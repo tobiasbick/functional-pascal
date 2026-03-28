@@ -28,24 +28,15 @@ pub const MOUSE_ACTION_VARIANTS: &[&str] = &[
 pub const MOUSE_BUTTON_VARIANTS: &[&str] = &["None", "Left", "Right", "Middle"];
 
 pub fn event_kind_index(name: &str) -> usize {
-    EVENT_KIND_VARIANTS
-        .iter()
-        .position(|&v| v == name)
-        .unwrap_or(0)
+    crate::variant_index(EVENT_KIND_VARIANTS, name)
 }
 
 pub fn mouse_action_index(name: &str) -> usize {
-    MOUSE_ACTION_VARIANTS
-        .iter()
-        .position(|&v| v == name)
-        .unwrap_or(0)
+    crate::variant_index(MOUSE_ACTION_VARIANTS, name)
 }
 
 pub fn mouse_button_index(name: &str) -> usize {
-    MOUSE_BUTTON_VARIANTS
-        .iter()
-        .position(|&v| v == name)
-        .unwrap_or(0)
+    crate::variant_index(MOUSE_BUTTON_VARIANTS, name)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -84,6 +75,9 @@ impl ConsoleEvent {
         }
     }
 
+    // Modifier arguments (shift/ctrl/alt/meta) are intentionally flat here; a
+    // dedicated `Modifiers` struct would reduce arity but requires a larger refactor.
+    #[expect(clippy::too_many_arguments, reason = "8 args represent discrete mouse-event fields; grouping into a Modifiers struct is a future refactor")]
     pub fn mouse(
         action: usize,
         button: usize,

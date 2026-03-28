@@ -35,6 +35,8 @@ pub struct KeyInput {
     /// Non-key terminal events for the unified `ReadEvent` API.
     live_console_queue: VecDeque<LiveConsoleEvent>,
     raw_mode: bool,
+    /// Set when any test-queue data is pushed; prevents falling through to live terminal I/O.
+    test_mode: bool,
 }
 
 impl KeyInput {
@@ -43,6 +45,7 @@ impl KeyInput {
     }
 
     pub fn push_chars(&mut self, s: &str) {
+        self.test_mode = true;
         for c in s.chars() {
             self.test_queue.push_back(c);
         }
@@ -50,10 +53,12 @@ impl KeyInput {
 
     /// Queue a structured key event for the next `ReadKeyEvent` (tests).
     pub fn push_key_event(&mut self, ev: ConsoleKeyEvent) {
+        self.test_mode = true;
         self.event_queue.push_back(ev);
     }
 
     pub fn push_console_event(&mut self, ev: ConsoleEvent) {
+        self.test_mode = true;
         self.console_event_queue.push_back(ev);
     }
 

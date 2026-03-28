@@ -17,6 +17,9 @@ impl KeyInput {
         {
             return Ok(true);
         }
+        if self.test_mode {
+            return Ok(false);
+        }
         if !self.raw_mode {
             if !io::stdin().is_terminal() {
                 return Ok(false);
@@ -84,6 +87,9 @@ impl KeyInput {
     pub fn event_pending(&mut self, location: SourceLocation) -> Result<bool, StdError> {
         if !self.console_event_queue.is_empty() || !self.live_console_queue.is_empty() {
             return Ok(true);
+        }
+        if self.test_mode {
+            return Ok(false);
         }
         if !self.raw_mode {
             if !io::stdin().is_terminal() {

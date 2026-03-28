@@ -35,10 +35,7 @@ pub const KEY_KIND_VARIANTS: &[&str] = &[
 
 /// Discriminant index for a variant name (`Unknown` if missing).
 pub fn key_kind_index(name: &str) -> usize {
-    KEY_KIND_VARIANTS
-        .iter()
-        .position(|&v| v == name)
-        .unwrap_or(0)
+    crate::variant_index(KEY_KIND_VARIANTS, name)
 }
 
 /// One console key event (Rust side); VM maps this to `Std.Console.KeyEvent`.

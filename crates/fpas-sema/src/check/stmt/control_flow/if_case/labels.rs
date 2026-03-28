@@ -108,10 +108,10 @@ impl Checker {
                 for (arg, (_, field_ty)) in args.iter().zip(variant.fields.iter()) {
                     match arg {
                         Expr::Designator(designator) if designator.parts.len() == 1 => {
-                            if let DesignatorPart::Ident(name, _) = &designator.parts[0] {
-                                if name != "_" {
-                                    bindings.push((name.clone(), field_ty.clone()));
-                                }
+                            if let DesignatorPart::Ident(name, _) = &designator.parts[0]
+                                && name != "_"
+                            {
+                                bindings.push((name.clone(), field_ty.clone()));
                             }
                         }
                         Expr::Call { .. } => {

@@ -25,8 +25,8 @@ use fpas_parser::Program;
 /// Compile a parsed program into bytecode.
 pub fn compile(program: &Program) -> Result<Chunk, CompileError> {
     let (sema_errors, expr_types, method_calls) = fpas_sema::analyze_with_types(program);
-    if let Some(err) = sema_errors.first() {
-        return Err(err.clone());
+    if let Some(err) = sema_errors.into_iter().next() {
+        return Err(err);
     }
     let mut compiler = Compiler::new(expr_types, method_calls);
     compiler.compile_program(program)?;

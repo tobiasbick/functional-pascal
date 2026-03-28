@@ -57,3 +57,9 @@ impl Checker {
         self.errors.push(sema_error(code, message, hint, span));
     }
 }
+
+impl Default for Checker {
+    fn default() -> Self {
+        Self::new()
+    }
+}

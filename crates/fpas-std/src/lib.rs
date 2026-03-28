@@ -41,3 +41,10 @@ pub use std_units::{
     canonical_std_unit_from_segments, canonical_std_unit_from_tail, is_std_root_segment,
     std_symbols, std_unit_symbols, std_units_list_for_hint,
 };
+
+/// Returns the index of `name` in `variants`, or 0 if not found.
+///
+/// Used by all console enum variant name → index conversions.
+pub(crate) fn variant_index(variants: &[&str], name: &str) -> usize {
+    variants.iter().position(|&v| v == name).unwrap_or(0)
+}

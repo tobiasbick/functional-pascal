@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use fpas_parser::Program;
 use fpas_std::key_event::KEY_KIND_VARIANTS;
@@ -60,14 +60,9 @@ impl Compiler {
         }
 
         // Only register unambiguous aliases.
-        let mut ambiguous: HashSet<String> = HashSet::new();
         for (short, qualified) in seen {
-            if qualified.len() == 1 {
-                if let Some(qualified_name) = qualified.into_iter().next() {
-                    self.short_aliases.insert(short, qualified_name);
-                }
-            } else {
-                ambiguous.insert(short);
+            if let [qualified_name] = qualified.as_slice() {
+                self.short_aliases.insert(short, qualified_name.clone());
             }
         }
     }

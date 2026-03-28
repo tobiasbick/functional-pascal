@@ -2,7 +2,7 @@ use super::Lexer;
 use crate::{Span, Token, error::lex_error};
 
 impl Lexer<'_> {
-    pub(super) fn at_end(&self) -> bool {
+    pub(super) const fn at_end(&self) -> bool {
         self.pos >= self.src.len()
     }
 
@@ -35,11 +35,11 @@ impl Lexer<'_> {
         ch
     }
 
-    pub(super) fn span_here(&self) -> (usize, u32, u32) {
+    pub(super) const fn span_here(&self) -> (usize, u32, u32) {
         (self.pos, self.line, self.col)
     }
 
-    pub(super) fn make_span(&self, start_offset: usize, start_line: u32, start_col: u32) -> Span {
+    pub(super) const fn make_span(&self, start_offset: usize, start_line: u32, start_col: u32) -> Span {
         Span {
             offset: start_offset,
             length: self.pos - start_offset,

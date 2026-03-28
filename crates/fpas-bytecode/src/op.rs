@@ -1,5 +1,5 @@
 /// Bytecode instructions.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Op {
     /// Push constant from the chunk's constant pool.
     Constant(u16),

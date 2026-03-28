@@ -178,6 +178,6 @@ pub enum Intrinsic {
 
 impl From<Intrinsic> for u16 {
     fn from(intrinsic: Intrinsic) -> Self {
-        intrinsic as u16
+        intrinsic as Self
     }
 }

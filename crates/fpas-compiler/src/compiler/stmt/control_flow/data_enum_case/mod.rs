@@ -194,27 +194,27 @@ impl Compiler {
                 .find_variant_field_count(primary_enum, &call.variant_name)
                 .or_else(|| self.find_variant_field_count_any(&call.variant_name));
 
-            if let Some(expected) = expected {
-                if call.arg_count != expected {
-                    return Err(compile_error(
-                        SEMA_ENUM_FIELD_COUNT_MISMATCH,
-                        format!(
-                            "Variant '{}' expects {} field{}, but {} {} supplied.",
-                            call.variant_name,
-                            expected,
-                            if expected == 1 { "" } else { "s" },
-                            call.arg_count,
-                            if call.arg_count == 1 { "was" } else { "were" },
-                        ),
-                        format!(
-                            "Use {} binding{} to match all fields of '{}'.",
-                            expected,
-                            if expected == 1 { "" } else { "s" },
-                            call.variant_name,
-                        ),
-                        call.span,
-                    ));
-                }
+            if let Some(expected) = expected
+                && call.arg_count != expected
+            {
+                return Err(compile_error(
+                    SEMA_ENUM_FIELD_COUNT_MISMATCH,
+                    format!(
+                        "Variant '{}' expects {} field{}, but {} {} supplied.",
+                        call.variant_name,
+                        expected,
+                        if expected == 1 { "" } else { "s" },
+                        call.arg_count,
+                        if call.arg_count == 1 { "was" } else { "were" },
+                    ),
+                    format!(
+                        "Use {} binding{} to match all fields of '{}'.",
+                        expected,
+                        if expected == 1 { "" } else { "s" },
+                        call.variant_name,
+                    ),
+                    call.span,
+                ));
             }
         }
         Ok(())

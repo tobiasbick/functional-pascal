@@ -75,10 +75,9 @@ impl Checker {
             for label in &arm.labels {
                 if let Some(bindings) =
                     self.check_case_label(&case_ty, is_result_or_option, is_data_enum, label)
+                    && !bindings.is_empty()
                 {
-                    if !bindings.is_empty() {
-                        has_binding = Some(bindings);
-                    }
+                    has_binding = Some(bindings);
                 }
             }
 

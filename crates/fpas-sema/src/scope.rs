@@ -123,3 +123,9 @@ impl ScopeStack {
         names
     }
 }
+
+impl Default for ScopeStack {
+    fn default() -> Self {
+        Self::new()
+    }
+}

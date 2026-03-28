@@ -31,6 +31,9 @@ After `uses Std.Result;` use short names (`Unwrap`, `IsOk`, …) or qualified (`
 | function | `UnwrapOr(R: Result of T, E; Default: T): T` | returns Default if Error |
 | function | `IsOk(R: Result of T, E): boolean` | true if Ok |
 | function | `IsError(R: Result of T, E): boolean` | true if Error |
+| function | `Map(R: Result of T, E; F: function(V: T): U): Result of U, E` | transform Ok value |
+| function | `AndThen(R: Result of T, E; F: function(V: T): Result of U, E): Result of U, E` | chain fallible operations |
+| function | `OrElse(R: Result of T, E; F: function(Err: E): Result of T, F): Result of T, F` | recover from Error |
 
 ---
 
@@ -74,6 +77,49 @@ Returns `true` if `R` is an `Error` variant.
 ```pascal
 var R: Result of integer, string := Error('fail');
 WriteLn(IsError(R))                              { true }
+```
+
+---
+
+## `function Map(R: Result of T, E; F: function(V: T): U): Result of U, E`
+
+Transforms the `Ok` value with `F`. If `R` is `Error`, returns it unchanged.
+
+```pascal
+var R: Result of integer, string := Ok(21);
+var M: Result of string, string := Map(R,
+  function(V: integer): string begin return IntToStr(V * 2) end);
+{ M = Ok('42') }
+```
+
+---
+
+## `function AndThen(R: Result of T, E; F: function(V: T): Result of U, E): Result of U, E`
+
+Calls `F` with the `Ok` value. `F` returns a new `Result`, enabling chained fallible operations. If `R` is `Error`, returns it unchanged.
+
+```pascal
+var R: Result of integer, string := Ok(10);
+var M: Result of string, string := AndThen(R,
+  function(V: integer): Result of string, string
+  begin
+    if V > 0 then return Ok(IntToStr(V))
+    else return Error('non-positive')
+  end);
+{ M = Ok('10') }
+```
+
+---
+
+## `function OrElse(R: Result of T, E; F: function(Err: E): Result of T, F): Result of T, F`
+
+Calls `F` with the `Error` value to attempt recovery. If `R` is `Ok`, returns it unchanged.
+
+```pascal
+var R: Result of integer, string := Error('oops');
+var M: Result of integer, string := OrElse(R,
+  function(E: string): Result of integer, string begin return Ok(0) end);
+{ M = Ok(0) }
 ```
 
 ---

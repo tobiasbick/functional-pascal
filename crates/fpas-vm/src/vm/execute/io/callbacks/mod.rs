@@ -2,6 +2,7 @@ use super::super::super::{Vm, VmError};
 use fpas_bytecode::{Intrinsic, SourceLocation};
 
 mod array_ops;
+mod result_option_ops;
 mod sync_call;
 
 impl Vm {
@@ -21,6 +22,30 @@ impl Vm {
             }
             Intrinsic::ArrayReduce => {
                 self.exec_array_reduce(line)?;
+                Ok(true)
+            }
+            Intrinsic::ResultMap => {
+                self.exec_result_map(line)?;
+                Ok(true)
+            }
+            Intrinsic::ResultAndThen => {
+                self.exec_result_and_then(line)?;
+                Ok(true)
+            }
+            Intrinsic::ResultOrElse => {
+                self.exec_result_or_else(line)?;
+                Ok(true)
+            }
+            Intrinsic::OptionMap => {
+                self.exec_option_map(line)?;
+                Ok(true)
+            }
+            Intrinsic::OptionAndThen => {
+                self.exec_option_and_then(line)?;
+                Ok(true)
+            }
+            Intrinsic::OptionOrElse => {
+                self.exec_option_or_else(line)?;
                 Ok(true)
             }
             _ => Ok(false),

@@ -31,6 +31,9 @@ After `uses Std.Option;` use short names (`Unwrap`, `IsSome`, …) or qualified 
 | function | `UnwrapOr(O: Option of T; Default: T): T` | returns Default if None |
 | function | `IsSome(O: Option of T): boolean` | true if Some |
 | function | `IsNone(O: Option of T): boolean` | true if None |
+| function | `Map(O: Option of T; F: function(V: T): U): Option of U` | transform Some value |
+| function | `AndThen(O: Option of T; F: function(V: T): Option of U): Option of U` | chain fallible operations |
+| function | `OrElse(O: Option of T; F: function(): Option of T): Option of T` | provide fallback |
 
 ---
 
@@ -74,6 +77,49 @@ Returns `true` if `O` is `None`.
 ```pascal
 var O: Option of integer := None;
 WriteLn(IsNone(O))                             { true }
+```
+
+---
+
+## `function Map(O: Option of T; F: function(V: T): U): Option of U`
+
+Transforms the `Some` value with `F`. If `O` is `None`, returns `None`.
+
+```pascal
+var O: Option of integer := Some(7);
+var M: Option of string := Map(O,
+  function(V: integer): string begin return IntToStr(V * 3) end);
+{ M = Some('21') }
+```
+
+---
+
+## `function AndThen(O: Option of T; F: function(V: T): Option of U): Option of U`
+
+Calls `F` with the `Some` value. `F` returns a new `Option`, enabling chained lookups. If `O` is `None`, returns `None`.
+
+```pascal
+var O: Option of integer := Some(5);
+var M: Option of string := AndThen(O,
+  function(V: integer): Option of string
+  begin
+    if V > 0 then return Some(IntToStr(V))
+    else return None
+  end);
+{ M = Some('5') }
+```
+
+---
+
+## `function OrElse(O: Option of T; F: function(): Option of T): Option of T`
+
+Calls `F` to provide a fallback when `O` is `None`. If `O` is `Some`, returns it unchanged.
+
+```pascal
+var O: Option of integer := None;
+var M: Option of integer := OrElse(O,
+  function(): Option of integer begin return Some(99) end);
+{ M = Some(99) }
 ```
 
 ---

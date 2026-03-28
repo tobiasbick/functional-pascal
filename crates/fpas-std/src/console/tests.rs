@@ -1,5 +1,7 @@
 use super::*;
-use crate::console_event::{ConsoleEvent, event_kind_index, mouse_action_index, mouse_button_index};
+use crate::console_event::{
+    ConsoleEvent, event_kind_index, mouse_action_index, mouse_button_index,
+};
 use crate::key_event::{ConsoleKeyEvent, key_kind_index};
 use crossterm::event::{
     Event, KeyCode, KeyEvent as CrosstermKeyEvent, KeyModifiers, MouseButton, MouseEvent,
@@ -335,8 +337,10 @@ fn console_wind_min_and_wind_max_follow_window_and_resize() {
 fn console_del_line_on_bottom_row_clears_that_row_only() {
     let mut c = Console::new();
     c.window(1, 1, 4, 2, test_location()).unwrap();
-    c.write(&Value::Str("ABCD".into()), test_location()).unwrap();
-    c.write(&Value::Str("EFGH".into()), test_location()).unwrap();
+    c.write(&Value::Str("ABCD".into()), test_location())
+        .unwrap();
+    c.write(&Value::Str("EFGH".into()), test_location())
+        .unwrap();
 
     c.goto_xy(1, 2, test_location()).unwrap();
     c.del_line(test_location()).unwrap();
@@ -355,8 +359,10 @@ fn console_del_line_on_bottom_row_clears_that_row_only() {
 fn console_ins_line_on_top_row_shifts_rows_down_and_drops_bottom() {
     let mut c = Console::new();
     c.window(1, 1, 4, 2, test_location()).unwrap();
-    c.write(&Value::Str("ABCD".into()), test_location()).unwrap();
-    c.write(&Value::Str("EFGH".into()), test_location()).unwrap();
+    c.write(&Value::Str("ABCD".into()), test_location())
+        .unwrap();
+    c.write(&Value::Str("EFGH".into()), test_location())
+        .unwrap();
 
     c.goto_xy(1, 1, test_location()).unwrap();
     c.ins_line(test_location()).unwrap();
@@ -484,7 +490,10 @@ fn console_sound_rejects_non_positive_frequencies() {
     let mut c = Console::new();
 
     let zero = c.sound(0, test_location()).unwrap_err();
-    assert_eq!(zero.message, "Sound expects a positive frequency in Hz, got 0");
+    assert_eq!(
+        zero.message,
+        "Sound expects a positive frequency in Hz, got 0"
+    );
 
     let negative = c.sound(-5, test_location()).unwrap_err();
     assert_eq!(

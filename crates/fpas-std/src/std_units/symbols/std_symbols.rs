@@ -178,11 +178,17 @@ pub const STD_RESULT_UNWRAP: &str = std_result!("Unwrap");
 pub const STD_RESULT_UNWRAP_OR: &str = std_result!("UnwrapOr");
 pub const STD_RESULT_IS_OK: &str = std_result!("IsOk");
 pub const STD_RESULT_IS_ERR: &str = std_result!("IsError");
+pub const STD_RESULT_MAP: &str = std_result!("Map");
+pub const STD_RESULT_AND_THEN: &str = std_result!("AndThen");
+pub const STD_RESULT_OR_ELSE: &str = std_result!("OrElse");
 
 pub const STD_OPTION_UNWRAP: &str = std_option!("Unwrap");
 pub const STD_OPTION_UNWRAP_OR: &str = std_option!("UnwrapOr");
 pub const STD_OPTION_IS_SOME: &str = std_option!("IsSome");
 pub const STD_OPTION_IS_NONE: &str = std_option!("IsNone");
+pub const STD_OPTION_MAP: &str = std_option!("Map");
+pub const STD_OPTION_AND_THEN: &str = std_option!("AndThen");
+pub const STD_OPTION_OR_ELSE: &str = std_option!("OrElse");
 
 pub const STD_CHANNEL_MAKE: &str = std_channel!("Make");
 pub const STD_CHANNEL_MAKE_BUFFERED: &str = std_channel!("MakeBuffered");

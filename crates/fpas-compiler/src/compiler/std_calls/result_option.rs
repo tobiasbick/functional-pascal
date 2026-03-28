@@ -38,6 +38,27 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::ResultIsError, location);
                 Ok(true)
             }
+            s::STD_RESULT_MAP => {
+                self.expect_exact_args(name, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::ResultMap, location);
+                Ok(true)
+            }
+            s::STD_RESULT_AND_THEN => {
+                self.expect_exact_args(name, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::ResultAndThen, location);
+                Ok(true)
+            }
+            s::STD_RESULT_OR_ELSE => {
+                self.expect_exact_args(name, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::ResultOrElse, location);
+                Ok(true)
+            }
             s::STD_OPTION_UNWRAP => {
                 self.expect_exact_args(name, 1, args, location)?;
                 self.compile_expr(&args[0])?;
@@ -61,6 +82,27 @@ impl Compiler {
                 self.expect_exact_args(name, 1, args, location)?;
                 self.compile_expr(&args[0])?;
                 self.emit_intrinsic(Intrinsic::OptionIsNone, location);
+                Ok(true)
+            }
+            s::STD_OPTION_MAP => {
+                self.expect_exact_args(name, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::OptionMap, location);
+                Ok(true)
+            }
+            s::STD_OPTION_AND_THEN => {
+                self.expect_exact_args(name, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::OptionAndThen, location);
+                Ok(true)
+            }
+            s::STD_OPTION_OR_ELSE => {
+                self.expect_exact_args(name, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::OptionOrElse, location);
                 Ok(true)
             }
             _ => Ok(false),

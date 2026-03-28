@@ -1,5 +1,6 @@
 use super::{compile_and_run, compile_err, compile_run_err, compile_run_error};
 mod case_destructuring;
+mod combinators;
 mod option_cases;
 mod option_functions;
 mod panic_handling;

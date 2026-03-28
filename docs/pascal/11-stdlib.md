@@ -28,8 +28,8 @@ See [09-units.md](09-units.md) for `uses` rules, short name ambiguity, and the r
 | [`Std.Conv`](std/conv.md) | Type conversions | `IntToStr`, `StrToInt`, `RealToStr`, `StrToReal`, … | [conv.md](std/conv.md) |
 | [`Std.Math`](std/math.md) | Mathematical functions | `Pi`, `Abs`, `Sqrt`, `Pow`, `Sin`, `Cos`, `Log`, … | [math.md](std/math.md) |
 | [`Std.Array`](std/array.md) | Array helpers | `Length`, `Push`, `Pop`, `Sort`, `Slice`, `Map`, `Filter`, `Reduce`, … | [array.md](std/array.md) |
-| [`Std.Result`](std/result.md) | Result helpers | `Unwrap`, `UnwrapOr`, `IsOk`, `IsError` | [result.md](std/result.md) |
-| [`Std.Option`](std/option.md) | Option helpers | `Unwrap`, `UnwrapOr`, `IsSome`, `IsNone` | [option.md](std/option.md) |
+| [`Std.Result`](std/result.md) | Result helpers | `Unwrap`, `UnwrapOr`, `IsOk`, `IsError`, `Map`, `AndThen`, `OrElse` | [result.md](std/result.md) |
+| [`Std.Option`](std/option.md) | Option helpers | `Unwrap`, `UnwrapOr`, `IsSome`, `IsNone`, `Map`, `AndThen`, `OrElse` | [option.md](std/option.md) |
 
 ---
 

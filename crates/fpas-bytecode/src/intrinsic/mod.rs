@@ -102,10 +102,34 @@ pub enum Intrinsic {
     ResultUnwrapOr = 91,
     ResultIsOk = 92,
     ResultIsError = 93,
+    /// `Std.Result.Map(R, F)` — `Ok(v)` → `Ok(F(v))`, `Error(e)` passthrough.
+    ///
+    /// **Documentation:** `docs/pascal/std/result.md`
+    ResultMap = 130,
+    /// `Std.Result.AndThen(R, F)` — `Ok(v)` → `F(v)`, `Error(e)` passthrough.
+    ///
+    /// **Documentation:** `docs/pascal/std/result.md`
+    ResultAndThen = 131,
+    /// `Std.Result.OrElse(R, F)` — `Ok(v)` passthrough, `Error(e)` → `F(e)`.
+    ///
+    /// **Documentation:** `docs/pascal/std/result.md`
+    ResultOrElse = 132,
     OptionUnwrap = 94,
     OptionUnwrapOr = 95,
     OptionIsSome = 96,
     OptionIsNone = 97,
+    /// `Std.Option.Map(O, F)` — `Some(v)` → `Some(F(v))`, `None` passthrough.
+    ///
+    /// **Documentation:** `docs/pascal/std/option.md`
+    OptionMap = 133,
+    /// `Std.Option.AndThen(O, F)` — `Some(v)` → `F(v)`, `None` passthrough.
+    ///
+    /// **Documentation:** `docs/pascal/std/option.md`
+    OptionAndThen = 134,
+    /// `Std.Option.OrElse(O, F)` — `Some(v)` passthrough, `None` → `F()`.
+    ///
+    /// **Documentation:** `docs/pascal/std/option.md`
+    OptionOrElse = 135,
 
     /// Create unbuffered channel. Pushes `Value::Channel(id)`.
     ///

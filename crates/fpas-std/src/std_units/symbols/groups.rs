@@ -140,6 +140,9 @@ pub(in super::super) const STD_RESULT_SYMBOLS: &[&str] = &[
     std_symbols::STD_RESULT_UNWRAP_OR,
     std_symbols::STD_RESULT_IS_OK,
     std_symbols::STD_RESULT_IS_ERR,
+    std_symbols::STD_RESULT_MAP,
+    std_symbols::STD_RESULT_AND_THEN,
+    std_symbols::STD_RESULT_OR_ELSE,
 ];
 
 pub(in super::super) const STD_OPTION_SYMBOLS: &[&str] = &[
@@ -147,6 +150,9 @@ pub(in super::super) const STD_OPTION_SYMBOLS: &[&str] = &[
     std_symbols::STD_OPTION_UNWRAP_OR,
     std_symbols::STD_OPTION_IS_SOME,
     std_symbols::STD_OPTION_IS_NONE,
+    std_symbols::STD_OPTION_MAP,
+    std_symbols::STD_OPTION_AND_THEN,
+    std_symbols::STD_OPTION_OR_ELSE,
 ];
 
 pub(in super::super) const STD_CHANNEL_SYMBOLS: &[&str] = &[

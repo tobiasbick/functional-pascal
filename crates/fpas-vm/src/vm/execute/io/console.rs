@@ -1,7 +1,8 @@
-use super::super::super::{Vm, VmError};
+use super::super::super::Worker;
+use super::super::super::diagnostics::VmError;
 use fpas_bytecode::{Intrinsic, SourceLocation, Value};
 
-impl Vm {
+impl Worker {
     pub(super) fn try_exec_console_intrinsic(
         &mut self,
         intrinsic: Intrinsic,
@@ -9,161 +10,371 @@ impl Vm {
     ) -> Result<bool, VmError> {
         match intrinsic {
             Intrinsic::ConsoleReadLn => {
-                let text = self.text_input.read_line(line)?;
+                let text = self
+                    .shared
+                    .text_input
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .read_line(line)?;
                 self.push(Value::Str(text))?;
             }
             Intrinsic::ConsoleRead => {
-                let ch = self.text_input.read_char(line)?;
+                let ch = self
+                    .shared
+                    .text_input
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .read_char(line)?;
                 self.push(Value::Char(ch))?;
             }
             Intrinsic::ConsoleReadKey => {
-                let ch = self.key_input.read_key(line)?;
+                let ch = self
+                    .shared
+                    .key_input
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .read_key(line)?;
                 self.push(Value::Char(ch))?;
             }
             Intrinsic::ConsoleKeyPressed => {
-                let pressed = self.key_input.key_pressed(line)?;
+                let pressed = self
+                    .shared
+                    .key_input
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .key_pressed(line)?;
                 self.push(Value::Boolean(pressed))?;
             }
             Intrinsic::ConsoleReadKeyEvent => {
-                let event = self.key_input.read_key_event(line)?;
-                self.push(self.key_event_record(event))?;
+                let event = self
+                    .shared
+                    .key_input
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .read_key_event(line)?;
+                self.push(Self::key_event_record(event))?;
             }
             Intrinsic::ConsoleEventPending => {
-                let pending = self.key_input.event_pending(line)?;
+                let pending = self
+                    .shared
+                    .key_input
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .event_pending(line)?;
                 self.push(Value::Boolean(pending))?;
             }
             Intrinsic::ConsoleReadEvent => {
-                let event = self.key_input.read_event(line)?;
-                if event.kind == fpas_std::event_kind_index("Resize") {
-                    self.console.resize(event.width as u16, event.height as u16);
+                let event = self
+                    .shared
+                    .key_input
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .read_event(line)?;
+                {
+                    let mut console = self
+                        .shared
+                        .console
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner());
+                    if event.kind == fpas_std::event_kind_index("Resize") {
+                        console.resize(event.width as u16, event.height as u16);
+                    }
                 }
-                self.push(self.console_event_record(event))?;
+                self.push(Self::console_event_record(event))?;
             }
             Intrinsic::ConsoleClrScr => {
-                self.console.clr_scr(line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .clr_scr(line)?;
             }
             Intrinsic::ConsoleClrEol => {
-                self.console.clr_eol(line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .clr_eol(line)?;
             }
             Intrinsic::ConsoleGotoXY => {
                 let y = self.pop_int(line)?;
                 let x = self.pop_int(line)?;
-                self.console.goto_xy(x, y, line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .goto_xy(x, y, line)?;
             }
             Intrinsic::ConsoleWhereX => {
-                self.push(Value::Integer(self.console.where_x()))?;
+                let val = self
+                    .shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .where_x();
+                self.push(Value::Integer(val))?;
             }
             Intrinsic::ConsoleWhereY => {
-                self.push(Value::Integer(self.console.where_y()))?;
+                let val = self
+                    .shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .where_y();
+                self.push(Value::Integer(val))?;
             }
             Intrinsic::ConsoleWindMin => {
-                self.push(Value::Integer(self.console.wind_min()))?;
+                let val = self
+                    .shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .wind_min();
+                self.push(Value::Integer(val))?;
             }
             Intrinsic::ConsoleWindMax => {
-                self.push(Value::Integer(self.console.wind_max()))?;
+                let val = self
+                    .shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .wind_max();
+                self.push(Value::Integer(val))?;
             }
             Intrinsic::ConsoleDelLine => {
-                self.console.del_line(line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .del_line(line)?;
             }
             Intrinsic::ConsoleInsLine => {
-                self.console.ins_line(line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .ins_line(line)?;
             }
             Intrinsic::ConsoleWindow => {
                 let y2 = self.pop_int(line)?;
                 let x2 = self.pop_int(line)?;
                 let y1 = self.pop_int(line)?;
                 let x1 = self.pop_int(line)?;
-                self.console.window(x1, y1, x2, y2, line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .window(x1, y1, x2, y2, line)?;
             }
             Intrinsic::ConsoleTextColor => {
                 let color = self.pop_int(line)?;
-                self.console.text_color(color, line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .text_color(color, line)?;
             }
             Intrinsic::ConsoleTextBackground => {
                 let color = self.pop_int(line)?;
-                self.console.text_background(color, line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .text_background(color, line)?;
             }
             Intrinsic::ConsoleHighVideo => {
-                self.console.high_video(line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .high_video(line)?;
             }
             Intrinsic::ConsoleLowVideo => {
-                self.console.low_video(line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .low_video(line)?;
             }
             Intrinsic::ConsoleNormVideo => {
-                self.console.norm_video(line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .norm_video(line)?;
             }
             Intrinsic::ConsoleTextAttr => {
-                self.push(Value::Integer(self.console.text_attr()))?;
+                let val = self
+                    .shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .text_attr();
+                self.push(Value::Integer(val))?;
             }
             Intrinsic::ConsoleSetTextAttr => {
                 let attr = self.pop_int(line)?;
-                self.console.set_text_attr(attr, line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .set_text_attr(attr, line)?;
             }
             Intrinsic::ConsoleDelay => {
                 let ms = self.pop_int(line)?;
-                self.console.delay(ms, line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .delay(ms, line)?;
             }
             Intrinsic::ConsoleCursorOn => {
-                self.console.cursor_on(line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .cursor_on(line)?;
             }
             Intrinsic::ConsoleCursorOff => {
-                self.console.cursor_off(line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .cursor_off(line)?;
             }
             Intrinsic::ConsoleCursorBig => {
-                self.console.cursor_big(line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .cursor_big(line)?;
             }
             Intrinsic::ConsoleTextMode => {
                 let mode = self.pop_int(line)?;
-                self.console.text_mode(mode, line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .text_mode(mode, line)?;
             }
             Intrinsic::ConsoleLastMode => {
-                self.push(Value::Integer(self.console.last_mode()))?;
+                let val = self
+                    .shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .last_mode();
+                self.push(Value::Integer(val))?;
             }
             Intrinsic::ConsoleScreenWidth => {
-                self.push(Value::Integer(self.console.screen_width()))?;
+                let val = self
+                    .shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .screen_width();
+                self.push(Value::Integer(val))?;
             }
             Intrinsic::ConsoleScreenHeight => {
-                self.push(Value::Integer(self.console.screen_height()))?;
+                let val = self
+                    .shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .screen_height();
+                self.push(Value::Integer(val))?;
             }
             Intrinsic::ConsoleSound => {
                 let hz = self.pop_int(line)?;
-                self.console.sound(hz, line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .sound(hz, line)?;
             }
             Intrinsic::ConsoleNoSound => {
-                self.console.no_sound()?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .no_sound()?;
             }
             Intrinsic::ConsoleAssignCrt => {
-                self.console.assign_crt()?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .assign_crt()?;
             }
             Intrinsic::ConsoleEnableRawMode => {
-                self.key_input.enable_raw_mode_explicit(line)?;
+                self.shared
+                    .key_input
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .enable_raw_mode_explicit(line)?;
             }
             Intrinsic::ConsoleDisableRawMode => {
-                self.key_input.disable_raw_mode_explicit(line)?;
+                self.shared
+                    .key_input
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .disable_raw_mode_explicit(line)?;
             }
             Intrinsic::ConsoleEnterAltScreen => {
-                self.console.enter_alt_screen(line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .enter_alt_screen(line)?;
             }
             Intrinsic::ConsoleLeaveAltScreen => {
-                self.console.leave_alt_screen(line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .leave_alt_screen(line)?;
             }
             Intrinsic::ConsoleEnableMouse => {
-                self.console.enable_mouse(line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .enable_mouse(line)?;
             }
             Intrinsic::ConsoleDisableMouse => {
-                self.console.disable_mouse(line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .disable_mouse(line)?;
             }
             Intrinsic::ConsoleEnableFocus => {
-                self.console.enable_focus(line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .enable_focus(line)?;
             }
             Intrinsic::ConsoleDisableFocus => {
-                self.console.disable_focus(line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .disable_focus(line)?;
             }
             Intrinsic::ConsoleEnablePaste => {
-                self.console.enable_paste(line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .enable_paste(line)?;
             }
             Intrinsic::ConsoleDisablePaste => {
-                self.console.disable_paste(line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .disable_paste(line)?;
             }
             _ => return Ok(false),
         }
@@ -171,7 +382,7 @@ impl Vm {
         Ok(true)
     }
 
-    fn key_event_record(&self, event: fpas_std::ConsoleKeyEvent) -> Value {
+    fn key_event_record(event: fpas_std::ConsoleKeyEvent) -> Value {
         Value::Record {
             type_name: "Std.Console.KeyEvent".into(),
             fields: vec![
@@ -185,7 +396,7 @@ impl Vm {
         }
     }
 
-    fn console_event_record(&self, event: fpas_std::ConsoleEvent) -> Value {
+    fn console_event_record(event: fpas_std::ConsoleEvent) -> Value {
         let fpas_std::ConsoleEvent {
             kind,
             key,
@@ -205,7 +416,7 @@ impl Vm {
             type_name: "Std.Console.Event".into(),
             fields: vec![
                 ("kind".into(), Value::Integer(kind as i64)),
-                ("key".into(), self.key_event_record(key)),
+                ("key".into(), Self::key_event_record(key)),
                 ("mouse_action".into(), Value::Integer(mouse_action as i64)),
                 ("mouse_button".into(), Value::Integer(mouse_button as i64)),
                 ("mouse_x".into(), Value::Integer(mouse_x)),

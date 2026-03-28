@@ -1,8 +1,8 @@
 use super::super::diagnostics::TYPE_MISMATCH_CODE;
-use super::super::{Vm, VmError, runtime_error};
+use super::super::{VmError, Worker, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 
-impl Vm {
+impl Worker {
     pub(in super::super) fn binary_int(
         &mut self,
         location: SourceLocation,

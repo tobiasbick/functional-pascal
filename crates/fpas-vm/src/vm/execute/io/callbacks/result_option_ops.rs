@@ -2,11 +2,12 @@
 //!
 //! **Documentation:** `docs/pascal/std/result.md` and `docs/pascal/std/option.md` (from the repository root).
 
-use super::super::super::super::{Vm, VmError, runtime_error};
+use super::super::super::super::diagnostics::VmError;
+use super::super::super::super::{Worker, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
 
-impl Vm {
+impl Worker {
     /// `Std.Result.Map(R, F)` — `Ok(v)` → `Ok(F(v))`, `Error(e)` passthrough.
     pub(super) fn exec_result_map(&mut self, line: SourceLocation) -> Result<(), VmError> {
         let func = self.pop(line)?;

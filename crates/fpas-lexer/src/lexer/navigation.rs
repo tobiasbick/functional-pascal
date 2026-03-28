@@ -39,7 +39,12 @@ impl Lexer<'_> {
         (self.pos, self.line, self.col)
     }
 
-    pub(super) const fn make_span(&self, start_offset: usize, start_line: u32, start_col: u32) -> Span {
+    pub(super) const fn make_span(
+        &self,
+        start_offset: usize,
+        start_line: u32,
+        start_col: u32,
+    ) -> Span {
         Span {
             offset: start_offset,
             length: self.pos - start_offset,

@@ -1,8 +1,7 @@
-use super::super::diagnostics::STACK_OVERFLOW_CODE;
-use super::super::{STACK_MAX, Vm, VmError, internal_error, runtime_error};
-use fpas_bytecode::{SourceLocation, Value};
+use super::super::{VmError, Worker, internal_error};
+use fpas_bytecode::SourceLocation;
 
-impl Vm {
+impl Worker {
     pub(in super::super) fn frame_base(&self) -> usize {
         self.call_stack
             .last()
@@ -39,38 +38,5 @@ impl Vm {
         }
 
         Ok(index)
-    }
-
-    pub(in super::super) fn push(&mut self, value: Value) -> Result<(), VmError> {
-        if self.stack.len() >= STACK_MAX {
-            return Err(runtime_error(
-                STACK_OVERFLOW_CODE,
-                "Stack overflow",
-                "Reduce recursion depth or intermediate stack usage in this expression.",
-                self.current_location,
-            ));
-        }
-        self.stack.push(value);
-        Ok(())
-    }
-
-    pub(in super::super) fn pop(&mut self, location: SourceLocation) -> Result<Value, VmError> {
-        self.stack.pop().ok_or_else(|| {
-            internal_error(
-                "Stack underflow",
-                "This indicates invalid bytecode or a VM bug. Please report it.",
-                location,
-            )
-        })
-    }
-
-    pub(in super::super) fn peek(&self, location: SourceLocation) -> Result<&Value, VmError> {
-        self.stack.last().ok_or_else(|| {
-            internal_error(
-                "Stack underflow",
-                "This indicates invalid bytecode or a VM bug. Please report it.",
-                location,
-            )
-        })
     }
 }

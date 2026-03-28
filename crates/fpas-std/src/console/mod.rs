@@ -37,7 +37,7 @@ pub struct Console {
     /// Fragments from `Write` not yet ended by `WriteLn`; one logical line for capture.
     capture_line_buf: String,
     state: ConsoleState,
-    writer: Option<Box<dyn Write>>,
+    writer: Option<Box<dyn Write + Send>>,
 }
 
 impl Default for Console {
@@ -56,7 +56,7 @@ impl Console {
         }
     }
 
-    pub fn with_writer(writer: Box<dyn Write>) -> Self {
+    pub fn with_writer(writer: Box<dyn Write + Send>) -> Self {
         let (width, height) =
             crossterm::terminal::size().unwrap_or((DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT));
         Self {

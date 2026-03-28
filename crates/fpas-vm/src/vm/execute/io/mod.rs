@@ -1,21 +1,30 @@
-use super::super::{Vm, VmError, internal_error};
+use super::super::diagnostics::VmError;
+use super::super::{Worker, internal_error};
 use fpas_bytecode::{Intrinsic, Op, SourceLocation};
 use fpas_std::run_intrinsic;
 
 mod callbacks;
 mod console;
 
-impl Vm {
+impl Worker {
     pub(super) fn try_exec_io(&mut self, op: Op, line: SourceLocation) -> Result<bool, VmError> {
         match op {
             Op::Print => {
                 let value = self.pop(line)?;
-                self.console.write(&value, line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .write(&value, line)?;
                 Ok(true)
             }
             Op::PrintLn => {
                 let value = self.pop(line)?;
-                self.console.write_ln(&value, line)?;
+                self.shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .write_ln(&value, line)?;
                 Ok(true)
             }
             Op::Intrinsic(id) => {

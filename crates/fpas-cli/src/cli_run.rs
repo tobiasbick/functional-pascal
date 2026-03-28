@@ -8,7 +8,7 @@ use crate::{CliInput, resolve_cli_input};
 pub(crate) fn run_cli(
     args: &[String],
     cwd: &Path,
-    stdout: Box<dyn Write>,
+    stdout: Box<dyn Write + Send>,
     stderr: &mut dyn Write,
 ) -> i32 {
     let input = match resolve_cli_input(args, cwd) {
@@ -25,7 +25,7 @@ pub(crate) fn run_cli(
     }
 }
 
-fn run_source_file(path: &Path, stdout: Box<dyn Write>, stderr: &mut dyn Write) -> i32 {
+fn run_source_file(path: &Path, stdout: Box<dyn Write + Send>, stderr: &mut dyn Write) -> i32 {
     let source = match fs::read_to_string(path) {
         Ok(source) => source,
         Err(error) => {
@@ -38,7 +38,7 @@ fn run_source_file(path: &Path, stdout: Box<dyn Write>, stderr: &mut dyn Write) 
     run_source(path_text.as_ref(), &source, stdout, stderr)
 }
 
-fn run_project_file(path: &Path, stdout: Box<dyn Write>, stderr: &mut dyn Write) -> i32 {
+fn run_project_file(path: &Path, stdout: Box<dyn Write + Send>, stderr: &mut dyn Write) -> i32 {
     let loaded = match project::load_project(path) {
         Ok(loaded) => loaded,
         Err(message) => {
@@ -84,7 +84,7 @@ fn run_project_file(path: &Path, stdout: Box<dyn Write>, stderr: &mut dyn Write)
 pub(crate) fn run_source(
     path: &str,
     source: &str,
-    stdout: Box<dyn Write>,
+    stdout: Box<dyn Write + Send>,
     stderr: &mut dyn Write,
 ) -> i32 {
     let (program, parse_errors) = fpas_parser::parse(source);
@@ -103,7 +103,7 @@ pub(crate) fn run_source(
 fn run_compiled_program(
     path: &str,
     program: &fpas_parser::Program,
-    stdout: Box<dyn Write>,
+    stdout: Box<dyn Write + Send>,
     stderr: &mut dyn Write,
 ) -> i32 {
     let chunk = match fpas_compiler::compile(program) {

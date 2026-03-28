@@ -77,7 +77,10 @@ impl ConsoleEvent {
 
     // Modifier arguments (shift/ctrl/alt/meta) are intentionally flat here; a
     // dedicated `Modifiers` struct would reduce arity but requires a larger refactor.
-    #[expect(clippy::too_many_arguments, reason = "8 args represent discrete mouse-event fields; grouping into a Modifiers struct is a future refactor")]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "8 args represent discrete mouse-event fields; grouping into a Modifiers struct is a future refactor"
+    )]
     pub fn mouse(
         action: usize,
         button: usize,

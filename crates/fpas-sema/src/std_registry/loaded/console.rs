@@ -68,7 +68,12 @@ fn register_std_console_key_api(checker: &mut Checker) {
             kind: SymbolKind::Type,
         },
     );
-    define_func(checker, s::STD_CONSOLE_READ_KEY_EVENT, vec![], key_event_ty.clone());
+    define_func(
+        checker,
+        s::STD_CONSOLE_READ_KEY_EVENT,
+        vec![],
+        key_event_ty.clone(),
+    );
 
     let event_kind_ty = register_enum_type(checker, s::STD_CONSOLE_EVENT_KIND, EVENT_KIND_VARIANTS);
     let mouse_action_ty =

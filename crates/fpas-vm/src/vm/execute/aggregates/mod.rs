@@ -6,10 +6,11 @@ mod array_locals;
 mod indexing;
 mod records;
 
-use super::super::{Vm, VmError};
+use super::super::Worker;
+use super::super::diagnostics::VmError;
 use fpas_bytecode::{Op, SourceLocation, Value};
 
-impl Vm {
+impl Worker {
     pub(super) fn try_exec_aggregates(
         &mut self,
         op: Op,

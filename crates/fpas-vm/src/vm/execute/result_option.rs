@@ -1,8 +1,9 @@
-use super::super::{Vm, VmError, runtime_error};
+use super::super::diagnostics::VmError;
+use super::super::{Worker, runtime_error};
 use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_diagnostics::codes::{RUNTIME_UNWRAP_FAILURE, RUNTIME_VM_OPERAND_TYPE_MISMATCH};
 
-impl Vm {
+impl Worker {
     pub(super) fn try_exec_result_option(
         &mut self,
         op: Op,

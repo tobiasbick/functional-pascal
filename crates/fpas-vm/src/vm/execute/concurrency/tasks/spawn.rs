@@ -1,8 +1,12 @@
-use super::super::super::super::{TaskContext, Vm, VmError, runtime_error};
+use super::super::super::super::diagnostics::VmError;
+use super::super::super::super::{TaskState, Worker, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::{RUNTIME_INVALID_TASK, RUNTIME_VM_OPERAND_TYPE_MISMATCH};
 
-impl Vm {
+impl Worker {
+    /// Spawn a new task: pops function value + args, pushes `Value::Task(id)`.
+    ///
+    /// The task is placed on the shared queue for any worker thread to pick up.
     pub(in super::super) fn exec_spawn_task(
         &mut self,
         argc: u8,
@@ -24,14 +28,20 @@ impl Vm {
             }
         };
 
-        let (code_start, _) = self.chunk.functions.get(&name).copied().ok_or_else(|| {
-            runtime_error(
-                RUNTIME_INVALID_TASK,
-                format!("Function `{name}` not found for task spawn"),
-                "Ensure the function is defined before spawning it as a task.",
-                line,
-            )
-        })?;
+        let (code_start, _) = self
+            .shared
+            .chunk
+            .functions
+            .get(&name)
+            .copied()
+            .ok_or_else(|| {
+                runtime_error(
+                    RUNTIME_INVALID_TASK,
+                    format!("Function `{name}` not found for task spawn"),
+                    "Ensure the function is defined before spawning it as a task.",
+                    line,
+                )
+            })?;
 
         let arg_count = argc as usize;
         let args_start = self.stack.len().saturating_sub(arg_count);
@@ -40,10 +50,9 @@ impl Vm {
         task_stack.extend(args);
         task_stack.extend(captures);
 
-        let task_id = self.next_task_id;
-        self.next_task_id += 1;
+        let task_id = self.shared.alloc_task_id();
 
-        self.tasks.push(TaskContext {
+        self.shared.enqueue_task(TaskState {
             id: task_id,
             ip: code_start,
             stack: task_stack,

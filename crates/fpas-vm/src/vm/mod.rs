@@ -1,19 +1,28 @@
-//! Stack VM for FPAS bytecode. Handles `Std.Console` input intrinsics and `Std.Array` `Push`/`Pop` opcodes.
+//! Parallel stack VM for FPAS bytecode.
 //!
-//! **Documentation:** `docs/pascal/std/console.md`, `docs/pascal/std/array.md` (from the repository root).
-//! **Maintenance:** Keep those Markdown files in sync when changing console I/O or array local op behavior here.
+//! The VM executes the main program on the calling thread. Tasks created with
+//! `go` are distributed across a thread pool for true parallel execution.
+//! Channels use `crossbeam-channel` for lock-free cross-thread communication.
+//!
+//! **Documentation:** `docs/future/parallel-vm.md`, `docs/pascal/08-concurrency.md`
 
-use fpas_bytecode::{Chunk, SourceLocation, Value};
+use fpas_bytecode::Chunk;
 use fpas_std::{Console, ConsoleEvent, ConsoleKeyEvent, KeyInput, TextInput};
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 use std::io::Write;
+use std::sync::atomic::{AtomicBool, AtomicU64};
+use std::sync::{Arc, Condvar, Mutex, RwLock};
 
 mod diagnostics;
 mod execute;
 mod helpers;
+mod shared;
+mod worker;
 
 pub use diagnostics::VmError;
 pub(crate) use diagnostics::{internal_error, runtime_error};
+pub(crate) use shared::{SharedChannel, SharedState, TaskState};
+pub(crate) use worker::Worker;
 
 const STACK_MAX: usize = 4096;
 const TIMESLICE: u32 = 256;
@@ -23,115 +32,141 @@ pub type VmOutput = fpas_std::CapturedOutput;
 
 /// Call frame for function invocations.
 #[derive(Debug)]
-struct CallFrame {
+pub(crate) struct CallFrame {
     /// Return address (instruction pointer to resume after call).
-    return_ip: usize,
+    pub return_ip: usize,
     /// Base slot of this frame on the value stack.
-    base_slot: usize,
+    pub base_slot: usize,
 }
 
-/// Saved state of a suspended task.
-struct TaskContext {
-    id: u64,
-    ip: usize,
-    stack: Vec<Value>,
-    call_stack: Vec<CallFrame>,
-}
-
-/// Buffered channel state.
-struct ChannelState {
-    buffer: VecDeque<Value>,
-    capacity: usize,
-    closed: bool,
-}
-
+/// Public VM interface.
+///
+/// Holds shared state and provides the entry point for program execution.
+/// Internally uses `Worker` threads for parallel task execution.
 pub struct Vm {
-    chunk: Chunk,
-    ip: usize,
-    current_location: SourceLocation,
-    stack: Vec<Value>,
-    globals: HashMap<String, Value>,
-    call_stack: Vec<CallFrame>,
-    console: Console,
-    /// Line-buffered stdin for `Read` / `ReadLn` (test lines via `push_readln_input`).
-    text_input: TextInput,
-    /// CRT-style keyboard buffer for `ReadKey` / `KeyPressed` (tests via `push_readkey_input`).
-    key_input: KeyInput,
-    // -- concurrency --
-    tasks: Vec<TaskContext>,
-    current_task_id: u64,
-    next_task_id: u64,
-    channels: HashMap<u64, ChannelState>,
-    next_channel_id: u64,
-    task_results: HashMap<u64, Value>,
-    instructions_until_yield: u32,
+    shared: Arc<SharedState>,
+    /// Pool size for worker threads (0 = main-thread only until first `go`).
+    pool_size: usize,
 }
 
 impl Vm {
+    /// Create a new VM (output is captured, not streamed).
     pub fn new(chunk: Chunk) -> Self {
-        Self {
-            chunk,
-            ip: 0,
-            current_location: SourceLocation::new(1, 1),
-            stack: Vec::with_capacity(256),
-            globals: HashMap::new(),
-            call_stack: Vec::new(),
-            console: Console::new(),
-            text_input: TextInput::new(),
-            key_input: KeyInput::new(),
-            tasks: Vec::new(),
-            current_task_id: 0,
-            next_task_id: 1,
-            channels: HashMap::new(),
-            next_channel_id: 1,
-            task_results: HashMap::new(),
-            instructions_until_yield: TIMESLICE,
-        }
+        Self::build(chunk, Console::new())
     }
 
     /// Create a VM that streams output to the given writer immediately.
-    pub fn with_writer(chunk: Chunk, writer: Box<dyn Write>) -> Self {
-        Self {
+    pub fn with_writer(chunk: Chunk, writer: Box<dyn Write + Send>) -> Self {
+        Self::build(chunk, Console::with_writer(writer))
+    }
+
+    fn build(chunk: Chunk, console: Console) -> Self {
+        let pool_size = std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(1)
+            .saturating_sub(1); // main thread counts as one worker
+
+        let shared = Arc::new(SharedState {
             chunk,
-            ip: 0,
-            current_location: SourceLocation::new(1, 1),
-            stack: Vec::with_capacity(256),
-            globals: HashMap::new(),
-            call_stack: Vec::new(),
-            console: Console::with_writer(writer),
-            text_input: TextInput::new(),
-            key_input: KeyInput::new(),
-            tasks: Vec::new(),
-            current_task_id: 0,
-            next_task_id: 1,
-            channels: HashMap::new(),
-            next_channel_id: 1,
-            task_results: HashMap::new(),
-            instructions_until_yield: TIMESLICE,
-        }
+            globals: RwLock::new(HashMap::new()),
+            channels: Mutex::new(HashMap::new()),
+            next_channel_id: AtomicU64::new(1),
+            task_queue: Mutex::new(Vec::new()),
+            task_available: Condvar::new(),
+            task_results: Mutex::new(HashMap::new()),
+            next_task_id: AtomicU64::new(1),
+            console: Mutex::new(console),
+            text_input: Mutex::new(TextInput::new()),
+            key_input: Mutex::new(KeyInput::new()),
+            shutdown: AtomicBool::new(false),
+        });
+
+        Self { shared, pool_size }
     }
 
     /// Queue a line for the next line-buffered `Read` / `ReadLn` (tests).
     pub fn push_readln_input(&mut self, line: &str) {
-        self.text_input.push_line(line);
+        self.shared
+            .text_input
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .push_line(line);
     }
 
     /// Queue characters for the next `Std.Console.ReadKey` calls (tests).
     pub fn push_readkey_input(&mut self, s: &str) {
-        self.key_input.push_chars(s);
+        self.shared
+            .key_input
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .push_chars(s);
     }
 
     /// Queue a structured key for the next `Std.Console.ReadKeyEvent` (tests).
     pub fn push_key_event(&mut self, ev: ConsoleKeyEvent) {
-        self.key_input.push_key_event(ev);
+        self.shared
+            .key_input
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .push_key_event(ev);
     }
 
     /// Queue a structured console event for the next `Std.Console.ReadEvent` (tests).
     pub fn push_console_event(&mut self, ev: ConsoleEvent) {
-        self.key_input.push_console_event(ev);
+        self.shared
+            .key_input
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .push_console_event(ev);
     }
 
-    pub fn output(&self) -> &VmOutput {
-        self.console.output()
+    /// Access captured output (for test assertions).
+    pub fn output(&self) -> VmOutput {
+        self.shared
+            .console
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .output()
+            .clone()
+    }
+
+    /// Execute the loaded program.
+    ///
+    /// The main program runs on the calling thread. If `go` tasks are spawned,
+    /// a thread pool is created to execute them in parallel.
+    pub fn run(&mut self) -> Result<(), VmError> {
+        let shared = Arc::clone(&self.shared);
+        let pool_size = self.pool_size;
+
+        // Spawn pool workers in a scoped thread block.
+        std::thread::scope(|scope| {
+            // Spawn pool worker threads.
+            let mut handles = Vec::with_capacity(pool_size);
+            for _ in 0..pool_size {
+                let s = Arc::clone(&shared);
+                handles.push(scope.spawn(move || {
+                    let mut w = Worker::new_pool(s);
+                    w.pool_loop()
+                }));
+            }
+
+            // Run main program on this thread.
+            let mut main_worker = Worker::new_main(Arc::clone(&shared));
+            let main_result = main_worker.run();
+
+            // Main task done — signal pool to shut down.
+            shared.request_shutdown();
+
+            // Collect pool worker errors.
+            for handle in handles {
+                if let Err(e) = handle.join().unwrap_or(Ok(())) {
+                    if main_result.is_ok() {
+                        return Err(e);
+                    }
+                }
+            }
+
+            main_result
+        })
     }
 }

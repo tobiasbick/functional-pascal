@@ -1,26 +1,29 @@
-use super::super::super::{ChannelState, Vm, VmError, runtime_error};
+use super::super::super::diagnostics::VmError;
+use super::super::super::{SharedChannel, Worker, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_CHANNEL_CLOSED, RUNTIME_INVALID_CHANNEL, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
 };
-use std::collections::VecDeque;
+use std::sync::atomic::Ordering;
 
-impl Vm {
+impl Worker {
     pub(super) fn exec_channel_make(
         &mut self,
         capacity: usize,
         _line: SourceLocation,
     ) -> Result<(), VmError> {
-        let id = self.next_channel_id;
-        self.next_channel_id += 1;
-        self.channels.insert(
-            id,
-            ChannelState {
-                buffer: VecDeque::new(),
-                capacity,
-                closed: false,
-            },
-        );
+        let id = self.shared.alloc_channel_id();
+        let (sender, receiver) = crossbeam_channel::bounded(capacity);
+        let channel = SharedChannel {
+            sender,
+            receiver,
+            closed: std::sync::atomic::AtomicBool::new(false),
+        };
+        self.shared
+            .channels
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .insert(id, channel);
         self.push(Value::Channel(id))
     }
 
@@ -28,8 +31,21 @@ impl Vm {
         let value = self.pop(line)?;
         let channel_id = self.pop_channel_id(line)?;
 
-        let channel = self.get_channel_mut(channel_id, line)?;
-        if channel.closed {
+        let channels = self
+            .shared
+            .channels
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        let channel = channels.get(&channel_id).ok_or_else(|| {
+            runtime_error(
+                RUNTIME_INVALID_CHANNEL,
+                format!("Channel {channel_id} does not exist"),
+                "The channel may have been garbage-collected or was never created.",
+                line,
+            )
+        })?;
+
+        if channel.closed.load(Ordering::Acquire) {
             return Err(runtime_error(
                 RUNTIME_CHANNEL_CLOSED,
                 "Cannot send on a closed channel",
@@ -38,49 +54,114 @@ impl Vm {
             ));
         }
 
-        if channel.buffer.len() < channel.capacity {
-            channel.buffer.push_back(value);
-        } else {
-            self.push(Value::Channel(channel_id))?;
-            self.push(value)?;
-            self.ip -= 1;
-            self.exec_yield();
+        match channel.sender.try_send(value.clone()) {
+            Ok(()) => Ok(()),
+            Err(crossbeam_channel::TrySendError::Full(_)) => {
+                drop(channels);
+                // Buffer full — re-push args and yield for retry.
+                self.push(Value::Channel(channel_id))?;
+                self.push(value)?;
+                self.ip -= 1;
+                self.exec_yield();
+                Ok(())
+            }
+            Err(crossbeam_channel::TrySendError::Disconnected(_)) => Err(runtime_error(
+                RUNTIME_CHANNEL_CLOSED,
+                "Cannot send on a disconnected channel",
+                "The receiving end of the channel has been dropped.",
+                line,
+            )),
         }
-        Ok(())
     }
 
     pub(super) fn exec_channel_recv(&mut self, line: SourceLocation) -> Result<(), VmError> {
         let channel_id = self.pop_channel_id(line)?;
-        let channel = self.get_channel_mut(channel_id, line)?;
 
-        if let Some(value) = channel.buffer.pop_front() {
-            self.push(value)?;
-        } else if channel.closed {
-            self.push(Value::Unit)?;
-        } else {
-            self.push(Value::Channel(channel_id))?;
-            self.ip -= 1;
-            self.exec_yield();
+        let channels = self
+            .shared
+            .channels
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        let channel = channels.get(&channel_id).ok_or_else(|| {
+            runtime_error(
+                RUNTIME_INVALID_CHANNEL,
+                format!("Channel {channel_id} does not exist"),
+                "The channel may have been garbage-collected or was never created.",
+                line,
+            )
+        })?;
+
+        match channel.receiver.try_recv() {
+            Ok(value) => {
+                drop(channels);
+                self.push(value)?;
+            }
+            Err(crossbeam_channel::TryRecvError::Empty) => {
+                if channel.closed.load(Ordering::Acquire) {
+                    drop(channels);
+                    self.push(Value::Unit)?;
+                } else {
+                    drop(channels);
+                    // Channel empty — re-push and yield for retry.
+                    self.push(Value::Channel(channel_id))?;
+                    self.ip -= 1;
+                    self.exec_yield();
+                }
+            }
+            Err(crossbeam_channel::TryRecvError::Disconnected) => {
+                drop(channels);
+                self.push(Value::Unit)?;
+            }
         }
         Ok(())
     }
 
     pub(super) fn exec_channel_try_recv(&mut self, line: SourceLocation) -> Result<(), VmError> {
         let channel_id = self.pop_channel_id(line)?;
-        let channel = self.get_channel_mut(channel_id, line)?;
 
-        if let Some(value) = channel.buffer.pop_front() {
-            self.push(Value::OptionSome(Box::new(value)))?;
-        } else {
-            self.push(Value::OptionNone)?;
+        let channels = self
+            .shared
+            .channels
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        let channel = channels.get(&channel_id).ok_or_else(|| {
+            runtime_error(
+                RUNTIME_INVALID_CHANNEL,
+                format!("Channel {channel_id} does not exist"),
+                "The channel may have been garbage-collected or was never created.",
+                line,
+            )
+        })?;
+
+        match channel.receiver.try_recv() {
+            Ok(value) => {
+                drop(channels);
+                self.push(Value::OptionSome(Box::new(value)))?;
+            }
+            Err(_) => {
+                drop(channels);
+                self.push(Value::OptionNone)?;
+            }
         }
         Ok(())
     }
 
     pub(super) fn exec_channel_close(&mut self, line: SourceLocation) -> Result<(), VmError> {
         let channel_id = self.pop_channel_id(line)?;
-        let channel = self.get_channel_mut(channel_id, line)?;
-        channel.closed = true;
+        let channels = self
+            .shared
+            .channels
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        let channel = channels.get(&channel_id).ok_or_else(|| {
+            runtime_error(
+                RUNTIME_INVALID_CHANNEL,
+                format!("Channel {channel_id} does not exist"),
+                "The channel may have been garbage-collected or was never created.",
+                line,
+            )
+        })?;
+        channel.closed.store(true, Ordering::Release);
         Ok(())
     }
 
@@ -95,20 +176,5 @@ impl Vm {
                 line,
             )),
         }
-    }
-
-    fn get_channel_mut(
-        &mut self,
-        id: u64,
-        line: SourceLocation,
-    ) -> Result<&mut ChannelState, VmError> {
-        self.channels.get_mut(&id).ok_or_else(|| {
-            runtime_error(
-                RUNTIME_INVALID_CHANNEL,
-                format!("Channel {id} does not exist"),
-                "The channel may have been garbage-collected or was never created.",
-                line,
-            )
-        })
     }
 }

@@ -1,6 +1,6 @@
 # 8. Concurrency
 
-Functional Pascal provides Go-inspired concurrency with lightweight tasks, typed channels, and a `select` statement for multiplexing.
+Functional Pascal provides Go-inspired concurrency with lightweight tasks, typed channels, and a `select` statement for multiplexing. Tasks created with `go` execute in parallel across multiple OS threads automatically.
 
 ## Tasks
 
@@ -21,7 +21,7 @@ begin
 end.
 ```
 
-`go` accepts any function or procedure call. The VM schedules tasks cooperatively.
+`go` accepts any function or procedure call. The VM distributes tasks across a thread pool for true parallel execution. The pool size equals the number of available CPU cores.
 
 ### Task Type
 

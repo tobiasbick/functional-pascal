@@ -2,11 +2,12 @@
 //!
 //! **Documentation:** `docs/future/advanced-types.md`
 
-use super::super::{Vm, VmError, runtime_error};
+use super::super::diagnostics::VmError;
+use super::super::{Worker, runtime_error};
 use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
 
-impl Vm {
+impl Worker {
     pub(super) fn try_exec_enums(&mut self, op: Op, line: SourceLocation) -> Result<bool, VmError> {
         match op {
             Op::MakeEnum(type_idx, variant_idx, field_count) => {

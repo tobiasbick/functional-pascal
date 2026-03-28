@@ -8,9 +8,8 @@ use crossterm::event::{
     MouseEventKind,
 };
 use fpas_bytecode::{SourceLocation, Value};
-use std::cell::RefCell;
 use std::io::{self, Write};
-use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
 fn test_location() -> SourceLocation {
     SourceLocation::new(1, 1)
@@ -18,12 +17,12 @@ fn test_location() -> SourceLocation {
 
 #[derive(Clone)]
 struct SharedBufferWriter {
-    bytes: Rc<RefCell<Vec<u8>>>,
+    bytes: Arc<Mutex<Vec<u8>>>,
 }
 
 impl Write for SharedBufferWriter {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.bytes.borrow_mut().extend_from_slice(buf);
+        self.bytes.lock().unwrap().extend_from_slice(buf);
         Ok(buf.len())
     }
 
@@ -32,10 +31,10 @@ impl Write for SharedBufferWriter {
     }
 }
 
-fn console_with_shared_writer() -> (Console, Rc<RefCell<Vec<u8>>>) {
-    let bytes = Rc::new(RefCell::new(Vec::new()));
+fn console_with_shared_writer() -> (Console, Arc<Mutex<Vec<u8>>>) {
+    let bytes = Arc::new(Mutex::new(Vec::new()));
     let writer = SharedBufferWriter {
-        bytes: Rc::clone(&bytes),
+        bytes: Arc::clone(&bytes),
     };
     (Console::with_writer(Box::new(writer)), bytes)
 }
@@ -508,7 +507,7 @@ fn console_sound_writes_terminal_bell_when_writer_is_attached() {
 
     c.sound(440, test_location()).unwrap();
 
-    assert_eq!(&*bytes.borrow(), b"\x07");
+    assert_eq!(&*bytes.lock().unwrap(), b"\x07");
 }
 
 #[test]
@@ -535,7 +534,7 @@ fn console_session_commands_emit_control_sequences_when_writer_exists() {
     c.enable_paste(test_location()).unwrap();
     c.disable_paste(test_location()).unwrap();
 
-    assert!(!bytes.borrow().is_empty());
+    assert!(!bytes.lock().unwrap().is_empty());
 }
 
 #[test]

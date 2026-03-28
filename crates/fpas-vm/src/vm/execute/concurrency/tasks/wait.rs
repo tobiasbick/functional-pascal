@@ -1,13 +1,21 @@
-use super::super::super::super::{Vm, VmError, runtime_error};
+use super::super::super::super::diagnostics::VmError;
+use super::super::super::super::{Worker, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
-use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
+use fpas_diagnostics::codes::{RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_VM_SHUTDOWN};
 
-impl Vm {
+impl Worker {
     pub(in super::super) fn exec_task_wait(&mut self, line: SourceLocation) -> Result<(), VmError> {
         let task_id = self.pop_task_id(line)?;
 
-        if let Some(result) = self.task_results.remove(&task_id) {
+        if let Some(result) = self.shared.take_task_result(task_id) {
             self.push(result)?;
+        } else if self.shared.is_shutdown() {
+            return Err(runtime_error(
+                RUNTIME_VM_SHUTDOWN,
+                "Execution aborted: the waited task failed",
+                "A task spawned with `go` raised a runtime error. Fix the error in the spawned task.",
+                line,
+            ));
         } else {
             self.push(Value::Task(task_id))?;
             self.ip -= 1;
@@ -32,7 +40,7 @@ impl Vm {
 
         let all_done = tasks.iter().all(|value| {
             if let Value::Task(id) = value {
-                self.task_results.contains_key(id)
+                self.shared.has_task_result(*id)
             } else {
                 true
             }
@@ -43,13 +51,20 @@ impl Vm {
                 .iter()
                 .map(|value| {
                     if let Value::Task(id) = value {
-                        self.task_results.remove(id).unwrap_or(Value::Unit)
+                        self.shared.take_task_result(*id).unwrap_or(Value::Unit)
                     } else {
                         Value::Unit
                     }
                 })
                 .collect();
             self.push(Value::Array(results))?;
+        } else if self.shared.is_shutdown() {
+            return Err(runtime_error(
+                RUNTIME_VM_SHUTDOWN,
+                "Execution aborted: a waited task failed",
+                "A task spawned with `go` raised a runtime error. Fix the error in the spawned task.",
+                line,
+            ));
         } else {
             self.push(Value::Array(tasks))?;
             self.ip -= 1;
@@ -59,7 +74,7 @@ impl Vm {
     }
 }
 
-pub(super) fn pop_task_id(vm: &mut Vm, line: SourceLocation) -> Result<u64, VmError> {
+pub(super) fn pop_task_id(vm: &mut Worker, line: SourceLocation) -> Result<u64, VmError> {
     let value = vm.pop(line)?;
     match value {
         Value::Task(id) => Ok(id),

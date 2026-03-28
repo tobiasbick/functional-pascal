@@ -1,8 +1,9 @@
-use super::super::super::super::{Vm, VmError, runtime_error};
+use super::super::super::super::diagnostics::VmError;
+use super::super::super::super::{Worker, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
 
-impl Vm {
+impl Worker {
     /// `Std.Array.Map(Arr, F)` — transform each element.
     ///
     /// **Documentation:** `docs/future/closures.md`

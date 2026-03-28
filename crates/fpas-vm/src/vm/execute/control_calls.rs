@@ -1,10 +1,11 @@
-use super::super::{CallFrame, Vm, VmError, runtime_error};
+use super::super::diagnostics::VmError;
+use super::super::{CallFrame, Worker, runtime_error};
 use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_UNDEFINED_FUNCTION, RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_WRONG_CALL_ARITY,
 };
 
-impl Vm {
+impl Worker {
     pub(super) fn try_exec_control_calls(
         &mut self,
         op: Op,
@@ -64,8 +65,13 @@ impl Vm {
         argc: u8,
         line: SourceLocation,
     ) -> Result<(), VmError> {
-        let (code_start, expected_arity) =
-            self.chunk.functions.get(name).copied().ok_or_else(|| {
+        let (code_start, expected_arity) = self
+            .shared
+            .chunk
+            .functions
+            .get(name)
+            .copied()
+            .ok_or_else(|| {
                 runtime_error(
                     RUNTIME_UNDEFINED_FUNCTION,
                     format!("Undefined function `{name}`"),

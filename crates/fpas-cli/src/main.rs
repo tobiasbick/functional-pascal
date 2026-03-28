@@ -34,7 +34,7 @@ fn main() {
         }
     };
 
-    let stdout = Box::new(std::io::stdout().lock());
+    let stdout: Box<dyn std::io::Write + Send> = Box::new(std::io::stdout());
     let mut stderr = std::io::stderr().lock();
     let exit_code = run_cli(&args, &cwd, stdout, &mut stderr);
     if exit_code != 0 {

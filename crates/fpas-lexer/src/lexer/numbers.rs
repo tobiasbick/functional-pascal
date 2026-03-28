@@ -16,7 +16,9 @@ impl Lexer<'_> {
         {
             self.advance();
             let frac_part = self.consume_decimal_digits();
-            let Ok(exp_part) = self.maybe_scan_exponent() else { return };
+            let Ok(exp_part) = self.maybe_scan_exponent() else {
+                return;
+            };
 
             let text = format!("{int_part}.{frac_part}{exp_part}");
             match text.parse::<f64>() {

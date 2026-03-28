@@ -3,10 +3,11 @@ mod comparisons;
 mod int_ops;
 mod real_ops;
 
-use super::super::{Vm, VmError};
+use super::super::Worker;
+use super::super::diagnostics::VmError;
 use fpas_bytecode::{Op, SourceLocation};
 
-impl Vm {
+impl Worker {
     pub(super) fn try_exec_numeric(
         &mut self,
         op: Op,

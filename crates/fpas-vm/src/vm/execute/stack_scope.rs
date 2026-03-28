@@ -1,8 +1,9 @@
-use super::super::{Vm, VmError, internal_error, runtime_error};
+use super::super::diagnostics::VmError;
+use super::super::{Worker, internal_error, runtime_error};
 use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_UNDEFINED_GLOBAL;
 
-impl Vm {
+impl Worker {
     pub(super) fn try_exec_stack_scope(
         &mut self,
         op: Op,
@@ -10,7 +11,7 @@ impl Vm {
     ) -> Result<bool, VmError> {
         match op {
             Op::Constant(idx) => {
-                let val = self.chunk.constants[idx as usize].clone();
+                let val = self.shared.chunk.constants[idx as usize].clone();
                 self.push(val)?;
                 Ok(true)
             }
@@ -41,21 +42,32 @@ impl Vm {
             }
             Op::GetGlobal(idx) => {
                 let name = self.const_str(idx, line)?;
-                let val = self.globals.get(&name).cloned().ok_or_else(|| {
-                    runtime_error(
-                        RUNTIME_UNDEFINED_GLOBAL,
-                        format!("Undefined global variable `{name}`"),
-                        "Declare the global variable before reading it, or fix the variable name.",
-                        line,
-                    )
-                })?;
+                let val = self
+                    .shared
+                    .globals
+                    .read()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .get(&name)
+                    .cloned()
+                    .ok_or_else(|| {
+                        runtime_error(
+                            RUNTIME_UNDEFINED_GLOBAL,
+                            format!("Undefined global variable `{name}`"),
+                            "Declare the global variable before reading it, or fix the variable name.",
+                            line,
+                        )
+                    })?;
                 self.push(val)?;
                 Ok(true)
             }
             Op::SetGlobal(idx) => {
                 let name = self.const_str(idx, line)?;
                 let val = self.peek(line)?.clone();
-                self.globals.insert(name, val);
+                self.shared
+                    .globals
+                    .write()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .insert(name, val);
                 Ok(true)
             }
             Op::GetEnclosing(depth, slot) => {

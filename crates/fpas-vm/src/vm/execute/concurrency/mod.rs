@@ -1,14 +1,15 @@
 //! Cooperative concurrency: task spawning, yielding, channels, and scheduling.
 //!
-//! **Documentation:** `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/pascal/08-concurrency.md`, `docs/future/parallel-vm.md`
 
 mod channels;
 mod tasks;
 
-use super::super::{Vm, VmError};
+use super::super::Worker;
+use super::super::diagnostics::VmError;
 use fpas_bytecode::{Intrinsic, Op, SourceLocation};
 
-impl Vm {
+impl Worker {
     /// Handle concurrency opcodes: `SpawnTask`, `Yield`.
     pub(super) fn try_exec_concurrency(
         &mut self,

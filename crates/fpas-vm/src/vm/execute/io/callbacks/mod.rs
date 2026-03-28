@@ -1,11 +1,12 @@
-use super::super::super::{Vm, VmError};
+use super::super::super::Worker;
+use super::super::super::diagnostics::VmError;
 use fpas_bytecode::{Intrinsic, SourceLocation};
 
 mod array_ops;
 mod result_option_ops;
 mod sync_call;
 
-impl Vm {
+impl Worker {
     pub(super) fn try_exec_array_callback_intrinsic(
         &mut self,
         intrinsic: Intrinsic,

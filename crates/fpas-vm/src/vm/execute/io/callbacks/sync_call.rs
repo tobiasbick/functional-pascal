@@ -1,11 +1,12 @@
-use super::super::super::super::{CallFrame, Vm, VmError, internal_error, runtime_error};
+use super::super::super::super::diagnostics::VmError;
+use super::super::super::super::{CallFrame, Worker, internal_error, runtime_error};
 use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_PROGRAM_PANIC, RUNTIME_UNDEFINED_FUNCTION, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
     RUNTIME_WRONG_CALL_ARITY,
 };
 
-impl Vm {
+impl Worker {
     /// Call a function value synchronously and return its result.
     ///
     /// Uses the existing run loop by pushing a call frame and stepping
@@ -28,8 +29,13 @@ impl Vm {
             }
         };
 
-        let (code_start, expected_arity) =
-            self.chunk.functions.get(&name).copied().ok_or_else(|| {
+        let (code_start, expected_arity) = self
+            .shared
+            .chunk
+            .functions
+            .get(&name)
+            .copied()
+            .ok_or_else(|| {
                 runtime_error(
                     RUNTIME_UNDEFINED_FUNCTION,
                     format!("Undefined function `{name}`"),
@@ -67,7 +73,7 @@ impl Vm {
         self.ip = code_start;
 
         while self.call_stack.len() > saved_depth {
-            if self.ip >= self.chunk.code.len() {
+            if self.ip >= self.shared.chunk.code.len() {
                 return Err(internal_error(
                     "IP ran past end of code during synchronous function call",
                     "This indicates a compiler/runtime bug.",
@@ -75,8 +81,8 @@ impl Vm {
                 ));
             }
 
-            let op = self.chunk.code[self.ip];
-            let location = self.chunk.location_at(self.ip).unwrap_or(line);
+            let op = self.shared.chunk.code[self.ip];
+            let location = self.shared.chunk.location_at(self.ip).unwrap_or(line);
             self.current_location = location;
             self.ip += 1;
 

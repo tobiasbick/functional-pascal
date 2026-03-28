@@ -1,7 +1,8 @@
-use super::super::super::{Vm, VmError};
+use super::super::super::Worker;
+use super::super::super::diagnostics::VmError;
 use fpas_bytecode::{Op, SourceLocation, Value};
 
-impl Vm {
+impl Worker {
     pub(super) fn try_exec_real_ops(
         &mut self,
         op: Op,

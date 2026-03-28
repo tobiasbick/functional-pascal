@@ -1,58 +1,58 @@
-# Parallel VM Execution
+# Parallel VM Execution — Implemented
 
-Automatic multi-core execution for `go` tasks — no language changes required.
+The VM uses true multi-threaded parallel execution for `go` tasks. No language changes were required.
 
-## Current State
+## Architecture
 
-The VM uses **cooperative scheduling** on a single OS thread. Tasks created with `go` run in round-robin with a 256-instruction timeslice. Concurrency is real (channels, select, wait all work), but there is no parallelism.
+### Worker / SharedState Split
 
-## Goal
+The monolithic `Vm` struct is split into two concerns:
 
-The VM decides autonomously how many OS threads to use. User code stays identical — `go Worker()` means "this can run concurrently", the VM decides *how*.
-
-## Design
+- **`Worker`** — per-thread execution state: instruction pointer, stack, call stack, current task ID, timeslice counter. Each OS thread owns exactly one `Worker`.
+- **`SharedState`** — `Arc`-wrapped resources shared across all workers: bytecode chunk, globals (`RwLock`), channels (`Mutex<HashMap>`), task queue (`Mutex<Vec>` + `Condvar`), task results (`Mutex<HashMap>`), console/input (`Mutex`), atomic counters for IDs, and an `AtomicBool` shutdown flag.
 
 ### Thread Pool
 
-- One worker thread per CPU core (configurable, like Go's `GOMAXPROCS`)
-- Global task queue with work-stealing: idle workers take tasks from busy workers
-- Main thread runs the program entry point; `go` pushes tasks to the global queue
+- Pool size = `available_parallelism() - 1` (main thread counts as one worker).
+- Uses `std::thread::scope` — all workers share the `Arc<SharedState>`.
+- Pool workers run `pool_loop()`: dequeue tasks, execute them, store results, wait on `Condvar` when idle.
+- Main worker executes task 0 (the program entry point) directly.
 
-### Value Ownership
+### Task Lifecycle
 
-Current `Value` types use shared references. For multi-threaded execution:
+1. `go Function(args)` creates a `TaskState` (id, ip, stack snapshot, call stack) and enqueues it via `SharedState::enqueue_task()`.
+2. Any idle worker dequeues the task, loads it with `Worker::load_task()`, and executes until completion or yield.
+3. On completion, the result is stored via `SharedState::store_task_result()` and all workers are notified.
+4. `Wait(T)` checks `SharedState::take_task_result()`; if not ready, the task yields and retries.
 
-- **Deep-copy on channel send** — values crossing thread boundaries must be independent
-- **Move semantics for `go` arguments** — task arguments are copied into the new task's stack frame
-- Immutable-by-default makes this safe: most values are never mutated after creation
+### Channels
 
-### Thread-Safe Channels
+Channels use `crossbeam-channel::bounded()` for lock-free MPMC communication:
 
-Replace `VecDeque`-based channel buffer with a concurrent queue:
+- `Send` uses `try_send()` — if the buffer is full, the task yields and retries (no spin-wait).
+- `Receive` uses `try_recv()` — if empty, the task yields and retries.
+- `Close` sets an `AtomicBool` flag on the channel; subsequent sends error, receives drain remaining values.
+- Channel metadata (sender, receiver, closed flag) is stored in a `Mutex<HashMap<u64, SharedChannel>>`.
 
-- `crossbeam-channel` or similar lock-free MPMC queue
-- Send/receive operations must not require the VM's global lock
-- Blocking operations yield the current task back to the thread pool, not spin-wait
+### Scheduling
 
-### Task Scheduling
+- Each worker has a 256-instruction timeslice (`TIMESLICE` constant).
+- On timeslice expiry or explicit yield, the current task is saved and enqueued; the worker picks the next task from the shared queue.
+- If no tasks are queued, the worker continues the current task (no-op yield).
+- Pool workers that have no task wait on a `Condvar` until a new task is enqueued or shutdown is signalled.
 
-| Scenario | Behavior |
-|----------|----------|
-| Few short tasks | Run on single thread (no overhead) |
-| Many independent tasks | Distribute across all cores |
-| Task blocked on channel | Yield to pool, resume when data arrives |
-| `Std.Task.Wait(T)` | If T is on same thread, inline-execute; otherwise block and steal work |
+### Globals
 
-### Migration Path
+- Global variables use `RwLock<HashMap<String, Value>>` — reads are concurrent, writes are exclusive.
+- `GetGlobal` acquires a read lock; `SetGlobal` / `DefineGlobal` acquire a write lock.
 
-1. Make `Value` either `Clone` or `Arc`-wrapped for cross-thread sharing
-2. Replace channel internals with `crossbeam-channel`
-3. Add a thread pool (e.g., `rayon` or custom work-stealing pool)
-4. Distribute `go`-spawned tasks across pool workers
-5. Keep single-threaded mode as fallback (pool size = 1)
+### Console / I/O
+
+- `Console`, `TextInput`, and `KeyInput` are each wrapped in their own `Mutex`.
+- I/O operations lock only the specific mutex they need, avoiding contention between unrelated operations.
 
 ## Non-Goals
 
-- Shared mutable state between tasks (no mutexes, no locks in the language)
-- Explicit thread control from user code
-- Async I/O — the VM handles I/O scheduling internally
+- Shared mutable state between tasks (no mutexes or locks in the language).
+- Explicit thread control from user code.
+- Async I/O — the VM handles I/O scheduling internally.

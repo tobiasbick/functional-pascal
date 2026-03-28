@@ -1,8 +1,9 @@
-use super::super::super::{Vm, VmError, runtime_error};
+use super::super::super::diagnostics::VmError;
+use super::super::super::{Worker, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::{RUNTIME_POP_FROM_EMPTY_ARRAY, RUNTIME_VM_OPERAND_TYPE_MISMATCH};
 
-impl Vm {
+impl Worker {
     pub(super) fn exec_array_push_local(
         &mut self,
         depth: u16,

@@ -8,7 +8,7 @@ Delphi and FreePascal support compiler directives inside comments using the `$` 
 
 ```pascal
 {$IFDEF DEBUG}
-  Std.Console.WriteLn('Debug mode');
+  WriteLn('Debug mode');
 {$ENDIF}
 
 {$I config.inc}        { include file }

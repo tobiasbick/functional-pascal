@@ -6,11 +6,11 @@ The `case of` statement matches a value against constants, ranges, or enum varia
 
 ```pascal
 case Value of
-  1: Std.Console.WriteLn('one');
-  2: Std.Console.WriteLn('two');
-  3: Std.Console.WriteLn('three');
+  1: WriteLn('one');
+  2: WriteLn('two');
+  3: WriteLn('three');
 else
-  Std.Console.WriteLn('other');
+  WriteLn('other');
 end;
 ```
 
@@ -20,12 +20,12 @@ Separate multiple values with commas:
 
 ```pascal
 case Day of
-  'Monday':    Std.Console.WriteLn('Start of week');
-  'Friday':    Std.Console.WriteLn('Almost weekend');
+  'Monday':    WriteLn('Start of week');
+  'Friday':    WriteLn('Almost weekend');
   'Saturday',
-  'Sunday':    Std.Console.WriteLn('Weekend');
+  'Sunday':    WriteLn('Weekend');
 else
-  Std.Console.WriteLn('Midweek');
+  WriteLn('Midweek');
 end;
 ```
 
@@ -73,9 +73,9 @@ Use `else` to handle all remaining cases:
 
 ```pascal
 case L of
-  Light.Red:  Std.Console.WriteLn('Stop');
+  Light.Red:  WriteLn('Stop');
 else
-  Std.Console.WriteLn('Proceed with caution');
+  WriteLn('Proceed with caution');
 end;
 ```
 
@@ -87,13 +87,13 @@ Use `begin..end` when a case arm needs multiple statements:
 case Command of
   'help':
     begin
-      Std.Console.WriteLn('Available commands:');
-      Std.Console.WriteLn('  help, quit, run');
+      WriteLn('Available commands:');
+      WriteLn('  help, quit, run');
     end;
   'quit':
-    Std.Console.WriteLn('Goodbye');
+    WriteLn('Goodbye');
 else
-  Std.Console.WriteLn('Unknown command');
+  WriteLn('Unknown command');
 end;
 ```
 
@@ -120,15 +120,15 @@ Guards work with all label types — values, ranges, destructuring, and enum pat
 ```pascal
 case S of
   Shape.Circle(R) if R > 10.0:
-    Std.Console.WriteLn('Large circle');
+    WriteLn('Large circle');
   Shape.Circle(R):
-    Std.Console.WriteLn('Small circle');
+    WriteLn('Small circle');
   Shape.Rectangle(W, H) if W = H:
-    Std.Console.WriteLn('Square');
+    WriteLn('Square');
   Shape.Rectangle(W, H):
-    Std.Console.WriteLn('Rectangle');
+    WriteLn('Rectangle');
   Shape.Point:
-    Std.Console.WriteLn('Point');
+    WriteLn('Point');
 end;
 ```
 
@@ -148,11 +148,11 @@ type
 
 case E of
   Expr.Add(Expr.Num(A), Expr.Num(B)):
-    Std.Console.WriteLn('Simple addition: ' + Std.Conv.IntToStr(A) + ' + ' + Std.Conv.IntToStr(B));
+    WriteLn('Simple addition: ' + IntToStr(A) + ' + ' + IntToStr(B));
   Expr.Mul(Expr.Num(0), _):
-    Std.Console.WriteLn('Multiply by zero');
+    WriteLn('Multiply by zero');
 else
-  Std.Console.WriteLn('Complex expression');
+  WriteLn('Complex expression');
 end;
 ```
 
@@ -163,11 +163,11 @@ Use `_` to match any value without binding it:
 ```pascal
 case E of
   Expr.Mul(Expr.Num(0), _):
-    Std.Console.WriteLn('Multiply by zero');
+    WriteLn('Multiply by zero');
   Expr.Mul(_, Expr.Num(0)):
-    Std.Console.WriteLn('Multiply by zero');
+    WriteLn('Multiply by zero');
 else
-  Std.Console.WriteLn('Other');
+  WriteLn('Other');
 end;
 ```
 
@@ -178,11 +178,11 @@ Guard clauses have access to all bindings from nested patterns:
 ```pascal
 case E of
   Expr.Add(Expr.Num(A), Expr.Num(B)) if A + B > 100:
-    Std.Console.WriteLn('Large sum');
+    WriteLn('Large sum');
   Expr.Add(Expr.Num(A), Expr.Num(B)):
-    Std.Console.WriteLn('Small sum');
+    WriteLn('Small sum');
 else
-  Std.Console.WriteLn('Not a simple addition');
+  WriteLn('Not a simple addition');
 end;
 ```
 
@@ -203,11 +203,11 @@ type
 
 case V of
   Outer.Wrap(Inner.A(X)):
-    Std.Console.WriteLn('A: ' + Std.Conv.IntToStr(X));
+    WriteLn('A: ' + IntToStr(X));
   Outer.Wrap(Inner.B):
-    Std.Console.WriteLn('B');
+    WriteLn('B');
   Outer.Empty:
-    Std.Console.WriteLn('Empty');
+    WriteLn('Empty');
 end;
 ```
 
@@ -227,8 +227,8 @@ type
 
 { ERROR: non-exhaustive match — missing Light.Yellow }
 case L of
-  Light.Red:   Std.Console.WriteLn('Stop');
-  Light.Green: Std.Console.WriteLn('Go');
+  Light.Red:   WriteLn('Stop');
+  Light.Green: WriteLn('Go');
 end;
 ```
 
@@ -236,9 +236,9 @@ Fix by covering all variants:
 
 ```pascal
 case L of
-  Light.Red:    Std.Console.WriteLn('Stop');
-  Light.Yellow: Std.Console.WriteLn('Caution');
-  Light.Green:  Std.Console.WriteLn('Go');
+  Light.Red:    WriteLn('Stop');
+  Light.Yellow: WriteLn('Caution');
+  Light.Green:  WriteLn('Go');
 end;
 ```
 
@@ -246,9 +246,9 @@ Or by adding `else`:
 
 ```pascal
 case L of
-  Light.Red: Std.Console.WriteLn('Stop');
+  Light.Red: WriteLn('Stop');
 else
-  Std.Console.WriteLn('Proceed with caution');
+  WriteLn('Proceed with caution');
 end;
 ```
 
@@ -259,13 +259,13 @@ end;
 ```pascal
 { ERROR: non-exhaustive — missing Error }
 case R of
-  Ok(V): Std.Console.WriteLn(Std.Conv.IntToStr(V));
+  Ok(V): WriteLn(IntToStr(V));
 end;
 
 { OK: both variants covered }
 case R of
-  Ok(V):  Std.Console.WriteLn(Std.Conv.IntToStr(V));
-  Error(E): Std.Console.WriteLn('Error: ' + E);
+  Ok(V):  WriteLn(IntToStr(V));
+  Error(E): WriteLn('Error: ' + E);
 end;
 ```
 

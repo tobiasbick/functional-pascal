@@ -20,7 +20,7 @@ type
 
     procedure Print(Self: Point);
     begin
-      Std.Console.WriteLn('(' + Std.Conv.IntToStr(Self.X) + ', ' + Std.Conv.IntToStr(Self.Y) + ')')
+      WriteLn('(' + IntToStr(Self.X) + ', ' + IntToStr(Self.Y) + ')')
     end;
   end;
 
@@ -31,9 +31,9 @@ begin
   A.Print();
   B.Print();
 
-  Std.Console.WriteLn('Sum of A: ' + Std.Conv.IntToStr(A.Sum()));
+  WriteLn('Sum of A: ' + IntToStr(A.Sum()));
 
   var C: Point := A.Add(B);
-  Std.Console.WriteLn('A + B =');
+  WriteLn('A + B =');
   C.Print()
 end.

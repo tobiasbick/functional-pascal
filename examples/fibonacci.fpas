@@ -10,7 +10,7 @@ begin
 end;
 
 begin
-  Std.Console.WriteLn('Fibonacci sequence:');
+  WriteLn('Fibonacci sequence:');
   for I: integer := 0 to 9 do
-    Std.Console.WriteLn(Fib(I))
+    WriteLn(Fib(I))
 end.

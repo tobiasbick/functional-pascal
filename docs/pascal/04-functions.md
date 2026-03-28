@@ -20,7 +20,7 @@ A procedure performs an action but returns no value:
 ```pascal
 procedure SayHello(Name: string);
 begin
-  Std.Console.WriteLn('Hello, ' + Name + '!');
+  WriteLn('Hello, ' + Name + '!');
 end;
 ```
 
@@ -71,7 +71,7 @@ end;
 
 begin
   var R: integer := Apply(Double, 5);  { 10 }
-  Std.Console.WriteLn(R);
+  WriteLn(R);
 end.
 ```
 
@@ -88,7 +88,7 @@ function Hypotenuse(A: real; B: real): real;
   end;
 
 begin
-  return Std.Math.Sqrt(Square(A) + Square(B));
+  return Sqrt(Square(A) + Square(B));
 end;
 ```
 
@@ -193,7 +193,7 @@ See [Types — Generics](05-types.md#generics) for generic records, enums, and t
 ```pascal
 function IndexOf(Items: array of string; Target: string): integer;
 begin
-  for I: integer := 0 to Std.Array.Length(Items) - 1 do
+  for I: integer := 0 to Length(Items) - 1 do
   begin
     if Items[I] = Target then
       return I;

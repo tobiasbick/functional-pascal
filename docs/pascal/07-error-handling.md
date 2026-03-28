@@ -30,8 +30,8 @@ Use `case of` with destructuring to handle both branches:
 ```pascal
 var R: Result of integer, string := Divide(10, 0);
 case R of
-  Ok(V):  Std.Console.WriteLn('Value: ' + Std.Conv.IntToStr(V));
-  Error(E): Std.Console.WriteLn('Error: ' + E);
+  Ok(V):  WriteLn('Value: ' + IntToStr(V));
+  Error(E): WriteLn('Error: ' + E);
 end;
 ```
 
@@ -51,7 +51,7 @@ var N: Option of integer := None;
 ```pascal
 function FindIndex(Items: array of integer; Target: integer): Option of integer;
 begin
-  for I: integer := 0 to Std.Array.Length(Items) - 1 do
+  for I: integer := 0 to Length(Items) - 1 do
     if Items[I] = Target then
       return Some(I);
   return None
@@ -63,8 +63,8 @@ end;
 ```pascal
 var Idx: Option of integer := FindIndex([10, 20, 30], 20);
 case Idx of
-  Some(I): Std.Console.WriteLn('Found at ' + Std.Conv.IntToStr(I));
-  None:    Std.Console.WriteLn('Not found');
+  Some(I): WriteLn('Found at ' + IntToStr(I));
+  None:    WriteLn('Not found');
 end;
 ```
 
@@ -76,7 +76,7 @@ end;
 function Process(A: integer; B: integer): Result of string, string;
 begin
   var Quotient: integer := try Divide(A, B);
-  return Ok(Std.Conv.IntToStr(Quotient))
+  return Ok(IntToStr(Quotient))
 end;
 ```
 

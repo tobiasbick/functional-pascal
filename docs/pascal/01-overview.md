@@ -11,7 +11,7 @@ uses
   Std.Console;
 
 begin
-  Std.Console.WriteLn('Hello, World!');
+  WriteLn('Hello, World!');
 end.
 ```
 
@@ -35,12 +35,12 @@ uses
 
 function Greet(Name: string): string;
 begin
-  return Std.Str.Concat('Hello, ', Name, '!');
+  return Concat('Hello, ', Name, '!');
 end;
 
 begin
   var Message: string := Greet('Pascal');
-  Std.Console.WriteLn(Message);
+  WriteLn(Message);
 end.
 ```
 
@@ -70,7 +70,7 @@ end;
 
 { main block }
 begin
-  Std.Console.WriteLn(Add(3, 4));
+  WriteLn(Add(3, 4));
 end.
 ```
 

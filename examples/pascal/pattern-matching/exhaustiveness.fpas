@@ -1,5 +1,5 @@
 program ExhaustivenessExample;
-uses Std.Console, Std.Conv;
+uses Std.Console, Std.Conv, Std.Array;
 
 { The compiler checks that case statements on enum, Result, and Option }
 { types cover all variants. A missing variant is a compile-time error  }
@@ -24,7 +24,7 @@ end;
 
 function SafeLookup(Items: array of integer; Target: integer): Option of integer;
 begin
-  for I: integer := 0 to Std.Array.Length(Items) - 1 do
+  for I: integer := 0 to Length(Items) - 1 do
     if Items[I] = Target then
       return Some(I);
   return None

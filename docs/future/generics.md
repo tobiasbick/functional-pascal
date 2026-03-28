@@ -38,7 +38,7 @@ end;
 begin
   var L: List of integer := List.Nil;
   var L2: List of integer := Prepend(Prepend(L, 1), 2);
-  Std.Console.WriteLn(ListLength(L2));  { 2 }
+  WriteLn(ListLength(L2));  { 2 }
 end.
 ```
 
@@ -65,7 +65,7 @@ end;
 begin
   var P: Pair of integer, string := record First := 42; Second := 'hello' end;
   var Q: Pair of string, string := MapFirst(P,
-    function(X: integer): string begin return Std.Conv.IntToStr(X) end);
-  Std.Console.WriteLn(Q.First);  { '42' }
+    function(X: integer): string begin return IntToStr(X) end);
+  WriteLn(Q.First);  { '42' }
 end.
 ```

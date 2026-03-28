@@ -19,7 +19,7 @@ type
 
     procedure Show(Self: Counter);
     begin
-      Std.Console.WriteLn('Counter: ' + Std.Conv.IntToStr(Self.Value))
+      WriteLn('Counter: ' + IntToStr(Self.Value))
     end;
   end;
 

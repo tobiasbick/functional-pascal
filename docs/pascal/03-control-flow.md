@@ -4,11 +4,11 @@
 
 ```pascal
 if X > 0 then
-  Std.Console.WriteLn('positive')
+  WriteLn('positive')
 else if X = 0 then
-  Std.Console.WriteLn('zero')
+  WriteLn('zero')
 else
-  Std.Console.WriteLn('negative');
+  WriteLn('negative');
 ```
 
 With blocks:
@@ -16,12 +16,12 @@ With blocks:
 ```pascal
 if X > 10 then
 begin
-  Std.Console.WriteLn('large');
+  WriteLn('large');
   mutable X := X - 10;
 end
 else
 begin
-  Std.Console.WriteLn('small');
+  WriteLn('small');
 end;
 ```
 
@@ -31,12 +31,12 @@ The enhanced `case` statement supports matching on integers, chars, strings, boo
 
 ```pascal
 case Day of
-  'Monday':    Std.Console.WriteLn('Start of week');
-  'Friday':    Std.Console.WriteLn('Almost weekend');
+  'Monday':    WriteLn('Start of week');
+  'Friday':    WriteLn('Almost weekend');
   'Saturday',
-  'Sunday':    Std.Console.WriteLn('Weekend');
+  'Sunday':    WriteLn('Weekend');
 else
-  Std.Console.WriteLn('Midweek');
+  WriteLn('Midweek');
 end;
 ```
 
@@ -59,7 +59,7 @@ end;
 ```pascal
 for I: integer := 1 to 10 do
 begin
-  Std.Console.WriteLn(I);
+  WriteLn(I);
 end;
 ```
 
@@ -68,7 +68,7 @@ end;
 ```pascal
 for I: integer := 10 downto 1 do
 begin
-  Std.Console.WriteLn(I);
+  WriteLn(I);
 end;
 ```
 
@@ -81,7 +81,7 @@ var
   Names: array of string := ['Alice', 'Bob', 'Charlie'];
 
 for Name: string in Names do
-  Std.Console.WriteLn(Name);
+  WriteLn(Name);
 ```
 
 The element type must match the array's element type:
@@ -91,7 +91,7 @@ var
   Scores: array of integer := [10, 20, 30];
 
 for S: integer in Scores do
-  Std.Console.WriteLn(S);
+  WriteLn(S);
 ```
 
 ## While Loop
@@ -102,7 +102,7 @@ mutable var
 
 while Count < 10 do
 begin
-  Std.Console.WriteLn(Count);
+  WriteLn(Count);
   Count := Count + 1;
 end;
 ```
@@ -116,7 +116,7 @@ mutable var
   Input: string := '';
 
 repeat
-  Input := Std.Console.ReadLn();
+  Input := ReadLn();
 until Input = 'quit';
 ```
 
@@ -131,6 +131,6 @@ begin
   if I > 50 then
     break;
 
-  Std.Console.WriteLn(I);
+  WriteLn(I);
 end;
 ```

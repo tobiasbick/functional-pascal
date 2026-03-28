@@ -16,7 +16,7 @@ end;
 
 begin
   var T: task := go Worker();
-  var R: integer := Std.Task.Wait(T);
+  var R: integer := Wait(T);
   WriteLn(R)
 end.
 ```
@@ -40,20 +40,20 @@ Channels are typed conduits for communication between tasks. Import `Std.Channel
 ```pascal
 uses Std.Channel;
 
-var Ch: channel of integer := Std.Channel.Make();
+var Ch: channel of integer := Make();
 ```
 
 Create a buffered channel with a specific capacity:
 
 ```pascal
-var Ch: channel of string := Std.Channel.MakeBuffered(10);
+var Ch: channel of string := MakeBuffered(10);
 ```
 
 ### Sending and Receiving
 
 ```pascal
-Std.Channel.Send(Ch, 42);
-var Value: integer := Std.Channel.Receive(Ch);
+Send(Ch, 42);
+var Value: integer := Receive(Ch);
 ```
 
 `Send` blocks when the buffer is full. `Receive` blocks until a value is available.
@@ -65,7 +65,7 @@ var Value: integer := Std.Channel.Receive(Ch);
 ```pascal
 uses Std.Channel, Std.Option;
 
-var V: Option of integer := Std.Channel.TryReceive(Ch);
+var V: Option of integer := TryReceive(Ch);
 if IsNone(V) then
   WriteLn('no value yet')
 ```
@@ -73,7 +73,7 @@ if IsNone(V) then
 ### Closing Channels
 
 ```pascal
-Std.Channel.Close(Ch);
+Close(Ch);
 ```
 
 After closing, pending values can still be received. Sending to a closed channel causes a runtime error.
@@ -86,13 +86,13 @@ uses Std.Console, Std.Channel, Std.Task;
 
 procedure Producer(Ch: channel of integer);
 begin
-  Std.Channel.Send(Ch, 99)
+  Send(Ch, 99)
 end;
 
 begin
-  var Ch: channel of integer := Std.Channel.Make();
+  var Ch: channel of integer := Make();
   go Producer(Ch);
-  WriteLn(Std.Channel.Receive(Ch))
+  WriteLn(Receive(Ch))
 end.
 ```
 
@@ -105,7 +105,7 @@ select
   case Msg: string from Ch1:
     WriteLn('Got message: ' + Msg);
   case Num: integer from Ch2:
-    WriteLn('Got number: ' + Std.Conv.IntToStr(Num));
+    WriteLn('Got number: ' + IntToStr(Num));
 end
 ```
 
@@ -132,7 +132,7 @@ end
 
 ```pascal
 var T: task := go Compute(100);
-var Result: integer := Std.Task.Wait(T);
+var Result: integer := Wait(T);
 ```
 
 ### Waiting for Multiple Tasks
@@ -140,7 +140,7 @@ var Result: integer := Std.Task.Wait(T);
 `Std.Task.WaitAll` blocks until all tasks in the array complete:
 
 ```pascal
-Std.Task.WaitAll([T1, T2, T3]);
+WaitAll([T1, T2, T3]);
 ```
 
 ## Standard Library

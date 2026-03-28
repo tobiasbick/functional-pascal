@@ -5,20 +5,20 @@ begin
   var Scores: array of integer := [12, 45, 3, 67, 29, 88, 51, 7, 93, 34];
 
   { Print only scores above 10, stop when we hit one above 90 }
-  Std.Console.WriteLn('Filtered scores:');
-  for I: integer := 0 to Std.Array.Length(Scores) - 1 do
+  WriteLn('Filtered scores:');
+  for I: integer := 0 to Length(Scores) - 1 do
   begin
     var S: integer := Scores[I];
 
     if S > 90 then
     begin
-      Std.Console.WriteLn('Stopping — score above 90 found');
+      WriteLn('Stopping — score above 90 found');
       break
     end;
 
     if S <= 10 then
       continue;
 
-    Std.Console.WriteLn(S)
+    WriteLn(S)
   end
 end.

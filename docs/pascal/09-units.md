@@ -8,6 +8,7 @@ A unit file starts with a `unit` declaration followed by declarations (functions
 
 ```pascal
 unit MyApp.Utils;
+uses Std.Str;
 
 function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
@@ -21,7 +22,7 @@ end;
 
 function IsBlank(S: string): boolean;
 begin
-  return Std.Str.Length(Std.Str.Trim(S)) = 0
+  return Length(Trim(S)) = 0
 end;
 ```
 
@@ -41,8 +42,8 @@ uses
   Std.Console;
 
 begin
-  var Clamped: integer := MyApp.Utils.Clamp(150, 0, 100);
-  Std.Console.WriteLn(Clamped);  { 100 }
+  var Clamped: integer := Clamp(150, 0, 100);
+  WriteLn(Clamped);  { 100 }
 end.
 ```
 
@@ -97,7 +98,7 @@ type
 
 function Distance(A: Point; B: Point): real;
 begin
-  return Std.Math.Sqrt(Square(B.X - A.X) + Square(B.Y - A.Y))
+  return Sqrt(Square(B.X - A.X) + Square(B.Y - A.Y))
 end;
 
 private function Square(V: real): real;

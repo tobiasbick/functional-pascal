@@ -113,7 +113,7 @@ end.
 ```pascal
 function FindFirst(Items: array of integer; Min: integer): Option of integer;
 begin
-  for I: integer := 0 to Std.Array.Length(Items) - 1 do
+  for I: integer := 0 to Length(Items) - 1 do
     if Items[I] >= Min then
       return Some(Items[I]);
   return None

@@ -97,7 +97,7 @@ begin
 end;
 
 { Higher-order: Map/Filter/Reduce }
-var Doubled := Std.Array.Map([1, 2, 3],
+var Doubled := Map([1, 2, 3],
   function(X: integer): integer begin return X * 2 end);
 ```
 
@@ -156,7 +156,7 @@ type
     begin
       var DX: real := Other.X - Self.X;
       var DY: real := Other.Y - Self.Y;
-      return Std.Math.Sqrt(DX * DX + DY * DY)
+      return Sqrt(DX * DX + DY * DY)
     end;
   end;
 
@@ -192,8 +192,8 @@ Destructure with `case` — bindings are positional:
 
 ```pascal
 case S of
-  Shape.Circle(R): WriteLn('radius ' + Std.Conv.RealToStr(R));
-  Shape.Rectangle(W, H): WriteLn(Std.Conv.RealToStr(W) + 'x' + Std.Conv.RealToStr(H));
+  Shape.Circle(R): WriteLn('radius ' + RealToStr(R));
+  Shape.Rectangle(W, H): WriteLn(RealToStr(W) + 'x' + RealToStr(H));
   Shape.Point: WriteLn('point')
 end;
 ```
@@ -329,7 +329,7 @@ Handle with `case` destructuring:
 
 ```pascal
 case R of
-  Ok(V):    WriteLn(Std.Conv.IntToStr(V));
+  Ok(V):    WriteLn(IntToStr(V));
   Error(E): WriteLn('Error: ' + E)
 end;
 ```
@@ -342,7 +342,7 @@ end;
 function Process(A: integer; B: integer): Result of string, string;
 begin
   var Q: integer := try Divide(A, B);
-  return Ok(Std.Conv.IntToStr(Q))
+  return Ok(IntToStr(Q))
 end;
 ```
 
@@ -363,14 +363,14 @@ Go-inspired concurrency with lightweight tasks, typed channels, and `select`.
 ```pascal
 uses Std.Console, Std.Channel, Std.Task;
 
-var Ch: channel of integer := Std.Channel.Make();
+var Ch: channel of integer := Make();
 go Producer(Ch);
-var V: integer := Std.Channel.Receive(Ch);
+var V: integer := Receive(Ch);
 ```
 
 - `go FuncCall()` — launch a concurrent task, returns `task` handle
-- `Std.Task.Wait(T)` — block until task completes, return result
-- `Std.Channel.Make()` / `MakeBuffered(N)` — create channels
+- `Wait(T)` — block until task completes, return result
+- `Make()` / `MakeBuffered(N)` — create channels
 - `Send`, `Receive`, `TryReceive`, `Close` — channel operations
 - `select ... case V: T from Ch: ... default: ... end` — multiplex channels
 

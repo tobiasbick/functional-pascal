@@ -45,12 +45,12 @@ type
     begin
       var DX: real := Other.X - Self.X;
       var DY: real := Other.Y - Self.Y;
-      return Std.Math.Sqrt(DX * DX + DY * DY)
+      return Sqrt(DX * DX + DY * DY)
     end;
 
     procedure Print(Self: Point);
     begin
-      Std.Console.WriteLn('(' + Std.Conv.RealToStr(Self.X) + ', ' + Std.Conv.RealToStr(Self.Y) + ')')
+      WriteLn('(' + RealToStr(Self.X) + ', ' + RealToStr(Self.Y) + ')')
     end;
   end;
 ```
@@ -73,7 +73,7 @@ Free-standing functions work equally well for operations on records:
 ```pascal
 function PointToString(P: Point): string;
 begin
-  return '(' + Std.Conv.RealToStr(P.X) + ', ' + Std.Conv.RealToStr(P.Y) + ')'
+  return '(' + RealToStr(P.X) + ', ' + RealToStr(P.Y) + ')'
 end;
 ```
 
@@ -155,11 +155,11 @@ Destructuring uses `case`:
 ```pascal
 case S of
   Shape.Circle(R):
-    Std.Console.WriteLn('Circle with radius ' + Std.Convert.ToString(R));
+    WriteLn('Circle with radius ' + RealToStr(R));
   Shape.Rectangle(W, H):
-    Std.Console.WriteLn('Rectangle ' + Std.Convert.ToString(W) + 'x' + Std.Convert.ToString(H));
+    WriteLn('Rectangle ' + RealToStr(W) + 'x' + RealToStr(H));
   Shape.Point:
-    Std.Console.WriteLn('Point');
+    WriteLn('Point');
 end;
 ```
 
@@ -181,14 +181,14 @@ Operations:
 
 ```pascal
 var
-  Len: integer := Std.Array.Length(Numbers);  { 3 }
+  Len: integer := Length(Numbers);  { 3 }
   First: integer := Numbers[0];              { 1 }
 
 mutable var
   Items: array of integer := [1, 2];
 
 begin
-  Std.Array.Push(Items, 3);  { [1, 2, 3] }
+  Push(Items, 3);  { [1, 2, 3] }
 end.
 ```
 

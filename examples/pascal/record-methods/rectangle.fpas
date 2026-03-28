@@ -26,9 +26,9 @@ type
       mutable var Kind: string := 'Rectangle';
       if Self.IsSquare() then
         Kind := 'Square';
-      Std.Console.WriteLn(Kind + ' ' + Std.Conv.IntToStr(Self.W) + 'x' + Std.Conv.IntToStr(Self.H)
-        + ' area=' + Std.Conv.IntToStr(Self.Area())
-        + ' perimeter=' + Std.Conv.IntToStr(Self.Perimeter()))
+      WriteLn(Kind + ' ' + IntToStr(Self.W) + 'x' + IntToStr(Self.H)
+        + ' area=' + IntToStr(Self.Area())
+        + ' perimeter=' + IntToStr(Self.Perimeter()))
     end;
   end;
 

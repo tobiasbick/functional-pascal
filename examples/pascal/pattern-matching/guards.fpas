@@ -28,13 +28,13 @@ function DescribeShape(S: Shape): string;
 begin
   case S of
     Shape.Circle(R) if R > 10.0:
-      return 'Large circle (radius ' + Std.Conv.RealToStr(R) + ')';
+      return 'Large circle (radius ' + RealToStr(R) + ')';
     Shape.Circle(R):
-      return 'Small circle (radius ' + Std.Conv.RealToStr(R) + ')';
+      return 'Small circle (radius ' + RealToStr(R) + ')';
     Shape.Rectangle(W, H) if W = H:
-      return 'Square (' + Std.Conv.RealToStr(W) + ')';
+      return 'Square (' + RealToStr(W) + ')';
     Shape.Rectangle(W, H):
-      return 'Rectangle (' + Std.Conv.RealToStr(W) + ' x ' + Std.Conv.RealToStr(H) + ')';
+      return 'Rectangle (' + RealToStr(W) + ' x ' + RealToStr(H) + ')';
     Shape.Point:
       return 'Point'
   end

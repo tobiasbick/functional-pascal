@@ -63,7 +63,7 @@ begin
   begin
     var cx: real := XMin + (Px / Wr) * (XMax - XMin);
     var C: Complex := record Re := cx; Im := cy; end;
-    Std.Array.Push(Row, Iterate(C, MaxIter))
+    Push(Row, Iterate(C, MaxIter))
   end;
 
   return Row
@@ -101,12 +101,12 @@ begin
   { Spawn one task per row }
   mutable var Tasks: array of task := [];
   for Py: integer := 0 to Height - 1 do
-    Std.Array.Push(Tasks, go ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter));
+    Push(Tasks, go ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter));
 
   { Wait and render each row in order }
   for Py: integer := 0 to Height - 1 do
   begin
-    var Row: array of integer := Std.Task.Wait(Tasks[Py]);
+    var Row: array of integer := Wait(Tasks[Py]);
     if (Py + 1) <= ScreenHeight() then
     begin
       DrawRow(Row, Width, MaxIter);

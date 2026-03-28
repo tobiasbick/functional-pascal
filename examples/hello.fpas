@@ -1,5 +1,5 @@
 program Hello;
 uses Std.Console;
 begin
-  Std.Console.WriteLn('Hello, World!')
+  WriteLn('Hello, World!')
 end.

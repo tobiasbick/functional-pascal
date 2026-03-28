@@ -1,0 +1,18 @@
+unit Mandelbrot.Color;
+uses Std.Console;
+
+procedure DrawBand(band: integer);
+begin
+  case band of
+    0: begin TextBackground(Blue);       TextColor(Blue)       end;
+    1: begin TextBackground(LightBlue);  TextColor(LightBlue)  end;
+    2: begin TextBackground(Cyan);       TextColor(Cyan)       end;
+    3: begin TextBackground(LightCyan);  TextColor(LightCyan)  end;
+    4: begin TextBackground(Green);      TextColor(Green)      end;
+    5: begin TextBackground(LightGreen); TextColor(LightGreen) end;
+    6: begin TextBackground(Yellow);     TextColor(Yellow)     end;
+    7: begin TextBackground(White);      TextColor(White)      end
+  else
+    begin TextBackground(White); TextColor(White) end
+  end
+end;

@@ -1,0 +1,123 @@
+program JuliaAscii;
+uses Std.Console;
+
+procedure DrawBand(band: integer);
+begin
+  case band of
+    0: begin TextBackground(Blue);      TextColor(Blue)      end;
+    1: begin TextBackground(LightBlue); TextColor(LightBlue) end;
+    2: begin TextBackground(Cyan);      TextColor(Cyan)      end;
+    3: begin TextBackground(LightCyan); TextColor(LightCyan) end;
+    4: begin TextBackground(Green);     TextColor(Green)     end;
+    5: begin TextBackground(LightGreen);TextColor(LightGreen)end;
+    6: begin TextBackground(Yellow);    TextColor(Yellow)    end;
+    7: begin TextBackground(White);     TextColor(White)     end
+  else
+    begin TextBackground(White); TextColor(White) end
+  end
+end;
+
+procedure Render(XMin: real; XMax: real; YMin: real; YMax: real;
+                 Jr: real; Ji: real; MaxIter: integer);
+begin
+  var Wr: real := 79.0;
+  var Hr: real := 24.0;
+  mutable var zr: real := 0.0;
+  mutable var zi: real := 0.0;
+  mutable var tr: real := 0.0;
+  mutable var ti: real := 0.0;
+  mutable var N: integer := 0;
+
+  for Py: integer := 0 to 24 do
+  begin
+    var cy: real := YMax - (Py / Hr) * (YMax - YMin);
+    for Px: integer := 0 to 79 do
+    begin
+      var cx: real := XMin + (Px / Wr) * (XMax - XMin);
+      zr := cx;
+      zi := cy;
+      N := 0;
+      while (N < MaxIter) and (zr * zr + zi * zi <= 4.0) do
+      begin
+        tr := zr * zr - zi * zi + Jr;
+        ti := 2.0 * zr * zi + Ji;
+        zr := tr;
+        zi := ti;
+        N := N + 1
+      end;
+      if N >= MaxIter then
+      begin
+        TextBackground(Black);
+        TextColor(Black)
+      end
+      else
+        DrawBand((N * 8) div MaxIter);
+      Write(' ')
+    end;
+    WriteLn()
+  end
+end;
+
+begin
+  Window(1, 1, 80, 25);
+  CursorOff();
+
+  mutable var XMin: real := -1.8;
+  mutable var XMax: real := 1.8;
+  mutable var YMin: real := -1.2;
+  mutable var YMax: real := 1.2;
+  var Jr: real := -0.8;
+  var Ji: real := 0.156;
+  var MaxIter: integer := 96;
+  mutable var Quit: boolean := false;
+
+  ClrScr();
+  Render(XMin, XMax, YMin, YMax, Jr, Ji, MaxIter);
+
+  repeat
+    if KeyPressed() then
+    begin
+      var ev: KeyEvent := ReadKeyEvent();
+      var W: real := XMax - XMin;
+      var H: real := YMax - YMin;
+      var StepX: real := W * 0.15;
+      var StepY: real := H * 0.15;
+      mutable var Changed: boolean := true;
+
+      if ev.kind = KeyKind.Escape then
+        Quit := true
+      else if ev.kind = KeyKind.Left then
+      begin XMin := XMin - StepX; XMax := XMax - StepX end
+      else if ev.kind = KeyKind.Right then
+      begin XMin := XMin + StepX; XMax := XMax + StepX end
+      else if ev.kind = KeyKind.Up then
+      begin YMin := YMin + StepY; YMax := YMax + StepY end
+      else if ev.kind = KeyKind.Down then
+      begin YMin := YMin - StepY; YMax := YMax - StepY end
+      else if ev.ch = '+' then
+      begin
+        var Zx: real := W * 0.15;
+        var Zy: real := H * 0.15;
+        XMin := XMin + Zx; XMax := XMax - Zx;
+        YMin := YMin + Zy; YMax := YMax - Zy
+      end
+      else if ev.ch = '-' then
+      begin
+        var Zx: real := W * 0.15;
+        var Zy: real := H * 0.15;
+        XMin := XMin - Zx; XMax := XMax + Zx;
+        YMin := YMin - Zy; YMax := YMax + Zy
+      end
+      else
+        Changed := false;
+
+      if Changed and (not Quit) then
+      begin
+        ClrScr();
+        Render(XMin, XMax, YMin, YMax, Jr, Ji, MaxIter)
+      end
+    end;
+    Delay(16)
+  until Quit;
+  CursorOn()
+end.

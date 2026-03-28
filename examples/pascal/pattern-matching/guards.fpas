@@ -1,0 +1,55 @@
+program GuardsExample;
+uses Std.Console, Std.Conv;
+
+{ Guard clauses add conditions to case arms with `if`. }
+{ The arm matches only when both the label and the guard are true. }
+
+type
+  Shape = enum
+    Circle(Radius: real);
+    Rectangle(Width: real; Height: real);
+    Point;
+  end;
+
+function Classify(N: integer): string;
+begin
+  case N of
+    0:
+      return 'zero';
+    N if N > 0:
+      return 'positive';
+    N if N < 0:
+      return 'negative'
+  end;
+  return 'unknown'
+end;
+
+function DescribeShape(S: Shape): string;
+begin
+  case S of
+    Shape.Circle(R) if R > 10.0:
+      return 'Large circle (radius ' + Std.Conv.RealToStr(R) + ')';
+    Shape.Circle(R):
+      return 'Small circle (radius ' + Std.Conv.RealToStr(R) + ')';
+    Shape.Rectangle(W, H) if W = H:
+      return 'Square (' + Std.Conv.RealToStr(W) + ')';
+    Shape.Rectangle(W, H):
+      return 'Rectangle (' + Std.Conv.RealToStr(W) + ' x ' + Std.Conv.RealToStr(H) + ')';
+    Shape.Point:
+      return 'Point'
+  end
+end;
+
+begin
+  WriteLn('--- Integer guards ---');
+  WriteLn(Classify(-7));
+  WriteLn(Classify(0));
+  WriteLn(Classify(42));
+
+  WriteLn('--- Shape guards ---');
+  WriteLn(DescribeShape(Shape.Circle(3.0)));
+  WriteLn(DescribeShape(Shape.Circle(25.0)));
+  WriteLn(DescribeShape(Shape.Rectangle(5.0, 5.0)));
+  WriteLn(DescribeShape(Shape.Rectangle(4.0, 8.0)));
+  WriteLn(DescribeShape(Shape.Point))
+end.

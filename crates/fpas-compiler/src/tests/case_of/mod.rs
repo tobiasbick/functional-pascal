@@ -1,0 +1,9 @@
+mod booleans;
+mod edge_cases;
+mod enums;
+mod errors;
+mod integers;
+mod negative;
+mod ranges;
+mod strings;
+mod structure;

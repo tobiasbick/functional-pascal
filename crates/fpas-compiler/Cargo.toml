@@ -1,0 +1,22 @@
+[package]
+name = "fpas-compiler"
+description = "AST-to-bytecode compiler for Functional Pascal"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+fpas-bytecode = { path = "../fpas-bytecode" }
+fpas-diagnostics = { path = "../fpas-diagnostics" }
+fpas-lexer = { path = "../fpas-lexer" }
+fpas-parser = { path = "../fpas-parser" }
+fpas-sema = { path = "../fpas-sema" }
+fpas-std = { path = "../fpas-std" }
+
+[dev-dependencies]
+fpas-vm = { path = "../fpas-vm" }
+
+[lints]
+workspace = true
+

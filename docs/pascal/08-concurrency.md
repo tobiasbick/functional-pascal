@@ -1,0 +1,168 @@
+# 8. Concurrency
+
+Functional Pascal provides Go-inspired concurrency with lightweight tasks, typed channels, and a `select` statement for multiplexing.
+
+## Tasks
+
+Launch a concurrent task with the `go` keyword:
+
+```pascal
+uses Std.Console, Std.Task;
+
+function Worker(): integer;
+begin
+  return 42
+end;
+
+begin
+  var T: task := go Worker();
+  var R: integer := Std.Task.Wait(T);
+  WriteLn(R)
+end.
+```
+
+`go` accepts any function or procedure call. The VM schedules tasks cooperatively.
+
+### Task Type
+
+The `task` type represents a handle to a running task. Assign the result of a `go` expression to capture it:
+
+```pascal
+var T: task := go ComputeSomething(Data);
+```
+
+## Channels
+
+Channels are typed conduits for communication between tasks. Import `Std.Channel` to use them.
+
+### Creating Channels
+
+```pascal
+uses Std.Channel;
+
+var Ch: channel of integer := Std.Channel.Make();
+```
+
+Create a buffered channel with a specific capacity:
+
+```pascal
+var Ch: channel of string := Std.Channel.MakeBuffered(10);
+```
+
+### Sending and Receiving
+
+```pascal
+Std.Channel.Send(Ch, 42);
+var Value: integer := Std.Channel.Receive(Ch);
+```
+
+`Send` blocks when the buffer is full. `Receive` blocks until a value is available.
+
+### Non-Blocking Receive
+
+`TryReceive` returns an `Option` — `Some` with the value if one is available, `None` otherwise:
+
+```pascal
+uses Std.Channel, Std.Option;
+
+var V: Option of integer := Std.Channel.TryReceive(Ch);
+if IsNone(V) then
+  WriteLn('no value yet')
+```
+
+### Closing Channels
+
+```pascal
+Std.Channel.Close(Ch);
+```
+
+After closing, pending values can still be received. Sending to a closed channel causes a runtime error.
+
+### Example: Producer/Consumer
+
+```pascal
+program ProducerConsumer;
+uses Std.Console, Std.Channel, Std.Task;
+
+procedure Producer(Ch: channel of integer);
+begin
+  Std.Channel.Send(Ch, 99)
+end;
+
+begin
+  var Ch: channel of integer := Std.Channel.Make();
+  go Producer(Ch);
+  WriteLn(Std.Channel.Receive(Ch))
+end.
+```
+
+## Select
+
+The `select` statement waits on multiple channel operations simultaneously:
+
+```pascal
+select
+  case Msg: string from Ch1:
+    WriteLn('Got message: ' + Msg);
+  case Num: integer from Ch2:
+    WriteLn('Got number: ' + Std.Conv.IntToStr(Num));
+end
+```
+
+Each arm tries a non-blocking receive from its channel. The first arm with an available value executes. If no arm is ready, `select` blocks until one becomes available.
+
+### Select with Default
+
+A `default` arm runs when no channel has data:
+
+```pascal
+select
+  case Msg: string from Ch:
+    WriteLn(Msg);
+  default:
+    WriteLn('No message available');
+end
+```
+
+## Task Management
+
+### Waiting for a Task
+
+`Std.Task.Wait` blocks until the task completes and returns its result:
+
+```pascal
+var T: task := go Compute(100);
+var Result: integer := Std.Task.Wait(T);
+```
+
+### Waiting for Multiple Tasks
+
+`Std.Task.WaitAll` blocks until all tasks in the array complete:
+
+```pascal
+Std.Task.WaitAll([T1, T2, T3]);
+```
+
+## Standard Library
+
+### Std.Channel
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `Make` | `(): channel of T` | Create a channel (buffer capacity 1) |
+| `MakeBuffered` | `(Size: integer): channel of T` | Create a buffered channel |
+| `Send` | `(Ch: channel of T; Value: T)` | Send a value (blocks when full) |
+| `Receive` | `(Ch: channel of T): T` | Receive a value (blocks when empty) |
+| `TryReceive` | `(Ch: channel of T): Option of T` | Non-blocking receive |
+| `Close` | `(Ch: channel of T)` | Close the channel |
+
+### Std.Task
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `Wait` | `(T: task): T` | Wait for a task and return its result |
+| `WaitAll` | `(Tasks: array of task)` | Wait for all tasks to complete |
+
+## Keywords
+
+`go`, `channel`, `select`, `from` — all case-insensitive.

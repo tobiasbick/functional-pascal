@@ -1,0 +1,114 @@
+use super::{Expr, FunctionDecl, ProcedureDecl, TypeExpr};
+use fpas_lexer::Span;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Visibility {
+    #[default]
+    Public,
+    Private,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Decl {
+    Const(ConstDef),
+    Var(VarDef),
+    MutableVar(VarDef),
+    TypeDef(TypeDef),
+    Function(FunctionDecl),
+    Procedure(ProcedureDecl),
+}
+
+impl Decl {
+    pub fn visibility(&self) -> Visibility {
+        match self {
+            Decl::Const(c) => c.visibility,
+            Decl::Var(v) | Decl::MutableVar(v) => v.visibility,
+            Decl::TypeDef(td) => td.visibility,
+            Decl::Function(f) => f.visibility,
+            Decl::Procedure(p) => p.visibility,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ConstDef {
+    pub name: String,
+    pub type_expr: TypeExpr,
+    pub value: Expr,
+    pub visibility: Visibility,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct VarDef {
+    pub name: String,
+    pub type_expr: TypeExpr,
+    pub value: Expr,
+    pub visibility: Visibility,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TypeDef {
+    pub name: String,
+    /// Generic type parameters: `<T>`, `<K, V>`.
+    pub type_params: Vec<String>,
+    pub body: TypeBody,
+    pub visibility: Visibility,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum TypeBody {
+    Record(RecordType),
+    Enum(EnumType),
+    Alias(TypeExpr),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct RecordType {
+    pub fields: Vec<FieldDef>,
+    pub methods: Vec<RecordMethod>,
+    pub span: Span,
+}
+
+/// A function or procedure declared inside a `record … end` block.
+#[derive(Debug, Clone, PartialEq)]
+pub enum RecordMethod {
+    Function(FunctionDecl),
+    Procedure(ProcedureDecl),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct FieldDef {
+    pub name: String,
+    pub type_expr: TypeExpr,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct EnumType {
+    pub members: Vec<EnumMember>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct EnumMember {
+    pub name: String,
+    pub value: Option<i64>,
+    /// Associated-data fields. Empty for simple (valueless) variants.
+    ///
+    /// **Documentation:** `docs/future/advanced-types.md`
+    pub fields: Vec<EnumMemberField>,
+    pub span: Span,
+}
+
+/// A named, typed field inside an enum variant with associated data.
+///
+/// **Documentation:** `docs/future/advanced-types.md`
+#[derive(Debug, Clone, PartialEq)]
+pub struct EnumMemberField {
+    pub name: String,
+    pub type_expr: TypeExpr,
+    pub span: Span,
+}

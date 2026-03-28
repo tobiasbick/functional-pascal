@@ -1,0 +1,44 @@
+program ExpressionEval;
+uses Std.Console, Std.Conv;
+
+{ A simple expression tree using enums with associated data }
+type
+  Expr = enum
+    Num(Value: integer);
+    Add(Left: integer; Right: integer);
+    Mul(Left: integer; Right: integer);
+  end;
+
+function Eval(E: Expr): integer;
+begin
+  case E of
+    Expr.Num(V):
+      return V;
+    Expr.Add(L, R):
+      return L + R;
+    Expr.Mul(L, R):
+      return L * R
+  end
+end;
+
+function Show(E: Expr): string;
+begin
+  case E of
+    Expr.Num(V):
+      return Std.Conv.IntToStr(V);
+    Expr.Add(L, R):
+      return Std.Conv.IntToStr(L) + ' + ' + Std.Conv.IntToStr(R);
+    Expr.Mul(L, R):
+      return Std.Conv.IntToStr(L) + ' * ' + Std.Conv.IntToStr(R)
+  end
+end;
+
+begin
+  var E1: Expr := Expr.Num(42);
+  var E2: Expr := Expr.Add(3, 7);
+  var E3: Expr := Expr.Mul(4, 5);
+
+  Std.Console.WriteLn(Show(E1) + ' = ' + Std.Conv.IntToStr(Eval(E1)));
+  Std.Console.WriteLn(Show(E2) + ' = ' + Std.Conv.IntToStr(Eval(E2)));
+  Std.Console.WriteLn(Show(E3) + ' = ' + Std.Conv.IntToStr(Eval(E3)))
+end.

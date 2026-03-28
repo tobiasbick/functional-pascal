@@ -1,0 +1,17 @@
+[package]
+name = "fpas-sema"
+description = "Semantic analysis and type checking for Functional Pascal"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+fpas-diagnostics = { path = "../fpas-diagnostics" }
+fpas-lexer = { path = "../fpas-lexer" }
+fpas-parser = { path = "../fpas-parser" }
+fpas-std = { path = "../fpas-std" }
+
+[lints]
+workspace = true
+

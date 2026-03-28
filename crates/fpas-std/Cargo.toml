@@ -1,0 +1,16 @@
+[package]
+name = "fpas-std"
+description = "Standard library intrinsics for Functional Pascal"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+crossterm = "0.28"
+fpas-bytecode = { path = "../fpas-bytecode" }
+fpas-diagnostics = { path = "../fpas-diagnostics" }
+
+[lints]
+workspace = true
+

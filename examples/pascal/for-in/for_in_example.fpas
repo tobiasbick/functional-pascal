@@ -1,0 +1,22 @@
+program ForInExample;
+uses Std.Console;
+
+begin
+  var Scores: array of integer := [12, 45, 3, 67, 29, 88, 51, 7, 93, 34];
+
+  { Print only scores above 10, stop when we hit one above 90 }
+  Std.Console.WriteLn('Filtered scores:');
+  for S: integer in Scores do
+  begin
+    if S > 90 then
+    begin
+      Std.Console.WriteLn('Stopping — score above 90 found');
+      break
+    end;
+
+    if S <= 10 then
+      continue;
+
+    Std.Console.WriteLn(S)
+  end
+end.

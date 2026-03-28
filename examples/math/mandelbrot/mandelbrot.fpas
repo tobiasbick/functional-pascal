@@ -1,0 +1,108 @@
+program MandelbrotAscii;
+uses Std.Console, Mandelbrot.Render;
+
+begin
+  EnterAltScreen();
+  EnableRawMode();
+  CursorOff();
+
+  var MaxIter: integer := 96;
+  var PanFactor: real := 0.15;
+  var ZoomFactor: real := 0.15;
+  var ResizeDebounceTicks: integer := 4;
+  mutable var Width: integer := ScreenWidth();
+  mutable var Height: integer := ScreenHeight();
+
+  mutable var XMin: real := -2.5;
+  mutable var XMax: real := 1.0;
+  mutable var YMin: real := -1.0;
+  mutable var YMax: real := 1.0;
+  mutable var Quit: boolean := false;
+  mutable var RenderPending: boolean := false;
+  mutable var ResizeCooldown: integer := 0;
+
+  ClrScr();
+  Render(XMin, XMax, YMin, YMax, Width, Height, MaxIter);
+
+  repeat
+    if EventPending() then
+    begin
+      repeat
+        var ev: Event := ReadEvent();
+        mutable var Changed: boolean := false;
+
+        if ev.kind = EventKind.Resize then
+        begin
+          var NewWidth: integer := ScreenWidth();
+          var NewHeight: integer := ScreenHeight();
+
+          if (NewWidth <> Width) or (NewHeight <> Height) then
+          begin
+            Width := NewWidth;
+            Height := NewHeight;
+            RenderPending := true;
+            ResizeCooldown := ResizeDebounceTicks
+          end
+        end
+        else if ev.kind = EventKind.Key then
+        begin
+          var key: KeyEvent := ev.key;
+          var W: real := XMax - XMin;
+          var H: real := YMax - YMin;
+          var StepX: real := W * PanFactor;
+          var StepY: real := H * PanFactor;
+
+          Changed := true;
+          case key.kind of
+            KeyKind.Escape: Quit := true;
+            KeyKind.Left:   begin XMin := XMin - StepX; XMax := XMax - StepX end;
+            KeyKind.Right:  begin XMin := XMin + StepX; XMax := XMax + StepX end;
+            KeyKind.Up:     begin YMin := YMin + StepY; YMax := YMax + StepY end;
+            KeyKind.Down:   begin YMin := YMin - StepY; YMax := YMax - StepY end
+          else
+            if key.ch = '+' then
+            begin
+              var Zx: real := W * ZoomFactor;
+              var Zy: real := H * ZoomFactor;
+              XMin := XMin + Zx; XMax := XMax - Zx;
+              YMin := YMin + Zy; YMax := YMax - Zy
+            end
+            else if key.ch = '-' then
+            begin
+              var Zx: real := W * ZoomFactor;
+              var Zy: real := H * ZoomFactor;
+              XMin := XMin - Zx; XMax := XMax + Zx;
+              YMin := YMin - Zy; YMax := YMax + Zy
+            end
+            else
+              Changed := false
+          end;
+
+          if Changed and (not Quit) then
+          begin
+            RenderPending := true;
+            ResizeCooldown := 0
+          end
+        end
+      until (not EventPending()) or Quit
+    end;
+
+    if RenderPending and (not Quit) then
+    begin
+      if ResizeCooldown > 0 then
+        ResizeCooldown := ResizeCooldown - 1
+      else
+      begin
+        ClrScr();
+        Render(XMin, XMax, YMin, YMax, Width, Height, MaxIter);
+        RenderPending := false
+      end
+    end;
+
+    Delay(16)
+  until Quit;
+
+  CursorOn();
+  DisableRawMode();
+  LeaveAltScreen()
+end.

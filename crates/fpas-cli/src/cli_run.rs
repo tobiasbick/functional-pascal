@@ -1,0 +1,143 @@
+use std::fs;
+use std::io::Write;
+use std::path::Path;
+
+use crate::project;
+use crate::{CliInput, resolve_cli_input};
+
+pub(crate) fn run_cli(
+    args: &[String],
+    cwd: &Path,
+    stdout: Box<dyn Write>,
+    stderr: &mut dyn Write,
+) -> i32 {
+    let input = match resolve_cli_input(args, cwd) {
+        Ok(input) => input,
+        Err(message) => {
+            let _ = writeln!(stderr, "{message}");
+            return 1;
+        }
+    };
+
+    match input {
+        CliInput::SourceFile(path) => run_source_file(&path, stdout, stderr),
+        CliInput::ProjectFile(path) => run_project_file(&path, stdout, stderr),
+    }
+}
+
+fn run_source_file(path: &Path, stdout: Box<dyn Write>, stderr: &mut dyn Write) -> i32 {
+    let source = match fs::read_to_string(path) {
+        Ok(source) => source,
+        Err(error) => {
+            let _ = writeln!(stderr, "Error reading `{}`: {error}", path.display());
+            return 1;
+        }
+    };
+
+    let path_text = path.to_string_lossy();
+    run_source(path_text.as_ref(), &source, stdout, stderr)
+}
+
+fn run_project_file(path: &Path, stdout: Box<dyn Write>, stderr: &mut dyn Write) -> i32 {
+    let loaded = match project::load_project(path) {
+        Ok(loaded) => loaded,
+        Err(message) => {
+            let _ = writeln!(stderr, "{message}");
+            return 1;
+        }
+    };
+
+    for warning in &loaded.warnings {
+        let _ = writeln!(stderr, "warning: {warning}");
+    }
+
+    match loaded.kind {
+        project::ProjectKind::Program => {
+            let Some(main) = loaded.main else {
+                let _ = writeln!(
+                    stderr,
+                    "Project is missing `project.main`.\n  help: Set `main = \"src/main.fpas\"` in `[project]`."
+                );
+                return 1;
+            };
+            let merged_program = match project::build_program(&main, &loaded.source_files) {
+                Ok(program) => program,
+                Err(message) => {
+                    let _ = writeln!(stderr, "{message}");
+                    return 1;
+                }
+            };
+
+            let main_path = main.to_string_lossy();
+            run_compiled_program(main_path.as_ref(), &merged_program, stdout, stderr)
+        }
+        project::ProjectKind::Library => {
+            let _ = writeln!(
+                stderr,
+                "Library projects are not executable.\n  help: Use a `program` project to run code with the CLI."
+            );
+            1
+        }
+    }
+}
+
+pub(crate) fn run_source(
+    path: &str,
+    source: &str,
+    stdout: Box<dyn Write>,
+    stderr: &mut dyn Write,
+) -> i32 {
+    let (program, parse_errors) = fpas_parser::parse(source);
+    if !parse_errors.is_empty() {
+        for diagnostic in &parse_errors {
+            if !emit_diagnostic(path, diagnostic.as_diagnostic(), stderr) {
+                return 1;
+            }
+        }
+        return 1;
+    }
+
+    run_compiled_program(path, &program, stdout, stderr)
+}
+
+fn run_compiled_program(
+    path: &str,
+    program: &fpas_parser::Program,
+    stdout: Box<dyn Write>,
+    stderr: &mut dyn Write,
+) -> i32 {
+    let chunk = match fpas_compiler::compile(program) {
+        Ok(chunk) => chunk,
+        Err(diagnostic) => {
+            if !emit_diagnostic(path, &diagnostic, stderr) {
+                return 1;
+            }
+            return 1;
+        }
+    };
+
+    let mut vm = fpas_vm::Vm::with_writer(chunk, stdout);
+    if let Err(diagnostic) = vm.run() {
+        if !emit_diagnostic(path, &diagnostic, stderr) {
+            return 2;
+        }
+        return 2;
+    }
+
+    0
+}
+
+fn emit_diagnostic(
+    path: &str,
+    diagnostic: &fpas_diagnostics::Diagnostic,
+    stderr: &mut dyn Write,
+) -> bool {
+    writeln!(stderr, "{}", render_cli_diagnostic(path, diagnostic)).is_ok()
+}
+
+pub(crate) fn render_cli_diagnostic(
+    path: &str,
+    diagnostic: &fpas_diagnostics::Diagnostic,
+) -> String {
+    fpas_diagnostics::render(path, diagnostic)
+}

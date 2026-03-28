@@ -1,0 +1,51 @@
+{ Nested Patterns — match on nested enum structures }
+program NestedPatterns;
+uses Std.Console, Std.Conv;
+
+type
+  Expr = enum
+    Num(Value: integer);
+    Add(Left: Expr; Right: Expr);
+    Mul(Left: Expr; Right: Expr);
+  end;
+
+function Eval(E: Expr): integer;
+begin
+  case E of
+    Expr.Num(V):
+      return V;
+    Expr.Add(Left, Right):
+      return Eval(Left) + Eval(Right);
+    Expr.Mul(Left, Right):
+      return Eval(Left) * Eval(Right)
+  end;
+  return 0
+end;
+
+function Describe(E: Expr): string;
+begin
+  case E of
+    Expr.Add(Expr.Num(A), Expr.Num(B)):
+      return IntToStr(A) + ' + ' + IntToStr(B);
+    Expr.Mul(Expr.Num(0), _):
+      return '0 (multiply by zero)';
+    Expr.Mul(Expr.Num(A), Expr.Num(B)):
+      return IntToStr(A) + ' * ' + IntToStr(B);
+  else
+    return 'complex expression'
+  end
+end;
+
+begin
+  var E1: Expr := Expr.Add(Expr.Num(3), Expr.Num(4));
+  WriteLn(Describe(E1) + ' = ' + IntToStr(Eval(E1)));
+
+  var E2: Expr := Expr.Mul(Expr.Num(0), Expr.Num(99));
+  WriteLn(Describe(E2) + ' = ' + IntToStr(Eval(E2)));
+
+  var E3: Expr := Expr.Mul(Expr.Num(5), Expr.Num(6));
+  WriteLn(Describe(E3) + ' = ' + IntToStr(Eval(E3)));
+
+  var E4: Expr := Expr.Add(Expr.Mul(Expr.Num(2), Expr.Num(3)), Expr.Num(1));
+  WriteLn(Describe(E4) + ' = ' + IntToStr(Eval(E4)))
+end.

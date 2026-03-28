@@ -1,0 +1,41 @@
+program RectangleExample;
+uses Std.Console, Std.Conv;
+
+type
+  Rect = record
+    W: integer;
+    H: integer;
+
+    function Area(Self: Rect): integer;
+    begin
+      return Self.W * Self.H
+    end;
+
+    function Perimeter(Self: Rect): integer;
+    begin
+      return 2 * (Self.W + Self.H)
+    end;
+
+    function IsSquare(Self: Rect): boolean;
+    begin
+      return Self.W = Self.H
+    end;
+
+    procedure Describe(Self: Rect);
+    begin
+      mutable var Kind: string := 'Rectangle';
+      if Self.IsSquare() then
+        Kind := 'Square';
+      Std.Console.WriteLn(Kind + ' ' + Std.Conv.IntToStr(Self.W) + 'x' + Std.Conv.IntToStr(Self.H)
+        + ' area=' + Std.Conv.IntToStr(Self.Area())
+        + ' perimeter=' + Std.Conv.IntToStr(Self.Perimeter()))
+    end;
+  end;
+
+begin
+  var R: Rect := record W := 5; H := 3; end;
+  R.Describe();
+
+  var S: Rect := record W := 4; H := 4; end;
+  S.Describe()
+end.

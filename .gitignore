@@ -1,0 +1,20 @@
+# Rust / Cargo
+target/
+debug/
+**/*.rs.bk
+*.pdb
+
+# VS Code
+.vscode/
+
+# Cursor — ignore local state; keep shared plans
+.cursor/**
+!.cursor/plans/
+!.cursor/plans/**
+
+# OpenCode
+#opencode.jsonc
+
+# Functional pascal
+bin/
+

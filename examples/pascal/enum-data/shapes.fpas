@@ -1,0 +1,43 @@
+program ShapesExample;
+uses Std.Console, Std.Conv, Std.Math;
+
+type
+  Shape = enum
+    Circle(Radius: real);
+    Rectangle(Width: real; Height: real);
+    Point;
+  end;
+
+function Area(S: Shape): real;
+begin
+  case S of
+    Shape.Circle(R):
+      return Std.Math.Pi * R * R;
+    Shape.Rectangle(W, H):
+      return W * H;
+    Shape.Point:
+      return 0.0
+  end
+end;
+
+function Describe(S: Shape): string;
+begin
+  case S of
+    Shape.Circle(R):
+      return 'Circle with radius ' + Std.Conv.RealToStr(R);
+    Shape.Rectangle(W, H):
+      return 'Rectangle ' + Std.Conv.RealToStr(W) + ' x ' + Std.Conv.RealToStr(H);
+    Shape.Point:
+      return 'Point'
+  end
+end;
+
+begin
+  var C: Shape := Shape.Circle(5.0);
+  var R: Shape := Shape.Rectangle(10.0, 3.0);
+  var P: Shape := Shape.Point;
+
+  Std.Console.WriteLn(Describe(C) + ' -> area = ' + Std.Conv.RealToStr(Area(C)));
+  Std.Console.WriteLn(Describe(R) + ' -> area = ' + Std.Conv.RealToStr(Area(R)));
+  Std.Console.WriteLn(Describe(P) + ' -> area = ' + Std.Conv.RealToStr(Area(P)))
+end.

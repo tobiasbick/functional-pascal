@@ -1,0 +1,14 @@
+[package]
+name = "fpas-lexer"
+description = "Tokenizer and lexical analysis for Functional Pascal"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+fpas-diagnostics = { path = "../fpas-diagnostics" }
+
+[lints]
+workspace = true
+

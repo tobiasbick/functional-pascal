@@ -1,0 +1,7 @@
+[project]
+name = "mandelbrot"
+kind = "program"
+main = "mandelbrot.fpas"
+
+[sources]
+include = ["*.fpas"]

@@ -1,0 +1,16 @@
+program Fibonacci;
+uses Std.Console;
+
+function Fib(N: integer): integer;
+begin
+  if N <= 1 then
+    return N
+  else
+    return Fib(N - 1) + Fib(N - 2)
+end;
+
+begin
+  Std.Console.WriteLn('Fibonacci sequence:');
+  for I: integer := 0 to 9 do
+    Std.Console.WriteLn(Fib(I))
+end.

@@ -1,0 +1,117 @@
+unit Mandelbrot.Render;
+uses Std.Console, Std.Task, Std.Array, Std.Conv, Mandelbrot.Color;
+
+private type Complex = record
+  Re: real;
+  Im: real;
+
+  function Sq(Self: Complex): Complex;
+  begin
+    return record
+      Re := Self.Re * Self.Re - Self.Im * Self.Im;
+      Im := 2.0 * Self.Re * Self.Im;
+    end
+  end;
+
+  function Add(Self: Complex; Other: Complex): Complex;
+  begin
+    return record
+      Re := Self.Re + Other.Re;
+      Im := Self.Im + Other.Im;
+    end
+  end;
+
+  function MagSq(Self: Complex): real;
+  begin
+    return Self.Re * Self.Re + Self.Im * Self.Im
+  end;
+end;
+
+private function Iterate(C: Complex; MaxIter: integer): integer;
+begin
+  var EscapeRadius: real := 4.0;
+  mutable var Z: Complex := record Re := 0.0; Im := 0.0; end;
+  mutable var N: integer := 0;
+
+  while (N < MaxIter) and (Z.MagSq() <= EscapeRadius) do
+  begin
+    var ZSq: Complex := Z.Sq();
+    Z := ZSq.Add(C);
+    N := N + 1
+  end;
+  return N
+end;
+
+{ Compute one row of iteration counts — runs as a concurrent task }
+private function ComputeRow(Py: integer; Width: integer; Height: integer;
+                            XMin: real; XMax: real;
+                            YMin: real; YMax: real; MaxIter: integer): array of integer;
+begin
+  mutable var WidthRange: integer := Width - 1;
+  mutable var HeightRange: integer := Height - 1;
+  if WidthRange < 1 then
+    WidthRange := 1;
+  if HeightRange < 1 then
+    HeightRange := 1;
+
+  var Wr: real := IntToReal(WidthRange);
+  var Hr: real := IntToReal(HeightRange);
+  var cy: real := YMax - (Py / Hr) * (YMax - YMin);
+  mutable var Row: array of integer := [];
+
+  for Px: integer := 0 to Width - 1 do
+  begin
+    var cx: real := XMin + (Px / Wr) * (XMax - XMin);
+    var C: Complex := record Re := cx; Im := cy; end;
+    Std.Array.Push(Row, Iterate(C, MaxIter))
+  end;
+
+  return Row
+end;
+
+{ Draw a pre-computed row to the console }
+private procedure DrawRow(Row: array of integer; Width: integer; MaxIter: integer);
+begin
+  var ColorBands: integer := 8;
+  var CurrentWidth: integer := ScreenWidth();
+  mutable var DrawWidth: integer := Width;
+
+  if DrawWidth > CurrentWidth then
+    DrawWidth := CurrentWidth;
+  if DrawWidth < 1 then
+    return;
+
+  for Px: integer := 0 to DrawWidth - 1 do
+  begin
+    var N: integer := Row[Px];
+    if N >= MaxIter then
+    begin
+      TextBackground(Black);
+      TextColor(Black)
+    end
+    else
+      DrawBand((N * ColorBands) div MaxIter);
+    Write(' ')
+  end
+end;
+
+procedure Render(XMin: real; XMax: real; YMin: real; YMax: real;
+                 Width: integer; Height: integer; MaxIter: integer);
+begin
+  { Spawn one task per row }
+  mutable var Tasks: array of task := [];
+  for Py: integer := 0 to Height - 1 do
+    Std.Array.Push(Tasks, go ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter));
+
+  { Wait and render each row in order }
+  for Py: integer := 0 to Height - 1 do
+  begin
+    var Row: array of integer := Std.Task.Wait(Tasks[Py]);
+    if (Py + 1) <= ScreenHeight() then
+    begin
+      DrawRow(Row, Width, MaxIter);
+      if (Py + 1 < Height) and (Py + 1 < ScreenHeight()) then
+        WriteLn()
+    end
+  end
+end;

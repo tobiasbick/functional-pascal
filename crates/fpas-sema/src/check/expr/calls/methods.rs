@@ -1,0 +1,114 @@
+use super::super::super::Checker;
+use crate::types::{MethodKind, ParamTy, Ty};
+use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_WRONG_ARGUMENT_COUNT};
+use fpas_lexer::Span;
+use fpas_parser::{Designator, DesignatorPart, Expr};
+
+impl Checker {
+    /// Try to resolve `designator(args)` as a record method call.
+    /// Returns `Some(return_ty)` if the last designator part is a method on the receiver record.
+    pub(super) fn try_check_method_call(
+        &mut self,
+        call_expr: &Expr,
+        designator: &Designator,
+        args: &[Expr],
+        span: Span,
+    ) -> Option<Ty> {
+        if designator.parts.len() < 2 {
+            return None;
+        }
+
+        let method_name = match designator.parts.last()? {
+            DesignatorPart::Ident(name, _) => name.clone(),
+            _ => return None,
+        };
+
+        let receiver_designator = Designator {
+            parts: designator.parts[..designator.parts.len() - 1].to_vec(),
+            span: designator.span,
+        };
+
+        let receiver_ty = self.check_designator_expr(&receiver_designator);
+        let Ty::Record(record_ty) = &receiver_ty else {
+            return None;
+        };
+
+        let qualified = format!("{}.{}", record_ty.name, method_name);
+        let method_kind = self.resolve_method_kind(record_ty, &method_name, &qualified)?;
+
+        let call_key = Self::expr_lookup_key(call_expr);
+        self.method_calls.insert(call_key, qualified.clone());
+
+        match &method_kind {
+            MethodKind::Function(func_ty) => {
+                self.check_method_call_args(&qualified, &func_ty.params[1..], args, span);
+                Some(*func_ty.return_type.clone())
+            }
+            MethodKind::Procedure(_) => {
+                self.check_args_only(args);
+                self.error_with_code(
+                    SEMA_TYPE_MISMATCH,
+                    format!("Method procedure `{qualified}` does not return a value"),
+                    "Use a method function instead if you need a return value.",
+                    span,
+                );
+                Some(Ty::Error)
+            }
+        }
+    }
+
+    fn resolve_method_kind(
+        &self,
+        record_ty: &crate::types::RecordTy,
+        method_name: &str,
+        qualified: &str,
+    ) -> Option<MethodKind> {
+        if let Some((_, method_kind)) = record_ty
+            .methods
+            .iter()
+            .find(|(name, _)| name == method_name)
+        {
+            return Some(method_kind.clone());
+        }
+
+        let symbol = self.scopes.lookup(qualified)?;
+        match &symbol.ty {
+            Ty::Function(function_ty) => Some(MethodKind::Function(function_ty.clone())),
+            Ty::Procedure(procedure_ty) => Some(MethodKind::Procedure(procedure_ty.clone())),
+            _ => None,
+        }
+    }
+
+    fn check_method_call_args(
+        &mut self,
+        name: &str,
+        visible_params: &[ParamTy],
+        args: &[Expr],
+        span: Span,
+    ) {
+        if visible_params.len() != args.len() {
+            self.error_with_code(
+                SEMA_WRONG_ARGUMENT_COUNT,
+                format!(
+                    "Method `{name}` expects {} arguments, got {}",
+                    visible_params.len(),
+                    args.len()
+                ),
+                "Check the number of arguments (Self is implicit).",
+                span,
+            );
+        }
+
+        for (index, arg) in args.iter().enumerate() {
+            let arg_ty = self.check_expr(arg);
+            if let Some(param) = visible_params.get(index) {
+                self.check_type_compat(
+                    &param.ty,
+                    &arg_ty,
+                    &format!("argument {}", index + 1),
+                    span,
+                );
+            }
+        }
+    }
+}

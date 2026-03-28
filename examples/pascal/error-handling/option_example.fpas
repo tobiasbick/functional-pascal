@@ -1,0 +1,51 @@
+program OptionExample;
+uses Std.Console, Std.Conv, Std.Array, Std.Option;
+
+function FindFirst(Items: array of integer; Min: integer): Option of integer;
+begin
+  for I: integer := 0 to Length(Items) - 1 do
+    if Items[I] >= Min then
+      return Some(Items[I]);
+  return None
+end;
+
+function DoubleFirst(Items: array of integer; Min: integer): Option of string;
+begin
+  var V: integer := try FindFirst(Items, Min);
+  return Some(IntToStr(V) + ' x 2 = ' + IntToStr(V * 2))
+end;
+
+begin
+  var Data: array of integer := [3, 7, 15, 42, 8];
+
+  { Basic Option usage }
+  var Found: Option of integer := FindFirst(Data, 10);
+  WriteLn('IsSome: ', IsSome(Found));
+  WriteLn('Value: ', Unwrap(Found));
+
+  var Missing: Option of integer := FindFirst(Data, 100);
+  WriteLn('IsNone: ', IsNone(Missing));
+  WriteLn('UnwrapOr: ', UnwrapOr(Missing, 0));
+
+  { Case destructuring }
+  case FindFirst(Data, 40) of
+    Some(V): WriteLn('Found >= 40: ', V);
+    None:    WriteLn('Nothing >= 40')
+  end;
+
+  case FindFirst(Data, 100) of
+    Some(V): WriteLn('Found >= 100: ', V);
+    None:    WriteLn('Nothing >= 100')
+  end;
+
+  { Try operator — None propagation }
+  case DoubleFirst(Data, 10) of
+    Some(S): WriteLn(S);
+    None:    WriteLn('No match to double')
+  end;
+
+  case DoubleFirst(Data, 100) of
+    Some(S): WriteLn(S);
+    None:    WriteLn('No match to double')
+  end
+end.

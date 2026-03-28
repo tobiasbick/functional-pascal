@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "skills": {
+    "rust-async-patterns": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "988ec224108ffdb4ec8f4d87ad3caeeb6e54ba9c026b81286ff87ad09b55aa2e"
+    },
+    "rust-best-practices": {
+      "source": "apollographql/skills",
+      "sourceType": "github",
+      "computedHash": "3f89cd417842ca60bffefea01ee88fc28116b75a8e69329c4d6db446fbfcad02"
+    },
+    "rust-refactor-helper": {
+      "source": "zhanghandong/rust-skills",
+      "sourceType": "github",
+      "computedHash": "0dcbec9380651de430ce900f95e5ebcd93bb85cd371911df9f098a5baf29c50e"
+    }
+  }
+}

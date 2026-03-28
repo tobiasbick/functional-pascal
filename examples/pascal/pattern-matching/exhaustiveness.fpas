@@ -1,0 +1,54 @@
+program ExhaustivenessExample;
+uses Std.Console, Std.Conv;
+
+{ The compiler checks that case statements on enum, Result, and Option }
+{ types cover all variants. A missing variant is a compile-time error  }
+{ unless an else branch is present.                                    }
+
+type
+  Light = enum
+    Red;
+    Yellow;
+    Green;
+  end;
+
+function TrafficAdvice(L: Light): string;
+begin
+  { All three variants are covered — no else needed. }
+  case L of
+    Light.Red:    return 'Stop';
+    Light.Yellow: return 'Caution';
+    Light.Green:  return 'Go'
+  end
+end;
+
+function SafeLookup(Items: array of integer; Target: integer): Option of integer;
+begin
+  for I: integer := 0 to Std.Array.Length(Items) - 1 do
+    if Items[I] = Target then
+      return Some(I);
+  return None
+end;
+
+begin
+  WriteLn('--- Enum exhaustiveness ---');
+  WriteLn(TrafficAdvice(Light.Red));
+  WriteLn(TrafficAdvice(Light.Yellow));
+  WriteLn(TrafficAdvice(Light.Green));
+
+  WriteLn('--- Option exhaustiveness ---');
+  var Idx: Option of integer := SafeLookup([10, 20, 30], 20);
+  { Both Some and None are covered. }
+  case Idx of
+    Some(I): WriteLn('Found at index ' + IntToStr(I));
+    None:    WriteLn('Not found')
+  end;
+
+  WriteLn('--- Result exhaustiveness ---');
+  var R: Result of integer, string := Ok(42);
+  { Both Ok and Error are covered. }
+  case R of
+    Ok(V):  WriteLn('Value: ' + IntToStr(V));
+    Error(E): WriteLn('Error: ' + E)
+  end
+end.

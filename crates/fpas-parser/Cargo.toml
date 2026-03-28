@@ -1,0 +1,15 @@
+[package]
+name = "fpas-parser"
+description = "Parser producing the AST for Functional Pascal"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+fpas-lexer = { path = "../fpas-lexer" }
+fpas-diagnostics = { path = "../fpas-diagnostics" }
+
+[lints]
+workspace = true
+

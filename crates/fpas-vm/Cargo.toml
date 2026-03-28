@@ -1,0 +1,16 @@
+[package]
+name = "fpas-vm"
+description = "Virtual machine and bytecode interpreter for Functional Pascal"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+fpas-bytecode = { path = "../fpas-bytecode" }
+fpas-diagnostics = { path = "../fpas-diagnostics" }
+fpas-std = { path = "../fpas-std" }
+
+[lints]
+workspace = true
+

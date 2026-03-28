@@ -1,0 +1,68 @@
+use super::*;
+#[test]
+fn map_wrong_arity_compile_error() {
+    let err = compile_err(
+        "\
+program MapBadArity;
+uses Std.Array;
+begin
+  var A: array of integer := [1, 2];
+  var B: array of integer := Map(A)
+end.",
+    );
+    assert!(
+        err.message.contains("expects 2 arguments")
+            || err.message.contains("expected 2")
+            || err.message.contains("Map"),
+        "unexpected error: {err:?}"
+    );
+}
+#[test]
+fn reduce_wrong_arity_compile_error() {
+    let err = compile_err(
+        "\
+program ReduceBadArity;
+uses Std.Array;
+begin
+  var A: array of integer := [1, 2];
+  var B: integer := Reduce(A, 0)
+end.",
+    );
+    assert!(
+        err.message.contains("expects 3 arguments")
+            || err.message.contains("expected 3")
+            || err.message.contains("Reduce"),
+        "unexpected error: {err:?}"
+    );
+}
+
+#[test]
+fn lambda_type_mismatch_return() {
+    let err = compile_err(
+        "\
+program LambdaRetMismatch;
+begin
+  var F: function(X: integer): string :=
+    function(X: integer): string
+    begin
+      return X
+    end
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+}
+
+#[test]
+fn lambda_wrong_param_count_in_call() {
+    let err = compile_err(
+        "\
+program LambdaArity;
+uses Std.Console;
+begin
+  var F: function(X: integer): integer :=
+    function(X: integer): integer begin return X end;
+  WriteLn(F(1, 2))
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_WRONG_ARGUMENT_COUNT);
+}

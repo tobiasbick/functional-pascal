@@ -1,0 +1,49 @@
+program ResultExample;
+uses Std.Console, Std.Conv, Std.Result;
+
+function Divide(A: integer; B: integer): Result of integer, string;
+begin
+  if B = 0 then
+    return Error('Division by zero')
+  else
+    return Ok(A div B)
+end;
+
+function Stringify(A: integer; B: integer): Result of string, string;
+begin
+  var Quotient: integer := try Divide(A, B);
+  return Ok(IntToStr(A) + ' / ' + IntToStr(B) + ' = ' + IntToStr(Quotient))
+end;
+
+begin
+  { Basic Result usage }
+  var R1: Result of integer, string := Divide(10, 3);
+  WriteLn('IsOk: ', IsOk(R1));
+  WriteLn('Value: ', Unwrap(R1));
+
+  var R2: Result of integer, string := Divide(5, 0);
+  WriteLn('IsError: ', IsError(R2));
+  WriteLn('UnwrapOr: ', UnwrapOr(R2, -1));
+
+  { Case destructuring }
+  case Divide(42, 6) of
+    Ok(V):  WriteLn('42 / 6 = ', V);
+    Error(E): WriteLn('Error: ', E)
+  end;
+
+  case Divide(7, 0) of
+    Ok(V):  WriteLn('7 / 0 = ', V);
+    Error(E): WriteLn('Error: ', E)
+  end;
+
+  { Try operator — error propagation }
+  case Stringify(100, 4) of
+    Ok(S):  WriteLn(S);
+    Error(E): WriteLn('Failed: ', E)
+  end;
+
+  case Stringify(100, 0) of
+    Ok(S):  WriteLn(S);
+    Error(E): WriteLn('Failed: ', E)
+  end
+end.

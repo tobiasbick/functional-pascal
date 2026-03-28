@@ -1,0 +1,403 @@
+---
+description: Functional Pascal (FPAS) — syntax, mutability, Std library, pitfalls when editing .fpas sources
+globs: "**/*.fpas"
+alwaysApply: false
+---
+
+# Functional Pascal Language Guide
+
+Functional Pascal is a modern Pascal dialect with immutability-by-default, first-class functions, and a module system. Files use `.fpas` extension. The language is **case-insensitive** for keywords and identifiers.
+
+## Program Structure
+
+Programs use `program` + `begin...end.` with a trailing period. Units use `unit` and have no main block.
+
+```pascal
+program MyApp;
+uses Std.Console;
+begin
+  WriteLn('Hello')
+end.
+```
+
+```pascal
+unit MyApp.Utils;
+function Helper(X: integer): integer;
+begin
+  return X + 1
+end;
+```
+
+## Types
+
+| Type | Examples |
+|------|---------|
+| `integer` | `42`, `-7`, `$FF`, `1_000` |
+| `real` | `3.14`, `1.5e10` (digits required both sides of `.`) |
+| `boolean` | `true`, `false` |
+| `char` | Must be explicitly typed |
+| `string` | `'Hello'`, `'It''s'` (doubled quote), `'line1'#13#10'line2'` |
+| `array of T` | `[1, 2, 3]`, `[]` — 0-based indexing |
+| `dict of K to V` | `['key': value]`, `[:]` — insertion-ordered key-value map |
+| `Result of T, E` | `Ok(value)`, `Error(value)` — success or error |
+| `Option of T` | `Some(value)`, `None` — present or absent |
+
+## Variables and Constants
+
+All variables are **immutable by default**. Use `mutable var` for reassignable variables.
+
+```pascal
+var Name: string := 'Alice';
+mutable var Count: integer := 0;
+const MaxSize: integer := 1024;
+```
+
+## Functions and Procedures
+
+Use `return` to return values. There is **no** `FuncName := value` return pattern.
+
+```pascal
+function Add(A: integer; B: integer): integer;
+begin
+  return A + B
+end;
+
+procedure Greet(Name: string);
+begin
+  WriteLn('Hello, ' + Name)
+end;
+```
+
+- Parameters: semicolons in declarations, commas in calls
+- `mutable` parameter keyword allows reassignment inside the function
+- Nested functions have lexical scope access
+- `forward` enables mutual recursion: `function Foo(...): T; forward;`
+
+## Function Types
+
+```pascal
+type IntOp = function(A: integer; B: integer): integer;
+
+function Apply(F: function(X: integer): integer; Value: integer): integer;
+begin
+  return F(Value)
+end;
+```
+
+## Anonymous Functions and Closures
+
+Anonymous functions (lambdas) use `function(...): Type begin ... end` inline. They capture enclosing variables by value:
+
+```pascal
+var Square := function(X: integer): integer begin return X * X end;
+
+{ Closure — captures N from enclosing scope }
+function MakeAdder(N: integer): function(X: integer): integer;
+begin
+  return function(X: integer): integer begin return X + N end
+end;
+
+{ Higher-order: Map/Filter/Reduce }
+var Doubled := Map([1, 2, 3],
+  function(X: integer): integer begin return X * 2 end);
+```
+
+## Control Flow
+
+```pascal
+if X > 0 then WriteLn('positive')
+else if X = 0 then WriteLn('zero')
+else WriteLn('negative');
+
+case Value of
+  1: WriteLn('one');
+  2, 3: WriteLn('two or three');
+  10..20: WriteLn('ten to twenty')
+else
+  WriteLn('other')
+end;
+
+{ Guard clauses: arm matches only when label matches AND guard is true }
+case S of
+  Shape.Circle(R) if R > 10.0: WriteLn('Large');
+  Shape.Circle(R): WriteLn('Small');
+  Shape.Rectangle(W, H): WriteLn('Rect')
+end;
+
+{ Nested patterns and wildcards }
+case E of
+  Expr.Add(Expr.Num(A), Expr.Num(B)): WriteLn('sum');
+  Expr.Mul(Expr.Num(0), _): WriteLn('zero');
+else
+  WriteLn('other')
+end;
+
+{ Exhaustiveness: enum/Result/Option must cover all variants or use else }
+{ Guards do NOT count toward exhaustiveness }
+
+for I: integer := 1 to 10 do WriteLn(I);
+for I: integer := 10 downto 1 do WriteLn(I);
+for X: integer in MyArray do WriteLn(X);
+
+while Condition do begin ... end;
+repeat ... until Done;
+```
+
+`break` and `continue` work in all loops.
+
+## Records and Enums
+
+```pascal
+type
+  Point = record
+    X: real;
+    Y: real;
+
+    function DistanceTo(Self: Point; Other: Point): real;
+    begin
+      var DX: real := Other.X - Self.X;
+      var DY: real := Other.Y - Self.Y;
+      return Sqrt(DX * DX + DY * DY)
+    end;
+  end;
+
+  Color = enum
+    Red;
+    Green;
+    Blue;
+  end;
+
+var P: Point := record X := 0.0; Y := 5.0 end;
+var C: Color := Color.Red;
+```
+
+Records can contain methods (functions/procedures). The first parameter is `Self` typed as the record. Callers use dot notation; `Self` is implicit: `A.DistanceTo(B)`. Field assignment requires `mutable var`.
+
+### Enums with Associated Data
+
+Enum variants can carry data fields (like tagged unions):
+
+```pascal
+type
+  Shape = enum
+    Circle(Radius: real);
+    Rectangle(Width: real; Height: real);
+    Point;
+  end;
+
+var S: Shape := Shape.Circle(5.0);
+var R: Shape := Shape.Rectangle(10.0, 20.0);
+```
+
+Destructure with `case` — bindings are positional:
+
+```pascal
+case S of
+  Shape.Circle(R): WriteLn('radius ' + RealToStr(R));
+  Shape.Rectangle(W, H): WriteLn(RealToStr(W) + 'x' + RealToStr(H));
+  Shape.Point: WriteLn('point')
+end;
+```
+
+Backing values (`Success = 200`) cannot be combined with associated data on the same variant.
+
+## Generics
+
+Type parameters are declared in angle brackets (`<T>`). Concrete type arguments use the `of` keyword at usage sites.
+
+```pascal
+type
+  Box<T> = record
+    Value: T;
+  end;
+
+  Maybe<T> = enum
+    Just(Value: T);
+    Nothing;
+  end;
+
+function Identity<T>(Value: T): T;
+begin
+  return Value
+end;
+
+var B: Box of string := record Value := 'hi'; end;
+var M: Maybe of integer := Maybe.Just(42);
+var X: integer := Identity(7);  { T inferred }
+```
+
+Multiple type parameters: `Pair<A, B>`, used as `Pair of integer, string`. Type aliases can specialize generics: `type IntBox = Box of integer;`. Generics use type erasure — no monomorphization.
+
+## Visibility
+
+Applies in `unit` files only (not `program` files). All declarations are **public by default**.
+
+```pascal
+unit MyApp.Render;
+
+private function InternalHelper(X: real): real;
+begin
+  return X * X
+end;
+
+procedure Render(Value: real);
+begin
+  WriteLn(InternalHelper(Value))
+end;
+```
+
+`private` hides the symbol from importers. `public` is optional/explicit. Works on `function`, `procedure`, `type`, `const`, `var`.
+
+## Units and Uses
+
+```pascal
+program MyApp;
+uses Std.Console, Std.Math, MyApp.Utils;
+begin
+  WriteLn(Sqrt(16.0));
+  WriteLn(MyApp.Utils.Clamp(150, 0, 100))
+end.
+```
+
+- Short names available after `uses` import
+- Ambiguous short names require fully qualified access (e.g., `Std.Str.Length` vs `Std.Array.Length`)
+- `Std.*` namespace is reserved for the standard library
+
+## Standard Library
+
+| Unit | Purpose | Key symbols |
+|------|---------|------------|
+| `Std.Console` | Text I/O, CRT screen, keyboard | `WriteLn`, `Write`, `ReadLn`, `ReadKey`, `ReadKeyEvent`, `KeyPressed`, `ClrScr`, `GotoXY`, `TextColor`, `TextBackground`, `Window`, `Delay`, `CursorOn`, `CursorOff` |
+| `Std.Str` | String operations | `Length`, `ToUpper`, `ToLower`, `Trim`, `Contains`, `StartsWith`, `EndsWith`, `Substring`, `IndexOf`, `Replace`, `Split`, `Join`, `IsNumeric` |
+| `Std.Conv` | Type conversions | `IntToStr`, `StrToInt`, `IntToReal`, `RealToStr`, `StrToReal`, `CharToStr` |
+| `Std.Math` | Math functions | `Pi`, `Sqrt`, `Pow`, `Floor`, `Ceil`, `Round`, `Sin`, `Cos`, `Log`, `Abs`, `Min`, `Max` |
+| `Std.Array` | Array operations | `Length`, `Sort`, `Reverse`, `Contains`, `IndexOf`, `Slice`, `Push` (mutable), `Pop` (mutable), `Map`, `Filter`, `Reduce` |
+| `Std.Dict` | Dict operations | `Length`, `ContainsKey`, `Keys`, `Values`, `Remove` |
+| `Std.Result` | Result helpers | `Unwrap`, `UnwrapOr`, `IsOk`, `IsError` |
+| `Std.Option` | Option helpers | `Unwrap`, `UnwrapOr`, `IsSome`, `IsNone` |
+| `Std.Channel` | Channel operations | `Make`, `MakeBuffered`, `Send`, `Receive`, `TryReceive`, `Close` |
+| `Std.Task` | Task management | `Wait`, `WaitAll` |
+
+**Ambiguous names** — always qualify these:
+- `Length`, `Contains`, `IndexOf` across `Std.Str`, `Std.Array`, `Std.Dict`
+- `Unwrap`, `UnwrapOr` across `Std.Result` and `Std.Option`
+
+## Operators
+
+| Precedence | Operators |
+|-----------|----------|
+| 1 (highest) | `not`, unary `-` |
+| 2 | `*`, `/`, `div`, `mod`, `and`, `shl`, `shr` |
+| 3 | `+`, `-`, `or`, `xor` |
+| 4 (lowest) | `=`, `<>`, `<`, `>`, `<=`, `>=` |
+
+`/` always returns `real`. Use `div` for integer division.
+
+## Semicolons
+
+Semicolons are **separators**, not terminators. No semicolon required before `end`, `else`, `until`.
+
+```pascal
+begin
+  var X: integer := 1;
+  var Y: integer := 2;
+  WriteLn(X + Y)         { no semicolon before end }
+end
+```
+
+## Comments
+
+```pascal
+{ Brace comment }
+(* Parenthesis-star comment *)
+// Line comment
+```
+
+Comments do **not** nest.
+
+## Error Handling
+
+### Result and Option
+
+```pascal
+var R: Result of integer, string := Ok(42);
+var E: Result of integer, string := Error('not found');
+var O: Option of integer := Some(7);
+var N: Option of integer := None;
+```
+
+Handle with `case` destructuring:
+
+```pascal
+case R of
+  Ok(V):    WriteLn(IntToStr(V));
+  Error(E): WriteLn('Error: ' + E)
+end;
+```
+
+### Try Operator
+
+`try` propagates errors — unwraps `Ok`/`Some`, returns early on `Error`/`None`:
+
+```pascal
+function Process(A: integer; B: integer): Result of string, string;
+begin
+  var Q: integer := try Divide(A, B);
+  return Ok(IntToStr(Q))
+end;
+```
+
+### Panic
+
+`panic` aborts the program for unrecoverable errors:
+
+```pascal
+if B = 0 then panic('Division by zero');
+```
+
+Use `Result`/`Option` for expected failures; `panic` for broken invariants.
+
+## Concurrency
+
+Go-inspired concurrency with lightweight tasks, typed channels, and `select`.
+
+```pascal
+uses Std.Console, Std.Channel, Std.Task;
+
+var Ch: channel of integer := Make();
+go Producer(Ch);
+var V: integer := Receive(Ch);
+```
+
+- `go FuncCall()` — launch a concurrent task, returns `task` handle
+- `Wait(T)` — block until task completes, return result
+- `Make()` / `MakeBuffered(N)` — create channels
+- `Send`, `Receive`, `TryReceive`, `Close` — channel operations
+- `select ... case V: T from Ch: ... default: ... end` — multiplex channels
+
+## Projects (.fpasprj)
+
+Multi-file projects use TOML project files:
+
+```toml
+[project]
+name = "my-app"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/**/*.fpas"]
+```
+
+## Key Rules Summary
+
+1. **Immutable by default** — use `mutable var` only when needed
+2. **`return` only** — no `FuncName := value` pattern
+3. **Semicolons separate** — no trailing semicolon before `end`/`else`/`until`
+4. **Records support methods** — first param is `Self` typed as the record, called via dot notation
+5. **Case-insensitive** — `WriteLn` = `writeln` = `WRITELN`
+6. **`private` for internal symbols** — public is default in units
+7. **Qualify ambiguous names** — `Std.Str.Length` vs `Std.Array.Length`; `Std.Result.Unwrap` vs `Std.Option.Unwrap`
+8. **Single quotes for strings** — `'Hello'`, doubled for escaping: `'It''s'`
+9. **`Result`/`Option` for expected errors** — `panic` only for broken invariants
+10. **`try` propagates errors** — unwraps or returns early

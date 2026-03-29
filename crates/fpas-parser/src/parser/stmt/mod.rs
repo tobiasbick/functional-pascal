@@ -101,6 +101,7 @@ impl Parser {
                 | Token::None
                 | Token::Try
                 | Token::Go
+                | Token::New
                 | Token::Function
         )
     }

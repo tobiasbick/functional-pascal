@@ -1,6 +1,7 @@
 use super::{FormalParam, FuncBody, TypeExpr};
 use fpas_lexer::Span;
 
+/// Parsed expression.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
     Integer(i64, Span),
@@ -34,6 +35,14 @@ pub enum Expr {
         fields: Vec<FieldInit>,
         span: Span,
     },
+    /// `new T with Field := Value; ... end`
+    ///
+    /// **Documentation:** `docs/pascal/05-types.md`
+    New {
+        type_expr: TypeExpr,
+        fields: Vec<FieldInit>,
+        span: Span,
+    },
     /// `Ok(expr)` — wrap value in Result::Ok.
     ResultOk(Box<Expr>, Span),
     /// `Error(expr)` — wrap value in Result::Error.
@@ -60,6 +69,7 @@ pub enum Expr {
     Go(Box<Expr>, Span),
 }
 
+/// Record or `new` field initializer.
 #[derive(Debug, Clone, PartialEq)]
 pub struct FieldInit {
     pub name: String,
@@ -67,24 +77,28 @@ pub struct FieldInit {
     pub span: Span,
 }
 
+/// Parsed variable/field/index access path.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Designator {
     pub parts: Vec<DesignatorPart>,
     pub span: Span,
 }
 
+/// One segment in a parsed designator path.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DesignatorPart {
     Ident(String, Span),
     Index(Expr, Span),
 }
 
+/// Unary operator.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum UnaryOp {
     Not,
     Negate,
 }
 
+/// Binary operator.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BinaryOp {
     Mul,

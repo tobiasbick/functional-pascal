@@ -28,3 +28,18 @@ fn record_literal() {
         _ => panic!("expected RecordLiteral"),
     }
 }
+
+#[test]
+fn new_expr() {
+    match parse_expr("new Point with X := 1; Y := 2; end") {
+        Expr::New {
+            type_expr, fields, ..
+        } => {
+            assert!(matches!(type_expr, TypeExpr::Named { .. }));
+            assert_eq!(fields.len(), 2);
+            assert_eq!(fields[0].name, "X");
+            assert_eq!(fields[1].name, "Y");
+        }
+        _ => panic!("expected New"),
+    }
+}

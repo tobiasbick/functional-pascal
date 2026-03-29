@@ -1,5 +1,7 @@
+use std::sync::{Arc, RwLock};
+
 /// Runtime value in the VM.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum Value {
     Integer(i64),
     Real(f64),
@@ -24,6 +26,13 @@ pub enum Value {
     Record {
         type_name: String,
         fields: Vec<(String, Value)>,
+    },
+    /// Shared heap reference.
+    ///
+    /// **Documentation:** `docs/pascal/05-types.md`
+    Ref {
+        type_name: String,
+        value: Arc<RwLock<Value>>,
     },
     /// Unit / void — result of procedures, statements.
     Unit,
@@ -55,6 +64,7 @@ pub enum Value {
 }
 
 impl Value {
+    /// Return the runtime type category name for diagnostics.
     pub fn type_name(&self) -> &'static str {
         match self {
             Value::Integer(_) => "integer",
@@ -66,6 +76,7 @@ impl Value {
             Value::Array(_) => "array",
             Value::Dict(_) => "dict",
             Value::Record { .. } => "record",
+            Value::Ref { .. } => "ref",
             Value::Unit => "unit",
             Value::ResultOk(_) => "Result.Ok",
             Value::ResultError(_) => "Result.Error",
@@ -158,6 +169,7 @@ impl std::fmt::Display for Value {
                 }
                 write!(f, "}}")
             }
+            Value::Ref { type_name, .. } => write!(f, "<ref {type_name}>"),
             Value::Unit => write!(f, "()"),
             Value::ResultOk(v) => write!(f, "Ok({v})"),
             Value::ResultError(v) => write!(f, "Error({v})"),
@@ -166,6 +178,70 @@ impl std::fmt::Display for Value {
             Value::Function { name, .. } => write!(f, "<function {name}>"),
             Value::Channel(id) => write!(f, "<channel {id}>"),
             Value::Task(id) => write!(f, "<task {id}>"),
+        }
+    }
+}
+
+impl PartialEq for Value {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Integer(a), Self::Integer(b)) => a == b,
+            (Self::Real(a), Self::Real(b)) => a == b,
+            (Self::Boolean(a), Self::Boolean(b)) => a == b,
+            (Self::Char(a), Self::Char(b)) => a == b,
+            (Self::Str(a), Self::Str(b)) => a == b,
+            (
+                Self::Enum {
+                    type_name: a_type,
+                    variant: a_variant,
+                    fields: a_fields,
+                },
+                Self::Enum {
+                    type_name: b_type,
+                    variant: b_variant,
+                    fields: b_fields,
+                },
+            ) => a_type == b_type && a_variant == b_variant && a_fields == b_fields,
+            (Self::Array(a), Self::Array(b)) => a == b,
+            (Self::Dict(a), Self::Dict(b)) => a == b,
+            (
+                Self::Record {
+                    type_name: a_type,
+                    fields: a_fields,
+                },
+                Self::Record {
+                    type_name: b_type,
+                    fields: b_fields,
+                },
+            ) => a_type == b_type && a_fields == b_fields,
+            (
+                Self::Ref {
+                    type_name: a_type,
+                    value: a_value,
+                },
+                Self::Ref {
+                    type_name: b_type,
+                    value: b_value,
+                },
+            ) => a_type == b_type && Arc::ptr_eq(a_value, b_value),
+            (Self::Unit, Self::Unit) => true,
+            (Self::ResultOk(a), Self::ResultOk(b)) => a == b,
+            (Self::ResultError(a), Self::ResultError(b)) => a == b,
+            (Self::OptionSome(a), Self::OptionSome(b)) => a == b,
+            (Self::OptionNone, Self::OptionNone) => true,
+            (
+                Self::Function {
+                    name: a_name,
+                    captures: a_captures,
+                },
+                Self::Function {
+                    name: b_name,
+                    captures: b_captures,
+                },
+            ) => a_name == b_name && a_captures == b_captures,
+            (Self::Channel(a), Self::Channel(b)) => a == b,
+            (Self::Task(a), Self::Task(b)) => a == b,
+            _ => false,
         }
     }
 }

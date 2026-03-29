@@ -1,6 +1,7 @@
+/// Lexical token produced by the Functional Pascal lexer.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
-    // Keywords (55)
+    // Keywords (58)
     Program,
     Unit,
     Uses,
@@ -57,6 +58,9 @@ pub enum Token {
     Select,
     From,
     Dict,
+    Ref,
+    New,
+    With,
 
     // Literals
     Integer(i64),
@@ -151,6 +155,9 @@ impl Token {
             "select" => Token::Select,
             "from" => Token::From,
             "dict" => Token::Dict,
+            "ref" => Token::Ref,
+            "new" => Token::New,
+            "with" => Token::With,
             _ => Token::Ident(raw),
         }
     }

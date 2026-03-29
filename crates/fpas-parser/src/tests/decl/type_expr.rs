@@ -21,3 +21,14 @@ fn procedure_type_expr() {
         _ => panic!("expected Var"),
     }
 }
+
+#[test]
+fn ref_type_expr() {
+    let p = parse_ok("program T; var NodeRef: ref integer := new integer with end; begin end.");
+    match &p.declarations[0] {
+        Decl::Var(v) => {
+            assert!(matches!(v.type_expr, TypeExpr::Ref { .. }));
+        }
+        _ => panic!("expected Var"),
+    }
+}

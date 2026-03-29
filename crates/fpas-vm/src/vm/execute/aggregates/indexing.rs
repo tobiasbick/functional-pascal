@@ -9,7 +9,8 @@ impl Worker {
     pub(super) fn exec_index_get(&mut self, line: SourceLocation) -> Result<(), VmError> {
         let key = self.pop(line)?;
         let collection = self.pop(line)?;
-        match collection {
+        let deref_collection = self.deref_value(&collection);
+        match deref_collection {
             Value::Array(elems) => {
                 let idx = array_index_from_key(&key, line)?;
                 if idx >= elems.len() {
@@ -48,6 +49,35 @@ impl Worker {
         let value = self.pop(line)?;
         let key = self.pop(line)?;
         let collection = self.pop(line)?;
+        if let Some(result) = self.update_ref_target(&collection, |target| match target {
+            Value::Array(elems) => {
+                let idx = array_index_from_key(&key, line)?;
+                if idx >= elems.len() {
+                    return Err(runtime_error(
+                        RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
+                        format!("Array index {idx} out of bounds (len {})", elems.len()),
+                        "Check index bounds before array assignment.",
+                        line,
+                    ));
+                }
+                elems[idx] = value.clone();
+                Ok(())
+            }
+            Value::Dict(pairs) => {
+                if let Some(entry) = pairs.iter_mut().find(|(candidate, _)| candidate == &key) {
+                    entry.1 = value.clone();
+                } else {
+                    pairs.push((key.clone(), value.clone()));
+                }
+                Ok(())
+            }
+            _ => Err(index_operand_error("IndexSet", &collection, line)),
+        }) {
+            result?;
+            self.push(collection)?;
+            return Ok(());
+        }
+
         match collection {
             Value::Array(mut elems) => {
                 let idx = array_index_from_key(&key, line)?;

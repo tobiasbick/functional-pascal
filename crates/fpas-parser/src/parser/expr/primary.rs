@@ -40,6 +40,7 @@ impl Parser {
             }
             Token::LBracket => self.parse_array_or_dict_literal(),
             Token::Record => self.parse_record_literal(),
+            Token::New => self.parse_new_expr(),
             Token::Ident(_) => self.parse_designator_or_call(),
             Token::Ok => {
                 let start = self.current_span();
@@ -163,6 +164,34 @@ impl Parser {
         }
         self.expect(&Token::End);
         Expr::RecordLiteral {
+            fields,
+            span: self.span_from(start),
+        }
+    }
+
+    fn parse_new_expr(&mut self) -> Expr {
+        let start = self.current_span();
+        self.advance();
+        let type_expr = self.parse_type_expr();
+        self.expect(&Token::With);
+        let mut fields = Vec::new();
+        while !self.check(&Token::End) && !self.at_end() {
+            let field_start = self.current_span();
+            let (name, _) = self
+                .expect_ident()
+                .unwrap_or(("_error_".into(), field_start));
+            self.expect(&Token::ColonAssign);
+            let value = self.parse_expression();
+            self.expect_semi();
+            fields.push(FieldInit {
+                name,
+                value,
+                span: self.span_from(field_start),
+            });
+        }
+        self.expect(&Token::End);
+        Expr::New {
+            type_expr,
             fields,
             span: self.span_from(start),
         }

@@ -15,6 +15,7 @@ pub(crate) fn expr_span(expr: &Expr) -> Span {
         Expr::ArrayLiteral(_, span) => *span,
         Expr::DictLiteral(_, span) => *span,
         Expr::RecordLiteral { span, .. } => *span,
+        Expr::New { span, .. } => *span,
         Expr::ResultOk(_, span) => *span,
         Expr::ResultError(_, span) => *span,
         Expr::OptionSome(_, span) => *span,

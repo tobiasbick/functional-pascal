@@ -19,6 +19,9 @@ impl Checker {
                 }
             }
             TypeExpr::Array(inner, _) => Ty::Array(Box::new(self.resolve_type_expr(inner))),
+            TypeExpr::Ref { inner_type, .. } => {
+                Ty::Ref(Box::new(self.resolve_type_expr(inner_type)))
+            }
             TypeExpr::FunctionType {
                 params,
                 return_type,

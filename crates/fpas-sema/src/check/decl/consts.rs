@@ -82,6 +82,7 @@ impl Checker {
             Expr::RecordLiteral { fields, .. } => fields
                 .iter()
                 .all(|field| self.const_expr_is_compile_time_known(&field.value)),
+            Expr::New { .. } => false,
             Expr::ResultOk(inner, _)
             | Expr::ResultError(inner, _)
             | Expr::OptionSome(inner, _)

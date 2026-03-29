@@ -74,6 +74,50 @@ begin
 end.
 ```
 
+## Reference Assignment
+
+`ref T` stores a shared reference to a heap-allocated record. Assigning a `ref` value copies the reference, so both variables observe the same underlying record.
+
+```pascal
+type
+  Counter = record
+    Value: integer;
+  end;
+
+mutable var
+  Root: ref Counter := new Counter with
+    Value := 1;
+  end;
+
+var
+  Alias: ref Counter := Root;
+
+begin
+  Root.Value := 2;
+  WriteLn(IntToStr(Alias.Value));  { 2 }
+end.
+```
+
+Field and index access dereference a `ref` automatically. No explicit dereference operator is required.
+
+The mutability check applies to the variable you write through. Writing through an immutable `ref` variable is rejected even though the target is heap-allocated:
+
+```pascal
+type
+  Counter = record
+    Value: integer;
+  end;
+
+var
+  Root: ref Counter := new Counter with
+    Value := 1;
+  end;
+
+begin
+  Root.Value := 2;  { ERROR: Root is immutable }
+end.
+```
+
 ## Constants
 
 Constants are declared with `const` and `:=`. Must have a value known at compile time:
@@ -84,6 +128,8 @@ const
   MaxSize: integer := 1024;
   Greeting: string := 'Hello';
 ```
+
+`new` performs runtime allocation, so it is not valid in a `const` initializer.
 
 ## Number Literals
 

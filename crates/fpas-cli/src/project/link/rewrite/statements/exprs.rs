@@ -36,6 +36,14 @@ impl NameRewriter<'_> {
                     self.rewrite_expr(&mut field.value);
                 }
             }
+            Expr::New {
+                type_expr, fields, ..
+            } => {
+                self.rewrite_type_expr(type_expr);
+                for field in fields {
+                    self.rewrite_expr(&mut field.value);
+                }
+            }
             Expr::ResultOk(inner, _) | Expr::ResultError(inner, _) | Expr::OptionSome(inner, _) => {
                 self.rewrite_expr(inner);
             }
@@ -89,6 +97,14 @@ impl NameRewriter<'_> {
                 }
             }
             Expr::RecordLiteral { fields, .. } => {
+                for field in fields {
+                    self.rewrite_case_pattern_expr(&mut field.value, allow_binding_name);
+                }
+            }
+            Expr::New {
+                type_expr, fields, ..
+            } => {
+                self.rewrite_type_expr(type_expr);
                 for field in fields {
                     self.rewrite_case_pattern_expr(&mut field.value, allow_binding_name);
                 }

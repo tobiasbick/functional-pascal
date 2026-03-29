@@ -112,12 +112,21 @@ impl Checker {
         };
 
         let receiver_ty = self.check_designator_expr(&receiver_designator);
-        let Ty::Record(record_ty) = &receiver_ty else {
-            return None;
+        let resolved_receiver_ty = self.resolve_visible_type(&receiver_ty);
+        let record_ty = match &resolved_receiver_ty {
+            Ty::Record(record_ty) => record_ty.clone(),
+            Ty::Ref(inner) => {
+                let inner_ty = self.resolve_visible_type(inner);
+                let Ty::Record(record_ty) = inner_ty else {
+                    return None;
+                };
+                record_ty
+            }
+            _ => return None,
         };
 
         let qualified = format!("{}.{}", record_ty.name, method_name);
-        let method_kind = self.resolve_method_kind(record_ty, &method_name, &qualified)?;
+        let method_kind = self.resolve_method_kind(&record_ty, &method_name, &qualified)?;
 
         let call_key = Self::expr_lookup_key(call_expr);
         self.method_calls.insert(call_key, qualified.clone());

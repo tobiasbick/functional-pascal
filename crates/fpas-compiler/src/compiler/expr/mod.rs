@@ -105,6 +105,19 @@ impl Compiler {
                     (span.line, span.column),
                 );
             }
+            Expr::New { fields, span, .. } => {
+                for field in fields {
+                    self.emit_constant(Value::Str(field.name.clone()), (span.line, span.column));
+                    self.compile_expr(&field.value)?;
+                }
+                let type_name = self.new_record_type_name(expr);
+                let type_idx = self.chunk.add_constant(Value::Str(type_name));
+                self.emit(
+                    Op::MakeRecord(type_idx, fields.len() as u16),
+                    (span.line, span.column),
+                );
+                self.emit(Op::MakeRef(type_idx), (span.line, span.column));
+            }
             Expr::ResultOk(inner, span) => {
                 self.compile_expr(inner)?;
                 self.emit(Op::MakeOk, (span.line, span.column));
@@ -137,5 +150,16 @@ impl Compiler {
         }
 
         Ok(())
+    }
+
+    fn new_record_type_name(&self, expr: &Expr) -> String {
+        match self.ty_of(expr) {
+            Ty::Ref(inner) => match inner.as_ref() {
+                Ty::Record(record_ty) => record_ty.name.clone(),
+                Ty::Named(name) => name.clone(),
+                _ => "<ref>".into(),
+            },
+            _ => "<ref>".into(),
+        }
     }
 }

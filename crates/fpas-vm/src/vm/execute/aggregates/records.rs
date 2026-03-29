@@ -33,7 +33,8 @@ impl Worker {
     ) -> Result<(), VmError> {
         let field_name = self.const_str(name_idx, line)?;
         let record = self.pop(line)?;
-        if let Value::Record { fields, .. } = record {
+        let deref_record = self.deref_value(&record);
+        if let Value::Record { fields, .. } = deref_record {
             let value = fields
                 .iter()
                 .find(|(name, _)| name == &field_name)
@@ -50,7 +51,7 @@ impl Worker {
             return Ok(());
         }
 
-        Err(record_operand_error("FieldGet", line))
+        Err(self.ref_operand_error("FieldGet", "record", line))
     }
 
     pub(super) fn exec_field_set(
@@ -61,6 +62,20 @@ impl Worker {
         let field_name = self.const_str(name_idx, line)?;
         let value = self.pop(line)?;
         let record = self.pop(line)?;
+        if let Some(result) = self.update_ref_target(&record, |target| {
+            let Value::Record { fields, .. } = target else {
+                return Err(record_operand_error("FieldSet", line));
+            };
+            if let Some(entry) = fields.iter_mut().find(|(name, _)| name == &field_name) {
+                entry.1 = value.clone();
+            }
+            Ok(())
+        }) {
+            result?;
+            self.push(record)?;
+            return Ok(());
+        }
+
         if let Value::Record {
             type_name,
             mut fields,
@@ -73,7 +88,7 @@ impl Worker {
             return Ok(());
         }
 
-        Err(record_operand_error("FieldSet", line))
+        Err(self.ref_operand_error("FieldSet", "record", line))
     }
 }
 

@@ -1,6 +1,6 @@
 ---
 applyTo: "**/*.fpas"
-description: "Use when writing, reviewing, or generating Functional Pascal (.fpas) code. Covers syntax, types, visibility, units, standard library, and common patterns. Reference docs at docs/pascal/ and docs/pascal/std/."
+description: "Use when writing, reviewing, or generating Functional Pascal (.fpas) code. Covers syntax, reference types, visibility, units, standard library, and common patterns. Reference docs at docs/pascal/ and docs/pascal/std/."
 ---
 
 # Functional Pascal Language Guide
@@ -40,6 +40,7 @@ end;
 | `dict of K to V` | `['key': value]`, `[:]` — insertion-ordered key-value map |
 | `Result of T, E` | `Ok(value)`, `Error(value)` — success or error |
 | `Option of T` | `Some(value)`, `None` — present or absent |
+| `ref T` | `ref Node`, `new Node with ... end` — shared reference to a heap-allocated record |
 
 ## Variables and Constants
 
@@ -50,6 +51,8 @@ var Name: string := 'Alice';
 mutable var Count: integer := 0;
 const MaxSize: integer := 1024;
 ```
+
+`ref` bindings follow the same mutability rules as every other variable. Assigning a `ref` value copies the reference, not the underlying record. `new` performs runtime allocation, so it is not valid in `const` initializers.
 
 ## Functions and Procedures
 
@@ -171,6 +174,36 @@ var C: Color := Color.Red;
 ```
 
 Records can contain methods (functions/procedures). The first parameter is `Self` typed as the record. Callers use dot notation; `Self` is implicit: `A.DistanceTo(B)`. Field assignment requires `mutable var`.
+
+### Reference Types
+
+Use `ref T` for shared, heap-allocated records and recursive structures:
+
+```pascal
+type
+  Node = record
+    Value: integer;
+    Next: Option of ref Node;
+  end;
+
+mutable var Head: ref Node := new Node with
+  Value := 1;
+  Next := None;
+end;
+
+var Alias: ref Node := Head;
+
+begin
+  Head.Value := 2;
+  WriteLn(IntToStr(Alias.Value))
+end.
+```
+
+- `new T with ... end` allocates a record and returns `ref T`
+- assignment of `ref` shares the same underlying record
+- field access, indexing, and method calls dereference `ref` automatically
+- writing through a `ref` still requires the binding used for the write to be declared with `mutable var`
+- `new` is valid only for record types, and every field must be initialized exactly once
 
 ### Enums with Associated Data
 
@@ -419,3 +452,4 @@ include = ["src/**/*.fpas"]
 8. **Single quotes for strings** — `'Hello'`, doubled for escaping: `'It''s'`
 9. **`Result`/`Option` for expected errors** — `panic` only for broken invariants
 10. **`try` propagates errors** — unwraps or returns early
+11. **`ref` is shared** — `new T with ... end` allocates a shared record; assignment aliases it; writes through it need a mutable binding

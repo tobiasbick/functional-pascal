@@ -10,6 +10,23 @@ use fpas_parser::{FuncBody, RecordMethod, RecordType, TypeDef};
 
 impl Checker {
     pub(super) fn check_record_type_def(&mut self, td: &TypeDef, record: &RecordType) {
+        if !self.scopes.define(
+            &td.name,
+            Symbol {
+                ty: Ty::Named(td.name.clone()),
+                mutable: false,
+                kind: SymbolKind::Type,
+            },
+        ) {
+            self.error_with_code(
+                fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION,
+                format!("Duplicate type `{}`", td.name),
+                "Each name must be unique in the same scope.",
+                td.span,
+            );
+            return;
+        }
+
         let fields = self.with_type_params(&td.type_params, td.span, |checker| {
             record
                 .fields
@@ -30,10 +47,6 @@ impl Checker {
             methods: Vec::new(),
         };
         let mut ty = Ty::Record(record_ty);
-
-        if !self.define_type_symbol(td, ty.clone()) {
-            return;
-        }
 
         let methods = self.with_type_params(&td.type_params, td.span, |checker| {
             checker.check_record_methods(&td.name, &ty, &record.methods)
@@ -59,7 +72,11 @@ impl Checker {
         for method in methods {
             match method {
                 RecordMethod::Function(function) => {
-                    let return_ty = self.resolve_type_expr(&function.return_type);
+                    let return_ty = self.resolve_method_param_type(
+                        &function.return_type,
+                        type_name,
+                        record_ty,
+                    );
                     let params: Vec<ParamTy> = function
                         .params
                         .iter()

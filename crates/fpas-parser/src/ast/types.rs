@@ -1,6 +1,7 @@
 use super::QualifiedId;
 use fpas_lexer::Span;
 
+/// Parsed type expression.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TypeExpr {
     /// A named type, optionally with type arguments: `Point` or `Stack of integer`.
@@ -10,6 +11,13 @@ pub enum TypeExpr {
         type_args: Vec<TypeExpr>,
     },
     Array(Box<TypeExpr>, Span),
+    /// `ref T`
+    ///
+    /// **Documentation:** `docs/pascal/05-types.md`
+    Ref {
+        inner_type: Box<TypeExpr>,
+        span: Span,
+    },
     FunctionType {
         params: Vec<FormalParam>,
         return_type: Box<TypeExpr>,
@@ -47,6 +55,7 @@ pub enum TypeExpr {
     },
 }
 
+/// Parsed formal parameter.
 #[derive(Debug, Clone, PartialEq)]
 pub struct FormalParam {
     pub mutable: bool,

@@ -35,6 +35,11 @@ impl Checker {
             Expr::ArrayLiteral(elements, _) => self.check_array_literal(elements),
             Expr::DictLiteral(pairs, _) => self.check_dict_literal(pairs),
             Expr::RecordLiteral { fields, .. } => self.check_record_literal(fields),
+            Expr::New {
+                type_expr,
+                fields,
+                span,
+            } => self.check_new_expr(type_expr, fields, *span),
             Expr::ResultOk(inner, _) => {
                 let inner_ty = self.check_expr(inner);
                 Ty::Result(Box::new(inner_ty), Box::new(Ty::Error))
@@ -180,6 +185,34 @@ impl Checker {
             fields: field_types,
             methods: Vec::new(),
         })
+    }
+
+    fn check_new_expr(
+        &mut self,
+        type_expr: &TypeExpr,
+        fields: &[FieldInit],
+        span: fpas_lexer::Span,
+    ) -> Ty {
+        let target_ty = self.resolve_type_expr(type_expr);
+        if !matches!(self.resolve_visible_type(&target_ty), Ty::Record(_)) && !target_ty.is_error() {
+            self.error_with_code(
+                fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
+                format!("`new` requires a record type, found `{target_ty:?}`"),
+                "Use `new RecordType with Field := Value; ... end`.",
+                span,
+            );
+            for field in fields {
+                let _ = self.check_expr(&field.value);
+            }
+            return Ty::Error;
+        }
+
+        let value_ty = self.check_record_literal(fields);
+        if !target_ty.is_error() && !value_ty.is_error() {
+            self.check_type_compat(&target_ty, &value_ty, "new initializer", span);
+        }
+
+        Ty::Ref(Box::new(target_ty))
     }
 
     fn check_try_expr(&mut self, inner: &Expr, span: fpas_lexer::Span) -> Ty {

@@ -93,6 +93,72 @@ begin
 end.
 ```
 
+## Reference Types
+
+`ref T` denotes a shared reference to a heap-allocated record of type `T`. Use it when multiple variables should refer to the same record, or when a record must contain references to values of its own type.
+
+### Recursive Records
+
+```pascal
+type
+  Node = record
+    Value: integer;
+    Next: Option of ref Node;
+  end;
+```
+
+### Allocating with `new`
+
+`new T with ... end` allocates a record and returns a value of type `ref T`.
+
+```pascal
+mutable var
+  Head: ref Node := new Node with
+    Value := 1;
+    Next := None;
+  end;
+```
+
+The target of `new` must be a record type. Each declared field must be initialized exactly once. Missing fields and unknown fields are compile-time errors.
+
+### Sharing and Implicit Dereference
+
+Assigning a `ref` value shares the same underlying record:
+
+```pascal
+mutable var
+  Head: ref Node := new Node with
+    Value := 1;
+    Next := None;
+  end;
+
+var
+  Alias: ref Node := Head;
+
+begin
+  Head.Value := 2;
+  WriteLn(IntToStr(Alias.Value));  { 2 }
+end.
+```
+
+Field access, field assignment, indexing, and method calls dereference `ref` values automatically. Use the same dot and bracket syntax as for ordinary records, arrays, and dicts.
+
+### Mutability Through `ref`
+
+The mutability rule is checked at the variable used for the write. Rebinding a `ref` variable still requires `mutable var`, and writing through a `ref` also requires a mutable binding:
+
+```pascal
+var
+  Root: ref Node := new Node with
+    Value := 1;
+    Next := None;
+  end;
+
+begin
+  Root.Value := 2;  { ERROR: Root is immutable }
+end.
+```
+
 ## Enumerations
 
 Enums define a set of named constants, optionally with explicit integer backing values.

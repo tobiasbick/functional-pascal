@@ -5,6 +5,7 @@
 mod array_locals;
 mod indexing;
 mod records;
+mod refs;
 
 use super::super::Worker;
 use super::super::diagnostics::VmError;
@@ -35,6 +36,10 @@ impl Worker {
             }
             Op::MakeRecord(type_idx, field_count) => {
                 self.exec_make_record(type_idx, field_count, line)?;
+                Ok(true)
+            }
+            Op::MakeRef(type_idx) => {
+                self.exec_make_ref(type_idx, line)?;
                 Ok(true)
             }
             Op::FieldGet(name_idx) => {

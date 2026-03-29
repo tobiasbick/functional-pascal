@@ -68,7 +68,7 @@ line_comment    = '//' { (* any char except newline *) } newline ;
 (* { outer { inner } ← first } closes the comment.                 *)
 (* {$...} is NOT a compiler directive — treated as regular comment. *)
 
-(* ---- Keywords (56, case-insensitive) --------------------------- *)
+(* ---- Keywords (59, case-insensitive) --------------------------- *)
 
 keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'var'       | 'mutable'   | 'function'  | 'procedure'
@@ -79,6 +79,7 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'and'       | 'or'        | 'not'       | 'xor'
                 | 'div'       | 'mod'       | 'shl'       | 'shr'
                 | 'true'      | 'false'     | 'type'      | 'record'
+                | 'ref'       | 'new'       | 'with'
                 | 'enum'      | 'array'     | 'forward'   | 'panic'
                 | 'break'     | 'continue'  | 'result'    | 'option'
                 | 'ok'        | 'error'     | 'some'      | 'none'
@@ -179,7 +180,8 @@ constraint_name     = 'Comparable' | 'Numeric' | 'Printable' ;
 
 (* ---- 2.3 Type Expressions ------------------------------------- *)
 
-type_expr           = 'array' 'of' type_expr            (* array type     *)
+type_expr           = 'ref' type_expr                   (* shared ref     *)
+                    | 'array' 'of' type_expr            (* array type     *)
                     | 'dict' 'of' type_expr 'to' type_expr (* dict type    *)
                     | 'channel' 'of' type_expr           (* channel type   *)
                     | 'result' 'of' type_expr ',' type_expr  (* result type *)
@@ -418,6 +420,7 @@ primary_expr        = integer_literal
                     | array_literal
                     | dict_literal
                     | record_literal
+                    | new_expr
                     | function_expr                      (* lambda/closure *)
                     | 'go' expression                    (* spawn task     *)
                     | designator [ call_args ] ;
@@ -435,7 +438,10 @@ call_args           = '(' [ arg_list ] ')' ;
 
 (* -- Record construction -- *)
 record_literal      = 'record' field_init { field_init } 'end' ;
+new_expr            = 'new' type_expr 'with' field_init { field_init } 'end' ;
 field_init          = identifier ':=' expression ';' ;
+
+(* `new` is valid only when `type_expr` resolves to a record type. *)
 
 arg_list            = expression { ',' expression } ;
 

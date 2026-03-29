@@ -5,8 +5,8 @@ use fpas_lexer::Span;
 #[derive(Debug, Clone, PartialEq)]
 pub struct FunctionDecl {
     pub name: String,
-    /// Generic type parameters: `<T>`, `<A, B>`.
-    pub type_params: Vec<String>,
+    /// Generic type parameters: `<T>`, `<T: Comparable>`, `<A, B>`.
+    pub type_params: Vec<super::TypeParam>,
     pub params: Vec<FormalParam>,
     pub return_type: TypeExpr,
     pub body: FuncBody,
@@ -17,8 +17,8 @@ pub struct FunctionDecl {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProcedureDecl {
     pub name: String,
-    /// Generic type parameters: `<T>`, `<A, B>`.
-    pub type_params: Vec<String>,
+    /// Generic type parameters: `<T>`, `<T: Comparable>`, `<A, B>`.
+    pub type_params: Vec<super::TypeParam>,
     pub params: Vec<FormalParam>,
     pub body: FuncBody,
     pub visibility: Visibility,

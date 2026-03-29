@@ -173,7 +173,9 @@ type_body           = record_type
                     | enum_type
                     | type_expr ;
 
-type_params         = '<' identifier { ',' identifier } '>' ;
+type_params         = '<' type_param { ',' type_param } '>' ;
+type_param          = identifier [ ':' constraint_name ] ;
+constraint_name     = 'Comparable' | 'Numeric' | 'Printable' ;
 
 (* ---- 2.3 Type Expressions ------------------------------------- *)
 

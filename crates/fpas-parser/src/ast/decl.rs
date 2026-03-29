@@ -48,11 +48,21 @@ pub struct VarDef {
     pub span: Span,
 }
 
+/// A generic type parameter with optional constraint: `T` or `T: Comparable`.
+///
+/// **Documentation:** `docs/pascal/05-types.md` (Generics — Constraints)
+#[derive(Debug, Clone, PartialEq)]
+pub struct TypeParam {
+    pub name: String,
+    /// Optional constraint name: `Comparable`, `Numeric`, `Printable`.
+    pub constraint: Option<String>,
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct TypeDef {
     pub name: String,
-    /// Generic type parameters: `<T>`, `<K, V>`.
-    pub type_params: Vec<String>,
+    /// Generic type parameters: `<T>`, `<T: Comparable>`, `<K, V>`.
+    pub type_params: Vec<TypeParam>,
     pub body: TypeBody,
     pub visibility: Visibility,
     pub span: Span,

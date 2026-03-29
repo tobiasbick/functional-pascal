@@ -4,6 +4,7 @@
 use super::*;
 
 mod aliases;
+mod constraints;
 mod edge_cases;
 mod enums;
 mod errors;

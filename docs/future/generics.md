@@ -1,15 +1,18 @@
 # Future: Generics Extensions
 
-> Deferred. Core generics (functions, records, enums, type aliases, type inference) are implemented — see the main docs.
+> Deferred. Core generics (functions, records, enums, type aliases, type inference, constraints) are implemented — see the main docs.
 
 ## Open
 
-- **Constraints / bounds** — e.g., `<T: Comparable>` or `where T: Printable`
 - **Higher-kinded types** — e.g., `<F<_>>`
 - **Variance annotations** — covariance / contravariance
 - **Generic methods on non-generic types** — currently all type params must be at the type level
 - **Default type arguments** — e.g., `<T = integer>`
 - **Specialization** — alternative implementations for specific types
+
+## Implemented
+
+- ~~**Constraints / bounds**~~ — `<T: Comparable>`, `<T: Numeric>`, `<T: Printable>` — **implemented** (built-in constraints checked at instantiation)
 
 ## Examples
 

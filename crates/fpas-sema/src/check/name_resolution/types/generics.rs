@@ -1,6 +1,6 @@
 use super::super::Checker;
-use crate::types::{EnumTy, EnumVariantTy, RecordTy, Ty};
-use fpas_diagnostics::codes::SEMA_UNKNOWN_TYPE;
+use crate::types::{EnumTy, EnumVariantTy, GenericParamDef, RecordTy, Ty};
+use fpas_diagnostics::codes::{SEMA_CONSTRAINT_VIOLATION, SEMA_UNKNOWN_TYPE};
 use fpas_lexer::Span;
 
 impl Checker {
@@ -8,7 +8,7 @@ impl Checker {
     /// args, this is currently a pass-through (type erasure: the VM doesn't
     /// need concrete type args at runtime).
     ///
-    /// **Documentation:** `docs/future/generics.md`
+    /// **Documentation:** `docs/pascal/05-types.md` (Generics — Constraints)
     pub(crate) fn apply_type_args(&mut self, base: Ty, args: &[Ty], span: Span) -> Ty {
         match &base {
             Ty::Record(record) if !record.type_params.is_empty() => {
@@ -25,6 +25,7 @@ impl Checker {
         if !self.validate_type_arg_count(&record.name, record.type_params.len(), args.len(), span) {
             return Ty::Error;
         }
+        self.validate_constraints(&record.type_params, args, span);
 
         let mapping = Self::type_arg_mapping(&record.type_params, args);
         let fields = record
@@ -51,6 +52,7 @@ impl Checker {
         {
             return Ty::Error;
         }
+        self.validate_constraints(&enum_ty.type_params, args, span);
 
         let mapping = Self::type_arg_mapping(&enum_ty.type_params, args);
         let variants = enum_ty
@@ -73,6 +75,40 @@ impl Checker {
         })
     }
 
+    /// Check that each concrete type argument satisfies its parameter's constraint.
+    fn validate_constraints(&mut self, type_params: &[GenericParamDef], args: &[Ty], span: Span) {
+        for (param, arg) in type_params.iter().zip(args.iter()) {
+            // Skip validation for error types and unresolved generic params.
+            if arg.is_error() || matches!(arg, Ty::GenericParam(_)) {
+                continue;
+            }
+            if let Some(constraint) = param.constraint {
+                if !constraint.satisfied_by(arg) {
+                    self.error_with_code(
+                        SEMA_CONSTRAINT_VIOLATION,
+                        format!(
+                            "Type `{arg:?}` does not satisfy constraint `{}` on parameter `{}`",
+                            constraint.display_name(),
+                            param.name,
+                        ),
+                        format!(
+                            "The `{}` constraint requires a type that supports {}.",
+                            constraint.display_name(),
+                            match constraint {
+                                crate::types::TypeConstraint::Comparable =>
+                                    "comparison operators (=, <>, <, >, <=, >=)",
+                                crate::types::TypeConstraint::Numeric =>
+                                    "arithmetic operators (+, -, *, /, div, mod)",
+                                crate::types::TypeConstraint::Printable => "string conversion",
+                            },
+                        ),
+                        span,
+                    );
+                }
+            }
+        }
+    }
+
     fn validate_type_arg_count(
         &mut self,
         type_name: &str,
@@ -93,11 +129,14 @@ impl Checker {
         false
     }
 
-    fn type_arg_mapping<'a>(type_params: &'a [String], args: &'a [Ty]) -> Vec<(&'a str, &'a Ty)> {
+    fn type_arg_mapping<'a>(
+        type_params: &'a [GenericParamDef],
+        args: &'a [Ty],
+    ) -> Vec<(&'a str, &'a Ty)> {
         type_params
             .iter()
             .zip(args.iter())
-            .map(|(param, arg)| (param.as_str(), arg))
+            .map(|(param, arg)| (param.name.as_str(), arg))
             .collect()
     }
 

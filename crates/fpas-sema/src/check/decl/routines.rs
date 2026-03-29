@@ -8,17 +8,7 @@ impl Checker {
         // Register generic type parameters as GenericParam types in a new scope.
         let has_type_params = !f.type_params.is_empty();
         if has_type_params {
-            self.scopes.push_scope();
-            for tp in &f.type_params {
-                self.scopes.define(
-                    tp,
-                    Symbol {
-                        ty: Ty::GenericParam(tp.clone()),
-                        mutable: false,
-                        kind: SymbolKind::Type,
-                    },
-                );
-            }
+            self.push_type_param_scope(&f.type_params, f.span);
         }
 
         let return_ty = self.resolve_type_expr(&f.return_type);
@@ -58,9 +48,9 @@ impl Checker {
             // Re-introduce type params inside the function body scope.
             for tp in &f.type_params {
                 self.scopes.define(
-                    tp,
+                    &tp.name,
                     Symbol {
-                        ty: Ty::GenericParam(tp.clone()),
+                        ty: Ty::GenericParam(tp.name.clone()),
                         mutable: false,
                         kind: SymbolKind::Type,
                     },
@@ -101,17 +91,7 @@ impl Checker {
         // Register generic type parameters.
         let has_type_params = !p.type_params.is_empty();
         if has_type_params {
-            self.scopes.push_scope();
-            for tp in &p.type_params {
-                self.scopes.define(
-                    tp,
-                    Symbol {
-                        ty: Ty::GenericParam(tp.clone()),
-                        mutable: false,
-                        kind: SymbolKind::Type,
-                    },
-                );
-            }
+            self.push_type_param_scope(&p.type_params, p.span);
         }
 
         let params: Vec<ParamTy> = p
@@ -150,9 +130,9 @@ impl Checker {
             // Re-introduce type params inside the procedure body scope.
             for tp in &p.type_params {
                 self.scopes.define(
-                    tp,
+                    &tp.name,
                     Symbol {
-                        ty: Ty::GenericParam(tp.clone()),
+                        ty: Ty::GenericParam(tp.name.clone()),
                         mutable: false,
                         kind: SymbolKind::Type,
                     },

@@ -1,3 +1,68 @@
+/// Built-in type constraints for generic parameters.
+///
+/// **Documentation:** `docs/pascal/05-types.md` (Generics — Constraints)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TypeConstraint {
+    /// Supports comparison operators: `=`, `<>`, `<`, `>`, `<=`, `>=`.
+    Comparable,
+    /// Supports arithmetic operators: `+`, `-`, `*`, `/`, `div`, `mod`.
+    Numeric,
+    /// Can be converted to a string representation.
+    Printable,
+}
+
+impl TypeConstraint {
+    /// Resolve a constraint name (case-insensitive) to a built-in constraint.
+    pub fn from_name(name: &str) -> Option<Self> {
+        match name.to_ascii_lowercase().as_str() {
+            "comparable" => Some(Self::Comparable),
+            "numeric" => Some(Self::Numeric),
+            "printable" => Some(Self::Printable),
+            _ => None,
+        }
+    }
+
+    /// Human-readable name for diagnostics.
+    pub fn display_name(self) -> &'static str {
+        match self {
+            Self::Comparable => "Comparable",
+            Self::Numeric => "Numeric",
+            Self::Printable => "Printable",
+        }
+    }
+
+    /// Check whether a concrete type satisfies this constraint.
+    pub fn satisfied_by(self, ty: &Ty) -> bool {
+        match self {
+            Self::Comparable => matches!(
+                ty,
+                Ty::Integer | Ty::Real | Ty::Boolean | Ty::Char | Ty::String
+            ),
+            Self::Numeric => matches!(ty, Ty::Integer | Ty::Real),
+            Self::Printable => !matches!(ty, Ty::Function(_) | Ty::Procedure(_)),
+        }
+    }
+}
+
+/// A resolved generic type parameter with optional constraint.
+///
+/// **Documentation:** `docs/pascal/05-types.md` (Generics — Constraints)
+#[derive(Debug, Clone, PartialEq)]
+pub struct GenericParamDef {
+    pub name: String,
+    pub constraint: Option<TypeConstraint>,
+}
+
+impl GenericParamDef {
+    /// Create an unconstrained parameter.
+    pub fn unconstrained(name: String) -> Self {
+        Self {
+            name,
+            constraint: None,
+        }
+    }
+}
+
 /// Resolved type representation used during semantic analysis.
 ///
 /// **Documentation:** `docs/future/generics.md`
@@ -42,8 +107,8 @@ pub enum Ty {
 #[derive(Debug, Clone, PartialEq)]
 pub struct RecordTy {
     pub name: std::string::String,
-    /// Generic type parameter names declared on this record.
-    pub type_params: Vec<std::string::String>,
+    /// Generic type parameters declared on this record.
+    pub type_params: Vec<GenericParamDef>,
     pub fields: Vec<(std::string::String, Ty)>,
     pub methods: Vec<(std::string::String, MethodKind)>,
 }
@@ -59,8 +124,8 @@ pub enum MethodKind {
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumTy {
     pub name: std::string::String,
-    /// Generic type parameter names declared on this enum.
-    pub type_params: Vec<std::string::String>,
+    /// Generic type parameters declared on this enum.
+    pub type_params: Vec<GenericParamDef>,
     pub variants: Vec<EnumVariantTy>,
 }
 

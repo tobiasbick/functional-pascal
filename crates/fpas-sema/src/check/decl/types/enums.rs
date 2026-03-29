@@ -17,7 +17,7 @@ impl Checker {
             return;
         }
 
-        let variants = self.with_type_params(&td.type_params, |checker| {
+        let variants = self.with_type_params(&td.type_params, td.span, |checker| {
             enum_ty
                 .members
                 .iter()
@@ -42,7 +42,7 @@ impl Checker {
 
         let ty = Ty::Enum(EnumTy {
             name: td.name.clone(),
-            type_params: td.type_params.clone(),
+            type_params: Self::resolve_type_params(&td.type_params),
             variants: variants.clone(),
         });
 

@@ -1,8 +1,9 @@
 use super::Checker;
 use crate::scope::{Symbol, SymbolKind};
-use crate::types::Ty;
-use fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION;
-use fpas_parser::{TypeBody, TypeDef};
+use crate::types::{GenericParamDef, Ty, TypeConstraint};
+use fpas_diagnostics::codes::{SEMA_DUPLICATE_DECLARATION, SEMA_UNKNOWN_TYPE};
+use fpas_lexer::Span;
+use fpas_parser::{TypeBody, TypeDef, TypeParam};
 
 mod enums;
 mod records;
@@ -17,19 +18,21 @@ impl Checker {
     }
 
     fn check_alias_type_def(&mut self, td: &TypeDef, type_expr: &fpas_parser::TypeExpr) {
-        let ty = self.with_type_params(&td.type_params, |checker| {
+        let ty = self.with_type_params(&td.type_params, td.span, |checker| {
             checker.resolve_type_expr(type_expr)
         });
         self.define_type_symbol(td, ty);
     }
 
+    /// Execute `f` with the given type parameters in scope, then pop the scope.
     pub(super) fn with_type_params<T>(
         &mut self,
-        type_params: &[String],
+        type_params: &[TypeParam],
+        span: Span,
         f: impl FnOnce(&mut Self) -> T,
     ) -> T {
         if !type_params.is_empty() {
-            self.push_type_param_scope(type_params);
+            self.push_type_param_scope(type_params, span);
         }
         let result = f(self);
         if !type_params.is_empty() {
@@ -39,18 +42,43 @@ impl Checker {
     }
 
     /// Push a temporary scope with generic type parameters defined as `GenericParam`.
-    pub(super) fn push_type_param_scope(&mut self, type_params: &[String]) {
+    /// Validates constraint names and reports errors for unknown constraints.
+    pub(super) fn push_type_param_scope(&mut self, type_params: &[TypeParam], span: Span) {
         self.scopes.push_scope();
-        for type_param in type_params {
+        for tp in type_params {
+            if let Some(ref constraint_name) = tp.constraint {
+                if TypeConstraint::from_name(constraint_name).is_none() {
+                    self.error_with_code(
+                        SEMA_UNKNOWN_TYPE,
+                        format!("Unknown type constraint `{constraint_name}`"),
+                        "Valid constraints: Comparable, Numeric, Printable.",
+                        span,
+                    );
+                }
+            }
             self.scopes.define(
-                type_param,
+                &tp.name,
                 Symbol {
-                    ty: Ty::GenericParam(type_param.clone()),
+                    ty: Ty::GenericParam(tp.name.clone()),
                     mutable: false,
                     kind: SymbolKind::Type,
                 },
             );
         }
+    }
+
+    /// Convert AST type parameters to resolved `GenericParamDef`s.
+    pub(super) fn resolve_type_params(type_params: &[TypeParam]) -> Vec<GenericParamDef> {
+        type_params
+            .iter()
+            .map(|tp| GenericParamDef {
+                name: tp.name.clone(),
+                constraint: tp
+                    .constraint
+                    .as_ref()
+                    .and_then(|c| TypeConstraint::from_name(c)),
+            })
+            .collect()
     }
 
     pub(super) fn define_type_symbol(&mut self, td: &TypeDef, ty: Ty) -> bool {

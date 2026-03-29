@@ -106,24 +106,36 @@ impl Parser {
         args
     }
 
-    /// Parse optional generic type parameters: `<T>`, `<A, B>`.
+    /// Parse optional generic type parameters: `<T>`, `<T: Comparable>`, `<A, B>`.
     /// Returns an empty vec if no `<` follows.
-    pub(crate) fn parse_type_params(&mut self) -> Vec<String> {
+    ///
+    /// **Documentation:** `docs/pascal/05-types.md` (Generics — Constraints)
+    pub(crate) fn parse_type_params(&mut self) -> Vec<crate::TypeParam> {
         if !self.eat(&Token::Less) {
             return Vec::new();
         }
         let mut params = Vec::new();
-        let (name, _) = self
-            .expect_ident()
-            .unwrap_or(("_error_".into(), self.current_span()));
-        params.push(name);
+        params.push(self.parse_single_type_param());
         while self.eat(&Token::Comma) {
-            let (name, _) = self
-                .expect_ident()
-                .unwrap_or(("_error_".into(), self.current_span()));
-            params.push(name);
+            params.push(self.parse_single_type_param());
         }
         self.expect(&Token::Greater);
         params
+    }
+
+    /// Parse a single type parameter: `T` or `T: Constraint`.
+    fn parse_single_type_param(&mut self) -> crate::TypeParam {
+        let (name, _) = self
+            .expect_ident()
+            .unwrap_or(("_error_".into(), self.current_span()));
+        let constraint = if self.eat(&Token::Colon) {
+            let (constraint_name, _) = self
+                .expect_ident()
+                .unwrap_or(("_error_".into(), self.current_span()));
+            Some(constraint_name)
+        } else {
+            None
+        };
+        crate::TypeParam { name, constraint }
     }
 }

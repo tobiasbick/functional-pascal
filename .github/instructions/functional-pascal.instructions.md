@@ -227,6 +227,25 @@ var X: integer := Identity(7);  { T inferred }
 
 Multiple type parameters: `Pair<A, B>`, used as `Pair of integer, string`. Type aliases can specialize generics: `type IntBox = Box of integer;`. Generics use type erasure — no monomorphization.
 
+### Constraints
+
+Type parameters can be constrained: `<T: Constraint>`. The compiler checks constraints at instantiation.
+
+| Constraint | Types | Description |
+|------------|-------|-------------|
+| `Comparable` | `integer`, `real`, `boolean`, `char`, `string` | Comparison operators |
+| `Numeric` | `integer`, `real` | Arithmetic operators |
+| `Printable` | All except `function`/`procedure` | String conversion |
+
+```pascal
+type
+  Ordered<T: Comparable> = record Value: T; end;
+  Entry<K: Comparable, V> = record Key: K; Value: V; end;
+
+var O: Ordered of integer := record Value := 42; end;
+{ var Bad: Ordered of array of integer := ...  ← compile error }
+```
+
 ## Visibility
 
 Applies in `unit` files only (not `program` files). All declarations are **public by default**.

@@ -5,7 +5,7 @@ use fpas_parser::{FuncBody, RecordMethod, RecordType, TypeDef};
 
 impl Checker {
     pub(super) fn check_record_type_def(&mut self, td: &TypeDef, record: &RecordType) {
-        let fields = self.with_type_params(&td.type_params, |checker| {
+        let fields = self.with_type_params(&td.type_params, td.span, |checker| {
             record
                 .fields
                 .iter()
@@ -20,7 +20,7 @@ impl Checker {
 
         let record_ty = RecordTy {
             name: td.name.clone(),
-            type_params: td.type_params.clone(),
+            type_params: Self::resolve_type_params(&td.type_params),
             fields,
             methods: Vec::new(),
         };
@@ -30,7 +30,7 @@ impl Checker {
             return;
         }
 
-        let methods = self.with_type_params(&td.type_params, |checker| {
+        let methods = self.with_type_params(&td.type_params, td.span, |checker| {
             checker.check_record_methods(&td.name, &ty, &record.methods)
         });
 

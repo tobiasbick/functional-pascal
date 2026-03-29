@@ -278,3 +278,60 @@ var
 ### Implementation
 
 Generics use type erasure. The VM operates on dynamic values, so no monomorphization is needed. Type parameters are checked at compile time and erased at runtime.
+
+### Constraints
+
+Type parameters can be constrained to require specific capabilities from the concrete type. Constraints are written after the parameter name, separated by a colon: `<T: Constraint>`.
+
+```pascal
+type
+  Ordered<T: Comparable> = record Value: T; end;
+  NumBox<T: Numeric> = record Value: T; end;
+  Displayable<T: Printable> = record Value: T; end;
+```
+
+When a constrained generic type is instantiated, the compiler checks that the concrete type satisfies the constraint. Violating a constraint is a compile-time error.
+
+#### Built-in Constraints
+
+| Constraint | Satisfied by | Description |
+|------------|-------------|-------------|
+| `Comparable` | `integer`, `real`, `boolean`, `char`, `string` | Supports comparison operators: `=`, `<>`, `<`, `>`, `<=`, `>=` |
+| `Numeric` | `integer`, `real` | Supports arithmetic operators: `+`, `-`, `*`, `/`, `div`, `mod` |
+| `Printable` | All types except `function` and `procedure` | Can be converted to a string representation |
+
+#### Examples
+
+```pascal
+{ Constrained record — only comparable types allowed }
+type
+  SortedPair<T: Comparable> = record
+    First: T;
+    Second: T;
+  end;
+
+var
+  P: SortedPair of integer := record First := 1; Second := 2; end;  { OK }
+{ var Bad: SortedPair of array of integer := ...  ← compile error }
+```
+
+```pascal
+{ Mixed constrained and unconstrained parameters }
+type
+  Entry<K: Comparable, V> = record
+    Key: K;
+    Value: V;
+  end;
+
+var
+  E: Entry of string, integer := record Key := 'x'; Value := 42; end;
+```
+
+```pascal
+{ Constrained enum }
+type
+  Maybe<T: Comparable> = enum
+    Just(Value: T);
+    Nothing;
+  end;
+```

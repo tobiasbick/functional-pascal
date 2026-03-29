@@ -59,7 +59,7 @@ fn std_unit_with_extra_segments_rejected() {
 }
 
 #[test]
-fn user_unit_cannot_use_std_namespace() {
+fn user_unit_cannot_use_std_namespace_even_when_unused() {
     let cwd = create_temp_dir("run-user-std-ns");
     let project_file = cwd.join("app.fpasprj");
     write_text(
@@ -73,22 +73,18 @@ main = "src/main.fpas"
 include = ["src/*.fpas"]
 "#,
     );
-    write_text(
-        &cwd.join("src/main.fpas"),
-        "program Main;\nuses Std.MyLib;\nbegin\nend.\n",
-    );
+    write_text(&cwd.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
     write_text(
         &cwd.join("src/mylib.fpas"),
-        "unit Std.MyLib;\nfunction Foo(): integer;\nbegin\n  return 1\nend;\n",
+        "unit sTd.MyLib;\nfunction Foo(): integer;\nbegin\n  return 1\nend;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
-    // Std.MyLib is treated as a standard lib unit and rejected as unknown
     assert_eq!(exit_code, 1, "stderr: {stderr_output}");
     assert!(
-        stderr_output.contains("Unknown standard library unit") || stderr_output.contains("Std"),
-        "expected Std namespace error, got: {stderr_output}"
+        stderr_output.contains("reserved for standard library units"),
+        "expected reserved namespace error, got: {stderr_output}"
     );
 }

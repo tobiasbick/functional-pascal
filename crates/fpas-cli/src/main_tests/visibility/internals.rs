@@ -87,3 +87,49 @@ end;
     assert_eq!(exit_code, 0);
     assert_eq!(stdout_output, "15\n");
 }
+
+#[test]
+fn private_visibility_in_program_is_rejected() {
+    let (exit_code, _, stderr_output) = support::run_source_and_capture_output(
+        "private_program_visibility.fpas",
+        "\
+program Main;
+
+private var
+  X: integer := 1;
+
+begin
+  WriteLn(X)
+end.
+",
+    );
+
+    assert_eq!(exit_code, 1);
+    assert!(
+        stderr_output.contains("`private` is not valid in a `program` file"),
+        "expected program visibility error, got: {stderr_output}"
+    );
+}
+
+#[test]
+fn public_visibility_in_program_is_rejected() {
+    let (exit_code, _, stderr_output) = support::run_source_and_capture_output(
+        "public_program_visibility.fpas",
+        "\
+program Main;
+
+public var
+  X: integer := 1;
+
+begin
+  WriteLn(X)
+end.
+",
+    );
+
+    assert_eq!(exit_code, 1);
+    assert!(
+        stderr_output.contains("`public` is not valid in a `program` file"),
+        "expected program visibility error, got: {stderr_output}"
+    );
+}

@@ -1,3 +1,8 @@
+//! Expression typing.
+//!
+//! **Documentation:** `docs/pascal/02-basics.md`, `docs/pascal/04-functions.md`,
+//! and `docs/pascal/07-error-handling.md` (from the repository root).
+
 mod calls;
 mod designator;
 mod operators;
@@ -11,13 +16,7 @@ impl Checker {
         let ty = match expr {
             Expr::Integer(_, _) => Ty::Integer,
             Expr::Real(_, _) => Ty::Real,
-            Expr::Str(value, _) => {
-                if value.chars().count() == 1 {
-                    Ty::Char
-                } else {
-                    Ty::String
-                }
-            }
+            Expr::Str(_, _) => Ty::String,
             Expr::Bool(_, _) => Ty::Boolean,
             Expr::Designator(designator) => self.check_designator_expr(designator),
             Expr::Call {
@@ -56,14 +55,71 @@ impl Checker {
                 body,
                 span: _,
             } => self.check_function_expr(params, return_type, body),
-            Expr::Go(inner, _) => {
-                let inner_ty = self.check_expr(inner);
-                Ty::Task(Box::new(inner_ty))
-            }
+            Expr::Go(inner, span) => self.check_go_expr(inner, *span),
         };
         let key = Self::expr_lookup_key(expr);
         self.expr_types.insert(key, ty.clone());
         ty
+    }
+
+    fn check_go_expr(&mut self, inner: &Expr, span: fpas_lexer::Span) -> Ty {
+        let inner_ty = match inner {
+            Expr::Call {
+                designator,
+                args,
+                span: call_span,
+            } => {
+                let name = Self::resolve_designator_name(designator);
+                self.ensure_fq_std_unit_loaded(&name);
+
+                if let Some(symbol) = self.scopes.lookup(&name) {
+                    self.check_known_go_call_symbol(
+                        &name,
+                        symbol.kind,
+                        symbol.ty.clone(),
+                        args,
+                        *call_span,
+                    )
+                } else if let Some(result) =
+                    self.try_check_method_go_call(inner, designator, args, *call_span)
+                {
+                    result
+                } else if let Some(hint) = self.ambiguous_hint(&name) {
+                    self.error_with_code(
+                        fpas_diagnostics::codes::SEMA_AMBIGUOUS_IMPORTED_NAME,
+                        format!("Ambiguous name `{name}`"),
+                        hint,
+                        *call_span,
+                    );
+                    self.check_args_only(args);
+                    Ty::Error
+                } else {
+                    let hint = self.hint_unknown_callable(&name);
+                    self.error_with_code(
+                        fpas_diagnostics::codes::SEMA_UNKNOWN_NAME,
+                        format!("Unknown function or procedure `{name}`"),
+                        hint,
+                        *call_span,
+                    );
+                    self.check_args_only(args);
+                    Ty::Error
+                }
+            }
+            _ => {
+                let _ = self.check_expr(inner);
+                self.error_with_code(
+                    fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
+                    "`go` requires a function or procedure call",
+                    "Use `go FunctionName(args)` or `go SomeCallable(args)`.",
+                    span,
+                );
+                Ty::Error
+            }
+        };
+
+        let inner_key = Self::expr_lookup_key(inner);
+        self.expr_types.insert(inner_key, inner_ty.clone());
+        Ty::Task(Box::new(inner_ty))
     }
 
     fn check_array_literal(&mut self, elements: &[Expr]) -> Ty {
@@ -129,8 +185,14 @@ impl Checker {
     fn check_try_expr(&mut self, inner: &Expr, span: fpas_lexer::Span) -> Ty {
         let inner_ty = self.check_expr(inner);
         match &inner_ty {
-            Ty::Result(ok, _) => *ok.clone(),
-            Ty::Option(inner) => *inner.clone(),
+            Ty::Result(ok, _) => {
+                self.check_try_context(&inner_ty, span);
+                *ok.clone()
+            }
+            Ty::Option(inner) => {
+                self.check_try_context(&inner_ty, span);
+                *inner.clone()
+            }
             Ty::Error => Ty::Error,
             _ => {
                 self.error_with_code(
@@ -144,9 +206,78 @@ impl Checker {
         }
     }
 
+    fn check_try_context(&mut self, inner_ty: &Ty, span: fpas_lexer::Span) {
+        let Some(function_ctx) = self.scopes.function_ctx.clone() else {
+            self.error_with_code(
+                fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
+                "`try` can only be used inside a function that returns Result or Option",
+                "Wrap the expression in a function that returns `Result of T, E` or `Option of T`.",
+                span,
+            );
+            return;
+        };
+
+        let Some(return_ty) = function_ctx.return_type else {
+            self.error_with_code(
+                fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
+                format!(
+                    "Procedure `{}` cannot use `try` because it does not return a value",
+                    function_ctx.name
+                ),
+                "Use `try` inside a function that returns `Result of T, E` or `Option of T`.",
+                span,
+            );
+            return;
+        };
+
+        if return_ty.is_error() {
+            return;
+        }
+
+        match (inner_ty, &return_ty) {
+            (Ty::Result(_, inner_err), Ty::Result(_, outer_err)) => {
+                if !outer_err.compatible_with(inner_err) {
+                    self.error_with_code(
+                        fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
+                        format!(
+                            "`try` propagates `{inner_ty:?}`, but function `{}` returns `{return_ty:?}`",
+                            function_ctx.name
+                        ),
+                        "Make the enclosing function return `Result of <value>, <same error type>`.",
+                        span,
+                    );
+                }
+            }
+            (Ty::Option(_), Ty::Option(_)) => {}
+            (Ty::Result(_, _), _) => {
+                self.error_with_code(
+                    fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
+                    format!(
+                        "`try` propagates `{inner_ty:?}`, but function `{}` returns `{return_ty:?}`",
+                        function_ctx.name
+                    ),
+                    "Use `try` on `Result` only inside a function that returns `Result of T, E` with a compatible error type.",
+                    span,
+                );
+            }
+            (Ty::Option(_), _) => {
+                self.error_with_code(
+                    fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
+                    format!(
+                        "`try` propagates `{inner_ty:?}`, but function `{}` returns `{return_ty:?}`",
+                        function_ctx.name
+                    ),
+                    "Use `try` on `Option` only inside a function that returns `Option of T`.",
+                    span,
+                );
+            }
+            _ => {}
+        }
+    }
+
     /// Type-check an anonymous function expression (lambda / closure).
     ///
-    /// **Documentation:** `docs/future/closures.md`
+    /// **Documentation:** `docs/pascal/04-functions.md`
     fn check_function_expr(
         &mut self,
         params: &[FormalParam],
@@ -193,6 +324,7 @@ impl Checker {
                 self.check_stmt(stmt);
             }
 
+            self.report_missing_forward_declarations_in_current_scope();
             self.scopes.function_ctx = prev_ctx;
             self.scopes.pop_scope();
         }

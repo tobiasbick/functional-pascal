@@ -61,6 +61,32 @@ end.",
     );
     assert_eq!(out.lines, vec!["Hello World"]);
 }
+
+#[test]
+fn closure_captures_by_value_at_creation_time() {
+    let out = compile_and_run(
+        "\
+program ClosureByValue;
+uses Std.Console;
+function BuildReader(): function(): integer;
+begin
+  mutable var N: integer := 1;
+  var ReadN: function(): integer :=
+    function(): integer
+    begin
+      return N
+    end;
+  N := 2;
+  return ReadN
+end;
+begin
+  var Reader: function(): integer := BuildReader();
+  WriteLn(Reader())
+end.",
+    );
+    assert_eq!(out.lines, vec!["1"]);
+}
+
 #[test]
 fn closure_captures_boolean() {
     let out = compile_and_run(

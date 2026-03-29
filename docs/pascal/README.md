@@ -20,7 +20,7 @@ A function-first programming language built on Pascal's readable syntax and clea
 5. [Types](05-types.md) — Records, enumerations, arrays, type aliases
 6. [Case Of](06-pattern-matching.md) — Value, range, and enum matching
 7. [Error Handling](07-error-handling.md) — `Result`, `Option`, `try`, `panic`
-8. [Concurrency](08-concurrency.md) — Planned for future versions
+8. [Concurrency](08-concurrency.md) — Tasks, channels, and `select`
 9. [Units](09-units.md) — Unit system, `uses`, namespaces, visibility
 10. [Projects](10-projects.md) — `.fpasprj` project files, CLI, program/library kinds
 11. [Standard Library](11-stdlib.md) — `Std.*` built-in libraries

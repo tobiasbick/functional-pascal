@@ -177,15 +177,14 @@ end.",
 }
 
 // ═══════════════════════════════════════════════════════════════
-// FUNCTION REDEFINITION — the last definition wins
+// DUPLICATE DEFINITIONS
 // ═══════════════════════════════════════════════════════════════
 
 #[test]
-fn redefined_function_uses_last_definition() {
-    let out = compile_and_run(
+fn duplicate_function_definition_is_rejected() {
+    let err = compile_err(
         "\
 program RedefFunc;
-uses Std.Console;
 
 function Foo(): integer;
 begin
@@ -198,8 +197,11 @@ begin
 end;
 
 begin
-  WriteLn(Foo())
+  var R: integer := Foo()
 end.",
     );
-    assert_eq!(out.lines, vec!["2"]);
+    assert_eq!(
+        err.code,
+        fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION
+    );
 }

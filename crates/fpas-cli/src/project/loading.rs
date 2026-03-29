@@ -1,4 +1,4 @@
-use super::common::{parse_compilation_unit_file, qualified_id_to_string};
+use super::common::{parse_compilation_unit_file, qualified_id_to_string, validate_user_unit_name};
 use super::paths::{
     resolve_explicit_file_path, resolve_source_files, same_file, validate_source_extension,
 };
@@ -159,6 +159,7 @@ fn validate_project_source_units(
                 ));
             }
             CompilationUnit::Unit(unit) => {
+                validate_user_unit_name(&source_path, &unit.name)?;
                 let unit_name = qualified_id_to_string(&unit.name);
                 let key = unit_name.to_ascii_lowercase();
                 if let Some(first_path) = seen_unit_names.get(&key) {

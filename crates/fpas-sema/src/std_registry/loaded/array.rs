@@ -20,6 +20,14 @@ pub(super) fn register_std_array(checker: &mut Checker) {
         s::STD_ARRAY_MAP,
         s::STD_ARRAY_FILTER,
         s::STD_ARRAY_REDUCE,
+        s::STD_ARRAY_CONCAT,
+        s::STD_ARRAY_FILL,
+        s::STD_ARRAY_FIND,
+        s::STD_ARRAY_FIND_INDEX,
+        s::STD_ARRAY_ANY,
+        s::STD_ARRAY_ALL,
+        s::STD_ARRAY_FLAT_MAP,
+        s::STD_ARRAY_FOR_EACH,
     ] {
         define_builtin_std(checker, name, placeholder.clone());
     }

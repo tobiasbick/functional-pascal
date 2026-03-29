@@ -14,6 +14,8 @@ pub(super) fn check_math_builtin_std_call(
     let ty = match name {
         s::STD_MATH_ABS => check_abs(c, args, span),
         s::STD_MATH_MIN | s::STD_MATH_MAX => check_min_max(c, name, args, span),
+        s::STD_MATH_SIGN => check_sign(c, args, span),
+        s::STD_MATH_CLAMP => check_clamp(c, args, span),
         _ => return None,
     };
     Some(ty)
@@ -73,6 +75,66 @@ fn check_min_max(c: &mut Checker, name: &str, args: &[Expr], span: Span) -> Ty {
     match (&left_ty, &right_ty) {
         (Ty::Integer, Ty::Integer) => Ty::Integer,
         (Ty::Real, Ty::Real) => Ty::Real,
+        _ => Ty::Real,
+    }
+}
+
+fn check_sign(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+    if args.len() != 1 {
+        c.error_with_code(
+            SEMA_WRONG_ARGUMENT_COUNT,
+            format!(
+                "`{}` expects 1 argument, got {}",
+                s::STD_MATH_SIGN,
+                args.len()
+            ),
+            "Example: Std.Math.Sign(-5) or Std.Math.Sign(-3.5).",
+            span,
+        );
+        return Ty::Error;
+    }
+    let ty = c.check_expr(&args[0]);
+    if ty == Ty::Integer || ty == Ty::Real {
+        Ty::Integer
+    } else {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            format!("`{}` expects integer or real", s::STD_MATH_SIGN),
+            "Use a numeric argument.",
+            span,
+        );
+        Ty::Error
+    }
+}
+
+fn check_clamp(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+    if args.len() != 3 {
+        c.error_with_code(
+            SEMA_WRONG_ARGUMENT_COUNT,
+            format!(
+                "`{}` expects 3 arguments, got {}",
+                s::STD_MATH_CLAMP,
+                args.len()
+            ),
+            "Example: Std.Math.Clamp(X, Lo, Hi).",
+            span,
+        );
+        return Ty::Error;
+    }
+    let x_ty = c.check_expr(&args[0]);
+    let lo_ty = c.check_expr(&args[1]);
+    let hi_ty = c.check_expr(&args[2]);
+    if !x_ty.is_numeric() || !lo_ty.is_numeric() || !hi_ty.is_numeric() {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            format!("`{}` expects numeric arguments", s::STD_MATH_CLAMP),
+            "Use integers or reals.",
+            span,
+        );
+        return Ty::Error;
+    }
+    match (&x_ty, &lo_ty, &hi_ty) {
+        (Ty::Integer, Ty::Integer, Ty::Integer) => Ty::Integer,
         _ => Ty::Real,
     }
 }

@@ -1,6 +1,11 @@
+//! Record type checking.
+//!
+//! **Documentation:** `docs/pascal/05-types.md`
+
 use super::Checker;
 use crate::scope::{FunctionCtx, Symbol, SymbolKind};
 use crate::types::{FunctionTy, MethodKind, ParamTy, ProcedureTy, RecordTy, Ty};
+use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
 use fpas_parser::{FuncBody, RecordMethod, RecordType, TypeDef};
 
 impl Checker {
@@ -69,6 +74,15 @@ impl Checker {
                         })
                         .collect();
 
+                    if !self.validate_record_method_signature(
+                        type_name,
+                        &function.name,
+                        &params,
+                        function.span,
+                    ) {
+                        continue;
+                    }
+
                     let function_ty = FunctionTy {
                         params: params.clone(),
                         return_type: Box::new(return_ty.clone()),
@@ -103,6 +117,15 @@ impl Checker {
                         })
                         .collect();
 
+                    if !self.validate_record_method_signature(
+                        type_name,
+                        &procedure.name,
+                        &params,
+                        procedure.span,
+                    ) {
+                        continue;
+                    }
+
                     let procedure_ty = ProcedureTy {
                         variadic: false,
                         params: params.clone(),
@@ -126,6 +149,46 @@ impl Checker {
         }
 
         checked_methods
+    }
+
+    fn validate_record_method_signature(
+        &mut self,
+        type_name: &str,
+        method_name: &str,
+        params: &[ParamTy],
+        span: fpas_lexer::Span,
+    ) -> bool {
+        let Some(self_param) = params.first() else {
+            self.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                format!(
+                    "Record method `{type_name}.{method_name}` must declare `Self: {type_name}` as its first parameter"
+                ),
+                format!(
+                    "Use `{method_name}(Self: {type_name}; ...)` so calls like `Value.{method_name}(...)` can pass the receiver implicitly."
+                ),
+                span,
+            );
+            return false;
+        };
+
+        if !self_param.name.eq_ignore_ascii_case("Self")
+            || !matches!(&self_param.ty, Ty::Record(record) if record.name.eq_ignore_ascii_case(type_name))
+        {
+            self.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                format!(
+                    "Record method `{type_name}.{method_name}` must declare `Self: {type_name}` as its first parameter"
+                ),
+                format!(
+                    "Use `{method_name}(Self: {type_name}; ...)` so calls like `Value.{method_name}(...)` can pass the receiver implicitly."
+                ),
+                span,
+            );
+            return false;
+        }
+
+        true
     }
 
     fn check_method_body(
@@ -161,6 +224,7 @@ impl Checker {
         for stmt in stmts {
             self.check_stmt(stmt);
         }
+        self.report_missing_forward_declarations_in_current_scope();
         self.scopes.function_ctx = previous_ctx;
         self.scopes.pop_scope();
     }

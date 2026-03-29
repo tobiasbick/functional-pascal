@@ -470,3 +470,463 @@ end.
     let (exit_code, _stdout, _stderr) = support::run_source_and_capture_output("t.fpas", source);
     assert_ne!(exit_code, 0);
 }
+
+// ---------------------------------------------------------------------------
+// Find
+// ---------------------------------------------------------------------------
+
+#[test]
+fn find_found() {
+    let source = r#"program T;
+uses Std.Console, Std.Array, Std.Option;
+begin
+  var A: array of integer := [1, 2, 3, 4, 5];
+  var R: Option of integer := Find(A,
+    function(X: integer): boolean begin return X > 3 end);
+  WriteLn(IsSome(R));
+  WriteLn(Unwrap(R))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "true\n4\n");
+}
+
+#[test]
+fn find_not_found() {
+    let source = r#"program T;
+uses Std.Console, Std.Array, Std.Option;
+begin
+  var A: array of integer := [1, 2, 3];
+  var R: Option of integer := Find(A,
+    function(X: integer): boolean begin return X > 10 end);
+  WriteLn(IsNone(R))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "true\n");
+}
+
+#[test]
+fn find_empty_array() {
+    let source = r#"program T;
+uses Std.Console, Std.Array, Std.Option;
+begin
+  var A: array of integer := [];
+  var R: Option of integer := Find(A,
+    function(X: integer): boolean begin return true end);
+  WriteLn(IsNone(R))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "true\n");
+}
+
+// ---------------------------------------------------------------------------
+// FindIndex
+// ---------------------------------------------------------------------------
+
+#[test]
+fn find_index_found() {
+    let source = r#"program T;
+uses Std.Console, Std.Array;
+begin
+  var A: array of integer := [10, 20, 30];
+  var Idx: integer := FindIndex(A,
+    function(X: integer): boolean begin return X > 15 end);
+  WriteLn(Idx)
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "1\n");
+}
+
+#[test]
+fn find_index_not_found() {
+    let source = r#"program T;
+uses Std.Console, Std.Array;
+begin
+  var A: array of integer := [1, 2, 3];
+  var Idx: integer := FindIndex(A,
+    function(X: integer): boolean begin return X > 100 end);
+  WriteLn(Idx)
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "-1\n");
+}
+
+#[test]
+fn find_index_empty_array() {
+    let source = r#"program T;
+uses Std.Console, Std.Array;
+begin
+  var A: array of integer := [];
+  var Idx: integer := FindIndex(A,
+    function(X: integer): boolean begin return true end);
+  WriteLn(Idx)
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "-1\n");
+}
+
+// ---------------------------------------------------------------------------
+// Any
+// ---------------------------------------------------------------------------
+
+#[test]
+fn any_some_match() {
+    let source = r#"program T;
+uses Std.Console, Std.Array;
+begin
+  var A: array of integer := [1, -2, 3];
+  WriteLn(Any(A,
+    function(X: integer): boolean begin return X < 0 end))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "true\n");
+}
+
+#[test]
+fn any_no_match() {
+    let source = r#"program T;
+uses Std.Console, Std.Array;
+begin
+  var A: array of integer := [1, 2, 3];
+  WriteLn(Any(A,
+    function(X: integer): boolean begin return X < 0 end))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "false\n");
+}
+
+#[test]
+fn any_empty_array() {
+    let source = r#"program T;
+uses Std.Console, Std.Array;
+begin
+  var A: array of integer := [];
+  WriteLn(Any(A,
+    function(X: integer): boolean begin return true end))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "false\n");
+}
+
+// ---------------------------------------------------------------------------
+// All
+// ---------------------------------------------------------------------------
+
+#[test]
+fn all_match() {
+    let source = r#"program T;
+uses Std.Console, Std.Array;
+begin
+  var A: array of integer := [1, 2, 3];
+  WriteLn(All(A,
+    function(X: integer): boolean begin return X > 0 end))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "true\n");
+}
+
+#[test]
+fn all_some_fail() {
+    let source = r#"program T;
+uses Std.Console, Std.Array;
+begin
+  var A: array of integer := [1, -2, 3];
+  WriteLn(All(A,
+    function(X: integer): boolean begin return X > 0 end))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "false\n");
+}
+
+#[test]
+fn all_empty_array() {
+    let source = r#"program T;
+uses Std.Console, Std.Array;
+begin
+  var A: array of integer := [];
+  WriteLn(All(A,
+    function(X: integer): boolean begin return false end))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    // All on empty array is vacuously true
+    assert_eq!(stdout, "true\n");
+}
+
+// ---------------------------------------------------------------------------
+// Concat
+// ---------------------------------------------------------------------------
+
+#[test]
+fn concat_normal() {
+    let source = r#"program T;
+uses Std.Console, Std.Array;
+begin
+  var C: array of integer := Concat([1, 2], [3, 4]);
+  WriteLn(Length(C));
+  WriteLn(C[0]);
+  WriteLn(C[3])
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "4\n1\n4\n");
+}
+
+#[test]
+fn concat_empty_left() {
+    let source = r#"program T;
+uses Std.Console, Std.Array;
+begin
+  var C: array of integer := Concat([], [1, 2]);
+  WriteLn(Length(C))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "2\n");
+}
+
+#[test]
+fn concat_empty_right() {
+    let source = r#"program T;
+uses Std.Console, Std.Array;
+begin
+  var C: array of integer := Concat([1, 2], []);
+  WriteLn(Length(C))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "2\n");
+}
+
+#[test]
+fn concat_both_empty() {
+    let source = r#"program T;
+uses Std.Console, Std.Array;
+begin
+  var C: array of integer := Concat([], []);
+  WriteLn(Length(C))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "0\n");
+}
+
+#[test]
+fn concat_rejects_incompatible_element_types() {
+    let source = r#"program T;
+uses Std.Array;
+begin
+  var C: array of integer := Concat([1], [true])
+end.
+"#;
+    let (exit_code, _stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert_ne!(exit_code, 0);
+    assert!(stderr.contains("right array element"), "stderr: {stderr}");
+}
+
+// ---------------------------------------------------------------------------
+// FlatMap
+// ---------------------------------------------------------------------------
+
+#[test]
+fn flat_map_normal() {
+    let source = r#"program T;
+uses Std.Console, Std.Array;
+begin
+  var R: array of integer := FlatMap([1, 2, 3],
+    function(X: integer): array of integer begin return [X, X * 10] end);
+  WriteLn(Length(R));
+  WriteLn(R[0]);
+  WriteLn(R[1]);
+  WriteLn(R[4]);
+  WriteLn(R[5])
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "6\n1\n10\n3\n30\n");
+}
+
+#[test]
+fn flat_map_empty_results() {
+    let source = r#"program T;
+uses Std.Console, Std.Array;
+begin
+  var R: array of integer := FlatMap([1, 2, 3],
+    function(X: integer): array of integer begin return [] end);
+  WriteLn(Length(R))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "0\n");
+}
+
+#[test]
+fn flat_map_empty_array() {
+    let source = r#"program T;
+uses Std.Console, Std.Array;
+begin
+  var R: array of integer := FlatMap([], function(X: integer): array of integer begin return [X] end);
+  WriteLn(Length(R))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "0\n");
+}
+
+#[test]
+fn flat_map_rejects_scalar_mapper_result() {
+    let source = r#"program T;
+uses Std.Array;
+begin
+  var X: integer := FlatMap([1, 2],
+    function(V: integer): integer begin return V end)
+end.
+"#;
+    let (exit_code, _stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert_ne!(exit_code, 0);
+    assert!(
+        stderr.contains("mapper must return an array"),
+        "stderr: {stderr}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Fill
+// ---------------------------------------------------------------------------
+
+#[test]
+fn fill_normal() {
+    let source = r#"program T;
+uses Std.Console, Std.Array;
+begin
+  var A: array of integer := Fill(7, 3);
+  WriteLn(Length(A));
+  WriteLn(A[0]);
+  WriteLn(A[2])
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "3\n7\n7\n");
+}
+
+#[test]
+fn fill_zero_count() {
+    let source = r#"program T;
+uses Std.Console, Std.Array;
+begin
+  var A: array of integer := Fill(7, 0);
+  WriteLn(Length(A))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "0\n");
+}
+
+#[test]
+fn fill_string_elements() {
+    let source = r#"program T;
+uses Std.Console, Std.Array;
+begin
+  var A: array of string := Fill('x', 2);
+  WriteLn(A[0]);
+  WriteLn(A[1])
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "x\nx\n");
+}
+
+// ---------------------------------------------------------------------------
+// ForEach
+// ---------------------------------------------------------------------------
+
+#[test]
+fn for_each_normal() {
+    let source = r#"program T;
+uses Std.Console, Std.Array;
+procedure PrintValue(X: integer);
+begin
+  WriteLn(X)
+end;
+begin
+  ForEach([10, 20, 30], PrintValue)
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "10\n20\n30\n");
+}
+
+#[test]
+fn for_each_empty_array() {
+    let source = r#"program T;
+uses Std.Console, Std.Array;
+procedure PrintValue(X: integer);
+begin
+  WriteLn(X)
+end;
+begin
+  ForEach([], PrintValue);
+  WriteLn('done')
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "done\n");
+}

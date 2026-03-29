@@ -35,6 +35,8 @@ All routines are **generic over key type `K` and value type `V`**.
 | function | `Keys(D: dict of K to V): array of K` | all keys in insertion order |
 | function | `Values(D: dict of K to V): array of V` | all values in insertion order |
 | function | `Remove(D: dict of K to V; Key: K): dict of K to V` | new dict without the given key |
+| function | `Get(D: dict of K to V; Key: K): Option of V` | safe lookup; `None` if absent |
+| function | `Merge(D1: dict of K to V; D2: dict of K to V): dict of K to V` | combined dict; `D2` wins on conflict |
 
 ---
 
@@ -106,6 +108,41 @@ Returns a new dict without the given key. If the key does not exist, the origina
 var D: dict of string to integer := ['A': 1, 'B': 2, 'C': 3];
 var D2: dict of string to integer := Std.Dict.Remove(D, 'B');
 WriteLn(D2)  { [A: 1, C: 3] }
+```
+
+---
+
+### `Get`
+
+```pascal
+function Get(D: dict of K to V; Key: K): Option of V;
+```
+
+Safe lookup. Returns `Some(value)` if the key exists, `None` otherwise. Requires `uses Std.Option` to pattern-match on the result.
+
+```pascal
+uses Std.Dict, Std.Option;
+
+var D: dict of string to integer := ['Alice': 30, 'Bob': 25];
+var Age: Option of integer := Std.Dict.Get(D, 'Alice');    { Some(30) }
+var Missing: Option of integer := Std.Dict.Get(D, 'Eve');  { None }
+```
+
+---
+
+### `Merge`
+
+```pascal
+function Merge(D1: dict of K to V; D2: dict of K to V): dict of K to V;
+```
+
+Returns a new dict containing all entries from both `D1` and `D2`. When the same key exists in both, `D2` wins (last-write-wins). The original dicts are not modified.
+
+```pascal
+var Base: dict of string to integer := ['A': 1, 'B': 2];
+var Over: dict of string to integer := ['B': 9, 'C': 3];
+var M: dict of string to integer := Std.Dict.Merge(Base, Over);
+{ [A: 1, B: 9, C: 3] }
 ```
 
 ---

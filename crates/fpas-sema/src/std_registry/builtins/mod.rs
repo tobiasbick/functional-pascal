@@ -1,4 +1,5 @@
 mod array;
+mod channel_task;
 mod dict;
 mod math;
 mod result_option;
@@ -11,6 +12,9 @@ use fpas_parser::{DesignatorPart, Expr};
 
 pub fn check_builtin_std_call(c: &mut Checker, name: &str, args: &[Expr], span: Span) -> Ty {
     if let Some(ty) = array::check_array_builtin_std_call(c, name, args, span) {
+        return ty;
+    }
+    if let Some(ty) = channel_task::check_channel_task_builtin_std_call(c, name, args, span) {
         return ty;
     }
     if let Some(ty) = dict::check_dict_builtin_std_call(c, name, args, span) {

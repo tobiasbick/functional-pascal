@@ -6,8 +6,46 @@ fn const_valid() {
 }
 
 #[test]
+fn const_can_reference_previous_const() {
+    check_ok("program T; const A: integer := 40; B: integer := A + 2; begin end.");
+}
+
+#[test]
 fn const_type_mismatch() {
     check_errors("program T; const X: integer := 3.14; begin end.");
+}
+
+#[test]
+fn const_initializer_must_be_compile_time_known() {
+    let errors = check_errors(
+        "program T; \
+         function FortyTwo(): integer; \
+         begin return 42 end; \
+         const X: integer := FortyTwo(); \
+         begin end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| { error.code == fpas_diagnostics::codes::SEMA_NON_CONSTANT_EXPRESSION }),
+        "expected non-constant-expression diagnostic, got: {errors:#?}"
+    );
+}
+
+#[test]
+fn const_initializer_cannot_read_variable() {
+    let errors = check_errors(
+        "program T; \
+         var Seed: integer := 1; \
+         const X: integer := Seed; \
+         begin end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| { error.code == fpas_diagnostics::codes::SEMA_NON_CONSTANT_EXPRESSION }),
+        "expected non-constant-expression diagnostic, got: {errors:#?}"
+    );
 }
 
 #[test]
@@ -155,7 +193,60 @@ fn function_forward_valid() {
     check_ok(
         "program T; \
          function F(): integer; forward; \
+         function F(): integer; \
+         begin return 1 end; \
          begin end.",
+    );
+}
+
+#[test]
+fn function_forward_requires_implementation() {
+    let errors = check_errors(
+        "program T; \
+         function F(): integer; forward; \
+         begin end.",
+    );
+    assert!(
+        errors.iter().any(|error| {
+            error.code == fpas_diagnostics::codes::SEMA_UNKNOWN_NAME
+                && error.message.contains("forward")
+        }),
+        "expected missing forward implementation error, got: {errors:#?}"
+    );
+}
+
+#[test]
+fn function_forward_signature_must_match() {
+    let errors = check_errors(
+        "program T; \
+         function F(X: integer): integer; forward; \
+         function F(X: integer): string; \
+         begin return 'oops' end; \
+         begin end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == fpas_diagnostics::codes::SEMA_TYPE_MISMATCH),
+        "expected forward signature mismatch, got: {errors:#?}"
+    );
+}
+
+#[test]
+fn function_duplicate_definition_rejected() {
+    let errors = check_errors(
+        "program T; \
+         function F(): integer; \
+         begin return 1 end; \
+         function F(): integer; \
+         begin return 2 end; \
+         begin end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION),
+        "expected duplicate routine error, got: {errors:#?}"
     );
 }
 

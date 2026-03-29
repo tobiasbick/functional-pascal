@@ -38,26 +38,30 @@ impl Worker {
             ));
         };
 
-        let all_done = tasks.iter().all(|value| {
-            if let Value::Task(id) = value {
-                self.shared.has_task_result(*id)
-            } else {
-                true
-            }
-        });
+        let mut task_ids = Vec::with_capacity(tasks.len());
+        for value in &tasks {
+            let Value::Task(id) = value else {
+                return Err(runtime_error(
+                    RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                    format!(
+                        "Expected every `Std.Task.WaitAll` element to be a task, got `{}`",
+                        value.type_name()
+                    ),
+                    "Pass an array of task handles such as `[T1, T2, T3]`.",
+                    line,
+                ));
+            };
+            task_ids.push(*id);
+        }
+
+        let all_done = task_ids
+            .iter()
+            .all(|task_id| self.shared.has_task_result(*task_id));
 
         if all_done {
-            let results: Vec<Value> = tasks
-                .iter()
-                .map(|value| {
-                    if let Value::Task(id) = value {
-                        self.shared.take_task_result(*id).unwrap_or(Value::Unit)
-                    } else {
-                        Value::Unit
-                    }
-                })
-                .collect();
-            self.push(Value::Array(results))?;
+            for task_id in task_ids {
+                let _ = self.shared.take_task_result(task_id);
+            }
         } else if self.shared.is_shutdown() {
             return Err(runtime_error(
                 RUNTIME_VM_SHUTDOWN,

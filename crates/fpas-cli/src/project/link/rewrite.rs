@@ -3,8 +3,10 @@ mod scope;
 mod statements;
 mod types;
 
-use fpas_parser::{Decl, Stmt};
+use fpas_parser::{Decl, Stmt, Visibility};
 use std::collections::{HashMap, HashSet};
+
+const PRIVATE_NAMESPACE_SEGMENT: &str = "__private__";
 
 pub(super) fn declaration_name(decl: &Decl) -> &str {
     match decl {
@@ -16,10 +18,25 @@ pub(super) fn declaration_name(decl: &Decl) -> &str {
     }
 }
 
+/// Implements qualified user-unit names and private-unit encapsulation from
+/// `docs/pascal/09-units.md`.
+pub(super) fn linked_decl_name(
+    unit_name: &str,
+    short_name: &str,
+    visibility: Visibility,
+) -> String {
+    match visibility {
+        Visibility::Public => format!("{unit_name}.{short_name}"),
+        Visibility::Private => {
+            format!("{unit_name}.{PRIVATE_NAMESPACE_SEGMENT}.{short_name}")
+        }
+    }
+}
+
 pub(super) fn rename_top_level_decls(decls: &mut [Decl], unit_name: &str) {
     for decl in decls {
         let old_name = declaration_name(decl).to_string();
-        let new_name = format!("{unit_name}.{old_name}");
+        let new_name = linked_decl_name(unit_name, &old_name, decl.visibility());
         declaration_name_mut(decl).clone_from(&new_name);
     }
 }

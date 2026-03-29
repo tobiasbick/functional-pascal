@@ -125,3 +125,71 @@ end.",
     );
     assert_eq!(out.lines, vec!["99"]);
 }
+
+// ═══════════════════════════════════════════════════════════════
+// NEGATIVE — forward declarations
+// ═══════════════════════════════════════════════════════════════
+
+#[test]
+fn forward_function_requires_implementation() {
+    let err = compile_err(
+        "\
+program MissingForwardImpl;
+
+function Value(): integer; forward;
+
+begin
+  var X: integer := Value()
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_UNKNOWN_NAME);
+    assert!(err.message.contains("forward"), "unexpected error: {err:?}");
+}
+
+#[test]
+fn forward_function_signature_must_match_implementation() {
+    let err = compile_err(
+        "\
+program ForwardMismatch;
+
+function Value(X: integer): integer; forward;
+
+function Value(X: integer): string;
+begin
+  return 'wrong'
+end;
+
+begin
+  var X: string := Value(1)
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+    assert!(
+        err.message.contains("Forward declaration"),
+        "unexpected error: {err:?}"
+    );
+}
+
+#[test]
+fn forward_procedure_cannot_become_function() {
+    let err = compile_err(
+        "\
+program ForwardKindMismatch;
+
+procedure LogValue(X: integer); forward;
+
+function LogValue(X: integer): integer;
+begin
+  return X
+end;
+
+begin
+  var X: integer := LogValue(1)
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+    assert!(
+        err.message.contains("Forward declaration"),
+        "unexpected error: {err:?}"
+    );
+}

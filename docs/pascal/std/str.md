@@ -41,7 +41,21 @@ Requires `uses Std.Str;`.
 | function | `Split(S: string; Delim: string): array of string` | split segments |
 | function | `Join(Parts: array of string; Delim: string): string` | join with delimiter |
 | function | `IsNumeric(S: string): boolean` | parses as number? |
-
+| function | `RepeatStr(S: string; Count: integer): string` | repeat `S` exactly `Count` times |
+| function | `PadLeft(S: string; Width: integer; Fill: char): string` | left-pad to `Width` |
+| function | `PadRight(S: string; Width: integer; Fill: char): string` | right-pad to `Width` |
+| function | `PadCenter(S: string; Width: integer; Fill: char): string` | center-pad to `Width` |
+| function | `FromChar(C: char; Count: integer): string` | string of repeated char |
+| function | `CharAt(S: string; Index: integer): char` | character at 0-based index |
+| function | `SetCharAt(S: string; Index: integer; C: char): string` | new string with one char replaced |
+| function | `Ord(C: char): integer` | Unicode codepoint |
+| function | `Chr(N: integer): char` | character from codepoint |
+| function | `Insert(S: string; Index: integer; Sub: string): string` | insert `Sub` at index |
+| function | `Delete(S: string; Start: integer; Len: integer): string` | remove `Len` chars |
+| function | `Reverse(S: string): string` | reversed copy |
+| function | `TrimLeft(S: string): string` | strip leading whitespace |
+| function | `TrimRight(S: string): string` | strip trailing whitespace |
+| function | `LastIndexOf(S: string; Sub: string): integer` | last index or `-1` |
 **Indexing:** all “character index” parameters are in **Unicode scalar** units (user-visible characters), not UTF-8 bytes.
 
 ---
@@ -185,6 +199,158 @@ WriteLn(Join(['x', 'y'], ':'))
 ```pascal
 WriteLn(IsNumeric('42'));
 WriteLn(IsNumeric('nope'))
+```
+
+---
+
+## `function RepeatStr(S: string; Count: integer): string`
+
+Returns `S` concatenated `Count` times. `Count` ≤ 0 yields an empty string.
+
+```pascal
+WriteLn(RepeatStr('ab', 3))  { ababab }
+```
+
+---
+
+## `function PadLeft(S: string; Width: integer; Fill: char): string`
+
+If `Length(S) < Width`, prepends `Fill` characters until length equals `Width`. Otherwise returns `S` unchanged.
+
+```pascal
+WriteLn(PadLeft('42', 5, '0'))  { 00042 }
+```
+
+---
+
+## `function PadRight(S: string; Width: integer; Fill: char): string`
+
+Like `PadLeft` but appends `Fill` on the right.
+
+```pascal
+WriteLn(PadRight('Hi', 6, '.'))  { Hi.... }
+```
+
+---
+
+## `function PadCenter(S: string; Width: integer; Fill: char): string`
+
+Centers `S` within `Width` characters of `Fill`. When the remaining space is odd, the extra character goes on the right.
+
+```pascal
+WriteLn(PadCenter('Hi', 6, '-'))  { --Hi-- }
+```
+
+---
+
+## `function FromChar(C: char; Count: integer): string`
+
+Builds a string of `Count` copies of `C`. `Count` ≤ 0 yields an empty string.
+
+```pascal
+WriteLn(FromChar('─', 40))
+```
+
+---
+
+## `function CharAt(S: string; Index: integer): char`
+
+Returns the character at the 0-based `Index`. **Runtime error** if out of bounds.
+
+```pascal
+var C: char := CharAt('Hello', 0);
+WriteLn(C)  { H }
+```
+
+---
+
+## `function SetCharAt(S: string; Index: integer; C: char): string`
+
+Returns a **new** string that is identical to `S` except the character at `Index` is replaced with `C`. **Runtime error** if out of bounds.
+
+```pascal
+WriteLn(SetCharAt('Hello', 0, 'J'))  { Jello }
+```
+
+---
+
+## `function Ord(C: char): integer`
+
+Returns the Unicode codepoint (integer value) of `C`.
+
+```pascal
+WriteLn(Ord('A'))  { 65 }
+```
+
+---
+
+## `function Chr(N: integer): char`
+
+Returns the character with Unicode codepoint `N`. **Runtime error** if `N` is not a valid Unicode scalar value.
+
+```pascal
+WriteLn(Chr(65))  { A }
+```
+
+---
+
+## `function Insert(S: string; Index: integer; Sub: string): string`
+
+Returns a new string with `Sub` inserted at position `Index`. **Runtime error** if `Index` is out of range `[0..Length(S)]`.
+
+```pascal
+WriteLn(Insert('Hllo', 1, 'e'))  { Hello }
+```
+
+---
+
+## `function Delete(S: string; Start: integer; Len: integer): string`
+
+Returns a new string with `Len` characters removed starting at `Start`. **Runtime error** if the range is out of bounds.
+
+```pascal
+WriteLn(Delete('Hello', 1, 3))  { Ho }
+```
+
+---
+
+## `function Reverse(S: string): string`
+
+Returns a new string with characters in reverse order.
+
+```pascal
+WriteLn(Reverse('abc'))  { cba }
+```
+
+---
+
+## `function TrimLeft(S: string): string`
+
+Strips leading whitespace only.
+
+```pascal
+WriteLn(TrimLeft('  hi  '))  { 'hi  ' }
+```
+
+---
+
+## `function TrimRight(S: string): string`
+
+Strips trailing whitespace only.
+
+```pascal
+WriteLn(TrimRight('  hi  '))  { '  hi' }
+```
+
+---
+
+## `function LastIndexOf(S: string; Sub: string): integer`
+
+Returns the **last** character index of `Sub` in `S`, or **`-1`** if not found.
+
+```pascal
+WriteLn(LastIndexOf('abcabc', 'abc'))  { 3 }
+WriteLn(LastIndexOf('abc', 'z'))       { -1 }
 ```
 
 ---

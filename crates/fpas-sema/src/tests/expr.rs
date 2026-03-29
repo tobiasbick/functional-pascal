@@ -19,6 +19,23 @@ fn string_literal() {
 }
 
 #[test]
+fn single_character_string_literal_defaults_to_string() {
+    let (program, parse_errors) = fpas_parser::parse("program T; var X: string := 'A'; begin end.");
+    assert!(parse_errors.is_empty(), "{parse_errors:#?}");
+
+    let value = match &program.declarations[0] {
+        fpas_parser::Decl::Var(var_def) => &var_def.value,
+        other => panic!("expected variable declaration, got {other:?}"),
+    };
+
+    let (errors, types, _method_calls) = analyze_with_types(&program);
+    assert!(errors.is_empty(), "{errors:#?}");
+
+    let key = crate::expr_lookup_key(value);
+    assert_eq!(types.get(&key), Some(&crate::Ty::String));
+}
+
+#[test]
 fn bool_literal() {
     check_ok("program T; var X: boolean := true; begin end.");
 }

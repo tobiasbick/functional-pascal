@@ -128,6 +128,18 @@ fn empty_body_allowed() {
     assert!(prog.body.is_empty());
 }
 
+#[test]
+fn leading_dot_real_literal_is_rejected() {
+    let (_, errs) = parse_with_errors("program T; begin var X: real := .5 end.");
+    assert!(!errs.is_empty());
+}
+
+#[test]
+fn trailing_dot_real_literal_is_rejected() {
+    let (_, errs) = parse_with_errors("program T; begin var X: real := 5. end.");
+    assert!(!errs.is_empty());
+}
+
 // ── Diagnostic code, location and help assertions ───────────────
 
 #[test]

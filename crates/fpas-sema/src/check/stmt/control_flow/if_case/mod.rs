@@ -71,17 +71,29 @@ impl Checker {
         );
 
         for arm in arms {
-            let mut has_binding = None;
+            let mut binding_sets = Vec::new();
             for label in &arm.labels {
                 if let Some(bindings) =
                     self.check_case_label(&case_ty, is_result_or_option, is_data_enum, label)
-                    && !bindings.is_empty()
                 {
-                    has_binding = Some(bindings);
+                    binding_sets.push(bindings);
                 }
             }
 
-            if let Some(bindings) = has_binding {
+            let labels_with_bindings = binding_sets
+                .iter()
+                .filter(|bindings| !bindings.is_empty())
+                .count();
+            if labels_with_bindings == 0 {
+                self.check_guard(&arm.guard, span);
+                self.check_stmt(&arm.body);
+                continue;
+            }
+
+            for bindings in binding_sets
+                .into_iter()
+                .filter(|bindings| !bindings.is_empty())
+            {
                 self.scopes.push_scope();
                 for (name, ty) in &bindings {
                     self.scopes.define(
@@ -96,9 +108,6 @@ impl Checker {
                 self.check_guard(&arm.guard, span);
                 self.check_stmt(&arm.body);
                 self.scopes.pop_scope();
-            } else {
-                self.check_guard(&arm.guard, span);
-                self.check_stmt(&arm.body);
             }
         }
 

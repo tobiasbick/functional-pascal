@@ -46,7 +46,7 @@ impl Parser {
             Vec::new()
         };
 
-        let declarations = self.parse_declarations();
+        let declarations = self.parse_declarations(false);
 
         self.expect(&Token::Begin);
         let body = self.parse_statement_list();
@@ -77,7 +77,7 @@ impl Parser {
             Vec::new()
         };
 
-        let declarations = self.parse_declarations();
+        let declarations = self.parse_declarations(true);
 
         if !self.check(&Token::Eof) {
             let span = self.current_span();

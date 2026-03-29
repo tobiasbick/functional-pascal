@@ -117,7 +117,17 @@ impl Checker {
         match &method_kind {
             MethodKind::Procedure(proc_ty) => {
                 // Check visible params (excluding Self).
-                let visible_params = &proc_ty.params[1..];
+                let Some(visible_params) = proc_ty.params.get(1..) else {
+                    self.error_with_code(
+                        fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
+                        format!(
+                            "Record method `{qualified}` must declare `Self` as its first parameter"
+                        ),
+                        "Declare the method as `procedure Name(Self: RecordType; ...)`.",
+                        span,
+                    );
+                    return true;
+                };
                 if visible_params.len() != args.len() {
                     self.error_with_code(
                         fpas_diagnostics::codes::SEMA_WRONG_ARGUMENT_COUNT,
@@ -143,7 +153,17 @@ impl Checker {
                 }
             }
             MethodKind::Function(func_ty) => {
-                let visible_params = &func_ty.params[1..];
+                let Some(visible_params) = func_ty.params.get(1..) else {
+                    self.error_with_code(
+                        fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
+                        format!(
+                            "Record method `{qualified}` must declare `Self` as its first parameter"
+                        ),
+                        "Declare the method as `function Name(Self: RecordType; ...)`.",
+                        span,
+                    );
+                    return true;
+                };
                 if visible_params.len() != args.len() {
                     self.error_with_code(
                         fpas_diagnostics::codes::SEMA_WRONG_ARGUMENT_COUNT,

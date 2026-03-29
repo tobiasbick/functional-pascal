@@ -32,6 +32,10 @@ Requires `uses Std.Conv;`.
 | function | `RealToStr(R: real): string` | text form |
 | function | `StrToReal(S: string): real` | parse; error if invalid |
 | function | `CharToStr(C: char): string` | length-1 string |
+| function | `BoolToStr(B: boolean): string` | `'true'` or `'false'` |
+| function | `StrToBool(S: string): boolean` | parse; case-insensitive; error if invalid |
+| function | `IntToHex(N: integer; Digits: integer): string` | uppercase hex, zero-padded |
+| function | `HexToInt(S: string): integer` | parse hex; supports `$` / `0x` prefix |
 
 ---
 
@@ -92,6 +96,51 @@ Single-character string.
 
 ```pascal
 WriteLn(CharToStr('Z'))
+```
+
+---
+
+## `function BoolToStr(B: boolean): string`
+
+Returns `'true'` or `'false'`.
+
+```pascal
+WriteLn(BoolToStr(true))   { true }
+WriteLn(BoolToStr(false))  { false }
+```
+
+---
+
+## `function StrToBool(S: string): boolean`
+
+Parses `'true'` or `'false'` (case-insensitive). **Runtime error** if `S` is neither.
+
+```pascal
+WriteLn(StrToBool('True'));    { true }
+WriteLn(StrToBool('FALSE'))    { false }
+```
+
+---
+
+## `function IntToHex(N: integer; Digits: integer): string`
+
+Returns `N` as an uppercase hexadecimal string, zero-padded to at least `Digits` characters.
+
+```pascal
+WriteLn(IntToHex(255, 2));    { FF }
+WriteLn(IntToHex(255, 4))     { 00FF }
+```
+
+---
+
+## `function HexToInt(S: string): integer`
+
+Parses a hexadecimal string. Accepts optional `$` or `0x` prefix. **Runtime error** if the string is not valid hex.
+
+```pascal
+WriteLn(HexToInt('FF'));     { 255 }
+WriteLn(HexToInt('$FF'));    { 255 }
+WriteLn(HexToInt('0xFF'))    { 255 }
 ```
 
 ---

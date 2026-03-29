@@ -39,7 +39,7 @@ pub enum Value {
     ///
     /// For closures, `captures` holds the values captured from enclosing scopes.
     ///
-    /// **Documentation:** `docs/future/closures.md`
+    /// **Documentation:** `docs/pascal/04-functions.md`
     Function {
         name: String,
         captures: Vec<Value>,

@@ -82,6 +82,98 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::MathMax, location);
                 Ok(true)
             }
+            s::STD_MATH_TAN => {
+                self.expect_exact_args(s::STD_MATH_TAN, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::MathTan, location);
+                Ok(true)
+            }
+            s::STD_MATH_ARC_SIN => {
+                self.expect_exact_args(s::STD_MATH_ARC_SIN, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::MathArcSin, location);
+                Ok(true)
+            }
+            s::STD_MATH_ARC_COS => {
+                self.expect_exact_args(s::STD_MATH_ARC_COS, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::MathArcCos, location);
+                Ok(true)
+            }
+            s::STD_MATH_ARC_TAN => {
+                self.expect_exact_args(s::STD_MATH_ARC_TAN, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::MathArcTan, location);
+                Ok(true)
+            }
+            s::STD_MATH_ARC_TAN2 => {
+                self.expect_exact_args(s::STD_MATH_ARC_TAN2, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::MathArcTan2, location);
+                Ok(true)
+            }
+            s::STD_MATH_EXP => {
+                self.expect_exact_args(s::STD_MATH_EXP, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::MathExp, location);
+                Ok(true)
+            }
+            s::STD_MATH_LOG10 => {
+                self.expect_exact_args(s::STD_MATH_LOG10, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::MathLog10, location);
+                Ok(true)
+            }
+            s::STD_MATH_LOG2 => {
+                self.expect_exact_args(s::STD_MATH_LOG2, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::MathLog2, location);
+                Ok(true)
+            }
+            s::STD_MATH_TRUNC => {
+                self.expect_exact_args(s::STD_MATH_TRUNC, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::MathTrunc, location);
+                Ok(true)
+            }
+            s::STD_MATH_FRAC => {
+                self.expect_exact_args(s::STD_MATH_FRAC, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::MathFrac, location);
+                Ok(true)
+            }
+            s::STD_MATH_SIGN => {
+                self.expect_exact_args(s::STD_MATH_SIGN, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::MathSign, location);
+                Ok(true)
+            }
+            s::STD_MATH_CLAMP => {
+                self.expect_exact_args(s::STD_MATH_CLAMP, 3, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.compile_expr(&args[2])?;
+                self.emit_intrinsic(Intrinsic::MathClamp, location);
+                Ok(true)
+            }
+            s::STD_MATH_RANDOM => {
+                self.expect_exact_args(s::STD_MATH_RANDOM, 0, args, location)?;
+                self.emit_intrinsic(Intrinsic::MathRandom, location);
+                Ok(true)
+            }
+            s::STD_MATH_RANDOM_INT => {
+                self.expect_exact_args(s::STD_MATH_RANDOM_INT, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::MathRandomInt, location);
+                Ok(true)
+            }
+            s::STD_MATH_RANDOMIZE => {
+                self.expect_exact_args(s::STD_MATH_RANDOMIZE, 0, args, location)?;
+                self.emit_intrinsic(Intrinsic::MathRandomize, location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

@@ -25,122 +25,58 @@ impl Compiler {
         let mut end_patches = Vec::new();
 
         for arm in arms {
-            let mut body_patches = Vec::new();
-            let mut next_patches = Vec::new();
-
             for label in &arm.labels {
-                match label {
-                    fpas_parser::CaseLabel::Value {
-                        start,
-                        end: Some(end_expr),
-                        ..
-                    } => {
-                        self.emit(Op::GetLocal(case_slot), (line, column));
-                        self.compile_expr(start)?;
-                        self.emit(ge_op, (line, column));
+                self.emit_case_label_match(label, case_slot, eq_op, ge_op, le_op, line, column)?;
+                let fail_patch = self.emit(Op::JumpIfFalse(0), (line, column));
 
-                        self.emit(Op::GetLocal(case_slot), (line, column));
-                        self.compile_expr(end_expr)?;
-                        self.emit(le_op, (line, column));
-
-                        self.emit(Op::And, (line, column));
-                    }
-                    fpas_parser::CaseLabel::Value {
-                        start, end: None, ..
-                    } => {
-                        self.emit(Op::GetLocal(case_slot), (line, column));
-                        self.compile_expr(start)?;
-                        self.emit(eq_op, (line, column));
-                    }
+                let binding = match label {
                     fpas_parser::CaseLabel::Destructure {
                         variant, binding, ..
-                    } => {
-                        self.emit(Op::GetLocal(case_slot), (line, column));
-                        match variant {
-                            fpas_parser::DestructureVariant::Ok => {
-                                self.emit(Op::IsResultOk, (line, column));
-                            }
-                            fpas_parser::DestructureVariant::Error => {
-                                self.emit(Op::IsResultOk, (line, column));
-                                self.emit(Op::Not, (line, column));
-                            }
-                            fpas_parser::DestructureVariant::Some => {
-                                self.emit(Op::IsOptionSome, (line, column));
-                            }
-                            fpas_parser::DestructureVariant::None => {
-                                self.emit(Op::IsOptionSome, (line, column));
-                                self.emit(Op::Not, (line, column));
-                            }
+                    } => binding.as_ref().map(|name| (*variant, name.clone())),
+                    fpas_parser::CaseLabel::Value { .. } => None,
+                };
+
+                if let Some((variant, name)) = &binding {
+                    self.begin_scope();
+                    self.emit(Op::GetLocal(case_slot), (line, column));
+                    match variant {
+                        fpas_parser::DestructureVariant::Ok
+                        | fpas_parser::DestructureVariant::Some => {
+                            self.emit(Op::UnwrapOk, (line, column));
                         }
-                        let _ = binding;
+                        fpas_parser::DestructureVariant::Error => {
+                            self.emit(Op::UnwrapErr, (line, column));
+                        }
+                        fpas_parser::DestructureVariant::None => {}
                     }
+                    self.add_local(name);
                 }
 
-                let jump = self.emit(Op::JumpIfTrue(0), (line, column));
-                body_patches.push(jump);
-            }
-
-            let skip = self.emit(Op::Jump(0), (line, column));
-            next_patches.push(skip);
-
-            let body_addr = self.chunk.len() as u32;
-            for patch in body_patches {
-                self.patch_jump(patch, body_addr, (line, column))?;
-            }
-
-            let has_binding = arm.labels.iter().find_map(|l| {
-                if let fpas_parser::CaseLabel::Destructure {
-                    variant, binding, ..
-                } = l
-                {
-                    binding.as_ref().map(|b| (*variant, b.clone()))
+                let guard_fail = if let Some(guard_expr) = &arm.guard {
+                    self.compile_expr(guard_expr)?;
+                    Some(self.emit(Op::JumpIfFalse(0), (line, column)))
                 } else {
                     None
+                };
+
+                self.compile_stmt(&arm.body)?;
+
+                if binding.is_some() {
+                    self.end_scope((line, column));
                 }
-            });
-            let opened_scope = has_binding.is_some();
-            if let Some((variant, name)) = &has_binding {
-                self.begin_scope();
-                self.emit(Op::GetLocal(case_slot), (line, column));
-                match variant {
-                    fpas_parser::DestructureVariant::Ok | fpas_parser::DestructureVariant::Some => {
-                        self.emit(Op::UnwrapOk, (line, column));
+
+                end_patches.push(self.emit(Op::Jump(0), (line, column)));
+
+                if let Some(guard_patch) = guard_fail {
+                    let cleanup_addr = self.chunk.len() as u32;
+                    self.patch_jump(guard_patch, cleanup_addr, (line, column))?;
+                    if binding.is_some() {
+                        self.emit(Op::Pop, (line, column));
                     }
-                    fpas_parser::DestructureVariant::Error => {
-                        self.emit(Op::UnwrapErr, (line, column));
-                    }
-                    fpas_parser::DestructureVariant::None => {}
                 }
-                self.add_local(name);
-            }
 
-            let guard_fail = if let Some(guard_expr) = &arm.guard {
-                self.compile_expr(guard_expr)?;
-                Some(self.emit(Op::JumpIfFalse(0), (line, column)))
-            } else {
-                None
-            };
-
-            self.compile_stmt(&arm.body)?;
-
-            if opened_scope {
-                self.end_scope((line, column));
-            }
-
-            let end_jump = self.emit(Op::Jump(0), (line, column));
-            end_patches.push(end_jump);
-
-            if let Some(guard_patch) = guard_fail {
-                let guard_fail_addr = self.chunk.len() as u32;
-                self.patch_jump(guard_patch, guard_fail_addr, (line, column))?;
-                if has_binding.is_some() {
-                    self.emit(Op::Pop, (line, column));
-                }
-            }
-
-            let next_addr = self.chunk.len() as u32;
-            for patch in next_patches {
-                self.patch_jump(patch, next_addr, (line, column))?;
+                let next_label_addr = self.chunk.len() as u32;
+                self.patch_jump(fail_patch, next_label_addr, (line, column))?;
             }
         }
 
@@ -153,6 +89,63 @@ impl Compiler {
         let end_addr = self.chunk.len() as u32;
         for patch in end_patches {
             self.patch_jump(patch, end_addr, (line, column))?;
+        }
+
+        Ok(())
+    }
+
+    fn emit_case_label_match(
+        &mut self,
+        label: &fpas_parser::CaseLabel,
+        case_slot: u16,
+        eq_op: Op,
+        ge_op: Op,
+        le_op: Op,
+        line: u32,
+        column: u32,
+    ) -> Result<(), CompileError> {
+        match label {
+            fpas_parser::CaseLabel::Value {
+                start,
+                end: Some(end_expr),
+                ..
+            } => {
+                self.emit(Op::GetLocal(case_slot), (line, column));
+                self.compile_expr(start)?;
+                self.emit(ge_op, (line, column));
+
+                self.emit(Op::GetLocal(case_slot), (line, column));
+                self.compile_expr(end_expr)?;
+                self.emit(le_op, (line, column));
+
+                self.emit(Op::And, (line, column));
+            }
+            fpas_parser::CaseLabel::Value {
+                start, end: None, ..
+            } => {
+                self.emit(Op::GetLocal(case_slot), (line, column));
+                self.compile_expr(start)?;
+                self.emit(eq_op, (line, column));
+            }
+            fpas_parser::CaseLabel::Destructure { variant, .. } => {
+                self.emit(Op::GetLocal(case_slot), (line, column));
+                match variant {
+                    fpas_parser::DestructureVariant::Ok => {
+                        self.emit(Op::IsResultOk, (line, column));
+                    }
+                    fpas_parser::DestructureVariant::Error => {
+                        self.emit(Op::IsResultOk, (line, column));
+                        self.emit(Op::Not, (line, column));
+                    }
+                    fpas_parser::DestructureVariant::Some => {
+                        self.emit(Op::IsOptionSome, (line, column));
+                    }
+                    fpas_parser::DestructureVariant::None => {
+                        self.emit(Op::IsOptionSome, (line, column));
+                        self.emit(Op::Not, (line, column));
+                    }
+                }
+            }
         }
 
         Ok(())

@@ -67,6 +67,18 @@ pub(crate) fn pop_char(v: Value, location: SourceLocation) -> Result<char, StdEr
     }
 }
 
+pub(crate) fn pop_bool(v: Value, location: SourceLocation) -> Result<bool, StdError> {
+    match v {
+        Value::Boolean(b) => Ok(b),
+        other => Err(std_runtime_error(
+            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            format!("Expected boolean argument, got {}", other.type_name()),
+            "Pass a boolean value to this Std.* call.",
+            location,
+        )),
+    }
+}
+
 pub(crate) fn pop_array(v: Value, location: SourceLocation) -> Result<Vec<Value>, StdError> {
     match v {
         Value::Array(a) => Ok(a),

@@ -174,6 +174,182 @@ pub enum Intrinsic {
     DictValues = 123,
     /// **Documentation:** `docs/future/advanced-types.md`
     DictRemove = 124,
+    /// **Documentation:** `docs/pascal/std/dict.md`
+    DictGet = 125,
+    /// **Documentation:** `docs/pascal/std/dict.md`
+    DictMerge = 126,
+
+    /// `Std.Str.Repeat(S, N)` — repeat string N times.
+    ///
+    /// **Documentation:** `docs/pascal/std/str.md`
+    StrRepeat = 200,
+    /// `Std.Str.PadLeft(S, Width, PadChar)` — left-pad string to width.
+    ///
+    /// **Documentation:** `docs/pascal/std/str.md`
+    StrPadLeft = 201,
+    /// `Std.Str.PadRight(S, Width, PadChar)` — right-pad string to width.
+    ///
+    /// **Documentation:** `docs/pascal/std/str.md`
+    StrPadRight = 202,
+    /// `Std.Str.PadCenter(S, Width, PadChar)` — center-pad string to width.
+    ///
+    /// **Documentation:** `docs/pascal/std/str.md`
+    StrPadCenter = 203,
+    /// `Std.Str.FromChar(C, N)` — create string of N copies of char C.
+    ///
+    /// **Documentation:** `docs/pascal/std/str.md`
+    StrFromChar = 204,
+    /// `Std.Str.CharAt(S, Index)` — character at zero-based index.
+    ///
+    /// **Documentation:** `docs/pascal/std/str.md`
+    StrCharAt = 205,
+    /// `Std.Str.SetCharAt(S, Index, C)` — return new string with char replaced.
+    ///
+    /// **Documentation:** `docs/pascal/std/str.md`
+    StrSetCharAt = 206,
+    /// `Std.Str.Ord(C)` — Unicode code point of a char.
+    ///
+    /// **Documentation:** `docs/pascal/std/str.md`
+    StrOrd = 207,
+    /// `Std.Str.Chr(N)` — char from Unicode code point.
+    ///
+    /// **Documentation:** `docs/pascal/std/str.md`
+    StrChr = 208,
+    /// `Std.Str.Insert(S, Index, Sub)` — insert substring at index.
+    ///
+    /// **Documentation:** `docs/pascal/std/str.md`
+    StrInsert = 209,
+    /// `Std.Str.Delete(S, Index, Len)` — delete Len chars starting at Index.
+    ///
+    /// **Documentation:** `docs/pascal/std/str.md`
+    StrDelete = 210,
+    /// `Std.Str.Reverse(S)` — reverse a string.
+    ///
+    /// **Documentation:** `docs/pascal/std/str.md`
+    StrReverse = 211,
+    /// `Std.Str.TrimLeft(S)` — trim leading whitespace.
+    ///
+    /// **Documentation:** `docs/pascal/std/str.md`
+    StrTrimLeft = 212,
+    /// `Std.Str.TrimRight(S)` — trim trailing whitespace.
+    ///
+    /// **Documentation:** `docs/pascal/std/str.md`
+    StrTrimRight = 213,
+    /// `Std.Str.LastIndexOf(S, Sub)` — last occurrence index or -1.
+    ///
+    /// **Documentation:** `docs/pascal/std/str.md`
+    StrLastIndexOf = 214,
+
+    /// `Std.Conv.BoolToStr(B)` — boolean to `'true'`/`'false'`.
+    ///
+    /// **Documentation:** `docs/pascal/std/conv.md`
+    ConvBoolToStr = 215,
+    /// `Std.Conv.StrToBool(S)` — parse `'true'`/`'false'` to boolean.
+    ///
+    /// **Documentation:** `docs/pascal/std/conv.md`
+    ConvStrToBool = 216,
+    /// `Std.Conv.IntToHex(N)` — integer to hexadecimal string.
+    ///
+    /// **Documentation:** `docs/pascal/std/conv.md`
+    ConvIntToHex = 217,
+    /// `Std.Conv.HexToInt(S)` — hexadecimal string to integer.
+    ///
+    /// **Documentation:** `docs/pascal/std/conv.md`
+    ConvHexToInt = 218,
+
+    /// `Std.Math.Tan(R)` — tangent.
+    ///
+    /// **Documentation:** `docs/pascal/std/math.md`
+    MathTan = 219,
+    /// `Std.Math.ArcSin(R)` — arcsine.
+    ///
+    /// **Documentation:** `docs/pascal/std/math.md`
+    MathArcSin = 220,
+    /// `Std.Math.ArcCos(R)` — arccosine.
+    ///
+    /// **Documentation:** `docs/pascal/std/math.md`
+    MathArcCos = 221,
+    /// `Std.Math.ArcTan(R)` — arctangent.
+    ///
+    /// **Documentation:** `docs/pascal/std/math.md`
+    MathArcTan = 222,
+    /// `Std.Math.ArcTan2(Y, X)` — two-argument arctangent.
+    ///
+    /// **Documentation:** `docs/pascal/std/math.md`
+    MathArcTan2 = 223,
+    /// `Std.Math.Exp(R)` — e^R.
+    ///
+    /// **Documentation:** `docs/pascal/std/math.md`
+    MathExp = 224,
+    /// `Std.Math.Log10(R)` — base-10 logarithm.
+    ///
+    /// **Documentation:** `docs/pascal/std/math.md`
+    MathLog10 = 225,
+    /// `Std.Math.Log2(R)` — base-2 logarithm.
+    ///
+    /// **Documentation:** `docs/pascal/std/math.md`
+    MathLog2 = 226,
+    /// `Std.Math.Trunc(R)` — truncate toward zero, return integer.
+    ///
+    /// **Documentation:** `docs/pascal/std/math.md`
+    MathTrunc = 227,
+    /// `Std.Math.Frac(R)` — fractional part.
+    ///
+    /// **Documentation:** `docs/pascal/std/math.md`
+    MathFrac = 228,
+    /// `Std.Math.Sign(X)` — sign (-1, 0, 1), polymorphic integer/real.
+    ///
+    /// **Documentation:** `docs/pascal/std/math.md`
+    MathSign = 229,
+    /// `Std.Math.Clamp(X, Lo, Hi)` — clamp to range, polymorphic.
+    ///
+    /// **Documentation:** `docs/pascal/std/math.md`
+    MathClamp = 230,
+    /// `Std.Math.Random` — random real in [0, 1).
+    ///
+    /// **Documentation:** `docs/pascal/std/math.md`
+    MathRandom = 231,
+    /// `Std.Math.RandomInt(N)` — random integer in [0, N).
+    ///
+    /// **Documentation:** `docs/pascal/std/math.md`
+    MathRandomInt = 232,
+    /// `Std.Math.Randomize` — seed the RNG.
+    ///
+    /// **Documentation:** `docs/pascal/std/math.md`
+    MathRandomize = 233,
+
+    /// `Std.Array.Concat(A, B)` — concatenate two arrays.
+    ///
+    /// **Documentation:** `docs/pascal/std/array.md`
+    ArrayConcat = 234,
+    /// `Std.Array.Fill(Value, Count)` — create array of Count copies of Value.
+    ///
+    /// **Documentation:** `docs/pascal/std/array.md`
+    ArrayFill = 235,
+    /// `Std.Array.Find(Arr, Pred)` — first element matching predicate, or None.
+    ///
+    /// **Documentation:** `docs/pascal/std/array.md`
+    ArrayFind = 236,
+    /// `Std.Array.FindIndex(Arr, Pred)` — index of first match, or -1.
+    ///
+    /// **Documentation:** `docs/pascal/std/array.md`
+    ArrayFindIndex = 237,
+    /// `Std.Array.Any(Arr, Pred)` — true if any element matches.
+    ///
+    /// **Documentation:** `docs/pascal/std/array.md`
+    ArrayAny = 238,
+    /// `Std.Array.All(Arr, Pred)` — true if all elements match.
+    ///
+    /// **Documentation:** `docs/pascal/std/array.md`
+    ArrayAll = 239,
+    /// `Std.Array.FlatMap(Arr, F)` — map then flatten.
+    ///
+    /// **Documentation:** `docs/pascal/std/array.md`
+    ArrayFlatMap = 240,
+    /// `Std.Array.ForEach(Arr, F)` — apply F to each element (returns unit).
+    ///
+    /// **Documentation:** `docs/pascal/std/array.md`
+    ArrayForEach = 241,
 }
 
 impl From<Intrinsic> for u16 {

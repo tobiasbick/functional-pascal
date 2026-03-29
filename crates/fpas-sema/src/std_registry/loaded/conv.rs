@@ -40,4 +40,28 @@ pub(super) fn register_std_conv(checker: &mut Checker) {
         vec![p("N", Ty::Integer, false)],
         Ty::Real,
     );
+    define_func(
+        checker,
+        s::STD_CONV_BOOL_TO_STR,
+        vec![p("B", Ty::Boolean, false)],
+        Ty::String,
+    );
+    define_func(
+        checker,
+        s::STD_CONV_STR_TO_BOOL,
+        vec![p("S", Ty::String, false)],
+        Ty::Boolean,
+    );
+    define_func(
+        checker,
+        s::STD_CONV_INT_TO_HEX,
+        vec![p("N", Ty::Integer, false), p("Digits", Ty::Integer, false)],
+        Ty::String,
+    );
+    define_func(
+        checker,
+        s::STD_CONV_HEX_TO_INT,
+        vec![p("S", Ty::String, false)],
+        Ty::Integer,
+    );
 }

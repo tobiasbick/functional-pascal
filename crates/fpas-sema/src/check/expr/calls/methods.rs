@@ -14,47 +14,17 @@ impl Checker {
         args: &[Expr],
         span: Span,
     ) -> Option<Ty> {
-        if designator.parts.len() < 2 {
-            return None;
-        }
+        self.try_check_method_call_like(call_expr, designator, args, span, false)
+    }
 
-        let method_name = match designator.parts.last()? {
-            DesignatorPart::Ident(name, _) => name.clone(),
-            _ => return None,
-        };
-
-        let receiver_designator = Designator {
-            parts: designator.parts[..designator.parts.len() - 1].to_vec(),
-            span: designator.span,
-        };
-
-        let receiver_ty = self.check_designator_expr(&receiver_designator);
-        let Ty::Record(record_ty) = &receiver_ty else {
-            return None;
-        };
-
-        let qualified = format!("{}.{}", record_ty.name, method_name);
-        let method_kind = self.resolve_method_kind(record_ty, &method_name, &qualified)?;
-
-        let call_key = Self::expr_lookup_key(call_expr);
-        self.method_calls.insert(call_key, qualified.clone());
-
-        match &method_kind {
-            MethodKind::Function(func_ty) => {
-                self.check_method_call_args(&qualified, &func_ty.params[1..], args, span);
-                Some(*func_ty.return_type.clone())
-            }
-            MethodKind::Procedure(_) => {
-                self.check_args_only(args);
-                self.error_with_code(
-                    SEMA_TYPE_MISMATCH,
-                    format!("Method procedure `{qualified}` does not return a value"),
-                    "Use a method function instead if you need a return value.",
-                    span,
-                );
-                Some(Ty::Error)
-            }
-        }
+    pub(in crate::check::expr) fn try_check_method_go_call(
+        &mut self,
+        call_expr: &Expr,
+        designator: &Designator,
+        args: &[Expr],
+        span: Span,
+    ) -> Option<Ty> {
+        self.try_check_method_call_like(call_expr, designator, args, span, true)
     }
 
     fn resolve_method_kind(
@@ -108,6 +78,90 @@ impl Checker {
                     &format!("argument {}", index + 1),
                     span,
                 );
+            }
+        }
+    }
+
+    fn try_check_method_call_like(
+        &mut self,
+        call_expr: &Expr,
+        designator: &Designator,
+        args: &[Expr],
+        span: Span,
+        allow_procedure_result: bool,
+    ) -> Option<Ty> {
+        if designator.parts.len() < 2 {
+            return None;
+        }
+
+        let Some(DesignatorPart::Ident(base_name, _)) = designator.parts.first() else {
+            return None;
+        };
+        if self.scopes.lookup(base_name).is_none() {
+            return None;
+        }
+
+        let method_name = match designator.parts.last()? {
+            DesignatorPart::Ident(name, _) => name.clone(),
+            _ => return None,
+        };
+
+        let receiver_designator = Designator {
+            parts: designator.parts[..designator.parts.len() - 1].to_vec(),
+            span: designator.span,
+        };
+
+        let receiver_ty = self.check_designator_expr(&receiver_designator);
+        let Ty::Record(record_ty) = &receiver_ty else {
+            return None;
+        };
+
+        let qualified = format!("{}.{}", record_ty.name, method_name);
+        let method_kind = self.resolve_method_kind(record_ty, &method_name, &qualified)?;
+
+        let call_key = Self::expr_lookup_key(call_expr);
+        self.method_calls.insert(call_key, qualified.clone());
+
+        match &method_kind {
+            MethodKind::Function(func_ty) => {
+                let Some(visible_params) = func_ty.params.get(1..) else {
+                    self.error_with_code(
+                        SEMA_TYPE_MISMATCH,
+                        format!(
+                            "Record method `{qualified}` must declare `Self` as its first parameter"
+                        ),
+                        "Declare the method as `function Name(Self: RecordType; ...)`.",
+                        span,
+                    );
+                    return Some(Ty::Error);
+                };
+                self.check_method_call_args(&qualified, visible_params, args, span);
+                Some(*func_ty.return_type.clone())
+            }
+            MethodKind::Procedure(proc_ty) => {
+                let Some(visible_params) = proc_ty.params.get(1..) else {
+                    self.error_with_code(
+                        SEMA_TYPE_MISMATCH,
+                        format!(
+                            "Record method `{qualified}` must declare `Self` as its first parameter"
+                        ),
+                        "Declare the method as `procedure Name(Self: RecordType; ...)`.",
+                        span,
+                    );
+                    return Some(Ty::Error);
+                };
+                self.check_method_call_args(&qualified, visible_params, args, span);
+                if allow_procedure_result {
+                    Some(Ty::Unit)
+                } else {
+                    self.error_with_code(
+                        SEMA_TYPE_MISMATCH,
+                        format!("Method procedure `{qualified}` does not return a value"),
+                        "Use a method function instead if you need a return value.",
+                        span,
+                    );
+                    Some(Ty::Error)
+                }
             }
         }
     }

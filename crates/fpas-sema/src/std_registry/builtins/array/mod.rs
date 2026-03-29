@@ -30,6 +30,14 @@ pub(super) fn check_array_builtin_std_call(
         s::STD_ARRAY_MAP => higher_order::check_map(c, args, span),
         s::STD_ARRAY_FILTER => higher_order::check_filter(c, args, span),
         s::STD_ARRAY_REDUCE => higher_order::check_reduce(c, args, span),
+        s::STD_ARRAY_CONCAT => query::check_concat(c, args, span),
+        s::STD_ARRAY_FILL => query::check_fill(c, args, span),
+        s::STD_ARRAY_FIND => higher_order::check_find(c, args, span),
+        s::STD_ARRAY_FIND_INDEX => higher_order::check_find_index(c, args, span),
+        s::STD_ARRAY_ANY => higher_order::check_any(c, args, span),
+        s::STD_ARRAY_ALL => higher_order::check_all(c, args, span),
+        s::STD_ARRAY_FLAT_MAP => higher_order::check_flat_map(c, args, span),
+        s::STD_ARRAY_FOR_EACH => higher_order::check_for_each(c, args, span),
         _ => return None,
     };
 

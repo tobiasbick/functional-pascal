@@ -25,6 +25,30 @@ impl Worker {
                 self.exec_array_reduce(line)?;
                 Ok(true)
             }
+            Intrinsic::ArrayFind => {
+                self.exec_array_find(line)?;
+                Ok(true)
+            }
+            Intrinsic::ArrayFindIndex => {
+                self.exec_array_find_index(line)?;
+                Ok(true)
+            }
+            Intrinsic::ArrayAny => {
+                self.exec_array_any(line)?;
+                Ok(true)
+            }
+            Intrinsic::ArrayAll => {
+                self.exec_array_all(line)?;
+                Ok(true)
+            }
+            Intrinsic::ArrayFlatMap => {
+                self.exec_array_flat_map(line)?;
+                Ok(true)
+            }
+            Intrinsic::ArrayForEach => {
+                self.exec_array_for_each(line)?;
+                Ok(true)
+            }
             Intrinsic::ResultMap => {
                 self.exec_result_map(line)?;
                 Ok(true)

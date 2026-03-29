@@ -1,6 +1,7 @@
 use super::{
     UnitFile,
     rewrite::declaration_name,
+    rewrite::linked_decl_name,
     support::{canonical_unit_key, internal_link_error, is_std_unit, unknown_unit_error},
 };
 use crate::project::common::qualified_id_to_string;
@@ -31,7 +32,10 @@ pub(super) fn collect_unit_exports(
                     "Duplicate declaration `{short_name}` in unit `{unit_name}`.\n  help: Use unique top-level declaration names per unit."
                 ));
             }
-            unit_exports.insert(short_name.to_string(), format!("{unit_name}.{short_name}"));
+            unit_exports.insert(
+                short_name.to_string(),
+                linked_decl_name(&unit_name, short_name, decl.visibility()),
+            );
         }
 
         exports.insert(unit_key.clone(), unit_exports);
@@ -60,7 +64,10 @@ pub(super) fn collect_all_unit_symbols(
                     "Duplicate declaration `{short_name}` in unit `{unit_name}`.\n  help: Use unique top-level declaration names per unit."
                 ));
             }
-            symbols.insert(short_name.to_string(), format!("{unit_name}.{short_name}"));
+            symbols.insert(
+                short_name.to_string(),
+                linked_decl_name(&unit_name, short_name, decl.visibility()),
+            );
         }
 
         all.insert(unit_key.clone(), symbols);

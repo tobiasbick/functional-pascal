@@ -53,3 +53,90 @@ end.",
         "{errs:#?}"
     );
 }
+
+#[test]
+fn std_dict_merge_requires_matching_rhs_dict_type() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Dict;
+begin
+  var M: dict of integer to integer := Std.Dict.Merge([1: 10], ['x': true])
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| e.message.contains("same key and value types")),
+        "{errs:#?}"
+    );
+}
+
+#[test]
+fn std_dict_merge_requires_dict_rhs() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Dict;
+begin
+  var M: dict of integer to integer := Std.Dict.Merge([1: 10], 42)
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| e.message.contains("dict as second argument")),
+        "{errs:#?}"
+    );
+}
+
+#[test]
+fn std_dict_get_requires_matching_key_type() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Dict;
+begin
+  var V: Option of integer := Std.Dict.Get(['Alice': 1], 42)
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| e.message.contains("Type mismatch in dict key")),
+        "{errs:#?}"
+    );
+}
+
+#[test]
+fn std_array_find_requires_boolean_callback_result() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Array;
+begin
+  var V: Option of integer := Std.Array.Find([1, 2, 3],
+    function(X: integer): integer begin return X end)
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| e.message.contains("Type mismatch in callback return type")),
+        "{errs:#?}"
+    );
+}
+
+#[test]
+fn std_array_for_each_requires_procedure_callback() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Array;
+begin
+  Std.Array.ForEach([1, 2, 3],
+    function(X: integer): integer begin return X end)
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| e.message.contains("second argument must be a procedure")),
+        "{errs:#?}"
+    );
+}

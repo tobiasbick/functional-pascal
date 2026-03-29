@@ -4,7 +4,7 @@ mod decl;
 mod entry;
 mod expr;
 mod name_resolution;
-mod spans;
+pub(crate) mod spans;
 mod stmt;
 
 pub(crate) use context::Checker;

@@ -8,11 +8,19 @@ impl Checker {
         let declared_ty = self.resolve_type_expr(&v.type_expr);
         let value_ty = self.check_expr(&v.value);
         self.check_type_compat(&declared_ty, &value_ty, "variable initializer", v.span);
+        let stored_ty = match (&declared_ty, &value_ty) {
+            (crate::types::Ty::Task(inner), crate::types::Ty::Task(actual))
+                if inner.is_error() && !actual.is_error() =>
+            {
+                crate::types::Ty::Task(actual.clone())
+            }
+            _ => declared_ty.clone(),
+        };
 
         if !self.scopes.define(
             &v.name,
             Symbol {
-                ty: declared_ty,
+                ty: stored_ty,
                 mutable,
                 kind: SymbolKind::Var,
             },

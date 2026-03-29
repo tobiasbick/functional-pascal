@@ -410,3 +410,114 @@ end.",
         err.message
     );
 }
+
+#[test]
+fn case_data_enum_rejects_foreign_root_variant() {
+    let err = compile_err(
+        "\
+program T;
+type
+  Shape = enum
+    Circle(Radius: real);
+    Point;
+  end;
+  Other = enum
+    Square(Size: real);
+  end;
+begin
+  var S: Shape := Shape.Point;
+  case S of
+    Other.Square(Size): Std.Console.WriteLn('bad');
+    Shape.Point: Std.Console.WriteLn('point')
+  end
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+    assert!(
+        err.message.contains("does not belong") || err.message.contains("Shape"),
+        "expected foreign root variant error, got: {}",
+        err.message
+    );
+}
+
+#[test]
+fn case_data_enum_rejects_foreign_nested_variant() {
+    let err = compile_err(
+        "\
+program T;
+type
+  Inner = enum
+    A(X: integer);
+  end;
+  Other = enum
+    B(X: integer);
+  end;
+  Outer = enum
+    Wrap(Value: Inner);
+    Empty;
+  end;
+begin
+  var V: Outer := Outer.Empty;
+  case V of
+    Outer.Wrap(Other.B(X)): Std.Console.WriteLn('bad');
+    Outer.Empty: Std.Console.WriteLn('empty')
+  end
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+    assert!(
+        err.message.contains("does not belong") || err.message.contains("Inner"),
+        "expected foreign nested variant error, got: {}",
+        err.message
+    );
+}
+
+#[test]
+fn case_data_enum_rejects_wrong_literal_type_in_pattern() {
+    let err = compile_err(
+        "\
+program T;
+type
+  Shape = enum
+    Circle(Radius: real);
+    Point;
+  end;
+begin
+  var S: Shape := Shape.Point;
+  case S of
+    Shape.Circle('large'): Std.Console.WriteLn('bad');
+    Shape.Point: Std.Console.WriteLn('point')
+  end
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+    assert!(
+        err.message.contains("enum pattern literal") || err.message.contains("Type mismatch"),
+        "expected literal type mismatch, got: {}",
+        err.message
+    );
+}
+
+#[test]
+fn case_option_rejects_result_pattern() {
+    let err = compile_err(
+        "\
+program T;
+begin
+  var O: Option of integer := None;
+  case O of
+    Ok(V): Std.Console.WriteLn('bad');
+    None: Std.Console.WriteLn('none')
+  end
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+    assert!(
+        err.message.contains("Option")
+            || err
+                .help
+                .as_deref()
+                .is_some_and(|help| help.contains("Option")),
+        "expected Result/Option mismatch, got: {err:?}"
+    );
+}

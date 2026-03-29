@@ -40,6 +40,7 @@ pub const SEMA_INVALID_BREAK_OR_CONTINUE_PLACEMENT: DiagnosticCode = DiagnosticC
 pub const SEMA_NON_EXHAUSTIVE_CASE: DiagnosticCode = DiagnosticCode::new(2011);
 pub const SEMA_ENUM_FIELD_COUNT_MISMATCH: DiagnosticCode = DiagnosticCode::new(2012);
 pub const SEMA_CONSTRAINT_VIOLATION: DiagnosticCode = DiagnosticCode::new(2013);
+pub const SEMA_NON_CONSTANT_EXPRESSION: DiagnosticCode = DiagnosticCode::new(2014);
 
 pub const COMPILE_INVALID_DESIGNATOR_BASE: DiagnosticCode = DiagnosticCode::new(3001);
 pub const COMPILE_INVALID_ASSIGNMENT_TARGET: DiagnosticCode = DiagnosticCode::new(3002);
@@ -108,6 +109,7 @@ mod tests {
             SEMA_NON_EXHAUSTIVE_CASE,
             SEMA_ENUM_FIELD_COUNT_MISMATCH,
             SEMA_CONSTRAINT_VIOLATION,
+            SEMA_NON_CONSTANT_EXPRESSION,
             COMPILE_INVALID_DESIGNATOR_BASE,
             COMPILE_INVALID_ASSIGNMENT_TARGET,
             COMPILE_INTRINSIC_ARITY_MISMATCH,

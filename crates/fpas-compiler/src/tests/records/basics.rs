@@ -132,3 +132,19 @@ end.",
     // Y stays unchanged
     assert_eq!(out.lines, vec!["99", "2"]);
 }
+
+#[test]
+fn record_literal_named_fields_can_be_out_of_order() {
+    let out = compile_and_run(
+        "\
+program RecOrder;
+uses Std.Console;
+type Point = record X: integer; Y: integer; end;
+begin
+  var P: Point := record Y := 20; X := 10; end;
+  WriteLn(P.X);
+  WriteLn(P.Y)
+end.",
+    );
+    assert_eq!(out.lines, vec!["10", "20"]);
+}

@@ -2,7 +2,8 @@ use super::super::super::diagnostics::VmError;
 use super::super::super::{SharedChannel, Worker, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::{
-    RUNTIME_CHANNEL_CLOSED, RUNTIME_INVALID_CHANNEL, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+    RUNTIME_CHANNEL_CLOSED, RUNTIME_INVALID_CHANNEL, RUNTIME_NUMERIC_DOMAIN_ERROR,
+    RUNTIME_VM_OPERAND_TYPE_MISMATCH,
 };
 use std::sync::atomic::Ordering;
 
@@ -25,6 +26,23 @@ impl Worker {
             .unwrap_or_else(|e| e.into_inner())
             .insert(id, channel);
         self.push(Value::Channel(id))
+    }
+
+    pub(super) fn exec_channel_make_buffered(
+        &mut self,
+        capacity: i64,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        if capacity < 0 {
+            return Err(runtime_error(
+                RUNTIME_NUMERIC_DOMAIN_ERROR,
+                "Channel buffer size cannot be negative",
+                "Pass `0` or a positive integer to `Std.Channel.MakeBuffered`.",
+                line,
+            ));
+        }
+
+        self.exec_channel_make(capacity as usize, line)
     }
 
     pub(super) fn exec_channel_send(&mut self, line: SourceLocation) -> Result<(), VmError> {
@@ -98,8 +116,12 @@ impl Worker {
             }
             Err(crossbeam_channel::TryRecvError::Empty) => {
                 if channel.closed.load(Ordering::Acquire) {
-                    drop(channels);
-                    self.push(Value::Unit)?;
+                    return Err(runtime_error(
+                        RUNTIME_CHANNEL_CLOSED,
+                        "Cannot receive from a closed, empty channel",
+                        "Use `Std.Channel.TryReceive` if the channel may already be closed and empty.",
+                        line,
+                    ));
                 } else {
                     drop(channels);
                     // Channel empty — re-push and yield for retry.
@@ -108,10 +130,12 @@ impl Worker {
                     self.exec_yield();
                 }
             }
-            Err(crossbeam_channel::TryRecvError::Disconnected) => {
-                drop(channels);
-                self.push(Value::Unit)?;
-            }
+            Err(crossbeam_channel::TryRecvError::Disconnected) => Err(runtime_error(
+                RUNTIME_CHANNEL_CLOSED,
+                "Cannot receive from a disconnected channel",
+                "Use `Std.Channel.TryReceive` or keep at least one sender alive until the final value is sent.",
+                line,
+            ))?,
         }
         Ok(())
     }

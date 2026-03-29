@@ -26,3 +26,21 @@ pub(super) fn parse_compilation_unit_file(path: &Path) -> Result<CompilationUnit
 pub(super) fn qualified_id_to_string(id: &QualifiedId) -> String {
     id.parts.join(".")
 }
+
+/// `docs/pascal/09-units.md`: `Std.*` is reserved for implementation-defined standard units.
+pub(super) fn validate_user_unit_name(path: &Path, id: &QualifiedId) -> Result<(), String> {
+    if id
+        .parts
+        .first()
+        .is_some_and(|head| head.eq_ignore_ascii_case("std"))
+    {
+        return Err(format!(
+            "Source file `{}` declares `unit {}`.\n  help: The root segment `Std` is reserved for standard library units. Rename the unit to a non-`Std` namespace such as `App.{}`.",
+            path.to_string_lossy(),
+            qualified_id_to_string(id),
+            id.parts.get(1).map_or("Core", String::as_str)
+        ));
+    }
+
+    Ok(())
+}

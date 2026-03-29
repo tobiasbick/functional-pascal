@@ -12,7 +12,7 @@ All units are opt-in through `uses`.
 - `Std.Conv` - [conv.md](conv.md)
 - `Std.Math` - [math.md](math.md)
 - `Std.Array` - [array.md](array.md)
-- `Std.Dict` - [dict.md](dict.md) (dictionaries — `Length`, `ContainsKey`, `Keys`, `Values`, `Remove`)
+- `Std.Dict` - [dict.md](dict.md) (dictionaries — `Length`, `ContainsKey`, `Keys`, `Values`, `Remove`, `Get`, `Merge`)
 - `Std.Result` - [result.md](result.md) (helpers for `Result of T, E` — `Unwrap`, `UnwrapOr`, `IsOk`, `IsError`, `Map`, `AndThen`, `OrElse`)
 - `Std.Option` - [option.md](option.md) (helpers for `Option of T` — `Unwrap`, `UnwrapOr`, `IsSome`, `IsNone`, `Map`, `AndThen`, `OrElse`)
 

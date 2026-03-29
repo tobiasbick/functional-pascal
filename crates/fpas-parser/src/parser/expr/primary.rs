@@ -172,7 +172,7 @@ impl Parser {
     ///
     /// Syntax: `function(Params): ReturnType begin Stmts end`
     ///
-    /// **Documentation:** `docs/future/closures.md`
+    /// **Documentation:** `docs/pascal/04-functions.md`
     fn parse_function_expr(&mut self) -> Expr {
         let start = self.current_span();
         self.advance(); // consume `function`

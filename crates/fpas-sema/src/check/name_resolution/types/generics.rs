@@ -82,29 +82,29 @@ impl Checker {
             if arg.is_error() || matches!(arg, Ty::GenericParam(_)) {
                 continue;
             }
-            if let Some(constraint) = param.constraint {
-                if !constraint.satisfied_by(arg) {
-                    self.error_with_code(
-                        SEMA_CONSTRAINT_VIOLATION,
-                        format!(
-                            "Type `{arg:?}` does not satisfy constraint `{}` on parameter `{}`",
-                            constraint.display_name(),
-                            param.name,
-                        ),
-                        format!(
-                            "The `{}` constraint requires a type that supports {}.",
-                            constraint.display_name(),
-                            match constraint {
-                                crate::types::TypeConstraint::Comparable =>
-                                    "comparison operators (=, <>, <, >, <=, >=)",
-                                crate::types::TypeConstraint::Numeric =>
-                                    "arithmetic operators (+, -, *, /, div, mod)",
-                                crate::types::TypeConstraint::Printable => "string conversion",
-                            },
-                        ),
-                        span,
-                    );
-                }
+            if let Some(constraint) = param.constraint
+                && !constraint.satisfied_by(arg)
+            {
+                self.error_with_code(
+                    SEMA_CONSTRAINT_VIOLATION,
+                    format!(
+                        "Type `{arg:?}` does not satisfy constraint `{}` on parameter `{}`",
+                        constraint.display_name(),
+                        param.name,
+                    ),
+                    format!(
+                        "The `{}` constraint requires a type that supports {}.",
+                        constraint.display_name(),
+                        match constraint {
+                            crate::types::TypeConstraint::Comparable =>
+                                "comparison operators (=, <>, <, >, <=, >=)",
+                            crate::types::TypeConstraint::Numeric =>
+                                "arithmetic operators (+, -, *, /, div, mod)",
+                            crate::types::TypeConstraint::Printable => "string conversion",
+                        },
+                    ),
+                    span,
+                );
             }
         }
     }

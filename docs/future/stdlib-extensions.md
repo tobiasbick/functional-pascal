@@ -1,34 +1,6 @@
 # Future: Standard Library Extensions
 
-> Planned. Extends existing standard library units with additional functions and iteration support.
-
-## Std.Str — String Helpers
-
-### Motivation
-
-Building formatted text output requires padding, repeating characters, and character-level access. The current `Std.Str` surface ([str.md](../pascal/std/str.md)) lacks these operations.
-
-### Proposed Additions
-
-| Kind | Signature | Description |
-|------|-----------|-------------|
-| function | `RepeatStr(S: string; Count: integer): string` | Repeat `S` exactly `Count` times |
-| function | `PadLeft(S: string; Width: integer; Fill: char): string` | Left-pad to `Width` with `Fill` |
-| function | `PadRight(S: string; Width: integer; Fill: char): string` | Right-pad to `Width` with `Fill` |
-| function | `PadCenter(S: string; Width: integer; Fill: char): string` | Center-pad to `Width` with `Fill` |
-| function | `CharAt(S: string; Index: integer): char` | Character at 0-based index |
-| function | `SetCharAt(S: string; Index: integer; C: char): string` | New string with one character replaced |
-| function | `FromChar(C: char; Count: integer): string` | Build string from repeated char |
-
-### Examples
-
-```pascal
-uses Std.Str;
-
-var Line: string := RepeatStr('─', 40);
-var Header: string := PadCenter('Title', 40, ' ');
-var C: char := CharAt('Hello', 0);   { 'H' }
-```
+> Remaining planned extensions. Functions already implemented are documented in [docs/pascal/std/](../pascal/std/README.md).
 
 ---
 
@@ -36,7 +8,7 @@ var C: char := CharAt('Hello', 0);   { 'H' }
 
 ### Motivation
 
-Accessing a single character in a string currently requires `Substring(S, I, 1)`, which returns a `string`, not a `char`. Direct index syntax would be more natural.
+Accessing a single character in a string currently requires `CharAt(S, I)` or `Substring(S, I, 1)`. Direct index syntax would be more natural.
 
 ### Proposed Syntax
 
@@ -46,6 +18,33 @@ var C: char := S[0];            { 'H' — 0-based character index }
 ```
 
 Index access on `string` yields `char`. Out-of-bounds is a runtime error.
+
+---
+
+## Std.Dict — Functional Transformations
+
+### Motivation
+
+`Get` and `Merge` are implemented. Still missing: higher-order `Map` and `Filter` on dictionaries — needed for transforming config data or filtering entries.
+
+### Proposed Additions
+
+| Kind | Signature | Description |
+|------|-----------|-------------|
+| function | `Map(D: dict of K to V; F: function(V: V): V2): dict of K to V2` | Transform all values |
+| function | `Filter(D: dict of K to V; F: function(K: K; V: V): boolean): dict of K to V` | Keep matching entries |
+
+### Examples
+
+```pascal
+uses Std.Dict;
+
+var D: dict of string to integer := ['A': 1, 'B': 2, 'C': 3];
+var Doubled: dict of string to integer := Map(D,
+  function(V: integer): integer begin return V * 2 end);
+var Big: dict of string to integer := Filter(D,
+  function(K: string; V: integer): boolean begin return V > 1 end);
+```
 
 ---
 
@@ -75,8 +74,6 @@ case E of
 end;
 ```
 
-`EventPending()` already exists for key/mouse polling, but `PollEvent` provides the full `Event` record without blocking.
-
 ---
 
 ## For-In over Dict
@@ -105,25 +102,10 @@ for Key: string, Value: integer in Ages do
 
 ---
 
-## Std.Dict — Index Access
+## Docs and Specs to Extend (when implemented)
 
-### Motivation
-
-Dict values are currently accessed only through procedural functions. Index syntax would be more natural:
-
-```pascal
-var Age: integer := Ages['Alice'];         { instead of a Get function }
-```
-
-Out-of-bounds (missing key) would be a runtime error, or return an `Option` depending on design choice.
-
----
-
-## Docs and Specs to Extend
-
-- [std/str.md](../pascal/std/str.md): `RepeatStr`, `PadLeft`, `PadRight`, `PadCenter`, `CharAt`, `SetCharAt`, `FromChar`
-- [std/console.md](../pascal/std/console.md): `ReadEventTimeout`, `PollEvent`
 - [02-basics.md](../pascal/02-basics.md): string index access `S[I]`
 - [03-control-flow.md](../pascal/03-control-flow.md): `for-in` over `dict`
-- [std/dict.md](../pascal/std/dict.md): index access syntax, key-value iteration
-- [grammar.ebnf](../specs/grammar.ebnf): `ForInDict`, `DictIndexExpr`, `StringIndexExpr` productions
+- [std/dict.md](../pascal/std/dict.md): `Map`, `Filter`
+- [std/console.md](../pascal/std/console.md): `ReadEventTimeout`, `PollEvent`
+- [grammar.ebnf](../specs/grammar.ebnf): `ForInDict`, `StringIndexExpr` productions

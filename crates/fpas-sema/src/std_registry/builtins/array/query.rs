@@ -114,3 +114,68 @@ pub(super) fn check_slice(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     c.check_type_compat(&Ty::Integer, &len_ty, "length", span);
     array_ty
 }
+
+pub(super) fn check_concat(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+    if !check_argument_count(
+        c,
+        s::STD_ARRAY_CONCAT,
+        2,
+        args,
+        "Example: Std.Array.Concat(A, B).",
+        span,
+    ) {
+        return Ty::Error;
+    }
+
+    let a_ty = c.check_expr(&args[0]);
+    let b_ty = c.check_expr(&args[1]);
+
+    let Some(a_elem_ty) = array_elem_ty(&a_ty) else {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            format!("`{}` first argument must be an array", s::STD_ARRAY_CONCAT),
+            "Pass `array of T` as the first argument.",
+            span,
+        );
+        return Ty::Error;
+    };
+
+    let Some(b_elem_ty) = array_elem_ty(&b_ty) else {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            format!("`{}` second argument must be an array", s::STD_ARRAY_CONCAT),
+            "Pass `array of T` as the second argument.",
+            span,
+        );
+        return Ty::Error;
+    };
+
+    if !a_elem_ty.compatible_with(&b_elem_ty) {
+        c.check_type_compat(&a_elem_ty, &b_elem_ty, "right array element", span);
+        return Ty::Error;
+    }
+
+    if a_elem_ty.is_error() && !b_elem_ty.is_error() {
+        b_ty
+    } else {
+        a_ty
+    }
+}
+
+pub(super) fn check_fill(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+    if !check_argument_count(
+        c,
+        s::STD_ARRAY_FILL,
+        2,
+        args,
+        "Example: Std.Array.Fill(Value, Count).",
+        span,
+    ) {
+        return Ty::Error;
+    }
+
+    let elem_ty = c.check_expr(&args[0]);
+    let count_ty = c.check_expr(&args[1]);
+    c.check_type_compat(&Ty::Integer, &count_ty, "count", span);
+    Ty::Array(Box::new(elem_ty))
+}

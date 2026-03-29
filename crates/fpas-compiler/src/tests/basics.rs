@@ -76,3 +76,65 @@ end.",
     );
     assert_eq!(out.lines, vec!["1", "2", "3"]);
 }
+
+#[test]
+fn multiline_string_literal() {
+    let out = compile_and_run(
+        "\
+program MultiLine;
+begin
+  Std.Console.WriteLn('Roses are red
+Violets are blue')
+end.",
+    );
+    assert_eq!(out.lines, vec!["Roses are red\nViolets are blue"]);
+}
+
+#[test]
+fn character_code_concatenation() {
+    let out = compile_and_run(
+        "\
+program CharCodes;
+begin
+  Std.Console.WriteLn('Hello'#13#10'World')
+end.",
+    );
+    assert_eq!(out.lines, vec!["Hello\r\nWorld"]);
+}
+
+#[test]
+fn xor_and_shift_operators() {
+    let out = compile_and_run(
+        "\
+program Bitwise;
+begin
+  Std.Console.WriteLn(6 xor 3);
+  Std.Console.WriteLn(1 shl 4);
+  Std.Console.WriteLn(16 shr 2)
+end.",
+    );
+    assert_eq!(out.lines, vec!["5", "16", "4"]);
+}
+
+#[test]
+fn const_expression_must_be_compile_time_known() {
+    let err = compile_err(
+        "\
+program ConstExpr;
+
+function FortyTwo(): integer;
+begin
+  return 42
+end;
+
+const
+  Answer: integer := FortyTwo();
+
+begin
+end.",
+    );
+    assert_eq!(
+        err.code,
+        fpas_diagnostics::codes::SEMA_NON_CONSTANT_EXPRESSION
+    );
+}

@@ -100,6 +100,7 @@ impl Parser {
                 | Token::Some
                 | Token::None
                 | Token::Try
+                | Token::Go
                 | Token::Function
         )
     }

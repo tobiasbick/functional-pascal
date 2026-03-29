@@ -1,9 +1,12 @@
 use super::Checker;
-use crate::scope::{FunctionCtx, Symbol, SymbolKind};
+use crate::scope::{FunctionCtx, PendingRoutine, Symbol, SymbolKind};
 use crate::types::{FunctionTy, ParamTy, ProcedureTy, Ty};
+use fpas_diagnostics::codes::{SEMA_DUPLICATE_DECLARATION, SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
+use fpas_lexer::Span;
 use fpas_parser::{FuncBody, FunctionDecl, ProcedureDecl};
 
 impl Checker {
+    /// Check function and procedure declarations against `docs/pascal/04-functions.md`.
     pub(super) fn check_function_decl(&mut self, f: &FunctionDecl) {
         // Register generic type parameters as GenericParam types in a new scope.
         let has_type_params = !f.type_params.is_empty();
@@ -31,16 +34,16 @@ impl Checker {
             self.scopes.pop_scope();
         }
 
-        if !self.scopes.define(
+        self.register_routine_symbol(
             &f.name,
             Symbol {
                 ty: func_ty,
                 mutable: false,
                 kind: SymbolKind::Function,
             },
-        ) {
-            // Allow duplicate for forward + implementation pattern
-        }
+            &f.body,
+            f.span,
+        );
 
         if let FuncBody::Block { nested, stmts } = &f.body {
             self.scopes.push_scope();
@@ -82,6 +85,7 @@ impl Checker {
                 self.check_stmt(stmt);
             }
 
+            self.report_missing_forward_declarations_in_current_scope();
             self.scopes.function_ctx = prev_ctx;
             self.scopes.pop_scope();
         }
@@ -113,16 +117,16 @@ impl Checker {
             self.scopes.pop_scope();
         }
 
-        if !self.scopes.define(
+        self.register_routine_symbol(
             &p.name,
             Symbol {
                 ty: proc_ty,
                 mutable: false,
                 kind: SymbolKind::Procedure,
             },
-        ) {
-            // Allow duplicate for forward + implementation
-        }
+            &p.body,
+            p.span,
+        );
 
         if let FuncBody::Block { nested, stmts } = &p.body {
             self.scopes.push_scope();
@@ -164,8 +168,101 @@ impl Checker {
                 self.check_stmt(stmt);
             }
 
+            self.report_missing_forward_declarations_in_current_scope();
             self.scopes.function_ctx = prev_ctx;
             self.scopes.pop_scope();
         }
     }
+
+    fn register_routine_symbol(&mut self, name: &str, symbol: Symbol, body: &FuncBody, span: Span) {
+        match body {
+            FuncBody::Forward => self.register_forward_routine(name, symbol, span),
+            FuncBody::Block { .. } => self.register_routine_implementation(name, symbol, span),
+        }
+    }
+
+    fn register_forward_routine(&mut self, name: &str, symbol: Symbol, span: Span) {
+        match self.install_routine_symbol(name, symbol.clone()) {
+            RoutineInstall::Installed => {
+                self.scopes
+                    .define_pending_routine(name, PendingRoutine { symbol, span });
+            }
+            RoutineInstall::Duplicate => {
+                self.error_with_code(
+                    SEMA_DUPLICATE_DECLARATION,
+                    format!("Duplicate routine `{name}`"),
+                    "Use exactly one forward declaration followed by one matching implementation.",
+                    span,
+                );
+            }
+        }
+    }
+
+    fn register_routine_implementation(&mut self, name: &str, symbol: Symbol, span: Span) {
+        match self.install_routine_symbol(name, symbol.clone()) {
+            RoutineInstall::Installed => return,
+            RoutineInstall::Duplicate => {}
+        }
+
+        let Some(forward) = self.scopes.take_pending_routine(name) else {
+            self.error_with_code(
+                SEMA_DUPLICATE_DECLARATION,
+                format!("Duplicate routine `{name}`"),
+                "Each routine name must be unique in the same scope.",
+                span,
+            );
+            return;
+        };
+
+        if forward.symbol.kind != symbol.kind || forward.symbol.ty != symbol.ty {
+            self.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                format!("Forward declaration for `{name}` does not match its implementation"),
+                "Make the implementation use the same parameters, routine kind, and return type as the forward declaration.",
+                span,
+            );
+        }
+    }
+
+    fn install_routine_symbol(&mut self, name: &str, symbol: Symbol) -> RoutineInstall {
+        if self.scopes.define(name, symbol.clone()) {
+            return RoutineInstall::Installed;
+        }
+
+        let Some(existing) = self.scopes.lookup_current(name) else {
+            return RoutineInstall::Duplicate;
+        };
+
+        if existing.kind != SymbolKind::BuiltinStd {
+            return RoutineInstall::Duplicate;
+        }
+
+        if let Some(existing) = self.scopes.lookup_mut(name) {
+            *existing = symbol;
+            return RoutineInstall::Installed;
+        }
+
+        RoutineInstall::Duplicate
+    }
+
+    pub(crate) fn report_missing_forward_declarations_in_current_scope(&mut self) {
+        for (name, pending) in self.scopes.drain_pending_routines() {
+            let routine_kind = match pending.symbol.kind {
+                SymbolKind::Function => "Function",
+                SymbolKind::Procedure => "Procedure",
+                _ => "Routine",
+            };
+            self.error_with_code(
+                SEMA_UNKNOWN_NAME,
+                format!("{routine_kind} `{name}` was declared `forward` but never implemented"),
+                "Add a matching body later in the same declaration scope.",
+                pending.span,
+            );
+        }
+    }
+}
+
+enum RoutineInstall {
+    Installed,
+    Duplicate,
 }

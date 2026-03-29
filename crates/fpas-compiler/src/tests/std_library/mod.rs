@@ -1,6 +1,7 @@
 use super::*;
 
 mod array;
+mod concurrency;
 mod console;
 mod conv;
 mod dict;

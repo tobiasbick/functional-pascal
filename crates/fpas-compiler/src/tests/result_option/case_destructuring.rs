@@ -55,3 +55,17 @@ end.",
     );
     assert_eq!(out.lines, vec!["nothing"]);
 }
+
+#[test]
+fn case_result_multi_label_shared_binding() {
+    let out = compile_and_run(
+        "program T;
+var R: Result of string, string := Error('fallback');
+begin
+  case R of
+    Ok(Msg), Error(Msg): Std.Console.WriteLn(Msg)
+  end
+end.",
+    );
+    assert_eq!(out.lines, vec!["fallback"]);
+}

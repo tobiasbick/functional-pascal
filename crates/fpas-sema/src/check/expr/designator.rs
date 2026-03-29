@@ -38,8 +38,21 @@ impl Checker {
             }
             DesignatorPart::Ident(first, _) => {
                 let Some(symbol) = self.scopes.lookup(first) else {
+                    let full_name = Self::resolve_designator_name(designator);
+                    let is_qualified_ident_chain = designator.parts.len() > 1
+                        && designator
+                            .parts
+                            .iter()
+                            .all(|part| matches!(part, DesignatorPart::Ident(_, _)));
+
                     let hint = if let Some(ambiguous_hint) = self.ambiguous_hint(first) {
                         ambiguous_hint
+                    } else if is_qualified_ident_chain {
+                        if crate::std_units::looks_like_std_qualified_name(&full_name) {
+                            self.hint_unknown_callable(&full_name)
+                        } else {
+                            "Check that the unit is listed in `uses` and that the symbol is public. Private unit members are not visible outside their unit.".to_string()
+                        }
                     } else if crate::std_units::looks_like_std_qualified_name(first) {
                         self.hint_unknown_callable(first)
                     } else {
@@ -48,6 +61,8 @@ impl Checker {
 
                     let message = if self.ambiguous_imports.contains_key(first) {
                         format!("Ambiguous name `{first}`")
+                    } else if is_qualified_ident_chain {
+                        format!("Undefined identifier `{full_name}`")
                     } else {
                         format!("Undefined identifier `{first}`")
                     };

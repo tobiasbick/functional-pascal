@@ -91,6 +91,62 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::ArrayReduce, location);
                 Ok(true)
             }
+            s::STD_ARRAY_CONCAT => {
+                self.expect_exact_args(s::STD_ARRAY_CONCAT, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::ArrayConcat, location);
+                Ok(true)
+            }
+            s::STD_ARRAY_FILL => {
+                self.expect_exact_args(s::STD_ARRAY_FILL, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::ArrayFill, location);
+                Ok(true)
+            }
+            s::STD_ARRAY_FIND => {
+                self.expect_exact_args(s::STD_ARRAY_FIND, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::ArrayFind, location);
+                Ok(true)
+            }
+            s::STD_ARRAY_FIND_INDEX => {
+                self.expect_exact_args(s::STD_ARRAY_FIND_INDEX, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::ArrayFindIndex, location);
+                Ok(true)
+            }
+            s::STD_ARRAY_ANY => {
+                self.expect_exact_args(s::STD_ARRAY_ANY, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::ArrayAny, location);
+                Ok(true)
+            }
+            s::STD_ARRAY_ALL => {
+                self.expect_exact_args(s::STD_ARRAY_ALL, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::ArrayAll, location);
+                Ok(true)
+            }
+            s::STD_ARRAY_FLAT_MAP => {
+                self.expect_exact_args(s::STD_ARRAY_FLAT_MAP, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::ArrayFlatMap, location);
+                Ok(true)
+            }
+            s::STD_ARRAY_FOR_EACH => {
+                self.expect_exact_args(s::STD_ARRAY_FOR_EACH, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::ArrayForEach, location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

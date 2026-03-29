@@ -101,3 +101,112 @@ end.",
     );
     assert_eq!(err.code, fpas_diagnostics::codes::SEMA_WRONG_ARGUMENT_COUNT);
 }
+
+#[test]
+fn record_literal_missing_field_reports_error() {
+    let err = compile_err(
+        "\
+program MissingField;
+type Point = record X: integer; Y: integer; end;
+begin
+  var P: Point := record X := 1; end
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+}
+
+#[test]
+fn record_literal_extra_field_reports_error() {
+    let err = compile_err(
+        "\
+program ExtraField;
+type Point = record X: integer; Y: integer; end;
+begin
+  var P: Point := record X := 1; Y := 2; Z := 3; end
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+}
+
+#[test]
+fn record_literal_duplicate_field_reports_error() {
+    let err = compile_err(
+        "\
+program DuplicateField;
+type Point = record X: integer; Y: integer; end;
+begin
+  var P: Point := record X := 1; X := 2; end
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+}
+
+#[test]
+fn record_method_without_self_parameter_is_rejected() {
+    let err = compile_err(
+        "\
+program MissingSelf;
+type Point = record
+  X: integer;
+  function Sum(): integer;
+  begin
+    return X
+  end;
+end;
+begin
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+    assert!(
+        err.message.contains("Self: Point"),
+        "expected explicit Self requirement, got: {}",
+        err.message
+    );
+}
+
+#[test]
+fn record_method_with_wrong_first_parameter_name_is_rejected() {
+    let err = compile_err(
+        "\
+program WrongSelfName;
+type Point = record
+  X: integer;
+  function Sum(This: Point): integer;
+  begin
+    return This.X
+  end;
+end;
+begin
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+    assert!(
+        err.message.contains("Self: Point"),
+        "expected explicit Self requirement, got: {}",
+        err.message
+    );
+}
+
+#[test]
+fn record_method_with_wrong_self_type_is_rejected() {
+    let err = compile_err(
+        "\
+program WrongSelfType;
+type Other = record X: integer; end;
+type Point = record
+  X: integer;
+  function Sum(Self: Other): integer;
+  begin
+    return Self.X
+  end;
+end;
+begin
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+    assert!(
+        err.message.contains("Self: Point"),
+        "expected explicit Self requirement, got: {}",
+        err.message
+    );
+}

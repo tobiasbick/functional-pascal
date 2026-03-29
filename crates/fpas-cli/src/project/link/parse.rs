@@ -1,5 +1,7 @@
 use super::{UnitFile, support::canonical_unit_key};
-use crate::project::common::{parse_compilation_unit_file, qualified_id_to_string};
+use crate::project::common::{
+    parse_compilation_unit_file, qualified_id_to_string, validate_user_unit_name,
+};
 
 use fpas_parser::{CompilationUnit, Program};
 use std::collections::HashMap;
@@ -32,6 +34,7 @@ pub(super) fn parse_unit_files(
                 ));
             }
         };
+        validate_user_unit_name(source_path, &unit.name)?;
 
         let key = canonical_unit_key(&unit.name);
         if let Some(existing) = by_unit.get(&key) {

@@ -42,7 +42,7 @@ impl Worker {
             }
             Intrinsic::ChannelMakeBuffered => {
                 let size = self.pop_int(line)?;
-                self.exec_channel_make(size.max(1) as usize, line)?;
+                self.exec_channel_make_buffered(size, line)?;
                 Ok(true)
             }
             Intrinsic::ChannelSend => {

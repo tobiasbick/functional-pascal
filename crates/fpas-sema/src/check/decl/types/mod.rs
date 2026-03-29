@@ -46,15 +46,15 @@ impl Checker {
     pub(super) fn push_type_param_scope(&mut self, type_params: &[TypeParam], span: Span) {
         self.scopes.push_scope();
         for tp in type_params {
-            if let Some(ref constraint_name) = tp.constraint {
-                if TypeConstraint::from_name(constraint_name).is_none() {
-                    self.error_with_code(
-                        SEMA_UNKNOWN_TYPE,
-                        format!("Unknown type constraint `{constraint_name}`"),
-                        "Valid constraints: Comparable, Numeric, Printable.",
-                        span,
-                    );
-                }
+            if let Some(ref constraint_name) = tp.constraint
+                && TypeConstraint::from_name(constraint_name).is_none()
+            {
+                self.error_with_code(
+                    SEMA_UNKNOWN_TYPE,
+                    format!("Unknown type constraint `{constraint_name}`"),
+                    "Valid constraints: Comparable, Numeric, Printable.",
+                    span,
+                );
             }
             self.scopes.define(
                 &tp.name,

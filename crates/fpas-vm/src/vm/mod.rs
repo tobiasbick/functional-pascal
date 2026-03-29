@@ -159,10 +159,10 @@ impl Vm {
 
             // Collect pool worker errors.
             for handle in handles {
-                if let Err(e) = handle.join().unwrap_or(Ok(())) {
-                    if main_result.is_ok() {
-                        return Err(e);
-                    }
+                if let Err(e) = handle.join().unwrap_or(Ok(()))
+                    && main_result.is_ok()
+                {
+                    return Err(e);
                 }
             }
 

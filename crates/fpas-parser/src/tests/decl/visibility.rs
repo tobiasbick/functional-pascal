@@ -195,8 +195,8 @@ end.
 }
 
 #[test]
-fn private_in_program_is_accepted() {
-    let program = parse_ok(
+fn private_in_program_is_rejected() {
+    let (program, errors) = parse_with_errors(
         "\
 program App;
 
@@ -209,5 +209,47 @@ end.
     );
 
     assert_eq!(program.declarations.len(), 1);
-    assert_eq!(program.declarations[0].visibility(), Visibility::Private);
+    assert_eq!(program.declarations[0].visibility(), Visibility::Public);
+    let parser_error = errors.iter().find_map(|diagnostic| match diagnostic {
+        ParseDiagnostic::Parser(error) => Some(error),
+        ParseDiagnostic::Lexer(_) => None,
+    });
+    let parser_error = parser_error.expect("expected parser diagnostic");
+    assert_eq!(parser_error.code, PARSE_EXPECTED_TOKEN);
+    assert!(
+        parser_error
+            .message
+            .contains("`private` is not valid in a `program` file"),
+        "{parser_error:#?}"
+    );
+}
+
+#[test]
+fn public_in_program_is_rejected() {
+    let (program, errors) = parse_with_errors(
+        "\
+program App;
+
+public var
+  X: integer := 1;
+
+begin
+end.
+",
+    );
+
+    assert_eq!(program.declarations.len(), 1);
+    assert_eq!(program.declarations[0].visibility(), Visibility::Public);
+    let parser_error = errors.iter().find_map(|diagnostic| match diagnostic {
+        ParseDiagnostic::Parser(error) => Some(error),
+        ParseDiagnostic::Lexer(_) => None,
+    });
+    let parser_error = parser_error.expect("expected parser diagnostic");
+    assert_eq!(parser_error.code, PARSE_EXPECTED_TOKEN);
+    assert!(
+        parser_error
+            .message
+            .contains("`public` is not valid in a `program` file"),
+        "{parser_error:#?}"
+    );
 }

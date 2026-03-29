@@ -65,7 +65,7 @@ impl GenericParamDef {
 
 /// Resolved type representation used during semantic analysis.
 ///
-/// **Documentation:** `docs/future/generics.md`
+/// **Documentation:** `docs/pascal/05-types.md`
 #[derive(Debug, Clone, PartialEq)]
 pub enum Ty {
     Integer,
@@ -120,7 +120,7 @@ pub enum MethodKind {
     Procedure(ProcedureTy),
 }
 
-/// **Documentation:** `docs/future/generics.md`
+/// **Documentation:** `docs/pascal/05-types.md`
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumTy {
     pub name: std::string::String,
@@ -131,7 +131,7 @@ pub struct EnumTy {
 
 /// A single variant in an enum type. Simple variants have an empty `fields` vec.
 ///
-/// **Documentation:** `docs/future/advanced-types.md`
+/// **Documentation:** `docs/pascal/05-types.md`
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumVariantTy {
     pub name: String,
@@ -194,13 +194,7 @@ impl Ty {
             // Array with Error element type is compatible with any array
             (Ty::Array(a), Ty::Array(b)) => a.compatible_with(b),
             // Records: structural compatibility (ignore name)
-            (Ty::Record(a), Ty::Record(b)) => {
-                a.fields.len() == b.fields.len()
-                    && a.fields
-                        .iter()
-                        .zip(b.fields.iter())
-                        .all(|((n1, t1), (n2, t2))| n1 == n2 && t1.compatible_with(t2))
-            }
+            (Ty::Record(a), Ty::Record(b)) => Self::record_fields_compatible(&a.fields, &b.fields),
             // Enums: same name is sufficient (type-erased generics).
             (Ty::Enum(a), Ty::Enum(b)) => a.name == b.name,
             (Ty::Unit, Ty::Unit) => true,
@@ -233,5 +227,23 @@ impl Ty {
             Ty::Enum(e) => !e.has_data(),
             _ => false,
         }
+    }
+
+    fn record_fields_compatible(fields: &[(String, Ty)], other_fields: &[(String, Ty)]) -> bool {
+        if fields.len() != other_fields.len() {
+            return false;
+        }
+
+        fields.iter().all(|(name, ty)| {
+            other_fields
+                .iter()
+                .find(|(other_name, _)| other_name == name)
+                .is_some_and(|(_, other_ty)| ty.compatible_with(other_ty))
+        }) && other_fields.iter().all(|(name, ty)| {
+            fields
+                .iter()
+                .find(|(other_name, _)| other_name == name)
+                .is_some_and(|(_, other_ty)| ty.compatible_with(other_ty))
+        })
     }
 }

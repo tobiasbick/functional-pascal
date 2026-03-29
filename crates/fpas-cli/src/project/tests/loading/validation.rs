@@ -191,3 +191,29 @@ include = ["src/*.fpas"]
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
     assert!(error.contains("Duplicate unit name `app.utils`"));
 }
+
+#[test]
+fn reserved_std_root_is_rejected_for_source_units() {
+    let dir = create_temp_dir("reserved-std-root");
+    let project_file = dir.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "app"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/*.fpas"]
+"#,
+    );
+    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(&dir.join("src/std_unit.fpas"), "unit Std.Helpers;");
+
+    let error = load_project(&project_file).expect_err("reserved Std namespace must fail");
+    fs::remove_dir_all(&dir).expect("temp directory must be removed");
+    assert!(
+        error.contains("reserved for standard library units"),
+        "expected reserved Std namespace error, got: {error}"
+    );
+}

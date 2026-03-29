@@ -97,6 +97,40 @@ include = ["src/*.fpas"]
 }
 
 #[test]
+fn private_function_not_exported_by_qualified_name() {
+    let cwd = create_temp_dir("vis-private-fn-qualified");
+    let project_file = cwd.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "app"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/*.fpas"]
+"#,
+    );
+    write_text(
+        &cwd.join("src/main.fpas"),
+        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(App.Lib.Secret())\nend.\n",
+    );
+    write_text(
+        &cwd.join("src/lib.fpas"),
+        "unit App.Lib;\n\nprivate function Secret(): integer;\nbegin\n  return 42\nend;\n",
+    );
+
+    let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 1);
+    assert!(
+        stderr_output.contains("App.Lib.Secret"),
+        "error should mention the qualified private symbol, got: {stderr_output}"
+    );
+}
+
+#[test]
 fn private_const_not_exported() {
     let cwd = create_temp_dir("vis-private-const");
     let project_file = cwd.join("app.fpasprj");
@@ -209,6 +243,54 @@ private type
     assert!(
         stderr_output.contains("SecretPoint"),
         "error should mention the private type name, got: {stderr_output}"
+    );
+}
+
+#[test]
+fn private_type_not_exported_by_qualified_name() {
+    let cwd = create_temp_dir("vis-private-type-qualified");
+    let project_file = cwd.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "app"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/*.fpas"]
+"#,
+    );
+    write_text(
+        &cwd.join("src/main.fpas"),
+        "\
+program Main;
+uses App.Lib;
+begin
+  var P: App.Lib.SecretPoint := App.Lib.SecretPoint { X: 1; Y: 2 };
+end.
+",
+    );
+    write_text(
+        &cwd.join("src/lib.fpas"),
+        "\
+unit App.Lib;
+
+private type
+  SecretPoint = record
+    X: integer;
+    Y: integer;
+  end;
+",
+    );
+
+    let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 1);
+    assert!(
+        stderr_output.contains("App.Lib.SecretPoint"),
+        "error should mention the qualified private type, got: {stderr_output}"
     );
 }
 

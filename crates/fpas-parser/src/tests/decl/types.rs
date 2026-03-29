@@ -167,3 +167,13 @@ fn enum_data_fieldless_has_no_backing_value() {
         _ => panic!("expected TypeDef"),
     }
 }
+
+#[test]
+fn enum_variant_cannot_mix_fields_with_backing_value() {
+    let (_, errors) =
+        parse_with_errors("program T; type Shape = enum Circle(Radius: real) = 1; end; begin end.");
+    assert!(
+        !errors.is_empty(),
+        "expected parser error when mixing enum fields with a backing value"
+    );
+}

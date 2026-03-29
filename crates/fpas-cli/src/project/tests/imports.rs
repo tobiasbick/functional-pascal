@@ -143,3 +143,58 @@ include = ["src/*.fpas"]
             .any(|decl| matches!(decl, Decl::Function(f) if f.name == "App.Top.Top"))
     );
 }
+
+#[test]
+fn build_program_keeps_private_unit_symbols_internal() {
+    let dir = create_temp_dir("link-private-internal");
+    let project_file = dir.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "app"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/*.fpas"]
+"#,
+    );
+    write_text(
+        &dir.join("src/main.fpas"),
+        "program Main; uses App.Lib; begin PublicValue() end.\n",
+    );
+    write_text(
+        &dir.join("src/lib.fpas"),
+        "\
+unit App.Lib;
+
+private function SecretValue(): integer;
+begin
+  return 10
+end;
+
+function PublicValue(): integer;
+begin
+  return SecretValue()
+end;
+",
+    );
+
+    let loaded = load_project(&project_file).expect("project should load");
+    let program = build_program(
+        loaded.main.as_deref().expect("main path must exist"),
+        &loaded.source_files,
+    )
+    .expect("project should link");
+    fs::remove_dir_all(&dir).expect("temp directory must be removed");
+
+    assert!(program.declarations.iter().any(
+        |decl| matches!(decl, Decl::Function(f) if f.name == "App.Lib.__private__.SecretValue")
+    ));
+    assert!(
+        program
+            .declarations
+            .iter()
+            .any(|decl| matches!(decl, Decl::Function(f) if f.name == "App.Lib.PublicValue"))
+    );
+}

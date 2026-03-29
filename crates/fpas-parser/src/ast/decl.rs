@@ -108,14 +108,14 @@ pub struct EnumMember {
     pub value: Option<i64>,
     /// Associated-data fields. Empty for simple (valueless) variants.
     ///
-    /// **Documentation:** `docs/future/advanced-types.md`
+    /// **Documentation:** `docs/pascal/05-types.md`
     pub fields: Vec<EnumMemberField>,
     pub span: Span,
 }
 
 /// A named, typed field inside an enum variant with associated data.
 ///
-/// **Documentation:** `docs/future/advanced-types.md`
+/// **Documentation:** `docs/pascal/05-types.md`
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumMemberField {
     pub name: String,

@@ -51,6 +51,27 @@ pub(crate) fn run(
             pairs.retain(|(k, _)| k != &key);
             stack.push(Value::Dict(pairs));
         }
+        Intrinsic::DictGet => {
+            let key = pop_value(stack, location)?;
+            let pairs = pop_dict(pop_value(stack, location)?, location)?;
+            let found = pairs.into_iter().find(|(k, _)| k == &key);
+            match found {
+                Some((_, v)) => stack.push(Value::OptionSome(Box::new(v))),
+                None => stack.push(Value::OptionNone),
+            }
+        }
+        Intrinsic::DictMerge => {
+            let other = pop_dict(pop_value(stack, location)?, location)?;
+            let mut base = pop_dict(pop_value(stack, location)?, location)?;
+            for (k, v) in other {
+                if let Some(entry) = base.iter_mut().find(|(ek, _)| ek == &k) {
+                    entry.1 = v;
+                } else {
+                    base.push((k, v));
+                }
+            }
+            stack.push(Value::Dict(base));
+        }
         _ => return Ok(None),
     }
     Ok(Some(()))

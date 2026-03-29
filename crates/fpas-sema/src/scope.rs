@@ -1,4 +1,5 @@
 use crate::types::Ty;
+use fpas_lexer::Span;
 use std::collections::HashMap;
 
 /// A symbol in the scope.
@@ -7,6 +8,15 @@ pub struct Symbol {
     pub ty: Ty,
     pub mutable: bool,
     pub kind: SymbolKind,
+}
+
+/// A routine declared with `forward` that still requires a matching body.
+///
+/// **Documentation:** `docs/pascal/04-functions.md`
+#[derive(Debug, Clone)]
+pub struct PendingRoutine {
+    pub symbol: Symbol,
+    pub span: Span,
 }
 
 impl Symbol {
@@ -35,12 +45,14 @@ pub enum SymbolKind {
 #[derive(Debug)]
 struct Scope {
     symbols: HashMap<String, Symbol>,
+    pending_routines: HashMap<String, PendingRoutine>,
 }
 
 impl Scope {
     fn new() -> Self {
         Self {
             symbols: HashMap::new(),
+            pending_routines: HashMap::new(),
         }
     }
 }
@@ -100,6 +112,11 @@ impl ScopeStack {
         None
     }
 
+    /// Look up a symbol only in the current (innermost) scope.
+    pub fn lookup_current(&self, name: &str) -> Option<&Symbol> {
+        self.scopes.last().and_then(|scope| scope.symbols.get(name))
+    }
+
     /// Mutable lookup for updating a symbol after initial definition.
     pub fn lookup_mut(&mut self, name: &str) -> Option<&mut Symbol> {
         for scope in self.scopes.iter_mut().rev() {
@@ -108,6 +125,31 @@ impl ScopeStack {
             }
         }
         None
+    }
+
+    /// Register a pending forward routine in the current scope.
+    pub fn define_pending_routine(&mut self, name: &str, pending: PendingRoutine) {
+        let scope = self
+            .scopes
+            .last_mut()
+            .expect("scope stack must always contain at least one scope");
+        scope.pending_routines.insert(name.to_string(), pending);
+    }
+
+    /// Remove and return a pending forward routine from the current scope.
+    pub fn take_pending_routine(&mut self, name: &str) -> Option<PendingRoutine> {
+        self.scopes
+            .last_mut()
+            .and_then(|scope| scope.pending_routines.remove(name))
+    }
+
+    /// Drain pending forward routines from the current scope.
+    pub fn drain_pending_routines(&mut self) -> Vec<(String, PendingRoutine)> {
+        let scope = self
+            .scopes
+            .last_mut()
+            .expect("scope stack must always contain at least one scope");
+        scope.pending_routines.drain().collect()
     }
 
     /// Return all symbol names that start with a given prefix.

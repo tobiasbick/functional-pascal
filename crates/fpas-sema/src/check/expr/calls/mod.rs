@@ -95,6 +95,56 @@ impl Checker {
         }
     }
 
+    pub(super) fn check_known_go_call_symbol(
+        &mut self,
+        name: &str,
+        symbol_kind: SymbolKind,
+        symbol_ty: Ty,
+        args: &[Expr],
+        span: Span,
+    ) -> Ty {
+        if symbol_kind == SymbolKind::BuiltinStd {
+            let dispatch = self.builtin_std_dispatch_name(name);
+            return crate::std_registry::check_builtin_std_call(self, &dispatch, args, span);
+        }
+
+        if symbol_kind == SymbolKind::EnumVariantConstructor {
+            self.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                format!(
+                    "`go` requires a function or procedure call, but `{name}` constructs a value"
+                ),
+                "Spawn a named function, procedure, method call, or callable variable.",
+                span,
+            );
+            self.check_args_only(args);
+            return Ty::Error;
+        }
+
+        match &symbol_ty {
+            Ty::Function(func_ty) => {
+                self.check_function_call_args(name, func_ty, args, span);
+                *func_ty.return_type.clone()
+            }
+            Ty::Procedure(proc_ty) => {
+                self.check_procedure_call_args(name, proc_ty, args, span);
+                Ty::Unit
+            }
+            _ => {
+                self.error_with_code(
+                    SEMA_TYPE_MISMATCH,
+                    format!(
+                        "`go` requires a function or procedure call, but `{name}` is not callable"
+                    ),
+                    "Use `go FunctionName(args)` or `go SomeCallable(args)`.",
+                    span,
+                );
+                self.check_args_only(args);
+                Ty::Error
+            }
+        }
+    }
+
     fn check_enum_variant_constructor_call(
         &mut self,
         name: &str,

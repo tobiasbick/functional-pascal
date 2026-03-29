@@ -30,8 +30,8 @@ impl Compiler {
     /// enclosing variables, they are captured by value at creation time
     /// (closure).
     ///
-    /// **Documentation:** `docs/future/closures.md`
-    pub(super) fn compile_function_expr(
+    /// **Documentation:** `docs/pascal/04-functions.md`
+    pub(in crate::compiler) fn compile_function_expr(
         &mut self,
         params: &[FormalParam],
         body: &FuncBody,

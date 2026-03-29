@@ -278,23 +278,23 @@ end.
 }
 
 #[test]
-fn channel_close_receive_empty_returns_unit() {
+fn channel_close_receive_empty_is_runtime_error() {
     let source = r#"program CloseEmpty;
-uses Std.Console, Std.Channel;
+uses Std.Channel;
 
 begin
   var Ch: channel of integer := Std.Channel.Make();
   Std.Channel.Close(Ch);
-  Std.Channel.Receive(Ch);
-  WriteLn('received')
+  Std.Channel.Receive(Ch)
 end.
 "#;
 
-    let (exit_code, stdout_output, stderr_output) =
-        support::run_source_and_capture_output("close_empty.fpas", source);
-    assert!(stderr_output.is_empty(), "stderr: {stderr_output}");
-    assert_eq!(exit_code, 0);
-    assert_eq!(stdout_output, "received\n");
+    let (exit_code, stderr_output) = support::run_and_capture_stderr("close_empty.fpas", source);
+    assert_eq!(exit_code, 2);
+    assert!(
+        stderr_output.contains("closed, empty channel"),
+        "stderr: {stderr_output}"
+    );
 }
 
 #[test]
@@ -945,4 +945,40 @@ end.
     assert!(stderr_output.is_empty(), "stderr: {stderr_output}");
     assert_eq!(exit_code, 0);
     assert_eq!(stdout_output, "9\n16\n25\n");
+}
+
+#[test]
+fn invalid_go_expression_is_compile_error() {
+    let source = r#"program BadGo;
+begin
+  go 1
+end.
+"#;
+
+    let (exit_code, stderr_output) = support::run_and_capture_stderr("bad_go.fpas", source);
+    assert_eq!(exit_code, 1);
+    assert!(
+        stderr_output.contains("`go` requires a function call"),
+        "stderr: {stderr_output}"
+    );
+}
+
+#[test]
+fn task_wait_all_does_not_leak_stack() {
+    let source = r#"program WaitAllNoLeak;
+uses Std.Console, Std.Task;
+
+begin
+  var Tasks: array of task := [];
+  for I: integer := 1 to 5000 do
+    Std.Task.WaitAll(Tasks);
+  WriteLn('ok')
+end.
+"#;
+
+    let (exit_code, stdout_output, stderr_output) =
+        support::run_source_and_capture_output("waitall_no_leak.fpas", source);
+    assert!(stderr_output.is_empty(), "stderr: {stderr_output}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout_output, "ok\n");
 }

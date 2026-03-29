@@ -45,6 +45,20 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::DictRemove, location);
                 Ok(true)
             }
+            s::STD_DICT_GET => {
+                self.expect_exact_args(s::STD_DICT_GET, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::DictGet, location);
+                Ok(true)
+            }
+            s::STD_DICT_MERGE => {
+                self.expect_exact_args(s::STD_DICT_MERGE, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::DictMerge, location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

@@ -550,3 +550,704 @@ end.
     assert_eq!(exit_code, 0);
     assert_eq!(stdout, "true\n");
 }
+
+// ---------------------------------------------------------------------------
+// Repeat
+// ---------------------------------------------------------------------------
+
+#[test]
+fn repeat_normal() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(RepeatStr('ab', 3))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "ababab\n");
+}
+
+#[test]
+fn repeat_zero_count() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(RepeatStr('x', 0))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "\n");
+}
+
+#[test]
+fn repeat_negative_count() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(RepeatStr('x', -5))
+end.
+"#;
+    let (exit_code, _stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert_ne!(exit_code, 0);
+    assert!(
+        stderr.contains("Repeat count must be >= 0"),
+        "stderr: {stderr}"
+    );
+}
+
+#[test]
+fn repeat_empty_string() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(RepeatStr('', 5))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "\n");
+}
+
+// ---------------------------------------------------------------------------
+// PadLeft / PadRight / PadCenter
+// ---------------------------------------------------------------------------
+
+#[test]
+fn pad_left_normal() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(PadLeft('42', 5, '0'))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "00042\n");
+}
+
+#[test]
+fn pad_left_already_wide() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(PadLeft('Hello', 3, ' '))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "Hello\n");
+}
+
+#[test]
+fn pad_right_normal() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(PadRight('Hi', 6, '.'))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "Hi....\n");
+}
+
+#[test]
+fn pad_right_already_wide() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(PadRight('Hello', 2, '.'))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "Hello\n");
+}
+
+#[test]
+fn pad_center_normal() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(PadCenter('Hi', 6, '-'))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "--Hi--\n");
+}
+
+#[test]
+fn pad_center_odd_spacing() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(PadCenter('Hi', 7, '-'))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    // 7 - 2 = 5 remaining, left gets 2, right gets 3
+    assert_eq!(stdout, "--Hi---\n");
+}
+
+#[test]
+fn pad_center_already_wide() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(PadCenter('Hello', 3, '-'))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "Hello\n");
+}
+
+#[test]
+fn pad_left_negative_width_is_runtime_error() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(PadLeft('a', -1, '.'))
+end.
+"#;
+    let (exit_code, _stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert_ne!(exit_code, 0);
+    assert!(
+        stderr.contains("PadLeft width must be >= 0"),
+        "stderr: {stderr}"
+    );
+}
+
+#[test]
+fn pad_right_negative_width_is_runtime_error() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(PadRight('a', -1, '.'))
+end.
+"#;
+    let (exit_code, _stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert_ne!(exit_code, 0);
+    assert!(
+        stderr.contains("PadRight width must be >= 0"),
+        "stderr: {stderr}"
+    );
+}
+
+#[test]
+fn pad_center_negative_width_is_runtime_error() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(PadCenter('a', -1, '.'))
+end.
+"#;
+    let (exit_code, _stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert_ne!(exit_code, 0);
+    assert!(
+        stderr.contains("PadCenter width must be >= 0"),
+        "stderr: {stderr}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// FromChar
+// ---------------------------------------------------------------------------
+
+#[test]
+fn from_char_normal() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(FromChar('x', 4))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "xxxx\n");
+}
+
+#[test]
+fn from_char_zero_count() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(FromChar('x', 0))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "\n");
+}
+
+// ---------------------------------------------------------------------------
+// CharAt
+// ---------------------------------------------------------------------------
+
+#[test]
+fn char_at_first() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(CharAt('Hello', 0))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "H\n");
+}
+
+#[test]
+fn char_at_last() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(CharAt('Hello', 4))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "o\n");
+}
+
+#[test]
+fn char_at_out_of_bounds() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(CharAt('Hi', 5))
+end.
+"#;
+    let (exit_code, _stdout, _stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert_ne!(exit_code, 0);
+}
+
+#[test]
+fn char_at_negative_index() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(CharAt('Hi', -1))
+end.
+"#;
+    let (exit_code, _stdout, _stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert_ne!(exit_code, 0);
+}
+
+// ---------------------------------------------------------------------------
+// SetCharAt
+// ---------------------------------------------------------------------------
+
+#[test]
+fn set_char_at_normal() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(SetCharAt('Hello', 0, 'J'))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "Jello\n");
+}
+
+#[test]
+fn set_char_at_out_of_bounds() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(SetCharAt('Hi', 10, 'X'))
+end.
+"#;
+    let (exit_code, _stdout, _stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert_ne!(exit_code, 0);
+}
+
+// ---------------------------------------------------------------------------
+// Ord / Chr
+// ---------------------------------------------------------------------------
+
+#[test]
+fn ord_normal() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(Ord('A'))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "65\n");
+}
+
+#[test]
+fn ord_zero_char() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(Ord('0'))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "48\n");
+}
+
+#[test]
+fn chr_normal() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(Chr(65))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "A\n");
+}
+
+#[test]
+fn chr_invalid_codepoint() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(Chr(-1))
+end.
+"#;
+    let (exit_code, _stdout, _stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert_ne!(exit_code, 0);
+}
+
+#[test]
+fn chr_rejects_oversized_codepoint() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(Chr(4294967296))
+end.
+"#;
+    let (exit_code, _stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert_ne!(exit_code, 0);
+    assert!(
+        stderr.contains("Chr: 4294967296 is not a valid Unicode code point"),
+        "stderr: {stderr}"
+    );
+}
+
+#[test]
+fn ord_chr_roundtrip() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(Chr(Ord('Z')))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "Z\n");
+}
+
+// ---------------------------------------------------------------------------
+// Insert
+// ---------------------------------------------------------------------------
+
+#[test]
+fn insert_middle() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(Std.Str.Insert('Hllo', 1, 'e'))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "Hello\n");
+}
+
+#[test]
+fn insert_at_start() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(Std.Str.Insert('world', 0, 'Hello '))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "Hello world\n");
+}
+
+#[test]
+fn insert_at_end() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(Std.Str.Insert('Hello', 5, '!'))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "Hello!\n");
+}
+
+#[test]
+fn insert_out_of_bounds() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(Std.Str.Insert('Hi', 10, 'x'))
+end.
+"#;
+    let (exit_code, _stdout, _stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert_ne!(exit_code, 0);
+}
+
+// ---------------------------------------------------------------------------
+// Delete
+// ---------------------------------------------------------------------------
+
+#[test]
+fn delete_middle() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(Std.Str.Delete('Hello', 1, 3))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "Ho\n");
+}
+
+#[test]
+fn delete_from_start() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(Std.Str.Delete('Hello', 0, 2))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "llo\n");
+}
+
+#[test]
+fn delete_all() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(Std.Str.Delete('Hi', 0, 2))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "\n");
+}
+
+#[test]
+fn delete_out_of_bounds() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(Std.Str.Delete('Hi', 0, 10))
+end.
+"#;
+    let (exit_code, _stdout, _stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert_ne!(exit_code, 0);
+}
+
+// ---------------------------------------------------------------------------
+// Reverse (Std.Str)
+// ---------------------------------------------------------------------------
+
+#[test]
+fn str_reverse_normal() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(Reverse('abc'))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "cba\n");
+}
+
+#[test]
+fn str_reverse_empty() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(Reverse(''))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "\n");
+}
+
+#[test]
+fn str_reverse_single_char() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(Reverse('X'))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "X\n");
+}
+
+// ---------------------------------------------------------------------------
+// TrimLeft / TrimRight
+// ---------------------------------------------------------------------------
+
+#[test]
+fn trim_left_normal() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(TrimLeft('  hi  '))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "hi  \n");
+}
+
+#[test]
+fn trim_left_no_leading_space() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(TrimLeft('hi'))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "hi\n");
+}
+
+#[test]
+fn trim_right_normal() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(TrimRight('  hi  '))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "  hi\n");
+}
+
+#[test]
+fn trim_right_no_trailing_space() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(TrimRight('hi'))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "hi\n");
+}
+
+// ---------------------------------------------------------------------------
+// LastIndexOf
+// ---------------------------------------------------------------------------
+
+#[test]
+fn last_index_of_found() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(LastIndexOf('abcabc', 'abc'))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "3\n");
+}
+
+#[test]
+fn last_index_of_not_found() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(LastIndexOf('abc', 'z'))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "-1\n");
+}
+
+#[test]
+fn last_index_of_single_occurrence() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(LastIndexOf('hello', 'ell'))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "1\n");
+}
+
+#[test]
+fn last_index_of_empty_string() {
+    let source = r#"program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(LastIndexOf('', 'x'))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "-1\n");
+}

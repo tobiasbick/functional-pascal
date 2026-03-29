@@ -95,6 +95,21 @@ pub(in super::super) const STD_STR_SYMBOLS: &[&str] = &[
     std_symbols::STD_STR_SPLIT,
     std_symbols::STD_STR_JOIN,
     std_symbols::STD_STR_IS_NUMERIC,
+    std_symbols::STD_STR_REPEAT,
+    std_symbols::STD_STR_PAD_LEFT,
+    std_symbols::STD_STR_PAD_RIGHT,
+    std_symbols::STD_STR_PAD_CENTER,
+    std_symbols::STD_STR_FROM_CHAR,
+    std_symbols::STD_STR_CHAR_AT,
+    std_symbols::STD_STR_SET_CHAR_AT,
+    std_symbols::STD_STR_ORD,
+    std_symbols::STD_STR_CHR,
+    std_symbols::STD_STR_INSERT,
+    std_symbols::STD_STR_DELETE,
+    std_symbols::STD_STR_REVERSE,
+    std_symbols::STD_STR_TRIM_LEFT,
+    std_symbols::STD_STR_TRIM_RIGHT,
+    std_symbols::STD_STR_LAST_INDEX_OF,
 ];
 
 pub(in super::super) const STD_CONV_SYMBOLS: &[&str] = &[
@@ -104,6 +119,10 @@ pub(in super::super) const STD_CONV_SYMBOLS: &[&str] = &[
     std_symbols::STD_CONV_STR_TO_REAL,
     std_symbols::STD_CONV_CHAR_TO_STR,
     std_symbols::STD_CONV_INT_TO_REAL,
+    std_symbols::STD_CONV_BOOL_TO_STR,
+    std_symbols::STD_CONV_STR_TO_BOOL,
+    std_symbols::STD_CONV_INT_TO_HEX,
+    std_symbols::STD_CONV_HEX_TO_INT,
 ];
 
 pub(in super::super) const STD_MATH_SYMBOLS: &[&str] = &[
@@ -119,6 +138,21 @@ pub(in super::super) const STD_MATH_SYMBOLS: &[&str] = &[
     std_symbols::STD_MATH_ABS,
     std_symbols::STD_MATH_MIN,
     std_symbols::STD_MATH_MAX,
+    std_symbols::STD_MATH_TAN,
+    std_symbols::STD_MATH_ARC_SIN,
+    std_symbols::STD_MATH_ARC_COS,
+    std_symbols::STD_MATH_ARC_TAN,
+    std_symbols::STD_MATH_ARC_TAN2,
+    std_symbols::STD_MATH_EXP,
+    std_symbols::STD_MATH_LOG10,
+    std_symbols::STD_MATH_LOG2,
+    std_symbols::STD_MATH_TRUNC,
+    std_symbols::STD_MATH_FRAC,
+    std_symbols::STD_MATH_SIGN,
+    std_symbols::STD_MATH_CLAMP,
+    std_symbols::STD_MATH_RANDOM,
+    std_symbols::STD_MATH_RANDOM_INT,
+    std_symbols::STD_MATH_RANDOMIZE,
 ];
 
 pub(in super::super) const STD_ARRAY_SYMBOLS: &[&str] = &[
@@ -133,6 +167,14 @@ pub(in super::super) const STD_ARRAY_SYMBOLS: &[&str] = &[
     std_symbols::STD_ARRAY_MAP,
     std_symbols::STD_ARRAY_FILTER,
     std_symbols::STD_ARRAY_REDUCE,
+    std_symbols::STD_ARRAY_CONCAT,
+    std_symbols::STD_ARRAY_FILL,
+    std_symbols::STD_ARRAY_FIND,
+    std_symbols::STD_ARRAY_FIND_INDEX,
+    std_symbols::STD_ARRAY_ANY,
+    std_symbols::STD_ARRAY_ALL,
+    std_symbols::STD_ARRAY_FLAT_MAP,
+    std_symbols::STD_ARRAY_FOR_EACH,
 ];
 
 pub(in super::super) const STD_RESULT_SYMBOLS: &[&str] = &[
@@ -173,4 +215,6 @@ pub(in super::super) const STD_DICT_SYMBOLS: &[&str] = &[
     std_symbols::STD_DICT_KEYS,
     std_symbols::STD_DICT_VALUES,
     std_symbols::STD_DICT_REMOVE,
+    std_symbols::STD_DICT_GET,
+    std_symbols::STD_DICT_MERGE,
 ];

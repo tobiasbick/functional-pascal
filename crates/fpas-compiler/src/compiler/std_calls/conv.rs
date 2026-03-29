@@ -49,6 +49,31 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::ConvIntToReal, location);
                 Ok(true)
             }
+            s::STD_CONV_BOOL_TO_STR => {
+                self.expect_exact_args(s::STD_CONV_BOOL_TO_STR, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::ConvBoolToStr, location);
+                Ok(true)
+            }
+            s::STD_CONV_STR_TO_BOOL => {
+                self.expect_exact_args(s::STD_CONV_STR_TO_BOOL, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::ConvStrToBool, location);
+                Ok(true)
+            }
+            s::STD_CONV_INT_TO_HEX => {
+                self.expect_exact_args(s::STD_CONV_INT_TO_HEX, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::ConvIntToHex, location);
+                Ok(true)
+            }
+            s::STD_CONV_HEX_TO_INT => {
+                self.expect_exact_args(s::STD_CONV_HEX_TO_INT, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::ConvHexToInt, location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

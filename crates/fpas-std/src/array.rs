@@ -91,6 +91,26 @@ pub(crate) fn run(
             let out: Vec<Value> = arr[start as usize..(start + len) as usize].to_vec();
             stack.push(Value::Array(out));
         }
+        Intrinsic::ArrayConcat => {
+            let b = pop_array(pop_value(stack, location)?, location)?;
+            let mut a = pop_array(pop_value(stack, location)?, location)?;
+            a.extend(b);
+            stack.push(Value::Array(a));
+        }
+        Intrinsic::ArrayFill => {
+            let count = pop_int(pop_value(stack, location)?, location)?;
+            let value = pop_value(stack, location)?;
+            if count < 0 {
+                return Err(std_runtime_error(
+                    RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
+                    format!("Fill count must be >= 0, got {count}"),
+                    "Pass a non-negative integer to Std.Array.Fill.",
+                    location,
+                ));
+            }
+            let arr: Vec<Value> = vec![value; count as usize];
+            stack.push(Value::Array(arr));
+        }
         _ => return Ok(None),
     }
     Ok(Some(()))

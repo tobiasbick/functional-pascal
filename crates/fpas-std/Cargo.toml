@@ -10,6 +10,7 @@ repository.workspace = true
 crossterm = "0.28"
 fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }
+rand = "0.8"
 
 [lints]
 workspace = true

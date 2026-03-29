@@ -71,3 +71,40 @@ end.",
     );
     assert_eq!(out.lines, vec!["42"]);
 }
+
+#[test]
+fn lambda_zero_params() {
+    let out = compile_and_run(
+        "\
+program LambdaZero;
+uses Std.Console;
+begin
+  var GetFortyTwo: function(): integer :=
+    function(): integer
+    begin
+      return 42
+    end;
+  WriteLn(GetFortyTwo())
+end.",
+    );
+    assert_eq!(out.lines, vec!["42"]);
+}
+
+#[test]
+fn lambda_in_nested_expression() {
+    let out = compile_and_run(
+        "\
+program LambdaExpr;
+uses Std.Console;
+function Apply(F: function(X: integer): integer; V: integer): integer;
+begin
+  return F(V)
+end;
+begin
+  WriteLn(Apply(
+    function(X: integer): integer begin return X * X end,
+    3) + 1)
+end.",
+    );
+    assert_eq!(out.lines, vec!["10"]);
+}

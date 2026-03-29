@@ -146,6 +146,31 @@ include = ["src/math.fpas", "lib/*.fpas"]
 }
 
 #[test]
+fn whitespace_only_include_entry_is_rejected() {
+    let dir = create_temp_dir("whitespace-include-entry");
+    let project_file = dir.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "app"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["   "]
+"#,
+    );
+    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+
+    let error = load_project(&project_file).expect_err("whitespace-only entry must fail");
+    fs::remove_dir_all(&dir).expect("temp directory must be removed");
+    assert!(
+        error.contains("empty"),
+        "expected empty entry error, got: {error}"
+    );
+}
+
+#[test]
 fn explicit_include_must_be_fpas_source_file() {
     let dir = create_temp_dir("include-extension");
     let project_file = dir.join("app.fpasprj");

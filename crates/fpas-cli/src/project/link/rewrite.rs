@@ -55,6 +55,7 @@ pub(super) struct NameRewriter<'a> {
     path: String,
     resolved: &'a HashMap<String, String>,
     ambiguous: &'a HashMap<String, Vec<String>>,
+    canonical_units: &'a HashMap<String, Vec<String>>,
     value_scopes: Vec<HashSet<String>>,
     type_scopes: Vec<HashSet<String>>,
     first_error: Option<String>,
@@ -65,11 +66,13 @@ impl<'a> NameRewriter<'a> {
         path: String,
         resolved: &'a HashMap<String, String>,
         ambiguous: &'a HashMap<String, Vec<String>>,
+        canonical_units: &'a HashMap<String, Vec<String>>,
     ) -> Self {
         Self {
             path,
             resolved,
             ambiguous,
+            canonical_units,
             value_scopes: vec![HashSet::new()],
             type_scopes: vec![HashSet::new()],
             first_error: None,

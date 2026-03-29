@@ -237,7 +237,7 @@ end.",
     );
 
     assert!(
-        msg.contains("Channel buffer size cannot be negative"),
-        "expected negative-capacity error, got: {msg}"
+        msg.contains("Channel buffer size must be a positive integer"),
+        "expected positive-capacity error, got: {msg}"
     );
 }

@@ -130,3 +130,60 @@ fn multiple_numbers() {
         vec![Token::Integer(1), Token::Integer(2), Token::Integer(3)]
     );
 }
+
+// ── Edge Cases (02-basics.md) ───────────────────────────────────
+
+#[test]
+fn dot_digit_is_not_real() {
+    // `.5` is NOT a valid real literal — must have digits on both sides
+    assert_eq!(toks(".5"), vec![Token::Dot, Token::Integer(5)]);
+}
+
+#[test]
+fn integer_dot_no_digit_is_not_real() {
+    // `5.` alone is NOT a valid real — just integer + dot
+    assert_eq!(toks("5. "), vec![Token::Integer(5), Token::Dot]);
+}
+
+#[test]
+fn leading_zeros_integer() {
+    assert_eq!(toks("007"), vec![Token::Integer(7)]);
+    assert_eq!(toks("00"), vec![Token::Integer(0)]);
+}
+
+#[test]
+fn hex_max_i64() {
+    assert_eq!(toks("$7FFFFFFFFFFFFFFF"), vec![Token::Integer(i64::MAX)]);
+}
+
+#[test]
+fn hex_single_digit() {
+    assert_eq!(toks("$0"), vec![Token::Integer(0)]);
+    assert_eq!(toks("$A"), vec![Token::Integer(10)]);
+}
+
+#[test]
+fn integer_negative_is_two_tokens() {
+    // -42 is unary minus + literal (spec: "Negative numbers are parsed as unary minus + literal")
+    assert_eq!(toks("-42"), vec![Token::Minus, Token::Integer(42)]);
+}
+
+#[test]
+fn real_negative_is_two_tokens() {
+    assert_eq!(toks("-3.14"), vec![Token::Minus, Token::Real(3.14)]);
+}
+
+#[test]
+fn scientific_negative_exponent_only() {
+    assert_eq!(toks("2.5e-1"), vec![Token::Real(0.25)]);
+}
+
+#[test]
+fn scientific_uppercase_e() {
+    assert_eq!(toks("1.0E10"), vec![Token::Real(1.0e10)]);
+}
+
+#[test]
+fn underscore_in_hex_multiple_groups() {
+    assert_eq!(toks("$1_2_3_4"), vec![Token::Integer(0x1234)]);
+}

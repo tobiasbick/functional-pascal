@@ -1,6 +1,6 @@
 use super::Checker;
 use crate::scope::{FunctionCtx, PendingRoutine, Symbol, SymbolKind};
-use crate::types::{FunctionTy, ParamTy, ProcedureTy, Ty};
+use crate::types::{FunctionTy, ParamTy, ProcedureTy, Ty, TypeConstraint};
 use fpas_diagnostics::codes::{SEMA_DUPLICATE_DECLARATION, SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
 use fpas_lexer::Span;
 use fpas_parser::{FuncBody, FunctionDecl, ProcedureDecl};
@@ -14,6 +14,8 @@ impl Checker {
             self.push_type_param_scope(&f.type_params, f.span);
         }
 
+        let type_param_defs = Self::resolve_type_params(&f.type_params);
+
         let return_ty = self.resolve_type_expr(&f.return_type);
         let params: Vec<ParamTy> = f
             .params
@@ -26,6 +28,7 @@ impl Checker {
             .collect();
 
         let func_ty = Ty::Function(FunctionTy {
+            type_params: type_param_defs.clone(),
             params: params.clone(),
             return_type: Box::new(return_ty.clone()),
         });
@@ -48,12 +51,16 @@ impl Checker {
         if let FuncBody::Block { nested, stmts } = &f.body {
             self.scopes.push_scope();
 
-            // Re-introduce type params inside the function body scope.
+            // Re-introduce type params inside the function body scope (with constraints).
             for tp in &f.type_params {
+                let constraint = tp
+                    .constraint
+                    .as_ref()
+                    .and_then(|c| TypeConstraint::from_name(c));
                 self.scopes.define(
                     &tp.name,
                     Symbol {
-                        ty: Ty::GenericParam(tp.name.clone()),
+                        ty: Ty::GenericParam(tp.name.clone(), constraint),
                         mutable: false,
                         kind: SymbolKind::Type,
                     },
@@ -98,6 +105,8 @@ impl Checker {
             self.push_type_param_scope(&p.type_params, p.span);
         }
 
+        let type_param_defs = Self::resolve_type_params(&p.type_params);
+
         let params: Vec<ParamTy> = p
             .params
             .iter()
@@ -109,6 +118,7 @@ impl Checker {
             .collect();
 
         let proc_ty = Ty::Procedure(ProcedureTy {
+            type_params: type_param_defs.clone(),
             variadic: false,
             params: params.clone(),
         });
@@ -131,12 +141,16 @@ impl Checker {
         if let FuncBody::Block { nested, stmts } = &p.body {
             self.scopes.push_scope();
 
-            // Re-introduce type params inside the procedure body scope.
+            // Re-introduce type params inside the procedure body scope (with constraints).
             for tp in &p.type_params {
+                let constraint = tp
+                    .constraint
+                    .as_ref()
+                    .and_then(|c| TypeConstraint::from_name(c));
                 self.scopes.define(
                     &tp.name,
                     Symbol {
-                        ty: Ty::GenericParam(tp.name.clone()),
+                        ty: Ty::GenericParam(tp.name.clone(), constraint),
                         mutable: false,
                         kind: SymbolKind::Type,
                     },

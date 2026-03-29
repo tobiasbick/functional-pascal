@@ -104,3 +104,48 @@ end.",
     );
     assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
 }
+
+#[test]
+fn enum_data_variant_used_as_simple_when_it_has_fields() {
+    // Currently, the compiler treats `Shape.Circle` (without args) as a reference
+    // to the variant constructor rather than a compile error.  This compiles but
+    // produces a function value — the variant is not "called".
+    compile_ok(
+        "\
+program T;
+type Shape = enum Circle(Radius: real); end;
+begin
+  var S: Shape := Shape.Circle
+end.",
+    );
+}
+
+#[test]
+fn enum_returned_from_function_and_matched() {
+    let out = compile_and_run(
+        "\
+program EnumReturnMatch;
+uses Std.Console;
+type Dir = enum North; South; East; West; end;
+
+function Opposite(D: Dir): Dir;
+begin
+  case D of
+    Dir.North: return Dir.South;
+    Dir.South: return Dir.North;
+    Dir.East: return Dir.West;
+    Dir.West: return Dir.East
+  end;
+  return Dir.North
+end;
+
+begin
+  var D: Dir := Opposite(Dir.East);
+  if D = Dir.West then
+    WriteLn('west')
+  else
+    WriteLn('other')
+end.",
+    );
+    assert_eq!(out.lines, vec!["west"]);
+}

@@ -1,6 +1,70 @@
 use super::*;
 
 #[test]
+fn qualified_const_access_from_user_unit() {
+    let cwd = create_temp_dir("run-qual-const");
+    let project_file = cwd.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "app"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/*.fpas"]
+"#,
+    );
+    write_text(
+        &cwd.join("src/main.fpas"),
+        "program Main;\nuses App.Config, Std.Console;\nbegin\n  WriteLn(App.Config.MaxVal)\nend.\n",
+    );
+    write_text(
+        &cwd.join("src/config.fpas"),
+        "unit App.Config;\n\nconst\n  MaxVal: integer := 256;\n",
+    );
+
+    let (exit_code, stdout_output, stderr_output) =
+        support::run_cli_and_capture_output(&project_file, &cwd);
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 0, "stderr: {stderr_output}");
+    assert_eq!(stdout_output, "256\n");
+}
+
+#[test]
+fn case_insensitive_qualified_call() {
+    let cwd = create_temp_dir("run-case-qual-call");
+    let project_file = cwd.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "app"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/*.fpas"]
+"#,
+    );
+    write_text(
+        &cwd.join("src/main.fpas"),
+        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(app.lib.GetValue())\nend.\n",
+    );
+    write_text(
+        &cwd.join("src/lib.fpas"),
+        "unit App.Lib;\nfunction GetValue(): integer;\nbegin\n  return 44\nend;\n",
+    );
+
+    let (exit_code, stdout_output, stderr_output) =
+        support::run_cli_and_capture_output(&project_file, &cwd);
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 0, "stderr: {stderr_output}");
+    assert_eq!(stdout_output, "44\n");
+}
+
+#[test]
 fn qualified_name_call_to_user_unit_function() {
     let cwd = create_temp_dir("run-qualified-call");
     let project_file = cwd.join("app.fpasprj");

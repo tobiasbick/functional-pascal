@@ -398,6 +398,7 @@ fn expect_unary_function_callback(
     let Ty::Function(FunctionTy {
         params,
         return_type,
+        ..
     }) = callback_ty
     else {
         c.error_with_code(
@@ -454,6 +455,7 @@ fn expect_binary_function_callback(
     let Ty::Function(FunctionTy {
         params,
         return_type,
+        ..
     }) = callback_ty
     else {
         c.error_with_code(

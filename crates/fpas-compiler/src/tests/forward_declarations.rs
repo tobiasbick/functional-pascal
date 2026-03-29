@@ -1,8 +1,7 @@
+/// Tests for forward declarations and mutual recursion.
+///
+/// **Documentation:** [docs/pascal/04-functions.md](docs/pascal/04-functions.md)
 use super::*;
-
-// ═══════════════════════════════════════════════════════════════
-// POSITIVE — forward declarations
-// ═══════════════════════════════════════════════════════════════
 
 #[test]
 fn forward_mutual_recursion_is_even_odd() {
@@ -192,4 +191,93 @@ end.",
         err.message.contains("Forward declaration"),
         "unexpected error: {err:?}"
     );
+}
+
+#[test]
+fn forward_function_cannot_become_procedure() {
+    let err = compile_err(
+        "\
+program ForwardKindMismatch2;
+
+function GetValue(): integer; forward;
+
+procedure GetValue();
+begin
+  Std.Console.WriteLn('wrong')
+end;
+
+begin
+  GetValue()
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+    assert!(
+        err.message.contains("Forward declaration"),
+        "unexpected error: {err:?}"
+    );
+}
+
+#[test]
+fn forward_parameter_count_mismatch() {
+    let err = compile_err(
+        "\
+program ForwardParamCount;
+
+function Foo(A: integer): integer; forward;
+
+function Foo(A: integer; B: integer): integer;
+begin
+  return A + B
+end;
+
+begin
+  var R: integer := Foo(1, 2)
+end.",
+    );
+    assert!(
+        err.code == fpas_diagnostics::codes::SEMA_TYPE_MISMATCH
+            || err.message.contains("Forward declaration")
+            || err.message.contains("parameter"),
+        "unexpected error: {err:?}"
+    );
+}
+
+#[test]
+fn forward_parameter_type_mismatch() {
+    let err = compile_err(
+        "\
+program ForwardParamType;
+
+function Foo(A: integer): integer; forward;
+
+function Foo(A: string): integer;
+begin
+  return 1
+end;
+
+begin
+  var R: integer := Foo(1)
+end.",
+    );
+    assert!(
+        err.code == fpas_diagnostics::codes::SEMA_TYPE_MISMATCH
+            || err.message.contains("Forward declaration"),
+        "unexpected error: {err:?}"
+    );
+}
+
+#[test]
+fn forward_procedure_requires_implementation() {
+    let err = compile_err(
+        "\
+program MissingForwardProc;
+
+procedure DoWork(X: integer); forward;
+
+begin
+  DoWork(1)
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_UNKNOWN_NAME);
+    assert!(err.message.contains("forward"), "unexpected error: {err:?}");
 }

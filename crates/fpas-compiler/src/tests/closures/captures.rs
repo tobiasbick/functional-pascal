@@ -111,3 +111,49 @@ end.",
     );
     assert_eq!(out.lines, vec!["false", "true"]);
 }
+
+#[test]
+fn closure_captures_multiple_variables() {
+    let out = compile_and_run(
+        "\
+program ClosureMultiCapture;
+uses Std.Console;
+function MakeLinear(A: integer; B: integer): function(X: integer): integer;
+begin
+  return function(X: integer): integer
+  begin
+    return A * X + B
+  end
+end;
+begin
+  var F: function(X: integer): integer := MakeLinear(3, 7);
+  WriteLn(F(10))
+end.",
+    );
+    assert_eq!(out.lines, vec!["37"]);
+}
+
+#[test]
+fn nested_closure_returns_closure() {
+    let out = compile_and_run(
+        "\
+program NestedClosure;
+uses Std.Console;
+function MakeOuter(A: integer): function(B: integer): function(X: integer): integer;
+begin
+  return function(B: integer): function(X: integer): integer
+  begin
+    return function(X: integer): integer
+    begin
+      return A + B + X
+    end
+  end
+end;
+begin
+  var Middle: function(B: integer): function(X: integer): integer := MakeOuter(100);
+  var Inner: function(X: integer): integer := Middle(20);
+  WriteLn(Inner(3))
+end.",
+    );
+    assert_eq!(out.lines, vec!["123"]);
+}

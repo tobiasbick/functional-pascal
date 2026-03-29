@@ -15,6 +15,20 @@ impl Compiler {
         location: SourceLocation,
     ) -> Result<(), CompileError> {
         let (lt, rt) = operand_types;
+
+        if is_generic_param(lt) || is_generic_param(rt) {
+            return self.compile_direct_binary(
+                if op == BinaryOp::Eq {
+                    Op::EqDyn
+                } else {
+                    Op::NeqDyn
+                },
+                left,
+                right,
+                location,
+            );
+        }
+
         if *lt == Ty::Real || *rt == Ty::Real {
             return self.emit_numeric_binary(
                 if op == BinaryOp::Eq {
@@ -82,6 +96,11 @@ impl Compiler {
         location: SourceLocation,
     ) -> Result<(), CompileError> {
         let (lt, rt) = operand_types;
+
+        if is_generic_param(lt) || is_generic_param(rt) {
+            return self.compile_direct_binary(ordering_dyn_op(op), left, right, location);
+        }
+
         if matches!((lt, rt), (Ty::String | Ty::Char, Ty::String | Ty::Char)) {
             return self.emit_string_binary(
                 left,
@@ -104,6 +123,20 @@ impl Compiler {
         }
 
         self.compile_direct_binary(ordering_int_op(op), left, right, location)
+    }
+}
+
+fn is_generic_param(ty: &Ty) -> bool {
+    matches!(ty, Ty::GenericParam(..))
+}
+
+fn ordering_dyn_op(op: BinaryOp) -> Op {
+    match op {
+        BinaryOp::Lt => Op::LtDyn,
+        BinaryOp::Gt => Op::GtDyn,
+        BinaryOp::LtEq => Op::LeDyn,
+        BinaryOp::GtEq => Op::GeDyn,
+        _ => unreachable!("only ordering operators reach dynamic ordering"),
     }
 }
 

@@ -80,6 +80,24 @@ end.",
 }
 
 #[test]
+fn procedure_too_few_arguments() {
+    let err = compile_err(
+        "\
+program ProcTooFew;
+
+procedure PrintTwo(A: string; B: string);
+begin
+  Std.Console.WriteLn(A + B)
+end;
+
+begin
+  PrintTwo('only one')
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_WRONG_ARGUMENT_COUNT);
+}
+
+#[test]
 fn procedure_too_many_arguments() {
     let err = compile_err(
         "\
@@ -120,6 +138,24 @@ end.",
 }
 
 #[test]
+fn argument_type_mismatch_second_param() {
+    let err = compile_err(
+        "\
+program ArgMismatch2;
+
+function Add(A: integer; B: integer): integer;
+begin
+  return A + B
+end;
+
+begin
+  var R: integer := Add(1, 'two')
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+}
+
+#[test]
 fn return_type_mismatch_in_assignment() {
     let err = compile_err(
         "\
@@ -132,6 +168,24 @@ end;
 
 begin
   var N: integer := GetName()
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+}
+
+#[test]
+fn return_wrong_type_in_function_body() {
+    let err = compile_err(
+        "\
+program RetWrongType;
+
+function GetNumber(): integer;
+begin
+  return 'not a number'
+end;
+
+begin
+  var N: integer := GetNumber()
 end.",
     );
     assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
@@ -159,6 +213,28 @@ end.",
     );
 }
 
+#[test]
+fn procedure_result_used_in_expression() {
+    let err = compile_err(
+        "\
+program ProcInExpr;
+uses Std.Console;
+
+procedure Noop();
+begin
+end;
+
+begin
+  WriteLn(Noop())
+end.",
+    );
+    assert!(
+        err.code == fpas_diagnostics::codes::SEMA_TYPE_MISMATCH
+            || err.message.contains("procedure"),
+        "unexpected error: {err:?}"
+    );
+}
+
 // ═══════════════════════════════════════════════════════════════
 // UNKNOWN FUNCTION
 // ═══════════════════════════════════════════════════════════════
@@ -176,12 +252,25 @@ end.",
     assert_eq!(err.code, fpas_diagnostics::codes::SEMA_UNKNOWN_NAME);
 }
 
+#[test]
+fn call_undeclared_procedure() {
+    let err = compile_err(
+        "\
+program UnknownProc;
+
+begin
+  Nonexistent('hello')
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_UNKNOWN_NAME);
+}
+
 // ═══════════════════════════════════════════════════════════════
 // DUPLICATE DEFINITIONS
 // ═══════════════════════════════════════════════════════════════
 
 #[test]
-fn duplicate_function_definition_is_rejected() {
+fn duplicate_function_definition() {
     let err = compile_err(
         "\
 program RedefFunc;
@@ -194,6 +283,57 @@ end;
 function Foo(): integer;
 begin
   return 2
+end;
+
+begin
+  var R: integer := Foo()
+end.",
+    );
+    assert_eq!(
+        err.code,
+        fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION
+    );
+}
+
+#[test]
+fn duplicate_procedure_definition() {
+    let err = compile_err(
+        "\
+program RedefProc;
+
+procedure Greet();
+begin
+  Std.Console.WriteLn('hi')
+end;
+
+procedure Greet();
+begin
+  Std.Console.WriteLn('hello')
+end;
+
+begin
+  Greet()
+end.",
+    );
+    assert_eq!(
+        err.code,
+        fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION
+    );
+}
+
+#[test]
+fn function_and_procedure_same_name() {
+    let err = compile_err(
+        "\
+program FuncProcSameName;
+
+function Foo(): integer;
+begin
+  return 1
+end;
+
+procedure Foo();
+begin
 end;
 
 begin

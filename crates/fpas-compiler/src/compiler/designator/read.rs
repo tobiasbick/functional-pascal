@@ -57,10 +57,21 @@ impl Compiler {
                 return Ok(());
             }
 
+            // Qualified names from linked units (e.g. `App.Config.MaxSize`) are registered
+            // as locals under their full dotted name. Try the joined name before falling
+            // through to GetGlobal.
+            if let Some(local_ref) = self.resolve_local(&name) {
+                match local_ref {
+                    LocalRef::Local(slot) => self.emit(Op::GetLocal(slot), location),
+                    LocalRef::Enclosing(depth, slot) => {
+                        self.emit(Op::GetEnclosing(depth, slot), location)
+                    }
+                };
+                return Ok(());
+            }
+
             // If the name resolves to a known function, emit a function reference value.
-            if d.parts.len() == 1
-                && let Some((_code_start, _arity)) = self.chunk.functions.get(&name)
-            {
+            if let Some((_code_start, _arity)) = self.chunk.functions.get(&name) {
                 self.emit_constant(
                     Value::Function {
                         name: name.clone(),

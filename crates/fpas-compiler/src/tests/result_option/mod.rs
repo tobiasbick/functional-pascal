@@ -1,9 +1,10 @@
-use super::{compile_and_run, compile_err, compile_run_err, compile_run_error};
+use super::{compile_and_run, compile_err, compile_run_err, compile_run_error, parse_fails};
 mod case_destructuring;
 mod combinators;
 mod option_cases;
 mod option_functions;
 mod panic_handling;
+mod reserved_keywords;
 mod result_cases;
 mod result_functions;
 mod try_edge_cases;

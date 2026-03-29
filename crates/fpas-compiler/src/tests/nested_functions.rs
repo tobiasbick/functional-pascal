@@ -1,3 +1,6 @@
+/// Tests for nested functions with lexical scope access.
+///
+/// **Documentation:** [docs/pascal/04-functions.md](docs/pascal/04-functions.md)
 use super::*;
 
 #[test]
@@ -116,4 +119,81 @@ begin
 end.",
     );
     assert_eq!(out.lines, vec!["hello from inner"]);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EDGE CASES
+// ═══════════════════════════════════════════════════════════════
+
+#[test]
+fn multiple_nested_functions_at_same_level() {
+    let out = compile_and_run(
+        "\
+program MultiNested;
+
+function Compute(X: integer): integer;
+  function Double(N: integer): integer;
+  begin
+    return N * 2
+  end;
+
+  function Inc(N: integer): integer;
+  begin
+    return N + 1
+  end;
+begin
+  return Inc(Double(X))
+end;
+
+begin
+  Std.Console.WriteLn(Compute(5))
+end.",
+    );
+    assert_eq!(out.lines, vec!["11"]);
+}
+
+#[test]
+fn nested_function_shadows_outer_param() {
+    let out = compile_and_run(
+        "\
+program NestedShadow;
+
+function Outer(X: integer): integer;
+  function Inner(X: integer): integer;
+  begin
+    return X * 10
+  end;
+begin
+  return Inner(X + 1)
+end;
+
+begin
+  Std.Console.WriteLn(Outer(3))
+end.",
+    );
+    assert_eq!(out.lines, vec!["40"]);
+}
+
+#[test]
+fn nested_function_with_own_local_vars() {
+    let out = compile_and_run(
+        "\
+program NestedLocals;
+uses Std.Console;
+
+function Outer(X: integer): integer;
+  function Inner(): integer;
+  begin
+    var Local: integer := X * 3;
+    return Local + 1
+  end;
+begin
+  return Inner()
+end;
+
+begin
+  WriteLn(Outer(10))
+end.",
+    );
+    assert_eq!(out.lines, vec!["31"]);
 }

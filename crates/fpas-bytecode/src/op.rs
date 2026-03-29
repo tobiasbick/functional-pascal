@@ -40,6 +40,23 @@ pub enum Op {
     NegateInt,
     NegateReal,
 
+    // ── Dynamic numeric (type-erased generics) ──────────────
+    /// Polymorphic arithmetic — dispatches at runtime based on value types.
+    /// Used inside generic function bodies when compile-time type is GenericParam.
+    AddDyn,
+    SubDyn,
+    MulDyn,
+    DivDyn,
+    NegateDyn,
+
+    // ── Dynamic comparison (type-erased generics) ───────────
+    EqDyn,
+    NeqDyn,
+    LtDyn,
+    GtDyn,
+    LeDyn,
+    GeDyn,
+
     // ── String ──────────────────────────────────────────────
     ConcatStr,
 

@@ -8,6 +8,7 @@ mod special;
 use crate::error::CompileError;
 use fpas_bytecode::{Op, Value};
 use fpas_parser::{Expr, UnaryOp};
+use fpas_sema::Ty;
 
 use super::Compiler;
 
@@ -56,7 +57,13 @@ impl Compiler {
                 self.compile_expr(operand)?;
                 match op {
                     UnaryOp::Negate => {
-                        self.emit(Op::NegateInt, (span.line, span.column));
+                        let operand_ty = self.ty_of(operand);
+                        let negate_op = if matches!(operand_ty, Ty::GenericParam(..)) {
+                            Op::NegateDyn
+                        } else {
+                            Op::NegateInt
+                        };
+                        self.emit(negate_op, (span.line, span.column));
                     }
                     UnaryOp::Not => {
                         self.emit(Op::Not, (span.line, span.column));

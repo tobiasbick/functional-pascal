@@ -958,7 +958,7 @@ end.
     let (exit_code, stderr_output) = support::run_and_capture_stderr("bad_go.fpas", source);
     assert_eq!(exit_code, 1);
     assert!(
-        stderr_output.contains("`go` requires a function call"),
+        stderr_output.contains("`go` requires a function or procedure call"),
         "stderr: {stderr_output}"
     );
 }
@@ -981,4 +981,363 @@ end.
     assert!(stderr_output.is_empty(), "stderr: {stderr_output}");
     assert_eq!(exit_code, 0);
     assert_eq!(stdout_output, "ok\n");
+}
+
+// ===========================================================================
+// Select with mixed-type channels (from spec example)
+// ===========================================================================
+
+#[test]
+fn select_with_mixed_type_channels() {
+    let source = r#"program SelectMixed;
+uses Std.Console, Std.Channel, Std.Conv;
+
+begin
+  var Ch1: channel of string := Std.Channel.Make();
+  var Ch2: channel of integer := Std.Channel.Make();
+  Std.Channel.Send(Ch2, 7);
+  select
+    case Msg: string from Ch1:
+      WriteLn('msg=' + Msg);
+    case Num: integer from Ch2:
+      WriteLn('num=' + Std.Conv.IntToStr(Num));
+  end
+end.
+"#;
+
+    let (exit_code, stdout_output, stderr_output) =
+        support::run_source_and_capture_output("select_mixed.fpas", source);
+    assert!(stderr_output.is_empty(), "stderr: {stderr_output}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout_output, "num=7\n");
+}
+
+// ===========================================================================
+// MakeBuffered(0) creates a rendezvous (synchronous) channel
+// ===========================================================================
+
+#[test]
+fn make_buffered_zero_creates_sync_channel() {
+    let source = r#"program SyncChan;
+uses Std.Channel;
+
+begin
+  var Ch: channel of integer := Std.Channel.MakeBuffered(0)
+end.
+"#;
+
+    let (exit_code, stderr_output) = support::run_and_capture_stderr("sync_chan.fpas", source);
+    assert_eq!(exit_code, 2);
+    assert!(
+        stderr_output.contains("buffer size must be a positive integer"),
+        "stderr: {stderr_output}"
+    );
+}
+
+// ===========================================================================
+// Double close is a no-op (not an error)
+// ===========================================================================
+
+#[test]
+fn double_close_does_not_error() {
+    let source = r#"program DoubleClose;
+uses Std.Console, Std.Channel;
+
+begin
+  var Ch: channel of integer := Std.Channel.Make();
+  Std.Channel.Send(Ch, 1);
+  Std.Channel.Close(Ch);
+  Std.Channel.Close(Ch);
+  WriteLn(Std.Channel.Receive(Ch))
+end.
+"#;
+
+    let (exit_code, stdout_output, stderr_output) =
+        support::run_source_and_capture_output("double_close.fpas", source);
+    assert!(stderr_output.is_empty(), "stderr: {stderr_output}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout_output, "1\n");
+}
+
+// ===========================================================================
+// Channel of real
+// ===========================================================================
+
+#[test]
+fn channel_of_real() {
+    let source = r#"program ChanReal;
+uses Std.Console, Std.Channel, Std.Task;
+
+procedure Sender(Ch: channel of real);
+begin
+  Std.Channel.Send(Ch, 3.14)
+end;
+
+begin
+  var Ch: channel of real := Std.Channel.Make();
+  go Sender(Ch);
+  WriteLn(Std.Channel.Receive(Ch))
+end.
+"#;
+
+    let (exit_code, stdout_output, stderr_output) =
+        support::run_source_and_capture_output("chan_real.fpas", source);
+    assert!(stderr_output.is_empty(), "stderr: {stderr_output}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout_output, "3.14\n");
+}
+
+// ===========================================================================
+// Select skips closed+empty arm, picks ready arm
+// ===========================================================================
+
+#[test]
+fn select_skips_closed_arm_to_ready_arm() {
+    let source = r#"program SelectClosed;
+uses Std.Console, Std.Channel;
+
+begin
+  var Closed: channel of integer := Std.Channel.Make();
+  Std.Channel.Close(Closed);
+  var Ready: channel of integer := Std.Channel.Make();
+  Std.Channel.Send(Ready, 42);
+  select
+    case V: integer from Closed:
+      WriteLn('closed');
+    case V: integer from Ready:
+      WriteLn(V);
+  end
+end.
+"#;
+
+    let (exit_code, stdout_output, stderr_output) =
+        support::run_source_and_capture_output("select_closed.fpas", source);
+    assert!(stderr_output.is_empty(), "stderr: {stderr_output}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout_output, "42\n");
+}
+
+// ===========================================================================
+// Go spawns a closure (callable variable)
+// ===========================================================================
+
+#[test]
+fn go_spawns_closure() {
+    let source = r#"program GoClosure;
+uses Std.Console, Std.Task;
+
+function MakeGreeter(Name: string): function(): string;
+begin
+  return function(): string begin return 'Hi ' + Name end
+end;
+
+begin
+  var Greet: function(): string := MakeGreeter('World');
+  var T: task := go Greet();
+  WriteLn(Std.Task.Wait(T))
+end.
+"#;
+
+    let (exit_code, stdout_output, stderr_output) =
+        support::run_source_and_capture_output("go_closure.fpas", source);
+    assert!(stderr_output.is_empty(), "stderr: {stderr_output}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout_output, "Hi World\n");
+}
+
+// ===========================================================================
+// TryReceive: extract the value from Some
+// ===========================================================================
+
+#[test]
+fn try_receive_extracts_value() {
+    let source = r#"program TryRecvValue;
+uses Std.Console, Std.Channel, Std.Option;
+
+begin
+  var Ch: channel of integer := Std.Channel.Make();
+  Std.Channel.Send(Ch, 77);
+  var V: Option of integer := Std.Channel.TryReceive(Ch);
+  WriteLn(Std.Option.Unwrap(V))
+end.
+"#;
+
+    let (exit_code, stdout_output, stderr_output) =
+        support::run_source_and_capture_output("tryrecv_value.fpas", source);
+    assert!(stderr_output.is_empty(), "stderr: {stderr_output}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout_output, "77\n");
+}
+
+// ===========================================================================
+// Channel of record — send/receive complex types
+// ===========================================================================
+
+#[test]
+fn channel_of_record() {
+    let source = r#"program ChanRecord;
+uses Std.Console, Std.Channel, Std.Task, Std.Conv;
+
+type Point = record
+  X: integer;
+  Y: integer;
+end;
+
+procedure Sender(Ch: channel of Point);
+begin
+  Std.Channel.Send(Ch, record X := 3; Y := 4; end)
+end;
+
+begin
+  var Ch: channel of Point := Std.Channel.Make();
+  go Sender(Ch);
+  var P: Point := Std.Channel.Receive(Ch);
+  WriteLn(Std.Conv.IntToStr(P.X) + ',' + Std.Conv.IntToStr(P.Y))
+end.
+"#;
+
+    let (exit_code, stdout_output, stderr_output) =
+        support::run_source_and_capture_output("chan_record.fpas", source);
+    assert!(stderr_output.is_empty(), "stderr: {stderr_output}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout_output, "3,4\n");
+}
+
+// ===========================================================================
+// Select with default only (no case arms)
+// ===========================================================================
+
+#[test]
+fn select_default_only() {
+    let source = r#"program SelectDefaultOnly;
+uses Std.Console;
+
+begin
+  select
+    default:
+      WriteLn('only default');
+  end
+end.
+"#;
+
+    let (exit_code, stdout_output, stderr_output) =
+        support::run_source_and_capture_output("select_default_only.fpas", source);
+    assert!(stderr_output.is_empty(), "stderr: {stderr_output}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout_output, "only default\n");
+}
+
+// ===========================================================================
+// Select with default + data on string channel picks data arm
+// ===========================================================================
+
+#[test]
+fn select_prefers_data_over_default() {
+    let source = r#"program SelectPrefersData;
+uses Std.Console, Std.Channel;
+
+begin
+  var Ch: channel of string := Std.Channel.Make();
+  Std.Channel.Send(Ch, 'hello');
+  select
+    case Msg: string from Ch:
+      WriteLn(Msg);
+    default:
+      WriteLn('default');
+  end
+end.
+"#;
+
+    let (exit_code, stdout_output, stderr_output) =
+        support::run_source_and_capture_output("select_data_over_default.fpas", source);
+    assert!(stderr_output.is_empty(), "stderr: {stderr_output}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout_output, "hello\n");
+}
+
+// ===========================================================================
+// Send to closed channel from a task — runtime error
+// ===========================================================================
+
+#[test]
+fn send_to_closed_channel_in_task_is_runtime_error() {
+    let source = r#"program SendClosedTask;
+uses Std.Channel, Std.Task;
+
+procedure BadSender(Ch: channel of integer);
+begin
+  Std.Channel.Send(Ch, 1)
+end;
+
+begin
+  var Ch: channel of integer := Std.Channel.Make();
+  Std.Channel.Close(Ch);
+  var T: task := go BadSender(Ch);
+  Std.Task.Wait(T)
+end.
+"#;
+
+    let (exit_code, stderr_output) =
+        support::run_and_capture_stderr("send_closed_task.fpas", source);
+    assert_eq!(exit_code, 2);
+    assert!(
+        stderr_output.contains("closed channel") || stderr_output.contains("task failed"),
+        "stderr: {stderr_output}"
+    );
+}
+
+// ===========================================================================
+// Receive from closed+drained buffered channel — runtime error
+// ===========================================================================
+
+#[test]
+fn receive_from_drained_closed_buffered_channel_is_error() {
+    let source = r#"program DrainedClosed;
+uses Std.Channel;
+
+begin
+  var Ch: channel of integer := Std.Channel.MakeBuffered(2);
+  Std.Channel.Send(Ch, 1);
+  Std.Channel.Send(Ch, 2);
+  Std.Channel.Close(Ch);
+  var A: integer := Std.Channel.Receive(Ch);
+  var B: integer := Std.Channel.Receive(Ch);
+  Std.Channel.Receive(Ch)
+end.
+"#;
+
+    let (exit_code, stderr_output) = support::run_and_capture_stderr("drained_closed.fpas", source);
+    assert_eq!(exit_code, 2);
+    assert!(
+        stderr_output.contains("closed, empty channel"),
+        "stderr: {stderr_output}"
+    );
+}
+
+// ===========================================================================
+// MakeBuffered with large capacity
+// ===========================================================================
+
+#[test]
+fn make_buffered_large_capacity() {
+    let source = r#"program BigBuffer;
+uses Std.Console, Std.Channel;
+
+begin
+  var Ch: channel of integer := Std.Channel.MakeBuffered(1000);
+  for I: integer := 1 to 1000 do
+    Std.Channel.Send(Ch, I);
+  mutable var Sum: integer := 0;
+  for I: integer := 1 to 1000 do
+    Sum := Sum + Std.Channel.Receive(Ch);
+  WriteLn(Sum)
+end.
+"#;
+
+    let (exit_code, stdout_output, stderr_output) =
+        support::run_source_and_capture_output("big_buffer.fpas", source);
+    assert!(stderr_output.is_empty(), "stderr: {stderr_output}");
+    assert_eq!(exit_code, 0);
+    // Sum 1..1000 = 500500
+    assert_eq!(stdout_output, "500500\n");
 }

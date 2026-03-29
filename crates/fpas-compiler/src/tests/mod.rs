@@ -59,6 +59,11 @@ fn compile_err(source: &str) -> crate::CompileError {
     crate::compile(&program).expect_err("compilation should fail")
 }
 
+fn parse_fails(source: &str) {
+    let (_, errors) = parse(source);
+    assert!(!errors.is_empty(), "Expected parse errors, got none");
+}
+
 mod arrays;
 mod basics;
 mod case_of;

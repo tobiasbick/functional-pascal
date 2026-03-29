@@ -1,5 +1,6 @@
 mod bitwise_bool;
 mod comparisons;
+mod dynamic_ops;
 mod int_ops;
 mod real_ops;
 
@@ -17,6 +18,7 @@ impl Worker {
             || self.try_exec_real_ops(op, line)?
             || self.try_exec_comparisons(op, line)?
             || self.try_exec_bitwise_bool(op, line)?
+            || self.try_exec_dynamic_ops(op, line)?
         {
             return Ok(true);
         }

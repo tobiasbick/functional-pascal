@@ -129,6 +129,7 @@ impl NameRewriter<'_> {
         let Some(qualified) =
             self.resolve_import_name(first_name, first_span.line, first_span.column)
         else {
+            self.normalize_qualified_unit_prefix(designator);
             return;
         };
 
@@ -138,5 +139,50 @@ impl NameRewriter<'_> {
             .collect::<Vec<_>>();
         rewritten.extend(designator.parts.iter().skip(1).cloned());
         designator.parts = rewritten;
+    }
+
+    /// When a user writes a qualified designator like `app.lib.GetValue`, the unit
+    /// prefix may use non-canonical casing. Normalize the prefix segments to their
+    /// canonical form so the sema and compiler see the correct names.
+    fn normalize_qualified_unit_prefix(&self, designator: &mut Designator) {
+        if designator.parts.len() < 2 {
+            return;
+        }
+
+        let ident_count = designator
+            .parts
+            .iter()
+            .take_while(|p| matches!(p, DesignatorPart::Ident(_, _)))
+            .count();
+
+        if ident_count < 2 {
+            return;
+        }
+
+        let first_span = match &designator.parts[0] {
+            DesignatorPart::Ident(_, span) => *span,
+            _ => return,
+        };
+
+        for prefix_len in (1..ident_count).rev() {
+            let candidate: String = designator.parts[..prefix_len]
+                .iter()
+                .filter_map(|p| match p {
+                    DesignatorPart::Ident(name, _) => Some(name.to_ascii_lowercase()),
+                    _ => None,
+                })
+                .collect::<Vec<_>>()
+                .join(".");
+
+            if let Some(canonical_segments) = self.canonical_units.get(&candidate) {
+                let mut new_parts: Vec<DesignatorPart> = canonical_segments
+                    .iter()
+                    .map(|s| DesignatorPart::Ident(s.clone(), first_span))
+                    .collect();
+                new_parts.extend(designator.parts.iter().skip(prefix_len).cloned());
+                designator.parts = new_parts;
+                return;
+            }
+        }
     }
 }

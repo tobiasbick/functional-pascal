@@ -69,3 +69,54 @@ end.",
     );
     assert_eq!(out.lines, vec!["fallback"]);
 }
+
+// ── Binding scoping (spec line 38) ──────────────────────────────────────
+// "The binding variable (V, E) is scoped to its arm body."
+
+#[test]
+fn result_case_binding_not_accessible_after_case() {
+    let err = super::compile_err(
+        "program T;
+var R: Result of integer, string := Ok(42);
+begin
+  case R of
+    Ok(V):  Std.Console.WriteLn(V);
+    Error(E): Std.Console.WriteLn(E)
+  end;
+  Std.Console.WriteLn(V)
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_UNKNOWN_NAME);
+}
+
+#[test]
+fn option_case_binding_not_accessible_after_case() {
+    let err = super::compile_err(
+        "program T;
+var O: Option of integer := Some(7);
+begin
+  case O of
+    Some(V): Std.Console.WriteLn(V);
+    None:    Std.Console.WriteLn('none')
+  end;
+  Std.Console.WriteLn(V)
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_UNKNOWN_NAME);
+}
+
+#[test]
+fn result_error_binding_not_accessible_outside_arm() {
+    let err = super::compile_err(
+        "program T;
+var R: Result of integer, string := Error('fail');
+begin
+  case R of
+    Ok(V):  Std.Console.WriteLn(V);
+    Error(E): Std.Console.WriteLn(E)
+  end;
+  Std.Console.WriteLn(E)
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_UNKNOWN_NAME);
+}

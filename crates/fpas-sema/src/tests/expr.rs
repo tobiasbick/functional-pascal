@@ -162,6 +162,71 @@ fn shr_valid() {
     check_ok("program T; var X: integer := 16 shr 4; begin end.");
 }
 
+#[test]
+fn shl_with_real_error() {
+    check_errors("program T; var X: integer := 1 shl 2.0; begin end.");
+}
+
+#[test]
+fn shr_with_real_error() {
+    check_errors("program T; var X: integer := 16 shr 1.5; begin end.");
+}
+
+#[test]
+fn mod_with_real_error() {
+    check_errors("program T; var X: integer := 10 mod 3.0; begin end.");
+}
+
+#[test]
+fn xor_booleans() {
+    check_ok("program T; var X: boolean := true xor false; begin end.");
+}
+
+#[test]
+fn xor_integers_bitwise() {
+    check_ok("program T; var X: integer := 5 xor 3; begin end.");
+}
+
+#[test]
+fn xor_with_string_error() {
+    check_errors("program T; var X: boolean := 'a' xor 'b'; begin end.");
+}
+
+#[test]
+fn and_with_string_error() {
+    check_errors("program T; var X: boolean := 'a' and 'b'; begin end.");
+}
+
+#[test]
+fn or_with_string_error() {
+    check_errors("program T; var X: boolean := 'a' or 'b'; begin end.");
+}
+
+#[test]
+fn not_string_error() {
+    check_errors("program T; var X: boolean := not 'hello'; begin end.");
+}
+
+#[test]
+fn not_integer_bitwise() {
+    check_ok("program T; var X: integer := not 0; begin end.");
+}
+
+#[test]
+fn compare_incompatible_types_error() {
+    check_errors("program T; var X: boolean := 1 < 'hello'; begin end.");
+}
+
+#[test]
+fn negate_real() {
+    check_ok("program T; var X: real := -3.14; begin end.");
+}
+
+#[test]
+fn not_real_error() {
+    check_errors("program T; var X: real := not 3.14; begin end.");
+}
+
 // ── Array literal ───────────────────────────────────────────────
 
 #[test]

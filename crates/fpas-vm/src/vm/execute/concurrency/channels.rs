@@ -33,11 +33,11 @@ impl Worker {
         capacity: i64,
         line: SourceLocation,
     ) -> Result<(), VmError> {
-        if capacity < 0 {
+        if capacity <= 0 {
             return Err(runtime_error(
                 RUNTIME_NUMERIC_DOMAIN_ERROR,
-                "Channel buffer size cannot be negative",
-                "Pass `0` or a positive integer to `Std.Channel.MakeBuffered`.",
+                "Channel buffer size must be a positive integer",
+                "Pass a positive integer to `Std.Channel.MakeBuffered`. Use `Std.Channel.Make` for capacity 1.",
                 line,
             ));
         }

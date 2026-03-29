@@ -114,3 +114,52 @@ fn slash_not_comment() {
         vec![Token::Integer(4), Token::Slash, Token::Integer(2)]
     );
 }
+
+// ── Non-nesting and cross-style (02-basics.md) ──────────────────
+
+#[test]
+fn paren_comment_does_not_nest() {
+    // (* outer (* inner *) ← first *) closes the comment
+    assert_eq!(toks("(* outer (* inner *) 42"), vec![Token::Integer(42)]);
+}
+
+#[test]
+fn line_comment_inside_brace_comment() {
+    // // inside { } is just comment text, not a line comment
+    assert_eq!(
+        toks("{ // not a line comment } 42"),
+        vec![Token::Integer(42)]
+    );
+}
+
+#[test]
+fn brace_inside_line_comment() {
+    // { inside // is just comment text — brace does NOT start a new comment
+    assert_eq!(
+        toks("// { not a brace comment\n42"),
+        vec![Token::Integer(42)]
+    );
+}
+
+#[test]
+fn paren_comment_inside_brace_comment() {
+    assert_eq!(toks("{ (* still brace *) } 42"), vec![Token::Integer(42)]);
+}
+
+#[test]
+fn brace_inside_paren_comment() {
+    assert_eq!(toks("(* { still paren } *) 42"), vec![Token::Integer(42)]);
+}
+
+#[test]
+fn line_comment_inside_paren_comment() {
+    assert_eq!(toks("(* // still paren *) 42"), vec![Token::Integer(42)]);
+}
+
+#[test]
+fn comment_preserves_surrounding_tokens() {
+    assert_eq!(
+        toks("1 { skip } + (* skip *) 2 // trailing"),
+        vec![Token::Integer(1), Token::Plus, Token::Integer(2)]
+    );
+}

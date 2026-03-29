@@ -66,3 +66,35 @@ end.",
     );
     assert_eq!(err.code, fpas_diagnostics::codes::SEMA_WRONG_ARGUMENT_COUNT);
 }
+
+#[test]
+fn lambda_argument_type_mismatch() {
+    let err = compile_err(
+        "\
+program LambdaArgMismatch;
+begin
+  var F: function(X: integer): integer :=
+    function(X: integer): integer begin return X end;
+  var R: integer := F('wrong')
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+}
+
+#[test]
+fn function_type_mismatch_in_assignment() {
+    let err = compile_err(
+        "\
+program FuncTypeMismatch;
+
+function Add(A: integer; B: integer): integer;
+begin
+  return A + B
+end;
+
+begin
+  var F: function(X: integer): integer := Add
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+}

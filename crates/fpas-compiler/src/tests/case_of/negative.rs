@@ -472,6 +472,139 @@ end.",
     );
 }
 
+// ---------------------------------------------------------------------------
+// Range on data-enum is not supported
+// doc: docs/pascal/06-pattern-matching.md
+// ---------------------------------------------------------------------------
+
+#[test]
+fn case_data_enum_rejects_range_label() {
+    let err = compile_err(
+        "\
+program T;
+type
+  Shape = enum
+    Circle(Radius: real);
+    Point;
+  end;
+begin
+  var S: Shape := Shape.Point;
+  case S of
+    Shape.Circle(1.0)..Shape.Circle(10.0): Std.Console.WriteLn('bad');
+    Shape.Point: Std.Console.WriteLn('point')
+  end
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+    assert!(
+        err.message.contains("range")
+            || err.message.contains("Range")
+            || err.message.contains("do not support"),
+        "expected range-on-data-enum error, got: {}",
+        err.message
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Destructure patterns (Ok/Error/Some/None) on non-Result/Option types
+// doc: docs/pascal/06-pattern-matching.md
+// ---------------------------------------------------------------------------
+
+#[test]
+fn case_destructure_on_integer_rejected() {
+    let err = compile_err(
+        "\
+program T;
+begin
+  var X: integer := 5;
+  case X of
+    Ok(V): Std.Console.WriteLn('bad')
+  else
+    Std.Console.WriteLn('ok')
+  end
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+    assert!(
+        err.message.contains("Result")
+            || err.message.contains("Option")
+            || err.message.contains("Destructure"),
+        "expected destructure-on-integer error, got: {}",
+        err.message
+    );
+}
+
+#[test]
+fn case_destructure_some_on_string_rejected() {
+    let err = compile_err(
+        "\
+program T;
+begin
+  var S: string := 'hello';
+  case S of
+    Some(V): Std.Console.WriteLn('bad')
+  else
+    Std.Console.WriteLn('ok')
+  end
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+    assert!(
+        err.message.contains("Result")
+            || err.message.contains("Option")
+            || err.message.contains("Destructure"),
+        "expected destructure-on-string error, got: {}",
+        err.message
+    );
+}
+
+#[test]
+fn case_result_rejects_option_pattern() {
+    let err = compile_err(
+        "\
+program T;
+begin
+  var R: Result of integer, string := Ok(1);
+  case R of
+    Some(V): Std.Console.WriteLn('bad');
+    Error(E): Std.Console.WriteLn('err')
+  end
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+    assert!(
+        err.message.contains("Result")
+            || err
+                .help
+                .as_deref()
+                .is_some_and(|help| help.contains("Result")),
+        "expected Result/Option variant mismatch, got: {err:?}"
+    );
+}
+
+#[test]
+fn case_destructure_on_simple_enum_rejected() {
+    let err = compile_err(
+        "\
+program T;
+type Color = enum Red; Green; Blue; end;
+begin
+  var C: Color := Color.Red;
+  case C of
+    Ok(V): Std.Console.WriteLn('bad')
+  else
+    Std.Console.WriteLn('ok')
+  end
+end.",
+    );
+    let msg = err.message.to_lowercase();
+    assert!(
+        msg.contains("result") || msg.contains("option") || msg.contains("destructure"),
+        "expected destructure-on-enum error, got: {}",
+        err.message
+    );
+}
+
 #[test]
 fn case_data_enum_rejects_wrong_literal_type_in_pattern() {
     let err = compile_err(

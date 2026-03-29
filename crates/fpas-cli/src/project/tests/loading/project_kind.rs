@@ -69,6 +69,76 @@ include = ["src/**/*.fpas"]
 }
 
 #[test]
+fn empty_project_kind_is_rejected() {
+    let dir = create_temp_dir("empty-kind");
+    let project_file = dir.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "app"
+kind = ""
+main = "src/main.fpas"
+
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+
+    let error = load_project(&project_file).expect_err("empty kind must fail");
+    fs::remove_dir_all(&dir).expect("temp directory must be removed");
+    assert!(
+        error.contains("Invalid `project.kind`"),
+        "expected invalid kind error, got: {error}"
+    );
+}
+
+#[test]
+fn whitespace_only_project_kind_is_rejected() {
+    let dir = create_temp_dir("whitespace-kind");
+    let project_file = dir.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "app"
+kind = "   "
+main = "src/main.fpas"
+
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+
+    let error = load_project(&project_file).expect_err("whitespace-only kind must fail");
+    fs::remove_dir_all(&dir).expect("temp directory must be removed");
+    assert!(
+        error.contains("Invalid `project.kind`"),
+        "expected invalid kind error, got: {error}"
+    );
+}
+
+#[test]
+fn library_without_sources_section_is_rejected() {
+    let dir = create_temp_dir("library-no-sources");
+    let project_file = dir.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "lib"
+kind = "library"
+"#,
+    );
+
+    let error = load_project(&project_file).expect_err("library without sources must fail");
+    fs::remove_dir_all(&dir).expect("temp directory must be removed");
+    assert!(
+        error.contains("Missing `[sources]` section"),
+        "expected missing sources error, got: {error}"
+    );
+}
+
+#[test]
 fn library_project_loads_without_main() {
     let dir = create_temp_dir("library-valid");
     let project_file = dir.join("app.fpasprj");

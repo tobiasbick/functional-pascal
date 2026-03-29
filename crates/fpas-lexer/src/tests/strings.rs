@@ -140,3 +140,30 @@ fn space_between_char_codes() {
         vec![Token::Str("A".into()), Token::Str("B".into())]
     );
 }
+
+// ── Edge Cases (02-basics.md) ───────────────────────────────────
+
+#[test]
+fn char_codes_only() {
+    // Multiple char codes concatenated without any quoted string
+    assert_eq!(toks("#65#66#67"), vec![Token::Str("ABC".into())]);
+}
+
+#[test]
+fn char_code_boundary_values() {
+    // #0 (null) and #255 (max) — both valid
+    assert_eq!(toks("#0"), vec![Token::Str("\0".into())]);
+    assert_eq!(toks("#255"), vec![Token::Str("\u{FF}".into())]);
+}
+
+#[test]
+fn string_with_only_escaped_apostrophes() {
+    // '''''' = two doubled apostrophes inside quotes = "''"
+    assert_eq!(toks("''''''"), vec![Token::Str("''".into())]);
+}
+
+#[test]
+fn empty_string_between_char_codes() {
+    // #65''#66 = char code, empty string, char code — all concatenated
+    assert_eq!(toks("#65''#66"), vec![Token::Str("AB".into())]);
+}

@@ -1,6 +1,6 @@
 /// Tests for generics: generic functions, records, and enums.
 ///
-/// **Documentation:** `docs/future/generics.md`
+/// **Documentation:** `docs/pascal/05-types.md`
 use super::*;
 
 mod aliases;

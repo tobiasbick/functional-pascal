@@ -89,6 +89,101 @@ end;
 }
 
 #[test]
+fn private_const_usable_within_same_unit() {
+    let cwd = create_temp_dir("vis-private-const-internal");
+    let project_file = cwd.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "app"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/*.fpas"]
+"#,
+    );
+    write_text(
+        &cwd.join("src/main.fpas"),
+        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetSecret())\nend.\n",
+    );
+    write_text(
+        &cwd.join("src/lib.fpas"),
+        "\
+unit App.Lib;
+
+private const
+  SecretVal: integer := 99;
+
+function GetSecret(): integer;
+begin
+  return SecretVal
+end;
+",
+    );
+
+    let (exit_code, stdout_output, stderr_output) =
+        support::run_cli_and_capture_output(&project_file, &cwd);
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 0, "stderr: {stderr_output}");
+    assert_eq!(stdout_output, "99\n");
+}
+
+#[test]
+fn private_function_not_callable_from_other_unit() {
+    let cwd = create_temp_dir("vis-private-cross-unit");
+    let project_file = cwd.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "app"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/*.fpas"]
+"#,
+    );
+    write_text(
+        &cwd.join("src/main.fpas"),
+        "program Main;\nuses App.Caller, Std.Console;\nbegin\n  WriteLn(TryCall())\nend.\n",
+    );
+    write_text(
+        &cwd.join("src/caller.fpas"),
+        "\
+unit App.Caller;
+uses App.Lib;
+
+function TryCall(): integer;
+begin
+  return Secret()
+end;
+",
+    );
+    write_text(
+        &cwd.join("src/lib.fpas"),
+        "\
+unit App.Lib;
+
+private function Secret(): integer;
+begin
+  return 42
+end;
+",
+    );
+
+    let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 1);
+    assert!(
+        stderr_output.contains("Secret"),
+        "error should mention the private symbol, got: {stderr_output}"
+    );
+}
+
+#[test]
 fn private_visibility_in_program_is_rejected() {
     let (exit_code, _, stderr_output) = support::run_source_and_capture_output(
         "private_program_visibility.fpas",

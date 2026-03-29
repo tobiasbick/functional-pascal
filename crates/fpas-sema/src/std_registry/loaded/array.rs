@@ -5,6 +5,7 @@ use fpas_std::std_symbols as s;
 
 pub(super) fn register_std_array(checker: &mut Checker) {
     let placeholder = Ty::Function(FunctionTy {
+        type_params: Vec::new(),
         params: vec![],
         return_type: Box::new(Ty::Error),
     });

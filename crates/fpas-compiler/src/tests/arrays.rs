@@ -150,3 +150,84 @@ end.",
         msg
     );
 }
+
+// ═══════════════════════════════════════════════════════════════
+// EDGE CASES — arrays of composite types
+// ═══════════════════════════════════════════════════════════════
+
+#[test]
+fn array_of_records() {
+    let out = compile_and_run(
+        "\
+program ArrRec;
+uses Std.Console;
+type Point = record X: integer; Y: integer; end;
+begin
+  var Pts: array of Point := [
+    record X := 1; Y := 2; end,
+    record X := 3; Y := 4; end
+  ];
+  WriteLn(Pts[0].X);
+  WriteLn(Pts[1].Y)
+end.",
+    );
+    assert_eq!(out.lines, vec!["1", "4"]);
+}
+
+#[test]
+fn array_of_enums() {
+    let out = compile_and_run(
+        "\
+program ArrEnum;
+uses Std.Console;
+type Color = enum Red; Green; Blue; end;
+begin
+  var Colors: array of Color := [Color.Red, Color.Blue, Color.Green];
+  if Colors[0] = Color.Red then
+    WriteLn('red')
+  else
+    WriteLn('other');
+  if Colors[1] = Color.Blue then
+    WriteLn('blue')
+  else
+    WriteLn('other')
+end.",
+    );
+    assert_eq!(out.lines, vec!["red", "blue"]);
+}
+
+#[test]
+fn array_of_enum_data_variants() {
+    let out = compile_and_run(
+        "\
+program ArrEnumData;
+uses Std.Console;
+type Shape = enum Circle(Radius: real); Dot; end;
+begin
+  var Shapes: array of Shape := [Shape.Circle(5.0), Shape.Dot, Shape.Circle(1.0)];
+  case Shapes[0] of
+    Shape.Circle(R): WriteLn(R);
+    Shape.Dot: WriteLn('dot')
+  end;
+  case Shapes[1] of
+    Shape.Circle(R): WriteLn(R);
+    Shape.Dot: WriteLn('dot')
+  end
+end.",
+    );
+    assert_eq!(out.lines, vec!["5", "dot"]);
+}
+
+#[test]
+fn push_on_immutable_array_is_rejected() {
+    let err = compile_err(
+        "\
+program PushImmut;
+uses Std.Array;
+begin
+  var A: array of integer := [1, 2];
+  Std.Array.Push(A, 3)
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_IMMUTABLE_ASSIGNMENT);
+}

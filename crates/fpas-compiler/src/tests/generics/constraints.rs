@@ -186,3 +186,241 @@ end.",
         err.message
     );
 }
+
+// ═══════════════════════════════════════════════════════════════
+// NEGATIVE — Comparable constraint with all valid types
+// ═══════════════════════════════════════════════════════════════
+
+#[test]
+fn constrained_comparable_with_boolean() {
+    let output = compile_and_run(
+        "\
+program T;
+uses Std.Console;
+type Ordered<T: Comparable> = record Value: T; end;
+begin
+  var O: Ordered of boolean := record Value := true; end;
+  WriteLn(O.Value)
+end.",
+    );
+    assert_eq!(output.lines, ["true"]);
+}
+
+#[test]
+fn constrained_comparable_with_char() {
+    let output = compile_and_run(
+        "\
+program T;
+uses Std.Console;
+type Ordered<T: Comparable> = record Value: T; end;
+begin
+  var O: Ordered of char := record Value := 'A'; end;
+  WriteLn(O.Value)
+end.",
+    );
+    assert_eq!(output.lines, ["A"]);
+}
+
+#[test]
+fn constrained_comparable_with_real() {
+    let output = compile_and_run(
+        "\
+program T;
+uses Std.Console;
+type Ordered<T: Comparable> = record Value: T; end;
+begin
+  var O: Ordered of real := record Value := 2.5; end;
+  WriteLn(O.Value)
+end.",
+    );
+    assert_eq!(output.lines, ["2.5"]);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NEGATIVE — Printable constraint violation with function type
+// ═══════════════════════════════════════════════════════════════
+
+#[test]
+fn constraint_violation_printable_with_function_type() {
+    let err = compile_err(
+        "\
+program T;
+type Show<T: Printable> = record Value: T; end;
+begin
+  var S: Show of function(X: integer): integer := record Value := Add; end
+end.",
+    );
+    assert!(
+        err.message.contains("constraint") || err.message.contains("Printable"),
+        "expected Printable constraint violation, got: {}",
+        err.message
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NEGATIVE — Numeric constraint with non-numeric types
+// ═══════════════════════════════════════════════════════════════
+
+#[test]
+fn constraint_violation_numeric_with_char() {
+    let err = compile_err(
+        "\
+program T;
+type NumBox<T: Numeric> = record Value: T; end;
+begin
+  var N: NumBox of char := record Value := 'A'; end
+end.",
+    );
+    assert!(
+        err.message.contains("constraint") || err.message.contains("Numeric"),
+        "expected Numeric constraint violation, got: {}",
+        err.message
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// POSITIVE — Constrained generic functions
+// ═══════════════════════════════════════════════════════════════
+
+#[test]
+fn constrained_generic_function_comparable() {
+    // Comparable constraint on a function: `=` works on generic T because the VM
+    // supports equality on all value types.
+    let output = compile_and_run(
+        "\
+program T;
+uses Std.Console;
+function IsEqual<T: Comparable>(A: T; B: T): boolean;
+begin
+  return A = B
+end;
+begin
+  WriteLn(IsEqual(42, 42));
+  WriteLn(IsEqual('a', 'b'))
+end.",
+    );
+    assert_eq!(output.lines, ["true", "false"]);
+}
+
+#[test]
+fn constrained_generic_function_numeric_arithmetic() {
+    // Numeric constraint allows arithmetic operators inside the function body.
+    let output = compile_and_run(
+        "\
+program T;
+uses Std.Console, Std.Conv;
+function Add<T: Numeric>(A: T; B: T): T;
+begin
+  return A + B
+end;
+begin
+  WriteLn(IntToStr(Add(3, 4)));
+  WriteLn(RealToStr(Add(1.5, 2.5)))
+end.",
+    );
+    assert_eq!(output.lines, ["7", "4"]);
+}
+
+#[test]
+fn constrained_generic_function_numeric_negate() {
+    let output = compile_and_run(
+        "\
+program T;
+uses Std.Console, Std.Conv;
+function Neg<T: Numeric>(X: T): T;
+begin
+  return -X
+end;
+begin
+  WriteLn(IntToStr(Neg(5)));
+  WriteLn(RealToStr(Neg(3.14)))
+end.",
+    );
+    assert_eq!(output.lines, ["-5", "-3.14"]);
+}
+
+#[test]
+fn constrained_generic_function_comparable_lt() {
+    // Comparable constraint allows `<` comparison in function body.
+    let output = compile_and_run(
+        "\
+program T;
+uses Std.Console;
+function IsLess<T: Comparable>(A: T; B: T): boolean;
+begin
+  return A < B
+end;
+begin
+  WriteLn(IsLess(1, 2));
+  WriteLn(IsLess(10, 5))
+end.",
+    );
+    assert_eq!(output.lines, ["true", "false"]);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NEGATIVE — Constraint violations at call sites
+// ═══════════════════════════════════════════════════════════════
+
+#[test]
+fn constrained_generic_function_violation_at_callsite() {
+    // Calling a `<T: Comparable>` function with an array (not Comparable).
+    let err = compile_err(
+        "\
+program T;
+function Compare<T: Comparable>(A: T; B: T): boolean;
+begin
+  return A = B
+end;
+begin
+  Compare([1], [2])
+end.",
+    );
+    assert!(
+        err.message.contains("constraint") || err.message.contains("Comparable"),
+        "expected constraint violation error, got: {}",
+        err.message
+    );
+}
+
+#[test]
+fn constrained_generic_function_numeric_violation_at_callsite() {
+    // Calling a `<T: Numeric>` function with a string (not Numeric).
+    let err = compile_err(
+        "\
+program T;
+function Add<T: Numeric>(A: T; B: T): T;
+begin
+  return A + B
+end;
+begin
+  Add('hello', 'world')
+end.",
+    );
+    assert!(
+        err.message.contains("constraint") || err.message.contains("Numeric"),
+        "expected Numeric constraint violation error, got: {}",
+        err.message
+    );
+}
+
+#[test]
+fn unconstrained_generic_function_no_arithmetic() {
+    // Without Numeric constraint, arithmetic should fail inside the body.
+    let err = compile_err(
+        "\
+program T;
+function Add<T>(A: T; B: T): T;
+begin
+  return A + B
+end;
+begin
+  Add(1, 2)
+end.",
+    );
+    assert!(
+        err.message.contains("numeric"),
+        "expected numeric operand error, got: {}",
+        err.message
+    );
+}

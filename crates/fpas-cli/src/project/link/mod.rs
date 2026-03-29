@@ -28,6 +28,11 @@ pub fn build_program(main_path: &Path, source_files: &[PathBuf]) -> Result<Progr
     let exports = collect_unit_exports(&reachable_unit_keys, &units)?;
     let all_symbols = collect_all_unit_symbols(&reachable_unit_keys, &units)?;
 
+    let canonical_units: std::collections::HashMap<String, Vec<String>> = units
+        .iter()
+        .map(|(key, uf)| (key.clone(), uf.unit.name.parts.clone()))
+        .collect();
+
     let mut std_uses = collect_std_uses(&main_program.uses);
     let mut merged_unit_decls = Vec::<Decl>::new();
 
@@ -53,6 +58,7 @@ pub fn build_program(main_path: &Path, source_files: &[PathBuf]) -> Result<Progr
             unit_file.path.to_string_lossy().into_owned(),
             &imports.resolved,
             &imports.ambiguous,
+            &canonical_units,
         );
         rewriter.rewrite_declarations(&mut declarations);
         rewriter.raise_first_error()?;
@@ -65,6 +71,7 @@ pub fn build_program(main_path: &Path, source_files: &[PathBuf]) -> Result<Progr
         main_path.to_string_lossy().into_owned(),
         &main_imports.resolved,
         &main_imports.ambiguous,
+        &canonical_units,
     );
     main_rewriter.rewrite_declarations(&mut main_program.declarations);
     main_rewriter.rewrite_statements(&mut main_program.body);

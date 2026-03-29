@@ -16,7 +16,7 @@ impl Checker {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
                         "Unary `-` requires a numeric operand",
-                        "Use integer or real values.",
+                        "Use integer or real values, or a generic type with Numeric constraint.",
                         span,
                     );
                     Ty::Error
@@ -60,7 +60,10 @@ impl Checker {
         match op {
             BinaryOp::Add | BinaryOp::Sub | BinaryOp::Mul | BinaryOp::RealDiv => {
                 if left.is_numeric() && right.is_numeric() {
-                    if *left == Ty::Real || *right == Ty::Real {
+                    // When both sides are GenericParam, return the left param type.
+                    if matches!(left, Ty::GenericParam(..)) {
+                        left.clone()
+                    } else if *left == Ty::Real || *right == Ty::Real {
                         Ty::Real
                     } else {
                         Ty::Integer
@@ -74,7 +77,7 @@ impl Checker {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
                         format!("Operator `{op:?}` requires numeric operands"),
-                        "Both sides must be integer or real.",
+                        "Both sides must be integer or real, or a generic type with Numeric constraint.",
                         span,
                     );
                     Ty::Error
@@ -124,7 +127,9 @@ impl Checker {
             }
 
             BinaryOp::Lt | BinaryOp::Gt | BinaryOp::LtEq | BinaryOp::GtEq => {
-                if (left.is_ordinal() && right.is_ordinal() && left.compatible_with(right))
+                if left.is_comparable() && right.is_comparable() && left.compatible_with(right) {
+                    Ty::Boolean
+                } else if (left.is_ordinal() && right.is_ordinal() && left.compatible_with(right))
                     || (left.is_numeric() && right.is_numeric())
                     || (*left == Ty::String && *right == Ty::String)
                 {

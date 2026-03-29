@@ -84,6 +84,7 @@ impl Checker {
                     }
 
                     let function_ty = FunctionTy {
+                        type_params: Vec::new(),
                         params: params.clone(),
                         return_type: Box::new(return_ty.clone()),
                     };
@@ -127,6 +128,7 @@ impl Checker {
                     }
 
                     let procedure_ty = ProcedureTy {
+                        type_params: Vec::new(),
                         variadic: false,
                         params: params.clone(),
                     };

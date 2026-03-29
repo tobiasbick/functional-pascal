@@ -115,3 +115,72 @@ end.",
     );
     assert_eq!(err.code, fpas_diagnostics::codes::SEMA_UNKNOWN_TYPE);
 }
+
+#[test]
+fn type_alias_array() {
+    let out = compile_and_run(
+        "\
+program AliasArr;
+uses Std.Console, Std.Array, Std.Conv;
+type IntList = array of integer;
+begin
+  var L: IntList := [10, 20, 30];
+  WriteLn(IntToStr(Std.Array.Length(L)));
+  WriteLn(L[1])
+end.",
+    );
+    assert_eq!(out.lines, vec!["3", "20"]);
+}
+
+#[test]
+fn type_alias_record() {
+    let out = compile_and_run(
+        "\
+program AliasRec;
+uses Std.Console;
+type Coord = record X: integer; Y: integer; end;
+type Position = Coord;
+begin
+  var P: Position := record X := 5; Y := 10; end;
+  WriteLn(P.X);
+  WriteLn(P.Y)
+end.",
+    );
+    assert_eq!(out.lines, vec!["5", "10"]);
+}
+
+#[test]
+fn type_alias_chain() {
+    let out = compile_and_run(
+        "\
+program AliasChain;
+uses Std.Console;
+type Base = integer;
+type Middle = Base;
+type Top = Middle;
+begin
+  var X: Top := 42;
+  WriteLn(X)
+end.",
+    );
+    assert_eq!(out.lines, vec!["42"]);
+}
+
+#[test]
+fn multiple_type_block_declarations() {
+    let out = compile_and_run(
+        "\
+program MultiType;
+uses Std.Console;
+type
+  UserId = integer;
+  UserName = string;
+begin
+  var Id: UserId := 1;
+  var Name: UserName := 'Alice';
+  WriteLn(Id);
+  WriteLn(Name)
+end.",
+    );
+    assert_eq!(out.lines, vec!["1", "Alice"]);
+}

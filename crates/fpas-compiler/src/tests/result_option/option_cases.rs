@@ -102,3 +102,81 @@ end.",
     );
     assert_eq!(out.lines, vec!["no"]);
 }
+
+// ── Edge cases ──────────────────────────────────────────────────────────
+
+#[test]
+fn option_of_real() {
+    let out = compile_and_run(
+        "program T;
+var O: Option of real := Some(3.14);
+begin
+  case O of
+    Some(V): Std.Console.WriteLn(V);
+    None:    Std.Console.WriteLn('none')
+  end
+end.",
+    );
+    assert_eq!(out.lines, vec!["3.14"]);
+}
+
+#[test]
+fn option_in_for_loop() {
+    let out = compile_and_run(
+        "program T;
+function MaybeEven(X: integer): Option of integer;
+begin
+  if X mod 2 = 0 then return Some(X)
+  else return None
+end;
+begin
+  for I: integer := 1 to 4 do
+  begin
+    case MaybeEven(I) of
+      Some(V): Std.Console.WriteLn(V);
+      None:    Std.Console.WriteLn('odd')
+    end
+  end
+end.",
+    );
+    assert_eq!(out.lines, vec!["odd", "2", "odd", "4"]);
+}
+
+#[test]
+fn option_in_while_loop() {
+    let out = compile_and_run(
+        "program T;
+function Half(X: integer): Option of integer;
+begin
+  if X mod 2 = 0 then return Some(X div 2)
+  else return None
+end;
+mutable var N: integer := 16;
+begin
+  while Std.Option.IsSome(Half(N)) do
+  begin
+    N := Std.Option.Unwrap(Half(N));
+    Std.Console.WriteLn(N)
+  end
+end.",
+    );
+    assert_eq!(out.lines, vec!["8", "4", "2", "1"]);
+}
+
+#[test]
+fn option_none_as_function_return() {
+    let out = compile_and_run(
+        "program T;
+function AlwaysNone(): Option of string;
+begin
+  return None
+end;
+begin
+  case AlwaysNone() of
+    Some(S): Std.Console.WriteLn(S);
+    None:    Std.Console.WriteLn('nothing')
+  end
+end.",
+    );
+    assert_eq!(out.lines, vec!["nothing"]);
+}

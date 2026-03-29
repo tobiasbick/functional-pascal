@@ -301,3 +301,303 @@ fn mutable_param() {
          begin end.",
     );
 }
+
+// ── Generics (sema-level) ──────────────────────────────────
+
+#[test]
+fn generic_record_valid() {
+    check_ok(
+        "program T; \
+         type Box<T> = record Value: T; end; \
+         var B: Box of integer := record Value := 42; end; \
+         begin end.",
+    );
+}
+
+#[test]
+fn generic_record_multiple_params_valid() {
+    check_ok(
+        "program T; \
+         type Pair<A, B> = record First: A; Second: B; end; \
+         var P: Pair of integer, string := record First := 1; Second := 'hi'; end; \
+         begin end.",
+    );
+}
+
+#[test]
+fn generic_enum_valid() {
+    check_ok(
+        "program T; \
+         type Maybe<T> = enum Just(Value: T); Nothing; end; \
+         var M: Maybe of integer := Maybe.Just(42); \
+         begin end.",
+    );
+}
+
+#[test]
+fn generic_type_alias_valid() {
+    check_ok(
+        "program T; \
+         type Box<T> = record Value: T; end; \
+         type IntBox = Box of integer; \
+         var B: IntBox := record Value := 7; end; \
+         begin end.",
+    );
+}
+
+#[test]
+fn generic_function_valid() {
+    check_ok(
+        "program T; \
+         function Identity<T>(Value: T): T; \
+         begin return Value end; \
+         var X: integer := Identity(42); \
+         begin end.",
+    );
+}
+
+#[test]
+fn generic_procedure_valid() {
+    check_ok(
+        "program T; uses Std.Console; \
+         procedure Print<T>(Value: T); \
+         begin WriteLn(Value) end; \
+         begin Print(42) end.",
+    );
+}
+
+// ── Constraints (sema-level) ───────────────────────────────
+
+#[test]
+fn constraint_comparable_valid() {
+    check_ok(
+        "program T; \
+         type Ordered<T: Comparable> = record Value: T; end; \
+         var O: Ordered of integer := record Value := 1; end; \
+         begin end.",
+    );
+}
+
+#[test]
+fn constraint_numeric_valid() {
+    check_ok(
+        "program T; \
+         type NumBox<T: Numeric> = record Value: T; end; \
+         var N: NumBox of real := record Value := 3.14; end; \
+         begin end.",
+    );
+}
+
+#[test]
+fn constraint_printable_valid() {
+    check_ok(
+        "program T; \
+         type Wrapper<T: Printable> = record Inner: T; end; \
+         var W: Wrapper of string := record Inner := 'hi'; end; \
+         begin end.",
+    );
+}
+
+#[test]
+fn constraint_mixed_valid() {
+    check_ok(
+        "program T; \
+         type Entry<K: Comparable, V> = record Key: K; Value: V; end; \
+         var E: Entry of string, integer := record Key := 'x'; Value := 42; end; \
+         begin end.",
+    );
+}
+
+#[test]
+fn constraint_violation_numeric_with_string() {
+    let errors = check_errors(
+        "program T; \
+         type NumBox<T: Numeric> = record Value: T; end; \
+         var N: NumBox of string := record Value := 'oops'; end; \
+         begin end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.code == fpas_diagnostics::codes::SEMA_CONSTRAINT_VIOLATION),
+        "expected SEMA_CONSTRAINT_VIOLATION, got: {errors:#?}"
+    );
+}
+
+#[test]
+fn constraint_violation_comparable_with_array() {
+    let errors = check_errors(
+        "program T; \
+         type Sorted<T: Comparable> = record Value: T; end; \
+         var S: Sorted of array of integer := record Value := [1]; end; \
+         begin end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.code == fpas_diagnostics::codes::SEMA_CONSTRAINT_VIOLATION),
+        "expected SEMA_CONSTRAINT_VIOLATION, got: {errors:#?}"
+    );
+}
+
+#[test]
+fn unknown_constraint_name() {
+    let errors = check_errors(
+        "program T; \
+         type Box<T: Sortable> = record Value: T; end; \
+         begin end.",
+    );
+    assert!(
+        !errors.is_empty(),
+        "expected error for unknown constraint 'Sortable'"
+    );
+}
+
+#[test]
+fn generic_wrong_type_arg_count() {
+    let errors = check_errors(
+        "program T; \
+         type Box<T> = record Value: T; end; \
+         var B: Box of integer, string := record Value := 1; end; \
+         begin end.",
+    );
+    assert!(
+        !errors.is_empty(),
+        "expected error for wrong type argument count"
+    );
+}
+
+// ── Type Aliases (sema-level) ──────────────────────────────
+
+#[test]
+fn type_alias_scalar_valid() {
+    check_ok(
+        "program T; \
+         type UserId = integer; \
+         var Id: UserId := 42; \
+         begin end.",
+    );
+}
+
+#[test]
+fn type_alias_to_unknown_type() {
+    let errors = check_errors(
+        "program T; \
+         type Foo = Nonexistent; \
+         begin end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.code == fpas_diagnostics::codes::SEMA_UNKNOWN_TYPE),
+        "expected SEMA_UNKNOWN_TYPE, got: {errors:#?}"
+    );
+}
+
+#[test]
+fn record_method_valid() {
+    check_ok(
+        "program T; uses Std.Console; \
+         type Point = record \
+           X: integer; Y: integer; \
+           function Sum(Self: Point): integer; \
+           begin return Self.X + Self.Y end; \
+         end; \
+         begin \
+           var P: Point := record X := 3; Y := 7; end; \
+           WriteLn(P.Sum()) \
+         end.",
+    );
+}
+
+#[test]
+fn constrained_enum_valid() {
+    check_ok(
+        "program T; \
+         type Maybe<T: Comparable> = enum Just(Value: T); Nothing; end; \
+         var M: Maybe of string := Maybe.Just('hi'); \
+         begin end.",
+    );
+}
+
+// ── Constraint-aware operators in generic function bodies ───
+
+#[test]
+fn generic_function_numeric_constraint_allows_arithmetic() {
+    check_ok(
+        "program T; \
+         function Add<T: Numeric>(A: T; B: T): T; \
+         begin return A + B end; \
+         begin Add(1, 2) end.",
+    );
+}
+
+#[test]
+fn generic_function_numeric_constraint_allows_negate() {
+    check_ok(
+        "program T; \
+         function Neg<T: Numeric>(X: T): T; \
+         begin return -X end; \
+         begin Neg(5) end.",
+    );
+}
+
+#[test]
+fn generic_function_comparable_constraint_allows_lt() {
+    check_ok(
+        "program T; \
+         function IsLess<T: Comparable>(A: T; B: T): boolean; \
+         begin return A < B end; \
+         begin IsLess(1, 2) end.",
+    );
+}
+
+#[test]
+fn generic_function_unconstrained_rejects_arithmetic() {
+    let errors = check_errors(
+        "program T; \
+         function Add<T>(A: T; B: T): T; \
+         begin return A + B end; \
+         begin Add(1, 2) end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.code == fpas_diagnostics::codes::SEMA_TYPE_MISMATCH),
+        "expected SEMA_TYPE_MISMATCH for arithmetic on unconstrained T, got: {errors:#?}"
+    );
+}
+
+// ── Constraint validation at function call sites ───────────
+
+#[test]
+fn generic_function_constraint_violation_at_call_site() {
+    let errors = check_errors(
+        "program T; \
+         function Compare<T: Comparable>(A: T; B: T): boolean; \
+         begin return A = B end; \
+         begin Compare([1], [2]) end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.code == fpas_diagnostics::codes::SEMA_CONSTRAINT_VIOLATION),
+        "expected SEMA_CONSTRAINT_VIOLATION at call site, got: {errors:#?}"
+    );
+}
+
+#[test]
+fn generic_function_numeric_violation_at_call_site() {
+    let errors = check_errors(
+        "program T; \
+         function Add<T: Numeric>(A: T; B: T): T; \
+         begin return A + B end; \
+         begin Add('a', 'b') end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.code == fpas_diagnostics::codes::SEMA_CONSTRAINT_VIOLATION),
+        "expected SEMA_CONSTRAINT_VIOLATION at call site, got: {errors:#?}"
+    );
+}

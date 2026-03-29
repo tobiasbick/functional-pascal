@@ -66,3 +66,51 @@ end.",
         _ => panic!("expected return go expression"),
     }
 }
+
+#[test]
+fn select_parses_multiple_arms_different_types() {
+    let stmts = body_stmts(
+        "program T; begin select case Msg: string from Ch1: WriteLn(Msg); case Num: integer from Ch2: WriteLn(Num); end end.",
+    );
+
+    match &stmts[0] {
+        Stmt::Select {
+            arms, default_body, ..
+        } => {
+            assert_eq!(arms.len(), 2);
+            assert_eq!(arms[0].binding, "Msg");
+            assert_eq!(arms[1].binding, "Num");
+            assert!(default_body.is_none());
+        }
+        _ => panic!("expected Select statement"),
+    }
+}
+
+#[test]
+fn select_parses_default_only() {
+    let stmts = body_stmts("program T; begin select default: WriteLn('idle') end end.");
+
+    match &stmts[0] {
+        Stmt::Select {
+            arms, default_body, ..
+        } => {
+            assert!(arms.is_empty());
+            assert!(default_body.is_some());
+        }
+        _ => panic!("expected Select statement"),
+    }
+}
+
+#[test]
+fn go_as_expression_in_var_decl() {
+    let stmts = body_stmts(
+        "program T; function Work(): integer; begin return 1 end; begin var T: task := go Work() end.",
+    );
+
+    match &stmts[0] {
+        Stmt::Var(def) => {
+            assert!(matches!(def.value, Expr::Go(_, _)));
+        }
+        _ => panic!("expected var with go expression, got {:?}", stmts[0]),
+    }
+}

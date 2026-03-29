@@ -34,6 +34,7 @@ impl Checker {
                     .collect();
                 let return_ty = self.resolve_type_expr(return_type);
                 Ty::Function(FunctionTy {
+                    type_params: Vec::new(),
                     params: param_tys,
                     return_type: Box::new(return_ty),
                 })
@@ -48,6 +49,7 @@ impl Checker {
                     })
                     .collect();
                 Ty::Procedure(ProcedureTy {
+                    type_params: Vec::new(),
                     params: param_tys,
                     variadic: false,
                 })

@@ -76,10 +76,15 @@ impl Checker {
     }
 
     /// Check that each concrete type argument satisfies its parameter's constraint.
-    fn validate_constraints(&mut self, type_params: &[GenericParamDef], args: &[Ty], span: Span) {
+    pub(crate) fn validate_constraints(
+        &mut self,
+        type_params: &[GenericParamDef],
+        args: &[Ty],
+        span: Span,
+    ) {
         for (param, arg) in type_params.iter().zip(args.iter()) {
             // Skip validation for error types and unresolved generic params.
-            if arg.is_error() || matches!(arg, Ty::GenericParam(_)) {
+            if arg.is_error() || matches!(arg, Ty::GenericParam(..)) {
                 continue;
             }
             if let Some(constraint) = param.constraint
@@ -143,7 +148,7 @@ impl Checker {
     /// Replace `GenericParam("T")` with concrete types based on the mapping.
     fn substitute_type_params(ty: &Ty, mapping: &[(&str, &Ty)]) -> Ty {
         match ty {
-            Ty::GenericParam(name) => {
+            Ty::GenericParam(name, _) => {
                 Self::lookup_type_param(name, mapping).unwrap_or_else(|| ty.clone())
             }
             Ty::Array(inner) => Ty::Array(Box::new(Self::substitute_type_params(inner, mapping))),

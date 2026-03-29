@@ -61,6 +61,34 @@ include = ["src/*.fpas"]
 }
 
 #[test]
+fn glob_matching_only_main_file_yields_empty_sources() {
+    let dir = create_temp_dir("glob-only-main");
+    let project_file = dir.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "app"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/*.fpas"]
+"#,
+    );
+    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+
+    let loaded = load_project(&project_file).expect("project should load");
+    fs::remove_dir_all(&dir).expect("temp directory must be removed");
+
+    assert!(
+        loaded.source_files.is_empty(),
+        "only main was matched, so no sources remain"
+    );
+    assert!(loaded.main.is_some());
+    assert!(loaded.warnings.is_empty());
+}
+
+#[test]
 fn source_program_file_is_skipped_with_warning() {
     let dir = create_temp_dir("skip-source-program");
     let project_file = dir.join("app.fpasprj");

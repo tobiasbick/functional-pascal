@@ -193,6 +193,154 @@ include = ["src/*.fpas"]
 }
 
 #[test]
+fn whitespace_only_name_is_rejected() {
+    let dir = create_temp_dir("whitespace-name");
+    let project_file = dir.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "   "
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+
+    let error = load_project(&project_file).expect_err("whitespace-only name must fail");
+    fs::remove_dir_all(&dir).expect("temp directory must be removed");
+    assert!(
+        error.contains("`project.name` must be a non-empty string"),
+        "expected non-empty name error, got: {error}"
+    );
+}
+
+#[test]
+fn whitespace_only_version_is_rejected() {
+    let dir = create_temp_dir("whitespace-version");
+    let project_file = dir.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "app"
+version = "   "
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+
+    let error = load_project(&project_file).expect_err("whitespace-only version must fail");
+    fs::remove_dir_all(&dir).expect("temp directory must be removed");
+    assert!(
+        error.contains("`project.version` must be a non-empty string"),
+        "expected non-empty version error, got: {error}"
+    );
+}
+
+#[test]
+fn missing_project_name_is_rejected() {
+    let dir = create_temp_dir("missing-name");
+    let project_file = dir.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+
+    let error = load_project(&project_file).expect_err("missing name must fail");
+    fs::remove_dir_all(&dir).expect("temp directory must be removed");
+    assert!(
+        error.contains("Invalid project file"),
+        "expected TOML parse error for missing name, got: {error}"
+    );
+}
+
+#[test]
+fn empty_main_path_is_rejected() {
+    let dir = create_temp_dir("empty-main");
+    let project_file = dir.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "app"
+kind = "program"
+main = ""
+
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    write_text(&dir.join("src/util.fpas"), "unit App.Util;");
+
+    let error = load_project(&project_file).expect_err("empty main path must fail");
+    fs::remove_dir_all(&dir).expect("temp directory must be removed");
+    assert!(
+        error.contains("`project.main` must be a non-empty string"),
+        "expected non-empty main error, got: {error}"
+    );
+}
+
+#[test]
+fn whitespace_only_main_path_is_rejected() {
+    let dir = create_temp_dir("whitespace-main");
+    let project_file = dir.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "app"
+kind = "program"
+main = "   "
+
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    write_text(&dir.join("src/util.fpas"), "unit App.Util;");
+
+    let error = load_project(&project_file).expect_err("whitespace-only main path must fail");
+    fs::remove_dir_all(&dir).expect("temp directory must be removed");
+    assert!(
+        error.contains("`project.main` must be a non-empty string"),
+        "expected non-empty main error, got: {error}"
+    );
+}
+
+#[test]
+fn freeform_version_string_is_accepted() {
+    let dir = create_temp_dir("freeform-version");
+    let project_file = dir.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "app"
+version = "v2.1.0-beta+build.42"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+
+    let loaded = load_project(&project_file).expect("freeform version should be accepted");
+    fs::remove_dir_all(&dir).expect("temp directory must be removed");
+    assert_eq!(loaded.kind, ProjectKind::Program);
+}
+
+#[test]
 fn reserved_std_root_is_rejected_for_source_units() {
     let dir = create_temp_dir("reserved-std-root");
     let project_file = dir.join("app.fpasprj");

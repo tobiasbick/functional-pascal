@@ -9,6 +9,7 @@ use fpas_std::std_symbols as s;
 
 pub fn register_std_channel(c: &mut Checker) {
     let placeholder = Ty::Function(FunctionTy {
+        type_params: Vec::new(),
         params: vec![],
         return_type: Box::new(Ty::Error),
     });
@@ -27,6 +28,7 @@ pub fn register_std_channel(c: &mut Checker) {
 
 pub fn register_std_task(c: &mut Checker) {
     let placeholder = Ty::Function(FunctionTy {
+        type_params: Vec::new(),
         params: vec![],
         return_type: Box::new(Ty::Error),
     });

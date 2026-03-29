@@ -16,6 +16,8 @@ impl Compiler {
         let (lt, rt) = operand_types;
         if matches!((lt, rt), (Ty::String | Ty::Char, Ty::String | Ty::Char)) {
             self.emit_string_binary(left, right, operand_types, Op::ConcatStr, location)
+        } else if is_generic_param(lt) || is_generic_param(rt) {
+            self.compile_direct_binary(Op::AddDyn, left, right, location)
         } else if lt.is_numeric() && rt.is_numeric() {
             self.emit_numeric_binary(
                 Op::AddInt,
@@ -38,6 +40,15 @@ impl Compiler {
         operand_types: (&Ty, &Ty),
         location: SourceLocation,
     ) -> Result<(), CompileError> {
+        let (lt, rt) = operand_types;
+        if is_generic_param(lt) || is_generic_param(rt) {
+            let dyn_op = match op {
+                BinaryOp::Sub => Op::SubDyn,
+                BinaryOp::Mul => Op::MulDyn,
+                _ => unreachable!("only subtraction and multiplication reach this helper"),
+            };
+            return self.compile_direct_binary(dyn_op, left, right, location);
+        }
         let (int_op, real_op) = match op {
             BinaryOp::Sub => (Op::SubInt, Op::SubReal),
             BinaryOp::Mul => (Op::MulInt, Op::MulReal),
@@ -54,6 +65,9 @@ impl Compiler {
         location: SourceLocation,
     ) -> Result<(), CompileError> {
         let (lt, rt) = operand_types;
+        if is_generic_param(lt) || is_generic_param(rt) {
+            return self.compile_direct_binary(Op::DivDyn, left, right, location);
+        }
         self.compile_expr(left)?;
         self.maybe_int_to_real_for_ty(lt, location);
         self.compile_expr(right)?;
@@ -74,4 +88,8 @@ impl Compiler {
         self.emit(op, location);
         Ok(())
     }
+}
+
+fn is_generic_param(ty: &Ty) -> bool {
+    matches!(ty, Ty::GenericParam(..))
 }

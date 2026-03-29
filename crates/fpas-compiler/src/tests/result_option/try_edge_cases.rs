@@ -401,3 +401,112 @@ end.",
         "expected procedure-specific diagnostic, got: {err:?}"
     );
 }
+
+// ── Try in program main block ───────────────────────────────────────────
+
+#[test]
+fn try_result_in_program_main_block_is_compile_error() {
+    let err = compile_err(
+        "program T;
+function GetVal(): Result of integer, string;
+begin
+  return Ok(42)
+end;
+begin
+  var X: integer := try GetVal()
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+}
+
+#[test]
+fn try_option_in_program_main_block_is_compile_error() {
+    let err = compile_err(
+        "program T;
+function MaybeVal(): Option of integer;
+begin
+  return Some(7)
+end;
+begin
+  var X: integer := try MaybeVal()
+end.",
+    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+}
+
+// ── Nested try expressions ──────────────────────────────────────────────
+
+#[test]
+fn try_nested_in_function_call() {
+    let out = compile_and_run(
+        "program T;
+function GetDivisor(): Result of integer, string;
+begin
+  return Ok(2)
+end;
+function GetDividend(): Result of integer, string;
+begin
+  return Ok(10)
+end;
+function Compute(): Result of integer, string;
+begin
+  return Ok(try GetDividend() div try GetDivisor())
+end;
+begin
+  Std.Console.WriteLn(Std.Result.Unwrap(Compute()))
+end.",
+    );
+    assert_eq!(out.lines, vec!["5"]);
+}
+
+#[test]
+fn try_nested_first_fails() {
+    let out = compile_and_run(
+        "program T;
+function GetDivisor(): Result of integer, string;
+begin
+  return Ok(2)
+end;
+function GetDividend(): Result of integer, string;
+begin
+  return Error('no dividend')
+end;
+function Compute(): Result of integer, string;
+begin
+  return Ok(try GetDividend() div try GetDivisor())
+end;
+begin
+  case Compute() of
+    Ok(V):    Std.Console.WriteLn(V);
+    Error(E): Std.Console.WriteLn(E)
+  end
+end.",
+    );
+    assert_eq!(out.lines, vec!["no dividend"]);
+}
+
+#[test]
+fn try_nested_second_fails() {
+    let out = compile_and_run(
+        "program T;
+function GetDivisor(): Result of integer, string;
+begin
+  return Error('no divisor')
+end;
+function GetDividend(): Result of integer, string;
+begin
+  return Ok(10)
+end;
+function Compute(): Result of integer, string;
+begin
+  return Ok(try GetDividend() div try GetDivisor())
+end;
+begin
+  case Compute() of
+    Ok(V):    Std.Console.WriteLn(V);
+    Error(E): Std.Console.WriteLn(E)
+  end
+end.",
+    );
+    assert_eq!(out.lines, vec!["no divisor"]);
+}

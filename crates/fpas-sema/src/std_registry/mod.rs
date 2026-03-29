@@ -29,6 +29,7 @@ fn define_func(c: &mut Checker, q: &str, params: Vec<ParamTy>, ret: Ty) {
         q,
         Symbol {
             ty: Ty::Function(FunctionTy {
+                type_params: Vec::new(),
                 params,
                 return_type: Box::new(ret),
             }),
@@ -43,6 +44,7 @@ fn define_proc_variadic(c: &mut Checker, q: &str) {
         q,
         Symbol {
             ty: Ty::Procedure(ProcedureTy {
+                type_params: Vec::new(),
                 params: vec![],
                 variadic: true,
             }),
@@ -57,6 +59,7 @@ fn define_proc(c: &mut Checker, q: &str, params: Vec<ParamTy>) {
         q,
         Symbol {
             ty: Ty::Procedure(ProcedureTy {
+                type_params: Vec::new(),
                 params,
                 variadic: false,
             }),

@@ -86,8 +86,9 @@ pub enum Ty {
     Result(Box<Ty>, Box<Ty>),
     /// `Option of T`.
     Option(Box<Ty>),
-    /// A generic type parameter (e.g. `T` in `function Identity<T>`).
-    GenericParam(std::string::String),
+    /// A generic type parameter (e.g. `T` in `function Identity<T>`),
+    /// optionally carrying its constraint for operator checking inside generic bodies.
+    GenericParam(std::string::String, Option<TypeConstraint>),
     /// `channel of T` — typed channel for concurrent communication.
     ///
     /// **Documentation:** `docs/pascal/08-concurrency.md`
@@ -152,12 +153,14 @@ impl EnumTy {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FunctionTy {
+    pub type_params: Vec<GenericParamDef>,
     pub params: Vec<ParamTy>,
     pub return_type: Box<Ty>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProcedureTy {
+    pub type_params: Vec<GenericParamDef>,
     pub params: Vec<ParamTy>,
     /// Accept any number of arguments at the call site (e.g. `Std.Console.WriteLn`).
     pub variadic: bool,
@@ -183,7 +186,7 @@ impl Ty {
         }
         match (self, other) {
             // GenericParam is compatible with anything (erased at runtime).
-            (Ty::GenericParam(_), _) | (_, Ty::GenericParam(_)) => true,
+            (Ty::GenericParam(..), _) | (_, Ty::GenericParam(..)) => true,
             // Named type matches the concrete type with the same name (recursive enums).
             (Ty::Named(n), Ty::Enum(e)) | (Ty::Enum(e), Ty::Named(n)) => {
                 n.eq_ignore_ascii_case(&e.name)
@@ -215,9 +218,23 @@ impl Ty {
         }
     }
 
-    /// True for numeric types (integer, real).
+    /// True for numeric types (integer, real), or a generic param with Numeric constraint.
     pub fn is_numeric(&self) -> bool {
-        matches!(self, Ty::Integer | Ty::Real)
+        match self {
+            Ty::Integer | Ty::Real => true,
+            Ty::GenericParam(_, Some(TypeConstraint::Numeric)) => true,
+            _ => false,
+        }
+    }
+
+    /// True for types that satisfy the Comparable constraint, including generic
+    /// params with Comparable (or Numeric, since Numeric ⊂ Comparable).
+    pub fn is_comparable(&self) -> bool {
+        match self {
+            Ty::Integer | Ty::Real | Ty::Boolean | Ty::Char | Ty::String => true,
+            Ty::GenericParam(_, Some(TypeConstraint::Comparable | TypeConstraint::Numeric)) => true,
+            _ => false,
+        }
     }
 
     /// True for ordinal types (integer, boolean, char, simple enum without data).

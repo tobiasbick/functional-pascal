@@ -221,30 +221,14 @@ fn minmax_value(
         } else {
             Value::Real(x.max(*y))
         }),
-        (Value::Integer(x), Value::Real(y)) => {
-            let xr = *x as f64;
-            Ok(if min {
-                Value::Real(xr.min(*y))
-            } else {
-                Value::Real(xr.max(*y))
-            })
-        }
-        (Value::Real(x), Value::Integer(y)) => {
-            let yr = *y as f64;
-            Ok(if min {
-                Value::Real(x.min(yr))
-            } else {
-                Value::Real(x.max(yr))
-            })
-        }
         _ => Err(std_runtime_error(
             RUNTIME_INTRINSIC_STACK_STATE_ERROR,
             format!(
-                "Min/Max expects two integers or two reals (or mixed int/real), got {} and {}",
+                "Min/Max expects two integers or two reals, got {} and {}",
                 a.type_name(),
                 b.type_name()
             ),
-            "Pass numeric values to Std.Math.Min/Std.Math.Max.",
+            "Both arguments must be the same numeric kind.",
             location,
         )),
     }
@@ -281,25 +265,16 @@ fn clamp_value(
         ensure_valid_clamp_bounds(*a, *b, location)?;
         return Ok(Value::Integer((*v).clamp(*a, *b)));
     }
-
-    let v = numeric_as_real(x, location)?;
-    let a = numeric_as_real(lo, location)?;
-    let b = numeric_as_real(hi, location)?;
-    ensure_valid_clamp_bounds(a, b, location)?;
-    Ok(Value::Real(v.clamp(a, b)))
-}
-
-fn numeric_as_real(value: Value, location: SourceLocation) -> Result<f64, StdError> {
-    match value {
-        Value::Integer(n) => Ok(n as f64),
-        Value::Real(n) => Ok(n),
-        _ => Err(std_runtime_error(
-            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-            "Clamp expects numeric arguments (integer or real)",
-            "Pass numeric values to Std.Math.Clamp(X, Lo, Hi).",
-            location,
-        )),
+    if let (Value::Real(v), Value::Real(a), Value::Real(b)) = (&x, &lo, &hi) {
+        ensure_valid_clamp_bounds(*a, *b, location)?;
+        return Ok(Value::Real(v.clamp(*a, *b)));
     }
+    Err(std_runtime_error(
+        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+        "Clamp expects all three arguments to be the same numeric kind",
+        "All arguments must be integer or all must be real.",
+        location,
+    ))
 }
 
 fn ensure_valid_clamp_bounds<T>(lo: T, hi: T, location: SourceLocation) -> Result<(), StdError>

@@ -75,7 +75,15 @@ fn check_min_max(c: &mut Checker, name: &str, args: &[Expr], span: Span) -> Ty {
     match (&left_ty, &right_ty) {
         (Ty::Integer, Ty::Integer) => Ty::Integer,
         (Ty::Real, Ty::Real) => Ty::Real,
-        _ => Ty::Real,
+        _ => {
+            c.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                format!("`{name}` requires both arguments to be the same numeric kind (both integer or both real)"),
+                "Use explicit conversion, for example `IntToReal(N)`, to match types.",
+                span,
+            );
+            Ty::Error
+        }
     }
 }
 
@@ -135,6 +143,18 @@ fn check_clamp(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     }
     match (&x_ty, &lo_ty, &hi_ty) {
         (Ty::Integer, Ty::Integer, Ty::Integer) => Ty::Integer,
-        _ => Ty::Real,
+        (Ty::Real, Ty::Real, Ty::Real) => Ty::Real,
+        _ => {
+            c.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                format!(
+                    "`{}` requires all three arguments to be the same numeric kind (all integer or all real)",
+                    s::STD_MATH_CLAMP
+                ),
+                "Use explicit conversion, for example `IntToReal(N)`, to match types.",
+                span,
+            );
+            Ty::Error
+        }
     }
 }

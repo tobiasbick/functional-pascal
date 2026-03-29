@@ -449,3 +449,57 @@ end.
     let (exit_code, _stdout, _stderr) = support::run_source_and_capture_output("t.fpas", source);
     assert_ne!(exit_code, 0);
 }
+
+// ---------------------------------------------------------------------------
+// IntToHex — negative number
+// ---------------------------------------------------------------------------
+
+#[test]
+fn int_to_hex_negative() {
+    let source = r#"program T;
+uses Std.Console, Std.Conv;
+begin
+  WriteLn(IntToHex(-255, 2))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "-FF\n");
+}
+
+// ---------------------------------------------------------------------------
+// HexToInt — uppercase 0X prefix
+// ---------------------------------------------------------------------------
+
+#[test]
+fn hex_to_int_uppercase_0x_prefix() {
+    let source = r#"program T;
+uses Std.Console, Std.Conv;
+begin
+  WriteLn(HexToInt('0XFF'))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "255\n");
+}
+
+// ---------------------------------------------------------------------------
+// StrToReal — whitespace trimming
+// ---------------------------------------------------------------------------
+
+#[test]
+fn str_to_real_with_whitespace() {
+    let source = r#"program T;
+uses Std.Console, Std.Conv;
+begin
+  WriteLn(StrToReal('  3.14  '))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "3.14\n");
+}

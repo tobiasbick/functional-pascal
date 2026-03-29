@@ -866,24 +866,72 @@ end.
 }
 
 #[test]
-fn clamp_mixed_numeric_forms() {
+fn clamp_mixed_types_is_compile_error() {
     let source = r#"program T;
 uses Std.Console, Std.Math;
 begin
-  var A: real := Clamp(5, 0, 10.0);
-  var B: real := Clamp(5, 0.0, 10);
-  var C: real := Clamp(5.5, 0.0, 10);
-  var D: real := Clamp(5.5, 0, 10.0);
-  WriteLn(A);
-  WriteLn(B);
-  WriteLn(C);
-  WriteLn(D)
+  WriteLn(Clamp(5, 0, 10.0))
+end.
+"#;
+    let (exit_code, _stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert_ne!(exit_code, 0);
+    assert!(stderr.contains("same numeric kind"), "stderr: {stderr}");
+}
+
+#[test]
+fn min_real() {
+    let source = r#"program T;
+uses Std.Console, Std.Math;
+begin
+  WriteLn(Min(3.5, 1.2));
+  WriteLn(Min(-0.5, 0.5))
 end.
 "#;
     let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
     assert!(stderr.is_empty(), "stderr: {stderr}");
     assert_eq!(exit_code, 0);
-    assert_eq!(stdout, "5\n5\n5.5\n5.5\n");
+    assert_eq!(stdout, "1.2\n-0.5\n");
+}
+
+#[test]
+fn max_real() {
+    let source = r#"program T;
+uses Std.Console, Std.Math;
+begin
+  WriteLn(Max(3.5, 1.2));
+  WriteLn(Max(-0.5, 0.5))
+end.
+"#;
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "3.5\n0.5\n");
+}
+
+#[test]
+fn min_mixed_types_is_compile_error() {
+    let source = r#"program T;
+uses Std.Console, Std.Math;
+begin
+  WriteLn(Min(3, 1.5))
+end.
+"#;
+    let (exit_code, _stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert_ne!(exit_code, 0);
+    assert!(stderr.contains("same numeric kind"), "stderr: {stderr}");
+}
+
+#[test]
+fn max_mixed_types_is_compile_error() {
+    let source = r#"program T;
+uses Std.Console, Std.Math;
+begin
+  WriteLn(Max(3, 1.5))
+end.
+"#;
+    let (exit_code, _stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert_ne!(exit_code, 0);
+    assert!(stderr.contains("same numeric kind"), "stderr: {stderr}");
 }
 
 #[test]

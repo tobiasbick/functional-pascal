@@ -57,6 +57,12 @@ impl NameRewriter<'_> {
             } => {
                 self.rewrite_callable(params, Some(return_type), body);
             }
+            Expr::RecordUpdate { base, fields, .. } => {
+                self.rewrite_expr(base);
+                for field in fields {
+                    self.rewrite_expr(&mut field.value);
+                }
+            }
         }
     }
 
@@ -123,6 +129,12 @@ impl NameRewriter<'_> {
                 ..
             } => {
                 self.rewrite_callable(params, Some(return_type), body);
+            }
+            Expr::RecordUpdate { base, fields, .. } => {
+                self.rewrite_case_pattern_expr(base, allow_binding_name);
+                for field in fields {
+                    self.rewrite_case_pattern_expr(&mut field.value, allow_binding_name);
+                }
             }
         }
     }

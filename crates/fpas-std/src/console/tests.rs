@@ -112,7 +112,7 @@ fn key_input_read_key_does_not_consume_event_queue() {
 #[test]
 fn key_input_live_queue_feeds_read_key_event() {
     let mut k = KeyInput::new();
-    assert!(k.queue_live_event(Event::Key(CrosstermKeyEvent::new(
+    assert!(k.push_live_event(Event::Key(CrosstermKeyEvent::new(
         KeyCode::Char('x'),
         KeyModifiers::SHIFT,
     ))));
@@ -160,7 +160,7 @@ fn key_input_read_event_preserves_fifo_across_event_kinds() {
 #[test]
 fn key_input_live_mouse_event_maps_to_one_based_console_coordinates() {
     let mut k = KeyInput::new();
-    assert!(k.queue_live_event(Event::Mouse(MouseEvent {
+    assert!(k.push_live_event(Event::Mouse(MouseEvent {
         kind: MouseEventKind::Drag(MouseButton::Right),
         column: 4,
         row: 2,
@@ -181,7 +181,7 @@ fn key_input_live_mouse_event_maps_to_one_based_console_coordinates() {
 #[test]
 fn key_input_live_key_event_is_visible_to_unified_event_api() {
     let mut k = KeyInput::new();
-    assert!(k.queue_live_event(Event::Key(CrosstermKeyEvent::new(
+    assert!(k.push_live_event(Event::Key(CrosstermKeyEvent::new(
         KeyCode::Char('Z'),
         KeyModifiers::ALT | KeyModifiers::SHIFT,
     ))));

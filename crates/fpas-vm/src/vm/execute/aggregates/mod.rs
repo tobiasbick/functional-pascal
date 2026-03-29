@@ -50,6 +50,10 @@ impl Worker {
                 self.exec_field_set(name_idx, line)?;
                 Ok(true)
             }
+            Op::UpdateRecord(n_overrides) => {
+                self.exec_update_record(n_overrides, line)?;
+                Ok(true)
+            }
             Op::ArrayPushLocal(depth, slot) => {
                 self.exec_array_push_local(depth, slot, line)?;
                 Ok(true)

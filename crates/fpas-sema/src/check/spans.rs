@@ -23,5 +23,6 @@ pub(crate) fn expr_span(expr: &Expr) -> Span {
         Expr::Try(_, span) => *span,
         Expr::Function { span, .. } => *span,
         Expr::Go(_, span) => *span,
+        Expr::RecordUpdate { span, .. } => *span,
     }
 }

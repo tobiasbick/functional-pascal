@@ -62,6 +62,17 @@ impl KeyInput {
         self.console_event_queue.push_back(ev);
     }
 
+    /// Queue a live-style event from test code.
+    ///
+    /// Identical to [`queue_live_event`] but additionally sets `test_mode = true`, so
+    /// that once all queued events are consumed, `key_pressed` and `event_pending`
+    /// return `false` instead of falling through to live terminal polling.
+    #[cfg(test)]
+    pub(crate) fn push_live_event(&mut self, ev: Event) -> bool {
+        self.test_mode = true;
+        self.queue_live_event(ev)
+    }
+
     pub(crate) fn queue_live_event(&mut self, ev: Event) -> bool {
         match ev {
             Event::Key(key) if key.kind != KeyEventKind::Release => {

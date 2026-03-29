@@ -6,7 +6,7 @@
 use std::collections::HashMap;
 
 use fpas_bytecode::Chunk;
-use fpas_sema::{ExprTypeMap, MethodCallMap};
+use fpas_sema::{ExprTypeMap, MethodCallMap, RecordDefaultsMap};
 
 mod binary_op;
 mod designator;
@@ -70,6 +70,11 @@ pub struct Compiler {
     method_calls: MethodCallMap,
     /// Counter for generating unique lambda function names.
     next_lambda_id: u32,
+    /// Named record type → ordered (field_name, optional_default_expr) pairs.
+    /// Used to expand record literals when fields with defaults are omitted.
+    ///
+    /// **Documentation:** `docs/pascal/05-types.md` (Default Field Values)
+    record_defaults: RecordDefaultsMap,
 }
 
 struct LoopCtx {
@@ -79,7 +84,12 @@ struct LoopCtx {
 }
 
 impl Compiler {
-    pub fn new(expr_types: ExprTypeMap, method_calls: MethodCallMap) -> Self {
+    /// Create a new compiler with the given sema results.
+    pub fn new(
+        expr_types: ExprTypeMap,
+        method_calls: MethodCallMap,
+        record_defaults: RecordDefaultsMap,
+    ) -> Self {
         Self {
             chunk: Chunk::new(),
             locals: Vec::new(),
@@ -93,6 +103,7 @@ impl Compiler {
             record_methods: HashMap::new(),
             method_calls,
             next_lambda_id: 0,
+            record_defaults,
         }
     }
 

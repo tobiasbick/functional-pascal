@@ -197,6 +197,37 @@ impl Parser {
         }
     }
 
+    /// Parse a record update expression: `base with Field := Value; … end`.
+    ///
+    /// The `with` token has already been peeked but **not consumed** when this is called.
+    /// Consumes `with`, the field overrides, and `end`.
+    ///
+    /// **Documentation:** `docs/pascal/05-types.md` (Record Update Expression)
+    pub(super) fn parse_record_update(&mut self, base: Expr, start: fpas_lexer::Span) -> Expr {
+        self.advance(); // consume `with`
+        let mut fields = Vec::new();
+        while !self.check(&Token::End) && !self.at_end() {
+            let field_start = self.current_span();
+            let (name, _) = self
+                .expect_ident()
+                .unwrap_or(("_error_".into(), field_start));
+            self.expect(&Token::ColonAssign);
+            let value = self.parse_expression();
+            self.expect_semi();
+            fields.push(FieldInit {
+                name,
+                value,
+                span: self.span_from(field_start),
+            });
+        }
+        self.expect(&Token::End);
+        Expr::RecordUpdate {
+            base: Box::new(base),
+            fields,
+            span: self.span_from(start),
+        }
+    }
+
     /// Parse an anonymous function expression (lambda / closure).
     ///
     /// Syntax: `function(Params): ReturnType begin Stmts end`

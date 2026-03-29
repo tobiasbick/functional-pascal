@@ -203,7 +203,12 @@ formal_type_param   = [ 'mutable' ] identifier ':' type_expr ;
 record_type         = 'record'
                       { field_def | record_method }
                       'end' ;
-field_def           = identifier ':' type_expr ';' ;
+field_def           = identifier ':' type_expr [ ':=' expression ] ';' ;
+
+(* ':= expression' is an optional default value for the field.      *)
+(* When a record literal omits a field that has a default, the      *)
+(* compiler substitutes the default automatically.  Fields without  *)
+(* a default must be supplied in every record literal.              *)
 
 record_method       = function_decl
                     | procedure_decl ;
@@ -405,7 +410,15 @@ mult_op             = '*' | '/' | 'div' | 'mod' | 'and' | 'shl' | 'shr' ;
 unary_expr          = 'not' unary_expr
                     | '-' unary_expr
                     | 'try' unary_expr                   (* error propagation *)
-                    | primary_expr ;
+                    | primary_expr [ record_update ] ;
+
+record_update       = 'with' field_init { field_init } 'end' ;
+
+(* record_update is a postfix operator that produces a new record   *)
+(* value identical to the base except for the overridden fields.    *)
+(* The base expression must have a record type. Unknown or wrong-   *)
+(* typed field overrides are compile-time errors.                   *)
+(* Example: P with X := 10; end — produces a copy of P with X = 10 *)
 
 primary_expr        = integer_literal
                     | real_literal
@@ -437,7 +450,10 @@ function_expr       = 'function' '(' [ param_list ] ')' ':' type_expr
 call_args           = '(' [ arg_list ] ')' ;
 
 (* -- Record construction -- *)
-record_literal      = 'record' field_init { field_init } 'end' ;
+record_literal      = 'record' { field_init } 'end' ;
+
+(* Zero field_inits is valid when every field of the target type    *)
+(* has a default value: var P: Point := record end;                 *)
 new_expr            = 'new' type_expr 'with' field_init { field_init } 'end' ;
 field_init          = identifier ':=' expression ';' ;
 

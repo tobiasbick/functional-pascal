@@ -158,6 +158,13 @@ pub enum Op {
     FieldGet(u16),
     /// Set field by constant-pool index (field name): [record, value] → ().
     FieldSet(u16),
+    /// Copy a record and override N fields: [base, name0, val0, …, nameN-1, valN-1] → record.
+    ///
+    /// The operand is the number of (name, value) override pairs.
+    /// All non-overridden fields are copied from the base record unchanged.
+    ///
+    /// **Documentation:** `docs/pascal/05-types.md` (Record Update Expression)
+    UpdateRecord(u16),
 
     // ── Special ─────────────────────────────────────────────
     /// Print value (for WriteLn/Write builtins).

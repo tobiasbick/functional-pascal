@@ -100,3 +100,59 @@ fn record_operand_error(op_name: &str, line: SourceLocation) -> VmError {
         line,
     )
 }
+
+impl Worker {
+    /// Execute `UpdateRecord(n)`: copy a record, overriding `n` named fields.
+    ///
+    /// Stack before: `[base_record, name0, val0, …, nameN-1, valN-1]`  
+    /// Stack after: `[new_record]`  
+    ///
+    /// If `base` is a `Ref`, it is automatically dereferenced to produce a fresh
+    /// value-type copy (the reference itself is not modified).
+    ///
+    /// **Documentation:** `docs/pascal/05-types.md` (Record Update Expression)
+    pub(super) fn exec_update_record(
+        &mut self,
+        n_overrides: u16,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        // Drain N (name, value) pairs pushed AFTER the base record.
+        let override_items = self.drain_values(n_overrides as usize * 2);
+        let base = self.pop(line)?;
+        // Dereference if needed — `with` always produces a fresh value copy.
+        let concrete = self.deref_value(&base);
+
+        let Value::Record {
+            type_name,
+            mut fields,
+        } = concrete
+        else {
+            return Err(runtime_error(
+                RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                "`with` update requires a record value",
+                "Use `RecordExpr with Field := NewValue; … end` on a record value.",
+                line,
+            ));
+        };
+
+        for pair in override_items.chunks(2) {
+            let name = match &pair[0] {
+                Value::Str(s) => s.clone(),
+                _ => String::new(),
+            };
+            if let Some(entry) = fields.iter_mut().find(|(n, _)| *n == name) {
+                entry.1 = pair[1].clone();
+            } else {
+                return Err(runtime_error(
+                    RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                    format!("Record has no field `{name}` to update"),
+                    "Check the field name against the record type definition.",
+                    line,
+                ));
+            }
+        }
+
+        self.push(Value::Record { type_name, fields })?;
+        Ok(())
+    }
+}

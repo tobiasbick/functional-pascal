@@ -90,6 +90,12 @@ impl Checker {
             | Expr::Go(inner, _) => self.const_expr_is_compile_time_known(inner),
             Expr::OptionNone(_) => true,
             Expr::Call { .. } | Expr::Function { .. } => false,
+            Expr::RecordUpdate { base, fields, .. } => {
+                self.const_expr_is_compile_time_known(base)
+                    && fields
+                        .iter()
+                        .all(|f| self.const_expr_is_compile_time_known(&f.value))
+            }
         }
     }
 }

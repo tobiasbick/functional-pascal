@@ -67,6 +67,17 @@ pub enum Expr {
     ///
     /// **Documentation:** `docs/pascal/08-concurrency.md`
     Go(Box<Expr>, Span),
+    /// `base with Field := Value; … end` — record update expression.
+    ///
+    /// Creates a new record by copying all fields from `base`, then overriding
+    /// those listed in `fields`. The original value is unchanged.
+    ///
+    /// **Documentation:** `docs/pascal/05-types.md` (Record Update Expression)
+    RecordUpdate {
+        base: Box<Expr>,
+        fields: Vec<FieldInit>,
+        span: Span,
+    },
 }
 
 /// Record or `new` field initializer.

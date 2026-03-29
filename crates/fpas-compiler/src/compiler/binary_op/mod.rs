@@ -15,10 +15,32 @@ use super::Compiler;
 impl Compiler {
     pub(super) fn ty_of(&self, expr: &Expr) -> Ty {
         let key = fpas_sema::expr_lookup_key(expr);
-        let Some(ty) = self.expr_types.get(&key) else {
-            unreachable!("expression type missing after semantic analysis");
-        };
-        ty.clone()
+        if let Some(ty) = self.expr_types.get(&key) {
+            return ty.clone();
+        }
+        // Fallback for constant sub-expressions that were cloned (e.g. record field
+        // defaults copied into RecordDefaultsMap lose their type-map entries because
+        // the pointer identity changes on clone).
+        self.infer_const_ty(expr)
+    }
+
+    /// Infer the type of a constant expression without consulting the type map.
+    ///
+    /// Only handles the subset of expressions that can legitimately appear as record
+    /// field default values: literals, paren-wrapped literals, and unary negation of
+    /// numeric literals.  For anything else the method panics identically to the old
+    /// `ty_of` to preserve the invariant that all non-constant expressions must be
+    /// present in the type map after semantic analysis.
+    fn infer_const_ty(&self, expr: &Expr) -> Ty {
+        match expr {
+            Expr::Integer(_, _) => Ty::Integer,
+            Expr::Real(_, _) => Ty::Real,
+            Expr::Str(_, _) => Ty::String,
+            Expr::Bool(_, _) => Ty::Boolean,
+            Expr::UnaryOp { operand, .. } => self.infer_const_ty(operand),
+            Expr::Paren(inner, _) => self.infer_const_ty(inner),
+            _ => unreachable!("expression type missing after semantic analysis"),
+        }
     }
 
     fn maybe_int_to_real_for_ty(&mut self, ty: &Ty, location: SourceLocation) {

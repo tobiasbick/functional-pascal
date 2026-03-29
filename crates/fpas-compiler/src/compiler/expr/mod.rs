@@ -95,15 +95,45 @@ impl Compiler {
                 self.emit(Op::MakeDict(pairs.len() as u16), (span.line, span.column));
             }
             Expr::RecordLiteral { fields, span } => {
-                for field in fields {
-                    self.emit_constant(Value::Str(field.name.clone()), (span.line, span.column));
-                    self.compile_expr(&field.value)?;
+                // If sema annotated this literal with a named record type that has defaults,
+                // emit all fields (provided + defaults). Otherwise emit the raw fields.
+                let type_name_and_specs = self.take_record_literal_expansion(expr);
+                if let Some((type_name, field_specs)) = type_name_and_specs {
+                    let provided: std::collections::HashMap<&str, &fpas_parser::Expr> = fields
+                        .iter()
+                        .map(|f| (f.name.as_str(), &f.value))
+                        .collect();
+                    for (field_name, default) in &field_specs {
+                        self.emit_constant(
+                            Value::Str(field_name.clone()),
+                            (span.line, span.column),
+                        );
+                        if let Some(val) = provided.get(field_name.as_str()).copied() {
+                            self.compile_expr(val)?;
+                        } else {
+                            // Sema guaranteed that a default exists when the field is absent.
+                            self.compile_expr(default.as_ref().expect(
+                                "compiler: missing required field with no default — sema should have caught this",
+                            ))?;
+                        }
+                    }
+                    let n = field_specs.len() as u16;
+                    let type_idx = self.chunk.add_constant(Value::Str(type_name));
+                    self.emit(Op::MakeRecord(type_idx, n), (span.line, span.column));
+                } else {
+                    for field in fields {
+                        self.emit_constant(
+                            Value::Str(field.name.clone()),
+                            (span.line, span.column),
+                        );
+                        self.compile_expr(&field.value)?;
+                    }
+                    let type_idx = self.chunk.add_constant(Value::Str("<record>".into()));
+                    self.emit(
+                        Op::MakeRecord(type_idx, fields.len() as u16),
+                        (span.line, span.column),
+                    );
                 }
-                let type_idx = self.chunk.add_constant(Value::Str("<record>".into()));
-                self.emit(
-                    Op::MakeRecord(type_idx, fields.len() as u16),
-                    (span.line, span.column),
-                );
             }
             Expr::New { fields, span, .. } => {
                 for field in fields {
@@ -147,6 +177,21 @@ impl Compiler {
             Expr::Go(inner, span) => {
                 self.compile_go_expr(inner, *span)?;
             }
+            Expr::RecordUpdate { base, fields, span } => {
+                // Emit base, then (name, value) override pairs, then UpdateRecord.
+                self.compile_expr(base)?;
+                for field in fields {
+                    self.emit_constant(
+                        Value::Str(field.name.clone()),
+                        (span.line, span.column),
+                    );
+                    self.compile_expr(&field.value)?;
+                }
+                self.emit(
+                    Op::UpdateRecord(fields.len() as u16),
+                    (span.line, span.column),
+                );
+            }
         }
 
         Ok(())
@@ -161,5 +206,23 @@ impl Compiler {
             },
             _ => "<ref>".into(),
         }
+    }
+
+    /// If the given `RecordLiteral` expression was annotated by sema with a named record type
+    /// that has registered defaults, return the type name and the ordered field-defaults list
+    /// (cloned so the borrow on `self` is released before compilation continues).
+    ///
+    /// Returns `None` for anonymous literals or named types without any defaults.
+    fn take_record_literal_expansion(
+        &self,
+        expr: &Expr,
+    ) -> Option<(String, Vec<(String, Option<fpas_parser::Expr>)>)> {
+        let ty = self.ty_of(expr);
+        if let Ty::Record(record_ty) = ty {
+            if let Some(specs) = self.record_defaults.get(&record_ty.name) {
+                return Some((record_ty.name.clone(), specs.clone()));
+            }
+        }
+        None
     }
 }

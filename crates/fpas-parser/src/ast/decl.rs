@@ -89,10 +89,16 @@ pub enum RecordMethod {
     Procedure(ProcedureDecl),
 }
 
+/// A field declaration inside a `record … end` block.
+///
+/// **Documentation:** `docs/pascal/05-types.md` (Record Types — Default Field Values)
 #[derive(Debug, Clone, PartialEq)]
 pub struct FieldDef {
     pub name: String,
     pub type_expr: TypeExpr,
+    /// Optional default expression used when the field is omitted from a record literal.
+    /// Only valid on a named record type definition, not on anonymous literals.
+    pub default_value: Option<Expr>,
     pub span: Span,
 }
 

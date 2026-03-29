@@ -112,7 +112,7 @@ begin
   var P: Point := record X := 1; end
 end.",
     );
-    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_MISSING_RECORD_FIELD);
 }
 
 #[test]
@@ -125,7 +125,7 @@ begin
   var P: Point := record X := 1; Y := 2; Z := 3; end
 end.",
     );
-    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_UNKNOWN_NAME);
 }
 
 #[test]
@@ -138,7 +138,7 @@ begin
   var P: Point := record X := 1; X := 2; end
 end.",
     );
-    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION);
 }
 
 #[test]

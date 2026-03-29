@@ -13,6 +13,12 @@ pub type ExprTypeMap = HashMap<usize, Ty>;
 /// Present only for calls that are record method invocations.
 pub type MethodCallMap = HashMap<usize, String>;
 
+/// Maps a named record type to its ordered field list, each entry carrying an optional
+/// cloned default expression. The order matches the type definition.
+///
+/// **Documentation:** `docs/pascal/05-types.md` (Default Field Values)
+pub type RecordDefaultsMap = HashMap<String, Vec<(String, Option<Expr>)>>;
+
 pub struct Checker {
     pub(crate) scopes: ScopeStack,
     pub(crate) errors: Vec<SemaError>,
@@ -24,6 +30,8 @@ pub struct Checker {
     pub(crate) ambiguous_imports: HashMap<String, Vec<String>>,
     /// Unqualified `BuiltinStd` call -> fully qualified name for the polymorphic checker.
     pub(crate) short_builtin_redirect: HashMap<String, String>,
+    /// Named record type → ordered (field_name, optional_default_expr) pairs.
+    pub(crate) record_defaults: RecordDefaultsMap,
 }
 
 impl Checker {
@@ -36,11 +44,12 @@ impl Checker {
             loaded_std_units: HashSet::new(),
             ambiguous_imports: HashMap::new(),
             short_builtin_redirect: HashMap::new(),
+            record_defaults: RecordDefaultsMap::new(),
         }
     }
 
-    pub fn finish(self) -> (Vec<SemaError>, ExprTypeMap, MethodCallMap) {
-        (self.errors, self.expr_types, self.method_calls)
+    pub fn finish(self) -> (Vec<SemaError>, ExprTypeMap, MethodCallMap, RecordDefaultsMap) {
+        (self.errors, self.expr_types, self.method_calls, self.record_defaults)
     }
 
     pub fn expr_lookup_key(expr: &Expr) -> usize {

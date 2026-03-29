@@ -15,6 +15,7 @@ mod types;
 
 pub use check::ExprTypeMap;
 pub use check::MethodCallMap;
+pub use check::RecordDefaultsMap;
 pub use error::SemaError;
 pub use types::Ty;
 
@@ -26,8 +27,11 @@ pub fn analyze(program: &Program) -> Vec<SemaError> {
     analyze_with_types(program).0
 }
 
-/// Like [`analyze`], but also returns the inferred type of every expression (by source key).
-pub fn analyze_with_types(program: &Program) -> (Vec<SemaError>, ExprTypeMap, MethodCallMap) {
+/// Like [`analyze`], but also returns the inferred type of every expression (by source key)
+/// and the map of record type defaults used by the compiler for default field expansion.
+pub fn analyze_with_types(
+    program: &Program,
+) -> (Vec<SemaError>, ExprTypeMap, MethodCallMap, RecordDefaultsMap) {
     let mut checker = check::Checker::new();
     checker.check_program(program);
     checker.finish()

@@ -40,6 +40,35 @@ impl Checker {
                 .collect::<Vec<_>>()
         });
 
+        // Validate default values and build the defaults map entry.
+        // We check defaults outside `with_type_params` because defaults are evaluated
+        // in the outer scope (they cannot reference the type's own generic params).
+        let defaults_entry: Vec<(String, Option<fpas_parser::Expr>)> = record
+            .fields
+            .iter()
+            .zip(fields.iter())
+            .map(|(field_def, (_, field_ty))| {
+                if let Some(default_expr) = &field_def.default_value {
+                    let default_ty = self.check_expr(default_expr);
+                    self.check_type_compat(
+                        field_ty,
+                        &default_ty,
+                        &format!("default value for field `{}`", field_def.name),
+                        field_def.span,
+                    );
+                    (field_def.name.clone(), Some(default_expr.clone()))
+                } else {
+                    (field_def.name.clone(), None)
+                }
+            })
+            .collect();
+
+        // Only register defaults when at least one field has a default, since the
+        // compiler uses the absence of an entry to mean "no defaults, emit as-is".
+        if defaults_entry.iter().any(|(_, d)| d.is_some()) {
+            self.record_defaults.insert(td.name.clone(), defaults_entry);
+        }
+
         let record_ty = RecordTy {
             name: td.name.clone(),
             type_params: Self::resolve_type_params(&td.type_params),

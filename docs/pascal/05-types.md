@@ -93,6 +93,93 @@ begin
 end.
 ```
 
+### Default Field Values
+
+A field declaration may include a default value using `:=`. When a record literal omits a field that has a default, the compiler substitutes the default automatically. Fields without a default must always be supplied.
+
+```pascal
+type
+  Config = record
+    Host: string := 'localhost';
+    Port: integer := 8080;
+    Debug: boolean := false;
+  end;
+```
+
+Omitting defaulted fields:
+
+```pascal
+var
+  C: Config := record end;          { Host='localhost', Port=8080, Debug=false }
+  D: Config := record Port := 9000; end;  { Host='localhost', Port=9000, Debug=false }
+```
+
+Explicitly providing a value overrides the default:
+
+```pascal
+var
+  E: Config := record Host := 'example.com'; Port := 443; Debug := true; end;
+```
+
+Fields without a default remain required:
+
+```pascal
+type
+  Vertex = record
+    Id: integer;           { required }
+    X: integer := 0;       { optional }
+    Y: integer := 0;       { optional }
+  end;
+
+var
+  V: Vertex := record Id := 7; end;  { X=0, Y=0 from defaults }
+```
+
+### Record Update Expression
+
+The `with` expression creates a copy of a record with selected fields replaced. The original value is never mutated.
+
+```
+base with Field := NewValue; … end
+```
+
+```pascal
+type
+  Point = record X: integer; Y: integer; end;
+
+var
+  P: Point := record X := 1; Y := 2; end;
+  Q: Point := P with X := 99; end;   { Q.X=99, Q.Y=2; P is unchanged }
+```
+
+Multiple fields can be updated in one expression:
+
+```pascal
+var
+  R: Point := P with X := 10; Y := 20; end;
+```
+
+Updates may be chained by wrapping the inner expression in parentheses:
+
+```pascal
+var
+  S: Point := (P with X := 5; end) with Y := 7; end;
+```
+
+`with` works on any record value, including function return values:
+
+```pascal
+function Origin(): Point;
+begin
+  return record X := 0; Y := 0; end
+end;
+
+var
+  T: Point := Origin() with X := 42; end;
+```
+
+Unknown field names and type mismatches in override values are compile-time errors.
+
 ## Reference Types
 
 `ref T` denotes a shared reference to a heap-allocated record of type `T`. Use it when multiple variables should refer to the same record, or when a record must contain references to values of its own type.

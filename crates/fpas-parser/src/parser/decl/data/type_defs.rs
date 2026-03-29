@@ -74,10 +74,16 @@ impl Parser {
         let (name, _) = self.expect_ident().unwrap_or(("_error_".into(), start));
         self.expect(&Token::Colon);
         let type_expr = self.parse_type_expr();
+        let default_value = if self.eat(&Token::ColonAssign) {
+            Some(self.parse_expression())
+        } else {
+            None
+        };
         self.expect_semi();
         FieldDef {
             name,
             type_expr,
+            default_value,
             span: self.span_from(start),
         }
     }

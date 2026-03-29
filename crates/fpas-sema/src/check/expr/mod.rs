@@ -61,6 +61,9 @@ impl Checker {
                 span: _,
             } => self.check_function_expr(params, return_type, body),
             Expr::Go(inner, span) => self.check_go_expr(inner, *span),
+            Expr::RecordUpdate { base, fields, span } => {
+                self.check_record_update(base, fields, *span)
+            }
         };
         let key = Self::expr_lookup_key(expr);
         self.expr_types.insert(key, ty.clone());
@@ -213,6 +216,83 @@ impl Checker {
         }
 
         Ty::Ref(Box::new(target_ty))
+    }
+
+    /// Type-check a record update expression: `base with Field := Value; … end`.
+    ///
+    /// The base must resolve to a record type. Each override field must exist in
+    /// that record and have a compatible value type. The result has the same type
+    /// as the base expression.
+    ///
+    /// **Documentation:** `docs/pascal/05-types.md` (Record Update Expression)
+    fn check_record_update(
+        &mut self,
+        base: &Expr,
+        fields: &[FieldInit],
+        span: fpas_lexer::Span,
+    ) -> Ty {
+        let base_ty = self.check_expr(base);
+        let resolved = self.resolve_visible_type(&base_ty);
+
+        let record_ty = match resolved {
+            Ty::Record(r) => r,
+            _ if !base_ty.is_error() => {
+                self.error_with_code(
+                    fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
+                    format!(
+                        "`with` update requires a record value, found `{base_ty:?}`"
+                    ),
+                    "Use `RecordExpr with Field := NewValue; … end` on a record value.",
+                    span,
+                );
+                for field in fields {
+                    let _ = self.check_expr(&field.value);
+                }
+                return Ty::Error;
+            }
+            _ => {
+                for field in fields {
+                    let _ = self.check_expr(&field.value);
+                }
+                return Ty::Error;
+            }
+        };
+
+        // Validate each override field.
+        for field_init in fields {
+            if let Some((_, field_ty)) = record_ty
+                .fields
+                .iter()
+                .find(|(name, _)| name.eq_ignore_ascii_case(&field_init.name))
+            {
+                let value_ty = self.check_expr(&field_init.value);
+                self.check_type_compat(
+                    field_ty,
+                    &value_ty,
+                    &format!("field update `{}`", field_init.name),
+                    span,
+                );
+            } else {
+                let known: Vec<&str> =
+                    record_ty.fields.iter().map(|(n, _)| n.as_str()).collect();
+                self.error_with_code(
+                    fpas_diagnostics::codes::SEMA_UNKNOWN_NAME,
+                    format!(
+                        "Record type `{}` has no field `{}`",
+                        record_ty.name, field_init.name
+                    ),
+                    format!(
+                        "Known fields: {}. Use an existing field name in the update.",
+                        known.join(", ")
+                    ),
+                    span,
+                );
+                let _ = self.check_expr(&field_init.value);
+            }
+        }
+
+        // Return the same type as the base (named or anonymous).
+        base_ty
     }
 
     fn check_try_expr(&mut self, inner: &Expr, span: fpas_lexer::Span) -> Ty {

@@ -26,7 +26,7 @@ fn new_expression_records_ref_type() {
         other => panic!("expected variable declaration, got {other:?}"),
     };
 
-    let (errors, types, _) = analyze_with_types(&program);
+    let (errors, types, _, _) = analyze_with_types(&program);
     assert!(errors.is_empty(), "{errors:#?}");
 
     let key = expr_lookup_key(value);

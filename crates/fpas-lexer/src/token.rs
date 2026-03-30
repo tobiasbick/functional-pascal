@@ -95,6 +95,12 @@ pub enum Token {
     Less,
     Greater,
 
+    /// A compiler directive `{$CONTENT}`.
+    ///
+    /// The payload is the trimmed raw content between `$` and `}`, e.g. `"IFDEF DEBUG"` or
+    /// `"DEFINE RELEASE"`.  Directives are case-insensitive in the preprocessor.
+    Directive(Box<str>),
+
     // End of file
     Eof,
 }

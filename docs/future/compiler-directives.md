@@ -1,28 +1,10 @@
 # Future: Compiler Directives
 
-> Deferred from v1. Planned for a future version.
+> **Implemented.**  See `docs/pascal/12-compiler-directives.md` for the current specification.
 
-Delphi and FreePascal support compiler directives inside comments using the `$` prefix. These control conditional compilation, file includes, and compiler settings.
+## Implemented
 
-## Examples (Delphi/FreePascal Style)
-
-```pascal
-{$IFDEF DEBUG}
-  WriteLn('Debug mode');
-{$ENDIF}
-
-{$I config.inc}        { include file }
-
-{$R+}                  { range checking on }
-{$OPTIMIZATION ON}
-```
-
-## v1 Behavior
-
-In v1, `{$...}` is treated as a regular brace comment and ignored. The lexer does not special-case the `$` prefix.
-
-## Future Considerations
-
-- Conditional compilation: `{$IFDEF}`, `{$IFNDEF}`, `{$ELSE}`, `{$ENDIF}`
-- Include files: `{$I filename}` or `{$INCLUDE filename}`
-- Compiler switches: `{$R+}` range checking, `{$O+}` optimization
+- ~~**Conditional compilation**~~ — `{$IFDEF}`, `{$IFNDEF}`, `{$ELSE}`, `{$ENDIF}` — **implemented**
+- ~~**Symbol management**~~ — `{$DEFINE name}`, `{$UNDEF name}` — **implemented**
+- ~~**Include files**~~ — `{$I filename}` / `{$INCLUDE filename}` — **implemented** (project mode only; single-file mode emits an error)
+- **Compiler switches** — `{$R+}`, `{$O+}`, etc. — accepted but have no effect (diagnostic emitted)

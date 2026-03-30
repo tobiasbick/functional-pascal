@@ -9,6 +9,9 @@ impl Lexer<'_> {
                 break;
             }
             match self.current() {
+                // A `{$...}` sequence is a compiler directive, not a comment; let
+                // `scan_token` produce a `Token::Directive`.
+                b'{' if self.peek_at(1) == Some(b'$') => break,
                 b'{' => self.skip_brace_comment(),
                 b'(' if self.peek_at(1) == Some(b'*') => self.skip_paren_comment(),
                 b'/' if self.peek_at(1) == Some(b'/') => self.skip_line_comment(),

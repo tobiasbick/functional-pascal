@@ -19,8 +19,10 @@ fn brace_comment_multi_line() {
 }
 
 #[test]
-fn brace_compiler_directive_is_comment() {
-    assert_eq!(toks("{$ifdef TEST} 42"), vec![Token::Integer(42)]);
+fn brace_compiler_directive_emits_directive_token() {
+    // {$...} is now a compiler directive token, not a comment.
+    // The preprocessor (tested separately) removes it from the token stream.
+    assert_eq!(toks("{$ifdef TEST} 42"), vec![Token::Directive("ifdef TEST".into()), Token::Integer(42)]);
 }
 
 #[test]

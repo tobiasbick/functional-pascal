@@ -1,3 +1,4 @@
+mod directive;
 mod identifiers;
 mod navigation;
 mod numbers;
@@ -48,6 +49,7 @@ impl<'a> Lexer<'a> {
 
     fn scan_token(&mut self) {
         match self.current() {
+            b'{' if self.peek_at(1) == Some(b'$') => self.scan_directive(),
             b'a'..=b'z' | b'A'..=b'Z' | b'_' => self.scan_ident_or_keyword(),
             b'0'..=b'9' => self.scan_number(),
             b'$' => self.scan_hex_integer(),

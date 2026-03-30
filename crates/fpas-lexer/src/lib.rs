@@ -8,10 +8,12 @@
 
 mod error;
 mod lexer;
+mod preprocessor;
 mod span;
 mod token;
 
 pub use error::LexError;
+pub use preprocessor::{DefineSet, preprocess};
 pub use span::Span;
 pub use token::Token;
 

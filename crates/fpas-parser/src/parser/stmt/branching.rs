@@ -86,7 +86,7 @@ impl Parser {
     fn parse_case_label(&mut self) -> CaseLabel {
         let start = self.current_span();
 
-        // Destructure patterns: Ok(ident), Err(ident), Some(ident), None
+        // Destructure patterns: Ok(ident), Error(ident), Some(ident), None
         match self.current_token() {
             Token::Ok | Token::Error | Token::Some => {
                 let variant = match self.current_token() {
@@ -97,12 +97,7 @@ impl Parser {
                 };
                 self.advance();
                 self.expect(&Token::LParen);
-                let binding = if let Token::Ident(name) = self.current_token().clone() {
-                    self.advance();
-                    Some(name)
-                } else {
-                    None
-                };
+                let binding = self.expect_ident().map(|(name, _)| name);
                 self.expect(&Token::RParen);
                 return CaseLabel::Destructure {
                     variant,

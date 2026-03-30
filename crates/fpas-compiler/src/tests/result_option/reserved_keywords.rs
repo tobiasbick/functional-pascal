@@ -1,4 +1,4 @@
-/// Tests that `Result`, `Option`, `Ok`, `Error`, `Some`, `None`, `try` are
+/// Tests that `Result`, `Option`, `Ok`, `Error`, `Some`, `None`, `try`, `panic` are
 /// reserved keywords and cannot be used as identifiers.
 ///
 /// **Spec:** `docs/pascal/07-error-handling.md`, line 155.
@@ -39,6 +39,11 @@ fn none_as_variable_name_is_parse_error() {
 #[test]
 fn try_as_variable_name_is_parse_error() {
     parse_fails("program T; var Try: integer := 1; begin end.");
+}
+
+#[test]
+fn panic_as_variable_name_is_parse_error() {
+    parse_fails("program T; var Panic: integer := 1; begin end.");
 }
 
 #[test]
@@ -96,6 +101,19 @@ fn try_as_function_name_is_parse_error() {
     parse_fails(
         "program T;
 function Try(): integer;
+begin
+  return 1
+end;
+begin
+end.",
+    );
+}
+
+#[test]
+fn panic_as_function_name_is_parse_error() {
+    parse_fails(
+        "program T;
+function Panic(): integer;
 begin
   return 1
 end;

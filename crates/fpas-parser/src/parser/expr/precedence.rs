@@ -107,6 +107,12 @@ impl Parser {
             };
         }
 
+        if self.check(&Token::Try) {
+            self.advance();
+            let operand = self.parse_unary();
+            return Expr::Try(Box::new(operand), self.span_from(start));
+        }
+
         let expr = self.parse_primary();
         // Postfix record update: `base with Field := Value; … end`
         if self.check(&Token::With) {

@@ -21,11 +21,11 @@ begin
 end.
 ```
 
-`go` accepts any function or procedure call. The VM distributes tasks across a thread pool for true parallel execution. The pool size equals the number of available CPU cores.
+`go` accepts only a function or procedure call expression. Bare values and other expressions are rejected by the compiler. The VM distributes tasks across a thread pool for true parallel execution. The pool size equals the number of available CPU cores.
 
 ### Task Type
 
-The `task` type represents a handle to a running task. Assign the result of a `go` expression to capture it:
+The `task` type represents a handle to a running task. Assign the result of a `go` expression to capture it. For type checking, the handle keeps the spawned call's result type, while the runtime value is an opaque task handle:
 
 ```pascal
 var T: task := go ComputeSomething(Data);
@@ -33,7 +33,7 @@ var T: task := go ComputeSomething(Data);
 
 ## Channels
 
-Channels are typed conduits for communication between tasks. Import `Std.Channel` to use them.
+Channels are typed conduits for communication between tasks. The type `channel of T` is part of the language. Import `Std.Channel` for the channel operations shown below.
 
 ### Creating Channels
 
@@ -56,7 +56,7 @@ Send(Ch, 42);
 var Value: integer := Receive(Ch);
 ```
 
-`Send` blocks when the buffer is full. `Receive` blocks until a value is available.
+From the program's point of view, `Send` blocks when the buffer is full and `Receive` blocks until a value is available. Internally the runtime retries cooperatively until the operation can proceed.
 
 ### Non-Blocking Receive
 
@@ -109,11 +109,11 @@ select
 end
 ```
 
-Each arm tries a non-blocking receive from its channel. The first arm with an available value executes. If no arm is ready, `select` blocks until one becomes available.
+Each arm tries a non-blocking receive from its channel. The first arm with an available value executes. If no arm is ready and no `default` arm is present, `select` behaves like a blocking wait: the runtime keeps yielding until one arm becomes available. A `select` must contain at least one `case` arm or a `default` arm.
 
 ### Select with Default
 
-A `default` arm runs when no channel has data:
+A `default` arm runs when no channel has data. A `select` may also consist of a `default` arm only:
 
 ```pascal
 select
@@ -160,9 +160,11 @@ WaitAll([T1, T2, T3]);
 
 | Function | Signature | Description |
 |----------|-----------|-------------|
-| `Wait` | `(T: task): T` | Wait for a task and return its result |
+| `Wait` | `(Handle: task): T` | Wait for a task and return its result |
 | `WaitAll` | `(Tasks: array of task)` | Wait for all tasks to complete |
+
+Here, `T` means the return type of the spawned call.
 
 ## Keywords
 
-`go`, `channel`, `select`, `from` — all case-insensitive.
+`go`, `channel`, `select`, `default`, `from` — all case-insensitive.

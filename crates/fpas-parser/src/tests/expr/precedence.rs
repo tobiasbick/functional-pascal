@@ -94,3 +94,17 @@ fn left_associative_add() {
         _ => panic!("expected Add at top, Sub on left"),
     }
 }
+
+#[test]
+fn try_has_unary_precedence() {
+    match parse_expr("try GetVal() * 3") {
+        Expr::BinaryOp {
+            op: BinaryOp::Mul,
+            left,
+            ..
+        } => {
+            assert!(matches!(*left, Expr::Try(_, _)));
+        }
+        _ => panic!("expected Mul at top, Try on left"),
+    }
+}

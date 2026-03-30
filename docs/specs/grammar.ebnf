@@ -436,17 +436,19 @@ break_stmt          = 'break' ;
 continue_stmt       = 'continue' ;
 
 (* -- Go (spawn task) -- *)
-go_stmt             = 'go' expression ;
+go_call             = designator '(' [ arg_list ] ')' ;
+go_stmt             = 'go' go_call ;
 
-(* `go` launches a concurrent task. The expression must be a        *)
-(* function or procedure call. As an expression, `go f()` returns   *)
+(* `go` launches a concurrent task. Only call syntax is valid.      *)
+(* As an expression, `go f()` returns                                *)
 (* a `task` handle.                                                 *)
 
 (* -- Select (channel multiplexing) -- *)
 select_stmt         = 'select'
-                      { select_arm }
-                      [ 'default' ':' statement_list [ ';' ] ]
-                      'end' ;
+                                 ( select_arm { select_arm }
+                                    [ 'default' ':' statement_list [ ';' ] ]
+                                 | 'default' ':' statement_list [ ';' ] )
+                                 'end' ;
 
 select_arm          = 'case' identifier ':' type_expr 'from' expression
                       ':' statement ';' ;
@@ -455,6 +457,7 @@ select_arm          = 'case' identifier ':' type_expr 'from' expression
 (* The first arm with an available value executes.                  *)
 (* The binding identifier receives the value.                       *)
 (* `default` runs when no channel has data.                         *)
+(* Empty `select end` is invalid.                                   *)
 
 (* -- Procedure / Function Call (statement position) -- *)
 call_stmt           = designator '(' [ arg_list ] ')' ;
@@ -507,7 +510,7 @@ primary_expr        = integer_literal
                     | record_literal
                     | new_expr
                     | function_expr                      (* lambda/closure *)
-                    | 'go' expression                    (* spawn task     *)
+                    | 'go' go_call                       (* spawn task     *)
                     | designator [ call_args ] ;
 
 (* -- Anonymous function expression (lambda / closure) -- *)

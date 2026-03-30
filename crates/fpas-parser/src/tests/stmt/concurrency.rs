@@ -1,4 +1,4 @@
-use super::super::parse_ok;
+use super::super::{parse_ok, parse_with_errors};
 use super::body_stmts;
 use crate::ast::*;
 
@@ -99,6 +99,16 @@ fn select_parses_default_only() {
         }
         _ => panic!("expected Select statement"),
     }
+}
+
+#[test]
+fn empty_select_reports_error() {
+    let (_, errs) = parse_with_errors("program T; begin select end end.");
+
+    assert!(
+        errs.iter().any(|err| format!("{err:?}").contains("Empty `select`")),
+        "expected empty select diagnostic, got: {errs:#?}"
+    );
 }
 
 #[test]

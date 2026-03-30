@@ -140,6 +140,12 @@ fn trailing_dot_real_literal_is_rejected() {
     assert!(!errs.is_empty());
 }
 
+#[test]
+fn destructure_pattern_requires_binding_identifier() {
+    let (_, errs) = parse_with_errors("program T; begin case R of Ok(): X := 1 end end.");
+    assert!(!errs.is_empty());
+}
+
 // ── Diagnostic code, location and help assertions ───────────────
 
 #[test]

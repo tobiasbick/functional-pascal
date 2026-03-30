@@ -80,6 +80,15 @@ impl Parser {
             }
         }
 
+        if arms.is_empty() && default_body.is_none() {
+            self.error_with_code(
+                PARSE_INVALID_STATEMENT_START,
+                "Empty `select` is not allowed",
+                "Add at least one `case` arm or a `default` arm to the `select` statement.",
+                self.span_from(start),
+            );
+        }
+
         Stmt::Select {
             arms,
             default_body,

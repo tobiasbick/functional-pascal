@@ -71,12 +71,6 @@ impl Parser {
                 self.advance();
                 Expr::OptionNone(span)
             }
-            Token::Try => {
-                let start = self.current_span();
-                self.advance();
-                let inner = self.parse_primary();
-                Expr::Try(Box::new(inner), self.span_from(start))
-            }
             Token::Go => {
                 let start = self.current_span();
                 self.advance();

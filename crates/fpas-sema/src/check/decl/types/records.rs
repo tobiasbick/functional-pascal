@@ -4,9 +4,9 @@
 
 use super::Checker;
 use crate::scope::{FunctionCtx, Symbol, SymbolKind};
-use crate::types::{FunctionTy, InterfaceTy, MethodKind, ParamTy, ProcedureTy, RecordTy, Ty};
+use crate::types::{FunctionTy, InterfaceTy, MethodKind, ParamTy, ProcedureTy, RecordTy, Ty, TypeConstraint};
 use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_TYPE};
-use fpas_parser::{FuncBody, RecordMethod, RecordType, TypeDef};
+use fpas_parser::{FuncBody, RecordMethod, RecordType, TypeDef, TypeParam};
 
 impl Checker {
     pub(super) fn check_record_type_def(&mut self, td: &TypeDef, record: &RecordType) {
@@ -141,24 +141,35 @@ impl Checker {
         for method in methods {
             match method {
                 RecordMethod::Function(function) => {
-                    let return_ty = self.resolve_method_param_type(
-                        &function.return_type,
-                        type_name,
-                        record_ty,
-                    );
-                    let params: Vec<ParamTy> = function
-                        .params
-                        .iter()
-                        .map(|param| ParamTy {
-                            mutable: param.mutable,
-                            name: param.name.clone(),
-                            ty: self.resolve_method_param_type(
-                                &param.type_expr,
+                    let type_param_defs = Self::resolve_type_params(&function.type_params);
+
+                    // Resolve param/return types with the method's own type params in scope
+                    // so expressions like `Value: T` resolve `T` as a generic param.
+                    let (return_ty, params) = self.with_type_params(
+                        &function.type_params,
+                        function.span,
+                        |checker| {
+                            let return_ty = checker.resolve_method_param_type(
+                                &function.return_type,
                                 type_name,
                                 record_ty,
-                            ),
-                        })
-                        .collect();
+                            );
+                            let params: Vec<ParamTy> = function
+                                .params
+                                .iter()
+                                .map(|param| ParamTy {
+                                    mutable: param.mutable,
+                                    name: param.name.clone(),
+                                    ty: checker.resolve_method_param_type(
+                                        &param.type_expr,
+                                        type_name,
+                                        record_ty,
+                                    ),
+                                })
+                                .collect();
+                            (return_ty, params)
+                        },
+                    );
 
                     if !self.validate_record_method_signature(
                         type_name,
@@ -170,7 +181,7 @@ impl Checker {
                     }
 
                     let function_ty = FunctionTy {
-                        type_params: Vec::new(),
+                        type_params: type_param_defs,
                         params: params.clone(),
                         return_type: Box::new(return_ty.clone()),
                     };
@@ -185,24 +196,38 @@ impl Checker {
                         },
                     );
 
-                    self.check_method_body(&qualified, &params, Some(return_ty), &function.body);
+                    self.check_method_body(
+                        &qualified,
+                        &function.type_params,
+                        &params,
+                        Some(return_ty),
+                        &function.body,
+                    );
                     checked_methods
                         .push((function.name.clone(), MethodKind::Function(function_ty)));
                 }
                 RecordMethod::Procedure(procedure) => {
-                    let params: Vec<ParamTy> = procedure
-                        .params
-                        .iter()
-                        .map(|param| ParamTy {
-                            mutable: param.mutable,
-                            name: param.name.clone(),
-                            ty: self.resolve_method_param_type(
-                                &param.type_expr,
-                                type_name,
-                                record_ty,
-                            ),
-                        })
-                        .collect();
+                    let type_param_defs = Self::resolve_type_params(&procedure.type_params);
+
+                    let params = self.with_type_params(
+                        &procedure.type_params,
+                        procedure.span,
+                        |checker| {
+                            procedure
+                                .params
+                                .iter()
+                                .map(|param| ParamTy {
+                                    mutable: param.mutable,
+                                    name: param.name.clone(),
+                                    ty: checker.resolve_method_param_type(
+                                        &param.type_expr,
+                                        type_name,
+                                        record_ty,
+                                    ),
+                                })
+                                .collect::<Vec<_>>()
+                        },
+                    );
 
                     if !self.validate_record_method_signature(
                         type_name,
@@ -214,7 +239,7 @@ impl Checker {
                     }
 
                     let procedure_ty = ProcedureTy {
-                        type_params: Vec::new(),
+                        type_params: type_param_defs,
                         variadic: false,
                         params: params.clone(),
                     };
@@ -229,7 +254,13 @@ impl Checker {
                         },
                     );
 
-                    self.check_method_body(&qualified, &params, None, &procedure.body);
+                    self.check_method_body(
+                        &qualified,
+                        &procedure.type_params,
+                        &params,
+                        None,
+                        &procedure.body,
+                    );
                     checked_methods
                         .push((procedure.name.clone(), MethodKind::Procedure(procedure_ty)));
                 }
@@ -282,6 +313,7 @@ impl Checker {
     fn check_method_body(
         &mut self,
         qualified_name: &str,
+        type_params: &[TypeParam],
         params: &[ParamTy],
         return_type: Option<Ty>,
         body: &FuncBody,
@@ -291,6 +323,24 @@ impl Checker {
         };
 
         self.scopes.push_scope();
+
+        // Introduce method-level generic type parameters as `GenericParam` types
+        // so that expressions in the body can reference them.
+        for tp in type_params {
+            let constraint = tp
+                .constraint
+                .as_ref()
+                .and_then(|c| TypeConstraint::from_name(c));
+            self.scopes.define(
+                &tp.name,
+                Symbol {
+                    ty: Ty::GenericParam(tp.name.clone(), constraint),
+                    mutable: false,
+                    kind: SymbolKind::Type,
+                },
+            );
+        }
+
         for param in params {
             self.scopes.define(
                 &param.name,

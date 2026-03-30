@@ -27,6 +27,7 @@ pub fn check_errors(src: &str) -> Vec<SemaError> {
 
 mod decl;
 mod expr;
+mod generic_methods;
 mod integration;
 mod interfaces;
 mod stmt;

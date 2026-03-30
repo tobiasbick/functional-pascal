@@ -96,6 +96,8 @@ impl Checker {
     /// Resolve method signatures in an interface body to `MethodKind` values.
     ///
     /// `Self` in parameters is treated as the interface type itself.
+    /// Method-level generic type parameters (`Map<R>(...)`) are pushed into scope
+    /// so that references to `R` in param/return types resolve correctly.
     fn resolve_interface_method_sigs(
         &mut self,
         iface_name: &str,
@@ -106,45 +108,62 @@ impl Checker {
         for method in methods {
             match method {
                 RecordMethod::Function(f) => {
-                    let return_ty =
-                        self.resolve_method_param_type(&f.return_type, iface_name, iface_ty);
-                    let params: Vec<ParamTy> = f
-                        .params
-                        .iter()
-                        .map(|p| ParamTy {
-                            mutable: p.mutable,
-                            name: p.name.clone(),
-                            ty: self
-                                .resolve_method_param_type(&p.type_expr, iface_name, iface_ty),
-                        })
-                        .collect();
+                    let type_param_defs = Self::resolve_type_params(&f.type_params);
+                    let (return_ty, params) = self.with_type_params(
+                        &f.type_params,
+                        f.span,
+                        |checker| {
+                            let return_ty = checker
+                                .resolve_method_param_type(&f.return_type, iface_name, iface_ty);
+                            let params: Vec<ParamTy> = f
+                                .params
+                                .iter()
+                                .map(|p| ParamTy {
+                                    mutable: p.mutable,
+                                    name: p.name.clone(),
+                                    ty: checker.resolve_method_param_type(
+                                        &p.type_expr,
+                                        iface_name,
+                                        iface_ty,
+                                    ),
+                                })
+                                .collect();
+                            (return_ty, params)
+                        },
+                    );
                     result.push((
                         f.name.clone(),
                         MethodKind::Function(FunctionTy {
-                            type_params: Vec::new(),
+                            type_params: type_param_defs,
                             params,
                             return_type: Box::new(return_ty),
                         }),
                     ));
                 }
                 RecordMethod::Procedure(p) => {
-                    let params: Vec<ParamTy> = p
-                        .params
-                        .iter()
-                        .map(|param| ParamTy {
-                            mutable: param.mutable,
-                            name: param.name.clone(),
-                            ty: self.resolve_method_param_type(
-                                &param.type_expr,
-                                iface_name,
-                                iface_ty,
-                            ),
-                        })
-                        .collect();
+                    let type_param_defs = Self::resolve_type_params(&p.type_params);
+                    let params = self.with_type_params(
+                        &p.type_params,
+                        p.span,
+                        |checker| {
+                            p.params
+                                .iter()
+                                .map(|param| ParamTy {
+                                    mutable: param.mutable,
+                                    name: param.name.clone(),
+                                    ty: checker.resolve_method_param_type(
+                                        &param.type_expr,
+                                        iface_name,
+                                        iface_ty,
+                                    ),
+                                })
+                                .collect::<Vec<_>>()
+                        },
+                    );
                     result.push((
                         p.name.clone(),
                         MethodKind::Procedure(ProcedureTy {
-                            type_params: Vec::new(),
+                            type_params: type_param_defs,
                             variadic: false,
                             params,
                         }),

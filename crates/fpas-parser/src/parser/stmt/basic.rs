@@ -17,7 +17,15 @@ impl Parser {
             self.advance();
         }
         self.advance();
-        let (name, _) = self.expect_ident().unwrap_or(("_error_".into(), start));
+        let (name, _) = match self.expect_ident() {
+            Some(ident) => ident,
+            None => {
+                if !self.at_end() {
+                    self.advance();
+                }
+                ("_error_".into(), start)
+            }
+        };
         self.expect(&Token::Colon);
         let type_expr = self.parse_type_expr();
         self.expect(&Token::ColonAssign);

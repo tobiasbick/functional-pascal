@@ -6,13 +6,13 @@
 
 - **Higher-kinded types** — e.g., `<F<_>>`
 - **Variance annotations** — covariance / contravariance
-- **Generic methods on non-generic types** — currently all type params must be at the type level
 - **Default type arguments** — e.g., `<T = integer>`
 - **Specialization** — alternative implementations for specific types
 
 ## Implemented
 
 - ~~**Constraints / bounds**~~ — `<T: Comparable>`, `<T: Numeric>`, `<T: Printable>` — **implemented** (built-in constraints checked at instantiation)
+- ~~**Generic methods on non-generic types**~~ — method-level type parameters such as `function Map<R>(Self: Box; ...)` on records and interfaces — **implemented**
 
 ## Examples
 

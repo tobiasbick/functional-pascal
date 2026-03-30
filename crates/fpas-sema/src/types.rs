@@ -254,6 +254,25 @@ impl Ty {
             // Interface is compatible with itself (same name) or a parent (extends chain not
             // walked here — sema widens the method set at declaration time instead).
             (Ty::Interface(a), Ty::Interface(b)) => a.name.eq_ignore_ascii_case(&b.name),
+            // Function and procedure structural compatibility: param count and element-wise
+            // type compatibility. This allows generic params inside function-typed parameters
+            // to unify with concrete types at call sites (e.g., `function(X: T): R` vs
+            // `function(X: integer): string` when T=integer, R=string).
+            (Ty::Function(a), Ty::Function(b)) => {
+                a.params.len() == b.params.len()
+                    && a.return_type.compatible_with(&b.return_type)
+                    && a.params
+                        .iter()
+                        .zip(b.params.iter())
+                        .all(|(pa, pb)| pa.ty.compatible_with(&pb.ty))
+            }
+            (Ty::Procedure(a), Ty::Procedure(b)) => {
+                (a.variadic || b.variadic || a.params.len() == b.params.len())
+                    && a.params
+                        .iter()
+                        .zip(b.params.iter())
+                        .all(|(pa, pb)| pa.ty.compatible_with(&pb.ty))
+            }
             _ => self == other,
         }
     }

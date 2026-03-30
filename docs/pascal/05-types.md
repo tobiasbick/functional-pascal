@@ -428,6 +428,58 @@ var
   S: string  := Identity('hi');  { T inferred as string  }
 ```
 
+### Generic Record Methods
+
+Record methods may declare their own type parameters even when the record itself is not generic.
+The type parameters belong to the method, not to the surrounding record.
+
+```pascal
+type
+  Box = record
+    Value: integer;
+
+    function Map<R>(Self: Box; F: function(X: integer): R): R;
+    begin
+      return F(Self.Value)
+    end;
+  end;
+
+function ToText(X: integer): string;
+begin
+  return 'value=' + IntToStr(X)
+end;
+
+var
+  B: Box := record Value := 42; end;
+  S: string := B.Map(ToText);   { R inferred as string }
+```
+
+Method-level type parameters may also use constraints:
+
+```pascal
+type
+  Accumulator = record
+    function Add<T: Numeric>(Self: Accumulator; Extra: T): T;
+    begin
+      return Extra
+    end;
+  end;
+```
+
+On generic records, method-level type parameters are added on top of the record's own type parameters:
+
+```pascal
+type
+  Wrapper<T> = record
+    Value: T;
+
+    function Transform<R>(Self: Wrapper of T; F: function(X: T): R): R;
+    begin
+      return F(Self.Value)
+    end;
+  end;
+```
+
 ### Implementation
 
 Generics use type erasure. The VM operates on dynamic values, so no monomorphization is needed. Type parameters are checked at compile time and erased at runtime.
@@ -510,6 +562,15 @@ type
 
 Interface bodies contain only **method signatures** (no bodies, no fields). Each
 method must declare `Self` as its first parameter typed as the interface itself.
+
+Interface method signatures may also declare their own type parameters:
+
+```pascal
+type
+  IMapper = interface
+    function Map<R>(Self: IMapper; F: function(X: integer): R): R;
+  end;
+```
 
 ### Implementing an Interface
 

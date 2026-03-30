@@ -1,5 +1,5 @@
 use super::super::super::Checker;
-use crate::types::{MethodKind, ParamTy, Ty};
+use crate::types::{GenericParamDef, MethodKind, ParamTy, Ty};
 use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_WRONG_ARGUMENT_COUNT};
 use fpas_lexer::Span;
 use fpas_parser::{Designator, DesignatorPart, Expr};
@@ -52,6 +52,7 @@ impl Checker {
     fn check_method_call_args(
         &mut self,
         name: &str,
+        type_params: &[GenericParamDef],
         visible_params: &[ParamTy],
         args: &[Expr],
         span: Span,
@@ -69,6 +70,7 @@ impl Checker {
             );
         }
 
+        let mut arg_types = Vec::with_capacity(args.len());
         for (index, arg) in args.iter().enumerate() {
             let arg_ty = self.check_expr(arg);
             if let Some(param) = visible_params.get(index) {
@@ -79,7 +81,10 @@ impl Checker {
                     span,
                 );
             }
+            arg_types.push(arg_ty);
         }
+
+        self.validate_routine_constraints(type_params, visible_params, &arg_types, span);
     }
 
     fn try_check_method_call_like(
@@ -158,7 +163,7 @@ impl Checker {
                     );
                     return Some(Ty::Error);
                 };
-                self.check_method_call_args(&qualified, visible_params, args, span);
+                self.check_method_call_args(&qualified, &func_ty.type_params, visible_params, args, span);
                 Some(*func_ty.return_type.clone())
             }
             MethodKind::Procedure(proc_ty) => {
@@ -173,7 +178,7 @@ impl Checker {
                     );
                     return Some(Ty::Error);
                 };
-                self.check_method_call_args(&qualified, visible_params, args, span);
+                self.check_method_call_args(&qualified, &proc_ty.type_params, visible_params, args, span);
                 if allow_procedure_result {
                     Some(Ty::Unit)
                 } else {
@@ -219,12 +224,12 @@ impl Checker {
         match &method_kind {
             MethodKind::Function(func_ty) => {
                 let visible = func_ty.params.get(1..).unwrap_or(&[]);
-                self.check_method_call_args(method_name, visible, args, span);
+                self.check_method_call_args(method_name, &func_ty.type_params, visible, args, span);
                 Some(*func_ty.return_type.clone())
             }
             MethodKind::Procedure(proc_ty) => {
                 let visible = proc_ty.params.get(1..).unwrap_or(&[]);
-                self.check_method_call_args(method_name, visible, args, span);
+                self.check_method_call_args(method_name, &proc_ty.type_params, visible, args, span);
                 if allow_procedure_result {
                     Some(Ty::Unit)
                 } else {

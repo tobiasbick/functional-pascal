@@ -52,7 +52,15 @@ impl Parser {
 
     fn parse_var_def(&mut self, visibility: Visibility) -> VarDef {
         let start = self.current_span();
-        let (name, _) = self.expect_ident().unwrap_or(("_error_".into(), start));
+        let (name, _) = match self.expect_ident() {
+            Some(ident) => ident,
+            None => {
+                if !self.at_end() {
+                    self.advance();
+                }
+                ("_error_".into(), start)
+            }
+        };
         self.expect(&Token::Colon);
         let type_expr = self.parse_type_expr();
         self.expect(&Token::ColonAssign);

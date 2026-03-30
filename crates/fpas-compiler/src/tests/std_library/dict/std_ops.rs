@@ -63,10 +63,12 @@ program DictRm;
 begin
   var D: dict of string to integer := ['Alice': 30, 'Bob': 25, 'Charlie': 35];
   var D2: dict of string to integer := Std.Dict.Remove(D, 'Bob');
-  Std.Console.WriteLn(D2);
-  Std.Console.WriteLn(Std.Dict.Length(D2))
+  Std.Console.WriteLn(Std.Dict.Length(D2));
+  Std.Console.WriteLn(Std.Dict.ContainsKey(D2, 'Bob'));
+  Std.Console.WriteLn(Std.Dict.Length(D))
 end.",
     );
+    assert_eq!(out.lines, vec!["2", "false", "3"]);
 }
 
 // ── Dict.Map ──────────────────────────────────────────────────────────────────

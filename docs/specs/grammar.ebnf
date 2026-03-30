@@ -239,6 +239,8 @@ record_method       = function_decl
 (* Record methods must declare Self as the first parameter, typed   *)
 (* as the enclosing record. Callers use dot notation; Self is       *)
 (* passed implicitly: A.DistanceTo(B) → Point.DistanceTo(A, B).    *)
+(* Record methods may declare their own type_params via the shared  *)
+(* function_decl / procedure_decl grammar.                          *)
 
 enum_type           = 'enum' enum_member { enum_member } 'end' ;
 enum_member         = identifier [ enum_fields | '=' integer_literal ] ';' ;
@@ -260,14 +262,15 @@ interface_method_sig = interface_function_sig
                      | interface_procedure_sig ;
 
 interface_function_sig  = 'function'  identifier [ type_params ]
-                          '(' formal_param_list ')' ':' type_expr ';' ;
+                          '(' [ param_list ] ')' ':' type_expr ';' ;
 
 interface_procedure_sig = 'procedure' identifier [ type_params ]
-                          '(' formal_param_list ')' ';' ;
+                          '(' [ param_list ] ')' ';' ;
 
 (* Interface bodies contain only signatures — no bodies, no fields. *)
 (* Each method must declare Self as its first parameter, typed as   *)
 (* the interface itself.                                            *)
+(* Interface methods may also declare their own type_params.        *)
 (* 'extends' inherits all parent-interface method signatures.       *)
 (* Circular extends (A extends A, or A extends B extends A) is     *)
 (* a semantic error.                                                *)

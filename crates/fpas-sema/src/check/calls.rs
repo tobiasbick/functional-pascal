@@ -85,7 +85,7 @@ impl Checker {
     /// `GenericParam(name, _)` and use the corresponding argument type as the
     /// inferred concrete type. Then validate each inferred type against its
     /// constraint (if any).
-    fn validate_routine_constraints(
+    pub(crate) fn validate_routine_constraints(
         &mut self,
         type_params: &[GenericParamDef],
         params: &[crate::types::ParamTy],

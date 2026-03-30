@@ -57,6 +57,23 @@ end.",
 }
 
 #[test]
+fn result_as_local_variable_name_in_method_is_parse_error() {
+        parse_fails(
+                "program T;
+type Holder = record
+    Value: integer;
+    function Wrap(Self: Holder): integer;
+    begin
+        var Result: integer := Self.Value;
+        return Result
+    end;
+end;
+begin
+end.",
+        );
+}
+
+#[test]
 fn ok_as_function_name_is_parse_error() {
     parse_fails(
         "program T;

@@ -149,6 +149,7 @@ impl Checker {
                         span,
                     );
                 }
+                let mut arg_types = Vec::with_capacity(args.len());
                 for (i, arg) in args.iter().enumerate() {
                     let arg_ty = self.check_expr(arg);
                     if let Some(param) = visible_params.get(i) {
@@ -159,7 +160,14 @@ impl Checker {
                             span,
                         );
                     }
+                    arg_types.push(arg_ty);
                 }
+                self.validate_routine_constraints(
+                    &proc_ty.type_params,
+                    visible_params,
+                    &arg_types,
+                    span,
+                );
             }
             MethodKind::Function(func_ty) => {
                 let Some(visible_params) = func_ty.params.get(1..) else {
@@ -185,6 +193,7 @@ impl Checker {
                         span,
                     );
                 }
+                let mut arg_types = Vec::with_capacity(args.len());
                 for (i, arg) in args.iter().enumerate() {
                     let arg_ty = self.check_expr(arg);
                     if let Some(param) = visible_params.get(i) {
@@ -195,7 +204,14 @@ impl Checker {
                             span,
                         );
                     }
+                    arg_types.push(arg_ty);
                 }
+                self.validate_routine_constraints(
+                    &func_ty.type_params,
+                    visible_params,
+                    &arg_types,
+                    span,
+                );
             }
         }
 

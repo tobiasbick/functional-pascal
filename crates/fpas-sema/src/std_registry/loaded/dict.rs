@@ -17,6 +17,8 @@ pub(super) fn register_std_dict(checker: &mut Checker) {
         s::STD_DICT_REMOVE,
         s::STD_DICT_GET,
         s::STD_DICT_MERGE,
+        s::STD_DICT_MAP,
+        s::STD_DICT_FILTER,
     ] {
         define_builtin_std(checker, name, placeholder.clone());
     }

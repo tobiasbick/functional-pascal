@@ -152,6 +152,107 @@ impl KeyInput {
         }
     }
 
+    /// Wait up to `timeout_ms` milliseconds for a console event.
+    ///
+    /// Returns `Some(event)` if one arrives within the timeout, `None` on timeout.
+    pub fn read_event_timeout(
+        &mut self,
+        timeout_ms: i64,
+        location: SourceLocation,
+    ) -> Result<Option<crate::console_event::ConsoleEvent>, StdError> {
+        // Drain queued events first (test mode or previously buffered).
+        if let Some(event) = self.console_event_queue.pop_front() {
+            return Ok(Some(event));
+        }
+        if let Some(event) = self.live_console_queue.pop_front() {
+            return Ok(Some(map_console_event(event)));
+        }
+        if self.test_mode {
+            return Ok(None);
+        }
+
+        let duration = Duration::from_millis(timeout_ms.max(0) as u64);
+        // Raw mode is required for event polling. If not already enabled, return None
+        // rather than entering raw mode implicitly. Call EnableRawMode() first.
+        if !self.raw_mode {
+            return Ok(None);
+        }
+
+        if !event::poll(duration).map_err(|e| {
+            std_runtime_error(
+                RUNTIME_CONSOLE_INPUT_FAILURE,
+                format!("ReadEventTimeout failed (poll): {e}"),
+                "Check terminal input availability and try again.",
+                location,
+            )
+        })? {
+            return Ok(None);
+        }
+
+        let ev = event::read().map_err(|e| {
+            std_runtime_error(
+                RUNTIME_CONSOLE_INPUT_FAILURE,
+                format!("ReadEventTimeout failed (read): {e}"),
+                "Check terminal input availability and try again.",
+                location,
+            )
+        })?;
+        if self.queue_live_event(ev) {
+            if let Some(next) = self.live_console_queue.pop_front() {
+                return Ok(Some(map_console_event(next)));
+            }
+        }
+        Ok(None)
+    }
+
+    /// Non-blocking event poll — returns `Some(event)` if one is pending, `None` otherwise.
+    ///
+    /// Unlike `read_event_timeout`, this never enters raw mode; it only checks already-buffered
+    /// events and, if already in raw mode, does a 0 ms crossterm poll.
+    pub fn poll_event(
+        &mut self,
+        location: SourceLocation,
+    ) -> Result<Option<crate::console_event::ConsoleEvent>, StdError> {
+        // Fast path: queued events.
+        if let Some(event) = self.console_event_queue.pop_front() {
+            return Ok(Some(event));
+        }
+        if let Some(event) = self.live_console_queue.pop_front() {
+            return Ok(Some(map_console_event(event)));
+        }
+        if self.test_mode {
+            return Ok(None);
+        }
+        // Only poll the real terminal if we are already in raw mode.
+        if !self.raw_mode {
+            return Ok(None);
+        }
+        if !event::poll(Duration::ZERO).map_err(|e| {
+            std_runtime_error(
+                RUNTIME_CONSOLE_INPUT_FAILURE,
+                format!("PollEvent failed (poll): {e}"),
+                "Check terminal input availability and try again.",
+                location,
+            )
+        })? {
+            return Ok(None);
+        }
+        let ev = event::read().map_err(|e| {
+            std_runtime_error(
+                RUNTIME_CONSOLE_INPUT_FAILURE,
+                format!("PollEvent failed (read): {e}"),
+                "Check terminal input availability and try again.",
+                location,
+            )
+        })?;
+        if self.queue_live_event(ev) {
+            if let Some(next) = self.live_console_queue.pop_front() {
+                return Ok(Some(map_console_event(next)));
+            }
+        }
+        Ok(None)
+    }
+
     pub(super) fn ensure_raw_mode(&mut self, location: SourceLocation) -> Result<(), StdError> {
         if self.raw_mode {
             return Ok(());

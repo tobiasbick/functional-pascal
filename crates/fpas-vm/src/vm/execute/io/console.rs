@@ -376,6 +376,59 @@ impl Worker {
                     .unwrap_or_else(|e| e.into_inner())
                     .disable_paste(line)?;
             }
+            Intrinsic::ConsoleReadEventTimeout => {
+                let ms = self.pop_int(line)?;
+                let maybe_event = self
+                    .shared
+                    .key_input
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .read_event_timeout(ms, line)?;
+                match maybe_event {
+                    Some(event) => {
+                        {
+                            let mut console = self
+                                .shared
+                                .console
+                                .lock()
+                                .unwrap_or_else(|e| e.into_inner());
+                            if event.kind == fpas_std::event_kind_index("Resize") {
+                                console.resize(event.width as u16, event.height as u16);
+                            }
+                        }
+                        self.push(Value::OptionSome(Box::new(Self::console_event_record(event))))?;
+                    }
+                    None => {
+                        self.push(Value::OptionNone)?;
+                    }
+                }
+            }
+            Intrinsic::ConsolePollEvent => {
+                let maybe_event = self
+                    .shared
+                    .key_input
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .poll_event(line)?;
+                match maybe_event {
+                    Some(event) => {
+                        {
+                            let mut console = self
+                                .shared
+                                .console
+                                .lock()
+                                .unwrap_or_else(|e| e.into_inner());
+                            if event.kind == fpas_std::event_kind_index("Resize") {
+                                console.resize(event.width as u16, event.height as u16);
+                            }
+                        }
+                        self.push(Value::OptionSome(Box::new(Self::console_event_record(event))))?;
+                    }
+                    None => {
+                        self.push(Value::OptionNone)?;
+                    }
+                }
+            }
             _ => return Ok(false),
         }
 

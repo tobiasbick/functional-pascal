@@ -74,6 +74,8 @@ Everything below requires `uses Std.Console;`.
 | function | `ReadKeyEvent(): KeyEvent` | structured key + modifiers |
 | function | `EventPending(): boolean` | true if `ReadEvent()` has data waiting |
 | function | `ReadEvent(): Event` | unified terminal event for keyboard, mouse, resize, paste, and focus |
+| function | `ReadEventTimeout(Milliseconds: integer): Option of Event` | wait up to N ms for an event; requires `EnableRawMode()` first |
+| function | `PollEvent(): Option of Event` | non-blocking check; `None` if no event is ready; requires `EnableRawMode()` first |
 | procedure | `EnableRawMode()` | explicitly enable terminal raw mode |
 | procedure | `DisableRawMode()` | explicitly disable terminal raw mode |
 | procedure | `EnterAltScreen()` | switch to the alternate terminal screen |
@@ -610,7 +612,39 @@ if E.kind = EventKind.Resize then
   WriteLn(E.width, 'x', E.height);
 ```
 
-### `procedure EnableRawMode()`
+### `function ReadEventTimeout(Milliseconds: integer): Option of Event`
+
+- **Parameters:** `Milliseconds` — maximum time to wait in milliseconds (`0` = non-blocking poll).
+- **Returns:** `Some(E)` if an event arrived within the timeout; `None` otherwise.
+- **Prerequisite:** call `EnableRawMode()` before using this function. If raw mode is not active, `None` is returned immediately.
+
+```pascal
+uses Std.Console, Std.Option;
+
+EnableRawMode();
+var MaybeEvent: Option of Event := ReadEventTimeout(100);
+match MaybeEvent with
+  | Some(E) => WriteLn(E.kind)
+  | None => WriteLn('timeout')
+end
+```
+
+### `function PollEvent(): Option of Event`
+
+- **Parameters:** none.
+- **Returns:** `Some(E)` if an event is already available; `None` if the queue is empty.
+- **Prerequisite:** call `EnableRawMode()` before using this function. If raw mode is not active, `None` is returned immediately.
+
+```pascal
+uses Std.Console, Std.Option;
+
+EnableRawMode();
+var MaybeE: Option of Event := PollEvent();
+match MaybeE with
+  | Some(E) => WriteLn('got event')
+  | None => WriteLn('nothing pending')
+end
+```
 
 ### `procedure DisableRawMode()`
 

@@ -54,6 +54,14 @@ pub enum Intrinsic {
     ConsoleDisableFocus = 194,
     ConsoleEnablePaste = 195,
     ConsoleDisablePaste = 196,
+    /// `Std.Console.ReadEventTimeout(Ms)` — wait up to `Ms` milliseconds; returns `option of Event`.
+    ///
+    /// **Documentation:** `docs/pascal/std/console.md`
+    ConsoleReadEventTimeout = 197,
+    /// `Std.Console.PollEvent()` — non-blocking; returns `option of Event`.
+    ///
+    /// **Documentation:** `docs/pascal/std/console.md`
+    ConsolePollEvent = 198,
 
     StrLength = 20,
     StrToUpper = 21,
@@ -178,6 +186,14 @@ pub enum Intrinsic {
     DictGet = 125,
     /// **Documentation:** `docs/pascal/std/dict.md`
     DictMerge = 126,
+    /// `Std.Dict.Map(D, F)` — transform every value; `F: function(V): V2`.
+    ///
+    /// **Documentation:** `docs/pascal/std/dict.md`
+    DictMap = 127,
+    /// `Std.Dict.Filter(D, F)` — keep entries where `F(K, V)` is true.
+    ///
+    /// **Documentation:** `docs/pascal/std/dict.md`
+    DictFilter = 128,
 
     /// `Std.Str.Repeat(S, N)` — repeat string N times.
     ///

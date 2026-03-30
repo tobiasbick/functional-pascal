@@ -54,6 +54,8 @@ pub(in super::super) const STD_CONSOLE_SYMBOLS: &[&str] = &[
     std_symbols::STD_CONSOLE_DISABLE_FOCUS,
     std_symbols::STD_CONSOLE_ENABLE_PASTE,
     std_symbols::STD_CONSOLE_DISABLE_PASTE,
+    std_symbols::STD_CONSOLE_READ_EVENT_TIMEOUT,
+    std_symbols::STD_CONSOLE_POLL_EVENT,
     std_symbols::STD_CONSOLE_BLACK,
     std_symbols::STD_CONSOLE_BLUE,
     std_symbols::STD_CONSOLE_GREEN,
@@ -217,4 +219,6 @@ pub(in super::super) const STD_DICT_SYMBOLS: &[&str] = &[
     std_symbols::STD_DICT_REMOVE,
     std_symbols::STD_DICT_GET,
     std_symbols::STD_DICT_MERGE,
+    std_symbols::STD_DICT_MAP,
+    std_symbols::STD_DICT_FILTER,
 ];

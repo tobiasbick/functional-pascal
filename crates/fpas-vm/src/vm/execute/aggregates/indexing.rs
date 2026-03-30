@@ -40,6 +40,19 @@ impl Worker {
                     }
                 }
             }
+            Value::Str(s) => {
+                let idx = array_index_from_key(&key, line)?;
+                let chars: Vec<char> = s.chars().collect();
+                if idx >= chars.len() {
+                    return Err(runtime_error(
+                        RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
+                        format!("String index {idx} out of bounds (length {})", chars.len()),
+                        "Check the index is in the range 0 .. Length(S) - 1.",
+                        line,
+                    ));
+                }
+                self.push(Value::Char(chars[idx]))?;
+            }
             _ => return Err(index_operand_error("IndexGet", &collection, line)),
         }
         Ok(())
@@ -122,10 +135,10 @@ fn index_operand_error(op_name: &str, collection: &Value, line: SourceLocation) 
     runtime_error(
         RUNTIME_VM_OPERAND_TYPE_MISMATCH,
         format!(
-            "{op_name} requires an array or dict, got {}",
+            "{op_name} requires an array, dict, or string; got {}",
             collection.type_name()
         ),
-        "Use indexing only on array or dict values.",
+        "Use indexing only on array, dict, or string values.",
         line,
     )
 }

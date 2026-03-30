@@ -500,6 +500,8 @@ dict_literal        = '[' ( ':' ']'                                      (* empt
                           { ',' expression ':' expression } ']' ) ;
 
 (* -- Designator (variable, field, or indexed access) -- *)
+(* Index expression '[' expression ']' applies to: array (integer index),
+   dict (key of matching type), and string (integer index → char).        *)
 designator          = identifier { '.' identifier | '[' expression ']' } ;
 
 (* -- Qualified identifier (for uses, types — no indexing) -- *)

@@ -111,8 +111,20 @@ fn register_std_console_key_api(checker: &mut Checker) {
             kind: SymbolKind::Type,
         },
     );
-    define_func(checker, s::STD_CONSOLE_READ_EVENT, vec![], event_ty);
+    define_func(checker, s::STD_CONSOLE_READ_EVENT, vec![], event_ty.clone());
     define_func(checker, s::STD_CONSOLE_EVENT_PENDING, vec![], Ty::Boolean);
+    define_func(
+        checker,
+        s::STD_CONSOLE_READ_EVENT_TIMEOUT,
+        vec![p("Milliseconds", Ty::Integer, false)],
+        Ty::Option(Box::new(event_ty.clone())),
+    );
+    define_func(
+        checker,
+        s::STD_CONSOLE_POLL_EVENT,
+        vec![],
+        Ty::Option(Box::new(event_ty)),
+    );
 }
 
 pub(super) fn register_std_console(checker: &mut Checker) {

@@ -133,11 +133,22 @@ impl Checker {
                                     }
                                     *val_ty.clone()
                                 }
+                                Ty::String => {
+                                    if index_ty != Ty::Integer && !index_ty.is_error() {
+                                        self.error_with_code(
+                                            SEMA_TYPE_MISMATCH,
+                                            "String index must be an integer",
+                                            "Use an integer index, e.g. S[0].",
+                                            super::super::spans::expr_span(index_expr),
+                                        );
+                                    }
+                                    Ty::Char
+                                }
                                 _ => {
                                     self.error_with_code(
                                         SEMA_TYPE_MISMATCH,
-                                        "Indexed value is not an array or dict",
-                                        "Use `A[I]` only on array or dict values.",
+                                        "Indexed value is not an array, dict, or string",
+                                        "Use `A[I]` only on array, dict, or string values.",
                                         *span,
                                     );
                                     Ty::Error

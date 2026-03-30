@@ -3,6 +3,7 @@ use super::super::super::diagnostics::VmError;
 use fpas_bytecode::{Intrinsic, SourceLocation};
 
 mod array_ops;
+mod dict_ops;
 mod result_option_ops;
 mod sync_call;
 
@@ -71,6 +72,14 @@ impl Worker {
             }
             Intrinsic::OptionOrElse => {
                 self.exec_option_or_else(line)?;
+                Ok(true)
+            }
+            Intrinsic::DictMap => {
+                self.exec_dict_map(line)?;
+                Ok(true)
+            }
+            Intrinsic::DictFilter => {
+                self.exec_dict_filter(line)?;
                 Ok(true)
             }
             _ => Ok(false),

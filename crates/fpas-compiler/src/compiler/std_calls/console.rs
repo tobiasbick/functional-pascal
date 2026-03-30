@@ -249,6 +249,17 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::ConsoleDisablePaste, location);
                 Ok(true)
             }
+            s::STD_CONSOLE_READ_EVENT_TIMEOUT => {
+                self.expect_exact_args(s::STD_CONSOLE_READ_EVENT_TIMEOUT, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::ConsoleReadEventTimeout, location);
+                Ok(true)
+            }
+            s::STD_CONSOLE_POLL_EVENT => {
+                self.expect_zero_args(s::STD_CONSOLE_POLL_EVENT, args, location)?;
+                self.emit_intrinsic(Intrinsic::ConsolePollEvent, location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

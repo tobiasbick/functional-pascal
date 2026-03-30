@@ -37,6 +37,8 @@ All routines are **generic over key type `K` and value type `V`**.
 | function | `Remove(D: dict of K to V; Key: K): dict of K to V` | new dict without the given key |
 | function | `Get(D: dict of K to V; Key: K): Option of V` | safe lookup; `None` if absent |
 | function | `Merge(D1: dict of K to V; D2: dict of K to V): dict of K to V` | combined dict; `D2` wins on conflict |
+| function | `Map(D: dict of K to V; F: function(V: V): V2): dict of K to V2` | transform all values |
+| function | `Filter(D: dict of K to V; F: function(K: K; V: V): boolean): dict of K to V` | keep matching entries |
 
 ---
 
@@ -143,6 +145,39 @@ var Base: dict of string to integer := ['A': 1, 'B': 2];
 var Over: dict of string to integer := ['B': 9, 'C': 3];
 var M: dict of string to integer := Std.Dict.Merge(Base, Over);
 { [A: 1, B: 9, C: 3] }
+```
+
+---
+
+### `Map`
+
+```pascal
+function Map(D: dict of K to V; F: function(V: V): V2): dict of K to V2;
+```
+
+Transforms every value in `D` by applying `F` to it. Keys are preserved; the result is a new dict of the same size. The original dict is not modified.
+
+```pascal
+var Prices: dict of string to real := ['Apple': 1.0, 'Banana': 0.5];
+var Doubled: dict of string to real := Std.Dict.Map(Prices, function(V: real): real begin return V * 2.0 end);
+WriteLn(Doubled)  { [Apple: 2.0, Banana: 1.0] }
+```
+
+---
+
+### `Filter`
+
+```pascal
+function Filter(D: dict of K to V; F: function(K: K; V: V): boolean): dict of K to V;
+```
+
+Returns a new dict containing only the entries for which `F(K, V)` returns `true`. The original dict is not modified.
+
+```pascal
+var Scores: dict of string to integer := ['Alice': 90, 'Bob': 55, 'Carol': 80];
+var Passing: dict of string to integer :=
+  Std.Dict.Filter(Scores, function(K: string; V: integer): boolean begin return V >= 60 end);
+WriteLn(Passing)  { [Alice: 90, Carol: 80] }
 ```
 
 ---

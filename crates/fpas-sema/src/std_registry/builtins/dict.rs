@@ -1,5 +1,5 @@
 use crate::check::Checker;
-use crate::types::Ty;
+use crate::types::{FunctionTy, Ty};
 use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_WRONG_ARGUMENT_COUNT};
 use fpas_lexer::Span;
 use fpas_parser::Expr;
@@ -19,6 +19,8 @@ pub(super) fn check_dict_builtin_std_call(
         s::STD_DICT_REMOVE => check_dict_remove(c, args, span),
         s::STD_DICT_GET => check_dict_get(c, args, span),
         s::STD_DICT_MERGE => check_dict_merge(c, args, span),
+        s::STD_DICT_MAP => check_dict_map(c, args, span),
+        s::STD_DICT_FILTER => check_dict_filter(c, args, span),
         _ => return None,
     };
     Some(ty)
@@ -249,4 +251,136 @@ fn check_dict_merge(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     }
 
     Ty::Dict(Box::new(k1), Box::new(v1))
+}
+
+/// `Std.Dict.Map(D, F)` — `F: function(V): V2` → `dict of K to V2`.
+fn check_dict_map(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+    if args.len() != 2 {
+        c.error_with_code(
+            SEMA_WRONG_ARGUMENT_COUNT,
+            format!(
+                "`{}` expects 2 arguments, got {}",
+                s::STD_DICT_MAP,
+                args.len()
+            ),
+            "Example: Std.Dict.Map(D, function(V: integer): integer begin return V * 2 end).",
+            span,
+        );
+        return Ty::Error;
+    }
+    let dict_ty = c.check_expr(&args[0]);
+    let func_ty = c.check_expr(&args[1]);
+    let Some((k, v)) = dict_kv_types(&dict_ty) else {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            format!("`{}` first argument must be a dict", s::STD_DICT_MAP),
+            "Pass `dict of K to V`.",
+            span,
+        );
+        return Ty::Error;
+    };
+    let return_ty = match &func_ty {
+        Ty::Function(FunctionTy { params, return_type, .. }) if params.len() == 1 => {
+            if !v.compatible_with(&params[0].ty) {
+                c.error_with_code(
+                    SEMA_TYPE_MISMATCH,
+                    format!(
+                        "`{}` callback parameter type mismatch: expected `{v:?}`, got `{:?}`",
+                        s::STD_DICT_MAP, params[0].ty
+                    ),
+                    "Pass a function(V: V): V2 where V matches the dict's value type.",
+                    span,
+                );
+                return Ty::Error;
+            }
+            (**return_type).clone()
+        }
+        Ty::Error => return Ty::Error,
+        _ => {
+            c.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                format!("`{}` second argument must be a 1-parameter function", s::STD_DICT_MAP),
+                "Pass a function(V: V): V2.",
+                span,
+            );
+            return Ty::Error;
+        }
+    };
+    Ty::Dict(Box::new(k), Box::new(return_ty))
+}
+
+/// `Std.Dict.Filter(D, F)` — `F: function(K; V): boolean` → `dict of K to V`.
+fn check_dict_filter(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+    if args.len() != 2 {
+        c.error_with_code(
+            SEMA_WRONG_ARGUMENT_COUNT,
+            format!(
+                "`{}` expects 2 arguments, got {}",
+                s::STD_DICT_FILTER,
+                args.len()
+            ),
+            "Example: Std.Dict.Filter(D, function(K: string; V: integer): boolean begin return V > 1 end).",
+            span,
+        );
+        return Ty::Error;
+    }
+    let dict_ty = c.check_expr(&args[0]);
+    let func_ty = c.check_expr(&args[1]);
+    let Some((k, v)) = dict_kv_types(&dict_ty) else {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            format!("`{}` first argument must be a dict", s::STD_DICT_FILTER),
+            "Pass `dict of K to V`.",
+            span,
+        );
+        return Ty::Error;
+    };
+    match &func_ty {
+        Ty::Function(FunctionTy { params, return_type, .. }) if params.len() == 2 => {
+            if !k.compatible_with(&params[0].ty) {
+                c.error_with_code(
+                    SEMA_TYPE_MISMATCH,
+                    format!(
+                        "`{}` callback first parameter type mismatch: expected `{k:?}`, got `{:?}`",
+                        s::STD_DICT_FILTER, params[0].ty
+                    ),
+                    "First callback parameter must match the dict's key type.",
+                    span,
+                );
+                return Ty::Error;
+            }
+            if !v.compatible_with(&params[1].ty) {
+                c.error_with_code(
+                    SEMA_TYPE_MISMATCH,
+                    format!(
+                        "`{}` callback second parameter type mismatch: expected `{v:?}`, got `{:?}`",
+                        s::STD_DICT_FILTER, params[1].ty
+                    ),
+                    "Second callback parameter must match the dict's value type.",
+                    span,
+                );
+                return Ty::Error;
+            }
+            if !Ty::Boolean.compatible_with(return_type) {
+                c.error_with_code(
+                    SEMA_TYPE_MISMATCH,
+                    format!("`{}` callback must return boolean", s::STD_DICT_FILTER),
+                    "Pass a function(K: K; V: V): boolean.",
+                    span,
+                );
+                return Ty::Error;
+            }
+        }
+        Ty::Error => return Ty::Error,
+        _ => {
+            c.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                format!("`{}` second argument must be a 2-parameter function", s::STD_DICT_FILTER),
+                "Pass a function(K: K; V: V): boolean.",
+                span,
+            );
+            return Ty::Error;
+        }
+    }
+    Ty::Dict(Box::new(k), Box::new(v))
 }

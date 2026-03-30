@@ -201,6 +201,28 @@ type
 | `shl`    | Shift left (integer)                 | `A shl 2`       |
 | `shr`    | Shift right (integer)                | `A shr 1`       |
 
+### String Indexing
+
+Individual characters can be read by 0-based integer index using bracket notation. The result type is `char`.
+
+```pascal
+var
+  S: string := 'Hello';
+  C: char := S[0];   { 'H' }
+  L: char := S[4];   { 'o' }
+```
+
+Accessing an out-of-bounds index is a **runtime error**. The index must be an `integer`; non-integer indices are a compile-time error.
+
+```pascal
+{ iterate over characters }
+mutable var I: integer := 0;
+while I < Std.Str.Length(S) do begin
+  WriteLn(S[I]);
+  I := I + 1
+end
+```
+
 ### String Concatenation
 
 ```pascal

@@ -4,13 +4,13 @@
 
 ---
 
-## Std.Str — String Indexing
+## ~~Std.Str — String Indexing~~ — **implemented**
 
 ### Motivation
 
 Accessing a single character in a string currently requires `CharAt(S, I)` or `Substring(S, I, 1)`. Direct index syntax would be more natural.
 
-### Proposed Syntax
+### ~~Proposed Syntax~~ Syntax
 
 ```pascal
 var S: string := 'Hello';
@@ -19,60 +19,43 @@ var C: char := S[0];            { 'H' — 0-based character index }
 
 Index access on `string` yields `char`. Out-of-bounds is a runtime error.
 
+See [02-basics.md](../pascal/02-basics.md) for documentation.
+
 ---
 
-## Std.Dict — Functional Transformations
+## ~~Std.Dict — Functional Transformations~~ — **implemented**
 
 ### Motivation
 
 `Get` and `Merge` are implemented. Still missing: higher-order `Map` and `Filter` on dictionaries — needed for transforming config data or filtering entries.
 
-### Proposed Additions
+### ~~Proposed Additions~~ Additions
 
 | Kind | Signature | Description |
 |------|-----------|-------------|
 | function | `Map(D: dict of K to V; F: function(V: V): V2): dict of K to V2` | Transform all values |
 | function | `Filter(D: dict of K to V; F: function(K: K; V: V): boolean): dict of K to V` | Keep matching entries |
 
-### Examples
-
-```pascal
-uses Std.Dict;
-
-var D: dict of string to integer := ['A': 1, 'B': 2, 'C': 3];
-var Doubled: dict of string to integer := Map(D,
-  function(V: integer): integer begin return V * 2 end);
-var Big: dict of string to integer := Filter(D,
-  function(K: string; V: integer): boolean begin return V > 1 end);
-```
+See [std/dict.md](../pascal/std/dict.md) for documentation and examples.
 
 ---
 
-## Std.Console — Timer and Timeout Events
+## ~~Std.Console — Timer and Timeout Events~~ — **implemented**
 
 ### Motivation
 
 Interactive programs need idle processing, cursor blinking, and periodic updates. `ReadEvent()` currently blocks indefinitely — there is no way to specify a timeout or receive periodic timer events.
 
-### Proposed Additions
+### ~~Proposed Additions~~ Additions
 
 | Kind | Signature | Description |
 |------|-----------|-------------|
 | function | `ReadEventTimeout(Milliseconds: integer): Option of Event` | Wait up to `Milliseconds` ms; return `None` on timeout |
 | function | `PollEvent(): Option of Event` | Non-blocking; return `None` if no event pending |
 
-### Examples
+**Note:** `EnableRawMode()` must be called before using either function.
 
-```pascal
-uses Std.Console, Std.Option;
-
-{ Wait up to 100ms for an event, then do idle work }
-var E: Option of Event := ReadEventTimeout(100);
-case E of
-  Some(Ev): HandleEvent(Ev);
-  None: IdleUpdate();
-end;
-```
+See [std/console.md](../pascal/std/console.md) for documentation and examples.
 
 ---
 
@@ -104,8 +87,9 @@ for Key: string, Value: integer in Ages do
 
 ## Docs and Specs to Extend (when implemented)
 
-- [02-basics.md](../pascal/02-basics.md): string index access `S[I]`
+- ~~[02-basics.md](../pascal/02-basics.md): string index access `S[I]`~~ — done
 - [03-control-flow.md](../pascal/03-control-flow.md): `for-in` over `dict`
-- [std/dict.md](../pascal/std/dict.md): `Map`, `Filter`
-- [std/console.md](../pascal/std/console.md): `ReadEventTimeout`, `PollEvent`
-- [grammar.ebnf](../specs/grammar.ebnf): `ForInDict`, `StringIndexExpr` productions
+- ~~[std/dict.md](../pascal/std/dict.md): `Map`, `Filter`~~ — done
+- ~~[std/console.md](../pascal/std/console.md): `ReadEventTimeout`, `PollEvent`~~ — done
+- [grammar.ebnf](../specs/grammar.ebnf): `ForInDict` production
+- ~~[grammar.ebnf](../specs/grammar.ebnf): `StringIndexExpr` production~~ — covered by existing `designator` rule

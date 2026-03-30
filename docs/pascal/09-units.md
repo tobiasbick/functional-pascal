@@ -4,7 +4,7 @@ The unit system enables multi-file projects. Each source file declares its names
 
 ## Unit Declaration
 
-A unit file starts with a `unit` declaration followed by declarations (functions, procedures, types, constants). There is no main block.
+A unit file starts with a `unit` declaration followed by declarations (functions, procedures, types, constants, `var`, and `mutable var`). There is no main block.
 
 ```pascal
 unit MyApp.Utils;
@@ -114,6 +114,8 @@ The `private` and `public` keywords apply to `function`, `procedure`, `type`, `c
 ## Reserved Namespace `Std`
 
 The first segment `Std` (ASCII, any case) is reserved for the standard library. User-defined units must use another root segment (for example `MyApp.Utils`, not `Std.Utils`). Only the compiler and bundled libraries may define names under `Std.*`.
+
+In `uses`, only two-part standard library names such as `Std.Console` are valid. A bare `Std` entry and longer names such as `Std.IO.Console` are invalid.
 
 Unknown `uses` entries referring to `Std.*` are rejected with an error that lists the valid standard units.
 

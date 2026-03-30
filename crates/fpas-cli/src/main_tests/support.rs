@@ -40,14 +40,13 @@ pub(super) fn run_and_capture_stderr(path: &str, source: &str) -> (i32, String) 
 }
 
 pub(super) fn run_cli_and_capture_output(project_file: &Path, cwd: &Path) -> (i32, String, String) {
+    run_cli_args_and_capture_output(&[project_file.to_string_lossy().to_string()], cwd)
+}
+
+pub(super) fn run_cli_args_and_capture_output(args: &[String], cwd: &Path) -> (i32, String, String) {
     let stdout = SharedWriter::default();
     let mut stderr = Vec::<u8>::new();
-    let exit_code = run_cli(
-        &[project_file.to_string_lossy().to_string()],
-        cwd,
-        Box::new(stdout.clone()),
-        &mut stderr,
-    );
+    let exit_code = run_cli(args, cwd, Box::new(stdout.clone()), &mut stderr);
 
     let stdout_output = stdout.into_string();
     let stderr_output = String::from_utf8(stderr).expect("stderr must be valid UTF-8");

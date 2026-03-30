@@ -89,6 +89,9 @@ pub enum DiagnosticStage {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DiagnosticSeverity {
+    /// A non-fatal diagnostic that does not block compilation.
+    Warning,
+    /// A fatal diagnostic that prevents successful compilation or execution.
     Error,
 }
 
@@ -103,6 +106,26 @@ pub struct Diagnostic {
 }
 
 impl Diagnostic {
+    /// Creates a warning diagnostic.
+    #[must_use]
+    pub fn warning(
+        code: DiagnosticCode,
+        stage: DiagnosticStage,
+        message: impl Into<String>,
+        help: Option<String>,
+        span: SourceSpan,
+    ) -> Self {
+        Self {
+            code,
+            stage,
+            severity: DiagnosticSeverity::Warning,
+            message: message.into(),
+            help,
+            span,
+        }
+    }
+
+    /// Creates an error diagnostic.
     #[must_use]
     pub fn error(
         code: DiagnosticCode,
@@ -125,6 +148,7 @@ impl Diagnostic {
 #[must_use]
 pub fn render(path: &str, diagnostic: &Diagnostic) -> String {
     let severity = match diagnostic.severity {
+        DiagnosticSeverity::Warning => "warning",
         DiagnosticSeverity::Error => "error",
     };
 
@@ -147,7 +171,9 @@ pub fn render(path: &str, diagnostic: &Diagnostic) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{Diagnostic, DiagnosticCode, DiagnosticStage, SourceLocation, SourceSpan, render};
+    use super::{
+        Diagnostic, DiagnosticCode, DiagnosticStage, SourceLocation, SourceSpan, render,
+    };
 
     #[test]
     fn source_location_from_tuple() {
@@ -192,6 +218,23 @@ mod tests {
         assert_eq!(
             rendered,
             "path/to/file.fpas:12:8: error[F1003]: Expected `then`, found `do`\n  help: Insert `then` after the condition."
+        );
+    }
+
+    #[test]
+    fn render_warning_uses_warning_label() {
+        let diagnostic = Diagnostic::warning(
+            DiagnosticCode::new(13),
+            DiagnosticStage::Lex,
+            "Unknown compiler directive `{$R+}`",
+            Some("This directive is ignored.".to_string()),
+            SourceSpan::new(0, 4, 3, 5),
+        );
+
+        let rendered = render("path/to/file.fpas", &diagnostic);
+        assert_eq!(
+            rendered,
+            "path/to/file.fpas:3:5: warning[F0013]: Unknown compiler directive `{$R+}`\n  help: This directive is ignored."
         );
     }
 

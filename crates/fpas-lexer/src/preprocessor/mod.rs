@@ -22,10 +22,12 @@
 mod directive;
 
 use std::collections::HashSet;
+use std::fs;
+use std::path::{Path, PathBuf};
 
 pub use directive::{DirectiveKind, parse_directive_content};
 
-use crate::{LexError, Span, SpannedToken, Token, error::lex_error};
+use crate::{LexError, Span, SpannedToken, Token, error::{lex_error, lex_warning}};
 use fpas_diagnostics::codes::{
     LEX_DIRECTIVE_ELSE_WITHOUT_IFDEF, LEX_DIRECTIVE_ENDIF_WITHOUT_IFDEF,
     LEX_DIRECTIVE_INCLUDE_UNSUPPORTED, LEX_DIRECTIVE_UNCLOSED_IFDEF, LEX_DIRECTIVE_UNKNOWN,
@@ -96,6 +98,22 @@ pub fn preprocess(
     state.run(tokens)
 }
 
+/// Processes a token stream in project mode, resolving active `{$I ...}` /
+/// `{$INCLUDE ...}` directives relative to `current_file`.
+///
+/// Included files are lexed and preprocessed recursively as if their source
+/// text appeared inline at the include site.
+///
+/// **Documentation:** `docs/pascal/12-compiler-directives.md`
+pub fn preprocess_in_project(
+    tokens: Vec<SpannedToken>,
+    defines: &DefineSet,
+    current_file: &Path,
+) -> Result<(Vec<SpannedToken>, Vec<LexError>), String> {
+    let state = Preprocessor::new(defines.clone());
+    state.run_in_project(tokens, current_file)
+}
+
 // ── Internal state ────────────────────────────────────────────────────────────
 
 /// One frame on the conditional compilation stack.
@@ -137,20 +155,22 @@ impl Preprocessor {
     }
 
     fn run(mut self, tokens: Vec<SpannedToken>) -> (Vec<SpannedToken>, Vec<LexError>) {
-        for st in tokens {
-            match &st.token {
-                Token::Directive(raw) => {
-                    let span = st.span;
-                    let kind = parse_directive_content(raw);
-                    self.handle_directive(kind, span);
-                }
-                _ => {
-                    if self.is_emitting() {
-                        self.out.push(st);
-                    }
-                }
-            }
-        }
+        self.process_tokens(tokens, None, true)
+            .expect("single-file preprocessing must not perform file I/O");
+
+        self.finish()
+    }
+
+    fn run_in_project(
+        mut self,
+        tokens: Vec<SpannedToken>,
+        current_file: &Path,
+    ) -> Result<(Vec<SpannedToken>, Vec<LexError>), String> {
+        self.process_tokens(tokens, Some(current_file), true)?;
+        Ok(self.finish())
+    }
+
+    fn finish(mut self) -> (Vec<SpannedToken>, Vec<LexError>) {
 
         // Report any unclosed IFDEF/IFNDEF blocks.
         for frame in &self.stack {
@@ -165,7 +185,37 @@ impl Preprocessor {
         (self.out, self.errors)
     }
 
-    fn handle_directive(&mut self, kind: DirectiveKind, span: Span) {
+    fn process_tokens(
+        &mut self,
+        tokens: Vec<SpannedToken>,
+        current_file: Option<&Path>,
+        keep_eof: bool,
+    ) -> Result<(), String> {
+        for st in tokens {
+            match &st.token {
+                Token::Directive(raw) => {
+                    let span = st.span;
+                    let kind = parse_directive_content(raw);
+                    self.handle_directive(kind, span, current_file)?;
+                }
+                Token::Eof if !keep_eof => {}
+                _ => {
+                    if self.is_emitting() {
+                        self.out.push(st);
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    fn handle_directive(
+        &mut self,
+        kind: DirectiveKind,
+        span: Span,
+        current_file: Option<&Path>,
+    ) -> Result<(), String> {
         match kind {
             DirectiveKind::IfDef(name) => {
                 let parent = self.is_emitting();
@@ -233,18 +283,23 @@ impl Preprocessor {
             }
             DirectiveKind::Include(filename) => {
                 if self.is_emitting() {
-                    self.errors.push(lex_error(
-                        LEX_DIRECTIVE_INCLUDE_UNSUPPORTED,
-                        &format!("`{{$INCLUDE {filename}}}` is not supported in single-file mode"),
-                        "File inclusion is only available inside a multi-file project. \
-                         Use `fpas build` with a `.fpproj` project file.",
-                        span,
-                    ));
+                    match current_file {
+                        Some(path) => self.process_include(path, &filename)?,
+                        None => {
+                            self.errors.push(lex_error(
+                                LEX_DIRECTIVE_INCLUDE_UNSUPPORTED,
+                                &format!("`{{$INCLUDE {filename}}}` is not supported in single-file mode"),
+                                "File inclusion is only available inside a multi-file project. \
+                                 Use `fpas build` with a `.fpasprj` project file.",
+                                span,
+                            ));
+                        }
+                    }
                 }
             }
             DirectiveKind::Unknown(raw) => {
                 if self.is_emitting() {
-                    self.errors.push(lex_error(
+                    self.errors.push(lex_warning(
                         LEX_DIRECTIVE_UNKNOWN,
                         &format!("Unknown compiler directive `{{${raw}}}`"),
                         "Supported directives: DEFINE, UNDEF, IFDEF, IFNDEF, ELSE, ENDIF, \
@@ -255,5 +310,44 @@ impl Preprocessor {
                 }
             }
         }
+
+        Ok(())
     }
+
+    fn process_include(&mut self, current_file: &Path, filename: &str) -> Result<(), String> {
+        let include_path = resolve_include_path(current_file, filename)?;
+        let source = fs::read_to_string(&include_path).map_err(|error| {
+            format!(
+                "Error reading included file `{}` referenced from `{}`: {error}",
+                include_path.to_string_lossy(),
+                current_file.to_string_lossy()
+            )
+        })?;
+        let (tokens, lex_errors) = crate::lex(&source);
+        self.errors.extend(lex_errors);
+        self.process_tokens(tokens, Some(&include_path), false)
+    }
+}
+
+fn resolve_include_path(current_file: &Path, filename: &str) -> Result<PathBuf, String> {
+    let trimmed = filename.trim();
+    if trimmed.is_empty() {
+        return Err(format!(
+            "Include directive in `{}` is missing a file name.",
+            current_file.to_string_lossy()
+        ));
+    }
+
+    let raw_path = PathBuf::from(trimmed);
+    if raw_path.is_absolute() {
+        return Ok(raw_path);
+    }
+
+    let base_dir = current_file.parent().ok_or_else(|| {
+        format!(
+            "Cannot resolve include path `{trimmed}` relative to `{}`.",
+            current_file.to_string_lossy()
+        )
+    })?;
+    Ok(base_dir.join(raw_path))
 }

@@ -18,3 +18,19 @@ pub fn lex_error(
         span.into(),
     )
 }
+
+#[must_use]
+pub fn lex_warning(
+    code: DiagnosticCode,
+    message: impl Into<String>,
+    hint: impl Into<String>,
+    span: Span,
+) -> LexError {
+    Diagnostic::warning(
+        code,
+        DiagnosticStage::Lex,
+        message,
+        Some(hint.into()),
+        span.into(),
+    )
+}

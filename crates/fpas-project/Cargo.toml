@@ -1,0 +1,18 @@
+[package]
+name = "fpas-project"
+description = "Project loading and unit linking for the Functional Pascal compiler"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+fpas-diagnostics = { path = "../fpas-diagnostics" }
+fpas-lexer = { path = "../fpas-lexer" }
+fpas-parser = { path = "../fpas-parser" }
+glob = "0.3.3"
+serde = { version = "1.0.228", features = ["derive"] }
+toml = "0.9.8"
+
+[lints]
+workspace = true

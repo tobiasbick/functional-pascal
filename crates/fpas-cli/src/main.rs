@@ -14,12 +14,11 @@
 )]
 mod cli_input;
 mod cli_run;
-mod project;
 
 use std::env;
 use std::process;
 
-pub(crate) use cli_input::{CliInput, resolve_cli_input};
+pub(crate) use cli_input::{CliConfig, CliInput, resolve_cli_config, resolve_cli_input};
 pub(crate) use cli_run::run_cli;
 #[cfg(test)]
 pub(crate) use cli_run::{render_cli_diagnostic, run_source};
@@ -44,6 +43,9 @@ fn main() {
 
 #[cfg(test)]
 mod main_tests;
+
+#[cfg(test)]
+mod project;
 
 #[cfg(test)]
 mod test_support;

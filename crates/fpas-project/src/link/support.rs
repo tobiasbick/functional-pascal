@@ -1,5 +1,5 @@
 use super::UnitFile;
-use crate::project::common::qualified_id_to_string;
+use crate::common::qualified_id_to_string;
 
 use fpas_parser::QualifiedId;
 use std::collections::HashMap;

@@ -1,4 +1,5 @@
 use crate::{DefineSet, Token, lex, preprocess};
+use fpas_diagnostics::DiagnosticSeverity;
 
 // Helper: lex + preprocess with given defines, return just the non-EOF tokens.
 fn pp(source: &str, defines: &DefineSet) -> Vec<Token> {
@@ -239,13 +240,18 @@ fn include_in_inactive_branch_is_suppressed() {
 }
 
 #[test]
-fn unknown_directive_in_active_branch_is_error() {
-    let msgs = pp_errors("{$R+}", &empty());
-    assert_eq!(msgs.len(), 1);
+fn unknown_directive_in_active_branch_is_warning() {
+    let (tokens, lex_errors) = lex("{$R+}");
+    assert!(lex_errors.is_empty(), "lex errors: {lex_errors:?}");
+
+    let (out, errors) = preprocess(tokens, &empty());
+    assert!(out.iter().all(|token| token.token == Token::Eof));
+    assert_eq!(errors.len(), 1);
+    assert_eq!(errors[0].severity, DiagnosticSeverity::Warning);
     assert!(
-        msgs[0].contains("Unknown compiler directive"),
+        errors[0].message.contains("Unknown compiler directive"),
         "unexpected message: {}",
-        msgs[0]
+        errors[0].message
     );
 }
 

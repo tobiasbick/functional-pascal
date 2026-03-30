@@ -1,20 +1,5 @@
-mod common;
-mod link;
-mod loading;
-mod model;
-mod paths;
-
-use std::path::{Path, PathBuf};
-
-pub use loading::load_project;
-pub use model::{LoadedProject, ProjectKind};
-
-pub fn build_program(
-    main_path: &Path,
-    source_files: &[PathBuf],
-) -> Result<fpas_parser::Program, String> {
-    link::build_program(main_path, source_files)
-}
+pub use fpas_project::{ProjectKind, build_program, load_project};
 
 #[cfg(test)]
+#[path = "project/tests/mod.rs"]
 mod tests;

@@ -4,7 +4,7 @@ use super::{
     rewrite::linked_decl_name,
     support::{canonical_unit_key, internal_link_error, is_std_unit, unknown_unit_error},
 };
-use crate::project::common::qualified_id_to_string;
+use crate::common::qualified_id_to_string;
 
 use fpas_parser::{QualifiedId, Visibility};
 use std::collections::{BTreeSet, HashMap, HashSet};

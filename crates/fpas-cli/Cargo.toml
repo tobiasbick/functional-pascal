@@ -11,13 +11,12 @@ name = "fpas"
 path = "src/main.rs"
 
 [dependencies]
+fpas-project = { path = "../fpas-project" }
 fpas-parser = { path = "../fpas-parser" }
+fpas-lexer = { path = "../fpas-lexer" }
 fpas-compiler = { path = "../fpas-compiler" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-vm = { path = "../fpas-vm" }
-glob = "0.3.3"
-serde = { version = "1.0.228", features = ["derive"] }
-toml = "0.9.8"
 
 [lints]
 workspace = true

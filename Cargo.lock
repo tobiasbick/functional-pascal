@@ -83,11 +83,10 @@ version = "0.0.1"
 dependencies = [
  "fpas-compiler",
  "fpas-diagnostics",
+ "fpas-lexer",
  "fpas-parser",
+ "fpas-project",
  "fpas-vm",
- "glob",
- "serde",
- "toml",
 ]
 
 [[package]]
@@ -120,6 +119,18 @@ version = "0.0.1"
 dependencies = [
  "fpas-diagnostics",
  "fpas-lexer",
+]
+
+[[package]]
+name = "fpas-project"
+version = "0.0.1"
+dependencies = [
+ "fpas-diagnostics",
+ "fpas-lexer",
+ "fpas-parser",
+ "glob",
+ "serde",
+ "toml",
 ]
 
 [[package]]

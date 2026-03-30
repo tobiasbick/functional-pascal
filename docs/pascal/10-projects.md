@@ -9,7 +9,7 @@ A project groups source files into a buildable unit. Projects are defined by a `
   - One match: loads that project file.
   - Multiple matches: error — pass the desired `.fpasprj` path explicitly.
 - `fpas <path>` — detects input type by extension:
-  - `.fpas` — runs as a single source file (no project needed).
+  - `.fpas` — runs as a single source file with a `program` declaration (no project needed).
   - `.fpasprj` — loads as a project file.
   - Other extensions — error.
 - `fpas` with more than one argument — usage error.
@@ -38,8 +38,8 @@ include = ["src/**/*.fpas"]
 
 ### Project Kinds
 
-- **`program`** — produces an executable. Requires `main` pointing to a file with a `program` declaration. There is exactly one program file per project.
-- **`library`** — a reusable library. All files use `unit` declarations. Must not define `main`.
+- **`program`** — produces an executable. Requires `main` pointing to a file with a `program` declaration. The entry point is exactly one main program file per project.
+- **`library`** — a reusable library. Must not define `main`. Source files are expected to use `unit` declarations.
 
 ### `[sources]` Section
 

@@ -135,14 +135,14 @@ compilation_unit    = program | unit ;
 
 program             = program_heading
                       [ uses_clause ]
-                      { declaration }
+                      { program_declaration }
                       main_block '.' ;
 
 program_heading     = 'program' identifier ';' ;
 
 unit                = unit_heading
                       [ uses_clause ]
-                      { declaration } ;
+                      { unit_declaration } ;
 
 unit_heading        = 'unit' qualified_id ';' ;
 
@@ -161,17 +161,20 @@ main_block          = 'begin' statement_list 'end' ;
 
 (* ---- 2.2 Declarations ----------------------------------------- *)
 
-declaration         = [ visibility ] ( const_block
+program_declaration = const_block
                     | var_block
                     | mutable_var_block
                     | type_block
                     | function_decl
-                    | procedure_decl ) ;
+                    | procedure_decl ;
+
+unit_declaration    = [ visibility ] program_declaration ;
 
 visibility          = 'public' | 'private' ;
 
 (* Default visibility is `public`. `public`/`private` control       *)
-(* whether a symbol is exported from a unit.                        *)
+(* whether a symbol is exported from a unit. They are not valid in  *)
+(* `program` files.                                                 *)
 
 (* -- Constants -- *)
 const_block         = 'const' const_def { const_def } ;

@@ -64,3 +64,17 @@ fn cli_renders_runtime_stage_output() {
         "runtime.fpas:3:3: error[F4010]: panic: boom\n  help: Remove the panic or guard the failing condition before calling panic.\n"
     );
 }
+
+#[test]
+fn cli_renders_warning_diagnostic_and_continues() {
+    let source = "program WarnOnly;\n{$R+}\nbegin\nend.\n";
+    let (exit_code, stdout_output, stderr_output) =
+        support::run_source_and_capture_output("warn.fpas", source);
+
+    assert_eq!(exit_code, 0);
+    assert!(stdout_output.is_empty());
+    assert_eq!(
+        stderr_output,
+        "warn.fpas:2:1: warning[F0013]: Unknown compiler directive `{$R+}`\n  help: Supported directives: DEFINE, UNDEF, IFDEF, IFNDEF, ELSE, ENDIF, INCLUDE (project mode only).  Compiler switches such as `{$R+}` are accepted but have no effect.\n"
+    );
+}

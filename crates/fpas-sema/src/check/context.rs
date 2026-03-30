@@ -26,6 +26,10 @@ pub type InterfaceDispatchMap = HashMap<usize, String>;
 /// **Documentation:** `docs/pascal/05-types.md` (Default Field Values)
 pub type RecordDefaultsMap = HashMap<String, Vec<(String, Option<Expr>)>>;
 
+/// Marks `CaseLabel::Value.start` expressions that semantic analysis interpreted
+/// as scalar guard bindings instead of value labels.
+pub type ScalarCaseBindingMap = HashSet<usize>;
+
 pub struct Checker {
     pub(crate) scopes: ScopeStack,
     pub(crate) errors: Vec<SemaError>,
@@ -43,6 +47,8 @@ pub struct Checker {
     pub(crate) short_builtin_redirect: HashMap<String, String>,
     /// Named record type → ordered (field_name, optional_default_expr) pairs.
     pub(crate) record_defaults: RecordDefaultsMap,
+    /// `case` label expressions that bind the scrutinee for a guarded scalar arm.
+    pub(crate) scalar_case_bindings: ScalarCaseBindingMap,
     /// Record names currently registered as placeholders while their fields are being resolved.
     pub(crate) pending_record_types: HashSet<String>,
 }
@@ -59,6 +65,7 @@ impl Checker {
             ambiguous_imports: HashMap::new(),
             short_builtin_redirect: HashMap::new(),
             record_defaults: RecordDefaultsMap::new(),
+            scalar_case_bindings: ScalarCaseBindingMap::new(),
             pending_record_types: HashSet::new(),
         }
     }
@@ -71,6 +78,7 @@ impl Checker {
         MethodCallMap,
         InterfaceDispatchMap,
         RecordDefaultsMap,
+        ScalarCaseBindingMap,
     ) {
         (
             self.errors,
@@ -78,6 +86,7 @@ impl Checker {
             self.method_calls,
             self.interface_dispatch,
             self.record_defaults,
+            self.scalar_case_bindings,
         )
     }
 

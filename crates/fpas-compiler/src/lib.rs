@@ -24,8 +24,14 @@ use fpas_parser::Program;
 
 /// Compile a parsed program into bytecode.
 pub fn compile(program: &Program) -> Result<Chunk, CompileError> {
-    let (sema_errors, expr_types, method_calls, interface_dispatch, record_defaults) =
-        fpas_sema::analyze_with_types(program);
+    let (
+        sema_errors,
+        expr_types,
+        method_calls,
+        interface_dispatch,
+        record_defaults,
+        scalar_case_bindings,
+    ) = fpas_sema::analyze_with_types(program);
     if let Some(err) = sema_errors.into_iter().next() {
         return Err(err);
     }
@@ -34,6 +40,7 @@ pub fn compile(program: &Program) -> Result<Chunk, CompileError> {
         method_calls,
         interface_dispatch,
         record_defaults,
+        scalar_case_bindings,
     );
     compiler.compile_program(program)?;
     Ok(compiler.finish())

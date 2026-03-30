@@ -85,7 +85,10 @@ fn all_63_keywords() {
 fn default_is_reserved_keyword() {
     assert_eq!(toks("default"), vec![Token::Default]);
     assert_eq!(toks("DEFAULT"), vec![Token::Default]);
-    assert_eq!(toks("defaultValue"), vec![Token::Ident("defaultValue".into())]);
+    assert_eq!(
+        toks("defaultValue"),
+        vec![Token::Ident("defaultValue".into())]
+    );
 }
 
 #[test]

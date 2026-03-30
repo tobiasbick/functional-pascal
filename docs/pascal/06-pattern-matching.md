@@ -134,6 +134,29 @@ end;
 
 The guard expression has access to any bindings introduced by the label.
 
+### Scalar Guard Bindings
+
+In scalar `case` arms, a single bare identifier with a guard introduces a binding for the matched value:
+
+```pascal
+case Value of
+  N if N > 0:
+    WriteLn('positive');
+  N if N < 0:
+    WriteLn('negative');
+else
+  WriteLn('zero');
+end;
+```
+
+`N` is available in both the guard and the arm body, but only inside that arm.
+
+Rules:
+
+- The arm must have exactly one label.
+- The label must be a single bare identifier, not a range or a comma-separated label list.
+- If the identifier resolves to a compile-time constant or enum member, it remains a normal value label instead of becoming a binding.
+
 ## Nested Patterns
 
 Patterns can be nested to match complex enum structures. When a variant field is itself an enum, the pattern can destructure it recursively:

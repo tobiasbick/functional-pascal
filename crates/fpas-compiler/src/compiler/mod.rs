@@ -6,7 +6,9 @@
 use std::collections::HashMap;
 
 use fpas_bytecode::Chunk;
-use fpas_sema::{ExprTypeMap, InterfaceDispatchMap, MethodCallMap, RecordDefaultsMap};
+use fpas_sema::{
+    ExprTypeMap, InterfaceDispatchMap, MethodCallMap, RecordDefaultsMap, ScalarCaseBindingMap,
+};
 
 mod binary_op;
 mod designator;
@@ -79,6 +81,8 @@ pub struct Compiler {
     ///
     /// **Documentation:** `docs/pascal/05-types.md` (Default Field Values)
     record_defaults: RecordDefaultsMap,
+    /// Scalar `case` labels that sema resolved as guard bindings.
+    scalar_case_bindings: ScalarCaseBindingMap,
 }
 
 struct LoopCtx {
@@ -94,6 +98,7 @@ impl Compiler {
         method_calls: MethodCallMap,
         interface_dispatch: InterfaceDispatchMap,
         record_defaults: RecordDefaultsMap,
+        scalar_case_bindings: ScalarCaseBindingMap,
     ) -> Self {
         Self {
             chunk: Chunk::new(),
@@ -110,6 +115,7 @@ impl Compiler {
             interface_dispatch,
             next_lambda_id: 0,
             record_defaults,
+            scalar_case_bindings,
         }
     }
 

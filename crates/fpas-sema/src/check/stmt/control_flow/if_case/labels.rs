@@ -1,5 +1,6 @@
 use super::Checker;
 use crate::check::spans::expr_span;
+use crate::scope::SymbolKind;
 use crate::types::{EnumTy, Ty};
 use fpas_diagnostics::codes::{
     SEMA_ENUM_FIELD_COUNT_MISMATCH, SEMA_NON_BOOLEAN_CONDITION, SEMA_TYPE_MISMATCH,
@@ -290,5 +291,61 @@ pub(super) fn binding_type_for_variant(case_ty: &Ty, variant: &DestructureVarian
         (Ty::Result(_, err), DestructureVariant::Error) => *err.clone(),
         (Ty::Option(inner), DestructureVariant::Some) => *inner.clone(),
         _ => Ty::Error,
+    }
+}
+
+impl Checker {
+    pub(super) fn scalar_guard_binding_name<'a>(
+        &self,
+        case_ty: &Ty,
+        labels: &'a [CaseLabel],
+        guard: &Option<Expr>,
+    ) -> Option<&'a str> {
+        if guard.is_none() || labels.len() != 1 {
+            return None;
+        }
+
+        if matches!(case_ty, Ty::Result(_, _) | Ty::Option(_)) {
+            return None;
+        }
+        if matches!(case_ty, Ty::Enum(enum_ty) if enum_ty.has_data()) {
+            return None;
+        }
+
+        let CaseLabel::Value {
+            start, end: None, ..
+        } = &labels[0]
+        else {
+            return None;
+        };
+
+        let Expr::Designator(designator) = start else {
+            return None;
+        };
+        if designator.parts.len() != 1 {
+            return None;
+        }
+
+        let DesignatorPart::Ident(name, _) = &designator.parts[0] else {
+            return None;
+        };
+        if name == "_" {
+            return None;
+        }
+
+        match self.scopes.lookup(name) {
+            Some(symbol) if matches!(symbol.kind, SymbolKind::Const | SymbolKind::EnumMember) => {
+                None
+            }
+            _ => Some(name.as_str()),
+        }
+    }
+
+    pub(super) fn mark_scalar_guard_binding(&mut self, label: &CaseLabel) {
+        let CaseLabel::Value { start, .. } = label else {
+            return;
+        };
+        self.scalar_case_bindings
+            .insert(Self::expr_lookup_key(start));
     }
 }

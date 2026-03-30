@@ -106,15 +106,15 @@ end.",
 
 #[test]
 fn default_as_function_name_is_parse_error() {
-        parse_fails(
-                "program T;
+    parse_fails(
+        "program T;
 function default(): integer;
 begin
     return 1
 end;
 begin
 end.",
-        );
+    );
 }
 
 // ── Case insensitivity ─────────────────────────────────────────────────

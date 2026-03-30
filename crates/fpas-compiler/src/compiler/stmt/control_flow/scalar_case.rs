@@ -1,7 +1,7 @@
 use super::super::super::Compiler;
 use crate::error::CompileError;
-use fpas_bytecode::Op;
-use fpas_parser::{CaseArm, Stmt};
+use fpas_bytecode::{Op, Value};
+use fpas_parser::{CaseArm, CaseLabel, DesignatorPart, Expr, Stmt};
 use fpas_sema::Ty;
 
 impl Compiler {
@@ -29,6 +29,7 @@ impl Compiler {
                 self.emit_case_label_match(label, case_slot, eq_op, ge_op, le_op, line, column)?;
                 let fail_patch = self.emit(Op::JumpIfFalse(0), (line, column));
 
+                let scalar_binding = self.scalar_guard_binding_name(label);
                 let binding = match label {
                     fpas_parser::CaseLabel::Destructure {
                         variant, binding, ..
@@ -36,7 +37,11 @@ impl Compiler {
                     fpas_parser::CaseLabel::Value { .. } => None,
                 };
 
-                if let Some((variant, name)) = &binding {
+                if let Some(name) = &scalar_binding {
+                    self.begin_scope();
+                    self.emit(Op::GetLocal(case_slot), (line, column));
+                    self.add_local(name);
+                } else if let Some((variant, name)) = &binding {
                     self.begin_scope();
                     self.emit(Op::GetLocal(case_slot), (line, column));
                     match variant {
@@ -61,7 +66,7 @@ impl Compiler {
 
                 self.compile_stmt(&arm.body)?;
 
-                if binding.is_some() {
+                if scalar_binding.is_some() || binding.is_some() {
                     self.end_scope((line, column));
                 }
 
@@ -70,7 +75,7 @@ impl Compiler {
                 if let Some(guard_patch) = guard_fail {
                     let cleanup_addr = self.chunk.len() as u32;
                     self.patch_jump(guard_patch, cleanup_addr, (line, column))?;
-                    if binding.is_some() {
+                    if scalar_binding.is_some() || binding.is_some() {
                         self.emit(Op::Pop, (line, column));
                     }
                 }
@@ -123,6 +128,10 @@ impl Compiler {
             fpas_parser::CaseLabel::Value {
                 start, end: None, ..
             } => {
+                if self.is_scalar_guard_binding_expr(start) {
+                    self.emit_constant(Value::Boolean(true), (line, column));
+                    return Ok(());
+                }
                 self.emit(Op::GetLocal(case_slot), (line, column));
                 self.compile_expr(start)?;
                 self.emit(eq_op, (line, column));
@@ -149,5 +158,30 @@ impl Compiler {
         }
 
         Ok(())
+    }
+
+    fn scalar_guard_binding_name(&self, label: &CaseLabel) -> Option<String> {
+        let CaseLabel::Value {
+            start, end: None, ..
+        } = label
+        else {
+            return None;
+        };
+        if !self.is_scalar_guard_binding_expr(start) {
+            return None;
+        }
+
+        let Expr::Designator(designator) = start else {
+            return None;
+        };
+        let DesignatorPart::Ident(name, _) = &designator.parts[0] else {
+            return None;
+        };
+        Some(name.clone())
+    }
+
+    fn is_scalar_guard_binding_expr(&self, expr: &Expr) -> bool {
+        self.scalar_case_bindings
+            .contains(&fpas_sema::expr_lookup_key(expr))
     }
 }

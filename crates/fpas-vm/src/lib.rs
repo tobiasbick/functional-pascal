@@ -27,7 +27,8 @@ mod tests {
         chunk.emit(Op::Halt, loc());
 
         let code_start = chunk.len();
-        chunk.functions
+        chunk
+            .functions
             .insert(function_name.to_string(), (code_start, 0));
         body(&mut chunk);
         chunk

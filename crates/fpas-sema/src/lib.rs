@@ -17,6 +17,7 @@ pub use check::ExprTypeMap;
 pub use check::InterfaceDispatchMap;
 pub use check::MethodCallMap;
 pub use check::RecordDefaultsMap;
+pub use check::ScalarCaseBindingMap;
 pub use error::SemaError;
 pub use types::Ty;
 
@@ -38,6 +39,7 @@ pub fn analyze_with_types(
     MethodCallMap,
     InterfaceDispatchMap,
     RecordDefaultsMap,
+    ScalarCaseBindingMap,
 ) {
     let mut checker = check::Checker::new();
     checker.check_program(program);

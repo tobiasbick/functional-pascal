@@ -246,6 +246,37 @@ begin
 end.
 ```
 
+## Result and Option Types
+
+`Result of T, E` represents either a successful value of type `T` or an error value of type `E`.
+`Option of T` represents either a present value of type `T` or the absence of a value.
+
+```pascal
+var Success: Result of integer, string := Ok(42);
+var Failure: Result of integer, string := Error('not found');
+
+var Present: Option of integer := Some(7);
+var Missing: Option of integer := None;
+```
+
+Use `case` destructuring to handle both forms:
+
+```pascal
+case Success of
+  Ok(Value): WriteLn(IntToStr(Value));
+  Error(Message): WriteLn(Message)
+end;
+
+case Present of
+  Some(Value): WriteLn(IntToStr(Value));
+  None: WriteLn('empty')
+end;
+```
+
+Use `try` to propagate `Error(...)` and `None` automatically from functions that return
+`Result` or `Option`. For propagation rules, combinators, and standard-library helpers, see
+[07-error-handling.md](07-error-handling.md).
+
 ## Enumerations
 
 Enums define a set of named constants, optionally with explicit integer backing values.
@@ -344,6 +375,53 @@ begin
   Push(Items, 3);  { [1, 2, 3] }
 end.
 ```
+
+## Dictionaries
+
+`dict of K to V` stores key-value pairs. Keys keep insertion order when iterated with `for-in`.
+
+```pascal
+var Ages: dict of string to integer := ['Alice': 30, 'Bob': 25];
+var Empty: dict of string to integer := [:];
+
+var AliceAge: integer := Ages['Alice'];
+```
+
+Dictionary writes require a mutable binding:
+
+```pascal
+mutable var
+  Counts: dict of string to integer := ['A': 1];
+
+begin
+  Counts['A'] := 2;
+  Counts['B'] := 3
+end.
+```
+
+Use `Std.Dict` for helpers such as `Length`, `ContainsKey`, `Get`, `Keys`, `Values`, and `Remove`.
+
+## Channels
+
+`channel of T` is a typed channel used to send values of type `T` between concurrent tasks.
+
+```pascal
+uses Std.Channel;
+
+var Ch: channel of integer := Make();
+```
+
+Sending and receiving preserve the element type:
+
+```pascal
+Send(Ch, 42);
+var Value: integer := Receive(Ch);
+var MaybeValue: Option of integer := TryReceive(Ch);
+```
+
+`TryReceive` returns `Some(Value)` when data is available and `None` when no value can be taken
+immediately. For `go`, `select`, buffering, closing, and task handles, see
+[08-concurrency.md](08-concurrency.md).
 
 ## Type Aliases
 

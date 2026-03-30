@@ -12,3 +12,4 @@ pub use context::ExprTypeMap;
 pub use context::InterfaceDispatchMap;
 pub use context::MethodCallMap;
 pub use context::RecordDefaultsMap;
+pub use context::ScalarCaseBindingMap;

@@ -232,7 +232,9 @@ field_def           = identifier ':' type_expr [ ':=' expression ] ';' ;
 (* compiler substitutes the default automatically.  Fields without  *)
 (* a default must be supplied in every record literal.              *)
 
-implements_clause   = 'implements' type_expr ';' ;
+interface_name      = qualified_id [ 'of' type_arg_list ] ;
+
+implements_clause   = 'implements' interface_name ';' ;
 
 (* A record may have zero or more implements_clause entries.        *)
 (* Nominal typing: explicit declaration is required; structural     *)
@@ -259,7 +261,7 @@ enum_field          = identifier ':' type_expr ;
 (* ---- 2.4b Interface Types ------------------------------------- *)
 
 interface_type      = 'interface'
-                      [ 'extends' type_expr ';' ]
+                      [ 'extends' interface_name ';' ]
                       { interface_method_sig }
                       'end' ;
 
@@ -360,28 +362,42 @@ case_stmt           = 'case' expression 'of'
 
 case_arm            = case_label_list [ 'if' expression ] ':' statement ;
 case_label_list     = case_label { ',' case_label } ;
-case_label          = expression [ '..' expression ]     (* value/range    *)
-                    | destructure_label ;                (* Result/Option  *)
-                    | enum_pattern ;                     (* enum with data *)
+case_label          = destructure_label                  (* Result/Option  *)
+                    | enum_pattern                       (* enum with data *)
+                    | expression [ '..' expression ] ;  (* value/range    *)
 
 destructure_label   = ( 'ok' | 'error' | 'some' ) '(' identifier ')'
                     | 'none' ;
 
 enum_pattern        = qualified_id '(' pattern_arg { ',' pattern_arg } ')'
-                    | qualified_id ;                     (* fieldless var. *)
+                    | qualified_id ;                     (* fieldless variant *)
 
 pattern_arg         = '_'                                (* wildcard       *)
                     | identifier                         (* binding        *)
+                    | literal_pattern                    (* literal match  *)
                     | enum_pattern ;                     (* nested pattern *)
+
+literal_pattern     = integer_literal
+                    | real_literal
+                    | string_literal
+                    | 'true'
+                    | 'false' ;
 
 (* Value labels must be compile-time constants: integer, char,      *)
 (* string, boolean, or enum literals. Ranges use '..'.              *)
+(*                                                                  *)
+(* Semantic disambiguation for guarded scalar bindings: in a scalar  *)
+(* case arm, `Name if <boolean>:` binds the scrutinee to `Name`     *)
+(* when the arm has exactly one bare identifier label and `Name`    *)
+(* does not resolve to a compile-time constant or enum member.      *)
+(* This shorthand is not valid for ranges or comma-separated label  *)
+(* lists.                                                           *)
 (* Destructure labels bind the inner value of Result/Option.        *)
 (* Enum patterns match a variant and bind its fields positionally:  *)
 (* Shape.Circle(R) binds Radius to R. Patterns may nest:           *)
 (* Expr.Add(Expr.Num(A), Expr.Num(B)) matches Add where both       *)
-(* children are Num and binds their values. '_' matches anything    *)
-(* without binding.                                                 *)
+(* children are Num and binds their values. Fields may also match   *)
+(* literals. '_' matches anything without binding.                  *)
 (*                                                                  *)
 (* Guard clause ('if' expression) on an arm: the arm matches only   *)
 (* when the label matches AND the guard evaluates to true. The      *)

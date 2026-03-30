@@ -71,6 +71,25 @@ impl Checker {
         );
 
         for arm in arms {
+            if let Some(binding_name) =
+                self.scalar_guard_binding_name(&case_ty, &arm.labels, &arm.guard)
+            {
+                self.mark_scalar_guard_binding(&arm.labels[0]);
+                self.scopes.push_scope();
+                self.scopes.define(
+                    binding_name,
+                    Symbol {
+                        ty: case_ty.clone(),
+                        mutable: false,
+                        kind: SymbolKind::Var,
+                    },
+                );
+                self.check_guard(&arm.guard, span);
+                self.check_stmt(&arm.body);
+                self.scopes.pop_scope();
+                continue;
+            }
+
             let mut binding_sets = Vec::new();
             for label in &arm.labels {
                 if let Some(bindings) =

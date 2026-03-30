@@ -210,3 +210,59 @@ fn for_in_assign_to_loop_var_in_nested_block() {
          end.",
     );
 }
+
+// ---------------------------------------------------------------------------
+// for-in over dict — yields keys in insertion order
+// ---------------------------------------------------------------------------
+
+#[test]
+fn for_in_dict_valid_string_key() {
+    check_ok(
+        "program T;
+         begin \
+         var D: dict of string to integer := ['a': 1]; \
+         for K: string in D do return \
+         end.",
+    );
+}
+
+#[test]
+fn for_in_dict_valid_integer_key() {
+    check_ok(
+        "program T; begin \
+         var D: dict of integer to boolean := [1: true]; \
+         for K: integer in D do return \
+         end.",
+    );
+}
+
+#[test]
+fn for_in_dict_key_type_mismatch() {
+    check_errors(
+        "program T; begin \
+         var D: dict of string to integer := ['a': 1]; \
+         for K: integer in D do return \
+         end.",
+    );
+}
+
+#[test]
+fn for_in_dict_var_is_immutable() {
+    check_errors(
+        "program T; begin \
+         var D: dict of string to integer := ['a': 1]; \
+         for K: string in D do K := 'x' \
+         end.",
+    );
+}
+
+#[test]
+fn for_in_dict_var_not_accessible_after_loop() {
+    check_errors(
+        "program T; begin \
+         var D: dict of string to integer := ['a': 1]; \
+         for K: string in D do return; \
+         Std.Console.WriteLn(K) \
+         end.",
+    );
+}

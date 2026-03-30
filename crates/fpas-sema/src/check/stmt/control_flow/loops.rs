@@ -63,12 +63,16 @@ impl Checker {
             Ty::Array(elem_ty) => {
                 self.check_type_compat(&var_ty, elem_ty, "for-in element", span);
             }
+            // `for K: KT in <dict of KT to VT>` iterates over keys in insertion order.
+            Ty::Dict(k_ty, _v_ty) => {
+                self.check_type_compat(&var_ty, k_ty, "for-in dict key", span);
+            }
             Ty::Error => {}
             _ => {
                 self.error_with_code(
                     SEMA_TYPE_MISMATCH,
-                    "For-in requires an array expression",
-                    "for X: T in <array of T> do ...",
+                    "For-in requires an array or dict expression",
+                    "for X: T in <array of T> do ...  or  for K: K in <dict of K to V> do ...",
                     span,
                 );
             }

@@ -63,7 +63,16 @@ impl Compiler {
         line: u32,
         column: u32,
     ) -> Result<(), CompileError> {
+        use fpas_sema::Ty;
         self.compile_expr(iterable)?;
+        // For dict iterables, convert to array of keys first so the rest of the
+        // loop body uses the identical array-iteration pattern.
+        if matches!(self.ty_of(iterable), Ty::Dict(_, _)) {
+            self.emit(
+                Op::Intrinsic(u16::from(Intrinsic::DictKeys)),
+                (line, column),
+            );
+        }
         self.begin_scope();
         let arr_slot = self.add_local("__for_arr");
 

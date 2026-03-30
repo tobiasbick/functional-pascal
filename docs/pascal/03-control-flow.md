@@ -94,6 +94,33 @@ for S: integer in Scores do
   WriteLn(S);
 ```
 
+### For-In (Dict Key Iteration)
+
+Iterates over the **keys** of a `dict of K to V` in insertion order. The loop
+variable receives each key; values can be looked up via the key inside the body.
+Requires `uses Std.Dict`.
+
+```pascal
+uses Std.Dict, Std.Conv;
+
+var Ages: dict of string to integer := ['Alice': 30, 'Bob': 25];
+
+for Name: string in Ages do
+  WriteLn(Name + ': ' + IntToStr(Ages[Name]));
+```
+
+The loop variable type must match the dict's key type. Iterating an empty dict
+executes the body zero times. `break` and `continue` work as usual.
+
+```pascal
+{ Print only keys whose value exceeds 10 }
+for K: string in Ages do
+begin
+  if Ages[K] <= 10 then continue;
+  WriteLn(K);
+end;
+```
+
 ## While Loop
 
 ```pascal

@@ -375,6 +375,8 @@ for_stmt            = 'for' identifier ':' type_expr ':=' expression
                       'do' statement ;
 
 (* -- For-In Loop -- *)
+(* Works for both array-of-T (yields elements) and dict-of-K-to-V  *)
+(* (yields keys in insertion order). Loop variable is immutable.   *)
 for_in_stmt         = 'for' identifier ':' type_expr 'in' expression
                       'do' statement ;
 

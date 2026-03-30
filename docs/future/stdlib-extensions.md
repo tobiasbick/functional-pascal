@@ -59,7 +59,7 @@ See [std/console.md](../pascal/std/console.md) for documentation and examples.
 
 ---
 
-## For-In over Dict
+## ~~For-In over Dict~~ — **implemented**
 
 ### Motivation
 
@@ -88,8 +88,8 @@ for Key: string, Value: integer in Ages do
 ## Docs and Specs to Extend (when implemented)
 
 - ~~[02-basics.md](../pascal/02-basics.md): string index access `S[I]`~~ — done
-- [03-control-flow.md](../pascal/03-control-flow.md): `for-in` over `dict`
+- ~~[03-control-flow.md](../pascal/03-control-flow.md): `for-in` over `dict`~~ — done
 - ~~[std/dict.md](../pascal/std/dict.md): `Map`, `Filter`~~ — done
 - ~~[std/console.md](../pascal/std/console.md): `ReadEventTimeout`, `PollEvent`~~ — done
-- [grammar.ebnf](../specs/grammar.ebnf): `ForInDict` production
+- ~~[grammar.ebnf](../specs/grammar.ebnf): `ForInDict` production~~ — done
 - ~~[grammar.ebnf](../specs/grammar.ebnf): `StringIndexExpr` production~~ — covered by existing `designator` rule

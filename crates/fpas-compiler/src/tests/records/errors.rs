@@ -138,7 +138,10 @@ begin
   var P: Point := record X := 1; X := 2; end
 end.",
     );
-    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION);
+    assert_eq!(
+        err.code,
+        fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION
+    );
 }
 
 #[test]

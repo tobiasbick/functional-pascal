@@ -7,6 +7,9 @@ impl Worker {
     /// exhausted, saves the current task and picks up the next one from
     /// the shared queue.
     pub(in super::super::super) fn maybe_timeslice_yield(&mut self) {
+        if self.sync_call_depth > 0 {
+            return;
+        }
         self.instructions_until_yield = self.instructions_until_yield.saturating_sub(1);
         if self.instructions_until_yield == 0 {
             self.instructions_until_yield = TIMESLICE;

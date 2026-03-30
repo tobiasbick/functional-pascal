@@ -1,5 +1,5 @@
 use super::super::{VmError, Worker, internal_error};
-use fpas_bytecode::SourceLocation;
+use fpas_bytecode::{SourceLocation, Value};
 
 impl Worker {
     pub(in super::super) fn frame_base(&self) -> usize {
@@ -19,10 +19,22 @@ impl Worker {
         let frame_count = self.call_stack.len();
         let base = if depth == 0 {
             self.frame_base()
-        } else if (depth as usize) >= frame_count {
-            0
         } else {
-            self.call_stack[frame_count - 1 - depth as usize].base_slot
+            let depth = depth as usize;
+            if depth > frame_count {
+                return Err(internal_error(
+                    format!(
+                        "enclosing local depth {depth} is invalid for call stack depth {frame_count}"
+                    ),
+                    "This indicates invalid bytecode or a compiler closure-layout bug. Please report it.",
+                    location,
+                ));
+            }
+            if depth == frame_count {
+                0
+            } else {
+                self.call_stack[frame_count - 1 - depth].base_slot
+            }
         };
 
         let index = base + slot as usize;
@@ -38,5 +50,25 @@ impl Worker {
         }
 
         Ok(index)
+    }
+
+    pub(in super::super) fn drain_stack_tail(
+        &mut self,
+        count: usize,
+        location: SourceLocation,
+    ) -> Result<Vec<Value>, VmError> {
+        if count > self.stack.len() {
+            return Err(internal_error(
+                format!(
+                    "cannot drain {count} value(s) from stack of len {}",
+                    self.stack.len()
+                ),
+                "This indicates invalid bytecode or a VM stack-layout bug. Please report it.",
+                location,
+            ));
+        }
+
+        let start = self.stack.len() - count;
+        Ok(self.stack.drain(start..).collect())
     }
 }

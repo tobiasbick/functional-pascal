@@ -19,11 +19,11 @@ impl Worker {
     ) -> Result<bool, VmError> {
         match op {
             Op::MakeArray(count) => {
-                self.exec_make_array(count)?;
+                self.exec_make_array(count, line)?;
                 Ok(true)
             }
             Op::MakeDict(pair_count) => {
-                self.exec_make_dict(pair_count)?;
+                self.exec_make_dict(pair_count, line)?;
                 Ok(true)
             }
             Op::IndexGet => {
@@ -66,19 +66,18 @@ impl Worker {
         }
     }
 
-    fn drain_values(&mut self, count: usize) -> Vec<Value> {
-        let start = self.stack.len() - count;
-        self.stack.drain(start..).collect()
+    fn drain_values(&mut self, count: usize, line: SourceLocation) -> Result<Vec<Value>, VmError> {
+        self.drain_stack_tail(count, line)
     }
 
-    fn exec_make_array(&mut self, count: u16) -> Result<(), VmError> {
-        let elements = self.drain_values(count as usize);
+    fn exec_make_array(&mut self, count: u16, line: SourceLocation) -> Result<(), VmError> {
+        let elements = self.drain_values(count as usize, line)?;
         self.push(Value::Array(elements))?;
         Ok(())
     }
 
-    fn exec_make_dict(&mut self, pair_count: u16) -> Result<(), VmError> {
-        let items = self.drain_values(pair_count as usize * 2);
+    fn exec_make_dict(&mut self, pair_count: u16, line: SourceLocation) -> Result<(), VmError> {
+        let items = self.drain_values(pair_count as usize * 2, line)?;
         let pairs = items
             .chunks(2)
             .map(|chunk| (chunk[0].clone(), chunk[1].clone()))

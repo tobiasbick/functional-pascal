@@ -4,7 +4,9 @@
 
 use super::Checker;
 use crate::scope::{FunctionCtx, Symbol, SymbolKind};
-use crate::types::{FunctionTy, InterfaceTy, MethodKind, ParamTy, ProcedureTy, RecordTy, Ty, TypeConstraint};
+use crate::types::{
+    FunctionTy, InterfaceTy, MethodKind, ParamTy, ProcedureTy, RecordTy, Ty, TypeConstraint,
+};
 use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_TYPE};
 use fpas_parser::{FuncBody, RecordMethod, RecordType, TypeDef, TypeParam};
 
@@ -26,6 +28,7 @@ impl Checker {
             );
             return;
         }
+        self.pending_record_types.insert(td.name.clone());
 
         let fields = self.with_type_params(&td.type_params, td.span, |checker| {
             record
@@ -128,6 +131,7 @@ impl Checker {
         if let Some(existing) = self.scopes.lookup_mut(&td.name) {
             *existing.ty_mut() = ty;
         }
+        self.pending_record_types.remove(&td.name);
     }
 
     fn check_record_methods(
@@ -145,10 +149,8 @@ impl Checker {
 
                     // Resolve param/return types with the method's own type params in scope
                     // so expressions like `Value: T` resolve `T` as a generic param.
-                    let (return_ty, params) = self.with_type_params(
-                        &function.type_params,
-                        function.span,
-                        |checker| {
+                    let (return_ty, params) =
+                        self.with_type_params(&function.type_params, function.span, |checker| {
                             let return_ty = checker.resolve_method_param_type(
                                 &function.return_type,
                                 type_name,
@@ -168,8 +170,7 @@ impl Checker {
                                 })
                                 .collect();
                             (return_ty, params)
-                        },
-                    );
+                        });
 
                     if !self.validate_record_method_signature(
                         type_name,
@@ -209,10 +210,8 @@ impl Checker {
                 RecordMethod::Procedure(procedure) => {
                     let type_param_defs = Self::resolve_type_params(&procedure.type_params);
 
-                    let params = self.with_type_params(
-                        &procedure.type_params,
-                        procedure.span,
-                        |checker| {
+                    let params =
+                        self.with_type_params(&procedure.type_params, procedure.span, |checker| {
                             procedure
                                 .params
                                 .iter()
@@ -226,8 +225,7 @@ impl Checker {
                                     ),
                                 })
                                 .collect::<Vec<_>>()
-                        },
-                    );
+                        });
 
                     if !self.validate_record_method_signature(
                         type_name,
@@ -513,4 +511,3 @@ impl Checker {
         }
     }
 }
-

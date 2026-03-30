@@ -107,10 +107,8 @@ impl Compiler {
                 // emit all fields (provided + defaults). Otherwise emit the raw fields.
                 let type_name_and_specs = self.take_record_literal_expansion(expr);
                 if let Some((type_name, field_specs)) = type_name_and_specs {
-                    let provided: std::collections::HashMap<&str, &fpas_parser::Expr> = fields
-                        .iter()
-                        .map(|f| (f.name.as_str(), &f.value))
-                        .collect();
+                    let provided: std::collections::HashMap<&str, &fpas_parser::Expr> =
+                        fields.iter().map(|f| (f.name.as_str(), &f.value)).collect();
                     for (field_name, default) in &field_specs {
                         self.emit_constant(
                             Value::Str(field_name.clone()),
@@ -189,10 +187,7 @@ impl Compiler {
                 // Emit base, then (name, value) override pairs, then UpdateRecord.
                 self.compile_expr(base)?;
                 for field in fields {
-                    self.emit_constant(
-                        Value::Str(field.name.clone()),
-                        (span.line, span.column),
-                    );
+                    self.emit_constant(Value::Str(field.name.clone()), (span.line, span.column));
                     self.compile_expr(&field.value)?;
                 }
                 self.emit(

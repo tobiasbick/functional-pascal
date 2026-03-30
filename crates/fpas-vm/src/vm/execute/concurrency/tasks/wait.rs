@@ -1,25 +1,39 @@
 use super::super::super::super::diagnostics::VmError;
-use super::super::super::super::{Worker, runtime_error};
+use super::super::super::super::{TaskResultPoll, Worker, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
-use fpas_diagnostics::codes::{RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_VM_SHUTDOWN};
+use fpas_diagnostics::codes::{
+    RUNTIME_INVALID_TASK, RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_VM_SHUTDOWN,
+};
 
 impl Worker {
     pub(in super::super) fn exec_task_wait(&mut self, line: SourceLocation) -> Result<(), VmError> {
         let task_id = self.pop_task_id(line)?;
 
-        if let Some(result) = self.shared.take_task_result(task_id) {
-            self.push(result)?;
-        } else if self.shared.is_shutdown() {
-            return Err(runtime_error(
-                RUNTIME_VM_SHUTDOWN,
-                "Execution aborted: the waited task failed",
-                "A task spawned with `go` raised a runtime error. Fix the error in the spawned task.",
-                line,
-            ));
-        } else {
-            self.push(Value::Task(task_id))?;
-            self.ip -= 1;
-            self.exec_yield();
+        match self.shared.poll_task_result(task_id) {
+            TaskResultPoll::Available(result) => {
+                self.push(result)?;
+            }
+            TaskResultPoll::Consumed => {
+                return Err(runtime_error(
+                    RUNTIME_INVALID_TASK,
+                    format!("Task {task_id} was already awaited"),
+                    "Wait on each task handle only once, or keep the result in a variable after waiting.",
+                    line,
+                ));
+            }
+            TaskResultPoll::Pending if self.shared.is_shutdown() => {
+                return Err(runtime_error(
+                    RUNTIME_VM_SHUTDOWN,
+                    "Execution aborted: the waited task failed",
+                    "A task spawned with `go` raised a runtime error. Fix the error in the spawned task.",
+                    line,
+                ));
+            }
+            TaskResultPoll::Pending => {
+                self.push(Value::Task(task_id))?;
+                self.ip -= 1;
+                self.exec_yield();
+            }
         }
         Ok(())
     }
@@ -59,9 +73,7 @@ impl Worker {
             .all(|task_id| self.shared.has_task_result(*task_id));
 
         if all_done {
-            for task_id in task_ids {
-                let _ = self.shared.take_task_result(task_id);
-            }
+            // `WaitAll` observes completion but does not consume task results.
         } else if self.shared.is_shutdown() {
             return Err(runtime_error(
                 RUNTIME_VM_SHUTDOWN,

@@ -15,7 +15,7 @@ impl Parser {
             Token::Ref => {
                 let start = self.current_span();
                 self.advance();
-                let inner_type = self.parse_type_expr();
+                let inner_type = self.parse_named_type_expr();
                 TypeExpr::Ref {
                     inner_type: Box::new(inner_type),
                     span: self.span_from(start),
@@ -92,17 +92,18 @@ impl Parser {
                     span: self.span_from(start),
                 }
             }
-            _ => {
-                let qid = self.parse_qualified_id();
-                // Check for `of` type arguments: `Stack of integer`
-                let type_args = if self.eat(&Token::Of) {
-                    self.parse_type_arg_list()
-                } else {
-                    Vec::new()
-                };
-                TypeExpr::Named { id: qid, type_args }
-            }
+            _ => self.parse_named_type_expr(),
         }
+    }
+
+    fn parse_named_type_expr(&mut self) -> TypeExpr {
+        let qid = self.parse_qualified_id();
+        let type_args = if self.eat(&Token::Of) {
+            self.parse_type_arg_list()
+        } else {
+            Vec::new()
+        };
+        TypeExpr::Named { id: qid, type_args }
     }
 
     /// Parse a comma-separated list of type arguments (after `of`):

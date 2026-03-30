@@ -78,3 +78,32 @@ end.",
     );
     assert_eq!(out.lines, vec!["3 6 9 "]);
 }
+
+#[test]
+fn array_map_callback_can_spawn_and_wait_for_tasks() {
+    let out = compile_and_run(
+        "\
+program MapAsync;
+uses Std.Array, Std.Console, Std.Task;
+
+function DoubleLater(X: integer): integer;
+begin
+  return X * 2
+end;
+
+begin
+  var Numbers: array of integer := [1, 2, 3];
+  var Doubled: array of integer := Map(Numbers,
+    function(X: integer): integer
+    begin
+      var Tsk: task := go DoubleLater(X);
+      return Std.Task.Wait(Tsk)
+    end);
+  for V: integer in Doubled do
+    Write(V, ' ');
+  WriteLn('')
+end.",
+    );
+
+    assert_eq!(out.lines, vec!["2 4 6 "]);
+}

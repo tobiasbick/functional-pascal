@@ -8,6 +8,9 @@ mod wait;
 
 impl Worker {
     pub(super) fn exec_yield(&mut self) {
+        if self.sync_call_depth > 0 {
+            return;
+        }
         if self.current_task_id == 0 {
             // The main task must never be enqueued — pool workers must not steal it.
             // Yield CPU time so pool workers can make progress on spawned tasks.

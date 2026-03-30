@@ -53,6 +53,55 @@ end.",
 }
 
 #[test]
+fn wait_all_does_not_consume_task_results() {
+    let out = compile_and_run(
+        "\
+program T;
+uses Std.Console, Std.Task;
+
+function Compute(Value: integer): integer;
+begin
+  return Value * 2
+end;
+
+begin
+  var T1: task := go Compute(10);
+  var T2: task := go Compute(11);
+  Std.Task.WaitAll([T1, T2]);
+  Std.Console.WriteLn(Std.Task.Wait(T1));
+  Std.Console.WriteLn(Std.Task.Wait(T2))
+end.",
+    );
+
+    assert_eq!(out.lines, vec!["20", "22"]);
+}
+
+#[test]
+fn waiting_twice_on_the_same_task_reports_a_runtime_error() {
+    let msg = compile_run_err(
+        "\
+program T;
+uses Std.Console, Std.Task;
+
+function Compute(): integer;
+begin
+  return 42
+end;
+
+begin
+  var Tsk: task := go Compute();
+  Std.Console.WriteLn(Std.Task.Wait(Tsk));
+  Std.Console.WriteLn(Std.Task.Wait(Tsk))
+end.",
+    );
+
+    assert!(
+        msg.contains("was already awaited"),
+        "expected already-awaited task error, got: {msg}"
+    );
+}
+
+#[test]
 fn go_supports_std_library_function_calls() {
     let out = compile_and_run(
         "\

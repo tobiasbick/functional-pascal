@@ -250,7 +250,10 @@ fn implements_non_interface_errors() {
          end;
          begin end.",
     );
-    assert!(!errors.is_empty(), "expected an error for non-interface in implements");
+    assert!(
+        !errors.is_empty(),
+        "expected an error for non-interface in implements"
+    );
 }
 
 #[test]
@@ -262,5 +265,8 @@ fn implements_unknown_name_errors() {
          end;
          begin end.",
     );
-    assert!(!errors.is_empty(), "expected an error for unknown interface name");
+    assert!(
+        !errors.is_empty(),
+        "expected an error for unknown interface name"
+    );
 }

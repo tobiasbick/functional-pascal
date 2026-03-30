@@ -42,7 +42,7 @@ var
 
 ## Variables
 
-Variables are **immutable by default**. Use `mutable var` as a block modifier to allow reassignment.
+Variables are **immutable by default**. Use `mutable var` to allow reassignment. This works both as a declaration block and as an inline statement inside a `begin..end` block.
 
 ```pascal
 var
@@ -71,6 +71,15 @@ mutable var
 
 begin
   Count := Count + 1;  { OK }
+end.
+```
+
+Inline mutable variables use the same syntax:
+
+```pascal
+begin
+  mutable var Count: integer := 0;
+  Count := Count + 1
 end.
 ```
 

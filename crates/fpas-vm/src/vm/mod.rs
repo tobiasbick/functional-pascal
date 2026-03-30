@@ -6,7 +6,7 @@
 //!
 //! **Documentation:** `docs/future/parallel-vm.md`, `docs/pascal/08-concurrency.md`
 
-use fpas_bytecode::Chunk;
+use fpas_bytecode::{Chunk, SourceLocation};
 use fpas_std::{Console, ConsoleEvent, ConsoleKeyEvent, KeyInput, TextInput};
 use std::collections::HashMap;
 use std::io::Write;
@@ -21,7 +21,7 @@ mod worker;
 
 pub use diagnostics::VmError;
 pub(crate) use diagnostics::{internal_error, runtime_error};
-pub(crate) use shared::{SharedChannel, SharedState, TaskState};
+pub(crate) use shared::{SharedChannel, SharedState, TaskResultPoll, TaskState};
 pub(crate) use worker::Worker;
 
 const STACK_MAX: usize = 4096;
@@ -64,7 +64,8 @@ impl Vm {
         let pool_size = std::thread::available_parallelism()
             .map(|n| n.get())
             .unwrap_or(1)
-            .saturating_sub(1); // main thread counts as one worker
+            .saturating_sub(1)
+            .max(1); // always keep one pool worker so `go` can make progress on single-core hosts
 
         let shared = Arc::new(SharedState {
             chunk,
@@ -159,10 +160,18 @@ impl Vm {
 
             // Collect pool worker errors.
             for handle in handles {
-                if let Err(e) = handle.join().unwrap_or(Ok(()))
-                    && main_result.is_ok()
-                {
-                    return Err(e);
+                match handle.join() {
+                    Ok(Ok(())) => {}
+                    Ok(Err(e)) if main_result.is_ok() => return Err(e),
+                    Ok(Err(_)) => {}
+                    Err(_) if main_result.is_ok() => {
+                        return Err(internal_error(
+                            "Worker thread panicked",
+                            "A background VM worker crashed unexpectedly. This indicates a VM bug.",
+                            SourceLocation::new(1, 1),
+                        ));
+                    }
+                    Err(_) => {}
                 }
             }
 

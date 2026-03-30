@@ -19,7 +19,9 @@ pub(crate) struct Worker {
     pub stack: Vec<Value>,
     pub call_stack: Vec<CallFrame>,
     pub current_task_id: u64,
+    pub current_task_retain_result: bool,
     pub instructions_until_yield: u32,
+    pub sync_call_depth: u32,
 }
 
 impl Worker {
@@ -32,7 +34,9 @@ impl Worker {
             stack: Vec::with_capacity(256),
             call_stack: Vec::new(),
             current_task_id: 0,
+            current_task_retain_result: false,
             instructions_until_yield: TIMESLICE,
+            sync_call_depth: 0,
         }
     }
 
@@ -45,7 +49,9 @@ impl Worker {
             stack: Vec::new(),
             call_stack: Vec::new(),
             current_task_id: u64::MAX, // sentinel — no task loaded
+            current_task_retain_result: false,
             instructions_until_yield: TIMESLICE,
+            sync_call_depth: 0,
         }
     }
 
@@ -55,6 +61,7 @@ impl Worker {
         self.ip = task.ip;
         self.stack = task.stack;
         self.call_stack = task.call_stack;
+        self.current_task_retain_result = task.retain_result;
         self.instructions_until_yield = TIMESLICE;
     }
 
@@ -65,6 +72,7 @@ impl Worker {
             ip: self.ip,
             stack: std::mem::take(&mut self.stack),
             call_stack: std::mem::take(&mut self.call_stack),
+            retain_result: self.current_task_retain_result,
         }
     }
 

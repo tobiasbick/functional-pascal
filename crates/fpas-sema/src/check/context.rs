@@ -43,6 +43,8 @@ pub struct Checker {
     pub(crate) short_builtin_redirect: HashMap<String, String>,
     /// Named record type → ordered (field_name, optional_default_expr) pairs.
     pub(crate) record_defaults: RecordDefaultsMap,
+    /// Record names currently registered as placeholders while their fields are being resolved.
+    pub(crate) pending_record_types: HashSet<String>,
 }
 
 impl Checker {
@@ -57,11 +59,26 @@ impl Checker {
             ambiguous_imports: HashMap::new(),
             short_builtin_redirect: HashMap::new(),
             record_defaults: RecordDefaultsMap::new(),
+            pending_record_types: HashSet::new(),
         }
     }
 
-    pub fn finish(self) -> (Vec<SemaError>, ExprTypeMap, MethodCallMap, InterfaceDispatchMap, RecordDefaultsMap) {
-        (self.errors, self.expr_types, self.method_calls, self.interface_dispatch, self.record_defaults)
+    pub fn finish(
+        self,
+    ) -> (
+        Vec<SemaError>,
+        ExprTypeMap,
+        MethodCallMap,
+        InterfaceDispatchMap,
+        RecordDefaultsMap,
+    ) {
+        (
+            self.errors,
+            self.expr_types,
+            self.method_calls,
+            self.interface_dispatch,
+            self.record_defaults,
+        )
     }
 
     pub fn expr_lookup_key(expr: &Expr) -> usize {

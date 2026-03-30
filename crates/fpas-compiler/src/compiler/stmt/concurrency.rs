@@ -15,13 +15,15 @@ use fpas_sema::Ty;
 impl Compiler {
     /// Compile `go Func(args)` as a statement (fire-and-forget: discard task handle).
     pub(super) fn compile_go_stmt(&mut self, expr: &Expr, span: Span) -> Result<(), CompileError> {
-        self.compile_go_expr(expr, span)?;
-        self.emit(Op::Pop, (span.line, span.column));
-        Ok(())
+        self.compile_go(expr, span, true)
     }
 
     /// Compile `go CallExpr` as an expression that pushes a `Value::Task(id)`.
     pub(crate) fn compile_go_expr(&mut self, expr: &Expr, span: Span) -> Result<(), CompileError> {
+        self.compile_go(expr, span, false)
+    }
+
+    fn compile_go(&mut self, expr: &Expr, span: Span, detached: bool) -> Result<(), CompileError> {
         let loc = (span.line, span.column);
         match expr {
             Expr::Call {
@@ -38,14 +40,20 @@ impl Compiler {
                     let mut wrapper_args = Vec::with_capacity(args.len() + 1);
                     wrapper_args.push(Expr::Designator(receiver));
                     wrapper_args.extend(args.iter().cloned());
-                    self.compile_go_wrapper_call(&qualified, &wrapper_args, returns_value, span)?;
+                    self.compile_go_wrapper_call(
+                        &qualified,
+                        &wrapper_args,
+                        returns_value,
+                        detached,
+                        span,
+                    )?;
                     return Ok(());
                 }
 
                 let name = Self::resolve_designator_name(designator);
                 let qualified = self.qualify_name(&name).to_string();
                 if qualified.starts_with("Std.") {
-                    self.compile_go_wrapper_call(&qualified, args, returns_value, span)?;
+                    self.compile_go_wrapper_call(&qualified, args, returns_value, detached, span)?;
                     return Ok(());
                 }
 
@@ -53,7 +61,7 @@ impl Compiler {
                     self.compile_expr(arg)?;
                 }
                 self.compile_designator_read(designator)?;
-                self.emit(Op::SpawnTask(args.len() as u8), loc);
+                self.emit_go_spawn(args.len() as u8, detached, loc);
                 Ok(())
             }
             _ => Err(compile_error(
@@ -70,6 +78,7 @@ impl Compiler {
         callee_name: &str,
         arg_exprs: &[Expr],
         returns_value: bool,
+        detached: bool,
         span: Span,
     ) -> Result<(), CompileError> {
         for expr in arg_exprs {
@@ -107,11 +116,17 @@ impl Compiler {
             },
             (span.line, span.column),
         )?;
-        self.emit(
-            Op::SpawnTask(arg_exprs.len() as u8),
-            (span.line, span.column),
-        );
+        self.emit_go_spawn(arg_exprs.len() as u8, detached, (span.line, span.column));
         Ok(())
+    }
+
+    fn emit_go_spawn(&mut self, argc: u8, detached: bool, location: (u32, u32)) {
+        let op = if detached {
+            Op::SpawnDetachedTask(argc)
+        } else {
+            Op::SpawnTask(argc)
+        };
+        self.emit(op, location);
     }
 
     fn go_call_returns_value(&self, expr: &Expr) -> bool {

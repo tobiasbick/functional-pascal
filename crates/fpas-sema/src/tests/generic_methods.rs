@@ -176,9 +176,7 @@ fn generic_method_constraint_violation_at_call_site() {
          begin end.",
     );
     assert!(
-        errors
-            .iter()
-            .any(|e| e.code == SEMA_CONSTRAINT_VIOLATION),
+        errors.iter().any(|e| e.code == SEMA_CONSTRAINT_VIOLATION),
         "expected constraint-violation diagnostic, got: {errors:#?}"
     );
 }

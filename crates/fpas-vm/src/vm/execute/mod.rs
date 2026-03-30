@@ -29,7 +29,9 @@ impl Worker {
                 if self.current_task_id != 0 {
                     // Non-main task ran past end of code — complete it.
                     let result = self.stack.pop().unwrap_or(Value::Unit);
-                    self.shared.store_task_result(self.current_task_id, result);
+                    if self.current_task_retain_result {
+                        self.shared.store_task_result(self.current_task_id, result);
+                    }
                     // Try to pick up another local task (cooperative yield).
                     if self.pick_next_task() {
                         continue;
@@ -72,8 +74,10 @@ impl Worker {
                     } else if self.current_task_id == 0 {
                         return Ok(());
                     } else {
-                        self.shared
-                            .store_task_result(self.current_task_id, return_val);
+                        if self.current_task_retain_result {
+                            self.shared
+                                .store_task_result(self.current_task_id, return_val);
+                        }
                         if !self.pick_next_task() {
                             return Ok(());
                         }

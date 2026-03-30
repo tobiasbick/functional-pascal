@@ -163,7 +163,13 @@ impl Checker {
                     );
                     return Some(Ty::Error);
                 };
-                self.check_method_call_args(&qualified, &func_ty.type_params, visible_params, args, span);
+                self.check_method_call_args(
+                    &qualified,
+                    &func_ty.type_params,
+                    visible_params,
+                    args,
+                    span,
+                );
                 Some(*func_ty.return_type.clone())
             }
             MethodKind::Procedure(proc_ty) => {
@@ -178,7 +184,13 @@ impl Checker {
                     );
                     return Some(Ty::Error);
                 };
-                self.check_method_call_args(&qualified, &proc_ty.type_params, visible_params, args, span);
+                self.check_method_call_args(
+                    &qualified,
+                    &proc_ty.type_params,
+                    visible_params,
+                    args,
+                    span,
+                );
                 if allow_procedure_result {
                     Some(Ty::Unit)
                 } else {

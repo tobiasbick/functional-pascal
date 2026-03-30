@@ -18,7 +18,11 @@ impl Worker {
     ) -> Result<bool, VmError> {
         match op {
             Op::SpawnTask(argc) => {
-                self.exec_spawn_task(argc, line)?;
+                self.exec_spawn_task(argc, true, line)?;
+                Ok(true)
+            }
+            Op::SpawnDetachedTask(argc) => {
+                self.exec_spawn_task(argc, false, line)?;
                 Ok(true)
             }
             Op::Yield => {

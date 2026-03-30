@@ -126,10 +126,7 @@ fn symbol_names_are_case_insensitive() {
 #[test]
 fn nested_ifdef_both_true() {
     let src = "{$IFDEF A} {$IFDEF B} 10 {$ENDIF} {$ENDIF}";
-    assert_eq!(
-        pp(src, &with(&["A", "B"])),
-        vec![Token::Integer(10)]
-    );
+    assert_eq!(pp(src, &with(&["A", "B"])), vec![Token::Integer(10)]);
 }
 
 #[test]
@@ -142,19 +139,13 @@ fn nested_ifdef_outer_false_skips_inner() {
 #[test]
 fn nested_ifdef_inner_false() {
     let src = "{$IFDEF A} {$IFDEF B} 10 {$ELSE} 20 {$ENDIF} {$ENDIF}";
-    assert_eq!(
-        pp(src, &with(&["A"])),
-        vec![Token::Integer(20)]
-    );
+    assert_eq!(pp(src, &with(&["A"])), vec![Token::Integer(20)]);
 }
 
 #[test]
 fn deeply_nested_ifdef() {
     let src = "{$IFDEF A}{$IFDEF B}{$IFDEF C} 42 {$ENDIF}{$ENDIF}{$ENDIF}";
-    assert_eq!(
-        pp(src, &with(&["A", "B", "C"])),
-        vec![Token::Integer(42)]
-    );
+    assert_eq!(pp(src, &with(&["A", "B", "C"])), vec![Token::Integer(42)]);
 }
 
 // ── Code surrounds ────────────────────────────────────────────────────────────
@@ -283,10 +274,7 @@ fn no_directives_passes_through_unchanged() {
 #[test]
 fn multiple_defines_independent() {
     assert_eq!(
-        pp(
-            "{$IFDEF A} 1 {$ENDIF} {$IFDEF B} 2 {$ENDIF}",
-            &with(&["A"])
-        ),
+        pp("{$IFDEF A} 1 {$ENDIF} {$IFDEF B} 2 {$ENDIF}", &with(&["A"])),
         vec![Token::Integer(1)]
     );
 }

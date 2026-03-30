@@ -280,13 +280,18 @@ fn check_dict_map(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         return Ty::Error;
     };
     let return_ty = match &func_ty {
-        Ty::Function(FunctionTy { params, return_type, .. }) if params.len() == 1 => {
+        Ty::Function(FunctionTy {
+            params,
+            return_type,
+            ..
+        }) if params.len() == 1 => {
             if !v.compatible_with(&params[0].ty) {
                 c.error_with_code(
                     SEMA_TYPE_MISMATCH,
                     format!(
                         "`{}` callback parameter type mismatch: expected `{v:?}`, got `{:?}`",
-                        s::STD_DICT_MAP, params[0].ty
+                        s::STD_DICT_MAP,
+                        params[0].ty
                     ),
                     "Pass a function(V: V): V2 where V matches the dict's value type.",
                     span,
@@ -299,7 +304,10 @@ fn check_dict_map(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         _ => {
             c.error_with_code(
                 SEMA_TYPE_MISMATCH,
-                format!("`{}` second argument must be a 1-parameter function", s::STD_DICT_MAP),
+                format!(
+                    "`{}` second argument must be a 1-parameter function",
+                    s::STD_DICT_MAP
+                ),
                 "Pass a function(V: V): V2.",
                 span,
             );
@@ -336,13 +344,18 @@ fn check_dict_filter(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         return Ty::Error;
     };
     match &func_ty {
-        Ty::Function(FunctionTy { params, return_type, .. }) if params.len() == 2 => {
+        Ty::Function(FunctionTy {
+            params,
+            return_type,
+            ..
+        }) if params.len() == 2 => {
             if !k.compatible_with(&params[0].ty) {
                 c.error_with_code(
                     SEMA_TYPE_MISMATCH,
                     format!(
                         "`{}` callback first parameter type mismatch: expected `{k:?}`, got `{:?}`",
-                        s::STD_DICT_FILTER, params[0].ty
+                        s::STD_DICT_FILTER,
+                        params[0].ty
                     ),
                     "First callback parameter must match the dict's key type.",
                     span,
@@ -375,7 +388,10 @@ fn check_dict_filter(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         _ => {
             c.error_with_code(
                 SEMA_TYPE_MISMATCH,
-                format!("`{}` second argument must be a 2-parameter function", s::STD_DICT_FILTER),
+                format!(
+                    "`{}` second argument must be a 2-parameter function",
+                    s::STD_DICT_FILTER
+                ),
                 "Pass a function(K: K; V: V): boolean.",
                 span,
             );

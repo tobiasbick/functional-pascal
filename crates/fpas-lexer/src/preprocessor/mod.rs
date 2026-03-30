@@ -235,9 +235,7 @@ impl Preprocessor {
                 if self.is_emitting() {
                     self.errors.push(lex_error(
                         LEX_DIRECTIVE_INCLUDE_UNSUPPORTED,
-                        &format!(
-                            "`{{$INCLUDE {filename}}}` is not supported in single-file mode"
-                        ),
+                        &format!("`{{$INCLUDE {filename}}}` is not supported in single-file mode"),
                         "File inclusion is only available inside a multi-file project. \
                          Use `fpas build` with a `.fpproj` project file.",
                         span,

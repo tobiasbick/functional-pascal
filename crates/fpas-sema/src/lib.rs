@@ -32,7 +32,13 @@ pub fn analyze(program: &Program) -> Vec<SemaError> {
 /// and the map of record type defaults used by the compiler for default field expansion.
 pub fn analyze_with_types(
     program: &Program,
-) -> (Vec<SemaError>, ExprTypeMap, MethodCallMap, InterfaceDispatchMap, RecordDefaultsMap) {
+) -> (
+    Vec<SemaError>,
+    ExprTypeMap,
+    MethodCallMap,
+    InterfaceDispatchMap,
+    RecordDefaultsMap,
+) {
     let mut checker = check::Checker::new();
     checker.check_program(program);
     checker.finish()

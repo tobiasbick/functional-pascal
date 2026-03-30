@@ -58,11 +58,7 @@ impl Checker {
         // Resolve method signatures declared on this interface.
         let iface_ty_placeholder = Ty::Named(td.name.clone());
         let own = self.with_type_params(&td.type_params, td.span, |checker| {
-            checker.resolve_interface_method_sigs(
-                &td.name,
-                &iface_ty_placeholder,
-                &iface.methods,
-            )
+            checker.resolve_interface_method_sigs(&td.name, &iface_ty_placeholder, &iface.methods)
         });
         methods.extend(own);
 
@@ -109,12 +105,13 @@ impl Checker {
             match method {
                 RecordMethod::Function(f) => {
                     let type_param_defs = Self::resolve_type_params(&f.type_params);
-                    let (return_ty, params) = self.with_type_params(
-                        &f.type_params,
-                        f.span,
-                        |checker| {
-                            let return_ty = checker
-                                .resolve_method_param_type(&f.return_type, iface_name, iface_ty);
+                    let (return_ty, params) =
+                        self.with_type_params(&f.type_params, f.span, |checker| {
+                            let return_ty = checker.resolve_method_param_type(
+                                &f.return_type,
+                                iface_name,
+                                iface_ty,
+                            );
                             let params: Vec<ParamTy> = f
                                 .params
                                 .iter()
@@ -129,8 +126,7 @@ impl Checker {
                                 })
                                 .collect();
                             (return_ty, params)
-                        },
-                    );
+                        });
                     result.push((
                         f.name.clone(),
                         MethodKind::Function(FunctionTy {
@@ -142,24 +138,20 @@ impl Checker {
                 }
                 RecordMethod::Procedure(p) => {
                     let type_param_defs = Self::resolve_type_params(&p.type_params);
-                    let params = self.with_type_params(
-                        &p.type_params,
-                        p.span,
-                        |checker| {
-                            p.params
-                                .iter()
-                                .map(|param| ParamTy {
-                                    mutable: param.mutable,
-                                    name: param.name.clone(),
-                                    ty: checker.resolve_method_param_type(
-                                        &param.type_expr,
-                                        iface_name,
-                                        iface_ty,
-                                    ),
-                                })
-                                .collect::<Vec<_>>()
-                        },
-                    );
+                    let params = self.with_type_params(&p.type_params, p.span, |checker| {
+                        p.params
+                            .iter()
+                            .map(|param| ParamTy {
+                                mutable: param.mutable,
+                                name: param.name.clone(),
+                                ty: checker.resolve_method_param_type(
+                                    &param.type_expr,
+                                    iface_name,
+                                    iface_ty,
+                                ),
+                            })
+                            .collect::<Vec<_>>()
+                    });
                     result.push((
                         p.name.clone(),
                         MethodKind::Procedure(ProcedureTy {

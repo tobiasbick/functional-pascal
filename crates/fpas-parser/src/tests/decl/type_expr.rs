@@ -24,8 +24,10 @@ fn procedure_type_expr() {
 
 #[test]
 fn ref_type_expr() {
-    let p = parse_ok("program T; var NodeRef: ref integer := new integer with end; begin end.");
-    match &p.declarations[0] {
+    let p = parse_ok(
+        "program T; type Node = record end; var NodeRef: ref Node := new Node with end; begin end.",
+    );
+    match &p.declarations[1] {
         Decl::Var(v) => {
             assert!(matches!(v.type_expr, TypeExpr::Ref { .. }));
         }

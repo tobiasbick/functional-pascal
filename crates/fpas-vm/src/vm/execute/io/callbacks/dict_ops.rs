@@ -48,7 +48,10 @@ impl Worker {
             Value::Dict(pairs) => Ok(pairs),
             other => Err(runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-                format!("{context}: first argument must be a dict, got {}", other.type_name()),
+                format!(
+                    "{context}: first argument must be a dict, got {}",
+                    other.type_name()
+                ),
                 "Pass a `dict of K to V` as the first argument.",
                 line,
             )),

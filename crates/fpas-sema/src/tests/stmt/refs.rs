@@ -37,15 +37,15 @@ fn new_expression_records_ref_type() {
 }
 
 #[test]
-fn new_requires_record_type() {
+fn ref_requires_record_type() {
     let errors = check_errors(
         "program T; \
-         var X: ref integer := new integer with end; \
+         type ScalarRef = ref integer; \
          begin end.",
     );
     assert!(errors.iter().any(|error| {
         error.code == fpas_diagnostics::codes::SEMA_TYPE_MISMATCH
-            && error.message.contains("`new` requires a record type")
+            && error.message.contains("`ref` requires a record type")
     }));
 }
 
@@ -71,9 +71,11 @@ fn immutable_ref_field_assignment_is_rejected() {
            P.X := 2 \
          end.",
     );
-    assert!(errors.iter().any(|error| {
-        error.code == fpas_diagnostics::codes::SEMA_IMMUTABLE_ASSIGNMENT
-    }));
+    assert!(
+        errors
+            .iter()
+            .any(|error| { error.code == fpas_diagnostics::codes::SEMA_IMMUTABLE_ASSIGNMENT })
+    );
 }
 
 #[test]
@@ -84,7 +86,9 @@ fn const_ref_initializer_is_rejected_as_non_constant() {
          const P: ref Point := new Point with X := 1; end; \
          begin end.",
     );
-    assert!(errors.iter().any(|error| {
-        error.code == fpas_diagnostics::codes::SEMA_NON_CONSTANT_EXPRESSION
-    }));
+    assert!(
+        errors
+            .iter()
+            .any(|error| { error.code == fpas_diagnostics::codes::SEMA_NON_CONSTANT_EXPRESSION })
+    );
 }

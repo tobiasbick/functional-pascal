@@ -9,7 +9,7 @@
 use super::super::super::diagnostics::VmError;
 use super::super::super::{Worker, runtime_error};
 use fpas_bytecode::{Op, SourceLocation, Value};
-use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
+use fpas_diagnostics::codes::{RUNTIME_NUMERIC_DOMAIN_ERROR, RUNTIME_VM_OPERAND_TYPE_MISMATCH};
 
 impl Worker {
     pub(super) fn try_exec_dynamic_ops(
@@ -61,7 +61,17 @@ impl Worker {
             Op::NegateDyn => {
                 let val = self.pop(line)?;
                 match val {
-                    Value::Integer(n) => self.push(Value::Integer(-n))?,
+                    Value::Integer(n) => {
+                        let negated = n.checked_neg().ok_or_else(|| {
+                            runtime_error(
+                                RUNTIME_NUMERIC_DOMAIN_ERROR,
+                                "Integer negation overflow",
+                                "Avoid negating the minimum integer value.",
+                                line,
+                            )
+                        })?;
+                        self.push(Value::Integer(negated))?;
+                    }
                     Value::Real(n) => self.push(Value::Real(-n))?,
                     _ => {
                         return Err(runtime_error(

@@ -11,7 +11,7 @@ impl Worker {
     ) -> Result<bool, VmError> {
         match op {
             Op::Constant(idx) => {
-                let val = self.shared.chunk.constants[idx as usize].clone();
+                let val = self.const_value(idx, line)?.clone();
                 self.push(val)?;
                 Ok(true)
             }
@@ -29,15 +29,15 @@ impl Worker {
                 Ok(true)
             }
             Op::GetLocal(slot) => {
-                let base = self.frame_base();
-                let val = self.stack[base + slot as usize].clone();
+                let idx = self.local_abs_index(0, slot, line)?;
+                let val = self.stack[idx].clone();
                 self.push(val)?;
                 Ok(true)
             }
             Op::SetLocal(slot) => {
-                let base = self.frame_base();
+                let idx = self.local_abs_index(0, slot, line)?;
                 let val = self.peek(line)?.clone();
-                self.stack[base + slot as usize] = val;
+                self.stack[idx] = val;
                 Ok(true)
             }
             Op::GetGlobal(idx) => {
@@ -71,13 +71,8 @@ impl Worker {
                 Ok(true)
             }
             Op::GetEnclosing(depth, slot) => {
-                let cs_len = self.call_stack.len();
-                let base = if (depth as usize) >= cs_len {
-                    0
-                } else {
-                    self.call_stack[cs_len - 1 - depth as usize].base_slot
-                };
-                let val = self.stack[base + slot as usize].clone();
+                let idx = self.local_abs_index(depth, slot, line)?;
+                let val = self.stack[idx].clone();
                 self.push(val)?;
                 Ok(true)
             }
@@ -89,13 +84,8 @@ impl Worker {
                         line,
                     )
                 })?;
-                let cs_len = self.call_stack.len();
-                let base = if (depth as usize) >= cs_len {
-                    0
-                } else {
-                    self.call_stack[cs_len - 1 - depth as usize].base_slot
-                };
-                self.stack[base + slot as usize] = val;
+                let idx = self.local_abs_index(depth, slot, line)?;
+                self.stack[idx] = val;
                 Ok(true)
             }
             Op::MakeClosure(num_captures) => {

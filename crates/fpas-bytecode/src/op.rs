@@ -229,6 +229,12 @@ pub enum Op {
     ///
     /// **Documentation:** `docs/pascal/08-concurrency.md`
     SpawnTask(u8),
+    /// Spawn a detached task: pops function value + `arg_count` args and discards its result.
+    ///
+    /// Used for statement-form `go` where no task handle is retained.
+    ///
+    /// **Documentation:** `docs/pascal/08-concurrency.md`
+    SpawnDetachedTask(u8),
     /// Yield execution to the scheduler (cooperative switch).
     ///
     /// **Documentation:** `docs/pascal/08-concurrency.md`

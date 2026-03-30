@@ -176,6 +176,10 @@ visibility          = 'public' | 'private' ;
 const_block         = 'const' const_def { const_def } ;
 const_def           = identifier ':' type_expr ':=' expression ';' ;
 
+(* The initializer must be compile-time known. Syntax allows a general *)
+(* expression here; the semantic checker restricts it to literals,     *)
+(* other constants, enum members, and pure operator combinations.      *)
+
 (* -- Immutable variables -- *)
 var_block           = 'var' var_def { var_def } ;
 var_def             = identifier ':' type_expr ':=' expression ';' ;
@@ -197,7 +201,7 @@ constraint_name     = 'Comparable' | 'Numeric' | 'Printable' ;
 
 (* ---- 2.3 Type Expressions ------------------------------------- *)
 
-type_expr           = 'ref' type_expr                   (* shared ref     *)
+type_expr           = 'ref' qualified_id [ 'of' type_arg_list ] (* shared ref *)
                     | 'array' 'of' type_expr            (* array type     *)
                     | 'dict' 'of' type_expr 'to' type_expr (* dict type    *)
                     | 'channel' 'of' type_expr           (* channel type   *)

@@ -94,5 +94,8 @@ begin
 end.",
     );
     let msg = format!("{err:?}");
-    assert!(msg.contains("Numeric") || msg.contains("constraint"), "{msg}");
+    assert!(
+        msg.contains("Numeric") || msg.contains("constraint"),
+        "{msg}"
+    );
 }

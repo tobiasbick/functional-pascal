@@ -16,6 +16,17 @@ pub(crate) struct SharedChannel {
     pub closed: AtomicBool,
 }
 
+pub(crate) enum TaskResultPoll {
+    Pending,
+    Available(Value),
+    Consumed,
+}
+
+pub(crate) enum TaskResultState {
+    Available(Value),
+    Consumed,
+}
+
 /// Shared state for the parallel VM.
 ///
 /// All fields are thread-safe. Workers hold `Arc<SharedState>` and
@@ -37,8 +48,8 @@ pub(crate) struct SharedState {
     /// Signalled when new tasks are pushed or existing tasks become ready.
     pub task_available: Condvar,
 
-    /// Completed task results: task id → return value.
-    pub task_results: Mutex<HashMap<u64, Value>>,
+    /// Completed task states for tasks whose results can still be observed.
+    pub task_results: Mutex<HashMap<u64, TaskResultState>>,
     /// Next task id (monotonically increasing; 0 = main program).
     pub next_task_id: AtomicU64,
 
@@ -59,6 +70,7 @@ pub(crate) struct TaskState {
     pub ip: usize,
     pub stack: Vec<Value>,
     pub call_stack: Vec<super::CallFrame>,
+    pub retain_result: bool,
 }
 
 impl SharedState {
@@ -94,10 +106,10 @@ impl SharedState {
         self.task_results
             .lock()
             .unwrap_or_else(|e| e.into_inner())
-            .insert(id, value);
+            .insert(id, TaskResultState::Available(value));
     }
 
-    /// Check whether a task result is available (without removing it).
+    /// Check whether a task has already completed.
     pub(crate) fn has_task_result(&self, id: u64) -> bool {
         self.task_results
             .lock()
@@ -105,12 +117,21 @@ impl SharedState {
             .contains_key(&id)
     }
 
-    /// Remove and return a task result.
-    pub(crate) fn take_task_result(&self, id: u64) -> Option<Value> {
-        self.task_results
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .remove(&id)
+    /// Consume a completed task result if it is still available.
+    pub(crate) fn poll_task_result(&self, id: u64) -> TaskResultPoll {
+        let mut task_results = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
+        let Some(state) = task_results.get_mut(&id) else {
+            return TaskResultPoll::Pending;
+        };
+
+        match state {
+            TaskResultState::Available(value) => {
+                let result = value.clone();
+                *state = TaskResultState::Consumed;
+                TaskResultPoll::Available(result)
+            }
+            TaskResultState::Consumed => TaskResultPoll::Consumed,
+        }
     }
 
     /// Signal all workers to shut down.

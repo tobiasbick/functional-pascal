@@ -17,7 +17,7 @@ With blocks:
 if X > 10 then
 begin
   WriteLn('large');
-  mutable X := X - 10;
+  X := X - 10;
 end
 else
 begin
@@ -28,6 +28,8 @@ end;
 ## Case Of
 
 The enhanced `case` statement supports matching on integers, chars, strings, booleans, and enums:
+
+For guard clauses, `Result`/`Option` destructuring, enum patterns, and exhaustiveness rules, see [6. Case Of](06-pattern-matching.md).
 
 ```pascal
 case Day of

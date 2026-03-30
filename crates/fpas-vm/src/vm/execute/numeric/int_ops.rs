@@ -2,7 +2,8 @@ use super::super::super::diagnostics::VmError;
 use super::super::super::{Worker, runtime_error};
 use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_diagnostics::codes::{
-    RUNTIME_DIVISION_BY_ZERO, RUNTIME_MODULO_BY_ZERO, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+    RUNTIME_DIVISION_BY_ZERO, RUNTIME_MODULO_BY_ZERO, RUNTIME_NUMERIC_DOMAIN_ERROR,
+    RUNTIME_VM_OPERAND_TYPE_MISMATCH,
 };
 
 impl Worker {
@@ -33,6 +34,13 @@ impl Worker {
                             "Check the right-hand side before using `div` or `/`.",
                             line,
                         ))
+                    } else if a == i64::MIN && b == -1 {
+                        Err(runtime_error(
+                            RUNTIME_NUMERIC_DOMAIN_ERROR,
+                            "Integer division overflow",
+                            "Avoid dividing the minimum integer value by `-1`.",
+                            line,
+                        ))
                     } else {
                         Ok(Value::Integer(a / b))
                     }
@@ -48,6 +56,13 @@ impl Worker {
                             "Check the right-hand side before using `mod`.",
                             line,
                         ))
+                    } else if a == i64::MIN && b == -1 {
+                        Err(runtime_error(
+                            RUNTIME_NUMERIC_DOMAIN_ERROR,
+                            "Integer modulo overflow",
+                            "Avoid applying `mod` with the minimum integer value and `-1`.",
+                            line,
+                        ))
                     } else {
                         Ok(Value::Integer(a % b))
                     }
@@ -57,7 +72,17 @@ impl Worker {
             Op::NegateInt => {
                 let val = self.pop(line)?;
                 match val {
-                    Value::Integer(n) => self.push(Value::Integer(-n))?,
+                    Value::Integer(n) => {
+                        let negated = n.checked_neg().ok_or_else(|| {
+                            runtime_error(
+                                RUNTIME_NUMERIC_DOMAIN_ERROR,
+                                "Integer negation overflow",
+                                "Avoid negating the minimum integer value.",
+                                line,
+                            )
+                        })?;
+                        self.push(Value::Integer(negated))?;
+                    }
                     Value::Real(n) => self.push(Value::Real(-n))?,
                     _ => {
                         return Err(runtime_error(

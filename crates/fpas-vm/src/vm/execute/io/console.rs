@@ -396,7 +396,9 @@ impl Worker {
                                 console.resize(event.width as u16, event.height as u16);
                             }
                         }
-                        self.push(Value::OptionSome(Box::new(Self::console_event_record(event))))?;
+                        self.push(Value::OptionSome(Box::new(Self::console_event_record(
+                            event,
+                        ))))?;
                     }
                     None => {
                         self.push(Value::OptionNone)?;
@@ -422,7 +424,9 @@ impl Worker {
                                 console.resize(event.width as u16, event.height as u16);
                             }
                         }
-                        self.push(Value::OptionSome(Box::new(Self::console_event_record(event))))?;
+                        self.push(Value::OptionSome(Box::new(Self::console_event_record(
+                            event,
+                        ))))?;
                     }
                     None => {
                         self.push(Value::OptionNone)?;

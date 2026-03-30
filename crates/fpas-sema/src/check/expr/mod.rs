@@ -198,7 +198,8 @@ impl Checker {
         span: fpas_lexer::Span,
     ) -> Ty {
         let target_ty = self.resolve_type_expr(type_expr);
-        if !matches!(self.resolve_visible_type(&target_ty), Ty::Record(_)) && !target_ty.is_error() {
+        if !matches!(self.resolve_visible_type(&target_ty), Ty::Record(_)) && !target_ty.is_error()
+        {
             self.error_with_code(
                 fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
                 format!("`new` requires a record type, found `{target_ty:?}`"),
@@ -240,9 +241,7 @@ impl Checker {
             _ if !base_ty.is_error() => {
                 self.error_with_code(
                     fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
-                    format!(
-                        "`with` update requires a record value, found `{base_ty:?}`"
-                    ),
+                    format!("`with` update requires a record value, found `{base_ty:?}`"),
                     "Use `RecordExpr with Field := NewValue; … end` on a record value.",
                     span,
                 );
@@ -274,8 +273,7 @@ impl Checker {
                     span,
                 );
             } else {
-                let known: Vec<&str> =
-                    record_ty.fields.iter().map(|(n, _)| n.as_str()).collect();
+                let known: Vec<&str> = record_ty.fields.iter().map(|(n, _)| n.as_str()).collect();
                 self.error_with_code(
                     fpas_diagnostics::codes::SEMA_UNKNOWN_NAME,
                     format!(

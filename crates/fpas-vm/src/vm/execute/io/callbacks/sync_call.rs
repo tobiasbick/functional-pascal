@@ -71,61 +71,67 @@ impl Worker {
         }
         let saved_ip = self.ip;
         self.ip = code_start;
+        self.sync_call_depth += 1;
+        let result = (|| -> Result<Value, VmError> {
+            while self.call_stack.len() > saved_depth {
+                if self.ip >= self.shared.chunk.code.len() {
+                    return Err(internal_error(
+                        "IP ran past end of code during synchronous function call",
+                        "This indicates a compiler/runtime bug.",
+                        line,
+                    ));
+                }
 
-        while self.call_stack.len() > saved_depth {
-            if self.ip >= self.shared.chunk.code.len() {
-                return Err(internal_error(
-                    "IP ran past end of code during synchronous function call",
-                    "This indicates a compiler/runtime bug.",
-                    line,
-                ));
-            }
+                let op = self.shared.chunk.code[self.ip];
+                let location = self.shared.chunk.location_at(self.ip).unwrap_or(line);
+                self.current_location = location;
+                self.ip += 1;
 
-            let op = self.shared.chunk.code[self.ip];
-            let location = self.shared.chunk.location_at(self.ip).unwrap_or(line);
-            self.current_location = location;
-            self.ip += 1;
+                if self.try_exec_stack_scope(op, location)?
+                    || self.try_exec_numeric(op, location)?
+                    || self.try_exec_control_calls(op, location)?
+                    || self.try_exec_concurrency(op, location)?
+                    || self.try_exec_aggregates(op, location)?
+                    || self.try_exec_result_option(op, location)?
+                    || self.try_exec_enums(op, location)?
+                    || self.try_exec_io(op, location)?
+                {
+                    continue;
+                }
 
-            if self.try_exec_stack_scope(op, location)?
-                || self.try_exec_numeric(op, location)?
-                || self.try_exec_control_calls(op, location)?
-                || self.try_exec_aggregates(op, location)?
-                || self.try_exec_result_option(op, location)?
-                || self.try_exec_io(op, location)?
-            {
-                continue;
-            }
-
-            match op {
-                Op::Return => {
-                    let return_value = self.pop(location)?;
-                    if let Some(frame) = self.call_stack.pop() {
-                        self.stack.truncate(frame.base_slot);
-                        self.push(return_value)?;
-                        self.ip = frame.return_ip;
+                match op {
+                    Op::Return => {
+                        let return_value = self.pop(location)?;
+                        if let Some(frame) = self.call_stack.pop() {
+                            self.stack.truncate(frame.base_slot);
+                            self.push(return_value)?;
+                            self.ip = frame.return_ip;
+                        }
+                    }
+                    Op::Halt => break,
+                    Op::Panic => {
+                        let value = self.pop(location)?;
+                        return Err(runtime_error(
+                            RUNTIME_PROGRAM_PANIC,
+                            format!("panic: {value}"),
+                            "Remove the panic or guard the failing condition.",
+                            location,
+                        ));
+                    }
+                    _ => {
+                        return Err(internal_error(
+                            format!("Unhandled opcode in sync call: {op:?}"),
+                            "This indicates a VM dispatch bug.",
+                            location,
+                        ));
                     }
                 }
-                Op::Halt => break,
-                Op::Panic => {
-                    let value = self.pop(location)?;
-                    return Err(runtime_error(
-                        RUNTIME_PROGRAM_PANIC,
-                        format!("panic: {value}"),
-                        "Remove the panic or guard the failing condition.",
-                        location,
-                    ));
-                }
-                _ => {
-                    return Err(internal_error(
-                        format!("Unhandled opcode in sync call: {op:?}"),
-                        "This indicates a VM dispatch bug.",
-                        location,
-                    ));
-                }
             }
-        }
 
+            self.pop(line)
+        })();
+        self.sync_call_depth -= 1;
         self.ip = saved_ip;
-        self.pop(line)
+        result
     }
 }

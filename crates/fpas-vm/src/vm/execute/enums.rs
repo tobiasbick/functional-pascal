@@ -13,8 +13,7 @@ impl Worker {
             Op::MakeEnum(type_idx, variant_idx, field_count) => {
                 let type_name = self.const_str(type_idx, line)?;
                 let variant = self.const_str(variant_idx, line)?;
-                let start = self.stack.len() - field_count as usize;
-                let fields: Vec<Value> = self.stack.drain(start..).collect();
+                let fields = self.drain_stack_tail(field_count as usize, line)?;
                 self.push(Value::Enum {
                     type_name,
                     variant,

@@ -58,8 +58,8 @@ end.",
 
 #[test]
 fn result_as_local_variable_name_in_method_is_parse_error() {
-        parse_fails(
-                "program T;
+    parse_fails(
+        "program T;
 type Holder = record
     Value: integer;
     function Wrap(Self: Holder): integer;
@@ -70,7 +70,7 @@ type Holder = record
 end;
 begin
 end.",
-        );
+    );
 }
 
 #[test]

@@ -76,7 +76,7 @@ pub enum Ty {
     /// Procedure / void result (e.g. `Std.Array.Push`).
     Unit,
     Array(Box<Ty>),
-    /// `ref T` — shared reference to a heap-allocated value.
+    /// `ref T` — shared reference to a heap-allocated record.
     ///
     /// **Documentation:** `docs/pascal/05-types.md`
     Ref(Box<Ty>),
@@ -247,10 +247,9 @@ impl Ty {
                 k1.compatible_with(k2) && v1.compatible_with(v2)
             }
             // Record satisfies an interface it explicitly implements.
-            (Ty::Record(r), Ty::Interface(i)) => r
-                .implements
-                .iter()
-                .any(|n| n.eq_ignore_ascii_case(&i.name)),
+            (Ty::Record(r), Ty::Interface(i)) => {
+                r.implements.iter().any(|n| n.eq_ignore_ascii_case(&i.name))
+            }
             // Interface is compatible with itself (same name) or a parent (extends chain not
             // walked here — sema widens the method set at declaration time instead).
             (Ty::Interface(a), Ty::Interface(b)) => a.name.eq_ignore_ascii_case(&b.name),

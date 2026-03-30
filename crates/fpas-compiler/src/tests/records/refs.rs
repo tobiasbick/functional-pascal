@@ -102,12 +102,12 @@ end.",
 }
 
 #[test]
-fn new_non_record_type_reports_error() {
+fn ref_non_record_type_reports_error() {
     let err = compile_err(
         "\
-program RefBadNew;
+program RefBadRef;
+type ScalarRef = ref integer;
 begin
-  var X: ref integer := new integer with end
 end.",
     );
     assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);

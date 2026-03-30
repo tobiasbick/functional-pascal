@@ -1,6 +1,8 @@
 use super::Checker;
 use crate::scope::{Symbol, SymbolKind};
-use fpas_diagnostics::codes::{SEMA_DUPLICATE_DECLARATION, SEMA_MISSING_RECORD_FIELD, SEMA_UNKNOWN_NAME};
+use fpas_diagnostics::codes::{
+    SEMA_DUPLICATE_DECLARATION, SEMA_MISSING_RECORD_FIELD, SEMA_UNKNOWN_NAME,
+};
 use fpas_parser::{Expr, FieldInit, VarDef};
 
 impl Checker {
@@ -82,10 +84,7 @@ impl Checker {
                         "Field `{}` is specified more than once in record literal",
                         field_init.name
                     ),
-                    format!(
-                        "Remove the duplicate `{} := …` entry.",
-                        field_init.name
-                    ),
+                    format!("Remove the duplicate `{} := …` entry.", field_init.name),
                     span,
                 );
             }

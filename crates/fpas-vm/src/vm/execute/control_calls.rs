@@ -1,5 +1,5 @@
 use super::super::diagnostics::VmError;
-use super::super::{CallFrame, Worker, runtime_error};
+use super::super::{CallFrame, Worker, internal_error, runtime_error};
 use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_UNDEFINED_FUNCTION, RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_WRONG_CALL_ARITY,
@@ -75,7 +75,13 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<String, VmError> {
         let sp = self.stack.len();
-        let receiver_idx = sp.saturating_sub(argc as usize);
+        let receiver_idx = sp.checked_sub(argc as usize).ok_or_else(|| {
+            internal_error(
+                format!("CallVirtual expected {argc} argument(s) on the stack, found {sp}"),
+                "This indicates invalid bytecode or a VM stack-layout bug. Please report it.",
+                line,
+            )
+        })?;
         let receiver = self.stack.get(receiver_idx).ok_or_else(|| {
             runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
@@ -130,6 +136,17 @@ impl Worker {
                 RUNTIME_WRONG_CALL_ARITY,
                 format!("Function `{name}` expects {expected_arity} arguments, got {argc}"),
                 "Call the function with the declared number of arguments.",
+                line,
+            ));
+        }
+
+        if self.stack.len() < argc as usize {
+            return Err(internal_error(
+                format!(
+                    "Call to `{name}` expected {argc} argument(s) on the stack, found {}",
+                    self.stack.len()
+                ),
+                "This indicates invalid bytecode or a VM stack-layout bug. Please report it.",
                 line,
             ));
         }

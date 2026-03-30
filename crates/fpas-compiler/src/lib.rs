@@ -24,12 +24,12 @@ use fpas_parser::Program;
 
 /// Compile a parsed program into bytecode.
 pub fn compile(program: &Program) -> Result<Chunk, CompileError> {
-    let (sema_errors, expr_types, method_calls, record_defaults) =
+    let (sema_errors, expr_types, method_calls, interface_dispatch, record_defaults) =
         fpas_sema::analyze_with_types(program);
     if let Some(err) = sema_errors.into_iter().next() {
         return Err(err);
     }
-    let mut compiler = Compiler::new(expr_types, method_calls, record_defaults);
+    let mut compiler = Compiler::new(expr_types, method_calls, interface_dispatch, record_defaults);
     compiler.compile_program(program)?;
     Ok(compiler.finish())
 }

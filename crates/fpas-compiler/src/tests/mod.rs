@@ -78,6 +78,7 @@ mod forward_declarations;
 mod functions;
 mod functions_errors;
 mod generics;
+mod interfaces;
 mod nested_functions;
 mod nested_patterns;
 mod numeric_binary_ops;

@@ -44,6 +44,7 @@ impl Checker {
             type_params: Vec::new(),
             fields,
             methods,
+            implements: Vec::new(),
         })
     }
 

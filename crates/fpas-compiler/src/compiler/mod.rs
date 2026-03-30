@@ -6,7 +6,7 @@
 use std::collections::HashMap;
 
 use fpas_bytecode::Chunk;
-use fpas_sema::{ExprTypeMap, MethodCallMap, RecordDefaultsMap};
+use fpas_sema::{ExprTypeMap, InterfaceDispatchMap, MethodCallMap, RecordDefaultsMap};
 
 mod binary_op;
 mod designator;
@@ -68,6 +68,10 @@ pub struct Compiler {
     record_methods: HashMap<String, Vec<String>>,
     /// Maps call-expression/designator identity to qualified method name.
     method_calls: MethodCallMap,
+    /// Call keys where virtual (interface) dispatch must be emitted.
+    ///
+    /// **Documentation:** `docs/pascal/05-types.md` (Interfaces)
+    interface_dispatch: InterfaceDispatchMap,
     /// Counter for generating unique lambda function names.
     next_lambda_id: u32,
     /// Named record type → ordered (field_name, optional_default_expr) pairs.
@@ -88,6 +92,7 @@ impl Compiler {
     pub fn new(
         expr_types: ExprTypeMap,
         method_calls: MethodCallMap,
+        interface_dispatch: InterfaceDispatchMap,
         record_defaults: RecordDefaultsMap,
     ) -> Self {
         Self {
@@ -102,6 +107,7 @@ impl Compiler {
             expr_types,
             record_methods: HashMap::new(),
             method_calls,
+            interface_dispatch,
             next_lambda_id: 0,
             record_defaults,
         }

@@ -59,6 +59,7 @@ fn register_std_console_key_api(checker: &mut Checker) {
             ("meta".into(), Ty::Boolean),
         ],
         methods: Vec::new(),
+        implements: Vec::new(),
     });
     checker.scopes.define(
         s::STD_CONSOLE_KEY_EVENT,
@@ -100,6 +101,7 @@ fn register_std_console_key_api(checker: &mut Checker) {
             ("meta".into(), Ty::Boolean),
         ],
         methods: Vec::new(),
+        implements: Vec::new(),
     });
     checker.scopes.define(
         s::STD_CONSOLE_EVENT,

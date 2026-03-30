@@ -61,6 +61,9 @@ pub enum Token {
     Ref,
     New,
     With,
+    Interface,
+    Implements,
+    Extends,
 
     // Literals
     Integer(i64),
@@ -158,6 +161,9 @@ impl Token {
             "ref" => Token::Ref,
             "new" => Token::New,
             "with" => Token::With,
+            "interface" => Token::Interface,
+            "implements" => Token::Implements,
+            "extends" => Token::Extends,
             _ => Token::Ident(raw),
         }
     }

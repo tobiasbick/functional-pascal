@@ -4,7 +4,7 @@ Features planned for later versions of Functional Pascal. Implemented entries re
 
 | Feature | Description |
 |---------|-------------|
-| [Interfaces](interfaces.md) | Ad-hoc polymorphism, `interface` / `implements`, dynamic dispatch |
+| ~~[Interfaces](interfaces.md)~~ | ~~Ad-hoc polymorphism, `interface` / `implements`, dynamic dispatch~~ — **implemented** (`interface`/`extends`/`implements`, nominal typing, `CallVirtual` dispatch) |
 | ~~[Reference Types](references.md)~~ | ~~`ref` type constructor for shared, heap-allocated values~~ — **implemented** (`ref`, `new ... with ... end`, implicit dereference) |
 | ~~[Record Extensions](record-extensions.md)~~ | ~~Default field values, `with` update expression, recursive record types~~ — **implemented** (default field values, `base with Field := Value; … end` update expression) |
 | [Stdlib Extensions](stdlib-extensions.md) | String padding/repeat, timer events, `for-in` over dict, index access |

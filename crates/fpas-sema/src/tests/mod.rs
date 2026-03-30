@@ -28,4 +28,5 @@ pub fn check_errors(src: &str) -> Vec<SemaError> {
 mod decl;
 mod expr;
 mod integration;
+mod interfaces;
 mod stmt;

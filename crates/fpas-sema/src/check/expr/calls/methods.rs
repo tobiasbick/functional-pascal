@@ -113,6 +113,20 @@ impl Checker {
 
         let receiver_ty = self.check_designator_expr(&receiver_designator);
         let resolved_receiver_ty = self.resolve_visible_type(&receiver_ty);
+
+        // ── Interface receiver — virtual dispatch ─────────────────────────────────
+        if let Ty::Interface(iface) = &resolved_receiver_ty {
+            return self.try_check_interface_method_call(
+                call_expr,
+                iface.clone(),
+                &method_name,
+                args,
+                span,
+                allow_procedure_result,
+            );
+        }
+
+        // ── Record (concrete) receiver — static dispatch ──────────────────────────
         let record_ty = match &resolved_receiver_ty {
             Ty::Record(record_ty) => record_ty.clone(),
             Ty::Ref(inner) => {
@@ -167,6 +181,57 @@ impl Checker {
                         SEMA_TYPE_MISMATCH,
                         format!("Method procedure `{qualified}` does not return a value"),
                         "Use a method function instead if you need a return value.",
+                        span,
+                    );
+                    Some(Ty::Error)
+                }
+            }
+        }
+    }
+
+    /// Handle a method call on an interface-typed receiver.
+    ///
+    /// Records the call in `interface_dispatch` so the compiler can emit `CallVirtual`.
+    fn try_check_interface_method_call(
+        &mut self,
+        call_expr: &Expr,
+        iface: crate::types::InterfaceTy,
+        method_name: &str,
+        args: &[Expr],
+        span: Span,
+        allow_procedure_result: bool,
+    ) -> Option<Ty> {
+        let method_kind = iface
+            .methods
+            .iter()
+            .find(|(n, _)| n.eq_ignore_ascii_case(method_name))?
+            .1
+            .clone();
+
+        let call_key = Self::expr_lookup_key(call_expr);
+        // Store the interface-qualified name in method_calls so the receiver is compiled.
+        let qualified = format!("{}.{}", iface.name, method_name);
+        self.method_calls.insert(call_key, qualified);
+        // Mark this call for virtual dispatch; the compiler uses the unqualified method name.
+        self.interface_dispatch
+            .insert(call_key, method_name.to_owned());
+
+        match &method_kind {
+            MethodKind::Function(func_ty) => {
+                let visible = func_ty.params.get(1..).unwrap_or(&[]);
+                self.check_method_call_args(method_name, visible, args, span);
+                Some(*func_ty.return_type.clone())
+            }
+            MethodKind::Procedure(proc_ty) => {
+                let visible = proc_ty.params.get(1..).unwrap_or(&[]);
+                self.check_method_call_args(method_name, visible, args, span);
+                if allow_procedure_result {
+                    Some(Ty::Unit)
+                } else {
+                    self.error_with_code(
+                        SEMA_TYPE_MISMATCH,
+                        format!("Interface method `{}.{method_name}` is a procedure — it does not return a value", iface.name),
+                        "Use a function method if you need a return value.",
                         span,
                     );
                     Some(Ty::Error)

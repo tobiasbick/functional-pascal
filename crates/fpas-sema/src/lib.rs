@@ -14,6 +14,7 @@ mod std_units;
 mod types;
 
 pub use check::ExprTypeMap;
+pub use check::InterfaceDispatchMap;
 pub use check::MethodCallMap;
 pub use check::RecordDefaultsMap;
 pub use error::SemaError;
@@ -31,7 +32,7 @@ pub fn analyze(program: &Program) -> Vec<SemaError> {
 /// and the map of record type defaults used by the compiler for default field expansion.
 pub fn analyze_with_types(
     program: &Program,
-) -> (Vec<SemaError>, ExprTypeMap, MethodCallMap, RecordDefaultsMap) {
+) -> (Vec<SemaError>, ExprTypeMap, MethodCallMap, InterfaceDispatchMap, RecordDefaultsMap) {
     let mut checker = check::Checker::new();
     checker.check_program(program);
     checker.finish()

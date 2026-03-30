@@ -28,7 +28,7 @@ fn single_character_string_literal_defaults_to_string() {
         other => panic!("expected variable declaration, got {other:?}"),
     };
 
-    let (errors, types, _method_calls, _) = analyze_with_types(&program);
+    let (errors, types, _method_calls, _, _) = analyze_with_types(&program);
     assert!(errors.is_empty(), "{errors:#?}");
 
     let key = crate::expr_lookup_key(value);
@@ -57,7 +57,7 @@ fn analyze_with_types_records_expression_types() {
     let (program, parse_errors) =
         fpas_parser::parse("program T; var X: real := 1.0 + 2.0; begin end.");
     assert!(parse_errors.is_empty());
-    let (errs, map, _method_calls, _) = analyze_with_types(&program);
+    let (errs, map, _method_calls, _, _) = analyze_with_types(&program);
     assert!(errs.is_empty(), "{errs:?}");
     assert!(
         map.len() >= 3,

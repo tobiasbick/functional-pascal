@@ -41,7 +41,15 @@ impl Compiler {
                 span,
             } => {
                 let call_key = std::ptr::from_ref(expr) as usize;
-                if let Some(qualified) = self.method_calls.get(&call_key).cloned() {
+                if let Some(method_name) = self.interface_dispatch.get(&call_key).cloned() {
+                    // Interface virtual dispatch — receiver's runtime type determines impl.
+                    self.compile_virtual_method_call(
+                        designator,
+                        &method_name,
+                        args,
+                        (span.line, span.column).into(),
+                    )?;
+                } else if let Some(qualified) = self.method_calls.get(&call_key).cloned() {
                     self.compile_method_call(
                         designator,
                         &qualified,

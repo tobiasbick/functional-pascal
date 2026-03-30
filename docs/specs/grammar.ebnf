@@ -84,7 +84,7 @@ directive_content = (* any characters except '}', trimmed *) ;
 (*   INCLUDE filename     — same as I                                *)
 (* Unknown directive keywords emit a diagnostic but are ignored.    *)
 
-(* ---- Keywords (59, case-insensitive) --------------------------- *)
+(* ---- Keywords (63, case-insensitive) --------------------------- *)
 
 keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'var'       | 'mutable'   | 'function'  | 'procedure'
@@ -100,8 +100,9 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'break'     | 'continue'  | 'result'    | 'option'
                 | 'ok'        | 'error'     | 'some'      | 'none'
                 | 'try'       | 'public'    | 'private'
-                | 'go'        | 'channel'   | 'select'    | 'from'
-                | 'dict' ;
+                | 'go'        | 'channel'   | 'select'    | 'default'
+                | 'from'      | 'dict'      | 'interface' | 'implements'
+                | 'extends' ;
 
 (* ---- Symbols --------------------------------------------------- *)
 

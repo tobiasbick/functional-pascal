@@ -57,6 +57,7 @@ pub(super) fn token_display(t: &Token) -> Cow<'static, str> {
         Token::Go => "go".into(),
         Token::Channel => "channel".into(),
         Token::Select => "select".into(),
+        Token::Default => "default".into(),
         Token::From => "from".into(),
         Token::Dict => "dict".into(),
         Token::Ref => "ref".into(),

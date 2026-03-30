@@ -41,6 +41,11 @@ fn try_as_variable_name_is_parse_error() {
     parse_fails("program T; var Try: integer := 1; begin end.");
 }
 
+#[test]
+fn default_as_variable_name_is_parse_error() {
+    parse_fails("program T; var default: integer := 1; begin end.");
+}
+
 // ── Function names ──────────────────────────────────────────────────────
 
 #[test]
@@ -99,6 +104,19 @@ end.",
     );
 }
 
+#[test]
+fn default_as_function_name_is_parse_error() {
+        parse_fails(
+                "program T;
+function default(): integer;
+begin
+    return 1
+end;
+begin
+end.",
+        );
+}
+
 // ── Case insensitivity ─────────────────────────────────────────────────
 
 #[test]
@@ -119,4 +137,9 @@ fn try_mixed_case_as_variable_name_is_parse_error() {
 #[test]
 fn none_uppercase_as_variable_name_is_parse_error() {
     parse_fails("program T; var NONE: integer := 1; begin end.");
+}
+
+#[test]
+fn default_mixed_case_as_variable_name_is_parse_error() {
+    parse_fails("program T; var DeFaUlT: integer := 1; begin end.");
 }

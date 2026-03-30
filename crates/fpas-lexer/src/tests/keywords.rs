@@ -2,13 +2,13 @@ use super::toks;
 use crate::Token;
 
 #[test]
-fn all_55_keywords() {
+fn all_63_keywords() {
     let input = "program unit uses const var mutable function procedure begin end return \
                  if then else case of for to downto in in do while \
                  repeat until and or not xor div mod shl shr \
                  true false type record enum array forward panic break continue \
                  public private result option ok error some none try \
-                 go channel select from dict";
+                 go channel select default from dict ref new with interface implements extends";
     let tokens = toks(input);
     assert_eq!(
         tokens,
@@ -68,10 +68,24 @@ fn all_55_keywords() {
             Token::Go,
             Token::Channel,
             Token::Select,
+            Token::Default,
             Token::From,
             Token::Dict,
+            Token::Ref,
+            Token::New,
+            Token::With,
+            Token::Interface,
+            Token::Implements,
+            Token::Extends,
         ]
     );
+}
+
+#[test]
+fn default_is_reserved_keyword() {
+    assert_eq!(toks("default"), vec![Token::Default]);
+    assert_eq!(toks("DEFAULT"), vec![Token::Default]);
+    assert_eq!(toks("defaultValue"), vec![Token::Ident("defaultValue".into())]);
 }
 
 #[test]

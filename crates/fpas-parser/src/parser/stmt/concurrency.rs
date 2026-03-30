@@ -58,7 +58,7 @@ impl Parser {
                     arms.push(self.parse_select_arm());
                     self.eat(&Token::Semicolon);
                 }
-                Token::Ident(s) if s.eq_ignore_ascii_case("default") => {
+                Token::Default => {
                     self.advance(); // consume `default`
                     self.expect(&Token::Colon);
                     let body = self.parse_statement_list();

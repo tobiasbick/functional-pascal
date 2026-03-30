@@ -120,7 +120,7 @@ begin
 end;
 
 begin
-  var Add5 := MakeAdder(5);
+  var Add5: function(X: integer): integer := MakeAdder(5);
   WriteLn(Add5(10));  { 15 }
 end.
 ```

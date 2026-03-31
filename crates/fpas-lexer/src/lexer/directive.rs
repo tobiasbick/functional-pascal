@@ -20,14 +20,12 @@ impl Lexer<'_> {
         while !self.at_end() {
             if self.current() == b'}' {
                 let raw = &self.src[start..self.pos];
-                // SAFETY: the lexer input is valid UTF-8 (it came from a &str); any
-                // non-ASCII bytes inside the directive are still valid UTF-8 sequences
-                // because the outer source did not trigger an error at that point.
-                #[expect(
-                    clippy::string_from_utf8_as_bytes,
-                    reason = "we sliced a &[u8] view of a &str — round-tripping through from_utf8 is safe"
-                )]
-                let content: Box<str> = String::from_utf8_lossy(raw).trim().into();
+                // SAFETY: `self.src` is a byte view of a `&str`; any contiguous
+                // slice of it is valid UTF-8.
+                let content: Box<str> = std::str::from_utf8(raw)
+                    .expect("directive content is valid UTF-8: lexer source comes from &str")
+                    .trim()
+                    .into();
                 self.advance(); // consume '}'
                 self.push_tok(Token::Directive(content), so, sl, sc);
                 return;

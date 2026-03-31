@@ -48,7 +48,7 @@ impl Lexer<'_> {
                     return;
                 }
             } else {
-                buf.push(self.advance() as char);
+                buf.push(self.advance_utf8_char());
             }
         }
     }

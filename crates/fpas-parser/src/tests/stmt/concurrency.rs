@@ -106,7 +106,8 @@ fn empty_select_reports_error() {
     let (_, errs) = parse_with_errors("program T; begin select end end.");
 
     assert!(
-        errs.iter().any(|err| format!("{err:?}").contains("Empty `select`")),
+        errs.iter()
+            .any(|err| format!("{err:?}").contains("Empty `select`")),
         "expected empty select diagnostic, got: {errs:#?}"
     );
 }

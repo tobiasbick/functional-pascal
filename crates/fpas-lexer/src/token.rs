@@ -107,7 +107,7 @@ pub enum Token {
 }
 
 impl Token {
-    pub fn from_ident(raw: String) -> Token {
+    pub fn from_ident(raw: &str) -> Token {
         match raw.to_ascii_lowercase().as_str() {
             "program" => Token::Program,
             "unit" => Token::Unit,
@@ -172,7 +172,7 @@ impl Token {
             "interface" => Token::Interface,
             "implements" => Token::Implements,
             "extends" => Token::Extends,
-            _ => Token::Ident(raw),
+            _ => Token::Ident(raw.to_owned()),
         }
     }
 }

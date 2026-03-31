@@ -77,47 +77,34 @@ impl Lexer<'_> {
         }
     }
 
-    pub(super) fn consume_decimal_digits(&mut self) -> String {
+    /// Collects a run of digits (and `_` separators) where each digit satisfies `pred`.
+    ///
+    /// Leading and trailing underscores are not consumed; an underscore is only
+    /// skipped when the next byte also satisfies `pred`.
+    fn consume_digits_with(&mut self, pred: impl Fn(u8) -> bool) -> String {
         let mut digits = String::new();
-        if !self.at_end() && self.current().is_ascii_digit() {
+        if !self.at_end() && pred(self.current()) {
             digits.push(self.advance() as char);
         }
-
         while !self.at_end() {
-            if self.current().is_ascii_digit() {
+            if pred(self.current()) {
                 digits.push(self.advance() as char);
-            } else if self.current() == b'_' && self.peek_at(1).is_some_and(|c| c.is_ascii_digit())
-            {
+            } else if self.current() == b'_' && self.peek_at(1).is_some_and(|c| pred(c)) {
                 self.advance();
                 digits.push(self.advance() as char);
             } else {
                 break;
             }
         }
-
         digits
     }
 
+    pub(super) fn consume_decimal_digits(&mut self) -> String {
+        self.consume_digits_with(|c| c.is_ascii_digit())
+    }
+
     pub(super) fn consume_hex_digits(&mut self) -> String {
-        let mut digits = String::new();
-        if !self.at_end() && self.current().is_ascii_hexdigit() {
-            digits.push(self.advance() as char);
-        }
-
-        while !self.at_end() {
-            if self.current().is_ascii_hexdigit() {
-                digits.push(self.advance() as char);
-            } else if self.current() == b'_'
-                && self.peek_at(1).is_some_and(|c| c.is_ascii_hexdigit())
-            {
-                self.advance();
-                digits.push(self.advance() as char);
-            } else {
-                break;
-            }
-        }
-
-        digits
+        self.consume_digits_with(|c| c.is_ascii_hexdigit())
     }
 
     pub(super) fn maybe_scan_exponent(&mut self) -> Result<String, ()> {

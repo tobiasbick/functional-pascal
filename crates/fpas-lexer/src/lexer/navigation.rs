@@ -29,8 +29,36 @@ impl Lexer<'_> {
                 }
             }
             _ => {
-                self.col += 1;
+                // Only count non-continuation bytes (0x80–0xBF) so that a
+                // multi-byte UTF-8 codepoint advances the column by exactly one.
+                if (ch & 0xC0) != 0x80 {
+                    self.col += 1;
+                }
             }
+        }
+        ch
+    }
+
+    /// Reads one Unicode scalar value from the current position, advances past
+    /// all of its bytes, and returns the decoded [`char`].
+    ///
+    /// The source is always valid UTF-8 because the lexer is created from a
+    /// `&str`.  Column tracking uses [`advance`][Self::advance] internally, so
+    /// multi-byte codepoints increment the column counter by exactly one.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called at end of input.
+    pub(super) fn advance_utf8_char(&mut self) -> char {
+        // `self.src` is a byte projection of a `&str`, so it is always valid UTF-8.
+        let remaining =
+            std::str::from_utf8(&self.src[self.pos..]).expect("lexer source is valid UTF-8");
+        let ch = remaining
+            .chars()
+            .next()
+            .expect("advance_utf8_char called past end of input");
+        for _ in 0..ch.len_utf8() {
+            self.advance();
         }
         ch
     }

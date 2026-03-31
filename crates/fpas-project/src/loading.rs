@@ -42,7 +42,10 @@ pub fn load_project(path: &Path) -> Result<LoadedProject, String> {
 ///
 /// This implements project-file handling from `docs/pascal/10-projects.md`
 /// and compiler directives from `docs/pascal/12-compiler-directives.md`.
-pub fn load_project_with_defines(path: &Path, defines: &DefineSet) -> Result<LoadedProject, String> {
+pub fn load_project_with_defines(
+    path: &Path,
+    defines: &DefineSet,
+) -> Result<LoadedProject, String> {
     let project_text = fs::read_to_string(path).map_err(|e| {
         format!(
             "Error reading project file `{}`: {e}",

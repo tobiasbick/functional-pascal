@@ -27,7 +27,10 @@ use std::path::{Path, PathBuf};
 
 pub use directive::{DirectiveKind, parse_directive_content};
 
-use crate::{LexError, Span, SpannedToken, Token, error::{lex_error, lex_warning}};
+use crate::{
+    LexError, Span, SpannedToken, Token,
+    error::{lex_error, lex_warning},
+};
 use fpas_diagnostics::codes::{
     LEX_DIRECTIVE_ELSE_WITHOUT_IFDEF, LEX_DIRECTIVE_ENDIF_WITHOUT_IFDEF,
     LEX_DIRECTIVE_INCLUDE_UNSUPPORTED, LEX_DIRECTIVE_UNCLOSED_IFDEF, LEX_DIRECTIVE_UNKNOWN,
@@ -46,13 +49,6 @@ impl DefineSet {
         Self::default()
     }
 
-    /// Creates a symbol set pre-populated from an iterator of names.
-    ///
-    /// Names are normalised to upper-case automatically.
-    pub fn from_iter(iter: impl IntoIterator<Item = impl Into<String>>) -> Self {
-        Self(iter.into_iter().map(|s| s.into().to_uppercase()).collect())
-    }
-
     /// Returns `true` if `name` (case-insensitive) is defined.
     #[must_use]
     pub fn is_defined(&self, name: &str) -> bool {
@@ -67,6 +63,12 @@ impl DefineSet {
     /// Removes `name` (case-insensitive) from the set.
     pub fn undef(&mut self, name: &str) {
         self.0.remove(&name.to_uppercase());
+    }
+}
+
+impl<S: Into<String>> FromIterator<S> for DefineSet {
+    fn from_iter<I: IntoIterator<Item = S>>(iter: I) -> Self {
+        Self(iter.into_iter().map(|s| s.into().to_uppercase()).collect())
     }
 }
 
@@ -171,7 +173,6 @@ impl Preprocessor {
     }
 
     fn finish(mut self) -> (Vec<SpannedToken>, Vec<LexError>) {
-
         // Report any unclosed IFDEF/IFNDEF blocks.
         for frame in &self.stack {
             self.errors.push(lex_error(
@@ -288,7 +289,9 @@ impl Preprocessor {
                         None => {
                             self.errors.push(lex_error(
                                 LEX_DIRECTIVE_INCLUDE_UNSUPPORTED,
-                                &format!("`{{$INCLUDE {filename}}}` is not supported in single-file mode"),
+                                &format!(
+                                    "`{{$INCLUDE {filename}}}` is not supported in single-file mode"
+                                ),
                                 "File inclusion is only available inside a multi-file project. \
                                  Use `fpas build` with a `.fpasprj` project file.",
                                 span,

@@ -35,7 +35,10 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<CliConfi
         let arg = &args[index];
         if arg == "-D" || arg == "--define" {
             let Some(name) = args.get(index + 1) else {
-                return Err("Missing name after `--define`.\n  help: Use `-D DEBUG` or `--define DEBUG`.".to_string());
+                return Err(
+                    "Missing name after `--define`.\n  help: Use `-D DEBUG` or `--define DEBUG`."
+                        .to_string(),
+                );
             };
             add_define(&mut defines, name)?;
             index += 2;
@@ -63,7 +66,9 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<CliConfi
         }
 
         if input.replace(arg.clone()).is_some() {
-            return Err("Usage: fpas [-D NAME | --define NAME]... [<file.fpas | file.fpasprj>]".to_string());
+            return Err(
+                "Usage: fpas [-D NAME | --define NAME]... [<file.fpas | file.fpasprj>]".to_string(),
+            );
         }
         index += 1;
     }

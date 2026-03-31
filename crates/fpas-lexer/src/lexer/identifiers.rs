@@ -10,7 +10,7 @@ impl Lexer<'_> {
             raw.push(self.advance() as char);
         }
 
-        let token = Token::from_ident(raw);
+        let token = Token::from_ident(&raw);
         self.push_tok(token, so, sl, sc);
     }
 }

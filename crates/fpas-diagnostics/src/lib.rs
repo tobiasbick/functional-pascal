@@ -171,9 +171,7 @@ pub fn render(path: &str, diagnostic: &Diagnostic) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        Diagnostic, DiagnosticCode, DiagnosticStage, SourceLocation, SourceSpan, render,
-    };
+    use super::{Diagnostic, DiagnosticCode, DiagnosticStage, SourceLocation, SourceSpan, render};
 
     #[test]
     fn source_location_from_tuple() {

@@ -43,7 +43,10 @@ pub(super) fn run_cli_and_capture_output(project_file: &Path, cwd: &Path) -> (i3
     run_cli_args_and_capture_output(&[project_file.to_string_lossy().to_string()], cwd)
 }
 
-pub(super) fn run_cli_args_and_capture_output(args: &[String], cwd: &Path) -> (i32, String, String) {
+pub(super) fn run_cli_args_and_capture_output(
+    args: &[String],
+    cwd: &Path,
+) -> (i32, String, String) {
     let stdout = SharedWriter::default();
     let mut stderr = Vec::<u8>::new();
     let exit_code = run_cli(args, cwd, Box::new(stdout.clone()), &mut stderr);

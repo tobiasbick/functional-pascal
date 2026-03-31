@@ -72,17 +72,14 @@ fn run_project_file(
                 );
                 return 1;
             };
-            let merged_program = match project::build_program_with_defines(
-                &main,
-                &loaded.source_files,
-                defines,
-            ) {
-                Ok(program) => program,
-                Err(message) => {
-                    let _ = writeln!(stderr, "{message}");
-                    return 1;
-                }
-            };
+            let merged_program =
+                match project::build_program_with_defines(&main, &loaded.source_files, defines) {
+                    Ok(program) => program,
+                    Err(message) => {
+                        let _ = writeln!(stderr, "{message}");
+                        return 1;
+                    }
+                };
 
             let main_path = main.to_string_lossy();
             run_compiled_program(main_path.as_ref(), &merged_program, stdout, stderr)

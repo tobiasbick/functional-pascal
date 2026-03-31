@@ -36,13 +36,12 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<(), VmError> {
         let idx = self.local_abs_index(depth, slot, line)?;
-        let array = self.stack[idx].clone();
-        let Value::Array(mut elems) = array else {
+        let Value::Array(elems) = &mut self.stack[idx] else {
             return Err(runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 format!(
                     "ArrayPopLocal: local is {}, expected array",
-                    array.type_name()
+                    self.stack[idx].type_name()
                 ),
                 "Pass a mutable local array variable to Std.Array.Pop.",
                 line,
@@ -56,7 +55,6 @@ impl Worker {
                 line,
             )
         })?;
-        self.stack[idx] = Value::Array(elems);
         self.push(popped)?;
         Ok(())
     }

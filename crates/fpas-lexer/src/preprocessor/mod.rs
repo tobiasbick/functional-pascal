@@ -138,6 +138,9 @@ struct Preprocessor {
     stack: Vec<IfFrame>,
     out: Vec<SpannedToken>,
     errors: Vec<LexError>,
+    /// Canonical paths of files currently being processed, used to detect
+    /// circular includes.
+    include_stack: Vec<PathBuf>,
 }
 
 impl Preprocessor {
@@ -147,6 +150,7 @@ impl Preprocessor {
             stack: Vec::new(),
             out: Vec::new(),
             errors: Vec::new(),
+            include_stack: Vec::new(),
         }
     }
 
@@ -319,6 +323,21 @@ impl Preprocessor {
 
     fn process_include(&mut self, current_file: &Path, filename: &str) -> Result<(), String> {
         let include_path = resolve_include_path(current_file, filename)?;
+        let canonical = include_path
+            .canonicalize()
+            .unwrap_or_else(|_| include_path.clone());
+        if self.include_stack.contains(&canonical) {
+            return Err(format!(
+                "Circular include detected: `{}` is already being processed (include chain: {})",
+                include_path.to_string_lossy(),
+                self.include_stack
+                    .iter()
+                    .map(|p| p.to_string_lossy().into_owned())
+                    .collect::<Vec<_>>()
+                    .join(" → ")
+            ));
+        }
+        self.include_stack.push(canonical);
         let source = fs::read_to_string(&include_path).map_err(|error| {
             format!(
                 "Error reading included file `{}` referenced from `{}`: {error}",
@@ -328,7 +347,9 @@ impl Preprocessor {
         })?;
         let (tokens, lex_errors) = crate::lex(&source);
         self.errors.extend(lex_errors);
-        self.process_tokens(tokens, Some(&include_path), false)
+        let result = self.process_tokens(tokens, Some(&include_path), false);
+        self.include_stack.pop();
+        result
     }
 }
 

@@ -12,6 +12,10 @@ use fpas_sema::Ty;
 
 use super::Compiler;
 
+pub(super) fn is_generic_param(ty: &Ty) -> bool {
+    matches!(ty, Ty::GenericParam(..))
+}
+
 impl Compiler {
     pub(super) fn ty_of(&self, expr: &Expr) -> Ty {
         let key = fpas_sema::expr_lookup_key(expr);

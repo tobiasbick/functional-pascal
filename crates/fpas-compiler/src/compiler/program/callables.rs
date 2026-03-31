@@ -67,6 +67,26 @@ impl Compiler {
             .functions
             .insert(name.to_string(), (code_start, params.len() as u8));
 
+        self.compile_routine_body(params, body, location)?;
+
+        let after = self.chunk.len() as u32;
+        self.patch_jump(jump_over, after, location)?;
+        Ok(())
+    }
+
+    /// Shared body compilation for named callables and anonymous lambdas.
+    ///
+    /// Saves and restores the compiler's local-variable state, compiles the
+    /// function body inside a fresh scope, and emits the trailing `Unit`+`Return`.
+    /// Returns `(code_start, body_end)` byte offsets for the caller.
+    pub(in crate::compiler) fn compile_routine_body(
+        &mut self,
+        params: &[fpas_parser::FormalParam],
+        body: &FuncBody,
+        location: impl super::super::emit::IntoEmitLocation + Copy,
+    ) -> Result<(usize, usize), CompileError> {
+        let code_start = self.chunk.len();
+
         let saved_locals = std::mem::take(&mut self.locals);
         let saved_next_slot = self.next_slot;
         let saved_scope_depth = self.scope_depth;
@@ -93,13 +113,13 @@ impl Compiler {
         self.emit(Op::Return, location);
         self.end_scope(location);
 
+        let body_end = self.chunk.len();
+
         self.enclosing_locals.pop();
         self.locals = saved_locals;
         self.next_slot = saved_next_slot;
         self.scope_depth = saved_scope_depth;
 
-        let after = self.chunk.len() as u32;
-        self.patch_jump(jump_over, after, location)?;
-        Ok(())
+        Ok((code_start, body_end))
     }
 }

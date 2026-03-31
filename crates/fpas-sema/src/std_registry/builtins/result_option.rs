@@ -109,7 +109,16 @@ fn check_result_map(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     let func_ty = c.check_expr(&args[1]);
     let err_ty = match &result_ty {
         Ty::Result(_, e) => *e.clone(),
-        _ => Ty::Error,
+        Ty::Error => Ty::Error,
+        _ => {
+            c.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                format!("`{}` first argument must be a Result", s::STD_RESULT_MAP),
+                "Pass a `Result of T, E` value.",
+                span,
+            );
+            return Ty::Error;
+        }
     };
     match &func_ty {
         Ty::Function(FunctionTy { return_type, .. }) => {
@@ -138,7 +147,19 @@ fn check_result_and_then(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         );
         return Ty::Error;
     }
-    let _result_ty = c.check_expr(&args[0]);
+    let result_ty = c.check_expr(&args[0]);
+    if !matches!(result_ty, Ty::Result(..) | Ty::Error) {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            format!(
+                "`{}` first argument must be a Result",
+                s::STD_RESULT_AND_THEN
+            ),
+            "Pass a `Result of T, E` value.",
+            span,
+        );
+        return Ty::Error;
+    }
     let func_ty = c.check_expr(&args[1]);
     match &func_ty {
         Ty::Function(FunctionTy { return_type, .. }) => *return_type.clone(),
@@ -168,7 +189,19 @@ fn check_result_or_else(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         );
         return Ty::Error;
     }
-    let _result_ty = c.check_expr(&args[0]);
+    let result_ty = c.check_expr(&args[0]);
+    if !matches!(result_ty, Ty::Result(..) | Ty::Error) {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            format!(
+                "`{}` first argument must be a Result",
+                s::STD_RESULT_OR_ELSE
+            ),
+            "Pass a `Result of T, E` value.",
+            span,
+        );
+        return Ty::Error;
+    }
     let func_ty = c.check_expr(&args[1]);
     match &func_ty {
         Ty::Function(FunctionTy { return_type, .. }) => *return_type.clone(),
@@ -198,7 +231,16 @@ fn check_option_map(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         );
         return Ty::Error;
     }
-    let _opt_ty = c.check_expr(&args[0]);
+    let opt_ty = c.check_expr(&args[0]);
+    if !matches!(opt_ty, Ty::Option(..) | Ty::Error) {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            format!("`{}` first argument must be an Option", s::STD_OPTION_MAP),
+            "Pass an `Option of T` value.",
+            span,
+        );
+        return Ty::Error;
+    }
     let func_ty = c.check_expr(&args[1]);
     match &func_ty {
         Ty::Function(FunctionTy { return_type, .. }) => Ty::Option(return_type.clone()),
@@ -225,7 +267,19 @@ fn check_option_and_then(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         );
         return Ty::Error;
     }
-    let _opt_ty = c.check_expr(&args[0]);
+    let opt_ty = c.check_expr(&args[0]);
+    if !matches!(opt_ty, Ty::Option(..) | Ty::Error) {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            format!(
+                "`{}` first argument must be an Option",
+                s::STD_OPTION_AND_THEN
+            ),
+            "Pass an `Option of T` value.",
+            span,
+        );
+        return Ty::Error;
+    }
     let func_ty = c.check_expr(&args[1]);
     match &func_ty {
         Ty::Function(FunctionTy { return_type, .. }) => *return_type.clone(),
@@ -255,7 +309,19 @@ fn check_option_or_else(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         );
         return Ty::Error;
     }
-    let _opt_ty = c.check_expr(&args[0]);
+    let opt_ty = c.check_expr(&args[0]);
+    if !matches!(opt_ty, Ty::Option(..) | Ty::Error) {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            format!(
+                "`{}` first argument must be an Option",
+                s::STD_OPTION_OR_ELSE
+            ),
+            "Pass an `Option of T` value.",
+            span,
+        );
+        return Ty::Error;
+    }
     let func_ty = c.check_expr(&args[1]);
     match &func_ty {
         Ty::Function(FunctionTy { return_type, .. }) => *return_type.clone(),

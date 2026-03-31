@@ -23,6 +23,10 @@ use fpas_bytecode::Chunk;
 use fpas_parser::Program;
 
 /// Compile a parsed program into bytecode.
+///
+/// Returns the first error encountered (sema or codegen). All sema errors are
+/// collected but only the first is surfaced through the current single-error
+/// return type.
 pub fn compile(program: &Program) -> Result<Chunk, CompileError> {
     let (
         sema_errors,
@@ -32,8 +36,8 @@ pub fn compile(program: &Program) -> Result<Chunk, CompileError> {
         record_defaults,
         scalar_case_bindings,
     ) = fpas_sema::analyze_with_types(program);
-    if let Some(err) = sema_errors.into_iter().next() {
-        return Err(err);
+    if !sema_errors.is_empty() {
+        return Err(sema_errors.into_iter().next().expect("non-empty"));
     }
     let mut compiler = Compiler::new(
         expr_types,

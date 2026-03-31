@@ -86,6 +86,7 @@ pub const RUNTIME_INVALID_CHANNEL: DiagnosticCode = DiagnosticCode::new(4017);
 pub const RUNTIME_INVALID_TASK: DiagnosticCode = DiagnosticCode::new(4018);
 pub const RUNTIME_DICT_KEY_NOT_FOUND: DiagnosticCode = DiagnosticCode::new(4019);
 pub const RUNTIME_VM_SHUTDOWN: DiagnosticCode = DiagnosticCode::new(4020);
+pub const RUNTIME_STRING_INDEX_OUT_OF_BOUNDS: DiagnosticCode = DiagnosticCode::new(4021);
 
 pub const INTERNAL_COMPILER_INVARIANT_FAILURE: DiagnosticCode = DiagnosticCode::new(9001);
 pub const INTERNAL_VM_INVARIANT_FAILURE: DiagnosticCode = DiagnosticCode::new(9002);
@@ -160,6 +161,7 @@ mod tests {
             RUNTIME_INVALID_TASK,
             RUNTIME_DICT_KEY_NOT_FOUND,
             RUNTIME_VM_SHUTDOWN,
+            RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,
             INTERNAL_COMPILER_INVARIANT_FAILURE,
             INTERNAL_VM_INVARIANT_FAILURE,
         ];

@@ -11,7 +11,7 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<(), VmError> {
         let type_name = self.const_str(type_idx, line)?;
-        let items = self.drain_values(field_count as usize * 2, line)?;
+        let items = self.drain_stack_tail(field_count as usize * 2, line)?;
         let fields = items
             .chunks(2)
             .map(|pair| {
@@ -122,7 +122,7 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<(), VmError> {
         // Drain N (name, value) pairs pushed AFTER the base record.
-        let override_items = self.drain_values(n_overrides as usize * 2, line)?;
+        let override_items = self.drain_stack_tail(n_overrides as usize * 2, line)?;
         let base = self.pop(line)?;
         // Dereference if needed — `with` always produces a fresh value copy.
         let concrete = self.deref_value(&base);

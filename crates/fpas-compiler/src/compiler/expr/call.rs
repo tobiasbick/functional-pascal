@@ -59,7 +59,11 @@ impl Compiler {
             let type_idx = self.chunk.add_constant(Value::Str(type_name));
             let variant_idx = self.chunk.add_constant(Value::Str(variant_info.name));
             self.emit(
-                Op::MakeEnum(type_idx, variant_idx, args.len() as u8),
+                Op::MakeEnum(
+                    type_idx,
+                    variant_idx,
+                    u8::try_from(args.len()).unwrap_or(u8::MAX),
+                ),
                 location,
             );
             return Ok(());
@@ -75,7 +79,8 @@ impl Compiler {
                     self.emit(Op::GetEnclosing(depth, slot), location)
                 }
             };
-            self.emit(Op::CallValue(args.len() as u8), location);
+            let arity = u8::try_from(args.len()).unwrap_or(u8::MAX);
+            self.emit(Op::CallValue(arity), location);
             return Ok(());
         }
 
@@ -83,7 +88,8 @@ impl Compiler {
             self.compile_expr(arg)?;
         }
         let name_idx = self.chunk.add_constant(Value::Str(name.into()));
-        self.emit(Op::Call(name_idx, args.len() as u8), location);
+        let arity = u8::try_from(args.len()).unwrap_or(u8::MAX);
+        self.emit(Op::Call(name_idx, arity), location);
         Ok(())
     }
 
@@ -102,7 +108,7 @@ impl Compiler {
         for arg in args {
             self.compile_expr(arg)?;
         }
-        let total_args = (args.len() + 1) as u8;
+        let total_args = u8::try_from(args.len() + 1).unwrap_or(u8::MAX);
         let name_idx = self.chunk.add_constant(Value::Str(qualified_method.into()));
         self.emit(Op::Call(name_idx, total_args), location);
         Ok(())
@@ -129,7 +135,7 @@ impl Compiler {
         for arg in args {
             self.compile_expr(arg)?;
         }
-        let total_args = (args.len() + 1) as u8;
+        let total_args = u8::try_from(args.len() + 1).unwrap_or(u8::MAX);
         let name_idx = self.chunk.add_constant(Value::Str(method_name.into()));
         self.emit(Op::CallVirtual(name_idx, total_args), location);
         Ok(())

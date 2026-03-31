@@ -4,6 +4,7 @@ use fpas_parser::{BinaryOp, Expr};
 use fpas_sema::Ty;
 
 use super::super::Compiler;
+use super::is_generic_param;
 
 impl Compiler {
     pub(super) fn compile_equality(
@@ -124,10 +125,6 @@ impl Compiler {
 
         self.compile_direct_binary(ordering_int_op(op), left, right, location)
     }
-}
-
-fn is_generic_param(ty: &Ty) -> bool {
-    matches!(ty, Ty::GenericParam(..))
 }
 
 fn ordering_dyn_op(op: BinaryOp) -> Op {

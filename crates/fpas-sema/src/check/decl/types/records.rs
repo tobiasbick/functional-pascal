@@ -96,7 +96,7 @@ impl Checker {
                     _ => {
                         self.error_with_code(
                             SEMA_UNKNOWN_TYPE,
-                            format!("`{}` is not an interface", td.name),
+                            format!("`{resolved}` is not an interface"),
                             "Only interface names can appear in an `implements` clause.",
                             td.span,
                         );

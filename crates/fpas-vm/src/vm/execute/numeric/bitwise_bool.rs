@@ -11,11 +11,37 @@ impl Worker {
     ) -> Result<bool, VmError> {
         match op {
             Op::BitAnd => {
-                self.binary_int(line, |a, b| Ok(Value::Integer(a & b)))?;
+                let b = self.pop(line)?;
+                let a = self.pop(line)?;
+                match (a, b) {
+                    (Value::Boolean(a), Value::Boolean(b)) => self.push(Value::Boolean(a & b))?,
+                    (Value::Integer(a), Value::Integer(b)) => self.push(Value::Integer(a & b))?,
+                    _ => {
+                        return Err(runtime_error(
+                            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                            "`bitand` requires matching boolean or integer operands",
+                            "Use `bitand` with two booleans or two integers.",
+                            line,
+                        ));
+                    }
+                }
                 Ok(true)
             }
             Op::BitOr => {
-                self.binary_int(line, |a, b| Ok(Value::Integer(a | b)))?;
+                let b = self.pop(line)?;
+                let a = self.pop(line)?;
+                match (a, b) {
+                    (Value::Boolean(a), Value::Boolean(b)) => self.push(Value::Boolean(a | b))?,
+                    (Value::Integer(a), Value::Integer(b)) => self.push(Value::Integer(a | b))?,
+                    _ => {
+                        return Err(runtime_error(
+                            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                            "`bitor` requires matching boolean or integer operands",
+                            "Use `bitor` with two booleans or two integers.",
+                            line,
+                        ));
+                    }
+                }
                 Ok(true)
             }
             Op::BitXor => {

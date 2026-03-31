@@ -88,8 +88,9 @@ fn check_dict_contains_key(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         return Ty::Error;
     }
     let dict_ty = c.check_expr(&args[0]);
-    let _key_ty = c.check_expr(&args[1]);
-    if dict_kv_types(&dict_ty).is_some() {
+    let key_ty = c.check_expr(&args[1]);
+    if let Some((k, _)) = dict_kv_types(&dict_ty) {
+        c.check_type_compat(&k, &key_ty, "dict key", span);
         Ty::Boolean
     } else {
         c.error_with_code(
@@ -154,8 +155,9 @@ fn check_dict_remove(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         return Ty::Error;
     }
     let dict_ty = c.check_expr(&args[0]);
-    let _key_ty = c.check_expr(&args[1]);
+    let key_ty = c.check_expr(&args[1]);
     if let Some((k, v)) = dict_kv_types(&dict_ty) {
+        c.check_type_compat(&k, &key_ty, "dict key", span);
         Ty::Dict(Box::new(k), Box::new(v))
     } else {
         c.error_with_code(
@@ -237,7 +239,7 @@ fn check_dict_merge(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         return Ty::Error;
     };
 
-    if k1 != k2 || v1 != v2 {
+    if !k1.compatible_with(&k2) || !v1.compatible_with(&v2) {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!(

@@ -121,7 +121,18 @@ impl Worker {
 
 fn array_index_from_key(key: &Value, line: SourceLocation) -> Result<usize, VmError> {
     match key {
-        Value::Integer(n) => Ok(*n as usize),
+        Value::Integer(n) => {
+            if *n < 0 {
+                Err(runtime_error(
+                    RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
+                    format!("Negative array index {n}"),
+                    "Array indices must be non-negative integers (0-based).",
+                    line,
+                ))
+            } else {
+                Ok(*n as usize)
+            }
+        }
         _ => Err(runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             "Array index must be an integer",

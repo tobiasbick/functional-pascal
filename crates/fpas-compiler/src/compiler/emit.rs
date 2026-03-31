@@ -1,6 +1,7 @@
 use fpas_bytecode::{ChunkError, Op, SourceLocation, Value};
 
-use crate::error::{CompileError, internal_compiler_error};
+use crate::error::{CompileError, compile_error, internal_compiler_error};
+use fpas_diagnostics::codes::COMPILE_INTRINSIC_ARITY_MISMATCH;
 
 use super::Compiler;
 
@@ -38,6 +39,21 @@ impl Compiler {
     pub(super) fn emit_constant(&mut self, value: Value, location: impl IntoEmitLocation) {
         let idx = self.chunk.add_constant(value);
         self.emit(Op::Constant(idx), location);
+    }
+
+    pub(super) fn checked_u16(
+        count: usize,
+        what: &str,
+        span: fpas_lexer::Span,
+    ) -> Result<u16, CompileError> {
+        u16::try_from(count).map_err(|_| {
+            compile_error(
+                COMPILE_INTRINSIC_ARITY_MISMATCH,
+                format!("Too many {what} ({count}); maximum is 65535"),
+                format!("Reduce the number of {what} to at most 65535."),
+                span,
+            )
+        })
     }
 
     pub(super) fn patch_jump(

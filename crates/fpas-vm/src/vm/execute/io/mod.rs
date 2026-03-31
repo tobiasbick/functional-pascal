@@ -11,20 +11,12 @@ impl Worker {
         match op {
             Op::Print => {
                 let value = self.pop(line)?;
-                self.shared
-                    .console
-                    .lock()
-                    .unwrap_or_else(|e| e.into_inner())
-                    .write(&value, line)?;
+                self.with_console(|c| c.write(&value, line))?;
                 Ok(true)
             }
             Op::PrintLn => {
                 let value = self.pop(line)?;
-                self.shared
-                    .console
-                    .lock()
-                    .unwrap_or_else(|e| e.into_inner())
-                    .write_ln(&value, line)?;
+                self.with_console(|c| c.write_ln(&value, line))?;
                 Ok(true)
             }
             Op::Intrinsic(id) => {
@@ -39,7 +31,7 @@ impl Worker {
                 if self.try_exec_console_intrinsic(intrinsic, line)? {
                     return Ok(true);
                 }
-                if self.try_exec_array_callback_intrinsic(intrinsic, line)? {
+                if self.try_exec_higher_order_intrinsic(intrinsic, line)? {
                     return Ok(true);
                 }
                 if self.try_exec_concurrency_intrinsic(intrinsic, line)? {

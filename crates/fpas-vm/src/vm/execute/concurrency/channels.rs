@@ -49,21 +49,27 @@ impl Worker {
         let value = self.pop(line)?;
         let channel_id = self.pop_channel_id(line)?;
 
-        let channels = self
-            .shared
-            .channels
-            .lock()
-            .unwrap_or_else(|e| e.into_inner());
-        let channel = channels.get(&channel_id).ok_or_else(|| {
-            runtime_error(
-                RUNTIME_INVALID_CHANNEL,
-                format!("Channel {channel_id} does not exist"),
-                "The channel may have been garbage-collected or was never created.",
-                line,
+        let (sender, is_closed) = {
+            let channels = self
+                .shared
+                .channels
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
+            let channel = channels.get(&channel_id).ok_or_else(|| {
+                runtime_error(
+                    RUNTIME_INVALID_CHANNEL,
+                    format!("Channel {channel_id} does not exist"),
+                    "The channel may have been garbage-collected or was never created.",
+                    line,
+                )
+            })?;
+            (
+                channel.sender.clone(),
+                channel.closed.load(Ordering::Acquire),
             )
-        })?;
+        };
 
-        if channel.closed.load(Ordering::Acquire) {
+        if is_closed {
             return Err(runtime_error(
                 RUNTIME_CHANNEL_CLOSED,
                 "Cannot send on a closed channel",
@@ -72,11 +78,9 @@ impl Worker {
             ));
         }
 
-        match channel.sender.try_send(value.clone()) {
+        match sender.try_send(value.clone()) {
             Ok(()) => Ok(()),
             Err(crossbeam_channel::TrySendError::Full(_)) => {
-                drop(channels);
-                // Buffer full — re-push args and yield for retry.
                 self.push(Value::Channel(channel_id))?;
                 self.push(value)?;
                 self.ip -= 1;
@@ -95,47 +99,51 @@ impl Worker {
     pub(super) fn exec_channel_recv(&mut self, line: SourceLocation) -> Result<(), VmError> {
         let channel_id = self.pop_channel_id(line)?;
 
-        let channels = self
-            .shared
-            .channels
-            .lock()
-            .unwrap_or_else(|e| e.into_inner());
-        let channel = channels.get(&channel_id).ok_or_else(|| {
-            runtime_error(
-                RUNTIME_INVALID_CHANNEL,
-                format!("Channel {channel_id} does not exist"),
-                "The channel may have been garbage-collected or was never created.",
-                line,
+        let (receiver, is_closed) = {
+            let channels = self
+                .shared
+                .channels
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
+            let channel = channels.get(&channel_id).ok_or_else(|| {
+                runtime_error(
+                    RUNTIME_INVALID_CHANNEL,
+                    format!("Channel {channel_id} does not exist"),
+                    "The channel may have been garbage-collected or was never created.",
+                    line,
+                )
+            })?;
+            (
+                channel.receiver.clone(),
+                channel.closed.load(Ordering::Acquire),
             )
-        })?;
+        };
 
-        match channel.receiver.try_recv() {
+        match receiver.try_recv() {
             Ok(value) => {
-                drop(channels);
                 self.push(value)?;
             }
             Err(crossbeam_channel::TryRecvError::Empty) => {
-                if channel.closed.load(Ordering::Acquire) {
+                if is_closed {
                     return Err(runtime_error(
                         RUNTIME_CHANNEL_CLOSED,
                         "Cannot receive from a closed, empty channel",
                         "Use `Std.Channel.TryReceive` if the channel may already be closed and empty.",
                         line,
                     ));
-                } else {
-                    drop(channels);
-                    // Channel empty — re-push and yield for retry.
-                    self.push(Value::Channel(channel_id))?;
-                    self.ip -= 1;
-                    self.exec_yield();
                 }
+                self.push(Value::Channel(channel_id))?;
+                self.ip -= 1;
+                self.exec_yield();
             }
-            Err(crossbeam_channel::TryRecvError::Disconnected) => Err(runtime_error(
-                RUNTIME_CHANNEL_CLOSED,
-                "Cannot receive from a disconnected channel",
-                "Use `Std.Channel.TryReceive` or keep at least one sender alive until the final value is sent.",
-                line,
-            ))?,
+            Err(crossbeam_channel::TryRecvError::Disconnected) => {
+                return Err(runtime_error(
+                    RUNTIME_CHANNEL_CLOSED,
+                    "Cannot receive from a disconnected channel",
+                    "Use `Std.Channel.TryReceive` or keep at least one sender alive until the final value is sent.",
+                    line,
+                ));
+            }
         }
         Ok(())
     }
@@ -143,29 +151,26 @@ impl Worker {
     pub(super) fn exec_channel_try_recv(&mut self, line: SourceLocation) -> Result<(), VmError> {
         let channel_id = self.pop_channel_id(line)?;
 
-        let channels = self
-            .shared
-            .channels
-            .lock()
-            .unwrap_or_else(|e| e.into_inner());
-        let channel = channels.get(&channel_id).ok_or_else(|| {
-            runtime_error(
-                RUNTIME_INVALID_CHANNEL,
-                format!("Channel {channel_id} does not exist"),
-                "The channel may have been garbage-collected or was never created.",
-                line,
-            )
-        })?;
+        let receiver = {
+            let channels = self
+                .shared
+                .channels
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
+            let channel = channels.get(&channel_id).ok_or_else(|| {
+                runtime_error(
+                    RUNTIME_INVALID_CHANNEL,
+                    format!("Channel {channel_id} does not exist"),
+                    "The channel may have been garbage-collected or was never created.",
+                    line,
+                )
+            })?;
+            channel.receiver.clone()
+        };
 
-        match channel.receiver.try_recv() {
-            Ok(value) => {
-                drop(channels);
-                self.push(Value::OptionSome(Box::new(value)))?;
-            }
-            Err(_) => {
-                drop(channels);
-                self.push(Value::OptionNone)?;
-            }
+        match receiver.try_recv() {
+            Ok(value) => self.push(Value::OptionSome(Box::new(value)))?,
+            Err(_) => self.push(Value::OptionNone)?,
         }
         Ok(())
     }

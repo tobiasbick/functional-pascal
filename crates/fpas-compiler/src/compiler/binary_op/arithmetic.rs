@@ -4,6 +4,7 @@ use fpas_parser::{BinaryOp, Expr};
 use fpas_sema::Ty;
 
 use super::super::Compiler;
+use super::is_generic_param;
 
 impl Compiler {
     pub(super) fn compile_add(
@@ -88,8 +89,4 @@ impl Compiler {
         self.emit(op, location);
         Ok(())
     }
-}
-
-fn is_generic_param(ty: &Ty) -> bool {
-    matches!(ty, Ty::GenericParam(..))
 }

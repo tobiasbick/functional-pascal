@@ -1,5 +1,169 @@
 use super::Intrinsic;
 
+/// All intrinsic variants in a single array, used for round-trip testing.
+#[cfg(test)]
+const ALL_INTRINSICS: &[Intrinsic] = &[
+    Intrinsic::ConsoleReadLn,
+    Intrinsic::ConsoleRead,
+    Intrinsic::ConsoleReadKey,
+    Intrinsic::ConsoleKeyPressed,
+    Intrinsic::ConsoleReadKeyEvent,
+    Intrinsic::ConsoleClrScr,
+    Intrinsic::ConsoleClrEol,
+    Intrinsic::ConsoleGotoXY,
+    Intrinsic::ConsoleWhereX,
+    Intrinsic::ConsoleWhereY,
+    Intrinsic::ConsoleWindMin,
+    Intrinsic::ConsoleWindMax,
+    Intrinsic::ConsoleWindow,
+    Intrinsic::ConsoleTextColor,
+    Intrinsic::ConsoleTextBackground,
+    Intrinsic::ConsoleDelay,
+    Intrinsic::ConsoleCursorOn,
+    Intrinsic::ConsoleCursorOff,
+    Intrinsic::ConsoleDelLine,
+    Intrinsic::ConsoleInsLine,
+    Intrinsic::ConsoleHighVideo,
+    Intrinsic::ConsoleLowVideo,
+    Intrinsic::ConsoleNormVideo,
+    Intrinsic::ConsoleTextAttr,
+    Intrinsic::ConsoleSetTextAttr,
+    Intrinsic::ConsoleCursorBig,
+    Intrinsic::ConsoleTextMode,
+    Intrinsic::ConsoleLastMode,
+    Intrinsic::ConsoleScreenWidth,
+    Intrinsic::ConsoleScreenHeight,
+    Intrinsic::ConsoleSound,
+    Intrinsic::ConsoleNoSound,
+    Intrinsic::ConsoleAssignCrt,
+    Intrinsic::ConsoleEventPending,
+    Intrinsic::ConsoleReadEvent,
+    Intrinsic::ConsoleEnableRawMode,
+    Intrinsic::ConsoleDisableRawMode,
+    Intrinsic::ConsoleEnterAltScreen,
+    Intrinsic::ConsoleLeaveAltScreen,
+    Intrinsic::ConsoleEnableMouse,
+    Intrinsic::ConsoleDisableMouse,
+    Intrinsic::ConsoleEnableFocus,
+    Intrinsic::ConsoleDisableFocus,
+    Intrinsic::ConsoleEnablePaste,
+    Intrinsic::ConsoleDisablePaste,
+    Intrinsic::ConsoleReadEventTimeout,
+    Intrinsic::ConsolePollEvent,
+    Intrinsic::StrLength,
+    Intrinsic::StrToUpper,
+    Intrinsic::StrToLower,
+    Intrinsic::StrTrim,
+    Intrinsic::StrContains,
+    Intrinsic::StrStartsWith,
+    Intrinsic::StrEndsWith,
+    Intrinsic::StrSubstring,
+    Intrinsic::StrIndexOf,
+    Intrinsic::StrReplace,
+    Intrinsic::StrSplit,
+    Intrinsic::StrJoin,
+    Intrinsic::StrIsNumeric,
+    Intrinsic::StrRepeat,
+    Intrinsic::StrPadLeft,
+    Intrinsic::StrPadRight,
+    Intrinsic::StrPadCenter,
+    Intrinsic::StrFromChar,
+    Intrinsic::StrCharAt,
+    Intrinsic::StrSetCharAt,
+    Intrinsic::StrOrd,
+    Intrinsic::StrChr,
+    Intrinsic::StrInsert,
+    Intrinsic::StrDelete,
+    Intrinsic::StrReverse,
+    Intrinsic::StrTrimLeft,
+    Intrinsic::StrTrimRight,
+    Intrinsic::StrLastIndexOf,
+    Intrinsic::ConvIntToStr,
+    Intrinsic::ConvStrToInt,
+    Intrinsic::ConvRealToStr,
+    Intrinsic::ConvStrToReal,
+    Intrinsic::ConvCharToStr,
+    Intrinsic::ConvIntToReal,
+    Intrinsic::ConvBoolToStr,
+    Intrinsic::ConvStrToBool,
+    Intrinsic::ConvIntToHex,
+    Intrinsic::ConvHexToInt,
+    Intrinsic::MathSqrt,
+    Intrinsic::MathPow,
+    Intrinsic::MathFloor,
+    Intrinsic::MathCeil,
+    Intrinsic::MathRound,
+    Intrinsic::MathSin,
+    Intrinsic::MathCos,
+    Intrinsic::MathLog,
+    Intrinsic::MathMin,
+    Intrinsic::MathMax,
+    Intrinsic::MathAbs,
+    Intrinsic::MathTan,
+    Intrinsic::MathArcSin,
+    Intrinsic::MathArcCos,
+    Intrinsic::MathArcTan,
+    Intrinsic::MathArcTan2,
+    Intrinsic::MathExp,
+    Intrinsic::MathLog10,
+    Intrinsic::MathLog2,
+    Intrinsic::MathTrunc,
+    Intrinsic::MathFrac,
+    Intrinsic::MathSign,
+    Intrinsic::MathClamp,
+    Intrinsic::MathRandom,
+    Intrinsic::MathRandomInt,
+    Intrinsic::MathRandomize,
+    Intrinsic::ArrayLength,
+    Intrinsic::ArraySort,
+    Intrinsic::ArrayReverse,
+    Intrinsic::ArrayContains,
+    Intrinsic::ArrayIndexOf,
+    Intrinsic::ArraySlice,
+    Intrinsic::ArrayMap,
+    Intrinsic::ArrayFilter,
+    Intrinsic::ArrayReduce,
+    Intrinsic::ArrayConcat,
+    Intrinsic::ArrayFill,
+    Intrinsic::ArrayFind,
+    Intrinsic::ArrayFindIndex,
+    Intrinsic::ArrayAny,
+    Intrinsic::ArrayAll,
+    Intrinsic::ArrayFlatMap,
+    Intrinsic::ArrayForEach,
+    Intrinsic::ResultUnwrap,
+    Intrinsic::ResultUnwrapOr,
+    Intrinsic::ResultIsOk,
+    Intrinsic::ResultIsError,
+    Intrinsic::ResultMap,
+    Intrinsic::ResultAndThen,
+    Intrinsic::ResultOrElse,
+    Intrinsic::OptionUnwrap,
+    Intrinsic::OptionUnwrapOr,
+    Intrinsic::OptionIsSome,
+    Intrinsic::OptionIsNone,
+    Intrinsic::OptionMap,
+    Intrinsic::OptionAndThen,
+    Intrinsic::OptionOrElse,
+    Intrinsic::ChannelMake,
+    Intrinsic::ChannelMakeBuffered,
+    Intrinsic::ChannelSend,
+    Intrinsic::ChannelRecv,
+    Intrinsic::ChannelTryRecv,
+    Intrinsic::ChannelClose,
+    Intrinsic::TaskWait,
+    Intrinsic::TaskWaitAll,
+    Intrinsic::DictLength,
+    Intrinsic::DictContainsKey,
+    Intrinsic::DictKeys,
+    Intrinsic::DictValues,
+    Intrinsic::DictRemove,
+    Intrinsic::DictGet,
+    Intrinsic::DictMerge,
+    Intrinsic::DictMap,
+    Intrinsic::DictFilter,
+];
+
 impl Intrinsic {
     pub fn from_u16(raw: u16) -> Option<Self> {
         Some(match raw {
@@ -164,5 +328,40 @@ impl Intrinsic {
             241 => Self::ArrayForEach,
             _ => return None,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn intrinsic_round_trip_encode_decode() {
+        for &intr in ALL_INTRINSICS {
+            let encoded: u16 = intr.into();
+            let decoded = Intrinsic::from_u16(encoded);
+            assert_eq!(
+                decoded,
+                Some(intr),
+                "round-trip failed for {intr:?} (discriminant {encoded}): from_u16 returned {decoded:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn all_intrinsics_list_is_complete() {
+        let count_in_list = ALL_INTRINSICS.len();
+        // Probe the full u16 range to find any variant NOT in ALL_INTRINSICS.
+        let mut found_via_probe = 0usize;
+        for raw in 0..=u16::MAX {
+            if Intrinsic::from_u16(raw).is_some() {
+                found_via_probe += 1;
+            }
+        }
+        assert_eq!(
+            count_in_list, found_via_probe,
+            "ALL_INTRINSICS has {count_in_list} entries but from_u16 recognises {found_via_probe} — \
+             a variant was added to from_u16 or mod.rs without updating ALL_INTRINSICS"
+        );
     }
 }

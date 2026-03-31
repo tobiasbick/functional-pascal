@@ -9,7 +9,9 @@
 use super::super::super::diagnostics::VmError;
 use super::super::super::{Worker, runtime_error};
 use fpas_bytecode::{Op, SourceLocation, Value};
-use fpas_diagnostics::codes::{RUNTIME_NUMERIC_DOMAIN_ERROR, RUNTIME_VM_OPERAND_TYPE_MISMATCH};
+use fpas_diagnostics::codes::{
+    RUNTIME_DIVISION_BY_ZERO, RUNTIME_NUMERIC_DOMAIN_ERROR, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+};
 
 impl Worker {
     pub(super) fn try_exec_dynamic_ops(
@@ -49,13 +51,31 @@ impl Worker {
                 Ok(true)
             }
             Op::DivDyn => {
-                self.binary_numeric_dyn(line, |a, b| match (a, b) {
-                    (Value::Integer(x), Value::Integer(y)) => Ok(Value::Real(x as f64 / y as f64)),
-                    (Value::Real(x), Value::Real(y)) => Ok(Value::Real(x / y)),
-                    (Value::Integer(x), Value::Real(y)) => Ok(Value::Real(x as f64 / y)),
-                    (Value::Real(x), Value::Integer(y)) => Ok(Value::Real(x / y as f64)),
-                    _ => None.ok_or(()),
-                })?;
+                let right = self.pop(line)?;
+                let left = self.pop(line)?;
+                let result = match (&left, &right) {
+                    (Value::Integer(x), Value::Integer(y)) => {
+                        if *y == 0 {
+                            return Err(runtime_error(
+                                RUNTIME_DIVISION_BY_ZERO,
+                                "Division by zero",
+                                "Check the right-hand side before using `/`.",
+                                line,
+                            ));
+                        }
+                        Ok(Value::Real(*x as f64 / *y as f64))
+                    }
+                    (Value::Real(x), Value::Real(y)) => Ok(Value::Real(*x / *y)),
+                    (Value::Integer(x), Value::Real(y)) => Ok(Value::Real(*x as f64 / *y)),
+                    (Value::Real(x), Value::Integer(y)) => Ok(Value::Real(*x / *y as f64)),
+                    _ => Err(runtime_error(
+                        RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                        "Dynamic arithmetic requires numeric operands (integer or real)",
+                        "Ensure both operands are numeric types.",
+                        line,
+                    )),
+                }?;
+                self.push(result)?;
                 Ok(true)
             }
             Op::NegateDyn => {
@@ -85,27 +105,27 @@ impl Worker {
                 Ok(true)
             }
             Op::EqDyn => {
-                self.binary_comparable_dyn(line, |a, b| Value::Boolean(a == b))?;
+                self.binary_comparable_dyn(line, |ord| ord.is_eq())?;
                 Ok(true)
             }
             Op::NeqDyn => {
-                self.binary_comparable_dyn(line, |a, b| Value::Boolean(a != b))?;
+                self.binary_comparable_dyn(line, |ord| !ord.is_eq())?;
                 Ok(true)
             }
             Op::LtDyn => {
-                self.binary_comparable_dyn(line, |a, b| Value::Boolean(a < b))?;
+                self.binary_comparable_dyn(line, |ord| ord.is_lt())?;
                 Ok(true)
             }
             Op::GtDyn => {
-                self.binary_comparable_dyn(line, |a, b| Value::Boolean(a > b))?;
+                self.binary_comparable_dyn(line, |ord| ord.is_gt())?;
                 Ok(true)
             }
             Op::LeDyn => {
-                self.binary_comparable_dyn(line, |a, b| Value::Boolean(a <= b))?;
+                self.binary_comparable_dyn(line, |ord| ord.is_le())?;
                 Ok(true)
             }
             Op::GeDyn => {
-                self.binary_comparable_dyn(line, |a, b| Value::Boolean(a >= b))?;
+                self.binary_comparable_dyn(line, |ord| ord.is_ge())?;
                 Ok(true)
             }
             _ => Ok(false),
@@ -133,82 +153,33 @@ impl Worker {
     fn binary_comparable_dyn(
         &mut self,
         line: SourceLocation,
-        f: impl FnOnce(ComparableValue, ComparableValue) -> Value,
+        f: impl FnOnce(std::cmp::Ordering) -> bool,
     ) -> Result<(), VmError> {
         let right = self.pop(line)?;
         let left = self.pop(line)?;
-        match (
-            ComparableValue::from_value(&left),
-            ComparableValue::from_value(&right),
-        ) {
-            (Some(a), Some(b)) => self.push(f(a, b)),
-            _ => Err(runtime_error(
+        let ord = dyn_compare(&left, &right).ok_or_else(|| {
+            runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-                "Dynamic comparison requires comparable operands",
+                "Dynamic comparison requires comparable operands of compatible types",
                 "Ensure both operands are comparable types (integer, real, boolean, char, string).",
                 line,
-            )),
-        }
+            )
+        })?;
+        self.push(Value::Boolean(f(ord)))
     }
 }
 
-/// A wrapper that implements Ord/PartialOrd for runtime-polymorphic comparison.
-#[derive(Debug, PartialEq)]
-enum ComparableValue {
-    Integer(i64),
-    Real(f64),
-    Boolean(bool),
-    Char(char),
-    Str(String),
-}
-
-impl ComparableValue {
-    fn from_value(v: &Value) -> Option<Self> {
-        match v {
-            Value::Integer(n) => Some(Self::Integer(*n)),
-            Value::Real(n) => Some(Self::Real(*n)),
-            Value::Boolean(b) => Some(Self::Boolean(*b)),
-            Value::Char(c) => Some(Self::Char(*c)),
-            Value::Str(s) => Some(Self::Str(s.clone())),
-            _ => None,
-        }
-    }
-
-    fn discriminant_index(&self) -> u8 {
-        match self {
-            Self::Integer(_) => 0,
-            Self::Real(_) => 1,
-            Self::Boolean(_) => 2,
-            Self::Char(_) => 3,
-            Self::Str(_) => 4,
-        }
-    }
-}
-
-impl Eq for ComparableValue {}
-
-impl PartialOrd for ComparableValue {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for ComparableValue {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        match (self, other) {
-            (Self::Integer(a), Self::Integer(b)) => a.cmp(b),
-            (Self::Real(a), Self::Real(b)) => a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal),
-            (Self::Integer(a), Self::Real(b)) => (*a as f64)
-                .partial_cmp(b)
-                .unwrap_or(std::cmp::Ordering::Equal),
-            (Self::Real(a), Self::Integer(b)) => a
-                .partial_cmp(&(*b as f64))
-                .unwrap_or(std::cmp::Ordering::Equal),
-            (Self::Boolean(a), Self::Boolean(b)) => a.cmp(b),
-            (Self::Char(a), Self::Char(b)) => a.cmp(b),
-            (Self::Str(a), Self::Str(b)) => a.cmp(b),
-            // Cross-type comparison: use discriminant index as fallback.
-            _ => self.discriminant_index().cmp(&other.discriminant_index()),
-        }
+/// Compare two runtime values, returning `None` for incompatible or
+/// unordered pairs (e.g. NaN).
+fn dyn_compare(left: &Value, right: &Value) -> Option<std::cmp::Ordering> {
+    match (left, right) {
+        (Value::Integer(a), Value::Integer(b)) => Some(a.cmp(b)),
+        (Value::Real(a), Value::Real(b)) => a.partial_cmp(b),
+        (Value::Integer(a), Value::Real(b)) => (*a as f64).partial_cmp(b),
+        (Value::Real(a), Value::Integer(b)) => a.partial_cmp(&(*b as f64)),
+        (Value::Boolean(a), Value::Boolean(b)) => Some(a.cmp(b)),
+        (Value::Char(a), Value::Char(b)) => Some(a.cmp(b)),
+        (Value::Str(a), Value::Str(b)) => Some(a.cmp(b)),
+        _ => None,
     }
 }

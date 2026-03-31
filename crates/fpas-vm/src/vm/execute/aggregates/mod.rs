@@ -66,18 +66,14 @@ impl Worker {
         }
     }
 
-    fn drain_values(&mut self, count: usize, line: SourceLocation) -> Result<Vec<Value>, VmError> {
-        self.drain_stack_tail(count, line)
-    }
-
     fn exec_make_array(&mut self, count: u16, line: SourceLocation) -> Result<(), VmError> {
-        let elements = self.drain_values(count as usize, line)?;
+        let elements = self.drain_stack_tail(count as usize, line)?;
         self.push(Value::Array(elements))?;
         Ok(())
     }
 
     fn exec_make_dict(&mut self, pair_count: u16, line: SourceLocation) -> Result<(), VmError> {
-        let items = self.drain_values(pair_count as usize * 2, line)?;
+        let items = self.drain_stack_tail(pair_count as usize * 2, line)?;
         let pairs = items
             .chunks(2)
             .map(|chunk| (chunk[0].clone(), chunk[1].clone()))

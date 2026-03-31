@@ -30,6 +30,8 @@ impl Worker {
                 Ok(true)
             }
             Op::IsResultOk => {
+                // Matches both ResultOk and OptionSome because `try` uses this
+                // opcode to check "is success" on both Result and Option values.
                 let val = self.pop(line)?;
                 let ok = matches!(val, Value::ResultOk(_) | Value::OptionSome(_));
                 self.push(Value::Boolean(ok))?;

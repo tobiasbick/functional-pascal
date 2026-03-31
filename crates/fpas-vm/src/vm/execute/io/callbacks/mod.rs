@@ -8,7 +8,7 @@ mod result_option_ops;
 mod sync_call;
 
 impl Worker {
-    pub(super) fn try_exec_array_callback_intrinsic(
+    pub(super) fn try_exec_higher_order_intrinsic(
         &mut self,
         intrinsic: Intrinsic,
         line: SourceLocation,

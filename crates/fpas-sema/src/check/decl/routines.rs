@@ -6,29 +6,19 @@ use fpas_lexer::Span;
 use fpas_parser::{FuncBody, FunctionDecl, ProcedureDecl};
 
 impl Checker {
-    /// Check function and procedure declarations against `docs/pascal/04-functions.md`.
+    /// Check function declarations against `docs/pascal/04-functions.md`.
     pub(super) fn check_function_decl(&mut self, f: &FunctionDecl) {
-        // Register generic type parameters as GenericParam types in a new scope.
         let has_type_params = !f.type_params.is_empty();
         if has_type_params {
             self.push_type_param_scope(&f.type_params, f.span);
         }
 
         let type_param_defs = Self::resolve_type_params(&f.type_params);
-
         let return_ty = self.resolve_type_expr(&f.return_type);
-        let params: Vec<ParamTy> = f
-            .params
-            .iter()
-            .map(|p| ParamTy {
-                mutable: p.mutable,
-                name: p.name.clone(),
-                ty: self.resolve_type_expr(&p.type_expr),
-            })
-            .collect();
+        let params: Vec<ParamTy> = self.resolve_formal_params(&f.params);
 
         let func_ty = Ty::Function(FunctionTy {
-            type_params: type_param_defs.clone(),
+            type_params: type_param_defs,
             params: params.clone(),
             return_type: Box::new(return_ty.clone()),
         });
@@ -37,88 +27,27 @@ impl Checker {
             self.scopes.pop_scope();
         }
 
-        self.register_routine_symbol(
-            &f.name,
-            Symbol {
-                ty: func_ty,
-                mutable: false,
-                kind: SymbolKind::Function,
-            },
-            &f.body,
-            f.span,
-        );
-
-        if let FuncBody::Block { nested, stmts } = &f.body {
-            self.scopes.push_scope();
-
-            // Re-introduce type params inside the function body scope (with constraints).
-            for tp in &f.type_params {
-                let constraint = tp
-                    .constraint
-                    .as_ref()
-                    .and_then(|c| TypeConstraint::from_name(c));
-                self.scopes.define(
-                    &tp.name,
-                    Symbol {
-                        ty: Ty::GenericParam(tp.name.clone(), constraint),
-                        mutable: false,
-                        kind: SymbolKind::Type,
-                    },
-                );
-            }
-
-            for p in &params {
-                self.scopes.define(
-                    &p.name,
-                    Symbol {
-                        ty: p.ty.clone(),
-                        mutable: p.mutable,
-                        kind: SymbolKind::Param,
-                    },
-                );
-            }
-
-            let prev_ctx = self.scopes.function_ctx.take();
-            self.scopes.function_ctx = Some(FunctionCtx {
-                name: f.name.clone(),
-                return_type: Some(return_ty),
-            });
-
-            for decl in nested {
-                self.check_decl(decl);
-            }
-
-            for stmt in stmts {
-                self.check_stmt(stmt);
-            }
-
-            self.report_missing_forward_declarations_in_current_scope();
-            self.scopes.function_ctx = prev_ctx;
-            self.scopes.pop_scope();
-        }
+        let symbol = Symbol {
+            ty: func_ty,
+            mutable: false,
+            kind: SymbolKind::Function,
+        };
+        self.register_routine_symbol(&f.name, symbol, &f.body, f.span);
+        self.check_routine_body(&f.name, &f.type_params, &params, Some(return_ty), &f.body);
     }
 
+    /// Check procedure declarations against `docs/pascal/04-functions.md`.
     pub(super) fn check_procedure_decl(&mut self, p: &ProcedureDecl) {
-        // Register generic type parameters.
         let has_type_params = !p.type_params.is_empty();
         if has_type_params {
             self.push_type_param_scope(&p.type_params, p.span);
         }
 
         let type_param_defs = Self::resolve_type_params(&p.type_params);
-
-        let params: Vec<ParamTy> = p
-            .params
-            .iter()
-            .map(|param| ParamTy {
-                mutable: param.mutable,
-                name: param.name.clone(),
-                ty: self.resolve_type_expr(&param.type_expr),
-            })
-            .collect();
+        let params: Vec<ParamTy> = self.resolve_formal_params(&p.params);
 
         let proc_ty = Ty::Procedure(ProcedureTy {
-            type_params: type_param_defs.clone(),
+            type_params: type_param_defs,
             variadic: false,
             params: params.clone(),
         });
@@ -127,65 +56,82 @@ impl Checker {
             self.scopes.pop_scope();
         }
 
-        self.register_routine_symbol(
-            &p.name,
-            Symbol {
-                ty: proc_ty,
-                mutable: false,
-                kind: SymbolKind::Procedure,
-            },
-            &p.body,
-            p.span,
-        );
+        let symbol = Symbol {
+            ty: proc_ty,
+            mutable: false,
+            kind: SymbolKind::Procedure,
+        };
+        self.register_routine_symbol(&p.name, symbol, &p.body, p.span);
+        self.check_routine_body(&p.name, &p.type_params, &params, None, &p.body);
+    }
 
-        if let FuncBody::Block { nested, stmts } = &p.body {
-            self.scopes.push_scope();
-
-            // Re-introduce type params inside the procedure body scope (with constraints).
-            for tp in &p.type_params {
-                let constraint = tp
-                    .constraint
-                    .as_ref()
-                    .and_then(|c| TypeConstraint::from_name(c));
-                self.scopes.define(
-                    &tp.name,
-                    Symbol {
-                        ty: Ty::GenericParam(tp.name.clone(), constraint),
-                        mutable: false,
-                        kind: SymbolKind::Type,
-                    },
-                );
-            }
-
-            for param in &params {
-                self.scopes.define(
-                    &param.name,
-                    Symbol {
-                        ty: param.ty.clone(),
-                        mutable: param.mutable,
-                        kind: SymbolKind::Param,
-                    },
-                );
-            }
-
-            let prev_ctx = self.scopes.function_ctx.take();
-            self.scopes.function_ctx = Some(FunctionCtx {
+    fn resolve_formal_params(&mut self, params: &[fpas_parser::FormalParam]) -> Vec<ParamTy> {
+        params
+            .iter()
+            .map(|p| ParamTy {
+                mutable: p.mutable,
                 name: p.name.clone(),
-                return_type: None,
-            });
+                ty: self.resolve_type_expr(&p.type_expr),
+            })
+            .collect()
+    }
 
-            for decl in nested {
-                self.check_decl(decl);
-            }
+    fn check_routine_body(
+        &mut self,
+        name: &str,
+        type_params: &[fpas_parser::TypeParam],
+        params: &[ParamTy],
+        return_type: Option<Ty>,
+        body: &FuncBody,
+    ) {
+        let FuncBody::Block { nested, stmts } = body else {
+            return;
+        };
 
-            for stmt in stmts {
-                self.check_stmt(stmt);
-            }
+        self.scopes.push_scope();
 
-            self.report_missing_forward_declarations_in_current_scope();
-            self.scopes.function_ctx = prev_ctx;
-            self.scopes.pop_scope();
+        for tp in type_params {
+            let constraint = tp
+                .constraint
+                .as_ref()
+                .and_then(|c| TypeConstraint::from_name(c));
+            self.scopes.define(
+                &tp.name,
+                Symbol {
+                    ty: Ty::GenericParam(tp.name.clone(), constraint),
+                    mutable: false,
+                    kind: SymbolKind::Type,
+                },
+            );
         }
+
+        for p in params {
+            self.scopes.define(
+                &p.name,
+                Symbol {
+                    ty: p.ty.clone(),
+                    mutable: p.mutable,
+                    kind: SymbolKind::Param,
+                },
+            );
+        }
+
+        let prev_ctx = self.scopes.function_ctx.take();
+        self.scopes.function_ctx = Some(FunctionCtx {
+            name: name.to_string(),
+            return_type,
+        });
+
+        for decl in nested {
+            self.check_decl(decl);
+        }
+        for stmt in stmts {
+            self.check_stmt(stmt);
+        }
+
+        self.report_missing_forward_declarations_in_current_scope();
+        self.scopes.function_ctx = prev_ctx;
+        self.scopes.pop_scope();
     }
 
     fn register_routine_symbol(&mut self, name: &str, symbol: Symbol, body: &FuncBody, span: Span) {

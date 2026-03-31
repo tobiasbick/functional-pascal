@@ -10,7 +10,8 @@ use crate::helpers::{
 };
 use fpas_bytecode::{Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::{
-    RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS, RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+    RUNTIME_INTRINSIC_STACK_STATE_ERROR, RUNTIME_NUMERIC_DOMAIN_ERROR,
+    RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,
 };
 
 /// Runs a `Std.Str` intrinsic if `intrinsic` matches; leaves stack unchanged and returns `Ok(None)` otherwise.
@@ -59,7 +60,7 @@ pub(crate) fn run(
             let n = chars.len() as i64;
             if start < 0 || len < 0 || start > n || start + len > n {
                 return Err(std_runtime_error(
-                    RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
+                    RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,
                     format!("Substring out of range (len={n}, start={start}, len_param={len})"),
                     "Ensure `start` and `len` select a valid substring range.",
                     location,
@@ -127,7 +128,7 @@ pub(crate) fn run(
             let s = pop_string(pop_value(stack, location)?, location)?;
             if n < 0 {
                 return Err(std_runtime_error(
-                    RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
+                    RUNTIME_NUMERIC_DOMAIN_ERROR,
                     format!("Repeat count must be >= 0, got {n}"),
                     "Pass a non-negative integer to Std.Str.Repeat.",
                     location,
@@ -183,7 +184,7 @@ pub(crate) fn run(
             let c = pop_char(pop_value(stack, location)?, location)?;
             if n < 0 {
                 return Err(std_runtime_error(
-                    RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
+                    RUNTIME_NUMERIC_DOMAIN_ERROR,
                     format!("FromChar count must be >= 0, got {n}"),
                     "Pass a non-negative integer to Std.Str.FromChar.",
                     location,
@@ -198,7 +199,7 @@ pub(crate) fn run(
             let chars: Vec<char> = s.chars().collect();
             if idx < 0 || idx >= chars.len() as i64 {
                 return Err(std_runtime_error(
-                    RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
+                    RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,
                     format!("CharAt index {idx} out of range (length {})", chars.len()),
                     "Ensure the index is within 0..Length(S)-1.",
                     location,
@@ -213,7 +214,7 @@ pub(crate) fn run(
             let mut chars: Vec<char> = s.chars().collect();
             if idx < 0 || idx >= chars.len() as i64 {
                 return Err(std_runtime_error(
-                    RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
+                    RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,
                     format!(
                         "SetCharAt index {idx} out of range (length {})",
                         chars.len()
@@ -236,7 +237,7 @@ pub(crate) fn run(
                 .and_then(char::from_u32)
                 .ok_or_else(|| {
                     std_runtime_error(
-                        RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
+                        RUNTIME_NUMERIC_DOMAIN_ERROR,
                         format!("Chr: {n} is not a valid Unicode code point"),
                         "Pass a valid Unicode code point (0..=0x10FFFF, excluding surrogates).",
                         location,
@@ -251,7 +252,7 @@ pub(crate) fn run(
             let chars: Vec<char> = s.chars().collect();
             if idx < 0 || idx > chars.len() as i64 {
                 return Err(std_runtime_error(
-                    RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
+                    RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,
                     format!("Insert index {idx} out of range (length {})", chars.len()),
                     "Ensure the index is within 0..Length(S).",
                     location,
@@ -270,7 +271,7 @@ pub(crate) fn run(
             let n = chars.len() as i64;
             if idx < 0 || len < 0 || idx > n || idx + len > n {
                 return Err(std_runtime_error(
-                    RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
+                    RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,
                     format!("Delete out of range (length={n}, index={idx}, count={len})"),
                     "Ensure index and count select a valid range.",
                     location,
@@ -314,7 +315,7 @@ fn checked_pad_width(
 ) -> Result<usize, StdError> {
     if width < 0 {
         Err(std_runtime_error(
-            RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
+            RUNTIME_NUMERIC_DOMAIN_ERROR,
             format!("{intrinsic_name} width must be >= 0, got {width}"),
             format!("Pass a non-negative width to Std.Str.{intrinsic_name}."),
             location,

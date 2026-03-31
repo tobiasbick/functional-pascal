@@ -104,7 +104,7 @@ impl KeyInput {
                 )
             })?;
             self.queue_live_event(ev);
-            if !self.live_queue.is_empty() {
+            if !self.live_console_queue.is_empty() {
                 return Ok(true);
             }
         }

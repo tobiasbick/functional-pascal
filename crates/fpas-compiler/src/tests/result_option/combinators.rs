@@ -1,6 +1,6 @@
 /// Tests for `Std.Result.{Map,AndThen,OrElse}` and `Std.Option.{Map,AndThen,OrElse}` —
 /// `docs/pascal/std/result.md` and `docs/pascal/std/option.md`.
-use super::{compile_and_run, compile_run_err};
+use super::{compile_and_run, compile_err};
 
 // ── Result.Map ──────────────────────────────────────────────────────────
 
@@ -720,100 +720,106 @@ end.",
     assert_eq!(out.lines, vec!["124"]);
 }
 
-// ── Runtime error: wrong value type at VM level ─────────────────────────
+// ── Compile-time error: wrong value type ─────────────────────────────
 
 #[test]
 fn result_map_on_non_result_panics() {
-    let msg = compile_run_err(
+    let msg = &compile_err(
         "program T;
 uses Std.Result;
 begin
   var X: integer := 42;
   Std.Result.Map(X, function(V: integer): integer begin return V end)
 end.",
-    );
+    )
+    .message;
     assert!(
-        msg.contains("expects a Result value"),
+        msg.contains("must be a Result"),
         "expected type error, got: {msg}"
     );
 }
 
 #[test]
 fn option_map_on_non_option_panics() {
-    let msg = compile_run_err(
+    let msg = &compile_err(
         "program T;
 uses Std.Option;
 begin
   var X: string := 'hello';
   Std.Option.Map(X, function(V: string): string begin return V end)
 end.",
-    );
+    )
+    .message;
     assert!(
-        msg.contains("expects an Option value"),
+        msg.contains("must be an Option"),
         "expected type error, got: {msg}"
     );
 }
 
 #[test]
 fn result_and_then_on_non_result_panics() {
-    let msg = compile_run_err(
+    let msg = &compile_err(
         "program T;
 uses Std.Result;
 begin
   var X: boolean := true;
   Std.Result.AndThen(X, function(V: boolean): Result of boolean, string begin return Ok(V) end)
 end.",
-    );
+    )
+    .message;
     assert!(
-        msg.contains("expects a Result value"),
+        msg.contains("must be a Result"),
         "expected type error, got: {msg}"
     );
 }
 
 #[test]
 fn option_and_then_on_non_option_panics() {
-    let msg = compile_run_err(
+    let msg = &compile_err(
         "program T;
 uses Std.Option;
 begin
   var X: integer := 1;
   Std.Option.AndThen(X, function(V: integer): Option of integer begin return Some(V) end)
 end.",
-    );
+    )
+    .message;
     assert!(
-        msg.contains("expects an Option value"),
+        msg.contains("must be an Option"),
         "expected type error, got: {msg}"
     );
 }
 
 #[test]
 fn result_or_else_on_non_result_panics() {
-    let msg = compile_run_err(
+    let msg = &compile_err(
         "program T;
 uses Std.Result;
 begin
   var X: integer := 0;
   Std.Result.OrElse(X, function(E: integer): Result of integer, string begin return Ok(0) end)
 end.",
-    );
+    )
+    .message;
     assert!(
-        msg.contains("expects a Result value"),
+        msg.contains("must be a Result"),
         "expected type error, got: {msg}"
     );
 }
 
 #[test]
 fn option_or_else_on_non_option_panics() {
-    let msg = compile_run_err(
+    let msg = &compile_err(
         "program T;
 uses Std.Option;
 begin
   var X: integer := 0;
   Std.Option.OrElse(X, function(): Option of integer begin return Some(0) end)
 end.",
-    );
+    )
+    .message;
     assert!(
-        msg.contains("expects an Option value"),
+        msg.contains("must be an Option"),
         "expected type error, got: {msg}"
     );
 }

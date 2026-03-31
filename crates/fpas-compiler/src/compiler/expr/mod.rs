@@ -66,10 +66,10 @@ impl Compiler {
                 match op {
                     UnaryOp::Negate => {
                         let operand_ty = self.ty_of(operand);
-                        let negate_op = if matches!(operand_ty, Ty::GenericParam(..)) {
-                            Op::NegateDyn
-                        } else {
-                            Op::NegateInt
+                        let negate_op = match operand_ty {
+                            Ty::GenericParam(..) => Op::NegateDyn,
+                            Ty::Real => Op::NegateReal,
+                            _ => Op::NegateInt,
                         };
                         self.emit(negate_op, (span.line, span.column));
                     }
@@ -93,14 +93,20 @@ impl Compiler {
                 for elem in elems {
                     self.compile_expr(elem)?;
                 }
-                self.emit(Op::MakeArray(elems.len() as u16), (span.line, span.column));
+                self.emit(
+                    Op::MakeArray(Self::checked_u16(elems.len(), "array elements", *span)?),
+                    (span.line, span.column),
+                );
             }
             Expr::DictLiteral(pairs, span) => {
                 for (key, value) in pairs {
                     self.compile_expr(key)?;
                     self.compile_expr(value)?;
                 }
-                self.emit(Op::MakeDict(pairs.len() as u16), (span.line, span.column));
+                self.emit(
+                    Op::MakeDict(Self::checked_u16(pairs.len(), "dict pairs", *span)?),
+                    (span.line, span.column),
+                );
             }
             Expr::RecordLiteral { fields, span } => {
                 // If sema annotated this literal with a named record type that has defaults,
@@ -195,7 +201,9 @@ impl Compiler {
                     (span.line, span.column),
                 );
             }
-            Expr::Error(_) => {}
+            Expr::Error(span) => {
+                self.emit(Op::Unit, (span.line, span.column));
+            }
         }
 
         Ok(())

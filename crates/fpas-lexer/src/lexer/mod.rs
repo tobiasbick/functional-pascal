@@ -71,7 +71,7 @@ impl<'a> Lexer<'a> {
             b'=' => self.emit_single(Token::Equal),
             _ => {
                 let (so, sl, sc) = self.span_here();
-                let ch = self.advance() as char;
+                let ch = self.advance_utf8_char();
                 self.push_err(
                     LEX_UNEXPECTED_CHARACTER,
                     &format!("Unexpected character `{ch}`"),

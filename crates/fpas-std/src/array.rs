@@ -13,8 +13,20 @@ use fpas_diagnostics::codes::{
 
 fn value_to_sort_key(v: &Value) -> Result<String, String> {
     Ok(match v {
-        Value::Integer(n) => format!("i:{n:020}"),
-        Value::Real(x) => format!("r:{x:.15e}"),
+        // Offset by i64::MAX so that negative values sort correctly in
+        // lexicographic order:  -3 → 9223372036854775804, -1 → …806, 0 → …807.
+        Value::Integer(n) => format!("i:{:020}", (*n as u128).wrapping_add(i64::MAX as u128 + 1)),
+        Value::Real(x) => {
+            let bits = x.to_bits();
+            // IEEE 754 total-order trick: flip all bits for negatives,
+            // flip only sign bit for positives → monotonic u64 order.
+            let sortable = if bits >> 63 == 1 {
+                !bits
+            } else {
+                bits ^ (1 << 63)
+            };
+            format!("r:{sortable:020}")
+        }
         Value::Str(s) => format!("s:{s}"),
         Value::Char(c) => format!("c:{c}"),
         Value::Boolean(b) => format!("b:{b}"),

@@ -43,43 +43,10 @@ impl Compiler {
 
         let jump_over = self.emit(Op::Jump(0), location);
 
-        let code_start = self.chunk.len();
+        let (code_start, body_end) = self.compile_routine_body(params, body, location)?;
         self.chunk
             .functions
             .insert(lambda_name.clone(), (code_start, arity));
-
-        let saved_locals = std::mem::take(&mut self.locals);
-        let saved_next_slot = self.next_slot;
-        let saved_scope_depth = self.scope_depth;
-        self.next_slot = 0;
-        self.scope_depth = 0;
-        self.enclosing_locals.push(saved_locals.clone());
-
-        self.begin_scope();
-
-        for param in params {
-            self.add_local(&param.name);
-        }
-
-        if let FuncBody::Block { nested, stmts } = body {
-            for decl in nested {
-                self.compile_decl(decl)?;
-            }
-            for stmt in stmts {
-                self.compile_stmt(stmt)?;
-            }
-        }
-
-        self.emit(Op::Unit, location);
-        self.emit(Op::Return, location);
-
-        self.end_scope(location);
-        let body_end = self.chunk.len();
-
-        self.enclosing_locals.pop();
-        self.locals = saved_locals;
-        self.next_slot = saved_next_slot;
-        self.scope_depth = saved_scope_depth;
 
         let mut captures: Vec<(u16, u16)> = Vec::new();
         for index in code_start..body_end {

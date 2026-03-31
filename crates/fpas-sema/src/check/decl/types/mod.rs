@@ -6,7 +6,6 @@ use fpas_lexer::Span;
 use fpas_parser::{TypeBody, TypeDef, TypeParam};
 
 mod enums;
-mod interfaces;
 mod records;
 
 impl Checker {
@@ -15,7 +14,6 @@ impl Checker {
             TypeBody::Record(record) => self.check_record_type_def(td, record),
             TypeBody::Enum(enum_ty) => self.check_enum_type_def(td, enum_ty),
             TypeBody::Alias(type_expr) => self.check_alias_type_def(td, type_expr),
-            TypeBody::Interface(iface) => self.check_interface_type_def(td, iface),
         }
     }
 

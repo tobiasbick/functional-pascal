@@ -32,7 +32,6 @@ pub fn compile(program: &Program) -> Result<Chunk, CompileError> {
         sema_errors,
         expr_types,
         method_calls,
-        interface_dispatch,
         record_defaults,
         scalar_case_bindings,
     ) = fpas_sema::analyze_with_types(program);
@@ -42,7 +41,6 @@ pub fn compile(program: &Program) -> Result<Chunk, CompileError> {
     let mut compiler = Compiler::new(
         expr_types,
         method_calls,
-        interface_dispatch,
         record_defaults,
         scalar_case_bindings,
     );

@@ -255,13 +255,3 @@ fn generic_method_return_type_is_generic_param() {
     );
 }
 
-#[test]
-fn generic_interface_method_signature_only() {
-    check_ok(
-        "program T;
-         type IFace = interface
-           function Map<R>(Self: IFace; F: function(X: integer): R): R;
-         end;
-         begin end.",
-    );
-}

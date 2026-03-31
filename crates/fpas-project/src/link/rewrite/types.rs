@@ -40,9 +40,7 @@ impl NameRewriter<'_> {
             self.rewrite_type_expr(return_type);
         }
 
-        let FuncBody::Block { nested, stmts } = body else {
-            return;
-        };
+        let FuncBody::Block { nested, stmts } = body;
 
         self.push_scope();
         for param in params.iter() {
@@ -83,22 +81,6 @@ impl NameRewriter<'_> {
             }
             TypeBody::Enum(_) => {}
             TypeBody::Alias(type_expr) => self.rewrite_type_expr(type_expr),
-            TypeBody::Interface(iface) => {
-                for method in &mut iface.methods {
-                    match method {
-                        fpas_parser::RecordMethod::Function(f) => {
-                            self.rewrite_callable(
-                                &mut f.params,
-                                Some(&mut f.return_type),
-                                &mut f.body,
-                            );
-                        }
-                        fpas_parser::RecordMethod::Procedure(p) => {
-                            self.rewrite_callable(&mut p.params, None, &mut p.body);
-                        }
-                    }
-                }
-            }
         }
     }
 

@@ -87,26 +87,6 @@ impl Checker {
         let receiver_ty = self.check_designator_expr(&receiver_designator);
         let resolved_receiver_ty = self.resolve_visible_type(&receiver_ty);
 
-        // Interface receiver — virtual dispatch.
-        if let Ty::Interface(iface) = &resolved_receiver_ty {
-            let Some(method_kind) = iface
-                .methods
-                .iter()
-                .find(|(n, _)| n.eq_ignore_ascii_case(&method_name))
-                .map(|(_, mk)| mk.clone())
-            else {
-                return false;
-            };
-
-            let key = Self::designator_key(designator);
-            let qualified = format!("{}.{}", iface.name, method_name);
-            self.method_calls.insert(key, qualified);
-            self.interface_dispatch.insert(key, method_name.clone());
-
-            self.check_stmt_method_kind(&method_name, &method_kind, args, span);
-            return true;
-        }
-
         // Record (concrete) receiver — static dispatch.
         let record_ty = match &resolved_receiver_ty {
             Ty::Record(record_ty) => record_ty.clone(),

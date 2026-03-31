@@ -77,7 +77,6 @@ mod expressions;
 mod functions;
 mod functions_errors;
 mod generics;
-mod interfaces;
 mod nested_functions;
 mod numeric_binary_ops;
 mod pattern_matching;

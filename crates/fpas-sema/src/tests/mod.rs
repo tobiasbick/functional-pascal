@@ -29,5 +29,4 @@ mod decl;
 mod expr;
 mod generic_methods;
 mod integration;
-mod interfaces;
 mod stmt;

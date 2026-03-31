@@ -13,13 +13,6 @@ pub type ExprTypeMap = HashMap<usize, Ty>;
 /// Present only for calls that are record method invocations.
 pub type MethodCallMap = HashMap<usize, String>;
 
-/// Maps a call-expression identity to the **unqualified** method name for interface virtual
-/// dispatch. When a key is present in this map, the compiler must emit `CallVirtual` instead of
-/// a statically-qualified `Call`.
-///
-/// **Documentation:** `docs/pascal/05-types.md` (Interfaces)
-pub type InterfaceDispatchMap = HashMap<usize, String>;
-
 /// Maps a named record type to its ordered field list, each entry carrying an optional
 /// cloned default expression. The order matches the type definition.
 ///
@@ -35,10 +28,6 @@ pub struct Checker {
     pub(crate) errors: Vec<SemaError>,
     pub(crate) expr_types: ExprTypeMap,
     pub(crate) method_calls: MethodCallMap,
-    /// Call keys where dynamic (virtual) dispatch via the receiver's runtime type is required.
-    ///
-    /// **Documentation:** `docs/pascal/05-types.md` (Interfaces)
-    pub(crate) interface_dispatch: InterfaceDispatchMap,
     /// Canonical std unit names from `uses` (e.g. `Std.Console`).
     pub(crate) loaded_std_units: HashSet<String>,
     /// Short names that map to multiple fully-qualified std symbols (ambiguous).
@@ -60,7 +49,6 @@ impl Checker {
             errors: Vec::new(),
             expr_types: ExprTypeMap::new(),
             method_calls: MethodCallMap::new(),
-            interface_dispatch: InterfaceDispatchMap::new(),
             loaded_std_units: HashSet::new(),
             ambiguous_imports: HashMap::new(),
             short_builtin_redirect: HashMap::new(),
@@ -76,7 +64,6 @@ impl Checker {
         Vec<SemaError>,
         ExprTypeMap,
         MethodCallMap,
-        InterfaceDispatchMap,
         RecordDefaultsMap,
         ScalarCaseBindingMap,
     ) {
@@ -84,7 +71,6 @@ impl Checker {
             self.errors,
             self.expr_types,
             self.method_calls,
-            self.interface_dispatch,
             self.record_defaults,
             self.scalar_case_bindings,
         )

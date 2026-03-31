@@ -379,26 +379,4 @@ fn record_with_generic_function_method() {
     }
 }
 
-// 11. Interface method with its own generic type parameters
-#[test]
-fn interface_with_generic_function_method() {
-    let p = parse_ok(
-        "program T; type Mapper = interface \
-         function Map<R>(Self: Mapper; F: function(X: integer): R): R; \
-         end; begin end.",
-    );
-    match &p.declarations[0] {
-        Decl::TypeDef(td) => match &td.body {
-            TypeBody::Interface(iface) => match &iface.methods[0] {
-                RecordMethod::Function(f) => {
-                    assert_eq!(f.name, "Map");
-                    assert_eq!(f.type_params.len(), 1);
-                    assert_eq!(f.type_params[0].name, "R");
-                }
-                _ => panic!("expected function method"),
-            },
-            _ => panic!("expected Interface"),
-        },
-        _ => panic!("expected TypeDef"),
-    }
-}
+

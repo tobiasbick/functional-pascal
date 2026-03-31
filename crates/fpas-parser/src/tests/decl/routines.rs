@@ -30,7 +30,6 @@ fn function_with_body() {
                     assert!(nested.is_empty());
                     assert_eq!(stmts.len(), 1);
                 }
-                _ => panic!("expected Block body"),
             }
         }
         _ => panic!("expected Function"),
@@ -89,7 +88,6 @@ fn nested_function() {
             FuncBody::Block { nested, .. } => {
                 assert_eq!(nested.len(), 1);
             }
-            _ => panic!("expected Block"),
         },
         _ => panic!("expected Function"),
     }

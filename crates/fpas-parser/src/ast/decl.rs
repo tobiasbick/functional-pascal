@@ -73,20 +73,12 @@ pub enum TypeBody {
     Record(RecordType),
     Enum(EnumType),
     Alias(TypeExpr),
-    /// `interface … end` type definition.
-    ///
-    /// **Documentation:** `docs/pascal/05-types.md` (Interfaces)
-    Interface(InterfaceType),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RecordType {
     pub fields: Vec<FieldDef>,
     pub methods: Vec<RecordMethod>,
-    /// Interface names this record explicitly implements.
-    ///
-    /// **Documentation:** `docs/pascal/05-types.md` (Interfaces)
-    pub implements: Vec<TypeExpr>,
     pub span: Span,
 }
 
@@ -97,20 +89,6 @@ pub enum RecordMethod {
     Procedure(ProcedureDecl),
 }
 
-/// An `interface … end` type definition.
-///
-/// Methods are declared as signatures only (no body). The `Self` parameter
-/// must be typed as the interface name.
-///
-/// **Documentation:** `docs/pascal/05-types.md` (Interfaces)
-#[derive(Debug, Clone, PartialEq)]
-pub struct InterfaceType {
-    /// Optional base interface name (single inheritance via `extends`).
-    pub extends: Option<TypeExpr>,
-    /// Method signatures declared on this interface.
-    pub methods: Vec<RecordMethod>,
-    pub span: Span,
-}
 
 /// A field declaration inside a `record … end` block.
 ///

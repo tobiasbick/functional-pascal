@@ -14,7 +14,6 @@ mod std_units;
 mod types;
 
 pub use check::ExprTypeMap;
-pub use check::InterfaceDispatchMap;
 pub use check::MethodCallMap;
 pub use check::RecordDefaultsMap;
 pub use check::ScalarCaseBindingMap;
@@ -37,7 +36,6 @@ pub fn analyze_with_types(
     Vec<SemaError>,
     ExprTypeMap,
     MethodCallMap,
-    InterfaceDispatchMap,
     RecordDefaultsMap,
     ScalarCaseBindingMap,
 ) {

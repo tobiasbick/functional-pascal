@@ -113,31 +113,4 @@ impl Compiler {
         self.emit(Op::Call(name_idx, total_args), location);
         Ok(())
     }
-
-    /// Compile a virtual (interface) method call.
-    ///
-    /// Emits `CallVirtual(method_name_idx, total_argc)` so the VM can resolve the concrete
-    /// implementation from the receiver's runtime type name at dispatch time.
-    ///
-    /// **Documentation:** `docs/pascal/05-types.md` (Interfaces)
-    pub(in super::super) fn compile_virtual_method_call(
-        &mut self,
-        designator: &Designator,
-        method_name: &str,
-        args: &[Expr],
-        location: SourceLocation,
-    ) -> Result<(), CompileError> {
-        let receiver = Designator {
-            parts: designator.parts[..designator.parts.len() - 1].to_vec(),
-            span: designator.span,
-        };
-        self.compile_designator_read(&receiver)?;
-        for arg in args {
-            self.compile_expr(arg)?;
-        }
-        let total_args = u8::try_from(args.len() + 1).unwrap_or(u8::MAX);
-        let name_idx = self.chunk.add_constant(Value::Str(method_name.into()));
-        self.emit(Op::CallVirtual(name_idx, total_args), location);
-        Ok(())
-    }
 }

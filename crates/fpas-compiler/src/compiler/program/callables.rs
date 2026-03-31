@@ -59,10 +59,6 @@ impl Compiler {
         body: &FuncBody,
         span: fpas_lexer::Span,
     ) -> Result<(), CompileError> {
-        if matches!(body, FuncBody::SignatureOnly) {
-            return Ok(());
-        }
-
         let location = Self::location_of(&span);
         let jump_over = self.emit(Op::Jump(0), location);
 
@@ -104,13 +100,12 @@ impl Compiler {
             self.add_local(&param.name);
         }
 
-        if let FuncBody::Block { nested, stmts } = body {
-            for decl in nested {
-                self.compile_decl(decl)?;
-            }
-            for stmt in stmts {
-                self.compile_stmt(stmt)?;
-            }
+        let FuncBody::Block { nested, stmts } = body;
+        for decl in nested {
+            self.compile_decl(decl)?;
+        }
+        for stmt in stmts {
+            self.compile_stmt(stmt)?;
         }
 
         self.emit(Op::Unit, location);

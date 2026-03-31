@@ -112,13 +112,6 @@ pub enum Op {
     // ── Functions ───────────────────────────────────────────
     /// Call function/procedure at constant-pool index (name), with arg_count args on stack.
     Call(u16, u8),
-    /// Dynamic interface dispatch: look up the first argument's runtime type name, form
-    /// `TypeName.MethodName`, and call it with `arg_count` arguments (including the receiver).
-    ///
-    /// Stack layout: `[..., receiver, arg1, ..., argN]` (total = `arg_count`)
-    ///
-    /// **Documentation:** `docs/pascal/05-types.md` (Interfaces)
-    CallVirtual(u16, u8),
     /// Call a function value on top of the stack with arg_count args below it.
     ///
     /// Stack layout: `[..., arg0, arg1, ..., argN, function_value]` → `[..., return_value]`

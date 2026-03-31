@@ -84,9 +84,7 @@ impl Checker {
         return_type: Option<Ty>,
         body: &FuncBody,
     ) {
-        let FuncBody::Block { nested, stmts } = body else {
-            return;
-        };
+        let FuncBody::Block { nested, stmts } = body;
 
         self.scopes.push_scope();
 
@@ -135,7 +133,6 @@ impl Checker {
 
     fn register_routine_symbol(&mut self, name: &str, symbol: Symbol, body: &FuncBody, span: Span) {
         match body {
-            FuncBody::SignatureOnly => {}
             FuncBody::Block { .. } => match self.install_routine_symbol(name, symbol) {
                 RoutineInstall::Installed => {}
                 RoutineInstall::Duplicate => {

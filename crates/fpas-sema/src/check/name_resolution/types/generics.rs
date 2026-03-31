@@ -46,7 +46,6 @@ impl Checker {
             type_params: Vec::new(),
             fields,
             methods,
-            implements: record.implements.clone(),
         })
     }
 

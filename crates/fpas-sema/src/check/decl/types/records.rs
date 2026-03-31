@@ -4,10 +4,9 @@
 
 use super::Checker;
 use crate::scope::{FunctionCtx, Symbol, SymbolKind};
-use crate::types::{
-    FunctionTy, InterfaceTy, MethodKind, ParamTy, ProcedureTy, RecordTy, Ty, TypeConstraint,
-};
-use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_TYPE};
+use crate::types::
+    {FunctionTy, MethodKind, ParamTy, ProcedureTy, RecordTy, Ty, TypeConstraint};
+use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
 use fpas_parser::{FuncBody, RecordMethod, RecordType, TypeDef, TypeParam};
 
 impl Checker {
@@ -77,7 +76,6 @@ impl Checker {
             type_params: Self::resolve_type_params(&td.type_params),
             fields,
             methods: Vec::new(),
-            implements: Vec::new(),
         };
         let mut ty = Ty::Record(record_ty);
 
@@ -85,47 +83,8 @@ impl Checker {
             checker.check_record_methods(&td.name, &ty, &record.methods)
         });
 
-        // Resolve and validate `implements` clauses.
-        let implements: Vec<String> = record
-            .implements
-            .iter()
-            .filter_map(|te| {
-                let resolved = self.resolve_type_expr(te);
-                match resolved {
-                    Ty::Interface(iface) => Some(iface.name.clone()),
-                    _ => {
-                        self.error_with_code(
-                            SEMA_UNKNOWN_TYPE,
-                            format!("`{resolved}` is not an interface"),
-                            "Only interface names can appear in an `implements` clause.",
-                            td.span,
-                        );
-                        None
-                    }
-                }
-            })
-            .collect();
-
         if let Ty::Record(record_ty) = &mut ty {
-            record_ty.methods = methods.clone();
-            record_ty.implements = implements.clone();
-        }
-
-        // Validate that the record actually implements every declared interface.
-        let iface_types: Vec<InterfaceTy> = implements
-            .iter()
-            .filter_map(|name| {
-                self.scopes.lookup(name).and_then(|sym| {
-                    if let Ty::Interface(iface) = &sym.ty {
-                        Some(iface.clone())
-                    } else {
-                        None
-                    }
-                })
-            })
-            .collect();
-        for iface in &iface_types {
-            self.validate_implements(&td.name, &methods, iface, td.span);
+            record_ty.methods = methods;
         }
 
         if let Some(existing) = self.scopes.lookup_mut(&td.name) {
@@ -316,9 +275,7 @@ impl Checker {
         return_type: Option<Ty>,
         body: &FuncBody,
     ) {
-        let FuncBody::Block { nested, stmts } = body else {
-            return;
-        };
+        let FuncBody::Block { nested, stmts } = body;
 
         self.scopes.push_scope();
 
@@ -378,135 +335,5 @@ impl Checker {
             return record_ty.clone();
         }
         resolved
-    }
-
-    /// Verify that `record_name` provides an implementation for every method in `iface`.
-    ///
-    /// A method is considered implemented when the record has a method with the same name
-    /// whose parameter types (after substituting the record type for `Self`) and return type
-    /// match those declared in the interface.
-    fn validate_implements(
-        &mut self,
-        record_name: &str,
-        record_methods: &[(String, MethodKind)],
-        iface: &InterfaceTy,
-        span: fpas_lexer::Span,
-    ) {
-        for (method_name, iface_kind) in &iface.methods {
-            let found = record_methods
-                .iter()
-                .find(|(n, _)| n.eq_ignore_ascii_case(method_name));
-
-            let Some((_, record_kind)) = found else {
-                self.error_with_code(
-                    SEMA_TYPE_MISMATCH,
-                    format!(
-                        "Record `{record_name}` does not implement `{}` required by interface `{}`",
-                        method_name, iface.name
-                    ),
-                    format!(
-                        "Add `function {method_name}(Self: {record_name}; ...)` (or the matching `procedure`) to `{record_name}`."
-                    ),
-                    span,
-                );
-                continue;
-            };
-
-            // Compare signatures: skip Self param (index 0) for arity/type checking.
-            match (iface_kind, record_kind) {
-                (MethodKind::Function(if_fn), MethodKind::Function(rec_fn)) => {
-                    self.check_method_sig_compat(
-                        record_name,
-                        method_name,
-                        &iface.name,
-                        if_fn.params.get(1..).unwrap_or(&[]),
-                        Some(&if_fn.return_type),
-                        rec_fn.params.get(1..).unwrap_or(&[]),
-                        Some(&rec_fn.return_type),
-                        span,
-                    );
-                }
-                (MethodKind::Procedure(if_pr), MethodKind::Procedure(rec_pr)) => {
-                    self.check_method_sig_compat(
-                        record_name,
-                        method_name,
-                        &iface.name,
-                        if_pr.params.get(1..).unwrap_or(&[]),
-                        None,
-                        rec_pr.params.get(1..).unwrap_or(&[]),
-                        None,
-                        span,
-                    );
-                }
-                _ => {
-                    self.error_with_code(
-                        SEMA_TYPE_MISMATCH,
-                        format!(
-                            "Method `{record_name}.{method_name}` kind (function/procedure) does not match interface `{}`",
-                            iface.name
-                        ),
-                        "Use the same kind (function or procedure) as declared in the interface.",
-                        span,
-                    );
-                }
-            }
-        }
-    }
-
-    /// Check that the visible parameter lists and return type of a record method match
-    /// the corresponding interface declaration (Self param excluded on both sides).
-    #[allow(clippy::too_many_arguments)]
-    fn check_method_sig_compat(
-        &mut self,
-        record_name: &str,
-        method_name: &str,
-        iface_name: &str,
-        iface_params: &[ParamTy],
-        iface_ret: Option<&Ty>,
-        rec_params: &[ParamTy],
-        rec_ret: Option<&Ty>,
-        span: fpas_lexer::Span,
-    ) {
-        if iface_params.len() != rec_params.len() {
-            self.error_with_code(
-                SEMA_TYPE_MISMATCH,
-                format!(
-                    "`{record_name}.{method_name}` has {} parameter(s) but interface `{iface_name}` requires {}",
-                    rec_params.len(),
-                    iface_params.len()
-                ),
-                "Adjust the parameter list to match the interface declaration.",
-                span,
-            );
-            return;
-        }
-
-        for (i, (ip, rp)) in iface_params.iter().zip(rec_params.iter()).enumerate() {
-            if !ip.ty.compatible_with(&rp.ty) {
-                self.error_with_code(
-                        SEMA_TYPE_MISMATCH,
-                        format!(
-                            "`{record_name}.{method_name}` parameter {} type mismatch: interface expects `{}`, record has `{}`",
-                            i + 1, ip.ty, rp.ty
-                        ),
-                    "Change the parameter type to match the interface declaration.",
-                    span,
-                );
-            }
-        }
-
-        match (iface_ret, rec_ret) {
-            (Some(ir), Some(rr)) if !ir.compatible_with(rr) => {
-                self.error_with_code(
-                        SEMA_TYPE_MISMATCH,
-                        format!(
-                            "`{record_name}.{method_name}` return type mismatch: interface expects `{ir}`, record has `{rr}`"
-                        ),
-                    "Change the return type to match the interface declaration.",
-                    span,
-                );
-            }
-            _ => {}
-        }
     }
 }

@@ -101,10 +101,6 @@ pub enum Ty {
     ///
     /// **Documentation:** `docs/pascal/08-concurrency.md`
     Task(Box<Ty>),
-    /// An `interface` type.
-    ///
-    /// **Documentation:** `docs/pascal/05-types.md` (Interfaces)
-    Interface(InterfaceTy),
     /// Placeholder for errors — compatible with anything to avoid cascading.
     Error,
 }
@@ -116,10 +112,6 @@ pub struct RecordTy {
     pub type_params: Vec<GenericParamDef>,
     pub fields: Vec<(String, Ty)>,
     pub methods: Vec<(String, MethodKind)>,
-    /// Names of interfaces this record explicitly implements.
-    ///
-    /// **Documentation:** `docs/pascal/05-types.md` (Interfaces)
-    pub implements: Vec<String>,
 }
 
 /// Whether a record method is a function (returns a value) or a procedure.
@@ -157,20 +149,6 @@ impl EnumTy {
     pub fn member_names(&self) -> Vec<String> {
         self.variants.iter().map(|v| v.name.clone()).collect()
     }
-}
-
-/// An interface type produced by an `interface … end` declaration.
-///
-/// **Documentation:** `docs/pascal/05-types.md` (Interfaces)
-#[derive(Debug, Clone, PartialEq)]
-pub struct InterfaceTy {
-    pub name: String,
-    /// Generic type parameters declared on this interface.
-    pub type_params: Vec<GenericParamDef>,
-    /// Method signatures declared on this interface (and inherited from `extends`).
-    pub methods: Vec<(String, MethodKind)>,
-    /// Optional parent interface name (single inheritance via `extends`).
-    pub extends: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -234,7 +212,6 @@ impl std::fmt::Display for Ty {
             Ty::Channel(inner) => write!(f, "channel of {inner}"),
             Ty::Dict(k, v) => write!(f, "dict of {k} to {v}"),
             Ty::Task(inner) => write!(f, "task of {inner}"),
-            Ty::Interface(i) => write!(f, "{}", i.name),
             Ty::Error => write!(f, "<error>"),
         }
     }
@@ -285,13 +262,6 @@ impl Ty {
             (Ty::Dict(k1, v1), Ty::Dict(k2, v2)) => {
                 k1.compatible_with(k2) && v1.compatible_with(v2)
             }
-            // Record satisfies an interface it explicitly implements.
-            (Ty::Record(r), Ty::Interface(i)) => {
-                r.implements.iter().any(|n| n.eq_ignore_ascii_case(&i.name))
-            }
-            // Interface is compatible with itself (same name) or a parent (extends chain not
-            // walked here — sema widens the method set at declaration time instead).
-            (Ty::Interface(a), Ty::Interface(b)) => a.name.eq_ignore_ascii_case(&b.name),
             // Function and procedure structural compatibility: param count and element-wise
             // type compatibility. This allows generic params inside function-typed parameters
             // to unify with concrete types at call sites (e.g., `function(X: T): R` vs

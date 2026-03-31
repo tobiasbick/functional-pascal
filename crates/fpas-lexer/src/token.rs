@@ -5,7 +5,7 @@
 /// Lexical token produced by the Functional Pascal lexer.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
-    // Keywords (62)
+    // Keywords (59)
     Program,
     Unit,
     Uses,
@@ -63,9 +63,6 @@ pub enum Token {
     From,
     Dict,
     With,
-    Interface,
-    Implements,
-    Extends,
 
     // Literals
     Integer(i64),
@@ -161,9 +158,6 @@ impl Token {
             "from" => Token::From,
             "dict" => Token::Dict,
             "with" => Token::With,
-            "interface" => Token::Interface,
-            "implements" => Token::Implements,
-            "extends" => Token::Extends,
             _ => Token::Ident(raw.to_owned()),
         }
     }

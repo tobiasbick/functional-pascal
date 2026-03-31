@@ -10,8 +10,7 @@ impl Parser {
     /// Parse a function header: `function Name<T>(Params): RetType;`
     ///
     /// Consumes everything through the trailing semicolon and returns the
-    /// parsed components. Shared by top-level declarations, record methods,
-    /// and interface signatures.
+    /// parsed components. Shared by top-level declarations and record methods.
     fn parse_function_header(
         &mut self,
     ) -> (String, Vec<TypeParam>, Vec<FormalParam>, TypeExpr, Span) {
@@ -66,33 +65,6 @@ impl Parser {
             params,
             body,
             visibility,
-            span: self.span_from(start),
-        }
-    }
-
-    /// Parse a function signature for an interface (no body).
-    pub(super) fn parse_interface_function(&mut self) -> FunctionDecl {
-        let (name, type_params, params, return_type, start) = self.parse_function_header();
-        FunctionDecl {
-            name,
-            type_params,
-            params,
-            return_type,
-            body: FuncBody::SignatureOnly,
-            visibility: Visibility::Public,
-            span: self.span_from(start),
-        }
-    }
-
-    /// Parse a procedure signature for an interface (no body).
-    pub(super) fn parse_interface_procedure(&mut self) -> ProcedureDecl {
-        let (name, type_params, params, start) = self.parse_procedure_header();
-        ProcedureDecl {
-            name,
-            type_params,
-            params,
-            body: FuncBody::SignatureOnly,
-            visibility: Visibility::Public,
             span: self.span_from(start),
         }
     }

@@ -56,9 +56,7 @@ end.",
     let Decl::Function(spawn) = &program.declarations[1] else {
         panic!("expected function declaration");
     };
-    let FuncBody::Block { stmts, .. } = &spawn.body else {
-        panic!("expected block body");
-    };
+    let FuncBody::Block { stmts, .. } = &spawn.body;
     match &stmts[0] {
         Stmt::Return(Some(Expr::Go(inner, _)), _) => {
             assert!(matches!(inner.as_ref(), Expr::Call { .. }));

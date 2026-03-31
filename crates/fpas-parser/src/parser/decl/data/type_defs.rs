@@ -33,54 +33,7 @@ impl Parser {
         match self.current_token() {
             Token::Record => TypeBody::Record(self.parse_record_type()),
             Token::Enum => TypeBody::Enum(self.parse_enum_type()),
-            Token::Interface => TypeBody::Interface(self.parse_interface_type()),
             _ => TypeBody::Alias(self.parse_type_expr()),
-        }
-    }
-
-    /// Parse `interface [ extends TypeName ] { method-sig ; } end`.
-    ///
-    /// **Documentation:** `docs/pascal/05-types.md` (Interfaces)
-    fn parse_interface_type(&mut self) -> InterfaceType {
-        let start = self.current_span();
-        self.advance(); // consume `interface`
-
-        let extends = if self.eat(&Token::Extends) {
-            let te = self.parse_type_expr();
-            self.expect_semi(); // consume `;` after `extends TypeName`
-            Some(te)
-        } else {
-            None
-        };
-
-        let mut methods = Vec::new();
-        while !self.check(&Token::End) && !self.at_end() {
-            match self.current_token() {
-                Token::Function => {
-                    methods.push(RecordMethod::Function(self.parse_interface_function()));
-                }
-                Token::Procedure => {
-                    methods.push(RecordMethod::Procedure(self.parse_interface_procedure()));
-                }
-                _ => {
-                    let span = self.current_span();
-                    self.error_with_code(
-                        PARSE_EXPECTED_TOKEN,
-                        "Expected `function` or `procedure` in interface body",
-                        "Interface bodies contain only method signatures: `function Name(Self: IName; ...): RetType;`",
-                        span,
-                    );
-                    if !self.at_end() && !self.check(&Token::End) {
-                        self.advance();
-                    }
-                }
-            }
-        }
-        self.expect(&Token::End);
-        InterfaceType {
-            extends,
-            methods,
-            span: self.span_from(start),
         }
     }
 
@@ -89,7 +42,6 @@ impl Parser {
         self.advance();
         let mut fields = Vec::new();
         let mut methods = Vec::new();
-        let mut implements = Vec::new();
         while !self.check(&Token::End) && !self.at_end() {
             match self.current_token() {
                 Token::Function => {
@@ -102,11 +54,6 @@ impl Parser {
                         self.parse_procedure_decl(Visibility::default()),
                     ));
                 }
-                Token::Implements => {
-                    self.advance(); // consume `implements`
-                    implements.push(self.parse_type_expr());
-                    self.expect_semi();
-                }
                 _ => fields.push(self.parse_field_def()),
             }
         }
@@ -114,7 +61,6 @@ impl Parser {
         RecordType {
             fields,
             methods,
-            implements,
             span: self.span_from(start),
         }
     }

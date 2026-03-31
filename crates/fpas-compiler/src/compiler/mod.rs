@@ -6,9 +6,8 @@
 use std::collections::HashMap;
 
 use fpas_bytecode::Chunk;
-use fpas_sema::{
-    ExprTypeMap, InterfaceDispatchMap, MethodCallMap, RecordDefaultsMap, ScalarCaseBindingMap,
-};
+use fpas_sema::
+    {ExprTypeMap, MethodCallMap, RecordDefaultsMap, ScalarCaseBindingMap};
 
 mod binary_op;
 mod designator;
@@ -70,10 +69,6 @@ pub struct Compiler {
     record_methods: HashMap<String, Vec<String>>,
     /// Maps call-expression/designator identity to qualified method name.
     method_calls: MethodCallMap,
-    /// Call keys where virtual (interface) dispatch must be emitted.
-    ///
-    /// **Documentation:** `docs/pascal/05-types.md` (Interfaces)
-    interface_dispatch: InterfaceDispatchMap,
     /// Named record type → ordered (field_name, optional_default_expr) pairs.
     /// Used to expand record literals when fields with defaults are omitted.
     ///
@@ -94,7 +89,6 @@ impl Compiler {
     pub fn new(
         expr_types: ExprTypeMap,
         method_calls: MethodCallMap,
-        interface_dispatch: InterfaceDispatchMap,
         record_defaults: RecordDefaultsMap,
         scalar_case_bindings: ScalarCaseBindingMap,
     ) -> Self {
@@ -110,7 +104,6 @@ impl Compiler {
             expr_types,
             record_methods: HashMap::new(),
             method_calls,
-            interface_dispatch,
             record_defaults,
             scalar_case_bindings,
         }

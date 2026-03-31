@@ -162,7 +162,6 @@ end.",
     match &p.declarations[0] {
         Decl::Function(f) => match &f.body {
             FuncBody::Block { nested, .. } => assert_eq!(nested.len(), 1),
-            _ => panic!("expected Block body"),
         },
         _ => panic!("expected Function"),
     }

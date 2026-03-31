@@ -135,7 +135,7 @@ end.",
 
 #[test]
 fn case_nested_enum_destructure_wrong_field_count() {
-    // Inner variant A has 1 field, but pattern supplies 2
+    // Nested enum patterns are not supported — any nested pattern is rejected
     let err = compile_err(
         "\
 program T;
@@ -149,21 +149,17 @@ type
     Empty;
   end;
 begin
-  var V: Outer := Outer.Wrap(Inner.A(1));
+  var V: Outer := Outer.Empty;
   case V of
-    Outer.Wrap(Inner.A(X, Y)): Std.Console.WriteLn('bad');
-    Outer.Wrap(Inner.B): Std.Console.WriteLn('b');
+    Outer.Wrap(Inner.A(X)): Std.Console.WriteLn('bad');
     Outer.Empty: Std.Console.WriteLn('empty')
   end
 end.",
     );
-    assert_eq!(
-        err.code,
-        fpas_diagnostics::codes::SEMA_ENUM_FIELD_COUNT_MISMATCH
-    );
+    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
     assert!(
-        err.message.contains("1 field") && err.message.contains("2 were"),
-        "expected nested field count mismatch, got: {}",
+        err.message.contains("Nested enum patterns are not supported"),
+        "expected nested pattern rejection, got: {}",
         err.message
     );
 }
@@ -380,26 +376,20 @@ end.",
 
 #[test]
 fn nested_pattern_non_exhaustive_outer_missing() {
-    // Nested patterns: missing Outer.Empty variant
+    // Non-exhaustive data-enum: missing Outer.Empty variant (no nested patterns)
     let err = compile_err(
         "\
 program T;
 type
-  Inner = enum
-    A(X: integer);
-    B;
-  end;
   Outer = enum
-    Wrap(I: Inner);
+    Wrap(I: integer);
     Empty;
   end;
 begin
-  var V: Outer := Outer.Wrap(Inner.A(1));
+  var V: Outer := Outer.Wrap(1);
   case V of
-    Outer.Wrap(Inner.A(X)):
-      Std.Console.WriteLn('a');
-    Outer.Wrap(Inner.B):
-      Std.Console.WriteLn('b')
+    Outer.Wrap(X):
+      Std.Console.WriteLn('wrapped')
   end
 end.",
     );
@@ -466,8 +456,8 @@ end.",
     );
     assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
     assert!(
-        err.message.contains("does not belong") || err.message.contains("Inner"),
-        "expected foreign nested variant error, got: {}",
+        err.message.contains("Nested enum patterns are not supported") || err.message.contains("single-level"),
+        "expected nested pattern rejection, got: {}",
         err.message
     );
 }
@@ -625,8 +615,9 @@ end.",
     );
     assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
     assert!(
-        err.message.contains("enum pattern literal") || err.message.contains("Type mismatch"),
-        "expected literal type mismatch, got: {}",
+        err.message.contains("Literal matching inside enum patterns is not supported")
+            || err.message.contains("guard clause"),
+        "expected literal-in-pattern rejection, got: {}",
         err.message
     );
 }

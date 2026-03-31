@@ -126,14 +126,6 @@ case S of
   Shape.Rectangle(W, H): WriteLn('Rect')
 end;
 
-{ Nested patterns and wildcards }
-case E of
-  Expr.Add(Expr.Num(A), Expr.Num(B)): WriteLn('sum');
-  Expr.Mul(Expr.Num(0), _): WriteLn('zero');
-else
-  WriteLn('other')
-end;
-
 { Exhaustiveness: enum/Result/Option must cover all variants or use else }
 { Guards do NOT count toward exhaustiveness }
 

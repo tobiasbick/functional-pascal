@@ -78,6 +78,10 @@ impl Checker {
 
     /// Validate a data-enum pattern and extract any bindings it introduces.
     ///
+    /// Only single-level destructuring is supported. Each field position must be
+    /// a plain identifier binding — wildcards, nested patterns, and literals are
+    /// rejected with a diagnostic.
+    ///
     /// **Documentation:** `docs/pascal/06-pattern-matching.md`
     pub(super) fn check_data_enum_pattern(
         &mut self,
@@ -91,15 +95,32 @@ impl Checker {
         &mut self,
         expected_ty: &Ty,
         expr: &Expr,
-        allow_binding: bool,
+        in_arg_position: bool,
     ) -> Vec<(String, Ty)> {
         match expr {
-            Expr::Call {
-                designator, args, ..
-            } => self.collect_variant_pattern_bindings(expected_ty, designator, args),
-            Expr::Designator(designator) if allow_binding && designator.parts.len() == 1 => {
+            Expr::Call { designator, args, .. } if !in_arg_position => {
+                self.collect_variant_pattern_bindings(expected_ty, designator, args)
+            }
+            Expr::Call { .. } => {
+                self.error_with_code(
+                    SEMA_TYPE_MISMATCH,
+                    "Nested enum patterns are not supported; use single-level destructuring only",
+                    "Replace the nested pattern with a binding name, then use a guard clause: `Outer.Wrap(Inner) if ...:`.",
+                    expr_span(expr),
+                );
+                Vec::new()
+            }
+            Expr::Designator(designator) if in_arg_position && designator.parts.len() == 1 => {
                 match &designator.parts[0] {
-                    DesignatorPart::Ident(name, _) if name == "_" => Vec::new(),
+                    DesignatorPart::Ident(name, _) if name == "_" => {
+                        self.error_with_code(
+                            SEMA_TYPE_MISMATCH,
+                            "Wildcard `_` is not supported in patterns; use a named binding instead",
+                            "Replace `_` with a name like `Ignored` if you do not need the value.",
+                            expr_span(expr),
+                        );
+                        Vec::new()
+                    }
                     DesignatorPart::Ident(name, _) => vec![(name.clone(), expected_ty.clone())],
                     DesignatorPart::Index(_, _) => Vec::new(),
                 }
@@ -108,22 +129,21 @@ impl Checker {
                 self.collect_variant_pattern_bindings(expected_ty, designator, &[])
             }
             Expr::Integer(..) | Expr::Real(..) | Expr::Str(..) | Expr::Bool(..)
-                if allow_binding =>
+                if in_arg_position =>
             {
-                let actual_ty = self.check_expr(expr);
-                self.check_type_compat(
-                    expected_ty,
-                    &actual_ty,
-                    "enum pattern literal",
+                self.error_with_code(
+                    SEMA_TYPE_MISMATCH,
+                    "Literal matching inside enum patterns is not supported; use a guard clause instead",
+                    "Replace the literal with a binding `X` and add a guard: `Variant(X) if X = 0:`.",
                     expr_span(expr),
                 );
                 Vec::new()
             }
-            _ if allow_binding => {
+            _ if in_arg_position => {
                 self.error_with_code(
                     SEMA_TYPE_MISMATCH,
-                    "Enum pattern fields only allow bindings, `_`, literals, or nested enum patterns",
-                    "Use a binding name, `_`, a literal, or another enum pattern such as `Inner.A(X)`.",
+                    "Enum pattern fields must be identifier bindings",
+                    "Use a named binding such as `R` or `Value` for each enum field.",
                     expr_span(expr),
                 );
                 Vec::new()
@@ -160,8 +180,8 @@ impl Checker {
             let Some(enum_ty) = self.resolve_enum_ty(expected_ty) else {
                 self.error_with_code(
                     SEMA_TYPE_MISMATCH,
-                    format!("Nested enum pattern expects an enum field, found `{expected_ty}`"),
-                    "Use `_`, a binding name, or a literal when the field is not an enum.",
+                    format!("Expected an enum type for the case expression, found `{expected_ty}`"),
+                    "Use a variant pattern such as `Shape.Circle(R)` or `Shape.Point`.",
                     designator.span,
                 );
                 return Vec::new();

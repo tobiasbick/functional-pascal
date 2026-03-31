@@ -356,17 +356,13 @@ destructure_label   = ( 'ok' | 'error' | 'some' ) '(' identifier ')'
 enum_pattern        = qualified_id '(' pattern_arg { ',' pattern_arg } ')'
                     | qualified_id ;                     (* fieldless variant *)
 
-pattern_arg         = '_'                                (* wildcard       *)
-                    | identifier                         (* binding        *)
-                    | literal_pattern                    (* literal match  *)
-                    | enum_pattern ;                     (* nested pattern *)
+pattern_arg         = identifier ;                       (* binding only   *)
 
-literal_pattern     = integer_literal
-                    | real_literal
-                    | string_literal
-                    | 'true'
-                    | 'false' ;
-
+(* Each field position in an enum pattern must be a plain identifier *)
+(* binding — wildcards, literals, and nested patterns are not        *)
+(* supported.  Use a guard clause for additional constraints:        *)
+(*   Shape.Circle(R) if R > 10.0: ...                               *)
+(*                                                                  *)
 (* Value labels must be compile-time constants: integer, char,      *)
 (* string, boolean, or enum literals. Ranges use '..'.              *)
 (*                                                                  *)
@@ -378,10 +374,7 @@ literal_pattern     = integer_literal
 (* lists.                                                           *)
 (* Destructure labels bind the inner value of Result/Option.        *)
 (* Enum patterns match a variant and bind its fields positionally:  *)
-(* Shape.Circle(R) binds Radius to R. Patterns may nest:           *)
-(* Expr.Add(Expr.Num(A), Expr.Num(B)) matches Add where both       *)
-(* children are Num and binds their values. Fields may also match   *)
-(* literals. '_' matches anything without binding.                  *)
+(* Shape.Circle(R) binds Radius to R.                               *)
 (*                                                                  *)
 (* Guard clause ('if' expression) on an arm: the arm matches only   *)
 (* when the label matches AND the guard evaluates to true. The      *)

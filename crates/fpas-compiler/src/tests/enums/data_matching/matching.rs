@@ -6,23 +6,23 @@ fn enum_data_case_multiple_labels_keep_each_label_pattern() {
         "\
 program EnumMultiLabelPattern;
 uses Std.Console;
-type Expr = enum
-  Num(Value: integer);
-  Add(Left: Expr; Right: Expr);
-  Mul(Left: Expr; Right: Expr);
+type Shape = enum
+  Circle(Radius: real);
+  Square(Side: real);
+  Triangle(A: real; B: real; C: real);
 end;
 begin
-  var E: Expr := Expr.Mul(Expr.Num(2), Expr.Num(3));
-  case E of
-    Expr.Add(Expr.Num(1), Expr.Num(2)),
-    Expr.Mul(Expr.Num(2), Expr.Num(3)):
-      WriteLn('matched')
+  var S: Shape := Shape.Square(5.0);
+  case S of
+    Shape.Circle(R),
+    Shape.Square(R):
+      WriteLn('round or square')
   else
     WriteLn('other')
   end
 end.",
     );
-    assert_eq!(out.lines, vec!["matched"]);
+    assert_eq!(out.lines, vec!["round or square"]);
 }
 
 #[test]

@@ -88,29 +88,3 @@ fn case_with_destructure_pattern() {
         _ => panic!("expected Case"),
     }
 }
-
-#[test]
-fn case_with_nested_pattern_wildcard() {
-    let stmts = body_stmts("program T; begin case E of Expr.Mul(Expr.Num(0), _): A := 1 end end.");
-    match &stmts[0] {
-        Stmt::Case { arms, .. } => {
-            let CaseLabel::Value {
-                start, end: None, ..
-            } = &arms[0].labels[0]
-            else {
-                panic!("expected nested-pattern label");
-            };
-            let Expr::Call { args, .. } = start else {
-                panic!("expected outer call");
-            };
-            let Expr::Designator(wildcard) = &args[1] else {
-                panic!("expected wildcard designator");
-            };
-            match &wildcard.parts[0] {
-                DesignatorPart::Ident(name, _) => assert_eq!(name, "_"),
-                _ => panic!("expected wildcard identifier"),
-            }
-        }
-        _ => panic!("expected Case"),
-    }
-}

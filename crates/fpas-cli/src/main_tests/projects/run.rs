@@ -64,8 +64,8 @@ include = ["src/*.fpas"]
 }
 
 #[test]
-fn run_cli_resolves_include_directive_inside_project_main() {
-    let cwd = create_temp_dir("run-project-include-main");
+fn run_cli_shares_constants_via_unit_instead_of_include() {
+    let cwd = create_temp_dir("run-project-shared-unit");
     let project_file = cwd.join("app.fpasprj");
     write_text(
         &project_file,
@@ -80,11 +80,11 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses Std.Console;\n{$INCLUDE parts/message.inc}\nbegin\n  WriteLn(Message)\nend.\n",
+        "program Main;\nuses App.Parts, Std.Console;\nbegin\n  WriteLn(Message)\nend.\n",
     );
     write_text(
-        &cwd.join("src/parts/message.inc"),
-        "const Message: string := 'Hello from include';\n",
+        &cwd.join("src/parts.fpas"),
+        "unit App.Parts;\n\nconst\n  Message: string := 'Hello from unit';\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -92,28 +92,6 @@ include = ["src/*.fpas"]
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     assert_eq!(exit_code, 0, "stderr: {stderr_output}");
-    assert_eq!(stdout_output, "Hello from include\n");
-    assert!(stderr_output.is_empty());
-}
-
-#[test]
-fn run_cli_applies_define_flags_to_single_file_compilation() {
-    let cwd = create_temp_dir("run-cli-define-flag");
-    let source_path = cwd.join("main.fpas");
-    write_text(
-        &source_path,
-        "program Main;\nuses Std.Console;\nbegin\n  {$IFDEF DEBUG}\n  WriteLn('debug');\n  {$ELSE}\n  WriteLn('release');\n  {$ENDIF}\nend.\n",
-    );
-
-    let args = vec![
-        String::from("-DDEBUG"),
-        source_path.to_string_lossy().to_string(),
-    ];
-    let (exit_code, stdout_output, stderr_output) =
-        support::run_cli_args_and_capture_output(&args, &cwd);
-    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
-
-    assert_eq!(exit_code, 0, "stderr: {stderr_output}");
-    assert_eq!(stdout_output, "debug\n");
+    assert_eq!(stdout_output, "Hello from unit\n");
     assert!(stderr_output.is_empty());
 }

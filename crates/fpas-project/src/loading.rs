@@ -3,7 +3,6 @@ use super::paths::{
     resolve_explicit_file_path, resolve_source_files, same_file, validate_source_extension,
 };
 use super::{LoadedProject, ProjectKind};
-use fpas_lexer::DefineSet;
 use fpas_parser::CompilationUnit;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -34,18 +33,6 @@ struct SourcesSection {
 /// This implements project-file handling from `docs/pascal/10-projects.md`
 /// and validates user-unit naming rules from `docs/pascal/09-units.md`.
 pub fn load_project(path: &Path) -> Result<LoadedProject, String> {
-    load_project_with_defines(path, &DefineSet::new())
-}
-
-/// Load and validate a Functional Pascal project file with predefined
-/// conditional symbols.
-///
-/// This implements project-file handling from `docs/pascal/10-projects.md`
-/// and compiler directives from `docs/pascal/12-compiler-directives.md`.
-pub fn load_project_with_defines(
-    path: &Path,
-    defines: &DefineSet,
-) -> Result<LoadedProject, String> {
     let project_text = fs::read_to_string(path).map_err(|e| {
         format!(
             "Error reading project file `{}`: {e}",
@@ -107,10 +94,10 @@ pub fn load_project_with_defines(
     };
 
     if let Some(main_path) = main.as_deref() {
-        validate_program_main_file(main_path, defines, &mut warnings)?;
+        validate_program_main_file(main_path, &mut warnings)?;
     }
 
-    source_files = validate_project_source_units(source_files, defines, &mut warnings)?;
+    source_files = validate_project_source_units(source_files, &mut warnings)?;
 
     Ok(LoadedProject {
         kind,
@@ -148,12 +135,8 @@ fn validate_optional_non_empty(field_name: &str, value: Option<&str>) -> Result<
     Ok(())
 }
 
-fn validate_program_main_file(
-    main_path: &Path,
-    defines: &DefineSet,
-    warnings: &mut Vec<String>,
-) -> Result<(), String> {
-    let (unit, parse_warnings) = parse_compilation_unit_file(main_path, defines)?;
+fn validate_program_main_file(main_path: &Path, warnings: &mut Vec<String>) -> Result<(), String> {
+    let (unit, parse_warnings) = parse_compilation_unit_file(main_path)?;
     warnings.extend(parse_warnings);
 
     match unit {
@@ -168,14 +151,13 @@ fn validate_program_main_file(
 
 fn validate_project_source_units(
     source_files: Vec<PathBuf>,
-    defines: &DefineSet,
     warnings: &mut Vec<String>,
 ) -> Result<Vec<PathBuf>, String> {
     let mut validated = Vec::new();
     let mut seen_unit_names = HashMap::<String, PathBuf>::new();
 
     for source_path in source_files {
-        let (unit, parse_warnings) = parse_compilation_unit_file(&source_path, defines)?;
+        let (unit, parse_warnings) = parse_compilation_unit_file(&source_path)?;
         warnings.extend(parse_warnings);
 
         match unit {

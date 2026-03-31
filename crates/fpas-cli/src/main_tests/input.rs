@@ -95,51 +95,12 @@ fn resolve_cli_input_rejects_more_than_one_argument() {
 }
 
 #[test]
-fn resolve_cli_config_collects_short_define_flags() {
-    let cwd = create_temp_dir("define-short");
-    let config = resolve_cli_config(
-        &[
-            String::from("-DDEBUG"),
-            String::from("-D"),
-            String::from("TRACE"),
-            String::from("main.fpas"),
-        ],
-        &cwd,
-    )
-    .expect("define flags should parse");
+fn resolve_cli_config_rejects_define_style_flags() {
+    let cwd = create_temp_dir("no-define");
+    let result = resolve_cli_config(&[String::from("-DDEBUG"), String::from("main.fpas")], &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
-    assert_eq!(config.input, CliInput::SourceFile(cwd.join("main.fpas")));
-    assert!(config.defines.is_defined("debug"));
-    assert!(config.defines.is_defined("TRACE"));
-}
-
-#[test]
-fn resolve_cli_config_collects_long_define_flags() {
-    let cwd = create_temp_dir("define-long");
-    let config = resolve_cli_config(
-        &[
-            String::from("--define=RELEASE"),
-            String::from("--define"),
-            String::from("FEATURE_X"),
-            String::from("app.fpasprj"),
-        ],
-        &cwd,
-    )
-    .expect("long define flags should parse");
-    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
-
-    assert_eq!(config.input, CliInput::ProjectFile(cwd.join("app.fpasprj")));
-    assert!(config.defines.is_defined("release"));
-    assert!(config.defines.is_defined("feature_x"));
-}
-
-#[test]
-fn resolve_cli_config_rejects_empty_define_name() {
-    let cwd = create_temp_dir("define-empty");
-    let result = resolve_cli_config(&[String::from("--define"), String::from("   ")], &cwd);
-    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
-
-    let error = result.expect_err("empty define must fail");
-    assert!(error.contains("must not be empty"));
+    let error = result.expect_err("define flags are not supported");
+    assert!(error.contains("Unknown option"));
+    assert!(error.contains("-DDEBUG"));
 }

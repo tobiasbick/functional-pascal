@@ -222,17 +222,17 @@ mod tests {
     #[test]
     fn render_warning_uses_warning_label() {
         let diagnostic = Diagnostic::warning(
-            DiagnosticCode::new(13),
+            DiagnosticCode::new(5),
             DiagnosticStage::Lex,
-            "Unknown compiler directive `{$R+}`",
-            Some("This directive is ignored.".to_string()),
+            "Invalid character code in string literal",
+            Some("Use decimal digits after `#`, for example `#65` for 'A'.".to_string()),
             SourceSpan::new(0, 4, 3, 5),
         );
 
         let rendered = render("path/to/file.fpas", &diagnostic);
         assert_eq!(
             rendered,
-            "path/to/file.fpas:3:5: warning[F0013]: Unknown compiler directive `{$R+}`\n  help: This directive is ignored."
+            "path/to/file.fpas:3:5: warning[F0005]: Invalid character code in string literal\n  help: Use decimal digits after `#`, for example `#65` for 'A'."
         );
     }
 

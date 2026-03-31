@@ -10,6 +10,6 @@ mod loading;
 mod model;
 mod paths;
 
-pub use link::{build_program, build_program_with_defines};
-pub use loading::{load_project, load_project_with_defines};
+pub use link::build_program;
+pub use loading::load_project;
 pub use model::{LoadedProject, ProjectKind};

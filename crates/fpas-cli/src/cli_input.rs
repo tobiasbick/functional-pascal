@@ -1,8 +1,6 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use fpas_lexer::DefineSet;
-
 const SOURCE_FILE_EXTENSION: &str = "fpas";
 const PROJECT_FILE_EXTENSION: &str = "fpasprj";
 
@@ -15,7 +13,6 @@ pub(crate) enum CliInput {
 #[derive(Debug, Clone)]
 pub(crate) struct CliConfig {
     pub input: CliInput,
-    pub defines: DefineSet,
 }
 
 #[cfg(test)]
@@ -28,48 +25,20 @@ pub(crate) fn resolve_cli_input(args: &[String], cwd: &Path) -> Result<CliInput,
 }
 
 pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<CliConfig, String> {
-    let mut defines = DefineSet::new();
     let mut input = None::<String>;
     let mut index = 0;
 
     while index < args.len() {
         let arg = &args[index];
-        if arg == "-D" || arg == "--define" {
-            let Some(name) = args.get(index + 1) else {
-                return Err(
-                    "Missing name after `--define`.\n  help: Use `-D DEBUG` or `--define DEBUG`."
-                        .to_string(),
-                );
-            };
-            add_define(&mut defines, name)?;
-            index += 2;
-            continue;
-        }
-
-        if let Some(name) = arg.strip_prefix("--define=") {
-            add_define(&mut defines, name)?;
-            index += 1;
-            continue;
-        }
-
-        if let Some(name) = arg.strip_prefix("-D") {
-            if !name.is_empty() {
-                add_define(&mut defines, name)?;
-                index += 1;
-                continue;
-            }
-        }
 
         if arg.starts_with('-') {
             return Err(format!(
-                "Unknown option `{arg}`.\n  help: Use `-D NAME` / `--define NAME` or pass a `.fpas` / `.fpasprj` path."
+                "Unknown option `{arg}`.\n  help: Pass a `.fpas` or `.fpasprj` path."
             ));
         }
 
         if input.replace(arg.clone()).is_some() {
-            return Err(
-                "Usage: fpas [-D NAME | --define NAME]... [<file.fpas | file.fpasprj>]".to_string(),
-            );
+            return Err("Usage: fpas [<file.fpas | file.fpasprj>]".to_string());
         }
         index += 1;
     }
@@ -79,20 +48,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<CliConfi
         None => discover_project_file(cwd),
     }?;
 
-    Ok(CliConfig { input, defines })
-}
-
-fn add_define(defines: &mut DefineSet, raw_name: &str) -> Result<(), String> {
-    let name = raw_name.trim();
-    if name.is_empty() {
-        return Err(
-            "Conditional symbol names must not be empty.\n  help: Use `-D DEBUG` or `--define RELEASE`."
-                .to_string(),
-        );
-    }
-
-    defines.define(name);
-    Ok(())
+    Ok(CliConfig { input })
 }
 
 fn resolve_explicit_input(input: &str, cwd: &Path) -> Result<CliInput, String> {

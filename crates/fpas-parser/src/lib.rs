@@ -35,7 +35,7 @@ pub use ast::*;
 pub use error::ParseError;
 
 use fpas_diagnostics::Diagnostic;
-use fpas_lexer::{DefineSet, SpannedToken, lex, preprocess};
+use fpas_lexer::{SpannedToken, lex};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ParseDiagnostic {
@@ -52,44 +52,22 @@ impl ParseDiagnostic {
     }
 }
 
-/// Lex and preprocess `source` with the given defines into tokens and lexer diagnostics.
-fn tokenize(source: &str, defines: &DefineSet) -> (Vec<SpannedToken>, Vec<ParseDiagnostic>) {
+/// Lex `source` into tokens and lexer diagnostics.
+fn tokenize(source: &str) -> (Vec<SpannedToken>, Vec<ParseDiagnostic>) {
     let (tokens, lex_errors) = lex(source);
-    let (tokens, pre_errors) = preprocess(tokens, defines);
-    let errors = lex_errors
-        .into_iter()
-        .chain(pre_errors)
-        .map(ParseDiagnostic::Lexer)
-        .collect();
+    let errors = lex_errors.into_iter().map(ParseDiagnostic::Lexer).collect();
     (tokens, errors)
 }
 
 pub fn parse(source: &str) -> (Program, Vec<ParseDiagnostic>) {
-    parse_with_defines(source, &DefineSet::new())
-}
-
-/// Parses a full `program` source with the given set of pre-defined conditional
-/// symbols.
-///
-/// Use this variant when the caller needs to pass `{$DEFINE}` symbols from the
-/// outside (e.g., command-line `-D` flags).
-pub fn parse_with_defines(source: &str, defines: &DefineSet) -> (Program, Vec<ParseDiagnostic>) {
-    let (tokens, mut errors) = tokenize(source, defines);
+    let (tokens, mut errors) = tokenize(source);
     let (program, parse_errors) = parser::Parser::new(tokens).parse_program();
     errors.extend(parse_errors.into_iter().map(ParseDiagnostic::Parser));
     (program, errors)
 }
 
 pub fn parse_compilation_unit(source: &str) -> (CompilationUnit, Vec<ParseDiagnostic>) {
-    parse_compilation_unit_with_defines(source, &DefineSet::new())
-}
-
-/// Parses a compilation unit with pre-defined conditional symbols.
-pub fn parse_compilation_unit_with_defines(
-    source: &str,
-    defines: &DefineSet,
-) -> (CompilationUnit, Vec<ParseDiagnostic>) {
-    let (tokens, mut errors) = tokenize(source, defines);
+    let (tokens, mut errors) = tokenize(source);
     let (unit, parse_errors) = parser::Parser::new(tokens).parse_compilation_unit();
     errors.extend(parse_errors.into_iter().map(ParseDiagnostic::Parser));
     (unit, errors)

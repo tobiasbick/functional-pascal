@@ -1,4 +1,4 @@
-use super::toks;
+use super::{lex_with_errors, toks};
 use crate::Token;
 
 // ── Brace Comments ──────────────────────────────────────────────
@@ -19,13 +19,11 @@ fn brace_comment_multi_line() {
 }
 
 #[test]
-fn brace_compiler_directive_emits_directive_token() {
-    // {$...} is now a compiler directive token, not a comment.
-    // The preprocessor (tested separately) removes it from the token stream.
-    assert_eq!(
-        toks("{$ifdef TEST} 42"),
-        vec![Token::Directive("ifdef TEST".into()), Token::Integer(42)]
-    );
+fn brace_compiler_directive_is_lex_error_not_comment() {
+    // `{$...}` is not a comment; the lexer reports an error and skips the sequence.
+    let (tokens, errors) = lex_with_errors("{$ifdef TEST} 42");
+    assert_eq!(tokens, vec![Token::Integer(42)]);
+    assert_eq!(errors.len(), 1);
 }
 
 #[test]

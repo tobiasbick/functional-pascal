@@ -1,12 +1,11 @@
 use fpas_diagnostics::{Diagnostic, DiagnosticSeverity};
-use fpas_lexer::{DefineSet, lex, preprocess_in_project};
+use fpas_lexer::lex;
 use fpas_parser::{CompilationUnit, QualifiedId, parse_tokens_compilation_unit};
 use std::fs;
 use std::path::Path;
 
 pub(super) fn parse_compilation_unit_file(
     path: &Path,
-    defines: &DefineSet,
 ) -> Result<(CompilationUnit, Vec<String>), String> {
     let source_text = fs::read_to_string(path).map_err(|e| {
         format!(
@@ -16,11 +15,9 @@ pub(super) fn parse_compilation_unit_file(
     })?;
 
     let (tokens, lex_errors) = lex(&source_text);
-    let (tokens, pre_errors) = preprocess_in_project(tokens, defines, path)?;
     let (unit, parse_errors) = parse_tokens_compilation_unit(tokens);
 
     let mut diagnostics: Vec<Diagnostic> = lex_errors;
-    diagnostics.extend(pre_errors);
     diagnostics.extend(
         parse_errors
             .into_iter()

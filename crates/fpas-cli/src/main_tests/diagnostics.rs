@@ -66,15 +66,15 @@ fn cli_renders_runtime_stage_output() {
 }
 
 #[test]
-fn cli_renders_warning_diagnostic_and_continues() {
-    let source = "program WarnOnly;\n{$R+}\nbegin\nend.\n";
+fn cli_reports_compiler_directive_syntax_as_lex_error() {
+    let source = "program Fail;\n{$R+}\nbegin\nend.\n";
     let (exit_code, stdout_output, stderr_output) =
-        support::run_source_and_capture_output("warn.fpas", source);
+        support::run_source_and_capture_output("directive.fpas", source);
 
-    assert_eq!(exit_code, 0);
+    assert_eq!(exit_code, 1);
     assert!(stdout_output.is_empty());
     assert_eq!(
         stderr_output,
-        "warn.fpas:2:1: warning[F0013]: Unknown compiler directive `{$R+}`\n  help: Supported directives: DEFINE, UNDEF, IFDEF, IFNDEF, ELSE, ENDIF, INCLUDE (project mode only).  Compiler switches such as `{$R+}` are accepted but have no effect.\n"
+        "directive.fpas:2:1: error[F0010]: `{$...}` is not valid source syntax\n  help: Remove this sequence. Put shared declarations in another `.fpas` file and import the unit with `uses`.\n"
     );
 }

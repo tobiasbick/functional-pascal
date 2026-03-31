@@ -1,23 +1,25 @@
 # Remove: Compiler Directives
 
-> Priority: 2 — isolated preprocessor stage, no downstream features depend on it.
+**Status: done** (implemented).
 
-## What to remove
+## What was removed
 
 - The entire preprocessor layer.
 - Directives: `{$DEFINE}`, `{$UNDEF}`, `{$IFDEF}`, `{$IFNDEF}`, `{$ELSE}`,
   `{$ENDIF}`, `{$I}`, `{$INCLUDE}`.
 - The `fpas-lexer/src/preprocessor/` module.
+- CLI flags `-D` / `--define` (conditional symbols).
+- Language doc chapter `docs/pascal/12-compiler-directives.md`.
 
-## Current state
+## Rationale
 
 No example uses compiler directives. Conditional compilation is not needed
-for a single-platform TUI language.
+for a single-platform TUI language. Shared source is expressed with units and
+`uses` in multi-file projects.
 
-## Scope
+## Implementation notes
 
-- **Lexer:** remove `preprocessor/` module and directive token handling.
-  `{$...}` becomes a lexer error ("unknown syntax").
-- **Grammar (EBNF):** remove `directive` and `directive_content` productions.
-- **Docs:** remove `12-compiler-directives.md`. Remove directive mention from
-  `01-overview.md` and any cross-references.
+- **Lexer:** `{$...}` is scanned and rejected with a lexer error; no directive token.
+- **Parser / project:** lex only — no post-lex preprocessor pass.
+- **Grammar (EBNF):** `docs/specs/grammar.ebnf` — directive productions removed; note under brace comments.
+- **Diagnostics:** `LEX_COMPILER_DIRECTIVE_NOT_SUPPORTED` (F0010); former F0011–F0014 removed.

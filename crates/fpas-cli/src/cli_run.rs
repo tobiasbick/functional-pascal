@@ -4,7 +4,6 @@ use std::path::Path;
 
 use crate::{CliInput, resolve_cli_config};
 use fpas_diagnostics::DiagnosticSeverity;
-use fpas_lexer::DefineSet;
 use fpas_project as project;
 
 pub(crate) fn run_cli(
@@ -22,17 +21,12 @@ pub(crate) fn run_cli(
     };
 
     match config.input {
-        CliInput::SourceFile(path) => run_source_file(&path, &config.defines, stdout, stderr),
-        CliInput::ProjectFile(path) => run_project_file(&path, &config.defines, stdout, stderr),
+        CliInput::SourceFile(path) => run_source_file(&path, stdout, stderr),
+        CliInput::ProjectFile(path) => run_project_file(&path, stdout, stderr),
     }
 }
 
-fn run_source_file(
-    path: &Path,
-    defines: &DefineSet,
-    stdout: Box<dyn Write + Send>,
-    stderr: &mut dyn Write,
-) -> i32 {
+fn run_source_file(path: &Path, stdout: Box<dyn Write + Send>, stderr: &mut dyn Write) -> i32 {
     let source = match fs::read_to_string(path) {
         Ok(source) => source,
         Err(error) => {
@@ -42,16 +36,11 @@ fn run_source_file(
     };
 
     let path_text = path.to_string_lossy();
-    run_source_with_defines(path_text.as_ref(), &source, defines, stdout, stderr)
+    run_source_impl(path_text.as_ref(), &source, stdout, stderr)
 }
 
-fn run_project_file(
-    path: &Path,
-    defines: &DefineSet,
-    stdout: Box<dyn Write + Send>,
-    stderr: &mut dyn Write,
-) -> i32 {
-    let loaded = match project::load_project_with_defines(path, defines) {
+fn run_project_file(path: &Path, stdout: Box<dyn Write + Send>, stderr: &mut dyn Write) -> i32 {
+    let loaded = match project::load_project(path) {
         Ok(loaded) => loaded,
         Err(message) => {
             let _ = writeln!(stderr, "{message}");
@@ -72,14 +61,13 @@ fn run_project_file(
                 );
                 return 1;
             };
-            let merged_program =
-                match project::build_program_with_defines(&main, &loaded.source_files, defines) {
-                    Ok(program) => program,
-                    Err(message) => {
-                        let _ = writeln!(stderr, "{message}");
-                        return 1;
-                    }
-                };
+            let merged_program = match project::build_program(&main, &loaded.source_files) {
+                Ok(program) => program,
+                Err(message) => {
+                    let _ = writeln!(stderr, "{message}");
+                    return 1;
+                }
+            };
 
             let main_path = main.to_string_lossy();
             run_compiled_program(main_path.as_ref(), &merged_program, stdout, stderr)
@@ -94,24 +82,13 @@ fn run_project_file(
     }
 }
 
-#[cfg(test)]
-pub(crate) fn run_source(
+fn run_source_impl(
     path: &str,
     source: &str,
     stdout: Box<dyn Write + Send>,
     stderr: &mut dyn Write,
 ) -> i32 {
-    run_source_with_defines(path, source, &DefineSet::new(), stdout, stderr)
-}
-
-fn run_source_with_defines(
-    path: &str,
-    source: &str,
-    defines: &DefineSet,
-    stdout: Box<dyn Write + Send>,
-    stderr: &mut dyn Write,
-) -> i32 {
-    let (program, parse_errors) = fpas_parser::parse_with_defines(source, defines);
+    let (program, parse_errors) = fpas_parser::parse(source);
     let has_errors = parse_errors
         .iter()
         .any(|diagnostic| diagnostic.as_diagnostic().severity == DiagnosticSeverity::Error);
@@ -127,6 +104,16 @@ fn run_source_with_defines(
     }
 
     run_compiled_program(path, &program, stdout, stderr)
+}
+
+#[cfg(test)]
+pub(crate) fn run_source(
+    path: &str,
+    source: &str,
+    stdout: Box<dyn Write + Send>,
+    stderr: &mut dyn Write,
+) -> i32 {
+    run_source_impl(path, source, stdout, stderr)
 }
 
 fn run_compiled_program(

@@ -127,7 +127,7 @@ end.
 
 ## Mutual recursion
 
-There is no `forward` keyword. Declare callees before callers when only one direction of call is needed. For mutual recursion, nest the helper in the outer routine so both names are in scope when bodies are checked:
+Declare callees before callers when only one direction of call is needed. For mutual recursion, nest the helper in the outer routine so both names are in scope when bodies are checked:
 
 ```pascal
 function IsEven(N: integer): boolean;

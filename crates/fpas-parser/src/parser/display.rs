@@ -90,6 +90,5 @@ pub(super) fn token_display(t: &Token) -> Cow<'static, str> {
         Token::Less => "<".into(),
         Token::Greater => ">".into(),
         Token::Eof => "end of file".into(),
-        Token::Directive(d) => format!("{{${d}}}").into(),
     }
 }

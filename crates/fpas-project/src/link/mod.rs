@@ -11,7 +11,6 @@ use parse::{parse_program_file, parse_unit_files};
 use rewrite::{NameRewriter, rename_top_level_decls};
 use support::{collect_std_uses, internal_link_error, internal_symbol_error, merge_std_uses};
 
-use fpas_lexer::DefineSet;
 use fpas_parser::{Decl, Program, Unit};
 use std::path::{Path, PathBuf};
 
@@ -26,19 +25,8 @@ struct UnitFile {
 /// unit members, and rewrites user-unit symbols into fully qualified names as
 /// described in `docs/pascal/09-units.md`.
 pub fn build_program(main_path: &Path, source_files: &[PathBuf]) -> Result<Program, String> {
-    build_program_with_defines(main_path, source_files, &DefineSet::new())
-}
-
-/// Build a linked `Program` with predefined conditional symbols.
-///
-/// **Documentation:** `docs/pascal/12-compiler-directives.md`
-pub fn build_program_with_defines(
-    main_path: &Path,
-    source_files: &[PathBuf],
-    defines: &DefineSet,
-) -> Result<Program, String> {
-    let mut main_program = parse_program_file(main_path, defines)?;
-    let units = parse_unit_files(source_files, defines)?;
+    let mut main_program = parse_program_file(main_path)?;
+    let units = parse_unit_files(source_files)?;
 
     let reachable_unit_keys = resolve_reachable_units(&main_program.uses, &units)?;
     let unit_order = topo_sort_units(&reachable_unit_keys, &units)?;

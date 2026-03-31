@@ -6,7 +6,7 @@
 //!    inside that range.
 //! 3. Add the new constant to `allocated_codes_are_unique` below.
 //!    The test rejects accidental code reuse across the full catalog.
-//! 4. Re-run `cargo test --workspace` and update `docs/plans/diagnostics/02-code-catalog.md`.
+//! 4. Re-run `cargo test --workspace` and update any diagnostic catalog docs under `docs/` if they exist.
 
 use crate::DiagnosticCode;
 
@@ -20,16 +20,8 @@ pub const LEX_INTEGER_LITERAL_OVERFLOW: DiagnosticCode = DiagnosticCode::new(7);
 pub const LEX_REAL_LITERAL_OVERFLOW: DiagnosticCode = DiagnosticCode::new(8);
 pub const LEX_INVALID_NUMERIC_EXPONENT: DiagnosticCode = DiagnosticCode::new(9);
 
-/// Compiler directive: `{$ELSE}` or `{$ENDIF}` without a matching `{$IFDEF}` or `{$IFNDEF}`.
-pub const LEX_DIRECTIVE_ELSE_WITHOUT_IFDEF: DiagnosticCode = DiagnosticCode::new(10);
-/// Compiler directive: `{$ENDIF}` without a matching `{$IFDEF}` or `{$IFNDEF}`.
-pub const LEX_DIRECTIVE_ENDIF_WITHOUT_IFDEF: DiagnosticCode = DiagnosticCode::new(11);
-/// Compiler directive: unclosed `{$IFDEF}` or `{$IFNDEF}` at end of file.
-pub const LEX_DIRECTIVE_UNCLOSED_IFDEF: DiagnosticCode = DiagnosticCode::new(12);
-/// Compiler directive with an unrecognized name — silently ignored at present.
-pub const LEX_DIRECTIVE_UNKNOWN: DiagnosticCode = DiagnosticCode::new(13);
-/// `{$I filename}` / `{$INCLUDE filename}` is not supported in single-file mode.
-pub const LEX_DIRECTIVE_INCLUDE_UNSUPPORTED: DiagnosticCode = DiagnosticCode::new(14);
+/// Lexer: `{$...}` is invalid source syntax.
+pub const LEX_COMPILER_DIRECTIVE_NOT_SUPPORTED: DiagnosticCode = DiagnosticCode::new(10);
 
 pub const PARSE_EXPECTED_TOKEN: DiagnosticCode = DiagnosticCode::new(1001);
 pub const PARSE_EXPECTED_IDENTIFIER: DiagnosticCode = DiagnosticCode::new(1002);
@@ -108,11 +100,7 @@ mod tests {
             LEX_INTEGER_LITERAL_OVERFLOW,
             LEX_REAL_LITERAL_OVERFLOW,
             LEX_INVALID_NUMERIC_EXPONENT,
-            LEX_DIRECTIVE_ELSE_WITHOUT_IFDEF,
-            LEX_DIRECTIVE_ENDIF_WITHOUT_IFDEF,
-            LEX_DIRECTIVE_UNCLOSED_IFDEF,
-            LEX_DIRECTIVE_UNKNOWN,
-            LEX_DIRECTIVE_INCLUDE_UNSUPPORTED,
+            LEX_COMPILER_DIRECTIVE_NOT_SUPPORTED,
             PARSE_EXPECTED_TOKEN,
             PARSE_EXPECTED_IDENTIFIER,
             PARSE_INVALID_STATEMENT_START,

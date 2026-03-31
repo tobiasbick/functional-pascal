@@ -1,33 +1,32 @@
-//! Lexer support for scanning `{$...}` compiler directives into [`Token::Directive`].
+//! Lexer handling for a `{` immediately followed by `$`: the sequence is rejected.
 //!
-//! **Documentation:** `docs/pascal/12-compiler-directives.md`
+//! **Documentation:** `docs/pascal/10-projects.md` (multi-file projects and `uses`)
 
 use super::Lexer;
-use crate::Token;
-use fpas_diagnostics::codes::LEX_UNTERMINATED_BRACE_COMMENT;
+use fpas_diagnostics::codes::{
+    LEX_COMPILER_DIRECTIVE_NOT_SUPPORTED, LEX_UNTERMINATED_BRACE_COMMENT,
+};
 
 impl Lexer<'_> {
-    /// Scans a compiler directive of the form `{$content}` and emits
-    /// [`Token::Directive`] containing the trimmed content after the `$`.
+    /// Scans `{$...}` through the closing `}` and reports a lexer error (no token is emitted).
     ///
-    /// On an unterminated directive (no closing `}`) an error is pushed instead.
+    /// On an unterminated sequence (no closing `}` before EOF) an unterminated-brace error is pushed.
     pub(super) fn scan_directive(&mut self) {
         let (so, sl, sc) = self.span_here();
         self.advance(); // consume '{'
         self.advance(); // consume '$'
 
-        let start = self.pos;
         while !self.at_end() {
             if self.current() == b'}' {
-                let raw = &self.src[start..self.pos];
-                // SAFETY: `self.src` is a byte view of a `&str`; any contiguous
-                // slice of it is valid UTF-8.
-                let content: Box<str> = std::str::from_utf8(raw)
-                    .expect("directive content is valid UTF-8: lexer source comes from &str")
-                    .trim()
-                    .into();
                 self.advance(); // consume '}'
-                self.push_tok(Token::Directive(content), so, sl, sc);
+                self.push_err(
+                    LEX_COMPILER_DIRECTIVE_NOT_SUPPORTED,
+                    "`{$...}` is not valid source syntax",
+                    "Remove this sequence. Put shared declarations in another `.fpas` file and import the unit with `uses`.",
+                    so,
+                    sl,
+                    sc,
+                );
                 return;
             }
             self.advance();
@@ -35,8 +34,8 @@ impl Lexer<'_> {
 
         self.push_err(
             LEX_UNTERMINATED_BRACE_COMMENT,
-            "Unterminated compiler directive starting with `{$`",
-            "Add a closing `}` before end of file. Example: `{$IFDEF DEBUG}` … `{$ENDIF}`.",
+            "Unterminated `{$...}` sequence starting with `{$`",
+            "Add a closing `}` before end of file, or use a brace comment `{ ... }` without `$` after `{`.",
             so,
             sl,
             sc,

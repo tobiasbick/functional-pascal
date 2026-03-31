@@ -66,23 +66,8 @@ line_comment    = '//' { (* any char except newline *) } newline ;
 
 (* Comments do NOT nest.                                            *)
 (* { outer { inner } ← first } closes the comment.                 *)
-
-(* ---- Compiler Directives (preprocessed before parsing) --------- *)
-
-directive       = '{$' directive_content '}' ;
-directive_content = (* any characters except '}', trimmed *) ;
-
-(* The preprocessor interprets directive_content case-insensitively. *)
-(* Supported keywords:                                               *)
-(*   DEFINE name          — introduce a conditional symbol           *)
-(*   UNDEF  name          — remove a conditional symbol              *)
-(*   IFDEF  name          — start block, active if name is defined   *)
-(*   IFNDEF name          — start block, active if name is undefined *)
-(*   ELSE                 — toggle current conditional block         *)
-(*   ENDIF                — close current conditional block          *)
-(*   I filename           — include file (project mode only)         *)
-(*   INCLUDE filename     — same as I                                *)
-(* Unknown directive keywords emit a diagnostic but are ignored.    *)
+(* A `{` immediately followed by `$` is not a comment: the lexer    *)
+(* reports an error for that sequence. *)
 
 (* ---- Keywords (62, case-insensitive) --------------------------- *)
 

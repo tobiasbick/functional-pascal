@@ -38,7 +38,6 @@ impl Checker {
                 self.check_args_only(args);
             }
             None => {
-                // Try method call dispatch.
                 if self.try_check_method_call_stmt(designator, args, span) {
                     return;
                 }
@@ -64,7 +63,7 @@ impl Checker {
         }
     }
 
-    /// Try to resolve a call statement as a record method call.
+    /// Try to resolve a call statement as a record or interface method call.
     fn try_check_method_call_stmt(
         &mut self,
         designator: &Designator,
@@ -87,6 +86,28 @@ impl Checker {
 
         let receiver_ty = self.check_designator_expr(&receiver_designator);
         let resolved_receiver_ty = self.resolve_visible_type(&receiver_ty);
+
+        // Interface receiver — virtual dispatch.
+        if let Ty::Interface(iface) = &resolved_receiver_ty {
+            let Some(method_kind) = iface
+                .methods
+                .iter()
+                .find(|(n, _)| n.eq_ignore_ascii_case(&method_name))
+                .map(|(_, mk)| mk.clone())
+            else {
+                return false;
+            };
+
+            let key = Self::designator_key(designator);
+            let qualified = format!("{}.{}", iface.name, method_name);
+            self.method_calls.insert(key, qualified);
+            self.interface_dispatch.insert(key, method_name.clone());
+
+            self.check_stmt_method_kind(&method_name, &method_kind, args, span);
+            return true;
+        }
+
+        // Record (concrete) receiver — static dispatch.
         let record_ty = match &resolved_receiver_ty {
             Ty::Record(record_ty) => record_ty.clone(),
             Ty::Ref(inner) => {
@@ -99,122 +120,67 @@ impl Checker {
             _ => return false,
         };
 
-        let method = record_ty
-            .methods
-            .iter()
-            .find(|(name, _)| name == &method_name);
-
-        // Fallback: look up TypeName.MethodName in scope (handles Self inside method bodies
-        // where the record type doesn't yet have methods populated).
         let qualified = format!("{}.{}", record_ty.name, method_name);
-        let method_kind = if let Some((_, mk)) = method {
-            mk.clone()
-        } else if let Some(sym) = self.scopes.lookup(&qualified) {
-            match &sym.ty {
-                Ty::Function(f) => MethodKind::Function(f.clone()),
-                Ty::Procedure(p) => MethodKind::Procedure(p.clone()),
-                _ => return false,
-            }
-        } else {
+        let method_kind = self.resolve_method_kind(&record_ty, &method_name, &qualified);
+        let Some(method_kind) = method_kind else {
             return false;
         };
 
-        // Record for the compiler that this call is a method invocation.
-        let key = std::ptr::from_ref(designator) as usize;
-        self.method_calls.insert(key, qualified.clone());
+        self.method_calls
+            .insert(Self::designator_key(designator), qualified.clone());
 
-        match &method_kind {
+        self.check_stmt_method_kind(&qualified, &method_kind, args, span);
+        true
+    }
+
+    fn check_stmt_method_kind(
+        &mut self,
+        qualified: &str,
+        method_kind: &MethodKind,
+        args: &[Expr],
+        span: Span,
+    ) {
+        match method_kind {
             MethodKind::Procedure(proc_ty) => {
-                // Check visible params (excluding Self).
                 let Some(visible_params) = proc_ty.params.get(1..) else {
                     self.error_with_code(
-                        fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
-                        format!(
-                            "Record method `{qualified}` must declare `Self` as its first parameter"
-                        ),
+                        SEMA_TYPE_MISMATCH,
+                        format!("Method `{qualified}` must declare `Self` as its first parameter"),
                         "Declare the method as `procedure Name(Self: RecordType; ...)`.",
                         span,
                     );
-                    return true;
+                    return;
                 };
-                if visible_params.len() != args.len() {
-                    self.error_with_code(
-                        fpas_diagnostics::codes::SEMA_WRONG_ARGUMENT_COUNT,
-                        format!(
-                            "Method `{qualified}` expects {} arguments, got {}",
-                            visible_params.len(),
-                            args.len()
-                        ),
-                        "Check the number of arguments (Self is implicit).",
-                        span,
-                    );
-                }
-                let mut arg_types = Vec::with_capacity(args.len());
-                for (i, arg) in args.iter().enumerate() {
-                    let arg_ty = self.check_expr(arg);
-                    if let Some(param) = visible_params.get(i) {
-                        self.check_type_compat(
-                            &param.ty,
-                            &arg_ty,
-                            &format!("argument {}", i + 1),
-                            span,
-                        );
-                    }
-                    arg_types.push(arg_ty);
-                }
-                self.validate_routine_constraints(
+                self.check_method_call_args(
+                    qualified,
                     &proc_ty.type_params,
                     visible_params,
-                    &arg_types,
+                    args,
                     span,
                 );
             }
             MethodKind::Function(func_ty) => {
                 let Some(visible_params) = func_ty.params.get(1..) else {
                     self.error_with_code(
-                        fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
-                        format!(
-                            "Record method `{qualified}` must declare `Self` as its first parameter"
-                        ),
+                        SEMA_TYPE_MISMATCH,
+                        format!("Method `{qualified}` must declare `Self` as its first parameter"),
                         "Declare the method as `function Name(Self: RecordType; ...)`.",
                         span,
                     );
-                    return true;
+                    return;
                 };
-                if visible_params.len() != args.len() {
-                    self.error_with_code(
-                        fpas_diagnostics::codes::SEMA_WRONG_ARGUMENT_COUNT,
-                        format!(
-                            "Method `{qualified}` expects {} arguments, got {}",
-                            visible_params.len(),
-                            args.len()
-                        ),
-                        "Check the number of arguments (Self is implicit).",
-                        span,
-                    );
-                }
-                let mut arg_types = Vec::with_capacity(args.len());
-                for (i, arg) in args.iter().enumerate() {
-                    let arg_ty = self.check_expr(arg);
-                    if let Some(param) = visible_params.get(i) {
-                        self.check_type_compat(
-                            &param.ty,
-                            &arg_ty,
-                            &format!("argument {}", i + 1),
-                            span,
-                        );
-                    }
-                    arg_types.push(arg_ty);
-                }
-                self.validate_routine_constraints(
+                self.check_method_call_args(
+                    qualified,
                     &func_ty.type_params,
                     visible_params,
-                    &arg_types,
+                    args,
                     span,
                 );
             }
         }
+    }
 
-        true
+    fn designator_key(designator: &Designator) -> usize {
+        std::ptr::from_ref(designator) as usize
     }
 }

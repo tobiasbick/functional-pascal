@@ -125,7 +125,7 @@ impl Checker {
                                         self.error_with_code(
                                             SEMA_TYPE_MISMATCH,
                                             format!(
-                                                "Dict key type mismatch: expected `{key_ty:?}`, got `{index_ty:?}`"
+                                                "Dict key type mismatch: expected `{key_ty}`, got `{index_ty}`"
                                             ),
                                             "Use a key matching the dict's key type.",
                                             super::super::spans::expr_span(index_expr),

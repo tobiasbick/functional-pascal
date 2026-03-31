@@ -16,7 +16,7 @@ impl Checker {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
                         format!(
-                            "Function `{}` must return a value of type `{:?}`",
+                            "Function `{}` must return a value of type `{}`",
                             function_ctx.name, expected
                         ),
                         "Add a return expression: return <expr>",

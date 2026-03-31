@@ -85,14 +85,14 @@ pub enum Ty {
     Function(FunctionTy),
     Procedure(ProcedureTy),
     /// A named type not yet resolved or unknown.
-    Named(std::string::String),
+    Named(String),
     /// `Result of T, E`.
     Result(Box<Ty>, Box<Ty>),
     /// `Option of T`.
     Option(Box<Ty>),
     /// A generic type parameter (e.g. `T` in `function Identity<T>`),
     /// optionally carrying its constraint for operator checking inside generic bodies.
-    GenericParam(std::string::String, Option<TypeConstraint>),
+    GenericParam(String, Option<TypeConstraint>),
     /// `channel of T` — typed channel for concurrent communication.
     ///
     /// **Documentation:** `docs/pascal/08-concurrency.md`
@@ -115,15 +115,15 @@ pub enum Ty {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RecordTy {
-    pub name: std::string::String,
+    pub name: String,
     /// Generic type parameters declared on this record.
     pub type_params: Vec<GenericParamDef>,
-    pub fields: Vec<(std::string::String, Ty)>,
-    pub methods: Vec<(std::string::String, MethodKind)>,
+    pub fields: Vec<(String, Ty)>,
+    pub methods: Vec<(String, MethodKind)>,
     /// Names of interfaces this record explicitly implements.
     ///
     /// **Documentation:** `docs/pascal/05-types.md` (Interfaces)
-    pub implements: Vec<std::string::String>,
+    pub implements: Vec<String>,
 }
 
 /// Whether a record method is a function (returns a value) or a procedure.
@@ -136,7 +136,7 @@ pub enum MethodKind {
 /// **Documentation:** `docs/pascal/05-types.md`
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumTy {
-    pub name: std::string::String,
+    pub name: String,
     /// Generic type parameters declared on this enum.
     pub type_params: Vec<GenericParamDef>,
     pub variants: Vec<EnumVariantTy>,
@@ -168,13 +168,13 @@ impl EnumTy {
 /// **Documentation:** `docs/pascal/05-types.md` (Interfaces)
 #[derive(Debug, Clone, PartialEq)]
 pub struct InterfaceTy {
-    pub name: std::string::String,
+    pub name: String,
     /// Generic type parameters declared on this interface.
     pub type_params: Vec<GenericParamDef>,
     /// Method signatures declared on this interface (and inherited from `extends`).
-    pub methods: Vec<(std::string::String, MethodKind)>,
+    pub methods: Vec<(String, MethodKind)>,
     /// Optional parent interface name (single inheritance via `extends`).
-    pub extends: Option<std::string::String>,
+    pub extends: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -197,6 +197,52 @@ pub struct ParamTy {
     pub mutable: bool,
     pub name: String,
     pub ty: Ty,
+}
+
+impl std::fmt::Display for Ty {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Ty::Integer => write!(f, "integer"),
+            Ty::Real => write!(f, "real"),
+            Ty::Boolean => write!(f, "boolean"),
+            Ty::Char => write!(f, "char"),
+            Ty::String => write!(f, "string"),
+            Ty::Unit => write!(f, "unit"),
+            Ty::Array(inner) => write!(f, "array of {inner}"),
+            Ty::Ref(inner) => write!(f, "ref {inner}"),
+            Ty::Record(r) => write!(f, "{}", r.name),
+            Ty::Enum(e) => write!(f, "{}", e.name),
+            Ty::Function(ft) => {
+                write!(f, "function(")?;
+                for (i, p) in ft.params.iter().enumerate() {
+                    if i > 0 {
+                        write!(f, "; ")?;
+                    }
+                    write!(f, "{}: {}", p.name, p.ty)?;
+                }
+                write!(f, "): {}", ft.return_type)
+            }
+            Ty::Procedure(pt) => {
+                write!(f, "procedure(")?;
+                for (i, p) in pt.params.iter().enumerate() {
+                    if i > 0 {
+                        write!(f, "; ")?;
+                    }
+                    write!(f, "{}: {}", p.name, p.ty)?;
+                }
+                write!(f, ")")
+            }
+            Ty::Named(n) => write!(f, "{n}"),
+            Ty::Result(ok, err) => write!(f, "Result of {ok}, {err}"),
+            Ty::Option(inner) => write!(f, "Option of {inner}"),
+            Ty::GenericParam(name, _) => write!(f, "{name}"),
+            Ty::Channel(inner) => write!(f, "channel of {inner}"),
+            Ty::Dict(k, v) => write!(f, "dict of {k} to {v}"),
+            Ty::Task(inner) => write!(f, "task of {inner}"),
+            Ty::Interface(i) => write!(f, "{}", i.name),
+            Ty::Error => write!(f, "<error>"),
+        }
+    }
 }
 
 impl Ty {

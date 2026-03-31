@@ -4,6 +4,28 @@ use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
 use fpas_lexer::Span;
 use fpas_parser::{BinaryOp, Expr, UnaryOp};
 
+fn binary_op_symbol(op: BinaryOp) -> &'static str {
+    match op {
+        BinaryOp::Add => "+",
+        BinaryOp::Sub => "-",
+        BinaryOp::Mul => "*",
+        BinaryOp::RealDiv => "/",
+        BinaryOp::IntDiv => "div",
+        BinaryOp::Mod => "mod",
+        BinaryOp::And => "and",
+        BinaryOp::Or => "or",
+        BinaryOp::Xor => "xor",
+        BinaryOp::Shl => "shl",
+        BinaryOp::Shr => "shr",
+        BinaryOp::Eq => "=",
+        BinaryOp::NotEq => "<>",
+        BinaryOp::Lt => "<",
+        BinaryOp::Gt => ">",
+        BinaryOp::LtEq => "<=",
+        BinaryOp::GtEq => ">=",
+    }
+}
+
 impl Checker {
     pub(super) fn check_unary_expr(&mut self, op: UnaryOp, operand: &Expr, span: Span) -> Ty {
         let operand_ty = self.check_expr(operand);
@@ -76,7 +98,7 @@ impl Checker {
                 } else {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
-                        format!("Operator `{op:?}` requires numeric operands"),
+                        format!("Operator `{}` requires numeric operands", binary_op_symbol(op)),
                         "Both sides must be integer or real, or a generic type with Numeric constraint.",
                         span,
                     );
@@ -90,7 +112,10 @@ impl Checker {
                 } else {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
-                        format!("Operator `{op:?}` requires integer operands"),
+                        format!(
+                            "Operator `{}` requires integer operands",
+                            binary_op_symbol(op)
+                        ),
                         "Both sides must be integer.",
                         span,
                     );
@@ -106,7 +131,10 @@ impl Checker {
                 } else {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
-                        format!("Operator `{op:?}` requires boolean or integer operands"),
+                        format!(
+                            "Operator `{}` requires boolean or integer operands",
+                            binary_op_symbol(op)
+                        ),
                         "Both sides must be the same type (boolean or integer).",
                         span,
                     );
@@ -127,11 +155,8 @@ impl Checker {
             }
 
             BinaryOp::Lt | BinaryOp::Gt | BinaryOp::LtEq | BinaryOp::GtEq => {
-                if left.is_comparable() && right.is_comparable() && left.compatible_with(right) {
-                    Ty::Boolean
-                } else if (left.is_ordinal() && right.is_ordinal() && left.compatible_with(right))
+                if (left.is_comparable() && right.is_comparable() && left.compatible_with(right))
                     || (left.is_numeric() && right.is_numeric())
-                    || (*left == Ty::String && *right == Ty::String)
                 {
                     Ty::Boolean
                 } else {

@@ -485,11 +485,11 @@ impl Checker {
         for (i, (ip, rp)) in iface_params.iter().zip(rec_params.iter()).enumerate() {
             if !ip.ty.compatible_with(&rp.ty) {
                 self.error_with_code(
-                    SEMA_TYPE_MISMATCH,
-                    format!(
-                        "`{record_name}.{method_name}` parameter {} type mismatch: interface expects `{:?}`, record has `{:?}`",
-                        i + 1, ip.ty, rp.ty
-                    ),
+                        SEMA_TYPE_MISMATCH,
+                        format!(
+                            "`{record_name}.{method_name}` parameter {} type mismatch: interface expects `{}`, record has `{}`",
+                            i + 1, ip.ty, rp.ty
+                        ),
                     "Change the parameter type to match the interface declaration.",
                     span,
                 );
@@ -499,10 +499,10 @@ impl Checker {
         match (iface_ret, rec_ret) {
             (Some(ir), Some(rr)) if !ir.compatible_with(rr) => {
                 self.error_with_code(
-                    SEMA_TYPE_MISMATCH,
-                    format!(
-                        "`{record_name}.{method_name}` return type mismatch: interface expects `{ir:?}`, record has `{rr:?}`"
-                    ),
+                        SEMA_TYPE_MISMATCH,
+                        format!(
+                            "`{record_name}.{method_name}` return type mismatch: interface expects `{ir}`, record has `{rr}`"
+                        ),
                     "Change the return type to match the interface declaration.",
                     span,
                 );

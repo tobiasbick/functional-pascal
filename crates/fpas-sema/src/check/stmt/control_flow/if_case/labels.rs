@@ -160,7 +160,7 @@ impl Checker {
             let Some(enum_ty) = self.resolve_enum_ty(expected_ty) else {
                 self.error_with_code(
                     SEMA_TYPE_MISMATCH,
-                    format!("Nested enum pattern expects an enum field, found `{expected_ty:?}`"),
+                    format!("Nested enum pattern expects an enum field, found `{expected_ty}`"),
                     "Use `_`, a binding name, or a literal when the field is not an enum.",
                     designator.span,
                 );
@@ -257,7 +257,10 @@ impl Checker {
         };
         self.error_with_code(
             SEMA_TYPE_MISMATCH,
-            format!("Pattern `{variant:?}` does not match case expression type `{case_ty:?}`"),
+            format!(
+                "Pattern `{}` does not match case expression type `{case_ty}`",
+                destructure_variant_name(&variant),
+            ),
             hint,
             span,
         );
@@ -275,6 +278,15 @@ impl Checker {
             }
             _ => None,
         }
+    }
+}
+
+fn destructure_variant_name(variant: &DestructureVariant) -> &'static str {
+    match variant {
+        DestructureVariant::Ok => "Ok",
+        DestructureVariant::Error => "Error",
+        DestructureVariant::Some => "Some",
+        DestructureVariant::None => "None",
     }
 }
 

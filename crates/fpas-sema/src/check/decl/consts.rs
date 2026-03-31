@@ -83,11 +83,10 @@ impl Checker {
                 .iter()
                 .all(|field| self.const_expr_is_compile_time_known(&field.value)),
             Expr::New { .. } => false,
-            Expr::ResultOk(inner, _)
-            | Expr::ResultError(inner, _)
-            | Expr::OptionSome(inner, _)
-            | Expr::Try(inner, _)
-            | Expr::Go(inner, _) => self.const_expr_is_compile_time_known(inner),
+            Expr::ResultOk(inner, _) | Expr::ResultError(inner, _) | Expr::OptionSome(inner, _) => {
+                self.const_expr_is_compile_time_known(inner)
+            }
+            Expr::Try(..) | Expr::Go(..) => false,
             Expr::OptionNone(_) => true,
             Expr::Call { .. } | Expr::Function { .. } | Expr::Error(_) => false,
             Expr::RecordUpdate { base, fields, .. } => {

@@ -1,15 +1,31 @@
 # Future Features
 
-Features planned for later versions of Functional Pascal. Implemented entries remain here only for roadmap tracking.
+Planned changes for Functional Pascal, in execution order.
+
+## Removals (simplification)
+
+| # | Feature | Description |
+|---|---------|-------------|
+| 1 | [`forward`](01-remove-forward.md) | Remove `forward` declarations — mutual recursion not needed |
+| 2 | [Compiler Directives](02-remove-compiler-directives.md) | Remove `{$IFDEF}`, `{$INCLUDE}`, entire preprocessor |
+| 3 | [Inline Lambdas](03-remove-inline-lambdas.md) | Remove anonymous function expressions — named functions stay |
+| 4 | [Nested Patterns](04-remove-nested-patterns.md) | Remove deep destructuring and `_` wildcard — simple matching stays |
+| 5 | [`ref` / `new`](05-remove-ref-new.md) | Remove reference types and heap allocation |
+| 6 | [Interfaces](06-remove-interfaces.md) | Remove `interface`, `implements`, `extends`, virtual dispatch |
+| 7 | [Generic Types](07-remove-generic-types.md) | Remove user-defined generic records, enums, type aliases — generic functions stay |
+| 8 | [Channels + Select](08-remove-channels-select.md) | Remove `channel`, `select`, `Std.Channel` — `go`/`task`/`Wait` stays |
+| 9 | [`dict`](09-remove-dict.md) | Pending — may be kept |
+
+## Additions
+
+| # | Feature | Description |
+|---|---------|-------------|
+| 10 | [String Format](10-add-string-format.md) | `Format()` function in `Std.Str` |
+| 11 | [Extended Colors](11-add-extended-colors.md) | 256-color and truecolor in `Std.Console` |
+| 12 | [String Repeat](12-add-string-repeat.md) | `Repeat()` function in `Std.Str` |
+
+## Not yet planned
 
 | Feature | Description |
 |---------|-------------|
-| ~~[Interfaces](interfaces.md)~~ | ~~Ad-hoc polymorphism, `interface` / `implements`, dynamic dispatch~~ — **implemented** (`interface`/`extends`/`implements`, nominal typing, `CallVirtual` dispatch) |
-| ~~[Reference Types](references.md)~~ | ~~`ref` type constructor for shared, heap-allocated values~~ — **implemented** (`ref`, `new ... with ... end`, implicit dereference) |
-| ~~[Record Extensions](record-extensions.md)~~ | ~~Default field values, `with` update expression, recursive record types~~ — **implemented** (default field values, `base with Field := Value; … end` update expression) |
-| ~~[Stdlib Extensions](stdlib-extensions.md)~~ | ~~String padding/repeat, timer events, `for-in` over dict, index access~~ — **fully implemented** (`Dict.Map`/`Filter`, `String S[I]`, `Console.ReadEventTimeout`/`PollEvent`, `for-in` over dict) |
-| ~~[Compiler Directives](compiler-directives.md)~~ | ~~`{$IFDEF}`, `{$I}`, compiler switches~~ — **implemented** (`{$DEFINE}`/`{$UNDEF}`, `{$IFDEF}`/`{$IFNDEF}`/`{$ELSE}`/`{$ENDIF}`, `{$INCLUDE}` in project mode) |
 | [Libraries](libraries.md) | Project kind `library`, export rules |
-| [Generics Extensions](generics.md) | HKT, variance, default type arguments, specialization (implemented: constraints `Comparable`/`Numeric`/`Printable`, generic methods on records and interfaces) |
-| ~~[Error Handling Extensions](error-handling.md)~~ | ~~Chaining combinators~~ — **implemented** (`Map`, `AndThen`, `OrElse`) |
-| ~~[Parallel VM Execution](parallel-vm.md)~~ | ~~Automatic multi-core `go` tasks via thread pool~~ — **implemented** (thread pool, crossbeam channels, `Worker`/`SharedState` architecture) |

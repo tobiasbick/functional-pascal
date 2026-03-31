@@ -1,5 +1,7 @@
 use super::super::Checker;
-use crate::types::{EnumTy, EnumVariantTy, GenericParamDef, RecordTy, Ty};
+use crate::types::{
+    EnumTy, EnumVariantTy, FunctionTy, GenericParamDef, ParamTy, ProcedureTy, RecordTy, Ty,
+};
 use fpas_diagnostics::codes::{SEMA_CONSTRAINT_VIOLATION, SEMA_UNKNOWN_TYPE};
 use fpas_lexer::Span;
 
@@ -44,7 +46,7 @@ impl Checker {
             type_params: Vec::new(),
             fields,
             methods,
-            implements: Vec::new(),
+            implements: record.implements.clone(),
         })
     }
 
@@ -94,7 +96,7 @@ impl Checker {
                 self.error_with_code(
                     SEMA_CONSTRAINT_VIOLATION,
                     format!(
-                        "Type `{arg:?}` does not satisfy constraint `{}` on parameter `{}`",
+                        "Type `{arg}` does not satisfy constraint `{}` on parameter `{}`",
                         constraint.display_name(),
                         param.name,
                     ),
@@ -149,7 +151,7 @@ impl Checker {
     /// Replace `GenericParam("T")` with concrete types based on the mapping.
     fn substitute_type_params(ty: &Ty, mapping: &[(&str, &Ty)]) -> Ty {
         match ty {
-            Ty::GenericParam(name, _) => {
+            Ty::GenericParam(name, _) | Ty::Named(name) => {
                 Self::lookup_type_param(name, mapping).unwrap_or_else(|| ty.clone())
             }
             Ty::Array(inner) => Ty::Array(Box::new(Self::substitute_type_params(inner, mapping))),
@@ -158,7 +160,41 @@ impl Checker {
                 Box::new(Self::substitute_type_params(err, mapping)),
             ),
             Ty::Option(inner) => Ty::Option(Box::new(Self::substitute_type_params(inner, mapping))),
-            Ty::Named(name) => Self::lookup_type_param(name, mapping).unwrap_or_else(|| ty.clone()),
+            Ty::Channel(inner) => {
+                Ty::Channel(Box::new(Self::substitute_type_params(inner, mapping)))
+            }
+            Ty::Task(inner) => Ty::Task(Box::new(Self::substitute_type_params(inner, mapping))),
+            Ty::Ref(inner) => Ty::Ref(Box::new(Self::substitute_type_params(inner, mapping))),
+            Ty::Dict(k, v) => Ty::Dict(
+                Box::new(Self::substitute_type_params(k, mapping)),
+                Box::new(Self::substitute_type_params(v, mapping)),
+            ),
+            Ty::Function(f) => Ty::Function(FunctionTy {
+                type_params: f.type_params.clone(),
+                params: f
+                    .params
+                    .iter()
+                    .map(|p| ParamTy {
+                        mutable: p.mutable,
+                        name: p.name.clone(),
+                        ty: Self::substitute_type_params(&p.ty, mapping),
+                    })
+                    .collect(),
+                return_type: Box::new(Self::substitute_type_params(&f.return_type, mapping)),
+            }),
+            Ty::Procedure(p) => Ty::Procedure(ProcedureTy {
+                type_params: p.type_params.clone(),
+                variadic: p.variadic,
+                params: p
+                    .params
+                    .iter()
+                    .map(|param| ParamTy {
+                        mutable: param.mutable,
+                        name: param.name.clone(),
+                        ty: Self::substitute_type_params(&param.ty, mapping),
+                    })
+                    .collect(),
+            }),
             _ => ty.clone(),
         }
     }

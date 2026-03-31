@@ -90,6 +90,12 @@ impl Checker {
         )
     }
 
+    /// Stable identity key for an AST expression node.
+    ///
+    /// Uses the memory address of the `Expr` reference. This is sound because:
+    /// - The AST (`Program`) is immutable and heap-allocated for the entire analysis.
+    /// - No AST nodes are moved or cloned during checking.
+    /// - Keys are only used within a single `check_program` call.
     pub fn expr_lookup_key(expr: &Expr) -> usize {
         std::ptr::from_ref(expr) as usize
     }

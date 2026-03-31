@@ -125,7 +125,7 @@ impl Checker {
                     self.error_with_code(
                         fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
                         format!(
-                            "Type mismatch in select arm source: expected `Channel(Error)`, found `{other:?}`"
+                            "Type mismatch in select arm source: expected a channel, found `{other}`"
                         ),
                         "Use `case Name: Type from SomeChannel:` with a channel expression.",
                         crate::check::spans::expr_span(&arm.channel),

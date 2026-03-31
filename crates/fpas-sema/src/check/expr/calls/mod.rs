@@ -9,23 +9,43 @@ use fpas_diagnostics::codes::{
 use fpas_lexer::Span;
 use fpas_parser::{Designator, Expr};
 
+/// Result of resolving a call target before checking argument types.
+pub(in crate::check::expr) enum CallResolution {
+    /// Resolved to a known symbol (kind + type).
+    Symbol { kind: SymbolKind, ty: Ty },
+    /// Resolved as a method call — the return type is already fully checked.
+    MethodResult(Ty),
+    /// Resolution failed (error already reported, args already checked).
+    Failed,
+}
+
 impl Checker {
-    pub(super) fn check_call_expr(
+    /// Resolve a call target: symbol lookup → method fallback → ambiguous/unknown error.
+    pub(in crate::check::expr) fn resolve_call_target(
         &mut self,
         call_expr: &Expr,
         designator: &Designator,
         args: &[Expr],
         span: Span,
-    ) -> Ty {
+        allow_procedure_result: bool,
+    ) -> CallResolution {
         let name = Self::resolve_designator_name(designator);
         self.ensure_fq_std_unit_loaded(&name);
 
         if let Some(symbol) = self.scopes.lookup(&name) {
-            return self.check_known_call_symbol(&name, symbol.kind, symbol.ty.clone(), args, span);
+            return CallResolution::Symbol {
+                kind: symbol.kind,
+                ty: symbol.ty.clone(),
+            };
         }
 
-        if let Some(result) = self.try_check_method_call(call_expr, designator, args, span) {
-            return result;
+        let method_result = if allow_procedure_result {
+            self.try_check_method_go_call(call_expr, designator, args, span)
+        } else {
+            self.try_check_method_call(call_expr, designator, args, span)
+        };
+        if let Some(result) = method_result {
+            return CallResolution::MethodResult(result);
         }
 
         if let Some(hint) = self.ambiguous_hint(&name) {
@@ -36,7 +56,7 @@ impl Checker {
                 span,
             );
             self.check_args_only(args);
-            return Ty::Error;
+            return CallResolution::Failed;
         }
 
         let hint = self.hint_unknown_callable(&name);
@@ -47,7 +67,24 @@ impl Checker {
             span,
         );
         self.check_args_only(args);
-        Ty::Error
+        CallResolution::Failed
+    }
+
+    pub(super) fn check_call_expr(
+        &mut self,
+        call_expr: &Expr,
+        designator: &Designator,
+        args: &[Expr],
+        span: Span,
+    ) -> Ty {
+        match self.resolve_call_target(call_expr, designator, args, span, false) {
+            CallResolution::Symbol { kind, ty } => {
+                let name = Self::resolve_designator_name(designator);
+                self.check_known_call_symbol(&name, kind, ty, args, span)
+            }
+            CallResolution::MethodResult(ty) => ty,
+            CallResolution::Failed => Ty::Error,
+        }
     }
 
     fn check_known_call_symbol(

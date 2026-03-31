@@ -78,40 +78,14 @@ impl Checker {
                 args,
                 span: call_span,
             } => {
-                let name = Self::resolve_designator_name(designator);
-                self.ensure_fq_std_unit_loaded(&name);
-
-                if let Some(symbol) = self.scopes.lookup(&name) {
-                    self.check_known_go_call_symbol(
-                        &name,
-                        symbol.kind,
-                        symbol.ty.clone(),
-                        args,
-                        *call_span,
-                    )
-                } else if let Some(result) =
-                    self.try_check_method_go_call(inner, designator, args, *call_span)
-                {
-                    result
-                } else if let Some(hint) = self.ambiguous_hint(&name) {
-                    self.error_with_code(
-                        fpas_diagnostics::codes::SEMA_AMBIGUOUS_IMPORTED_NAME,
-                        format!("Ambiguous name `{name}`"),
-                        hint,
-                        *call_span,
-                    );
-                    self.check_args_only(args);
-                    Ty::Error
-                } else {
-                    let hint = self.hint_unknown_callable(&name);
-                    self.error_with_code(
-                        fpas_diagnostics::codes::SEMA_UNKNOWN_NAME,
-                        format!("Unknown function or procedure `{name}`"),
-                        hint,
-                        *call_span,
-                    );
-                    self.check_args_only(args);
-                    Ty::Error
+                use calls::CallResolution;
+                match self.resolve_call_target(inner, designator, args, *call_span, true) {
+                    CallResolution::Symbol { kind, ty } => {
+                        let name = Self::resolve_designator_name(designator);
+                        self.check_known_go_call_symbol(&name, kind, ty, args, *call_span)
+                    }
+                    CallResolution::MethodResult(ty) => ty,
+                    CallResolution::Failed => Ty::Error,
                 }
             }
             _ => {
@@ -203,7 +177,7 @@ impl Checker {
         {
             self.error_with_code(
                 fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
-                format!("`new` requires a record type, found `{target_ty:?}`"),
+                format!("`new` requires a record type, found `{target_ty}`"),
                 "Use `new RecordType with Field := Value; ... end`.",
                 span,
             );
@@ -242,7 +216,7 @@ impl Checker {
             _ if !base_ty.is_error() => {
                 self.error_with_code(
                     fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
-                    format!("`with` update requires a record value, found `{base_ty:?}`"),
+                    format!("`with` update requires a record value, found `{base_ty}`"),
                     "Use `RecordExpr with Field := NewValue; … end` on a record value.",
                     span,
                 );
@@ -310,7 +284,7 @@ impl Checker {
             _ => {
                 self.error_with_code(
                     fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
-                    format!("try requires Result or Option, found `{inner_ty:?}`"),
+                    format!("try requires Result or Option, found `{inner_ty}`"),
                     "Use try only on Result or Option values.".to_string(),
                     span,
                 );
@@ -353,7 +327,7 @@ impl Checker {
                     self.error_with_code(
                         fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
                         format!(
-                            "`try` propagates `{inner_ty:?}`, but function `{}` returns `{return_ty:?}`",
+                            "`try` propagates `{inner_ty}`, but function `{}` returns `{return_ty}`",
                             function_ctx.name
                         ),
                         "Make the enclosing function return `Result of <value>, <same error type>`.",
@@ -366,7 +340,7 @@ impl Checker {
                 self.error_with_code(
                     fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
                     format!(
-                        "`try` propagates `{inner_ty:?}`, but function `{}` returns `{return_ty:?}`",
+                        "`try` propagates `{inner_ty}`, but function `{}` returns `{return_ty}`",
                         function_ctx.name
                     ),
                     "Use `try` on `Result` only inside a function that returns `Result of T, E` with a compatible error type.",
@@ -377,7 +351,7 @@ impl Checker {
                 self.error_with_code(
                     fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
                     format!(
-                        "`try` propagates `{inner_ty:?}`, but function `{}` returns `{return_ty:?}`",
+                        "`try` propagates `{inner_ty}`, but function `{}` returns `{return_ty}`",
                         function_ctx.name
                     ),
                     "Use `try` on `Option` only inside a function that returns `Option of T`.",

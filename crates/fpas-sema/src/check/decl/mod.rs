@@ -30,7 +30,7 @@ impl Checker {
         if !expected.compatible_with(actual) {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,
-                format!("Type mismatch in {context}: expected `{expected:?}`, found `{actual:?}`"),
+                format!("Type mismatch in {context}: expected `{expected}`, found `{actual}`"),
                 format!("The {context} must match the declared type."),
                 span,
             );

@@ -289,7 +289,7 @@ fn check_dict_map(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
                 c.error_with_code(
                     SEMA_TYPE_MISMATCH,
                     format!(
-                        "`{}` callback parameter type mismatch: expected `{v:?}`, got `{:?}`",
+                        "`{}` callback parameter type mismatch: expected `{v}`, got `{}`",
                         s::STD_DICT_MAP,
                         params[0].ty
                     ),
@@ -353,7 +353,7 @@ fn check_dict_filter(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
                 c.error_with_code(
                     SEMA_TYPE_MISMATCH,
                     format!(
-                        "`{}` callback first parameter type mismatch: expected `{k:?}`, got `{:?}`",
+                        "`{}` callback first parameter type mismatch: expected `{k}`, got `{}`",
                         s::STD_DICT_FILTER,
                         params[0].ty
                     ),
@@ -366,8 +366,9 @@ fn check_dict_filter(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
                 c.error_with_code(
                     SEMA_TYPE_MISMATCH,
                     format!(
-                        "`{}` callback second parameter type mismatch: expected `{v:?}`, got `{:?}`",
-                        s::STD_DICT_FILTER, params[1].ty
+                        "`{}` callback second parameter type mismatch: expected `{v}`, got `{}`",
+                        s::STD_DICT_FILTER,
+                        params[1].ty
                     ),
                     "Second callback parameter must match the dict's value type.",
                     span,

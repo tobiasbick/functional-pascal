@@ -27,7 +27,7 @@ impl Checker {
         self.try_check_method_call_like(call_expr, designator, args, span, true)
     }
 
-    fn resolve_method_kind(
+    pub(in crate::check) fn resolve_method_kind(
         &self,
         record_ty: &crate::types::RecordTy,
         method_name: &str,
@@ -49,7 +49,7 @@ impl Checker {
         }
     }
 
-    fn check_method_call_args(
+    pub(in crate::check) fn check_method_call_args(
         &mut self,
         name: &str,
         type_params: &[GenericParamDef],

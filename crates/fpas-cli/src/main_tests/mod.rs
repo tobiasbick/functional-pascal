@@ -1,6 +1,5 @@
-use super::{
-    CliInput, render_cli_diagnostic, resolve_cli_config, resolve_cli_input, run_cli, run_source,
-};
+use super::{CliInput, render_cli_diagnostic, resolve_cli_config, run_cli, run_source};
+use crate::cli_input::resolve_cli_input;
 use crate::test_support::{create_temp_dir, write_file, write_text};
 use fpas_diagnostics::codes::COMPILE_INTRINSIC_ARITY_MISMATCH;
 use fpas_diagnostics::{Diagnostic, DiagnosticStage, SourceSpan};

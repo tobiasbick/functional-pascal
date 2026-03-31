@@ -5,6 +5,11 @@ use fpas_lexer::Token;
 
 impl Parser {
     pub(super) fn parse_primary(&mut self) -> Expr {
+        // Avoid cloning the String payload when dispatching an identifier.
+        if matches!(self.current_token(), Token::Ident(_)) {
+            return self.parse_designator_or_call();
+        }
+
         match self.current_token().clone() {
             Token::Integer(v) => {
                 let span = self.current_span();
@@ -41,7 +46,6 @@ impl Parser {
             Token::LBracket => self.parse_array_or_dict_literal(),
             Token::Record => self.parse_record_literal(),
             Token::New => self.parse_new_expr(),
-            Token::Ident(_) => self.parse_designator_or_call(),
             Token::Ok => {
                 let start = self.current_span();
                 self.advance();
@@ -141,22 +145,7 @@ impl Parser {
     fn parse_record_literal(&mut self) -> Expr {
         let start = self.current_span();
         self.advance();
-        let mut fields = Vec::new();
-        while !self.check(&Token::End) && !self.at_end() {
-            let field_start = self.current_span();
-            let (name, _) = self
-                .expect_ident()
-                .unwrap_or(("_error_".into(), field_start));
-            self.expect(&Token::ColonAssign);
-            let value = self.parse_expression();
-            self.expect_semi();
-            fields.push(FieldInit {
-                name,
-                value,
-                span: self.span_from(field_start),
-            });
-        }
-        self.expect(&Token::End);
+        let fields = self.parse_field_init_list();
         Expr::RecordLiteral {
             fields,
             span: self.span_from(start),
@@ -168,6 +157,18 @@ impl Parser {
         self.advance();
         let type_expr = self.parse_type_expr();
         self.expect(&Token::With);
+        let fields = self.parse_field_init_list();
+        Expr::New {
+            type_expr,
+            fields,
+            span: self.span_from(start),
+        }
+    }
+
+    /// Parse `Field := Value;` initializers until `end`, then consume `end`.
+    ///
+    /// Shared by record literals, `new` expressions, and record update expressions.
+    fn parse_field_init_list(&mut self) -> Vec<FieldInit> {
         let mut fields = Vec::new();
         while !self.check(&Token::End) && !self.at_end() {
             let field_start = self.current_span();
@@ -184,11 +185,7 @@ impl Parser {
             });
         }
         self.expect(&Token::End);
-        Expr::New {
-            type_expr,
-            fields,
-            span: self.span_from(start),
-        }
+        fields
     }
 
     /// Parse a record update expression: `base with Field := Value; … end`.
@@ -199,22 +196,7 @@ impl Parser {
     /// **Documentation:** `docs/pascal/05-types.md` (Record Update Expression)
     pub(super) fn parse_record_update(&mut self, base: Expr, start: fpas_lexer::Span) -> Expr {
         self.advance(); // consume `with`
-        let mut fields = Vec::new();
-        while !self.check(&Token::End) && !self.at_end() {
-            let field_start = self.current_span();
-            let (name, _) = self
-                .expect_ident()
-                .unwrap_or(("_error_".into(), field_start));
-            self.expect(&Token::ColonAssign);
-            let value = self.parse_expression();
-            self.expect_semi();
-            fields.push(FieldInit {
-                name,
-                value,
-                span: self.span_from(field_start),
-            });
-        }
-        self.expect(&Token::End);
+        let fields = self.parse_field_init_list();
         Expr::RecordUpdate {
             base: Box::new(base),
             fields,

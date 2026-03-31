@@ -42,7 +42,7 @@ impl Parser {
     }
 
     pub(crate) fn expect(&mut self, expected: &Token) -> Option<Span> {
-        if self.matches(expected) {
+        if self.check(expected) {
             Some(self.advance().span)
         } else {
             let span = self.current_span();
@@ -60,16 +60,12 @@ impl Parser {
         }
     }
 
-    pub(crate) fn matches(&self, expected: &Token) -> bool {
+    pub(crate) fn check(&self, expected: &Token) -> bool {
         std::mem::discriminant(self.current_token()) == std::mem::discriminant(expected)
     }
 
-    pub(crate) fn check(&self, expected: &Token) -> bool {
-        self.matches(expected)
-    }
-
     pub(crate) fn eat(&mut self, expected: &Token) -> bool {
-        if self.matches(expected) {
+        if self.check(expected) {
             self.advance();
             true
         } else {
@@ -99,14 +95,7 @@ impl Parser {
     }
 
     pub(crate) fn expect_ident(&mut self) -> Option<(String, Span)> {
-        if let Token::Ident(_) = self.current_token() {
-            let st = self.advance().clone();
-            if let Token::Ident(name) = st.token {
-                Some((name, st.span))
-            } else {
-                unreachable!()
-            }
-        } else {
+        let Token::Ident(name) = self.current_token().clone() else {
             let span = self.current_span();
             self.error_with_code(
                 PARSE_EXPECTED_IDENTIFIER,
@@ -117,8 +106,10 @@ impl Parser {
                 "An identifier (name) is required here.",
                 span,
             );
-            None
-        }
+            return None;
+        };
+        let span = self.advance().span;
+        Some((name, span))
     }
 
     /// Identifier segment after `.` (allows `array`, `result`, `option` as names

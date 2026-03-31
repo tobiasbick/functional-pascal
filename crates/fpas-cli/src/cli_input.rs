@@ -18,6 +18,7 @@ pub(crate) struct CliConfig {
     pub defines: DefineSet,
 }
 
+#[cfg(test)]
 pub(crate) fn resolve_cli_input(args: &[String], cwd: &Path) -> Result<CliInput, String> {
     if args.len() > 1 {
         return Err("Usage: fpas [<file.fpas | file.fpasprj>]".to_string());

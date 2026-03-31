@@ -5,7 +5,6 @@ use crossterm::event::{self, Event, KeyEvent as CrosstermKeyEvent, KeyEventKind}
 use crossterm::terminal::enable_raw_mode;
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_INPUT_FAILURE;
-use std::io::{self, IsTerminal};
 use std::time::Duration;
 
 impl KeyInput {
@@ -17,14 +16,8 @@ impl KeyInput {
         {
             return Ok(true);
         }
-        if self.test_mode {
+        if self.test_mode || !self.raw_mode {
             return Ok(false);
-        }
-        if !self.raw_mode {
-            if !io::stdin().is_terminal() {
-                return Ok(false);
-            }
-            self.ensure_raw_mode(location)?;
         }
         loop {
             if !event::poll(Duration::ZERO).map_err(|e| {
@@ -88,14 +81,8 @@ impl KeyInput {
         if !self.console_event_queue.is_empty() || !self.live_console_queue.is_empty() {
             return Ok(true);
         }
-        if self.test_mode {
+        if self.test_mode || !self.raw_mode {
             return Ok(false);
-        }
-        if !self.raw_mode {
-            if !io::stdin().is_terminal() {
-                return Ok(false);
-            }
-            self.ensure_raw_mode(location)?;
         }
         loop {
             if !event::poll(Duration::ZERO).map_err(|e| {

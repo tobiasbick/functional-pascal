@@ -1,5 +1,5 @@
-use super::super::super::Parser;
 use crate::ast::*;
+use crate::parser::Parser;
 use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
 use fpas_lexer::Token;
 

@@ -1,7 +1,7 @@
 use super::super::Parser;
 use crate::ast::*;
 use crate::parser::token_display;
-use fpas_diagnostics::codes::{PARSE_EXPECTED_EXPRESSION, PARSE_INVALID_STATEMENT_START};
+use fpas_diagnostics::codes::PARSE_INVALID_STATEMENT_START;
 use fpas_lexer::Token;
 
 impl Parser {
@@ -101,22 +101,10 @@ impl Parser {
         let start = self.current_span();
         self.advance(); // consume `case`
 
-        let binding = match self.current_token() {
-            Token::Ident(name) => {
-                let name = name.clone();
-                self.advance();
-                name
-            }
-            _ => {
-                self.error_with_code(
-                    PARSE_EXPECTED_EXPRESSION,
-                    "Expected binding identifier in select arm",
-                    "Syntax: `case Name: Type from Channel: body`.",
-                    self.current_span(),
-                );
-                String::from("_")
-            }
-        };
+        let binding = self
+            .expect_ident()
+            .map(|(name, _)| name)
+            .unwrap_or_else(|| "_".to_string());
 
         self.expect(&Token::Colon);
         let type_expr = self.parse_type_expr();

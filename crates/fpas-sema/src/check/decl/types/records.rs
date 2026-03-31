@@ -360,7 +360,6 @@ impl Checker {
         for stmt in stmts {
             self.check_stmt(stmt);
         }
-        self.report_missing_forward_declarations_in_current_scope();
         self.scopes.function_ctx = previous_ctx;
         self.scopes.pop_scope();
     }

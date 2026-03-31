@@ -34,7 +34,6 @@ impl Checker {
         for decl in &program.declarations {
             self.check_decl(decl);
         }
-        self.report_missing_forward_declarations_in_current_scope();
 
         let prev_ctx = self.scopes.function_ctx.take();
         self.scopes.function_ctx = Some(FunctionCtx {

@@ -25,8 +25,14 @@ pub struct ProcedureDecl {
     pub span: Span,
 }
 
+/// Callable body shape.
+///
+/// **`SignatureOnly`** is used for interface method signatures (no `begin`…`end` in source).
+/// User functions and procedures always use **`Block`**.
+///
+/// **Documentation:** `docs/pascal/04-functions.md` (from the repository root).
 #[derive(Debug, Clone, PartialEq)]
 pub enum FuncBody {
-    Forward,
+    SignatureOnly,
     Block { nested: Vec<Decl>, stmts: Vec<Stmt> },
 }

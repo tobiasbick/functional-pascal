@@ -1,7 +1,11 @@
+//! Token kinds and keyword recognition.
+//!
+//! **Documentation:** `docs/pascal/01-overview.md` (keywords, from the repository root).
+
 /// Lexical token produced by the Functional Pascal lexer.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
-    // Keywords (63)
+    // Keywords (62)
     Program,
     Unit,
     Uses,
@@ -40,7 +44,6 @@ pub enum Token {
     Record,
     Enum,
     Array,
-    Forward,
     Panic,
     Break,
     Continue,
@@ -147,7 +150,6 @@ impl Token {
             "record" => Token::Record,
             "enum" => Token::Enum,
             "array" => Token::Array,
-            "forward" => Token::Forward,
             "panic" => Token::Panic,
             "break" => Token::Break,
             "continue" => Token::Continue,

@@ -189,50 +189,6 @@ fn function_return_type_mismatch() {
 }
 
 #[test]
-fn function_forward_valid() {
-    check_ok(
-        "program T; \
-         function F(): integer; forward; \
-         function F(): integer; \
-         begin return 1 end; \
-         begin end.",
-    );
-}
-
-#[test]
-fn function_forward_requires_implementation() {
-    let errors = check_errors(
-        "program T; \
-         function F(): integer; forward; \
-         begin end.",
-    );
-    assert!(
-        errors.iter().any(|error| {
-            error.code == fpas_diagnostics::codes::SEMA_UNKNOWN_NAME
-                && error.message.contains("forward")
-        }),
-        "expected missing forward implementation error, got: {errors:#?}"
-    );
-}
-
-#[test]
-fn function_forward_signature_must_match() {
-    let errors = check_errors(
-        "program T; \
-         function F(X: integer): integer; forward; \
-         function F(X: integer): string; \
-         begin return 'oops' end; \
-         begin end.",
-    );
-    assert!(
-        errors
-            .iter()
-            .any(|error| error.code == fpas_diagnostics::codes::SEMA_TYPE_MISMATCH),
-        "expected forward signature mismatch, got: {errors:#?}"
-    );
-}
-
-#[test]
 fn function_duplicate_definition_rejected() {
     let errors = check_errors(
         "program T; \

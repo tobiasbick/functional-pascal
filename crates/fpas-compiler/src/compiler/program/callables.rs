@@ -1,3 +1,7 @@
+//! Compiling named functions and procedures.
+//!
+//! **Documentation:** `docs/pascal/04-functions.md` (from the repository root).
+
 use crate::error::CompileError;
 use fpas_bytecode::Op;
 use fpas_parser::{FuncBody, FunctionDecl, ProcedureDecl, RecordMethod};
@@ -55,7 +59,7 @@ impl Compiler {
         body: &FuncBody,
         span: fpas_lexer::Span,
     ) -> Result<(), CompileError> {
-        if matches!(body, FuncBody::Forward) {
+        if matches!(body, FuncBody::SignatureOnly) {
             return Ok(());
         }
 

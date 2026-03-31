@@ -2,11 +2,11 @@ use super::toks;
 use crate::Token;
 
 #[test]
-fn all_63_keywords() {
+fn all_62_keywords() {
     let input = "program unit uses const var mutable function procedure begin end return \
                  if then else case of for to downto in in do while \
                  repeat until and or not xor div mod shl shr \
-                 true false type record enum array forward panic break continue \
+                 true false type record enum array panic break continue \
                  public private result option ok error some none try \
                  go channel select default from dict ref new with interface implements extends";
     let tokens = toks(input);
@@ -52,7 +52,6 @@ fn all_63_keywords() {
             Token::Record,
             Token::Enum,
             Token::Array,
-            Token::Forward,
             Token::Panic,
             Token::Break,
             Token::Continue,
@@ -79,6 +78,11 @@ fn all_63_keywords() {
             Token::Extends,
         ]
     );
+}
+
+#[test]
+fn forward_is_not_a_keyword() {
+    assert_eq!(toks("forward"), vec![Token::Ident("forward".into())]);
 }
 
 #[test]

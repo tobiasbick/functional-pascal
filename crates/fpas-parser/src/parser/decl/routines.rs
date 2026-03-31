@@ -1,3 +1,7 @@
+//! Routine declarations (`function` / `procedure`).
+//!
+//! **Documentation:** `docs/pascal/04-functions.md` (from the repository root).
+
 use super::super::Parser;
 use crate::ast::*;
 use fpas_lexer::{Span, Token};
@@ -74,7 +78,7 @@ impl Parser {
             type_params,
             params,
             return_type,
-            body: FuncBody::Forward,
+            body: FuncBody::SignatureOnly,
             visibility: Visibility::Public,
             span: self.span_from(start),
         }
@@ -87,18 +91,13 @@ impl Parser {
             name,
             type_params,
             params,
-            body: FuncBody::Forward,
+            body: FuncBody::SignatureOnly,
             visibility: Visibility::Public,
             span: self.span_from(start),
         }
     }
 
     fn parse_func_body(&mut self) -> FuncBody {
-        if self.eat(&Token::Forward) {
-            self.expect_semi();
-            return FuncBody::Forward;
-        }
-
         let nested = self.parse_nested_decls();
         self.expect(&Token::Begin);
         let stmts = self.parse_statement_list();

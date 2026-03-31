@@ -125,27 +125,24 @@ begin
 end.
 ```
 
-## Forward Declarations
+## Mutual recursion
 
-Use `forward` to declare a function before its body, enabling mutual recursion:
+There is no `forward` keyword. Declare callees before callers when only one direction of call is needed. For mutual recursion, nest the helper in the outer routine so both names are in scope when bodies are checked:
 
 ```pascal
-function IsEven(N: integer): boolean; forward;
-
-function IsOdd(N: integer): boolean;
-begin
-  if N = 0 then
-    return false
-  else
-    return IsEven(N - 1);
-end;
-
 function IsEven(N: integer): boolean;
+  function IsOdd(X: integer): boolean;
+  begin
+    if X = 0 then
+      return false
+    else
+      return IsEven(X - 1)
+  end;
 begin
   if N = 0 then
     return true
   else
-    return IsOdd(N - 1);
+    return IsOdd(N - 1)
 end;
 ```
 

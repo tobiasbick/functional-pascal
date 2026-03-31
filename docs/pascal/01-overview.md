@@ -88,7 +88,7 @@ for       to        downto    in        do        while
 repeat    until     and       or        not
 xor       div       mod       shl       shr
 true      false     type      record    enum
-array     forward   panic     break     continue
+array     panic     break     continue
 result    option    ok        error     some
 none      try
 ```

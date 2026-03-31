@@ -84,7 +84,7 @@ directive_content = (* any characters except '}', trimmed *) ;
 (*   INCLUDE filename     — same as I                                *)
 (* Unknown directive keywords emit a diagnostic but are ignored.    *)
 
-(* ---- Keywords (63, case-insensitive) --------------------------- *)
+(* ---- Keywords (62, case-insensitive) --------------------------- *)
 
 keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'var'       | 'mutable'   | 'function'  | 'procedure'
@@ -96,7 +96,7 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'div'       | 'mod'       | 'shl'       | 'shr'
                 | 'true'      | 'false'     | 'type'      | 'record'
                 | 'ref'       | 'new'       | 'with'
-                | 'enum'      | 'array'     | 'forward'   | 'panic'
+                | 'enum'      | 'array'     | 'panic'
                 | 'break'     | 'continue'  | 'result'    | 'option'
                 | 'ok'        | 'error'     | 'some'      | 'none'
                 | 'try'       | 'public'    | 'private'
@@ -288,17 +288,13 @@ interface_procedure_sig = 'procedure' identifier [ type_params ]
 (* ---- 2.5 Functions & Procedures -------------------------------- *)
 
 function_decl       = function_heading ';'
-                      ( 'forward' ';'
-                      | { nested_decl } 'begin' statement_list 'end' ';'
-                      ) ;
+                      { nested_decl } 'begin' statement_list 'end' ';' ;
 
 function_heading    = 'function' identifier [ type_params ]
                       '(' [ param_list ] ')' ':' type_expr ;
 
 procedure_decl      = procedure_heading ';'
-                      ( 'forward' ';'
-                      | { nested_decl } 'begin' statement_list 'end' ';'
-                      ) ;
+                      { nested_decl } 'begin' statement_list 'end' ';' ;
 
 procedure_heading   = 'procedure' identifier [ type_params ]
                       '(' [ param_list ] ')' ;

@@ -73,7 +73,7 @@ end;
 - Parameters: semicolons in declarations, commas in calls
 - `mutable` parameter keyword allows reassignment inside the function
 - Nested functions have lexical scope access
-- `forward` enables mutual recursion: `function Foo(...): T; forward;`
+- Mutual recursion: nest a helper function in the outer routine, or declare callees before callers; there is no `forward` keyword
 
 ## Function Types
 

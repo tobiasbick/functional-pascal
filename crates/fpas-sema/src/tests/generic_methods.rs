@@ -256,9 +256,7 @@ fn generic_method_return_type_is_generic_param() {
 }
 
 #[test]
-fn generic_method_is_forward_declared_only() {
-    // Forward declarations inside a record are not currently supported,
-    // but ensure the parser + sema do not crash on an empty (forward) body.
+fn generic_interface_method_signature_only() {
     check_ok(
         "program T;
          type IFace = interface

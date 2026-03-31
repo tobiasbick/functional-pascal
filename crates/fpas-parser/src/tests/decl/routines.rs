@@ -1,17 +1,15 @@
-use super::*;
+use super::{parse_ok, parse_with_errors};
+use crate::ast::*;
 
 #[test]
-fn function_forward() {
-    let p =
-        parse_ok("program T; function Add(A: integer; B: integer): integer; forward; begin end.");
-    match &p.declarations[0] {
-        Decl::Function(f) => {
-            assert_eq!(f.name, "Add");
-            assert_eq!(f.params.len(), 2);
-            assert!(matches!(f.body, FuncBody::Forward));
-        }
-        _ => panic!("expected Function"),
-    }
+fn function_rejects_legacy_forward_token() {
+    let (_p, errors) = parse_with_errors(
+        "program T; function Add(A: integer; B: integer): integer; forward; begin end.",
+    );
+    assert!(
+        !errors.is_empty(),
+        "expected parse errors for `forward` after header, got none"
+    );
 }
 
 #[test]

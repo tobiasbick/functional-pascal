@@ -138,31 +138,34 @@ end.",
 }
 
 #[test]
-fn forward_then_implement() {
+fn nested_mutual_recursion_even_odd() {
     let p = parse_ok(
         "\
 program T;
 
-function IsEven(N: integer): boolean; forward;
-function IsOdd(N: integer): boolean; forward;
-
 function IsEven(N: integer): boolean;
+  function IsOdd(X: integer): boolean;
+  begin
+    if X = 0 then return false
+    else return IsEven(X - 1)
+  end;
 begin
   if N = 0 then return true
   else return IsOdd(N - 1)
-end;
-
-function IsOdd(N: integer): boolean;
-begin
-  if N = 0 then return false
-  else return IsEven(N - 1)
 end;
 
 begin
   return
 end.",
     );
-    assert_eq!(p.declarations.len(), 4); // 2 forward + 2 impl
+    assert_eq!(p.declarations.len(), 1);
+    match &p.declarations[0] {
+        Decl::Function(f) => match &f.body {
+            FuncBody::Block { nested, .. } => assert_eq!(nested.len(), 1),
+            _ => panic!("expected Block body"),
+        },
+        _ => panic!("expected Function"),
+    }
 }
 
 #[test]

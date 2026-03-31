@@ -110,13 +110,6 @@ impl Checker {
         // Record (concrete) receiver — static dispatch.
         let record_ty = match &resolved_receiver_ty {
             Ty::Record(record_ty) => record_ty.clone(),
-            Ty::Ref(inner) => {
-                let inner_ty = self.resolve_visible_type(inner);
-                let Ty::Record(record_ty) = inner_ty else {
-                    return false;
-                };
-                record_ty
-            }
             _ => return false,
         };
 

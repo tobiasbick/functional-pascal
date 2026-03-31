@@ -45,7 +45,6 @@ impl Parser {
             }
             Token::LBracket => self.parse_array_or_dict_literal(),
             Token::Record => self.parse_record_literal(),
-            Token::New => self.parse_new_expr(),
             Token::Ok => {
                 let start = self.current_span();
                 self.advance();
@@ -146,19 +145,6 @@ impl Parser {
         self.advance();
         let fields = self.parse_field_init_list();
         Expr::RecordLiteral {
-            fields,
-            span: self.span_from(start),
-        }
-    }
-
-    fn parse_new_expr(&mut self) -> Expr {
-        let start = self.current_span();
-        self.advance();
-        let type_expr = self.parse_type_expr();
-        self.expect(&Token::With);
-        let fields = self.parse_field_init_list();
-        Expr::New {
-            type_expr,
             fields,
             span: self.span_from(start),
         }

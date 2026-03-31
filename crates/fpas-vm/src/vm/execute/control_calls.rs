@@ -93,12 +93,11 @@ impl Worker {
 
         let type_name = match receiver {
             Value::Record { type_name, .. } => type_name.clone(),
-            Value::Ref { type_name, .. } => type_name.clone(),
             other => {
                 return Err(runtime_error(
                     RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                     format!(
-                        "CallVirtual: receiver must be a record or ref, got `{}`",
+                        "CallVirtual: receiver must be a record, got `{}`",
                         other.type_name()
                     ),
                     "Only record values can be the receiver of an interface method call.",

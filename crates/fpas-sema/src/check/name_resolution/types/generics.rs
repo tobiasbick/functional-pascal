@@ -164,7 +164,6 @@ impl Checker {
                 Ty::Channel(Box::new(Self::substitute_type_params(inner, mapping)))
             }
             Ty::Task(inner) => Ty::Task(Box::new(Self::substitute_type_params(inner, mapping))),
-            Ty::Ref(inner) => Ty::Ref(Box::new(Self::substitute_type_params(inner, mapping))),
             Ty::Dict(k, v) => Ty::Dict(
                 Box::new(Self::substitute_type_params(k, mapping)),
                 Box::new(Self::substitute_type_params(v, mapping)),

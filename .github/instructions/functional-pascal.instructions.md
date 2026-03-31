@@ -40,7 +40,6 @@ end;
 | `dict of K to V` | `['key': value]`, `[:]` — insertion-ordered key-value map |
 | `Result of T, E` | `Ok(value)`, `Error(value)` — success or error |
 | `Option of T` | `Some(value)`, `None` — present or absent |
-| `ref T` | `ref Node`, `new Node with ... end` — shared reference to a heap-allocated record |
 
 ## Variables and Constants
 
@@ -51,8 +50,6 @@ var Name: string := 'Alice';
 mutable var Count: integer := 0;
 const MaxSize: integer := 1024;
 ```
-
-`ref` bindings follow the same mutability rules as every other variable. Assigning a `ref` value copies the reference, not the underlying record. `new` performs runtime allocation, so it is not valid in `const` initializers.
 
 ## Functions and Procedures
 

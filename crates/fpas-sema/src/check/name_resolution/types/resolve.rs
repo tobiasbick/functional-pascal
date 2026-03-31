@@ -1,6 +1,6 @@
 use super::super::Checker;
 use crate::types::{FunctionTy, ParamTy, ProcedureTy, Ty};
-use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_TYPE};
+use fpas_diagnostics::codes::SEMA_UNKNOWN_TYPE;
 use fpas_parser::{QualifiedId, TypeExpr};
 
 impl Checker {
@@ -19,20 +19,6 @@ impl Checker {
                 }
             }
             TypeExpr::Array(inner, _) => Ty::Array(Box::new(self.resolve_type_expr(inner))),
-            TypeExpr::Ref { inner_type, span } => {
-                let inner_ty = self.resolve_type_expr(inner_type);
-                if self.is_valid_ref_target(&inner_ty) {
-                    Ty::Ref(Box::new(inner_ty))
-                } else {
-                    self.error_with_code(
-                        SEMA_TYPE_MISMATCH,
-                        "`ref` requires a record type",
-                        "Use a named record type after `ref`, for example `ref Node`.",
-                        *span,
-                    );
-                    Ty::Ref(Box::new(Ty::Error))
-                }
-            }
             TypeExpr::FunctionType {
                 params,
                 return_type,
@@ -121,11 +107,4 @@ impl Checker {
         }
     }
 
-    fn is_valid_ref_target(&self, ty: &Ty) -> bool {
-        match ty {
-            Ty::Record(_) => true,
-            Ty::Named(name) => self.pending_record_types.contains(name),
-            _ => false,
-        }
-    }
 }

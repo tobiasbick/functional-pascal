@@ -12,15 +12,6 @@ impl Parser {
                 let inner = self.parse_type_expr();
                 TypeExpr::Array(Box::new(inner), self.span_from(start))
             }
-            Token::Ref => {
-                let start = self.current_span();
-                self.advance();
-                let inner_type = self.parse_named_type_expr();
-                TypeExpr::Ref {
-                    inner_type: Box::new(inner_type),
-                    span: self.span_from(start),
-                }
-            }
             Token::Function => {
                 let start = self.current_span();
                 self.advance();

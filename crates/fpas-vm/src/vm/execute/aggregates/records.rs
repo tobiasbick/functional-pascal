@@ -36,8 +36,7 @@ impl Worker {
     ) -> Result<(), VmError> {
         let field_name = self.const_str(name_idx, line)?;
         let record = self.pop(line)?;
-        let deref_record = self.deref_value(&record);
-        if let Value::Record { fields, .. } = deref_record {
+        if let Value::Record { fields, .. } = record {
             let value = fields
                 .iter()
                 .find(|(name, _)| name == &field_name)
@@ -54,7 +53,12 @@ impl Worker {
             return Ok(());
         }
 
-        Err(self.ref_operand_error("FieldGet", "record", line))
+        Err(runtime_error(
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+            "FieldGet requires a record value",
+            "Use field access only on record values.",
+            line,
+        ))
     }
 
     pub(super) fn exec_field_set(
@@ -65,21 +69,6 @@ impl Worker {
         let field_name = self.const_str(name_idx, line)?;
         let value = self.pop(line)?;
         let record = self.pop(line)?;
-        if let Some(result) = self.update_ref_target(&record, |target| {
-            let Value::Record { fields, .. } = target else {
-                return Err(record_operand_error("FieldSet", line));
-            };
-            let Some(entry) = fields.iter_mut().find(|(name, _)| name == &field_name) else {
-                return Err(missing_field_error(&field_name, line));
-            };
-            entry.1 = value.clone();
-            Ok(())
-        }) {
-            result?;
-            self.push(record)?;
-            return Ok(());
-        }
-
         if let Value::Record {
             type_name,
             mut fields,
@@ -93,17 +82,13 @@ impl Worker {
             return Ok(());
         }
 
-        Err(self.ref_operand_error("FieldSet", "record", line))
+        Err(runtime_error(
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+            "FieldSet requires a record value",
+            "Use field assignment only on record values.",
+            line,
+        ))
     }
-}
-
-fn record_operand_error(op_name: &str, line: SourceLocation) -> VmError {
-    runtime_error(
-        RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-        format!("{op_name} requires a record"),
-        "Use field access only on record values.",
-        line,
-    )
 }
 
 impl Worker {
@@ -111,9 +96,6 @@ impl Worker {
     ///
     /// Stack before: `[base_record, name0, val0, …, nameN-1, valN-1]`  
     /// Stack after: `[new_record]`  
-    ///
-    /// If `base` is a `Ref`, it is automatically dereferenced to produce a fresh
-    /// value-type copy (the reference itself is not modified).
     ///
     /// **Documentation:** `docs/pascal/05-types.md` (Record Update Expression)
     pub(super) fn exec_update_record(
@@ -124,13 +106,11 @@ impl Worker {
         // Drain N (name, value) pairs pushed AFTER the base record.
         let override_items = self.drain_stack_tail(n_overrides as usize * 2, line)?;
         let base = self.pop(line)?;
-        // Dereference if needed — `with` always produces a fresh value copy.
-        let concrete = self.deref_value(&base);
 
         let Value::Record {
             type_name,
             mut fields,
-        } = concrete
+        } = base
         else {
             return Err(runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,

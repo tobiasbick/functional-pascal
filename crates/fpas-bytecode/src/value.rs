@@ -1,5 +1,3 @@
-use std::sync::{Arc, RwLock};
-
 /// Runtime value in the VM.
 #[derive(Debug, Clone)]
 pub enum Value {
@@ -26,13 +24,6 @@ pub enum Value {
     Record {
         type_name: String,
         fields: Vec<(String, Value)>,
-    },
-    /// Shared heap reference.
-    ///
-    /// **Documentation:** `docs/pascal/05-types.md`
-    Ref {
-        type_name: String,
-        value: Arc<RwLock<Value>>,
     },
     /// Unit / void — result of procedures, statements.
     Unit,
@@ -76,7 +67,6 @@ impl Value {
             Value::Array(_) => "array",
             Value::Dict(_) => "dict",
             Value::Record { .. } => "record",
-            Value::Ref { .. } => "ref",
             Value::Unit => "unit",
             Value::ResultOk(_) => "Result.Ok",
             Value::ResultError(_) => "Result.Error",
@@ -169,7 +159,6 @@ impl std::fmt::Display for Value {
                 }
                 write!(f, "}}")
             }
-            Value::Ref { type_name, .. } => write!(f, "<ref {type_name}>"),
             Value::Unit => write!(f, "()"),
             Value::ResultOk(v) => write!(f, "Ok({v})"),
             Value::ResultError(v) => write!(f, "Error({v})"),
@@ -214,16 +203,6 @@ impl PartialEq for Value {
                     fields: b_fields,
                 },
             ) => a_type == b_type && a_fields == b_fields,
-            (
-                Self::Ref {
-                    type_name: a_type,
-                    value: a_value,
-                },
-                Self::Ref {
-                    type_name: b_type,
-                    value: b_value,
-                },
-            ) => a_type == b_type && Arc::ptr_eq(a_value, b_value),
             (Self::Unit, Self::Unit) => true,
             (Self::ResultOk(a), Self::ResultOk(b)) => a == b,
             (Self::ResultError(a), Self::ResultError(b)) => a == b,

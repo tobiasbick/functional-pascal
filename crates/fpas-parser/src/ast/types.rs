@@ -12,13 +12,6 @@ pub enum TypeExpr {
         span: Span,
     },
     Array(Box<TypeExpr>, Span),
-    /// `ref T`
-    ///
-    /// **Documentation:** `docs/pascal/05-types.md`
-    Ref {
-        inner_type: Box<TypeExpr>,
-        span: Span,
-    },
     FunctionType {
         params: Vec<FormalParam>,
         return_type: Box<TypeExpr>,

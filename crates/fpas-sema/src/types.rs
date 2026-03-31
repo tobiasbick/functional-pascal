@@ -76,10 +76,6 @@ pub enum Ty {
     /// Procedure / void result (e.g. `Std.Array.Push`).
     Unit,
     Array(Box<Ty>),
-    /// `ref T` — shared reference to a heap-allocated record.
-    ///
-    /// **Documentation:** `docs/pascal/05-types.md`
-    Ref(Box<Ty>),
     Record(RecordTy),
     Enum(EnumTy),
     Function(FunctionTy),
@@ -209,7 +205,6 @@ impl std::fmt::Display for Ty {
             Ty::String => write!(f, "string"),
             Ty::Unit => write!(f, "unit"),
             Ty::Array(inner) => write!(f, "array of {inner}"),
-            Ty::Ref(inner) => write!(f, "ref {inner}"),
             Ty::Record(r) => write!(f, "{}", r.name),
             Ty::Enum(e) => write!(f, "{}", e.name),
             Ty::Function(ft) => {
@@ -268,8 +263,6 @@ impl Ty {
             (Ty::Char, Ty::String) | (Ty::String, Ty::Char) => true,
             // Array with Error element type is compatible with any array
             (Ty::Array(a), Ty::Array(b)) => a.compatible_with(b),
-            // Ref covariance
-            (Ty::Ref(a), Ty::Ref(b)) => a.compatible_with(b),
             // Named type matches the concrete record with the same name (recursive records).
             (Ty::Named(n), Ty::Record(r)) | (Ty::Record(r), Ty::Named(n)) => {
                 n.eq_ignore_ascii_case(&r.name)

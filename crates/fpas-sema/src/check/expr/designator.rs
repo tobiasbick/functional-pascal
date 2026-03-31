@@ -74,9 +74,6 @@ impl Checker {
                 let mut ty = symbol.ty.clone();
                 for part in &designator.parts[1..] {
                     ty = self.resolve_visible_type(&ty);
-                    if let Ty::Ref(inner) = ty {
-                        ty = self.resolve_visible_type(inner.as_ref());
-                    }
 
                     ty = match part {
                         DesignatorPart::Ident(field, span) => match &ty {

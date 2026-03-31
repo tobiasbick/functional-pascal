@@ -141,7 +141,6 @@ impl NameRewriter<'_> {
                 }
             }
             TypeExpr::Array(inner, _) => self.rewrite_type_expr(inner),
-            TypeExpr::Ref { inner_type, .. } => self.rewrite_type_expr(inner_type),
             TypeExpr::FunctionType {
                 params,
                 return_type,

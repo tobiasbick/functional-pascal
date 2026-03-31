@@ -1,4 +1,3 @@
-use super::TypeExpr;
 use fpas_lexer::Span;
 
 impl Expr {
@@ -24,7 +23,7 @@ impl Expr {
             | Self::UnaryOp { span, .. }
             | Self::BinaryOp { span, .. }
             | Self::RecordLiteral { span, .. }
-            | Self::New { span, .. }
+
             | Self::RecordUpdate { span, .. } => *span,
         }
     }
@@ -61,14 +60,6 @@ pub enum Expr {
     /// **Documentation:** `docs/future/advanced-types.md`
     DictLiteral(Vec<(Expr, Expr)>, Span),
     RecordLiteral {
-        fields: Vec<FieldInit>,
-        span: Span,
-    },
-    /// `new T with Field := Value; ... end`
-    ///
-    /// **Documentation:** `docs/pascal/05-types.md`
-    New {
-        type_expr: TypeExpr,
         fields: Vec<FieldInit>,
         span: Span,
     },

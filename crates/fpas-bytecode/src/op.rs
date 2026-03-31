@@ -151,10 +151,6 @@ pub enum Op {
     // ── Records ─────────────────────────────────────────────
     /// Build record: N field values on stack + constant index for type name.
     MakeRecord(u16, u16),
-    /// Wrap the top-of-stack value in a shared reference.
-    ///
-    /// **Documentation:** `docs/pascal/05-types.md`
-    MakeRef(u16),
     /// Get field by constant-pool index (field name): [record] → value.
     FieldGet(u16),
     /// Set field by constant-pool index (field name): [record, value] → ().

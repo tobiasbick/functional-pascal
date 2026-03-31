@@ -37,51 +37,6 @@ end.",
 }
 
 #[test]
-fn lambda_type_mismatch_return() {
-    let err = compile_err(
-        "\
-program LambdaRetMismatch;
-begin
-  var F: function(X: integer): string :=
-    function(X: integer): string
-    begin
-      return X
-    end
-end.",
-    );
-    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
-}
-
-#[test]
-fn lambda_wrong_param_count_in_call() {
-    let err = compile_err(
-        "\
-program LambdaArity;
-uses Std.Console;
-begin
-  var F: function(X: integer): integer :=
-    function(X: integer): integer begin return X end;
-  WriteLn(F(1, 2))
-end.",
-    );
-    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_WRONG_ARGUMENT_COUNT);
-}
-
-#[test]
-fn lambda_argument_type_mismatch() {
-    let err = compile_err(
-        "\
-program LambdaArgMismatch;
-begin
-  var F: function(X: integer): integer :=
-    function(X: integer): integer begin return X end;
-  var R: integer := F('wrong')
-end.",
-    );
-    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
-}
-
-#[test]
 fn function_type_mismatch_in_assignment() {
     let err = compile_err(
         "\

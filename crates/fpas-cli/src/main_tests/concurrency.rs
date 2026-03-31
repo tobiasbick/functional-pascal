@@ -1122,24 +1122,24 @@ end.
 // ===========================================================================
 
 #[test]
-fn go_spawns_closure() {
-    let source = r#"program GoClosure;
+fn go_spawns_callable_variable() {
+    let source = r#"program GoCallable;
 uses Std.Console, Std.Task;
 
-function MakeGreeter(Name: string): function(): string;
+function Greet(): string;
 begin
-  return function(): string begin return 'Hi ' + Name end
+  return 'Hi World'
 end;
 
 begin
-  var Greet: function(): string := MakeGreeter('World');
-  var T: task := go Greet();
+  var F: function(): string := Greet;
+  var T: task := go F();
   WriteLn(Std.Task.Wait(T))
 end.
 "#;
 
     let (exit_code, stdout_output, stderr_output) =
-        support::run_source_and_capture_output("go_closure.fpas", source);
+        support::run_source_and_capture_output("go_callable.fpas", source);
     assert!(stderr_output.is_empty(), "stderr: {stderr_output}");
     assert_eq!(exit_code, 0);
     assert_eq!(stdout_output, "Hi World\n");

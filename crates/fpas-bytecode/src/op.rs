@@ -125,12 +125,6 @@ pub enum Op {
     ///
     /// **Documentation:** `docs/future/closures.md`
     CallValue(u8),
-    /// Bundle captured values into a function value to form a closure.
-    ///
-    /// Stack: `[..., cap0, cap1, ..., capN, function_value]` → `[..., closure_value]`
-    ///
-    /// **Documentation:** `docs/future/closures.md`
-    MakeClosure(u8),
     /// Return from function (top-of-stack is return value).
     Return,
     /// Read a local from an enclosing function's call frame.

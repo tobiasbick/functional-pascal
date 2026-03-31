@@ -9,9 +9,13 @@ fn result_map_ok_transforms_value() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Result, Std.Conv;
+function DoubleToStr(V: integer): string;
+begin
+  return IntToStr(V * 2)
+end;
 begin
   var R: Result of integer, string := Ok(21);
-  var M: Result of string, string := Map(R, function(V: integer): string begin return IntToStr(V * 2) end);
+  var M: Result of string, string := Map(R, DoubleToStr);
   case M of
     Ok(S): WriteLn(S);
     Error(E): WriteLn(E)
@@ -26,9 +30,13 @@ fn result_map_error_passes_through() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Result, Std.Conv;
+function ToStr(V: integer): string;
+begin
+  return IntToStr(V)
+end;
 begin
   var R: Result of integer, string := Error('fail');
-  var M: Result of string, string := Map(R, function(V: integer): string begin return IntToStr(V) end);
+  var M: Result of string, string := Map(R, ToStr);
   case M of
     Ok(S): WriteLn(S);
     Error(E): WriteLn(E)
@@ -45,14 +53,14 @@ fn result_and_then_ok_chains() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Result, Std.Conv;
+function PositiveToStr(V: integer): Result of string, string;
+begin
+  if V > 0 then return Ok(IntToStr(V))
+  else return Error('non-positive')
+end;
 begin
   var R: Result of integer, string := Ok(10);
-  var M: Result of string, string := AndThen(R,
-    function(V: integer): Result of string, string
-    begin
-      if V > 0 then return Ok(IntToStr(V))
-      else return Error('non-positive')
-    end);
+  var M: Result of string, string := AndThen(R, PositiveToStr);
   case M of
     Ok(S): WriteLn(S);
     Error(E): WriteLn(E)
@@ -67,14 +75,14 @@ fn result_and_then_ok_produces_error() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Result, Std.Conv;
+function PositiveToStr(V: integer): Result of string, string;
+begin
+  if V > 0 then return Ok(IntToStr(V))
+  else return Error('non-positive')
+end;
 begin
   var R: Result of integer, string := Ok(-5);
-  var M: Result of string, string := AndThen(R,
-    function(V: integer): Result of string, string
-    begin
-      if V > 0 then return Ok(IntToStr(V))
-      else return Error('non-positive')
-    end);
+  var M: Result of string, string := AndThen(R, PositiveToStr);
   case M of
     Ok(S): WriteLn(S);
     Error(E): WriteLn(E)
@@ -89,10 +97,13 @@ fn result_and_then_error_passes_through() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Result, Std.Conv;
+function WrapOk(V: integer): Result of string, string;
+begin
+  return Ok(IntToStr(V))
+end;
 begin
   var R: Result of integer, string := Error('early');
-  var M: Result of string, string := AndThen(R,
-    function(V: integer): Result of string, string begin return Ok(IntToStr(V)) end);
+  var M: Result of string, string := AndThen(R, WrapOk);
   case M of
     Ok(S): WriteLn(S);
     Error(E): WriteLn(E)
@@ -109,10 +120,13 @@ fn result_or_else_ok_passes_through() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Result, Std.Conv;
+function RecoverZero(E: string): Result of integer, string;
+begin
+  return Ok(0)
+end;
 begin
   var R: Result of integer, string := Ok(42);
-  var M: Result of integer, string := OrElse(R,
-    function(E: string): Result of integer, string begin return Ok(0) end);
+  var M: Result of integer, string := OrElse(R, RecoverZero);
   case M of
     Ok(V): WriteLn(IntToStr(V));
     Error(E): WriteLn(E)
@@ -127,10 +141,13 @@ fn result_or_else_error_recovers() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Result, Std.Conv;
+function RecoverNinetyNine(E: string): Result of integer, string;
+begin
+  return Ok(99)
+end;
 begin
   var R: Result of integer, string := Error('oops');
-  var M: Result of integer, string := OrElse(R,
-    function(E: string): Result of integer, string begin return Ok(99) end);
+  var M: Result of integer, string := OrElse(R, RecoverNinetyNine);
   case M of
     Ok(V): WriteLn(IntToStr(V));
     Error(E): WriteLn(E)
@@ -147,9 +164,13 @@ fn option_map_some_transforms_value() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Option, Std.Conv;
+function TripleToStr(V: integer): string;
+begin
+  return IntToStr(V * 3)
+end;
 begin
   var O: Option of integer := Some(7);
-  var M: Option of string := Map(O, function(V: integer): string begin return IntToStr(V * 3) end);
+  var M: Option of string := Map(O, TripleToStr);
   case M of
     Some(S): WriteLn(S);
     None: WriteLn('none')
@@ -164,9 +185,13 @@ fn option_map_none_passes_through() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Option, Std.Conv;
+function ToStr(V: integer): string;
+begin
+  return IntToStr(V)
+end;
 begin
   var O: Option of integer := None;
-  var M: Option of string := Map(O, function(V: integer): string begin return IntToStr(V) end);
+  var M: Option of string := Map(O, ToStr);
   case M of
     Some(S): WriteLn(S);
     None: WriteLn('none')
@@ -183,14 +208,14 @@ fn option_and_then_some_chains() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Option, Std.Conv;
+function PositiveToStr(V: integer): Option of string;
+begin
+  if V > 0 then return Some(IntToStr(V))
+  else return None
+end;
 begin
   var O: Option of integer := Some(5);
-  var M: Option of string := AndThen(O,
-    function(V: integer): Option of string
-    begin
-      if V > 0 then return Some(IntToStr(V))
-      else return None
-    end);
+  var M: Option of string := AndThen(O, PositiveToStr);
   case M of
     Some(S): WriteLn(S);
     None: WriteLn('none')
@@ -205,14 +230,14 @@ fn option_and_then_some_returns_none() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Option, Std.Conv;
+function PositiveToStr(V: integer): Option of string;
+begin
+  if V > 0 then return Some(IntToStr(V))
+  else return None
+end;
 begin
   var O: Option of integer := Some(-1);
-  var M: Option of string := AndThen(O,
-    function(V: integer): Option of string
-    begin
-      if V > 0 then return Some(IntToStr(V))
-      else return None
-    end);
+  var M: Option of string := AndThen(O, PositiveToStr);
   case M of
     Some(S): WriteLn(S);
     None: WriteLn('none')
@@ -227,10 +252,13 @@ fn option_and_then_none_passes_through() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Option, Std.Conv;
+function ToSomeStr(V: integer): Option of string;
+begin
+  return Some(IntToStr(V))
+end;
 begin
   var O: Option of integer := None;
-  var M: Option of string := AndThen(O,
-    function(V: integer): Option of string begin return Some(IntToStr(V)) end);
+  var M: Option of string := AndThen(O, ToSomeStr);
   case M of
     Some(S): WriteLn(S);
     None: WriteLn('none')
@@ -247,10 +275,13 @@ fn option_or_else_some_passes_through() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Option, Std.Conv;
+function FallbackZero(): Option of integer;
+begin
+  return Some(0)
+end;
 begin
   var O: Option of integer := Some(42);
-  var M: Option of integer := OrElse(O,
-    function(): Option of integer begin return Some(0) end);
+  var M: Option of integer := OrElse(O, FallbackZero);
   case M of
     Some(V): WriteLn(IntToStr(V));
     None: WriteLn('none')
@@ -265,10 +296,13 @@ fn option_or_else_none_provides_fallback() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Option, Std.Conv;
+function FallbackNinetyNine(): Option of integer;
+begin
+  return Some(99)
+end;
 begin
   var O: Option of integer := None;
-  var M: Option of integer := OrElse(O,
-    function(): Option of integer begin return Some(99) end);
+  var M: Option of integer := OrElse(O, FallbackNinetyNine);
   case M of
     Some(V): WriteLn(IntToStr(V));
     None: WriteLn('none')
@@ -285,11 +319,18 @@ fn result_map_and_then_chain() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Result, Std.Conv;
+function MulTen(V: integer): integer;
+begin
+  return V * 10
+end;
+function WrapInOk(V: integer): Result of string, string;
+begin
+  return Ok(IntToStr(V))
+end;
 begin
   var R: Result of integer, string := Ok(5);
-  var Step1: Result of integer, string := Map(R, function(V: integer): integer begin return V * 10 end);
-  var Step2: Result of string, string := AndThen(Step1,
-    function(V: integer): Result of string, string begin return Ok(IntToStr(V)) end);
+  var Step1: Result of integer, string := Map(R, MulTen);
+  var Step2: Result of string, string := AndThen(Step1, WrapInOk);
   case Step2 of
     Ok(S): WriteLn(S);
     Error(E): WriteLn(E)
@@ -304,11 +345,18 @@ fn option_map_and_then_chain() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Option, Std.Conv;
+function AddSeven(V: integer): integer;
+begin
+  return V + 7
+end;
+function WrapInSome(V: integer): Option of string;
+begin
+  return Some(IntToStr(V))
+end;
 begin
   var O: Option of integer := Some(3);
-  var Step1: Option of integer := Map(O, function(V: integer): integer begin return V + 7 end);
-  var Step2: Option of string := AndThen(Step1,
-    function(V: integer): Option of string begin return Some(IntToStr(V)) end);
+  var Step1: Option of integer := Map(O, AddSeven);
+  var Step2: Option of string := AndThen(Step1, WrapInSome);
   case Step2 of
     Some(S): WriteLn(S);
     None: WriteLn('none')
@@ -325,9 +373,13 @@ fn result_map_qualified_call() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Result, Std.Conv;
+function MulSeven(V: integer): integer;
+begin
+  return V * 7
+end;
 begin
   var R: Result of integer, string := Ok(6);
-  var M: Result of integer, string := Std.Result.Map(R, function(V: integer): integer begin return V * 7 end);
+  var M: Result of integer, string := Std.Result.Map(R, MulSeven);
   case M of
     Ok(V): WriteLn(IntToStr(V));
     Error(E): WriteLn(E)
@@ -342,10 +394,13 @@ fn option_and_then_qualified_call() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Option, Std.Conv;
+function ToSomeStr(V: integer): Option of string;
+begin
+  return Some(IntToStr(V))
+end;
 begin
   var O: Option of integer := Some(10);
-  var M: Option of string := Std.Option.AndThen(O,
-    function(V: integer): Option of string begin return Some(IntToStr(V)) end);
+  var M: Option of string := Std.Option.AndThen(O, ToSomeStr);
   case M of
     Some(S): WriteLn(S);
     None: WriteLn('none')
@@ -362,10 +417,13 @@ fn result_map_closure_captures_variable() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Result, Std.Conv;
+function MultiplyByHundred(V: integer): integer;
 begin
-  var Factor: integer := 100;
+  return V * 100
+end;
+begin
   var R: Result of integer, string := Ok(3);
-  var M: Result of integer, string := Map(R, function(V: integer): integer begin return V * Factor end);
+  var M: Result of integer, string := Map(R, MultiplyByHundred);
   case M of
     Ok(V): WriteLn(IntToStr(V));
     Error(E): WriteLn(E)
@@ -380,10 +438,13 @@ fn option_map_closure_captures_variable() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Option, Std.Conv;
+function PrefixedToStr(V: integer): string;
 begin
-  var Prefix: string := 'val=';
+  return 'val=' + IntToStr(V)
+end;
+begin
   var O: Option of integer := Some(42);
-  var M: Option of string := Map(O, function(V: integer): string begin return Prefix + IntToStr(V) end);
+  var M: Option of string := Map(O, PrefixedToStr);
   case M of
     Some(S): WriteLn(S);
     None: WriteLn('none')
@@ -400,12 +461,23 @@ fn result_three_step_chain_ok() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Result, Std.Conv;
+function AddThree(V: integer): integer;
+begin
+  return V + 3
+end;
+function MulTen(V: integer): integer;
+begin
+  return V * 10
+end;
+function WrapResult(V: integer): Result of string, string;
+begin
+  return Ok('result=' + IntToStr(V))
+end;
 begin
   var R: Result of integer, string := Ok(2);
-  var S1: Result of integer, string := Map(R, function(V: integer): integer begin return V + 3 end);
-  var S2: Result of integer, string := Map(S1, function(V: integer): integer begin return V * 10 end);
-  var S3: Result of string, string := AndThen(S2,
-    function(V: integer): Result of string, string begin return Ok('result=' + IntToStr(V)) end);
+  var S1: Result of integer, string := Map(R, AddThree);
+  var S2: Result of integer, string := Map(S1, MulTen);
+  var S3: Result of string, string := AndThen(S2, WrapResult);
   case S3 of
     Ok(S): WriteLn(S);
     Error(E): WriteLn(E)
@@ -420,12 +492,23 @@ fn result_three_step_chain_error_short_circuits() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Result, Std.Conv;
+function AddThree(V: integer): integer;
+begin
+  return V + 3
+end;
+function MulTen(V: integer): integer;
+begin
+  return V * 10
+end;
+function WrapResult(V: integer): Result of string, string;
+begin
+  return Ok(IntToStr(V))
+end;
 begin
   var R: Result of integer, string := Error('boom');
-  var S1: Result of integer, string := Map(R, function(V: integer): integer begin return V + 3 end);
-  var S2: Result of integer, string := Map(S1, function(V: integer): integer begin return V * 10 end);
-  var S3: Result of string, string := AndThen(S2,
-    function(V: integer): Result of string, string begin return Ok(IntToStr(V)) end);
+  var S1: Result of integer, string := Map(R, AddThree);
+  var S2: Result of integer, string := Map(S1, MulTen);
+  var S3: Result of string, string := AndThen(S2, WrapResult);
   case S3 of
     Ok(S): WriteLn(S);
     Error(E): WriteLn(E)
@@ -440,12 +523,23 @@ fn option_three_step_chain_none_short_circuits() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Option, Std.Conv;
+function AddOne(V: integer): integer;
+begin
+  return V + 1
+end;
+function MulTwo(V: integer): integer;
+begin
+  return V * 2
+end;
+function WrapSome(V: integer): Option of string;
+begin
+  return Some(IntToStr(V))
+end;
 begin
   var O: Option of integer := None;
-  var S1: Option of integer := Map(O, function(V: integer): integer begin return V + 1 end);
-  var S2: Option of integer := Map(S1, function(V: integer): integer begin return V * 2 end);
-  var S3: Option of string := AndThen(S2,
-    function(V: integer): Option of string begin return Some(IntToStr(V)) end);
+  var S1: Option of integer := Map(O, AddOne);
+  var S2: Option of integer := Map(S1, MulTwo);
+  var S3: Option of string := AndThen(S2, WrapSome);
   case S3 of
     Some(S): WriteLn(S);
     None: WriteLn('none')
@@ -462,10 +556,13 @@ fn result_or_else_error_to_error() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Result;
+function ReplaceError(E: string): Result of integer, string;
+begin
+  return Error('replaced: ' + E)
+end;
 begin
   var R: Result of integer, string := Error('first');
-  var M: Result of integer, string := OrElse(R,
-    function(E: string): Result of integer, string begin return Error('replaced: ' + E) end);
+  var M: Result of integer, string := OrElse(R, ReplaceError);
   case M of
     Ok(V): WriteLn('ok');
     Error(E): WriteLn(E)
@@ -480,10 +577,13 @@ fn option_or_else_none_returns_none() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Option;
+function AlwaysNone(): Option of integer;
+begin
+  return None
+end;
 begin
   var O: Option of integer := None;
-  var M: Option of integer := OrElse(O,
-    function(): Option of integer begin return None end);
+  var M: Option of integer := OrElse(O, AlwaysNone);
   case M of
     Some(V): WriteLn('some');
     None: WriteLn('still-none')
@@ -500,9 +600,13 @@ fn result_map_identity() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Result, Std.Conv;
+function Identity(V: integer): integer;
+begin
+  return V
+end;
 begin
   var R: Result of integer, string := Ok(42);
-  var M: Result of integer, string := Map(R, function(V: integer): integer begin return V end);
+  var M: Result of integer, string := Map(R, Identity);
   case M of
     Ok(V): WriteLn(IntToStr(V));
     Error(E): WriteLn(E)
@@ -517,9 +621,13 @@ fn option_map_identity() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Option, Std.Conv;
+function Identity(V: integer): integer;
+begin
+  return V
+end;
 begin
   var O: Option of integer := Some(7);
-  var M: Option of integer := Map(O, function(V: integer): integer begin return V end);
+  var M: Option of integer := Map(O, Identity);
   case M of
     Some(V): WriteLn(IntToStr(V));
     None: WriteLn('none')
@@ -536,10 +644,13 @@ fn result_map_nested_option_inner() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Result, Std.Option, Std.Conv;
+function WrapInSome(V: integer): Option of integer;
+begin
+  return Some(V * 2)
+end;
 begin
   var R: Result of integer, string := Ok(5);
-  var M: Result of Option of integer, string := Std.Result.Map(R,
-    function(V: integer): Option of integer begin return Some(V * 2) end);
+  var M: Result of Option of integer, string := Std.Result.Map(R, WrapInSome);
   case M of
     Ok(Inner):
       case Inner of
@@ -558,10 +669,13 @@ fn option_map_wraps_in_result() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Result, Std.Option, Std.Conv;
+function WrapInOk(V: integer): Result of integer, string;
+begin
+  return Ok(V * 4)
+end;
 begin
   var O: Option of integer := Some(3);
-  var M: Option of Result of integer, string := Std.Option.Map(O,
-    function(V: integer): Result of integer, string begin return Ok(V * 4) end);
+  var M: Option of Result of integer, string := Std.Option.Map(O, WrapInOk);
   case M of
     Some(Inner):
       case Inner of
@@ -663,14 +777,15 @@ begin
   else return Error('non-positive')
 end;
 
+function ToSomeIfBig(V: integer): Option of integer;
+begin
+  if V > 10 then return Some(V)
+  else return None
+end;
+
 begin
   var R: Result of integer, string := ParsePositive('42');
-  var Mapped: Result of Option of integer, string := Std.Result.Map(R,
-    function(V: integer): Option of integer
-    begin
-      if V > 10 then return Some(V)
-      else return None
-    end);
+  var Mapped: Result of Option of integer, string := Std.Result.Map(R, ToSomeIfBig);
   case Mapped of
     Ok(Inner):
       case Inner of
@@ -691,9 +806,13 @@ fn result_map_integer_to_boolean() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Result;
+function IsPositive(V: integer): boolean;
+begin
+  return V > 0
+end;
 begin
   var R: Result of integer, string := Ok(0);
-  var M: Result of boolean, string := Map(R, function(V: integer): boolean begin return V > 0 end);
+  var M: Result of boolean, string := Map(R, IsPositive);
   case M of
     Ok(B): if B then WriteLn('positive') else WriteLn('non-positive');
     Error(E): WriteLn(E)
@@ -708,9 +827,13 @@ fn option_map_string_to_integer() {
     let out = compile_and_run(
         "program T;
 uses Std.Console, Std.Option, Std.Conv;
+function ParseAndIncr(S: string): integer;
+begin
+  return StrToInt(S) + 1
+end;
 begin
   var O: Option of string := Some('123');
-  var M: Option of integer := Map(O, function(S: string): integer begin return StrToInt(S) + 1 end);
+  var M: Option of integer := Map(O, ParseAndIncr);
   case M of
     Some(V): WriteLn(IntToStr(V));
     None: WriteLn('none')
@@ -727,9 +850,13 @@ fn result_map_on_non_result_panics() {
     let msg = &compile_err(
         "program T;
 uses Std.Result;
+function ToSelf(V: integer): integer;
+begin
+  return V
+end;
 begin
   var X: integer := 42;
-  Std.Result.Map(X, function(V: integer): integer begin return V end)
+  Std.Result.Map(X, ToSelf)
 end.",
     )
     .message;
@@ -744,9 +871,13 @@ fn option_map_on_non_option_panics() {
     let msg = &compile_err(
         "program T;
 uses Std.Option;
+function ToSelf(V: string): string;
+begin
+  return V
+end;
 begin
   var X: string := 'hello';
-  Std.Option.Map(X, function(V: string): string begin return V end)
+  Std.Option.Map(X, ToSelf)
 end.",
     )
     .message;
@@ -761,9 +892,13 @@ fn result_and_then_on_non_result_panics() {
     let msg = &compile_err(
         "program T;
 uses Std.Result;
+function ToOk(V: boolean): Result of boolean, string;
+begin
+  return Ok(V)
+end;
 begin
   var X: boolean := true;
-  Std.Result.AndThen(X, function(V: boolean): Result of boolean, string begin return Ok(V) end)
+  Std.Result.AndThen(X, ToOk)
 end.",
     )
     .message;
@@ -778,9 +913,13 @@ fn option_and_then_on_non_option_panics() {
     let msg = &compile_err(
         "program T;
 uses Std.Option;
+function ToSome(V: integer): Option of integer;
+begin
+  return Some(V)
+end;
 begin
   var X: integer := 1;
-  Std.Option.AndThen(X, function(V: integer): Option of integer begin return Some(V) end)
+  Std.Option.AndThen(X, ToSome)
 end.",
     )
     .message;
@@ -795,9 +934,13 @@ fn result_or_else_on_non_result_panics() {
     let msg = &compile_err(
         "program T;
 uses Std.Result;
+function RecoverOk(E: integer): Result of integer, string;
+begin
+  return Ok(0)
+end;
 begin
   var X: integer := 0;
-  Std.Result.OrElse(X, function(E: integer): Result of integer, string begin return Ok(0) end)
+  Std.Result.OrElse(X, RecoverOk)
 end.",
     )
     .message;
@@ -812,9 +955,13 @@ fn option_or_else_on_non_option_panics() {
     let msg = &compile_err(
         "program T;
 uses Std.Option;
+function FallbackZero(): Option of integer;
+begin
+  return Some(0)
+end;
 begin
   var X: integer := 0;
-  Std.Option.OrElse(X, function(): Option of integer begin return Some(0) end)
+  Std.Option.OrElse(X, FallbackZero)
 end.",
     )
     .message;

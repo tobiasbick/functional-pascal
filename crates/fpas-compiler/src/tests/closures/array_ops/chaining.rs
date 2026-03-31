@@ -6,12 +6,18 @@ fn map_then_filter() {
         "\
 program ChainTest;
 uses Std.Console, Std.Array;
+function Double(X: integer): integer;
+begin
+  return X * 2
+end;
+function GreaterThanFive(X: integer): boolean;
+begin
+  return X > 5
+end;
 begin
   var Nums: array of integer := [1, 2, 3, 4, 5];
-  var Doubled: array of integer := Map(Nums,
-    function(X: integer): integer begin return X * 2 end);
-  var Big: array of integer := Filter(Doubled,
-    function(X: integer): boolean begin return X > 5 end);
+  var Doubled: array of integer := Map(Nums, Double);
+  var Big: array of integer := Filter(Doubled, GreaterThanFive);
   for V: integer in Big do
     Write(V);
   WriteLn('')
@@ -26,15 +32,23 @@ fn map_filter_reduce_chained() {
         "\
 program FullChain;
 uses Std.Console, Std.Array;
+function Square(X: integer): integer;
+begin
+  return X * X
+end;
+function GreaterThanTwenty(X: integer): boolean;
+begin
+  return X > 20
+end;
+function AddAcc(Acc: integer; V: integer): integer;
+begin
+  return Acc + V
+end;
 begin
   var Nums: array of integer := [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-  { Square, keep > 20, sum }
-  var Squared: array of integer := Map(Nums,
-    function(X: integer): integer begin return X * X end);
-  var Big: array of integer := Filter(Squared,
-    function(X: integer): boolean begin return X > 20 end);
-  var Total: integer := Reduce(Big, 0,
-    function(Acc: integer; V: integer): integer begin return Acc + V end);
+  var Squared: array of integer := Map(Nums, Square);
+  var Big: array of integer := Filter(Squared, GreaterThanTwenty);
+  var Total: integer := Reduce(Big, 0, AddAcc);
   WriteLn(Total)
 end.",
     );

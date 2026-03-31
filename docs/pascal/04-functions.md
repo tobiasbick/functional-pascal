@@ -92,39 +92,6 @@ begin
 end;
 ```
 
-## Anonymous Functions (Lambdas)
-
-Anonymous functions use the `function` keyword inline and can be assigned to variables or passed as arguments:
-
-```pascal
-var Square: function(X: integer): integer :=
-  function(X: integer): integer
-  begin
-    return X * X
-  end;
-
-WriteLn(Square(4));  { 16 }
-```
-
-## Closures
-
-Anonymous functions capture variables from their enclosing scope by value:
-
-```pascal
-function MakeAdder(N: integer): function(X: integer): integer;
-begin
-  return function(X: integer): integer
-  begin
-    return X + N
-  end
-end;
-
-begin
-  var Add5: function(X: integer): integer := MakeAdder(5);
-  WriteLn(Add5(10));  { 15 }
-end.
-```
-
 ## Mutual recursion
 
 Declare callees before callers when only one direction of call is needed. For mutual recursion, nest the helper in the outer routine so both names are in scope when bodies are checked:

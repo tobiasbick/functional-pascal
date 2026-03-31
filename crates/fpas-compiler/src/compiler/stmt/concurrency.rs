@@ -108,7 +108,7 @@ impl Compiler {
             }]
         };
 
-        self.compile_function_expr(
+        self.compile_callable_wrapper(
             &params,
             &FuncBody::Block {
                 nested: vec![],

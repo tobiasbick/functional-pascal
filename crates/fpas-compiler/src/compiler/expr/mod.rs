@@ -178,14 +178,6 @@ impl Compiler {
             Expr::Try(inner, span) => {
                 self.compile_try_expr(inner, (span.line, span.column))?;
             }
-            Expr::Function {
-                params,
-                return_type: _,
-                body,
-                span,
-            } => {
-                self.compile_function_expr(params, body, (span.line, span.column))?;
-            }
             Expr::Go(inner, span) => {
                 self.compile_go_expr(inner, *span)?;
             }

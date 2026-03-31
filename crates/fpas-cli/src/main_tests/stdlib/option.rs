@@ -172,10 +172,13 @@ end.
 fn map_some_transforms_value() {
     let source = r#"program T;
 uses Std.Console, Std.Option, Std.Conv;
+function TripleToStr(V: integer): string;
+begin
+  return IntToStr(V * 3)
+end;
 begin
   var O: Option of integer := Some(7);
-  var M: Option of string := Map(O,
-    function(V: integer): string begin return IntToStr(V * 3) end);
+  var M: Option of string := Map(O, TripleToStr);
   WriteLn(Unwrap(M))
 end.
 "#;
@@ -189,10 +192,13 @@ end.
 fn map_none_passes_through() {
     let source = r#"program T;
 uses Std.Console, Std.Option;
+function AlwaysOk(V: integer): string;
+begin
+  return 'ok'
+end;
 begin
   var O: Option of integer := None;
-  var M: Option of string := Map(O,
-    function(V: integer): string begin return 'ok' end);
+  var M: Option of string := Map(O, AlwaysOk);
   WriteLn(IsNone(M))
 end.
 "#;
@@ -206,10 +212,13 @@ end.
 fn map_qualified_call() {
     let source = r#"program T;
 uses Std.Console, Std.Option, Std.Conv;
+function ToStr(V: integer): string;
+begin
+  return IntToStr(V)
+end;
 begin
   var O: Option of integer := Some(10);
-  var M: Option of string := Std.Option.Map(O,
-    function(V: integer): string begin return IntToStr(V) end);
+  var M: Option of string := Std.Option.Map(O, ToStr);
   WriteLn(Unwrap(M))
 end.
 "#;
@@ -227,14 +236,14 @@ end.
 fn and_then_some_chains() {
     let source = r#"program T;
 uses Std.Console, Std.Option, Std.Conv;
+function PositiveToStr(V: integer): Option of string;
+begin
+  if V > 0 then return Some(IntToStr(V))
+  else return None
+end;
 begin
   var O: Option of integer := Some(5);
-  var M: Option of string := AndThen(O,
-    function(V: integer): Option of string
-    begin
-      if V > 0 then return Some(IntToStr(V))
-      else return None
-    end);
+  var M: Option of string := AndThen(O, PositiveToStr);
   WriteLn(Unwrap(M))
 end.
 "#;
@@ -248,14 +257,14 @@ end.
 fn and_then_some_returns_none() {
     let source = r#"program T;
 uses Std.Console, Std.Option;
+function PositiveOk(V: integer): Option of string;
+begin
+  if V > 0 then return Some('ok')
+  else return None
+end;
 begin
   var O: Option of integer := Some(-1);
-  var M: Option of string := AndThen(O,
-    function(V: integer): Option of string
-    begin
-      if V > 0 then return Some('ok')
-      else return None
-    end);
+  var M: Option of string := AndThen(O, PositiveOk);
   WriteLn(IsNone(M))
 end.
 "#;
@@ -269,10 +278,13 @@ end.
 fn and_then_none_passes_through() {
     let source = r#"program T;
 uses Std.Console, Std.Option;
+function AlwaysSomeOk(V: integer): Option of string;
+begin
+  return Some('ok')
+end;
 begin
   var O: Option of integer := None;
-  var M: Option of string := AndThen(O,
-    function(V: integer): Option of string begin return Some('ok') end);
+  var M: Option of string := AndThen(O, AlwaysSomeOk);
   WriteLn(IsNone(M))
 end.
 "#;
@@ -290,10 +302,13 @@ end.
 fn or_else_none_provides_fallback() {
     let source = r#"program T;
 uses Std.Console, Std.Option;
+function FallbackNinetyNine(): Option of integer;
+begin
+  return Some(99)
+end;
 begin
   var O: Option of integer := None;
-  var M: Option of integer := OrElse(O,
-    function(): Option of integer begin return Some(99) end);
+  var M: Option of integer := OrElse(O, FallbackNinetyNine);
   WriteLn(Unwrap(M))
 end.
 "#;
@@ -307,10 +322,13 @@ end.
 fn or_else_some_passes_through() {
     let source = r#"program T;
 uses Std.Console, Std.Option;
+function FallbackNinetyNine(): Option of integer;
+begin
+  return Some(99)
+end;
 begin
   var O: Option of integer := Some(7);
-  var M: Option of integer := OrElse(O,
-    function(): Option of integer begin return Some(99) end);
+  var M: Option of integer := OrElse(O, FallbackNinetyNine);
   WriteLn(Unwrap(M))
 end.
 "#;
@@ -324,10 +342,13 @@ end.
 fn or_else_none_returns_none() {
     let source = r#"program T;
 uses Std.Console, Std.Option;
+function AlwaysNone(): Option of integer;
+begin
+  return None
+end;
 begin
   var O: Option of integer := None;
-  var M: Option of integer := OrElse(O,
-    function(): Option of integer begin return None end);
+  var M: Option of integer := OrElse(O, AlwaysNone);
   WriteLn(IsNone(M))
 end.
 "#;
@@ -345,16 +366,19 @@ end.
 fn map_then_and_then_chain() {
     let source = r#"program T;
 uses Std.Console, Std.Option, Std.Conv;
+function Double(V: integer): integer;
+begin
+  return V * 2
+end;
+function PositiveToStr(V: integer): Option of string;
+begin
+  if V > 0 then return Some(IntToStr(V))
+  else return None
+end;
 begin
   var O: Option of integer := Some(5);
-  var Doubled: Option of integer := Map(O,
-    function(V: integer): integer begin return V * 2 end);
-  var Final: Option of string := AndThen(Doubled,
-    function(V: integer): Option of string
-    begin
-      if V > 0 then return Some(IntToStr(V))
-      else return None
-    end);
+  var Doubled: Option of integer := Map(O, Double);
+  var Final: Option of string := AndThen(Doubled, PositiveToStr);
   WriteLn(Unwrap(Final))
 end.
 "#;

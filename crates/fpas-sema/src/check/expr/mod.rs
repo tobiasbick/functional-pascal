@@ -54,12 +54,6 @@ impl Checker {
             }
             Expr::OptionNone(_) => Ty::Option(Box::new(Ty::Error)),
             Expr::Try(inner, span) => self.check_try_expr(inner, *span),
-            Expr::Function {
-                params,
-                return_type,
-                body,
-                span: _,
-            } => self.check_function_expr(params, return_type, body),
             Expr::Go(inner, span) => self.check_go_expr(inner, *span),
             Expr::RecordUpdate { base, fields, span } => {
                 self.check_record_update(base, fields, *span)
@@ -360,65 +354,5 @@ impl Checker {
             }
             _ => {}
         }
-    }
-
-    /// Type-check an anonymous function expression (lambda / closure).
-    ///
-    /// **Documentation:** `docs/pascal/04-functions.md`
-    fn check_function_expr(
-        &mut self,
-        params: &[FormalParam],
-        return_type_expr: &TypeExpr,
-        body: &FuncBody,
-    ) -> Ty {
-        use crate::scope::{FunctionCtx, Symbol, SymbolKind};
-        use crate::types::{FunctionTy, ParamTy};
-
-        let return_ty = self.resolve_type_expr(return_type_expr);
-        let param_tys: Vec<ParamTy> = params
-            .iter()
-            .map(|p| ParamTy {
-                mutable: p.mutable,
-                name: p.name.clone(),
-                ty: self.resolve_type_expr(&p.type_expr),
-            })
-            .collect();
-
-        if let FuncBody::Block { nested, stmts } = body {
-            self.scopes.push_scope();
-
-            for p in &param_tys {
-                self.scopes.define(
-                    &p.name,
-                    Symbol {
-                        ty: p.ty.clone(),
-                        mutable: p.mutable,
-                        kind: SymbolKind::Param,
-                    },
-                );
-            }
-
-            let prev_ctx = self.scopes.function_ctx.take();
-            self.scopes.function_ctx = Some(FunctionCtx {
-                name: "<lambda>".into(),
-                return_type: Some(return_ty.clone()),
-            });
-
-            for decl in nested {
-                self.check_decl(decl);
-            }
-            for stmt in stmts {
-                self.check_stmt(stmt);
-            }
-
-            self.scopes.function_ctx = prev_ctx;
-            self.scopes.pop_scope();
-        }
-
-        Ty::Function(FunctionTy {
-            type_params: Vec::new(),
-            params: param_tys,
-            return_type: Box::new(return_ty),
-        })
     }
 }

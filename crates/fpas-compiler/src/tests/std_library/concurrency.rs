@@ -7,17 +7,14 @@ fn go_wait_supports_callable_values() {
 program T;
 uses Std.Console, Std.Task;
 
-function MakeAdder(Base: integer): function(X: integer): integer;
+function AddFortyTwo(X: integer): integer;
 begin
-  return function(X: integer): integer
-  begin
-    return Base + X
-  end
+  return 40 + X
 end;
 
 begin
-  var Add: function(X: integer): integer := MakeAdder(40);
-  var Tsk: task := go Add(2);
+  var F: function(X: integer): integer := AddFortyTwo;
+  var Tsk: task := go F(2);
   Std.Console.WriteLn(Std.Task.Wait(Tsk))
 end.",
     );

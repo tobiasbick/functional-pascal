@@ -1,19 +1,30 @@
 program ClosuresExample;
 uses Std.Console, Std.Array;
 
-{ A named function passed as a first-class value }
+{ First-class named functions }
 function Square(X: integer): integer;
 begin
   return X * X
 end;
 
-{ Returns a closure that captures N }
-function MakeAdder(N: integer): function(X: integer): integer;
+function Double(X: integer): integer;
 begin
-  return function(X: integer): integer
-  begin
-    return X + N
-  end
+  return X * 2
+end;
+
+function IsGreaterThanThree(X: integer): boolean;
+begin
+  return X > 3
+end;
+
+function IsGreaterThanTen(X: integer): boolean;
+begin
+  return X > 10
+end;
+
+function Sum(Acc: integer; V: integer): integer;
+begin
+  return Acc + V
 end;
 
 { Higher-order: accepts any integer->integer function }
@@ -23,22 +34,14 @@ begin
 end;
 
 begin
-  { 1. Anonymous function assigned to a variable }
-  var Double: function(X: integer): integer :=
-    function(X: integer): integer
-    begin
-      return X * 2
-    end;
-  WriteLn('Double(7) = ', Double(7));
-
-  { 2. Named function as a first-class value }
+  { 1. Named function as a first-class value }
   WriteLn('Apply(Square, 6) = ', Apply(Square, 6));
 
-  { 3. Closure capturing an enclosing variable }
-  var Add10: function(X: integer): integer := MakeAdder(10);
-  WriteLn('Add10(5) = ', Add10(5));
+  { 2. Named function assigned to a variable }
+  var Op: function(X: integer): integer := Double;
+  WriteLn('Op(7) = ', Op(7));
 
-  { 4. Map — double every element }
+  { 3. Map — double every element }
   var Nums: array of integer := [1, 2, 3, 4, 5];
   var Doubled: array of integer := Map(Nums, Double);
   Write('Map double: ');
@@ -46,23 +49,20 @@ begin
     Write(V, ' ');
   WriteLn('');
 
-  { 5. Filter — keep only values > 3 }
-  var Big: array of integer := Filter(Nums,
-    function(X: integer): boolean begin return X > 3 end);
+  { 4. Filter — keep only values > 3 }
+  var Big: array of integer := Filter(Nums, IsGreaterThanThree);
   Write('Filter > 3: ');
   for V: integer in Big do
     Write(V, ' ');
   WriteLn('');
 
-  { 6. Reduce — sum all elements }
-  var Sum: integer := Reduce(Nums, 0,
-    function(Acc: integer; V: integer): integer begin return Acc + V end);
-  WriteLn('Reduce sum: ', Sum);
+  { 5. Reduce — sum all elements }
+  var Total: integer := Reduce(Nums, 0, Sum);
+  WriteLn('Reduce sum: ', Total);
 
-  { 7. Chained: square, then keep only values > 10 }
+  { 6. Chained: square, then keep only values > 10 }
   var Squared: array of integer := Map(Nums, Square);
-  var LargeSquares: array of integer := Filter(Squared,
-    function(X: integer): boolean begin return X > 10 end);
+  var LargeSquares: array of integer := Filter(Squared, IsGreaterThanTen);
   Write('Squares > 10: ');
   for V: integer in LargeSquares do
     Write(V, ' ');

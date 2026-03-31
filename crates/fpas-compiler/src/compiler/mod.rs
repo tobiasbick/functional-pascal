@@ -74,8 +74,6 @@ pub struct Compiler {
     ///
     /// **Documentation:** `docs/pascal/05-types.md` (Interfaces)
     interface_dispatch: InterfaceDispatchMap,
-    /// Counter for generating unique lambda function names.
-    next_lambda_id: u32,
     /// Named record type → ordered (field_name, optional_default_expr) pairs.
     /// Used to expand record literals when fields with defaults are omitted.
     ///
@@ -113,7 +111,6 @@ impl Compiler {
             record_methods: HashMap::new(),
             method_calls,
             interface_dispatch,
-            next_lambda_id: 0,
             record_defaults,
             scalar_case_bindings,
         }

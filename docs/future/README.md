@@ -8,7 +8,7 @@ Planned changes for Functional Pascal, in execution order.
 |---|---------|-------------|
 | 1 | ~~[`forward`](01-remove-forward.md)~~ | **Done** |
 | 2 | ~~[`Compiler Directives`](02-remove-compiler-directives.md)~~ | **Done** |
-| 3 | [Inline Lambdas](03-remove-inline-lambdas.md) | Remove anonymous function expressions — named functions stay |
+| 3 | ~~[Inline Lambdas](03-remove-inline-lambdas.md)~~ | **Done** |
 | 4 | [Nested Patterns](04-remove-nested-patterns.md) | Remove deep destructuring and `_` wildcard — simple matching stays |
 | 5 | [`ref` / `new`](05-remove-ref-new.md) | Remove reference types and heap allocation |
 | 6 | [Interfaces](06-remove-interfaces.md) | Remove `interface`, `implements`, `extends`, virtual dispatch |

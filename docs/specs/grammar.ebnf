@@ -493,17 +493,8 @@ primary_expr        = integer_literal
                     | dict_literal
                     | record_literal
                     | new_expr
-                    | function_expr                      (* lambda/closure *)
                     | 'go' go_call                       (* spawn task     *)
                     | designator [ call_args ] ;
-
-(* -- Anonymous function expression (lambda / closure) -- *)
-function_expr       = 'function' '(' [ param_list ] ')' ':' type_expr
-                      { nested_decl }
-                      'begin' statement_list 'end' ;
-
-(* Anonymous functions capture enclosing variables by value.         *)
-(* They can be assigned to variables or passed as arguments.         *)
 
 (* -- Function call -- *)
 call_args           = '(' [ arg_list ] ')' ;

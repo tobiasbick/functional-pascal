@@ -191,10 +191,13 @@ end.
 fn map_ok_transforms_value() {
     let source = r#"program T;
 uses Std.Console, Std.Result, Std.Conv;
+function DoubleToStr(V: integer): string;
+begin
+  return IntToStr(V * 2)
+end;
 begin
   var R: Result of integer, string := Ok(21);
-  var M: Result of string, string := Map(R,
-    function(V: integer): string begin return IntToStr(V * 2) end);
+  var M: Result of string, string := Map(R, DoubleToStr);
   WriteLn(Unwrap(M))
 end.
 "#;
@@ -208,10 +211,13 @@ end.
 fn map_error_passes_through() {
     let source = r#"program T;
 uses Std.Console, Std.Result;
+function AlwaysOk(V: integer): string;
+begin
+  return 'ok'
+end;
 begin
   var R: Result of integer, string := Error('fail');
-  var M: Result of string, string := Map(R,
-    function(V: integer): string begin return 'ok' end);
+  var M: Result of string, string := Map(R, AlwaysOk);
   WriteLn(IsError(M))
 end.
 "#;
@@ -225,10 +231,13 @@ end.
 fn map_qualified_call() {
     let source = r#"program T;
 uses Std.Console, Std.Result, Std.Conv;
+function ToStr(V: integer): string;
+begin
+  return IntToStr(V)
+end;
 begin
   var R: Result of integer, string := Ok(5);
-  var M: Result of string, string := Std.Result.Map(R,
-    function(V: integer): string begin return IntToStr(V) end);
+  var M: Result of string, string := Std.Result.Map(R, ToStr);
   WriteLn(Unwrap(M))
 end.
 "#;
@@ -246,14 +255,14 @@ end.
 fn and_then_ok_chains() {
     let source = r#"program T;
 uses Std.Console, Std.Result, Std.Conv;
+function PositiveToStr(V: integer): Result of string, string;
+begin
+  if V > 0 then return Ok(IntToStr(V))
+  else return Error('non-positive')
+end;
 begin
   var R: Result of integer, string := Ok(10);
-  var M: Result of string, string := AndThen(R,
-    function(V: integer): Result of string, string
-    begin
-      if V > 0 then return Ok(IntToStr(V))
-      else return Error('non-positive')
-    end);
+  var M: Result of string, string := AndThen(R, PositiveToStr);
   WriteLn(Unwrap(M))
 end.
 "#;
@@ -267,14 +276,14 @@ end.
 fn and_then_ok_produces_error() {
     let source = r#"program T;
 uses Std.Console, Std.Result;
+function PositiveOk(V: integer): Result of string, string;
+begin
+  if V > 0 then return Ok('ok')
+  else return Error('non-positive')
+end;
 begin
   var R: Result of integer, string := Ok(-1);
-  var M: Result of string, string := AndThen(R,
-    function(V: integer): Result of string, string
-    begin
-      if V > 0 then return Ok('ok')
-      else return Error('non-positive')
-    end);
+  var M: Result of string, string := AndThen(R, PositiveOk);
   WriteLn(IsError(M))
 end.
 "#;
@@ -288,10 +297,13 @@ end.
 fn and_then_error_passes_through() {
     let source = r#"program T;
 uses Std.Console, Std.Result;
+function AlwaysOk(V: integer): Result of string, string;
+begin
+  return Ok('ok')
+end;
 begin
   var R: Result of integer, string := Error('original');
-  var M: Result of string, string := AndThen(R,
-    function(V: integer): Result of string, string begin return Ok('ok') end);
+  var M: Result of string, string := AndThen(R, AlwaysOk);
   WriteLn(IsError(M))
 end.
 "#;
@@ -309,10 +321,13 @@ end.
 fn or_else_error_recovers() {
     let source = r#"program T;
 uses Std.Console, Std.Result;
+function RecoverZero(E: string): Result of integer, string;
+begin
+  return Ok(0)
+end;
 begin
   var R: Result of integer, string := Error('oops');
-  var M: Result of integer, string := OrElse(R,
-    function(E: string): Result of integer, string begin return Ok(0) end);
+  var M: Result of integer, string := OrElse(R, RecoverZero);
   WriteLn(Unwrap(M))
 end.
 "#;
@@ -326,10 +341,13 @@ end.
 fn or_else_ok_passes_through() {
     let source = r#"program T;
 uses Std.Console, Std.Result;
+function RecoverZero(E: string): Result of integer, string;
+begin
+  return Ok(0)
+end;
 begin
   var R: Result of integer, string := Ok(42);
-  var M: Result of integer, string := OrElse(R,
-    function(E: string): Result of integer, string begin return Ok(0) end);
+  var M: Result of integer, string := OrElse(R, RecoverZero);
   WriteLn(Unwrap(M))
 end.
 "#;
@@ -343,10 +361,13 @@ end.
 fn or_else_error_to_error() {
     let source = r#"program T;
 uses Std.Console, Std.Result;
+function ReplaceError(E: string): Result of integer, string;
+begin
+  return Error('second')
+end;
 begin
   var R: Result of integer, string := Error('first');
-  var M: Result of integer, string := OrElse(R,
-    function(E: string): Result of integer, string begin return Error('second') end);
+  var M: Result of integer, string := OrElse(R, ReplaceError);
   WriteLn(IsError(M))
 end.
 "#;
@@ -364,16 +385,19 @@ end.
 fn map_then_and_then_chain() {
     let source = r#"program T;
 uses Std.Console, Std.Result, Std.Conv;
+function Double(V: integer): integer;
+begin
+  return V * 2
+end;
+function PositiveToStr(V: integer): Result of string, string;
+begin
+  if V > 0 then return Ok(IntToStr(V))
+  else return Error('non-positive')
+end;
 begin
   var R: Result of integer, string := Ok(5);
-  var Doubled: Result of integer, string := Map(R,
-    function(V: integer): integer begin return V * 2 end);
-  var Final: Result of string, string := AndThen(Doubled,
-    function(V: integer): Result of string, string
-    begin
-      if V > 0 then return Ok(IntToStr(V))
-      else return Error('non-positive')
-    end);
+  var Doubled: Result of integer, string := Map(R, Double);
+  var Final: Result of string, string := AndThen(Doubled, PositiveToStr);
   WriteLn(Unwrap(Final))
 end.
 "#;

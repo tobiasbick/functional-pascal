@@ -88,27 +88,6 @@ impl Worker {
                 self.stack[idx] = val;
                 Ok(true)
             }
-            Op::MakeClosure(num_captures) => {
-                let func = self.pop(line)?;
-                let mut captures = Vec::with_capacity(num_captures as usize);
-                for _ in 0..num_captures {
-                    captures.push(self.pop(line)?);
-                }
-                captures.reverse();
-                match func {
-                    Value::Function { name, .. } => {
-                        self.push(Value::Function { name, captures })?;
-                    }
-                    _ => {
-                        return Err(internal_error(
-                            "MakeClosure expected a Function value on stack",
-                            "This indicates a compiler bug. Please report it.",
-                            line,
-                        ));
-                    }
-                }
-                Ok(true)
-            }
             _ => Ok(false),
         }
     }

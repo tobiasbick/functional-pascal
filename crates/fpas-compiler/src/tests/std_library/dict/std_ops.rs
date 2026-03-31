@@ -78,10 +78,13 @@ fn std_dict_map_doubles_values() {
     let out = compile_and_run(
         "\
 program DictMapDouble;
+function Double(V: integer): integer;
+begin
+  return V * 2
+end;
 begin
   var D: dict of string to integer := ['A': 1, 'B': 2, 'C': 3];
-  var D2: dict of string to integer := Std.Dict.Map(D,
-    function(V: integer): integer begin return V * 2 end);
+  var D2: dict of string to integer := Std.Dict.Map(D, Double);
   Std.Console.WriteLn(D2)
 end.",
     );
@@ -93,10 +96,13 @@ fn std_dict_map_preserves_keys() {
     let out = compile_and_run(
         "\
 program DictMapKeys;
+function AddFive(V: integer): integer;
+begin
+  return V + 5
+end;
 begin
   var D: dict of string to integer := ['X': 10, 'Y': 20];
-  var D2: dict of string to integer := Std.Dict.Map(D,
-    function(V: integer): integer begin return V + 5 end);
+  var D2: dict of string to integer := Std.Dict.Map(D, AddFive);
   Std.Console.WriteLn(Std.Dict.Keys(D2))
 end.",
     );
@@ -108,10 +114,13 @@ fn std_dict_map_empty_dict_returns_empty() {
     let out = compile_and_run(
         "\
 program DictMapEmpty;
+function Mul99(V: integer): integer;
+begin
+  return V * 99
+end;
 begin
   var D: dict of string to integer := [:];
-  var D2: dict of string to integer := Std.Dict.Map(D,
-    function(V: integer): integer begin return V * 99 end);
+  var D2: dict of string to integer := Std.Dict.Map(D, Mul99);
   Std.Console.WriteLn(Std.Dict.Length(D2))
 end.",
     );
@@ -139,10 +148,13 @@ fn std_dict_filter_keeps_matching_entries() {
     let out = compile_and_run(
         "\
 program DictFilter;
+function GreaterThanTwo(K: string; V: integer): boolean;
+begin
+  return V > 2
+end;
 begin
   var D: dict of string to integer := ['A': 1, 'B': 2, 'C': 3, 'D': 4];
-  var Big: dict of string to integer := Std.Dict.Filter(D,
-    function(K: string; V: integer): boolean begin return V > 2 end);
+  var Big: dict of string to integer := Std.Dict.Filter(D, GreaterThanTwo);
   Std.Console.WriteLn(Big)
 end.",
     );
@@ -154,10 +166,13 @@ fn std_dict_filter_all_pass() {
     let out = compile_and_run(
         "\
 program DictFilterAll;
+function AlwaysTrue(K: string; V: integer): boolean;
+begin
+  return true
+end;
 begin
   var D: dict of string to integer := ['A': 1, 'B': 2];
-  var All: dict of string to integer := Std.Dict.Filter(D,
-    function(K: string; V: integer): boolean begin return true end);
+  var All: dict of string to integer := Std.Dict.Filter(D, AlwaysTrue);
   Std.Console.WriteLn(Std.Dict.Length(All))
 end.",
     );
@@ -169,10 +184,13 @@ fn std_dict_filter_none_pass() {
     let out = compile_and_run(
         "\
 program DictFilterNone;
+function AlwaysFalse(K: string; V: integer): boolean;
+begin
+  return false
+end;
 begin
   var D: dict of string to integer := ['A': 1, 'B': 2];
-  var None_: dict of string to integer := Std.Dict.Filter(D,
-    function(K: string; V: integer): boolean begin return false end);
+  var None_: dict of string to integer := Std.Dict.Filter(D, AlwaysFalse);
   Std.Console.WriteLn(Std.Dict.Length(None_))
 end.",
     );
@@ -184,10 +202,13 @@ fn std_dict_filter_empty_dict() {
     let out = compile_and_run(
         "\
 program DictFilterEmpty;
+function Positive(K: string; V: integer): boolean;
+begin
+  return V > 0
+end;
 begin
   var D: dict of string to integer := [:];
-  var F: dict of string to integer := Std.Dict.Filter(D,
-    function(K: string; V: integer): boolean begin return V > 0 end);
+  var F: dict of string to integer := Std.Dict.Filter(D, Positive);
   Std.Console.WriteLn(Std.Dict.Length(F))
 end.",
     );
@@ -200,11 +221,13 @@ fn std_dict_filter_uses_key_in_predicate() {
         "\
 program DictFilterKey;
 uses Std.Str;
+function StartsWithA(K: string; V: integer): boolean;
+begin
+  return Std.Str.StartsWith(K, 'a')
+end;
 begin
   var D: dict of string to integer := ['apple': 1, 'banana': 2, 'apricot': 3];
-  var A: dict of string to integer := Std.Dict.Filter(D,
-    function(K: string; V: integer): boolean
-    begin return Std.Str.StartsWith(K, 'a') end);
+  var A: dict of string to integer := Std.Dict.Filter(D, StartsWithA);
   Std.Console.WriteLn(Std.Dict.Length(A))
 end.",
     );

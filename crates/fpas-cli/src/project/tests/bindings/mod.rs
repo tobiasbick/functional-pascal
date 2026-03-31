@@ -4,5 +4,4 @@ use fpas_parser::{CaseLabel, Expr, Stmt};
 use std::fs;
 
 mod case_patterns;
-mod lambdas;
 mod select;

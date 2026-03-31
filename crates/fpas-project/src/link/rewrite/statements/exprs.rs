@@ -53,14 +53,6 @@ impl NameRewriter<'_> {
             }
             Expr::Try(inner, _) | Expr::Go(inner, _) => self.rewrite_expr(inner),
             Expr::OptionNone(_) => {}
-            Expr::Function {
-                params,
-                return_type,
-                body,
-                ..
-            } => {
-                self.rewrite_callable(params, Some(return_type), body);
-            }
             Expr::RecordUpdate { base, fields, .. } => {
                 self.rewrite_expr(base);
                 for field in fields {
@@ -130,14 +122,6 @@ impl NameRewriter<'_> {
                 self.rewrite_case_pattern_expr(inner, allow_binding_name);
             }
             Expr::OptionNone(_) => {}
-            Expr::Function {
-                params,
-                return_type,
-                body,
-                ..
-            } => {
-                self.rewrite_callable(params, Some(return_type), body);
-            }
             Expr::RecordUpdate { base, fields, .. } => {
                 self.rewrite_case_pattern_expr(base, allow_binding_name);
                 for field in fields {

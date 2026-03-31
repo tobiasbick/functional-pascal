@@ -23,104 +23,38 @@ impl Compiler {
         Ok(())
     }
 
-    /// Compile an anonymous function expression (lambda / closure).
+    /// Compile a compiler-generated callable (used internally for `go` wrappers).
     ///
-    /// Generates a unique internal name, compiles the body like a named function,
-    /// then pushes a `Value::Function` on the stack. If the body references
-    /// enclosing variables, they are captured by value at creation time
-    /// (closure).
+    /// Emits a jump over the body, compiles the body as a named routine, registers it
+    /// in the chunk, then patches the jump and pushes the resulting `Value::Function`
+    /// on the stack. No user-visible syntax is involved.
     ///
-    /// **Documentation:** `docs/pascal/04-functions.md`
-    pub(in crate::compiler) fn compile_function_expr(
+    /// **Documentation:** `docs/pascal/08-concurrency.md`
+    pub(in crate::compiler) fn compile_callable_wrapper(
         &mut self,
         params: &[FormalParam],
         body: &FuncBody,
         location: (u32, u32),
     ) -> Result<(), CompileError> {
-        let lambda_name = format!("$lambda_{}", self.next_lambda_id);
-        self.next_lambda_id += 1;
+        let wrapper_name = format!("$wrapper_{}", self.chunk.code.len());
         let arity = params.len() as u8;
 
         let jump_over = self.emit(Op::Jump(0), location);
-
-        let (code_start, body_end) = self.compile_routine_body(params, body, location)?;
+        let (code_start, _) = self.compile_routine_body(params, body, location)?;
         self.chunk
             .functions
-            .insert(lambda_name.clone(), (code_start, arity));
-
-        let mut captures: Vec<(u16, u16)> = Vec::new();
-        for index in code_start..body_end {
-            match self.chunk.code[index] {
-                Op::GetEnclosing(depth, slot) | Op::SetEnclosing(depth, slot) => {
-                    let key = (depth, slot);
-                    if !captures.contains(&key) {
-                        captures.push(key);
-                    }
-                }
-                _ => {}
-            }
-        }
-
-        if captures.is_empty() {
-            let after = self.chunk.len() as u32;
-            self.patch_jump(jump_over, after, location)?;
-
-            self.emit_constant(
-                Value::Function {
-                    name: lambda_name,
-                    captures: vec![],
-                },
-                location,
-            );
-            return Ok(());
-        }
-
-        for index in code_start..body_end {
-            let replacement = match self.chunk.code[index] {
-                Op::GetEnclosing(depth, slot) => {
-                    let Some(capture_index) = captures
-                        .iter()
-                        .position(|capture| *capture == (depth, slot))
-                    else {
-                        unreachable!("capture set must include every rewritten enclosing access");
-                    };
-                    Some(Op::GetLocal(arity as u16 + capture_index as u16))
-                }
-                Op::SetEnclosing(depth, slot) => {
-                    let Some(capture_index) = captures
-                        .iter()
-                        .position(|capture| *capture == (depth, slot))
-                    else {
-                        unreachable!("capture set must include every rewritten enclosing access");
-                    };
-                    Some(Op::SetLocal(arity as u16 + capture_index as u16))
-                }
-                _ => None,
-            };
-            if let Some(op) = replacement {
-                self.chunk.code[index] = op;
-            }
-        }
+            .insert(wrapper_name.clone(), (code_start, arity));
 
         let after = self.chunk.len() as u32;
         self.patch_jump(jump_over, after, location)?;
 
-        for &(depth, slot) in &captures {
-            if depth == 1 {
-                self.emit(Op::GetLocal(slot), location);
-            } else {
-                self.emit(Op::GetEnclosing(depth - 1, slot), location);
-            }
-        }
-
         self.emit_constant(
             Value::Function {
-                name: lambda_name,
+                name: wrapper_name,
                 captures: vec![],
             },
             location,
         );
-        self.emit(Op::MakeClosure(captures.len() as u8), location);
         Ok(())
     }
 }

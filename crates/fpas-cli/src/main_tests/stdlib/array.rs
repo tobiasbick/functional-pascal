@@ -325,10 +325,13 @@ end.
 fn map_double() {
     let source = r#"program T;
 uses Std.Console, Std.Array;
+function Double(X: integer): integer;
+begin
+  return X * 2
+end;
 begin
   var Nums: array of integer := [1, 2, 3];
-  var Doubled: array of integer := Map(Nums,
-    function(X: integer): integer begin return X * 2 end);
+  var Doubled: array of integer := Map(Nums, Double);
   WriteLn(Doubled[0]);
   WriteLn(Doubled[1]);
   WriteLn(Doubled[2])
@@ -344,10 +347,13 @@ end.
 fn map_empty_array() {
     let source = r#"program T;
 uses Std.Console, Std.Array;
+function AddOne(X: integer): integer;
+begin
+  return X + 1
+end;
 begin
   var A: array of integer := [];
-  var B: array of integer := Map(A,
-    function(X: integer): integer begin return X + 1 end);
+  var B: array of integer := Map(A, AddOne);
   WriteLn(Length(B))
 end.
 "#;
@@ -365,10 +371,13 @@ end.
 fn filter_evens() {
     let source = r#"program T;
 uses Std.Console, Std.Array;
+function IsEven(X: integer): boolean;
+begin
+  return X mod 2 = 0
+end;
 begin
   var Nums: array of integer := [1, 2, 3, 4, 5];
-  var Evens: array of integer := Filter(Nums,
-    function(X: integer): boolean begin return X mod 2 = 0 end);
+  var Evens: array of integer := Filter(Nums, IsEven);
   WriteLn(Length(Evens));
   WriteLn(Evens[0]);
   WriteLn(Evens[1])
@@ -384,10 +393,13 @@ end.
 fn filter_none_match() {
     let source = r#"program T;
 uses Std.Console, Std.Array;
+function IsEven(X: integer): boolean;
+begin
+  return X mod 2 = 0
+end;
 begin
   var Nums: array of integer := [1, 3, 5];
-  var Evens: array of integer := Filter(Nums,
-    function(X: integer): boolean begin return X mod 2 = 0 end);
+  var Evens: array of integer := Filter(Nums, IsEven);
   WriteLn(Length(Evens))
 end.
 "#;
@@ -405,10 +417,13 @@ end.
 fn reduce_sum() {
     let source = r#"program T;
 uses Std.Console, Std.Array;
+function AddAcc(Acc: integer; V: integer): integer;
+begin
+  return Acc + V
+end;
 begin
   var Nums: array of integer := [1, 2, 3, 4, 5];
-  var Sum: integer := Reduce(Nums, 0,
-    function(Acc: integer; V: integer): integer begin return Acc + V end);
+  var Sum: integer := Reduce(Nums, 0, AddAcc);
   WriteLn(Sum)
 end.
 "#;
@@ -422,10 +437,13 @@ end.
 fn reduce_empty_returns_init() {
     let source = r#"program T;
 uses Std.Console, Std.Array;
+function AddAcc(Acc: integer; V: integer): integer;
+begin
+  return Acc + V
+end;
 begin
   var A: array of integer := [];
-  var Val: integer := Reduce(A, 99,
-    function(Acc: integer; V: integer): integer begin return Acc + V end);
+  var Val: integer := Reduce(A, 99, AddAcc);
   WriteLn(Val)
 end.
 "#;
@@ -479,10 +497,13 @@ end.
 fn find_found() {
     let source = r#"program T;
 uses Std.Console, Std.Array, Std.Option;
+function IsGreaterThanThree(X: integer): boolean;
+begin
+  return X > 3
+end;
 begin
   var A: array of integer := [1, 2, 3, 4, 5];
-  var R: Option of integer := Find(A,
-    function(X: integer): boolean begin return X > 3 end);
+  var R: Option of integer := Find(A, IsGreaterThanThree);
   WriteLn(IsSome(R));
   WriteLn(Unwrap(R))
 end.
@@ -497,10 +518,13 @@ end.
 fn find_not_found() {
     let source = r#"program T;
 uses Std.Console, Std.Array, Std.Option;
+function IsGreaterThanTen(X: integer): boolean;
+begin
+  return X > 10
+end;
 begin
   var A: array of integer := [1, 2, 3];
-  var R: Option of integer := Find(A,
-    function(X: integer): boolean begin return X > 10 end);
+  var R: Option of integer := Find(A, IsGreaterThanTen);
   WriteLn(IsNone(R))
 end.
 "#;
@@ -514,10 +538,13 @@ end.
 fn find_empty_array() {
     let source = r#"program T;
 uses Std.Console, Std.Array, Std.Option;
+function AlwaysTrue(X: integer): boolean;
+begin
+  return true
+end;
 begin
   var A: array of integer := [];
-  var R: Option of integer := Find(A,
-    function(X: integer): boolean begin return true end);
+  var R: Option of integer := Find(A, AlwaysTrue);
   WriteLn(IsNone(R))
 end.
 "#;
@@ -535,10 +562,13 @@ end.
 fn find_index_found() {
     let source = r#"program T;
 uses Std.Console, Std.Array;
+function IsGreaterThanFifteen(X: integer): boolean;
+begin
+  return X > 15
+end;
 begin
   var A: array of integer := [10, 20, 30];
-  var Idx: integer := FindIndex(A,
-    function(X: integer): boolean begin return X > 15 end);
+  var Idx: integer := FindIndex(A, IsGreaterThanFifteen);
   WriteLn(Idx)
 end.
 "#;
@@ -552,10 +582,13 @@ end.
 fn find_index_not_found() {
     let source = r#"program T;
 uses Std.Console, Std.Array;
+function IsGreaterThanHundred(X: integer): boolean;
+begin
+  return X > 100
+end;
 begin
   var A: array of integer := [1, 2, 3];
-  var Idx: integer := FindIndex(A,
-    function(X: integer): boolean begin return X > 100 end);
+  var Idx: integer := FindIndex(A, IsGreaterThanHundred);
   WriteLn(Idx)
 end.
 "#;
@@ -569,10 +602,13 @@ end.
 fn find_index_empty_array() {
     let source = r#"program T;
 uses Std.Console, Std.Array;
+function AlwaysTrue(X: integer): boolean;
+begin
+  return true
+end;
 begin
   var A: array of integer := [];
-  var Idx: integer := FindIndex(A,
-    function(X: integer): boolean begin return true end);
+  var Idx: integer := FindIndex(A, AlwaysTrue);
   WriteLn(Idx)
 end.
 "#;
@@ -590,10 +626,13 @@ end.
 fn any_some_match() {
     let source = r#"program T;
 uses Std.Console, Std.Array;
+function IsNegative(X: integer): boolean;
+begin
+  return X < 0
+end;
 begin
   var A: array of integer := [1, -2, 3];
-  WriteLn(Any(A,
-    function(X: integer): boolean begin return X < 0 end))
+  WriteLn(Any(A, IsNegative))
 end.
 "#;
     let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
@@ -606,10 +645,13 @@ end.
 fn any_no_match() {
     let source = r#"program T;
 uses Std.Console, Std.Array;
+function IsNegative(X: integer): boolean;
+begin
+  return X < 0
+end;
 begin
   var A: array of integer := [1, 2, 3];
-  WriteLn(Any(A,
-    function(X: integer): boolean begin return X < 0 end))
+  WriteLn(Any(A, IsNegative))
 end.
 "#;
     let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
@@ -622,10 +664,13 @@ end.
 fn any_empty_array() {
     let source = r#"program T;
 uses Std.Console, Std.Array;
+function AlwaysTrue(X: integer): boolean;
+begin
+  return true
+end;
 begin
   var A: array of integer := [];
-  WriteLn(Any(A,
-    function(X: integer): boolean begin return true end))
+  WriteLn(Any(A, AlwaysTrue))
 end.
 "#;
     let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
@@ -642,10 +687,13 @@ end.
 fn all_match() {
     let source = r#"program T;
 uses Std.Console, Std.Array;
+function IsPositive(X: integer): boolean;
+begin
+  return X > 0
+end;
 begin
   var A: array of integer := [1, 2, 3];
-  WriteLn(All(A,
-    function(X: integer): boolean begin return X > 0 end))
+  WriteLn(All(A, IsPositive))
 end.
 "#;
     let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
@@ -658,10 +706,13 @@ end.
 fn all_some_fail() {
     let source = r#"program T;
 uses Std.Console, Std.Array;
+function IsPositive(X: integer): boolean;
+begin
+  return X > 0
+end;
 begin
   var A: array of integer := [1, -2, 3];
-  WriteLn(All(A,
-    function(X: integer): boolean begin return X > 0 end))
+  WriteLn(All(A, IsPositive))
 end.
 "#;
     let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
@@ -674,10 +725,13 @@ end.
 fn all_empty_array() {
     let source = r#"program T;
 uses Std.Console, Std.Array;
+function AlwaysFalse(X: integer): boolean;
+begin
+  return false
+end;
 begin
   var A: array of integer := [];
-  WriteLn(All(A,
-    function(X: integer): boolean begin return false end))
+  WriteLn(All(A, AlwaysFalse))
 end.
 "#;
     let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
@@ -774,9 +828,12 @@ end.
 fn flat_map_normal() {
     let source = r#"program T;
 uses Std.Console, Std.Array;
+function Expand(X: integer): array of integer;
 begin
-  var R: array of integer := FlatMap([1, 2, 3],
-    function(X: integer): array of integer begin return [X, X * 10] end);
+  return [X, X * 10]
+end;
+begin
+  var R: array of integer := FlatMap([1, 2, 3], Expand);
   WriteLn(Length(R));
   WriteLn(R[0]);
   WriteLn(R[1]);
@@ -794,9 +851,12 @@ end.
 fn flat_map_empty_results() {
     let source = r#"program T;
 uses Std.Console, Std.Array;
+function EmptyArray(X: integer): array of integer;
 begin
-  var R: array of integer := FlatMap([1, 2, 3],
-    function(X: integer): array of integer begin return [] end);
+  return []
+end;
+begin
+  var R: array of integer := FlatMap([1, 2, 3], EmptyArray);
   WriteLn(Length(R))
 end.
 "#;
@@ -810,8 +870,12 @@ end.
 fn flat_map_empty_array() {
     let source = r#"program T;
 uses Std.Console, Std.Array;
+function Wrap(X: integer): array of integer;
 begin
-  var R: array of integer := FlatMap([], function(X: integer): array of integer begin return [X] end);
+  return [X]
+end;
+begin
+  var R: array of integer := FlatMap([], Wrap);
   WriteLn(Length(R))
 end.
 "#;
@@ -825,9 +889,12 @@ end.
 fn flat_map_rejects_scalar_mapper_result() {
     let source = r#"program T;
 uses Std.Array;
+function Identity(V: integer): integer;
 begin
-  var X: integer := FlatMap([1, 2],
-    function(V: integer): integer begin return V end)
+  return V
+end;
+begin
+  var X: integer := FlatMap([1, 2], Identity)
 end.
 "#;
     let (exit_code, _stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);

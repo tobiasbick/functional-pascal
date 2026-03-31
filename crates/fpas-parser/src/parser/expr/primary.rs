@@ -81,7 +81,6 @@ impl Parser {
                 let inner = self.parse_primary();
                 Expr::Go(Box::new(inner), self.span_from(start))
             }
-            Token::Function => self.parse_function_expr(),
             _ => {
                 let span = self.current_span();
                 self.error_with_code(
@@ -200,33 +199,6 @@ impl Parser {
         Expr::RecordUpdate {
             base: Box::new(base),
             fields,
-            span: self.span_from(start),
-        }
-    }
-
-    /// Parse an anonymous function expression (lambda / closure).
-    ///
-    /// Syntax: `function(Params): ReturnType begin Stmts end`
-    ///
-    /// **Documentation:** `docs/pascal/04-functions.md`
-    fn parse_function_expr(&mut self) -> Expr {
-        let start = self.current_span();
-        self.advance(); // consume `function`
-        self.expect(&Token::LParen);
-        let params = self.parse_formal_param_list();
-        self.expect(&Token::RParen);
-        self.expect(&Token::Colon);
-        let return_type = self.parse_type_expr();
-
-        let nested = self.parse_nested_decls();
-        self.expect(&Token::Begin);
-        let stmts = self.parse_statement_list();
-        self.expect(&Token::End);
-
-        Expr::Function {
-            params,
-            return_type,
-            body: FuncBody::Block { nested, stmts },
             span: self.span_from(start),
         }
     }

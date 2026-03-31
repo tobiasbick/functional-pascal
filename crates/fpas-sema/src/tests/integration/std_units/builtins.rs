@@ -111,9 +111,12 @@ fn std_array_find_requires_boolean_callback_result() {
         "\
 program T;
 uses Std.Array;
+function WrongReturn(X: integer): integer;
 begin
-  var V: Option of integer := Std.Array.Find([1, 2, 3],
-    function(X: integer): integer begin return X end)
+  return X
+end;
+begin
+  var V: Option of integer := Std.Array.Find([1, 2, 3], WrongReturn)
 end.",
     );
     assert!(
@@ -129,9 +132,12 @@ fn std_array_for_each_requires_procedure_callback() {
         "\
 program T;
 uses Std.Array;
+function NotAProcedure(X: integer): integer;
 begin
-  Std.Array.ForEach([1, 2, 3],
-    function(X: integer): integer begin return X end)
+  return X
+end;
+begin
+  Std.Array.ForEach([1, 2, 3], NotAProcedure)
 end.",
     );
     assert!(

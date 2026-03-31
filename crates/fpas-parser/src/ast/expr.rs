@@ -1,4 +1,4 @@
-use super::{FormalParam, FuncBody, TypeExpr};
+use super::TypeExpr;
 use fpas_lexer::Span;
 
 impl Expr {
@@ -25,7 +25,6 @@ impl Expr {
             | Self::BinaryOp { span, .. }
             | Self::RecordLiteral { span, .. }
             | Self::New { span, .. }
-            | Self::Function { span, .. }
             | Self::RecordUpdate { span, .. } => *span,
         }
     }
@@ -83,16 +82,7 @@ pub enum Expr {
     OptionNone(Span),
     /// `try expr` — unwrap Result/Option or propagate error.
     Try(Box<Expr>, Span),
-    /// Anonymous function expression (lambda / closure).
-    /// `function(Params): ReturnType begin Stmts end`
-    ///
-    /// **Documentation:** `docs/future/closures.md`
-    Function {
-        params: Vec<FormalParam>,
-        return_type: TypeExpr,
-        body: FuncBody,
-        span: Span,
-    },
+
     /// `go expr` — spawn a concurrent task.
     ///
     /// **Documentation:** `docs/pascal/08-concurrency.md`

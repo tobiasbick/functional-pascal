@@ -4,7 +4,7 @@ use fpas_diagnostics::codes::PARSE_EXPECTED_EXPRESSION;
 use fpas_lexer::Token;
 
 impl Parser {
-    pub(super) fn parse_primary(&mut self) -> Expr {
+    pub(in crate::parser) fn parse_primary(&mut self) -> Expr {
         // Avoid cloning the String payload when dispatching an identifier.
         if matches!(self.current_token(), Token::Ident(_)) {
             return self.parse_designator_or_call();
@@ -94,7 +94,7 @@ impl Parser {
                     span,
                 );
                 self.advance();
-                Expr::Integer(0, span)
+                Expr::Error(span)
             }
         }
     }

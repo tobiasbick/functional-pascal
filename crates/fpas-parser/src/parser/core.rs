@@ -84,8 +84,10 @@ impl Parser {
     }
 
     pub(crate) fn span_from(&self, start: Span) -> Span {
-        let end_pos = if self.pos > 0 { self.pos - 1 } else { 0 };
-        let end = &self.tokens[end_pos.min(self.tokens.len() - 1)];
+        if self.pos == 0 {
+            return start;
+        }
+        let end = &self.tokens[(self.pos - 1).min(self.tokens.len() - 1)];
         Span {
             offset: start.offset,
             length: (end.span.offset + end.span.length).saturating_sub(start.offset),

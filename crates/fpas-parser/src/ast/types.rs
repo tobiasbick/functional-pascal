@@ -9,6 +9,7 @@ pub enum TypeExpr {
         id: QualifiedId,
         /// Generic type arguments supplied via `of`: `Stack of integer`.
         type_args: Vec<TypeExpr>,
+        span: Span,
     },
     Array(Box<TypeExpr>, Span),
     /// `ref T`

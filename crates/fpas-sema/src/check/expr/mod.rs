@@ -64,6 +64,7 @@ impl Checker {
             Expr::RecordUpdate { base, fields, span } => {
                 self.check_record_update(base, fields, *span)
             }
+            Expr::Error(_) => Ty::Error,
         };
         let key = Self::expr_lookup_key(expr);
         self.expr_types.insert(key, ty.clone());

@@ -4,7 +4,11 @@ use fpas_parser::{Designator, DesignatorPart, Expr};
 impl NameRewriter<'_> {
     pub(in super::super) fn rewrite_expr(&mut self, expr: &mut Expr) {
         match expr {
-            Expr::Integer(_, _) | Expr::Real(_, _) | Expr::Str(_, _) | Expr::Bool(_, _) => {}
+            Expr::Integer(_, _)
+            | Expr::Real(_, _)
+            | Expr::Str(_, _)
+            | Expr::Bool(_, _)
+            | Expr::Error(_) => {}
             Expr::Designator(designator) => self.rewrite_designator(designator),
             Expr::Call {
                 designator, args, ..
@@ -68,7 +72,11 @@ impl NameRewriter<'_> {
 
     pub(super) fn rewrite_case_pattern_expr(&mut self, expr: &mut Expr, allow_binding_name: bool) {
         match expr {
-            Expr::Integer(_, _) | Expr::Real(_, _) | Expr::Str(_, _) | Expr::Bool(_, _) => {}
+            Expr::Integer(_, _)
+            | Expr::Real(_, _)
+            | Expr::Str(_, _)
+            | Expr::Bool(_, _)
+            | Expr::Error(_) => {}
             Expr::Designator(designator) => {
                 if allow_binding_name && Self::is_pattern_binding_designator(designator) {
                     return;

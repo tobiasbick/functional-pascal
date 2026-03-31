@@ -195,6 +195,7 @@ impl Compiler {
                     (span.line, span.column),
                 );
             }
+            Expr::Error(_) => {}
         }
 
         Ok(())

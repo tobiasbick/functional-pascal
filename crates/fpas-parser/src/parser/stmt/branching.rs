@@ -1,5 +1,6 @@
 use super::super::Parser;
 use crate::ast::*;
+use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
 use fpas_lexer::Token;
 
 impl Parser {
@@ -32,6 +33,18 @@ impl Parser {
         while !matches!(self.current_token(), Token::End | Token::Else | Token::Eof) {
             arms.push(self.parse_case_arm());
             if !self.eat(&Token::Semicolon) {
+                if !matches!(self.current_token(), Token::End | Token::Else | Token::Eof) {
+                    let span = self.current_span();
+                    self.error_with_code(
+                        PARSE_EXPECTED_TOKEN,
+                        &format!(
+                            "Expected `;` between case arms, found `{}`",
+                            super::super::token_display(self.current_token()),
+                        ),
+                        "Insert `;` after the case arm body.",
+                        span,
+                    );
+                }
                 break;
             }
             if matches!(self.current_token(), Token::End | Token::Else | Token::Eof) {

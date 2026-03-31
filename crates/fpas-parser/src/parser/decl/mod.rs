@@ -4,7 +4,7 @@ mod type_expr;
 
 use super::Parser;
 use crate::ast::*;
-use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
+use fpas_diagnostics::codes::PARSE_INVALID_VISIBILITY;
 use fpas_lexer::Token;
 
 impl Parser {
@@ -23,8 +23,12 @@ impl Parser {
                     }
                 }
                 Token::Type => decls.extend(self.parse_type_block(visibility)),
-                Token::Function => decls.push(self.parse_function_decl(visibility)),
-                Token::Procedure => decls.push(self.parse_procedure_decl(visibility)),
+                Token::Function => {
+                    decls.push(Decl::Function(self.parse_function_decl(visibility)));
+                }
+                Token::Procedure => {
+                    decls.push(Decl::Procedure(self.parse_procedure_decl(visibility)));
+                }
                 _ => break,
             }
         }
@@ -41,7 +45,7 @@ impl Parser {
                     Visibility::Public
                 } else {
                     self.error_with_code(
-                        PARSE_EXPECTED_TOKEN,
+                        PARSE_INVALID_VISIBILITY,
                         "`public` is not valid in a `program` file",
                         "Remove `public`. Program-level declarations are not imported, so visibility modifiers are not allowed here.",
                         span,
@@ -56,7 +60,7 @@ impl Parser {
                     Visibility::Private
                 } else {
                     self.error_with_code(
-                        PARSE_EXPECTED_TOKEN,
+                        PARSE_INVALID_VISIBILITY,
                         "`private` is not valid in a `program` file",
                         "Remove `private`. Program-level declarations are not imported, so visibility modifiers are not allowed here.",
                         span,

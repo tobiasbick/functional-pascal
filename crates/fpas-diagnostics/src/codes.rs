@@ -37,6 +37,8 @@ pub const PARSE_INVALID_STATEMENT_START: DiagnosticCode = DiagnosticCode::new(10
 pub const PARSE_EXPECTED_TO_OR_DOWNTO: DiagnosticCode = DiagnosticCode::new(1004);
 pub const PARSE_EXPECTED_EXPRESSION: DiagnosticCode = DiagnosticCode::new(1005);
 pub const PARSE_INVALID_CALL_OR_ASSIGNMENT_FORM: DiagnosticCode = DiagnosticCode::new(1006);
+/// Visibility modifier (`public`/`private`) used outside a `unit` file.
+pub const PARSE_INVALID_VISIBILITY: DiagnosticCode = DiagnosticCode::new(1007);
 
 pub const SEMA_UNKNOWN_TYPE: DiagnosticCode = DiagnosticCode::new(2001);
 pub const SEMA_DUPLICATE_DECLARATION: DiagnosticCode = DiagnosticCode::new(2002);
@@ -116,6 +118,7 @@ mod tests {
             PARSE_EXPECTED_TO_OR_DOWNTO,
             PARSE_EXPECTED_EXPRESSION,
             PARSE_INVALID_CALL_OR_ASSIGNMENT_FORM,
+            PARSE_INVALID_VISIBILITY,
             SEMA_UNKNOWN_TYPE,
             SEMA_DUPLICATE_DECLARATION,
             SEMA_UNKNOWN_NAME,

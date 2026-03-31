@@ -1,6 +1,36 @@
 use super::{FormalParam, FuncBody, TypeExpr};
 use fpas_lexer::Span;
 
+impl Expr {
+    #[must_use]
+    pub fn span(&self) -> Span {
+        match self {
+            Self::Integer(_, span)
+            | Self::Real(_, span)
+            | Self::Str(_, span)
+            | Self::Bool(_, span)
+            | Self::Paren(_, span)
+            | Self::ArrayLiteral(_, span)
+            | Self::DictLiteral(_, span)
+            | Self::ResultOk(_, span)
+            | Self::ResultError(_, span)
+            | Self::OptionSome(_, span)
+            | Self::OptionNone(span)
+            | Self::Try(_, span)
+            | Self::Go(_, span)
+            | Self::Error(span) => *span,
+            Self::Designator(d) => d.span,
+            Self::Call { span, .. }
+            | Self::UnaryOp { span, .. }
+            | Self::BinaryOp { span, .. }
+            | Self::RecordLiteral { span, .. }
+            | Self::New { span, .. }
+            | Self::Function { span, .. }
+            | Self::RecordUpdate { span, .. } => *span,
+        }
+    }
+}
+
 /// Parsed expression.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
@@ -78,6 +108,10 @@ pub enum Expr {
         fields: Vec<FieldInit>,
         span: Span,
     },
+    /// Placeholder emitted when the parser fails to parse an expression.
+    /// Downstream passes should propagate this as an error rather than
+    /// checking or compiling it.
+    Error(Span),
 }
 
 /// Record or `new` field initializer.

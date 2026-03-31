@@ -89,7 +89,7 @@ impl Checker {
             | Expr::Try(inner, _)
             | Expr::Go(inner, _) => self.const_expr_is_compile_time_known(inner),
             Expr::OptionNone(_) => true,
-            Expr::Call { .. } | Expr::Function { .. } => false,
+            Expr::Call { .. } | Expr::Function { .. } | Expr::Error(_) => false,
             Expr::RecordUpdate { base, fields, .. } => {
                 self.const_expr_is_compile_time_known(base)
                     && fields

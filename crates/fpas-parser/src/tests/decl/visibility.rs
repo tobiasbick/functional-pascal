@@ -1,4 +1,5 @@
 use super::*;
+use fpas_diagnostics::codes::PARSE_INVALID_VISIBILITY;
 
 #[test]
 fn default_visibility_is_public() {
@@ -215,7 +216,7 @@ end.
         ParseDiagnostic::Lexer(_) => None,
     });
     let parser_error = parser_error.expect("expected parser diagnostic");
-    assert_eq!(parser_error.code, PARSE_EXPECTED_TOKEN);
+    assert_eq!(parser_error.code, PARSE_INVALID_VISIBILITY);
     assert!(
         parser_error
             .message
@@ -245,7 +246,7 @@ end.
         ParseDiagnostic::Lexer(_) => None,
     });
     let parser_error = parser_error.expect("expected parser diagnostic");
-    assert_eq!(parser_error.code, PARSE_EXPECTED_TOKEN);
+    assert_eq!(parser_error.code, PARSE_INVALID_VISIBILITY);
     assert!(
         parser_error
             .message

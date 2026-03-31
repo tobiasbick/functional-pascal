@@ -112,6 +112,7 @@ impl NameRewriter<'_> {
             TypeExpr::Named {
                 id: name,
                 type_args,
+                ..
             } => {
                 if name.parts.len() != 1 {
                     for arg in type_args {

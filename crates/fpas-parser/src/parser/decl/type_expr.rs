@@ -97,13 +97,18 @@ impl Parser {
     }
 
     fn parse_named_type_expr(&mut self) -> TypeExpr {
+        let start = self.current_span();
         let qid = self.parse_qualified_id();
         let type_args = if self.eat(&Token::Of) {
             self.parse_type_arg_list()
         } else {
             Vec::new()
         };
-        TypeExpr::Named { id: qid, type_args }
+        TypeExpr::Named {
+            id: qid,
+            type_args,
+            span: self.span_from(start),
+        }
     }
 
     /// Parse a comma-separated list of type arguments (after `of`):

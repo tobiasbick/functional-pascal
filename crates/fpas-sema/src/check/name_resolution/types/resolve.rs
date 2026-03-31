@@ -6,7 +6,7 @@ use fpas_parser::{QualifiedId, TypeExpr};
 impl Checker {
     pub(crate) fn resolve_type_expr(&mut self, type_expr: &TypeExpr) -> Ty {
         match type_expr {
-            TypeExpr::Named { id, type_args } => {
+            TypeExpr::Named { id, type_args, .. } => {
                 let base = self.resolve_named_type(id);
                 if type_args.is_empty() {
                     base

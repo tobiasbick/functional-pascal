@@ -57,14 +57,10 @@ impl Parser {
         while !self.check(&Token::End) && !self.at_end() {
             match self.current_token() {
                 Token::Function => {
-                    if let Decl::Function(f) = self.parse_interface_function() {
-                        methods.push(RecordMethod::Function(f));
-                    }
+                    methods.push(RecordMethod::Function(self.parse_interface_function()));
                 }
                 Token::Procedure => {
-                    if let Decl::Procedure(p) = self.parse_interface_procedure() {
-                        methods.push(RecordMethod::Procedure(p));
-                    }
+                    methods.push(RecordMethod::Procedure(self.parse_interface_procedure()));
                 }
                 _ => {
                     let span = self.current_span();
@@ -88,49 +84,6 @@ impl Parser {
         }
     }
 
-    /// Parse a function signature inside an interface (no body, no `forward` keyword).
-    fn parse_interface_function(&mut self) -> Decl {
-        let start = self.current_span();
-        self.advance(); // consume `function`
-        let (name, _) = self.expect_ident().unwrap_or(("_error_".into(), start));
-        let type_params = self.parse_type_params();
-        self.expect(&Token::LParen);
-        let params = self.parse_formal_param_list();
-        self.expect(&Token::RParen);
-        self.expect(&Token::Colon);
-        let return_type = self.parse_type_expr();
-        self.expect_semi();
-        Decl::Function(FunctionDecl {
-            name,
-            type_params,
-            params,
-            return_type,
-            body: FuncBody::Forward,
-            visibility: Visibility::Public,
-            span: self.span_from(start),
-        })
-    }
-
-    /// Parse a procedure signature inside an interface (no body, no `forward` keyword).
-    fn parse_interface_procedure(&mut self) -> Decl {
-        let start = self.current_span();
-        self.advance(); // consume `procedure`
-        let (name, _) = self.expect_ident().unwrap_or(("_error_".into(), start));
-        let type_params = self.parse_type_params();
-        self.expect(&Token::LParen);
-        let params = self.parse_formal_param_list();
-        self.expect(&Token::RParen);
-        self.expect_semi();
-        Decl::Procedure(ProcedureDecl {
-            name,
-            type_params,
-            params,
-            body: FuncBody::Forward,
-            visibility: Visibility::Public,
-            span: self.span_from(start),
-        })
-    }
-
     fn parse_record_type(&mut self) -> RecordType {
         let start = self.current_span();
         self.advance();
@@ -140,18 +93,14 @@ impl Parser {
         while !self.check(&Token::End) && !self.at_end() {
             match self.current_token() {
                 Token::Function => {
-                    if let Decl::Function(function) =
-                        self.parse_function_decl(Visibility::default())
-                    {
-                        methods.push(RecordMethod::Function(function));
-                    }
+                    methods.push(RecordMethod::Function(
+                        self.parse_function_decl(Visibility::default()),
+                    ));
                 }
                 Token::Procedure => {
-                    if let Decl::Procedure(procedure) =
-                        self.parse_procedure_decl(Visibility::default())
-                    {
-                        methods.push(RecordMethod::Procedure(procedure));
-                    }
+                    methods.push(RecordMethod::Procedure(
+                        self.parse_procedure_decl(Visibility::default()),
+                    ));
                 }
                 Token::Implements => {
                     self.advance(); // consume `implements`

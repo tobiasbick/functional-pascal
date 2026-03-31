@@ -161,6 +161,7 @@ impl Compiler {
                 span,
             },
             type_args: vec![],
+            span,
         }
     }
 

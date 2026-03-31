@@ -1,9 +1,16 @@
 use super::super::Parser;
 use crate::ast::*;
-use fpas_lexer::Token;
+use fpas_lexer::{Span, Token};
 
 impl Parser {
-    pub(super) fn parse_function_decl(&mut self, visibility: Visibility) -> Decl {
+    /// Parse a function header: `function Name<T>(Params): RetType;`
+    ///
+    /// Consumes everything through the trailing semicolon and returns the
+    /// parsed components. Shared by top-level declarations, record methods,
+    /// and interface signatures.
+    fn parse_function_header(
+        &mut self,
+    ) -> (String, Vec<TypeParam>, Vec<FormalParam>, TypeExpr, Span) {
         let start = self.current_span();
         self.advance();
         let (name, _) = self.expect_ident().unwrap_or(("_error_".into(), start));
@@ -14,21 +21,13 @@ impl Parser {
         self.expect(&Token::Colon);
         let return_type = self.parse_type_expr();
         self.expect_semi();
-
-        let body = self.parse_func_body();
-
-        Decl::Function(FunctionDecl {
-            name,
-            type_params,
-            params,
-            return_type,
-            body,
-            visibility,
-            span: self.span_from(start),
-        })
+        (name, type_params, params, return_type, start)
     }
 
-    pub(super) fn parse_procedure_decl(&mut self, visibility: Visibility) -> Decl {
+    /// Parse a procedure header: `procedure Name<T>(Params);`
+    ///
+    /// Consumes everything through the trailing semicolon.
+    fn parse_procedure_header(&mut self) -> (String, Vec<TypeParam>, Vec<FormalParam>, Span) {
         let start = self.current_span();
         self.advance();
         let (name, _) = self.expect_ident().unwrap_or(("_error_".into(), start));
@@ -37,17 +36,61 @@ impl Parser {
         let params = self.parse_formal_param_list();
         self.expect(&Token::RParen);
         self.expect_semi();
+        (name, type_params, params, start)
+    }
 
+    pub(super) fn parse_function_decl(&mut self, visibility: Visibility) -> FunctionDecl {
+        let (name, type_params, params, return_type, start) = self.parse_function_header();
         let body = self.parse_func_body();
+        FunctionDecl {
+            name,
+            type_params,
+            params,
+            return_type,
+            body,
+            visibility,
+            span: self.span_from(start),
+        }
+    }
 
-        Decl::Procedure(ProcedureDecl {
+    pub(super) fn parse_procedure_decl(&mut self, visibility: Visibility) -> ProcedureDecl {
+        let (name, type_params, params, start) = self.parse_procedure_header();
+        let body = self.parse_func_body();
+        ProcedureDecl {
             name,
             type_params,
             params,
             body,
             visibility,
             span: self.span_from(start),
-        })
+        }
+    }
+
+    /// Parse a function signature for an interface (no body).
+    pub(super) fn parse_interface_function(&mut self) -> FunctionDecl {
+        let (name, type_params, params, return_type, start) = self.parse_function_header();
+        FunctionDecl {
+            name,
+            type_params,
+            params,
+            return_type,
+            body: FuncBody::Forward,
+            visibility: Visibility::Public,
+            span: self.span_from(start),
+        }
+    }
+
+    /// Parse a procedure signature for an interface (no body).
+    pub(super) fn parse_interface_procedure(&mut self) -> ProcedureDecl {
+        let (name, type_params, params, start) = self.parse_procedure_header();
+        ProcedureDecl {
+            name,
+            type_params,
+            params,
+            body: FuncBody::Forward,
+            visibility: Visibility::Public,
+            span: self.span_from(start),
+        }
     }
 
     fn parse_func_body(&mut self) -> FuncBody {
@@ -69,8 +112,16 @@ impl Parser {
         let mut decls = Vec::new();
         loop {
             match self.current_token() {
-                Token::Function => decls.push(self.parse_function_decl(Visibility::default())),
-                Token::Procedure => decls.push(self.parse_procedure_decl(Visibility::default())),
+                Token::Function => {
+                    decls.push(Decl::Function(
+                        self.parse_function_decl(Visibility::default()),
+                    ));
+                }
+                Token::Procedure => {
+                    decls.push(Decl::Procedure(
+                        self.parse_procedure_decl(Visibility::default()),
+                    ));
+                }
                 _ => break,
             }
         }

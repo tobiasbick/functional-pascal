@@ -9,7 +9,7 @@ It demonstrates:
 - record methods via the `Complex` helper type
 - enum-driven palette selection
 - fork-join parallelism with one `go` task per rendered row
-- truecolor console output through `TextBackgroundRGB`
+- colorful console rendering that works with the current CRT-style screen model
 - raw-mode event handling, resize awareness, alternate screen usage, and a live HUD
 
 ## Run

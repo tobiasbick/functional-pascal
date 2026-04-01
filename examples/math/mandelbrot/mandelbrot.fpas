@@ -149,7 +149,16 @@ begin
       Some(E):
         begin
           if E.kind = EventKind.Resize then
-            NeedsRender := true
+          begin
+            var NewWidth: integer := RenderWidth();
+            var NewHeight: integer := RenderHeight();
+            if (NewWidth <> Width) or (NewHeight <> Height) then
+            begin
+              Width := NewWidth;
+              Height := NewHeight;
+              NeedsRender := true
+            end
+          end
           else if E.kind = EventKind.Key then
           begin
             var Key: KeyEvent := E.key;

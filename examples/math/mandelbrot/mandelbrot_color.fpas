@@ -1,5 +1,5 @@
 unit Mandelbrot.Color;
-uses Std.Console, Std.Conv, Std.Math;
+uses Std.Console, Std.Math;
 
 type
   PaletteKind = enum
@@ -7,39 +7,6 @@ type
     Ember;
     Aurora;
   end;
-
-private type Rgb = record
-  R: integer;
-  G: integer;
-  B: integer;
-end;
-
-private function MixChannel(A: integer; B: integer; T: real): integer;
-begin
-  return Clamp(Round(IntToReal(A) + IntToReal(B - A) * Clamp(T, 0.0, 1.0)), 0, 255)
-end;
-
-private function Mix(Left: Rgb; Right: Rgb; T: real): Rgb;
-begin
-  var Amount: real := Clamp(T, 0.0, 1.0);
-  return record
-    R := MixChannel(Left.R, Right.R, Amount);
-    G := MixChannel(Left.G, Right.G, Amount);
-    B := MixChannel(Left.B, Right.B, Amount);
-  end
-end;
-
-private function Segment(C0: Rgb; C1: Rgb; C2: Rgb; C3: Rgb; Phase: real): Rgb;
-begin
-  var T: real := Frac(Phase);
-  if T < 0.25 then
-    return Mix(C0, C1, T / 0.25);
-  if T < 0.5 then
-    return Mix(C1, C2, (T - 0.25) / 0.25);
-  if T < 0.75 then
-    return Mix(C2, C3, (T - 0.5) / 0.25);
-  return Mix(C3, C0, (T - 0.75) / 0.25)
-end;
 
 function PaletteName(Kind: PaletteKind): string;
 begin
@@ -50,40 +17,74 @@ begin
   end
 end;
 
-private function Sample(Kind: PaletteKind; Phase: real): Rgb;
+private function BandIndex(EscapeValue: real): integer;
 begin
+  return Clamp(Trunc(Frac(EscapeValue * 0.08) * 12.0), 0, 11)
+end;
+
+private function Sample(Kind: PaletteKind; EscapeValue: real): integer;
+begin
+  var Band: integer := BandIndex(EscapeValue);
   case Kind of
     PaletteKind.DeepOcean:
-      return Segment(
-        record R := 0;   G := 7;   B := 22;  end,
-        record R := 10;  G := 42;  B := 104; end,
-        record R := 50;  G := 153; B := 255; end,
-        record R := 255; G := 208; B := 88;  end,
-        Phase);
+      case Band of
+        0: return Blue;
+        1: return Blue;
+        2: return LightBlue;
+        3: return Cyan;
+        4: return LightCyan;
+        5: return LightCyan;
+        6: return Green;
+        7: return LightGreen;
+        8: return Yellow;
+        9: return LightGray;
+        10: return White;
+      else
+        return White
+      end;
     PaletteKind.Ember:
-      return Segment(
-        record R := 16;  G := 8;   B := 4;   end,
-        record R := 120; G := 24;  B := 12;  end,
-        record R := 255; G := 110; B := 32;  end,
-        record R := 255; G := 228; B := 120; end,
-        Phase);
+      case Band of
+        0: return Red;
+        1: return Red;
+        2: return LightRed;
+        3: return Brown;
+        4: return Yellow;
+        5: return Yellow;
+        6: return LightGray;
+        7: return White;
+        8: return LightMagenta;
+        9: return Magenta;
+        10: return LightRed;
+      else
+        return White
+      end;
     PaletteKind.Aurora:
-      return Segment(
-        record R := 3;   G := 18;  B := 34;  end,
-        record R := 0;   G := 120; B := 110; end,
-        record R := 112; G := 232; B := 136; end,
-        record R := 224; G := 255; B := 196; end,
-        Phase)
+      case Band of
+        0: return DarkGray;
+        1: return Blue;
+        2: return LightBlue;
+        3: return Cyan;
+        4: return LightCyan;
+        5: return Green;
+        6: return LightGreen;
+        7: return LightGreen;
+        8: return Yellow;
+        9: return LightGray;
+        10: return White;
+      else
+        return White
+      end
   end
 end;
 
 procedure ApplyInsideColor();
 begin
-  TextBackgroundRGB(0, 0, 0)
+  TextBackground(Black);
+  TextColor(Black)
 end;
 
 procedure ApplyEscapeColor(Kind: PaletteKind; EscapeValue: real);
 begin
-  var Color: Rgb := Sample(Kind, EscapeValue * 0.075);
-  TextBackgroundRGB(Color.R, Color.G, Color.B)
+  TextBackground(Black);
+  TextColor(Sample(Kind, EscapeValue))
 end;

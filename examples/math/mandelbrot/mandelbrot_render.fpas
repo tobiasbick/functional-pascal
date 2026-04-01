@@ -1,5 +1,5 @@
 unit Mandelbrot.Render;
-uses Std.Console, Std.Task, Std.Array, Std.Conv, Std.Math, Mandelbrot.Color;
+uses Std.Console, Std.Task, Std.Array, Std.Conv, Std.Math, Std.Str, Mandelbrot.Color;
 
 private type Complex = record
   Re: real;
@@ -87,6 +87,15 @@ begin
 end;
 
 { Draw a pre-computed row to the console }
+private function EscapeGlyph(EscapeValue: real): char;
+begin
+  var Ramp: string := '.,-~:+*=#%@';
+  var Count: integer := Std.Str.Length(Ramp);
+  var Phase: real := Frac(EscapeValue * 0.08);
+  var Index: integer := Clamp(Trunc(Phase * IntToReal(Count)), 0, Count - 1);
+  return CharAt(Ramp, Index)
+end;
+
 private procedure DrawRow(Row: array of PixelSample; Width: integer; Palette: PaletteKind);
 begin
   var CurrentWidth: integer := ScreenWidth();
@@ -101,10 +110,15 @@ begin
   begin
     var Sample: PixelSample := Row[Px];
     if Sample.IsInside then
-      ApplyInsideColor()
+    begin
+      ApplyInsideColor();
+      Write(' ')
+    end
     else
+    begin
       ApplyEscapeColor(Palette, Sample.EscapeValue);
-    Write(' ')
+      Write(EscapeGlyph(Sample.EscapeValue))
+    end
   end
 end;
 

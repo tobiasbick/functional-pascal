@@ -1,4 +1,8 @@
-use super::{UnitFile, support::canonical_unit_key};
+use super::{
+    UnitFile,
+    source_map::{apply_program_source_id, apply_unit_source_id},
+    support::canonical_unit_key,
+};
 use crate::common::{parse_compilation_unit_file, qualified_id_to_string, validate_user_unit_name};
 
 use fpas_parser::{CompilationUnit, Program};
@@ -7,7 +11,10 @@ use std::path::{Path, PathBuf};
 
 pub(super) fn parse_program_file(path: &Path) -> Result<Program, String> {
     match parse_compilation_unit_file(path)?.0 {
-        CompilationUnit::Program(program) => Ok(program),
+        CompilationUnit::Program(mut program) => {
+            apply_program_source_id(&mut program, 0);
+            Ok(program)
+        }
         CompilationUnit::Unit(unit) => Err(format!(
             "Expected a `program` file at `{}`, but found `unit {}`.",
             path.to_string_lossy(),
@@ -18,11 +25,16 @@ pub(super) fn parse_program_file(path: &Path) -> Result<Program, String> {
 
 pub(super) fn parse_unit_files(
     source_files: &[PathBuf],
+    source_paths: &mut Vec<PathBuf>,
 ) -> Result<HashMap<String, UnitFile>, String> {
     let mut by_unit = HashMap::<String, UnitFile>::new();
 
     for source_path in source_files {
-        let unit = match parse_compilation_unit_file(source_path)?.0 {
+        let source_id =
+            u32::try_from(source_paths.len()).expect("source path count must fit into source IDs");
+        source_paths.push(source_path.clone());
+
+        let mut unit = match parse_compilation_unit_file(source_path)?.0 {
             CompilationUnit::Unit(unit) => unit,
             CompilationUnit::Program(program) => {
                 return Err(format!(
@@ -32,6 +44,7 @@ pub(super) fn parse_unit_files(
                 ));
             }
         };
+        apply_unit_source_id(&mut unit, source_id);
         validate_user_unit_name(source_path, &unit.name)?;
 
         let key = canonical_unit_key(&unit.name);

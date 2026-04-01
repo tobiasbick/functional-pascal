@@ -1,6 +1,6 @@
 use super::super::super::Compiler;
 use crate::error::{CompileError, compile_error};
-use fpas_bytecode::{Op, Value};
+use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_diagnostics::codes::SEMA_ENUM_FIELD_COUNT_MISMATCH;
 use fpas_parser::{CaseArm, CaseLabel, Stmt};
 
@@ -22,8 +22,7 @@ impl Compiler {
         else_body: Option<&[Stmt]>,
         case_slot: u16,
         enum_type_name: &str,
-        line: u32,
-        column: u32,
+        location: SourceLocation,
     ) -> Result<(), CompileError> {
         let mut end_patches = Vec::new();
 
@@ -38,7 +37,7 @@ impl Compiler {
                     label,
                     pattern.root_variant_name.as_deref(),
                     case_slot,
-                    (line, column),
+                    location,
                     &mut fail_patches,
                 )?;
 
@@ -46,15 +45,15 @@ impl Compiler {
                 if binding_count > 0 {
                     self.begin_scope();
                     for (field_idx, binding_name) in &pattern.bindings {
-                        self.emit(Op::GetLocal(case_slot), (line, column));
-                        self.emit(Op::EnumField(*field_idx), (line, column));
+                        self.emit(Op::GetLocal(case_slot), location);
+                        self.emit(Op::EnumField(*field_idx), location);
                         self.add_local(binding_name);
                     }
                 }
 
                 let guard_fail = if let Some(guard_expr) = &arm.guard {
                     self.compile_expr(guard_expr)?;
-                    Some(self.emit(Op::JumpIfFalse(0), (line, column)))
+                    Some(self.emit(Op::JumpIfFalse(0), location))
                 } else {
                     None
                 };
@@ -62,22 +61,22 @@ impl Compiler {
                 self.compile_stmt(&arm.body)?;
 
                 if binding_count > 0 {
-                    self.end_scope((line, column));
+                    self.end_scope(location);
                 }
 
-                end_patches.push(self.emit(Op::Jump(0), (line, column)));
+                end_patches.push(self.emit(Op::Jump(0), location));
 
                 if let Some(guard_patch) = guard_fail {
                     let guard_fail_addr = self.chunk.len() as u32;
-                    self.patch_jump(guard_patch, guard_fail_addr, (line, column))?;
+                    self.patch_jump(guard_patch, guard_fail_addr, location)?;
                     for _ in 0..binding_count {
-                        self.emit(Op::Pop, (line, column));
+                        self.emit(Op::Pop, location);
                     }
                 }
 
                 let next_label_addr = self.chunk.len() as u32;
                 for patch in fail_patches {
-                    self.patch_jump(patch, next_label_addr, (line, column))?;
+                    self.patch_jump(patch, next_label_addr, location)?;
                 }
             }
         }
@@ -90,7 +89,7 @@ impl Compiler {
 
         let end_addr = self.chunk.len() as u32;
         for patch in end_patches {
-            self.patch_jump(patch, end_addr, (line, column))?;
+            self.patch_jump(patch, end_addr, location)?;
         }
 
         Ok(())
@@ -102,7 +101,7 @@ impl Compiler {
         label: &CaseLabel,
         root_variant_name: Option<&str>,
         case_slot: u16,
-        location: (u32, u32),
+        location: SourceLocation,
         fail_patches: &mut Vec<usize>,
     ) -> Result<(), CompileError> {
         self.emit(Op::GetLocal(case_slot), location);

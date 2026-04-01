@@ -45,6 +45,7 @@ impl Compiler {
             length: 0,
             line: location.line,
             column: location.column,
+            source_id: location.source_id,
         }
     }
 

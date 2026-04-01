@@ -93,6 +93,7 @@ impl Parser {
             length: (end.span.offset + end.span.length).saturating_sub(start.offset),
             line: start.line,
             column: start.column,
+            source_id: start.source_id,
         }
     }
 

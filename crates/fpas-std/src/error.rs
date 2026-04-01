@@ -17,7 +17,7 @@ pub fn std_runtime_error(
         DiagnosticStage::Runtime,
         message,
         Some(help.into()),
-        SourceSpan::new(0, 1, location.line, location.column),
+        SourceSpan::new_with_source(0, 1, location.line, location.column, location.source_id),
     )
 }
 
@@ -32,6 +32,6 @@ pub fn std_internal_error(
         DiagnosticStage::Internal,
         message,
         Some(help.into()),
-        SourceSpan::new(0, 1, location.line, location.column),
+        SourceSpan::new_with_source(0, 1, location.line, location.column, location.source_id),
     )
 }

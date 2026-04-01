@@ -125,7 +125,7 @@ impl Compiler {
         detached: bool,
         span: Span,
     ) -> Result<(), CompileError> {
-        let location = (span.line, span.column);
+        let location = Self::location_of(&span);
         let argc = Self::checked_u8(argc, "task arguments", span)?;
         let op = if detached {
             Op::SpawnDetachedTask(argc)

@@ -1,6 +1,6 @@
 use std::fs;
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::{CliInput, resolve_cli_config};
 use fpas_diagnostics::DiagnosticSeverity;
@@ -61,16 +61,23 @@ fn run_project_file(path: &Path, stdout: Box<dyn Write + Send>, stderr: &mut dyn
                 );
                 return 1;
             };
-            let merged_program = match project::build_program(&main, &loaded.source_files) {
-                Ok(program) => program,
-                Err(message) => {
-                    let _ = writeln!(stderr, "{message}");
-                    return 1;
-                }
-            };
+            let linked_program =
+                match project::build_program_with_source_map(&main, &loaded.source_files) {
+                    Ok(program) => program,
+                    Err(message) => {
+                        let _ = writeln!(stderr, "{message}");
+                        return 1;
+                    }
+                };
 
             let main_path = main.to_string_lossy();
-            run_compiled_program(main_path.as_ref(), &merged_program, stdout, stderr)
+            run_compiled_program(
+                main_path.as_ref(),
+                &linked_program.program,
+                Some(&linked_program.source_paths),
+                stdout,
+                stderr,
+            )
         }
         project::ProjectKind::Library => {
             let _ = writeln!(
@@ -94,7 +101,7 @@ fn run_source_impl(
         .any(|diagnostic| diagnostic.as_diagnostic().severity == DiagnosticSeverity::Error);
 
     for diagnostic in &parse_errors {
-        if !emit_diagnostic(path, diagnostic.as_diagnostic(), stderr) {
+        if !emit_diagnostic(path, None, diagnostic.as_diagnostic(), stderr) {
             return 1;
         }
     }
@@ -103,7 +110,7 @@ fn run_source_impl(
         return 1;
     }
 
-    run_compiled_program(path, &program, stdout, stderr)
+    run_compiled_program(path, &program, None, stdout, stderr)
 }
 
 #[cfg(test)]
@@ -119,13 +126,14 @@ pub(crate) fn run_source(
 fn run_compiled_program(
     path: &str,
     program: &fpas_parser::Program,
+    source_paths: Option<&[PathBuf]>,
     stdout: Box<dyn Write + Send>,
     stderr: &mut dyn Write,
 ) -> i32 {
     let chunk = match fpas_compiler::compile(program) {
         Ok(chunk) => chunk,
         Err(diagnostic) => {
-            if !emit_diagnostic(path, &diagnostic, stderr) {
+            if !emit_diagnostic(path, source_paths, &diagnostic, stderr) {
                 return 1;
             }
             return 1;
@@ -134,7 +142,7 @@ fn run_compiled_program(
 
     let mut vm = fpas_vm::Vm::with_writer(chunk, stdout);
     if let Err(diagnostic) = vm.run() {
-        if !emit_diagnostic(path, &diagnostic, stderr) {
+        if !emit_diagnostic(path, source_paths, &diagnostic, stderr) {
             return 2;
         }
         return 2;
@@ -145,10 +153,16 @@ fn run_compiled_program(
 
 fn emit_diagnostic(
     path: &str,
+    source_paths: Option<&[PathBuf]>,
     diagnostic: &fpas_diagnostics::Diagnostic,
     stderr: &mut dyn Write,
 ) -> bool {
-    writeln!(stderr, "{}", render_cli_diagnostic(path, diagnostic)).is_ok()
+    writeln!(
+        stderr,
+        "{}",
+        render_cli_diagnostic_with_sources(path, source_paths, diagnostic)
+    )
+    .is_ok()
 }
 
 pub(crate) fn render_cli_diagnostic(
@@ -156,4 +170,23 @@ pub(crate) fn render_cli_diagnostic(
     diagnostic: &fpas_diagnostics::Diagnostic,
 ) -> String {
     fpas_diagnostics::render(path, diagnostic)
+}
+
+fn render_cli_diagnostic_with_sources(
+    fallback_path: &str,
+    source_paths: Option<&[PathBuf]>,
+    diagnostic: &fpas_diagnostics::Diagnostic,
+) -> String {
+    let Some(path) = source_paths
+        .and_then(|paths| {
+            usize::try_from(diagnostic.span.source_id)
+                .ok()
+                .and_then(|index| paths.get(index))
+        })
+        .map(|path| path.to_string_lossy().into_owned())
+    else {
+        return render_cli_diagnostic(fallback_path, diagnostic);
+    };
+
+    fpas_diagnostics::render(&path, diagnostic)
 }

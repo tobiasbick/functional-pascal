@@ -78,6 +78,7 @@ impl Lexer<'_> {
             length: self.pos - start_offset,
             line: start_line,
             column: start_col,
+            source_id: 0,
         }
     }
 

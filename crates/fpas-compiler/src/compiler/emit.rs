@@ -16,6 +16,18 @@ impl IntoEmitLocation for SourceLocation {
     }
 }
 
+impl IntoEmitLocation for fpas_lexer::Span {
+    fn into_emit_location(self) -> SourceLocation {
+        SourceLocation::new_with_source(self.line, self.column, self.source_id)
+    }
+}
+
+impl IntoEmitLocation for &fpas_lexer::Span {
+    fn into_emit_location(self) -> SourceLocation {
+        (*self).into_emit_location()
+    }
+}
+
 impl IntoEmitLocation for (u32, u32) {
     fn into_emit_location(self) -> SourceLocation {
         SourceLocation::new(self.0, self.1)
@@ -35,11 +47,12 @@ impl Compiler {
             length: 0,
             line: location.line,
             column: location.column,
+            source_id: location.source_id,
         }
     }
 
     pub(super) fn location_of(span: &fpas_lexer::Span) -> SourceLocation {
-        SourceLocation::new(span.line, span.column)
+        SourceLocation::new_with_source(span.line, span.column, span.source_id)
     }
 
     pub(super) fn emit(&mut self, op: Op, location: impl IntoEmitLocation) -> usize {

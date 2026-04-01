@@ -1,6 +1,6 @@
 use super::super::super::Compiler;
 use crate::error::CompileError;
-use fpas_bytecode::{Op, Value};
+use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_parser::{CaseArm, CaseLabel, DesignatorPart, Expr, Stmt};
 use fpas_sema::Ty;
 
@@ -12,8 +12,7 @@ impl Compiler {
         else_body: Option<&[Stmt]>,
         case_slot: u16,
         case_ty: &Ty,
-        line: u32,
-        column: u32,
+        location: SourceLocation,
     ) -> Result<(), CompileError> {
         let (eq_op, ge_op, le_op) = match case_ty {
             Ty::String => (Op::EqStr, Op::GeStr, Op::LeStr),
@@ -26,8 +25,8 @@ impl Compiler {
 
         for arm in arms {
             for label in &arm.labels {
-                self.emit_case_label_match(label, case_slot, eq_op, ge_op, le_op, line, column)?;
-                let fail_patch = self.emit(Op::JumpIfFalse(0), (line, column));
+                self.emit_case_label_match(label, case_slot, eq_op, ge_op, le_op, location)?;
+                let fail_patch = self.emit(Op::JumpIfFalse(0), location);
 
                 let scalar_binding = self.scalar_guard_binding_name(label);
                 let binding = match label {
@@ -39,18 +38,18 @@ impl Compiler {
 
                 if let Some(name) = &scalar_binding {
                     self.begin_scope();
-                    self.emit(Op::GetLocal(case_slot), (line, column));
+                    self.emit(Op::GetLocal(case_slot), location);
                     self.add_local(name);
                 } else if let Some((variant, name)) = &binding {
                     self.begin_scope();
-                    self.emit(Op::GetLocal(case_slot), (line, column));
+                    self.emit(Op::GetLocal(case_slot), location);
                     match variant {
                         fpas_parser::DestructureVariant::Ok
                         | fpas_parser::DestructureVariant::Some => {
-                            self.emit(Op::UnwrapOk, (line, column));
+                            self.emit(Op::UnwrapOk, location);
                         }
                         fpas_parser::DestructureVariant::Error => {
-                            self.emit(Op::UnwrapErr, (line, column));
+                            self.emit(Op::UnwrapErr, location);
                         }
                         fpas_parser::DestructureVariant::None => {}
                     }
@@ -59,7 +58,7 @@ impl Compiler {
 
                 let guard_fail = if let Some(guard_expr) = &arm.guard {
                     self.compile_expr(guard_expr)?;
-                    Some(self.emit(Op::JumpIfFalse(0), (line, column)))
+                    Some(self.emit(Op::JumpIfFalse(0), location))
                 } else {
                     None
                 };
@@ -67,21 +66,21 @@ impl Compiler {
                 self.compile_stmt(&arm.body)?;
 
                 if scalar_binding.is_some() || binding.is_some() {
-                    self.end_scope((line, column));
+                    self.end_scope(location);
                 }
 
-                end_patches.push(self.emit(Op::Jump(0), (line, column)));
+                end_patches.push(self.emit(Op::Jump(0), location));
 
                 if let Some(guard_patch) = guard_fail {
                     let cleanup_addr = self.chunk.len() as u32;
-                    self.patch_jump(guard_patch, cleanup_addr, (line, column))?;
+                    self.patch_jump(guard_patch, cleanup_addr, location)?;
                     if scalar_binding.is_some() || binding.is_some() {
-                        self.emit(Op::Pop, (line, column));
+                        self.emit(Op::Pop, location);
                     }
                 }
 
                 let next_label_addr = self.chunk.len() as u32;
-                self.patch_jump(fail_patch, next_label_addr, (line, column))?;
+                self.patch_jump(fail_patch, next_label_addr, location)?;
             }
         }
 
@@ -93,7 +92,7 @@ impl Compiler {
 
         let end_addr = self.chunk.len() as u32;
         for patch in end_patches {
-            self.patch_jump(patch, end_addr, (line, column))?;
+            self.patch_jump(patch, end_addr, location)?;
         }
 
         Ok(())
@@ -106,8 +105,7 @@ impl Compiler {
         eq_op: Op,
         ge_op: Op,
         le_op: Op,
-        line: u32,
-        column: u32,
+        location: SourceLocation,
     ) -> Result<(), CompileError> {
         match label {
             fpas_parser::CaseLabel::Value {
@@ -115,43 +113,43 @@ impl Compiler {
                 end: Some(end_expr),
                 ..
             } => {
-                self.emit(Op::GetLocal(case_slot), (line, column));
+                self.emit(Op::GetLocal(case_slot), location);
                 self.compile_expr(start)?;
-                self.emit(ge_op, (line, column));
+                self.emit(ge_op, location);
 
-                self.emit(Op::GetLocal(case_slot), (line, column));
+                self.emit(Op::GetLocal(case_slot), location);
                 self.compile_expr(end_expr)?;
-                self.emit(le_op, (line, column));
+                self.emit(le_op, location);
 
-                self.emit(Op::And, (line, column));
+                self.emit(Op::And, location);
             }
             fpas_parser::CaseLabel::Value {
                 start, end: None, ..
             } => {
                 if self.is_scalar_guard_binding_expr(start) {
-                    self.emit_constant(Value::Boolean(true), (line, column))?;
+                    self.emit_constant(Value::Boolean(true), location)?;
                     return Ok(());
                 }
-                self.emit(Op::GetLocal(case_slot), (line, column));
+                self.emit(Op::GetLocal(case_slot), location);
                 self.compile_expr(start)?;
-                self.emit(eq_op, (line, column));
+                self.emit(eq_op, location);
             }
             fpas_parser::CaseLabel::Destructure { variant, .. } => {
-                self.emit(Op::GetLocal(case_slot), (line, column));
+                self.emit(Op::GetLocal(case_slot), location);
                 match variant {
                     fpas_parser::DestructureVariant::Ok => {
-                        self.emit(Op::IsResultOk, (line, column));
+                        self.emit(Op::IsResultOk, location);
                     }
                     fpas_parser::DestructureVariant::Error => {
-                        self.emit(Op::IsResultOk, (line, column));
-                        self.emit(Op::Not, (line, column));
+                        self.emit(Op::IsResultOk, location);
+                        self.emit(Op::Not, location);
                     }
                     fpas_parser::DestructureVariant::Some => {
-                        self.emit(Op::IsOptionSome, (line, column));
+                        self.emit(Op::IsOptionSome, location);
                     }
                     fpas_parser::DestructureVariant::None => {
-                        self.emit(Op::IsOptionSome, (line, column));
-                        self.emit(Op::Not, (line, column));
+                        self.emit(Op::IsOptionSome, location);
+                        self.emit(Op::Not, location);
                     }
                 }
             }

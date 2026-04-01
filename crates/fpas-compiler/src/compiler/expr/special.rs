@@ -1,5 +1,5 @@
 use crate::error::CompileError;
-use fpas_bytecode::{Op, Value};
+use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_lexer::Span;
 use fpas_parser::{Expr, FormalParam, FuncBody};
 
@@ -9,7 +9,7 @@ impl Compiler {
     pub(super) fn compile_try_expr(
         &mut self,
         inner: &Expr,
-        location: (u32, u32),
+        location: SourceLocation,
     ) -> Result<(), CompileError> {
         self.compile_expr(inner)?;
         self.emit(Op::Dup, location);
@@ -37,7 +37,7 @@ impl Compiler {
         body: &FuncBody,
         span: Span,
     ) -> Result<(), CompileError> {
-        let location = (span.line, span.column);
+        let location = Self::location_of(&span);
         let wrapper_name = format!("$wrapper_{}", self.chunk.code.len());
         let arity = Self::checked_u8(params.len(), "wrapper parameters", span)?;
 

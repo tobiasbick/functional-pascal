@@ -12,6 +12,9 @@ debug/
 !.cursor/plans/
 !.cursor/plans/**
 
+# Codex
+.codex-review/
+
 # OpenCode
 #opencode.jsonc
 

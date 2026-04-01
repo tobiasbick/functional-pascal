@@ -7,6 +7,7 @@ mod for_loops;
 mod while_repeat;
 
 use super::super::{Compiler, LoopCtx};
+use crate::compiler::emit::IntoEmitLocation;
 use crate::error::CompileError;
 
 impl Compiler {
@@ -18,7 +19,7 @@ impl Compiler {
         });
     }
 
-    fn emit_loop_scope_pops(&mut self, location: (u32, u32)) {
+    fn emit_loop_scope_pops(&mut self, location: impl IntoEmitLocation + Copy) {
         if let Some(ctx) = self.loop_stack.last() {
             let pops = self
                 .locals
@@ -32,7 +33,11 @@ impl Compiler {
         }
     }
 
-    fn patch_continues(&mut self, target: u32, location: (u32, u32)) -> Result<(), CompileError> {
+    fn patch_continues(
+        &mut self,
+        target: u32,
+        location: impl IntoEmitLocation + Copy,
+    ) -> Result<(), CompileError> {
         let patches = self
             .loop_stack
             .last_mut()
@@ -48,7 +53,7 @@ impl Compiler {
     fn patch_and_pop_breaks(
         &mut self,
         after: u32,
-        location: (u32, u32),
+        location: impl IntoEmitLocation + Copy,
     ) -> Result<(), CompileError> {
         if let Some(ctx) = self.loop_stack.pop() {
             for patch in ctx.break_patches {

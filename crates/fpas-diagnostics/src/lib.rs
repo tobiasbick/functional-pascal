@@ -6,14 +6,24 @@ pub mod codes;
 pub struct SourceLocation {
     pub line: u32,
     pub column: u32,
+    pub source_id: u32,
 }
 
 impl SourceLocation {
     #[must_use]
     pub fn new(line: u32, column: u32) -> Self {
+        Self::new_with_source(line, column, 0)
+    }
+
+    #[must_use]
+    pub fn new_with_source(line: u32, column: u32, source_id: u32) -> Self {
         assert!(line > 0, "source line must be 1-based");
         assert!(column > 0, "source column must be 1-based");
-        Self { line, column }
+        Self {
+            line,
+            column,
+            source_id,
+        }
     }
 }
 
@@ -29,11 +39,23 @@ pub struct SourceSpan {
     pub length: usize,
     pub line: u32,
     pub column: u32,
+    pub source_id: u32,
 }
 
 impl SourceSpan {
     #[must_use]
     pub fn new(offset: usize, length: usize, line: u32, column: u32) -> Self {
+        Self::new_with_source(offset, length, line, column, 0)
+    }
+
+    #[must_use]
+    pub fn new_with_source(
+        offset: usize,
+        length: usize,
+        line: u32,
+        column: u32,
+        source_id: u32,
+    ) -> Self {
         assert!(line > 0, "source line must be 1-based");
         assert!(column > 0, "source column must be 1-based");
         Self {
@@ -41,12 +63,13 @@ impl SourceSpan {
             length,
             line,
             column,
+            source_id,
         }
     }
 
     #[must_use]
     pub fn location(self) -> SourceLocation {
-        SourceLocation::new(self.line, self.column)
+        SourceLocation::new_with_source(self.line, self.column, self.source_id)
     }
 }
 
@@ -183,6 +206,12 @@ mod tests {
     fn source_span_location_returns_line_and_column() {
         let span = SourceSpan::new(7, 5, 21, 3);
         assert_eq!(span.location(), SourceLocation::new(21, 3));
+    }
+
+    #[test]
+    fn source_span_location_preserves_source_id() {
+        let span = SourceSpan::new_with_source(7, 5, 21, 3, 9);
+        assert_eq!(span.location(), SourceLocation::new_with_source(21, 3, 9));
     }
 
     #[test]

@@ -13,13 +13,3 @@ pub(super) fn assert_qualified_designator(parts: &[DesignatorPart], expected: &[
 pub(super) fn assert_single_ident(parts: &[DesignatorPart], expected: &str) {
     assert_qualified_designator(parts, &[expected]);
 }
-
-pub(super) fn assert_named_type(type_expr: &TypeExpr, expected: &[&str]) {
-    match type_expr {
-        TypeExpr::Named { id, .. } => {
-            let actual = id.parts.iter().map(String::as_str).collect::<Vec<_>>();
-            assert_eq!(actual, expected);
-        }
-        other => panic!("expected named type, got {other:?}"),
-    }
-}

@@ -11,14 +11,13 @@ impl Compiler {
     pub(super) fn compile_block_stmt(
         &mut self,
         stmts: &[Stmt],
-        line: u32,
-        column: u32,
+        location: SourceLocation,
     ) -> Result<(), CompileError> {
         self.begin_scope();
         for stmt in stmts {
             self.compile_stmt(stmt)?;
         }
-        self.end_scope((line, column));
+        self.end_scope(location);
         Ok(())
     }
 
@@ -32,35 +31,32 @@ impl Compiler {
         &mut self,
         target: &Designator,
         value: &Expr,
-        line: u32,
-        column: u32,
+        location: SourceLocation,
     ) -> Result<(), CompileError> {
-        self.compile_designator_write(target, value, SourceLocation::new(line, column))
+        self.compile_designator_write(target, value, location)
     }
 
     pub(super) fn compile_return_stmt(
         &mut self,
         expr: Option<&Expr>,
-        line: u32,
-        column: u32,
+        location: SourceLocation,
     ) -> Result<(), CompileError> {
         if let Some(value) = expr {
             self.compile_expr(value)?;
         } else {
-            self.emit(Op::Unit, (line, column));
+            self.emit(Op::Unit, location);
         }
-        self.emit(Op::Return, (line, column));
+        self.emit(Op::Return, location);
         Ok(())
     }
 
     pub(super) fn compile_panic_stmt(
         &mut self,
         expr: &Expr,
-        line: u32,
-        column: u32,
+        location: SourceLocation,
     ) -> Result<(), CompileError> {
         self.compile_expr(expr)?;
-        self.emit(Op::Panic, (line, column));
+        self.emit(Op::Panic, location);
         Ok(())
     }
 
@@ -68,22 +64,16 @@ impl Compiler {
         &mut self,
         designator: &Designator,
         args: &[Expr],
-        line: u32,
-        column: u32,
+        location: SourceLocation,
     ) -> Result<(), CompileError> {
         let call_key = std::ptr::from_ref(designator) as usize;
         if let Some(qualified) = self.method_calls.get(&call_key).cloned() {
-            self.compile_method_call(
-                designator,
-                &qualified,
-                args,
-                SourceLocation::new(line, column),
-            )?;
-            self.emit(Op::Pop, (line, column));
+            self.compile_method_call(designator, &qualified, args, location)?;
+            self.emit(Op::Pop, location);
         } else {
             let name = Self::resolve_designator_name(designator);
-            self.compile_call(&name, args, SourceLocation::new(line, column))?;
-            self.emit(Op::Pop, (line, column));
+            self.compile_call(&name, args, location)?;
+            self.emit(Op::Pop, location);
         }
         Ok(())
     }

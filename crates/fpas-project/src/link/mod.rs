@@ -2,6 +2,7 @@ mod graph;
 mod imports;
 mod parse;
 mod rewrite;
+mod source_map;
 mod support;
 
 use crate::common::qualified_id_to_string;
@@ -19,14 +20,30 @@ struct UnitFile {
     unit: Unit,
 }
 
+pub struct LinkedProgram {
+    pub program: Program,
+    pub source_paths: Vec<PathBuf>,
+}
+
 /// Build a single linked `Program` from a main file plus project units.
 ///
 /// This resolves reachable units, checks import ambiguity, preserves private
 /// unit members, and rewrites user-unit symbols into fully qualified names as
 /// described in `docs/pascal/09-units.md`.
 pub fn build_program(main_path: &Path, source_files: &[PathBuf]) -> Result<Program, String> {
+    Ok(build_program_with_source_map(main_path, source_files)?.program)
+}
+
+/// Build a single linked `Program` together with the source-path table used to
+/// resolve diagnostics back to the originating file.
+pub fn build_program_with_source_map(
+    main_path: &Path,
+    source_files: &[PathBuf],
+) -> Result<LinkedProgram, String> {
     let mut main_program = parse_program_file(main_path)?;
-    let units = parse_unit_files(source_files)?;
+
+    let mut source_paths = vec![main_path.to_path_buf()];
+    let units = parse_unit_files(source_files, &mut source_paths)?;
 
     let reachable_unit_keys = resolve_reachable_units(&main_program.uses, &units)?;
     let unit_order = topo_sort_units(&reachable_unit_keys, &units)?;
@@ -85,5 +102,8 @@ pub fn build_program(main_path: &Path, source_files: &[PathBuf]) -> Result<Progr
     main_program.uses = std_uses;
     merged_unit_decls.append(&mut main_program.declarations);
     main_program.declarations = merged_unit_decls;
-    Ok(main_program)
+    Ok(LinkedProgram {
+        program: main_program,
+        source_paths,
+    })
 }

@@ -4,11 +4,18 @@ pub struct Span {
     pub length: usize,
     pub line: u32,
     pub column: u32,
+    pub source_id: u32,
 }
 
 impl From<Span> for fpas_diagnostics::SourceSpan {
     fn from(span: Span) -> Self {
-        Self::new(span.offset, span.length, span.line, span.column)
+        Self::new_with_source(
+            span.offset,
+            span.length,
+            span.line,
+            span.column,
+            span.source_id,
+        )
     }
 }
 
@@ -19,6 +26,7 @@ impl From<fpas_diagnostics::SourceSpan> for Span {
             length: span.length,
             line: span.line,
             column: span.column,
+            source_id: span.source_id,
         }
     }
 }

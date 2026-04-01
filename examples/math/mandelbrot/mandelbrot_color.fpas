@@ -1,18 +1,89 @@
 unit Mandelbrot.Color;
-uses Std.Console;
+uses Std.Console, Std.Conv, Std.Math;
 
-procedure DrawBand(band: integer);
+type
+  PaletteKind = enum
+    DeepOcean;
+    Ember;
+    Aurora;
+  end;
+
+private type Rgb = record
+  R: integer;
+  G: integer;
+  B: integer;
+end;
+
+private function MixChannel(A: integer; B: integer; T: real): integer;
 begin
-  case band of
-    0: begin TextBackground(Blue);       TextColor(Blue)       end;
-    1: begin TextBackground(LightBlue);  TextColor(LightBlue)  end;
-    2: begin TextBackground(Cyan);       TextColor(Cyan)       end;
-    3: begin TextBackground(LightCyan);  TextColor(LightCyan)  end;
-    4: begin TextBackground(Green);      TextColor(Green)      end;
-    5: begin TextBackground(LightGreen); TextColor(LightGreen) end;
-    6: begin TextBackground(Yellow);     TextColor(Yellow)     end;
-    7: begin TextBackground(White);      TextColor(White)      end
-  else
-    begin TextBackground(White); TextColor(White) end
+  return Clamp(Round(IntToReal(A) + IntToReal(B - A) * Clamp(T, 0.0, 1.0)), 0, 255)
+end;
+
+private function Mix(Left: Rgb; Right: Rgb; T: real): Rgb;
+begin
+  var Amount: real := Clamp(T, 0.0, 1.0);
+  return record
+    R := MixChannel(Left.R, Right.R, Amount);
+    G := MixChannel(Left.G, Right.G, Amount);
+    B := MixChannel(Left.B, Right.B, Amount);
   end
+end;
+
+private function Segment(C0: Rgb; C1: Rgb; C2: Rgb; C3: Rgb; Phase: real): Rgb;
+begin
+  var T: real := Frac(Phase);
+  if T < 0.25 then
+    return Mix(C0, C1, T / 0.25);
+  if T < 0.5 then
+    return Mix(C1, C2, (T - 0.25) / 0.25);
+  if T < 0.75 then
+    return Mix(C2, C3, (T - 0.5) / 0.25);
+  return Mix(C3, C0, (T - 0.75) / 0.25)
+end;
+
+function PaletteName(Kind: PaletteKind): string;
+begin
+  case Kind of
+    PaletteKind.DeepOcean: return 'Deep Ocean';
+    PaletteKind.Ember:     return 'Ember';
+    PaletteKind.Aurora:    return 'Aurora'
+  end
+end;
+
+private function Sample(Kind: PaletteKind; Phase: real): Rgb;
+begin
+  case Kind of
+    PaletteKind.DeepOcean:
+      return Segment(
+        record R := 0;   G := 7;   B := 22;  end,
+        record R := 10;  G := 42;  B := 104; end,
+        record R := 50;  G := 153; B := 255; end,
+        record R := 255; G := 208; B := 88;  end,
+        Phase);
+    PaletteKind.Ember:
+      return Segment(
+        record R := 16;  G := 8;   B := 4;   end,
+        record R := 120; G := 24;  B := 12;  end,
+        record R := 255; G := 110; B := 32;  end,
+        record R := 255; G := 228; B := 120; end,
+        Phase);
+    PaletteKind.Aurora:
+      return Segment(
+        record R := 3;   G := 18;  B := 34;  end,
+        record R := 0;   G := 120; B := 110; end,
+        record R := 112; G := 232; B := 136; end,
+        record R := 224; G := 255; B := 196; end,
+        Phase)
+  end
+end;
+
+procedure ApplyInsideColor();
+begin
+  TextBackgroundRGB(0, 0, 0)
+end;
+
+procedure ApplyEscapeColor(Kind: PaletteKind; EscapeValue: real);
+begin
+  var Color: Rgb := Sample(Kind, EscapeValue * 0.075);
+  TextBackgroundRGB(Color.R, Color.G, Color.B)
 end;

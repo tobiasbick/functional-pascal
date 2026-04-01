@@ -1,107 +1,236 @@
-program MandelbrotAscii;
-uses Std.Console, Mandelbrot.Render;
+program MandelbrotShowcase;
+uses Std.Console, Std.Conv, Std.Math, Std.Str, Mandelbrot.Color, Mandelbrot.Render;
+
+type
+  ExplorerState = record
+    CenterX: real;
+    CenterY: real;
+    SpanY: real;
+    MaxIter: integer;
+    Palette: PaletteKind;
+
+    function SpanX(Self: ExplorerState; Width: integer; Height: integer): real;
+    begin
+      var SafeWidth: integer := Max(Width, 1);
+      var SafeHeight: integer := Max(Height, 1);
+      return Self.SpanY * (IntToReal(SafeWidth) / IntToReal(SafeHeight)) * 0.5
+    end;
+
+    function XMin(Self: ExplorerState; Width: integer; Height: integer): real;
+    begin
+      return Self.CenterX - (Self.SpanX(Width, Height) * 0.5)
+    end;
+
+    function XMax(Self: ExplorerState; Width: integer; Height: integer): real;
+    begin
+      return Self.CenterX + (Self.SpanX(Width, Height) * 0.5)
+    end;
+
+    function YMin(Self: ExplorerState): real;
+    begin
+      return Self.CenterY - (Self.SpanY * 0.5)
+    end;
+
+    function YMax(Self: ExplorerState): real;
+    begin
+      return Self.CenterY + (Self.SpanY * 0.5)
+    end;
+  end;
+
+function DefaultState(): ExplorerState;
+begin
+  return record
+    CenterX := -0.75;
+    CenterY := 0.0;
+    SpanY := 2.4;
+    MaxIter := 160;
+    Palette := PaletteKind.DeepOcean;
+  end
+end;
+
+function RenderWidth(): integer;
+begin
+  return Max(ScreenWidth(), 1)
+end;
+
+function RenderHeight(): integer;
+begin
+  return Max(ScreenHeight() - 2, 1)
+end;
+
+function ZoomLevel(State: ExplorerState): real;
+begin
+  return 2.4 / State.SpanY
+end;
+
+procedure UseFullWindow();
+begin
+  Window(1, 1, ScreenWidth(), ScreenHeight())
+end;
+
+procedure UseRenderWindow(Width: integer; Height: integer);
+begin
+  Window(1, 1, Width, Height)
+end;
+
+procedure DrawHud(State: ExplorerState; Width: integer; Height: integer);
+begin
+  UseFullWindow();
+
+  var HudTop: integer := Max(ScreenHeight() - 1, 1);
+  Window(1, HudTop, ScreenWidth(), ScreenHeight());
+  NormVideo();
+  ClrScr();
+
+  GotoXY(1, 1);
+  TextColorRGB(255, 220, 120);
+  Write('Functional Pascal Mandelbrot');
+  TextColorRGB(156, 204, 255);
+  Write('  tasks | units | records | truecolor | events');
+
+  if ScreenHeight() >= 2 then
+  begin
+    GotoXY(1, 2);
+    NormVideo();
+    Write(Format('size=%dx%d  center=(%f, %f)  zoom=%f  iter=%d  palette=%s',
+      Width,
+      Height,
+      State.CenterX,
+      State.CenterY,
+      ZoomLevel(State),
+      State.MaxIter,
+      PaletteName(State.Palette)));
+    Write('  arrows move  +/- zoom  PgUp/PgDn iter  1/2/3 palette  R reset  Esc quit')
+  end;
+
+  NormVideo();
+  UseRenderWindow(Width, Height)
+end;
 
 begin
   EnterAltScreen();
   EnableRawMode();
   CursorOff();
 
-  var MaxIter: integer := 96;
-  var PanFactor: real := 0.15;
-  var ZoomFactor: real := 0.15;
-  var ResizeDebounceTicks: integer := 4;
-  mutable var Width: integer := ScreenWidth();
-  mutable var Height: integer := ScreenHeight();
-
-  mutable var XMin: real := -2.5;
-  mutable var XMax: real := 1.0;
-  mutable var YMin: real := -1.0;
-  mutable var YMax: real := 1.0;
+  mutable var State: ExplorerState := DefaultState();
   mutable var Quit: boolean := false;
-  mutable var RenderPending: boolean := false;
-  mutable var ResizeCooldown: integer := 0;
-
-  ClrScr();
-  Render(XMin, XMax, YMin, YMax, Width, Height, MaxIter);
+  mutable var NeedsRender: boolean := true;
+  mutable var Width: integer := RenderWidth();
+  mutable var Height: integer := RenderHeight();
 
   repeat
-    if EventPending() then
+    var CurrentWidth: integer := RenderWidth();
+    var CurrentHeight: integer := RenderHeight();
+    if (CurrentWidth <> Width) or (CurrentHeight <> Height) then
     begin
-      repeat
-        var ev: Event := ReadEvent();
-        mutable var Changed: boolean := false;
-
-        if ev.kind = EventKind.Resize then
-        begin
-          var NewWidth: integer := ScreenWidth();
-          var NewHeight: integer := ScreenHeight();
-
-          if (NewWidth <> Width) or (NewHeight <> Height) then
-          begin
-            Width := NewWidth;
-            Height := NewHeight;
-            RenderPending := true;
-            ResizeCooldown := ResizeDebounceTicks
-          end
-        end
-        else if ev.kind = EventKind.Key then
-        begin
-          var key: KeyEvent := ev.key;
-          var W: real := XMax - XMin;
-          var H: real := YMax - YMin;
-          var StepX: real := W * PanFactor;
-          var StepY: real := H * PanFactor;
-
-          Changed := true;
-          case key.kind of
-            KeyKind.Escape: Quit := true;
-            KeyKind.Left:   begin XMin := XMin - StepX; XMax := XMax - StepX end;
-            KeyKind.Right:  begin XMin := XMin + StepX; XMax := XMax + StepX end;
-            KeyKind.Up:     begin YMin := YMin + StepY; YMax := YMax + StepY end;
-            KeyKind.Down:   begin YMin := YMin - StepY; YMax := YMax - StepY end
-          else
-            if key.ch = '+' then
-            begin
-              var Zx: real := W * ZoomFactor;
-              var Zy: real := H * ZoomFactor;
-              XMin := XMin + Zx; XMax := XMax - Zx;
-              YMin := YMin + Zy; YMax := YMax - Zy
-            end
-            else if key.ch = '-' then
-            begin
-              var Zx: real := W * ZoomFactor;
-              var Zy: real := H * ZoomFactor;
-              XMin := XMin - Zx; XMax := XMax + Zx;
-              YMin := YMin - Zy; YMax := YMax + Zy
-            end
-            else
-              Changed := false
-          end;
-
-          if Changed and (not Quit) then
-          begin
-            RenderPending := true;
-            ResizeCooldown := 0
-          end
-        end
-      until (not EventPending()) or Quit
+      Width := CurrentWidth;
+      Height := CurrentHeight;
+      NeedsRender := true
     end;
 
-    if RenderPending and (not Quit) then
+    if NeedsRender and (not Quit) then
     begin
-      if ResizeCooldown > 0 then
-        ResizeCooldown := ResizeCooldown - 1
-      else
-      begin
-        ClrScr();
-        Render(XMin, XMax, YMin, YMax, Width, Height, MaxIter);
-        RenderPending := false
-      end
+      UseRenderWindow(Width, Height);
+      ClrScr();
+      Render(
+        State.XMin(Width, Height),
+        State.XMax(Width, Height),
+        State.YMin(),
+        State.YMax(),
+        Width,
+        Height,
+        State.MaxIter,
+        State.Palette);
+      DrawHud(State, Width, Height);
+      NeedsRender := false
     end;
 
-    Delay(16)
+    case ReadEventTimeout(16) of
+      Some(E):
+        begin
+          if E.kind = EventKind.Resize then
+            NeedsRender := true
+          else if E.kind = EventKind.Key then
+          begin
+            var Key: KeyEvent := E.key;
+            var StepX: real := State.SpanX(Width, Height) * 0.14;
+            var StepY: real := State.SpanY * 0.14;
+
+            if Key.kind = KeyKind.Escape then
+              Quit := true
+            else if Key.kind = KeyKind.Left then
+            begin
+              State.CenterX := State.CenterX - StepX;
+              NeedsRender := true
+            end
+            else if Key.kind = KeyKind.Right then
+            begin
+              State.CenterX := State.CenterX + StepX;
+              NeedsRender := true
+            end
+            else if Key.kind = KeyKind.Up then
+            begin
+              State.CenterY := State.CenterY + StepY;
+              NeedsRender := true
+            end
+            else if Key.kind = KeyKind.Down then
+            begin
+              State.CenterY := State.CenterY - StepY;
+              NeedsRender := true
+            end
+            else if Key.kind = KeyKind.PageUp then
+            begin
+              State.MaxIter := Min(State.MaxIter + 32, 2048);
+              NeedsRender := true
+            end
+            else if Key.kind = KeyKind.PageDown then
+            begin
+              State.MaxIter := Max(State.MaxIter - 32, 32);
+              NeedsRender := true
+            end
+            else if Key.kind = KeyKind.Character then
+            begin
+              case Key.ch of
+                '+', '=':
+                  begin
+                    State.SpanY := Max(State.SpanY * 0.82, 0.000_001);
+                    NeedsRender := true
+                  end;
+                '-':
+                  begin
+                    State.SpanY := Min(State.SpanY / 0.82, 3.5);
+                    NeedsRender := true
+                  end;
+                '1':
+                  begin
+                    State.Palette := PaletteKind.DeepOcean;
+                    NeedsRender := true
+                  end;
+                '2':
+                  begin
+                    State.Palette := PaletteKind.Ember;
+                    NeedsRender := true
+                  end;
+                '3':
+                  begin
+                    State.Palette := PaletteKind.Aurora;
+                    NeedsRender := true
+                  end;
+                'r', 'R':
+                  begin
+                    State := DefaultState();
+                    NeedsRender := true
+                  end
+              end
+            end
+          end
+        end;
+      None: begin end
+    end
   until Quit;
 
+  UseFullWindow();
+  NormVideo();
   CursorOn();
   DisableRawMode();
   LeaveAltScreen()

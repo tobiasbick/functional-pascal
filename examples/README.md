@@ -18,6 +18,7 @@ This directory contains runnable Functional Pascal examples for the current lang
 ## Multi-file project
 
 - `pascal/units-basic/` - `.fpasprj`, `unit` declarations, `uses`, and qualified calls across files
+- `math/mandelbrot/` - interactive showcase project with truecolor terminal rendering, tasks, events, and a live HUD
 
 ## Run
 

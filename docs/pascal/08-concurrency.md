@@ -70,7 +70,7 @@ begin
 end.
 ```
 
-The Mandelbrot example demonstrates this pattern: one task per row, all collected in order via `Wait`.
+The Mandelbrot showcase project in `examples/math/mandelbrot/` demonstrates this pattern: one task per row, all collected in order via `Wait`, combined with a truecolor terminal UI.
 
 ## Standard Library
 

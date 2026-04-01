@@ -81,11 +81,6 @@ impl Compiler {
                 span,
             } => self.compile_call_stmt(designator, args, span.line, span.column),
             Stmt::Go { expr, span } => self.compile_go_stmt(expr, *span),
-            Stmt::Select {
-                arms,
-                default_body,
-                span,
-            } => self.compile_select_stmt(arms, default_body.as_deref(), *span),
         }
     }
 }

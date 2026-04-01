@@ -53,9 +53,6 @@ impl Checker {
             TypeExpr::Option { inner_type, .. } => {
                 Ty::Option(Box::new(self.resolve_type_expr(inner_type)))
             }
-            TypeExpr::Channel { inner_type, .. } => {
-                Ty::Channel(Box::new(self.resolve_type_expr(inner_type)))
-            }
             TypeExpr::Dict {
                 key_type,
                 value_type,

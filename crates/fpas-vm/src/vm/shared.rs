@@ -2,19 +2,11 @@
 //!
 //! **Documentation:** `docs/future/parallel-vm.md`
 
-use crossbeam_channel as cbc;
 use fpas_bytecode::{Chunk, Value};
 use fpas_std::{Console, KeyInput, TextInput};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Condvar, Mutex, RwLock};
-
-/// Per-channel state shared across workers.
-pub(crate) struct SharedChannel {
-    pub sender: cbc::Sender<Value>,
-    pub receiver: cbc::Receiver<Value>,
-    pub closed: AtomicBool,
-}
 
 pub(crate) enum TaskResultPoll {
     Pending,
@@ -37,11 +29,6 @@ pub(crate) struct SharedState {
 
     /// Global variables.
     pub globals: RwLock<HashMap<String, Value>>,
-
-    /// Channel registry: channel id → shared channel.
-    pub channels: Mutex<HashMap<u64, SharedChannel>>,
-    /// Next channel id (monotonically increasing).
-    pub next_channel_id: AtomicU64,
 
     /// Ready queue of suspended tasks.
     pub task_queue: Mutex<Vec<TaskState>>,
@@ -77,11 +64,6 @@ impl SharedState {
     /// Allocate a fresh task id.
     pub(crate) fn alloc_task_id(&self) -> u64 {
         self.next_task_id.fetch_add(1, Ordering::Relaxed)
-    }
-
-    /// Allocate a fresh channel id.
-    pub(crate) fn alloc_channel_id(&self) -> u64 {
-        self.next_channel_id.fetch_add(1, Ordering::Relaxed)
     }
 
     /// Push a task onto the ready queue and notify one waiting worker.

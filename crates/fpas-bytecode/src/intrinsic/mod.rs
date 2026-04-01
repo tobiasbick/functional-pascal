@@ -139,30 +139,6 @@ pub enum Intrinsic {
     /// **Documentation:** `docs/pascal/std/option.md`
     OptionOrElse = 135,
 
-    /// Create unbuffered channel. Pushes `Value::Channel(id)`.
-    ///
-    /// **Documentation:** `docs/pascal/08-concurrency.md`
-    ChannelMake = 100,
-    /// Create buffered channel. Pops `size: integer`, pushes `Value::Channel(id)`.
-    ///
-    /// **Documentation:** `docs/pascal/08-concurrency.md`
-    ChannelMakeBuffered = 101,
-    /// Send value on channel. Pops `value`, pops `channel`.
-    ///
-    /// **Documentation:** `docs/pascal/08-concurrency.md`
-    ChannelSend = 102,
-    /// Receive value from channel (blocking). Pops `channel`, pushes received value.
-    ///
-    /// **Documentation:** `docs/pascal/08-concurrency.md`
-    ChannelRecv = 103,
-    /// Non-blocking receive. Pops `channel`, pushes `OptionSome(value)` or `OptionNone`.
-    ///
-    /// **Documentation:** `docs/pascal/08-concurrency.md`
-    ChannelTryRecv = 104,
-    /// Close a channel. Pops `channel`.
-    ///
-    /// **Documentation:** `docs/pascal/08-concurrency.md`
-    ChannelClose = 105,
     /// Wait for a task to complete. Pops `task`, pushes its return value.
     ///
     /// **Documentation:** `docs/pascal/08-concurrency.md`

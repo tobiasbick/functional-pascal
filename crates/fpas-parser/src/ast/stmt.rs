@@ -65,14 +65,6 @@ pub enum Stmt {
         expr: Expr,
         span: Span,
     },
-    /// `select` statement: multiplex on channel operations.
-    ///
-    /// **Documentation:** `docs/pascal/08-concurrency.md`
-    Select {
-        arms: Vec<SelectArm>,
-        default_body: Option<Vec<Stmt>>,
-        span: Span,
-    },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -117,14 +109,3 @@ pub enum DestructureVariant {
     None,
 }
 
-/// A single arm in a `select` statement.
-///
-/// **Documentation:** `docs/pascal/08-concurrency.md`
-#[derive(Debug, Clone, PartialEq)]
-pub struct SelectArm {
-    pub binding: String,
-    pub type_expr: TypeExpr,
-    pub channel: Expr,
-    pub body: Stmt,
-    pub span: Span,
-}

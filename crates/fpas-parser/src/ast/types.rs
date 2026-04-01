@@ -30,13 +30,6 @@ pub enum TypeExpr {
         inner_type: Box<TypeExpr>,
         span: Span,
     },
-    /// `channel of T`
-    ///
-    /// **Documentation:** `docs/pascal/08-concurrency.md`
-    Channel {
-        inner_type: Box<TypeExpr>,
-        span: Span,
-    },
     /// `dict of K to V`
     ///
     /// **Documentation:** `docs/future/advanced-types.md`

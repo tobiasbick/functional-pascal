@@ -1,5 +1,5 @@
 use super::super::NameRewriter;
-use fpas_parser::{CaseArm, CaseLabel, SelectArm, Stmt};
+use fpas_parser::{CaseArm, CaseLabel, Stmt};
 
 impl NameRewriter<'_> {
     pub(in super::super) fn rewrite_stmt(&mut self, stmt: &mut Stmt) {
@@ -106,18 +106,6 @@ impl NameRewriter<'_> {
                 }
             }
             Stmt::Go { expr, .. } => self.rewrite_expr(expr),
-            Stmt::Select {
-                arms, default_body, ..
-            } => {
-                for arm in arms {
-                    self.rewrite_select_arm(arm);
-                }
-                if let Some(stmts) = default_body {
-                    for stmt in stmts {
-                        self.rewrite_stmt(stmt);
-                    }
-                }
-            }
         }
     }
 
@@ -157,12 +145,4 @@ impl NameRewriter<'_> {
         }
     }
 
-    fn rewrite_select_arm(&mut self, arm: &mut SelectArm) {
-        self.rewrite_type_expr(&mut arm.type_expr);
-        self.rewrite_expr(&mut arm.channel);
-        self.push_scope();
-        self.declare_value(&arm.binding);
-        self.rewrite_stmt(&mut arm.body);
-        self.pop_scope();
-    }
 }

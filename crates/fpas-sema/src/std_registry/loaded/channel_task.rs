@@ -1,4 +1,4 @@
-//! Registration of `Std.Channel` and `Std.Task`.
+//! Registration of `Std.Task`.
 //!
 //! **Documentation:** `docs/pascal/08-concurrency.md` (from the repository root).
 
@@ -6,25 +6,6 @@ use super::super::define_builtin_std;
 use crate::check::Checker;
 use crate::types::{FunctionTy, Ty};
 use fpas_std::std_symbols as s;
-
-pub fn register_std_channel(c: &mut Checker) {
-    let placeholder = Ty::Function(FunctionTy {
-        type_params: Vec::new(),
-        params: vec![],
-        return_type: Box::new(Ty::Error),
-    });
-
-    for name in [
-        s::STD_CHANNEL_MAKE,
-        s::STD_CHANNEL_MAKE_BUFFERED,
-        s::STD_CHANNEL_SEND,
-        s::STD_CHANNEL_RECEIVE,
-        s::STD_CHANNEL_TRY_RECEIVE,
-        s::STD_CHANNEL_CLOSE,
-    ] {
-        define_builtin_std(c, name, placeholder.clone());
-    }
-}
 
 pub fn register_std_task(c: &mut Checker) {
     let placeholder = Ty::Function(FunctionTy {

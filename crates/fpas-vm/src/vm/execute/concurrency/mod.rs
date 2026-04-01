@@ -1,8 +1,7 @@
-//! Cooperative concurrency: task spawning, yielding, channels, and scheduling.
+//! Cooperative concurrency: task spawning, yielding, and scheduling.
 //!
 //! **Documentation:** `docs/pascal/08-concurrency.md`, `docs/future/parallel-vm.md`
 
-mod channels;
 mod tasks;
 
 use super::super::Worker;
@@ -40,31 +39,6 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<bool, VmError> {
         match intr {
-            Intrinsic::ChannelMake => {
-                self.exec_channel_make(1, line)?;
-                Ok(true)
-            }
-            Intrinsic::ChannelMakeBuffered => {
-                let size = self.pop_int(line)?;
-                self.exec_channel_make_buffered(size, line)?;
-                Ok(true)
-            }
-            Intrinsic::ChannelSend => {
-                self.exec_channel_send(line)?;
-                Ok(true)
-            }
-            Intrinsic::ChannelRecv => {
-                self.exec_channel_recv(line)?;
-                Ok(true)
-            }
-            Intrinsic::ChannelTryRecv => {
-                self.exec_channel_try_recv(line)?;
-                Ok(true)
-            }
-            Intrinsic::ChannelClose => {
-                self.exec_channel_close(line)?;
-                Ok(true)
-            }
             Intrinsic::TaskWait => {
                 self.exec_task_wait(line)?;
                 Ok(true)

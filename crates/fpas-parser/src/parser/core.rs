@@ -132,10 +132,6 @@ impl Parser {
                 self.advance();
                 Some(("Option".to_string(), span))
             }
-            Token::Channel => {
-                self.advance();
-                Some(("Channel".to_string(), span))
-            }
             Token::Dict => {
                 self.advance();
                 Some(("Dict".to_string(), span))

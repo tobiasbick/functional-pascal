@@ -128,7 +128,7 @@ impl NameRewriter<'_> {
                 self.rewrite_type_expr(ok_type);
                 self.rewrite_type_expr(err_type);
             }
-            TypeExpr::Option { inner_type, .. } | TypeExpr::Channel { inner_type, .. } => {
+            TypeExpr::Option { inner_type, .. } => {
                 self.rewrite_type_expr(inner_type);
             }
             TypeExpr::Dict {

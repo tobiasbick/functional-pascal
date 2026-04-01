@@ -44,10 +44,6 @@ pub enum Value {
         name: String,
         captures: Vec<Value>,
     },
-    /// Channel handle (runtime id).
-    ///
-    /// **Documentation:** `docs/pascal/08-concurrency.md`
-    Channel(u64),
     /// Task handle (runtime id).
     ///
     /// **Documentation:** `docs/pascal/08-concurrency.md`
@@ -73,7 +69,6 @@ impl Value {
             Value::OptionSome(_) => "Option.Some",
             Value::OptionNone => "Option.None",
             Value::Function { .. } => "function",
-            Value::Channel(_) => "channel",
             Value::Task(_) => "task",
         }
     }
@@ -165,7 +160,6 @@ impl std::fmt::Display for Value {
             Value::OptionSome(v) => write!(f, "Some({v})"),
             Value::OptionNone => write!(f, "None"),
             Value::Function { name, .. } => write!(f, "<function {name}>"),
-            Value::Channel(id) => write!(f, "<channel {id}>"),
             Value::Task(id) => write!(f, "<task {id}>"),
         }
     }
@@ -218,7 +212,6 @@ impl PartialEq for Value {
                     captures: b_captures,
                 },
             ) => a_name == b_name && a_captures == b_captures,
-            (Self::Channel(a), Self::Channel(b)) => a == b,
             (Self::Task(a), Self::Task(b)) => a == b,
             _ => false,
         }

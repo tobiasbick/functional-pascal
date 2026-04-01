@@ -2,7 +2,6 @@
 //!
 //! The VM executes the main program on the calling thread. Tasks created with
 //! `go` are distributed across a thread pool for true parallel execution.
-//! Channels use `crossbeam-channel` for lock-free cross-thread communication.
 //!
 //! **Documentation:** `docs/future/parallel-vm.md`, `docs/pascal/08-concurrency.md`
 
@@ -21,7 +20,7 @@ mod worker;
 
 pub use diagnostics::VmError;
 pub(crate) use diagnostics::{internal_error, runtime_error};
-pub(crate) use shared::{SharedChannel, SharedState, TaskResultPoll, TaskState};
+pub(crate) use shared::{SharedState, TaskResultPoll, TaskState};
 pub(crate) use worker::Worker;
 
 const STACK_MAX: usize = 4096;
@@ -70,8 +69,6 @@ impl Vm {
         let shared = Arc::new(SharedState {
             chunk,
             globals: RwLock::new(HashMap::new()),
-            channels: Mutex::new(HashMap::new()),
-            next_channel_id: AtomicU64::new(1),
             task_queue: Mutex::new(Vec::new()),
             task_available: Condvar::new(),
             task_results: Mutex::new(HashMap::new()),

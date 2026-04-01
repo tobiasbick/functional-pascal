@@ -33,11 +33,6 @@ macro_rules! std_option {
         concat!("Std.Option.", $suffix)
     };
 }
-macro_rules! std_channel {
-    ($suffix:literal) => {
-        concat!("Std.Channel.", $suffix)
-    };
-}
 macro_rules! std_task {
     ($suffix:literal) => {
         concat!("Std.Task.", $suffix)
@@ -233,13 +228,6 @@ pub const STD_OPTION_IS_NONE: &str = std_option!("IsNone");
 pub const STD_OPTION_MAP: &str = std_option!("Map");
 pub const STD_OPTION_AND_THEN: &str = std_option!("AndThen");
 pub const STD_OPTION_OR_ELSE: &str = std_option!("OrElse");
-
-pub const STD_CHANNEL_MAKE: &str = std_channel!("Make");
-pub const STD_CHANNEL_MAKE_BUFFERED: &str = std_channel!("MakeBuffered");
-pub const STD_CHANNEL_SEND: &str = std_channel!("Send");
-pub const STD_CHANNEL_RECEIVE: &str = std_channel!("Receive");
-pub const STD_CHANNEL_TRY_RECEIVE: &str = std_channel!("TryReceive");
-pub const STD_CHANNEL_CLOSE: &str = std_channel!("Close");
 
 pub const STD_TASK_WAIT: &str = std_task!("Wait");
 pub const STD_TASK_WAIT_ALL: &str = std_task!("WaitAll");

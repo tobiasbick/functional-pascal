@@ -171,22 +171,6 @@ mod tests {
     }
 
     #[test]
-    fn try_receive_on_closed_empty_channel_returns_none() {
-        let mut chunk = Chunk::new();
-        chunk.emit(Op::Intrinsic(Intrinsic::ChannelMake as u16), loc());
-        chunk.emit(Op::Dup, loc());
-        chunk.emit(Op::Intrinsic(Intrinsic::ChannelClose as u16), loc());
-        chunk.emit(Op::Intrinsic(Intrinsic::ChannelTryRecv as u16), loc());
-        chunk.emit(Op::PrintLn, loc());
-        chunk.emit(Op::Halt, loc());
-
-        let mut vm = Vm::new(chunk);
-        vm.run()
-            .expect("TryReceive on a closed, empty channel should return None");
-        assert_eq!(vm.output().lines, vec!["None"]);
-    }
-
-    #[test]
     fn malformed_get_enclosing_reports_error_instead_of_silently_falling_back() {
         let mut chunk = Chunk::new();
         emit_constant(&mut chunk, Value::Integer(1));

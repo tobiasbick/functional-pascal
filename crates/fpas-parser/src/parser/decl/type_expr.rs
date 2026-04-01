@@ -61,16 +61,6 @@ impl Parser {
                     span: self.span_from(start),
                 }
             }
-            Token::Channel => {
-                let start = self.current_span();
-                self.advance();
-                self.expect(&Token::Of);
-                let inner_type = self.parse_type_expr();
-                TypeExpr::Channel {
-                    inner_type: Box::new(inner_type),
-                    span: self.span_from(start),
-                }
-            }
             Token::Dict => {
                 let start = self.current_span();
                 self.advance();

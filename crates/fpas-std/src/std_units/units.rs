@@ -7,7 +7,6 @@ pub const STD_UNIT_MATH: &str = "Std.Math";
 pub const STD_UNIT_ARRAY: &str = "Std.Array";
 pub const STD_UNIT_RESULT: &str = "Std.Result";
 pub const STD_UNIT_OPTION: &str = "Std.Option";
-pub const STD_UNIT_CHANNEL: &str = "Std.Channel";
 pub const STD_UNIT_TASK: &str = "Std.Task";
 pub const STD_UNIT_DICT: &str = "Std.Dict";
 
@@ -19,7 +18,6 @@ pub const STD_UNITS_KNOWN: &[&str] = &[
     STD_UNIT_ARRAY,
     STD_UNIT_RESULT,
     STD_UNIT_OPTION,
-    STD_UNIT_CHANNEL,
     STD_UNIT_TASK,
     STD_UNIT_DICT,
 ];

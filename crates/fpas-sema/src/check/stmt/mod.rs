@@ -96,61 +96,6 @@ impl Checker {
                     self.check_expr(expr);
                 }
             }
-
-            Stmt::Select {
-                arms, default_body, ..
-            } => self.check_select_stmt(arms, default_body.as_deref()),
-        }
-    }
-
-    fn check_select_stmt(&mut self, arms: &[SelectArm], default_body: Option<&[Stmt]>) {
-        for arm in arms {
-            let channel_ty = self.check_expr(&arm.channel);
-            let declared_ty = self.resolve_type_expr(&arm.type_expr);
-
-            let binding_ty = match channel_ty {
-                crate::types::Ty::Channel(inner) => {
-                    if !declared_ty.is_error() && !inner.compatible_with(&declared_ty) {
-                        self.check_type_compat(
-                            &inner,
-                            &declared_ty,
-                            "select arm binding",
-                            arm.span,
-                        );
-                    }
-                    *inner
-                }
-                crate::types::Ty::Error => crate::types::Ty::Error,
-                other => {
-                    self.error_with_code(
-                        fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
-                        format!(
-                            "Type mismatch in select arm source: expected a channel, found `{other}`"
-                        ),
-                        "Use `case Name: Type from SomeChannel:` with a channel expression.",
-                        crate::check::spans::expr_span(&arm.channel),
-                    );
-                    crate::types::Ty::Error
-                }
-            };
-
-            self.scopes.push_scope();
-            self.scopes.define(
-                &arm.binding,
-                crate::scope::Symbol {
-                    ty: binding_ty,
-                    mutable: false,
-                    kind: crate::scope::SymbolKind::Var,
-                },
-            );
-            self.check_stmt(&arm.body);
-            self.scopes.pop_scope();
-        }
-
-        if let Some(body) = default_body {
-            for stmt in body {
-                self.check_stmt(stmt);
-            }
         }
     }
 

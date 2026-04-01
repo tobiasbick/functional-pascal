@@ -89,10 +89,6 @@ pub enum Ty {
     /// A generic type parameter (e.g. `T` in `function Identity<T>`),
     /// optionally carrying its constraint for operator checking inside generic bodies.
     GenericParam(String, Option<TypeConstraint>),
-    /// `channel of T` — typed channel for concurrent communication.
-    ///
-    /// **Documentation:** `docs/pascal/08-concurrency.md`
-    Channel(Box<Ty>),
     /// `dict of K to V` — key-value collection.
     ///
     /// **Documentation:** `docs/future/advanced-types.md`
@@ -205,7 +201,6 @@ impl std::fmt::Display for Ty {
             Ty::Result(ok, err) => write!(f, "Result of {ok}, {err}"),
             Ty::Option(inner) => write!(f, "Option of {inner}"),
             Ty::GenericParam(name, _) => write!(f, "{name}"),
-            Ty::Channel(inner) => write!(f, "channel of {inner}"),
             Ty::Dict(k, v) => write!(f, "dict of {k} to {v}"),
             Ty::Task(inner) => write!(f, "task of {inner}"),
             Ty::Error => write!(f, "<error>"),
@@ -251,8 +246,7 @@ impl Ty {
             }
             // Option covariance
             (Ty::Option(a), Ty::Option(b)) => a.compatible_with(b),
-            // Channel and Task covariance (inner type may be erased as Error)
-            (Ty::Channel(a), Ty::Channel(b)) => a.compatible_with(b),
+            // Task covariance (inner type may be erased as Error)
             (Ty::Task(a), Ty::Task(b)) => a.compatible_with(b),
             // Dict covariance
             (Ty::Dict(k1, v1), Ty::Dict(k2, v2)) => {

@@ -73,8 +73,6 @@ pub const RUNTIME_NUMERIC_DOMAIN_ERROR: DiagnosticCode = DiagnosticCode::new(401
 pub const RUNTIME_CONVERSION_FAILURE: DiagnosticCode = DiagnosticCode::new(4013);
 pub const RUNTIME_CONSOLE_STATE_ERROR: DiagnosticCode = DiagnosticCode::new(4014);
 pub const RUNTIME_UNWRAP_FAILURE: DiagnosticCode = DiagnosticCode::new(4015);
-pub const RUNTIME_CHANNEL_CLOSED: DiagnosticCode = DiagnosticCode::new(4016);
-pub const RUNTIME_INVALID_CHANNEL: DiagnosticCode = DiagnosticCode::new(4017);
 pub const RUNTIME_INVALID_TASK: DiagnosticCode = DiagnosticCode::new(4018);
 pub const RUNTIME_DICT_KEY_NOT_FOUND: DiagnosticCode = DiagnosticCode::new(4019);
 pub const RUNTIME_VM_SHUTDOWN: DiagnosticCode = DiagnosticCode::new(4020);
@@ -144,8 +142,6 @@ mod tests {
             RUNTIME_CONVERSION_FAILURE,
             RUNTIME_CONSOLE_STATE_ERROR,
             RUNTIME_UNWRAP_FAILURE,
-            RUNTIME_CHANNEL_CLOSED,
-            RUNTIME_INVALID_CHANNEL,
             RUNTIME_INVALID_TASK,
             RUNTIME_DICT_KEY_NOT_FOUND,
             RUNTIME_VM_SHUTDOWN,

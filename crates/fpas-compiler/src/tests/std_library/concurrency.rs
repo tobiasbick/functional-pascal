@@ -27,20 +27,17 @@ fn go_wait_all_supports_procedure_tasks() {
     let out = compile_and_run(
         "\
 program T;
-uses Std.Console, Std.Task, Std.Channel;
+uses Std.Console, Std.Task;
 
-procedure SendValue(Ch: channel of integer; Value: integer);
+procedure PrintValue(Value: integer);
 begin
-  Std.Channel.Send(Ch, Value)
+  Std.Console.WriteLn(Value)
 end;
 
 begin
-  var Ch: channel of integer := Std.Channel.MakeBuffered(2);
-  var T1: task := go SendValue(Ch, 10);
-  var T2: task := go SendValue(Ch, 20);
-  Std.Task.WaitAll([T1, T2]);
-  Std.Console.WriteLn(Std.Channel.Receive(Ch));
-  Std.Console.WriteLn(Std.Channel.Receive(Ch))
+  var T1: task := go PrintValue(10);
+  var T2: task := go PrintValue(20);
+  Std.Task.WaitAll([T1, T2])
 end.",
     );
 
@@ -154,136 +151,4 @@ end.",
     );
 
     assert_eq!(out.lines, vec!["count=7"]);
-}
-
-#[test]
-fn select_prefers_the_first_ready_arm() {
-    let out = compile_and_run(
-        "\
-program T;
-uses Std.Console, Std.Channel;
-
-begin
-  var Ch1: channel of integer := Std.Channel.MakeBuffered(1);
-  var Ch2: channel of integer := Std.Channel.MakeBuffered(1);
-  Std.Channel.Send(Ch1, 1);
-  Std.Channel.Send(Ch2, 2);
-
-  select
-    case Value: integer from Ch1:
-      Std.Console.WriteLn('first=' + Std.Conv.IntToStr(Value));
-    case Other: integer from Ch2:
-      Std.Console.WriteLn('second=' + Std.Conv.IntToStr(Other));
-  end
-end.",
-    );
-
-    assert_eq!(out.lines, vec!["first=1"]);
-}
-
-#[test]
-fn select_with_default_runs_default_branch() {
-    let out = compile_and_run(
-        "\
-program T;
-uses Std.Console, Std.Channel;
-
-begin
-  var Ch: channel of integer := Std.Channel.Make();
-  select
-    case Value: integer from Ch:
-      Std.Console.WriteLn(Value);
-    default:
-      Std.Console.WriteLn('idle');
-  end
-end.",
-    );
-
-    assert_eq!(out.lines, vec!["idle"]);
-}
-
-#[test]
-fn select_without_default_waits_for_a_value() {
-    let out = compile_and_run(
-        "\
-program T;
-uses Std.Console, Std.Channel;
-
-procedure Producer(Ch: channel of integer);
-begin
-  Std.Channel.Send(Ch, 99)
-end;
-
-begin
-  var Ch: channel of integer := Std.Channel.Make();
-  go Producer(Ch);
-
-  select
-    case Value: integer from Ch:
-      Std.Console.WriteLn(Value);
-  end
-end.",
-    );
-
-    assert_eq!(out.lines, vec!["99"]);
-}
-
-#[test]
-fn close_drains_buffer_and_try_receive_then_returns_none() {
-    let out = compile_and_run(
-        "\
-program T;
-uses Std.Console, Std.Channel, Std.Option;
-
-begin
-  var Ch: channel of integer := Std.Channel.MakeBuffered(2);
-  Std.Channel.Send(Ch, 7);
-  Std.Channel.Send(Ch, 8);
-  Std.Channel.Close(Ch);
-
-  Std.Console.WriteLn(Std.Channel.Receive(Ch));
-  Std.Console.WriteLn(Std.Channel.Receive(Ch));
-  Std.Console.WriteLn(Std.Option.IsNone(Std.Channel.TryReceive(Ch)))
-end.",
-    );
-
-    assert_eq!(out.lines, vec!["7", "8", "true"]);
-}
-
-#[test]
-fn sending_to_a_closed_channel_reports_a_runtime_error() {
-    let msg = compile_run_err(
-        "\
-program T;
-uses Std.Channel;
-
-begin
-  var Ch: channel of integer := Std.Channel.Make();
-  Std.Channel.Close(Ch);
-  Std.Channel.Send(Ch, 1)
-end.",
-    );
-
-    assert!(
-        msg.contains("Cannot send on a closed channel"),
-        "expected closed-channel error, got: {msg}"
-    );
-}
-
-#[test]
-fn make_buffered_rejects_negative_capacity() {
-    let msg = compile_run_err(
-        "\
-program T;
-uses Std.Channel;
-
-begin
-  var Ch: channel of integer := Std.Channel.MakeBuffered(-1)
-end.",
-    );
-
-    assert!(
-        msg.contains("Channel buffer size must be a positive integer"),
-        "expected positive-capacity error, got: {msg}"
-    );
 }

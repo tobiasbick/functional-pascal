@@ -62,7 +62,6 @@ impl Parser {
                 Stmt::Continue(span)
             }
             Token::Go => self.parse_go_stmt(),
-            Token::Select => self.parse_select_stmt(),
             Token::Ident(_) => self.parse_call_or_assign(),
             _ => {
                 let span = self.current_span();

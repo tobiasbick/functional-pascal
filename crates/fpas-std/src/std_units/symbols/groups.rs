@@ -199,15 +199,6 @@ pub(in super::super) const STD_OPTION_SYMBOLS: &[&str] = &[
     std_symbols::STD_OPTION_OR_ELSE,
 ];
 
-pub(in super::super) const STD_CHANNEL_SYMBOLS: &[&str] = &[
-    std_symbols::STD_CHANNEL_MAKE,
-    std_symbols::STD_CHANNEL_MAKE_BUFFERED,
-    std_symbols::STD_CHANNEL_SEND,
-    std_symbols::STD_CHANNEL_RECEIVE,
-    std_symbols::STD_CHANNEL_TRY_RECEIVE,
-    std_symbols::STD_CHANNEL_CLOSE,
-];
-
 pub(in super::super) const STD_TASK_SYMBOLS: &[&str] =
     &[std_symbols::STD_TASK_WAIT, std_symbols::STD_TASK_WAIT_ALL];
 

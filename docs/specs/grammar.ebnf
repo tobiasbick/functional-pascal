@@ -69,7 +69,7 @@ line_comment    = '//' { (* any char except newline *) } newline ;
 (* A `{` immediately followed by `$` is not a comment: the lexer    *)
 (* reports an error for that sequence. *)
 
-(* ---- Keywords (59, case-insensitive) --------------------------- *)
+(* ---- Keywords (55, case-insensitive) --------------------------- *)
 
 keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'var'       | 'mutable'   | 'function'  | 'procedure'
@@ -84,8 +84,7 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'break'     | 'continue'  | 'result'    | 'option'
                 | 'ok'        | 'error'     | 'some'      | 'none'
                 | 'try'       | 'public'    | 'private'
-                | 'go'        | 'channel'   | 'select'    | 'default'
-                | 'from'      | 'dict'      | 'with' ;
+                | 'go'        | 'dict'      | 'with' ;
 
 (* ---- Symbols --------------------------------------------------- *)
 
@@ -189,7 +188,6 @@ constraint_name     = 'Comparable' | 'Numeric' | 'Printable' ;
 
 type_expr           = 'array' 'of' type_expr            (* array type     *)
                     | 'dict' 'of' type_expr 'to' type_expr (* dict type    *)
-                    | 'channel' 'of' type_expr           (* channel type   *)
                     | 'result' 'of' type_expr ',' type_expr  (* result type *)
                     | 'option' 'of' type_expr            (* option type    *)
                     | function_type                      (* function type  *)
@@ -271,7 +269,6 @@ statement           = block
                     | break_stmt
                     | continue_stmt
                     | go_stmt
-                    | select_stmt
                     | call_stmt ;
 
 block               = 'begin' statement_list 'end' ;
@@ -381,22 +378,6 @@ go_stmt             = 'go' go_call ;
 (* `go` launches a concurrent task. Only call syntax is valid.      *)
 (* As an expression, `go f()` returns                                *)
 (* a `task` handle.                                                 *)
-
-(* -- Select (channel multiplexing) -- *)
-select_stmt         = 'select'
-                                 ( select_arm { select_arm }
-                                    [ 'default' ':' statement_list [ ';' ] ]
-                                 | 'default' ':' statement_list [ ';' ] )
-                                 'end' ;
-
-select_arm          = 'case' identifier ':' type_expr 'from' expression
-                      ':' statement ';' ;
-
-(* Each arm tries a non-blocking receive from its channel.          *)
-(* The first arm with an available value executes.                  *)
-(* The binding identifier receives the value.                       *)
-(* `default` runs when no channel has data.                         *)
-(* Empty `select end` is invalid.                                   *)
 
 (* -- Procedure / Function Call (statement position) -- *)
 call_stmt           = designator '(' [ arg_list ] ')' ;

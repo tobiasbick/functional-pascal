@@ -1,5 +1,4 @@
 mod array;
-mod channel;
 mod console;
 mod conv;
 mod dict;
@@ -163,9 +162,6 @@ impl Compiler {
             return Ok(true);
         }
         if self.compile_result_option_call(name, args, location)? {
-            return Ok(true);
-        }
-        if self.compile_channel_call(name, args, location)? {
             return Ok(true);
         }
         if self.compile_task_call(name, args, location)? {

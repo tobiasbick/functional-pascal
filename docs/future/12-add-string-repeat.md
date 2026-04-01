@@ -1,6 +1,6 @@
 # Add: String Repeat
 
-> Priority: 12 — small stdlib utility.
+> Status: **Done**.
 
 ## Problem
 
@@ -14,17 +14,19 @@ for I: integer := 1 to Width do
 
 ## Solution
 
-Add `Repeat` to `Std.Str`:
+`RepeatStr` is available in `Std.Str`:
 
 ```pascal
-var Line: string := Repeat('─', Width);
-var Border: string := Repeat('═', 40);
+var Line: string := RepeatStr('─', Width);
+var Border: string := RepeatStr('═', 40);
 ```
+
+> **Note:** The name `Repeat` cannot be used because `repeat` is a reserved keyword (`repeat … until` loop).
 
 ### Signature
 
 ```
-function Repeat(S: string; Count: integer): string;
+function RepeatStr(S: string; Count: integer): string;
 ```
 
 - Returns `S` concatenated `Count` times.
@@ -32,8 +34,8 @@ function Repeat(S: string; Count: integer): string;
 
 ## Scope
 
-- **fpas-std:** implement in `Std.Str`.
-- **Std registry:** register `Repeat` in `Std.Str`.
-- **Docs:** add to `std/str.md`.
+- **fpas-std:** implemented in `Std.Str`.
+- **Std registry:** registered as `RepeatStr` in `Std.Str`.
+- **Docs:** documented in `std/str.md`.
 
 No language changes. No new keywords.

@@ -591,12 +591,10 @@ begin
   WriteLn(RepeatStr('x', -5))
 end.
 "#;
-    let (exit_code, _stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
-    assert_ne!(exit_code, 0);
-    assert!(
-        stderr.contains("Repeat count must be >= 0"),
-        "stderr: {stderr}"
-    );
+    let (exit_code, stdout, stderr) = support::run_source_and_capture_output("t.fpas", source);
+    assert!(stderr.is_empty(), "stderr: {stderr}");
+    assert_eq!(exit_code, 0);
+    assert_eq!(stdout, "\n");
 }
 
 #[test]

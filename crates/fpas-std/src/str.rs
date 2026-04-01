@@ -126,15 +126,12 @@ pub(crate) fn run(
         Intrinsic::StrRepeat => {
             let n = pop_int(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
-            if n < 0 {
-                return Err(std_runtime_error(
-                    RUNTIME_NUMERIC_DOMAIN_ERROR,
-                    format!("Repeat count must be >= 0, got {n}"),
-                    "Pass a non-negative integer to Std.Str.Repeat.",
-                    location,
-                ));
-            }
-            stack.push(Value::Str(s.repeat(n as usize)));
+            let out = if n <= 0 {
+                String::new()
+            } else {
+                s.repeat(n as usize)
+            };
+            stack.push(Value::Str(out));
         }
         Intrinsic::StrPadLeft => {
             let pad_char = pop_char(pop_value(stack, location)?, location)?;

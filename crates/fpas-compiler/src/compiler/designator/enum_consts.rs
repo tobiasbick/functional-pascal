@@ -8,16 +8,16 @@ impl Compiler {
         &mut self,
         d: &Designator,
         location: SourceLocation,
-    ) -> bool {
+    ) -> Result<bool, crate::error::CompileError> {
         if d.parts.len() < 2 {
-            return false;
+            return Ok(false);
         }
         if !d
             .parts
             .iter()
             .all(|p| matches!(p, DesignatorPart::Ident(_, _)))
         {
-            return false;
+            return Ok(false);
         }
         let names: Vec<&str> = d
             .parts
@@ -28,7 +28,7 @@ impl Compiler {
             })
             .collect();
         let Some((member, type_segments)) = names.split_last() else {
-            return false;
+            return Ok(false);
         };
         let type_name = type_segments.join(".");
         let resolved_type = self.short_aliases.get(&type_name).cloned();
@@ -48,19 +48,19 @@ impl Compiler {
                     // Data enum: emit MakeEnum with zero fields for fieldless variants.
                     // Variants with fields are constructed via compile_call.
                     if !variant.field_names.is_empty() {
-                        return false;
+                        return Ok(false);
                     }
-                    let type_idx = self.chunk.add_constant(Value::Str(tn.into()));
-                    let variant_idx = self.chunk.add_constant(Value::Str((*member).into()));
+                    let type_idx = self.add_constant(Value::Str(tn.into()), location)?;
+                    let variant_idx = self.add_constant(Value::Str((*member).into()), location)?;
                     self.emit(Op::MakeEnum(type_idx, variant_idx, 0), location);
                 } else {
                     // Simple enum: emit integer backing value.
-                    self.emit_constant(Value::Integer(variant.backing), location);
+                    self.emit_constant(Value::Integer(variant.backing), location)?;
                 }
-                return true;
+                return Ok(true);
             }
         }
-        false
+        Ok(false)
     }
 
     /// Look up an enum variant with associated data by a (possibly qualified) name.

@@ -57,6 +57,7 @@ pub const COMPILE_INTRINSIC_ARITY_MISMATCH: DiagnosticCode = DiagnosticCode::new
 pub const COMPILE_UNSUPPORTED_INTRINSIC_LOWERING_CASE: DiagnosticCode = DiagnosticCode::new(3004);
 pub const COMPILE_INVALID_MUTABLE_ARRAY_LOWERING_TARGET: DiagnosticCode = DiagnosticCode::new(3005);
 pub const COMPILE_INVALID_GO_EXPRESSION: DiagnosticCode = DiagnosticCode::new(3006);
+pub const COMPILE_BYTECODE_OPERAND_OVERFLOW: DiagnosticCode = DiagnosticCode::new(3007);
 
 pub const RUNTIME_DIVISION_BY_ZERO: DiagnosticCode = DiagnosticCode::new(4001);
 pub const RUNTIME_MODULO_BY_ZERO: DiagnosticCode = DiagnosticCode::new(4002);
@@ -129,6 +130,7 @@ mod tests {
             COMPILE_UNSUPPORTED_INTRINSIC_LOWERING_CASE,
             COMPILE_INVALID_MUTABLE_ARRAY_LOWERING_TARGET,
             COMPILE_INVALID_GO_EXPRESSION,
+            COMPILE_BYTECODE_OPERAND_OVERFLOW,
             RUNTIME_DIVISION_BY_ZERO,
             RUNTIME_MODULO_BY_ZERO,
             RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,

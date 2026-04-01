@@ -38,7 +38,7 @@ impl Compiler {
         self.patch_continues(increment_start, (line, column))?;
 
         self.emit(Op::GetLocal(var_slot), (line, column));
-        self.emit_constant(Value::Integer(1), (line, column));
+        self.emit_constant(Value::Integer(1), (line, column))?;
         match direction {
             ForDirection::To => self.emit(Op::AddInt, (line, column)),
             ForDirection::Downto => self.emit(Op::SubInt, (line, column)),
@@ -76,7 +76,7 @@ impl Compiler {
         self.begin_scope();
         let arr_slot = self.add_local("__for_arr");
 
-        self.emit_constant(Value::Integer(0), (line, column));
+        self.emit_constant(Value::Integer(0), (line, column))?;
         let idx_slot = self.add_local("__for_idx");
 
         self.emit(Op::GetLocal(arr_slot), (line, column));
@@ -109,7 +109,7 @@ impl Compiler {
         self.patch_continues(increment_start, (line, column))?;
 
         self.emit(Op::GetLocal(idx_slot), (line, column));
-        self.emit_constant(Value::Integer(1), (line, column));
+        self.emit_constant(Value::Integer(1), (line, column))?;
         self.emit(Op::AddInt, (line, column));
         self.emit(Op::SetLocal(idx_slot), (line, column));
         self.emit(Op::Pop, (line, column));

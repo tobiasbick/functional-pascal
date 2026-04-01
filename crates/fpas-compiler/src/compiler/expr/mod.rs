@@ -16,21 +16,21 @@ impl Compiler {
     pub(super) fn compile_expr(&mut self, expr: &Expr) -> Result<(), CompileError> {
         match expr {
             Expr::Integer(n, span) => {
-                self.emit_constant(Value::Integer(*n), (span.line, span.column));
+                self.emit_constant(Value::Integer(*n), (span.line, span.column))?;
             }
             Expr::Real(n, span) => {
-                self.emit_constant(Value::Real(*n), (span.line, span.column));
+                self.emit_constant(Value::Real(*n), (span.line, span.column))?;
             }
             Expr::Str(s, span) => {
                 let mut chars = s.chars();
                 if let (Some(c), None) = (chars.next(), chars.next()) {
-                    self.emit_constant(Value::Char(c), (span.line, span.column));
+                    self.emit_constant(Value::Char(c), (span.line, span.column))?;
                 } else {
-                    self.emit_constant(Value::Str(s.clone()), (span.line, span.column));
+                    self.emit_constant(Value::Str(s.clone()), (span.line, span.column))?;
                 }
             }
             Expr::Bool(b, span) => {
-                self.emit_constant(Value::Boolean(*b), (span.line, span.column));
+                self.emit_constant(Value::Boolean(*b), (span.line, span.column))?;
             }
             Expr::Designator(d) => {
                 self.compile_designator_read(d)?;
@@ -111,7 +111,7 @@ impl Compiler {
                         self.emit_constant(
                             Value::Str(field_name.clone()),
                             (span.line, span.column),
-                        );
+                        )?;
                         if let Some(val) = provided.get(field_name.as_str()).copied() {
                             self.compile_expr(val)?;
                         } else {
@@ -122,17 +122,19 @@ impl Compiler {
                         }
                     }
                     let n = field_specs.len() as u16;
-                    let type_idx = self.chunk.add_constant(Value::Str(type_name));
+                    let type_idx =
+                        self.add_constant(Value::Str(type_name), (span.line, span.column))?;
                     self.emit(Op::MakeRecord(type_idx, n), (span.line, span.column));
                 } else {
                     for field in fields {
                         self.emit_constant(
                             Value::Str(field.name.clone()),
                             (span.line, span.column),
-                        );
+                        )?;
                         self.compile_expr(&field.value)?;
                     }
-                    let type_idx = self.chunk.add_constant(Value::Str("<record>".into()));
+                    let type_idx =
+                        self.add_constant(Value::Str("<record>".into()), (span.line, span.column))?;
                     self.emit(
                         Op::MakeRecord(type_idx, fields.len() as u16),
                         (span.line, span.column),
@@ -164,7 +166,7 @@ impl Compiler {
                 // Emit base, then (name, value) override pairs, then UpdateRecord.
                 self.compile_expr(base)?;
                 for field in fields {
-                    self.emit_constant(Value::Str(field.name.clone()), (span.line, span.column));
+                    self.emit_constant(Value::Str(field.name.clone()), (span.line, span.column))?;
                     self.compile_expr(&field.value)?;
                 }
                 self.emit(

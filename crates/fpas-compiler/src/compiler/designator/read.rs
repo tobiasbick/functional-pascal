@@ -12,7 +12,7 @@ impl Compiler {
         d: &Designator,
     ) -> Result<(), CompileError> {
         let location = Self::location_of(&d.span);
-        if self.try_emit_enum_constant(d, location) {
+        if self.try_emit_enum_constant(d, location)? {
             return Ok(());
         }
 
@@ -40,7 +40,7 @@ impl Compiler {
             for part in parts {
                 match part {
                     DesignatorPart::Ident(field, _) => {
-                        let idx = self.chunk.add_constant(Value::Str(field.clone()));
+                        let idx = self.add_constant(Value::Str(field.clone()), location)?;
                         self.emit(Op::FieldGet(idx), location);
                     }
                     DesignatorPart::Index(expr, _) => {
@@ -53,7 +53,7 @@ impl Compiler {
             let raw_name = Self::resolve_designator_name(d);
             let name = self.qualify_name(&raw_name).to_string();
             if let Some(value) = Self::builtin_const_value(&name) {
-                self.emit_constant(value, location);
+                self.emit_constant(value, location)?;
                 return Ok(());
             }
 
@@ -78,11 +78,11 @@ impl Compiler {
                         captures: vec![],
                     },
                     location,
-                );
+                )?;
                 return Ok(());
             }
 
-            let idx = self.chunk.add_constant(Value::Str(name));
+            let idx = self.add_constant(Value::Str(name), location)?;
             self.emit(Op::GetGlobal(idx), location);
             for part in &d.parts {
                 if let DesignatorPart::Index(expr, _) = part {

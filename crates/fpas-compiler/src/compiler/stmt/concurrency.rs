@@ -24,7 +24,6 @@ impl Compiler {
     }
 
     fn compile_go(&mut self, expr: &Expr, span: Span, detached: bool) -> Result<(), CompileError> {
-        let loc = (span.line, span.column);
         match expr {
             Expr::Call {
                 designator, args, ..
@@ -61,7 +60,7 @@ impl Compiler {
                     self.compile_expr(arg)?;
                 }
                 self.compile_designator_read(designator)?;
-                self.emit_go_spawn(args.len() as u8, detached, loc);
+                self.emit_go_spawn(args.len(), detached, span)?;
                 Ok(())
             }
             _ => Err(compile_error(
@@ -114,19 +113,27 @@ impl Compiler {
                 nested: vec![],
                 stmts: body,
             },
-            (span.line, span.column),
+            span,
         )?;
-        self.emit_go_spawn(arg_exprs.len() as u8, detached, (span.line, span.column));
+        self.emit_go_spawn(arg_exprs.len(), detached, span)?;
         Ok(())
     }
 
-    fn emit_go_spawn(&mut self, argc: u8, detached: bool, location: (u32, u32)) {
+    fn emit_go_spawn(
+        &mut self,
+        argc: usize,
+        detached: bool,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        let location = (span.line, span.column);
+        let argc = Self::checked_u8(argc, "task arguments", span)?;
         let op = if detached {
             Op::SpawnDetachedTask(argc)
         } else {
             Op::SpawnTask(argc)
         };
         self.emit(op, location);
+        Ok(())
     }
 
     fn go_call_returns_value(&self, expr: &Expr) -> bool {

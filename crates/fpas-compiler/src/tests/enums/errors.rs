@@ -1,5 +1,19 @@
 use super::*;
 
+fn enum_fields(count: usize) -> String {
+    (0..count)
+        .map(|index| format!("F{index}: integer"))
+        .collect::<Vec<_>>()
+        .join("; ")
+}
+
+fn enum_args(count: usize) -> String {
+    (0..count)
+        .map(|index| index.to_string())
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
 // ── Negative tests (sema / compile errors) ──────────────────
 
 #[test]
@@ -148,4 +162,24 @@ begin
 end.",
     );
     assert_eq!(out.lines, vec!["west"]);
+}
+
+#[test]
+fn enum_variant_with_more_than_255_fields_reports_bytecode_operand_overflow() {
+    let err = compile_err(&format!(
+        "program EnumFieldOverflow;
+type Big = enum
+    Huge({});
+end;
+begin
+    var V: Big := Big.Huge({})
+end.",
+        enum_fields(256),
+        enum_args(256)
+    ));
+
+    assert_eq!(
+        err.code,
+        fpas_diagnostics::codes::COMPILE_BYTECODE_OPERAND_OVERFLOW
+    );
 }

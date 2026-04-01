@@ -29,7 +29,7 @@ impl Compiler {
 
         for arm in arms {
             for label in &arm.labels {
-                let pattern = DataEnumPattern::analyze(label);
+                let pattern = DataEnumPattern::analyze(label)?;
 
                 self.validate_variant_field_count(enum_type_name, &pattern)?;
                 let mut fail_patches = Vec::new();
@@ -107,7 +107,7 @@ impl Compiler {
     ) -> Result<(), CompileError> {
         self.emit(Op::GetLocal(case_slot), location);
         if let Some(variant_name) = root_variant_name {
-            let variant_idx = self.chunk.add_constant(Value::Str(variant_name.into()));
+            let variant_idx = self.add_constant(Value::Str(variant_name.into()), location)?;
             self.emit(Op::IsVariant(variant_idx), location);
             fail_patches.push(self.emit(Op::JumpIfFalse(0), location));
             return Ok(());

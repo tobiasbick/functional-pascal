@@ -129,7 +129,7 @@ impl Compiler {
                 start, end: None, ..
             } => {
                 if self.is_scalar_guard_binding_expr(start) {
-                    self.emit_constant(Value::Boolean(true), (line, column));
+                    self.emit_constant(Value::Boolean(true), (line, column))?;
                     return Ok(());
                 }
                 self.emit(Op::GetLocal(case_slot), (line, column));

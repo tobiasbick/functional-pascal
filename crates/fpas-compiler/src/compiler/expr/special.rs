@@ -1,5 +1,6 @@
 use crate::error::CompileError;
 use fpas_bytecode::{Op, Value};
+use fpas_lexer::Span;
 use fpas_parser::{Expr, FormalParam, FuncBody};
 
 use super::super::Compiler;
@@ -34,10 +35,11 @@ impl Compiler {
         &mut self,
         params: &[FormalParam],
         body: &FuncBody,
-        location: (u32, u32),
+        span: Span,
     ) -> Result<(), CompileError> {
+        let location = (span.line, span.column);
         let wrapper_name = format!("$wrapper_{}", self.chunk.code.len());
-        let arity = params.len() as u8;
+        let arity = Self::checked_u8(params.len(), "wrapper parameters", span)?;
 
         let jump_over = self.emit(Op::Jump(0), location);
         let (code_start, _) = self.compile_routine_body(params, body, location)?;
@@ -54,7 +56,7 @@ impl Compiler {
                 captures: vec![],
             },
             location,
-        );
+        )?;
         Ok(())
     }
 }

@@ -86,7 +86,8 @@ impl Worker {
                 ));
             }
 
-            if self.ip >= self.shared.chunk.code.len() {
+            let code_len = self.shared.chunk.code.len();
+            if self.ip == code_len {
                 if self.current_task_id != 0 {
                     let result = self.stack.pop().unwrap_or(Value::Unit);
                     if self.current_task_retain_result {
@@ -97,6 +98,16 @@ impl Worker {
                     }
                 }
                 return Ok(());
+            }
+            if self.ip > code_len {
+                return Err(internal_error(
+                    format!(
+                        "Instruction pointer jumped past the end of the chunk: ip={}, len={code_len}",
+                        self.ip
+                    ),
+                    "This indicates malformed bytecode or a VM control-flow bug. Please report it.",
+                    self.current_location,
+                ));
             }
 
             match self.exec_one(self.current_location)? {

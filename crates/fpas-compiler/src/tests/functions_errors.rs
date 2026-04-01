@@ -3,6 +3,13 @@
 /// **Documentation:** [docs/pascal/04-functions.md](docs/pascal/04-functions.md)
 use super::*;
 
+fn comma_separated_params(count: usize) -> String {
+    (0..count)
+        .map(|index| format!("P{index}: integer"))
+        .collect::<Vec<_>>()
+        .join("; ")
+}
+
 // ═══════════════════════════════════════════════════════════════
 // WRONG ARGUMENT COUNT
 // ═══════════════════════════════════════════════════════════════
@@ -263,6 +270,28 @@ begin
 end.",
     );
     assert_eq!(err.code, fpas_diagnostics::codes::SEMA_UNKNOWN_NAME);
+}
+
+#[test]
+fn function_with_more_than_255_parameters_reports_bytecode_operand_overflow() {
+    let err = compile_err(&format!(
+        "program TooManyParams;
+
+function Sum({}): integer;
+begin
+  return 0
+end;
+
+begin
+  Std.Console.WriteLn(0)
+end.",
+        comma_separated_params(256)
+    ));
+
+    assert_eq!(
+        err.code,
+        fpas_diagnostics::codes::COMPILE_BYTECODE_OPERAND_OVERFLOW
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════

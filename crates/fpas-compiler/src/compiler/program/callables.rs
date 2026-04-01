@@ -61,11 +61,12 @@ impl Compiler {
     ) -> Result<(), CompileError> {
         let location = Self::location_of(&span);
         let jump_over = self.emit(Op::Jump(0), location);
+        let arity = Self::checked_u8(params.len(), "parameters", span)?;
 
         let code_start = self.chunk.len();
         self.chunk
             .functions
-            .insert(name.to_string(), (code_start, params.len() as u8));
+            .insert(name.to_string(), (code_start, arity));
 
         self.compile_routine_body(params, body, location)?;
 

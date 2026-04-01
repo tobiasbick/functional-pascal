@@ -39,7 +39,7 @@ impl Compiler {
                 };
                 self.emit(Op::Pop, location);
             } else {
-                let idx = self.chunk.add_constant(Value::Str(base_name));
+                let idx = self.add_constant(Value::Str(base_name), location)?;
                 self.emit(Op::SetGlobal(idx), location);
                 self.emit(Op::Pop, location);
             }
@@ -52,14 +52,14 @@ impl Compiler {
                     }
                 };
             } else {
-                let idx = self.chunk.add_constant(Value::Str(base_name.clone()));
+                let idx = self.add_constant(Value::Str(base_name.clone()), location)?;
                 self.emit(Op::GetGlobal(idx), location);
             }
 
             for part in &remaining[..remaining.len() - 1] {
                 match part {
                     DesignatorPart::Ident(field, _) => {
-                        let idx = self.chunk.add_constant(Value::Str(field.clone()));
+                        let idx = self.add_constant(Value::Str(field.clone()), location)?;
                         self.emit(Op::FieldGet(idx), location);
                     }
                     DesignatorPart::Index(expr, _) => {
@@ -76,7 +76,7 @@ impl Compiler {
             match last_part {
                 DesignatorPart::Ident(field, _) => {
                     self.compile_expr(value)?;
-                    let idx = self.chunk.add_constant(Value::Str(field.clone()));
+                    let idx = self.add_constant(Value::Str(field.clone()), location)?;
                     self.emit(Op::FieldSet(idx), location);
                 }
                 DesignatorPart::Index(expr, _) => {
@@ -95,7 +95,7 @@ impl Compiler {
                 };
                 self.emit(Op::Pop, location);
             } else {
-                let idx = self.chunk.add_constant(Value::Str(base_name));
+                let idx = self.add_constant(Value::Str(base_name), location)?;
                 self.emit(Op::SetGlobal(idx), location);
                 self.emit(Op::Pop, location);
             }

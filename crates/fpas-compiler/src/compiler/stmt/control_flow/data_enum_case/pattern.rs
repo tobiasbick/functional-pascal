@@ -1,6 +1,9 @@
 use fpas_lexer::Span;
 use fpas_parser::{CaseLabel, DesignatorPart, Expr};
 
+use crate::error::{CompileError, compile_error};
+use fpas_diagnostics::codes::COMPILE_BYTECODE_OPERAND_OVERFLOW;
+
 /// A variant call found in a pattern, used for field-count validation.
 pub(super) struct PatternCall {
     pub(super) variant_name: String,
@@ -25,12 +28,12 @@ pub(super) struct DataEnumPattern {
 
 impl DataEnumPattern {
     /// Analyze a [`CaseLabel`] and extract the root variant name and bindings.
-    pub(super) fn analyze(label: &CaseLabel) -> Self {
+    pub(super) fn analyze(label: &CaseLabel) -> Result<Self, CompileError> {
         let CaseLabel::Value {
             start, end: None, ..
         } = label
         else {
-            return Self::empty();
+            return Ok(Self::empty());
         };
 
         match start {
@@ -45,22 +48,22 @@ impl DataEnumPattern {
                     arg_count: args.len(),
                     span: *span,
                 });
-                let bindings = collect_bindings(args);
-                Self {
+                let bindings = collect_bindings(args, *span)?;
+                Ok(Self {
                     root_variant_name,
                     bindings,
                     variant_call,
-                }
+                })
             }
             Expr::Designator(designator) => {
                 let root_variant_name = variant_name_from_designator(designator);
-                Self {
+                Ok(Self {
                     root_variant_name,
                     bindings: Vec::new(),
                     variant_call: None,
-                }
+                })
             }
-            _ => Self::empty(),
+            _ => Ok(Self::empty()),
         }
     }
 
@@ -77,7 +80,7 @@ impl DataEnumPattern {
 ///
 /// Only plain identifier args (not `_`) become bindings. Any other expression
 /// is skipped — sema has already rejected such args before the compiler runs.
-fn collect_bindings(args: &[Expr]) -> Vec<(u8, String)> {
+fn collect_bindings(args: &[Expr], span: Span) -> Result<Vec<(u8, String)>, CompileError> {
     args.iter()
         .enumerate()
         .filter_map(|(i, arg)| {
@@ -86,10 +89,26 @@ fn collect_bindings(args: &[Expr]) -> Vec<(u8, String)> {
                 && let DesignatorPart::Ident(name, _) = &d.parts[0]
                 && name != "_"
             {
-                Some((i as u8, name.clone()))
+                Some((i, name.clone()))
             } else {
                 None
             }
+        })
+        .map(|(index, name)| {
+            u8::try_from(index).map(|field_index| (field_index, name)).map_err(|_| {
+                compile_error(
+                    COMPILE_BYTECODE_OPERAND_OVERFLOW,
+                    format!(
+                        "Pattern binds more than {} enum fields; field index {index} does not fit in bytecode",
+                        u8::MAX
+                    ),
+                    format!(
+                        "Reduce the number of bound enum fields to at most {}.",
+                        u8::MAX
+                    ),
+                    span,
+                )
+            })
         })
         .collect()
 }

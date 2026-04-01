@@ -9,11 +9,11 @@ A modern, function-first programming language built on Pascal's readable syntax.
 ## Features
 
 - **Function-first** — Functions are the primary building block. No classical classes.
-- **Immutable by default** — All bindings are immutable unless declared `mutable`.
-- **Pattern matching** — Exhaustive `case` expressions with enum, `Result`, and `Option` destructuring.
-- **First-class functions & closures** — Pass functions as values, return closures that capture their environment.
+- **Immutable by default** — All bindings are immutable unless declared with `mutable var`.
+- **Pattern matching** — Exhaustive `case` statements with enum, `Result`, and `Option` destructuring.
+- **First-class functions** — Pass named functions as values, store them in variables, and use them with higher-order APIs.
 - **Error handling** — Built-in `Result of T, E` and `Option of T` types with a `try` operator for propagation.
-- **Concurrency** — Go-inspired `go` tasks and typed channels for concurrent programming.
+- **Concurrency** — Go-inspired `go` tasks with `Wait` and `WaitAll` for fork-join concurrency.
 - **Safe by design** — The VM manages memory. No pointers, no manual allocation, no unsafe operations.
 - **Case-insensitive** — Keywords and identifiers are case-insensitive, following Pascal tradition.
 - **Explicit types** — Every variable and parameter declares its type.
@@ -45,7 +45,7 @@ end.
 Run it:
 
 ```sh
-fpas run hello.fpas
+fpas hello.fpas
 ```
 
 ## Examples
@@ -91,20 +91,22 @@ begin
 end;
 ```
 
-### Closures
+### Higher-Order Functions
 
 ```pascal
-function MakeAdder(N: integer): function(X: integer): integer;
+function Double(X: integer): integer;
 begin
-  return function(X: integer): integer
-  begin
-    return X + N
-  end
+  return X * 2
+end;
+
+function Apply(F: function(X: integer): integer; Value: integer): integer;
+begin
+  return F(Value)
 end;
 
 begin
-  var Add5: function(X: integer): integer := MakeAdder(5);
-  WriteLn(Add5(10));  { 15 }
+  var Op: function(X: integer): integer := Double;
+  WriteLn(Apply(Op, 10));  { 20 }
 end.
 ```
 

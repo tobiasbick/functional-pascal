@@ -37,6 +37,10 @@ After `uses Std.Result;` use short names (`Unwrap`, `IsOk`, …) or qualified (`
 
 ---
 
+Examples below use named helper functions. Anonymous function expressions are not supported.
+
+---
+
 ## `function Unwrap(R: Result of T, E): T`
 
 Extracts the value from `Ok(value)`. **Runtime error** if `R` is `Error`.
@@ -86,9 +90,13 @@ WriteLn(IsError(R))                              { true }
 Transforms the `Ok` value with `F`. If `R` is `Error`, returns it unchanged.
 
 ```pascal
+function DoubleToString(V: integer): string;
+begin
+  return IntToStr(V * 2)
+end;
+
 var R: Result of integer, string := Ok(21);
-var M: Result of string, string := Map(R,
-  function(V: integer): string begin return IntToStr(V * 2) end);
+var M: Result of string, string := Map(R, DoubleToString);
 { M = Ok('42') }
 ```
 
@@ -99,13 +107,14 @@ var M: Result of string, string := Map(R,
 Calls `F` with the `Ok` value. `F` returns a new `Result`, enabling chained fallible operations. If `R` is `Error`, returns it unchanged.
 
 ```pascal
+function PositiveToResult(V: integer): Result of string, string;
+begin
+  if V > 0 then return Ok(IntToStr(V))
+  else return Error('non-positive')
+end;
+
 var R: Result of integer, string := Ok(10);
-var M: Result of string, string := AndThen(R,
-  function(V: integer): Result of string, string
-  begin
-    if V > 0 then return Ok(IntToStr(V))
-    else return Error('non-positive')
-  end);
+var M: Result of string, string := AndThen(R, PositiveToResult);
 { M = Ok('10') }
 ```
 
@@ -116,9 +125,13 @@ var M: Result of string, string := AndThen(R,
 Calls `F` with the `Error` value to attempt recovery. If `R` is `Ok`, returns it unchanged.
 
 ```pascal
+function RecoverToZero(E: string): Result of integer, string;
+begin
+  return Ok(0)
+end;
+
 var R: Result of integer, string := Error('oops');
-var M: Result of integer, string := OrElse(R,
-  function(E: string): Result of integer, string begin return Ok(0) end);
+var M: Result of integer, string := OrElse(R, RecoverToZero);
 { M = Ok(0) }
 ```
 

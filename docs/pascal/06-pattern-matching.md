@@ -67,6 +67,26 @@ begin
 end;
 ```
 
+Enum patterns bind variant fields positionally with plain identifiers only:
+
+```pascal
+case S of
+  Shape.Circle(R):
+    WriteLn('Circle');
+  Shape.Rectangle(W, H):
+    WriteLn('Rectangle');
+  Shape.Point:
+    WriteLn('Point');
+end;
+```
+
+Rules:
+
+- Each field position must be a bare identifier binding.
+- Nested patterns are not supported.
+- `_` is not supported as a wildcard binding.
+- Use a guard clause when you need additional constraints on a bound value.
+
 ## Else Branch
 
 Use `else` to handle all remaining cases:
@@ -133,6 +153,7 @@ end;
 ```
 
 The guard expression has access to any bindings introduced by the label.
+For enum patterns, guards are the way to express additional checks because pattern arguments cannot contain literals, wildcards, or nested enum patterns.
 
 ### Scalar Guard Bindings
 

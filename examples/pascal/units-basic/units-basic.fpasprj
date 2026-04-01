@@ -1,0 +1,7 @@
+[project]
+name = "units-basic"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/**/*.fpas"]

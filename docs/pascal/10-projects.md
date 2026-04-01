@@ -2,6 +2,8 @@
 
 A project groups source files into a buildable unit. Projects are defined by a `.fpasprj` file using TOML format.
 
+Multi-file programs are composed with project source lists plus `unit` / `uses`. There is no source-level include mechanism such as `{$I}` or `{$INCLUDE}`.
+
 ## CLI Usage
 
 - `fpas` (no arguments) — searches the current directory for a `.fpasprj` file.
@@ -50,6 +52,8 @@ Lists all source files belonging to the project. Each source file declares its n
 | `include` | Yes | Array of file paths or glob patterns. Must contain at least one entry. |
 
 #### Include Patterns
+
+These `include` entries belong to the project file format only. They are not related to Pascal compiler directives.
 
 Each `include` entry can be:
 

@@ -197,6 +197,8 @@ var
 
 Three comment styles are supported. Comments do **not** nest.
 
+`{$...}` is **not** a comment form in Functional Pascal. Pascal-style compiler directives and source-level includes such as `{$I}` / `{$INCLUDE}` are not supported; the lexer reports them as errors.
+
 ```pascal
 { Brace comment — single or multi-line }
 

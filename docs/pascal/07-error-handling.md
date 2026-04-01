@@ -97,22 +97,27 @@ end;
 ```pascal
 uses Std.Result, Std.Conv;
 
+function DoubleToString(V: integer): string;
+begin
+  return IntToStr(V * 2)
+end;
+
 var R: Result of integer, string := Ok(21);
-var M: Result of string, string := Map(R,
-  function(V: integer): string begin return IntToStr(V * 2) end);
+var M: Result of string, string := Map(R, DoubleToString);
 { M = Ok('42') }
 ```
 
 ```pascal
-uses Std.Option;
+uses Std.Option, Std.Conv;
+
+function PositiveToString(V: integer): Option of string;
+begin
+  if V > 0 then return Some(IntToStr(V))
+  else return None
+end;
 
 var O: Option of integer := Some(5);
-var M: Option of string := AndThen(O,
-  function(V: integer): Option of string
-  begin
-    if V > 0 then return Some(IntToStr(V))
-    else return None
-  end);
+var M: Option of string := AndThen(O, PositiveToString);
 { M = Some('5') }
 ```
 

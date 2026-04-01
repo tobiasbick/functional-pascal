@@ -282,6 +282,7 @@ end;
 ```
 
 Each binding name in the pattern is positional — it corresponds to the field at that position in the variant declaration. A variant without fields (like `Point` above) uses no parentheses.
+Each field position must use a plain identifier binding. Nested patterns and `_` are not supported in enum patterns; use a guard on the `case` arm for extra constraints.
 
 Backing values cannot be combined with associated data on the same variant.
 
@@ -335,28 +336,6 @@ end.
 
 Use `Std.Dict` for helpers such as `Length`, `ContainsKey`, `Get`, `Keys`, `Values`, and `Remove`.
 
-## Channels
-
-`channel of T` is a typed channel used to send values of type `T` between concurrent tasks.
-
-```pascal
-uses Std.Channel;
-
-var Ch: channel of integer := Make();
-```
-
-Sending and receiving preserve the element type:
-
-```pascal
-Send(Ch, 42);
-var Value: integer := Receive(Ch);
-var MaybeValue: Option of integer := TryReceive(Ch);
-```
-
-`TryReceive` returns `Some(Value)` when data is available and `None` when no value can be taken
-immediately. For `go`, `select`, buffering, closing, and task handles, see
-[08-concurrency.md](08-concurrency.md).
-
 ## Type Aliases
 
 Create semantic names for existing types:
@@ -370,7 +349,7 @@ type
 
 ## Generics
 
-Functions and procedures can be parameterized with type parameters declared in angle brackets (`<T>`). Records and enums are not generic — only functions and procedures support type parameters.
+Functions and procedures can be parameterized with type parameters declared in angle brackets (`<T>`). Records, enums, and type aliases are not generic — only functions and procedures support type parameters.
 
 ### Generic Functions and Procedures
 

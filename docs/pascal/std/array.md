@@ -51,6 +51,8 @@ All routines are **generic over element type `T`** (your array’s element type)
 
 **Mutating calls:** `Push` and `Pop` require **`A` to be a simple mutable array variable** (typically `mutable var Name: array of T := …`). The compiler rejects other targets.
 
+**Callbacks:** parameters such as `F: function(...)` or `F: procedure(...)` accept named functions or procedures. Anonymous function expressions are not supported.
+
 ---
 
 ## `function Length(A: array of T): integer`
@@ -152,9 +154,13 @@ WriteLn(Length(A))
 Returns a new array where each element is the result of calling `F` on the corresponding element of `A`.
 
 ```pascal
+function Double(X: integer): integer;
+begin
+  return X * 2
+end;
+
 var Nums: array of integer := [1, 2, 3];
-var Doubled: array of integer := Map(Nums,
-  function(X: integer): integer begin return X * 2 end);
+var Doubled: array of integer := Map(Nums, Double);
 ```
 
 ---
@@ -164,9 +170,13 @@ var Doubled: array of integer := Map(Nums,
 Returns a new array containing only elements for which `F` returns `true`.
 
 ```pascal
+function IsEven(X: integer): boolean;
+begin
+  return X mod 2 = 0
+end;
+
 var Nums: array of integer := [1, 2, 3, 4, 5];
-var Evens: array of integer := Filter(Nums,
-  function(X: integer): boolean begin return X mod 2 = 0 end);
+var Evens: array of integer := Filter(Nums, IsEven);
 ```
 
 ---
@@ -176,9 +186,13 @@ var Evens: array of integer := Filter(Nums,
 Folds elements left-to-right, starting from `Init`.
 
 ```pascal
+function Sum(Acc: integer; V: integer): integer;
+begin
+  return Acc + V
+end;
+
 var Nums: array of integer := [1, 2, 3, 4, 5];
-var Sum: integer := Reduce(Nums, 0,
-  function(Acc: integer; V: integer): integer begin return Acc + V end);
+var Total: integer := Reduce(Nums, 0, Sum);
 ```
 
 ---
@@ -188,9 +202,13 @@ var Sum: integer := Reduce(Nums, 0,
 Returns the **first** element for which `F` returns `true`, wrapped in `Some`. Returns `None` if no element matches. Requires `uses Std.Option` to work with the result.
 
 ```pascal
+function IsAboveThree(X: integer): boolean;
+begin
+  return X > 3
+end;
+
 var Nums: array of integer := [1, 2, 3, 4, 5];
-var First: Option of integer := Find(Nums,
-  function(X: integer): boolean begin return X > 3 end);
+var First: Option of integer := Find(Nums, IsAboveThree);
 { Some(4) }
 ```
 
@@ -201,8 +219,12 @@ var First: Option of integer := Find(Nums,
 Returns the **index** of the first element for which `F` returns `true`, or **`-1`** if none matches.
 
 ```pascal
-var Idx: integer := FindIndex([10, 20, 30],
-  function(X: integer): boolean begin return X > 15 end);
+function IsAboveFifteen(X: integer): boolean;
+begin
+  return X > 15
+end;
+
+var Idx: integer := FindIndex([10, 20, 30], IsAboveFifteen);
 WriteLn(Idx)  { 1 }
 ```
 
@@ -213,8 +235,12 @@ WriteLn(Idx)  { 1 }
 Returns `true` if **at least one** element satisfies `F`.
 
 ```pascal
-var HasNeg: boolean := Any([1, -2, 3],
-  function(X: integer): boolean begin return X < 0 end);
+function IsNegative(X: integer): boolean;
+begin
+  return X < 0
+end;
+
+var HasNeg: boolean := Any([1, -2, 3], IsNegative);
 WriteLn(HasNeg)  { true }
 ```
 
@@ -225,8 +251,12 @@ WriteLn(HasNeg)  { true }
 Returns `true` if **every** element satisfies `F`.
 
 ```pascal
-var AllPos: boolean := All([1, 2, 3],
-  function(X: integer): boolean begin return X > 0 end);
+function IsPositive(X: integer): boolean;
+begin
+  return X > 0
+end;
+
+var AllPos: boolean := All([1, 2, 3], IsPositive);
 WriteLn(AllPos)  { true }
 ```
 
@@ -248,8 +278,12 @@ WriteLn(Length(C))  { 4 }
 Applies `F` to each element (producing an array), then flattens all results into a single array.
 
 ```pascal
-var Result: array of integer := FlatMap([1, 2, 3],
-  function(X: integer): array of integer begin return [X, X * 10] end);
+function ExpandPair(X: integer): array of integer;
+begin
+  return [X, X * 10]
+end;
+
+var Result: array of integer := FlatMap([1, 2, 3], ExpandPair);
 { [1, 10, 2, 20, 3, 30] }
 ```
 
@@ -271,8 +305,12 @@ WriteLn(Length(Zeros))  { 5 }
 Calls `F` for each element in `A`. Does not return a value.
 
 ```pascal
-ForEach([1, 2, 3],
-  procedure(X: integer) begin WriteLn(X) end);
+procedure PrintValue(X: integer);
+begin
+  WriteLn(X)
+end;
+
+ForEach([1, 2, 3], PrintValue);
 ```
 
 ---

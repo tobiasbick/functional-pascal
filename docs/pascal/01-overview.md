@@ -18,7 +18,7 @@ end.
 ## Design Philosophy
 
 - **Function first** — Functions are the primary building block. No classical classes.
-- **Immutable by default** — All bindings are immutable unless declared `mutable`.
+- **Immutable by default** — All bindings are immutable unless declared with `mutable var`.
 - **Explicit types** — Every variable and parameter declares its type.
 - **Safe by design** — The VM manages memory. No pointers, no manual allocation.
 - **Familiar syntax** — Pascal's `begin`, `end`, `:=`, `downto` and other well-known keywords.
@@ -81,14 +81,18 @@ The first segment `Std` in a unit name is reserved for the implementation-define
 All keywords are case-insensitive, following traditional Pascal convention:
 
 ```
-program   uses      const     var       mutable
-function  procedure begin     end       return
-if        then      else      case      of
-for       to        downto    in        do        while
-repeat    until     and       or        not
-xor       div       mod       shl       shr
-true      false     type      record    enum
-array     panic     break     continue
-result    option    ok        error     some
-none      try
+program   unit      uses      const
+var       mutable   function  procedure
+begin     end       return    if
+then      else      case      of
+for       to        downto    in
+do        while     repeat    until
+and       or        not       xor
+div       mod       shl       shr
+true      false     type      record
+enum      array     panic     break
+continue  result    option    ok
+error     some      none      try
+public    private   go        dict
+with
 ```

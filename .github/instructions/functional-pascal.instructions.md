@@ -1,6 +1,6 @@
 ---
 applyTo: "**/*.fpas"
-description: "Use when writing, reviewing, or generating Functional Pascal (.fpas) code. Covers syntax, reference types, visibility, units, standard library, and common patterns. Reference docs at docs/pascal/ and docs/pascal/std/."
+description: "Use when writing, reviewing, or generating Functional Pascal (.fpas) code. Covers syntax, types, visibility, units, standard library, and common patterns. Reference docs at docs/pascal/ and docs/pascal/std/."
 ---
 
 # Functional Pascal Language Guide
@@ -69,7 +69,7 @@ end;
 
 - Parameters: semicolons in declarations, commas in calls
 - `mutable` parameter keyword allows reassignment inside the function
-- Nested functions have lexical scope access
+- Nested functions are available for local helpers and mutual recursion
 - Mutual recursion: nest a helper function in the outer routine, or declare callees before callers; there is no `forward` keyword
 
 ## Function Types
@@ -83,22 +83,20 @@ begin
 end;
 ```
 
-## Anonymous Functions and Closures
+## Passing Callables
 
-Anonymous functions (lambdas) use `function(...): Type begin ... end` inline. They capture enclosing variables by value:
+Use named functions or procedures when a value of function/procedure type is required. Anonymous function expressions are not supported.
 
 ```pascal
-var Square := function(X: integer): integer begin return X * X end;
-
-{ Closure — captures N from enclosing scope }
-function MakeAdder(N: integer): function(X: integer): integer;
+function Square(X: integer): integer;
 begin
-  return function(X: integer): integer begin return X + N end
+  return X * X
 end;
 
-{ Higher-order: Map/Filter/Reduce }
-var Doubled := Map([1, 2, 3],
-  function(X: integer): integer begin return X * 2 end);
+var Op: function(X: integer): integer := Square;
+
+var Squared := Map([1, 2, 3],
+  Square);
 ```
 
 ## Control Flow
@@ -163,36 +161,6 @@ var C: Color := Color.Red;
 ```
 
 Records can contain methods (functions/procedures). The first parameter is `Self` typed as the record. Callers use dot notation; `Self` is implicit: `A.DistanceTo(B)`. Field assignment requires `mutable var`.
-
-### Reference Types
-
-Use `ref T` for shared, heap-allocated records and recursive structures:
-
-```pascal
-type
-  Node = record
-    Value: integer;
-    Next: Option of ref Node;
-  end;
-
-mutable var Head: ref Node := new Node with
-  Value := 1;
-  Next := None;
-end;
-
-var Alias: ref Node := Head;
-
-begin
-  Head.Value := 2;
-  WriteLn(IntToStr(Alias.Value))
-end.
-```
-
-- `new T with ... end` allocates a record and returns `ref T`
-- assignment of `ref` shares the same underlying record
-- field access, indexing, and method calls dereference `ref` automatically
-- writing through a `ref` still requires the binding used for the write to be declared with `mutable var`
-- `new` is valid only for record types, and every field must be initialized exactly once
 
 ### Enums with Associated Data
 
@@ -315,7 +283,6 @@ end.
 | `Std.Dict` | Dict operations | `Length`, `ContainsKey`, `Keys`, `Values`, `Remove` |
 | `Std.Result` | Result helpers | `Unwrap`, `UnwrapOr`, `IsOk`, `IsError` |
 | `Std.Option` | Option helpers | `Unwrap`, `UnwrapOr`, `IsSome`, `IsNone` |
-| `Std.Channel` | Channel operations | `Make`, `MakeBuffered`, `Send`, `Receive`, `TryReceive`, `Close` |
 | `Std.Task` | Task management | `Wait`, `WaitAll` |
 
 **Ambiguous names** — always qualify these:
@@ -399,21 +366,25 @@ Use `Result`/`Option` for expected failures; `panic` for broken invariants.
 
 ## Concurrency
 
-Go-inspired concurrency with lightweight tasks, typed channels, and `select`.
+Go-inspired concurrency with lightweight tasks and fork-join patterns.
 
 ```pascal
-uses Std.Console, Std.Channel, Std.Task;
+uses Std.Console, Std.Task;
 
-var Ch: channel of integer := Make();
-go Producer(Ch);
-var V: integer := Receive(Ch);
+function Worker(): integer;
+begin
+  return 42
+end;
+
+begin
+  var T: task := go Worker();
+  WriteLn(Wait(T))
+end.
 ```
 
-- `go FuncCall()` — launch a concurrent task, returns `task` handle
-- `Wait(T)` — block until task completes, return result
-- `Make()` / `MakeBuffered(N)` — create channels
-- `Send`, `Receive`, `TryReceive`, `Close` — channel operations
-- `select ... case V: T from Ch: ... default: ... end` — multiplex channels
+- `go FuncCall()` — launch a concurrent task, returns a `task` handle when used as an expression
+- `Wait(T)` — block until a task completes and return its result
+- `WaitAll([T1, T2, T3])` — block until all tasks in an array complete
 
 ## Projects (.fpasprj)
 
@@ -441,4 +412,3 @@ include = ["src/**/*.fpas"]
 8. **Single quotes for strings** — `'Hello'`, doubled for escaping: `'It''s'`
 9. **`Result`/`Option` for expected errors** — `panic` only for broken invariants
 10. **`try` propagates errors** — unwraps or returns early
-11. **`ref` is shared** — `new T with ... end` allocates a shared record; assignment aliases it; writes through it need a mutable binding

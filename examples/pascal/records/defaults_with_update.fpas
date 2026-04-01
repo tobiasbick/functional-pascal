@@ -1,0 +1,25 @@
+program RecordDefaultsWithUpdate;
+uses Std.Console, Std.Conv;
+
+type
+  Config = record
+    Host: string := 'localhost';
+    Port: integer := 8080;
+    Retries: integer := 3;
+  end;
+
+function ShowConfig(Value: Config): string;
+begin
+  return Value.Host + ':' + IntToStr(Value.Port) + ' retries=' + IntToStr(Value.Retries)
+end;
+
+begin
+  var DefaultConfig: Config := record end;
+  var DevConfig: Config := DefaultConfig with Port := 3000; end;
+  var ProdConfig: Config := DevConfig with Host := 'api.example'; Port := 443; end;
+
+  WriteLn('Default: ' + ShowConfig(DefaultConfig));
+  WriteLn('Dev: ' + ShowConfig(DevConfig));
+  WriteLn('Prod: ' + ShowConfig(ProdConfig));
+  WriteLn('Original still unchanged: ' + ShowConfig(DefaultConfig))
+end.

@@ -1,0 +1,16 @@
+unit App.Math;
+
+function Clamp(Value: integer; Min: integer; Max: integer): integer;
+begin
+  if Value < Min then
+    return Min
+  else if Value > Max then
+    return Max
+  else
+    return Value
+end;
+
+function Scale(Value: integer; Factor: integer): integer;
+begin
+  return Value * Factor
+end;

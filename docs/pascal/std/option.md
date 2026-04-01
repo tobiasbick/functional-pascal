@@ -37,6 +37,10 @@ After `uses Std.Option;` use short names (`Unwrap`, `IsSome`, …) or qualified 
 
 ---
 
+Examples below use named helper functions. Anonymous function expressions are not supported.
+
+---
+
 ## `function Unwrap(O: Option of T): T`
 
 Extracts the value from `Some(value)`. **Runtime error** if `O` is `None`.
@@ -86,9 +90,13 @@ WriteLn(IsNone(O))                             { true }
 Transforms the `Some` value with `F`. If `O` is `None`, returns `None`.
 
 ```pascal
+function TripleToString(V: integer): string;
+begin
+  return IntToStr(V * 3)
+end;
+
 var O: Option of integer := Some(7);
-var M: Option of string := Map(O,
-  function(V: integer): string begin return IntToStr(V * 3) end);
+var M: Option of string := Map(O, TripleToString);
 { M = Some('21') }
 ```
 
@@ -99,13 +107,14 @@ var M: Option of string := Map(O,
 Calls `F` with the `Some` value. `F` returns a new `Option`, enabling chained lookups. If `O` is `None`, returns `None`.
 
 ```pascal
+function PositiveToOptionString(V: integer): Option of string;
+begin
+  if V > 0 then return Some(IntToStr(V))
+  else return None
+end;
+
 var O: Option of integer := Some(5);
-var M: Option of string := AndThen(O,
-  function(V: integer): Option of string
-  begin
-    if V > 0 then return Some(IntToStr(V))
-    else return None
-  end);
+var M: Option of string := AndThen(O, PositiveToOptionString);
 { M = Some('5') }
 ```
 
@@ -116,9 +125,13 @@ var M: Option of string := AndThen(O,
 Calls `F` to provide a fallback when `O` is `None`. If `O` is `Some`, returns it unchanged.
 
 ```pascal
+function Fallback99(): Option of integer;
+begin
+  return Some(99)
+end;
+
 var O: Option of integer := None;
-var M: Option of integer := OrElse(O,
-  function(): Option of integer begin return Some(99) end);
+var M: Option of integer := OrElse(O, Fallback99);
 { M = Some(99) }
 ```
 

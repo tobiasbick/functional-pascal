@@ -1,0 +1,8 @@
+program UnitsBasic;
+uses App.Math, App.Reporting, Std.Console, Std.Conv;
+
+begin
+  WriteLn('Short name: ', DescribeClamp(135));
+  WriteLn('Qualified name: ', App.Reporting.DescribeScaled(6, 7));
+  WriteLn('Clamp direct call: ', IntToStr(App.Math.Clamp(-4, 0, 10)))
+end.

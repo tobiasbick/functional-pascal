@@ -75,9 +75,11 @@ begin
 end.
 ```
 
+Call sites must pass a named function or procedure. Inline anonymous function expressions are not part of the language.
+
 ## Nested Functions
 
-Functions can be declared inside other functions. They have access to the enclosing function's variables (lexical scope):
+Functions can be declared inside other functions. Use nested declarations for local helpers and mutual recursion:
 
 ```pascal
 function Hypotenuse(A: real; B: real): real;
@@ -148,7 +150,7 @@ begin
 end;
 ```
 
-See [Types — Generics](05-types.md#generics) for generic record methods and constraints.
+See [Types — Generics](05-types.md#generics) for constraints and method-level generics on record methods.
 
 ## Early Return
 

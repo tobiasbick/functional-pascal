@@ -7,7 +7,7 @@ All units are opt-in through `uses`.
 
 ## Unit pages
 
-- `Std.Console` - [console.md](console.md) (text I/O, CRT-style screen control, `ReadKey` / `KeyPressed`, `ReadKeyEvent`, `KeyKind`, `KeyEvent`)
+- `Std.Console` - [console.md](console.md) (text I/O, CRT-style screen control, RGB/256 text colors, `ReadKey` / `KeyPressed`, `ReadKeyEvent`, `ReadEvent`, `KeyKind`, `KeyEvent`)
 - `Std.Str` - [str.md](str.md)
 - `Std.Conv` - [conv.md](conv.md)
 - `Std.Math` - [math.md](math.md)

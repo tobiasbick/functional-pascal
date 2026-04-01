@@ -171,7 +171,7 @@ pub enum Intrinsic {
     /// **Documentation:** `docs/pascal/std/dict.md`
     DictFilter = 128,
 
-    /// `Std.Str.Repeat(S, N)` — repeat string N times.
+        /// `Std.Str.RepeatStr(S, N)` — repeat string N times; `N <= 0` returns `''`.
     ///
     /// **Documentation:** `docs/pascal/std/str.md`
     StrRepeat = 200,

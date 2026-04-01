@@ -41,7 +41,7 @@ Requires `uses Std.Str;`.
 | function | `Split(S: string; Delim: string): array of string` | split segments |
 | function | `Join(Parts: array of string; Delim: string): string` | join with delimiter |
 | function | `IsNumeric(S: string): boolean` | parses as number? |
-| function | `RepeatStr(S: string; Count: integer): string` | repeat `S` exactly `Count` times |
+| function | `RepeatStr(S: string; Count: integer): string` | repeat `S`; `Count <= 0` returns empty string |
 | function | `PadLeft(S: string; Width: integer; Fill: char): string` | left-pad to `Width` |
 | function | `PadRight(S: string; Width: integer; Fill: char): string` | right-pad to `Width` |
 | function | `PadCenter(S: string; Width: integer; Fill: char): string` | center-pad to `Width` |
@@ -58,6 +58,8 @@ Requires `uses Std.Str;`.
 | function | `LastIndexOf(S: string; Sub: string): integer` | last index or `-1` |
 | function | `Format(Template: string; ...): string` | printf-style string formatting |
 **Indexing:** all “character index” parameters are in **Unicode scalar** units (user-visible characters), not UTF-8 bytes.
+
+**Variadic formatting:** `Format` always requires the first argument `Template: string`. Each specifier other than `%%` consumes exactly one additional argument. Placeholder compatibility is validated at runtime.
 
 ---
 
@@ -363,6 +365,8 @@ WriteLn(LastIndexOf('abc', 'z'))       { -1 }
 
 Returns a new string by substituting format specifiers in `Template` with the supplied arguments.
 
+`Template` is mandatory. `Format()` without a template string is a compile error.
+
 ```pascal
 var Status: string := Format('Zoom: %fx Center: (%f, %f)', Zoom, CX, CY);
 var Msg: string    := Format('Item %d: %s', Index, Name);
@@ -378,7 +382,13 @@ var Pct: string    := Format('100%%');  { '100%' }
 | `%s` | `string` or `char` | `Format('%s', 'hi')` → `'hi'` |
 | `%%` | *(no argument)* | `Format('100%%')` → `'100%'` |
 
-The number of specifiers (excluding `%%`) must exactly match the number of extra arguments; a mismatch is a **runtime error**.
+`%f` accepts both `real` and `integer`. Integer arguments are rendered with at least one fractional digit: `Format('%f', 42)` produces `'42.0'`.
+
+### Runtime errors
+
+- A trailing `%` at the end of `Template` is a runtime error.
+- Unknown specifiers such as `%q` are a runtime error.
+- Too few arguments, too many arguments, or a type mismatch for `%d`, `%f`, or `%s` are runtime errors.
 
 ---
 

@@ -1,0 +1,13 @@
+unit App.Reporting;
+uses App.Math, Std.Conv;
+
+function DescribeClamp(Value: integer): string;
+begin
+  var Clamped: integer := Clamp(Value, 0, 100);
+  return 'input=' + IntToStr(Value) + ', clamped=' + IntToStr(Clamped)
+end;
+
+function DescribeScaled(Value: integer; Factor: integer): string;
+begin
+  return 'scaled=' + IntToStr(Scale(Value, Factor))
+end;

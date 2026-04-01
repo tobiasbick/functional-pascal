@@ -67,7 +67,8 @@ line_comment    = '//' { (* any char except newline *) } newline ;
 (* Comments do NOT nest.                                            *)
 (* { outer { inner } ← first } closes the comment.                 *)
 (* A `{` immediately followed by `$` is not a comment: the lexer    *)
-(* reports an error for that sequence. *)
+(* reports an error for that sequence. There are no compiler        *)
+(* directives or source-level include forms in the language.        *)
 
 (* ---- Keywords (55, case-insensitive) --------------------------- *)
 

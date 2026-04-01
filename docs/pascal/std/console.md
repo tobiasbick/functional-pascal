@@ -51,10 +51,10 @@ Everything below requires `uses Std.Console;`.
 | procedure | `Window(X1, Y1, X2, Y2)` | set the active console window (screen-relative) |
 | procedure | `TextColor(Color)` | set foreground color for subsequent writes |
 | procedure | `TextBackground(Color)` | set background color for subsequent writes |
-| procedure | `TextColorRGB(R, G, B)` | set fg to 24-bit truecolor (0–255 per channel) |
-| procedure | `TextBackgroundRGB(R, G, B)` | set bg to 24-bit truecolor (0–255 per channel) |
-| procedure | `TextColor256(Index)` | set fg to 256-color palette index (0–255) |
-| procedure | `TextBackground256(Index)` | set bg to 256-color palette index (0–255) |
+| procedure | `TextColorRGB(R, G, B)` | set fg to 24-bit truecolor (0–255 per channel), outside packed `TextAttr` state |
+| procedure | `TextBackgroundRGB(R, G, B)` | set bg to 24-bit truecolor (0–255 per channel), outside packed `TextAttr` state |
+| procedure | `TextColor256(Index)` | set fg to 256-color palette index (0–255), outside packed `TextAttr` state |
+| procedure | `TextBackground256(Index)` | set bg to 256-color palette index (0–255), outside packed `TextAttr` state |
 | procedure | `HighVideo()` | set bright foreground intensity bit |
 | procedure | `LowVideo()` | clear bright foreground intensity bit |
 | procedure | `NormVideo()` | reset attributes to light-gray on black |
@@ -101,6 +101,8 @@ Everything below requires `uses Std.Console;`.
 | const | `BW40`, `C40`, `BW80`, `C80`, `CO40`, `CO80`, `Mono`, `Font8x8` | text-mode compatibility constants |
 | enum members | `KeyKind.Unknown`, `KeyKind.Escape`, … | see [KeyKind](#type-keykind-enum) |
 | enum members | `EventKind.Key`, `MouseAction.Down`, `MouseButton.Left`, … | see below |
+
+Extended color procedures (`TextColorRGB`, `TextBackgroundRGB`, `TextColor256`, `TextBackground256`) send terminal ANSI color escapes directly. They do not update the packed 16-color CRT attribute returned by `TextAttr()`. Calling `TextColor`, `TextBackground`, `HighVideo`, `LowVideo`, `NormVideo`, or `SetTextAttr` afterwards switches back to the packed CRT attribute path and overrides the extended color.
 
 ---
 
@@ -435,6 +437,7 @@ Additional CRT compatibility constants:
 - **Effect (`HighVideo`):** sets the foreground intensity bit.
 - **Effect (`LowVideo`):** clears the foreground intensity bit.
 - **Effect (`NormVideo`):** resets attributes to light gray on black (`TextAttr = 7`).
+- **Interaction:** `NormVideo` replaces any active RGB / 256-color styling with the normal packed CRT attribute state.
 
 ### `procedure TextColorRGB(R, G, B)`
 
@@ -443,6 +446,7 @@ Additional CRT compatibility constants:
 - **Parameters:** three integers `R`, `G`, `B` (0–255 each).
 - **Result:** none.
 - **Effect:** applies a 24-bit truecolor ANSI escape for the foreground / background. Takes effect immediately for subsequent `Write`/`WriteLn` calls.
+- **State interaction:** does not change the packed value returned by `TextAttr()`. A later call to `TextColor`, `TextBackground`, `HighVideo`, `LowVideo`, `NormVideo`, or `SetTextAttr` overrides the RGB color.
 - **Errors:** runtime error if any channel is outside `0..255`.
 
 ```pascal
@@ -460,6 +464,7 @@ WriteLn('truecolor text');
 - **Parameters:** one integer index (0–255).
 - **Result:** none.
 - **Effect:** applies a 256-color ANSI palette escape for the foreground / background. Takes effect immediately for subsequent `Write`/`WriteLn` calls.
+- **State interaction:** does not change the packed value returned by `TextAttr()`. A later call to `TextColor`, `TextBackground`, `HighVideo`, `LowVideo`, `NormVideo`, or `SetTextAttr` overrides the 256-color selection.
 - **Errors:** runtime error if the index is outside `0..255`.
 
 ```pascal
@@ -473,6 +478,7 @@ WriteLn('256-color text');
 
 - **Parameters:** none.
 - **Returns:** packed text attribute as `Background * 16 + Foreground`.
+- **Scope:** reports only the packed CRT 16-color attribute state. Extended colors set by `TextColorRGB`, `TextBackgroundRGB`, `TextColor256`, and `TextBackground256` are not representable in this integer and therefore do not change the returned value.
 
 ### `procedure SetTextAttr(Attr)`
 
@@ -480,6 +486,7 @@ WriteLn('256-color text');
 - **Result:** none.
 - **Accepted values:** `0..255`.
 - **Effect:** unpacks and applies foreground/background colors from the packed attribute.
+- **Interaction:** overrides any active RGB / 256-color styling and returns output to the packed CRT 16-color attribute model.
 - **Errors:** runtime error if `Attr` is outside `0..255`.
 
 ### `procedure Delay(Milliseconds)`

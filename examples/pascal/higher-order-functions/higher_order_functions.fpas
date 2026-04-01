@@ -1,4 +1,4 @@
-program ClosuresExample;
+program HigherOrderFunctionsExample;
 uses Std.Console, Std.Array;
 
 { First-class named functions }

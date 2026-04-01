@@ -108,8 +108,6 @@ pub enum Ty {
 #[derive(Debug, Clone, PartialEq)]
 pub struct RecordTy {
     pub name: String,
-    /// Generic type parameters declared on this record.
-    pub type_params: Vec<GenericParamDef>,
     pub fields: Vec<(String, Ty)>,
     pub methods: Vec<(String, MethodKind)>,
 }
@@ -125,8 +123,6 @@ pub enum MethodKind {
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumTy {
     pub name: String,
-    /// Generic type parameters declared on this enum.
-    pub type_params: Vec<GenericParamDef>,
     pub variants: Vec<EnumVariantTy>,
 }
 

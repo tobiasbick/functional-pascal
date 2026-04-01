@@ -17,7 +17,6 @@ fn register_enum_type(checker: &mut Checker, qualified_name: &str, variants: &[&
     let member_names: Vec<String> = variants.iter().map(|v| v.name.clone()).collect();
     let enum_ty = Ty::Enum(EnumTy {
         name: qualified_name.into(),
-        type_params: Vec::new(),
         variants,
     });
     checker.scopes.define(
@@ -49,7 +48,6 @@ fn register_std_console_key_api(checker: &mut Checker) {
 
     let key_event_ty = Ty::Record(RecordTy {
         name: s::STD_CONSOLE_KEY_EVENT.into(),
-        type_params: Vec::new(),
         fields: vec![
             ("kind".into(), key_kind_ty.clone()),
             ("ch".into(), Ty::Char),
@@ -83,7 +81,6 @@ fn register_std_console_key_api(checker: &mut Checker) {
 
     let event_ty = Ty::Record(RecordTy {
         name: s::STD_CONSOLE_EVENT.into(),
-        type_params: Vec::new(),
         fields: vec![
             ("kind".into(), event_kind_ty),
             ("key".into(), key_event_ty),

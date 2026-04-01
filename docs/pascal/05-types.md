@@ -370,53 +370,7 @@ type
 
 ## Generics
 
-Types and routines can be parameterized with type parameters declared in angle brackets (`<T>`). At usage sites, concrete type arguments are supplied with the `of` keyword.
-
-### Generic Records
-
-```pascal
-type
-  Pair<A, B> = record
-    First: A;
-    Second: B;
-  end;
-
-var
-  P: Pair of integer, string := record
-    First := 42;
-    Second := 'hello';
-  end;
-```
-
-### Generic Enums
-
-```pascal
-type
-  Maybe<T> = enum
-    Just(Value: T);
-    Nothing;
-  end;
-
-var
-  M: Maybe of string := Maybe.Just('hi');
-
-begin
-  case M of
-    Maybe.Just(V): WriteLn(V);
-    Maybe.Nothing: WriteLn('nothing')
-  end
-end.
-```
-
-### Generic Type Aliases
-
-```pascal
-type
-  Box<T> = record
-    Value: T;
-  end;
-  IntBox = Box of integer;
-```
+Functions and procedures can be parameterized with type parameters declared in angle brackets (`<T>`). Records and enums are not generic — only functions and procedures support type parameters.
 
 ### Generic Functions and Procedures
 
@@ -478,20 +432,6 @@ type
   end;
 ```
 
-On generic records, method-level type parameters are added on top of the record's own type parameters:
-
-```pascal
-type
-  Wrapper<T> = record
-    Value: T;
-
-    function Transform<R>(Self: Wrapper of T; F: function(X: T): R): R;
-    begin
-      return F(Self.Value)
-    end;
-  end;
-```
-
 ### Implementation
 
 Generics use type erasure. The VM operates on dynamic values, so no monomorphization is needed. Type parameters are checked at compile time and erased at runtime.
@@ -499,15 +439,6 @@ Generics use type erasure. The VM operates on dynamic values, so no monomorphiza
 ### Constraints
 
 Type parameters can be constrained to require specific capabilities from the concrete type. Constraints are written after the parameter name, separated by a colon: `<T: Constraint>`.
-
-```pascal
-type
-  Ordered<T: Comparable> = record Value: T; end;
-  NumBox<T: Numeric> = record Value: T; end;
-  Displayable<T: Printable> = record Value: T; end;
-```
-
-When a constrained generic type is instantiated, the compiler checks that the concrete type satisfies the constraint. Violating a constraint is a compile-time error.
 
 #### Built-in Constraints
 
@@ -520,35 +451,21 @@ When a constrained generic type is instantiated, the compiler checks that the co
 #### Examples
 
 ```pascal
-{ Constrained record — only comparable types allowed }
-type
-  SortedPair<T: Comparable> = record
-    First: T;
-    Second: T;
-  end;
+function Max<T: Comparable>(A: T; B: T): T;
+begin
+  if A > B then return A else return B
+end;
 
-var
-  P: SortedPair of integer := record First := 1; Second := 2; end;  { OK }
-{ var Bad: SortedPair of array of integer := ...  ← compile error }
+function Add<T: Numeric>(A: T; B: T): T;
+begin
+  return A + B
+end;
 ```
 
-```pascal
-{ Mixed constrained and unconstrained parameters }
-type
-  Entry<K: Comparable, V> = record
-    Key: K;
-    Value: V;
-  end;
+Constraint violations at call sites are compile-time errors:
 
+```pascal
 var
-  E: Entry of string, integer := record Key := 'x'; Value := 42; end;
-```
-
-```pascal
-{ Constrained enum }
-type
-  Maybe<T: Comparable> = enum
-    Just(Value: T);
-    Nothing;
-  end;
+  M: integer := Max(3, 7);    { OK — integer is Comparable }
+{ var Bad := Max([1], [2]);   ← compile error: array is not Comparable }
 ```

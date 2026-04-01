@@ -160,7 +160,6 @@ impl Compiler {
                 parts: vec!["integer".into()],
                 span,
             },
-            type_args: vec![],
             span,
         }
     }

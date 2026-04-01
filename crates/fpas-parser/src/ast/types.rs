@@ -4,11 +4,9 @@ use fpas_lexer::Span;
 /// Parsed type expression.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TypeExpr {
-    /// A named type, optionally with type arguments: `Point` or `Stack of integer`.
+    /// A named type: `Point`, `integer`, `Std.Console.Color`.
     Named {
         id: QualifiedId,
-        /// Generic type arguments supplied via `of`: `Stack of integer`.
-        type_args: Vec<TypeExpr>,
         span: Span,
     },
     Array(Box<TypeExpr>, Span),

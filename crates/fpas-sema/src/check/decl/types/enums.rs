@@ -17,32 +17,29 @@ impl Checker {
             return;
         }
 
-        let variants = self.with_type_params(&td.type_params, td.span, |checker| {
-            enum_ty
-                .members
-                .iter()
-                .map(|member| {
-                    let fields = member
-                        .fields
-                        .iter()
-                        .map(|field| {
-                            (
-                                field.name.clone(),
-                                checker.resolve_type_expr(&field.type_expr),
-                            )
-                        })
-                        .collect();
-                    EnumVariantTy {
-                        name: member.name.clone(),
-                        fields,
-                    }
-                })
-                .collect::<Vec<_>>()
-        });
+        let variants: Vec<EnumVariantTy> = enum_ty
+            .members
+            .iter()
+            .map(|member| {
+                let fields = member
+                    .fields
+                    .iter()
+                    .map(|field| {
+                        (
+                            field.name.clone(),
+                            self.resolve_type_expr(&field.type_expr),
+                        )
+                    })
+                    .collect();
+                EnumVariantTy {
+                    name: member.name.clone(),
+                    fields,
+                }
+            })
+            .collect();
 
         let ty = Ty::Enum(EnumTy {
             name: td.name.clone(),
-            type_params: Self::resolve_type_params(&td.type_params),
             variants: variants.clone(),
         });
 

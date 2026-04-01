@@ -1,5 +1,6 @@
 use super::super::Parser;
 use crate::ast::*;
+use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
 use fpas_lexer::Token;
 
 impl Parser {
@@ -90,26 +91,25 @@ impl Parser {
     fn parse_named_type_expr(&mut self) -> TypeExpr {
         let start = self.current_span();
         let qid = self.parse_qualified_id();
-        let type_args = if self.eat(&Token::Of) {
-            self.parse_type_arg_list()
-        } else {
-            Vec::new()
-        };
+        if self.check(&Token::Of) {
+            let span = self.current_span();
+            self.error_with_code(
+                PARSE_EXPECTED_TOKEN,
+                "User-defined generic type arguments (`Type of T`) are not supported. Use built-in generic types: `array of T`, `option of T`, `result of T, E`.",
+                "Remove the `of ...` part, or use a built-in generic type.",
+                span,
+            );
+            // consume `of` and the following type expression to recover
+            self.advance();
+            self.parse_type_expr();
+            while self.eat(&Token::Comma) {
+                self.parse_type_expr();
+            }
+        }
         TypeExpr::Named {
             id: qid,
-            type_args,
             span: self.span_from(start),
         }
-    }
-
-    /// Parse a comma-separated list of type arguments (after `of`):
-    /// `integer` or `integer, string`.
-    fn parse_type_arg_list(&mut self) -> Vec<TypeExpr> {
-        let mut args = vec![self.parse_type_expr()];
-        while self.eat(&Token::Comma) {
-            args.push(self.parse_type_expr());
-        }
-        args
     }
 
     /// Parse optional generic type parameters: `<T>`, `<T: Comparable>`, `<A, B>`.

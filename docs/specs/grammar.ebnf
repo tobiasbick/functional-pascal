@@ -176,7 +176,7 @@ mutable_var_block   = 'mutable' 'var' var_def { var_def } ;
 
 (* -- Type definitions -- *)
 type_block          = 'type' type_def { type_def } ;
-type_def            = identifier [ type_params ] '=' type_body ';' ;
+type_def            = identifier '=' type_body ';' ;
 type_body           = record_type
                     | enum_type
                     | type_expr ;
@@ -194,9 +194,7 @@ type_expr           = 'array' 'of' type_expr            (* array type     *)
                     | 'option' 'of' type_expr            (* option type    *)
                     | function_type                      (* function type  *)
                     | procedure_type                     (* procedure type *)
-                    | qualified_id [ 'of' type_arg_list ] ; (* named type  *)
-
-type_arg_list       = type_expr { ',' type_expr } ;
+                    | qualified_id ;                              (* named type  *)
 
 function_type       = 'function' '(' [ formal_type_list ] ')' ':' type_expr ;
 procedure_type      = 'procedure' '(' [ formal_type_list ] ')' ;

@@ -54,30 +54,6 @@ end.",
 }
 
 #[test]
-fn generic_record_method_on_generic_record_uses_both_type_levels() {
-    let out = compile_and_run(
-        "\
-program GenericMethodNested;
-type Wrapper<T> = record
-  Value: T;
-  function Transform<R>(Self: Wrapper of T; F: function(X: T): R): R;
-  begin
-    return F(Self.Value)
-  end;
-end;
-function Describe(X: integer): string;
-begin
-  return 'n=' + Std.Conv.IntToStr(X)
-end;
-begin
-  var W: Wrapper of integer := record Value := 7; end;
-  Std.Console.WriteLn(W.Transform(Describe))
-end.",
-    );
-    assert_eq!(out.lines, vec!["n=7"]);
-}
-
-#[test]
 fn generic_record_method_constraint_violation_is_compile_error() {
     let err = compile_err(
         "\

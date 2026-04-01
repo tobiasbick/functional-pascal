@@ -148,7 +148,6 @@ impl Checker {
 
         Ty::Record(crate::types::RecordTy {
             name: "<anonymous>".into(),
-            type_params: Vec::new(),
             fields: field_types,
             methods: Vec::new(),
         })

@@ -91,36 +91,20 @@ impl NameRewriter<'_> {
 
     pub(super) fn rewrite_type_expr(&mut self, type_expr: &mut TypeExpr) {
         match type_expr {
-            TypeExpr::Named {
-                id: name,
-                type_args,
-                ..
-            } => {
+            TypeExpr::Named { id: name, .. } => {
                 if name.parts.len() != 1 {
-                    for arg in type_args {
-                        self.rewrite_type_expr(arg);
-                    }
                     return;
                 }
                 let short_name = &name.parts[0];
                 if self.is_local_type(short_name) {
-                    for arg in type_args {
-                        self.rewrite_type_expr(arg);
-                    }
                     return;
                 }
                 let Some(qualified) =
                     self.resolve_import_name(short_name, name.span.line, name.span.column)
                 else {
-                    for arg in type_args {
-                        self.rewrite_type_expr(arg);
-                    }
                     return;
                 };
                 name.parts = qualified.split('.').map(str::to_string).collect();
-                for arg in type_args {
-                    self.rewrite_type_expr(arg);
-                }
             }
             TypeExpr::Array(inner, _) => self.rewrite_type_expr(inner),
             TypeExpr::FunctionType {

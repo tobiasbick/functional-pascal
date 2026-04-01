@@ -29,22 +29,18 @@ impl Checker {
         }
         self.pending_record_types.insert(td.name.clone());
 
-        let fields = self.with_type_params(&td.type_params, td.span, |checker| {
-            record
-                .fields
-                .iter()
-                .map(|field| {
-                    (
-                        field.name.clone(),
-                        checker.resolve_type_expr(&field.type_expr),
-                    )
-                })
-                .collect::<Vec<_>>()
-        });
+        let fields: Vec<_> = record
+            .fields
+            .iter()
+            .map(|field| {
+                (
+                    field.name.clone(),
+                    self.resolve_type_expr(&field.type_expr),
+                )
+            })
+            .collect();
 
         // Validate default values and build the defaults map entry.
-        // We check defaults outside `with_type_params` because defaults are evaluated
-        // in the outer scope (they cannot reference the type's own generic params).
         let defaults_entry: Vec<(String, Option<fpas_parser::Expr>)> = record
             .fields
             .iter()
@@ -73,15 +69,12 @@ impl Checker {
 
         let record_ty = RecordTy {
             name: td.name.clone(),
-            type_params: Self::resolve_type_params(&td.type_params),
             fields,
             methods: Vec::new(),
         };
         let mut ty = Ty::Record(record_ty);
 
-        let methods = self.with_type_params(&td.type_params, td.span, |checker| {
-            checker.check_record_methods(&td.name, &ty, &record.methods)
-        });
+        let methods = self.check_record_methods(&td.name, &ty, &record.methods);
 
         if let Ty::Record(record_ty) = &mut ty {
             record_ty.methods = methods;

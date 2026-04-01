@@ -180,112 +180,36 @@ fn enum_variant_cannot_mix_fields_with_backing_value() {
 
 // ── Generics (parser-level) ────────────────────────────────
 
-// 1. Generic record with single type param
-#[test]
-fn generic_record_single_param() {
-    let p = parse_ok("program T; type Box<T> = record Value: T; end; begin end.");
-    match &p.declarations[0] {
-        Decl::TypeDef(td) => {
-            assert_eq!(td.name, "Box");
-            assert_eq!(td.type_params.len(), 1);
-            assert_eq!(td.type_params[0].name, "T");
-            assert!(td.type_params[0].constraint.is_none());
-            match &td.body {
-                TypeBody::Record(r) => assert_eq!(r.fields.len(), 1),
-                _ => panic!("expected Record"),
-            }
-        }
-        _ => panic!("expected TypeDef"),
-    }
-}
+// Generic type params on type defs produce a parse error.
 
-// 2. Generic record with multiple type params
 #[test]
-fn generic_record_multiple_params() {
-    let p = parse_ok("program T; type Pair<A, B> = record First: A; Second: B; end; begin end.");
-    match &p.declarations[0] {
-        Decl::TypeDef(td) => {
-            assert_eq!(td.type_params.len(), 2);
-            assert_eq!(td.type_params[0].name, "A");
-            assert_eq!(td.type_params[1].name, "B");
-        }
-        _ => panic!("expected TypeDef"),
-    }
-}
-
-// 3. Generic record with constraint
-#[test]
-fn generic_record_with_constraint() {
-    let p = parse_ok("program T; type Ordered<T: Comparable> = record Value: T; end; begin end.");
-    match &p.declarations[0] {
-        Decl::TypeDef(td) => {
-            assert_eq!(td.type_params.len(), 1);
-            assert_eq!(td.type_params[0].name, "T");
-            assert_eq!(td.type_params[0].constraint.as_deref(), Some("Comparable"));
-        }
-        _ => panic!("expected TypeDef"),
-    }
-}
-
-// 4. Generic record with mixed constrained/unconstrained params
-#[test]
-fn generic_record_mixed_constraints() {
-    let p = parse_ok(
-        "program T; type Entry<K: Comparable, V> = record Key: K; Value: V; end; begin end.",
+fn generic_record_type_params_not_allowed() {
+    let (_, errors) =
+        parse_with_errors("program T; type Box<T> = record Value: integer; end; begin end.");
+    assert!(
+        !errors.is_empty(),
+        "expected parse error for generic type definition"
     );
-    match &p.declarations[0] {
-        Decl::TypeDef(td) => {
-            assert_eq!(td.type_params.len(), 2);
-            assert_eq!(td.type_params[0].name, "K");
-            assert_eq!(td.type_params[0].constraint.as_deref(), Some("Comparable"));
-            assert_eq!(td.type_params[1].name, "V");
-            assert!(td.type_params[1].constraint.is_none());
-        }
-        _ => panic!("expected TypeDef"),
-    }
 }
 
-// 5. Generic enum
 #[test]
-fn generic_enum_single_param() {
-    let p = parse_ok("program T; type Maybe<T> = enum Just(Value: T); Nothing; end; begin end.");
-    match &p.declarations[0] {
-        Decl::TypeDef(td) => {
-            assert_eq!(td.name, "Maybe");
-            assert_eq!(td.type_params.len(), 1);
-            assert_eq!(td.type_params[0].name, "T");
-            match &td.body {
-                TypeBody::Enum(e) => {
-                    assert_eq!(e.members.len(), 2);
-                    assert_eq!(e.members[0].fields.len(), 1);
-                    assert!(e.members[1].fields.is_empty());
-                }
-                _ => panic!("expected Enum"),
-            }
-        }
-        _ => panic!("expected TypeDef"),
-    }
-}
-
-// 6. Generic type alias (alias with type args via `of`)
-#[test]
-fn generic_type_alias_of_syntax() {
-    let p = parse_ok(
-        "program T; type Box<T> = record Value: T; end; type IntBox = Box of integer; begin end.",
+fn generic_enum_type_params_not_allowed() {
+    let (_, errors) =
+        parse_with_errors("program T; type Maybe<T> = enum Just; Nothing; end; begin end.");
+    assert!(
+        !errors.is_empty(),
+        "expected parse error for generic enum definition"
     );
-    match &p.declarations[1] {
-        Decl::TypeDef(td) => {
-            assert_eq!(td.name, "IntBox");
-            assert!(td.type_params.is_empty());
-            match &td.body {
-                TypeBody::Alias(TypeExpr::Named { type_args, .. }) => {
-                    assert_eq!(type_args.len(), 1);
-                }
-                _ => panic!("expected Alias with Named type"),
-            }
-        }
-        _ => panic!("expected TypeDef"),
-    }
+}
+
+#[test]
+fn generic_type_alias_of_syntax_not_allowed() {
+    let (_, errors) =
+        parse_with_errors("program T; type Foo = integer; var X: Foo of integer := 0; begin end.");
+    assert!(
+        !errors.is_empty(),
+        "expected parse error for generic type argument syntax"
+    );
 }
 
 // ── Record Methods (parser-level) ──────────────────────────

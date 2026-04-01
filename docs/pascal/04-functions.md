@@ -148,7 +148,7 @@ begin
 end;
 ```
 
-See [Types — Generics](05-types.md#generics) for generic records, enums, and type aliases.
+See [Types — Generics](05-types.md#generics) for generic record methods and constraints.
 
 ## Early Return
 

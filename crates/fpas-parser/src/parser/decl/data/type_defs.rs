@@ -16,13 +16,22 @@ impl Parser {
     fn parse_type_def(&mut self, visibility: Visibility) -> TypeDef {
         let start = self.current_span();
         let (name, _) = self.expect_ident().unwrap_or(("_error_".into(), start));
-        let type_params = self.parse_type_params();
+        if self.check(&Token::Less) {
+            let span = self.current_span();
+            self.error_with_code(
+                PARSE_EXPECTED_TOKEN,
+                "Generic type definitions are not supported. Only generic functions and procedures support type parameters.",
+                "Remove `<...>` and use a generic function instead: `function Foo<T>(x: T): T`.",
+                span,
+            );
+            // consume to recover
+            self.parse_type_params();
+        }
         self.expect(&Token::Equal);
         let body = self.parse_type_body();
         self.expect_semi();
         TypeDef {
             name,
-            type_params,
             body,
             visibility,
             span: self.span_from(start),

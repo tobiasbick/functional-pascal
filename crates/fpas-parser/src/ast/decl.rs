@@ -50,7 +50,9 @@ pub struct VarDef {
 
 /// A generic type parameter with optional constraint: `T` or `T: Comparable`.
 ///
-/// **Documentation:** `docs/pascal/05-types.md` (Generics — Constraints)
+/// Used on function and procedure headings: `function Foo<T>(x: T): T`.
+///
+/// **Documentation:** `docs/pascal/04-functions.md` (Generic Functions)
 #[derive(Debug, Clone, PartialEq)]
 pub struct TypeParam {
     pub name: String,
@@ -61,8 +63,6 @@ pub struct TypeParam {
 #[derive(Debug, Clone, PartialEq)]
 pub struct TypeDef {
     pub name: String,
-    /// Generic type parameters: `<T>`, `<T: Comparable>`, `<K, V>`.
-    pub type_params: Vec<TypeParam>,
     pub body: TypeBody,
     pub visibility: Visibility,
     pub span: Span,

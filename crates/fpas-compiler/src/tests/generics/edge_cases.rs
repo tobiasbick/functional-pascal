@@ -1,8 +1,8 @@
 use super::*;
 
-// ═══════════════════════════════════════════════════════════════
-// EDGE CASES — positive
-// ═══════════════════════════════════════════════════════════════
+// =============================================================
+// EDGE CASES — generic functions
+// =============================================================
 
 #[test]
 fn generic_single_letter_type_params() {
@@ -40,74 +40,6 @@ begin
 end.",
     );
     assert_eq!(out.lines, vec!["test"]);
-}
-
-#[test]
-fn generic_type_param_same_name_different_types() {
-    // Two generic types both use T but independently
-    let out = compile_and_run(
-        "\
-program IndependentT;
-uses Std.Console;
-
-type
-  BoxA<T> = record Value: T; end;
-  BoxB<T> = record Item: T; end;
-
-begin
-  var A: BoxA of integer := record Value := 1; end;
-  var B: BoxB of string := record Item := 'hi'; end;
-  WriteLn(A.Value);
-  WriteLn(B.Item)
-end.",
-    );
-    assert_eq!(out.lines, vec!["1", "hi"]);
-}
-
-#[test]
-fn generic_record_with_option_field() {
-    let out = compile_and_run(
-        "\
-program GenericOptionField;
-uses Std.Console;
-
-type
-  Container<T> = record
-    Value: Option of T;
-  end;
-
-begin
-  var C: Container of integer := record Value := Some(42); end;
-  case C.Value of
-    Some(V): WriteLn(V);
-    None: WriteLn('none')
-  end
-end.",
-    );
-    assert_eq!(out.lines, vec!["42"]);
-}
-
-#[test]
-fn generic_record_with_result_field() {
-    let out = compile_and_run(
-        "\
-program GenericResultField;
-uses Std.Console;
-
-type
-  Holder<T> = record
-    Value: Result of T, string;
-  end;
-
-begin
-  var H: Holder of integer := record Value := Ok(99); end;
-  case H.Value of
-    Ok(V): WriteLn(V);
-    Error(E): WriteLn(E)
-  end
-end.",
-    );
-    assert_eq!(out.lines, vec!["99"]);
 }
 
 #[test]

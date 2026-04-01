@@ -18,9 +18,7 @@ impl Checker {
     }
 
     fn check_alias_type_def(&mut self, td: &TypeDef, type_expr: &fpas_parser::TypeExpr) {
-        let ty = self.with_type_params(&td.type_params, td.span, |checker| {
-            checker.resolve_type_expr(type_expr)
-        });
+        let ty = self.resolve_type_expr(type_expr);
         self.define_type_symbol(td, ty);
     }
 

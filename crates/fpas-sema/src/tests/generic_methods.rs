@@ -96,19 +96,6 @@ fn generic_method_called_with_inferred_type() {
 }
 
 #[test]
-fn generic_method_on_generic_record_adds_own_type_param() {
-    check_ok(
-        "program T;
-         type Wrapper<T> = record
-           Value: T;
-           function Transform<R>(Self: Wrapper of T; F: function(X: T): R): R;
-           begin return F(Self.Value) end;
-         end;
-         begin end.",
-    );
-}
-
-#[test]
 fn two_records_each_with_independent_generic_methods() {
     check_ok(
         "program T;

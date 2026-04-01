@@ -6,18 +6,7 @@ use fpas_parser::{QualifiedId, TypeExpr};
 impl Checker {
     pub(crate) fn resolve_type_expr(&mut self, type_expr: &TypeExpr) -> Ty {
         match type_expr {
-            TypeExpr::Named { id, type_args, .. } => {
-                let base = self.resolve_named_type(id);
-                if type_args.is_empty() {
-                    base
-                } else {
-                    let resolved_args: Vec<Ty> = type_args
-                        .iter()
-                        .map(|arg| self.resolve_type_expr(arg))
-                        .collect();
-                    self.apply_type_args(base, &resolved_args, id.span)
-                }
-            }
+            TypeExpr::Named { id, .. } => self.resolve_named_type(id),
             TypeExpr::Array(inner, _) => Ty::Array(Box::new(self.resolve_type_expr(inner))),
             TypeExpr::FunctionType {
                 params,

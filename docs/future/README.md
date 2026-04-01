@@ -12,7 +12,7 @@ Planned changes for Functional Pascal, in execution order.
 | 4 | ~~[Nested Patterns](04-remove-nested-patterns.md)~~ | **Done** |
 | 5 | ~~[`ref` / `new`](05-remove-ref-new.md)~~ | **Done** |
 | 6 | ~~[Interfaces](06-remove-interfaces.md)~~ | **Done** |
-| 7 | [Generic Types](07-remove-generic-types.md) | Remove user-defined generic records, enums, type aliases — generic functions stay |
+| 7 | ~~[Generic Types](07-remove-generic-types.md)~~ | **Done** |
 | 8 | [Channels + Select](08-remove-channels-select.md) | Remove `channel`, `select`, `Std.Channel` — `go`/`task`/`Wait` stays |
 | 9 | [`dict`](09-remove-dict.md) | Pending — may be kept |
 

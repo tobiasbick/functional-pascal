@@ -190,6 +190,34 @@ pub(super) fn register_std_console(checker: &mut Checker) {
         s::STD_CONSOLE_TEXT_BACKGROUND,
         vec![p("Color", Ty::Integer, false)],
     );
+    define_proc(
+        checker,
+        s::STD_CONSOLE_TEXT_COLOR_RGB,
+        vec![
+            p("R", Ty::Integer, false),
+            p("G", Ty::Integer, false),
+            p("B", Ty::Integer, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_CONSOLE_TEXT_BACKGROUND_RGB,
+        vec![
+            p("R", Ty::Integer, false),
+            p("G", Ty::Integer, false),
+            p("B", Ty::Integer, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_CONSOLE_TEXT_COLOR_256,
+        vec![p("Index", Ty::Integer, false)],
+    );
+    define_proc(
+        checker,
+        s::STD_CONSOLE_TEXT_BACKGROUND_256,
+        vec![p("Index", Ty::Integer, false)],
+    );
     define_proc(checker, s::STD_CONSOLE_HIGH_VIDEO, vec![]);
     define_proc(checker, s::STD_CONSOLE_LOW_VIDEO, vec![]);
     define_proc(checker, s::STD_CONSOLE_NORM_VIDEO, vec![]);

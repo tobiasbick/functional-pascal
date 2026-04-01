@@ -115,6 +115,34 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::ConsoleTextBackground, location);
                 Ok(true)
             }
+            s::STD_CONSOLE_TEXT_COLOR_RGB => {
+                self.expect_exact_args(s::STD_CONSOLE_TEXT_COLOR_RGB, 3, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::ConsoleTextColorRGB, location);
+                Ok(true)
+            }
+            s::STD_CONSOLE_TEXT_BACKGROUND_RGB => {
+                self.expect_exact_args(s::STD_CONSOLE_TEXT_BACKGROUND_RGB, 3, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::ConsoleTextBackgroundRGB, location);
+                Ok(true)
+            }
+            s::STD_CONSOLE_TEXT_COLOR_256 => {
+                self.expect_exact_args(s::STD_CONSOLE_TEXT_COLOR_256, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic_unit(Intrinsic::ConsoleTextColor256, location);
+                Ok(true)
+            }
+            s::STD_CONSOLE_TEXT_BACKGROUND_256 => {
+                self.expect_exact_args(s::STD_CONSOLE_TEXT_BACKGROUND_256, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic_unit(Intrinsic::ConsoleTextBackground256, location);
+                Ok(true)
+            }
             s::STD_CONSOLE_HIGH_VIDEO => {
                 self.expect_zero_args(s::STD_CONSOLE_HIGH_VIDEO, args, location)?;
                 self.emit_intrinsic_unit(Intrinsic::ConsoleHighVideo, location);

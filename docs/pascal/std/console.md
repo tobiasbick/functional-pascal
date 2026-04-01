@@ -51,6 +51,10 @@ Everything below requires `uses Std.Console;`.
 | procedure | `Window(X1, Y1, X2, Y2)` | set the active console window (screen-relative) |
 | procedure | `TextColor(Color)` | set foreground color for subsequent writes |
 | procedure | `TextBackground(Color)` | set background color for subsequent writes |
+| procedure | `TextColorRGB(R, G, B)` | set fg to 24-bit truecolor (0–255 per channel) |
+| procedure | `TextBackgroundRGB(R, G, B)` | set bg to 24-bit truecolor (0–255 per channel) |
+| procedure | `TextColor256(Index)` | set fg to 256-color palette index (0–255) |
+| procedure | `TextBackground256(Index)` | set bg to 256-color palette index (0–255) |
 | procedure | `HighVideo()` | set bright foreground intensity bit |
 | procedure | `LowVideo()` | clear bright foreground intensity bit |
 | procedure | `NormVideo()` | reset attributes to light-gray on black |
@@ -431,6 +435,39 @@ Additional CRT compatibility constants:
 - **Effect (`HighVideo`):** sets the foreground intensity bit.
 - **Effect (`LowVideo`):** clears the foreground intensity bit.
 - **Effect (`NormVideo`):** resets attributes to light gray on black (`TextAttr = 7`).
+
+### `procedure TextColorRGB(R, G, B)`
+
+### `procedure TextBackgroundRGB(R, G, B)`
+
+- **Parameters:** three integers `R`, `G`, `B` (0–255 each).
+- **Result:** none.
+- **Effect:** applies a 24-bit truecolor ANSI escape for the foreground / background. Takes effect immediately for subsequent `Write`/`WriteLn` calls.
+- **Errors:** runtime error if any channel is outside `0..255`.
+
+```pascal
+uses Std.Console;
+
+TextColorRGB(255, 128, 0);       { orange foreground }
+TextBackgroundRGB(0, 0, 64);     { dark-blue background }
+WriteLn('truecolor text');
+```
+
+### `procedure TextColor256(Index)`
+
+### `procedure TextBackground256(Index)`
+
+- **Parameters:** one integer index (0–255).
+- **Result:** none.
+- **Effect:** applies a 256-color ANSI palette escape for the foreground / background. Takes effect immediately for subsequent `Write`/`WriteLn` calls.
+- **Errors:** runtime error if the index is outside `0..255`.
+
+```pascal
+uses Std.Console;
+
+TextColor256(196);        { bright red in xterm-256color }
+WriteLn('256-color text');
+```
 
 ### `function TextAttr(): integer`
 

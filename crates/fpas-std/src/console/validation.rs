@@ -88,4 +88,42 @@ impl Console {
         }
         Ok(raw as u8)
     }
+
+    pub(super) fn validate_color_256(
+        &self,
+        raw: i64,
+        op_name: &str,
+        location: SourceLocation,
+    ) -> Result<u8, StdError> {
+        if !(0..=255).contains(&raw) {
+            return Err(std_runtime_error(
+                RUNTIME_CONSOLE_STATE_ERROR,
+                format!("{op_name} expects a color index from 0 to 255, got {raw}"),
+                "Pass an integer from 0 to 255 for the 256-color palette.",
+                location,
+            ));
+        }
+        Ok(raw as u8)
+    }
+
+    pub(super) fn validate_rgb(
+        &self,
+        r: i64,
+        g: i64,
+        b: i64,
+        op_name: &str,
+        location: SourceLocation,
+    ) -> Result<(u8, u8, u8), StdError> {
+        for (ch, val) in [("R", r), ("G", g), ("B", b)] {
+            if !(0..=255).contains(&val) {
+                return Err(std_runtime_error(
+                    RUNTIME_CONSOLE_STATE_ERROR,
+                    format!("{op_name} expects {ch} in 0–255, got {val}"),
+                    "Each channel (R, G, B) must be an integer from 0 to 255.",
+                    location,
+                ));
+            }
+        }
+        Ok((r as u8, g as u8, b as u8))
+    }
 }

@@ -132,6 +132,10 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::ArrayAll,
     Intrinsic::ArrayFlatMap,
     Intrinsic::ArrayForEach,
+    Intrinsic::ConsoleTextColorRGB,
+    Intrinsic::ConsoleTextBackgroundRGB,
+    Intrinsic::ConsoleTextColor256,
+    Intrinsic::ConsoleTextBackground256,
     Intrinsic::ResultUnwrap,
     Intrinsic::ResultUnwrapOr,
     Intrinsic::ResultIsOk,
@@ -316,6 +320,10 @@ impl Intrinsic {
             239 => Self::ArrayAll,
             240 => Self::ArrayFlatMap,
             241 => Self::ArrayForEach,
+            243 => Self::ConsoleTextColorRGB,
+            244 => Self::ConsoleTextBackgroundRGB,
+            245 => Self::ConsoleTextColor256,
+            246 => Self::ConsoleTextBackground256,
             _ => return None,
         })
     }

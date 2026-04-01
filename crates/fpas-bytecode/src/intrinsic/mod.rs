@@ -349,6 +349,23 @@ pub enum Intrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/array.md`
     ArrayForEach = 241,
+
+    /// `Std.Console.TextColorRGB(R, G, B)` — set fg to 24-bit truecolor.
+    ///
+    /// **Documentation:** `docs/pascal/std/console.md`
+    ConsoleTextColorRGB = 243,
+    /// `Std.Console.TextBackgroundRGB(R, G, B)` — set bg to 24-bit truecolor.
+    ///
+    /// **Documentation:** `docs/pascal/std/console.md`
+    ConsoleTextBackgroundRGB = 244,
+    /// `Std.Console.TextColor256(Index)` — set fg to 256-color palette index.
+    ///
+    /// **Documentation:** `docs/pascal/std/console.md`
+    ConsoleTextColor256 = 245,
+    /// `Std.Console.TextBackground256(Index)` — set bg to 256-color palette index.
+    ///
+    /// **Documentation:** `docs/pascal/std/console.md`
+    ConsoleTextBackground256 = 246,
 }
 
 impl From<Intrinsic> for u16 {

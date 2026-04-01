@@ -21,7 +21,7 @@ Planned changes for Functional Pascal, in execution order.
 | # | Feature | Description |
 |---|---------|-------------|
 | 10 | ~~[String Format](10-add-string-format.md)~~ | **Done** |
-| 11 | [Extended Colors](11-add-extended-colors.md) | 256-color and truecolor in `Std.Console` |
+| 11 | ~~[Extended Colors](11-add-extended-colors.md)~~ | **Done** |
 | 12 | [String Repeat](12-add-string-repeat.md) | `Repeat()` function in `Std.Str` |
 
 ## Not yet planned

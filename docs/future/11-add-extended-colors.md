@@ -1,6 +1,6 @@
 # Add: Extended Color Support (256-color / Truecolor)
 
-> Priority: 11 — stdlib extension after core language is stable.
+> Status: **Done.**
 
 ## Problem
 

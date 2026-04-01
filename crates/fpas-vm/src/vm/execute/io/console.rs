@@ -124,6 +124,26 @@ impl Worker {
                 let color = self.pop_int(line)?;
                 self.with_console(|c| c.text_background(color, line))?;
             }
+            Intrinsic::ConsoleTextColorRGB => {
+                let b = self.pop_int(line)?;
+                let g = self.pop_int(line)?;
+                let r = self.pop_int(line)?;
+                self.with_console(|c| c.text_color_rgb(r, g, b, line))?;
+            }
+            Intrinsic::ConsoleTextBackgroundRGB => {
+                let b = self.pop_int(line)?;
+                let g = self.pop_int(line)?;
+                let r = self.pop_int(line)?;
+                self.with_console(|c| c.text_background_rgb(r, g, b, line))?;
+            }
+            Intrinsic::ConsoleTextColor256 => {
+                let index = self.pop_int(line)?;
+                self.with_console(|c| c.text_color_256(index, line))?;
+            }
+            Intrinsic::ConsoleTextBackground256 => {
+                let index = self.pop_int(line)?;
+                self.with_console(|c| c.text_background_256(index, line))?;
+            }
             Intrinsic::ConsoleHighVideo => self.with_console(|c| c.high_video(line))?,
             Intrinsic::ConsoleLowVideo => self.with_console(|c| c.low_video(line))?,
             Intrinsic::ConsoleNormVideo => self.with_console(|c| c.norm_video(line))?,

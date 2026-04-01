@@ -89,7 +89,6 @@ pub enum RecordMethod {
     Procedure(ProcedureDecl),
 }
 
-
 /// A field declaration inside a `record … end` block.
 ///
 /// **Documentation:** `docs/pascal/05-types.md` (Record Types — Default Field Values)

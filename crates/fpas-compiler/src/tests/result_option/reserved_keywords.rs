@@ -138,4 +138,3 @@ fn try_mixed_case_as_variable_name_is_parse_error() {
 fn none_uppercase_as_variable_name_is_parse_error() {
     parse_fails("program T; var NONE: integer := 1; begin end.");
 }
-

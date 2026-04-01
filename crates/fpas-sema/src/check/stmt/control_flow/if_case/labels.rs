@@ -98,7 +98,9 @@ impl Checker {
         in_arg_position: bool,
     ) -> Vec<(String, Ty)> {
         match expr {
-            Expr::Call { designator, args, .. } if !in_arg_position => {
+            Expr::Call {
+                designator, args, ..
+            } if !in_arg_position => {
                 self.collect_variant_pattern_bindings(expected_ty, designator, args)
             }
             Expr::Call { .. } => {

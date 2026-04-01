@@ -1,4 +1,4 @@
-use super::super::{define_func, p};
+use super::super::{define_func, define_func_variadic, p};
 use crate::check::Checker;
 use crate::types::Ty;
 use fpas_std::std_symbols as s;
@@ -206,5 +206,11 @@ pub(super) fn register_std_str(checker: &mut Checker) {
         s::STD_STR_LAST_INDEX_OF,
         vec![p("S", Ty::String, false), p("Sub", Ty::String, false)],
         Ty::Integer,
+    );
+    define_func_variadic(
+        checker,
+        s::STD_STR_FORMAT,
+        vec![p("Template", Ty::String, false)],
+        Ty::String,
     );
 }

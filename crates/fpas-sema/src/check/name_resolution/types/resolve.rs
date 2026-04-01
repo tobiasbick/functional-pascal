@@ -26,6 +26,7 @@ impl Checker {
                     type_params: Vec::new(),
                     params: param_tys,
                     return_type: Box::new(return_ty),
+                    variadic: false,
                 })
             }
             TypeExpr::ProcedureType { params, .. } => {
@@ -92,5 +93,4 @@ impl Checker {
             }
         }
     }
-
 }

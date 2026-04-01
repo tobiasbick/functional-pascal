@@ -158,7 +158,8 @@ end.",
     );
     assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
     assert!(
-        err.message.contains("Nested enum patterns are not supported"),
+        err.message
+            .contains("Nested enum patterns are not supported"),
         "expected nested pattern rejection, got: {}",
         err.message
     );
@@ -456,7 +457,9 @@ end.",
     );
     assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
     assert!(
-        err.message.contains("Nested enum patterns are not supported") || err.message.contains("single-level"),
+        err.message
+            .contains("Nested enum patterns are not supported")
+            || err.message.contains("single-level"),
         "expected nested pattern rejection, got: {}",
         err.message
     );
@@ -615,7 +618,8 @@ end.",
     );
     assert_eq!(err.code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
     assert!(
-        err.message.contains("Literal matching inside enum patterns is not supported")
+        err.message
+            .contains("Literal matching inside enum patterns is not supported")
             || err.message.contains("guard clause"),
         "expected literal-in-pattern rejection, got: {}",
         err.message

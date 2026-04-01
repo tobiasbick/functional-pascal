@@ -21,4 +21,3 @@ fn procedure_type_expr() {
         _ => panic!("expected Var"),
     }
 }
-

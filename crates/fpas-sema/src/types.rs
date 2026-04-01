@@ -148,6 +148,8 @@ pub struct FunctionTy {
     pub type_params: Vec<GenericParamDef>,
     pub params: Vec<ParamTy>,
     pub return_type: Box<Ty>,
+    /// Accept any number of arguments beyond the declared params (e.g. `Std.Str.Format`).
+    pub variadic: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]

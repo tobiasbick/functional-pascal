@@ -21,6 +21,7 @@ impl Checker {
             type_params: type_param_defs,
             params: params.clone(),
             return_type: Box::new(return_ty.clone()),
+            variadic: false,
         });
 
         if has_type_params {

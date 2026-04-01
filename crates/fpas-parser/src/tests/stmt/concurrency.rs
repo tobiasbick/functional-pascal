@@ -56,4 +56,3 @@ fn go_as_expression_in_var_decl() {
         _ => panic!("expected var with go expression, got {:?}", stmts[0]),
     }
 }
-

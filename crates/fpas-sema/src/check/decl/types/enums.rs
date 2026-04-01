@@ -24,12 +24,7 @@ impl Checker {
                 let fields = member
                     .fields
                     .iter()
-                    .map(|field| {
-                        (
-                            field.name.clone(),
-                            self.resolve_type_expr(&field.type_expr),
-                        )
-                    })
+                    .map(|field| (field.name.clone(), self.resolve_type_expr(&field.type_expr)))
                     .collect();
                 EnumVariantTy {
                     name: member.name.clone(),

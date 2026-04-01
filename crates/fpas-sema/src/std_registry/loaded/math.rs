@@ -129,6 +129,7 @@ pub(super) fn register_std_math(checker: &mut Checker) {
             type_params: Vec::new(),
             params: vec![],
             return_type: Box::new(Ty::Error),
+            variadic: false,
         }),
     );
     define_builtin_std(
@@ -138,6 +139,7 @@ pub(super) fn register_std_math(checker: &mut Checker) {
             type_params: Vec::new(),
             params: vec![],
             return_type: Box::new(Ty::Error),
+            variadic: false,
         }),
     );
     define_builtin_std(
@@ -147,6 +149,7 @@ pub(super) fn register_std_math(checker: &mut Checker) {
             type_params: Vec::new(),
             params: vec![],
             return_type: Box::new(Ty::Error),
+            variadic: false,
         }),
     );
     define_builtin_std(
@@ -156,6 +159,7 @@ pub(super) fn register_std_math(checker: &mut Checker) {
             type_params: Vec::new(),
             params: vec![],
             return_type: Box::new(Ty::Error),
+            variadic: false,
         }),
     );
     define_builtin_std(
@@ -165,6 +169,7 @@ pub(super) fn register_std_math(checker: &mut Checker) {
             type_params: Vec::new(),
             params: vec![],
             return_type: Box::new(Ty::Error),
+            variadic: false,
         }),
     );
 }

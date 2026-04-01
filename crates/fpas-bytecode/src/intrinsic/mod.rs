@@ -231,6 +231,13 @@ pub enum Intrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/str.md`
     StrLastIndexOf = 214,
+    /// `Std.Str.Format(Template, ...)` — printf-style string formatting.
+    ///
+    /// Stack convention: template pushed first, then each arg, then arg count as integer.
+    /// Specifiers: `%d` integer, `%f` real, `%s` string, `%%` literal percent.
+    ///
+    /// **Documentation:** `docs/pascal/std/str.md`
+    StrFormat = 242,
 
     /// `Std.Conv.BoolToStr(B)` — boolean to `'true'`/`'false'`.
     ///

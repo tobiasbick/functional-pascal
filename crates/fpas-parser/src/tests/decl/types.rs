@@ -302,5 +302,3 @@ fn record_with_generic_function_method() {
         _ => panic!("expected TypeDef"),
     }
 }
-
-

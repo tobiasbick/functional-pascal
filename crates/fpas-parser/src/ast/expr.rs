@@ -23,7 +23,6 @@ impl Expr {
             | Self::UnaryOp { span, .. }
             | Self::BinaryOp { span, .. }
             | Self::RecordLiteral { span, .. }
-
             | Self::RecordUpdate { span, .. } => *span,
         }
     }

@@ -4,8 +4,7 @@
 
 use super::Checker;
 use crate::scope::{FunctionCtx, Symbol, SymbolKind};
-use crate::types::
-    {FunctionTy, MethodKind, ParamTy, ProcedureTy, RecordTy, Ty, TypeConstraint};
+use crate::types::{FunctionTy, MethodKind, ParamTy, ProcedureTy, RecordTy, Ty, TypeConstraint};
 use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
 use fpas_parser::{FuncBody, RecordMethod, RecordType, TypeDef, TypeParam};
 
@@ -32,12 +31,7 @@ impl Checker {
         let fields: Vec<_> = record
             .fields
             .iter()
-            .map(|field| {
-                (
-                    field.name.clone(),
-                    self.resolve_type_expr(&field.type_expr),
-                )
-            })
+            .map(|field| (field.name.clone(), self.resolve_type_expr(&field.type_expr)))
             .collect();
 
         // Validate default values and build the defaults map entry.
@@ -137,6 +131,7 @@ impl Checker {
                         type_params: type_param_defs,
                         params: params.clone(),
                         return_type: Box::new(return_ty.clone()),
+                        variadic: false,
                     };
 
                     let qualified = format!("{type_name}.{}", function.name);

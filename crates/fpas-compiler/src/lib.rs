@@ -28,13 +28,8 @@ use fpas_parser::Program;
 /// collected but only the first is surfaced through the current single-error
 /// return type.
 pub fn compile(program: &Program) -> Result<Chunk, CompileError> {
-    let (
-        sema_errors,
-        expr_types,
-        method_calls,
-        record_defaults,
-        scalar_case_bindings,
-    ) = fpas_sema::analyze_with_types(program);
+    let (sema_errors, expr_types, method_calls, record_defaults, scalar_case_bindings) =
+        fpas_sema::analyze_with_types(program);
     if !sema_errors.is_empty() {
         return Err(sema_errors.into_iter().next().expect("non-empty"));
     }

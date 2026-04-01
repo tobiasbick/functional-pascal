@@ -112,6 +112,7 @@ pub(in super::super) const STD_STR_SYMBOLS: &[&str] = &[
     std_symbols::STD_STR_TRIM_LEFT,
     std_symbols::STD_STR_TRIM_RIGHT,
     std_symbols::STD_STR_LAST_INDEX_OF,
+    std_symbols::STD_STR_FORMAT,
 ];
 
 pub(in super::super) const STD_CONV_SYMBOLS: &[&str] = &[

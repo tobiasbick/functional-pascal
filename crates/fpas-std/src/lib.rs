@@ -36,8 +36,8 @@ pub use error::StdError;
 pub use intrinsics::run_intrinsic;
 pub use key_event::{ConsoleKeyEvent, KEY_KIND_VARIANTS};
 pub use std_units::{
-    STD_UNIT_ARRAY, STD_UNIT_CONSOLE, STD_UNIT_CONV, STD_UNIT_DICT,
-    STD_UNIT_MATH, STD_UNIT_OPTION, STD_UNIT_RESULT, STD_UNIT_STR, STD_UNIT_TASK, STD_UNITS_KNOWN,
+    STD_UNIT_ARRAY, STD_UNIT_CONSOLE, STD_UNIT_CONV, STD_UNIT_DICT, STD_UNIT_MATH, STD_UNIT_OPTION,
+    STD_UNIT_RESULT, STD_UNIT_STR, STD_UNIT_TASK, STD_UNITS_KNOWN,
     canonical_std_unit_from_segments, canonical_std_unit_from_tail, is_std_root_segment,
     std_symbols, std_unit_symbols, std_units_list_for_hint,
 };

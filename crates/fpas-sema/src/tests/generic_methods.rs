@@ -241,4 +241,3 @@ fn generic_method_return_type_is_generic_param() {
          begin end.",
     );
 }
-

@@ -153,6 +153,7 @@ pub const STD_STR_REVERSE: &str = std_str!("Reverse");
 pub const STD_STR_TRIM_LEFT: &str = std_str!("TrimLeft");
 pub const STD_STR_TRIM_RIGHT: &str = std_str!("TrimRight");
 pub const STD_STR_LAST_INDEX_OF: &str = std_str!("LastIndexOf");
+pub const STD_STR_FORMAT: &str = std_str!("Format");
 
 pub const STD_CONV_INT_TO_STR: &str = std_conv!("IntToStr");
 pub const STD_CONV_STR_TO_INT: &str = std_conv!("StrToInt");

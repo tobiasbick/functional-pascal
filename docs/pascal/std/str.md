@@ -56,6 +56,7 @@ Requires `uses Std.Str;`.
 | function | `TrimLeft(S: string): string` | strip leading whitespace |
 | function | `TrimRight(S: string): string` | strip trailing whitespace |
 | function | `LastIndexOf(S: string; Sub: string): integer` | last index or `-1` |
+| function | `Format(Template: string; ...): string` | printf-style string formatting |
 **Indexing:** all “character index” parameters are in **Unicode scalar** units (user-visible characters), not UTF-8 bytes.
 
 ---
@@ -352,6 +353,29 @@ Returns the **last** character index of `Sub` in `S`, or **`-1`** if not found.
 WriteLn(LastIndexOf('abcabc', 'abc'))  { 3 }
 WriteLn(LastIndexOf('abc', 'z'))       { -1 }
 ```
+
+---
+
+## `function Format(Template: string; ...): string`
+
+Returns a new string by substituting format specifiers in `Template` with the supplied arguments.
+
+```pascal
+var Status: string := Format('Zoom: %fx Center: (%f, %f)', Zoom, CX, CY);
+var Msg: string    := Format('Item %d: %s', Index, Name);
+var Pct: string    := Format('100%%');  { '100%' }
+```
+
+### Specifiers
+
+| Specifier | Accepted type | Example |
+|-----------|--------------|---------|
+| `%d` | `integer` | `Format('%d', 42)` → `'42'` |
+| `%f` | `real` or `integer` | `Format('%f', 3.14)` → `'3.14'` |
+| `%s` | `string` or `char` | `Format('%s', 'hi')` → `'hi'` |
+| `%%` | *(no argument)* | `Format('100%%')` → `'100%'` |
+
+The number of specifiers (excluding `%%`) must exactly match the number of extra arguments; a mismatch is a **runtime error**.
 
 ---
 

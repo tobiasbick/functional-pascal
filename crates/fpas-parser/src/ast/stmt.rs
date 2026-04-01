@@ -108,4 +108,3 @@ pub enum DestructureVariant {
     Some,
     None,
 }
-

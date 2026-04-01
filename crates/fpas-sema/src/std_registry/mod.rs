@@ -32,6 +32,23 @@ fn define_func(c: &mut Checker, q: &str, params: Vec<ParamTy>, ret: Ty) {
                 type_params: Vec::new(),
                 params,
                 return_type: Box::new(ret),
+                variadic: false,
+            }),
+            mutable: false,
+            kind: SymbolKind::Function,
+        },
+    );
+}
+
+fn define_func_variadic(c: &mut Checker, q: &str, params: Vec<ParamTy>, ret: Ty) {
+    c.scopes.define(
+        q,
+        Symbol {
+            ty: Ty::Function(FunctionTy {
+                type_params: Vec::new(),
+                params,
+                return_type: Box::new(ret),
+                variadic: true,
             }),
             mutable: false,
             kind: SymbolKind::Function,

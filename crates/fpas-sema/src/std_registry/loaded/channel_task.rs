@@ -12,6 +12,7 @@ pub fn register_std_task(c: &mut Checker) {
         type_params: Vec::new(),
         params: vec![],
         return_type: Box::new(Ty::Error),
+        variadic: false,
     });
 
     for name in [s::STD_TASK_WAIT, s::STD_TASK_WAIT_ALL] {

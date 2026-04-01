@@ -28,4 +28,3 @@ fn record_literal() {
         _ => panic!("expected RecordLiteral"),
     }
 }
-

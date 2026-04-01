@@ -12,6 +12,7 @@ pub(super) fn register_std_result(checker: &mut Checker) {
         type_params: Vec::new(),
         params: vec![],
         return_type: Box::new(Ty::Error),
+        variadic: false,
     });
     for name in [
         s::STD_RESULT_UNWRAP,
@@ -31,6 +32,7 @@ pub(super) fn register_std_option(checker: &mut Checker) {
         type_params: Vec::new(),
         params: vec![],
         return_type: Box::new(Ty::Error),
+        variadic: false,
     });
     for name in [
         s::STD_OPTION_UNWRAP,

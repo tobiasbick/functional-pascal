@@ -24,7 +24,7 @@ See [09-units.md](09-units.md) for `uses` rules, short name ambiguity, and the r
 | Unit | Purpose | Key symbols | Details |
 |------|---------|-------------|---------|
 | [`Std.Console`](std/console.md) | Console I/O, CRT screen control | `Write`, `WriteLn`, `ReadLn`, `ClrScr`, `GotoXY`, … | [console.md](std/console.md) |
-| [`Std.Str`](std/str.md) | String operations | `Length`, `ToUpper`, `Contains`, `Split`, `Join`, `PadLeft`, `CharAt`, `Ord`, `Chr`, … | [str.md](std/str.md) |
+| [`Std.Str`](std/str.md) | String operations | `Length`, `ToUpper`, `Contains`, `Split`, `Join`, `PadLeft`, `CharAt`, `Ord`, `Chr`, `Format`, … | [str.md](std/str.md) |
 | [`Std.Conv`](std/conv.md) | Type conversions | `IntToStr`, `StrToInt`, `RealToStr`, `BoolToStr`, `IntToHex`, … | [conv.md](std/conv.md) |
 | [`Std.Math`](std/math.md) | Mathematical functions | `Pi`, `Abs`, `Sqrt`, `Pow`, `Sin`, `Cos`, `Tan`, `Log`, `Exp`, `Clamp`, `Random`, … | [math.md](std/math.md) |
 | [`Std.Array`](std/array.md) | Array helpers | `Length`, `Push`, `Pop`, `Sort`, `Slice`, `Map`, `Filter`, `Reduce`, `Find`, `Any`, `All`, … | [array.md](std/array.md) |

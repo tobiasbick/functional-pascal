@@ -12,7 +12,7 @@ impl Checker {
         args: &[Expr],
         span: Span,
     ) {
-        if func_ty.params.len() != args.len() {
+        if !func_ty.variadic && func_ty.params.len() != args.len() {
             self.error_with_code(
                 SEMA_WRONG_ARGUMENT_COUNT,
                 format!(

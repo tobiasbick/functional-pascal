@@ -6,8 +6,7 @@
 use std::collections::HashMap;
 
 use fpas_bytecode::Chunk;
-use fpas_sema::
-    {ExprTypeMap, MethodCallMap, RecordDefaultsMap, ScalarCaseBindingMap};
+use fpas_sema::{ExprTypeMap, MethodCallMap, RecordDefaultsMap, ScalarCaseBindingMap};
 
 mod binary_op;
 mod designator;

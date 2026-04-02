@@ -121,10 +121,8 @@ impl Checker {
         }
 
         // Check all required fields (those without a default) are provided.
-        let provided: std::collections::HashSet<String> = fields
-            .iter()
-            .map(|f| f.name.to_ascii_lowercase())
-            .collect();
+        let provided: std::collections::HashSet<String> =
+            fields.iter().map(|f| f.name.to_ascii_lowercase()).collect();
         let defaults = self
             .record_defaults
             .get(&record_ty.name)

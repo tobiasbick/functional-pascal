@@ -4,17 +4,7 @@ use super::*;
 fn diamond_dependency_graph() {
     let cwd = create_temp_dir("run-diamond-deps");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
         "program Main;\nuses App.A, App.B, Std.Console;\nbegin\n  WriteLn(FromA() + FromB())\nend.\n",
@@ -44,17 +34,7 @@ include = ["src/*.fpas"]
 fn three_unit_cyclic_dependency() {
     let cwd = create_temp_dir("run-three-cycle");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
         "program Main;\nuses App.A;\nbegin\nend.\n",
@@ -77,17 +57,7 @@ include = ["src/*.fpas"]
 fn duplicate_unit_names_in_different_files_rejected() {
     let cwd = create_temp_dir("run-duplicate-unit-name");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
         "program Main;\nuses App.Lib;\nbegin\nend.\n",
@@ -115,17 +85,7 @@ include = ["src/*.fpas"]
 fn duplicate_uses_entries_are_harmless() {
     let cwd = create_temp_dir("run-dup-uses");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
         "program Main;\nuses App.Lib, App.Lib, Std.Console;\nbegin\n  WriteLn(GetVal())\nend.\n",
@@ -147,17 +107,7 @@ include = ["src/*.fpas"]
 fn single_segment_unit_name_compiles() {
     let cwd = create_temp_dir("run-single-seg-unit");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
         "program Main;\nuses Utils, Std.Console;\nbegin\n  WriteLn(GetNum())\nend.\n",
@@ -179,17 +129,7 @@ include = ["src/*.fpas"]
 fn empty_unit_compiles_successfully() {
     let cwd = create_temp_dir("run-empty-unit");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
         "program Main;\nuses App.Empty;\nbegin\nend.\n",
@@ -206,17 +146,7 @@ include = ["src/*.fpas"]
 fn self_import_reports_cycle() {
     let cwd = create_temp_dir("run-self-import");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
         "program Main;\nuses App.A;\nbegin\nend.\n",
@@ -237,17 +167,7 @@ include = ["src/*.fpas"]
 fn unit_name_resolved_case_insensitively() {
     let cwd = create_temp_dir("run-case-insensitive-unit");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     // uses clause has different casing than unit declaration
     write_text(
         &cwd.join("src/main.fpas"),
@@ -270,17 +190,7 @@ include = ["src/*.fpas"]
 fn unreachable_unit_is_not_linked() {
     let cwd = create_temp_dir("run-unreachable-unit");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(&cwd.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
     // This unit is valid but never imported — it should not affect the program
     write_text(
@@ -298,17 +208,7 @@ include = ["src/*.fpas"]
 fn unit_with_only_private_declarations_exports_nothing() {
     let cwd = create_temp_dir("run-only-private");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     // Import the unit but don't call anything — should succeed
     write_text(
         &cwd.join("src/main.fpas"),
@@ -336,17 +236,7 @@ end;
 fn calling_private_symbol_from_only_private_unit_fails() {
     let cwd = create_temp_dir("run-call-only-private");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
         "program Main;\nuses App.Internal, Std.Console;\nbegin\n  WriteLn(Secret())\nend.\n",
@@ -377,17 +267,7 @@ end;
 fn unused_import_does_not_cause_error() {
     let cwd = create_temp_dir("run-unused-import");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     // Import the unit but never call any of its functions
     write_text(
         &cwd.join("src/main.fpas"),
@@ -408,17 +288,7 @@ include = ["src/*.fpas"]
 fn unit_name_is_resolved_from_declaration_not_file_path() {
     let cwd = create_temp_dir("run-unit-name-from-decl");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/**/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/**/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
         "program Main;\nuses App.Tools, Std.Console;\nbegin\n  WriteLn(GetValue())\nend.\n",

@@ -102,9 +102,7 @@ impl Checker {
         let Some(DesignatorPart::Ident(base_name, _)) = designator.parts.first() else {
             return None;
         };
-        if self.scopes.lookup(base_name).is_none() {
-            return None;
-        }
+        self.scopes.lookup(base_name)?;
 
         let method_name = match designator.parts.last()? {
             DesignatorPart::Ident(name, _) => name.clone(),

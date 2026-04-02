@@ -12,6 +12,9 @@ use fpas_sema::Ty;
 
 use super::Compiler;
 
+type RecordFieldDefault = (String, Option<fpas_parser::Expr>);
+type RecordLiteralExpansion = (String, Vec<RecordFieldDefault>);
+
 impl Compiler {
     pub(super) fn compile_expr(&mut self, expr: &Expr) -> Result<(), CompileError> {
         match expr {
@@ -113,10 +116,12 @@ impl Compiler {
                         if let Some(val) = provided.get(field_name.as_str()).copied() {
                             self.compile_expr(val)?;
                         } else {
-                            // Sema guaranteed that a default exists when the field is absent.
-                            self.compile_expr(default.as_ref().expect(
-                                "compiler: missing required field with no default — sema should have caught this",
-                            ))?;
+                            let Some(default_expr) = default.as_ref() else {
+                                unreachable!(
+                                    "compiler: missing required field with no default — sema should have caught this"
+                                );
+                            };
+                            self.compile_expr(default_expr)?;
                         }
                     }
                     let n = field_specs.len() as u16;
@@ -175,15 +180,12 @@ impl Compiler {
     /// (cloned so the borrow on `self` is released before compilation continues).
     ///
     /// Returns `None` for anonymous literals or named types without any defaults.
-    fn take_record_literal_expansion(
-        &self,
-        expr: &Expr,
-    ) -> Option<(String, Vec<(String, Option<fpas_parser::Expr>)>)> {
+    fn take_record_literal_expansion(&self, expr: &Expr) -> Option<RecordLiteralExpansion> {
         let ty = self.ty_of(expr);
-        if let Ty::Record(record_ty) = ty {
-            if let Some(specs) = self.record_defaults.get(&record_ty.name) {
-                return Some((record_ty.name.clone(), specs.clone()));
-            }
+        if let Ty::Record(record_ty) = ty
+            && let Some(specs) = self.record_defaults.get(&record_ty.name)
+        {
+            return Some((record_ty.name.clone(), specs.clone()));
         }
         None
     }

@@ -1,5 +1,7 @@
 use super::super::super::super::diagnostics::VmError;
-use super::super::super::super::{TaskState, Worker, canonical_name, internal_error, runtime_error};
+use super::super::super::super::{
+    TaskState, Worker, canonical_name, internal_error, runtime_error,
+};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_INVALID_TASK, RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_WRONG_CALL_ARITY,

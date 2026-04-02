@@ -184,10 +184,10 @@ impl KeyInput {
                 location,
             )
         })?;
-        if self.queue_live_event(ev) {
-            if let Some(next) = self.live_console_queue.pop_front() {
-                return Ok(Some(map_console_event(next)));
-            }
+        if self.queue_live_event(ev)
+            && let Some(next) = self.live_console_queue.pop_front()
+        {
+            return Ok(Some(map_console_event(next)));
         }
         Ok(None)
     }
@@ -232,10 +232,10 @@ impl KeyInput {
                 location,
             )
         })?;
-        if self.queue_live_event(ev) {
-            if let Some(next) = self.live_console_queue.pop_front() {
-                return Ok(Some(map_console_event(next)));
-            }
+        if self.queue_live_event(ev)
+            && let Some(next) = self.live_console_queue.pop_front()
+        {
+            return Ok(Some(map_console_event(next)));
         }
         Ok(None)
     }

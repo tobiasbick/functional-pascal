@@ -114,7 +114,7 @@ mod tests {
 
     #[test]
     fn parses_pascal_real_literals_only() {
-        assert_eq!(parse_pascal_real("3.14"), Some(3.14));
+        assert_eq!(parse_pascal_real("3.14"), Some(314.0 / 100.0));
         assert_eq!(parse_pascal_real("-1.5e2"), Some(-150.0));
         assert_eq!(parse_pascal_real("1_000.5_0"), Some(1000.50));
         assert_eq!(parse_pascal_real(".5"), None);

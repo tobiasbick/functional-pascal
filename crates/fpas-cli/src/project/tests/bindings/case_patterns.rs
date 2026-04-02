@@ -1,3 +1,4 @@
+use super::support::load_and_build_program;
 use super::*;
 
 #[test]
@@ -47,12 +48,7 @@ end;
 ",
     );
 
-    let loaded = load_project(&project_file).expect("project should load");
-    let program = build_program(
-        loaded.main.as_deref().expect("main path must exist"),
-        &loaded.source_files,
-    )
-    .expect("project should link");
+    let program = load_and_build_program(&project_file);
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
 
     let Stmt::Case { arms, .. } = &program.body[0] else {

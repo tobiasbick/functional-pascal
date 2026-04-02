@@ -16,7 +16,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(&dir.join("src/util.fpas"), "unit App.Util;");
 
-    let error = load_project(&project_file).expect_err("program projects need main");
+    let error = load_project_error(&project_file, "program projects need main");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
     assert!(error.contains("Program projects require `project.main`"));
 }
@@ -38,7 +38,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(&dir.join("src/util.fpas"), "unit Lib.Util;");
 
-    let error = load_project(&project_file).expect_err("library project must reject main");
+    let error = load_project_error(&project_file, "library project must reject main");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
     assert!(error.contains("must not define `project.main`"));
 }
@@ -60,7 +60,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
 
-    let error = load_project(&project_file).expect_err("invalid kind must fail");
+    let error = load_project_error(&project_file, "invalid kind must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
     assert!(
         error.contains("Invalid `project.kind`"),
@@ -85,7 +85,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
 
-    let error = load_project(&project_file).expect_err("empty kind must fail");
+    let error = load_project_error(&project_file, "empty kind must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
     assert!(
         error.contains("Invalid `project.kind`"),
@@ -110,7 +110,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
 
-    let error = load_project(&project_file).expect_err("whitespace-only kind must fail");
+    let error = load_project_error(&project_file, "whitespace-only kind must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
     assert!(
         error.contains("Invalid `project.kind`"),
@@ -130,7 +130,7 @@ kind = "library"
 "#,
     );
 
-    let error = load_project(&project_file).expect_err("library without sources must fail");
+    let error = load_project_error(&project_file, "library without sources must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
     assert!(
         error.contains("Missing `[sources]` section"),
@@ -154,7 +154,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(&dir.join("src/util.fpas"), "unit Lib.Util;");
 
-    let loaded = load_project(&project_file).expect("library project should load");
+    let loaded = load_project_ok(&project_file);
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
     assert_eq!(loaded.kind, ProjectKind::Library);
     assert!(loaded.main.is_none());

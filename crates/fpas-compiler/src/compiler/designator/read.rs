@@ -73,7 +73,8 @@ impl Compiler {
 
             // If the name resolves to a known function, emit a function reference value.
             let canonical_function_name = canonical_name(&name);
-            if let Some((_code_start, _arity)) = self.chunk.functions.get(&canonical_function_name) {
+            if let Some((_code_start, _arity)) = self.chunk.functions.get(&canonical_function_name)
+            {
                 self.emit_constant(
                     Value::Function {
                         name: canonical_function_name,

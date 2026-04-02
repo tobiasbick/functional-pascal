@@ -400,8 +400,8 @@ fn record_method_valid() {
 
 #[test]
 fn record_method_names_are_case_insensitive() {
-        check_ok(
-                "program T; uses Std.Console; \
+    check_ok(
+        "program T; uses Std.Console; \
                  type Point = record \
                      X: integer; \
                      function Sum(Self: Point): integer; \
@@ -411,7 +411,7 @@ fn record_method_names_are_case_insensitive() {
                      var P: Point := record X := 3; end; \
                      WriteLn(P.sum()) \
                  end.",
-        );
+    );
 }
 
 // ── Constraint-aware operators in generic function bodies ───

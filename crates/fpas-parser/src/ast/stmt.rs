@@ -81,10 +81,6 @@ pub struct CaseArm {
     pub span: Span,
 }
 
-#[expect(
-    clippy::large_enum_variant,
-    reason = "case labels keep expression payloads inline because the parser AST is shared across parser, sema, linker, and compiler passes"
-)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum CaseLabel {
     /// Classic value label: single value or range (`1`, `1..10`).

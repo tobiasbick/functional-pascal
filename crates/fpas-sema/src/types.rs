@@ -279,30 +279,33 @@ impl Ty {
 
     /// True for numeric types (integer, real), or a generic param with Numeric constraint.
     pub fn is_numeric(&self) -> bool {
-        match self {
-            Ty::Integer | Ty::Real => true,
-            Ty::GenericParam(_, Some(TypeConstraint::Numeric)) => true,
-            _ => false,
-        }
+        matches!(
+            self,
+            Ty::Integer | Ty::Real | Ty::GenericParam(_, Some(TypeConstraint::Numeric))
+        )
     }
 
     /// True for types that satisfy the Comparable constraint, including generic
     /// params with Comparable (or Numeric, since Numeric ⊂ Comparable).
     pub fn is_comparable(&self) -> bool {
-        match self {
-            Ty::Integer | Ty::Real | Ty::Boolean | Ty::Char | Ty::String => true,
-            Ty::GenericParam(_, Some(TypeConstraint::Comparable | TypeConstraint::Numeric)) => true,
-            _ => false,
-        }
+        matches!(
+            self,
+            Ty::Integer
+                | Ty::Real
+                | Ty::Boolean
+                | Ty::Char
+                | Ty::String
+                | Ty::GenericParam(
+                    _,
+                    Some(TypeConstraint::Comparable | TypeConstraint::Numeric)
+                )
+        )
     }
 
     /// True for ordinal types (integer, boolean, char, simple enum without data).
     pub fn is_ordinal(&self) -> bool {
-        match self {
-            Ty::Integer | Ty::Boolean | Ty::Char => true,
-            Ty::Enum(e) => !e.has_data(),
-            _ => false,
-        }
+        matches!(self, Ty::Integer | Ty::Boolean | Ty::Char)
+            || matches!(self, Ty::Enum(e) if !e.has_data())
     }
 
     fn record_fields_compatible(fields: &[(String, Ty)], other_fields: &[(String, Ty)]) -> bool {

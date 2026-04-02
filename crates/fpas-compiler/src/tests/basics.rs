@@ -49,10 +49,10 @@ end.",
     assert_eq!(out.lines, vec!["42"]);
 }
 
-  #[test]
-  fn variable_lookup_is_case_insensitive_at_runtime() {
+#[test]
+fn variable_lookup_is_case_insensitive_at_runtime() {
     let out = compile_and_run(
-      "\
+        "\
   program VarCase;
   begin
     var X: integer := 42;
@@ -60,12 +60,12 @@ end.",
   end.",
     );
     assert_eq!(out.lines, vec!["42"]);
-  }
+}
 
-  #[test]
-  fn short_std_alias_lookup_is_case_insensitive_in_compiler() {
+#[test]
+fn short_std_alias_lookup_is_case_insensitive_in_compiler() {
     let out = compile_and_run(
-      "\
+        "\
   program StdAliasCase;
   uses Std.Console;
   begin
@@ -73,7 +73,7 @@ end.",
   end.",
     );
     assert_eq!(out.lines, vec!["ok"]);
-  }
+}
 
 #[test]
 fn mutable_variable_assign() {

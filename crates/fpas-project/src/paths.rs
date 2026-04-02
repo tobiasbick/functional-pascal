@@ -1,7 +1,7 @@
 use glob::glob;
 use std::collections::HashSet;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::{Path, PathBuf, absolute};
 
 const SOURCE_FILE_EXTENSION: &str = "fpas";
 
@@ -22,9 +22,15 @@ pub(super) fn resolve_source_files(
             );
         }
 
+        let resolved_path = resolve_path(entry, root_dir);
+        if resolved_path.is_file() {
+            validate_source_extension(&resolved_path, "sources.include")?;
+            insert_unique_source_file(resolved_path, &mut files, &mut seen, &mut warnings);
+            continue;
+        }
+
         if is_glob_pattern(entry) {
-            let pattern_path = resolve_path(entry, root_dir);
-            let pattern_text = pattern_path.to_string_lossy().replace('\\', "/");
+            let pattern_text = resolved_path.to_string_lossy().replace('\\', "/");
             let mut matches = Vec::<PathBuf>::new();
             for matched in glob(&pattern_text).map_err(|e| {
                 format!(
@@ -154,5 +160,20 @@ pub(super) fn same_file(left: &Path, right: &Path) -> bool {
 }
 
 fn canonical_or_original(path: &Path) -> PathBuf {
-    fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
+    fs::canonicalize(path)
+        .or_else(|_| absolute(path))
+        .unwrap_or_else(|_| path.to_path_buf())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::canonical_or_original;
+    use std::path::Path;
+
+    #[test]
+    fn canonical_or_original_falls_back_to_absolute_path_for_missing_entries() {
+        let fallback = canonical_or_original(Path::new("missing-path-for-tests/example.fpas"));
+
+        assert!(fallback.is_absolute());
+    }
 }

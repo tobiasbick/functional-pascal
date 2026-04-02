@@ -1,9 +1,5 @@
 use super::*;
 
-fn toml_path(path: &std::path::Path) -> String {
-    path.to_string_lossy().replace('\\', "/")
-}
-
 #[test]
 fn program_project_accepts_absolute_main_path() {
     let dir = create_temp_dir("absolute-main");
@@ -25,7 +21,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(&main_path, "program Main;\nbegin\nend.\n");
 
-    let loaded = load_project(&project_file).expect("absolute main path should load");
+    let loaded = load_project_ok(&project_file);
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
 
     assert_eq!(loaded.main, Some(main_path));
@@ -54,11 +50,36 @@ include = ["{util_path_text}"]
     write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
     write_text(&util_path, "unit App.Util;");
 
-    let loaded = load_project(&project_file).expect("absolute include path should load");
+    let loaded = load_project_ok(&project_file);
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
 
     assert_eq!(loaded.source_files, vec![util_path]);
     assert!(loaded.warnings.is_empty());
+}
+
+#[test]
+fn sources_include_treats_existing_bracket_path_as_explicit_file() {
+    let dir = create_temp_dir("explicit-bracket-include");
+    let unit_path = dir.join("src/[draft].fpas");
+    let project_file = dir.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "app"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/[draft].fpas"]
+"#,
+    );
+    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(&unit_path, "unit App.Draft;");
+
+    let loaded = load_project_ok(&project_file);
+    fs::remove_dir_all(&dir).expect("temp directory must be removed");
+
+    assert_eq!(loaded.source_files, vec![unit_path]);
 }
 
 #[test]
@@ -78,7 +99,7 @@ include = ["src/util.fpas"]
     );
     write_text(&dir.join("src/util.fpas"), "unit App.Util;");
 
-    let error = load_project(&project_file).expect_err("main directory must fail");
+    let error = load_project_error(&project_file, "main directory must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
 
     assert!(
@@ -104,7 +125,7 @@ include = ["src"]
     );
     write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
 
-    let error = load_project(&project_file).expect_err("include directory must fail");
+    let error = load_project_error(&project_file, "include directory must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
 
     assert!(
@@ -131,11 +152,37 @@ include = ["src/**/*"]
     write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
     write_text(&dir.join("src/readme.md"), "not pascal");
 
-    let error = load_project(&project_file).expect_err("glob with non-source file must fail");
+    let error = load_project_error(&project_file, "glob with non-source file must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
 
     assert!(
         error.contains("matched a non-source file"),
         "expected non-source glob error, got: {error}"
+    );
+}
+
+#[test]
+fn missing_bracket_path_is_reported_as_glob_without_matches() {
+    let dir = create_temp_dir("missing-bracket-path");
+    let project_file = dir.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "app"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/[draft].fpas"]
+"#,
+    );
+    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+
+    let error = load_project_error(&project_file, "missing bracket path must fail");
+    fs::remove_dir_all(&dir).expect("temp directory must be removed");
+
+    assert!(
+        error.contains("matched no files"),
+        "expected no-match glob error, got: {error}"
     );
 }

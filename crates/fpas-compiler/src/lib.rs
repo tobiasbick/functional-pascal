@@ -31,7 +31,10 @@ pub fn compile(program: &Program) -> Result<Chunk, CompileError> {
     let (sema_errors, expr_types, method_calls, record_defaults, scalar_case_bindings) =
         fpas_sema::analyze_with_types(program);
     if !sema_errors.is_empty() {
-        return Err(sema_errors.into_iter().next().expect("non-empty"));
+        let Some(first_error) = sema_errors.into_iter().next() else {
+            unreachable!("non-empty semantic error list expected after emptiness check");
+        };
+        return Err(first_error);
     }
     let mut compiler = Compiler::new(
         expr_types,

@@ -54,12 +54,18 @@ pub(super) fn topo_sort_units(
     let mut state = HashMap::<String, VisitState>::new();
     let mut stack = Vec::<String>::new();
 
-    for unit_key in reachable {
+    for unit_key in sorted_reachable_unit_keys(reachable) {
         topo_visit(
-            unit_key, reachable, units, &mut state, &mut stack, &mut order,
+            &unit_key, reachable, units, &mut state, &mut stack, &mut order,
         )?;
     }
     Ok(order)
+}
+
+fn sorted_reachable_unit_keys(reachable: &HashSet<String>) -> Vec<String> {
+    let mut unit_keys = reachable.iter().cloned().collect::<Vec<_>>();
+    unit_keys.sort();
+    unit_keys
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -79,7 +85,12 @@ fn topo_visit(
     match state.get(key) {
         Some(VisitState::Done) => return Ok(()),
         Some(VisitState::Visiting) => {
-            let cycle_start = stack.iter().position(|item| item == key).unwrap_or(0);
+            let Some(cycle_start) = stack.iter().position(|item| item == key) else {
+                return Err(internal_link_error(
+                    key,
+                    "reporting a cyclic dependency path",
+                ));
+            };
             let cycle = stack[cycle_start..]
                 .iter()
                 .map(|unit_key| display_unit_key(unit_key))
@@ -116,4 +127,30 @@ fn topo_visit(
     state.insert(key.to_string(), VisitState::Done);
     order.push(key.to_string());
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::sorted_reachable_unit_keys;
+    use std::collections::HashSet;
+
+    #[test]
+    fn sorted_reachable_unit_keys_returns_stable_lexical_order() {
+        let reachable = HashSet::from([
+            "app.beta".to_string(),
+            "app.alpha".to_string(),
+            "app.gamma".to_string(),
+        ]);
+
+        let sorted = sorted_reachable_unit_keys(&reachable);
+
+        assert_eq!(
+            sorted,
+            vec![
+                "app.alpha".to_string(),
+                "app.beta".to_string(),
+                "app.gamma".to_string(),
+            ]
+        );
+    }
 }

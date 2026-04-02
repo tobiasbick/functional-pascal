@@ -282,15 +282,11 @@ impl ConsoleState {
     #[cfg(test)]
     pub(super) fn cell_at_packed(&self, x: u16, y: u16) -> (char, u8, u8) {
         let cell = self.cell_at(x, y);
-        (
-            cell.ch,
-            cell.fg
-                .packed_index()
-                .expect("expected packed foreground color"),
-            cell.bg
-                .packed_index()
-                .expect("expected packed background color"),
-        )
+        let fg = cell.fg.packed_index();
+        let bg = cell.bg.packed_index();
+        assert!(fg.is_some(), "expected packed foreground color");
+        assert!(bg.is_some(), "expected packed background color");
+        (cell.ch, fg.unwrap_or_default(), bg.unwrap_or_default())
     }
 
     #[cfg(test)]

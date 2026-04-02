@@ -5,4 +5,5 @@ mod errors;
 mod qualified;
 mod resolution;
 mod run;
+mod support;
 mod warnings;

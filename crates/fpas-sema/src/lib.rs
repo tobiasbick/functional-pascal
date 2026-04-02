@@ -5,6 +5,13 @@
         reason = "semantic analysis tests use expect to keep diagnostic assertions short"
     )
 )]
+#![cfg_attr(
+    test,
+    expect(
+        clippy::panic,
+        reason = "semantic analysis tests use explicit panic for structural mismatches"
+    )
+)]
 
 mod check;
 mod error;

@@ -17,7 +17,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
 
-    let loaded = load_project(&project_file).expect("project should load");
+    let loaded = load_project_ok(&project_file);
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
     assert_eq!(loaded.kind, ProjectKind::Program);
     assert!(loaded.source_files.is_empty());
@@ -40,7 +40,7 @@ include = ["units/**/*.fpas"]
     );
     write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
 
-    let error = load_project(&project_file).expect_err("include glob without matches must fail");
+    let error = load_project_error(&project_file, "include glob without matches must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
     assert!(error.contains("matched no files"));
 }
@@ -62,7 +62,7 @@ include = ["src/missing.fpas"]
     );
     write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
 
-    let error = load_project(&project_file).expect_err("missing include must fail");
+    let error = load_project_error(&project_file, "missing include must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
     assert!(error.contains("path does not exist"));
 }
@@ -84,7 +84,7 @@ include = []
     );
     write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
 
-    let error = load_project(&project_file).expect_err("empty include must fail");
+    let error = load_project_error(&project_file, "empty include must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
     assert!(
         error.contains("`sources.include` must contain at least one entry"),
@@ -109,7 +109,7 @@ include = [""]
     );
     write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
 
-    let error = load_project(&project_file).expect_err("empty entry must fail");
+    let error = load_project_error(&project_file, "empty entry must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
     assert!(
         error.contains("empty"),
@@ -139,7 +139,7 @@ include = ["src/math.fpas", "lib/*.fpas"]
     write_text(&dir.join("src/math.fpas"), "unit App.Math;");
     write_text(&dir.join("lib/helpers.fpas"), "unit App.Lib;");
 
-    let loaded = load_project(&project_file).expect("mixed includes should load");
+    let loaded = load_project_ok(&project_file);
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
     assert_eq!(loaded.source_files.len(), 2);
     assert!(loaded.warnings.is_empty());
@@ -162,7 +162,7 @@ include = ["   "]
     );
     write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
 
-    let error = load_project(&project_file).expect_err("whitespace-only entry must fail");
+    let error = load_project_error(&project_file, "whitespace-only entry must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
     assert!(
         error.contains("empty"),
@@ -188,7 +188,7 @@ include = ["src/readme.md"]
     write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
     write_text(&dir.join("src/readme.md"), "docs");
 
-    let error = load_project(&project_file).expect_err("include extension must be validated");
+    let error = load_project_error(&project_file, "include extension must be validated");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
     assert!(error.contains("`sources.include` must reference a `.fpas` file"));
 }

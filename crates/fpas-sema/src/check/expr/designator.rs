@@ -1,6 +1,6 @@
 use super::super::Checker;
-use crate::scope::canonical_symbol_name;
 use crate::scope::SymbolKind;
+use crate::scope::canonical_symbol_name;
 use crate::types::Ty;
 use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
 use fpas_parser::{Designator, DesignatorPart};

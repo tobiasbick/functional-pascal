@@ -1,6 +1,8 @@
 use super::super::super::super::diagnostics::VmError;
 use super::super::super::super::execute::StepResult;
-use super::super::super::super::{CallFrame, Worker, canonical_name, internal_error, runtime_error};
+use super::super::super::super::{
+    CallFrame, Worker, canonical_name, internal_error, runtime_error,
+};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_UNDEFINED_FUNCTION, RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_WRONG_CALL_ARITY,

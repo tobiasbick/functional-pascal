@@ -4,17 +4,7 @@ use super::*;
 fn run_cli_emits_warning_for_program_source_file_and_still_runs() {
     let cwd = create_temp_dir("run-program-source-warning");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
         "program Main;\nuses App.Util, Std.Console;\nbegin\n  WriteLn(GetValue())\nend.\n",
@@ -39,16 +29,10 @@ include = ["src/*.fpas"]
 fn run_cli_emits_warning_for_duplicate_source_file_and_still_runs() {
     let cwd = create_temp_dir("run-duplicate-source-warning");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
+    support::write_program_project_file(
         &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/util.fpas", "src/*.fpas", "src/util.fpas"]
-"#,
+        "src/main.fpas",
+        &["src/util.fpas", "src/*.fpas", "src/util.fpas"],
     );
     write_text(
         &cwd.join("src/main.fpas"),

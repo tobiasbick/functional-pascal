@@ -4,17 +4,7 @@ use super::*;
 fn run_cli_resolves_nested_project_main_entry() {
     let cwd = create_temp_dir("run-nested-project-main-entry");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "app/main.fpas"
-
-[sources]
-include = ["app/**/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "app/main.fpas", &["app/**/*.fpas"]);
     write_text(&cwd.join("app/main.fpas"), "program Main;\nbegin\nend.\n");
 
     let (exit_code, stdout_output, stderr_output) =

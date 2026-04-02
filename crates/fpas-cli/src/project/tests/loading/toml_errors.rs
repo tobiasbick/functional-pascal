@@ -6,7 +6,7 @@ fn malformed_toml_is_rejected() {
     let project_file = dir.join("app.fpasprj");
     write_text(&project_file, "this is not valid TOML {{{");
 
-    let error = load_project(&project_file).expect_err("malformed TOML must fail");
+    let error = load_project_error(&project_file, "malformed TOML must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
     assert!(
         error.contains("Invalid project file"),
@@ -25,7 +25,7 @@ include = ["src/**/*.fpas"]
 "#,
     );
 
-    let error = load_project(&project_file).expect_err("missing [project] must fail");
+    let error = load_project_error(&project_file, "missing [project] must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
     assert!(
         error.contains("Invalid project file"),
@@ -46,7 +46,7 @@ main = "src/main.fpas"
 "#,
     );
 
-    let error = load_project(&project_file).expect_err("missing [sources] must fail");
+    let error = load_project_error(&project_file, "missing [sources] must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
     assert!(
         error.contains("Missing `[sources]` section"),

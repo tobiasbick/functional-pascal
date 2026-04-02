@@ -22,7 +22,10 @@ impl Checker {
                 .lookup_original_name(name)
                 .unwrap_or(name)
                 .to_string()
-        } else if let Some(qualified) = self.short_builtin_redirect.get(&canonical_symbol_name(name)) {
+        } else if let Some(qualified) = self
+            .short_builtin_redirect
+            .get(&canonical_symbol_name(name))
+        {
             qualified.clone()
         } else {
             name.to_string()

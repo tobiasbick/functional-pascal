@@ -4,16 +4,7 @@ use super::*;
 fn run_cli_rejects_library_projects() {
     let cwd = create_temp_dir("run-library-project");
     let project_file = cwd.join("lib.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "lib"
-kind = "library"
-
-[sources]
-include = ["src/**/*.fpas"]
-"#,
-    );
+    support::write_library_project_file(&project_file, &["src/**/*.fpas"]);
     write_text(&cwd.join("src/util.fpas"), "unit Lib.Util;");
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -28,17 +19,7 @@ include = ["src/**/*.fpas"]
 fn run_cli_reports_cyclic_unit_dependencies() {
     let cwd = create_temp_dir("run-cycle");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
         "program Main;\nuses App.A;\nbegin\nend.\n",
@@ -57,17 +38,7 @@ include = ["src/*.fpas"]
 fn run_cli_reports_unknown_user_unit() {
     let cwd = create_temp_dir("run-unknown-unit");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
         "program Main;\nuses App.Missing;\nbegin\nend.\n",
@@ -84,17 +55,7 @@ include = ["src/*.fpas"]
 fn run_cli_reports_ambiguous_user_imports() {
     let cwd = create_temp_dir("run-ambiguous-import");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
         "program Main;\nuses App.Math, App.Advanced;\nbegin\n  Add(1, 2)\nend.\n",
@@ -119,17 +80,7 @@ include = ["src/*.fpas"]
 fn run_cli_reports_unit_sema_errors_with_the_unit_path() {
     let cwd = create_temp_dir("run-unit-sema-path");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
         "program Main;\nuses App.Util;\nbegin\nend.\n",
@@ -151,17 +102,7 @@ include = ["src/*.fpas"]
 fn run_cli_reports_unit_runtime_errors_with_the_unit_path() {
     let cwd = create_temp_dir("run-unit-runtime-path");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
         "program Main;\nuses App.Util;\nbegin\n  Trigger()\nend.\n",

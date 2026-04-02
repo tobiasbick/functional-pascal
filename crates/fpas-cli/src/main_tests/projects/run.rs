@@ -4,17 +4,7 @@ use super::*;
 fn run_cli_executes_program_project_main_file() {
     let cwd = create_temp_dir("run-program-project");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/**/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/**/*.fpas"]);
     write_text(&cwd.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
 
     let (exit_code, stdout_output, stderr_output) =
@@ -30,17 +20,7 @@ include = ["src/**/*.fpas"]
 fn run_cli_executes_multi_file_project_end_to_end() {
     let cwd = create_temp_dir("run-multifile-project");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
         "program Main;\nuses App.Util, Std.Console;\nbegin\n  WriteLn(Double(3))\nend.\n",
@@ -67,17 +47,7 @@ include = ["src/*.fpas"]
 fn run_cli_shares_constants_via_unit_instead_of_include() {
     let cwd = create_temp_dir("run-project-shared-unit");
     let project_file = cwd.join("app.fpasprj");
-    write_text(
-        &project_file,
-        r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/*.fpas"]
-"#,
-    );
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
         "program Main;\nuses App.Parts, Std.Console;\nbegin\n  WriteLn(Message)\nend.\n",

@@ -30,8 +30,7 @@ pub(super) fn parse_unit_files(
     let mut by_unit = HashMap::<String, UnitFile>::new();
 
     for source_path in source_files {
-        let source_id =
-            u32::try_from(source_paths.len()).expect("source path count must fit into source IDs");
+        let source_id = next_source_id(source_paths.len())?;
         source_paths.push(source_path.clone());
 
         let mut unit = match parse_compilation_unit_file(source_path)?.0 {
@@ -67,4 +66,31 @@ pub(super) fn parse_unit_files(
     }
 
     Ok(by_unit)
+}
+
+fn next_source_id(source_path_count: usize) -> Result<u32, String> {
+    u32::try_from(source_path_count).map_err(|_| {
+        format!(
+            "Too many source files in project: {source_path_count}.
+  help: Reduce the number of linked source files so source IDs fit into 32 bits."
+        )
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::next_source_id;
+
+    #[test]
+    fn next_source_id_rejects_counts_that_do_not_fit_into_u32() {
+        let result = next_source_id((u32::MAX as usize).saturating_add(1));
+
+        assert!(
+            result.is_err(),
+            "overflowing source path counts must be rejected"
+        );
+        let error = result.err().unwrap_or_default();
+
+        assert!(error.contains("Too many source files in project"));
+    }
 }

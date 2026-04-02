@@ -89,7 +89,7 @@ impl Lexer<'_> {
         while !self.at_end() {
             if pred(self.current()) {
                 digits.push(self.advance() as char);
-            } else if self.current() == b'_' && self.peek_at(1).is_some_and(|c| pred(c)) {
+            } else if self.current() == b'_' && self.peek_at(1).is_some_and(&pred) {
                 self.advance();
                 digits.push(self.advance() as char);
             } else {

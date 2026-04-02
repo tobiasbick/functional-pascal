@@ -83,7 +83,7 @@ impl Worker {
             }
             Op::Shl => {
                 self.binary_int(line, |a, b| {
-                    if b < 0 || b >= 64 {
+                    if !(0..64).contains(&b) {
                         Err(runtime_error(
                             RUNTIME_NUMERIC_DOMAIN_ERROR,
                             format!("Shift amount {b} is out of range (0..63)"),
@@ -98,7 +98,7 @@ impl Worker {
             }
             Op::Shr => {
                 self.binary_int(line, |a, b| {
-                    if b < 0 || b >= 64 {
+                    if !(0..64).contains(&b) {
                         Err(runtime_error(
                             RUNTIME_NUMERIC_DOMAIN_ERROR,
                             format!("Shift amount {b} is out of range (0..63)"),

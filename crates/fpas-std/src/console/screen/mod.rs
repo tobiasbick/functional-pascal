@@ -1,3 +1,5 @@
+use crossterm::style::Color;
+
 pub(super) const DEFAULT_SCREEN_WIDTH: u16 = 80;
 pub(super) const DEFAULT_SCREEN_HEIGHT: u16 = 25;
 pub(super) const TEXT_MODE_BW40: i64 = 0;
@@ -39,10 +41,61 @@ impl WindowRect {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct ScreenCell {
-    ch: char,
-    fg: u8,
-    bg: u8,
+pub(super) enum RenderColor {
+    Crt(u8),
+    Rgb { r: u8, g: u8, b: u8 },
+    Ansi256(u8),
+}
+
+impl RenderColor {
+    pub(super) fn to_crossterm(self) -> Color {
+        match self {
+            Self::Crt(index) => match index {
+                0 => Color::Black,
+                1 => Color::DarkBlue,
+                2 => Color::DarkGreen,
+                3 => Color::DarkCyan,
+                4 => Color::DarkRed,
+                5 => Color::DarkMagenta,
+                6 => Color::DarkYellow,
+                7 => Color::Grey,
+                8 => Color::DarkGrey,
+                9 => Color::Blue,
+                10 => Color::Green,
+                11 => Color::Cyan,
+                12 => Color::Red,
+                13 => Color::Magenta,
+                14 => Color::Yellow,
+                _ => Color::White,
+            },
+            Self::Rgb { r, g, b } => Color::Rgb { r, g, b },
+            Self::Ansi256(index) => Color::AnsiValue(index),
+        }
+    }
+
+    #[cfg(test)]
+    fn packed_index(self) -> Option<u8> {
+        match self {
+            Self::Crt(index) => Some(index),
+            Self::Rgb { .. } | Self::Ansi256(_) => None,
+        }
+    }
+
+    #[cfg(test)]
+    fn debug_label(self) -> String {
+        match self {
+            Self::Crt(index) => format!("crt:{index}"),
+            Self::Rgb { r, g, b } => format!("rgb:{r},{g},{b}"),
+            Self::Ansi256(index) => format!("ansi256:{index}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) struct ScreenCell {
+    pub(super) ch: char,
+    pub(super) fg: RenderColor,
+    pub(super) bg: RenderColor,
 }
 
 #[derive(Debug, Clone)]
@@ -54,6 +107,8 @@ pub(super) struct ConsoleState {
     pub(super) cursor_y: u16,
     pub(super) fg: u8,
     pub(super) bg: u8,
+    active_fg: RenderColor,
+    active_bg: RenderColor,
     pub(super) cursor_visible: bool,
     pub(super) cursor_big: bool,
     pub(super) last_mode: i64,
@@ -72,8 +127,8 @@ impl ConsoleState {
         let height = height.max(1);
         let blank = ScreenCell {
             ch: ' ',
-            fg: 7,
-            bg: 0,
+            fg: RenderColor::Crt(7),
+            bg: RenderColor::Crt(0),
         };
         Self {
             width,
@@ -83,6 +138,8 @@ impl ConsoleState {
             cursor_y: 1,
             fg: 7,
             bg: 0,
+            active_fg: RenderColor::Crt(7),
+            active_bg: RenderColor::Crt(0),
             cursor_visible: true,
             cursor_big: false,
             last_mode: TEXT_MODE_C80,
@@ -118,8 +175,8 @@ impl ConsoleState {
 
         let blank = ScreenCell {
             ch: ' ',
-            fg: self.fg,
-            bg: self.bg,
+            fg: self.active_fg,
+            bg: self.active_bg,
         };
         let old_width = self.width;
         let old_height = self.height;
@@ -172,8 +229,8 @@ impl ConsoleState {
     fn blank_cell(&self) -> ScreenCell {
         ScreenCell {
             ch: ' ',
-            fg: self.fg,
-            bg: self.bg,
+            fg: self.active_fg,
+            bg: self.active_bg,
         }
     }
 
@@ -190,9 +247,29 @@ impl ConsoleState {
         self.pending_wrap = false;
     }
 
-    pub(super) fn cell_at(&self, x: u16, y: u16) -> (char, u8, u8) {
-        let cell = self.cells[self.index(x, y)];
-        (cell.ch, cell.fg, cell.bg)
+    pub(super) fn cell_at(&self, x: u16, y: u16) -> ScreenCell {
+        self.cells[self.index(x, y)]
+    }
+
+    pub(super) fn use_packed_colors(&mut self) {
+        self.active_fg = RenderColor::Crt(self.fg);
+        self.active_bg = RenderColor::Crt(self.bg);
+    }
+
+    pub(super) fn set_extended_fg_rgb(&mut self, r: u8, g: u8, b: u8) {
+        self.active_fg = RenderColor::Rgb { r, g, b };
+    }
+
+    pub(super) fn set_extended_bg_rgb(&mut self, r: u8, g: u8, b: u8) {
+        self.active_bg = RenderColor::Rgb { r, g, b };
+    }
+
+    pub(super) fn set_extended_fg_ansi(&mut self, index: u8) {
+        self.active_fg = RenderColor::Ansi256(index);
+    }
+
+    pub(super) fn set_extended_bg_ansi(&mut self, index: u8) {
+        self.active_bg = RenderColor::Ansi256(index);
     }
 
     #[cfg(test)]
@@ -200,6 +277,26 @@ impl ConsoleState {
         (1..=self.width)
             .map(|x| self.cells[self.index(x, y)].ch)
             .collect()
+    }
+
+    #[cfg(test)]
+    pub(super) fn cell_at_packed(&self, x: u16, y: u16) -> (char, u8, u8) {
+        let cell = self.cell_at(x, y);
+        (
+            cell.ch,
+            cell.fg
+                .packed_index()
+                .expect("expected packed foreground color"),
+            cell.bg
+                .packed_index()
+                .expect("expected packed background color"),
+        )
+    }
+
+    #[cfg(test)]
+    pub(super) fn cell_color_labels(&self, x: u16, y: u16) -> (char, String, String) {
+        let cell = self.cell_at(x, y);
+        (cell.ch, cell.fg.debug_label(), cell.bg.debug_label())
     }
 }
 

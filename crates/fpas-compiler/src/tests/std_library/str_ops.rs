@@ -56,6 +56,47 @@ end.",
     assert!(msg.contains("delimiter") || msg.contains("empty"), "{msg}");
 }
 
+#[test]
+fn std_is_numeric_follows_pascal_number_syntax() {
+    let out = compile_and_run(
+        "\
+program T;
+begin
+  Std.Console.WriteLn(Std.Str.IsNumeric('3.0E-4'));
+  Std.Console.WriteLn(Std.Str.IsNumeric('5.'));
+  Std.Console.WriteLn(Std.Str.IsNumeric('NaN'))
+end.",
+    );
+    assert_eq!(out.lines, vec!["true", "false", "false"]);
+}
+
+#[test]
+fn std_is_numeric_accepts_trimmed_signed_underscored_numbers() {
+    let out = compile_and_run(
+        "\
+program T;
+begin
+  Std.Console.WriteLn(Std.Str.IsNumeric('  +1_024  '));
+  Std.Console.WriteLn(Std.Str.IsNumeric(' -0.25E+2 '))
+end.",
+    );
+    assert_eq!(out.lines, vec!["true", "true"]);
+}
+
+#[test]
+fn std_is_numeric_rejects_malformed_exponent_and_underscores() {
+    let out = compile_and_run(
+        "\
+program T;
+begin
+  Std.Console.WriteLn(Std.Str.IsNumeric('1.0e'));
+  Std.Console.WriteLn(Std.Str.IsNumeric('1__0'));
+  Std.Console.WriteLn(Std.Str.IsNumeric('1e3'))
+end.",
+    );
+    assert_eq!(out.lines, vec!["false", "false", "false"]);
+}
+
 // ── String index S[I] ─────────────────────────────────────────────────────────
 
 #[test]

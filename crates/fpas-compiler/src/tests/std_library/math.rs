@@ -47,3 +47,47 @@ end.",
     );
     assert!(msg.contains("Log") || msg.contains("positive"), "{msg}");
 }
+
+#[test]
+fn std_floor_rejects_non_finite_results() {
+    let msg = compile_run_err(
+        "\
+program T;
+begin
+  var N: integer := Std.Math.Floor(Std.Math.Exp(1000.0))
+end.",
+    );
+    assert!(
+        msg.contains("Floor result") || msg.contains("integer range"),
+        "{msg}"
+    );
+}
+
+#[test]
+fn std_math_negative_rounding_variants() {
+    let out = compile_and_run(
+        "\
+program T;
+begin
+  Std.Console.WriteLn(Std.Math.Floor(-3.2));
+  Std.Console.WriteLn(Std.Math.Ceil(-3.2));
+  Std.Console.WriteLn(Std.Math.Trunc(-3.7))
+end.",
+    );
+    assert_eq!(out.lines, vec!["-4", "-3", "-3"]);
+}
+
+#[test]
+fn std_trunc_rejects_negative_non_finite_results() {
+    let msg = compile_run_err(
+        "\
+program T;
+begin
+  var N: integer := Std.Math.Trunc(-Std.Math.Exp(1000.0))
+end.",
+    );
+    assert!(
+        msg.contains("Trunc result") || msg.contains("integer range"),
+        "{msg}"
+    );
+}

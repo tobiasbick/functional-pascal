@@ -10,8 +10,8 @@ mod tests {
     use fpas_diagnostics::codes::{
         INTERNAL_VM_INVARIANT_FAILURE, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
         RUNTIME_DICT_KEY_NOT_FOUND, RUNTIME_DIVISION_BY_ZERO, RUNTIME_INVALID_TASK,
-        RUNTIME_NUMERIC_DOMAIN_ERROR, RUNTIME_UNDEFINED_GLOBAL,
-        RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_WRONG_CALL_ARITY,
+        RUNTIME_NUMERIC_DOMAIN_ERROR, RUNTIME_UNDEFINED_GLOBAL, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+        RUNTIME_WRONG_CALL_ARITY,
     };
     use fpas_std::{Console, KeyInput, TextInput};
     use std::collections::HashMap;
@@ -508,7 +508,9 @@ mod tests {
             retain_result: false,
         });
 
-        worker.run().expect("shutdown should stop pool tasks cleanly");
+        worker
+            .run()
+            .expect("shutdown should stop pool tasks cleanly");
 
         let output = shared
             .console
@@ -516,7 +518,10 @@ mod tests {
             .unwrap_or_else(|e| e.into_inner())
             .output()
             .clone();
-        assert!(output.lines.is_empty(), "pool task should not emit output after shutdown");
+        assert!(
+            output.lines.is_empty(),
+            "pool task should not emit output after shutdown"
+        );
         assert!(shared.shutdown.load(Ordering::Acquire));
     }
 }

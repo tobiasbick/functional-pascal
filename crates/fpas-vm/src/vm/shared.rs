@@ -5,9 +5,9 @@
 use fpas_bytecode::{Chunk, Value};
 use fpas_std::{Console, KeyInput, TextInput};
 use std::collections::HashMap;
-use std::time::Duration;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Condvar, Mutex, RwLock};
+use std::time::Duration;
 
 pub(crate) enum TaskResultPoll {
     Pending,

@@ -10,6 +10,8 @@ use fpas_bytecode::{Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::{RUNTIME_INTRINSIC_STACK_STATE_ERROR, RUNTIME_NUMERIC_DOMAIN_ERROR};
 use rand::Rng;
 
+const INTEGER_RANGE_HINT: &str = "Use a finite value whose rounded result fits in the integer range -9223372036854775808..9223372036854775807.";
+
 pub(crate) fn run(
     intrinsic: Intrinsic,
     stack: &mut Vec<Value>,
@@ -35,15 +37,27 @@ pub(crate) fn run(
         }
         Intrinsic::MathFloor => {
             let r = pop_real(pop_value(stack, location)?, location)?;
-            stack.push(Value::Integer(r.floor() as i64));
+            stack.push(Value::Integer(checked_real_to_int(
+                r.floor(),
+                "Floor",
+                location,
+            )?));
         }
         Intrinsic::MathCeil => {
             let r = pop_real(pop_value(stack, location)?, location)?;
-            stack.push(Value::Integer(r.ceil() as i64));
+            stack.push(Value::Integer(checked_real_to_int(
+                r.ceil(),
+                "Ceil",
+                location,
+            )?));
         }
         Intrinsic::MathRound => {
             let r = pop_real(pop_value(stack, location)?, location)?;
-            stack.push(Value::Integer(r.round() as i64));
+            stack.push(Value::Integer(checked_real_to_int(
+                r.round(),
+                "Round",
+                location,
+            )?));
         }
         Intrinsic::MathSin => {
             let r = pop_real(pop_value(stack, location)?, location)?;
@@ -146,7 +160,11 @@ pub(crate) fn run(
         }
         Intrinsic::MathTrunc => {
             let r = pop_real(pop_value(stack, location)?, location)?;
-            stack.push(Value::Integer(r.trunc() as i64));
+            stack.push(Value::Integer(checked_real_to_int(
+                r.trunc(),
+                "Trunc",
+                location,
+            )?));
         }
         Intrinsic::MathFrac => {
             let r = pop_real(pop_value(stack, location)?, location)?;
@@ -193,7 +211,14 @@ pub(crate) fn run(
 
 fn abs_value(v: Value, location: SourceLocation) -> Result<Value, StdError> {
     match v {
-        Value::Integer(n) => Ok(Value::Integer(n.abs())),
+        Value::Integer(n) => n.checked_abs().map(Value::Integer).ok_or_else(|| {
+            std_runtime_error(
+                RUNTIME_NUMERIC_DOMAIN_ERROR,
+                "Abs overflow for minimum integer value",
+                "Use a wider numeric type or avoid taking Abs of -9223372036854775808.",
+                location,
+            )
+        }),
         Value::Real(x) => Ok(Value::Real(x.abs())),
         other => Err(std_runtime_error(
             RUNTIME_INTRINSIC_STACK_STATE_ERROR,
@@ -202,6 +227,23 @@ fn abs_value(v: Value, location: SourceLocation) -> Result<Value, StdError> {
             location,
         )),
     }
+}
+
+fn checked_real_to_int(
+    value: f64,
+    intrinsic_name: &str,
+    location: SourceLocation,
+) -> Result<i64, StdError> {
+    if !value.is_finite() || value < i64::MIN as f64 || value > i64::MAX as f64 {
+        return Err(std_runtime_error(
+            RUNTIME_NUMERIC_DOMAIN_ERROR,
+            format!("{intrinsic_name} result {value} is outside the integer range"),
+            INTEGER_RANGE_HINT,
+            location,
+        ));
+    }
+
+    Ok(value as i64)
 }
 
 fn minmax_value(
@@ -290,5 +332,66 @@ where
             "Pass bounds where `Lo <= Hi` to Std.Math.Clamp(X, Lo, Hi).",
             location,
         ))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::run;
+    use fpas_bytecode::{Intrinsic, SourceLocation, Value};
+
+    fn test_location() -> SourceLocation {
+        SourceLocation::new(1, 1)
+    }
+
+    #[test]
+    fn abs_reports_overflow_for_min_integer() {
+        let mut stack = vec![Value::Integer(i64::MIN)];
+
+        let error = run(Intrinsic::MathAbs, &mut stack, test_location()).unwrap_err();
+
+        assert!(error.message.contains("Abs overflow"), "{}", error.message);
+    }
+
+    #[test]
+    fn floor_rejects_non_finite_values() {
+        let mut stack = vec![Value::Real(f64::INFINITY)];
+
+        let error = run(Intrinsic::MathFloor, &mut stack, test_location()).unwrap_err();
+
+        assert!(error.message.contains("Floor result"), "{}", error.message);
+    }
+
+    #[test]
+    fn trunc_rejects_out_of_range_values() {
+        let mut stack = vec![Value::Real(1.0e300)];
+
+        let error = run(Intrinsic::MathTrunc, &mut stack, test_location()).unwrap_err();
+
+        assert!(error.message.contains("Trunc result"), "{}", error.message);
+    }
+
+    #[test]
+    fn floor_ceil_and_trunc_keep_negative_finite_semantics() {
+        let mut floor_stack = vec![Value::Real(-3.2)];
+        run(Intrinsic::MathFloor, &mut floor_stack, test_location()).unwrap();
+        assert_eq!(floor_stack, vec![Value::Integer(-4)]);
+
+        let mut ceil_stack = vec![Value::Real(-3.2)];
+        run(Intrinsic::MathCeil, &mut ceil_stack, test_location()).unwrap();
+        assert_eq!(ceil_stack, vec![Value::Integer(-3)]);
+
+        let mut trunc_stack = vec![Value::Real(-3.7)];
+        run(Intrinsic::MathTrunc, &mut trunc_stack, test_location()).unwrap();
+        assert_eq!(trunc_stack, vec![Value::Integer(-3)]);
+    }
+
+    #[test]
+    fn round_accepts_regular_finite_values() {
+        let mut stack = vec![Value::Real(2.6)];
+
+        run(Intrinsic::MathRound, &mut stack, test_location()).unwrap();
+
+        assert_eq!(stack, vec![Value::Integer(3)]);
     }
 }

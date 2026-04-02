@@ -65,7 +65,7 @@ impl Worker {
                         }
                         Ok(Value::Real(*x as f64 / *y as f64))
                     }
-                    (Value::Real(_,), Value::Real(y)) if *y == 0.0 => Err(runtime_error(
+                    (Value::Real(_), Value::Real(y)) if *y == 0.0 => Err(runtime_error(
                         RUNTIME_DIVISION_BY_ZERO,
                         "Division by zero",
                         "Check the right-hand side before using `/`.",

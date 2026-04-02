@@ -2,7 +2,7 @@ use super::Console;
 use crate::error::{StdError, std_runtime_error};
 use crossterm::QueueableCommand;
 use crossterm::cursor::{Hide, MoveTo, SetCursorStyle, Show};
-use crossterm::style::{Color, Print, ResetColor, SetBackgroundColor, SetForegroundColor};
+use crossterm::style::{Print, ResetColor, SetBackgroundColor, SetForegroundColor};
 use crossterm::terminal::{Clear, ClearType};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
@@ -35,39 +35,39 @@ impl Console {
             for y in 1..=state.height {
                 writer.queue(MoveTo(0, y - 1)).map_err(map_err)?;
                 for x in 1..=state.width {
-                    let (ch, fg, bg) = state.cell_at(x, y);
+                    let cell = state.cell_at(x, y);
                     writer
-                        .queue(SetForegroundColor(Self::map_color(fg)))
-                        .and_then(|w| w.queue(SetBackgroundColor(Self::map_color(bg))))
-                        .and_then(|w| w.queue(Print(ch)))
+                        .queue(SetForegroundColor(cell.fg.to_crossterm()))
+                        .and_then(|w| w.queue(SetBackgroundColor(cell.bg.to_crossterm())))
+                        .and_then(|w| w.queue(Print(cell.ch)))
                         .map_err(map_err)?;
                 }
             }
         } else {
             // Subsequent frames: only repaint cells that differ from the previous frame.
-            let mut last_fg: Option<u8> = None;
-            let mut last_bg: Option<u8> = None;
+            let mut last_fg = None;
+            let mut last_bg = None;
 
             for y in 1..=state.height {
                 for x in 1..=state.width {
                     if !state.cell_changed(x, y) {
                         continue;
                     }
-                    let (ch, fg, bg) = state.cell_at(x, y);
+                    let cell = state.cell_at(x, y);
                     writer.queue(MoveTo(x - 1, y - 1)).map_err(map_err)?;
-                    if last_fg != Some(fg) {
+                    if last_fg != Some(cell.fg) {
                         writer
-                            .queue(SetForegroundColor(Self::map_color(fg)))
+                            .queue(SetForegroundColor(cell.fg.to_crossterm()))
                             .map_err(map_err)?;
-                        last_fg = Some(fg);
+                        last_fg = Some(cell.fg);
                     }
-                    if last_bg != Some(bg) {
+                    if last_bg != Some(cell.bg) {
                         writer
-                            .queue(SetBackgroundColor(Self::map_color(bg)))
+                            .queue(SetBackgroundColor(cell.bg.to_crossterm()))
                             .map_err(map_err)?;
-                        last_bg = Some(bg);
+                        last_bg = Some(cell.bg);
                     }
-                    writer.queue(Print(ch)).map_err(map_err)?;
+                    writer.queue(Print(cell.ch)).map_err(map_err)?;
                 }
             }
         }
@@ -102,26 +102,5 @@ impl Console {
         // Snapshot current frame for next diff comparison.
         self.state.commit_frame();
         Ok(())
-    }
-
-    pub(super) fn map_color(index: u8) -> Color {
-        match index {
-            0 => Color::Black,
-            1 => Color::DarkBlue,
-            2 => Color::DarkGreen,
-            3 => Color::DarkCyan,
-            4 => Color::DarkRed,
-            5 => Color::DarkMagenta,
-            6 => Color::DarkYellow,
-            7 => Color::Grey,
-            8 => Color::DarkGrey,
-            9 => Color::Blue,
-            10 => Color::Green,
-            11 => Color::Cyan,
-            12 => Color::Red,
-            13 => Color::Magenta,
-            14 => Color::Yellow,
-            _ => Color::White,
-        }
     }
 }

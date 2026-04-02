@@ -80,6 +80,10 @@ impl Console {
     }
 
     pub(crate) fn test_cell(&self, x: u16, y: u16) -> (char, u8, u8) {
-        self.state.cell_at(x, y)
+        self.state.cell_at_packed(x, y)
+    }
+
+    pub(crate) fn test_cell_colors(&self, x: u16, y: u16) -> (char, String, String) {
+        self.state.cell_color_labels(x, y)
     }
 }

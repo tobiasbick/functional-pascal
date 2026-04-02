@@ -21,6 +21,7 @@ mod helpers;
 mod intrinsics;
 pub mod key_event;
 mod math;
+mod numeric_text;
 mod result_option;
 mod std_units;
 mod str;

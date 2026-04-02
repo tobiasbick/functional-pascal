@@ -8,6 +8,7 @@ use crate::error::{StdError, std_runtime_error};
 use crate::helpers::{
     pop_array, pop_char, pop_int, pop_string, pop_value, value_as_string_for_join,
 };
+use crate::numeric_text::is_pascal_numeric;
 use fpas_bytecode::{Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_FORMAT_MISMATCH, RUNTIME_INTRINSIC_STACK_STATE_ERROR, RUNTIME_NUMERIC_DOMAIN_ERROR,
@@ -118,10 +119,7 @@ pub(crate) fn run(
         }
         Intrinsic::StrIsNumeric => {
             let s = pop_string(pop_value(stack, location)?, location)?;
-            let t = s.trim();
-            stack.push(Value::Boolean(
-                t.parse::<i64>().is_ok() || t.parse::<f64>().is_ok(),
-            ));
+            stack.push(Value::Boolean(is_pascal_numeric(&s)));
         }
         Intrinsic::StrRepeat => {
             let n = pop_int(pop_value(stack, location)?, location)?;

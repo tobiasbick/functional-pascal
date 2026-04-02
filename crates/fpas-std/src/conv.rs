@@ -6,6 +6,7 @@
 
 use crate::error::{StdError, std_runtime_error};
 use crate::helpers::{pop_bool, pop_char, pop_int, pop_real, pop_string, pop_value};
+use crate::numeric_text::parse_pascal_real;
 use fpas_bytecode::{Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_CONVERSION_FAILURE;
 
@@ -37,7 +38,7 @@ pub(crate) fn run(
         }
         Intrinsic::ConvStrToReal => {
             let s = pop_string(pop_value(stack, location)?, location)?;
-            let r = s.trim().parse::<f64>().map_err(|_| {
+            let r = parse_pascal_real(&s).ok_or_else(|| {
                 std_runtime_error(
                     RUNTIME_CONVERSION_FAILURE,
                     format!("StrToReal: invalid real `{s}`"),

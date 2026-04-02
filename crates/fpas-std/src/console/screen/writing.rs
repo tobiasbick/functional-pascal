@@ -84,8 +84,8 @@ impl ConsoleState {
                 let idx = self.index(x, y);
                 self.cells[idx] = ScreenCell {
                     ch,
-                    fg: self.fg,
-                    bg: self.bg,
+                    fg: self.active_fg,
+                    bg: self.active_bg,
                 };
                 if self.cursor_x == self.window_width() {
                     self.pending_wrap = true;

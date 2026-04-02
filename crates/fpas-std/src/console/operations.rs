@@ -183,12 +183,15 @@ impl Console {
         self.render_screen(location)
     }
 
+    /// `Std.Console.TextColor(Color)` — select a packed CRT foreground color.
     pub fn text_color(&mut self, color: i64, location: SourceLocation) -> Result<(), StdError> {
         self.enable_crt_mode();
         self.state.fg = self.validate_color(color, "TextColor", location)?;
+        self.state.use_packed_colors();
         Ok(())
     }
 
+    /// `Std.Console.TextBackground(Color)` — select a packed CRT background color.
     pub fn text_background(
         &mut self,
         color: i64,
@@ -196,28 +199,35 @@ impl Console {
     ) -> Result<(), StdError> {
         self.enable_crt_mode();
         self.state.bg = self.validate_color(color, "TextBackground", location)?;
+        self.state.use_packed_colors();
         Ok(())
     }
 
+    /// `Std.Console.HighVideo()` — enable the packed bright foreground bit.
     pub fn high_video(&mut self, location: SourceLocation) -> Result<(), StdError> {
         self.sync_terminal_size();
         self.enable_crt_mode();
         self.state.fg |= 0x08;
+        self.state.use_packed_colors();
         self.render_screen(location)
     }
 
+    /// `Std.Console.LowVideo()` — disable the packed bright foreground bit.
     pub fn low_video(&mut self, location: SourceLocation) -> Result<(), StdError> {
         self.sync_terminal_size();
         self.enable_crt_mode();
         self.state.fg &= 0x07;
+        self.state.use_packed_colors();
         self.render_screen(location)
     }
 
+    /// `Std.Console.NormVideo()` — restore packed light-gray-on-black colors.
     pub fn norm_video(&mut self, location: SourceLocation) -> Result<(), StdError> {
         self.sync_terminal_size();
         self.enable_crt_mode();
         self.state.fg = 7;
         self.state.bg = 0;
+        self.state.use_packed_colors();
         self.render_screen(location)
     }
 
@@ -225,12 +235,14 @@ impl Console {
         i64::from((self.state.bg << 4) | (self.state.fg & 0x0F))
     }
 
+    /// `Std.Console.SetTextAttr(Attr)` — restore packed CRT colors from `Attr`.
     pub fn set_text_attr(&mut self, attr: i64, location: SourceLocation) -> Result<(), StdError> {
         self.sync_terminal_size();
         self.enable_crt_mode();
         let attr = self.validate_text_attr(attr, location)?;
         self.state.fg = attr & 0x0F;
         self.state.bg = (attr >> 4) & 0x0F;
+        self.state.use_packed_colors();
         self.render_screen(location)
     }
 
@@ -270,6 +282,7 @@ impl Console {
         self.render_screen(location)
     }
 
+    /// `Std.Console.TextMode(Mode)` — reset packed CRT state and clear the screen.
     pub fn text_mode(&mut self, mode: i64, location: SourceLocation) -> Result<(), StdError> {
         self.sync_terminal_size();
         self.enable_crt_mode();
@@ -279,6 +292,7 @@ impl Console {
             .set_window(WindowRect::full(self.state.width, self.state.height));
         self.state.fg = 7;
         self.state.bg = 0;
+        self.state.use_packed_colors();
         self.state.cursor_visible = true;
         self.state.cursor_big = false;
         self.state.clear_window();
@@ -390,6 +404,7 @@ impl Console {
         location: SourceLocation,
     ) -> Result<(), StdError> {
         let (r, g, b) = self.validate_rgb(r, g, b, "TextColorRGB", location)?;
+        self.state.set_extended_fg_rgb(r, g, b);
         self.run_writer_command(
             crossterm::style::SetForegroundColor(crossterm::style::Color::Rgb { r, g, b }),
             "TextColorRGB failed",
@@ -408,6 +423,7 @@ impl Console {
         location: SourceLocation,
     ) -> Result<(), StdError> {
         let (r, g, b) = self.validate_rgb(r, g, b, "TextBackgroundRGB", location)?;
+        self.state.set_extended_bg_rgb(r, g, b);
         self.run_writer_command(
             crossterm::style::SetBackgroundColor(crossterm::style::Color::Rgb { r, g, b }),
             "TextBackgroundRGB failed",
@@ -420,6 +436,7 @@ impl Console {
     /// Spec: `docs/pascal/std/console.md`.
     pub fn text_color_256(&mut self, index: i64, location: SourceLocation) -> Result<(), StdError> {
         let index = self.validate_color_256(index, "TextColor256", location)?;
+        self.state.set_extended_fg_ansi(index);
         self.run_writer_command(
             crossterm::style::SetForegroundColor(crossterm::style::Color::AnsiValue(index)),
             "TextColor256 failed",
@@ -436,6 +453,7 @@ impl Console {
         location: SourceLocation,
     ) -> Result<(), StdError> {
         let index = self.validate_color_256(index, "TextBackground256", location)?;
+        self.state.set_extended_bg_ansi(index);
         self.run_writer_command(
             crossterm::style::SetBackgroundColor(crossterm::style::Color::AnsiValue(index)),
             "TextBackground256 failed",

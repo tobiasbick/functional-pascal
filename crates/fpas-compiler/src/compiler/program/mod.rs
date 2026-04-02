@@ -8,7 +8,7 @@ use crate::error::CompileError;
 use fpas_bytecode::Op;
 use fpas_parser::{Decl, Program, RecordMethod, TypeBody};
 
-use super::Compiler;
+use super::{Compiler, canonical_name};
 
 impl Compiler {
     pub fn compile_program(&mut self, program: &Program) -> Result<(), CompileError> {
@@ -70,7 +70,7 @@ impl Compiler {
                 next_value = backing + 1;
             }
             self.enums.insert(
-                type_def.name.clone(),
+                canonical_name(&type_def.name),
                 super::EnumInfo { variants, has_data },
             );
         }

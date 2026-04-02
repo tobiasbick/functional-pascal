@@ -59,6 +59,28 @@ end.",
     );
     assert_eq!(out.lines, vec!["Hello, World!"]);
 }
+
+#[test]
+fn record_method_name_is_case_insensitive_at_runtime() {
+    let out = compile_and_run(
+        "\
+program RecMethodCase;
+type Point = record
+  X: integer;
+  Y: integer;
+  function Sum(Self: Point): integer;
+  begin
+    return Self.X + Self.Y
+  end;
+end;
+begin
+  var P: Point := record X := 3; Y := 7; end;
+  Std.Console.WriteLn(P.sum())
+end.",
+    );
+    assert_eq!(out.lines, vec!["10"]);
+}
+
 #[test]
 fn record_multiple_methods() {
     let out = compile_and_run(

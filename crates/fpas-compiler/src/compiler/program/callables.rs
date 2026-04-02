@@ -6,6 +6,7 @@ use crate::error::CompileError;
 use fpas_bytecode::Op;
 use fpas_parser::{FuncBody, FunctionDecl, ProcedureDecl, RecordMethod};
 
+use super::super::canonical_name;
 use super::Compiler;
 
 impl Compiler {
@@ -66,7 +67,7 @@ impl Compiler {
         let code_start = self.chunk.len();
         self.chunk
             .functions
-            .insert(name.to_string(), (code_start, arity));
+            .insert(canonical_name(name), (code_start, arity));
 
         self.compile_routine_body(params, body, location)?;
 

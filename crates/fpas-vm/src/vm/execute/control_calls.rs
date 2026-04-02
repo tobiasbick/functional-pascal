@@ -1,5 +1,5 @@
 use super::super::diagnostics::VmError;
-use super::super::{CallFrame, Worker, internal_error, runtime_error};
+use super::super::{CallFrame, Worker, canonical_name, internal_error, runtime_error};
 use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_UNDEFINED_FUNCTION, RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_WRONG_CALL_ARITY,
@@ -65,11 +65,13 @@ impl Worker {
         argc: u8,
         line: SourceLocation,
     ) -> Result<(), VmError> {
+        let canonical = canonical_name(name);
         let (code_start, expected_arity) = self
             .shared
             .chunk
             .functions
             .get(name)
+            .or_else(|| self.shared.chunk.functions.get(&canonical))
             .copied()
             .ok_or_else(|| {
                 runtime_error(

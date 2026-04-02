@@ -69,6 +69,30 @@ end.",
 }
 
 #[test]
+fn short_std_console_symbols_are_case_insensitive_in_mixed_case() {
+    let chunk = compile_ok(
+        "\
+program T;
+uses std.console;
+begin
+  var E: keyevent := readkeyevent();
+  writeln(E.kind = keykind.space)
+end.",
+    );
+    let mut vm = fpas_vm::Vm::new(chunk);
+    vm.push_key_event(ConsoleKeyEvent::new(
+        key_kind_index("Space"),
+        ' ',
+        false,
+        false,
+        false,
+        false,
+    ));
+    vm.run().expect("VM should not error");
+    assert_eq!(vm.output().lines, vec!["true"]);
+}
+
+#[test]
 fn short_writeln_variadic_multiple_args() {
     let out = compile_and_run(
         "\

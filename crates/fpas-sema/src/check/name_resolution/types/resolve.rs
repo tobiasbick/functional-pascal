@@ -1,4 +1,6 @@
 use super::super::Checker;
+use crate::scope::SymbolKind;
+use crate::scope::canonical_symbol_name;
 use crate::types::{FunctionTy, ParamTy, ProcedureTy, Ty};
 use fpas_diagnostics::codes::SEMA_UNKNOWN_TYPE;
 use fpas_parser::{QualifiedId, TypeExpr};
@@ -68,7 +70,7 @@ impl Checker {
 
     fn resolve_named_type(&mut self, qid: &QualifiedId) -> Ty {
         let name = qid.parts.join(".");
-        match name.as_str() {
+        match canonical_symbol_name(&name).as_str() {
             "integer" => Ty::Integer,
             "real" => Ty::Real,
             "boolean" => Ty::Boolean,
@@ -77,7 +79,17 @@ impl Checker {
             "task" => Ty::Task(Box::new(Ty::Error)),
             _ => {
                 if let Some(symbol) = self.scopes.lookup(&name) {
-                    symbol.ty.clone()
+                    if matches!(symbol.kind, SymbolKind::Type) {
+                        symbol.ty.clone()
+                    } else {
+                        self.error_with_code(
+                            SEMA_UNKNOWN_TYPE,
+                            format!("Name `{name}` is not a type"),
+                            "Use a declared type name here, not a variable, constant, or routine.",
+                            qid.span,
+                        );
+                        Ty::Error
+                    }
                 } else if self.ambiguous_hint(&name).is_some() {
                     self.report_ambiguous_type_name(&name, qid.span);
                     Ty::Error

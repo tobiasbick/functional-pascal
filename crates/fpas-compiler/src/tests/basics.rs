@@ -49,6 +49,32 @@ end.",
     assert_eq!(out.lines, vec!["42"]);
 }
 
+  #[test]
+  fn variable_lookup_is_case_insensitive_at_runtime() {
+    let out = compile_and_run(
+      "\
+  program VarCase;
+  begin
+    var X: integer := 42;
+    Std.Console.WriteLn(x)
+  end.",
+    );
+    assert_eq!(out.lines, vec!["42"]);
+  }
+
+  #[test]
+  fn short_std_alias_lookup_is_case_insensitive_in_compiler() {
+    let out = compile_and_run(
+      "\
+  program StdAliasCase;
+  uses Std.Console;
+  begin
+    writeln('ok')
+  end.",
+    );
+    assert_eq!(out.lines, vec!["ok"]);
+  }
+
 #[test]
 fn mutable_variable_assign() {
     let out = compile_and_run(

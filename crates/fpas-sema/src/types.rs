@@ -240,7 +240,7 @@ impl Ty {
             // Records: structural compatibility (ignore name)
             (Ty::Record(a), Ty::Record(b)) => Self::record_fields_compatible(&a.fields, &b.fields),
             // Enums: same name is sufficient (type-erased generics).
-            (Ty::Enum(a), Ty::Enum(b)) => a.name == b.name,
+            (Ty::Enum(a), Ty::Enum(b)) => a.name.eq_ignore_ascii_case(&b.name),
             (Ty::Unit, Ty::Unit) => true,
             // Result covariance
             (Ty::Result(ok1, err1), Ty::Result(ok2, err2)) => {
@@ -313,12 +313,12 @@ impl Ty {
         fields.iter().all(|(name, ty)| {
             other_fields
                 .iter()
-                .find(|(other_name, _)| other_name == name)
+                .find(|(other_name, _)| other_name.eq_ignore_ascii_case(name))
                 .is_some_and(|(_, other_ty)| ty.compatible_with(other_ty))
         }) && other_fields.iter().all(|(name, ty)| {
             fields
                 .iter()
-                .find(|(other_name, _)| other_name == name)
+                .find(|(other_name, _)| other_name.eq_ignore_ascii_case(name))
                 .is_some_and(|(_, other_ty)| ty.compatible_with(other_ty))
         })
     }

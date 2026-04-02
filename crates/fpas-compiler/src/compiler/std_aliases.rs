@@ -7,7 +7,7 @@ use fpas_std::{
     canonical_std_unit_from_segments, std_unit_symbols,
 };
 
-use super::Compiler;
+use super::{Compiler, canonical_name};
 
 impl Compiler {
     /// Build short-name → qualified-name aliases from the `uses` clause.
@@ -27,6 +27,8 @@ impl Compiler {
         let mut seen: HashMap<String, Vec<String>> = HashMap::new();
         for unit in &units {
             for &qname in std_unit_symbols(unit) {
+                self.short_aliases
+                    .insert(canonical_name(qname), qname.to_string());
                 let prefix = format!("{unit}.");
                 if let Some(short) = qname.strip_prefix(&prefix) {
                     seen.entry(short.to_string())
@@ -62,7 +64,8 @@ impl Compiler {
         // Only register unambiguous aliases.
         for (short, qualified) in seen {
             if let [qualified_name] = qualified.as_slice() {
-                self.short_aliases.insert(short, qualified_name.clone());
+                self.short_aliases
+                    .insert(canonical_name(&short), qualified_name.clone());
             }
         }
     }
@@ -70,7 +73,7 @@ impl Compiler {
     /// Resolve a possibly-short name to its fully-qualified equivalent.
     pub(super) fn qualify_name<'a>(&'a self, name: &'a str) -> &'a str {
         self.short_aliases
-            .get(name)
+            .get(&canonical_name(name))
             .map(|s| s.as_str())
             .unwrap_or(name)
     }

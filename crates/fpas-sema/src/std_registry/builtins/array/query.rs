@@ -76,7 +76,7 @@ pub(super) fn check_contains_or_index_of(
     let value_ty = c.check_expr(&args[1]);
     c.check_type_compat(&elem_ty, &value_ty, "compared value", span);
 
-    if name == s::STD_ARRAY_CONTAINS {
+    if name.eq_ignore_ascii_case(s::STD_ARRAY_CONTAINS) {
         Ty::Boolean
     } else {
         Ty::Integer

@@ -1,4 +1,5 @@
 use crate::check::Checker;
+use crate::scope::canonical_symbol_name;
 use crate::scope::{Symbol, SymbolKind};
 use std::collections::HashMap;
 
@@ -38,12 +39,14 @@ pub fn register_short_aliases(checker: &mut Checker) {
             if sym.kind == SymbolKind::BuiltinStd {
                 checker
                     .short_builtin_redirect
-                    .insert(short.clone(), qualified.clone());
+                    .insert(canonical_symbol_name(&short), qualified.clone());
             }
             checker.scopes.define(&short, sym.clone());
         } else {
             let qualified_names: Vec<String> = entries.into_iter().map(|(q, _)| q).collect();
-            checker.ambiguous_imports.insert(short, qualified_names);
+            checker
+                .ambiguous_imports
+                .insert(canonical_symbol_name(&short), qualified_names);
         }
     }
 }

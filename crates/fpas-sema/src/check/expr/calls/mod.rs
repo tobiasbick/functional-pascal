@@ -191,7 +191,11 @@ impl Checker {
     ) -> Ty {
         if let Ty::Enum(enum_def) = enum_ty {
             let variant_name = name.rsplit('.').next().unwrap_or(name);
-            if let Some(variant) = enum_def.variants.iter().find(|v| v.name == variant_name) {
+            if let Some(variant) = enum_def
+                .variants
+                .iter()
+                .find(|v| v.name.eq_ignore_ascii_case(variant_name))
+            {
                 if args.len() != variant.fields.len() {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,

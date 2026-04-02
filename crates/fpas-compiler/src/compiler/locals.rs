@@ -5,7 +5,7 @@ use fpas_std::{
     canonical_std_unit_from_segments, is_std_root_segment, std_symbols as s,
 };
 
-use super::{Compiler, EnumInfo, EnumVariantInfo, Local, LocalRef};
+use super::{Compiler, EnumInfo, EnumVariantInfo, Local, LocalRef, canonical_name};
 
 impl Compiler {
     pub(super) fn begin_scope(&mut self) {
@@ -27,7 +27,7 @@ impl Compiler {
     pub(super) fn add_local(&mut self, name: &str) -> u16 {
         let slot = self.next_slot;
         self.locals.push(Local {
-            name: name.to_string(),
+            name: canonical_name(name),
             depth: self.scope_depth,
             slot,
         });
@@ -36,15 +36,16 @@ impl Compiler {
     }
 
     pub(super) fn resolve_local(&self, name: &str) -> Option<LocalRef> {
+        let canonical = canonical_name(name);
         for local in self.locals.iter().rev() {
-            if local.name == name {
+            if local.name == canonical {
                 return Some(LocalRef::Local(local.slot));
             }
         }
 
         for (depth_minus_1, parent) in self.enclosing_locals.iter().rev().enumerate() {
             for local in parent.iter().rev() {
-                if local.name == name {
+                if local.name == canonical {
                     return Some(LocalRef::Enclosing((depth_minus_1 + 1) as u16, local.slot));
                 }
             }
@@ -86,7 +87,7 @@ impl Compiler {
             })
             .collect();
         self.enums.insert(
-            type_name.into(),
+            canonical_name(type_name),
             EnumInfo {
                 variants,
                 has_data: false,

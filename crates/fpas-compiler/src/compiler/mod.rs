@@ -83,6 +83,10 @@ struct LoopCtx {
     scope_depth: u32,
 }
 
+fn canonical_name(name: &str) -> String {
+    name.to_ascii_lowercase()
+}
+
 impl Compiler {
     /// Create a new compiler with the given sema results.
     pub fn new(

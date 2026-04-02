@@ -121,8 +121,10 @@ impl Checker {
         }
 
         // Check all required fields (those without a default) are provided.
-        let provided: std::collections::HashSet<String> =
-            fields.iter().map(|f| f.name.clone()).collect();
+        let provided: std::collections::HashSet<String> = fields
+            .iter()
+            .map(|f| f.name.to_ascii_lowercase())
+            .collect();
         let defaults = self
             .record_defaults
             .get(&record_ty.name)
@@ -130,12 +132,12 @@ impl Checker {
             .unwrap_or_default();
 
         for (field_name, _) in &record_ty.fields {
-            if provided.contains(field_name.as_str()) {
+            if provided.contains(&field_name.to_ascii_lowercase()) {
                 continue;
             }
             let has_default = defaults
                 .iter()
-                .find(|(n, _)| n == field_name)
+                .find(|(n, _)| n.eq_ignore_ascii_case(field_name))
                 .is_some_and(|(_, d)| d.is_some());
             if !has_default {
                 self.error_with_code(

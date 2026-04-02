@@ -1,22 +1,28 @@
 use super::Checker;
+use crate::scope::canonical_symbol_name;
 use fpas_diagnostics::codes::SEMA_AMBIGUOUS_IMPORTED_NAME;
 
 impl Checker {
     /// If `name` is an ambiguous short import, return a hint listing the candidates.
     pub(crate) fn ambiguous_hint(&self, name: &str) -> Option<String> {
-        self.ambiguous_imports.get(name).map(|candidates| {
+        self.ambiguous_imports
+            .get(&canonical_symbol_name(name))
+            .map(|candidates| {
             format!(
                 "`{name}` exists in multiple imported units: {}. Use the fully qualified name to disambiguate.",
                 candidates.join(", ")
             )
-        })
+            })
     }
 
     /// Loads a `Std.*` unit on demand when code uses a fully qualified name without `uses`.
     pub(crate) fn builtin_std_dispatch_name(&self, name: &str) -> String {
         if name.contains('.') {
-            name.to_string()
-        } else if let Some(qualified) = self.short_builtin_redirect.get(name) {
+            self.scopes
+                .lookup_original_name(name)
+                .unwrap_or(name)
+                .to_string()
+        } else if let Some(qualified) = self.short_builtin_redirect.get(&canonical_symbol_name(name)) {
             qualified.clone()
         } else {
             name.to_string()

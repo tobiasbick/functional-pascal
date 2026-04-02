@@ -1,4 +1,4 @@
-use super::super::super::Compiler;
+use super::super::super::{Compiler, canonical_name};
 use crate::error::{CompileError, compile_error};
 use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_diagnostics::codes::SEMA_ENUM_FIELD_COUNT_MISMATCH;
@@ -164,10 +164,10 @@ impl Compiler {
 
     /// Look up the field count for a variant in the given enum type.
     fn find_variant_field_count(&self, enum_name: &str, variant_name: &str) -> Option<usize> {
-        self.enums.get(enum_name).and_then(|info| {
+        self.enums.get(&canonical_name(enum_name)).and_then(|info| {
             info.variants
                 .iter()
-                .find(|v| v.name == variant_name)
+                .find(|v| v.name.eq_ignore_ascii_case(variant_name))
                 .map(|v| v.field_names.len())
         })
     }

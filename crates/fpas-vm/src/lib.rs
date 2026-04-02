@@ -181,6 +181,26 @@ mod tests {
     }
 
     #[test]
+    fn set_global_then_get_global_is_case_insensitive() {
+        let mut chunk = Chunk::new();
+        let set_name_idx = chunk
+            .add_constant(Value::Str("Answer".to_string()))
+            .expect("constant should fit in test chunk");
+        let get_name_idx = chunk
+            .add_constant(Value::Str("answer".to_string()))
+            .expect("constant should fit in test chunk");
+
+        emit_constant(&mut chunk, Value::Integer(42));
+        chunk.emit(Op::SetGlobal(set_name_idx), loc());
+        chunk.emit(Op::Pop, loc());
+        chunk.emit(Op::GetGlobal(get_name_idx), loc());
+        chunk.emit(Op::PrintLn, loc());
+        chunk.emit(Op::Halt, loc());
+
+        assert_eq!(run_ok_output(chunk), vec!["42"]);
+    }
+
+    #[test]
     fn get_global_on_missing_name_reports_runtime_error() {
         let mut chunk = Chunk::new();
         let name_idx = chunk
@@ -214,6 +234,28 @@ mod tests {
                 chunk.emit(Op::Return, loc());
             },
         );
+
+        assert_eq!(run_ok_output(chunk), vec!["9"]);
+    }
+
+    #[test]
+    fn call_value_resolves_function_name_case_insensitively() {
+        let mut chunk = Chunk::new();
+        emit_constant(
+            &mut chunk,
+            Value::Function {
+                name: "ReturnNine".to_string(),
+                captures: vec![],
+            },
+        );
+        chunk.emit(Op::CallValue(0), loc());
+        chunk.emit(Op::PrintLn, loc());
+        chunk.emit(Op::Halt, loc());
+
+        let code_start = chunk.len();
+        chunk.functions.insert("returnnine".to_string(), (code_start, 0));
+        emit_constant(&mut chunk, Value::Integer(9));
+        chunk.emit(Op::Return, loc());
 
         assert_eq!(run_ok_output(chunk), vec!["9"]);
     }

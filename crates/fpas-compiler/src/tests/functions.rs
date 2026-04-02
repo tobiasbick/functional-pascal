@@ -26,6 +26,25 @@ end.",
 }
 
 #[test]
+fn function_call_is_case_insensitive_at_runtime() {
+    let out = compile_and_run(
+        "\
+program FuncCase;
+uses Std.Console;
+
+function Double(x: integer): integer;
+begin
+  return x * 2
+end;
+
+begin
+  WriteLn(double(21))
+end.",
+    );
+    assert_eq!(out.lines, vec!["42"]);
+}
+
+#[test]
 fn function_returning_string() {
     let out = compile_and_run(
         "\

@@ -69,6 +69,17 @@ fn duplicate_variable() {
 }
 
 #[test]
+fn duplicate_variable_differs_only_by_case_rejected() {
+    let errors = check_errors("program T; var X: integer := 1; var x: integer := 2; begin end.");
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION),
+        "expected duplicate variable error, got: {errors:#?}"
+    );
+}
+
+#[test]
 fn record_type_valid() {
     check_ok("program T; type Point = record X: real; Y: real; end; begin end.");
 }
@@ -281,6 +292,18 @@ fn generic_procedure_valid() {
     );
 }
 
+#[test]
+fn generic_function_reused_type_param_requires_same_concrete_type() {
+    check_errors(
+        "program T; \
+         function PickFirst<T>(A: T; B: T): T; \
+         begin return A end; \
+         begin \
+           var X: integer := PickFirst(1, true) \
+         end.",
+    );
+}
+
 // ── Constraints (sema-level) ───────────────────────────────
 // Constraints on user-defined generic types are gone (generic type
 // definitions were removed). Constraint tests live in the generic
@@ -294,6 +317,16 @@ fn type_alias_scalar_valid() {
         "program T; \
          type UserId = integer; \
          var Id: UserId := 42; \
+         begin end.",
+    );
+}
+
+#[test]
+fn type_alias_names_are_case_insensitive() {
+    check_ok(
+        "program T; \
+         type UserId = integer; \
+         var Id: userid := 42; \
          begin end.",
     );
 }
@@ -314,6 +347,42 @@ fn type_alias_to_unknown_type() {
 }
 
 #[test]
+fn value_name_cannot_be_used_as_type() {
+    let errors = check_errors(
+        "program T; \
+         var Alias: integer := 1; \
+         var X: Alias := 2; \
+         begin end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.code == fpas_diagnostics::codes::SEMA_UNKNOWN_TYPE),
+        "expected SEMA_UNKNOWN_TYPE, got: {errors:#?}"
+    );
+}
+
+#[test]
+fn variable_names_are_case_insensitive() {
+    check_ok(
+        "program T; \
+         var X: integer := 1; \
+         var Y: integer := x; \
+         begin end.",
+    );
+}
+
+#[test]
+fn record_literal_field_names_are_case_insensitive() {
+    check_ok(
+        "program T; \
+         type Point = record X: integer; Y: integer; end; \
+         var P: Point := record x := 1; y := 2; end; \
+         begin end.",
+    );
+}
+
+#[test]
 fn record_method_valid() {
     check_ok(
         "program T; uses Std.Console; \
@@ -327,6 +396,22 @@ fn record_method_valid() {
            WriteLn(P.Sum()) \
          end.",
     );
+}
+
+#[test]
+fn record_method_names_are_case_insensitive() {
+        check_ok(
+                "program T; uses Std.Console; \
+                 type Point = record \
+                     X: integer; \
+                     function Sum(Self: Point): integer; \
+                     begin return Self.X end; \
+                 end; \
+                 begin \
+                     var P: Point := record X := 3; end; \
+                     WriteLn(P.sum()) \
+                 end.",
+        );
 }
 
 // ── Constraint-aware operators in generic function bodies ───

@@ -1,6 +1,10 @@
 use crate::types::Ty;
 use std::collections::HashMap;
 
+pub(crate) fn canonical_symbol_name(name: &str) -> String {
+    name.to_ascii_lowercase()
+}
+
 /// A symbol in the scope.
 ///
 /// **Documentation:** `docs/pascal/02-basics.md` (from the repository root).
@@ -36,7 +40,13 @@ pub enum SymbolKind {
 /// A single scope level.
 #[derive(Debug)]
 struct Scope {
-    symbols: HashMap<String, Symbol>,
+    symbols: HashMap<String, ScopedSymbol>,
+}
+
+#[derive(Debug)]
+struct ScopedSymbol {
+    original_name: String,
+    symbol: Symbol,
 }
 
 impl Scope {
@@ -85,18 +95,37 @@ impl ScopeStack {
     pub fn define(&mut self, name: &str, symbol: Symbol) -> bool {
         let scope_index = self.scopes.len() - 1;
         let scope = &mut self.scopes[scope_index];
-        if scope.symbols.contains_key(name) {
+        let canonical_name = canonical_symbol_name(name);
+        if scope.symbols.contains_key(&canonical_name) {
             return false;
         }
-        scope.symbols.insert(name.to_string(), symbol);
+        scope.symbols.insert(
+            canonical_name,
+            ScopedSymbol {
+                original_name: name.to_string(),
+                symbol,
+            },
+        );
         true
     }
 
     /// Look up a symbol by name, searching from innermost to outermost scope.
     pub fn lookup(&self, name: &str) -> Option<&Symbol> {
+        let canonical_name = canonical_symbol_name(name);
         for scope in self.scopes.iter().rev() {
-            if let Some(sym) = scope.symbols.get(name) {
-                return Some(sym);
+            if let Some(sym) = scope.symbols.get(&canonical_name) {
+                return Some(&sym.symbol);
+            }
+        }
+        None
+    }
+
+    /// Look up the original stored spelling for a symbol name.
+    pub fn lookup_original_name(&self, name: &str) -> Option<&str> {
+        let canonical_name = canonical_symbol_name(name);
+        for scope in self.scopes.iter().rev() {
+            if let Some(sym) = scope.symbols.get(&canonical_name) {
+                return Some(&sym.original_name);
             }
         }
         None
@@ -104,14 +133,19 @@ impl ScopeStack {
 
     /// Look up a symbol only in the current (innermost) scope.
     pub fn lookup_current(&self, name: &str) -> Option<&Symbol> {
-        self.scopes.last().and_then(|scope| scope.symbols.get(name))
+        let canonical_name = canonical_symbol_name(name);
+        self.scopes
+            .last()
+            .and_then(|scope| scope.symbols.get(&canonical_name))
+            .map(|entry| &entry.symbol)
     }
 
     /// Mutable lookup for updating a symbol after initial definition.
     pub fn lookup_mut(&mut self, name: &str) -> Option<&mut Symbol> {
+        let canonical_name = canonical_symbol_name(name);
         for scope in self.scopes.iter_mut().rev() {
-            if let Some(sym) = scope.symbols.get_mut(name) {
-                return Some(sym);
+            if let Some(sym) = scope.symbols.get_mut(&canonical_name) {
+                return Some(&mut sym.symbol);
             }
         }
         None
@@ -119,11 +153,12 @@ impl ScopeStack {
 
     /// Return all symbol names that start with a given prefix.
     pub fn names_with_prefix(&self, prefix: &str) -> Vec<String> {
+        let canonical_prefix = canonical_symbol_name(prefix);
         let mut names = Vec::new();
         for scope in &self.scopes {
-            for name in scope.symbols.keys() {
-                if name.starts_with(prefix) {
-                    names.push(name.clone());
+            for (canonical_name, symbol) in &scope.symbols {
+                if canonical_name.starts_with(&canonical_prefix) {
+                    names.push(symbol.original_name.clone());
                 }
             }
         }

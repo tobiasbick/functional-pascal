@@ -1,4 +1,5 @@
 use super::super::Checker;
+use crate::scope::canonical_symbol_name;
 use crate::scope::SymbolKind;
 use crate::types::Ty;
 use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
@@ -59,7 +60,10 @@ impl Checker {
                         "Check spelling or declare the variable or constant.".to_string()
                     };
 
-                    let message = if self.ambiguous_imports.contains_key(first) {
+                    let message = if self
+                        .ambiguous_imports
+                        .contains_key(&canonical_symbol_name(first))
+                    {
                         format!("Ambiguous name `{first}`")
                     } else if is_qualified_ident_chain {
                         format!("Undefined identifier `{full_name}`")
@@ -78,8 +82,10 @@ impl Checker {
                     ty = match part {
                         DesignatorPart::Ident(field, span) => match &ty {
                             Ty::Record(record_ty) => {
-                                if let Some((_, field_ty)) =
-                                    record_ty.fields.iter().find(|(name, _)| name == field)
+                                if let Some((_, field_ty)) = record_ty
+                                    .fields
+                                    .iter()
+                                    .find(|(name, _)| name.eq_ignore_ascii_case(field))
                                 {
                                     field_ty.clone()
                                 } else {

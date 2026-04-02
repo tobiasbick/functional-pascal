@@ -1,6 +1,7 @@
 use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_parser::{Designator, DesignatorPart};
 
+use super::super::canonical_name;
 use super::Compiler;
 
 impl Compiler {
@@ -31,7 +32,7 @@ impl Compiler {
             return Ok(false);
         };
         let type_name = type_segments.join(".");
-        let resolved_type = self.short_aliases.get(&type_name).cloned();
+        let resolved_type = self.short_aliases.get(&canonical_name(&type_name)).cloned();
         let type_names_to_try: Vec<&str> = {
             let mut v = vec![type_name.as_str()];
             if let Some(ref r) = resolved_type {
@@ -41,8 +42,11 @@ impl Compiler {
         };
 
         for tn in type_names_to_try {
-            if let Some(info) = self.enums.get(tn)
-                && let Some(variant) = info.variants.iter().find(|v| v.name == *member)
+            if let Some(info) = self.enums.get(&canonical_name(tn))
+                && let Some(variant) = info
+                    .variants
+                    .iter()
+                    .find(|v| v.name.eq_ignore_ascii_case(member))
             {
                 if info.has_data {
                     // Data enum: emit MakeEnum with zero fields for fieldless variants.
@@ -76,7 +80,7 @@ impl Compiler {
             let type_names_to_try = [
                 type_part.to_string(),
                 self.short_aliases
-                    .get(type_part)
+                    .get(&canonical_name(type_part))
                     .cloned()
                     .unwrap_or_default(),
             ];
@@ -84,9 +88,12 @@ impl Compiler {
                 if tn.is_empty() {
                     continue;
                 }
-                if let Some(info) = self.enums.get(tn.as_str())
+                if let Some(info) = self.enums.get(&canonical_name(tn))
                     && info.has_data
-                    && let Some(v) = info.variants.iter().find(|v| v.name == variant_part)
+                    && let Some(v) = info
+                        .variants
+                        .iter()
+                        .find(|v| v.name.eq_ignore_ascii_case(variant_part))
                 {
                     return Some((tn.clone(), v.clone()));
                 }

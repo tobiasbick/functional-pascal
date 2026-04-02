@@ -36,7 +36,7 @@ impl Checker {
         if let Some((_, method_kind)) = record_ty
             .methods
             .iter()
-            .find(|(name, _)| name == method_name)
+            .find(|(name, _)| name.eq_ignore_ascii_case(method_name))
         {
             return Some(method_kind.clone());
         }

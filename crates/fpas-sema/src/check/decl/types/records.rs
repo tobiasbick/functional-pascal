@@ -318,7 +318,7 @@ impl Checker {
     ) -> Ty {
         let resolved = self.resolve_type_expr(type_expr);
         if let Ty::Named(name) = &resolved
-            && name == type_name
+            && name.eq_ignore_ascii_case(type_name)
         {
             return record_ty.clone();
         }

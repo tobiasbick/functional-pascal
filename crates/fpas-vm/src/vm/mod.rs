@@ -26,6 +26,10 @@ pub(crate) use worker::Worker;
 const STACK_MAX: usize = 4096;
 const TIMESLICE: u32 = 256;
 
+pub(crate) fn canonical_name(name: &str) -> String {
+    name.to_ascii_lowercase()
+}
+
 /// Re-export captured output type from fpas-std.
 pub type VmOutput = fpas_std::CapturedOutput;
 

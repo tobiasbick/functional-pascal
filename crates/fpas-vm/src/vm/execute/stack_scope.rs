@@ -1,5 +1,5 @@
 use super::super::diagnostics::VmError;
-use super::super::{Worker, internal_error, runtime_error};
+use super::super::{Worker, canonical_name, internal_error, runtime_error};
 use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_UNDEFINED_GLOBAL;
 
@@ -42,12 +42,13 @@ impl Worker {
             }
             Op::GetGlobal(idx) => {
                 let name = self.const_str(idx, line)?;
+                let canonical = canonical_name(&name);
                 let val = self
                     .shared
                     .globals
                     .read()
                     .unwrap_or_else(|e| e.into_inner())
-                    .get(&name)
+                    .get(&canonical)
                     .cloned()
                     .ok_or_else(|| {
                         runtime_error(
@@ -67,7 +68,7 @@ impl Worker {
                     .globals
                     .write()
                     .unwrap_or_else(|e| e.into_inner())
-                    .insert(name, val);
+                    .insert(canonical_name(&name), val);
                 Ok(true)
             }
             Op::GetEnclosing(depth, slot) => {

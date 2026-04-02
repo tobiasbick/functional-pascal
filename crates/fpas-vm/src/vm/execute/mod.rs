@@ -23,6 +23,23 @@ pub(super) enum StepResult {
 }
 
 impl Worker {
+    fn check_shutdown(&self) -> Result<(), VmError> {
+        if !self.shared.is_shutdown() {
+            return Ok(());
+        }
+
+        if self.current_task_id == 0 {
+            return Err(runtime_error(
+                RUNTIME_VM_SHUTDOWN,
+                "Execution aborted: a concurrent task failed",
+                "A task spawned with `go` raised a runtime error. Fix the error in the spawned task.",
+                self.current_location,
+            ));
+        }
+
+        Ok(())
+    }
+
     /// Fetch, decode and execute the next instruction.
     ///
     /// All opcodes **except** `Return`, `Halt`, and `Panic` are fully handled
@@ -77,13 +94,12 @@ impl Worker {
 
     pub fn run(&mut self) -> Result<(), VmError> {
         loop {
-            if self.shared.is_shutdown() && self.current_task_id == 0 {
-                return Err(runtime_error(
-                    RUNTIME_VM_SHUTDOWN,
-                    "Execution aborted: a concurrent task failed",
-                    "A task spawned with `go` raised a runtime error. Fix the error in the spawned task.",
-                    self.current_location,
-                ));
+            if self.shared.is_shutdown() {
+                if self.current_task_id == 0 {
+                    self.check_shutdown()?;
+                } else if self.current_task_id != u64::MAX {
+                    return Ok(());
+                }
             }
 
             let code_len = self.shared.chunk.code.len();

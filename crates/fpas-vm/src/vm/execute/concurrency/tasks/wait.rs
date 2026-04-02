@@ -4,6 +4,9 @@ use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_INVALID_TASK, RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_VM_SHUTDOWN,
 };
+use std::time::Duration;
+
+const WAIT_POLL_INTERVAL: Duration = Duration::from_millis(1);
 
 impl Worker {
     pub(in super::super) fn exec_task_wait(&mut self, line: SourceLocation) -> Result<(), VmError> {
@@ -32,7 +35,9 @@ impl Worker {
             TaskResultPoll::Pending => {
                 self.push(Value::Task(task_id))?;
                 self.ip -= 1;
-                self.exec_yield();
+                if !self.exec_yield() {
+                    self.shared.wait_for_task_progress(WAIT_POLL_INTERVAL);
+                }
             }
         }
         Ok(())
@@ -84,7 +89,9 @@ impl Worker {
         } else {
             self.push(Value::Array(tasks))?;
             self.ip -= 1;
-            self.exec_yield();
+            if !self.exec_yield() {
+                self.shared.wait_for_task_progress(WAIT_POLL_INTERVAL);
+            }
         }
         Ok(())
     }

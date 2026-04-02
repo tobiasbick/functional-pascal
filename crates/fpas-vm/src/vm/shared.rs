@@ -5,6 +5,7 @@
 use fpas_bytecode::{Chunk, Value};
 use fpas_std::{Console, KeyInput, TextInput};
 use std::collections::HashMap;
+use std::time::Duration;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Condvar, Mutex, RwLock};
 
@@ -120,6 +121,15 @@ impl SharedState {
     pub(crate) fn request_shutdown(&self) {
         self.shutdown.store(true, Ordering::Release);
         self.task_available.notify_all();
+    }
+
+    /// Wait briefly for new task activity, task completion, or shutdown.
+    pub(crate) fn wait_for_task_progress(&self, timeout: Duration) {
+        let queue = self.task_queue.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = self
+            .task_available
+            .wait_timeout(queue, timeout)
+            .unwrap_or_else(|e| e.into_inner());
     }
 
     /// Check whether shutdown has been requested.

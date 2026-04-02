@@ -19,11 +19,7 @@ impl Worker {
                 return;
             }
             // Try to pick up another task; if none, continue current.
-            if let Some(next) = self.shared.try_dequeue_task() {
-                let saved = self.save_task();
-                self.shared.enqueue_task(saved);
-                self.load_task(next);
-            }
+            self.switch_to_next_ready_task();
         }
     }
 }

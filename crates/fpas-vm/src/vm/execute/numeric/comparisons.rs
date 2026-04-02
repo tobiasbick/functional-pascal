@@ -65,27 +65,27 @@ impl Worker {
                 Ok(true)
             }
             Op::EqReal => {
-                self.binary_real(line, |a, b| Value::Boolean(a == b))?;
+                self.binary_real(line, |a, b| Ok(Value::Boolean(a == b)))?;
                 Ok(true)
             }
             Op::NeqReal => {
-                self.binary_real(line, |a, b| Value::Boolean(a != b))?;
+                self.binary_real(line, |a, b| Ok(Value::Boolean(a != b)))?;
                 Ok(true)
             }
             Op::LtReal => {
-                self.binary_real(line, |a, b| Value::Boolean(a < b))?;
+                self.binary_real(line, |a, b| Ok(Value::Boolean(a < b)))?;
                 Ok(true)
             }
             Op::GtReal => {
-                self.binary_real(line, |a, b| Value::Boolean(a > b))?;
+                self.binary_real(line, |a, b| Ok(Value::Boolean(a > b)))?;
                 Ok(true)
             }
             Op::LeReal => {
-                self.binary_real(line, |a, b| Value::Boolean(a <= b))?;
+                self.binary_real(line, |a, b| Ok(Value::Boolean(a <= b)))?;
                 Ok(true)
             }
             Op::GeReal => {
-                self.binary_real(line, |a, b| Value::Boolean(a >= b))?;
+                self.binary_real(line, |a, b| Ok(Value::Boolean(a >= b)))?;
                 Ok(true)
             }
             Op::EqStr => {

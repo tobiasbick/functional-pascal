@@ -5,10 +5,18 @@ pub use vm::{Vm, VmError, VmOutput};
 #[cfg(test)]
 mod tests {
     use super::Vm;
+    use crate::vm::{CallFrame, SharedState, Worker};
     use fpas_bytecode::{Chunk, Intrinsic, Op, SourceLocation, Value};
     use fpas_diagnostics::codes::{
-        INTERNAL_VM_INVARIANT_FAILURE, RUNTIME_INVALID_TASK, RUNTIME_NUMERIC_DOMAIN_ERROR,
+        INTERNAL_VM_INVARIANT_FAILURE, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
+        RUNTIME_DICT_KEY_NOT_FOUND, RUNTIME_DIVISION_BY_ZERO, RUNTIME_INVALID_TASK,
+        RUNTIME_NUMERIC_DOMAIN_ERROR, RUNTIME_UNDEFINED_GLOBAL,
+        RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_WRONG_CALL_ARITY,
     };
+    use fpas_std::{Console, KeyInput, TextInput};
+    use std::collections::HashMap;
+    use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+    use std::sync::{Arc, Condvar, Mutex, RwLock};
 
     fn loc() -> SourceLocation {
         SourceLocation::new(1, 1)
@@ -21,8 +29,9 @@ mod tests {
         chunk.emit(Op::Constant(idx), loc());
     }
 
-    fn build_zero_arg_function_chunk(
+    fn build_function_chunk(
         function_name: &str,
+        arity: u8,
         main: impl FnOnce(&mut Chunk),
         body: impl FnOnce(&mut Chunk),
     ) -> Chunk {
@@ -33,14 +42,28 @@ mod tests {
         let code_start = chunk.len();
         chunk
             .functions
-            .insert(function_name.to_string(), (code_start, 0));
+            .insert(function_name.to_string(), (code_start, arity));
         body(&mut chunk);
         chunk
+    }
+
+    fn build_zero_arg_function_chunk(
+        function_name: &str,
+        main: impl FnOnce(&mut Chunk),
+        body: impl FnOnce(&mut Chunk),
+    ) -> Chunk {
+        build_function_chunk(function_name, 0, main, body)
     }
 
     fn run_err(chunk: Chunk) -> fpas_diagnostics::Diagnostic {
         let mut vm = Vm::new(chunk);
         vm.run().expect_err("VM should return an error")
+    }
+
+    fn run_ok_output(chunk: Chunk) -> Vec<String> {
+        let mut vm = Vm::new(chunk);
+        vm.run().expect("VM should succeed");
+        vm.output().lines
     }
 
     #[test]
@@ -114,6 +137,238 @@ mod tests {
 
         let err = run_err(chunk);
         assert_eq!(err.code, RUNTIME_NUMERIC_DOMAIN_ERROR);
+    }
+
+    #[test]
+    fn real_division_by_zero_reports_error_instead_of_returning_infinity() {
+        let mut chunk = Chunk::new();
+        emit_constant(&mut chunk, Value::Real(1.0));
+        emit_constant(&mut chunk, Value::Real(0.0));
+        chunk.emit(Op::DivReal, loc());
+        chunk.emit(Op::Halt, loc());
+
+        let err = run_err(chunk);
+        assert_eq!(err.code, RUNTIME_DIVISION_BY_ZERO);
+    }
+
+    #[test]
+    fn dynamic_real_division_by_zero_reports_error() {
+        let mut chunk = Chunk::new();
+        emit_constant(&mut chunk, Value::Real(1.0));
+        emit_constant(&mut chunk, Value::Real(0.0));
+        chunk.emit(Op::DivDyn, loc());
+        chunk.emit(Op::Halt, loc());
+
+        let err = run_err(chunk);
+        assert_eq!(err.code, RUNTIME_DIVISION_BY_ZERO);
+    }
+
+    #[test]
+    fn set_global_then_get_global_round_trips_value() {
+        let mut chunk = Chunk::new();
+        let name_idx = chunk
+            .add_constant(Value::Str("Answer".to_string()))
+            .expect("constant should fit in test chunk");
+
+        emit_constant(&mut chunk, Value::Integer(42));
+        chunk.emit(Op::SetGlobal(name_idx), loc());
+        chunk.emit(Op::Pop, loc());
+        chunk.emit(Op::GetGlobal(name_idx), loc());
+        chunk.emit(Op::PrintLn, loc());
+        chunk.emit(Op::Halt, loc());
+
+        assert_eq!(run_ok_output(chunk), vec!["42"]);
+    }
+
+    #[test]
+    fn get_global_on_missing_name_reports_runtime_error() {
+        let mut chunk = Chunk::new();
+        let name_idx = chunk
+            .add_constant(Value::Str("Missing".to_string()))
+            .expect("constant should fit in test chunk");
+        chunk.emit(Op::GetGlobal(name_idx), loc());
+        chunk.emit(Op::Halt, loc());
+
+        let err = run_err(chunk);
+        assert_eq!(err.code, RUNTIME_UNDEFINED_GLOBAL);
+    }
+
+    #[test]
+    fn call_value_executes_function_value_and_returns_result() {
+        let function_name = "ReturnNine";
+        let chunk = build_zero_arg_function_chunk(
+            function_name,
+            |chunk| {
+                emit_constant(
+                    chunk,
+                    Value::Function {
+                        name: function_name.to_string(),
+                        captures: vec![],
+                    },
+                );
+                chunk.emit(Op::CallValue(0), loc());
+                chunk.emit(Op::PrintLn, loc());
+            },
+            |chunk| {
+                emit_constant(chunk, Value::Integer(9));
+                chunk.emit(Op::Return, loc());
+            },
+        );
+
+        assert_eq!(run_ok_output(chunk), vec!["9"]);
+    }
+
+    #[test]
+    fn call_value_with_non_function_reports_operand_type_mismatch() {
+        let mut chunk = Chunk::new();
+        emit_constant(&mut chunk, Value::Integer(1));
+        chunk.emit(Op::CallValue(0), loc());
+        chunk.emit(Op::Halt, loc());
+
+        let err = run_err(chunk);
+        assert_eq!(err.code, RUNTIME_VM_OPERAND_TYPE_MISMATCH);
+    }
+
+    #[test]
+    fn string_index_get_returns_character_value() {
+        let mut chunk = Chunk::new();
+        emit_constant(&mut chunk, Value::Str("pascal".to_string()));
+        emit_constant(&mut chunk, Value::Integer(2));
+        chunk.emit(Op::IndexGet, loc());
+        chunk.emit(Op::PrintLn, loc());
+        chunk.emit(Op::Halt, loc());
+
+        assert_eq!(run_ok_output(chunk), vec!["s"]);
+    }
+
+    #[test]
+    fn array_index_get_with_negative_index_reports_bounds_error() {
+        let mut chunk = Chunk::new();
+        emit_constant(&mut chunk, Value::Integer(7));
+        chunk.emit(Op::MakeArray(1), loc());
+        emit_constant(&mut chunk, Value::Integer(-1));
+        chunk.emit(Op::IndexGet, loc());
+        chunk.emit(Op::Halt, loc());
+
+        let err = run_err(chunk);
+        assert_eq!(err.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
+    }
+
+    #[test]
+    fn dict_index_set_adds_new_key_and_makes_it_readable() {
+        let mut chunk = Chunk::new();
+        chunk.emit(Op::MakeDict(0), loc());
+        emit_constant(&mut chunk, Value::Str("language".to_string()));
+        emit_constant(&mut chunk, Value::Integer(2024));
+        chunk.emit(Op::IndexSet, loc());
+        emit_constant(&mut chunk, Value::Str("language".to_string()));
+        chunk.emit(Op::IndexGet, loc());
+        chunk.emit(Op::PrintLn, loc());
+        chunk.emit(Op::Halt, loc());
+
+        assert_eq!(run_ok_output(chunk), vec!["2024"]);
+    }
+
+    #[test]
+    fn dict_index_get_missing_key_reports_runtime_error() {
+        let mut chunk = Chunk::new();
+        emit_constant(&mut chunk, Value::Str("key".to_string()));
+        emit_constant(&mut chunk, Value::Integer(1));
+        chunk.emit(Op::MakeDict(1), loc());
+        emit_constant(&mut chunk, Value::Str("other".to_string()));
+        chunk.emit(Op::IndexGet, loc());
+        chunk.emit(Op::Halt, loc());
+
+        let err = run_err(chunk);
+        assert_eq!(err.code, RUNTIME_DICT_KEY_NOT_FOUND);
+    }
+
+    #[test]
+    fn update_record_overrides_selected_field_and_keeps_others() {
+        let mut chunk = Chunk::new();
+        let type_idx = chunk
+            .add_constant(Value::Str("Point".to_string()))
+            .expect("constant should fit in test chunk");
+        let x_idx = chunk
+            .add_constant(Value::Str("x".to_string()))
+            .expect("constant should fit in test chunk");
+        let y_idx = chunk
+            .add_constant(Value::Str("y".to_string()))
+            .expect("constant should fit in test chunk");
+
+        emit_constant(&mut chunk, Value::Str("x".to_string()));
+        emit_constant(&mut chunk, Value::Integer(1));
+        emit_constant(&mut chunk, Value::Str("y".to_string()));
+        emit_constant(&mut chunk, Value::Integer(2));
+        chunk.emit(Op::MakeRecord(type_idx, 2), loc());
+        emit_constant(&mut chunk, Value::Str("x".to_string()));
+        emit_constant(&mut chunk, Value::Integer(9));
+        chunk.emit(Op::UpdateRecord(1), loc());
+        chunk.emit(Op::Dup, loc());
+        chunk.emit(Op::FieldGet(x_idx), loc());
+        chunk.emit(Op::PrintLn, loc());
+        chunk.emit(Op::FieldGet(y_idx), loc());
+        chunk.emit(Op::PrintLn, loc());
+        chunk.emit(Op::Halt, loc());
+
+        assert_eq!(run_ok_output(chunk), vec!["9", "2"]);
+    }
+
+    #[test]
+    fn update_record_with_unknown_field_reports_runtime_error() {
+        let mut chunk = Chunk::new();
+        let type_idx = chunk
+            .add_constant(Value::Str("Point".to_string()))
+            .expect("constant should fit in test chunk");
+
+        emit_constant(&mut chunk, Value::Str("x".to_string()));
+        emit_constant(&mut chunk, Value::Integer(1));
+        chunk.emit(Op::MakeRecord(type_idx, 1), loc());
+        emit_constant(&mut chunk, Value::Str("y".to_string()));
+        emit_constant(&mut chunk, Value::Integer(2));
+        chunk.emit(Op::UpdateRecord(1), loc());
+        chunk.emit(Op::Halt, loc());
+
+        let err = run_err(chunk);
+        assert_eq!(err.code, RUNTIME_VM_OPERAND_TYPE_MISMATCH);
+    }
+
+    #[test]
+    fn wait_all_with_non_task_value_reports_operand_type_mismatch() {
+        let mut chunk = Chunk::new();
+        emit_constant(&mut chunk, Value::Integer(1));
+        chunk.emit(Op::MakeArray(1), loc());
+        chunk.emit(Op::Intrinsic(Intrinsic::TaskWaitAll as u16), loc());
+        chunk.emit(Op::Halt, loc());
+
+        let err = run_err(chunk);
+        assert_eq!(err.code, RUNTIME_VM_OPERAND_TYPE_MISMATCH);
+    }
+
+    #[test]
+    fn spawn_task_with_wrong_arity_reports_runtime_error() {
+        let function_name = "NeedOneArg";
+        let chunk = build_function_chunk(
+            function_name,
+            1,
+            |chunk| {
+                emit_constant(
+                    chunk,
+                    Value::Function {
+                        name: function_name.to_string(),
+                        captures: vec![],
+                    },
+                );
+                chunk.emit(Op::SpawnTask(0), loc());
+            },
+            |chunk| {
+                emit_constant(chunk, Value::Integer(0));
+                chunk.emit(Op::Return, loc());
+            },
+        );
+
+        let err = run_err(chunk);
+        assert_eq!(err.code, RUNTIME_WRONG_CALL_ARITY);
     }
 
     #[test]
@@ -222,5 +477,46 @@ mod tests {
 
         let err = run_err(chunk);
         assert_eq!(err.code, INTERNAL_VM_INVARIANT_FAILURE);
+    }
+
+    #[test]
+    fn pool_tasks_stop_without_side_effects_after_shutdown() {
+        let mut chunk = Chunk::new();
+        emit_constant(&mut chunk, Value::Str("late".to_string()));
+        chunk.emit(Op::PrintLn, loc());
+        chunk.emit(Op::Halt, loc());
+
+        let shared = Arc::new(SharedState {
+            chunk,
+            globals: RwLock::new(HashMap::new()),
+            task_queue: Mutex::new(Vec::new()),
+            task_available: Condvar::new(),
+            task_results: Mutex::new(HashMap::new()),
+            next_task_id: AtomicU64::new(1),
+            console: Mutex::new(Console::new()),
+            text_input: Mutex::new(TextInput::new()),
+            key_input: Mutex::new(KeyInput::new()),
+            shutdown: AtomicBool::new(true),
+        });
+
+        let mut worker = Worker::new_pool(Arc::clone(&shared));
+        worker.load_task(crate::vm::TaskState {
+            id: 1,
+            ip: 0,
+            stack: Vec::new(),
+            call_stack: Vec::<CallFrame>::new(),
+            retain_result: false,
+        });
+
+        worker.run().expect("shutdown should stop pool tasks cleanly");
+
+        let output = shared
+            .console
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .output()
+            .clone();
+        assert!(output.lines.is_empty(), "pool task should not emit output after shutdown");
+        assert!(shared.shutdown.load(Ordering::Acquire));
     }
 }

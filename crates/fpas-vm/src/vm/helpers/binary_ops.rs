@@ -37,12 +37,15 @@ impl Worker {
     pub(in super::super) fn binary_real(
         &mut self,
         location: SourceLocation,
-        f: impl FnOnce(f64, f64) -> Value,
+        f: impl FnOnce(f64, f64) -> Result<Value, VmError>,
     ) -> Result<(), VmError> {
         let right = self.pop(location)?;
         let left = self.pop(location)?;
         match (left, right) {
-            (Value::Real(left), Value::Real(right)) => self.push(f(left, right)),
+            (Value::Real(left), Value::Real(right)) => {
+                let result = f(left, right)?;
+                self.push(result)
+            }
             _ => Err(runtime_error(
                 TYPE_MISMATCH_CODE,
                 "Real operation requires real operands",

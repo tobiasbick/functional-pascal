@@ -65,6 +65,24 @@ impl Worker {
                         }
                         Ok(Value::Real(*x as f64 / *y as f64))
                     }
+                    (Value::Real(_,), Value::Real(y)) if *y == 0.0 => Err(runtime_error(
+                        RUNTIME_DIVISION_BY_ZERO,
+                        "Division by zero",
+                        "Check the right-hand side before using `/`.",
+                        line,
+                    )),
+                    (Value::Integer(_), Value::Real(y)) if *y == 0.0 => Err(runtime_error(
+                        RUNTIME_DIVISION_BY_ZERO,
+                        "Division by zero",
+                        "Check the right-hand side before using `/`.",
+                        line,
+                    )),
+                    (Value::Real(_), Value::Integer(y)) if *y == 0 => Err(runtime_error(
+                        RUNTIME_DIVISION_BY_ZERO,
+                        "Division by zero",
+                        "Check the right-hand side before using `/`.",
+                        line,
+                    )),
                     (Value::Real(x), Value::Real(y)) => Ok(Value::Real(*x / *y)),
                     (Value::Integer(x), Value::Real(y)) => Ok(Value::Real(*x as f64 / *y)),
                     (Value::Real(x), Value::Integer(y)) => Ok(Value::Real(*x / *y as f64)),

@@ -76,7 +76,15 @@ impl Parser {
 
     fn parse_field_def(&mut self) -> FieldDef {
         let start = self.current_span();
-        let (name, _) = self.expect_ident().unwrap_or(("_error_".into(), start));
+        let (name, _) = match self.expect_ident() {
+            Some(ident) => ident,
+            None => {
+                if !self.at_end() && !self.check(&Token::Semicolon) && !self.check(&Token::End) {
+                    self.advance();
+                }
+                ("_error_".into(), start)
+            }
+        };
         self.expect(&Token::Colon);
         let type_expr = self.parse_type_expr();
         let default_value = if self.eat(&Token::ColonAssign) {

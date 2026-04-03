@@ -118,12 +118,34 @@ impl Parser {
     pub(crate) fn parse_qualified_id(&mut self) -> QualifiedId {
         let start = self.current_span();
         let mut parts = Vec::new();
-        if let Some((name, _)) = self.expect_ident() {
-            parts.push(name);
+        match self.expect_ident() {
+            Some((name, _)) => parts.push(name),
+            None => {
+                if !self.at_end()
+                    && !matches!(
+                        self.current_token(),
+                        Token::Dot | Token::Comma | Token::Semicolon
+                    )
+                {
+                    self.advance();
+                }
+                parts.push("_error_".to_string());
+            }
         }
         while self.eat(&Token::Dot) {
             if let Some((name, _)) = self.expect_ident_after_dot() {
                 parts.push(name);
+            } else {
+                if !self.at_end()
+                    && !matches!(
+                        self.current_token(),
+                        Token::Dot | Token::Comma | Token::Semicolon
+                    )
+                {
+                    self.advance();
+                }
+                parts.push("_error_".to_string());
+                break;
             }
         }
         QualifiedId {

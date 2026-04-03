@@ -77,7 +77,7 @@ impl Parser {
             Token::Go => {
                 let start = self.current_span();
                 self.advance();
-                let inner = self.parse_primary();
+                let inner = self.parse_go_call_expression(start);
                 Expr::Go(Box::new(inner), self.span_from(start))
             }
             _ => {

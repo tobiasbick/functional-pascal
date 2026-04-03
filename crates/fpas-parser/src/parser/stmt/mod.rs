@@ -41,7 +41,7 @@ impl Parser {
                 if self.peek_token() == &Token::Var {
                     self.parse_var_stmt(true)
                 } else {
-                    self.parse_call_or_assign()
+                    self.parse_invalid_statement_start()
                 }
             }
             Token::Return => self.parse_return_stmt(),
@@ -63,20 +63,42 @@ impl Parser {
             }
             Token::Go => self.parse_go_stmt(),
             Token::Ident(_) => self.parse_call_or_assign(),
-            _ => {
-                let span = self.current_span();
-                self.error_with_code(
-                    PARSE_INVALID_STATEMENT_START,
-                    &format!(
-                        "Unexpected token `{}` at start of statement",
-                        super::token_display(self.current_token())
-                    ),
-                    "Expected a statement: var, if, while, for, begin, return, etc.",
-                    span,
-                );
-                self.advance();
-                Stmt::Block(Vec::new(), span)
-            }
+            _ => self.parse_invalid_statement_start(),
+        }
+    }
+
+    fn parse_invalid_statement_start(&mut self) -> Stmt {
+        let span = self.current_span();
+        self.error_with_code(
+            PARSE_INVALID_STATEMENT_START,
+            &format!(
+                "Unexpected token `{}` at start of statement",
+                super::token_display(self.current_token())
+            ),
+            "Expected a statement: var, if, while, for, begin, return, etc.",
+            span,
+        );
+        while !self.at_end() && !self.check(&Token::Semicolon) && !self.is_stmt_list_end() {
+            self.advance();
+        }
+        Stmt::Block(Vec::new(), span)
+    }
+
+    pub(in crate::parser) fn parse_go_call_expression(
+        &mut self,
+        go_span: fpas_lexer::Span,
+    ) -> Expr {
+        let expr = self.parse_expression();
+        if matches!(expr, Expr::Call { .. }) {
+            expr
+        } else {
+            self.error_with_code(
+                fpas_diagnostics::codes::PARSE_EXPECTED_EXPRESSION,
+                "`go` requires a function or procedure call expression",
+                "Use `go FunctionName(args)` or `go SomeCallable(args)`.",
+                go_span,
+            );
+            Expr::Error(expr.span())
         }
     }
 

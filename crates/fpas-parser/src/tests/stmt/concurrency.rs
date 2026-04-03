@@ -1,12 +1,26 @@
-use super::super::parse_ok;
+use super::super::{parse_ok, parse_with_errors};
 use super::body_stmts;
-use crate::ast::*;
+use crate::{ParseDiagnostic, ast::*};
 
 #[test]
 fn go_statement_parses_call_expression() {
     let stmts = body_stmts("program T; begin go Worker() end.");
     match &stmts[0] {
         Stmt::Go { expr, .. } => assert!(matches!(expr, Expr::Call { .. })),
+        _ => panic!("expected Go statement"),
+    }
+}
+
+#[test]
+fn go_statement_parses_qualified_call_expression() {
+    let stmts = body_stmts("program T; begin go Std.Console.WriteLn('hi') end.");
+    match &stmts[0] {
+        Stmt::Go { expr, .. } => match expr {
+            Expr::Call { designator, .. } => {
+                assert_eq!(designator.parts.len(), 3);
+            }
+            _ => panic!("expected call expression"),
+        },
         _ => panic!("expected Go statement"),
     }
 }
@@ -55,4 +69,49 @@ fn go_as_expression_in_var_decl() {
         }
         _ => panic!("expected var with go expression, got {:?}", stmts[0]),
     }
+}
+
+#[test]
+fn go_statement_rejects_non_call_expression() {
+    use fpas_diagnostics::codes::PARSE_EXPECTED_EXPRESSION;
+
+    let (_, errs) = parse_with_errors("program T; begin go 1 end.");
+    let parse_err = errs.iter().find_map(|err| match err {
+        ParseDiagnostic::Parser(diagnostic) if diagnostic.code == PARSE_EXPECTED_EXPRESSION => {
+            Some(diagnostic)
+        }
+        _ => None,
+    });
+
+    assert!(parse_err.is_some(), "expected parser error, got: {errs:#?}");
+}
+
+#[test]
+fn go_statement_rejects_bare_designator() {
+    use fpas_diagnostics::codes::PARSE_EXPECTED_EXPRESSION;
+
+    let (_, errs) = parse_with_errors("program T; begin go Worker end.");
+    let parse_err = errs.iter().find_map(|err| match err {
+        ParseDiagnostic::Parser(diagnostic) if diagnostic.code == PARSE_EXPECTED_EXPRESSION => {
+            Some(diagnostic)
+        }
+        _ => None,
+    });
+
+    assert!(parse_err.is_some(), "expected parser error, got: {errs:#?}");
+}
+
+#[test]
+fn go_expression_rejects_non_call_expression() {
+    use fpas_diagnostics::codes::PARSE_EXPECTED_EXPRESSION;
+
+    let (_, errs) = parse_with_errors("program T; begin var T: task := go 1 end.");
+    let parse_err = errs.iter().find_map(|err| match err {
+        ParseDiagnostic::Parser(diagnostic) if diagnostic.code == PARSE_EXPECTED_EXPRESSION => {
+            Some(diagnostic)
+        }
+        _ => None,
+    });
+
+    assert!(parse_err.is_some(), "expected parser error, got: {errs:#?}");
 }

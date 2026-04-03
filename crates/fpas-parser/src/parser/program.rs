@@ -115,18 +115,14 @@ impl Parser {
         units
     }
 
+    /// Parse a dotted identifier path while preserving strong sync tokens on recovery.
     pub(crate) fn parse_qualified_id(&mut self) -> QualifiedId {
         let start = self.current_span();
         let mut parts = Vec::new();
         match self.expect_ident() {
             Some((name, _)) => parts.push(name),
             None => {
-                if !self.at_end()
-                    && !matches!(
-                        self.current_token(),
-                        Token::Dot | Token::Comma | Token::Semicolon
-                    )
-                {
+                if !self.at_end() && !self.is_qualified_id_recovery_boundary() {
                     self.advance();
                 }
                 parts.push("_error_".to_string());
@@ -136,12 +132,7 @@ impl Parser {
             if let Some((name, _)) = self.expect_ident_after_dot() {
                 parts.push(name);
             } else {
-                if !self.at_end()
-                    && !matches!(
-                        self.current_token(),
-                        Token::Dot | Token::Comma | Token::Semicolon
-                    )
-                {
+                if !self.at_end() && !self.is_qualified_id_recovery_boundary() {
                     self.advance();
                 }
                 parts.push("_error_".to_string());
@@ -152,5 +143,50 @@ impl Parser {
             parts,
             span: self.span_from(start),
         }
+    }
+
+    fn is_qualified_id_recovery_boundary(&self) -> bool {
+        matches!(
+            self.current_token(),
+            Token::Dot
+                | Token::Comma
+                | Token::Semicolon
+                | Token::Colon
+                | Token::Equal
+                | Token::RParen
+                | Token::RBracket
+                | Token::Then
+                | Token::Else
+                | Token::Of
+                | Token::To
+                | Token::Downto
+                | Token::In
+                | Token::Do
+                | Token::Until
+                | Token::Begin
+                | Token::End
+                | Token::Program
+                | Token::Unit
+                | Token::Uses
+                | Token::Const
+                | Token::Var
+                | Token::Mutable
+                | Token::Function
+                | Token::Procedure
+                | Token::If
+                | Token::Case
+                | Token::For
+                | Token::While
+                | Token::Repeat
+                | Token::Return
+                | Token::Panic
+                | Token::Break
+                | Token::Continue
+                | Token::Type
+                | Token::Public
+                | Token::Private
+                | Token::Go
+                | Token::Eof
+        )
     }
 }

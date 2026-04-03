@@ -139,3 +139,26 @@ end;
     assert_eq!(unit.declarations.len(), 1);
     assert!(matches!(&unit.declarations[0], Decl::Function(_)));
 }
+
+#[test]
+fn unit_with_missing_uses_identifier_before_declaration_keeps_following_declaration() {
+    let (unit, errors) = parse_compilation_unit_with_errors(
+        "\
+unit MyApp.Core;
+uses function Answer(): integer;
+begin
+  return 42
+end;
+",
+    );
+    assert!(!errors.is_empty());
+
+    let CompilationUnit::Unit(unit) = unit else {
+        panic!("expected unit compilation unit");
+    };
+
+    assert_eq!(unit.uses.len(), 1);
+    assert_eq!(unit.uses[0].parts, vec!["_error_"]);
+    assert_eq!(unit.declarations.len(), 1);
+    assert!(matches!(&unit.declarations[0], Decl::Function(_)));
+}

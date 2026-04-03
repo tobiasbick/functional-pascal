@@ -21,9 +21,8 @@ fn record_type() {
 
 #[test]
 fn invalid_record_field_recovery_preserves_following_field() {
-    let (p, errors) = parse_with_errors(
-        "program T; type Point = record X: real; 123; Y: real; end; begin end.",
-    );
+    let (p, errors) =
+        parse_with_errors("program T; type Point = record X: real; 123; Y: real; end; begin end.");
     assert!(!errors.is_empty());
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {

@@ -1,4 +1,5 @@
 use super::super::{check_errors, check_ok};
+use fpas_parser::{ParseDiagnostic, parse};
 #[test]
 fn go_accepts_procedure_calls_as_tasks() {
     check_ok(
@@ -19,7 +20,7 @@ end.",
 
 #[test]
 fn go_requires_a_call_expression() {
-    let errors = check_errors(
+    let (_, errors) = parse(
         "\
 program T;
 begin
@@ -28,9 +29,12 @@ end.",
     );
 
     assert!(
-        errors.iter().any(|error| error
-            .message
-            .contains("`go` requires a function or procedure call")),
+        errors.iter().any(|error| match error {
+            ParseDiagnostic::Parser(diagnostic) => diagnostic
+                .message
+                .contains("`go` requires a function or procedure call"),
+            ParseDiagnostic::Lexer(_) => false,
+        }),
         "errors: {errors:#?}"
     );
 }

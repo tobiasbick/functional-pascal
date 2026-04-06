@@ -20,6 +20,12 @@ pub(crate) enum TaskResultState {
     Consumed,
 }
 
+#[derive(Debug, Default)]
+pub(crate) struct TuiState {
+    pub is_open: bool,
+    pub redraw_pending: bool,
+}
+
 /// Shared state for the parallel VM.
 ///
 /// All fields are thread-safe. Workers hold `Arc<SharedState>` and
@@ -47,6 +53,8 @@ pub(crate) struct SharedState {
     pub text_input: Mutex<TextInput>,
     /// CRT-style keyboard buffer.
     pub key_input: Mutex<KeyInput>,
+    /// Minimal shared `Std.Tui` application/session state.
+    pub tui: Mutex<TuiState>,
 
     /// Set when the main task completes or an error occurs.
     pub shutdown: AtomicBool,

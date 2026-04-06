@@ -12,7 +12,7 @@ impl Worker {
             .unwrap_or_else(|e| e.into_inner()))
     }
 
-    fn with_key_input<R>(&self, f: impl FnOnce(&mut KeyInput) -> R) -> R {
+    pub(in super::super) fn with_key_input<R>(&self, f: impl FnOnce(&mut KeyInput) -> R) -> R {
         f(&mut self
             .shared
             .key_input

@@ -13,7 +13,7 @@ pub use vm::{Vm, VmError, VmOutput};
 #[cfg(test)]
 mod tests {
     use super::Vm;
-    use crate::vm::{CallFrame, SharedState, Worker};
+    use crate::vm::{CallFrame, SharedState, TuiState, Worker};
     use fpas_bytecode::{Chunk, Intrinsic, Op, SourceLocation, Value};
     use fpas_diagnostics::codes::{
         INTERNAL_VM_INVARIANT_FAILURE, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
@@ -548,6 +548,7 @@ mod tests {
             console: Mutex::new(Console::new()),
             text_input: Mutex::new(TextInput::new()),
             key_input: Mutex::new(KeyInput::new()),
+            tui: Mutex::new(TuiState::default()),
             shutdown: AtomicBool::new(true),
         });
 

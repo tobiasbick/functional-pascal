@@ -15,6 +15,9 @@ impl Compiler {
         if Self::program_uses_std_console(program) {
             self.register_std_console_enums();
         }
+        if Self::program_uses_std_tui(program) {
+            self.register_std_tui_enums();
+        }
         self.build_short_aliases(program);
 
         for decl in &program.declarations {

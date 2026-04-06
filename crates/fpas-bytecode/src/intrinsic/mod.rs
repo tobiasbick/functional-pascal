@@ -366,6 +366,39 @@ pub enum Intrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/console.md`
     ConsoleTextBackground256 = 246,
+
+    /// `Std.Tui.Application.Open()` — create/open a TUI application session.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui.md`
+    TuiApplicationOpen = 247,
+    /// `Std.Tui.Application.Close(App)` — close a TUI application session.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui.md`
+    TuiApplicationClose = 248,
+    /// `Std.Tui.Application.Size(App)` — current terminal size.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui.md`
+    TuiApplicationSize = 249,
+    /// `Std.Tui.Application.ReadEvent(App)` — blocking read of the next TUI event.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui.md`
+    TuiApplicationReadEvent = 250,
+    /// `Std.Tui.Application.ReadEventTimeout(App, Ms)` — wait up to `Ms` milliseconds.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui.md`
+    TuiApplicationReadEventTimeout = 251,
+    /// `Std.Tui.Application.PollEvent(App)` — non-blocking TUI event poll.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui.md`
+    TuiApplicationPollEvent = 252,
+    /// `Std.Tui.Application.RequestRedraw(App)` — mark the application as needing redraw.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui.md`
+    TuiApplicationRequestRedraw = 253,
+    /// `Std.Tui.Application.RedrawPending(App)` — consume and report redraw state.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui.md`
+    TuiApplicationRedrawPending = 254,
 }
 
 impl From<Intrinsic> for u16 {

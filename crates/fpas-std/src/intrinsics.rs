@@ -67,9 +67,17 @@ pub fn run_intrinsic(
             | Intrinsic::ConsoleDisableFocus
             | Intrinsic::ConsoleEnablePaste
             | Intrinsic::ConsoleDisablePaste
+            | Intrinsic::TuiApplicationOpen
+            | Intrinsic::TuiApplicationClose
+            | Intrinsic::TuiApplicationSize
+            | Intrinsic::TuiApplicationReadEvent
+            | Intrinsic::TuiApplicationReadEventTimeout
+            | Intrinsic::TuiApplicationPollEvent
+            | Intrinsic::TuiApplicationRequestRedraw
+            | Intrinsic::TuiApplicationRedrawPending
     ) {
         return Err(std_internal_error(
-            "internal: Std.Console input intrinsics are handled in the VM",
+            "internal: Std.Console and Std.Tui session intrinsics are handled in the VM",
             "This indicates a VM dispatch bug. Please report this as a compiler/runtime bug.",
             location,
         ));

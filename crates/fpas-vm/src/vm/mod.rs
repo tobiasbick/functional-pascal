@@ -20,7 +20,7 @@ mod worker;
 
 pub use diagnostics::VmError;
 pub(crate) use diagnostics::{internal_error, runtime_error};
-pub(crate) use shared::{SharedState, TaskResultPoll, TaskState};
+pub(crate) use shared::{SharedState, TaskResultPoll, TaskState, TuiState};
 pub(crate) use worker::Worker;
 
 const STACK_MAX: usize = 4096;
@@ -80,6 +80,7 @@ impl Vm {
             console: Mutex::new(console),
             text_input: Mutex::new(TextInput::new()),
             key_input: Mutex::new(KeyInput::new()),
+            tui: Mutex::new(TuiState::default()),
             shutdown: AtomicBool::new(false),
         });
 

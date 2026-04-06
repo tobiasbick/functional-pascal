@@ -32,14 +32,22 @@ After `uses Std.Tui;` you can refer to the unit in either form:
 
 ## Current status
 
-`Std.Tui` currently defines the **semantic surface** for the first application model:
+`Std.Tui` currently provides the first **semantic, compiler, and VM-backed** application path:
 
 - `Application` is the TUI session handle.
 - `Size` exposes terminal width and height.
 - `Event` exposes key and resize input.
 - `Application.RequestRedraw` / `Application.RedrawPending` support redraw-oriented loops.
 
-This surface is intended for semantic analysis and API design. Runtime bindings for the unit are not part of the current implementation yet.
+The initial execution path is intentionally narrow:
+
+- `Application.Open` / `Application.Close` create and release the logical session handle.
+- `Application.Size` reads the current terminal dimensions.
+- `Application.ReadEvent`, `Application.ReadEventTimeout`, and `Application.PollEvent` currently surface only `Key` and `Resize` events.
+- `Application.RequestRedraw` marks redraw as needed.
+- `Application.RedrawPending` reports and clears the pending redraw flag so render loops can consume it once per request.
+
+The broader Rust runtime design for `Std.Tui` is still intentionally minimal and may expand in follow-up work.
 
 ---
 

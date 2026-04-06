@@ -4,7 +4,7 @@ use fpas_parser::Program;
 use fpas_std::key_event::KEY_KIND_VARIANTS;
 use fpas_std::{
     EVENT_KIND_VARIANTS, MOUSE_ACTION_VARIANTS, MOUSE_BUTTON_VARIANTS, STD_UNIT_CONSOLE,
-    canonical_std_unit_from_segments, std_unit_symbols,
+    STD_UNIT_TUI, TUI_EVENT_KIND_VARIANTS, canonical_std_unit_from_segments, std_unit_symbols,
 };
 
 use super::{Compiler, canonical_name};
@@ -56,6 +56,17 @@ impl Compiler {
                 for variant in MOUSE_BUTTON_VARIANTS {
                     let short = format!("MouseButton.{variant}");
                     let qualified = format!("{STD_UNIT_CONSOLE}.MouseButton.{variant}");
+                    seen.entry(short).or_default().push(qualified);
+                }
+            } else if unit == STD_UNIT_TUI {
+                for variant in KEY_KIND_VARIANTS {
+                    let short = format!("KeyKind.{variant}");
+                    let qualified = format!("{STD_UNIT_TUI}.KeyKind.{variant}");
+                    seen.entry(short).or_default().push(qualified);
+                }
+                for variant in TUI_EVENT_KIND_VARIANTS {
+                    let short = format!("EventKind.{variant}");
+                    let qualified = format!("{STD_UNIT_TUI}.EventKind.{variant}");
                     seen.entry(short).or_default().push(qualified);
                 }
             }

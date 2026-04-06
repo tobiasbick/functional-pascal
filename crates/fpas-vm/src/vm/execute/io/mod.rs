@@ -5,6 +5,7 @@ use fpas_std::run_intrinsic;
 
 mod callbacks;
 mod console;
+mod tui;
 
 impl Worker {
     pub(super) fn try_exec_io(&mut self, op: Op, line: SourceLocation) -> Result<bool, VmError> {
@@ -29,6 +30,9 @@ impl Worker {
                 })?;
 
                 if self.try_exec_console_intrinsic(intrinsic, line)? {
+                    return Ok(true);
+                }
+                if self.try_exec_tui_intrinsic(intrinsic, line)? {
                     return Ok(true);
                 }
                 if self.try_exec_higher_order_intrinsic(intrinsic, line)? {

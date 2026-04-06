@@ -6,10 +6,8 @@ use super::super::{define_func, define_proc, p};
 use crate::check::Checker;
 use crate::scope::{Symbol, SymbolKind};
 use crate::types::{EnumTy, EnumVariantTy, RecordTy, Ty};
-use fpas_std::key_event::KEY_KIND_VARIANTS;
 use fpas_std::std_symbols as s;
-
-const TUI_EVENT_KIND_VARIANTS: &[&str] = &["Key", "Resize"];
+use fpas_std::{KEY_KIND_VARIANTS, TUI_EVENT_KIND_VARIANTS};
 
 fn register_enum_type(checker: &mut Checker, qualified_name: &str, variants: &[&str]) -> Ty {
     let variants: Vec<EnumVariantTy> = variants

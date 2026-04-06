@@ -6,6 +6,7 @@ mod math;
 mod result_option;
 mod str_ops;
 mod task;
+mod tui;
 
 use crate::error::{CompileError, compile_error};
 use fpas_bytecode::{Intrinsic, Op, SourceLocation};
@@ -145,6 +146,9 @@ impl Compiler {
         location: SourceLocation,
     ) -> Result<bool, CompileError> {
         if self.compile_console_call(name, args, location)? {
+            return Ok(true);
+        }
+        if self.compile_tui_call(name, args, location)? {
             return Ok(true);
         }
         if self.compile_str_call(name, args, location)? {

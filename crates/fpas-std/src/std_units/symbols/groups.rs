@@ -87,6 +87,23 @@ pub(in super::super) const STD_CONSOLE_SYMBOLS: &[&str] = &[
     std_symbols::STD_CONSOLE_FONT_8X8,
 ];
 
+pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
+    std_symbols::STD_TUI_APPLICATION,
+    std_symbols::STD_TUI_SIZE,
+    std_symbols::STD_TUI_EVENT,
+    std_symbols::STD_TUI_KEY_EVENT,
+    std_symbols::STD_TUI_KEY_KIND,
+    std_symbols::STD_TUI_EVENT_KIND,
+    std_symbols::STD_TUI_APPLICATION_OPEN,
+    std_symbols::STD_TUI_APPLICATION_CLOSE,
+    std_symbols::STD_TUI_APPLICATION_SIZE,
+    std_symbols::STD_TUI_APPLICATION_READ_EVENT,
+    std_symbols::STD_TUI_APPLICATION_READ_EVENT_TIMEOUT,
+    std_symbols::STD_TUI_APPLICATION_POLL_EVENT,
+    std_symbols::STD_TUI_APPLICATION_REQUEST_REDRAW,
+    std_symbols::STD_TUI_APPLICATION_REDRAW_PENDING,
+];
+
 pub(in super::super) const STD_STR_SYMBOLS: &[&str] = &[
     std_symbols::STD_STR_LENGTH,
     std_symbols::STD_STR_TO_UPPER,

@@ -3,6 +3,11 @@ macro_rules! std_console {
         concat!("Std.Console.", $suffix)
     };
 }
+macro_rules! std_tui {
+    ($suffix:literal) => {
+        concat!("Std.Tui.", $suffix)
+    };
+}
 macro_rules! std_str {
     ($suffix:literal) => {
         concat!("Std.Str.", $suffix)
@@ -128,6 +133,21 @@ pub const STD_CONSOLE_CO40: &str = std_console!("CO40");
 pub const STD_CONSOLE_CO80: &str = std_console!("CO80");
 pub const STD_CONSOLE_MONO: &str = std_console!("Mono");
 pub const STD_CONSOLE_FONT_8X8: &str = std_console!("Font8x8");
+
+pub const STD_TUI_APPLICATION: &str = std_tui!("Application");
+pub const STD_TUI_SIZE: &str = std_tui!("Size");
+pub const STD_TUI_EVENT: &str = std_tui!("Event");
+pub const STD_TUI_KEY_EVENT: &str = std_tui!("KeyEvent");
+pub const STD_TUI_KEY_KIND: &str = std_tui!("KeyKind");
+pub const STD_TUI_EVENT_KIND: &str = std_tui!("EventKind");
+pub const STD_TUI_APPLICATION_OPEN: &str = std_tui!("Application.Open");
+pub const STD_TUI_APPLICATION_CLOSE: &str = std_tui!("Application.Close");
+pub const STD_TUI_APPLICATION_SIZE: &str = std_tui!("Application.Size");
+pub const STD_TUI_APPLICATION_READ_EVENT: &str = std_tui!("Application.ReadEvent");
+pub const STD_TUI_APPLICATION_READ_EVENT_TIMEOUT: &str = std_tui!("Application.ReadEventTimeout");
+pub const STD_TUI_APPLICATION_POLL_EVENT: &str = std_tui!("Application.PollEvent");
+pub const STD_TUI_APPLICATION_REQUEST_REDRAW: &str = std_tui!("Application.RequestRedraw");
+pub const STD_TUI_APPLICATION_REDRAW_PENDING: &str = std_tui!("Application.RedrawPending");
 
 pub const STD_STR_LENGTH: &str = std_str!("Length");
 pub const STD_STR_TO_UPPER: &str = std_str!("ToUpper");

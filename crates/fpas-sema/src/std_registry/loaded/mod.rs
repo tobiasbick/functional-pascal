@@ -6,11 +6,12 @@ mod dict;
 mod math;
 mod result_option;
 mod str_ops;
+mod tui;
 
 use crate::check::Checker;
 use fpas_std::{
     STD_UNIT_ARRAY, STD_UNIT_CONSOLE, STD_UNIT_CONV, STD_UNIT_DICT, STD_UNIT_MATH, STD_UNIT_OPTION,
-    STD_UNIT_RESULT, STD_UNIT_STR, STD_UNIT_TASK, STD_UNITS_KNOWN,
+    STD_UNIT_RESULT, STD_UNIT_STR, STD_UNIT_TASK, STD_UNIT_TUI, STD_UNITS_KNOWN,
 };
 
 pub fn register_loaded_std(checker: &mut Checker) {
@@ -33,6 +34,7 @@ pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
         STD_UNIT_OPTION => result_option::register_std_option(checker),
         STD_UNIT_TASK => channel_task::register_std_task(checker),
         STD_UNIT_DICT => dict::register_std_dict(checker),
+        STD_UNIT_TUI => tui::register_std_tui(checker),
         _ => {}
     }
 }

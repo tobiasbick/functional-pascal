@@ -12,6 +12,23 @@ impl Worker {
             .unwrap_or_else(|e| e.into_inner()))
     }
 
+    pub(in super::super) fn with_console_and_key_input<R>(
+        &self,
+        f: impl FnOnce(&mut Console, &mut KeyInput) -> R,
+    ) -> R {
+        let mut console = self
+            .shared
+            .console
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        let mut key_input = self
+            .shared
+            .key_input
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        f(&mut console, &mut key_input)
+    }
+
     pub(in super::super) fn with_key_input<R>(&self, f: impl FnOnce(&mut KeyInput) -> R) -> R {
         f(&mut self
             .shared

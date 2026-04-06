@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/future/parallel-vm.md`
 
 use fpas_bytecode::{Chunk, Value};
-use fpas_std::{Console, KeyInput, TextInput};
+use fpas_std::{Console, KeyInput, TextInput, TuiSession};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Condvar, Mutex, RwLock};
@@ -22,8 +22,7 @@ pub(crate) enum TaskResultState {
 
 #[derive(Debug, Default)]
 pub(crate) struct TuiState {
-    pub is_open: bool,
-    pub redraw_pending: bool,
+    pub session: TuiSession,
 }
 
 /// Shared state for the parallel VM.

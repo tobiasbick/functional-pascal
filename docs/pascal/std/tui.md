@@ -41,7 +41,8 @@ After `uses Std.Tui;` you can refer to the unit in either form:
 
 The initial execution path is intentionally narrow:
 
-- `Application.Open` / `Application.Close` create and release the logical session handle.
+- `Application.Open` starts the initial terminal session by owning raw mode and the alternate screen when the runtime is connected to a real terminal.
+- `Application.Close` releases that session and restores the terminal state it acquired.
 - `Application.Size` reads the current terminal dimensions.
 - `Application.ReadEvent`, `Application.ReadEventTimeout`, and `Application.PollEvent` currently surface only `Key` and `Resize` events.
 - `Application.RequestRedraw` marks redraw as needed.
@@ -191,11 +192,13 @@ end;
 
 Create or open a terminal application session.
 
-The intended model is that this acquires the terminal session needed for a TUI loop.
+The initial runtime acquires the terminal session needed for a TUI loop by enabling raw mode and entering the alternate screen when the runtime is connected to an interactive terminal.
 
 ### `procedure Application.Close(App: Application)`
 
 Close the application session and release its terminal-session ownership.
+
+The initial runtime restores any terminal state acquired by `Application.Open()`.
 
 ### `function Application.Size(App: Application): Size`
 

@@ -71,6 +71,10 @@ impl Console {
     pub fn output(&self) -> &CapturedOutput {
         &self.captured
     }
+
+    pub(crate) fn has_terminal_writer(&self) -> bool {
+        self.writer.is_some()
+    }
 }
 
 #[cfg(test)]

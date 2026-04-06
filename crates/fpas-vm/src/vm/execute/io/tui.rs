@@ -6,8 +6,7 @@ use super::super::super::Worker;
 use super::super::super::diagnostics::{TYPE_MISMATCH_CODE, VmError};
 use super::super::super::runtime_error;
 use fpas_bytecode::{Intrinsic, SourceLocation, Value};
-use fpas_std::{ConsoleEvent, ConsoleKeyEvent};
-use std::time::Instant;
+use fpas_std::{ConsoleKeyEvent, TuiEvent};
 
 const TUI_APPLICATION_TYPE: &str = "Std.Tui.Application";
 const TUI_SIZE_TYPE: &str = "Std.Tui.Size";
@@ -22,56 +21,82 @@ impl Worker {
     ) -> Result<bool, VmError> {
         match intrinsic {
             Intrinsic::TuiApplicationOpen => {
-                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                tui.is_open = true;
-                tui.redraw_pending = false;
-                drop(tui);
+                {
+                    let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                    self.with_console_and_key_input(|console, key_input| {
+                        tui.session.open(console, key_input, line)
+                    })?;
+                }
                 self.push(Self::tui_application_record())?;
             }
             Intrinsic::TuiApplicationClose => {
                 self.pop_tui_application(line)?;
                 let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                tui.is_open = false;
-                tui.redraw_pending = false;
+                self.with_console_and_key_input(|console, key_input| {
+                    tui.session.close(console, key_input, line)
+                })?;
             }
             Intrinsic::TuiApplicationSize => {
                 self.pop_tui_application(line)?;
-                let (width, height) = self.with_console(|c| (c.screen_width(), c.screen_height()));
+                let (width, height) = {
+                    let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                    self.with_console(|console| tui.session.size(console, line))?
+                };
                 self.push(Self::tui_size_record(width, height))?;
             }
             Intrinsic::TuiApplicationReadEvent => {
                 self.pop_tui_application(line)?;
-                let event = self.read_tui_event(line)?;
-                self.push(event)?;
+                let event = {
+                    let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                    self.with_console_and_key_input(|console, key_input| {
+                        tui.session.read_event(console, key_input, line)
+                    })?
+                };
+                self.push(Self::tui_event_record(event))?;
             }
             Intrinsic::TuiApplicationReadEventTimeout => {
                 let timeout_ms = self.pop_int(line)?;
                 self.pop_tui_application(line)?;
-                let event = self.read_tui_event_timeout(timeout_ms, line)?;
+                let event = {
+                    let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                    self.with_console_and_key_input(|console, key_input| {
+                        tui.session
+                            .read_event_timeout(console, key_input, timeout_ms, line)
+                    })?
+                };
                 match event {
-                    Some(event) => self.push(Value::OptionSome(Box::new(event)))?,
+                    Some(event) => {
+                        self.push(Value::OptionSome(Box::new(Self::tui_event_record(event))))?
+                    }
                     None => self.push(Value::OptionNone)?,
                 }
             }
             Intrinsic::TuiApplicationPollEvent => {
                 self.pop_tui_application(line)?;
-                let event = self.poll_tui_event(line)?;
+                let event = {
+                    let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                    self.with_console_and_key_input(|console, key_input| {
+                        tui.session.poll_event(console, key_input, line)
+                    })?
+                };
                 match event {
-                    Some(event) => self.push(Value::OptionSome(Box::new(event)))?,
+                    Some(event) => {
+                        self.push(Value::OptionSome(Box::new(Self::tui_event_record(event))))?
+                    }
                     None => self.push(Value::OptionNone)?,
                 }
             }
             Intrinsic::TuiApplicationRequestRedraw => {
                 self.pop_tui_application(line)?;
                 let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                tui.redraw_pending = true;
+                tui.session.request_redraw(line)?;
             }
             Intrinsic::TuiApplicationRedrawPending => {
                 self.pop_tui_application(line)?;
-                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                let pending = tui.redraw_pending;
-                tui.redraw_pending = false;
-                drop(tui);
+                let pending = {
+                    let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                    tui.session.take_redraw_pending(line)?
+                };
                 self.push(Value::Boolean(pending))?;
             }
             _ => return Ok(false),
@@ -90,96 +115,6 @@ impl Worker {
                 line,
             )),
         }
-    }
-
-    fn read_tui_event(&mut self, line: SourceLocation) -> Result<Value, VmError> {
-        loop {
-            let event = self.with_key_input(|k| k.read_event(line))?;
-            self.maybe_resize_on_console_event(&event);
-            if let Some(value) = Self::map_console_event_to_tui(event) {
-                return Ok(value);
-            }
-        }
-    }
-
-    fn read_tui_event_timeout(
-        &mut self,
-        timeout_ms: i64,
-        line: SourceLocation,
-    ) -> Result<Option<Value>, VmError> {
-        let deadline = Instant::now() + std::time::Duration::from_millis(timeout_ms.max(0) as u64);
-
-        loop {
-            let now = Instant::now();
-            if now >= deadline {
-                return Ok(None);
-            }
-
-            let remaining = deadline
-                .duration_since(now)
-                .as_millis()
-                .min(i64::MAX as u128) as i64;
-            let event = self.with_key_input(|k| k.read_event_timeout(remaining, line))?;
-            match event {
-                Some(event) => {
-                    self.maybe_resize_on_console_event(&event);
-                    if let Some(value) = Self::map_console_event_to_tui(event) {
-                        return Ok(Some(value));
-                    }
-                }
-                None => return Ok(None),
-            }
-        }
-    }
-
-    fn poll_tui_event(&mut self, line: SourceLocation) -> Result<Option<Value>, VmError> {
-        loop {
-            let event = self.with_key_input(|k| k.poll_event(line))?;
-            match event {
-                Some(event) => {
-                    self.maybe_resize_on_console_event(&event);
-                    if let Some(value) = Self::map_console_event_to_tui(event) {
-                        return Ok(Some(value));
-                    }
-                }
-                None => return Ok(None),
-            }
-        }
-    }
-
-    fn maybe_resize_on_console_event(&self, event: &ConsoleEvent) {
-        if event.kind == fpas_std::event_kind_index("Resize") {
-            self.with_console(|c| c.resize(event.width as u16, event.height as u16));
-        }
-    }
-
-    fn map_console_event_to_tui(event: ConsoleEvent) -> Option<Value> {
-        if event.kind == fpas_std::event_kind_index("Key") {
-            return Some(Value::Record {
-                type_name: TUI_EVENT_TYPE.into(),
-                fields: vec![
-                    ("kind".into(), Value::Integer(0)),
-                    ("key".into(), Self::tui_key_event_record(event.key)),
-                    ("size".into(), Self::tui_size_record(0, 0)),
-                ],
-            });
-        }
-
-        if event.kind == fpas_std::event_kind_index("Resize") {
-            return Some(Value::Record {
-                type_name: TUI_EVENT_TYPE.into(),
-                fields: vec![
-                    ("kind".into(), Value::Integer(1)),
-                    ("key".into(), Self::tui_unknown_key_event()),
-                    (
-                        "size".into(),
-                        Self::tui_size_record(event.width, event.height),
-                    ),
-                ],
-            });
-        }
-
-        None
     }
 
     fn tui_application_record() -> Value {
@@ -221,6 +156,27 @@ impl Worker {
                 ("alt".into(), Value::Boolean(event.alt)),
                 ("meta".into(), Value::Boolean(event.meta)),
             ],
+        }
+    }
+
+    fn tui_event_record(event: TuiEvent) -> Value {
+        match event {
+            TuiEvent::Key(key) => Value::Record {
+                type_name: TUI_EVENT_TYPE.into(),
+                fields: vec![
+                    ("kind".into(), Value::Integer(0)),
+                    ("key".into(), Self::tui_key_event_record(key)),
+                    ("size".into(), Self::tui_size_record(0, 0)),
+                ],
+            },
+            TuiEvent::Resize { width, height } => Value::Record {
+                type_name: TUI_EVENT_TYPE.into(),
+                fields: vec![
+                    ("kind".into(), Value::Integer(1)),
+                    ("key".into(), Self::tui_unknown_key_event()),
+                    ("size".into(), Self::tui_size_record(width, height)),
+                ],
+            },
         }
     }
 }

@@ -1,4 +1,4 @@
-use super::super::{compile_and_run, compile_err, compile_ok};
+use super::super::{compile_and_run, compile_err, compile_ok, compile_run_error};
 use fpas_std::{ConsoleEvent, ConsoleKeyEvent, key_event::key_kind_index};
 
 fn compile_run_with_console_events(source: &str, events: &[ConsoleEvent]) -> fpas_vm::VmOutput {
@@ -22,7 +22,8 @@ begin
   var App: Application := Application.Open();
   Application.RequestRedraw(App);
   Std.Console.WriteLn(Application.RedrawPending(App));
-  Std.Console.WriteLn(Application.RedrawPending(App))
+  Std.Console.WriteLn(Application.RedrawPending(App));
+  Application.Close(App)
 end.",
     );
 
@@ -34,7 +35,7 @@ fn std_tui_poll_event_maps_resize_and_key_events() {
     let out = compile_run_with_console_events(
         "\
 program T;
-uses Std.Tui;
+uses Std.Console, Std.Tui;
 
 begin
   var App: Application := Application.Open();
@@ -42,8 +43,10 @@ begin
   case Application.PollEvent(App) of
     Some(E):
       begin
+        var CurrentSize: Size := Application.Size(App);
         Std.Console.WriteLn(E.kind = Std.Tui.EventKind.Resize);
-        Std.Console.WriteLn(E.size.width)
+        Std.Console.WriteLn(E.size.width);
+        Std.Console.WriteLn(CurrentSize.width)
       end;
     None:
       Std.Console.WriteLn('missing resize')
@@ -57,7 +60,9 @@ begin
       end;
     None:
       Std.Console.WriteLn('missing key')
-  end
+  end;
+
+  Application.Close(App)
 end.",
         &[
             ConsoleEvent::resize(120, 40),
@@ -72,7 +77,90 @@ end.",
         ],
     );
 
-    assert_eq!(out.lines, vec!["true", "120", "true", "true"]);
+    assert_eq!(out.lines, vec!["true", "120", "120", "true", "true"]);
+}
+
+#[test]
+fn std_tui_read_event_timeout_returns_none_without_events() {
+    let out = compile_and_run(
+        "\
+program T;
+uses Std.Console, Std.Option, Std.Tui;
+
+begin
+  var App: Application := Application.Open();
+  Std.Console.WriteLn(Std.Option.IsNone(Application.ReadEventTimeout(App, 0)));
+  Application.Close(App)
+end.",
+    );
+
+    assert_eq!(out.lines, vec!["true"]);
+}
+
+#[test]
+fn std_tui_open_close_and_reopen_succeeds() {
+    let out = compile_and_run(
+        "\
+program T;
+uses Std.Console, Std.Tui;
+
+begin
+  var First: Application := Application.Open();
+  Application.Close(First);
+
+  var Second: Application := Application.Open();
+  Application.RequestRedraw(Second);
+  Std.Console.WriteLn(Application.RedrawPending(Second));
+  Application.Close(Second)
+end.",
+    );
+
+    assert_eq!(out.lines, vec!["true"]);
+}
+
+#[test]
+fn std_tui_open_rejects_second_session() {
+    let error = compile_run_error(
+        "\
+program T;
+uses Std.Tui;
+
+begin
+  var First: Application := Application.Open();
+  var Second: Application := Application.Open()
+end.",
+    );
+
+    assert!(
+        error
+            .message
+            .contains("cannot open a second Std.Tui session"),
+        "unexpected runtime error: {}",
+        error.message
+    );
+}
+
+#[test]
+fn std_tui_use_after_close_reports_runtime_error() {
+    let error = compile_run_error(
+        "\
+program T;
+uses Std.Tui;
+
+begin
+  var App: Application := Application.Open();
+  Application.Close(App);
+  Application.RequestRedraw(App)
+end.",
+    );
+
+    assert!(
+        error
+            .message
+            .contains("requires an open Std.Tui application session"),
+        "unexpected runtime error: {}",
+        error.message
+    );
 }
 
 #[test]

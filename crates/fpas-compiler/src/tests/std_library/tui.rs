@@ -181,3 +181,67 @@ end.",
         err.message
     );
 }
+
+#[test]
+fn std_tui_poll_event_skips_unsupported_console_events() {
+    let out = compile_run_with_console_events(
+        "\
+program T;
+uses Std.Console, Std.Tui;
+
+begin
+  var App: Application := Application.Open();
+
+  case Application.PollEvent(App) of
+    Some(E):
+      Std.Console.WriteLn(E.kind = Std.Tui.EventKind.Key);
+    None:
+      Std.Console.WriteLn('none')
+  end;
+
+  Application.Close(App)
+end.",
+        &[
+            ConsoleEvent::focus_gained(),
+            ConsoleEvent::paste("ignored".to_string()),
+            ConsoleEvent::key(ConsoleKeyEvent::new(
+                key_kind_index("Space"),
+                ' ',
+                false,
+                false,
+                false,
+                false,
+            )),
+        ],
+    );
+
+    assert_eq!(out.lines, vec!["true"]);
+}
+
+#[test]
+fn std_tui_read_event_timeout_skips_unsupported_events_before_resize() {
+    let out = compile_run_with_console_events(
+        "\
+program T;
+uses Std.Console, Std.Tui;
+
+begin
+  var App: Application := Application.Open();
+
+  case Application.ReadEventTimeout(App, 50) of
+    Some(E):
+      begin
+        Std.Console.WriteLn(E.kind = Std.Tui.EventKind.Resize);
+        Std.Console.WriteLn(E.size.width)
+      end;
+    None:
+      Std.Console.WriteLn('none')
+  end;
+
+  Application.Close(App)
+end.",
+        &[ConsoleEvent::focus_gained(), ConsoleEvent::resize(77, 25)],
+    );
+
+    assert_eq!(out.lines, vec!["true", "77"]);
+}

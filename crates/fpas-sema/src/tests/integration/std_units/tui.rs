@@ -67,6 +67,42 @@ end.",
 }
 
 #[test]
+fn std_tui_application_close_wrong_arg_count() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Tui;
+begin
+  var App: Application := Application.Open();
+  Application.Close(App, App)
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| e.message.contains("expects 1 arguments, got 2")),
+        "{errs:#?}"
+    );
+}
+
+#[test]
+fn std_tui_read_event_timeout_wrong_arg_count() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Tui;
+begin
+  var App: Application := Application.Open();
+  var Ev: Option of Event := Application.ReadEventTimeout(App)
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| e.message.contains("expects 2 arguments, got 1")),
+        "{errs:#?}"
+    );
+}
+
+#[test]
 fn std_tui_size_unknown_field() {
     let errs = check_errors(
         "\

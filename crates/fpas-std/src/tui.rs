@@ -258,3 +258,154 @@ fn session_state_error(
 ) -> StdError {
     std_runtime_error(RUNTIME_CONSOLE_STATE_ERROR, message, help, location)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::key_event::key_kind_index;
+    use fpas_bytecode::SourceLocation;
+
+    fn test_location() -> SourceLocation {
+        SourceLocation::new(1, 1)
+    }
+
+    #[test]
+    fn tui_session_open_close_reopen_succeeds_without_terminal_writer() {
+        let mut session = TuiSession::default();
+        let mut console = Console::new();
+        let mut key_input = KeyInput::new();
+
+        session
+            .open(&mut console, &mut key_input, test_location())
+            .expect("first open should succeed");
+        session
+            .close(&mut console, &mut key_input, test_location())
+            .expect("close should succeed");
+        session
+            .open(&mut console, &mut key_input, test_location())
+            .expect("reopen should succeed");
+    }
+
+    #[test]
+    fn tui_session_second_open_is_rejected() {
+        let mut session = TuiSession::default();
+        let mut console = Console::new();
+        let mut key_input = KeyInput::new();
+
+        session
+            .open(&mut console, &mut key_input, test_location())
+            .expect("first open should succeed");
+
+        let error = session
+            .open(&mut console, &mut key_input, test_location())
+            .expect_err("second open should fail");
+
+        assert!(
+            error
+                .message
+                .contains("cannot open a second Std.Tui session"),
+            "unexpected error message: {}",
+            error.message
+        );
+    }
+
+    #[test]
+    fn tui_session_request_redraw_is_consumed_once() {
+        let mut session = TuiSession::default();
+        let mut console = Console::new();
+        let mut key_input = KeyInput::new();
+
+        session
+            .open(&mut console, &mut key_input, test_location())
+            .expect("open should succeed");
+        session
+            .request_redraw(test_location())
+            .expect("request redraw should succeed");
+
+        let first = session
+            .take_redraw_pending(test_location())
+            .expect("first redraw check should succeed");
+        let second = session
+            .take_redraw_pending(test_location())
+            .expect("second redraw check should succeed");
+
+        assert!(first);
+        assert!(!second);
+    }
+
+    #[test]
+    fn tui_session_size_requires_open_session() {
+        let session = TuiSession::default();
+        let mut console = Console::new();
+
+        let error = session
+            .size(&mut console, test_location())
+            .expect_err("size without open session should fail");
+
+        assert!(
+            error
+                .message
+                .contains("requires an open Std.Tui application session"),
+            "unexpected error message: {}",
+            error.message
+        );
+    }
+
+    #[test]
+    fn tui_session_read_event_maps_resize_and_updates_console_size() {
+        let mut session = TuiSession::default();
+        let mut console = Console::new();
+        let mut key_input = KeyInput::new();
+
+        session
+            .open(&mut console, &mut key_input, test_location())
+            .expect("open should succeed");
+
+        key_input.push_console_event(ConsoleEvent::resize(120, 40));
+
+        let event = session
+            .read_event(&mut console, &mut key_input, test_location())
+            .expect("read event should succeed");
+
+        assert_eq!(
+            event,
+            TuiEvent::Resize {
+                width: 120,
+                height: 40
+            }
+        );
+        assert_eq!(console.screen_width(), 120);
+        assert_eq!(console.screen_height(), 40);
+    }
+
+    #[test]
+    fn tui_session_poll_event_skips_unsupported_events_until_key() {
+        let mut session = TuiSession::default();
+        let mut console = Console::new();
+        let mut key_input = KeyInput::new();
+
+        session
+            .open(&mut console, &mut key_input, test_location())
+            .expect("open should succeed");
+
+        key_input.push_console_event(ConsoleEvent::focus_gained());
+        key_input.push_console_event(ConsoleEvent::paste("ignored".to_string()));
+        key_input.push_console_event(ConsoleEvent::key(ConsoleKeyEvent::new(
+            key_kind_index("Space"),
+            ' ',
+            false,
+            false,
+            false,
+            false,
+        )));
+
+        let event = session
+            .poll_event(&mut console, &mut key_input, test_location())
+            .expect("poll event should succeed")
+            .expect("key event should be available");
+
+        assert!(
+            matches!(event, TuiEvent::Key(ConsoleKeyEvent { kind, .. }) if kind == key_kind_index("Space"))
+        );
+    }
+}

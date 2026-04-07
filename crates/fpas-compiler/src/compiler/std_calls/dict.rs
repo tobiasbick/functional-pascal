@@ -1,3 +1,7 @@
+//! Lowers `Std.Dict` calls to VM intrinsics.
+//!
+//! **Documentation:** `docs/pascal/std/dict.md` (from the repository root).
+
 use crate::error::CompileError;
 use fpas_bytecode::{Intrinsic, SourceLocation};
 use fpas_parser::Expr;

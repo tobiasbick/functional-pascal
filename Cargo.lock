@@ -83,7 +83,6 @@ version = "0.0.1"
 dependencies = [
  "fpas-compiler",
  "fpas-diagnostics",
- "fpas-lexer",
  "fpas-parser",
  "fpas-project",
  "fpas-vm",

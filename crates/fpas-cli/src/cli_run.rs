@@ -1,19 +1,32 @@
+//! Run compile and VM from CLI-resolved input.
+//!
+//! Spec: [Projects & CLI](../../../docs/pascal/10-projects.md).
+
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use crate::{CliInput, resolve_cli_config};
+use crate::{CliInput, ResolvedCli, resolve_cli_config};
 use fpas_diagnostics::DiagnosticSeverity;
 use fpas_project as project;
 
 pub(crate) fn run_cli(
     args: &[String],
     cwd: &Path,
-    stdout: Box<dyn Write + Send>,
+    mut stdout: Box<dyn Write + Send>,
     stderr: &mut dyn Write,
 ) -> i32 {
     let config = match resolve_cli_config(args, cwd) {
-        Ok(config) => config,
+        Ok(ResolvedCli::Run(config)) => config,
+        Ok(ResolvedCli::Help) => {
+            use crate::cli_input::CLI_HELP;
+            let _ = stdout.write_all(CLI_HELP.as_bytes());
+            return 0;
+        }
+        Ok(ResolvedCli::Version) => {
+            let _ = writeln!(stdout, "fpas {}", env!("CARGO_PKG_VERSION"));
+            return 0;
+        }
         Err(message) => {
             let _ = writeln!(stderr, "{message}");
             return 1;
@@ -130,10 +143,14 @@ fn run_compiled_program(
     stdout: Box<dyn Write + Send>,
     stderr: &mut dyn Write,
 ) -> i32 {
-    let chunk = match fpas_compiler::compile(program) {
+    let chunk = match fpas_compiler::compile_all(program) {
         Ok(chunk) => chunk,
-        Err(diagnostic) => {
-            if !emit_diagnostic(path, source_paths, &diagnostic, stderr) {
+        Err(diagnostics) => {
+            let mut ok = true;
+            for diagnostic in &diagnostics {
+                ok &= emit_diagnostic(path, source_paths, diagnostic, stderr);
+            }
+            if !ok {
                 return 1;
             }
             return 1;

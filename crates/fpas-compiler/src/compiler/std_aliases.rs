@@ -1,3 +1,7 @@
+//! Resolves `uses` units and builds short-name → qualified `Std.*` aliases.
+//!
+//! **Documentation:** `docs/pascal/09-units.md` (from the repository root).
+
 use std::collections::HashMap;
 
 use fpas_parser::Program;

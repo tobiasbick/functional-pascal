@@ -144,6 +144,16 @@ impl Chunk {
     pub fn is_empty(&self) -> bool {
         self.code.is_empty()
     }
+
+    /// Returns `true` if this chunk may enqueue parallel tasks (`go` / detached spawn).
+    ///
+    /// Used by the VM to avoid spawning a thread pool when no background workers are needed.
+    #[must_use]
+    pub fn uses_spawn_tasks(&self) -> bool {
+        self.code
+            .iter()
+            .any(|op| matches!(op, Op::SpawnTask(_) | Op::SpawnDetachedTask(_)))
+    }
 }
 
 impl Default for Chunk {
@@ -185,6 +195,19 @@ mod tests {
                 max_constants: u16::MAX as usize,
             })
         );
+    }
+
+    #[test]
+    fn uses_spawn_tasks_detects_spawn_opcodes() {
+        let mut chunk = Chunk::new();
+        assert!(!chunk.uses_spawn_tasks());
+        chunk.emit(Op::Jump(0), loc());
+        assert!(!chunk.uses_spawn_tasks());
+        chunk.emit(Op::SpawnTask(0), loc());
+        assert!(chunk.uses_spawn_tasks());
+        let mut chunk2 = Chunk::new();
+        chunk2.emit(Op::SpawnDetachedTask(1), loc());
+        assert!(chunk2.uses_spawn_tasks());
     }
 
     #[test]

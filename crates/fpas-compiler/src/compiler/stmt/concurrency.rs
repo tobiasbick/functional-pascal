@@ -28,7 +28,7 @@ impl Compiler {
             Expr::Call {
                 designator, args, ..
             } => {
-                let call_key = std::ptr::from_ref(expr) as usize;
+                let call_key = fpas_sema::expr_lookup_key(expr);
                 let returns_value = self.go_call_returns_value(expr);
 
                 if let Some(qualified) = self.method_calls.get(&call_key).cloned() {

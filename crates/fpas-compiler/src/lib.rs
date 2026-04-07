@@ -24,17 +24,26 @@ use fpas_parser::Program;
 
 /// Compile a parsed program into bytecode.
 ///
-/// Returns the first error encountered (sema or codegen). All sema errors are
-/// collected but only the first is surfaced through the current single-error
-/// return type.
+/// Returns the first error encountered (sema or codegen). Prefer [`compile_all`] when you need
+/// every semantic error at once (for example CLI or IDE integration).
+///
+/// **Documentation:** `docs/pascal/10-projects.md` (from the repository root).
 pub fn compile(program: &Program) -> Result<Chunk, CompileError> {
+    match compile_all(program) {
+        Ok(chunk) => Ok(chunk),
+        Err(mut errors) => Err(errors.remove(0)),
+    }
+}
+
+/// Like [`compile`], but returns **all** semantic-analysis errors when sema fails, or a single
+/// element when codegen fails after successful sema.
+///
+/// **Documentation:** `docs/pascal/10-projects.md` (from the repository root).
+pub fn compile_all(program: &Program) -> Result<Chunk, Vec<CompileError>> {
     let (sema_errors, expr_types, method_calls, record_defaults, scalar_case_bindings) =
         fpas_sema::analyze_with_types(program);
     if !sema_errors.is_empty() {
-        let Some(first_error) = sema_errors.into_iter().next() else {
-            unreachable!("non-empty semantic error list expected after emptiness check");
-        };
-        return Err(first_error);
+        return Err(sema_errors);
     }
     let mut compiler = Compiler::new(
         expr_types,
@@ -42,8 +51,10 @@ pub fn compile(program: &Program) -> Result<Chunk, CompileError> {
         record_defaults,
         scalar_case_bindings,
     );
-    compiler.compile_program(program)?;
-    Ok(compiler.finish())
+    match compiler.compile_program(program) {
+        Ok(()) => Ok(compiler.finish()),
+        Err(e) => Err(vec![e]),
+    }
 }
 
 #[cfg(test)]

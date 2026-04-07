@@ -1,3 +1,7 @@
+//! Lowers standard-library calls and intrinsics to VM operations.
+//!
+//! **Documentation:** `docs/pascal/11-stdlib.md`, `docs/pascal/std/README.md` (from the repository root).
+
 mod array;
 mod console;
 mod conv;

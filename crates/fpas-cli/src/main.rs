@@ -18,7 +18,7 @@ mod cli_run;
 use std::env;
 use std::process;
 
-pub(crate) use cli_input::{CliInput, resolve_cli_config};
+pub(crate) use cli_input::{CliInput, ResolvedCli, resolve_cli_config};
 pub(crate) use cli_run::run_cli;
 #[cfg(test)]
 pub(crate) use cli_run::{render_cli_diagnostic, run_source};

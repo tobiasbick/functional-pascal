@@ -1,3 +1,4 @@
+use super::support::run_cli_args_and_capture_output;
 use super::*;
 
 #[test]
@@ -103,4 +104,48 @@ fn resolve_cli_config_rejects_define_style_flags() {
     let error = result.expect_err("define flags are not supported");
     assert!(error.contains("Unknown option"));
     assert!(error.contains("-DDEBUG"));
+}
+
+#[test]
+fn resolve_cli_config_help_and_version_are_exclusive() {
+    let cwd = create_temp_dir("flags");
+    assert_eq!(
+        resolve_cli_config(&[String::from("--help")], &cwd),
+        Ok(ResolvedCli::Help)
+    );
+    assert_eq!(
+        resolve_cli_config(&[String::from("-h")], &cwd),
+        Ok(ResolvedCli::Help)
+    );
+    assert_eq!(
+        resolve_cli_config(&[String::from("--version")], &cwd),
+        Ok(ResolvedCli::Version)
+    );
+    assert_eq!(
+        resolve_cli_config(&[String::from("-V")], &cwd),
+        Ok(ResolvedCli::Version)
+    );
+
+    let extra = resolve_cli_config(&[String::from("--help"), String::from("x.fpas")], &cwd);
+    assert!(extra.is_err());
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+}
+
+#[test]
+fn run_cli_help_and_version_exit_zero() {
+    let cwd = create_temp_dir("run-help");
+
+    let (code_h, help_text, stderr_h) =
+        run_cli_args_and_capture_output(&[String::from("--help")], &cwd);
+    assert_eq!(code_h, 0);
+    assert!(help_text.contains("Usage:"));
+    assert!(stderr_h.is_empty());
+
+    let (code_v, ver, stderr_v) =
+        run_cli_args_and_capture_output(&[String::from("--version")], &cwd);
+    assert_eq!(code_v, 0);
+    assert!(ver.starts_with("fpas "));
+    assert!(stderr_v.is_empty());
+
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 }

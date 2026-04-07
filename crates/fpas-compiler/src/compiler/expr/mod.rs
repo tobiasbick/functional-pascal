@@ -5,7 +5,7 @@
 mod call;
 mod special;
 
-use crate::error::CompileError;
+use crate::error::{CompileError, internal_compiler_error};
 use fpas_bytecode::{Op, Value};
 use fpas_parser::{Expr, UnaryOp};
 use fpas_sema::Ty;
@@ -45,7 +45,7 @@ impl Compiler {
                 span,
             } => {
                 let location = Self::location_of(span);
-                let call_key = std::ptr::from_ref(expr) as usize;
+                let call_key = fpas_sema::expr_lookup_key(expr);
                 if let Some(qualified) = self.method_calls.get(&call_key).cloned() {
                     self.compile_method_call(designator, &qualified, args, location)?;
                 } else {
@@ -117,9 +117,12 @@ impl Compiler {
                             self.compile_expr(val)?;
                         } else {
                             let Some(default_expr) = default.as_ref() else {
-                                unreachable!(
-                                    "compiler: missing required field with no default — sema should have caught this"
-                                );
+                                return Err(internal_compiler_error(
+                                    "Missing required record field with no default value (semantic analysis should have reported this).",
+                                    "This is an internal compiler error. Re-run compilation and report the source program.",
+                                    span.line,
+                                    span.column,
+                                ));
                             };
                             self.compile_expr(default_expr)?;
                         }

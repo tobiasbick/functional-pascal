@@ -15,6 +15,8 @@ Multi-file programs are composed with project source lists plus `unit` / `uses`.
   - `.fpasprj` — loads as a project file.
   - Other extensions — error.
 - `fpas` with more than one argument — usage error.
+- `fpas -h` / `fpas --help` — prints usage to stdout and exits successfully.
+- `fpas -V` / `fpas --version` — prints the compiler version to stdout and exits successfully.
 
 ## Project File Format
 

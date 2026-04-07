@@ -66,7 +66,7 @@ impl Compiler {
         args: &[Expr],
         location: SourceLocation,
     ) -> Result<(), CompileError> {
-        let call_key = std::ptr::from_ref(designator) as usize;
+        let call_key = fpas_sema::designator_lookup_key(designator);
         if let Some(qualified) = self.method_calls.get(&call_key).cloned() {
             self.compile_method_call(designator, &qualified, args, location)?;
             self.emit(Op::Pop, location);

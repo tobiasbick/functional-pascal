@@ -100,7 +100,7 @@ impl Checker {
         };
 
         self.method_calls
-            .insert(Self::designator_key(designator), qualified.clone());
+            .insert(crate::designator_lookup_key(designator), qualified.clone());
 
         self.check_stmt_method_kind(&qualified, &method_kind, args, span);
         true
@@ -151,9 +151,5 @@ impl Checker {
                 );
             }
         }
-    }
-
-    fn designator_key(designator: &Designator) -> usize {
-        std::ptr::from_ref(designator) as usize
     }
 }

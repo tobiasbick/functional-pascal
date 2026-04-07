@@ -52,9 +52,20 @@ pub fn analyze_with_types(
 }
 
 /// Stable key for looking up [`ExprTypeMap`] entries (address of the `Expr` in the AST).
+///
+/// Uses the memory address of the `Expr` reference. This is sound because the AST is immutable
+/// for the whole compile pipeline; keys must match between sema and codegen for the same tree.
 #[must_use]
 pub fn expr_lookup_key(expr: &fpas_parser::Expr) -> usize {
     check::Checker::expr_lookup_key(expr)
+}
+
+/// Stable key for call-statement method resolution (address of the call's [`Designator`] in the AST).
+///
+/// **Documentation:** `docs/pascal/04-functions.md` (record method calls; from the repository root).
+#[must_use]
+pub fn designator_lookup_key(designator: &fpas_parser::Designator) -> usize {
+    std::ptr::from_ref(designator) as usize
 }
 
 #[cfg(test)]

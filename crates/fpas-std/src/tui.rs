@@ -109,10 +109,10 @@ impl TuiSession {
         location: SourceLocation,
     ) -> Result<(i64, i64), StdError> {
         self.ensure_open(
-			"Application.Size(App) requires an open Std.Tui application session.",
-			"Open the application first and keep the returned handle alive while querying its size.",
-			location,
-		)?;
+            "Application.Size(App) requires an open Std.Tui application session.",
+            "Open the application first and keep the returned handle alive while querying its size.",
+            location,
+        )?;
 
         Ok((console.screen_width(), console.screen_height()))
     }
@@ -145,10 +145,10 @@ impl TuiSession {
         location: SourceLocation,
     ) -> Result<Option<TuiEvent>, StdError> {
         self.ensure_open(
-			"Application.ReadEventTimeout(App, Milliseconds) requires an open Std.Tui application session.",
-			"Open the application before waiting for timed events.",
-			location,
-		)?;
+            "Application.ReadEventTimeout(App, Milliseconds) requires an open Std.Tui application session.",
+            "Open the application before waiting for timed events.",
+            location,
+        )?;
 
         let deadline = Instant::now() + Duration::from_millis(timeout_ms.max(0) as u64);
 

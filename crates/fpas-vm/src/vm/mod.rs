@@ -64,11 +64,21 @@ impl Vm {
     }
 
     fn build(chunk: Chunk, console: Console) -> Self {
-        let pool_size = std::thread::available_parallelism()
-            .map(|n| n.get())
-            .unwrap_or(1)
-            .saturating_sub(1)
-            .max(1); // always keep one pool worker so `go` can make progress on single-core hosts
+        // **Documentation:** `docs/pascal/08-concurrency.md` (from the repository root).
+        //
+        // Spawning `available_parallelism() - 1` workers for every `Vm::run()` caused severe
+        // slowdown when hundreds of tests each created a VM in parallel: each run blocked one
+        // idle worker thread on a condvar. Only programs that emit `SpawnTask` / `SpawnDetachedTask`
+        // need a pool.
+        let pool_size = if chunk.uses_spawn_tasks() {
+            std::thread::available_parallelism()
+                .map(|n| n.get())
+                .unwrap_or(1)
+                .saturating_sub(1)
+                .max(1)
+        } else {
+            0
+        };
 
         let shared = Arc::new(SharedState {
             chunk,

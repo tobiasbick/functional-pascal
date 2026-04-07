@@ -1,8 +1,26 @@
+//! CLI argument resolution and project discovery.
+//!
+//! Spec: [Projects & CLI](../../../docs/pascal/10-projects.md).
+
 use std::fs;
 use std::path::{Path, PathBuf};
 
 const SOURCE_FILE_EXTENSION: &str = "fpas";
 const PROJECT_FILE_EXTENSION: &str = "fpasprj";
+
+/// Text printed for `fpas -h` / `fpas --help` (stdout).
+pub(crate) const CLI_HELP: &str = "\
+fpas — Functional Pascal compiler
+
+Usage:
+  fpas [<file.fpas | file.fpasprj>]    Run a source file or project
+  fpas                                 Discover a `.fpasprj` in the current directory
+
+Options:
+  -h, --help      Print this help
+  -V, --version   Print version
+
+";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum CliInput {
@@ -10,9 +28,17 @@ pub(crate) enum CliInput {
     ProjectFile(PathBuf),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct CliConfig {
     pub input: CliInput,
+}
+
+/// Result of parsing CLI arguments before loading sources.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum ResolvedCli {
+    Run(CliConfig),
+    Help,
+    Version,
 }
 
 #[cfg(test)]
@@ -21,19 +47,43 @@ pub(crate) fn resolve_cli_input(args: &[String], cwd: &Path) -> Result<CliInput,
         return Err("Usage: fpas [<file.fpas | file.fpasprj>]".to_string());
     }
 
-    Ok(resolve_cli_config(args, cwd)?.input)
+    match resolve_cli_config(args, cwd)? {
+        ResolvedCli::Run(c) => Ok(c.input),
+        ResolvedCli::Help | ResolvedCli::Version => {
+            Err("resolve_cli_input: use resolve_cli_config for --help or --version".to_string())
+        }
+    }
 }
 
-pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<CliConfig, String> {
+pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<ResolvedCli, String> {
     let mut input = None::<String>;
     let mut index = 0;
 
     while index < args.len() {
         let arg = &args[index];
 
+        if arg == "-h" || arg == "--help" {
+            if args.len() != 1 {
+                return Err(
+                    "Usage: fpas [<file.fpas | file.fpasprj>]\n  help: `fpas --help` shows options."
+                        .to_string(),
+                );
+            }
+            return Ok(ResolvedCli::Help);
+        }
+        if arg == "-V" || arg == "--version" {
+            if args.len() != 1 {
+                return Err(
+                    "Usage: fpas [<file.fpas | file.fpasprj>]\n  help: `fpas --help` shows options."
+                        .to_string(),
+                );
+            }
+            return Ok(ResolvedCli::Version);
+        }
+
         if arg.starts_with('-') {
             return Err(format!(
-                "Unknown option `{arg}`.\n  help: Pass a `.fpas` or `.fpasprj` path."
+                "Unknown option `{arg}`.\n  help: Pass a `.fpas` or `.fpasprj` path, or `fpas --help`."
             ));
         }
 
@@ -48,7 +98,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<CliConfi
         None => discover_project_file(cwd),
     }?;
 
-    Ok(CliConfig { input })
+    Ok(ResolvedCli::Run(CliConfig { input }))
 }
 
 fn resolve_explicit_input(input: &str, cwd: &Path) -> Result<CliInput, String> {

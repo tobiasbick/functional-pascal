@@ -226,21 +226,38 @@ Return `true` when the application should render a new frame.
 
 ---
 
-## Example loop
+## Minimal application model
+
+The smallest useful `Std.Tui` flow is:
+
+1. open an application session,
+2. request and consume redraws,
+3. process events,
+4. close the session before exit.
 
 ```pascal
-program Demo;
-uses Std.Tui;
+program StdTuiMinimal;
+uses Std.Console, Std.Tui;
 begin
   var App: Application := Application.Open();
+  mutable var Running: boolean := true;
   Application.RequestRedraw(App);
 
-  while true do
+  while Running do
   begin
-    case Application.PollEvent(App) of
+    case Application.ReadEventTimeout(App, 16) of
       Some(E):
-        if E.kind = EventKind.Resize then
-          Application.RequestRedraw(App);
+        begin
+          if E.kind = EventKind.Resize then
+            Application.RequestRedraw(App)
+          else if E.kind = EventKind.Key then
+          begin
+            if E.key.kind = KeyKind.Escape then
+              Running := false
+            else
+              Application.RequestRedraw(App)
+          end
+        end;
       None:
         begin
         end
@@ -248,8 +265,17 @@ begin
 
     if Application.RedrawPending(App) then
     begin
-      { update local state and render here }
+      var S: Size := Application.Size(App);
+      ClrScr();
+      GotoXY(1, 1);
+      WriteLn('Std.Tui minimal app');
+      WriteLn('Size: ', S.width, 'x', S.height);
+      WriteLn('Press Escape to exit')
     end
-  end
+  end;
+
+  Application.Close(App)
 end.
 ```
+
+See also: [`examples/pascal/tui/minimal_application.fpas`](../../../examples/pascal/tui/minimal_application.fpas)

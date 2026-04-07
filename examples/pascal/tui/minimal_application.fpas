@@ -1,0 +1,48 @@
+program TuiMinimalApplication;
+uses Std.Console, Std.Tui;
+begin
+  var App: Application := Application.Open();
+  mutable var Running: boolean := true;
+  mutable var LastEvent: string := 'none';
+  Application.RequestRedraw(App);
+
+  while Running do
+  begin
+    case Application.ReadEventTimeout(App, 16) of
+      Some(E):
+        begin
+          if E.kind = Std.Tui.EventKind.Resize then
+          begin
+            LastEvent := 'resize';
+            Application.RequestRedraw(App)
+          end
+          else if E.kind = Std.Tui.EventKind.Key then
+          begin
+            if E.key.kind = Std.Tui.KeyKind.Escape then
+              Running := false
+            else if E.key.kind = Std.Tui.KeyKind.Character then
+              LastEvent := 'key(character)'
+            else
+              LastEvent := 'key';
+            Application.RequestRedraw(App)
+          end
+        end;
+      None:
+        begin
+        end
+    end;
+
+    if Application.RedrawPending(App) then
+    begin
+      var SizeNow: Size := Application.Size(App);
+      ClrScr();
+      GotoXY(1, 1);
+      WriteLn('Std.Tui minimal application');
+      WriteLn('Size: ', SizeNow.width, 'x', SizeNow.height);
+      WriteLn('Last event: ', LastEvent);
+      WriteLn('Press Escape to exit')
+    end
+  end;
+
+  Application.Close(App)
+end.

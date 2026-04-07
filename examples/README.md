@@ -14,6 +14,7 @@ This directory contains runnable Functional Pascal examples for the current lang
 - `pascal/pattern-matching/` - guards and exhaustiveness
 - `pascal/record-methods/` - record methods and dot-call syntax
 - `pascal/records/defaults_with_update.fpas` - record default fields and immutable `with` updates
+- `pascal/tui/minimal_application.fpas` - minimal `Std.Tui.Application` lifecycle with event handling and redraw coordination
 
 ## Multi-file project
 

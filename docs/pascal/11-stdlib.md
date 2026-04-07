@@ -55,8 +55,15 @@ WriteLn('Value: ', 42, ' Flag: ', true);
 uses Std.Tui;
 
 var App: Application := Application.Open();
-var SizeNow: Size := Application.Size(App);
 Application.RequestRedraw(App);
+
+case Application.ReadEventTimeout(App, 16) of
+  Some(E): if E.kind = EventKind.Resize then Application.RequestRedraw(App);
+  None: begin end
+end;
+
+var SizeNow: Size := Application.Size(App);
+Application.Close(App);
 ```
 
 ### Strings and conversions

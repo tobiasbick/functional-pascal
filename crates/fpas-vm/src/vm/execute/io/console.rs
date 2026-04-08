@@ -234,7 +234,7 @@ impl Worker {
         Ok(true)
     }
 
-    fn key_event_record(event: fpas_std::ConsoleKeyEvent) -> Value {
+    pub(in crate::vm::execute::io) fn key_event_record(event: fpas_std::ConsoleKeyEvent) -> Value {
         Value::Record {
             type_name: "Std.Console.KeyEvent".into(),
             fields: vec![

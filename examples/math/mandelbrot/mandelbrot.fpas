@@ -1,3 +1,4 @@
+{ Run as `fpas mandelbrot.fpasprj` (multi-unit project). Interactive; see examples/README.md. }
 program MandelbrotShowcase;
 uses Std.Console, Std.Conv, Std.Math, Std.Str, Mandelbrot.Color, Mandelbrot.Render;
 

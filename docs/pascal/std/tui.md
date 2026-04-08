@@ -28,6 +28,8 @@ After `uses Std.Tui;` you can refer to the unit in either form:
 
 `Std.Tui` exports nested names such as `Application.Open`, `Application.ReadEvent`, and `EventKind.Resize`. These short forms are available only when `Std.Tui` appears in `uses`.
 
+`Std.Tui` builds on [`Std.Console`](console.md): the `key` field of `Std.Tui.TuiEvent` has type **`Std.Console.KeyEvent`** (and its `kind` field is **`Std.Console.KeyKind`**). The **`Tui`** prefix avoids clashing with **`Std.Console.Event`**. Import **`Std.Console`** alongside **`Std.Tui`** when you need short names such as `KeyKind` or `WriteLn`, or use fully qualified `Std.Console.*` names.
+
 ---
 
 ## Current status
@@ -36,7 +38,7 @@ After `uses Std.Tui;` you can refer to the unit in either form:
 
 - `Application` is the TUI session handle.
 - `Size` exposes terminal width and height.
-- `Event` exposes key and resize input.
+- `TuiEvent` exposes key and resize input.
 - `Application.RequestRedraw` / `Application.RedrawPending` support redraw-oriented loops.
 
 The initial execution path is intentionally narrow:
@@ -54,25 +56,25 @@ The broader Rust runtime design for `Std.Tui` is still intentionally minimal and
 
 ## Quick reference
 
-Everything below requires `uses Std.Tui;`.
+Everything below requires `uses Std.Tui;`. Key types for `TuiEvent.key` come from **`Std.Console`** (add `uses Std.Console` for short names like `KeyKind`).
 
 | Kind | Name | Notes |
 |------|------|--------|
 | type | `Application` | opaque application/session handle |
 | type | `Size` | record with `width` and `height` |
-| type | `KeyKind` | enum for logical keys |
-| type | `KeyEvent` | record for one key input |
 | type | `EventKind` | enum with `Key` and `Resize` |
-| type | `Event` | record for one application event |
+| type | `TuiEvent` | record for one application event (`key` is `Std.Console.KeyEvent`) |
+| type | `Std.Console.KeyKind` | enum for logical keys (reused; not defined under `Std.Tui`) |
+| type | `Std.Console.KeyEvent` | record for one key input (reused; not defined under `Std.Tui`) |
 | function | `Application.Open(): Application` | create/open an application session |
 | procedure | `Application.Close(App: Application)` | close the application session |
 | function | `Application.Size(App: Application): Size` | current terminal size |
-| function | `Application.ReadEvent(App: Application): Event` | blocking event read |
-| function | `Application.ReadEventTimeout(App: Application; Milliseconds: integer): Option of Event` | wait up to N ms |
-| function | `Application.PollEvent(App: Application): Option of Event` | non-blocking event check |
+| function | `Application.ReadEvent(App: Application): TuiEvent` | blocking event read |
+| function | `Application.ReadEventTimeout(App: Application; Milliseconds: integer): Option of TuiEvent` | wait up to N ms |
+| function | `Application.PollEvent(App: Application): Option of TuiEvent` | non-blocking event check |
 | procedure | `Application.RequestRedraw(App: Application)` | mark the application as needing redraw |
 | function | `Application.RedrawPending(App: Application): boolean` | query redraw state |
-| enum members | `KeyKind.Space`, `KeyKind.Escape`, `KeyKind.Character`, … | same logical key set as the console key model |
+| enum members | `Std.Console.KeyKind.*` (short `KeyKind.*` with `uses Std.Console`) | same as [`Std.Console`](console.md) |
 | enum members | `EventKind.Key`, `EventKind.Resize` | TUI event kinds |
 
 ---
@@ -107,49 +109,9 @@ end;
 
 ---
 
-### Type `KeyKind`
+### Key input types (`Std.Console.KeyKind`, `Std.Console.KeyEvent`)
 
-Logical name: `Std.Tui.KeyKind`. Short: `KeyKind` when `Std.Tui` is imported.
-
-`KeyKind` uses the same logical key set as the terminal key model already used elsewhere in the standard library:
-
-- `Unknown`
-- `Escape`
-- `Tab`
-- `Enter`
-- `Backspace`
-- `Space`
-- `Up`
-- `Down`
-- `Left`
-- `Right`
-- `Home`
-- `End`
-- `PageUp`
-- `PageDown`
-- `Insert`
-- `Delete`
-- `F1` .. `F12`
-- `Character`
-
----
-
-### Type `KeyEvent`
-
-Logical name: `Std.Tui.KeyEvent`. Short: `KeyEvent` when `Std.Tui` is imported.
-
-Conceptual declaration:
-
-```pascal
-type KeyEvent = record
-  kind: KeyKind;
-  ch: char;
-  shift: boolean;
-  ctrl: boolean;
-  alt: boolean;
-  meta: boolean
-end;
-```
+`Std.Tui` does not define its own key types. Use **`Std.Console.KeyKind`** and **`Std.Console.KeyEvent`** for `TuiEvent.key` (see [`console.md`](console.md) — `ReadKeyEvent`, `KeyEvent`, `KeyKind`). With `uses Std.Console`, the short names **`KeyKind`** and **`KeyEvent`** refer to those console types.
 
 ---
 
@@ -164,16 +126,16 @@ Variants:
 
 ---
 
-### Type `Event`
+### Type `TuiEvent`
 
-Logical name: `Std.Tui.Event`. Short: `Event` when `Std.Tui` is imported.
+Logical name: `Std.Tui.TuiEvent`. Short: `TuiEvent` when `Std.Tui` is imported.
 
 Conceptual declaration:
 
 ```pascal
-type Event = record
+type TuiEvent = record
   kind: EventKind;
-  key: KeyEvent;
+  key: Std.Console.KeyEvent;
   size: Size
 end;
 ```
@@ -181,7 +143,7 @@ end;
 | Field | Type | Meaning |
 |-------|------|---------|
 | `kind` | `EventKind` | which event payload is active |
-| `key` | `KeyEvent` | populated for `EventKind.Key` |
+| `key` | `Std.Console.KeyEvent` | populated for `EventKind.Key` |
 | `size` | `Size` | populated for `EventKind.Resize` |
 
 ---
@@ -204,15 +166,15 @@ The initial runtime restores any terminal state acquired by `Application.Open()`
 
 Return the current terminal size for the application.
 
-### `function Application.ReadEvent(App: Application): Event`
+### `function Application.ReadEvent(App: Application): TuiEvent`
 
 Read one event from the application event stream.
 
-### `function Application.ReadEventTimeout(App: Application; Milliseconds: integer): Option of Event`
+### `function Application.ReadEventTimeout(App: Application; Milliseconds: integer): Option of TuiEvent`
 
 Wait up to `Milliseconds` for an event. Returns `None` if no event is available before the timeout.
 
-### `function Application.PollEvent(App: Application): Option of Event`
+### `function Application.PollEvent(App: Application): Option of TuiEvent`
 
 Return the next event if one is already available; otherwise return `None`.
 
@@ -252,7 +214,7 @@ begin
             Application.RequestRedraw(App)
           else if E.kind = EventKind.Key then
           begin
-            if E.key.kind = KeyKind.Escape then
+            if E.key.kind = Std.Console.KeyKind.Escape then
               Running := false
             else
               Application.RequestRedraw(App)

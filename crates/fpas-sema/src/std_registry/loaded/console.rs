@@ -43,7 +43,7 @@ fn register_enum_type(checker: &mut Checker, qualified_name: &str, variants: &[&
     enum_ty
 }
 
-fn register_std_console_key_api(checker: &mut Checker) {
+pub(super) fn register_std_console_key_api(checker: &mut Checker) {
     let key_kind_ty = register_enum_type(checker, s::STD_CONSOLE_KEY_KIND, KEY_KIND_VARIANTS);
 
     let key_event_ty = Ty::Record(RecordTy {

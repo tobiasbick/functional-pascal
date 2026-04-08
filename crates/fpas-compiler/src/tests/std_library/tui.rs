@@ -56,7 +56,7 @@ begin
     Some(E):
       begin
         Std.Console.WriteLn(E.kind = Std.Tui.EventKind.Key);
-        Std.Console.WriteLn(E.key.kind = Std.Tui.KeyKind.Space)
+        Std.Console.WriteLn(E.key.kind = Std.Console.KeyKind.Space)
       end;
     None:
       Std.Console.WriteLn('missing key')

@@ -1,8 +1,11 @@
+//! CRT screen redraw: emit ANSI SGR for cell colors explicitly so capture buffers see truecolor
+//! and 256-color sequences. See `docs/pascal/std/console.md` (from repository root).
+
 use super::Console;
 use crate::error::{StdError, std_runtime_error};
 use crossterm::QueueableCommand;
 use crossterm::cursor::{Hide, MoveTo, SetCursorStyle, Show};
-use crossterm::style::{Print, ResetColor, SetBackgroundColor, SetForegroundColor};
+use crossterm::style::{Print, ResetColor};
 use crossterm::terminal::{Clear, ClearType};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
@@ -37,8 +40,8 @@ impl Console {
                 for x in 1..=state.width {
                     let cell = state.cell_at(x, y);
                     writer
-                        .queue(SetForegroundColor(cell.fg.to_crossterm()))
-                        .and_then(|w| w.queue(SetBackgroundColor(cell.bg.to_crossterm())))
+                        .queue(Print(cell.fg.ansi_set_fg()))
+                        .and_then(|w| w.queue(Print(cell.bg.ansi_set_bg())))
                         .and_then(|w| w.queue(Print(cell.ch)))
                         .map_err(map_err)?;
                 }
@@ -57,13 +60,13 @@ impl Console {
                     writer.queue(MoveTo(x - 1, y - 1)).map_err(map_err)?;
                     if last_fg != Some(cell.fg) {
                         writer
-                            .queue(SetForegroundColor(cell.fg.to_crossterm()))
+                            .queue(Print(cell.fg.ansi_set_fg()))
                             .map_err(map_err)?;
                         last_fg = Some(cell.fg);
                     }
                     if last_bg != Some(cell.bg) {
                         writer
-                            .queue(SetBackgroundColor(cell.bg.to_crossterm()))
+                            .queue(Print(cell.bg.ansi_set_bg()))
                             .map_err(map_err)?;
                         last_bg = Some(cell.bg);
                     }

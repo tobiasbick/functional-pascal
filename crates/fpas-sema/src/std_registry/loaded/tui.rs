@@ -1,13 +1,15 @@
 //! `Std.Tui` semantic registration.
 //!
+//! `Std.Tui.TuiEvent.key` uses `Std.Console.KeyEvent` (registered by [`super::console::register_std_console_key_api`] when needed).
+//!
 //! **Documentation:** `docs/pascal/std/tui.md` (from the repository root).
 
 use super::super::{define_func, define_proc, p};
 use crate::check::Checker;
 use crate::scope::{Symbol, SymbolKind};
 use crate::types::{EnumTy, EnumVariantTy, RecordTy, Ty};
+use fpas_std::TUI_EVENT_KIND_VARIANTS;
 use fpas_std::std_symbols as s;
-use fpas_std::{KEY_KIND_VARIANTS, TUI_EVENT_KIND_VARIANTS};
 
 fn register_enum_type(checker: &mut Checker, qualified_name: &str, variants: &[&str]) -> Ty {
     let variants: Vec<EnumVariantTy> = variants
@@ -78,19 +80,12 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         ],
     );
 
-    let key_kind_ty = register_enum_type(checker, s::STD_TUI_KEY_KIND, KEY_KIND_VARIANTS);
-    let key_event_ty = register_record_type(
-        checker,
-        s::STD_TUI_KEY_EVENT,
-        vec![
-            ("kind".into(), key_kind_ty),
-            ("ch".into(), Ty::Char),
-            ("shift".into(), Ty::Boolean),
-            ("ctrl".into(), Ty::Boolean),
-            ("alt".into(), Ty::Boolean),
-            ("meta".into(), Ty::Boolean),
-        ],
-    );
+    let key_event_ty = checker
+        .scopes
+        .lookup(s::STD_CONSOLE_KEY_EVENT)
+        .expect("Std.Console.KeyEvent must be registered before Std.Tui")
+        .ty
+        .clone();
 
     let event_kind_ty = register_enum_type(checker, s::STD_TUI_EVENT_KIND, TUI_EVENT_KIND_VARIANTS);
     let event_ty = register_record_type(
@@ -98,7 +93,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         s::STD_TUI_EVENT,
         vec![
             ("kind".into(), event_kind_ty),
-            ("key".into(), key_event_ty.clone()),
+            ("key".into(), key_event_ty),
             ("size".into(), size_ty.clone()),
         ],
     );

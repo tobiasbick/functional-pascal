@@ -9,13 +9,13 @@ uses Std.Tui;
 begin
   var App: Application := Application.Open();
   var Screen: Size := Application.Size(App);
-  var Ev: Event := Application.ReadEvent(App);
-  var MaybeEvent: Option of Event := Application.ReadEventTimeout(App, 16);
-  var Pending: Option of Event := Application.PollEvent(App);
+  var Ev: TuiEvent := Application.ReadEvent(App);
+  var MaybeEvent: Option of TuiEvent := Application.ReadEventTimeout(App, 16);
+  var Pending: Option of TuiEvent := Application.PollEvent(App);
   Application.RequestRedraw(App);
   var NeedsRedraw: boolean := Application.RedrawPending(App);
   var IsResize: boolean := Ev.kind = EventKind.Resize;
-  var IsSpace: boolean := Ev.key.kind = KeyKind.Space;
+  var IsSpace: boolean := Ev.key.kind = Std.Console.KeyKind.Space;
   var Width: integer := Screen.width;
   var Height: integer := Ev.size.height;
   Application.Close(App)
@@ -92,7 +92,7 @@ program T;
 uses Std.Tui;
 begin
   var App: Application := Application.Open();
-  var Ev: Option of Event := Application.ReadEventTimeout(App)
+  var Ev: Option of TuiEvent := Application.ReadEventTimeout(App)
 end.",
     );
     assert!(
@@ -128,7 +128,7 @@ program T;
 uses Std.Tui;
 begin
   var App: Application := Application.Open();
-  var Ev: Event := Application.ReadEvent(App);
+  var Ev: TuiEvent := Application.ReadEvent(App);
   var IsCustom: boolean := Ev.kind = Std.Tui.EventKind.Custom
 end.",
     );

@@ -1,3 +1,4 @@
+{ Interactive TUI demo — run in a terminal; Escape exits. See examples/README.md. }
 program TuiMinimalApplication;
 uses Std.Console, Std.Tui;
 begin
@@ -18,9 +19,9 @@ begin
           end
           else if E.kind = Std.Tui.EventKind.Key then
           begin
-            if E.key.kind = Std.Tui.KeyKind.Escape then
+            if E.key.kind = KeyKind.Escape then
               Running := false
-            else if E.key.kind = Std.Tui.KeyKind.Character then
+            else if E.key.kind = KeyKind.Character then
               LastEvent := 'key(character)'
             else
               LastEvent := 'key';

@@ -1,4 +1,4 @@
-use crossterm::style::Color;
+use std::borrow::Cow;
 
 pub(super) const DEFAULT_SCREEN_WIDTH: u16 = 80;
 pub(super) const DEFAULT_SCREEN_HEIGHT: u16 = 25;
@@ -47,29 +47,60 @@ pub(super) enum RenderColor {
     Ansi256(u8),
 }
 
+/// Packed CRT palette indices 0–15 → ANSI SGR foreground (CSI `3x` / `9x` `m`).
+const CRT_FG_SGR: [&str; 16] = [
+    "\x1b[30m", "\x1b[34m", "\x1b[32m", "\x1b[36m", "\x1b[31m", "\x1b[35m", "\x1b[33m", "\x1b[37m",
+    "\x1b[90m", "\x1b[94m", "\x1b[92m", "\x1b[96m", "\x1b[91m", "\x1b[95m", "\x1b[93m", "\x1b[97m",
+];
+
+/// Packed CRT palette indices 0–15 → ANSI SGR background (CSI `4x` / `10x` `m`).
+const CRT_BG_SGR: [&str; 16] = [
+    "\x1b[40m",
+    "\x1b[44m",
+    "\x1b[42m",
+    "\x1b[46m",
+    "\x1b[41m",
+    "\x1b[45m",
+    "\x1b[43m",
+    "\x1b[47m",
+    "\x1b[100m",
+    "\x1b[104m",
+    "\x1b[102m",
+    "\x1b[106m",
+    "\x1b[101m",
+    "\x1b[105m",
+    "\x1b[103m",
+    "\x1b[107m",
+];
+
 impl RenderColor {
-    pub(super) fn to_crossterm(self) -> Color {
+    /// ANSI SGR sequence to set the foreground (truecolor / 256 / or CRT palette).
+    ///
+    /// Used by the CRT redraw path so output is plain CSI bytes. `crossterm::style::SetForegroundColor`
+    /// can emit `\e[m` when the writer is not a color-capable TTY (for example tests that capture
+    /// to an in-memory buffer on Windows).
+    ///
+    /// Spec: `docs/pascal/std/console.md` (from repository root).
+    pub(super) fn ansi_set_fg(self) -> Cow<'static, str> {
         match self {
-            Self::Crt(index) => match index {
-                0 => Color::Black,
-                1 => Color::DarkBlue,
-                2 => Color::DarkGreen,
-                3 => Color::DarkCyan,
-                4 => Color::DarkRed,
-                5 => Color::DarkMagenta,
-                6 => Color::DarkYellow,
-                7 => Color::Grey,
-                8 => Color::DarkGrey,
-                9 => Color::Blue,
-                10 => Color::Green,
-                11 => Color::Cyan,
-                12 => Color::Red,
-                13 => Color::Magenta,
-                14 => Color::Yellow,
-                _ => Color::White,
-            },
-            Self::Rgb { r, g, b } => Color::Rgb { r, g, b },
-            Self::Ansi256(index) => Color::AnsiValue(index),
+            Self::Crt(i) => {
+                Cow::Borrowed(CRT_FG_SGR.get(i as usize).copied().unwrap_or("\x1b[97m"))
+            }
+            Self::Rgb { r, g, b } => Cow::Owned(format!("\x1b[38;2;{r};{g};{b}m")),
+            Self::Ansi256(index) => Cow::Owned(format!("\x1b[38;5;{index}m")),
+        }
+    }
+
+    /// ANSI SGR sequence to set the background (truecolor / 256 / or CRT palette).
+    ///
+    /// Spec: `docs/pascal/std/console.md` (from repository root).
+    pub(super) fn ansi_set_bg(self) -> Cow<'static, str> {
+        match self {
+            Self::Crt(i) => {
+                Cow::Borrowed(CRT_BG_SGR.get(i as usize).copied().unwrap_or("\x1b[107m"))
+            }
+            Self::Rgb { r, g, b } => Cow::Owned(format!("\x1b[48;2;{r};{g};{b}m")),
+            Self::Ansi256(index) => Cow::Owned(format!("\x1b[48;5;{index}m")),
         }
     }
 

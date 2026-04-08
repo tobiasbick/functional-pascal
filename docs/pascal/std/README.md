@@ -8,7 +8,7 @@ All units are opt-in through `uses`.
 ## Unit pages
 
 - `Std.Console` - [console.md](console.md) (text I/O, CRT-style screen control, RGB/256 text colors, `ReadKey` / `KeyPressed`, `ReadKeyEvent`, `ReadEvent`, `KeyKind`, `KeyEvent`)
-- `Std.Tui` - [tui.md](tui.md) (terminal application handle, size, key/resize events, redraw coordination)
+- `Std.Tui` - [tui.md](tui.md) (terminal application handle, size, key/resize events, redraw coordination; key payloads use `Std.Console.KeyKind` / `Std.Console.KeyEvent`)
 - `Std.Str` - [str.md](str.md)
 - `Std.Conv` - [conv.md](conv.md)
 - `Std.Math` - [math.md](math.md)

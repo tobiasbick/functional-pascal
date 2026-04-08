@@ -1,3 +1,4 @@
+{ Built only via mandelbrot.fpasprj — not a standalone program. }
 unit Mandelbrot.Render;
 uses Std.Console, Std.Task, Std.Array, Std.Conv, Std.Math, Std.Str, Mandelbrot.Color;
 

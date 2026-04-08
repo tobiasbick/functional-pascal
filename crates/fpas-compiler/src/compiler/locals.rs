@@ -116,7 +116,8 @@ impl Compiler {
     }
 
     pub(super) fn register_std_tui_enums(&mut self) {
-        self.register_enum_variants(s::STD_TUI_KEY_KIND, KEY_KIND_VARIANTS);
+        // `Std.Tui.TuiEvent.key` is `Std.Console.KeyEvent` (field `kind` is `Std.Console.KeyKind`).
+        self.register_enum_variants(s::STD_CONSOLE_KEY_KIND, KEY_KIND_VARIANTS);
         self.register_enum_variants(s::STD_TUI_EVENT_KIND, TUI_EVENT_KIND_VARIANTS);
     }
 }

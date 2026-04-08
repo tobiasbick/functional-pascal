@@ -1,3 +1,4 @@
+{ Interactive CRT demo — blocks until Escape. Single-file; see examples/README.md. }
 program JuliaAscii;
 uses Std.Console;
 

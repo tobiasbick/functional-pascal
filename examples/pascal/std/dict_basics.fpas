@@ -1,0 +1,37 @@
+{ Spec: docs/pascal/std/dict.md (from repository root). }
+program DictBasics;
+uses Std.Console, Std.Conv, Std.Dict, Std.Option, Std.Array;
+
+function DoubleScore(V: integer): integer;
+begin
+  return V * 2
+end;
+
+function IsHighScore(K: string; V: integer): boolean;
+begin
+  return V >= 90
+end;
+
+begin
+  var Scores: dict of string to integer := ['Ada': 95, 'Bob': 72, 'Cara': 91];
+  WriteLn('length: ', IntToStr(Std.Dict.Length(Scores)));
+  WriteLn('has Ada: ', ContainsKey(Scores, 'Ada'));
+
+  var Merged: dict of string to integer :=
+    Merge(Scores, ['Bob': 88, 'Dan': 70]);
+  WriteLn('merged Bob: ', IntToStr(Merged['Bob']));
+
+  case Get(Merged, 'Eve') of
+    Some(V): WriteLn('unexpected Eve: ', IntToStr(V));
+    None:    WriteLn('get missing: none (ok)')
+  end;
+
+  var Doubled: dict of string to integer := Std.Dict.Map(Merged, DoubleScore);
+  WriteLn('map Ada doubled: ', IntToStr(Doubled['Ada']));
+
+  var Top: dict of string to integer := Std.Dict.Filter(Merged, IsHighScore);
+  WriteLn('filter len: ', IntToStr(Std.Dict.Length(Top)));
+
+  var Ks: array of string := Keys(Top);
+  WriteLn('keys array len: ', IntToStr(Std.Array.Length(Ks)))
+end.

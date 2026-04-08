@@ -136,9 +136,7 @@ pub const STD_CONSOLE_FONT_8X8: &str = std_console!("Font8x8");
 
 pub const STD_TUI_APPLICATION: &str = std_tui!("Application");
 pub const STD_TUI_SIZE: &str = std_tui!("Size");
-pub const STD_TUI_EVENT: &str = std_tui!("Event");
-pub const STD_TUI_KEY_EVENT: &str = std_tui!("KeyEvent");
-pub const STD_TUI_KEY_KIND: &str = std_tui!("KeyKind");
+pub const STD_TUI_EVENT: &str = std_tui!("TuiEvent");
 pub const STD_TUI_EVENT_KIND: &str = std_tui!("EventKind");
 pub const STD_TUI_APPLICATION_OPEN: &str = std_tui!("Application.Open");
 pub const STD_TUI_APPLICATION_CLOSE: &str = std_tui!("Application.Close");

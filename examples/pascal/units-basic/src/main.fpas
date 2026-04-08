@@ -1,3 +1,4 @@
+{ Run as `fpas units-basic.fpasprj` — loads App.* units. See examples/README.md. }
 program UnitsBasic;
 uses App.Math, App.Reporting, Std.Console, Std.Conv;
 

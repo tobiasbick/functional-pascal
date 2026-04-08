@@ -1,0 +1,24 @@
+{ Spec: docs/pascal/std/README.md — Std.Task; see also crates/fpas-cli concurrency tests. }
+program TaskBasics;
+uses Std.Console, Std.Conv, Std.Task, Std.Array;
+
+function Square(N: integer): integer;
+begin
+  return N * N
+end;
+
+begin
+  var One: task := go Square(6);
+  WriteLn('wait one: ', IntToStr(Wait(One)));
+
+  mutable var Jobs: array of task := [];
+  Push(Jobs, go Square(3));
+  Push(Jobs, go Square(4));
+  WriteLn('wait [0]: ', IntToStr(Wait(Jobs[0])));
+  WriteLn('wait [1]: ', IntToStr(Wait(Jobs[1])));
+
+  var Ta: task := go Square(2);
+  var Tb: task := go Square(3);
+  WaitAll([Ta, Tb]);
+  WriteLn('after waitall: ', IntToStr(Wait(Ta) + Wait(Tb)))
+end.

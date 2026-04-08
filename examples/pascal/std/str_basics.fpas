@@ -1,0 +1,18 @@
+{ Spec: docs/pascal/std/str.md (from repository root). }
+program StrBasics;
+uses Std.Console, Std.Conv, Std.Str;
+begin
+  var S: string := '  Hello, World!  ';
+  WriteLn('trim: ', Trim(S));
+  WriteLn('upper: ', ToUpper('fpas'));
+  WriteLn('split+join: ', Join(Split('a,b,c', ','), '|'));
+
+  var Msg: string := Format('n=%d upper=%s', 42, ToUpper('ok'));
+  WriteLn('format: ', Msg);
+
+  WriteLn('contains b: ', Contains('abc', 'b'));
+  WriteLn('substring: ', Substring('Hello', 0, 3));
+  WriteLn('replace: ', Replace('banana', 'na', 'NA'));
+  WriteLn('reverse: ', Reverse('draw'));
+  WriteLn('pad: ', PadLeft('7', 4, '0'))
+end.

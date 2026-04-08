@@ -10,8 +10,7 @@ use fpas_std::{ConsoleKeyEvent, TuiEvent};
 
 const TUI_APPLICATION_TYPE: &str = "Std.Tui.Application";
 const TUI_SIZE_TYPE: &str = "Std.Tui.Size";
-const TUI_EVENT_TYPE: &str = "Std.Tui.Event";
-const TUI_KEY_EVENT_TYPE: &str = "Std.Tui.KeyEvent";
+const TUI_EVENT_TYPE: &str = "Std.Tui.TuiEvent";
 
 impl Worker {
     pub(super) fn try_exec_tui_intrinsic(
@@ -135,7 +134,7 @@ impl Worker {
     }
 
     fn tui_unknown_key_event() -> Value {
-        Self::tui_key_event_record(ConsoleKeyEvent::new(
+        Self::key_event_record(ConsoleKeyEvent::new(
             fpas_std::key_event::key_kind_index("Unknown"),
             '\0',
             false,
@@ -145,27 +144,13 @@ impl Worker {
         ))
     }
 
-    fn tui_key_event_record(event: ConsoleKeyEvent) -> Value {
-        Value::Record {
-            type_name: TUI_KEY_EVENT_TYPE.into(),
-            fields: vec![
-                ("kind".into(), Value::Integer(event.kind as i64)),
-                ("ch".into(), Value::Char(event.ch)),
-                ("shift".into(), Value::Boolean(event.shift)),
-                ("ctrl".into(), Value::Boolean(event.ctrl)),
-                ("alt".into(), Value::Boolean(event.alt)),
-                ("meta".into(), Value::Boolean(event.meta)),
-            ],
-        }
-    }
-
     fn tui_event_record(event: TuiEvent) -> Value {
         match event {
             TuiEvent::Key(key) => Value::Record {
                 type_name: TUI_EVENT_TYPE.into(),
                 fields: vec![
                     ("kind".into(), Value::Integer(0)),
-                    ("key".into(), Self::tui_key_event_record(key)),
+                    ("key".into(), Self::key_event_record(key)),
                     ("size".into(), Self::tui_size_record(0, 0)),
                 ],
             },

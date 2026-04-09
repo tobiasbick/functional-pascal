@@ -1,3 +1,7 @@
+//! `Std.Task.Wait` / `Std.Task.WaitAll` execution.
+//!
+//! **Documentation:** `docs/pascal/std/task.md` (from the repository root).
+
 use crate::vm::diagnostics::VmError;
 use crate::vm::{TaskResultPoll, Worker, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};

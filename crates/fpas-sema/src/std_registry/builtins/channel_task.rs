@@ -1,6 +1,6 @@
 //! Type-checking builtins for `Std.Task`.
 //!
-//! **Documentation:** `docs/pascal/08-concurrency.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/task.md` (from the repository root); language rules: `docs/pascal/08-concurrency.md`.
 
 use crate::check::Checker;
 use crate::types::Ty;

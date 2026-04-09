@@ -32,6 +32,7 @@ See [09-units.md](09-units.md) for `uses` rules, short name ambiguity, and the r
 | [`Std.Dict`](std/dict.md) | Dictionary helpers | `Length`, `ContainsKey`, `Keys`, `Values`, `Remove`, `Get`, `Merge` | [dict.md](std/dict.md) |
 | [`Std.Result`](std/result.md) | Result helpers | `Unwrap`, `UnwrapOr`, `IsOk`, `IsError`, `Map`, `AndThen`, `OrElse` | [result.md](std/result.md) |
 | [`Std.Option`](std/option.md) | Option helpers | `Unwrap`, `UnwrapOr`, `IsSome`, `IsNone`, `Map`, `AndThen`, `OrElse` | [option.md](std/option.md) |
+| [`Std.Task`](std/task.md) | Task synchronization | `Wait`, `WaitAll` | [task.md](std/task.md) |
 
 ---
 

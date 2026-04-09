@@ -141,11 +141,11 @@ pub enum Intrinsic {
 
     /// Wait for a task to complete. Pops `task`, pushes its return value.
     ///
-    /// **Documentation:** `docs/pascal/08-concurrency.md`
+    /// **Documentation:** `docs/pascal/std/task.md`
     TaskWait = 110,
     /// Wait for all tasks to complete. Pops `array of task`.
     ///
-    /// **Documentation:** `docs/pascal/08-concurrency.md`
+    /// **Documentation:** `docs/pascal/std/task.md`
     TaskWaitAll = 111,
 
     /// **Documentation:** `docs/future/advanced-types.md`

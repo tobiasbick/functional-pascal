@@ -1,6 +1,6 @@
 //! Lowers `Std.Task` concurrency helpers to VM intrinsics.
 //!
-//! **Documentation:** `docs/pascal/08-concurrency.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/task.md` (from the repository root); language rules: `docs/pascal/08-concurrency.md`.
 
 use crate::error::CompileError;
 use fpas_bytecode::{Intrinsic, SourceLocation};

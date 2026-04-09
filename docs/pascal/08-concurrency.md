@@ -76,6 +76,8 @@ The Mandelbrot showcase project in `examples/math/mandelbrot/` demonstrates this
 
 ### Std.Task
 
+Per-symbol reference (parameters, edge cases, `Wait` vs `WaitAll`): [std/task.md](std/task.md).
+
 | Function | Signature | Description |
 |----------|-----------|-------------|
 | `Wait` | `(Handle: task): T` | Wait for a task and return its result |

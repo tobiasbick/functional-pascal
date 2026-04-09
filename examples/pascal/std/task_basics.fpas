@@ -1,4 +1,4 @@
-{ Spec: docs/pascal/std/README.md — Std.Task; see also crates/fpas-cli concurrency tests. }
+{ Spec: docs/pascal/std/task.md (from repository root); see also docs/pascal/08-concurrency.md. }
 program TaskBasics;
 uses Std.Console, Std.Conv, Std.Task, Std.Array;
 

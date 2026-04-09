@@ -1,5 +1,5 @@
-//! Dispatches `Op::Intrinsic` to unit modules (`str`, `conv`, `math`, `array`, `result_option`).
-//! Console I/O intrinsics are handled in `fpas-vm`, not here.
+//! Dispatches `Op::Intrinsic` to unit modules (`str`, `conv`, `math`, `array`, `result_option`, `dict`).
+//! Console, TUI, and `Std.Task` (`TaskWait`, `TaskWaitAll`) intrinsics are handled in `fpas-vm`, not here.
 //!
 //! **Documentation:** `docs/pascal/std/README.md` (from the repository root).
 //! **Maintenance:** When adding or rerouting intrinsics, update the README, the relevant unit `.md` file, and `fpas-bytecode::Intrinsic`.

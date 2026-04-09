@@ -1,11 +1,12 @@
 use fpas_diagnostics::{Diagnostic, DiagnosticSeverity};
-use fpas_lexer::lex;
+use fpas_lexer::lex_with_source_id;
 use fpas_parser::{CompilationUnit, QualifiedId, parse_tokens_compilation_unit};
 use std::fs;
 use std::path::Path;
 
 pub(super) fn parse_compilation_unit_file(
     path: &Path,
+    source_id: u32,
 ) -> Result<(CompilationUnit, Vec<String>), String> {
     let source_text = fs::read_to_string(path).map_err(|e| {
         format!(
@@ -14,7 +15,7 @@ pub(super) fn parse_compilation_unit_file(
         )
     })?;
 
-    let (tokens, lex_errors) = lex(&source_text);
+    let (tokens, lex_errors) = lex_with_source_id(&source_text, source_id);
     let (unit, parse_errors) = parse_tokens_compilation_unit(tokens);
 
     let mut diagnostics: Vec<Diagnostic> = lex_errors;

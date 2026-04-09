@@ -48,6 +48,13 @@ fn char_code_very_large() {
 }
 
 #[test]
+fn char_code_decimal_overflow_u32() {
+    let (_, errs) = lex_with_errors("#99999999999999999999");
+    assert_eq!(errs.len(), 1);
+    assert!(errs[0].message.contains("too large"));
+}
+
+#[test]
 fn char_code_error_has_explicit_help() {
     let (_, errs) = lex_with_errors("#");
     assert_eq!(errs.len(), 1);

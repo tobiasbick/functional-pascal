@@ -6,8 +6,16 @@ impl Lexer<'_> {
         self.pos >= self.src.len()
     }
 
+    /// Byte at `pos`. Callers must ensure `!at_end()` first.
+    #[expect(
+        clippy::expect_used,
+        reason = "Scan logic only calls `current` when `pos` is in range; `at_end` guards the driver loop."
+    )]
     pub(super) fn current(&self) -> u8 {
-        self.src[self.pos]
+        self.src
+            .get(self.pos)
+            .copied()
+            .expect("lexer: `current()` called at EOF; callers must check `at_end()` first")
     }
 
     pub(super) fn peek_at(&self, offset: usize) -> Option<u8> {
@@ -78,7 +86,7 @@ impl Lexer<'_> {
             length: self.pos - start_offset,
             line: start_line,
             column: start_col,
-            source_id: 0,
+            source_id: self.source_id,
         }
     }
 

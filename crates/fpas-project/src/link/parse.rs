@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 pub(super) fn parse_program_file(path: &Path) -> Result<Program, String> {
-    match parse_compilation_unit_file(path)?.0 {
+    match parse_compilation_unit_file(path, 0)?.0 {
         CompilationUnit::Program(mut program) => {
             apply_program_source_id(&mut program, 0);
             Ok(program)
@@ -33,7 +33,7 @@ pub(super) fn parse_unit_files(
         let source_id = next_source_id(source_paths.len())?;
         source_paths.push(source_path.clone());
 
-        let mut unit = match parse_compilation_unit_file(source_path)?.0 {
+        let mut unit = match parse_compilation_unit_file(source_path, source_id)?.0 {
             CompilationUnit::Unit(unit) => unit,
             CompilationUnit::Program(program) => {
                 return Err(format!(

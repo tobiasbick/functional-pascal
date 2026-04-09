@@ -1,3 +1,7 @@
+//! Main lexer driver: token dispatch, trivia skipping, and EOF handling.
+//!
+//! **Documentation:** `docs/pascal/01-overview.md` (lexical structure and keywords).
+
 mod directive;
 mod identifiers;
 mod navigation;
@@ -14,17 +18,23 @@ pub struct Lexer<'a> {
     pos: usize,
     line: u32,
     col: u32,
+    source_id: u32,
     tokens: Vec<SpannedToken>,
     errors: Vec<LexError>,
 }
 
 impl<'a> Lexer<'a> {
     pub fn new(source: &'a str) -> Self {
+        Self::with_source_id(source, 0)
+    }
+
+    pub fn with_source_id(source: &'a str, source_id: u32) -> Self {
         Self {
             src: source.as_bytes(),
             pos: 0,
             line: 1,
             col: 1,
+            source_id,
             tokens: Vec::new(),
             errors: Vec::new(),
         }

@@ -136,7 +136,7 @@ fn validate_optional_non_empty(field_name: &str, value: Option<&str>) -> Result<
 }
 
 fn validate_program_main_file(main_path: &Path, warnings: &mut Vec<String>) -> Result<(), String> {
-    let (unit, parse_warnings) = parse_compilation_unit_file(main_path)?;
+    let (unit, parse_warnings) = parse_compilation_unit_file(main_path, 0)?;
     warnings.extend(parse_warnings);
 
     match unit {
@@ -157,7 +157,7 @@ fn validate_project_source_units(
     let mut seen_unit_names = HashMap::<String, PathBuf>::new();
 
     for source_path in source_files {
-        let (unit, parse_warnings) = parse_compilation_unit_file(&source_path)?;
+        let (unit, parse_warnings) = parse_compilation_unit_file(&source_path, 0)?;
         warnings.extend(parse_warnings);
 
         match unit {

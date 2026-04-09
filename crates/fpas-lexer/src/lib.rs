@@ -25,5 +25,11 @@ pub fn lex(source: &str) -> (Vec<SpannedToken>, Vec<LexError>) {
     lexer::Lexer::new(source).tokenize()
 }
 
+/// Like [`lex`], but attaches `source_id` to every token and lexer diagnostic span.
+#[must_use]
+pub fn lex_with_source_id(source: &str, source_id: u32) -> (Vec<SpannedToken>, Vec<LexError>) {
+    lexer::Lexer::with_source_id(source, source_id).tokenize()
+}
+
 #[cfg(test)]
 mod tests;

@@ -70,7 +70,20 @@ impl Lexer<'_> {
         }
 
         let digits = self.consume_decimal_digits();
-        let code: u32 = digits.parse().unwrap_or(u32::MAX);
+        let code: u32 = match digits.parse() {
+            Ok(v) => v,
+            Err(_) => {
+                self.push_err(
+                    LEX_INVALID_CHARACTER_CODE_LITERAL,
+                    "Character code literal is too large to represent",
+                    "Use a decimal value after `#` that fits in 32 bits, for example `#65` for `A`.",
+                    so,
+                    sl,
+                    sc,
+                );
+                return;
+            }
+        };
 
         if code > 255 {
             self.push_err(

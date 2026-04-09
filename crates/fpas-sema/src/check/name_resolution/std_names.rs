@@ -8,10 +8,10 @@ impl Checker {
         self.ambiguous_imports
             .get(&canonical_symbol_name(name))
             .map(|candidates| {
-            format!(
-                "`{name}` exists in multiple imported units: {}. Use the fully qualified name to disambiguate.",
-                candidates.join(", ")
-            )
+                format!(
+                    "`{name}` exists in multiple imported units: {}. Use the fully qualified name to disambiguate.",
+                    candidates.join(", ")
+                )
             })
     }
 
@@ -38,15 +38,18 @@ impl Checker {
             return;
         };
 
-        let already_loaded = self.loaded_std_units.contains(&unit);
-        let symbol_reachable = already_loaded && self.scopes.lookup(fully_qualified_name).is_some();
-        if symbol_reachable {
+        if self.loaded_std_units.contains(&unit)
+            && self.scopes.lookup(fully_qualified_name).is_some()
+        {
             return;
         }
 
+        let new_unit = !self.loaded_std_units.contains(&unit);
         self.loaded_std_units.insert(unit.clone());
         crate::std_registry::register_single_std_unit(self, unit.as_str());
-        crate::std_registry::register_short_aliases(self);
+        if new_unit {
+            crate::std_registry::register_short_aliases(self);
+        }
     }
 
     pub(crate) fn report_ambiguous_type_name(&mut self, name: &str, span: fpas_lexer::Span) {

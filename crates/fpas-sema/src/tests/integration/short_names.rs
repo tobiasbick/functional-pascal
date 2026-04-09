@@ -165,3 +165,37 @@ begin
 end.",
     );
 }
+
+/// After a second `Std.*` unit is pulled in via a fully qualified name, short-alias rebuild must
+/// drop a previously unique short name so it does not keep resolving to only one unit.
+#[test]
+fn short_name_becomes_ambiguous_after_fq_std_loads_second_unit() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Str;
+begin
+  var A: array of integer := [1];
+  var L1: integer := Std.Array.Length(A);
+  var L2: integer := Length('hi')
+end.",
+    );
+    assert!(
+        errs.iter().any(|e| e.message.contains("Ambiguous")),
+        "expected ambiguous `Length` after `Std.Array` was auto-loaded: {errs:#?}"
+    );
+}
+
+#[test]
+fn fq_std_after_single_uses_disambiguates_length() {
+    check_ok(
+        "\
+program T;
+uses Std.Str;
+begin
+  var A: array of integer := [1];
+  var L1: integer := Std.Array.Length(A);
+  var L2: integer := Std.Str.Length('hi')
+end.",
+    );
+}

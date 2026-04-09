@@ -94,7 +94,18 @@ impl ScopeStack {
     /// Returns false if already defined in the same scope.
     pub fn define(&mut self, name: &str, symbol: Symbol) -> bool {
         let scope_index = self.scopes.len() - 1;
-        let scope = &mut self.scopes[scope_index];
+        Self::define_in_scope(&mut self.scopes[scope_index], name, symbol)
+    }
+
+    /// Define in the outermost (program) scope. Used for `Std.*` short aliases so nested checking
+    /// (for example inside a routine body) does not attach imports to a transient inner scope.
+    ///
+    /// **Documentation:** `docs/pascal/09-units-stdlib.md` (from the repository root).
+    pub fn define_in_root(&mut self, name: &str, symbol: Symbol) -> bool {
+        Self::define_in_scope(&mut self.scopes[0], name, symbol)
+    }
+
+    fn define_in_scope(scope: &mut Scope, name: &str, symbol: Symbol) -> bool {
         let canonical_name = canonical_symbol_name(name);
         if scope.symbols.contains_key(&canonical_name) {
             return false;
@@ -107,6 +118,12 @@ impl ScopeStack {
             },
         );
         true
+    }
+
+    /// Remove a symbol from the program root scope. Used when rebuilding `Std` short aliases.
+    pub fn remove_from_root(&mut self, name: &str) -> bool {
+        let canonical_name = canonical_symbol_name(name);
+        self.scopes[0].symbols.remove(&canonical_name).is_some()
     }
 
     /// Look up a symbol by name, searching from innermost to outermost scope.

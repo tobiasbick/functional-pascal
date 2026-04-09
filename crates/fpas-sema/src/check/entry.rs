@@ -9,6 +9,7 @@ impl Checker {
     pub fn check_program(&mut self, program: &Program) {
         self.loaded_std_units.clear();
         self.short_builtin_redirect.clear();
+        self.std_short_alias_keys.clear();
         for u in &program.uses {
             match canonical_unit_from_uses_clause(u) {
                 Ok(canon) => {

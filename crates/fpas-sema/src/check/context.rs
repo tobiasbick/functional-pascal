@@ -34,6 +34,8 @@ pub struct Checker {
     pub(crate) ambiguous_imports: HashMap<String, Vec<String>>,
     /// Unqualified `BuiltinStd` call -> fully qualified name for the polymorphic checker.
     pub(crate) short_builtin_redirect: HashMap<String, String>,
+    /// Canonical short names inserted at the program root by [`crate::std_registry::register_short_aliases`].
+    pub(crate) std_short_alias_keys: HashSet<String>,
     /// Named record type → ordered (field_name, optional_default_expr) pairs.
     pub(crate) record_defaults: RecordDefaultsMap,
     /// `case` label expressions that bind the scrutinee for a guarded scalar arm.
@@ -52,6 +54,7 @@ impl Checker {
             loaded_std_units: HashSet::new(),
             ambiguous_imports: HashMap::new(),
             short_builtin_redirect: HashMap::new(),
+            std_short_alias_keys: HashSet::new(),
             record_defaults: RecordDefaultsMap::new(),
             scalar_case_bindings: ScalarCaseBindingMap::new(),
             pending_record_types: HashSet::new(),

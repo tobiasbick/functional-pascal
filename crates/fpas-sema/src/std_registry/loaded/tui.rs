@@ -80,12 +80,12 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         ],
     );
 
-    let key_event_ty = checker
-        .scopes
-        .lookup(s::STD_CONSOLE_KEY_EVENT)
-        .expect("Std.Console.KeyEvent must be registered before Std.Tui")
-        .ty
-        .clone();
+    let key_event_ty = match checker.scopes.lookup(s::STD_CONSOLE_KEY_EVENT) {
+        Some(sym) => sym.ty.clone(),
+        None => unreachable!(
+            "Std.Console.KeyEvent must be registered before Std.Tui (see loaded/mod.rs)"
+        ),
+    };
 
     let event_kind_ty = register_enum_type(checker, s::STD_TUI_EVENT_KIND, TUI_EVENT_KIND_VARIANTS);
     let event_ty = register_record_type(

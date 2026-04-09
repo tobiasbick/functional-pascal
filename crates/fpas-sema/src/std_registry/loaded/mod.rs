@@ -42,6 +42,8 @@ pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
             }
             tui::register_std_tui(checker);
         }
-        _ => {}
+        _ => unreachable!(
+            "register_single_std_unit: unhandled std unit `{unit}` — add a match arm for every entry in fpas_std::STD_UNITS_KNOWN"
+        ),
     }
 }

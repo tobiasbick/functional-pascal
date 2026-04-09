@@ -1,8 +1,8 @@
 //! Standard library symbols and polymorphic `BuiltinStd` checking.
 //!
-//! **Documentation:** `docs/pascal/std/*.md` (from the repository root) - Pascal-facing API tables per unit.
+//! **Documentation:** `docs/pascal/std/*.md` (from the repository root) — Pascal-facing API tables per unit.
 //! **Maintenance:** Registering or changing a `Std.*` symbol here must be reflected in the matching unit
-//! Markdown file and in runtime/compiler/bytecode code.
+//! Markdown file and in runtime/compiler/bytecode code (`fpas-std`, `fpas-bytecode`, `fpas-compiler`).
 
 mod aliases;
 mod builtins;

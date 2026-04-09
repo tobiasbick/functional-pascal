@@ -1,8 +1,8 @@
-use super::super::{VmError, Worker, internal_error};
+use crate::vm::{VmError, Worker, internal_error};
 use fpas_bytecode::{SourceLocation, Value};
 
 impl Worker {
-    pub(in super::super) fn frame_base(&self) -> usize {
+    pub(in crate::vm) fn frame_base(&self) -> usize {
         self.call_stack
             .last()
             .map(|frame| frame.base_slot)
@@ -10,7 +10,7 @@ impl Worker {
     }
 
     /// Absolute stack index for local at `(enclosing_depth, slot)` (same convention as `GetEnclosing`).
-    pub(in super::super) fn local_abs_index(
+    pub(in crate::vm) fn local_abs_index(
         &self,
         depth: u16,
         slot: u16,
@@ -52,7 +52,7 @@ impl Worker {
         Ok(index)
     }
 
-    pub(in super::super) fn drain_stack_tail(
+    pub(in crate::vm) fn drain_stack_tail(
         &mut self,
         count: usize,
         location: SourceLocation,

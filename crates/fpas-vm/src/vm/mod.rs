@@ -170,7 +170,8 @@ impl Vm {
             // Main task done — signal pool to shut down.
             shared.request_shutdown();
 
-            // Collect pool worker errors.
+            // Collect pool worker errors. If the main task already failed, prefer that diagnostic
+            // and drop pool errors so the caller sees a single primary failure.
             for handle in handles {
                 match handle.join() {
                     Ok(Ok(())) => {}

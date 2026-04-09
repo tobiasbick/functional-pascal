@@ -1,6 +1,5 @@
-use super::super::super::Worker;
-use super::super::super::diagnostics::VmError;
-use super::super::super::runtime_error;
+use crate::vm::diagnostics::VmError;
+use crate::vm::{Worker, runtime_error};
 use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_DIVISION_BY_ZERO;
 

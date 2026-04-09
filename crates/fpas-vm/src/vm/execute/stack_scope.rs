@@ -1,5 +1,5 @@
-use super::super::diagnostics::VmError;
-use super::super::{Worker, canonical_name, internal_error, runtime_error};
+use crate::vm::diagnostics::VmError;
+use crate::vm::{Worker, canonical_name, internal_error, runtime_error};
 use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_UNDEFINED_GLOBAL;
 

@@ -1,15 +1,19 @@
-use super::super::super::super::diagnostics::VmError;
-use super::super::super::super::{TaskResultPoll, Worker, runtime_error};
+use crate::vm::diagnostics::VmError;
+use crate::vm::{TaskResultPoll, Worker, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_INVALID_TASK, RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_VM_SHUTDOWN,
 };
 use std::time::Duration;
 
+/// When yield does not reschedule, block briefly on the condvar instead of hot-spinning.
 const WAIT_POLL_INTERVAL: Duration = Duration::from_millis(1);
 
 impl Worker {
-    pub(in super::super) fn exec_task_wait(&mut self, line: SourceLocation) -> Result<(), VmError> {
+    pub(in crate::vm::execute::concurrency) fn exec_task_wait(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
         let task_id = self.pop_task_id(line)?;
 
         match self.shared.poll_task_result(task_id) {
@@ -43,7 +47,7 @@ impl Worker {
         Ok(())
     }
 
-    pub(in super::super) fn exec_task_wait_all(
+    pub(in crate::vm::execute::concurrency) fn exec_task_wait_all(
         &mut self,
         line: SourceLocation,
     ) -> Result<(), VmError> {
@@ -75,7 +79,7 @@ impl Worker {
 
         let all_done = task_ids
             .iter()
-            .all(|task_id| self.shared.has_task_result(*task_id));
+            .all(|task_id| self.shared.task_completion_recorded(*task_id));
 
         if all_done {
             // `WaitAll` observes completion but does not consume task results.

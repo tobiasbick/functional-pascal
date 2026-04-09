@@ -2,9 +2,8 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui.md` (from the repository root).
 
-use super::super::super::Worker;
-use super::super::super::diagnostics::{TYPE_MISMATCH_CODE, VmError};
-use super::super::super::runtime_error;
+use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError};
+use crate::vm::{Worker, runtime_error};
 use fpas_bytecode::{Intrinsic, SourceLocation, Value};
 use fpas_std::{ConsoleKeyEvent, TuiEvent};
 

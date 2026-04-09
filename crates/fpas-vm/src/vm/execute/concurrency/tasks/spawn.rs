@@ -1,7 +1,5 @@
-use super::super::super::super::diagnostics::VmError;
-use super::super::super::super::{
-    TaskState, Worker, canonical_name, internal_error, runtime_error,
-};
+use crate::vm::diagnostics::VmError;
+use crate::vm::{TaskState, Worker, canonical_name, internal_error, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_INVALID_TASK, RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_WRONG_CALL_ARITY,
@@ -11,7 +9,7 @@ impl Worker {
     /// Spawn a new task: pops function value + args, pushes `Value::Task(id)`.
     ///
     /// The task is placed on the shared queue for any worker thread to pick up.
-    pub(in super::super) fn exec_spawn_task(
+    pub(in crate::vm::execute::concurrency) fn exec_spawn_task(
         &mut self,
         argc: u8,
         retain_result: bool,

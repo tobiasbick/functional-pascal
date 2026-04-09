@@ -1,10 +1,10 @@
-use super::super::super::Worker;
-use super::super::super::diagnostics::VmError;
+use crate::vm::Worker;
+use crate::vm::diagnostics::VmError;
 use fpas_bytecode::{Intrinsic, SourceLocation, Value};
 use fpas_std::{Console, KeyInput, TextInput};
 
 impl Worker {
-    pub(in super::super) fn with_console<R>(&self, f: impl FnOnce(&mut Console) -> R) -> R {
+    pub(in crate::vm::execute) fn with_console<R>(&self, f: impl FnOnce(&mut Console) -> R) -> R {
         f(&mut self
             .shared
             .console
@@ -12,7 +12,7 @@ impl Worker {
             .unwrap_or_else(|e| e.into_inner()))
     }
 
-    pub(in super::super) fn with_console_and_key_input<R>(
+    pub(in crate::vm::execute) fn with_console_and_key_input<R>(
         &self,
         f: impl FnOnce(&mut Console, &mut KeyInput) -> R,
     ) -> R {
@@ -29,7 +29,10 @@ impl Worker {
         f(&mut console, &mut key_input)
     }
 
-    pub(in super::super) fn with_key_input<R>(&self, f: impl FnOnce(&mut KeyInput) -> R) -> R {
+    pub(in crate::vm::execute) fn with_key_input<R>(
+        &self,
+        f: impl FnOnce(&mut KeyInput) -> R,
+    ) -> R {
         f(&mut self
             .shared
             .key_input

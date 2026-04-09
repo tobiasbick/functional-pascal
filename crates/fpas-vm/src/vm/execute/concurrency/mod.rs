@@ -4,8 +4,8 @@
 
 mod tasks;
 
-use super::super::Worker;
-use super::super::diagnostics::VmError;
+use crate::vm::Worker;
+use crate::vm::diagnostics::VmError;
 use fpas_bytecode::{Intrinsic, Op, SourceLocation};
 
 impl Worker {

@@ -2,8 +2,8 @@
 //!
 //! **Documentation:** `docs/future/advanced-types.md`
 
-use super::super::diagnostics::VmError;
-use super::super::{Worker, runtime_error};
+use crate::vm::diagnostics::VmError;
+use crate::vm::{Worker, runtime_error};
 use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
 

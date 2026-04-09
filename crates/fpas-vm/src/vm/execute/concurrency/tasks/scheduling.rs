@@ -1,4 +1,4 @@
-use super::super::super::super::{TIMESLICE, Worker};
+use crate::vm::{TIMESLICE, Worker};
 
 impl Worker {
     /// Yield to allow other tasks to run (timeslice preemption).
@@ -6,7 +6,7 @@ impl Worker {
     /// Decrements the instruction counter and, when the timeslice is
     /// exhausted, saves the current task and picks up the next one from
     /// the shared queue.
-    pub(in super::super::super) fn maybe_timeslice_yield(&mut self) {
+    pub(in crate::vm::execute) fn maybe_timeslice_yield(&mut self) {
         if self.sync_call_depth > 0 {
             return;
         }

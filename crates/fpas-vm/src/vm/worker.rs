@@ -128,7 +128,9 @@ impl Worker {
     /// Returns when shutdown is signalled and no tasks remain.
     pub fn pool_loop(&mut self) -> Result<(), VmError> {
         loop {
-            // Try to get a task from the queue.
+            // Fast path without locking: matches the common case when work is already queued.
+            // If the queue is empty, we lock and wait below — a second `pop` after the lock
+            // avoids missing a task that arrived between the try and `wait`.
             if let Some(task) = self.shared.try_dequeue_task() {
                 self.load_task(task);
                 self.run_current_task()?;

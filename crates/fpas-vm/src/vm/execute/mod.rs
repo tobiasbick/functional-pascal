@@ -7,8 +7,8 @@ mod numeric;
 mod result_option;
 mod stack_scope;
 
-use super::diagnostics::VmError;
-use super::{Worker, internal_error, runtime_error};
+use crate::vm::diagnostics::VmError;
+use crate::vm::{Worker, internal_error, runtime_error};
 use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_diagnostics::codes::{RUNTIME_PROGRAM_PANIC, RUNTIME_VM_SHUTDOWN};
 

@@ -1,5 +1,5 @@
-use super::super::diagnostics::VmError;
-use super::super::{Worker, internal_error};
+use crate::vm::diagnostics::VmError;
+use crate::vm::{Worker, internal_error};
 use fpas_bytecode::{Intrinsic, Op, SourceLocation};
 use fpas_std::run_intrinsic;
 

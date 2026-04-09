@@ -1,9 +1,9 @@
-use super::super::diagnostics::TYPE_MISMATCH_CODE;
-use super::super::{VmError, Worker, runtime_error};
+use crate::vm::diagnostics::TYPE_MISMATCH_CODE;
+use crate::vm::{VmError, Worker, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 
 impl Worker {
-    pub(in super::super) fn binary_int(
+    pub(in crate::vm) fn binary_int(
         &mut self,
         location: SourceLocation,
         f: impl FnOnce(i64, i64) -> Result<Value, VmError>,
@@ -34,7 +34,7 @@ impl Worker {
         }
     }
 
-    pub(in super::super) fn binary_real(
+    pub(in crate::vm) fn binary_real(
         &mut self,
         location: SourceLocation,
         f: impl FnOnce(f64, f64) -> Result<Value, VmError>,
@@ -55,7 +55,7 @@ impl Worker {
         }
     }
 
-    pub(in super::super) fn binary_str(
+    pub(in crate::vm) fn binary_str(
         &mut self,
         location: SourceLocation,
         f: impl FnOnce(&str, &str) -> Value,

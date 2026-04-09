@@ -99,8 +99,12 @@ impl SharedState {
             .insert(id, TaskResultState::Available(value));
     }
 
-    /// Check whether a task has already completed.
-    pub(crate) fn has_task_result(&self, id: u64) -> bool {
+    /// Returns true once a retained task has finished and an entry exists in [`Self::task_results`].
+    ///
+    /// The entry remains after [`Self::poll_task_result`] consumes the value (state becomes
+    /// [`TaskResultState::Consumed`]); callers that need a still-available result must use
+    /// [`Self::poll_task_result`].
+    pub(crate) fn task_completion_recorded(&self, id: u64) -> bool {
         self.task_results
             .lock()
             .unwrap_or_else(|e| e.into_inner())
@@ -130,7 +134,11 @@ impl SharedState {
         self.task_available.notify_all();
     }
 
-    /// Wait briefly for new task activity, task completion, or shutdown.
+    /// Block up to `timeout` until notified (task queued, completion, or shutdown).
+    ///
+    /// Used when cooperative yield cannot switch tasks (for example the main thread with an empty
+    /// ready queue) so task-wait logic can pause without spinning. Trades a little latency for
+    /// bounded CPU use.
     pub(crate) fn wait_for_task_progress(&self, timeout: Duration) {
         let queue = self.task_queue.lock().unwrap_or_else(|e| e.into_inner());
         let _guard = self

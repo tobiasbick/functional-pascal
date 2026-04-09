@@ -6,8 +6,8 @@ mod array_locals;
 mod indexing;
 mod records;
 
-use super::super::Worker;
-use super::super::diagnostics::VmError;
+use crate::vm::Worker;
+use crate::vm::diagnostics::VmError;
 use fpas_bytecode::{Op, SourceLocation, Value};
 
 impl Worker {

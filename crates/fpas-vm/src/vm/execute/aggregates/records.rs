@@ -1,5 +1,5 @@
-use super::super::super::diagnostics::VmError;
-use super::super::super::{Worker, internal_error, runtime_error};
+use crate::vm::diagnostics::VmError;
+use crate::vm::{Worker, internal_error, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
 

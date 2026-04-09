@@ -1,5 +1,5 @@
-use super::super::super::Worker;
-use super::super::super::diagnostics::VmError;
+use crate::vm::Worker;
+use crate::vm::diagnostics::VmError;
 use fpas_bytecode::{Intrinsic, SourceLocation};
 
 mod array_ops;

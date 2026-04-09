@@ -1,9 +1,9 @@
-use super::super::diagnostics::TYPE_MISMATCH_CODE;
-use super::super::{VmError, Worker, internal_error, runtime_error};
+use crate::vm::diagnostics::TYPE_MISMATCH_CODE;
+use crate::vm::{VmError, Worker, internal_error, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 
 impl Worker {
-    pub(in super::super) fn const_value(
+    pub(in crate::vm) fn const_value(
         &self,
         idx: u16,
         location: SourceLocation,
@@ -24,7 +24,7 @@ impl Worker {
             })
     }
 
-    pub(in super::super) fn pop_int(&mut self, location: SourceLocation) -> Result<i64, VmError> {
+    pub(in crate::vm) fn pop_int(&mut self, location: SourceLocation) -> Result<i64, VmError> {
         match self.pop(location)? {
             Value::Integer(value) => Ok(value),
             other => Err(runtime_error(
@@ -36,7 +36,7 @@ impl Worker {
         }
     }
 
-    pub(in super::super) fn pop_real(&mut self, location: SourceLocation) -> Result<f64, VmError> {
+    pub(in crate::vm) fn pop_real(&mut self, location: SourceLocation) -> Result<f64, VmError> {
         match self.pop(location)? {
             Value::Real(value) => Ok(value),
             other => Err(runtime_error(
@@ -48,7 +48,7 @@ impl Worker {
         }
     }
 
-    pub(in super::super) fn pop_bool(&mut self, location: SourceLocation) -> Result<bool, VmError> {
+    pub(in crate::vm) fn pop_bool(&mut self, location: SourceLocation) -> Result<bool, VmError> {
         match self.pop(location)? {
             Value::Boolean(value) => Ok(value),
             other => Err(runtime_error(
@@ -60,7 +60,7 @@ impl Worker {
         }
     }
 
-    pub(in super::super) fn const_str(
+    pub(in crate::vm) fn const_str(
         &self,
         idx: u16,
         location: SourceLocation,

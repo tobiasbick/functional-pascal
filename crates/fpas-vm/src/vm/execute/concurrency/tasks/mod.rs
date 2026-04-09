@@ -1,5 +1,5 @@
-use super::super::super::Worker;
-use super::super::super::diagnostics::VmError;
+use crate::vm::Worker;
+use crate::vm::diagnostics::VmError;
 use fpas_bytecode::SourceLocation;
 
 mod scheduling;
@@ -24,7 +24,7 @@ impl Worker {
         wait::pop_task_id(self, line)
     }
 
-    pub(in super::super) fn switch_to_next_ready_task(&mut self) -> bool {
+    pub(in crate::vm::execute) fn switch_to_next_ready_task(&mut self) -> bool {
         if let Some(next) = self.shared.try_dequeue_task() {
             let saved = self.save_task();
             self.shared.enqueue_task(saved);

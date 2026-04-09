@@ -1,5 +1,5 @@
-use super::super::diagnostics::VmError;
-use super::super::{CallFrame, Worker, canonical_name, internal_error, runtime_error};
+use crate::vm::diagnostics::VmError;
+use crate::vm::{CallFrame, Worker, canonical_name, internal_error, runtime_error};
 use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_UNDEFINED_FUNCTION, RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_WRONG_CALL_ARITY,
@@ -49,7 +49,9 @@ impl Worker {
                     }
                 };
                 self.call_named_function(&name, argc, line)?;
-                // Push captured values after args (accessible as locals after params).
+                // After `call_named_function`, `base_slot` points at the first argument. Pushing
+                // captures on top matches the compiler layout: parameters then closure cells as
+                // successive locals for the callee.
                 for cap in captures {
                     self.push(cap)?;
                 }

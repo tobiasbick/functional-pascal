@@ -181,8 +181,8 @@ pub(crate) fn run(
             stack.push(clamp_value(x, lo, hi, location)?);
         }
         Intrinsic::MathRandom => {
-            let mut rng = rand::thread_rng();
-            let r: f64 = rng.r#gen();
+            let mut rng = rand::rng();
+            let r: f64 = rng.random();
             stack.push(Value::Real(r));
         }
         Intrinsic::MathRandomInt => {
@@ -196,12 +196,12 @@ pub(crate) fn run(
                     location,
                 ));
             }
-            let mut rng = rand::thread_rng();
-            let r: i64 = rng.gen_range(lo..=hi);
+            let mut rng = rand::rng();
+            let r: i64 = rng.random_range(lo..=hi);
             stack.push(Value::Integer(r));
         }
         Intrinsic::MathRandomize => {
-            // Randomize is a no-op when using thread_rng (automatically seeded).
+            // Randomize is a no-op when using `rand::rng()` (automatically seeded per thread).
             stack.push(Value::Unit);
         }
         _ => return Ok(None),

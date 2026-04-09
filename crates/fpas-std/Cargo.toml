@@ -7,10 +7,10 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-crossterm = "0.28"
+crossterm = { workspace = true }
 fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }
-rand = "0.8"
+rand = { workspace = true }
 
 [lints]
 workspace = true

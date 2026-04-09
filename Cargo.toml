@@ -18,3 +18,10 @@ unwrap_used = "warn"
 expect_used = "warn"
 panic = "warn"
 todo = "warn"
+
+[workspace.dependencies]
+crossterm = "0.29"
+glob = "0.3"
+rand = "0.9"
+serde = { version = "1", features = ["derive"] }
+toml = "0.9"

@@ -1,8 +1,9 @@
 //! Dispatches `Op::Intrinsic` to unit modules (`str`, `conv`, `math`, `array`, `result_option`, `dict`).
-//! Console, TUI, and `Std.Task` (`TaskWait`, `TaskWaitAll`) intrinsics are handled in `fpas-vm`, not here.
+//! Console, TUI, task wait, and higher-order (callback) intrinsics are handled in `fpas-vm`, not here.
 //!
 //! **Documentation:** `docs/pascal/std/README.md` (from the repository root).
-//! **Maintenance:** When adding or rerouting intrinsics, update the README, the relevant unit `.md` file, and `fpas-bytecode::Intrinsic`.
+//! **Maintenance:** When adding or rerouting intrinsics, update the README, the relevant unit `.md` file,
+//! `fpas-bytecode::Intrinsic`, and the VM-only `matches!` guards below (mirror `try_exec_*` in `fpas-vm`).
 
 use crate::array;
 use crate::conv;
@@ -65,6 +66,12 @@ pub fn run_intrinsic(
             | Intrinsic::ConsoleDisableFocus
             | Intrinsic::ConsoleEnablePaste
             | Intrinsic::ConsoleDisablePaste
+            | Intrinsic::ConsoleReadEventTimeout
+            | Intrinsic::ConsolePollEvent
+            | Intrinsic::ConsoleTextColorRGB
+            | Intrinsic::ConsoleTextBackgroundRGB
+            | Intrinsic::ConsoleTextColor256
+            | Intrinsic::ConsoleTextBackground256
             | Intrinsic::TuiApplicationOpen
             | Intrinsic::TuiApplicationClose
             | Intrinsic::TuiApplicationSize
@@ -75,7 +82,42 @@ pub fn run_intrinsic(
             | Intrinsic::TuiApplicationRedrawPending
     ) {
         return Err(std_internal_error(
-            "internal: Std.Console and Std.Tui session intrinsics are handled in the VM",
+            "internal: Std.Console and Std.Tui intrinsics are handled in the VM",
+            "This indicates a VM dispatch bug. Please report this as a compiler/runtime bug.",
+            location,
+        ));
+    }
+
+    if matches!(intrinsic, Intrinsic::TaskWait | Intrinsic::TaskWaitAll) {
+        return Err(std_internal_error(
+            "internal: Std.Task wait intrinsics (Wait, WaitAll) are handled in the VM",
+            "This indicates a VM dispatch bug. Please report this as a compiler/runtime bug.",
+            location,
+        ));
+    }
+
+    if matches!(
+        intrinsic,
+        Intrinsic::ArrayMap
+            | Intrinsic::ArrayFilter
+            | Intrinsic::ArrayReduce
+            | Intrinsic::ArrayFind
+            | Intrinsic::ArrayFindIndex
+            | Intrinsic::ArrayAny
+            | Intrinsic::ArrayAll
+            | Intrinsic::ArrayFlatMap
+            | Intrinsic::ArrayForEach
+            | Intrinsic::ResultMap
+            | Intrinsic::ResultAndThen
+            | Intrinsic::ResultOrElse
+            | Intrinsic::OptionMap
+            | Intrinsic::OptionAndThen
+            | Intrinsic::OptionOrElse
+            | Intrinsic::DictMap
+            | Intrinsic::DictFilter
+    ) {
+        return Err(std_internal_error(
+            "internal: higher-order Std intrinsics (function callbacks) are handled in the VM",
             "This indicates a VM dispatch bug. Please report this as a compiler/runtime bug.",
             location,
         ));
@@ -102,7 +144,55 @@ pub fn run_intrinsic(
 
     Err(std_internal_error(
         format!("unknown or unimplemented intrinsic reached std dispatch ({intrinsic:?})"),
-        "This indicates a VM dispatch bug: console/TUI intrinsics must be handled in the VM, and all other std opcodes must route through fpas-std. Please report this as a compiler/runtime issue.",
+        "This indicates a VM dispatch bug: console, TUI, task wait, and callback-based std opcodes must be handled in the VM; all other std opcodes must be implemented in fpas-std. Please report this as a compiler/runtime issue.",
         location,
     ))
+}
+
+#[cfg(test)]
+mod vm_only_guard_tests {
+    use super::run_intrinsic;
+    use fpas_bytecode::{Intrinsic, SourceLocation, Value};
+
+    fn loc() -> SourceLocation {
+        SourceLocation::new(1, 1)
+    }
+
+    #[test]
+    fn console_poll_event_is_vm_only() {
+        let err = run_intrinsic(Intrinsic::ConsolePollEvent, &mut Vec::new(), loc())
+            .expect_err("expected internal error");
+        assert!(
+            err.message.contains("Std.Console and Std.Tui"),
+            "message={}",
+            err.message
+        );
+    }
+
+    #[test]
+    fn task_wait_is_vm_only() {
+        let err = run_intrinsic(Intrinsic::TaskWait, &mut Vec::new(), loc()).expect_err("err");
+        assert!(
+            err.message.contains("Std.Task wait"),
+            "message={}",
+            err.message
+        );
+    }
+
+    #[test]
+    fn array_map_is_vm_only() {
+        let err = run_intrinsic(Intrinsic::ArrayMap, &mut Vec::new(), loc()).expect_err("err");
+        assert!(
+            err.message.contains("higher-order Std intrinsics"),
+            "message={}",
+            err.message
+        );
+    }
+
+    #[test]
+    fn str_length_still_dispatches() {
+        let mut stack = vec![Value::Str("ab".into())];
+        run_intrinsic(Intrinsic::StrLength, &mut stack, loc()).unwrap();
+        assert_eq!(stack, vec![Value::Integer(2)]);
+    }
 }

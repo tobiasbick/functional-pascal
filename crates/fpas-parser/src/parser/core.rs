@@ -1,3 +1,7 @@
+//! Parser primitives (token helpers, identifier paths).
+//!
+//! **Documentation:** `docs/pascal/01-overview.md` (keywords), `docs/pascal/11-stdlib.md` (`Std.*` paths).
+
 use super::Parser;
 use crate::error::parse_error;
 use fpas_diagnostics::codes::{PARSE_EXPECTED_IDENTIFIER, PARSE_EXPECTED_TOKEN};
@@ -115,12 +119,17 @@ impl Parser {
         Some((name, span))
     }
 
-    /// Identifier segment after `.` (allows `array`, `result`, `option` as names
-    /// so `Std.Array`, `Std.Result`, `Std.Option` work).
-    pub(crate) fn expect_ident_after_dot(&mut self) -> Option<(String, Span)> {
+    /// Reserved words that name `Std.*` units (`array`, `result`, `option`, `dict`) are lexed as
+    /// keywords. When they appear as a dotted path segment, treat them like the corresponding
+    /// Pascal-cased identifier (`Array`, …).
+    ///
+    /// The first segment of a path uses the same rule in [`Parser::parse_qualified_id`] and
+    /// [`Parser::parse_designator`]. In expression position, those keywords only start a
+    /// designator when immediately followed by `.` (so `array of T` remains the array type and
+    /// `result of T, E` remains the result type).
+    pub(crate) fn try_consume_std_keyword_path_segment(&mut self) -> Option<(String, Span)> {
         let span = self.current_span();
         match self.current_token() {
-            Token::Ident(_) => self.expect_ident(),
             Token::Array => {
                 self.advance();
                 Some(("Array".to_string(), span))
@@ -137,8 +146,23 @@ impl Parser {
                 self.advance();
                 Some(("Dict".to_string(), span))
             }
-            _ => self.expect_ident(),
+            _ => None,
         }
+    }
+
+    pub(crate) fn is_std_keyword_path_start(&self) -> bool {
+        matches!(
+            self.current_token(),
+            Token::Array | Token::Result | Token::OptionKw | Token::Dict
+        ) && matches!(self.peek_token(), Token::Dot)
+    }
+
+    /// Identifier segment after `.` (including `array` → `Array`, etc.).
+    pub(crate) fn expect_ident_after_dot(&mut self) -> Option<(String, Span)> {
+        if let Some(seg) = self.try_consume_std_keyword_path_segment() {
+            return Some(seg);
+        }
+        self.expect_ident()
     }
 
     pub(crate) fn expect_semi(&mut self) {

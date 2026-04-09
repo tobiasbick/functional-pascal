@@ -25,6 +25,14 @@ fn program_with_uses_std_array() {
 }
 
 #[test]
+fn program_with_uses_std_array_lowercase_unit_keyword() {
+    let p = parse_ok("program T; uses Std.array; begin end.");
+    assert_eq!(p.uses.len(), 1);
+    assert_eq!(p.uses[0].parts, vec!["Std", "Array"]);
+}
+
+
+#[test]
 fn program_with_const() {
     let p = parse_ok("program T; const Pi: real := 3.14; begin end.");
     assert_eq!(p.declarations.len(), 1);

@@ -21,6 +21,12 @@ fn deeply_qualified_unit_name() {
 }
 
 #[test]
+fn unit_name_leading_std_unit_keyword_segment() {
+    let unit = parse_unit_ok("unit array.Plugin;");
+    assert_eq!(unit.name.parts, vec!["Array", "Plugin"]);
+}
+
+#[test]
 fn unit_with_uses_and_declarations() {
     let unit = parse_unit_ok(
         "\

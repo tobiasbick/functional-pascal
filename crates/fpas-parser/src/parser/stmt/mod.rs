@@ -103,26 +103,27 @@ impl Parser {
     }
 
     fn can_start_expression(&self) -> bool {
-        matches!(
-            self.current_token(),
-            Token::Integer(_)
-                | Token::Real(_)
-                | Token::Str(_)
-                | Token::True
-                | Token::False
-                | Token::Ident(_)
-                | Token::LParen
-                | Token::LBracket
-                | Token::Not
-                | Token::Minus
-                | Token::Record
-                | Token::Ok
-                | Token::Error
-                | Token::Some
-                | Token::None
-                | Token::Try
-                | Token::Go
-                | Token::Function
-        )
+        self.is_std_keyword_path_start()
+            || matches!(
+                self.current_token(),
+                Token::Integer(_)
+                    | Token::Real(_)
+                    | Token::Str(_)
+                    | Token::True
+                    | Token::False
+                    | Token::Ident(_)
+                    | Token::LParen
+                    | Token::LBracket
+                    | Token::Not
+                    | Token::Minus
+                    | Token::Record
+                    | Token::Ok
+                    | Token::Error
+                    | Token::Some
+                    | Token::None
+                    | Token::Try
+                    | Token::Go
+                    | Token::Function
+            )
     }
 }

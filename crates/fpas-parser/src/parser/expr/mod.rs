@@ -15,7 +15,11 @@ impl Parser {
         let start = self.current_span();
         let mut parts = Vec::new();
 
-        let (name, name_span) = self.expect_ident().unwrap_or(("_error_".into(), start));
+        let (name, name_span) = if let Some(p) = self.try_consume_std_keyword_path_segment() {
+            p
+        } else {
+            self.expect_ident().unwrap_or(("_error_".into(), start))
+        };
         parts.push(DesignatorPart::Ident(name, name_span));
 
         loop {

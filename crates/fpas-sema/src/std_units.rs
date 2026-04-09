@@ -80,7 +80,7 @@ pub fn canonical_unit_from_uses_clause(q: &QualifiedId) -> Result<String, String
 /// If `name` looks like `Std.<Unit>.<member>`, returns canonical unit and full member path (segments after unit).
 pub fn parse_std_qualified_call(name: &str) -> Option<(String, String)> {
     let parts: Vec<&str> = name.split('.').collect();
-    if parts.len() < 3 {
+    if parts.len() < 3 || parts.iter().any(|s| s.is_empty()) {
         return None;
     }
     if !is_std_root_segment(parts[0]) {
@@ -93,25 +93,25 @@ pub fn parse_std_qualified_call(name: &str) -> Option<(String, String)> {
 
 /// LLM-friendly hint when a call or identifier is missing from scope.
 pub fn hint_for_unknown_std_name(name: &str, loaded: &HashSet<String>) -> String {
+    let parsed = parse_std_qualified_call(name);
     let parts: Vec<&str> = name.split('.').collect();
 
     // Fully-qualified Std.* call
-    if parts.len() >= 3 && is_std_root_segment(parts[0]) && parse_std_qualified_call(name).is_none()
-    {
+    if parts.len() >= 3 && is_std_root_segment(parts[0]) && parsed.is_none() {
         return format!(
             "Unknown standard library unit in `{name}`. Valid `Std.*` units: {}.",
             std_units_list_for_hint()
         );
     }
 
-    if let Some((unit, _member)) = parse_std_qualified_call(name) {
+    if let Some((unit, _member)) = parsed {
         if !loaded.contains(&unit) {
             return format!(
                 "Add `uses {unit};` immediately after the program name (before constants, variables, or `begin`). Example: `program Main; uses {unit}; begin ... end.`"
             );
         }
         return format!(
-            "The standard unit `{unit}` is listed in `uses`, but `{name}` is not implemented in the runtime. Check docs/pascal/09-units-stdlib.md for supported members."
+            "The standard unit `{unit}` is listed in `uses`, but `{name}` is not implemented in the runtime. Check docs/pascal/11-stdlib.md for supported members."
         );
     }
 

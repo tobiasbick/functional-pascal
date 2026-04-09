@@ -100,7 +100,7 @@ impl ScopeStack {
     /// Define in the outermost (program) scope. Used for `Std.*` short aliases so nested checking
     /// (for example inside a routine body) does not attach imports to a transient inner scope.
     ///
-    /// **Documentation:** `docs/pascal/09-units-stdlib.md` (from the repository root).
+    /// **Documentation:** `docs/pascal/09-units.md` (from the repository root).
     pub fn define_in_root(&mut self, name: &str, symbol: Symbol) -> bool {
         Self::define_in_scope(&mut self.scopes[0], name, symbol)
     }

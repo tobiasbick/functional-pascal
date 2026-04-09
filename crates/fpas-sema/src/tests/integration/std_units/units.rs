@@ -1,6 +1,13 @@
 use super::check_errors;
 
 #[test]
+fn parse_std_qualified_call_rejects_empty_segments() {
+    assert!(crate::std_units::parse_std_qualified_call("Std.Console.WriteLn").is_some());
+    assert!(crate::std_units::parse_std_qualified_call("Std..Console.WriteLn").is_none());
+    assert!(crate::std_units::parse_std_qualified_call("Std.Console..WriteLn").is_none());
+}
+
+#[test]
 fn uses_unknown_unit_rejected() {
     let errs = check_errors(
         "\

@@ -1,6 +1,6 @@
 //! Short names for `Std.*` symbols.
 //!
-//! **Documentation:** `docs/pascal/09-units-stdlib.md` (from the repository root).
+//! **Documentation:** `docs/pascal/09-units.md` and `docs/pascal/11-stdlib.md` (from the repository root).
 
 use crate::check::Checker;
 use crate::scope::canonical_symbol_name;

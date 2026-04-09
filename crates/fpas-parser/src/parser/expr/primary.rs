@@ -6,7 +6,7 @@ use fpas_lexer::Token;
 impl Parser {
     pub(in crate::parser) fn parse_primary(&mut self) -> Expr {
         // Avoid cloning the String payload when dispatching an identifier.
-        if matches!(self.current_token(), Token::Ident(_)) {
+        if matches!(self.current_token(), Token::Ident(_)) || self.is_std_keyword_path_start() {
             return self.parse_designator_or_call();
         }
 

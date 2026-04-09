@@ -146,12 +146,10 @@ fn run_compiled_program(
     let chunk = match fpas_compiler::compile_all(program) {
         Ok(chunk) => chunk,
         Err(diagnostics) => {
-            let mut ok = true;
             for diagnostic in &diagnostics {
-                ok &= emit_diagnostic(path, source_paths, diagnostic, stderr);
-            }
-            if !ok {
-                return 1;
+                if !emit_diagnostic(path, source_paths, diagnostic, stderr) {
+                    return 1;
+                }
             }
             return 1;
         }

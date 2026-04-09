@@ -56,6 +56,16 @@ pub(super) fn run_cli_args_and_capture_output(
     (exit_code, stdout_output, stderr_output)
 }
 
+/// Builds `program T; uses Std.Console; begin … end.` with `statements` as the block body.
+pub(super) fn program_with_console(statements: &str) -> String {
+    format!("program T;\nuses Std.Console;\nbegin\n{statements}end.\n")
+}
+
+/// Same as [`program_with_console`] but without a `uses` clause (for negative tests).
+pub(super) fn program_without_uses(statements: &str) -> String {
+    format!("program T;\nbegin\n{statements}end.\n")
+}
+
 pub(super) fn run_source_and_capture_output(path: &str, source: &str) -> (i32, String, String) {
     let stdout = SharedWriter::default();
     let mut stderr = Vec::<u8>::new();

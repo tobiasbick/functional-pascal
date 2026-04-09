@@ -41,6 +41,9 @@ pub(crate) enum ResolvedCli {
     Version,
 }
 
+/// Resolves at most one positional path or project discovery, for unit tests only.
+///
+/// [`resolve_cli_config`] is the full CLI entry: it also handles `--help` / `--version`.
 #[cfg(test)]
 pub(crate) fn resolve_cli_input(args: &[String], cwd: &Path) -> Result<CliInput, String> {
     if args.len() > 1 {

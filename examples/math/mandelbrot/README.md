@@ -10,7 +10,9 @@ It demonstrates:
 - enum-driven palette selection
 - fork-join parallelism with one `go` task per rendered row
 - colorful console rendering that works with the current CRT-style screen model
-- raw-mode event handling, resize awareness, alternate screen usage, and a live HUD
+- raw-mode event handling with an exhaustive `case` on `EventKind` (key, mouse wheel, resize, paste, focus)
+- `EnableMouse` / `EnableFocus` / `EnablePaste` paired with matching `Disable*` on shutdown
+- resize awareness, alternate screen usage, and a live HUD
 
 ## Run
 
@@ -22,6 +24,9 @@ cargo run -p fpas-cli -- examples/math/mandelbrot/mandelbrot.fpasprj
 
 - Arrow keys: pan
 - `+` / `-`: zoom in and out
+- Mouse wheel: zoom (terminals that report SGR mouse mode)
+- Left click on the fractal: center the view on that cell
+- Middle click on the fractal: same reset as `R`
 - `PageUp` / `PageDown`: increase or decrease iteration depth
 - `1`, `2`, `3`: switch color palettes
 - `R`: reset the view

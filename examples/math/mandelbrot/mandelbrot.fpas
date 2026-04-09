@@ -64,6 +64,19 @@ begin
   return 2.4 / State.SpanY
 end;
 
+{ 1-based cell in the render viewport → complex plane (same mapping as row iteration) }
+function ViewportCX(State: ExplorerState; W: integer; H: integer; CellX: integer): real;
+begin
+  var Wr: integer := Max(W - 1, 1);
+  return State.XMin(W, H) + (IntToReal(CellX - 1) / IntToReal(Wr)) * (State.XMax(W, H) - State.XMin(W, H))
+end;
+
+function ViewportCY(State: ExplorerState; W: integer; H: integer; CellY: integer): real;
+begin
+  var Hr: integer := Max(H - 1, 1);
+  return State.YMax() - (IntToReal(CellY - 1) / IntToReal(Hr)) * (State.YMax() - State.YMin())
+end;
+
 procedure UseFullWindow();
 begin
   Window(1, 1, ScreenWidth(), ScreenHeight())
@@ -87,7 +100,7 @@ begin
   TextColorRGB(255, 220, 120);
   Write('Functional Pascal Mandelbrot');
   TextColorRGB(156, 204, 255);
-  Write('  tasks | units | records | truecolor | events');
+  Write('  tasks | units | records | truecolor | mouse | focus | paste');
 
   if ScreenHeight() >= 2 then
   begin
@@ -101,7 +114,7 @@ begin
       ZoomLevel(State),
       State.MaxIter,
       PaletteName(State.Palette)));
-    Write('  arrows move  +/- zoom  PgUp/PgDn iter  1/2/3 palette  R reset  Esc quit')
+    Write('  click center  wheel zoom  M middle=reset  arrows  +/-  PgUp/Dn  1/2/3  R  Esc')
   end;
 
   NormVideo();
@@ -111,6 +124,9 @@ end;
 begin
   EnterAltScreen();
   EnableRawMode();
+  EnableMouse();
+  EnableFocus();
+  EnablePaste();
   CursorOff();
 
   mutable var State: ExplorerState := DefaultState();
@@ -149,90 +165,128 @@ begin
     case ReadEventTimeout(16) of
       Some(E):
         begin
-          if E.kind = EventKind.Resize then
-          begin
-            var NewWidth: integer := RenderWidth();
-            var NewHeight: integer := RenderHeight();
-            if (NewWidth <> Width) or (NewHeight <> Height) then
-            begin
-              Width := NewWidth;
-              Height := NewHeight;
-              NeedsRender := true
-            end
-          end
-          else if E.kind = EventKind.Key then
-          begin
-            var Key: KeyEvent := E.key;
-            var StepX: real := State.SpanX(Width, Height) * 0.14;
-            var StepY: real := State.SpanY * 0.14;
+          case E.kind of
+            EventKind.Resize:
+              begin
+                var NewWidth: integer := RenderWidth();
+                var NewHeight: integer := RenderHeight();
+                if (NewWidth <> Width) or (NewHeight <> Height) then
+                begin
+                  Width := NewWidth;
+                  Height := NewHeight;
+                  NeedsRender := true
+                end
+              end;
+            EventKind.Key:
+              begin
+                var Key: KeyEvent := E.key;
+                var StepX: real := State.SpanX(Width, Height) * 0.14;
+                var StepY: real := State.SpanY * 0.14;
 
-            if Key.kind = KeyKind.Escape then
-              Quit := true
-            else if Key.kind = KeyKind.Left then
-            begin
-              State.CenterX := State.CenterX - StepX;
-              NeedsRender := true
-            end
-            else if Key.kind = KeyKind.Right then
-            begin
-              State.CenterX := State.CenterX + StepX;
-              NeedsRender := true
-            end
-            else if Key.kind = KeyKind.Up then
-            begin
-              State.CenterY := State.CenterY + StepY;
-              NeedsRender := true
-            end
-            else if Key.kind = KeyKind.Down then
-            begin
-              State.CenterY := State.CenterY - StepY;
-              NeedsRender := true
-            end
-            else if Key.kind = KeyKind.PageUp then
-            begin
-              State.MaxIter := Min(State.MaxIter + 32, 2048);
-              NeedsRender := true
-            end
-            else if Key.kind = KeyKind.PageDown then
-            begin
-              State.MaxIter := Max(State.MaxIter - 32, 32);
-              NeedsRender := true
-            end
-            else if Key.kind = KeyKind.Character then
-            begin
-              case Key.ch of
-                '+', '=':
+                if Key.kind = KeyKind.Escape then
+                  Quit := true
+                else if Key.kind = KeyKind.Left then
+                begin
+                  State.CenterX := State.CenterX - StepX;
+                  NeedsRender := true
+                end
+                else if Key.kind = KeyKind.Right then
+                begin
+                  State.CenterX := State.CenterX + StepX;
+                  NeedsRender := true
+                end
+                else if Key.kind = KeyKind.Up then
+                begin
+                  State.CenterY := State.CenterY + StepY;
+                  NeedsRender := true
+                end
+                else if Key.kind = KeyKind.Down then
+                begin
+                  State.CenterY := State.CenterY - StepY;
+                  NeedsRender := true
+                end
+                else if Key.kind = KeyKind.PageUp then
+                begin
+                  State.MaxIter := Min(State.MaxIter + 32, 2048);
+                  NeedsRender := true
+                end
+                else if Key.kind = KeyKind.PageDown then
+                begin
+                  State.MaxIter := Max(State.MaxIter - 32, 32);
+                  NeedsRender := true
+                end
+                else if Key.kind = KeyKind.Character then
+                begin
+                  case Key.ch of
+                    '+', '=':
+                      begin
+                        State.SpanY := Max(State.SpanY * 0.82, 0.000_001);
+                        NeedsRender := true
+                      end;
+                    '-':
+                      begin
+                        State.SpanY := Min(State.SpanY / 0.82, 3.5);
+                        NeedsRender := true
+                      end;
+                    '1':
+                      begin
+                        State.Palette := PaletteKind.DeepOcean;
+                        NeedsRender := true
+                      end;
+                    '2':
+                      begin
+                        State.Palette := PaletteKind.Ember;
+                        NeedsRender := true
+                      end;
+                    '3':
+                      begin
+                        State.Palette := PaletteKind.Aurora;
+                        NeedsRender := true
+                      end;
+                    'r', 'R':
+                      begin
+                        State := DefaultState();
+                        NeedsRender := true
+                      end
+                  end
+                end
+              end;
+            EventKind.Mouse:
+              begin
+                var InView: boolean := (E.mouse_x >= 1) and (E.mouse_x <= Width)
+                  and (E.mouse_y >= 1) and (E.mouse_y <= Height);
+
+                if E.mouse_action = MouseAction.ScrollUp then
+                begin
+                  State.SpanY := Max(State.SpanY * 0.88, 0.000_001);
+                  NeedsRender := true
+                end
+                else if E.mouse_action = MouseAction.ScrollDown then
+                begin
+                  State.SpanY := Min(State.SpanY / 0.88, 3.5);
+                  NeedsRender := true
+                end
+                else if InView and (E.mouse_action = MouseAction.Down) then
+                begin
+                  if E.mouse_button = MouseButton.Left then
                   begin
-                    State.SpanY := Max(State.SpanY * 0.82, 0.000_001);
+                    State.CenterX := ViewportCX(State, Width, Height, E.mouse_x);
+                    State.CenterY := ViewportCY(State, Width, Height, E.mouse_y);
                     NeedsRender := true
-                  end;
-                '-':
-                  begin
-                    State.SpanY := Min(State.SpanY / 0.82, 3.5);
-                    NeedsRender := true
-                  end;
-                '1':
-                  begin
-                    State.Palette := PaletteKind.DeepOcean;
-                    NeedsRender := true
-                  end;
-                '2':
-                  begin
-                    State.Palette := PaletteKind.Ember;
-                    NeedsRender := true
-                  end;
-                '3':
-                  begin
-                    State.Palette := PaletteKind.Aurora;
-                    NeedsRender := true
-                  end;
-                'r', 'R':
+                  end
+                  else if E.mouse_button = MouseButton.Middle then
                   begin
                     State := DefaultState();
                     NeedsRender := true
                   end
-              end
-            end
+                end
+              end;
+            EventKind.Paste:
+              begin end;
+            EventKind.FocusGained:
+              NeedsRender := true;
+            EventKind.FocusLost:
+              begin end
           end
         end;
       None: begin end
@@ -242,6 +296,9 @@ begin
   UseFullWindow();
   NormVideo();
   CursorOn();
+  DisablePaste();
+  DisableFocus();
+  DisableMouse();
   DisableRawMode();
   LeaveAltScreen()
 end.

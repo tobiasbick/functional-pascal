@@ -7,13 +7,11 @@
 use crate::array;
 use crate::conv;
 use crate::dict;
-use crate::error::{StdError, std_internal_error, std_runtime_error};
+use crate::error::{StdError, std_internal_error};
 use crate::math;
 use crate::result_option;
 use crate::str;
 use fpas_bytecode::{Intrinsic, SourceLocation, Value};
-use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
-
 /// Execute a standard-library intrinsic; mutates `stack` (Pascal call order: args already pushed).
 pub fn run_intrinsic(
     intrinsic: Intrinsic,
@@ -102,13 +100,9 @@ pub fn run_intrinsic(
         return Ok(());
     }
 
-    Err(std_runtime_error(
-        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-        format!(
-            "unknown or unimplemented intrinsic (opcode {:?})",
-            intrinsic
-        ),
-        "Ensure the compiler and std intrinsic table are in sync for this call.",
+    Err(std_internal_error(
+        format!("unknown or unimplemented intrinsic reached std dispatch ({intrinsic:?})"),
+        "This indicates a VM dispatch bug: console/TUI intrinsics must be handled in the VM, and all other std opcodes must route through fpas-std. Please report this as a compiler/runtime issue.",
         location,
     ))
 }

@@ -66,7 +66,9 @@ pub const RUNTIME_POP_FROM_EMPTY_ARRAY: DiagnosticCode = DiagnosticCode::new(400
 pub const RUNTIME_UNDEFINED_GLOBAL: DiagnosticCode = DiagnosticCode::new(4005);
 pub const RUNTIME_UNDEFINED_FUNCTION: DiagnosticCode = DiagnosticCode::new(4006);
 pub const RUNTIME_WRONG_CALL_ARITY: DiagnosticCode = DiagnosticCode::new(4007);
+/// Operand has the wrong dynamic type for the operation (including std intrinsic argument checks).
 pub const RUNTIME_VM_OPERAND_TYPE_MISMATCH: DiagnosticCode = DiagnosticCode::new(4008);
+/// Intrinsic stack underflow, or an argument violates an intrinsic precondition (not a dynamic type mismatch).
 pub const RUNTIME_INTRINSIC_STACK_STATE_ERROR: DiagnosticCode = DiagnosticCode::new(4009);
 pub const RUNTIME_PROGRAM_PANIC: DiagnosticCode = DiagnosticCode::new(4010);
 pub const RUNTIME_CONSOLE_INPUT_FAILURE: DiagnosticCode = DiagnosticCode::new(4011);

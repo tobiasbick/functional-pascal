@@ -8,7 +8,7 @@ use crate::error::{StdError, std_runtime_error};
 use crate::helpers::{pop_array, pop_int, pop_value};
 use fpas_bytecode::{Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::{
-    RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS, RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+    RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
 };
 
 fn value_to_sort_key(v: &Value) -> Result<String, String> {
@@ -54,7 +54,7 @@ pub(crate) fn run(
             for e in &arr {
                 keys.push(value_to_sort_key(e).map_err(|m| {
                     std_runtime_error(
-                        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                        RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                         m,
                         "Use arrays of comparable primitive values (integer, real, string, char, boolean) with Std.Array.Sort.",
                         location,

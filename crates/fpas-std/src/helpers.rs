@@ -2,7 +2,9 @@
 
 use crate::error::{StdError, std_runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
-use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
+use fpas_diagnostics::codes::{
+    RUNTIME_INTRINSIC_STACK_STATE_ERROR, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+};
 
 pub(crate) fn pop_value(
     stack: &mut Vec<Value>,
@@ -23,7 +25,7 @@ pub(crate) fn pop_string(v: Value, location: SourceLocation) -> Result<String, S
         Value::Str(s) => Ok(s),
         Value::Char(c) => Ok(c.to_string()),
         other => Err(std_runtime_error(
-            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!("Expected string argument, got {}", other.type_name()),
             "Pass a string-compatible value (string or char) to this Std.* call.",
             location,
@@ -35,7 +37,7 @@ pub(crate) fn pop_int(v: Value, location: SourceLocation) -> Result<i64, StdErro
     match v {
         Value::Integer(n) => Ok(n),
         other => Err(std_runtime_error(
-            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!("Expected integer argument, got {}", other.type_name()),
             "Pass an integer value to this Std.* call.",
             location,
@@ -47,7 +49,7 @@ pub(crate) fn pop_real(v: Value, location: SourceLocation) -> Result<f64, StdErr
     match v {
         Value::Real(n) => Ok(n),
         other => Err(std_runtime_error(
-            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!("Expected real argument, got {}", other.type_name()),
             "Pass a real value to this Std.* call.",
             location,
@@ -59,7 +61,7 @@ pub(crate) fn pop_char(v: Value, location: SourceLocation) -> Result<char, StdEr
     match v {
         Value::Char(c) => Ok(c),
         other => Err(std_runtime_error(
-            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!("Expected char argument, got {}", other.type_name()),
             "Pass a char value to this Std.* call.",
             location,
@@ -71,7 +73,7 @@ pub(crate) fn pop_bool(v: Value, location: SourceLocation) -> Result<bool, StdEr
     match v {
         Value::Boolean(b) => Ok(b),
         other => Err(std_runtime_error(
-            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!("Expected boolean argument, got {}", other.type_name()),
             "Pass a boolean value to this Std.* call.",
             location,
@@ -83,7 +85,7 @@ pub(crate) fn pop_array(v: Value, location: SourceLocation) -> Result<Vec<Value>
     match v {
         Value::Array(a) => Ok(a),
         other => Err(std_runtime_error(
-            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!("Expected array argument, got {}", other.type_name()),
             "Pass an array value to this Std.* call.",
             location,
@@ -99,7 +101,7 @@ pub(crate) fn value_as_string_for_join(
         Value::Str(s) => Ok(s.clone()),
         Value::Char(c) => Ok(c.to_string()),
         other => Err(std_runtime_error(
-            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!(
                 "Join expects an array of strings, got {}",
                 other.type_name()

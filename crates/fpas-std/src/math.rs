@@ -7,7 +7,7 @@
 use crate::error::{StdError, std_runtime_error};
 use crate::helpers::{pop_int, pop_real, pop_value};
 use fpas_bytecode::{Intrinsic, SourceLocation, Value};
-use fpas_diagnostics::codes::{RUNTIME_INTRINSIC_STACK_STATE_ERROR, RUNTIME_NUMERIC_DOMAIN_ERROR};
+use fpas_diagnostics::codes::{RUNTIME_NUMERIC_DOMAIN_ERROR, RUNTIME_VM_OPERAND_TYPE_MISMATCH};
 use rand::Rng;
 
 const INTEGER_RANGE_HINT: &str = "Use a finite value whose rounded result fits in the integer range -9223372036854775808..9223372036854775807.";
@@ -221,7 +221,7 @@ fn abs_value(v: Value, location: SourceLocation) -> Result<Value, StdError> {
         }),
         Value::Real(x) => Ok(Value::Real(x.abs())),
         other => Err(std_runtime_error(
-            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!("Abs expects numeric value, got {}", other.type_name()),
             "Pass an integer or real value to Std.Math.Abs.",
             location,
@@ -264,7 +264,7 @@ fn minmax_value(
             Value::Real(x.max(*y))
         }),
         _ => Err(std_runtime_error(
-            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!(
                 "Min/Max expects two integers or two reals, got {} and {}",
                 a.type_name(),
@@ -289,7 +289,7 @@ fn sign_value(v: Value, location: SourceLocation) -> Result<Value, StdError> {
             }
         }
         other => Err(std_runtime_error(
-            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!("Sign expects numeric value, got {}", other.type_name()),
             "Pass an integer or real value to Std.Math.Sign.",
             location,
@@ -312,7 +312,7 @@ fn clamp_value(
         return Ok(Value::Real(v.clamp(*a, *b)));
     }
     Err(std_runtime_error(
-        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+        RUNTIME_VM_OPERAND_TYPE_MISMATCH,
         "Clamp expects all three arguments to be the same numeric kind",
         "All arguments must be integer or all must be real.",
         location,

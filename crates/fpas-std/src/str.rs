@@ -4,7 +4,7 @@
 //! **Maintenance:** Keep that Markdown file aligned with this file, `intrinsics.rs`,
 //! `fpas-bytecode::Intrinsic`, `fpas-compiler` std call lowering, and `fpas-sema` `std_registry.rs`.
 
-use crate::error::{StdError, std_runtime_error};
+use crate::error::{StdError, std_internal_error, std_runtime_error};
 use crate::helpers::{
     pop_array, pop_char, pop_int, pop_string, pop_value, value_as_string_for_join,
 };
@@ -301,8 +301,7 @@ pub(crate) fn run(
         Intrinsic::StrFormat => {
             let arg_count = pop_int(pop_value(stack, location)?, location)?;
             if arg_count < 0 {
-                return Err(std_runtime_error(
-                    RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                return Err(std_internal_error(
                     "Format: internal error — negative argument count",
                     "Report this as a compiler bug.",
                     location,

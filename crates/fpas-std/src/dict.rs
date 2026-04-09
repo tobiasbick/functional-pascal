@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** `docs/future/advanced-types.md`
 
-use crate::error::StdError;
+use crate::error::{StdError, std_runtime_error};
 use crate::helpers::pop_value;
 use fpas_bytecode::{Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
@@ -10,7 +10,7 @@ use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
 fn pop_dict(val: Value, location: SourceLocation) -> Result<Vec<(Value, Value)>, StdError> {
     match val {
         Value::Dict(pairs) => Ok(pairs),
-        other => Err(crate::error::std_runtime_error(
+        other => Err(std_runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!("expected dict, got {}", other.type_name()),
             "Pass a `dict of K to V` value.",

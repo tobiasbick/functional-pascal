@@ -1,3 +1,8 @@
+//! VM runtime diagnostic helpers (`Diagnostic` with placeholder `SourceSpan` offset/length).
+//!
+//! Like `fpas-std::error`, spans use `offset` 0 and `length` 1 because the VM tracks line/column
+//! and `source_id`, not byte offsets into source text.
+
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::{
     INTERNAL_VM_INVARIANT_FAILURE, RUNTIME_INTRINSIC_STACK_STATE_ERROR,

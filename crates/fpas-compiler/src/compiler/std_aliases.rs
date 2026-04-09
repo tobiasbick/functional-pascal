@@ -13,6 +13,19 @@ use fpas_std::{
 
 use super::{Compiler, canonical_name};
 
+fn record_enum_member_short_names(
+    seen: &mut HashMap<String, Vec<String>>,
+    unit: &str,
+    enum_name: &str,
+    variants: &[&str],
+) {
+    for &variant in variants {
+        let short = format!("{enum_name}.{variant}");
+        let qualified = format!("{unit}.{enum_name}.{variant}");
+        seen.entry(short).or_default().push(qualified);
+    }
+}
+
 impl Compiler {
     /// Build short-name → qualified-name aliases from the `uses` clause.
     pub(super) fn build_short_aliases(&mut self, program: &Program) {
@@ -42,37 +55,43 @@ impl Compiler {
             }
             // Also register enum member short aliases (e.g. KeyKind.Space → Std.Console.KeyKind.Space).
             if unit == STD_UNIT_CONSOLE {
-                for variant in KEY_KIND_VARIANTS {
-                    let short = format!("KeyKind.{variant}");
-                    let qualified = format!("{STD_UNIT_CONSOLE}.KeyKind.{variant}");
-                    seen.entry(short).or_default().push(qualified);
-                }
-                for variant in EVENT_KIND_VARIANTS {
-                    let short = format!("EventKind.{variant}");
-                    let qualified = format!("{STD_UNIT_CONSOLE}.EventKind.{variant}");
-                    seen.entry(short).or_default().push(qualified);
-                }
-                for variant in MOUSE_ACTION_VARIANTS {
-                    let short = format!("MouseAction.{variant}");
-                    let qualified = format!("{STD_UNIT_CONSOLE}.MouseAction.{variant}");
-                    seen.entry(short).or_default().push(qualified);
-                }
-                for variant in MOUSE_BUTTON_VARIANTS {
-                    let short = format!("MouseButton.{variant}");
-                    let qualified = format!("{STD_UNIT_CONSOLE}.MouseButton.{variant}");
-                    seen.entry(short).or_default().push(qualified);
-                }
+                record_enum_member_short_names(
+                    &mut seen,
+                    STD_UNIT_CONSOLE,
+                    "KeyKind",
+                    KEY_KIND_VARIANTS,
+                );
+                record_enum_member_short_names(
+                    &mut seen,
+                    STD_UNIT_CONSOLE,
+                    "EventKind",
+                    EVENT_KIND_VARIANTS,
+                );
+                record_enum_member_short_names(
+                    &mut seen,
+                    STD_UNIT_CONSOLE,
+                    "MouseAction",
+                    MOUSE_ACTION_VARIANTS,
+                );
+                record_enum_member_short_names(
+                    &mut seen,
+                    STD_UNIT_CONSOLE,
+                    "MouseButton",
+                    MOUSE_BUTTON_VARIANTS,
+                );
             } else if unit == STD_UNIT_TUI {
-                for variant in KEY_KIND_VARIANTS {
-                    let short = format!("KeyKind.{variant}");
-                    let qualified = format!("{STD_UNIT_TUI}.KeyKind.{variant}");
-                    seen.entry(short).or_default().push(qualified);
-                }
-                for variant in TUI_EVENT_KIND_VARIANTS {
-                    let short = format!("EventKind.{variant}");
-                    let qualified = format!("{STD_UNIT_TUI}.EventKind.{variant}");
-                    seen.entry(short).or_default().push(qualified);
-                }
+                record_enum_member_short_names(
+                    &mut seen,
+                    STD_UNIT_TUI,
+                    "KeyKind",
+                    KEY_KIND_VARIANTS,
+                );
+                record_enum_member_short_names(
+                    &mut seen,
+                    STD_UNIT_TUI,
+                    "EventKind",
+                    TUI_EVENT_KIND_VARIANTS,
+                );
             }
         }
 

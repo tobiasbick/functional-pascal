@@ -2,8 +2,9 @@
 //!
 //! **Documentation:** `docs/pascal/std/str.md` (from the repository root).
 
-use crate::error::CompileError;
-use fpas_bytecode::{Intrinsic, SourceLocation};
+use crate::error::{CompileError, compile_error};
+use fpas_bytecode::{Intrinsic, Op, SourceLocation, Value};
+use fpas_diagnostics::codes::COMPILE_INTRINSIC_ARITY_MISMATCH;
 use fpas_parser::Expr;
 use fpas_std::std_symbols as s;
 
@@ -17,6 +18,25 @@ impl Compiler {
         location: SourceLocation,
     ) -> Result<bool, CompileError> {
         match name {
+            s::STD_STR_FORMAT => {
+                if args.is_empty() {
+                    return Err(compile_error(
+                        COMPILE_INTRINSIC_ARITY_MISMATCH,
+                        "Format requires at least one argument (the template string)",
+                        "Use: Format('template %d', Value)",
+                        Self::call_site_span(location),
+                    ));
+                }
+                // Stack layout consumed by StrFormat: template, arg1..argN, N
+                self.compile_expr(&args[0])?;
+                for arg in &args[1..] {
+                    self.compile_expr(arg)?;
+                }
+                let arg_count = (args.len() - 1) as i64;
+                self.emit_constant(Value::Integer(arg_count), location)?;
+                self.emit(Op::Intrinsic(u16::from(Intrinsic::StrFormat)), location);
+                Ok(true)
+            }
             s::STD_STR_LENGTH => {
                 self.expect_exact_args(s::STD_STR_LENGTH, 1, args, location)?;
                 self.compile_expr(&args[0])?;

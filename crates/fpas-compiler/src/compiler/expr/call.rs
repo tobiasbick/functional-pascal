@@ -1,9 +1,6 @@
-use crate::error::{CompileError, compile_error};
-use fpas_bytecode::{Intrinsic, Op, SourceLocation, Value};
-use fpas_diagnostics::codes::COMPILE_INTRINSIC_ARITY_MISMATCH;
-use fpas_lexer::Span;
+use crate::error::CompileError;
+use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_parser::{Designator, Expr};
-use fpas_std::std_symbols as s;
 
 use super::super::Compiler;
 
@@ -14,66 +11,11 @@ impl Compiler {
         args: &[Expr],
         location: SourceLocation,
     ) -> Result<(), CompileError> {
-        let resolved = self.qualify_name(name);
-        let name = if resolved != name {
-            resolved.to_string()
-        } else {
-            name.to_string()
-        };
-        let name = name.as_str();
-        match name {
-            s::STD_CONSOLE_WRITE_LN => {
-                if args.is_empty() {
-                    self.emit_constant(Value::Str(String::new()), location)?;
-                    self.emit(Op::PrintLn, location);
-                } else {
-                    for (index, arg) in args.iter().enumerate() {
-                        self.compile_expr(arg)?;
-                        if index + 1 == args.len() {
-                            self.emit(Op::PrintLn, location);
-                        } else {
-                            self.emit(Op::Print, location);
-                        }
-                    }
-                }
-                self.emit(Op::Unit, location);
-                return Ok(());
-            }
-            s::STD_CONSOLE_WRITE => {
-                for arg in args {
-                    self.compile_expr(arg)?;
-                    self.emit(Op::Print, location);
-                }
-                self.emit(Op::Unit, location);
-                return Ok(());
-            }
-            s::STD_STR_FORMAT => {
-                if args.is_empty() {
-                    return Err(compile_error(
-                        COMPILE_INTRINSIC_ARITY_MISMATCH,
-                        "Format requires at least one argument (the template string)",
-                        "Use: Format('template %d', Value)",
-                        Span {
-                            offset: 0,
-                            length: 0,
-                            line: location.line,
-                            column: location.column,
-                            source_id: location.source_id,
-                        },
-                    ));
-                }
-                // Stack layout consumed by StrFormat: template, arg1..argN, N
-                self.compile_expr(&args[0])?;
-                for arg in &args[1..] {
-                    self.compile_expr(arg)?;
-                }
-                let arg_count = (args.len() - 1) as i64;
-                self.emit_constant(Value::Integer(arg_count), location)?;
-                self.emit(Op::Intrinsic(u16::from(Intrinsic::StrFormat)), location);
-                return Ok(());
-            }
-            _ => {}
-        }
+        let qualified_storage = self
+            .short_aliases
+            .get(&super::super::canonical_name(name))
+            .map(|s| s.clone());
+        let name = qualified_storage.as_deref().unwrap_or(name);
 
         if self.compile_std_library_call(name, args, location)? {
             return Ok(());

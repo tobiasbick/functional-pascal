@@ -1,9 +1,9 @@
-//! Lowers `Std.Console` calls to VM intrinsics.
+//! Lowers `Std.Console` calls to VM intrinsics and print operations.
 //!
 //! **Documentation:** `docs/pascal/std/console.md` (from the repository root).
 
 use crate::error::CompileError;
-use fpas_bytecode::{Intrinsic, SourceLocation};
+use fpas_bytecode::{Intrinsic, Op, SourceLocation, Value};
 use fpas_parser::Expr;
 use fpas_std::std_symbols as s;
 
@@ -17,6 +17,31 @@ impl Compiler {
         location: SourceLocation,
     ) -> Result<bool, CompileError> {
         match name {
+            s::STD_CONSOLE_WRITE_LN => {
+                if args.is_empty() {
+                    self.emit_constant(Value::Str(String::new()), location)?;
+                    self.emit(Op::PrintLn, location);
+                } else {
+                    for (index, arg) in args.iter().enumerate() {
+                        self.compile_expr(arg)?;
+                        if index + 1 == args.len() {
+                            self.emit(Op::PrintLn, location);
+                        } else {
+                            self.emit(Op::Print, location);
+                        }
+                    }
+                }
+                self.emit(Op::Unit, location);
+                Ok(true)
+            }
+            s::STD_CONSOLE_WRITE => {
+                for arg in args {
+                    self.compile_expr(arg)?;
+                    self.emit(Op::Print, location);
+                }
+                self.emit(Op::Unit, location);
+                Ok(true)
+            }
             s::STD_CONSOLE_READ_LN => {
                 self.expect_zero_args(s::STD_CONSOLE_READ_LN, args, location)?;
                 self.emit_intrinsic(Intrinsic::ConsoleReadLn, location);

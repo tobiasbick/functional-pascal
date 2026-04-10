@@ -1,11 +1,11 @@
 ---
 applyTo: "**/*.fpas"
-description: "Use when writing, reviewing, or generating Functional Pascal (.fpas) code. Covers syntax, types, visibility, units, standard library, and common patterns. Reference docs at docs/pascal/ and docs/pascal/std/."
+description: "Functional Pascal (FPAS) — syntax, reference types, mutability, Std library, pitfalls when editing .fpas sources. Canonical spec under docs/pascal/."
 ---
 
 # Functional Pascal Language Guide
 
-Functional Pascal is a modern Pascal dialect with immutability-by-default, first-class functions, and a module system. Files use `.fpas` extension. The language is **case-insensitive** for keywords and identifiers.
+Functional Pascal is a modern Pascal dialect with immutability-by-default, first-class functions, and a module system. Files use `.fpas` extension. The language is **case-insensitive** for keywords and identifiers. Authoritative documentation lives in [`docs/pascal/`](../../docs/pascal/).
 
 ## Program Structure
 
@@ -40,6 +40,7 @@ end;
 | `dict of K to V` | `['key': value]`, `[:]` — insertion-ordered key-value map |
 | `Result of T, E` | `Ok(value)`, `Error(value)` — success or error |
 | `Option of T` | `Some(value)`, `None` — present or absent |
+| `ref T` | `ref Node`, `new Node with ... end` — shared reference to a heap-allocated record |
 
 ## Variables and Constants
 
@@ -50,6 +51,8 @@ var Name: string := 'Alice';
 mutable var Count: integer := 0;
 const MaxSize: integer := 1024;
 ```
+
+`ref` bindings follow the same mutability rules as every other variable. Assigning a `ref` value copies the reference, not the underlying record. `new` performs runtime allocation, so it is not valid in `const` initializers.
 
 ## Functions and Procedures
 
@@ -69,8 +72,8 @@ end;
 
 - Parameters: semicolons in declarations, commas in calls
 - `mutable` parameter keyword allows reassignment inside the function
-- Nested functions are available for local helpers and mutual recursion
-- Mutual recursion: nest a helper function in the outer routine, or declare callees before callers; there is no `forward` keyword
+- Nested functions have lexical scope access
+- `forward` enables mutual recursion: `function Foo(...): T; forward;`
 
 ## Function Types
 
@@ -83,20 +86,22 @@ begin
 end;
 ```
 
-## Passing Callables
+## Anonymous Functions and Closures
 
-Use named functions or procedures when a value of function/procedure type is required. Anonymous function expressions are not supported.
+Anonymous functions (lambdas) use `function(...): Type begin ... end` inline. They capture enclosing variables by value:
 
 ```pascal
-function Square(X: integer): integer;
+var Square := function(X: integer): integer begin return X * X end;
+
+{ Closure — captures N from enclosing scope }
+function MakeAdder(N: integer): function(X: integer): integer;
 begin
-  return X * X
+  return function(X: integer): integer begin return X + N end
 end;
 
-var Op: function(X: integer): integer := Square;
-
-var Squared := Map([1, 2, 3],
-  Square);
+{ Higher-order: Map/Filter/Reduce }
+var Doubled := Map([1, 2, 3],
+  function(X: integer): integer begin return X * 2 end);
 ```
 
 ## Control Flow
@@ -162,6 +167,36 @@ var C: Color := Color.Red;
 
 Records can contain methods (functions/procedures). The first parameter is `Self` typed as the record. Callers use dot notation; `Self` is implicit: `A.DistanceTo(B)`. Field assignment requires `mutable var`.
 
+### Reference Types
+
+Use `ref T` for shared, heap-allocated records and recursive structures:
+
+```pascal
+type
+  Node = record
+    Value: integer;
+    Next: Option of ref Node;
+  end;
+
+mutable var Head: ref Node := new Node with
+  Value := 1;
+  Next := None;
+end;
+
+var Alias: ref Node := Head;
+
+begin
+  Head.Value := 2;
+  WriteLn(IntToStr(Alias.Value))
+end.
+```
+
+- `new T with ... end` allocates a record and returns `ref T`
+- assignment of `ref` shares the same underlying record
+- field access, indexing, and method calls dereference `ref` automatically
+- writing through a `ref` still requires the binding used for the write to be declared with `mutable var`
+- `new` is valid only for record types, and every field must be initialized exactly once
+
 ### Enums with Associated Data
 
 Enum variants can carry data fields (like tagged unions):
@@ -217,25 +252,6 @@ var X: integer := Identity(7);  { T inferred }
 
 Multiple type parameters: `Pair<A, B>`, used as `Pair of integer, string`. Type aliases can specialize generics: `type IntBox = Box of integer;`. Generics use type erasure — no monomorphization.
 
-### Constraints
-
-Type parameters can be constrained: `<T: Constraint>`. The compiler checks constraints at instantiation.
-
-| Constraint | Types | Description |
-|------------|-------|-------------|
-| `Comparable` | `integer`, `real`, `boolean`, `char`, `string` | Comparison operators |
-| `Numeric` | `integer`, `real` | Arithmetic operators |
-| `Printable` | All except `function`/`procedure` | String conversion |
-
-```pascal
-type
-  Ordered<T: Comparable> = record Value: T; end;
-  Entry<K: Comparable, V> = record Key: K; Value: V; end;
-
-var O: Ordered of integer := record Value := 42; end;
-{ var Bad: Ordered of array of integer := ...  ← compile error }
-```
-
 ## Visibility
 
 Applies in `unit` files only (not `program` files). All declarations are **public by default**.
@@ -275,19 +291,20 @@ end.
 
 | Unit | Purpose | Key symbols |
 |------|---------|------------|
-| `Std.Console` | Text I/O, CRT screen, keyboard | `WriteLn`, `Write`, `ReadLn`, `ReadKey`, `ReadKeyEvent`, `KeyPressed`, `ClrScr`, `GotoXY`, `TextColor`, `TextBackground`, `Window`, `Delay`, `CursorOn`, `CursorOff` |
-| `Std.Str` | String operations | `Length`, `ToUpper`, `ToLower`, `Trim`, `Contains`, `StartsWith`, `EndsWith`, `Substring`, `IndexOf`, `Replace`, `Split`, `Join`, `IsNumeric` |
-| `Std.Conv` | Type conversions | `IntToStr`, `StrToInt`, `IntToReal`, `RealToStr`, `StrToReal`, `CharToStr` |
-| `Std.Math` | Math functions | `Pi`, `Sqrt`, `Pow`, `Floor`, `Ceil`, `Round`, `Sin`, `Cos`, `Log`, `Abs`, `Min`, `Max` |
-| `Std.Array` | Array operations | `Length`, `Sort`, `Reverse`, `Contains`, `IndexOf`, `Slice`, `Push` (mutable), `Pop` (mutable), `Map`, `Filter`, `Reduce` |
-| `Std.Dict` | Dict operations | `Length`, `ContainsKey`, `Keys`, `Values`, `Remove` |
-| `Std.Result` | Result helpers | `Unwrap`, `UnwrapOr`, `IsOk`, `IsError` |
-| `Std.Option` | Option helpers | `Unwrap`, `UnwrapOr`, `IsSome`, `IsNone` |
-| `Std.Task` | Task management | `Wait`, `WaitAll` |
+| `Std.Console` | Text I/O, CRT screen, keyboard, events | `WriteLn`, `Write`, `ReadLn`, `ReadKey`, `ReadKeyEvent`, `KeyPressed`, `ReadEvent`, `ReadEventTimeout`, `PollEvent`, `ClrScr`, `GotoXY`, `TextColor`, `TextBackground`, `TextColorRGB`, `TextColor256`, `Window`, `Delay`, `CursorOn`, `CursorOff`, raw mode / alt screen helpers |
+| `Std.Tui` | Terminal app session, resize/redraw loop | `Application.Open`, `Application.Close`, `Application.Size`, `Application.ReadEvent`, `Application.ReadEventTimeout`, `Application.PollEvent`, `Application.RequestRedraw`, `Application.RedrawPending`, `TuiEvent`, `EventKind` (uses `Std.Console.KeyEvent` for key payloads) |
+| `Std.Str` | String operations | `Length`, `ToUpper`, `ToLower`, `Trim`, `Contains`, `StartsWith`, `EndsWith`, `Substring`, `IndexOf`, `Replace`, `Split`, `Join`, `IsNumeric`, `Format`, … |
+| `Std.Conv` | Type conversions | `IntToStr`, `StrToInt`, `IntToReal`, `RealToStr`, `StrToReal`, `CharToStr`, `BoolToStr`, … |
+| `Std.Math` | Math functions | `Pi`, `Sqrt`, `Pow`, `Floor`, `Ceil`, `Round`, `Sin`, `Cos`, `Log`, `Abs`, `Min`, `Max`, `Clamp`, … |
+| `Std.Array` | Array operations | `Length`, `Sort`, `Reverse`, `Contains`, `IndexOf`, `Slice`, `Push` (mutable), `Pop` (mutable), `Map`, `Filter`, `Reduce`, … |
+| `Std.Dict` | Dict operations | `Length`, `ContainsKey`, `Keys`, `Values`, `Remove`, `Get`, `Merge` |
+| `Std.Result` | Result helpers | `Unwrap`, `UnwrapOr`, `IsOk`, `IsError`, `Map`, `AndThen`, `OrElse` |
+| `Std.Option` | Option helpers | `Unwrap`, `UnwrapOr`, `IsSome`, `IsNone`, `Map`, `AndThen`, `OrElse` |
+| `Std.Task` | Task synchronization (`go`) | `Wait`, `WaitAll` |
 
 **Ambiguous names** — always qualify these:
 - `Length`, `Contains`, `IndexOf` across `Std.Str`, `Std.Array`, `Std.Dict`
-- `Unwrap`, `UnwrapOr` across `Std.Result` and `Std.Option`
+- `Unwrap`, `UnwrapOr`, `Map`, `AndThen`, `OrElse` across `Std.Result` and `Std.Option`
 
 ## Operators
 
@@ -366,7 +383,7 @@ Use `Result`/`Option` for expected failures; `panic` for broken invariants.
 
 ## Concurrency
 
-Go-inspired concurrency with lightweight tasks and fork-join patterns.
+Go-inspired **tasks** only: spawn work with `go`, synchronize with `Std.Task`. There are no channels or `select` in the current language or standard library.
 
 ```pascal
 uses Std.Console, Std.Task;
@@ -382,9 +399,11 @@ begin
 end.
 ```
 
-- `go FuncCall()` — launch a concurrent task, returns a `task` handle when used as an expression
-- `Wait(T)` — block until a task completes and return its result
-- `WaitAll([T1, T2, T3])` — block until all tasks in an array complete
+- `go FuncCall()` — launch a concurrent task; assign to `task` (result type follows the spawned call)
+- `Wait(T)` — block until the task finishes, return its result
+- `WaitAll([T1, T2, …])` — block until every task in the array completes
+
+See [`docs/pascal/08-concurrency.md`](../../docs/pascal/08-concurrency.md).
 
 ## Projects (.fpasprj)
 
@@ -393,6 +412,7 @@ Multi-file projects use TOML project files:
 ```toml
 [project]
 name = "my-app"
+version = "1.0.0"   # optional
 kind = "program"
 main = "src/main.fpas"
 
@@ -408,7 +428,8 @@ include = ["src/**/*.fpas"]
 4. **Records support methods** — first param is `Self` typed as the record, called via dot notation
 5. **Case-insensitive** — `WriteLn` = `writeln` = `WRITELN`
 6. **`private` for internal symbols** — public is default in units
-7. **Qualify ambiguous names** — `Std.Str.Length` vs `Std.Array.Length`; `Std.Result.Unwrap` vs `Std.Option.Unwrap`
+7. **Qualify ambiguous names** — `Std.Str.Length` vs `Std.Array.Length`; shared helpers on `Std.Result` vs `Std.Option` (`Unwrap`, `Map`, `AndThen`, `OrElse`, …)
 8. **Single quotes for strings** — `'Hello'`, doubled for escaping: `'It''s'`
 9. **`Result`/`Option` for expected errors** — `panic` only for broken invariants
 10. **`try` propagates errors** — unwraps or returns early
+11. **`ref` is shared** — `new T with ... end` allocates a shared record; assignment aliases it; writes through it need a mutable binding

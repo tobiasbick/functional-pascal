@@ -1,12 +1,12 @@
 ---
-description: Functional Pascal (FPAS) — syntax, reference types, mutability, Std library, pitfalls when editing .fpas sources
+description: Functional Pascal (FPAS) — syntax, reference types, mutability, Std library, pitfalls when editing .fpas sources. Canonical spec under docs/pascal/.
 globs: "**/*.fpas"
 alwaysApply: false
 ---
 
 # Functional Pascal Language Guide
 
-Functional Pascal is a modern Pascal dialect with immutability-by-default, first-class functions, and a module system. Files use `.fpas` extension. The language is **case-insensitive** for keywords and identifiers.
+Functional Pascal is a modern Pascal dialect with immutability-by-default, first-class functions, and a module system. Files use `.fpas` extension. The language is **case-insensitive** for keywords and identifiers. Authoritative documentation lives in [`docs/pascal/`](../../docs/pascal/).
 
 ## Program Structure
 
@@ -292,20 +292,20 @@ end.
 
 | Unit | Purpose | Key symbols |
 |------|---------|------------|
-| `Std.Console` | Text I/O, CRT screen, keyboard | `WriteLn`, `Write`, `ReadLn`, `ReadKey`, `ReadKeyEvent`, `KeyPressed`, `ClrScr`, `GotoXY`, `TextColor`, `TextBackground`, `Window`, `Delay`, `CursorOn`, `CursorOff` |
-| `Std.Str` | String operations | `Length`, `ToUpper`, `ToLower`, `Trim`, `Contains`, `StartsWith`, `EndsWith`, `Substring`, `IndexOf`, `Replace`, `Split`, `Join`, `IsNumeric` |
-| `Std.Conv` | Type conversions | `IntToStr`, `StrToInt`, `IntToReal`, `RealToStr`, `StrToReal`, `CharToStr` |
-| `Std.Math` | Math functions | `Pi`, `Sqrt`, `Pow`, `Floor`, `Ceil`, `Round`, `Sin`, `Cos`, `Log`, `Abs`, `Min`, `Max` |
-| `Std.Array` | Array operations | `Length`, `Sort`, `Reverse`, `Contains`, `IndexOf`, `Slice`, `Push` (mutable), `Pop` (mutable), `Map`, `Filter`, `Reduce` |
-| `Std.Dict` | Dict operations | `Length`, `ContainsKey`, `Keys`, `Values`, `Remove` |
-| `Std.Result` | Result helpers | `Unwrap`, `UnwrapOr`, `IsOk`, `IsError` |
-| `Std.Option` | Option helpers | `Unwrap`, `UnwrapOr`, `IsSome`, `IsNone` |
-| `Std.Channel` | Channel operations | `Make`, `MakeBuffered`, `Send`, `Receive`, `TryReceive`, `Close` |
-| `Std.Task` | Task management | `Wait`, `WaitAll` |
+| `Std.Console` | Text I/O, CRT screen, keyboard, events | `WriteLn`, `Write`, `ReadLn`, `ReadKey`, `ReadKeyEvent`, `KeyPressed`, `ReadEvent`, `ReadEventTimeout`, `PollEvent`, `ClrScr`, `GotoXY`, `TextColor`, `TextBackground`, `TextColorRGB`, `TextColor256`, `Window`, `Delay`, `CursorOn`, `CursorOff`, raw mode / alt screen helpers |
+| `Std.Tui` | Terminal app session, resize/redraw loop | `Application.Open`, `Application.Close`, `Application.Size`, `Application.ReadEvent`, `Application.ReadEventTimeout`, `Application.PollEvent`, `Application.RequestRedraw`, `Application.RedrawPending`, `TuiEvent`, `EventKind` (uses `Std.Console.KeyEvent` for key payloads) |
+| `Std.Str` | String operations | `Length`, `ToUpper`, `ToLower`, `Trim`, `Contains`, `StartsWith`, `EndsWith`, `Substring`, `IndexOf`, `Replace`, `Split`, `Join`, `IsNumeric`, `Format`, … |
+| `Std.Conv` | Type conversions | `IntToStr`, `StrToInt`, `IntToReal`, `RealToStr`, `StrToReal`, `CharToStr`, `BoolToStr`, … |
+| `Std.Math` | Math functions | `Pi`, `Sqrt`, `Pow`, `Floor`, `Ceil`, `Round`, `Sin`, `Cos`, `Log`, `Abs`, `Min`, `Max`, `Clamp`, … |
+| `Std.Array` | Array operations | `Length`, `Sort`, `Reverse`, `Contains`, `IndexOf`, `Slice`, `Push` (mutable), `Pop` (mutable), `Map`, `Filter`, `Reduce`, … |
+| `Std.Dict` | Dict operations | `Length`, `ContainsKey`, `Keys`, `Values`, `Remove`, `Get`, `Merge` |
+| `Std.Result` | Result helpers | `Unwrap`, `UnwrapOr`, `IsOk`, `IsError`, `Map`, `AndThen`, `OrElse` |
+| `Std.Option` | Option helpers | `Unwrap`, `UnwrapOr`, `IsSome`, `IsNone`, `Map`, `AndThen`, `OrElse` |
+| `Std.Task` | Task synchronization (`go`) | `Wait`, `WaitAll` |
 
 **Ambiguous names** — always qualify these:
 - `Length`, `Contains`, `IndexOf` across `Std.Str`, `Std.Array`, `Std.Dict`
-- `Unwrap`, `UnwrapOr` across `Std.Result` and `Std.Option`
+- `Unwrap`, `UnwrapOr`, `Map`, `AndThen`, `OrElse` across `Std.Result` and `Std.Option`
 
 ## Operators
 
@@ -384,21 +384,27 @@ Use `Result`/`Option` for expected failures; `panic` for broken invariants.
 
 ## Concurrency
 
-Go-inspired concurrency with lightweight tasks, typed channels, and `select`.
+Go-inspired **tasks** only: spawn work with `go`, synchronize with `Std.Task`. There are no channels or `select` in the current language or standard library.
 
 ```pascal
-uses Std.Console, Std.Channel, Std.Task;
+uses Std.Console, Std.Task;
 
-var Ch: channel of integer := Make();
-go Producer(Ch);
-var V: integer := Receive(Ch);
+function Worker(): integer;
+begin
+  return 42
+end;
+
+begin
+  var T: task := go Worker();
+  WriteLn(Wait(T))
+end.
 ```
 
-- `go FuncCall()` — launch a concurrent task, returns `task` handle
-- `Wait(T)` — block until task completes, return result
-- `Make()` / `MakeBuffered(N)` — create channels
-- `Send`, `Receive`, `TryReceive`, `Close` — channel operations
-- `select ... case V: T from Ch: ... default: ... end` — multiplex channels
+- `go FuncCall()` — launch a concurrent task; assign to `task` (result type follows the spawned call)
+- `Wait(T)` — block until the task finishes, return its result
+- `WaitAll([T1, T2, …])` — block until every task in the array completes
+
+See [`docs/pascal/08-concurrency.md`](../../docs/pascal/08-concurrency.md).
 
 ## Projects (.fpasprj)
 
@@ -407,6 +413,7 @@ Multi-file projects use TOML project files:
 ```toml
 [project]
 name = "my-app"
+version = "1.0.0"   # optional
 kind = "program"
 main = "src/main.fpas"
 
@@ -422,7 +429,7 @@ include = ["src/**/*.fpas"]
 4. **Records support methods** — first param is `Self` typed as the record, called via dot notation
 5. **Case-insensitive** — `WriteLn` = `writeln` = `WRITELN`
 6. **`private` for internal symbols** — public is default in units
-7. **Qualify ambiguous names** — `Std.Str.Length` vs `Std.Array.Length`; `Std.Result.Unwrap` vs `Std.Option.Unwrap`
+7. **Qualify ambiguous names** — `Std.Str.Length` vs `Std.Array.Length`; shared helpers on `Std.Result` vs `Std.Option` (`Unwrap`, `Map`, `AndThen`, `OrElse`, …)
 8. **Single quotes for strings** — `'Hello'`, doubled for escaping: `'It''s'`
 9. **`Result`/`Option` for expected errors** — `panic` only for broken invariants
 10. **`try` propagates errors** — unwraps or returns early

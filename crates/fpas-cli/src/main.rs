@@ -41,6 +41,8 @@ fn main() {
     }
 }
 
+// `main_tests` exercises the `fpas` binary (CLI + full pipeline). `project` tests target
+// `fpas_project` loading/linking through the crate's `project` re-exports.
 #[cfg(test)]
 mod main_tests;
 

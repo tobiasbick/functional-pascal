@@ -8,24 +8,7 @@ pub(super) fn toml_path(path: &std::path::Path) -> String {
 
 /// Writes a standard program project manifest with the provided source includes.
 pub(super) fn write_program_project_file(project_file: &std::path::Path, include: &[&str]) {
-    let include_entries = include
-        .iter()
-        .map(|entry| format!("\"{entry}\""))
-        .collect::<Vec<_>>()
-        .join(", ");
-    write_text(
-        project_file,
-        &format!(
-            r#"[project]
-name = "app"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = [{include_entries}]
-"#
-        ),
-    );
+    crate::test_support::write_program_fpasprj(project_file, "src/main.fpas", include);
 }
 
 /// Loads a project file and returns the parsed project.

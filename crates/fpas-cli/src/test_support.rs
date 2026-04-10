@@ -23,3 +23,47 @@ pub(crate) fn write_text(path: &Path, text: &str) {
     }
     fs::write(path, text).expect("test file must be created");
 }
+
+/// Writes a `.fpasprj` manifest for tests (`kind = "program"`).
+///
+/// Spec: [Projects & CLI](../../../docs/pascal/10-projects.md).
+pub(crate) fn write_program_fpasprj(project_file: &Path, main: &str, include: &[&str]) {
+    write_fpasprj(project_file, "app", "program", Some(main), include);
+}
+
+/// Writes a `.fpasprj` manifest for tests (`kind = "library"`).
+///
+/// Spec: [Projects & CLI](../../../docs/pascal/10-projects.md).
+pub(crate) fn write_library_fpasprj(project_file: &Path, include: &[&str]) {
+    write_fpasprj(project_file, "lib", "library", None, include);
+}
+
+fn write_fpasprj(
+    project_file: &Path,
+    name: &str,
+    kind: &str,
+    main: Option<&str>,
+    include: &[&str],
+) {
+    let include_entries = include
+        .iter()
+        .map(|entry| format!("\"{entry}\""))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let main_entry = match main {
+        Some(main) => format!("main = \"{main}\"\n\n"),
+        None => String::new(),
+    };
+
+    write_text(
+        project_file,
+        &format!(
+            r#"[project]
+name = "{name}"
+kind = "{kind}"
+{main_entry}[sources]
+include = [{include_entries}]
+"#
+        ),
+    );
+}

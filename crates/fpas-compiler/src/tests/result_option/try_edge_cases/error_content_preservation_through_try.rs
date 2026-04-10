@@ -1,4 +1,4 @@
-use super::super::{compile_and_run, compile_err};
+use super::super::compile_and_run;
 // ── Error content preservation through try ──────────────────────────────
 
 #[test]

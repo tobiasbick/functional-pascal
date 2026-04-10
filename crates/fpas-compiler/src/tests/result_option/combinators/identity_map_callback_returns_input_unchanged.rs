@@ -1,4 +1,4 @@
-use super::super::{compile_and_run, compile_err};
+use super::super::compile_and_run;
 // ── Identity map (callback returns input unchanged) ─────────────────────
 
 #[test]

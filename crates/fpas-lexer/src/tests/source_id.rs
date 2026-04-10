@@ -4,10 +4,12 @@ use crate::{Token, lex_with_source_id};
 fn lex_with_source_id_on_token_spans() {
     let (tokens, errs) = lex_with_source_id("x", 7);
     assert!(errs.is_empty());
-    let ident = tokens
+    let idents: Vec<_> = tokens
         .iter()
-        .find(|t| matches!(t.token, Token::Ident(_)))
-        .expect("identifier token");
+        .filter(|t| matches!(t.token, Token::Ident(_)))
+        .collect();
+    assert_eq!(idents.len(), 1, "expected exactly one identifier token");
+    let ident = idents[0];
     assert_eq!(ident.span.source_id, 7);
 }
 

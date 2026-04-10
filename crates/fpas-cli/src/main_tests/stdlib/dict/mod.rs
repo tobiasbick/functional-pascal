@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 mod ambiguity__length_with_std_str_and_std_array;
 mod containskey;
 mod dict_indexing;

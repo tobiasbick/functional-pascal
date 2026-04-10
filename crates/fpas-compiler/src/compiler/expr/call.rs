@@ -14,7 +14,7 @@ impl Compiler {
         let qualified_storage = self
             .short_aliases
             .get(&super::super::canonical_name(name))
-            .map(|s| s.clone());
+            .cloned();
         let name = qualified_storage.as_deref().unwrap_or(name);
 
         if self.compile_std_library_call(name, args, location)? {

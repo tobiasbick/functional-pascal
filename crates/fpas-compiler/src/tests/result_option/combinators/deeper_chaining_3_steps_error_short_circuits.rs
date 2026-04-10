@@ -1,4 +1,4 @@
-use super::super::{compile_and_run, compile_err};
+use super::super::compile_and_run;
 // ── Deeper chaining (3+ steps, error short-circuits) ────────────────────
 
 #[test]

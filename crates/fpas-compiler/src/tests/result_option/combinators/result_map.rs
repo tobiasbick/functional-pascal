@@ -1,4 +1,4 @@
-use super::super::{compile_and_run, compile_err};
+use super::super::compile_and_run;
 // ── Result.Map ──────────────────────────────────────────────────────────
 
 #[test]

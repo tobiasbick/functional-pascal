@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 mod charat;
 mod contains;
 mod delete;

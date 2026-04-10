@@ -151,6 +151,8 @@ pub fn run_intrinsic(
 
 #[cfg(test)]
 mod vm_only_guard_tests {
+    #![allow(clippy::expect_used, clippy::unwrap_used)]
+
     use super::run_intrinsic;
     use fpas_bytecode::{Intrinsic, SourceLocation, Value};
 

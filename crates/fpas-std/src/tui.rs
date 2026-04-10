@@ -261,6 +261,8 @@ fn session_state_error(
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::expect_used)]
+
     use super::*;
     use crate::key_event::key_kind_index;
     use fpas_bytecode::SourceLocation;

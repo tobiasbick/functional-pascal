@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 mod abs__integer_and_real;
 mod arcsin_arccos_arctan;
 mod arctan2;

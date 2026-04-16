@@ -4,7 +4,7 @@ Open planning items for Functional Pascal.
 
 ## VM implementation
 
-The parallel bytecode runtime is documented in [`parallel-vm.md`](parallel-vm.md) (thread pool, task queue, and how it relates to [`docs/pascal/08-concurrency.md`](../pascal/08-concurrency.md)).
+[`parallel-vm.md`](parallel-vm.md) is an **ordered implementation roadmap** for the parallel task runtime in `fpas-vm` (bytecode through shutdown). Language rules stay in [`docs/pascal/08-concurrency.md`](../pascal/08-concurrency.md).
 
 ## TUI roadmap
 

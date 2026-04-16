@@ -193,7 +193,7 @@ type_expr           = 'array' 'of' type_expr            (* array type     *)
                     | 'option' 'of' type_expr            (* option type    *)
                     | function_type                      (* function type  *)
                     | procedure_type                     (* procedure type *)
-                    | qualified_id ;                              (* named type  *)
+                    | qualified_id ;   (* named type: user types, `task`, etc. *)
 
 function_type       = 'function' '(' [ formal_type_list ] ')' ':' type_expr ;
 procedure_type      = 'procedure' '(' [ formal_type_list ] ')' ;
@@ -373,12 +373,14 @@ break_stmt          = 'break' ;
 continue_stmt       = 'continue' ;
 
 (* -- Go (spawn task) -- *)
+(* Syntax: same call shape as call_stmt — designator '(' args ')'. *)
+(* The parser requires the expression after `go` to be a call (not   *)
+(* a bare designator or other expression). Semantics: statement     *)
+(* `go` … is fire-and-forget (no handle); expression `go` … has type *)
+(* `task` and retains the result for `Std.Task.Wait`. See           *)
+(* docs/pascal/08-concurrency.md.                                   *)
 go_call             = designator '(' [ arg_list ] ')' ;
 go_stmt             = 'go' go_call ;
-
-(* `go` launches a concurrent task. Only call syntax is valid.      *)
-(* As an expression, `go f()` returns                                *)
-(* a `task` handle.                                                 *)
 
 (* -- Procedure / Function Call (statement position) -- *)
 call_stmt           = designator '(' [ arg_list ] ')' ;
@@ -429,7 +431,7 @@ primary_expr        = integer_literal
                     | array_literal
                     | dict_literal
                     | record_literal
-                    | 'go' go_call                       (* spawn task     *)
+                    | 'go' go_call                       (* task handle    *)
                     | designator [ call_args ] ;
 
 (* -- Function call -- *)

@@ -1,6 +1,6 @@
 # TUI application framework (Turbo Vision direction)
 
-This document is an **implementation plan** for evolving Functional Pascal’s terminal UI from **poll-style** APIs toward a **Rust-hosted event loop** with **user-defined reactions** in FPAS (`RunApp`-style entry and `On*` callbacks). It builds on existing pieces: [`Std.Tui`](../pascal/std/tui.md), console key types in [`Std.Console`](../pascal/std/console.md), VM shared state (see [`parallel-vm.md`](parallel-vm.md)), and `crates/fpas-std` / `crates/fpas-vm`.
+This document is an **implementation plan** for evolving Functional Pascal’s terminal UI from **poll-style** APIs toward a **Rust-hosted event loop** with **user-defined reactions** in FPAS (`RunApp`-style entry and `On*` callbacks). It builds on existing pieces: [`Std.Tui`](../pascal/std/tui.md), console key types in [`Std.Console`](../pascal/std/console.md), VM shared state and mutex discipline (see [`parallel-vm.md`](parallel-vm.md#phase-3-shared-state-queues-and-io)), and `crates/fpas-std` / `crates/fpas-vm`.
 
 **Principles**
 
@@ -49,7 +49,7 @@ This document is an **implementation plan** for evolving Functional Pascal’s t
 2. Define how the VM **stores** function references: indices into a **handler table** emitted by the compiler, or chunk constants; align with existing **first-class function** representation in bytecode.
 3. Specify **calling convention** from Rust into FP: **which stack**, **which arguments**, **error handling** if the user panics or returns.
 4. Implement **dispatch** in `crates/fpas-vm`: on `HostEvent`, push arguments, call the registered procedure, then resume the host loop.
-5. Ensure **console mutex / shared state** rules from [`parallel-vm.md`](parallel-vm.md) still hold: no concurrent VM access from multiple threads during handler execution.
+5. Ensure **console mutex / shared state** rules from [`parallel-vm.md`](parallel-vm.md#phase-3-shared-state-queues-and-io) still hold: no concurrent VM access from multiple threads during handler execution.
 6. Add **VM tests** that register stub handlers and feed synthetic events through the bridge.
 
 ---
@@ -133,5 +133,5 @@ Phases **6** and **7** can partially overlap once **4** is stable; do not start 
 |----------|-----------|
 | [`docs/pascal/std/tui.md`](../pascal/std/tui.md) | Current `Std.Tui` API |
 | [`docs/pascal/std/console.md`](../pascal/std/console.md) | Key types and legacy I/O |
-| [`docs/future/parallel-vm.md`](parallel-vm.md) | VM threads and shared console/TUI state |
+| [`docs/future/parallel-vm.md`](parallel-vm.md) | VM task roadmap; Phase 3 — shared I/O and locks |
 | [`docs/pascal/08-concurrency.md`](../pascal/08-concurrency.md) | Task model vs TUI main thread |

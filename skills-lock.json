@@ -1,6 +1,11 @@
 {
   "version": 1,
   "skills": {
+    "karpathy-guidelines": {
+      "source": "forrestchang/andrej-karpathy-skills",
+      "sourceType": "github",
+      "computedHash": "0ec1641120accbb458780e0bd19a50a4182f2b97863e90851b91307f29802c9f"
+    },
     "rust-async-patterns": {
       "source": "wshobson/agents",
       "sourceType": "github",

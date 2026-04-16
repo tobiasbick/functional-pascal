@@ -6,6 +6,10 @@ Open planning items for Functional Pascal.
 
 The parallel bytecode runtime is documented in [`parallel-vm.md`](parallel-vm.md) (thread pool, task queue, and how it relates to [`docs/pascal/08-concurrency.md`](../pascal/08-concurrency.md)).
 
+## TUI roadmap
+
+Turbo Vision–style direction: Rust-hosted event loop, FPAS `On*` handlers and `RunApp`-style entry, migration away from poll-heavy console usage. See [`tui-application-framework.md`](tui-application-framework.md).
+
 ## Under Consideration
 
 | # | Feature | Description |

@@ -157,4 +157,4 @@ end;
 
 ## Keywords
 
-`Result`, `Option`, `Ok`, `Error`, `Some`, `None`, `try` are reserved keywords.
+`Result`, `Option`, `Ok`, `Error`, `Some`, `None`, `try`, `panic` are reserved keywords.

@@ -30,12 +30,11 @@ end.
 program Greet;
 
 uses
-  Std.Console,
-  Std.Str;
+  Std.Console;
 
 function Greet(Name: string): string;
 begin
-  return Concat('Hello, ', Name, '!');
+  return 'Hello, ' + Name + '!';
 end;
 
 begin

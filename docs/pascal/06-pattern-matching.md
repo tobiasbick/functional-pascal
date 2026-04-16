@@ -85,6 +85,7 @@ Rules:
 - Each field position must be a bare identifier binding.
 - Nested patterns are not supported.
 - `_` is not supported as a wildcard binding.
+- Ranges (`a..b`) are not allowed on enum variant labels.
 - Use a guard clause when you need additional constraints on a bound value.
 
 ## Else Branch

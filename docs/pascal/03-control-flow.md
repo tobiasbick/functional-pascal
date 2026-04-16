@@ -27,9 +27,17 @@ end;
 
 ## Case Of
 
-The enhanced `case` statement supports matching on integers, chars, strings, booleans, and enums:
+The `case` expression may have any of the following types:
 
-For guard clauses, `Result`/`Option` destructuring, enum patterns, and exhaustiveness rules, see [6. Case Of](06-pattern-matching.md).
+- an ordinal type: `integer`, `boolean`, `char`, or an `enum`
+- `string`
+- `Result<T, E>` or `Option<T>`
+
+Simple scalar matching (integers, chars, strings, booleans, simple enums) is
+shown below. Guard clauses (`label if cond:`), destructuring patterns
+(`Ok(x)`, `Error(e)`, `Some(x)`, `None`), data-carrying enum patterns, and
+exhaustiveness rules are documented in
+[6. Case Of](06-pattern-matching.md) and [7. Error Handling](07-error-handling.md).
 
 ```pascal
 case Day of

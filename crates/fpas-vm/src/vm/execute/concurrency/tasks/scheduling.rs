@@ -1,3 +1,9 @@
+//! Instruction-budget preemption for spawned tasks.
+//!
+//! The main task (id `0`) never uses the shared ready queue; only pool workers run spawned tasks
+//! that may be saved and re-queued here. See `docs/future/parallel-vm.md` (Phase 7),
+//! `docs/pascal/08-concurrency.md`.
+
 use crate::vm::{TIMESLICE, Worker};
 
 impl Worker {

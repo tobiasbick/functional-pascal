@@ -1,3 +1,7 @@
+//! Task switching: [`Worker::exec_yield`], [`Worker::switch_to_next_ready_task`], and spawn/wait.
+//!
+//! **Documentation:** `docs/future/parallel-vm.md` (Phases 6–8), `docs/pascal/08-concurrency.md`
+
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
 use fpas_bytecode::SourceLocation;

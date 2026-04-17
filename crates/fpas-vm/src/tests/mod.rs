@@ -11,3 +11,4 @@ mod spawn_path;
 mod tasks;
 mod uses_spawn_tasks;
 mod worker_pool;
+mod yield_scheduling;

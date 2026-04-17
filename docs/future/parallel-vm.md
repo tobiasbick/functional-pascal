@@ -14,7 +14,8 @@ Follow the phases **in order** when building or auditing the system. Each phase 
 | **4** — Conditional pool, scoped `run` | **Done** — pool size `0` when `Chunk::uses_spawn_tasks()` is false, else `max(1, available_parallelism − 1)`; `Vm::run` uses `thread::scope`, main task on caller thread, `SharedState::request_shutdown` (`notify_all`) after main. Tests: `crates/fpas-vm/src/tests/worker_pool.rs`. |
 | **5** — Worker pull loop, task binding | **Done** — main worker (task `0`), pool sentinel (`u64::MAX`), `pool_loop` fast dequeue + condvar wait, `TaskState` save/load. Tests: `crates/fpas-vm/src/tests/pool_worker_loop.rs`. |
 | **6** — Execute — spawn path | **Done** — callee + args popped per opcode arity, chunk entry resolved, [`TaskState`](../../crates/fpas-vm/src/vm/shared.rs) enqueued, retained spawn pushes `Value::Task`. Tests: `crates/fpas-vm/src/tests/spawn_path.rs`. |
-| **7–9** | Use the checklists below against the current tree (`fpas-vm`, tests); items were implemented incrementally — audit when changing behavior. |
+| **7** — Cooperative scheduling (yield / timeslice) | **Done** — `Op::Yield` and a fixed instruction budget (`TIMESLICE` in `fpas-vm`) reschedule **spawned** tasks via save/enqueue/dequeue; main task (`0`) never enters the shared queue (`thread::yield_now` on main `Yield`). Tests: `crates/fpas-vm/src/tests/yield_scheduling.rs`. |
+| **8–9** | Use the checklists below against the current tree (`fpas-vm`, tests); items were implemented incrementally — audit when changing behavior. |
 
 ---
 
@@ -137,9 +138,11 @@ Follow the phases **in order** when building or auditing the system. Each phase 
 1. After a bounded number of instructions (timeslice), or on **`Op::Yield`**, save the current task and **enqueue** it again (unless rules forbid re-queuing the main task — follow the existing invariants in the VM).
 2. Ensure the **main task** never competes incorrectly for the ready queue (document in code: main runs on caller thread; only **spawned** tasks should appear in the pool queue).
 
-**Primary path:** `crates/fpas-vm/src/vm/execute/concurrency/tasks/scheduling.rs` and opcode dispatch for `Yield`.
+**Primary path:** `crates/fpas-vm/src/vm/execute/concurrency/tasks/scheduling.rs` and opcode dispatch for `Yield` in [`concurrency/mod.rs`](../../crates/fpas-vm/src/vm/execute/concurrency/mod.rs); cooperative `Yield` / `switch_to_next_ready_task` in [`tasks/mod.rs`](../../crates/fpas-vm/src/vm/execute/concurrency/tasks/mod.rs).
 
 **Done when:** Busy spawned tasks still allow the main program to reach `Wait` / completion without starvation in tests.
+
+**Implemented:** Instruction budget in [`Worker::maybe_timeslice_yield`](../../crates/fpas-vm/src/vm/execute/concurrency/tasks/scheduling.rs) (skips while `sync_call_depth > 0`, skips enqueue for task id `0`). [`Worker::exec_yield`](../../crates/fpas-vm/src/vm/execute/concurrency/tasks/mod.rs): main uses `std::thread::yield_now`, spawned tasks use [`Worker::switch_to_next_ready_task`](../../crates/fpas-vm/src/vm/execute/concurrency/tasks/mod.rs). Budget reset on [`Worker::load_task`](../../crates/fpas-vm/src/vm/worker.rs). VM tests: [`yield_scheduling.rs`](../../crates/fpas-vm/src/tests/yield_scheduling.rs).
 
 ---
 
@@ -198,4 +201,5 @@ Pick these only if the project explicitly adopts them; they are **not** required
 | Phase 4 tests (pool sizing, scoped run, shutdown / condvar) | `crates/fpas-vm/src/tests/worker_pool.rs` |
 | Phase 5 tests (pool loop, save/load, enqueue wake, errors) | `crates/fpas-vm/src/tests/pool_worker_loop.rs` |
 | Phase 6 tests (spawn execute path: arity, captures, detached, errors) | `crates/fpas-vm/src/tests/spawn_path.rs` |
+| Phase 7 tests (yield, timeslice, main vs pool queue) | `crates/fpas-vm/src/tests/yield_scheduling.rs` |
 | `go` lowering (retained vs detached) | `crates/fpas-compiler/src/compiler/stmt/concurrency.rs`, `crates/fpas-compiler/src/compiler/expr/mod.rs` |

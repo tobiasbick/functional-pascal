@@ -60,6 +60,8 @@ If it does emit spawn bytecode, the VM starts **`max(1, available_parallelism âˆ
 
 Those background workers exist only for a single **`Vm::run`** invocation: the runtime **joins** pool threads before `run` returns so short-lived hosts do not accumulate stray threads across many runs.
 
+**Cooperative scheduling (implementation):** Spawned tasks can be **preempted cooperatively** after a fixed instruction budget and on the **`Yield`** opcode so long-running bytecode cannot starve other queued tasks on the same worker. The **main** program task always runs on the thread that called `Vm::run` and is **not** placed on the shared ready queue; a main-thread `Yield` yields the OS thread so pool workers can run. Details: Phase 7 in [`docs/future/parallel-vm.md`](../future/parallel-vm.md).
+
 ### Shared runtime state (implementation)
 
 Worker threads and the main execution thread share one **`Arc<SharedState>`** value: immutable bytecode (`Chunk`), a mutex-protected **ready queue** of suspended tasks paired with a **condition variable** so idle workers block instead of spinning, **task id** allocation, **task result** storage for handles used with `Wait`, an **atomic shutdown** flag, and mutex-protected **console** and **input** (and minimal **TUI**) state so concurrent tasks do not corrupt I/O. Lock ordering between those mutexes is documented in the VM source. For process shape (scoped `run`, conditional pool sizing, shutdown), see Phase 4; for queues and I/O mutexes see Phase 3 in [`docs/future/parallel-vm.md`](../future/parallel-vm.md).

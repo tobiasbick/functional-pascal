@@ -133,5 +133,5 @@ Phases **6** and **7** can partially overlap once **4** is stable; do not start 
 |----------|-----------|
 | [`docs/pascal/std/tui.md`](../pascal/std/tui.md) | Current `Std.Tui` API |
 | [`docs/pascal/std/console.md`](../pascal/std/console.md) | Key types and legacy I/O |
-| [`docs/future/parallel-vm.md`](parallel-vm.md) | VM task roadmap; Phase 3 — shared I/O and locks |
+| [`docs/future/parallel-vm.md`](parallel-vm.md) | Implemented VM task runtime; Phase 3 — shared I/O and locks (`#phase-3-shared-state-queues-and-io`) |
 | [`docs/pascal/08-concurrency.md`](../pascal/08-concurrency.md) | Task model vs TUI main thread |

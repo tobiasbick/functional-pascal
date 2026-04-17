@@ -5,7 +5,9 @@
 use fpas_bytecode::{Intrinsic, Op, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN;
 
-use crate::tests::helpers::{build_zero_arg_function_chunk, emit_constant, loc, run_err, run_ok_output};
+use crate::tests::helpers::{
+    build_zero_arg_function_chunk, emit_constant, loc, run_err, run_ok_output,
+};
 
 use super::fixtures::emit_instruction_waste;
 

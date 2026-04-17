@@ -1,6 +1,10 @@
 mod pool_shutdown;
 mod pool_worker_common;
+mod pool_worker_contention;
+mod pool_worker_enqueue;
 mod pool_worker_errors_shutdown;
 mod pool_worker_invariants;
-mod pool_worker_queue;
-mod worker_pool;
+mod worker_pool_common;
+mod worker_pool_condvar;
+mod worker_pool_policy;
+mod worker_pool_run;

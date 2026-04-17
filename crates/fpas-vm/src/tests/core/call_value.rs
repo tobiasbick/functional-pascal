@@ -1,7 +1,9 @@
 use fpas_bytecode::{Chunk, Op, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
 
-use crate::tests::helpers::{build_zero_arg_function_chunk, emit_constant, loc, run_err, run_ok_output};
+use crate::tests::helpers::{
+    build_zero_arg_function_chunk, emit_constant, loc, run_err, run_ok_output,
+};
 
 #[test]
 fn call_value_executes_function_value_and_returns_result() {

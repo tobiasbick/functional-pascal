@@ -207,19 +207,19 @@ pub enum Op {
     /// **Documentation:** `docs/future/advanced-types.md`
     EnumField(u8),
 
-    // ── Concurrency ─────────────────────────────────────────
+    // ── Concurrency (stack VM task surface) ─────────────────
     /// Spawn a new task: pops function value + `arg_count` args, pushes `Value::Task(id)`.
     ///
-    /// **Documentation:** `docs/pascal/08-concurrency.md`
+    /// **Documentation:** `docs/future/parallel-vm.md` (Phase 1), `docs/pascal/08-concurrency.md`
     SpawnTask(u8),
     /// Spawn a detached task: pops function value + `arg_count` args and discards its result.
     ///
     /// Used for statement-form `go` where no task handle is retained.
     ///
-    /// **Documentation:** `docs/pascal/08-concurrency.md`
+    /// **Documentation:** `docs/future/parallel-vm.md` (Phase 1), `docs/pascal/08-concurrency.md`
     SpawnDetachedTask(u8),
     /// Yield execution to the scheduler (cooperative switch).
     ///
-    /// **Documentation:** `docs/pascal/08-concurrency.md`
+    /// **Documentation:** `docs/future/parallel-vm.md` (Phase 1), `docs/pascal/08-concurrency.md`
     Yield,
 }

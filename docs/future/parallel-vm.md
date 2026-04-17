@@ -4,6 +4,14 @@ This document is for **Rust contributors** who extend or port the bytecode VM’
 
 Follow the phases **in order** when building or auditing the system. Each phase lists a **goal**, **primary crates/paths**, and **how to know you are done**.
 
+### Status in this repository
+
+| Phase | State |
+|-------|--------|
+| **1** — Bytecode surface | **Done** — opcodes and `Chunk::uses_spawn_tasks` in `fpas-bytecode`; VM reads the flag at construction (`fpas-vm`). |
+| **2** — Compiler lowering | **Done** — `go` expression vs statement map to `Op::SpawnTask` / `Op::SpawnDetachedTask` in `fpas-compiler`. |
+| **3–9** | Use the checklists below against the current tree (`fpas-vm`, tests); items were implemented incrementally — audit when changing behavior. |
+
 ---
 
 ## Phase 1: Bytecode surface
@@ -16,6 +24,8 @@ Follow the phases **in order** when building or auditing the system. Each phase 
 2. Add a **static scan** over emitted code (e.g. `Chunk::uses_spawn_tasks`) that is `true` iff any spawn opcode appears anywhere in the chunk.
 
 **Done when:** The compiler can emit these ops and the VM can query `uses_spawn_tasks` without executing the program.
+
+**Implemented:** [`Op`](../../crates/fpas-bytecode/src/op.rs) in `crates/fpas-bytecode/src/op.rs`; scan in [`Chunk::uses_spawn_tasks`](../../crates/fpas-bytecode/src/chunk.rs) over `Chunk::code` only — it treats **`Op::SpawnTask` and `Op::SpawnDetachedTask`** as spawns. **`Op::Yield` does not set the flag** (yield is for scheduling only; pool sizing follows spawn opcodes). Integration tests: `crates/fpas-bytecode/tests/parallel_vm_phase1.rs`.
 
 ---
 
@@ -32,6 +42,8 @@ Follow the phases **in order** when building or auditing the system. Each phase 
 **Primary path:** `crates/fpas-compiler` — task spawn lowering (see module that lowers `go` statements and expressions).
 
 **Done when:** Every program that uses `go` produces a chunk that passes Phase 1’s scan; programs without `go` produce chunks where the scan is false.
+
+**Implemented:** Statement lowering [`compiler/stmt/concurrency.rs`](../../crates/fpas-compiler/src/compiler/stmt/concurrency.rs) (`Stmt::Go` → detached spawn); expression lowering [`compiler/expr/mod.rs`](../../crates/fpas-compiler/src/compiler/expr/mod.rs) (`Expr::Go` → retained spawn). Compiler tests: `crates/fpas-compiler/src/tests/parallel_vm_phase1.rs`.
 
 ---
 
@@ -168,4 +180,6 @@ Pick these only if the project explicitly adopts them; they are **not** required
 | Pool loop, main vs pool worker | `crates/fpas-vm/src/vm/worker.rs` |
 | Shared queues, condvar, I/O mutexes | `crates/fpas-vm/src/vm/shared.rs` |
 | Spawn / yield / intrinsic dispatch | `crates/fpas-vm/src/vm/execute/concurrency/` |
-| Spawn detection on chunk | `crates/fpas-bytecode/src/chunk.rs` |
+| Spawn detection on chunk | `crates/fpas-bytecode/src/chunk.rs` (`Chunk::uses_spawn_tasks`) |
+| Phase 1–2 tests (bytecode / compiler / VM) | `crates/fpas-bytecode/tests/parallel_vm_phase1.rs`, `crates/fpas-compiler/src/tests/parallel_vm_phase1.rs`, `crates/fpas-vm/src/tests/parallel_vm_phase1.rs` |
+| `go` lowering (retained vs detached) | `crates/fpas-compiler/src/compiler/stmt/concurrency.rs`, `crates/fpas-compiler/src/compiler/expr/mod.rs` |

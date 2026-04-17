@@ -147,7 +147,10 @@ impl Chunk {
 
     /// Returns `true` if this chunk may enqueue parallel tasks (`go` / detached spawn).
     ///
-    /// Used by the VM to avoid spawning a thread pool when no background workers are needed.
+    /// The scan is purely static over [`Op::SpawnTask`] / [`Op::SpawnDetachedTask`] in `code`;
+    /// [`Op::Yield`] and other opcodes do not affect the result.
+    ///
+    /// **Documentation:** `docs/future/parallel-vm.md` (Phase 1), `docs/pascal/08-concurrency.md`
     #[must_use]
     pub fn uses_spawn_tasks(&self) -> bool {
         self.code
@@ -208,6 +211,14 @@ mod tests {
         let mut chunk2 = Chunk::new();
         chunk2.emit(Op::SpawnDetachedTask(1), loc());
         assert!(chunk2.uses_spawn_tasks());
+    }
+
+    #[test]
+    fn uses_spawn_tasks_ignores_yield_only_chunks() {
+        let mut chunk = Chunk::new();
+        chunk.emit(Op::Yield, loc());
+        chunk.emit(Op::Yield, loc());
+        assert!(!chunk.uses_spawn_tasks());
     }
 
     #[test]

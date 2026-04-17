@@ -2,6 +2,15 @@
 
 Functional Pascal provides Go-inspired lightweight task concurrency. Tasks created with `go` may run on worker threads in parallel with the main program; the main program always runs on the OS thread that starts VM execution. For bytecode and scheduling details, see [`docs/future/parallel-vm.md`](../future/parallel-vm.md).
 
+## Bytecode mapping (implementation)
+
+The compiler lowers `go` to dedicated VM opcodes (see Phase 1–2 in [`parallel-vm.md`](../future/parallel-vm.md)):
+
+- **`go` as an expression** (e.g. assigned to a `task` variable) emits a **retained** spawn: the callee and arguments are popped and a task handle is pushed for later `Wait`.
+- **`go` as a statement** (fire-and-forget) emits a **detached** spawn: same stack effect except **no** handle is retained for the caller.
+
+At VM construction time, the runtime uses a **static scan** of the compiled instruction stream: if the chunk contains **no** retained or detached spawn opcodes, it does **not** start a background worker pool. Opcodes used only for cooperative scheduling (for example **`Yield`**) do **not** by themselves imply a pool — only spawn opcodes do.
+
 ## Tasks
 
 Launch a concurrent task with the `go` keyword.
@@ -45,9 +54,9 @@ Bare values, operators, and non-call expressions are rejected by the parser or s
 
 ### Thread pool
 
-If the compiled program contains **no** `go` (no spawn bytecode), the VM does **not** start background worker threads.
+If the compiled chunk contains **no** spawn opcodes for tasks (equivalently: the program never uses `go` in a way that reaches bytecode), the VM does **not** start background worker threads.
 
-If it does use `go`, the VM starts **`max(1, available_parallelism − 1)`** worker threads that share a ready queue, while the **main task** (task id `0`) still runs on the thread that invoked VM execution. Together, this matches typical machine parallelism without starting idle workers for programs that never spawn tasks.
+If it does emit spawn bytecode, the VM starts **`max(1, available_parallelism − 1)`** worker threads that share a ready queue, while the **main task** (task id `0`) still runs on the thread that invoked VM execution. Together, this matches typical machine parallelism without starting idle workers for programs that never spawn tasks.
 
 ### Task Type
 

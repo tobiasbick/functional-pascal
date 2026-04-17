@@ -79,6 +79,7 @@ mod functions_errors;
 mod generics;
 mod nested_functions;
 mod numeric_binary_ops;
+mod parallel_vm_phase1;
 mod pattern_matching;
 mod records;
 mod result_option;

@@ -106,6 +106,7 @@ impl SharedState {
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .insert(id, TaskResultState::Available(value));
+        self.task_available.notify_all();
     }
 
     /// Returns true once a retained task has finished and an entry exists in [`Self::task_results`].
@@ -143,17 +144,31 @@ impl SharedState {
         self.task_available.notify_all();
     }
 
-    /// Block up to `timeout` until notified (task queued, completion, or shutdown).
+    /// Block until notified (task queued, result stored, or shutdown).
+    ///
+    /// `timeout`: `None` waits until [`Condvar::wait`] returns; `Some(d)` uses [`Condvar::wait_timeout`].
+    /// A zero duration returns immediately without blocking.
     ///
     /// Used when cooperative yield cannot switch tasks (for example the main thread with an empty
-    /// ready queue) so task-wait logic can pause without spinning. Trades a little latency for
-    /// bounded CPU use.
-    pub(crate) fn wait_for_task_progress(&self, timeout: Duration) {
+    /// ready queue) so `Wait` / `WaitAll` can block without hot-spinning. Callers must re-check
+    /// their condition after wakeup (spurious wakeups are possible).
+    pub(crate) fn wait_for_task_progress(&self, timeout: Option<Duration>) {
         let queue = self.task_queue.lock().unwrap_or_else(|e| e.into_inner());
-        let _guard = self
-            .task_available
-            .wait_timeout(queue, timeout)
-            .unwrap_or_else(|e| e.into_inner());
+        match timeout {
+            None => {
+                let _guard = self
+                    .task_available
+                    .wait(queue)
+                    .unwrap_or_else(|e| e.into_inner());
+            }
+            Some(d) if d.is_zero() => {}
+            Some(d) => {
+                let _guard = self
+                    .task_available
+                    .wait_timeout(queue, d)
+                    .unwrap_or_else(|e| e.into_inner());
+            }
+        }
     }
 
     /// Check whether shutdown has been requested.

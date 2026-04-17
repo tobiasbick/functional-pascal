@@ -78,7 +78,7 @@ var T: task := go ComputeSomething(Data);
 
 ### Waiting for a Task
 
-`Std.Task.Wait` blocks until the task completes and returns its result type **`T`**:
+`Std.Task.Wait` blocks until the task completes and returns its result type **`T`** (the VM waits on the same shared condition variable as the task queue — it does not hot-spin):
 
 ```pascal
 var T: task := go Compute(100);
@@ -89,7 +89,7 @@ For a **procedure** task, `Wait` completes when the procedure finishes; **`T`** 
 
 ### Waiting for Multiple Tasks
 
-`Std.Task.WaitAll` blocks until all tasks in the array complete:
+`Std.Task.WaitAll` blocks until all tasks in the array complete (same condvar-based blocking as `Wait`):
 
 ```pascal
 WaitAll([T1, T2, T3]);

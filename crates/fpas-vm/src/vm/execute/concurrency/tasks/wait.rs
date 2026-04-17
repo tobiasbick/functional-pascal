@@ -8,10 +8,6 @@ use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_INVALID_TASK, RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_VM_SHUTDOWN,
 };
-use std::time::Duration;
-
-/// When yield does not reschedule, block briefly on the condvar instead of hot-spinning.
-const WAIT_POLL_INTERVAL: Duration = Duration::from_millis(1);
 
 impl Worker {
     pub(in crate::vm::execute::concurrency) fn exec_task_wait(
@@ -43,8 +39,37 @@ impl Worker {
             TaskResultPoll::Pending => {
                 self.push(Value::Task(task_id))?;
                 self.ip -= 1;
-                if !self.exec_yield() {
-                    self.shared.wait_for_task_progress(WAIT_POLL_INTERVAL);
+                loop {
+                    if self.exec_yield() {
+                        return Ok(());
+                    }
+                    match self.shared.poll_task_result(task_id) {
+                        TaskResultPoll::Available(result) => {
+                            let _ = self.pop(line)?;
+                            self.push(result)?;
+                            self.ip += 1;
+                            return Ok(());
+                        }
+                        TaskResultPoll::Consumed => {
+                            return Err(runtime_error(
+                                RUNTIME_INVALID_TASK,
+                                format!("Task {task_id} was already awaited"),
+                                "Wait on each task handle only once, or keep the result in a variable after waiting.",
+                                line,
+                            ));
+                        }
+                        TaskResultPoll::Pending if self.shared.is_shutdown() => {
+                            return Err(runtime_error(
+                                RUNTIME_VM_SHUTDOWN,
+                                "Execution aborted: the waited task failed",
+                                "A task spawned with `go` raised a runtime error. Fix the error in the spawned task.",
+                                line,
+                            ));
+                        }
+                        TaskResultPoll::Pending => {
+                            self.shared.wait_for_task_progress(None);
+                        }
+                    }
                 }
             }
         }
@@ -97,8 +122,27 @@ impl Worker {
         } else {
             self.push(Value::Array(tasks))?;
             self.ip -= 1;
-            if !self.exec_yield() {
-                self.shared.wait_for_task_progress(WAIT_POLL_INTERVAL);
+            loop {
+                if self.exec_yield() {
+                    return Ok(());
+                }
+                let all_done = task_ids
+                    .iter()
+                    .all(|task_id| self.shared.task_completion_recorded(*task_id));
+                if all_done {
+                    let _ = self.pop(line)?;
+                    self.ip += 1;
+                    return Ok(());
+                }
+                if self.shared.is_shutdown() {
+                    return Err(runtime_error(
+                        RUNTIME_VM_SHUTDOWN,
+                        "Execution aborted: a waited task failed",
+                        "A task spawned with `go` raised a runtime error. Fix the error in the spawned task.",
+                        line,
+                    ));
+                }
+                self.shared.wait_for_task_progress(None);
             }
         }
         Ok(())

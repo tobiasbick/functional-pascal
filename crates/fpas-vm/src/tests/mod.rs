@@ -10,5 +10,6 @@ mod shared_state;
 mod spawn_path;
 mod tasks;
 mod uses_spawn_tasks;
+mod wait_blocking;
 mod worker_pool;
 mod yield_scheduling;

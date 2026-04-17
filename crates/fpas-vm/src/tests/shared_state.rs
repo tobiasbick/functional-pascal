@@ -131,7 +131,7 @@ fn request_shutdown_sets_flag_and_is_idempotent() {
 fn wait_for_task_progress_returns_on_timeout_without_progress() {
     let shared = Arc::new(minimal_shared_state(minimal_halt_chunk()));
     let start = std::time::Instant::now();
-    shared.wait_for_task_progress(Duration::from_millis(40));
+    shared.wait_for_task_progress(Some(Duration::from_millis(40)));
     assert!(
         start.elapsed() < Duration::from_millis(500),
         "should not block indefinitely"
@@ -143,10 +143,22 @@ fn wait_for_task_progress_wakes_on_enqueue_notify() {
     let shared = Arc::new(minimal_shared_state(minimal_halt_chunk()));
     let s2 = Arc::clone(&shared);
     let waiter = thread::spawn(move || {
-        s2.wait_for_task_progress(Duration::from_secs(5));
+        s2.wait_for_task_progress(Some(Duration::from_secs(5)));
     });
     thread::sleep(Duration::from_millis(30));
     shared.enqueue_task(dummy_task(1, 0));
+    waiter.join().expect("waiter join");
+}
+
+#[test]
+fn wait_for_task_progress_wakes_on_store_task_result() {
+    let shared = Arc::new(minimal_shared_state(minimal_halt_chunk()));
+    let s2 = Arc::clone(&shared);
+    let waiter = thread::spawn(move || {
+        s2.wait_for_task_progress(None);
+    });
+    thread::sleep(Duration::from_millis(30));
+    shared.store_task_result(42, Value::Integer(1));
     waiter.join().expect("waiter join");
 }
 

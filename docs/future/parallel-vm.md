@@ -15,7 +15,8 @@ Follow the phases **in order** when building or auditing the system. Each phase 
 | **5** — Worker pull loop, task binding | **Done** — main worker (task `0`), pool sentinel (`u64::MAX`), `pool_loop` fast dequeue + condvar wait, `TaskState` save/load. Tests: `crates/fpas-vm/src/tests/pool_worker_loop.rs`. |
 | **6** — Execute — spawn path | **Done** — callee + args popped per opcode arity, chunk entry resolved, [`TaskState`](../../crates/fpas-vm/src/vm/shared.rs) enqueued, retained spawn pushes `Value::Task`. Tests: `crates/fpas-vm/src/tests/spawn_path.rs`. |
 | **7** — Cooperative scheduling (yield / timeslice) | **Done** — `Op::Yield` and a fixed instruction budget (`TIMESLICE` in `fpas-vm`) reschedule **spawned** tasks via save/enqueue/dequeue; main task (`0`) never enters the shared queue (`thread::yield_now` on main `Yield`). Tests: `crates/fpas-vm/src/tests/yield_scheduling.rs`. |
-| **8–9** | Use the checklists below against the current tree (`fpas-vm`, tests); items were implemented incrementally — audit when changing behavior. |
+| **8** — Blocking wait intrinsics | **Done** — `Std.Task.Wait` / `WaitAll` retry with cooperative `Yield` on the main task, then block on the shared condvar (no hot-spin); `store_task_result` notifies waiters. Tests: `crates/fpas-vm/src/tests/wait_blocking.rs`, `shared_state.rs` (condvar). |
+| **9** | Use the checklist below against the current tree (`fpas-vm`, tests); audit when changing shutdown / error propagation. |
 
 ---
 
@@ -152,13 +153,15 @@ Follow the phases **in order** when building or auditing the system. Each phase 
 
 **Do:**
 
-1. **`Wait`:** If the result is not ready, re-push the task handle (or rewind IP), run **yield** logic, and optionally **wait** on the shared condition variable with a short timeout until task completion or shutdown.
+1. **`Wait`:** If the result is not ready, re-push the task handle (or rewind IP), run **yield** logic, then **wait** on the shared condition variable (unbounded wait or a bounded timeout for tests) until task completion or shutdown; wakeups also come from `enqueue_task`, `store_task_result`, and shutdown.
 2. **`WaitAll`:** Barrier over an **array of task handles**; must not consume results if the language spec says so (see [`std/task.md`](../pascal/std/task.md)).
 3. Map failed child tasks to a single **shutdown / aborted** error path for waiters.
 
 **Primary path:** `crates/fpas-vm/src/vm/execute/concurrency/tasks/wait.rs` and intrinsic dispatch in `execute/concurrency/mod.rs`.
 
 **Done when:** Behavior matches `docs/pascal/std/task.md` (double-wait errors, empty `WaitAll`, etc.).
+
+**Implemented:** [`Worker::exec_task_wait`](../../crates/fpas-vm/src/vm/execute/concurrency/tasks/wait.rs) / [`Worker::exec_task_wait_all`](../../crates/fpas-vm/src/vm/execute/concurrency/tasks/wait.rs): loop with [`Worker::exec_yield`](../../crates/fpas-vm/src/vm/execute/concurrency/tasks/mod.rs), then [`SharedState::wait_for_task_progress`](../../crates/fpas-vm/src/vm/shared.rs) with `None` for unbounded condvar wait; [`SharedState::store_task_result`](../../crates/fpas-vm/src/vm/shared.rs) calls `notify_all` so completion wakes waiters. VM tests: [`wait_blocking.rs`](../../crates/fpas-vm/src/tests/wait_blocking.rs); condvar unit tests in [`shared_state.rs`](../../crates/fpas-vm/src/tests/shared_state.rs).
 
 ---
 
@@ -202,4 +205,5 @@ Pick these only if the project explicitly adopts them; they are **not** required
 | Phase 5 tests (pool loop, save/load, enqueue wake, errors) | `crates/fpas-vm/src/tests/pool_worker_loop.rs` |
 | Phase 6 tests (spawn execute path: arity, captures, detached, errors) | `crates/fpas-vm/src/tests/spawn_path.rs` |
 | Phase 7 tests (yield, timeslice, main vs pool queue) | `crates/fpas-vm/src/tests/yield_scheduling.rs` |
+| Phase 8 tests (Wait / WaitAll blocking, errors) | `crates/fpas-vm/src/tests/wait_blocking.rs` |
 | `go` lowering (retained vs detached) | `crates/fpas-compiler/src/compiler/stmt/concurrency.rs`, `crates/fpas-compiler/src/compiler/expr/mod.rs` |

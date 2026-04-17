@@ -56,7 +56,7 @@ Bare values, operators, and non-call expressions are rejected by the parser or s
 
 If the compiled chunk contains **no** spawn opcodes for tasks (equivalently: the program never uses `go` in a way that reaches bytecode), the VM does **not** start background worker threads.
 
-If it does emit spawn bytecode, the VM starts **`max(1, available_parallelism − 1)`** worker threads that share a ready queue, while the **main task** (task id `0`) still runs on the thread that invoked VM execution. Together, this matches typical machine parallelism without starting idle workers for programs that never spawn tasks.
+If it does emit spawn bytecode, the VM starts **`max(1, available_parallelism − 1)`** worker threads that share a ready queue, while the **main task** (task id `0`) still runs on the thread that invoked VM execution. Each pool thread runs **at most one** ready task at a time: workers block when the queue is empty and are woken when work is enqueued or the VM shuts down (see Phase 5 in [`parallel-vm.md`](../future/parallel-vm.md)). Together, this matches typical machine parallelism without starting idle workers for programs that never spawn tasks.
 
 Those background workers exist only for a single **`Vm::run`** invocation: the runtime **joins** pool threads before `run` returns so short-lived hosts do not accumulate stray threads across many runs.
 

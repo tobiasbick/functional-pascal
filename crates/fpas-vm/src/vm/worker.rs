@@ -1,6 +1,6 @@
 //! Per-thread worker that executes bytecode for one task at a time.
 //!
-//! **Documentation:** `docs/future/parallel-vm.md`
+//! **Documentation:** `docs/future/parallel-vm.md`, `docs/pascal/08-concurrency.md`
 
 use super::diagnostics::{STACK_OVERFLOW_CODE, VmError};
 use super::shared::{SharedState, TaskState};

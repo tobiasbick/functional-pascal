@@ -12,7 +12,8 @@ Follow the phases **in order** when building or auditing the system. Each phase 
 | **2** — Compiler lowering | **Done** — `go` expression vs statement map to `Op::SpawnTask` / `Op::SpawnDetachedTask` in `fpas-compiler`. |
 | **3** — Shared state, queues, I/O | **Done** — `SharedState` in `fpas-vm` (`Arc` at runtime): chunk, globals, ready queue + condvar, task ids/results, shutdown flag, console and input/TUI mutexes; lock-ordering notes in source. Tests: `crates/fpas-vm/src/tests/shared_state.rs`. |
 | **4** — Conditional pool, scoped `run` | **Done** — pool size `0` when `Chunk::uses_spawn_tasks()` is false, else `max(1, available_parallelism − 1)`; `Vm::run` uses `thread::scope`, main task on caller thread, `SharedState::request_shutdown` (`notify_all`) after main. Tests: `crates/fpas-vm/src/tests/worker_pool.rs`. |
-| **5–9** | Use the checklists below against the current tree (`fpas-vm`, tests); items were implemented incrementally — audit when changing behavior. |
+| **5** — Worker pull loop, task binding | **Done** — main worker (task `0`), pool sentinel (`u64::MAX`), `pool_loop` fast dequeue + condvar wait, `TaskState` save/load. Tests: `crates/fpas-vm/src/tests/pool_worker_loop.rs`. |
+| **6–9** | Use the checklists below against the current tree (`fpas-vm`, tests); items were implemented incrementally — audit when changing behavior. |
 
 ---
 
@@ -104,6 +105,8 @@ Follow the phases **in order** when building or auditing the system. Each phase 
 
 **Done when:** Pool workers block on an empty queue and wake when `enqueue_task` runs `notify_one` (or equivalent).
 
+**Implemented:** [`Worker::new_main`](../../crates/fpas-vm/src/vm/worker.rs), [`Worker::new_pool`](../../crates/fpas-vm/src/vm/worker.rs), [`Worker::pool_loop`](../../crates/fpas-vm/src/vm/worker.rs) (fast `try_dequeue_task`, then lock `task_queue` and wait on `task_available` when idle), [`Worker::load_task`](../../crates/fpas-vm/src/vm/worker.rs) / [`Worker::save_task`](../../crates/fpas-vm/src/vm/worker.rs) over [`TaskState`](../../crates/fpas-vm/src/vm/shared.rs). VM tests: `crates/fpas-vm/src/tests/pool_worker_loop.rs`.
+
 ---
 
 ## Phase 6: Execute — spawn path
@@ -190,4 +193,5 @@ Pick these only if the project explicitly adopts them; they are **not** required
 | Phase 1–2 tests (bytecode / compiler / VM) | `crates/fpas-bytecode/tests/parallel_vm_phase1.rs`, `crates/fpas-compiler/src/tests/parallel_vm_phase1.rs`, `crates/fpas-vm/src/tests/uses_spawn_tasks.rs` |
 | Shared-state tests (queue / I/O mutexes) | `crates/fpas-vm/src/tests/shared_state.rs` |
 | Phase 4 tests (pool sizing, scoped run, shutdown / condvar) | `crates/fpas-vm/src/tests/worker_pool.rs` |
+| Phase 5 tests (pool loop, save/load, enqueue wake, errors) | `crates/fpas-vm/src/tests/pool_worker_loop.rs` |
 | `go` lowering (retained vs detached) | `crates/fpas-compiler/src/compiler/stmt/concurrency.rs`, `crates/fpas-compiler/src/compiler/expr/mod.rs` |

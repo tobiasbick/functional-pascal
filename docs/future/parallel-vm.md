@@ -13,7 +13,8 @@ Follow the phases **in order** when building or auditing the system. Each phase 
 | **3** — Shared state, queues, I/O | **Done** — `SharedState` in `fpas-vm` (`Arc` at runtime): chunk, globals, ready queue + condvar, task ids/results, shutdown flag, console and input/TUI mutexes; lock-ordering notes in source. Tests: `crates/fpas-vm/src/tests/shared_state.rs`. |
 | **4** — Conditional pool, scoped `run` | **Done** — pool size `0` when `Chunk::uses_spawn_tasks()` is false, else `max(1, available_parallelism − 1)`; `Vm::run` uses `thread::scope`, main task on caller thread, `SharedState::request_shutdown` (`notify_all`) after main. Tests: `crates/fpas-vm/src/tests/worker_pool.rs`. |
 | **5** — Worker pull loop, task binding | **Done** — main worker (task `0`), pool sentinel (`u64::MAX`), `pool_loop` fast dequeue + condvar wait, `TaskState` save/load. Tests: `crates/fpas-vm/src/tests/pool_worker_loop.rs`. |
-| **6–9** | Use the checklists below against the current tree (`fpas-vm`, tests); items were implemented incrementally — audit when changing behavior. |
+| **6** — Execute — spawn path | **Done** — callee + args popped per opcode arity, chunk entry resolved, [`TaskState`](../../crates/fpas-vm/src/vm/shared.rs) enqueued, retained spawn pushes `Value::Task`. Tests: `crates/fpas-vm/src/tests/spawn_path.rs`. |
+| **7–9** | Use the checklists below against the current tree (`fpas-vm`, tests); items were implemented incrementally — audit when changing behavior. |
 
 ---
 
@@ -123,6 +124,8 @@ Follow the phases **in order** when building or auditing the system. Each phase 
 
 **Done when:** Integration tests can run `go` functions that return values and observe them via `Wait`.
 
+**Implemented:** [`Worker::exec_spawn_task`](../../crates/fpas-vm/src/vm/execute/concurrency/tasks/spawn.rs) (`retained` vs detached via opcode dispatch in [`concurrency/mod.rs`](../../crates/fpas-vm/src/vm/execute/concurrency/mod.rs)); task id from [`SharedState::alloc_task_id`](../../crates/fpas-vm/src/vm/shared.rs); enqueue via [`SharedState::enqueue_task`](../../crates/fpas-vm/src/vm/shared.rs). Top-level return stores results for waiters in [`Worker::run`](../../crates/fpas-vm/src/vm/execute/mod.rs). VM tests: [`spawn_path.rs`](../../crates/fpas-vm/src/tests/spawn_path.rs) (also [`tasks.rs`](../../crates/fpas-vm/src/tests/tasks.rs) for wait edge cases).
+
 ---
 
 ## Phase 7: Cooperative scheduling (yield / timeslice)
@@ -194,4 +197,5 @@ Pick these only if the project explicitly adopts them; they are **not** required
 | Shared-state tests (queue / I/O mutexes) | `crates/fpas-vm/src/tests/shared_state.rs` |
 | Phase 4 tests (pool sizing, scoped run, shutdown / condvar) | `crates/fpas-vm/src/tests/worker_pool.rs` |
 | Phase 5 tests (pool loop, save/load, enqueue wake, errors) | `crates/fpas-vm/src/tests/pool_worker_loop.rs` |
+| Phase 6 tests (spawn execute path: arity, captures, detached, errors) | `crates/fpas-vm/src/tests/spawn_path.rs` |
 | `go` lowering (retained vs detached) | `crates/fpas-compiler/src/compiler/stmt/concurrency.rs`, `crates/fpas-compiler/src/compiler/expr/mod.rs` |

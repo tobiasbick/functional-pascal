@@ -10,7 +10,7 @@ use fpas_diagnostics::codes::{
     RUNTIME_WRONG_CALL_ARITY,
 };
 
-use super::helpers::{
+use crate::tests::helpers::{
     build_function_chunk, build_zero_arg_function_chunk, emit_constant, loc, run_err, run_ok_output,
 };
 

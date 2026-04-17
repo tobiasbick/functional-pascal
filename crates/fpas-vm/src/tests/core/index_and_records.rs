@@ -3,7 +3,7 @@ use fpas_diagnostics::codes::{
     RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS, RUNTIME_DICT_KEY_NOT_FOUND, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
 };
 
-use super::helpers::{emit_constant, loc, run_err, run_ok_output};
+use crate::tests::helpers::{emit_constant, loc, run_err, run_ok_output};
 
 #[test]
 fn string_index_get_returns_character_value() {

@@ -5,7 +5,7 @@
 use crate::Vm;
 use fpas_bytecode::{Chunk, Op};
 
-use super::helpers::loc;
+use crate::tests::helpers::loc;
 
 #[test]
 fn vm_accepts_chunk_with_uses_spawn_tasks_false_without_running_spawn_path() {

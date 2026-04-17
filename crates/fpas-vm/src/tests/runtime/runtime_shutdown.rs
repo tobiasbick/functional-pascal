@@ -9,7 +9,7 @@ use fpas_diagnostics::codes::{
     RUNTIME_INVALID_TASK, RUNTIME_PROGRAM_PANIC, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
 };
 
-use super::helpers::{build_zero_arg_function_chunk, emit_constant, loc, run_err};
+use crate::tests::helpers::{build_zero_arg_function_chunk, emit_constant, loc, run_err};
 
 // --- Positive: successful runs always shut down the pool ---
 

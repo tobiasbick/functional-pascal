@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex, RwLock};
 
-use super::helpers::{emit_constant, loc};
+use crate::tests::helpers::{emit_constant, loc};
 
 #[test]
 fn pool_tasks_stop_without_side_effects_after_abort_flag() {

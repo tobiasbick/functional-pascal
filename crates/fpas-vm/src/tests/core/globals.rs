@@ -1,7 +1,7 @@
 use fpas_bytecode::{Chunk, Op, Value};
 use fpas_diagnostics::codes::RUNTIME_UNDEFINED_GLOBAL;
 
-use super::helpers::{emit_constant, loc, run_err, run_ok_output};
+use crate::tests::helpers::{emit_constant, loc, run_err, run_ok_output};
 
 #[test]
 fn set_global_then_get_global_round_trips_value() {

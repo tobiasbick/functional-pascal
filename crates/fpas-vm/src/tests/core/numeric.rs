@@ -1,7 +1,7 @@
 use fpas_bytecode::{Chunk, Op, Value};
 use fpas_diagnostics::codes::{RUNTIME_DIVISION_BY_ZERO, RUNTIME_NUMERIC_DOMAIN_ERROR};
 
-use super::helpers::{emit_constant, loc, run_err};
+use crate::tests::helpers::{emit_constant, loc, run_err};
 
 #[test]
 fn integer_division_overflow_reports_error_instead_of_panicking() {

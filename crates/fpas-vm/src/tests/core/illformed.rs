@@ -2,7 +2,7 @@ use crate::Vm;
 use fpas_bytecode::{Chunk, Op, Value};
 use fpas_diagnostics::codes::INTERNAL_VM_INVARIANT_FAILURE;
 
-use super::helpers::{emit_constant, loc, run_err};
+use crate::tests::helpers::{emit_constant, loc, run_err};
 
 #[test]
 fn malformed_call_reports_error_instead_of_panicking() {

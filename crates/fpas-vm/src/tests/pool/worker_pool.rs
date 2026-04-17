@@ -9,7 +9,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread;
 use std::time::Duration;
 
-use super::helpers::{emit_constant, loc, minimal_shared_state};
+use crate::tests::helpers::{emit_constant, loc, minimal_shared_state};
 
 /// Mirrors [`crate::vm::Vm::build`] pool sizing when the chunk uses spawn bytecode.
 fn expected_spawn_pool_workers() -> usize {

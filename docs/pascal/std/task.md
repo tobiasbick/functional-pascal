@@ -69,4 +69,4 @@ An empty array completes immediately.
 ## Runtime errors
 
 - **`Wait` after the result was already taken:** wait each task handle at most once for its return value (see VM hint: do not double-await the same completion).
-- **Task failure / VM shutdown:** if a spawned task aborts with a runtime error, a waiter may see an execution-aborted diagnostic; fix the fault in the spawned task.
+- **Task failure / VM shutdown:** if a spawned task aborts with a runtime error, the runtime sets a **failure** path (not just “main finished” teardown) so other spawned work can stop; a waiter may see an execution-aborted diagnostic. Fix the fault in the spawned task. (VM: `SharedState::signal_runtime_failure` in `fpas-vm`, Phase 9 in [`parallel-vm.md`](../../future/parallel-vm.md).)

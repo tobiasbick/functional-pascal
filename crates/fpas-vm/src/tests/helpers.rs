@@ -20,6 +20,7 @@ pub(super) fn minimal_shared_state(chunk: Chunk) -> SharedState {
         key_input: Mutex::new(KeyInput::new()),
         tui: Mutex::new(Default::default()),
         shutdown: AtomicBool::new(false),
+        abort_spawned_bytecode: AtomicBool::new(false),
     }
 }
 

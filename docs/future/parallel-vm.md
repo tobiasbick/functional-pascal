@@ -16,7 +16,7 @@ Follow the phases **in order** when building or auditing the system. Each phase 
 | **6** — Execute — spawn path | **Done** — callee + args popped per opcode arity, chunk entry resolved, [`TaskState`](../../crates/fpas-vm/src/vm/shared.rs) enqueued, retained spawn pushes `Value::Task`. Tests: `crates/fpas-vm/src/tests/spawn_path.rs`. |
 | **7** — Cooperative scheduling (yield / timeslice) | **Done** — `Op::Yield` and a fixed instruction budget (`TIMESLICE` in `fpas-vm`) reschedule **spawned** tasks via save/enqueue/dequeue; main task (`0`) never enters the shared queue (`thread::yield_now` on main `Yield`). Tests: `crates/fpas-vm/src/tests/yield_scheduling.rs`. |
 | **8** — Blocking wait intrinsics | **Done** — `Std.Task.Wait` / `WaitAll` retry with cooperative `Yield` on the main task, then block on the shared condvar (no hot-spin); `store_task_result` notifies waiters. Tests: `crates/fpas-vm/src/tests/wait_blocking.rs`, `shared_state.rs` (condvar). |
-| **9** | Use the checklist below against the current tree (`fpas-vm`, tests); audit when changing shutdown / error propagation. |
+| **9** — Errors, shutdown, harness | **Done** — runtime failure sets `SharedState::signal_runtime_failure` (shutdown + `abort_spawned_bytecode`); normal main completion uses `request_shutdown` only so queued tasks still run; `Vm::run` guard drops [`ShutdownAfterMain`](../../crates/fpas-vm/src/vm/mod.rs) after the main worker returns or unwinds; pool join prefers the main task’s diagnostic when both fail; pool panic → internal error. Tests: [`runtime_shutdown.rs`](../../crates/fpas-vm/src/tests/runtime_shutdown.rs), [`spawn_path.rs`](../../crates/fpas-vm/src/tests/spawn_path.rs), [`tasks.rs`](../../crates/fpas-vm/src/tests/tasks.rs), [`wait_blocking.rs`](../../crates/fpas-vm/src/tests/wait_blocking.rs), [`pool_shutdown.rs`](../../crates/fpas-vm/src/tests/pool_shutdown.rs). |
 
 ---
 
@@ -177,6 +177,12 @@ Follow the phases **in order** when building or auditing the system. Each phase 
 
 **Done when:** `cargo test --workspace` passes and stress scenarios (many VMs, many tasks) remain bounded in thread count.
 
+**Implemented:**
+
+- **Shutdown vs abort:** [`SharedState::request_shutdown`](../../crates/fpas-vm/src/vm/shared.rs) wakes idle pool workers when the **main task** has finished its `Worker::run` (success or failure); it does **not** stop bytecode that is already scheduled on the ready queue so detached work can still run before `Vm::run` joins the pool. A **runtime failure** in any worker calls [`SharedState::signal_runtime_failure`](../../crates/fpas-vm/src/vm/shared.rs), which sets **`abort_spawned_bytecode`** and shutdown so other **spawned** tasks exit cooperatively at the next [`Worker::run`](../../crates/fpas-vm/src/vm/execute/mod.rs) loop boundary (main task id `0` still uses [`Worker::check_shutdown`](../../crates/fpas-vm/src/vm/execute/mod.rs) for `RUNTIME_VM_SHUTDOWN`).
+- **`Vm::run`:** [`ShutdownAfterMain`](../../crates/fpas-vm/src/vm/mod.rs) ensures [`SharedState::request_shutdown`](../../crates/fpas-vm/src/vm/shared.rs) runs after the main worker returns **or unwinds**, so pool threads do not stay blocked on an empty queue; each `run` clears **`abort_spawned_bytecode`**. Join order: if the main task returned **`Err`**, that diagnostic wins; otherwise the first pool **`Err`** is returned; pool **`join` panics** become an internal diagnostic.
+- **Pool loop:** [`Worker::pool_loop`](../../crates/fpas-vm/src/vm/worker.rs) re-tries `try_dequeue_task` once when shutdown is already true so a task enqueued immediately before teardown is not skipped by a stale empty fast-path check.
+
 ---
 
 ## Optional extensions (not specified in the Pascal docs)
@@ -206,4 +212,5 @@ Pick these only if the project explicitly adopts them; they are **not** required
 | Phase 6 tests (spawn execute path: arity, captures, detached, errors) | `crates/fpas-vm/src/tests/spawn_path.rs` |
 | Phase 7 tests (yield, timeslice, main vs pool queue) | `crates/fpas-vm/src/tests/yield_scheduling.rs` |
 | Phase 8 tests (Wait / WaitAll blocking, errors) | `crates/fpas-vm/src/tests/wait_blocking.rs` |
+| Phase 9 tests (shutdown vs abort, `Vm::run` errors, join / panic) | `crates/fpas-vm/src/tests/runtime_shutdown.rs` |
 | `go` lowering (retained vs detached) | `crates/fpas-compiler/src/compiler/stmt/concurrency.rs`, `crates/fpas-compiler/src/compiler/expr/mod.rs` |

@@ -11,6 +11,7 @@ use crate::vm::diagnostics::VmError;
 use crate::vm::{Worker, internal_error, runtime_error};
 use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_diagnostics::codes::{RUNTIME_PROGRAM_PANIC, RUNTIME_VM_SHUTDOWN};
+use std::sync::atomic::Ordering;
 
 /// Outcome of executing a single instruction via [`Worker::exec_one`].
 pub(super) enum StepResult {
@@ -94,12 +95,14 @@ impl Worker {
 
     pub fn run(&mut self) -> Result<(), VmError> {
         loop {
-            if self.shared.is_shutdown() {
-                if self.current_task_id == 0 {
-                    self.check_shutdown()?;
-                } else if self.current_task_id != u64::MAX {
-                    return Ok(());
-                }
+            if self.shared.abort_spawned_bytecode.load(Ordering::Acquire)
+                && self.current_task_id != 0
+                && self.current_task_id != u64::MAX
+            {
+                return Ok(());
+            }
+            if self.shared.is_shutdown() && self.current_task_id == 0 {
+                self.check_shutdown()?;
             }
 
             let code_len = self.shared.chunk.code.len();

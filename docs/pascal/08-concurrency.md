@@ -60,6 +60,8 @@ If it does emit spawn bytecode, the VM starts **`max(1, available_parallelism âˆ
 
 Those background workers exist only for a single **`Vm::run`** invocation: the runtime **joins** pool threads before `run` returns so short-lived hosts do not accumulate stray threads across many runs.
 
+When the **main task** finishes (normally or with a runtime error), the VM signals **teardown shutdown** so idle workers wake and exit once the ready queue is drained; this is separate from **`signal_runtime_failure`**, which also sets **`abort_spawned_bytecode`** after a concurrent task fails so other spawned tasks stop at the next instruction-boundary check. **`Vm::run`** returns **one** primary diagnostic: if the main task failed, that error wins; otherwise a pool worker error (for example after a spawned task **`panic`s**) is surfaced. Background Rust panics in pool threads are mapped to an internal VM diagnostic. Details: Phase 9 in [`docs/future/parallel-vm.md`](../future/parallel-vm.md).
+
 **Cooperative scheduling (implementation):** Spawned tasks can be **preempted cooperatively** after a fixed instruction budget and on the **`Yield`** opcode so long-running bytecode cannot starve other queued tasks on the same worker. The **main** program task always runs on the thread that called `Vm::run` and is **not** placed on the shared ready queue; a main-thread `Yield` yields the OS thread so pool workers can run. Details: Phase 7 in [`docs/future/parallel-vm.md`](../future/parallel-vm.md).
 
 ### Shared runtime state (implementation)

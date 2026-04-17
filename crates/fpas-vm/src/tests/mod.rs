@@ -6,6 +6,7 @@ mod index_and_records;
 mod numeric;
 mod pool_shutdown;
 mod pool_worker_loop;
+mod runtime_shutdown;
 mod shared_state;
 mod spawn_path;
 mod tasks;

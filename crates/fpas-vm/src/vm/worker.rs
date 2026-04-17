@@ -126,6 +126,8 @@ impl Worker {
     /// Pool-worker main loop: pull tasks from the shared queue and execute them.
     ///
     /// Returns when shutdown is signalled and no tasks remain.
+    ///
+    /// **Documentation:** `docs/future/parallel-vm.md` (Phases 5 and 9).
     pub fn pool_loop(&mut self) -> Result<(), VmError> {
         loop {
             // Fast path without locking: matches the common case when work is already queued.
@@ -135,6 +137,14 @@ impl Worker {
                 self.load_task(task);
                 self.run_current_task()?;
             } else if self.shared.is_shutdown() {
+                // Between the empty fast-path dequeue and observing shutdown, the main worker may
+                // have enqueued work and then signalled shutdown. Re-fetch before exiting so we do
+                // not leave runnable tasks stranded.
+                if let Some(task) = self.shared.try_dequeue_task() {
+                    self.load_task(task);
+                    self.run_current_task()?;
+                    continue;
+                }
                 return Ok(());
             } else {
                 // Wait for task or shutdown signal.
@@ -173,8 +183,7 @@ impl Worker {
                 Ok(())
             }
             Err(e) => {
-                // Task errored — signal global shutdown.
-                self.shared.request_shutdown();
+                self.shared.signal_runtime_failure();
                 Err(e)
             }
         }

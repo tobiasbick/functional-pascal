@@ -8,7 +8,7 @@ use std::sync::{Arc, Condvar, Mutex, RwLock};
 use super::helpers::{emit_constant, loc};
 
 #[test]
-fn pool_tasks_stop_without_side_effects_after_shutdown() {
+fn pool_tasks_stop_without_side_effects_after_abort_flag() {
     let mut chunk = Chunk::new();
     emit_constant(&mut chunk, Value::Str("late".to_string()));
     chunk.emit(Op::PrintLn, loc());
@@ -26,6 +26,7 @@ fn pool_tasks_stop_without_side_effects_after_shutdown() {
         key_input: Mutex::new(KeyInput::new()),
         tui: Mutex::new(TuiState::default()),
         shutdown: AtomicBool::new(true),
+        abort_spawned_bytecode: AtomicBool::new(true),
     });
 
     let mut worker = Worker::new_pool(Arc::clone(&shared));
@@ -39,7 +40,7 @@ fn pool_tasks_stop_without_side_effects_after_shutdown() {
 
     worker
         .run()
-        .expect("shutdown should stop pool tasks cleanly");
+        .expect("abort flag should stop pool tasks cleanly");
 
     let output = shared
         .console
@@ -49,7 +50,7 @@ fn pool_tasks_stop_without_side_effects_after_shutdown() {
         .clone();
     assert!(
         output.lines.is_empty(),
-        "pool task should not emit output after shutdown"
+        "pool task should not emit output after cooperative abort"
     );
     assert!(shared.shutdown.load(Ordering::Acquire));
 }

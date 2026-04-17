@@ -66,6 +66,11 @@ pub(crate) struct SharedState {
 
     /// Set when the main task completes or an error occurs.
     pub shutdown: AtomicBool,
+
+    /// Set when any worker hits a runtime error so in-flight spawned tasks cooperatively exit.
+    /// Plain [`Self::request_shutdown`] (after the main task finishes) does **not** set this flag,
+    /// so workers can still run tasks that were queued before teardown.
+    pub abort_spawned_bytecode: AtomicBool,
 }
 
 /// Saved state of a suspended task (ready to be resumed by any worker).
@@ -142,6 +147,13 @@ impl SharedState {
     pub(crate) fn request_shutdown(&self) {
         self.shutdown.store(true, Ordering::Release);
         self.task_available.notify_all();
+    }
+
+    /// Signal global shutdown **and** request in-flight spawned tasks to stop before the next
+    /// instruction boundary (after a concurrent task failure).
+    pub(crate) fn signal_runtime_failure(&self) {
+        self.abort_spawned_bytecode.store(true, Ordering::Release);
+        self.request_shutdown();
     }
 
     /// Block until notified (task queued, result stored, or shutdown).

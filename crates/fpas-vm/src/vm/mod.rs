@@ -26,6 +26,18 @@ pub(crate) use worker::Worker;
 const STACK_MAX: usize = 4096;
 const TIMESLICE: u32 = 256;
 
+/// Drops after [`Worker::run`] returns or unwinds so [`SharedState::request_shutdown`] always runs.
+/// Pool workers block on the task condvar; without this, a panic in the main worker could strand them.
+///
+/// **Documentation:** `docs/future/parallel-vm.md` (Phase 9).
+struct ShutdownAfterMain(Arc<SharedState>);
+
+impl Drop for ShutdownAfterMain {
+    fn drop(&mut self) {
+        self.0.request_shutdown();
+    }
+}
+
 pub(crate) fn canonical_name(name: &str) -> String {
     name.to_ascii_lowercase()
 }
@@ -92,6 +104,7 @@ impl Vm {
             key_input: Mutex::new(KeyInput::new()),
             tui: Mutex::new(TuiState::default()),
             shutdown: AtomicBool::new(false),
+            abort_spawned_bytecode: AtomicBool::new(false),
         });
 
         Self { shared, pool_size }
@@ -101,6 +114,12 @@ impl Vm {
     #[cfg(test)]
     pub(crate) fn worker_pool_size_for_tests(&self) -> usize {
         self.pool_size
+    }
+
+    /// Test-only: whether global shutdown was requested after a run (or mid-run failure).
+    #[cfg(test)]
+    pub(crate) fn is_shutdown_for_tests(&self) -> bool {
+        self.shared.is_shutdown()
     }
 
     /// Queue a line for the next line-buffered `Read` / `ReadLn` (tests).
@@ -154,6 +173,9 @@ impl Vm {
     /// The main program runs on the calling thread. If `go` tasks are spawned,
     /// a thread pool is created to execute them in parallel.
     pub fn run(&mut self) -> Result<(), VmError> {
+        self.shared
+            .abort_spawned_bytecode
+            .store(false, std::sync::atomic::Ordering::Release);
         let shared = Arc::clone(&self.shared);
         let pool_size = self.pool_size;
 
@@ -169,12 +191,13 @@ impl Vm {
                 }));
             }
 
-            // Run main program on this thread.
-            let mut main_worker = Worker::new_main(Arc::clone(&shared));
-            let main_result = main_worker.run();
-
-            // Main task done — signal pool to shut down.
-            shared.request_shutdown();
+            // Run main program on this thread. Always shut down when the main worker returns or
+            // unwinds so pool threads are not left blocked on an empty queue.
+            let main_result = {
+                let _shutdown_after_main = ShutdownAfterMain(Arc::clone(&shared));
+                let mut main_worker = Worker::new_main(Arc::clone(&shared));
+                main_worker.run()
+            };
 
             // Collect pool worker errors. If the main task already failed, prefer that diagnostic
             // and drop pool errors so the caller sees a single primary failure.

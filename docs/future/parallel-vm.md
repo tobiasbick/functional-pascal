@@ -10,7 +10,8 @@ Follow the phases **in order** when building or auditing the system. Each phase 
 |-------|--------|
 | **1** — Bytecode surface | **Done** — opcodes and `Chunk::uses_spawn_tasks` in `fpas-bytecode`; VM reads the flag at construction (`fpas-vm`). |
 | **2** — Compiler lowering | **Done** — `go` expression vs statement map to `Op::SpawnTask` / `Op::SpawnDetachedTask` in `fpas-compiler`. |
-| **3–9** | Use the checklists below against the current tree (`fpas-vm`, tests); items were implemented incrementally — audit when changing behavior. |
+| **3** — Shared state, queues, I/O | **Done** — `SharedState` in `fpas-vm` (`Arc` at runtime): chunk, globals, ready queue + condvar, task ids/results, shutdown flag, console and input/TUI mutexes; lock-ordering notes in source. Tests: `crates/fpas-vm/src/tests/shared_state.rs`. |
+| **4–9** | Use the checklists below against the current tree (`fpas-vm`, tests); items were implemented incrementally — audit when changing behavior. |
 
 ---
 
@@ -64,6 +65,8 @@ Follow the phases **in order** when building or auditing the system. Each phase 
 **Primary path:** `crates/fpas-vm/src/vm/shared.rs`.
 
 **Done when:** Types compile, fields exist, and enqueue/dequeue/wait helpers are callable from the worker without data races (under Miri or careful review).
+
+**Implemented:** [`SharedState`](../../crates/fpas-vm/src/vm/shared.rs) in `crates/fpas-vm/src/vm/shared.rs` (chunk, `globals` `RwLock`, `task_queue` + `task_available`, `task_results`, `next_task_id`, `shutdown`, `console`, `text_input`, `key_input`, `tui`). [`Worker::pool_loop`](../../crates/fpas-vm/src/vm/worker.rs) uses the queue mutex with the condition variable when the fast dequeue path finds an empty queue. VM tests: `crates/fpas-vm/src/tests/shared_state.rs`.
 
 ---
 
@@ -181,5 +184,6 @@ Pick these only if the project explicitly adopts them; they are **not** required
 | Shared queues, condvar, I/O mutexes | `crates/fpas-vm/src/vm/shared.rs` |
 | Spawn / yield / intrinsic dispatch | `crates/fpas-vm/src/vm/execute/concurrency/` |
 | Spawn detection on chunk | `crates/fpas-bytecode/src/chunk.rs` (`Chunk::uses_spawn_tasks`) |
-| Phase 1–2 tests (bytecode / compiler / VM) | `crates/fpas-bytecode/tests/parallel_vm_phase1.rs`, `crates/fpas-compiler/src/tests/parallel_vm_phase1.rs`, `crates/fpas-vm/src/tests/parallel_vm_phase1.rs` |
+| Phase 1–2 tests (bytecode / compiler / VM) | `crates/fpas-bytecode/tests/parallel_vm_phase1.rs`, `crates/fpas-compiler/src/tests/parallel_vm_phase1.rs`, `crates/fpas-vm/src/tests/uses_spawn_tasks.rs` |
+| Shared-state tests (queue / I/O mutexes) | `crates/fpas-vm/src/tests/shared_state.rs` |
 | `go` lowering (retained vs detached) | `crates/fpas-compiler/src/compiler/stmt/concurrency.rs`, `crates/fpas-compiler/src/compiler/expr/mod.rs` |

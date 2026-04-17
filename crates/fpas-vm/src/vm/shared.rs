@@ -1,6 +1,15 @@
 //! Shared state accessible by all worker threads.
 //!
-//! **Documentation:** `docs/future/parallel-vm.md`
+//! **Documentation:** `docs/future/parallel-vm.md` (Phase 3), `docs/pascal/08-concurrency.md`.
+//!
+//! ## Lock ordering
+//!
+//! Independent mutexes (`task_queue`, `task_results`, `console`, `text_input`, `key_input`, `tui`)
+//! each protect a single concern. **Do not acquire more than one of these locks at the same time**
+//! from VM or intrinsic code unless the order is documented here and consistently followed.
+//! [`RwLock`] on `globals` is separate; avoid holding `globals` while waiting on `task_available`.
+//! Pool workers follow [`super::Worker::pool_loop`]: take `task_queue`, then wait on
+//! `task_available` while holding that guard (standard `Condvar` pattern).
 
 use fpas_bytecode::{Chunk, Value};
 use fpas_std::{Console, KeyInput, TextInput, TuiSession};

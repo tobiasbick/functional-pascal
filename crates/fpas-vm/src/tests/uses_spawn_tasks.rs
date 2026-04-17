@@ -1,6 +1,6 @@
-//! Phase 1: `Chunk::uses_spawn_tasks` drives whether the VM constructs a worker pool at build time.
+//! `Chunk::uses_spawn_tasks` and VM construction: programs without spawn bytecode run without a worker pool.
 //!
-//! **Documentation:** `docs/future/parallel-vm.md` (Phase 1), `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/future/parallel-vm.md`, `docs/pascal/08-concurrency.md`
 
 use crate::Vm;
 use fpas_bytecode::{Chunk, Op};

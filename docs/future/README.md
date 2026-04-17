@@ -4,7 +4,7 @@ Open planning items for Functional Pascal.
 
 ## VM implementation
 
-[`parallel-vm.md`](parallel-vm.md) is an **ordered implementation roadmap** for the parallel task runtime in `fpas-vm` (bytecode through shutdown). Language rules stay in [`docs/pascal/08-concurrency.md`](../pascal/08-concurrency.md). Phases **1** (spawn / yield opcodes + `Chunk::uses_spawn_tasks`) and **2** (`go` lowering) are **implemented** in the current tree; see the status table at the top of that file.
+[`parallel-vm.md`](parallel-vm.md) is an **ordered implementation roadmap** for the parallel task runtime in `fpas-vm` (bytecode through shutdown). Language rules stay in [`docs/pascal/08-concurrency.md`](../pascal/08-concurrency.md). Phases **1** (spawn / yield opcodes + `Chunk::uses_spawn_tasks`), **2** (`go` lowering), and **3** (shared `Arc<SharedState>`: ready queue, condvar, task results, I/O mutexes) are **implemented** in the current tree; see the status table at the top of that file.
 
 ## TUI roadmap
 

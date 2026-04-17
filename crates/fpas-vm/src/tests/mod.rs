@@ -4,6 +4,7 @@ mod helpers;
 mod illformed;
 mod index_and_records;
 mod numeric;
-mod parallel_vm_phase1;
 mod pool_shutdown;
+mod shared_state;
 mod tasks;
+mod uses_spawn_tasks;

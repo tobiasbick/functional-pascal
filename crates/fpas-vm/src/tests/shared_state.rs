@@ -2,37 +2,19 @@
 //!
 //! **Documentation:** `docs/future/parallel-vm.md`
 
-use crate::vm::{SharedState, TaskResultPoll, TaskState, Worker};
+use crate::vm::{TaskResultPoll, TaskState, Worker};
 use fpas_bytecode::{Chunk, Op, Value};
-use fpas_std::{Console, KeyInput, TextInput};
-use std::collections::HashMap;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Arc, Condvar, Mutex, RwLock};
+use std::sync::Arc;
+use std::sync::atomic::Ordering;
 use std::thread;
 use std::time::Duration;
 
-use super::helpers::loc;
+use super::helpers::{loc, minimal_shared_state};
 
 fn minimal_halt_chunk() -> Chunk {
     let mut chunk = Chunk::new();
     chunk.emit(Op::Halt, loc());
     chunk
-}
-
-fn shared_state_for_test(chunk: Chunk) -> SharedState {
-    SharedState {
-        chunk,
-        globals: RwLock::new(HashMap::new()),
-        task_queue: Mutex::new(Vec::new()),
-        task_available: Condvar::new(),
-        task_results: Mutex::new(HashMap::new()),
-        next_task_id: AtomicU64::new(1),
-        console: Mutex::new(Console::new()),
-        text_input: Mutex::new(TextInput::new()),
-        key_input: Mutex::new(KeyInput::new()),
-        tui: Mutex::new(Default::default()),
-        shutdown: AtomicBool::new(false),
-    }
 }
 
 fn dummy_task(id: u64, ip: usize) -> TaskState {
@@ -49,7 +31,7 @@ fn dummy_task(id: u64, ip: usize) -> TaskState {
 
 #[test]
 fn alloc_task_id_starts_at_one_and_increments() {
-    let shared = shared_state_for_test(minimal_halt_chunk());
+    let shared = minimal_shared_state(minimal_halt_chunk());
     assert_eq!(shared.alloc_task_id(), 1);
     assert_eq!(shared.alloc_task_id(), 2);
     assert_eq!(shared.alloc_task_id(), 3);
@@ -59,13 +41,13 @@ fn alloc_task_id_starts_at_one_and_increments() {
 
 #[test]
 fn try_dequeue_empty_returns_none() {
-    let shared = shared_state_for_test(minimal_halt_chunk());
+    let shared = minimal_shared_state(minimal_halt_chunk());
     assert!(shared.try_dequeue_task().is_none());
 }
 
 #[test]
 fn enqueue_then_try_dequeue_returns_same_task() {
-    let shared = shared_state_for_test(minimal_halt_chunk());
+    let shared = minimal_shared_state(minimal_halt_chunk());
     let task = dummy_task(7, 3);
     shared.enqueue_task(task);
     let got = shared.try_dequeue_task().expect("one task");
@@ -76,7 +58,7 @@ fn enqueue_then_try_dequeue_returns_same_task() {
 
 #[test]
 fn ready_queue_is_lifo_under_single_threaded_push_pop() {
-    let shared = shared_state_for_test(minimal_halt_chunk());
+    let shared = minimal_shared_state(minimal_halt_chunk());
     shared.enqueue_task(dummy_task(1, 0));
     shared.enqueue_task(dummy_task(2, 0));
     assert_eq!(shared.try_dequeue_task().unwrap().id, 2);
@@ -88,7 +70,7 @@ fn ready_queue_is_lifo_under_single_threaded_push_pop() {
 
 #[test]
 fn poll_task_result_pending_for_unknown_id() {
-    let shared = shared_state_for_test(minimal_halt_chunk());
+    let shared = minimal_shared_state(minimal_halt_chunk());
     assert!(matches!(
         shared.poll_task_result(999),
         TaskResultPoll::Pending
@@ -97,7 +79,7 @@ fn poll_task_result_pending_for_unknown_id() {
 
 #[test]
 fn store_poll_available_then_consumed() {
-    let shared = shared_state_for_test(minimal_halt_chunk());
+    let shared = minimal_shared_state(minimal_halt_chunk());
     let v = Value::Integer(42);
     shared.store_task_result(5, v.clone());
 
@@ -121,7 +103,7 @@ fn store_poll_available_then_consumed() {
 
 #[test]
 fn poll_never_available_without_store() {
-    let shared = shared_state_for_test(minimal_halt_chunk());
+    let shared = minimal_shared_state(minimal_halt_chunk());
     for _ in 0..3 {
         assert!(matches!(
             shared.poll_task_result(1),
@@ -134,20 +116,20 @@ fn poll_never_available_without_store() {
 
 #[test]
 fn request_shutdown_sets_flag_and_is_idempotent() {
-    let shared = shared_state_for_test(minimal_halt_chunk());
+    let shared = minimal_shared_state(minimal_halt_chunk());
     assert!(!shared.is_shutdown());
     shared.request_shutdown();
     assert!(shared.is_shutdown());
     shared.request_shutdown();
     assert!(shared.is_shutdown());
-    assert_eq!(shared.shutdown.load(Ordering::Acquire), true);
+    assert!(shared.shutdown.load(Ordering::Acquire));
 }
 
 // --- Positive: condvar progress wait ---
 
 #[test]
 fn wait_for_task_progress_returns_on_timeout_without_progress() {
-    let shared = Arc::new(shared_state_for_test(minimal_halt_chunk()));
+    let shared = Arc::new(minimal_shared_state(minimal_halt_chunk()));
     let start = std::time::Instant::now();
     shared.wait_for_task_progress(Duration::from_millis(40));
     assert!(
@@ -158,7 +140,7 @@ fn wait_for_task_progress_returns_on_timeout_without_progress() {
 
 #[test]
 fn wait_for_task_progress_wakes_on_enqueue_notify() {
-    let shared = Arc::new(shared_state_for_test(minimal_halt_chunk()));
+    let shared = Arc::new(minimal_shared_state(minimal_halt_chunk()));
     let s2 = Arc::clone(&shared);
     let waiter = thread::spawn(move || {
         s2.wait_for_task_progress(Duration::from_secs(5));
@@ -173,7 +155,7 @@ fn wait_for_task_progress_wakes_on_enqueue_notify() {
 #[test]
 fn pool_worker_drains_prequeued_task_then_exits_on_shutdown() {
     let chunk = minimal_halt_chunk();
-    let shared = Arc::new(shared_state_for_test(chunk));
+    let shared = Arc::new(minimal_shared_state(chunk));
     shared.enqueue_task(dummy_task(10, 0));
 
     let s2 = Arc::clone(&shared);
@@ -191,7 +173,7 @@ fn pool_worker_drains_prequeued_task_then_exits_on_shutdown() {
 #[test]
 fn pool_worker_blocks_until_enqueue_then_shutdown() {
     let chunk = minimal_halt_chunk();
-    let shared = Arc::new(shared_state_for_test(chunk));
+    let shared = Arc::new(minimal_shared_state(chunk));
 
     let s2 = Arc::clone(&shared);
     let handle = thread::spawn(move || {
@@ -210,7 +192,7 @@ fn pool_worker_blocks_until_enqueue_then_shutdown() {
 
 #[test]
 fn concurrent_enqueues_all_dequeued() {
-    let shared = Arc::new(shared_state_for_test(minimal_halt_chunk()));
+    let shared = Arc::new(minimal_shared_state(minimal_halt_chunk()));
     let mut handles = Vec::new();
     for t in 0..8 {
         let s = Arc::clone(&shared);
@@ -236,7 +218,7 @@ fn concurrent_enqueues_all_dequeued() {
 
 #[test]
 fn console_lock_serializes_concurrent_writes() {
-    let shared = Arc::new(shared_state_for_test(minimal_halt_chunk()));
+    let shared = Arc::new(minimal_shared_state(minimal_halt_chunk()));
     let mut handles = Vec::new();
     for k in 0..6 {
         let s = Arc::clone(&shared);

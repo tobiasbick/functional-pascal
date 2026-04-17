@@ -4,6 +4,7 @@ mod helpers;
 mod illformed;
 mod index_and_records;
 mod numeric;
+mod worker_pool;
 mod pool_shutdown;
 mod shared_state;
 mod tasks;

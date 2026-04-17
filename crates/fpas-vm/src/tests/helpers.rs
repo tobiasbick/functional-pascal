@@ -1,5 +1,27 @@
 use crate::Vm;
+use crate::vm::SharedState;
 use fpas_bytecode::{Chunk, Op, SourceLocation, Value};
+use fpas_std::{Console, KeyInput, TextInput};
+use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, AtomicU64};
+use std::sync::{Condvar, Mutex, RwLock};
+
+/// Minimal [`SharedState`] shell for tests (matches [`crate::vm::Vm::build`] field init except chunk).
+pub(super) fn minimal_shared_state(chunk: Chunk) -> SharedState {
+    SharedState {
+        chunk,
+        globals: RwLock::new(HashMap::new()),
+        task_queue: Mutex::new(Vec::new()),
+        task_available: Condvar::new(),
+        task_results: Mutex::new(HashMap::new()),
+        next_task_id: AtomicU64::new(1),
+        console: Mutex::new(Console::new()),
+        text_input: Mutex::new(TextInput::new()),
+        key_input: Mutex::new(KeyInput::new()),
+        tui: Mutex::new(Default::default()),
+        shutdown: AtomicBool::new(false),
+    }
+}
 
 pub(super) fn loc() -> SourceLocation {
     SourceLocation::new(1, 1)

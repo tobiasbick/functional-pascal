@@ -97,6 +97,12 @@ impl Vm {
         Self { shared, pool_size }
     }
 
+    /// Test-only accessor for [`Self::build`] worker count (spawn chunks only).
+    #[cfg(test)]
+    pub(crate) fn worker_pool_size_for_tests(&self) -> usize {
+        self.pool_size
+    }
+
     /// Queue a line for the next line-buffered `Read` / `ReadLn` (tests).
     pub fn push_readln_input(&mut self, line: &str) {
         self.shared

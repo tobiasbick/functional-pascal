@@ -58,9 +58,11 @@ If the compiled chunk contains **no** spawn opcodes for tasks (equivalently: the
 
 If it does emit spawn bytecode, the VM starts **`max(1, available_parallelism − 1)`** worker threads that share a ready queue, while the **main task** (task id `0`) still runs on the thread that invoked VM execution. Together, this matches typical machine parallelism without starting idle workers for programs that never spawn tasks.
 
+Those background workers exist only for a single **`Vm::run`** invocation: the runtime **joins** pool threads before `run` returns so short-lived hosts do not accumulate stray threads across many runs.
+
 ### Shared runtime state (implementation)
 
-Worker threads and the main execution thread share one **`Arc<SharedState>`** value: immutable bytecode (`Chunk`), a mutex-protected **ready queue** of suspended tasks paired with a **condition variable** so idle workers block instead of spinning, **task id** allocation, **task result** storage for handles used with `Wait`, an **atomic shutdown** flag, and mutex-protected **console** and **input** (and minimal **TUI**) state so concurrent tasks do not corrupt I/O. Lock ordering between those mutexes is documented in the VM source. For the full checklist and file pointers, see Phase 3 in [`docs/future/parallel-vm.md`](../future/parallel-vm.md).
+Worker threads and the main execution thread share one **`Arc<SharedState>`** value: immutable bytecode (`Chunk`), a mutex-protected **ready queue** of suspended tasks paired with a **condition variable** so idle workers block instead of spinning, **task id** allocation, **task result** storage for handles used with `Wait`, an **atomic shutdown** flag, and mutex-protected **console** and **input** (and minimal **TUI**) state so concurrent tasks do not corrupt I/O. Lock ordering between those mutexes is documented in the VM source. For process shape (scoped `run`, conditional pool sizing, shutdown), see Phase 4; for queues and I/O mutexes see Phase 3 in [`docs/future/parallel-vm.md`](../future/parallel-vm.md).
 
 ### Task Type
 

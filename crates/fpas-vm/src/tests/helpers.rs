@@ -1,7 +1,7 @@
 use crate::Vm;
 use crate::vm::SharedState;
 use fpas_bytecode::{Chunk, Op, SourceLocation, Value};
-use fpas_std::{Console, KeyInput, TextInput};
+use fpas_std::{Console, ConsoleKeyEvent, KeyInput, TextInput};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU64};
 use std::sync::{Condvar, Mutex, RwLock};
@@ -14,6 +14,7 @@ pub(super) fn minimal_shared_state(chunk: Chunk) -> SharedState {
         task_queue: Mutex::new(Vec::new()),
         task_available: Condvar::new(),
         task_results: Mutex::new(HashMap::new()),
+        task_results_available: Condvar::new(),
         next_task_id: AtomicU64::new(1),
         console: Mutex::new(Console::new()),
         text_input: Mutex::new(TextInput::new()),
@@ -26,6 +27,27 @@ pub(super) fn minimal_shared_state(chunk: Chunk) -> SharedState {
 
 pub(super) fn loc() -> SourceLocation {
     SourceLocation::new(1, 1)
+}
+
+pub(super) fn tui_application_value() -> Value {
+    Value::Record {
+        type_name: "Std.Tui.Application".into(),
+        fields: vec![],
+    }
+}
+
+pub(super) fn key_event_value(ev: ConsoleKeyEvent) -> Value {
+    Value::Record {
+        type_name: "Std.Console.KeyEvent".into(),
+        fields: vec![
+            ("kind".into(), Value::Integer(ev.kind as i64)),
+            ("ch".into(), Value::Char(ev.ch)),
+            ("shift".into(), Value::Boolean(ev.shift)),
+            ("ctrl".into(), Value::Boolean(ev.ctrl)),
+            ("alt".into(), Value::Boolean(ev.alt)),
+            ("meta".into(), Value::Boolean(ev.meta)),
+        ],
+    }
 }
 
 pub(super) fn emit_constant(chunk: &mut Chunk, value: Value) {

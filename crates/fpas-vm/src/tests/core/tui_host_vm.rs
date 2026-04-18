@@ -1,0 +1,340 @@
+//! VM bridge for `TuiHost` (Phase 3): host poll/register/process intrinsics (see `docs/pascal/std/tui-app.md`).
+//!
+//! **Documentation:** `docs/pascal/std/tui-app.md` (from the repository root).
+
+use fpas_bytecode::{Chunk, Intrinsic, Op, Value};
+use fpas_std::ConsoleEvent;
+use fpas_std::ConsoleKeyEvent;
+use fpas_std::key_event::key_kind_index;
+
+use crate::Vm;
+use crate::tests::helpers::{
+    emit_constant, key_event_value, loc, run_ok_output, tui_application_value,
+};
+
+#[test]
+fn tui_host_invoke_on_key_pressed_runs_registered_fp_function() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnKey".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnKeyPressed as u16),
+        loc(),
+    );
+    emit_constant(&mut chunk, tui_application_value());
+    emit_constant(
+        &mut chunk,
+        key_event_value(ConsoleKeyEvent::new(
+            key_kind_index("Space"),
+            ' ',
+            false,
+            false,
+            false,
+            false,
+        )),
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostInvokeOnKeyPressed as u16),
+        loc(),
+    );
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::Halt, loc());
+
+    let on_key_start = chunk.len();
+    chunk.functions.insert("OnKey".into(), (on_key_start, 2));
+    emit_constant(&mut chunk, Value::Boolean(true));
+    chunk.emit(Op::Return, loc());
+
+    assert_eq!(run_ok_output(chunk), vec!["true"]);
+}
+
+#[test]
+fn tui_host_poll_next_coalesces_resize_before_key() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Dup, loc());
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostPollNext as u16), loc());
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::Dup, loc());
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostPollNext as u16), loc());
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::Dup, loc());
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostPollNext as u16), loc());
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::Halt, loc());
+
+    let mut vm = Vm::new(chunk);
+    vm.push_console_event(ConsoleEvent::resize(10, 10));
+    vm.push_console_event(ConsoleEvent::resize(30, 20));
+    vm.push_console_event(ConsoleEvent::key(ConsoleKeyEvent::new(
+        key_kind_index("Escape"),
+        '\u{1b}',
+        false,
+        false,
+        false,
+        false,
+    )));
+    vm.run().expect("vm ok");
+    let lines = vm.output().lines;
+    assert_eq!(lines[0], "None", "resize-only poll buffers coalesced size");
+    assert_eq!(
+        lines[1], "None",
+        "second resize still waits for a key before flush"
+    );
+    assert!(
+        lines[2].contains("30"),
+        "third poll (key) flushes coalesced resize (width 30): {}",
+        lines[2]
+    );
+}
+
+#[test]
+fn tui_host_process_next_dispatches_on_resize_handler() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnResize".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnResize as u16),
+        loc(),
+    );
+    emit_constant(&mut chunk, tui_application_value());
+    emit_constant(&mut chunk, Value::Integer(32));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::Halt, loc());
+
+    let on_resize_start = chunk.len();
+    chunk
+        .functions
+        .insert("OnResize".into(), (on_resize_start, 2));
+    emit_constant(&mut chunk, Value::Str("r".into()));
+    chunk.emit(Op::PrintLn, loc());
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    let mut vm = Vm::new(chunk);
+    vm.push_console_event(ConsoleEvent::resize(10, 10));
+    vm.push_console_event(ConsoleEvent::resize(30, 20));
+    vm.push_console_event(ConsoleEvent::key(ConsoleKeyEvent::new(
+        key_kind_index("Escape"),
+        '\u{1b}',
+        false,
+        false,
+        false,
+        false,
+    )));
+    vm.run().expect("vm ok");
+    assert_eq!(vm.output().lines, vec!["r", "2"]);
+}
+
+#[test]
+fn tui_host_process_next_resize_without_handler_returns_tag_four() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    emit_constant(&mut chunk, tui_application_value());
+    emit_constant(&mut chunk, Value::Integer(32));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::Halt, loc());
+
+    let mut vm = Vm::new(chunk);
+    vm.push_console_event(ConsoleEvent::resize(5, 5));
+    vm.push_console_event(ConsoleEvent::key(ConsoleKeyEvent::new(
+        key_kind_index("A"),
+        'a',
+        false,
+        false,
+        false,
+        false,
+    )));
+    vm.run().expect("vm ok");
+    assert_eq!(vm.output().lines, vec!["4"]);
+}
+
+#[test]
+fn tui_host_dispatch_redraw_invokes_on_paint() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Dup, loc());
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiApplicationRequestRedraw as u16),
+        loc(),
+    );
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnPaint".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnPaint as u16),
+        loc(),
+    );
+    emit_constant(&mut chunk, tui_application_value());
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostDispatchRedraw as u16),
+        loc(),
+    );
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::Halt, loc());
+
+    let on_paint_start = chunk.len();
+    chunk
+        .functions
+        .insert("OnPaint".into(), (on_paint_start, 1));
+    emit_constant(&mut chunk, Value::Str("p".into()));
+    chunk.emit(Op::PrintLn, loc());
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    assert_eq!(run_ok_output(chunk), vec!["p", "5"]);
+}
+
+#[test]
+fn tui_host_dispatch_redraw_without_handler_clears_and_returns_six() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Dup, loc());
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiApplicationRequestRedraw as u16),
+        loc(),
+    );
+    emit_constant(&mut chunk, tui_application_value());
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostDispatchRedraw as u16),
+        loc(),
+    );
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::Halt, loc());
+
+    assert_eq!(run_ok_output(chunk), vec!["6"]);
+}
+
+#[test]
+fn tui_host_dispatch_redraw_when_not_pending_returns_zero() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    emit_constant(&mut chunk, tui_application_value());
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostDispatchRedraw as u16),
+        loc(),
+    );
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::Halt, loc());
+
+    assert_eq!(run_ok_output(chunk), vec!["0"]);
+}
+
+#[test]
+fn tui_host_run_loop_dispatches_paint_then_key_until_idle() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Dup, loc());
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiApplicationRequestRedraw as u16),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnKey".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnKeyPressed as u16),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnPaint".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnPaint as u16),
+        loc(),
+    );
+    emit_constant(&mut chunk, Value::Integer(16));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRunLoop as u16), loc());
+    chunk.emit(Op::Halt, loc());
+
+    let on_key_start = chunk.len();
+    chunk.functions.insert("OnKey".into(), (on_key_start, 2));
+    emit_constant(&mut chunk, Value::Boolean(true));
+    chunk.emit(Op::Return, loc());
+
+    let on_paint_start = chunk.len();
+    chunk
+        .functions
+        .insert("OnPaint".into(), (on_paint_start, 1));
+    emit_constant(&mut chunk, Value::Str("p".into()));
+    chunk.emit(Op::PrintLn, loc());
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    let mut vm = Vm::new(chunk);
+    vm.push_console_event(ConsoleEvent::key(ConsoleKeyEvent::new(
+        key_kind_index("Escape"),
+        '\u{1b}',
+        false,
+        false,
+        false,
+        false,
+    )));
+    vm.run().expect("vm ok");
+    assert_eq!(vm.output().lines, vec!["p"]);
+}
+
+#[test]
+fn tui_host_run_loop_max_iterations_zero_skips_body() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Dup, loc());
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiApplicationRequestRedraw as u16),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnPaint".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnPaint as u16),
+        loc(),
+    );
+    emit_constant(&mut chunk, Value::Integer(0));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRunLoop as u16), loc());
+    chunk.emit(Op::Halt, loc());
+
+    let on_paint_start = chunk.len();
+    chunk
+        .functions
+        .insert("OnPaint".into(), (on_paint_start, 1));
+    emit_constant(&mut chunk, Value::Str("p".into()));
+    chunk.emit(Op::PrintLn, loc());
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    assert!(run_ok_output(chunk).is_empty());
+}

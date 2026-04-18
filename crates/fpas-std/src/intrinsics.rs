@@ -80,6 +80,14 @@ pub fn run_intrinsic(
             | Intrinsic::TuiApplicationPollEvent
             | Intrinsic::TuiApplicationRequestRedraw
             | Intrinsic::TuiApplicationRedrawPending
+            | Intrinsic::TuiHostPollNext
+            | Intrinsic::TuiHostRegisterOnKeyPressed
+            | Intrinsic::TuiHostInvokeOnKeyPressed
+            | Intrinsic::TuiHostRegisterOnResize
+            | Intrinsic::TuiHostProcessNext
+            | Intrinsic::TuiHostRegisterOnPaint
+            | Intrinsic::TuiHostDispatchRedraw
+            | Intrinsic::TuiHostRunLoop
     ) {
         return Err(std_internal_error(
             "internal: Std.Console and Std.Tui intrinsics are handled in the VM",

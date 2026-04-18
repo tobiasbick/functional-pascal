@@ -67,7 +67,7 @@ impl Worker {
                             ));
                         }
                         TaskResultPoll::Pending => {
-                            self.shared.wait_for_task_progress(None);
+                            self.shared.wait_until_task_result_ready(task_id);
                         }
                     }
                 }
@@ -142,7 +142,7 @@ impl Worker {
                         line,
                     ));
                 }
-                self.shared.wait_for_task_progress(None);
+                self.shared.wait_until_all_tasks_recorded(&task_ids);
             }
         }
         Ok(())

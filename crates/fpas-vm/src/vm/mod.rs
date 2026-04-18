@@ -98,6 +98,7 @@ impl Vm {
             task_queue: Mutex::new(Vec::new()),
             task_available: Condvar::new(),
             task_results: Mutex::new(HashMap::new()),
+            task_results_available: Condvar::new(),
             next_task_id: AtomicU64::new(1),
             console: Mutex::new(console),
             text_input: Mutex::new(TextInput::new()),

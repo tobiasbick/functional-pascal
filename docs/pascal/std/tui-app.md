@@ -1,14 +1,37 @@
 # `Std.Tui` — dispatch-mode application (target)
 
-**Status:** target specification for the Rust-hosted event loop and `On*` handlers described in `[docs/future/tui-application-framework.md](../../future/tui-application-framework.md)`. **Not implemented** until compiler, sema, and VM wiring exist; until then, use the poll-style API in `[tui.md](tui.md)`.
+**Status:** target specification for the Rust-hosted event loop and `On*` handlers described in `[docs/future/tui-application-framework.md](../../future/tui-application-framework.md)`. The **Pascal API and compiler lowering** are not wired yet (Phase 4); use the poll-style API in `[tui.md](tui.md)` for programs today. A **partial VM bridge** exists (see below).
 
 **Maintenance (implementers only):** when this mode ships, register types and routines in `[loaded/tui.rs](../../../crates/fpas-sema/src/std_registry/loaded/tui.rs)` and keep this file aligned with that registry (see root `[AGENTS.md](../../../AGENTS.md)`).
 
 ---
 
+## VM bridge (Phase 3 — partial)
+
+These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mod.rs)` variants drive `fpas_std::TuiHost` from the VM; **they are not `Std.Tui` procedures yet** (no sema/compiler surface). Stack order matches other TUI intrinsics: pass `Application`, duplicate with the bytecode `Dup` opcode when the handle is needed again.
+
+
+| Intrinsic                     | Stack (bottom → top)                             | Result                                                                                                                                                                                                                                                                              |
+| ----------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TuiHostPollNext`             | `Application`                                    | `Option<Std.Tui.TuiEvent>` with host resize coalescing.                                                                                                                                                                                                                             |
+| `TuiHostRegisterOnKeyPressed` | `Application`, `function`                        | Registers `function (Application, Std.Console.KeyEvent): boolean` for invoke.                                                                                                                                                                                                       |
+| `TuiHostInvokeOnKeyPressed`   | `Application`, `Std.Console.KeyEvent`            | Calls the registered function; pushes `boolean` (`consumed`).                                                                                                                                                                                                                       |
+| `TuiHostRegisterOnResize`     | `Application`, `function`                        | Registers `procedure (Application, Std.Tui.Size)` (arity 2).                                                                                                                                                                                                                        |
+| `TuiHostProcessNext`          | `Application`, `max_spins` (`integer`, top)      | Spins up to `max_spins` (clamped to `4096`, minimum one iteration) through `poll_event` + host ingest, then dispatches **at most one** `HostEvent`. Pushes `integer`: `0` no event, `1` key dispatched, `2` resize dispatched, `3` key without handler, `4` resize without handler. |
+| `TuiHostRegisterOnPaint`      | `Application`, `function`                        | Registers `procedure (Application)` (arity 1).                                                                                                                                                                                                                                      |
+| `TuiHostDispatchRedraw`       | `Application`                                    | If redraw is pending: runs registered `OnPaint` after `take_redraw_pending`, or clears the flag with tag `6` when no handler. Pushes `integer`: `0` not pending, `5` paint ran, `6` cleared without handler.                                                                        |
+| `TuiHostRunLoop`              | `Application`, `max_iterations` (`integer`, top) | Bounded host loop: each iteration runs the same work as `TuiHostDispatchRedraw` then `TuiHostProcessNext` with a fixed inner `max_spins` of `64`. Stops when both steps would be idle (`0`). `max_iterations` is clamped to `0..=1_000_000`. Pushes `()`.                           |
+
+
+**Bytecode discriminants** (authoritative enum: `[Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mod.rs)`): **255** `TuiHostPollNext`, **256** `TuiHostRegisterOnKeyPressed`, **257** `TuiHostInvokeOnKeyPressed`, **258** `TuiHostRegisterOnResize`, **259** `TuiHostProcessNext`, **260** `TuiHostRegisterOnPaint`, **261** `TuiHostDispatchRedraw`, **262** `TuiHostRunLoop`. These are VM-only until Phase 4 registers Pascal names.
+
+`Application.Close` clears registered host handlers (`OnKeyPressed`, `OnResize`, `OnPaint`), resets the host pump state, and closes the session as today.
+
+---
+
 ## Relationship to the poll-style API
 
-Today, `[tui.md](tui.md)` documents `**Application.ReadEvent`**, `**ReadEventTimeout**`, `**PollEvent**`, and redraw helpers. The dispatch model **replaces** that pattern for full applications: the runtime owns the blocking loop and calls user `**On*`** procedures. Poll-style entry points are **removed or narrowed** once dispatch mode exists (project policy: no backward compatibility requirement).
+Today, `[tui.md](tui.md)` documents `**Application.ReadEvent`**, `**ReadEventTimeout`**, `**PollEvent**`, and redraw helpers. The dispatch model replaces that pattern for full applications: the runtime owns the blocking loop and calls user `**On***` procedures. Poll-style entry points are **removed or narrowed** once dispatch mode exists (project policy: no backward compatibility requirement).
 
 Dispatch-mode names use the `**On` prefix** so they do not collide with legacy names such as console `**KeyPressed`** (boolean poll).
 
@@ -24,14 +47,16 @@ Dispatch-mode names use the `**On` prefix** so they do not collide with legacy n
 | `Application.Close` | Release the session. After `**Application.Run`** completes successfully, the host **must** have restored the session as if `**Close`** ran (see **Lifecycle** below). |
 
 
+**VM today:** Pascal does not lower `**Application.Run`**. The closest bytecode helper is `**TuiHostRunLoop**` (**262**): a **bounded** loop that alternates redraw dispatch and `**TuiHostProcessNext`** until both are idle; it does **not** replace a blocking `**Run`** (no quit signal, `**OnExit**`, or automatic `**Close**`).
+
 ### Lifecycle (normative)
 
-1. User calls `**Application.Open`** → receives `**App**`.
-2. User calls `**Application.Run(App, …)**` with handler configuration (exact bundle syntax is Phase 4; see **Handler bundle** below).
+1. User calls `**Application.Open`** → receives `**App`**.
+2. User calls `**Application.Run(App, …)`** with handler configuration (exact bundle syntax is Phase 4; see **Handler bundle** below).
 3. While running, the host dispatches `**On*`** handlers on the **main VM thread** only (see `[parallel-vm.md](../../rust/parallel-vm.md)`).
-4. When the host stops the loop, it invokes `**OnExit(App, Reason)`** once if that handler is provided, then **performs `Application.Close(App)`** (or equivalent) so the program must **not** call `**Close`** again for the same successful `**Run**` unless the spec explicitly documents a double-close error.
+4. When the host stops the loop, it invokes `**OnExit(App, Reason)`** once if that handler is provided, then **performs `Application.Close(App)`** (or equivalent) so the program must **not** call `**Close`** again for the same successful `**Run`** unless the spec explicitly documents a double-close error.
 
-If `**Run**` is never called, the program keeps today’s obligation: `**Open**` / `**Close**` pairing without `**Run**`.
+If `**Run`** is never called, the program keeps today’s obligation: `**Open**` / `**Close**` pairing without `**Run**`.
 
 ---
 
@@ -39,7 +64,7 @@ If `**Run**` is never called, the program keeps today’s obligation: `**Open**`
 
 The compiler may lower a **single** entry (for example `**Application.Run`** plus a descriptor record) or a small sequence of registration calls. Semantically there is **one** configuration object with named handler slots.
 
-**Required** for a minimal app: at least `**OnPaint`** (or the host rejects `**Run**`). Other slots are optional unless diagnostics require them.
+**Required** for a minimal app: at least `**OnPaint`** (or the host rejects `**Run`**). Other slots are optional unless diagnostics require them.
 
 Conceptual field names (logical, not final syntax):
 
@@ -58,7 +83,7 @@ Conceptual field names (logical, not final syntax):
 
 ## Types and signatures
 
-Reuse existing types from `**Std.Tui**` and `**Std.Console**` where possible: `**Application**`, `**Size**`, `**Std.Console.KeyEvent**`.
+Reuse existing types from `**Std.Tui`** and `**Std.Console`** where possible: `**Application**`, `**Size**`, `**Std.Console.KeyEvent**`.
 
 ### `ExitReason` (target)
 
@@ -104,37 +129,37 @@ procedure OnExit(App: Application; Reason: ExitReason);
 
 - **When:** Invoked **once** after the host decides to stop the loop and **before** terminal restore (`**Close`** semantics).
 - **Veto:** **Not supported** in v1: `**OnExit`** cannot cancel shutdown. It is for teardown of user state only.
-- **Ordering:** `**OnExit`** runs **after** the last `**OnPaint`** / input handler for that run; no further `**On***` run after `**OnExit**` except what the implementation documents for catastrophic failure paths.
+- **Ordering:** `**OnExit`** runs **after** the last `**OnPaint`** / input handler for that run; no further `**On*`** run after `**OnExit`** except what the implementation documents for catastrophic failure paths.
 
 ---
 
 ## Redraw and paint
 
-- **Model:** **invalidation**, not “call `**OnPaint`** every host tick”. The host sets an internal **redraw pending** flag when `**Application.RequestRedraw`** is called, when `**OnResize**` fires, when `**OnStartup**` completes (implementation may auto-request redraw once), and when the backend signals damage the host maps to a redraw. Multiple requests **coalesce** to **one** `**OnPaint`** per logical flush.
+- **Model:** **invalidation**, not “call `**OnPaint`** every host tick”. The host sets an internal **redraw pending** flag when `**Application.RequestRedraw`** is called, when `**OnResize`** fires, when `**OnStartup`** completes (implementation may auto-request redraw once), and when the backend signals damage the host maps to a redraw. Multiple requests **coalesce** to **one** `**OnPaint`** per logical flush.
 - `**OnPaint`:** Performs a **full frame** draw (entire buffer for the app). **Damage rectangles** and partial updates are **Rust-internal** optimizations later; the FP contract stays **full paint** until Phase 7 narrows it.
-- **Relation to `RedrawPending`:** In dispatch mode, user code **typically does not poll** `**RedrawPending`**; the host invokes `**OnPaint**` when a frame is due. If both APIs coexist during transition, the spec for `**RedrawPending**` in hosted mode is: host consumes the pending flag when entering `**OnPaint**` (aligned with today’s “consume once” semantics).
+- **Relation to `RedrawPending`:** In dispatch mode, user code **typically does not poll** `**RedrawPending`**; the host invokes `**OnPaint`** when a frame is due. If both APIs coexist during transition, the spec for `**RedrawPending**` in hosted mode is: host consumes the pending flag when entering `**OnPaint**` (aligned with today’s “consume once” semantics).
 
 ---
 
 ## `OnIdle`
 
 - Optional. If the idle interval is **greater than zero**, the host may call `**OnIdle(App)`** when no input was available for that interval and no higher-priority work ran. Used for caret blink, status clocks, etc.
-- `**OnIdle**` must not block on input (same **reentrancy** rules as `[docs/future/tui-application-framework.md](../../future/tui-application-framework.md)` Phase 0).
+- `**OnIdle`** must not block on input (same **reentrancy** rules as `[docs/future/tui-application-framework.md](../../future/tui-application-framework.md)` Phase 0).
 
 ---
 
 ## Threading and reentrancy
 
-Same as Phase 0 of the framework plan: `**On*`** only on the **main VM thread**; no `**ReadEvent`** / `**Run**` from inside handlers; `**RequestRedraw**` and non-blocking queries are allowed. Spawned tasks must not touch TUI/console state without a future synchronized API.
+Same as Phase 0 of the framework plan: `**On*`** only on the **main VM thread**; no `**ReadEvent`** / `**Run`** from inside handlers; `**RequestRedraw`** and non-blocking queries are allowed. Spawned tasks must not touch TUI/console state without a future synchronized API.
 
 ---
 
 ## Optional and best-effort events
 
-Handlers that depend on terminal or OS capability (**key release**, **paste**, **focus**) are specified per `**HostEvent`** mapping in implementation docs; if a backend cannot emit an event, the corresponding `**On***` (when added in later phases) is **not called** or is documented as a no-op. Phase 6 of the framework plan tracks `**OnKeyReleased`** / `**OnKeyDown**` honesty.
+Handlers that depend on terminal or OS capability (**key release**, **paste**, **focus**) are specified per `**HostEvent`** mapping in implementation docs; if a backend cannot emit an event, the corresponding `**On`*** (when added in later phases) is **not called** or is documented as a no-op. Phase 6 of the framework plan tracks `**OnKeyReleased`** / `**OnKeyDown`** honesty.
 
 ---
 
 ## Single entry point rule
 
-There must be **at most one** active `**Application.Run`** (or equivalent hosted loop) per process for a given session handle; nested `**Run**` is **forbidden** until a later spec defines modal nesting.
+There must be **at most one** active `**Application.Run`** (or equivalent hosted loop) per process for a given session handle; nested `**Run`** is **forbidden** until a later spec defines modal nesting.

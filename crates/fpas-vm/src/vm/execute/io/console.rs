@@ -1,7 +1,7 @@
 use crate::vm::Worker;
-use crate::vm::diagnostics::VmError;
+use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError, internal_error, runtime_error};
 use fpas_bytecode::{Intrinsic, SourceLocation, Value};
-use fpas_std::{Console, KeyInput, TextInput};
+use fpas_std::{Console, ConsoleKeyEvent, KeyInput, TextInput};
 
 impl Worker {
     pub(in crate::vm::execute) fn with_console<R>(&self, f: impl FnOnce(&mut Console) -> R) -> R {
@@ -285,5 +285,82 @@ impl Worker {
                 ("meta".into(), Value::Boolean(meta)),
             ],
         }
+    }
+}
+
+impl Worker {
+    /// Pop a `Std.Console.KeyEvent` record (used by `Std.Tui` host dispatch).
+    pub(in crate::vm::execute::io) fn pop_console_key_event(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<ConsoleKeyEvent, VmError> {
+        const KEY: &str = "Std.Console.KeyEvent";
+        match self.pop(line)? {
+            Value::Record { type_name, fields } if type_name == KEY => {
+                Self::console_key_event_from_fields(&fields, line)
+            }
+            other => Err(runtime_error(
+                TYPE_MISMATCH_CODE,
+                format!("Expected {KEY}, got {}", other.type_name()),
+                "Pass a `Std.Console.KeyEvent` value.",
+                line,
+            )),
+        }
+    }
+
+    fn console_key_event_from_fields(
+        fields: &[(String, Value)],
+        line: SourceLocation,
+    ) -> Result<ConsoleKeyEvent, VmError> {
+        let field = |name: &str| -> Result<&Value, VmError> {
+            fields
+                .iter()
+                .find(|(k, _)| k == name)
+                .map(|(_, v)| v)
+                .ok_or_else(|| {
+                    internal_error(
+                        format!("Std.Console.KeyEvent missing field `{name}`"),
+                        "This indicates a compiler/runtime mismatch.",
+                        line,
+                    )
+                })
+        };
+
+        let kind = match field("kind")? {
+            Value::Integer(i) if *i >= 0 => *i as usize,
+            _ => {
+                return Err(internal_error(
+                    "Std.Console.KeyEvent.kind must be a non-negative integer",
+                    "This indicates a compiler/runtime mismatch.",
+                    line,
+                ));
+            }
+        };
+        let ch = match field("ch")? {
+            Value::Char(c) => *c,
+            _ => {
+                return Err(internal_error(
+                    "Std.Console.KeyEvent.ch must be a character",
+                    "This indicates a compiler/runtime mismatch.",
+                    line,
+                ));
+            }
+        };
+        let read_bool = |name: &str| -> Result<bool, VmError> {
+            match field(name)? {
+                Value::Boolean(b) => Ok(*b),
+                _ => Err(internal_error(
+                    format!("Std.Console.KeyEvent.{name} must be a boolean"),
+                    "This indicates a compiler/runtime mismatch.",
+                    line,
+                )),
+            }
+        };
+        let shift = read_bool("shift")?;
+        let ctrl = read_bool("ctrl")?;
+        let alt = read_bool("alt")?;
+        let meta = read_bool("meta")?;
+
+        Ok(ConsoleKeyEvent::new(kind, ch, shift, ctrl, alt, meta))
     }
 }

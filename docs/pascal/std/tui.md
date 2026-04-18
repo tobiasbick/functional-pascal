@@ -30,7 +30,7 @@ After `uses Std.Tui;` you can refer to the unit in either form:
 
 `Std.Tui` exports nested names such as `Application.Open`, `Application.ReadEvent`, and `EventKind.Resize`. These short forms are available only when `Std.Tui` appears in `uses`.
 
-`Std.Tui` builds on `[Std.Console](console.md)`: the `key` field of `Std.Tui.TuiEvent` has type `**Std.Console.KeyEvent`** (and its `kind` field is `**Std.Console.KeyKind**`). The `**Tui**` prefix avoids clashing with `**Std.Console.Event**`. Import `**Std.Console**` alongside `**Std.Tui**` when you need short names such as `KeyKind` or `WriteLn`, or use fully qualified `Std.Console.*` names.
+`Std.Tui` builds on `[Std.Console](console.md)`: the `key` field of `Std.Tui.TuiEvent` has type `**Std.Console.KeyEvent`** (and its `kind` field is `**Std.Console.KeyKind`**). The `**Tui**` prefix avoids clashing with `**Std.Console.Event**`. Import `**Std.Console**` alongside `**Std.Tui**` when you need short names such as `KeyKind` or `WriteLn`, or use fully qualified `Std.Console.*` names.
 
 ---
 
@@ -77,7 +77,7 @@ Everything below requires `uses Std.Tui;`. Key types for `TuiEvent.key` come fro
 | function     | `Application.PollEvent(App: Application): Option of TuiEvent`                               | non-blocking event check                                           |
 | procedure    | `Application.RequestRedraw(App: Application)`                                               | mark the application as needing redraw                             |
 | function     | `Application.RedrawPending(App: Application): boolean`                                      | query redraw state                                                 |
-| enum members | `Std.Console.KeyKind.*` (short `KeyKind.*` with `uses Std.Console`)                         | same as `[Std.Console](console.md)`                                |
+| enum members | `Std.Console.KeyKind.`* (short `KeyKind.*` with `uses Std.Console`)                         | same as `[Std.Console](console.md)`                                |
 | enum members | `EventKind.Key`, `EventKind.Resize`                                                         | TUI event kinds                                                    |
 
 
@@ -193,6 +193,8 @@ Mark the application as needing a redraw.
 ### `function Application.RedrawPending(App: Application): boolean`
 
 Return `true` when the application should render a new frame.
+
+**Runtime (Rust only):** `TuiSession::is_redraw_pending` in `crates/fpas-std` peeks the same flag without consuming it; used by the VM host when servicing `TuiHostDispatchRedraw` and the bounded `TuiHostRunLoop` path (see `docs/pascal/std/tui-app.md`). Not exposed as a Pascal `Std.Tui` call yet.
 
 ---
 

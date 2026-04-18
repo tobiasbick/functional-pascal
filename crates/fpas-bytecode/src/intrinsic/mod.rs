@@ -399,6 +399,53 @@ pub enum Intrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui.md`
     TuiApplicationRedrawPending = 254,
+
+    /// `Std.Tui` host poll: next event via `fpas_std::TuiHost` (resize coalescing). Returns `Option<Std.Tui.TuiEvent>`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md` (from the repository root)
+    TuiHostPollNext = 255,
+
+    /// Register `function (Application, Std.Console.KeyEvent): boolean` for host key dispatch.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostRegisterOnKeyPressed = 256,
+
+    /// Invoke the registered key handler; stack: `Application`, `Std.Console.KeyEvent` (key on top).
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostInvokeOnKeyPressed = 257,
+
+    /// Register `procedure (Application, Std.Tui.Size)` for host resize dispatch.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostRegisterOnResize = 258,
+
+    /// Poll the session up to `max_spins` times, coalesce through `TuiHost`, dispatch at most one
+    /// `HostEvent` to registered handlers. Stack: `Application`, `max_spins` (top). Pushes `integer`
+    /// tag: `0` none, `1` key dispatched, `2` resize dispatched, `3` key without handler, `4` resize without handler.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostProcessNext = 259,
+
+    /// Register `procedure (Application)` for host paint (`OnPaint`).
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostRegisterOnPaint = 260,
+
+    /// If redraw is pending, consume it and invoke `OnPaint` when registered; otherwise no-op.
+    /// Stack: `Application`. Pushes `integer`: `0` no redraw pending, `5` paint ran, `6` redraw
+    /// pending but no handler (flag cleared).
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostDispatchRedraw = 261,
+
+    /// Bounded host main loop: each iteration runs redraw dispatch then processes at most one input
+    /// event (same work as `TuiHostDispatchRedraw` + `TuiHostProcessNext`). Stops early when both
+    /// steps are idle (`0`). Stack: `Application`, `max_iterations` (`integer`, top, clamped to 1_000_000).
+    /// Pushes `()`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostRunLoop = 262,
 }
 
 impl From<Intrinsic> for u16 {

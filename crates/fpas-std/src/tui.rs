@@ -221,6 +221,19 @@ impl TuiSession {
         Ok(pending)
     }
 
+    /// Returns whether a redraw was requested and **does not** clear the flag (peek).
+    ///
+    /// Used by the VM host when deciding whether to run `OnPaint` without consuming the
+    /// pending state when no paint handler is registered.
+    pub fn is_redraw_pending(&self, location: SourceLocation) -> Result<bool, StdError> {
+        self.ensure_open(
+            "Application.IsRedrawPending(App) requires an open Std.Tui application session.",
+            "Open the application before querying redraw state.",
+            location,
+        )?;
+        Ok(self.redraw_pending)
+    }
+
     fn ensure_open(
         &self,
         message: &'static str,
@@ -308,6 +321,39 @@ mod tests {
                 .contains("cannot open a second Std.Tui session"),
             "unexpected error message: {}",
             error.message
+        );
+    }
+
+    #[test]
+    fn tui_session_is_redraw_pending_peeks_without_clearing() {
+        let mut session = TuiSession::default();
+        let mut console = Console::new();
+        let mut key_input = KeyInput::new();
+
+        session
+            .open(&mut console, &mut key_input, test_location())
+            .expect("open");
+        session
+            .request_redraw(test_location())
+            .expect("request redraw");
+
+        assert!(
+            session
+                .is_redraw_pending(test_location())
+                .expect("peek redraw")
+        );
+        assert!(
+            session
+                .is_redraw_pending(test_location())
+                .expect("peek again")
+        );
+
+        let taken = session.take_redraw_pending(test_location()).expect("take");
+        assert!(taken);
+        assert!(
+            !session
+                .is_redraw_pending(test_location())
+                .expect("peek after take")
         );
     }
 

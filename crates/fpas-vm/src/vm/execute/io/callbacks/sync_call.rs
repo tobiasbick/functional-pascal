@@ -12,7 +12,7 @@ impl Worker {
     /// Uses [`Worker::exec_one`] to step through instructions until the
     /// injected call frame returns, sharing the same dispatch logic as the
     /// main `run()` loop.
-    pub(super) fn call_function_sync(
+    pub(in crate::vm::execute) fn call_function_sync(
         &mut self,
         func: &Value,
         args: &[Value],

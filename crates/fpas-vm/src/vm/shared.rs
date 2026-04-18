@@ -10,12 +10,16 @@
 //! [`RwLock`] on `globals` is separate; avoid holding `globals` while waiting on `task_available`.
 //! Pool workers follow [`super::Worker::pool_loop`]: take `task_queue`, then wait on
 //! `task_available` while holding that guard (standard `Condvar` pattern).
+//! `TaskWait` / `WaitAll` must not use that same wait for **result** readiness: notifications from
+//! [`Self::store_task_result`] are paired with [`Self::task_results_available`] while holding
+//! [`Self::task_results`] so wakeups cannot be missed between a poll and a block.
 
 use fpas_bytecode::{Chunk, Value};
-use fpas_std::{Console, KeyInput, TextInput, TuiSession};
+use fpas_std::{Console, KeyInput, TextInput, TuiHost, TuiSession};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Condvar, Mutex, RwLock};
+#[cfg(test)]
 use std::time::Duration;
 
 pub(crate) enum TaskResultPoll {
@@ -29,9 +33,29 @@ pub(crate) enum TaskResultState {
     Consumed,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub(crate) struct TuiState {
     pub session: TuiSession,
+    /// Resize coalescing and future hosted-loop pump (`docs/pascal/std/tui-app.md`).
+    pub host: TuiHost,
+    /// `OnKeyPressed`-style handler: `function (Application, KeyEvent): boolean`.
+    pub on_key_pressed: Option<Value>,
+    /// `OnResize`-style handler: `procedure (Application, Size)` (two arguments).
+    pub on_resize: Option<Value>,
+    /// `OnPaint`-style handler: `procedure (Application)` (one argument).
+    pub on_paint: Option<Value>,
+}
+
+impl Default for TuiState {
+    fn default() -> Self {
+        Self {
+            session: TuiSession::default(),
+            host: TuiHost::new(),
+            on_key_pressed: None,
+            on_resize: None,
+            on_paint: None,
+        }
+    }
 }
 
 /// Shared state for the parallel VM.
@@ -52,6 +76,9 @@ pub(crate) struct SharedState {
 
     /// Completed task states for tasks whose results can still be observed.
     pub task_results: Mutex<HashMap<u64, TaskResultState>>,
+    /// Woken when [`Self::task_results`] gains or updates an entry (for example after
+    /// [`Self::store_task_result`]). Always wait while holding the [`Self::task_results`] mutex.
+    pub task_results_available: Condvar,
     /// Next task id (monotonically increasing; 0 = main program).
     pub next_task_id: AtomicU64,
 
@@ -111,6 +138,8 @@ impl SharedState {
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .insert(id, TaskResultState::Available(value));
+        self.task_results_available.notify_all();
+        // Legacy: tests and pool code may wait on `task_available` while holding `task_queue`.
         self.task_available.notify_all();
     }
 
@@ -147,6 +176,7 @@ impl SharedState {
     pub(crate) fn request_shutdown(&self) {
         self.shutdown.store(true, Ordering::Release);
         self.task_available.notify_all();
+        self.task_results_available.notify_all();
     }
 
     /// Signal global shutdown **and** request in-flight spawned tasks to stop before the next
@@ -161,9 +191,10 @@ impl SharedState {
     /// `timeout`: `None` waits until [`Condvar::wait`] returns; `Some(d)` uses [`Condvar::wait_timeout`].
     /// A zero duration returns immediately without blocking.
     ///
-    /// Used when cooperative yield cannot switch tasks (for example the main thread with an empty
-    /// ready queue) so `Wait` / `WaitAll` can block without hot-spinning. Callers must re-check
-    /// their condition after wakeup (spurious wakeups are possible).
+    /// Used for **ready-queue** progress (pool workers, enqueue tests). `TaskWait` uses
+    /// [`Self::wait_until_task_result_ready`] / [`Self::wait_until_all_tasks_recorded`] instead so
+    /// result notifications cannot be lost between a poll and a sleep.
+    #[cfg(test)]
     pub(crate) fn wait_for_task_progress(&self, timeout: Option<Duration>) {
         let queue = self.task_queue.lock().unwrap_or_else(|e| e.into_inner());
         match timeout {
@@ -180,6 +211,43 @@ impl SharedState {
                     .wait_timeout(queue, d)
                     .unwrap_or_else(|e| e.into_inner());
             }
+        }
+    }
+
+    /// Block until `task_id` has a completion record in [`Self::task_results`] or shutdown.
+    ///
+    /// Must be paired with [`Self::store_task_result`], which notifies [`Self::task_results_available`].
+    pub(crate) fn wait_until_task_result_ready(&self, task_id: u64) {
+        let mut guard = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
+        loop {
+            match guard.get(&task_id) {
+                Some(TaskResultState::Available(_)) | Some(TaskResultState::Consumed) => return,
+                None => {}
+            }
+            if self.is_shutdown() {
+                return;
+            }
+            guard = self
+                .task_results_available
+                .wait(guard)
+                .unwrap_or_else(|e| e.into_inner());
+        }
+    }
+
+    /// Block until every `task_id` has an entry in [`Self::task_results`] (or shutdown).
+    pub(crate) fn wait_until_all_tasks_recorded(&self, task_ids: &[u64]) {
+        let mut guard = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
+        loop {
+            let all = task_ids
+                .iter()
+                .all(|id| guard.contains_key(id));
+            if all || self.is_shutdown() {
+                return;
+            }
+            guard = self
+                .task_results_available
+                .wait(guard)
+                .unwrap_or_else(|e| e.into_inner());
         }
     }
 

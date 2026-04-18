@@ -1,6 +1,6 @@
 //! Retained spawn: wait for child return value and multi-argument calls.
 //!
-//! **Documentation:** `docs/future/parallel-vm.md` (Phase 6), `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/rust/parallel-vm.md` (Phase 6), `docs/pascal/08-concurrency.md`
 
 use fpas_bytecode::{Intrinsic, Op, Value};
 

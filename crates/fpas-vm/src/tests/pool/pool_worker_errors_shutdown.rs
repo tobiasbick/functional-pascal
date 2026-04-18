@@ -1,6 +1,6 @@
 //! Pool loop failures (bad IP, `Panic`), clean exit when shutdown is already set.
 //!
-//! **Documentation:** `docs/future/parallel-vm.md` (Phase 5 checklist), `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/rust/parallel-vm.md` (Phase 5 checklist), `docs/pascal/08-concurrency.md`
 
 use crate::vm::{TaskState, Worker};
 use fpas_bytecode::{Chunk, Op, Value};

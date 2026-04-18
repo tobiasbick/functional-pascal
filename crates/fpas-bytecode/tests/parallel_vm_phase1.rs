@@ -1,6 +1,6 @@
-//! Phase 1 from `docs/future/parallel-vm.md`: spawn opcodes and static `Chunk::uses_spawn_tasks` scan.
+//! Phase 1 from `docs/rust/parallel-vm.md`: spawn opcodes and static `Chunk::uses_spawn_tasks` scan.
 //!
-//! **Documentation:** `docs/future/parallel-vm.md` (Phase 1), `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/rust/parallel-vm.md` (Phase 1), `docs/pascal/08-concurrency.md`
 
 use fpas_bytecode::{Chunk, Op, SourceLocation, Value};
 

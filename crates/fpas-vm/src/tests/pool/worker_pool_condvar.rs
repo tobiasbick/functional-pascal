@@ -1,6 +1,6 @@
 //! Shutdown wakes threads blocked on the task queue condvar.
 //!
-//! **Documentation:** `docs/future/parallel-vm.md` (Phase 4 checklist), `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/rust/parallel-vm.md` (Phase 4 checklist), `docs/pascal/08-concurrency.md`
 
 use fpas_bytecode::{Chunk, Op};
 use std::sync::Arc;

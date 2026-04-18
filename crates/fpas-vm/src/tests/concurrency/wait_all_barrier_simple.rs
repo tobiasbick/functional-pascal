@@ -1,6 +1,6 @@
 //! Empty `WaitAll` and two-task barrier with per-task `Wait` + print.
 //!
-//! **Documentation:** `docs/future/parallel-vm.md` (Phase 8), `docs/pascal/std/task.md`, `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/rust/parallel-vm.md` (Phase 8), `docs/pascal/std/task.md`, `docs/pascal/08-concurrency.md`
 
 use crate::Vm;
 use fpas_bytecode::{Chunk, Intrinsic, Op, Value};

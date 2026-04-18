@@ -1,6 +1,6 @@
 //! Pool worker wakes on `enqueue_task` and drains multiple pre-queued tasks.
 //!
-//! **Documentation:** `docs/future/parallel-vm.md` (Phase 5 checklist), `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/rust/parallel-vm.md` (Phase 5 checklist), `docs/pascal/08-concurrency.md`
 
 use crate::vm::{TaskState, Worker};
 use fpas_bytecode::Value;

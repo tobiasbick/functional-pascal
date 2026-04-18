@@ -1,6 +1,6 @@
 //! Panic paths: detached child after main halts, main panic with and without worker pool.
 //!
-//! **Documentation:** `docs/future/parallel-vm.md` (Phase 9), `docs/pascal/08-concurrency.md`,
+//! **Documentation:** `docs/rust/parallel-vm.md` (Phase 9), `docs/pascal/08-concurrency.md`,
 //! `docs/pascal/std/task.md`
 
 use crate::Vm;

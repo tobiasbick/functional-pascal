@@ -150,7 +150,7 @@ impl Chunk {
     /// The scan is purely static over [`Op::SpawnTask`] / [`Op::SpawnDetachedTask`] in `code`;
     /// [`Op::Yield`] and other opcodes do not affect the result.
     ///
-    /// **Documentation:** `docs/future/parallel-vm.md` (Phase 1), `docs/pascal/08-concurrency.md`
+    /// **Documentation:** `docs/rust/parallel-vm.md` (Phase 1), `docs/pascal/08-concurrency.md`
     #[must_use]
     pub fn uses_spawn_tasks(&self) -> bool {
         self.code

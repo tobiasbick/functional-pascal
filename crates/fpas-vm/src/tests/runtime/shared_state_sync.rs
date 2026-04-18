@@ -1,6 +1,6 @@
 //! Shutdown flag and [`SharedState::wait_for_task_progress`](crate::vm::SharedState::wait_for_task_progress).
 //!
-//! **Documentation:** `docs/future/parallel-vm.md`
+//! **Documentation:** `docs/rust/parallel-vm.md`
 
 use fpas_bytecode::Value;
 use std::sync::Arc;

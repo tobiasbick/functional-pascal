@@ -210,16 +210,16 @@ pub enum Op {
     // ── Concurrency (stack VM task surface) ─────────────────
     /// Spawn a new task: pops function value + `arg_count` args, pushes `Value::Task(id)`.
     ///
-    /// **Documentation:** `docs/future/parallel-vm.md` (Phase 1), `docs/pascal/08-concurrency.md`
+    /// **Documentation:** `docs/rust/parallel-vm.md` (Phase 1), `docs/pascal/08-concurrency.md`
     SpawnTask(u8),
     /// Spawn a detached task: pops function value + `arg_count` args and discards its result.
     ///
     /// Used for statement-form `go` where no task handle is retained.
     ///
-    /// **Documentation:** `docs/future/parallel-vm.md` (Phase 1), `docs/pascal/08-concurrency.md`
+    /// **Documentation:** `docs/rust/parallel-vm.md` (Phase 1), `docs/pascal/08-concurrency.md`
     SpawnDetachedTask(u8),
     /// Yield execution to the scheduler (cooperative switch).
     ///
-    /// **Documentation:** `docs/future/parallel-vm.md` (Phase 1), `docs/pascal/08-concurrency.md`
+    /// **Documentation:** `docs/rust/parallel-vm.md` (Phase 1), `docs/pascal/08-concurrency.md`
     Yield,
 }

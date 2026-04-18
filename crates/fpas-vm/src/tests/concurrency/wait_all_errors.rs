@@ -1,6 +1,6 @@
 //! `WaitAll` validation and shutdown when a spawned child panics.
 //!
-//! **Documentation:** `docs/future/parallel-vm.md` (Phase 8), `docs/pascal/std/task.md`, `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/rust/parallel-vm.md` (Phase 8), `docs/pascal/std/task.md`, `docs/pascal/08-concurrency.md`
 
 use fpas_bytecode::{Chunk, Intrinsic, Op, Value};
 use fpas_diagnostics::codes::{RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_VM_SHUTDOWN};

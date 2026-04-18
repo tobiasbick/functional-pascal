@@ -1,6 +1,6 @@
 //! Spawn operand validation, missing definitions, arity, internal invariants.
 //!
-//! **Documentation:** `docs/future/parallel-vm.md` (Phase 6), `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/rust/parallel-vm.md` (Phase 6), `docs/pascal/08-concurrency.md`
 
 use fpas_bytecode::{Chunk, Op, Value};
 use fpas_diagnostics::codes::{

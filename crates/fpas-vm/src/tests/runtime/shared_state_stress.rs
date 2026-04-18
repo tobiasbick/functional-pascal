@@ -1,6 +1,6 @@
 //! Pool worker smoke tests, concurrent enqueue stress, console mutex under threads.
 //!
-//! **Documentation:** `docs/future/parallel-vm.md`
+//! **Documentation:** `docs/rust/parallel-vm.md`
 
 use crate::vm::Worker;
 use fpas_bytecode::Value;

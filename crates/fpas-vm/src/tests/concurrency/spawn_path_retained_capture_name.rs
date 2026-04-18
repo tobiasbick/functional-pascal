@@ -1,6 +1,6 @@
 //! Retained spawn: closure captures on child stack and canonical function-name lookup.
 //!
-//! **Documentation:** `docs/future/parallel-vm.md` (Phase 6), `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/rust/parallel-vm.md` (Phase 6), `docs/pascal/08-concurrency.md`
 
 use fpas_bytecode::{Chunk, Intrinsic, Op, Value};
 

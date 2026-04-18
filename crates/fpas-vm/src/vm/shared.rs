@@ -1,6 +1,6 @@
 //! Shared state accessible by all worker threads.
 //!
-//! **Documentation:** `docs/future/parallel-vm.md` (Phase 3), `docs/pascal/08-concurrency.md`.
+//! **Documentation:** `docs/rust/parallel-vm.md` (Phase 3), `docs/pascal/08-concurrency.md`.
 //!
 //! ## Lock ordering
 //!

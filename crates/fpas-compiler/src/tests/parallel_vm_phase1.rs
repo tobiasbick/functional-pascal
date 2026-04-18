@@ -1,6 +1,6 @@
-//! Phase 1 from `docs/future/parallel-vm.md`: emitted spawn opcodes and `Chunk::uses_spawn_tasks`.
+//! Phase 1 from `docs/rust/parallel-vm.md`: emitted spawn opcodes and `Chunk::uses_spawn_tasks`.
 //!
-//! **Documentation:** `docs/future/parallel-vm.md` (Phase 1), `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/rust/parallel-vm.md` (Phase 1), `docs/pascal/08-concurrency.md`
 
 use super::compile_ok;
 use fpas_bytecode::Op;

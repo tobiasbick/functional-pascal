@@ -1,6 +1,6 @@
 //! Per-thread worker that executes bytecode for one task at a time.
 //!
-//! **Documentation:** `docs/future/parallel-vm.md`, `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/rust/parallel-vm.md`, `docs/pascal/08-concurrency.md`
 
 use super::diagnostics::{STACK_OVERFLOW_CODE, VmError};
 use super::shared::{SharedState, TaskState};
@@ -127,7 +127,7 @@ impl Worker {
     ///
     /// Returns when shutdown is signalled and no tasks remain.
     ///
-    /// **Documentation:** `docs/future/parallel-vm.md` (Phases 5 and 9).
+    /// **Documentation:** `docs/rust/parallel-vm.md` (Phases 5 and 9).
     pub fn pool_loop(&mut self) -> Result<(), VmError> {
         loop {
             // Fast path without locking: matches the common case when work is already queued.

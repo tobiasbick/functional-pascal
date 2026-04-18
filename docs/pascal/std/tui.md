@@ -13,7 +13,7 @@ begin
 end.
 ```
 
-**Maintenance (implementers only):** keep this file aligned with [`loaded/tui.rs`](../../../crates/fpas-sema/src/std_registry/loaded/tui.rs) and the standard-unit registry under [`crates/fpas-std/src/std_units/`](../../../crates/fpas-std/src/std_units/mod.rs).
+**Maintenance (implementers only):** keep this file aligned with `[loaded/tui.rs](../../../crates/fpas-sema/src/std_registry/loaded/tui.rs)` and the standard-unit registry under `[crates/fpas-std/src/std_units/](../../../crates/fpas-std/src/std_units/mod.rs)`.
 
 ---
 
@@ -21,14 +21,16 @@ end.
 
 After `uses Std.Tui;` you can refer to the unit in either form:
 
-| Style | Example |
-|--------|---------|
+
+| Style               | Example                      |
+| ------------------- | ---------------------------- |
 | **Fully qualified** | `Std.Tui.Application.Open()` |
-| **Short** | `Application.Open()` |
+| **Short**           | `Application.Open()`         |
+
 
 `Std.Tui` exports nested names such as `Application.Open`, `Application.ReadEvent`, and `EventKind.Resize`. These short forms are available only when `Std.Tui` appears in `uses`.
 
-`Std.Tui` builds on [`Std.Console`](console.md): the `key` field of `Std.Tui.TuiEvent` has type **`Std.Console.KeyEvent`** (and its `kind` field is **`Std.Console.KeyKind`**). The **`Tui`** prefix avoids clashing with **`Std.Console.Event`**. Import **`Std.Console`** alongside **`Std.Tui`** when you need short names such as `KeyKind` or `WriteLn`, or use fully qualified `Std.Console.*` names.
+`Std.Tui` builds on `[Std.Console](console.md)`: the `key` field of `Std.Tui.TuiEvent` has type `**Std.Console.KeyEvent`** (and its `kind` field is `**Std.Console.KeyKind**`). The `**Tui**` prefix avoids clashing with `**Std.Console.Event**`. Import `**Std.Console**` alongside `**Std.Tui**` when you need short names such as `KeyKind` or `WriteLn`, or use fully qualified `Std.Console.*` names.
 
 ---
 
@@ -56,26 +58,28 @@ The broader Rust runtime design for `Std.Tui` is still intentionally minimal and
 
 ## Quick reference
 
-Everything below requires `uses Std.Tui;`. Key types for `TuiEvent.key` come from **`Std.Console`** (add `uses Std.Console` for short names like `KeyKind`).
+Everything below requires `uses Std.Tui;`. Key types for `TuiEvent.key` come from `**Std.Console`** (add `uses Std.Console` for short names like `KeyKind`).
 
-| Kind | Name | Notes |
-|------|------|--------|
-| type | `Application` | opaque application/session handle |
-| type | `Size` | record with `width` and `height` |
-| type | `EventKind` | enum with `Key` and `Resize` |
-| type | `TuiEvent` | record for one application event (`key` is `Std.Console.KeyEvent`) |
-| type | `Std.Console.KeyKind` | enum for logical keys (reused; not defined under `Std.Tui`) |
-| type | `Std.Console.KeyEvent` | record for one key input (reused; not defined under `Std.Tui`) |
-| function | `Application.Open(): Application` | create/open an application session |
-| procedure | `Application.Close(App: Application)` | close the application session |
-| function | `Application.Size(App: Application): Size` | current terminal size |
-| function | `Application.ReadEvent(App: Application): TuiEvent` | blocking event read |
-| function | `Application.ReadEventTimeout(App: Application; Milliseconds: integer): Option of TuiEvent` | wait up to N ms |
-| function | `Application.PollEvent(App: Application): Option of TuiEvent` | non-blocking event check |
-| procedure | `Application.RequestRedraw(App: Application)` | mark the application as needing redraw |
-| function | `Application.RedrawPending(App: Application): boolean` | query redraw state |
-| enum members | `Std.Console.KeyKind.*` (short `KeyKind.*` with `uses Std.Console`) | same as [`Std.Console`](console.md) |
-| enum members | `EventKind.Key`, `EventKind.Resize` | TUI event kinds |
+
+| Kind         | Name                                                                                        | Notes                                                              |
+| ------------ | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| type         | `Application`                                                                               | opaque application/session handle                                  |
+| type         | `Size`                                                                                      | record with `width` and `height`                                   |
+| type         | `EventKind`                                                                                 | enum with `Key` and `Resize`                                       |
+| type         | `TuiEvent`                                                                                  | record for one application event (`key` is `Std.Console.KeyEvent`) |
+| type         | `Std.Console.KeyKind`                                                                       | enum for logical keys (reused; not defined under `Std.Tui`)        |
+| type         | `Std.Console.KeyEvent`                                                                      | record for one key input (reused; not defined under `Std.Tui`)     |
+| function     | `Application.Open(): Application`                                                           | create/open an application session                                 |
+| procedure    | `Application.Close(App: Application)`                                                       | close the application session                                      |
+| function     | `Application.Size(App: Application): Size`                                                  | current terminal size                                              |
+| function     | `Application.ReadEvent(App: Application): TuiEvent`                                         | blocking event read                                                |
+| function     | `Application.ReadEventTimeout(App: Application; Milliseconds: integer): Option of TuiEvent` | wait up to N ms                                                    |
+| function     | `Application.PollEvent(App: Application): Option of TuiEvent`                               | non-blocking event check                                           |
+| procedure    | `Application.RequestRedraw(App: Application)`                                               | mark the application as needing redraw                             |
+| function     | `Application.RedrawPending(App: Application): boolean`                                      | query redraw state                                                 |
+| enum members | `Std.Console.KeyKind.*` (short `KeyKind.*` with `uses Std.Console`)                         | same as `[Std.Console](console.md)`                                |
+| enum members | `EventKind.Key`, `EventKind.Resize`                                                         | TUI event kinds                                                    |
+
 
 ---
 
@@ -102,16 +106,18 @@ type Size = record
 end;
 ```
 
-| Field | Type | Meaning |
-|-------|------|---------|
-| `width` | `integer` | terminal width in cells |
+
+| Field    | Type      | Meaning                  |
+| -------- | --------- | ------------------------ |
+| `width`  | `integer` | terminal width in cells  |
 | `height` | `integer` | terminal height in cells |
+
 
 ---
 
 ### Key input types (`Std.Console.KeyKind`, `Std.Console.KeyEvent`)
 
-`Std.Tui` does not define its own key types. Use **`Std.Console.KeyKind`** and **`Std.Console.KeyEvent`** for `TuiEvent.key` (see [`console.md`](console.md) — `ReadKeyEvent`, `KeyEvent`, `KeyKind`). With `uses Std.Console`, the short names **`KeyKind`** and **`KeyEvent`** refer to those console types.
+`Std.Tui` does not define its own key types. Use `**Std.Console.KeyKind**` and `**Std.Console.KeyEvent**` for `TuiEvent.key` (see `[console.md](console.md)` — `ReadKeyEvent`, `KeyEvent`, `KeyKind`). With `uses Std.Console`, the short names `**KeyKind**` and `**KeyEvent**` refer to those console types.
 
 ---
 
@@ -140,11 +146,13 @@ type TuiEvent = record
 end;
 ```
 
-| Field | Type | Meaning |
-|-------|------|---------|
-| `kind` | `EventKind` | which event payload is active |
-| `key` | `Std.Console.KeyEvent` | populated for `EventKind.Key` |
-| `size` | `Size` | populated for `EventKind.Resize` |
+
+| Field  | Type                   | Meaning                          |
+| ------ | ---------------------- | -------------------------------- |
+| `kind` | `EventKind`            | which event payload is active    |
+| `key`  | `Std.Console.KeyEvent` | populated for `EventKind.Key`    |
+| `size` | `Size`                 | populated for `EventKind.Resize` |
+
 
 ---
 
@@ -240,4 +248,4 @@ begin
 end.
 ```
 
-See also: [`examples/pascal/tui/minimal_application.fpas`](../../../examples/pascal/tui/minimal_application.fpas)
+See also: `[examples/pascal/tui/minimal_application.fpas](../../../examples/pascal/tui/minimal_application.fpas)`

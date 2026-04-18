@@ -9,6 +9,7 @@ All units are opt-in through `uses`.
 
 - `Std.Console` - [console.md](console.md) (text I/O, CRT-style screen control, RGB/256 text colors, `ReadKey` / `KeyPressed`, `ReadKeyEvent`, `ReadEvent`, `KeyKind`, `KeyEvent`)
 - `Std.Tui` - [tui.md](tui.md) (terminal application handle, size, key/resize events, redraw coordination; key payloads use `Std.Console.KeyKind` / `Std.Console.KeyEvent`)
+- `Std.Tui` dispatch mode (target) - [tui-app.md](tui-app.md) (`Application.Run`, `On*` handlers — not implemented yet; see [tui-application-framework.md](../../future/tui-application-framework.md))
 - `Std.Str` - [str.md](str.md)
 - `Std.Conv` - [conv.md](conv.md)
 - `Std.Math` - [math.md](math.md)

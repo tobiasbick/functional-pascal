@@ -163,6 +163,7 @@ begin
   var Maybe: Option of TuiEvent := Application.HostPollNext(App);
   var Tag: integer := Application.HostProcessNext(App, 64);
   var Dr: integer := Application.HostDispatchRedraw(App);
+  Application.HostRequestQuit(App);
   Application.HostRunLoop(App, 8);
   Application.Close(App)
 end.",

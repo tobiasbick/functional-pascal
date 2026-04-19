@@ -16,6 +16,7 @@ fpas examples/pascal/std/dict_basics.fpas
 fpas examples/pascal/std/task_basics.fpas
 fpas examples/pascal/tui/host_dispatch_minimal.fpas
 fpas examples/pascal/tui/host_dispatch_paint.fpas
+fpas examples/pascal/tui/host_dispatch_quit.fpas
 ```
 
 ### Projects (`.fpasprj`)
@@ -68,5 +69,6 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 | `pascal/tui/minimal_application.fpas` | `Std.Tui.Application` loop; **Escape** to quit |
 | `pascal/tui/host_dispatch_minimal.fpas` | One **`HostProcessNext`** call then **`Close`** (dispatch bridge); same TUI session behavior as `minimal_application.fpas` |
 | `pascal/tui/host_dispatch_paint.fpas` | **`HostRegisterOnPaint`** + **`HostDispatchRedraw`** (one paint pass) |
+| `pascal/tui/host_dispatch_quit.fpas` | **`HostRequestQuit`** from **`OnPaint`**, then **`HostRunLoop`** (cooperative exit) |
 
 TUI APIs use types such as **`Std.Tui.TuiEvent`** and **`Std.Tui.EventKind`** (see `docs/pascal/std/tui.md`). **Host dispatch** (`Application.Host*`) is documented in `docs/pascal/std/tui-app.md`. The console’s own event type remains **`Std.Console.Event`**.

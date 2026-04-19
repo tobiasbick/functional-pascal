@@ -1,0 +1,16 @@
+{ Cooperative quit from OnPaint ends HostRunLoop early. See docs/pascal/std/tui-app.md. }
+program TuiHostDispatchQuit;
+uses Std.Tui;
+
+procedure OnPaint(App: Application);
+begin
+  Application.HostRequestQuit(App)
+end;
+
+begin
+  var App: Application := Application.Open();
+  Application.RequestRedraw(App);
+  Application.HostRegisterOnPaint(App, OnPaint);
+  Application.HostRunLoop(App, 100);
+  Application.Close(App)
+end.

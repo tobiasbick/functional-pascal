@@ -63,7 +63,7 @@ Phase 0 is **complete** for planning purposes. The subsections below are authori
 
 Phase 1 is **complete**. The canonical user-facing spec is `**[docs/pascal/std/tui-app.md](../pascal/std/tui-app.md)`** (English). Summary:
 
-- **Entry:** `**Application.Open`** then `**Application.Run(App, …)`** (blocking hosted loop). After `**Run`** completes normally, the host performs `**Application.Close`** semantics once `**OnExit`** has run (see `**tui-app.md**` lifecycle). Until Pascal lowers `**Run**`, bytecode can approximate stepping with `**TuiHostRunLoop**` (intrinsic **262**): a **bounded** loop of redraw dispatch plus `**TuiHostProcessNext`**, stopping when both are idle—not a substitute for quit signals or `**OnExit`**.
+- **Entry:** `**Application.Open`** then `**Application.Run(App, …)`** (blocking hosted loop). After `**Run`** completes normally, the host performs `**Application.Close`** semantics once `**OnExit`** has run (see `**tui-app.md**` lifecycle). Until Pascal lowers `**Run**`, bytecode can approximate stepping with `**TuiHostRunLoop**` (intrinsic **262**) plus cooperative **`**TuiHostRequestQuit**` (263)** / Pascal `**Application.HostRequestQuit`**: a **bounded** loop of redraw dispatch plus `**TuiHostProcessNext`**, stopping when both are idle **or** quit was requested—not a substitute for structured `**ExitReason**` / `**OnExit`** / automatic `**Close`**.
 - **Handlers:** `**OnStartup`** (optional), `**OnKeyPressed(App, Key): boolean`** (consumed), `**OnResize`**, `**OnPaint`** (required), `**OnIdle**` (optional), `**OnExit(App, Reason)**` with **no veto**.
 - **Redraw:** invalidation + coalescing; `**OnPaint`** is the single FP paint contract; optional `**OnIdle`** uses a configurable idle interval.
 - **Naming:** `**On*`** prefix only for dispatch callbacks; poll-style `**ReadEvent`** / `**PollEvent`** / console `**KeyPressed`** are superseded for full apps when implementation lands (`[tui.md](../pascal/std/tui.md)` remains the source for the **current** poll API until Phase 5).
@@ -94,7 +94,7 @@ Original checklist (for history): ~~coalescing~~, ~~redraw integration~~, ~~fake
 
 ## Phase 3 — VM bridge: from host loop to bytecode
 
-**Status:** **Partial** — bytecode bridge and handler dispatch are **implemented**; **`Application.Host*`** is **lowered from Pascal** (see [tui-app.md](../pascal/std/tui-app.md)). **Still missing:** **`Application.Run`**, **quit / `ExitReason`**, **`OnExit`**, and **idle** as a **single** hosted lifecycle.
+**Status:** **Partial** — bytecode bridge and handler dispatch are **implemented**; **`Application.Host*`** is **lowered from Pascal** (see [tui-app.md](../pascal/std/tui-app.md)). **Cooperative quit** for the bounded host loop is **implemented** (`**TuiHostRequestQuit**` / `**Application.HostRequestQuit**`). **Still missing:** **`Application.Run`**, structured **`ExitReason`**, **`OnExit`**, and **idle** as a **single** hosted lifecycle.
 
 **Done**
 
@@ -114,7 +114,7 @@ Original checklist (for history): ~~coalescing~~, ~~redraw integration~~, ~~fake
 
 | Item                                     | State                                                                                     |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------- |
-| 1. Intrinsic set (run / register / quit) | **Partial:** **255**–**262** shipped; **quit / Run / ExitReason** outstanding.            |
+| 1. Intrinsic set (run / register / quit) | **Partial:** **255**–**263** shipped (including cooperative quit); **`Application.Run` / `ExitReason` / `OnExit`** still outstanding. |
 | 2. Where handlers live                   | **Done for VM:** chunk **constants** + `TuiState` fields; compiler may add a table later. |
 | 3. Rust → FP calling convention          | **Done** for current intrinsics (`call_function_sync`, arity checks).                     |
 | 4. Dispatch in `fpas-vm`                 | **Done** for `ProcessNext` / redraw / run-loop stepping (not full TV lifecycle).          |
@@ -126,7 +126,7 @@ Original checklist (for history): ~~coalescing~~, ~~redraw integration~~, ~~fake
 
 ## Phase 4 — Compiler and semantic analysis
 
-**Status:** **Partial.** **`Application.Host*`** symbols for the VM host intrinsics (**255**–**262**) are registered in [`loaded/tui.rs`](../../crates/fpas-sema/src/std_registry/loaded/tui.rs) and lowered in [`std_calls/tui.rs`](../../crates/fpas-compiler/src/compiler/std_calls/tui.rs); compiler integration tests cover stepping intrinsics and **`HostRegisterOnPaint` + `HostDispatchRedraw`** (see `fpas-compiler` [`std_library/tui.rs`](../../crates/fpas-compiler/src/tests/std_library/tui.rs)). Samples: [`host_dispatch_minimal.fpas`](../../examples/pascal/tui/host_dispatch_minimal.fpas), [`host_dispatch_paint.fpas`](../../examples/pascal/tui/host_dispatch_paint.fpas). See [tui-app.md](../pascal/std/tui-app.md). **Still open:** **`Application.Run`** (or equivalent), **`ExitReason`**, handler **bundle** types, and **`OnExit`** / quit as a **single** hosted lifecycle.
+**Status:** **Partial.** **`Application.Host*`** symbols for the VM host intrinsics (**255**–**263**) are registered in [`loaded/tui.rs`](../../crates/fpas-sema/src/std_registry/loaded/tui.rs) and lowered in [`std_calls/tui.rs`](../../crates/fpas-compiler/src/compiler/std_calls/tui.rs); compiler integration tests cover stepping intrinsics, **`HostRegisterOnPaint` + `HostDispatchRedraw`**, and **`HostRequestQuit` + `HostRunLoop`** (see `fpas-compiler` [`std_library/tui.rs`](../../crates/fpas-compiler/src/tests/std_library/tui.rs)). Samples: [`host_dispatch_minimal.fpas`](../../examples/pascal/tui/host_dispatch_minimal.fpas), [`host_dispatch_paint.fpas`](../../examples/pascal/tui/host_dispatch_paint.fpas), [`host_dispatch_quit.fpas`](../../examples/pascal/tui/host_dispatch_quit.fpas). See [tui-app.md](../pascal/std/tui-app.md). **Still open:** **`Application.Run`** (or equivalent), **`ExitReason`**, handler **bundle** types, and **`OnExit`** as a **single** hosted lifecycle (beyond cooperative quit on the bounded loop).
 
 1. Extend `**Std.Tui`** (or successor unit) in [`fpas-sema` registry](../../crates/fpas-sema/src/std_registry/loaded/tui.rs): new types for **options bundle** or **fluent registration** API—keep **one** story, avoid duplicate entry points.
 2. Type-check handler assignments: **procedure types** must match declared `On*` signatures exactly.

@@ -12,10 +12,12 @@ use fpas_diagnostics::codes::{
 use fpas_std::{ConsoleKeyEvent, HostEvent, TuiEvent};
 
 const TUI_APPLICATION_TYPE: &str = "Std.Tui.Application";
+const TUI_APPLICATION_HANDLERS_TYPE: &str = "Std.Tui.ApplicationHandlers";
 const TUI_SIZE_TYPE: &str = "Std.Tui.Size";
 const TUI_EVENT_TYPE: &str = "Std.Tui.TuiEvent";
 
 impl Worker {
+    /// Execute a `Std.Tui` intrinsic in the VM.
     pub(super) fn try_exec_tui_intrinsic(
         &mut self,
         intrinsic: Intrinsic,
@@ -44,6 +46,62 @@ impl Worker {
                 if !self.request_tui_host_stop_for_active_run() {
                     self.close_tui_application_state(line)?;
                 }
+            }
+            Intrinsic::TuiApplicationConfigure => {
+                let handlers = self.pop_tui_application_handlers(line)?;
+                self.pop_tui_application(line)?;
+
+                let on_paint = Self::required_record_field(&handlers, "OnPaint", line)?.clone();
+                self.validate_host_handler_function(
+                    &on_paint,
+                    1,
+                    "OnPaint",
+                    "Set `OnPaint := Handler` where `Handler` is `procedure (Application)`.",
+                    line,
+                )?;
+                let on_key_pressed = self.optional_host_handler_field(
+                    &handlers,
+                    "OnKeyPressed",
+                    2,
+                    "OnKeyPressed",
+                    "Set `OnKeyPressed := Some(Handler)` or `None`; the handler must be `function (Application, Std.Console.KeyEvent): boolean`.",
+                    line,
+                )?;
+                let on_resize = self.optional_host_handler_field(
+                    &handlers,
+                    "OnResize",
+                    2,
+                    "OnResize",
+                    "Set `OnResize := Some(Handler)` or `None`; the handler must be `procedure (Application, Std.Tui.Size)`.",
+                    line,
+                )?;
+                let idle_interval_ms = self
+                    .integer_record_field(&handlers, "OnIdleMilliseconds", line)?
+                    .max(0);
+                let on_idle = self.optional_host_handler_field(
+                    &handlers,
+                    "OnIdle",
+                    1,
+                    "OnIdle",
+                    "Set `OnIdle := Some(Handler)` or `None`; the handler must be `procedure (Application)`.",
+                    line,
+                )?;
+                let on_exit = self.optional_host_handler_field(
+                    &handlers,
+                    "OnExit",
+                    2,
+                    "OnExit",
+                    "Set `OnExit := Some(Handler)` or `None`; the handler must be `procedure (Application, Std.Tui.ExitReason)`.",
+                    line,
+                )?;
+
+                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                tui.on_paint = Some(on_paint);
+                tui.on_key_pressed = on_key_pressed;
+                tui.on_resize = on_resize;
+                tui.idle_interval_ms = idle_interval_ms;
+                tui.on_idle = on_idle;
+                tui.on_exit = on_exit;
             }
             Intrinsic::TuiApplicationRun => {
                 self.tui_application_run(line)?;
@@ -297,6 +355,95 @@ impl Worker {
             _ => Err(runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 format!("{label} expects a function value"),
+                help,
+                line,
+            )),
+        }
+    }
+
+    fn pop_tui_application_handlers(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<Vec<(String, Value)>, VmError> {
+        match self.pop(line)? {
+            Value::Record { type_name, fields } if type_name == TUI_APPLICATION_HANDLERS_TYPE => {
+                Ok(fields)
+            }
+            other => Err(runtime_error(
+                TYPE_MISMATCH_CODE,
+                format!(
+                    "Expected {TUI_APPLICATION_HANDLERS_TYPE}, got {}",
+                    other.type_name()
+                ),
+                "Pass a `Std.Tui.ApplicationHandlers` record to `Application.Configure(App, Handlers)`.",
+                line,
+            )),
+        }
+    }
+
+    fn required_record_field<'a>(
+        fields: &'a [(String, Value)],
+        field_name: &str,
+        line: SourceLocation,
+    ) -> Result<&'a Value, VmError> {
+        fields
+            .iter()
+            .find(|(name, _)| name.eq_ignore_ascii_case(field_name))
+            .map(|(_, value)| value)
+            .ok_or_else(|| {
+                runtime_error(
+                    RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                    format!(
+                        "Application.Configure(App, Handlers) is missing field `{field_name}`"
+                    ),
+                    format!(
+                        "Build `ApplicationHandlers` with `{field_name} := ...`; malformed bytecode or a broken caller skipped that field."
+                    ),
+                    line,
+                )
+            })
+    }
+
+    fn integer_record_field(
+        &self,
+        fields: &[(String, Value)],
+        field_name: &str,
+        line: SourceLocation,
+    ) -> Result<i64, VmError> {
+        match Self::required_record_field(fields, field_name, line)? {
+            Value::Integer(value) => Ok(*value),
+            other => Err(runtime_error(
+                TYPE_MISMATCH_CODE,
+                format!(
+                    "ApplicationHandlers.{field_name} must be integer, got {}",
+                    other.type_name()
+                ),
+                format!(
+                    "Set `{field_name} := <milliseconds>` with an integer value in the handler bundle."
+                ),
+                line,
+            )),
+        }
+    }
+
+    fn optional_host_handler_field(
+        &self,
+        fields: &[(String, Value)],
+        field_name: &str,
+        arity: u8,
+        label: &str,
+        help: &'static str,
+        line: SourceLocation,
+    ) -> Result<Option<Value>, VmError> {
+        match Self::required_record_field(fields, field_name, line)? {
+            Value::OptionNone => Ok(None),
+            Value::OptionSome(inner) => {
+                self.validate_host_handler_function(inner, arity, label, help, line)?;
+                Ok(Some((**inner).clone()))
+            }
+            _ => Err(runtime_error(
+                RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                format!("ApplicationHandlers.{field_name} must be `Some(handler)` or `None`"),
                 help,
                 line,
             )),

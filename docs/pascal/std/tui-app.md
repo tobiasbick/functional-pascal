@@ -1,6 +1,6 @@
 # `Std.Tui` — dispatch-mode application (target)
 
-**Status:** target specification for the Rust-hosted event loop and `On*` handlers described in `[docs/future/tui-application-framework.md](../../future/tui-application-framework.md)`. **`Application.Host*`** dispatch helpers are **registered and lowered**, and **`Application.Run(App)`** is available as the hosted loop entrypoint using previously registered handlers. `OnIdle` is available through `Application.HostRegisterOnIdle(App, Milliseconds, OnIdle)`; only the future single handler-bundle surface remains open. The poll-style API in `[tui.md](tui.md)` remains available for programs that do not use hosted dispatch.
+**Status:** target specification for the Rust-hosted event loop and `On*` handlers described in `[docs/future/tui-application-framework.md](../../future/tui-application-framework.md)`. **`Application.Host*`** dispatch helpers are **registered and lowered**, **`ApplicationHandlers`** / **`Application.Configure(App, Handlers)`** are available as the bundled registration surface, and **`Application.Run(App)`** is available as the hosted loop entrypoint. `OnIdle` remains available through both `Application.HostRegisterOnIdle(App, Milliseconds, OnIdle)` and the bundle field pair `OnIdleMilliseconds` + `OnIdle`. The poll-style API in `[tui.md](tui.md)` remains available for programs that do not use hosted dispatch.
 
 **Maintenance (implementers only):** when this mode ships, register types and routines in `[loaded/tui.rs](../../../crates/fpas-sema/src/std_registry/loaded/tui.rs)` and keep this file aligned with that registry (see root `[AGENTS.md](../../../AGENTS.md)`).
 
@@ -24,6 +24,7 @@ These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mo
 | `TuiHostRunLoop`              | `Application`, `max_iterations` (`integer`, top) | Bounded host loop: each iteration runs the same work as `TuiHostDispatchRedraw` then `TuiHostProcessNext` with a fixed inner `max_spins` of `64`. After each iteration, if `TuiHostRequestQuit` was observed, the loop stops and the quit flag is cleared. Otherwise stops when both steps would be idle (`0`). `max_iterations` is clamped to `0..=1_000_000`. Pushes `()`. |
 | `TuiHostRequestQuit`          | `Application`                                    | Sets a flag read by `TuiHostRunLoop` after each iteration. Does not push a value.                                                                                                                                                                                                 |
 | `TuiHostRegisterOnExit`       | `Application`, `function`                        | Registers `procedure (Application, ExitReason)` for a future hosted `Run` / `OnExit` path. Current bounded `HostRunLoop` does **not** invoke it yet.                                                                                                                               |
+| `TuiApplicationConfigure`     | `Application`, `ApplicationHandlers`             | Applies a bundled hosted-dispatch configuration. Replaces the current hosted handlers with the record fields from `ApplicationHandlers`; `OnPaint` is required, optional handlers use `Some(Handler)` or `None`, and `OnIdleMilliseconds <= 0` disables idle callbacks.        |
 | `TuiApplicationRun`           | `Application`                                    | Hosted loop entrypoint. Requires a previously registered `OnPaint` handler, auto-requests the first redraw, blocks until `Application.HostRequestQuit(App)` is observed **or** the host stops the active run, records `ExitReason.UserQuit` or `ExitReason.HostStop`, invokes `OnExit` when registered, and performs `Application.Close` semantics before returning. Pushes `()`. |
 
 ### Pascal names (registry + compiler)
@@ -41,11 +42,12 @@ These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mo
 | `Application.HostRunLoop(App, MaxIterations)` | `TuiHostRunLoop` |
 | `Application.HostRequestQuit(App)` | `TuiHostRequestQuit` |
 | `Application.HostRegisterOnExit(App, OnExit)` | `TuiHostRegisterOnExit` |
+| `Application.Configure(App, Handlers)` | `TuiApplicationConfigure` |
 | `Application.Run(App)` | `TuiApplicationRun` |
 
 Samples: [`examples/pascal/tui/host_dispatch_minimal.fpas`](../../../examples/pascal/tui/host_dispatch_minimal.fpas) (one `HostProcessNext` step), [`examples/pascal/tui/host_dispatch_paint.fpas`](../../../examples/pascal/tui/host_dispatch_paint.fpas) (register `OnPaint` + `HostDispatchRedraw`), [`examples/pascal/tui/host_dispatch_quit.fpas`](../../../examples/pascal/tui/host_dispatch_quit.fpas) (`HostRequestQuit` from `OnPaint` + `HostRunLoop`).
 
-**Bytecode discriminants** (authoritative enum: [`Intrinsic`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs)): **255** `TuiHostPollNext`, **256** `TuiHostRegisterOnKeyPressed`, **257** `TuiHostInvokeOnKeyPressed`, **258** `TuiHostRegisterOnResize`, **259** `TuiHostProcessNext`, **260** `TuiHostRegisterOnPaint`, **261** `TuiHostDispatchRedraw`, **262** `TuiHostRunLoop`, **263** `TuiHostRequestQuit`, **264** `TuiHostRegisterOnExit`, **265** `TuiApplicationRun`, **266** `TuiHostRegisterOnIdle`.
+**Bytecode discriminants** (authoritative enum: [`Intrinsic`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs)): **255** `TuiHostPollNext`, **256** `TuiHostRegisterOnKeyPressed`, **257** `TuiHostInvokeOnKeyPressed`, **258** `TuiHostRegisterOnResize`, **259** `TuiHostProcessNext`, **260** `TuiHostRegisterOnPaint`, **261** `TuiHostDispatchRedraw`, **262** `TuiHostRunLoop`, **263** `TuiHostRequestQuit`, **264** `TuiHostRegisterOnExit`, **265** `TuiApplicationRun`, **266** `TuiHostRegisterOnIdle`, **267** `TuiApplicationConfigure`.
 
 `Application.Close` clears registered host handlers (`OnKeyPressed`, `OnResize`, `OnPaint`, `OnIdle`, `OnExit`), resets the host pump state, and closes the session as today.
 
@@ -65,15 +67,15 @@ Dispatch-mode names use the `**On` prefix** so they do not collide with legacy n
 | Step                | Meaning                                                                                                                                                               |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Application.Open`  | Same session semantics as today: acquire terminal state (raw mode, alternate screen when applicable).                                                                 |
-| `Application.Run`   | Start the **hosted** main loop for the given `Application` handle. Register handlers first with `Application.HostRegisterOn*`; `OnPaint` is required. The loop auto-requests the first redraw and blocks until the application requests quit. |
+| `Application.Run`   | Start the **hosted** main loop for the given `Application` handle. Register handlers first with `Application.Configure(App, Handlers)` or the explicit `Application.HostRegisterOn*` helpers; `OnPaint` is required. The loop auto-requests the first redraw and blocks until the application requests quit. |
 | `Application.Close` | Release the session. After `**Application.Run`** completes successfully, the host **must** have restored the session as if `**Close`** ran (see **Lifecycle** below). |
 
-**Current Pascal surface:** `**Application.Run(App)`** is lowered to a dedicated intrinsic and uses handlers registered beforehand with `**Application.HostRegisterOn*`**. `**TuiHostRunLoop**` (**262**) remains available as the low-level bounded stepping helper for tests and explicit host experimentation.
+**Current Pascal surface:** `**Application.Configure(App, Handlers)`** lowers to a dedicated intrinsic and writes the bundled hosted handlers (`**OnPaint`** required; optional handlers use `**Some(...)`** / `**None`**). `**Application.Run(App)`** then uses whichever handlers were registered last, whether through `**Configure`** or the explicit `**Application.HostRegisterOn*`** helpers. `**TuiHostRunLoop**` (**262**) remains available as the low-level bounded stepping helper for tests and explicit host experimentation.
 
 ### Lifecycle (normative)
 
 1. User calls `**Application.Open`** → receives `**App`**.
-2. User registers handlers with `**Application.HostRegisterOn*`** (`**OnPaint`** required, others optional).
+2. User registers handlers with `**Application.Configure(App, Handlers)`** or `**Application.HostRegisterOn*`** (`**OnPaint`** required, others optional).
 3. User calls `**Application.Run(App)`**.
 4. While running, the host dispatches `**On*`** handlers on the **main VM thread** only (see `[parallel-vm.md](../../rust/parallel-vm.md)`).
 5. When the application requests quit, the host records `**ExitReason.UserQuit`**. If the active hosted session is stopped by low-level host control during `**Run`** (for example `**Application.Close(App)`** is invoked while the run is still active), the host records `**ExitReason.HostStop`** instead. In either case it invokes `**OnExit(App, Reason)`** once if that handler is provided, then **performs `Application.Close(App)`** (or equivalent) so the program must **not** call `**Close`** again for the same successful `**Run`**.
@@ -84,21 +86,40 @@ If `**Run`** is never called, the program keeps today’s obligation: `**Open**`
 
 ## Current registration model
 
-Today, Pascal registers handlers with the existing `**Application.HostRegisterOn*`** routines and then starts the hosted loop with `**Application.Run(App)`**. `**OnIdle`** is configured with `**Application.HostRegisterOnIdle(App, Milliseconds, OnIdle)`**; `**Milliseconds <= 0`** disables idle callbacks. A future bundle syntax may lower to the same runtime model, but the current shipped surface is the explicit registration API.
+Pascal can register hosted handlers in two equivalent ways before `**Application.Run(App)`**:
 
-**Required** for a minimal app: at least `**OnPaint`** (the runtime rejects `**Run`** otherwise). Other slots are optional unless diagnostics require them.
+1. **Bundle form** with `**Application.Configure(App, Handlers)`** using the shipped record type `**ApplicationHandlers`**.
+2. **Explicit form** with the `**Application.HostRegisterOn*`** routines.
 
-Conceptual field names (logical, not final syntax):
+The most recent configuration wins per slot. `**Application.Configure`** replaces the current hosted handler set with the record fields from `**ApplicationHandlers`**.
+
+**Required** for a minimal app: at least `**OnPaint`** (the runtime rejects `**Run`** otherwise). Other slots are optional.
+
+### `ApplicationHandlers`
+
+Shipped record fields:
 
 
 | Slot           | Required | Role                                                                                                                            |
 | -------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `OnStartup`    | no       | Runs once **before** the first blocking wait, after the session is open. Use for initial `**RequestRedraw`** or one-time setup. |
-| `OnKeyPressed` | no       | Key / text input.                                                                                                               |
-| `OnResize`     | no       | Terminal size changed (coalesced by the host).                                                                                  |
 | `OnPaint`      | **yes**  | Full logical **frame**: draw the entire TUI for this pass.                                                                      |
-| `OnIdle`       | no       | Host-invoked when no input arrived for a configured **idle interval** (optional timer; **zero** means no idle callbacks).       |
-| `OnExit`       | no       | Last user hook before terminal restore (see `**OnExit`**).                                                                      |
+| `OnKeyPressed` | no       | `Option of function(App: Application; Key: Std.Console.KeyEvent): boolean` — key / text input.                                 |
+| `OnResize`     | no       | `Option of procedure(App: Application; NewSize: Size)` — terminal size changed (coalesced by the host).                        |
+| `OnIdleMilliseconds` | no | Idle interval in milliseconds. `<= 0` disables idle callbacks.                                                                  |
+| `OnIdle`       | no       | `Option of procedure(App: Application)` — host-invoked when no input arrived for the configured idle interval.                 |
+| `OnExit`       | no       | `Option of procedure(App: Application; Reason: ExitReason)` — last user hook before terminal restore.                          |
+
+Example:
+
+```pascal
+var Handlers: ApplicationHandlers := record
+  OnPaint := OnPaint;
+  OnKeyPressed := Some(OnKeyPressed);
+  OnIdleMilliseconds := 16;
+  OnIdle := Some(OnIdle);
+  OnExit := Some(OnExit);
+end;
+```
 
 
 ---

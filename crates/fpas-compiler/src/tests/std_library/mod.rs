@@ -8,3 +8,4 @@ mod dict;
 mod math;
 mod str_ops;
 mod tui;
+mod tui_configure;

@@ -89,12 +89,14 @@ pub(in super::super) const STD_CONSOLE_SYMBOLS: &[&str] = &[
 
 pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_APPLICATION,
+    std_symbols::STD_TUI_APPLICATION_HANDLERS,
     std_symbols::STD_TUI_SIZE,
     std_symbols::STD_TUI_EVENT,
     std_symbols::STD_TUI_EVENT_KIND,
     std_symbols::STD_TUI_EXIT_REASON,
     std_symbols::STD_TUI_APPLICATION_OPEN,
     std_symbols::STD_TUI_APPLICATION_CLOSE,
+    std_symbols::STD_TUI_APPLICATION_CONFIGURE,
     std_symbols::STD_TUI_APPLICATION_RUN,
     std_symbols::STD_TUI_APPLICATION_SIZE,
     std_symbols::STD_TUI_APPLICATION_READ_EVENT,

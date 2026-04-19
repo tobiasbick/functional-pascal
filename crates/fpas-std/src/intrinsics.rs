@@ -80,6 +80,7 @@ pub fn run_intrinsic(
             | Intrinsic::TuiApplicationPollEvent
             | Intrinsic::TuiApplicationRequestRedraw
             | Intrinsic::TuiApplicationRedrawPending
+            | Intrinsic::TuiApplicationConfigure
             | Intrinsic::TuiHostPollNext
             | Intrinsic::TuiHostRegisterOnKeyPressed
             | Intrinsic::TuiHostInvokeOnKeyPressed

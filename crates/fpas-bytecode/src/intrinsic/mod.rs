@@ -400,6 +400,13 @@ pub enum Intrinsic {
     /// **Documentation:** `docs/pascal/std/tui.md`
     TuiApplicationRedrawPending = 254,
 
+    /// `Std.Tui.Application.Configure(App, Handlers)` — apply a hosted-dispatch handler bundle.
+    /// Replaces the currently registered hosted handlers for the active application session.
+    /// Stack: `Application`, `Std.Tui.ApplicationHandlers`. Pushes `()`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiApplicationConfigure = 267,
+
     /// Hosted application loop (`Std.Tui.Application.Run`). Uses the handlers registered through
     /// `Application.HostRegisterOn*`, auto-requests the first redraw, waits until
     /// `Application.HostRequestQuit` is observed or the active hosted session is stopped,

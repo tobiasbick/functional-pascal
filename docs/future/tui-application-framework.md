@@ -142,13 +142,15 @@ Original checklist (for history): ~~coalescing~~, ~~redraw integration~~, ~~fake
 
 ## Phase 4 — Compiler and semantic analysis
 
-**Status:** **Mostly complete.** `**Application.Host*`** symbols for the VM host intrinsics (**255**–**266**) are registered in `[loaded/tui.rs](../../crates/fpas-sema/src/std_registry/loaded/tui.rs)` and lowered in `[std_calls/tui.rs](../../crates/fpas-compiler/src/compiler/std_calls/tui.rs)`; `**Application.Run`** is now registered and lowered to intrinsic **265**. Compiler integration tests cover stepping intrinsics, `**HostRegisterOnPaint` + `HostDispatchRedraw`**, `**HostRequestQuit` + `HostRunLoop`**, `**HostRegisterOnExit`**, `**HostRegisterOnIdle`**, and `**Application.Run`** for both `**ExitReason.UserQuit**` and `**ExitReason.HostStop**`. See [tui-app.md](../pascal/std/tui-app.md). Still open: handler **bundle** types and additional future host-produced `**ExitReason`** values beyond `**HostStop**`.
+**Status:** **Complete for the current handler-registration scope.** `**Application.Host*`** symbols for the VM host intrinsics (**255**–**267**) are registered in `[loaded/tui.rs](../../crates/fpas-sema/src/std_registry/loaded/tui.rs)` and lowered in `[std_calls/tui.rs](../../crates/fpas-compiler/src/compiler/std_calls/tui.rs)`; `**Application.Run`** is registered and lowered to intrinsic **265**; and the bundled registration surface `**ApplicationHandlers`** + `**Application.Configure(App, Handlers)`** is registered, lowered to intrinsic **267**, runtime-validated, and covered by positive / negative / edge-case tests. See [tui-app.md](../pascal/std/tui-app.md). Still open for a later slice: additional future host-produced `**ExitReason`** values beyond `**HostStop**`.
 
-1. Extend `**Std.Tui`** (or successor unit) in `[fpas-sema` registry](../../crates/fpas-sema/src/std_registry/loaded/tui.rs): new types for **options bundle** or **fluent registration** API—keep **one** story, avoid duplicate entry points.
-2. Type-check handler assignments: **procedure types** must match declared `On*` signatures exactly.
-3. Lower new calls in `[fpas-compiler](../../crates/fpas-compiler/src/compiler/std_calls/tui.rs)`: emit **registration + `Run`** sequence or a single `**Application.Run**` intrinsic with a descriptor record.
-4. Update **short-name / qualified-name** rules and integration tests under `crates/fpas-sema/src/tests/integration/std_units/tui.rs`.
-5. Fail with **LLM-friendly diagnostics** when handlers are missing required fields or when old APIs are used after removal.
+Completed in this slice:
+
+1. `**Std.Tui.ApplicationHandlers`** record type and `**Application.Configure(App, Handlers)`** bundle API.
+2. Exact type-checking for bundled handler assignments (`**OnPaint`**, optional `**Some(...)`** / `**None`** slots, idle interval field).
+3. Compiler lowering for the bundle API via intrinsic **267**.
+4. Short-name / qualified-name coverage and dedicated sema / compiler / VM tests for the bundle surface.
+5. **LLM-friendly diagnostics** for missing required bundle fields and malformed runtime handler values.
 
 ---
 

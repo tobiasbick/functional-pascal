@@ -135,12 +135,16 @@ pub const STD_CONSOLE_MONO: &str = std_console!("Mono");
 pub const STD_CONSOLE_FONT_8X8: &str = std_console!("Font8x8");
 
 pub const STD_TUI_APPLICATION: &str = std_tui!("Application");
+/// Hosted-dispatch handler bundle for `Std.Tui.Application.Configure`; see `docs/pascal/std/tui-app.md`.
+pub const STD_TUI_APPLICATION_HANDLERS: &str = std_tui!("ApplicationHandlers");
 pub const STD_TUI_SIZE: &str = std_tui!("Size");
 pub const STD_TUI_EVENT: &str = std_tui!("TuiEvent");
 pub const STD_TUI_EVENT_KIND: &str = std_tui!("EventKind");
 pub const STD_TUI_EXIT_REASON: &str = std_tui!("ExitReason");
 pub const STD_TUI_APPLICATION_OPEN: &str = std_tui!("Application.Open");
 pub const STD_TUI_APPLICATION_CLOSE: &str = std_tui!("Application.Close");
+/// Configure hosted-dispatch handlers from a single bundle; see `docs/pascal/std/tui-app.md`.
+pub const STD_TUI_APPLICATION_CONFIGURE: &str = std_tui!("Application.Configure");
 /// Dispatch-mode hosted application loop; see `docs/pascal/std/tui-app.md`.
 pub const STD_TUI_APPLICATION_RUN: &str = std_tui!("Application.Run");
 pub const STD_TUI_APPLICATION_SIZE: &str = std_tui!("Application.Size");

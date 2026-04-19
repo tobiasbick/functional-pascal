@@ -177,9 +177,14 @@ procedure OnPaint(App: Application);
 begin
 end;
 
+procedure OnIdle(App: Application);
+begin
+end;
+
 begin
   var App: Application := Application.Open();
     Application.HostRegisterOnPaint(App, OnPaint);
+        Application.HostRegisterOnIdle(App, 16, OnIdle);
   var Maybe: Option of TuiEvent := Application.HostPollNext(App);
   var Tag: integer := Application.HostProcessNext(App, 64);
   var Dr: integer := Application.HostDispatchRedraw(App);
@@ -204,6 +209,48 @@ end.",
     assert!(
         errs.iter()
             .any(|e| e.message.contains("expects 1 arguments, got 2")),
+        "{errs:#?}"
+    );
+}
+
+#[test]
+fn std_tui_host_register_on_idle_wrong_arg_count() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Tui;
+begin
+  var App: Application := Application.Open();
+  Application.HostRegisterOnIdle(App, 10)
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| e.message.contains("expects 3 arguments, got 2")),
+        "{errs:#?}"
+    );
+}
+
+#[test]
+fn std_tui_host_register_on_idle_requires_procedure_signature() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Tui;
+
+function WrongOnIdle(App: Application): boolean;
+begin
+  return true
+end;
+
+begin
+  var App: Application := Application.Open();
+  Application.HostRegisterOnIdle(App, 10, WrongOnIdle)
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| e.message.contains("procedure") || e.message.contains("Type mismatch")),
         "{errs:#?}"
     );
 }

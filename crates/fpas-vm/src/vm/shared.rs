@@ -44,6 +44,10 @@ pub(crate) struct TuiState {
     pub on_resize: Option<Value>,
     /// `OnPaint`-style handler: `procedure (Application)` (one argument).
     pub on_paint: Option<Value>,
+    /// `OnIdle`-style handler: `procedure (Application)` (one argument).
+    pub on_idle: Option<Value>,
+    /// Idle interval for hosted `Application.Run` callbacks in milliseconds; `0` disables idle.
+    pub idle_interval_ms: i64,
     /// `OnExit`-style handler: `procedure (Application, ExitReason)` (registered when `Application.Run` / bridge exists).
     pub on_exit: Option<Value>,
     /// Last reason recorded for a hosted run (`Std.Tui.ExitReason` enum value); set when a future `Run` loop stops.
@@ -62,6 +66,8 @@ impl Default for TuiState {
             on_key_pressed: None,
             on_resize: None,
             on_paint: None,
+            on_idle: None,
+            idle_interval_ms: 0,
             on_exit: None,
             last_exit_reason: None,
             quit_requested: false,

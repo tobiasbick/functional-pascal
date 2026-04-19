@@ -30,6 +30,8 @@ impl Worker {
                     })?;
                     tui.host = fpas_std::TuiHost::new();
                     tui.quit_requested = false;
+                    tui.on_idle = None;
+                    tui.idle_interval_ms = 0;
                     tui.on_exit = None;
                     tui.last_exit_reason = None;
                     tui.run_active = false;
@@ -180,6 +182,21 @@ impl Worker {
                 )?;
                 let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
                 tui.on_paint = Some(func);
+            }
+            Intrinsic::TuiHostRegisterOnIdle => {
+                let func = self.pop(line)?;
+                let milliseconds = self.pop_int(line)?.max(0);
+                self.pop_tui_application(line)?;
+                self.validate_host_handler_function(
+                    &func,
+                    1,
+                    "OnIdle",
+                    "Pass `Application`, an idle interval in milliseconds, and a `procedure (Application)` handler.",
+                    line,
+                )?;
+                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                tui.on_idle = Some(func);
+                tui.idle_interval_ms = milliseconds;
             }
             Intrinsic::TuiHostDispatchRedraw => {
                 self.pop_tui_application(line)?;
@@ -437,6 +454,8 @@ impl Worker {
         tui.on_key_pressed = None;
         tui.on_resize = None;
         tui.on_paint = None;
+        tui.on_idle = None;
+        tui.idle_interval_ms = 0;
         tui.on_exit = None;
         tui.last_exit_reason = None;
         tui.quit_requested = false;

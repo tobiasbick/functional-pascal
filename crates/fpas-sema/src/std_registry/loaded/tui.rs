@@ -209,6 +209,20 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             p("OnPaint", on_paint_ty, false),
         ],
     );
+    let on_idle_ty = Ty::Procedure(ProcedureTy {
+        type_params: Vec::new(),
+        params: vec![p("App", application_ty.clone(), false)],
+        variadic: false,
+    });
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_REGISTER_ON_IDLE,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("Milliseconds", Ty::Integer, false),
+            p("OnIdle", on_idle_ty, false),
+        ],
+    );
     define_func(
         checker,
         s::STD_TUI_APPLICATION_HOST_DISPATCH_REDRAW,

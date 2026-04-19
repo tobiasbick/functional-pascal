@@ -441,6 +441,12 @@ pub enum Intrinsic {
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     TuiHostRegisterOnPaint = 260,
 
+    /// Register `procedure (Application)` plus an idle interval in milliseconds for host idle dispatch.
+    /// Zero or negative milliseconds disable idle callbacks until re-registered.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostRegisterOnIdle = 266,
+
     /// If redraw is pending, consume it and invoke `OnPaint` when registered; otherwise no-op.
     /// Stack: `Application`. Pushes `integer`: `0` no redraw pending, `5` paint ran, `6` redraw
     /// pending but no handler (flag cleared).

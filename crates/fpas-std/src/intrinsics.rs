@@ -86,6 +86,7 @@ pub fn run_intrinsic(
             | Intrinsic::TuiHostRegisterOnResize
             | Intrinsic::TuiHostProcessNext
             | Intrinsic::TuiHostRegisterOnPaint
+            | Intrinsic::TuiHostRegisterOnIdle
             | Intrinsic::TuiHostDispatchRedraw
             | Intrinsic::TuiHostRunLoop
             | Intrinsic::TuiHostRequestQuit

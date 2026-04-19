@@ -142,6 +142,19 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnPaint, location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_HOST_REGISTER_ON_IDLE => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_REGISTER_ON_IDLE,
+                    3,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.compile_expr(&args[2])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnIdle, location);
+                Ok(true)
+            }
             s::STD_TUI_APPLICATION_HOST_DISPATCH_REDRAW => {
                 self.expect_exact_args(
                     s::STD_TUI_APPLICATION_HOST_DISPATCH_REDRAW,

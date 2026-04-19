@@ -160,6 +160,9 @@ pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_RESIZE: &str =
 pub const STD_TUI_APPLICATION_HOST_PROCESS_NEXT: &str = std_tui!("Application.HostProcessNext");
 pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_PAINT: &str =
     std_tui!("Application.HostRegisterOnPaint");
+/// Register `procedure (Application)` plus an idle interval in milliseconds for hosted `OnIdle` callbacks.
+pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_IDLE: &str =
+    std_tui!("Application.HostRegisterOnIdle");
 pub const STD_TUI_APPLICATION_HOST_DISPATCH_REDRAW: &str =
     std_tui!("Application.HostDispatchRedraw");
 pub const STD_TUI_APPLICATION_HOST_RUN_LOOP: &str = std_tui!("Application.HostRunLoop");

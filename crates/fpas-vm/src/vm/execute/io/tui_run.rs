@@ -9,8 +9,13 @@ use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 
 const TUI_EXIT_REASON_TYPE: &str = "Std.Tui.ExitReason";
 const USER_QUIT_EXIT_REASON: &str = "UserQuit";
-const RUN_WAIT_TIMEOUT_MS: i64 = 50;
+const DEFAULT_RUN_WAIT_TIMEOUT_MS: i64 = 50;
 const RUN_PROCESS_SPINS: usize = 64;
+
+enum IdleWaitOutcome {
+    Continue,
+    InvokeOnIdle,
+}
 
 impl Worker {
     pub(super) fn tui_application_run(&mut self, line: SourceLocation) -> Result<(), VmError> {
@@ -74,39 +79,93 @@ impl Worker {
             }
 
             if self.take_tui_host_quit_requested() {
-                let exit_reason = Self::user_quit_exit_reason();
-                {
-                    let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                    tui.last_exit_reason = Some(exit_reason.clone());
-                }
-                self.invoke_tui_on_exit_if_present(exit_reason, line)?;
-                return Ok(());
+                return self.finish_tui_application_run(Self::user_quit_exit_reason(), line);
             }
 
             if redraw_tag != 0 || process_tag != 0 {
                 continue;
             }
 
-            let flushed_resize = {
-                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                let next = self.with_console_and_key_input(|console, key_input| {
-                    tui.session
-                        .read_event_timeout(console, key_input, RUN_WAIT_TIMEOUT_MS, line)
-                })?;
-                match next {
-                    Some(event) => {
-                        tui.host.ingest_tui_event(event);
-                        false
+            match self.wait_for_tui_run_work_or_idle(line)? {
+                IdleWaitOutcome::Continue => {}
+                IdleWaitOutcome::InvokeOnIdle => {
+                    self.invoke_tui_on_idle_if_present(line)?;
+                    if self.take_tui_host_quit_requested() {
+                        return self
+                            .finish_tui_application_run(Self::user_quit_exit_reason(), line);
                     }
-                    None => tui.host.flush_pending_resize(),
                 }
-            };
-
-            if flushed_resize {
-                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                tui.session.request_redraw(line)?;
             }
         }
+    }
+
+    fn wait_for_tui_run_work_or_idle(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<IdleWaitOutcome, VmError> {
+        let (idle_enabled, wait_timeout_ms) = {
+            let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+            let idle_enabled = tui.idle_interval_ms > 0 && tui.on_idle.is_some();
+            let wait_timeout_ms = if idle_enabled {
+                tui.idle_interval_ms
+            } else {
+                DEFAULT_RUN_WAIT_TIMEOUT_MS
+            };
+            (idle_enabled, wait_timeout_ms)
+        };
+
+        let flushed_resize = {
+            let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+            let next = self.with_console_and_key_input(|console, key_input| {
+                tui.session
+                    .read_event_timeout(console, key_input, wait_timeout_ms, line)
+            })?;
+            match next {
+                Some(event) => {
+                    tui.host.ingest_tui_event(event);
+                    false
+                }
+                None => tui.host.flush_pending_resize(),
+            }
+        };
+
+        if flushed_resize {
+            let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+            tui.session.request_redraw(line)?;
+            return Ok(IdleWaitOutcome::Continue);
+        }
+
+        if idle_enabled {
+            return Ok(IdleWaitOutcome::InvokeOnIdle);
+        }
+
+        Ok(IdleWaitOutcome::Continue)
+    }
+
+    fn finish_tui_application_run(
+        &mut self,
+        exit_reason: Value,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        {
+            let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+            tui.last_exit_reason = Some(exit_reason.clone());
+        }
+        self.invoke_tui_on_exit_if_present(exit_reason, line)
+    }
+
+    fn invoke_tui_on_idle_if_present(&mut self, line: SourceLocation) -> Result<(), VmError> {
+        let handler = {
+            let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+            tui.on_idle.clone()
+        };
+
+        let Some(handler) = handler else {
+            return Ok(());
+        };
+
+        let _ = self.call_function_sync(&handler, &[Self::tui_application_record()], line)?;
+        Ok(())
     }
 
     fn invoke_tui_on_exit_if_present(

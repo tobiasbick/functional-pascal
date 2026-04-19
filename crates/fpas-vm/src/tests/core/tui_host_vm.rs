@@ -207,6 +207,74 @@ fn tui_host_dispatch_redraw_invokes_on_paint() {
 }
 
 #[test]
+fn tui_host_register_on_idle_stores_handler_and_interval() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    emit_constant(&mut chunk, tui_application_value());
+    emit_constant(&mut chunk, Value::Integer(25));
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnIdle".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnIdle as u16),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let on_idle_start = chunk.len();
+    chunk.functions.insert("OnIdle".into(), (on_idle_start, 1));
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+    assert!(matches!(
+        tui.on_idle.as_ref(),
+        Some(Value::Function { name, .. }) if name == "OnIdle"
+    ));
+    assert_eq!(tui.idle_interval_ms, 25);
+}
+
+#[test]
+fn tui_host_register_on_idle_clamps_negative_interval_to_zero() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    emit_constant(&mut chunk, tui_application_value());
+    emit_constant(&mut chunk, Value::Integer(-5));
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnIdle".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnIdle as u16),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let on_idle_start = chunk.len();
+    chunk.functions.insert("OnIdle".into(), (on_idle_start, 1));
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+    assert_eq!(tui.idle_interval_ms, 0);
+}
+
+#[test]
 fn tui_host_dispatch_redraw_without_handler_clears_and_returns_six() {
     let mut chunk = Chunk::new();
     chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
@@ -391,6 +459,98 @@ fn tui_host_register_on_exit_stores_handler_in_shared_tui_state() {
         tui.on_exit.as_ref(),
         Some(Value::Function { name, .. }) if name == "OnExit"
     ));
+}
+
+#[test]
+fn tui_host_register_on_idle_is_cleared_by_application_close() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnIdle".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnIdle as u16),
+        loc(),
+    );
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationClose as u16), loc());
+    chunk.emit(Op::Halt, loc());
+
+    let on_idle_start = chunk.len();
+    chunk.functions.insert("OnIdle".into(), (on_idle_start, 1));
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+    assert!(
+        tui.on_idle.is_none(),
+        "Application.Close should clear OnIdle"
+    );
+    assert_eq!(tui.idle_interval_ms, 0);
+}
+
+#[test]
+fn tui_host_register_on_idle_rejects_non_function_value() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    emit_constant(&mut chunk, tui_application_value());
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(&mut chunk, Value::Integer(7));
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnIdle as u16),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let error = run_err(chunk);
+    assert!(
+        error.message.contains("OnIdle expects a function value"),
+        "unexpected runtime error: {}",
+        error.message
+    );
+}
+
+#[test]
+fn tui_host_register_on_idle_rejects_wrong_arity() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    emit_constant(&mut chunk, tui_application_value());
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "WrongOnIdle".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnIdle as u16),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let on_idle_start = chunk.len();
+    chunk
+        .functions
+        .insert("WrongOnIdle".into(), (on_idle_start, 2));
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    let error = run_err(chunk);
+    assert!(
+        error.message.contains("OnIdle handler must have arity 1"),
+        "unexpected runtime error: {}",
+        error.message
+    );
 }
 
 #[test]

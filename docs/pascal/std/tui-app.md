@@ -1,6 +1,6 @@
 # `Std.Tui` — dispatch-mode application (target)
 
-**Status:** target specification for the Rust-hosted event loop and `On*` handlers described in `[docs/future/tui-application-framework.md](../../future/tui-application-framework.md)`. **`Application.Host*`** dispatch helpers are **registered and lowered**, and **`Application.Run(App)`** is available as the hosted loop entrypoint using previously registered handlers. `OnIdle` and a single handler-bundle surface remain future work. The poll-style API in `[tui.md](tui.md)` remains available for programs that do not use hosted dispatch.
+**Status:** target specification for the Rust-hosted event loop and `On*` handlers described in `[docs/future/tui-application-framework.md](../../future/tui-application-framework.md)`. **`Application.Host*`** dispatch helpers are **registered and lowered**, and **`Application.Run(App)`** is available as the hosted loop entrypoint using previously registered handlers. `OnIdle` is available through `Application.HostRegisterOnIdle(App, Milliseconds, OnIdle)`; only the future single handler-bundle surface remains open. The poll-style API in `[tui.md](tui.md)` remains available for programs that do not use hosted dispatch.
 
 **Maintenance (implementers only):** when this mode ships, register types and routines in `[loaded/tui.rs](../../../crates/fpas-sema/src/std_registry/loaded/tui.rs)` and keep this file aligned with that registry (see root `[AGENTS.md](../../../AGENTS.md)`).
 
@@ -19,6 +19,7 @@ These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mo
 | `TuiHostRegisterOnResize`     | `Application`, `function`                        | Registers `procedure (Application, Std.Tui.Size)` (arity 2).                                                                                                                                                                                                                        |
 | `TuiHostProcessNext`          | `Application`, `max_spins` (`integer`, top)      | Spins up to `max_spins` (clamped to `4096`, minimum one iteration) through `poll_event` + host ingest, then dispatches **at most one** `HostEvent`. Pushes `integer`: `0` no event, `1` key dispatched, `2` resize dispatched, `3` key without handler, `4` resize without handler. |
 | `TuiHostRegisterOnPaint`      | `Application`, `function`                        | Registers `procedure (Application)` (arity 1).                                                                                                                                                                                                                                      |
+| `TuiHostRegisterOnIdle`       | `Application`, `integer`, `function`             | Registers `procedure (Application)` plus an idle interval in milliseconds. `Milliseconds <= 0` disables idle callbacks.                                                                                                                                                             |
 | `TuiHostDispatchRedraw`       | `Application`                                    | If redraw is pending: runs registered `OnPaint` after `take_redraw_pending`, or clears the flag with tag `6` when no handler. Pushes `integer`: `0` not pending, `5` paint ran, `6` cleared without handler.                                                                        |
 | `TuiHostRunLoop`              | `Application`, `max_iterations` (`integer`, top) | Bounded host loop: each iteration runs the same work as `TuiHostDispatchRedraw` then `TuiHostProcessNext` with a fixed inner `max_spins` of `64`. After each iteration, if `TuiHostRequestQuit` was observed, the loop stops and the quit flag is cleared. Otherwise stops when both steps would be idle (`0`). `max_iterations` is clamped to `0..=1_000_000`. Pushes `()`. |
 | `TuiHostRequestQuit`          | `Application`                                    | Sets a flag read by `TuiHostRunLoop` after each iteration. Does not push a value.                                                                                                                                                                                                 |
@@ -35,6 +36,7 @@ These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mo
 | `Application.HostRegisterOnResize(App, OnResize)` | `TuiHostRegisterOnResize` |
 | `Application.HostProcessNext(App, MaxSpins)` | `TuiHostProcessNext` |
 | `Application.HostRegisterOnPaint(App, OnPaint)` | `TuiHostRegisterOnPaint` |
+| `Application.HostRegisterOnIdle(App, Milliseconds, OnIdle)` | `TuiHostRegisterOnIdle` |
 | `Application.HostDispatchRedraw(App)` | `TuiHostDispatchRedraw` |
 | `Application.HostRunLoop(App, MaxIterations)` | `TuiHostRunLoop` |
 | `Application.HostRequestQuit(App)` | `TuiHostRequestQuit` |
@@ -43,9 +45,9 @@ These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mo
 
 Samples: [`examples/pascal/tui/host_dispatch_minimal.fpas`](../../../examples/pascal/tui/host_dispatch_minimal.fpas) (one `HostProcessNext` step), [`examples/pascal/tui/host_dispatch_paint.fpas`](../../../examples/pascal/tui/host_dispatch_paint.fpas) (register `OnPaint` + `HostDispatchRedraw`), [`examples/pascal/tui/host_dispatch_quit.fpas`](../../../examples/pascal/tui/host_dispatch_quit.fpas) (`HostRequestQuit` from `OnPaint` + `HostRunLoop`).
 
-**Bytecode discriminants** (authoritative enum: [`Intrinsic`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs)): **255** `TuiHostPollNext`, **256** `TuiHostRegisterOnKeyPressed`, **257** `TuiHostInvokeOnKeyPressed`, **258** `TuiHostRegisterOnResize`, **259** `TuiHostProcessNext`, **260** `TuiHostRegisterOnPaint`, **261** `TuiHostDispatchRedraw`, **262** `TuiHostRunLoop`, **263** `TuiHostRequestQuit`, **264** `TuiHostRegisterOnExit`, **265** `TuiApplicationRun`.
+**Bytecode discriminants** (authoritative enum: [`Intrinsic`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs)): **255** `TuiHostPollNext`, **256** `TuiHostRegisterOnKeyPressed`, **257** `TuiHostInvokeOnKeyPressed`, **258** `TuiHostRegisterOnResize`, **259** `TuiHostProcessNext`, **260** `TuiHostRegisterOnPaint`, **261** `TuiHostDispatchRedraw`, **262** `TuiHostRunLoop`, **263** `TuiHostRequestQuit`, **264** `TuiHostRegisterOnExit`, **265** `TuiApplicationRun`, **266** `TuiHostRegisterOnIdle`.
 
-`Application.Close` clears registered host handlers (`OnKeyPressed`, `OnResize`, `OnPaint`, `OnExit`), resets the host pump state, and closes the session as today.
+`Application.Close` clears registered host handlers (`OnKeyPressed`, `OnResize`, `OnPaint`, `OnIdle`, `OnExit`), resets the host pump state, and closes the session as today.
 
 ---
 
@@ -82,7 +84,7 @@ If `**Run`** is never called, the program keeps today’s obligation: `**Open**`
 
 ## Current registration model
 
-Today, Pascal registers handlers with the existing `**Application.HostRegisterOn*`** routines and then starts the hosted loop with `**Application.Run(App)`**. A future bundle syntax may lower to the same runtime model, but the current shipped surface is the explicit registration API.
+Today, Pascal registers handlers with the existing `**Application.HostRegisterOn*`** routines and then starts the hosted loop with `**Application.Run(App)`**. `**OnIdle`** is configured with `**Application.HostRegisterOnIdle(App, Milliseconds, OnIdle)`**; `**Milliseconds <= 0`** disables idle callbacks. A future bundle syntax may lower to the same runtime model, but the current shipped surface is the explicit registration API.
 
 **Required** for a minimal app: at least `**OnPaint`** (the runtime rejects `**Run`** otherwise). Other slots are optional unless diagnostics require them.
 

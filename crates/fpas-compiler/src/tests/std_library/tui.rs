@@ -245,3 +245,78 @@ end.",
 
     assert_eq!(out.lines, vec!["true", "77"]);
 }
+
+#[test]
+fn std_tui_host_process_next_returns_zero_without_events() {
+    let out = compile_and_run(
+        "\
+program T;
+uses Std.Console, Std.Tui;
+
+begin
+  var App: Application := Application.Open();
+  Std.Console.WriteLn(Application.HostProcessNext(App, 8));
+  Application.Close(App)
+end.",
+    );
+
+    assert_eq!(out.lines, vec!["0"]);
+}
+
+#[test]
+fn std_tui_host_poll_next_none_without_events() {
+    let out = compile_and_run(
+        "\
+program T;
+uses Std.Console, Std.Option, Std.Tui;
+
+begin
+  var App: Application := Application.Open();
+  Std.Console.WriteLn(Std.Option.IsNone(Application.HostPollNext(App)));
+  Application.Close(App)
+end.",
+    );
+
+    assert_eq!(out.lines, vec!["true"]);
+}
+
+#[test]
+fn std_tui_host_dispatch_redraw_not_pending_returns_zero() {
+    let out = compile_and_run(
+        "\
+program T;
+uses Std.Console, Std.Tui;
+
+begin
+  var App: Application := Application.Open();
+  Std.Console.WriteLn(Application.HostDispatchRedraw(App));
+  Application.Close(App)
+end.",
+    );
+
+    assert_eq!(out.lines, vec!["0"]);
+}
+
+#[test]
+fn std_tui_host_register_on_paint_and_dispatch_redraw_runs_handler() {
+    let out = compile_and_run(
+        "\
+program T;
+uses Std.Console, Std.Tui;
+
+procedure OnPaint(App: Application);
+begin
+  Std.Console.WriteLn('p')
+end;
+
+begin
+  var App: Application := Application.Open();
+  Application.RequestRedraw(App);
+  Application.HostRegisterOnPaint(App, OnPaint);
+  Std.Console.WriteLn(Application.HostDispatchRedraw(App));
+  Application.Close(App)
+end.",
+    );
+
+    assert_eq!(out.lines, vec!["p", "5"]);
+}

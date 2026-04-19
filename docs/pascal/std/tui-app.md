@@ -35,6 +35,8 @@ These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mo
 | `Application.HostDispatchRedraw(App)` | `TuiHostDispatchRedraw` |
 | `Application.HostRunLoop(App, MaxIterations)` | `TuiHostRunLoop` |
 
+Samples: [`examples/pascal/tui/host_dispatch_minimal.fpas`](../../../examples/pascal/tui/host_dispatch_minimal.fpas) (one `HostProcessNext` step), [`examples/pascal/tui/host_dispatch_paint.fpas`](../../../examples/pascal/tui/host_dispatch_paint.fpas) (register `OnPaint` + `HostDispatchRedraw`).
+
 **Bytecode discriminants** (authoritative enum: [`Intrinsic`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs)): **255** `TuiHostPollNext`, **256** `TuiHostRegisterOnKeyPressed`, **257** `TuiHostInvokeOnKeyPressed`, **258** `TuiHostRegisterOnResize`, **259** `TuiHostProcessNext`, **260** `TuiHostRegisterOnPaint`, **261** `TuiHostDispatchRedraw`, **262** `TuiHostRunLoop`.
 
 `Application.Close` clears registered host handlers (`OnKeyPressed`, `OnResize`, `OnPaint`), resets the host pump state, and closes the session as today.

@@ -94,7 +94,7 @@ Original checklist (for history): ~~coalescing~~, ~~redraw integration~~, ~~fake
 
 ## Phase 3 — VM bridge: from host loop to bytecode
 
-**Status:** **Partial** — bytecode bridge and handler dispatch are **implemented**; **Pascal `Application.Run`**, **quit / `ExitReason`**, and **compiler lowering** are **not**.
+**Status:** **Partial** — bytecode bridge and handler dispatch are **implemented**; **`Application.Host*`** is **lowered from Pascal** (see [tui-app.md](../pascal/std/tui-app.md)). **Still missing:** **`Application.Run`**, **quit / `ExitReason`**, **`OnExit`**, and **idle** as a **single** hosted lifecycle.
 
 **Done**
 
@@ -108,7 +108,6 @@ Original checklist (for history): ~~coalescing~~, ~~redraw integration~~, ~~fake
 
 - **One** intrinsic (or Pascal `**Application.Run`**) that **blocks until stop** with `**ExitReason`**, `**OnExit**`, and documented `**Close**` semantics (not the same as bounded `**TuiHostRunLoop**`).
 - **Idle timer** / `**OnIdle`** wiring from the host.
-- **Phase 4:** sema/compiler/registry for `Std.Tui` dispatch mode (see [tui-app.md](../pascal/std/tui-app.md)).
 
 **Checklist mapping**
 
@@ -127,7 +126,7 @@ Original checklist (for history): ~~coalescing~~, ~~redraw integration~~, ~~fake
 
 ## Phase 4 — Compiler and semantic analysis
 
-**Status:** **Partial.** **`Application.Host*`** symbols for the VM host intrinsics (**255**–**262**) are registered in [`loaded/tui.rs`](../../crates/fpas-sema/src/std_registry/loaded/tui.rs) and lowered in [`std_calls/tui.rs`](../../crates/fpas-compiler/src/compiler/std_calls/tui.rs); see [tui-app.md](../pascal/std/tui-app.md). **Still open:** **`Application.Run`** (or equivalent), **`ExitReason`**, handler **bundle** types, and **integration tests** beyond basic host call type-checking.
+**Status:** **Partial.** **`Application.Host*`** symbols for the VM host intrinsics (**255**–**262**) are registered in [`loaded/tui.rs`](../../crates/fpas-sema/src/std_registry/loaded/tui.rs) and lowered in [`std_calls/tui.rs`](../../crates/fpas-compiler/src/compiler/std_calls/tui.rs); compiler integration tests cover stepping intrinsics and **`HostRegisterOnPaint` + `HostDispatchRedraw`** (see `fpas-compiler` [`std_library/tui.rs`](../../crates/fpas-compiler/src/tests/std_library/tui.rs)). Samples: [`host_dispatch_minimal.fpas`](../../examples/pascal/tui/host_dispatch_minimal.fpas), [`host_dispatch_paint.fpas`](../../examples/pascal/tui/host_dispatch_paint.fpas). See [tui-app.md](../pascal/std/tui-app.md). **Still open:** **`Application.Run`** (or equivalent), **`ExitReason`**, handler **bundle** types, and **`OnExit`** / quit as a **single** hosted lifecycle.
 
 1. Extend `**Std.Tui`** (or successor unit) in [`fpas-sema` registry](../../crates/fpas-sema/src/std_registry/loaded/tui.rs): new types for **options bundle** or **fluent registration** API—keep **one** story, avoid duplicate entry points.
 2. Type-check handler assignments: **procedure types** must match declared `On*` signatures exactly.

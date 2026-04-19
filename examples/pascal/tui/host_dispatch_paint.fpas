@@ -1,0 +1,17 @@
+{ Register an OnPaint handler and dispatch one redraw. See docs/pascal/std/tui-app.md. }
+program TuiHostDispatchPaint;
+uses Std.Console, Std.Tui;
+
+procedure OnPaint(App: Application);
+begin
+  WriteLn('frame')
+end;
+
+begin
+  var App: Application := Application.Open();
+  Application.RequestRedraw(App);
+  Application.HostRegisterOnPaint(App, OnPaint);
+  { Tag 5 = paint ran (see tui-app.md). }
+  WriteLn(Application.HostDispatchRedraw(App));
+  Application.Close(App)
+end.

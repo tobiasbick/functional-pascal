@@ -9,6 +9,8 @@ uses Std.Tui;
 begin
   var R: ExitReason := ExitReason.UserQuit;
   var H: boolean := R = ExitReason.HostStop;
+    var B: boolean := R = ExitReason.HostAndUserStop;
+    var S: boolean := R = ExitReason.HostShutdown;
   Application.Close(Application.Open())
 end.",
     );

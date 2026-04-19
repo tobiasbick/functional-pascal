@@ -438,7 +438,7 @@ end.",
 }
 
 #[test]
-fn std_tui_run_prefers_host_stop_when_close_and_quit_both_happen() {
+fn std_tui_run_reports_host_and_user_stop_when_close_and_quit_both_happen() {
     let out = compile_and_run(
         "\
 program T;
@@ -463,7 +463,55 @@ begin
 end.",
     );
 
-    assert_eq!(out.lines, vec!["Std.Tui.ExitReason.HostStop"]);
+    assert_eq!(out.lines, vec!["Std.Tui.ExitReason.HostAndUserStop"]);
+}
+
+#[test]
+fn std_tui_run_reports_host_shutdown_when_concurrent_task_failure_requests_vm_shutdown() {
+    let chunk = compile_ok(
+        "\
+program T;
+uses Std.Console, Std.Tui;
+
+procedure Crash();
+begin
+  panic('boom')
+end;
+
+procedure OnPaint(App: Application);
+begin
+  Std.Console.WriteLn('paint');
+  go Crash()
+end;
+
+procedure OnExit(App: Application; Reason: ExitReason);
+begin
+  Std.Console.WriteLn(Reason)
+end;
+
+begin
+  var App: Application := Application.Open();
+  Application.HostRegisterOnPaint(App, OnPaint);
+  Application.HostRegisterOnExit(App, OnExit);
+  Application.Run(App)
+end.",
+    );
+
+    let mut vm = fpas_vm::Vm::new(chunk);
+    let error = vm
+        .run()
+        .expect_err("expected VM shutdown after spawned panic");
+    assert!(
+        error
+            .message
+            .contains("Execution aborted: a concurrent task failed"),
+        "unexpected runtime error: {}",
+        error.message
+    );
+    assert_eq!(
+        vm.output().lines,
+        vec!["paint", "Std.Tui.ExitReason.HostShutdown"],
+    );
 }
 
 #[test]

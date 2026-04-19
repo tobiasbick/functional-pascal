@@ -4,6 +4,7 @@
 
 use fpas_bytecode::{Chunk, Intrinsic, Op, Value};
 use std::sync::Arc;
+use std::thread;
 
 use crate::tests::helpers::{
     emit_constant, loc, minimal_shared_state, run_err, tui_application_value,
@@ -178,7 +179,7 @@ fn tui_application_run_reports_host_stop_when_close_happens_during_run() {
 }
 
 #[test]
-fn tui_application_run_prefers_host_stop_over_user_quit_when_both_are_requested() {
+fn tui_application_run_reports_host_and_user_stop_when_both_are_requested() {
     let mut chunk = Chunk::new();
     chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
     chunk.emit(Op::Dup, loc());
@@ -239,7 +240,101 @@ fn tui_application_run_prefers_host_stop_over_user_quit_when_both_are_requested(
             .output()
             .lines
             .clone(),
-        vec!["Std.Tui.ExitReason.HostStop"],
+        vec!["Std.Tui.ExitReason.HostAndUserStop"],
+    );
+}
+
+#[test]
+fn tui_application_run_reports_host_shutdown_when_vm_shutdown_is_requested() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Dup, loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnPaint".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnPaint as u16),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnExit".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnExit as u16),
+        loc(),
+    );
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationRun as u16), loc());
+    chunk.emit(Op::Halt, loc());
+
+    let on_paint_start = chunk.len();
+    chunk
+        .functions
+        .insert("OnPaint".into(), (on_paint_start, 1));
+    emit_constant(&mut chunk, Value::Str("paint".into()));
+    chunk.emit(Op::PrintLn, loc());
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    let on_exit_start = chunk.len();
+    chunk.functions.insert("OnExit".into(), (on_exit_start, 2));
+    chunk.emit(Op::GetLocal(1), loc());
+    chunk.emit(Op::PrintLn, loc());
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let shutdown_shared = Arc::clone(&shared);
+    let shutdown_thread = thread::spawn(move || {
+        loop {
+            let painted = {
+                let console = shutdown_shared
+                    .console
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner());
+                console.output().lines.iter().any(|line| line == "paint")
+            };
+            if painted {
+                break;
+            }
+            thread::yield_now();
+        }
+        shutdown_shared.request_shutdown();
+    });
+
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    let error = worker
+        .run()
+        .expect_err("VM should fail due to requested shutdown");
+    shutdown_thread
+        .join()
+        .expect("shutdown helper thread should join cleanly");
+
+    assert!(
+        error
+            .message
+            .contains("Execution aborted: a concurrent task failed"),
+        "unexpected runtime error: {}",
+        error.message
+    );
+    assert_eq!(
+        worker
+            .shared
+            .console
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .output()
+            .lines
+            .clone(),
+        vec!["paint", "Std.Tui.ExitReason.HostShutdown"],
     );
 }
 

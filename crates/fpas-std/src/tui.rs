@@ -13,7 +13,8 @@ use std::time::{Duration, Instant};
 pub const TUI_EVENT_KIND_VARIANTS: &[&str] = &["Key", "Resize"];
 
 /// Variants for `Std.Tui.ExitReason` (dispatch `OnExit` / future `Application.Run`); see `docs/pascal/std/tui-app.md`.
-pub const TUI_EXIT_REASON_VARIANTS: &[&str] = &["UserQuit", "HostStop"];
+pub const TUI_EXIT_REASON_VARIANTS: &[&str] =
+    &["UserQuit", "HostStop", "HostAndUserStop", "HostShutdown"];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TuiEvent {

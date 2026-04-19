@@ -22,6 +22,8 @@ pub(crate) struct Worker {
     pub current_task_retain_result: bool,
     pub instructions_until_yield: u32,
     pub sync_call_depth: u32,
+    /// Allows specific synchronous cleanup callbacks to run during global shutdown.
+    pub allow_shutdown_during_sync_call: bool,
 }
 
 impl Worker {
@@ -37,6 +39,7 @@ impl Worker {
             current_task_retain_result: false,
             instructions_until_yield: TIMESLICE,
             sync_call_depth: 0,
+            allow_shutdown_during_sync_call: false,
         }
     }
 
@@ -52,6 +55,7 @@ impl Worker {
             current_task_retain_result: false,
             instructions_until_yield: TIMESLICE,
             sync_call_depth: 0,
+            allow_shutdown_during_sync_call: false,
         }
     }
 

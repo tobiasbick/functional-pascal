@@ -92,15 +92,18 @@ impl Worker {
     ) -> Result<Value, VmError> {
         while self.call_stack.len() > target_depth {
             if self.shared.is_shutdown() {
-                if self.current_task_id == 0 {
+                if self.allow_shutdown_during_sync_call {
+                    // Allow cleanup callbacks (for example TUI OnExit) to finish during shutdown.
+                } else if self.current_task_id == 0 {
                     return Err(runtime_error(
                         fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN,
                         "Execution aborted: a concurrent task failed",
                         "A task spawned with `go` raised a runtime error. Fix the error in the spawned task.",
                         self.current_location,
                     ));
+                } else {
+                    return Ok(Value::Unit);
                 }
-                return Ok(Value::Unit);
             }
 
             if self.ip >= self.shared.chunk.code.len() {

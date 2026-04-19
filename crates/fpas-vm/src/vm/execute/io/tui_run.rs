@@ -10,6 +10,8 @@ use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 const TUI_EXIT_REASON_TYPE: &str = "Std.Tui.ExitReason";
 const USER_QUIT_EXIT_REASON: &str = "UserQuit";
 const HOST_STOP_EXIT_REASON: &str = "HostStop";
+const HOST_AND_USER_STOP_EXIT_REASON: &str = "HostAndUserStop";
+const HOST_SHUTDOWN_EXIT_REASON: &str = "HostShutdown";
 const DEFAULT_RUN_WAIT_TIMEOUT_MS: i64 = 50;
 const RUN_PROCESS_SPINS: usize = 64;
 
@@ -100,10 +102,20 @@ impl Worker {
     }
 
     fn take_tui_application_run_stop_reason(&self) -> Option<Value> {
+        if self.shared.is_shutdown() {
+            return Some(Self::host_shutdown_exit_reason());
+        }
+
         let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
         if tui.host_stop_requested {
+            let quit_requested = tui.quit_requested;
             tui.host_stop_requested = false;
-            Some(Self::host_stop_exit_reason())
+            tui.quit_requested = false;
+            if quit_requested {
+                Some(Self::host_and_user_stop_exit_reason())
+            } else {
+                Some(Self::host_stop_exit_reason())
+            }
         } else if tui.quit_requested {
             tui.quit_requested = false;
             Some(Self::user_quit_exit_reason())
@@ -195,11 +207,16 @@ impl Worker {
             return Ok(());
         };
 
-        let _ = self.call_function_sync(
+        let previous_allow_shutdown = self.allow_shutdown_during_sync_call;
+        self.allow_shutdown_during_sync_call = true;
+        let callback_result = self.call_function_sync(
             &handler,
             &[Self::tui_application_record(), exit_reason],
             line,
-        )?;
+        );
+        self.allow_shutdown_during_sync_call = previous_allow_shutdown;
+
+        let _ = callback_result?;
         Ok(())
     }
 
@@ -215,6 +232,22 @@ impl Worker {
         Value::Enum {
             type_name: TUI_EXIT_REASON_TYPE.into(),
             variant: HOST_STOP_EXIT_REASON.into(),
+            fields: vec![],
+        }
+    }
+
+    fn host_and_user_stop_exit_reason() -> Value {
+        Value::Enum {
+            type_name: TUI_EXIT_REASON_TYPE.into(),
+            variant: HOST_AND_USER_STOP_EXIT_REASON.into(),
+            fields: vec![],
+        }
+    }
+
+    fn host_shutdown_exit_reason() -> Value {
+        Value::Enum {
+            type_name: TUI_EXIT_REASON_TYPE.into(),
+            variant: HOST_SHUTDOWN_EXIT_REASON.into(),
             fields: vec![],
         }
     }

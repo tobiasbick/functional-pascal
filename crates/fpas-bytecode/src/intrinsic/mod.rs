@@ -440,12 +440,19 @@ pub enum Intrinsic {
     TuiHostDispatchRedraw = 261,
 
     /// Bounded host main loop: each iteration runs redraw dispatch then processes at most one input
-    /// event (same work as `TuiHostDispatchRedraw` + `TuiHostProcessNext`). Stops early when both
+    /// event (same work as `TuiHostDispatchRedraw` + `TuiHostProcessNext`). Stops early when
+    /// `TuiHostRequestQuit` was set, or when both
     /// steps are idle (`0`). Stack: `Application`, `max_iterations` (`integer`, top, clamped to 1_000_000).
     /// Pushes `()`.
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     TuiHostRunLoop = 262,
+
+    /// Request the bounded host run loop to stop after the current iteration (`TuiHostRunLoop` checks
+    /// this after each redraw/process step). Stack: `Application`. Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostRequestQuit = 263,
 }
 
 impl From<Intrinsic> for u16 {

@@ -29,6 +29,7 @@ impl Worker {
                         tui.session.open(console, key_input, line)
                     })?;
                     tui.host = fpas_std::TuiHost::new();
+                    tui.quit_requested = false;
                 }
                 self.push(Self::tui_application_record())?;
             }
@@ -42,6 +43,7 @@ impl Worker {
                 tui.on_key_pressed = None;
                 tui.on_resize = None;
                 tui.on_paint = None;
+                tui.quit_requested = false;
             }
             Intrinsic::TuiApplicationSize => {
                 self.pop_tui_application(line)?;
@@ -190,6 +192,11 @@ impl Worker {
                 self.pop_tui_application(line)?;
                 self.tui_host_run_loop_inner(max_iters, line)?;
                 self.push(Value::Unit)?;
+            }
+            Intrinsic::TuiHostRequestQuit => {
+                self.pop_tui_application(line)?;
+                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                tui.quit_requested = true;
             }
             Intrinsic::TuiHostInvokeOnKeyPressed => {
                 let key_ev = self.pop_console_key_event(line)?;
@@ -370,11 +377,25 @@ impl Worker {
         for _ in 0..max_iterations {
             let dr = self.tui_host_dispatch_redraw_inner(line)?;
             let pn = self.tui_host_process_next_inner(PER_EVENT_SPINS, line)?;
+            if self.take_tui_host_quit_requested() {
+                break;
+            }
             if dr == 0 && pn == 0 {
                 break;
             }
         }
         Ok(())
+    }
+
+    /// Clears the flag when set so a later `TuiHostRunLoop` does not stop immediately.
+    fn take_tui_host_quit_requested(&self) -> bool {
+        let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+        if tui.quit_requested {
+            tui.quit_requested = false;
+            true
+        } else {
+            false
+        }
     }
 
     fn pop_tui_application(&mut self, line: SourceLocation) -> Result<(), VmError> {

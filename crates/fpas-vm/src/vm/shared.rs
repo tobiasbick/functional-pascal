@@ -44,6 +44,8 @@ pub(crate) struct TuiState {
     pub on_resize: Option<Value>,
     /// `OnPaint`-style handler: `procedure (Application)` (one argument).
     pub on_paint: Option<Value>,
+    /// Set by `TuiHostRequestQuit`; consumed when [`crate::vm::execute::io::tui::Worker`] run loop observes it.
+    pub quit_requested: bool,
 }
 
 impl Default for TuiState {
@@ -54,6 +56,7 @@ impl Default for TuiState {
             on_key_pressed: None,
             on_resize: None,
             on_paint: None,
+            quit_requested: false,
         }
     }
 }

@@ -131,7 +131,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         Ty::Option(Box::new(event_ty.clone())),
     );
 
-    // Host dispatch bridge (bytecode intrinsics 255–262); see `docs/pascal/std/tui-app.md`.
+    // Host dispatch bridge (bytecode intrinsics 255–263); see `docs/pascal/std/tui-app.md`.
     define_func(
         checker,
         s::STD_TUI_APPLICATION_HOST_POLL_NEXT,
@@ -215,6 +215,11 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             p("App", application_ty.clone(), false),
             p("MaxIterations", Ty::Integer, false),
         ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_REQUEST_QUIT,
+        vec![p("App", application_ty.clone(), false)],
     );
 
     define_func(

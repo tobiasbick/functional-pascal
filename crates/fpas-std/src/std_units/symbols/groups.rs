@@ -108,6 +108,7 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_APPLICATION_HOST_REGISTER_ON_PAINT,
     std_symbols::STD_TUI_APPLICATION_HOST_DISPATCH_REDRAW,
     std_symbols::STD_TUI_APPLICATION_HOST_RUN_LOOP,
+    std_symbols::STD_TUI_APPLICATION_HOST_REQUEST_QUIT,
 ];
 
 pub(in super::super) const STD_STR_SYMBOLS: &[&str] = &[

@@ -152,6 +152,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::TuiHostRegisterOnPaint,
     Intrinsic::TuiHostDispatchRedraw,
     Intrinsic::TuiHostRunLoop,
+    Intrinsic::TuiHostRequestQuit,
     Intrinsic::ResultUnwrap,
     Intrinsic::ResultUnwrapOr,
     Intrinsic::ResultIsOk,
@@ -356,6 +357,7 @@ impl Intrinsic {
             260 => Self::TuiHostRegisterOnPaint,
             261 => Self::TuiHostDispatchRedraw,
             262 => Self::TuiHostRunLoop,
+            263 => Self::TuiHostRequestQuit,
             _ => return None,
         })
     }

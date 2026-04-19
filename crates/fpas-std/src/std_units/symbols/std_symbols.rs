@@ -160,6 +160,7 @@ pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_PAINT: &str =
 pub const STD_TUI_APPLICATION_HOST_DISPATCH_REDRAW: &str =
     std_tui!("Application.HostDispatchRedraw");
 pub const STD_TUI_APPLICATION_HOST_RUN_LOOP: &str = std_tui!("Application.HostRunLoop");
+pub const STD_TUI_APPLICATION_HOST_REQUEST_QUIT: &str = std_tui!("Application.HostRequestQuit");
 
 pub const STD_STR_LENGTH: &str = std_str!("Length");
 pub const STD_STR_TO_UPPER: &str = std_str!("ToUpper");

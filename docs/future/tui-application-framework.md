@@ -99,7 +99,7 @@ Original checklist (for history): ~~coalescing~~, ~~redraw integration~~, ~~fake
 **Done**
 
 - `**TuiState`** (`fpas-vm`): holds `**TuiHost**` plus optional `**on_key_pressed**`, `**on_resize**`, `**on_paint**` (`fpas_bytecode::Value`).
-- **Intrinsics (discriminants):** **255**–**259** — `TuiHostPollNext`, register/invoke key, register resize, `TuiHostProcessNext`; **260**–**261** — `TuiHostRegisterOnPaint`, `TuiHostDispatchRedraw`; **262** — `**TuiHostRunLoop`** (bounded alternation of redraw dispatch + `ProcessNext` until idle).
+- **Intrinsics (discriminants):** **255**–**259** — `TuiHostPollNext`, register/invoke key, register resize, `TuiHostProcessNext`; **260**–**261** — `TuiHostRegisterOnPaint`, `TuiHostDispatchRedraw`; **262** — `**TuiHostRunLoop`** (bounded alternation of redraw dispatch + `ProcessNext` until idle or `**TuiHostRequestQuit`**); **263** — `**TuiHostRequestQuit`** (cooperative stop for the bounded loop).
 - **Dispatch:** `HostEvent` → push args → `**Worker::call_function_sync`** for FP handlers; **no `tui` mutex held** across the call (see `[parallel-vm.md](../rust/parallel-vm.md)`).
 - **Console helpers:** e.g. `Std.Console.KeyEvent` materialization where needed for host paths.
 - **Tests:** `[tui_host_vm.rs](../../crates/fpas-vm/src/tests/core/tui_host_vm.rs)` (poll coalescing, resize/key tags, redraw tags, run loop).

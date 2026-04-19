@@ -298,6 +298,30 @@ end.",
 }
 
 #[test]
+fn std_tui_host_request_quit_from_on_paint_stops_host_run_loop() {
+    let out = compile_and_run(
+        "\
+program T;
+uses Std.Console, Std.Tui;
+
+procedure OnPaint(App: Application);
+begin
+  Application.HostRequestQuit(App)
+end;
+
+begin
+  var App: Application := Application.Open();
+  Application.RequestRedraw(App);
+  Application.HostRegisterOnPaint(App, OnPaint);
+  Application.HostRunLoop(App, 100);
+  Application.Close(App)
+end.",
+    );
+
+    assert!(out.lines.is_empty());
+}
+
+#[test]
 fn std_tui_host_register_on_paint_and_dispatch_redraw_runs_handler() {
     let out = compile_and_run(
         "\

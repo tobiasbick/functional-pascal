@@ -303,6 +303,27 @@ fn tui_host_run_loop_dispatches_paint_then_key_until_idle() {
 }
 
 #[test]
+fn tui_host_request_quit_ends_host_run_loop_after_idle_iteration() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Dup, loc());
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRequestQuit as u16),
+        loc(),
+    );
+    emit_constant(&mut chunk, Value::Integer(10_000));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRunLoop as u16), loc());
+    chunk.emit(Op::Halt, loc());
+
+    let mut vm = Vm::new(chunk);
+    vm.run().expect("vm ok");
+    assert!(
+        vm.output().lines.is_empty(),
+        "run loop should exit on quit after first idle iteration without printing"
+    );
+}
+
+#[test]
 fn tui_host_run_loop_max_iterations_zero_skips_body() {
     let mut chunk = Chunk::new();
     chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());

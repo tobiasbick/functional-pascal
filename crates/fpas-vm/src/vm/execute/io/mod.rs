@@ -6,6 +6,7 @@ use fpas_std::run_intrinsic;
 mod callbacks;
 mod console;
 mod tui;
+mod tui_run;
 
 impl Worker {
     pub(super) fn try_exec_io(&mut self, op: Op, line: SourceLocation) -> Result<bool, VmError> {

@@ -1,6 +1,6 @@
 # `Std.Tui` — dispatch-mode application (target)
 
-**Status:** target specification for the Rust-hosted event loop and `On*` handlers described in `[docs/future/tui-application-framework.md](../../future/tui-application-framework.md)`. **`Application.Host*`** dispatch helpers are **registered and lowered** (Phase 4 — partial), including `Application.HostRegisterOnExit`; a full **`Application.Run`** bundle and runtime **`OnExit`** invocation are still **not** in Pascal. The poll-style API in `[tui.md](tui.md)` remains the default for full programs until `Run` exists.
+**Status:** target specification for the Rust-hosted event loop and `On*` handlers described in `[docs/future/tui-application-framework.md](../../future/tui-application-framework.md)`. **`Application.Host*`** dispatch helpers are **registered and lowered**, and **`Application.Run(App)`** is available as the hosted loop entrypoint using previously registered handlers. `OnIdle` and a single handler-bundle surface remain future work. The poll-style API in `[tui.md](tui.md)` remains available for programs that do not use hosted dispatch.
 
 **Maintenance (implementers only):** when this mode ships, register types and routines in `[loaded/tui.rs](../../../crates/fpas-sema/src/std_registry/loaded/tui.rs)` and keep this file aligned with that registry (see root `[AGENTS.md](../../../AGENTS.md)`).
 
@@ -23,6 +23,7 @@ These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mo
 | `TuiHostRunLoop`              | `Application`, `max_iterations` (`integer`, top) | Bounded host loop: each iteration runs the same work as `TuiHostDispatchRedraw` then `TuiHostProcessNext` with a fixed inner `max_spins` of `64`. After each iteration, if `TuiHostRequestQuit` was observed, the loop stops and the quit flag is cleared. Otherwise stops when both steps would be idle (`0`). `max_iterations` is clamped to `0..=1_000_000`. Pushes `()`. |
 | `TuiHostRequestQuit`          | `Application`                                    | Sets a flag read by `TuiHostRunLoop` after each iteration. Does not push a value.                                                                                                                                                                                                 |
 | `TuiHostRegisterOnExit`       | `Application`, `function`                        | Registers `procedure (Application, ExitReason)` for a future hosted `Run` / `OnExit` path. Current bounded `HostRunLoop` does **not** invoke it yet.                                                                                                                               |
+| `TuiApplicationRun`           | `Application`                                    | Hosted loop entrypoint. Requires a previously registered `OnPaint` handler, auto-requests the first redraw, blocks until `Application.HostRequestQuit(App)` is observed, records `ExitReason.UserQuit`, invokes `OnExit` when registered, and performs `Application.Close` semantics before returning. Pushes `()`. |
 
 ### Pascal names (registry + compiler)
 
@@ -38,10 +39,11 @@ These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mo
 | `Application.HostRunLoop(App, MaxIterations)` | `TuiHostRunLoop` |
 | `Application.HostRequestQuit(App)` | `TuiHostRequestQuit` |
 | `Application.HostRegisterOnExit(App, OnExit)` | `TuiHostRegisterOnExit` |
+| `Application.Run(App)` | `TuiApplicationRun` |
 
 Samples: [`examples/pascal/tui/host_dispatch_minimal.fpas`](../../../examples/pascal/tui/host_dispatch_minimal.fpas) (one `HostProcessNext` step), [`examples/pascal/tui/host_dispatch_paint.fpas`](../../../examples/pascal/tui/host_dispatch_paint.fpas) (register `OnPaint` + `HostDispatchRedraw`), [`examples/pascal/tui/host_dispatch_quit.fpas`](../../../examples/pascal/tui/host_dispatch_quit.fpas) (`HostRequestQuit` from `OnPaint` + `HostRunLoop`).
 
-**Bytecode discriminants** (authoritative enum: [`Intrinsic`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs)): **255** `TuiHostPollNext`, **256** `TuiHostRegisterOnKeyPressed`, **257** `TuiHostInvokeOnKeyPressed`, **258** `TuiHostRegisterOnResize`, **259** `TuiHostProcessNext`, **260** `TuiHostRegisterOnPaint`, **261** `TuiHostDispatchRedraw`, **262** `TuiHostRunLoop`, **263** `TuiHostRequestQuit`, **264** `TuiHostRegisterOnExit`.
+**Bytecode discriminants** (authoritative enum: [`Intrinsic`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs)): **255** `TuiHostPollNext`, **256** `TuiHostRegisterOnKeyPressed`, **257** `TuiHostInvokeOnKeyPressed`, **258** `TuiHostRegisterOnResize`, **259** `TuiHostProcessNext`, **260** `TuiHostRegisterOnPaint`, **261** `TuiHostDispatchRedraw`, **262** `TuiHostRunLoop`, **263** `TuiHostRequestQuit`, **264** `TuiHostRegisterOnExit`, **265** `TuiApplicationRun`.
 
 `Application.Close` clears registered host handlers (`OnKeyPressed`, `OnResize`, `OnPaint`, `OnExit`), resets the host pump state, and closes the session as today.
 
@@ -61,28 +63,28 @@ Dispatch-mode names use the `**On` prefix** so they do not collide with legacy n
 | Step                | Meaning                                                                                                                                                               |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Application.Open`  | Same session semantics as today: acquire terminal state (raw mode, alternate screen when applicable).                                                                 |
-| `Application.Run`   | Start the **hosted** main loop for the given `Application` handle. **Blocks** until the host decides to stop (user quit, host error, or future signal path).          |
+| `Application.Run`   | Start the **hosted** main loop for the given `Application` handle. Register handlers first with `Application.HostRegisterOn*`; `OnPaint` is required. The loop auto-requests the first redraw and blocks until the application requests quit. |
 | `Application.Close` | Release the session. After `**Application.Run`** completes successfully, the host **must** have restored the session as if `**Close`** ran (see **Lifecycle** below). |
 
-
-**VM today:** Pascal does not lower `**Application.Run`**. The closest bytecode helper is `**TuiHostRunLoop**` (**262**): a **bounded** loop that alternates redraw dispatch and `**TuiHostProcessNext`** until both are idle or `**TuiHostRequestQuit**` (**263**) was observed; it still does **not** replace a blocking `**Run`** (`**OnExit**`, automatic `**Close**`, or a full `**ExitReason**` story).
+**Current Pascal surface:** `**Application.Run(App)`** is lowered to a dedicated intrinsic and uses handlers registered beforehand with `**Application.HostRegisterOn*`**. `**TuiHostRunLoop**` (**262**) remains available as the low-level bounded stepping helper for tests and explicit host experimentation.
 
 ### Lifecycle (normative)
 
 1. User calls `**Application.Open`** → receives `**App`**.
-2. User calls `**Application.Run(App, …)`** with handler configuration (exact bundle syntax is Phase 4; see **Handler bundle** below).
-3. While running, the host dispatches `**On*`** handlers on the **main VM thread** only (see `[parallel-vm.md](../../rust/parallel-vm.md)`).
-4. When the host stops the loop, it invokes `**OnExit(App, Reason)`** once if that handler is provided, then **performs `Application.Close(App)`** (or equivalent) so the program must **not** call `**Close`** again for the same successful `**Run`** unless the spec explicitly documents a double-close error.
+2. User registers handlers with `**Application.HostRegisterOn*`** (`**OnPaint`** required, others optional).
+3. User calls `**Application.Run(App)`**.
+4. While running, the host dispatches `**On*`** handlers on the **main VM thread** only (see `[parallel-vm.md](../../rust/parallel-vm.md)`).
+5. When the application requests quit, the host records `**ExitReason.UserQuit`**, invokes `**OnExit(App, Reason)`** once if that handler is provided, then **performs `Application.Close(App)`** (or equivalent) so the program must **not** call `**Close`** again for the same successful `**Run`**.
 
 If `**Run`** is never called, the program keeps today’s obligation: `**Open**` / `**Close**` pairing without `**Run**`.
 
 ---
 
-## Handler bundle (conceptual)
+## Current registration model
 
-The compiler may lower a **single** entry (for example `**Application.Run`** plus a descriptor record) or a small sequence of registration calls. Semantically there is **one** configuration object with named handler slots.
+Today, Pascal registers handlers with the existing `**Application.HostRegisterOn*`** routines and then starts the hosted loop with `**Application.Run(App)`**. A future bundle syntax may lower to the same runtime model, but the current shipped surface is the explicit registration API.
 
-**Required** for a minimal app: at least `**OnPaint`** (or the host rejects `**Run`**). Other slots are optional unless diagnostics require them.
+**Required** for a minimal app: at least `**OnPaint`** (the runtime rejects `**Run`** otherwise). Other slots are optional unless diagnostics require them.
 
 Conceptual field names (logical, not final syntax):
 
@@ -105,7 +107,7 @@ Reuse existing types from `**Std.Tui`** and `**Std.Console`** where possible: `*
 
 ### `ExitReason` (target)
 
-Enum describing why the hosted loop stopped (`**Std.Tui.ExitReason`**). **Registry:** the type and variants `**UserQuit**`, `**HostStop**` are registered in [`loaded/tui.rs`](../../../crates/fpas-sema/src/std_registry/loaded/tui.rs) and known to the compiler enum tables. **VM:** [`TuiState`](../../../crates/fpas-vm/src/vm/shared.rs) reserves optional `**on_exit**` and `**last_exit_reason**`; `TuiHostRegisterOnExit` stores the callback, but no current intrinsic assigns `last_exit_reason` or invokes `on_exit` yet. **`Application.Run`** is not lowered yet, so user code still cannot observe a runtime `**ExitReason**` from the host until that milestone lands.
+Enum describing why the hosted loop stopped (`**Std.Tui.ExitReason`**). **Registry:** the type and variants `**UserQuit**`, `**HostStop**` are registered in [`loaded/tui.rs`](../../../crates/fpas-sema/src/std_registry/loaded/tui.rs) and known to the compiler enum tables. **VM:** [`Application.Run`](../../../crates/fpas-vm/src/vm/execute/io/tui_run.rs) records `**last_exit_reason**`, invokes the registered `**OnExit**`, and then performs close semantics. The current hosted loop reports `**UserQuit`** when `**Application.HostRequestQuit(App)`** ends the run; `**HostStop`** remains reserved for future host-driven stop paths.
 
 
 | Variant    | Meaning                                                                                                                                                    |

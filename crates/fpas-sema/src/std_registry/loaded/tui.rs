@@ -111,6 +111,11 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         s::STD_TUI_APPLICATION_CLOSE,
         vec![p("App", application_ty.clone(), false)],
     );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_RUN,
+        vec![p("App", application_ty.clone(), false)],
+    );
     define_func(
         checker,
         s::STD_TUI_APPLICATION_SIZE,

@@ -28,6 +28,12 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::TuiApplicationClose, location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_RUN => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_RUN, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiApplicationRun, location);
+                Ok(true)
+            }
             s::STD_TUI_APPLICATION_SIZE => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_SIZE, 1, args, location)?;
                 self.compile_expr(&args[0])?;

@@ -172,15 +172,39 @@ fn std_tui_host_dispatch_surface_typechecks() {
         "\
 program T;
 uses Std.Tui;
+
+procedure OnPaint(App: Application);
+begin
+end;
+
 begin
   var App: Application := Application.Open();
+    Application.HostRegisterOnPaint(App, OnPaint);
   var Maybe: Option of TuiEvent := Application.HostPollNext(App);
   var Tag: integer := Application.HostProcessNext(App, 64);
   var Dr: integer := Application.HostDispatchRedraw(App);
   Application.HostRequestQuit(App);
+    Application.Run(App);
   Application.HostRunLoop(App, 8);
-  Application.Close(App)
 end.",
+    );
+}
+
+#[test]
+fn std_tui_application_run_wrong_arg_count() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Tui;
+begin
+    var App: Application := Application.Open();
+    Application.Run(App, App)
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| e.message.contains("expects 1 arguments, got 2")),
+        "{errs:#?}"
     );
 }
 

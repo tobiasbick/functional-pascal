@@ -50,6 +50,8 @@ pub(crate) struct TuiState {
     pub last_exit_reason: Option<Value>,
     /// Set by `TuiHostRequestQuit`; consumed when [`crate::vm::execute::io::tui::Worker`] run loop observes it.
     pub quit_requested: bool,
+    /// Guards the single hosted `Application.Run` entrypoint for the active session.
+    pub run_active: bool,
 }
 
 impl Default for TuiState {
@@ -63,6 +65,7 @@ impl Default for TuiState {
             on_exit: None,
             last_exit_reason: None,
             quit_requested: false,
+            run_active: false,
         }
     }
 }

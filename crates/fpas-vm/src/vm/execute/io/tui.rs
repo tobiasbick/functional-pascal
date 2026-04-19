@@ -32,22 +32,17 @@ impl Worker {
                     tui.quit_requested = false;
                     tui.on_exit = None;
                     tui.last_exit_reason = None;
+                    tui.run_active = false;
                 }
                 self.push(Self::tui_application_record())?;
             }
             Intrinsic::TuiApplicationClose => {
                 self.pop_tui_application(line)?;
-                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                self.with_console_and_key_input(|console, key_input| {
-                    tui.session.close(console, key_input, line)
-                })?;
-                tui.host = fpas_std::TuiHost::new();
-                tui.on_key_pressed = None;
-                tui.on_resize = None;
-                tui.on_paint = None;
-                tui.on_exit = None;
-                tui.last_exit_reason = None;
-                tui.quit_requested = false;
+                self.close_tui_application_state(line)?;
+            }
+            Intrinsic::TuiApplicationRun => {
+                self.tui_application_run(line)?;
+                self.push(Value::Unit)?;
             }
             Intrinsic::TuiApplicationSize => {
                 self.pop_tui_application(line)?;
@@ -289,7 +284,7 @@ impl Worker {
     }
 
     /// Returns status tag pushed by `TuiHostProcessNext` (`0`..=`4`).
-    fn tui_host_process_next_inner(
+    pub(super) fn tui_host_process_next_inner(
         &mut self,
         max_spins: usize,
         line: SourceLocation,
@@ -356,7 +351,10 @@ impl Worker {
     }
 
     /// `0` = no redraw pending, `5` = `OnPaint` ran, `6` = pending but no handler (cleared).
-    fn tui_host_dispatch_redraw_inner(&mut self, line: SourceLocation) -> Result<i64, VmError> {
+    pub(super) fn tui_host_dispatch_redraw_inner(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<i64, VmError> {
         let (pending, on_paint) = {
             let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
             let pending = tui.session.is_redraw_pending(line)?;
@@ -405,7 +403,7 @@ impl Worker {
     }
 
     /// Clears the flag when set so a later `TuiHostRunLoop` does not stop immediately.
-    fn take_tui_host_quit_requested(&self) -> bool {
+    pub(super) fn take_tui_host_quit_requested(&self) -> bool {
         let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
         if tui.quit_requested {
             tui.quit_requested = false;
@@ -415,7 +413,7 @@ impl Worker {
         }
     }
 
-    fn pop_tui_application(&mut self, line: SourceLocation) -> Result<(), VmError> {
+    pub(super) fn pop_tui_application(&mut self, line: SourceLocation) -> Result<(), VmError> {
         match self.pop(line)? {
             Value::Record { type_name, .. } if type_name == TUI_APPLICATION_TYPE => Ok(()),
             other => Err(runtime_error(
@@ -427,7 +425,27 @@ impl Worker {
         }
     }
 
-    fn tui_application_record() -> Value {
+    pub(super) fn close_tui_application_state(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+        let close_result = self.with_console_and_key_input(|console, key_input| {
+            tui.session.close(console, key_input, line)
+        });
+        tui.host = fpas_std::TuiHost::new();
+        tui.on_key_pressed = None;
+        tui.on_resize = None;
+        tui.on_paint = None;
+        tui.on_exit = None;
+        tui.last_exit_reason = None;
+        tui.quit_requested = false;
+        tui.run_active = false;
+        close_result?;
+        Ok(())
+    }
+
+    pub(super) fn tui_application_record() -> Value {
         Value::Record {
             type_name: TUI_APPLICATION_TYPE.into(),
             fields: vec![],

@@ -400,6 +400,15 @@ pub enum Intrinsic {
     /// **Documentation:** `docs/pascal/std/tui.md`
     TuiApplicationRedrawPending = 254,
 
+    /// Hosted application loop (`Std.Tui.Application.Run`). Uses the handlers registered through
+    /// `Application.HostRegisterOn*`, auto-requests the first redraw, waits until
+    /// `Application.HostRequestQuit` is observed, records `Std.Tui.ExitReason.UserQuit`, invokes
+    /// `OnExit` when registered, and performs `Application.Close` semantics before returning.
+    /// Stack: `Application`. Pushes `()`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiApplicationRun = 265,
+
     /// `Std.Tui` host poll: next event via `fpas_std::TuiHost` (resize coalescing). Returns `Option<Std.Tui.TuiEvent>`.
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md` (from the repository root)

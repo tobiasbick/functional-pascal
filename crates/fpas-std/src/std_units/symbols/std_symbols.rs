@@ -141,6 +141,8 @@ pub const STD_TUI_EVENT_KIND: &str = std_tui!("EventKind");
 pub const STD_TUI_EXIT_REASON: &str = std_tui!("ExitReason");
 pub const STD_TUI_APPLICATION_OPEN: &str = std_tui!("Application.Open");
 pub const STD_TUI_APPLICATION_CLOSE: &str = std_tui!("Application.Close");
+/// Dispatch-mode hosted application loop; see `docs/pascal/std/tui-app.md`.
+pub const STD_TUI_APPLICATION_RUN: &str = std_tui!("Application.Run");
 pub const STD_TUI_APPLICATION_SIZE: &str = std_tui!("Application.Size");
 pub const STD_TUI_APPLICATION_READ_EVENT: &str = std_tui!("Application.ReadEvent");
 pub const STD_TUI_APPLICATION_READ_EVENT_TIMEOUT: &str = std_tui!("Application.ReadEventTimeout");

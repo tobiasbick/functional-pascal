@@ -6,11 +6,14 @@ use fpas_bytecode::{Chunk, Intrinsic, Op, Value};
 use fpas_std::ConsoleEvent;
 use fpas_std::ConsoleKeyEvent;
 use fpas_std::key_event::key_kind_index;
+use std::sync::Arc;
 
 use crate::Vm;
 use crate::tests::helpers::{
-    emit_constant, key_event_value, loc, run_ok_output, tui_application_value,
+    emit_constant, key_event_value, loc, minimal_shared_state, run_err, run_ok_output,
+    tui_application_value,
 };
+use crate::vm::Worker;
 
 #[test]
 fn tui_host_invoke_on_key_pressed_runs_registered_fp_function() {
@@ -307,10 +310,7 @@ fn tui_host_request_quit_ends_host_run_loop_after_idle_iteration() {
     let mut chunk = Chunk::new();
     chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
     chunk.emit(Op::Dup, loc());
-    chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRequestQuit as u16),
-        loc(),
-    );
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRequestQuit as u16), loc());
     emit_constant(&mut chunk, Value::Integer(10_000));
     chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRunLoop as u16), loc());
     chunk.emit(Op::Halt, loc());
@@ -358,4 +358,123 @@ fn tui_host_run_loop_max_iterations_zero_skips_body() {
     chunk.emit(Op::Return, loc());
 
     assert!(run_ok_output(chunk).is_empty());
+}
+
+#[test]
+fn tui_host_register_on_exit_stores_handler_in_shared_tui_state() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnExit".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnExit as u16),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let on_exit_start = chunk.len();
+    chunk.functions.insert("OnExit".into(), (on_exit_start, 2));
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+    assert!(matches!(
+        tui.on_exit.as_ref(),
+        Some(Value::Function { name, .. }) if name == "OnExit"
+    ));
+}
+
+#[test]
+fn tui_host_register_on_exit_is_cleared_by_application_close() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Dup, loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnExit".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnExit as u16),
+        loc(),
+    );
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationClose as u16), loc());
+    chunk.emit(Op::Halt, loc());
+
+    let on_exit_start = chunk.len();
+    chunk.functions.insert("OnExit".into(), (on_exit_start, 2));
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+    assert!(
+        tui.on_exit.is_none(),
+        "Application.Close should clear OnExit"
+    );
+}
+
+#[test]
+fn tui_host_register_on_exit_rejects_non_function_value() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    emit_constant(&mut chunk, Value::Integer(7));
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnExit as u16),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let error = run_err(chunk);
+    assert!(
+        error.message.contains("OnExit expects a function value"),
+        "unexpected runtime error: {}",
+        error.message
+    );
+}
+
+#[test]
+fn tui_host_register_on_exit_rejects_wrong_arity() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "WrongOnExit".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnExit as u16),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let on_exit_start = chunk.len();
+    chunk
+        .functions
+        .insert("WrongOnExit".into(), (on_exit_start, 1));
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    let error = run_err(chunk);
+    assert!(
+        error.message.contains("OnExit handler must have arity 2"),
+        "unexpected runtime error: {}",
+        error.message
+    );
 }

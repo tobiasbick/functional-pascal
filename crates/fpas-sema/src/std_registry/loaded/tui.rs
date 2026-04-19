@@ -8,8 +8,8 @@ use super::super::{define_func, define_proc, p};
 use crate::check::Checker;
 use crate::scope::{Symbol, SymbolKind};
 use crate::types::{EnumTy, EnumVariantTy, FunctionTy, ProcedureTy, RecordTy, Ty};
-use fpas_std::TUI_EVENT_KIND_VARIANTS;
 use fpas_std::std_symbols as s;
+use fpas_std::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS};
 
 fn register_enum_type(checker: &mut Checker, qualified_name: &str, variants: &[&str]) -> Ty {
     let variants: Vec<EnumVariantTy> = variants
@@ -88,6 +88,8 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
     };
 
     let event_kind_ty = register_enum_type(checker, s::STD_TUI_EVENT_KIND, TUI_EVENT_KIND_VARIANTS);
+    let exit_reason_ty =
+        register_enum_type(checker, s::STD_TUI_EXIT_REASON, TUI_EXIT_REASON_VARIANTS);
     let event_ty = register_record_type(
         checker,
         s::STD_TUI_EVENT,
@@ -220,6 +222,22 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         checker,
         s::STD_TUI_APPLICATION_HOST_REQUEST_QUIT,
         vec![p("App", application_ty.clone(), false)],
+    );
+    let on_exit_ty = Ty::Procedure(ProcedureTy {
+        type_params: Vec::new(),
+        params: vec![
+            p("App", application_ty.clone(), false),
+            p("Reason", exit_reason_ty, false),
+        ],
+        variadic: false,
+    });
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_REGISTER_ON_EXIT,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("OnExit", on_exit_ty, false),
+        ],
     );
 
     define_func(

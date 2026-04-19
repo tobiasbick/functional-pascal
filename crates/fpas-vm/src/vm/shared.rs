@@ -44,6 +44,10 @@ pub(crate) struct TuiState {
     pub on_resize: Option<Value>,
     /// `OnPaint`-style handler: `procedure (Application)` (one argument).
     pub on_paint: Option<Value>,
+    /// `OnExit`-style handler: `procedure (Application, ExitReason)` (registered when `Application.Run` / bridge exists).
+    pub on_exit: Option<Value>,
+    /// Last reason recorded for a hosted run (`Std.Tui.ExitReason` enum value); set when a future `Run` loop stops.
+    pub last_exit_reason: Option<Value>,
     /// Set by `TuiHostRequestQuit`; consumed when [`crate::vm::execute::io::tui::Worker`] run loop observes it.
     pub quit_requested: bool,
 }
@@ -56,6 +60,8 @@ impl Default for TuiState {
             on_key_pressed: None,
             on_resize: None,
             on_paint: None,
+            on_exit: None,
+            last_exit_reason: None,
             quit_requested: false,
         }
     }

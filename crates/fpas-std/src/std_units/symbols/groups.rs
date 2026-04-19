@@ -92,6 +92,7 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_SIZE,
     std_symbols::STD_TUI_EVENT,
     std_symbols::STD_TUI_EVENT_KIND,
+    std_symbols::STD_TUI_EXIT_REASON,
     std_symbols::STD_TUI_APPLICATION_OPEN,
     std_symbols::STD_TUI_APPLICATION_CLOSE,
     std_symbols::STD_TUI_APPLICATION_SIZE,
@@ -109,6 +110,7 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_APPLICATION_HOST_DISPATCH_REDRAW,
     std_symbols::STD_TUI_APPLICATION_HOST_RUN_LOOP,
     std_symbols::STD_TUI_APPLICATION_HOST_REQUEST_QUIT,
+    std_symbols::STD_TUI_APPLICATION_HOST_REGISTER_ON_EXIT,
 ];
 
 pub(in super::super) const STD_STR_SYMBOLS: &[&str] = &[

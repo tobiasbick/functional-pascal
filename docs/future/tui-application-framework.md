@@ -11,6 +11,23 @@ This document is an **implementation plan** for evolving Functional Pascal’s t
 
 ---
 
+## Rolling progress (implementation snapshot)
+
+Quick view of what already exists **in tree** versus what this document still treats as future work. Details stay in the phase sections below.
+
+
+| Topic                                                                     | In code today                                                                                                                                    | Still open (this plan)                                                                                                      |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `**TuiHost`** resize coalescing, `**HostEvent`**, `**TuiSession`** redraw | `crates/fpas-std`                                                                                                                                | Standalone Rust-only blocking app loop (optional)                                                                           |
+| VM `**TuiState**` + host intrinsics **255**–**264**                       | `crates/fpas-vm`, `crates/fpas-bytecode`; `**TuiState`** holds optional `**on_exit**` + `**last_exit_reason**`, and intrinsic **264** registers `**on_exit**` (still not invoked/populated by the run loop) | Single blocking `**Application.Run**` / intrinsic that **fills** `**last_exit_reason**`, invokes `**on_exit**`, `**Close**` |
+| `**Application.Host***` + `**HostRequestQuit**` / `**HostRegisterOnExit**` | sema, compiler, VM tests, `examples/pascal/tui/host_dispatch_*.fpas`                                                                             | `**OnExit**` invocation, `**ExitReason**` from host, **idle**                                                               |
+| `**Std.Tui.ExitReason**` (`**UserQuit**`, `**HostStop**`)                 | sema registry + compiler enum tables (`fpas-std` variant list)                                                                                   | Host sets `**last_exit_reason**` + Pascal `**OnExit**` when `**Run**` exists                                                |
+
+
+**Next slice (in order):** (1) ~~register `**ExitReason`** in `Std.Tui~~` — **done**; (2) `~~**TuiState.on_exit**` / `**last_exit_reason**` fields (reset on `**Open**`/`**Close**`)~~ — **done**; (3) ~~`**TuiHostRegisterOnExit`** (or bundle) + intrinsic(s) to assign `**on_exit**`~~ — **done** (`**Application.HostRegisterOnExit`** / intrinsic **264** store the handler); (4) `**Application.Run**` (or one intrinsic) that runs the hosted loop, sets `**last_exit_reason**`, calls `**on_exit**`, then `**Close**` semantics; (5) `**OnIdle**` interval host-side.
+
+---
+
 ## Phase 0 — Requirements and terminology
 
 Phase 0 is **complete** for planning purposes. The subsections below are authoritative; revise them here if decisions change.
@@ -63,7 +80,7 @@ Phase 0 is **complete** for planning purposes. The subsections below are authori
 
 Phase 1 is **complete**. The canonical user-facing spec is `**[docs/pascal/std/tui-app.md](../pascal/std/tui-app.md)`** (English). Summary:
 
-- **Entry:** `**Application.Open`** then `**Application.Run(App, …)`** (blocking hosted loop). After `**Run`** completes normally, the host performs `**Application.Close`** semantics once `**OnExit`** has run (see `**tui-app.md**` lifecycle). Until Pascal lowers `**Run**`, bytecode can approximate stepping with `**TuiHostRunLoop**` (intrinsic **262**) plus cooperative **`**TuiHostRequestQuit**` (263)** / Pascal `**Application.HostRequestQuit`**: a **bounded** loop of redraw dispatch plus `**TuiHostProcessNext`**, stopping when both are idle **or** quit was requested—not a substitute for structured `**ExitReason**` / `**OnExit`** / automatic `**Close`**.
+- **Entry:** `**Application.Open`** then `**Application.Run(App, …)`** (blocking hosted loop). After `**Run`** completes normally, the host performs `**Application.Close`** semantics once `**OnExit`** has run (see `**tui-app.md`** lifecycle). Until Pascal lowers `**Run`**, bytecode can approximate stepping with `**TuiHostRunLoop**` (intrinsic **262**) plus cooperative `**TuiHostRequestQuit`** (intrinsic **263**) / Pascal `**Application.HostRequestQuit`**: a bounded loop of redraw dispatch plus `**TuiHostProcessNext`**, stopping when both are idle **or** quit was requested—not a substitute for structured `**ExitReason`** / `**OnExit`** / automatic `**Close`**.
 - **Handlers:** `**OnStartup`** (optional), `**OnKeyPressed(App, Key): boolean`** (consumed), `**OnResize`**, `**OnPaint`** (required), `**OnIdle**` (optional), `**OnExit(App, Reason)**` with **no veto**.
 - **Redraw:** invalidation + coalescing; `**OnPaint`** is the single FP paint contract; optional `**OnIdle`** uses a configurable idle interval.
 - **Naming:** `**On*`** prefix only for dispatch callbacks; poll-style `**ReadEvent`** / `**PollEvent`** / console `**KeyPressed`** are superseded for full apps when implementation lands (`[tui.md](../pascal/std/tui.md)` remains the source for the **current** poll API until Phase 5).
@@ -77,8 +94,8 @@ Phase 1 is **complete**. The canonical user-facing spec is `**[docs/pascal/std/t
 
 **Done**
 
-- `**[TuiHost](../../crates/fpas-std/src/tui_host.rs)`** and `**HostEvent**`: normalize console/`TuiSession` input; **resize coalescing** ahead of key; `flush_pending_resize`; `**HostEvent::suggests_request_redraw`** on resize.
-- **Pump API:** `poll_next` / `read_next_blocking` over `**TuiSession`**; optional `**set_trace_hook**` for ordering/debug.
+- `**[TuiHost](../../crates/fpas-std/src/tui_host.rs)`** and `**HostEvent`**: normalize console/`TuiSession` input; resize coalescing ahead of key; `flush_pending_resize`; `**HostEvent::suggests_request_redraw`** on resize.
+- **Pump API:** `poll_next` / `read_next_blocking` over `**TuiSession`**; optional `**set_trace_hook`** for ordering/debug.
 - **Redraw coordination:** `TuiSession` invalidation + `**is_redraw_pending`** (peek, consume-on-paint path used by the VM).
 - **Tests:** `KeyInput` / console queues in `fpas-std` (no real terminal required for those tests).
 
@@ -94,41 +111,41 @@ Original checklist (for history): ~~coalescing~~, ~~redraw integration~~, ~~fake
 
 ## Phase 3 — VM bridge: from host loop to bytecode
 
-**Status:** **Partial** — bytecode bridge and handler dispatch are **implemented**; **`Application.Host*`** is **lowered from Pascal** (see [tui-app.md](../pascal/std/tui-app.md)). **Cooperative quit** for the bounded host loop is **implemented** (`**TuiHostRequestQuit**` / `**Application.HostRequestQuit**`). **Still missing:** **`Application.Run`**, structured **`ExitReason`**, **`OnExit`**, and **idle** as a **single** hosted lifecycle.
+**Status:** **Partial** — bytecode bridge and handler dispatch are **implemented**; `**Application.Host*`** is **lowered from Pascal** (see [tui-app.md](../pascal/std/tui-app.md)). **Cooperative quit** for the bounded host loop is **implemented** (`**TuiHostRequestQuit`** / `**Application.HostRequestQuit`**). `**Application.HostRegisterOnExit`** / intrinsic **264** store an optional `**on_exit**` handler in `**TuiState**`. **Language type** `**Std.Tui.ExitReason`** is **registered** (variants `**UserQuit`** / `**HostStop**`) for future `**OnExit**` / `**Run**` — **no intrinsic assigns** `last_exit_reason` **or invokes** `on_exit` **yet**. `**TuiState`** holds optional `**on_exit**` / `**last_exit_reason**` (cleared on `**Open**`/`**Close**`). **Still missing:** `**Application.Run`**, host-produced `ExitReason` into `last_exit_reason`, `**OnExit`** call, and **idle** as a **single** hosted lifecycle.
 
 **Done**
 
-- `**TuiState`** (`fpas-vm`): holds `**TuiHost**` plus optional `**on_key_pressed**`, `**on_resize**`, `**on_paint**` (`fpas_bytecode::Value`).
-- **Intrinsics (discriminants):** **255**–**259** — `TuiHostPollNext`, register/invoke key, register resize, `TuiHostProcessNext`; **260**–**261** — `TuiHostRegisterOnPaint`, `TuiHostDispatchRedraw`; **262** — `**TuiHostRunLoop`** (bounded alternation of redraw dispatch + `ProcessNext` until idle or `**TuiHostRequestQuit`**); **263** — `**TuiHostRequestQuit`** (cooperative stop for the bounded loop).
+- `**TuiState`** (`fpas-vm`): holds `**TuiHost`** plus optional `**on_key_pressed`**, `**on_resize**`, `**on_paint**`, optional `**on_exit**` / `**last_exit_reason**` (placeholders for `**Run**`/`**OnExit**`; cleared on `**Open**`/`**Close**`) (`fpas_bytecode::Value`).
+- **Intrinsics (discriminants):** **255**–**259** — `TuiHostPollNext`, register/invoke key, register resize, `TuiHostProcessNext`; **260**–**261** — `TuiHostRegisterOnPaint`, `TuiHostDispatchRedraw`; **262** — `**TuiHostRunLoop`** (bounded alternation of redraw dispatch + `ProcessNext` until idle or `**TuiHostRequestQuit`**); **263** — `**TuiHostRequestQuit`** (cooperative stop for the bounded loop); **264** — `**TuiHostRegisterOnExit`** (stores `**on_exit**` only).
 - **Dispatch:** `HostEvent` → push args → `**Worker::call_function_sync`** for FP handlers; **no `tui` mutex held** across the call (see `[parallel-vm.md](../rust/parallel-vm.md)`).
 - **Console helpers:** e.g. `Std.Console.KeyEvent` materialization where needed for host paths.
 - **Tests:** `[tui_host_vm.rs](../../crates/fpas-vm/src/tests/core/tui_host_vm.rs)` (poll coalescing, resize/key tags, redraw tags, run loop).
 
 **Still open**
 
-- **One** intrinsic (or Pascal `**Application.Run`**) that **blocks until stop** with `**ExitReason`**, `**OnExit**`, and documented `**Close**` semantics (not the same as bounded `**TuiHostRunLoop**`).
+- **One** intrinsic (or Pascal `**Application.Run`**) that blocks until stop with `**ExitReason`**, `**OnExit**`, and documented `**Close**` semantics (not the same as bounded `**TuiHostRunLoop**`).
 - **Idle timer** / `**OnIdle`** wiring from the host.
 
 **Checklist mapping**
 
 
-| Item                                     | State                                                                                     |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------- |
-| 1. Intrinsic set (run / register / quit) | **Partial:** **255**–**263** shipped (including cooperative quit); **`Application.Run` / `ExitReason` / `OnExit`** still outstanding. |
-| 2. Where handlers live                   | **Done for VM:** chunk **constants** + `TuiState` fields; compiler may add a table later. |
-| 3. Rust → FP calling convention          | **Done** for current intrinsics (`call_function_sync`, arity checks).                     |
-| 4. Dispatch in `fpas-vm`                 | **Done** for `ProcessNext` / redraw / run-loop stepping (not full TV lifecycle).          |
-| 5. Mutex / main-thread rules             | **Done** (aligned with `parallel-vm` Phase 3).                                            |
-| 6. VM tests with synthetic events        | **Done** (`tui_host_vm` + related).                                                       |
+| Item                                     | State                                                                                                                                                                                            |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1. Intrinsic set (run / register / quit) | **Partial:** **255**–**264** shipped (including cooperative quit and `**HostRegisterOnExit**` storage); `**ExitReason`** exists as a **Pascal enum only** at runtime; `**Application.Run` / runtime `ExitReason` / `OnExit` invocation** still outstanding. |
+| 2. Where handlers live                   | **Done for VM:** chunk **constants** + `TuiState` fields; compiler may add a table later.                                                                                                        |
+| 3. Rust → FP calling convention          | **Done** for current intrinsics (`call_function_sync`, arity checks).                                                                                                                            |
+| 4. Dispatch in `fpas-vm`                 | **Done** for `ProcessNext` / redraw / run-loop stepping (not full TV lifecycle).                                                                                                                 |
+| 5. Mutex / main-thread rules             | **Done** (aligned with `parallel-vm` Phase 3).                                                                                                                                                   |
+| 6. VM tests with synthetic events        | **Done** (`tui_host_vm` + related).                                                                                                                                                              |
 
 
 ---
 
 ## Phase 4 — Compiler and semantic analysis
 
-**Status:** **Partial.** **`Application.Host*`** symbols for the VM host intrinsics (**255**–**263**) are registered in [`loaded/tui.rs`](../../crates/fpas-sema/src/std_registry/loaded/tui.rs) and lowered in [`std_calls/tui.rs`](../../crates/fpas-compiler/src/compiler/std_calls/tui.rs); compiler integration tests cover stepping intrinsics, **`HostRegisterOnPaint` + `HostDispatchRedraw`**, and **`HostRequestQuit` + `HostRunLoop`** (see `fpas-compiler` [`std_library/tui.rs`](../../crates/fpas-compiler/src/tests/std_library/tui.rs)). Samples: [`host_dispatch_minimal.fpas`](../../examples/pascal/tui/host_dispatch_minimal.fpas), [`host_dispatch_paint.fpas`](../../examples/pascal/tui/host_dispatch_paint.fpas), [`host_dispatch_quit.fpas`](../../examples/pascal/tui/host_dispatch_quit.fpas). See [tui-app.md](../pascal/std/tui-app.md). **Still open:** **`Application.Run`** (or equivalent), **`ExitReason`**, handler **bundle** types, and **`OnExit`** as a **single** hosted lifecycle (beyond cooperative quit on the bounded loop).
+**Status:** **Partial.** `**Application.Host*`** symbols for the VM host intrinsics (**255**–**264**) are registered in `[loaded/tui.rs](../../crates/fpas-sema/src/std_registry/loaded/tui.rs)` and lowered in `[std_calls/tui.rs](../../crates/fpas-compiler/src/compiler/std_calls/tui.rs)`; compiler integration tests cover stepping intrinsics, `**HostRegisterOnPaint` + `HostDispatchRedraw`**, `**HostRequestQuit` + `HostRunLoop`**, and `**HostRegisterOnExit`** storage lowering (see `fpas-compiler` `[std_library/tui.rs](../../crates/fpas-compiler/src/tests/std_library/tui.rs)`). `Std.Tui.ExitReason` is registered with the same crate (no `**Application.Run**` lowering yet). Samples: `[host_dispatch_minimal.fpas](../../examples/pascal/tui/host_dispatch_minimal.fpas)`, `[host_dispatch_paint.fpas](../../examples/pascal/tui/host_dispatch_paint.fpas)`, `[host_dispatch_quit.fpas](../../examples/pascal/tui/host_dispatch_quit.fpas)`. See [tui-app.md](../pascal/std/tui-app.md). Still open: `**Application.Run`** (or equivalent), **host wiring** for `**ExitReason`**, handler **bundle** types, and `**OnExit`** as a **single** hosted lifecycle (beyond cooperative quit on the bounded loop).
 
-1. Extend `**Std.Tui`** (or successor unit) in [`fpas-sema` registry](../../crates/fpas-sema/src/std_registry/loaded/tui.rs): new types for **options bundle** or **fluent registration** API—keep **one** story, avoid duplicate entry points.
+1. Extend `**Std.Tui`** (or successor unit) in `[fpas-sema` registry](../../crates/fpas-sema/src/std_registry/loaded/tui.rs): new types for **options bundle** or **fluent registration** API—keep **one** story, avoid duplicate entry points.
 2. Type-check handler assignments: **procedure types** must match declared `On*` signatures exactly.
 3. Lower new calls in `[fpas-compiler](../../crates/fpas-compiler/src/compiler/std_calls/tui.rs)`: emit **registration + `Run`** sequence or a single `**Application.Run**` intrinsic with a descriptor record.
 4. Update **short-name / qualified-name** rules and integration tests under `crates/fpas-sema/src/tests/integration/std_units/tui.rs`.

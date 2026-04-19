@@ -453,6 +453,12 @@ pub enum Intrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     TuiHostRequestQuit = 263,
+
+    /// Register `procedure (Application, Std.Tui.ExitReason)` for a future hosted `Run` / `OnExit` path.
+    /// Stack: `Application`, `OnExit` (function value, top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostRegisterOnExit = 264,
 }
 
 impl From<Intrinsic> for u16 {

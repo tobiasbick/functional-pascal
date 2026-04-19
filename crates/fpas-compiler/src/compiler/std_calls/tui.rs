@@ -155,9 +155,26 @@ impl Compiler {
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_REQUEST_QUIT => {
-                self.expect_exact_args(s::STD_TUI_APPLICATION_HOST_REQUEST_QUIT, 1, args, location)?;
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_REQUEST_QUIT,
+                    1,
+                    args,
+                    location,
+                )?;
                 self.compile_expr(&args[0])?;
                 self.emit_intrinsic_unit(Intrinsic::TuiHostRequestQuit, location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_REGISTER_ON_EXIT => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_REGISTER_ON_EXIT,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnExit, location);
                 Ok(true)
             }
             _ => Ok(false),

@@ -6,8 +6,8 @@ use fpas_parser::{Designator, DesignatorPart, Program};
 use fpas_std::key_event::KEY_KIND_VARIANTS;
 use fpas_std::{
     EVENT_KIND_VARIANTS, MOUSE_ACTION_VARIANTS, MOUSE_BUTTON_VARIANTS, STD_UNIT_CONSOLE,
-    STD_UNIT_TUI, TUI_EVENT_KIND_VARIANTS, canonical_std_unit_from_segments, is_std_root_segment,
-    std_symbols as s,
+    STD_UNIT_TUI, TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS,
+    canonical_std_unit_from_segments, is_std_root_segment, std_symbols as s,
 };
 
 use super::{Compiler, EnumInfo, EnumVariantInfo, Local, LocalRef, canonical_name};
@@ -119,5 +119,6 @@ impl Compiler {
         // `Std.Tui.TuiEvent.key` is `Std.Console.KeyEvent` (field `kind` is `Std.Console.KeyKind`).
         self.register_enum_variants(s::STD_CONSOLE_KEY_KIND, KEY_KIND_VARIANTS);
         self.register_enum_variants(s::STD_TUI_EVENT_KIND, TUI_EVENT_KIND_VARIANTS);
+        self.register_enum_variants(s::STD_TUI_EXIT_REASON, TUI_EXIT_REASON_VARIANTS);
     }
 }

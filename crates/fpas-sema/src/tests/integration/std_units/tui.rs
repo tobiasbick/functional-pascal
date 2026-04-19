@@ -1,6 +1,20 @@
 use super::{check_errors, check_ok};
 
 #[test]
+fn std_tui_exit_reason_enum_is_available() {
+    check_ok(
+        "\
+program T;
+uses Std.Tui;
+begin
+  var R: ExitReason := ExitReason.UserQuit;
+  var H: boolean := R = ExitReason.HostStop;
+  Application.Close(Application.Open())
+end.",
+    );
+}
+
+#[test]
 fn std_tui_application_surface_is_available() {
     check_ok(
         "\
@@ -171,6 +185,25 @@ end.",
 }
 
 #[test]
+fn std_tui_host_register_on_exit_typechecks() {
+    check_ok(
+        "\
+program T;
+uses Std.Tui;
+
+procedure OnExit(App: Application; Reason: ExitReason);
+begin
+end;
+
+begin
+  var App: Application := Application.Open();
+  Application.HostRegisterOnExit(App, OnExit);
+  Application.Close(App)
+end.",
+    );
+}
+
+#[test]
 fn std_tui_host_run_loop_wrong_arg_count() {
     let errs = check_errors(
         "\
@@ -184,6 +217,66 @@ end.",
     assert!(
         errs.iter()
             .any(|e| e.message.contains("expects 2 arguments, got 1")),
+        "{errs:#?}"
+    );
+}
+
+#[test]
+fn std_tui_host_register_on_exit_wrong_arg_count() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Tui;
+begin
+  var App: Application := Application.Open();
+  Application.HostRegisterOnExit(App)
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| e.message.contains("expects 2 arguments, got 1")),
+        "{errs:#?}"
+    );
+}
+
+#[test]
+fn std_tui_host_register_on_exit_requires_procedure_signature() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Tui;
+
+function WrongOnExit(App: Application; Reason: ExitReason): boolean;
+begin
+  return true
+end;
+
+begin
+  var App: Application := Application.Open();
+  Application.HostRegisterOnExit(App, WrongOnExit)
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| { e.message.contains("procedure") || e.message.contains("Type mismatch") }),
+        "{errs:#?}"
+    );
+}
+
+#[test]
+fn std_tui_host_request_quit_wrong_arg_count() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Tui;
+begin
+  var App: Application := Application.Open();
+  Application.HostRequestQuit(App, App)
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| e.message.contains("expects 1 arguments, got 2")),
         "{errs:#?}"
     );
 }

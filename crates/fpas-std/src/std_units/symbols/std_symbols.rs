@@ -138,6 +138,7 @@ pub const STD_TUI_APPLICATION: &str = std_tui!("Application");
 pub const STD_TUI_SIZE: &str = std_tui!("Size");
 pub const STD_TUI_EVENT: &str = std_tui!("TuiEvent");
 pub const STD_TUI_EVENT_KIND: &str = std_tui!("EventKind");
+pub const STD_TUI_EXIT_REASON: &str = std_tui!("ExitReason");
 pub const STD_TUI_APPLICATION_OPEN: &str = std_tui!("Application.Open");
 pub const STD_TUI_APPLICATION_CLOSE: &str = std_tui!("Application.Close");
 pub const STD_TUI_APPLICATION_SIZE: &str = std_tui!("Application.Size");
@@ -161,6 +162,8 @@ pub const STD_TUI_APPLICATION_HOST_DISPATCH_REDRAW: &str =
     std_tui!("Application.HostDispatchRedraw");
 pub const STD_TUI_APPLICATION_HOST_RUN_LOOP: &str = std_tui!("Application.HostRunLoop");
 pub const STD_TUI_APPLICATION_HOST_REQUEST_QUIT: &str = std_tui!("Application.HostRequestQuit");
+pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_EXIT: &str =
+    std_tui!("Application.HostRegisterOnExit");
 
 pub const STD_STR_LENGTH: &str = std_str!("Length");
 pub const STD_STR_TO_UPPER: &str = std_str!("ToUpper");

@@ -44,7 +44,7 @@ pub use std_units::{
     canonical_std_unit_from_segments, canonical_std_unit_from_tail, is_std_root_segment,
     std_symbols, std_unit_symbols, std_units_list_for_hint,
 };
-pub use tui::{TUI_EVENT_KIND_VARIANTS, TuiEvent, TuiSession};
+pub use tui::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent, TuiSession};
 pub use tui_host::{HostEvent, TuiHost};
 
 /// Returns the index of `name` in `variants`, or 0 if not found.

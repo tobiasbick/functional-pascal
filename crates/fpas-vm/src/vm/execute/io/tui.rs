@@ -30,6 +30,8 @@ impl Worker {
                     })?;
                     tui.host = fpas_std::TuiHost::new();
                     tui.quit_requested = false;
+                    tui.on_exit = None;
+                    tui.last_exit_reason = None;
                 }
                 self.push(Self::tui_application_record())?;
             }
@@ -43,6 +45,8 @@ impl Worker {
                 tui.on_key_pressed = None;
                 tui.on_resize = None;
                 tui.on_paint = None;
+                tui.on_exit = None;
+                tui.last_exit_reason = None;
                 tui.quit_requested = false;
             }
             Intrinsic::TuiApplicationSize => {
@@ -197,6 +201,19 @@ impl Worker {
                 self.pop_tui_application(line)?;
                 let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
                 tui.quit_requested = true;
+            }
+            Intrinsic::TuiHostRegisterOnExit => {
+                let func = self.pop(line)?;
+                self.pop_tui_application(line)?;
+                self.validate_host_handler_function(
+                    &func,
+                    2,
+                    "OnExit",
+                    "Pass a `procedure (Application, Std.Tui.ExitReason)` (two parameters).",
+                    line,
+                )?;
+                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                tui.on_exit = Some(func);
             }
             Intrinsic::TuiHostInvokeOnKeyPressed => {
                 let key_ev = self.pop_console_key_event(line)?;

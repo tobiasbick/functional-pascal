@@ -410,6 +410,63 @@ end.",
 }
 
 #[test]
+fn std_tui_run_reports_host_stop_when_close_happens_inside_handler() {
+    let out = compile_and_run(
+        "\
+program T;
+uses Std.Console, Std.Tui;
+
+procedure OnPaint(App: Application);
+begin
+  Application.Close(App)
+end;
+
+procedure OnExit(App: Application; Reason: ExitReason);
+begin
+  Std.Console.WriteLn(Reason)
+end;
+
+begin
+  var App: Application := Application.Open();
+  Application.HostRegisterOnPaint(App, OnPaint);
+  Application.HostRegisterOnExit(App, OnExit);
+  Application.Run(App)
+end.",
+    );
+
+    assert_eq!(out.lines, vec!["Std.Tui.ExitReason.HostStop"]);
+}
+
+#[test]
+fn std_tui_run_prefers_host_stop_when_close_and_quit_both_happen() {
+    let out = compile_and_run(
+        "\
+program T;
+uses Std.Console, Std.Tui;
+
+procedure OnPaint(App: Application);
+begin
+  Application.Close(App);
+  Application.HostRequestQuit(App)
+end;
+
+procedure OnExit(App: Application; Reason: ExitReason);
+begin
+  Std.Console.WriteLn(Reason)
+end;
+
+begin
+  var App: Application := Application.Open();
+  Application.HostRegisterOnPaint(App, OnPaint);
+  Application.HostRegisterOnExit(App, OnExit);
+  Application.Run(App)
+end.",
+    );
+
+    assert_eq!(out.lines, vec!["Std.Tui.ExitReason.HostStop"]);
+}
+
+#[test]
 fn std_tui_run_requires_registered_on_paint_handler() {
     let error = compile_run_error(
         "\

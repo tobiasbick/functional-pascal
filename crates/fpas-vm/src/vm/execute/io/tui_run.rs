@@ -9,6 +9,7 @@ use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 
 const TUI_EXIT_REASON_TYPE: &str = "Std.Tui.ExitReason";
 const USER_QUIT_EXIT_REASON: &str = "UserQuit";
+const HOST_STOP_EXIT_REASON: &str = "HostStop";
 const DEFAULT_RUN_WAIT_TIMEOUT_MS: i64 = 50;
 const RUN_PROCESS_SPINS: usize = 64;
 
@@ -78,8 +79,8 @@ impl Worker {
                 tui.session.request_redraw(line)?;
             }
 
-            if self.take_tui_host_quit_requested() {
-                return self.finish_tui_application_run(Self::user_quit_exit_reason(), line);
+            if let Some(exit_reason) = self.take_tui_application_run_stop_reason() {
+                return self.finish_tui_application_run(exit_reason, line);
             }
 
             if redraw_tag != 0 || process_tag != 0 {
@@ -90,12 +91,24 @@ impl Worker {
                 IdleWaitOutcome::Continue => {}
                 IdleWaitOutcome::InvokeOnIdle => {
                     self.invoke_tui_on_idle_if_present(line)?;
-                    if self.take_tui_host_quit_requested() {
-                        return self
-                            .finish_tui_application_run(Self::user_quit_exit_reason(), line);
+                    if let Some(exit_reason) = self.take_tui_application_run_stop_reason() {
+                        return self.finish_tui_application_run(exit_reason, line);
                     }
                 }
             }
+        }
+    }
+
+    fn take_tui_application_run_stop_reason(&self) -> Option<Value> {
+        let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+        if tui.host_stop_requested {
+            tui.host_stop_requested = false;
+            Some(Self::host_stop_exit_reason())
+        } else if tui.quit_requested {
+            tui.quit_requested = false;
+            Some(Self::user_quit_exit_reason())
+        } else {
+            None
         }
     }
 
@@ -194,6 +207,14 @@ impl Worker {
         Value::Enum {
             type_name: TUI_EXIT_REASON_TYPE.into(),
             variant: USER_QUIT_EXIT_REASON.into(),
+            fields: vec![],
+        }
+    }
+
+    fn host_stop_exit_reason() -> Value {
+        Value::Enum {
+            type_name: TUI_EXIT_REASON_TYPE.into(),
+            variant: HOST_STOP_EXIT_REASON.into(),
             fields: vec![],
         }
     }

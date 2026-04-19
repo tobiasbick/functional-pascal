@@ -402,8 +402,9 @@ pub enum Intrinsic {
 
     /// Hosted application loop (`Std.Tui.Application.Run`). Uses the handlers registered through
     /// `Application.HostRegisterOn*`, auto-requests the first redraw, waits until
-    /// `Application.HostRequestQuit` is observed, records `Std.Tui.ExitReason.UserQuit`, invokes
-    /// `OnExit` when registered, and performs `Application.Close` semantics before returning.
+    /// `Application.HostRequestQuit` is observed or the active hosted session is stopped,
+    /// records `Std.Tui.ExitReason.UserQuit` or `Std.Tui.ExitReason.HostStop`, invokes `OnExit`
+    /// when registered, and performs `Application.Close` semantics before returning.
     /// Stack: `Application`. Pushes `()`.
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`

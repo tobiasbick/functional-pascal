@@ -30,6 +30,7 @@ impl Worker {
                     })?;
                     tui.host = fpas_std::TuiHost::new();
                     tui.quit_requested = false;
+                    tui.host_stop_requested = false;
                     tui.on_idle = None;
                     tui.idle_interval_ms = 0;
                     tui.on_exit = None;
@@ -40,7 +41,9 @@ impl Worker {
             }
             Intrinsic::TuiApplicationClose => {
                 self.pop_tui_application(line)?;
-                self.close_tui_application_state(line)?;
+                if !self.request_tui_host_stop_for_active_run() {
+                    self.close_tui_application_state(line)?;
+                }
             }
             Intrinsic::TuiApplicationRun => {
                 self.tui_application_run(line)?;
@@ -430,6 +433,17 @@ impl Worker {
         }
     }
 
+    /// Converts `Application.Close(App)` into a structured host stop while `Application.Run` is active.
+    pub(super) fn request_tui_host_stop_for_active_run(&self) -> bool {
+        let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+        if tui.run_active {
+            tui.host_stop_requested = true;
+            true
+        } else {
+            false
+        }
+    }
+
     pub(super) fn pop_tui_application(&mut self, line: SourceLocation) -> Result<(), VmError> {
         match self.pop(line)? {
             Value::Record { type_name, .. } if type_name == TUI_APPLICATION_TYPE => Ok(()),
@@ -459,6 +473,7 @@ impl Worker {
         tui.on_exit = None;
         tui.last_exit_reason = None;
         tui.quit_requested = false;
+        tui.host_stop_requested = false;
         tui.run_active = false;
         close_result?;
         Ok(())

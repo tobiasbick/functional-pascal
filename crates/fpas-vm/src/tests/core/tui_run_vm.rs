@@ -92,6 +92,158 @@ fn tui_application_run_invokes_on_exit_and_clears_shared_state() {
 }
 
 #[test]
+fn tui_application_run_reports_host_stop_when_close_happens_during_run() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Dup, loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnPaint".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnPaint as u16),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnExit".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnExit as u16),
+        loc(),
+    );
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationRun as u16), loc());
+    chunk.emit(Op::Halt, loc());
+
+    let on_paint_start = chunk.len();
+    chunk
+        .functions
+        .insert("OnPaint".into(), (on_paint_start, 1));
+    emit_constant(&mut chunk, tui_application_value());
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationClose as u16), loc());
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    let on_exit_start = chunk.len();
+    chunk.functions.insert("OnExit".into(), (on_exit_start, 2));
+    chunk.emit(Op::GetLocal(1), loc());
+    chunk.emit(Op::PrintLn, loc());
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    assert_eq!(
+        worker
+            .shared
+            .console
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .output()
+            .lines
+            .clone(),
+        vec!["Std.Tui.ExitReason.HostStop"],
+    );
+
+    let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+    assert!(
+        tui.on_paint.is_none(),
+        "Application.Run should clear OnPaint after HostStop"
+    );
+    assert!(
+        tui.on_exit.is_none(),
+        "Application.Run should clear OnExit after HostStop"
+    );
+    assert!(
+        tui.last_exit_reason.is_none(),
+        "Application.Run close semantics should clear the last exit reason after HostStop"
+    );
+    assert!(
+        !tui.host_stop_requested,
+        "Application.Run should clear the pending HostStop request"
+    );
+    assert!(
+        !tui.run_active,
+        "Application.Run should reset the active-run guard after HostStop"
+    );
+}
+
+#[test]
+fn tui_application_run_prefers_host_stop_over_user_quit_when_both_are_requested() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Dup, loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnPaint".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnPaint as u16),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnExit".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnExit as u16),
+        loc(),
+    );
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationRun as u16), loc());
+    chunk.emit(Op::Halt, loc());
+
+    let on_paint_start = chunk.len();
+    chunk
+        .functions
+        .insert("OnPaint".into(), (on_paint_start, 1));
+    emit_constant(&mut chunk, tui_application_value());
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationClose as u16), loc());
+    emit_constant(&mut chunk, tui_application_value());
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRequestQuit as u16), loc());
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    let on_exit_start = chunk.len();
+    chunk.functions.insert("OnExit".into(), (on_exit_start, 2));
+    chunk.emit(Op::GetLocal(1), loc());
+    chunk.emit(Op::PrintLn, loc());
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    assert_eq!(
+        worker
+            .shared
+            .console
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .output()
+            .lines
+            .clone(),
+        vec!["Std.Tui.ExitReason.HostStop"],
+    );
+}
+
+#[test]
 fn tui_application_run_rejects_missing_on_paint_handler() {
     let mut chunk = Chunk::new();
     chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());

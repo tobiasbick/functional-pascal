@@ -146,6 +146,20 @@ pub const STD_TUI_APPLICATION_READ_EVENT_TIMEOUT: &str = std_tui!("Application.R
 pub const STD_TUI_APPLICATION_POLL_EVENT: &str = std_tui!("Application.PollEvent");
 pub const STD_TUI_APPLICATION_REQUEST_REDRAW: &str = std_tui!("Application.RequestRedraw");
 pub const STD_TUI_APPLICATION_REDRAW_PENDING: &str = std_tui!("Application.RedrawPending");
+/// Dispatch-mode host bridge; see `docs/pascal/std/tui-app.md`.
+pub const STD_TUI_APPLICATION_HOST_POLL_NEXT: &str = std_tui!("Application.HostPollNext");
+pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_KEY_PRESSED: &str =
+    std_tui!("Application.HostRegisterOnKeyPressed");
+pub const STD_TUI_APPLICATION_HOST_INVOKE_ON_KEY_PRESSED: &str =
+    std_tui!("Application.HostInvokeOnKeyPressed");
+pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_RESIZE: &str =
+    std_tui!("Application.HostRegisterOnResize");
+pub const STD_TUI_APPLICATION_HOST_PROCESS_NEXT: &str = std_tui!("Application.HostProcessNext");
+pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_PAINT: &str =
+    std_tui!("Application.HostRegisterOnPaint");
+pub const STD_TUI_APPLICATION_HOST_DISPATCH_REDRAW: &str =
+    std_tui!("Application.HostDispatchRedraw");
+pub const STD_TUI_APPLICATION_HOST_RUN_LOOP: &str = std_tui!("Application.HostRunLoop");
 
 pub const STD_STR_LENGTH: &str = std_str!("Length");
 pub const STD_STR_TO_UPPER: &str = std_str!("ToUpper");

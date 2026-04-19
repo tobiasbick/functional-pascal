@@ -2,12 +2,12 @@
 //!
 //! `Std.Tui.TuiEvent.key` uses `Std.Console.KeyEvent` (registered by [`super::console::register_std_console_key_api`] when needed).
 //!
-//! **Documentation:** `docs/pascal/std/tui.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/tui.md`, `docs/pascal/std/tui-app.md` (from the repository root).
 
 use super::super::{define_func, define_proc, p};
 use crate::check::Checker;
 use crate::scope::{Symbol, SymbolKind};
-use crate::types::{EnumTy, EnumVariantTy, RecordTy, Ty};
+use crate::types::{EnumTy, EnumVariantTy, FunctionTy, ProcedureTy, RecordTy, Ty};
 use fpas_std::TUI_EVENT_KIND_VARIANTS;
 use fpas_std::std_symbols as s;
 
@@ -93,7 +93,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         s::STD_TUI_EVENT,
         vec![
             ("kind".into(), event_kind_ty),
-            ("key".into(), key_event_ty),
+            ("key".into(), key_event_ty.clone()),
             ("size".into(), size_ty.clone()),
         ],
     );
@@ -113,7 +113,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         checker,
         s::STD_TUI_APPLICATION_SIZE,
         vec![p("App", application_ty.clone(), false)],
-        size_ty,
+        size_ty.clone(),
     );
     define_func(
         checker,
@@ -130,6 +130,93 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         ],
         Ty::Option(Box::new(event_ty.clone())),
     );
+
+    // Host dispatch bridge (bytecode intrinsics 255–262); see `docs/pascal/std/tui-app.md`.
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_POLL_NEXT,
+        vec![p("App", application_ty.clone(), false)],
+        Ty::Option(Box::new(event_ty.clone())),
+    );
+    let on_key_pressed_ty = Ty::Function(FunctionTy {
+        type_params: Vec::new(),
+        params: vec![
+            p("App", application_ty.clone(), false),
+            p("Key", key_event_ty.clone(), false),
+        ],
+        return_type: Box::new(Ty::Boolean),
+        variadic: false,
+    });
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_REGISTER_ON_KEY_PRESSED,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("OnKeyPressed", on_key_pressed_ty, false),
+        ],
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_INVOKE_ON_KEY_PRESSED,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("Key", key_event_ty.clone(), false),
+        ],
+        Ty::Boolean,
+    );
+    let on_resize_ty = Ty::Procedure(ProcedureTy {
+        type_params: Vec::new(),
+        params: vec![
+            p("App", application_ty.clone(), false),
+            p("NewSize", size_ty.clone(), false),
+        ],
+        variadic: false,
+    });
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_REGISTER_ON_RESIZE,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("OnResize", on_resize_ty, false),
+        ],
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_PROCESS_NEXT,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("MaxSpins", Ty::Integer, false),
+        ],
+        Ty::Integer,
+    );
+    let on_paint_ty = Ty::Procedure(ProcedureTy {
+        type_params: Vec::new(),
+        params: vec![p("App", application_ty.clone(), false)],
+        variadic: false,
+    });
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_REGISTER_ON_PAINT,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("OnPaint", on_paint_ty, false),
+        ],
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_DISPATCH_REDRAW,
+        vec![p("App", application_ty.clone(), false)],
+        Ty::Integer,
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_RUN_LOOP,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("MaxIterations", Ty::Integer, false),
+        ],
+    );
+
     define_func(
         checker,
         s::STD_TUI_APPLICATION_POLL_EVENT,

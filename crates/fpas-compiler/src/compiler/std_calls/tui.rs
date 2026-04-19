@@ -1,6 +1,6 @@
 //! Lowers `Std.Tui` calls to VM intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/tui.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/tui.md`, `docs/pascal/std/tui-app.md` (from the repository root).
 
 use crate::error::CompileError;
 use fpas_bytecode::{Intrinsic, SourceLocation};
@@ -68,6 +68,90 @@ impl Compiler {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_REDRAW_PENDING, 1, args, location)?;
                 self.compile_expr(&args[0])?;
                 self.emit_intrinsic(Intrinsic::TuiApplicationRedrawPending, location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_POLL_NEXT => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_HOST_POLL_NEXT, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::TuiHostPollNext, location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_REGISTER_ON_KEY_PRESSED => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_REGISTER_ON_KEY_PRESSED,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnKeyPressed, location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_INVOKE_ON_KEY_PRESSED => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_INVOKE_ON_KEY_PRESSED,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::TuiHostInvokeOnKeyPressed, location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_REGISTER_ON_RESIZE => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_REGISTER_ON_RESIZE,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnResize, location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_PROCESS_NEXT => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_PROCESS_NEXT,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::TuiHostProcessNext, location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_REGISTER_ON_PAINT => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_REGISTER_ON_PAINT,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnPaint, location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_DISPATCH_REDRAW => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_DISPATCH_REDRAW,
+                    1,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::TuiHostDispatchRedraw, location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_RUN_LOOP => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_HOST_RUN_LOOP, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiHostRunLoop, location);
                 Ok(true)
             }
             _ => Ok(false),

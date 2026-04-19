@@ -238,9 +238,7 @@ impl SharedState {
     pub(crate) fn wait_until_all_tasks_recorded(&self, task_ids: &[u64]) {
         let mut guard = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
         loop {
-            let all = task_ids
-                .iter()
-                .all(|id| guard.contains_key(id));
+            let all = task_ids.iter().all(|id| guard.contains_key(id));
             if all || self.is_shutdown() {
                 return;
             }

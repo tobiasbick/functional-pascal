@@ -30,6 +30,8 @@ After `uses Std.Tui;` you can refer to the unit in either form:
 
 `Std.Tui` exports nested names such as `Application.Open`, `Application.ReadEvent`, and `EventKind.Resize`. These short forms are available only when `Std.Tui` appears in `uses`.
 
+For the **Rust-hosted dispatch bridge** (`Application.HostPollNext`, `Application.HostProcessNext`, …), see `[tui-app.md](tui-app.md)`.
+
 `Std.Tui` builds on `[Std.Console](console.md)`: the `key` field of `Std.Tui.TuiEvent` has type `**Std.Console.KeyEvent`** (and its `kind` field is `**Std.Console.KeyKind`**). The `**Tui**` prefix avoids clashing with `**Std.Console.Event**`. Import `**Std.Console**` alongside `**Std.Tui**` when you need short names such as `KeyKind` or `WriteLn`, or use fully qualified `Std.Console.*` names.
 
 ---

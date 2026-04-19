@@ -151,3 +151,38 @@ begin
 end.",
     );
 }
+
+#[test]
+fn std_tui_host_dispatch_surface_typechecks() {
+    check_ok(
+        "\
+program T;
+uses Std.Tui;
+begin
+  var App: Application := Application.Open();
+  var Maybe: Option of TuiEvent := Application.HostPollNext(App);
+  var Tag: integer := Application.HostProcessNext(App, 64);
+  var Dr: integer := Application.HostDispatchRedraw(App);
+  Application.HostRunLoop(App, 8);
+  Application.Close(App)
+end.",
+    );
+}
+
+#[test]
+fn std_tui_host_run_loop_wrong_arg_count() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Tui;
+begin
+  var App: Application := Application.Open();
+  Application.HostRunLoop(App)
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| e.message.contains("expects 2 arguments, got 1")),
+        "{errs:#?}"
+    );
+}

@@ -63,7 +63,7 @@ Phase 0 is **complete** for planning purposes. The subsections below are authori
 
 Phase 1 is **complete**. The canonical user-facing spec is `**[docs/pascal/std/tui-app.md](../pascal/std/tui-app.md)`** (English). Summary:
 
-- **Entry:** `**Application.Open`** then `**Application.Run(App, …)`** (blocking hosted loop). After `**Run`** completes normally, the host performs `**Application.Close`** semantics once `**OnExit**` has run (see `**tui-app.md**` lifecycle). Until Pascal lowers `**Run**`, bytecode can approximate stepping with `**TuiHostRunLoop**` (intrinsic **262**): a **bounded** loop of redraw dispatch plus `**TuiHostProcessNext`**, stopping when both are idle—not a substitute for quit signals or `**OnExit**`.
+- **Entry:** `**Application.Open`** then `**Application.Run(App, …)`** (blocking hosted loop). After `**Run`** completes normally, the host performs `**Application.Close`** semantics once `**OnExit`** has run (see `**tui-app.md**` lifecycle). Until Pascal lowers `**Run**`, bytecode can approximate stepping with `**TuiHostRunLoop**` (intrinsic **262**): a **bounded** loop of redraw dispatch plus `**TuiHostProcessNext`**, stopping when both are idle—not a substitute for quit signals or `**OnExit`**.
 - **Handlers:** `**OnStartup`** (optional), `**OnKeyPressed(App, Key): boolean`** (consumed), `**OnResize`**, `**OnPaint`** (required), `**OnIdle**` (optional), `**OnExit(App, Reason)**` with **no veto**.
 - **Redraw:** invalidation + coalescing; `**OnPaint`** is the single FP paint contract; optional `**OnIdle`** uses a configurable idle interval.
 - **Naming:** `**On*`** prefix only for dispatch callbacks; poll-style `**ReadEvent`** / `**PollEvent`** / console `**KeyPressed`** are superseded for full apps when implementation lands (`[tui.md](../pascal/std/tui.md)` remains the source for the **current** poll API until Phase 5).
@@ -73,33 +73,63 @@ Phase 1 is **complete**. The canonical user-facing spec is `**[docs/pascal/std/t
 
 ## Phase 2 — Rust: core event loop (no FP handlers yet)
 
-**Progress:** `[TuiHost](../../crates/fpas-std/src/tui_host.rs)` and `HostEvent` in `crates/fpas-std`: coalesced resize before key, `flush_pending_resize` for idle, optional `set_trace_hook`, `HostEvent::suggests_request_redraw` for resize, `poll_next` / `read_next_blocking` over `TuiSession`, unit tests via `KeyInput` queues (no real terminal). Extra `HostEvent` variants (focus, paste, key-up stubs) remain.
+**Status:** **Largely complete** for the `**TuiHost` / `HostEvent` state machine** in `crates/fpas-std`; the **outer blocking “application loop”** is not a single Rust entry point yet—the VM drives stepping via Phase 3 intrinsics (see below).
 
-1. Introduce a `**TuiHost` / `ApplicationRuntime`** module in `crates/fpas-std` (or a dedicated subcrate if boundaries blur) that owns the **blocking loop**: read terminal events, normalize to an internal `**HostEvent`** enum.
-2. Map low-level events to `**HostEvent`**: at minimum **resize**, **key down / text**, **focus gained/lost** if already used, **paste** if in scope; leave stubs for **key up** if the backend cannot supply them.
-3. Implement **coalescing** where needed (e.g. multiple resize notifications → one logical `OnResize`).
-4. Integrate **redraw requests**: internal flag set by `RequestRedraw` and/or host-driven “needs paint” after certain events.
-5. Add **structured logging hooks** (behind `cfg`) for debugging dispatch order.
-6. **Unit-test** the Rust state machine with **fake event streams** (no terminal required in CI).
+**Done**
+
+- `**[TuiHost](../../crates/fpas-std/src/tui_host.rs)`** and `**HostEvent**`: normalize console/`TuiSession` input; **resize coalescing** ahead of key; `flush_pending_resize`; `**HostEvent::suggests_request_redraw`** on resize.
+- **Pump API:** `poll_next` / `read_next_blocking` over `**TuiSession`**; optional `**set_trace_hook**` for ordering/debug.
+- **Redraw coordination:** `TuiSession` invalidation + `**is_redraw_pending`** (peek, consume-on-paint path used by the VM).
+- **Tests:** `KeyInput` / console queues in `fpas-std` (no real terminal required for those tests).
+
+**Open / deferred**
+
+- A **standalone** Rust `ApplicationRuntime` that owns the **only** blocking loop for full apps (superseded for now by the VM + intrinsics story).
+- **Extra `HostEvent` variants** (focus, paste, key-up) remain stubs or best-effort where documented.
+- **Structured logging** beyond the trace hook is optional follow-up.
+
+Original checklist (for history): ~~coalescing~~, ~~redraw integration~~, ~~fake-stream testing~~; **blocking Rust-only loop** and **full structured logging** still optional.
 
 ---
 
 ## Phase 3 — VM bridge: from host loop to bytecode
 
-**Progress:** `TuiState` holds `TuiHost` plus optional `on_key_pressed` / `on_resize` / `on_paint` function values (`fpas_bytecode::Value`); intrinsics **255**–**259** (poll, register key, invoke key, register resize, process-next), **260**–**261** (`TuiHostRegisterOnPaint`, `TuiHostDispatchRedraw`), and **262** (`TuiHostRunLoop`: bounded redraw + process-next iterations until idle); `fpas_std::TuiSession::is_redraw_pending` supports peek-before-paint; `Worker::call_function_sync` runs handlers without holding the `tui` mutex; tests in `[tui_host_vm.rs](../../crates/fpas-vm/src/tests/core/tui_host_vm.rs)`. **Still open:** true blocking `Application.Run` (quit signal / host stop reason), idle timer wiring, Pascal surface in sema/compiler (see [tui-app.md](../pascal/std/tui-app.md)).
+**Status:** **Partial** — bytecode bridge and handler dispatch are **implemented**; **Pascal `Application.Run`**, **quit / `ExitReason`**, and **compiler lowering** are **not**.
 
-1. Design **intrinsic set** for: **enter run loop**, **register N typed handlers**, **run until quit**. Prefer **few** intrinsics with clear semantics over many micro-ops. **Current slice:** poll/register/invoke/process/dispatch (**255**–**261**) plus **bounded** `**TuiHostRunLoop`** (**262**); still missing a **single** intrinsic that blocks until **quit** / **host stop** with `**ExitReason`** and automatic `**Close**`.
-2. Define how the VM **stores** function references: indices into a **handler table** emitted by the compiler, or chunk constants; align with existing **first-class function** representation in bytecode.
-3. Specify **calling convention** from Rust into FP: **which stack**, **which arguments**, **error handling** if the user panics or returns.
-4. Implement **dispatch** in `crates/fpas-vm`: on `HostEvent`, push arguments, call the registered procedure, then resume the host loop.
-5. Ensure **console mutex / shared state** rules from `[parallel-vm.md](../rust/parallel-vm.md#phase-3-shared-state-queues-and-io)` still hold: no concurrent VM access from multiple threads during handler execution.
-6. Add **VM tests** that register stub handlers and feed synthetic events through the bridge.
+**Done**
+
+- `**TuiState`** (`fpas-vm`): holds `**TuiHost**` plus optional `**on_key_pressed**`, `**on_resize**`, `**on_paint**` (`fpas_bytecode::Value`).
+- **Intrinsics (discriminants):** **255**–**259** — `TuiHostPollNext`, register/invoke key, register resize, `TuiHostProcessNext`; **260**–**261** — `TuiHostRegisterOnPaint`, `TuiHostDispatchRedraw`; **262** — `**TuiHostRunLoop`** (bounded alternation of redraw dispatch + `ProcessNext` until idle).
+- **Dispatch:** `HostEvent` → push args → `**Worker::call_function_sync`** for FP handlers; **no `tui` mutex held** across the call (see `[parallel-vm.md](../rust/parallel-vm.md)`).
+- **Console helpers:** e.g. `Std.Console.KeyEvent` materialization where needed for host paths.
+- **Tests:** `[tui_host_vm.rs](../../crates/fpas-vm/src/tests/core/tui_host_vm.rs)` (poll coalescing, resize/key tags, redraw tags, run loop).
+
+**Still open**
+
+- **One** intrinsic (or Pascal `**Application.Run`**) that **blocks until stop** with `**ExitReason`**, `**OnExit**`, and documented `**Close**` semantics (not the same as bounded `**TuiHostRunLoop**`).
+- **Idle timer** / `**OnIdle`** wiring from the host.
+- **Phase 4:** sema/compiler/registry for `Std.Tui` dispatch mode (see [tui-app.md](../pascal/std/tui-app.md)).
+
+**Checklist mapping**
+
+
+| Item                                     | State                                                                                     |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------- |
+| 1. Intrinsic set (run / register / quit) | **Partial:** **255**–**262** shipped; **quit / Run / ExitReason** outstanding.            |
+| 2. Where handlers live                   | **Done for VM:** chunk **constants** + `TuiState` fields; compiler may add a table later. |
+| 3. Rust → FP calling convention          | **Done** for current intrinsics (`call_function_sync`, arity checks).                     |
+| 4. Dispatch in `fpas-vm`                 | **Done** for `ProcessNext` / redraw / run-loop stepping (not full TV lifecycle).          |
+| 5. Mutex / main-thread rules             | **Done** (aligned with `parallel-vm` Phase 3).                                            |
+| 6. VM tests with synthetic events        | **Done** (`tui_host_vm` + related).                                                       |
+
 
 ---
 
 ## Phase 4 — Compiler and semantic analysis
 
-1. Extend `**Std.Tui`** (or successor unit) in `[fpas-sema` registry](../../crates/fpas-sema/src/std_registry/loaded/tui.rs): new types for **options bundle** or **fluent registration** API—keep **one** story, avoid duplicate entry points.
+**Status:** **Partial.** **`Application.Host*`** symbols for the VM host intrinsics (**255**–**262**) are registered in [`loaded/tui.rs`](../../crates/fpas-sema/src/std_registry/loaded/tui.rs) and lowered in [`std_calls/tui.rs`](../../crates/fpas-compiler/src/compiler/std_calls/tui.rs); see [tui-app.md](../pascal/std/tui-app.md). **Still open:** **`Application.Run`** (or equivalent), **`ExitReason`**, handler **bundle** types, and **integration tests** beyond basic host call type-checking.
+
+1. Extend `**Std.Tui`** (or successor unit) in [`fpas-sema` registry](../../crates/fpas-sema/src/std_registry/loaded/tui.rs): new types for **options bundle** or **fluent registration** API—keep **one** story, avoid duplicate entry points.
 2. Type-check handler assignments: **procedure types** must match declared `On*` signatures exactly.
 3. Lower new calls in `[fpas-compiler](../../crates/fpas-compiler/src/compiler/std_calls/tui.rs)`: emit **registration + `Run`** sequence or a single `**Application.Run**` intrinsic with a descriptor record.
 4. Update **short-name / qualified-name** rules and integration tests under `crates/fpas-sema/src/tests/integration/std_units/tui.rs`.
@@ -109,6 +139,8 @@ Phase 1 is **complete**. The canonical user-facing spec is `**[docs/pascal/std/t
 
 ## Phase 5 — Standard library cleanup: TUI-first, shrink legacy console loop
 
+**Status:** **Not started** (depends on Phase 4).
+
 1. Inventory **poll-style** entry points: `ReadEvent`, `ReadEventTimeout`, `PollEvent`, `KeyPressed`, etc., across `[docs/pascal/std/console.md](../pascal/std/console.md)` and `[tui.md](../pascal/std/tui.md)`.
 2. Classify each as: **keep for non-TUI scripts**, **move under `Std.Tui`**, or **remove** in favor of `On*`.
 3. Update **Mandelbrot** and other examples to the **new** pattern once `Run` exists; delete duplicated loop boilerplate.
@@ -117,6 +149,8 @@ Phase 1 is **complete**. The canonical user-facing spec is `**[docs/pascal/std/t
 ---
 
 ## Phase 6 — Event coverage and honesty in the spec
+
+**Status:** **Not started** (partial overlap with Phase 4 once dispatch ships).
 
 1. Implement `**OnKeyPressed`** (and `**OnKeyReleased` / `OnKeyDown`** only if the backend can emit them reliably; otherwise document as **optional / noop** on some platforms).
 2. Implement `**OnResize`** with **debounced** size (match `Application.Size` semantics).
@@ -128,6 +162,8 @@ Phase 1 is **complete**. The canonical user-facing spec is `**[docs/pascal/std/t
 
 ## Phase 7 — Toward Turbo Vision–like structure (incremental)
 
+**Status:** **Not started**.
+
 1. Introduce **view IDs** or **handles** in Rust only: opaque to FPAS at first (`type View = …` with no methods).
 2. Add **child ordering** and **focus chain** in Rust; expose **minimal** FP callbacks: `OnActivate`, `OnDeactivate` (names TBD).
 3. Add **command set** (keyboard shortcuts) resolved in Rust, **invoking** FP handlers by id—avoid parsing key names in FP for common cases.
@@ -137,6 +173,8 @@ Phase 1 is **complete**. The canonical user-facing spec is `**[docs/pascal/std/t
 ---
 
 ## Phase 8 — Quality, tooling, and maintenance
+
+**Status:** **Not started** (incremental work alongside Phases 4–7).
 
 1. **Integration test**: headless or scripted terminal where possible; document manual test checklist for real terminals.
 2. **Fuzz or property-test** event ordering (resize bursts, rapid keys).
@@ -182,3 +220,5 @@ Phases **6** and **7** can partially overlap once **4** is stable; do not start 
 | `[docs/pascal/std/console.md](../pascal/std/console.md)`       | Key types and legacy I/O                                                                            |
 | `[docs/rust/parallel-vm.md](../rust/parallel-vm.md)`           | Implemented VM task runtime; Phase 3 — shared I/O and locks (`#phase-3-shared-state-queues-and-io`) |
 | `[docs/pascal/08-concurrency.md](../pascal/08-concurrency.md)` | Task model vs TUI main thread                                                                       |
+
+

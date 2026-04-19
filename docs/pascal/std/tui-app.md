@@ -1,14 +1,14 @@
 # `Std.Tui` — dispatch-mode application (target)
 
-**Status:** target specification for the Rust-hosted event loop and `On*` handlers described in `[docs/future/tui-application-framework.md](../../future/tui-application-framework.md)`. The **Pascal API and compiler lowering** are not wired yet (Phase 4); use the poll-style API in `[tui.md](tui.md)` for programs today. A **partial VM bridge** exists (see below).
+**Status:** target specification for the Rust-hosted event loop and `On*` handlers described in `[docs/future/tui-application-framework.md](../../future/tui-application-framework.md)`. **`Application.Host*`** dispatch helpers are **registered and lowered** (Phase 4 — partial); a full **`Application.Run`** bundle, **`OnExit`**, and **`ExitReason`** are still **not** in Pascal. The poll-style API in `[tui.md](tui.md)` remains the default for full programs until `Run` exists.
 
 **Maintenance (implementers only):** when this mode ships, register types and routines in `[loaded/tui.rs](../../../crates/fpas-sema/src/std_registry/loaded/tui.rs)` and keep this file aligned with that registry (see root `[AGENTS.md](../../../AGENTS.md)`).
 
 ---
 
-## VM bridge (Phase 3 — partial)
+## VM bridge (Phase 3–4)
 
-These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mod.rs)` variants drive `fpas_std::TuiHost` from the VM; **they are not `Std.Tui` procedures yet** (no sema/compiler surface). Stack order matches other TUI intrinsics: pass `Application`, duplicate with the bytecode `Dup` opcode when the handle is needed again.
+These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mod.rs)` variants drive `fpas_std::TuiHost` from the VM. In Pascal they appear as **`Std.Tui.Application.Host*`** (see table below); stack order matches other TUI intrinsics: pass `Application`, duplicate with the bytecode `Dup` opcode when the handle is needed again.
 
 
 | Intrinsic                     | Stack (bottom → top)                             | Result                                                                                                                                                                                                                                                                              |
@@ -22,8 +22,20 @@ These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mo
 | `TuiHostDispatchRedraw`       | `Application`                                    | If redraw is pending: runs registered `OnPaint` after `take_redraw_pending`, or clears the flag with tag `6` when no handler. Pushes `integer`: `0` not pending, `5` paint ran, `6` cleared without handler.                                                                        |
 | `TuiHostRunLoop`              | `Application`, `max_iterations` (`integer`, top) | Bounded host loop: each iteration runs the same work as `TuiHostDispatchRedraw` then `TuiHostProcessNext` with a fixed inner `max_spins` of `64`. Stops when both steps would be idle (`0`). `max_iterations` is clamped to `0..=1_000_000`. Pushes `()`.                           |
 
+### Pascal names (registry + compiler)
 
-**Bytecode discriminants** (authoritative enum: `[Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mod.rs)`): **255** `TuiHostPollNext`, **256** `TuiHostRegisterOnKeyPressed`, **257** `TuiHostInvokeOnKeyPressed`, **258** `TuiHostRegisterOnResize`, **259** `TuiHostProcessNext`, **260** `TuiHostRegisterOnPaint`, **261** `TuiHostDispatchRedraw`, **262** `TuiHostRunLoop`. These are VM-only until Phase 4 registers Pascal names.
+| Pascal `Std.Tui` call | Maps to intrinsic |
+| ----------------------- | ----------------- |
+| `Application.HostPollNext(App)` | `TuiHostPollNext` |
+| `Application.HostRegisterOnKeyPressed(App, OnKeyPressed)` | `TuiHostRegisterOnKeyPressed` |
+| `Application.HostInvokeOnKeyPressed(App, Key)` | `TuiHostInvokeOnKeyPressed` |
+| `Application.HostRegisterOnResize(App, OnResize)` | `TuiHostRegisterOnResize` |
+| `Application.HostProcessNext(App, MaxSpins)` | `TuiHostProcessNext` |
+| `Application.HostRegisterOnPaint(App, OnPaint)` | `TuiHostRegisterOnPaint` |
+| `Application.HostDispatchRedraw(App)` | `TuiHostDispatchRedraw` |
+| `Application.HostRunLoop(App, MaxIterations)` | `TuiHostRunLoop` |
+
+**Bytecode discriminants** (authoritative enum: [`Intrinsic`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs)): **255** `TuiHostPollNext`, **256** `TuiHostRegisterOnKeyPressed`, **257** `TuiHostInvokeOnKeyPressed`, **258** `TuiHostRegisterOnResize`, **259** `TuiHostProcessNext`, **260** `TuiHostRegisterOnPaint`, **261** `TuiHostDispatchRedraw`, **262** `TuiHostRunLoop`.
 
 `Application.Close` clears registered host handlers (`OnKeyPressed`, `OnResize`, `OnPaint`), resets the host pump state, and closes the session as today.
 

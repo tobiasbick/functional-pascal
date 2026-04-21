@@ -173,6 +173,9 @@ pub const STD_TUI_APPLICATION_HOST_RUN_LOOP: &str = std_tui!("Application.HostRu
 pub const STD_TUI_APPLICATION_HOST_REQUEST_QUIT: &str = std_tui!("Application.HostRequestQuit");
 pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_EXIT: &str =
     std_tui!("Application.HostRegisterOnExit");
+/// Register `procedure (Application, Std.Console.Event)` for hosted mouse-event dispatch.
+pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_MOUSE: &str =
+    std_tui!("Application.HostRegisterOnMouse");
 
 pub const STD_STR_LENGTH: &str = std_str!("Length");
 pub const STD_STR_TO_UPPER: &str = std_str!("ToUpper");

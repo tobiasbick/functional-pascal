@@ -40,6 +40,8 @@ pub(crate) struct TuiState {
     pub host: TuiHost,
     /// `OnKeyPressed`-style handler: `function (Application, KeyEvent): boolean`.
     pub on_key_pressed: Option<Value>,
+    /// `OnMouse`-style handler: `procedure (Application, Std.Console.Event)` (two arguments).
+    pub on_mouse: Option<Value>,
     /// `OnResize`-style handler: `procedure (Application, Size)` (two arguments).
     pub on_resize: Option<Value>,
     /// `OnPaint`-style handler: `procedure (Application)` (one argument).
@@ -66,6 +68,7 @@ impl Default for TuiState {
             session: TuiSession::default(),
             host: TuiHost::new(),
             on_key_pressed: None,
+            on_mouse: None,
             on_resize: None,
             on_paint: None,
             on_idle: None,

@@ -21,6 +21,7 @@ use std::collections::VecDeque;
 pub enum HostEvent {
     Resize { width: i64, height: i64 },
     Key(ConsoleKeyEvent),
+    Mouse(crate::console_event::ConsoleEvent),
 }
 
 impl HostEvent {
@@ -72,6 +73,13 @@ impl TuiHost {
                     self.ready.push_back(HostEvent::Resize { width, height });
                 }
                 self.ready.push_back(HostEvent::Key(key));
+            }
+            TuiEvent::Mouse(ev) => {
+                if let Some((width, height)) = self.pending_resize.take() {
+                    self.trace("tui_host: flush coalesced resize before mouse");
+                    self.ready.push_back(HostEvent::Resize { width, height });
+                }
+                self.ready.push_back(HostEvent::Mouse(ev));
             }
         }
     }

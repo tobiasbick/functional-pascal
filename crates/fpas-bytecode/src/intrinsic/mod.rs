@@ -483,6 +483,12 @@ pub enum Intrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     TuiHostRegisterOnExit = 264,
+
+    /// Register `procedure (Application, Std.Console.Event)` for host mouse-event dispatch.
+    /// Stack: `Application`, `OnMouse` (function value, top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostRegisterOnMouse = 268,
 }
 
 impl From<Intrinsic> for u16 {

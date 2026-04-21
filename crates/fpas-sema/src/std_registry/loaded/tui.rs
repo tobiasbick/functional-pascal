@@ -122,6 +122,13 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         ),
     };
 
+    let console_event_ty = match checker.scopes.lookup(s::STD_CONSOLE_EVENT) {
+        Some(sym) => sym.ty.clone(),
+        None => {
+            unreachable!("Std.Console.Event must be registered before Std.Tui (see loaded/mod.rs)")
+        }
+    };
+
     let event_kind_ty = register_enum_type(checker, s::STD_TUI_EVENT_KIND, TUI_EVENT_KIND_VARIANTS);
     let exit_reason_ty =
         register_enum_type(checker, s::STD_TUI_EXIT_REASON, TUI_EXIT_REASON_VARIANTS);
@@ -132,6 +139,14 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             p("Key", key_event_ty.clone(), false),
         ],
         return_type: Box::new(Ty::Boolean),
+        variadic: false,
+    });
+    let on_mouse_ty = Ty::Procedure(ProcedureTy {
+        type_params: Vec::new(),
+        params: vec![
+            p("App", application_ty.clone(), false),
+            p("Event", console_event_ty.clone(), false),
+        ],
         variadic: false,
     });
     let on_resize_ty = Ty::Procedure(ProcedureTy {
@@ -169,6 +184,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
                 "OnKeyPressed".into(),
                 Ty::Option(Box::new(on_key_pressed_ty.clone())),
             ),
+            ("OnMouse".into(), Ty::Option(Box::new(on_mouse_ty.clone()))),
             (
                 "OnResize".into(),
                 Ty::Option(Box::new(on_resize_ty.clone())),
@@ -180,6 +196,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         vec![
             ("OnPaint".into(), None),
             ("OnKeyPressed".into(), Some(default_none_expr())),
+            ("OnMouse".into(), Some(default_none_expr())),
             ("OnResize".into(), Some(default_none_expr())),
             ("OnIdleMilliseconds".into(), Some(default_zero_expr())),
             ("OnIdle".into(), Some(default_none_expr())),
@@ -325,6 +342,14 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         vec![
             p("App", application_ty.clone(), false),
             p("OnExit", on_exit_ty, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_REGISTER_ON_MOUSE,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("OnMouse", on_mouse_ty, false),
         ],
     );
 

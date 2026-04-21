@@ -237,3 +237,89 @@ end.",
     assert_eq!(out.lines, vec!["paint", "resize", "paint", "key"]);
 }
 
+// Phase 6: OnMouse dispatch via Configure+Run.
+
+#[test]
+fn std_tui_configure_on_mouse_dispatches_mouse_event_and_quits() {
+    use fpas_std::{mouse_action_index, mouse_button_index};
+
+    let out = compile_run_with_console_events(
+        "\
+program T;
+uses Std.Console, Std.Tui;
+
+procedure OnPaint(App: Application);
+begin
+  Std.Console.WriteLn('paint')
+end;
+
+procedure OnMouse(App: Application; Event: Std.Console.Event);
+begin
+  Std.Console.WriteLn('mouse');
+  Application.HostRequestQuit(App)
+end;
+
+begin
+  var App: Application := Application.Open();
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+    OnMouse := Some(OnMouse);
+  end;
+  Application.Configure(App, Handlers);
+  Application.Run(App)
+end.",
+        &[ConsoleEvent::mouse(
+            mouse_action_index("Down"),
+            mouse_button_index("Left"),
+            10,
+            5,
+            false,
+            false,
+            false,
+            false,
+        )],
+    );
+
+    assert_eq!(out.lines, vec!["paint", "mouse"]);
+}
+
+#[test]
+fn std_tui_configure_on_mouse_receives_correct_coordinates() {
+    use fpas_std::{mouse_action_index, mouse_button_index};
+
+    let out = compile_run_with_console_events(
+        "\
+program T;
+uses Std.Console, Std.Tui;
+
+procedure OnPaint(App: Application);
+begin
+end;
+
+procedure OnMouse(App: Application; Event: Std.Console.Event);
+begin
+  Std.Console.WriteLn(Event.mouse_x);
+  Std.Console.WriteLn(Event.mouse_y);
+  Application.HostRequestQuit(App)
+end;
+
+begin
+  var App: Application := Application.Open();
+  Application.HostRegisterOnMouse(App, OnMouse);
+  Application.HostRegisterOnPaint(App, OnPaint);
+  Application.Run(App)
+end.",
+        &[ConsoleEvent::mouse(
+            mouse_action_index("Move"),
+            mouse_button_index("None"),
+            42,
+            17,
+            false,
+            false,
+            false,
+            false,
+        )],
+    );
+
+    assert_eq!(out.lines, vec!["42", "17"]);
+}

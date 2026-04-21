@@ -1,4 +1,6 @@
-use super::super::{compile_and_run, compile_err, compile_ok, compile_run_error, compile_run_with_console_events};
+use super::super::{
+    compile_and_run, compile_err, compile_ok, compile_run_error, compile_run_with_console_events,
+};
 use fpas_bytecode::{Intrinsic, Op};
 use fpas_std::{ConsoleEvent, ConsoleKeyEvent, key_event::key_kind_index};
 

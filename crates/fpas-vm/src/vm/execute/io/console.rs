@@ -251,7 +251,7 @@ impl Worker {
         }
     }
 
-    fn console_event_record(event: fpas_std::ConsoleEvent) -> Value {
+    pub(in crate::vm::execute::io) fn console_event_record(event: fpas_std::ConsoleEvent) -> Value {
         let fpas_std::ConsoleEvent {
             kind,
             key,

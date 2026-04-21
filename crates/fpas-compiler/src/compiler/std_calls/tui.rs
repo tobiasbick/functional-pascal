@@ -203,6 +203,18 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnExit, location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_HOST_REGISTER_ON_MOUSE => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_REGISTER_ON_MOUSE,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnMouse, location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

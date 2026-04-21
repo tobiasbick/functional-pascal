@@ -38,6 +38,10 @@ impl Worker {
                     tui.on_exit = None;
                     tui.last_exit_reason = None;
                     tui.run_active = false;
+                    tui.on_key_pressed = None;
+                    tui.on_mouse = None;
+                    tui.on_resize = None;
+                    tui.on_paint = None;
                 }
                 self.push(Self::tui_application_record())?;
             }
@@ -65,6 +69,14 @@ impl Worker {
                     2,
                     "OnKeyPressed",
                     "Set `OnKeyPressed := Some(Handler)` or `None`; the handler must be `function (Application, Std.Console.KeyEvent): boolean`.",
+                    line,
+                )?;
+                let on_mouse = self.optional_host_handler_field(
+                    &handlers,
+                    "OnMouse",
+                    2,
+                    "OnMouse",
+                    "Set `OnMouse := Some(Handler)` or `None`; the handler must be `procedure (Application, Std.Console.Event)`.",
                     line,
                 )?;
                 let on_resize = self.optional_host_handler_field(
@@ -98,6 +110,7 @@ impl Worker {
                 let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
                 tui.on_paint = Some(on_paint);
                 tui.on_key_pressed = on_key_pressed;
+                tui.on_mouse = on_mouse;
                 tui.on_resize = on_resize;
                 tui.idle_interval_ms = idle_interval_ms;
                 tui.on_idle = on_idle;
@@ -194,6 +207,7 @@ impl Worker {
                                 TuiEvent::Resize { width, height }
                             }
                             HostEvent::Key(k) => TuiEvent::Key(k),
+                            HostEvent::Mouse(m) => TuiEvent::Mouse(m),
                         };
                         self.push(Value::OptionSome(Box::new(Self::tui_event_record(tui_ev))))?;
                     }
@@ -287,6 +301,19 @@ impl Worker {
                 )?;
                 let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
                 tui.on_exit = Some(func);
+            }
+            Intrinsic::TuiHostRegisterOnMouse => {
+                let func = self.pop(line)?;
+                self.pop_tui_application(line)?;
+                self.validate_host_handler_function(
+                    &func,
+                    2,
+                    "OnMouse",
+                    "Pass a `procedure (Application, Std.Console.Event)` (two parameters).",
+                    line,
+                )?;
+                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                tui.on_mouse = Some(func);
             }
             Intrinsic::TuiHostInvokeOnKeyPressed => {
                 let key_ev = self.pop_console_key_event(line)?;
@@ -482,9 +509,13 @@ impl Worker {
             return Ok(0);
         };
 
-        let (on_key, on_resize) = {
+        let (on_key, on_mouse, on_resize) = {
             let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            (tui.on_key_pressed.clone(), tui.on_resize.clone())
+            (
+                tui.on_key_pressed.clone(),
+                tui.on_mouse.clone(),
+                tui.on_resize.clone(),
+            )
         };
 
         let app_rec = Self::tui_application_record();
@@ -500,6 +531,18 @@ impl Worker {
                     Ok(1)
                 } else {
                     Ok(3)
+                }
+            }
+            HostEvent::Mouse(mouse_ev) => {
+                if let Some(handler) = on_mouse {
+                    let _ = self.call_function_sync(
+                        &handler,
+                        &[app_rec, Self::console_event_record(mouse_ev)],
+                        line,
+                    )?;
+                    Ok(5)
+                } else {
+                    Ok(7)
                 }
             }
             HostEvent::Resize { width, height } => {
@@ -613,6 +656,7 @@ impl Worker {
         });
         tui.host = fpas_std::TuiHost::new();
         tui.on_key_pressed = None;
+        tui.on_mouse = None;
         tui.on_resize = None;
         tui.on_paint = None;
         tui.on_idle = None;
@@ -670,6 +714,14 @@ impl Worker {
                     ("kind".into(), Value::Integer(1)),
                     ("key".into(), Self::tui_unknown_key_event()),
                     ("size".into(), Self::tui_size_record(width, height)),
+                ],
+            },
+            TuiEvent::Mouse(_) => Value::Record {
+                type_name: TUI_EVENT_TYPE.into(),
+                fields: vec![
+                    ("kind".into(), Value::Integer(2)),
+                    ("key".into(), Self::tui_unknown_key_event()),
+                    ("size".into(), Self::tui_size_record(0, 0)),
                 ],
             },
         }

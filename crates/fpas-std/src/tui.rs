@@ -10,7 +10,7 @@ use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 use std::time::{Duration, Instant};
 
-pub const TUI_EVENT_KIND_VARIANTS: &[&str] = &["Key", "Resize"];
+pub const TUI_EVENT_KIND_VARIANTS: &[&str] = &["Key", "Resize", "Mouse"];
 
 /// Variants for `Std.Tui.ExitReason` (dispatch `OnExit` / future `Application.Run`); see `docs/pascal/std/tui-app.md`.
 pub const TUI_EXIT_REASON_VARIANTS: &[&str] =
@@ -20,6 +20,7 @@ pub const TUI_EXIT_REASON_VARIANTS: &[&str] =
 pub enum TuiEvent {
     Key(ConsoleKeyEvent),
     Resize { width: i64, height: i64 },
+    Mouse(ConsoleEvent),
 }
 
 #[derive(Debug, Default)]
@@ -263,6 +264,10 @@ fn map_console_event(console: &mut Console, event: ConsoleEvent) -> Option<TuiEv
 
     if event.kind == event_kind_index("Key") {
         return Some(TuiEvent::Key(event.key));
+    }
+
+    if event.kind == event_kind_index("Mouse") {
+        return Some(TuiEvent::Mouse(event));
     }
 
     None

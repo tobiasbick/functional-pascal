@@ -157,6 +157,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::TuiHostRunLoop,
     Intrinsic::TuiHostRequestQuit,
     Intrinsic::TuiHostRegisterOnExit,
+    Intrinsic::TuiHostRegisterOnMouse,
     Intrinsic::ResultUnwrap,
     Intrinsic::ResultUnwrapOr,
     Intrinsic::ResultIsOk,
@@ -366,6 +367,7 @@ impl Intrinsic {
             262 => Self::TuiHostRunLoop,
             263 => Self::TuiHostRequestQuit,
             264 => Self::TuiHostRegisterOnExit,
+            268 => Self::TuiHostRegisterOnMouse,
             _ => return None,
         })
     }

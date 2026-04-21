@@ -115,6 +115,7 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_APPLICATION_HOST_RUN_LOOP,
     std_symbols::STD_TUI_APPLICATION_HOST_REQUEST_QUIT,
     std_symbols::STD_TUI_APPLICATION_HOST_REGISTER_ON_EXIT,
+    std_symbols::STD_TUI_APPLICATION_HOST_REGISTER_ON_MOUSE,
 ];
 
 pub(in super::super) const STD_STR_SYMBOLS: &[&str] = &[

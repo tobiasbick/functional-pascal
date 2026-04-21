@@ -83,7 +83,7 @@ Phase 1 is **complete**. The canonical user-facing spec is `**[docs/pascal/std/t
 - **Entry:** `**Application.Open`**, register handlers with `**Application.HostRegisterOn*`**, then `**Application.Run(App)`** (blocking hosted loop). After `**Run`** completes normally, the host performs `**Application.Close`** semantics once `**OnExit`** has run (see `**tui-app.md`** lifecycle). `**TuiHostRunLoop**` (intrinsic **262**) remains the bounded stepping helper for tests and explicit low-level host pumping, not a substitute for structured `**ExitReason`** / `**OnExit`** / automatic `**Close**`.
 - **Handlers:** `**OnStartup`** (optional), `**OnKeyPressed(App, Key): boolean`** (consumed), `**OnResize`**, `**OnPaint`** (required), `**OnIdle**` (optional), `**OnExit(App, Reason)**` with **no veto**.
 - **Redraw:** invalidation + coalescing; `**OnPaint`** is the single FP paint contract; optional `**OnIdle`** uses a configurable idle interval.
-- **Naming:** `**On*`** prefix only for dispatch callbacks; poll-style `**ReadEvent`** / `**PollEvent`** / console `**KeyPressed`** are superseded for full apps when implementation lands (`[tui.md](../pascal/std/tui.md)` remains the source for the **current** poll API until Phase 5).
+- **Naming:** `**On*`** prefix only for dispatch callbacks; poll-style `**ReadEvent`** / `**PollEvent`** / console `**KeyPressed`** are superseded for full apps (see `[tui.md](../pascal/std/tui.md)` poll-style API status section).
 - **Sema alignment:** extend `[loaded/tui.rs](../../crates/fpas-sema/src/std_registry/loaded/tui.rs)` when implementing; keep `**tui-app.md`** and that registry in sync.
 
 ---
@@ -156,12 +156,14 @@ Completed in this slice:
 
 ## Phase 5 — Standard library cleanup: TUI-first, shrink legacy console loop
 
-**Status:** **Not started** (depends on Phase 4).
+**Status:** **Complete for the dispatch-model migration slice.** Poll-style API classification is documented in `[tui.md](../pascal/std/tui.md)` (new "Poll-style API status" section). `[examples/pascal/tui/minimal_application.fpas](../../examples/pascal/tui/minimal_application.fpas)` is rewritten to use `Application.Configure` + `Application.Run` (dispatch model, no manual event loop). `[examples/README.md](../../examples/README.md)` updated. Two integration tests added to `[tui_configure.rs](../../crates/fpas-compiler/src/tests/std_library/tui_configure.rs)` covering `OnKeyPressed` dispatch and `OnResize` → repaint.
 
-1. Inventory **poll-style** entry points: `ReadEvent`, `ReadEventTimeout`, `PollEvent`, `KeyPressed`, etc., across `[docs/pascal/std/console.md](../pascal/std/console.md)` and `[tui.md](../pascal/std/tui.md)`.
-2. Classify each as: **keep for non-TUI scripts**, **move under `Std.Tui`**, or **remove** in favor of `On*`.
-3. Update **Mandelbrot** and other examples to the **new** pattern once `Run` exists; delete duplicated loop boilerplate.
-4. Refresh `**[examples/README.md](../../examples/README.md)`** and any **CI** that assumes old patterns.
+**Mandelbrot migration:** blocked on Phase 6 — the Mandelbrot example uses mouse, paste, and focus events (`EventKind.Mouse`, `EventKind.Paste`, `EventKind.FocusGained`) not yet in the dispatch model. Migration deferred until Phase 6 adds `OnMouse` (or equivalent).
+
+**Classification outcome** (see `[tui.md](../pascal/std/tui.md)` for the table):
+- `Application.ReadEvent`, `Application.ReadEventTimeout`, `Application.PollEvent`: superseded for full apps; kept as low-level primitives for non-hosted scripts and existing tests.
+- `Application.RequestRedraw`, `Application.RedrawPending`: compatible with dispatch mode; kept.
+- `Std.Console` event APIs (`ReadEvent`, `ReadEventTimeout`, `PollEvent`, `KeyPressed`): keep for non-TUI scripts that do not open a `Std.Tui` session.
 
 ---
 

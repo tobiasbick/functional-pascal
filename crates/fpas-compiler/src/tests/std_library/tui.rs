@@ -1,16 +1,6 @@
-use super::super::{compile_and_run, compile_err, compile_ok, compile_run_error};
+use super::super::{compile_and_run, compile_err, compile_ok, compile_run_error, compile_run_with_console_events};
 use fpas_bytecode::{Intrinsic, Op};
 use fpas_std::{ConsoleEvent, ConsoleKeyEvent, key_event::key_kind_index};
-
-fn compile_run_with_console_events(source: &str, events: &[ConsoleEvent]) -> fpas_vm::VmOutput {
-    let chunk = compile_ok(source);
-    let mut vm = fpas_vm::Vm::new(chunk);
-    for event in events {
-        vm.push_console_event(event.clone());
-    }
-    vm.run().expect("VM should not error");
-    vm.output().clone()
-}
 
 #[test]
 fn std_tui_redraw_pending_is_consumed_once() {

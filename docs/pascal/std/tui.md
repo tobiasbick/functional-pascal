@@ -200,56 +200,65 @@ Return `true` when the application should render a new frame.
 
 ---
 
-## Minimal application model
+## Dispatch model (recommended)
 
-The smallest useful `Std.Tui` flow is:
-
-1. open an application session,
-2. request and consume redraws,
-3. process events,
-4. close the session before exit.
+For full applications, use `Application.Configure` + `Application.Run` instead of a manual event loop. Register `On*` handlers once; the host calls them:
 
 ```pascal
-program StdTuiMinimal;
+program TuiMinimalApplication;
 uses Std.Console, Std.Tui;
+
+procedure OnPaint(App: Application);
+begin
+  var S: Size := Application.Size(App);
+  ClrScr();
+  GotoXY(1, 1);
+  WriteLn('Size: ', S.width, 'x', S.height);
+  WriteLn('Press Escape to exit')
+end;
+
+function OnKeyPressed(App: Application; Key: Std.Console.KeyEvent): boolean;
+begin
+  if Key.kind = KeyKind.Escape then
+  begin
+    Application.HostRequestQuit(App);
+    return true
+  end;
+  Application.RequestRedraw(App);
+  return false
+end;
+
+procedure OnResize(App: Application; NewSize: Size);
+begin
+  Application.RequestRedraw(App)
+end;
+
 begin
   var App: Application := Application.Open();
-  mutable var Running: boolean := true;
-  Application.RequestRedraw(App);
-
-  while Running do
-  begin
-    case Application.ReadEventTimeout(App, 16) of
-      Some(E):
-        begin
-          if E.kind = EventKind.Resize then
-            Application.RequestRedraw(App)
-          else if E.kind = EventKind.Key then
-          begin
-            if E.key.kind = Std.Console.KeyKind.Escape then
-              Running := false
-            else
-              Application.RequestRedraw(App)
-          end
-        end;
-      None:
-        begin
-        end
-    end;
-
-    if Application.RedrawPending(App) then
-    begin
-      var S: Size := Application.Size(App);
-      ClrScr();
-      GotoXY(1, 1);
-      WriteLn('Std.Tui minimal app');
-      WriteLn('Size: ', S.width, 'x', S.height);
-      WriteLn('Press Escape to exit')
-    end
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+    OnKeyPressed := Some(OnKeyPressed);
+    OnResize := Some(OnResize);
   end;
-
-  Application.Close(App)
+  Application.Configure(App, Handlers);
+  Application.Run(App)
 end.
 ```
 
+`Application.Run` performs `Application.Close` automatically after the loop exits. See `[tui-app.md](tui-app.md)` for the full dispatch API and `ApplicationHandlers` fields.
+
 See also: `[examples/pascal/tui/minimal_application.fpas](../../../examples/pascal/tui/minimal_application.fpas)`
+
+---
+
+## Poll-style API status
+
+`Application.ReadEvent`, `Application.ReadEventTimeout`, and `Application.PollEvent` predate the hosted dispatch model. For programs using `Application.Run` and `On*` handlers, these poll-style calls are not needed: the host invokes `On*` handlers directly.
+
+| Routine | Recommendation |
+|---------|----------------|
+| `Application.ReadEvent` | Superseded for full apps. Use `Application.Run` + `OnKeyPressed` / `OnResize`. Kept for non-hosted scripts. |
+| `Application.ReadEventTimeout` | Same as above. |
+| `Application.PollEvent` | Same as above. |
+| `Application.RequestRedraw` | Fully compatible with dispatch mode; call from any `On*` handler. |
+| `Application.RedrawPending` | Low-level flag query; not needed in dispatch mode (host invokes `OnPaint` automatically). |

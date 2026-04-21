@@ -66,9 +66,9 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 |------|--------|
 | `math/julia/julia.fpas` | Single-file; pan/zoom with keys after first draw |
 | `math/mandelbrot/mandelbrot.fpasprj` | Project; fullscreen Mandelbrot explorer |
-| `pascal/tui/minimal_application.fpas` | `Std.Tui.Application` loop; **Escape** to quit |
+| `pascal/tui/minimal_application.fpas` | `Application.Configure` + `Application.Run` dispatch mode; **Escape** to quit |
 | `pascal/tui/host_dispatch_minimal.fpas` | One **`HostProcessNext`** call then **`Close`** (dispatch bridge); same TUI session behavior as `minimal_application.fpas` |
 | `pascal/tui/host_dispatch_paint.fpas` | **`HostRegisterOnPaint`** + **`HostDispatchRedraw`** (one paint pass) |
 | `pascal/tui/host_dispatch_quit.fpas` | **`HostRequestQuit`** from **`OnPaint`**, then **`HostRunLoop`** (cooperative exit) |
 
-TUI APIs use types such as **`Std.Tui.TuiEvent`** and **`Std.Tui.EventKind`** (see `docs/pascal/std/tui.md`). **Host dispatch** (`Application.Host*`) is documented in `docs/pascal/std/tui-app.md`. The console’s own event type remains **`Std.Console.Event`**.
+TUI apps use the dispatch model: `Application.Configure(App, Handlers)` registers `On*` handlers; `Application.Run(App)` starts the hosted loop. See `docs/pascal/std/tui-app.md` for the full dispatch API and `docs/pascal/std/tui.md` for poll-style API status. The console's own event type remains **`Std.Console.Event`**.

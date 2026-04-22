@@ -22,6 +22,12 @@ pub enum HostEvent {
     Resize { width: i64, height: i64 },
     Key(ConsoleKeyEvent),
     Mouse(crate::console_event::ConsoleEvent),
+    /// Bracketed-paste content; best-effort on terminals that support it.
+    Paste(crate::console_event::ConsoleEvent),
+    /// Terminal focus gained; best-effort / optional.
+    FocusGained(crate::console_event::ConsoleEvent),
+    /// Terminal focus lost; best-effort / optional.
+    FocusLost(crate::console_event::ConsoleEvent),
 }
 
 impl HostEvent {
@@ -80,6 +86,27 @@ impl TuiHost {
                     self.ready.push_back(HostEvent::Resize { width, height });
                 }
                 self.ready.push_back(HostEvent::Mouse(ev));
+            }
+            TuiEvent::Paste(ev) => {
+                if let Some((width, height)) = self.pending_resize.take() {
+                    self.trace("tui_host: flush coalesced resize before paste");
+                    self.ready.push_back(HostEvent::Resize { width, height });
+                }
+                self.ready.push_back(HostEvent::Paste(ev));
+            }
+            TuiEvent::FocusGained(ev) => {
+                if let Some((width, height)) = self.pending_resize.take() {
+                    self.trace("tui_host: flush coalesced resize before focus-gained");
+                    self.ready.push_back(HostEvent::Resize { width, height });
+                }
+                self.ready.push_back(HostEvent::FocusGained(ev));
+            }
+            TuiEvent::FocusLost(ev) => {
+                if let Some((width, height)) = self.pending_resize.take() {
+                    self.trace("tui_host: flush coalesced resize before focus-lost");
+                    self.ready.push_back(HostEvent::Resize { width, height });
+                }
+                self.ready.push_back(HostEvent::FocusLost(ev));
             }
         }
     }

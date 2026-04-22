@@ -158,7 +158,7 @@ Completed in this slice:
 
 **Status:** **Complete for the dispatch-model migration slice.** Poll-style API classification is documented in `[tui.md](../pascal/std/tui.md)` (new "Poll-style API status" section). `[examples/pascal/tui/minimal_application.fpas](../../examples/pascal/tui/minimal_application.fpas)` is rewritten to use `Application.Configure` + `Application.Run` (dispatch model, no manual event loop). `[examples/README.md](../../examples/README.md)` updated. Two integration tests added to `[tui_configure.rs](../../crates/fpas-compiler/src/tests/std_library/tui_configure.rs)` covering `OnKeyPressed` dispatch and `OnResize` → repaint.
 
-**Mandelbrot migration:** partially unblocked — `OnMouse` dispatch is now implemented (Phase 6 item 5 below). Paste and focus events (`EventKind.Paste`, `EventKind.FocusGained`) are still open; full Mandelbrot migration deferred until those are addressed.
+**Mandelbrot migration:** now fully unblocked — `OnMouse`, `OnPaste`, `OnFocusGained`, and `OnFocusLost` are all implemented.
 
 **Classification outcome** (see `[tui.md](../pascal/std/tui.md)` for the table):
 - `Application.ReadEvent`, `Application.ReadEventTimeout`, `Application.PollEvent`: superseded for full apps; kept as low-level primitives for non-hosted scripts and existing tests.
@@ -169,14 +169,14 @@ Completed in this slice:
 
 ## Phase 6 — Event coverage and honesty in the spec
 
-**Status:** **Partially complete.** Items 1–4 were completed as part of Phases 3–5. Item 5 (`OnMouse`) is now implemented: `Mouse` variant added to `TuiEvent`/`HostEvent`, `TuiHostRegisterOnMouse` (intrinsic **268**) registered and lowered, `ApplicationHandlers.OnMouse` bundle field wired, VM dispatch returns tags `5` (mouse dispatched) / `7` (mouse without handler). Paste and focus events remain open.
+**Status:** **Complete.** Items 1–5 were completed as part of Phases 3–5. Item 5 (`OnMouse`) was implemented in the previous slice: `Mouse` variant added to `TuiEvent`/`HostEvent`, `TuiHostRegisterOnMouse` (intrinsic **268**) registered and lowered, `ApplicationHandlers.OnMouse` bundle field wired, VM dispatch returns tags `5` (mouse dispatched) / `7` (mouse without handler). Item 6 is now **done**: `OnPaste` (intrinsic **269**), `OnFocusGained` (intrinsic **270**), and `OnFocusLost` (intrinsic **271**) added — `Paste`/`FocusGained`/`FocusLost` variants added to `TuiEvent` and `HostEvent`; `ApplicationHandlers` bundle extended with three new optional fields; VM dispatch returns tags `8`/`9` (paste), `10`/`11` (focus-gained), `12`/`13` (focus-lost); `map_console_event` forwards all three; Mandelbrot migration is now fully unblocked.
 
 1. Implement `**OnKeyPressed`** (and `**OnKeyReleased` / `OnKeyDown`** only if the backend can emit them reliably; otherwise document as **optional / noop** on some platforms). ✅
 2. Implement `**OnResize`** with **debounced** size (match `Application.Size` semantics). ✅
 3. Implement `**OnExit`** (or `**OnShutdown`**) for clean terminal restore; pair with `**Application.Open`/`Close`** lifecycle. ✅
 4. Add `**OnPaint**` tied to **invalidation** and `RedrawPending` semantics (see `[tui-app.md](../pascal/std/tui-app.md)`). ✅
 5. Add `**OnMouse`** for mouse events (`Down`, `Up`, `Move`, `ScrollUp`, `ScrollDown`, etc.). ✅
-6. Add `**OnPaste`** and `**OnFocusGained`/`OnFocusLost`** to unblock Mandelbrot migration.
+6. ~~Add `**OnPaste`** and `**OnFocusGained`/`OnFocusLost`** to unblock Mandelbrot migration.~~ ✅
 7. Document **every** `On`* in `docs/pascal/std/` with **when it fires** and **threading** expectations.
 
 ---

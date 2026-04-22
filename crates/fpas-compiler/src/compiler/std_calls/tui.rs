@@ -215,6 +215,42 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnMouse, location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_HOST_REGISTER_ON_PASTE => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_REGISTER_ON_PASTE,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnPaste, location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_REGISTER_ON_FOCUS_GAINED => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_REGISTER_ON_FOCUS_GAINED,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnFocusGained, location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_REGISTER_ON_FOCUS_LOST => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_REGISTER_ON_FOCUS_LOST,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnFocusLost, location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

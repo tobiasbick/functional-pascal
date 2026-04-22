@@ -21,6 +21,12 @@ pub enum TuiEvent {
     Key(ConsoleKeyEvent),
     Resize { width: i64, height: i64 },
     Mouse(ConsoleEvent),
+    /// Bracketed-paste content; best-effort on terminals that support it.
+    Paste(ConsoleEvent),
+    /// Terminal focus gained; best-effort / optional on many terminals.
+    FocusGained(ConsoleEvent),
+    /// Terminal focus lost; best-effort / optional on many terminals.
+    FocusLost(ConsoleEvent),
 }
 
 #[derive(Debug, Default)]
@@ -268,6 +274,18 @@ fn map_console_event(console: &mut Console, event: ConsoleEvent) -> Option<TuiEv
 
     if event.kind == event_kind_index("Mouse") {
         return Some(TuiEvent::Mouse(event));
+    }
+
+    if event.kind == event_kind_index("Paste") {
+        return Some(TuiEvent::Paste(event));
+    }
+
+    if event.kind == event_kind_index("FocusGained") {
+        return Some(TuiEvent::FocusGained(event));
+    }
+
+    if event.kind == event_kind_index("FocusLost") {
+        return Some(TuiEvent::FocusLost(event));
     }
 
     None

@@ -489,6 +489,24 @@ pub enum Intrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     TuiHostRegisterOnMouse = 268,
+
+    /// Register `procedure (Application, Std.Console.Event)` for bracketed-paste dispatch.
+    /// Stack: `Application`, `OnPaste` (function value, top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostRegisterOnPaste = 269,
+
+    /// Register `procedure (Application, Std.Console.Event)` for terminal focus-gained dispatch.
+    /// Stack: `Application`, `OnFocusGained` (function value, top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostRegisterOnFocusGained = 270,
+
+    /// Register `procedure (Application, Std.Console.Event)` for terminal focus-lost dispatch.
+    /// Stack: `Application`, `OnFocusLost` (function value, top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostRegisterOnFocusLost = 271,
 }
 
 impl From<Intrinsic> for u16 {

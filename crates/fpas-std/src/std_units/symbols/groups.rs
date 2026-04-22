@@ -116,6 +116,9 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_APPLICATION_HOST_REQUEST_QUIT,
     std_symbols::STD_TUI_APPLICATION_HOST_REGISTER_ON_EXIT,
     std_symbols::STD_TUI_APPLICATION_HOST_REGISTER_ON_MOUSE,
+    std_symbols::STD_TUI_APPLICATION_HOST_REGISTER_ON_PASTE,
+    std_symbols::STD_TUI_APPLICATION_HOST_REGISTER_ON_FOCUS_GAINED,
+    std_symbols::STD_TUI_APPLICATION_HOST_REGISTER_ON_FOCUS_LOST,
 ];
 
 pub(in super::super) const STD_STR_SYMBOLS: &[&str] = &[

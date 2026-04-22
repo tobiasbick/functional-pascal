@@ -40,6 +40,9 @@ impl Worker {
                     tui.run_active = false;
                     tui.on_key_pressed = None;
                     tui.on_mouse = None;
+                    tui.on_paste = None;
+                    tui.on_focus_gained = None;
+                    tui.on_focus_lost = None;
                     tui.on_resize = None;
                     tui.on_paint = None;
                 }
@@ -79,6 +82,30 @@ impl Worker {
                     "Set `OnMouse := Some(Handler)` or `None`; the handler must be `procedure (Application, Std.Console.Event)`.",
                     line,
                 )?;
+                let on_paste = self.optional_host_handler_field(
+                    &handlers,
+                    "OnPaste",
+                    2,
+                    "OnPaste",
+                    "Set `OnPaste := Some(Handler)` or `None`; the handler must be `procedure (Application, Std.Console.Event)`.",
+                    line,
+                )?;
+                let on_focus_gained = self.optional_host_handler_field(
+                    &handlers,
+                    "OnFocusGained",
+                    2,
+                    "OnFocusGained",
+                    "Set `OnFocusGained := Some(Handler)` or `None`; the handler must be `procedure (Application, Std.Console.Event)`.",
+                    line,
+                )?;
+                let on_focus_lost = self.optional_host_handler_field(
+                    &handlers,
+                    "OnFocusLost",
+                    2,
+                    "OnFocusLost",
+                    "Set `OnFocusLost := Some(Handler)` or `None`; the handler must be `procedure (Application, Std.Console.Event)`.",
+                    line,
+                )?;;
                 let on_resize = self.optional_host_handler_field(
                     &handlers,
                     "OnResize",
@@ -111,6 +138,9 @@ impl Worker {
                 tui.on_paint = Some(on_paint);
                 tui.on_key_pressed = on_key_pressed;
                 tui.on_mouse = on_mouse;
+                tui.on_paste = on_paste;
+                tui.on_focus_gained = on_focus_gained;
+                tui.on_focus_lost = on_focus_lost;
                 tui.on_resize = on_resize;
                 tui.idle_interval_ms = idle_interval_ms;
                 tui.on_idle = on_idle;
@@ -208,6 +238,13 @@ impl Worker {
                             }
                             HostEvent::Key(k) => TuiEvent::Key(k),
                             HostEvent::Mouse(m) => TuiEvent::Mouse(m),
+                            // Paste and focus events are dispatch-only; not exposed via poll API.
+                            HostEvent::Paste(_)
+                            | HostEvent::FocusGained(_)
+                            | HostEvent::FocusLost(_) => {
+                                self.push(Value::OptionNone)?;
+                                return Ok(true);
+                            }
                         };
                         self.push(Value::OptionSome(Box::new(Self::tui_event_record(tui_ev))))?;
                     }
@@ -314,6 +351,45 @@ impl Worker {
                 )?;
                 let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
                 tui.on_mouse = Some(func);
+            }
+            Intrinsic::TuiHostRegisterOnPaste => {
+                let func = self.pop(line)?;
+                self.pop_tui_application(line)?;
+                self.validate_host_handler_function(
+                    &func,
+                    2,
+                    "OnPaste",
+                    "Pass a `procedure (Application, Std.Console.Event)` (two parameters).",
+                    line,
+                )?;
+                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                tui.on_paste = Some(func);
+            }
+            Intrinsic::TuiHostRegisterOnFocusGained => {
+                let func = self.pop(line)?;
+                self.pop_tui_application(line)?;
+                self.validate_host_handler_function(
+                    &func,
+                    2,
+                    "OnFocusGained",
+                    "Pass a `procedure (Application, Std.Console.Event)` (two parameters).",
+                    line,
+                )?;
+                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                tui.on_focus_gained = Some(func);
+            }
+            Intrinsic::TuiHostRegisterOnFocusLost => {
+                let func = self.pop(line)?;
+                self.pop_tui_application(line)?;
+                self.validate_host_handler_function(
+                    &func,
+                    2,
+                    "OnFocusLost",
+                    "Pass a `procedure (Application, Std.Console.Event)` (two parameters).",
+                    line,
+                )?;
+                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                tui.on_focus_lost = Some(func);
             }
             Intrinsic::TuiHostInvokeOnKeyPressed => {
                 let key_ev = self.pop_console_key_event(line)?;
@@ -509,11 +585,14 @@ impl Worker {
             return Ok(0);
         };
 
-        let (on_key, on_mouse, on_resize) = {
+let (on_key, on_mouse, on_paste, on_focus_gained, on_focus_lost, on_resize) = {
             let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
             (
                 tui.on_key_pressed.clone(),
                 tui.on_mouse.clone(),
+                tui.on_paste.clone(),
+                tui.on_focus_gained.clone(),
+                tui.on_focus_lost.clone(),
                 tui.on_resize.clone(),
             )
         };
@@ -543,6 +622,42 @@ impl Worker {
                     Ok(5)
                 } else {
                     Ok(7)
+                }
+            }
+            HostEvent::Paste(paste_ev) => {
+                if let Some(handler) = on_paste {
+                    let _ = self.call_function_sync(
+                        &handler,
+                        &[app_rec, Self::console_event_record(paste_ev)],
+                        line,
+                    )?;
+                    Ok(8)
+                } else {
+                    Ok(9)
+                }
+            }
+            HostEvent::FocusGained(focus_ev) => {
+                if let Some(handler) = on_focus_gained {
+                    let _ = self.call_function_sync(
+                        &handler,
+                        &[app_rec, Self::console_event_record(focus_ev)],
+                        line,
+                    )?;
+                    Ok(10)
+                } else {
+                    Ok(11)
+                }
+            }
+            HostEvent::FocusLost(focus_ev) => {
+                if let Some(handler) = on_focus_lost {
+                    let _ = self.call_function_sync(
+                        &handler,
+                        &[app_rec, Self::console_event_record(focus_ev)],
+                        line,
+                    )?;
+                    Ok(12)
+                } else {
+                    Ok(13)
                 }
             }
             HostEvent::Resize { width, height } => {
@@ -657,6 +772,9 @@ impl Worker {
         tui.host = fpas_std::TuiHost::new();
         tui.on_key_pressed = None;
         tui.on_mouse = None;
+        tui.on_paste = None;
+        tui.on_focus_gained = None;
+        tui.on_focus_lost = None;
         tui.on_resize = None;
         tui.on_paint = None;
         tui.on_idle = None;
@@ -720,6 +838,32 @@ impl Worker {
                 type_name: TUI_EVENT_TYPE.into(),
                 fields: vec![
                     ("kind".into(), Value::Integer(2)),
+                    ("key".into(), Self::tui_unknown_key_event()),
+                    ("size".into(), Self::tui_size_record(0, 0)),
+                ],
+            },
+            // Paste/Focus are dispatch-only; kind integers 3/4/5 are beyond the declared
+            // Std.Tui.EventKind variants but won't crash legacy poll-style callers.
+            TuiEvent::Paste(_) => Value::Record {
+                type_name: TUI_EVENT_TYPE.into(),
+                fields: vec![
+                    ("kind".into(), Value::Integer(3)),
+                    ("key".into(), Self::tui_unknown_key_event()),
+                    ("size".into(), Self::tui_size_record(0, 0)),
+                ],
+            },
+            TuiEvent::FocusGained(_) => Value::Record {
+                type_name: TUI_EVENT_TYPE.into(),
+                fields: vec![
+                    ("kind".into(), Value::Integer(4)),
+                    ("key".into(), Self::tui_unknown_key_event()),
+                    ("size".into(), Self::tui_size_record(0, 0)),
+                ],
+            },
+            TuiEvent::FocusLost(_) => Value::Record {
+                type_name: TUI_EVENT_TYPE.into(),
+                fields: vec![
+                    ("kind".into(), Value::Integer(5)),
                     ("key".into(), Self::tui_unknown_key_event()),
                     ("size".into(), Self::tui_size_record(0, 0)),
                 ],

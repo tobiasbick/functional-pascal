@@ -323,3 +323,132 @@ end.",
 
     assert_eq!(out.lines, vec!["42", "17"]);
 }
+
+// Phase 6: OnPaste dispatch via Configure+Run.
+
+#[test]
+fn std_tui_configure_on_paste_dispatches_paste_event_and_quits() {
+    let out = compile_run_with_console_events(
+        "\
+program T;
+uses Std.Console, Std.Tui;
+
+procedure OnPaint(App: Application);
+begin
+  Std.Console.WriteLn('paint')
+end;
+
+procedure OnPaste(App: Application; Event: Std.Console.Event);
+begin
+  Std.Console.WriteLn('paste');
+  Application.HostRequestQuit(App)
+end;
+
+begin
+  var App: Application := Application.Open();
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+    OnPaste := Some(OnPaste);
+  end;
+  Application.Configure(App, Handlers);
+  Application.Run(App)
+end.",
+        &[ConsoleEvent::paste("hello world".to_string())],
+    );
+
+    assert_eq!(out.lines, vec!["paint", "paste"]);
+}
+
+#[test]
+fn std_tui_configure_on_paste_receives_text_content() {
+    let out = compile_run_with_console_events(
+        "\
+program T;
+uses Std.Console, Std.Tui;
+
+procedure OnPaint(App: Application);
+begin
+end;
+
+procedure OnPaste(App: Application; Event: Std.Console.Event);
+begin
+  Std.Console.WriteLn(Event.text);
+  Application.HostRequestQuit(App)
+end;
+
+begin
+  var App: Application := Application.Open();
+  Application.HostRegisterOnPaste(App, OnPaste);
+  Application.HostRegisterOnPaint(App, OnPaint);
+  Application.Run(App)
+end.",
+        &[ConsoleEvent::paste("copied text".to_string())],
+    );
+
+    assert_eq!(out.lines, vec!["copied text"]);
+}
+
+// Phase 6: OnFocusGained/OnFocusLost dispatch via Configure+Run.
+
+#[test]
+fn std_tui_configure_on_focus_gained_dispatches_event_and_quits() {
+    let out = compile_run_with_console_events(
+        "\
+program T;
+uses Std.Console, Std.Tui;
+
+procedure OnPaint(App: Application);
+begin
+  Std.Console.WriteLn('paint')
+end;
+
+procedure OnFocusGained(App: Application; Event: Std.Console.Event);
+begin
+  Std.Console.WriteLn('focused');
+  Application.HostRequestQuit(App)
+end;
+
+begin
+  var App: Application := Application.Open();
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+    OnFocusGained := Some(OnFocusGained);
+  end;
+  Application.Configure(App, Handlers);
+  Application.Run(App)
+end.",
+        &[ConsoleEvent::focus_gained()],
+    );
+
+    assert_eq!(out.lines, vec!["paint", "focused"]);
+}
+
+#[test]
+fn std_tui_configure_on_focus_lost_dispatches_event_and_quits() {
+    let out = compile_run_with_console_events(
+        "\
+program T;
+uses Std.Console, Std.Tui;
+
+procedure OnPaint(App: Application);
+begin
+  Std.Console.WriteLn('paint')
+end;
+
+procedure OnFocusLost(App: Application; Event: Std.Console.Event);
+begin
+  Std.Console.WriteLn('blurred');
+  Application.HostRequestQuit(App)
+end;
+
+begin
+  var App: Application := Application.Open();
+  Application.HostRegisterOnFocusLost(App, OnFocusLost);
+  Application.HostRegisterOnPaint(App, OnPaint);
+  Application.Run(App)
+end.",
+        &[ConsoleEvent::focus_lost()],
+    );
+
+    assert_eq!(out.lines, vec!["paint", "blurred"]);
+}

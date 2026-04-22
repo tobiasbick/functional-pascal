@@ -176,6 +176,15 @@ pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_EXIT: &str =
 /// Register `procedure (Application, Std.Console.Event)` for hosted mouse-event dispatch.
 pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_MOUSE: &str =
     std_tui!("Application.HostRegisterOnMouse");
+/// Register `procedure (Application, Std.Console.Event)` for bracketed-paste dispatch.
+pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_PASTE: &str =
+    std_tui!("Application.HostRegisterOnPaste");
+/// Register `procedure (Application, Std.Console.Event)` for terminal focus-gained dispatch.
+pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_FOCUS_GAINED: &str =
+    std_tui!("Application.HostRegisterOnFocusGained");
+/// Register `procedure (Application, Std.Console.Event)` for terminal focus-lost dispatch.
+pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_FOCUS_LOST: &str =
+    std_tui!("Application.HostRegisterOnFocusLost");
 
 pub const STD_STR_LENGTH: &str = std_str!("Length");
 pub const STD_STR_TO_UPPER: &str = std_str!("ToUpper");

@@ -149,6 +149,10 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         ],
         variadic: false,
     });
+    // OnPaste, OnFocusGained, OnFocusLost all share the same signature as OnMouse.
+    let on_paste_ty = on_mouse_ty.clone();
+    let on_focus_gained_ty = on_mouse_ty.clone();
+    let on_focus_lost_ty = on_mouse_ty.clone();
     let on_resize_ty = Ty::Procedure(ProcedureTy {
         type_params: Vec::new(),
         params: vec![
@@ -185,6 +189,15 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
                 Ty::Option(Box::new(on_key_pressed_ty.clone())),
             ),
             ("OnMouse".into(), Ty::Option(Box::new(on_mouse_ty.clone()))),
+            ("OnPaste".into(), Ty::Option(Box::new(on_paste_ty.clone()))),
+            (
+                "OnFocusGained".into(),
+                Ty::Option(Box::new(on_focus_gained_ty.clone())),
+            ),
+            (
+                "OnFocusLost".into(),
+                Ty::Option(Box::new(on_focus_lost_ty.clone())),
+            ),
             (
                 "OnResize".into(),
                 Ty::Option(Box::new(on_resize_ty.clone())),
@@ -197,6 +210,9 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             ("OnPaint".into(), None),
             ("OnKeyPressed".into(), Some(default_none_expr())),
             ("OnMouse".into(), Some(default_none_expr())),
+            ("OnPaste".into(), Some(default_none_expr())),
+            ("OnFocusGained".into(), Some(default_none_expr())),
+            ("OnFocusLost".into(), Some(default_none_expr())),
             ("OnResize".into(), Some(default_none_expr())),
             ("OnIdleMilliseconds".into(), Some(default_zero_expr())),
             ("OnIdle".into(), Some(default_none_expr())),
@@ -350,6 +366,30 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         vec![
             p("App", application_ty.clone(), false),
             p("OnMouse", on_mouse_ty, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_REGISTER_ON_PASTE,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("OnPaste", on_paste_ty, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_REGISTER_ON_FOCUS_GAINED,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("OnFocusGained", on_focus_gained_ty, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_REGISTER_ON_FOCUS_LOST,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("OnFocusLost", on_focus_lost_ty, false),
         ],
     );
 

@@ -45,6 +45,9 @@ fn tui_application_configure_stores_bundle_handlers_and_interval() {
                 Value::OptionSome(Box::new(function_value("OnExit"))),
             ),
             ("OnMouse".into(), Value::OptionNone),
+            ("OnPaste".into(), Value::OptionNone),
+            ("OnFocusGained".into(), Value::OptionNone),
+            ("OnFocusLost".into(), Value::OptionNone),
         ]),
     );
     chunk.emit(
@@ -122,6 +125,9 @@ fn tui_application_configure_clears_previous_optional_handlers_with_none_default
             ("OnIdle".into(), Value::OptionNone),
             ("OnExit".into(), Value::OptionNone),
             ("OnMouse".into(), Value::OptionNone),
+            ("OnPaste".into(), Value::OptionNone),
+            ("OnFocusGained".into(), Value::OptionNone),
+            ("OnFocusLost".into(), Value::OptionNone),
         ]),
     );
     chunk.emit(
@@ -243,6 +249,9 @@ fn tui_application_configure_clamps_negative_idle_interval_to_zero() {
             ),
             ("OnExit".into(), Value::OptionNone),
             ("OnMouse".into(), Value::OptionNone),
+            ("OnPaste".into(), Value::OptionNone),
+            ("OnFocusGained".into(), Value::OptionNone),
+            ("OnFocusLost".into(), Value::OptionNone),
         ]),
     );
     chunk.emit(

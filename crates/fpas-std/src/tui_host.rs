@@ -19,7 +19,10 @@ use std::collections::VecDeque;
 /// when the console → TUI mapping grows.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum HostEvent {
-    Resize { width: i64, height: i64 },
+    Resize {
+        width: i64,
+        height: i64,
+    },
     Key(ConsoleKeyEvent),
     Mouse(crate::console_event::ConsoleEvent),
     /// Bracketed-paste content; best-effort on terminals that support it.

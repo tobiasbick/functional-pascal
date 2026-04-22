@@ -147,17 +147,17 @@ impl Worker {
         }
         Ok(())
     }
-}
 
-pub(super) fn pop_task_id(vm: &mut Worker, line: SourceLocation) -> Result<u64, VmError> {
-    let value = vm.pop(line)?;
-    match value {
-        Value::Task(id) => Ok(id),
-        other => Err(runtime_error(
-            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-            format!("Expected task, got `{}`", other.type_name()),
-            "Pass a task handle from `go FunctionName(args)`.",
-            line,
-        )),
+    fn pop_task_id(&mut self, line: SourceLocation) -> Result<u64, VmError> {
+        let value = self.pop(line)?;
+        match value {
+            Value::Task(id) => Ok(id),
+            other => Err(runtime_error(
+                RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                format!("Expected task, got `{}`", other.type_name()),
+                "Pass a task handle from `go FunctionName(args)`.",
+                line,
+            )),
+        }
     }
 }

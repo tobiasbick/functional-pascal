@@ -19,7 +19,10 @@ pub const TUI_EXIT_REASON_VARIANTS: &[&str] =
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TuiEvent {
     Key(ConsoleKeyEvent),
-    Resize { width: i64, height: i64 },
+    Resize {
+        width: i64,
+        height: i64,
+    },
     Mouse(ConsoleEvent),
     /// Bracketed-paste content; best-effort on terminals that support it.
     Paste(ConsoleEvent),
@@ -186,6 +189,39 @@ impl TuiSession {
     }
 
     pub fn poll_event(
+        &self,
+        console: &mut Console,
+        key_input: &mut KeyInput,
+        location: SourceLocation,
+    ) -> Result<Option<TuiEvent>, StdError> {
+        self.ensure_open(
+            "Application.PollEvent(App) requires an open Std.Tui application session.",
+            "Open the application before polling for events.",
+            location,
+        )?;
+
+        loop {
+            match key_input.poll_event(location)? {
+                Some(event) => {
+                    if let Some(mapped) = map_console_event(console, event) {
+                        // Paste and focus events are dispatch-only; skip them in the poll path.
+                        match mapped {
+                            TuiEvent::Paste(_)
+                            | TuiEvent::FocusGained(_)
+                            | TuiEvent::FocusLost(_) => continue,
+                            _ => return Ok(Some(mapped)),
+                        }
+                    }
+                }
+                None => return Ok(None),
+            }
+        }
+    }
+
+    /// Like [`poll_event`](Self::poll_event) but also returns paste and focus events.
+    ///
+    /// Used by the hosted run loop which dispatches those events to registered handlers.
+    pub fn poll_event_all(
         &self,
         console: &mut Console,
         key_input: &mut KeyInput,

@@ -206,6 +206,56 @@ procedure OnExit(App: Application; Reason: ExitReason);
 
 ---
 
+## `OnKeyPressed`
+
+- **When:** Fired once for each key or text-input event delivered by the host, in the order the host dequeues events from the terminal. Within a single dispatch turn, at most one key event is dispatched before control returns to the host loop (no batching of multiple keys in one handler call).
+- **Ordering relative to other handlers:** `OnResize` events that arrive before the key in the host queue are coalesced and dispatched first; `OnPaint` runs after input dispatch if a redraw is pending.
+- **Return value:** `true` means the key was **consumed**; the host performs no further default action for this event. `false` passes the event on to any future default routing (Phase 7+).
+- **Threading:** Main VM thread only. Must not call blocking event APIs (`Application.ReadEvent`, `Application.Run`) from inside this handler.
+
+---
+
+## `OnResize`
+
+- **When:** Fired when the terminal reports a size change. The host **coalesces** rapid successive resize events — only the final size of a burst is delivered. `NewSize` matches the value `Application.Size(App)` returns immediately after the handler returns.
+- **Ordering:** Resize is processed before any key event that arrived in the same batch; the host auto-requests a redraw when a resize fires, so `OnPaint` runs after `OnResize` returns (if no earlier redraw was already pending).
+- **Threading:** Main VM thread only. Non-blocking queries (`Application.Size`, `Application.RequestRedraw`) are allowed from inside this handler.
+
+---
+
+## `OnMouse`
+
+- **When:** Fired once per mouse event (button down, button up, cursor move, scroll) as delivered by the terminal backend via `crossterm`. Move events may be frequent; the host does **not** coalesce them.
+- **Ordering:** Mouse events are dispatched in arrival order, interleaved with key events. `OnPaint` runs after input dispatch if a redraw was requested during the handler.
+- **Event argument:** A `Std.Console.Event` value with the `Mouse` variant; inspect `Event.mouseButton`, `Event.mouseColumn`, `Event.mouseRow`, and related fields.
+- **Threading:** Main VM thread only. Same reentrancy rules as `OnKeyPressed`.
+
+---
+
+## `OnPaste`
+
+- **When:** Fired when the terminal delivers a bracketed-paste sequence. **Best-effort** — only fires on terminals that support bracketed-paste mode and only when `Std.Console.EnablePaste` has been called on the active session. On terminals that do not support it this handler is never called.
+- **Event argument:** A `Std.Console.Event` value with the `Paste` variant; the pasted text is in `Event.text`.
+- **Threading:** Main VM thread only. Same reentrancy rules as `OnKeyPressed`.
+
+---
+
+## `OnFocusGained`
+
+- **When:** Fired when the terminal reports that the application window gained input focus. **Best-effort / optional** — not all terminals emit focus events; if the backend cannot emit this event the handler is never called.
+- **Event argument:** A `Std.Console.Event` value with the `FocusGained` variant.
+- **Threading:** Main VM thread only. Same reentrancy rules as `OnKeyPressed`.
+
+---
+
+## `OnFocusLost`
+
+- **When:** Fired when the terminal reports that the application window lost input focus. **Best-effort / optional** — same platform caveats as `OnFocusGained`.
+- **Event argument:** A `Std.Console.Event` value with the `FocusLost` variant.
+- **Threading:** Main VM thread only. Same reentrancy rules as `OnKeyPressed`.
+
+---
+
 ## Threading and reentrancy
 
 Same as Phase 0 of the framework plan: `**On*`** only on the **main VM thread**; no `**ReadEvent`** / `**Run`** from inside handlers; `**RequestRedraw`** and non-blocking queries are allowed. Spawned tasks must not touch TUI/console state without a future synchronized API.

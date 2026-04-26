@@ -90,7 +90,7 @@ end;
 { Draw a pre-computed row to the console }
 private function EscapeGlyph(EscapeValue: real): char;
 begin
-  var Ramp: string := '.,-~:+*=#%@';
+  var Ramp: string := ' ░▒▓█';
   var Count: integer := Std.Str.Length(Ramp);
   var Phase: real := Frac(EscapeValue * 0.08);
   var Index: integer := Clamp(Trunc(Phase * IntToReal(Count)), 0, Count - 1);

@@ -111,8 +111,12 @@ impl Console {
     pub fn goto_xy(&mut self, x: i64, y: i64, location: SourceLocation) -> Result<(), StdError> {
         self.sync_terminal_size();
         self.enable_crt_mode();
-        let x = self.validate_relative_coord(x, self.state.window_width(), "X", location)?;
-        let y = self.validate_relative_coord(y, self.state.window_height(), "Y", location)?;
+        let (Some(x), Some(y)) = (
+            self.check_relative_coord(x, self.state.window_width()),
+            self.check_relative_coord(y, self.state.window_height()),
+        ) else {
+            return Ok(());
+        };
         self.state.set_cursor(x, y);
         self.render_screen(location)
     }
@@ -161,10 +165,14 @@ impl Console {
     ) -> Result<(), StdError> {
         self.sync_terminal_size();
         self.enable_crt_mode();
-        let x1 = self.validate_absolute_coord(x1, self.state.width, "X1", location)?;
-        let y1 = self.validate_absolute_coord(y1, self.state.height, "Y1", location)?;
-        let x2 = self.validate_absolute_coord(x2, self.state.width, "X2", location)?;
-        let y2 = self.validate_absolute_coord(y2, self.state.height, "Y2", location)?;
+        let (Some(x1), Some(y1), Some(x2), Some(y2)) = (
+            self.check_absolute_coord(x1, self.state.width),
+            self.check_absolute_coord(y1, self.state.height),
+            self.check_absolute_coord(x2, self.state.width),
+            self.check_absolute_coord(y2, self.state.height),
+        ) else {
+            return Ok(());
+        };
         if x1 > x2 || y1 > y2 {
             return Err(std_runtime_error(
                 RUNTIME_CONSOLE_STATE_ERROR,

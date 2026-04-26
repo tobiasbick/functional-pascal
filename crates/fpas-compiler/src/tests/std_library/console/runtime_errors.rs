@@ -1,24 +1,23 @@
 use super::*;
 
 #[test]
-fn std_console_window_invalid_runtime() {
-    let msg = compile_run_err(
+fn std_console_window_out_of_bounds_is_silent() {
+    // Out-of-bounds Window coordinates must be silently discarded, not abort the program.
+    compile_run_with_readln(
         "\
 program T;
 uses Std.Console;
 begin
   Window(0, 1, 10, 10)
 end.",
-    );
-    assert!(
-        msg.contains("outside the screen") || msg.contains("Window"),
-        "{msg}"
+        &[],
     );
 }
 
 #[test]
-fn std_console_gotoxy_invalid_runtime() {
-    let msg = compile_run_err(
+fn std_console_gotoxy_out_of_bounds_is_silent() {
+    // GotoXY outside the active window must be silently discarded, not abort the program.
+    compile_run_with_readln(
         "\
 program T;
 uses Std.Console;
@@ -26,10 +25,7 @@ begin
   Window(5, 5, 6, 6);
   GotoXY(3, 1)
 end.",
-    );
-    assert!(
-        msg.contains("active window") || msg.contains("coordinate"),
-        "{msg}"
+        &[],
     );
 }
 

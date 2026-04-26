@@ -4,56 +4,19 @@ use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 
 impl Console {
-    pub(super) fn validate_relative_coord(
-        &self,
-        raw: i64,
-        max: u16,
-        name: &str,
-        location: SourceLocation,
-    ) -> Result<u16, StdError> {
-        let Ok(value) = u16::try_from(raw) else {
-            return Err(std_runtime_error(
-                RUNTIME_CONSOLE_STATE_ERROR,
-                format!("{name} coordinate {raw} is out of range"),
-                format!("Use a value between 1 and {max} inside the active console window."),
-                location,
-            ));
-        };
-        if value == 0 || value > max {
-            return Err(std_runtime_error(
-                RUNTIME_CONSOLE_STATE_ERROR,
-                format!("{name} coordinate {raw} is outside the active window"),
-                format!("Use a value between 1 and {max} inside the active console window."),
-                location,
-            ));
-        }
-        Ok(value)
+    /// Returns `Some(coord)` if `raw` is a valid 1-based coordinate within `[1, max]`;
+    /// returns `None` when the coordinate is out of bounds so the caller can silently skip
+    /// the operation (e.g. after a terminal resize).
+    pub(super) fn check_relative_coord(&self, raw: i64, max: u16) -> Option<u16> {
+        let value = u16::try_from(raw).ok()?;
+        if value == 0 || value > max { None } else { Some(value) }
     }
 
-    pub(super) fn validate_absolute_coord(
-        &self,
-        raw: i64,
-        max: u16,
-        name: &str,
-        location: SourceLocation,
-    ) -> Result<u16, StdError> {
-        let Ok(value) = u16::try_from(raw) else {
-            return Err(std_runtime_error(
-                RUNTIME_CONSOLE_STATE_ERROR,
-                format!("{name} coordinate {raw} is out of range"),
-                format!("Use a value between 1 and {max} on the current screen."),
-                location,
-            ));
-        };
-        if value == 0 || value > max {
-            return Err(std_runtime_error(
-                RUNTIME_CONSOLE_STATE_ERROR,
-                format!("{name} coordinate {raw} is outside the screen"),
-                format!("Use a value between 1 and {max} on the current screen."),
-                location,
-            ));
-        }
-        Ok(value)
+    /// Returns `Some(coord)` if `raw` is a valid 1-based absolute screen coordinate within
+    /// `[1, max]`; returns `None` when out of bounds so the caller can silently skip.
+    pub(super) fn check_absolute_coord(&self, raw: i64, max: u16) -> Option<u16> {
+        let value = u16::try_from(raw).ok()?;
+        if value == 0 || value > max { None } else { Some(value) }
     }
 
     pub(super) fn validate_color(

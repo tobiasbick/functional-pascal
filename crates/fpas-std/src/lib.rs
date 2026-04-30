@@ -27,6 +27,7 @@ mod std_units;
 mod str;
 mod tui;
 mod tui_host;
+mod tui_view;
 
 pub use console::{
     CapturedOutput, Console, KeyInput, ReadLnQueue, TextInput, read_line_from_stdin,
@@ -46,6 +47,7 @@ pub use std_units::{
 };
 pub use tui::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent, TuiSession};
 pub use tui_host::{HostEvent, TuiHost};
+pub use tui_view::{ViewId, ViewRect, ViewRegistry};
 
 /// Returns the index of `name` in `variants`, or 0 if not found.
 ///

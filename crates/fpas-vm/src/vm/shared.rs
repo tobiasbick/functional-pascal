@@ -15,7 +15,7 @@
 //! [`Self::task_results`] so wakeups cannot be missed between a poll and a block.
 
 use fpas_bytecode::{Chunk, Value};
-use fpas_std::{Console, KeyInput, TextInput, TuiHost, TuiSession};
+use fpas_std::{Console, KeyInput, TextInput, TuiHost, TuiSession, ViewRegistry};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Condvar, Mutex, RwLock};
@@ -66,6 +66,8 @@ pub(crate) struct TuiState {
     pub host_stop_requested: bool,
     /// Guards the single hosted `Application.Run` entrypoint for the active session.
     pub run_active: bool,
+    /// Host-managed view registry for the active session (Phase 7). FPAS has no surface yet.
+    pub views: ViewRegistry,
 }
 
 impl Default for TuiState {
@@ -87,6 +89,7 @@ impl Default for TuiState {
             quit_requested: false,
             host_stop_requested: false,
             run_active: false,
+            views: ViewRegistry::default(),
         }
     }
 }

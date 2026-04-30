@@ -256,6 +256,7 @@ impl Worker {
         tui.quit_requested = false;
         tui.host_stop_requested = false;
         tui.run_active = false;
+        tui.views.clear();
         close_result?;
         Ok(())
     }

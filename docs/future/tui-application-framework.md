@@ -28,9 +28,9 @@ Implementation plan for evolving Functional Pascal's terminal UI from poll-style
 
 ## Phase 7 — Toward Turbo Vision–like structure (incremental)
 
-**Status:** Not started. Prerequisite: dispatch and redraw from Phase 6 are stable ✅.
+**Status:** Step 1 done.
 
-1. Introduce **view IDs / handles** in Rust only: opaque to FPAS at first (`type View = …`, no methods).
+1. ✅ Introduce **view IDs / handles** in Rust only: `ViewId` (opaque `u32` wrapper), `ViewRect` (bounding box), `ViewRegistry` (register / unregister / rect / clear). `TuiState.views: ViewRegistry` added; cleared on `Application.Close`. No FPAS surface. Key artifacts: [`fpas-std/src/tui_view.rs`](../../crates/fpas-std/src/tui_view.rs), [`shared.rs`](../../crates/fpas-vm/src/vm/shared.rs).
 2. Add **child ordering** and **focus chain** in Rust; expose minimal FP callbacks `OnActivate`, `OnDeactivate` (names TBD).
 3. Add **command set** (keyboard shortcuts) resolved in Rust, invoking FP handlers by id.
 4. Add **modal dialog** host API once single-view dispatch is stable.

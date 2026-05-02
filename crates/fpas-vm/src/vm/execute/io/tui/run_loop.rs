@@ -8,7 +8,9 @@ use fpas_bytecode::{SourceLocation, Value};
 use fpas_std::HostEvent;
 
 const TUI_APPLICATION_TYPE: &str = "Std.Tui.Application";
-
+/// Discriminant of `Std.Console.KeyKind.Tab`; must match
+/// [`fpas_std::key_event::KEY_KIND_VARIANTS`] (index 2).
+const KEY_KIND_TAB: usize = 2;
 impl Worker {
     /// Processes at most one pending `HostEvent`, dispatching to the registered handler.
     ///
@@ -62,6 +64,25 @@ impl Worker {
 
         match ev {
             HostEvent::Key(k) => {
+                // Phase 7 Step 2: Tab / Shift+Tab trigger host-managed focus traversal when
+                // the focus chain has children.  The key is consumed and never reaches
+                // OnKeyPressed in that case.
+                if k.kind == KEY_KIND_TAB {
+                    let (changed, had_previous) = {
+                        let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                        if k.shift {
+                            tui.views.focus_prev()
+                        } else {
+                            tui.views.focus_next()
+                        }
+                    };
+                    if changed {
+                        self.invoke_focus_transition(had_previous, line)?;
+                        return Ok(if k.shift { 15 } else { 14 });
+                    }
+                    // No focusable children or single-element chain already focused:
+                    // fall through to normal OnKeyPressed dispatch.
+                }
                 if let Some(handler) = on_key {
                     let _ = self.call_function_sync(
                         &handler,
@@ -203,6 +224,38 @@ impl Worker {
         }
     }
 
+    /// Fires `OnDeactivate` (if `fire_deactivate` is `true` and a handler is registered)
+    /// then `OnActivate` (if registered) after a focus transition.
+    ///
+    /// Both handlers have the signature `procedure (Application)`.
+    fn invoke_focus_transition(
+        &mut self,
+        fire_deactivate: bool,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        let app_rec = Self::tui_application_record();
+
+        if fire_deactivate {
+            let handler = {
+                let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                tui.on_deactivate.clone()
+            };
+            if let Some(handler) = handler {
+                let _ = self.call_function_sync(&handler, &[app_rec.clone()], line)?;
+            }
+        }
+
+        let handler = {
+            let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+            tui.on_activate.clone()
+        };
+        if let Some(handler) = handler {
+            let _ = self.call_function_sync(&handler, &[app_rec], line)?;
+        }
+
+        Ok(())
+    }
+
     /// Converts `Application.Close(App)` into a structured host stop while `Application.Run` is active.
     ///
     /// Returns `true` when a hosted run is active (the run loop will handle the actual close).
@@ -247,6 +300,8 @@ impl Worker {
         tui.on_paste = None;
         tui.on_focus_gained = None;
         tui.on_focus_lost = None;
+        tui.on_activate = None;
+        tui.on_deactivate = None;
         tui.on_resize = None;
         tui.on_paint = None;
         tui.on_idle = None;

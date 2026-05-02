@@ -4,5 +4,6 @@ mod illformed;
 mod index_and_records;
 mod numeric;
 mod tui_configure_vm;
+mod tui_focus_vm;
 mod tui_host_vm;
 mod tui_run_vm;

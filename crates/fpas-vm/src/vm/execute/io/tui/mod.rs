@@ -39,6 +39,8 @@ impl Worker {
                     tui.on_paste = None;
                     tui.on_focus_gained = None;
                     tui.on_focus_lost = None;
+                    tui.on_activate = None;
+                    tui.on_deactivate = None;
                     tui.on_resize = None;
                     tui.on_paint = None;
                 }
@@ -102,6 +104,22 @@ impl Worker {
                     "Set `OnFocusLost := Some(Handler)` or `None`; the handler must be `procedure (Application, Std.Console.Event)`.",
                     line,
                 )?;
+                let on_activate = self.optional_host_handler_field(
+                    &handlers,
+                    "OnActivate",
+                    1,
+                    "OnActivate",
+                    "Set `OnActivate := Some(Handler)` or `None`; the handler must be `procedure (Application)`.",
+                    line,
+                )?;
+                let on_deactivate = self.optional_host_handler_field(
+                    &handlers,
+                    "OnDeactivate",
+                    1,
+                    "OnDeactivate",
+                    "Set `OnDeactivate := Some(Handler)` or `None`; the handler must be `procedure (Application)`.",
+                    line,
+                )?;
                 let on_resize = self.optional_host_handler_field(
                     &handlers,
                     "OnResize",
@@ -137,6 +155,8 @@ impl Worker {
                 tui.on_paste = on_paste;
                 tui.on_focus_gained = on_focus_gained;
                 tui.on_focus_lost = on_focus_lost;
+                tui.on_activate = on_activate;
+                tui.on_deactivate = on_deactivate;
                 tui.on_resize = on_resize;
                 tui.idle_interval_ms = idle_interval_ms;
                 tui.on_idle = on_idle;
@@ -406,6 +426,32 @@ impl Worker {
                 )?;
                 let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
                 tui.on_focus_lost = Some(func);
+            }
+            Intrinsic::TuiHostRegisterOnActivate => {
+                let func = self.pop(line)?;
+                self.pop_tui_application(line)?;
+                self.validate_host_handler_function(
+                    &func,
+                    1,
+                    "OnActivate",
+                    "Pass a `procedure (Application)` (one parameter).",
+                    line,
+                )?;
+                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                tui.on_activate = Some(func);
+            }
+            Intrinsic::TuiHostRegisterOnDeactivate => {
+                let func = self.pop(line)?;
+                self.pop_tui_application(line)?;
+                self.validate_host_handler_function(
+                    &func,
+                    1,
+                    "OnDeactivate",
+                    "Pass a `procedure (Application)` (one parameter).",
+                    line,
+                )?;
+                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                tui.on_deactivate = Some(func);
             }
             Intrinsic::TuiHostInvokeOnKeyPressed => {
                 let key_ev = self.pop_console_key_event(line)?;

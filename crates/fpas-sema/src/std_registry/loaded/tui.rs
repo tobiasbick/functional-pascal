@@ -153,6 +153,13 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
     let on_paste_ty = on_mouse_ty.clone();
     let on_focus_gained_ty = on_mouse_ty.clone();
     let on_focus_lost_ty = on_mouse_ty.clone();
+    // OnActivate and OnDeactivate fire on host-managed focus transitions (Tab / Shift+Tab).
+    let on_activate_ty = Ty::Procedure(ProcedureTy {
+        type_params: Vec::new(),
+        params: vec![p("App", application_ty.clone(), false)],
+        variadic: false,
+    });
+    let on_deactivate_ty = on_activate_ty.clone();
     let on_resize_ty = Ty::Procedure(ProcedureTy {
         type_params: Vec::new(),
         params: vec![
@@ -199,6 +206,14 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
                 Ty::Option(Box::new(on_focus_lost_ty.clone())),
             ),
             (
+                "OnActivate".into(),
+                Ty::Option(Box::new(on_activate_ty.clone())),
+            ),
+            (
+                "OnDeactivate".into(),
+                Ty::Option(Box::new(on_deactivate_ty.clone())),
+            ),
+            (
                 "OnResize".into(),
                 Ty::Option(Box::new(on_resize_ty.clone())),
             ),
@@ -213,6 +228,8 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             ("OnPaste".into(), Some(default_none_expr())),
             ("OnFocusGained".into(), Some(default_none_expr())),
             ("OnFocusLost".into(), Some(default_none_expr())),
+            ("OnActivate".into(), Some(default_none_expr())),
+            ("OnDeactivate".into(), Some(default_none_expr())),
             ("OnResize".into(), Some(default_none_expr())),
             ("OnIdleMilliseconds".into(), Some(default_zero_expr())),
             ("OnIdle".into(), Some(default_none_expr())),
@@ -390,6 +407,22 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         vec![
             p("App", application_ty.clone(), false),
             p("OnFocusLost", on_focus_lost_ty, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_REGISTER_ON_ACTIVATE,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("OnActivate", on_activate_ty, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_REGISTER_ON_DEACTIVATE,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("OnDeactivate", on_deactivate_ty, false),
         ],
     );
 

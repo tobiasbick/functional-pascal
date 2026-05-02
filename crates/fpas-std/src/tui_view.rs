@@ -1,8 +1,8 @@
 //! Rust-internal view registry for the TUI application framework (Phase 7).
 //!
 //! View handles are opaque identifiers maintained entirely by the host; FPAS has no
-//! surface for them yet. Child ordering, focus chains, and FP-visible bindings are
-//! added in later Phase 7 steps.
+//! surface for them yet.  The focus chain tracks an ordered sequence of focusable
+//! children; Tab / Shift+Tab traversal is managed by the VM run loop.
 //!
 //! Plan: `docs/future/tui-application-framework.md`
 //! Spec: `docs/pascal/std/tui-app.md`
@@ -33,10 +33,20 @@ struct ViewEntry {
 ///
 /// Allocates monotonically increasing [`ViewId`]s. Registration order determines
 /// initial paint order (index 0 = bottom / background).
+///
+/// The *focus chain* is a separate ordered list of [`ViewId`]s — a subset of
+/// registered views that participate in Tab / Shift+Tab traversal.  Adding a view
+/// to the chain is explicit via [`push_child`][Self::push_child]; removal happens
+/// automatically on [`unregister`][Self::unregister] or [`clear`][Self::clear].
 #[derive(Debug, Default)]
 pub struct ViewRegistry {
     next_id: u32,
     views: Vec<ViewEntry>,
+    /// Ordered focus chain (Tab / Shift+Tab traversal order).
+    children: Vec<ViewId>,
+    /// Index into `children` for the currently focused view, or `None` if no view
+    /// in the chain has been focused yet.
+    focused: Option<usize>,
 }
 
 impl ViewRegistry {
@@ -49,8 +59,12 @@ impl ViewRegistry {
     }
 
     /// Remove a view by id. No-op if not found.
+    ///
+    /// If the view is in the focus chain it is also removed there; the focused
+    /// index is adjusted to keep the focus valid.
     pub fn unregister(&mut self, id: ViewId) {
         self.views.retain(|v| v.id != id);
+        self.remove_from_focus_chain(id);
     }
 
     /// Bounding rect for a view, or `None` if not registered.
@@ -86,6 +100,102 @@ impl ViewRegistry {
     /// Remove all registered views (called on `Application.Close`).
     pub fn clear(&mut self) {
         self.views.clear();
+        self.children.clear();
+        self.focused = None;
+    }
+
+    // --- Focus chain ---
+
+    /// Append `id` to the focus chain if it is not already present.
+    ///
+    /// The view does not need to be registered via [`register`][Self::register] first,
+    /// but only registered views have meaningful bounding boxes.
+    pub fn push_child(&mut self, id: ViewId) {
+        if !self.children.contains(&id) {
+            self.children.push(id);
+        }
+    }
+
+    /// Remove `id` from the focus chain. No-op if not present.
+    ///
+    /// The focused index is adjusted so that another child (if any) retains focus.
+    pub fn remove_child(&mut self, id: ViewId) {
+        self.remove_from_focus_chain(id);
+    }
+
+    /// `ViewId` of the currently focused child, or `None` if the chain is empty or
+    /// no view has been focused yet.
+    #[must_use]
+    pub fn focused_id(&self) -> Option<ViewId> {
+        self.focused.map(|i| self.children[i])
+    }
+
+    /// `true` when the focus chain has at least one entry.
+    #[must_use]
+    pub fn has_focusable_children(&self) -> bool {
+        !self.children.is_empty()
+    }
+
+    /// Advance focus forward (Tab).
+    ///
+    /// Returns `(changed, had_previous)`:
+    /// - `changed`: focus moved or was established.
+    /// - `had_previous`: there was a previously focused view before the transition
+    ///   (caller should fire `OnDeactivate` for the old view only when `true`).
+    ///
+    /// Returns `(false, false)` when the chain is empty or has only one already-focused
+    /// entry (Tab wraps for chains with two or more entries).
+    pub fn focus_next(&mut self) -> (bool, bool) {
+        self.focus_step(1)
+    }
+
+    /// Retreat focus backward (Shift+Tab).
+    ///
+    /// Same return semantics as [`focus_next`][Self::focus_next].
+    pub fn focus_prev(&mut self) -> (bool, bool) {
+        self.focus_step(self.children.len().saturating_sub(1))
+    }
+
+    // --- Private helpers ---
+
+    fn focus_step(&mut self, step: usize) -> (bool, bool) {
+        let len = self.children.len();
+        match len {
+            0 => (false, false),
+            1 => {
+                if self.focused.is_none() {
+                    self.focused = Some(0);
+                    (true, false)
+                } else {
+                    (false, false)
+                }
+            }
+            _ => {
+                let had_previous = self.focused.is_some();
+                let new_idx = self.focused.map_or(0, |i| (i + step) % len);
+                self.focused = Some(new_idx);
+                (true, had_previous)
+            }
+        }
+    }
+
+    fn remove_from_focus_chain(&mut self, id: ViewId) {
+        let Some(pos) = self.children.iter().position(|&v| v == id) else {
+            return;
+        };
+        self.children.remove(pos);
+        self.focused = match self.focused {
+            None => None,
+            Some(i) if i > pos => Some(i - 1),
+            Some(i) if i == pos => {
+                if self.children.is_empty() {
+                    None
+                } else {
+                    Some(i.saturating_sub(1))
+                }
+            }
+            Some(i) => Some(i),
+        };
     }
 }
 
@@ -94,7 +204,12 @@ mod tests {
     use super::*;
 
     fn rect(x: i64, y: i64, w: i64, h: i64) -> ViewRect {
-        ViewRect { x, y, width: w, height: h }
+        ViewRect {
+            x,
+            y,
+            width: w,
+            height: h,
+        }
     }
 
     #[test]
@@ -161,5 +276,140 @@ mod tests {
         // second unregister must not panic
         reg.unregister(id);
         assert!(reg.is_empty());
+    }
+
+    // --- Focus chain tests ---
+
+    #[test]
+    fn push_child_adds_to_focus_chain() {
+        let mut reg = ViewRegistry::default();
+        let a = reg.register(rect(0, 0, 10, 5));
+        let b = reg.register(rect(0, 5, 10, 5));
+        reg.push_child(a);
+        reg.push_child(b);
+        assert!(reg.has_focusable_children());
+    }
+
+    #[test]
+    fn push_child_deduplicates() {
+        let mut reg = ViewRegistry::default();
+        let a = reg.register(rect(0, 0, 10, 5));
+        reg.push_child(a);
+        reg.push_child(a);
+        // Only one entry; focus_next on 1-element with no prior focus establishes focus.
+        let (changed, had) = reg.focus_next();
+        assert!(changed);
+        assert!(!had);
+        // Second Tab on single-element chain does nothing.
+        let (changed2, _) = reg.focus_next();
+        assert!(!changed2);
+    }
+
+    #[test]
+    fn focus_next_empty_chain_returns_no_change() {
+        let mut reg = ViewRegistry::default();
+        assert_eq!(reg.focus_next(), (false, false));
+    }
+
+    #[test]
+    fn focus_next_single_establishes_focus() {
+        let mut reg = ViewRegistry::default();
+        let a = reg.register(rect(0, 0, 10, 5));
+        reg.push_child(a);
+        assert_eq!(reg.focused_id(), None);
+        let (changed, had) = reg.focus_next();
+        assert!(changed);
+        assert!(!had);
+        assert_eq!(reg.focused_id(), Some(a));
+    }
+
+    #[test]
+    fn focus_next_two_children_wraps() {
+        let mut reg = ViewRegistry::default();
+        let a = reg.register(rect(0, 0, 10, 5));
+        let b = reg.register(rect(0, 5, 10, 5));
+        reg.push_child(a);
+        reg.push_child(b);
+
+        // First Tab: establish focus on a (index 0).
+        let (c1, h1) = reg.focus_next();
+        assert!(c1);
+        assert!(!h1);
+        assert_eq!(reg.focused_id(), Some(a));
+
+        // Second Tab: move to b.
+        let (c2, h2) = reg.focus_next();
+        assert!(c2);
+        assert!(h2);
+        assert_eq!(reg.focused_id(), Some(b));
+
+        // Third Tab: wrap back to a.
+        let (c3, h3) = reg.focus_next();
+        assert!(c3);
+        assert!(h3);
+        assert_eq!(reg.focused_id(), Some(a));
+    }
+
+    #[test]
+    fn focus_prev_retreats() {
+        let mut reg = ViewRegistry::default();
+        let a = reg.register(rect(0, 0, 10, 5));
+        let b = reg.register(rect(0, 5, 10, 5));
+        let c = reg.register(rect(0, 10, 10, 5));
+        reg.push_child(a);
+        reg.push_child(b);
+        reg.push_child(c);
+
+        // Establish forward focus to b.
+        reg.focus_next(); // a
+        reg.focus_next(); // b
+
+        // Shift+Tab: back to a.
+        let (changed, had) = reg.focus_prev();
+        assert!(changed);
+        assert!(had);
+        assert_eq!(reg.focused_id(), Some(a));
+    }
+
+    #[test]
+    fn remove_child_adjusts_focus() {
+        let mut reg = ViewRegistry::default();
+        let a = reg.register(rect(0, 0, 10, 5));
+        let b = reg.register(rect(0, 5, 10, 5));
+        reg.push_child(a);
+        reg.push_child(b);
+        // Focus b (index 1).
+        reg.focus_next(); // a
+        reg.focus_next(); // b
+        assert_eq!(reg.focused_id(), Some(b));
+        // Remove b — focus should fall back to a (index 0).
+        reg.remove_child(b);
+        assert_eq!(reg.focused_id(), Some(a));
+    }
+
+    #[test]
+    fn unregister_also_removes_from_focus_chain() {
+        let mut reg = ViewRegistry::default();
+        let a = reg.register(rect(0, 0, 10, 5));
+        let b = reg.register(rect(0, 5, 10, 5));
+        reg.push_child(a);
+        reg.push_child(b);
+        reg.focus_next(); // a
+        reg.focus_next(); // b
+        // Unregister b: removed from both view list and focus chain.
+        reg.unregister(b);
+        assert_eq!(reg.len(), 1);
+        assert_eq!(reg.focused_id(), Some(a));
+    }
+
+    #[test]
+    fn clear_resets_focus_chain() {
+        let mut reg = ViewRegistry::default();
+        let a = reg.register(rect(0, 0, 10, 5));
+        reg.push_child(a);
+        reg.focus_next();
+        reg.clear();
+        assert!(!reg.has_focusable_children());
+        assert_eq!(reg.focused_id(), None);
     }
 }

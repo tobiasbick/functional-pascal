@@ -48,6 +48,12 @@ pub(crate) struct TuiState {
     pub on_focus_gained: Option<Value>,
     /// `OnFocusLost`-style handler: `procedure (Application, Std.Console.Event)` (two arguments).
     pub on_focus_lost: Option<Value>,
+    /// `OnActivate`-style handler: `procedure (Application)` — fired when a view in the focus
+    /// chain gains focus (Tab / Shift+Tab traversal, Phase 7 Step 2).
+    pub on_activate: Option<Value>,
+    /// `OnDeactivate`-style handler: `procedure (Application)` — fired when a view in the focus
+    /// chain loses focus (Tab / Shift+Tab traversal, Phase 7 Step 2).
+    pub on_deactivate: Option<Value>,
     /// `OnResize`-style handler: `procedure (Application, Size)` (two arguments).
     pub on_resize: Option<Value>,
     /// `OnPaint`-style handler: `procedure (Application)` (one argument).
@@ -80,6 +86,8 @@ impl Default for TuiState {
             on_paste: None,
             on_focus_gained: None,
             on_focus_lost: None,
+            on_activate: None,
+            on_deactivate: None,
             on_resize: None,
             on_paint: None,
             on_idle: None,

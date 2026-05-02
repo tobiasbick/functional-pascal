@@ -185,6 +185,12 @@ pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_FOCUS_GAINED: &str =
 /// Register `procedure (Application, Std.Console.Event)` for terminal focus-lost dispatch.
 pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_FOCUS_LOST: &str =
     std_tui!("Application.HostRegisterOnFocusLost");
+/// Register `procedure (Application)` for host-managed view focus-gained dispatch (Tab traversal).
+pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_ACTIVATE: &str =
+    std_tui!("Application.HostRegisterOnActivate");
+/// Register `procedure (Application)` for host-managed view focus-lost dispatch (Tab traversal).
+pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_DEACTIVATE: &str =
+    std_tui!("Application.HostRegisterOnDeactivate");
 
 pub const STD_STR_LENGTH: &str = std_str!("Length");
 pub const STD_STR_TO_UPPER: &str = std_str!("ToUpper");

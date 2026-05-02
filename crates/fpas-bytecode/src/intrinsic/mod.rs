@@ -507,6 +507,20 @@ pub enum Intrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     TuiHostRegisterOnFocusLost = 271,
+
+    /// Register `procedure (Application)` for host-managed focus-gained dispatch (Tab traversal).
+    /// Fires when a view in the focus chain gains focus.
+    /// Stack: `Application`, `OnActivate` (function value, top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostRegisterOnActivate = 272,
+
+    /// Register `procedure (Application)` for host-managed focus-lost dispatch (Tab traversal).
+    /// Fires when a view in the focus chain loses focus.
+    /// Stack: `Application`, `OnDeactivate` (function value, top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostRegisterOnDeactivate = 273,
 }
 
 impl From<Intrinsic> for u16 {

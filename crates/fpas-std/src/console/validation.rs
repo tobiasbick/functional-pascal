@@ -9,14 +9,22 @@ impl Console {
     /// the operation (e.g. after a terminal resize).
     pub(super) fn check_relative_coord(&self, raw: i64, max: u16) -> Option<u16> {
         let value = u16::try_from(raw).ok()?;
-        if value == 0 || value > max { None } else { Some(value) }
+        if value == 0 || value > max {
+            None
+        } else {
+            Some(value)
+        }
     }
 
     /// Returns `Some(coord)` if `raw` is a valid 1-based absolute screen coordinate within
     /// `[1, max]`; returns `None` when out of bounds so the caller can silently skip.
     pub(super) fn check_absolute_coord(&self, raw: i64, max: u16) -> Option<u16> {
         let value = u16::try_from(raw).ok()?;
-        if value == 0 || value > max { None } else { Some(value) }
+        if value == 0 || value > max {
+            None
+        } else {
+            Some(value)
+        }
     }
 
     pub(super) fn validate_color(

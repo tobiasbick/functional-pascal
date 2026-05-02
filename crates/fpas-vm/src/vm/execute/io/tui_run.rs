@@ -76,7 +76,7 @@ impl Worker {
             let redraw_tag = self.tui_host_dispatch_redraw_inner(line)?;
             let process_tag = self.tui_host_process_next_inner(RUN_PROCESS_SPINS, line)?;
 
-            if matches!(process_tag, 2 | 4) {
+            if matches!(process_tag, 2 | 4 | 14 | 15) {
                 let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
                 tui.session.request_redraw(line)?;
             }

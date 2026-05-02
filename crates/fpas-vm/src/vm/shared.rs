@@ -155,6 +155,10 @@ pub(crate) struct TaskState {
 
 impl SharedState {
     /// Allocate a fresh task id.
+    ///
+    /// IDs are monotonically increasing `u64` values starting at 1 (0 is reserved for the main
+    /// task).  After ~18 quintillion allocations the counter wraps to 0.  In practice this is
+    /// unreachable, but callers should not store IDs across a restart.
     pub(crate) fn alloc_task_id(&self) -> u64 {
         self.next_task_id.fetch_add(1, Ordering::Relaxed)
     }

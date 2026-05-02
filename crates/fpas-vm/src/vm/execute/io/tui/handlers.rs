@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/pascal/std/tui-app.md` (from the repository root).
 
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError};
+use crate::vm::shared::TuiState;
 use crate::vm::{Worker, canonical_name, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::{
@@ -148,5 +149,30 @@ impl Worker {
                 line,
             )),
         }
+    }
+
+    /// Acquires the TUI state lock for the duration of `f`.
+    ///
+    /// Prefer this over bare `.lock().unwrap_or_else(...)` for simple reads/writes that do **not**
+    /// need to call other `&mut self` methods while the lock is held.
+    pub(in crate::vm::execute::io) fn with_tui<R>(&self, f: impl FnOnce(&mut TuiState) -> R) -> R {
+        f(&mut self.shared.tui.lock().unwrap_or_else(|e| e.into_inner()))
+    }
+
+    /// Pops a handler function and an `Application` record from the stack, validates arity, then
+    /// stores the handler via `setter`.  Eliminates boilerplate from every `TuiHostRegister*` arm.
+    pub(super) fn register_tui_handler(
+        &mut self,
+        arity: u8,
+        label: &'static str,
+        hint: &'static str,
+        setter: impl FnOnce(&mut TuiState, Value),
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        let func = self.pop(line)?;
+        self.pop_tui_application(line)?;
+        self.validate_host_handler_function(&func, arity, label, hint, line)?;
+        self.with_tui(|tui| setter(tui, func));
+        Ok(())
     }
 }

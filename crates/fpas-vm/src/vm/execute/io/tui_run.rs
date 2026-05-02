@@ -67,18 +67,14 @@ impl Worker {
     }
 
     fn tui_application_run_loop(&mut self, line: SourceLocation) -> Result<(), VmError> {
-        {
-            let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            tui.session.request_redraw(line)?;
-        }
+        self.with_tui(|tui| tui.session.request_redraw(line))?;
 
         loop {
             let redraw_tag = self.tui_host_dispatch_redraw_inner(line)?;
             let process_tag = self.tui_host_process_next_inner(RUN_PROCESS_SPINS, line)?;
 
             if matches!(process_tag, 2 | 4 | 14 | 15) {
-                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                tui.session.request_redraw(line)?;
+                self.with_tui(|tui| tui.session.request_redraw(line))?;
             }
 
             if let Some(exit_reason) = self.take_tui_application_run_stop_reason() {
@@ -128,8 +124,7 @@ impl Worker {
         &mut self,
         line: SourceLocation,
     ) -> Result<IdleWaitOutcome, VmError> {
-        let (idle_enabled, wait_timeout_ms) = {
-            let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+        let (idle_enabled, wait_timeout_ms) = self.with_tui(|tui| {
             let idle_enabled = tui.idle_interval_ms > 0 && tui.on_idle.is_some();
             let wait_timeout_ms = if idle_enabled {
                 tui.idle_interval_ms
@@ -137,7 +132,7 @@ impl Worker {
                 DEFAULT_RUN_WAIT_TIMEOUT_MS
             };
             (idle_enabled, wait_timeout_ms)
-        };
+        });
 
         let flushed_resize = {
             let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
@@ -155,8 +150,7 @@ impl Worker {
         };
 
         if flushed_resize {
-            let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            tui.session.request_redraw(line)?;
+            self.with_tui(|tui| tui.session.request_redraw(line))?;
             return Ok(IdleWaitOutcome::Continue);
         }
 
@@ -172,18 +166,14 @@ impl Worker {
         exit_reason: Value,
         line: SourceLocation,
     ) -> Result<(), VmError> {
-        {
-            let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+        self.with_tui(|tui| {
             tui.last_exit_reason = Some(exit_reason.clone());
-        }
+        });
         self.invoke_tui_on_exit_if_present(exit_reason, line)
     }
 
     fn invoke_tui_on_idle_if_present(&mut self, line: SourceLocation) -> Result<(), VmError> {
-        let handler = {
-            let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            tui.on_idle.clone()
-        };
+        let handler = self.with_tui(|tui| tui.on_idle.clone());
 
         let Some(handler) = handler else {
             return Ok(());
@@ -198,10 +188,7 @@ impl Worker {
         exit_reason: Value,
         line: SourceLocation,
     ) -> Result<(), VmError> {
-        let handler = {
-            let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            tui.on_exit.clone()
-        };
+        let handler = self.with_tui(|tui| tui.on_exit.clone());
 
         let Some(handler) = handler else {
             return Ok(());

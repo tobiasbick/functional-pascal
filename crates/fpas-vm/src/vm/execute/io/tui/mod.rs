@@ -238,15 +238,11 @@ impl Worker {
             }
             Intrinsic::TuiApplicationRequestRedraw => {
                 self.pop_tui_application(line)?;
-                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                tui.session.request_redraw(line)?;
+                self.with_tui(|tui| tui.session.request_redraw(line))?;
             }
             Intrinsic::TuiApplicationRedrawPending => {
                 self.pop_tui_application(line)?;
-                let pending = {
-                    let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                    tui.session.take_redraw_pending(line)?
-                };
+                let pending = self.with_tui(|tui| tui.session.take_redraw_pending(line))?;
                 self.push(Value::Boolean(pending))?;
             }
             Intrinsic::TuiHostPollNext => {
@@ -287,30 +283,22 @@ impl Worker {
                 }
             }
             Intrinsic::TuiHostRegisterOnKeyPressed => {
-                let func = self.pop(line)?;
-                self.pop_tui_application(line)?;
-                self.validate_host_handler_function(
-                    &func,
+                self.register_tui_handler(
                     2,
                     "OnKeyPressed",
                     "Pass a `function (Application, Std.Console.KeyEvent): boolean`.",
+                    |tui, f| tui.on_key_pressed = Some(f),
                     line,
                 )?;
-                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                tui.on_key_pressed = Some(func);
             }
             Intrinsic::TuiHostRegisterOnResize => {
-                let func = self.pop(line)?;
-                self.pop_tui_application(line)?;
-                self.validate_host_handler_function(
-                    &func,
+                self.register_tui_handler(
                     2,
                     "OnResize",
                     "Pass a `procedure (Application, Std.Tui.Size)` (two parameters).",
+                    |tui, f| tui.on_resize = Some(f),
                     line,
                 )?;
-                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                tui.on_resize = Some(func);
             }
             Intrinsic::TuiHostProcessNext => {
                 let max_spins = self.pop_int(line)?.max(0).min(4096) as usize;
@@ -319,17 +307,13 @@ impl Worker {
                 self.push(Value::Integer(tag))?;
             }
             Intrinsic::TuiHostRegisterOnPaint => {
-                let func = self.pop(line)?;
-                self.pop_tui_application(line)?;
-                self.validate_host_handler_function(
-                    &func,
+                self.register_tui_handler(
                     1,
                     "OnPaint",
                     "Pass a `procedure (Application)` (one parameter).",
+                    |tui, f| tui.on_paint = Some(f),
                     line,
                 )?;
-                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                tui.on_paint = Some(func);
             }
             Intrinsic::TuiHostRegisterOnIdle => {
                 let func = self.pop(line)?;
@@ -342,9 +326,10 @@ impl Worker {
                     "Pass `Application`, an idle interval in milliseconds, and a `procedure (Application)` handler.",
                     line,
                 )?;
-                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                tui.on_idle = Some(func);
-                tui.idle_interval_ms = milliseconds;
+                self.with_tui(|tui| {
+                    tui.on_idle = Some(func);
+                    tui.idle_interval_ms = milliseconds;
+                });
             }
             Intrinsic::TuiHostDispatchRedraw => {
                 self.pop_tui_application(line)?;
@@ -359,107 +344,75 @@ impl Worker {
             }
             Intrinsic::TuiHostRequestQuit => {
                 self.pop_tui_application(line)?;
-                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                tui.quit_requested = true;
+                self.with_tui(|tui| tui.quit_requested = true);
             }
             Intrinsic::TuiHostRegisterOnExit => {
-                let func = self.pop(line)?;
-                self.pop_tui_application(line)?;
-                self.validate_host_handler_function(
-                    &func,
+                self.register_tui_handler(
                     2,
                     "OnExit",
                     "Pass a `procedure (Application, Std.Tui.ExitReason)` (two parameters).",
+                    |tui, f| tui.on_exit = Some(f),
                     line,
                 )?;
-                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                tui.on_exit = Some(func);
             }
             Intrinsic::TuiHostRegisterOnMouse => {
-                let func = self.pop(line)?;
-                self.pop_tui_application(line)?;
-                self.validate_host_handler_function(
-                    &func,
+                self.register_tui_handler(
                     2,
                     "OnMouse",
                     "Pass a `procedure (Application, Std.Console.Event)` (two parameters).",
+                    |tui, f| tui.on_mouse = Some(f),
                     line,
                 )?;
-                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                tui.on_mouse = Some(func);
             }
             Intrinsic::TuiHostRegisterOnPaste => {
-                let func = self.pop(line)?;
-                self.pop_tui_application(line)?;
-                self.validate_host_handler_function(
-                    &func,
+                self.register_tui_handler(
                     2,
                     "OnPaste",
                     "Pass a `procedure (Application, Std.Console.Event)` (two parameters).",
+                    |tui, f| tui.on_paste = Some(f),
                     line,
                 )?;
-                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                tui.on_paste = Some(func);
             }
             Intrinsic::TuiHostRegisterOnFocusGained => {
-                let func = self.pop(line)?;
-                self.pop_tui_application(line)?;
-                self.validate_host_handler_function(
-                    &func,
+                self.register_tui_handler(
                     2,
                     "OnFocusGained",
                     "Pass a `procedure (Application, Std.Console.Event)` (two parameters).",
+                    |tui, f| tui.on_focus_gained = Some(f),
                     line,
                 )?;
-                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                tui.on_focus_gained = Some(func);
             }
             Intrinsic::TuiHostRegisterOnFocusLost => {
-                let func = self.pop(line)?;
-                self.pop_tui_application(line)?;
-                self.validate_host_handler_function(
-                    &func,
+                self.register_tui_handler(
                     2,
                     "OnFocusLost",
                     "Pass a `procedure (Application, Std.Console.Event)` (two parameters).",
+                    |tui, f| tui.on_focus_lost = Some(f),
                     line,
                 )?;
-                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                tui.on_focus_lost = Some(func);
             }
             Intrinsic::TuiHostRegisterOnActivate => {
-                let func = self.pop(line)?;
-                self.pop_tui_application(line)?;
-                self.validate_host_handler_function(
-                    &func,
+                self.register_tui_handler(
                     1,
                     "OnActivate",
                     "Pass a `procedure (Application)` (one parameter).",
+                    |tui, f| tui.on_activate = Some(f),
                     line,
                 )?;
-                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                tui.on_activate = Some(func);
             }
             Intrinsic::TuiHostRegisterOnDeactivate => {
-                let func = self.pop(line)?;
-                self.pop_tui_application(line)?;
-                self.validate_host_handler_function(
-                    &func,
+                self.register_tui_handler(
                     1,
                     "OnDeactivate",
                     "Pass a `procedure (Application)` (one parameter).",
+                    |tui, f| tui.on_deactivate = Some(f),
                     line,
                 )?;
-                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                tui.on_deactivate = Some(func);
             }
             Intrinsic::TuiHostInvokeOnKeyPressed => {
                 let key_ev = self.pop_console_key_event(line)?;
                 self.pop_tui_application(line)?;
-                let handler = {
-                    let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                    tui.on_key_pressed.clone()
-                };
+                let handler = self.with_tui(|tui| tui.on_key_pressed.clone());
                 let handler = handler.ok_or_else(|| {
                     runtime_error(
                         RUNTIME_INTRINSIC_STACK_STATE_ERROR,

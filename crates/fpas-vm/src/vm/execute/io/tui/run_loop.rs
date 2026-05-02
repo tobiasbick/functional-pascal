@@ -94,54 +94,38 @@ impl Worker {
                     Ok(3)
                 }
             }
-            HostEvent::Mouse(mouse_ev) => {
-                if let Some(handler) = on_mouse {
-                    let _ = self.call_function_sync(
-                        &handler,
-                        &[app_rec, Self::console_event_record(mouse_ev)],
-                        line,
-                    )?;
-                    Ok(5)
-                } else {
-                    Ok(7)
-                }
-            }
-            HostEvent::Paste(paste_ev) => {
-                if let Some(handler) = on_paste {
-                    let _ = self.call_function_sync(
-                        &handler,
-                        &[app_rec, Self::console_event_record(paste_ev)],
-                        line,
-                    )?;
-                    Ok(8)
-                } else {
-                    Ok(9)
-                }
-            }
-            HostEvent::FocusGained(focus_ev) => {
-                if let Some(handler) = on_focus_gained {
-                    let _ = self.call_function_sync(
-                        &handler,
-                        &[app_rec, Self::console_event_record(focus_ev)],
-                        line,
-                    )?;
-                    Ok(10)
-                } else {
-                    Ok(11)
-                }
-            }
-            HostEvent::FocusLost(focus_ev) => {
-                if let Some(handler) = on_focus_lost {
-                    let _ = self.call_function_sync(
-                        &handler,
-                        &[app_rec, Self::console_event_record(focus_ev)],
-                        line,
-                    )?;
-                    Ok(12)
-                } else {
-                    Ok(13)
-                }
-            }
+            HostEvent::Mouse(ev) => self.dispatch_console_event_handler(
+                on_mouse,
+                app_rec,
+                Self::console_event_record(ev),
+                5,
+                7,
+                line,
+            ),
+            HostEvent::Paste(ev) => self.dispatch_console_event_handler(
+                on_paste,
+                app_rec,
+                Self::console_event_record(ev),
+                8,
+                9,
+                line,
+            ),
+            HostEvent::FocusGained(ev) => self.dispatch_console_event_handler(
+                on_focus_gained,
+                app_rec,
+                Self::console_event_record(ev),
+                10,
+                11,
+                line,
+            ),
+            HostEvent::FocusLost(ev) => self.dispatch_console_event_handler(
+                on_focus_lost,
+                app_rec,
+                Self::console_event_record(ev),
+                12,
+                13,
+                line,
+            ),
             HostEvent::Resize { width, height } => {
                 if let Some(handler) = on_resize {
                     let _ = self.call_function_sync(
@@ -154,6 +138,26 @@ impl Worker {
                     Ok(4)
                 }
             }
+        }
+    }
+
+    /// Dispatches a `Std.Console.Event`-bearing handler.
+    ///
+    /// Returns `hit_tag` when `handler` is present (and calls it), `miss_tag` otherwise.
+    fn dispatch_console_event_handler(
+        &mut self,
+        handler: Option<Value>,
+        app_rec: Value,
+        event_rec: Value,
+        hit_tag: i64,
+        miss_tag: i64,
+        line: SourceLocation,
+    ) -> Result<i64, VmError> {
+        if let Some(h) = handler {
+            let _ = self.call_function_sync(&h, &[app_rec, event_rec], line)?;
+            Ok(hit_tag)
+        } else {
+            Ok(miss_tag)
         }
     }
 

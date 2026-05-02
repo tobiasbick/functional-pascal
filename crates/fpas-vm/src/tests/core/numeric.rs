@@ -72,3 +72,41 @@ fn dynamic_real_division_by_zero_reports_error() {
     let err = run_err(chunk);
     assert_eq!(err.code, RUNTIME_DIVISION_BY_ZERO);
 }
+
+/// AddInt / SubInt / MulInt intentionally wrap on overflow (no panic, no error).
+#[test]
+fn add_int_wraps_on_overflow() {
+    let mut chunk = Chunk::new();
+    emit_constant(&mut chunk, Value::Integer(i64::MAX));
+    emit_constant(&mut chunk, Value::Integer(1));
+    chunk.emit(Op::AddInt, loc());
+    chunk.emit(Op::Halt, loc());
+
+    // wrapping_add: i64::MAX + 1 == i64::MIN
+    let output = crate::tests::helpers::run_ok_output(chunk);
+    let _ = output; // result is on the stack but not printed; the test just confirms no panic/error
+}
+
+#[test]
+fn sub_int_wraps_on_underflow() {
+    let mut chunk = Chunk::new();
+    emit_constant(&mut chunk, Value::Integer(i64::MIN));
+    emit_constant(&mut chunk, Value::Integer(1));
+    chunk.emit(Op::SubInt, loc());
+    chunk.emit(Op::Halt, loc());
+
+    let output = crate::tests::helpers::run_ok_output(chunk);
+    let _ = output;
+}
+
+#[test]
+fn mul_int_wraps_on_overflow() {
+    let mut chunk = Chunk::new();
+    emit_constant(&mut chunk, Value::Integer(i64::MAX));
+    emit_constant(&mut chunk, Value::Integer(2));
+    chunk.emit(Op::MulInt, loc());
+    chunk.emit(Op::Halt, loc());
+
+    let output = crate::tests::helpers::run_ok_output(chunk);
+    let _ = output;
+}

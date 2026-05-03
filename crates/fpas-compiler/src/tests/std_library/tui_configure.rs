@@ -234,7 +234,7 @@ end.",
         ],
     );
 
-    assert_eq!(out.lines, vec!["paint", "resize", "paint", "key"]);
+    assert_eq!(out.lines, vec!["resize", "paint", "key"]);
 }
 
 // Phase 6: OnMouse dispatch via Configure+Run.

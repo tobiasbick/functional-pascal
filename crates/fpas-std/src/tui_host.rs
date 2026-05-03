@@ -132,6 +132,11 @@ impl TuiHost {
         self.ready.pop_front()
     }
 
+    #[must_use]
+    pub fn peek_ready_event(&self) -> Option<&HostEvent> {
+        self.ready.front()
+    }
+
     /// Non-blocking: returns a ready [`HostEvent`] or polls the session once.
     pub fn poll_next(
         &mut self,

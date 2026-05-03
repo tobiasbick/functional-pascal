@@ -6,6 +6,7 @@ use crate::vm::diagnostics::VmError;
 use crate::vm::{Worker, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
+use fpas_std::HostEvent;
 
 const TUI_EXIT_REASON_TYPE: &str = "Std.Tui.ExitReason";
 const USER_QUIT_EXIT_REASON: &str = "UserQuit";
@@ -67,6 +68,8 @@ impl Worker {
     }
 
     fn tui_application_run_loop(&mut self, line: SourceLocation) -> Result<(), VmError> {
+        self.prime_initial_tui_run_events(line)?;
+        self.dispatch_initial_tui_resize_if_present(line)?;
         self.with_tui(|tui| tui.session.request_redraw(line))?;
 
         loop {
@@ -95,6 +98,43 @@ impl Worker {
                 }
             }
         }
+    }
+
+    fn prime_initial_tui_run_events(&mut self, line: SourceLocation) -> Result<(), VmError> {
+        for _ in 0..RUN_PROCESS_SPINS {
+            let next = {
+                let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                self.with_console_and_key_input(|console, key_input| {
+                    tui.session.poll_event_all(console, key_input, line)
+                })?
+            };
+
+            let Some(event) = next else {
+                break;
+            };
+
+            let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+            tui.host.ingest_tui_event(event);
+        }
+
+        Ok(())
+    }
+
+    fn dispatch_initial_tui_resize_if_present(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        let has_initial_resize = {
+            let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+            let _ = tui.host.flush_pending_resize();
+            matches!(tui.host.peek_ready_event(), Some(HostEvent::Resize { .. }))
+        };
+
+        if has_initial_resize {
+            let _ = self.tui_host_process_next_inner(1, line)?;
+        }
+
+        Ok(())
     }
 
     fn take_tui_application_run_stop_reason(&self) -> Option<Value> {
@@ -150,7 +190,10 @@ impl Worker {
         };
 
         if flushed_resize {
-            self.with_tui(|tui| tui.session.request_redraw(line))?;
+            // The coalesced resize is now in the ready queue; process_next will dispatch it
+            // and set process_tag 2|4, which triggers request_redraw there.  Requesting
+            // here as well would cause a double redraw (once from this path, once from the
+            // process_tag dispatch), so we just continue and let process_next handle it.
             return Ok(IdleWaitOutcome::Continue);
         }
 

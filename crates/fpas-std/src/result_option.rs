@@ -44,7 +44,17 @@ pub(crate) fn run(
             match val {
                 Value::ResultOk(inner) => stack.push(*inner),
                 Value::ResultError(_) => stack.push(default),
-                _ => stack.push(default),
+                _ => {
+                    return Err(std_runtime_error(
+                        RUNTIME_UNWRAP_FAILURE,
+                        format!(
+                            "Std.Result.UnwrapOr expects a Result value, got {}",
+                            val.type_name()
+                        ),
+                        "Pass a Result value (Ok or Error) as the first argument to Std.Result.UnwrapOr.",
+                        location,
+                    ));
+                }
             }
         }
         Intrinsic::ResultIsOk => {
@@ -86,7 +96,17 @@ pub(crate) fn run(
             match val {
                 Value::OptionSome(inner) => stack.push(*inner),
                 Value::OptionNone => stack.push(default),
-                _ => stack.push(default),
+                _ => {
+                    return Err(std_runtime_error(
+                        RUNTIME_UNWRAP_FAILURE,
+                        format!(
+                            "Std.Option.UnwrapOr expects an Option value, got {}",
+                            val.type_name()
+                        ),
+                        "Pass an Option value (Some or None) as the first argument to Std.Option.UnwrapOr.",
+                        location,
+                    ));
+                }
             }
         }
         Intrinsic::OptionIsSome => {
@@ -100,4 +120,39 @@ pub(crate) fn run(
         _ => return Ok(None),
     }
     Ok(Some(()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_location() -> SourceLocation {
+        SourceLocation::new(1, 1)
+    }
+
+    #[test]
+    fn result_unwrap_or_rejects_non_result_values() {
+        let mut stack = vec![Value::Integer(1), Value::Integer(99)];
+
+        let error = run(Intrinsic::ResultUnwrapOr, &mut stack, test_location()).unwrap_err();
+
+        assert!(
+            error.message.contains("expects a Result value"),
+            "{}",
+            error.message
+        );
+    }
+
+    #[test]
+    fn option_unwrap_or_rejects_non_option_values() {
+        let mut stack = vec![Value::Integer(1), Value::Integer(99)];
+
+        let error = run(Intrinsic::OptionUnwrapOr, &mut stack, test_location()).unwrap_err();
+
+        assert!(
+            error.message.contains("expects an Option value"),
+            "{}",
+            error.message
+        );
+    }
 }

@@ -97,6 +97,37 @@ end.",
     assert_eq!(out.lines, vec!["false", "false", "false"]);
 }
 
+#[test]
+fn std_str_unicode_indices_are_character_based() {
+    let out = compile_and_run(
+        "\
+program T;
+begin
+  Std.Console.WriteLn(Std.Str.Length('😀x'));
+  Std.Console.WriteLn(Std.Str.Substring('café', 3, 1));
+  Std.Console.WriteLn(Std.Str.IndexOf('naïve café', 'café'));
+  Std.Console.WriteLn(Std.Str.LastIndexOf('å-å-å', 'å'))
+end.",
+    );
+    assert_eq!(out.lines, vec!["2", "é", "6", "4"]);
+}
+
+#[test]
+fn std_str_boundary_cases_are_explicit() {
+    let out = compile_and_run(
+        "\
+program T;
+begin
+  Std.Console.WriteLn(Std.Str.Substring('abc', 3, 0));
+  Std.Console.WriteLn(Std.Str.IndexOf('abc', ''));
+  Std.Console.WriteLn(Std.Str.LastIndexOf('abc', ''));
+  Std.Console.WriteLn(Std.Str.Delete('abc', 1, 0));
+  Std.Console.WriteLn(Std.Str.Insert('abc', 3, '!'))
+end.",
+    );
+    assert_eq!(out.lines, vec!["", "0", "3", "abc", "abc!"]);
+}
+
 // ── String index S[I] ─────────────────────────────────────────────────────────
 
 #[test]

@@ -71,6 +71,63 @@ end.",
     assert_eq!(out.lines, vec!["2", "false", "3"]);
 }
 
+#[test]
+fn std_dict_get_returns_option_for_existing_missing_and_empty() {
+    let out = compile_and_run(
+        "\
+  program DictGet;
+  uses Std.Option;
+  begin
+    var D: dict of string to integer := ['A': 1, 'B': 2];
+    var Empty: dict of string to integer := [:];
+    var Found: Option of integer := Std.Dict.Get(D, 'B');
+    Std.Console.WriteLn(Std.Option.IsSome(Found));
+    Std.Console.WriteLn(Std.Option.Unwrap(Found));
+    Std.Console.WriteLn(Std.Option.IsNone(Std.Dict.Get(D, 'Z')));
+    Std.Console.WriteLn(Std.Option.IsNone(Std.Dict.Get(Empty, 'A')))
+  end.",
+    );
+    assert_eq!(out.lines, vec!["true", "2", "true", "true"]);
+}
+
+#[test]
+fn std_dict_remove_missing_and_empty_are_noops() {
+    let out = compile_and_run(
+        "\
+  program DictRemoveEdges;
+  begin
+    var D: dict of string to integer := ['A': 1];
+    var Empty: dict of string to integer := [:];
+    var Same: dict of string to integer := Std.Dict.Remove(D, 'Z');
+    var StillEmpty: dict of string to integer := Std.Dict.Remove(Empty, 'Z');
+    Std.Console.WriteLn(Std.Dict.Length(Same));
+    Std.Console.WriteLn(Std.Dict.ContainsKey(Same, 'A'));
+    Std.Console.WriteLn(Std.Dict.Length(StillEmpty))
+  end.",
+    );
+    assert_eq!(out.lines, vec!["1", "true", "0"]);
+}
+
+#[test]
+fn std_dict_merge_handles_empty_inputs_and_overrides_existing_keys() {
+    let out = compile_and_run(
+        "\
+  program DictMergeEdges;
+  begin
+    var A: dict of string to integer := ['A': 1, 'B': 2];
+    var B: dict of string to integer := ['B': 20, 'C': 30];
+    var Empty: dict of string to integer := [:];
+    Std.Console.WriteLn(Std.Dict.Merge(A, B));
+    Std.Console.WriteLn(Std.Dict.Merge(Empty, A));
+    Std.Console.WriteLn(Std.Dict.Merge(A, Empty))
+  end.",
+    );
+    assert_eq!(
+        out.lines,
+        vec!["[A: 1, B: 20, C: 30]", "[A: 1, B: 2]", "[A: 1, B: 2]"]
+    );
+}
+
 // ── Dict.Map ──────────────────────────────────────────────────────────────────
 
 #[test]

@@ -297,7 +297,15 @@ impl TuiSession {
 
 fn map_console_event(console: &mut Console, event: ConsoleEvent) -> Option<TuiEvent> {
     if event.kind == event_kind_index("Resize") {
-        console.resize(event.width as u16, event.height as u16);
+        let (Ok(width), Ok(height)) = (u16::try_from(event.width), u16::try_from(event.height))
+        else {
+            return None;
+        };
+        if width == 0 || height == 0 {
+            return None;
+        }
+
+        console.resize(width, height);
         return Some(TuiEvent::Resize {
             width: event.width,
             height: event.height,
@@ -487,6 +495,37 @@ mod tests {
         );
         assert_eq!(console.screen_width(), 120);
         assert_eq!(console.screen_height(), 40);
+    }
+
+    #[test]
+    fn tui_session_ignores_invalid_resize_events() {
+        let mut session = TuiSession::default();
+        let mut console = Console::new();
+        let mut key_input = KeyInput::new();
+
+        session
+            .open(&mut console, &mut key_input, test_location())
+            .expect("open should succeed");
+
+        key_input.push_console_event(ConsoleEvent::resize(0, 40));
+        key_input.push_console_event(ConsoleEvent::resize(-1, 40));
+        key_input.push_console_event(ConsoleEvent::resize(i64::from(u16::MAX) + 1, 40));
+        key_input.push_console_event(ConsoleEvent::key(ConsoleKeyEvent::new(
+            key_kind_index("Enter"),
+            '\n',
+            false,
+            false,
+            false,
+            false,
+        )));
+
+        let event = session
+            .read_event(&mut console, &mut key_input, test_location())
+            .expect("read event should skip invalid resize events");
+
+        assert!(matches!(event, TuiEvent::Key(_)));
+        assert_eq!(console.screen_width(), 80);
+        assert_eq!(console.screen_height(), 25);
     }
 
     #[test]

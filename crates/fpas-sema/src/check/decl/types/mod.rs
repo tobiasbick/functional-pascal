@@ -43,6 +43,7 @@ impl Checker {
     /// Validates constraint names and reports errors for unknown constraints.
     pub(super) fn push_type_param_scope(&mut self, type_params: &[TypeParam], span: Span) {
         self.scopes.push_scope();
+        self.check_unique_type_param_names(type_params, span);
         for tp in type_params {
             let constraint = tp
                 .constraint

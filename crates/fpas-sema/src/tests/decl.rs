@@ -90,6 +90,17 @@ fn enum_type_valid() {
 }
 
 #[test]
+fn enum_duplicate_member_rejected() {
+    let errors = check_errors("program T; type Color = enum Red; red; end; begin end.");
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION),
+        "expected duplicate enum member error, got: {errors:#?}"
+    );
+}
+
+#[test]
 fn enum_members_in_scope() {
     check_ok(
         "program T; \
@@ -107,6 +118,21 @@ fn enum_data_type_valid() {
         "program T; \
          type Shape = enum Circle(Radius: real); Rectangle(W: real; H: real); end; \
          begin end.",
+    );
+}
+
+#[test]
+fn enum_data_duplicate_field_rejected() {
+    let errors = check_errors(
+        "program T; \
+         type Shape = enum Circle(Radius: real; radius: integer); end; \
+         begin end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION),
+        "expected duplicate enum field error, got: {errors:#?}"
     );
 }
 
@@ -214,6 +240,38 @@ fn function_duplicate_definition_rejected() {
             .iter()
             .any(|error| error.code == fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION),
         "expected duplicate routine error, got: {errors:#?}"
+    );
+}
+
+#[test]
+fn function_duplicate_parameter_rejected() {
+    let errors = check_errors(
+        "program T; \
+         function F(X: integer; x: integer): integer; \
+         begin return X end; \
+         begin end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION),
+        "expected duplicate parameter error, got: {errors:#?}"
+    );
+}
+
+#[test]
+fn function_duplicate_type_parameter_rejected() {
+    let errors = check_errors(
+        "program T; \
+         function F<T, t>(Value: T): T; \
+         begin return Value end; \
+         begin end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION),
+        "expected duplicate type parameter error, got: {errors:#?}"
     );
 }
 
@@ -383,6 +441,21 @@ fn record_literal_field_names_are_case_insensitive() {
 }
 
 #[test]
+fn record_duplicate_field_rejected() {
+    let errors = check_errors(
+        "program T; \
+         type Point = record X: integer; x: integer; end; \
+         begin end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION),
+        "expected duplicate record field error, got: {errors:#?}"
+    );
+}
+
+#[test]
 fn record_method_valid() {
     check_ok(
         "program T; uses Std.Console; \
@@ -411,6 +484,27 @@ fn record_method_names_are_case_insensitive() {
                      var P: Point := record X := 3; end; \
                      WriteLn(P.sum()) \
                  end.",
+    );
+}
+
+#[test]
+fn record_duplicate_method_rejected() {
+    let errors = check_errors(
+        "program T; \
+         type Point = record \
+           X: integer; \
+           function Sum(Self: Point): integer; \
+           begin return Self.X end; \
+           function sum(Self: Point): integer; \
+           begin return Self.X end; \
+         end; \
+         begin end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION),
+        "expected duplicate record method error, got: {errors:#?}"
     );
 }
 

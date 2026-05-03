@@ -8,6 +8,8 @@ use fpas_parser::{FuncBody, FunctionDecl, ProcedureDecl};
 impl Checker {
     /// Check function declarations against `docs/pascal/04-functions.md`.
     pub(super) fn check_function_decl(&mut self, f: &FunctionDecl) {
+        self.check_unique_formal_param_names(&f.params);
+
         let has_type_params = !f.type_params.is_empty();
         if has_type_params {
             self.push_type_param_scope(&f.type_params, f.span);
@@ -39,6 +41,8 @@ impl Checker {
 
     /// Check procedure declarations against `docs/pascal/04-functions.md`.
     pub(super) fn check_procedure_decl(&mut self, p: &ProcedureDecl) {
+        self.check_unique_formal_param_names(&p.params);
+
         let has_type_params = !p.type_params.is_empty();
         if has_type_params {
             self.push_type_param_scope(&p.type_params, p.span);

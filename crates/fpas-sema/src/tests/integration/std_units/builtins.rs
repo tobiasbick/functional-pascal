@@ -38,6 +38,40 @@ end.",
 }
 
 #[test]
+fn std_str_format_requires_template_argument() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Str;
+begin
+  var S: string := Std.Str.Format()
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| e.code == fpas_diagnostics::codes::SEMA_WRONG_ARGUMENT_COUNT),
+        "{errs:#?}"
+    );
+}
+
+#[test]
+fn std_str_format_checks_template_type() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Str;
+begin
+  var S: string := Std.Str.Format(42)
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| e.code == fpas_diagnostics::codes::SEMA_TYPE_MISMATCH),
+        "{errs:#?}"
+    );
+}
+
+#[test]
 fn std_array_push_requires_mutable_array() {
     let errs = check_errors(
         "\

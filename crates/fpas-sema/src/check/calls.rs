@@ -13,7 +13,18 @@ impl Checker {
         args: &[Expr],
         span: Span,
     ) {
-        if !func_ty.variadic && func_ty.params.len() != args.len() {
+        if func_ty.variadic && args.len() < func_ty.params.len() {
+            self.error_with_code(
+                SEMA_WRONG_ARGUMENT_COUNT,
+                format!(
+                    "Function `{name}` expects at least {} arguments, got {}",
+                    func_ty.params.len(),
+                    args.len()
+                ),
+                "Pass all required arguments before any variadic arguments.",
+                span,
+            );
+        } else if !func_ty.variadic && func_ty.params.len() != args.len() {
             self.error_with_code(
                 SEMA_WRONG_ARGUMENT_COUNT,
                 format!(
@@ -50,7 +61,18 @@ impl Checker {
         args: &[Expr],
         span: Span,
     ) {
-        if !proc_ty.variadic && proc_ty.params.len() != args.len() {
+        if proc_ty.variadic && args.len() < proc_ty.params.len() {
+            self.error_with_code(
+                SEMA_WRONG_ARGUMENT_COUNT,
+                format!(
+                    "Procedure `{name}` expects at least {} arguments, got {}",
+                    proc_ty.params.len(),
+                    args.len()
+                ),
+                "Pass all required arguments before any variadic arguments.",
+                span,
+            );
+        } else if !proc_ty.variadic && proc_ty.params.len() != args.len() {
             self.error_with_code(
                 SEMA_WRONG_ARGUMENT_COUNT,
                 format!(

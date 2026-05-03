@@ -3,10 +3,11 @@
 //! **Documentation:** `docs/pascal/05-types.md`
 
 use super::Checker;
-use crate::scope::{FunctionCtx, Symbol, SymbolKind};
+use crate::scope::{FunctionCtx, Symbol, SymbolKind, canonical_symbol_name};
 use crate::types::{FunctionTy, MethodKind, ParamTy, ProcedureTy, RecordTy, Ty, TypeConstraint};
-use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
+use fpas_diagnostics::codes::{SEMA_DUPLICATE_DECLARATION, SEMA_TYPE_MISMATCH};
 use fpas_parser::{FuncBody, RecordMethod, RecordType, TypeDef, TypeParam};
+use std::collections::HashSet;
 
 impl Checker {
     pub(super) fn check_record_type_def(&mut self, td: &TypeDef, record: &RecordType) {
@@ -28,16 +29,27 @@ impl Checker {
         }
         self.pending_record_types.insert(td.name.clone());
 
-        let fields: Vec<_> = record
-            .fields
-            .iter()
-            .map(|field| (field.name.clone(), self.resolve_type_expr(&field.type_expr)))
-            .collect();
+        let mut seen_fields = HashSet::new();
+        let mut field_indexes = Vec::new();
+        let mut fields = Vec::new();
+        for (field_index, field) in record.fields.iter().enumerate() {
+            if !seen_fields.insert(canonical_symbol_name(&field.name)) {
+                self.error_with_code(
+                    SEMA_DUPLICATE_DECLARATION,
+                    format!("Duplicate record field `{}`", field.name),
+                    "Each record field name must be unique within the record type.",
+                    field.span,
+                );
+                continue;
+            }
+            field_indexes.push(field_index);
+            fields.push((field.name.clone(), self.resolve_type_expr(&field.type_expr)));
+        }
 
         // Validate default values and build the defaults map entry.
-        let defaults_entry: Vec<(String, Option<fpas_parser::Expr>)> = record
-            .fields
+        let defaults_entry: Vec<(String, Option<fpas_parser::Expr>)> = field_indexes
             .iter()
+            .map(|field_index| &record.fields[*field_index])
             .zip(fields.iter())
             .map(|(field_def, (_, field_ty))| {
                 if let Some(default_expr) = &field_def.default_value {
@@ -87,10 +99,22 @@ impl Checker {
         methods: &[RecordMethod],
     ) -> Vec<(String, MethodKind)> {
         let mut checked_methods = Vec::new();
+        let mut seen_methods = HashSet::new();
 
         for method in methods {
             match method {
                 RecordMethod::Function(function) => {
+                    if !seen_methods.insert(canonical_symbol_name(&function.name)) {
+                        self.error_with_code(
+                            SEMA_DUPLICATE_DECLARATION,
+                            format!("Duplicate record method `{type_name}.{}`", function.name),
+                            "Each record method name must be unique within the record type.",
+                            function.span,
+                        );
+                        continue;
+                    }
+                    self.check_unique_formal_param_names(&function.params);
+
                     let type_param_defs = Self::resolve_type_params(&function.type_params);
 
                     // Resolve param/return types with the method's own type params in scope
@@ -155,6 +179,17 @@ impl Checker {
                         .push((function.name.clone(), MethodKind::Function(function_ty)));
                 }
                 RecordMethod::Procedure(procedure) => {
+                    if !seen_methods.insert(canonical_symbol_name(&procedure.name)) {
+                        self.error_with_code(
+                            SEMA_DUPLICATE_DECLARATION,
+                            format!("Duplicate record method `{type_name}.{}`", procedure.name),
+                            "Each record method name must be unique within the record type.",
+                            procedure.span,
+                        );
+                        continue;
+                    }
+                    self.check_unique_formal_param_names(&procedure.params);
+
                     let type_param_defs = Self::resolve_type_params(&procedure.type_params);
 
                     let params =

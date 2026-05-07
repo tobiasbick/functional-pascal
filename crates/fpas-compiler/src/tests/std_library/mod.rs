@@ -12,3 +12,4 @@ mod tui;
 mod tui_commands;
 mod tui_configure;
 mod tui_focus;
+mod tui_modal;

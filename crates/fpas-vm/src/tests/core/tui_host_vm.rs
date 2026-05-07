@@ -125,6 +125,46 @@ fn tui_host_bound_command_without_handler_returns_tag_seventeen() {
 }
 
 #[test]
+fn tui_host_modal_depth_tracks_enter_and_leave() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, Value::Integer(10));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostEnterModal as u16), loc());
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, Value::Integer(20));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostEnterModal as u16), loc());
+    chunk.emit(Op::Dup, loc());
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostModalDepth as u16), loc());
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::Dup, loc());
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostLeaveModal as u16), loc());
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostModalDepth as u16), loc());
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::Halt, loc());
+
+    assert_eq!(run_ok_output(chunk), vec!["2", "1"]);
+}
+
+#[test]
+fn tui_host_modal_stack_is_cleared_by_application_close() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, Value::Integer(10));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostEnterModal as u16), loc());
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationClose as u16), loc());
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+    assert_eq!(tui.modals.depth(), 0);
+}
+
+#[test]
 fn tui_host_poll_next_coalesces_resize_before_key() {
     let mut chunk = Chunk::new();
     chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());

@@ -28,6 +28,7 @@ mod str;
 mod tui;
 mod tui_command;
 mod tui_host;
+mod tui_modal;
 mod tui_view;
 
 pub use console::{
@@ -49,6 +50,7 @@ pub use std_units::{
 pub use tui::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent, TuiSession};
 pub use tui_command::{CommandId, CommandRegistry};
 pub use tui_host::{HostEvent, TuiHost};
+pub use tui_modal::{ModalId, ModalStack};
 pub use tui_view::{ViewId, ViewRect, ViewRegistry};
 
 /// Returns the index of `name` in `variants`, or 0 if not found.

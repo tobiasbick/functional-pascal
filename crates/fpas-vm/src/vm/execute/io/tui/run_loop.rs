@@ -345,6 +345,7 @@ impl Worker {
         tui.run_active = false;
         tui.views.clear();
         tui.commands.clear();
+        tui.modals.clear();
         close_result?;
         Ok(())
     }

@@ -165,6 +165,9 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::TuiHostRegisterOnDeactivate,
     Intrinsic::TuiHostRegisterOnCommand,
     Intrinsic::TuiHostBindCommand,
+    Intrinsic::TuiHostEnterModal,
+    Intrinsic::TuiHostLeaveModal,
+    Intrinsic::TuiHostModalDepth,
     Intrinsic::ResultUnwrap,
     Intrinsic::ResultUnwrapOr,
     Intrinsic::ResultIsOk,
@@ -382,6 +385,9 @@ impl Intrinsic {
             273 => Self::TuiHostRegisterOnDeactivate,
             274 => Self::TuiHostRegisterOnCommand,
             275 => Self::TuiHostBindCommand,
+            276 => Self::TuiHostEnterModal,
+            277 => Self::TuiHostLeaveModal,
+            278 => Self::TuiHostModalDepth,
             _ => return None,
         })
     }

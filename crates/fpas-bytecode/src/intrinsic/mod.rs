@@ -533,6 +533,24 @@ pub enum Intrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     TuiHostBindCommand = 275,
+
+    /// Push an application-defined modal id onto the host modal stack.
+    /// Stack: `Application`, `ModalId` (`integer`, top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostEnterModal = 276,
+
+    /// Pop the active host modal frame, if any.
+    /// Stack: `Application`. Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostLeaveModal = 277,
+
+    /// Return the active host modal stack depth.
+    /// Stack: `Application`. Pushes `integer`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostModalDepth = 278,
 }
 
 impl From<Intrinsic> for u16 {

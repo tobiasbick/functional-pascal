@@ -455,6 +455,25 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             p("CommandId", Ty::Integer, false),
         ],
     );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_ENTER_MODAL,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("ModalId", Ty::Integer, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_LEAVE_MODAL,
+        vec![p("App", application_ty.clone(), false)],
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_MODAL_DEPTH,
+        vec![p("App", application_ty.clone(), false)],
+        Ty::Integer,
+    );
 
     define_func(
         checker,

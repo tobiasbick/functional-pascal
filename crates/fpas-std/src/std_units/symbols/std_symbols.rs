@@ -196,6 +196,12 @@ pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_COMMAND: &str =
     std_tui!("Application.HostRegisterOnCommand");
 /// Bind a `Std.Console.KeyEvent` shortcut to a hosted command id.
 pub const STD_TUI_APPLICATION_HOST_BIND_COMMAND: &str = std_tui!("Application.HostBindCommand");
+/// Push an application-defined modal id onto the hosted modal stack.
+pub const STD_TUI_APPLICATION_HOST_ENTER_MODAL: &str = std_tui!("Application.HostEnterModal");
+/// Pop the active hosted modal frame, if any.
+pub const STD_TUI_APPLICATION_HOST_LEAVE_MODAL: &str = std_tui!("Application.HostLeaveModal");
+/// Return the active hosted modal stack depth.
+pub const STD_TUI_APPLICATION_HOST_MODAL_DEPTH: &str = std_tui!("Application.HostModalDepth");
 
 pub const STD_STR_LENGTH: &str = std_str!("Length");
 pub const STD_STR_TO_UPPER: &str = std_str!("ToUpper");

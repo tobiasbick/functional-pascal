@@ -300,6 +300,25 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::TuiHostBindCommand, location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_HOST_ENTER_MODAL => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_HOST_ENTER_MODAL, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiHostEnterModal, location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_LEAVE_MODAL => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_HOST_LEAVE_MODAL, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiHostLeaveModal, location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_MODAL_DEPTH => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_HOST_MODAL_DEPTH, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::TuiHostModalDepth, location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

@@ -15,7 +15,9 @@
 //! [`Self::task_results`] so wakeups cannot be missed between a poll and a block.
 
 use fpas_bytecode::{Chunk, Value};
-use fpas_std::{CommandRegistry, Console, KeyInput, TextInput, TuiHost, TuiSession, ViewRegistry};
+use fpas_std::{
+    CommandRegistry, Console, KeyInput, ModalStack, TextInput, TuiHost, TuiSession, ViewRegistry,
+};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Condvar, Mutex, RwLock};
@@ -78,6 +80,8 @@ pub(crate) struct TuiState {
     pub views: ViewRegistry,
     /// Host-managed command shortcut registry for the active session (Phase 7).
     pub commands: CommandRegistry,
+    /// Host-managed modal stack for the active session (Phase 7).
+    pub modals: ModalStack,
 }
 
 impl Default for TuiState {
@@ -104,6 +108,7 @@ impl Default for TuiState {
             run_active: false,
             views: ViewRegistry::default(),
             commands: CommandRegistry::default(),
+            modals: ModalStack::default(),
         }
     }
 }

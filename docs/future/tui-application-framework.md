@@ -28,12 +28,12 @@ Implementation plan for evolving Functional Pascal's terminal UI from poll-style
 
 ## Phase 7 — Toward Turbo Vision–like structure (incremental)
 
-**Status:** Steps 1–3 done.
+**Status:** Steps 1–4 done.
 
 1. ✅ Introduce **view IDs / handles** in Rust only: `ViewId` (opaque `u32` wrapper), `ViewRect` (bounding box), `ViewRegistry` (register / unregister / rect / clear). `TuiState.views: ViewRegistry` added; cleared on `Application.Close`. No FPAS surface. Key artifacts: [`fpas-std/src/tui_view.rs`](../../crates/fpas-std/src/tui_view.rs), [`shared.rs`](../../crates/fpas-vm/src/vm/shared.rs).
 2. ✅ **Child ordering and focus chain** in Rust: `ViewRegistry` extended with an ordered focus chain (`push_child`, `remove_child`, `focus_next`, `focus_prev`, `focused_id`, `has_focusable_children`). Tab / Shift+Tab are intercepted by `tui_host_process_next_inner` and advance / retreat focus when the chain is non-empty; the key falls through to `OnKeyPressed` when there are no focusable children. `OnActivate` (intrinsic **272**) and `OnDeactivate` (intrinsic **273**) — both `procedure (Application)` — are fired by the host on every focus transition; registered via `Application.HostRegisterOnActivate` / `Application.HostRegisterOnDeactivate` or as optional fields in `ApplicationHandlers`. Focus changes also request a redraw (tags **14** = forward, **15** = backward). Key artifacts: [`tui_view.rs`](../../crates/fpas-std/src/tui_view.rs), [`run_loop.rs`](../../crates/fpas-vm/src/vm/execute/io/tui/run_loop.rs), [`tui_focus_vm.rs`](../../crates/fpas-vm/src/tests/core/tui_focus_vm.rs).
 3. ✅ Add **command set** (keyboard shortcuts) resolved in Rust, invoking FP handlers by id: `CommandRegistry` stores `Std.Console.KeyEvent` → integer command id bindings; `Application.HostBindCommand` registers shortcuts, `Application.HostRegisterOnCommand` / `ApplicationHandlers.OnCommand` register `procedure (Application, integer)`, and `HostProcessNext` dispatches commands before ordinary `OnKeyPressed` (tags **16** = dispatched, **17** = bound but no handler). Key artifacts: [`tui_command.rs`](../../crates/fpas-std/src/tui_command.rs), [`run_loop.rs`](../../crates/fpas-vm/src/vm/execute/io/tui/run_loop.rs), [`tui_commands.rs`](../../crates/fpas-compiler/src/tests/std_library/tui_commands.rs).
-4. Add **modal dialog** host API once single-view dispatch is stable.
+4. ✅ Add **modal dialog** host API: `ModalStack` stores application-defined integer modal ids, `Application.HostEnterModal` / `Application.HostLeaveModal` mutate the stack, and `Application.HostModalDepth` exposes the active stack depth for tests and later routing. `Application.Open` / `Application.Close` clear modal state. Key artifacts: [`tui_modal.rs`](../../crates/fpas-std/src/tui_modal.rs), [`tui_modal.rs`](../../crates/fpas-compiler/src/tests/std_library/tui_modal.rs).
 5. Revisit **performance**: double buffer, damage rectangles — Rust-internal, no FP contract change yet.
 
 ---

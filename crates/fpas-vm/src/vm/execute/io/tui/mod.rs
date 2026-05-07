@@ -45,6 +45,7 @@ impl Worker {
                     tui.on_resize = None;
                     tui.on_paint = None;
                     tui.commands.clear();
+                    tui.modals.clear();
                 }
                 self.push(Self::tui_application_record())?;
             }
@@ -436,6 +437,24 @@ impl Worker {
                 self.with_tui(|tui| {
                     tui.commands.bind(key, fpas_std::CommandId(command_id));
                 });
+            }
+            Intrinsic::TuiHostEnterModal => {
+                let modal_id = self.pop_int(line)?;
+                self.pop_tui_application(line)?;
+                self.with_tui(|tui| {
+                    tui.modals.enter(fpas_std::ModalId(modal_id));
+                });
+            }
+            Intrinsic::TuiHostLeaveModal => {
+                self.pop_tui_application(line)?;
+                self.with_tui(|tui| {
+                    tui.modals.leave();
+                });
+            }
+            Intrinsic::TuiHostModalDepth => {
+                self.pop_tui_application(line)?;
+                let depth = self.with_tui(|tui| tui.modals.depth() as i64);
+                self.push(Value::Integer(depth))?;
             }
             Intrinsic::TuiHostInvokeOnKeyPressed => {
                 let key_ev = self.pop_console_key_event(line)?;

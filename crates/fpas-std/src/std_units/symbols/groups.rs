@@ -126,6 +126,10 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_APPLICATION_HOST_ENTER_MODAL,
     std_symbols::STD_TUI_APPLICATION_HOST_LEAVE_MODAL,
     std_symbols::STD_TUI_APPLICATION_HOST_MODAL_DEPTH,
+    std_symbols::STD_TUI_APPLICATION_HOST_REGISTER_VIEW,
+    std_symbols::STD_TUI_APPLICATION_HOST_UNREGISTER_VIEW,
+    std_symbols::STD_TUI_APPLICATION_HOST_PUSH_CHILD_VIEW,
+    std_symbols::STD_TUI_APPLICATION_HOST_QUERY_FOCUSED_VIEW_ID,
 ];
 
 pub(in super::super) const STD_STR_SYMBOLS: &[&str] = &[

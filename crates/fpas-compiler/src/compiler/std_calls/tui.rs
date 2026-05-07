@@ -319,6 +319,51 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::TuiHostModalDepth, location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_HOST_REGISTER_VIEW => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_HOST_REGISTER_VIEW, 5, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.compile_expr(&args[2])?;
+                self.compile_expr(&args[3])?;
+                self.compile_expr(&args[4])?;
+                self.emit_intrinsic(Intrinsic::TuiHostRegisterView, location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_UNREGISTER_VIEW => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_UNREGISTER_VIEW,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiHostUnregisterView, location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_PUSH_CHILD_VIEW => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_PUSH_CHILD_VIEW,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiHostPushChildView, location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_QUERY_FOCUSED_VIEW_ID => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_QUERY_FOCUSED_VIEW_ID,
+                    1,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::TuiHostQueryFocusedViewId, location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

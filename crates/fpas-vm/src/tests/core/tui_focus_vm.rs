@@ -1,9 +1,8 @@
 //! VM-level tests for Phase 7 Step 2: host-managed focus chain, Tab/Shift+Tab traversal,
 //! and `OnActivate`/`OnDeactivate` dispatch.
 //!
-//! These tests populate `TuiState.views` directly from Rust before running the VM so that
-//! Tab traversal can be exercised without an FPAS-side view-registration API (which is added
-//! in a later Phase 7 step).
+//! These tests populate `TuiState.views` directly from Rust where convenient, and also cover
+//! the additive FPAS-facing host view API introduced after the initial focus-chain step.
 //!
 //! **Documentation:** `docs/pascal/std/tui-app.md` (from the repository root).
 
@@ -122,6 +121,122 @@ fn add_key_handler(chunk: &mut Chunk, name: &str, output: &str) {
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
+
+#[test]
+fn host_register_view_returns_distinct_integer_handles() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(&mut chunk, Value::Integer(5));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::PrintLn, loc());
+
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(&mut chunk, Value::Integer(5));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let lines = shared.console.lock().unwrap().output().lines.clone();
+    assert_eq!(lines, vec!["0", "1"]);
+}
+
+#[test]
+fn host_push_child_view_populates_focus_chain_and_query_focused_view_id() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(&mut chunk, Value::Integer(5));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+
+    chunk.emit(Op::GetLocal(0), loc());
+    chunk.emit(Op::GetLocal(1), loc());
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostPushChildView as u16), loc());
+
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(&mut chunk, Value::Integer(5));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+
+    chunk.emit(Op::GetLocal(0), loc());
+    chunk.emit(Op::GetLocal(2), loc());
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostPushChildView as u16), loc());
+
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(64));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::PrintLn, loc());
+
+    chunk.emit(Op::GetLocal(0), loc());
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostQueryFocusedViewId as u16), loc());
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    shared
+        .key_input
+        .lock()
+        .unwrap()
+        .push_console_event(tab_event(false));
+
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let lines = shared.console.lock().unwrap().output().lines.clone();
+    assert_eq!(lines, vec!["14", "0"]);
+}
+
+#[test]
+fn host_unregister_view_removes_it_from_focus_chain() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(&mut chunk, Value::Integer(5));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+
+    chunk.emit(Op::GetLocal(0), loc());
+    chunk.emit(Op::GetLocal(1), loc());
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostPushChildView as u16), loc());
+
+    chunk.emit(Op::GetLocal(0), loc());
+    chunk.emit(Op::GetLocal(1), loc());
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostUnregisterView as u16), loc());
+
+    chunk.emit(Op::GetLocal(0), loc());
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostQueryFocusedViewId as u16), loc());
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let lines = shared.console.lock().unwrap().output().lines.clone();
+    assert_eq!(lines, vec!["-1"]);
+
+    let tui = shared.tui.lock().unwrap();
+    assert!(!tui.views.has_focusable_children());
+}
 
 #[test]
 fn tab_with_two_focusable_views_fires_on_activate_and_returns_tag_14() {

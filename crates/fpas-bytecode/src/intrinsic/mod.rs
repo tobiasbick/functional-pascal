@@ -551,6 +551,30 @@ pub enum Intrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     TuiHostModalDepth = 278,
+
+    /// Register a host-managed view and return its opaque handle.
+    /// Stack: `Application`, `X`, `Y`, `Width`, `Height` (`integer`, top). Pushes `integer`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostRegisterView = 279,
+
+    /// Remove a host-managed view by handle.
+    /// Stack: `Application`, `ViewId` (`integer`, top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostUnregisterView = 280,
+
+    /// Append a host-managed view to the focus chain.
+    /// Stack: `Application`, `ViewId` (`integer`, top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostPushChildView = 281,
+
+    /// Return the focused host-managed view handle, or `-1` when no view is focused.
+    /// Stack: `Application`. Pushes `integer`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostQueryFocusedViewId = 282,
 }
 
 impl From<Intrinsic> for u16 {

@@ -202,6 +202,18 @@ pub const STD_TUI_APPLICATION_HOST_ENTER_MODAL: &str = std_tui!("Application.Hos
 pub const STD_TUI_APPLICATION_HOST_LEAVE_MODAL: &str = std_tui!("Application.HostLeaveModal");
 /// Return the active hosted modal stack depth.
 pub const STD_TUI_APPLICATION_HOST_MODAL_DEPTH: &str = std_tui!("Application.HostModalDepth");
+/// Register a host-managed view and return its opaque integer handle.
+pub const STD_TUI_APPLICATION_HOST_REGISTER_VIEW: &str =
+    std_tui!("Application.HostRegisterView");
+/// Remove a host-managed view by handle.
+pub const STD_TUI_APPLICATION_HOST_UNREGISTER_VIEW: &str =
+    std_tui!("Application.HostUnregisterView");
+/// Append a host-managed view to the focus chain.
+pub const STD_TUI_APPLICATION_HOST_PUSH_CHILD_VIEW: &str =
+    std_tui!("Application.HostPushChildView");
+/// Return the currently focused host-managed view handle, or `-1` when none is focused.
+pub const STD_TUI_APPLICATION_HOST_QUERY_FOCUSED_VIEW_ID: &str =
+    std_tui!("Application.HostQueryFocusedViewId");
 
 pub const STD_STR_LENGTH: &str = std_str!("Length");
 pub const STD_STR_TO_UPPER: &str = std_str!("ToUpper");

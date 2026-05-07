@@ -14,6 +14,20 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ViewId(u32);
 
+impl ViewId {
+    /// Construct a view id from its raw host representation.
+    #[must_use]
+    pub const fn from_raw(raw: u32) -> Self {
+        Self(raw)
+    }
+
+    /// Raw host representation used when shuttling view ids through FPAS today.
+    #[must_use]
+    pub const fn raw(self) -> u32 {
+        self.0
+    }
+}
+
 /// Axis-aligned bounding box for a view (terminal cell coordinates, origin top-left).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ViewRect {
@@ -411,5 +425,11 @@ mod tests {
         reg.clear();
         assert!(!reg.has_focusable_children());
         assert_eq!(reg.focused_id(), None);
+    }
+
+    #[test]
+    fn view_id_raw_round_trip() {
+        let id = ViewId::from_raw(42);
+        assert_eq!(id.raw(), 42);
     }
 }

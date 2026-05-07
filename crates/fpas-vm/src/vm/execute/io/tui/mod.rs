@@ -10,7 +10,7 @@ use crate::vm::diagnostics::VmError;
 use crate::vm::{Worker, runtime_error};
 use fpas_bytecode::{Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
-use fpas_std::{HostEvent, TuiEvent};
+use fpas_std::{HostEvent, TuiEvent, ViewId, ViewRect};
 
 impl Worker {
     /// Execute a `Std.Tui` intrinsic in the VM.
@@ -456,6 +456,42 @@ impl Worker {
                 let depth = self.with_tui(|tui| tui.modals.depth() as i64);
                 self.push(Value::Integer(depth))?;
             }
+            Intrinsic::TuiHostRegisterView => {
+                let height = self.pop_int(line)?;
+                let width = self.pop_int(line)?;
+                let y = self.pop_int(line)?;
+                let x = self.pop_int(line)?;
+                self.pop_tui_application(line)?;
+                let view_id = self.with_tui(|tui| {
+                    tui.views.register(ViewRect {
+                        x,
+                        y,
+                        width,
+                        height,
+                    })
+                });
+                self.push(Value::Integer(i64::from(view_id.raw())))?;
+            }
+            Intrinsic::TuiHostUnregisterView => {
+                let view_id = self.pop_tui_view_id(line)?;
+                self.pop_tui_application(line)?;
+                self.with_tui(|tui| {
+                    tui.views.unregister(view_id);
+                });
+            }
+            Intrinsic::TuiHostPushChildView => {
+                let view_id = self.pop_tui_view_id(line)?;
+                self.pop_tui_application(line)?;
+                self.with_tui(|tui| {
+                    tui.views.push_child(view_id);
+                });
+            }
+            Intrinsic::TuiHostQueryFocusedViewId => {
+                self.pop_tui_application(line)?;
+                let focused_id = self.with_tui(|tui| tui.views.focused_id());
+                let packed = focused_id.map_or(-1, |id| i64::from(id.raw()));
+                self.push(Value::Integer(packed))?;
+            }
             Intrinsic::TuiHostInvokeOnKeyPressed => {
                 let key_ev = self.pop_console_key_event(line)?;
                 self.pop_tui_application(line)?;
@@ -480,5 +516,18 @@ impl Worker {
         }
 
         Ok(true)
+    }
+
+    fn pop_tui_view_id(&mut self, line: SourceLocation) -> Result<ViewId, VmError> {
+        let raw = self.pop_int(line)?;
+        let raw = u32::try_from(raw).map_err(|_| {
+            runtime_error(
+                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                format!("ViewId {raw} is out of range (expected 0..={})", u32::MAX),
+                "Pass the integer handle returned by `Application.HostRegisterView(App, X, Y, Width, Height)`.",
+                line,
+            )
+        })?;
+        Ok(ViewId::from_raw(raw))
     }
 }

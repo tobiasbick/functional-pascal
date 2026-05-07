@@ -474,6 +474,40 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         vec![p("App", application_ty.clone(), false)],
         Ty::Integer,
     );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_REGISTER_VIEW,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("X", Ty::Integer, false),
+            p("Y", Ty::Integer, false),
+            p("Width", Ty::Integer, false),
+            p("Height", Ty::Integer, false),
+        ],
+        Ty::Integer,
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_UNREGISTER_VIEW,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("ViewId", Ty::Integer, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_PUSH_CHILD_VIEW,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("ViewId", Ty::Integer, false),
+        ],
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_QUERY_FOCUSED_VIEW_ID,
+        vec![p("App", application_ty.clone(), false)],
+        Ty::Integer,
+    );
 
     define_func(
         checker,

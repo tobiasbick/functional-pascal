@@ -35,6 +35,10 @@ These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mo
 | `TuiHostEnterModal`           | `Application`, `integer`                         | Pushes an application-defined modal id onto the host modal stack. Does not push a value.                                                                                                                                                                                           |
 | `TuiHostLeaveModal`           | `Application`                                    | Pops the active host modal frame, if any. Leaving an empty modal stack is a no-op. Does not push a value.                                                                                                                                                                          |
 | `TuiHostModalDepth`           | `Application`                                    | Pushes `integer`: the active modal stack depth.                                                                                                                                                                                                                                    |
+| `TuiHostRegisterView`         | `Application`, `integer`, `integer`, `integer`, `integer` | Registers a host-managed view from `x`, `y`, `width`, `height` and pushes an opaque integer handle. Registration order remains the host paint order.                                                                                                                        |
+| `TuiHostUnregisterView`       | `Application`, `integer`                         | Removes a host-managed view by handle. Unknown handles are ignored. Does not push a value.                                                                                                                                                                                        |
+| `TuiHostPushChildView`        | `Application`, `integer`                         | Appends a host-managed view handle to the focus chain used by Tab / Shift+Tab traversal. Does not push a value.                                                                                                                                                                  |
+| `TuiHostQueryFocusedViewId`   | `Application`                                    | Pushes `integer`: the currently focused view handle, or `-1` when no host-managed view is focused.                                                                                                                                                                               |
 | `TuiApplicationConfigure`     | `Application`, `ApplicationHandlers`             | Applies a bundled hosted-dispatch configuration. Replaces the current hosted handlers with the record fields from `ApplicationHandlers`; `OnPaint` is required, optional handlers use `Some(Handler)` or `None`, and `OnIdleMilliseconds <= 0` disables idle callbacks.        |
 | `TuiApplicationRun`           | `Application`                                    | Hosted loop entrypoint. Requires a previously registered `OnPaint` handler, auto-requests the first redraw, blocks until `Application.HostRequestQuit(App)` is observed **or** the host stops the active run, records `ExitReason.UserQuit`, `ExitReason.HostStop`, `ExitReason.HostAndUserStop`, or `ExitReason.HostShutdown`, invokes `OnExit` when registered, and performs `Application.Close` semantics before returning. Pushes `()`. |
 
@@ -64,12 +68,16 @@ These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mo
 | `Application.HostEnterModal(App, ModalId)` | `TuiHostEnterModal` |
 | `Application.HostLeaveModal(App)` | `TuiHostLeaveModal` |
 | `Application.HostModalDepth(App)` | `TuiHostModalDepth` |
+| `Application.HostRegisterView(App, X, Y, Width, Height)` | `TuiHostRegisterView` |
+| `Application.HostUnregisterView(App, ViewId)` | `TuiHostUnregisterView` |
+| `Application.HostPushChildView(App, ViewId)` | `TuiHostPushChildView` |
+| `Application.HostQueryFocusedViewId(App)` | `TuiHostQueryFocusedViewId` |
 | `Application.Configure(App, Handlers)` | `TuiApplicationConfigure` |
 | `Application.Run(App)` | `TuiApplicationRun` |
 
 Samples: [`examples/pascal/tui/host_dispatch_minimal.fpas`](../../../examples/pascal/tui/host_dispatch_minimal.fpas) (one `HostProcessNext` step), [`examples/pascal/tui/host_dispatch_paint.fpas`](../../../examples/pascal/tui/host_dispatch_paint.fpas) (register `OnPaint` + `HostDispatchRedraw`), [`examples/pascal/tui/host_dispatch_quit.fpas`](../../../examples/pascal/tui/host_dispatch_quit.fpas) (`HostRequestQuit` from `OnPaint` + `HostRunLoop`).
 
-**Bytecode discriminants** (authoritative enum: [`Intrinsic`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs)): **255** `TuiHostPollNext`, **256** `TuiHostRegisterOnKeyPressed`, **257** `TuiHostInvokeOnKeyPressed`, **258** `TuiHostRegisterOnResize`, **259** `TuiHostProcessNext`, **260** `TuiHostRegisterOnPaint`, **261** `TuiHostDispatchRedraw`, **262** `TuiHostRunLoop`, **263** `TuiHostRequestQuit`, **264** `TuiHostRegisterOnExit`, **265** `TuiApplicationRun`, **266** `TuiHostRegisterOnIdle`, **267** `TuiApplicationConfigure`, **268** `TuiHostRegisterOnMouse`, **269** `TuiHostRegisterOnPaste`, **270** `TuiHostRegisterOnFocusGained`, **271** `TuiHostRegisterOnFocusLost`, **272** `TuiHostRegisterOnActivate`, **273** `TuiHostRegisterOnDeactivate`, **274** `TuiHostRegisterOnCommand`, **275** `TuiHostBindCommand`, **276** `TuiHostEnterModal`, **277** `TuiHostLeaveModal`, **278** `TuiHostModalDepth`.
+**Bytecode discriminants** (authoritative enum: [`Intrinsic`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs)): **255** `TuiHostPollNext`, **256** `TuiHostRegisterOnKeyPressed`, **257** `TuiHostInvokeOnKeyPressed`, **258** `TuiHostRegisterOnResize`, **259** `TuiHostProcessNext`, **260** `TuiHostRegisterOnPaint`, **261** `TuiHostDispatchRedraw`, **262** `TuiHostRunLoop`, **263** `TuiHostRequestQuit`, **264** `TuiHostRegisterOnExit`, **265** `TuiApplicationRun`, **266** `TuiHostRegisterOnIdle`, **267** `TuiApplicationConfigure`, **268** `TuiHostRegisterOnMouse`, **269** `TuiHostRegisterOnPaste`, **270** `TuiHostRegisterOnFocusGained`, **271** `TuiHostRegisterOnFocusLost`, **272** `TuiHostRegisterOnActivate`, **273** `TuiHostRegisterOnDeactivate`, **274** `TuiHostRegisterOnCommand`, **275** `TuiHostBindCommand`, **276** `TuiHostEnterModal`, **277** `TuiHostLeaveModal`, **278** `TuiHostModalDepth`, **279** `TuiHostRegisterView`, **280** `TuiHostUnregisterView`, **281** `TuiHostPushChildView`, **282** `TuiHostQueryFocusedViewId`.
 
 `Application.Close` clears registered host handlers (`OnKeyPressed`, `OnResize`, `OnPaint`, `OnIdle`, `OnExit`, `OnMouse`, `OnPaste`, `OnFocusGained`, `OnFocusLost`, `OnActivate`, `OnDeactivate`, `OnCommand`), resets the host pump state, clears the view registry (including the focus chain), clears command bindings, clears the modal stack, and closes the session as today.
 
@@ -78,6 +86,14 @@ Samples: [`examples/pascal/tui/host_dispatch_minimal.fpas`](../../../examples/pa
 `Application.HostEnterModal(App, ModalId)` pushes an application-defined integer modal id onto the host stack. `Application.HostLeaveModal(App)` pops the active modal frame and is a no-op when the stack is empty. `Application.HostModalDepth(App)` returns the current stack depth.
 
 The current modal contract is state only: command dispatch, focus traversal, and key dispatch keep their existing rules. View-scoped modal routing is a later Phase 7 refinement built on this stack.
+
+### Host view handles
+
+`Application.HostRegisterView(App, X, Y, Width, Height)` returns an opaque integer view handle owned by the host. The current FPAS surface treats that handle as an integer token; pass it back unchanged to `Application.HostUnregisterView(App, ViewId)` and `Application.HostPushChildView(App, ViewId)`.
+
+`Application.HostPushChildView(App, ViewId)` appends the handle to the focus chain used by Tab / Shift+Tab traversal. `Application.HostQueryFocusedViewId(App)` returns the currently focused handle or `-1` when no host-managed view is focused.
+
+This view surface is intentionally narrow: it exists to seed focus order and future modal/view routing. Paint, command dispatch, and event handlers remain application-global in the current phase.
 
 ---
 

@@ -168,6 +168,10 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::TuiHostEnterModal,
     Intrinsic::TuiHostLeaveModal,
     Intrinsic::TuiHostModalDepth,
+    Intrinsic::TuiHostRegisterView,
+    Intrinsic::TuiHostUnregisterView,
+    Intrinsic::TuiHostPushChildView,
+    Intrinsic::TuiHostQueryFocusedViewId,
     Intrinsic::ResultUnwrap,
     Intrinsic::ResultUnwrapOr,
     Intrinsic::ResultIsOk,
@@ -388,6 +392,10 @@ impl Intrinsic {
             276 => Self::TuiHostEnterModal,
             277 => Self::TuiHostLeaveModal,
             278 => Self::TuiHostModalDepth,
+            279 => Self::TuiHostRegisterView,
+            280 => Self::TuiHostUnregisterView,
+            281 => Self::TuiHostPushChildView,
+            282 => Self::TuiHostQueryFocusedViewId,
             _ => return None,
         })
     }

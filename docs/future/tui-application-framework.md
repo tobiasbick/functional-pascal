@@ -28,14 +28,31 @@ Implementation plan for evolving Functional Pascal's terminal UI from poll-style
 
 ## Phase 7 — Toward Turbo Vision–like structure (incremental)
 
-**Status:** Steps 1–5 done.
+**Status:** Steps 1–6 done.
 
 1. ✅ Introduce **view IDs / handles** in Rust only: `ViewId` (opaque `u32` wrapper), `ViewRect` (bounding box), `ViewRegistry` (register / unregister / rect / clear). `TuiState.views: ViewRegistry` added; cleared on `Application.Close`. No FPAS surface. Key artifacts: [`fpas-std/src/tui_view.rs`](../../crates/fpas-std/src/tui_view.rs), [`shared.rs`](../../crates/fpas-vm/src/vm/shared.rs).
 2. ✅ **Child ordering and focus chain** in Rust: `ViewRegistry` extended with an ordered focus chain (`push_child`, `remove_child`, `focus_next`, `focus_prev`, `focused_id`, `has_focusable_children`). Tab / Shift+Tab are intercepted by `tui_host_process_next_inner` and advance / retreat focus when the chain is non-empty; the key falls through to `OnKeyPressed` when there are no focusable children. `OnActivate` (intrinsic **272**) and `OnDeactivate` (intrinsic **273**) — both `procedure (Application)` — are fired by the host on every focus transition; registered via `Application.HostRegisterOnActivate` / `Application.HostRegisterOnDeactivate` or as optional fields in `ApplicationHandlers`. Focus changes also request a redraw (tags **14** = forward, **15** = backward). Key artifacts: [`tui_view.rs`](../../crates/fpas-std/src/tui_view.rs), [`run_loop.rs`](../../crates/fpas-vm/src/vm/execute/io/tui/run_loop.rs), [`tui_focus_vm.rs`](../../crates/fpas-vm/src/tests/core/tui_focus_vm.rs).
 3. ✅ Add **command set** (keyboard shortcuts) resolved in Rust, invoking FP handlers by id: `CommandRegistry` stores `Std.Console.KeyEvent` → integer command id bindings; `Application.HostBindCommand` registers shortcuts, `Application.HostRegisterOnCommand` / `ApplicationHandlers.OnCommand` register `procedure (Application, integer)`, and `HostProcessNext` dispatches commands before ordinary `OnKeyPressed` (tags **16** = dispatched, **17** = bound but no handler). Key artifacts: [`tui_command.rs`](../../crates/fpas-std/src/tui_command.rs), [`run_loop.rs`](../../crates/fpas-vm/src/vm/execute/io/tui/run_loop.rs), [`tui_commands.rs`](../../crates/fpas-compiler/src/tests/std_library/tui_commands.rs).
 4. ✅ Add **modal dialog** host API: `ModalStack` stores application-defined integer modal ids, `Application.HostEnterModal` / `Application.HostLeaveModal` mutate the stack, and `Application.HostModalDepth` exposes the active stack depth for tests and later routing. `Application.Open` / `Application.Close` clear modal state. Key artifacts: [`tui_modal.rs`](../../crates/fpas-std/src/tui_modal.rs), [`tui_modal.rs`](../../crates/fpas-compiler/src/tests/std_library/tui_modal.rs).
 5. ✅ Expose a minimal **view host API** to FPAS: `Application.HostRegisterView` / `Application.HostUnregisterView` manage opaque integer view handles backed by `ViewRegistry`; `Application.HostPushChildView` seeds the Tab / Shift+Tab focus chain from FPAS; `Application.HostQueryFocusedViewId` exposes the currently focused host view id (or `-1`). This is intentionally narrower than a widget API and provides the missing bridge between Rust-managed view state and future modal/view routing. Key artifacts: [`tui_view.rs`](../../crates/fpas-std/src/tui_view.rs), [`tui/mod.rs`](../../crates/fpas-vm/src/vm/execute/io/tui/mod.rs), [`tui_focus.rs`](../../crates/fpas-compiler/src/tests/std_library/tui_focus.rs).
-6. Revisit **performance**: double buffer, damage rectangles — Rust-internal, no FP contract change yet.
+6. ✅ Add **modal-scoped routing** on top of those view handles: `Application.HostAttachViewToActiveModal` associates views with the topmost modal frame; Tab / Shift+Tab traversal is limited to the modal view set while active; mouse events outside the active modal view rectangles are suppressed; key and command dispatch are blocked while focus sits on a background view outside the active modal scope. `OnPaint`, resize, paste, and terminal focus events remain global for now. Key artifacts: [`tui_modal.rs`](../../crates/fpas-std/src/tui_modal.rs), [`run_loop.rs`](../../crates/fpas-vm/src/vm/execute/io/tui/run_loop.rs), [`tui_modal.rs`](../../crates/fpas-compiler/src/tests/std_library/tui_modal.rs).
+7. Revisit **performance**: double buffer, damage rectangles — Rust-internal, no FP contract change yet.
+
+### Current limitations after Step 6
+
+- `OnPaint` remains application-global. The host still expects a full-frame paint contract; there is no modal-only paint surface and no widget-local redraw protocol yet.
+- Resize, paste, terminal focus-gained, and terminal focus-lost events remain application-global. Current modal routing only constrains Tab / Shift+Tab traversal, mouse hits, and key / command dispatch.
+- Modal scoping is explicit and narrow: FPAS must call `Application.HostAttachViewToActiveModal(App, ViewId)` for each modal view. A modal frame without attached views still behaves like state only.
+- Command bindings remain global registrations. The host currently blocks command dispatch when focus is outside the active modal scope, but there is no per-view or per-modal command registry yet.
+- There is still no widget tree, layout system, z-order policy beyond registration order, or high-level dialog abstraction such as `ShowModal`.
+
+### Next open implementation item
+
+The next unfinished Phase 7 item is still **performance**:
+
+- double buffer
+- damage rectangles
+- no FPAS contract change unless measurement forces a later spec adjustment
 
 ---
 

@@ -130,6 +130,7 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_APPLICATION_HOST_UNREGISTER_VIEW,
     std_symbols::STD_TUI_APPLICATION_HOST_PUSH_CHILD_VIEW,
     std_symbols::STD_TUI_APPLICATION_HOST_QUERY_FOCUSED_VIEW_ID,
+    std_symbols::STD_TUI_APPLICATION_HOST_ATTACH_VIEW_TO_ACTIVE_MODAL,
 ];
 
 pub(in super::super) const STD_STR_SYMBOLS: &[&str] = &[

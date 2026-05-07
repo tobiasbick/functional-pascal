@@ -214,6 +214,9 @@ pub const STD_TUI_APPLICATION_HOST_PUSH_CHILD_VIEW: &str =
 /// Return the currently focused host-managed view handle, or `-1` when none is focused.
 pub const STD_TUI_APPLICATION_HOST_QUERY_FOCUSED_VIEW_ID: &str =
     std_tui!("Application.HostQueryFocusedViewId");
+/// Attach a host-managed view handle to the active modal scope.
+pub const STD_TUI_APPLICATION_HOST_ATTACH_VIEW_TO_ACTIVE_MODAL: &str =
+    std_tui!("Application.HostAttachViewToActiveModal");
 
 pub const STD_STR_LENGTH: &str = std_str!("Length");
 pub const STD_STR_TO_UPPER: &str = std_str!("ToUpper");

@@ -163,11 +163,21 @@ impl ViewRegistry {
         self.focus_step(1)
     }
 
+    /// Advance focus forward (Tab) within `scope`.
+    pub fn focus_next_in_scope(&mut self, scope: &[ViewId]) -> (bool, bool) {
+        self.focus_step_in_scope(scope, true)
+    }
+
     /// Retreat focus backward (Shift+Tab).
     ///
     /// Same return semantics as [`focus_next`][Self::focus_next].
     pub fn focus_prev(&mut self) -> (bool, bool) {
         self.focus_step(self.children.len().saturating_sub(1))
+    }
+
+    /// Retreat focus backward (Shift+Tab) within `scope`.
+    pub fn focus_prev_in_scope(&mut self, scope: &[ViewId]) -> (bool, bool) {
+        self.focus_step_in_scope(scope, false)
     }
 
     // --- Private helpers ---
@@ -189,6 +199,57 @@ impl ViewRegistry {
                 let new_idx = self.focused.map_or(0, |i| (i + step) % len);
                 self.focused = Some(new_idx);
                 (true, had_previous)
+            }
+        }
+    }
+
+    fn focus_step_in_scope(&mut self, scope: &[ViewId], forward: bool) -> (bool, bool) {
+        let scoped_indices: Vec<usize> = self
+            .children
+            .iter()
+            .enumerate()
+            .filter_map(|(idx, id)| scope.contains(id).then_some(idx))
+            .collect();
+
+        match scoped_indices.len() {
+            0 => (false, false),
+            1 => {
+                let target = scoped_indices[0];
+                if self.focused == Some(target) {
+                    (false, false)
+                } else {
+                    let had_previous = self.focused.is_some();
+                    self.focused = Some(target);
+                    (true, had_previous)
+                }
+            }
+            len => {
+                let had_previous = self.focused.is_some();
+                let target = match self
+                    .focused
+                    .and_then(|focused| scoped_indices.iter().position(|&idx| idx == focused))
+                {
+                    Some(pos) => {
+                        if forward {
+                            scoped_indices[(pos + 1) % len]
+                        } else {
+                            scoped_indices[(pos + len - 1) % len]
+                        }
+                    }
+                    None => {
+                        if forward {
+                            scoped_indices[0]
+                        } else {
+                            scoped_indices[len - 1]
+                        }
+                    }
+                };
+                if self.focused == Some(target) {
+                    (false, false)
+                } else {
+                    self.focused = Some(target);
+                    (true, had_previous)
+                }
             }
         }
     }
@@ -431,5 +492,40 @@ mod tests {
     fn view_id_raw_round_trip() {
         let id = ViewId::from_raw(42);
         assert_eq!(id.raw(), 42);
+    }
+
+    #[test]
+    fn focus_next_in_scope_skips_non_modal_children() {
+        let mut reg = ViewRegistry::default();
+        let a = reg.register(rect(0, 0, 10, 5));
+        let b = reg.register(rect(0, 5, 10, 5));
+        let c = reg.register(rect(0, 10, 10, 5));
+        reg.push_child(a);
+        reg.push_child(b);
+        reg.push_child(c);
+
+        reg.focus_next(); // a
+        let (changed, had_previous) = reg.focus_next_in_scope(&[b, c]);
+
+        assert!(changed);
+        assert!(had_previous);
+        assert_eq!(reg.focused_id(), Some(b));
+    }
+
+    #[test]
+    fn focus_prev_in_scope_establishes_last_scoped_view() {
+        let mut reg = ViewRegistry::default();
+        let a = reg.register(rect(0, 0, 10, 5));
+        let b = reg.register(rect(0, 5, 10, 5));
+        let c = reg.register(rect(0, 10, 10, 5));
+        reg.push_child(a);
+        reg.push_child(b);
+        reg.push_child(c);
+
+        let (changed, had_previous) = reg.focus_prev_in_scope(&[b, c]);
+
+        assert!(changed);
+        assert!(!had_previous);
+        assert_eq!(reg.focused_id(), Some(c));
     }
 }

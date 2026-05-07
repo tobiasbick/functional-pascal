@@ -492,6 +492,13 @@ impl Worker {
                 let packed = focused_id.map_or(-1, |id| i64::from(id.raw()));
                 self.push(Value::Integer(packed))?;
             }
+            Intrinsic::TuiHostAttachViewToActiveModal => {
+                let view_id = self.pop_tui_view_id(line)?;
+                self.pop_tui_application(line)?;
+                self.with_tui(|tui| {
+                    let _ = tui.modals.attach_view_to_active(view_id);
+                });
+            }
             Intrinsic::TuiHostInvokeOnKeyPressed => {
                 let key_ev = self.pop_console_key_event(line)?;
                 self.pop_tui_application(line)?;

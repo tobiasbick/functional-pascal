@@ -575,6 +575,12 @@ pub enum Intrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     TuiHostQueryFocusedViewId = 282,
+
+    /// Attach a host-managed view handle to the active modal scope.
+    /// Stack: `Application`, `ViewId` (`integer`, top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostAttachViewToActiveModal = 283,
 }
 
 impl From<Intrinsic> for u16 {

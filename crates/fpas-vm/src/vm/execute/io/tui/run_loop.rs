@@ -5,7 +5,7 @@
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError};
 use crate::vm::{Worker, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
-use fpas_std::{CommandId, HostEvent};
+use fpas_std::{CommandId, ConsoleEvent, HostEvent, ViewId, ViewRect};
 
 const TUI_APPLICATION_TYPE: &str = "Std.Tui.Application";
 /// Discriminant of `Std.Console.KeyKind.Tab`; must match
@@ -16,7 +16,9 @@ impl Worker {
     ///
     /// Returns a status tag: `0` = none, `1` = key dispatched, `2` = resize dispatched,
     /// `3` = key (no handler), `4` = resize (no handler), `5`/`7`/`8`/`9`/`10`/`11`/`12`/`13`
-    /// for mouse/paste/focus events (dispatched or not).
+    /// for mouse/paste/focus events (dispatched or not), `18` = key blocked by active modal
+    /// scope, `19` = mouse blocked by active modal scope, `20` = command blocked by active
+    /// modal scope.
     pub(in crate::vm::execute::io) fn tui_host_process_next_inner(
         &mut self,
         max_spins: usize,
@@ -61,6 +63,7 @@ impl Worker {
         };
 
         let app_rec = Self::tui_application_record();
+        let modal_scope = self.active_modal_scope();
 
         match ev {
             HostEvent::Key(k) => {
@@ -70,7 +73,13 @@ impl Worker {
                 if k.kind == KEY_KIND_TAB {
                     let (changed, had_previous) = {
                         let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                        if k.shift {
+                        if let Some(scope) = modal_scope.as_deref() {
+                            if k.shift {
+                                tui.views.focus_prev_in_scope(scope)
+                            } else {
+                                tui.views.focus_next_in_scope(scope)
+                            }
+                        } else if k.shift {
                             tui.views.focus_prev()
                         } else {
                             tui.views.focus_next()
@@ -84,7 +93,13 @@ impl Worker {
                     // fall through to normal OnKeyPressed dispatch.
                 }
                 if let Some(command_id) = self.resolve_tui_command(&k) {
+                    if self.modal_blocks_keyboard_dispatch(modal_scope.as_deref()) {
+                        return Ok(20);
+                    }
                     return self.dispatch_tui_command(command_id, line);
+                }
+                if self.modal_blocks_keyboard_dispatch(modal_scope.as_deref()) {
+                    return Ok(18);
                 }
                 if let Some(handler) = on_key {
                     let _ = self.call_function_sync(
@@ -97,14 +112,19 @@ impl Worker {
                     Ok(3)
                 }
             }
-            HostEvent::Mouse(ev) => self.dispatch_console_event_handler(
-                on_mouse,
-                app_rec,
-                Self::console_event_record(ev),
-                5,
-                7,
-                line,
-            ),
+            HostEvent::Mouse(ev) => {
+                if self.modal_blocks_mouse_dispatch(modal_scope.as_deref(), &ev) {
+                    return Ok(19);
+                }
+                self.dispatch_console_event_handler(
+                    on_mouse,
+                    app_rec,
+                    Self::console_event_record(ev),
+                    5,
+                    7,
+                    line,
+                )
+            }
             HostEvent::Paste(ev) => self.dispatch_console_event_handler(
                 on_paste,
                 app_rec,
@@ -240,6 +260,47 @@ impl Worker {
         let _ =
             self.call_function_sync(&handler, &[app_rec, Value::Integer(command_id.0)], line)?;
         Ok(16)
+    }
+
+    fn active_modal_scope(&self) -> Option<Vec<ViewId>> {
+        let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+        tui.modals
+            .active_scoped_views()
+            .filter(|views| !views.is_empty())
+            .map(|views| views.to_vec())
+    }
+
+    fn modal_blocks_keyboard_dispatch(&self, modal_scope: Option<&[ViewId]>) -> bool {
+        let Some(scope) = modal_scope else {
+            return false;
+        };
+
+        let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+        match tui.views.focused_id() {
+            Some(focused) => !scope.contains(&focused),
+            None => false,
+        }
+    }
+
+    fn modal_blocks_mouse_dispatch(
+        &self,
+        modal_scope: Option<&[ViewId]>,
+        event: &ConsoleEvent,
+    ) -> bool {
+        let Some(scope) = modal_scope else {
+            return false;
+        };
+
+        let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+        !scope.iter().any(|view_id| {
+            tui.views
+                .rect(*view_id)
+                .is_some_and(|rect| Self::rect_contains_point(rect, event.mouse_x, event.mouse_y))
+        })
+    }
+
+    fn rect_contains_point(rect: ViewRect, x: i64, y: i64) -> bool {
+        x >= rect.x && y >= rect.y && x < rect.x + rect.width && y < rect.y + rect.height
     }
 
     /// Clears the quit flag and returns `true` if it was set.

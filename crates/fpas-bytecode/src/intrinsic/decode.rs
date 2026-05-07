@@ -172,6 +172,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::TuiHostUnregisterView,
     Intrinsic::TuiHostPushChildView,
     Intrinsic::TuiHostQueryFocusedViewId,
+    Intrinsic::TuiHostAttachViewToActiveModal,
     Intrinsic::ResultUnwrap,
     Intrinsic::ResultUnwrapOr,
     Intrinsic::ResultIsOk,
@@ -396,6 +397,7 @@ impl Intrinsic {
             280 => Self::TuiHostUnregisterView,
             281 => Self::TuiHostPushChildView,
             282 => Self::TuiHostQueryFocusedViewId,
+            283 => Self::TuiHostAttachViewToActiveModal,
             _ => return None,
         })
     }

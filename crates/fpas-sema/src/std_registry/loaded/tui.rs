@@ -508,6 +508,14 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         vec![p("App", application_ty.clone(), false)],
         Ty::Integer,
     );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_ATTACH_VIEW_TO_ACTIVE_MODAL,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("ViewId", Ty::Integer, false),
+        ],
+    );
 
     define_func(
         checker,

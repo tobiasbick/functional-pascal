@@ -364,6 +364,18 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::TuiHostQueryFocusedViewId, location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_HOST_ATTACH_VIEW_TO_ACTIVE_MODAL => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_ATTACH_VIEW_TO_ACTIVE_MODAL,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiHostAttachViewToActiveModal, location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

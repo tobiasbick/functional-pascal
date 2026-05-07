@@ -5,7 +5,7 @@
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError};
 use crate::vm::{Worker, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
-use fpas_std::HostEvent;
+use fpas_std::{CommandId, HostEvent};
 
 const TUI_APPLICATION_TYPE: &str = "Std.Tui.Application";
 /// Discriminant of `Std.Console.KeyKind.Tab`; must match
@@ -82,6 +82,9 @@ impl Worker {
                     }
                     // No focusable children or single-element chain already focused:
                     // fall through to normal OnKeyPressed dispatch.
+                }
+                if let Some(command_id) = self.resolve_tui_command(&k) {
+                    return self.dispatch_tui_command(command_id, line);
                 }
                 if let Some(handler) = on_key {
                     let _ = self.call_function_sync(
@@ -215,6 +218,30 @@ impl Worker {
         Ok(())
     }
 
+    fn resolve_tui_command(&self, key: &fpas_std::ConsoleKeyEvent) -> Option<CommandId> {
+        let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+        tui.commands.resolve(key)
+    }
+
+    fn dispatch_tui_command(
+        &mut self,
+        command_id: CommandId,
+        line: SourceLocation,
+    ) -> Result<i64, VmError> {
+        let handler = {
+            let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+            tui.on_command.clone()
+        };
+        let Some(handler) = handler else {
+            return Ok(17);
+        };
+
+        let app_rec = Self::tui_application_record();
+        let _ =
+            self.call_function_sync(&handler, &[app_rec, Value::Integer(command_id.0)], line)?;
+        Ok(16)
+    }
+
     /// Clears the quit flag and returns `true` if it was set.
     ///
     /// Clearing ensures a subsequent `TuiHostRunLoop` does not stop immediately.
@@ -306,6 +333,7 @@ impl Worker {
         tui.on_focus_lost = None;
         tui.on_activate = None;
         tui.on_deactivate = None;
+        tui.on_command = None;
         tui.on_resize = None;
         tui.on_paint = None;
         tui.on_idle = None;
@@ -316,6 +344,7 @@ impl Worker {
         tui.host_stop_requested = false;
         tui.run_active = false;
         tui.views.clear();
+        tui.commands.clear();
         close_result?;
         Ok(())
     }

@@ -163,6 +163,8 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::TuiHostRegisterOnFocusLost,
     Intrinsic::TuiHostRegisterOnActivate,
     Intrinsic::TuiHostRegisterOnDeactivate,
+    Intrinsic::TuiHostRegisterOnCommand,
+    Intrinsic::TuiHostBindCommand,
     Intrinsic::ResultUnwrap,
     Intrinsic::ResultUnwrapOr,
     Intrinsic::ResultIsOk,
@@ -378,6 +380,8 @@ impl Intrinsic {
             271 => Self::TuiHostRegisterOnFocusLost,
             272 => Self::TuiHostRegisterOnActivate,
             273 => Self::TuiHostRegisterOnDeactivate,
+            274 => Self::TuiHostRegisterOnCommand,
+            275 => Self::TuiHostBindCommand,
             _ => return None,
         })
     }

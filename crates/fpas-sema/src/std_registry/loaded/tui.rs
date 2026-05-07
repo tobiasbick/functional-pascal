@@ -160,6 +160,14 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         variadic: false,
     });
     let on_deactivate_ty = on_activate_ty.clone();
+    let on_command_ty = Ty::Procedure(ProcedureTy {
+        type_params: Vec::new(),
+        params: vec![
+            p("App", application_ty.clone(), false),
+            p("CommandId", Ty::Integer, false),
+        ],
+        variadic: false,
+    });
     let on_resize_ty = Ty::Procedure(ProcedureTy {
         type_params: Vec::new(),
         params: vec![
@@ -214,6 +222,10 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
                 Ty::Option(Box::new(on_deactivate_ty.clone())),
             ),
             (
+                "OnCommand".into(),
+                Ty::Option(Box::new(on_command_ty.clone())),
+            ),
+            (
                 "OnResize".into(),
                 Ty::Option(Box::new(on_resize_ty.clone())),
             ),
@@ -230,6 +242,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             ("OnFocusLost".into(), Some(default_none_expr())),
             ("OnActivate".into(), Some(default_none_expr())),
             ("OnDeactivate".into(), Some(default_none_expr())),
+            ("OnCommand".into(), Some(default_none_expr())),
             ("OnResize".into(), Some(default_none_expr())),
             ("OnIdleMilliseconds".into(), Some(default_zero_expr())),
             ("OnIdle".into(), Some(default_none_expr())),
@@ -423,6 +436,23 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         vec![
             p("App", application_ty.clone(), false),
             p("OnDeactivate", on_deactivate_ty, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_REGISTER_ON_COMMAND,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("OnCommand", on_command_ty, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_BIND_COMMAND,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("Key", key_event_ty, false),
+            p("CommandId", Ty::Integer, false),
         ],
     );
 

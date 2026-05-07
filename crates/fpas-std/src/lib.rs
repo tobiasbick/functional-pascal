@@ -26,6 +26,7 @@ mod result_option;
 mod std_units;
 mod str;
 mod tui;
+mod tui_command;
 mod tui_host;
 mod tui_view;
 
@@ -46,6 +47,7 @@ pub use std_units::{
     std_symbols, std_unit_symbols, std_units_list_for_hint,
 };
 pub use tui::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent, TuiSession};
+pub use tui_command::{CommandId, CommandRegistry};
 pub use tui_host::{HostEvent, TuiHost};
 pub use tui_view::{ViewId, ViewRect, ViewRegistry};
 

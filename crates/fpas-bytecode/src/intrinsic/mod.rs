@@ -521,6 +521,18 @@ pub enum Intrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     TuiHostRegisterOnDeactivate = 273,
+
+    /// Register `procedure (Application, integer)` for host-resolved command dispatch.
+    /// Stack: `Application`, `OnCommand` (function value, top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostRegisterOnCommand = 274,
+
+    /// Bind a `Std.Console.KeyEvent` shortcut to a command id.
+    /// Stack: `Application`, `Std.Console.KeyEvent`, `CommandId` (`integer`, top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostBindCommand = 275,
 }
 
 impl From<Intrinsic> for u16 {

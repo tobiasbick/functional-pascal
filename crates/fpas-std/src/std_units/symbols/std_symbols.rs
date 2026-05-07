@@ -191,6 +191,11 @@ pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_ACTIVATE: &str =
 /// Register `procedure (Application)` for host-managed view focus-lost dispatch (Tab traversal).
 pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_DEACTIVATE: &str =
     std_tui!("Application.HostRegisterOnDeactivate");
+/// Register `procedure (Application, integer)` for hosted command dispatch.
+pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_COMMAND: &str =
+    std_tui!("Application.HostRegisterOnCommand");
+/// Bind a `Std.Console.KeyEvent` shortcut to a hosted command id.
+pub const STD_TUI_APPLICATION_HOST_BIND_COMMAND: &str = std_tui!("Application.HostBindCommand");
 
 pub const STD_STR_LENGTH: &str = std_str!("Length");
 pub const STD_STR_TO_UPPER: &str = std_str!("ToUpper");

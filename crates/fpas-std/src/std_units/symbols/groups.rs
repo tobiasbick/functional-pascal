@@ -121,6 +121,8 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_APPLICATION_HOST_REGISTER_ON_FOCUS_LOST,
     std_symbols::STD_TUI_APPLICATION_HOST_REGISTER_ON_ACTIVATE,
     std_symbols::STD_TUI_APPLICATION_HOST_REGISTER_ON_DEACTIVATE,
+    std_symbols::STD_TUI_APPLICATION_HOST_REGISTER_ON_COMMAND,
+    std_symbols::STD_TUI_APPLICATION_HOST_BIND_COMMAND,
 ];
 
 pub(in super::super) const STD_STR_SYMBOLS: &[&str] = &[

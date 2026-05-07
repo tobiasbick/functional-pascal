@@ -50,6 +50,7 @@ fn tui_application_configure_stores_bundle_handlers_and_interval() {
             ("OnFocusLost".into(), Value::OptionNone),
             ("OnActivate".into(), Value::OptionNone),
             ("OnDeactivate".into(), Value::OptionNone),
+            ("OnCommand".into(), Value::OptionNone),
         ]),
     );
     chunk.emit(
@@ -132,6 +133,7 @@ fn tui_application_configure_clears_previous_optional_handlers_with_none_default
             ("OnFocusLost".into(), Value::OptionNone),
             ("OnActivate".into(), Value::OptionNone),
             ("OnDeactivate".into(), Value::OptionNone),
+            ("OnCommand".into(), Value::OptionNone),
         ]),
     );
     chunk.emit(
@@ -258,6 +260,7 @@ fn tui_application_configure_clamps_negative_idle_interval_to_zero() {
             ("OnFocusLost".into(), Value::OptionNone),
             ("OnActivate".into(), Value::OptionNone),
             ("OnDeactivate".into(), Value::OptionNone),
+            ("OnCommand".into(), Value::OptionNone),
         ]),
     );
     chunk.emit(

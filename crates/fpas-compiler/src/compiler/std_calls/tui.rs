@@ -275,6 +275,31 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnDeactivate, location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_HOST_REGISTER_ON_COMMAND => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_REGISTER_ON_COMMAND,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnCommand, location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_BIND_COMMAND => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_BIND_COMMAND,
+                    3,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.compile_expr(&args[2])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiHostBindCommand, location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

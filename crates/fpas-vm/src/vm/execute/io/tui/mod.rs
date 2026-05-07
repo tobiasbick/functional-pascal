@@ -41,8 +41,10 @@ impl Worker {
                     tui.on_focus_lost = None;
                     tui.on_activate = None;
                     tui.on_deactivate = None;
+                    tui.on_command = None;
                     tui.on_resize = None;
                     tui.on_paint = None;
+                    tui.commands.clear();
                 }
                 self.push(Self::tui_application_record())?;
             }
@@ -120,6 +122,14 @@ impl Worker {
                     "Set `OnDeactivate := Some(Handler)` or `None`; the handler must be `procedure (Application)`.",
                     line,
                 )?;
+                let on_command = self.optional_host_handler_field(
+                    &handlers,
+                    "OnCommand",
+                    2,
+                    "OnCommand",
+                    "Set `OnCommand := Some(Handler)` or `None`; the handler must be `procedure (Application, integer)`.",
+                    line,
+                )?;
                 let on_resize = self.optional_host_handler_field(
                     &handlers,
                     "OnResize",
@@ -157,6 +167,7 @@ impl Worker {
                 tui.on_focus_lost = on_focus_lost;
                 tui.on_activate = on_activate;
                 tui.on_deactivate = on_deactivate;
+                tui.on_command = on_command;
                 tui.on_resize = on_resize;
                 tui.idle_interval_ms = idle_interval_ms;
                 tui.on_idle = on_idle;
@@ -408,6 +419,23 @@ impl Worker {
                     |tui, f| tui.on_deactivate = Some(f),
                     line,
                 )?;
+            }
+            Intrinsic::TuiHostRegisterOnCommand => {
+                self.register_tui_handler(
+                    2,
+                    "OnCommand",
+                    "Pass a `procedure (Application, integer)` (two parameters).",
+                    |tui, f| tui.on_command = Some(f),
+                    line,
+                )?;
+            }
+            Intrinsic::TuiHostBindCommand => {
+                let command_id = self.pop_int(line)?;
+                let key = self.pop_console_key_event(line)?;
+                self.pop_tui_application(line)?;
+                self.with_tui(|tui| {
+                    tui.commands.bind(key, fpas_std::CommandId(command_id));
+                });
             }
             Intrinsic::TuiHostInvokeOnKeyPressed => {
                 let key_ev = self.pop_console_key_event(line)?;

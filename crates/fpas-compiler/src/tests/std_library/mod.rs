@@ -9,5 +9,6 @@ mod dict;
 mod math;
 mod str_ops;
 mod tui;
+mod tui_commands;
 mod tui_configure;
 mod tui_focus;

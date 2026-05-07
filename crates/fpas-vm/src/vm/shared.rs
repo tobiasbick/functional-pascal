@@ -15,7 +15,7 @@
 //! [`Self::task_results`] so wakeups cannot be missed between a poll and a block.
 
 use fpas_bytecode::{Chunk, Value};
-use fpas_std::{Console, KeyInput, TextInput, TuiHost, TuiSession, ViewRegistry};
+use fpas_std::{CommandRegistry, Console, KeyInput, TextInput, TuiHost, TuiSession, ViewRegistry};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Condvar, Mutex, RwLock};
@@ -54,6 +54,8 @@ pub(crate) struct TuiState {
     /// `OnDeactivate`-style handler: `procedure (Application)` — fired when a view in the focus
     /// chain loses focus (Tab / Shift+Tab traversal, Phase 7 Step 2).
     pub on_deactivate: Option<Value>,
+    /// `OnCommand`-style handler: `procedure (Application, integer)` for host-resolved shortcuts.
+    pub on_command: Option<Value>,
     /// `OnResize`-style handler: `procedure (Application, Size)` (two arguments).
     pub on_resize: Option<Value>,
     /// `OnPaint`-style handler: `procedure (Application)` (one argument).
@@ -74,6 +76,8 @@ pub(crate) struct TuiState {
     pub run_active: bool,
     /// Host-managed view registry for the active session (Phase 7). FPAS has no surface yet.
     pub views: ViewRegistry,
+    /// Host-managed command shortcut registry for the active session (Phase 7).
+    pub commands: CommandRegistry,
 }
 
 impl Default for TuiState {
@@ -88,6 +92,7 @@ impl Default for TuiState {
             on_focus_lost: None,
             on_activate: None,
             on_deactivate: None,
+            on_command: None,
             on_resize: None,
             on_paint: None,
             on_idle: None,
@@ -98,6 +103,7 @@ impl Default for TuiState {
             host_stop_requested: false,
             run_active: false,
             views: ViewRegistry::default(),
+            commands: CommandRegistry::default(),
         }
     }
 }

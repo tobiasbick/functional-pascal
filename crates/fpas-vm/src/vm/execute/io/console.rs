@@ -299,6 +299,9 @@ impl Worker {
             Value::Record { type_name, fields } if type_name == KEY => {
                 Self::console_key_event_from_fields(&fields, line)
             }
+            Value::Record { type_name, fields } if type_name == "<record>" => {
+                Self::console_key_event_from_fields(&fields, line)
+            }
             other => Err(runtime_error(
                 TYPE_MISMATCH_CODE,
                 format!("Expected {KEY}, got {}", other.type_name()),

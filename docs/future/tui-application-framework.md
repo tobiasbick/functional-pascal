@@ -40,6 +40,7 @@ Implementation plan for evolving Functional Pascal's terminal UI from poll-style
 	- ✅ Groundwork: `TuiSession` now uses an internal damage accumulator instead of a bare redraw flag. `Application.RequestRedraw` still marks the whole frame dirty for now. Key artifacts: [`fpas-std/src/tui.rs`](../../crates/fpas-std/src/tui.rs), [`fpas-std/src/tui_damage.rs`](../../crates/fpas-std/src/tui_damage.rs).
 	- ✅ Hosted consumption: the VM redraw path now peeks and consumes `DamageRegion` values end to end before `OnPaint`, while preserving the current application-global paint contract. Hosted `Application.Run` callbacks also remain shutdown-safe in this path, so `HostShutdown` still reaches `OnExit` deterministically. Key artifacts: [`run_loop.rs`](../../crates/fpas-vm/src/vm/execute/io/tui/run_loop.rs), [`sync_call.rs`](../../crates/fpas-vm/src/vm/execute/io/callbacks/sync_call.rs), [`tui_run.rs`](../../crates/fpas-vm/src/vm/execute/io/tui_run.rs).
 	- ✅ First partial producer: host-managed focus transitions now mark the old/new focused view rectangles dirty instead of falling back to an unconditional full-frame redraw. `Tab` / `Shift+Tab` inside the host focus chain therefore exercise real `DamageRegion::Rect` accumulation before the next `OnPaint`. Key artifacts: [`tui.rs`](../../crates/fpas-std/src/tui.rs), [`run_loop.rs`](../../crates/fpas-vm/src/vm/execute/io/tui/run_loop.rs), [`tui_focus_vm.rs`](../../crates/fpas-vm/src/tests/core/tui_focus_vm.rs).
+	- ✅ Additional partial producer: `Application.HostRegisterView` and `Application.HostUnregisterView` now mark the affected view rectangle dirty, so host-managed view lifecycle changes contribute rect-based damage instead of relying on a later whole-frame redraw request. Key artifacts: [`tui.rs`](../../crates/fpas-std/src/tui.rs), [`tui/mod.rs`](../../crates/fpas-vm/src/vm/execute/io/tui/mod.rs), [`tui_host_vm.rs`](../../crates/fpas-vm/src/tests/core/tui_host_vm.rs).
 
 ### Current limitations after Step 6
 
@@ -47,14 +48,14 @@ Implementation plan for evolving Functional Pascal's terminal UI from poll-style
 - Resize, paste, terminal focus-gained, and terminal focus-lost events remain application-global. Current modal routing only constrains Tab / Shift+Tab traversal, mouse hits, and key / command dispatch.
 - Modal scoping is explicit and narrow: FPAS must call `Application.HostAttachViewToActiveModal(App, ViewId)` for each modal view. A modal frame without attached views still behaves like state only.
 - Command bindings remain global registrations. The host currently blocks command dispatch when focus is outside the active modal scope, but there is no per-view or per-modal command registry yet.
-- Damage tracking is only partially exploited. Focus transitions now emit partial dirty rectangles, but resize, mouse, paste, terminal focus, and most host-state changes still fall back to whole-frame invalidation.
+- Damage tracking is only partially exploited. Focus transitions and host-managed view registration/unregistration now emit partial dirty rectangles, but resize, mouse, paste, terminal focus, and most host-state changes still fall back to whole-frame invalidation.
 - There is still no widget tree, layout system, z-order policy beyond registration order, or high-level dialog abstraction such as `ShowModal`.
 
 ## Next open implementation item
 
 The next unfinished Phase 7 work item is still **performance**, but the immediate next code step is now narrower:
 
-- wire more partial dirty-rectangle producers into the Rust host beyond focus transitions
+- wire more partial dirty-rectangle producers into the Rust host beyond focus transitions and view lifecycle changes
 - add double buffering after dirty-rectangle flow exists end to end
 - keep the FPAS contract unchanged unless measurement forces a later spec adjustment
 

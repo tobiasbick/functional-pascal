@@ -5,6 +5,8 @@
 use fpas_bytecode::{Chunk, Intrinsic, Op, Value};
 use fpas_std::ConsoleEvent;
 use fpas_std::ConsoleKeyEvent;
+use fpas_std::DamageRegion;
+use fpas_std::ViewRect;
 use fpas_std::key_event::key_kind_index;
 use std::sync::Arc;
 
@@ -55,6 +57,86 @@ fn tui_host_invoke_on_key_pressed_runs_registered_fp_function() {
     chunk.emit(Op::Return, loc());
 
     assert_eq!(run_ok_output(chunk), vec!["true"]);
+}
+
+#[test]
+fn tui_host_register_view_marks_rect_damage() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(3));
+    emit_constant(&mut chunk, Value::Integer(4));
+    emit_constant(&mut chunk, Value::Integer(5));
+    emit_constant(&mut chunk, Value::Integer(6));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::Pop, loc());
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let damage = shared
+        .tui
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .session
+        .peek_redraw_damage(loc())
+        .expect("peek damage should succeed");
+    assert_eq!(
+        damage,
+        Some(DamageRegion::Rect(ViewRect {
+            x: 3,
+            y: 4,
+            width: 5,
+            height: 6,
+        }))
+    );
+}
+
+#[test]
+fn tui_host_unregister_view_marks_removed_rect_damage() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(0));
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostUnregisterView as u16),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    {
+        let mut tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+        let view_id = tui.views.register(ViewRect {
+            x: 8,
+            y: 2,
+            width: 7,
+            height: 4,
+        });
+        assert_eq!(view_id.raw(), 0);
+    }
+
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let damage = shared
+        .tui
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .session
+        .peek_redraw_damage(loc())
+        .expect("peek damage should succeed");
+    assert_eq!(
+        damage,
+        Some(DamageRegion::Rect(ViewRect {
+            x: 8,
+            y: 2,
+            width: 7,
+            height: 4,
+        }))
+    );
 }
 
 #[test]

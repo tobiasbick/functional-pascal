@@ -462,13 +462,16 @@ impl Worker {
                 let y = self.pop_int(line)?;
                 let x = self.pop_int(line)?;
                 self.pop_tui_application(line)?;
+                let view_rect = ViewRect {
+                    x,
+                    y,
+                    width,
+                    height,
+                };
                 let view_id = self.with_tui(|tui| {
-                    tui.views.register(ViewRect {
-                        x,
-                        y,
-                        width,
-                        height,
-                    })
+                    let view_id = tui.views.register(view_rect);
+                    let _ = tui.session.request_redraw_rect(view_rect, line);
+                    view_id
                 });
                 self.push(Value::Integer(i64::from(view_id.raw())))?;
             }
@@ -476,6 +479,9 @@ impl Worker {
                 let view_id = self.pop_tui_view_id(line)?;
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| {
+                    if let Some(rect) = tui.views.rect(view_id) {
+                        let _ = tui.session.request_redraw_rect(rect, line);
+                    }
                     tui.views.unregister(view_id);
                 });
             }

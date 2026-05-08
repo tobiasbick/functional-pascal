@@ -27,6 +27,7 @@ mod std_units;
 mod str;
 mod tui;
 mod tui_command;
+mod tui_damage;
 mod tui_host;
 mod tui_modal;
 mod tui_view;

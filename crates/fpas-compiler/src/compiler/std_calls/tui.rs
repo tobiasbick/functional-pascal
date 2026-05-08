@@ -320,7 +320,12 @@ impl Compiler {
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_REGISTER_VIEW => {
-                self.expect_exact_args(s::STD_TUI_APPLICATION_HOST_REGISTER_VIEW, 5, args, location)?;
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_REGISTER_VIEW,
+                    5,
+                    args,
+                    location,
+                )?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
                 self.compile_expr(&args[2])?;

@@ -6,6 +6,7 @@ use crate::ConsoleKeyEvent;
 use crate::console::{Console, KeyInput};
 use crate::console_event::{ConsoleEvent, event_kind_index};
 use crate::error::{StdError, std_runtime_error};
+use crate::tui_damage::DamageTracker;
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 use std::time::{Duration, Instant};
@@ -35,7 +36,7 @@ pub enum TuiEvent {
 #[derive(Debug, Default)]
 pub struct TuiSession {
     open: bool,
-    redraw_pending: bool,
+    damage: DamageTracker,
     owns_raw_mode: bool,
     owns_alt_screen: bool,
 }
@@ -56,7 +57,7 @@ impl TuiSession {
         }
 
         self.open = true;
-        self.redraw_pending = false;
+        self.damage.clear();
         self.owns_raw_mode = false;
         self.owns_alt_screen = false;
 
@@ -106,7 +107,7 @@ impl TuiSession {
         }
 
         self.open = false;
-        self.redraw_pending = false;
+        self.damage.clear();
         self.owns_raw_mode = false;
         self.owns_alt_screen = false;
 
@@ -252,7 +253,7 @@ impl TuiSession {
             location,
         )?;
 
-        self.redraw_pending = true;
+        self.damage.mark_full();
         Ok(())
     }
 
@@ -263,9 +264,7 @@ impl TuiSession {
             location,
         )?;
 
-        let pending = self.redraw_pending;
-        self.redraw_pending = false;
-        Ok(pending)
+        Ok(self.damage.take().is_some())
     }
 
     /// Returns whether a redraw was requested and **does not** clear the flag (peek).
@@ -278,7 +277,7 @@ impl TuiSession {
             "Open the application before querying redraw state.",
             location,
         )?;
-        Ok(self.redraw_pending)
+        Ok(self.damage.has_damage())
     }
 
     fn ensure_open(

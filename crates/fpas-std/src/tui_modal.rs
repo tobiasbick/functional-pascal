@@ -56,7 +56,9 @@ impl ModalStack {
     /// Scoped views for the active modal frame, if any.
     #[must_use]
     pub fn active_scoped_views(&self) -> Option<&[ViewId]> {
-        self.frames.last().map(|frame| frame.scoped_views.as_slice())
+        self.frames
+            .last()
+            .map(|frame| frame.scoped_views.as_slice())
     }
 
     /// Number of active modal frames.
@@ -142,7 +144,10 @@ mod tests {
 
         assert!(modals.attach_view_to_active(ViewId::from_raw(1)));
         assert!(modals.attach_view_to_active(ViewId::from_raw(1)));
-        assert_eq!(modals.active_scoped_views().map(|views| views.len()), Some(1));
+        assert_eq!(
+            modals.active_scoped_views().map(|views| views.len()),
+            Some(1)
+        );
     }
 
     #[test]

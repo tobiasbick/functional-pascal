@@ -203,8 +203,7 @@ pub const STD_TUI_APPLICATION_HOST_LEAVE_MODAL: &str = std_tui!("Application.Hos
 /// Return the active hosted modal stack depth.
 pub const STD_TUI_APPLICATION_HOST_MODAL_DEPTH: &str = std_tui!("Application.HostModalDepth");
 /// Register a host-managed view and return its opaque integer handle.
-pub const STD_TUI_APPLICATION_HOST_REGISTER_VIEW: &str =
-    std_tui!("Application.HostRegisterView");
+pub const STD_TUI_APPLICATION_HOST_REGISTER_VIEW: &str = std_tui!("Application.HostRegisterView");
 /// Remove a host-managed view by handle.
 pub const STD_TUI_APPLICATION_HOST_UNREGISTER_VIEW: &str =
     std_tui!("Application.HostUnregisterView");

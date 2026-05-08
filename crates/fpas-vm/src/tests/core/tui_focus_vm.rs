@@ -184,7 +184,10 @@ fn host_push_child_view_populates_focus_chain_and_query_focused_view_id() {
     chunk.emit(Op::PrintLn, loc());
 
     chunk.emit(Op::GetLocal(0), loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostQueryFocusedViewId as u16), loc());
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostQueryFocusedViewId as u16),
+        loc(),
+    );
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -220,10 +223,16 @@ fn host_unregister_view_removes_it_from_focus_chain() {
 
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(Op::GetLocal(1), loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostUnregisterView as u16), loc());
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostUnregisterView as u16),
+        loc(),
+    );
 
     chunk.emit(Op::GetLocal(0), loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostQueryFocusedViewId as u16), loc());
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostQueryFocusedViewId as u16),
+        loc(),
+    );
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 

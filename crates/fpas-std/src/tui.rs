@@ -258,6 +258,26 @@ impl TuiSession {
         Ok(())
     }
 
+    /// Marks a rectangular region dirty for the next hosted paint.
+    ///
+    /// This is currently a Rust-host detail used while Phase 7 performance work moves from
+    /// whole-frame redraw requests toward partial invalidation. FPAS still observes the same
+    /// application-global `OnPaint` contract.
+    pub fn request_redraw_rect(
+        &mut self,
+        rect: crate::ViewRect,
+        location: SourceLocation,
+    ) -> Result<(), StdError> {
+        self.ensure_open(
+            "Application.RequestRedraw(App) requires an open Std.Tui application session.",
+            "Open the application before requesting a redraw.",
+            location,
+        )?;
+
+        self.damage.mark_rect(rect);
+        Ok(())
+    }
+
     /// Returns the pending redraw damage without clearing it.
     ///
     /// Used by the Rust host to decide whether `OnPaint` should run and which redraw scope
@@ -510,6 +530,85 @@ mod tests {
 
         assert_eq!(first, Some(DamageRegion::FullFrame));
         assert_eq!(second, None);
+    }
+
+    #[test]
+    fn tui_session_request_redraw_rect_marks_rect_damage() {
+        let mut session = TuiSession::default();
+        let mut console = Console::new();
+        let mut key_input = KeyInput::new();
+
+        session
+            .open(&mut console, &mut key_input, test_location())
+            .expect("open should succeed");
+        session
+            .request_redraw_rect(
+                crate::ViewRect {
+                    x: 3,
+                    y: 4,
+                    width: 5,
+                    height: 6,
+                },
+                test_location(),
+            )
+            .expect("rect redraw should succeed");
+
+        assert_eq!(
+            session
+                .peek_redraw_damage(test_location())
+                .expect("peek damage"),
+            Some(DamageRegion::Rect(crate::ViewRect {
+                x: 3,
+                y: 4,
+                width: 5,
+                height: 6,
+            }))
+        );
+    }
+
+    #[test]
+    fn tui_session_request_redraw_rect_merges_rectangles() {
+        let mut session = TuiSession::default();
+        let mut console = Console::new();
+        let mut key_input = KeyInput::new();
+
+        session
+            .open(&mut console, &mut key_input, test_location())
+            .expect("open should succeed");
+        session
+            .request_redraw_rect(
+                crate::ViewRect {
+                    x: 2,
+                    y: 2,
+                    width: 4,
+                    height: 3,
+                },
+                test_location(),
+            )
+            .expect("first rect redraw should succeed");
+        session
+            .request_redraw_rect(
+                crate::ViewRect {
+                    x: 8,
+                    y: 1,
+                    width: 2,
+                    height: 5,
+                },
+                test_location(),
+            )
+            .expect("second rect redraw should succeed");
+
+        assert_eq!(
+            session
+                .take_redraw_damage(test_location())
+                .expect("take damage"),
+            Some(DamageRegion::Rect(crate::ViewRect {
+                x: 2,
+                y: 1,
+                width: 8,
+                height: 5,
+            }))
+        );
     }
 
     #[test]

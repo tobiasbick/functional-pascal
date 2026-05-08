@@ -14,10 +14,6 @@ pub enum DamageRegion {
     /// The next paint must redraw the entire application surface.
     FullFrame,
     /// The next paint may restrict itself to the dirty rectangle.
-    #[allow(
-        dead_code,
-        reason = "Phase 7 groundwork adds rectangle damage accumulation before the host emits partial invalidations"
-    )]
     Rect(ViewRect),
 }
 
@@ -41,10 +37,6 @@ impl DamageTracker {
     /// Merges a dirty rectangle into the pending damage set.
     ///
     /// Non-positive rectangles are ignored because they do not cover visible cells.
-    #[allow(
-        dead_code,
-        reason = "Phase 7 groundwork adds rectangle damage accumulation before the host emits partial invalidations"
-    )]
     pub(crate) fn mark_rect(&mut self, rect: ViewRect) {
         if rect.width <= 0 || rect.height <= 0 {
             return;
@@ -75,10 +67,6 @@ impl DamageTracker {
     }
 }
 
-#[allow(
-    dead_code,
-    reason = "Phase 7 groundwork adds rectangle damage accumulation before the host emits partial invalidations"
-)]
 fn union_rects(left: ViewRect, right: ViewRect) -> ViewRect {
     let min_x = left.x.min(right.x);
     let min_y = left.y.min(right.y);

@@ -71,21 +71,41 @@ impl Worker {
                 // the focus chain has children.  The key is consumed and never reaches
                 // OnKeyPressed in that case.
                 if k.kind == KEY_KIND_TAB {
-                    let (changed, had_previous) = {
+                    let (changed, had_previous, previous_focus, current_focus) = {
                         let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                        let previous_focus = tui.views.focused_id();
                         if let Some(scope) = modal_scope.as_deref() {
-                            if k.shift {
+                            let (changed, had_previous) = if k.shift {
                                 tui.views.focus_prev_in_scope(scope)
                             } else {
                                 tui.views.focus_next_in_scope(scope)
-                            }
+                            };
+                            (
+                                changed,
+                                had_previous,
+                                previous_focus,
+                                tui.views.focused_id(),
+                            )
                         } else if k.shift {
-                            tui.views.focus_prev()
+                            let (changed, had_previous) = tui.views.focus_prev();
+                            (
+                                changed,
+                                had_previous,
+                                previous_focus,
+                                tui.views.focused_id(),
+                            )
                         } else {
-                            tui.views.focus_next()
+                            let (changed, had_previous) = tui.views.focus_next();
+                            (
+                                changed,
+                                had_previous,
+                                previous_focus,
+                                tui.views.focused_id(),
+                            )
                         }
                     };
                     if changed {
+                        self.request_focus_transition_redraw(previous_focus, current_focus, line)?;
                         self.invoke_focus_transition(had_previous, line)?;
                         return Ok(if k.shift { 15 } else { 14 });
                     }
@@ -309,6 +329,32 @@ impl Worker {
 
     fn rect_contains_point(rect: ViewRect, x: i64, y: i64) -> bool {
         x >= rect.x && y >= rect.y && x < rect.x + rect.width && y < rect.y + rect.height
+    }
+
+    fn request_focus_transition_redraw(
+        &self,
+        previous_focus: Option<ViewId>,
+        current_focus: Option<ViewId>,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+        let previous_rect = previous_focus.and_then(|view_id| tui.views.rect(view_id));
+        let current_rect = current_focus.and_then(|view_id| tui.views.rect(view_id));
+
+        let mut marked_any = false;
+        if let Some(rect) = previous_rect {
+            tui.session.request_redraw_rect(rect, line)?;
+            marked_any = true;
+        }
+        if let Some(rect) = current_rect {
+            tui.session.request_redraw_rect(rect, line)?;
+            marked_any = true;
+        }
+        if !marked_any {
+            tui.session.request_redraw(line)?;
+        }
+
+        Ok(())
     }
 
     /// Clears the quit flag and returns `true` if it was set.

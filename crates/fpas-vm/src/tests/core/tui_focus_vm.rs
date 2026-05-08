@@ -7,7 +7,7 @@
 //! **Documentation:** `docs/pascal/std/tui-app.md` (from the repository root).
 
 use fpas_bytecode::{Chunk, Intrinsic, Op, Value};
-use fpas_std::{ConsoleEvent, ConsoleKeyEvent, ViewRect, key_event::key_kind_index};
+use fpas_std::{ConsoleEvent, ConsoleKeyEvent, DamageRegion, ViewRect, key_event::key_kind_index};
 use std::sync::Arc;
 
 use crate::tests::helpers::{emit_constant, loc, minimal_shared_state};
@@ -30,6 +30,15 @@ fn view_rect() -> ViewRect {
         y: 0,
         width: 10,
         height: 5,
+    }
+}
+
+fn view_rect_at(x: i64, y: i64, width: i64, height: i64) -> ViewRect {
+    ViewRect {
+        x,
+        y,
+        width,
+        height,
     }
 }
 
@@ -356,6 +365,83 @@ fn tab_second_press_fires_deactivate_then_activate() {
     // First Tab: no previous focus → only OnActivate fires.
     // Second Tab: previous focus exists → OnDeactivate then OnActivate fires.
     assert_eq!(lines, vec!["activate", "deactivate", "activate"]);
+}
+
+#[test]
+fn first_focus_transition_marks_rect_damage_for_focused_view() {
+    let mut chunk = build_process_next_chunk_with_handlers(Some("OnActivate"), None, None);
+    add_handler(&mut chunk, "OnActivate", 1, "activate");
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    {
+        let mut tui = shared.tui.lock().unwrap();
+        let focused = tui.views.register(view_rect_at(4, 2, 7, 3));
+        tui.views.push_child(focused);
+    }
+
+    shared
+        .key_input
+        .lock()
+        .unwrap()
+        .push_console_event(tab_event(false));
+
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let damage = shared
+        .tui
+        .lock()
+        .unwrap()
+        .session
+        .peek_redraw_damage(loc())
+        .expect("peek damage should succeed");
+    assert_eq!(damage, Some(DamageRegion::Rect(view_rect_at(4, 2, 7, 3))));
+}
+
+#[test]
+fn second_focus_transition_merges_previous_and_current_rects() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, Value::Integer(64));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Pop, loc());
+    emit_constant(&mut chunk, Value::Integer(64));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Pop, loc());
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    {
+        let mut tui = shared.tui.lock().unwrap();
+        let first = tui.views.register(view_rect_at(1, 1, 4, 3));
+        let second = tui.views.register(view_rect_at(10, 2, 5, 4));
+        tui.views.push_child(first);
+        tui.views.push_child(second);
+    }
+
+    shared
+        .key_input
+        .lock()
+        .unwrap()
+        .push_console_event(tab_event(false));
+    shared
+        .key_input
+        .lock()
+        .unwrap()
+        .push_console_event(tab_event(false));
+
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let damage = shared
+        .tui
+        .lock()
+        .unwrap()
+        .session
+        .peek_redraw_damage(loc())
+        .expect("peek damage should succeed");
+    assert_eq!(damage, Some(DamageRegion::Rect(view_rect_at(1, 1, 14, 5))));
 }
 
 #[test]

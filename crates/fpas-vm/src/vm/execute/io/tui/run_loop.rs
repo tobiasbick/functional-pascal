@@ -170,6 +170,7 @@ impl Worker {
                 line,
             ),
             HostEvent::Resize { width, height } => {
+                self.with_tui(|tui| tui.session.request_redraw(line))?;
                 if let Some(handler) = on_resize {
                     let _ = self.call_function_sync_allowing_shutdown(
                         &handler,

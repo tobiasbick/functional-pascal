@@ -70,15 +70,11 @@ impl Worker {
     fn tui_application_run_loop(&mut self, line: SourceLocation) -> Result<(), VmError> {
         self.prime_initial_tui_run_events(line)?;
         self.dispatch_initial_tui_resize_if_present(line)?;
-        self.with_tui(|tui| tui.session.request_redraw(line))?;
+        self.with_tui(|tui| tui.session.request_redraw_if_absent(line))?;
 
         loop {
             let redraw_tag = self.tui_host_dispatch_redraw_inner(line)?;
             let process_tag = self.tui_host_process_next_inner(RUN_PROCESS_SPINS, line)?;
-
-            if matches!(process_tag, 2 | 4) {
-                self.with_tui(|tui| tui.session.request_redraw(line))?;
-            }
 
             if let Some(exit_reason) = self.take_tui_application_run_stop_reason() {
                 return self.finish_tui_application_run(exit_reason, line);

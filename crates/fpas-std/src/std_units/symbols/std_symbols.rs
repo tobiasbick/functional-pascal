@@ -216,6 +216,8 @@ pub const STD_TUI_APPLICATION_HOST_QUERY_FOCUSED_VIEW_ID: &str =
 /// Attach a host-managed view handle to the active modal scope.
 pub const STD_TUI_APPLICATION_HOST_ATTACH_VIEW_TO_ACTIVE_MODAL: &str =
     std_tui!("Application.HostAttachViewToActiveModal");
+/// Update the bounding rectangle for a host-managed view handle.
+pub const STD_TUI_APPLICATION_HOST_SET_VIEW_RECT: &str = std_tui!("Application.HostSetViewRect");
 
 pub const STD_STR_LENGTH: &str = std_str!("Length");
 pub const STD_STR_TO_UPPER: &str = std_str!("ToUpper");

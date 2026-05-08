@@ -516,6 +516,18 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             p("ViewId", Ty::Integer, false),
         ],
     );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_SET_VIEW_RECT,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("ViewId", Ty::Integer, false),
+            p("X", Ty::Integer, false),
+            p("Y", Ty::Integer, false),
+            p("Width", Ty::Integer, false),
+            p("Height", Ty::Integer, false),
+        ],
+    );
 
     define_func(
         checker,

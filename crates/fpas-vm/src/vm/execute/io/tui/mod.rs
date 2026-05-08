@@ -448,7 +448,26 @@ impl Worker {
             Intrinsic::TuiHostLeaveModal => {
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| {
-                    tui.modals.leave();
+                    let popped_views = tui
+                        .modals
+                        .leave_with_scoped_views()
+                        .map(|(_, scoped_views)| scoped_views)
+                        .unwrap_or_default();
+                    for view_id in popped_views {
+                        if let Some(rect) = tui.views.rect(view_id) {
+                            let _ = tui.session.request_redraw_rect(rect, line);
+                        }
+                    }
+                    let revealed_views = tui
+                        .modals
+                        .active_scoped_views()
+                        .map(|views| views.to_vec())
+                        .unwrap_or_default();
+                    for view_id in revealed_views {
+                        if let Some(rect) = tui.views.rect(view_id) {
+                            let _ = tui.session.request_redraw_rect(rect, line);
+                        }
+                    }
                 });
             }
             Intrinsic::TuiHostModalDepth => {
@@ -479,10 +498,18 @@ impl Worker {
                 let view_id = self.pop_tui_view_id(line)?;
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| {
+                    let previous_focus = tui.views.focused_id();
                     if let Some(rect) = tui.views.rect(view_id) {
                         let _ = tui.session.request_redraw_rect(rect, line);
                     }
                     tui.views.unregister(view_id);
+                    let current_focus = tui.views.focused_id();
+                    if current_focus != previous_focus
+                        && let Some(view_id) = current_focus
+                        && let Some(rect) = tui.views.rect(view_id)
+                    {
+                        let _ = tui.session.request_redraw_rect(rect, line);
+                    }
                 });
             }
             Intrinsic::TuiHostPushChildView => {
@@ -502,7 +529,33 @@ impl Worker {
                 let view_id = self.pop_tui_view_id(line)?;
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| {
-                    let _ = tui.modals.attach_view_to_active(view_id);
+                    if tui.modals.attach_view_to_active(view_id)
+                        && let Some(rect) = tui.views.rect(view_id)
+                    {
+                        let _ = tui.session.request_redraw_rect(rect, line);
+                    }
+                });
+            }
+            Intrinsic::TuiHostSetViewRect => {
+                let height = self.pop_int(line)?;
+                let width = self.pop_int(line)?;
+                let y = self.pop_int(line)?;
+                let x = self.pop_int(line)?;
+                let view_id = self.pop_tui_view_id(line)?;
+                self.pop_tui_application(line)?;
+                self.with_tui(|tui| {
+                    let Some(previous_rect) = tui.views.rect(view_id) else {
+                        return;
+                    };
+                    let next_rect = ViewRect {
+                        x,
+                        y,
+                        width,
+                        height,
+                    };
+                    tui.views.set_rect(view_id, next_rect);
+                    let _ = tui.session.request_redraw_rect(previous_rect, line);
+                    let _ = tui.session.request_redraw_rect(next_rect, line);
                 });
             }
             Intrinsic::TuiHostInvokeOnKeyPressed => {

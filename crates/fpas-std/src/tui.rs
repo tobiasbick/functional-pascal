@@ -258,6 +258,23 @@ impl TuiSession {
         Ok(())
     }
 
+    /// Marks the whole application surface dirty only when no redraw damage is pending yet.
+    ///
+    /// This lets the hosted startup path request an initial paint without overwriting more
+    /// specific dirty-rectangle information that may already have been accumulated.
+    pub fn request_redraw_if_absent(&mut self, location: SourceLocation) -> Result<(), StdError> {
+        self.ensure_open(
+            "Application.RequestRedraw(App) requires an open Std.Tui application session.",
+            "Open the application before requesting a redraw.",
+            location,
+        )?;
+
+        if !self.damage.has_damage() {
+            self.damage.mark_full();
+        }
+        Ok(())
+    }
+
     /// Marks a rectangular region dirty for the next hosted paint.
     ///
     /// This is currently a Rust-host detail used while Phase 7 performance work moves from
@@ -607,6 +624,64 @@ mod tests {
                 y: 1,
                 width: 8,
                 height: 5,
+            }))
+        );
+    }
+
+    #[test]
+    fn tui_session_request_redraw_if_absent_marks_full_frame_when_idle() {
+        let mut session = TuiSession::default();
+        let mut console = Console::new();
+        let mut key_input = KeyInput::new();
+
+        session
+            .open(&mut console, &mut key_input, test_location())
+            .expect("open should succeed");
+        session
+            .request_redraw_if_absent(test_location())
+            .expect("conditional redraw should succeed");
+
+        assert_eq!(
+            session
+                .peek_redraw_damage(test_location())
+                .expect("peek damage"),
+            Some(DamageRegion::FullFrame)
+        );
+    }
+
+    #[test]
+    fn tui_session_request_redraw_if_absent_preserves_existing_rect_damage() {
+        let mut session = TuiSession::default();
+        let mut console = Console::new();
+        let mut key_input = KeyInput::new();
+
+        session
+            .open(&mut console, &mut key_input, test_location())
+            .expect("open should succeed");
+        session
+            .request_redraw_rect(
+                crate::ViewRect {
+                    x: 6,
+                    y: 7,
+                    width: 8,
+                    height: 9,
+                },
+                test_location(),
+            )
+            .expect("rect redraw should succeed");
+        session
+            .request_redraw_if_absent(test_location())
+            .expect("conditional redraw should succeed");
+
+        assert_eq!(
+            session
+                .peek_redraw_damage(test_location())
+                .expect("peek damage"),
+            Some(DamageRegion::Rect(crate::ViewRect {
+                x: 6,
+                y: 7,
+                width: 8,
+                height: 9,
             }))
         );
     }

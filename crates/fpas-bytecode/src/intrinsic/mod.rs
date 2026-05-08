@@ -581,6 +581,12 @@ pub enum Intrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     TuiHostAttachViewToActiveModal = 283,
+
+    /// Update the bounding rectangle for a host-managed view.
+    /// Stack: `Application`, `ViewId`, `X`, `Y`, `Width`, `Height` (`integer`, top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostSetViewRect = 284,
 }
 
 impl From<Intrinsic> for u16 {

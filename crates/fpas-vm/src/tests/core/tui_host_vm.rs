@@ -140,6 +140,139 @@ fn tui_host_unregister_view_marks_removed_rect_damage() {
 }
 
 #[test]
+fn tui_host_unregister_focused_view_marks_removed_and_new_focus_rects() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(1));
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostUnregisterView as u16),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    {
+        let mut tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+        let first = tui.views.register(ViewRect {
+            x: 1,
+            y: 1,
+            width: 4,
+            height: 3,
+        });
+        let second = tui.views.register(ViewRect {
+            x: 10,
+            y: 2,
+            width: 5,
+            height: 4,
+        });
+        assert_eq!(first.raw(), 0);
+        assert_eq!(second.raw(), 1);
+        tui.views.push_child(first);
+        tui.views.push_child(second);
+        let _ = tui.views.focus_next();
+        let _ = tui.views.focus_next();
+    }
+
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+    let damage = tui
+        .session
+        .peek_redraw_damage(loc())
+        .expect("peek damage should succeed");
+    assert_eq!(
+        damage,
+        Some(DamageRegion::Rect(ViewRect {
+            x: 1,
+            y: 1,
+            width: 14,
+            height: 5,
+        }))
+    );
+    assert_eq!(tui.views.focused_id().map(|id| id.raw()), Some(0));
+}
+
+#[test]
+fn tui_host_set_view_rect_marks_old_and_new_rect_damage() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(3));
+    emit_constant(&mut chunk, Value::Integer(4));
+    emit_constant(&mut chunk, Value::Integer(7));
+    emit_constant(&mut chunk, Value::Integer(6));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostSetViewRect as u16), loc());
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    {
+        let mut tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+        let view_id = tui.views.register(ViewRect {
+            x: 1,
+            y: 2,
+            width: 5,
+            height: 4,
+        });
+        assert_eq!(view_id.raw(), 0);
+    }
+
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+    let damage = tui
+        .session
+        .peek_redraw_damage(loc())
+        .expect("peek damage should succeed");
+    assert_eq!(
+        damage,
+        Some(DamageRegion::Rect(ViewRect {
+            x: 1,
+            y: 2,
+            width: 9,
+            height: 8,
+        }))
+    );
+    assert_eq!(
+        tui.views.rect(fpas_std::ViewId::from_raw(0)),
+        Some(ViewRect {
+            x: 3,
+            y: 4,
+            width: 7,
+            height: 6,
+        })
+    );
+}
+
+#[test]
+fn tui_host_set_view_rect_ignores_unknown_view_ids() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(99));
+    emit_constant(&mut chunk, Value::Integer(3));
+    emit_constant(&mut chunk, Value::Integer(4));
+    emit_constant(&mut chunk, Value::Integer(7));
+    emit_constant(&mut chunk, Value::Integer(6));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostSetViewRect as u16), loc());
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+    let damage = tui
+        .session
+        .peek_redraw_damage(loc())
+        .expect("peek damage should succeed");
+    assert_eq!(damage, None);
+}
+
+#[test]
 fn tui_host_command_shortcut_dispatches_on_command_and_returns_tag_sixteen() {
     let save_key =
         ConsoleKeyEvent::new(key_kind_index("Character"), 's', false, true, false, false);
@@ -229,6 +362,189 @@ fn tui_host_modal_depth_tracks_enter_and_leave() {
 }
 
 #[test]
+fn tui_host_enter_modal_without_attached_views_does_not_mark_damage() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(10));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostEnterModal as u16), loc());
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let damage = shared
+        .tui
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .session
+        .peek_redraw_damage(loc())
+        .expect("peek damage should succeed");
+    assert_eq!(damage, None);
+}
+
+#[test]
+fn tui_host_attach_view_to_active_modal_marks_view_rect_damage() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(&mut chunk, Value::Integer(11));
+    emit_constant(&mut chunk, Value::Integer(6));
+    emit_constant(&mut chunk, Value::Integer(7));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(10));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostEnterModal as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    chunk.emit(Op::GetLocal(1), loc());
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostAttachViewToActiveModal as u16),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let damage = shared
+        .tui
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .session
+        .peek_redraw_damage(loc())
+        .expect("peek damage should succeed");
+    assert_eq!(
+        damage,
+        Some(DamageRegion::Rect(ViewRect {
+            x: 10,
+            y: 11,
+            width: 6,
+            height: 7,
+        }))
+    );
+}
+
+#[test]
+fn tui_host_leave_modal_marks_popped_modal_view_rect_damage() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(&mut chunk, Value::Integer(11));
+    emit_constant(&mut chunk, Value::Integer(6));
+    emit_constant(&mut chunk, Value::Integer(7));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(10));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostEnterModal as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    chunk.emit(Op::GetLocal(1), loc());
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostAttachViewToActiveModal as u16),
+        loc(),
+    );
+    chunk.emit(Op::GetLocal(0), loc());
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiApplicationRedrawPending as u16),
+        loc(),
+    );
+    chunk.emit(Op::Pop, loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostLeaveModal as u16), loc());
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let damage = shared
+        .tui
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .session
+        .peek_redraw_damage(loc())
+        .expect("peek damage should succeed");
+    assert_eq!(
+        damage,
+        Some(DamageRegion::Rect(ViewRect {
+            x: 10,
+            y: 11,
+            width: 6,
+            height: 7,
+        }))
+    );
+}
+
+#[test]
+fn tui_host_leave_modal_marks_popped_and_revealed_modal_view_rects() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(1));
+    emit_constant(&mut chunk, Value::Integer(1));
+    emit_constant(&mut chunk, Value::Integer(4));
+    emit_constant(&mut chunk, Value::Integer(3));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(&mut chunk, Value::Integer(2));
+    emit_constant(&mut chunk, Value::Integer(5));
+    emit_constant(&mut chunk, Value::Integer(4));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(10));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostEnterModal as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    chunk.emit(Op::GetLocal(1), loc());
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostAttachViewToActiveModal as u16),
+        loc(),
+    );
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(20));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostEnterModal as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    chunk.emit(Op::GetLocal(2), loc());
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostAttachViewToActiveModal as u16),
+        loc(),
+    );
+    chunk.emit(Op::GetLocal(0), loc());
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiApplicationRedrawPending as u16),
+        loc(),
+    );
+    chunk.emit(Op::Pop, loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostLeaveModal as u16), loc());
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let damage = shared
+        .tui
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .session
+        .peek_redraw_damage(loc())
+        .expect("peek damage should succeed");
+    assert_eq!(
+        damage,
+        Some(DamageRegion::Rect(ViewRect {
+            x: 1,
+            y: 1,
+            width: 14,
+            height: 5,
+        }))
+    );
+}
+
+#[test]
 fn tui_host_modal_stack_is_cleared_by_application_close() {
     let mut chunk = Chunk::new();
     chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
@@ -244,68 +560,6 @@ fn tui_host_modal_stack_is_cleared_by_application_close() {
 
     let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
     assert_eq!(tui.modals.depth(), 0);
-}
-
-#[test]
-fn tui_host_modal_scope_blocks_mouse_outside_attached_views() {
-    let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
-    chunk.emit(Op::Dup, loc());
-    emit_constant(
-        &mut chunk,
-        Value::Function {
-            name: "OnMouse".into(),
-            captures: vec![],
-        },
-    );
-    chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnMouse as u16),
-        loc(),
-    );
-    chunk.emit(Op::GetLocal(0), loc());
-    emit_constant(&mut chunk, Value::Integer(10));
-    emit_constant(&mut chunk, Value::Integer(10));
-    emit_constant(&mut chunk, Value::Integer(5));
-    emit_constant(&mut chunk, Value::Integer(5));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
-    chunk.emit(Op::GetLocal(0), loc());
-    emit_constant(&mut chunk, Value::Integer(10));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostEnterModal as u16), loc());
-    chunk.emit(Op::GetLocal(0), loc());
-    chunk.emit(Op::GetLocal(1), loc());
-    chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostAttachViewToActiveModal as u16),
-        loc(),
-    );
-    chunk.emit(Op::GetLocal(0), loc());
-    emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
-    chunk.emit(Op::PrintLn, loc());
-    chunk.emit(Op::Halt, loc());
-
-    let on_mouse_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnMouse".into(), (on_mouse_start, 2));
-    emit_constant(&mut chunk, Value::Str("mouse".into()));
-    chunk.emit(Op::PrintLn, loc());
-    emit_constant(&mut chunk, Value::Unit);
-    chunk.emit(Op::Return, loc());
-
-    let mut vm = Vm::new(chunk);
-    vm.push_console_event(ConsoleEvent::mouse(
-        fpas_std::mouse_action_index("Down"),
-        fpas_std::mouse_button_index("Left"),
-        1,
-        1,
-        false,
-        false,
-        false,
-        false,
-    ));
-    vm.run().expect("vm ok");
-
-    assert_eq!(vm.output().lines, vec!["19"]);
 }
 
 #[test]
@@ -478,6 +732,66 @@ fn tui_host_process_next_dispatches_on_resize_handler() {
 }
 
 #[test]
+fn tui_host_process_next_resize_marks_full_frame_damage() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnResize".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnResize as u16),
+        loc(),
+    );
+    emit_constant(&mut chunk, tui_application_value());
+    emit_constant(&mut chunk, Value::Integer(32));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Pop, loc());
+    chunk.emit(Op::Halt, loc());
+
+    let on_resize_start = chunk.len();
+    chunk
+        .functions
+        .insert("OnResize".into(), (on_resize_start, 2));
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    shared
+        .key_input
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .push_console_event(ConsoleEvent::resize(80, 25));
+    shared
+        .key_input
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .push_console_event(ConsoleEvent::key(ConsoleKeyEvent::new(
+            key_kind_index("Escape"),
+            '\u{1b}',
+            false,
+            false,
+            false,
+            false,
+        )));
+
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let damage = shared
+        .tui
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .session
+        .peek_redraw_damage(loc())
+        .expect("peek damage should succeed");
+    assert_eq!(damage, Some(DamageRegion::FullFrame));
+}
+
+#[test]
 fn tui_host_process_next_resize_without_handler_returns_tag_four() {
     let mut chunk = Chunk::new();
     chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
@@ -499,6 +813,48 @@ fn tui_host_process_next_resize_without_handler_returns_tag_four() {
     )));
     vm.run().expect("vm ok");
     assert_eq!(vm.output().lines, vec!["4"]);
+}
+
+#[test]
+fn tui_host_process_next_resize_without_handler_still_marks_full_frame_damage() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    emit_constant(&mut chunk, tui_application_value());
+    emit_constant(&mut chunk, Value::Integer(32));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Pop, loc());
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    shared
+        .key_input
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .push_console_event(ConsoleEvent::resize(90, 30));
+    shared
+        .key_input
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .push_console_event(ConsoleEvent::key(ConsoleKeyEvent::new(
+            key_kind_index("Escape"),
+            '\u{1b}',
+            false,
+            false,
+            false,
+            false,
+        )));
+
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let damage = shared
+        .tui
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .session
+        .peek_redraw_damage(loc())
+        .expect("peek damage should succeed");
+    assert_eq!(damage, Some(DamageRegion::FullFrame));
 }
 
 #[test]

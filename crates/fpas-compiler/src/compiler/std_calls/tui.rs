@@ -381,6 +381,22 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::TuiHostAttachViewToActiveModal, location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_HOST_SET_VIEW_RECT => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_SET_VIEW_RECT,
+                    6,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.compile_expr(&args[2])?;
+                self.compile_expr(&args[3])?;
+                self.compile_expr(&args[4])?;
+                self.compile_expr(&args[5])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiHostSetViewRect, location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

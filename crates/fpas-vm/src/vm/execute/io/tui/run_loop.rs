@@ -5,7 +5,7 @@
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError};
 use crate::vm::{Worker, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
-use fpas_std::{CommandId, ConsoleEvent, HostEvent, ViewId, ViewRect};
+use fpas_std::{CommandId, ConsoleEvent, DamageRegion, HostEvent, ViewId, ViewRect};
 
 const TUI_APPLICATION_TYPE: &str = "Std.Tui.Application";
 /// Discriminant of `Std.Console.KeyKind.Tab`; must match
@@ -102,7 +102,7 @@ impl Worker {
                     return Ok(18);
                 }
                 if let Some(handler) = on_key {
-                    let _ = self.call_function_sync(
+                    let _ = self.call_function_sync_allowing_shutdown(
                         &handler,
                         &[app_rec, Self::key_event_record(k)],
                         line,
@@ -151,7 +151,7 @@ impl Worker {
             ),
             HostEvent::Resize { width, height } => {
                 if let Some(handler) = on_resize {
-                    let _ = self.call_function_sync(
+                    let _ = self.call_function_sync_allowing_shutdown(
                         &handler,
                         &[app_rec, Self::tui_size_record(width, height)],
                         line,
@@ -177,7 +177,7 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<i64, VmError> {
         if let Some(h) = handler {
-            let _ = self.call_function_sync(&h, &[app_rec, event_rec], line)?;
+            let _ = self.call_function_sync_allowing_shutdown(&h, &[app_rec, event_rec], line)?;
             Ok(hit_tag)
         } else {
             Ok(miss_tag)
@@ -191,28 +191,33 @@ impl Worker {
         &mut self,
         line: SourceLocation,
     ) -> Result<i64, VmError> {
-        let (pending, on_paint) = {
+        let (damage, on_paint) = {
             let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            let pending = tui.session.is_redraw_pending(line)?;
-            (pending, tui.on_paint.clone())
+            let damage = tui.session.peek_redraw_damage(line)?;
+            (damage, tui.on_paint.clone())
         };
 
-        if !pending {
+        let Some(expected_damage) = damage else {
             return Ok(0);
-        }
+        };
 
         let app_rec = Self::tui_application_record();
 
         if let Some(handler) = on_paint {
             {
                 let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                let _ = tui.session.take_redraw_pending(line)?;
+                let consumed_damage = tui.session.take_redraw_damage(line)?;
+                debug_assert_eq!(consumed_damage, Some(expected_damage));
             }
-            let _ = self.call_function_sync(&handler, &[app_rec], line)?;
+            match expected_damage {
+                DamageRegion::FullFrame | DamageRegion::Rect(_) => {}
+            }
+            let _ = self.call_function_sync_allowing_shutdown(&handler, &[app_rec], line)?;
             Ok(5)
         } else {
             let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            let _ = tui.session.take_redraw_pending(line)?;
+            let consumed_damage = tui.session.take_redraw_damage(line)?;
+            debug_assert_eq!(consumed_damage, Some(expected_damage));
             Ok(6)
         }
     }
@@ -257,8 +262,11 @@ impl Worker {
         };
 
         let app_rec = Self::tui_application_record();
-        let _ =
-            self.call_function_sync(&handler, &[app_rec, Value::Integer(command_id.0)], line)?;
+        let _ = self.call_function_sync_allowing_shutdown(
+            &handler,
+            &[app_rec, Value::Integer(command_id.0)],
+            line,
+        )?;
         Ok(16)
     }
 
@@ -333,7 +341,8 @@ impl Worker {
                 tui.on_deactivate.clone()
             };
             if let Some(handler) = handler {
-                let _ = self.call_function_sync(&handler, &[app_rec.clone()], line)?;
+                let _ =
+                    self.call_function_sync_allowing_shutdown(&handler, &[app_rec.clone()], line)?;
             }
         }
 
@@ -342,7 +351,7 @@ impl Worker {
             tui.on_activate.clone()
         };
         if let Some(handler) = handler {
-            let _ = self.call_function_sync(&handler, &[app_rec], line)?;
+            let _ = self.call_function_sync_allowing_shutdown(&handler, &[app_rec], line)?;
         }
 
         Ok(())

@@ -222,7 +222,11 @@ impl Worker {
             return Ok(());
         };
 
-        let _ = self.call_function_sync(&handler, &[Self::tui_application_record()], line)?;
+        let _ = self.call_function_sync_allowing_shutdown(
+            &handler,
+            &[Self::tui_application_record()],
+            line,
+        )?;
         Ok(())
     }
 

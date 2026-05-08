@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/pascal/std/tui.md` (from the repository root).
 
 use crate::ConsoleKeyEvent;
+use crate::DamageRegion;
 use crate::console::{Console, KeyInput};
 use crate::console_event::{ConsoleEvent, event_kind_index};
 use crate::error::{StdError, std_runtime_error};
@@ -257,14 +258,43 @@ impl TuiSession {
         Ok(())
     }
 
-    pub fn take_redraw_pending(&mut self, location: SourceLocation) -> Result<bool, StdError> {
+    /// Returns the pending redraw damage without clearing it.
+    ///
+    /// Used by the Rust host to decide whether `OnPaint` should run and which redraw scope
+    /// was requested. FPAS still treats redraw as an application-global paint request.
+    pub fn peek_redraw_damage(
+        &self,
+        location: SourceLocation,
+    ) -> Result<Option<DamageRegion>, StdError> {
+        self.ensure_open(
+            "Application.IsRedrawPending(App) requires an open Std.Tui application session.",
+            "Open the application before querying redraw state.",
+            location,
+        )?;
+
+        Ok(self.damage.peek())
+    }
+
+    /// Consumes and returns the pending redraw damage region.
+    ///
+    /// Used by the Rust host immediately before `OnPaint` dispatch. Returning the region now
+    /// keeps the host on the damage-tracking path even while the public paint contract remains
+    /// full-frame.
+    pub fn take_redraw_damage(
+        &mut self,
+        location: SourceLocation,
+    ) -> Result<Option<DamageRegion>, StdError> {
         self.ensure_open(
             "Application.RedrawPending(App) requires an open Std.Tui application session.",
             "Open the application before checking redraw state.",
             location,
         )?;
 
-        Ok(self.damage.take().is_some())
+        Ok(self.damage.take())
+    }
+
+    pub fn take_redraw_pending(&mut self, location: SourceLocation) -> Result<bool, StdError> {
+        Ok(self.take_redraw_damage(location)?.is_some())
     }
 
     /// Returns whether a redraw was requested and **does not** clear the flag (peek).
@@ -277,6 +307,7 @@ impl TuiSession {
             "Open the application before querying redraw state.",
             location,
         )?;
+
         Ok(self.damage.has_damage())
     }
 
@@ -417,6 +448,12 @@ mod tests {
                 .is_redraw_pending(test_location())
                 .expect("peek again")
         );
+        assert_eq!(
+            session
+                .peek_redraw_damage(test_location())
+                .expect("peek damage"),
+            Some(DamageRegion::FullFrame)
+        );
 
         let taken = session.take_redraw_pending(test_location()).expect("take");
         assert!(taken);
@@ -449,6 +486,30 @@ mod tests {
 
         assert!(first);
         assert!(!second);
+    }
+
+    #[test]
+    fn tui_session_take_redraw_damage_returns_full_frame_once() {
+        let mut session = TuiSession::default();
+        let mut console = Console::new();
+        let mut key_input = KeyInput::new();
+
+        session
+            .open(&mut console, &mut key_input, test_location())
+            .expect("open should succeed");
+        session
+            .request_redraw(test_location())
+            .expect("request redraw should succeed");
+
+        let first = session
+            .take_redraw_damage(test_location())
+            .expect("first damage take should succeed");
+        let second = session
+            .take_redraw_damage(test_location())
+            .expect("second damage take should succeed");
+
+        assert_eq!(first, Some(DamageRegion::FullFrame));
+        assert_eq!(second, None);
     }
 
     #[test]

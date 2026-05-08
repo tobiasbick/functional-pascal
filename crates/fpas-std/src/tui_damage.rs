@@ -6,8 +6,11 @@
 use crate::ViewRect;
 
 /// Pending redraw scope for the hosted TUI application surface.
+///
+/// This is a Rust-host detail used by `fpas-vm` while Phase 7 performance work is in
+/// progress. It is not part of the FPAS language surface.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum DamageRegion {
+pub enum DamageRegion {
     /// The next paint must redraw the entire application surface.
     FullFrame,
     /// The next paint may restrict itself to the dirty rectangle.
@@ -58,6 +61,12 @@ impl DamageTracker {
     #[must_use]
     pub(crate) fn has_damage(&self) -> bool {
         self.pending.is_some()
+    }
+
+    /// Returns the pending damage without clearing it.
+    #[must_use]
+    pub(crate) fn peek(&self) -> Option<DamageRegion> {
+        self.pending
     }
 
     /// Consumes and returns the pending damage description.

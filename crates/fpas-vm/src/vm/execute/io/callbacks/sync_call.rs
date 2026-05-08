@@ -82,6 +82,19 @@ impl Worker {
         result
     }
 
+    pub(in crate::vm::execute::io) fn call_function_sync_allowing_shutdown(
+        &mut self,
+        func: &Value,
+        args: &[Value],
+        line: SourceLocation,
+    ) -> Result<Value, VmError> {
+        let previous_allow_shutdown = self.allow_shutdown_during_sync_call;
+        self.allow_shutdown_during_sync_call = true;
+        let result = self.call_function_sync(func, args, line);
+        self.allow_shutdown_during_sync_call = previous_allow_shutdown;
+        result
+    }
+
     /// Step through instructions until the call stack returns to
     /// `target_depth`, i.e. the frame injected by `call_function_sync` has
     /// been popped.

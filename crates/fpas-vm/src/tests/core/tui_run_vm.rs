@@ -349,11 +349,70 @@ fn tui_application_run_rejects_missing_on_paint_handler() {
 
     let error = run_err(chunk);
     assert!(
-        error
-            .message
-            .contains("Application.Run(App) requires a registered OnPaint handler"),
+        error.message.contains(
+            "Application.Run(App) requires a registered OnPaint handler or local view paint handler"
+        ),
         "unexpected runtime error: {}",
         error.message
+    );
+}
+
+#[test]
+fn tui_application_run_accepts_local_view_paint_without_global_on_paint() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Dup, loc());
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, Value::Integer(4));
+    emit_constant(&mut chunk, Value::Integer(5));
+    emit_constant(&mut chunk, Value::Integer(6));
+    emit_constant(&mut chunk, Value::Integer(3));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnViewPaint".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnViewPaint as u16),
+        loc(),
+    );
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationRun as u16), loc());
+    chunk.emit(Op::Halt, loc());
+
+    let on_view_paint_start = chunk.len();
+    chunk
+        .functions
+        .insert("OnViewPaint".into(), (on_view_paint_start, 3));
+    chunk.emit(Op::GetLocal(1), loc());
+    chunk.emit(Op::PrintLn, loc());
+    emit_constant(&mut chunk, tui_application_value());
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRequestQuit as u16), loc());
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    assert_eq!(
+        worker
+            .shared
+            .console
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .output()
+            .lines
+            .clone(),
+        vec!["0"],
+    );
+
+    let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+    assert!(
+        tui.view_paints.is_empty(),
+        "Application.Run close semantics should clear local view paint handlers"
     );
 }
 

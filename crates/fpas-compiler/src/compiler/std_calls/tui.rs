@@ -41,6 +41,20 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::TuiApplicationRun, location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_SHOW_MODAL => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_SHOW_MODAL, 3, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.compile_expr(&args[2])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiApplicationShowModal, location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_CLOSE_MODAL => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_CLOSE_MODAL, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiApplicationCloseModal, location);
+                Ok(true)
+            }
             s::STD_TUI_APPLICATION_SIZE => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_SIZE, 1, args, location)?;
                 self.compile_expr(&args[0])?;
@@ -395,6 +409,32 @@ impl Compiler {
                 self.compile_expr(&args[4])?;
                 self.compile_expr(&args[5])?;
                 self.emit_intrinsic_unit(Intrinsic::TuiHostSetViewRect, location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_SET_VIEW_PARENT => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_SET_VIEW_PARENT,
+                    3,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.compile_expr(&args[2])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiHostSetViewParent, location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT,
+                    3,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.compile_expr(&args[2])?;
+                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnViewPaint, location);
                 Ok(true)
             }
             _ => Ok(false),

@@ -174,6 +174,10 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::TuiHostQueryFocusedViewId,
     Intrinsic::TuiHostAttachViewToActiveModal,
     Intrinsic::TuiHostSetViewRect,
+    Intrinsic::TuiHostSetViewParent,
+    Intrinsic::TuiHostRegisterOnViewPaint,
+    Intrinsic::TuiApplicationShowModal,
+    Intrinsic::TuiApplicationCloseModal,
     Intrinsic::ResultUnwrap,
     Intrinsic::ResultUnwrapOr,
     Intrinsic::ResultIsOk,
@@ -400,6 +404,10 @@ impl Intrinsic {
             282 => Self::TuiHostQueryFocusedViewId,
             283 => Self::TuiHostAttachViewToActiveModal,
             284 => Self::TuiHostSetViewRect,
+            285 => Self::TuiHostSetViewParent,
+            286 => Self::TuiHostRegisterOnViewPaint,
+            287 => Self::TuiApplicationShowModal,
+            288 => Self::TuiApplicationCloseModal,
             _ => return None,
         })
     }

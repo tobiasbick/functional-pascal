@@ -1,6 +1,6 @@
 # `Std.Tui` — dispatch-mode application (target)
 
-**Status:** target specification for the Rust-hosted event loop and `On*` handlers described in `[docs/future/tui-application-framework.md](../../future/tui-application-framework.md)`. **`Application.Host*`** dispatch helpers are **registered and lowered**, **`ApplicationHandlers`** / **`Application.Configure(App, Handlers)`** are available as the bundled registration surface, and **`Application.Run(App)`** is available as the hosted loop entrypoint. `OnIdle` remains available through both `Application.HostRegisterOnIdle(App, Milliseconds, OnIdle)` and the bundle field pair `OnIdleMilliseconds` + `OnIdle`. The poll-style API in `[tui.md](tui.md)` remains available for programs that do not use hosted dispatch.
+**Status:** target specification for the Rust-hosted event loop and `On*` handlers described in `[docs/future/tui-application-framework.md](../../future/tui-application-framework.md)`. **`Application.Host*`** dispatch helpers are **registered and lowered**, **`ApplicationHandlers`** / **`Application.Configure(App, Handlers)`** are available as the bundled registration surface, **`Application.Run(App)`** is available as the hosted loop entrypoint, and the current Phase 7 structure layer now includes **`Std.Tui.Rect`**, **`Application.HostSetViewParent`**, **`Application.HostRegisterOnViewPaint`**, **`Application.ShowModal`**, and **`Application.CloseModal`**. `OnIdle` remains available through both `Application.HostRegisterOnIdle(App, Milliseconds, OnIdle)` and the bundle field pair `OnIdleMilliseconds` + `OnIdle`. The poll-style API in `[tui.md](tui.md)` remains available for programs that do not use hosted dispatch.
 
 **Maintenance (implementers only):** when this mode ships, register types and routines in `[loaded/tui.rs](../../../crates/fpas-sema/src/std_registry/loaded/tui.rs)` and keep this file aligned with that registry (see root `[AGENTS.md](../../../AGENTS.md)`).
 
@@ -41,8 +41,12 @@ These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mo
 | `TuiHostQueryFocusedViewId`   | `Application`                                    | Pushes `integer`: the currently focused view handle, or `-1` when no host-managed view is focused.                                                                                                                                                                               |
 | `TuiHostAttachViewToActiveModal` | `Application`, `integer`                      | Attaches a host-managed view handle to the currently active modal frame. Attached views define the modal focus/mouse scope for the topmost modal. Does not push a value.                                                                                                      |
 | `TuiHostSetViewRect`          | `Application`, `integer`, `integer`, `integer`, `integer`, `integer` | Updates a host-managed view handle to `x`, `y`, `width`, `height`. Unknown handles are ignored. Does not push a value.                                                                                                                                      |
+| `TuiHostSetViewParent`        | `Application`, `integer`, `integer`           | Reparents a host-managed view under `parent_view_id`. Pass `-1` to detach the view back to the root list. The view keeps its current absolute terminal rectangle during the reparenting step. Unknown handles are ignored. Does not push a value.                          |
+| `TuiHostRegisterOnViewPaint`  | `Application`, `integer`, `function`          | Registers `procedure (Application, integer, Std.Tui.Rect)` (arity 3) as a view-local paint handler for one host-managed view. During hosted redraw, the host invokes it in tree paint order when that view intersects the current damage region.                              |
 | `TuiApplicationConfigure`     | `Application`, `ApplicationHandlers`             | Applies a bundled hosted-dispatch configuration. Replaces the current hosted handlers with the record fields from `ApplicationHandlers`; `OnPaint` is required, optional handlers use `Some(Handler)` or `None`, and `OnIdleMilliseconds <= 0` disables idle callbacks.        |
-| `TuiApplicationRun`           | `Application`                                    | Hosted loop entrypoint. Requires a previously registered `OnPaint` handler, auto-requests the first redraw, blocks until `Application.HostRequestQuit(App)` is observed **or** the host stops the active run, records `ExitReason.UserQuit`, `ExitReason.HostStop`, `ExitReason.HostAndUserStop`, or `ExitReason.HostShutdown`, invokes `OnExit` when registered, and performs `Application.Close` semantics before returning. Pushes `()`. |
+| `TuiApplicationRun`           | `Application`                                    | Hosted loop entrypoint. Requires a previously registered global `OnPaint` handler **or** at least one local view paint handler, auto-requests the first redraw, blocks until `Application.HostRequestQuit(App)` is observed **or** the host stops the active run, records `ExitReason.UserQuit`, `ExitReason.HostStop`, `ExitReason.HostAndUserStop`, or `ExitReason.HostShutdown`, invokes `OnExit` when registered, and performs `Application.Close` semantics before returning. Pushes `()`. |
+| `TuiApplicationShowModal`     | `Application`, `integer`, `integer`             | Pushes a modal frame anchored to the given root view. The root view is raised, the modal scope becomes that view subtree (plus any explicitly attached extra views), and focus is moved into that scope when possible. Does not push a value.                               |
+| `TuiApplicationCloseModal`    | `Application`                                    | Pops the active modal frame created by `Application.ShowModal` or `Application.HostEnterModal`. Leaving an empty modal stack is a no-op. Does not push a value.                                                                                                                 |
 
 ### Pascal names (registry + compiler)
 
@@ -76,28 +80,34 @@ These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mo
 | `Application.HostQueryFocusedViewId(App)` | `TuiHostQueryFocusedViewId` |
 | `Application.HostAttachViewToActiveModal(App, ViewId)` | `TuiHostAttachViewToActiveModal` |
 | `Application.HostSetViewRect(App, ViewId, X, Y, Width, Height)` | `TuiHostSetViewRect` |
+| `Application.HostSetViewParent(App, ViewId, ParentViewId)` | `TuiHostSetViewParent` |
+| `Application.HostRegisterOnViewPaint(App, ViewId, OnViewPaint)` | `TuiHostRegisterOnViewPaint` |
 | `Application.Configure(App, Handlers)` | `TuiApplicationConfigure` |
 | `Application.Run(App)` | `TuiApplicationRun` |
+| `Application.ShowModal(App, ModalId, RootViewId)` | `TuiApplicationShowModal` |
+| `Application.CloseModal(App)` | `TuiApplicationCloseModal` |
 
 Samples: [`examples/pascal/tui/host_dispatch_minimal.fpas`](../../../examples/pascal/tui/host_dispatch_minimal.fpas) (one `HostProcessNext` step), [`examples/pascal/tui/host_dispatch_paint.fpas`](../../../examples/pascal/tui/host_dispatch_paint.fpas) (register `OnPaint` + `HostDispatchRedraw`), [`examples/pascal/tui/host_dispatch_quit.fpas`](../../../examples/pascal/tui/host_dispatch_quit.fpas) (`HostRequestQuit` from `OnPaint` + `HostRunLoop`).
 
-**Bytecode discriminants** (authoritative enum: [`Intrinsic`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs)): **255** `TuiHostPollNext`, **256** `TuiHostRegisterOnKeyPressed`, **257** `TuiHostInvokeOnKeyPressed`, **258** `TuiHostRegisterOnResize`, **259** `TuiHostProcessNext`, **260** `TuiHostRegisterOnPaint`, **261** `TuiHostDispatchRedraw`, **262** `TuiHostRunLoop`, **263** `TuiHostRequestQuit`, **264** `TuiHostRegisterOnExit`, **265** `TuiApplicationRun`, **266** `TuiHostRegisterOnIdle`, **267** `TuiApplicationConfigure`, **268** `TuiHostRegisterOnMouse`, **269** `TuiHostRegisterOnPaste`, **270** `TuiHostRegisterOnFocusGained`, **271** `TuiHostRegisterOnFocusLost`, **272** `TuiHostRegisterOnActivate`, **273** `TuiHostRegisterOnDeactivate`, **274** `TuiHostRegisterOnCommand`, **275** `TuiHostBindCommand`, **276** `TuiHostEnterModal`, **277** `TuiHostLeaveModal`, **278** `TuiHostModalDepth`, **279** `TuiHostRegisterView`, **280** `TuiHostUnregisterView`, **281** `TuiHostPushChildView`, **282** `TuiHostQueryFocusedViewId`, **283** `TuiHostAttachViewToActiveModal`, **284** `TuiHostSetViewRect`.
+**Bytecode discriminants** (authoritative enum: [`Intrinsic`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs)): **255** `TuiHostPollNext`, **256** `TuiHostRegisterOnKeyPressed`, **257** `TuiHostInvokeOnKeyPressed`, **258** `TuiHostRegisterOnResize`, **259** `TuiHostProcessNext`, **260** `TuiHostRegisterOnPaint`, **261** `TuiHostDispatchRedraw`, **262** `TuiHostRunLoop`, **263** `TuiHostRequestQuit`, **264** `TuiHostRegisterOnExit`, **265** `TuiApplicationRun`, **266** `TuiHostRegisterOnIdle`, **267** `TuiApplicationConfigure`, **268** `TuiHostRegisterOnMouse`, **269** `TuiHostRegisterOnPaste`, **270** `TuiHostRegisterOnFocusGained`, **271** `TuiHostRegisterOnFocusLost`, **272** `TuiHostRegisterOnActivate`, **273** `TuiHostRegisterOnDeactivate`, **274** `TuiHostRegisterOnCommand`, **275** `TuiHostBindCommand`, **276** `TuiHostEnterModal`, **277** `TuiHostLeaveModal`, **278** `TuiHostModalDepth`, **279** `TuiHostRegisterView`, **280** `TuiHostUnregisterView`, **281** `TuiHostPushChildView`, **282** `TuiHostQueryFocusedViewId`, **283** `TuiHostAttachViewToActiveModal`, **284** `TuiHostSetViewRect`, **285** `TuiHostSetViewParent`, **286** `TuiHostRegisterOnViewPaint`, **287** `TuiApplicationShowModal`, **288** `TuiApplicationCloseModal`.
 
-`Application.Close` clears registered host handlers (`OnKeyPressed`, `OnResize`, `OnPaint`, `OnIdle`, `OnExit`, `OnMouse`, `OnPaste`, `OnFocusGained`, `OnFocusLost`, `OnActivate`, `OnDeactivate`, `OnCommand`), resets the host pump state, clears the view registry (including the focus chain), clears command bindings, clears the modal stack, and closes the session as today.
+`Application.Close` clears registered host handlers (`OnKeyPressed`, `OnResize`, `OnPaint`, `OnIdle`, `OnExit`, `OnMouse`, `OnPaste`, `OnFocusGained`, `OnFocusLost`, `OnActivate`, `OnDeactivate`, `OnCommand`), clears local view paint handlers, resets the host pump state, clears the view registry (including the focus chain), clears command bindings, clears the modal stack, and closes the session as today.
 
 ### Modal host state
 
-`Application.HostEnterModal(App, ModalId)` pushes an application-defined integer modal id onto the host stack. `Application.HostLeaveModal(App)` pops the active modal frame and is a no-op when the stack is empty. `Application.HostModalDepth(App)` returns the current stack depth.
+`Application.ShowModal(App, ModalId, RootViewId)` is the Phase 7 high-level modal surface. It pushes an application-defined modal id together with a root host view, raises that root, and scopes focus, mouse, and command routing to the root subtree. `Application.CloseModal(App)` pops the active modal frame and is a no-op when the stack is empty.
 
-`Application.HostAttachViewToActiveModal(App, ViewId)` adds a previously registered host view handle to the topmost modal frame. When the active modal has one or more attached views, Tab / Shift+Tab traversal is limited to those views, mouse events outside their rectangles are suppressed, and key / command dispatch is blocked while focus is on a non-modal view. `OnPaint`, resize, paste, and terminal focus events remain application-global in the current phase.
+`Application.HostEnterModal(App, ModalId)` / `Application.HostLeaveModal(App)` remain the low-level modal-stack primitives, and `Application.HostModalDepth(App)` returns the current stack depth. `Application.HostAttachViewToActiveModal(App, ViewId)` can extend the active modal scope with extra host-managed views beyond the modal root subtree. When the active modal has one or more scoped views, Tab / Shift+Tab traversal is limited to those views, mouse events outside their rectangles are suppressed, and key / command dispatch is blocked while focus is on a non-modal view.
 
 ### Host view handles
 
-`Application.HostRegisterView(App, X, Y, Width, Height)` returns an opaque integer view handle owned by the host. The current FPAS surface treats that handle as an integer token; pass it back unchanged to `Application.HostUnregisterView(App, ViewId)`, `Application.HostPushChildView(App, ViewId)`, and `Application.HostSetViewRect(App, ViewId, X, Y, Width, Height)`.
+`Application.HostRegisterView(App, X, Y, Width, Height)` returns an opaque integer view handle owned by the host. The current FPAS surface treats that handle as an integer token; pass it back unchanged to `Application.HostUnregisterView(App, ViewId)`, `Application.HostPushChildView(App, ViewId)`, `Application.HostSetViewRect(App, ViewId, X, Y, Width, Height)`, `Application.HostSetViewParent(App, ViewId, ParentViewId)`, and `Application.HostRegisterOnViewPaint(App, ViewId, OnViewPaint)`.
 
-`Application.HostPushChildView(App, ViewId)` appends the handle to the focus chain used by Tab / Shift+Tab traversal. `Application.HostQueryFocusedViewId(App)` returns the currently focused handle or `-1` when no host-managed view is focused. `Application.HostSetViewRect(App, ViewId, X, Y, Width, Height)` updates the registered bounding rectangle in place; unknown handles are ignored.
+`Application.HostPushChildView(App, ViewId)` appends the handle to the focus chain used by Tab / Shift+Tab traversal. `Application.HostQueryFocusedViewId(App)` returns the currently focused handle or `-1` when no host-managed view is focused.
 
-This view surface is intentionally narrow: it exists to seed focus order and future modal/view routing. Paint, command dispatch, and event handlers remain application-global in the current phase.
+Root views use absolute terminal coordinates. `Application.HostSetViewParent(App, ViewId, ParentViewId)` reparents a view under another view; pass `-1` as `ParentViewId` to detach it back to the root list. Reparenting preserves the current absolute terminal rectangle. After a view has a parent, `Application.HostSetViewRect(App, ViewId, X, Y, Width, Height)` interprets `X` and `Y` relative to that parent. Sibling order defines z-order, and `Application.ShowModal` scopes to a root view subtree.
+
+`Application.HostRegisterOnViewPaint(App, ViewId, OnViewPaint)` registers a local paint handler for one view. During hosted redraw, the host first runs global `OnPaint` when present and then runs view-local paint handlers in tree paint order for views intersecting the current damage. The `Bounds` argument is the view's absolute terminal rectangle.
 
 ---
 
@@ -115,15 +125,15 @@ Dispatch-mode names use the `**On` prefix** so they do not collide with legacy n
 | Step                | Meaning                                                                                                                                                               |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Application.Open`  | Same session semantics as today: acquire terminal state (raw mode, alternate screen when applicable).                                                                 |
-| `Application.Run`   | Start the **hosted** main loop for the given `Application` handle. Register handlers first with `Application.Configure(App, Handlers)` or the explicit `Application.HostRegisterOn*` helpers; `OnPaint` is required. The loop auto-requests the first redraw and blocks until the application requests quit. |
+| `Application.Run`   | Start the **hosted** main loop for the given `Application` handle. Register handlers first with `Application.Configure(App, Handlers)`, the explicit `Application.HostRegisterOn*` helpers, or per-view `Application.HostRegisterOnViewPaint`; at least one global `OnPaint` or local view paint handler is required. The loop auto-requests the first redraw and blocks until the application requests quit. |
 | `Application.Close` | Release the session. After `**Application.Run`** completes successfully, the host **must** have restored the session as if `**Close`** ran (see **Lifecycle** below). |
 
-**Current Pascal surface:** `**Application.Configure(App, Handlers)`** lowers to a dedicated intrinsic and writes the bundled hosted handlers (`**OnPaint`** required; optional handlers use `**Some(...)`** / `**None`**). `**Application.Run(App)`** then uses whichever handlers were registered last, whether through `**Configure`** or the explicit `**Application.HostRegisterOn*`** helpers. `**TuiHostRunLoop**` (**262**) remains available as the low-level bounded stepping helper for tests and explicit host experimentation.
+**Current Pascal surface:** `**Application.Configure(App, Handlers)`** lowers to a dedicated intrinsic and writes the bundled hosted handlers (`**OnPaint`** required in bundle form; optional handlers use `**Some(...)`** / `**None`**). `**Application.Run(App)`** then uses whichever handlers were registered last, whether through `**Configure`**, the explicit `**Application.HostRegisterOn*`** helpers, or the per-view `**Application.HostRegisterOnViewPaint`** registrations. `**TuiHostRunLoop**` (**262**) remains available as the low-level bounded stepping helper for tests and explicit host experimentation.
 
 ### Lifecycle (normative)
 
 1. User calls `**Application.Open`** → receives `**App`**.
-2. User registers handlers with `**Application.Configure(App, Handlers)`** or `**Application.HostRegisterOn*`** (`**OnPaint`** required, others optional).
+2. User registers handlers with `**Application.Configure(App, Handlers)`**, `**Application.HostRegisterOn*`**, and optionally `**Application.HostRegisterOnViewPaint`** for individual views. A hosted run requires at least one global `**OnPaint`** handler or at least one local view paint handler.
 3. User calls `**Application.Run(App)`**.
 4. While running, the host dispatches `**On*`** handlers on the **main VM thread** only (see `[parallel-vm.md](../../rust/parallel-vm.md)`).
 5. When the application requests quit, the host records `**ExitReason.UserQuit`**. If the active hosted session is stopped by low-level host control during `**Run`** (for example `**Application.Close(App)`** is invoked while the run is still active), the host records `**ExitReason.HostStop`**. If both are requested in the same turn, the host records `**ExitReason.HostAndUserStop`**. If the VM enters global shutdown while the hosted run is active (for example after a concurrent task failure), the host records `**ExitReason.HostShutdown`**. In every case it invokes `**OnExit(App, Reason)`** once if that handler is provided, then **performs `Application.Close(App)`** (or equivalent) so the program must **not** call `**Close`** again for the same successful `**Run`**.
@@ -138,10 +148,11 @@ Pascal can register hosted handlers in two equivalent ways before `**Application
 
 1. **Bundle form** with `**Application.Configure(App, Handlers)`** using the shipped record type `**ApplicationHandlers`**.
 2. **Explicit form** with the `**Application.HostRegisterOn*`** routines.
+3. **Per-view paint form** with `**Application.HostRegisterOnViewPaint(App, ViewId, OnViewPaint)`**.
 
-The most recent configuration wins per slot. `**Application.Configure`** replaces the current hosted handler set with the record fields from `**ApplicationHandlers`**.
+The most recent configuration wins per slot. `**Application.Configure`** replaces the current hosted handler set with the record fields from `**ApplicationHandlers`**. View-local paint handlers are tracked separately per host view.
 
-**Required** for a minimal app: at least `**OnPaint`** (the runtime rejects `**Run`** otherwise). Other slots are optional.
+**Required** for a minimal hosted run: at least one global `**OnPaint`** or at least one local view paint handler. In bundle form, `**ApplicationHandlers.OnPaint`** remains required. Other slots are optional.
 
 ### `ApplicationHandlers`
 
@@ -184,6 +195,17 @@ end;
 
 Reuse existing types from `**Std.Tui`** and `**Std.Console`** where possible: `**Application**`, `**Size**`, `**Std.Console.KeyEvent**`.
 
+### `Rect` (target)
+
+Record describing the absolute terminal bounds for a host-managed view during local paint dispatch.
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `x` | `integer` | Left edge in terminal cells. |
+| `y` | `integer` | Top edge in terminal cells. |
+| `width` | `integer` | Width in terminal cells. |
+| `height` | `integer` | Height in terminal cells. |
+
 ### `ExitReason` (target)
 
 Enum describing why the hosted loop stopped (`**Std.Tui.ExitReason`**). **Registry:** the type and variants `**UserQuit**`, `**HostStop`**, `**HostAndUserStop**`, `**HostShutdown**` are registered in [`loaded/tui.rs`](../../../crates/fpas-sema/src/std_registry/loaded/tui.rs) and known to the compiler enum tables. **VM:** [`Application.Run`](../../../crates/fpas-vm/src/vm/execute/io/tui_run.rs) records `**last_exit_reason**`, invokes the registered `**OnExit**`, and then performs close semantics. The current hosted loop reports `**UserQuit`** when `**Application.HostRequestQuit(App)`** ends the run, `**HostStop`** when low-level code stops the active hosted session during `**Run`**, `**HostAndUserStop`** when both stop signals are present in the same turn, and `**HostShutdown`** when VM global shutdown is requested while the hosted run is active.
@@ -213,6 +235,8 @@ function OnKeyPressed(App: Application; Key: Std.Console.KeyEvent): boolean;
 
 procedure OnResize(App: Application; NewSize: Size);
 
+procedure OnViewPaint(App: Application; ViewId: integer; Bounds: Rect);
+
 procedure OnPaint(App: Application);
 
 procedure OnIdle(App: Application);
@@ -236,8 +260,9 @@ procedure OnExit(App: Application; Reason: ExitReason);
 
 ## Redraw and paint
 
-- **Model:** **invalidation**, not “call `**OnPaint`** every host tick”. The host sets an internal **redraw pending** flag when `**Application.RequestRedraw`** is called, when `**OnResize`** fires, when `**OnStartup`** completes (implementation may auto-request redraw once), and when the backend signals damage the host maps to a redraw. Multiple requests **coalesce** to **one** `**OnPaint`** per logical flush.
-- `**OnPaint`:** Performs a **full logical frame** draw (entire buffer for the app). The Rust host now batches each hosted paint into one deferred back-buffered present and may restrict terminal diff/flush work to tracked dirty regions plus the console mutations recorded during that frame. The FP contract remains a full logical paint.
+- **Model:** **invalidation**, not “call `**OnPaint`** every host tick”. The host sets an internal **redraw pending** flag when `**Application.RequestRedraw`** is called, when `**OnResize`** fires, when `**OnStartup`** completes (implementation may auto-request redraw once), and when the backend signals damage the host maps to a redraw. Multiple requests **coalesce** to **one** hosted flush.
+- `**OnPaint`:** Performs a **full logical frame** draw (entire buffer for the app). The Rust host now batches each hosted paint into one deferred back-buffered present and may restrict terminal diff/flush work to tracked dirty regions plus the console mutations recorded during that frame.
+- `**OnViewPaint`:** Performs view-local paint for one host-managed view. The host runs view-local paint handlers after the global `**OnPaint`** (when present), in tree paint order, and only for views intersecting the current damage. `**Bounds`** is the view's absolute terminal rectangle after parent-relative layout has been resolved.
 - **Relation to `RedrawPending`:** In dispatch mode, user code **typically does not poll** `**RedrawPending`**; the host invokes `**OnPaint`** when a frame is due. If both APIs coexist during transition, the spec for `**RedrawPending**` in hosted mode is: host consumes the pending flag when entering `**OnPaint**` (aligned with today’s “consume once” semantics).
 
 ---
@@ -313,4 +338,4 @@ Handlers that depend on terminal or OS capability (**key release**, **paste**, *
 
 ## Single entry point rule
 
-There must be **at most one** active `**Application.Run`** (or equivalent hosted loop) per process for a given session handle; nested `**Run`** is **forbidden** until a later spec defines modal nesting.
+There must be **at most one** active `**Application.Run`** (or equivalent hosted loop) per process for a given session handle. Modal nesting is expressed through `**Application.ShowModal`** / `**Application.CloseModal`**; nested `**Run`** remains **forbidden**.

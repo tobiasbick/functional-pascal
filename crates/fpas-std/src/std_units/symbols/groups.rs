@@ -90,6 +90,7 @@ pub(in super::super) const STD_CONSOLE_SYMBOLS: &[&str] = &[
 pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_APPLICATION,
     std_symbols::STD_TUI_APPLICATION_HANDLERS,
+    std_symbols::STD_TUI_RECT,
     std_symbols::STD_TUI_SIZE,
     std_symbols::STD_TUI_EVENT,
     std_symbols::STD_TUI_EVENT_KIND,
@@ -98,6 +99,8 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_APPLICATION_CLOSE,
     std_symbols::STD_TUI_APPLICATION_CONFIGURE,
     std_symbols::STD_TUI_APPLICATION_RUN,
+    std_symbols::STD_TUI_APPLICATION_SHOW_MODAL,
+    std_symbols::STD_TUI_APPLICATION_CLOSE_MODAL,
     std_symbols::STD_TUI_APPLICATION_SIZE,
     std_symbols::STD_TUI_APPLICATION_READ_EVENT,
     std_symbols::STD_TUI_APPLICATION_READ_EVENT_TIMEOUT,
@@ -132,6 +135,8 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_APPLICATION_HOST_QUERY_FOCUSED_VIEW_ID,
     std_symbols::STD_TUI_APPLICATION_HOST_ATTACH_VIEW_TO_ACTIVE_MODAL,
     std_symbols::STD_TUI_APPLICATION_HOST_SET_VIEW_RECT,
+    std_symbols::STD_TUI_APPLICATION_HOST_SET_VIEW_PARENT,
+    std_symbols::STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT,
 ];
 
 pub(in super::super) const STD_STR_SYMBOLS: &[&str] = &[

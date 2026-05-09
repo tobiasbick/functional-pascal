@@ -137,6 +137,7 @@ pub const STD_CONSOLE_FONT_8X8: &str = std_console!("Font8x8");
 pub const STD_TUI_APPLICATION: &str = std_tui!("Application");
 /// Hosted-dispatch handler bundle for `Std.Tui.Application.Configure`; see `docs/pascal/std/tui-app.md`.
 pub const STD_TUI_APPLICATION_HANDLERS: &str = std_tui!("ApplicationHandlers");
+pub const STD_TUI_RECT: &str = std_tui!("Rect");
 pub const STD_TUI_SIZE: &str = std_tui!("Size");
 pub const STD_TUI_EVENT: &str = std_tui!("TuiEvent");
 pub const STD_TUI_EVENT_KIND: &str = std_tui!("EventKind");
@@ -147,6 +148,10 @@ pub const STD_TUI_APPLICATION_CLOSE: &str = std_tui!("Application.Close");
 pub const STD_TUI_APPLICATION_CONFIGURE: &str = std_tui!("Application.Configure");
 /// Dispatch-mode hosted application loop; see `docs/pascal/std/tui-app.md`.
 pub const STD_TUI_APPLICATION_RUN: &str = std_tui!("Application.Run");
+/// High-level modal helper rooted at a host-managed view subtree.
+pub const STD_TUI_APPLICATION_SHOW_MODAL: &str = std_tui!("Application.ShowModal");
+/// Close the active modal dialog shown via `Application.ShowModal`.
+pub const STD_TUI_APPLICATION_CLOSE_MODAL: &str = std_tui!("Application.CloseModal");
 pub const STD_TUI_APPLICATION_SIZE: &str = std_tui!("Application.Size");
 pub const STD_TUI_APPLICATION_READ_EVENT: &str = std_tui!("Application.ReadEvent");
 pub const STD_TUI_APPLICATION_READ_EVENT_TIMEOUT: &str = std_tui!("Application.ReadEventTimeout");
@@ -218,6 +223,12 @@ pub const STD_TUI_APPLICATION_HOST_ATTACH_VIEW_TO_ACTIVE_MODAL: &str =
     std_tui!("Application.HostAttachViewToActiveModal");
 /// Update the bounding rectangle for a host-managed view handle.
 pub const STD_TUI_APPLICATION_HOST_SET_VIEW_RECT: &str = std_tui!("Application.HostSetViewRect");
+/// Re-parent a host-managed view. Pass `-1` as `ParentViewId` to detach it back to the root list.
+pub const STD_TUI_APPLICATION_HOST_SET_VIEW_PARENT: &str =
+    std_tui!("Application.HostSetViewParent");
+/// Register a local paint handler for a host-managed view.
+pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT: &str =
+    std_tui!("Application.HostRegisterOnViewPaint");
 
 pub const STD_STR_LENGTH: &str = std_str!("Length");
 pub const STD_STR_TO_UPPER: &str = std_str!("ToUpper");

@@ -11,6 +11,7 @@ pub struct ModalId(pub i64);
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct ModalFrame {
     id: ModalId,
+    root_view: Option<ViewId>,
     scoped_views: Vec<ViewId>,
 }
 
@@ -25,6 +26,19 @@ impl ModalStack {
     pub fn enter(&mut self, modal_id: ModalId) {
         self.frames.push(ModalFrame {
             id: modal_id,
+            root_view: None,
+            scoped_views: Vec::new(),
+        });
+    }
+
+    /// Push `modal_id` as the active modal and bind it to `root_view`.
+    ///
+    /// The host uses the root view's full subtree as the modal scope for focus, mouse routing,
+    /// and local paint ordering.
+    pub fn show(&mut self, modal_id: ModalId, root_view: ViewId) {
+        self.frames.push(ModalFrame {
+            id: modal_id,
+            root_view: Some(root_view),
             scoped_views: Vec::new(),
         });
     }
@@ -40,10 +54,23 @@ impl ModalStack {
         self.pop_frame().map(|frame| (frame.id, frame.scoped_views))
     }
 
+    /// Pop the active modal and return its id, optional root view, and manually attached views.
+    #[must_use]
+    pub fn leave_with_scope_info(&mut self) -> Option<(ModalId, Option<ViewId>, Vec<ViewId>)> {
+        self.pop_frame()
+            .map(|frame| (frame.id, frame.root_view, frame.scoped_views))
+    }
+
     /// Active modal id, if a modal is active.
     #[must_use]
     pub fn active_id(&self) -> Option<ModalId> {
         self.frames.last().map(|frame| frame.id)
+    }
+
+    /// Root view for the active modal frame, if one was supplied through `show`.
+    #[must_use]
+    pub fn active_root_view(&self) -> Option<ViewId> {
+        self.frames.last().and_then(|frame| frame.root_view)
     }
 
     /// Attach `view_id` to the active modal scope.
@@ -127,6 +154,32 @@ mod tests {
             Some((ModalId(10), vec![ViewId::from_raw(1), ViewId::from_raw(2)]))
         );
         assert!(modals.is_empty());
+    }
+
+    #[test]
+    fn show_tracks_root_view_for_active_modal() {
+        let mut modals = ModalStack::default();
+
+        modals.show(ModalId(10), ViewId::from_raw(7));
+
+        assert_eq!(modals.active_id(), Some(ModalId(10)));
+        assert_eq!(modals.active_root_view(), Some(ViewId::from_raw(7)));
+    }
+
+    #[test]
+    fn leave_with_scope_info_returns_root_and_manual_scope() {
+        let mut modals = ModalStack::default();
+        modals.show(ModalId(10), ViewId::from_raw(7));
+        assert!(modals.attach_view_to_active(ViewId::from_raw(1)));
+
+        assert_eq!(
+            modals.leave_with_scope_info(),
+            Some((
+                ModalId(10),
+                Some(ViewId::from_raw(7)),
+                vec![ViewId::from_raw(1)]
+            ))
+        );
     }
 
     #[test]

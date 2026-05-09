@@ -28,34 +28,29 @@ Implementation plan for evolving Functional Pascal's terminal UI from poll-style
 
 ## Phase 7 — Toward Turbo Vision–like structure (incremental)
 
-**Status:** Steps 1–7 are done for the current hosted-dispatch scope. In short: hosted dispatch works, view handles/focus chain/commands/modals are in place, modal-scoped routing exists, dirty-rectangle production now covers the current host-managed events, and hosted paint runs through a deferred back-buffered present.
+**Status:** Complete for the current hosted-dispatch scope. Hosted dispatch works, view handles/focus chain/commands/modals are in place, modal-scoped routing exists, dirty-rectangle production covers the current host-managed events, hosted paint runs through a deferred back-buffered present, and the missing structural layer from this phase is now implemented.
 
 ### Done so far
 
 - Hosted TUI loop, `On*` handler registration, `Application.Configure`, `Application.Run`, and `ExitReason` are in place.
-- Host-managed views now cover registration, unregister, focus traversal, modal attachment, and `Application.HostSetViewRect`.
+- Host-managed views now cover registration, unregister, focus traversal, modal attachment, `Application.HostSetViewRect`, and `Application.HostSetViewParent`.
+- The host now maintains a real view tree: child views use parent-relative layout, sibling order defines z-order, and modal scope can target a full rooted subtree instead of only an explicit flat attachment list.
+- Local paint now exists alongside application-global `OnPaint`: `Application.HostRegisterOnViewPaint` installs per-view handlers that receive `Std.Tui.Rect` and run in tree paint order for damaged views.
+- High-level modal structure now exists through `Application.ShowModal` / `Application.CloseModal`, which anchor modal scope to a root view and move focus into that scope automatically.
 - Damage tracking exists end to end and now uses explicit dirty rectangles or redraw hints for focus transitions, view lifecycle changes, view-rect updates, resize, modal attach/leave, mouse, paste, and terminal focus events.
 - Hosted `OnPaint` now runs through a deferred single-present path: CRT writes stay buffered until the handler returns, and the terminal diff/flush step can restrict itself to the tracked dirty region plus the actual console mutations recorded during that frame.
 
-### What is still missing
+### Remaining follow-on work
 
-- `OnPaint` is still application-global. There is still no widget-local or modal-local paint contract.
-- Modal scoping is still explicit and narrow: FPAS must attach views manually, and command bindings are still global rather than per-view or per-modal.
-- There is still no widget tree, layout system, z-order policy beyond registration order, or high-level dialog API such as `ShowModal`.
-
-## Next open implementation item
-
-The next unfinished Phase 7 work item is **structure above the hosted core**:
-
-- narrow the paint contract from application-global `OnPaint` toward view-local or modal-local paint
-- move beyond explicit view attachment toward richer modal/view ownership and routing rules
-- add the next structural layer: widget tree, layout, z-order policy, and higher-level dialog primitives
+- There is still no higher-level widget library, automatic layout manager, dialog builder, or packaged Turbo Vision-style control set.
+- Command bindings remain global; future work may add per-view or per-modal command maps on top of the current rooted modal routing.
+- `ApplicationHandlers` still models the application-global handler bundle; view-local paint stays on the explicit host-view surface for now.
 
 ---
 
 ## Phase 8 — Quality, tooling, and maintenance
 
-**Status:** Not started (runs alongside Phases 7+).
+**Status:** Next active phase.
 
 1. **Integration test**: headless or scripted terminal; document manual checklist for real terminals.
 2. **Fuzz / property-test** event ordering (resize bursts, rapid keys).

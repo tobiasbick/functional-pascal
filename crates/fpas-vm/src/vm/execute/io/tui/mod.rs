@@ -44,6 +44,7 @@ impl Worker {
                     tui.on_command = None;
                     tui.on_resize = None;
                     tui.on_paint = None;
+                    tui.view_paints.clear();
                     tui.commands.clear();
                     tui.modals.clear();
                 }
@@ -177,6 +178,29 @@ impl Worker {
             Intrinsic::TuiApplicationRun => {
                 self.tui_application_run(line)?;
                 self.push(Value::Unit)?;
+            }
+            Intrinsic::TuiApplicationShowModal => {
+                let root_view_id = self.pop_tui_view_id(line)?;
+                let root_view_id = self.require_registered_tui_view(root_view_id, line)?;
+                let modal_id = self.pop_int(line)?;
+                self.pop_tui_application(line)?;
+                self.with_tui(|tui| {
+                    let previous_scope = Self::modal_scope_ids(tui);
+                    tui.views.raise(root_view_id);
+                    tui.modals.show(fpas_std::ModalId(modal_id), root_view_id);
+                    let next_scope = Self::modal_scope_ids(tui);
+                    Self::request_scope_redraws(tui, &previous_scope, &next_scope, line);
+                    let _ = tui.views.focus_first_in_scope(&next_scope);
+                });
+            }
+            Intrinsic::TuiApplicationCloseModal => {
+                self.pop_tui_application(line)?;
+                self.with_tui(|tui| {
+                    let previous_scope = Self::modal_scope_ids(tui);
+                    let _ = tui.modals.leave_with_scope_info();
+                    let next_scope = Self::modal_scope_ids(tui);
+                    Self::request_scope_redraws(tui, &previous_scope, &next_scope, line);
+                });
             }
             Intrinsic::TuiApplicationSize => {
                 self.pop_tui_application(line)?;
@@ -456,26 +480,10 @@ impl Worker {
             Intrinsic::TuiHostLeaveModal => {
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| {
-                    let popped_views = tui
-                        .modals
-                        .leave_with_scoped_views()
-                        .map(|(_, scoped_views)| scoped_views)
-                        .unwrap_or_default();
-                    for view_id in popped_views {
-                        if let Some(rect) = tui.views.rect(view_id) {
-                            let _ = tui.session.request_redraw_rect(rect, line);
-                        }
-                    }
-                    let revealed_views = tui
-                        .modals
-                        .active_scoped_views()
-                        .map(|views| views.to_vec())
-                        .unwrap_or_default();
-                    for view_id in revealed_views {
-                        if let Some(rect) = tui.views.rect(view_id) {
-                            let _ = tui.session.request_redraw_rect(rect, line);
-                        }
-                    }
+                    let previous_scope = Self::modal_scope_ids(tui);
+                    let _ = tui.modals.leave_with_scope_info();
+                    let next_scope = Self::modal_scope_ids(tui);
+                    Self::request_scope_redraws(tui, &previous_scope, &next_scope, line);
                 });
             }
             Intrinsic::TuiHostModalDepth => {
@@ -566,6 +574,48 @@ impl Worker {
                     let _ = tui.session.request_redraw_rect(next_rect, line);
                 });
             }
+            Intrinsic::TuiHostSetViewParent => {
+                let parent_raw = self.pop_int(line)?;
+                let view_id = self.pop_tui_view_id(line)?;
+                self.pop_tui_application(line)?;
+                self.with_tui(|tui| {
+                    let parent_id = if parent_raw < 0 {
+                        None
+                    } else {
+                        Some(ViewId::from_raw(parent_raw as u32))
+                    };
+                    let previous_rect = tui.views.rect(view_id);
+                    if let Some(parent_id) = parent_id {
+                        if tui.views.rect(parent_id).is_none() {
+                            return;
+                        }
+                    }
+                    if tui.views.set_parent(view_id, parent_id) {
+                        if let Some(rect) = previous_rect {
+                            let _ = tui.session.request_redraw_rect(rect, line);
+                        }
+                        if let Some(rect) = tui.views.rect(view_id) {
+                            let _ = tui.session.request_redraw_rect(rect, line);
+                        }
+                    }
+                });
+            }
+            Intrinsic::TuiHostRegisterOnViewPaint => {
+                let func = self.pop(line)?;
+                let view_id = self.pop_tui_view_id(line)?;
+                self.pop_tui_application(line)?;
+                self.require_registered_tui_view(view_id, line)?;
+                self.validate_host_handler_function(
+                    &func,
+                    3,
+                    "OnViewPaint",
+                    "Pass a `procedure (Application, integer, Std.Tui.Rect)` handler for a registered host view.",
+                    line,
+                )?;
+                self.with_tui(|tui| {
+                    tui.view_paints.insert(view_id, func);
+                });
+            }
             Intrinsic::TuiHostInvokeOnKeyPressed => {
                 let key_ev = self.pop_console_key_event(line)?;
                 self.pop_tui_application(line)?;
@@ -603,5 +653,54 @@ impl Worker {
             )
         })?;
         Ok(ViewId::from_raw(raw))
+    }
+
+    fn require_registered_tui_view(
+        &self,
+        view_id: ViewId,
+        line: SourceLocation,
+    ) -> Result<ViewId, VmError> {
+        let exists = self.with_tui(|tui| tui.views.rect(view_id).is_some());
+        if exists {
+            Ok(view_id)
+        } else {
+            Err(runtime_error(
+                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                format!("Unknown host view handle {}", view_id.raw()),
+                "Pass a view id returned by `Application.HostRegisterView(App, X, Y, Width, Height)`.",
+                line,
+            ))
+        }
+    }
+
+    fn modal_scope_ids(tui: &crate::vm::TuiState) -> Vec<ViewId> {
+        let mut scope = tui
+            .modals
+            .active_root_view()
+            .map(|root| tui.views.subtree_ids(root))
+            .unwrap_or_default();
+
+        if let Some(extra_views) = tui.modals.active_scoped_views() {
+            for view_id in extra_views {
+                if !scope.contains(view_id) {
+                    scope.push(*view_id);
+                }
+            }
+        }
+
+        scope
+    }
+
+    fn request_scope_redraws(
+        tui: &mut crate::vm::TuiState,
+        previous_scope: &[ViewId],
+        next_scope: &[ViewId],
+        line: SourceLocation,
+    ) {
+        for view_id in previous_scope.iter().chain(next_scope.iter()) {
+            if let Some(rect) = tui.views.rect(*view_id) {
+                let _ = tui.session.request_redraw_rect(rect, line);
+            }
+        }
     }
 }

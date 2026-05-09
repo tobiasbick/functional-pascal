@@ -4,9 +4,10 @@
 
 use crate::vm::Worker;
 use fpas_bytecode::Value;
-use fpas_std::{ConsoleKeyEvent, TuiEvent};
+use fpas_std::{ConsoleKeyEvent, TuiEvent, ViewRect};
 
 const TUI_APPLICATION_TYPE: &str = "Std.Tui.Application";
+const TUI_RECT_TYPE: &str = "Std.Tui.Rect";
 const TUI_SIZE_TYPE: &str = "Std.Tui.Size";
 const TUI_EVENT_TYPE: &str = "Std.Tui.TuiEvent";
 
@@ -26,6 +27,19 @@ impl Worker {
             fields: vec![
                 ("width".into(), Value::Integer(width)),
                 ("height".into(), Value::Integer(height)),
+            ],
+        }
+    }
+
+    /// Constructs a `Std.Tui.Rect` record with `x`, `y`, `width`, and `height` fields.
+    pub(in crate::vm::execute::io) fn tui_rect_record(rect: ViewRect) -> Value {
+        Value::Record {
+            type_name: TUI_RECT_TYPE.into(),
+            fields: vec![
+                ("x".into(), Value::Integer(rect.x)),
+                ("y".into(), Value::Integer(rect.y)),
+                ("width".into(), Value::Integer(rect.width)),
+                ("height".into(), Value::Integer(rect.height)),
             ],
         }
     }

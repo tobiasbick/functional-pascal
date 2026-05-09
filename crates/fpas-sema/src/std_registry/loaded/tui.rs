@@ -106,6 +106,16 @@ fn default_zero_expr() -> Expr {
 
 pub(super) fn register_std_tui(checker: &mut Checker) {
     let application_ty = register_record_type(checker, s::STD_TUI_APPLICATION, Vec::new());
+    let rect_ty = register_record_type(
+        checker,
+        s::STD_TUI_RECT,
+        vec![
+            ("x".into(), Ty::Integer),
+            ("y".into(), Ty::Integer),
+            ("width".into(), Ty::Integer),
+            ("height".into(), Ty::Integer),
+        ],
+    );
     let size_ty = register_record_type(
         checker,
         s::STD_TUI_SIZE,
@@ -165,6 +175,15 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         params: vec![
             p("App", application_ty.clone(), false),
             p("CommandId", Ty::Integer, false),
+        ],
+        variadic: false,
+    });
+    let on_view_paint_ty = Ty::Procedure(ProcedureTy {
+        type_params: Vec::new(),
+        params: vec![
+            p("App", application_ty.clone(), false),
+            p("ViewId", Ty::Integer, false),
+            p("Rect", rect_ty.clone(), false),
         ],
         variadic: false,
     });
@@ -281,6 +300,20 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
     define_proc(
         checker,
         s::STD_TUI_APPLICATION_RUN,
+        vec![p("App", application_ty.clone(), false)],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_SHOW_MODAL,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("ModalId", Ty::Integer, false),
+            p("RootViewId", Ty::Integer, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_CLOSE_MODAL,
         vec![p("App", application_ty.clone(), false)],
     );
     define_func(
@@ -526,6 +559,24 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             p("Y", Ty::Integer, false),
             p("Width", Ty::Integer, false),
             p("Height", Ty::Integer, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_SET_VIEW_PARENT,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("ViewId", Ty::Integer, false),
+            p("ParentViewId", Ty::Integer, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("ViewId", Ty::Integer, false),
+            p("OnViewPaint", on_view_paint_ty, false),
         ],
     );
 

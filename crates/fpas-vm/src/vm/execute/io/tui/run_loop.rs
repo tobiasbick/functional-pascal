@@ -231,10 +231,10 @@ impl Worker {
         &mut self,
         line: SourceLocation,
     ) -> Result<i64, VmError> {
-        let (damage, on_paint) = {
+        let (damage, on_paint, has_view_paints) = {
             let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
             let damage = tui.session.peek_redraw_damage(line)?;
-            (damage, tui.on_paint.clone())
+            (damage, tui.on_paint.clone(), !tui.view_paints.is_empty())
         };
 
         let Some(expected_damage) = damage else {
@@ -243,7 +243,7 @@ impl Worker {
 
         let app_rec = Self::tui_application_record();
 
-        if let Some(handler) = on_paint {
+        if on_paint.is_some() || has_view_paints {
             {
                 let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
                 let consumed_damage = tui.session.take_redraw_damage(line)?;
@@ -253,12 +253,18 @@ impl Worker {
                         .begin_hosted_paint(console, expected_damage, line)
                 })?;
             }
-            let handler_result =
-                self.call_function_sync_allowing_shutdown(&handler, &[app_rec], line);
+            let paint_result = (|| -> Result<(), VmError> {
+                if let Some(handler) = on_paint {
+                    let _ =
+                        self.call_function_sync_allowing_shutdown(&handler, &[app_rec], line)?;
+                }
+                let _ = self.dispatch_view_paint_handlers(expected_damage, line)?;
+                Ok(())
+            })();
             {
                 let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
                 self.with_console(|console| {
-                    if handler_result.is_ok() {
+                    if paint_result.is_ok() {
                         tui.session.finish_hosted_paint(console, line)
                     } else {
                         tui.session.abort_hosted_paint(console);
@@ -266,7 +272,7 @@ impl Worker {
                     }
                 })?;
             }
-            let _ = handler_result?;
+            paint_result?;
             Ok(5)
         } else {
             let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
@@ -326,10 +332,8 @@ impl Worker {
 
     fn active_modal_scope(&self) -> Option<Vec<ViewId>> {
         let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-        tui.modals
-            .active_scoped_views()
-            .filter(|views| !views.is_empty())
-            .map(|views| views.to_vec())
+        let scope = Self::modal_scope_ids(&tui);
+        (!scope.is_empty()).then_some(scope)
     }
 
     fn modal_blocks_keyboard_dispatch(&self, modal_scope: Option<&[ViewId]>) -> bool {
@@ -430,25 +434,68 @@ impl Worker {
         event: &ConsoleEvent,
     ) -> DamageRegion {
         let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-        let mut matched_rect = None;
-
-        for view_id in tui.views.ids() {
-            if modal_scope.is_some_and(|scope| !scope.contains(&view_id)) {
-                continue;
-            }
-
-            let Some(rect) = tui.views.rect(view_id) else {
-                continue;
-            };
-
-            if Self::rect_contains_point(rect, event.mouse_x, event.mouse_y) {
-                matched_rect = Some(rect);
-            }
-        }
-
-        matched_rect
+        tui.views
+            .topmost_view_at(event.mouse_x, event.mouse_y, modal_scope)
+            .and_then(|view_id| tui.views.rect(view_id))
             .map(DamageRegion::Rect)
             .unwrap_or(DamageRegion::FullFrame)
+    }
+
+    fn dispatch_view_paint_handlers(
+        &mut self,
+        damage: DamageRegion,
+        line: SourceLocation,
+    ) -> Result<bool, VmError> {
+        let scheduled = {
+            let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+            tui.views
+                .paint_order()
+                .into_iter()
+                .filter_map(|view_id| {
+                    let handler = tui.view_paints.get(&view_id)?.clone();
+                    let rect = tui.views.rect(view_id)?;
+                    Self::damage_intersects_rect(damage, rect).then_some((view_id, rect, handler))
+                })
+                .collect::<Vec<_>>()
+        };
+
+        if scheduled.is_empty() {
+            return Ok(false);
+        }
+
+        let app_rec = Self::tui_application_record();
+        for (view_id, rect, handler) in scheduled {
+            let _ = self.call_function_sync_allowing_shutdown(
+                &handler,
+                &[
+                    app_rec.clone(),
+                    Value::Integer(i64::from(view_id.raw())),
+                    Self::tui_rect_record(rect),
+                ],
+                line,
+            )?;
+        }
+
+        Ok(true)
+    }
+
+    fn damage_intersects_rect(damage: DamageRegion, rect: ViewRect) -> bool {
+        match damage {
+            DamageRegion::FullFrame => true,
+            DamageRegion::Rect(dirty) => Self::rects_intersect(dirty, rect),
+        }
+    }
+
+    fn rects_intersect(left: ViewRect, right: ViewRect) -> bool {
+        let left_right = left.x.saturating_add(left.width);
+        let left_bottom = left.y.saturating_add(left.height);
+        let right_right = right.x.saturating_add(right.width);
+        let right_bottom = right.y.saturating_add(right.height);
+
+        left.x < right_right
+            && right.x < left_right
+            && left.y < right_bottom
+            && right.y < left_bottom
     }
 
     /// Clears the quit flag and returns `true` if it was set.
@@ -546,6 +593,7 @@ impl Worker {
         tui.on_command = None;
         tui.on_resize = None;
         tui.on_paint = None;
+        tui.view_paints.clear();
         tui.on_idle = None;
         tui.idle_interval_ms = 0;
         tui.on_exit = None;

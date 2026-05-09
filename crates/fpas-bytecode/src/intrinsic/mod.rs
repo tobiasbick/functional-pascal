@@ -587,6 +587,31 @@ pub enum Intrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     TuiHostSetViewRect = 284,
+
+    /// Re-parent a host-managed view.
+    /// Stack: `Application`, `ViewId`, `ParentViewId` (`integer`, top; `-1` detaches back to the root list).
+    /// Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostSetViewParent = 285,
+
+    /// Register a view-local paint handler.
+    /// Stack: `Application`, `ViewId`, `OnViewPaint` (function value, top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostRegisterOnViewPaint = 286,
+
+    /// Show a modal dialog rooted at a host-managed view subtree.
+    /// Stack: `Application`, `ModalId`, `RootViewId` (`integer`, top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiApplicationShowModal = 287,
+
+    /// Close the active modal dialog shown through `TuiApplicationShowModal`.
+    /// Stack: `Application`. Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiApplicationCloseModal = 288,
 }
 
 impl From<Intrinsic> for u16 {

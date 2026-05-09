@@ -1,4 +1,4 @@
-use super::ConsoleState;
+use super::{ConsoleState, FrameDamage, WindowRect};
 
 impl ConsoleState {
     /// Returns `true` when no previous frame has been committed yet.
@@ -12,8 +12,33 @@ impl ConsoleState {
         self.prev_cells.get(idx) != Some(&self.cells[idx])
     }
 
+    pub(in super::super) fn full_screen_rect(&self) -> WindowRect {
+        WindowRect::full(self.width, self.height)
+    }
+
+    pub(in super::super) fn mark_full_damage(&mut self) {
+        self.pending_frame_damage = Some(FrameDamage::FullFrame);
+    }
+
+    pub(in super::super) fn mark_damage_rect(&mut self, rect: WindowRect) {
+        self.pending_frame_damage = Some(match self.pending_frame_damage {
+            Some(FrameDamage::FullFrame) => FrameDamage::FullFrame,
+            Some(FrameDamage::Rect(existing)) => FrameDamage::Rect(existing.union(rect)),
+            None => FrameDamage::Rect(rect),
+        });
+    }
+
+    pub(in super::super) fn take_frame_damage(&mut self) -> Option<FrameDamage> {
+        self.pending_frame_damage.take()
+    }
+
+    pub(in super::super) fn clear_frame_damage(&mut self) {
+        self.pending_frame_damage = None;
+    }
+
     /// Snapshot the current cells as the previous frame.
     pub(in super::super) fn commit_frame(&mut self) {
         self.prev_cells.clone_from(&self.cells);
+        self.pending_frame_damage = None;
     }
 }

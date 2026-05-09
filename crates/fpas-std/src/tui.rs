@@ -22,6 +22,8 @@ pub const TUI_EXIT_REASON_VARIANTS: &[&str] =
 pub enum TuiEvent {
     Key(ConsoleKeyEvent),
     Resize {
+        old_width: i64,
+        old_height: i64,
         width: i64,
         height: i64,
     },
@@ -38,6 +40,7 @@ pub enum TuiEvent {
 pub struct TuiSession {
     open: bool,
     damage: DamageTracker,
+    redraw_hint: Option<DamageRegion>,
     owns_raw_mode: bool,
     owns_alt_screen: bool,
 }
@@ -59,8 +62,10 @@ impl TuiSession {
 
         self.open = true;
         self.damage.clear();
+        self.redraw_hint = None;
         self.owns_raw_mode = false;
         self.owns_alt_screen = false;
+        console.abort_tui_paint();
 
         if !console.has_terminal_writer() {
             return Ok(());
@@ -93,6 +98,7 @@ impl TuiSession {
         )?;
 
         let mut first_error = None;
+        console.abort_tui_paint();
 
         if self.owns_alt_screen
             && let Err(error) = console.leave_alt_screen(location)
@@ -109,6 +115,7 @@ impl TuiSession {
 
         self.open = false;
         self.damage.clear();
+        self.redraw_hint = None;
         self.owns_raw_mode = false;
         self.owns_alt_screen = false;
 
@@ -254,7 +261,10 @@ impl TuiSession {
             location,
         )?;
 
-        self.damage.mark_full();
+        match self.redraw_hint.unwrap_or(DamageRegion::FullFrame) {
+            DamageRegion::FullFrame => self.damage.mark_full(),
+            DamageRegion::Rect(rect) => self.damage.mark_rect(rect),
+        }
         Ok(())
     }
 
@@ -270,7 +280,10 @@ impl TuiSession {
         )?;
 
         if !self.damage.has_damage() {
-            self.damage.mark_full();
+            match self.redraw_hint.unwrap_or(DamageRegion::FullFrame) {
+                DamageRegion::FullFrame => self.damage.mark_full(),
+                DamageRegion::Rect(rect) => self.damage.mark_rect(rect),
+            }
         }
         Ok(())
     }
@@ -293,6 +306,99 @@ impl TuiSession {
 
         self.damage.mark_rect(rect);
         Ok(())
+    }
+
+    /// Marks the union of the old and new surface bounds dirty after a terminal resize.
+    ///
+    /// The public FPAS contract still treats resize as an application-global `OnPaint`, but
+    /// the Rust host can track a tighter redraw rectangle while Phase 7 moves away from
+    /// blanket full-frame invalidation.
+    pub fn request_resize_redraw(
+        &mut self,
+        old_width: i64,
+        old_height: i64,
+        new_width: i64,
+        new_height: i64,
+        location: SourceLocation,
+    ) -> Result<(), StdError> {
+        self.ensure_open(
+            "Application.RequestRedraw(App) requires an open Std.Tui application session.",
+            "Open the application before requesting a redraw.",
+            location,
+        )?;
+
+        self.damage.mark_rect(crate::ViewRect {
+            x: 0,
+            y: 0,
+            width: old_width.max(new_width),
+            height: old_height.max(new_height),
+        });
+        Ok(())
+    }
+
+    /// Sets a host-side redraw hint for the next explicit redraw request.
+    ///
+    /// Hosted input dispatch uses this to narrow `Application.RequestRedraw(App)` to a more
+    /// specific dirty region when the host can associate the event with a known view.
+    /// The public FPAS paint contract remains application-global.
+    pub fn set_host_redraw_hint(&mut self, damage: DamageRegion) {
+        self.redraw_hint = Some(damage);
+    }
+
+    /// Clears any previously installed host-side redraw hint.
+    ///
+    /// Hosted dispatch calls this after each input handler so redraw narrowing does not leak
+    /// across unrelated events.
+    pub fn clear_host_redraw_hint(&mut self) {
+        self.redraw_hint = None;
+    }
+
+    /// Begins a hosted `OnPaint` frame on the console back buffer.
+    ///
+    /// While the frame is active, CRT-style console operations update the buffered screen state
+    /// but do not flush to the terminal. The host completes the frame with
+    /// [`finish_hosted_paint`](Self::finish_hosted_paint).
+    pub fn begin_hosted_paint(
+        &self,
+        console: &mut Console,
+        damage: DamageRegion,
+        location: SourceLocation,
+    ) -> Result<(), StdError> {
+        self.ensure_open(
+            "Application.Run(App) requires an open Std.Tui application session.",
+            "Open the application before the hosted run loop starts painting.",
+            location,
+        )?;
+
+        console.begin_tui_paint(damage);
+        Ok(())
+    }
+
+    /// Finishes a hosted `OnPaint` frame and presents the accumulated back buffer once.
+    ///
+    /// The Rust host may restrict terminal diff/flush work to the tracked dirty region and the
+    /// console mutations recorded during that frame, while the FPAS paint contract remains a full
+    /// logical frame.
+    pub fn finish_hosted_paint(
+        &self,
+        console: &mut Console,
+        location: SourceLocation,
+    ) -> Result<(), StdError> {
+        self.ensure_open(
+            "Application.Run(App) requires an open Std.Tui application session.",
+            "Open the application before the hosted run loop starts painting.",
+            location,
+        )?;
+
+        console.finish_tui_paint(location)
+    }
+
+    /// Aborts the current hosted `OnPaint` frame without presenting it.
+    ///
+    /// Used by the Rust host when a paint handler fails so deferred terminal output does not leak
+    /// past the failing callback.
+    pub fn abort_hosted_paint(&self, console: &mut Console) {
+        console.abort_tui_paint();
     }
 
     /// Returns the pending redraw damage without clearing it.
@@ -372,8 +478,12 @@ fn map_console_event(console: &mut Console, event: ConsoleEvent) -> Option<TuiEv
             return None;
         }
 
+        let old_width = console.screen_width();
+        let old_height = console.screen_height();
         console.resize(width, height);
         return Some(TuiEvent::Resize {
+            old_width,
+            old_height,
             width: event.width,
             height: event.height,
         });
@@ -629,6 +739,32 @@ mod tests {
     }
 
     #[test]
+    fn tui_session_request_resize_redraw_marks_union_of_old_and_new_bounds() {
+        let mut session = TuiSession::default();
+        let mut console = Console::new();
+        let mut key_input = KeyInput::new();
+
+        session
+            .open(&mut console, &mut key_input, test_location())
+            .expect("open should succeed");
+        session
+            .request_resize_redraw(80, 25, 40, 10, test_location())
+            .expect("resize redraw should succeed");
+
+        assert_eq!(
+            session
+                .take_redraw_damage(test_location())
+                .expect("take damage"),
+            Some(DamageRegion::Rect(crate::ViewRect {
+                x: 0,
+                y: 0,
+                width: 80,
+                height: 25,
+            }))
+        );
+    }
+
+    #[test]
     fn tui_session_request_redraw_if_absent_marks_full_frame_when_idle() {
         let mut session = TuiSession::default();
         let mut console = Console::new();
@@ -723,6 +859,8 @@ mod tests {
         assert_eq!(
             event,
             TuiEvent::Resize {
+                old_width: 80,
+                old_height: 25,
                 width: 120,
                 height: 40
             }

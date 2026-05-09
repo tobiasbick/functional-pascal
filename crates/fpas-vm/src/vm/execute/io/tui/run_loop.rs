@@ -136,10 +136,12 @@ impl Worker {
                 if self.modal_blocks_mouse_dispatch(modal_scope.as_deref(), &ev) {
                     return Ok(19);
                 }
+                let redraw_hint = self.mouse_redraw_hint(modal_scope.as_deref(), &ev);
                 self.dispatch_console_event_handler(
                     on_mouse,
                     app_rec,
                     Self::console_event_record(ev),
+                    Some(redraw_hint),
                     5,
                     7,
                     line,
@@ -149,6 +151,7 @@ impl Worker {
                 on_paste,
                 app_rec,
                 Self::console_event_record(ev),
+                Some(self.focused_view_redraw_hint()),
                 8,
                 9,
                 line,
@@ -157,6 +160,7 @@ impl Worker {
                 on_focus_gained,
                 app_rec,
                 Self::console_event_record(ev),
+                Some(self.focused_view_redraw_hint()),
                 10,
                 11,
                 line,
@@ -165,12 +169,21 @@ impl Worker {
                 on_focus_lost,
                 app_rec,
                 Self::console_event_record(ev),
+                Some(self.focused_view_redraw_hint()),
                 12,
                 13,
                 line,
             ),
-            HostEvent::Resize { width, height } => {
-                self.with_tui(|tui| tui.session.request_redraw(line))?;
+            HostEvent::Resize {
+                old_width,
+                old_height,
+                width,
+                height,
+            } => {
+                self.with_tui(|tui| {
+                    tui.session
+                        .request_resize_redraw(old_width, old_height, width, height, line)
+                })?;
                 if let Some(handler) = on_resize {
                     let _ = self.call_function_sync_allowing_shutdown(
                         &handler,
@@ -193,12 +206,18 @@ impl Worker {
         handler: Option<Value>,
         app_rec: Value,
         event_rec: Value,
+        redraw_hint: Option<DamageRegion>,
         hit_tag: i64,
         miss_tag: i64,
         line: SourceLocation,
     ) -> Result<i64, VmError> {
         if let Some(h) = handler {
-            let _ = self.call_function_sync_allowing_shutdown(&h, &[app_rec, event_rec], line)?;
+            let _ = self.call_function_sync_allowing_shutdown_with_redraw_hint(
+                &h,
+                &[app_rec, event_rec],
+                redraw_hint,
+                line,
+            )?;
             Ok(hit_tag)
         } else {
             Ok(miss_tag)
@@ -229,11 +248,25 @@ impl Worker {
                 let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
                 let consumed_damage = tui.session.take_redraw_damage(line)?;
                 debug_assert_eq!(consumed_damage, Some(expected_damage));
+                self.with_console(|console| {
+                    tui.session
+                        .begin_hosted_paint(console, expected_damage, line)
+                })?;
             }
-            match expected_damage {
-                DamageRegion::FullFrame | DamageRegion::Rect(_) => {}
+            let handler_result =
+                self.call_function_sync_allowing_shutdown(&handler, &[app_rec], line);
+            {
+                let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                self.with_console(|console| {
+                    if handler_result.is_ok() {
+                        tui.session.finish_hosted_paint(console, line)
+                    } else {
+                        tui.session.abort_hosted_paint(console);
+                        Ok(())
+                    }
+                })?;
             }
-            let _ = self.call_function_sync_allowing_shutdown(&handler, &[app_rec], line)?;
+            let _ = handler_result?;
             Ok(5)
         } else {
             let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
@@ -356,6 +389,66 @@ impl Worker {
         }
 
         Ok(())
+    }
+
+    fn call_function_sync_allowing_shutdown_with_redraw_hint(
+        &mut self,
+        handler: &Value,
+        args: &[Value],
+        redraw_hint: Option<DamageRegion>,
+        line: SourceLocation,
+    ) -> Result<Value, VmError> {
+        {
+            let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+            if let Some(damage) = redraw_hint {
+                tui.session.set_host_redraw_hint(damage);
+            } else {
+                tui.session.clear_host_redraw_hint();
+            }
+        }
+
+        let result = self.call_function_sync_allowing_shutdown(handler, args, line);
+
+        let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+        tui.session.clear_host_redraw_hint();
+
+        result
+    }
+
+    fn focused_view_redraw_hint(&self) -> DamageRegion {
+        let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+        tui.views
+            .focused_id()
+            .and_then(|view_id| tui.views.rect(view_id))
+            .map(DamageRegion::Rect)
+            .unwrap_or(DamageRegion::FullFrame)
+    }
+
+    fn mouse_redraw_hint(
+        &self,
+        modal_scope: Option<&[ViewId]>,
+        event: &ConsoleEvent,
+    ) -> DamageRegion {
+        let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+        let mut matched_rect = None;
+
+        for view_id in tui.views.ids() {
+            if modal_scope.is_some_and(|scope| !scope.contains(&view_id)) {
+                continue;
+            }
+
+            let Some(rect) = tui.views.rect(view_id) else {
+                continue;
+            };
+
+            if Self::rect_contains_point(rect, event.mouse_x, event.mouse_y) {
+                matched_rect = Some(rect);
+            }
+        }
+
+        matched_rect
+            .map(DamageRegion::Rect)
+            .unwrap_or(DamageRegion::FullFrame)
     }
 
     /// Clears the quit flag and returns `true` if it was set.

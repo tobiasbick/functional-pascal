@@ -37,6 +37,7 @@ pub struct Console {
     /// Fragments from `Write` not yet ended by `WriteLn`; one logical line for capture.
     capture_line_buf: String,
     state: ConsoleState,
+    tui_paint_active: bool,
     writer: Option<Box<dyn Write + Send>>,
 }
 
@@ -52,6 +53,7 @@ impl Console {
             captured: CapturedOutput::default(),
             capture_line_buf: String::new(),
             state: ConsoleState::new(DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT),
+            tui_paint_active: false,
             writer: None,
         }
     }
@@ -63,6 +65,7 @@ impl Console {
             captured: CapturedOutput::default(),
             capture_line_buf: String::new(),
             state: ConsoleState::new(width, height),
+            tui_paint_active: false,
             writer: Some(writer),
         }
     }

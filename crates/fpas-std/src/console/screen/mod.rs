@@ -38,6 +38,56 @@ impl WindowRect {
     pub(super) fn height(self) -> u16 {
         self.bottom - self.top + 1
     }
+
+    pub(super) fn union(self, other: Self) -> Self {
+        Self {
+            left: self.left.min(other.left),
+            top: self.top.min(other.top),
+            right: self.right.max(other.right),
+            bottom: self.bottom.max(other.bottom),
+        }
+    }
+
+    pub(super) fn from_zero_based_rect(
+        x: i64,
+        y: i64,
+        width: i64,
+        height: i64,
+        screen_width: u16,
+        screen_height: u16,
+    ) -> Option<Self> {
+        if width <= 0 || height <= 0 {
+            return None;
+        }
+
+        let screen_width = i64::from(screen_width.max(1));
+        let screen_height = i64::from(screen_height.max(1));
+        let left = x.max(0);
+        let top = y.max(0);
+        let right = x
+            .saturating_add(width.saturating_sub(1))
+            .min(screen_width.saturating_sub(1));
+        let bottom = y
+            .saturating_add(height.saturating_sub(1))
+            .min(screen_height.saturating_sub(1));
+
+        if left > right || top > bottom {
+            return None;
+        }
+
+        Some(Self {
+            left: u16::try_from(left.saturating_add(1)).ok()?,
+            top: u16::try_from(top.saturating_add(1)).ok()?,
+            right: u16::try_from(right.saturating_add(1)).ok()?,
+            bottom: u16::try_from(bottom.saturating_add(1)).ok()?,
+        })
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum FrameDamage {
+    FullFrame,
+    Rect(WindowRect),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -150,6 +200,8 @@ pub(super) struct ConsoleState {
     cells: Vec<ScreenCell>,
     /// Previous frame for differential rendering. Empty until the first render.
     prev_cells: Vec<ScreenCell>,
+    /// Mutated screen region since the last committed present.
+    pending_frame_damage: Option<FrameDamage>,
 }
 
 impl ConsoleState {
@@ -178,6 +230,7 @@ impl ConsoleState {
             pending_wrap: false,
             cells: vec![blank; width as usize * height as usize],
             prev_cells: Vec::new(),
+            pending_frame_damage: None,
         }
     }
 
@@ -226,6 +279,7 @@ impl ConsoleState {
         self.height = new_height;
         self.cells = new_cells;
         self.prev_cells.clear();
+        self.pending_frame_damage = Some(FrameDamage::FullFrame);
 
         self.window.left = self.window.left.min(new_width);
         self.window.top = self.window.top.min(new_height);

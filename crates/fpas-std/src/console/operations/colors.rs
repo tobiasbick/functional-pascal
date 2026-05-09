@@ -78,6 +78,9 @@ impl Console {
     ) -> Result<(), StdError> {
         let (r, g, b) = self.validate_rgb(r, g, b, "TextColorRGB", location)?;
         self.state.set_extended_fg_rgb(r, g, b);
+        if self.state.crt_mode {
+            return Ok(());
+        }
         self.run_writer_command(
             crossterm::style::SetForegroundColor(crossterm::style::Color::Rgb { r, g, b }),
             "TextColorRGB failed",
@@ -97,6 +100,9 @@ impl Console {
     ) -> Result<(), StdError> {
         let (r, g, b) = self.validate_rgb(r, g, b, "TextBackgroundRGB", location)?;
         self.state.set_extended_bg_rgb(r, g, b);
+        if self.state.crt_mode {
+            return Ok(());
+        }
         self.run_writer_command(
             crossterm::style::SetBackgroundColor(crossterm::style::Color::Rgb { r, g, b }),
             "TextBackgroundRGB failed",
@@ -110,6 +116,9 @@ impl Console {
     pub fn text_color_256(&mut self, index: i64, location: SourceLocation) -> Result<(), StdError> {
         let index = self.validate_color_256(index, "TextColor256", location)?;
         self.state.set_extended_fg_ansi(index);
+        if self.state.crt_mode {
+            return Ok(());
+        }
         self.run_writer_command(
             crossterm::style::SetForegroundColor(crossterm::style::Color::AnsiValue(index)),
             "TextColor256 failed",
@@ -127,6 +136,9 @@ impl Console {
     ) -> Result<(), StdError> {
         let index = self.validate_color_256(index, "TextBackground256", location)?;
         self.state.set_extended_bg_ansi(index);
+        if self.state.crt_mode {
+            return Ok(());
+        }
         self.run_writer_command(
             crossterm::style::SetBackgroundColor(crossterm::style::Color::AnsiValue(index)),
             "TextBackground256 failed",

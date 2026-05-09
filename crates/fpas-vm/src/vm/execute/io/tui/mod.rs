@@ -277,9 +277,17 @@ impl Worker {
                     None => self.push(Value::OptionNone)?,
                     Some(ev) => {
                         let tui_ev = match ev {
-                            HostEvent::Resize { width, height } => {
-                                TuiEvent::Resize { width, height }
-                            }
+                            HostEvent::Resize {
+                                old_width,
+                                old_height,
+                                width,
+                                height,
+                            } => TuiEvent::Resize {
+                                old_width,
+                                old_height,
+                                width,
+                                height,
+                            },
                             HostEvent::Key(k) => TuiEvent::Key(k),
                             HostEvent::Mouse(m) => TuiEvent::Mouse(m),
                             // Paste and focus events are dispatch-only; not exposed via poll API.

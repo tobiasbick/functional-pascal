@@ -237,7 +237,7 @@ procedure OnExit(App: Application; Reason: ExitReason);
 ## Redraw and paint
 
 - **Model:** **invalidation**, not “call `**OnPaint`** every host tick”. The host sets an internal **redraw pending** flag when `**Application.RequestRedraw`** is called, when `**OnResize`** fires, when `**OnStartup`** completes (implementation may auto-request redraw once), and when the backend signals damage the host maps to a redraw. Multiple requests **coalesce** to **one** `**OnPaint`** per logical flush.
-- `**OnPaint`:** Performs a **full frame** draw (entire buffer for the app). **Damage rectangles** and partial updates are **Rust-internal** optimizations later; the FP contract stays **full paint** until Phase 7 narrows it.
+- `**OnPaint`:** Performs a **full logical frame** draw (entire buffer for the app). The Rust host now batches each hosted paint into one deferred back-buffered present and may restrict terminal diff/flush work to tracked dirty regions plus the console mutations recorded during that frame. The FP contract remains a full logical paint.
 - **Relation to `RedrawPending`:** In dispatch mode, user code **typically does not poll** `**RedrawPending`**; the host invokes `**OnPaint`** when a frame is due. If both APIs coexist during transition, the spec for `**RedrawPending**` in hosted mode is: host consumes the pending flag when entering `**OnPaint**` (aligned with today’s “consume once” semantics).
 
 ---

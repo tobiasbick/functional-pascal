@@ -2,6 +2,8 @@
 //! and 256-color sequences. See `docs/pascal/std/console.md` (from repository root).
 
 use super::Console;
+use super::screen::{FrameDamage, WindowRect};
+use crate::DamageRegion;
 use crate::error::{StdError, std_runtime_error};
 use crossterm::QueueableCommand;
 use crossterm::cursor::{Hide, MoveTo, SetCursorStyle, Show};
@@ -12,14 +14,49 @@ use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 use std::io::Write;
 
 impl Console {
+    pub(crate) fn begin_tui_paint(&mut self, damage: DamageRegion) {
+        self.tui_paint_active = true;
+        match damage {
+            DamageRegion::FullFrame => self.state.mark_full_damage(),
+            DamageRegion::Rect(rect) => {
+                if let Some(region) = WindowRect::from_zero_based_rect(
+                    rect.x,
+                    rect.y,
+                    rect.width,
+                    rect.height,
+                    self.state.width,
+                    self.state.height,
+                ) {
+                    self.state.mark_damage_rect(region);
+                }
+            }
+        }
+    }
+
+    pub(crate) fn finish_tui_paint(&mut self, location: SourceLocation) -> Result<(), StdError> {
+        self.tui_paint_active = false;
+        self.render_screen(location)
+    }
+
+    pub(crate) fn abort_tui_paint(&mut self) {
+        self.tui_paint_active = false;
+        self.state.clear_frame_damage();
+    }
+
     /// Render only the cells that changed since the last frame (differential rendering).
     /// On the very first frame, clear the terminal and draw everything.
     pub(super) fn render_screen(&mut self, location: SourceLocation) -> Result<(), StdError> {
-        let Some(writer) = self.writer.as_mut() else {
+        if self.tui_paint_active {
             return Ok(());
-        };
+        }
 
         let first_frame = self.state.is_first_frame();
+        let damage = self.state.take_frame_damage();
+
+        let Some(writer) = self.writer.as_mut() else {
+            self.state.commit_frame();
+            return Ok(());
+        };
 
         let state = &self.state;
 
@@ -46,13 +83,17 @@ impl Console {
                         .map_err(map_err)?;
                 }
             }
-        } else {
+        } else if let Some(region) = match damage {
+            Some(FrameDamage::FullFrame) => Some(state.full_screen_rect()),
+            Some(FrameDamage::Rect(region)) => Some(region),
+            None => None,
+        } {
             // Subsequent frames: only repaint cells that differ from the previous frame.
             let mut last_fg = None;
             let mut last_bg = None;
 
-            for y in 1..=state.height {
-                for x in 1..=state.width {
+            for y in region.top..=region.bottom {
+                for x in region.left..=region.right {
                     if !state.cell_changed(x, y) {
                         continue;
                     }

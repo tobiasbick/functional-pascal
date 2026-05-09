@@ -2,6 +2,7 @@ use super::{ConsoleState, ScreenCell};
 
 impl ConsoleState {
     pub(in super::super) fn clear_window(&mut self) {
+        let dirty = self.window;
         let blank = self.blank_cell();
         for y in self.window.top..=self.window.bottom {
             for x in self.window.left..=self.window.right {
@@ -12,15 +13,23 @@ impl ConsoleState {
         self.cursor_x = 1;
         self.cursor_y = 1;
         self.pending_wrap = false;
+        self.mark_damage_rect(dirty);
     }
 
     pub(in super::super) fn clear_eol(&mut self) {
         let blank = self.blank_cell();
         let y = self.abs_y();
+        let left = self.abs_x();
         for x in self.abs_x()..=self.window.right {
             let idx = self.index(x, y);
             self.cells[idx] = blank;
         }
+        self.mark_damage_rect(super::WindowRect {
+            left,
+            top: y,
+            right: self.window.right,
+            bottom: y,
+        });
     }
 
     pub(in super::super) fn del_line(&mut self) {
@@ -37,6 +46,12 @@ impl ConsoleState {
             let idx = self.index(x, self.window.bottom);
             self.cells[idx] = blank;
         }
+        self.mark_damage_rect(super::WindowRect {
+            left: self.window.left,
+            top: abs_y,
+            right: self.window.right,
+            bottom: self.window.bottom,
+        });
     }
 
     pub(in super::super) fn ins_line(&mut self) {
@@ -53,6 +68,12 @@ impl ConsoleState {
             let idx = self.index(x, abs_y);
             self.cells[idx] = blank;
         }
+        self.mark_damage_rect(super::WindowRect {
+            left: self.window.left,
+            top: abs_y,
+            right: self.window.right,
+            bottom: self.window.bottom,
+        });
     }
 
     pub(in super::super) fn write_text(&mut self, s: &str, newline: bool) {
@@ -87,6 +108,12 @@ impl ConsoleState {
                     fg: self.active_fg,
                     bg: self.active_bg,
                 };
+                self.mark_damage_rect(super::WindowRect {
+                    left: x,
+                    top: y,
+                    right: x,
+                    bottom: y,
+                });
                 if self.cursor_x == self.window_width() {
                     self.pending_wrap = true;
                 } else {
@@ -119,5 +146,6 @@ impl ConsoleState {
             let idx = self.index(x, self.window.bottom);
             self.cells[idx] = blank;
         }
+        self.mark_damage_rect(self.window);
     }
 }

@@ -53,7 +53,7 @@ impl Worker {
                     ("size".into(), Self::tui_size_record(0, 0)),
                 ],
             },
-            TuiEvent::Resize { width, height } => Value::Record {
+            TuiEvent::Resize { width, height, .. } => Value::Record {
                 type_name: TUI_EVENT_TYPE.into(),
                 fields: vec![
                     ("kind".into(), Value::Integer(1)),

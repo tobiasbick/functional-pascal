@@ -20,6 +20,8 @@ use std::collections::VecDeque;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum HostEvent {
     Resize {
+        old_width: i64,
+        old_height: i64,
         width: i64,
         height: i64,
     },
@@ -47,7 +49,7 @@ type TraceFn = fn(&str);
 /// so a key following resizes yields **`Resize` (once, last size) then `Key`**.
 #[derive(Debug, Default)]
 pub struct TuiHost {
-    pending_resize: Option<(i64, i64)>,
+    pending_resize: Option<(i64, i64, i64, i64)>,
     ready: VecDeque<HostEvent>,
     trace: Option<TraceFn>,
 }
@@ -72,42 +74,77 @@ impl TuiHost {
     /// Feed one mapped [`TuiEvent`] from the session / console path.
     pub fn ingest_tui_event(&mut self, ev: TuiEvent) {
         match ev {
-            TuiEvent::Resize { width, height } => {
+            TuiEvent::Resize {
+                old_width,
+                old_height,
+                width,
+                height,
+            } => {
                 self.trace("tui_host: buffer resize (coalesce)");
-                self.pending_resize = Some((width, height));
+                self.pending_resize = Some(
+                    self.pending_resize
+                        .map_or((old_width, old_height, width, height), |pending| {
+                            (pending.0, pending.1, width, height)
+                        }),
+                );
             }
             TuiEvent::Key(key) => {
-                if let Some((width, height)) = self.pending_resize.take() {
+                if let Some((old_width, old_height, width, height)) = self.pending_resize.take() {
                     self.trace("tui_host: flush coalesced resize before key");
-                    self.ready.push_back(HostEvent::Resize { width, height });
+                    self.ready.push_back(HostEvent::Resize {
+                        old_width,
+                        old_height,
+                        width,
+                        height,
+                    });
                 }
                 self.ready.push_back(HostEvent::Key(key));
             }
             TuiEvent::Mouse(ev) => {
-                if let Some((width, height)) = self.pending_resize.take() {
+                if let Some((old_width, old_height, width, height)) = self.pending_resize.take() {
                     self.trace("tui_host: flush coalesced resize before mouse");
-                    self.ready.push_back(HostEvent::Resize { width, height });
+                    self.ready.push_back(HostEvent::Resize {
+                        old_width,
+                        old_height,
+                        width,
+                        height,
+                    });
                 }
                 self.ready.push_back(HostEvent::Mouse(ev));
             }
             TuiEvent::Paste(ev) => {
-                if let Some((width, height)) = self.pending_resize.take() {
+                if let Some((old_width, old_height, width, height)) = self.pending_resize.take() {
                     self.trace("tui_host: flush coalesced resize before paste");
-                    self.ready.push_back(HostEvent::Resize { width, height });
+                    self.ready.push_back(HostEvent::Resize {
+                        old_width,
+                        old_height,
+                        width,
+                        height,
+                    });
                 }
                 self.ready.push_back(HostEvent::Paste(ev));
             }
             TuiEvent::FocusGained(ev) => {
-                if let Some((width, height)) = self.pending_resize.take() {
+                if let Some((old_width, old_height, width, height)) = self.pending_resize.take() {
                     self.trace("tui_host: flush coalesced resize before focus-gained");
-                    self.ready.push_back(HostEvent::Resize { width, height });
+                    self.ready.push_back(HostEvent::Resize {
+                        old_width,
+                        old_height,
+                        width,
+                        height,
+                    });
                 }
                 self.ready.push_back(HostEvent::FocusGained(ev));
             }
             TuiEvent::FocusLost(ev) => {
-                if let Some((width, height)) = self.pending_resize.take() {
+                if let Some((old_width, old_height, width, height)) = self.pending_resize.take() {
                     self.trace("tui_host: flush coalesced resize before focus-lost");
-                    self.ready.push_back(HostEvent::Resize { width, height });
+                    self.ready.push_back(HostEvent::Resize {
+                        old_width,
+                        old_height,
+                        width,
+                        height,
+                    });
                 }
                 self.ready.push_back(HostEvent::FocusLost(ev));
             }
@@ -119,9 +156,14 @@ impl TuiHost {
     /// Intended for an **idle** or **timeout** tick in the outer host loop (see plan Phase 2).
     #[must_use]
     pub fn flush_pending_resize(&mut self) -> bool {
-        if let Some((width, height)) = self.pending_resize.take() {
+        if let Some((old_width, old_height, width, height)) = self.pending_resize.take() {
             self.trace("tui_host: flush pending resize (idle)");
-            self.ready.push_back(HostEvent::Resize { width, height });
+            self.ready.push_back(HostEvent::Resize {
+                old_width,
+                old_height,
+                width,
+                height,
+            });
             return true;
         }
         false
@@ -193,10 +235,14 @@ mod tests {
     fn coalesces_multiple_resizes_before_key() {
         let mut host = TuiHost::new();
         host.ingest_tui_event(TuiEvent::Resize {
+            old_width: 80,
+            old_height: 25,
             width: 10,
             height: 10,
         });
         host.ingest_tui_event(TuiEvent::Resize {
+            old_width: 10,
+            old_height: 10,
             width: 20,
             height: 30,
         });
@@ -212,6 +258,8 @@ mod tests {
         assert_eq!(
             host.pop_ready_event(),
             Some(HostEvent::Resize {
+                old_width: 80,
+                old_height: 25,
                 width: 20,
                 height: 30
             })
@@ -224,6 +272,8 @@ mod tests {
     fn flush_pending_resize_after_resize_only_stream() {
         let mut host = TuiHost::new();
         host.ingest_tui_event(TuiEvent::Resize {
+            old_width: 80,
+            old_height: 25,
             width: 80,
             height: 25,
         });
@@ -231,6 +281,8 @@ mod tests {
         assert_eq!(
             host.pop_ready_event(),
             Some(HostEvent::Resize {
+                old_width: 80,
+                old_height: 25,
                 width: 80,
                 height: 25
             })
@@ -265,6 +317,8 @@ mod tests {
         assert_eq!(
             first,
             HostEvent::Resize {
+                old_width: 80,
+                old_height: 25,
                 width: 100,
                 height: 40
             }
@@ -288,6 +342,8 @@ mod tests {
         let mut host = TuiHost::new();
         host.set_trace_hook(Some(hook as TraceFn));
         host.ingest_tui_event(TuiEvent::Resize {
+            old_width: 80,
+            old_height: 25,
             width: 1,
             height: 1,
         });
@@ -300,6 +356,8 @@ mod tests {
     #[test]
     fn resize_suggests_redraw_key_does_not() {
         let r = HostEvent::Resize {
+            old_width: 80,
+            old_height: 25,
             width: 1,
             height: 1,
         };

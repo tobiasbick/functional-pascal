@@ -1,0 +1,75 @@
+{ Local view paint demo — parent-relative layout plus per-view paint handlers. Press M to move the badge and Escape to quit. }
+program TuiLocalViewPaint;
+uses Std.Console, Std.Tui;
+
+mutable var RootView: integer := -1;
+mutable var BadgeView: integer := -1;
+mutable var BadgeColumn: integer := 2;
+
+procedure ClearBounds(Bounds: Std.Tui.Rect);
+begin
+  for Row: integer := 0 to Bounds.height - 1 do
+  begin
+    GotoXY(Bounds.x + 1, Bounds.y + Row + 1);
+    for Col: integer := 0 to Bounds.width - 1 do
+      Write(' ')
+  end
+end;
+
+procedure OnViewPaint(App: Application; ViewId: integer; Bounds: Std.Tui.Rect);
+begin
+  if ViewId = RootView then
+  begin
+    ClearBounds(Bounds);
+    GotoXY(Bounds.x + 1, Bounds.y + 1);
+    Write('Local view paint');
+    GotoXY(Bounds.x + 1, Bounds.y + 2);
+    Write('M moves the badge inside the parent view');
+    GotoXY(Bounds.x + 1, Bounds.y + 3);
+    Write('Escape exits')
+  end
+  else if ViewId = BadgeView then
+  begin
+    GotoXY(Bounds.x + 1, Bounds.y + 1);
+    Write('[badge]')
+  end
+end;
+
+function OnKeyPressed(App: Application; Key: Std.Console.KeyEvent): boolean;
+begin
+  if Key.kind = KeyKind.Escape then
+  begin
+    Application.HostRequestQuit(App);
+    return true
+  end;
+
+  if (Key.kind = KeyKind.Character) and ((Key.ch = 'm') or (Key.ch = 'M')) then
+  begin
+    if BadgeColumn = 2 then
+      BadgeColumn := 20
+    else
+      BadgeColumn := 2;
+    Application.HostSetViewRect(App, BadgeView, BadgeColumn, 4, 7, 1);
+    Application.RequestRedraw(App);
+    return true
+  end;
+
+  return false
+end;
+
+procedure OnResize(App: Application; NewSize: Size);
+begin
+  Application.RequestRedraw(App)
+end;
+
+begin
+  var App: Application := Application.Open();
+  RootView := Application.HostRegisterView(App, 4, 3, 40, 8);
+  BadgeView := Application.HostRegisterView(App, 2, 4, 7, 1);
+  Application.HostSetViewParent(App, BadgeView, RootView);
+  Application.HostRegisterOnViewPaint(App, RootView, OnViewPaint);
+  Application.HostRegisterOnViewPaint(App, BadgeView, OnViewPaint);
+  Application.HostRegisterOnKeyPressed(App, OnKeyPressed);
+  Application.HostRegisterOnResize(App, OnResize);
+  Application.Run(App)
+end.

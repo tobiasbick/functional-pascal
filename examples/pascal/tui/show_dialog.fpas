@@ -1,0 +1,117 @@
+{ ShowDialog demo — an owned dialog root is created on demand and modal-local commands close it. }
+program TuiShowDialog;
+uses Std.Console, Std.Tui;
+
+mutable var DialogView: integer := -1;
+mutable var Status: string := 'Ctrl+D opens an owned dialog. Ctrl+Q exits.';
+
+procedure ClearBounds(Bounds: Std.Tui.Rect);
+begin
+  for Row: integer := 0 to Bounds.height - 1 do
+  begin
+    GotoXY(Bounds.x + 1, Bounds.y + Row + 1);
+    for Col: integer := 0 to Bounds.width - 1 do
+      Write(' ')
+  end
+end;
+
+procedure OnDialogPaint(App: Application; ViewId: integer; Bounds: Std.Tui.Rect);
+begin
+  ClearBounds(Bounds);
+  GotoXY(Bounds.x + 2, Bounds.y + 2);
+  Write('Owned dialog root');
+  GotoXY(Bounds.x + 2, Bounds.y + 3);
+  Write('Escape closes this dialog');
+  GotoXY(Bounds.x + 2, Bounds.y + 4);
+  Write('CloseModal also unregisters its root')
+end;
+
+procedure OnPaint(App: Application);
+begin
+  ClrScr();
+  GotoXY(1, 1);
+  WriteLn('ShowDialog');
+  GotoXY(1, 2);
+  WriteLn('Modal depth: ', Application.HostModalDepth(App));
+  GotoXY(1, 3);
+  WriteLn(Status);
+  GotoXY(1, 5);
+  WriteLn('Ctrl+D opens an owned dialog root.');
+  GotoXY(1, 6);
+  WriteLn('Escape closes the active dialog. Ctrl+Q exits.');
+  if DialogView >= 0 then
+  begin
+    GotoXY(1, 8);
+    WriteLn('Current dialog root view: ', DialogView)
+  end
+end;
+
+procedure OnCommand(App: Application; CommandId: integer);
+begin
+  if CommandId = 1 then
+  begin
+    if DialogView < 0 then
+    begin
+      var EscapeKey: Std.Console.KeyEvent := record
+        kind := Std.Console.KeyKind.Escape;
+        ch := #27;
+        shift := false;
+        ctrl := false;
+        alt := false;
+        meta := false;
+      end;
+      DialogView := Application.ShowDialog(App, 10, 18, 6, 34, 8);
+      Application.HostRegisterOnViewPaint(App, DialogView, OnDialogPaint);
+      Application.HostBindCommandToActiveModal(App, EscapeKey, 2);
+      Status := 'Dialog open. Escape closes it.'
+    end
+    else
+      Status := 'Dialog already open.';
+
+    Application.RequestRedraw(App)
+  end
+  else if CommandId = 2 then
+  begin
+    if DialogView >= 0 then
+    begin
+      Application.CloseModal(App);
+      DialogView := -1;
+      Status := 'Dialog closed. Ctrl+D opens a fresh owned root.';
+      Application.RequestRedraw(App)
+    end
+  end
+  else if CommandId = 99 then
+    Application.HostRequestQuit(App)
+end;
+
+procedure OnResize(App: Application; NewSize: Size);
+begin
+  Application.RequestRedraw(App)
+end;
+
+begin
+  var App: Application := Application.Open();
+  var OpenDialogKey: Std.Console.KeyEvent := record
+    kind := Std.Console.KeyKind.Character;
+    ch := 'd';
+    shift := false;
+    ctrl := true;
+    alt := false;
+    meta := false;
+  end;
+  var QuitKey: Std.Console.KeyEvent := record
+    kind := Std.Console.KeyKind.Character;
+    ch := 'q';
+    shift := false;
+    ctrl := true;
+    alt := false;
+    meta := false;
+  end;
+
+  Application.HostRegisterOnPaint(App, OnPaint);
+  Application.HostRegisterOnCommand(App, OnCommand);
+  Application.HostRegisterOnResize(App, OnResize);
+  Application.HostBindCommand(App, OpenDialogKey, 1);
+  Application.HostBindCommand(App, QuitKey, 99);
+  Application.Run(App)
+end.

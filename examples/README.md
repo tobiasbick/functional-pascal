@@ -17,6 +17,10 @@ fpas examples/pascal/std/task_basics.fpas
 fpas examples/pascal/tui/host_dispatch_minimal.fpas
 fpas examples/pascal/tui/host_dispatch_paint.fpas
 fpas examples/pascal/tui/host_dispatch_quit.fpas
+fpas examples/pascal/tui/local_view_paint.fpas
+fpas examples/pascal/tui/view_scoped_commands.fpas
+fpas examples/pascal/tui/show_modal_existing_view.fpas
+fpas examples/pascal/tui/show_dialog.fpas
 ```
 
 ### Projects (`.fpasprj`)
@@ -47,6 +51,10 @@ Do **not** pass a `unit` source alone (for example `mandelbrot_color.fpas` or `m
 | `pascal/std/str_basics.fpas` | `Std.Str` — trim, split/join, `Format`, search/replace |
 | `pascal/std/dict_basics.fpas` | `Std.Dict` — literals, `Get`, `Merge`, `Map`/`Filter` (qualified when also using `Std.Array` / `Std.Option`) |
 | `pascal/std/task_basics.fpas` | `Std.Task` — `go`, `Wait`, `WaitAll` |
+| `pascal/tui/local_view_paint.fpas` | `Std.Tui` — local view paint, parent-relative layout, `HostSetViewRect` |
+| `pascal/tui/view_scoped_commands.fpas` | `Std.Tui` — `HostBindCommandToView` and focus/ancestor command routing |
+| `pascal/tui/show_modal_existing_view.fpas` | `Std.Tui` — `ShowModal` for an existing view subtree |
+| `pascal/tui/show_dialog.fpas` | `Std.Tui` — `ShowDialog` plus modal-local command binding |
 | `math/julia/julia.fpas` | ASCII Julia set (**interactive** — see below) |
 
 ## Multi-unit projects
@@ -70,5 +78,9 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 | `pascal/tui/host_dispatch_minimal.fpas` | One **`HostProcessNext`** call then **`Close`** (dispatch bridge); same TUI session behavior as `minimal_application.fpas` |
 | `pascal/tui/host_dispatch_paint.fpas` | **`HostRegisterOnPaint`** + **`HostDispatchRedraw`** (one paint pass) |
 | `pascal/tui/host_dispatch_quit.fpas` | **`HostRequestQuit`** from **`OnPaint`**, then **`HostRunLoop`** (cooperative exit) |
+| `pascal/tui/local_view_paint.fpas` | Local view paint only; press **M** to move a child view and **Escape** to quit |
+| `pascal/tui/view_scoped_commands.fpas` | Focus-aware view commands; **Tab** changes focus, **Ctrl+S** resolves per panel, **Escape** quits |
+| `pascal/tui/show_modal_existing_view.fpas` | Existing view subtree becomes modal; **Tab** stays in the subtree, **Escape** closes the modal |
+| `pascal/tui/show_dialog.fpas` | Owned modal dialog; **Ctrl+D** opens it, **Escape** closes it, **Ctrl+Q** quits |
 
 TUI apps use the dispatch model: `Application.Configure(App, Handlers)` registers `On*` handlers; `Application.Run(App)` starts the hosted loop. See `docs/pascal/std/tui-app.md` for the full dispatch API and `docs/pascal/std/tui.md` for poll-style API status. The console's own event type remains **`Std.Console.Event`**.

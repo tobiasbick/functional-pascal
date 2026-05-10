@@ -23,7 +23,7 @@ A modern, function-first programming language built on Pascal's readable syntax.
 ### Build from source
 
 ```sh
-git clone https://github.com/ArcticDev/functional-pascal.git
+git clone https://github.com/tobiasbick/functional-pascal.git
 cd functional-pascal
 cargo build --release
 ```
@@ -74,6 +74,9 @@ end.
 ### Pattern Matching
 
 ```pascal
+program PatternMatching;
+uses Std.Console;
+
 type
   Light = enum
     Red;
@@ -89,11 +92,18 @@ begin
     Light.Green:  return 'Go'
   end
 end;
+
+begin
+  WriteLn(TrafficAdvice(Light.Red))
+end.
 ```
 
 ### Higher-Order Functions
 
 ```pascal
+program HigherOrderFunctions;
+uses Std.Console;
+
 function Double(X: integer): integer;
 begin
   return X * 2
@@ -113,6 +123,9 @@ end.
 ### Error Handling with Option
 
 ```pascal
+program OptionExample;
+uses Std.Console, Std.Array;
+
 function FindFirst(Items: array of integer; Min: integer): Option of integer;
 begin
   for I: integer := 0 to Length(Items) - 1 do
@@ -154,6 +167,7 @@ The full language documentation is in [`docs/pascal/`](docs/pascal/):
 | `fpas-cli` | Command-line interface (`fpas` binary) |
 | `fpas-lexer` | Tokenizer / lexical analysis |
 | `fpas-parser` | Parser producing the AST |
+| `fpas-project` | Project loading and unit linking for `.fpasprj` builds |
 | `fpas-sema` | Semantic analysis and type checking |
 | `fpas-compiler` | AST-to-bytecode compilation |
 | `fpas-bytecode` | Bytecode definitions and chunk format |

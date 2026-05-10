@@ -7,7 +7,7 @@ resolver = "3"
 version = "0.0.1"
 edition = "2024"
 license = "BSD-3-Clause"
-repository = "https://github.com/ArcticDev/functional-pascal"
+repository = "https://github.com/tobiasbick/functional-pascal"
 description = "A modern, function-first programming language built on Pascal's readable syntax"
 
 [workspace.lints.rust]

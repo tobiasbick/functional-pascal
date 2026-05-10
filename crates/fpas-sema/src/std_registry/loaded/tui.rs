@@ -311,6 +311,19 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             p("RootViewId", Ty::Integer, false),
         ],
     );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_SHOW_DIALOG,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("ModalId", Ty::Integer, false),
+            p("X", Ty::Integer, false),
+            p("Y", Ty::Integer, false),
+            p("Width", Ty::Integer, false),
+            p("Height", Ty::Integer, false),
+        ],
+        Ty::Integer,
+    );
     define_proc(
         checker,
         s::STD_TUI_APPLICATION_CLOSE_MODAL,
@@ -482,6 +495,25 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
     define_proc(
         checker,
         s::STD_TUI_APPLICATION_HOST_BIND_COMMAND,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("Key", key_event_ty.clone(), false),
+            p("CommandId", Ty::Integer, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_BIND_COMMAND_TO_VIEW,
+        vec![
+            p("App", application_ty.clone(), false),
+            p("ViewId", Ty::Integer, false),
+            p("Key", key_event_ty.clone(), false),
+            p("CommandId", Ty::Integer, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_BIND_COMMAND_TO_ACTIVE_MODAL,
         vec![
             p("App", application_ty.clone(), false),
             p("Key", key_event_ty, false),

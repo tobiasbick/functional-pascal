@@ -178,6 +178,9 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::TuiHostRegisterOnViewPaint,
     Intrinsic::TuiApplicationShowModal,
     Intrinsic::TuiApplicationCloseModal,
+    Intrinsic::TuiHostBindCommandToView,
+    Intrinsic::TuiHostBindCommandToActiveModal,
+    Intrinsic::TuiApplicationShowDialog,
     Intrinsic::ResultUnwrap,
     Intrinsic::ResultUnwrapOr,
     Intrinsic::ResultIsOk,
@@ -408,6 +411,9 @@ impl Intrinsic {
             286 => Self::TuiHostRegisterOnViewPaint,
             287 => Self::TuiApplicationShowModal,
             288 => Self::TuiApplicationCloseModal,
+            289 => Self::TuiHostBindCommandToView,
+            290 => Self::TuiHostBindCommandToActiveModal,
+            291 => Self::TuiApplicationShowDialog,
             _ => return None,
         })
     }

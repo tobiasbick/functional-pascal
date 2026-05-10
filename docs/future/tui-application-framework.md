@@ -36,15 +36,15 @@ Implementation plan for evolving Functional Pascal's terminal UI from poll-style
 - Host-managed views now cover registration, unregister, focus traversal, modal attachment, `Application.HostSetViewRect`, and `Application.HostSetViewParent`.
 - The host now maintains a real view tree: child views use parent-relative layout, sibling order defines z-order, and modal scope can target a full rooted subtree instead of only an explicit flat attachment list.
 - Local paint now exists alongside application-global `OnPaint`: `Application.HostRegisterOnViewPaint` installs per-view handlers that receive `Std.Tui.Rect` and run in tree paint order for damaged views.
-- High-level modal structure now exists through `Application.ShowModal` / `Application.CloseModal`, which anchor modal scope to a root view and move focus into that scope automatically.
+- High-level modal structure now exists through `Application.ShowModal` / `Application.CloseModal`, and `Application.ShowDialog` now adds a minimal owned dialog primitive on top of that root-view model.
+- Command maps are no longer only global: the host now resolves shortcuts from focused-view ancestry, then the active modal frame, then the global command registry.
 - Damage tracking exists end to end and now uses explicit dirty rectangles or redraw hints for focus transitions, view lifecycle changes, view-rect updates, resize, modal attach/leave, mouse, paste, and terminal focus events.
 - Hosted `OnPaint` now runs through a deferred single-present path: CRT writes stay buffered until the handler returns, and the terminal diff/flush step can restrict itself to the tracked dirty region plus the actual console mutations recorded during that frame.
 
 ### Remaining follow-on work
 
-- There is still no higher-level widget library, automatic layout manager, dialog builder, or packaged Turbo Vision-style control set.
-- Command bindings remain global; future work may add per-view or per-modal command maps on top of the current rooted modal routing.
-- `ApplicationHandlers` still models the application-global handler bundle; view-local paint stays on the explicit host-view surface for now.
+- There is still no higher-level widget library, automatic layout manager, or packaged Turbo Vision-style control set.
+- `ApplicationHandlers` still models the application-global handler bundle; view-local paint and scoped command maps stay on the explicit host-view / modal surfaces for now.
 
 ---
 

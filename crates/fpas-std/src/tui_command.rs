@@ -16,7 +16,7 @@ struct CommandBinding {
 }
 
 /// Host-side keyboard shortcut registry for an active TUI session.
-#[derive(Debug, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct CommandRegistry {
     bindings: Vec<CommandBinding>,
 }

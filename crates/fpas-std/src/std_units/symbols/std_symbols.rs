@@ -150,6 +150,8 @@ pub const STD_TUI_APPLICATION_CONFIGURE: &str = std_tui!("Application.Configure"
 pub const STD_TUI_APPLICATION_RUN: &str = std_tui!("Application.Run");
 /// High-level modal helper rooted at a host-managed view subtree.
 pub const STD_TUI_APPLICATION_SHOW_MODAL: &str = std_tui!("Application.ShowModal");
+/// High-level dialog helper that creates a root host-managed view and shows it modally.
+pub const STD_TUI_APPLICATION_SHOW_DIALOG: &str = std_tui!("Application.ShowDialog");
 /// Close the active modal dialog shown via `Application.ShowModal`.
 pub const STD_TUI_APPLICATION_CLOSE_MODAL: &str = std_tui!("Application.CloseModal");
 pub const STD_TUI_APPLICATION_SIZE: &str = std_tui!("Application.Size");
@@ -201,6 +203,12 @@ pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_COMMAND: &str =
     std_tui!("Application.HostRegisterOnCommand");
 /// Bind a `Std.Console.KeyEvent` shortcut to a hosted command id.
 pub const STD_TUI_APPLICATION_HOST_BIND_COMMAND: &str = std_tui!("Application.HostBindCommand");
+/// Bind a `Std.Console.KeyEvent` shortcut to a host-managed view subtree.
+pub const STD_TUI_APPLICATION_HOST_BIND_COMMAND_TO_VIEW: &str =
+    std_tui!("Application.HostBindCommandToView");
+/// Bind a `Std.Console.KeyEvent` shortcut to the active modal frame.
+pub const STD_TUI_APPLICATION_HOST_BIND_COMMAND_TO_ACTIVE_MODAL: &str =
+    std_tui!("Application.HostBindCommandToActiveModal");
 /// Push an application-defined modal id onto the hosted modal stack.
 pub const STD_TUI_APPLICATION_HOST_ENTER_MODAL: &str = std_tui!("Application.HostEnterModal");
 /// Pop the active hosted modal frame, if any.

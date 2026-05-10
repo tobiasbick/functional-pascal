@@ -45,6 +45,7 @@ impl Worker {
                     tui.on_resize = None;
                     tui.on_paint = None;
                     tui.view_paints.clear();
+                    tui.view_commands.clear();
                     tui.commands.clear();
                     tui.modals.clear();
                 }
@@ -193,13 +194,35 @@ impl Worker {
                     let _ = tui.views.focus_first_in_scope(&next_scope);
                 });
             }
+            Intrinsic::TuiApplicationShowDialog => {
+                let height = self.pop_int(line)?;
+                let width = self.pop_int(line)?;
+                let y = self.pop_int(line)?;
+                let x = self.pop_int(line)?;
+                let modal_id = self.pop_int(line)?;
+                self.pop_tui_application(line)?;
+                let view_rect = ViewRect {
+                    x,
+                    y,
+                    width,
+                    height,
+                };
+                let dialog_root = self.with_tui(|tui| {
+                    let previous_scope = Self::modal_scope_ids(tui);
+                    let view_id = tui.views.register(view_rect);
+                    let _ = tui.session.request_redraw_rect(view_rect, line);
+                    tui.modals.show_dialog(fpas_std::ModalId(modal_id), view_id);
+                    let next_scope = Self::modal_scope_ids(tui);
+                    Self::request_scope_redraws(tui, &previous_scope, &next_scope, line);
+                    let _ = tui.views.focus_first_in_scope(&next_scope);
+                    view_id
+                });
+                self.push(Value::Integer(i64::from(dialog_root.raw())))?;
+            }
             Intrinsic::TuiApplicationCloseModal => {
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| {
-                    let previous_scope = Self::modal_scope_ids(tui);
-                    let _ = tui.modals.leave_with_scope_info();
-                    let next_scope = Self::modal_scope_ids(tui);
-                    Self::request_scope_redraws(tui, &previous_scope, &next_scope, line);
+                    Self::close_active_modal(tui, line);
                 });
             }
             Intrinsic::TuiApplicationSize => {
@@ -470,6 +493,29 @@ impl Worker {
                     tui.commands.bind(key, fpas_std::CommandId(command_id));
                 });
             }
+            Intrinsic::TuiHostBindCommandToView => {
+                let command_id = self.pop_int(line)?;
+                let key = self.pop_console_key_event(line)?;
+                let view_id = self.pop_tui_view_id(line)?;
+                self.pop_tui_application(line)?;
+                self.require_registered_tui_view(view_id, line)?;
+                self.with_tui(|tui| {
+                    tui.view_commands
+                        .entry(view_id)
+                        .or_default()
+                        .bind(key, fpas_std::CommandId(command_id));
+                });
+            }
+            Intrinsic::TuiHostBindCommandToActiveModal => {
+                let command_id = self.pop_int(line)?;
+                let key = self.pop_console_key_event(line)?;
+                self.pop_tui_application(line)?;
+                self.with_tui(|tui| {
+                    let _ = tui
+                        .modals
+                        .bind_command_to_active(key, fpas_std::CommandId(command_id));
+                });
+            }
             Intrinsic::TuiHostEnterModal => {
                 let modal_id = self.pop_int(line)?;
                 self.pop_tui_application(line)?;
@@ -480,10 +526,7 @@ impl Worker {
             Intrinsic::TuiHostLeaveModal => {
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| {
-                    let previous_scope = Self::modal_scope_ids(tui);
-                    let _ = tui.modals.leave_with_scope_info();
-                    let next_scope = Self::modal_scope_ids(tui);
-                    Self::request_scope_redraws(tui, &previous_scope, &next_scope, line);
+                    Self::close_active_modal(tui, line);
                 });
             }
             Intrinsic::TuiHostModalDepth => {
@@ -514,18 +557,7 @@ impl Worker {
                 let view_id = self.pop_tui_view_id(line)?;
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| {
-                    let previous_focus = tui.views.focused_id();
-                    if let Some(rect) = tui.views.rect(view_id) {
-                        let _ = tui.session.request_redraw_rect(rect, line);
-                    }
-                    tui.views.unregister(view_id);
-                    let current_focus = tui.views.focused_id();
-                    if current_focus != previous_focus
-                        && let Some(view_id) = current_focus
-                        && let Some(rect) = tui.views.rect(view_id)
-                    {
-                        let _ = tui.session.request_redraw_rect(rect, line);
-                    }
+                    Self::unregister_tui_view_subtree(tui, view_id, line);
                 });
             }
             Intrinsic::TuiHostPushChildView => {
@@ -689,6 +721,49 @@ impl Worker {
         }
 
         scope
+    }
+
+    fn close_active_modal(tui: &mut crate::vm::TuiState, line: SourceLocation) {
+        let previous_scope = Self::modal_scope_ids(tui);
+        let popped = tui.modals.leave_with_scope_info();
+        let next_scope = Self::modal_scope_ids(tui);
+        Self::request_scope_redraws(tui, &previous_scope, &next_scope, line);
+
+        if let Some((_, Some(root_view), true, _)) = popped {
+            Self::unregister_tui_view_subtree(tui, root_view, line);
+        }
+    }
+
+    fn unregister_tui_view_subtree(
+        tui: &mut crate::vm::TuiState,
+        root_view: ViewId,
+        line: SourceLocation,
+    ) {
+        let subtree = tui.views.subtree_ids(root_view);
+        if subtree.is_empty() {
+            return;
+        }
+
+        let previous_focus = tui.views.focused_id();
+        Self::request_scope_redraws(tui, &subtree, &[], line);
+        Self::clear_view_local_state(tui, &subtree);
+        tui.modals.remove_view_references(&subtree);
+        tui.views.unregister(root_view);
+
+        let current_focus = tui.views.focused_id();
+        if current_focus != previous_focus
+            && let Some(view_id) = current_focus
+            && let Some(rect) = tui.views.rect(view_id)
+        {
+            let _ = tui.session.request_redraw_rect(rect, line);
+        }
+    }
+
+    fn clear_view_local_state(tui: &mut crate::vm::TuiState, view_ids: &[ViewId]) {
+        for view_id in view_ids {
+            tui.view_paints.remove(view_id);
+            tui.view_commands.remove(view_id);
+        }
     }
 
     fn request_scope_redraws(

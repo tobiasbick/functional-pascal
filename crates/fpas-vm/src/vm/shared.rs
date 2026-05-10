@@ -65,6 +65,8 @@ pub(crate) struct TuiState {
     pub on_paint: Option<Value>,
     /// View-local paint handlers: `procedure (Application, integer, Std.Tui.Rect)` keyed by view.
     pub view_paints: HashMap<ViewId, Value>,
+    /// View-local command bindings keyed by the view whose ancestry should resolve them.
+    pub view_commands: HashMap<ViewId, CommandRegistry>,
     /// `OnIdle`-style handler: `procedure (Application)` (one argument).
     pub on_idle: Option<Value>,
     /// Idle interval for hosted `Application.Run` callbacks in milliseconds; `0` disables idle.
@@ -79,7 +81,7 @@ pub(crate) struct TuiState {
     pub host_stop_requested: bool,
     /// Guards the single hosted `Application.Run` entrypoint for the active session.
     pub run_active: bool,
-    /// Host-managed view registry for the active session (Phase 7). FPAS has no surface yet.
+    /// Host-managed view registry for the active session (Phase 7 view/dialog surface).
     pub views: ViewRegistry,
     /// Host-managed command shortcut registry for the active session (Phase 7).
     pub commands: CommandRegistry,
@@ -103,6 +105,7 @@ impl Default for TuiState {
             on_resize: None,
             on_paint: None,
             view_paints: HashMap::new(),
+            view_commands: HashMap::new(),
             on_idle: None,
             idle_interval_ms: 0,
             on_exit: None,

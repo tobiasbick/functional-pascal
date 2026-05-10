@@ -192,6 +192,23 @@ impl ViewRegistry {
         ids
     }
 
+    /// Return the ancestor chain for `id`, starting with `id` itself and ending at the root.
+    #[must_use]
+    pub fn ancestors_inclusive(&self, id: ViewId) -> Vec<ViewId> {
+        let mut ids = Vec::new();
+        let mut current = Some(id);
+
+        while let Some(view_id) = current {
+            let Some(entry) = self.entry(view_id) else {
+                break;
+            };
+            ids.push(view_id);
+            current = entry.parent;
+        }
+
+        ids
+    }
+
     /// Return the full paint order from back to front.
     #[must_use]
     pub fn paint_order(&self) -> Vec<ViewId> {
@@ -663,5 +680,18 @@ mod tests {
         assert!(changed_wrap);
         assert!(had_previous_wrap);
         assert_eq!(registry.focused_id(), Some(b));
+    }
+
+    #[test]
+    fn ancestors_inclusive_returns_leaf_to_root() {
+        let mut registry = ViewRegistry::default();
+        let root = registry.register(rect(0, 0, 10, 5));
+        let child = registry.register(rect(1, 1, 4, 2));
+        let leaf = registry.register(rect(1, 0, 2, 1));
+
+        assert!(registry.set_parent(child, Some(root)));
+        assert!(registry.set_parent(leaf, Some(child)));
+
+        assert_eq!(registry.ancestors_inclusive(leaf), vec![leaf, child, root]);
     }
 }

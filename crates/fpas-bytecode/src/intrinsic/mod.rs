@@ -612,6 +612,25 @@ pub enum Intrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     TuiApplicationCloseModal = 288,
+
+    /// Bind a shortcut that is only active while the specified host-managed view or one of its
+    /// descendants has focus.
+    /// Stack: `Application`, `ViewId`, `Key`, `CommandId` (`integer`, top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostBindCommandToView = 289,
+
+    /// Bind a shortcut that is only active for the current modal frame.
+    /// Stack: `Application`, `Key`, `CommandId` (`integer`, top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiHostBindCommandToActiveModal = 290,
+
+    /// Register a root dialog view and show it as the active modal.
+    /// Stack: `Application`, `ModalId`, `X`, `Y`, `Width`, `Height` (`integer`, top). Pushes the root `ViewId`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    TuiApplicationShowDialog = 291,
 }
 
 impl From<Intrinsic> for u16 {

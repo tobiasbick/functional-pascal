@@ -6,6 +6,7 @@ use fpas_bytecode::{Chunk, Intrinsic, Op, Value};
 use fpas_std::ConsoleEvent;
 use fpas_std::ConsoleKeyEvent;
 use fpas_std::DamageRegion;
+use fpas_std::ViewId;
 use fpas_std::ViewRect;
 use fpas_std::key_event::key_kind_index;
 use std::sync::Arc;
@@ -340,6 +341,237 @@ fn tui_host_bound_command_without_handler_returns_tag_seventeen() {
 }
 
 #[test]
+fn tui_host_bind_command_to_view_stores_local_binding() {
+    let save_key =
+        ConsoleKeyEvent::new(key_kind_index("Character"), 's', false, true, false, false);
+
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(&mut chunk, Value::Integer(8));
+    emit_constant(&mut chunk, Value::Integer(4));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    chunk.emit(Op::GetLocal(1), loc());
+    emit_constant(&mut chunk, key_event_value(save_key.clone()));
+    emit_constant(&mut chunk, Value::Integer(20));
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostBindCommandToView as u16),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+    let binding = tui
+        .view_commands
+        .get(&ViewId::from_raw(0))
+        .and_then(|commands| commands.resolve(&save_key));
+    assert_eq!(binding, Some(fpas_std::CommandId(20)));
+}
+
+#[test]
+fn tui_host_bind_command_to_active_modal_stores_modal_binding() {
+    let save_key =
+        ConsoleKeyEvent::new(key_kind_index("Character"), 's', false, true, false, false);
+
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(10));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostEnterModal as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, key_event_value(save_key.clone()));
+    emit_constant(&mut chunk, Value::Integer(30));
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostBindCommandToActiveModal as u16),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+    assert_eq!(
+        tui.modals.resolve_active_command(&save_key),
+        Some(fpas_std::CommandId(30))
+    );
+}
+
+#[test]
+fn tui_host_view_command_shortcut_uses_focused_ancestor_binding() {
+    let save_key =
+        ConsoleKeyEvent::new(key_kind_index("Character"), 's', false, true, false, false);
+
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Dup, loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnCommand".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnCommand as u16),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, key_event_value(save_key.clone()));
+    emit_constant(&mut chunk, Value::Integer(10));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostBindCommand as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(&mut chunk, Value::Integer(8));
+    emit_constant(&mut chunk, Value::Integer(4));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(1));
+    emit_constant(&mut chunk, Value::Integer(1));
+    emit_constant(&mut chunk, Value::Integer(1));
+    emit_constant(&mut chunk, Value::Integer(1));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    chunk.emit(Op::GetLocal(2), loc());
+    chunk.emit(Op::GetLocal(1), loc());
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostSetViewParent as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    chunk.emit(Op::GetLocal(2), loc());
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostPushChildView as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    chunk.emit(Op::GetLocal(1), loc());
+    emit_constant(&mut chunk, key_event_value(save_key.clone()));
+    emit_constant(&mut chunk, Value::Integer(20));
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostBindCommandToView as u16),
+        loc(),
+    );
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(32));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Pop, loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(32));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::Halt, loc());
+
+    let on_command_start = chunk.len();
+    chunk
+        .functions
+        .insert("OnCommand".into(), (on_command_start, 2));
+    chunk.emit(Op::GetLocal(1), loc());
+    chunk.emit(Op::PrintLn, loc());
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    let mut vm = Vm::new(chunk);
+    vm.push_console_event(ConsoleEvent::key(ConsoleKeyEvent::new(
+        key_kind_index("Tab"),
+        '\t',
+        false,
+        false,
+        false,
+        false,
+    )));
+    vm.push_console_event(ConsoleEvent::key(save_key));
+    vm.run().expect("vm ok");
+
+    assert_eq!(vm.output().lines, vec!["20", "16"]);
+}
+
+#[test]
+fn tui_host_modal_command_shortcut_uses_active_modal_binding() {
+    let save_key =
+        ConsoleKeyEvent::new(key_kind_index("Character"), 's', false, true, false, false);
+
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Dup, loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnCommand".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostRegisterOnCommand as u16),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, key_event_value(save_key.clone()));
+    emit_constant(&mut chunk, Value::Integer(10));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostBindCommand as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(&mut chunk, Value::Integer(8));
+    emit_constant(&mut chunk, Value::Integer(4));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    chunk.emit(Op::GetLocal(1), loc());
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostPushChildView as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(10));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostEnterModal as u16), loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    chunk.emit(Op::GetLocal(1), loc());
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostAttachViewToActiveModal as u16),
+        loc(),
+    );
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, key_event_value(save_key.clone()));
+    emit_constant(&mut chunk, Value::Integer(30));
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiHostBindCommandToActiveModal as u16),
+        loc(),
+    );
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(32));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Pop, loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(32));
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::Halt, loc());
+
+    let on_command_start = chunk.len();
+    chunk
+        .functions
+        .insert("OnCommand".into(), (on_command_start, 2));
+    chunk.emit(Op::GetLocal(1), loc());
+    chunk.emit(Op::PrintLn, loc());
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    let mut vm = Vm::new(chunk);
+    vm.push_console_event(ConsoleEvent::key(ConsoleKeyEvent::new(
+        key_kind_index("Tab"),
+        '\t',
+        false,
+        false,
+        false,
+        false,
+    )));
+    vm.push_console_event(ConsoleEvent::key(save_key));
+    vm.run().expect("vm ok");
+
+    assert_eq!(vm.output().lines, vec!["30", "16"]);
+}
+
+#[test]
 fn tui_host_modal_depth_tracks_enter_and_leave() {
     let mut chunk = Chunk::new();
     chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
@@ -560,6 +792,36 @@ fn tui_host_modal_stack_is_cleared_by_application_close() {
 
     let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
     assert_eq!(tui.modals.depth(), 0);
+}
+
+#[test]
+fn tui_application_show_dialog_registers_owned_root_and_close_modal_removes_it() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(&mut chunk, Value::Integer(5));
+    emit_constant(&mut chunk, Value::Integer(6));
+    emit_constant(&mut chunk, Value::Integer(7));
+    emit_constant(&mut chunk, Value::Integer(8));
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiApplicationShowDialog as u16),
+        loc(),
+    );
+    chunk.emit(Op::Pop, loc());
+    chunk.emit(
+        Op::Intrinsic(Intrinsic::TuiApplicationCloseModal as u16),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+    assert_eq!(tui.modals.depth(), 0);
+    assert!(tui.views.is_empty());
 }
 
 #[test]

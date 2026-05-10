@@ -305,6 +305,20 @@ impl Worker {
 
     fn resolve_tui_command(&self, key: &fpas_std::ConsoleKeyEvent) -> Option<CommandId> {
         let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some(focused) = tui.views.focused_id() {
+            for view_id in tui.views.ancestors_inclusive(focused) {
+                if let Some(commands) = tui.view_commands.get(&view_id)
+                    && let Some(command_id) = commands.resolve(key)
+                {
+                    return Some(command_id);
+                }
+            }
+        }
+
+        if let Some(command_id) = tui.modals.resolve_active_command(key) {
+            return Some(command_id);
+        }
+
         tui.commands.resolve(key)
     }
 
@@ -594,6 +608,7 @@ impl Worker {
         tui.on_resize = None;
         tui.on_paint = None;
         tui.view_paints.clear();
+        tui.view_commands.clear();
         tui.on_idle = None;
         tui.idle_interval_ms = 0;
         tui.on_exit = None;

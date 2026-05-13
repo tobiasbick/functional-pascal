@@ -1,8 +1,8 @@
-# `Std.Tui` — dispatch-mode application (target)
+# `Std.Tui` — dispatch-mode application
 
-**Status:** target specification for the Rust-hosted event loop and `On*` handlers described in `[docs/future/tui-application-framework.md](../../future/tui-application-framework.md)`. **`Application.Host*`** dispatch helpers are **registered and lowered**, **`ApplicationHandlers`** / **`Application.Configure(App, Handlers)`** are available as the bundled registration surface, **`Application.Run(App)`** is available as the hosted loop entrypoint, and the current Phase 7 structure layer now includes **`Std.Tui.Rect`**, **`Application.HostSetViewParent`**, **`Application.HostRegisterOnViewPaint`**, **`Application.HostBindCommandToView`**, **`Application.HostBindCommandToActiveModal`**, **`Application.ShowModal`**, **`Application.ShowDialog`**, and **`Application.CloseModal`**. `OnIdle` remains available through both `Application.HostRegisterOnIdle(App, Milliseconds, OnIdle)` and the bundle field pair `OnIdleMilliseconds` + `OnIdle`. The poll-style API in `[tui.md](tui.md)` remains available for programs that do not use hosted dispatch.
+**Status:** current specification for the Rust-hosted event loop and `On*` handlers described in `[docs/future/tui-application-framework.md](../../future/tui-application-framework.md)`. **`Application.Host*`** dispatch helpers are **registered and lowered**, **`ApplicationHandlers`** / **`Application.Configure(App, Handlers)`** are available as the bundled registration surface, **`Application.Run(App)`** is available as the hosted loop entrypoint, and the current Phase 7 structure layer includes **`Std.Tui.Rect`**, **`Application.HostSetViewParent`**, **`Application.HostRegisterOnViewPaint`**, **`Application.HostBindCommandToView`**, **`Application.HostBindCommandToActiveModal`**, **`Application.ShowModal`**, **`Application.ShowDialog`**, and **`Application.CloseModal`**. `OnIdle` remains available through both `Application.HostRegisterOnIdle(App, Milliseconds, OnIdle)` and the bundle field pair `OnIdleMilliseconds` + `OnIdle`. The poll-style API in `[tui.md](tui.md)` remains available for programs that do not use hosted dispatch.
 
-**Maintenance (implementers only):** when this mode ships, register types and routines in `[loaded/tui.rs](../../../crates/fpas-sema/src/std_registry/loaded/tui.rs)` and keep this file aligned with that registry (see root `[AGENTS.md](../../../AGENTS.md)`).
+**Maintenance (implementers only):** keep the types and routines in `[loaded/tui.rs](../../../crates/fpas-sema/src/std_registry/loaded/tui.rs)` aligned with this file (see root `[AGENTS.md](../../../AGENTS.md)`).
 
 ---
 
@@ -23,7 +23,7 @@ These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mo
 | `TuiHostDispatchRedraw`       | `Application`                                    | If redraw is pending: runs registered `OnPaint` after `take_redraw_pending`, or clears the flag with tag `6` when no handler. Pushes `integer`: `0` not pending, `5` paint ran, `6` cleared without handler.                                                                        |
 | `TuiHostRunLoop`              | `Application`, `max_iterations` (`integer`, top) | Bounded host loop: each iteration runs the same work as `TuiHostDispatchRedraw` then `TuiHostProcessNext` with a fixed inner `max_spins` of `64`. After each iteration, if `TuiHostRequestQuit` was observed, the loop stops and the quit flag is cleared. Otherwise stops when both steps would be idle (`0`). `max_iterations` is clamped to `0..=1_000_000`. Pushes `()`. |
 | `TuiHostRequestQuit`          | `Application`                                    | Sets a flag read by `TuiHostRunLoop` after each iteration. Does not push a value.                                                                                                                                                                                                 |
-| `TuiHostRegisterOnExit`       | `Application`, `function`                        | Registers `procedure (Application, ExitReason)` for a future hosted `Run` / `OnExit` path. Current bounded `HostRunLoop` does **not** invoke it yet.                                                                                                                               |
+| `TuiHostRegisterOnExit`       | `Application`, `function`                        | Registers `procedure (Application, ExitReason)` for the hosted `Application.Run` / `OnExit` path. The bounded `HostRunLoop` helper still does **not** invoke it.                                                                                                                  |
 | `TuiHostRegisterOnMouse`      | `Application`, `function`                        | Registers `procedure (Application, Std.Console.Event)` (arity 2) for host mouse-event dispatch.                                                                                                                                                                                     |
 | `TuiHostRegisterOnPaste`      | `Application`, `function`                        | Registers `procedure (Application, Std.Console.Event)` (arity 2) for bracketed-paste dispatch. Best-effort; only fires on terminals that report paste events (requires `Std.Console.EnablePaste`).                                                                                  |
 | `TuiHostRegisterOnFocusGained` | `Application`, `function`                       | Registers `procedure (Application, Std.Console.Event)` (arity 2) for terminal focus-gained dispatch. Best-effort / optional.                                                                                                                                                       |
@@ -203,7 +203,7 @@ end;
 
 Reuse existing types from `**Std.Tui`** and `**Std.Console`** where possible: `**Application**`, `**Size**`, `**Std.Console.KeyEvent**`.
 
-### `Rect` (target)
+### `Rect`
 
 Record describing the absolute terminal bounds for a host-managed view during local paint dispatch.
 
@@ -214,7 +214,7 @@ Record describing the absolute terminal bounds for a host-managed view during lo
 | `width` | `integer` | Width in terminal cells. |
 | `height` | `integer` | Height in terminal cells. |
 
-### `ExitReason` (target)
+### `ExitReason`
 
 Enum describing why the hosted loop stopped (`**Std.Tui.ExitReason`**). **Registry:** the type and variants `**UserQuit**`, `**HostStop`**, `**HostAndUserStop**`, `**HostShutdown**` are registered in [`loaded/tui.rs`](../../../crates/fpas-sema/src/std_registry/loaded/tui.rs) and known to the compiler enum tables. **VM:** [`Application.Run`](../../../crates/fpas-vm/src/vm/execute/io/tui_run.rs) records `**last_exit_reason**`, invokes the registered `**OnExit**`, and then performs close semantics. The current hosted loop reports `**UserQuit`** when `**Application.HostRequestQuit(App)`** ends the run, `**HostStop`** when low-level code stops the active hosted session during `**Run`**, `**HostAndUserStop`** when both stop signals are present in the same turn, and `**HostShutdown`** when VM global shutdown is requested while the hosted run is active.
 

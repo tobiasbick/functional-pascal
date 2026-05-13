@@ -41,10 +41,10 @@ Implementation plan for evolving Functional Pascal's terminal UI from poll-style
 - Damage tracking exists end to end and now uses explicit dirty rectangles or redraw hints for focus transitions, view lifecycle changes, view-rect updates, resize, modal attach/leave, mouse, paste, and terminal focus events.
 - Hosted `OnPaint` now runs through a deferred single-present path: CRT writes stay buffered until the handler returns, and the terminal diff/flush step can restrict itself to the tracked dirty region plus the actual console mutations recorded during that frame.
 
-### Remaining follow-on work
+### Deferred beyond Phase 7
 
-- There is still no higher-level widget library, automatic layout manager, or packaged Turbo Vision-style control set.
-- `ApplicationHandlers` still models the application-global handler bundle; view-local paint and scoped command maps stay on the explicit host-view / modal surfaces for now.
+- A higher-level widget library, automatic layout manager, and packaged Turbo Vision-style control set remain outside the completed Phase 7 scope.
+- `ApplicationHandlers` intentionally remains the application-global handler bundle; view-local paint and scoped command maps stay on the explicit host-view / modal surfaces in the current design.
 
 ---
 
@@ -52,11 +52,11 @@ Implementation plan for evolving Functional Pascal's terminal UI from poll-style
 
 **Status:** Next active phase.
 
-1. **Integration test**: headless or scripted terminal; document manual checklist for real terminals.
+1. **Integration test**: headless or scripted terminal; manual real-terminal checklist is documented in [`docs/rust/tui-terminal-checklist.md`](../rust/tui-terminal-checklist.md).
 2. **Fuzz / property-test** event ordering (resize bursts, rapid keys).
-3. **Performance budget**: max input-to-handler latency on a reference machine (informal target).
-4. Verify all Rust sources link to the canonical `docs/pascal/` spec (project rule).
-5. Archive or move this file once Phase 7 is complete.
+3. **Performance budget**: hosted-dispatch latency targets are documented in [`docs/rust/tui-performance-budget.md`](../rust/tui-performance-budget.md).
+4. Verify TUI Rust sources link to the canonical `docs/pascal/` spec (covered by `tui_rust_sources_link_to_pascal_spec_docs`).
+5. Archive or move this file now that Phase 7 is complete.
 
 ---
 

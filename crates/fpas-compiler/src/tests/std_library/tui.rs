@@ -1,3 +1,7 @@
+//! Compiler integration tests for `Std.Tui`.
+//!
+//! **Documentation:** `docs/pascal/std/tui.md`, `docs/pascal/std/tui-app.md` (from the repository root).
+
 use super::super::{
     compile_and_run, compile_err, compile_ok, compile_run_error, compile_run_with_console_events,
 };

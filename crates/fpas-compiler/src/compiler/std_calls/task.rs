@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/pascal/std/task.md` (from the repository root); language rules: `docs/pascal/08-concurrency.md`.
 
 use crate::error::CompileError;
-use fpas_bytecode::{Intrinsic, SourceLocation};
+use fpas_bytecode::{Intrinsic, SourceLocation, TaskIntrinsic};
 use fpas_parser::Expr;
 use fpas_std::std_symbols as s;
 
@@ -20,13 +20,13 @@ impl Compiler {
             s::STD_TASK_WAIT => {
                 self.expect_exact_args(s::STD_TASK_WAIT, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::TaskWait, location);
+                self.emit_intrinsic(Intrinsic::Task(TaskIntrinsic::Wait), location);
                 Ok(true)
             }
             s::STD_TASK_WAIT_ALL => {
                 self.expect_exact_args(s::STD_TASK_WAIT_ALL, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic_unit(Intrinsic::TaskWaitAll, location);
+                self.emit_intrinsic_unit(Intrinsic::Task(TaskIntrinsic::WaitAll), location);
                 Ok(true)
             }
             _ => Ok(false),

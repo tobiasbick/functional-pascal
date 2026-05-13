@@ -6,7 +6,7 @@
 
 use crate::error::{StdError, std_runtime_error};
 use crate::helpers::{pop_int, pop_real, pop_value};
-use fpas_bytecode::{Intrinsic, SourceLocation, Value};
+use fpas_bytecode::{MathIntrinsic, Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::{RUNTIME_NUMERIC_DOMAIN_ERROR, RUNTIME_VM_OPERAND_TYPE_MISMATCH};
 use rand::Rng;
 
@@ -18,7 +18,7 @@ pub(crate) fn run(
     location: SourceLocation,
 ) -> Result<Option<()>, StdError> {
     match intrinsic {
-        Intrinsic::MathSqrt => {
+        Intrinsic::Math(MathIntrinsic::Sqrt) => {
             let r = pop_real(pop_value(stack, location)?, location)?;
             if r < 0.0 {
                 return Err(std_runtime_error(
@@ -30,12 +30,12 @@ pub(crate) fn run(
             }
             stack.push(Value::Real(r.sqrt()));
         }
-        Intrinsic::MathPow => {
+        Intrinsic::Math(MathIntrinsic::Pow) => {
             let exp = pop_real(pop_value(stack, location)?, location)?;
             let base = pop_real(pop_value(stack, location)?, location)?;
             stack.push(Value::Real(base.powf(exp)));
         }
-        Intrinsic::MathFloor => {
+        Intrinsic::Math(MathIntrinsic::Floor) => {
             let r = pop_real(pop_value(stack, location)?, location)?;
             stack.push(Value::Integer(checked_real_to_int(
                 r.floor(),
@@ -43,7 +43,7 @@ pub(crate) fn run(
                 location,
             )?));
         }
-        Intrinsic::MathCeil => {
+        Intrinsic::Math(MathIntrinsic::Ceil) => {
             let r = pop_real(pop_value(stack, location)?, location)?;
             stack.push(Value::Integer(checked_real_to_int(
                 r.ceil(),
@@ -51,7 +51,7 @@ pub(crate) fn run(
                 location,
             )?));
         }
-        Intrinsic::MathRound => {
+        Intrinsic::Math(MathIntrinsic::Round) => {
             let r = pop_real(pop_value(stack, location)?, location)?;
             stack.push(Value::Integer(checked_real_to_int(
                 r.round(),
@@ -59,15 +59,15 @@ pub(crate) fn run(
                 location,
             )?));
         }
-        Intrinsic::MathSin => {
+        Intrinsic::Math(MathIntrinsic::Sin) => {
             let r = pop_real(pop_value(stack, location)?, location)?;
             stack.push(Value::Real(r.sin()));
         }
-        Intrinsic::MathCos => {
+        Intrinsic::Math(MathIntrinsic::Cos) => {
             let r = pop_real(pop_value(stack, location)?, location)?;
             stack.push(Value::Real(r.cos()));
         }
-        Intrinsic::MathLog => {
+        Intrinsic::Math(MathIntrinsic::Log) => {
             let r = pop_real(pop_value(stack, location)?, location)?;
             if r <= 0.0 {
                 return Err(std_runtime_error(
@@ -79,25 +79,25 @@ pub(crate) fn run(
             }
             stack.push(Value::Real(r.ln()));
         }
-        Intrinsic::MathMin => {
+        Intrinsic::Math(MathIntrinsic::Min) => {
             let b = pop_value(stack, location)?;
             let a = pop_value(stack, location)?;
             stack.push(minmax_value(a, b, true, location)?);
         }
-        Intrinsic::MathMax => {
+        Intrinsic::Math(MathIntrinsic::Max) => {
             let b = pop_value(stack, location)?;
             let a = pop_value(stack, location)?;
             stack.push(minmax_value(a, b, false, location)?);
         }
-        Intrinsic::MathAbs => {
+        Intrinsic::Math(MathIntrinsic::Abs) => {
             let v = pop_value(stack, location)?;
             stack.push(abs_value(v, location)?);
         }
-        Intrinsic::MathTan => {
+        Intrinsic::Math(MathIntrinsic::Tan) => {
             let r = pop_real(pop_value(stack, location)?, location)?;
             stack.push(Value::Real(r.tan()));
         }
-        Intrinsic::MathArcSin => {
+        Intrinsic::Math(MathIntrinsic::ArcSin) => {
             let r = pop_real(pop_value(stack, location)?, location)?;
             if !(-1.0..=1.0).contains(&r) {
                 return Err(std_runtime_error(
@@ -109,7 +109,7 @@ pub(crate) fn run(
             }
             stack.push(Value::Real(r.asin()));
         }
-        Intrinsic::MathArcCos => {
+        Intrinsic::Math(MathIntrinsic::ArcCos) => {
             let r = pop_real(pop_value(stack, location)?, location)?;
             if !(-1.0..=1.0).contains(&r) {
                 return Err(std_runtime_error(
@@ -121,20 +121,20 @@ pub(crate) fn run(
             }
             stack.push(Value::Real(r.acos()));
         }
-        Intrinsic::MathArcTan => {
+        Intrinsic::Math(MathIntrinsic::ArcTan) => {
             let r = pop_real(pop_value(stack, location)?, location)?;
             stack.push(Value::Real(r.atan()));
         }
-        Intrinsic::MathArcTan2 => {
+        Intrinsic::Math(MathIntrinsic::ArcTan2) => {
             let x = pop_real(pop_value(stack, location)?, location)?;
             let y = pop_real(pop_value(stack, location)?, location)?;
             stack.push(Value::Real(y.atan2(x)));
         }
-        Intrinsic::MathExp => {
+        Intrinsic::Math(MathIntrinsic::Exp) => {
             let r = pop_real(pop_value(stack, location)?, location)?;
             stack.push(Value::Real(r.exp()));
         }
-        Intrinsic::MathLog10 => {
+        Intrinsic::Math(MathIntrinsic::Log10) => {
             let r = pop_real(pop_value(stack, location)?, location)?;
             if r <= 0.0 {
                 return Err(std_runtime_error(
@@ -146,7 +146,7 @@ pub(crate) fn run(
             }
             stack.push(Value::Real(r.log10()));
         }
-        Intrinsic::MathLog2 => {
+        Intrinsic::Math(MathIntrinsic::Log2) => {
             let r = pop_real(pop_value(stack, location)?, location)?;
             if r <= 0.0 {
                 return Err(std_runtime_error(
@@ -158,7 +158,7 @@ pub(crate) fn run(
             }
             stack.push(Value::Real(r.log2()));
         }
-        Intrinsic::MathTrunc => {
+        Intrinsic::Math(MathIntrinsic::Trunc) => {
             let r = pop_real(pop_value(stack, location)?, location)?;
             stack.push(Value::Integer(checked_real_to_int(
                 r.trunc(),
@@ -166,26 +166,26 @@ pub(crate) fn run(
                 location,
             )?));
         }
-        Intrinsic::MathFrac => {
+        Intrinsic::Math(MathIntrinsic::Frac) => {
             let r = pop_real(pop_value(stack, location)?, location)?;
             stack.push(Value::Real(r.fract()));
         }
-        Intrinsic::MathSign => {
+        Intrinsic::Math(MathIntrinsic::Sign) => {
             let v = pop_value(stack, location)?;
             stack.push(sign_value(v, location)?);
         }
-        Intrinsic::MathClamp => {
+        Intrinsic::Math(MathIntrinsic::Clamp) => {
             let hi = pop_value(stack, location)?;
             let lo = pop_value(stack, location)?;
             let x = pop_value(stack, location)?;
             stack.push(clamp_value(x, lo, hi, location)?);
         }
-        Intrinsic::MathRandom => {
+        Intrinsic::Math(MathIntrinsic::Random) => {
             let mut rng = rand::rng();
             let r: f64 = rng.random();
             stack.push(Value::Real(r));
         }
-        Intrinsic::MathRandomInt => {
+        Intrinsic::Math(MathIntrinsic::RandomInt) => {
             let hi = pop_int(pop_value(stack, location)?, location)?;
             let lo = pop_int(pop_value(stack, location)?, location)?;
             if lo > hi {
@@ -200,7 +200,7 @@ pub(crate) fn run(
             let r: i64 = rng.random_range(lo..=hi);
             stack.push(Value::Integer(r));
         }
-        Intrinsic::MathRandomize => {
+        Intrinsic::Math(MathIntrinsic::Randomize) => {
             // Randomize is a no-op when using `rand::rng()` (automatically seeded per thread).
             stack.push(Value::Unit);
         }
@@ -338,7 +338,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::run;
-    use fpas_bytecode::{Intrinsic, SourceLocation, Value};
+    use fpas_bytecode::{MathIntrinsic, Intrinsic, SourceLocation, Value};
 
     fn test_location() -> SourceLocation {
         SourceLocation::new(1, 1)
@@ -348,7 +348,7 @@ mod tests {
     fn abs_reports_overflow_for_min_integer() {
         let mut stack = vec![Value::Integer(i64::MIN)];
 
-        let error = run(Intrinsic::MathAbs, &mut stack, test_location()).unwrap_err();
+        let error = run(Intrinsic::Math(MathIntrinsic::Abs), &mut stack, test_location()).unwrap_err();
 
         assert!(error.message.contains("Abs overflow"), "{}", error.message);
     }
@@ -357,7 +357,7 @@ mod tests {
     fn floor_rejects_non_finite_values() {
         let mut stack = vec![Value::Real(f64::INFINITY)];
 
-        let error = run(Intrinsic::MathFloor, &mut stack, test_location()).unwrap_err();
+        let error = run(Intrinsic::Math(MathIntrinsic::Floor), &mut stack, test_location()).unwrap_err();
 
         assert!(error.message.contains("Floor result"), "{}", error.message);
     }
@@ -366,7 +366,7 @@ mod tests {
     fn trunc_rejects_out_of_range_values() {
         let mut stack = vec![Value::Real(1.0e300)];
 
-        let error = run(Intrinsic::MathTrunc, &mut stack, test_location()).unwrap_err();
+        let error = run(Intrinsic::Math(MathIntrinsic::Trunc), &mut stack, test_location()).unwrap_err();
 
         assert!(error.message.contains("Trunc result"), "{}", error.message);
     }
@@ -374,15 +374,15 @@ mod tests {
     #[test]
     fn floor_ceil_and_trunc_keep_negative_finite_semantics() {
         let mut floor_stack = vec![Value::Real(-3.2)];
-        run(Intrinsic::MathFloor, &mut floor_stack, test_location()).unwrap();
+        run(Intrinsic::Math(MathIntrinsic::Floor), &mut floor_stack, test_location()).unwrap();
         assert_eq!(floor_stack, vec![Value::Integer(-4)]);
 
         let mut ceil_stack = vec![Value::Real(-3.2)];
-        run(Intrinsic::MathCeil, &mut ceil_stack, test_location()).unwrap();
+        run(Intrinsic::Math(MathIntrinsic::Ceil), &mut ceil_stack, test_location()).unwrap();
         assert_eq!(ceil_stack, vec![Value::Integer(-3)]);
 
         let mut trunc_stack = vec![Value::Real(-3.7)];
-        run(Intrinsic::MathTrunc, &mut trunc_stack, test_location()).unwrap();
+        run(Intrinsic::Math(MathIntrinsic::Trunc), &mut trunc_stack, test_location()).unwrap();
         assert_eq!(trunc_stack, vec![Value::Integer(-3)]);
     }
 
@@ -390,7 +390,7 @@ mod tests {
     fn round_accepts_regular_finite_values() {
         let mut stack = vec![Value::Real(2.6)];
 
-        run(Intrinsic::MathRound, &mut stack, test_location()).unwrap();
+        run(Intrinsic::Math(MathIntrinsic::Round), &mut stack, test_location()).unwrap();
 
         assert_eq!(stack, vec![Value::Integer(3)]);
     }

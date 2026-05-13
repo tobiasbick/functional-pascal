@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/rust/parallel-vm.md` (Phase 8), `docs/pascal/std/task.md`, `docs/pascal/08-concurrency.md`
 
 use crate::Vm;
-use fpas_bytecode::{Intrinsic, Op, Value};
+use fpas_bytecode::{Intrinsic, Op, TaskIntrinsic, Value};
 
 use crate::tests::helpers::{build_zero_arg_function_chunk, emit_constant, loc};
 
@@ -26,7 +26,7 @@ fn wait_all_three_tasks_busy_children_then_barrier() {
                 chunk.emit(Op::SpawnTask(0), loc());
             }
             chunk.emit(Op::MakeArray(3), loc());
-            chunk.emit(Op::Intrinsic(Intrinsic::TaskWaitAll as u16), loc());
+            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::WaitAll))), loc());
             chunk.emit(Op::Halt, loc());
         },
         |chunk| {
@@ -66,7 +66,7 @@ fn main_yields_between_spawns_wait_all_still_completes() {
             chunk.emit(Op::Dup, loc());
             chunk.emit(Op::Dup, loc());
             chunk.emit(Op::MakeArray(2), loc());
-            chunk.emit(Op::Intrinsic(Intrinsic::TaskWaitAll as u16), loc());
+            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::WaitAll))), loc());
             chunk.emit(Op::Halt, loc());
         },
         |chunk| {

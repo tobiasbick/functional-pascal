@@ -1,6 +1,6 @@
 use crate::vm::Worker;
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError, internal_error, runtime_error};
-use fpas_bytecode::{Intrinsic, SourceLocation, Value};
+use fpas_bytecode::{ConsoleIntrinsic, Intrinsic, SourceLocation, Value};
 use fpas_std::{Console, ConsoleKeyEvent, KeyInput, TextInput};
 
 impl Worker {
@@ -75,159 +75,159 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<bool, VmError> {
         match intrinsic {
-            Intrinsic::ConsoleReadLn => {
+            Intrinsic::Console(ConsoleIntrinsic::ReadLn) => {
                 let text = self.with_text_input(|t| t.read_line(line))?;
                 self.push(Value::Str(text))?;
             }
-            Intrinsic::ConsoleRead => {
+            Intrinsic::Console(ConsoleIntrinsic::Read) => {
                 let ch = self.with_text_input(|t| t.read_char(line))?;
                 self.push(Value::Char(ch))?;
             }
-            Intrinsic::ConsoleReadKey => {
+            Intrinsic::Console(ConsoleIntrinsic::ReadKey) => {
                 let ch = self.with_key_input(|k| k.read_key(line))?;
                 self.push(Value::Char(ch))?;
             }
-            Intrinsic::ConsoleKeyPressed => {
+            Intrinsic::Console(ConsoleIntrinsic::KeyPressed) => {
                 let pressed = self.with_key_input(|k| k.key_pressed(line))?;
                 self.push(Value::Boolean(pressed))?;
             }
-            Intrinsic::ConsoleReadKeyEvent => {
+            Intrinsic::Console(ConsoleIntrinsic::ReadKeyEvent) => {
                 let event = self.with_key_input(|k| k.read_key_event(line))?;
                 self.push(Self::key_event_record(event))?;
             }
-            Intrinsic::ConsoleEventPending => {
+            Intrinsic::Console(ConsoleIntrinsic::EventPending) => {
                 let pending = self.with_key_input(|k| k.event_pending(line))?;
                 self.push(Value::Boolean(pending))?;
             }
-            Intrinsic::ConsoleReadEvent => {
+            Intrinsic::Console(ConsoleIntrinsic::ReadEvent) => {
                 let event = self.with_key_input(|k| k.read_event(line))?;
                 self.maybe_resize_on_event(&event);
                 self.push(Self::console_event_record(event))?;
             }
-            Intrinsic::ConsoleClrScr => self.with_console(|c| c.clr_scr(line))?,
-            Intrinsic::ConsoleClrEol => self.with_console(|c| c.clr_eol(line))?,
-            Intrinsic::ConsoleGotoXY => {
+            Intrinsic::Console(ConsoleIntrinsic::ClrScr) => self.with_console(|c| c.clr_scr(line))?,
+            Intrinsic::Console(ConsoleIntrinsic::ClrEol) => self.with_console(|c| c.clr_eol(line))?,
+            Intrinsic::Console(ConsoleIntrinsic::GotoXY) => {
                 let y = self.pop_int(line)?;
                 let x = self.pop_int(line)?;
                 self.with_console(|c| c.goto_xy(x, y, line))?;
             }
-            Intrinsic::ConsoleWhereX => {
+            Intrinsic::Console(ConsoleIntrinsic::WhereX) => {
                 let val = self.with_console(|c| c.where_x());
                 self.push(Value::Integer(val))?;
             }
-            Intrinsic::ConsoleWhereY => {
+            Intrinsic::Console(ConsoleIntrinsic::WhereY) => {
                 let val = self.with_console(|c| c.where_y());
                 self.push(Value::Integer(val))?;
             }
-            Intrinsic::ConsoleWindMin => {
+            Intrinsic::Console(ConsoleIntrinsic::WindMin) => {
                 let val = self.with_console(|c| c.wind_min());
                 self.push(Value::Integer(val))?;
             }
-            Intrinsic::ConsoleWindMax => {
+            Intrinsic::Console(ConsoleIntrinsic::WindMax) => {
                 let val = self.with_console(|c| c.wind_max());
                 self.push(Value::Integer(val))?;
             }
-            Intrinsic::ConsoleDelLine => self.with_console(|c| c.del_line(line))?,
-            Intrinsic::ConsoleInsLine => self.with_console(|c| c.ins_line(line))?,
-            Intrinsic::ConsoleWindow => {
+            Intrinsic::Console(ConsoleIntrinsic::DelLine) => self.with_console(|c| c.del_line(line))?,
+            Intrinsic::Console(ConsoleIntrinsic::InsLine) => self.with_console(|c| c.ins_line(line))?,
+            Intrinsic::Console(ConsoleIntrinsic::Window) => {
                 let y2 = self.pop_int(line)?;
                 let x2 = self.pop_int(line)?;
                 let y1 = self.pop_int(line)?;
                 let x1 = self.pop_int(line)?;
                 self.with_console(|c| c.window(x1, y1, x2, y2, line))?;
             }
-            Intrinsic::ConsoleTextColor => {
+            Intrinsic::Console(ConsoleIntrinsic::TextColor) => {
                 let color = self.pop_int(line)?;
                 self.with_console(|c| c.text_color(color, line))?;
             }
-            Intrinsic::ConsoleTextBackground => {
+            Intrinsic::Console(ConsoleIntrinsic::TextBackground) => {
                 let color = self.pop_int(line)?;
                 self.with_console(|c| c.text_background(color, line))?;
             }
-            Intrinsic::ConsoleTextColorRGB => {
+            Intrinsic::Console(ConsoleIntrinsic::TextColorRGB) => {
                 let b = self.pop_int(line)?;
                 let g = self.pop_int(line)?;
                 let r = self.pop_int(line)?;
                 self.with_console(|c| c.text_color_rgb(r, g, b, line))?;
             }
-            Intrinsic::ConsoleTextBackgroundRGB => {
+            Intrinsic::Console(ConsoleIntrinsic::TextBackgroundRGB) => {
                 let b = self.pop_int(line)?;
                 let g = self.pop_int(line)?;
                 let r = self.pop_int(line)?;
                 self.with_console(|c| c.text_background_rgb(r, g, b, line))?;
             }
-            Intrinsic::ConsoleTextColor256 => {
+            Intrinsic::Console(ConsoleIntrinsic::TextColor256) => {
                 let index = self.pop_int(line)?;
                 self.with_console(|c| c.text_color_256(index, line))?;
             }
-            Intrinsic::ConsoleTextBackground256 => {
+            Intrinsic::Console(ConsoleIntrinsic::TextBackground256) => {
                 let index = self.pop_int(line)?;
                 self.with_console(|c| c.text_background_256(index, line))?;
             }
-            Intrinsic::ConsoleHighVideo => self.with_console(|c| c.high_video(line))?,
-            Intrinsic::ConsoleLowVideo => self.with_console(|c| c.low_video(line))?,
-            Intrinsic::ConsoleNormVideo => self.with_console(|c| c.norm_video(line))?,
-            Intrinsic::ConsoleTextAttr => {
+            Intrinsic::Console(ConsoleIntrinsic::HighVideo) => self.with_console(|c| c.high_video(line))?,
+            Intrinsic::Console(ConsoleIntrinsic::LowVideo) => self.with_console(|c| c.low_video(line))?,
+            Intrinsic::Console(ConsoleIntrinsic::NormVideo) => self.with_console(|c| c.norm_video(line))?,
+            Intrinsic::Console(ConsoleIntrinsic::TextAttr) => {
                 let val = self.with_console(|c| c.text_attr());
                 self.push(Value::Integer(val))?;
             }
-            Intrinsic::ConsoleSetTextAttr => {
+            Intrinsic::Console(ConsoleIntrinsic::SetTextAttr) => {
                 let attr = self.pop_int(line)?;
                 self.with_console(|c| c.set_text_attr(attr, line))?;
             }
-            Intrinsic::ConsoleDelay => {
+            Intrinsic::Console(ConsoleIntrinsic::Delay) => {
                 let ms = self.pop_int(line)?;
                 self.with_console(|c| c.delay(ms, line))?;
             }
-            Intrinsic::ConsoleCursorOn => self.with_console(|c| c.cursor_on(line))?,
-            Intrinsic::ConsoleCursorOff => self.with_console(|c| c.cursor_off(line))?,
-            Intrinsic::ConsoleCursorBig => self.with_console(|c| c.cursor_big(line))?,
-            Intrinsic::ConsoleTextMode => {
+            Intrinsic::Console(ConsoleIntrinsic::CursorOn) => self.with_console(|c| c.cursor_on(line))?,
+            Intrinsic::Console(ConsoleIntrinsic::CursorOff) => self.with_console(|c| c.cursor_off(line))?,
+            Intrinsic::Console(ConsoleIntrinsic::CursorBig) => self.with_console(|c| c.cursor_big(line))?,
+            Intrinsic::Console(ConsoleIntrinsic::TextMode) => {
                 let mode = self.pop_int(line)?;
                 self.with_console(|c| c.text_mode(mode, line))?;
             }
-            Intrinsic::ConsoleLastMode => {
+            Intrinsic::Console(ConsoleIntrinsic::LastMode) => {
                 let val = self.with_console(|c| c.last_mode());
                 self.push(Value::Integer(val))?;
             }
-            Intrinsic::ConsoleScreenWidth => {
+            Intrinsic::Console(ConsoleIntrinsic::ScreenWidth) => {
                 let val = self.with_console(|c| c.screen_width());
                 self.push(Value::Integer(val))?;
             }
-            Intrinsic::ConsoleScreenHeight => {
+            Intrinsic::Console(ConsoleIntrinsic::ScreenHeight) => {
                 let val = self.with_console(|c| c.screen_height());
                 self.push(Value::Integer(val))?;
             }
-            Intrinsic::ConsoleSound => {
+            Intrinsic::Console(ConsoleIntrinsic::Sound) => {
                 let hz = self.pop_int(line)?;
                 self.with_console(|c| c.sound(hz, line))?;
             }
-            Intrinsic::ConsoleNoSound => self.with_console(|c| c.no_sound())?,
-            Intrinsic::ConsoleAssignCrt => self.with_console(|c| c.assign_crt())?,
-            Intrinsic::ConsoleEnableRawMode => {
+            Intrinsic::Console(ConsoleIntrinsic::NoSound) => self.with_console(|c| c.no_sound())?,
+            Intrinsic::Console(ConsoleIntrinsic::AssignCrt) => self.with_console(|c| c.assign_crt())?,
+            Intrinsic::Console(ConsoleIntrinsic::EnableRawMode) => {
                 self.with_key_input(|k| k.enable_raw_mode_explicit(line))?;
             }
-            Intrinsic::ConsoleDisableRawMode => {
+            Intrinsic::Console(ConsoleIntrinsic::DisableRawMode) => {
                 self.with_key_input(|k| k.disable_raw_mode_explicit(line))?;
             }
-            Intrinsic::ConsoleEnterAltScreen => {
+            Intrinsic::Console(ConsoleIntrinsic::EnterAltScreen) => {
                 self.with_console(|c| c.enter_alt_screen(line))?;
             }
-            Intrinsic::ConsoleLeaveAltScreen => {
+            Intrinsic::Console(ConsoleIntrinsic::LeaveAltScreen) => {
                 self.with_console(|c| c.leave_alt_screen(line))?;
             }
-            Intrinsic::ConsoleEnableMouse => self.with_console(|c| c.enable_mouse(line))?,
-            Intrinsic::ConsoleDisableMouse => self.with_console(|c| c.disable_mouse(line))?,
-            Intrinsic::ConsoleEnableFocus => self.with_console(|c| c.enable_focus(line))?,
-            Intrinsic::ConsoleDisableFocus => self.with_console(|c| c.disable_focus(line))?,
-            Intrinsic::ConsoleEnablePaste => self.with_console(|c| c.enable_paste(line))?,
-            Intrinsic::ConsoleDisablePaste => self.with_console(|c| c.disable_paste(line))?,
-            Intrinsic::ConsoleReadEventTimeout => {
+            Intrinsic::Console(ConsoleIntrinsic::EnableMouse) => self.with_console(|c| c.enable_mouse(line))?,
+            Intrinsic::Console(ConsoleIntrinsic::DisableMouse) => self.with_console(|c| c.disable_mouse(line))?,
+            Intrinsic::Console(ConsoleIntrinsic::EnableFocus) => self.with_console(|c| c.enable_focus(line))?,
+            Intrinsic::Console(ConsoleIntrinsic::DisableFocus) => self.with_console(|c| c.disable_focus(line))?,
+            Intrinsic::Console(ConsoleIntrinsic::EnablePaste) => self.with_console(|c| c.enable_paste(line))?,
+            Intrinsic::Console(ConsoleIntrinsic::DisablePaste) => self.with_console(|c| c.disable_paste(line))?,
+            Intrinsic::Console(ConsoleIntrinsic::ReadEventTimeout) => {
                 let ms = self.pop_int(line)?;
                 let event = self.with_key_input(|k| k.read_event_timeout(ms, line))?;
                 self.push_optional_event(event)?;
             }
-            Intrinsic::ConsolePollEvent => {
+            Intrinsic::Console(ConsoleIntrinsic::PollEvent) => {
                 let event = self.with_key_input(|k| k.poll_event(line))?;
                 self.push_optional_event(event)?;
             }

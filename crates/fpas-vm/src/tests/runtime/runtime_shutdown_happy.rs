@@ -4,7 +4,7 @@
 //! `docs/pascal/std/task.md`
 
 use crate::Vm;
-use fpas_bytecode::{Chunk, Intrinsic, Op, Value};
+use fpas_bytecode::{Chunk, Intrinsic, Op, TaskIntrinsic, Value};
 
 use crate::tests::helpers::{build_zero_arg_function_chunk, emit_constant, loc};
 
@@ -24,7 +24,7 @@ fn successful_spawn_program_sets_shutdown_before_returning() {
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());
-            chunk.emit(Op::Intrinsic(Intrinsic::TaskWait as u16), loc());
+            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
         },
         |chunk| {
             chunk.emit(Op::Unit, loc());

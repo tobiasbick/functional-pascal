@@ -4,7 +4,7 @@
 
 use crate::error::{StdError, std_runtime_error};
 use crate::helpers::pop_value;
-use fpas_bytecode::{Intrinsic, SourceLocation, Value};
+use fpas_bytecode::{DictIntrinsic, Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
 
 fn pop_dict(val: Value, location: SourceLocation) -> Result<Vec<(Value, Value)>, StdError> {
@@ -25,33 +25,33 @@ pub(crate) fn run(
     location: SourceLocation,
 ) -> Result<Option<()>, StdError> {
     match intrinsic {
-        Intrinsic::DictLength => {
+        Intrinsic::Dict(DictIntrinsic::Length) => {
             let pairs = pop_dict(pop_value(stack, location)?, location)?;
             stack.push(Value::Integer(pairs.len() as i64));
         }
-        Intrinsic::DictContainsKey => {
+        Intrinsic::Dict(DictIntrinsic::ContainsKey) => {
             let key = pop_value(stack, location)?;
             let pairs = pop_dict(pop_value(stack, location)?, location)?;
             let found = pairs.iter().any(|(k, _)| k == &key);
             stack.push(Value::Boolean(found));
         }
-        Intrinsic::DictKeys => {
+        Intrinsic::Dict(DictIntrinsic::Keys) => {
             let pairs = pop_dict(pop_value(stack, location)?, location)?;
             let keys: Vec<Value> = pairs.into_iter().map(|(k, _)| k).collect();
             stack.push(Value::Array(keys));
         }
-        Intrinsic::DictValues => {
+        Intrinsic::Dict(DictIntrinsic::Values) => {
             let pairs = pop_dict(pop_value(stack, location)?, location)?;
             let values: Vec<Value> = pairs.into_iter().map(|(_, v)| v).collect();
             stack.push(Value::Array(values));
         }
-        Intrinsic::DictRemove => {
+        Intrinsic::Dict(DictIntrinsic::Remove) => {
             let key = pop_value(stack, location)?;
             let mut pairs = pop_dict(pop_value(stack, location)?, location)?;
             pairs.retain(|(k, _)| k != &key);
             stack.push(Value::Dict(pairs));
         }
-        Intrinsic::DictGet => {
+        Intrinsic::Dict(DictIntrinsic::Get) => {
             let key = pop_value(stack, location)?;
             let pairs = pop_dict(pop_value(stack, location)?, location)?;
             let found = pairs.into_iter().find(|(k, _)| k == &key);
@@ -60,7 +60,7 @@ pub(crate) fn run(
                 None => stack.push(Value::OptionNone),
             }
         }
-        Intrinsic::DictMerge => {
+        Intrinsic::Dict(DictIntrinsic::Merge) => {
             let other = pop_dict(pop_value(stack, location)?, location)?;
             let mut base = pop_dict(pop_value(stack, location)?, location)?;
             for (k, v) in other {

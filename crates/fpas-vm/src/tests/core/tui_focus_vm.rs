@@ -6,7 +6,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui-app.md` (from the repository root).
 
-use fpas_bytecode::{Chunk, Intrinsic, Op, Value};
+use fpas_bytecode::{Chunk, Intrinsic, Op, TuiIntrinsic, Value};
 use fpas_std::{ConsoleEvent, ConsoleKeyEvent, DamageRegion, ViewRect, key_event::key_kind_index};
 use std::sync::Arc;
 
@@ -55,7 +55,7 @@ fn build_process_next_chunk_with_handlers(
     let mut chunk = Chunk::new();
 
     // Open TUI.
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
 
     if let Some(name) = on_activate_name {
         chunk.emit(Op::Dup, loc());
@@ -67,7 +67,7 @@ fn build_process_next_chunk_with_handlers(
             },
         );
         chunk.emit(
-            Op::Intrinsic(Intrinsic::TuiHostRegisterOnActivate as u16),
+            Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnActivate))),
             loc(),
         );
     }
@@ -81,7 +81,7 @@ fn build_process_next_chunk_with_handlers(
             },
         );
         chunk.emit(
-            Op::Intrinsic(Intrinsic::TuiHostRegisterOnDeactivate as u16),
+            Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnDeactivate))),
             loc(),
         );
     }
@@ -95,14 +95,14 @@ fn build_process_next_chunk_with_handlers(
             },
         );
         chunk.emit(
-            Op::Intrinsic(Intrinsic::TuiHostRegisterOnKeyPressed as u16),
+            Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnKeyPressed))),
             loc(),
         );
     }
 
     // TuiHostProcessNext(App, 64)
     emit_constant(&mut chunk, Value::Integer(64));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::PrintLn, loc()); // print the tag
     chunk.emit(Op::Halt, loc());
 
@@ -134,13 +134,13 @@ fn add_key_handler(chunk: &mut Chunk, name: &str, output: &str) {
 #[test]
 fn host_register_view_returns_distinct_integer_handles() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(0));
     emit_constant(&mut chunk, Value::Integer(0));
     emit_constant(&mut chunk, Value::Integer(10));
     emit_constant(&mut chunk, Value::Integer(5));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterView))), loc());
     chunk.emit(Op::PrintLn, loc());
 
     chunk.emit(Op::GetLocal(0), loc());
@@ -148,7 +148,7 @@ fn host_register_view_returns_distinct_integer_handles() {
     emit_constant(&mut chunk, Value::Integer(0));
     emit_constant(&mut chunk, Value::Integer(10));
     emit_constant(&mut chunk, Value::Integer(5));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterView))), loc());
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -163,38 +163,38 @@ fn host_register_view_returns_distinct_integer_handles() {
 #[test]
 fn host_push_child_view_populates_focus_chain_and_query_focused_view_id() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
 
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(0));
     emit_constant(&mut chunk, Value::Integer(0));
     emit_constant(&mut chunk, Value::Integer(10));
     emit_constant(&mut chunk, Value::Integer(5));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterView))), loc());
 
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(Op::GetLocal(1), loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostPushChildView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostPushChildView))), loc());
 
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(10));
     emit_constant(&mut chunk, Value::Integer(0));
     emit_constant(&mut chunk, Value::Integer(10));
     emit_constant(&mut chunk, Value::Integer(5));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterView))), loc());
 
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(Op::GetLocal(2), loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostPushChildView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostPushChildView))), loc());
 
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(64));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::PrintLn, loc());
 
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostQueryFocusedViewId as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostQueryFocusedViewId))),
         loc(),
     );
     chunk.emit(Op::PrintLn, loc());
@@ -217,29 +217,29 @@ fn host_push_child_view_populates_focus_chain_and_query_focused_view_id() {
 #[test]
 fn host_unregister_view_removes_it_from_focus_chain() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
 
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(0));
     emit_constant(&mut chunk, Value::Integer(0));
     emit_constant(&mut chunk, Value::Integer(10));
     emit_constant(&mut chunk, Value::Integer(5));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterView))), loc());
 
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(Op::GetLocal(1), loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostPushChildView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostPushChildView))), loc());
 
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(Op::GetLocal(1), loc());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostUnregisterView as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostUnregisterView))),
         loc(),
     );
 
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostQueryFocusedViewId as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostQueryFocusedViewId))),
         loc(),
     );
     chunk.emit(Op::PrintLn, loc());
@@ -295,7 +295,7 @@ fn tab_with_two_focusable_views_fires_on_activate_and_returns_tag_14() {
 fn tab_second_press_fires_deactivate_then_activate() {
     // Build chunk that calls TuiHostProcessNext twice.
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::Dup, loc());
     emit_constant(
         &mut chunk,
@@ -305,7 +305,7 @@ fn tab_second_press_fires_deactivate_then_activate() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnActivate as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnActivate))),
         loc(),
     );
     chunk.emit(Op::Dup, loc());
@@ -317,19 +317,19 @@ fn tab_second_press_fires_deactivate_then_activate() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnDeactivate as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnDeactivate))),
         loc(),
     );
 
     // First TuiHostProcessNext (Dup App so it survives for the second call).
     chunk.emit(Op::Dup, loc());
     emit_constant(&mut chunk, Value::Integer(64));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::Pop, loc()); // discard tag
 
     // Second TuiHostProcessNext (App still on stack from Dup above).
     emit_constant(&mut chunk, Value::Integer(64));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::Pop, loc());
 
     chunk.emit(Op::Halt, loc());
@@ -401,13 +401,13 @@ fn first_focus_transition_marks_rect_damage_for_focused_view() {
 #[test]
 fn second_focus_transition_merges_previous_and_current_rects() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::Dup, loc());
     emit_constant(&mut chunk, Value::Integer(64));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::Pop, loc());
     emit_constant(&mut chunk, Value::Integer(64));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::Pop, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -554,7 +554,7 @@ fn tab_with_single_already_focused_view_falls_through_to_on_key_pressed() {
 fn close_after_run_clears_on_activate_and_on_deactivate() {
     // Check that close_tui_application_state resets the new handlers.
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::Dup, loc());
     emit_constant(
         &mut chunk,
@@ -564,7 +564,7 @@ fn close_after_run_clears_on_activate_and_on_deactivate() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnPaint as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnPaint))),
         loc(),
     );
     chunk.emit(Op::Dup, loc());
@@ -576,7 +576,7 @@ fn close_after_run_clears_on_activate_and_on_deactivate() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnActivate as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnActivate))),
         loc(),
     );
     chunk.emit(Op::Dup, loc());
@@ -588,13 +588,13 @@ fn close_after_run_clears_on_activate_and_on_deactivate() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnDeactivate as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnDeactivate))),
         loc(),
     );
     // HostRequestQuit so Application.Run exits immediately.
     chunk.emit(Op::Dup, loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRequestQuit as u16), loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationRun as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRequestQuit))), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationRun))), loc());
     chunk.emit(Op::Halt, loc());
 
     let on_paint_start = chunk.len();

@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui-app.md` (from the repository root).
 
-use fpas_bytecode::{Chunk, Intrinsic, Op, Value};
+use fpas_bytecode::{Chunk, Intrinsic, Op, TuiIntrinsic, Value};
 use std::sync::Arc;
 
 use crate::tests::helpers::{emit_constant, loc, minimal_shared_state, run_err};
@@ -25,7 +25,7 @@ fn function_value(name: &str) -> Value {
 #[test]
 fn tui_application_configure_stores_bundle_handlers_and_interval() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         handlers_record(vec![
@@ -54,7 +54,7 @@ fn tui_application_configure_stores_bundle_handlers_and_interval() {
         ]),
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiApplicationConfigure as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationConfigure))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -111,11 +111,11 @@ fn tui_application_configure_stores_bundle_handlers_and_interval() {
 #[test]
 fn tui_application_configure_clears_previous_optional_handlers_with_none_defaults() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::Dup, loc());
     emit_constant(&mut chunk, function_value("OldOnExit"));
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnExit as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnExit))),
         loc(),
     );
     emit_constant(
@@ -137,7 +137,7 @@ fn tui_application_configure_clears_previous_optional_handlers_with_none_default
         ]),
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiApplicationConfigure as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationConfigure))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -175,7 +175,7 @@ fn tui_application_configure_clears_previous_optional_handlers_with_none_default
 #[test]
 fn tui_application_configure_rejects_missing_required_on_paint_field() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         handlers_record(vec![
@@ -187,7 +187,7 @@ fn tui_application_configure_rejects_missing_required_on_paint_field() {
         ]),
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiApplicationConfigure as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationConfigure))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -203,7 +203,7 @@ fn tui_application_configure_rejects_missing_required_on_paint_field() {
 #[test]
 fn tui_application_configure_rejects_non_option_optional_handler_value() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         handlers_record(vec![
@@ -216,7 +216,7 @@ fn tui_application_configure_rejects_non_option_optional_handler_value() {
         ]),
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiApplicationConfigure as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationConfigure))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -241,7 +241,7 @@ fn tui_application_configure_rejects_non_option_optional_handler_value() {
 #[test]
 fn tui_application_configure_clamps_negative_idle_interval_to_zero() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         handlers_record(vec![
@@ -264,7 +264,7 @@ fn tui_application_configure_clamps_negative_idle_interval_to_zero() {
         ]),
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiApplicationConfigure as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationConfigure))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());

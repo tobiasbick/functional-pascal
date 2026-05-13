@@ -4,7 +4,7 @@
 
 use crate::error::{StdError, std_runtime_error};
 use crate::helpers::pop_value;
-use fpas_bytecode::{Intrinsic, SourceLocation, Value};
+use fpas_bytecode::{OptionIntrinsic, ResultIntrinsic, Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_UNWRAP_FAILURE;
 
 pub(crate) fn run(
@@ -13,7 +13,7 @@ pub(crate) fn run(
     location: SourceLocation,
 ) -> Result<Option<()>, StdError> {
     match intrinsic {
-        Intrinsic::ResultUnwrap => {
+        Intrinsic::Result(ResultIntrinsic::Unwrap) => {
             let val = pop_value(stack, location)?;
             match val {
                 Value::ResultOk(inner) => stack.push(*inner),
@@ -38,7 +38,7 @@ pub(crate) fn run(
                 }
             }
         }
-        Intrinsic::ResultUnwrapOr => {
+        Intrinsic::Result(ResultIntrinsic::UnwrapOr) => {
             let default = pop_value(stack, location)?;
             let val = pop_value(stack, location)?;
             match val {
@@ -57,15 +57,15 @@ pub(crate) fn run(
                 }
             }
         }
-        Intrinsic::ResultIsOk => {
+        Intrinsic::Result(ResultIntrinsic::IsOk) => {
             let val = pop_value(stack, location)?;
             stack.push(Value::Boolean(matches!(val, Value::ResultOk(_))));
         }
-        Intrinsic::ResultIsError => {
+        Intrinsic::Result(ResultIntrinsic::IsError) => {
             let val = pop_value(stack, location)?;
             stack.push(Value::Boolean(matches!(val, Value::ResultError(_))));
         }
-        Intrinsic::OptionUnwrap => {
+        Intrinsic::Option(OptionIntrinsic::Unwrap) => {
             let val = pop_value(stack, location)?;
             match val {
                 Value::OptionSome(inner) => stack.push(*inner),
@@ -90,7 +90,7 @@ pub(crate) fn run(
                 }
             }
         }
-        Intrinsic::OptionUnwrapOr => {
+        Intrinsic::Option(OptionIntrinsic::UnwrapOr) => {
             let default = pop_value(stack, location)?;
             let val = pop_value(stack, location)?;
             match val {
@@ -109,11 +109,11 @@ pub(crate) fn run(
                 }
             }
         }
-        Intrinsic::OptionIsSome => {
+        Intrinsic::Option(OptionIntrinsic::IsSome) => {
             let val = pop_value(stack, location)?;
             stack.push(Value::Boolean(matches!(val, Value::OptionSome(_))));
         }
-        Intrinsic::OptionIsNone => {
+        Intrinsic::Option(OptionIntrinsic::IsNone) => {
             let val = pop_value(stack, location)?;
             stack.push(Value::Boolean(matches!(val, Value::OptionNone)));
         }
@@ -134,7 +134,7 @@ mod tests {
     fn result_unwrap_or_rejects_non_result_values() {
         let mut stack = vec![Value::Integer(1), Value::Integer(99)];
 
-        let error = run(Intrinsic::ResultUnwrapOr, &mut stack, test_location()).unwrap_err();
+        let error = run(Intrinsic::Result(ResultIntrinsic::UnwrapOr), &mut stack, test_location()).unwrap_err();
 
         assert!(
             error.message.contains("expects a Result value"),
@@ -147,7 +147,7 @@ mod tests {
     fn option_unwrap_or_rejects_non_option_values() {
         let mut stack = vec![Value::Integer(1), Value::Integer(99)];
 
-        let error = run(Intrinsic::OptionUnwrapOr, &mut stack, test_location()).unwrap_err();
+        let error = run(Intrinsic::Option(OptionIntrinsic::UnwrapOr), &mut stack, test_location()).unwrap_err();
 
         assert!(
             error.message.contains("expects an Option value"),

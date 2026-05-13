@@ -1,6 +1,6 @@
 use super::super::super::Compiler;
 use crate::error::CompileError;
-use fpas_bytecode::{Intrinsic, Op, SourceLocation, Value};
+use fpas_bytecode::{ArrayIntrinsic, DictIntrinsic, Intrinsic, Op, SourceLocation, Value};
 use fpas_parser::{Expr, ForDirection, Stmt};
 
 impl Compiler {
@@ -66,7 +66,7 @@ impl Compiler {
         // For dict iterables, convert to array of keys first so the rest of the
         // loop body uses the identical array-iteration pattern.
         if matches!(self.ty_of(iterable), Ty::Dict(_, _)) {
-            self.emit(Op::Intrinsic(u16::from(Intrinsic::DictKeys)), location);
+            self.emit(Op::Intrinsic(u16::from(Intrinsic::Dict(DictIntrinsic::Keys))), location);
         }
         self.begin_scope();
         let arr_slot = self.add_local("__for_arr");
@@ -75,7 +75,7 @@ impl Compiler {
         let idx_slot = self.add_local("__for_idx");
 
         self.emit(Op::GetLocal(arr_slot), location);
-        self.emit(Op::Intrinsic(u16::from(Intrinsic::ArrayLength)), location);
+        self.emit(Op::Intrinsic(u16::from(Intrinsic::Array(ArrayIntrinsic::Length))), location);
         let len_slot = self.add_local("__for_len");
 
         self.emit(Op::Unit, location);

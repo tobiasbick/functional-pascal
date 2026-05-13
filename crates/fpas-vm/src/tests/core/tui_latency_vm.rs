@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui-app.md` (from the repository root).
 
-use fpas_bytecode::{Chunk, Intrinsic, Op, Value};
+use fpas_bytecode::{Chunk, Intrinsic, Op, TuiIntrinsic, Value};
 use fpas_std::{ConsoleEvent, ConsoleKeyEvent, key_event::key_kind_index};
 
 use crate::Vm;
@@ -11,7 +11,7 @@ use crate::tests::helpers::{emit_constant, loc};
 #[test]
 fn tui_application_run_dispatches_ready_key_before_idle_wait() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
 
     chunk.emit(Op::Dup, loc());
     emit_constant(
@@ -22,7 +22,7 @@ fn tui_application_run_dispatches_ready_key_before_idle_wait() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnPaint as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnPaint))),
         loc(),
     );
 
@@ -35,7 +35,7 @@ fn tui_application_run_dispatches_ready_key_before_idle_wait() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnKeyPressed as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnKeyPressed))),
         loc(),
     );
 
@@ -49,11 +49,11 @@ fn tui_application_run_dispatches_ready_key_before_idle_wait() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnIdle as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnIdle))),
         loc(),
     );
 
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationRun as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationRun))), loc());
     chunk.emit(Op::Halt, loc());
 
     let on_paint_start = chunk.len();
@@ -70,7 +70,7 @@ fn tui_application_run_dispatches_ready_key_before_idle_wait() {
     emit_constant(&mut chunk, Value::Str("key".into()));
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::GetLocal(0), loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRequestQuit as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRequestQuit))), loc());
     emit_constant(&mut chunk, Value::Boolean(true));
     chunk.emit(Op::Return, loc());
 
@@ -79,7 +79,7 @@ fn tui_application_run_dispatches_ready_key_before_idle_wait() {
     emit_constant(&mut chunk, Value::Str("idle".into()));
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::GetLocal(0), loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRequestQuit as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRequestQuit))), loc());
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 

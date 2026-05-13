@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/task.md`, `docs/pascal/08-concurrency.md`
 
-use fpas_bytecode::{Intrinsic, Op, Value};
+use fpas_bytecode::{Intrinsic, Op, TaskIntrinsic, Value};
 use fpas_diagnostics::codes::{RUNTIME_INVALID_TASK, RUNTIME_WRONG_CALL_ARITY};
 
 use crate::tests::helpers::{
@@ -50,9 +50,9 @@ fn waiting_twice_on_same_task_reports_runtime_error() {
             );
             chunk.emit(Op::SpawnTask(0), loc());
             chunk.emit(Op::Dup, loc());
-            chunk.emit(Op::Intrinsic(Intrinsic::TaskWait as u16), loc());
+            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
             chunk.emit(Op::Pop, loc());
-            chunk.emit(Op::Intrinsic(Intrinsic::TaskWait as u16), loc());
+            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
         },
         |chunk| {
             emit_constant(chunk, Value::Integer(7));

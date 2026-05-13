@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/pascal/std/tui.md`, `docs/pascal/std/tui-app.md` (from the repository root).
 
 use crate::error::CompileError;
-use fpas_bytecode::{Intrinsic, SourceLocation};
+use fpas_bytecode::{Intrinsic, SourceLocation, TuiIntrinsic};
 use fpas_parser::Expr;
 use fpas_std::std_symbols as s;
 
@@ -19,26 +19,26 @@ impl Compiler {
         match name {
             s::STD_TUI_APPLICATION_OPEN => {
                 self.expect_zero_args(s::STD_TUI_APPLICATION_OPEN, args, location)?;
-                self.emit_intrinsic(Intrinsic::TuiApplicationOpen, location);
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_CLOSE => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_CLOSE, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiApplicationClose, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::ApplicationClose), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_CONFIGURE => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_CONFIGURE, 2, args, location)?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiApplicationConfigure, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::ApplicationConfigure), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_RUN => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_RUN, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiApplicationRun, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::ApplicationRun), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_SHOW_MODAL => {
@@ -46,7 +46,7 @@ impl Compiler {
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
                 self.compile_expr(&args[2])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiApplicationShowModal, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::ApplicationShowModal), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_SHOW_DIALOG => {
@@ -57,25 +57,25 @@ impl Compiler {
                 self.compile_expr(&args[3])?;
                 self.compile_expr(&args[4])?;
                 self.compile_expr(&args[5])?;
-                self.emit_intrinsic(Intrinsic::TuiApplicationShowDialog, location);
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::ApplicationShowDialog), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_CLOSE_MODAL => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_CLOSE_MODAL, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiApplicationCloseModal, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::ApplicationCloseModal), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_SIZE => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_SIZE, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::TuiApplicationSize, location);
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::ApplicationSize), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_READ_EVENT => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_READ_EVENT, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::TuiApplicationReadEvent, location);
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::ApplicationReadEvent), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_READ_EVENT_TIMEOUT => {
@@ -87,31 +87,31 @@ impl Compiler {
                 )?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic(Intrinsic::TuiApplicationReadEventTimeout, location);
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::ApplicationReadEventTimeout), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_POLL_EVENT => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_POLL_EVENT, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::TuiApplicationPollEvent, location);
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::ApplicationPollEvent), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_REQUEST_REDRAW => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_REQUEST_REDRAW, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiApplicationRequestRedraw, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::ApplicationRequestRedraw), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_REDRAW_PENDING => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_REDRAW_PENDING, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::TuiApplicationRedrawPending, location);
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::ApplicationRedrawPending), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_POLL_NEXT => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_HOST_POLL_NEXT, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::TuiHostPollNext, location);
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::HostPollNext), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_REGISTER_ON_KEY_PRESSED => {
@@ -123,7 +123,7 @@ impl Compiler {
                 )?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnKeyPressed, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnKeyPressed), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_INVOKE_ON_KEY_PRESSED => {
@@ -135,7 +135,7 @@ impl Compiler {
                 )?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic(Intrinsic::TuiHostInvokeOnKeyPressed, location);
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::HostInvokeOnKeyPressed), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_REGISTER_ON_RESIZE => {
@@ -147,7 +147,7 @@ impl Compiler {
                 )?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnResize, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnResize), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_PROCESS_NEXT => {
@@ -159,7 +159,7 @@ impl Compiler {
                 )?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic(Intrinsic::TuiHostProcessNext, location);
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::HostProcessNext), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_REGISTER_ON_PAINT => {
@@ -171,7 +171,7 @@ impl Compiler {
                 )?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnPaint, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnPaint), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_REGISTER_ON_IDLE => {
@@ -184,7 +184,7 @@ impl Compiler {
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
                 self.compile_expr(&args[2])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnIdle, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnIdle), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_DISPATCH_REDRAW => {
@@ -195,14 +195,14 @@ impl Compiler {
                     location,
                 )?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::TuiHostDispatchRedraw, location);
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::HostDispatchRedraw), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_RUN_LOOP => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_HOST_RUN_LOOP, 2, args, location)?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostRunLoop, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostRunLoop), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_REQUEST_QUIT => {
@@ -213,7 +213,7 @@ impl Compiler {
                     location,
                 )?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostRequestQuit, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostRequestQuit), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_REGISTER_ON_EXIT => {
@@ -225,7 +225,7 @@ impl Compiler {
                 )?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnExit, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnExit), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_REGISTER_ON_MOUSE => {
@@ -237,7 +237,7 @@ impl Compiler {
                 )?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnMouse, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnMouse), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_REGISTER_ON_PASTE => {
@@ -249,7 +249,7 @@ impl Compiler {
                 )?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnPaste, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnPaste), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_REGISTER_ON_FOCUS_GAINED => {
@@ -261,7 +261,7 @@ impl Compiler {
                 )?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnFocusGained, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnFocusGained), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_REGISTER_ON_FOCUS_LOST => {
@@ -273,7 +273,7 @@ impl Compiler {
                 )?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnFocusLost, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnFocusLost), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_REGISTER_ON_ACTIVATE => {
@@ -285,7 +285,7 @@ impl Compiler {
                 )?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnActivate, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnActivate), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_REGISTER_ON_DEACTIVATE => {
@@ -297,7 +297,7 @@ impl Compiler {
                 )?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnDeactivate, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnDeactivate), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_REGISTER_ON_COMMAND => {
@@ -309,7 +309,7 @@ impl Compiler {
                 )?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnCommand, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnCommand), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_BIND_COMMAND => {
@@ -322,7 +322,7 @@ impl Compiler {
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
                 self.compile_expr(&args[2])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostBindCommand, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostBindCommand), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_BIND_COMMAND_TO_VIEW => {
@@ -336,7 +336,7 @@ impl Compiler {
                 self.compile_expr(&args[1])?;
                 self.compile_expr(&args[2])?;
                 self.compile_expr(&args[3])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostBindCommandToView, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostBindCommandToView), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_BIND_COMMAND_TO_ACTIVE_MODAL => {
@@ -349,26 +349,26 @@ impl Compiler {
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
                 self.compile_expr(&args[2])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostBindCommandToActiveModal, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostBindCommandToActiveModal), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_ENTER_MODAL => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_HOST_ENTER_MODAL, 2, args, location)?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostEnterModal, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostEnterModal), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_LEAVE_MODAL => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_HOST_LEAVE_MODAL, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostLeaveModal, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostLeaveModal), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_MODAL_DEPTH => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_HOST_MODAL_DEPTH, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::TuiHostModalDepth, location);
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::HostModalDepth), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_REGISTER_VIEW => {
@@ -383,7 +383,7 @@ impl Compiler {
                 self.compile_expr(&args[2])?;
                 self.compile_expr(&args[3])?;
                 self.compile_expr(&args[4])?;
-                self.emit_intrinsic(Intrinsic::TuiHostRegisterView, location);
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::HostRegisterView), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_UNREGISTER_VIEW => {
@@ -395,7 +395,7 @@ impl Compiler {
                 )?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostUnregisterView, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostUnregisterView), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_PUSH_CHILD_VIEW => {
@@ -407,7 +407,7 @@ impl Compiler {
                 )?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostPushChildView, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostPushChildView), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_QUERY_FOCUSED_VIEW_ID => {
@@ -418,7 +418,7 @@ impl Compiler {
                     location,
                 )?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::TuiHostQueryFocusedViewId, location);
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::HostQueryFocusedViewId), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_ATTACH_VIEW_TO_ACTIVE_MODAL => {
@@ -430,7 +430,7 @@ impl Compiler {
                 )?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostAttachViewToActiveModal, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostAttachViewToActiveModal), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_SET_VIEW_RECT => {
@@ -446,7 +446,7 @@ impl Compiler {
                 self.compile_expr(&args[3])?;
                 self.compile_expr(&args[4])?;
                 self.compile_expr(&args[5])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostSetViewRect, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostSetViewRect), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_SET_VIEW_PARENT => {
@@ -459,7 +459,7 @@ impl Compiler {
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
                 self.compile_expr(&args[2])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostSetViewParent, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostSetViewParent), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT => {
@@ -472,7 +472,7 @@ impl Compiler {
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
                 self.compile_expr(&args[2])?;
-                self.emit_intrinsic_unit(Intrinsic::TuiHostRegisterOnViewPaint, location);
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnViewPaint), location);
                 Ok(true)
             }
             _ => Ok(false),

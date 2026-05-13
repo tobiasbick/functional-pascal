@@ -9,7 +9,7 @@ use crate::helpers::{
     pop_array, pop_char, pop_int, pop_string, pop_value, value_as_string_for_join,
 };
 use crate::numeric_text::is_pascal_numeric;
-use fpas_bytecode::{Intrinsic, SourceLocation, Value};
+use fpas_bytecode::{StrIntrinsic, Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_FORMAT_MISMATCH, RUNTIME_INTRINSIC_STACK_STATE_ERROR, RUNTIME_NUMERIC_DOMAIN_ERROR,
     RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,
@@ -22,38 +22,38 @@ pub(crate) fn run(
     location: SourceLocation,
 ) -> Result<Option<()>, StdError> {
     match intrinsic {
-        Intrinsic::StrLength => {
+        Intrinsic::Str(StrIntrinsic::Length) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
             stack.push(Value::Integer(s.chars().count() as i64));
         }
-        Intrinsic::StrToUpper => {
+        Intrinsic::Str(StrIntrinsic::ToUpper) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
             stack.push(Value::Str(s.to_uppercase()));
         }
-        Intrinsic::StrToLower => {
+        Intrinsic::Str(StrIntrinsic::ToLower) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
             stack.push(Value::Str(s.to_lowercase()));
         }
-        Intrinsic::StrTrim => {
+        Intrinsic::Str(StrIntrinsic::Trim) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
             stack.push(Value::Str(s.trim().to_string()));
         }
-        Intrinsic::StrContains => {
+        Intrinsic::Str(StrIntrinsic::Contains) => {
             let sub = pop_string(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
             stack.push(Value::Boolean(s.contains(&sub)));
         }
-        Intrinsic::StrStartsWith => {
+        Intrinsic::Str(StrIntrinsic::StartsWith) => {
             let pre = pop_string(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
             stack.push(Value::Boolean(s.starts_with(&pre)));
         }
-        Intrinsic::StrEndsWith => {
+        Intrinsic::Str(StrIntrinsic::EndsWith) => {
             let suf = pop_string(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
             stack.push(Value::Boolean(s.ends_with(&suf)));
         }
-        Intrinsic::StrSubstring => {
+        Intrinsic::Str(StrIntrinsic::Substring) => {
             let len = pop_int(pop_value(stack, location)?, location)?;
             let start = pop_int(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
@@ -72,7 +72,7 @@ pub(crate) fn run(
                 .collect();
             stack.push(Value::Str(out));
         }
-        Intrinsic::StrIndexOf => {
+        Intrinsic::Str(StrIntrinsic::IndexOf) => {
             let sub = pop_string(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
             let idx = s
@@ -81,13 +81,13 @@ pub(crate) fn run(
                 .unwrap_or(-1);
             stack.push(Value::Integer(idx));
         }
-        Intrinsic::StrReplace => {
+        Intrinsic::Str(StrIntrinsic::Replace) => {
             let new_s = pop_string(pop_value(stack, location)?, location)?;
             let old = pop_string(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
             stack.push(Value::Str(s.replace(&old, &new_s)));
         }
-        Intrinsic::StrSplit => {
+        Intrinsic::Str(StrIntrinsic::Split) => {
             let delim = pop_string(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
             if delim.is_empty() {
@@ -104,7 +104,7 @@ pub(crate) fn run(
                 .collect();
             stack.push(Value::Array(parts));
         }
-        Intrinsic::StrJoin => {
+        Intrinsic::Str(StrIntrinsic::Join) => {
             let delim = pop_string(pop_value(stack, location)?, location)?;
             let arr = pop_array(pop_value(stack, location)?, location)?;
             let mut out = String::new();
@@ -117,11 +117,11 @@ pub(crate) fn run(
             }
             stack.push(Value::Str(out));
         }
-        Intrinsic::StrIsNumeric => {
+        Intrinsic::Str(StrIntrinsic::IsNumeric) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
             stack.push(Value::Boolean(is_pascal_numeric(&s)));
         }
-        Intrinsic::StrRepeat => {
+        Intrinsic::Str(StrIntrinsic::Repeat) => {
             let n = pop_int(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
             let out = if n <= 0 {
@@ -131,7 +131,7 @@ pub(crate) fn run(
             };
             stack.push(Value::Str(out));
         }
-        Intrinsic::StrPadLeft => {
+        Intrinsic::Str(StrIntrinsic::PadLeft) => {
             let pad_char = pop_char(pop_value(stack, location)?, location)?;
             let width = pop_int(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
@@ -144,7 +144,7 @@ pub(crate) fn run(
                 stack.push(Value::Str(format!("{padding}{s}")));
             }
         }
-        Intrinsic::StrPadRight => {
+        Intrinsic::Str(StrIntrinsic::PadRight) => {
             let pad_char = pop_char(pop_value(stack, location)?, location)?;
             let width = pop_int(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
@@ -157,7 +157,7 @@ pub(crate) fn run(
                 stack.push(Value::Str(format!("{s}{padding}")));
             }
         }
-        Intrinsic::StrPadCenter => {
+        Intrinsic::Str(StrIntrinsic::PadCenter) => {
             let pad_char = pop_char(pop_value(stack, location)?, location)?;
             let width = pop_int(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
@@ -174,7 +174,7 @@ pub(crate) fn run(
                 stack.push(Value::Str(format!("{lp}{s}{rp}")));
             }
         }
-        Intrinsic::StrFromChar => {
+        Intrinsic::Str(StrIntrinsic::FromChar) => {
             let n = pop_int(pop_value(stack, location)?, location)?;
             let c = pop_char(pop_value(stack, location)?, location)?;
             if n < 0 {
@@ -188,7 +188,7 @@ pub(crate) fn run(
             let s: String = std::iter::repeat_n(c, n as usize).collect();
             stack.push(Value::Str(s));
         }
-        Intrinsic::StrCharAt => {
+        Intrinsic::Str(StrIntrinsic::CharAt) => {
             let idx = pop_int(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
             let chars: Vec<char> = s.chars().collect();
@@ -202,7 +202,7 @@ pub(crate) fn run(
             }
             stack.push(Value::Char(chars[idx as usize]));
         }
-        Intrinsic::StrSetCharAt => {
+        Intrinsic::Str(StrIntrinsic::SetCharAt) => {
             let c = pop_char(pop_value(stack, location)?, location)?;
             let idx = pop_int(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
@@ -221,11 +221,11 @@ pub(crate) fn run(
             chars[idx as usize] = c;
             stack.push(Value::Str(chars.into_iter().collect()));
         }
-        Intrinsic::StrOrd => {
+        Intrinsic::Str(StrIntrinsic::Ord) => {
             let c = pop_char(pop_value(stack, location)?, location)?;
             stack.push(Value::Integer(c as i64));
         }
-        Intrinsic::StrChr => {
+        Intrinsic::Str(StrIntrinsic::Chr) => {
             let n = pop_int(pop_value(stack, location)?, location)?;
             let c = u32::try_from(n)
                 .ok()
@@ -240,7 +240,7 @@ pub(crate) fn run(
                 })?;
             stack.push(Value::Char(c));
         }
-        Intrinsic::StrInsert => {
+        Intrinsic::Str(StrIntrinsic::Insert) => {
             let sub = pop_string(pop_value(stack, location)?, location)?;
             let idx = pop_int(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
@@ -258,7 +258,7 @@ pub(crate) fn run(
             result.insert_str(byte_offset, &sub);
             stack.push(Value::Str(result));
         }
-        Intrinsic::StrDelete => {
+        Intrinsic::Str(StrIntrinsic::Delete) => {
             let len = pop_int(pop_value(stack, location)?, location)?;
             let idx = pop_int(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
@@ -277,19 +277,19 @@ pub(crate) fn run(
             result.push_str(&tail);
             stack.push(Value::Str(result));
         }
-        Intrinsic::StrReverse => {
+        Intrinsic::Str(StrIntrinsic::Reverse) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
             stack.push(Value::Str(s.chars().rev().collect()));
         }
-        Intrinsic::StrTrimLeft => {
+        Intrinsic::Str(StrIntrinsic::TrimLeft) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
             stack.push(Value::Str(s.trim_start().to_string()));
         }
-        Intrinsic::StrTrimRight => {
+        Intrinsic::Str(StrIntrinsic::TrimRight) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
             stack.push(Value::Str(s.trim_end().to_string()));
         }
-        Intrinsic::StrLastIndexOf => {
+        Intrinsic::Str(StrIntrinsic::LastIndexOf) => {
             let sub = pop_string(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
             let idx = s
@@ -298,7 +298,7 @@ pub(crate) fn run(
                 .unwrap_or(-1);
             stack.push(Value::Integer(idx));
         }
-        Intrinsic::StrFormat => {
+        Intrinsic::Str(StrIntrinsic::Format) => {
             let arg_count = pop_int(pop_value(stack, location)?, location)?;
             if arg_count < 0 {
                 return Err(std_internal_error(

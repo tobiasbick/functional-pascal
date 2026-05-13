@@ -6,7 +6,7 @@ mod tasks;
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
-use fpas_bytecode::{Intrinsic, Op, SourceLocation};
+use fpas_bytecode::{Intrinsic, Op, SourceLocation, TaskIntrinsic};
 
 impl Worker {
     /// Handle concurrency opcodes: `SpawnTask`, `Yield`.
@@ -39,11 +39,11 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<bool, VmError> {
         match intr {
-            Intrinsic::TaskWait => {
+            Intrinsic::Task(TaskIntrinsic::Wait) => {
                 self.exec_task_wait(line)?;
                 Ok(true)
             }
-            Intrinsic::TaskWaitAll => {
+            Intrinsic::Task(TaskIntrinsic::WaitAll) => {
                 self.exec_task_wait_all(line)?;
                 Ok(true)
             }

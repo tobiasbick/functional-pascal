@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/rust/parallel-vm.md` (Phase 7), `docs/pascal/08-concurrency.md`
 
 use crate::vm::Worker;
-use fpas_bytecode::{Chunk, Intrinsic, Op, Value};
+use fpas_bytecode::{Chunk, Intrinsic, Op, TaskIntrinsic, Value};
 use std::sync::Arc;
 
 use crate::tests::helpers::{emit_constant, loc, minimal_shared_state, run_ok_output};
@@ -38,7 +38,7 @@ fn two_wasteful_spawned_tasks_interleave_and_wait_all_completes() {
     );
     chunk.emit(Op::SpawnTask(0), loc());
     chunk.emit(Op::MakeArray(2), loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TaskWaitAll as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::WaitAll))), loc());
     emit_constant(&mut chunk, Value::Str("both_done".to_string()));
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());

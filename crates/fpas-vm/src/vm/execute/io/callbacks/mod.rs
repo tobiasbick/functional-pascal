@@ -1,6 +1,6 @@
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
-use fpas_bytecode::{Intrinsic, SourceLocation};
+use fpas_bytecode::{ArrayIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic, ResultIntrinsic, SourceLocation};
 
 mod array_ops;
 mod dict_ops;
@@ -14,71 +14,71 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<bool, VmError> {
         match intrinsic {
-            Intrinsic::ArrayMap => {
+            Intrinsic::Array(ArrayIntrinsic::Map) => {
                 self.exec_array_map(line)?;
                 Ok(true)
             }
-            Intrinsic::ArrayFilter => {
+            Intrinsic::Array(ArrayIntrinsic::Filter) => {
                 self.exec_array_filter(line)?;
                 Ok(true)
             }
-            Intrinsic::ArrayReduce => {
+            Intrinsic::Array(ArrayIntrinsic::Reduce) => {
                 self.exec_array_reduce(line)?;
                 Ok(true)
             }
-            Intrinsic::ArrayFind => {
+            Intrinsic::Array(ArrayIntrinsic::Find) => {
                 self.exec_array_find(line)?;
                 Ok(true)
             }
-            Intrinsic::ArrayFindIndex => {
+            Intrinsic::Array(ArrayIntrinsic::FindIndex) => {
                 self.exec_array_find_index(line)?;
                 Ok(true)
             }
-            Intrinsic::ArrayAny => {
+            Intrinsic::Array(ArrayIntrinsic::Any) => {
                 self.exec_array_any(line)?;
                 Ok(true)
             }
-            Intrinsic::ArrayAll => {
+            Intrinsic::Array(ArrayIntrinsic::All) => {
                 self.exec_array_all(line)?;
                 Ok(true)
             }
-            Intrinsic::ArrayFlatMap => {
+            Intrinsic::Array(ArrayIntrinsic::FlatMap) => {
                 self.exec_array_flat_map(line)?;
                 Ok(true)
             }
-            Intrinsic::ArrayForEach => {
+            Intrinsic::Array(ArrayIntrinsic::ForEach) => {
                 self.exec_array_for_each(line)?;
                 Ok(true)
             }
-            Intrinsic::ResultMap => {
+            Intrinsic::Result(ResultIntrinsic::Map) => {
                 self.exec_result_map(line)?;
                 Ok(true)
             }
-            Intrinsic::ResultAndThen => {
+            Intrinsic::Result(ResultIntrinsic::AndThen) => {
                 self.exec_result_and_then(line)?;
                 Ok(true)
             }
-            Intrinsic::ResultOrElse => {
+            Intrinsic::Result(ResultIntrinsic::OrElse) => {
                 self.exec_result_or_else(line)?;
                 Ok(true)
             }
-            Intrinsic::OptionMap => {
+            Intrinsic::Option(OptionIntrinsic::Map) => {
                 self.exec_option_map(line)?;
                 Ok(true)
             }
-            Intrinsic::OptionAndThen => {
+            Intrinsic::Option(OptionIntrinsic::AndThen) => {
                 self.exec_option_and_then(line)?;
                 Ok(true)
             }
-            Intrinsic::OptionOrElse => {
+            Intrinsic::Option(OptionIntrinsic::OrElse) => {
                 self.exec_option_or_else(line)?;
                 Ok(true)
             }
-            Intrinsic::DictMap => {
+            Intrinsic::Dict(DictIntrinsic::Map) => {
                 self.exec_dict_map(line)?;
                 Ok(true)
             }
-            Intrinsic::DictFilter => {
+            Intrinsic::Dict(DictIntrinsic::Filter) => {
                 self.exec_dict_filter(line)?;
                 Ok(true)
             }

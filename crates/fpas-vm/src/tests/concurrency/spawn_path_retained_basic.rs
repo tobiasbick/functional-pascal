@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** `docs/rust/parallel-vm.md` (Phase 6), `docs/pascal/08-concurrency.md`
 
-use fpas_bytecode::{Intrinsic, Op, Value};
+use fpas_bytecode::{Intrinsic, Op, TaskIntrinsic, Value};
 
 use crate::tests::helpers::{
     build_function_chunk, build_zero_arg_function_chunk, emit_constant, loc, run_ok_output,
@@ -22,7 +22,7 @@ fn retained_spawn_wait_prints_child_return_value() {
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());
-            chunk.emit(Op::Intrinsic(Intrinsic::TaskWait as u16), loc());
+            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
             chunk.emit(Op::PrintLn, loc());
         },
         |chunk| {
@@ -51,7 +51,7 @@ fn spawn_passes_two_arguments_and_child_returns_sum() {
                 },
             );
             chunk.emit(Op::SpawnTask(2), loc());
-            chunk.emit(Op::Intrinsic(Intrinsic::TaskWait as u16), loc());
+            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
             chunk.emit(Op::PrintLn, loc());
         },
         |chunk| {

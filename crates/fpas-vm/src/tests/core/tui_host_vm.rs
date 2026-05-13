@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui-app.md` (from the repository root).
 
-use fpas_bytecode::{Chunk, Intrinsic, Op, Value};
+use fpas_bytecode::{Chunk, Intrinsic, Op, TuiIntrinsic, Value};
 use fpas_std::ConsoleEvent;
 use fpas_std::ConsoleKeyEvent;
 use fpas_std::DamageRegion;
@@ -21,7 +21,7 @@ use crate::vm::Worker;
 #[test]
 fn tui_host_invoke_on_key_pressed_runs_registered_fp_function() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -30,7 +30,7 @@ fn tui_host_invoke_on_key_pressed_runs_registered_fp_function() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnKeyPressed as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnKeyPressed))),
         loc(),
     );
     emit_constant(&mut chunk, tui_application_value());
@@ -46,7 +46,7 @@ fn tui_host_invoke_on_key_pressed_runs_registered_fp_function() {
         )),
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostInvokeOnKeyPressed as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostInvokeOnKeyPressed))),
         loc(),
     );
     chunk.emit(Op::PrintLn, loc());
@@ -63,13 +63,13 @@ fn tui_host_invoke_on_key_pressed_runs_registered_fp_function() {
 #[test]
 fn tui_host_register_view_marks_rect_damage() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(3));
     emit_constant(&mut chunk, Value::Integer(4));
     emit_constant(&mut chunk, Value::Integer(5));
     emit_constant(&mut chunk, Value::Integer(6));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterView))), loc());
     chunk.emit(Op::Pop, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -98,11 +98,11 @@ fn tui_host_register_view_marks_rect_damage() {
 #[test]
 fn tui_host_unregister_view_marks_removed_rect_damage() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(0));
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostUnregisterView as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostUnregisterView))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -143,11 +143,11 @@ fn tui_host_unregister_view_marks_removed_rect_damage() {
 #[test]
 fn tui_host_unregister_focused_view_marks_removed_and_new_focus_rects() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(1));
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostUnregisterView as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostUnregisterView))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -198,14 +198,14 @@ fn tui_host_unregister_focused_view_marks_removed_and_new_focus_rects() {
 #[test]
 fn tui_host_set_view_rect_marks_old_and_new_rect_damage() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(0));
     emit_constant(&mut chunk, Value::Integer(3));
     emit_constant(&mut chunk, Value::Integer(4));
     emit_constant(&mut chunk, Value::Integer(7));
     emit_constant(&mut chunk, Value::Integer(6));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostSetViewRect as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostSetViewRect))), loc());
     chunk.emit(Op::Halt, loc());
 
     let shared = Arc::new(minimal_shared_state(chunk));
@@ -251,14 +251,14 @@ fn tui_host_set_view_rect_marks_old_and_new_rect_damage() {
 #[test]
 fn tui_host_set_view_rect_ignores_unknown_view_ids() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(99));
     emit_constant(&mut chunk, Value::Integer(3));
     emit_constant(&mut chunk, Value::Integer(4));
     emit_constant(&mut chunk, Value::Integer(7));
     emit_constant(&mut chunk, Value::Integer(6));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostSetViewRect as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostSetViewRect))), loc());
     chunk.emit(Op::Halt, loc());
 
     let shared = Arc::new(minimal_shared_state(chunk));
@@ -279,7 +279,7 @@ fn tui_host_command_shortcut_dispatches_on_command_and_returns_tag_sixteen() {
         ConsoleKeyEvent::new(key_kind_index("Character"), 's', false, true, false, false);
 
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::Dup, loc());
     emit_constant(
         &mut chunk,
@@ -289,15 +289,15 @@ fn tui_host_command_shortcut_dispatches_on_command_and_returns_tag_sixteen() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnCommand as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnCommand))),
         loc(),
     );
     chunk.emit(Op::Dup, loc());
     emit_constant(&mut chunk, key_event_value(save_key.clone()));
     emit_constant(&mut chunk, Value::Integer(42));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostBindCommand as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostBindCommand))), loc());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -323,13 +323,13 @@ fn tui_host_bound_command_without_handler_returns_tag_seventeen() {
         ConsoleKeyEvent::new(key_kind_index("Character"), 's', false, true, false, false);
 
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::Dup, loc());
     emit_constant(&mut chunk, key_event_value(save_key.clone()));
     emit_constant(&mut chunk, Value::Integer(42));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostBindCommand as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostBindCommand))), loc());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -346,19 +346,19 @@ fn tui_host_bind_command_to_view_stores_local_binding() {
         ConsoleKeyEvent::new(key_kind_index("Character"), 's', false, true, false, false);
 
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(10));
     emit_constant(&mut chunk, Value::Integer(10));
     emit_constant(&mut chunk, Value::Integer(8));
     emit_constant(&mut chunk, Value::Integer(4));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterView))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(Op::GetLocal(1), loc());
     emit_constant(&mut chunk, key_event_value(save_key.clone()));
     emit_constant(&mut chunk, Value::Integer(20));
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostBindCommandToView as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostBindCommandToView))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -381,15 +381,15 @@ fn tui_host_bind_command_to_active_modal_stores_modal_binding() {
         ConsoleKeyEvent::new(key_kind_index("Character"), 's', false, true, false, false);
 
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(10));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostEnterModal as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostEnterModal))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, key_event_value(save_key.clone()));
     emit_constant(&mut chunk, Value::Integer(30));
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostBindCommandToActiveModal as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostBindCommandToActiveModal))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -411,7 +411,7 @@ fn tui_host_view_command_shortcut_uses_focused_ancestor_binding() {
         ConsoleKeyEvent::new(key_kind_index("Character"), 's', false, true, false, false);
 
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::Dup, loc());
     emit_constant(
         &mut chunk,
@@ -421,47 +421,47 @@ fn tui_host_view_command_shortcut_uses_focused_ancestor_binding() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnCommand as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnCommand))),
         loc(),
     );
     chunk.emit(Op::Dup, loc());
     emit_constant(&mut chunk, key_event_value(save_key.clone()));
     emit_constant(&mut chunk, Value::Integer(10));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostBindCommand as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostBindCommand))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(10));
     emit_constant(&mut chunk, Value::Integer(10));
     emit_constant(&mut chunk, Value::Integer(8));
     emit_constant(&mut chunk, Value::Integer(4));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterView))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(1));
     emit_constant(&mut chunk, Value::Integer(1));
     emit_constant(&mut chunk, Value::Integer(1));
     emit_constant(&mut chunk, Value::Integer(1));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterView))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(Op::GetLocal(2), loc());
     chunk.emit(Op::GetLocal(1), loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostSetViewParent as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostSetViewParent))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(Op::GetLocal(2), loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostPushChildView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostPushChildView))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(Op::GetLocal(1), loc());
     emit_constant(&mut chunk, key_event_value(save_key.clone()));
     emit_constant(&mut chunk, Value::Integer(20));
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostBindCommandToView as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostBindCommandToView))),
         loc(),
     );
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::Pop, loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -495,7 +495,7 @@ fn tui_host_modal_command_shortcut_uses_active_modal_binding() {
         ConsoleKeyEvent::new(key_kind_index("Character"), 's', false, true, false, false);
 
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::Dup, loc());
     emit_constant(
         &mut chunk,
@@ -505,45 +505,45 @@ fn tui_host_modal_command_shortcut_uses_active_modal_binding() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnCommand as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnCommand))),
         loc(),
     );
     chunk.emit(Op::Dup, loc());
     emit_constant(&mut chunk, key_event_value(save_key.clone()));
     emit_constant(&mut chunk, Value::Integer(10));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostBindCommand as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostBindCommand))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(10));
     emit_constant(&mut chunk, Value::Integer(10));
     emit_constant(&mut chunk, Value::Integer(8));
     emit_constant(&mut chunk, Value::Integer(4));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterView))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(Op::GetLocal(1), loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostPushChildView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostPushChildView))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(10));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostEnterModal as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostEnterModal))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(Op::GetLocal(1), loc());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostAttachViewToActiveModal as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostAttachViewToActiveModal))),
         loc(),
     );
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, key_event_value(save_key.clone()));
     emit_constant(&mut chunk, Value::Integer(30));
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostBindCommandToActiveModal as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostBindCommandToActiveModal))),
         loc(),
     );
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::Pop, loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -574,19 +574,19 @@ fn tui_host_modal_command_shortcut_uses_active_modal_binding() {
 #[test]
 fn tui_host_modal_depth_tracks_enter_and_leave() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::Dup, loc());
     emit_constant(&mut chunk, Value::Integer(10));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostEnterModal as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostEnterModal))), loc());
     chunk.emit(Op::Dup, loc());
     emit_constant(&mut chunk, Value::Integer(20));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostEnterModal as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostEnterModal))), loc());
     chunk.emit(Op::Dup, loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostModalDepth as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostModalDepth))), loc());
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Dup, loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostLeaveModal as u16), loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostModalDepth as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostLeaveModal))), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostModalDepth))), loc());
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -596,10 +596,10 @@ fn tui_host_modal_depth_tracks_enter_and_leave() {
 #[test]
 fn tui_host_enter_modal_without_attached_views_does_not_mark_damage() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(10));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostEnterModal as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostEnterModal))), loc());
     chunk.emit(Op::Halt, loc());
 
     let shared = Arc::new(minimal_shared_state(chunk));
@@ -619,20 +619,20 @@ fn tui_host_enter_modal_without_attached_views_does_not_mark_damage() {
 #[test]
 fn tui_host_attach_view_to_active_modal_marks_view_rect_damage() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(10));
     emit_constant(&mut chunk, Value::Integer(11));
     emit_constant(&mut chunk, Value::Integer(6));
     emit_constant(&mut chunk, Value::Integer(7));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterView))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(10));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostEnterModal as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostEnterModal))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(Op::GetLocal(1), loc());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostAttachViewToActiveModal as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostAttachViewToActiveModal))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -662,30 +662,30 @@ fn tui_host_attach_view_to_active_modal_marks_view_rect_damage() {
 #[test]
 fn tui_host_leave_modal_marks_popped_modal_view_rect_damage() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(10));
     emit_constant(&mut chunk, Value::Integer(11));
     emit_constant(&mut chunk, Value::Integer(6));
     emit_constant(&mut chunk, Value::Integer(7));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterView))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(10));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostEnterModal as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostEnterModal))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(Op::GetLocal(1), loc());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostAttachViewToActiveModal as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostAttachViewToActiveModal))),
         loc(),
     );
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiApplicationRedrawPending as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationRedrawPending))),
         loc(),
     );
     chunk.emit(Op::Pop, loc());
     chunk.emit(Op::GetLocal(0), loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostLeaveModal as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostLeaveModal))), loc());
     chunk.emit(Op::Halt, loc());
 
     let shared = Arc::new(minimal_shared_state(chunk));
@@ -713,45 +713,45 @@ fn tui_host_leave_modal_marks_popped_modal_view_rect_damage() {
 #[test]
 fn tui_host_leave_modal_marks_popped_and_revealed_modal_view_rects() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(1));
     emit_constant(&mut chunk, Value::Integer(1));
     emit_constant(&mut chunk, Value::Integer(4));
     emit_constant(&mut chunk, Value::Integer(3));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterView))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(10));
     emit_constant(&mut chunk, Value::Integer(2));
     emit_constant(&mut chunk, Value::Integer(5));
     emit_constant(&mut chunk, Value::Integer(4));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterView))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(10));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostEnterModal as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostEnterModal))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(Op::GetLocal(1), loc());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostAttachViewToActiveModal as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostAttachViewToActiveModal))),
         loc(),
     );
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(20));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostEnterModal as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostEnterModal))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(Op::GetLocal(2), loc());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostAttachViewToActiveModal as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostAttachViewToActiveModal))),
         loc(),
     );
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiApplicationRedrawPending as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationRedrawPending))),
         loc(),
     );
     chunk.emit(Op::Pop, loc());
     chunk.emit(Op::GetLocal(0), loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostLeaveModal as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostLeaveModal))), loc());
     chunk.emit(Op::Halt, loc());
 
     let shared = Arc::new(minimal_shared_state(chunk));
@@ -779,11 +779,11 @@ fn tui_host_leave_modal_marks_popped_and_revealed_modal_view_rects() {
 #[test]
 fn tui_host_modal_stack_is_cleared_by_application_close() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::Dup, loc());
     emit_constant(&mut chunk, Value::Integer(10));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostEnterModal as u16), loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationClose as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostEnterModal))), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationClose))), loc());
     chunk.emit(Op::Halt, loc());
 
     let shared = Arc::new(minimal_shared_state(chunk));
@@ -797,7 +797,7 @@ fn tui_host_modal_stack_is_cleared_by_application_close() {
 #[test]
 fn tui_application_show_dialog_registers_owned_root_and_close_modal_removes_it() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::Dup, loc());
     emit_constant(&mut chunk, Value::Integer(10));
     emit_constant(&mut chunk, Value::Integer(5));
@@ -805,12 +805,12 @@ fn tui_application_show_dialog_registers_owned_root_and_close_modal_removes_it()
     emit_constant(&mut chunk, Value::Integer(7));
     emit_constant(&mut chunk, Value::Integer(8));
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiApplicationShowDialog as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationShowDialog))),
         loc(),
     );
     chunk.emit(Op::Pop, loc());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiApplicationCloseModal as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationCloseModal))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -830,7 +830,7 @@ fn tui_host_modal_scope_blocks_command_when_focus_is_outside_scope() {
         ConsoleKeyEvent::new(key_kind_index("Character"), 's', false, true, false, false);
 
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::Dup, loc());
     emit_constant(
         &mut chunk,
@@ -840,47 +840,47 @@ fn tui_host_modal_scope_blocks_command_when_focus_is_outside_scope() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnCommand as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnCommand))),
         loc(),
     );
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, key_event_value(save_key.clone()));
     emit_constant(&mut chunk, Value::Integer(42));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostBindCommand as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostBindCommand))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(0));
     emit_constant(&mut chunk, Value::Integer(0));
     emit_constant(&mut chunk, Value::Integer(5));
     emit_constant(&mut chunk, Value::Integer(5));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterView))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(10));
     emit_constant(&mut chunk, Value::Integer(10));
     emit_constant(&mut chunk, Value::Integer(5));
     emit_constant(&mut chunk, Value::Integer(5));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRegisterView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterView))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(Op::GetLocal(1), loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostPushChildView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostPushChildView))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(Op::GetLocal(2), loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostPushChildView as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostPushChildView))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::Pop, loc());
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(10));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostEnterModal as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostEnterModal))), loc());
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(Op::GetLocal(2), loc());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostAttachViewToActiveModal as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostAttachViewToActiveModal))),
         loc(),
     );
     chunk.emit(Op::GetLocal(0), loc());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -911,15 +911,15 @@ fn tui_host_modal_scope_blocks_command_when_focus_is_outside_scope() {
 #[test]
 fn tui_host_poll_next_coalesces_resize_before_key() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::Dup, loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostPollNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostPollNext))), loc());
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Dup, loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostPollNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostPollNext))), loc());
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Dup, loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostPollNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostPollNext))), loc());
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -951,7 +951,7 @@ fn tui_host_poll_next_coalesces_resize_before_key() {
 #[test]
 fn tui_host_process_next_dispatches_on_resize_handler() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -960,12 +960,12 @@ fn tui_host_process_next_dispatches_on_resize_handler() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnResize as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnResize))),
         loc(),
     );
     emit_constant(&mut chunk, tui_application_value());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -996,7 +996,7 @@ fn tui_host_process_next_dispatches_on_resize_handler() {
 #[test]
 fn tui_host_process_next_resize_marks_union_of_surface_bounds() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -1005,12 +1005,12 @@ fn tui_host_process_next_resize_marks_union_of_surface_bounds() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnResize as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnResize))),
         loc(),
     );
     emit_constant(&mut chunk, tui_application_value());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::Pop, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -1064,10 +1064,10 @@ fn tui_host_process_next_resize_marks_union_of_surface_bounds() {
 #[test]
 fn tui_host_process_next_resize_without_handler_returns_tag_four() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(&mut chunk, tui_application_value());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -1088,10 +1088,10 @@ fn tui_host_process_next_resize_without_handler_returns_tag_four() {
 #[test]
 fn tui_host_process_next_resize_without_handler_still_marks_union_of_surface_bounds() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(&mut chunk, tui_application_value());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::Pop, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -1138,10 +1138,10 @@ fn tui_host_process_next_resize_without_handler_still_marks_union_of_surface_bou
 #[test]
 fn tui_host_process_next_resize_to_smaller_surface_preserves_old_bounds_in_damage() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(&mut chunk, tui_application_value());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::Pop, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -1188,10 +1188,10 @@ fn tui_host_process_next_resize_to_smaller_surface_preserves_old_bounds_in_damag
 #[test]
 fn tui_host_dispatch_redraw_invokes_on_paint() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::Dup, loc());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiApplicationRequestRedraw as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationRequestRedraw))),
         loc(),
     );
     emit_constant(
@@ -1202,12 +1202,12 @@ fn tui_host_dispatch_redraw_invokes_on_paint() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnPaint as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnPaint))),
         loc(),
     );
     emit_constant(&mut chunk, tui_application_value());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostDispatchRedraw as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostDispatchRedraw))),
         loc(),
     );
     chunk.emit(Op::PrintLn, loc());
@@ -1228,10 +1228,10 @@ fn tui_host_dispatch_redraw_invokes_on_paint() {
 #[test]
 fn tui_host_dispatch_redraw_consumes_damage_only_once() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::Dup, loc());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiApplicationRequestRedraw as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationRequestRedraw))),
         loc(),
     );
     emit_constant(
@@ -1242,18 +1242,18 @@ fn tui_host_dispatch_redraw_consumes_damage_only_once() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnPaint as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnPaint))),
         loc(),
     );
     emit_constant(&mut chunk, tui_application_value());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostDispatchRedraw as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostDispatchRedraw))),
         loc(),
     );
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, tui_application_value());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostDispatchRedraw as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostDispatchRedraw))),
         loc(),
     );
     chunk.emit(Op::PrintLn, loc());
@@ -1274,7 +1274,7 @@ fn tui_host_dispatch_redraw_consumes_damage_only_once() {
 #[test]
 fn tui_host_register_on_idle_stores_handler_and_interval() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(&mut chunk, tui_application_value());
     emit_constant(&mut chunk, Value::Integer(25));
     emit_constant(
@@ -1285,7 +1285,7 @@ fn tui_host_register_on_idle_stores_handler_and_interval() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnIdle as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnIdle))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -1310,7 +1310,7 @@ fn tui_host_register_on_idle_stores_handler_and_interval() {
 #[test]
 fn tui_host_register_on_idle_clamps_negative_interval_to_zero() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(&mut chunk, tui_application_value());
     emit_constant(&mut chunk, Value::Integer(-5));
     emit_constant(
@@ -1321,7 +1321,7 @@ fn tui_host_register_on_idle_clamps_negative_interval_to_zero() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnIdle as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnIdle))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -1342,15 +1342,15 @@ fn tui_host_register_on_idle_clamps_negative_interval_to_zero() {
 #[test]
 fn tui_host_dispatch_redraw_without_handler_clears_and_returns_six() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::Dup, loc());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiApplicationRequestRedraw as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationRequestRedraw))),
         loc(),
     );
     emit_constant(&mut chunk, tui_application_value());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostDispatchRedraw as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostDispatchRedraw))),
         loc(),
     );
     chunk.emit(Op::PrintLn, loc());
@@ -1362,10 +1362,10 @@ fn tui_host_dispatch_redraw_without_handler_clears_and_returns_six() {
 #[test]
 fn tui_host_dispatch_redraw_when_not_pending_returns_zero() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(&mut chunk, tui_application_value());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostDispatchRedraw as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostDispatchRedraw))),
         loc(),
     );
     chunk.emit(Op::PrintLn, loc());
@@ -1377,10 +1377,10 @@ fn tui_host_dispatch_redraw_when_not_pending_returns_zero() {
 #[test]
 fn tui_host_run_loop_dispatches_paint_then_key_until_idle() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::Dup, loc());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiApplicationRequestRedraw as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationRequestRedraw))),
         loc(),
     );
     chunk.emit(Op::Dup, loc());
@@ -1392,7 +1392,7 @@ fn tui_host_run_loop_dispatches_paint_then_key_until_idle() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnKeyPressed as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnKeyPressed))),
         loc(),
     );
     chunk.emit(Op::Dup, loc());
@@ -1404,11 +1404,11 @@ fn tui_host_run_loop_dispatches_paint_then_key_until_idle() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnPaint as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnPaint))),
         loc(),
     );
     emit_constant(&mut chunk, Value::Integer(16));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRunLoop as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRunLoop))), loc());
     chunk.emit(Op::Halt, loc());
 
     let on_key_start = chunk.len();
@@ -1441,11 +1441,11 @@ fn tui_host_run_loop_dispatches_paint_then_key_until_idle() {
 #[test]
 fn tui_host_request_quit_ends_host_run_loop_after_idle_iteration() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::Dup, loc());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRequestQuit as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRequestQuit))), loc());
     emit_constant(&mut chunk, Value::Integer(10_000));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRunLoop as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRunLoop))), loc());
     chunk.emit(Op::Halt, loc());
 
     let mut vm = Vm::new(chunk);
@@ -1459,10 +1459,10 @@ fn tui_host_request_quit_ends_host_run_loop_after_idle_iteration() {
 #[test]
 fn tui_host_run_loop_max_iterations_zero_skips_body() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::Dup, loc());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiApplicationRequestRedraw as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationRequestRedraw))),
         loc(),
     );
     chunk.emit(Op::Dup, loc());
@@ -1474,11 +1474,11 @@ fn tui_host_run_loop_max_iterations_zero_skips_body() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnPaint as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnPaint))),
         loc(),
     );
     emit_constant(&mut chunk, Value::Integer(0));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostRunLoop as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRunLoop))), loc());
     chunk.emit(Op::Halt, loc());
 
     let on_paint_start = chunk.len();
@@ -1496,7 +1496,7 @@ fn tui_host_run_loop_max_iterations_zero_skips_body() {
 #[test]
 fn tui_host_register_on_exit_stores_handler_in_shared_tui_state() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -1505,7 +1505,7 @@ fn tui_host_register_on_exit_stores_handler_in_shared_tui_state() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnExit as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnExit))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -1529,7 +1529,7 @@ fn tui_host_register_on_exit_stores_handler_in_shared_tui_state() {
 #[test]
 fn tui_host_register_on_idle_is_cleared_by_application_close() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::Dup, loc());
     emit_constant(&mut chunk, Value::Integer(10));
     emit_constant(
@@ -1540,10 +1540,10 @@ fn tui_host_register_on_idle_is_cleared_by_application_close() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnIdle as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnIdle))),
         loc(),
     );
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationClose as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationClose))), loc());
     chunk.emit(Op::Halt, loc());
 
     let on_idle_start = chunk.len();
@@ -1566,12 +1566,12 @@ fn tui_host_register_on_idle_is_cleared_by_application_close() {
 #[test]
 fn tui_host_register_on_idle_rejects_non_function_value() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(&mut chunk, tui_application_value());
     emit_constant(&mut chunk, Value::Integer(10));
     emit_constant(&mut chunk, Value::Integer(7));
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnIdle as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnIdle))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -1587,7 +1587,7 @@ fn tui_host_register_on_idle_rejects_non_function_value() {
 #[test]
 fn tui_host_register_on_idle_rejects_wrong_arity() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(&mut chunk, tui_application_value());
     emit_constant(&mut chunk, Value::Integer(10));
     emit_constant(
@@ -1598,7 +1598,7 @@ fn tui_host_register_on_idle_rejects_wrong_arity() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnIdle as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnIdle))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -1621,7 +1621,7 @@ fn tui_host_register_on_idle_rejects_wrong_arity() {
 #[test]
 fn tui_host_register_on_exit_is_cleared_by_application_close() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     chunk.emit(Op::Dup, loc());
     emit_constant(
         &mut chunk,
@@ -1631,10 +1631,10 @@ fn tui_host_register_on_exit_is_cleared_by_application_close() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnExit as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnExit))),
         loc(),
     );
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationClose as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationClose))), loc());
     chunk.emit(Op::Halt, loc());
 
     let on_exit_start = chunk.len();
@@ -1656,10 +1656,10 @@ fn tui_host_register_on_exit_is_cleared_by_application_close() {
 #[test]
 fn tui_host_register_on_exit_rejects_non_function_value() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(&mut chunk, Value::Integer(7));
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnExit as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnExit))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -1675,7 +1675,7 @@ fn tui_host_register_on_exit_rejects_non_function_value() {
 #[test]
 fn tui_host_register_on_exit_rejects_wrong_arity() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -1684,7 +1684,7 @@ fn tui_host_register_on_exit_rejects_wrong_arity() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnExit as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnExit))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -1707,7 +1707,7 @@ fn tui_host_register_on_exit_rejects_wrong_arity() {
 #[test]
 fn tui_host_register_on_mouse_stores_handler_in_shared_tui_state() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -1716,7 +1716,7 @@ fn tui_host_register_on_mouse_stores_handler_in_shared_tui_state() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnMouse as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnMouse))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -1745,7 +1745,7 @@ fn tui_host_register_on_mouse_stores_handler_in_shared_tui_state() {
 #[test]
 fn tui_host_process_next_dispatches_on_mouse_handler() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -1754,12 +1754,12 @@ fn tui_host_process_next_dispatches_on_mouse_handler() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnMouse as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnMouse))),
         loc(),
     );
     emit_constant(&mut chunk, tui_application_value());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -1791,7 +1791,7 @@ fn tui_host_process_next_dispatches_on_mouse_handler() {
 #[test]
 fn tui_host_mouse_redraw_hint_uses_view_rect_when_handler_requests_redraw() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -1800,12 +1800,12 @@ fn tui_host_mouse_redraw_hint_uses_view_rect_when_handler_requests_redraw() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnMouse as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnMouse))),
         loc(),
     );
     emit_constant(&mut chunk, tui_application_value());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::Pop, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -1815,7 +1815,7 @@ fn tui_host_mouse_redraw_hint_uses_view_rect_when_handler_requests_redraw() {
         .insert("OnMouseRedraw".into(), (on_mouse_start, 2));
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiApplicationRequestRedraw as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationRequestRedraw))),
         loc(),
     );
     emit_constant(&mut chunk, Value::Unit);
@@ -1870,10 +1870,10 @@ fn tui_host_mouse_redraw_hint_uses_view_rect_when_handler_requests_redraw() {
 #[test]
 fn tui_host_process_next_mouse_without_handler_returns_tag_seven() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(&mut chunk, tui_application_value());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -1896,7 +1896,7 @@ fn tui_host_process_next_mouse_without_handler_returns_tag_seven() {
 #[test]
 fn tui_host_register_on_mouse_is_cleared_by_application_close() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -1905,11 +1905,11 @@ fn tui_host_register_on_mouse_is_cleared_by_application_close() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnMouse as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnMouse))),
         loc(),
     );
     emit_constant(&mut chunk, tui_application_value());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationClose as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationClose))), loc());
     chunk.emit(Op::Halt, loc());
 
     let on_mouse_start = chunk.len();
@@ -1933,10 +1933,10 @@ fn tui_host_register_on_mouse_is_cleared_by_application_close() {
 #[test]
 fn tui_host_register_on_mouse_rejects_non_function_value() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(&mut chunk, Value::Integer(42));
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnMouse as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnMouse))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -1952,7 +1952,7 @@ fn tui_host_register_on_mouse_rejects_non_function_value() {
 #[test]
 fn tui_host_register_on_mouse_rejects_wrong_arity() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -1961,7 +1961,7 @@ fn tui_host_register_on_mouse_rejects_wrong_arity() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnMouse as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnMouse))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -1986,7 +1986,7 @@ fn tui_host_register_on_mouse_rejects_wrong_arity() {
 #[test]
 fn tui_host_register_on_paste_stores_handler_in_shared_tui_state() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -1995,7 +1995,7 @@ fn tui_host_register_on_paste_stores_handler_in_shared_tui_state() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnPaste as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnPaste))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -2024,7 +2024,7 @@ fn tui_host_register_on_paste_stores_handler_in_shared_tui_state() {
 #[test]
 fn tui_host_process_next_dispatches_on_paste_handler_returns_tag_eight() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -2033,12 +2033,12 @@ fn tui_host_process_next_dispatches_on_paste_handler_returns_tag_eight() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnPaste as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnPaste))),
         loc(),
     );
     emit_constant(&mut chunk, tui_application_value());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -2060,7 +2060,7 @@ fn tui_host_process_next_dispatches_on_paste_handler_returns_tag_eight() {
 #[test]
 fn tui_host_paste_redraw_hint_uses_focused_view_rect_when_handler_requests_redraw() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -2069,12 +2069,12 @@ fn tui_host_paste_redraw_hint_uses_focused_view_rect_when_handler_requests_redra
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnPaste as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnPaste))),
         loc(),
     );
     emit_constant(&mut chunk, tui_application_value());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::Pop, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -2084,7 +2084,7 @@ fn tui_host_paste_redraw_hint_uses_focused_view_rect_when_handler_requests_redra
         .insert("OnPasteRedraw".into(), (on_paste_start, 2));
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiApplicationRequestRedraw as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationRequestRedraw))),
         loc(),
     );
     emit_constant(&mut chunk, Value::Unit);
@@ -2132,10 +2132,10 @@ fn tui_host_paste_redraw_hint_uses_focused_view_rect_when_handler_requests_redra
 #[test]
 fn tui_host_process_next_paste_without_handler_returns_tag_nine() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(&mut chunk, tui_application_value());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -2148,7 +2148,7 @@ fn tui_host_process_next_paste_without_handler_returns_tag_nine() {
 #[test]
 fn tui_host_register_on_paste_is_cleared_by_application_close() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -2157,11 +2157,11 @@ fn tui_host_register_on_paste_is_cleared_by_application_close() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnPaste as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnPaste))),
         loc(),
     );
     emit_constant(&mut chunk, tui_application_value());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationClose as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationClose))), loc());
     chunk.emit(Op::Halt, loc());
 
     let on_paste_start = chunk.len();
@@ -2185,10 +2185,10 @@ fn tui_host_register_on_paste_is_cleared_by_application_close() {
 #[test]
 fn tui_host_register_on_paste_rejects_non_function_value() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(&mut chunk, Value::Integer(42));
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnPaste as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnPaste))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -2204,7 +2204,7 @@ fn tui_host_register_on_paste_rejects_non_function_value() {
 #[test]
 fn tui_host_register_on_paste_rejects_wrong_arity() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -2213,7 +2213,7 @@ fn tui_host_register_on_paste_rejects_wrong_arity() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnPaste as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnPaste))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -2238,7 +2238,7 @@ fn tui_host_register_on_paste_rejects_wrong_arity() {
 #[test]
 fn tui_host_register_on_focus_gained_stores_handler_in_shared_tui_state() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -2247,7 +2247,7 @@ fn tui_host_register_on_focus_gained_stores_handler_in_shared_tui_state() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnFocusGained as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnFocusGained))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -2276,7 +2276,7 @@ fn tui_host_register_on_focus_gained_stores_handler_in_shared_tui_state() {
 #[test]
 fn tui_host_process_next_dispatches_on_focus_gained_handler_returns_tag_ten() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -2285,12 +2285,12 @@ fn tui_host_process_next_dispatches_on_focus_gained_handler_returns_tag_ten() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnFocusGained as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnFocusGained))),
         loc(),
     );
     emit_constant(&mut chunk, tui_application_value());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -2312,7 +2312,7 @@ fn tui_host_process_next_dispatches_on_focus_gained_handler_returns_tag_ten() {
 #[test]
 fn tui_host_focus_gained_redraw_hint_uses_focused_view_rect_when_handler_requests_redraw() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -2321,12 +2321,12 @@ fn tui_host_focus_gained_redraw_hint_uses_focused_view_rect_when_handler_request
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnFocusGained as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnFocusGained))),
         loc(),
     );
     emit_constant(&mut chunk, tui_application_value());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::Pop, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -2336,7 +2336,7 @@ fn tui_host_focus_gained_redraw_hint_uses_focused_view_rect_when_handler_request
         .insert("OnFocusGainedRedraw".into(), (on_fg_start, 2));
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiApplicationRequestRedraw as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationRequestRedraw))),
         loc(),
     );
     emit_constant(&mut chunk, Value::Unit);
@@ -2384,10 +2384,10 @@ fn tui_host_focus_gained_redraw_hint_uses_focused_view_rect_when_handler_request
 #[test]
 fn tui_host_process_next_focus_gained_without_handler_returns_tag_eleven() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(&mut chunk, tui_application_value());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -2400,7 +2400,7 @@ fn tui_host_process_next_focus_gained_without_handler_returns_tag_eleven() {
 #[test]
 fn tui_host_register_on_focus_gained_is_cleared_by_application_close() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -2409,11 +2409,11 @@ fn tui_host_register_on_focus_gained_is_cleared_by_application_close() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnFocusGained as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnFocusGained))),
         loc(),
     );
     emit_constant(&mut chunk, tui_application_value());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationClose as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationClose))), loc());
     chunk.emit(Op::Halt, loc());
 
     let on_fg_start = chunk.len();
@@ -2437,7 +2437,7 @@ fn tui_host_register_on_focus_gained_is_cleared_by_application_close() {
 #[test]
 fn tui_host_register_on_focus_gained_rejects_wrong_arity() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -2446,7 +2446,7 @@ fn tui_host_register_on_focus_gained_rejects_wrong_arity() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnFocusGained as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnFocusGained))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -2471,7 +2471,7 @@ fn tui_host_register_on_focus_gained_rejects_wrong_arity() {
 #[test]
 fn tui_host_register_on_focus_lost_stores_handler_in_shared_tui_state() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -2480,7 +2480,7 @@ fn tui_host_register_on_focus_lost_stores_handler_in_shared_tui_state() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnFocusLost as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnFocusLost))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -2509,7 +2509,7 @@ fn tui_host_register_on_focus_lost_stores_handler_in_shared_tui_state() {
 #[test]
 fn tui_host_process_next_dispatches_on_focus_lost_handler_returns_tag_twelve() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -2518,12 +2518,12 @@ fn tui_host_process_next_dispatches_on_focus_lost_handler_returns_tag_twelve() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnFocusLost as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnFocusLost))),
         loc(),
     );
     emit_constant(&mut chunk, tui_application_value());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -2545,7 +2545,7 @@ fn tui_host_process_next_dispatches_on_focus_lost_handler_returns_tag_twelve() {
 #[test]
 fn tui_host_focus_lost_redraw_hint_uses_focused_view_rect_when_handler_requests_redraw() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -2554,12 +2554,12 @@ fn tui_host_focus_lost_redraw_hint_uses_focused_view_rect_when_handler_requests_
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnFocusLost as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnFocusLost))),
         loc(),
     );
     emit_constant(&mut chunk, tui_application_value());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::Pop, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -2569,7 +2569,7 @@ fn tui_host_focus_lost_redraw_hint_uses_focused_view_rect_when_handler_requests_
         .insert("OnFocusLostRedraw".into(), (on_fl_start, 2));
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiApplicationRequestRedraw as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationRequestRedraw))),
         loc(),
     );
     emit_constant(&mut chunk, Value::Unit);
@@ -2617,10 +2617,10 @@ fn tui_host_focus_lost_redraw_hint_uses_focused_view_rect_when_handler_requests_
 #[test]
 fn tui_host_process_next_focus_lost_without_handler_returns_tag_thirteen() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(&mut chunk, tui_application_value());
     emit_constant(&mut chunk, Value::Integer(32));
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiHostProcessNext as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostProcessNext))), loc());
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
@@ -2633,7 +2633,7 @@ fn tui_host_process_next_focus_lost_without_handler_returns_tag_thirteen() {
 #[test]
 fn tui_host_register_on_focus_lost_is_cleared_by_application_close() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -2642,11 +2642,11 @@ fn tui_host_register_on_focus_lost_is_cleared_by_application_close() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnFocusLost as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnFocusLost))),
         loc(),
     );
     emit_constant(&mut chunk, tui_application_value());
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationClose as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationClose))), loc());
     chunk.emit(Op::Halt, loc());
 
     let on_fl_start = chunk.len();
@@ -2670,7 +2670,7 @@ fn tui_host_register_on_focus_lost_is_cleared_by_application_close() {
 #[test]
 fn tui_host_register_on_focus_lost_rejects_wrong_arity() {
     let mut chunk = Chunk::new();
-    chunk.emit(Op::Intrinsic(Intrinsic::TuiApplicationOpen as u16), loc());
+    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))), loc());
     emit_constant(
         &mut chunk,
         Value::Function {
@@ -2679,7 +2679,7 @@ fn tui_host_register_on_focus_lost_rejects_wrong_arity() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(Intrinsic::TuiHostRegisterOnFocusLost as u16),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnFocusLost))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());

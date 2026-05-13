@@ -12,7 +12,7 @@ use crate::error::{StdError, std_internal_error};
 use crate::math;
 use crate::result_option;
 use crate::str;
-use fpas_bytecode::{Intrinsic, SourceLocation, Value};
+use fpas_bytecode::{ArrayIntrinsic, ConsoleIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic, ResultIntrinsic, SourceLocation, StrIntrinsic, TaskIntrinsic, TuiIntrinsic, Value};
 /// Execute a standard-library intrinsic; mutates `stack` (Pascal call order: args already pushed).
 pub fn run_intrinsic(
     intrinsic: Intrinsic,
@@ -21,77 +21,77 @@ pub fn run_intrinsic(
 ) -> Result<(), StdError> {
     if matches!(
         intrinsic,
-        Intrinsic::ConsoleReadLn
-            | Intrinsic::ConsoleRead
-            | Intrinsic::ConsoleReadKey
-            | Intrinsic::ConsoleKeyPressed
-            | Intrinsic::ConsoleReadKeyEvent
-            | Intrinsic::ConsoleClrScr
-            | Intrinsic::ConsoleClrEol
-            | Intrinsic::ConsoleGotoXY
-            | Intrinsic::ConsoleWhereX
-            | Intrinsic::ConsoleWhereY
-            | Intrinsic::ConsoleWindMin
-            | Intrinsic::ConsoleWindMax
-            | Intrinsic::ConsoleDelLine
-            | Intrinsic::ConsoleInsLine
-            | Intrinsic::ConsoleWindow
-            | Intrinsic::ConsoleTextColor
-            | Intrinsic::ConsoleTextBackground
-            | Intrinsic::ConsoleHighVideo
-            | Intrinsic::ConsoleLowVideo
-            | Intrinsic::ConsoleNormVideo
-            | Intrinsic::ConsoleTextAttr
-            | Intrinsic::ConsoleSetTextAttr
-            | Intrinsic::ConsoleDelay
-            | Intrinsic::ConsoleCursorOn
-            | Intrinsic::ConsoleCursorBig
-            | Intrinsic::ConsoleCursorOff
-            | Intrinsic::ConsoleTextMode
-            | Intrinsic::ConsoleLastMode
-            | Intrinsic::ConsoleScreenWidth
-            | Intrinsic::ConsoleScreenHeight
-            | Intrinsic::ConsoleSound
-            | Intrinsic::ConsoleNoSound
-            | Intrinsic::ConsoleAssignCrt
-            | Intrinsic::ConsoleEventPending
-            | Intrinsic::ConsoleReadEvent
-            | Intrinsic::ConsoleEnableRawMode
-            | Intrinsic::ConsoleDisableRawMode
-            | Intrinsic::ConsoleEnterAltScreen
-            | Intrinsic::ConsoleLeaveAltScreen
-            | Intrinsic::ConsoleEnableMouse
-            | Intrinsic::ConsoleDisableMouse
-            | Intrinsic::ConsoleEnableFocus
-            | Intrinsic::ConsoleDisableFocus
-            | Intrinsic::ConsoleEnablePaste
-            | Intrinsic::ConsoleDisablePaste
-            | Intrinsic::ConsoleReadEventTimeout
-            | Intrinsic::ConsolePollEvent
-            | Intrinsic::ConsoleTextColorRGB
-            | Intrinsic::ConsoleTextBackgroundRGB
-            | Intrinsic::ConsoleTextColor256
-            | Intrinsic::ConsoleTextBackground256
-            | Intrinsic::TuiApplicationOpen
-            | Intrinsic::TuiApplicationClose
-            | Intrinsic::TuiApplicationSize
-            | Intrinsic::TuiApplicationReadEvent
-            | Intrinsic::TuiApplicationReadEventTimeout
-            | Intrinsic::TuiApplicationPollEvent
-            | Intrinsic::TuiApplicationRequestRedraw
-            | Intrinsic::TuiApplicationRedrawPending
-            | Intrinsic::TuiApplicationConfigure
-            | Intrinsic::TuiHostPollNext
-            | Intrinsic::TuiHostRegisterOnKeyPressed
-            | Intrinsic::TuiHostInvokeOnKeyPressed
-            | Intrinsic::TuiHostRegisterOnResize
-            | Intrinsic::TuiHostProcessNext
-            | Intrinsic::TuiHostRegisterOnPaint
-            | Intrinsic::TuiHostRegisterOnIdle
-            | Intrinsic::TuiHostDispatchRedraw
-            | Intrinsic::TuiHostRunLoop
-            | Intrinsic::TuiHostRequestQuit
-            | Intrinsic::TuiHostRegisterOnExit
+        Intrinsic::Console(ConsoleIntrinsic::ReadLn)
+            | Intrinsic::Console(ConsoleIntrinsic::Read)
+            | Intrinsic::Console(ConsoleIntrinsic::ReadKey)
+            | Intrinsic::Console(ConsoleIntrinsic::KeyPressed)
+            | Intrinsic::Console(ConsoleIntrinsic::ReadKeyEvent)
+            | Intrinsic::Console(ConsoleIntrinsic::ClrScr)
+            | Intrinsic::Console(ConsoleIntrinsic::ClrEol)
+            | Intrinsic::Console(ConsoleIntrinsic::GotoXY)
+            | Intrinsic::Console(ConsoleIntrinsic::WhereX)
+            | Intrinsic::Console(ConsoleIntrinsic::WhereY)
+            | Intrinsic::Console(ConsoleIntrinsic::WindMin)
+            | Intrinsic::Console(ConsoleIntrinsic::WindMax)
+            | Intrinsic::Console(ConsoleIntrinsic::DelLine)
+            | Intrinsic::Console(ConsoleIntrinsic::InsLine)
+            | Intrinsic::Console(ConsoleIntrinsic::Window)
+            | Intrinsic::Console(ConsoleIntrinsic::TextColor)
+            | Intrinsic::Console(ConsoleIntrinsic::TextBackground)
+            | Intrinsic::Console(ConsoleIntrinsic::HighVideo)
+            | Intrinsic::Console(ConsoleIntrinsic::LowVideo)
+            | Intrinsic::Console(ConsoleIntrinsic::NormVideo)
+            | Intrinsic::Console(ConsoleIntrinsic::TextAttr)
+            | Intrinsic::Console(ConsoleIntrinsic::SetTextAttr)
+            | Intrinsic::Console(ConsoleIntrinsic::Delay)
+            | Intrinsic::Console(ConsoleIntrinsic::CursorOn)
+            | Intrinsic::Console(ConsoleIntrinsic::CursorBig)
+            | Intrinsic::Console(ConsoleIntrinsic::CursorOff)
+            | Intrinsic::Console(ConsoleIntrinsic::TextMode)
+            | Intrinsic::Console(ConsoleIntrinsic::LastMode)
+            | Intrinsic::Console(ConsoleIntrinsic::ScreenWidth)
+            | Intrinsic::Console(ConsoleIntrinsic::ScreenHeight)
+            | Intrinsic::Console(ConsoleIntrinsic::Sound)
+            | Intrinsic::Console(ConsoleIntrinsic::NoSound)
+            | Intrinsic::Console(ConsoleIntrinsic::AssignCrt)
+            | Intrinsic::Console(ConsoleIntrinsic::EventPending)
+            | Intrinsic::Console(ConsoleIntrinsic::ReadEvent)
+            | Intrinsic::Console(ConsoleIntrinsic::EnableRawMode)
+            | Intrinsic::Console(ConsoleIntrinsic::DisableRawMode)
+            | Intrinsic::Console(ConsoleIntrinsic::EnterAltScreen)
+            | Intrinsic::Console(ConsoleIntrinsic::LeaveAltScreen)
+            | Intrinsic::Console(ConsoleIntrinsic::EnableMouse)
+            | Intrinsic::Console(ConsoleIntrinsic::DisableMouse)
+            | Intrinsic::Console(ConsoleIntrinsic::EnableFocus)
+            | Intrinsic::Console(ConsoleIntrinsic::DisableFocus)
+            | Intrinsic::Console(ConsoleIntrinsic::EnablePaste)
+            | Intrinsic::Console(ConsoleIntrinsic::DisablePaste)
+            | Intrinsic::Console(ConsoleIntrinsic::ReadEventTimeout)
+            | Intrinsic::Console(ConsoleIntrinsic::PollEvent)
+            | Intrinsic::Console(ConsoleIntrinsic::TextColorRGB)
+            | Intrinsic::Console(ConsoleIntrinsic::TextBackgroundRGB)
+            | Intrinsic::Console(ConsoleIntrinsic::TextColor256)
+            | Intrinsic::Console(ConsoleIntrinsic::TextBackground256)
+            | Intrinsic::Tui(TuiIntrinsic::ApplicationOpen)
+            | Intrinsic::Tui(TuiIntrinsic::ApplicationClose)
+            | Intrinsic::Tui(TuiIntrinsic::ApplicationSize)
+            | Intrinsic::Tui(TuiIntrinsic::ApplicationReadEvent)
+            | Intrinsic::Tui(TuiIntrinsic::ApplicationReadEventTimeout)
+            | Intrinsic::Tui(TuiIntrinsic::ApplicationPollEvent)
+            | Intrinsic::Tui(TuiIntrinsic::ApplicationRequestRedraw)
+            | Intrinsic::Tui(TuiIntrinsic::ApplicationRedrawPending)
+            | Intrinsic::Tui(TuiIntrinsic::ApplicationConfigure)
+            | Intrinsic::Tui(TuiIntrinsic::HostPollNext)
+            | Intrinsic::Tui(TuiIntrinsic::HostRegisterOnKeyPressed)
+            | Intrinsic::Tui(TuiIntrinsic::HostInvokeOnKeyPressed)
+            | Intrinsic::Tui(TuiIntrinsic::HostRegisterOnResize)
+            | Intrinsic::Tui(TuiIntrinsic::HostProcessNext)
+            | Intrinsic::Tui(TuiIntrinsic::HostRegisterOnPaint)
+            | Intrinsic::Tui(TuiIntrinsic::HostRegisterOnIdle)
+            | Intrinsic::Tui(TuiIntrinsic::HostDispatchRedraw)
+            | Intrinsic::Tui(TuiIntrinsic::HostRunLoop)
+            | Intrinsic::Tui(TuiIntrinsic::HostRequestQuit)
+            | Intrinsic::Tui(TuiIntrinsic::HostRegisterOnExit)
     ) {
         return Err(std_internal_error(
             "internal: Std.Console and Std.Tui intrinsics are handled in the VM",
@@ -100,7 +100,7 @@ pub fn run_intrinsic(
         ));
     }
 
-    if matches!(intrinsic, Intrinsic::TaskWait | Intrinsic::TaskWaitAll) {
+    if matches!(intrinsic, Intrinsic::Task(TaskIntrinsic::Wait) | Intrinsic::Task(TaskIntrinsic::WaitAll)) {
         return Err(std_internal_error(
             "internal: Std.Task wait intrinsics (Wait, WaitAll) are handled in the VM",
             "This indicates a VM dispatch bug. Please report this as a compiler/runtime bug.",
@@ -110,23 +110,23 @@ pub fn run_intrinsic(
 
     if matches!(
         intrinsic,
-        Intrinsic::ArrayMap
-            | Intrinsic::ArrayFilter
-            | Intrinsic::ArrayReduce
-            | Intrinsic::ArrayFind
-            | Intrinsic::ArrayFindIndex
-            | Intrinsic::ArrayAny
-            | Intrinsic::ArrayAll
-            | Intrinsic::ArrayFlatMap
-            | Intrinsic::ArrayForEach
-            | Intrinsic::ResultMap
-            | Intrinsic::ResultAndThen
-            | Intrinsic::ResultOrElse
-            | Intrinsic::OptionMap
-            | Intrinsic::OptionAndThen
-            | Intrinsic::OptionOrElse
-            | Intrinsic::DictMap
-            | Intrinsic::DictFilter
+        Intrinsic::Array(ArrayIntrinsic::Map)
+            | Intrinsic::Array(ArrayIntrinsic::Filter)
+            | Intrinsic::Array(ArrayIntrinsic::Reduce)
+            | Intrinsic::Array(ArrayIntrinsic::Find)
+            | Intrinsic::Array(ArrayIntrinsic::FindIndex)
+            | Intrinsic::Array(ArrayIntrinsic::Any)
+            | Intrinsic::Array(ArrayIntrinsic::All)
+            | Intrinsic::Array(ArrayIntrinsic::FlatMap)
+            | Intrinsic::Array(ArrayIntrinsic::ForEach)
+            | Intrinsic::Result(ResultIntrinsic::Map)
+            | Intrinsic::Result(ResultIntrinsic::AndThen)
+            | Intrinsic::Result(ResultIntrinsic::OrElse)
+            | Intrinsic::Option(OptionIntrinsic::Map)
+            | Intrinsic::Option(OptionIntrinsic::AndThen)
+            | Intrinsic::Option(OptionIntrinsic::OrElse)
+            | Intrinsic::Dict(DictIntrinsic::Map)
+            | Intrinsic::Dict(DictIntrinsic::Filter)
     ) {
         return Err(std_internal_error(
             "internal: higher-order Std intrinsics (function callbacks) are handled in the VM",
@@ -166,7 +166,7 @@ mod vm_only_guard_tests {
     #![allow(clippy::expect_used, clippy::unwrap_used)]
 
     use super::run_intrinsic;
-    use fpas_bytecode::{Intrinsic, SourceLocation, Value};
+    use fpas_bytecode::{ArrayIntrinsic, ConsoleIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic, ResultIntrinsic, SourceLocation, StrIntrinsic, TaskIntrinsic, TuiIntrinsic, Value};
 
     fn loc() -> SourceLocation {
         SourceLocation::new(1, 1)
@@ -174,7 +174,7 @@ mod vm_only_guard_tests {
 
     #[test]
     fn console_poll_event_is_vm_only() {
-        let err = run_intrinsic(Intrinsic::ConsolePollEvent, &mut Vec::new(), loc())
+        let err = run_intrinsic(Intrinsic::Console(ConsoleIntrinsic::PollEvent), &mut Vec::new(), loc())
             .expect_err("expected internal error");
         assert!(
             err.message.contains("Std.Console and Std.Tui"),
@@ -185,7 +185,7 @@ mod vm_only_guard_tests {
 
     #[test]
     fn task_wait_is_vm_only() {
-        let err = run_intrinsic(Intrinsic::TaskWait, &mut Vec::new(), loc()).expect_err("err");
+        let err = run_intrinsic(Intrinsic::Task(TaskIntrinsic::Wait), &mut Vec::new(), loc()).expect_err("err");
         assert!(
             err.message.contains("Std.Task wait"),
             "message={}",
@@ -195,7 +195,7 @@ mod vm_only_guard_tests {
 
     #[test]
     fn array_map_is_vm_only() {
-        let err = run_intrinsic(Intrinsic::ArrayMap, &mut Vec::new(), loc()).expect_err("err");
+        let err = run_intrinsic(Intrinsic::Array(ArrayIntrinsic::Map), &mut Vec::new(), loc()).expect_err("err");
         assert!(
             err.message.contains("higher-order Std intrinsics"),
             "message={}",
@@ -206,7 +206,7 @@ mod vm_only_guard_tests {
     #[test]
     fn str_length_still_dispatches() {
         let mut stack = vec![Value::Str("ab".into())];
-        run_intrinsic(Intrinsic::StrLength, &mut stack, loc()).unwrap();
+        run_intrinsic(Intrinsic::Str(StrIntrinsic::Length), &mut stack, loc()).unwrap();
         assert_eq!(stack, vec![Value::Integer(2)]);
     }
 }

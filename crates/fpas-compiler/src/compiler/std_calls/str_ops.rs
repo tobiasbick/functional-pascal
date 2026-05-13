@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/pascal/std/str.md` (from the repository root).
 
 use crate::error::{CompileError, compile_error};
-use fpas_bytecode::{Intrinsic, Op, SourceLocation, Value};
+use fpas_bytecode::{Intrinsic, Op, SourceLocation, StrIntrinsic, Value};
 use fpas_diagnostics::codes::COMPILE_INTRINSIC_ARITY_MISMATCH;
 use fpas_parser::Expr;
 use fpas_std::std_symbols as s;
@@ -34,52 +34,52 @@ impl Compiler {
                 }
                 let arg_count = (args.len() - 1) as i64;
                 self.emit_constant(Value::Integer(arg_count), location)?;
-                self.emit(Op::Intrinsic(u16::from(Intrinsic::StrFormat)), location);
+                self.emit(Op::Intrinsic(u16::from(Intrinsic::Str(StrIntrinsic::Format))), location);
                 Ok(true)
             }
             s::STD_STR_LENGTH => {
                 self.expect_exact_args(s::STD_STR_LENGTH, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::StrLength, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::Length), location);
                 Ok(true)
             }
             s::STD_STR_TO_UPPER => {
                 self.expect_exact_args(s::STD_STR_TO_UPPER, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::StrToUpper, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::ToUpper), location);
                 Ok(true)
             }
             s::STD_STR_TO_LOWER => {
                 self.expect_exact_args(s::STD_STR_TO_LOWER, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::StrToLower, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::ToLower), location);
                 Ok(true)
             }
             s::STD_STR_TRIM => {
                 self.expect_exact_args(s::STD_STR_TRIM, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::StrTrim, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::Trim), location);
                 Ok(true)
             }
             s::STD_STR_CONTAINS => {
                 self.expect_exact_args(s::STD_STR_CONTAINS, 2, args, location)?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic(Intrinsic::StrContains, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::Contains), location);
                 Ok(true)
             }
             s::STD_STR_STARTS_WITH => {
                 self.expect_exact_args(s::STD_STR_STARTS_WITH, 2, args, location)?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic(Intrinsic::StrStartsWith, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::StartsWith), location);
                 Ok(true)
             }
             s::STD_STR_ENDS_WITH => {
                 self.expect_exact_args(s::STD_STR_ENDS_WITH, 2, args, location)?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic(Intrinsic::StrEndsWith, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::EndsWith), location);
                 Ok(true)
             }
             s::STD_STR_SUBSTRING => {
@@ -87,14 +87,14 @@ impl Compiler {
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
                 self.compile_expr(&args[2])?;
-                self.emit_intrinsic(Intrinsic::StrSubstring, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::Substring), location);
                 Ok(true)
             }
             s::STD_STR_INDEX_OF => {
                 self.expect_exact_args(s::STD_STR_INDEX_OF, 2, args, location)?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic(Intrinsic::StrIndexOf, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::IndexOf), location);
                 Ok(true)
             }
             s::STD_STR_REPLACE => {
@@ -102,34 +102,34 @@ impl Compiler {
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
                 self.compile_expr(&args[2])?;
-                self.emit_intrinsic(Intrinsic::StrReplace, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::Replace), location);
                 Ok(true)
             }
             s::STD_STR_SPLIT => {
                 self.expect_exact_args(s::STD_STR_SPLIT, 2, args, location)?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic(Intrinsic::StrSplit, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::Split), location);
                 Ok(true)
             }
             s::STD_STR_JOIN => {
                 self.expect_exact_args(s::STD_STR_JOIN, 2, args, location)?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic(Intrinsic::StrJoin, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::Join), location);
                 Ok(true)
             }
             s::STD_STR_IS_NUMERIC => {
                 self.expect_exact_args(s::STD_STR_IS_NUMERIC, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::StrIsNumeric, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::IsNumeric), location);
                 Ok(true)
             }
             s::STD_STR_REPEAT => {
                 self.expect_exact_args(s::STD_STR_REPEAT, 2, args, location)?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic(Intrinsic::StrRepeat, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::Repeat), location);
                 Ok(true)
             }
             s::STD_STR_PAD_LEFT => {
@@ -137,7 +137,7 @@ impl Compiler {
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
                 self.compile_expr(&args[2])?;
-                self.emit_intrinsic(Intrinsic::StrPadLeft, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::PadLeft), location);
                 Ok(true)
             }
             s::STD_STR_PAD_RIGHT => {
@@ -145,7 +145,7 @@ impl Compiler {
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
                 self.compile_expr(&args[2])?;
-                self.emit_intrinsic(Intrinsic::StrPadRight, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::PadRight), location);
                 Ok(true)
             }
             s::STD_STR_PAD_CENTER => {
@@ -153,21 +153,21 @@ impl Compiler {
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
                 self.compile_expr(&args[2])?;
-                self.emit_intrinsic(Intrinsic::StrPadCenter, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::PadCenter), location);
                 Ok(true)
             }
             s::STD_STR_FROM_CHAR => {
                 self.expect_exact_args(s::STD_STR_FROM_CHAR, 2, args, location)?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic(Intrinsic::StrFromChar, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::FromChar), location);
                 Ok(true)
             }
             s::STD_STR_CHAR_AT => {
                 self.expect_exact_args(s::STD_STR_CHAR_AT, 2, args, location)?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic(Intrinsic::StrCharAt, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::CharAt), location);
                 Ok(true)
             }
             s::STD_STR_SET_CHAR_AT => {
@@ -175,19 +175,19 @@ impl Compiler {
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
                 self.compile_expr(&args[2])?;
-                self.emit_intrinsic(Intrinsic::StrSetCharAt, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::SetCharAt), location);
                 Ok(true)
             }
             s::STD_STR_ORD => {
                 self.expect_exact_args(s::STD_STR_ORD, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::StrOrd, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::Ord), location);
                 Ok(true)
             }
             s::STD_STR_CHR => {
                 self.expect_exact_args(s::STD_STR_CHR, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::StrChr, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::Chr), location);
                 Ok(true)
             }
             s::STD_STR_INSERT => {
@@ -195,7 +195,7 @@ impl Compiler {
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
                 self.compile_expr(&args[2])?;
-                self.emit_intrinsic(Intrinsic::StrInsert, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::Insert), location);
                 Ok(true)
             }
             s::STD_STR_DELETE => {
@@ -203,32 +203,32 @@ impl Compiler {
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
                 self.compile_expr(&args[2])?;
-                self.emit_intrinsic(Intrinsic::StrDelete, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::Delete), location);
                 Ok(true)
             }
             s::STD_STR_REVERSE => {
                 self.expect_exact_args(s::STD_STR_REVERSE, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::StrReverse, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::Reverse), location);
                 Ok(true)
             }
             s::STD_STR_TRIM_LEFT => {
                 self.expect_exact_args(s::STD_STR_TRIM_LEFT, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::StrTrimLeft, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::TrimLeft), location);
                 Ok(true)
             }
             s::STD_STR_TRIM_RIGHT => {
                 self.expect_exact_args(s::STD_STR_TRIM_RIGHT, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::StrTrimRight, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::TrimRight), location);
                 Ok(true)
             }
             s::STD_STR_LAST_INDEX_OF => {
                 self.expect_exact_args(s::STD_STR_LAST_INDEX_OF, 2, args, location)?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic(Intrinsic::StrLastIndexOf, location);
+                self.emit_intrinsic(Intrinsic::Str(StrIntrinsic::LastIndexOf), location);
                 Ok(true)
             }
             _ => Ok(false),

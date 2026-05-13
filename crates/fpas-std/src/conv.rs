@@ -7,7 +7,7 @@
 use crate::error::{StdError, std_runtime_error};
 use crate::helpers::{pop_bool, pop_char, pop_int, pop_real, pop_string, pop_value};
 use crate::numeric_text::parse_pascal_real;
-use fpas_bytecode::{Intrinsic, SourceLocation, Value};
+use fpas_bytecode::{ConvIntrinsic, Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_CONVERSION_FAILURE;
 
 pub(crate) fn run(
@@ -16,11 +16,11 @@ pub(crate) fn run(
     location: SourceLocation,
 ) -> Result<Option<()>, StdError> {
     match intrinsic {
-        Intrinsic::ConvIntToStr => {
+        Intrinsic::Conv(ConvIntrinsic::IntToStr) => {
             let n = pop_int(pop_value(stack, location)?, location)?;
             stack.push(Value::Str(format!("{n}")));
         }
-        Intrinsic::ConvStrToInt => {
+        Intrinsic::Conv(ConvIntrinsic::StrToInt) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
             let n = s.trim().parse::<i64>().map_err(|_| {
                 std_runtime_error(
@@ -32,11 +32,11 @@ pub(crate) fn run(
             })?;
             stack.push(Value::Integer(n));
         }
-        Intrinsic::ConvRealToStr => {
+        Intrinsic::Conv(ConvIntrinsic::RealToStr) => {
             let r = pop_real(pop_value(stack, location)?, location)?;
             stack.push(Value::Str(format!("{r}")));
         }
-        Intrinsic::ConvStrToReal => {
+        Intrinsic::Conv(ConvIntrinsic::StrToReal) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
             let r = parse_pascal_real(&s).ok_or_else(|| {
                 std_runtime_error(
@@ -48,15 +48,15 @@ pub(crate) fn run(
             })?;
             stack.push(Value::Real(r));
         }
-        Intrinsic::ConvCharToStr => {
+        Intrinsic::Conv(ConvIntrinsic::CharToStr) => {
             let c = pop_char(pop_value(stack, location)?, location)?;
             stack.push(Value::Str(c.to_string()));
         }
-        Intrinsic::ConvIntToReal => {
+        Intrinsic::Conv(ConvIntrinsic::IntToReal) => {
             let n = pop_int(pop_value(stack, location)?, location)?;
             stack.push(Value::Real(n as f64));
         }
-        Intrinsic::ConvBoolToStr => {
+        Intrinsic::Conv(ConvIntrinsic::BoolToStr) => {
             let b = pop_bool(pop_value(stack, location)?, location)?;
             stack.push(Value::Str(if b {
                 "true".to_string()
@@ -64,7 +64,7 @@ pub(crate) fn run(
                 "false".to_string()
             }));
         }
-        Intrinsic::ConvStrToBool => {
+        Intrinsic::Conv(ConvIntrinsic::StrToBool) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
             match s.trim().to_lowercase().as_str() {
                 "true" => stack.push(Value::Boolean(true)),
@@ -79,7 +79,7 @@ pub(crate) fn run(
                 }
             }
         }
-        Intrinsic::ConvIntToHex => {
+        Intrinsic::Conv(ConvIntrinsic::IntToHex) => {
             let digits = pop_int(pop_value(stack, location)?, location)?;
             let n = pop_int(pop_value(stack, location)?, location)?;
             if digits < 0 {
@@ -100,7 +100,7 @@ pub(crate) fn run(
             };
             stack.push(Value::Str(formatted));
         }
-        Intrinsic::ConvHexToInt => {
+        Intrinsic::Conv(ConvIntrinsic::HexToInt) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
             let trimmed = s.trim();
             let trimmed = trimmed

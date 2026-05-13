@@ -8,7 +8,7 @@ mod run_loop;
 
 use crate::vm::diagnostics::VmError;
 use crate::vm::{Worker, runtime_error};
-use fpas_bytecode::{Intrinsic, SourceLocation, Value};
+use fpas_bytecode::{Intrinsic, SourceLocation, TuiIntrinsic, Value};
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 use fpas_std::{HostEvent, TuiEvent, ViewId, ViewRect};
 
@@ -20,7 +20,7 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<bool, VmError> {
         match intrinsic {
-            Intrinsic::TuiApplicationOpen => {
+            Intrinsic::Tui(TuiIntrinsic::ApplicationOpen) => {
                 {
                     let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
                     self.with_console_and_key_input(|console, key_input| {
@@ -51,13 +51,13 @@ impl Worker {
                 }
                 self.push(Self::tui_application_record())?;
             }
-            Intrinsic::TuiApplicationClose => {
+            Intrinsic::Tui(TuiIntrinsic::ApplicationClose) => {
                 self.pop_tui_application(line)?;
                 if !self.request_tui_host_stop_for_active_run() {
                     self.close_tui_application_state(line)?;
                 }
             }
-            Intrinsic::TuiApplicationConfigure => {
+            Intrinsic::Tui(TuiIntrinsic::ApplicationConfigure) => {
                 let handlers = self.pop_tui_application_handlers(line)?;
                 self.pop_tui_application(line)?;
 
@@ -176,11 +176,11 @@ impl Worker {
                 tui.on_idle = on_idle;
                 tui.on_exit = on_exit;
             }
-            Intrinsic::TuiApplicationRun => {
+            Intrinsic::Tui(TuiIntrinsic::ApplicationRun) => {
                 self.tui_application_run(line)?;
                 self.push(Value::Unit)?;
             }
-            Intrinsic::TuiApplicationShowModal => {
+            Intrinsic::Tui(TuiIntrinsic::ApplicationShowModal) => {
                 let root_view_id = self.pop_tui_view_id(line)?;
                 let root_view_id = self.require_registered_tui_view(root_view_id, line)?;
                 let modal_id = self.pop_int(line)?;
@@ -194,7 +194,7 @@ impl Worker {
                     let _ = tui.views.focus_first_in_scope(&next_scope);
                 });
             }
-            Intrinsic::TuiApplicationShowDialog => {
+            Intrinsic::Tui(TuiIntrinsic::ApplicationShowDialog) => {
                 let height = self.pop_int(line)?;
                 let width = self.pop_int(line)?;
                 let y = self.pop_int(line)?;
@@ -219,13 +219,13 @@ impl Worker {
                 });
                 self.push(Value::Integer(i64::from(dialog_root.raw())))?;
             }
-            Intrinsic::TuiApplicationCloseModal => {
+            Intrinsic::Tui(TuiIntrinsic::ApplicationCloseModal) => {
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| {
                     Self::close_active_modal(tui, line);
                 });
             }
-            Intrinsic::TuiApplicationSize => {
+            Intrinsic::Tui(TuiIntrinsic::ApplicationSize) => {
                 self.pop_tui_application(line)?;
                 let (width, height) = {
                     let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
@@ -233,7 +233,7 @@ impl Worker {
                 };
                 self.push(Self::tui_size_record(width, height))?;
             }
-            Intrinsic::TuiApplicationReadEvent => {
+            Intrinsic::Tui(TuiIntrinsic::ApplicationReadEvent) => {
                 self.pop_tui_application(line)?;
                 let event = {
                     let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
@@ -243,7 +243,7 @@ impl Worker {
                 };
                 self.push(Self::tui_event_record(event))?;
             }
-            Intrinsic::TuiApplicationReadEventTimeout => {
+            Intrinsic::Tui(TuiIntrinsic::ApplicationReadEventTimeout) => {
                 let timeout_ms = self.pop_int(line)?;
                 self.pop_tui_application(line)?;
                 loop {
@@ -270,7 +270,7 @@ impl Worker {
                     }
                 }
             }
-            Intrinsic::TuiApplicationPollEvent => {
+            Intrinsic::Tui(TuiIntrinsic::ApplicationPollEvent) => {
                 self.pop_tui_application(line)?;
                 loop {
                     let event = {
@@ -295,16 +295,16 @@ impl Worker {
                     }
                 }
             }
-            Intrinsic::TuiApplicationRequestRedraw => {
+            Intrinsic::Tui(TuiIntrinsic::ApplicationRequestRedraw) => {
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| tui.session.request_redraw(line))?;
             }
-            Intrinsic::TuiApplicationRedrawPending => {
+            Intrinsic::Tui(TuiIntrinsic::ApplicationRedrawPending) => {
                 self.pop_tui_application(line)?;
                 let pending = self.with_tui(|tui| tui.session.take_redraw_pending(line))?;
                 self.push(Value::Boolean(pending))?;
             }
-            Intrinsic::TuiHostPollNext => {
+            Intrinsic::Tui(TuiIntrinsic::HostPollNext) => {
                 self.pop_tui_application(line)?;
                 let mapped = {
                     let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
@@ -349,7 +349,7 @@ impl Worker {
                     }
                 }
             }
-            Intrinsic::TuiHostRegisterOnKeyPressed => {
+            Intrinsic::Tui(TuiIntrinsic::HostRegisterOnKeyPressed) => {
                 self.register_tui_handler(
                     2,
                     "OnKeyPressed",
@@ -358,7 +358,7 @@ impl Worker {
                     line,
                 )?;
             }
-            Intrinsic::TuiHostRegisterOnResize => {
+            Intrinsic::Tui(TuiIntrinsic::HostRegisterOnResize) => {
                 self.register_tui_handler(
                     2,
                     "OnResize",
@@ -367,13 +367,13 @@ impl Worker {
                     line,
                 )?;
             }
-            Intrinsic::TuiHostProcessNext => {
+            Intrinsic::Tui(TuiIntrinsic::HostProcessNext) => {
                 let max_spins = self.pop_int(line)?.max(0).min(4096) as usize;
                 self.pop_tui_application(line)?;
                 let tag = self.tui_host_process_next_inner(max_spins, line)?;
                 self.push(Value::Integer(tag))?;
             }
-            Intrinsic::TuiHostRegisterOnPaint => {
+            Intrinsic::Tui(TuiIntrinsic::HostRegisterOnPaint) => {
                 self.register_tui_handler(
                     1,
                     "OnPaint",
@@ -382,7 +382,7 @@ impl Worker {
                     line,
                 )?;
             }
-            Intrinsic::TuiHostRegisterOnIdle => {
+            Intrinsic::Tui(TuiIntrinsic::HostRegisterOnIdle) => {
                 let func = self.pop(line)?;
                 let milliseconds = self.pop_int(line)?.max(0);
                 self.pop_tui_application(line)?;
@@ -398,22 +398,22 @@ impl Worker {
                     tui.idle_interval_ms = milliseconds;
                 });
             }
-            Intrinsic::TuiHostDispatchRedraw => {
+            Intrinsic::Tui(TuiIntrinsic::HostDispatchRedraw) => {
                 self.pop_tui_application(line)?;
                 let tag = self.tui_host_dispatch_redraw_inner(line)?;
                 self.push(Value::Integer(tag))?;
             }
-            Intrinsic::TuiHostRunLoop => {
+            Intrinsic::Tui(TuiIntrinsic::HostRunLoop) => {
                 let max_iters = self.pop_int(line)?.max(0).min(1_000_000) as usize;
                 self.pop_tui_application(line)?;
                 self.tui_host_run_loop_inner(max_iters, line)?;
                 self.push(Value::Unit)?;
             }
-            Intrinsic::TuiHostRequestQuit => {
+            Intrinsic::Tui(TuiIntrinsic::HostRequestQuit) => {
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| tui.quit_requested = true);
             }
-            Intrinsic::TuiHostRegisterOnExit => {
+            Intrinsic::Tui(TuiIntrinsic::HostRegisterOnExit) => {
                 self.register_tui_handler(
                     2,
                     "OnExit",
@@ -422,7 +422,7 @@ impl Worker {
                     line,
                 )?;
             }
-            Intrinsic::TuiHostRegisterOnMouse => {
+            Intrinsic::Tui(TuiIntrinsic::HostRegisterOnMouse) => {
                 self.register_tui_handler(
                     2,
                     "OnMouse",
@@ -431,7 +431,7 @@ impl Worker {
                     line,
                 )?;
             }
-            Intrinsic::TuiHostRegisterOnPaste => {
+            Intrinsic::Tui(TuiIntrinsic::HostRegisterOnPaste) => {
                 self.register_tui_handler(
                     2,
                     "OnPaste",
@@ -440,7 +440,7 @@ impl Worker {
                     line,
                 )?;
             }
-            Intrinsic::TuiHostRegisterOnFocusGained => {
+            Intrinsic::Tui(TuiIntrinsic::HostRegisterOnFocusGained) => {
                 self.register_tui_handler(
                     2,
                     "OnFocusGained",
@@ -449,7 +449,7 @@ impl Worker {
                     line,
                 )?;
             }
-            Intrinsic::TuiHostRegisterOnFocusLost => {
+            Intrinsic::Tui(TuiIntrinsic::HostRegisterOnFocusLost) => {
                 self.register_tui_handler(
                     2,
                     "OnFocusLost",
@@ -458,7 +458,7 @@ impl Worker {
                     line,
                 )?;
             }
-            Intrinsic::TuiHostRegisterOnActivate => {
+            Intrinsic::Tui(TuiIntrinsic::HostRegisterOnActivate) => {
                 self.register_tui_handler(
                     1,
                     "OnActivate",
@@ -467,7 +467,7 @@ impl Worker {
                     line,
                 )?;
             }
-            Intrinsic::TuiHostRegisterOnDeactivate => {
+            Intrinsic::Tui(TuiIntrinsic::HostRegisterOnDeactivate) => {
                 self.register_tui_handler(
                     1,
                     "OnDeactivate",
@@ -476,7 +476,7 @@ impl Worker {
                     line,
                 )?;
             }
-            Intrinsic::TuiHostRegisterOnCommand => {
+            Intrinsic::Tui(TuiIntrinsic::HostRegisterOnCommand) => {
                 self.register_tui_handler(
                     2,
                     "OnCommand",
@@ -485,7 +485,7 @@ impl Worker {
                     line,
                 )?;
             }
-            Intrinsic::TuiHostBindCommand => {
+            Intrinsic::Tui(TuiIntrinsic::HostBindCommand) => {
                 let command_id = self.pop_int(line)?;
                 let key = self.pop_console_key_event(line)?;
                 self.pop_tui_application(line)?;
@@ -493,7 +493,7 @@ impl Worker {
                     tui.commands.bind(key, fpas_std::CommandId(command_id));
                 });
             }
-            Intrinsic::TuiHostBindCommandToView => {
+            Intrinsic::Tui(TuiIntrinsic::HostBindCommandToView) => {
                 let command_id = self.pop_int(line)?;
                 let key = self.pop_console_key_event(line)?;
                 let view_id = self.pop_tui_view_id(line)?;
@@ -506,7 +506,7 @@ impl Worker {
                         .bind(key, fpas_std::CommandId(command_id));
                 });
             }
-            Intrinsic::TuiHostBindCommandToActiveModal => {
+            Intrinsic::Tui(TuiIntrinsic::HostBindCommandToActiveModal) => {
                 let command_id = self.pop_int(line)?;
                 let key = self.pop_console_key_event(line)?;
                 self.pop_tui_application(line)?;
@@ -516,25 +516,25 @@ impl Worker {
                         .bind_command_to_active(key, fpas_std::CommandId(command_id));
                 });
             }
-            Intrinsic::TuiHostEnterModal => {
+            Intrinsic::Tui(TuiIntrinsic::HostEnterModal) => {
                 let modal_id = self.pop_int(line)?;
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| {
                     tui.modals.enter(fpas_std::ModalId(modal_id));
                 });
             }
-            Intrinsic::TuiHostLeaveModal => {
+            Intrinsic::Tui(TuiIntrinsic::HostLeaveModal) => {
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| {
                     Self::close_active_modal(tui, line);
                 });
             }
-            Intrinsic::TuiHostModalDepth => {
+            Intrinsic::Tui(TuiIntrinsic::HostModalDepth) => {
                 self.pop_tui_application(line)?;
                 let depth = self.with_tui(|tui| tui.modals.depth() as i64);
                 self.push(Value::Integer(depth))?;
             }
-            Intrinsic::TuiHostRegisterView => {
+            Intrinsic::Tui(TuiIntrinsic::HostRegisterView) => {
                 let height = self.pop_int(line)?;
                 let width = self.pop_int(line)?;
                 let y = self.pop_int(line)?;
@@ -553,27 +553,27 @@ impl Worker {
                 });
                 self.push(Value::Integer(i64::from(view_id.raw())))?;
             }
-            Intrinsic::TuiHostUnregisterView => {
+            Intrinsic::Tui(TuiIntrinsic::HostUnregisterView) => {
                 let view_id = self.pop_tui_view_id(line)?;
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| {
                     Self::unregister_tui_view_subtree(tui, view_id, line);
                 });
             }
-            Intrinsic::TuiHostPushChildView => {
+            Intrinsic::Tui(TuiIntrinsic::HostPushChildView) => {
                 let view_id = self.pop_tui_view_id(line)?;
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| {
                     tui.views.push_child(view_id);
                 });
             }
-            Intrinsic::TuiHostQueryFocusedViewId => {
+            Intrinsic::Tui(TuiIntrinsic::HostQueryFocusedViewId) => {
                 self.pop_tui_application(line)?;
                 let focused_id = self.with_tui(|tui| tui.views.focused_id());
                 let packed = focused_id.map_or(-1, |id| i64::from(id.raw()));
                 self.push(Value::Integer(packed))?;
             }
-            Intrinsic::TuiHostAttachViewToActiveModal => {
+            Intrinsic::Tui(TuiIntrinsic::HostAttachViewToActiveModal) => {
                 let view_id = self.pop_tui_view_id(line)?;
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| {
@@ -584,7 +584,7 @@ impl Worker {
                     }
                 });
             }
-            Intrinsic::TuiHostSetViewRect => {
+            Intrinsic::Tui(TuiIntrinsic::HostSetViewRect) => {
                 let height = self.pop_int(line)?;
                 let width = self.pop_int(line)?;
                 let y = self.pop_int(line)?;
@@ -606,7 +606,7 @@ impl Worker {
                     let _ = tui.session.request_redraw_rect(next_rect, line);
                 });
             }
-            Intrinsic::TuiHostSetViewParent => {
+            Intrinsic::Tui(TuiIntrinsic::HostSetViewParent) => {
                 let parent_raw = self.pop_int(line)?;
                 let view_id = self.pop_tui_view_id(line)?;
                 self.pop_tui_application(line)?;
@@ -632,7 +632,7 @@ impl Worker {
                     }
                 });
             }
-            Intrinsic::TuiHostRegisterOnViewPaint => {
+            Intrinsic::Tui(TuiIntrinsic::HostRegisterOnViewPaint) => {
                 let func = self.pop(line)?;
                 let view_id = self.pop_tui_view_id(line)?;
                 self.pop_tui_application(line)?;
@@ -648,7 +648,7 @@ impl Worker {
                     tui.view_paints.insert(view_id, func);
                 });
             }
-            Intrinsic::TuiHostInvokeOnKeyPressed => {
+            Intrinsic::Tui(TuiIntrinsic::HostInvokeOnKeyPressed) => {
                 let key_ev = self.pop_console_key_event(line)?;
                 self.pop_tui_application(line)?;
                 let handler = self.with_tui(|tui| tui.on_key_pressed.clone());

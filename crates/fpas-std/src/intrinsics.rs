@@ -12,7 +12,7 @@ use crate::error::{StdError, std_internal_error};
 use crate::math;
 use crate::result_option;
 use crate::str;
-use fpas_bytecode::{ArrayIntrinsic, ConsoleIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic, ResultIntrinsic, SourceLocation, StrIntrinsic, TaskIntrinsic, TuiIntrinsic, Value};
+use fpas_bytecode::{ArrayIntrinsic, ConsoleIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic, ResultIntrinsic, SourceLocation, TaskIntrinsic, TuiIntrinsic, Value};
 /// Execute a standard-library intrinsic; mutates `stack` (Pascal call order: args already pushed).
 pub fn run_intrinsic(
     intrinsic: Intrinsic,

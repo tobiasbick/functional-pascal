@@ -3,10 +3,10 @@
 //! **Documentation:** `docs/pascal/std/README.md` (from the repository root); each `Std.*` unit page maps API names to these variants.
 //! **Maintenance:** When adding or renumbering variants, update that documentation and the affected implementation crates.
 
-mod decode;
+use num_enum::TryFromPrimitive;
 
 /// VM intrinsic opcode payload (`Op::Intrinsic(self as u16)`).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u16)]
 pub enum Intrinsic {
     ConsoleReadLn = 1,
@@ -638,3 +638,15 @@ impl From<Intrinsic> for u16 {
         intrinsic as Self
     }
 }
+
+impl Intrinsic {
+    /// Decode a raw `u16` discriminant back to an `Intrinsic` variant.
+    ///
+    /// Returns `None` for unrecognised values.
+    pub fn from_u16(raw: u16) -> Option<Self> {
+        Self::try_from(raw).ok()
+    }
+}
+
+#[cfg(test)]
+mod tests;

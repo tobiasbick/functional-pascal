@@ -8,6 +8,7 @@ repository.workspace = true
 
 [dependencies]
 fpas-diagnostics = { path = "../fpas-diagnostics" }
+num_enum = "0.7"
 
 [lints]
 workspace = true

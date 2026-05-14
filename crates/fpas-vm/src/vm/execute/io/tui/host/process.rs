@@ -1,16 +1,16 @@
-//! `Std.Tui` run loop, event dispatch, and session lifecycle.
+//! Hosted `Std.Tui` event processing and command dispatch.
 //!
 //! **Documentation:** `docs/pascal/std/tui-app.md` (from the repository root).
 
-use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError};
-use crate::vm::{Worker, runtime_error};
+use crate::vm::Worker;
+use crate::vm::diagnostics::VmError;
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_std::{CommandId, ConsoleEvent, DamageRegion, HostEvent, ViewId, ViewRect};
 
-const TUI_APPLICATION_TYPE: &str = "Std.Tui.Application";
 /// Discriminant of `Std.Console.KeyKind.Tab`; must match
 /// [`fpas_std::key_event::KEY_KIND_VARIANTS`] (index 2).
 const KEY_KIND_TAB: usize = 2;
+
 impl Worker {
     /// Processes at most one pending `HostEvent`, dispatching to the registered handler.
     ///
@@ -27,8 +27,8 @@ impl Worker {
         let mut ready: Option<HostEvent> = None;
         for _ in 0..max_spins.max(1) {
             let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            if let Some(ev) = tui.host.pop_ready_event() {
-                ready = Some(ev);
+            if let Some(event) = tui.host.pop_ready_event() {
+                ready = Some(event);
                 break;
             }
             let polled = self.with_console_and_key_input(|console, key_input| {
@@ -36,17 +36,17 @@ impl Worker {
             })?;
             match polled {
                 None => break,
-                Some(tui_ev) => {
-                    tui.host.ingest_tui_event(tui_ev);
-                    if let Some(ev) = tui.host.pop_ready_event() {
-                        ready = Some(ev);
+                Some(tui_event) => {
+                    tui.host.ingest_tui_event(tui_event);
+                    if let Some(event) = tui.host.pop_ready_event() {
+                        ready = Some(event);
                         break;
                     }
                 }
             }
         }
 
-        let Some(ev) = ready else {
+        let Some(event) = ready else {
             return Ok(0);
         };
 
@@ -65,54 +65,34 @@ impl Worker {
         let app_rec = Self::tui_application_record();
         let modal_scope = self.active_modal_scope();
 
-        match ev {
-            HostEvent::Key(k) => {
-                // Phase 7 Step 2: Tab / Shift+Tab trigger host-managed focus traversal when
-                // the focus chain has children.  The key is consumed and never reaches
-                // OnKeyPressed in that case.
-                if k.kind == KEY_KIND_TAB {
+        match event {
+            HostEvent::Key(key_event) => {
+                if key_event.kind == KEY_KIND_TAB {
                     let (changed, had_previous, previous_focus, current_focus) = {
                         let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
                         let previous_focus = tui.views.focused_id();
                         if let Some(scope) = modal_scope.as_deref() {
-                            let (changed, had_previous) = if k.shift {
+                            let (changed, had_previous) = if key_event.shift {
                                 tui.views.focus_prev_in_scope(scope)
                             } else {
                                 tui.views.focus_next_in_scope(scope)
                             };
-                            (
-                                changed,
-                                had_previous,
-                                previous_focus,
-                                tui.views.focused_id(),
-                            )
-                        } else if k.shift {
+                            (changed, had_previous, previous_focus, tui.views.focused_id())
+                        } else if key_event.shift {
                             let (changed, had_previous) = tui.views.focus_prev();
-                            (
-                                changed,
-                                had_previous,
-                                previous_focus,
-                                tui.views.focused_id(),
-                            )
+                            (changed, had_previous, previous_focus, tui.views.focused_id())
                         } else {
                             let (changed, had_previous) = tui.views.focus_next();
-                            (
-                                changed,
-                                had_previous,
-                                previous_focus,
-                                tui.views.focused_id(),
-                            )
+                            (changed, had_previous, previous_focus, tui.views.focused_id())
                         }
                     };
                     if changed {
                         self.request_focus_transition_redraw(previous_focus, current_focus, line)?;
                         self.invoke_focus_transition(had_previous, line)?;
-                        return Ok(if k.shift { 15 } else { 14 });
+                        return Ok(if key_event.shift { 15 } else { 14 });
                     }
-                    // No focusable children or single-element chain already focused:
-                    // fall through to normal OnKeyPressed dispatch.
                 }
-                if let Some(command_id) = self.resolve_tui_command(&k) {
+                if let Some(command_id) = self.resolve_tui_command(&key_event) {
                     if self.modal_blocks_keyboard_dispatch(modal_scope.as_deref()) {
                         return Ok(20);
                     }
@@ -124,7 +104,7 @@ impl Worker {
                 if let Some(handler) = on_key {
                     let _ = self.call_function_sync_allowing_shutdown(
                         &handler,
-                        &[app_rec, Self::key_event_record(k)],
+                        &[app_rec, Self::key_event_record(key_event)],
                         line,
                     )?;
                     Ok(1)
@@ -132,43 +112,43 @@ impl Worker {
                     Ok(3)
                 }
             }
-            HostEvent::Mouse(ev) => {
-                if self.modal_blocks_mouse_dispatch(modal_scope.as_deref(), &ev) {
+            HostEvent::Mouse(console_event) => {
+                if self.modal_blocks_mouse_dispatch(modal_scope.as_deref(), &console_event) {
                     return Ok(19);
                 }
-                let redraw_hint = self.mouse_redraw_hint(modal_scope.as_deref(), &ev);
+                let redraw_hint = self.mouse_redraw_hint(modal_scope.as_deref(), &console_event);
                 self.dispatch_console_event_handler(
                     on_mouse,
                     app_rec,
-                    Self::console_event_record(ev),
+                    Self::console_event_record(console_event),
                     Some(redraw_hint),
                     5,
                     7,
                     line,
                 )
             }
-            HostEvent::Paste(ev) => self.dispatch_console_event_handler(
+            HostEvent::Paste(console_event) => self.dispatch_console_event_handler(
                 on_paste,
                 app_rec,
-                Self::console_event_record(ev),
+                Self::console_event_record(console_event),
                 Some(self.focused_view_redraw_hint()),
                 8,
                 9,
                 line,
             ),
-            HostEvent::FocusGained(ev) => self.dispatch_console_event_handler(
+            HostEvent::FocusGained(console_event) => self.dispatch_console_event_handler(
                 on_focus_gained,
                 app_rec,
-                Self::console_event_record(ev),
+                Self::console_event_record(console_event),
                 Some(self.focused_view_redraw_hint()),
                 10,
                 11,
                 line,
             ),
-            HostEvent::FocusLost(ev) => self.dispatch_console_event_handler(
+            HostEvent::FocusLost(console_event) => self.dispatch_console_event_handler(
                 on_focus_lost,
                 app_rec,
-                Self::console_event_record(ev),
+                Self::console_event_record(console_event),
                 Some(self.focused_view_redraw_hint()),
                 12,
                 13,
@@ -211,9 +191,9 @@ impl Worker {
         miss_tag: i64,
         line: SourceLocation,
     ) -> Result<i64, VmError> {
-        if let Some(h) = handler {
+        if let Some(handler) = handler {
             let _ = self.call_function_sync_allowing_shutdown_with_redraw_hint(
-                &h,
+                &handler,
                 &[app_rec, event_rec],
                 redraw_hint,
                 line,
@@ -222,85 +202,6 @@ impl Worker {
         } else {
             Ok(miss_tag)
         }
-    }
-
-    /// Consumes a pending redraw and invokes `OnPaint` if registered.
-    ///
-    /// Returns `0` = no redraw pending, `5` = `OnPaint` ran, `6` = pending but no handler (cleared).
-    pub(in crate::vm::execute::io) fn tui_host_dispatch_redraw_inner(
-        &mut self,
-        line: SourceLocation,
-    ) -> Result<i64, VmError> {
-        let (damage, on_paint, has_view_paints) = {
-            let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            let damage = tui.session.peek_redraw_damage(line)?;
-            (damage, tui.on_paint.clone(), !tui.view_paints.is_empty())
-        };
-
-        let Some(expected_damage) = damage else {
-            return Ok(0);
-        };
-
-        let app_rec = Self::tui_application_record();
-
-        if on_paint.is_some() || has_view_paints {
-            {
-                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                let consumed_damage = tui.session.take_redraw_damage(line)?;
-                debug_assert_eq!(consumed_damage, Some(expected_damage));
-                self.with_console(|console| {
-                    tui.session
-                        .begin_hosted_paint(console, expected_damage, line)
-                })?;
-            }
-            let paint_result = (|| -> Result<(), VmError> {
-                if let Some(handler) = on_paint {
-                    let _ =
-                        self.call_function_sync_allowing_shutdown(&handler, &[app_rec], line)?;
-                }
-                let _ = self.dispatch_view_paint_handlers(expected_damage, line)?;
-                Ok(())
-            })();
-            {
-                let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                self.with_console(|console| {
-                    if paint_result.is_ok() {
-                        tui.session.finish_hosted_paint(console, line)
-                    } else {
-                        tui.session.abort_hosted_paint(console);
-                        Ok(())
-                    }
-                })?;
-            }
-            paint_result?;
-            Ok(5)
-        } else {
-            let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            let consumed_damage = tui.session.take_redraw_damage(line)?;
-            debug_assert_eq!(consumed_damage, Some(expected_damage));
-            Ok(6)
-        }
-    }
-
-    /// Runs up to `max_iterations` of redraw + process-next. Stops early when both are idle
-    /// or `TuiHostRequestQuit` was set.
-    pub(in crate::vm::execute::io) fn tui_host_run_loop_inner(
-        &mut self,
-        max_iterations: usize,
-        line: SourceLocation,
-    ) -> Result<(), VmError> {
-        const PER_EVENT_SPINS: usize = 64;
-        for _ in 0..max_iterations {
-            let dr = self.tui_host_dispatch_redraw_inner(line)?;
-            let pn = self.tui_host_process_next_inner(PER_EVENT_SPINS, line)?;
-            if self.take_tui_host_quit_requested() {
-                break;
-            }
-            if dr == 0 && pn == 0 {
-                break;
-            }
-        }
-        Ok(())
     }
 
     fn resolve_tui_command(&self, key: &fpas_std::ConsoleKeyEvent) -> Option<CommandId> {
@@ -455,76 +356,6 @@ impl Worker {
             .unwrap_or(DamageRegion::FullFrame)
     }
 
-    fn dispatch_view_paint_handlers(
-        &mut self,
-        damage: DamageRegion,
-        line: SourceLocation,
-    ) -> Result<bool, VmError> {
-        let scheduled = {
-            let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            tui.views
-                .paint_order()
-                .into_iter()
-                .filter_map(|view_id| {
-                    let handler = tui.view_paints.get(&view_id)?.clone();
-                    let rect = tui.views.rect(view_id)?;
-                    Self::damage_intersects_rect(damage, rect).then_some((view_id, rect, handler))
-                })
-                .collect::<Vec<_>>()
-        };
-
-        if scheduled.is_empty() {
-            return Ok(false);
-        }
-
-        let app_rec = Self::tui_application_record();
-        for (view_id, rect, handler) in scheduled {
-            let _ = self.call_function_sync_allowing_shutdown(
-                &handler,
-                &[
-                    app_rec.clone(),
-                    Value::Integer(i64::from(view_id.raw())),
-                    Self::tui_rect_record(rect),
-                ],
-                line,
-            )?;
-        }
-
-        Ok(true)
-    }
-
-    fn damage_intersects_rect(damage: DamageRegion, rect: ViewRect) -> bool {
-        match damage {
-            DamageRegion::FullFrame => true,
-            DamageRegion::Rect(dirty) => Self::rects_intersect(dirty, rect),
-        }
-    }
-
-    fn rects_intersect(left: ViewRect, right: ViewRect) -> bool {
-        let left_right = left.x.saturating_add(left.width);
-        let left_bottom = left.y.saturating_add(left.height);
-        let right_right = right.x.saturating_add(right.width);
-        let right_bottom = right.y.saturating_add(right.height);
-
-        left.x < right_right
-            && right.x < left_right
-            && left.y < right_bottom
-            && right.y < left_bottom
-    }
-
-    /// Clears the quit flag and returns `true` if it was set.
-    ///
-    /// Clearing ensures a subsequent `TuiHostRunLoop` does not stop immediately.
-    pub(in crate::vm::execute::io) fn take_tui_host_quit_requested(&self) -> bool {
-        let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-        if tui.quit_requested {
-            tui.quit_requested = false;
-            true
-        } else {
-            false
-        }
-    }
-
     /// Fires `OnDeactivate` (if `fire_deactivate` is `true` and a handler is registered)
     /// then `OnActivate` (if registered) after a focus transition.
     ///
@@ -555,71 +386,6 @@ impl Worker {
             let _ = self.call_function_sync_allowing_shutdown(&handler, &[app_rec], line)?;
         }
 
-        Ok(())
-    }
-
-    /// Converts `Application.Close(App)` into a structured host stop while `Application.Run` is active.
-    ///
-    /// Returns `true` when a hosted run is active (the run loop will handle the actual close).
-    pub(in crate::vm::execute::io) fn request_tui_host_stop_for_active_run(&self) -> bool {
-        let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-        if tui.run_active {
-            tui.host_stop_requested = true;
-            true
-        } else {
-            false
-        }
-    }
-
-    /// Pops a `Std.Tui.Application` record from the stack, returning an error on type mismatch.
-    pub(in crate::vm::execute::io) fn pop_tui_application(
-        &mut self,
-        line: SourceLocation,
-    ) -> Result<(), VmError> {
-        match self.pop(line)? {
-            Value::Record { type_name, .. } if type_name == TUI_APPLICATION_TYPE => Ok(()),
-            other => Err(runtime_error(
-                TYPE_MISMATCH_CODE,
-                format!("Expected {TUI_APPLICATION_TYPE}, got {}", other.type_name()),
-                "Pass the value returned by Std.Tui.Application.Open().",
-                line,
-            )),
-        }
-    }
-
-    /// Closes the TUI session and resets all hosted-dispatch state.
-    pub(in crate::vm::execute::io) fn close_tui_application_state(
-        &mut self,
-        line: SourceLocation,
-    ) -> Result<(), VmError> {
-        let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-        let close_result = self.with_console_and_key_input(|console, key_input| {
-            tui.session.close(console, key_input, line)
-        });
-        tui.host = fpas_std::TuiHost::new();
-        tui.on_key_pressed = None;
-        tui.on_mouse = None;
-        tui.on_paste = None;
-        tui.on_focus_gained = None;
-        tui.on_focus_lost = None;
-        tui.on_activate = None;
-        tui.on_deactivate = None;
-        tui.on_command = None;
-        tui.on_resize = None;
-        tui.on_paint = None;
-        tui.view_paints.clear();
-        tui.view_commands.clear();
-        tui.on_idle = None;
-        tui.idle_interval_ms = 0;
-        tui.on_exit = None;
-        tui.last_exit_reason = None;
-        tui.quit_requested = false;
-        tui.host_stop_requested = false;
-        tui.run_active = false;
-        tui.views.clear();
-        tui.commands.clear();
-        tui.modals.clear();
-        close_result?;
         Ok(())
     }
 }

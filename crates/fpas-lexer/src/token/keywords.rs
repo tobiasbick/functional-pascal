@@ -1,100 +1,10 @@
-//! Token kinds and keyword recognition.
-//!
-//! **Documentation:** `docs/pascal/01-overview.md` (keywords, from the repository root).
-
-/// Lexical token produced by the Functional Pascal lexer.
-#[derive(Debug, Clone, PartialEq)]
-pub enum Token {
-    // Keywords (55)
-    Program,
-    Unit,
-    Uses,
-    Const,
-    Var,
-    Mutable,
-    Function,
-    Procedure,
-    Begin,
-    End,
-    Return,
-    If,
-    Then,
-    Else,
-    Case,
-    Of,
-    For,
-    To,
-    Downto,
-    In,
-    Do,
-    While,
-    Repeat,
-    Until,
-    And,
-    Or,
-    Not,
-    Xor,
-    Div,
-    Mod,
-    Shl,
-    Shr,
-    True,
-    False,
-    Type,
-    Record,
-    Enum,
-    Array,
-    Panic,
-    Break,
-    Continue,
-    Public,
-    Private,
-    Result,
-    OptionKw,
-    Ok,
-    Error,
-    Some,
-    None,
-    Try,
-    Go,
-    Dict,
-    With,
-
-    // Literals
-    Integer(i64),
-    Real(f64),
-    Str(String),
-
-    // Identifier
-    Ident(String),
-
-    // Symbols
-    ColonAssign,
-    DotDot,
-    NotEqual,
-    LessEqual,
-    GreaterEqual,
-    Colon,
-    Semicolon,
-    Comma,
-    Dot,
-    LParen,
-    RParen,
-    LBracket,
-    RBracket,
-    Plus,
-    Minus,
-    Star,
-    Slash,
-    Equal,
-    Less,
-    Greater,
-
-    // End of file
-    Eof,
-}
+use super::Token;
 
 impl Token {
+    /// Creates a keyword token when `raw` matches a Pascal keyword.
+    ///
+    /// Returns [`Token::Ident`] for non-keyword identifiers.
+    #[must_use]
     pub fn from_ident(raw: &str) -> Token {
         match raw {
             s if s.eq_ignore_ascii_case("program") => Token::Program,

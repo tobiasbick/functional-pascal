@@ -10,81 +10,116 @@
 
 use crate::DiagnosticCode;
 
-pub const LEX_UNEXPECTED_CHARACTER: DiagnosticCode = DiagnosticCode::new(1);
-pub const LEX_UNTERMINATED_BRACE_COMMENT: DiagnosticCode = DiagnosticCode::new(2);
-pub const LEX_UNTERMINATED_PAREN_COMMENT: DiagnosticCode = DiagnosticCode::new(3);
-pub const LEX_UNTERMINATED_STRING_LITERAL: DiagnosticCode = DiagnosticCode::new(4);
-pub const LEX_INVALID_CHARACTER_CODE_LITERAL: DiagnosticCode = DiagnosticCode::new(5);
-pub const LEX_INVALID_HEXADECIMAL_LITERAL: DiagnosticCode = DiagnosticCode::new(6);
-pub const LEX_INTEGER_LITERAL_OVERFLOW: DiagnosticCode = DiagnosticCode::new(7);
-pub const LEX_REAL_LITERAL_OVERFLOW: DiagnosticCode = DiagnosticCode::new(8);
-pub const LEX_INVALID_NUMERIC_EXPONENT: DiagnosticCode = DiagnosticCode::new(9);
+// Keep each stage inventory beside its declarations so uniqueness checks stay in sync.
+macro_rules! define_codes {
+    ($inventory:ident => {
+        $(
+            $(#[$meta:meta])*
+            $name:ident = $value:literal;
+        )*
+    }) => {
+        $(
+            $(#[$meta])*
+            pub const $name: DiagnosticCode = DiagnosticCode::new($value);
+        )*
 
-/// Lexer: `{$...}` is invalid source syntax.
-pub const LEX_COMPILER_DIRECTIVE_NOT_SUPPORTED: DiagnosticCode = DiagnosticCode::new(10);
+        #[cfg(test)]
+        const $inventory: &[DiagnosticCode] = &[$($name),*];
+    };
+}
 
-pub const PARSE_EXPECTED_TOKEN: DiagnosticCode = DiagnosticCode::new(1001);
-pub const PARSE_EXPECTED_IDENTIFIER: DiagnosticCode = DiagnosticCode::new(1002);
-pub const PARSE_INVALID_STATEMENT_START: DiagnosticCode = DiagnosticCode::new(1003);
-pub const PARSE_EXPECTED_TO_OR_DOWNTO: DiagnosticCode = DiagnosticCode::new(1004);
-pub const PARSE_EXPECTED_EXPRESSION: DiagnosticCode = DiagnosticCode::new(1005);
-pub const PARSE_INVALID_CALL_OR_ASSIGNMENT_FORM: DiagnosticCode = DiagnosticCode::new(1006);
-/// Visibility modifier (`public`/`private`) used outside a `unit` file.
-pub const PARSE_INVALID_VISIBILITY: DiagnosticCode = DiagnosticCode::new(1007);
+define_codes!(LEX_ALLOCATED_CODES => {
+    LEX_UNEXPECTED_CHARACTER = 1;
+    LEX_UNTERMINATED_BRACE_COMMENT = 2;
+    LEX_UNTERMINATED_PAREN_COMMENT = 3;
+    LEX_UNTERMINATED_STRING_LITERAL = 4;
+    LEX_INVALID_CHARACTER_CODE_LITERAL = 5;
+    LEX_INVALID_HEXADECIMAL_LITERAL = 6;
+    LEX_INTEGER_LITERAL_OVERFLOW = 7;
+    LEX_REAL_LITERAL_OVERFLOW = 8;
+    LEX_INVALID_NUMERIC_EXPONENT = 9;
 
-pub const SEMA_UNKNOWN_TYPE: DiagnosticCode = DiagnosticCode::new(2001);
-pub const SEMA_DUPLICATE_DECLARATION: DiagnosticCode = DiagnosticCode::new(2002);
-pub const SEMA_UNKNOWN_NAME: DiagnosticCode = DiagnosticCode::new(2003);
-pub const SEMA_AMBIGUOUS_IMPORTED_NAME: DiagnosticCode = DiagnosticCode::new(2004);
-pub const SEMA_IMMUTABLE_ASSIGNMENT: DiagnosticCode = DiagnosticCode::new(2005);
-pub const SEMA_TYPE_MISMATCH: DiagnosticCode = DiagnosticCode::new(2006);
-pub const SEMA_WRONG_ARGUMENT_COUNT: DiagnosticCode = DiagnosticCode::new(2007);
-pub const SEMA_NON_BOOLEAN_CONDITION: DiagnosticCode = DiagnosticCode::new(2008);
-pub const SEMA_INVALID_PANIC_ARGUMENT: DiagnosticCode = DiagnosticCode::new(2009);
-pub const SEMA_INVALID_BREAK_OR_CONTINUE_PLACEMENT: DiagnosticCode = DiagnosticCode::new(2010);
-pub const SEMA_NON_EXHAUSTIVE_CASE: DiagnosticCode = DiagnosticCode::new(2011);
-pub const SEMA_ENUM_FIELD_COUNT_MISMATCH: DiagnosticCode = DiagnosticCode::new(2012);
-pub const SEMA_CONSTRAINT_VIOLATION: DiagnosticCode = DiagnosticCode::new(2013);
-pub const SEMA_NON_CONSTANT_EXPRESSION: DiagnosticCode = DiagnosticCode::new(2014);
-/// A required record field (without a default value) is missing from a record literal.
-///
-/// **Documentation:** `docs/pascal/05-types.md` (Default Field Values)
-pub const SEMA_MISSING_RECORD_FIELD: DiagnosticCode = DiagnosticCode::new(2015);
+    /// Lexer: `{$...}` is invalid source syntax.
+    LEX_COMPILER_DIRECTIVE_NOT_SUPPORTED = 10;
+});
 
-pub const COMPILE_INVALID_DESIGNATOR_BASE: DiagnosticCode = DiagnosticCode::new(3001);
-pub const COMPILE_INVALID_ASSIGNMENT_TARGET: DiagnosticCode = DiagnosticCode::new(3002);
-pub const COMPILE_INTRINSIC_ARITY_MISMATCH: DiagnosticCode = DiagnosticCode::new(3003);
-pub const COMPILE_UNSUPPORTED_INTRINSIC_LOWERING_CASE: DiagnosticCode = DiagnosticCode::new(3004);
-pub const COMPILE_INVALID_MUTABLE_ARRAY_LOWERING_TARGET: DiagnosticCode = DiagnosticCode::new(3005);
-pub const COMPILE_INVALID_GO_EXPRESSION: DiagnosticCode = DiagnosticCode::new(3006);
-pub const COMPILE_BYTECODE_OPERAND_OVERFLOW: DiagnosticCode = DiagnosticCode::new(3007);
+define_codes!(PARSE_ALLOCATED_CODES => {
+    PARSE_EXPECTED_TOKEN = 1001;
+    PARSE_EXPECTED_IDENTIFIER = 1002;
+    PARSE_INVALID_STATEMENT_START = 1003;
+    PARSE_EXPECTED_TO_OR_DOWNTO = 1004;
+    PARSE_EXPECTED_EXPRESSION = 1005;
+    PARSE_INVALID_CALL_OR_ASSIGNMENT_FORM = 1006;
 
-pub const RUNTIME_DIVISION_BY_ZERO: DiagnosticCode = DiagnosticCode::new(4001);
-pub const RUNTIME_MODULO_BY_ZERO: DiagnosticCode = DiagnosticCode::new(4002);
-pub const RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS: DiagnosticCode = DiagnosticCode::new(4003);
-pub const RUNTIME_POP_FROM_EMPTY_ARRAY: DiagnosticCode = DiagnosticCode::new(4004);
-pub const RUNTIME_UNDEFINED_GLOBAL: DiagnosticCode = DiagnosticCode::new(4005);
-pub const RUNTIME_UNDEFINED_FUNCTION: DiagnosticCode = DiagnosticCode::new(4006);
-pub const RUNTIME_WRONG_CALL_ARITY: DiagnosticCode = DiagnosticCode::new(4007);
-/// Operand has the wrong dynamic type for the operation (including std intrinsic argument checks).
-pub const RUNTIME_VM_OPERAND_TYPE_MISMATCH: DiagnosticCode = DiagnosticCode::new(4008);
-/// Intrinsic stack underflow, or an argument violates an intrinsic precondition (not a dynamic type mismatch).
-pub const RUNTIME_INTRINSIC_STACK_STATE_ERROR: DiagnosticCode = DiagnosticCode::new(4009);
-pub const RUNTIME_PROGRAM_PANIC: DiagnosticCode = DiagnosticCode::new(4010);
-pub const RUNTIME_CONSOLE_INPUT_FAILURE: DiagnosticCode = DiagnosticCode::new(4011);
-pub const RUNTIME_NUMERIC_DOMAIN_ERROR: DiagnosticCode = DiagnosticCode::new(4012);
-pub const RUNTIME_CONVERSION_FAILURE: DiagnosticCode = DiagnosticCode::new(4013);
-pub const RUNTIME_CONSOLE_STATE_ERROR: DiagnosticCode = DiagnosticCode::new(4014);
-pub const RUNTIME_UNWRAP_FAILURE: DiagnosticCode = DiagnosticCode::new(4015);
-pub const RUNTIME_INVALID_TASK: DiagnosticCode = DiagnosticCode::new(4018);
-pub const RUNTIME_DICT_KEY_NOT_FOUND: DiagnosticCode = DiagnosticCode::new(4019);
-pub const RUNTIME_VM_SHUTDOWN: DiagnosticCode = DiagnosticCode::new(4020);
-pub const RUNTIME_STRING_INDEX_OUT_OF_BOUNDS: DiagnosticCode = DiagnosticCode::new(4021);
-/// `Std.Str.Format`: specifier count does not match argument list, or a type does not match its specifier.
-pub const RUNTIME_FORMAT_MISMATCH: DiagnosticCode = DiagnosticCode::new(4022);
+    /// Visibility modifier (`public`/`private`) used outside a `unit` file.
+    PARSE_INVALID_VISIBILITY = 1007;
+});
 
-pub const INTERNAL_COMPILER_INVARIANT_FAILURE: DiagnosticCode = DiagnosticCode::new(9001);
-pub const INTERNAL_VM_INVARIANT_FAILURE: DiagnosticCode = DiagnosticCode::new(9002);
+define_codes!(SEMA_ALLOCATED_CODES => {
+    SEMA_UNKNOWN_TYPE = 2001;
+    SEMA_DUPLICATE_DECLARATION = 2002;
+    SEMA_UNKNOWN_NAME = 2003;
+    SEMA_AMBIGUOUS_IMPORTED_NAME = 2004;
+    SEMA_IMMUTABLE_ASSIGNMENT = 2005;
+    SEMA_TYPE_MISMATCH = 2006;
+    SEMA_WRONG_ARGUMENT_COUNT = 2007;
+    SEMA_NON_BOOLEAN_CONDITION = 2008;
+    SEMA_INVALID_PANIC_ARGUMENT = 2009;
+    SEMA_INVALID_BREAK_OR_CONTINUE_PLACEMENT = 2010;
+    SEMA_NON_EXHAUSTIVE_CASE = 2011;
+    SEMA_ENUM_FIELD_COUNT_MISMATCH = 2012;
+    SEMA_CONSTRAINT_VIOLATION = 2013;
+    SEMA_NON_CONSTANT_EXPRESSION = 2014;
+
+    /// A required record field (without a default value) is missing from a record literal.
+    ///
+    /// **Documentation:** `docs/pascal/05-types.md` (Default Field Values)
+    SEMA_MISSING_RECORD_FIELD = 2015;
+});
+
+define_codes!(COMPILE_ALLOCATED_CODES => {
+    COMPILE_INVALID_DESIGNATOR_BASE = 3001;
+    COMPILE_INVALID_ASSIGNMENT_TARGET = 3002;
+    COMPILE_INTRINSIC_ARITY_MISMATCH = 3003;
+    COMPILE_UNSUPPORTED_INTRINSIC_LOWERING_CASE = 3004;
+    COMPILE_INVALID_MUTABLE_ARRAY_LOWERING_TARGET = 3005;
+    COMPILE_INVALID_GO_EXPRESSION = 3006;
+    COMPILE_BYTECODE_OPERAND_OVERFLOW = 3007;
+});
+
+define_codes!(RUNTIME_ALLOCATED_CODES => {
+    RUNTIME_DIVISION_BY_ZERO = 4001;
+    RUNTIME_MODULO_BY_ZERO = 4002;
+    RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS = 4003;
+    RUNTIME_POP_FROM_EMPTY_ARRAY = 4004;
+    RUNTIME_UNDEFINED_GLOBAL = 4005;
+    RUNTIME_UNDEFINED_FUNCTION = 4006;
+    RUNTIME_WRONG_CALL_ARITY = 4007;
+
+    /// Operand has the wrong dynamic type for the operation (including std intrinsic argument checks).
+    RUNTIME_VM_OPERAND_TYPE_MISMATCH = 4008;
+
+    /// Intrinsic stack underflow, or an argument violates an intrinsic precondition (not a dynamic type mismatch).
+    RUNTIME_INTRINSIC_STACK_STATE_ERROR = 4009;
+    RUNTIME_PROGRAM_PANIC = 4010;
+    RUNTIME_CONSOLE_INPUT_FAILURE = 4011;
+    RUNTIME_NUMERIC_DOMAIN_ERROR = 4012;
+    RUNTIME_CONVERSION_FAILURE = 4013;
+    RUNTIME_CONSOLE_STATE_ERROR = 4014;
+    RUNTIME_UNWRAP_FAILURE = 4015;
+    RUNTIME_INVALID_TASK = 4018;
+    RUNTIME_DICT_KEY_NOT_FOUND = 4019;
+    RUNTIME_VM_SHUTDOWN = 4020;
+    RUNTIME_STRING_INDEX_OUT_OF_BOUNDS = 4021;
+
+    /// `Std.Str.Format`: specifier count does not match argument list, or a type does not match its specifier.
+    RUNTIME_FORMAT_MISMATCH = 4022;
+});
+
+define_codes!(INTERNAL_ALLOCATED_CODES => {
+    INTERNAL_COMPILER_INVARIANT_FAILURE = 9001;
+    INTERNAL_VM_INVARIANT_FAILURE = 9002;
+});
 
 #[cfg(test)]
 mod tests {
@@ -94,75 +129,22 @@ mod tests {
     #[test]
     fn allocated_codes_are_unique() {
         let allocated_codes = [
-            LEX_UNEXPECTED_CHARACTER,
-            LEX_UNTERMINATED_BRACE_COMMENT,
-            LEX_UNTERMINATED_PAREN_COMMENT,
-            LEX_UNTERMINATED_STRING_LITERAL,
-            LEX_INVALID_CHARACTER_CODE_LITERAL,
-            LEX_INVALID_HEXADECIMAL_LITERAL,
-            LEX_INTEGER_LITERAL_OVERFLOW,
-            LEX_REAL_LITERAL_OVERFLOW,
-            LEX_INVALID_NUMERIC_EXPONENT,
-            LEX_COMPILER_DIRECTIVE_NOT_SUPPORTED,
-            PARSE_EXPECTED_TOKEN,
-            PARSE_EXPECTED_IDENTIFIER,
-            PARSE_INVALID_STATEMENT_START,
-            PARSE_EXPECTED_TO_OR_DOWNTO,
-            PARSE_EXPECTED_EXPRESSION,
-            PARSE_INVALID_CALL_OR_ASSIGNMENT_FORM,
-            PARSE_INVALID_VISIBILITY,
-            SEMA_UNKNOWN_TYPE,
-            SEMA_DUPLICATE_DECLARATION,
-            SEMA_UNKNOWN_NAME,
-            SEMA_AMBIGUOUS_IMPORTED_NAME,
-            SEMA_IMMUTABLE_ASSIGNMENT,
-            SEMA_TYPE_MISMATCH,
-            SEMA_WRONG_ARGUMENT_COUNT,
-            SEMA_NON_BOOLEAN_CONDITION,
-            SEMA_INVALID_PANIC_ARGUMENT,
-            SEMA_INVALID_BREAK_OR_CONTINUE_PLACEMENT,
-            SEMA_NON_EXHAUSTIVE_CASE,
-            SEMA_ENUM_FIELD_COUNT_MISMATCH,
-            SEMA_CONSTRAINT_VIOLATION,
-            SEMA_NON_CONSTANT_EXPRESSION,
-            SEMA_MISSING_RECORD_FIELD,
-            COMPILE_INVALID_DESIGNATOR_BASE,
-            COMPILE_INVALID_ASSIGNMENT_TARGET,
-            COMPILE_INTRINSIC_ARITY_MISMATCH,
-            COMPILE_UNSUPPORTED_INTRINSIC_LOWERING_CASE,
-            COMPILE_INVALID_MUTABLE_ARRAY_LOWERING_TARGET,
-            COMPILE_INVALID_GO_EXPRESSION,
-            COMPILE_BYTECODE_OPERAND_OVERFLOW,
-            RUNTIME_DIVISION_BY_ZERO,
-            RUNTIME_MODULO_BY_ZERO,
-            RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
-            RUNTIME_POP_FROM_EMPTY_ARRAY,
-            RUNTIME_UNDEFINED_GLOBAL,
-            RUNTIME_UNDEFINED_FUNCTION,
-            RUNTIME_WRONG_CALL_ARITY,
-            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-            RUNTIME_PROGRAM_PANIC,
-            RUNTIME_CONSOLE_INPUT_FAILURE,
-            RUNTIME_NUMERIC_DOMAIN_ERROR,
-            RUNTIME_CONVERSION_FAILURE,
-            RUNTIME_CONSOLE_STATE_ERROR,
-            RUNTIME_UNWRAP_FAILURE,
-            RUNTIME_INVALID_TASK,
-            RUNTIME_DICT_KEY_NOT_FOUND,
-            RUNTIME_VM_SHUTDOWN,
-            RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,
-            RUNTIME_FORMAT_MISMATCH,
-            INTERNAL_COMPILER_INVARIANT_FAILURE,
-            INTERNAL_VM_INVARIANT_FAILURE,
+            LEX_ALLOCATED_CODES,
+            PARSE_ALLOCATED_CODES,
+            SEMA_ALLOCATED_CODES,
+            COMPILE_ALLOCATED_CODES,
+            RUNTIME_ALLOCATED_CODES,
+            INTERNAL_ALLOCATED_CODES,
         ];
 
         let mut seen = HashSet::new();
-        for code in allocated_codes {
-            assert!(
-                seen.insert(code.value()),
-                "duplicate diagnostic code allocation detected: {code}",
-            );
+        for stage_codes in allocated_codes {
+            for code in stage_codes.iter().copied() {
+                assert!(
+                    seen.insert(code.value()),
+                    "duplicate diagnostic code allocation detected: {code}",
+                );
+            }
         }
     }
 }

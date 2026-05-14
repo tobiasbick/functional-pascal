@@ -20,8 +20,10 @@ impl Compiler {
                 // emit all fields (provided + defaults). Otherwise emit the raw fields.
                 let type_name_and_specs = self.take_record_literal_expansion(expr);
                 if let Some((type_name, field_specs)) = type_name_and_specs {
-                    let provided: HashMap<&str, &Expr> =
-                        fields.iter().map(|field| (field.name.as_str(), &field.value)).collect();
+                    let provided: HashMap<&str, &Expr> = fields
+                        .iter()
+                        .map(|field| (field.name.as_str(), &field.value))
+                        .collect();
                     for (field_name, default) in &field_specs {
                         self.emit_constant(Value::Str(field_name.clone()), location)?;
                         if let Some(value) = provided.get(field_name.as_str()).copied() {

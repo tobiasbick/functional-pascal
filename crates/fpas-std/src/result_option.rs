@@ -4,7 +4,7 @@
 
 use crate::error::{StdError, std_runtime_error};
 use crate::helpers::pop_value;
-use fpas_bytecode::{OptionIntrinsic, ResultIntrinsic, Intrinsic, SourceLocation, Value};
+use fpas_bytecode::{Intrinsic, OptionIntrinsic, ResultIntrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_UNWRAP_FAILURE;
 
 pub(crate) fn run(
@@ -134,7 +134,12 @@ mod tests {
     fn result_unwrap_or_rejects_non_result_values() {
         let mut stack = vec![Value::Integer(1), Value::Integer(99)];
 
-        let error = run(Intrinsic::Result(ResultIntrinsic::UnwrapOr), &mut stack, test_location()).unwrap_err();
+        let error = run(
+            Intrinsic::Result(ResultIntrinsic::UnwrapOr),
+            &mut stack,
+            test_location(),
+        )
+        .unwrap_err();
 
         assert!(
             error.message.contains("expects a Result value"),
@@ -147,7 +152,12 @@ mod tests {
     fn option_unwrap_or_rejects_non_option_values() {
         let mut stack = vec![Value::Integer(1), Value::Integer(99)];
 
-        let error = run(Intrinsic::Option(OptionIntrinsic::UnwrapOr), &mut stack, test_location()).unwrap_err();
+        let error = run(
+            Intrinsic::Option(OptionIntrinsic::UnwrapOr),
+            &mut stack,
+            test_location(),
+        )
+        .unwrap_err();
 
         assert!(
             error.message.contains("expects an Option value"),

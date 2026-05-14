@@ -17,10 +17,7 @@ impl Compiler {
             s::STD_CONSOLE_TEXT_COLOR => {
                 self.expect_exact_args(s::STD_CONSOLE_TEXT_COLOR, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic_unit(
-                    Intrinsic::Console(ConsoleIntrinsic::TextColor),
-                    location,
-                );
+                self.emit_intrinsic_unit(Intrinsic::Console(ConsoleIntrinsic::TextColor), location);
                 Ok(true)
             }
             s::STD_CONSOLE_TEXT_BACKGROUND => {

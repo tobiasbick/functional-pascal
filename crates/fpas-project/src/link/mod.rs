@@ -20,8 +20,11 @@ struct UnitFile {
     unit: Unit,
 }
 
+/// Fully linked project program together with its source-path table.
 pub struct LinkedProgram {
+    /// Linked main program with reachable unit declarations merged in.
     pub program: Program,
+    /// Source paths indexed by source ID for diagnostic rendering.
     pub source_paths: Vec<PathBuf>,
 }
 

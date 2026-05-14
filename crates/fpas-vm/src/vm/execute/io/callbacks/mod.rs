@@ -1,6 +1,8 @@
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
-use fpas_bytecode::{ArrayIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic, ResultIntrinsic, SourceLocation};
+use fpas_bytecode::{
+    ArrayIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic, ResultIntrinsic, SourceLocation,
+};
 
 mod array_ops;
 mod dict_ops;

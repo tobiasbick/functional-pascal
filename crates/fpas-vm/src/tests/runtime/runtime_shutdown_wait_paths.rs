@@ -26,9 +26,15 @@ fn wait_twice_on_same_task_second_wait_is_invalid_task() {
             );
             chunk.emit(Op::SpawnTask(0), loc());
             chunk.emit(Op::Dup, loc());
-            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
+            chunk.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
+                loc(),
+            );
             chunk.emit(Op::Pop, loc());
-            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
+            chunk.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
+                loc(),
+            );
         },
         |chunk| {
             chunk.emit(Op::Unit, loc());
@@ -44,7 +50,10 @@ fn wait_twice_on_same_task_second_wait_is_invalid_task() {
 fn wait_non_task_operand_errors_without_shutdown_semantics() {
     let mut chunk = Chunk::new();
     emit_constant(&mut chunk, Value::Integer(0));
-    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
+        loc(),
+    );
     chunk.emit(Op::Halt, loc());
 
     let mut vm = Vm::new(chunk);
@@ -70,9 +79,15 @@ fn wait_all_empty_succeeds_and_sets_shutdown_with_spawn_pool() {
         },
     );
     chunk.emit(Op::SpawnTask(0), loc());
-    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
+        loc(),
+    );
     chunk.emit(Op::MakeArray(0), loc());
-    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::WaitAll))), loc());
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::WaitAll))),
+        loc(),
+    );
     chunk.emit(Op::Halt, loc());
 
     let code_start = chunk.len();

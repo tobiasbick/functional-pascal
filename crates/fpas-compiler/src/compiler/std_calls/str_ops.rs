@@ -34,7 +34,10 @@ impl Compiler {
                 }
                 let arg_count = (args.len() - 1) as i64;
                 self.emit_constant(Value::Integer(arg_count), location)?;
-                self.emit(Op::Intrinsic(u16::from(Intrinsic::Str(StrIntrinsic::Format))), location);
+                self.emit(
+                    Op::Intrinsic(u16::from(Intrinsic::Str(StrIntrinsic::Format))),
+                    location,
+                );
                 Ok(true)
             }
             s::STD_STR_LENGTH => {

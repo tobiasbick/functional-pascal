@@ -40,7 +40,10 @@ fn single_spawned_task_yield_only_child_still_returns() {
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());
-            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
+            chunk.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
+                loc(),
+            );
             chunk.emit(Op::PrintLn, loc());
         },
         |chunk| {
@@ -69,7 +72,10 @@ fn spawn_with_yield_opcode_does_not_fail_runtime() {
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());
-            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
+            chunk.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
+                loc(),
+            );
         },
         |chunk| {
             chunk.emit(Op::Yield, loc());

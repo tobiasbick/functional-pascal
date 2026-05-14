@@ -67,10 +67,7 @@ impl Compiler {
                 )?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic_unit(
-                    Intrinsic::Tui(TuiIntrinsic::HostPushChildView),
-                    location,
-                );
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostPushChildView), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_QUERY_FOCUSED_VIEW_ID => {
@@ -97,10 +94,7 @@ impl Compiler {
                 for arg in args {
                     self.compile_expr(arg)?;
                 }
-                self.emit_intrinsic_unit(
-                    Intrinsic::Tui(TuiIntrinsic::HostSetViewRect),
-                    location,
-                );
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostSetViewRect), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_SET_VIEW_PARENT => {
@@ -113,10 +107,7 @@ impl Compiler {
                 for arg in args {
                     self.compile_expr(arg)?;
                 }
-                self.emit_intrinsic_unit(
-                    Intrinsic::Tui(TuiIntrinsic::HostSetViewParent),
-                    location,
-                );
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostSetViewParent), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT => {

@@ -9,7 +9,7 @@ use crate::helpers::{
     pop_array, pop_char, pop_int, pop_string, pop_value, value_as_string_for_join,
 };
 use crate::numeric_text::is_pascal_numeric;
-use fpas_bytecode::{StrIntrinsic, Intrinsic, SourceLocation, Value};
+use fpas_bytecode::{Intrinsic, SourceLocation, StrIntrinsic, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_FORMAT_MISMATCH, RUNTIME_INTRINSIC_STACK_STATE_ERROR, RUNTIME_NUMERIC_DOMAIN_ERROR,
     RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,

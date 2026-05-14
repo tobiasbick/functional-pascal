@@ -87,11 +87,17 @@ impl Compiler {
         let (lt, rt) = operand_types;
         self.compile_expr(left)?;
         if matches!(lt, Ty::Char) {
-            self.emit(Op::Intrinsic(u16::from(Intrinsic::Conv(ConvIntrinsic::CharToStr))), location);
+            self.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Conv(ConvIntrinsic::CharToStr))),
+                location,
+            );
         }
         self.compile_expr(right)?;
         if matches!(rt, Ty::Char) {
-            self.emit(Op::Intrinsic(u16::from(Intrinsic::Conv(ConvIntrinsic::CharToStr))), location);
+            self.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Conv(ConvIntrinsic::CharToStr))),
+                location,
+            );
         }
         self.emit(op, location);
         Ok(())

@@ -22,7 +22,10 @@ fn retained_spawn_child_yield_then_return_still_waits_correctly() {
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());
-            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
+            chunk.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
+                loc(),
+            );
             chunk.emit(Op::PrintLn, loc());
         },
         |chunk| {
@@ -50,7 +53,10 @@ fn main_emits_many_yields_before_wait_child_still_completes() {
     for _ in 0..64 {
         chunk.emit(Op::Yield, loc());
     }
-    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
+        loc(),
+    );
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 

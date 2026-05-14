@@ -30,7 +30,12 @@ impl Compiler {
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_HOST_BIND_COMMAND => {
-                self.expect_exact_args(s::STD_TUI_APPLICATION_HOST_BIND_COMMAND, 3, args, location)?;
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_BIND_COMMAND,
+                    3,
+                    args,
+                    location,
+                )?;
                 for arg in args {
                     self.compile_expr(arg)?;
                 }

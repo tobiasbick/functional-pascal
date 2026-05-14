@@ -38,7 +38,10 @@ fn two_wasteful_spawned_tasks_interleave_and_wait_all_completes() {
     );
     chunk.emit(Op::SpawnTask(0), loc());
     chunk.emit(Op::MakeArray(2), loc());
-    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::WaitAll))), loc());
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::WaitAll))),
+        loc(),
+    );
     emit_constant(&mut chunk, Value::Str("both_done".to_string()));
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());

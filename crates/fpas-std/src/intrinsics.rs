@@ -12,7 +12,10 @@ use crate::error::{StdError, std_internal_error};
 use crate::math;
 use crate::result_option;
 use crate::str;
-use fpas_bytecode::{ArrayIntrinsic, ConsoleIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic, ResultIntrinsic, SourceLocation, TaskIntrinsic, TuiIntrinsic, Value};
+use fpas_bytecode::{
+    ArrayIntrinsic, ConsoleIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic, ResultIntrinsic,
+    SourceLocation, TaskIntrinsic, TuiIntrinsic, Value,
+};
 /// Execute a standard-library intrinsic; mutates `stack` (Pascal call order: args already pushed).
 pub fn run_intrinsic(
     intrinsic: Intrinsic,
@@ -100,7 +103,10 @@ pub fn run_intrinsic(
         ));
     }
 
-    if matches!(intrinsic, Intrinsic::Task(TaskIntrinsic::Wait) | Intrinsic::Task(TaskIntrinsic::WaitAll)) {
+    if matches!(
+        intrinsic,
+        Intrinsic::Task(TaskIntrinsic::Wait) | Intrinsic::Task(TaskIntrinsic::WaitAll)
+    ) {
         return Err(std_internal_error(
             "internal: Std.Task wait intrinsics (Wait, WaitAll) are handled in the VM",
             "This indicates a VM dispatch bug. Please report this as a compiler/runtime bug.",
@@ -167,8 +173,8 @@ mod vm_only_guard_tests {
 
     use super::run_intrinsic;
     use fpas_bytecode::{
-        ArrayIntrinsic, ConsoleIntrinsic, Intrinsic, SourceLocation, StrIntrinsic,
-        TaskIntrinsic, Value,
+        ArrayIntrinsic, ConsoleIntrinsic, Intrinsic, SourceLocation, StrIntrinsic, TaskIntrinsic,
+        Value,
     };
 
     fn loc() -> SourceLocation {
@@ -177,8 +183,12 @@ mod vm_only_guard_tests {
 
     #[test]
     fn console_poll_event_is_vm_only() {
-        let err = run_intrinsic(Intrinsic::Console(ConsoleIntrinsic::PollEvent), &mut Vec::new(), loc())
-            .expect_err("expected internal error");
+        let err = run_intrinsic(
+            Intrinsic::Console(ConsoleIntrinsic::PollEvent),
+            &mut Vec::new(),
+            loc(),
+        )
+        .expect_err("expected internal error");
         assert!(
             err.message.contains("Std.Console and Std.Tui"),
             "message={}",
@@ -188,7 +198,8 @@ mod vm_only_guard_tests {
 
     #[test]
     fn task_wait_is_vm_only() {
-        let err = run_intrinsic(Intrinsic::Task(TaskIntrinsic::Wait), &mut Vec::new(), loc()).expect_err("err");
+        let err = run_intrinsic(Intrinsic::Task(TaskIntrinsic::Wait), &mut Vec::new(), loc())
+            .expect_err("err");
         assert!(
             err.message.contains("Std.Task wait"),
             "message={}",
@@ -198,7 +209,12 @@ mod vm_only_guard_tests {
 
     #[test]
     fn array_map_is_vm_only() {
-        let err = run_intrinsic(Intrinsic::Array(ArrayIntrinsic::Map), &mut Vec::new(), loc()).expect_err("err");
+        let err = run_intrinsic(
+            Intrinsic::Array(ArrayIntrinsic::Map),
+            &mut Vec::new(),
+            loc(),
+        )
+        .expect_err("err");
         assert!(
             err.message.contains("higher-order Std intrinsics"),
             "message={}",

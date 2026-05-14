@@ -26,7 +26,10 @@ fn wait_all_three_tasks_busy_children_then_barrier() {
                 chunk.emit(Op::SpawnTask(0), loc());
             }
             chunk.emit(Op::MakeArray(3), loc());
-            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::WaitAll))), loc());
+            chunk.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::WaitAll))),
+                loc(),
+            );
             chunk.emit(Op::Halt, loc());
         },
         |chunk| {
@@ -66,7 +69,10 @@ fn main_yields_between_spawns_wait_all_still_completes() {
             chunk.emit(Op::Dup, loc());
             chunk.emit(Op::Dup, loc());
             chunk.emit(Op::MakeArray(2), loc());
-            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::WaitAll))), loc());
+            chunk.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::WaitAll))),
+                loc(),
+            );
             chunk.emit(Op::Halt, loc());
         },
         |chunk| {

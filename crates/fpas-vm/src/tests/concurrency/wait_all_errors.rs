@@ -15,7 +15,10 @@ fn wait_all_rejects_integer_element() {
     emit_constant(&mut chunk, Value::Integer(1));
     emit_constant(&mut chunk, Value::Integer(2));
     chunk.emit(Op::MakeArray(2), loc());
-    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::WaitAll))), loc());
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::WaitAll))),
+        loc(),
+    );
     chunk.emit(Op::Halt, loc());
 
     let err = run_err(chunk);
@@ -49,7 +52,10 @@ fn wait_all_on_array_when_child_panicked_reports_shutdown() {
     chunk.emit(Op::Dup, loc());
     chunk.emit(Op::Dup, loc());
     chunk.emit(Op::MakeArray(2), loc());
-    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::WaitAll))), loc());
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::WaitAll))),
+        loc(),
+    );
     chunk.emit(Op::Halt, loc());
 
     let code_start = chunk.len();

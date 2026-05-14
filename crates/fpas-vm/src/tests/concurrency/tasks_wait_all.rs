@@ -13,7 +13,10 @@ fn wait_all_with_non_task_value_reports_operand_type_mismatch() {
     let mut chunk = Chunk::new();
     emit_constant(&mut chunk, Value::Integer(1));
     chunk.emit(Op::MakeArray(1), loc());
-    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::WaitAll))), loc());
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::WaitAll))),
+        loc(),
+    );
     chunk.emit(Op::Halt, loc());
 
     let err = run_err(chunk);
@@ -36,8 +39,14 @@ fn wait_all_keeps_task_result_available_for_wait() {
             chunk.emit(Op::SpawnTask(0), loc());
             chunk.emit(Op::Dup, loc());
             chunk.emit(Op::MakeArray(1), loc());
-            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::WaitAll))), loc());
-            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
+            chunk.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::WaitAll))),
+                loc(),
+            );
+            chunk.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
+                loc(),
+            );
             chunk.emit(Op::PrintLn, loc());
         },
         |chunk| {

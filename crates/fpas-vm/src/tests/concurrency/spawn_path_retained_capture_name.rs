@@ -20,7 +20,10 @@ fn spawn_loads_closure_captures_onto_child_stack() {
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());
-            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
+            chunk.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
+                loc(),
+            );
             chunk.emit(Op::PrintLn, loc());
         },
         |chunk| {
@@ -45,7 +48,10 @@ fn spawn_resolves_function_via_canonical_name_key() {
         },
     );
     chunk.emit(Op::SpawnTask(0), loc());
-    chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
+        loc(),
+    );
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 

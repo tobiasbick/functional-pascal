@@ -104,8 +104,12 @@ impl Worker {
                 self.maybe_resize_on_event(&event);
                 self.push(Self::console_event_record(event))?;
             }
-            Intrinsic::Console(ConsoleIntrinsic::ClrScr) => self.with_console(|c| c.clr_scr(line))?,
-            Intrinsic::Console(ConsoleIntrinsic::ClrEol) => self.with_console(|c| c.clr_eol(line))?,
+            Intrinsic::Console(ConsoleIntrinsic::ClrScr) => {
+                self.with_console(|c| c.clr_scr(line))?
+            }
+            Intrinsic::Console(ConsoleIntrinsic::ClrEol) => {
+                self.with_console(|c| c.clr_eol(line))?
+            }
             Intrinsic::Console(ConsoleIntrinsic::GotoXY) => {
                 let y = self.pop_int(line)?;
                 let x = self.pop_int(line)?;
@@ -127,8 +131,12 @@ impl Worker {
                 let val = self.with_console(|c| c.wind_max());
                 self.push(Value::Integer(val))?;
             }
-            Intrinsic::Console(ConsoleIntrinsic::DelLine) => self.with_console(|c| c.del_line(line))?,
-            Intrinsic::Console(ConsoleIntrinsic::InsLine) => self.with_console(|c| c.ins_line(line))?,
+            Intrinsic::Console(ConsoleIntrinsic::DelLine) => {
+                self.with_console(|c| c.del_line(line))?
+            }
+            Intrinsic::Console(ConsoleIntrinsic::InsLine) => {
+                self.with_console(|c| c.ins_line(line))?
+            }
             Intrinsic::Console(ConsoleIntrinsic::Window) => {
                 let y2 = self.pop_int(line)?;
                 let x2 = self.pop_int(line)?;
@@ -164,9 +172,15 @@ impl Worker {
                 let index = self.pop_int(line)?;
                 self.with_console(|c| c.text_background_256(index, line))?;
             }
-            Intrinsic::Console(ConsoleIntrinsic::HighVideo) => self.with_console(|c| c.high_video(line))?,
-            Intrinsic::Console(ConsoleIntrinsic::LowVideo) => self.with_console(|c| c.low_video(line))?,
-            Intrinsic::Console(ConsoleIntrinsic::NormVideo) => self.with_console(|c| c.norm_video(line))?,
+            Intrinsic::Console(ConsoleIntrinsic::HighVideo) => {
+                self.with_console(|c| c.high_video(line))?
+            }
+            Intrinsic::Console(ConsoleIntrinsic::LowVideo) => {
+                self.with_console(|c| c.low_video(line))?
+            }
+            Intrinsic::Console(ConsoleIntrinsic::NormVideo) => {
+                self.with_console(|c| c.norm_video(line))?
+            }
             Intrinsic::Console(ConsoleIntrinsic::TextAttr) => {
                 let val = self.with_console(|c| c.text_attr());
                 self.push(Value::Integer(val))?;
@@ -179,9 +193,15 @@ impl Worker {
                 let ms = self.pop_int(line)?;
                 self.with_console(|c| c.delay(ms, line))?;
             }
-            Intrinsic::Console(ConsoleIntrinsic::CursorOn) => self.with_console(|c| c.cursor_on(line))?,
-            Intrinsic::Console(ConsoleIntrinsic::CursorOff) => self.with_console(|c| c.cursor_off(line))?,
-            Intrinsic::Console(ConsoleIntrinsic::CursorBig) => self.with_console(|c| c.cursor_big(line))?,
+            Intrinsic::Console(ConsoleIntrinsic::CursorOn) => {
+                self.with_console(|c| c.cursor_on(line))?
+            }
+            Intrinsic::Console(ConsoleIntrinsic::CursorOff) => {
+                self.with_console(|c| c.cursor_off(line))?
+            }
+            Intrinsic::Console(ConsoleIntrinsic::CursorBig) => {
+                self.with_console(|c| c.cursor_big(line))?
+            }
             Intrinsic::Console(ConsoleIntrinsic::TextMode) => {
                 let mode = self.pop_int(line)?;
                 self.with_console(|c| c.text_mode(mode, line))?;
@@ -203,7 +223,9 @@ impl Worker {
                 self.with_console(|c| c.sound(hz, line))?;
             }
             Intrinsic::Console(ConsoleIntrinsic::NoSound) => self.with_console(|c| c.no_sound())?,
-            Intrinsic::Console(ConsoleIntrinsic::AssignCrt) => self.with_console(|c| c.assign_crt())?,
+            Intrinsic::Console(ConsoleIntrinsic::AssignCrt) => {
+                self.with_console(|c| c.assign_crt())?
+            }
             Intrinsic::Console(ConsoleIntrinsic::EnableRawMode) => {
                 self.with_key_input(|k| k.enable_raw_mode_explicit(line))?;
             }
@@ -216,12 +238,24 @@ impl Worker {
             Intrinsic::Console(ConsoleIntrinsic::LeaveAltScreen) => {
                 self.with_console(|c| c.leave_alt_screen(line))?;
             }
-            Intrinsic::Console(ConsoleIntrinsic::EnableMouse) => self.with_console(|c| c.enable_mouse(line))?,
-            Intrinsic::Console(ConsoleIntrinsic::DisableMouse) => self.with_console(|c| c.disable_mouse(line))?,
-            Intrinsic::Console(ConsoleIntrinsic::EnableFocus) => self.with_console(|c| c.enable_focus(line))?,
-            Intrinsic::Console(ConsoleIntrinsic::DisableFocus) => self.with_console(|c| c.disable_focus(line))?,
-            Intrinsic::Console(ConsoleIntrinsic::EnablePaste) => self.with_console(|c| c.enable_paste(line))?,
-            Intrinsic::Console(ConsoleIntrinsic::DisablePaste) => self.with_console(|c| c.disable_paste(line))?,
+            Intrinsic::Console(ConsoleIntrinsic::EnableMouse) => {
+                self.with_console(|c| c.enable_mouse(line))?
+            }
+            Intrinsic::Console(ConsoleIntrinsic::DisableMouse) => {
+                self.with_console(|c| c.disable_mouse(line))?
+            }
+            Intrinsic::Console(ConsoleIntrinsic::EnableFocus) => {
+                self.with_console(|c| c.enable_focus(line))?
+            }
+            Intrinsic::Console(ConsoleIntrinsic::DisableFocus) => {
+                self.with_console(|c| c.disable_focus(line))?
+            }
+            Intrinsic::Console(ConsoleIntrinsic::EnablePaste) => {
+                self.with_console(|c| c.enable_paste(line))?
+            }
+            Intrinsic::Console(ConsoleIntrinsic::DisablePaste) => {
+                self.with_console(|c| c.disable_paste(line))?
+            }
             Intrinsic::Console(ConsoleIntrinsic::ReadEventTimeout) => {
                 let ms = self.pop_int(line)?;
                 let event = self.with_key_input(|k| k.read_event_timeout(ms, line))?;

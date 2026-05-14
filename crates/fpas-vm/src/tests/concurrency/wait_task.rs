@@ -27,7 +27,10 @@ fn wait_succeeds_when_child_runs_long_enough_to_need_timeslice() {
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());
-            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
+            chunk.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
+                loc(),
+            );
             chunk.emit(Op::PrintLn, loc());
         },
         |chunk| {
@@ -55,7 +58,10 @@ fn wait_then_second_spawn_and_wait_is_independent() {
                     },
                 );
                 chunk.emit(Op::SpawnTask(0), loc());
-                chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
+                chunk.emit(
+                    Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
+                    loc(),
+                );
             }
             chunk.emit(Op::AddInt, loc());
             chunk.emit(Op::PrintLn, loc());
@@ -85,7 +91,10 @@ fn wait_on_child_that_panics_surfaces_shutdown_to_waiter() {
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());
-            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
+            chunk.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
+                loc(),
+            );
         },
         |chunk| {
             emit_constant(chunk, Value::Str("x".into()));

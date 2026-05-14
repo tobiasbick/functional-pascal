@@ -50,9 +50,15 @@ fn waiting_twice_on_same_task_reports_runtime_error() {
             );
             chunk.emit(Op::SpawnTask(0), loc());
             chunk.emit(Op::Dup, loc());
-            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
+            chunk.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
+                loc(),
+            );
             chunk.emit(Op::Pop, loc());
-            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
+            chunk.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
+                loc(),
+            );
         },
         |chunk| {
             emit_constant(chunk, Value::Integer(7));

@@ -6,10 +6,7 @@ use super::super::Compiler;
 
 impl Compiler {
     /// Lower `Result` and `Option` constructor expressions.
-    pub(super) fn compile_result_option_expr(
-        &mut self,
-        expr: &Expr,
-    ) -> Result<(), CompileError> {
+    pub(super) fn compile_result_option_expr(&mut self, expr: &Expr) -> Result<(), CompileError> {
         match expr {
             Expr::ResultOk(inner, span) => {
                 self.compile_expr(inner)?;

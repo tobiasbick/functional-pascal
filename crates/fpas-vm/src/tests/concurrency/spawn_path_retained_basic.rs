@@ -22,7 +22,10 @@ fn retained_spawn_wait_prints_child_return_value() {
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());
-            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
+            chunk.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
+                loc(),
+            );
             chunk.emit(Op::PrintLn, loc());
         },
         |chunk| {
@@ -51,7 +54,10 @@ fn spawn_passes_two_arguments_and_child_returns_sum() {
                 },
             );
             chunk.emit(Op::SpawnTask(2), loc());
-            chunk.emit(Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))), loc());
+            chunk.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
+                loc(),
+            );
             chunk.emit(Op::PrintLn, loc());
         },
         |chunk| {

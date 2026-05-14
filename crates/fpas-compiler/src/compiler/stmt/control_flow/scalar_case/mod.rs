@@ -1,8 +1,11 @@
 use super::super::super::Compiler;
 use crate::error::CompileError;
-use fpas_bytecode::{Op, SourceLocation, Value};
-use fpas_parser::{CaseArm, CaseLabel, DesignatorPart, Expr, Stmt};
+use fpas_bytecode::{Op, SourceLocation};
+use fpas_parser::{CaseArm, Stmt};
 use fpas_sema::Ty;
+
+mod bindings;
+mod matching;
 
 impl Compiler {
     /// Compile `case` on scalar types (integer, real, string, boolean, simple enum).
@@ -14,13 +17,7 @@ impl Compiler {
         case_ty: &Ty,
         location: SourceLocation,
     ) -> Result<(), CompileError> {
-        let (eq_op, ge_op, le_op) = match case_ty {
-            Ty::String => (Op::EqStr, Op::GeStr, Op::LeStr),
-            Ty::Real => (Op::EqReal, Op::GeReal, Op::LeReal),
-            Ty::Boolean => (Op::EqBool, Op::GeInt, Op::LeInt),
-            _ => (Op::EqInt, Op::GeInt, Op::LeInt),
-        };
-
+        let (eq_op, ge_op, le_op) = Self::scalar_case_compare_ops(case_ty);
         let mut end_patches = Vec::new();
 
         for arm in arms {
@@ -96,90 +93,5 @@ impl Compiler {
         }
 
         Ok(())
-    }
-
-    fn emit_case_label_match(
-        &mut self,
-        label: &fpas_parser::CaseLabel,
-        case_slot: u16,
-        eq_op: Op,
-        ge_op: Op,
-        le_op: Op,
-        location: SourceLocation,
-    ) -> Result<(), CompileError> {
-        match label {
-            fpas_parser::CaseLabel::Value {
-                start,
-                end: Some(end_expr),
-                ..
-            } => {
-                self.emit(Op::GetLocal(case_slot), location);
-                self.compile_expr(start)?;
-                self.emit(ge_op, location);
-
-                self.emit(Op::GetLocal(case_slot), location);
-                self.compile_expr(end_expr)?;
-                self.emit(le_op, location);
-
-                self.emit(Op::And, location);
-            }
-            fpas_parser::CaseLabel::Value {
-                start, end: None, ..
-            } => {
-                if self.is_scalar_guard_binding_expr(start) {
-                    self.emit_constant(Value::Boolean(true), location)?;
-                    return Ok(());
-                }
-                self.emit(Op::GetLocal(case_slot), location);
-                self.compile_expr(start)?;
-                self.emit(eq_op, location);
-            }
-            fpas_parser::CaseLabel::Destructure { variant, .. } => {
-                self.emit(Op::GetLocal(case_slot), location);
-                match variant {
-                    fpas_parser::DestructureVariant::Ok => {
-                        self.emit(Op::IsResultOk, location);
-                    }
-                    fpas_parser::DestructureVariant::Error => {
-                        self.emit(Op::IsResultOk, location);
-                        self.emit(Op::Not, location);
-                    }
-                    fpas_parser::DestructureVariant::Some => {
-                        self.emit(Op::IsOptionSome, location);
-                    }
-                    fpas_parser::DestructureVariant::None => {
-                        self.emit(Op::IsOptionSome, location);
-                        self.emit(Op::Not, location);
-                    }
-                }
-            }
-        }
-
-        Ok(())
-    }
-
-    fn scalar_guard_binding_name(&self, label: &CaseLabel) -> Option<String> {
-        let CaseLabel::Value {
-            start, end: None, ..
-        } = label
-        else {
-            return None;
-        };
-        if !self.is_scalar_guard_binding_expr(start) {
-            return None;
-        }
-
-        let Expr::Designator(designator) = start else {
-            return None;
-        };
-        let DesignatorPart::Ident(name, _) = &designator.parts[0] else {
-            return None;
-        };
-        Some(name.clone())
-    }
-
-    fn is_scalar_guard_binding_expr(&self, expr: &Expr) -> bool {
-        self.scalar_case_bindings
-            .contains(&fpas_sema::expr_lookup_key(expr))
     }
 }

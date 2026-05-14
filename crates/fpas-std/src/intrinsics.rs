@@ -166,7 +166,10 @@ mod vm_only_guard_tests {
     #![allow(clippy::expect_used, clippy::unwrap_used)]
 
     use super::run_intrinsic;
-    use fpas_bytecode::{ArrayIntrinsic, ConsoleIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic, ResultIntrinsic, SourceLocation, StrIntrinsic, TaskIntrinsic, TuiIntrinsic, Value};
+    use fpas_bytecode::{
+        ArrayIntrinsic, ConsoleIntrinsic, Intrinsic, SourceLocation, StrIntrinsic,
+        TaskIntrinsic, Value,
+    };
 
     fn loc() -> SourceLocation {
         SourceLocation::new(1, 1)

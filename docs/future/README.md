@@ -15,7 +15,7 @@ Turbo Vision–style direction: Rust-hosted event loop, FPAS `On*` handlers and 
 | # | Feature | Description |
 |---|---------|-------------|
 | 9 | [`dict`](09-remove-dict.md) | Pending — may be kept |
-| 10 | [`Native graphics mode`](10-native-graphics-mode.md) | Real windowed 2D graphics for BGI-style APIs and Fractint-like programs |
+| 10 | [`Native graphics mode`](10-native-graphics-mode.md) | Real windowed 2D graphics with drawing primitives, text, and direct input; detailed planning in [`std.graph/`](std.graph/README.md) |
 
 ## Not Yet Planned
 

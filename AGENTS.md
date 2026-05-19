@@ -6,6 +6,7 @@
 - **Rewrite over repair.** This project is work-in-progress. Prefer discarding and rewriting stale or convoluted code over patching legacy. There is no backward compatibility requirement.
 - **Keep it lean.** Remove dead code, unused imports, and obsolete modules aggressively.
 - **Keep files focused and reasonably small.** Each file should have one cohesive responsibility (one concern/topic). Aim to stay under 500 LOC when practical. Do not split code artificially just to satisfy a line-count target—clarity and cohesion come first. For broad components (for example, a lexer), split by clear sub-responsibilities (such as token definitions, scanning logic, and diagnostics), not by arbitrary size. Use directories to organize related files.
+- **Match FPAS unit structure in unit-owned Rust crates.** In crates such as `fpas-std`, group runtime files by the FPAS unit they implement: `Std.Tui` under `src/tui/`, `Std.Graph` under `src/graph/`, and so on. Keep `src/lib.rs` focused on module declarations and re-exports, not unit-specific implementation logic.
 - **No backward compatibility.** We do not want nor need backward compatibility, only accept the current specs. The language is not fixed yet.
 - **No legacy or backward references.** When you change something, do not mention old behavior. Document only the current state.
 

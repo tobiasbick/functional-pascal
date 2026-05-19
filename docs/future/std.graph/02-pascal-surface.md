@@ -1,0 +1,215 @@
+# Proposed `Std.Graph` Pascal surface
+
+**Status:** draft for the first public slice.
+
+## Design intent
+
+`Std.Graph` should start with a small, explicit surface that matches the Phase 1 MVP.
+It should expose a native window and a bulk framebuffer upload path first.
+That foundation should then grow into a small modern 2D drawing API with direct input handling.
+
+## Naming decisions
+
+- `UploadFrame` is the bulk pixel-upload fast path.
+- `Present` is reserved for presenting the runtime-owned backbuffer after drawing calls.
+- Event kinds use short names such as `Resize` and `Key` to stay aligned with existing `Std.Tui` and `Std.Console` event naming.
+
+## Target capability set
+
+The intended direction is:
+
+- bulk software frame upload for render-heavy programs
+- a runtime-owned backbuffer for drawing primitives
+- pixels, lines, simple shapes, and text
+- keyboard, mouse, wheel, resize, and close events
+- enough control to build Mandelbrot and Julia explorers
+
+## Proposed types
+
+```pascal
+type
+  Application = record end;
+
+  Size = record
+    width: integer;
+    height: integer;
+  end;
+
+  EventKind = (
+    CloseRequested,
+    Resize,
+    Key
+  );
+
+  Event = record
+    kind: EventKind;
+    size: Size;
+    key: Std.Console.KeyEvent;
+  end;
+```
+
+## Proposed routines
+
+```pascal
+function Application.Open(Width: integer; Height: integer; Title: string): Application;
+procedure Application.Close(App: Application);
+function Application.Size(App: Application): Size;
+function Application.PollEvent(App: Application): Option of Event;
+procedure Application.UploadFrame(
+  App: Application;
+  Width: integer;
+  Height: integer;
+  Pixels: array of integer
+);
+```
+
+## Planned next-slice drawing surface
+
+After the foundation slice, `Std.Graph` should grow a runtime-owned backbuffer API:
+
+```pascal
+procedure Application.Clear(App: Application; Color: integer);
+procedure Application.PutPixel(App: Application; X: integer; Y: integer; Color: integer);
+procedure Application.DrawLine(
+  App: Application;
+  X1: integer;
+  Y1: integer;
+  X2: integer;
+  Y2: integer;
+  Color: integer
+);
+procedure Application.DrawRect(
+  App: Application;
+  X: integer;
+  Y: integer;
+  Width: integer;
+  Height: integer;
+  Color: integer
+);
+procedure Application.FillRect(
+  App: Application;
+  X: integer;
+  Y: integer;
+  Width: integer;
+  Height: integer;
+  Color: integer
+);
+procedure Application.DrawCircle(
+  App: Application;
+  CenterX: integer;
+  CenterY: integer;
+  Radius: integer;
+  Color: integer
+);
+procedure Application.DrawText(
+  App: Application;
+  X: integer;
+  Y: integer;
+  Text: string;
+  Color: integer
+);
+procedure Application.Present(App: Application);
+```
+
+These routines are not part of the foundation slice, but they are part of the intended `Std.Graph` direction.
+
+## Semantics
+
+### `Application.Open`
+
+- Opens one native window.
+- `Width` and `Height` must be positive.
+- `Title` becomes the initial window title.
+- Phase 1 supports a single active graphics application per process.
+
+### `Application.Close`
+
+- Releases the window and associated host resources.
+- Closing an already closed application is a no-op.
+
+### `Application.Size`
+
+- Returns the latest known drawable size.
+- Width and height are always positive after a successful `Open`.
+
+### `Application.PollEvent`
+
+- Returns `None` when no event is pending.
+- `Event.kind = Resize` populates `Event.size`.
+- `Event.kind = Key` populates `Event.key`.
+- `Event.kind = CloseRequested` signals that the host asked the application to exit.
+
+### `Application.UploadFrame`
+
+- `Pixels` is a row-major framebuffer.
+- Each pixel is encoded as `$00RRGGBB`.
+- `Length(Pixels)` must equal `Width * Height`.
+- Phase 1 requires `Width` and `Height` to match the current window size exactly.
+- Any mismatch should raise a clear runtime diagnostic that reports the expected size.
+
+## Planned later semantics for drawing routines
+
+- Drawing routines mutate a runtime-owned backbuffer.
+- `Application.Present(App)` flushes that backbuffer to the native window.
+- `Application.UploadFrame` remains the bulk upload fast path for render-heavy programs.
+- The runtime should clip drawing operations to the current framebuffer bounds.
+- Text drawing should start with a simple deterministic bitmap font.
+
+## Minimal example
+
+```pascal
+program GraphSmoke;
+uses Std.Console, Std.Graph;
+
+function MakeSolidFrame(Width: integer; Height: integer; Color: integer): array of integer;
+begin
+  var Pixels: array of integer := [];
+  var Count: integer := Width * Height;
+  var I: integer := 0;
+  while I < Count do
+  begin
+    Pixels := Pixels + [Color];
+    I := I + 1
+  end;
+  return Pixels
+end;
+
+begin
+  var App: Application := Application.Open(640, 480, 'Graph smoke');
+  var Running: boolean := true;
+
+  while Running do
+  begin
+    var S: Size := Application.Size(App);
+    var Frame: array of integer := MakeSolidFrame(S.width, S.height, $00102040);
+    Application.UploadFrame(App, S.width, S.height, Frame);
+
+    match Application.PollEvent(App) with
+      Some(E) =>
+        if E.kind = EventKind.CloseRequested then
+          Running := false
+        else if E.kind = EventKind.Key then
+          if E.key.kind = KeyKind.Escape then
+            Running := false;
+      None =>
+        begin end
+    end
+  end;
+
+  Application.Close(App)
+end.
+```
+
+## Deliberately deferred surface
+
+The following should stay out of Phase 1 even if they are desired long-term:
+
+- drawing primitives listed above
+- mouse events
+- image loading helpers
+- multiple window APIs
+
+## Open design note
+
+Phase 1 reuses `Std.Console.KeyEvent` to avoid inventing a second keyboard abstraction immediately.
+If later graphics work needs richer window-system keyboard data, `Std.Graph` can define its own key event record in a later phase.

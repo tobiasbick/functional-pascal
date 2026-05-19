@@ -26,6 +26,7 @@ Core expectations:
 - prefer rewrites over patching convoluted code
 - remove dead code and obsolete code aggressively
 - keep files focused and cohesive
+- in unit-owned Rust crates such as `fpas-std`, group runtime files by the FPAS unit they implement
 - do not add compatibility layers
 - use English for code, comments, docs, identifiers, and commit messages
 - when implementing language behavior in Rust, link to the matching spec in `docs/pascal/`

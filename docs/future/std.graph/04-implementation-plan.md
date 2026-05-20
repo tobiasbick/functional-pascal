@@ -51,14 +51,14 @@ Verify:
 Scope:
 
 - [x] Add `graph/` module files.
-- [ ] Introduce `GraphSession`, event normalization, and framebuffer validation helpers.
+- [x] Introduce `GraphSession`, event normalization, and framebuffer validation helpers.
 - [x] Stub backend integration where necessary, but keep the project building.
 - [x] Keep the implementation under `crates/fpas-std/src/graph/`; `src/lib.rs` only re-exports.
 
 Verify:
 
-- [ ] `cargo build`
-- [ ] focused unit tests for size validation and pixel-length checks
+- [x] `cargo build`
+- [x] focused unit tests for size validation and pixel-length checks
 
 ### 5. VM bridge
 

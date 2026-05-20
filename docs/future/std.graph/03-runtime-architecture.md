@@ -21,7 +21,12 @@ Current stub layout:
 
 ```text
 crates/fpas-std/src/graph/
-  mod.rs           - current stub entry points and not-yet-implemented diagnostics
+  mod.rs           - graph module root and re-exports
+  event.rs         - current normalized event model and EventKind names
+  framebuffer.rs   - current frame-size and pixel-payload validation helpers
+  session.rs       - current GraphSession lifecycle and staged upload state
+  stub.rs          - current not-yet-implemented runtime diagnostics
+  tests.rs         - current runtime-skeleton tests
 ```
 
 Planned fuller layout:

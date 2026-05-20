@@ -41,7 +41,10 @@ pub use console_event::{
     event_kind_index, mouse_action_index, mouse_button_index,
 };
 pub use error::StdError;
-pub use graph::{GRAPH_EVENT_KIND_VARIANTS, run_graph_intrinsic};
+pub use graph::{
+    GRAPH_EVENT_KIND_VARIANTS, GraphEvent, GraphEventKind, GraphSession, UploadedFrame,
+    run_graph_intrinsic,
+};
 pub use intrinsics::run_intrinsic;
 pub use key_event::{ConsoleKeyEvent, KEY_KIND_VARIANTS};
 pub use std_units::{

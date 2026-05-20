@@ -1,5 +1,5 @@
 use crate::Vm;
-use crate::vm::SharedState;
+use crate::vm::{GraphState, SharedState};
 use fpas_bytecode::{Chunk, Op, SourceLocation, Value};
 use fpas_std::{Console, ConsoleKeyEvent, KeyInput, TextInput};
 use std::collections::HashMap;
@@ -20,6 +20,7 @@ pub(super) fn minimal_shared_state(chunk: Chunk) -> SharedState {
         text_input: Mutex::new(TextInput::new()),
         key_input: Mutex::new(KeyInput::new()),
         tui: Mutex::new(Default::default()),
+        graph: Mutex::new(GraphState::default()),
         shutdown: AtomicBool::new(false),
         abort_spawned_bytecode: AtomicBool::new(false),
     }
@@ -33,6 +34,23 @@ pub(super) fn tui_application_value() -> Value {
     Value::Record {
         type_name: "Std.Tui.Application".into(),
         fields: vec![],
+    }
+}
+
+pub(super) fn graph_application_value() -> Value {
+    Value::Record {
+        type_name: "Std.Graph.Application".into(),
+        fields: vec![],
+    }
+}
+
+pub(super) fn graph_size_value(width: i64, height: i64) -> Value {
+    Value::Record {
+        type_name: "Std.Graph.Size".into(),
+        fields: vec![
+            ("width".into(), Value::Integer(width)),
+            ("height".into(), Value::Integer(height)),
+        ],
     }
 }
 

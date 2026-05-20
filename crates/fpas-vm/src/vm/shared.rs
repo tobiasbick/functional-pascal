@@ -4,7 +4,7 @@
 //!
 //! ## Lock ordering
 //!
-//! Independent mutexes (`task_queue`, `task_results`, `console`, `text_input`, `key_input`, `tui`)
+//! Independent mutexes (`task_queue`, `task_results`, `console`, `text_input`, `key_input`, `tui`, `graph`)
 //! each protect a single concern. **Do not acquire more than one of these locks at the same time**
 //! from VM or intrinsic code unless the order is documented here and consistently followed.
 //! [`RwLock`] on `globals` is separate; avoid holding `globals` while waiting on `task_available`.
@@ -16,8 +16,8 @@
 
 use fpas_bytecode::{Chunk, Value};
 use fpas_std::{
-    CommandRegistry, Console, KeyInput, ModalStack, TextInput, TuiHost, TuiSession, ViewId,
-    ViewRegistry,
+    CommandRegistry, Console, GraphSession, KeyInput, ModalStack, TextInput, TuiHost,
+    TuiSession, ViewId, ViewRegistry,
 };
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -120,6 +120,13 @@ impl Default for TuiState {
     }
 }
 
+/// Shared `Std.Graph` lifecycle state for the active VM.
+#[derive(Debug, Default)]
+pub(crate) struct GraphState {
+    /// Current Phase 1 graph session and staged frame/event state.
+    pub session: GraphSession,
+}
+
 /// Shared state for the parallel VM.
 ///
 /// All fields are thread-safe. Workers hold `Arc<SharedState>` and
@@ -152,6 +159,8 @@ pub(crate) struct SharedState {
     pub key_input: Mutex<KeyInput>,
     /// Minimal shared `Std.Tui` application/session state.
     pub tui: Mutex<TuiState>,
+    /// Minimal shared `Std.Graph` application/session state.
+    pub graph: Mutex<GraphState>,
 
     /// Set when the main task completes or an error occurs.
     pub shutdown: AtomicBool,

@@ -16,6 +16,23 @@ pub struct UploadedFrame {
     pub(crate) pixels: Vec<u32>,
 }
 
+impl UploadedFrame {
+    /// Returns the validated frame width in pixels.
+    pub fn width(&self) -> i64 {
+        self.width
+    }
+
+    /// Returns the validated frame height in pixels.
+    pub fn height(&self) -> i64 {
+        self.height
+    }
+
+    /// Returns the validated packed `$00RRGGBB` pixel payload.
+    pub fn pixels(&self) -> &[u32] {
+        &self.pixels
+    }
+}
+
 /// Validates positive surface dimensions for `Std.Graph.Application.Open`.
 pub(crate) fn validate_surface_size(
     width: i64,

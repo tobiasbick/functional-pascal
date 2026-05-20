@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** `docs/future/std.graph/02-pascal-surface.md`, `docs/future/std.graph/04-implementation-plan.md` (from the repository root).
 
-use super::super::{compile_err, compile_ok, compile_run_error};
+use super::super::{compile_and_run, compile_err, compile_ok};
 use fpas_bytecode::intrinsic::GraphIntrinsic;
 use fpas_bytecode::{Intrinsic, Op};
 
@@ -85,22 +85,23 @@ end.",
 }
 
 #[test]
-fn std_graph_open_reports_runtime_stub_error() {
-    let error = compile_run_error(
+fn std_graph_phase1_runtime_bridge_supports_size_poll_upload_and_close() {
+    let out = compile_and_run(
         "\
 program T;
-uses Std.Graph;
+uses Std.Console, Std.Graph, Std.Option;
 
 begin
-  var App: Application := Application.Open(640, 480, 'Graph smoke')
+    var App: Application := Application.Open(2, 2, 'Graph smoke');
+  var Screen: Size := Application.Size(App);
+  Std.Console.WriteLn(Screen.width);
+  Std.Console.WriteLn(Screen.height);
+  Std.Console.WriteLn(Std.Option.IsNone(Application.PollEvent(App)));
+  var Pixels: array of integer := [$00102040, $00010203, $00000000, $00FFFFFF];
+  Application.UploadFrame(App, 2, 2, Pixels);
+  Application.Close(App)
 end.",
     );
 
-    assert!(
-        error
-            .message
-            .contains("Std.Graph.Application.Open is not implemented yet"),
-        "unexpected runtime error: {}",
-        error.message
-    );
+    assert_eq!(out.lines, vec!["2", "2", "true"]);
 }

@@ -65,12 +65,12 @@ Verify:
 Scope:
 
 - [x] Add graph intrinsic dispatch under `fpas-vm/src/vm/execute/io/graph/`.
-- [ ] Convert between VM values and `fpas-std` graph runtime types.
-- [ ] Construct `Std.Graph.Event` records in the VM.
+- [x] Convert between VM values and `fpas-std` graph runtime types.
+- [x] Construct `Std.Graph.Event` records in the VM.
 
 Verify:
 
-- [ ] VM tests for `Open`, `Close`, `Size`, `PollEvent`, and `UploadFrame`
+- [x] VM tests for `Open`, `Close`, `Size`, `PollEvent`, and `UploadFrame`
 
 ### 6. First working window lifecycle
 

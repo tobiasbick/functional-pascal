@@ -90,6 +90,22 @@ impl GraphSession {
         Ok(self.pending_events.pop_front())
     }
 
+    /// Queues one normalized host event for the active session.
+    pub fn push_event(
+        &mut self,
+        event: GraphEvent,
+        location: SourceLocation,
+    ) -> Result<(), StdError> {
+        self.ensure_open(
+            "Std.Graph host event injection requires an open graphics session.",
+            "Open the application before queueing host events for it.",
+            location,
+        )?;
+
+        self.pending_events.push_back(event);
+        Ok(())
+    }
+
     /// Validates and stages one full-frame upload for the active session.
     pub fn upload_frame(
         &mut self,
@@ -107,6 +123,11 @@ impl GraphSession {
         let validated = validate_frame_upload(self.width, self.height, width, height, pixels, location)?;
         self.last_uploaded_frame = Some(validated);
         Ok(())
+    }
+
+    /// Returns the most recently validated frame upload, if one is staged.
+    pub fn uploaded_frame(&self) -> Option<&UploadedFrame> {
+        self.last_uploaded_frame.as_ref()
     }
 
     #[cfg(test)]

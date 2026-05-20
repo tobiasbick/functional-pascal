@@ -1,4 +1,4 @@
-use crate::vm::{CallFrame, SharedState, TuiState, Worker};
+use crate::vm::{CallFrame, GraphState, SharedState, TuiState, Worker};
 use fpas_bytecode::{Chunk, Op, Value};
 use fpas_std::{Console, KeyInput, TextInput};
 use std::collections::HashMap;
@@ -26,6 +26,7 @@ fn pool_tasks_stop_without_side_effects_after_abort_flag() {
         text_input: Mutex::new(TextInput::new()),
         key_input: Mutex::new(KeyInput::new()),
         tui: Mutex::new(TuiState::default()),
+        graph: Mutex::new(GraphState::default()),
         shutdown: AtomicBool::new(true),
         abort_spawned_bytecode: AtomicBool::new(true),
     });

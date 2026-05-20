@@ -1,32 +1,109 @@
-//! `Std.Graph` application stub intrinsics.
+//! `Std.Graph` application lifecycle, event, and upload intrinsics.
 //!
 //! **Documentation:** `docs/future/std.graph/02-pascal-surface.md`, `docs/future/std.graph/04-implementation-plan.md` (from the repository root).
 
 use crate::vm::Worker;
-use crate::vm::diagnostics::VmError;
-use fpas_bytecode::{GraphIntrinsic, Intrinsic, SourceLocation};
+use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError};
+use crate::vm::runtime_error;
+use fpas_bytecode::{GraphIntrinsic, Intrinsic, SourceLocation, Value};
 
 impl Worker {
-    /// Executes application-level `Std.Graph` intrinsics through the current stub runtime.
+    /// Executes application-level `Std.Graph` intrinsics through the shared graph session.
     pub(super) fn try_exec_graph_application_intrinsic(
         &mut self,
         intrinsic: Intrinsic,
         line: SourceLocation,
     ) -> Result<bool, VmError> {
-        let graph_intrinsic = match intrinsic {
-            Intrinsic::Graph(GraphIntrinsic::ApplicationOpen) => GraphIntrinsic::ApplicationOpen,
-            Intrinsic::Graph(GraphIntrinsic::ApplicationClose) => GraphIntrinsic::ApplicationClose,
-            Intrinsic::Graph(GraphIntrinsic::ApplicationSize) => GraphIntrinsic::ApplicationSize,
+        match intrinsic {
+            Intrinsic::Graph(GraphIntrinsic::ApplicationOpen) => {
+                let title = self.pop_graph_title(line)?;
+                let height = self.pop_int(line)?;
+                let width = self.pop_int(line)?;
+                {
+                    let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
+                    graph.session.open(width, height, &title, line)?;
+                }
+                self.push(Self::graph_application_record())?;
+            }
+            Intrinsic::Graph(GraphIntrinsic::ApplicationClose) => {
+                self.pop_graph_application(line)?;
+                let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
+                graph.session.close(line)?;
+            }
+            Intrinsic::Graph(GraphIntrinsic::ApplicationSize) => {
+                self.pop_graph_application(line)?;
+                let (width, height) = {
+                    let graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
+                    graph.session.size(line)?
+                };
+                self.push(Self::graph_size_record(width, height))?;
+            }
             Intrinsic::Graph(GraphIntrinsic::ApplicationPollEvent) => {
-                GraphIntrinsic::ApplicationPollEvent
+                self.pop_graph_application(line)?;
+                let event = {
+                    let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
+                    graph.session.poll_event(line)?
+                };
+                match event {
+                    Some(event) => {
+                        self.push(Value::OptionSome(Box::new(Self::graph_event_record(event))))?
+                    }
+                    None => self.push(Value::OptionNone)?,
+                }
             }
             Intrinsic::Graph(GraphIntrinsic::ApplicationUploadFrame) => {
-                GraphIntrinsic::ApplicationUploadFrame
+                let pixels = self.pop_graph_pixels(line)?;
+                let height = self.pop_int(line)?;
+                let width = self.pop_int(line)?;
+                self.pop_graph_application(line)?;
+                let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
+                graph.session.upload_frame(width, height, &pixels, line)?;
             }
             _ => return Ok(false),
+        }
+
+        Ok(true)
+    }
+
+    fn pop_graph_title(&mut self, line: SourceLocation) -> Result<String, VmError> {
+        match self.pop(line)? {
+            Value::Str(title) => Ok(title),
+            other => Err(runtime_error(
+                TYPE_MISMATCH_CODE,
+                format!("Expected string, got {}", other.type_name()),
+                "Pass a string title to `Std.Graph.Application.Open(Width, Height, Title)`.",
+                line,
+            )),
+        }
+    }
+
+    fn pop_graph_pixels(&mut self, line: SourceLocation) -> Result<Vec<i64>, VmError> {
+        let values = match self.pop(line)? {
+            Value::Array(values) => values,
+            other => {
+                return Err(runtime_error(
+                    TYPE_MISMATCH_CODE,
+                    format!("Expected array, got {}", other.type_name()),
+                    "Pass an `array of integer` as the `Pixels` argument to `Std.Graph.Application.UploadFrame(App, Width, Height, Pixels)`.",
+                    line,
+                ));
+            }
         };
 
-        fpas_std::run_graph_intrinsic(graph_intrinsic, line)?;
-        Ok(true)
+        values
+            .into_iter()
+            .map(|value| match value {
+                Value::Integer(pixel) => Ok(pixel),
+                other => Err(runtime_error(
+                    TYPE_MISMATCH_CODE,
+                    format!(
+                        "Std.Graph.Application.UploadFrame(App, Width, Height, Pixels) expects `Pixels` to contain only integer values, but found {}.",
+                        other.type_name()
+                    ),
+                    "Build `Pixels` as `array of integer` with packed `$00RRGGBB` values.",
+                    line,
+                )),
+            })
+            .collect()
     }
 }

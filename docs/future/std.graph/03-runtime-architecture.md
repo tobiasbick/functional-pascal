@@ -96,10 +96,12 @@ Owns stack manipulation, intrinsic dispatch, record construction, and the call i
 ```text
 crates/fpas-vm/src/vm/execute/io/graph/
   mod.rs           - current graph intrinsic dispatch entry point
-  application.rs   - current Phase 1 stub dispatch for lifecycle, event, and upload calls
+  application.rs   - current Phase 1 VM bridge for lifecycle, event, and upload calls
+  records.rs       - current `Std.Graph.Application`, `Size`, and `Event` record construction
 ```
 
 `crates/fpas-vm/src/vm/execute/io/mod.rs` should route the new intrinsic family into that graph module.
+The VM now also keeps dedicated graph session state beside the TUI state so `Std.Graph` can evolve without reusing the terminal-hosted path.
 
 ## Data flow
 

@@ -1,8 +1,9 @@
-//! `Std.Graph` VM execution — stub intrinsic dispatch.
+//! `Std.Graph` VM execution and value/session bridging.
 //!
 //! **Documentation:** `docs/future/std.graph/01-mvp.md`, `docs/future/std.graph/04-implementation-plan.md` (from the repository root).
 
 mod application;
+mod records;
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;

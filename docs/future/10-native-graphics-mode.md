@@ -17,11 +17,11 @@ That split keeps the work traceable by topic instead of growing one large note.
 
 ## Current high-level decisions
 
-- The feature should be a new standard unit: `Std.Graph`.
-- The first milestone should prove one native window, event polling, and bulk framebuffer presentation.
-- The intended release target is a small modern 2D graphics surface with pixels, lines, text, and direct input handling.
-- The preferred initial backend is `winit` + `softbuffer`.
-- BGI compatibility is not a goal.
+- [x] The feature should be a new standard unit: `Std.Graph`.
+- [x] The first milestone should prove one native window, event polling, and bulk framebuffer presentation.
+- [x] The intended release target is a small modern 2D graphics surface with pixels, lines, text, and direct input handling.
+- [x] The preferred initial backend is `winit` + `softbuffer`.
+- [x] BGI compatibility is not a goal.
 
 ## Reading order
 

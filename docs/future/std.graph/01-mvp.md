@@ -6,10 +6,10 @@
 
 Create the smallest native graphics surface that proves all of the following:
 
-- FPAS can open a real desktop window.
-- FPAS can upload and present a software-rendered frame.
-- FPAS can observe window close, resize, and keyboard input.
-- FPAS can shut the graphics session down cleanly.
+- [ ] FPAS can open a real desktop window.
+- [ ] FPAS can upload and present a software-rendered frame.
+- [ ] FPAS can observe window close, resize, and keyboard input.
+- [ ] FPAS can shut the graphics session down cleanly.
 
 This is the foundation slice for a later drawing-oriented `Std.Graph` runtime.
 It is not the complete target surface.
@@ -30,46 +30,46 @@ Phase 1 intentionally does **not** include:
 
 The first slice should optimize for full-frame software rendering, not single-pixel VM calls.
 
-- One frame is one contiguous pixel array.
-- Pixels are row-major, top-left to bottom-right.
-- The frame dimensions must match the current window size.
-- After a resize event, the program regenerates and re-presents the frame at the new size.
+- [ ] One frame is one contiguous pixel array.
+- [ ] Pixels are row-major, top-left to bottom-right.
+- [ ] The frame dimensions must match the current window size.
+- [ ] After a resize event, the program regenerates and re-presents the frame at the new size.
 
 ## Required user-visible capabilities
 
-- Open a window with initial width, height, and title.
-- Query the current window size.
-- Poll pending events without blocking.
-- Upload and present a full frame.
-- Close the session.
+- [ ] Open a window with initial width, height, and title.
+- [ ] Query the current window size.
+- [ ] Poll pending events without blocking.
+- [ ] Upload and present a full frame.
+- [ ] Close the session.
 
 ## Foundation use cases
 
 This slice should already be enough for:
 
-- a solid-color smoke test
-- a simple gradient demo
-- a full-frame Mandelbrot renderer without in-runtime drawing primitives
+- [ ] a solid-color smoke test
+- [ ] a simple gradient demo
+- [ ] a full-frame Mandelbrot renderer without in-runtime drawing primitives
 
 ## Success criteria
 
 A small FPAS program can:
 
-1. Open a window.
-2. Query its size.
-3. Allocate an `array of integer` with `width * height` entries.
-4. Fill that array with a solid color or gradient.
-5. Upload the frame.
-6. React to `Resize`, `Key(Escape)`, and `CloseRequested`.
-7. Exit without hanging or leaking host state.
+- [ ] Open a window.
+- [ ] Query its size.
+- [ ] Allocate an `array of integer` with `width * height` entries.
+- [ ] Fill that array with a solid color or gradient.
+- [ ] Upload the frame.
+- [ ] React to `Resize`, `Key(Escape)`, and `CloseRequested`.
+- [ ] Exit without hanging or leaking host state.
 
 ## Acceptance checks
 
-- `cargo build`
-- `cargo test --workspace`
-- One smoke example run manually on Windows, Linux, and macOS.
-- Manual resize / close test.
-- Repeated open / close in one process without stale global state.
+- [ ] `cargo build`
+- [ ] `cargo test --workspace`
+- [ ] One smoke example run manually on Windows, Linux, and macOS.
+- [ ] Manual resize / close test.
+- [ ] Repeated open / close in one process without stale global state.
 
 ## Why bulk frame upload comes first
 
@@ -79,16 +79,16 @@ The first milestone should therefore prove the native window lifecycle and bulk 
 
 ## Immediate follow-up after Phase 1
 
-- a runtime-owned backbuffer
-- `Clear`
-- `PutPixel`
-- `DrawLine`
-- `DrawRect` / `FillRect`
-- `DrawCircle`
-- `DrawText`
-- `Present`
-- Mouse events.
-- Wheel events.
-- Blocking or timeout-based event wait.
-- Dirty-rectangle or scanline upload helpers.
-- Mandelbrot and Julia explorer examples with interactive controls.
+- [ ] a runtime-owned backbuffer
+- [ ] `Clear`
+- [ ] `PutPixel`
+- [ ] `DrawLine`
+- [ ] `DrawRect` / `FillRect`
+- [ ] `DrawCircle`
+- [ ] `DrawText`
+- [ ] `Present`
+- [ ] Mouse events.
+- [ ] Wheel events.
+- [ ] Blocking or timeout-based event wait.
+- [ ] Dirty-rectangle or scanline upload helpers.
+- [ ] Mandelbrot and Julia explorer examples with interactive controls.

@@ -10,19 +10,19 @@ That foundation should then grow into a small modern 2D drawing API with direct 
 
 ## Naming decisions
 
-- `UploadFrame` is the bulk pixel-upload fast path.
-- `Present` is reserved for presenting the runtime-owned backbuffer after drawing calls.
-- Event kinds use short names such as `Resize` and `Key` to stay aligned with existing `Std.Tui` and `Std.Console` event naming.
+- [x] `UploadFrame` is the bulk pixel-upload fast path.
+- [x] `Present` is reserved for presenting the runtime-owned backbuffer after drawing calls.
+- [x] Event kinds use short names such as `Resize` and `Key` to stay aligned with existing `Std.Tui` and `Std.Console` event naming.
 
 ## Target capability set
 
 The intended direction is:
 
-- bulk software frame upload for render-heavy programs
-- a runtime-owned backbuffer for drawing primitives
-- pixels, lines, simple shapes, and text
-- keyboard, mouse, wheel, resize, and close events
-- enough control to build Mandelbrot and Julia explorers
+- [ ] bulk software frame upload for render-heavy programs
+- [ ] a runtime-owned backbuffer for drawing primitives
+- [ ] pixels, lines, simple shapes, and text
+- [ ] keyboard, mouse, wheel, resize, and close events
+- [ ] enough control to build Mandelbrot and Julia explorers
 
 ## Proposed types
 
@@ -117,43 +117,43 @@ These routines are not part of the foundation slice, but they are part of the in
 
 ### `Application.Open`
 
-- Opens one native window.
-- `Width` and `Height` must be positive.
-- `Title` becomes the initial window title.
-- Phase 1 supports a single active graphics application per process.
+- [ ] Opens one native window.
+- [ ] `Width` and `Height` must be positive.
+- [ ] `Title` becomes the initial window title.
+- [ ] Phase 1 supports a single active graphics application per process.
 
 ### `Application.Close`
 
-- Releases the window and associated host resources.
-- Closing an already closed application is a no-op.
+- [ ] Releases the window and associated host resources.
+- [ ] Closing an already closed application is a no-op.
 
 ### `Application.Size`
 
-- Returns the latest known drawable size.
-- Width and height are always positive after a successful `Open`.
+- [ ] Returns the latest known drawable size.
+- [ ] Width and height are always positive after a successful `Open`.
 
 ### `Application.PollEvent`
 
-- Returns `None` when no event is pending.
-- `Event.kind = Resize` populates `Event.size`.
-- `Event.kind = Key` populates `Event.key`.
-- `Event.kind = CloseRequested` signals that the host asked the application to exit.
+- [ ] Returns `None` when no event is pending.
+- [ ] `Event.kind = Resize` populates `Event.size`.
+- [ ] `Event.kind = Key` populates `Event.key`.
+- [ ] `Event.kind = CloseRequested` signals that the host asked the application to exit.
 
 ### `Application.UploadFrame`
 
-- `Pixels` is a row-major framebuffer.
-- Each pixel is encoded as `$00RRGGBB`.
-- `Length(Pixels)` must equal `Width * Height`.
-- Phase 1 requires `Width` and `Height` to match the current window size exactly.
-- Any mismatch should raise a clear runtime diagnostic that reports the expected size.
+- [ ] `Pixels` is a row-major framebuffer.
+- [ ] Each pixel is encoded as `$00RRGGBB`.
+- [ ] `Length(Pixels)` must equal `Width * Height`.
+- [ ] Phase 1 requires `Width` and `Height` to match the current window size exactly.
+- [ ] Any mismatch should raise a clear runtime diagnostic that reports the expected size.
 
 ## Planned later semantics for drawing routines
 
-- Drawing routines mutate a runtime-owned backbuffer.
-- `Application.Present(App)` flushes that backbuffer to the native window.
-- `Application.UploadFrame` remains the bulk upload fast path for render-heavy programs.
-- The runtime should clip drawing operations to the current framebuffer bounds.
-- Text drawing should start with a simple deterministic bitmap font.
+- [ ] Drawing routines mutate a runtime-owned backbuffer.
+- [ ] `Application.Present(App)` flushes that backbuffer to the native window.
+- [ ] `Application.UploadFrame` remains the bulk upload fast path for render-heavy programs.
+- [ ] The runtime should clip drawing operations to the current framebuffer bounds.
+- [ ] Text drawing should start with a simple deterministic bitmap font.
 
 ## Minimal example
 

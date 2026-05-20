@@ -8,6 +8,11 @@ macro_rules! std_tui {
         concat!("Std.Tui.", $suffix)
     };
 }
+macro_rules! std_graph {
+    ($suffix:literal) => {
+        concat!("Std.Graph.", $suffix)
+    };
+}
 macro_rules! std_str {
     ($suffix:literal) => {
         concat!("Std.Str.", $suffix)
@@ -237,6 +242,16 @@ pub const STD_TUI_APPLICATION_HOST_SET_VIEW_PARENT: &str =
 /// Register a local paint handler for a host-managed view.
 pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT: &str =
     std_tui!("Application.HostRegisterOnViewPaint");
+
+pub const STD_GRAPH_APPLICATION: &str = std_graph!("Application");
+pub const STD_GRAPH_SIZE: &str = std_graph!("Size");
+pub const STD_GRAPH_EVENT: &str = std_graph!("Event");
+pub const STD_GRAPH_EVENT_KIND: &str = std_graph!("EventKind");
+pub const STD_GRAPH_APPLICATION_OPEN: &str = std_graph!("Application.Open");
+pub const STD_GRAPH_APPLICATION_CLOSE: &str = std_graph!("Application.Close");
+pub const STD_GRAPH_APPLICATION_SIZE: &str = std_graph!("Application.Size");
+pub const STD_GRAPH_APPLICATION_POLL_EVENT: &str = std_graph!("Application.PollEvent");
+pub const STD_GRAPH_APPLICATION_UPLOAD_FRAME: &str = std_graph!("Application.UploadFrame");
 
 pub const STD_STR_LENGTH: &str = std_str!("Length");
 pub const STD_STR_TO_UPPER: &str = std_str!("ToUpper");

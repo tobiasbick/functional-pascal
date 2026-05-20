@@ -10,10 +10,12 @@ pub const STD_UNIT_OPTION: &str = "Std.Option";
 pub const STD_UNIT_TASK: &str = "Std.Task";
 pub const STD_UNIT_DICT: &str = "Std.Dict";
 pub const STD_UNIT_TUI: &str = "Std.Tui";
+pub const STD_UNIT_GRAPH: &str = "Std.Graph";
 
 pub const STD_UNITS_KNOWN: &[&str] = &[
     STD_UNIT_CONSOLE,
     STD_UNIT_TUI,
+    STD_UNIT_GRAPH,
     STD_UNIT_STR,
     STD_UNIT_CONV,
     STD_UNIT_MATH,

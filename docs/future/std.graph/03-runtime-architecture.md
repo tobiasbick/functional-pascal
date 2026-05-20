@@ -4,11 +4,11 @@
 
 ## Principles
 
-- `Std.Graph` is a new runtime surface, not an extension of `Std.Console` or `Std.Tui`.
-- The implementation should follow the same integration chain already used by other `Std.*` units: sema, compiler lowering, bytecode intrinsics, VM execution, and `fpas-std` runtime support.
-- Files should stay small and thematic.
-- In `fpas-std`, runtime files should be grouped by the FPAS unit they implement: `Std.Tui` under `src/tui/`, `Std.Graph` under `src/graph/`, and so on.
-- Phase 1 should support one active native graphics session per process.
+- [x] `Std.Graph` is a new runtime surface, not an extension of `Std.Console` or `Std.Tui`.
+- [x] The implementation should follow the same integration chain already used by other `Std.*` units: sema, compiler lowering, bytecode intrinsics, VM execution, and `fpas-std` runtime support.
+- [x] Files should stay small and thematic.
+- [x] In `fpas-std`, runtime files should be grouped by the FPAS unit they implement: `Std.Tui` under `src/tui/`, `Std.Graph` under `src/graph/`, and so on.
+- [x] Phase 1 should support one active native graphics session per process.
 
 ## Proposed crate responsibilities
 
@@ -17,7 +17,14 @@
 Owns the host-facing graphics session and the `winit` + `softbuffer` backend integration.
 For this crate, the preferred layout follows the Pascal unit boundary directly: unit-owned code for `Std.Graph` should live under `src/graph/`, not as scattered top-level `graph_*` files.
 
-Proposed file layout:
+Current stub layout:
+
+```text
+crates/fpas-std/src/graph/
+  mod.rs           - current stub entry points and not-yet-implemented diagnostics
+```
+
+Planned fuller layout:
 
 ```text
 crates/fpas-std/src/graph/
@@ -49,11 +56,11 @@ crates/fpas-bytecode/src/intrinsic/
 
 Suggested first discriminants:
 
-- `ApplicationOpen`
-- `ApplicationClose`
-- `ApplicationSize`
-- `ApplicationPollEvent`
-- `ApplicationUploadFrame`
+- [x] `ApplicationOpen`
+- [x] `ApplicationClose`
+- [x] `ApplicationSize`
+- [x] `ApplicationPollEvent`
+- [x] `ApplicationUploadFrame`
 
 ### `crates/fpas-sema`
 
@@ -61,10 +68,8 @@ Registers the Pascal-facing types and routines for `uses Std.Graph`.
 
 ```text
 crates/fpas-sema/src/std_registry/loaded/graph/
-  mod.rs           - registration entry point
-  types.rs         - `Application`, `Size`, `EventKind`, `Event`
-  application.rs   - lifecycle, event, and present routine registration
-  drawing.rs       - drawing primitive registration
+  mod.rs             - Phase 1 type registration entry point
+  application_api.rs - Phase 1 lifecycle, event, and upload routine registration
 ```
 
 `crates/fpas-sema/src/std_registry/loaded/mod.rs` should register `Std.Graph` exactly once, following the same pattern as the other standard units.
@@ -75,10 +80,7 @@ Lowers `Std.Graph.Application.*` calls to the new intrinsic family.
 
 ```text
 crates/fpas-compiler/src/compiler/std_calls/
-  graph/
-    mod.rs         - graph lowering entry point
-    application.rs - lifecycle, event, and present lowering
-    drawing.rs     - drawing primitive lowering
+  graph.rs         - Phase 1 application lifecycle, event, and upload lowering
   mod.rs           - graph module registration
 ```
 
@@ -88,11 +90,8 @@ Owns stack manipulation, intrinsic dispatch, record construction, and the call i
 
 ```text
 crates/fpas-vm/src/vm/execute/io/graph/
-  mod.rs           - graph intrinsic dispatch entry point
-  application.rs   - open, close, and size
-  events.rs        - event polling and VM record construction
-  present.rs       - bulk frame upload bridge
-  drawing.rs       - primitive drawing bridge
+  mod.rs           - current graph intrinsic dispatch entry point
+  application.rs   - current Phase 1 stub dispatch for lifecycle, event, and upload calls
 ```
 
 `crates/fpas-vm/src/vm/execute/io/mod.rs` should route the new intrinsic family into that graph module.
@@ -107,35 +106,35 @@ crates/fpas-vm/src/vm/execute/io/graph/
 
 ## Session and threading model
 
-- Phase 1 should assume one active graphics session.
-- All graph intrinsics should execute on the same host thread that owns the native window.
-- If the current CLI / VM startup model does not guarantee main-thread ownership on macOS, that requirement must be resolved before the feature is enabled there.
-- `go` tasks should not touch `Std.Graph` in Phase 1.
+- [ ] Phase 1 should assume one active graphics session.
+- [ ] All graph intrinsics should execute on the same host thread that owns the native window.
+- [ ] If the current CLI / VM startup model does not guarantee main-thread ownership on macOS, that requirement must be resolved before the feature is enabled there.
+- [ ] `go` tasks should not touch `Std.Graph` in Phase 1.
 
 ## Event normalization
 
 The backend should convert platform-specific events into a minimal, stable model:
 
-- `CloseRequested`
-- `Resize`
-- `Key`
+- [ ] `CloseRequested`
+- [ ] `Resize`
+- [ ] `Key`
 
 That normalization belongs in `fpas-std/src/graph/event.rs`, not in the VM layer.
 
 ## Framebuffer contract
 
-- Phase 1 uses one full-frame upload call.
-- Pixel format is `$00RRGGBB` packed into `integer` / `u32` values.
-- The runtime should validate `Width`, `Height`, and `Length(Pixels)` before presenting.
-- Resize handling should update the expected frame size before the next `UploadFrame` call.
+- [ ] Phase 1 uses one full-frame upload call.
+- [ ] Pixel format is `$00RRGGBB` packed into `integer` / `u32` values.
+- [ ] The runtime should validate `Width`, `Height`, and `Length(Pixels)` before presenting.
+- [ ] Resize handling should update the expected frame size before the next `UploadFrame` call.
 
 ## Planned drawing model after the foundation slice
 
-- `GraphSession` should own a persistent backbuffer.
-- Drawing intrinsics mutate that backbuffer in place.
-- `Present` flushes the current backbuffer to the native window.
-- `UploadFrame` remains the direct bulk upload path for render-heavy code.
-- Keep raster concerns in separate theme files instead of one large drawing module.
+- [ ] `GraphSession` should own a persistent backbuffer.
+- [ ] Drawing intrinsics mutate that backbuffer in place.
+- [ ] `Present` flushes the current backbuffer to the native window.
+- [ ] `UploadFrame` remains the direct bulk upload path for render-heavy code.
+- [ ] Keep raster concerns in separate theme files instead of one large drawing module.
 
 ## Deliberate separation from `Std.Tui`
 
@@ -147,8 +146,8 @@ Any future common abstractions should only be extracted after both paths exist a
 
 For this feature, the intended rule is:
 
-- if code exists only because of `uses Std.Graph`, it belongs under `crates/fpas-std/src/graph/`
-- `crates/fpas-std/src/lib.rs` may re-export graph items, but should not absorb graph implementation logic
-- avoid new top-level files such as `graph_event.rs`, `graph_line.rs`, or `graph_backend.rs`
+- [ ] if code exists only because of `uses Std.Graph`, it belongs under `crates/fpas-std/src/graph/`
+- [ ] `crates/fpas-std/src/lib.rs` may re-export graph items, but should not absorb graph implementation logic
+- [ ] avoid new top-level files such as `graph_event.rs`, `graph_line.rs`, or `graph_backend.rs`
 
 This keeps the Rust runtime layout aligned with the FPAS standard-unit surface.

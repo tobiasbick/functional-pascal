@@ -142,6 +142,18 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT,
 ];
 
+pub(in super::super) const STD_GRAPH_SYMBOLS: &[&str] = &[
+    std_symbols::STD_GRAPH_APPLICATION,
+    std_symbols::STD_GRAPH_SIZE,
+    std_symbols::STD_GRAPH_EVENT,
+    std_symbols::STD_GRAPH_EVENT_KIND,
+    std_symbols::STD_GRAPH_APPLICATION_OPEN,
+    std_symbols::STD_GRAPH_APPLICATION_CLOSE,
+    std_symbols::STD_GRAPH_APPLICATION_SIZE,
+    std_symbols::STD_GRAPH_APPLICATION_POLL_EVENT,
+    std_symbols::STD_GRAPH_APPLICATION_UPLOAD_FRAME,
+];
+
 pub(in super::super) const STD_STR_SYMBOLS: &[&str] = &[
     std_symbols::STD_STR_LENGTH,
     std_symbols::STD_STR_TO_UPPER,

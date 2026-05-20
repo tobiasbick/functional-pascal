@@ -6,6 +6,7 @@ mod concurrency;
 mod console;
 mod conv;
 mod dict;
+mod graph;
 mod math;
 mod str_ops;
 mod tui;

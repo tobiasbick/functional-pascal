@@ -6,6 +6,7 @@ mod array;
 mod console;
 mod conv;
 mod dict;
+mod graph;
 mod math;
 mod result_option;
 mod str_ops;
@@ -31,6 +32,9 @@ impl Compiler {
             return Ok(true);
         }
         if self.compile_tui_call(name, args, location)? {
+            return Ok(true);
+        }
+        if self.compile_graph_call(name, args, location)? {
             return Ok(true);
         }
         if self.compile_str_call(name, args, location)? {

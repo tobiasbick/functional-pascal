@@ -13,8 +13,8 @@ use crate::math;
 use crate::result_option;
 use crate::str;
 use fpas_bytecode::{
-    ArrayIntrinsic, ConsoleIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic, ResultIntrinsic,
-    SourceLocation, TaskIntrinsic, TuiIntrinsic, Value,
+    ArrayIntrinsic, ConsoleIntrinsic, DictIntrinsic, GraphIntrinsic, Intrinsic,
+    OptionIntrinsic, ResultIntrinsic, SourceLocation, TaskIntrinsic, TuiIntrinsic, Value,
 };
 /// Execute a standard-library intrinsic; mutates `stack` (Pascal call order: args already pushed).
 pub fn run_intrinsic(
@@ -75,6 +75,11 @@ pub fn run_intrinsic(
             | Intrinsic::Console(ConsoleIntrinsic::TextBackgroundRGB)
             | Intrinsic::Console(ConsoleIntrinsic::TextColor256)
             | Intrinsic::Console(ConsoleIntrinsic::TextBackground256)
+            | Intrinsic::Graph(GraphIntrinsic::ApplicationOpen)
+            | Intrinsic::Graph(GraphIntrinsic::ApplicationClose)
+            | Intrinsic::Graph(GraphIntrinsic::ApplicationSize)
+            | Intrinsic::Graph(GraphIntrinsic::ApplicationPollEvent)
+            | Intrinsic::Graph(GraphIntrinsic::ApplicationUploadFrame)
             | Intrinsic::Tui(TuiIntrinsic::ApplicationOpen)
             | Intrinsic::Tui(TuiIntrinsic::ApplicationClose)
             | Intrinsic::Tui(TuiIntrinsic::ApplicationSize)
@@ -97,7 +102,7 @@ pub fn run_intrinsic(
             | Intrinsic::Tui(TuiIntrinsic::HostRegisterOnExit)
     ) {
         return Err(std_internal_error(
-            "internal: Std.Console and Std.Tui intrinsics are handled in the VM",
+            "internal: Std.Console, Std.Graph, and Std.Tui intrinsics are handled in the VM",
             "This indicates a VM dispatch bug. Please report this as a compiler/runtime bug.",
             location,
         ));
@@ -173,8 +178,8 @@ mod vm_only_guard_tests {
 
     use super::run_intrinsic;
     use fpas_bytecode::{
-        ArrayIntrinsic, ConsoleIntrinsic, Intrinsic, SourceLocation, StrIntrinsic, TaskIntrinsic,
-        Value,
+        ArrayIntrinsic, ConsoleIntrinsic, GraphIntrinsic, Intrinsic, SourceLocation,
+        StrIntrinsic, TaskIntrinsic, Value,
     };
 
     fn loc() -> SourceLocation {
@@ -190,7 +195,22 @@ mod vm_only_guard_tests {
         )
         .expect_err("expected internal error");
         assert!(
-            err.message.contains("Std.Console and Std.Tui"),
+            err.message.contains("Std.Console, Std.Graph, and Std.Tui"),
+            "message={}",
+            err.message
+        );
+    }
+
+    #[test]
+    fn graph_open_is_vm_only() {
+        let err = run_intrinsic(
+            Intrinsic::Graph(GraphIntrinsic::ApplicationOpen),
+            &mut Vec::new(),
+            loc(),
+        )
+        .expect_err("expected internal error");
+        assert!(
+            err.message.contains("Std.Console, Std.Graph, and Std.Tui"),
             "message={}",
             err.message
         );

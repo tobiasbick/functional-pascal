@@ -5,6 +5,7 @@ use fpas_std::run_intrinsic;
 
 mod callbacks;
 mod console;
+mod graph;
 mod tui;
 mod tui_run;
 
@@ -34,6 +35,9 @@ impl Worker {
                     return Ok(true);
                 }
                 if self.try_exec_tui_intrinsic(intrinsic, line)? {
+                    return Ok(true);
+                }
+                if self.try_exec_graph_intrinsic(intrinsic, line)? {
                     return Ok(true);
                 }
                 if self.try_exec_higher_order_intrinsic(intrinsic, line)? {

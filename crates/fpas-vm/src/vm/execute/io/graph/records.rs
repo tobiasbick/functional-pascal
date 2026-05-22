@@ -38,7 +38,10 @@ impl Worker {
             GraphEvent::CloseRequested => Value::Record {
                 type_name: GRAPH_EVENT_TYPE.into(),
                 fields: vec![
-                    ("kind".into(), Self::graph_event_kind_value(GraphEventKind::CloseRequested)),
+                    (
+                        "kind".into(),
+                        Self::graph_event_kind_value(GraphEventKind::CloseRequested),
+                    ),
                     ("size".into(), Self::graph_size_record(0, 0)),
                     ("key".into(), Self::graph_unknown_key_event()),
                 ],
@@ -46,7 +49,10 @@ impl Worker {
             GraphEvent::Resize { width, height } => Value::Record {
                 type_name: GRAPH_EVENT_TYPE.into(),
                 fields: vec![
-                    ("kind".into(), Self::graph_event_kind_value(GraphEventKind::Resize)),
+                    (
+                        "kind".into(),
+                        Self::graph_event_kind_value(GraphEventKind::Resize),
+                    ),
                     ("size".into(), Self::graph_size_record(width, height)),
                     ("key".into(), Self::graph_unknown_key_event()),
                 ],
@@ -54,7 +60,10 @@ impl Worker {
             GraphEvent::Key(key) => Value::Record {
                 type_name: GRAPH_EVENT_TYPE.into(),
                 fields: vec![
-                    ("kind".into(), Self::graph_event_kind_value(GraphEventKind::Key)),
+                    (
+                        "kind".into(),
+                        Self::graph_event_kind_value(GraphEventKind::Key),
+                    ),
                     ("size".into(), Self::graph_size_record(0, 0)),
                     ("key".into(), Self::key_event_record(key)),
                 ],
@@ -71,7 +80,10 @@ impl Worker {
             Value::Record { type_name, .. } if type_name == GRAPH_APPLICATION_TYPE => Ok(()),
             other => Err(runtime_error(
                 TYPE_MISMATCH_CODE,
-                format!("Expected {GRAPH_APPLICATION_TYPE}, got {}", other.type_name()),
+                format!(
+                    "Expected {GRAPH_APPLICATION_TYPE}, got {}",
+                    other.type_name()
+                ),
                 "Pass the value returned by `Std.Graph.Application.Open()`.",
                 line,
             )),

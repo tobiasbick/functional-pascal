@@ -169,8 +169,11 @@ impl Worker {
                     )
                 })?;
                 let app_rec = Self::tui_application_record();
-                let consumed =
-                    self.call_function_sync(&handler, &[app_rec, Self::key_event_record(key_event)], line)?;
+                let consumed = self.call_function_sync(
+                    &handler,
+                    &[app_rec, Self::key_event_record(key_event)],
+                    line,
+                )?;
                 self.push(consumed)?;
             }
             _ => return Ok(false),

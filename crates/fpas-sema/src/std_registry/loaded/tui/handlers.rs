@@ -112,10 +112,7 @@ pub(super) fn register_application_handlers(
                 "OnDeactivate".into(),
                 Ty::Option(Box::new(on_deactivate.clone())),
             ),
-            (
-                "OnCommand".into(),
-                Ty::Option(Box::new(on_command.clone())),
-            ),
+            ("OnCommand".into(), Ty::Option(Box::new(on_command.clone()))),
             ("OnResize".into(), Ty::Option(Box::new(on_resize.clone()))),
             ("OnIdleMilliseconds".into(), Ty::Integer),
             ("OnIdle".into(), Ty::Option(Box::new(on_idle.clone()))),
@@ -123,9 +120,18 @@ pub(super) fn register_application_handlers(
         ],
         vec![
             ("OnPaint".into(), None),
-            ("OnKeyPressed".into(), Some(type_registration::default_none_expr())),
-            ("OnMouse".into(), Some(type_registration::default_none_expr())),
-            ("OnPaste".into(), Some(type_registration::default_none_expr())),
+            (
+                "OnKeyPressed".into(),
+                Some(type_registration::default_none_expr()),
+            ),
+            (
+                "OnMouse".into(),
+                Some(type_registration::default_none_expr()),
+            ),
+            (
+                "OnPaste".into(),
+                Some(type_registration::default_none_expr()),
+            ),
             (
                 "OnFocusGained".into(),
                 Some(type_registration::default_none_expr()),
@@ -134,19 +140,34 @@ pub(super) fn register_application_handlers(
                 "OnFocusLost".into(),
                 Some(type_registration::default_none_expr()),
             ),
-            ("OnActivate".into(), Some(type_registration::default_none_expr())),
+            (
+                "OnActivate".into(),
+                Some(type_registration::default_none_expr()),
+            ),
             (
                 "OnDeactivate".into(),
                 Some(type_registration::default_none_expr()),
             ),
-            ("OnCommand".into(), Some(type_registration::default_none_expr())),
-            ("OnResize".into(), Some(type_registration::default_none_expr())),
+            (
+                "OnCommand".into(),
+                Some(type_registration::default_none_expr()),
+            ),
+            (
+                "OnResize".into(),
+                Some(type_registration::default_none_expr()),
+            ),
             (
                 "OnIdleMilliseconds".into(),
                 Some(type_registration::default_zero_expr()),
             ),
-            ("OnIdle".into(), Some(type_registration::default_none_expr())),
-            ("OnExit".into(), Some(type_registration::default_none_expr())),
+            (
+                "OnIdle".into(),
+                Some(type_registration::default_none_expr()),
+            ),
+            (
+                "OnExit".into(),
+                Some(type_registration::default_none_expr()),
+            ),
         ],
     );
 

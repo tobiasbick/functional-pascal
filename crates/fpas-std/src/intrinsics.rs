@@ -13,8 +13,8 @@ use crate::math;
 use crate::result_option;
 use crate::str;
 use fpas_bytecode::{
-    ArrayIntrinsic, ConsoleIntrinsic, DictIntrinsic, GraphIntrinsic, Intrinsic,
-    OptionIntrinsic, ResultIntrinsic, SourceLocation, TaskIntrinsic, TuiIntrinsic, Value,
+    ArrayIntrinsic, ConsoleIntrinsic, DictIntrinsic, GraphIntrinsic, Intrinsic, OptionIntrinsic,
+    ResultIntrinsic, SourceLocation, TaskIntrinsic, TuiIntrinsic, Value,
 };
 /// Execute a standard-library intrinsic; mutates `stack` (Pascal call order: args already pushed).
 pub fn run_intrinsic(
@@ -178,8 +178,8 @@ mod vm_only_guard_tests {
 
     use super::run_intrinsic;
     use fpas_bytecode::{
-        ArrayIntrinsic, ConsoleIntrinsic, GraphIntrinsic, Intrinsic, SourceLocation,
-        StrIntrinsic, TaskIntrinsic, Value,
+        ArrayIntrinsic, ConsoleIntrinsic, GraphIntrinsic, Intrinsic, SourceLocation, StrIntrinsic,
+        TaskIntrinsic, Value,
     };
 
     fn loc() -> SourceLocation {

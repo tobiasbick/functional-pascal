@@ -77,13 +77,28 @@ impl Worker {
                             } else {
                                 tui.views.focus_next_in_scope(scope)
                             };
-                            (changed, had_previous, previous_focus, tui.views.focused_id())
+                            (
+                                changed,
+                                had_previous,
+                                previous_focus,
+                                tui.views.focused_id(),
+                            )
                         } else if key_event.shift {
                             let (changed, had_previous) = tui.views.focus_prev();
-                            (changed, had_previous, previous_focus, tui.views.focused_id())
+                            (
+                                changed,
+                                had_previous,
+                                previous_focus,
+                                tui.views.focused_id(),
+                            )
                         } else {
                             let (changed, had_previous) = tui.views.focus_next();
-                            (changed, had_previous, previous_focus, tui.views.focused_id())
+                            (
+                                changed,
+                                had_previous,
+                                previous_focus,
+                                tui.views.focused_id(),
+                            )
                         }
                     };
                     if changed {

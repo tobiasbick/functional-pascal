@@ -2,6 +2,7 @@
 //!
 //! **Documentation:** `docs/future/std.graph/01-mvp.md`, `docs/future/std.graph/02-pascal-surface.md` (from the repository root).
 
+use super::backend;
 use super::event::GraphEvent;
 use super::framebuffer::{UploadedFrame, validate_frame_upload, validate_surface_size};
 use crate::error::{StdError, std_runtime_error};
@@ -38,6 +39,7 @@ impl GraphSession {
         }
 
         let (width, height) = validate_surface_size(width, height, location)?;
+        let (width, height) = backend::open_graph_backend(width, height, title, location)?;
         self.open = true;
         self.width = width;
         self.height = height;
@@ -56,6 +58,8 @@ impl GraphSession {
             location,
         )?;
 
+        backend::close_graph_backend(location)?;
+
         self.open = false;
         self.width = 0;
         self.height = 0;
@@ -73,21 +77,30 @@ impl GraphSession {
             location,
         )?;
 
-        Ok((self.width, self.height))
+        backend::graph_surface_size(location)
     }
 
     /// Polls the next queued graph event.
-    pub fn poll_event(
-        &mut self,
-        location: SourceLocation,
-    ) -> Result<Option<GraphEvent>, StdError> {
+    pub fn poll_event(&mut self, location: SourceLocation) -> Result<Option<GraphEvent>, StdError> {
         self.ensure_open(
             "Std.Graph.Application.PollEvent(App) requires an open graphics session.",
             "Open the application before polling for events.",
             location,
         )?;
 
-        Ok(self.pending_events.pop_front())
+        if let Some(event) = self.pending_events.pop_front() {
+            return Ok(Some(event));
+        }
+
+        let event = backend::poll_graph_event(location)?;
+        if let Some(GraphEvent::Resize { width, height }) = &event {
+            // Keep upload validation aligned with the latest host-known surface size.
+            let (width, height) = (*width, *height);
+            self.width = width;
+            self.height = height;
+        }
+
+        Ok(event)
     }
 
     /// Queues one normalized host event for the active session.
@@ -120,7 +133,18 @@ impl GraphSession {
             location,
         )?;
 
-        let validated = validate_frame_upload(self.width, self.height, width, height, pixels, location)?;
+        let (expected_width, expected_height) = backend::graph_surface_size(location)?;
+        self.width = expected_width;
+        self.height = expected_height;
+        let validated = validate_frame_upload(
+            expected_width,
+            expected_height,
+            width,
+            height,
+            pixels,
+            location,
+        )?;
+        backend::present_graph_frame(&validated, location)?;
         self.last_uploaded_frame = Some(validated);
         Ok(())
     }

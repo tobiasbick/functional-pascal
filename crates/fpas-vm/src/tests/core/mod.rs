@@ -1,6 +1,6 @@
 mod call_value;
-mod graph_vm;
 mod globals;
+mod graph_vm;
 mod illformed;
 mod index_and_records;
 mod numeric;

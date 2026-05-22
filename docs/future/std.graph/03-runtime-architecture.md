@@ -22,11 +22,14 @@ Current stub layout:
 ```text
 crates/fpas-std/src/graph/
   mod.rs           - graph module root and re-exports
+  backend/
+    mod.rs         - current backend selection, thread-local ownership, and test hooks
+    headless.rs    - current deterministic headless backend for automated tests
+    native.rs      - current `winit` + `softbuffer` window lifecycle and frame presentation
   event.rs         - current normalized event model and EventKind names
   framebuffer.rs   - current frame-size and pixel-payload validation helpers
-  session.rs       - current GraphSession lifecycle and staged upload state
-  stub.rs          - current not-yet-implemented runtime diagnostics
-  tests.rs         - current runtime-skeleton tests
+  session.rs       - current GraphSession lifecycle, backend wiring, and staged upload state
+  tests.rs         - current runtime tests for the headless validation path
 ```
 
 Planned fuller layout:
@@ -114,9 +117,14 @@ The VM now also keeps dedicated graph session state beside the TUI state so `Std
 ## Session and threading model
 
 - [ ] Phase 1 should assume one active graphics session.
-- [ ] All graph intrinsics should execute on the same host thread that owns the native window.
+- [x] All graph intrinsics should execute on the same host thread that owns the native window.
 - [ ] If the current CLI / VM startup model does not guarantee main-thread ownership on macOS, that requirement must be resolved before the feature is enabled there.
-- [ ] `go` tasks should not touch `Std.Graph` in Phase 1.
+- [x] `go` tasks should not touch `Std.Graph` in Phase 1.
+
+Current implementation note:
+
+- [x] the native `winit` + `softbuffer` runtime lives in a thread-local backend owned by the main VM thread, not inside `SharedState`
+- [x] automated tests use a deterministic headless backend hook so Graph VM/compiler tests stay stable without opening desktop windows
 
 ## Event normalization
 

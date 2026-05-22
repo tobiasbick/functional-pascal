@@ -76,12 +76,12 @@ Verify:
 
 Scope:
 
-- [ ] Wire `winit` + `softbuffer` in `fpas-std`.
-- [ ] Implement a real native window, event polling, resize updates, and frame presentation.
+- [x] Wire `winit` + `softbuffer` in `fpas-std`.
+- [x] Implement a real native window, event polling, resize updates, and frame presentation.
 
 Verify:
 
-- [ ] `cargo build`
+- [x] `cargo build`
 - [ ] `cargo test --workspace`
 - [ ] manual smoke run on Windows, Linux, macOS
 

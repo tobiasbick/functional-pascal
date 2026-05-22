@@ -11,6 +11,8 @@ crossterm = { workspace = true }
 fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 rand = { workspace = true }
+softbuffer = { workspace = true }
+winit = { workspace = true }
 
 [lints]
 workspace = true

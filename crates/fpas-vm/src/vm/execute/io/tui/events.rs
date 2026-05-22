@@ -115,7 +115,9 @@ impl Worker {
                                 return Ok(true);
                             }
                         };
-                        self.push(Value::OptionSome(Box::new(Self::tui_event_record(tui_event))))?;
+                        self.push(Value::OptionSome(Box::new(Self::tui_event_record(
+                            tui_event,
+                        ))))?;
                     }
                 }
             }

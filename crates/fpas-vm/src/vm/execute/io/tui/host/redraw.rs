@@ -33,7 +33,8 @@ impl Worker {
                 let consumed_damage = tui.session.take_redraw_damage(line)?;
                 debug_assert_eq!(consumed_damage, Some(expected_damage));
                 self.with_console(|console| {
-                    tui.session.begin_hosted_paint(console, expected_damage, line)
+                    tui.session
+                        .begin_hosted_paint(console, expected_damage, line)
                 })?;
             }
             let paint_result = (|| -> Result<(), VmError> {
@@ -78,8 +79,7 @@ impl Worker {
                 .filter_map(|view_id| {
                     let handler = tui.view_paints.get(&view_id)?.clone();
                     let rect = tui.views.rect(view_id)?;
-                    Self::damage_intersects_rect(damage, rect)
-                        .then_some((view_id, rect, handler))
+                    Self::damage_intersects_rect(damage, rect).then_some((view_id, rect, handler))
                 })
                 .collect::<Vec<_>>()
         };

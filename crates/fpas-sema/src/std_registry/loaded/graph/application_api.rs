@@ -1,5 +1,5 @@
-use super::GraphTypes;
 use super::super::super::{define_func, define_proc, p};
+use super::GraphTypes;
 use crate::check::Checker;
 use crate::types::Ty;
 use fpas_std::std_symbols as s;

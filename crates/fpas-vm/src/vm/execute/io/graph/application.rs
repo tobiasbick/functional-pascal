@@ -6,6 +6,7 @@ use crate::vm::Worker;
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError};
 use crate::vm::runtime_error;
 use fpas_bytecode::{GraphIntrinsic, Intrinsic, SourceLocation, Value};
+use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 
 impl Worker {
     /// Executes application-level `Std.Graph` intrinsics through the shared graph session.
@@ -14,6 +15,19 @@ impl Worker {
         intrinsic: Intrinsic,
         line: SourceLocation,
     ) -> Result<bool, VmError> {
+        if matches!(
+            intrinsic,
+            Intrinsic::Graph(
+                GraphIntrinsic::ApplicationOpen
+                    | GraphIntrinsic::ApplicationClose
+                    | GraphIntrinsic::ApplicationSize
+                    | GraphIntrinsic::ApplicationPollEvent
+                    | GraphIntrinsic::ApplicationUploadFrame
+            )
+        ) {
+            self.ensure_graph_main_task(line)?;
+        }
+
         match intrinsic {
             Intrinsic::Graph(GraphIntrinsic::ApplicationOpen) => {
                 let title = self.pop_graph_title(line)?;
@@ -105,5 +119,18 @@ impl Worker {
                 )),
             })
             .collect()
+    }
+
+    fn ensure_graph_main_task(&self, line: SourceLocation) -> Result<(), VmError> {
+        if self.current_task_id == 0 {
+            Ok(())
+        } else {
+            Err(runtime_error(
+                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                "Std.Graph.Application.* must run on the main task",
+                "Call `Std.Graph.Application.*` from the main program, not from a `go` task.",
+                line,
+            ))
+        }
     }
 }

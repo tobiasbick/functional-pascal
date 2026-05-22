@@ -5,6 +5,11 @@
 use super::super::{compile_and_run, compile_err, compile_ok};
 use fpas_bytecode::intrinsic::GraphIntrinsic;
 use fpas_bytecode::{Intrinsic, Op};
+use fpas_std::with_headless_graph_backend_for_tests;
+
+fn with_headless<T>(f: impl FnOnce() -> T) -> T {
+    with_headless_graph_backend_for_tests(f)
+}
 
 #[test]
 fn std_graph_phase1_calls_lower_to_graph_intrinsics() {
@@ -86,8 +91,9 @@ end.",
 
 #[test]
 fn std_graph_phase1_runtime_bridge_supports_size_poll_upload_and_close() {
-    let out = compile_and_run(
-        "\
+    with_headless(|| {
+        let out = compile_and_run(
+            "\
 program T;
 uses Std.Console, Std.Graph, Std.Option;
 
@@ -101,7 +107,8 @@ begin
   Application.UploadFrame(App, 2, 2, Pixels);
   Application.Close(App)
 end.",
-    );
+        );
 
-    assert_eq!(out.lines, vec!["2", "2", "true"]);
+        assert_eq!(out.lines, vec!["2", "2", "true"]);
+    });
 }

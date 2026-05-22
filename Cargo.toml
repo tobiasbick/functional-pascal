@@ -24,4 +24,6 @@ crossterm = "0.29"
 glob = "0.3"
 rand = "0.9"
 serde = { version = "1", features = ["derive"] }
+softbuffer = "0.4"
 toml = "0.9"
+winit = "0.30"

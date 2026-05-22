@@ -37,7 +37,8 @@ pub(super) fn register_std_graph(checker: &mut Checker) {
         s::STD_CONSOLE_KEY_EVENT,
         "Std.Console.KeyEvent must be registered before Std.Graph (see loaded/mod.rs)",
     );
-    let event_kind = register_enum_type(checker, s::STD_GRAPH_EVENT_KIND, GRAPH_EVENT_KIND_VARIANTS);
+    let event_kind =
+        register_enum_type(checker, s::STD_GRAPH_EVENT_KIND, GRAPH_EVENT_KIND_VARIANTS);
     let event = register_record_type(
         checker,
         s::STD_GRAPH_EVENT,
@@ -64,7 +65,10 @@ fn register_enum_type(checker: &mut Checker, qualified_name: &str, variants: &[&
             fields: vec![],
         })
         .collect();
-    let member_names: Vec<String> = variants.iter().map(|variant| variant.name.clone()).collect();
+    let member_names: Vec<String> = variants
+        .iter()
+        .map(|variant| variant.name.clone())
+        .collect();
     let enum_ty = Ty::Enum(EnumTy {
         name: qualified_name.into(),
         variants,

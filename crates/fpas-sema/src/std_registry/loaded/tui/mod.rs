@@ -73,10 +73,16 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         s::STD_CONSOLE_EVENT,
         "Std.Console.Event must be registered before Std.Tui (see loaded/mod.rs)",
     );
-    let event_kind =
-        type_registration::register_enum_type(checker, s::STD_TUI_EVENT_KIND, TUI_EVENT_KIND_VARIANTS);
-    let exit_reason =
-        type_registration::register_enum_type(checker, s::STD_TUI_EXIT_REASON, TUI_EXIT_REASON_VARIANTS);
+    let event_kind = type_registration::register_enum_type(
+        checker,
+        s::STD_TUI_EVENT_KIND,
+        TUI_EVENT_KIND_VARIANTS,
+    );
+    let exit_reason = type_registration::register_enum_type(
+        checker,
+        s::STD_TUI_EXIT_REASON,
+        TUI_EXIT_REASON_VARIANTS,
+    );
     let (application_handlers, callbacks) = handlers::register_application_handlers(
         checker,
         &application,

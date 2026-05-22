@@ -16,8 +16,8 @@
 
 use fpas_bytecode::{Chunk, Value};
 use fpas_std::{
-    CommandRegistry, Console, GraphSession, KeyInput, ModalStack, TextInput, TuiHost,
-    TuiSession, ViewId, ViewRegistry,
+    CommandRegistry, Console, GraphSession, KeyInput, ModalStack, TextInput, TuiHost, TuiSession,
+    ViewId, ViewRegistry,
 };
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};

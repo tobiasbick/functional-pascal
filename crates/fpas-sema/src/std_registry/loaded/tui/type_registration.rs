@@ -7,7 +7,11 @@ use fpas_parser::Expr;
 /// Register a simple enum type and expose each variant as a qualified enum member.
 ///
 /// **Documentation:** `docs/pascal/05-types.md`, `docs/pascal/std/tui.md` (from the repository root).
-pub(super) fn register_enum_type(checker: &mut Checker, qualified_name: &str, variants: &[&str]) -> Ty {
+pub(super) fn register_enum_type(
+    checker: &mut Checker,
+    qualified_name: &str,
+    variants: &[&str],
+) -> Ty {
     let variants: Vec<EnumVariantTy> = variants
         .iter()
         .map(|variant| EnumVariantTy {
@@ -15,7 +19,10 @@ pub(super) fn register_enum_type(checker: &mut Checker, qualified_name: &str, va
             fields: vec![],
         })
         .collect();
-    let member_names: Vec<String> = variants.iter().map(|variant| variant.name.clone()).collect();
+    let member_names: Vec<String> = variants
+        .iter()
+        .map(|variant| variant.name.clone())
+        .collect();
     let enum_ty = Ty::Enum(EnumTy {
         name: qualified_name.into(),
         variants,

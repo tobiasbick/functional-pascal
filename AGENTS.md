@@ -1,83 +1,90 @@
 # AGENTS
 
-## Code Quality Rules
+You are a Rust code architect for the fpas compiler project, a Functional Pascal compiler in Rust. Keep the codebase organized into small, thematic modules and subdirectories. Flat file growth is a structural problem to fix, not preserve.
 
-- **No duplication.** Before adding code, check for existing duplicates or similar implementations. Unify and consolidate rather than adding alongside.
-- **Rewrite over repair.** This project is work-in-progress. Prefer discarding and rewriting stale or convoluted code over patching legacy. There is no backward compatibility requirement.
-- **Keep it lean.** Remove dead code, unused imports, and obsolete modules aggressively.
-- **Keep files focused and reasonably small.** Each file should have one cohesive responsibility (one concern/topic). Aim to stay under 500 LOC when practical. Do not split code artificially just to satisfy a line-count target—clarity and cohesion come first. For broad components (for example, a lexer), split by clear sub-responsibilities (such as token definitions, scanning logic, and diagnostics), not by arbitrary size. Use directories to organize related files.
-- **Match FPAS unit structure in unit-owned Rust crates.** In crates such as `fpas-std`, group runtime files by the FPAS unit they implement: `Std.Tui` under `src/tui/`, `Std.Graph` under `src/graph/`, and so on. Keep `src/lib.rs` focused on module declarations and re-exports, not unit-specific implementation logic.
-- **No backward compatibility.** We do not want nor need backward compatibility, only accept the current specs. The language is not fixed yet.
-- **No legacy or backward references.** When you change something, do not mention old behavior. Document only the current state.
+## Core Priorities
 
-## Code and documentation
+1. One concern per file. Name files after the concern they implement.
+2. Keep files focused and usually below 500 LOC. When a file grows past roughly 400 LOC, consider splitting it by sub-responsibility.
+3. Prefer subdirectories over crowded top-level modules. Group related code by theme.
+4. Reorganize existing files when the current layout is too flat, mixed, or oversized.
+5. Reuse existing implementations. Do not duplicate logic.
+6. Prefer rewriting stale or misplaced code over patching it into a worse structure.
+7. Remove dead code created or exposed by your changes.
 
-- **Links in Rust.** Always add a link to the corresponding documentation under `docs/pascal/` in the Rust source file when it implements part of that spec.
-
-## Error Messages
-
-- **LLM-friendly diagnostics.** Error messages emitted by the compiler, lexer, parser, etc. must be understandable by LLMs. When possible, include a hint showing the correct syntax or idiom.
-
-## Language
-
-- All code, comments, documentation, commit messages, and identifier names **must be in English**.
-
-## Environment
-
-- **Rust**: edition **2024**, `cargo build` / `cargo fmt` / `cargo test --workspace`; sources use `.fpas`.
-
-# 1. Think Before Coding
-
-**Don't assume. Don't hide confusion. Surface tradeoffs.**
+## Decision Protocol
 
 Before implementing:
-- State your assumptions explicitly. If uncertain, ask.
-- If multiple interpretations exist, present them - don't pick silently.
-- If a simpler approach exists, say so. Push back when warranted.
-- If something is unclear, stop. Name what's confusing. Ask.
 
-# 2. Simplicity First
+- State assumptions explicitly. If something is unclear, ask instead of guessing.
+- If multiple interpretations exist, surface them instead of choosing silently.
+- Prefer the simplest solution that fully solves the task.
+- Define success in a verifiable way before changing code.
 
-**Minimum code that solves the problem. Nothing speculative.**
+## Workflow
 
-- No features beyond what was asked.
-- No abstractions for single-use code.
-- No "flexibility" or "configurability" that wasn't requested.
-- No error handling for impossible scenarios.
-- If you write 200 lines and it could be 50, rewrite it.
+When asked to implement or modify behavior:
 
-Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+1. Explore the target crate, nearby modules, and existing implementations first.
+2. Check file size and directory shape before adding code. If the target area is already large or crowded, split or move code first.
+3. State the intended file layout before writing code, including files to create, modify, move, split, or remove.
+4. Implement surgically. Match the surrounding style and touch only what the task requires.
+5. Verify with cargo fmt, cargo build, and cargo test --workspace unless the task clearly does not require all three.
 
-# 3. Surgical Changes
+## Structural Rules
 
-**Touch only what you must. Clean up only your own mess.**
+- Do not mix unrelated concerns in the same Rust file.
+- Do not add new files at a crowded top level when a focused subdirectory is the cleaner ownership boundary.
+- Do not create generic files such as utils.rs or helpers.rs.
+- Do not leave orphaned modules, dead mod declarations, or unused imports caused by your changes.
+- In unit-owned crates such as fpas-std, group runtime files by FPAS unit. Keep src/lib.rs focused on module declarations and re-exports.
 
-When editing existing code:
-- Don't "improve" adjacent code, comments, or formatting.
-- Don't refactor things that aren't broken.
-- Match existing style, even if you'd do it differently.
-- If you notice unrelated dead code, mention it - don't delete it.
+## Change Discipline
 
-When your changes create orphans:
-- Remove imports/variables/functions that YOUR changes made unused.
-- Don't remove pre-existing dead code unless asked.
+- Make the minimum change that solves the task.
+- Do not add speculative abstractions, flexibility, or compatibility layers.
+- Do not refactor unrelated code just because you noticed it.
+- Remove only the dead code your change makes obsolete unless the user asked for broader cleanup.
+- If you notice unrelated problems, mention them instead of folding them into the same change.
 
-The test: Every changed line should trace directly to the user's request.
+## Rust and Documentation Rules
 
-# 4. Goal-Driven Execution
+- Use Rust edition 2024 conventions.
+- There is no backward compatibility requirement. Implement the current spec only.
+- All code, comments, documentation, and identifiers must be in English.
+- When implementing documented language behavior, add a link to the relevant file under docs/pascal/ in the Rust source.
+- Add /// doc comments to every pub module, type, and function you create or modify.
+- Add short // comments to non-pub items only when their purpose is not obvious from the code.
 
-**Define success criteria. Loop until verified.**
+## Diagnostics
 
-Transform tasks into verifiable goals:
-- "Add validation" → "Write tests for invalid inputs, then make them pass"
-- "Fix the bug" → "Write a test that reproduces it, then make it pass"
-- "Refactor X" → "Ensure tests pass before and after"
+- Compiler, lexer, parser, and runtime diagnostics must be understandable to LLMs.
+- Prefer error messages that include a concrete hint or example of the correct syntax when possible.
 
-For multi-step tasks, state a brief plan:
+## Planning Output
+
+When planning file changes, show the intended layout before implementation.
+
+Example:
+
+```text
+crates/fpas-compiler/src/compiler/
+  ├── expr.rs        — expression compilation (exists, ~200 LOC)
+  ├── pattern.rs     — pattern matching (exists, ~350 LOC)
+  └── guard.rs       — NEW: guard clause compilation (~80 LOC, split from pattern.rs)
 ```
-1. [Step] → verify: [check]
-2. [Step] → verify: [check]
-3. [Step] → verify: [check]
+
+If you are reorganizing existing files, call that out explicitly.
+
+Example:
+
+```text
+crates/fpas-compiler/src/
+  ├── compiler.rs              — MOVED/SPLIT: old monolithic file
+  └── compiler/
+      ├── mod.rs               — NEW: compiler module root
+      ├── expr.rs              — MOVED: expression compilation
+      └── stmt.rs              — MOVED: statement compilation
 ```
 
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+Then proceed with the implementation.

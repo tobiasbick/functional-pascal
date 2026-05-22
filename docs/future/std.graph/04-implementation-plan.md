@@ -82,14 +82,14 @@ Scope:
 Verify:
 
 - [x] `cargo build`
-- [ ] `cargo test --workspace`
+- [x] `cargo test --workspace`
 - [ ] manual smoke run on Windows, Linux, macOS
 
 ### 7. Runtime-owned drawing surface
 
 Scope:
 
-- [ ] Add a persistent backbuffer to `GraphSession`.
+- [x] Add a persistent backbuffer to `GraphSession`.
 - [ ] Add `Clear`, `PutPixel`, `DrawLine`, `DrawRect`, `FillRect`, `DrawCircle`, and `Present`.
 - [ ] Keep drawing logic split by concern in small files.
 
@@ -149,7 +149,7 @@ If the goal is to begin coding immediately, start with this exact sequence:
 - [x] Register the Phase 1 `Std.Graph` symbols in `fpas-sema`.
 - [x] Lower those calls in `fpas-compiler`.
 - [x] Add a stubbed `fpas-vm` / `fpas-std` runtime path that returns clear "not implemented yet" diagnostics.
-- [ ] Replace the stubs with the real `winit` + `softbuffer` session.
+- [x] Replace the stubs with the real `winit` + `softbuffer` session.
 
 This keeps the work incremental and lets the compiler surface stabilize before native window integration begins.
 

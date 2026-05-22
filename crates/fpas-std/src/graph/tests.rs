@@ -32,6 +32,124 @@ fn graph_session_open_and_close_work_with_headless_backend() {
 }
 
 #[test]
+fn graph_session_clear_fills_runtime_backbuffer() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(3, 2, "Graph smoke", test_location())
+            .expect("open should succeed");
+
+        session
+            .clear(0x00102040, test_location())
+            .expect("clear should succeed");
+
+        assert_eq!(
+            session.backbuffer_pixels_for_tests(),
+            &[
+                0x00102040, 0x00102040, 0x00102040, 0x00102040, 0x00102040, 0x00102040
+            ]
+        );
+    });
+}
+
+#[test]
+fn graph_session_put_pixel_writes_inside_and_clips_outside() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(2, 2, "Graph smoke", test_location())
+            .expect("open should succeed");
+        session
+            .clear(0, test_location())
+            .expect("clear should succeed");
+
+        session
+            .put_pixel(1, 0, 0x00ABCDEF, test_location())
+            .expect("put pixel should succeed");
+        session
+            .put_pixel(-1, 0, 0x00FFFFFF, test_location())
+            .expect("clipped write should still succeed");
+        session
+            .put_pixel(99, 99, 0x00FFFFFF, test_location())
+            .expect("clipped write should still succeed");
+
+        assert_eq!(
+            session.backbuffer_pixels_for_tests(),
+            &[0x00000000, 0x00ABCDEF, 0x00000000, 0x00000000]
+        );
+    });
+}
+
+#[test]
+fn graph_session_upload_frame_updates_runtime_backbuffer() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(2, 1, "Graph smoke", test_location())
+            .expect("open should succeed");
+        session
+            .upload_frame(2, 1, &[0x00102040, 0x00FF00AA], test_location())
+            .expect("valid frame should succeed");
+
+        assert_eq!(
+            session.backbuffer_pixels_for_tests(),
+            &[0x00102040, 0x00FF00AA]
+        );
+    });
+}
+
+#[test]
+fn graph_session_present_accepts_runtime_owned_backbuffer() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(2, 1, "Graph smoke", test_location())
+            .expect("open should succeed");
+        session
+            .clear(0x00010203, test_location())
+            .expect("clear should succeed");
+        session
+            .put_pixel(1, 0, 0x00ABCDEF, test_location())
+            .expect("put pixel should succeed");
+        session
+            .present(test_location())
+            .expect("present should succeed");
+
+        assert_eq!(
+            session.backbuffer_pixels_for_tests(),
+            &[0x00010203, 0x00ABCDEF]
+        );
+    });
+}
+
+#[test]
+fn graph_session_resize_event_reallocates_runtime_backbuffer() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(2, 2, "Graph smoke", test_location())
+            .expect("open should succeed");
+        session.push_event_for_tests(GraphEvent::Resize {
+            width: 3,
+            height: 1,
+        });
+
+        let event = session
+            .poll_event(test_location())
+            .expect("poll should succeed");
+        assert_eq!(
+            event,
+            Some(GraphEvent::Resize {
+                width: 3,
+                height: 1,
+            })
+        );
+        assert_eq!(session.backbuffer_size_for_tests(), (3, 1));
+        assert_eq!(session.backbuffer_pixels_for_tests(), &[0, 0, 0]);
+    });
+}
+
+#[test]
 fn graph_session_open_validates_positive_surface_size() {
     with_headless(|| {
         let mut session = GraphSession::default();

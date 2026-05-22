@@ -17,19 +17,21 @@
 Owns the host-facing graphics session and the `winit` + `softbuffer` backend integration.
 For this crate, the preferred layout follows the Pascal unit boundary directly: unit-owned code for `Std.Graph` should live under `src/graph/`, not as scattered top-level `graph_*` files.
 
-Current stub layout:
+Current runtime layout:
 
 ```text
 crates/fpas-std/src/graph/
   mod.rs           - graph module root and re-exports
+  backbuffer.rs    - current runtime-owned backbuffer storage
   backend/
     mod.rs         - current backend selection, thread-local ownership, and test hooks
     headless.rs    - current deterministic headless backend for automated tests
     native.rs      - current `winit` + `softbuffer` window lifecycle and frame presentation
+  color.rs         - current packed RGB24 validation helpers
   event.rs         - current normalized event model and EventKind names
   framebuffer.rs   - current frame-size and pixel-payload validation helpers
-  session.rs       - current GraphSession lifecycle, backend wiring, and staged upload state
-  tests.rs         - current runtime tests for the headless validation path
+  session.rs       - current GraphSession lifecycle, backend wiring, backbuffer, and staged upload state
+  tests.rs         - current runtime tests for the headless validation and backbuffer path
 ```
 
 Planned fuller layout:
@@ -138,14 +140,14 @@ That normalization belongs in `fpas-std/src/graph/event.rs`, not in the VM layer
 
 ## Framebuffer contract
 
-- [ ] Phase 1 uses one full-frame upload call.
-- [ ] Pixel format is `$00RRGGBB` packed into `integer` / `u32` values.
-- [ ] The runtime should validate `Width`, `Height`, and `Length(Pixels)` before presenting.
-- [ ] Resize handling should update the expected frame size before the next `UploadFrame` call.
+- [x] Phase 1 uses one full-frame upload call.
+- [x] Pixel format is `$00RRGGBB` packed into `integer` / `u32` values.
+- [x] The runtime should validate `Width`, `Height`, and `Length(Pixels)` before presenting.
+- [x] Resize handling should update the expected frame size before the next `UploadFrame` call.
 
 ## Planned drawing model after the foundation slice
 
-- [ ] `GraphSession` should own a persistent backbuffer.
+- [x] `GraphSession` should own a persistent backbuffer.
 - [ ] Drawing intrinsics mutate that backbuffer in place.
 - [ ] `Present` flushes the current backbuffer to the native window.
 - [ ] `UploadFrame` remains the direct bulk upload path for render-heavy code.

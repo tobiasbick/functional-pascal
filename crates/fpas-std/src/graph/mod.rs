@@ -2,7 +2,9 @@
 //!
 //! **Documentation:** `docs/future/std.graph/01-mvp.md`, `docs/future/std.graph/02-pascal-surface.md` (from the repository root).
 
+mod backbuffer;
 mod backend;
+mod color;
 mod event;
 mod framebuffer;
 mod session;

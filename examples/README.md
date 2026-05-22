@@ -13,6 +13,7 @@ fpas examples/hello.fpas
 fpas examples/fibonacci.fpas
 fpas examples/pascal/std/str_basics.fpas
 fpas examples/pascal/std/dict_basics.fpas
+fpas examples/pascal/std/graph_basics.fpas
 fpas examples/pascal/std/task_basics.fpas
 fpas examples/pascal/tui/host_dispatch_minimal.fpas
 fpas examples/pascal/tui/host_dispatch_paint.fpas
@@ -50,6 +51,7 @@ Do **not** pass a `unit` source alone (for example `mandelbrot_color.fpas` or `m
 | `pascal/records/defaults_with_update.fpas` | Default fields and `with` updates |
 | `pascal/std/str_basics.fpas` | `Std.Str` — trim, split/join, `Format`, search/replace |
 | `pascal/std/dict_basics.fpas` | `Std.Dict` — literals, `Get`, `Merge`, `Map`/`Filter` (qualified when also using `Std.Array` / `Std.Option`) |
+| `pascal/std/graph_basics.fpas` | `Std.Graph` — open, draw, present, poll, close |
 | `pascal/std/task_basics.fpas` | `Std.Task` — `go`, `Wait`, `WaitAll` |
 | `pascal/tui/local_view_paint.fpas` | `Std.Tui` — local view paint, parent-relative layout, `HostSetViewRect` |
 | `pascal/tui/view_scoped_commands.fpas` | `Std.Tui` — `HostBindCommandToView` and focus/ancestor command routing |

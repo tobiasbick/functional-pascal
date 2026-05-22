@@ -120,13 +120,14 @@ Verify:
 Scope:
 
 - [ ] Add Mandelbrot and Julia example programs or port the existing showcases.
-- [ ] Add `docs/pascal/std/graph.md` once the surface is real.
-- [ ] Update `docs/pascal/std/README.md`.
+- [x] Add `docs/pascal/std/graph.md` once the surface is real.
+- [x] Update `docs/pascal/std/README.md`.
+- [x] Add a small `examples/pascal/std/graph_basics.fpas` smoke example.
 
 Verify:
 
 - [ ] examples run manually
-- [ ] docs and implementation names match exactly
+- [x] docs and implementation names match exactly
 
 ## File touchpoints checklist
 
@@ -165,7 +166,7 @@ Phase 1 is complete when all of the following are true:
 - [ ] The program can present a full RGB frame.
 - [ ] Resize and quit are observable through `Application.PollEvent`.
 - [ ] Escape-to-exit works through the proposed key event path.
-- [ ] The docs in `docs/pascal/std/graph.md` match the implementation.
+- [x] The docs in `docs/pascal/std/graph.md` match the implementation.
 
 ## Exit condition for the first useful graphics release
 
@@ -175,4 +176,4 @@ The first useful graphics release is complete when all of the following are true
 - [x] keyboard, mouse, wheel, resize, and close events are available
 - [ ] a Mandelbrot example runs interactively
 - [ ] a Julia example runs interactively
-- [ ] the canonical `Std.Graph` docs match the implemented surface
+- [x] the canonical `Std.Graph` docs match the implemented surface

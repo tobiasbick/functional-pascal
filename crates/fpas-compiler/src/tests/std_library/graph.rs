@@ -7,6 +7,9 @@ use fpas_bytecode::intrinsic::GraphIntrinsic;
 use fpas_bytecode::{Intrinsic, Op};
 use fpas_std::{last_headless_graph_frame_for_tests, with_headless_graph_backend_for_tests};
 
+const GRAPH_BASICS_EXAMPLE: &str =
+    include_str!("../../../../../examples/pascal/std/graph_basics.fpas");
+
 fn with_headless<T>(f: impl FnOnce() -> T) -> T {
     with_headless_graph_backend_for_tests(f)
 }
@@ -276,5 +279,19 @@ end.",
                 0x00000005, 0, 0, 0, 0x00000005,
             ]
         );
+    });
+}
+
+#[test]
+fn std_graph_basics_example_runs_headless() {
+    with_headless(|| {
+        let out = compile_and_run(GRAPH_BASICS_EXAMPLE);
+
+        assert_eq!(out.lines, vec!["size=32x24", "pending=false"]);
+
+        let frame = last_headless_graph_frame_for_tests()
+            .expect("present should publish a headless frame snapshot");
+        assert_eq!(frame.width(), 32);
+        assert_eq!(frame.height(), 24);
     });
 }

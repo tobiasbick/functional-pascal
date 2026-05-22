@@ -25,5 +25,5 @@ It is the detailed planning set behind [../10-native-graphics-mode.md](../10-nat
 
 ## Intended outcome
 
-- [ ] Publish the user-facing reference in `docs/pascal/std/graph.md` once implementation starts.
+- [x] Publish the user-facing reference in `docs/pascal/std/graph.md` once implementation starts.
 - [ ] Use this planning set to drive the canonical spec and the Mandelbrot and Julia explorer implementations.

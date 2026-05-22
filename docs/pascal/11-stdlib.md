@@ -24,6 +24,7 @@ See [09-units.md](09-units.md) for `uses` rules, short name ambiguity, and the r
 | Unit | Purpose | Key symbols | Details |
 |------|---------|-------------|---------|
 | [`Std.Console`](std/console.md) | Console I/O, CRT screen control, terminal events | `Write`, `WriteLn`, `ReadLn`, `ClrScr`, `GotoXY`, `TextColorRGB`, `TextColor256`, `ReadEvent`, … | [console.md](std/console.md) |
+| [`Std.Graph`](std/graph.md) | Native windowed graphics | `Application.Open`, `Application.UploadFrame`, `Application.DrawLine`, `Application.DrawText`, `Event`, `EventKind`, … | [graph.md](std/graph.md) |
 | [`Std.Tui`](std/tui.md) | Terminal application structure | `Application.Open`, `Application.ReadEvent`, `Application.Size`, `TuiEvent`, `Size`, `RequestRedraw`, … | [tui.md](std/tui.md) |
 | [`Std.Str`](std/str.md) | String operations | `Length`, `ToUpper`, `Contains`, `Split`, `Join`, `PadLeft`, `CharAt`, `Ord`, `Chr`, `Format`, … | [str.md](std/str.md) |
 | [`Std.Conv`](std/conv.md) | Type conversions | `IntToStr`, `StrToInt`, `RealToStr`, `BoolToStr`, `IntToHex`, … | [conv.md](std/conv.md) |
@@ -64,6 +65,18 @@ case Application.ReadEventTimeout(App, 16) of
 end;
 
 var SizeNow: Size := Application.Size(App);
+Application.Close(App);
+```
+
+### Native graphics shell
+
+```pascal
+uses Std.Graph;
+
+var App: Application := Application.Open(320, 200, 'Graph');
+Application.Clear(App, $00000020);
+Application.DrawText(App, 8, 8, 'FPAS', $00FFFFFF);
+Application.Present(App);
 Application.Close(App);
 ```
 

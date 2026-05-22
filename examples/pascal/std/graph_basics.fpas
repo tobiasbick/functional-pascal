@@ -1,0 +1,19 @@
+{ Spec: docs/pascal/std/graph.md (from repository root). }
+program GraphBasics;
+uses Std.Console, Std.Conv, Std.Graph, Std.Option;
+begin
+  var App: Application := Application.Open(32, 24, 'Graph basics');
+  var Screen: Size := Application.Size(App);
+
+  Application.Clear(App, $00020408);
+  Application.DrawRect(App, 0, 0, Screen.width, Screen.height, $0000C080);
+  Application.DrawLine(App, 0, 0, Screen.width - 1, Screen.height - 1, $00FF8040);
+  Application.DrawCircle(App, Screen.width div 2, Screen.height div 2, 5, $0040A0FF);
+  Application.DrawText(App, 2, 2, 'FPAS', $00FFFFFF);
+  Application.Present(App);
+
+  WriteLn('size=', IntToStr(Screen.width), 'x', IntToStr(Screen.height));
+  WriteLn('pending=', BoolToStr(Std.Option.IsSome(Application.PollEvent(App))));
+
+  Application.Close(App)
+end.

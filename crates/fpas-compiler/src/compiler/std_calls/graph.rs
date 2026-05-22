@@ -62,6 +62,37 @@ impl Compiler {
                 );
                 Ok(true)
             }
+            s::STD_GRAPH_APPLICATION_CLEAR => {
+                self.expect_exact_args(s::STD_GRAPH_APPLICATION_CLEAR, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(
+                    Intrinsic::Graph(GraphIntrinsic::ApplicationClear),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_GRAPH_APPLICATION_PUT_PIXEL => {
+                self.expect_exact_args(s::STD_GRAPH_APPLICATION_PUT_PIXEL, 4, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(
+                    Intrinsic::Graph(GraphIntrinsic::ApplicationPutPixel),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_GRAPH_APPLICATION_PRESENT => {
+                self.expect_exact_args(s::STD_GRAPH_APPLICATION_PRESENT, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic_unit(
+                    Intrinsic::Graph(GraphIntrinsic::ApplicationPresent),
+                    location,
+                );
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

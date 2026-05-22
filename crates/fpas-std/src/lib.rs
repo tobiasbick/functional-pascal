@@ -43,7 +43,7 @@ pub use console_event::{
 pub use error::StdError;
 pub use graph::{
     GRAPH_EVENT_KIND_VARIANTS, GraphEvent, GraphEventKind, GraphSession, UploadedFrame,
-    with_headless_graph_backend_for_tests,
+    last_headless_graph_frame_for_tests, with_headless_graph_backend_for_tests,
 };
 pub use intrinsics::run_intrinsic;
 pub use key_event::{ConsoleKeyEvent, KEY_KIND_VARIANTS};

@@ -148,10 +148,10 @@ That normalization belongs in `fpas-std/src/graph/event.rs`, not in the VM layer
 ## Planned drawing model after the foundation slice
 
 - [x] `GraphSession` should own a persistent backbuffer.
-- [ ] Drawing intrinsics mutate that backbuffer in place.
-- [ ] `Present` flushes the current backbuffer to the native window.
+- [x] `Clear` and `PutPixel` mutate that backbuffer in place.
+- [x] `Present` flushes the current backbuffer to the native window.
 - [ ] `UploadFrame` remains the direct bulk upload path for render-heavy code.
-- [ ] Keep raster concerns in separate theme files instead of one large drawing module.
+- [ ] `DrawLine`, `DrawRect`, `FillRect`, and `DrawCircle` still need their own focused runtime files.
 
 ## Deliberate separation from `Std.Tui`
 

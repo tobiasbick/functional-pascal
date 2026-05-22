@@ -30,4 +30,16 @@ pub enum GraphIntrinsic {
     ///
     /// **Documentation:** `docs/future/std.graph/02-pascal-surface.md`
     ApplicationUploadFrame = 296,
+    /// `Std.Graph.Application.Clear(App, Color)`.
+    ///
+    /// **Documentation:** `docs/future/std.graph/02-pascal-surface.md`
+    ApplicationClear = 297,
+    /// `Std.Graph.Application.PutPixel(App, X, Y, Color)`.
+    ///
+    /// **Documentation:** `docs/future/std.graph/02-pascal-surface.md`
+    ApplicationPutPixel = 298,
+    /// `Std.Graph.Application.Present(App)`.
+    ///
+    /// **Documentation:** `docs/future/std.graph/02-pascal-surface.md`
+    ApplicationPresent = 299,
 }

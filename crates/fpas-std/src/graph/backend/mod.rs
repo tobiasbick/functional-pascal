@@ -148,6 +148,7 @@ pub fn with_headless_graph_backend_for_tests<T>(f: impl FnOnce() -> T) -> T {
             GRAPH_BACKEND.with(|slot| {
                 slot.borrow_mut().take();
             });
+            headless::reset_last_presented_frame_for_tests();
             BACKEND_MODE.with(|mode| mode.set(self.previous));
         }
     }
@@ -156,8 +157,15 @@ pub fn with_headless_graph_backend_for_tests<T>(f: impl FnOnce() -> T) -> T {
     GRAPH_BACKEND.with(|slot| {
         slot.borrow_mut().take();
     });
+    headless::reset_last_presented_frame_for_tests();
     let _reset = ResetGuard { previous };
     f()
+}
+
+/// Returns the last frame presented by the headless graph backend on the current thread.
+#[doc(hidden)]
+pub fn last_headless_graph_frame_for_tests() -> Option<UploadedFrame> {
+    headless::last_presented_frame_for_tests()
 }
 
 fn with_backend<T>(

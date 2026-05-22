@@ -13,6 +13,8 @@ mod session;
 mod tests;
 
 #[doc(hidden)]
+pub use backend::last_headless_graph_frame_for_tests;
+#[doc(hidden)]
 pub use backend::with_headless_graph_backend_for_tests;
 pub use event::{GRAPH_EVENT_KIND_VARIANTS, GraphEvent, GraphEventKind};
 pub use framebuffer::UploadedFrame;

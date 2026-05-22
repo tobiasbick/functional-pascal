@@ -5,7 +5,8 @@ use crate::tests::helpers::{
 use crate::vm::Worker;
 use fpas_bytecode::{Chunk, GraphIntrinsic, Intrinsic, Op, Value};
 use fpas_std::{
-    ConsoleKeyEvent, GraphEvent, key_event::key_kind_index, with_headless_graph_backend_for_tests,
+    ConsoleKeyEvent, GraphEvent, key_event::key_kind_index, last_headless_graph_frame_for_tests,
+    with_headless_graph_backend_for_tests,
 };
 use std::sync::Arc;
 
@@ -186,6 +187,45 @@ fn graph_upload_frame_stages_the_validated_frame() {
         assert_eq!(staged.width(), 2);
         assert_eq!(staged.height(), 1);
         assert_eq!(staged.pixels(), &[0x00102030, 0x00040506]);
+    });
+}
+
+#[test]
+fn graph_clear_put_pixel_and_present_render_runtime_backbuffer() {
+    with_headless(|| {
+        let mut chunk = Chunk::new();
+        emit_constant(&mut chunk, Value::Integer(2));
+        emit_constant(&mut chunk, Value::Integer(1));
+        emit_constant(&mut chunk, Value::Str("Graph draw".to_string()));
+        emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationOpen);
+
+        chunk.emit(Op::Dup, loc());
+        emit_constant(&mut chunk, Value::Integer(0x00010203));
+        emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationClear);
+
+        chunk.emit(Op::Dup, loc());
+        emit_constant(&mut chunk, Value::Integer(1));
+        emit_constant(&mut chunk, Value::Integer(0));
+        emit_constant(&mut chunk, Value::Integer(0x00ABCDEF));
+        emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationPutPixel);
+
+        chunk.emit(Op::Dup, loc());
+        emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationPresent);
+        chunk.emit(Op::Halt, loc());
+
+        let shared = Arc::new(minimal_shared_state(chunk));
+        let mut worker = Worker::new_main(shared);
+        worker
+            .run()
+            .expect("graph drawing intrinsics should succeed");
+
+        assert_eq!(worker.stack, vec![graph_application_value()]);
+
+        let frame = last_headless_graph_frame_for_tests()
+            .expect("present should publish a headless frame snapshot");
+        assert_eq!(frame.width(), 2);
+        assert_eq!(frame.height(), 1);
+        assert_eq!(frame.pixels(), &[0x00010203, 0x00ABCDEF]);
     });
 }
 

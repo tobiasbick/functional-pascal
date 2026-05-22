@@ -23,6 +23,9 @@ impl Worker {
                     | GraphIntrinsic::ApplicationSize
                     | GraphIntrinsic::ApplicationPollEvent
                     | GraphIntrinsic::ApplicationUploadFrame
+                    | GraphIntrinsic::ApplicationClear
+                    | GraphIntrinsic::ApplicationPutPixel
+                    | GraphIntrinsic::ApplicationPresent
             )
         ) {
             self.ensure_graph_main_task(line)?;
@@ -72,6 +75,25 @@ impl Worker {
                 self.pop_graph_application(line)?;
                 let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
                 graph.session.upload_frame(width, height, &pixels, line)?;
+            }
+            Intrinsic::Graph(GraphIntrinsic::ApplicationClear) => {
+                let color = self.pop_int(line)?;
+                self.pop_graph_application(line)?;
+                let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
+                graph.session.clear(color, line)?;
+            }
+            Intrinsic::Graph(GraphIntrinsic::ApplicationPutPixel) => {
+                let color = self.pop_int(line)?;
+                let y = self.pop_int(line)?;
+                let x = self.pop_int(line)?;
+                self.pop_graph_application(line)?;
+                let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
+                graph.session.put_pixel(x, y, color, line)?;
+            }
+            Intrinsic::Graph(GraphIntrinsic::ApplicationPresent) => {
+                self.pop_graph_application(line)?;
+                let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
+                graph.session.present(line)?;
             }
             _ => return Ok(false),
         }

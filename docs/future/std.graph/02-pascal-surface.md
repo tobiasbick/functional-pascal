@@ -61,15 +61,16 @@ procedure Application.UploadFrame(
   Height: integer;
   Pixels: array of integer
 );
+procedure Application.Clear(App: Application; Color: integer);
+procedure Application.PutPixel(App: Application; X: integer; Y: integer; Color: integer);
+procedure Application.Present(App: Application);
 ```
 
 ## Planned next-slice drawing surface
 
-After the foundation slice, `Std.Graph` should grow a runtime-owned backbuffer API:
+After the current backbuffer slice, `Std.Graph` should grow the remaining drawing API:
 
 ```pascal
-procedure Application.Clear(App: Application; Color: integer);
-procedure Application.PutPixel(App: Application; X: integer; Y: integer; Color: integer);
 procedure Application.DrawLine(
   App: Application;
   X1: integer;
@@ -108,7 +109,6 @@ procedure Application.DrawText(
   Text: string;
   Color: integer
 );
-procedure Application.Present(App: Application);
 ```
 
 These routines are not part of the foundation slice, but they are part of the intended `Std.Graph` direction.
@@ -147,10 +147,23 @@ These routines are not part of the foundation slice, but they are part of the in
 - [ ] Phase 1 requires `Width` and `Height` to match the current window size exactly.
 - [ ] Any mismatch should raise a clear runtime diagnostic that reports the expected size.
 
+### `Application.Clear`
+
+- [ ] Fills the runtime-owned backbuffer with one packed `$00RRGGBB` color.
+
+### `Application.PutPixel`
+
+- [ ] Writes one pixel into the runtime-owned backbuffer.
+- [ ] Out-of-bounds coordinates are clipped.
+
+### `Application.Present`
+
+- [ ] Flushes the current runtime-owned backbuffer to the native window.
+
 ## Planned later semantics for drawing routines
 
 - [ ] Drawing routines mutate a runtime-owned backbuffer.
-- [ ] `Application.Present(App)` flushes that backbuffer to the native window.
+- [x] `Application.Present(App)` flushes that backbuffer to the native window.
 - [ ] `Application.UploadFrame` remains the bulk upload fast path for render-heavy programs.
 - [ ] The runtime should clip drawing operations to the current framebuffer bounds.
 - [ ] Text drawing should start with a simple deterministic bitmap font.

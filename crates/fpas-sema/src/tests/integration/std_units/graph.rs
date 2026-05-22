@@ -18,6 +18,9 @@ begin
   var Kind: EventKind := EventKind.Resize;
   var Width: integer := Screen.width;
   var IsEscape: boolean := Std.Console.KeyKind.Escape = Std.Console.KeyKind.Escape;
+    Application.Clear(App, $00010203);
+    Application.PutPixel(App, 1, 0, $00ABCDEF);
+    Application.Present(App);
   Application.UploadFrame(App, 1, 2, Pixels);
   Application.Close(App)
 end.",
@@ -81,6 +84,24 @@ end.",
     assert!(
         errs.iter()
             .any(|e| e.message.contains("array of integer") || e.message.contains("expected")),
+        "{errs:#?}"
+    );
+}
+
+#[test]
+fn std_graph_present_wrong_arg_count() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Graph;
+begin
+  var App: Application := Application.Open(640, 480, 'Graph smoke');
+  Application.Present(App, App)
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| e.message.contains("expects 1 arguments, got 2")),
         "{errs:#?}"
     );
 }

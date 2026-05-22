@@ -45,4 +45,27 @@ pub(super) fn register_application_api(checker: &mut Checker, types: &GraphTypes
             p("Pixels", Ty::Array(Box::new(Ty::Integer)), false),
         ],
     );
+    define_proc(
+        checker,
+        s::STD_GRAPH_APPLICATION_CLEAR,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Color", Ty::Integer, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_GRAPH_APPLICATION_PUT_PIXEL,
+        vec![
+            p("App", types.application.clone(), false),
+            p("X", Ty::Integer, false),
+            p("Y", Ty::Integer, false),
+            p("Color", Ty::Integer, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_GRAPH_APPLICATION_PRESENT,
+        vec![p("App", types.application.clone(), false)],
+    );
 }

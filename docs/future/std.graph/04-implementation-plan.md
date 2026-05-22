@@ -90,13 +90,15 @@ Verify:
 Scope:
 
 - [x] Add a persistent backbuffer to `GraphSession`.
-- [ ] Add `Clear`, `PutPixel`, `DrawLine`, `DrawRect`, `FillRect`, `DrawCircle`, and `Present`.
+- [x] Add `Clear`, `PutPixel`, and `Present`.
+- [ ] Add `DrawLine`, `DrawRect`, `FillRect`, and `DrawCircle`.
 - [ ] Keep drawing logic split by concern in small files.
 
 Verify:
 
-- [ ] runtime tests for primitive clipping and raster correctness
-- [ ] VM tests for each new drawing intrinsic
+- [x] runtime tests for `Clear`, `PutPixel`, and `Present`
+- [x] VM tests for `Clear`, `PutPixel`, and `Present`
+- [ ] VM tests for `DrawLine`, `DrawRect`, `FillRect`, and `DrawCircle`
 
 ### 8. Text and richer input
 

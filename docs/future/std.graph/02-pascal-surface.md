@@ -38,13 +38,25 @@ type
   EventKind = (
     CloseRequested,
     Resize,
-    Key
+    Key,
+    Mouse,
+    Wheel
   );
 
   Event = record
     kind: EventKind;
     size: Size;
     key: Std.Console.KeyEvent;
+    mouse_action: Std.Console.MouseAction;
+    mouse_button: Std.Console.MouseButton;
+    mouse_x: integer;
+    mouse_y: integer;
+    wheel_x: integer;
+    wheel_y: integer;
+    shift: boolean;
+    ctrl: boolean;
+    alt: boolean;
+    meta: boolean;
   end;
 ```
 
@@ -104,22 +116,12 @@ procedure Application.DrawText(
 procedure Application.Present(App: Application);
 ```
 
-## Planned next-slice input surface
+## Current richer input surface
 
-After the current drawing slice, `Std.Graph` should grow richer input:
-
-```pascal
-type
-  EventKind = (
-    CloseRequested,
-    Resize,
-    Key,
-    Mouse,
-    Wheel
-  );
-```
-
-These event variants are not part of the foundation slice yet, but they are part of the intended `Std.Graph` direction.
+- [x] `EventKind.Mouse` covers down, up, move, and drag through `Event.mouse_action`.
+- [x] `EventKind.Wheel` carries signed `wheel_x` / `wheel_y` deltas.
+- [x] Mouse positions use the same 0-based pixel coordinate space as the drawing API.
+- [x] `Event.mouse_action` and `Event.mouse_button` reuse `Std.Console.MouseAction` and `Std.Console.MouseButton`.
 
 ## Semantics
 
@@ -145,6 +147,8 @@ These event variants are not part of the foundation slice yet, but they are part
 - [ ] Returns `None` when no event is pending.
 - [ ] `Event.kind = Resize` populates `Event.size`.
 - [ ] `Event.kind = Key` populates `Event.key`.
+- [ ] `Event.kind = Mouse` populates `Event.mouse_action`, `Event.mouse_button`, `Event.mouse_x`, `Event.mouse_y`, and modifier flags.
+- [ ] `Event.kind = Wheel` populates `Event.wheel_x`, `Event.wheel_y`, `Event.mouse_x`, `Event.mouse_y`, and modifier flags.
 - [ ] `Event.kind = CloseRequested` signals that the host asked the application to exit.
 
 ### `Application.UploadFrame`

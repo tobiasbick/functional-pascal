@@ -1,7 +1,8 @@
 //! `Std.Graph` semantic registration.
 //!
-//! `Std.Graph.Event.key` uses `Std.Console.KeyEvent` (registered by
-//! [`super::console::register_std_console_key_api`] when needed).
+//! `Std.Graph.Event` reuses `Std.Console.KeyEvent`, `Std.Console.MouseAction`, and
+//! `Std.Console.MouseButton` (registered by [`super::console::register_std_console_key_api`]
+//! when needed).
 //!
 //! **Documentation:** `docs/future/std.graph/02-pascal-surface.md`, `docs/future/std.graph/04-implementation-plan.md` (from the repository root).
 
@@ -37,6 +38,16 @@ pub(super) fn register_std_graph(checker: &mut Checker) {
         s::STD_CONSOLE_KEY_EVENT,
         "Std.Console.KeyEvent must be registered before Std.Graph (see loaded/mod.rs)",
     );
+    let mouse_action = lookup_required_type(
+        checker,
+        s::STD_CONSOLE_MOUSE_ACTION,
+        "Std.Console.MouseAction must be registered before Std.Graph (see loaded/mod.rs)",
+    );
+    let mouse_button = lookup_required_type(
+        checker,
+        s::STD_CONSOLE_MOUSE_BUTTON,
+        "Std.Console.MouseButton must be registered before Std.Graph (see loaded/mod.rs)",
+    );
     let event_kind =
         register_enum_type(checker, s::STD_GRAPH_EVENT_KIND, GRAPH_EVENT_KIND_VARIANTS);
     let event = register_record_type(
@@ -46,6 +57,16 @@ pub(super) fn register_std_graph(checker: &mut Checker) {
             ("kind".into(), event_kind),
             ("size".into(), size.clone()),
             ("key".into(), key_event),
+            ("mouse_action".into(), mouse_action),
+            ("mouse_button".into(), mouse_button),
+            ("mouse_x".into(), Ty::Integer),
+            ("mouse_y".into(), Ty::Integer),
+            ("wheel_x".into(), Ty::Integer),
+            ("wheel_y".into(), Ty::Integer),
+            ("shift".into(), Ty::Boolean),
+            ("ctrl".into(), Ty::Boolean),
+            ("alt".into(), Ty::Boolean),
+            ("meta".into(), Ty::Boolean),
         ],
     );
 

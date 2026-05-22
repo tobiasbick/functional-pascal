@@ -3,7 +3,7 @@
 use super::event::{GraphEvent, GraphEventKind};
 use super::session::GraphSession;
 use super::with_headless_graph_backend_for_tests;
-use crate::{ConsoleKeyEvent, key_event::key_kind_index};
+use crate::{ConsoleKeyEvent, key_event::key_kind_index, mouse_action_index, mouse_button_index};
 use fpas_bytecode::SourceLocation;
 
 fn test_location() -> SourceLocation {
@@ -426,6 +426,80 @@ fn graph_session_poll_event_returns_queued_event() {
 }
 
 #[test]
+fn graph_session_poll_event_returns_queued_mouse_event() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(320, 200, "Graph smoke", test_location())
+            .expect("open should succeed");
+        session.push_event_for_tests(GraphEvent::Mouse {
+            action: mouse_action_index("Drag"),
+            button: mouse_button_index("Left"),
+            x: 12,
+            y: 34,
+            shift: true,
+            ctrl: false,
+            alt: false,
+            meta: false,
+        });
+
+        let event = session
+            .poll_event(test_location())
+            .expect("poll should succeed");
+        assert_eq!(
+            event,
+            Some(GraphEvent::Mouse {
+                action: mouse_action_index("Drag"),
+                button: mouse_button_index("Left"),
+                x: 12,
+                y: 34,
+                shift: true,
+                ctrl: false,
+                alt: false,
+                meta: false,
+            })
+        );
+    });
+}
+
+#[test]
+fn graph_session_poll_event_returns_queued_wheel_event() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(320, 200, "Graph smoke", test_location())
+            .expect("open should succeed");
+        session.push_event_for_tests(GraphEvent::Wheel {
+            delta_x: -1,
+            delta_y: 2,
+            x: 20,
+            y: 40,
+            shift: false,
+            ctrl: true,
+            alt: false,
+            meta: false,
+        });
+
+        let event = session
+            .poll_event(test_location())
+            .expect("poll should succeed");
+        assert_eq!(
+            event,
+            Some(GraphEvent::Wheel {
+                delta_x: -1,
+                delta_y: 2,
+                x: 20,
+                y: 40,
+                shift: false,
+                ctrl: true,
+                alt: false,
+                meta: false,
+            })
+        );
+    });
+}
+
+#[test]
 fn graph_event_kind_matches_payload_variant() {
     assert_eq!(
         GraphEvent::CloseRequested.kind(),
@@ -450,5 +524,33 @@ fn graph_event_kind_matches_payload_variant() {
         ))
         .kind(),
         GraphEventKind::Key
+    );
+    assert_eq!(
+        GraphEvent::Mouse {
+            action: mouse_action_index("Move"),
+            button: mouse_button_index("None"),
+            x: 0,
+            y: 0,
+            shift: false,
+            ctrl: false,
+            alt: false,
+            meta: false,
+        }
+        .kind(),
+        GraphEventKind::Mouse
+    );
+    assert_eq!(
+        GraphEvent::Wheel {
+            delta_x: 0,
+            delta_y: -1,
+            x: 0,
+            y: 0,
+            shift: false,
+            ctrl: false,
+            alt: false,
+            meta: false,
+        }
+        .kind(),
+        GraphEventKind::Wheel
     );
 }

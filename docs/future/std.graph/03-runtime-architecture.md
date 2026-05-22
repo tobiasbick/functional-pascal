@@ -144,11 +144,19 @@ Current implementation note:
 
 The backend should convert platform-specific events into a minimal, stable model:
 
-- [ ] `CloseRequested`
-- [ ] `Resize`
-- [ ] `Key`
+- [x] `CloseRequested`
+- [x] `Resize`
+- [x] `Key`
+- [x] `Mouse`
+- [x] `Wheel`
 
 That normalization belongs in `fpas-std/src/graph/event.rs`, not in the VM layer.
+
+Current implementation note:
+
+- [x] `winit` mouse-button press/release maps to `EventKind.Mouse` with `Down` / `Up`
+- [x] pointer motion maps to `Move` or `Drag` depending on currently pressed mouse buttons
+- [x] wheel input maps to `EventKind.Wheel` with signed horizontal and vertical deltas
 
 ## Framebuffer contract
 

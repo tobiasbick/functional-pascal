@@ -87,8 +87,8 @@ The first milestone should therefore prove the native window lifecycle and bulk 
 - [x] `DrawCircle`
 - [x] `DrawText`
 - [x] `Present`
-- [ ] Mouse events.
-- [ ] Wheel events.
+- [x] Mouse events.
+- [x] Wheel events.
 - [ ] Blocking or timeout-based event wait.
 - [ ] Dirty-rectangle or scanline upload helpers.
 - [ ] Mandelbrot and Julia explorer examples with interactive controls.

@@ -106,14 +106,14 @@ Verify:
 Scope:
 
 - [x] Add bitmap text drawing.
-- [ ] Add mouse, drag, and wheel events.
-- [ ] Add any missing event types needed for explorer-style interaction.
+- [x] Add mouse, drag, and wheel events.
+- [x] Add any missing event types needed for explorer-style interaction.
 
 Verify:
 
 - [x] runtime tests for text clipping and deterministic glyph output
 - [x] compiler/VM tests for `DrawText`
-- [ ] VM tests for mouse and wheel event records
+- [x] VM tests for mouse and wheel event records
 
 ### 9. Examples and canonical std docs
 
@@ -172,7 +172,7 @@ Phase 1 is complete when all of the following are true:
 The first useful graphics release is complete when all of the following are true:
 
 - [x] a program can draw pixels, lines, simple shapes, and text
-- [ ] keyboard, mouse, wheel, resize, and close events are available
+- [x] keyboard, mouse, wheel, resize, and close events are available
 - [ ] a Mandelbrot example runs interactively
 - [ ] a Julia example runs interactively
 - [ ] the canonical `Std.Graph` docs match the implemented surface

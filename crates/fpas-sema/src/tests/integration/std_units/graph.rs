@@ -16,18 +16,43 @@ begin
   var Pending: Option of Event := Application.PollEvent(App);
   var Pixels: array of integer := [$00102040, $00102040];
   var Kind: EventKind := EventKind.Resize;
+    var MouseKind: EventKind := EventKind.Mouse;
+    var WheelKind: EventKind := EventKind.Wheel;
   var Width: integer := Screen.width;
   var IsEscape: boolean := Std.Console.KeyKind.Escape = Std.Console.KeyKind.Escape;
+    var ActionValue: Std.Console.MouseAction := Std.Console.MouseAction.Down;
+    var ButtonValue: Std.Console.MouseButton := Std.Console.MouseButton.Left;
     Application.Clear(App, $00010203);
     Application.PutPixel(App, 1, 0, $00ABCDEF);
     Application.DrawLine(App, 0, 0, 3, 3, $00000010);
     Application.DrawRect(App, 1, 1, 2, 2, $00000020);
     Application.FillRect(App, 0, 0, 1, 1, $00000030);
     Application.DrawCircle(App, 3, 3, 1, $00000040);
-        Application.DrawText(App, 0, 0, 'A', $00000050);
+    Application.DrawText(App, 0, 0, 'A', $00000050);
     Application.Present(App);
   Application.UploadFrame(App, 1, 2, Pixels);
   Application.Close(App)
+end.",
+    );
+}
+
+#[test]
+fn std_graph_mouse_and_wheel_event_fields_are_available() {
+    check_ok(
+        "\
+program T;
+uses Std.Graph;
+begin
+  var App: Application := Application.Open(320, 200, 'Graph events');
+  var Pending: Option of Event := Application.PollEvent(App);
+    var E: Event := Std.Option.Unwrap(Pending);
+    var Action: Std.Console.MouseAction := E.mouse_action;
+    var Button: Std.Console.MouseButton := E.mouse_button;
+    var X: integer := E.mouse_x;
+    var Y: integer := E.mouse_y;
+    var WheelX: integer := E.wheel_x;
+    var WheelY: integer := E.wheel_y;
+    var Shifted: boolean := E.shift
 end.",
     );
 }
@@ -172,7 +197,7 @@ fn std_graph_event_kind_unknown_member() {
 program T;
 uses Std.Graph;
 begin
-  var Kind: EventKind := Std.Graph.EventKind.Mouse
+    var Kind: EventKind := Std.Graph.EventKind.Touch
 end.",
     );
     assert!(

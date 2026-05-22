@@ -4,7 +4,7 @@
 
 use super::super::{GraphEvent, UploadedFrame};
 use crate::error::{StdError, std_runtime_error};
-use crate::{ConsoleKeyEvent, key_event::key_kind_index};
+use crate::{ConsoleKeyEvent, key_event::key_kind_index, mouse_action_index, mouse_button_index};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 use softbuffer::{Context, Surface};
@@ -14,7 +14,7 @@ use std::rc::Rc;
 use std::time::Duration;
 use winit::application::ApplicationHandler;
 use winit::dpi::LogicalSize;
-use winit::event::{ElementState, KeyEvent, WindowEvent};
+use winit::event::{ElementState, KeyEvent, MouseButton, MouseScrollDelta, WindowEvent};
 use winit::event_loop::{ActiveEventLoop, EventLoop, OwnedDisplayHandle};
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 use winit::platform::pump_events::{EventLoopExtPumpEvents, PumpStatus};
@@ -141,6 +141,11 @@ struct NativeGraphApp {
     initial_height: i64,
     width: i64,
     height: i64,
+    cursor_x: i64,
+    cursor_y: i64,
+    left_button_down: bool,
+    right_button_down: bool,
+    middle_button_down: bool,
     modifiers: ModifiersState,
     pending_events: VecDeque<GraphEvent>,
     pending_frame: Option<UploadedFrame>,
@@ -159,6 +164,11 @@ impl NativeGraphApp {
             initial_height: height,
             width,
             height,
+            cursor_x: 0,
+            cursor_y: 0,
+            left_button_down: false,
+            right_button_down: false,
+            middle_button_down: false,
             modifiers: ModifiersState::default(),
             pending_events: VecDeque::new(),
             pending_frame: None,
@@ -188,6 +198,67 @@ impl NativeGraphApp {
             width: self.width,
             height: self.height,
         });
+    }
+
+    fn push_mouse_event(&mut self, action: usize, button: usize) {
+        let shift = self.modifiers.shift_key();
+        let ctrl = self.modifiers.control_key();
+        let alt = self.modifiers.alt_key();
+        let meta = self.modifiers.super_key();
+        self.pending_events.push_back(GraphEvent::Mouse {
+            action,
+            button,
+            x: self.cursor_x,
+            y: self.cursor_y,
+            shift,
+            ctrl,
+            alt,
+            meta,
+        });
+    }
+
+    fn push_wheel_event(&mut self, delta_x: i64, delta_y: i64) {
+        let shift = self.modifiers.shift_key();
+        let ctrl = self.modifiers.control_key();
+        let alt = self.modifiers.alt_key();
+        let meta = self.modifiers.super_key();
+        self.pending_events.push_back(GraphEvent::Wheel {
+            delta_x,
+            delta_y,
+            x: self.cursor_x,
+            y: self.cursor_y,
+            shift,
+            ctrl,
+            alt,
+            meta,
+        });
+    }
+
+    fn set_cursor_position(&mut self, x: f64, y: f64) {
+        self.cursor_x = x.floor() as i64;
+        self.cursor_y = y.floor() as i64;
+    }
+
+    fn set_mouse_button_down(&mut self, button: usize, down: bool) {
+        if button == mouse_button_index("Left") {
+            self.left_button_down = down;
+        } else if button == mouse_button_index("Right") {
+            self.right_button_down = down;
+        } else if button == mouse_button_index("Middle") {
+            self.middle_button_down = down;
+        }
+    }
+
+    fn active_mouse_button(&self) -> usize {
+        if self.left_button_down {
+            mouse_button_index("Left")
+        } else if self.right_button_down {
+            mouse_button_index("Right")
+        } else if self.middle_button_down {
+            mouse_button_index("Middle")
+        } else {
+            mouse_button_index("None")
+        }
     }
 
     fn handle_redraw_requested(&mut self) {
@@ -313,6 +384,33 @@ impl ApplicationHandler for NativeGraphApp {
             WindowEvent::ModifiersChanged(modifiers) => {
                 self.modifiers = modifiers.state();
             }
+            WindowEvent::CursorMoved { position, .. } => {
+                self.set_cursor_position(position.x, position.y);
+                let button = self.active_mouse_button();
+                let action = if button == mouse_button_index("None") {
+                    mouse_action_index("Move")
+                } else {
+                    mouse_action_index("Drag")
+                };
+                self.push_mouse_event(action, button);
+            }
+            WindowEvent::MouseInput { state, button, .. } => {
+                if let Some(button) = map_winit_mouse_button(button) {
+                    let action = if state == ElementState::Pressed {
+                        mouse_action_index("Down")
+                    } else {
+                        mouse_action_index("Up")
+                    };
+                    self.set_mouse_button_down(button, state == ElementState::Pressed);
+                    self.push_mouse_event(action, button);
+                }
+            }
+            WindowEvent::MouseWheel { delta, .. } => {
+                let (delta_x, delta_y) = map_winit_wheel_delta(delta);
+                if delta_x != 0 || delta_y != 0 {
+                    self.push_wheel_event(delta_x, delta_y);
+                }
+            }
             WindowEvent::KeyboardInput {
                 event,
                 is_synthetic: false,
@@ -324,6 +422,24 @@ impl ApplicationHandler for NativeGraphApp {
             }
             WindowEvent::RedrawRequested => self.handle_redraw_requested(),
             _ => {}
+        }
+    }
+}
+
+fn map_winit_mouse_button(button: MouseButton) -> Option<usize> {
+    match button {
+        MouseButton::Left => Some(mouse_button_index("Left")),
+        MouseButton::Right => Some(mouse_button_index("Right")),
+        MouseButton::Middle => Some(mouse_button_index("Middle")),
+        MouseButton::Back | MouseButton::Forward | MouseButton::Other(_) => None,
+    }
+}
+
+fn map_winit_wheel_delta(delta: MouseScrollDelta) -> (i64, i64) {
+    match delta {
+        MouseScrollDelta::LineDelta(x, y) => (x.round() as i64, y.round() as i64),
+        MouseScrollDelta::PixelDelta(position) => {
+            (position.x.round() as i64, position.y.round() as i64)
         }
     }
 }

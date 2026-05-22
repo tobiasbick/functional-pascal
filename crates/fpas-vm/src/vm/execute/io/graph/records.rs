@@ -6,7 +6,9 @@ use crate::vm::Worker;
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError};
 use crate::vm::runtime_error;
 use fpas_bytecode::{SourceLocation, Value};
-use fpas_std::{ConsoleKeyEvent, GraphEvent, GraphEventKind};
+use fpas_std::{
+    ConsoleKeyEvent, GraphEvent, GraphEventKind, mouse_action_index, mouse_button_index,
+};
 
 const GRAPH_APPLICATION_TYPE: &str = "Std.Graph.Application";
 const GRAPH_EVENT_TYPE: &str = "Std.Graph.Event";
@@ -44,6 +46,22 @@ impl Worker {
                     ),
                     ("size".into(), Self::graph_size_record(0, 0)),
                     ("key".into(), Self::graph_unknown_key_event()),
+                    (
+                        "mouse_action".into(),
+                        Value::Integer(mouse_action_index("Unknown") as i64),
+                    ),
+                    (
+                        "mouse_button".into(),
+                        Value::Integer(mouse_button_index("None") as i64),
+                    ),
+                    ("mouse_x".into(), Value::Integer(0)),
+                    ("mouse_y".into(), Value::Integer(0)),
+                    ("wheel_x".into(), Value::Integer(0)),
+                    ("wheel_y".into(), Value::Integer(0)),
+                    ("shift".into(), Value::Boolean(false)),
+                    ("ctrl".into(), Value::Boolean(false)),
+                    ("alt".into(), Value::Boolean(false)),
+                    ("meta".into(), Value::Boolean(false)),
                 ],
             },
             GraphEvent::Resize { width, height } => Value::Record {
@@ -55,6 +73,22 @@ impl Worker {
                     ),
                     ("size".into(), Self::graph_size_record(width, height)),
                     ("key".into(), Self::graph_unknown_key_event()),
+                    (
+                        "mouse_action".into(),
+                        Value::Integer(mouse_action_index("Unknown") as i64),
+                    ),
+                    (
+                        "mouse_button".into(),
+                        Value::Integer(mouse_button_index("None") as i64),
+                    ),
+                    ("mouse_x".into(), Value::Integer(0)),
+                    ("mouse_y".into(), Value::Integer(0)),
+                    ("wheel_x".into(), Value::Integer(0)),
+                    ("wheel_y".into(), Value::Integer(0)),
+                    ("shift".into(), Value::Boolean(false)),
+                    ("ctrl".into(), Value::Boolean(false)),
+                    ("alt".into(), Value::Boolean(false)),
+                    ("meta".into(), Value::Boolean(false)),
                 ],
             },
             GraphEvent::Key(key) => Value::Record {
@@ -65,7 +99,89 @@ impl Worker {
                         Self::graph_event_kind_value(GraphEventKind::Key),
                     ),
                     ("size".into(), Self::graph_size_record(0, 0)),
-                    ("key".into(), Self::key_event_record(key)),
+                    ("key".into(), Self::key_event_record(key.clone())),
+                    (
+                        "mouse_action".into(),
+                        Value::Integer(mouse_action_index("Unknown") as i64),
+                    ),
+                    (
+                        "mouse_button".into(),
+                        Value::Integer(mouse_button_index("None") as i64),
+                    ),
+                    ("mouse_x".into(), Value::Integer(0)),
+                    ("mouse_y".into(), Value::Integer(0)),
+                    ("wheel_x".into(), Value::Integer(0)),
+                    ("wheel_y".into(), Value::Integer(0)),
+                    ("shift".into(), Value::Boolean(key.shift)),
+                    ("ctrl".into(), Value::Boolean(key.ctrl)),
+                    ("alt".into(), Value::Boolean(key.alt)),
+                    ("meta".into(), Value::Boolean(key.meta)),
+                ],
+            },
+            GraphEvent::Mouse {
+                action,
+                button,
+                x,
+                y,
+                shift,
+                ctrl,
+                alt,
+                meta,
+            } => Value::Record {
+                type_name: GRAPH_EVENT_TYPE.into(),
+                fields: vec![
+                    (
+                        "kind".into(),
+                        Self::graph_event_kind_value(GraphEventKind::Mouse),
+                    ),
+                    ("size".into(), Self::graph_size_record(0, 0)),
+                    ("key".into(), Self::graph_unknown_key_event()),
+                    ("mouse_action".into(), Value::Integer(action as i64)),
+                    ("mouse_button".into(), Value::Integer(button as i64)),
+                    ("mouse_x".into(), Value::Integer(x)),
+                    ("mouse_y".into(), Value::Integer(y)),
+                    ("wheel_x".into(), Value::Integer(0)),
+                    ("wheel_y".into(), Value::Integer(0)),
+                    ("shift".into(), Value::Boolean(shift)),
+                    ("ctrl".into(), Value::Boolean(ctrl)),
+                    ("alt".into(), Value::Boolean(alt)),
+                    ("meta".into(), Value::Boolean(meta)),
+                ],
+            },
+            GraphEvent::Wheel {
+                delta_x,
+                delta_y,
+                x,
+                y,
+                shift,
+                ctrl,
+                alt,
+                meta,
+            } => Value::Record {
+                type_name: GRAPH_EVENT_TYPE.into(),
+                fields: vec![
+                    (
+                        "kind".into(),
+                        Self::graph_event_kind_value(GraphEventKind::Wheel),
+                    ),
+                    ("size".into(), Self::graph_size_record(0, 0)),
+                    ("key".into(), Self::graph_unknown_key_event()),
+                    (
+                        "mouse_action".into(),
+                        Value::Integer(mouse_action_index("Unknown") as i64),
+                    ),
+                    (
+                        "mouse_button".into(),
+                        Value::Integer(mouse_button_index("None") as i64),
+                    ),
+                    ("mouse_x".into(), Value::Integer(x)),
+                    ("mouse_y".into(), Value::Integer(y)),
+                    ("wheel_x".into(), Value::Integer(delta_x)),
+                    ("wheel_y".into(), Value::Integer(delta_y)),
+                    ("shift".into(), Value::Boolean(shift)),
+                    ("ctrl".into(), Value::Boolean(ctrl)),
+                    ("alt".into(), Value::Boolean(alt)),
+                    ("meta".into(), Value::Boolean(meta)),
                 ],
             },
         }
@@ -95,6 +211,8 @@ impl Worker {
             GraphEventKind::CloseRequested => 0,
             GraphEventKind::Resize => 1,
             GraphEventKind::Key => 2,
+            GraphEventKind::Mouse => 3,
+            GraphEventKind::Wheel => 4,
         };
         Value::Integer(index)
     }

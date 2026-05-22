@@ -6,7 +6,7 @@ use crate::vm::Worker;
 use fpas_bytecode::{Chunk, GraphIntrinsic, Intrinsic, Op, Value};
 use fpas_std::{
     ConsoleKeyEvent, GraphEvent, key_event::key_kind_index, last_headless_graph_frame_for_tests,
-    with_headless_graph_backend_for_tests,
+    mouse_action_index, mouse_button_index, with_headless_graph_backend_for_tests,
 };
 use std::sync::Arc;
 
@@ -147,6 +147,174 @@ fn graph_poll_event_builds_std_graph_event_record() {
                             false,
                         )),
                     ),
+                    (
+                        "mouse_action".into(),
+                        Value::Integer(mouse_action_index("Unknown") as i64),
+                    ),
+                    (
+                        "mouse_button".into(),
+                        Value::Integer(mouse_button_index("None") as i64),
+                    ),
+                    ("mouse_x".into(), Value::Integer(0)),
+                    ("mouse_y".into(), Value::Integer(0)),
+                    ("wheel_x".into(), Value::Integer(0)),
+                    ("wheel_y".into(), Value::Integer(0)),
+                    ("shift".into(), Value::Boolean(false)),
+                    ("ctrl".into(), Value::Boolean(false)),
+                    ("alt".into(), Value::Boolean(false)),
+                    ("meta".into(), Value::Boolean(false)),
+                ],
+            }))]
+        );
+    });
+}
+
+#[test]
+fn graph_poll_event_builds_std_graph_mouse_event_record() {
+    with_headless(|| {
+        let mut chunk = Chunk::new();
+        emit_constant(&mut chunk, graph_application_value());
+        emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationPollEvent);
+        chunk.emit(Op::Halt, loc());
+
+        let shared = Arc::new(minimal_shared_state(chunk));
+        {
+            let mut graph = shared.graph.lock().unwrap_or_else(|e| e.into_inner());
+            graph
+                .session
+                .open(640, 480, "Graph events", loc())
+                .expect("test graph session should open");
+            graph
+                .session
+                .push_event(
+                    GraphEvent::Mouse {
+                        action: mouse_action_index("Drag"),
+                        button: mouse_button_index("Left"),
+                        x: 12,
+                        y: 34,
+                        shift: true,
+                        ctrl: false,
+                        alt: true,
+                        meta: false,
+                    },
+                    loc(),
+                )
+                .expect("test graph event should enqueue");
+        }
+
+        let mut worker = Worker::new_main(shared);
+        worker.run().expect("graph poll event should succeed");
+
+        assert_eq!(
+            worker.stack,
+            vec![Value::OptionSome(Box::new(Value::Record {
+                type_name: "Std.Graph.Event".into(),
+                fields: vec![
+                    ("kind".into(), Value::Integer(3)),
+                    ("size".into(), graph_size_value(0, 0)),
+                    (
+                        "key".into(),
+                        key_event_value(ConsoleKeyEvent::new(
+                            key_kind_index("Unknown"),
+                            '\0',
+                            false,
+                            false,
+                            false,
+                            false,
+                        )),
+                    ),
+                    (
+                        "mouse_action".into(),
+                        Value::Integer(mouse_action_index("Drag") as i64),
+                    ),
+                    (
+                        "mouse_button".into(),
+                        Value::Integer(mouse_button_index("Left") as i64),
+                    ),
+                    ("mouse_x".into(), Value::Integer(12)),
+                    ("mouse_y".into(), Value::Integer(34)),
+                    ("wheel_x".into(), Value::Integer(0)),
+                    ("wheel_y".into(), Value::Integer(0)),
+                    ("shift".into(), Value::Boolean(true)),
+                    ("ctrl".into(), Value::Boolean(false)),
+                    ("alt".into(), Value::Boolean(true)),
+                    ("meta".into(), Value::Boolean(false)),
+                ],
+            }))]
+        );
+    });
+}
+
+#[test]
+fn graph_poll_event_builds_std_graph_wheel_event_record() {
+    with_headless(|| {
+        let mut chunk = Chunk::new();
+        emit_constant(&mut chunk, graph_application_value());
+        emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationPollEvent);
+        chunk.emit(Op::Halt, loc());
+
+        let shared = Arc::new(minimal_shared_state(chunk));
+        {
+            let mut graph = shared.graph.lock().unwrap_or_else(|e| e.into_inner());
+            graph
+                .session
+                .open(640, 480, "Graph events", loc())
+                .expect("test graph session should open");
+            graph
+                .session
+                .push_event(
+                    GraphEvent::Wheel {
+                        delta_x: -2,
+                        delta_y: 1,
+                        x: 20,
+                        y: 10,
+                        shift: false,
+                        ctrl: true,
+                        alt: false,
+                        meta: true,
+                    },
+                    loc(),
+                )
+                .expect("test graph event should enqueue");
+        }
+
+        let mut worker = Worker::new_main(shared);
+        worker.run().expect("graph poll event should succeed");
+
+        assert_eq!(
+            worker.stack,
+            vec![Value::OptionSome(Box::new(Value::Record {
+                type_name: "Std.Graph.Event".into(),
+                fields: vec![
+                    ("kind".into(), Value::Integer(4)),
+                    ("size".into(), graph_size_value(0, 0)),
+                    (
+                        "key".into(),
+                        key_event_value(ConsoleKeyEvent::new(
+                            key_kind_index("Unknown"),
+                            '\0',
+                            false,
+                            false,
+                            false,
+                            false,
+                        )),
+                    ),
+                    (
+                        "mouse_action".into(),
+                        Value::Integer(mouse_action_index("Unknown") as i64),
+                    ),
+                    (
+                        "mouse_button".into(),
+                        Value::Integer(mouse_button_index("None") as i64),
+                    ),
+                    ("mouse_x".into(), Value::Integer(20)),
+                    ("mouse_y".into(), Value::Integer(10)),
+                    ("wheel_x".into(), Value::Integer(-2)),
+                    ("wheel_y".into(), Value::Integer(1)),
+                    ("shift".into(), Value::Boolean(false)),
+                    ("ctrl".into(), Value::Boolean(true)),
+                    ("alt".into(), Value::Boolean(false)),
+                    ("meta".into(), Value::Boolean(true)),
                 ],
             }))]
         );

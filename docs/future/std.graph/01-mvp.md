@@ -79,14 +79,14 @@ The first milestone should therefore prove the native window lifecycle and bulk 
 
 ## Immediate follow-up after Phase 1
 
-- [ ] a runtime-owned backbuffer
-- [ ] `Clear`
-- [ ] `PutPixel`
-- [ ] `DrawLine`
-- [ ] `DrawRect` / `FillRect`
-- [ ] `DrawCircle`
-- [ ] `DrawText`
-- [ ] `Present`
+- [x] a runtime-owned backbuffer
+- [x] `Clear`
+- [x] `PutPixel`
+- [x] `DrawLine`
+- [x] `DrawRect` / `FillRect`
+- [x] `DrawCircle`
+- [x] `DrawText`
+- [x] `Present`
 - [ ] Mouse events.
 - [ ] Wheel events.
 - [ ] Blocking or timeout-based event wait.

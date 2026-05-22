@@ -93,6 +93,61 @@ impl Compiler {
                 );
                 Ok(true)
             }
+            s::STD_GRAPH_APPLICATION_DRAW_LINE => {
+                self.expect_exact_args(s::STD_GRAPH_APPLICATION_DRAW_LINE, 6, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(
+                    Intrinsic::Graph(GraphIntrinsic::ApplicationDrawLine),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_GRAPH_APPLICATION_DRAW_RECT => {
+                self.expect_exact_args(s::STD_GRAPH_APPLICATION_DRAW_RECT, 6, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(
+                    Intrinsic::Graph(GraphIntrinsic::ApplicationDrawRect),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_GRAPH_APPLICATION_FILL_RECT => {
+                self.expect_exact_args(s::STD_GRAPH_APPLICATION_FILL_RECT, 6, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(
+                    Intrinsic::Graph(GraphIntrinsic::ApplicationFillRect),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_GRAPH_APPLICATION_DRAW_CIRCLE => {
+                self.expect_exact_args(s::STD_GRAPH_APPLICATION_DRAW_CIRCLE, 5, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(
+                    Intrinsic::Graph(GraphIntrinsic::ApplicationDrawCircle),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_GRAPH_APPLICATION_DRAW_TEXT => {
+                self.expect_exact_args(s::STD_GRAPH_APPLICATION_DRAW_TEXT, 5, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(
+                    Intrinsic::Graph(GraphIntrinsic::ApplicationDrawText),
+                    location,
+                );
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

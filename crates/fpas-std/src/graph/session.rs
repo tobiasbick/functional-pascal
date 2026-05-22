@@ -4,9 +4,13 @@
 
 use super::backbuffer::GraphBackbuffer;
 use super::backend;
+use super::circle;
 use super::color::validate_rgb24;
 use super::event::GraphEvent;
 use super::framebuffer::{UploadedFrame, validate_frame_upload, validate_surface_size};
+use super::line;
+use super::rect;
+use super::text;
 use crate::error::{StdError, std_runtime_error};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
@@ -156,6 +160,138 @@ impl GraphSession {
         self.sync_backbuffer_to_backend(location)?;
         let frame = self.backbuffer.snapshot();
         backend::present_graph_frame(&frame, location)?;
+        Ok(())
+    }
+
+    /// Draws one clipped line into the runtime-owned backbuffer.
+    pub fn draw_line(
+        &mut self,
+        x1: i64,
+        y1: i64,
+        x2: i64,
+        y2: i64,
+        color: i64,
+        location: SourceLocation,
+    ) -> Result<(), StdError> {
+        self.ensure_open(
+            "Std.Graph.Application.DrawLine(App, X1, Y1, X2, Y2, Color) requires an open graphics session.",
+            "Open the application before mutating the runtime-owned backbuffer.",
+            location,
+        )?;
+
+        self.sync_backbuffer_to_backend(location)?;
+        let color = validate_rgb24(
+            color,
+            "Std.Graph.Application.DrawLine(App, X1, Y1, X2, Y2, Color)",
+            location,
+        )?;
+        line::draw_line(&mut self.backbuffer, x1, y1, x2, y2, color);
+        Ok(())
+    }
+
+    /// Draws one clipped rectangle outline into the runtime-owned backbuffer.
+    pub fn draw_rect(
+        &mut self,
+        x: i64,
+        y: i64,
+        width: i64,
+        height: i64,
+        color: i64,
+        location: SourceLocation,
+    ) -> Result<(), StdError> {
+        self.ensure_open(
+            "Std.Graph.Application.DrawRect(App, X, Y, Width, Height, Color) requires an open graphics session.",
+            "Open the application before mutating the runtime-owned backbuffer.",
+            location,
+        )?;
+
+        self.sync_backbuffer_to_backend(location)?;
+        let color = validate_rgb24(
+            color,
+            "Std.Graph.Application.DrawRect(App, X, Y, Width, Height, Color)",
+            location,
+        )?;
+        rect::draw_rect(&mut self.backbuffer, x, y, width, height, color, location)
+    }
+
+    /// Fills one clipped rectangle into the runtime-owned backbuffer.
+    pub fn fill_rect(
+        &mut self,
+        x: i64,
+        y: i64,
+        width: i64,
+        height: i64,
+        color: i64,
+        location: SourceLocation,
+    ) -> Result<(), StdError> {
+        self.ensure_open(
+            "Std.Graph.Application.FillRect(App, X, Y, Width, Height, Color) requires an open graphics session.",
+            "Open the application before mutating the runtime-owned backbuffer.",
+            location,
+        )?;
+
+        self.sync_backbuffer_to_backend(location)?;
+        let color = validate_rgb24(
+            color,
+            "Std.Graph.Application.FillRect(App, X, Y, Width, Height, Color)",
+            location,
+        )?;
+        rect::fill_rect(&mut self.backbuffer, x, y, width, height, color, location)
+    }
+
+    /// Draws one clipped circle outline into the runtime-owned backbuffer.
+    pub fn draw_circle(
+        &mut self,
+        center_x: i64,
+        center_y: i64,
+        radius: i64,
+        color: i64,
+        location: SourceLocation,
+    ) -> Result<(), StdError> {
+        self.ensure_open(
+            "Std.Graph.Application.DrawCircle(App, CenterX, CenterY, Radius, Color) requires an open graphics session.",
+            "Open the application before mutating the runtime-owned backbuffer.",
+            location,
+        )?;
+
+        self.sync_backbuffer_to_backend(location)?;
+        let color = validate_rgb24(
+            color,
+            "Std.Graph.Application.DrawCircle(App, CenterX, CenterY, Radius, Color)",
+            location,
+        )?;
+        circle::draw_circle(
+            &mut self.backbuffer,
+            center_x,
+            center_y,
+            radius,
+            color,
+            location,
+        )
+    }
+
+    /// Draws deterministic bitmap text into the runtime-owned backbuffer.
+    pub fn draw_text(
+        &mut self,
+        x: i64,
+        y: i64,
+        text_value: &str,
+        color: i64,
+        location: SourceLocation,
+    ) -> Result<(), StdError> {
+        self.ensure_open(
+            "Std.Graph.Application.DrawText(App, X, Y, Text, Color) requires an open graphics session.",
+            "Open the application before mutating the runtime-owned backbuffer.",
+            location,
+        )?;
+
+        self.sync_backbuffer_to_backend(location)?;
+        let color = validate_rgb24(
+            color,
+            "Std.Graph.Application.DrawText(App, X, Y, Text, Color)",
+            location,
+        )?;
+        text::draw_text(&mut self.backbuffer, x, y, text_value, color);
         Ok(())
     }
 

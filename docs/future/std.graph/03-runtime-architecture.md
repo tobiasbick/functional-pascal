@@ -27,9 +27,13 @@ crates/fpas-std/src/graph/
     mod.rs         - current backend selection, thread-local ownership, and test hooks
     headless.rs    - current deterministic headless backend for automated tests
     native.rs      - current `winit` + `softbuffer` window lifecycle and frame presentation
+  circle.rs        - current circle rasterization
   color.rs         - current packed RGB24 validation helpers
   event.rs         - current normalized event model and EventKind names
   framebuffer.rs   - current frame-size and pixel-payload validation helpers
+  line.rs          - current line rasterization
+  rect.rs          - current rectangle outline and fill primitives
+  text.rs          - current deterministic bitmap text rasterization
   session.rs       - current GraphSession lifecycle, backend wiring, backbuffer, and staged upload state
   tests.rs         - current runtime tests for the headless validation and backbuffer path
 ```
@@ -71,6 +75,14 @@ Suggested first discriminants:
 - [x] `ApplicationSize`
 - [x] `ApplicationPollEvent`
 - [x] `ApplicationUploadFrame`
+- [x] `ApplicationClear`
+- [x] `ApplicationPutPixel`
+- [x] `ApplicationPresent`
+- [x] `ApplicationDrawLine`
+- [x] `ApplicationDrawRect`
+- [x] `ApplicationFillRect`
+- [x] `ApplicationDrawCircle`
+- [x] `ApplicationDrawText`
 
 ### `crates/fpas-sema`
 
@@ -149,9 +161,10 @@ That normalization belongs in `fpas-std/src/graph/event.rs`, not in the VM layer
 
 - [x] `GraphSession` should own a persistent backbuffer.
 - [x] `Clear` and `PutPixel` mutate that backbuffer in place.
+- [x] `DrawLine`, `DrawRect`, `FillRect`, and `DrawCircle` mutate that backbuffer in place.
+- [x] `DrawText` mutates that backbuffer in place via a deterministic built-in bitmap font.
 - [x] `Present` flushes the current backbuffer to the native window.
 - [ ] `UploadFrame` remains the direct bulk upload path for render-heavy code.
-- [ ] `DrawLine`, `DrawRect`, `FillRect`, and `DrawCircle` still need their own focused runtime files.
 
 ## Deliberate separation from `Std.Tui`
 

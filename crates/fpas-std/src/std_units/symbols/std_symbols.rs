@@ -255,6 +255,11 @@ pub const STD_GRAPH_APPLICATION_UPLOAD_FRAME: &str = std_graph!("Application.Upl
 pub const STD_GRAPH_APPLICATION_CLEAR: &str = std_graph!("Application.Clear");
 pub const STD_GRAPH_APPLICATION_PUT_PIXEL: &str = std_graph!("Application.PutPixel");
 pub const STD_GRAPH_APPLICATION_PRESENT: &str = std_graph!("Application.Present");
+pub const STD_GRAPH_APPLICATION_DRAW_LINE: &str = std_graph!("Application.DrawLine");
+pub const STD_GRAPH_APPLICATION_DRAW_RECT: &str = std_graph!("Application.DrawRect");
+pub const STD_GRAPH_APPLICATION_FILL_RECT: &str = std_graph!("Application.FillRect");
+pub const STD_GRAPH_APPLICATION_DRAW_CIRCLE: &str = std_graph!("Application.DrawCircle");
+pub const STD_GRAPH_APPLICATION_DRAW_TEXT: &str = std_graph!("Application.DrawText");
 
 pub const STD_STR_LENGTH: &str = std_str!("Length");
 pub const STD_STR_TO_UPPER: &str = std_str!("ToUpper");

@@ -26,6 +26,11 @@ impl Worker {
                     | GraphIntrinsic::ApplicationClear
                     | GraphIntrinsic::ApplicationPutPixel
                     | GraphIntrinsic::ApplicationPresent
+                    | GraphIntrinsic::ApplicationDrawLine
+                    | GraphIntrinsic::ApplicationDrawRect
+                    | GraphIntrinsic::ApplicationFillRect
+                    | GraphIntrinsic::ApplicationDrawCircle
+                    | GraphIntrinsic::ApplicationDrawText
             )
         ) {
             self.ensure_graph_main_task(line)?;
@@ -33,7 +38,10 @@ impl Worker {
 
         match intrinsic {
             Intrinsic::Graph(GraphIntrinsic::ApplicationOpen) => {
-                let title = self.pop_graph_title(line)?;
+                let title = self.pop_graph_string(
+                    "Pass a string title to `Std.Graph.Application.Open(Width, Height, Title)`.",
+                    line,
+                )?;
                 let height = self.pop_int(line)?;
                 let width = self.pop_int(line)?;
                 {
@@ -95,19 +103,86 @@ impl Worker {
                 let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
                 graph.session.present(line)?;
             }
+            Intrinsic::Graph(GraphIntrinsic::ApplicationDrawLine) => {
+                let color = self.pop_int(line)?;
+                let y2 = self.pop_int(line)?;
+                let x2 = self.pop_int(line)?;
+                let y1 = self.pop_int(line)?;
+                let x1 = self.pop_int(line)?;
+                self.pop_graph_application(line)?;
+                let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
+                graph.session.draw_line(x1, y1, x2, y2, color, line)?;
+            }
+            Intrinsic::Graph(GraphIntrinsic::ApplicationDrawRect) => {
+                let color = self.pop_int(line)?;
+                let height = self.pop_int(line)?;
+                let width = self.pop_int(line)?;
+                let y = self.pop_int(line)?;
+                let x = self.pop_int(line)?;
+                self.pop_graph_application(line)?;
+                let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
+                graph.session.draw_rect(x, y, width, height, color, line)?;
+            }
+            Intrinsic::Graph(GraphIntrinsic::ApplicationFillRect) => {
+                let color = self.pop_int(line)?;
+                let height = self.pop_int(line)?;
+                let width = self.pop_int(line)?;
+                let y = self.pop_int(line)?;
+                let x = self.pop_int(line)?;
+                self.pop_graph_application(line)?;
+                let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
+                graph.session.fill_rect(x, y, width, height, color, line)?;
+            }
+            Intrinsic::Graph(GraphIntrinsic::ApplicationDrawCircle) => {
+                let color = self.pop_int(line)?;
+                let radius = self.pop_int(line)?;
+                let center_y = self.pop_int(line)?;
+                let center_x = self.pop_int(line)?;
+                self.pop_graph_application(line)?;
+                let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
+                graph
+                    .session
+                    .draw_circle(center_x, center_y, radius, color, line)?;
+            }
+            Intrinsic::Graph(GraphIntrinsic::ApplicationDrawText) => {
+                let color = self.pop_int(line)?;
+                let text = self.pop_graph_text(line)?;
+                let y = self.pop_int(line)?;
+                let x = self.pop_int(line)?;
+                self.pop_graph_application(line)?;
+                let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
+                graph.session.draw_text(x, y, &text, color, line)?;
+            }
             _ => return Ok(false),
         }
 
         Ok(true)
     }
 
-    fn pop_graph_title(&mut self, line: SourceLocation) -> Result<String, VmError> {
+    fn pop_graph_string(
+        &mut self,
+        help: &'static str,
+        line: SourceLocation,
+    ) -> Result<String, VmError> {
         match self.pop(line)? {
             Value::Str(title) => Ok(title),
             other => Err(runtime_error(
                 TYPE_MISMATCH_CODE,
                 format!("Expected string, got {}", other.type_name()),
-                "Pass a string title to `Std.Graph.Application.Open(Width, Height, Title)`.",
+                help,
+                line,
+            )),
+        }
+    }
+
+    fn pop_graph_text(&mut self, line: SourceLocation) -> Result<String, VmError> {
+        match self.pop(line)? {
+            Value::Str(text) => Ok(text),
+            Value::Char(ch) => Ok(ch.to_string()),
+            other => Err(runtime_error(
+                TYPE_MISMATCH_CODE,
+                format!("Expected string or char, got {}", other.type_name()),
+                "Pass a string or single character as `Text` to `Std.Graph.Application.DrawText(App, X, Y, Text, Color)`.",
                 line,
             )),
         }

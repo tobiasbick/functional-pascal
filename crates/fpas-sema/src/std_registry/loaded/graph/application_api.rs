@@ -68,4 +68,62 @@ pub(super) fn register_application_api(checker: &mut Checker, types: &GraphTypes
         s::STD_GRAPH_APPLICATION_PRESENT,
         vec![p("App", types.application.clone(), false)],
     );
+    define_proc(
+        checker,
+        s::STD_GRAPH_APPLICATION_DRAW_LINE,
+        vec![
+            p("App", types.application.clone(), false),
+            p("X1", Ty::Integer, false),
+            p("Y1", Ty::Integer, false),
+            p("X2", Ty::Integer, false),
+            p("Y2", Ty::Integer, false),
+            p("Color", Ty::Integer, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_GRAPH_APPLICATION_DRAW_RECT,
+        vec![
+            p("App", types.application.clone(), false),
+            p("X", Ty::Integer, false),
+            p("Y", Ty::Integer, false),
+            p("Width", Ty::Integer, false),
+            p("Height", Ty::Integer, false),
+            p("Color", Ty::Integer, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_GRAPH_APPLICATION_FILL_RECT,
+        vec![
+            p("App", types.application.clone(), false),
+            p("X", Ty::Integer, false),
+            p("Y", Ty::Integer, false),
+            p("Width", Ty::Integer, false),
+            p("Height", Ty::Integer, false),
+            p("Color", Ty::Integer, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_GRAPH_APPLICATION_DRAW_CIRCLE,
+        vec![
+            p("App", types.application.clone(), false),
+            p("CenterX", Ty::Integer, false),
+            p("CenterY", Ty::Integer, false),
+            p("Radius", Ty::Integer, false),
+            p("Color", Ty::Integer, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_GRAPH_APPLICATION_DRAW_TEXT,
+        vec![
+            p("App", types.application.clone(), false),
+            p("X", Ty::Integer, false),
+            p("Y", Ty::Integer, false),
+            p("Text", Ty::String, false),
+            p("Color", Ty::Integer, false),
+        ],
+    );
 }

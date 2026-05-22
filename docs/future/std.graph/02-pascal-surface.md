@@ -63,14 +63,6 @@ procedure Application.UploadFrame(
 );
 procedure Application.Clear(App: Application; Color: integer);
 procedure Application.PutPixel(App: Application; X: integer; Y: integer; Color: integer);
-procedure Application.Present(App: Application);
-```
-
-## Planned next-slice drawing surface
-
-After the current backbuffer slice, `Std.Graph` should grow the remaining drawing API:
-
-```pascal
 procedure Application.DrawLine(
   App: Application;
   X1: integer;
@@ -109,9 +101,25 @@ procedure Application.DrawText(
   Text: string;
   Color: integer
 );
+procedure Application.Present(App: Application);
 ```
 
-These routines are not part of the foundation slice, but they are part of the intended `Std.Graph` direction.
+## Planned next-slice input surface
+
+After the current drawing slice, `Std.Graph` should grow richer input:
+
+```pascal
+type
+  EventKind = (
+    CloseRequested,
+    Resize,
+    Key,
+    Mouse,
+    Wheel
+  );
+```
+
+These event variants are not part of the foundation slice yet, but they are part of the intended `Std.Graph` direction.
 
 ## Semantics
 
@@ -156,17 +164,43 @@ These routines are not part of the foundation slice, but they are part of the in
 - [ ] Writes one pixel into the runtime-owned backbuffer.
 - [ ] Out-of-bounds coordinates are clipped.
 
+### `Application.DrawLine`
+
+- [ ] Draws one line into the runtime-owned backbuffer.
+- [ ] Coordinates are clipped to the current framebuffer bounds.
+
+### `Application.DrawRect`
+
+- [ ] Draws one rectangle outline into the runtime-owned backbuffer.
+- [ ] `Width` and `Height` must be positive.
+
+### `Application.FillRect`
+
+- [ ] Fills one rectangle into the runtime-owned backbuffer.
+- [ ] `Width` and `Height` must be positive.
+
+### `Application.DrawCircle`
+
+- [ ] Draws one circle outline into the runtime-owned backbuffer.
+- [ ] `Radius` must be non-negative.
+
+### `Application.DrawText`
+
+- [ ] Draws deterministic bitmap text into the runtime-owned backbuffer.
+- [ ] Each glyph uses a fixed-size built-in bitmap font.
+- [ ] Drawing is clipped to the current framebuffer bounds.
+
 ### `Application.Present`
 
 - [ ] Flushes the current runtime-owned backbuffer to the native window.
 
 ## Planned later semantics for drawing routines
 
-- [ ] Drawing routines mutate a runtime-owned backbuffer.
+- [x] Drawing routines mutate a runtime-owned backbuffer.
 - [x] `Application.Present(App)` flushes that backbuffer to the native window.
-- [ ] `Application.UploadFrame` remains the bulk upload fast path for render-heavy programs.
-- [ ] The runtime should clip drawing operations to the current framebuffer bounds.
-- [ ] Text drawing should start with a simple deterministic bitmap font.
+- [x] `Application.UploadFrame` remains the bulk upload fast path for render-heavy programs.
+- [x] The runtime clips drawing operations to the current framebuffer bounds.
+- [x] `Application.DrawText(App, X, Y, Text, Color)` now uses a simple deterministic bitmap font.
 
 ## Minimal example
 

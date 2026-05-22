@@ -42,4 +42,24 @@ pub enum GraphIntrinsic {
     ///
     /// **Documentation:** `docs/future/std.graph/02-pascal-surface.md`
     ApplicationPresent = 299,
+    /// `Std.Graph.Application.DrawLine(App, X1, Y1, X2, Y2, Color)`.
+    ///
+    /// **Documentation:** `docs/future/std.graph/02-pascal-surface.md`
+    ApplicationDrawLine = 300,
+    /// `Std.Graph.Application.DrawRect(App, X, Y, Width, Height, Color)`.
+    ///
+    /// **Documentation:** `docs/future/std.graph/02-pascal-surface.md`
+    ApplicationDrawRect = 301,
+    /// `Std.Graph.Application.FillRect(App, X, Y, Width, Height, Color)`.
+    ///
+    /// **Documentation:** `docs/future/std.graph/02-pascal-surface.md`
+    ApplicationFillRect = 302,
+    /// `Std.Graph.Application.DrawCircle(App, CenterX, CenterY, Radius, Color)`.
+    ///
+    /// **Documentation:** `docs/future/std.graph/02-pascal-surface.md`
+    ApplicationDrawCircle = 303,
+    /// `Std.Graph.Application.DrawText(App, X, Y, Text, Color)`.
+    ///
+    /// **Documentation:** `docs/future/std.graph/02-pascal-surface.md`
+    ApplicationDrawText = 304,
 }

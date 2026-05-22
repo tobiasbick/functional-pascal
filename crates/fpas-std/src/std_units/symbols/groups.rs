@@ -155,6 +155,11 @@ pub(in super::super) const STD_GRAPH_SYMBOLS: &[&str] = &[
     std_symbols::STD_GRAPH_APPLICATION_CLEAR,
     std_symbols::STD_GRAPH_APPLICATION_PUT_PIXEL,
     std_symbols::STD_GRAPH_APPLICATION_PRESENT,
+    std_symbols::STD_GRAPH_APPLICATION_DRAW_LINE,
+    std_symbols::STD_GRAPH_APPLICATION_DRAW_RECT,
+    std_symbols::STD_GRAPH_APPLICATION_FILL_RECT,
+    std_symbols::STD_GRAPH_APPLICATION_DRAW_CIRCLE,
+    std_symbols::STD_GRAPH_APPLICATION_DRAW_TEXT,
 ];
 
 pub(in super::super) const STD_STR_SYMBOLS: &[&str] = &[

@@ -91,26 +91,28 @@ Scope:
 
 - [x] Add a persistent backbuffer to `GraphSession`.
 - [x] Add `Clear`, `PutPixel`, and `Present`.
-- [ ] Add `DrawLine`, `DrawRect`, `FillRect`, and `DrawCircle`.
-- [ ] Keep drawing logic split by concern in small files.
+- [x] Add `DrawLine`, `DrawRect`, `FillRect`, and `DrawCircle`.
+- [x] Keep drawing logic split by concern in small files.
 
 Verify:
 
 - [x] runtime tests for `Clear`, `PutPixel`, and `Present`
 - [x] VM tests for `Clear`, `PutPixel`, and `Present`
-- [ ] VM tests for `DrawLine`, `DrawRect`, `FillRect`, and `DrawCircle`
+- [x] runtime tests for `DrawLine`, `DrawRect`, `FillRect`, and `DrawCircle`
+- [x] VM tests for `DrawLine`, `DrawRect`, `FillRect`, and `DrawCircle`
 
 ### 8. Text and richer input
 
 Scope:
 
-- [ ] Add bitmap text drawing.
+- [x] Add bitmap text drawing.
 - [ ] Add mouse, drag, and wheel events.
 - [ ] Add any missing event types needed for explorer-style interaction.
 
 Verify:
 
-- [ ] runtime tests for text clipping and deterministic glyph output
+- [x] runtime tests for text clipping and deterministic glyph output
+- [x] compiler/VM tests for `DrawText`
 - [ ] VM tests for mouse and wheel event records
 
 ### 9. Examples and canonical std docs
@@ -169,7 +171,7 @@ Phase 1 is complete when all of the following are true:
 
 The first useful graphics release is complete when all of the following are true:
 
-- [ ] a program can draw pixels, lines, simple shapes, and text
+- [x] a program can draw pixels, lines, simple shapes, and text
 - [ ] keyboard, mouse, wheel, resize, and close events are available
 - [ ] a Mandelbrot example runs interactively
 - [ ] a Julia example runs interactively

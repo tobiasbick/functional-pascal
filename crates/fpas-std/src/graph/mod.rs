@@ -4,10 +4,14 @@
 
 mod backbuffer;
 mod backend;
+mod circle;
 mod color;
 mod event;
 mod framebuffer;
+mod line;
+mod rect;
 mod session;
+mod text;
 
 #[cfg(test)]
 mod tests;

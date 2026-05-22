@@ -20,6 +20,11 @@ begin
   var IsEscape: boolean := Std.Console.KeyKind.Escape = Std.Console.KeyKind.Escape;
     Application.Clear(App, $00010203);
     Application.PutPixel(App, 1, 0, $00ABCDEF);
+    Application.DrawLine(App, 0, 0, 3, 3, $00000010);
+    Application.DrawRect(App, 1, 1, 2, 2, $00000020);
+    Application.FillRect(App, 0, 0, 1, 1, $00000030);
+    Application.DrawCircle(App, 3, 3, 1, $00000040);
+        Application.DrawText(App, 0, 0, 'A', $00000050);
     Application.Present(App);
   Application.UploadFrame(App, 1, 2, Pixels);
   Application.Close(App)
@@ -102,6 +107,42 @@ end.",
     assert!(
         errs.iter()
             .any(|e| e.message.contains("expects 1 arguments, got 2")),
+        "{errs:#?}"
+    );
+}
+
+#[test]
+fn std_graph_draw_circle_wrong_arg_count() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Graph;
+begin
+  var App: Application := Application.Open(640, 480, 'Graph smoke');
+  Application.DrawCircle(App, 10, 10, 3)
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| e.message.contains("expects 5 arguments, got 4")),
+        "{errs:#?}"
+    );
+}
+
+#[test]
+fn std_graph_draw_text_wrong_arg_count() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Graph;
+begin
+  var App: Application := Application.Open(640, 480, 'Graph smoke');
+  Application.DrawText(App, 10, 10, 'A')
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| e.message.contains("expects 5 arguments, got 4")),
         "{errs:#?}"
     );
 }

@@ -90,7 +90,7 @@ The first milestone should therefore prove the native window lifecycle and bulk 
 - [x] `Present`
 - [x] Mouse events.
 - [x] Wheel events.
-- [ ] Blocking or timeout-based event wait.
+- [x] Blocking or timeout-based event wait.
 - [ ] Dirty-rectangle or scanline upload helpers.
 - [x] Julia explorer example with interactive controls.
 - [ ] Mandelbrot explorer example with interactive controls.

@@ -251,6 +251,8 @@ pub const STD_GRAPH_APPLICATION_OPEN: &str = std_graph!("Application.Open");
 pub const STD_GRAPH_APPLICATION_CLOSE: &str = std_graph!("Application.Close");
 pub const STD_GRAPH_APPLICATION_SIZE: &str = std_graph!("Application.Size");
 pub const STD_GRAPH_APPLICATION_POLL_EVENT: &str = std_graph!("Application.PollEvent");
+pub const STD_GRAPH_APPLICATION_READ_EVENT_TIMEOUT: &str =
+    std_graph!("Application.ReadEventTimeout");
 pub const STD_GRAPH_APPLICATION_UPLOAD_FRAME: &str = std_graph!("Application.UploadFrame");
 pub const STD_GRAPH_APPLICATION_CLEAR: &str = std_graph!("Application.Clear");
 pub const STD_GRAPH_APPLICATION_PUT_PIXEL: &str = std_graph!("Application.PutPixel");

@@ -170,6 +170,102 @@ fn graph_poll_event_builds_std_graph_event_record() {
 }
 
 #[test]
+fn graph_read_event_timeout_returns_none_without_events() {
+    with_headless(|| {
+        let mut chunk = Chunk::new();
+        emit_constant(&mut chunk, graph_application_value());
+        emit_constant(&mut chunk, Value::Integer(0));
+        emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationReadEventTimeout);
+        chunk.emit(Op::Halt, loc());
+
+        let shared = Arc::new(minimal_shared_state(chunk));
+        {
+            let mut graph = shared.graph.lock().unwrap_or_else(|e| e.into_inner());
+            graph
+                .session
+                .open(640, 480, "Graph events", loc())
+                .expect("test graph session should open");
+        }
+
+        let mut worker = Worker::new_main(shared);
+        worker.run().expect("graph read event timeout should succeed");
+
+        assert_eq!(worker.stack, vec![Value::OptionNone]);
+    });
+}
+
+#[test]
+fn graph_read_event_timeout_returns_queued_event_record() {
+    with_headless(|| {
+        let mut chunk = Chunk::new();
+        emit_constant(&mut chunk, graph_application_value());
+        emit_constant(&mut chunk, Value::Integer(16));
+        emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationReadEventTimeout);
+        chunk.emit(Op::Halt, loc());
+
+        let shared = Arc::new(minimal_shared_state(chunk));
+        {
+            let mut graph = shared.graph.lock().unwrap_or_else(|e| e.into_inner());
+            graph
+                .session
+                .open(640, 480, "Graph events", loc())
+                .expect("test graph session should open");
+            graph
+                .session
+                .push_event(
+                    GraphEvent::Resize {
+                        width: 320,
+                        height: 200,
+                    },
+                    loc(),
+                )
+                .expect("test graph event should enqueue");
+        }
+
+        let mut worker = Worker::new_main(shared);
+        worker.run().expect("graph read event timeout should succeed");
+
+        assert_eq!(
+            worker.stack,
+            vec![Value::OptionSome(Box::new(Value::Record {
+                type_name: "Std.Graph.Event".into(),
+                fields: vec![
+                    ("kind".into(), Value::Integer(1)),
+                    ("size".into(), graph_size_value(320, 200)),
+                    (
+                        "key".into(),
+                        key_event_value(ConsoleKeyEvent::new(
+                            key_kind_index("Unknown"),
+                            '\0',
+                            false,
+                            false,
+                            false,
+                            false,
+                        )),
+                    ),
+                    (
+                        "mouse_action".into(),
+                        Value::Integer(mouse_action_index("Unknown") as i64),
+                    ),
+                    (
+                        "mouse_button".into(),
+                        Value::Integer(mouse_button_index("None") as i64),
+                    ),
+                    ("mouse_x".into(), Value::Integer(0)),
+                    ("mouse_y".into(), Value::Integer(0)),
+                    ("wheel_x".into(), Value::Integer(0)),
+                    ("wheel_y".into(), Value::Integer(0)),
+                    ("shift".into(), Value::Boolean(false)),
+                    ("ctrl".into(), Value::Boolean(false)),
+                    ("alt".into(), Value::Boolean(false)),
+                    ("meta".into(), Value::Boolean(false)),
+                ],
+            }))]
+        );
+    });
+}
+
+#[test]
 fn graph_poll_event_builds_std_graph_resize_event_record() {
     with_headless(|| {
         let mut chunk = Chunk::new();

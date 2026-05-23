@@ -2,7 +2,7 @@
 
 use super::event::{GraphEvent, GraphEventKind};
 use super::session::GraphSession;
-use super::with_headless_graph_backend_for_tests;
+use super::{set_headless_graph_surface_size_for_tests, with_headless_graph_backend_for_tests};
 use crate::{ConsoleKeyEvent, key_event::key_kind_index, mouse_action_index, mouse_button_index};
 use fpas_bytecode::SourceLocation;
 
@@ -136,6 +136,30 @@ fn graph_session_upload_frame_updates_runtime_backbuffer() {
             session.backbuffer_pixels_for_tests(),
             &[0x00102040, 0x00FF00AA]
         );
+    });
+}
+
+#[test]
+fn graph_session_upload_frame_uses_last_observed_size_during_resize_race() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(2, 1, "Graph smoke", test_location())
+            .expect("open should succeed");
+        assert_eq!(session.size(test_location()).expect("size should succeed"), (2, 1));
+
+        set_headless_graph_surface_size_for_tests(4, 3);
+
+        session
+            .upload_frame(2, 1, &[0x00102040, 0x00FF00AA], test_location())
+            .expect("stale frame size should not fail during a concurrent resize");
+
+        let frame = session
+            .last_uploaded_frame_for_tests()
+            .expect("frame should still be staged");
+        assert_eq!(frame.width, 2);
+        assert_eq!(frame.height, 1);
+        assert_eq!(frame.pixels, vec![0x00102040, 0x00FF00AA]);
     });
 }
 

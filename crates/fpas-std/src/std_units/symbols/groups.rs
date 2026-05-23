@@ -151,6 +151,7 @@ pub(in super::super) const STD_GRAPH_SYMBOLS: &[&str] = &[
     std_symbols::STD_GRAPH_APPLICATION_CLOSE,
     std_symbols::STD_GRAPH_APPLICATION_SIZE,
     std_symbols::STD_GRAPH_APPLICATION_POLL_EVENT,
+    std_symbols::STD_GRAPH_APPLICATION_READ_EVENT_TIMEOUT,
     std_symbols::STD_GRAPH_APPLICATION_UPLOAD_FRAME,
     std_symbols::STD_GRAPH_APPLICATION_CLEAR,
     std_symbols::STD_GRAPH_APPLICATION_PUT_PIXEL,

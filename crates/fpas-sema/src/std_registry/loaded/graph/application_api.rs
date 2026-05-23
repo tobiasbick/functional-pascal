@@ -35,6 +35,15 @@ pub(super) fn register_application_api(checker: &mut Checker, types: &GraphTypes
         vec![p("App", types.application.clone(), false)],
         Ty::Option(Box::new(types.event.clone())),
     );
+    define_func(
+        checker,
+        s::STD_GRAPH_APPLICATION_READ_EVENT_TIMEOUT,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Milliseconds", Ty::Integer, false),
+        ],
+        Ty::Option(Box::new(types.event.clone())),
+    );
     define_proc(
         checker,
         s::STD_GRAPH_APPLICATION_UPLOAD_FRAME,

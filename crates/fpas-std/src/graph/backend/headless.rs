@@ -41,6 +41,17 @@ impl HeadlessGraphBackend {
         Ok(None)
     }
 
+    /// Waits up to `timeout_ms` milliseconds for the next queued event.
+    pub(crate) fn read_event_timeout(
+        &mut self,
+        timeout_ms: i64,
+        location: SourceLocation,
+    ) -> Result<Option<GraphEvent>, StdError> {
+        let _ = timeout_ms;
+        let _ = location;
+        Ok(None)
+    }
+
     /// Accepts a validated frame without presenting it anywhere.
     pub(crate) fn present_frame(
         &mut self,
@@ -60,6 +71,12 @@ impl HeadlessGraphBackend {
     pub(crate) fn size(&mut self, location: SourceLocation) -> Result<(i64, i64), StdError> {
         let _ = location;
         Ok((self.width, self.height))
+    }
+
+    #[cfg(test)]
+    pub(crate) fn set_size_for_tests(&mut self, width: i64, height: i64) {
+        self.width = width;
+        self.height = height;
     }
 }
 

@@ -78,14 +78,15 @@ impl GraphSession {
     }
 
     /// Returns the current logical surface size for the active session.
-    pub fn size(&self, location: SourceLocation) -> Result<(i64, i64), StdError> {
+    pub fn size(&mut self, location: SourceLocation) -> Result<(i64, i64), StdError> {
         self.ensure_open(
             "Std.Graph.Application.Size(App) requires an open graphics session.",
             "Open the application first and keep the returned handle alive while querying its size.",
             location,
         )?;
 
-        backend::graph_surface_size(location)
+        self.sync_backbuffer_to_backend(location)?;
+        Ok((self.width, self.height))
     }
 
     /// Polls the next queued graph event.
@@ -102,6 +103,31 @@ impl GraphSession {
         }
 
         let event = backend::poll_graph_event(location)?;
+        if let Some(event) = &event {
+            self.apply_polled_event(event, location)?;
+        }
+
+        Ok(event)
+    }
+
+    /// Waits up to `timeout_ms` milliseconds for the next queued graph event.
+    pub fn read_event_timeout(
+        &mut self,
+        timeout_ms: i64,
+        location: SourceLocation,
+    ) -> Result<Option<GraphEvent>, StdError> {
+        self.ensure_open(
+            "Std.Graph.Application.ReadEventTimeout(App, Milliseconds) requires an open graphics session.",
+            "Open the application before waiting for events.",
+            location,
+        )?;
+
+        if let Some(event) = self.pending_events.pop_front() {
+            self.apply_polled_event(&event, location)?;
+            return Ok(Some(event));
+        }
+
+        let event = backend::read_graph_event_timeout(timeout_ms, location)?;
         if let Some(event) = &event {
             self.apply_polled_event(event, location)?;
         }
@@ -323,9 +349,7 @@ impl GraphSession {
             location,
         )?;
 
-        let (expected_width, expected_height) = backend::graph_surface_size(location)?;
-        self.width = expected_width;
-        self.height = expected_height;
+        let (expected_width, expected_height) = (self.width, self.height);
         let validated = validate_frame_upload(
             expected_width,
             expected_height,

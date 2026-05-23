@@ -14,6 +14,7 @@ begin
   var App: Application := Application.Open(640, 480, 'Graph smoke');
   var Screen: Size := Application.Size(App);
   var Pending: Option of Event := Application.PollEvent(App);
+    var Timed: Option of Event := Application.ReadEventTimeout(App, 16);
   var Pixels: array of integer := [$00102040, $00102040];
   var Kind: EventKind := EventKind.Resize;
     var MouseKind: EventKind := EventKind.Mouse;
@@ -96,6 +97,24 @@ end.",
     assert!(
         errs.iter()
             .any(|e| e.message.contains("expects 3 arguments, got 2")),
+        "{errs:#?}"
+    );
+}
+
+#[test]
+fn std_graph_read_event_timeout_wrong_arg_count() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Graph;
+begin
+  var App: Application := Application.Open(640, 480, 'Graph smoke');
+  var Ev: Option of Event := Application.ReadEventTimeout(App)
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| e.message.contains("expects 2 arguments, got 1")),
         "{errs:#?}"
     );
 }

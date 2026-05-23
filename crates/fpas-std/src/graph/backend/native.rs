@@ -79,6 +79,21 @@ impl NativeGraphBackend {
         Ok(self.app.pending_events.pop_front())
     }
 
+    /// Waits up to `timeout_ms` milliseconds for one queued native event.
+    pub(crate) fn read_event_timeout(
+        &mut self,
+        timeout_ms: i64,
+        location: SourceLocation,
+    ) -> Result<Option<GraphEvent>, StdError> {
+        if let Some(event) = self.app.pending_events.pop_front() {
+            return Ok(Some(event));
+        }
+
+        let timeout = Duration::from_millis(timeout_ms.max(0) as u64);
+        self.pump(Some(timeout), location)?;
+        Ok(self.app.pending_events.pop_front())
+    }
+
     /// Presents one validated frame into the native window.
     pub(crate) fn present_frame(
         &mut self,
@@ -192,11 +207,14 @@ impl NativeGraphApp {
     }
 
     fn handle_resize(&mut self, width: u32, height: u32) {
-        self.width = i64::from(width);
-        self.height = i64::from(height);
+        let Some((width, height)) = normalized_surface_size(width, height) else {
+            return;
+        };
+        self.width = width;
+        self.height = height;
         self.pending_events.push_back(GraphEvent::Resize {
-            width: self.width,
-            height: self.height,
+            width,
+            height,
         });
     }
 
@@ -351,8 +369,10 @@ impl ApplicationHandler for NativeGraphApp {
         };
 
         let size = window.inner_size();
-        self.width = i64::from(size.width);
-        self.height = i64::from(size.height);
+        if let Some((width, height)) = normalized_surface_size(size.width, size.height) {
+            self.width = width;
+            self.height = height;
+        }
         self.window_id = Some(window.id());
         self.surface = Some(surface);
         self.window = Some(window);
@@ -432,6 +452,14 @@ fn map_winit_mouse_button(button: MouseButton) -> Option<usize> {
         MouseButton::Right => Some(mouse_button_index("Right")),
         MouseButton::Middle => Some(mouse_button_index("Middle")),
         MouseButton::Back | MouseButton::Forward | MouseButton::Other(_) => None,
+    }
+}
+
+fn normalized_surface_size(width: u32, height: u32) -> Option<(i64, i64)> {
+    if width == 0 || height == 0 {
+        None
+    } else {
+        Some((i64::from(width), i64::from(height)))
     }
 }
 
@@ -649,4 +677,21 @@ fn map_character_key(
         key_kind_index("Character")
     };
     Some(ConsoleKeyEvent::new(kind, ch, shift, ctrl, alt, meta))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::normalized_surface_size;
+
+    #[test]
+    fn normalized_surface_size_accepts_positive_extents() {
+        assert_eq!(normalized_surface_size(274, 196), Some((274, 196)));
+    }
+
+    #[test]
+    fn normalized_surface_size_rejects_zero_extents() {
+        assert_eq!(normalized_surface_size(0, 196), None);
+        assert_eq!(normalized_surface_size(274, 0), None);
+        assert_eq!(normalized_surface_size(0, 0), None);
+    }
 }

@@ -59,6 +59,17 @@ impl GraphBackend {
         }
     }
 
+    fn read_event_timeout(
+        &mut self,
+        timeout_ms: i64,
+        location: SourceLocation,
+    ) -> Result<Option<GraphEvent>, StdError> {
+        match self {
+            Self::Headless(backend) => backend.read_event_timeout(timeout_ms, location),
+            Self::Native(backend) => backend.read_event_timeout(timeout_ms, location),
+        }
+    }
+
     fn present_frame(
         &mut self,
         frame: &UploadedFrame,
@@ -128,6 +139,14 @@ pub(crate) fn poll_graph_event(location: SourceLocation) -> Result<Option<GraphE
     with_backend(location, |backend| backend.poll_event(location))
 }
 
+/// Waits up to `timeout_ms` milliseconds for one graph event from the active backend.
+pub(crate) fn read_graph_event_timeout(
+    timeout_ms: i64,
+    location: SourceLocation,
+) -> Result<Option<GraphEvent>, StdError> {
+    with_backend(location, |backend| backend.read_event_timeout(timeout_ms, location))
+}
+
 /// Presents one validated frame through the active backend.
 pub(crate) fn present_graph_frame(
     frame: &UploadedFrame,
@@ -166,6 +185,24 @@ pub fn with_headless_graph_backend_for_tests<T>(f: impl FnOnce() -> T) -> T {
 #[doc(hidden)]
 pub fn last_headless_graph_frame_for_tests() -> Option<UploadedFrame> {
     headless::last_presented_frame_for_tests()
+}
+
+/// Overrides the headless backend surface size on the current thread.
+#[doc(hidden)]
+#[cfg(test)]
+pub fn set_headless_graph_surface_size_for_tests(width: i64, height: i64) {
+    GRAPH_BACKEND.with(|slot| {
+        let mut slot = slot.borrow_mut();
+        let Some(backend) = slot.as_mut() else {
+            panic!("headless graph backend must be open before overriding its size for tests");
+        };
+        match backend {
+            GraphBackend::Headless(backend) => backend.set_size_for_tests(width, height),
+            GraphBackend::Native(_) => {
+                panic!("headless graph surface override is only available in headless tests")
+            }
+        }
+    });
 }
 
 fn with_backend<T>(

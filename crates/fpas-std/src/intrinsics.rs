@@ -79,6 +79,7 @@ pub fn run_intrinsic(
             | Intrinsic::Graph(GraphIntrinsic::ApplicationClose)
             | Intrinsic::Graph(GraphIntrinsic::ApplicationSize)
             | Intrinsic::Graph(GraphIntrinsic::ApplicationPollEvent)
+            | Intrinsic::Graph(GraphIntrinsic::ApplicationReadEventTimeout)
             | Intrinsic::Graph(GraphIntrinsic::ApplicationUploadFrame)
             | Intrinsic::Graph(GraphIntrinsic::ApplicationClear)
             | Intrinsic::Graph(GraphIntrinsic::ApplicationPutPixel)

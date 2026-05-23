@@ -67,6 +67,7 @@ function Application.Open(Width: integer; Height: integer; Title: string): Appli
 procedure Application.Close(App: Application);
 function Application.Size(App: Application): Size;
 function Application.PollEvent(App: Application): Option of Event;
+function Application.ReadEventTimeout(App: Application; Milliseconds: integer): Option of Event;
 procedure Application.UploadFrame(
   App: Application;
   Width: integer;
@@ -150,6 +151,13 @@ procedure Application.Present(App: Application);
 - [ ] `Event.kind = Mouse` populates `Event.mouse_action`, `Event.mouse_button`, `Event.mouse_x`, `Event.mouse_y`, and modifier flags.
 - [ ] `Event.kind = Wheel` populates `Event.wheel_x`, `Event.wheel_y`, `Event.mouse_x`, `Event.mouse_y`, and modifier flags.
 - [ ] `Event.kind = CloseRequested` signals that the host asked the application to exit.
+
+### `Application.ReadEventTimeout`
+
+- [ ] Waits up to `Milliseconds` for one event.
+- [ ] `Milliseconds <= 0` behaves like a non-blocking poll.
+- [ ] Returns `Some(E)` for the next queued `Resize`, `Key`, `Mouse`, `Wheel`, or `CloseRequested` event.
+- [ ] Returns `None` when no event arrives before the timeout elapses.
 
 ### `Application.UploadFrame`
 

@@ -78,12 +78,16 @@ Scope:
 
 - [x] Wire `winit` + `softbuffer` in `fpas-std`.
 - [x] Implement a real native window, event polling, resize updates, and frame presentation.
+- [x] Ignore transient native `0x0` resize callbacks so `Size` and `UploadFrame` keep using the last positive drawable extent.
+- [x] Accept `UploadFrame` data built for the last observed size during a concurrent resize, instead of aborting the program.
 - [x] Keep `Application.Close(App)` idempotent so cleanup paths can close safely.
 
 Verify:
 
 - [x] `cargo build`
 - [x] `cargo test --workspace`
+- [x] focused native-backend unit tests for zero-sized resize normalization
+- [x] focused runtime test for `UploadFrame` during a resize race after `Application.Size(App)`
 - [x] focused runtime test for repeated `Application.Close(App)`
 - [x] focused runtime and compiler/VM tests for open -> close -> open without stale backend state
 - [ ] manual smoke run on Windows, Linux, macOS
@@ -111,12 +115,14 @@ Scope:
 - [x] Add bitmap text drawing.
 - [x] Add mouse, drag, and wheel events.
 - [x] Add any missing event types needed for explorer-style interaction.
+- [x] Add `Application.ReadEventTimeout(App, Milliseconds)` for bounded event waits.
 
 Verify:
 
 - [x] runtime tests for text clipping and deterministic glyph output
 - [x] compiler/VM tests for `DrawText`
 - [x] VM tests for mouse and wheel event records
+- [x] sema, compiler, and VM tests for `Application.ReadEventTimeout`
 
 ### 9. Examples and canonical std docs
 

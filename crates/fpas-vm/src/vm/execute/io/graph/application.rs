@@ -22,6 +22,7 @@ impl Worker {
                     | GraphIntrinsic::ApplicationClose
                     | GraphIntrinsic::ApplicationSize
                     | GraphIntrinsic::ApplicationPollEvent
+                        | GraphIntrinsic::ApplicationReadEventTimeout
                     | GraphIntrinsic::ApplicationUploadFrame
                     | GraphIntrinsic::ApplicationClear
                     | GraphIntrinsic::ApplicationPutPixel
@@ -62,7 +63,7 @@ impl Worker {
             Intrinsic::Graph(GraphIntrinsic::ApplicationSize) => {
                 self.pop_graph_application(line)?;
                 let (width, height) = {
-                    let graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
+                    let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
                     graph.session.size(line)?
                 };
                 self.push(Self::graph_size_record(width, height))?;
@@ -72,6 +73,20 @@ impl Worker {
                 let event = {
                     let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
                     graph.session.poll_event(line)?
+                };
+                match event {
+                    Some(event) => {
+                        self.push(Value::OptionSome(Box::new(Self::graph_event_record(event))))?
+                    }
+                    None => self.push(Value::OptionNone)?,
+                }
+            }
+            Intrinsic::Graph(GraphIntrinsic::ApplicationReadEventTimeout) => {
+                let timeout_ms = self.pop_int(line)?;
+                self.pop_graph_application(line)?;
+                let event = {
+                    let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
+                    graph.session.read_event_timeout(timeout_ms, line)?
                 };
                 match event {
                     Some(event) => {

@@ -51,6 +51,22 @@ impl Compiler {
                 );
                 Ok(true)
             }
+            s::STD_GRAPH_APPLICATION_READ_EVENT_TIMEOUT => {
+                self.expect_exact_args(
+                    s::STD_GRAPH_APPLICATION_READ_EVENT_TIMEOUT,
+                    2,
+                    args,
+                    location,
+                )?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(
+                    Intrinsic::Graph(GraphIntrinsic::ApplicationReadEventTimeout),
+                    location,
+                );
+                Ok(true)
+            }
             s::STD_GRAPH_APPLICATION_UPLOAD_FRAME => {
                 self.expect_exact_args(s::STD_GRAPH_APPLICATION_UPLOAD_FRAME, 4, args, location)?;
                 for arg in args {

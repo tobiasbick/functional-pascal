@@ -40,13 +40,14 @@ If a file also references console-side names such as `Std.Console.KeyKind.*`, `S
 - one native window per process
 - a bulk `UploadFrame` path for software renderers
 - a runtime-owned backbuffer with pixels, lines, rectangles, circles, text, and `Present`
-- `PollEvent` support for `CloseRequested`, `Resize`, `Key`, `Mouse`, and `Wheel`
+- `PollEvent` and `ReadEventTimeout` support for `CloseRequested`, `Resize`, `Key`, `Mouse`, and `Wheel`
 
 Current runtime constraints:
 
 - `Std.Graph.Application.*` is main-task only; do not call it from `go` tasks
 - `DrawText` uses a built-in deterministic bitmap font
 - the runtime currently targets `winit` + `softbuffer`
+- transient native `0x0` resize callbacks are ignored; `Size` keeps the last positive drawable extent
 
 ---
 
@@ -62,6 +63,7 @@ Current runtime constraints:
 | procedure | `Application.Close(App: Application)` | close the session |
 | function | `Application.Size(App: Application): Size` | current drawable size |
 | function | `Application.PollEvent(App: Application): Option of Event` | non-blocking event poll |
+| function | `Application.ReadEventTimeout(App: Application; Milliseconds: integer): Option of Event` | wait up to N ms for one event |
 | procedure | `Application.UploadFrame(App: Application; Width: integer; Height: integer; Pixels: array of integer)` | bulk row-major `$00RRGGBB` upload |
 | procedure | `Application.Clear(App: Application; Color: integer)` | fill the runtime backbuffer |
 | procedure | `Application.PutPixel(App: Application; X: integer; Y: integer; Color: integer)` | write one clipped pixel |
@@ -166,9 +168,18 @@ Close the active graphics session. Closing an already closed session is a no-op.
 
 Return the latest known drawable size.
 
+Transient native `0x0` resize callbacks are ignored, so `Size` continues to report the last positive drawable extent.
+
 ### `function Application.PollEvent(App: Application): Option of Event`
 
 Return `Some(E)` when one event is queued, or `None` when no event is pending.
+
+### `function Application.ReadEventTimeout(App: Application; Milliseconds: integer): Option of Event`
+
+Wait up to `Milliseconds` for one queued event and return `Some(E)` when one arrives.
+
+- `Milliseconds <= 0` behaves like a non-blocking poll.
+- If an event is already queued, it is returned immediately.
 
 ### `procedure Application.UploadFrame(App: Application; Width: integer; Height: integer; Pixels: array of integer)`
 
@@ -177,6 +188,9 @@ Validate and present one full row-major framebuffer.
 - pixels use packed `$00RRGGBB`
 - `Length(Pixels)` must equal `Width * Height`
 - `Width` and `Height` must match the current drawable size
+- transient native `0x0` resize callbacks do not change the expected upload extent
+
+If the window is resized again after one earlier `Application.Size(App)` or `Application.PollEvent(App)` observation, a frame built for that last observed size is still accepted instead of aborting the program. The next size observation or resize event updates the expected extent.
 
 ### `procedure Application.Clear(App: Application; Color: integer)`
 

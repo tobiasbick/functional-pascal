@@ -78,11 +78,13 @@ Scope:
 
 - [x] Wire `winit` + `softbuffer` in `fpas-std`.
 - [x] Implement a real native window, event polling, resize updates, and frame presentation.
+- [x] Keep `Application.Close(App)` idempotent so cleanup paths can close safely.
 
 Verify:
 
 - [x] `cargo build`
 - [x] `cargo test --workspace`
+- [x] focused runtime test for repeated `Application.Close(App)`
 - [ ] manual smoke run on Windows, Linux, macOS
 
 ### 7. Runtime-owned drawing surface

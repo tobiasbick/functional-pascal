@@ -32,6 +32,22 @@ fn graph_session_open_and_close_work_with_headless_backend() {
 }
 
 #[test]
+fn graph_session_close_is_a_noop_after_the_session_is_already_closed() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(320, 200, "Graph smoke", test_location())
+            .expect("open should succeed");
+        session
+            .close(test_location())
+            .expect("first close should succeed");
+        session
+            .close(test_location())
+            .expect("second close should be a no-op");
+    });
+}
+
+#[test]
 fn graph_session_clear_fills_runtime_backbuffer() {
     with_headless(|| {
         let mut session = GraphSession::default();

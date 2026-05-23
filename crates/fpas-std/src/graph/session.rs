@@ -61,11 +61,9 @@ impl GraphSession {
 
     /// Closes the active graph session and clears staged state.
     pub fn close(&mut self, location: SourceLocation) -> Result<(), StdError> {
-        self.ensure_open(
-            "Std.Graph.Application.Close(App) requires an open graphics session.",
-            "Open the application with `Application.Open(...)` before closing it.",
-            location,
-        )?;
+        if !self.open {
+            return Ok(());
+        }
 
         backend::close_graph_backend(location)?;
 

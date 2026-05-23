@@ -70,6 +70,7 @@ A small FPAS program can:
 - [ ] One smoke example run manually on Windows, Linux, and macOS.
 - [ ] Manual resize / close test.
 - [ ] Repeated open / close in one process without stale global state.
+- [x] Repeated `Application.Close(App)` on the same handle is covered by a focused runtime test.
 
 ## Why bulk frame upload comes first
 

@@ -47,6 +47,10 @@ impl Worker {
                 {
                     let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
                     graph.session.open(width, height, &title, line)?;
+                    let pending = std::mem::take(&mut graph.pending_test_events);
+                    for event in pending {
+                        graph.session.push_event(event, line)?;
+                    }
                 }
                 self.push(Self::graph_application_record())?;
             }

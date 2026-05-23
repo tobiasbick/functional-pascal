@@ -58,6 +58,7 @@ Do **not** pass a `unit` source alone (for example `mandelbrot_color.fpas` or `m
 | `pascal/tui/show_modal_existing_view.fpas` | `Std.Tui` — `ShowModal` for an existing view subtree |
 | `pascal/tui/show_dialog.fpas` | `Std.Tui` — `ShowDialog` plus modal-local command binding |
 | `math/julia/julia.fpas` | ASCII Julia set (**interactive** — see below) |
+| `math/julia/julia_graph.fpas` | Native-window Julia explorer with `Std.Graph` |
 
 ## Multi-unit projects
 
@@ -75,6 +76,7 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 | Path | Notes |
 |------|--------|
 | `math/julia/julia.fpas` | Single-file; pan/zoom with keys after first draw |
+| `math/julia/julia_graph.fpas` | Single-file native-window Julia explorer; arrows pan, `WASD` changes Julia constant, wheel zooms, left click recenters, `Esc` quits |
 | `math/mandelbrot/mandelbrot.fpasprj` | Project; fullscreen Mandelbrot explorer |
 | `pascal/tui/minimal_application.fpas` | `Application.Configure` + `Application.Run` dispatch mode; **Escape** to quit |
 | `pascal/tui/host_dispatch_minimal.fpas` | One **`HostProcessNext`** call then **`Close`** (dispatch bridge); same TUI session behavior as `minimal_application.fpas` |

@@ -29,6 +29,8 @@ After `uses Std.Graph;` you can use either fully qualified names such as `Std.Gr
 
 Import `Std.Console` alongside `Std.Graph` when you want short names such as `KeyKind`, `MouseAction`, `MouseButton`, or `WriteLn`.
 
+If a file also references console-side names such as `Std.Console.KeyKind.*`, `Std.Console.MouseAction.*`, or `Std.Console.MouseButton.*`, keep those console names qualified.
+
 ---
 
 ## Current status
@@ -212,7 +214,7 @@ Flush the current runtime-owned backbuffer to the native window.
 
 ## Example
 
-See [examples/pascal/std/graph_basics.fpas](../../../examples/pascal/std/graph_basics.fpas) for a complete smoke example.
+See [examples/pascal/std/graph_basics.fpas](../../../examples/pascal/std/graph_basics.fpas) for a complete smoke example and [examples/math/julia/julia_graph.fpas](../../../examples/math/julia/julia_graph.fpas) for an interactive explorer.
 
 ```pascal
 uses Std.Console, Std.Conv, Std.Graph, Std.Option;

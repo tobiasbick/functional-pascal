@@ -1,0 +1,248 @@
+{ Spec: docs/pascal/std/graph.md (from repository root). }
+program JuliaGraph;
+uses Std.Array, Std.Console, Std.Conv, Std.Graph, Std.Math;
+
+type
+  JuliaState = record
+    CenterX: real;
+    CenterY: real;
+    SpanY: real;
+    Jr: real;
+    Ji: real;
+    MaxIter: integer;
+  end;
+
+function DefaultState(): JuliaState;
+begin
+  return record
+    CenterX := 0.0;
+    CenterY := 0.0;
+    SpanY := 2.4;
+    Jr := -0.8;
+    Ji := 0.156;
+    MaxIter := 96;
+  end
+end;
+
+function SpanX(State: JuliaState; Width: integer; Height: integer): real;
+begin
+  var SafeWidth: integer := Max(Width, 1);
+  var SafeHeight: integer := Max(Height, 1);
+  return State.SpanY * (IntToReal(SafeWidth) / IntToReal(SafeHeight))
+end;
+
+function ViewportCX(State: JuliaState; Width: integer; Height: integer; PixelX: integer): real;
+begin
+  var Wr: integer := Max(Width - 1, 1);
+  var XMin: real := State.CenterX - (SpanX(State, Width, Height) * 0.5);
+  return XMin + (IntToReal(PixelX) / IntToReal(Wr)) * SpanX(State, Width, Height)
+end;
+
+function ViewportCY(State: JuliaState; Height: integer; PixelY: integer): real;
+begin
+  var Hr: integer := Max(Height - 1, 1);
+  var YMax: real := State.CenterY + (State.SpanY * 0.5);
+  return YMax - (IntToReal(PixelY) / IntToReal(Hr)) * State.SpanY
+end;
+
+function SampleColor(Iter: integer; MaxIter: integer): integer;
+begin
+  if Iter >= MaxIter then
+    return $00020408;
+
+  case Iter mod 8 of
+    0: return $0012246B;
+    1: return $001A4C8F;
+    2: return $002A7ABF;
+    3: return $003CA6D8;
+    4: return $0056C86B;
+    5: return $00D1BE32;
+    6: return $00EE8A3A;
+  else
+    return $00D94C66
+  end
+end;
+
+function BuildFrame(State: JuliaState; Width: integer; Height: integer): array of integer;
+begin
+  var WidthRange: integer := Max(Width - 1, 1);
+  var HeightRange: integer := Max(Height - 1, 1);
+  var XSpan: real := SpanX(State, Width, Height);
+  var XMin: real := State.CenterX - (XSpan * 0.5);
+  var XMax: real := State.CenterX + (XSpan * 0.5);
+  var YMin: real := State.CenterY - (State.SpanY * 0.5);
+  var YMax: real := State.CenterY + (State.SpanY * 0.5);
+  mutable var Pixels: array of integer := [];
+
+  for Py: integer := 0 to Height - 1 do
+  begin
+    var Zy0: real := YMax - (IntToReal(Py) / IntToReal(HeightRange)) * (YMax - YMin);
+    for Px: integer := 0 to Width - 1 do
+    begin
+      var Zx0: real := XMin + (IntToReal(Px) / IntToReal(WidthRange)) * (XMax - XMin);
+      mutable var Zr: real := Zx0;
+      mutable var Zi: real := Zy0;
+      mutable var N: integer := 0;
+
+      while (N < State.MaxIter) and ((Zr * Zr + Zi * Zi) <= 4.0) do
+      begin
+        var Tr: real := Zr * Zr - Zi * Zi + State.Jr;
+        var Ti: real := 2.0 * Zr * Zi + State.Ji;
+        Zr := Tr;
+        Zi := Ti;
+        N := N + 1
+      end;
+
+      Push(Pixels, SampleColor(N, State.MaxIter))
+    end
+  end;
+
+  return Pixels
+end;
+
+procedure DrawHud(App: Application; State: JuliaState);
+begin
+  Application.FillRect(App, 0, 0, 92, 52, $00000010);
+  Application.DrawRect(App, 0, 0, 92, 52, $00FFFFFF);
+  Application.DrawText(App, 4, 4, 'JULIA', $00FFFFFF);
+  Application.DrawText(App, 4, 13, 'JR ' + RealToStr(State.Jr), $00FFFFFF);
+  Application.DrawText(App, 4, 22, 'JI ' + RealToStr(State.Ji), $00FFFFFF);
+  Application.DrawText(App, 4, 31, 'ZOOM ' + RealToStr(2.4 / State.SpanY), $00FFFFFF);
+  Application.DrawText(App, 4, 40, 'ESC R ARROWS', $00FFFFFF);
+  Application.DrawText(App, 4, 49, 'WASD WHEEL', $00FFFFFF)
+end;
+
+mutable var State: JuliaState := DefaultState();
+mutable var RenderWidth: integer := 96;
+mutable var RenderHeight: integer := 72;
+
+procedure Render(App: Application);
+begin
+  var Screen: Size := Application.Size(App);
+  RenderWidth := Max(Screen.width, 1);
+  RenderHeight := Max(Screen.height, 1);
+
+  var Frame: array of integer := BuildFrame(State, RenderWidth, RenderHeight);
+  Application.UploadFrame(App, RenderWidth, RenderHeight, Frame);
+  DrawHud(App, State);
+  Application.Present(App)
+end;
+
+procedure ResetExplorer();
+begin
+  State := DefaultState()
+end;
+
+begin
+  var App: Application := Application.Open(96, 72, 'Julia graph');
+  mutable var Dirty: boolean := true;
+  mutable var Quit: boolean := false;
+
+  while not Quit do
+  begin
+    if Dirty then
+    begin
+      Render(App);
+      Dirty := false
+    end;
+
+    case Application.PollEvent(App) of
+      Some(E):
+        if (E.wheel_x <> 0) or (E.wheel_y <> 0) then
+        begin
+          if E.wheel_y > 0 then
+            State.SpanY := Max(State.SpanY * 0.85, 0.000_001)
+          else if E.wheel_y < 0 then
+            State.SpanY := Min(State.SpanY / 0.85, 3.5);
+          Dirty := true
+        end
+        else if E.mouse_action = MouseAction.Down then
+        begin
+          if E.mouse_button = MouseButton.Left then
+          begin
+            State.CenterX := ViewportCX(State, RenderWidth, RenderHeight, E.mouse_x);
+            State.CenterY := ViewportCY(State, RenderHeight, E.mouse_y);
+            Dirty := true
+          end
+          else if E.mouse_button = MouseButton.Middle then
+          begin
+            ResetExplorer();
+            Dirty := true
+          end
+        end
+        else if E.key.kind <> KeyKind.Unknown then
+        begin
+          var StepX: real := SpanX(State, RenderWidth, RenderHeight) * 0.12;
+          var StepY: real := State.SpanY * 0.12;
+          if E.key.kind = KeyKind.Escape then
+            Quit := true
+          else if E.key.kind = KeyKind.Left then
+          begin
+            State.CenterX := State.CenterX - StepX;
+            Dirty := true
+          end
+          else if E.key.kind = KeyKind.Right then
+          begin
+            State.CenterX := State.CenterX + StepX;
+            Dirty := true
+          end
+          else if E.key.kind = KeyKind.Up then
+          begin
+            State.CenterY := State.CenterY + StepY;
+            Dirty := true
+          end
+          else if E.key.kind = KeyKind.Down then
+          begin
+            State.CenterY := State.CenterY - StepY;
+            Dirty := true
+          end
+          else if E.key.kind = KeyKind.Character then
+            case E.key.ch of
+              '+', '=':
+                begin
+                  State.SpanY := Max(State.SpanY * 0.85, 0.000_001);
+                  Dirty := true
+                end;
+              '-':
+                begin
+                  State.SpanY := Min(State.SpanY / 0.85, 3.5);
+                  Dirty := true
+                end;
+              'r', 'R':
+                begin
+                  ResetExplorer();
+                  Dirty := true
+                end;
+              'a', 'A':
+                begin
+                  State.Jr := State.Jr - 0.02;
+                  Dirty := true
+                end;
+              'd', 'D':
+                begin
+                  State.Jr := State.Jr + 0.02;
+                  Dirty := true
+                end;
+              'w', 'W':
+                begin
+                  State.Ji := State.Ji + 0.02;
+                  Dirty := true
+                end;
+              's', 'S':
+                begin
+                  State.Ji := State.Ji - 0.02;
+                  Dirty := true
+                end
+            end
+        end
+        else if (E.size.width > 0) or (E.size.height > 0) then
+          Dirty := true
+        else
+          Quit := true;
+      None:
+        Std.Console.Delay(16)
+    end
+  end;
+
+  Application.Close(App)
+end.

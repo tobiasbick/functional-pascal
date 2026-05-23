@@ -6,7 +6,7 @@
 //! **Documentation:** `docs/rust/parallel-vm.md`, `docs/pascal/08-concurrency.md`
 
 use fpas_bytecode::{Chunk, SourceLocation};
-use fpas_std::{Console, ConsoleEvent, ConsoleKeyEvent, KeyInput, TextInput};
+use fpas_std::{Console, ConsoleEvent, ConsoleKeyEvent, GraphEvent, KeyInput, TextInput};
 use std::collections::HashMap;
 use std::io::Write;
 use std::sync::atomic::{AtomicBool, AtomicU64};
@@ -158,6 +158,18 @@ impl Vm {
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .push_console_event(ev);
+    }
+
+    /// Queue a structured graph event for the next `Std.Graph.Application.PollEvent` (tests).
+    pub fn push_graph_event(&mut self, ev: GraphEvent) {
+        let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
+        if graph
+            .session
+            .push_event(ev.clone(), SourceLocation::new(1, 1))
+            .is_err()
+        {
+            graph.pending_test_events.push(ev);
+        }
     }
 
     /// Access captured output (for test assertions).

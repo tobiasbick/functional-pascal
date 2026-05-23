@@ -16,8 +16,8 @@
 
 use fpas_bytecode::{Chunk, Value};
 use fpas_std::{
-    CommandRegistry, Console, GraphSession, KeyInput, ModalStack, TextInput, TuiHost, TuiSession,
-    ViewId, ViewRegistry,
+    CommandRegistry, Console, GraphEvent, GraphSession, KeyInput, ModalStack, TextInput, TuiHost,
+    TuiSession, ViewId, ViewRegistry,
 };
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -125,6 +125,8 @@ impl Default for TuiState {
 pub(crate) struct GraphState {
     /// Current Phase 1 graph session and staged frame/event state.
     pub session: GraphSession,
+    /// Test-only host events queued before the application opens.
+    pub pending_test_events: Vec<GraphEvent>,
 }
 
 /// Shared state for the parallel VM.

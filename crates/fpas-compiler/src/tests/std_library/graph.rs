@@ -5,13 +5,28 @@
 use super::super::{compile_and_run, compile_err, compile_ok};
 use fpas_bytecode::intrinsic::GraphIntrinsic;
 use fpas_bytecode::{Intrinsic, Op};
-use fpas_std::{last_headless_graph_frame_for_tests, with_headless_graph_backend_for_tests};
+use fpas_std::{
+    ConsoleKeyEvent, GraphEvent, key_event::key_kind_index, last_headless_graph_frame_for_tests,
+    with_headless_graph_backend_for_tests,
+};
 
 const GRAPH_BASICS_EXAMPLE: &str =
     include_str!("../../../../../examples/pascal/std/graph_basics.fpas");
+const JULIA_GRAPH_EXAMPLE: &str =
+    include_str!("../../../../../examples/math/julia/julia_graph.fpas");
 
 fn with_headless<T>(f: impl FnOnce() -> T) -> T {
     with_headless_graph_backend_for_tests(f)
+}
+
+fn compile_run_with_graph_events(source: &str, events: &[GraphEvent]) -> fpas_vm::VmOutput {
+    let chunk = compile_ok(source);
+    let mut vm = fpas_vm::Vm::new(chunk);
+    for event in events {
+        vm.push_graph_event(event.clone());
+    }
+    vm.run().expect("VM should not error");
+    vm.output().clone()
 }
 
 #[test]
@@ -293,5 +308,33 @@ fn std_graph_basics_example_runs_headless() {
             .expect("present should publish a headless frame snapshot");
         assert_eq!(frame.width(), 32);
         assert_eq!(frame.height(), 24);
+    });
+}
+
+#[test]
+fn std_graph_julia_example_renders_one_headless_frame_then_exits_on_escape() {
+    with_headless(|| {
+        let out = compile_run_with_graph_events(
+            JULIA_GRAPH_EXAMPLE,
+            &[GraphEvent::Key(ConsoleKeyEvent::new(
+                key_kind_index("Escape"),
+                '\0',
+                false,
+                false,
+                false,
+                false,
+            ))],
+        );
+
+        assert!(out.lines.is_empty(), "unexpected output: {:?}", out.lines);
+
+        let frame = last_headless_graph_frame_for_tests()
+            .expect("present should publish a headless frame snapshot");
+        assert_eq!(frame.width(), 96);
+        assert_eq!(frame.height(), 72);
+        assert!(
+            frame.pixels().iter().any(|pixel| *pixel != 0),
+            "expected a non-empty Julia frame"
+        );
     });
 }

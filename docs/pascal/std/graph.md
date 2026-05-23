@@ -214,7 +214,7 @@ Flush the current runtime-owned backbuffer to the native window.
 
 ## Example
 
-See [examples/pascal/std/graph_basics.fpas](../../../examples/pascal/std/graph_basics.fpas) for a complete smoke example and [examples/math/julia/julia_graph.fpas](../../../examples/math/julia/julia_graph.fpas) for an interactive explorer.
+See [examples/pascal/std/graph_basics.fpas](../../../examples/pascal/std/graph_basics.fpas) for a complete smoke example, [examples/math/julia/julia_graph.fpas](../../../examples/math/julia/julia_graph.fpas) for a Julia explorer, and [examples/math/mandelbrot/mandelbrot_graph.fpas](../../../examples/math/mandelbrot/mandelbrot_graph.fpas) for a Mandelbrot explorer.
 
 ```pascal
 uses Std.Console, Std.Conv, Std.Graph, Std.Option;

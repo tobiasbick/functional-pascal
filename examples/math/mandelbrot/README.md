@@ -2,6 +2,8 @@
 
 This project is the current showcase example for Functional Pascal in a real terminal application.
 
+This folder also contains `mandelbrot_graph.fpas`, a single-file native-window `Std.Graph` Mandelbrot explorer.
+
 It demonstrates:
 
 - multi-file projects with `.fpasprj`
@@ -18,9 +20,23 @@ It demonstrates:
 
 ```sh
 cargo run -p fpas-cli -- examples/math/mandelbrot/mandelbrot.fpasprj
+fpas examples/math/mandelbrot/mandelbrot_graph.fpas
 ```
 
 ## Controls
+
+### `mandelbrot_graph.fpas`
+
+- Arrow keys: pan
+- `+` / `-`: zoom in and out
+- Mouse wheel: zoom
+- Left click on the fractal: center the view on that pixel
+- Middle click or `R`: reset the view
+- `PageUp` / `PageDown`: increase or decrease iteration depth
+- `1`, `2`, `3`: switch color palettes
+- `Esc`: quit
+
+### `mandelbrot.fpasprj`
 
 - Arrow keys: pan
 - `+` / `-`: zoom in and out

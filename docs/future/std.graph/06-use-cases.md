@@ -6,7 +6,7 @@
 
 `Std.Graph` should be good enough to build:
 
-- [ ] a Mandelbrot explorer
+- [x] a Mandelbrot explorer
 - [x] a Julia explorer
 - [x] simple pixel-oriented scientific or mathematical visualizers
 - [x] 2D viewers with text overlays and direct keyboard / mouse interaction
@@ -46,7 +46,7 @@ The plan does **not** require:
 
 The plan should consider `Std.Graph` genuinely useful once the repository can ship:
 
-- [ ] one Mandelbrot example with keyboard and mouse navigation
+- [x] one Mandelbrot example with keyboard and mouse navigation
 - [x] one Julia example with parameter changes and redraw
 - [x] a small text overlay showing current parameters and controls
 

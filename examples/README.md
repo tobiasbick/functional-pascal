@@ -15,6 +15,7 @@ fpas examples/pascal/std/str_basics.fpas
 fpas examples/pascal/std/dict_basics.fpas
 fpas examples/pascal/std/graph_basics.fpas
 fpas examples/pascal/std/task_basics.fpas
+fpas examples/math/mandelbrot/mandelbrot_graph.fpas
 fpas examples/pascal/tui/host_dispatch_minimal.fpas
 fpas examples/pascal/tui/host_dispatch_paint.fpas
 fpas examples/pascal/tui/host_dispatch_quit.fpas
@@ -53,6 +54,7 @@ Do **not** pass a `unit` source alone (for example `mandelbrot_color.fpas` or `m
 | `pascal/std/dict_basics.fpas` | `Std.Dict` — literals, `Get`, `Merge`, `Map`/`Filter` (qualified when also using `Std.Array` / `Std.Option`) |
 | `pascal/std/graph_basics.fpas` | `Std.Graph` — open, draw, present, poll, close |
 | `pascal/std/task_basics.fpas` | `Std.Task` — `go`, `Wait`, `WaitAll` |
+| `math/mandelbrot/mandelbrot_graph.fpas` | `Std.Graph` — native Mandelbrot explorer |
 | `pascal/tui/local_view_paint.fpas` | `Std.Tui` — local view paint, parent-relative layout, `HostSetViewRect` |
 | `pascal/tui/view_scoped_commands.fpas` | `Std.Tui` — `HostBindCommandToView` and focus/ancestor command routing |
 | `pascal/tui/show_modal_existing_view.fpas` | `Std.Tui` — `ShowModal` for an existing view subtree |
@@ -77,6 +79,7 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 |------|--------|
 | `math/julia/julia.fpas` | Single-file; pan/zoom with keys after first draw |
 | `math/julia/julia_graph.fpas` | Single-file native-window Julia explorer; arrows pan, `WASD` changes Julia constant, wheel zooms, left click recenters, `Esc` quits |
+| `math/mandelbrot/mandelbrot_graph.fpas` | Single-file native-window Mandelbrot explorer; arrows pan, wheel zooms, left click recenters, `1/2/3` switch palettes, `Esc` quits |
 | `math/mandelbrot/mandelbrot.fpasprj` | Project; fullscreen Mandelbrot explorer |
 | `pascal/tui/minimal_application.fpas` | `Application.Configure` + `Application.Run` dispatch mode; **Escape** to quit |
 | `pascal/tui/host_dispatch_minimal.fpas` | One **`HostProcessNext`** call then **`Close`** (dispatch bridge); same TUI session behavior as `minimal_application.fpas` |

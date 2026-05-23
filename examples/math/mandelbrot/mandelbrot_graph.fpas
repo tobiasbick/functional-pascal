@@ -1,0 +1,306 @@
+{ Spec: docs/pascal/std/graph.md (from repository root). }
+program MandelbrotGraph;
+uses Std.Array, Std.Console, Std.Conv, Std.Graph, Std.Math;
+
+type
+  MandelbrotState = record
+    CenterX: real;
+    CenterY: real;
+    SpanY: real;
+    MaxIter: integer;
+    Palette: integer;
+  end;
+
+function DefaultState(): MandelbrotState;
+begin
+  return record
+    CenterX := -0.75;
+    CenterY := 0.0;
+    SpanY := 2.4;
+    MaxIter := 160;
+    Palette := 1;
+  end
+end;
+
+function SpanX(State: MandelbrotState; Width: integer; Height: integer): real;
+begin
+  var SafeWidth: integer := Max(Width, 1);
+  var SafeHeight: integer := Max(Height, 1);
+  return State.SpanY * (IntToReal(SafeWidth) / IntToReal(SafeHeight))
+end;
+
+function ViewportCX(State: MandelbrotState; Width: integer; Height: integer; PixelX: integer): real;
+begin
+  var Wr: integer := Max(Width - 1, 1);
+  var XMin: real := State.CenterX - (SpanX(State, Width, Height) * 0.5);
+  return XMin + (IntToReal(PixelX) / IntToReal(Wr)) * SpanX(State, Width, Height)
+end;
+
+function ViewportCY(State: MandelbrotState; Height: integer; PixelY: integer): real;
+begin
+  var Hr: integer := Max(Height - 1, 1);
+  var YMax: real := State.CenterY + (State.SpanY * 0.5);
+  return YMax - (IntToReal(PixelY) / IntToReal(Hr)) * State.SpanY
+end;
+
+function PaletteName(Palette: integer): string;
+begin
+  case Palette of
+    1: return 'OCEAN';
+    2: return 'EMBER';
+    3: return 'AURORA';
+  else
+    return 'OCEAN'
+  end
+end;
+
+function SampleColor(Palette: integer; EscapeValue: real): integer;
+begin
+  var Band: integer := Clamp(Trunc(Frac(EscapeValue * 0.08) * 12.0), 0, 11);
+
+  if Palette = 2 then
+    case Band of
+      0: return $00400000;
+      1: return $006A0A00;
+      2: return $008A1E00;
+      3: return $00B03A00;
+      4: return $00D45A00;
+      5: return $00F07A00;
+      6: return $00FF9F1A;
+      7: return $00FFBE4A;
+      8: return $00FFD978;
+      9: return $00FFE7A6;
+      10: return $00FFF1CC;
+    else
+      return $00FFF8E8
+    end
+  else if Palette = 3 then
+    case Band of
+      0: return $00041020;
+      1: return $000A2E48;
+      2: return $00104D6A;
+      3: return $00146886;
+      4: return $00197C8F;
+      5: return $00238E7C;
+      6: return $0034A968;
+      7: return $0064BF64;
+      8: return $0094D976;
+      9: return $00C8E68A;
+      10: return $00EAF0B4;
+    else
+      return $00F8F8E0
+    end
+  else
+    case Band of
+      0: return $00051025;
+      1: return $000B1F46;
+      2: return $0010336A;
+      3: return $00144A8A;
+      4: return $001A63A7;
+      5: return $00227FC1;
+      6: return $002E9CCF;
+      7: return $004CB7D8;
+      8: return $0070D0DB;
+      9: return $00A1E0D8;
+      10: return $00D4EDE8;
+    else
+      return $00F2F8FF
+    end
+end;
+
+function BuildFrame(State: MandelbrotState; Width: integer; Height: integer): array of integer;
+begin
+  var WidthRange: integer := Max(Width - 1, 1);
+  var HeightRange: integer := Max(Height - 1, 1);
+  var XSpan: real := SpanX(State, Width, Height);
+  var XMin: real := State.CenterX - (XSpan * 0.5);
+  var XMax: real := State.CenterX + (XSpan * 0.5);
+  var YMin: real := State.CenterY - (State.SpanY * 0.5);
+  var YMax: real := State.CenterY + (State.SpanY * 0.5);
+  mutable var Pixels: array of integer := [];
+
+  for Py: integer := 0 to Height - 1 do
+  begin
+    var Cy: real := YMax - (IntToReal(Py) / IntToReal(HeightRange)) * (YMax - YMin);
+    for Px: integer := 0 to Width - 1 do
+    begin
+      var Cx: real := XMin + (IntToReal(Px) / IntToReal(WidthRange)) * (XMax - XMin);
+      mutable var Zr: real := 0.0;
+      mutable var Zi: real := 0.0;
+      mutable var N: integer := 0;
+
+      while (N < State.MaxIter) and ((Zr * Zr + Zi * Zi) <= 256.0) do
+      begin
+        var Tr: real := Zr * Zr - Zi * Zi + Cx;
+        var Ti: real := 2.0 * Zr * Zi + Cy;
+        Zr := Tr;
+        Zi := Ti;
+        N := N + 1
+      end;
+
+      if N >= State.MaxIter then
+        Push(Pixels, $00020408)
+      else
+      begin
+        var MagnitudeSq: real := Max(Zr * Zr + Zi * Zi, 4.0);
+        var Smooth: real := IntToReal(N) + 1.0 - (Log(Log(MagnitudeSq) * 0.5) / Log(2.0));
+        Push(Pixels, SampleColor(State.Palette, Smooth))
+      end
+    end
+  end;
+
+  return Pixels
+end;
+
+procedure DrawHud(App: Application; State: MandelbrotState);
+begin
+  Application.FillRect(App, 0, 0, 92, 61, $00000010);
+  Application.DrawRect(App, 0, 0, 92, 61, $00FFFFFF);
+  Application.DrawText(App, 4, 4, 'MANDELBROT', $00FFFFFF);
+  Application.DrawText(App, 4, 13, 'ZOOM ' + RealToStr(2.4 / State.SpanY), $00FFFFFF);
+  Application.DrawText(App, 4, 22, 'ITER ' + IntToStr(State.MaxIter), $00FFFFFF);
+  Application.DrawText(App, 4, 31, 'PAL ' + PaletteName(State.Palette), $00FFFFFF);
+  Application.DrawText(App, 4, 40, 'ESC R ARROWS', $00FFFFFF);
+  Application.DrawText(App, 4, 49, '+ - PGUP PGDN', $00FFFFFF);
+  Application.DrawText(App, 4, 58, '1 2 3 WHEEL', $00FFFFFF)
+end;
+
+mutable var State: MandelbrotState := DefaultState();
+mutable var RenderWidth: integer := 96;
+mutable var RenderHeight: integer := 72;
+
+procedure Render(App: Application);
+begin
+  var Screen: Size := Application.Size(App);
+  RenderWidth := Max(Screen.width, 1);
+  RenderHeight := Max(Screen.height, 1);
+
+  var Frame: array of integer := BuildFrame(State, RenderWidth, RenderHeight);
+  Application.UploadFrame(App, RenderWidth, RenderHeight, Frame);
+  DrawHud(App, State);
+  Application.Present(App)
+end;
+
+procedure ResetExplorer();
+begin
+  State := DefaultState()
+end;
+
+begin
+  var App: Application := Application.Open(96, 72, 'Mandelbrot graph');
+  mutable var Dirty: boolean := true;
+  mutable var Quit: boolean := false;
+
+  while not Quit do
+  begin
+    if Dirty then
+    begin
+      Render(App);
+      Dirty := false
+    end;
+
+    case Application.PollEvent(App) of
+      Some(E):
+        if (E.wheel_x <> 0) or (E.wheel_y <> 0) then
+        begin
+          if E.wheel_y > 0 then
+            State.SpanY := Max(State.SpanY * 0.88, 0.000_001)
+          else if E.wheel_y < 0 then
+            State.SpanY := Min(State.SpanY / 0.88, 3.5);
+          Dirty := true
+        end
+        else if E.mouse_action = MouseAction.Down then
+        begin
+          if E.mouse_button = MouseButton.Left then
+          begin
+            State.CenterX := ViewportCX(State, RenderWidth, RenderHeight, E.mouse_x);
+            State.CenterY := ViewportCY(State, RenderHeight, E.mouse_y);
+            Dirty := true
+          end
+          else if E.mouse_button = MouseButton.Middle then
+          begin
+            ResetExplorer();
+            Dirty := true
+          end
+        end
+        else if E.key.kind <> KeyKind.Unknown then
+        begin
+          var StepX: real := SpanX(State, RenderWidth, RenderHeight) * 0.14;
+          var StepY: real := State.SpanY * 0.14;
+          if E.key.kind = KeyKind.Escape then
+            Quit := true
+          else if E.key.kind = KeyKind.Left then
+          begin
+            State.CenterX := State.CenterX - StepX;
+            Dirty := true
+          end
+          else if E.key.kind = KeyKind.Right then
+          begin
+            State.CenterX := State.CenterX + StepX;
+            Dirty := true
+          end
+          else if E.key.kind = KeyKind.Up then
+          begin
+            State.CenterY := State.CenterY + StepY;
+            Dirty := true
+          end
+          else if E.key.kind = KeyKind.Down then
+          begin
+            State.CenterY := State.CenterY - StepY;
+            Dirty := true
+          end
+          else if E.key.kind = KeyKind.PageUp then
+          begin
+            State.MaxIter := Min(State.MaxIter + 32, 2048);
+            Dirty := true
+          end
+          else if E.key.kind = KeyKind.PageDown then
+          begin
+            State.MaxIter := Max(State.MaxIter - 32, 32);
+            Dirty := true
+          end
+          else if E.key.kind = KeyKind.Character then
+            case E.key.ch of
+              '+', '=':
+                begin
+                  State.SpanY := Max(State.SpanY * 0.82, 0.000_001);
+                  Dirty := true
+                end;
+              '-':
+                begin
+                  State.SpanY := Min(State.SpanY / 0.82, 3.5);
+                  Dirty := true
+                end;
+              '1':
+                begin
+                  State.Palette := 1;
+                  Dirty := true
+                end;
+              '2':
+                begin
+                  State.Palette := 2;
+                  Dirty := true
+                end;
+              '3':
+                begin
+                  State.Palette := 3;
+                  Dirty := true
+                end;
+              'r', 'R':
+                begin
+                  ResetExplorer();
+                  Dirty := true
+                end
+            end
+        end
+        else if (E.size.width > 0) or (E.size.height > 0) then
+          Dirty := true
+        else
+          Quit := true;
+      None:
+        Delay(16)
+    end
+  end;
+
+  Application.Close(App)
+end.

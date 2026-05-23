@@ -120,7 +120,7 @@ Verify:
 Scope:
 
 - [x] Add a first Julia `Std.Graph` explorer example.
-- [ ] Add a Mandelbrot `Std.Graph` example program or port the existing showcase.
+- [x] Add a Mandelbrot `Std.Graph` example program or port the existing showcase.
 - [x] Add `docs/pascal/std/graph.md` once the surface is real.
 - [x] Update `docs/pascal/std/README.md`.
 - [x] Add a small `examples/pascal/std/graph_basics.fpas` smoke example.
@@ -129,6 +129,7 @@ Verify:
 
 - [ ] examples run manually
 - [x] headless compiler smoke coverage for the Julia explorer example
+- [x] headless compiler smoke coverage for the Mandelbrot explorer example
 - [x] docs and implementation names match exactly
 
 ## File touchpoints checklist
@@ -176,6 +177,6 @@ The first useful graphics release is complete when all of the following are true
 
 - [x] a program can draw pixels, lines, simple shapes, and text
 - [x] keyboard, mouse, wheel, resize, and close events are available
-- [ ] a Mandelbrot example runs interactively
+- [x] a Mandelbrot example runs interactively
 - [x] a Julia example runs interactively
 - [x] the canonical `Std.Graph` docs match the implemented surface

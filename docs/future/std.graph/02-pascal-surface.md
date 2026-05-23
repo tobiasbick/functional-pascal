@@ -22,7 +22,7 @@ The intended direction is:
 - [ ] a runtime-owned backbuffer for drawing primitives
 - [ ] pixels, lines, simple shapes, and text
 - [ ] keyboard, mouse, wheel, resize, and close events
-- [ ] enough control to build Mandelbrot and Julia explorers
+- [x] enough control to build Mandelbrot and Julia explorers
 
 ## Proposed types
 

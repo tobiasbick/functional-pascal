@@ -170,6 +170,140 @@ fn graph_poll_event_builds_std_graph_event_record() {
 }
 
 #[test]
+fn graph_poll_event_builds_std_graph_resize_event_record() {
+    with_headless(|| {
+        let mut chunk = Chunk::new();
+        emit_constant(&mut chunk, graph_application_value());
+        emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationPollEvent);
+        chunk.emit(Op::Halt, loc());
+
+        let shared = Arc::new(minimal_shared_state(chunk));
+        {
+            let mut graph = shared.graph.lock().unwrap_or_else(|e| e.into_inner());
+            graph
+                .session
+                .open(640, 480, "Graph events", loc())
+                .expect("test graph session should open");
+            graph
+                .session
+                .push_event(
+                    GraphEvent::Resize {
+                        width: 800,
+                        height: 600,
+                    },
+                    loc(),
+                )
+                .expect("test graph event should enqueue");
+        }
+
+        let mut worker = Worker::new_main(shared);
+        worker.run().expect("graph poll event should succeed");
+
+        assert_eq!(
+            worker.stack,
+            vec![Value::OptionSome(Box::new(Value::Record {
+                type_name: "Std.Graph.Event".into(),
+                fields: vec![
+                    ("kind".into(), Value::Integer(1)),
+                    ("size".into(), graph_size_value(800, 600)),
+                    (
+                        "key".into(),
+                        key_event_value(ConsoleKeyEvent::new(
+                            key_kind_index("Unknown"),
+                            '\0',
+                            false,
+                            false,
+                            false,
+                            false,
+                        )),
+                    ),
+                    (
+                        "mouse_action".into(),
+                        Value::Integer(mouse_action_index("Unknown") as i64),
+                    ),
+                    (
+                        "mouse_button".into(),
+                        Value::Integer(mouse_button_index("None") as i64),
+                    ),
+                    ("mouse_x".into(), Value::Integer(0)),
+                    ("mouse_y".into(), Value::Integer(0)),
+                    ("wheel_x".into(), Value::Integer(0)),
+                    ("wheel_y".into(), Value::Integer(0)),
+                    ("shift".into(), Value::Boolean(false)),
+                    ("ctrl".into(), Value::Boolean(false)),
+                    ("alt".into(), Value::Boolean(false)),
+                    ("meta".into(), Value::Boolean(false)),
+                ],
+            }))]
+        );
+    });
+}
+
+#[test]
+fn graph_poll_event_builds_std_graph_close_requested_record() {
+    with_headless(|| {
+        let mut chunk = Chunk::new();
+        emit_constant(&mut chunk, graph_application_value());
+        emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationPollEvent);
+        chunk.emit(Op::Halt, loc());
+
+        let shared = Arc::new(minimal_shared_state(chunk));
+        {
+            let mut graph = shared.graph.lock().unwrap_or_else(|e| e.into_inner());
+            graph
+                .session
+                .open(640, 480, "Graph events", loc())
+                .expect("test graph session should open");
+            graph
+                .session
+                .push_event(GraphEvent::CloseRequested, loc())
+                .expect("test graph event should enqueue");
+        }
+
+        let mut worker = Worker::new_main(shared);
+        worker.run().expect("graph poll event should succeed");
+
+        assert_eq!(
+            worker.stack,
+            vec![Value::OptionSome(Box::new(Value::Record {
+                type_name: "Std.Graph.Event".into(),
+                fields: vec![
+                    ("kind".into(), Value::Integer(0)),
+                    ("size".into(), graph_size_value(0, 0)),
+                    (
+                        "key".into(),
+                        key_event_value(ConsoleKeyEvent::new(
+                            key_kind_index("Unknown"),
+                            '\0',
+                            false,
+                            false,
+                            false,
+                            false,
+                        )),
+                    ),
+                    (
+                        "mouse_action".into(),
+                        Value::Integer(mouse_action_index("Unknown") as i64),
+                    ),
+                    (
+                        "mouse_button".into(),
+                        Value::Integer(mouse_button_index("None") as i64),
+                    ),
+                    ("mouse_x".into(), Value::Integer(0)),
+                    ("mouse_y".into(), Value::Integer(0)),
+                    ("wheel_x".into(), Value::Integer(0)),
+                    ("wheel_y".into(), Value::Integer(0)),
+                    ("shift".into(), Value::Boolean(false)),
+                    ("ctrl".into(), Value::Boolean(false)),
+                    ("alt".into(), Value::Boolean(false)),
+                    ("meta".into(), Value::Boolean(false)),
+                ],
+            }))]
+        );
+    });
+}
+
+#[test]
 fn graph_poll_event_builds_std_graph_mouse_event_record() {
     with_headless(|| {
         let mut chunk = Chunk::new();

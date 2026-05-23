@@ -60,7 +60,7 @@ A small FPAS program can:
 - [ ] Allocate an `array of integer` with `width * height` entries.
 - [ ] Fill that array with a solid color or gradient.
 - [ ] Upload the frame.
-- [ ] React to `Resize`, `Key(Escape)`, and `CloseRequested`.
+- [x] React to `Resize`, `Key(Escape)`, and `CloseRequested`.
 - [ ] Exit without hanging or leaking host state.
 
 ## Acceptance checks
@@ -69,7 +69,7 @@ A small FPAS program can:
 - [ ] `cargo test --workspace`
 - [ ] One smoke example run manually on Windows, Linux, and macOS.
 - [ ] Manual resize / close test.
-- [ ] Repeated open / close in one process without stale global state.
+- [x] Repeated open / close in one process without stale global state is covered by focused runtime and compiler/VM tests.
 - [x] Repeated `Application.Close(App)` on the same handle is covered by a focused runtime test.
 
 ## Why bulk frame upload comes first

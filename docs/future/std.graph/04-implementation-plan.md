@@ -85,6 +85,7 @@ Verify:
 - [x] `cargo build`
 - [x] `cargo test --workspace`
 - [x] focused runtime test for repeated `Application.Close(App)`
+- [x] focused runtime and compiler/VM tests for open -> close -> open without stale backend state
 - [ ] manual smoke run on Windows, Linux, macOS
 
 ### 7. Runtime-owned drawing surface
@@ -169,8 +170,8 @@ Phase 1 is complete when all of the following are true:
 
 - [ ] A real FPAS program can open a native window.
 - [ ] The program can present a full RGB frame.
-- [ ] Resize and quit are observable through `Application.PollEvent`.
-- [ ] Escape-to-exit works through the proposed key event path.
+- [x] Resize and quit are observable through `Application.PollEvent`.
+- [x] Escape-to-exit works through the proposed key event path.
 - [x] The docs in `docs/pascal/std/graph.md` match the implementation.
 
 ## Exit condition for the first useful graphics release

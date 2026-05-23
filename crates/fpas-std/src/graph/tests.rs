@@ -48,6 +48,31 @@ fn graph_session_close_is_a_noop_after_the_session_is_already_closed() {
 }
 
 #[test]
+fn graph_session_can_open_close_and_reopen_without_stale_backend_state() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(320, 200, "Graph smoke", test_location())
+            .expect("first open should succeed");
+        session
+            .close(test_location())
+            .expect("first close should succeed");
+
+        session
+            .open(160, 120, "Graph smoke 2", test_location())
+            .expect("second open should succeed");
+        assert_eq!(session.backbuffer_size_for_tests(), (160, 120));
+        assert_eq!(
+            session.size(test_location()).expect("size should succeed"),
+            (160, 120)
+        );
+        session
+            .close(test_location())
+            .expect("second close should succeed");
+    });
+}
+
+#[test]
 fn graph_session_clear_fills_runtime_backbuffer() {
     with_headless(|| {
         let mut session = GraphSession::default();

@@ -206,6 +206,71 @@ end.",
 }
 
 #[test]
+fn std_graph_poll_event_exposes_resize_and_close_requested_to_programs() {
+        with_headless(|| {
+                let out = compile_run_with_graph_events(
+                        "\
+program T;
+uses Std.Console, Std.Conv, Std.Graph, Std.Option;
+
+begin
+    var App: Application := Application.Open(2, 2, 'Graph events');
+
+    case Application.PollEvent(App) of
+        Some(E):
+            Std.Console.WriteLn('resize=', IntToStr(E.size.width), 'x', IntToStr(E.size.height));
+        None:
+            Std.Console.WriteLn('missing-resize')
+    end;
+
+    case Application.PollEvent(App) of
+        Some(E):
+            Std.Console.WriteLn('event2=', IntToStr(E.size.width), 'x', IntToStr(E.size.height));
+        None:
+            Std.Console.WriteLn('missing-close')
+    end;
+
+    Application.Close(App)
+end.",
+                        &[
+                                GraphEvent::Resize {
+                                        width: 320,
+                                        height: 200,
+                                },
+                                GraphEvent::CloseRequested,
+                        ],
+                );
+
+                assert_eq!(out.lines, vec!["resize=320x200", "event2=0x0"]);
+        });
+}
+
+#[test]
+fn std_graph_can_close_and_reopen_in_one_process_without_stale_state() {
+    with_headless(|| {
+        let out = compile_and_run(
+            "\
+program T;
+uses Std.Console, Std.Conv, Std.Graph;
+
+begin
+  var First: Application := Application.Open(2, 2, 'Graph one');
+  var FirstSize: Size := Application.Size(First);
+  Std.Console.WriteLn(IntToStr(FirstSize.width), 'x', IntToStr(FirstSize.height));
+  Application.Close(First);
+
+  var Second: Application := Application.Open(3, 1, 'Graph two');
+  var SecondSize: Size := Application.Size(Second);
+  Std.Console.WriteLn(IntToStr(SecondSize.width), 'x', IntToStr(SecondSize.height));
+  Application.Close(Second)
+end.",
+        );
+
+        assert_eq!(out.lines, vec!["2x2", "3x1"]);
+    });
+}
+
+#[test]
 fn std_graph_clear_put_pixel_and_present_render_headless_frame() {
     with_headless(|| {
         let out = compile_and_run(

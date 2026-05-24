@@ -54,10 +54,7 @@ pub use std_units::{
     canonical_std_unit_from_segments, canonical_std_unit_from_tail, is_std_root_segment,
     std_symbols, std_unit_symbols, std_units_list_for_hint,
 };
-pub use tui::{
-    TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent, TuiSession,
-    tui_event_from_ui_event,
-};
+pub use tui::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent, TuiSession};
 pub use tui_command::{CommandId, CommandRegistry};
 pub use tui_damage::DamageRegion;
 pub use tui_host::TuiHost;

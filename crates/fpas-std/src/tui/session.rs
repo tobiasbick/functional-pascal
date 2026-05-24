@@ -137,6 +137,28 @@ impl TuiSession {
         }
     }
 
+    /// Block until the session yields a supported hosted UI event.
+    #[doc(hidden)]
+    pub fn read_ui_event(
+        &self,
+        console: &mut Console,
+        key_input: &mut KeyInput,
+        location: SourceLocation,
+    ) -> Result<UiEvent, StdError> {
+        self.ensure_open(
+            "Application.ReadEvent(App) requires an open Std.Tui application session.",
+            "Open the application before waiting for events.",
+            location,
+        )?;
+
+        loop {
+            let event = key_input.read_event(location)?;
+            if let Some(mapped) = map_console_ui_event(console, event) {
+                return Ok(mapped);
+            }
+        }
+    }
+
     /// Wait up to `timeout_ms` for a supported TUI event.
     pub fn read_event_timeout(
         &self,
@@ -244,15 +266,14 @@ impl TuiSession {
         }
     }
 
-    /// Like [`poll_event`](Self::poll_event) but also returns paste and focus events.
-    ///
-    /// Used by the hosted run loop which dispatches those events to registered handlers.
-    pub fn poll_event_all(
+    /// Poll once for a supported hosted UI event, skipping paste and focus dispatch events.
+    #[doc(hidden)]
+    pub fn poll_ui_event(
         &self,
         console: &mut Console,
         key_input: &mut KeyInput,
         location: SourceLocation,
-    ) -> Result<Option<TuiEvent>, StdError> {
+    ) -> Result<Option<UiEvent>, StdError> {
         self.ensure_open(
             "Application.PollEvent(App) requires an open Std.Tui application session.",
             "Open the application before polling for events.",
@@ -262,8 +283,13 @@ impl TuiSession {
         loop {
             match key_input.poll_event(location)? {
                 Some(event) => {
-                    if let Some(mapped) = map_console_event(console, event) {
-                        return Ok(Some(mapped));
+                    if let Some(mapped) = map_console_ui_event(console, event) {
+                        match mapped {
+                            UiEvent::Paste(_) | UiEvent::FocusGained | UiEvent::FocusLost => {
+                                continue;
+                            }
+                            _ => return Ok(Some(mapped)),
+                        }
                     }
                 }
                 None => return Ok(None),

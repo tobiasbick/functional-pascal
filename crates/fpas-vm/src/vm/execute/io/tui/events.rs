@@ -5,7 +5,7 @@
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
 use fpas_bytecode::{Intrinsic, SourceLocation, TuiIntrinsic, Value};
-use fpas_std::{TuiEvent, tui_event_from_ui_event};
+use fpas_std::TuiEvent;
 
 impl Worker {
     /// Executes event-reading `Std.Tui` intrinsics.
@@ -94,13 +94,11 @@ impl Worker {
                 match mapped {
                     None => self.push(Value::OptionNone)?,
                     Some(ev) => {
-                        let Some(tui_event) = tui_event_from_ui_event(ev) else {
+                        let Some(record) = Self::tui_ui_event_record(ev) else {
                             self.push(Value::OptionNone)?;
                             return Ok(true);
                         };
-                        self.push(Value::OptionSome(Box::new(Self::tui_event_record(
-                            tui_event,
-                        ))))?;
+                        self.push(Value::OptionSome(Box::new(record)))?;
                     }
                 }
             }

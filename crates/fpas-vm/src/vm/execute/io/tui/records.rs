@@ -4,7 +4,7 @@
 
 use crate::vm::Worker;
 use fpas_bytecode::Value;
-use fpas_std::{ConsoleKeyEvent, TuiEvent, ViewRect};
+use fpas_std::{ConsoleKeyEvent, TuiEvent, UiEvent, ViewRect};
 
 const TUI_APPLICATION_TYPE: &str = "Std.Tui.Application";
 const TUI_RECT_TYPE: &str = "Std.Tui.Rect";
@@ -109,6 +109,24 @@ impl Worker {
                     ("size".into(), Self::tui_size_record(0, 0)),
                 ],
             },
+        }
+    }
+
+    /// Converts a shared [`UiEvent`] into a `Std.Tui.TuiEvent` record when representable.
+    pub(in crate::vm::execute::io) fn tui_ui_event_record(event: UiEvent) -> Option<Value> {
+        match event {
+            UiEvent::Resize(resize) => Some(Self::tui_event_record(TuiEvent::Resize {
+                old_width: resize.old_width.unwrap_or(0),
+                old_height: resize.old_height.unwrap_or(0),
+                width: resize.width,
+                height: resize.height,
+            })),
+            UiEvent::Key(key) => Some(Self::tui_event_record(TuiEvent::Key(key))),
+            UiEvent::Mouse(mouse) => Some(Self::tui_event_record(TuiEvent::Mouse(mouse))),
+            UiEvent::Paste(text) => Some(Self::tui_event_record(TuiEvent::Paste(text))),
+            UiEvent::FocusGained => Some(Self::tui_event_record(TuiEvent::FocusGained)),
+            UiEvent::FocusLost => Some(Self::tui_event_record(TuiEvent::FocusLost)),
+            UiEvent::CloseRequested | UiEvent::Wheel(_) => None,
         }
     }
 }

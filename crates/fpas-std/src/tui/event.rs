@@ -31,56 +31,7 @@ pub enum TuiEvent {
     FocusLost,
 }
 
-impl TuiEvent {
-    /// Projects one internal shared UI event into the public `Std.Tui` event model.
-    #[must_use]
-    pub(crate) fn from_ui_event(value: UiEvent) -> Option<Self> {
-        match value {
-            UiEvent::Resize(resize) => Some(Self::Resize {
-                old_width: resize.old_width.unwrap_or(0),
-                old_height: resize.old_height.unwrap_or(0),
-                width: resize.width,
-                height: resize.height,
-            }),
-            UiEvent::Key(key) => Some(Self::Key(key)),
-            UiEvent::Mouse(mouse) => Some(Self::Mouse(mouse)),
-            UiEvent::Paste(text) => Some(Self::Paste(text)),
-            UiEvent::FocusGained => Some(Self::FocusGained),
-            UiEvent::FocusLost => Some(Self::FocusLost),
-            UiEvent::CloseRequested | UiEvent::Wheel(_) => None,
-        }
-    }
-
-    /// Projects one public `Std.Tui` event into the shared internal UI event model.
-    #[must_use]
-    pub(crate) fn into_ui_event(self) -> UiEvent {
-        match self {
-            Self::Resize {
-                old_width,
-                old_height,
-                width,
-                height,
-            } => UiEvent::Resize(UiResize::new(
-                Some(old_width),
-                Some(old_height),
-                width,
-                height,
-            )),
-            Self::Key(key) => UiEvent::Key(key),
-            Self::Mouse(mouse) => UiEvent::Mouse(mouse),
-            Self::Paste(text) => UiEvent::Paste(text),
-            Self::FocusGained => UiEvent::FocusGained,
-            Self::FocusLost => UiEvent::FocusLost,
-        }
-    }
-}
-
-/// Projects one shared UI event into the public `Std.Tui` event model.
-#[doc(hidden)]
-#[must_use]
-pub fn tui_event_from_ui_event(value: UiEvent) -> Option<TuiEvent> {
-    TuiEvent::from_ui_event(value)
-}
+impl TuiEvent {}
 
 /// Maps one console event into the shared internal UI event model.
 pub(super) fn map_console_ui_event(console: &mut Console, event: ConsoleEvent) -> Option<UiEvent> {
@@ -135,5 +86,22 @@ pub(super) fn map_console_ui_event(console: &mut Console, event: ConsoleEvent) -
 
 /// Maps one console event into the public `Std.Tui` event model.
 pub(crate) fn map_console_event(console: &mut Console, event: ConsoleEvent) -> Option<TuiEvent> {
-    map_console_ui_event(console, event).and_then(TuiEvent::from_ui_event)
+    map_console_ui_event(console, event).and_then(ui_event_as_tui_event)
+}
+
+fn ui_event_as_tui_event(value: UiEvent) -> Option<TuiEvent> {
+    match value {
+        UiEvent::Resize(resize) => Some(TuiEvent::Resize {
+            old_width: resize.old_width.unwrap_or(0),
+            old_height: resize.old_height.unwrap_or(0),
+            width: resize.width,
+            height: resize.height,
+        }),
+        UiEvent::Key(key) => Some(TuiEvent::Key(key)),
+        UiEvent::Mouse(mouse) => Some(TuiEvent::Mouse(mouse)),
+        UiEvent::Paste(text) => Some(TuiEvent::Paste(text)),
+        UiEvent::FocusGained => Some(TuiEvent::FocusGained),
+        UiEvent::FocusLost => Some(TuiEvent::FocusLost),
+        UiEvent::CloseRequested | UiEvent::Wheel(_) => None,
+    }
 }

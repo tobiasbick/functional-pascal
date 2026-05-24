@@ -162,10 +162,10 @@ impl TuiHost {
             return Ok(Some(ev));
         }
 
-        match session.poll_event(console, key_input, location)? {
+        match session.poll_ui_event(console, key_input, location)? {
             None => Ok(None),
-            Some(tui) => {
-                self.ingest_ui_event(tui.into_ui_event());
+            Some(event) => {
+                self.ingest_ui_event(event);
                 Ok(self.pop_ready_event())
             }
         }
@@ -184,8 +184,8 @@ impl TuiHost {
                 return Ok(ev);
             }
 
-            let tui = session.read_event(console, key_input, location)?;
-            self.ingest_ui_event(tui.into_ui_event());
+            let event = session.read_ui_event(console, key_input, location)?;
+            self.ingest_ui_event(event);
         }
     }
 }

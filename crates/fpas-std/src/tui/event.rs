@@ -31,8 +31,6 @@ pub enum TuiEvent {
     FocusLost,
 }
 
-impl TuiEvent {}
-
 /// Maps one console event into the shared internal UI event model.
 pub(super) fn map_console_ui_event(console: &mut Console, event: ConsoleEvent) -> Option<UiEvent> {
     if event.kind == event_kind_index("Resize") {

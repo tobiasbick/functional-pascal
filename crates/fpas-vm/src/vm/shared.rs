@@ -39,7 +39,7 @@ pub(crate) enum TaskResultState {
 #[derive(Debug)]
 pub(crate) struct TuiState {
     pub session: TuiSession,
-    /// Resize coalescing and future hosted-loop pump (`docs/pascal/std/tui-app.md`).
+    /// Resize coalescing and the hosted-loop event pump (`docs/pascal/std/tui-app.md`).
     pub host: TuiHost,
     /// `OnKeyPressed`-style handler: `function (Application, KeyEvent): boolean`.
     pub on_key_pressed: Option<Value>,
@@ -73,7 +73,7 @@ pub(crate) struct TuiState {
     pub idle_interval_ms: i64,
     /// `OnExit`-style handler: `procedure (Application, ExitReason)` (registered when `Application.Run` / bridge exists).
     pub on_exit: Option<Value>,
-    /// Last reason recorded for a hosted run (`Std.Tui.ExitReason` enum value); set when a future `Run` loop stops.
+    /// Last reason recorded for a hosted run (`Std.Tui.ExitReason` enum value); set when `Application.Run` stops.
     pub last_exit_reason: Option<Value>,
     /// Set by `TuiHostRequestQuit`; consumed when [`crate::vm::execute::io::tui::Worker`] run loop observes it.
     pub quit_requested: bool,

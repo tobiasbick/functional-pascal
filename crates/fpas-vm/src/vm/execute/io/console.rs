@@ -285,23 +285,25 @@ impl Worker {
         }
     }
 
-    /// Builds one `Std.Console.Event` record from the runtime console event model.
-    pub(in crate::vm::execute::io) fn console_event_record(event: fpas_std::ConsoleEvent) -> Value {
-        let fpas_std::ConsoleEvent {
-            kind,
-            key,
-            mouse_action,
-            mouse_button,
-            mouse_x,
-            mouse_y,
-            width,
-            height,
-            text,
-            shift,
-            ctrl,
-            alt,
-            meta,
-        } = event;
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Console event records have a fixed field layout mirroring Std.Console.Event"
+    )]
+    fn console_event_record_fields(
+        kind: usize,
+        key: ConsoleKeyEvent,
+        mouse_action: usize,
+        mouse_button: usize,
+        mouse_x: i64,
+        mouse_y: i64,
+        width: i64,
+        height: i64,
+        text: String,
+        shift: bool,
+        ctrl: bool,
+        alt: bool,
+        meta: bool,
+    ) -> Value {
         Value::Record {
             type_name: "Std.Console.Event".into(),
             fields: vec![
@@ -320,6 +322,40 @@ impl Worker {
                 ("meta".into(), Value::Boolean(meta)),
             ],
         }
+    }
+
+    /// Builds one `Std.Console.Event` record from the runtime console event model.
+    pub(in crate::vm::execute::io) fn console_event_record(event: fpas_std::ConsoleEvent) -> Value {
+        let fpas_std::ConsoleEvent {
+            kind,
+            key,
+            mouse_action,
+            mouse_button,
+            mouse_x,
+            mouse_y,
+            width,
+            height,
+            text,
+            shift,
+            ctrl,
+            alt,
+            meta,
+        } = event;
+        Self::console_event_record_fields(
+            kind,
+            key,
+            mouse_action,
+            mouse_button,
+            mouse_x,
+            mouse_y,
+            width,
+            height,
+            text,
+            shift,
+            ctrl,
+            alt,
+            meta,
+        )
     }
 
     fn non_key_console_event_record(kind: usize, mouse: Option<UiMouse>, text: String) -> Value {
@@ -351,34 +387,28 @@ impl Worker {
                 },
             );
 
-        Value::Record {
-            type_name: "Std.Console.Event".into(),
-            fields: vec![
-                ("kind".into(), Value::Integer(kind as i64)),
-                (
-                    "key".into(),
-                    Self::key_event_record(ConsoleKeyEvent::new(
-                        fpas_std::key_event::key_kind_index("Unknown"),
-                        '\0',
-                        false,
-                        false,
-                        false,
-                        false,
-                    )),
-                ),
-                ("mouse_action".into(), Value::Integer(mouse_action as i64)),
-                ("mouse_button".into(), Value::Integer(mouse_button as i64)),
-                ("mouse_x".into(), Value::Integer(mouse_x)),
-                ("mouse_y".into(), Value::Integer(mouse_y)),
-                ("width".into(), Value::Integer(0)),
-                ("height".into(), Value::Integer(0)),
-                ("text".into(), Value::Str(text)),
-                ("shift".into(), Value::Boolean(shift)),
-                ("ctrl".into(), Value::Boolean(ctrl)),
-                ("alt".into(), Value::Boolean(alt)),
-                ("meta".into(), Value::Boolean(meta)),
-            ],
-        }
+        Self::console_event_record_fields(
+            kind,
+            ConsoleKeyEvent::new(
+                fpas_std::key_event::key_kind_index("Unknown"),
+                '\0',
+                false,
+                false,
+                false,
+                false,
+            ),
+            mouse_action,
+            mouse_button,
+            mouse_x,
+            mouse_y,
+            0,
+            0,
+            text,
+            shift,
+            ctrl,
+            alt,
+            meta,
+        )
     }
 
     /// Builds one `Std.Console.Event` mouse record from the internal shared UI payload.

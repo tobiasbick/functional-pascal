@@ -3,7 +3,7 @@
 //! This type reduces repeated event reshaping between runtime layers while the
 //! public Pascal-facing unit APIs remain unchanged.
 
-use crate::{ConsoleKeyEvent, GraphEvent, TuiEvent};
+use crate::ConsoleKeyEvent;
 
 /// Shared keyboard/mouse modifier flags.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -128,17 +128,5 @@ impl UiEvent {
     #[must_use]
     pub fn suggests_request_redraw(&self) -> bool {
         matches!(self, Self::Resize(_))
-    }
-
-    /// Projects the shared event into the public `Std.Tui` runtime event model.
-    #[must_use]
-    pub fn into_tui_event(self) -> Option<TuiEvent> {
-        TuiEvent::from_ui_event(self)
-    }
-
-    /// Projects the shared event into the public `Std.Graph` runtime event model.
-    #[must_use]
-    pub fn into_graph_event(self) -> Option<GraphEvent> {
-        GraphEvent::from_ui_event(self)
     }
 }

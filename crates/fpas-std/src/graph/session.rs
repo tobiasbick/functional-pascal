@@ -100,7 +100,7 @@ impl GraphSession {
 
         if let Some(event) = self.pending_events.pop_front() {
             self.apply_polled_event(&event, location)?;
-            return Ok(event.into_graph_event());
+            return Ok(GraphEvent::from_ui_event(event));
         }
 
         let event = backend::poll_graph_event(location)?;
@@ -108,7 +108,7 @@ impl GraphSession {
             self.apply_polled_event(event, location)?;
         }
 
-        Ok(event.and_then(UiEvent::into_graph_event))
+        Ok(event.and_then(GraphEvent::from_ui_event))
     }
 
     /// Waits up to `timeout_ms` milliseconds for the next queued graph event.
@@ -125,7 +125,7 @@ impl GraphSession {
 
         if let Some(event) = self.pending_events.pop_front() {
             self.apply_polled_event(&event, location)?;
-            return Ok(event.into_graph_event());
+            return Ok(GraphEvent::from_ui_event(event));
         }
 
         let event = backend::read_graph_event_timeout(timeout_ms, location)?;
@@ -133,7 +133,7 @@ impl GraphSession {
             self.apply_polled_event(event, location)?;
         }
 
-        Ok(event.and_then(UiEvent::into_graph_event))
+        Ok(event.and_then(GraphEvent::from_ui_event))
     }
 
     /// Clears the runtime-owned backbuffer with one packed `$00RRGGBB` color.

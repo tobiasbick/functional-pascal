@@ -81,6 +81,13 @@ impl TuiEvent {
     }
 }
 
+/// Projects one shared UI event into the public `Std.Tui` event model.
+#[doc(hidden)]
+#[must_use]
+pub fn tui_event_from_ui_event(value: UiEvent) -> Option<TuiEvent> {
+    TuiEvent::from_ui_event(value)
+}
+
 fn console_event_from_ui_mouse(mouse: UiMouse) -> ConsoleEvent {
     ConsoleEvent::mouse(
         mouse.action,

@@ -322,33 +322,95 @@ impl Worker {
         }
     }
 
+    fn non_key_console_event_record(kind: usize, mouse: Option<UiMouse>, text: String) -> Value {
+        let (mouse_action, mouse_button, mouse_x, mouse_y, shift, ctrl, alt, meta) = mouse
+            .map_or_else(
+                || {
+                    (
+                        fpas_std::mouse_action_index("Unknown"),
+                        fpas_std::mouse_button_index("None"),
+                        0,
+                        0,
+                        false,
+                        false,
+                        false,
+                        false,
+                    )
+                },
+                |mouse| {
+                    (
+                        mouse.action,
+                        mouse.button,
+                        mouse.x,
+                        mouse.y,
+                        mouse.modifiers.shift,
+                        mouse.modifiers.ctrl,
+                        mouse.modifiers.alt,
+                        mouse.modifiers.meta,
+                    )
+                },
+            );
+
+        Value::Record {
+            type_name: "Std.Console.Event".into(),
+            fields: vec![
+                ("kind".into(), Value::Integer(kind as i64)),
+                (
+                    "key".into(),
+                    Self::key_event_record(ConsoleKeyEvent::new(
+                        fpas_std::key_event::key_kind_index("Unknown"),
+                        '\0',
+                        false,
+                        false,
+                        false,
+                        false,
+                    )),
+                ),
+                ("mouse_action".into(), Value::Integer(mouse_action as i64)),
+                ("mouse_button".into(), Value::Integer(mouse_button as i64)),
+                ("mouse_x".into(), Value::Integer(mouse_x)),
+                ("mouse_y".into(), Value::Integer(mouse_y)),
+                ("width".into(), Value::Integer(0)),
+                ("height".into(), Value::Integer(0)),
+                ("text".into(), Value::Str(text)),
+                ("shift".into(), Value::Boolean(shift)),
+                ("ctrl".into(), Value::Boolean(ctrl)),
+                ("alt".into(), Value::Boolean(alt)),
+                ("meta".into(), Value::Boolean(meta)),
+            ],
+        }
+    }
+
     /// Builds one `Std.Console.Event` mouse record from the internal shared UI payload.
     pub(in crate::vm::execute::io) fn console_mouse_event_record(mouse: UiMouse) -> Value {
-        Self::console_event_record(fpas_std::ConsoleEvent::mouse(
-            mouse.action,
-            mouse.button,
-            mouse.x,
-            mouse.y,
-            mouse.modifiers.shift,
-            mouse.modifiers.ctrl,
-            mouse.modifiers.alt,
-            mouse.modifiers.meta,
-        ))
+        Self::non_key_console_event_record(
+            fpas_std::event_kind_index("Mouse"),
+            Some(mouse),
+            String::new(),
+        )
     }
 
     /// Builds one `Std.Console.Event` paste record from bracketed paste text.
     pub(in crate::vm::execute::io) fn console_paste_event_record(text: String) -> Value {
-        Self::console_event_record(fpas_std::ConsoleEvent::paste(text))
+        Self::non_key_console_event_record(fpas_std::event_kind_index("Paste"), None, text)
     }
 
     /// Builds one `Std.Console.Event` focus-gained record.
     pub(in crate::vm::execute::io) fn console_focus_gained_event_record() -> Value {
-        Self::console_event_record(fpas_std::ConsoleEvent::focus_gained())
+        Self::non_key_console_event_record(
+            fpas_std::event_kind_index("FocusGained"),
+            None,
+            String::new(),
+        )
     }
 
     /// Builds one `Std.Console.Event` focus-lost record.
     pub(in crate::vm::execute::io) fn console_focus_lost_event_record() -> Value {
-        Self::console_event_record(fpas_std::ConsoleEvent::focus_lost())
+        Self::non_key_console_event_record(
+            fpas_std::event_kind_index("FocusLost"),
+            None,
+            String::new(),
+        )
     }
 }
 

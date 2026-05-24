@@ -22,7 +22,7 @@ impl Worker {
                     | GraphIntrinsic::ApplicationClose
                     | GraphIntrinsic::ApplicationSize
                     | GraphIntrinsic::ApplicationPollEvent
-                        | GraphIntrinsic::ApplicationReadEventTimeout
+                    | GraphIntrinsic::ApplicationReadEventTimeout
                     | GraphIntrinsic::ApplicationUploadFrame
                     | GraphIntrinsic::ApplicationClear
                     | GraphIntrinsic::ApplicationPutPixel

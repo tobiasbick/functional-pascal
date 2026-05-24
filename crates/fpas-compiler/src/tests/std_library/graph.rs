@@ -261,9 +261,9 @@ end.",
 
 #[test]
 fn std_graph_poll_event_exposes_resize_and_close_requested_to_programs() {
-        with_headless(|| {
-                let out = compile_run_with_graph_events(
-                        "\
+    with_headless(|| {
+        let out = compile_run_with_graph_events(
+            "\
 program T;
 uses Std.Console, Std.Conv, Std.Graph, Std.Option;
 
@@ -286,17 +286,17 @@ begin
 
     Application.Close(App)
 end.",
-                        &[
-                                GraphEvent::Resize {
-                                        width: 320,
-                                        height: 200,
-                                },
-                                GraphEvent::CloseRequested,
-                        ],
-                );
+            &[
+                GraphEvent::Resize {
+                    width: 320,
+                    height: 200,
+                },
+                GraphEvent::CloseRequested,
+            ],
+        );
 
-                assert_eq!(out.lines, vec!["resize=320x200", "event2=0x0"]);
-        });
+        assert_eq!(out.lines, vec!["resize=320x200", "event2=0x0"]);
+    });
 }
 
 #[test]

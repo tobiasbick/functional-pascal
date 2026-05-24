@@ -136,52 +136,58 @@ impl Worker {
                 y,
                 modifiers,
             }) => {
-                let console_event = ConsoleEvent::mouse(
+                let mouse = UiMouse {
                     action,
                     button,
                     x,
                     y,
-                    modifiers.shift,
-                    modifiers.ctrl,
-                    modifiers.alt,
-                    modifiers.meta,
-                );
-                if self.modal_blocks_mouse_dispatch(modal_scope.as_deref(), &console_event) {
+                    modifiers,
+                };
+                if self.modal_blocks_mouse_dispatch(modal_scope.as_deref(), mouse) {
                     return Ok(19);
                 }
-                let redraw_hint = self.mouse_redraw_hint(modal_scope.as_deref(), &console_event);
+                let redraw_hint = self.mouse_redraw_hint(modal_scope.as_deref(), mouse);
                 self.dispatch_console_event_handler(
                     on_mouse,
                     app_rec,
-                    Self::console_event_record(console_event),
+                    Self::console_event_record(ConsoleEvent::mouse(
+                        mouse.action,
+                        mouse.button,
+                        mouse.x,
+                        mouse.y,
+                        mouse.modifiers.shift,
+                        mouse.modifiers.ctrl,
+                        mouse.modifiers.alt,
+                        mouse.modifiers.meta,
+                    )),
                     Some(redraw_hint),
                     5,
                     7,
                     line,
                 )
             }
-            UiEvent::Paste(console_event) => self.dispatch_console_event_handler(
+            UiEvent::Paste(text) => self.dispatch_console_event_handler(
                 on_paste,
                 app_rec,
-                Self::console_event_record(console_event),
+                Self::console_event_record(ConsoleEvent::paste(text)),
                 Some(self.focused_view_redraw_hint()),
                 8,
                 9,
                 line,
             ),
-            UiEvent::FocusGained(console_event) => self.dispatch_console_event_handler(
+            UiEvent::FocusGained => self.dispatch_console_event_handler(
                 on_focus_gained,
                 app_rec,
-                Self::console_event_record(console_event),
+                Self::console_event_record(ConsoleEvent::focus_gained()),
                 Some(self.focused_view_redraw_hint()),
                 10,
                 11,
                 line,
             ),
-            UiEvent::FocusLost(console_event) => self.dispatch_console_event_handler(
+            UiEvent::FocusLost => self.dispatch_console_event_handler(
                 on_focus_lost,
                 app_rec,
-                Self::console_event_record(console_event),
+                Self::console_event_record(ConsoleEvent::focus_lost()),
                 Some(self.focused_view_redraw_hint()),
                 12,
                 13,
@@ -299,11 +305,7 @@ impl Worker {
         }
     }
 
-    fn modal_blocks_mouse_dispatch(
-        &self,
-        modal_scope: Option<&[ViewId]>,
-        event: &ConsoleEvent,
-    ) -> bool {
+    fn modal_blocks_mouse_dispatch(&self, modal_scope: Option<&[ViewId]>, mouse: UiMouse) -> bool {
         let Some(scope) = modal_scope else {
             return false;
         };
@@ -312,7 +314,7 @@ impl Worker {
         !scope.iter().any(|view_id| {
             tui.views
                 .rect(*view_id)
-                .is_some_and(|rect| Self::rect_contains_point(rect, event.mouse_x, event.mouse_y))
+                .is_some_and(|rect| Self::rect_contains_point(rect, mouse.x, mouse.y))
         })
     }
 
@@ -379,14 +381,10 @@ impl Worker {
             .unwrap_or(DamageRegion::FullFrame)
     }
 
-    fn mouse_redraw_hint(
-        &self,
-        modal_scope: Option<&[ViewId]>,
-        event: &ConsoleEvent,
-    ) -> DamageRegion {
+    fn mouse_redraw_hint(&self, modal_scope: Option<&[ViewId]>, mouse: UiMouse) -> DamageRegion {
         let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
         tui.views
-            .topmost_view_at(event.mouse_x, event.mouse_y, modal_scope)
+            .topmost_view_at(mouse.x, mouse.y, modal_scope)
             .and_then(|view_id| tui.views.rect(view_id))
             .map(DamageRegion::Rect)
             .unwrap_or(DamageRegion::FullFrame)

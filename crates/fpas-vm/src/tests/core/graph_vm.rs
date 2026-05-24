@@ -188,7 +188,9 @@ fn graph_read_event_timeout_returns_none_without_events() {
         }
 
         let mut worker = Worker::new_main(shared);
-        worker.run().expect("graph read event timeout should succeed");
+        worker
+            .run()
+            .expect("graph read event timeout should succeed");
 
         assert_eq!(worker.stack, vec![Value::OptionNone]);
     });
@@ -223,7 +225,9 @@ fn graph_read_event_timeout_returns_queued_event_record() {
         }
 
         let mut worker = Worker::new_main(shared);
-        worker.run().expect("graph read event timeout should succeed");
+        worker
+            .run()
+            .expect("graph read event timeout should succeed");
 
         assert_eq!(
             worker.stack,

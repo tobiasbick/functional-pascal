@@ -82,7 +82,7 @@ impl TuiHost {
                 }
                 self.ready.push_back(UiEvent::Mouse(mouse));
             }
-            UiEvent::Paste(event) => {
+            UiEvent::Paste(text) => {
                 if let Some((old_width, old_height, width, height)) = self.pending_resize.take() {
                     self.trace("tui_host: flush coalesced resize before paste");
                     self.ready.push_back(UiEvent::Resize(UiResize::new(
@@ -92,9 +92,9 @@ impl TuiHost {
                         height,
                     )));
                 }
-                self.ready.push_back(UiEvent::Paste(event));
+                self.ready.push_back(UiEvent::Paste(text));
             }
-            UiEvent::FocusGained(event) => {
+            UiEvent::FocusGained => {
                 if let Some((old_width, old_height, width, height)) = self.pending_resize.take() {
                     self.trace("tui_host: flush coalesced resize before focus-gained");
                     self.ready.push_back(UiEvent::Resize(UiResize::new(
@@ -104,9 +104,9 @@ impl TuiHost {
                         height,
                     )));
                 }
-                self.ready.push_back(UiEvent::FocusGained(event));
+                self.ready.push_back(UiEvent::FocusGained);
             }
-            UiEvent::FocusLost(event) => {
+            UiEvent::FocusLost => {
                 if let Some((old_width, old_height, width, height)) = self.pending_resize.take() {
                     self.trace("tui_host: flush coalesced resize before focus-lost");
                     self.ready.push_back(UiEvent::Resize(UiResize::new(
@@ -116,7 +116,7 @@ impl TuiHost {
                         height,
                     )));
                 }
-                self.ready.push_back(UiEvent::FocusLost(event));
+                self.ready.push_back(UiEvent::FocusLost);
             }
             UiEvent::CloseRequested | UiEvent::Wheel(_) | UiEvent::Resize(_) => {}
         }

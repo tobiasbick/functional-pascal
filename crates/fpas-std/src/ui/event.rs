@@ -112,11 +112,11 @@ pub enum UiEvent {
     /// Mouse input.
     Mouse(UiMouse),
     /// Bracketed paste content.
-    Paste(ConsoleEvent),
+    Paste(String),
     /// Focus gained.
-    FocusGained(ConsoleEvent),
+    FocusGained,
     /// Focus lost.
-    FocusLost(ConsoleEvent),
+    FocusLost,
     /// Graph-only close request.
     CloseRequested,
     /// Graph-only wheel input.
@@ -151,9 +151,9 @@ impl UiEvent {
                 mouse.modifiers.alt,
                 mouse.modifiers.meta,
             ))),
-            Self::Paste(event) => Some(TuiEvent::Paste(event)),
-            Self::FocusGained(event) => Some(TuiEvent::FocusGained(event)),
-            Self::FocusLost(event) => Some(TuiEvent::FocusLost(event)),
+            Self::Paste(text) => Some(TuiEvent::Paste(ConsoleEvent::paste(text))),
+            Self::FocusGained => Some(TuiEvent::FocusGained(ConsoleEvent::focus_gained())),
+            Self::FocusLost => Some(TuiEvent::FocusLost(ConsoleEvent::focus_lost())),
             Self::CloseRequested | Self::Wheel(_) => None,
         }
     }
@@ -188,7 +188,7 @@ impl UiEvent {
                 alt: wheel.modifiers.alt,
                 meta: wheel.modifiers.meta,
             }),
-            Self::Paste(_) | Self::FocusGained(_) | Self::FocusLost(_) => None,
+            Self::Paste(_) | Self::FocusGained | Self::FocusLost => None,
         }
     }
 }
@@ -215,9 +215,9 @@ impl From<TuiEvent> for UiEvent {
                 event.mouse_y,
                 UiModifiers::new(event.shift, event.ctrl, event.alt, event.meta),
             )),
-            TuiEvent::Paste(event) => Self::Paste(event),
-            TuiEvent::FocusGained(event) => Self::FocusGained(event),
-            TuiEvent::FocusLost(event) => Self::FocusLost(event),
+            TuiEvent::Paste(event) => Self::Paste(event.text),
+            TuiEvent::FocusGained(_) => Self::FocusGained,
+            TuiEvent::FocusLost(_) => Self::FocusLost,
         }
     }
 }

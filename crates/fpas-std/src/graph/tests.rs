@@ -146,7 +146,10 @@ fn graph_session_upload_frame_uses_last_observed_size_during_resize_race() {
         session
             .open(2, 1, "Graph smoke", test_location())
             .expect("open should succeed");
-        assert_eq!(session.size(test_location()).expect("size should succeed"), (2, 1));
+        assert_eq!(
+            session.size(test_location()).expect("size should succeed"),
+            (2, 1)
+        );
 
         set_headless_graph_surface_size_for_tests(4, 3);
 

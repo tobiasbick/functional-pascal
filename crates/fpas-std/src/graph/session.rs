@@ -332,7 +332,7 @@ impl GraphSession {
             location,
         )?;
 
-        self.pending_events.push_back(UiEvent::from(event));
+        self.pending_events.push_back(event.into_ui_event());
         Ok(())
     }
 
@@ -382,7 +382,7 @@ impl GraphSession {
 
     #[cfg(test)]
     pub(crate) fn push_event_for_tests(&mut self, event: GraphEvent) {
-        self.pending_events.push_back(UiEvent::from(event));
+        self.pending_events.push_back(event.into_ui_event());
     }
 
     #[cfg(test)]

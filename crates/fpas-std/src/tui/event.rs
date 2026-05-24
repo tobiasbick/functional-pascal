@@ -1,6 +1,6 @@
 use crate::console::Console;
 use crate::console_event::event_kind_index;
-use crate::{ConsoleEvent, ConsoleKeyEvent, UiEvent, UiMouse};
+use crate::{ConsoleEvent, ConsoleKeyEvent, UiEvent, UiModifiers, UiMouse, UiResize};
 
 /// Variants for `Std.Tui.EventKind`.
 pub const TUI_EVENT_KIND_VARIANTS: &[&str] = &["Key", "Resize", "Mouse"];
@@ -48,6 +48,35 @@ impl TuiEvent {
             UiEvent::FocusGained => Some(Self::FocusGained(ConsoleEvent::focus_gained())),
             UiEvent::FocusLost => Some(Self::FocusLost(ConsoleEvent::focus_lost())),
             UiEvent::CloseRequested | UiEvent::Wheel(_) => None,
+        }
+    }
+
+    /// Projects one public `Std.Tui` event into the shared internal UI event model.
+    #[must_use]
+    pub(crate) fn into_ui_event(self) -> UiEvent {
+        match self {
+            Self::Resize {
+                old_width,
+                old_height,
+                width,
+                height,
+            } => UiEvent::Resize(UiResize::new(
+                Some(old_width),
+                Some(old_height),
+                width,
+                height,
+            )),
+            Self::Key(key) => UiEvent::Key(key),
+            Self::Mouse(event) => UiEvent::Mouse(UiMouse::new(
+                event.mouse_action,
+                event.mouse_button,
+                event.mouse_x,
+                event.mouse_y,
+                UiModifiers::new(event.shift, event.ctrl, event.alt, event.meta),
+            )),
+            Self::Paste(event) => UiEvent::Paste(event.text),
+            Self::FocusGained(_) => UiEvent::FocusGained,
+            Self::FocusLost(_) => UiEvent::FocusLost,
         }
     }
 }

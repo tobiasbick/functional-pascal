@@ -43,7 +43,7 @@ impl TuiHost {
 
     /// Feed one mapped [`TuiEvent`] from the session / console path.
     pub fn ingest_tui_event(&mut self, ev: TuiEvent) {
-        match UiEvent::from(ev) {
+        match ev.into_ui_event() {
             UiEvent::Resize(UiResize {
                 old_width: Some(old_width),
                 old_height: Some(old_height),

@@ -3,7 +3,7 @@
 //! This type reduces repeated event reshaping between runtime layers while the
 //! public Pascal-facing unit APIs remain unchanged.
 
-use crate::{ConsoleEvent, ConsoleKeyEvent, GraphEvent, TuiEvent};
+use crate::{ConsoleKeyEvent, GraphEvent, TuiEvent};
 
 /// Shared keyboard/mouse modifier flags.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -133,29 +133,7 @@ impl UiEvent {
     /// Projects the shared event into the public `Std.Tui` runtime event model.
     #[must_use]
     pub fn into_tui_event(self) -> Option<TuiEvent> {
-        match self {
-            Self::Resize(resize) => Some(TuiEvent::Resize {
-                old_width: resize.old_width.unwrap_or(0),
-                old_height: resize.old_height.unwrap_or(0),
-                width: resize.width,
-                height: resize.height,
-            }),
-            Self::Key(key) => Some(TuiEvent::Key(key)),
-            Self::Mouse(mouse) => Some(TuiEvent::Mouse(ConsoleEvent::mouse(
-                mouse.action,
-                mouse.button,
-                mouse.x,
-                mouse.y,
-                mouse.modifiers.shift,
-                mouse.modifiers.ctrl,
-                mouse.modifiers.alt,
-                mouse.modifiers.meta,
-            ))),
-            Self::Paste(text) => Some(TuiEvent::Paste(ConsoleEvent::paste(text))),
-            Self::FocusGained => Some(TuiEvent::FocusGained(ConsoleEvent::focus_gained())),
-            Self::FocusLost => Some(TuiEvent::FocusLost(ConsoleEvent::focus_lost())),
-            Self::CloseRequested | Self::Wheel(_) => None,
-        }
+        TuiEvent::from_ui_event(self)
     }
 
     /// Projects the shared event into the public `Std.Graph` runtime event model.

@@ -1,6 +1,6 @@
-use crate::ConsoleKeyEvent;
 use crate::console::Console;
-use crate::console_event::{ConsoleEvent, event_kind_index};
+use crate::console_event::event_kind_index;
+use crate::{ConsoleEvent, ConsoleKeyEvent, UiEvent, UiMouse};
 
 /// Variants for `Std.Tui.EventKind`.
 pub const TUI_EVENT_KIND_VARIANTS: &[&str] = &["Key", "Resize", "Mouse"];
@@ -29,6 +29,40 @@ pub enum TuiEvent {
     FocusGained(ConsoleEvent),
     /// Terminal focus lost; best-effort / optional on many terminals.
     FocusLost(ConsoleEvent),
+}
+
+impl TuiEvent {
+    /// Projects one internal shared UI event into the public `Std.Tui` event model.
+    #[must_use]
+    pub(crate) fn from_ui_event(value: UiEvent) -> Option<Self> {
+        match value {
+            UiEvent::Resize(resize) => Some(Self::Resize {
+                old_width: resize.old_width.unwrap_or(0),
+                old_height: resize.old_height.unwrap_or(0),
+                width: resize.width,
+                height: resize.height,
+            }),
+            UiEvent::Key(key) => Some(Self::Key(key)),
+            UiEvent::Mouse(mouse) => Some(Self::Mouse(console_event_from_ui_mouse(mouse))),
+            UiEvent::Paste(text) => Some(Self::Paste(ConsoleEvent::paste(text))),
+            UiEvent::FocusGained => Some(Self::FocusGained(ConsoleEvent::focus_gained())),
+            UiEvent::FocusLost => Some(Self::FocusLost(ConsoleEvent::focus_lost())),
+            UiEvent::CloseRequested | UiEvent::Wheel(_) => None,
+        }
+    }
+}
+
+fn console_event_from_ui_mouse(mouse: UiMouse) -> ConsoleEvent {
+    ConsoleEvent::mouse(
+        mouse.action,
+        mouse.button,
+        mouse.x,
+        mouse.y,
+        mouse.modifiers.shift,
+        mouse.modifiers.ctrl,
+        mouse.modifiers.alt,
+        mouse.modifiers.meta,
+    )
 }
 
 pub(crate) fn map_console_event(console: &mut Console, event: ConsoleEvent) -> Option<TuiEvent> {

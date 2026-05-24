@@ -2,8 +2,9 @@
 //!
 //! **Documentation:** `docs/future/std.graph/04-implementation-plan.md` (from the repository root).
 
-use super::super::{GraphEvent, UploadedFrame};
+use super::super::UploadedFrame;
 use crate::error::StdError;
+use crate::ui::UiEvent;
 use fpas_bytecode::SourceLocation;
 use std::cell::RefCell;
 
@@ -36,7 +37,7 @@ impl HeadlessGraphBackend {
     pub(crate) fn poll_event(
         &mut self,
         location: SourceLocation,
-    ) -> Result<Option<GraphEvent>, StdError> {
+    ) -> Result<Option<UiEvent>, StdError> {
         let _ = location;
         Ok(None)
     }
@@ -46,7 +47,7 @@ impl HeadlessGraphBackend {
         &mut self,
         timeout_ms: i64,
         location: SourceLocation,
-    ) -> Result<Option<GraphEvent>, StdError> {
+    ) -> Result<Option<UiEvent>, StdError> {
         let _ = timeout_ms;
         let _ = location;
         Ok(None)

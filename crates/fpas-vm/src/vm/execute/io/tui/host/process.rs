@@ -5,14 +5,14 @@
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
 use fpas_bytecode::{SourceLocation, Value};
-use fpas_std::{CommandId, ConsoleEvent, DamageRegion, HostEvent, ViewId, ViewRect};
+use fpas_std::{CommandId, ConsoleEvent, DamageRegion, UiEvent, UiResize, ViewId, ViewRect};
 
 /// Discriminant of `Std.Console.KeyKind.Tab`; must match
 /// [`fpas_std::key_event::KEY_KIND_VARIANTS`] (index 2).
 const KEY_KIND_TAB: usize = 2;
 
 impl Worker {
-    /// Processes at most one pending `HostEvent`, dispatching to the registered handler.
+    /// Processes at most one pending `UiEvent`, dispatching to the registered handler.
     ///
     /// Returns a status tag: `0` = none, `1` = key dispatched, `2` = resize dispatched,
     /// `3` = key (no handler), `4` = resize (no handler), `5`/`7`/`8`/`9`/`10`/`11`/`12`/`13`
@@ -24,7 +24,7 @@ impl Worker {
         max_spins: usize,
         line: SourceLocation,
     ) -> Result<i64, VmError> {
-        let mut ready: Option<HostEvent> = None;
+        let mut ready: Option<UiEvent> = None;
         for _ in 0..max_spins.max(1) {
             let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
             if let Some(event) = tui.host.pop_ready_event() {
@@ -66,7 +66,7 @@ impl Worker {
         let modal_scope = self.active_modal_scope();
 
         match event {
-            HostEvent::Key(key_event) => {
+            UiEvent::Key(key_event) => {
                 if key_event.kind == KEY_KIND_TAB {
                     let (changed, had_previous, previous_focus, current_focus) = {
                         let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
@@ -127,7 +127,7 @@ impl Worker {
                     Ok(3)
                 }
             }
-            HostEvent::Mouse(console_event) => {
+            UiEvent::Mouse(console_event) => {
                 if self.modal_blocks_mouse_dispatch(modal_scope.as_deref(), &console_event) {
                     return Ok(19);
                 }
@@ -142,7 +142,7 @@ impl Worker {
                     line,
                 )
             }
-            HostEvent::Paste(console_event) => self.dispatch_console_event_handler(
+            UiEvent::Paste(console_event) => self.dispatch_console_event_handler(
                 on_paste,
                 app_rec,
                 Self::console_event_record(console_event),
@@ -151,7 +151,7 @@ impl Worker {
                 9,
                 line,
             ),
-            HostEvent::FocusGained(console_event) => self.dispatch_console_event_handler(
+            UiEvent::FocusGained(console_event) => self.dispatch_console_event_handler(
                 on_focus_gained,
                 app_rec,
                 Self::console_event_record(console_event),
@@ -160,7 +160,7 @@ impl Worker {
                 11,
                 line,
             ),
-            HostEvent::FocusLost(console_event) => self.dispatch_console_event_handler(
+            UiEvent::FocusLost(console_event) => self.dispatch_console_event_handler(
                 on_focus_lost,
                 app_rec,
                 Self::console_event_record(console_event),
@@ -169,12 +169,14 @@ impl Worker {
                 13,
                 line,
             ),
-            HostEvent::Resize {
+            UiEvent::Resize(UiResize {
                 old_width,
                 old_height,
                 width,
                 height,
-            } => {
+            }) => {
+                let old_width = old_width.unwrap_or(width);
+                let old_height = old_height.unwrap_or(height);
                 self.with_tui(|tui| {
                     tui.session
                         .request_resize_redraw(old_width, old_height, width, height, line)
@@ -190,6 +192,7 @@ impl Worker {
                     Ok(4)
                 }
             }
+            UiEvent::CloseRequested | UiEvent::Wheel(_) => Ok(0),
         }
     }
 

@@ -5,8 +5,9 @@
 mod headless;
 mod native;
 
-use super::{GraphEvent, UploadedFrame};
+use super::UploadedFrame;
 use crate::error::{StdError, std_runtime_error};
+use crate::ui::UiEvent;
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 use std::cell::{Cell, RefCell};
@@ -52,7 +53,7 @@ impl GraphBackend {
         }
     }
 
-    fn poll_event(&mut self, location: SourceLocation) -> Result<Option<GraphEvent>, StdError> {
+    fn poll_event(&mut self, location: SourceLocation) -> Result<Option<UiEvent>, StdError> {
         match self {
             Self::Headless(backend) => backend.poll_event(location),
             Self::Native(backend) => backend.poll_event(location),
@@ -63,7 +64,7 @@ impl GraphBackend {
         &mut self,
         timeout_ms: i64,
         location: SourceLocation,
-    ) -> Result<Option<GraphEvent>, StdError> {
+    ) -> Result<Option<UiEvent>, StdError> {
         match self {
             Self::Headless(backend) => backend.read_event_timeout(timeout_ms, location),
             Self::Native(backend) => backend.read_event_timeout(timeout_ms, location),
@@ -134,17 +135,19 @@ pub(crate) fn graph_surface_size(location: SourceLocation) -> Result<(i64, i64),
     with_backend(location, |backend| backend.size(location))
 }
 
-/// Polls one graph event from the active backend.
-pub(crate) fn poll_graph_event(location: SourceLocation) -> Result<Option<GraphEvent>, StdError> {
+/// Polls one shared UI event from the active graph backend.
+pub(crate) fn poll_graph_event(location: SourceLocation) -> Result<Option<UiEvent>, StdError> {
     with_backend(location, |backend| backend.poll_event(location))
 }
 
-/// Waits up to `timeout_ms` milliseconds for one graph event from the active backend.
+/// Waits up to `timeout_ms` milliseconds for one shared UI event from the active backend.
 pub(crate) fn read_graph_event_timeout(
     timeout_ms: i64,
     location: SourceLocation,
-) -> Result<Option<GraphEvent>, StdError> {
-    with_backend(location, |backend| backend.read_event_timeout(timeout_ms, location))
+) -> Result<Option<UiEvent>, StdError> {
+    with_backend(location, |backend| {
+        backend.read_event_timeout(timeout_ms, location)
+    })
 }
 
 /// Presents one validated frame through the active backend.

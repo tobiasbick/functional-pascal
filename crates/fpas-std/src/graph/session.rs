@@ -12,6 +12,7 @@ use super::line;
 use super::rect;
 use super::text;
 use crate::error::{StdError, std_runtime_error};
+use crate::ui::{UiEvent, UiResize};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 use std::collections::VecDeque;
@@ -23,7 +24,7 @@ pub struct GraphSession {
     width: i64,
     height: i64,
     title: String,
-    pending_events: VecDeque<GraphEvent>,
+    pending_events: VecDeque<UiEvent>,
     backbuffer: GraphBackbuffer,
     last_uploaded_frame: Option<UploadedFrame>,
 }
@@ -99,7 +100,7 @@ impl GraphSession {
 
         if let Some(event) = self.pending_events.pop_front() {
             self.apply_polled_event(&event, location)?;
-            return Ok(Some(event));
+            return Ok(event.into_graph_event());
         }
 
         let event = backend::poll_graph_event(location)?;
@@ -107,7 +108,7 @@ impl GraphSession {
             self.apply_polled_event(event, location)?;
         }
 
-        Ok(event)
+        Ok(event.and_then(UiEvent::into_graph_event))
     }
 
     /// Waits up to `timeout_ms` milliseconds for the next queued graph event.
@@ -124,7 +125,7 @@ impl GraphSession {
 
         if let Some(event) = self.pending_events.pop_front() {
             self.apply_polled_event(&event, location)?;
-            return Ok(Some(event));
+            return Ok(event.into_graph_event());
         }
 
         let event = backend::read_graph_event_timeout(timeout_ms, location)?;
@@ -132,7 +133,7 @@ impl GraphSession {
             self.apply_polled_event(event, location)?;
         }
 
-        Ok(event)
+        Ok(event.and_then(UiEvent::into_graph_event))
     }
 
     /// Clears the runtime-owned backbuffer with one packed `$00RRGGBB` color.
@@ -331,7 +332,7 @@ impl GraphSession {
             location,
         )?;
 
-        self.pending_events.push_back(event);
+        self.pending_events.push_back(UiEvent::from(event));
         Ok(())
     }
 
@@ -381,7 +382,7 @@ impl GraphSession {
 
     #[cfg(test)]
     pub(crate) fn push_event_for_tests(&mut self, event: GraphEvent) {
-        self.pending_events.push_back(event);
+        self.pending_events.push_back(UiEvent::from(event));
     }
 
     #[cfg(test)]
@@ -414,10 +415,10 @@ impl GraphSession {
 
     fn apply_polled_event(
         &mut self,
-        event: &GraphEvent,
+        event: &UiEvent,
         location: SourceLocation,
     ) -> Result<(), StdError> {
-        if let GraphEvent::Resize { width, height } = event {
+        if let UiEvent::Resize(UiResize { width, height, .. }) = event {
             self.width = *width;
             self.height = *height;
             self.backbuffer.resize(*width, *height, location)?;

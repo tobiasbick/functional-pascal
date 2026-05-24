@@ -32,6 +32,7 @@ mod tui_damage;
 mod tui_host;
 mod tui_modal;
 mod tui_view;
+mod ui;
 
 pub use console::{
     CapturedOutput, Console, KeyInput, ReadLnQueue, TextInput, read_line_from_stdin,
@@ -56,9 +57,10 @@ pub use std_units::{
 pub use tui::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent, TuiSession};
 pub use tui_command::{CommandId, CommandRegistry};
 pub use tui_damage::DamageRegion;
-pub use tui_host::{HostEvent, TuiHost};
+pub use tui_host::TuiHost;
 pub use tui_modal::{ModalId, ModalStack};
 pub use tui_view::{ViewId, ViewRect, ViewRegistry};
+pub use ui::{UiEvent, UiModifiers, UiResize, UiWheel};
 
 /// Returns the index of `name` in `variants`, or 0 if not found.
 ///

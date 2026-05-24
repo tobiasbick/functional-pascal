@@ -5,7 +5,7 @@
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
 use fpas_bytecode::{Intrinsic, SourceLocation, TuiIntrinsic, Value};
-use fpas_std::{HostEvent, TuiEvent};
+use fpas_std::{TuiEvent, UiEvent};
 
 impl Worker {
     /// Executes event-reading `Std.Tui` intrinsics.
@@ -94,26 +94,9 @@ impl Worker {
                 match mapped {
                     None => self.push(Value::OptionNone)?,
                     Some(ev) => {
-                        let tui_event = match ev {
-                            HostEvent::Resize {
-                                old_width,
-                                old_height,
-                                width,
-                                height,
-                            } => TuiEvent::Resize {
-                                old_width,
-                                old_height,
-                                width,
-                                height,
-                            },
-                            HostEvent::Key(k) => TuiEvent::Key(k),
-                            HostEvent::Mouse(mouse) => TuiEvent::Mouse(mouse),
-                            HostEvent::Paste(_)
-                            | HostEvent::FocusGained(_)
-                            | HostEvent::FocusLost(_) => {
-                                self.push(Value::OptionNone)?;
-                                return Ok(true);
-                            }
+                        let Some(tui_event) = UiEvent::into_tui_event(ev) else {
+                            self.push(Value::OptionNone)?;
+                            return Ok(true);
                         };
                         self.push(Value::OptionSome(Box::new(Self::tui_event_record(
                             tui_event,

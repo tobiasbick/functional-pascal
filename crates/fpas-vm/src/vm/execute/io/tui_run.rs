@@ -6,7 +6,7 @@ use crate::vm::diagnostics::VmError;
 use crate::vm::{Worker, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
-use fpas_std::HostEvent;
+use fpas_std::UiEvent;
 
 const TUI_EXIT_REASON_TYPE: &str = "Std.Tui.ExitReason";
 const USER_QUIT_EXIT_REASON: &str = "UserQuit";
@@ -123,7 +123,7 @@ impl Worker {
         let has_initial_resize = {
             let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
             let _ = tui.host.flush_pending_resize();
-            matches!(tui.host.peek_ready_event(), Some(HostEvent::Resize { .. }))
+            matches!(tui.host.peek_ready_event(), Some(UiEvent::Resize(_)))
         };
 
         if has_initial_resize {

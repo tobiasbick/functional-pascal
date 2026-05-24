@@ -58,7 +58,7 @@ pub enum TuiIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     HostRegisterOnResize = 258,
-    /// Poll the session, coalesce through `TuiHost`, dispatch at most one `HostEvent` to registered handlers.
+    /// Poll the session, coalesce through `TuiHost`, dispatch at most one internal `UiEvent` to registered handlers.
     ///
     /// Stack: `Application`, `max_spins` (top). Pushes `integer` tag:
     /// `0` none, `1` key dispatched, `2` resize dispatched, `3` key without handler, `4` resize without handler.

@@ -2,8 +2,9 @@
 //!
 //! **Documentation:** `docs/future/std.graph/01-mvp.md`, `docs/future/std.graph/05-backend-selection.md` (from the repository root).
 
-use super::super::{GraphEvent, UploadedFrame};
+use super::super::UploadedFrame;
 use crate::error::{StdError, std_runtime_error};
+use crate::ui::{UiEvent, UiModifiers, UiResize, UiWheel};
 use crate::{ConsoleKeyEvent, key_event::key_kind_index, mouse_action_index, mouse_button_index};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
@@ -74,7 +75,7 @@ impl NativeGraphBackend {
     pub(crate) fn poll_event(
         &mut self,
         location: SourceLocation,
-    ) -> Result<Option<GraphEvent>, StdError> {
+    ) -> Result<Option<UiEvent>, StdError> {
         self.pump(Some(Duration::ZERO), location)?;
         Ok(self.app.pending_events.pop_front())
     }
@@ -84,7 +85,7 @@ impl NativeGraphBackend {
         &mut self,
         timeout_ms: i64,
         location: SourceLocation,
-    ) -> Result<Option<GraphEvent>, StdError> {
+    ) -> Result<Option<UiEvent>, StdError> {
         if let Some(event) = self.app.pending_events.pop_front() {
             return Ok(Some(event));
         }
@@ -162,7 +163,7 @@ struct NativeGraphApp {
     right_button_down: bool,
     middle_button_down: bool,
     modifiers: ModifiersState,
-    pending_events: VecDeque<GraphEvent>,
+    pending_events: VecDeque<UiEvent>,
     pending_frame: Option<UploadedFrame>,
     last_error: Option<String>,
 }
@@ -212,10 +213,8 @@ impl NativeGraphApp {
         };
         self.width = width;
         self.height = height;
-        self.pending_events.push_back(GraphEvent::Resize {
-            width,
-            height,
-        });
+        self.pending_events
+            .push_back(UiEvent::Resize(UiResize::new(None, None, width, height)));
     }
 
     fn push_mouse_event(&mut self, action: usize, button: usize) {
@@ -223,16 +222,17 @@ impl NativeGraphApp {
         let ctrl = self.modifiers.control_key();
         let alt = self.modifiers.alt_key();
         let meta = self.modifiers.super_key();
-        self.pending_events.push_back(GraphEvent::Mouse {
-            action,
-            button,
-            x: self.cursor_x,
-            y: self.cursor_y,
-            shift,
-            ctrl,
-            alt,
-            meta,
-        });
+        self.pending_events
+            .push_back(UiEvent::Mouse(crate::ConsoleEvent::mouse(
+                action,
+                button,
+                self.cursor_x,
+                self.cursor_y,
+                shift,
+                ctrl,
+                alt,
+                meta,
+            )));
     }
 
     fn push_wheel_event(&mut self, delta_x: i64, delta_y: i64) {
@@ -240,16 +240,13 @@ impl NativeGraphApp {
         let ctrl = self.modifiers.control_key();
         let alt = self.modifiers.alt_key();
         let meta = self.modifiers.super_key();
-        self.pending_events.push_back(GraphEvent::Wheel {
+        self.pending_events.push_back(UiEvent::Wheel(UiWheel::new(
             delta_x,
             delta_y,
-            x: self.cursor_x,
-            y: self.cursor_y,
-            shift,
-            ctrl,
-            alt,
-            meta,
-        });
+            self.cursor_x,
+            self.cursor_y,
+            UiModifiers::new(shift, ctrl, alt, meta),
+        )));
     }
 
     fn set_cursor_position(&mut self, x: f64, y: f64) {
@@ -390,7 +387,7 @@ impl ApplicationHandler for NativeGraphApp {
 
         match event {
             WindowEvent::CloseRequested => {
-                self.pending_events.push_back(GraphEvent::CloseRequested);
+                self.pending_events.push_back(UiEvent::CloseRequested);
             }
             WindowEvent::Resized(size) => {
                 self.handle_resize(size.width, size.height);
@@ -437,7 +434,7 @@ impl ApplicationHandler for NativeGraphApp {
                 ..
             } => {
                 if let Some(key) = map_winit_key(&event, self.modifiers) {
-                    self.pending_events.push_back(GraphEvent::Key(key));
+                    self.pending_events.push_back(UiEvent::Key(key));
                 }
             }
             WindowEvent::RedrawRequested => self.handle_redraw_requested(),

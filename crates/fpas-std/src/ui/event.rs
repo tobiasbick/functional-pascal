@@ -54,6 +54,30 @@ impl UiResize {
     }
 }
 
+/// Shared mouse payload used by internal UI events.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct UiMouse {
+    pub action: usize,
+    pub button: usize,
+    pub x: i64,
+    pub y: i64,
+    pub modifiers: UiModifiers,
+}
+
+impl UiMouse {
+    /// Creates one mouse payload.
+    #[must_use]
+    pub const fn new(action: usize, button: usize, x: i64, y: i64, modifiers: UiModifiers) -> Self {
+        Self {
+            action,
+            button,
+            x,
+            y,
+            modifiers,
+        }
+    }
+}
+
 /// Shared wheel payload used by internal UI events.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct UiWheel {
@@ -86,7 +110,7 @@ pub enum UiEvent {
     /// Keyboard input.
     Key(ConsoleKeyEvent),
     /// Mouse input.
-    Mouse(ConsoleEvent),
+    Mouse(UiMouse),
     /// Bracketed paste content.
     Paste(ConsoleEvent),
     /// Focus gained.
@@ -117,7 +141,16 @@ impl UiEvent {
                 height: resize.height,
             }),
             Self::Key(key) => Some(TuiEvent::Key(key)),
-            Self::Mouse(event) => Some(TuiEvent::Mouse(event)),
+            Self::Mouse(mouse) => Some(TuiEvent::Mouse(ConsoleEvent::mouse(
+                mouse.action,
+                mouse.button,
+                mouse.x,
+                mouse.y,
+                mouse.modifiers.shift,
+                mouse.modifiers.ctrl,
+                mouse.modifiers.alt,
+                mouse.modifiers.meta,
+            ))),
             Self::Paste(event) => Some(TuiEvent::Paste(event)),
             Self::FocusGained(event) => Some(TuiEvent::FocusGained(event)),
             Self::FocusLost(event) => Some(TuiEvent::FocusLost(event)),
@@ -135,15 +168,15 @@ impl UiEvent {
                 height: resize.height,
             }),
             Self::Key(key) => Some(GraphEvent::Key(key)),
-            Self::Mouse(event) => Some(GraphEvent::Mouse {
-                action: event.mouse_action,
-                button: event.mouse_button,
-                x: event.mouse_x,
-                y: event.mouse_y,
-                shift: event.shift,
-                ctrl: event.ctrl,
-                alt: event.alt,
-                meta: event.meta,
+            Self::Mouse(mouse) => Some(GraphEvent::Mouse {
+                action: mouse.action,
+                button: mouse.button,
+                x: mouse.x,
+                y: mouse.y,
+                shift: mouse.modifiers.shift,
+                ctrl: mouse.modifiers.ctrl,
+                alt: mouse.modifiers.alt,
+                meta: mouse.modifiers.meta,
             }),
             Self::Wheel(wheel) => Some(GraphEvent::Wheel {
                 delta_x: wheel.delta_x,
@@ -175,7 +208,13 @@ impl From<TuiEvent> for UiEvent {
                 height,
             )),
             TuiEvent::Key(key) => Self::Key(key),
-            TuiEvent::Mouse(event) => Self::Mouse(event),
+            TuiEvent::Mouse(event) => Self::Mouse(UiMouse::new(
+                event.mouse_action,
+                event.mouse_button,
+                event.mouse_x,
+                event.mouse_y,
+                UiModifiers::new(event.shift, event.ctrl, event.alt, event.meta),
+            )),
             TuiEvent::Paste(event) => Self::Paste(event),
             TuiEvent::FocusGained(event) => Self::FocusGained(event),
             TuiEvent::FocusLost(event) => Self::FocusLost(event),
@@ -200,8 +239,12 @@ impl From<GraphEvent> for UiEvent {
                 ctrl,
                 alt,
                 meta,
-            } => Self::Mouse(ConsoleEvent::mouse(
-                action, button, x, y, shift, ctrl, alt, meta,
+            } => Self::Mouse(UiMouse::new(
+                action,
+                button,
+                x,
+                y,
+                UiModifiers::new(shift, ctrl, alt, meta),
             )),
             GraphEvent::Wheel {
                 delta_x,

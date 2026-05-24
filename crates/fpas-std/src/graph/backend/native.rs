@@ -4,7 +4,7 @@
 
 use super::super::UploadedFrame;
 use crate::error::{StdError, std_runtime_error};
-use crate::ui::{UiEvent, UiModifiers, UiResize, UiWheel};
+use crate::ui::{UiEvent, UiModifiers, UiMouse, UiResize, UiWheel};
 use crate::{ConsoleKeyEvent, key_event::key_kind_index, mouse_action_index, mouse_button_index};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
@@ -222,17 +222,13 @@ impl NativeGraphApp {
         let ctrl = self.modifiers.control_key();
         let alt = self.modifiers.alt_key();
         let meta = self.modifiers.super_key();
-        self.pending_events
-            .push_back(UiEvent::Mouse(crate::ConsoleEvent::mouse(
-                action,
-                button,
-                self.cursor_x,
-                self.cursor_y,
-                shift,
-                ctrl,
-                alt,
-                meta,
-            )));
+        self.pending_events.push_back(UiEvent::Mouse(UiMouse::new(
+            action,
+            button,
+            self.cursor_x,
+            self.cursor_y,
+            UiModifiers::new(shift, ctrl, alt, meta),
+        )));
     }
 
     fn push_wheel_event(&mut self, delta_x: i64, delta_y: i64) {

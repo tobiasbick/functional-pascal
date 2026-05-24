@@ -5,7 +5,9 @@
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
 use fpas_bytecode::{SourceLocation, Value};
-use fpas_std::{CommandId, ConsoleEvent, DamageRegion, UiEvent, UiResize, ViewId, ViewRect};
+use fpas_std::{
+    CommandId, ConsoleEvent, DamageRegion, UiEvent, UiMouse, UiResize, ViewId, ViewRect,
+};
 
 /// Discriminant of `Std.Console.KeyKind.Tab`; must match
 /// [`fpas_std::key_event::KEY_KIND_VARIANTS`] (index 2).
@@ -127,7 +129,23 @@ impl Worker {
                     Ok(3)
                 }
             }
-            UiEvent::Mouse(console_event) => {
+            UiEvent::Mouse(UiMouse {
+                action,
+                button,
+                x,
+                y,
+                modifiers,
+            }) => {
+                let console_event = ConsoleEvent::mouse(
+                    action,
+                    button,
+                    x,
+                    y,
+                    modifiers.shift,
+                    modifiers.ctrl,
+                    modifiers.alt,
+                    modifiers.meta,
+                );
                 if self.modal_blocks_mouse_dispatch(modal_scope.as_deref(), &console_event) {
                     return Ok(19);
                 }

@@ -60,7 +60,7 @@ pub use tui_damage::DamageRegion;
 pub use tui_host::TuiHost;
 pub use tui_modal::{ModalId, ModalStack};
 pub use tui_view::{ViewId, ViewRect, ViewRegistry};
-pub use ui::{UiEvent, UiModifiers, UiResize, UiWheel};
+pub use ui::{UiEvent, UiModifiers, UiMouse, UiResize, UiWheel};
 
 /// Returns the index of `name` in `variants`, or 0 if not found.
 ///

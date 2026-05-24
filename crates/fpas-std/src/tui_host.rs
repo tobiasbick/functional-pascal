@@ -70,7 +70,7 @@ impl TuiHost {
                 }
                 self.ready.push_back(UiEvent::Key(key));
             }
-            UiEvent::Mouse(event) => {
+            UiEvent::Mouse(mouse) => {
                 if let Some((old_width, old_height, width, height)) = self.pending_resize.take() {
                     self.trace("tui_host: flush coalesced resize before mouse");
                     self.ready.push_back(UiEvent::Resize(UiResize::new(
@@ -80,7 +80,7 @@ impl TuiHost {
                         height,
                     )));
                 }
-                self.ready.push_back(UiEvent::Mouse(event));
+                self.ready.push_back(UiEvent::Mouse(mouse));
             }
             UiEvent::Paste(event) => {
                 if let Some((old_width, old_height, width, height)) = self.pending_resize.take() {

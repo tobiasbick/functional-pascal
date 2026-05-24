@@ -5,4 +5,4 @@
 
 mod event;
 
-pub use event::{UiEvent, UiModifiers, UiResize, UiWheel};
+pub use event::{UiEvent, UiModifiers, UiMouse, UiResize, UiWheel};

@@ -192,9 +192,9 @@ impl TuiSession {
                 Some(event) => {
                     if let Some(mapped) = map_console_event(console, event) {
                         match mapped {
-                            TuiEvent::Paste(_)
-                            | TuiEvent::FocusGained(_)
-                            | TuiEvent::FocusLost(_) => continue,
+                            TuiEvent::Paste(_) | TuiEvent::FocusGained | TuiEvent::FocusLost => {
+                                continue;
+                            }
                             _ => return Ok(Some(mapped)),
                         }
                     }

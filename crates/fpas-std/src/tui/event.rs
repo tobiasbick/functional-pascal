@@ -22,13 +22,13 @@ pub enum TuiEvent {
         height: i64,
     },
     /// Mouse input preserved from the console event stream.
-    Mouse(ConsoleEvent),
+    Mouse(UiMouse),
     /// Bracketed-paste content; best-effort on terminals that support it.
-    Paste(ConsoleEvent),
+    Paste(String),
     /// Terminal focus gained; best-effort / optional on many terminals.
-    FocusGained(ConsoleEvent),
+    FocusGained,
     /// Terminal focus lost; best-effort / optional on many terminals.
-    FocusLost(ConsoleEvent),
+    FocusLost,
 }
 
 impl TuiEvent {
@@ -43,10 +43,10 @@ impl TuiEvent {
                 height: resize.height,
             }),
             UiEvent::Key(key) => Some(Self::Key(key)),
-            UiEvent::Mouse(mouse) => Some(Self::Mouse(console_event_from_ui_mouse(mouse))),
-            UiEvent::Paste(text) => Some(Self::Paste(ConsoleEvent::paste(text))),
-            UiEvent::FocusGained => Some(Self::FocusGained(ConsoleEvent::focus_gained())),
-            UiEvent::FocusLost => Some(Self::FocusLost(ConsoleEvent::focus_lost())),
+            UiEvent::Mouse(mouse) => Some(Self::Mouse(mouse)),
+            UiEvent::Paste(text) => Some(Self::Paste(text)),
+            UiEvent::FocusGained => Some(Self::FocusGained),
+            UiEvent::FocusLost => Some(Self::FocusLost),
             UiEvent::CloseRequested | UiEvent::Wheel(_) => None,
         }
     }
@@ -67,16 +67,10 @@ impl TuiEvent {
                 height,
             )),
             Self::Key(key) => UiEvent::Key(key),
-            Self::Mouse(event) => UiEvent::Mouse(UiMouse::new(
-                event.mouse_action,
-                event.mouse_button,
-                event.mouse_x,
-                event.mouse_y,
-                UiModifiers::new(event.shift, event.ctrl, event.alt, event.meta),
-            )),
-            Self::Paste(event) => UiEvent::Paste(event.text),
-            Self::FocusGained(_) => UiEvent::FocusGained,
-            Self::FocusLost(_) => UiEvent::FocusLost,
+            Self::Mouse(mouse) => UiEvent::Mouse(mouse),
+            Self::Paste(text) => UiEvent::Paste(text),
+            Self::FocusGained => UiEvent::FocusGained,
+            Self::FocusLost => UiEvent::FocusLost,
         }
     }
 }
@@ -86,19 +80,6 @@ impl TuiEvent {
 #[must_use]
 pub fn tui_event_from_ui_event(value: UiEvent) -> Option<TuiEvent> {
     TuiEvent::from_ui_event(value)
-}
-
-fn console_event_from_ui_mouse(mouse: UiMouse) -> ConsoleEvent {
-    ConsoleEvent::mouse(
-        mouse.action,
-        mouse.button,
-        mouse.x,
-        mouse.y,
-        mouse.modifiers.shift,
-        mouse.modifiers.ctrl,
-        mouse.modifiers.alt,
-        mouse.modifiers.meta,
-    )
 }
 
 pub(crate) fn map_console_event(console: &mut Console, event: ConsoleEvent) -> Option<TuiEvent> {
@@ -127,19 +108,25 @@ pub(crate) fn map_console_event(console: &mut Console, event: ConsoleEvent) -> O
     }
 
     if event.kind == event_kind_index("Mouse") {
-        return Some(TuiEvent::Mouse(event));
+        return Some(TuiEvent::Mouse(UiMouse::new(
+            event.mouse_action,
+            event.mouse_button,
+            event.mouse_x,
+            event.mouse_y,
+            UiModifiers::new(event.shift, event.ctrl, event.alt, event.meta),
+        )));
     }
 
     if event.kind == event_kind_index("Paste") {
-        return Some(TuiEvent::Paste(event));
+        return Some(TuiEvent::Paste(event.text));
     }
 
     if event.kind == event_kind_index("FocusGained") {
-        return Some(TuiEvent::FocusGained(event));
+        return Some(TuiEvent::FocusGained);
     }
 
     if event.kind == event_kind_index("FocusLost") {
-        return Some(TuiEvent::FocusLost(event));
+        return Some(TuiEvent::FocusLost);
     }
 
     None

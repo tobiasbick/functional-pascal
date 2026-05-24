@@ -41,9 +41,9 @@ impl Worker {
                             self.push(Value::OptionNone)?;
                             break;
                         }
-                        Some(
-                            TuiEvent::Paste(_) | TuiEvent::FocusGained(_) | TuiEvent::FocusLost(_),
-                        ) => continue,
+                        Some(TuiEvent::Paste(_) | TuiEvent::FocusGained | TuiEvent::FocusLost) => {
+                            continue;
+                        }
                         Some(event) => {
                             self.push(Value::OptionSome(Box::new(Self::tui_event_record(event))))?;
                             break;
@@ -65,9 +65,9 @@ impl Worker {
                             self.push(Value::OptionNone)?;
                             break;
                         }
-                        Some(
-                            TuiEvent::Paste(_) | TuiEvent::FocusGained(_) | TuiEvent::FocusLost(_),
-                        ) => continue,
+                        Some(TuiEvent::Paste(_) | TuiEvent::FocusGained | TuiEvent::FocusLost) => {
+                            continue;
+                        }
                         Some(event) => {
                             self.push(Value::OptionSome(Box::new(Self::tui_event_record(event))))?;
                             break;

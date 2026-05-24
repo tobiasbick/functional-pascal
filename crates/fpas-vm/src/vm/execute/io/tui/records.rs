@@ -93,7 +93,7 @@ impl Worker {
                     ("size".into(), Self::tui_size_record(0, 0)),
                 ],
             },
-            TuiEvent::FocusGained(_) => Value::Record {
+            TuiEvent::FocusGained => Value::Record {
                 type_name: TUI_EVENT_TYPE.into(),
                 fields: vec![
                     ("kind".into(), Value::Integer(4)),
@@ -101,7 +101,7 @@ impl Worker {
                     ("size".into(), Self::tui_size_record(0, 0)),
                 ],
             },
-            TuiEvent::FocusLost(_) => Value::Record {
+            TuiEvent::FocusLost => Value::Record {
                 type_name: TUI_EVENT_TYPE.into(),
                 fields: vec![
                     ("kind".into(), Value::Integer(5)),

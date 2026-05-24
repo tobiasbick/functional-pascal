@@ -82,7 +82,8 @@ pub fn tui_event_from_ui_event(value: UiEvent) -> Option<TuiEvent> {
     TuiEvent::from_ui_event(value)
 }
 
-pub(crate) fn map_console_event(console: &mut Console, event: ConsoleEvent) -> Option<TuiEvent> {
+/// Maps one console event into the shared internal UI event model.
+pub(super) fn map_console_ui_event(console: &mut Console, event: ConsoleEvent) -> Option<UiEvent> {
     if event.kind == event_kind_index("Resize") {
         let (Ok(width), Ok(height)) = (u16::try_from(event.width), u16::try_from(event.height))
         else {
@@ -95,20 +96,20 @@ pub(crate) fn map_console_event(console: &mut Console, event: ConsoleEvent) -> O
         let old_width = console.screen_width();
         let old_height = console.screen_height();
         console.resize(width, height);
-        return Some(TuiEvent::Resize {
-            old_width,
-            old_height,
-            width: event.width,
-            height: event.height,
-        });
+        return Some(UiEvent::Resize(UiResize::new(
+            Some(old_width),
+            Some(old_height),
+            event.width,
+            event.height,
+        )));
     }
 
     if event.kind == event_kind_index("Key") {
-        return Some(TuiEvent::Key(event.key));
+        return Some(UiEvent::Key(event.key));
     }
 
     if event.kind == event_kind_index("Mouse") {
-        return Some(TuiEvent::Mouse(UiMouse::new(
+        return Some(UiEvent::Mouse(UiMouse::new(
             event.mouse_action,
             event.mouse_button,
             event.mouse_x,
@@ -118,16 +119,21 @@ pub(crate) fn map_console_event(console: &mut Console, event: ConsoleEvent) -> O
     }
 
     if event.kind == event_kind_index("Paste") {
-        return Some(TuiEvent::Paste(event.text));
+        return Some(UiEvent::Paste(event.text));
     }
 
     if event.kind == event_kind_index("FocusGained") {
-        return Some(TuiEvent::FocusGained);
+        return Some(UiEvent::FocusGained);
     }
 
     if event.kind == event_kind_index("FocusLost") {
-        return Some(TuiEvent::FocusLost);
+        return Some(UiEvent::FocusLost);
     }
 
     None
+}
+
+/// Maps one console event into the public `Std.Tui` event model.
+pub(crate) fn map_console_event(console: &mut Console, event: ConsoleEvent) -> Option<TuiEvent> {
+    map_console_ui_event(console, event).and_then(TuiEvent::from_ui_event)
 }

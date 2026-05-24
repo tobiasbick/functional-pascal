@@ -32,12 +32,12 @@ impl Worker {
                 break;
             }
             let polled = self.with_console_and_key_input(|console, key_input| {
-                tui.session.poll_event_all(console, key_input, line)
+                tui.session.poll_ui_event_all(console, key_input, line)
             })?;
             match polled {
                 None => break,
-                Some(tui_event) => {
-                    tui.host.ingest_tui_event(tui_event);
+                Some(event) => {
+                    tui.host.ingest_ui_event(event);
                     if let Some(event) = tui.host.pop_ready_event() {
                         ready = Some(event);
                         break;

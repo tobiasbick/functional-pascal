@@ -83,10 +83,10 @@ impl Worker {
                         Some(ev)
                     } else {
                         let polled = self.with_console_and_key_input(|console, key_input| {
-                            tui.session.poll_event_all(console, key_input, line)
+                            tui.session.poll_ui_event_all(console, key_input, line)
                         })?;
-                        if let Some(tui_event) = polled {
-                            tui.host.ingest_tui_event(tui_event);
+                        if let Some(event) = polled {
+                            tui.host.ingest_ui_event(event);
                         }
                         tui.host.pop_ready_event()
                     }

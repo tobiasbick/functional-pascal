@@ -101,7 +101,7 @@ impl Worker {
             let next = {
                 let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
                 self.with_console_and_key_input(|console, key_input| {
-                    tui.session.poll_event_all(console, key_input, line)
+                    tui.session.poll_ui_event_all(console, key_input, line)
                 })?
             };
 
@@ -110,7 +110,7 @@ impl Worker {
             };
 
             let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            tui.host.ingest_tui_event(event);
+            tui.host.ingest_ui_event(event);
         }
 
         Ok(())
@@ -174,11 +174,11 @@ impl Worker {
             let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
             let next = self.with_console_and_key_input(|console, key_input| {
                 tui.session
-                    .read_event_timeout(console, key_input, wait_timeout_ms, line)
+                    .read_ui_event_timeout(console, key_input, wait_timeout_ms, line)
             })?;
             match next {
                 Some(event) => {
-                    tui.host.ingest_tui_event(event);
+                    tui.host.ingest_ui_event(event);
                     false
                 }
                 None => tui.host.flush_pending_resize(),

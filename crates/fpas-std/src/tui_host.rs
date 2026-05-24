@@ -8,14 +8,14 @@
 
 use crate::console::{Console, KeyInput};
 use crate::error::StdError;
-use crate::tui::{TuiEvent, TuiSession};
+use crate::tui::TuiSession;
 use crate::{UiEvent, UiResize};
 use fpas_bytecode::SourceLocation;
 use std::collections::VecDeque;
 
 type TraceFn = fn(&str);
 
-/// Coalesces rapid [`TuiEvent::Resize`] bursts and exposes a small ready queue
+/// Coalesces rapid [`UiEvent::Resize`] bursts and exposes a small ready queue
 /// so a key following resizes yields **`Resize` (once, last size) then `Key`**.
 #[derive(Debug, Default)]
 pub struct TuiHost {
@@ -41,9 +41,9 @@ impl TuiHost {
         }
     }
 
-    /// Feed one mapped [`TuiEvent`] from the session / console path.
-    pub fn ingest_tui_event(&mut self, ev: TuiEvent) {
-        match ev.into_ui_event() {
+    /// Feed one mapped [`UiEvent`] from the session / console path.
+    pub fn ingest_ui_event(&mut self, ev: UiEvent) {
+        match ev {
             UiEvent::Resize(UiResize {
                 old_width: Some(old_width),
                 old_height: Some(old_height),
@@ -165,7 +165,7 @@ impl TuiHost {
         match session.poll_event(console, key_input, location)? {
             None => Ok(None),
             Some(tui) => {
-                self.ingest_tui_event(tui);
+                self.ingest_ui_event(tui.into_ui_event());
                 Ok(self.pop_ready_event())
             }
         }
@@ -185,7 +185,7 @@ impl TuiHost {
             }
 
             let tui = session.read_event(console, key_input, location)?;
-            self.ingest_tui_event(tui);
+            self.ingest_ui_event(tui.into_ui_event());
         }
     }
 }
@@ -206,19 +206,9 @@ mod tests {
     #[test]
     fn coalesces_multiple_resizes_before_key() {
         let mut host = TuiHost::new();
-        host.ingest_tui_event(TuiEvent::Resize {
-            old_width: 80,
-            old_height: 25,
-            width: 10,
-            height: 10,
-        });
-        host.ingest_tui_event(TuiEvent::Resize {
-            old_width: 10,
-            old_height: 10,
-            width: 20,
-            height: 30,
-        });
-        host.ingest_tui_event(TuiEvent::Key(ConsoleKeyEvent::new(
+        host.ingest_ui_event(UiEvent::Resize(UiResize::new(Some(80), Some(25), 10, 10)));
+        host.ingest_ui_event(UiEvent::Resize(UiResize::new(Some(10), Some(10), 20, 30)));
+        host.ingest_ui_event(UiEvent::Key(ConsoleKeyEvent::new(
             key_kind_index("Space"),
             ' ',
             false,
@@ -238,12 +228,7 @@ mod tests {
     #[test]
     fn flush_pending_resize_after_resize_only_stream() {
         let mut host = TuiHost::new();
-        host.ingest_tui_event(TuiEvent::Resize {
-            old_width: 80,
-            old_height: 25,
-            width: 80,
-            height: 25,
-        });
+        host.ingest_ui_event(UiEvent::Resize(UiResize::new(Some(80), Some(25), 80, 25)));
         assert!(host.flush_pending_resize());
         assert_eq!(
             host.pop_ready_event(),
@@ -298,12 +283,7 @@ mod tests {
         CALLS.store(0, Ordering::Relaxed);
         let mut host = TuiHost::new();
         host.set_trace_hook(Some(hook as TraceFn));
-        host.ingest_tui_event(TuiEvent::Resize {
-            old_width: 80,
-            old_height: 25,
-            width: 1,
-            height: 1,
-        });
+        host.ingest_ui_event(UiEvent::Resize(UiResize::new(Some(80), Some(25), 1, 1)));
         assert!(CALLS.load(Ordering::Relaxed) >= 1);
         let before = CALLS.load(Ordering::Relaxed);
         assert!(host.flush_pending_resize());

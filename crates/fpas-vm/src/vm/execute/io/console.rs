@@ -1,7 +1,7 @@
 use crate::vm::Worker;
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError, internal_error, runtime_error};
 use fpas_bytecode::{ConsoleIntrinsic, Intrinsic, SourceLocation, Value};
-use fpas_std::{Console, ConsoleKeyEvent, KeyInput, TextInput};
+use fpas_std::{Console, ConsoleKeyEvent, KeyInput, TextInput, UiMouse};
 
 impl Worker {
     pub(in crate::vm::execute) fn with_console<R>(&self, f: impl FnOnce(&mut Console) -> R) -> R {
@@ -285,6 +285,7 @@ impl Worker {
         }
     }
 
+    /// Builds one `Std.Console.Event` record from the runtime console event model.
     pub(in crate::vm::execute::io) fn console_event_record(event: fpas_std::ConsoleEvent) -> Value {
         let fpas_std::ConsoleEvent {
             kind,
@@ -319,6 +320,35 @@ impl Worker {
                 ("meta".into(), Value::Boolean(meta)),
             ],
         }
+    }
+
+    /// Builds one `Std.Console.Event` mouse record from the internal shared UI payload.
+    pub(in crate::vm::execute::io) fn console_mouse_event_record(mouse: UiMouse) -> Value {
+        Self::console_event_record(fpas_std::ConsoleEvent::mouse(
+            mouse.action,
+            mouse.button,
+            mouse.x,
+            mouse.y,
+            mouse.modifiers.shift,
+            mouse.modifiers.ctrl,
+            mouse.modifiers.alt,
+            mouse.modifiers.meta,
+        ))
+    }
+
+    /// Builds one `Std.Console.Event` paste record from bracketed paste text.
+    pub(in crate::vm::execute::io) fn console_paste_event_record(text: String) -> Value {
+        Self::console_event_record(fpas_std::ConsoleEvent::paste(text))
+    }
+
+    /// Builds one `Std.Console.Event` focus-gained record.
+    pub(in crate::vm::execute::io) fn console_focus_gained_event_record() -> Value {
+        Self::console_event_record(fpas_std::ConsoleEvent::focus_gained())
+    }
+
+    /// Builds one `Std.Console.Event` focus-lost record.
+    pub(in crate::vm::execute::io) fn console_focus_lost_event_record() -> Value {
+        Self::console_event_record(fpas_std::ConsoleEvent::focus_lost())
     }
 }
 

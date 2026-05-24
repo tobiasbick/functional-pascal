@@ -5,9 +5,7 @@
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
 use fpas_bytecode::{SourceLocation, Value};
-use fpas_std::{
-    CommandId, ConsoleEvent, DamageRegion, UiEvent, UiMouse, UiResize, ViewId, ViewRect,
-};
+use fpas_std::{CommandId, DamageRegion, UiEvent, UiMouse, UiResize, ViewId, ViewRect};
 
 /// Discriminant of `Std.Console.KeyKind.Tab`; must match
 /// [`fpas_std::key_event::KEY_KIND_VARIANTS`] (index 2).
@@ -150,16 +148,7 @@ impl Worker {
                 self.dispatch_console_event_handler(
                     on_mouse,
                     app_rec,
-                    Self::console_event_record(ConsoleEvent::mouse(
-                        mouse.action,
-                        mouse.button,
-                        mouse.x,
-                        mouse.y,
-                        mouse.modifiers.shift,
-                        mouse.modifiers.ctrl,
-                        mouse.modifiers.alt,
-                        mouse.modifiers.meta,
-                    )),
+                    Self::console_mouse_event_record(mouse),
                     Some(redraw_hint),
                     5,
                     7,
@@ -169,7 +158,7 @@ impl Worker {
             UiEvent::Paste(text) => self.dispatch_console_event_handler(
                 on_paste,
                 app_rec,
-                Self::console_event_record(ConsoleEvent::paste(text)),
+                Self::console_paste_event_record(text),
                 Some(self.focused_view_redraw_hint()),
                 8,
                 9,
@@ -178,7 +167,7 @@ impl Worker {
             UiEvent::FocusGained => self.dispatch_console_event_handler(
                 on_focus_gained,
                 app_rec,
-                Self::console_event_record(ConsoleEvent::focus_gained()),
+                Self::console_focus_gained_event_record(),
                 Some(self.focused_view_redraw_hint()),
                 10,
                 11,
@@ -187,7 +176,7 @@ impl Worker {
             UiEvent::FocusLost => self.dispatch_console_event_handler(
                 on_focus_lost,
                 app_rec,
-                Self::console_event_record(ConsoleEvent::focus_lost()),
+                Self::console_focus_lost_event_record(),
                 Some(self.focused_view_redraw_hint()),
                 12,
                 13,

@@ -10,7 +10,7 @@ begin
 end.
 ```
 
-**Maintenance (implementers only):** align with [`std_registry/`](../../../crates/fpas-sema/src/std_registry/mod.rs), [`conv.rs`](../../../crates/fpas-std/src/conv.rs), [`intrinsics.rs`](../../../crates/fpas-std/src/intrinsics.rs), [`intrinsic.rs`](../../../crates/fpas-bytecode/src/intrinsic.rs), and [`compiler.rs`](../../../crates/fpas-compiler/src/compiler.rs).
+**Maintenance (implementers only):** align with [`std_registry/`](../../../crates/fpas-sema/src/std_registry/mod.rs), [`conv.rs`](../../../crates/fpas-std/src/conv.rs), [`intrinsics.rs`](../../../crates/fpas-std/src/intrinsics.rs), [`intrinsic/mod.rs`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs), and [`std_calls/conv.rs`](../../../crates/fpas-compiler/src/compiler/std_calls/conv.rs).
 
 ---
 
@@ -150,6 +150,6 @@ WriteLn(HexToInt('0xFF'))    { 255 }
 | Concern | Location |
 |---------|-----------|
 | Implementations | [`conv.rs`](../../../crates/fpas-std/src/conv.rs) |
-| Registration | [`std_registry.rs`](../../../crates/fpas-sema/src/std_registry.rs) |
+| Registration | [`std_registry/mod.rs`](../../../crates/fpas-sema/src/std_registry/mod.rs) |
 
 [← Standard library index](README.md)

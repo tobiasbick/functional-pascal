@@ -10,7 +10,7 @@ begin
 end.
 ```
 
-**Maintenance (implementers only):** align with [`std_registry/`](../../../crates/fpas-sema/src/std_registry/mod.rs), [`math.rs`](../../../crates/fpas-std/src/math.rs), [`compiler.rs`](../../../crates/fpas-compiler/src/compiler.rs) (`Pi` and call lowering), [`intrinsics.rs`](../../../crates/fpas-std/src/intrinsics.rs), and [`intrinsic.rs`](../../../crates/fpas-bytecode/src/intrinsic.rs).
+**Maintenance (implementers only):** align with [`std_registry/`](../../../crates/fpas-sema/src/std_registry/mod.rs), [`math.rs`](../../../crates/fpas-std/src/math.rs), [`std_calls/math.rs`](../../../crates/fpas-compiler/src/compiler/std_calls/math.rs) (`Pi` and call lowering), [`intrinsics.rs`](../../../crates/fpas-std/src/intrinsics.rs), and [`intrinsic/mod.rs`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs).
 
 ---
 
@@ -330,7 +330,7 @@ WriteLn(Random())
 | Concern | Location |
 |---------|-----------|
 | Runtime intrinsics | [`math.rs`](../../../crates/fpas-std/src/math.rs) |
-| `Pi` lowering | [`compiler.rs`](../../../crates/fpas-compiler/src/compiler.rs) |
-| Registration | [`std_registry.rs`](../../../crates/fpas-sema/src/std_registry.rs) |
+| `Pi` lowering | [`std_calls/math.rs`](../../../crates/fpas-compiler/src/compiler/std_calls/math.rs) |
+| Registration | [`std_registry/mod.rs`](../../../crates/fpas-sema/src/std_registry/mod.rs) |
 
 [← Standard library index](README.md)

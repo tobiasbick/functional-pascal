@@ -111,6 +111,50 @@ end.",
     assert_eq!(out.lines, vec!["3", "3"]);
 }
 
+#[test]
+fn in_operator_checks_array_membership() {
+    let out = compile_and_run(
+        "\
+  program ArrayInOperator;
+  uses Std.Console;
+  begin
+    WriteLn(2 in [1, 2, 3]);
+    WriteLn(5 in [1, 2, 3])
+  end.",
+    );
+    assert_eq!(out.lines, vec!["true", "false"]);
+}
+
+#[test]
+fn in_operator_checks_string_membership() {
+    let out = compile_and_run(
+        "\
+  program StringInOperator;
+  uses Std.Console;
+  begin
+    WriteLn('a' in 'pascal');
+    WriteLn('asc' in 'pascal');
+    WriteLn('z' in 'pascal')
+  end.",
+    );
+    assert_eq!(out.lines, vec!["true", "true", "false"]);
+}
+
+#[test]
+fn in_operator_rejects_incompatible_array_member_type() {
+    let err = compile_err(
+        "\
+  program BadArrayInOperator;
+  begin
+    var Found: boolean := 'x' in [1, 2, 3]
+  end.",
+    );
+    assert!(
+        err.message.contains("Operator `in` requires"),
+        "expected `in` type diagnostic, got: {err:#?}"
+    );
+}
+
 // ═══════════════════════════════════════════════════════════════
 // NEGATIVE — runtime errors
 // ═══════════════════════════════════════════════════════════════

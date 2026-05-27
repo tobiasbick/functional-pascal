@@ -12,7 +12,7 @@ begin
 end.
 ```
 
-**Maintenance (implementers only):** keep this file aligned with [`loaded/console.rs`](../../../crates/fpas-sema/src/std_registry/loaded/console.rs), [`console/`](../../../crates/fpas-std/src/console/mod.rs), [`key_event.rs`](../../../crates/fpas-std/src/key_event.rs), [`console_event.rs`](../../../crates/fpas-std/src/console_event.rs), the VM console path in [`vm/`](../../../crates/fpas-vm/src/vm/mod.rs), and [`compiler/std_calls/console.rs`](../../../crates/fpas-compiler/src/compiler/std_calls/console.rs).
+**Maintenance (implementers only):** keep this file aligned with [`loaded/console.rs`](../../../crates/fpas-sema/src/std_registry/loaded/console.rs), [`console/`](../../../crates/fpas-std/src/console/mod.rs), [`key_event.rs`](../../../crates/fpas-std/src/key_event.rs), [`console_event.rs`](../../../crates/fpas-std/src/console_event.rs), the VM console path in [`vm/`](../../../crates/fpas-vm/src/vm/mod.rs), and [`compiler/std_calls/console/`](../../../crates/fpas-compiler/src/compiler/std_calls/console/mod.rs).
 
 ---
 
@@ -730,6 +730,6 @@ end
 | Console backend | [`console/mod.rs`](../../../crates/fpas-std/src/console/mod.rs) |
 | Key and event types | [`key_event.rs`](../../../crates/fpas-std/src/key_event.rs), [`console_event.rs`](../../../crates/fpas-std/src/console_event.rs) |
 | Bytecode / VM | [`intrinsic/mod.rs`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs), [`vm/mod.rs`](../../../crates/fpas-vm/src/vm/mod.rs) |
-| Code generation | [`std_calls/console.rs`](../../../crates/fpas-compiler/src/compiler/std_calls/console.rs) |
+| Code generation | [`std_calls/console/`](../../../crates/fpas-compiler/src/compiler/std_calls/console/mod.rs) |
 
 [← Standard library index](README.md)

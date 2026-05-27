@@ -479,8 +479,8 @@ fn std_graph_mandelbrot_example_renders_one_headless_frame_then_exits_on_escape(
 
         let frame = last_headless_graph_frame_for_tests()
             .expect("present should publish a headless frame snapshot");
-        assert_eq!(frame.width(), 96);
-        assert_eq!(frame.height(), 72);
+        assert_eq!(frame.width(), 1280);
+        assert_eq!(frame.height(), 800);
         assert!(
             frame.pixels().iter().any(|pixel| *pixel != 0),
             "expected a non-empty Mandelbrot frame"

@@ -397,7 +397,9 @@ call_stmt           = designator '(' [ arg_list ] ')' ;
 expression          = comparison_expr ;
 
 comparison_expr     = additive_expr [ comparison_op additive_expr ] ;
-comparison_op       = '=' | '<>' | '<' | '>' | '<=' | '>=' ;
+comparison_op       = '=' | '<>' | '<' | '>' | '<=' | '>=' | 'in' ;
+
+(* `in` tests membership: value in array, key in dict, or char/string in string. *)
 
 additive_expr       = mult_expr { additive_op mult_expr } ;
 additive_op         = '+' | '-' | 'or' | 'xor' ;

@@ -11,7 +11,7 @@ begin
 end.
 ```
 
-**Maintenance (implementers only):** align with [`std_registry/loaded/result_option.rs`](../../../crates/fpas-sema/src/std_registry/loaded/result_option.rs), [`std_registry/builtins/result_option.rs`](../../../crates/fpas-sema/src/std_registry/builtins/result_option.rs), [`result_option.rs`](../../../crates/fpas-std/src/result_option.rs), [`intrinsics.rs`](../../../crates/fpas-std/src/intrinsics.rs), and [`intrinsic.rs`](../../../crates/fpas-bytecode/src/intrinsic.rs).
+**Maintenance (implementers only):** align with [`std_registry/loaded/result_option.rs`](../../../crates/fpas-sema/src/std_registry/loaded/result_option.rs), [`std_registry/builtins/result_option.rs`](../../../crates/fpas-sema/src/std_registry/builtins/result_option.rs), [`result_option.rs`](../../../crates/fpas-std/src/result_option.rs), [`intrinsics.rs`](../../../crates/fpas-std/src/intrinsics.rs), and [`intrinsic/mod.rs`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs).
 
 ---
 

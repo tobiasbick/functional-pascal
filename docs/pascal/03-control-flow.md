@@ -122,6 +122,8 @@ for Name: string in Ages do
 The loop variable type must match the dict's key type. Iterating an empty dict
 executes the body zero times. `break` and `continue` work as usual.
 
+This is separate from the `in` membership operator in expressions. In `for K: string in Ages`, `in` introduces iteration. In `'Alice' in Ages`, `in` returns whether the dictionary contains that key.
+
 ```pascal
 { Print only keys whose value exceeds 10 }
 for K: string in Ages do

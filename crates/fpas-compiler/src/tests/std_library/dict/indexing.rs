@@ -1,6 +1,21 @@
 use super::*;
 
 #[test]
+fn in_operator_checks_dict_key_membership() {
+    let out = compile_and_run(
+        "\
+program DictInOperator;
+uses Std.Console;
+begin
+  var Scores: dict of string to integer := ['Alice': 90, 'Bob': 55];
+  WriteLn('Alice' in Scores);
+  WriteLn('Carol' in Scores)
+end.",
+    );
+    assert_eq!(out.lines, vec!["true", "false"]);
+}
+
+#[test]
 fn dict_index_get() {
     let out = compile_and_run(
         "\

@@ -87,6 +87,36 @@ impl Worker {
         }
         Ok(())
     }
+
+    pub(super) fn exec_contains(&mut self, line: SourceLocation) -> Result<(), VmError> {
+        let collection = self.pop(line)?;
+        let needle = self.pop(line)?;
+        let found = match collection {
+            Value::Array(elements) => elements.iter().any(|candidate| candidate == &needle),
+            Value::Dict(pairs) => pairs.iter().any(|(candidate, _)| candidate == &needle),
+            Value::Str(text) => string_contains_value(&text, &needle, line)?,
+            other => return Err(index_operand_error("Contains", &other, line)),
+        };
+        self.push(Value::Boolean(found))?;
+        Ok(())
+    }
+}
+
+fn string_contains_value(
+    text: &str,
+    needle: &Value,
+    line: SourceLocation,
+) -> Result<bool, VmError> {
+    match needle {
+        Value::Char(ch) => Ok(text.chars().any(|candidate| candidate == *ch)),
+        Value::Str(value) => Ok(text.contains(value)),
+        _ => Err(runtime_error(
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+            "String membership requires a char or string value",
+            "Use `Ch in Text` or `Substring in Text` for string membership.",
+            line,
+        )),
+    }
 }
 
 fn array_index_from_key(key: &Value, line: SourceLocation) -> Result<usize, VmError> {

@@ -152,6 +152,15 @@ type
 | `>`      | Greater than      | `A > B`    |
 | `<=`     | Less or equal     | `A <= B`   |
 | `>=`     | Greater or equal  | `A >= B`   |
+| `in`     | Membership        | `A in B`   |
+
+`in` returns `boolean`. It tests whether an array contains a value, whether a dictionary contains a key, or whether a string contains a `char` or substring:
+
+```pascal
+WriteLn(2 in [1, 2, 3]);
+WriteLn('Alice' in ['Alice': 30]);
+WriteLn('asc' in 'pascal')
+```
 
 ### Logical / Bitwise
 

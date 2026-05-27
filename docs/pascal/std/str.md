@@ -10,7 +10,7 @@ begin
 end.
 ```
 
-**Maintenance (implementers only):** keep aligned with [`std_registry/`](../../../crates/fpas-sema/src/std_registry/mod.rs), [`str.rs`](../../../crates/fpas-std/src/str.rs), [`intrinsics.rs`](../../../crates/fpas-std/src/intrinsics.rs), [`intrinsic.rs`](../../../crates/fpas-bytecode/src/intrinsic.rs), and [`compiler.rs`](../../../crates/fpas-compiler/src/compiler.rs).
+**Maintenance (implementers only):** keep aligned with [`std_registry/`](../../../crates/fpas-sema/src/std_registry/mod.rs), [`str.rs`](../../../crates/fpas-std/src/str.rs), [`intrinsics.rs`](../../../crates/fpas-std/src/intrinsics.rs), [`intrinsic/mod.rs`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs), and [`std_calls/str_ops.rs`](../../../crates/fpas-compiler/src/compiler/std_calls/str_ops.rs).
 
 ---
 
@@ -397,6 +397,6 @@ var Pct: string    := Format('100%%');  { '100%' }
 | Concern | Location |
 |---------|-----------|
 | Algorithms | [`str.rs`](../../../crates/fpas-std/src/str.rs) |
-| Registration | [`std_registry.rs`](../../../crates/fpas-sema/src/std_registry.rs) |
+| Registration | [`std_registry/mod.rs`](../../../crates/fpas-sema/src/std_registry/mod.rs) |
 
 [← Standard library index](README.md)

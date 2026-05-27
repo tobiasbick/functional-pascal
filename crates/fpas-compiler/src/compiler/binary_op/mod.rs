@@ -153,6 +153,7 @@ impl Compiler {
             BinaryOp::Lt | BinaryOp::Gt | BinaryOp::LtEq | BinaryOp::GtEq => {
                 self.compile_ordering(op, left, right, operand_types, location)
             }
+            BinaryOp::In => self.compile_direct_binary(Op::Contains, left, right, location),
         }
     }
 }

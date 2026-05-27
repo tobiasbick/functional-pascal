@@ -4,7 +4,7 @@ Functional Pascal provides Go-inspired lightweight task concurrency. Tasks creat
 
 ## Bytecode mapping (implementation)
 
-The compiler lowers `go` to dedicated VM opcodes (see Phase 1–2 in [`parallel-vm.md`](../rust/parallel-vm.md)); the VM execute path for those opcodes is covered in Phase 6 of that layout (`fpas-vm` [`spawn.rs`](../../../crates/fpas-vm/src/vm/execute/concurrency/tasks/spawn.rs)):
+The compiler lowers `go` to dedicated VM opcodes (see Phase 1–2 in [`parallel-vm.md`](../rust/parallel-vm.md)); the VM execute path for those opcodes is covered in Phase 6 of that layout (`fpas-vm` [`spawn.rs`](../../crates/fpas-vm/src/vm/execute/concurrency/tasks/spawn.rs)):
 
 - **`go` as an expression** (e.g. assigned to a `task` variable) emits a **retained** spawn: the callee and arguments are popped and a task handle is pushed for later `Wait`.
 - **`go` as a statement** (fire-and-forget) emits a **detached** spawn: same stack effect except **no** handle is retained for the caller.

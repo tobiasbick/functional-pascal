@@ -13,7 +13,7 @@ begin
 end.
 ```
 
-**Maintenance (implementers only):** keep this file aligned with `[loaded/tui.rs](../../../crates/fpas-sema/src/std_registry/loaded/tui.rs)` and the standard-unit registry under `[crates/fpas-std/src/std_units/](../../../crates/fpas-std/src/std_units/mod.rs)`.
+**Maintenance (implementers only):** keep this file aligned with [`loaded/tui/`](../../../crates/fpas-sema/src/std_registry/loaded/tui/mod.rs) and the standard-unit registry under [`crates/fpas-std/src/std_units/`](../../../crates/fpas-std/src/std_units/mod.rs).
 
 ---
 
@@ -196,7 +196,9 @@ Mark the application as needing a redraw.
 
 Return `true` when the application should render a new frame.
 
-**Runtime (Rust only):** `TuiSession::is_redraw_pending` in `crates/fpas-std` peeks the same flag without consuming it; used by the VM host when servicing `TuiHostDispatchRedraw` and the bounded `TuiHostRunLoop` path (see `docs/pascal/std/tui-app.md`). Not exposed as a Pascal `Std.Tui` call yet.
+`Application.RedrawPending` consumes the redraw flag: the first call after `Application.RequestRedraw(App)` returns `true`, later calls return `false` until another redraw is requested.
+
+**Runtime (Rust only):** `TuiSession::is_redraw_pending` in `crates/fpas-std` peeks the same flag without consuming it; used by the VM host when servicing `TuiHostDispatchRedraw` and the bounded `TuiHostRunLoop` path (see `docs/pascal/std/tui-app.md`).
 
 ---
 

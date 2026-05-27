@@ -134,6 +134,13 @@ pub enum Op {
     IndexGet,
     /// Index/key set: [collection, index/key, value] → ().
     IndexSet,
+    /// Membership test: [value, collection] → boolean.
+    ///
+    /// Supports arrays (element membership), dicts (key membership), and strings
+    /// (character or substring membership).
+    ///
+    /// **Documentation:** `docs/pascal/02-basics.md`, `docs/specs/grammar.ebnf`
+    Contains,
 
     // ── Dicts ───────────────────────────────────────────────
     /// Build dict from N key-value pairs on stack (2*N values: k0, v0, k1, v1, …).

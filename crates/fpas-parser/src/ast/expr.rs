@@ -143,4 +143,5 @@ pub enum BinaryOp {
     Gt,
     LtEq,
     GtEq,
+    In,
 }

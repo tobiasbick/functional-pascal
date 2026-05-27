@@ -11,7 +11,7 @@ begin
 end.
 ```
 
-**Maintenance (implementers only):** align with [`std_registry/`](../../../crates/fpas-sema/src/std_registry/mod.rs), [`array.rs`](../../../crates/fpas-std/src/array.rs), [`vm/`](../../../crates/fpas-vm/src/vm/mod.rs) and [`compiler.rs`](../../../crates/fpas-compiler/src/compiler.rs) for `Push`/`Pop`, plus [`intrinsics.rs`](../../../crates/fpas-std/src/intrinsics.rs) / [`intrinsic.rs`](../../../crates/fpas-bytecode/src/intrinsic.rs).
+**Maintenance (implementers only):** align with [`std_registry/`](../../../crates/fpas-sema/src/std_registry/mod.rs), [`array.rs`](../../../crates/fpas-std/src/array.rs), [`vm/`](../../../crates/fpas-vm/src/vm/mod.rs) and [`std_calls/array.rs`](../../../crates/fpas-compiler/src/compiler/std_calls/array.rs) for `Push`/`Pop`, plus [`intrinsics.rs`](../../../crates/fpas-std/src/intrinsics.rs) / [`intrinsic/mod.rs`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs).
 
 ---
 
@@ -320,7 +320,7 @@ ForEach([1, 2, 3], PrintValue);
 | Concern | Location |
 |---------|-----------|
 | Pure helpers | [`array.rs`](../../../crates/fpas-std/src/array.rs) |
-| `Push` / `Pop` | [`vm.rs`](../../../crates/fpas-vm/src/vm.rs), [`compiler.rs`](../../../crates/fpas-compiler/src/compiler.rs) |
-| Registration | [`std_registry.rs`](../../../crates/fpas-sema/src/std_registry.rs) |
+| `Push` / `Pop` | [`vm/mod.rs`](../../../crates/fpas-vm/src/vm/mod.rs), [`std_calls/array.rs`](../../../crates/fpas-compiler/src/compiler/std_calls/array.rs) |
+| Registration | [`std_registry/mod.rs`](../../../crates/fpas-sema/src/std_registry/mod.rs) |
 
 [← Standard library index](README.md)

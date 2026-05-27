@@ -33,6 +33,10 @@ impl Worker {
                 self.exec_index_set(line)?;
                 Ok(true)
             }
+            Op::Contains => {
+                self.exec_contains(line)?;
+                Ok(true)
+            }
             Op::MakeRecord(type_idx, field_count) => {
                 self.exec_make_record(type_idx, field_count, line)?;
                 Ok(true)

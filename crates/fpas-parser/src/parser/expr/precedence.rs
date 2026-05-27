@@ -14,6 +14,7 @@ impl Parser {
             Token::Greater => Some(BinaryOp::Gt),
             Token::LessEqual => Some(BinaryOp::LtEq),
             Token::GreaterEqual => Some(BinaryOp::GtEq),
+            Token::In => Some(BinaryOp::In),
             _ => None,
         };
 

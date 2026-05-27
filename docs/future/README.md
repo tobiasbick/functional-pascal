@@ -10,6 +10,10 @@ Open planning items for Functional Pascal.
 
 Turbo Vision–style direction: Rust-hosted event loop, FPAS `On*` handlers and `RunApp`-style entry, migration away from poll-heavy console usage. See [`tui-application-framework.md`](tui-application-framework.md).
 
+## Standard library roadmap
+
+Future `Std.*` units for CLI, environment, paths, filesystem, time, random, JSON, and parsing. See [`std-roadmap.md`](std-roadmap.md).
+
 ## Under Consideration
 
 | # | Feature | Description |

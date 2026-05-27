@@ -1,6 +1,6 @@
 //! `Std.Graph` VM execution and value/session bridging.
 //!
-//! **Documentation:** `docs/future/std.graph/01-mvp.md`, `docs/future/std.graph/04-implementation-plan.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph.md` (from the repository root).
 
 mod application;
 mod records;

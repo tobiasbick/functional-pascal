@@ -1,6 +1,6 @@
 //! Compiler integration tests for `Std.Graph` lowering.
 //!
-//! **Documentation:** `docs/future/std.graph/02-pascal-surface.md`, `docs/future/std.graph/04-implementation-plan.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph.md` (from the repository root).
 
 use super::super::{compile_and_run, compile_err, compile_ok};
 use fpas_bytecode::intrinsic::GraphIntrinsic;

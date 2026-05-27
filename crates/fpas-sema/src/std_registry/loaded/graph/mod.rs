@@ -4,7 +4,7 @@
 //! `Std.Console.MouseButton` (registered by [`super::console::register_std_console_key_api`]
 //! when needed).
 //!
-//! **Documentation:** `docs/future/std.graph/02-pascal-surface.md`, `docs/future/std.graph/04-implementation-plan.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph.md` (from the repository root).
 
 mod application_api;
 
@@ -22,7 +22,7 @@ struct GraphTypes {
 
 /// Register the `Std.Graph` semantic surface for the Phase 1 MVP.
 ///
-/// **Documentation:** `docs/future/std.graph/01-mvp.md`, `docs/future/std.graph/02-pascal-surface.md` (from the repository root).
+/// **Documentation:** `docs/pascal/std/graph.md` (from the repository root).
 pub(super) fn register_std_graph(checker: &mut Checker) {
     let application = register_record_type(checker, s::STD_GRAPH_APPLICATION, Vec::new());
     let size = register_record_type(

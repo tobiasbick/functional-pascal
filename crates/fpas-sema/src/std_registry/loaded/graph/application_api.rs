@@ -6,7 +6,7 @@ use fpas_std::std_symbols as s;
 
 /// Register the user-facing `Std.Graph.Application` calls.
 ///
-/// **Documentation:** `docs/future/std.graph/02-pascal-surface.md`, `docs/future/std.graph/04-implementation-plan.md` (from the repository root).
+/// **Documentation:** `docs/pascal/std/graph.md` (from the repository root).
 pub(super) fn register_application_api(checker: &mut Checker, types: &GraphTypes) {
     define_func(
         checker,

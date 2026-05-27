@@ -1,6 +1,6 @@
 //! `Std.Graph` bitmap text rasterization.
 //!
-//! **Documentation:** `docs/future/std.graph/02-pascal-surface.md`, `docs/future/std.graph/03-runtime-architecture.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph.md` (from the repository root).
 
 use super::backbuffer::GraphBackbuffer;
 

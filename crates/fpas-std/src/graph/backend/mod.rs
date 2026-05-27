@@ -1,6 +1,6 @@
 //! `Std.Graph` backend selection, thread-local runtime ownership, and test hooks.
 //!
-//! **Documentation:** `docs/future/std.graph/03-runtime-architecture.md`, `docs/future/std.graph/05-backend-selection.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph.md` (from the repository root).
 
 mod headless;
 mod native;

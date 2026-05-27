@@ -1,6 +1,6 @@
 //! Native `Std.Graph` backend built on `winit` and `softbuffer`.
 //!
-//! **Documentation:** `docs/future/std.graph/01-mvp.md`, `docs/future/std.graph/05-backend-selection.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph.md` (from the repository root).
 
 use super::super::UploadedFrame;
 use crate::error::{StdError, std_runtime_error};

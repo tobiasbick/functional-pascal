@@ -1,6 +1,6 @@
 { Spec: docs/pascal/std/graph.md (from repository root). }
 program MandelbrotGraph;
-uses Std.Array, Std.Console, Std.Conv, Std.Graph, Std.Math;
+uses Std.Array, Std.Console, Std.Conv, Std.Graph, Std.Math, Std.Task;
 
 type
   MandelbrotState = record
@@ -108,7 +108,7 @@ begin
     end
 end;
 
-function BuildFrame(State: MandelbrotState; Width: integer; Height: integer): array of integer;
+function BuildFrameRow(State: MandelbrotState; Width: integer; Height: integer; Py: integer): array of integer;
 begin
   var WidthRange: integer := Max(Width - 1, 1);
   var HeightRange: integer := Max(Height - 1, 1);
@@ -117,36 +117,51 @@ begin
   var XMax: real := State.CenterX + (XSpan * 0.5);
   var YMin: real := State.CenterY - (State.SpanY * 0.5);
   var YMax: real := State.CenterY + (State.SpanY * 0.5);
+  var Cy: real := YMax - (IntToReal(Py) / IntToReal(HeightRange)) * (YMax - YMin);
+  mutable var Row: array of integer := [];
+
+  for Px: integer := 0 to Width - 1 do
+  begin
+    var Cx: real := XMin + (IntToReal(Px) / IntToReal(WidthRange)) * (XMax - XMin);
+    mutable var Zr: real := 0.0;
+    mutable var Zi: real := 0.0;
+    mutable var N: integer := 0;
+
+    while (N < State.MaxIter) and ((Zr * Zr + Zi * Zi) <= 256.0) do
+    begin
+      var Tr: real := Zr * Zr - Zi * Zi + Cx;
+      var Ti: real := 2.0 * Zr * Zi + Cy;
+      Zr := Tr;
+      Zi := Ti;
+      N := N + 1
+    end;
+
+    if N >= State.MaxIter then
+      Push(Row, $00020408)
+    else
+    begin
+      var MagnitudeSq: real := Max(Zr * Zr + Zi * Zi, 4.0);
+      var Smooth: real := IntToReal(N) + 1.0 - (Log(Log(MagnitudeSq) * 0.5) / Log(2.0));
+      Push(Row, SampleColor(State.Palette, Smooth))
+    end
+  end;
+
+  return Row
+end;
+
+function BuildFrame(State: MandelbrotState; Width: integer; Height: integer): array of integer;
+begin
+  mutable var Tasks: array of task := [];
   mutable var Pixels: array of integer := [];
 
   for Py: integer := 0 to Height - 1 do
+    Push(Tasks, go BuildFrameRow(State, Width, Height, Py));
+
+  for Py: integer := 0 to Height - 1 do
   begin
-    var Cy: real := YMax - (IntToReal(Py) / IntToReal(HeightRange)) * (YMax - YMin);
+    var Row: array of integer := Wait(Tasks[Py]);
     for Px: integer := 0 to Width - 1 do
-    begin
-      var Cx: real := XMin + (IntToReal(Px) / IntToReal(WidthRange)) * (XMax - XMin);
-      mutable var Zr: real := 0.0;
-      mutable var Zi: real := 0.0;
-      mutable var N: integer := 0;
-
-      while (N < State.MaxIter) and ((Zr * Zr + Zi * Zi) <= 256.0) do
-      begin
-        var Tr: real := Zr * Zr - Zi * Zi + Cx;
-        var Ti: real := 2.0 * Zr * Zi + Cy;
-        Zr := Tr;
-        Zi := Ti;
-        N := N + 1
-      end;
-
-      if N >= State.MaxIter then
-        Push(Pixels, $00020408)
-      else
-      begin
-        var MagnitudeSq: real := Max(Zr * Zr + Zi * Zi, 4.0);
-        var Smooth: real := IntToReal(N) + 1.0 - (Log(Log(MagnitudeSq) * 0.5) / Log(2.0));
-        Push(Pixels, SampleColor(State.Palette, Smooth))
-      end
-    end
+      Push(Pixels, Row[Px])
   end;
 
   return Pixels
@@ -166,17 +181,45 @@ begin
 end;
 
 mutable var State: MandelbrotState := DefaultState();
-mutable var RenderWidth: integer := 96;
-mutable var RenderHeight: integer := 72;
+var LogicalWidth: integer := 160;
+var LogicalHeight: integer := 100;
+mutable var RenderWidth: integer := 160;
+mutable var RenderHeight: integer := 100;
+mutable var DisplayScaleFactor: integer := 1;
+mutable var DisplayOffsetX: integer := 0;
+mutable var DisplayOffsetY: integer := 0;
+mutable var DisplayWidth: integer := 160;
+mutable var DisplayHeight: integer := 100;
+
+function ComputeDisplayScale(TargetWidth: integer; TargetHeight: integer; SourceWidth: integer; SourceHeight: integer): integer;
+begin
+  return Max(1, Min(Max(TargetWidth, 1) div Max(SourceWidth, 1), Max(TargetHeight, 1) div Max(SourceHeight, 1)))
+end;
+
+procedure DrawScaledFrame(App: Application; Source: array of integer; SourceWidth: integer; SourceHeight: integer; Scale: integer; OffsetX: integer; OffsetY: integer);
+begin
+  Application.Clear(App, $00000000);
+  for Y: integer := 0 to SourceHeight - 1 do
+    for X: integer := 0 to SourceWidth - 1 do
+      Application.FillRect(App, OffsetX + X * Scale, OffsetY + Y * Scale, Scale, Scale, Source[Y * SourceWidth + X])
+end;
 
 procedure Render(App: Application);
 begin
   var Screen: Size := Application.Size(App);
-  RenderWidth := Max(Screen.width, 1);
-  RenderHeight := Max(Screen.height, 1);
+  var TargetWidth: integer := Max(Screen.width, 1);
+  var TargetHeight: integer := Max(Screen.height, 1);
+
+  RenderWidth := LogicalWidth;
+  RenderHeight := LogicalHeight;
+  DisplayScaleFactor := ComputeDisplayScale(TargetWidth, TargetHeight, RenderWidth, RenderHeight);
+  DisplayWidth := RenderWidth * DisplayScaleFactor;
+  DisplayHeight := RenderHeight * DisplayScaleFactor;
+  DisplayOffsetX := (TargetWidth - DisplayWidth) div 2;
+  DisplayOffsetY := (TargetHeight - DisplayHeight) div 2;
 
   var Frame: array of integer := BuildFrame(State, RenderWidth, RenderHeight);
-  Application.UploadFrame(App, RenderWidth, RenderHeight, Frame);
+  DrawScaledFrame(App, Frame, RenderWidth, RenderHeight, DisplayScaleFactor, DisplayOffsetX, DisplayOffsetY);
   DrawHud(App, State);
   Application.Present(App)
 end;
@@ -187,7 +230,7 @@ begin
 end;
 
 begin
-  var App: Application := Application.Open(96, 72, 'Mandelbrot graph');
+  var App: Application := Application.Open(1280, 800, 'Mandelbrot graph');
   mutable var Dirty: boolean := true;
   mutable var Quit: boolean := false;
 
@@ -213,9 +256,14 @@ begin
         begin
           if E.mouse_button = MouseButton.Left then
           begin
-            State.CenterX := ViewportCX(State, RenderWidth, RenderHeight, E.mouse_x);
-            State.CenterY := ViewportCY(State, RenderHeight, E.mouse_y);
-            Dirty := true
+            if (E.mouse_x >= DisplayOffsetX) and (E.mouse_y >= DisplayOffsetY) and (E.mouse_x < DisplayOffsetX + DisplayWidth) and (E.mouse_y < DisplayOffsetY + DisplayHeight) then
+            begin
+              var LogicalMouseX: integer := Clamp((E.mouse_x - DisplayOffsetX) div DisplayScaleFactor, 0, RenderWidth - 1);
+              var LogicalMouseY: integer := Clamp((E.mouse_y - DisplayOffsetY) div DisplayScaleFactor, 0, RenderHeight - 1);
+              State.CenterX := ViewportCX(State, RenderWidth, RenderHeight, LogicalMouseX);
+              State.CenterY := ViewportCY(State, RenderHeight, LogicalMouseY);
+              Dirty := true
+            end
           end
           else if E.mouse_button = MouseButton.Middle then
           begin

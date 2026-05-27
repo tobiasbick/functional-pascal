@@ -1,6 +1,6 @@
 //! Deterministic headless `Std.Graph` backend used by automated tests.
 //!
-//! **Documentation:** `docs/future/std.graph/04-implementation-plan.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph.md` (from the repository root).
 
 use super::super::UploadedFrame;
 use crate::error::StdError;

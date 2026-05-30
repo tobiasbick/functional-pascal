@@ -14,25 +14,11 @@ Functional Pascal already has a useful `Std.*` surface for console programs, TUI
 
 ## Near-Term Units
 
-### `Std.Args`
-
-Add command-line argument access for CLI programs.
-
-Initial scope:
-
-- argument count.
-- argument lookup by index.
-- full argument list when arrays are ready enough for ergonomic use.
-
-Implementation notes:
-
-- Wire through the CLI runner and VM invocation path.
-- Define whether the executable name is included.
-- Document out-of-range behavior clearly.
-
 ### `Std.Env`
 
 Add process environment access.
+
+`Std.Env` is also a process-wide hosted capability, not a console-only API. Console, TUI, and Graph programs should all be able to import it and read the environment visible to the host process.
 
 Initial scope:
 
@@ -43,6 +29,7 @@ Initial scope:
 Implementation notes:
 
 - Treat environment access as hosted and effectful.
+- Keep the API process-wide and UI-independent: `Std.Console`, `Std.Tui`, and `Std.Graph` programs should all be able to use it when imported.
 - Return `Option of String` for missing values when possible.
 - Keep mutation APIs deferred until the process model needs them.
 

@@ -34,12 +34,17 @@ pub(crate) fn run_cli(
     };
 
     match config.input {
-        CliInput::SourceFile(path) => run_source_file(&path, stdout, stderr),
-        CliInput::ProjectFile(path) => run_project_file(&path, stdout, stderr),
+        CliInput::SourceFile(path) => run_source_file(&path, config.program_args, stdout, stderr),
+        CliInput::ProjectFile(path) => run_project_file(&path, config.program_args, stdout, stderr),
     }
 }
 
-fn run_source_file(path: &Path, stdout: Box<dyn Write + Send>, stderr: &mut dyn Write) -> i32 {
+fn run_source_file(
+    path: &Path,
+    program_args: Vec<String>,
+    stdout: Box<dyn Write + Send>,
+    stderr: &mut dyn Write,
+) -> i32 {
     let source = match fs::read_to_string(path) {
         Ok(source) => source,
         Err(error) => {
@@ -49,10 +54,15 @@ fn run_source_file(path: &Path, stdout: Box<dyn Write + Send>, stderr: &mut dyn 
     };
 
     let path_text = path.to_string_lossy();
-    run_source_impl(path_text.as_ref(), &source, stdout, stderr)
+    run_source_impl(path_text.as_ref(), &source, program_args, stdout, stderr)
 }
 
-fn run_project_file(path: &Path, stdout: Box<dyn Write + Send>, stderr: &mut dyn Write) -> i32 {
+fn run_project_file(
+    path: &Path,
+    program_args: Vec<String>,
+    stdout: Box<dyn Write + Send>,
+    stderr: &mut dyn Write,
+) -> i32 {
     let loaded = match project::load_project(path) {
         Ok(loaded) => loaded,
         Err(message) => {
@@ -88,6 +98,7 @@ fn run_project_file(path: &Path, stdout: Box<dyn Write + Send>, stderr: &mut dyn
                 main_path.as_ref(),
                 &linked_program.program,
                 Some(&linked_program.source_paths),
+                program_args,
                 stdout,
                 stderr,
             )
@@ -105,6 +116,7 @@ fn run_project_file(path: &Path, stdout: Box<dyn Write + Send>, stderr: &mut dyn
 fn run_source_impl(
     path: &str,
     source: &str,
+    program_args: Vec<String>,
     stdout: Box<dyn Write + Send>,
     stderr: &mut dyn Write,
 ) -> i32 {
@@ -123,7 +135,7 @@ fn run_source_impl(
         return 1;
     }
 
-    run_compiled_program(path, &program, None, stdout, stderr)
+    run_compiled_program(path, &program, None, program_args, stdout, stderr)
 }
 
 #[cfg(test)]
@@ -133,13 +145,14 @@ pub(crate) fn run_source(
     stdout: Box<dyn Write + Send>,
     stderr: &mut dyn Write,
 ) -> i32 {
-    run_source_impl(path, source, stdout, stderr)
+    run_source_impl(path, source, Vec::new(), stdout, stderr)
 }
 
 fn run_compiled_program(
     path: &str,
     program: &fpas_parser::Program,
     source_paths: Option<&[PathBuf]>,
+    program_args: Vec<String>,
     stdout: Box<dyn Write + Send>,
     stderr: &mut dyn Write,
 ) -> i32 {
@@ -155,7 +168,7 @@ fn run_compiled_program(
         }
     };
 
-    let mut vm = fpas_vm::Vm::with_writer(chunk, stdout);
+    let mut vm = fpas_vm::Vm::with_writer_and_args(chunk, stdout, program_args);
     if let Err(diagnostic) = vm.run() {
         if !emit_diagnostic(path, source_paths, &diagnostic, stderr) {
             return 2;

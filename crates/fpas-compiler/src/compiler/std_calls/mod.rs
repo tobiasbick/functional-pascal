@@ -2,6 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/11-stdlib.md`, `docs/pascal/std/README.md` (from the repository root).
 
+mod args;
 mod array;
 mod console;
 mod conv;
@@ -29,6 +30,9 @@ impl Compiler {
         args: &[Expr],
         location: SourceLocation,
     ) -> Result<bool, CompileError> {
+        if self.compile_args_call(name, args, location)? {
+            return Ok(true);
+        }
         if self.compile_console_call(name, args, location)? {
             return Ok(true);
         }

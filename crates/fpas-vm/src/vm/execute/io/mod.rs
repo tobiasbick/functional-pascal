@@ -3,6 +3,7 @@ use crate::vm::{Worker, internal_error};
 use fpas_bytecode::{Intrinsic, Op, SourceLocation};
 use fpas_std::run_intrinsic;
 
+mod args;
 mod callbacks;
 mod console;
 mod graph;
@@ -32,6 +33,9 @@ impl Worker {
                 })?;
 
                 if self.try_exec_console_intrinsic(intrinsic, line)? {
+                    return Ok(true);
+                }
+                if self.try_exec_args_intrinsic(intrinsic, line)? {
                     return Ok(true);
                 }
                 if self.try_exec_tui_intrinsic(intrinsic, line)? {

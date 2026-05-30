@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/pascal/std/README.md` (from the repository root); each `Std.*` unit page maps API names to these variants.
 //! **Maintenance:** When adding or renumbering variants, update that documentation and the affected implementation crates.
 
+pub mod args;
 pub mod array;
 pub mod console;
 pub mod conv;
@@ -16,6 +17,7 @@ pub mod str_ops;
 pub mod task;
 pub mod tui;
 
+pub use args::ArgsIntrinsic;
 pub use array::ArrayIntrinsic;
 pub use console::ConsoleIntrinsic;
 pub use conv::ConvIntrinsic;
@@ -34,6 +36,8 @@ pub use tui::TuiIntrinsic;
 /// Each variant wraps a domain-specific sub-enum whose discriminant is the stable `u16` wire value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Intrinsic {
+    /// `Std.Args.*` intrinsics.
+    Args(ArgsIntrinsic),
     /// `Std.Console.*` intrinsics.
     Console(ConsoleIntrinsic),
     /// `Std.Str.*` intrinsics.
@@ -63,6 +67,7 @@ pub enum Intrinsic {
 impl From<Intrinsic> for u16 {
     fn from(intrinsic: Intrinsic) -> Self {
         match intrinsic {
+            Intrinsic::Args(x) => x as u16,
             Intrinsic::Console(x) => x as u16,
             Intrinsic::Str(x) => x as u16,
             Intrinsic::Conv(x) => x as u16,
@@ -84,6 +89,9 @@ impl Intrinsic {
     ///
     /// Returns `None` for unrecognised values.
     pub fn from_u16(raw: u16) -> Option<Self> {
+        if let Ok(x) = ArgsIntrinsic::try_from(raw) {
+            return Some(Self::Args(x));
+        }
         if let Ok(x) = ConsoleIntrinsic::try_from(raw) {
             return Some(Self::Console(x));
         }

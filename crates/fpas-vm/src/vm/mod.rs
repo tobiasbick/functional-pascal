@@ -67,15 +67,29 @@ pub struct Vm {
 impl Vm {
     /// Create a new VM (output is captured, not streamed).
     pub fn new(chunk: Chunk) -> Self {
-        Self::build(chunk, Console::new())
+        Self::build(chunk, Console::new(), Vec::new())
+    }
+
+    /// Create a new VM with process arguments visible through `Std.Args`.
+    pub fn with_args(chunk: Chunk, args: Vec<String>) -> Self {
+        Self::build(chunk, Console::new(), args)
     }
 
     /// Create a VM that streams output to the given writer immediately.
     pub fn with_writer(chunk: Chunk, writer: Box<dyn Write + Send>) -> Self {
-        Self::build(chunk, Console::with_writer(writer))
+        Self::build(chunk, Console::with_writer(writer), Vec::new())
     }
 
-    fn build(chunk: Chunk, console: Console) -> Self {
+    /// Create a VM that streams output and exposes process arguments through `Std.Args`.
+    pub fn with_writer_and_args(
+        chunk: Chunk,
+        writer: Box<dyn Write + Send>,
+        args: Vec<String>,
+    ) -> Self {
+        Self::build(chunk, Console::with_writer(writer), args)
+    }
+
+    fn build(chunk: Chunk, console: Console, program_args: Vec<String>) -> Self {
         // **Documentation:** `docs/pascal/08-concurrency.md` (from the repository root).
         //
         // Spawning `available_parallelism() - 1` workers for every `Vm::run()` caused severe
@@ -94,6 +108,7 @@ impl Vm {
 
         let shared = Arc::new(SharedState {
             chunk,
+            program_args,
             globals: RwLock::new(HashMap::new()),
             task_queue: Mutex::new(Vec::new()),
             task_available: Condvar::new(),

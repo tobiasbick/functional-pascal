@@ -1,5 +1,6 @@
 pub const STD_ROOT_SEGMENT: &str = "Std";
 
+pub const STD_UNIT_ARGS: &str = "Std.Args";
 pub const STD_UNIT_CONSOLE: &str = "Std.Console";
 pub const STD_UNIT_STR: &str = "Std.Str";
 pub const STD_UNIT_CONV: &str = "Std.Conv";
@@ -14,6 +15,7 @@ pub const STD_UNIT_TUI: &str = "Std.Tui";
 pub const STD_UNIT_GRAPH: &str = "Std.Graph";
 
 pub const STD_UNITS_KNOWN: &[&str] = &[
+    STD_UNIT_ARGS,
     STD_UNIT_CONSOLE,
     STD_UNIT_TUI,
     STD_UNIT_GRAPH,

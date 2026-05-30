@@ -1,5 +1,10 @@
 use super::std_symbols;
 
+pub(in super::super) const STD_ARGS_SYMBOLS: &[&str] = &[
+    std_symbols::STD_ARGS_PARAM_COUNT,
+    std_symbols::STD_ARGS_PARAM_STR,
+];
+
 pub(in super::super) const STD_CONSOLE_SYMBOLS: &[&str] = &[
     std_symbols::STD_CONSOLE_WRITE_LN,
     std_symbols::STD_CONSOLE_WRITE,

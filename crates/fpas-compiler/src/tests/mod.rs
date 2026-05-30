@@ -15,6 +15,13 @@ fn compile_and_run(source: &str) -> fpas_vm::VmOutput {
     vm.output().clone()
 }
 
+fn compile_and_run_with_args(source: &str, args: &[&str]) -> fpas_vm::VmOutput {
+    let chunk = compile_ok(source);
+    let mut vm = fpas_vm::Vm::with_args(chunk, args.iter().map(|arg| (*arg).to_string()).collect());
+    vm.run().expect("VM should not error");
+    vm.output().clone()
+}
+
 fn compile_run_with_readln(source: &str, inputs: &[&str]) -> fpas_vm::VmOutput {
     let chunk = compile_ok(source);
     let mut vm = fpas_vm::Vm::new(chunk);
@@ -47,6 +54,15 @@ fn compile_run_err(source: &str) -> String {
 fn compile_run_error(source: &str) -> fpas_vm::VmError {
     let chunk = compile_ok(source);
     let mut vm = fpas_vm::Vm::new(chunk);
+    match vm.run() {
+        Ok(()) => panic!("expected VM runtime error"),
+        Err(e) => e,
+    }
+}
+
+fn compile_run_error_with_args(source: &str, args: &[&str]) -> fpas_vm::VmError {
+    let chunk = compile_ok(source);
+    let mut vm = fpas_vm::Vm::with_args(chunk, args.iter().map(|arg| (*arg).to_string()).collect());
     match vm.run() {
         Ok(()) => panic!("expected VM runtime error"),
         Err(e) => e,

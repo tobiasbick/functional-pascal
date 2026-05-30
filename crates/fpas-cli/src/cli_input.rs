@@ -13,12 +13,14 @@ pub(crate) const CLI_HELP: &str = "\
 fpas — Functional Pascal compiler
 
 Usage:
-  fpas [<file.fpas | file.fpasprj>]    Run a source file or project
-  fpas                                 Discover a `.fpasprj` in the current directory
+    fpas [<file.fpas | file.fpasprj>] [-- <args>...]    Run a source file or project
+    fpas [-- <args>...]                                Discover a `.fpasprj` in the current directory
 
 Options:
   -h, --help      Print this help
   -V, --version   Print version
+
+Program arguments after `--` are visible through `Std.Args`.
 
 ";
 
@@ -31,6 +33,7 @@ pub(crate) enum CliInput {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct CliConfig {
     pub input: CliInput,
+    pub program_args: Vec<String>,
 }
 
 /// Result of parsing CLI arguments before loading sources.
@@ -46,10 +49,6 @@ pub(crate) enum ResolvedCli {
 /// [`resolve_cli_config`] is the full CLI entry: it also handles `--help` / `--version`.
 #[cfg(test)]
 pub(crate) fn resolve_cli_input(args: &[String], cwd: &Path) -> Result<CliInput, String> {
-    if args.len() > 1 {
-        return Err("Usage: fpas [<file.fpas | file.fpasprj>]".to_string());
-    }
-
     match resolve_cli_config(args, cwd)? {
         ResolvedCli::Run(c) => Ok(c.input),
         ResolvedCli::Help | ResolvedCli::Version => {
@@ -59,25 +58,26 @@ pub(crate) fn resolve_cli_input(args: &[String], cwd: &Path) -> Result<CliInput,
 }
 
 pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<ResolvedCli, String> {
+    let (cli_args, program_args) = split_program_args(args);
     let mut input = None::<String>;
     let mut index = 0;
 
-    while index < args.len() {
-        let arg = &args[index];
+    while index < cli_args.len() {
+        let arg = &cli_args[index];
 
         if arg == "-h" || arg == "--help" {
-            if args.len() != 1 {
+            if cli_args.len() != 1 || !program_args.is_empty() {
                 return Err(
-                    "Usage: fpas [<file.fpas | file.fpasprj>]\n  help: `fpas --help` shows options."
+                    "Usage: fpas [<file.fpas | file.fpasprj>] [-- <args>...]\n  help: `fpas --help` shows options."
                         .to_string(),
                 );
             }
             return Ok(ResolvedCli::Help);
         }
         if arg == "-V" || arg == "--version" {
-            if args.len() != 1 {
+            if cli_args.len() != 1 || !program_args.is_empty() {
                 return Err(
-                    "Usage: fpas [<file.fpas | file.fpasprj>]\n  help: `fpas --help` shows options."
+                    "Usage: fpas [<file.fpas | file.fpasprj>] [-- <args>...]\n  help: `fpas --help` shows options."
                         .to_string(),
                 );
             }
@@ -91,7 +91,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
         }
 
         if input.replace(arg.clone()).is_some() {
-            return Err("Usage: fpas [<file.fpas | file.fpasprj>]".to_string());
+            return Err("Usage: fpas [<file.fpas | file.fpasprj>] [-- <args>...]".to_string());
         }
         index += 1;
     }
@@ -101,7 +101,18 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
         None => discover_project_file(cwd),
     }?;
 
-    Ok(ResolvedCli::Run(CliConfig { input }))
+    Ok(ResolvedCli::Run(CliConfig {
+        input,
+        program_args,
+    }))
+}
+
+fn split_program_args(args: &[String]) -> (&[String], Vec<String>) {
+    let Some(separator) = args.iter().position(|arg| arg == "--") else {
+        return (args, Vec::new());
+    };
+
+    (&args[..separator], args[separator + 1..].to_vec())
 }
 
 fn resolve_explicit_input(input: &str, cwd: &Path) -> Result<CliInput, String> {

@@ -10,6 +10,7 @@ use std::sync::{Condvar, Mutex, RwLock};
 pub(super) fn minimal_shared_state(chunk: Chunk) -> SharedState {
     SharedState {
         chunk,
+        program_args: Vec::new(),
         globals: RwLock::new(HashMap::new()),
         task_queue: Mutex::new(Vec::new()),
         task_available: Condvar::new(),

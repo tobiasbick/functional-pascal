@@ -92,7 +92,33 @@ fn resolve_cli_input_rejects_more_than_one_argument() {
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     let error = result.expect_err("multiple arguments must fail");
-    assert_eq!(error, "Usage: fpas [<file.fpas | file.fpasprj>]");
+    assert_eq!(
+        error,
+        "Usage: fpas [<file.fpas | file.fpasprj>] [-- <args>...]"
+    );
+}
+
+#[test]
+fn resolve_cli_config_splits_program_arguments_after_separator() {
+    let cwd = create_temp_dir("program-args");
+    let result = resolve_cli_config(
+        &[
+            String::from("main.fpas"),
+            String::from("--"),
+            String::from("one"),
+            String::from("-two"),
+        ],
+        &cwd,
+    );
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(
+        result,
+        Ok(ResolvedCli::Run(CliConfig {
+            input: CliInput::SourceFile(cwd.join("main.fpas")),
+            program_args: vec![String::from("one"), String::from("-two")],
+        }))
+    );
 }
 
 #[test]

@@ -137,6 +137,9 @@ pub(crate) struct SharedState {
     /// Compiled bytecode (read-only after construction).
     pub chunk: Chunk,
 
+    /// Process arguments visible to `Std.Args` (read-only after construction).
+    pub program_args: Vec<String>,
+
     /// Global variables.
     pub globals: RwLock<HashMap<String, Value>>,
 

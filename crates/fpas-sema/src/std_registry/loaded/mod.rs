@@ -1,3 +1,4 @@
+mod args;
 mod array;
 mod channel_task;
 mod console;
@@ -13,9 +14,9 @@ mod tui;
 use crate::check::Checker;
 use fpas_std::std_symbols as s;
 use fpas_std::{
-    STD_UNIT_ARRAY, STD_UNIT_CONSOLE, STD_UNIT_CONV, STD_UNIT_DICT, STD_UNIT_GRAPH, STD_UNIT_MATH,
-    STD_UNIT_OPTION, STD_UNIT_RANDOM, STD_UNIT_RESULT, STD_UNIT_STR, STD_UNIT_TASK, STD_UNIT_TUI,
-    STD_UNITS_KNOWN,
+    STD_UNIT_ARGS, STD_UNIT_ARRAY, STD_UNIT_CONSOLE, STD_UNIT_CONV, STD_UNIT_DICT, STD_UNIT_GRAPH,
+    STD_UNIT_MATH, STD_UNIT_OPTION, STD_UNIT_RANDOM, STD_UNIT_RESULT, STD_UNIT_STR, STD_UNIT_TASK,
+    STD_UNIT_TUI, STD_UNITS_KNOWN,
 };
 
 pub fn register_loaded_std(checker: &mut Checker) {
@@ -29,6 +30,7 @@ pub fn register_loaded_std(checker: &mut Checker) {
 /// Register symbols for one standard unit (idempotent if the unit was already registered).
 pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
     match unit {
+        STD_UNIT_ARGS => args::register_std_args(checker),
         STD_UNIT_CONSOLE => console::register_std_console(checker),
         STD_UNIT_STR => str_ops::register_std_str(checker),
         STD_UNIT_CONV => conv::register_std_conv(checker),

@@ -8,6 +8,7 @@ All units are opt-in through `uses`.
 ## Unit pages
 
 - `Std.Console` - [console.md](console.md) (text I/O, CRT-style screen control, RGB/256 text colors, `ReadKey` / `KeyPressed`, `ReadKeyEvent`, `ReadEvent`, `KeyKind`, `KeyEvent`)
+- `Std.Args` - [args.md](args.md) (process argument count and indexed lookup for arguments passed after `--`)
 - `Std.Graph` - [graph.md](graph.md) (native windowed graphics, framebuffer upload, drawing primitives, text, and direct input)
 - `Std.Tui` - [tui.md](tui.md) (terminal application handle, size, key/resize events, redraw coordination; key payloads use `Std.Console.KeyKind` / `Std.Console.KeyEvent`)
 - `Std.Tui` dispatch mode (target) - [tui-app.md](tui-app.md) (`Application.Host*` and hosted helpers use VM intrinsics **255**–**291**; `Application.Run` is lowered and runs the hosted loop; `OnExit` receives **`ExitReason.UserQuit`**, **`ExitReason.HostStop`**, **`ExitReason.HostAndUserStop`**, or **`ExitReason.HostShutdown`**. See [tui-application-framework.md](../../future/tui-application-framework.md).)

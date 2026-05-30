@@ -2,11 +2,10 @@
 //!
 //! **Documentation:** `docs/pascal/std/graph.md` (from the repository root).
 
+use super::color::MAX_RGB24;
 use crate::error::{StdError, std_runtime_error};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
-
-const MAX_RGB24: i64 = 0x00FF_FFFF;
 
 /// Validated frame payload ready for a future backend upload path.
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -23,7 +23,6 @@ pub struct GraphSession {
     open: bool,
     width: i64,
     height: i64,
-    title: String,
     pending_events: VecDeque<UiEvent>,
     backbuffer: GraphBackbuffer,
     last_uploaded_frame: Option<UploadedFrame>,
@@ -52,8 +51,6 @@ impl GraphSession {
         self.open = true;
         self.width = width;
         self.height = height;
-        self.title.clear();
-        self.title.push_str(title);
         self.pending_events.clear();
         self.backbuffer = backbuffer;
         self.last_uploaded_frame = None;
@@ -71,7 +68,6 @@ impl GraphSession {
         self.open = false;
         self.width = 0;
         self.height = 0;
-        self.title.clear();
         self.pending_events.clear();
         self.backbuffer = GraphBackbuffer::default();
         self.last_uploaded_frame = None;

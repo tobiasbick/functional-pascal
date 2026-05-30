@@ -122,7 +122,7 @@ fn graph_session_put_pixel_writes_inside_and_clips_outside() {
 }
 
 #[test]
-fn graph_session_upload_frame_updates_runtime_backbuffer() {
+fn graph_session_upload_frame_stages_valid_payload_in_backbuffer_and_cache() {
     with_headless(|| {
         let mut session = GraphSession::default();
         session
@@ -136,6 +136,13 @@ fn graph_session_upload_frame_updates_runtime_backbuffer() {
             session.backbuffer_pixels_for_tests(),
             &[0x00102040, 0x00FF00AA]
         );
+
+        let frame = session
+            .last_uploaded_frame_for_tests()
+            .expect("frame should be staged");
+        assert_eq!(frame.width, 2);
+        assert_eq!(frame.height, 1);
+        assert_eq!(frame.pixels, vec![0x00102040, 0x00FF00AA]);
     });
 }
 
@@ -291,6 +298,68 @@ fn graph_session_draw_circle_rejects_negative_radius() {
 }
 
 #[test]
+fn graph_session_draw_circle_with_zero_radius_draws_center_pixel() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(3, 3, "Graph smoke", test_location())
+            .expect("open should succeed");
+        session
+            .clear(0, test_location())
+            .expect("clear should succeed");
+        session
+            .draw_circle(1, 1, 0, 0x00000007, test_location())
+            .expect("zero radius should succeed");
+
+        assert_eq!(
+            session.backbuffer_pixels_for_tests(),
+            &[0, 0, 0, 0, 0x00000007, 0, 0, 0, 0]
+        );
+    });
+}
+
+#[test]
+fn graph_session_draw_rect_rejects_non_positive_dimensions() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(4, 4, "Graph smoke", test_location())
+            .expect("open should succeed");
+
+        let error = session
+            .draw_rect(0, 0, 0, 2, 0x00000002, test_location())
+            .expect_err("zero width should fail");
+
+        assert!(
+            error.message.contains("requires positive dimensions"),
+            "message={}",
+            error.message
+        );
+    });
+}
+
+#[test]
+fn graph_session_draw_rect_1x1_fills_single_pixel() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(3, 3, "Graph smoke", test_location())
+            .expect("open should succeed");
+        session
+            .clear(0, test_location())
+            .expect("clear should succeed");
+        session
+            .draw_rect(1, 1, 1, 1, 0x00000008, test_location())
+            .expect("1x1 rect should succeed");
+
+        assert_eq!(
+            session.backbuffer_pixels_for_tests(),
+            &[0, 0, 0, 0, 0x00000008, 0, 0, 0, 0]
+        );
+    });
+}
+
+#[test]
 fn graph_session_draw_text_renders_deterministic_bitmap_glyphs() {
     with_headless(|| {
         let mut session = GraphSession::default();
@@ -332,6 +401,58 @@ fn graph_session_draw_text_clips_outside_surface_bounds() {
                 0x00000006, 0,
             ]
         );
+    });
+}
+
+#[test]
+fn graph_session_draw_text_unknown_char_renders_question_mark_glyph() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(5, 7, "Graph text", test_location())
+            .expect("open should succeed");
+        session
+            .clear(0, test_location())
+            .expect("clear should succeed");
+        session
+            .draw_text(0, 0, "@", 0x00000009, test_location())
+            .expect("draw text should succeed");
+        let unknown_pixels = session.backbuffer_pixels_for_tests().to_vec();
+
+        session
+            .clear(0, test_location())
+            .expect("clear should succeed");
+        session
+            .draw_text(0, 0, "?", 0x00000009, test_location())
+            .expect("draw text should succeed");
+
+        assert_eq!(unknown_pixels, session.backbuffer_pixels_for_tests());
+    });
+}
+
+#[test]
+fn graph_session_draw_text_normalizes_lowercase_to_uppercase_glyphs() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(5, 7, "Graph text", test_location())
+            .expect("open should succeed");
+        session
+            .clear(0, test_location())
+            .expect("clear should succeed");
+        session
+            .draw_text(0, 0, "a", 0x0000000A, test_location())
+            .expect("draw text should succeed");
+        let lowercase_pixels = session.backbuffer_pixels_for_tests().to_vec();
+
+        session
+            .clear(0, test_location())
+            .expect("clear should succeed");
+        session
+            .draw_text(0, 0, "A", 0x0000000A, test_location())
+            .expect("draw text should succeed");
+
+        assert_eq!(lowercase_pixels, session.backbuffer_pixels_for_tests());
     });
 }
 
@@ -380,6 +501,88 @@ fn graph_session_open_validates_positive_surface_size() {
 }
 
 #[test]
+fn graph_session_open_rejects_zero_height() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+
+        let error = session
+            .open(320, 0, "Graph smoke", test_location())
+            .expect_err("zero height should fail");
+
+        assert!(
+            error.message.contains("requires positive dimensions"),
+            "message={}",
+            error.message
+        );
+    });
+}
+
+#[test]
+fn graph_session_second_open_is_rejected() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(320, 200, "Graph smoke", test_location())
+            .expect("first open should succeed");
+
+        let error = session
+            .open(160, 120, "Graph two", test_location())
+            .expect_err("second open should fail");
+
+        assert!(
+            error
+                .message
+                .contains("cannot open a second graphics session"),
+            "message={}",
+            error.message
+        );
+    });
+}
+
+#[test]
+fn graph_session_clear_rejects_invalid_rgb24_color() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(2, 2, "Graph smoke", test_location())
+            .expect("open should succeed");
+
+        let error = session
+            .clear(0x0100_0000, test_location())
+            .expect_err("out-of-range color should fail");
+
+        assert!(
+            error.message.contains("requires `$00RRGGBB` colors"),
+            "message={}",
+            error.message
+        );
+    });
+}
+
+#[test]
+fn graph_session_mutations_require_open_session() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(2, 2, "Graph smoke", test_location())
+            .expect("open should succeed");
+        session
+            .close(test_location())
+            .expect("close should succeed");
+
+        let error = session
+            .clear(0, test_location())
+            .expect_err("clear after close should fail");
+
+        assert!(
+            error.message.contains("requires an open graphics session"),
+            "message={}",
+            error.message
+        );
+    });
+}
+
+#[test]
 fn graph_session_upload_frame_rejects_pixel_length_mismatch() {
     with_headless(|| {
         let mut session = GraphSession::default();
@@ -393,6 +596,26 @@ fn graph_session_upload_frame_rejects_pixel_length_mismatch() {
 
         assert!(
             error.message.contains("expected 4 pixels for 2x2, got 3"),
+            "message={}",
+            error.message
+        );
+    });
+}
+
+#[test]
+fn graph_session_upload_frame_rejects_out_of_range_pixel() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(2, 1, "Graph smoke", test_location())
+            .expect("open should succeed");
+
+        let error = session
+            .upload_frame(2, 1, &[0x0010_2040, 0x0100_0000], test_location())
+            .expect_err("out-of-range pixel should fail");
+
+        assert!(
+            error.message.contains("is out of range"),
             "message={}",
             error.message
         );
@@ -418,26 +641,6 @@ fn graph_session_upload_frame_rejects_surface_size_mismatch() {
             "message={}",
             error.message
         );
-    });
-}
-
-#[test]
-fn graph_session_upload_frame_accepts_valid_rgb24_payload() {
-    with_headless(|| {
-        let mut session = GraphSession::default();
-        session
-            .open(2, 1, "Graph smoke", test_location())
-            .expect("open should succeed");
-        session
-            .upload_frame(2, 1, &[0x00102040, 0x00FF00AA], test_location())
-            .expect("valid frame should succeed");
-
-        let frame = session
-            .last_uploaded_frame_for_tests()
-            .expect("frame should be staged");
-        assert_eq!(frame.width, 2);
-        assert_eq!(frame.height, 1);
-        assert_eq!(frame.pixels, vec![0x00102040, 0x00FF00AA]);
     });
 }
 
@@ -489,6 +692,80 @@ fn graph_session_poll_event_returns_queued_event() {
                 width: 800,
                 height: 600,
             })
+        );
+    });
+}
+
+#[test]
+fn graph_session_read_event_timeout_returns_queued_event_immediately() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(320, 200, "Graph smoke", test_location())
+            .expect("open should succeed");
+        session.push_event_for_tests(GraphEvent::Resize {
+            width: 640,
+            height: 480,
+        });
+
+        let event = session
+            .read_event_timeout(16, test_location())
+            .expect("read event timeout should succeed");
+        assert_eq!(
+            event,
+            Some(GraphEvent::Resize {
+                width: 640,
+                height: 480,
+            })
+        );
+    });
+}
+
+#[test]
+fn graph_session_poll_event_returns_queued_close_requested_event() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(320, 200, "Graph smoke", test_location())
+            .expect("open should succeed");
+        session.push_event_for_tests(GraphEvent::CloseRequested);
+
+        let event = session
+            .poll_event(test_location())
+            .expect("poll should succeed");
+        assert_eq!(event, Some(GraphEvent::CloseRequested));
+    });
+}
+
+#[test]
+fn graph_session_poll_event_returns_queued_key_event() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(320, 200, "Graph smoke", test_location())
+            .expect("open should succeed");
+        session.push_event_for_tests(GraphEvent::Key(ConsoleKeyEvent::new(
+            key_kind_index("Escape"),
+            '\0',
+            false,
+            false,
+            false,
+            false,
+        )));
+
+        let event = session
+            .poll_event(test_location())
+            .expect("poll should succeed");
+        assert_eq!(
+            event,
+            Some(GraphEvent::Key(ConsoleKeyEvent::new(
+                key_kind_index("Escape"),
+                '\0',
+                false,
+                false,
+                false,
+                false,
+            )))
         );
     });
 }

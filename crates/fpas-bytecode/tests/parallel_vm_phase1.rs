@@ -133,7 +133,7 @@ fn spawn_task_arity_differences_all_detected() {
 #[test]
 fn constant_pool_and_locations_do_not_affect_scan() {
     let mut chunk = Chunk::new();
-    chunk.add_constant(Value::Integer(1)).expect("pool fits");
+    assert!(chunk.add_constant(Value::Integer(1)).is_ok());
     chunk.emit(Op::Constant(0), loc());
     chunk.emit(Op::SpawnDetachedTask(0), loc());
     assert_eq!(chunk.code.len(), chunk.locations.len());

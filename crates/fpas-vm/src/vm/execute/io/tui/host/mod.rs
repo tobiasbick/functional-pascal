@@ -39,7 +39,7 @@ impl Worker {
                 )?;
             }
             Intrinsic::Tui(TuiIntrinsic::HostProcessNext) => {
-                let max_spins = self.pop_int(line)?.max(0).min(4096) as usize;
+                let max_spins = self.pop_int(line)?.clamp(0, 4096) as usize;
                 self.pop_tui_application(line)?;
                 let tag = self.tui_host_process_next_inner(max_spins, line)?;
                 self.push(fpas_bytecode::Value::Integer(tag))?;
@@ -75,7 +75,7 @@ impl Worker {
                 self.push(fpas_bytecode::Value::Integer(tag))?;
             }
             Intrinsic::Tui(TuiIntrinsic::HostRunLoop) => {
-                let max_iters = self.pop_int(line)?.max(0).min(1_000_000) as usize;
+                let max_iters = self.pop_int(line)?.clamp(0, 1_000_000) as usize;
                 self.pop_tui_application(line)?;
                 self.tui_host_run_loop_inner(max_iters, line)?;
                 self.push(fpas_bytecode::Value::Unit)?;

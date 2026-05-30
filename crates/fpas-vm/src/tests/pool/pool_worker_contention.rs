@@ -50,8 +50,7 @@ fn two_pool_loops_share_one_task_only_one_executes_body() {
         .unwrap_or_else(|e| e.into_inner())
         .output()
         .lines
-        .len()
-        < 1
+        .is_empty()
     {
         assert!(
             start.elapsed() < Duration::from_secs(2),

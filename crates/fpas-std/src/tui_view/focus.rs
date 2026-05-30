@@ -1,11 +1,15 @@
 use super::{ViewId, ViewRegistry};
 
 impl ViewRegistry {
-    /// Append `id` to the focus chain if it is not already present.
-    pub fn push_child(&mut self, id: ViewId) {
+    /// Append `id` to the focus chain if it is registered and not already present.
+    pub fn push_child(&mut self, id: ViewId) -> bool {
+        if self.entry(id).is_none() {
+            return false;
+        }
         if !self.children.contains(&id) {
             self.children.push(id);
         }
+        true
     }
 
     /// Remove `id` from the focus chain.

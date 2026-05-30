@@ -2,7 +2,9 @@
     test,
     expect(
         clippy::expect_used,
-        reason = "VM tests use expect to keep low-level bytecode assertions focused on behavior"
+        clippy::unwrap_used,
+        clippy::panic,
+        reason = "VM tests use unwrap/expect/panic to keep low-level bytecode assertions focused on behavior"
     )
 )]
 

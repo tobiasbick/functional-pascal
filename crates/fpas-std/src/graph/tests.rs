@@ -158,7 +158,7 @@ fn graph_session_upload_frame_uses_last_observed_size_during_resize_race() {
             (2, 1)
         );
 
-        set_headless_graph_surface_size_for_tests(4, 3);
+        assert!(set_headless_graph_surface_size_for_tests(4, 3).is_ok());
 
         session
             .upload_frame(2, 1, &[0x00102040, 0x00FF00AA], test_location())

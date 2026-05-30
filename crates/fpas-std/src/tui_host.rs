@@ -59,66 +59,42 @@ impl TuiHost {
                 );
             }
             UiEvent::Key(key) => {
-                if let Some((old_width, old_height, width, height)) = self.pending_resize.take() {
-                    self.trace("tui_host: flush coalesced resize before key");
-                    self.ready.push_back(UiEvent::Resize(UiResize::new(
-                        Some(old_width),
-                        Some(old_height),
-                        width,
-                        height,
-                    )));
-                }
+                self.flush_pending_resize_before("tui_host: flush coalesced resize before key");
                 self.ready.push_back(UiEvent::Key(key));
             }
             UiEvent::Mouse(mouse) => {
-                if let Some((old_width, old_height, width, height)) = self.pending_resize.take() {
-                    self.trace("tui_host: flush coalesced resize before mouse");
-                    self.ready.push_back(UiEvent::Resize(UiResize::new(
-                        Some(old_width),
-                        Some(old_height),
-                        width,
-                        height,
-                    )));
-                }
+                self.flush_pending_resize_before("tui_host: flush coalesced resize before mouse");
                 self.ready.push_back(UiEvent::Mouse(mouse));
             }
             UiEvent::Paste(text) => {
-                if let Some((old_width, old_height, width, height)) = self.pending_resize.take() {
-                    self.trace("tui_host: flush coalesced resize before paste");
-                    self.ready.push_back(UiEvent::Resize(UiResize::new(
-                        Some(old_width),
-                        Some(old_height),
-                        width,
-                        height,
-                    )));
-                }
+                self.flush_pending_resize_before("tui_host: flush coalesced resize before paste");
                 self.ready.push_back(UiEvent::Paste(text));
             }
             UiEvent::FocusGained => {
-                if let Some((old_width, old_height, width, height)) = self.pending_resize.take() {
-                    self.trace("tui_host: flush coalesced resize before focus-gained");
-                    self.ready.push_back(UiEvent::Resize(UiResize::new(
-                        Some(old_width),
-                        Some(old_height),
-                        width,
-                        height,
-                    )));
-                }
+                self.flush_pending_resize_before(
+                    "tui_host: flush coalesced resize before focus-gained",
+                );
                 self.ready.push_back(UiEvent::FocusGained);
             }
             UiEvent::FocusLost => {
-                if let Some((old_width, old_height, width, height)) = self.pending_resize.take() {
-                    self.trace("tui_host: flush coalesced resize before focus-lost");
-                    self.ready.push_back(UiEvent::Resize(UiResize::new(
-                        Some(old_width),
-                        Some(old_height),
-                        width,
-                        height,
-                    )));
-                }
+                self.flush_pending_resize_before(
+                    "tui_host: flush coalesced resize before focus-lost",
+                );
                 self.ready.push_back(UiEvent::FocusLost);
             }
             UiEvent::CloseRequested | UiEvent::Wheel(_) | UiEvent::Resize(_) => {}
+        }
+    }
+
+    fn flush_pending_resize_before(&mut self, trace_msg: &'static str) {
+        if let Some((old_width, old_height, width, height)) = self.pending_resize.take() {
+            self.trace(trace_msg);
+            self.ready.push_back(UiEvent::Resize(UiResize::new(
+                Some(old_width),
+                Some(old_height),
+                width,
+                height,
+            )));
         }
     }
 

@@ -141,8 +141,9 @@ impl Worker {
             Intrinsic::Tui(TuiIntrinsic::HostPushChildView) => {
                 let view_id = self.pop_tui_view_id(line)?;
                 self.pop_tui_application(line)?;
+                self.require_registered_tui_view(view_id, line)?;
                 self.with_tui(|tui| {
-                    tui.views.push_child(view_id);
+                    let _ = tui.views.push_child(view_id);
                 });
             }
             Intrinsic::Tui(TuiIntrinsic::HostQueryFocusedViewId) => {
@@ -154,6 +155,7 @@ impl Worker {
             Intrinsic::Tui(TuiIntrinsic::HostAttachViewToActiveModal) => {
                 let view_id = self.pop_tui_view_id(line)?;
                 self.pop_tui_application(line)?;
+                self.require_registered_tui_view(view_id, line)?;
                 self.with_tui(|tui| {
                     if tui.modals.attach_view_to_active(view_id)
                         && let Some(rect) = tui.views.rect(view_id)

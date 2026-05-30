@@ -20,6 +20,20 @@ fn register_returns_distinct_ids() {
 }
 
 #[test]
+fn register_wraps_id_allocator_without_reusing_live_ids() {
+    let mut registry = ViewRegistry {
+        next_id: u32::MAX,
+        ..ViewRegistry::default()
+    };
+
+    let max_id = registry.register(rect(0, 0, 1, 1));
+    let wrapped_id = registry.register(rect(1, 0, 1, 1));
+
+    assert_eq!(max_id, ViewId::from_raw(u32::MAX));
+    assert_eq!(wrapped_id, ViewId::from_raw(0));
+}
+
+#[test]
 fn child_rect_tracks_parent_layout() {
     let mut registry = ViewRegistry::default();
     let parent = registry.register(rect(10, 5, 20, 10));
@@ -31,6 +45,12 @@ fn child_rect_tracks_parent_layout() {
 
     registry.set_rect(parent, rect(20, 10, 20, 10));
     assert_eq!(registry.rect(child), Some(rect(21, 11, 4, 2)));
+}
+
+#[test]
+fn rect_contains_point_handles_overflow_and_negative_size() {
+    assert!(rect(i64::MAX - 1, i64::MAX - 1, 10, 10).contains_point(i64::MAX - 1, i64::MAX - 1));
+    assert!(!rect(0, 0, -1, 10).contains_point(0, 0));
 }
 
 #[test]
@@ -129,6 +149,14 @@ fn focus_first_in_scope_targets_first_matching_focus_child() {
     assert!(changed);
     assert!(!had_previous);
     assert_eq!(registry.focused_id(), Some(b));
+}
+
+#[test]
+fn push_child_rejects_unknown_view_id() {
+    let mut registry = ViewRegistry::default();
+
+    assert!(!registry.push_child(ViewId::from_raw(42)));
+    assert!(!registry.has_focusable_children());
 }
 
 #[test]

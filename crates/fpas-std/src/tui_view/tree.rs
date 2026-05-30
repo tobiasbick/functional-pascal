@@ -3,8 +3,7 @@ use super::{ViewEntry, ViewId, ViewRect, ViewRegistry};
 impl ViewRegistry {
     /// Register a new root view covering `rect` and return its opaque [`ViewId`].
     pub fn register(&mut self, rect: ViewRect) -> ViewId {
-        let id = ViewId(self.next_id);
-        self.next_id = self.next_id.saturating_add(1);
+        let id = self.allocate_id();
         self.views.push(ViewEntry {
             id,
             local_rect: rect,
@@ -59,10 +58,10 @@ impl ViewRegistry {
             return false;
         }
 
-        if let Some(parent_id) = parent {
-            if self.entry(parent_id).is_none() || self.would_create_cycle(id, parent_id) {
-                return false;
-            }
+        if let Some(parent_id) = parent
+            && (self.entry(parent_id).is_none() || self.would_create_cycle(id, parent_id))
+        {
+            return false;
         }
 
         let current_parent = self.entry(id).and_then(|entry| entry.parent);
@@ -160,10 +159,10 @@ impl ViewRegistry {
     #[must_use]
     pub fn topmost_view_at(&self, x: i64, y: i64, scope: Option<&[ViewId]>) -> Option<ViewId> {
         self.paint_order().into_iter().rev().find(|view_id| {
-            scope.map_or(true, |scope_ids| scope_ids.contains(view_id))
+            scope.is_none_or(|scope_ids| scope_ids.contains(view_id))
                 && self
                     .rect(*view_id)
-                    .is_some_and(|rect| rect_contains_point(rect, x, y))
+                    .is_some_and(|rect| rect.contains_point(x, y))
         })
     }
 
@@ -187,7 +186,22 @@ impl ViewRegistry {
         self.focused = None;
     }
 
-    fn entry(&self, id: ViewId) -> Option<&ViewEntry> {
+    fn allocate_id(&mut self) -> ViewId {
+        let start = self.next_id;
+        loop {
+            let id = ViewId(self.next_id);
+            self.next_id = self.next_id.wrapping_add(1);
+            if self.entry(id).is_none() {
+                return id;
+            }
+            assert_ne!(
+                self.next_id, start,
+                "View id space exhausted; close unused views before registering more"
+            );
+        }
+    }
+
+    pub(super) fn entry(&self, id: ViewId) -> Option<&ViewEntry> {
         self.views.iter().find(|entry| entry.id == id)
     }
 
@@ -254,10 +268,4 @@ impl ViewRegistry {
         entries.push(view_id);
         true
     }
-}
-
-fn rect_contains_point(rect: ViewRect, x: i64, y: i64) -> bool {
-    let max_x = rect.x.saturating_add(rect.width.max(0));
-    let max_y = rect.y.saturating_add(rect.height.max(0));
-    x >= rect.x && y >= rect.y && x < max_x && y < max_y
 }

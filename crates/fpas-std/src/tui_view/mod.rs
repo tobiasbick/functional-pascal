@@ -46,6 +46,16 @@ pub struct ViewRect {
     pub height: i64,
 }
 
+impl ViewRect {
+    /// Return `true` when terminal-cell position `(x, y)` is inside this rectangle.
+    #[must_use]
+    pub fn contains_point(self, x: i64, y: i64) -> bool {
+        let max_x = self.x.saturating_add(self.width.max(0));
+        let max_y = self.y.saturating_add(self.height.max(0));
+        x >= self.x && y >= self.y && x < max_x && y < max_y
+    }
+}
+
 #[derive(Debug)]
 struct ViewEntry {
     id: ViewId,

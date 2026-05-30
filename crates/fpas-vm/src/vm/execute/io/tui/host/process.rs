@@ -5,11 +5,17 @@
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
 use fpas_bytecode::{SourceLocation, Value};
-use fpas_std::{CommandId, DamageRegion, UiEvent, UiMouse, UiResize, ViewId, ViewRect};
+use fpas_std::{CommandId, DamageRegion, UiEvent, UiMouse, UiResize, ViewId};
 
 /// Discriminant of `Std.Console.KeyKind.Tab`; must match
 /// [`fpas_std::key_event::KEY_KIND_VARIANTS`] (index 2).
 const KEY_KIND_TAB: usize = 2;
+
+#[derive(Clone, Copy)]
+struct DispatchTags {
+    hit: i64,
+    miss: i64,
+}
 
 impl Worker {
     /// Processes at most one pending `UiEvent`, dispatching to the registered handler.
@@ -147,39 +153,31 @@ impl Worker {
                 let redraw_hint = self.mouse_redraw_hint(modal_scope.as_deref(), mouse);
                 self.dispatch_console_event_handler(
                     on_mouse,
-                    app_rec,
-                    Self::console_mouse_event_record(mouse),
+                    [app_rec, Self::console_mouse_event_record(mouse)],
                     Some(redraw_hint),
-                    5,
-                    7,
+                    DispatchTags { hit: 5, miss: 7 },
                     line,
                 )
             }
             UiEvent::Paste(text) => self.dispatch_console_event_handler(
                 on_paste,
-                app_rec,
-                Self::console_paste_event_record(text),
+                [app_rec, Self::console_paste_event_record(text)],
                 Some(self.focused_view_redraw_hint()),
-                8,
-                9,
+                DispatchTags { hit: 8, miss: 9 },
                 line,
             ),
             UiEvent::FocusGained => self.dispatch_console_event_handler(
                 on_focus_gained,
-                app_rec,
-                Self::console_focus_gained_event_record(),
+                [app_rec, Self::console_focus_gained_event_record()],
                 Some(self.focused_view_redraw_hint()),
-                10,
-                11,
+                DispatchTags { hit: 10, miss: 11 },
                 line,
             ),
             UiEvent::FocusLost => self.dispatch_console_event_handler(
                 on_focus_lost,
-                app_rec,
-                Self::console_focus_lost_event_record(),
+                [app_rec, Self::console_focus_lost_event_record()],
                 Some(self.focused_view_redraw_hint()),
-                12,
-                13,
+                DispatchTags { hit: 12, miss: 13 },
                 line,
             ),
             UiEvent::Resize(UiResize {
@@ -215,23 +213,21 @@ impl Worker {
     fn dispatch_console_event_handler(
         &mut self,
         handler: Option<Value>,
-        app_rec: Value,
-        event_rec: Value,
+        args: [Value; 2],
         redraw_hint: Option<DamageRegion>,
-        hit_tag: i64,
-        miss_tag: i64,
+        tags: DispatchTags,
         line: SourceLocation,
     ) -> Result<i64, VmError> {
         if let Some(handler) = handler {
             let _ = self.call_function_sync_allowing_shutdown_with_redraw_hint(
                 &handler,
-                &[app_rec, event_rec],
+                &args,
                 redraw_hint,
                 line,
             )?;
-            Ok(hit_tag)
+            Ok(tags.hit)
         } else {
-            Ok(miss_tag)
+            Ok(tags.miss)
         }
     }
 
@@ -303,12 +299,8 @@ impl Worker {
         !scope.iter().any(|view_id| {
             tui.views
                 .rect(*view_id)
-                .is_some_and(|rect| Self::rect_contains_point(rect, mouse.x, mouse.y))
+                .is_some_and(|rect| rect.contains_point(mouse.x, mouse.y))
         })
-    }
-
-    fn rect_contains_point(rect: ViewRect, x: i64, y: i64) -> bool {
-        x >= rect.x && y >= rect.y && x < rect.x + rect.width && y < rect.y + rect.height
     }
 
     fn request_focus_transition_redraw(
@@ -396,8 +388,11 @@ impl Worker {
                 tui.on_deactivate.clone()
             };
             if let Some(handler) = handler {
-                let _ =
-                    self.call_function_sync_allowing_shutdown(&handler, &[app_rec.clone()], line)?;
+                let _ = self.call_function_sync_allowing_shutdown(
+                    &handler,
+                    std::slice::from_ref(&app_rec),
+                    line,
+                )?;
             }
         }
 

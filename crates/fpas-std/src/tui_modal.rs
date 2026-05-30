@@ -68,12 +68,6 @@ impl ModalStack {
         self.pop_frame().map(|frame| frame.id)
     }
 
-    /// Pop the active modal and return its id plus the views attached to that frame.
-    #[must_use]
-    pub fn leave_with_scoped_views(&mut self) -> Option<(ModalId, Vec<ViewId>)> {
-        self.pop_frame().map(|frame| (frame.id, frame.scoped_views))
-    }
-
     /// Pop the active modal and return its id, optional root view, and manually attached views.
     #[must_use]
     pub fn leave_with_scope_info(
@@ -200,20 +194,6 @@ mod tests {
         assert_eq!(modals.leave(), Some(ModalId(20)));
         assert_eq!(modals.active_id(), Some(ModalId(10)));
         assert_eq!(modals.depth(), 1);
-    }
-
-    #[test]
-    fn leave_with_scoped_views_returns_popped_scope() {
-        let mut modals = ModalStack::default();
-        modals.enter(ModalId(10));
-        assert!(modals.attach_view_to_active(ViewId::from_raw(1)));
-        assert!(modals.attach_view_to_active(ViewId::from_raw(2)));
-
-        assert_eq!(
-            modals.leave_with_scoped_views(),
-            Some((ModalId(10), vec![ViewId::from_raw(1), ViewId::from_raw(2)]))
-        );
-        assert!(modals.is_empty());
     }
 
     #[test]

@@ -48,7 +48,7 @@ fn save_task_and_load_task_round_trip_preserves_execution_state() {
     let saved = w.save_task();
     assert_eq!(saved.id, 7);
     assert_eq!(saved.ip, 12);
-    assert_eq!(saved.retain_result, true);
+    assert!(saved.retain_result);
     assert_eq!(saved.stack.len(), 1);
     assert_eq!(saved.call_stack.len(), 1);
     assert!(
@@ -64,7 +64,7 @@ fn save_task_and_load_task_round_trip_preserves_execution_state() {
     w2.load_task(saved);
     assert_eq!(w2.current_task_id, 7);
     assert_eq!(w2.ip, 12);
-    assert_eq!(w2.current_task_retain_result, true);
+    assert!(w2.current_task_retain_result);
     assert_eq!(w2.stack.len(), 1);
     assert_eq!(w2.call_stack.len(), 1);
 }

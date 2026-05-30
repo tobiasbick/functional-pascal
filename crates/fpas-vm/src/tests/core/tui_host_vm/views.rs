@@ -42,6 +42,54 @@ fn tui_host_register_view_marks_rect_damage() {
 }
 
 #[test]
+fn tui_host_push_child_view_rejects_unknown_view_id() {
+    let mut chunk = Chunk::new();
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))),
+        loc(),
+    );
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(99));
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostPushChildView))),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let error = run_err(chunk);
+    assert!(
+        error.message.contains("Unknown host view handle 99"),
+        "unexpected runtime error: {}",
+        error.message
+    );
+}
+
+#[test]
+fn tui_host_attach_view_to_active_modal_rejects_unknown_view_id() {
+    let mut chunk = Chunk::new();
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))),
+        loc(),
+    );
+    chunk.emit(Op::GetLocal(0), loc());
+    emit_constant(&mut chunk, Value::Integer(99));
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(
+            TuiIntrinsic::HostAttachViewToActiveModal,
+        ))),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let error = run_err(chunk);
+    assert!(
+        error.message.contains("Unknown host view handle 99"),
+        "unexpected runtime error: {}",
+        error.message
+    );
+}
+
+#[test]
 fn tui_host_unregister_view_marks_removed_rect_damage() {
     let mut chunk = Chunk::new();
     chunk.emit(

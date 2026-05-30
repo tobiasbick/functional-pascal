@@ -21,7 +21,7 @@ enum BackendMode {
 
 enum GraphBackend {
     Headless(headless::HeadlessGraphBackend),
-    Native(native::NativeGraphBackend),
+    Native(Box<native::NativeGraphBackend>),
 }
 
 thread_local! {
@@ -40,9 +40,9 @@ impl GraphBackend {
             BackendMode::Headless => Ok(Self::Headless(headless::HeadlessGraphBackend::open(
                 width, height, title,
             ))),
-            BackendMode::Native => Ok(Self::Native(native::NativeGraphBackend::open(
+            BackendMode::Native => Ok(Self::Native(Box::new(native::NativeGraphBackend::open(
                 width, height, title, location,
-            )?)),
+            )?))),
         }
     }
 
@@ -193,19 +193,25 @@ pub fn last_headless_graph_frame_for_tests() -> Option<UploadedFrame> {
 /// Overrides the headless backend surface size on the current thread.
 #[doc(hidden)]
 #[cfg(test)]
-pub fn set_headless_graph_surface_size_for_tests(width: i64, height: i64) {
+pub fn set_headless_graph_surface_size_for_tests(
+    width: i64,
+    height: i64,
+) -> Result<(), &'static str> {
     GRAPH_BACKEND.with(|slot| {
         let mut slot = slot.borrow_mut();
         let Some(backend) = slot.as_mut() else {
-            panic!("headless graph backend must be open before overriding its size for tests");
+            return Err("headless graph backend must be open before overriding its size for tests");
         };
         match backend {
-            GraphBackend::Headless(backend) => backend.set_size_for_tests(width, height),
+            GraphBackend::Headless(backend) => {
+                backend.set_size_for_tests(width, height);
+                Ok(())
+            }
             GraphBackend::Native(_) => {
-                panic!("headless graph surface override is only available in headless tests")
+                Err("headless graph surface override is only available in headless tests")
             }
         }
-    });
+    })
 }
 
 fn with_backend<T>(

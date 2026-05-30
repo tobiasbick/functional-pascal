@@ -4,6 +4,8 @@ use super::*;
 const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Args(ArgsIntrinsic::ParamCount),
     Intrinsic::Args(ArgsIntrinsic::ParamStr),
+    Intrinsic::Env(EnvIntrinsic::Get),
+    Intrinsic::Env(EnvIntrinsic::Exists),
     Intrinsic::Console(ConsoleIntrinsic::ReadLn),
     Intrinsic::Console(ConsoleIntrinsic::Read),
     Intrinsic::Console(ConsoleIntrinsic::ReadKey),

@@ -7,6 +7,7 @@ mod array;
 mod console;
 mod conv;
 mod dict;
+mod env;
 mod graph;
 mod math;
 mod random;
@@ -31,6 +32,9 @@ impl Compiler {
         location: SourceLocation,
     ) -> Result<bool, CompileError> {
         if self.compile_args_call(name, args, location)? {
+            return Ok(true);
+        }
+        if self.compile_env_call(name, args, location)? {
             return Ok(true);
         }
         if self.compile_console_call(name, args, location)? {

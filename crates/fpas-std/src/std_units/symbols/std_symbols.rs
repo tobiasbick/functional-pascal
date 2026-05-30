@@ -8,6 +8,11 @@ macro_rules! std_args {
         concat!("Std.Args.", $suffix)
     };
 }
+macro_rules! std_env {
+    ($suffix:literal) => {
+        concat!("Std.Env.", $suffix)
+    };
+}
 macro_rules! std_tui {
     ($suffix:literal) => {
         concat!("Std.Tui.", $suffix)
@@ -151,6 +156,9 @@ pub const STD_CONSOLE_FONT_8X8: &str = std_console!("Font8x8");
 
 pub const STD_ARGS_PARAM_COUNT: &str = std_args!("ParamCount");
 pub const STD_ARGS_PARAM_STR: &str = std_args!("ParamStr");
+
+pub const STD_ENV_GET: &str = std_env!("Get");
+pub const STD_ENV_EXISTS: &str = std_env!("Exists");
 
 pub const STD_TUI_APPLICATION: &str = std_tui!("Application");
 /// Hosted-dispatch handler bundle for `Std.Tui.Application.Configure`; see `docs/pascal/std/tui-app.md`.

@@ -8,6 +8,7 @@ pub mod array;
 pub mod console;
 pub mod conv;
 pub mod dict;
+pub mod env;
 pub mod graph;
 pub mod math;
 pub mod option;
@@ -22,6 +23,7 @@ pub use array::ArrayIntrinsic;
 pub use console::ConsoleIntrinsic;
 pub use conv::ConvIntrinsic;
 pub use dict::DictIntrinsic;
+pub use env::EnvIntrinsic;
 pub use graph::GraphIntrinsic;
 pub use math::MathIntrinsic;
 pub use option::OptionIntrinsic;
@@ -52,6 +54,8 @@ pub enum Intrinsic {
     Array(ArrayIntrinsic),
     /// `Std.Dict.*` intrinsics.
     Dict(DictIntrinsic),
+    /// `Std.Env.*` intrinsics.
+    Env(EnvIntrinsic),
     /// `Std.Graph.*` intrinsics.
     Graph(GraphIntrinsic),
     /// `Std.Result.*` intrinsics.
@@ -75,6 +79,7 @@ impl From<Intrinsic> for u16 {
             Intrinsic::Random(x) => x as u16,
             Intrinsic::Array(x) => x as u16,
             Intrinsic::Dict(x) => x as u16,
+            Intrinsic::Env(x) => x as u16,
             Intrinsic::Graph(x) => x as u16,
             Intrinsic::Result(x) => x as u16,
             Intrinsic::Option(x) => x as u16,
@@ -112,6 +117,9 @@ impl Intrinsic {
         }
         if let Ok(x) = DictIntrinsic::try_from(raw) {
             return Some(Self::Dict(x));
+        }
+        if let Ok(x) = EnvIntrinsic::try_from(raw) {
+            return Some(Self::Env(x));
         }
         if let Ok(x) = GraphIntrinsic::try_from(raw) {
             return Some(Self::Graph(x));

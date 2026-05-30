@@ -5,6 +5,9 @@ pub(in super::super) const STD_ARGS_SYMBOLS: &[&str] = &[
     std_symbols::STD_ARGS_PARAM_STR,
 ];
 
+pub(in super::super) const STD_ENV_SYMBOLS: &[&str] =
+    &[std_symbols::STD_ENV_GET, std_symbols::STD_ENV_EXISTS];
+
 pub(in super::super) const STD_CONSOLE_SYMBOLS: &[&str] = &[
     std_symbols::STD_CONSOLE_WRITE_LN,
     std_symbols::STD_CONSOLE_WRITE,

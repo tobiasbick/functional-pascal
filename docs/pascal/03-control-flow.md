@@ -31,7 +31,7 @@ The `case` expression may have any of the following types:
 
 - an ordinal type: `integer`, `boolean`, `char`, or an `enum`
 - `string`
-- `Result<T, E>` or `Option<T>`
+- `Result of T, E` or `Option of T`
 
 Simple scalar matching (integers, chars, strings, booleans, simple enums) is
 shown below. Guard clauses (`label if cond:`), destructuring patterns

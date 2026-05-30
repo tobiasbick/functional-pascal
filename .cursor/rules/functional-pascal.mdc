@@ -1,5 +1,5 @@
 ---
-description: Functional Pascal (FPAS) — syntax, reference types, mutability, Std library, pitfalls when editing .fpas sources. Canonical spec under docs/pascal/.
+description: Functional Pascal (FPAS) — syntax, mutability, Std library, pitfalls when editing .fpas sources. Canonical spec under docs/pascal/.
 globs: "**/*.fpas"
 alwaysApply: false
 ---
@@ -41,7 +41,6 @@ end;
 | `dict of K to V` | `['key': value]`, `[:]` — insertion-ordered key-value map |
 | `Result of T, E` | `Ok(value)`, `Error(value)` — success or error |
 | `Option of T` | `Some(value)`, `None` — present or absent |
-| `ref T` | `ref Node`, `new Node with ... end` — shared reference to a heap-allocated record |
 
 ## Variables and Constants
 
@@ -52,8 +51,6 @@ var Name: string := 'Alice';
 mutable var Count: integer := 0;
 const MaxSize: integer := 1024;
 ```
-
-`ref` bindings follow the same mutability rules as every other variable. Assigning a `ref` value copies the reference, not the underlying record. `new` performs runtime allocation, so it is not valid in `const` initializers.
 
 ## Functions and Procedures
 
@@ -168,36 +165,6 @@ var C: Color := Color.Red;
 
 Records can contain methods (functions/procedures). The first parameter is `Self` typed as the record. Callers use dot notation; `Self` is implicit: `A.DistanceTo(B)`. Field assignment requires `mutable var`.
 
-### Reference Types
-
-Use `ref T` for shared, heap-allocated records and recursive structures:
-
-```pascal
-type
-  Node = record
-    Value: integer;
-    Next: Option of ref Node;
-  end;
-
-mutable var Head: ref Node := new Node with
-  Value := 1;
-  Next := None;
-end;
-
-var Alias: ref Node := Head;
-
-begin
-  Head.Value := 2;
-  WriteLn(IntToStr(Alias.Value))
-end.
-```
-
-- `new T with ... end` allocates a record and returns `ref T`
-- assignment of `ref` shares the same underlying record
-- field access, indexing, and method calls dereference `ref` automatically
-- writing through a `ref` still requires the binding used for the write to be declared with `mutable var`
-- `new` is valid only for record types, and every field must be initialized exactly once
-
 ### Enums with Associated Data
 
 Enum variants can carry data fields (like tagged unions):
@@ -293,15 +260,21 @@ end.
 | Unit | Purpose | Key symbols |
 |------|---------|------------|
 | `Std.Console` | Text I/O, CRT screen, keyboard, events | `WriteLn`, `Write`, `ReadLn`, `ReadKey`, `ReadKeyEvent`, `KeyPressed`, `ReadEvent`, `ReadEventTimeout`, `PollEvent`, `ClrScr`, `GotoXY`, `TextColor`, `TextBackground`, `TextColorRGB`, `TextColor256`, `Window`, `Delay`, `CursorOn`, `CursorOff`, raw mode / alt screen helpers |
-| `Std.Tui` | Terminal app session, resize/redraw loop | `Application.Open`, `Application.Close`, `Application.Size`, `Application.ReadEvent`, `Application.ReadEventTimeout`, `Application.PollEvent`, `Application.RequestRedraw`, `Application.RedrawPending`, `TuiEvent`, `EventKind` (uses `Std.Console.KeyEvent` for key payloads) |
+| `Std.Args` | Process arguments after `--` | `ParamCount`, `ParamStr` |
+| `Std.Env` | Process environment | `Get`, `Exists` |
+| `Std.Graph` | Native windowed graphics | `Application.Open`, `Application.DrawLine`, `Application.DrawText`, `Application.PollEvent`, `Event`, `EventKind`, … |
+| `Std.Tui` | Terminal applications | Hosted: `Application.Configure`, `Application.Run`, `ApplicationHandlers`, `On*` handlers. Poll-style: `Application.Open`, `Application.ReadEvent`, `Application.PollEvent`, `RequestRedraw`, `TuiEvent`, `EventKind` |
 | `Std.Str` | String operations | `Length`, `ToUpper`, `ToLower`, `Trim`, `Contains`, `StartsWith`, `EndsWith`, `Substring`, `IndexOf`, `Replace`, `Split`, `Join`, `IsNumeric`, `Format`, … |
 | `Std.Conv` | Type conversions | `IntToStr`, `StrToInt`, `IntToReal`, `RealToStr`, `StrToReal`, `CharToStr`, `BoolToStr`, … |
 | `Std.Math` | Math functions | `Pi`, `Sqrt`, `Pow`, `Floor`, `Ceil`, `Round`, `Sin`, `Cos`, `Log`, `Abs`, `Min`, `Max`, `Clamp`, … |
+| `Std.Random` | Pseudo-random numbers | `Random`, `RandomInt`, `Randomize` |
 | `Std.Array` | Array operations | `Length`, `Sort`, `Reverse`, `Contains`, `IndexOf`, `Slice`, `Push` (mutable), `Pop` (mutable), `Map`, `Filter`, `Reduce`, … |
 | `Std.Dict` | Dict operations | `Length`, `ContainsKey`, `Keys`, `Values`, `Remove`, `Get`, `Merge` |
 | `Std.Result` | Result helpers | `Unwrap`, `UnwrapOr`, `IsOk`, `IsError`, `Map`, `AndThen`, `OrElse` |
 | `Std.Option` | Option helpers | `Unwrap`, `UnwrapOr`, `IsSome`, `IsNone`, `Map`, `AndThen`, `OrElse` |
 | `Std.Task` | Task synchronization (`go`) | `Wait`, `WaitAll` |
+
+Full TUI dispatch details: [`docs/pascal/std/tui-app.md`](../../docs/pascal/std/tui-app.md). Per-unit reference: [`docs/pascal/std/README.md`](../../docs/pascal/std/README.md).
 
 **Ambiguous names** — always qualify these:
 - `Length`, `Contains`, `IndexOf` across `Std.Str`, `Std.Array`, `Std.Dict`
@@ -433,4 +406,4 @@ include = ["src/**/*.fpas"]
 8. **Single quotes for strings** — `'Hello'`, doubled for escaping: `'It''s'`
 9. **`Result`/`Option` for expected errors** — `panic` only for broken invariants
 10. **`try` propagates errors** — unwraps or returns early
-11. **`ref` is shared** — `new T with ... end` allocates a shared record; assignment aliases it; writes through it need a mutable binding
+11. **Full TUI apps use hosted dispatch** — `Application.Configure` + `Application.Run`; poll-style `ReadEvent` is for scripts only

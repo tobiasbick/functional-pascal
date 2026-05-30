@@ -14,6 +14,7 @@ A modern, function-first programming language built on Pascal's readable syntax.
 - **First-class functions** — Pass named functions as values, store them in variables, and use them with higher-order APIs.
 - **Error handling** — Built-in `Result of T, E` and `Option of T` types with a `try` operator for propagation.
 - **Concurrency** — Go-inspired `go` tasks with `Wait` and `WaitAll` for fork-join concurrency.
+- **Standard library** — Built-in `Std.*` units for console I/O, TUI, native graphics, strings, math, arrays, tasks, and more.
 - **Safe by design** — The VM manages memory. No pointers, no manual allocation, no unsafe operations.
 - **Case-insensitive** — Keywords and identifiers are case-insensitive, following Pascal tradition.
 - **Explicit types** — Every variable and parameter declares its type.
@@ -28,7 +29,13 @@ cd functional-pascal
 cargo build --release
 ```
 
-The binary is at `target/release/fpas` (or `fpas.exe` on Windows).
+The binary is at `target/release/fpas` (or `fpas.exe` on Windows). Run it directly or add `target/release` to your `PATH`.
+
+Alternatively, run without installing:
+
+```sh
+cargo run -p fpas-cli -- examples/hello.fpas
+```
 
 ### Hello World
 
@@ -159,6 +166,14 @@ The full language documentation is in [`docs/pascal/`](docs/pascal/):
 9. [Units](docs/pascal/09-units.md)
 10. [Projects](docs/pascal/10-projects.md)
 11. [Standard Library](docs/pascal/11-stdlib.md)
+
+Rust contributor docs (VM layout, TUI checklists): [`docs/rust/`](docs/rust/).
+
+## Contributing
+
+- Language spec: [`docs/pascal/`](docs/pascal/) (source of truth)
+- AI agents: [`AI_CONTRIBUTING.md`](AI_CONTRIBUTING.md) and [`AGENTS.md`](AGENTS.md)
+- Examples: [`examples/README.md`](examples/README.md)
 
 ## Project Structure
 

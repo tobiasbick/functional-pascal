@@ -43,7 +43,7 @@ include = ["src/**/*.fpas"]
 ### Project Kinds
 
 - **`program`** — produces an executable. Requires `main` pointing to a file with a `program` declaration. The entry point is exactly one main program file per project.
-- **`library`** — a reusable library. Must not define `main`. Source files are expected to use `unit` declarations.
+- **`library`** — a reusable library. Must not define `main`. Source files are expected to use `unit` declarations. The CLI can load library projects for validation but **cannot execute** them; export and consumption rules are not yet defined (see [Future: Libraries](../future/libraries.md)).
 
 ### `[sources]` Section
 

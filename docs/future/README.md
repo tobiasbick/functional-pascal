@@ -8,11 +8,11 @@ Open planning items for Functional Pascal.
 
 ## TUI roadmap
 
-Turbo Vision–style direction: Rust-hosted event loop, FPAS `On*` handlers and `RunApp`-style entry, migration away from poll-heavy console usage. See [`tui-application-framework.md`](tui-application-framework.md).
+Hosted terminal UI is **implemented**: Rust-owned event loop, FPAS `On*` handlers, and `Application.Run` as the primary entry for full apps. Poll-style `ReadEvent` APIs remain for scripts. Implementation history and remaining ideas: [`tui-application-framework.md`](tui-application-framework.md). User-facing spec: [`docs/pascal/std/tui-app.md`](../pascal/std/tui-app.md).
 
 ## Standard library roadmap
 
-Future `Std.*` units for CLI, environment, paths, filesystem, time, JSON, and parsing. See [`std-roadmap.md`](std-roadmap.md).
+Implemented today: `Std.Console`, `Std.Args`, `Std.Env`, `Std.Graph`, `Std.Tui`, `Std.Str`, `Std.Conv`, `Std.Math`, `Std.Random`, `Std.Array`, `Std.Dict`, `Std.Result`, `Std.Option`, `Std.Task`. Planned additions (paths, filesystem, time, JSON, parsing): [`std-roadmap.md`](std-roadmap.md).
 
 ## Under Consideration
 

@@ -12,7 +12,7 @@ Turbo Vision–style direction: Rust-hosted event loop, FPAS `On*` handlers and 
 
 ## Standard library roadmap
 
-Future `Std.*` units for CLI, environment, paths, filesystem, time, random, JSON, and parsing. See [`std-roadmap.md`](std-roadmap.md).
+Future `Std.*` units for CLI, environment, paths, filesystem, time, JSON, and parsing. See [`std-roadmap.md`](std-roadmap.md).
 
 ## Under Consideration
 

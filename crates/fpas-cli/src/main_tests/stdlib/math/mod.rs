@@ -11,7 +11,6 @@ mod log10_log2;
 mod min_max;
 mod pi_constant;
 mod pow;
-mod random_randomint_randomize;
 mod sign;
 mod sin_cos;
 mod sqrt;

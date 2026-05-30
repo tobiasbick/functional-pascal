@@ -14,22 +14,6 @@ Functional Pascal already has a useful `Std.*` surface for console programs, TUI
 
 ## Near-Term Units
 
-### `Std.Random`
-
-Move random helpers out of `Std.Math`.
-
-Initial scope:
-
-- `Randomize` or an equivalent seed initializer.
-- integer range generation.
-- real number generation if the numeric runtime semantics are stable enough.
-
-Implementation notes:
-
-- Preserve existing behavior while moving the public unit boundary.
-- Decide whether random state is global VM state or an explicit value before adding richer APIs.
-- Keep deterministic tests possible by exposing a seeded path or test-only hook.
-
 ### `Std.Args`
 
 Add command-line argument access for CLI programs.
@@ -191,7 +175,6 @@ For every new or moved `Std.*` API:
 ## Open Decisions
 
 - How should hosted capabilities be represented for filesystem, environment, time, and process APIs?
-- Should random state be global, seeded explicitly, or both?
 - What is the canonical representation for byte data?
 - Should filesystem text APIs assume UTF-8 only?
 - Should `Std.Fs` remain blocking-but-`go`-friendly, or should a later runtime add true non-blocking filesystem operations?

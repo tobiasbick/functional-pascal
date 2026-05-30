@@ -233,9 +233,12 @@ pub(in super::super) const STD_MATH_SYMBOLS: &[&str] = &[
     std_symbols::STD_MATH_FRAC,
     std_symbols::STD_MATH_SIGN,
     std_symbols::STD_MATH_CLAMP,
-    std_symbols::STD_MATH_RANDOM,
-    std_symbols::STD_MATH_RANDOM_INT,
-    std_symbols::STD_MATH_RANDOMIZE,
+];
+
+pub(in super::super) const STD_RANDOM_SYMBOLS: &[&str] = &[
+    std_symbols::STD_RANDOM_RANDOM,
+    std_symbols::STD_RANDOM_RANDOM_INT,
+    std_symbols::STD_RANDOM_RANDOMIZE,
 ];
 
 pub(in super::super) const STD_ARRAY_SYMBOLS: &[&str] = &[

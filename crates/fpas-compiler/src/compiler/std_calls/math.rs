@@ -161,23 +161,6 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Math(MathIntrinsic::Clamp), location);
                 Ok(true)
             }
-            s::STD_MATH_RANDOM => {
-                self.expect_exact_args(s::STD_MATH_RANDOM, 0, args, location)?;
-                self.emit_intrinsic(Intrinsic::Math(MathIntrinsic::Random), location);
-                Ok(true)
-            }
-            s::STD_MATH_RANDOM_INT => {
-                self.expect_exact_args(s::STD_MATH_RANDOM_INT, 2, args, location)?;
-                self.compile_expr(&args[0])?;
-                self.compile_expr(&args[1])?;
-                self.emit_intrinsic(Intrinsic::Math(MathIntrinsic::RandomInt), location);
-                Ok(true)
-            }
-            s::STD_MATH_RANDOMIZE => {
-                self.expect_exact_args(s::STD_MATH_RANDOMIZE, 0, args, location)?;
-                self.emit_intrinsic(Intrinsic::Math(MathIntrinsic::Randomize), location);
-                Ok(true)
-            }
             _ => Ok(false),
         }
     }

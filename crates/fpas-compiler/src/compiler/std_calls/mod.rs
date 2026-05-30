@@ -8,6 +8,7 @@ mod conv;
 mod dict;
 mod graph;
 mod math;
+mod random;
 mod result_option;
 mod str_ops;
 mod support;
@@ -44,6 +45,9 @@ impl Compiler {
             return Ok(true);
         }
         if self.compile_math_call(name, args, location)? {
+            return Ok(true);
+        }
+        if self.compile_random_call(name, args, location)? {
             return Ok(true);
         }
         if self.compile_array_call(name, args, location)? {

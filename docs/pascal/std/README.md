@@ -14,6 +14,7 @@ All units are opt-in through `uses`.
 - `Std.Str` - [str.md](str.md)
 - `Std.Conv` - [conv.md](conv.md)
 - `Std.Math` - [math.md](math.md)
+- `Std.Random` - [random.md](random.md)
 - `Std.Array` - [array.md](array.md)
 - `Std.Dict` - [dict.md](dict.md) (dictionaries — `Length`, `ContainsKey`, `Keys`, `Values`, `Remove`, `Get`, `Merge`, `Map`, `Filter`)
 - `Std.Result` - [result.md](result.md) (helpers for `Result of T, E` — `Unwrap`, `UnwrapOr`, `IsOk`, `IsError`, `Map`, `AndThen`, `OrElse`)

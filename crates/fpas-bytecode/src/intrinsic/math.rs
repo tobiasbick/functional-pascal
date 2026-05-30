@@ -69,16 +69,4 @@ pub enum MathIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/math.md`
     Clamp = 230,
-    /// `Std.Math.Random` — random real in [0, 1).
-    ///
-    /// **Documentation:** `docs/pascal/std/math.md`
-    Random = 231,
-    /// `Std.Math.RandomInt(N)` — random integer in [0, N).
-    ///
-    /// **Documentation:** `docs/pascal/std/math.md`
-    RandomInt = 232,
-    /// `Std.Math.Randomize` — seed the RNG.
-    ///
-    /// **Documentation:** `docs/pascal/std/math.md`
-    Randomize = 233,
 }

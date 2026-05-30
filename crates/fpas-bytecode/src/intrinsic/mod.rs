@@ -10,6 +10,7 @@ pub mod dict;
 pub mod graph;
 pub mod math;
 pub mod option;
+pub mod random;
 pub mod result;
 pub mod str_ops;
 pub mod task;
@@ -22,6 +23,7 @@ pub use dict::DictIntrinsic;
 pub use graph::GraphIntrinsic;
 pub use math::MathIntrinsic;
 pub use option::OptionIntrinsic;
+pub use random::RandomIntrinsic;
 pub use result::ResultIntrinsic;
 pub use str_ops::StrIntrinsic;
 pub use task::TaskIntrinsic;
@@ -40,6 +42,8 @@ pub enum Intrinsic {
     Conv(ConvIntrinsic),
     /// `Std.Math.*` intrinsics.
     Math(MathIntrinsic),
+    /// `Std.Random.*` intrinsics.
+    Random(RandomIntrinsic),
     /// `Std.Array.*` intrinsics.
     Array(ArrayIntrinsic),
     /// `Std.Dict.*` intrinsics.
@@ -63,6 +67,7 @@ impl From<Intrinsic> for u16 {
             Intrinsic::Str(x) => x as u16,
             Intrinsic::Conv(x) => x as u16,
             Intrinsic::Math(x) => x as u16,
+            Intrinsic::Random(x) => x as u16,
             Intrinsic::Array(x) => x as u16,
             Intrinsic::Dict(x) => x as u16,
             Intrinsic::Graph(x) => x as u16,
@@ -90,6 +95,9 @@ impl Intrinsic {
         }
         if let Ok(x) = MathIntrinsic::try_from(raw) {
             return Some(Self::Math(x));
+        }
+        if let Ok(x) = RandomIntrinsic::try_from(raw) {
+            return Some(Self::Random(x));
         }
         if let Ok(x) = ArrayIntrinsic::try_from(raw) {
             return Some(Self::Array(x));

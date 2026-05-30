@@ -4,5 +4,6 @@ mod conv;
 mod dict;
 mod math;
 mod option;
+mod random;
 mod result;
 mod str;

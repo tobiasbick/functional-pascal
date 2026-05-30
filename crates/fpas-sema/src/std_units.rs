@@ -3,7 +3,7 @@
 use fpas_parser::QualifiedId;
 use fpas_std::{
     STD_UNITS_KNOWN, canonical_std_unit_from_segments, canonical_std_unit_from_tail,
-    is_std_root_segment,
+    is_std_root_segment, std_unit_symbols,
 };
 use std::collections::HashSet;
 
@@ -118,10 +118,10 @@ pub fn hint_for_unknown_std_name(name: &str, loaded: &HashSet<String>) -> String
     // Short (unqualified) name — check if it belongs to any known unit
     for unit in STD_UNITS_KNOWN {
         let candidate = format!("{unit}.{name}");
-        if let Some((u, _)) = parse_std_qualified_call(&candidate)
-            && !loaded.contains(&u)
-        {
-            return format!("`{name}` may be `{candidate}`. Add `uses {u};` to import the unit.");
+        if std_unit_symbols(unit).contains(&candidate.as_str()) && !loaded.contains(*unit) {
+            return format!(
+                "`{name}` may be `{candidate}`. Add `uses {unit};` to import the unit."
+            );
         }
     }
 

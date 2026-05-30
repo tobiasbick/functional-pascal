@@ -5,10 +5,9 @@
 //! `fpas-bytecode::Intrinsic`, `fpas-compiler` (`Std.Math.Pi` and call lowering), and `fpas-sema` `std_registry.rs`.
 
 use crate::error::{StdError, std_runtime_error};
-use crate::helpers::{pop_int, pop_real, pop_value};
+use crate::helpers::{pop_real, pop_value};
 use fpas_bytecode::{Intrinsic, MathIntrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::{RUNTIME_NUMERIC_DOMAIN_ERROR, RUNTIME_VM_OPERAND_TYPE_MISMATCH};
-use rand::Rng;
 
 const INTEGER_RANGE_HINT: &str = "Use a finite value whose rounded result fits in the integer range -9223372036854775808..9223372036854775807.";
 
@@ -179,30 +178,6 @@ pub(crate) fn run(
             let lo = pop_value(stack, location)?;
             let x = pop_value(stack, location)?;
             stack.push(clamp_value(x, lo, hi, location)?);
-        }
-        Intrinsic::Math(MathIntrinsic::Random) => {
-            let mut rng = rand::rng();
-            let r: f64 = rng.random();
-            stack.push(Value::Real(r));
-        }
-        Intrinsic::Math(MathIntrinsic::RandomInt) => {
-            let hi = pop_int(pop_value(stack, location)?, location)?;
-            let lo = pop_int(pop_value(stack, location)?, location)?;
-            if lo > hi {
-                return Err(std_runtime_error(
-                    RUNTIME_NUMERIC_DOMAIN_ERROR,
-                    format!("RandomInt lower bound {lo} must be <= upper bound {hi}"),
-                    "Pass bounds where `Lo <= Hi` to Std.Math.RandomInt.",
-                    location,
-                ));
-            }
-            let mut rng = rand::rng();
-            let r: i64 = rng.random_range(lo..=hi);
-            stack.push(Value::Integer(r));
-        }
-        Intrinsic::Math(MathIntrinsic::Randomize) => {
-            // Randomize is a no-op when using `rand::rng()` (automatically seeded per thread).
-            stack.push(Value::Unit);
         }
         _ => return Ok(None),
     }

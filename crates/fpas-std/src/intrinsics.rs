@@ -1,4 +1,4 @@
-//! Dispatches `Op::Intrinsic` to unit modules (`str`, `conv`, `math`, `array`, `result_option`, `dict`).
+//! Dispatches `Op::Intrinsic` to unit modules (`str`, `conv`, `math`, `random`, `array`, `result_option`, `dict`).
 //! Console, TUI, task wait, and higher-order (callback) intrinsics are handled in `fpas-vm`, not here.
 //!
 //! **Documentation:** `docs/pascal/std/README.md` (from the repository root).
@@ -10,6 +10,7 @@ use crate::conv;
 use crate::dict;
 use crate::error::{StdError, std_internal_error};
 use crate::math;
+use crate::random;
 use crate::result_option;
 use crate::str;
 use fpas_bytecode::{
@@ -162,6 +163,9 @@ pub fn run_intrinsic(
         return Ok(());
     }
     if math::run(intrinsic, stack, location)?.is_some() {
+        return Ok(());
+    }
+    if random::run(intrinsic, stack, location)?.is_some() {
         return Ok(());
     }
     if array::run(intrinsic, stack, location)?.is_some() {

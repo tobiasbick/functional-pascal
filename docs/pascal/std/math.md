@@ -52,9 +52,6 @@ Requires `uses Std.Math;`.
 | function | `Frac(R: real): real` | fractional part |
 | function | `Sign(N)` | `-1`, `0`, or `1` (`integer` or `real` input) |
 | function | `Clamp(V; Lo; Hi)` | restrict to range (`integer` or `real`) |
-| function | `Random(): real` | pseudo-random `[0.0, 1.0)` |
-| function | `RandomInt(Lo: integer; Hi: integer): integer` | random in `[Lo, Hi]` |
-| procedure | `Randomize()` | seed RNG from system entropy |
 
 ---
 
@@ -286,41 +283,6 @@ Returns `V` constrained to `[Lo, Hi]`. All three arguments must be the same nume
 WriteLn(Clamp(150, 0, 100));     { 100 }
 WriteLn(Clamp(-5, 0, 100));      { 0 }
 WriteLn(Clamp(1.5, 0.0, 1.0))   { 1.0 }
-```
-
----
-
-## `function Random(): real`
-
-Returns a pseudo-random real number in `[0.0, 1.0)`.
-
-```pascal
-Randomize();
-var R: real := Random();
-WriteLn(R)
-```
-
----
-
-## `function RandomInt(Lo: integer; Hi: integer): integer`
-
-Returns a pseudo-random integer in `[Lo, Hi]` inclusive.
-
-```pascal
-Randomize();
-var Die: integer := RandomInt(1, 6);
-WriteLn(Die)
-```
-
----
-
-## `procedure Randomize()`
-
-Seeds the random number generator from system entropy. Call once at program start for non-deterministic results.
-
-```pascal
-Randomize();
-WriteLn(Random())
 ```
 
 ---

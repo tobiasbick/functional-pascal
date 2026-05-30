@@ -28,7 +28,8 @@ See [09-units.md](09-units.md) for `uses` rules, short name ambiguity, and the r
 | [`Std.Tui`](std/tui.md) | Terminal application structure | `Application.Open`, `Application.ReadEvent`, `Application.Size`, `TuiEvent`, `Size`, `RequestRedraw`, … | [tui.md](std/tui.md) |
 | [`Std.Str`](std/str.md) | String operations | `Length`, `ToUpper`, `Contains`, `Split`, `Join`, `PadLeft`, `CharAt`, `Ord`, `Chr`, `Format`, … | [str.md](std/str.md) |
 | [`Std.Conv`](std/conv.md) | Type conversions | `IntToStr`, `StrToInt`, `RealToStr`, `BoolToStr`, `IntToHex`, … | [conv.md](std/conv.md) |
-| [`Std.Math`](std/math.md) | Mathematical functions | `Pi`, `Abs`, `Sqrt`, `Pow`, `Sin`, `Cos`, `Tan`, `Log`, `Exp`, `Clamp`, `Random`, … | [math.md](std/math.md) |
+| [`Std.Math`](std/math.md) | Mathematical functions | `Pi`, `Abs`, `Sqrt`, `Pow`, `Sin`, `Cos`, `Tan`, `Log`, `Exp`, `Clamp`, … | [math.md](std/math.md) |
+| [`Std.Random`](std/random.md) | Pseudo-random numbers | `Random`, `RandomInt`, `Randomize` | [random.md](std/random.md) |
 | [`Std.Array`](std/array.md) | Array helpers | `Length`, `Push`, `Pop`, `Sort`, `Slice`, `Map`, `Filter`, `Reduce`, `Find`, `Any`, `All`, … | [array.md](std/array.md) |
 | [`Std.Dict`](std/dict.md) | Dictionary helpers | `Length`, `ContainsKey`, `Keys`, `Values`, `Remove`, `Get`, `Merge` | [dict.md](std/dict.md) |
 | [`Std.Result`](std/result.md) | Result helpers | `Unwrap`, `UnwrapOr`, `IsOk`, `IsError`, `Map`, `AndThen`, `OrElse` | [result.md](std/result.md) |
@@ -97,6 +98,15 @@ uses Std.Math;
 
 var Root: real := Sqrt(16.0);
 var A: integer := Abs(-5);
+```
+
+### Random
+
+```pascal
+uses Std.Random;
+
+Randomize();
+var Die: integer := RandomInt(1, 6);
 ```
 
 ### Arrays

@@ -1,4 +1,4 @@
-use super::super::{define_builtin_std, define_const, define_func, define_proc, p};
+use super::super::{define_builtin_std, define_const, define_func, p};
 use crate::check::Checker;
 use crate::types::{FunctionTy, Ty};
 use fpas_std::std_symbols as s;
@@ -113,15 +113,6 @@ pub(super) fn register_std_math(checker: &mut Checker) {
         vec![p("R", Ty::Real, false)],
         Ty::Real,
     );
-    define_func(checker, s::STD_MATH_RANDOM, vec![], Ty::Real);
-    define_func(
-        checker,
-        s::STD_MATH_RANDOM_INT,
-        vec![p("Lo", Ty::Integer, false), p("Hi", Ty::Integer, false)],
-        Ty::Integer,
-    );
-    define_proc(checker, s::STD_MATH_RANDOMIZE, vec![]);
-
     define_builtin_std(
         checker,
         s::STD_MATH_ABS,

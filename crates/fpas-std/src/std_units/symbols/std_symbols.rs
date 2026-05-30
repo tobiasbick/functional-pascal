@@ -28,6 +28,11 @@ macro_rules! std_math {
         concat!("Std.Math.", $suffix)
     };
 }
+macro_rules! std_random {
+    ($suffix:literal) => {
+        concat!("Std.Random.", $suffix)
+    };
+}
 macro_rules! std_array {
     ($suffix:literal) => {
         concat!("Std.Array.", $suffix)
@@ -328,9 +333,10 @@ pub const STD_MATH_TRUNC: &str = std_math!("Trunc");
 pub const STD_MATH_FRAC: &str = std_math!("Frac");
 pub const STD_MATH_SIGN: &str = std_math!("Sign");
 pub const STD_MATH_CLAMP: &str = std_math!("Clamp");
-pub const STD_MATH_RANDOM: &str = std_math!("Random");
-pub const STD_MATH_RANDOM_INT: &str = std_math!("RandomInt");
-pub const STD_MATH_RANDOMIZE: &str = std_math!("Randomize");
+
+pub const STD_RANDOM_RANDOM: &str = std_random!("Random");
+pub const STD_RANDOM_RANDOM_INT: &str = std_random!("RandomInt");
+pub const STD_RANDOM_RANDOMIZE: &str = std_random!("Randomize");
 
 pub const STD_ARRAY_LENGTH: &str = std_array!("Length");
 pub const STD_ARRAY_SORT: &str = std_array!("Sort");

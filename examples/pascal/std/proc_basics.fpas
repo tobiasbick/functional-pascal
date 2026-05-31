@@ -1,0 +1,8 @@
+{ Spec: docs/pascal/std/proc.md (from repository root). }
+program ProcBasics;
+uses Std.Console, Std.Proc, Std.Result;
+begin
+  var Status: Result of integer, string := Run('__fpas_missing_command_8f21d2f4__', []);
+  WriteLn('missing command error: ', Std.Result.IsError(Status));
+  WriteLn('fallback code: ', Std.Result.UnwrapOr(Status, -1))
+end.

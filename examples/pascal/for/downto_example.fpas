@@ -1,0 +1,10 @@
+{ Spec: docs/pascal/03-control-flow.md (from repository root). }
+program DowntoExample;
+uses Std.Console, Std.Conv;
+begin
+  mutable var Sum: integer := 0;
+  for I: integer := 5 downto 1 do
+    Sum := Sum + I;
+
+  WriteLn('sum: ', IntToStr(Sum))
+end.

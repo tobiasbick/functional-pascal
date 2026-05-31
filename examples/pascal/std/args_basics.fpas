@@ -1,0 +1,10 @@
+{ Spec: docs/pascal/std/args.md (from repository root). }
+program ArgsBasics;
+uses Std.Console, Std.Args, Std.Conv;
+begin
+  WriteLn('count: ', IntToStr(ParamCount()));
+  if ParamCount() > 0 then
+    WriteLn('first: ', ParamStr(0))
+  else
+    WriteLn('first: <none>')
+end.

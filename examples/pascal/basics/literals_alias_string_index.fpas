@@ -1,0 +1,19 @@
+{ Spec: docs/pascal/02-basics.md (from repository root). }
+program LiteralsAliasStringIndex;
+uses Std.Console, Std.Conv, Std.Str;
+
+type Score = integer;
+
+const HexMask: integer := $0F;
+const BigScore: integer := 1_000;
+
+begin
+  var Name: string := 'FPAS';
+  var First: char := Name[0];
+  var Last: char := Name[Length(Name) - 1];
+  var Total: Score := BigScore + HexMask;
+
+  WriteLn('total: ', IntToStr(Total));
+  WriteLn('first: ', CharToStr(First));
+  WriteLn('last: ', CharToStr(Last))
+end.

@@ -1,0 +1,13 @@
+{ Spec: docs/pascal/std/parse.md (from repository root). }
+program ParseBasics;
+uses Std.Console, Std.Conv, Std.Parse, Std.Result;
+begin
+  var ParsedInt: Result of integer, string := TryInt(' +1_024 ');
+  var ParsedReal: Result of real, string := TryReal('1_024.0e-2');
+  var ParsedBool: Result of boolean, string := TryBool(' FALSE ');
+
+  WriteLn('int: ', IntToStr(Std.Result.UnwrapOr(ParsedInt, 0)));
+  WriteLn('real ok: ', Std.Result.IsOk(ParsedReal));
+  WriteLn('bool: ', Std.Result.UnwrapOr(ParsedBool, true));
+  WriteLn('bad int error: ', Std.Result.IsError(TryInt('nope')))
+end.

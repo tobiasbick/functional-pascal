@@ -1,0 +1,11 @@
+{ Spec: docs/pascal/std/time.md (from repository root). }
+program TimeBasics;
+uses Std.Console, Std.Time;
+begin
+  var Start: integer := MonotonicMillis();
+  Sleep(0);
+
+  var Elapsed: integer := ElapsedMillis(Start);
+  WriteLn('elapsed non-negative: ', Elapsed >= 0);
+  WriteLn('timestamp positive: ', TimestampMillis() > 0)
+end.

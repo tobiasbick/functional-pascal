@@ -1,0 +1,18 @@
+{ Spec: docs/pascal/03-control-flow.md (from repository root). }
+program WhileRepeatExample;
+uses Std.Console, Std.Conv;
+begin
+  mutable var Count: integer := 0;
+  while Count < 3 do
+  begin
+    WriteLn('while: ', IntToStr(Count));
+    Count := Count + 1
+  end;
+
+  mutable var Text: string := '';
+  repeat
+    Text := Text + 'x'
+  until Text = 'xxx';
+
+  WriteLn('repeat: ', Text)
+end.

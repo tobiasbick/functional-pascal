@@ -11,8 +11,10 @@ Use when the file begins with `program` and only imports `Std.*` (or needs no ot
 ```sh
 fpas examples/hello.fpas
 fpas examples/fibonacci.fpas
+fpas examples/pascal/std/args_basics.fpas -- one two
 fpas examples/pascal/std/str_basics.fpas
 fpas examples/pascal/std/dict_basics.fpas
+fpas examples/pascal/std/json_basics.fpas
 fpas examples/pascal/std/graph_basics.fpas
 fpas examples/pascal/std/task_basics.fpas
 fpas examples/math/mandelbrot/mandelbrot_graph.fpas
@@ -42,18 +44,31 @@ Do **not** pass a `unit` source alone (for example `mandelbrot_color.fpas` or `m
 |------|--------|
 | `hello.fpas` | Minimal `program` / `uses` / `begin` … `end.` |
 | `fibonacci.fpas` | Recursion and counting `for` loops |
+| `pascal/basics/literals_alias_string_index.fpas` | Constants, number literals, type aliases, and string indexing |
+| `pascal/control-flow/while_repeat_example.fpas` | `while` and `repeat until` loops |
+| `pascal/functions/mutable_nested_functions.fpas` | Mutable parameters, nested functions, and mutual recursion |
 | `pascal/higher-order-functions/higher_order_functions.fpas` | First-class functions and array helpers |
 | `pascal/enum-data/` | Enums with associated data and `case` |
 | `pascal/error-handling/` | `Result`, `Option`, `panic`, and `try` |
-| `pascal/for/` and `pascal/for-in/` | Counting loops and `for … in` |
+| `pascal/for/` and `pascal/for-in/` | Counting loops, `downto`, array `for … in`, and dict key iteration |
 | `pascal/generics/generic_functions.fpas` | Generic functions |
+| `pascal/generics/generic_record_methods.fpas` | Method-level generics and constraints on record methods |
 | `pascal/pattern-matching/` | Guards and exhaustiveness |
 | `pascal/record-methods/` | Record methods |
 | `pascal/records/defaults_with_update.fpas` | Default fields and `with` updates |
+| `pascal/std/args_basics.fpas` | `Std.Args` — arguments passed after `--` |
 | `pascal/std/str_basics.fpas` | `Std.Str` — trim, split/join, `Format`, search/replace |
 | `pascal/std/dict_basics.fpas` | `Std.Dict` — literals, `Get`, `Merge`, `Map`/`Filter` (qualified when also using `Std.Array` / `Std.Option`) |
+| `pascal/std/env_basics.fpas` | `Std.Env` — environment lookup and missing values |
+| `pascal/std/fs_basics.fpas` | `Std.Fs` — create directories, write/read UTF-8 text, path checks |
 | `pascal/std/graph_basics.fpas` | `Std.Graph` — open, draw, present, poll, close |
+| `pascal/std/json_basics.fpas` | `Std.Json` — parse, inspect, and stringify JSON trees |
+| `pascal/std/parse_basics.fpas` | `Std.Parse` — `Result`-based integer, real, and boolean parsing |
+| `pascal/std/path_basics.fpas` | `Std.Path` — join, normalize, basename, dirname, extension |
+| `pascal/std/proc_basics.fpas` | `Std.Proc` — process launch failure as `Result` |
+| `pascal/std/random_basics.fpas` | `Std.Random` — random real and inclusive integer ranges |
 | `pascal/std/task_basics.fpas` | `Std.Task` — `go`, `Wait`, `WaitAll` |
+| `pascal/std/time_basics.fpas` | `Std.Time` — monotonic time, elapsed time, timestamp, sleep |
 | `math/mandelbrot/mandelbrot_graph.fpas` | `Std.Graph` — native Mandelbrot explorer |
 | `pascal/tui/local_view_paint.fpas` | `Std.Tui` — local view paint, parent-relative layout, `HostSetViewRect` |
 | `pascal/tui/view_scoped_commands.fpas` | `Std.Tui` — `HostBindCommandToView` and focus/ancestor command routing |

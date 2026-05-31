@@ -1,0 +1,33 @@
+{ Spec: docs/pascal/05-types.md (from repository root). }
+program GenericRecordMethods;
+uses Std.Console, Std.Conv;
+
+type Box = record
+  Value: integer;
+
+  function Map<R>(Self: Box; F: function(X: integer): R): R;
+  begin
+    return F(Self.Value)
+  end;
+end;
+
+type Accumulator = record
+  function EchoNumeric<T: Numeric>(Self: Accumulator; Extra: T): T;
+  begin
+    return Extra
+  end;
+end;
+
+function ToText(X: integer): string;
+begin
+  return 'value=' + IntToStr(X)
+end;
+
+begin
+  var B: Box := record Value := 42; end;
+  WriteLn(B.Map(ToText));
+
+  var A: Accumulator := record end;
+  WriteLn('numeric int: ', IntToStr(A.EchoNumeric(21)));
+  WriteLn('numeric real ok: ', A.EchoNumeric(1.5) > 1.0)
+end.

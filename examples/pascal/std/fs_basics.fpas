@@ -1,0 +1,20 @@
+{ Spec: docs/pascal/std/fs.md (from repository root). }
+program FsBasics;
+uses Std.Console, Std.Fs, Std.Result;
+begin
+  var TargetDir: Result of boolean, string := CreateDir('target');
+  var TmpDir: Result of boolean, string := CreateDir('target/tmp');
+  var FilePath: string := 'target/tmp/fpas_fs_basics.txt';
+
+  var Written: Result of boolean, string := WriteText(FilePath, 'hello from fpas');
+  WriteLn('write ok: ', Std.Result.IsOk(Written));
+
+  case ReadText(FilePath) of
+    Ok(Text): WriteLn('read: ', Text);
+    Error(Message): WriteLn('read error: ', Message)
+  end;
+
+  WriteLn('exists: ', Exists(FilePath));
+  WriteLn('is file: ', IsFile(FilePath));
+  WriteLn('target is dir: ', IsDir('target'))
+end.

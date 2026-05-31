@@ -1,0 +1,15 @@
+{ Spec: docs/pascal/03-control-flow.md (from repository root). }
+program DictForInExample;
+uses Std.Console, Std.Conv, Std.Dict;
+begin
+  var Ages: dict of string to integer := ['Ada': 37, 'Bob': 29, 'Cara': 41];
+  mutable var Total: integer := 0;
+
+  for Name: string in Ages do
+  begin
+    WriteLn(Name + ': ' + IntToStr(Ages[Name]));
+    Total := Total + Ages[Name]
+  end;
+
+  WriteLn('total: ', IntToStr(Total))
+end.

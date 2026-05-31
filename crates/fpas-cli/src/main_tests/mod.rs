@@ -11,6 +11,7 @@ use std::path::Path;
 
 mod concurrency;
 mod diagnostics;
+mod examples;
 mod input;
 mod projects;
 mod stdlib;

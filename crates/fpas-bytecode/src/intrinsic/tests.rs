@@ -193,6 +193,8 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Graph(GraphIntrinsic::ApplicationFillRect),
     Intrinsic::Graph(GraphIntrinsic::ApplicationDrawCircle),
     Intrinsic::Graph(GraphIntrinsic::ApplicationDrawText),
+    Intrinsic::Json(JsonIntrinsic::Parse),
+    Intrinsic::Json(JsonIntrinsic::Stringify),
     Intrinsic::Tui(TuiIntrinsic::ApplicationOpen),
     Intrinsic::Tui(TuiIntrinsic::ApplicationClose),
     Intrinsic::Tui(TuiIntrinsic::ApplicationSize),

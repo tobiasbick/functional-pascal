@@ -22,6 +22,7 @@ All units are opt-in through `uses`.
 - `Std.Random` - [random.md](random.md)
 - `Std.Array` - [array.md](array.md)
 - `Std.Dict` - [dict.md](dict.md) (dictionaries — `Length`, `ContainsKey`, `Keys`, `Values`, `Remove`, `Get`, `Merge`, `Map`, `Filter`)
+- `Std.Json` - [json.md](json.md) (`JsonValue`, `Parse`, `Stringify` for JSON trees)
 - `Std.Result` - [result.md](result.md) (helpers for `Result of T, E` — `Unwrap`, `UnwrapOr`, `IsOk`, `IsError`, `Map`, `AndThen`, `OrElse`)
 - `Std.Option` - [option.md](option.md) (helpers for `Option of T` — `Unwrap`, `UnwrapOr`, `IsSome`, `IsNone`, `Map`, `AndThen`, `OrElse`)
 - `Std.Task` - [task.md](task.md) (`Wait`, `WaitAll` — blocking on `task` handles from `go`; language rules in [08-concurrency.md](../08-concurrency.md); VM layout in [parallel-vm.md](../../rust/parallel-vm.md))

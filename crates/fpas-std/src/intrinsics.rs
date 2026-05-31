@@ -11,6 +11,7 @@ use crate::dict;
 use crate::env;
 use crate::error::{StdError, std_internal_error};
 use crate::fs;
+use crate::json;
 use crate::math;
 use crate::path;
 use crate::random;
@@ -190,6 +191,9 @@ pub fn run_intrinsic(
         return Ok(());
     }
     if dict::run(intrinsic, stack, location)?.is_some() {
+        return Ok(());
+    }
+    if json::run(intrinsic, stack, location)?.is_some() {
         return Ok(());
     }
     if time::run(intrinsic, stack, location)?.is_some() {

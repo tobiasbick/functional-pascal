@@ -11,6 +11,7 @@ pub mod dict;
 pub mod env;
 pub mod fs;
 pub mod graph;
+pub mod json;
 pub mod math;
 pub mod option;
 pub mod path;
@@ -29,6 +30,7 @@ pub use dict::DictIntrinsic;
 pub use env::EnvIntrinsic;
 pub use fs::FsIntrinsic;
 pub use graph::GraphIntrinsic;
+pub use json::JsonIntrinsic;
 pub use math::MathIntrinsic;
 pub use option::OptionIntrinsic;
 pub use path::PathIntrinsic;
@@ -68,6 +70,8 @@ pub enum Intrinsic {
     Fs(FsIntrinsic),
     /// `Std.Graph.*` intrinsics.
     Graph(GraphIntrinsic),
+    /// `Std.Json.*` intrinsics.
+    Json(JsonIntrinsic),
     /// `Std.Result.*` intrinsics.
     Result(ResultIntrinsic),
     /// `Std.Option.*` intrinsics.
@@ -95,6 +99,7 @@ impl From<Intrinsic> for u16 {
             Intrinsic::Path(x) => x as u16,
             Intrinsic::Fs(x) => x as u16,
             Intrinsic::Graph(x) => x as u16,
+            Intrinsic::Json(x) => x as u16,
             Intrinsic::Result(x) => x as u16,
             Intrinsic::Option(x) => x as u16,
             Intrinsic::Task(x) => x as u16,
@@ -144,6 +149,9 @@ impl Intrinsic {
         }
         if let Ok(x) = GraphIntrinsic::try_from(raw) {
             return Some(Self::Graph(x));
+        }
+        if let Ok(x) = JsonIntrinsic::try_from(raw) {
+            return Some(Self::Json(x));
         }
         if let Ok(x) = ResultIntrinsic::try_from(raw) {
             return Some(Self::Result(x));

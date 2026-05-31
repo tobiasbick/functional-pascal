@@ -329,3 +329,15 @@ pub(in super::super) const STD_DICT_SYMBOLS: &[&str] = &[
     std_symbols::STD_DICT_MAP,
     std_symbols::STD_DICT_FILTER,
 ];
+
+pub(in super::super) const STD_JSON_SYMBOLS: &[&str] = &[
+    std_symbols::STD_JSON_VALUE,
+    std_symbols::STD_JSON_VALUE_NULL,
+    std_symbols::STD_JSON_VALUE_BOOL,
+    std_symbols::STD_JSON_VALUE_NUMBER,
+    std_symbols::STD_JSON_VALUE_STRING,
+    std_symbols::STD_JSON_VALUE_ARRAY,
+    std_symbols::STD_JSON_VALUE_OBJECT,
+    std_symbols::STD_JSON_PARSE,
+    std_symbols::STD_JSON_STRINGIFY,
+];

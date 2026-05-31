@@ -83,6 +83,11 @@ macro_rules! std_dict {
         concat!("Std.Dict.", $suffix)
     };
 }
+macro_rules! std_json {
+    ($suffix:literal) => {
+        concat!("Std.Json.", $suffix)
+    };
+}
 
 pub const STD_CONSOLE_WRITE_LN: &str = std_console!("WriteLn");
 pub const STD_CONSOLE_WRITE: &str = std_console!("Write");
@@ -435,3 +440,13 @@ pub const STD_DICT_GET: &str = std_dict!("Get");
 pub const STD_DICT_MERGE: &str = std_dict!("Merge");
 pub const STD_DICT_MAP: &str = std_dict!("Map");
 pub const STD_DICT_FILTER: &str = std_dict!("Filter");
+
+pub const STD_JSON_VALUE: &str = std_json!("JsonValue");
+pub const STD_JSON_VALUE_NULL: &str = std_json!("JsonValue.Null");
+pub const STD_JSON_VALUE_BOOL: &str = std_json!("JsonValue.Bool");
+pub const STD_JSON_VALUE_NUMBER: &str = std_json!("JsonValue.Number");
+pub const STD_JSON_VALUE_STRING: &str = std_json!("JsonValue.String");
+pub const STD_JSON_VALUE_ARRAY: &str = std_json!("JsonValue.Array");
+pub const STD_JSON_VALUE_OBJECT: &str = std_json!("JsonValue.Object");
+pub const STD_JSON_PARSE: &str = std_json!("Parse");
+pub const STD_JSON_STRINGIFY: &str = std_json!("Stringify");

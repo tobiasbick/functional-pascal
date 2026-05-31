@@ -3,6 +3,7 @@ mod array;
 mod console;
 mod conv;
 mod dict;
+mod json;
 mod math;
 mod option;
 mod random;

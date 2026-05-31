@@ -18,6 +18,9 @@ impl Compiler {
         if Self::program_uses_std_tui(program) {
             self.register_std_tui_enums();
         }
+        if Self::program_uses_std_json(program) {
+            self.register_std_json_enum();
+        }
         self.build_short_aliases(program);
 
         for decl in &program.declarations {

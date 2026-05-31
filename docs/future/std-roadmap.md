@@ -14,22 +14,6 @@ Functional Pascal already has a useful `Std.*` surface for console programs, TUI
 
 ## Mid-Term Units
 
-### `Std.Json`
-
-Useful for tools, configuration, and simple data interchange.
-
-Initial scope:
-
-- parse JSON text into a documented FPAS value representation.
-- stringify supported values.
-- typed lookup helpers if dynamic values are introduced.
-
-Implementation notes:
-
-- Do not invent a large dynamic object model accidentally.
-- Decide how JSON null maps to existing `Option` or future dynamic values.
-- Start with clear errors and small examples.
-
 ### `Std.Parse`
 
 Add parsing helpers if `Std.Conv` grows beyond simple conversions.

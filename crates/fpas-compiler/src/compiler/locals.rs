@@ -6,7 +6,7 @@ use fpas_parser::{Designator, DesignatorPart, Program};
 use fpas_std::key_event::KEY_KIND_VARIANTS;
 use fpas_std::{
     EVENT_KIND_VARIANTS, MOUSE_ACTION_VARIANTS, MOUSE_BUTTON_VARIANTS, STD_UNIT_CONSOLE,
-    STD_UNIT_TUI, TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS,
+    STD_UNIT_JSON, STD_UNIT_TUI, TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS,
     canonical_std_unit_from_segments, is_std_root_segment, std_symbols as s,
 };
 
@@ -89,6 +89,14 @@ impl Compiler {
         })
     }
 
+    pub(super) fn program_uses_std_json(program: &Program) -> bool {
+        program.uses.iter().any(|u| {
+            u.parts.len() == 2
+                && is_std_root_segment(&u.parts[0])
+                && canonical_std_unit_from_segments(&u.parts[0], &u.parts[1]) == Some(STD_UNIT_JSON)
+        })
+    }
+
     fn register_enum_variants(&mut self, type_name: &str, variant_names: &[&str]) {
         let variants: Vec<EnumVariantInfo> = variant_names
             .iter()
@@ -108,6 +116,25 @@ impl Compiler {
         );
     }
 
+    fn register_data_enum_variants(&mut self, type_name: &str, variants: &[(&str, &[&str])]) {
+        let variants: Vec<EnumVariantInfo> = variants
+            .iter()
+            .enumerate()
+            .map(|(i, (name, fields))| EnumVariantInfo {
+                name: (*name).to_string(),
+                backing: i as i64,
+                field_names: fields.iter().map(|field| (*field).to_string()).collect(),
+            })
+            .collect();
+        self.enums.insert(
+            canonical_name(type_name),
+            EnumInfo {
+                variants,
+                has_data: true,
+            },
+        );
+    }
+
     pub(super) fn register_std_console_enums(&mut self) {
         self.register_enum_variants(s::STD_CONSOLE_KEY_KIND, KEY_KIND_VARIANTS);
         self.register_enum_variants(s::STD_CONSOLE_EVENT_KIND, EVENT_KIND_VARIANTS);
@@ -120,5 +147,19 @@ impl Compiler {
         self.register_enum_variants(s::STD_CONSOLE_KEY_KIND, KEY_KIND_VARIANTS);
         self.register_enum_variants(s::STD_TUI_EVENT_KIND, TUI_EVENT_KIND_VARIANTS);
         self.register_enum_variants(s::STD_TUI_EXIT_REASON, TUI_EXIT_REASON_VARIANTS);
+    }
+
+    pub(super) fn register_std_json_enum(&mut self) {
+        self.register_data_enum_variants(
+            s::STD_JSON_VALUE,
+            &[
+                ("Null", &[]),
+                ("Bool", &["Value"]),
+                ("Number", &["Value"]),
+                ("String", &["Value"]),
+                ("Array", &["Items"]),
+                ("Object", &["Fields"]),
+            ],
+        );
     }
 }

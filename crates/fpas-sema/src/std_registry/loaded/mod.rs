@@ -7,6 +7,7 @@ mod dict;
 mod env;
 mod fs;
 mod graph;
+mod json;
 mod math;
 mod path;
 mod random;
@@ -19,8 +20,9 @@ use crate::check::Checker;
 use fpas_std::std_symbols as s;
 use fpas_std::{
     STD_UNIT_ARGS, STD_UNIT_ARRAY, STD_UNIT_CONSOLE, STD_UNIT_CONV, STD_UNIT_DICT, STD_UNIT_ENV,
-    STD_UNIT_FS, STD_UNIT_GRAPH, STD_UNIT_MATH, STD_UNIT_OPTION, STD_UNIT_PATH, STD_UNIT_RANDOM,
-    STD_UNIT_RESULT, STD_UNIT_STR, STD_UNIT_TASK, STD_UNIT_TIME, STD_UNIT_TUI, STD_UNITS_KNOWN,
+    STD_UNIT_FS, STD_UNIT_GRAPH, STD_UNIT_JSON, STD_UNIT_MATH, STD_UNIT_OPTION, STD_UNIT_PATH,
+    STD_UNIT_RANDOM, STD_UNIT_RESULT, STD_UNIT_STR, STD_UNIT_TASK, STD_UNIT_TIME, STD_UNIT_TUI,
+    STD_UNITS_KNOWN,
 };
 
 pub fn register_loaded_std(checker: &mut Checker) {
@@ -49,6 +51,7 @@ pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
         STD_UNIT_TASK => channel_task::register_std_task(checker),
         STD_UNIT_TIME => time::register_std_time(checker),
         STD_UNIT_DICT => dict::register_std_dict(checker),
+        STD_UNIT_JSON => json::register_std_json(checker),
         STD_UNIT_GRAPH => {
             if checker.scopes.lookup(s::STD_CONSOLE_KEY_EVENT).is_none() {
                 console::register_std_console_key_api(checker);

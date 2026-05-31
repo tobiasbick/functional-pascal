@@ -10,6 +10,7 @@ mod dict;
 mod env;
 mod fs;
 mod graph;
+mod json;
 mod math;
 mod path;
 mod random;
@@ -71,6 +72,9 @@ impl Compiler {
             return Ok(true);
         }
         if self.compile_dict_call(name, args, location)? {
+            return Ok(true);
+        }
+        if self.compile_json_call(name, args, location)? {
             return Ok(true);
         }
         if self.compile_result_option_call(name, args, location)? {

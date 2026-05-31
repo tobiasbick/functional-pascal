@@ -13,6 +13,7 @@ use crate::error::{StdError, std_internal_error};
 use crate::fs;
 use crate::json;
 use crate::math;
+use crate::parse;
 use crate::path;
 use crate::random;
 use crate::result_option;
@@ -176,6 +177,9 @@ pub fn run_intrinsic(
         return Ok(());
     }
     if conv::run(intrinsic, stack, location)?.is_some() {
+        return Ok(());
+    }
+    if parse::run(intrinsic, stack, location)?.is_some() {
         return Ok(());
     }
     if math::run(intrinsic, stack, location)?.is_some() {

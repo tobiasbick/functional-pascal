@@ -26,6 +26,7 @@ mod json;
 pub mod key_event;
 mod math;
 mod numeric_text;
+mod parse;
 mod path;
 mod random;
 mod result_option;
@@ -56,9 +57,9 @@ pub use intrinsics::run_intrinsic;
 pub use key_event::{ConsoleKeyEvent, KEY_KIND_VARIANTS};
 pub use std_units::{
     STD_UNIT_ARGS, STD_UNIT_ARRAY, STD_UNIT_CONSOLE, STD_UNIT_CONV, STD_UNIT_DICT, STD_UNIT_ENV,
-    STD_UNIT_FS, STD_UNIT_GRAPH, STD_UNIT_JSON, STD_UNIT_MATH, STD_UNIT_OPTION, STD_UNIT_PATH,
-    STD_UNIT_RANDOM, STD_UNIT_RESULT, STD_UNIT_STR, STD_UNIT_TASK, STD_UNIT_TIME, STD_UNIT_TUI,
-    STD_UNITS_KNOWN, canonical_std_unit_from_segments, canonical_std_unit_from_tail,
+    STD_UNIT_FS, STD_UNIT_GRAPH, STD_UNIT_JSON, STD_UNIT_MATH, STD_UNIT_OPTION, STD_UNIT_PARSE,
+    STD_UNIT_PATH, STD_UNIT_RANDOM, STD_UNIT_RESULT, STD_UNIT_STR, STD_UNIT_TASK, STD_UNIT_TIME,
+    STD_UNIT_TUI, STD_UNITS_KNOWN, canonical_std_unit_from_segments, canonical_std_unit_from_tail,
     is_std_root_segment, std_symbols, std_unit_symbols, std_units_list_for_hint,
 };
 pub use tui::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent, TuiSession};

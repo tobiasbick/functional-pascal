@@ -11,6 +11,7 @@ mod env;
 mod fs;
 mod graph;
 mod math;
+mod parse;
 mod path;
 mod str_ops;
 mod time;

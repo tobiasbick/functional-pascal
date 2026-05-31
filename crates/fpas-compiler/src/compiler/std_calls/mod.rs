@@ -12,6 +12,7 @@ mod fs;
 mod graph;
 mod json;
 mod math;
+mod parse;
 mod path;
 mod random;
 mod result_option;
@@ -60,6 +61,9 @@ impl Compiler {
             return Ok(true);
         }
         if self.compile_conv_call(name, args, location)? {
+            return Ok(true);
+        }
+        if self.compile_parse_call(name, args, location)? {
             return Ok(true);
         }
         if self.compile_math_call(name, args, location)? {

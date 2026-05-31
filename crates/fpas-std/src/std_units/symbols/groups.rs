@@ -240,6 +240,12 @@ pub(in super::super) const STD_CONV_SYMBOLS: &[&str] = &[
     std_symbols::STD_CONV_HEX_TO_INT,
 ];
 
+pub(in super::super) const STD_PARSE_SYMBOLS: &[&str] = &[
+    std_symbols::STD_PARSE_TRY_INT,
+    std_symbols::STD_PARSE_TRY_REAL,
+    std_symbols::STD_PARSE_TRY_BOOL,
+];
+
 pub(in super::super) const STD_MATH_SYMBOLS: &[&str] = &[
     std_symbols::STD_MATH_PI,
     std_symbols::STD_MATH_SQRT,

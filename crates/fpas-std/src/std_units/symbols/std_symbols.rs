@@ -48,6 +48,11 @@ macro_rules! std_conv {
         concat!("Std.Conv.", $suffix)
     };
 }
+macro_rules! std_parse {
+    ($suffix:literal) => {
+        concat!("Std.Parse.", $suffix)
+    };
+}
 macro_rules! std_math {
     ($suffix:literal) => {
         concat!("Std.Math.", $suffix)
@@ -362,6 +367,10 @@ pub const STD_CONV_BOOL_TO_STR: &str = std_conv!("BoolToStr");
 pub const STD_CONV_STR_TO_BOOL: &str = std_conv!("StrToBool");
 pub const STD_CONV_INT_TO_HEX: &str = std_conv!("IntToHex");
 pub const STD_CONV_HEX_TO_INT: &str = std_conv!("HexToInt");
+
+pub const STD_PARSE_TRY_INT: &str = std_parse!("TryInt");
+pub const STD_PARSE_TRY_REAL: &str = std_parse!("TryReal");
+pub const STD_PARSE_TRY_BOOL: &str = std_parse!("TryBool");
 
 pub const STD_MATH_PI: &str = std_math!("Pi");
 pub const STD_MATH_SQRT: &str = std_math!("Sqrt");

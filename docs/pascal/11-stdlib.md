@@ -33,6 +33,7 @@ See [09-units.md](09-units.md) for `uses` rules, short name ambiguity, and the r
 | [`Std.Tui`](std/tui.md) | Terminal application structure | Poll-style: `Application.Open`, `Application.ReadEvent`, … Hosted dispatch: `Application.Configure`, `Application.Run`, `On*` handlers — [tui-app.md](std/tui-app.md) | [tui.md](std/tui.md) |
 | [`Std.Str`](std/str.md) | String operations | `Length`, `ToUpper`, `Contains`, `Split`, `Join`, `PadLeft`, `CharAt`, `Ord`, `Chr`, `Format`, … | [str.md](std/str.md) |
 | [`Std.Conv`](std/conv.md) | Type conversions | `IntToStr`, `StrToInt`, `RealToStr`, `BoolToStr`, `IntToHex`, … | [conv.md](std/conv.md) |
+| [`Std.Parse`](std/parse.md) | Structured text parsing | `TryInt`, `TryReal`, `TryBool` | [parse.md](std/parse.md) |
 | [`Std.Math`](std/math.md) | Mathematical functions | `Pi`, `Abs`, `Sqrt`, `Pow`, `Sin`, `Cos`, `Tan`, `Log`, `Exp`, `Clamp`, … | [math.md](std/math.md) |
 | [`Std.Random`](std/random.md) | Pseudo-random numbers | `Random`, `RandomInt`, `Randomize` | [random.md](std/random.md) |
 | [`Std.Array`](std/array.md) | Array helpers | `Length`, `Push`, `Pop`, `Sort`, `Slice`, `Map`, `Filter`, `Reduce`, `Find`, `Any`, `All`, … | [array.md](std/array.md) |

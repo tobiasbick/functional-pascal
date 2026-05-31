@@ -14,6 +14,7 @@ pub mod graph;
 pub mod json;
 pub mod math;
 pub mod option;
+pub mod parse;
 pub mod path;
 pub mod random;
 pub mod result;
@@ -33,6 +34,7 @@ pub use graph::GraphIntrinsic;
 pub use json::JsonIntrinsic;
 pub use math::MathIntrinsic;
 pub use option::OptionIntrinsic;
+pub use parse::ParseIntrinsic;
 pub use path::PathIntrinsic;
 pub use random::RandomIntrinsic;
 pub use result::ResultIntrinsic;
@@ -54,6 +56,8 @@ pub enum Intrinsic {
     Str(StrIntrinsic),
     /// `Std.Conv.*` intrinsics.
     Conv(ConvIntrinsic),
+    /// `Std.Parse.*` intrinsics.
+    Parse(ParseIntrinsic),
     /// `Std.Math.*` intrinsics.
     Math(MathIntrinsic),
     /// `Std.Random.*` intrinsics.
@@ -91,6 +95,7 @@ impl From<Intrinsic> for u16 {
             Intrinsic::Console(x) => x as u16,
             Intrinsic::Str(x) => x as u16,
             Intrinsic::Conv(x) => x as u16,
+            Intrinsic::Parse(x) => x as u16,
             Intrinsic::Math(x) => x as u16,
             Intrinsic::Random(x) => x as u16,
             Intrinsic::Array(x) => x as u16,
@@ -125,6 +130,9 @@ impl Intrinsic {
         }
         if let Ok(x) = ConvIntrinsic::try_from(raw) {
             return Some(Self::Conv(x));
+        }
+        if let Ok(x) = ParseIntrinsic::try_from(raw) {
+            return Some(Self::Parse(x));
         }
         if let Ok(x) = MathIntrinsic::try_from(raw) {
             return Some(Self::Math(x));

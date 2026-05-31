@@ -8,6 +8,7 @@ pub const STD_UNIT_TIME: &str = "Std.Time";
 pub const STD_UNIT_CONSOLE: &str = "Std.Console";
 pub const STD_UNIT_STR: &str = "Std.Str";
 pub const STD_UNIT_CONV: &str = "Std.Conv";
+pub const STD_UNIT_PARSE: &str = "Std.Parse";
 pub const STD_UNIT_MATH: &str = "Std.Math";
 pub const STD_UNIT_RANDOM: &str = "Std.Random";
 pub const STD_UNIT_ARRAY: &str = "Std.Array";
@@ -30,6 +31,7 @@ pub const STD_UNITS_KNOWN: &[&str] = &[
     STD_UNIT_GRAPH,
     STD_UNIT_STR,
     STD_UNIT_CONV,
+    STD_UNIT_PARSE,
     STD_UNIT_MATH,
     STD_UNIT_RANDOM,
     STD_UNIT_ARRAY,

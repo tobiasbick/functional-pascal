@@ -18,6 +18,7 @@ All units are opt-in through `uses`.
 - `Std.Tui` dispatch mode (target) - [tui-app.md](tui-app.md) (`Application.Host*` and hosted helpers use VM intrinsics **255**–**291**; `Application.Run` is lowered and runs the hosted loop; `OnExit` receives **`ExitReason.UserQuit`**, **`ExitReason.HostStop`**, **`ExitReason.HostAndUserStop`**, or **`ExitReason.HostShutdown`**. See [tui-application-framework.md](../../future/tui-application-framework.md).)
 - `Std.Str` - [str.md](str.md)
 - `Std.Conv` - [conv.md](conv.md)
+- `Std.Parse` - [parse.md](parse.md) (structured text parsing with `Result` values)
 - `Std.Math` - [math.md](math.md)
 - `Std.Random` - [random.md](random.md)
 - `Std.Array` - [array.md](array.md)

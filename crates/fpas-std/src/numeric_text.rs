@@ -57,7 +57,8 @@ pub(crate) fn parse_pascal_real(text: &str) -> Option<f64> {
     value.is_finite().then_some(value)
 }
 
-fn parse_pascal_integer(text: &str) -> Option<i64> {
+/// Parses a Pascal integer literal string after trimming whitespace.
+pub(crate) fn parse_pascal_integer(text: &str) -> Option<i64> {
     let trimmed = text.trim();
     let bytes = trimmed.as_bytes();
     let mut index = 0;

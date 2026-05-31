@@ -12,23 +12,6 @@ Functional Pascal already has a useful `Std.*` surface for console programs, TUI
 - Keep pure helpers separate from effectful APIs.
 - Avoid adding memory-management APIs as a standard unit for now.
 
-## Mid-Term Units
-
-### `Std.Parse`
-
-Add parsing helpers if `Std.Conv` grows beyond simple conversions.
-
-Possible scope:
-
-- integer and real parsing with explicit error behavior.
-- boolean parsing.
-- token-oriented helpers for small CLI tools.
-
-Implementation notes:
-
-- Keep `Std.Conv` for straightforward type-to-type conversions.
-- Use `Std.Parse` when callers need structured parse errors or nontrivial input rules.
-
 ## Later Candidates
 
 These should wait until the runtime and capability model need them:

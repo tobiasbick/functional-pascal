@@ -12,7 +12,7 @@ Hosted terminal UI is **implemented**: Rust-owned event loop, FPAS `On*` handler
 
 ## Standard library roadmap
 
-Implemented today: `Std.Console`, `Std.Args`, `Std.Env`, `Std.Path`, `Std.Fs`, `Std.Graph`, `Std.Tui`, `Std.Str`, `Std.Conv`, `Std.Math`, `Std.Random`, `Std.Array`, `Std.Dict`, `Std.Result`, `Std.Option`, `Std.Task`. Planned additions (time, JSON, parsing): [`std-roadmap.md`](std-roadmap.md).
+Implemented today: `Std.Console`, `Std.Args`, `Std.Env`, `Std.Path`, `Std.Fs`, `Std.Time`, `Std.Graph`, `Std.Tui`, `Std.Str`, `Std.Conv`, `Std.Math`, `Std.Random`, `Std.Array`, `Std.Dict`, `Std.Result`, `Std.Option`, `Std.Task`. Planned additions (JSON, parsing): [`std-roadmap.md`](std-roadmap.md).
 
 ## Under Consideration
 

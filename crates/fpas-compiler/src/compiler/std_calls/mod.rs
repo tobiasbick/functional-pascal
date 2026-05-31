@@ -17,6 +17,7 @@ mod result_option;
 mod str_ops;
 mod support;
 mod task;
+mod time;
 mod tui;
 
 use crate::error::CompileError;
@@ -76,6 +77,9 @@ impl Compiler {
             return Ok(true);
         }
         if self.compile_task_call(name, args, location)? {
+            return Ok(true);
+        }
+        if self.compile_time_call(name, args, location)? {
             return Ok(true);
         }
         Ok(false)

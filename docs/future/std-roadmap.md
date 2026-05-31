@@ -12,25 +12,6 @@ Functional Pascal already has a useful `Std.*` surface for console programs, TUI
 - Keep pure helpers separate from effectful APIs.
 - Avoid adding memory-management APIs as a standard unit for now.
 
-## Near-Term Units
-
-### `Std.Time`
-
-Add time and duration helpers.
-
-Initial scope:
-
-- current timestamp.
-- monotonic elapsed time.
-- sleep by milliseconds.
-- duration helpers if records or numeric conventions make them pleasant to use.
-
-Implementation notes:
-
-- Move or mirror console delay behavior only after deciding the compatibility story.
-- Keep wall-clock time and monotonic time distinct.
-- Document precision and platform limits.
-
 ## Mid-Term Units
 
 ### `Std.Json`

@@ -18,6 +18,7 @@ pub mod random;
 pub mod result;
 pub mod str_ops;
 pub mod task;
+pub mod time;
 pub mod tui;
 
 pub use args::ArgsIntrinsic;
@@ -35,6 +36,7 @@ pub use random::RandomIntrinsic;
 pub use result::ResultIntrinsic;
 pub use str_ops::StrIntrinsic;
 pub use task::TaskIntrinsic;
+pub use time::TimeIntrinsic;
 pub use tui::TuiIntrinsic;
 
 /// VM intrinsic opcode payload (`Op::Intrinsic(u16::from(self))`).
@@ -72,6 +74,8 @@ pub enum Intrinsic {
     Option(OptionIntrinsic),
     /// `Std.Task.*` intrinsics.
     Task(TaskIntrinsic),
+    /// `Std.Time.*` intrinsics.
+    Time(TimeIntrinsic),
     /// `Std.Tui.*` intrinsics.
     Tui(TuiIntrinsic),
 }
@@ -94,6 +98,7 @@ impl From<Intrinsic> for u16 {
             Intrinsic::Result(x) => x as u16,
             Intrinsic::Option(x) => x as u16,
             Intrinsic::Task(x) => x as u16,
+            Intrinsic::Time(x) => x as u16,
             Intrinsic::Tui(x) => x as u16,
         }
     }
@@ -148,6 +153,9 @@ impl Intrinsic {
         }
         if let Ok(x) = TaskIntrinsic::try_from(raw) {
             return Some(Self::Task(x));
+        }
+        if let Ok(x) = TimeIntrinsic::try_from(raw) {
+            return Some(Self::Time(x));
         }
         if let Ok(x) = TuiIntrinsic::try_from(raw) {
             return Some(Self::Tui(x));

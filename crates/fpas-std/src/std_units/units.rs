@@ -4,6 +4,7 @@ pub const STD_UNIT_ARGS: &str = "Std.Args";
 pub const STD_UNIT_ENV: &str = "Std.Env";
 pub const STD_UNIT_PATH: &str = "Std.Path";
 pub const STD_UNIT_FS: &str = "Std.Fs";
+pub const STD_UNIT_TIME: &str = "Std.Time";
 pub const STD_UNIT_CONSOLE: &str = "Std.Console";
 pub const STD_UNIT_STR: &str = "Std.Str";
 pub const STD_UNIT_CONV: &str = "Std.Conv";
@@ -22,6 +23,7 @@ pub const STD_UNITS_KNOWN: &[&str] = &[
     STD_UNIT_ENV,
     STD_UNIT_PATH,
     STD_UNIT_FS,
+    STD_UNIT_TIME,
     STD_UNIT_CONSOLE,
     STD_UNIT_TUI,
     STD_UNIT_GRAPH,

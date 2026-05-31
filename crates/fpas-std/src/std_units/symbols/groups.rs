@@ -25,6 +25,13 @@ pub(in super::super) const STD_FS_SYMBOLS: &[&str] = &[
     std_symbols::STD_FS_CREATE_DIR,
 ];
 
+pub(in super::super) const STD_TIME_SYMBOLS: &[&str] = &[
+    std_symbols::STD_TIME_TIMESTAMP_MILLIS,
+    std_symbols::STD_TIME_MONOTONIC_MILLIS,
+    std_symbols::STD_TIME_ELAPSED_MILLIS,
+    std_symbols::STD_TIME_SLEEP,
+];
+
 pub(in super::super) const STD_CONSOLE_SYMBOLS: &[&str] = &[
     std_symbols::STD_CONSOLE_WRITE_LN,
     std_symbols::STD_CONSOLE_WRITE,

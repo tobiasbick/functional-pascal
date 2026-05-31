@@ -16,6 +16,7 @@ use crate::path;
 use crate::random;
 use crate::result_option;
 use crate::str;
+use crate::time;
 use fpas_bytecode::{
     ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, DictIntrinsic, GraphIntrinsic, Intrinsic,
     OptionIntrinsic, ResultIntrinsic, SourceLocation, TaskIntrinsic, TuiIntrinsic, Value,
@@ -189,6 +190,9 @@ pub fn run_intrinsic(
         return Ok(());
     }
     if dict::run(intrinsic, stack, location)?.is_some() {
+        return Ok(());
+    }
+    if time::run(intrinsic, stack, location)?.is_some() {
         return Ok(());
     }
 

@@ -13,6 +13,7 @@ mod graph;
 mod math;
 mod path;
 mod str_ops;
+mod time;
 mod tui;
 mod tui_commands;
 mod tui_configure;

@@ -23,6 +23,11 @@ macro_rules! std_fs {
         concat!("Std.Fs.", $suffix)
     };
 }
+macro_rules! std_time {
+    ($suffix:literal) => {
+        concat!("Std.Time.", $suffix)
+    };
+}
 macro_rules! std_tui {
     ($suffix:literal) => {
         concat!("Std.Tui.", $suffix)
@@ -182,6 +187,11 @@ pub const STD_FS_EXISTS: &str = std_fs!("Exists");
 pub const STD_FS_IS_FILE: &str = std_fs!("IsFile");
 pub const STD_FS_IS_DIR: &str = std_fs!("IsDir");
 pub const STD_FS_CREATE_DIR: &str = std_fs!("CreateDir");
+
+pub const STD_TIME_TIMESTAMP_MILLIS: &str = std_time!("TimestampMillis");
+pub const STD_TIME_MONOTONIC_MILLIS: &str = std_time!("MonotonicMillis");
+pub const STD_TIME_ELAPSED_MILLIS: &str = std_time!("ElapsedMillis");
+pub const STD_TIME_SLEEP: &str = std_time!("Sleep");
 
 pub const STD_TUI_APPLICATION: &str = std_tui!("Application");
 /// Hosted-dispatch handler bundle for `Std.Tui.Application.Configure`; see `docs/pascal/std/tui-app.md`.

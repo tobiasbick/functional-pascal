@@ -13,6 +13,11 @@ macro_rules! std_env {
         concat!("Std.Env.", $suffix)
     };
 }
+macro_rules! std_proc {
+    ($suffix:literal) => {
+        concat!("Std.Proc.", $suffix)
+    };
+}
 macro_rules! std_path {
     ($suffix:literal) => {
         concat!("Std.Path.", $suffix)
@@ -184,6 +189,8 @@ pub const STD_ARGS_PARAM_STR: &str = std_args!("ParamStr");
 
 pub const STD_ENV_GET: &str = std_env!("Get");
 pub const STD_ENV_EXISTS: &str = std_env!("Exists");
+
+pub const STD_PROC_RUN: &str = std_proc!("Run");
 
 pub const STD_PATH_JOIN: &str = std_path!("Join");
 pub const STD_PATH_BASE_NAME: &str = std_path!("BaseName");

@@ -10,6 +10,7 @@ All units are opt-in through `uses`.
 - `Std.Console` - [console.md](console.md) (text I/O, CRT-style screen control, RGB/256 text colors, `ReadKey` / `KeyPressed`, `ReadKeyEvent`, `ReadEvent`, `KeyKind`, `KeyEvent`)
 - `Std.Args` - [args.md](args.md) (process argument count and indexed lookup for arguments passed after `--`)
 - `Std.Env` - [env.md](env.md) (process environment lookup with `Get` and `Exists`)
+- `Std.Proc` - [proc.md](proc.md) (blocking host process execution with exit-code results)
 - `Std.Path` - [path.md](path.md) (pure path manipulation with `Join`, `BaseName`, `DirName`, `Extension`, `Normalize`)
 - `Std.Fs` - [fs.md](fs.md) (blocking UTF-8 file reads and writes, existence checks, and directory creation)
 - `Std.Time` - [time.md](time.md) (wall-clock and monotonic timestamps, elapsed time, and blocking sleep)

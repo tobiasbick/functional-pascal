@@ -8,6 +8,8 @@ pub(in super::super) const STD_ARGS_SYMBOLS: &[&str] = &[
 pub(in super::super) const STD_ENV_SYMBOLS: &[&str] =
     &[std_symbols::STD_ENV_GET, std_symbols::STD_ENV_EXISTS];
 
+pub(in super::super) const STD_PROC_SYMBOLS: &[&str] = &[std_symbols::STD_PROC_RUN];
+
 pub(in super::super) const STD_PATH_SYMBOLS: &[&str] = &[
     std_symbols::STD_PATH_JOIN,
     std_symbols::STD_PATH_BASE_NAME,

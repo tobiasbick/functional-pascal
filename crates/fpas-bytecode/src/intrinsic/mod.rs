@@ -16,6 +16,7 @@ pub mod math;
 pub mod option;
 pub mod parse;
 pub mod path;
+pub mod proc;
 pub mod random;
 pub mod result;
 pub mod str_ops;
@@ -36,6 +37,7 @@ pub use math::MathIntrinsic;
 pub use option::OptionIntrinsic;
 pub use parse::ParseIntrinsic;
 pub use path::PathIntrinsic;
+pub use proc::ProcIntrinsic;
 pub use random::RandomIntrinsic;
 pub use result::ResultIntrinsic;
 pub use str_ops::StrIntrinsic;
@@ -70,6 +72,8 @@ pub enum Intrinsic {
     Env(EnvIntrinsic),
     /// `Std.Path.*` intrinsics.
     Path(PathIntrinsic),
+    /// `Std.Proc.*` intrinsics.
+    Proc(ProcIntrinsic),
     /// `Std.Fs.*` intrinsics.
     Fs(FsIntrinsic),
     /// `Std.Graph.*` intrinsics.
@@ -102,6 +106,7 @@ impl From<Intrinsic> for u16 {
             Intrinsic::Dict(x) => x as u16,
             Intrinsic::Env(x) => x as u16,
             Intrinsic::Path(x) => x as u16,
+            Intrinsic::Proc(x) => x as u16,
             Intrinsic::Fs(x) => x as u16,
             Intrinsic::Graph(x) => x as u16,
             Intrinsic::Json(x) => x as u16,
@@ -151,6 +156,9 @@ impl Intrinsic {
         }
         if let Ok(x) = PathIntrinsic::try_from(raw) {
             return Some(Self::Path(x));
+        }
+        if let Ok(x) = ProcIntrinsic::try_from(raw) {
+            return Some(Self::Proc(x));
         }
         if let Ok(x) = FsIntrinsic::try_from(raw) {
             return Some(Self::Fs(x));

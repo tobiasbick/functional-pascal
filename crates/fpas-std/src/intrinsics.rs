@@ -15,6 +15,7 @@ use crate::json;
 use crate::math;
 use crate::parse;
 use crate::path;
+use crate::proc;
 use crate::random;
 use crate::result_option;
 use crate::str;
@@ -168,6 +169,9 @@ pub fn run_intrinsic(
         return Ok(());
     }
     if path::run(intrinsic, stack, location)?.is_some() {
+        return Ok(());
+    }
+    if proc::run(intrinsic, stack, location)?.is_some() {
         return Ok(());
     }
     if fs::run(intrinsic, stack, location)?.is_some() {

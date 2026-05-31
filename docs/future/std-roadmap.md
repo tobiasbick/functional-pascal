@@ -16,7 +16,6 @@ Functional Pascal already has a useful `Std.*` surface for console programs, TUI
 
 These should wait until the runtime and capability model need them:
 
-- `Std.Proc` for spawning processes and inspecting exit status.
 - `Std.Net` for sockets or low-level networking.
 - `Std.Http` for request/response workflows.
 - `Std.Crypto` for hashing and cryptographic primitives.

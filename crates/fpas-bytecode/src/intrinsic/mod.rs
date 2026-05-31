@@ -12,6 +12,7 @@ pub mod env;
 pub mod graph;
 pub mod math;
 pub mod option;
+pub mod path;
 pub mod random;
 pub mod result;
 pub mod str_ops;
@@ -27,6 +28,7 @@ pub use env::EnvIntrinsic;
 pub use graph::GraphIntrinsic;
 pub use math::MathIntrinsic;
 pub use option::OptionIntrinsic;
+pub use path::PathIntrinsic;
 pub use random::RandomIntrinsic;
 pub use result::ResultIntrinsic;
 pub use str_ops::StrIntrinsic;
@@ -56,6 +58,8 @@ pub enum Intrinsic {
     Dict(DictIntrinsic),
     /// `Std.Env.*` intrinsics.
     Env(EnvIntrinsic),
+    /// `Std.Path.*` intrinsics.
+    Path(PathIntrinsic),
     /// `Std.Graph.*` intrinsics.
     Graph(GraphIntrinsic),
     /// `Std.Result.*` intrinsics.
@@ -80,6 +84,7 @@ impl From<Intrinsic> for u16 {
             Intrinsic::Array(x) => x as u16,
             Intrinsic::Dict(x) => x as u16,
             Intrinsic::Env(x) => x as u16,
+            Intrinsic::Path(x) => x as u16,
             Intrinsic::Graph(x) => x as u16,
             Intrinsic::Result(x) => x as u16,
             Intrinsic::Option(x) => x as u16,
@@ -120,6 +125,9 @@ impl Intrinsic {
         }
         if let Ok(x) = EnvIntrinsic::try_from(raw) {
             return Some(Self::Env(x));
+        }
+        if let Ok(x) = PathIntrinsic::try_from(raw) {
+            return Some(Self::Path(x));
         }
         if let Ok(x) = GraphIntrinsic::try_from(raw) {
             return Some(Self::Graph(x));

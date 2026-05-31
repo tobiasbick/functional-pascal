@@ -11,6 +11,7 @@ use crate::dict;
 use crate::env;
 use crate::error::{StdError, std_internal_error};
 use crate::math;
+use crate::path;
 use crate::random;
 use crate::result_option;
 use crate::str;
@@ -160,6 +161,9 @@ pub fn run_intrinsic(
     }
 
     if env::run(intrinsic, stack, location)?.is_some() {
+        return Ok(());
+    }
+    if path::run(intrinsic, stack, location)?.is_some() {
         return Ok(());
     }
     if str::run(intrinsic, stack, location)?.is_some() {

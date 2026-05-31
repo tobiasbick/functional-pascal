@@ -7,8 +7,8 @@ pub use chunk::{Chunk, ChunkError};
 pub use fpas_diagnostics::SourceLocation;
 pub use intrinsic::{
     ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, ConvIntrinsic, DictIntrinsic, EnvIntrinsic,
-    GraphIntrinsic, Intrinsic, MathIntrinsic, OptionIntrinsic, RandomIntrinsic, ResultIntrinsic,
-    StrIntrinsic, TaskIntrinsic, TuiIntrinsic,
+    GraphIntrinsic, Intrinsic, MathIntrinsic, OptionIntrinsic, PathIntrinsic, RandomIntrinsic,
+    ResultIntrinsic, StrIntrinsic, TaskIntrinsic, TuiIntrinsic,
 };
 pub use op::Op;
 pub use value::Value;

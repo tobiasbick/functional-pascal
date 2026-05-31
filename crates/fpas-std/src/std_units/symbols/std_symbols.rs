@@ -13,6 +13,11 @@ macro_rules! std_env {
         concat!("Std.Env.", $suffix)
     };
 }
+macro_rules! std_path {
+    ($suffix:literal) => {
+        concat!("Std.Path.", $suffix)
+    };
+}
 macro_rules! std_tui {
     ($suffix:literal) => {
         concat!("Std.Tui.", $suffix)
@@ -159,6 +164,12 @@ pub const STD_ARGS_PARAM_STR: &str = std_args!("ParamStr");
 
 pub const STD_ENV_GET: &str = std_env!("Get");
 pub const STD_ENV_EXISTS: &str = std_env!("Exists");
+
+pub const STD_PATH_JOIN: &str = std_path!("Join");
+pub const STD_PATH_BASE_NAME: &str = std_path!("BaseName");
+pub const STD_PATH_DIR_NAME: &str = std_path!("DirName");
+pub const STD_PATH_EXTENSION: &str = std_path!("Extension");
+pub const STD_PATH_NORMALIZE: &str = std_path!("Normalize");
 
 pub const STD_TUI_APPLICATION: &str = std_tui!("Application");
 /// Hosted-dispatch handler bundle for `Std.Tui.Application.Configure`; see `docs/pascal/std/tui-app.md`.

@@ -14,23 +14,6 @@ Functional Pascal already has a useful `Std.*` surface for console programs, TUI
 
 ## Near-Term Units
 
-### `Std.Path`
-
-Add path manipulation without filesystem access.
-
-Initial scope:
-
-- join path segments.
-- basename and dirname.
-- extension extraction.
-- normalize separators where the target platform permits it.
-
-Implementation notes:
-
-- Keep `Std.Path` pure: it should not check whether paths exist.
-- Document platform-sensitive behavior.
-- Avoid guessing current working directory inside path helpers.
-
 ### `Std.Fs`
 
 Add basic filesystem operations.

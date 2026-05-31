@@ -10,6 +10,7 @@ mod dict;
 mod env;
 mod graph;
 mod math;
+mod path;
 mod str_ops;
 mod tui;
 mod tui_commands;

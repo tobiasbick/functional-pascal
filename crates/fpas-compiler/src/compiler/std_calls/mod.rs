@@ -10,6 +10,7 @@ mod dict;
 mod env;
 mod graph;
 mod math;
+mod path;
 mod random;
 mod result_option;
 mod str_ops;
@@ -35,6 +36,9 @@ impl Compiler {
             return Ok(true);
         }
         if self.compile_env_call(name, args, location)? {
+            return Ok(true);
+        }
+        if self.compile_path_call(name, args, location)? {
             return Ok(true);
         }
         if self.compile_console_call(name, args, location)? {

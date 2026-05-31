@@ -14,43 +14,6 @@ Functional Pascal already has a useful `Std.*` surface for console programs, TUI
 
 ## Near-Term Units
 
-### `Std.Fs`
-
-Add basic filesystem operations.
-
-Filesystem operations should be regular blocking standard-library calls at first, but they must be safe and documented for use with `go`. This gives programs task-based asynchronous file workflows without introducing a separate `async` / `await` language model.
-
-Initial scope:
-
-- read text file.
-- write text file.
-- exists checks.
-- file and directory distinction.
-- create directory.
-
-Implementation notes:
-
-- Keep this separate from `Std.Path`.
-- Use `Result` for fallible operations once error typing is ready enough.
-- Define encoding behavior for text reads and writes.
-- Document that `Std.Fs` calls may block the worker thread that runs them.
-- Ensure filesystem runtime code is thread-safe when called from multiple `go` tasks.
-- Add examples that spawn reads or writes with `go` and collect results with `Std.Task.Wait`.
-- Add binary APIs later only after byte-array conventions are stable.
-
-Example shape:
-
-```pascal
-uses Std.Fs, Std.Task;
-
-begin
-	var ReadJob: task := go ReadText('input.txt');
-	var Text: string := Wait(ReadJob)
-end.
-```
-
-Later, if the language grows a dedicated async model, `Std.Fs` can gain non-blocking variants or a separate async unit. That should be a runtime design decision, not a requirement for the first filesystem API.
-
 ### `Std.Time`
 
 Add time and duration helpers.

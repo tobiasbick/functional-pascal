@@ -27,6 +27,7 @@ See [09-units.md](09-units.md) for `uses` rules, short name ambiguity, and the r
 | [`Std.Args`](std/args.md) | Process arguments after `--` | `ParamCount`, `ParamStr` | [args.md](std/args.md) |
 | [`Std.Env`](std/env.md) | Process environment access | `Get`, `Exists` | [env.md](std/env.md) |
 | [`Std.Path`](std/path.md) | Pure path manipulation | `Join`, `BaseName`, `DirName`, `Extension`, `Normalize` | [path.md](std/path.md) |
+| [`Std.Fs`](std/fs.md) | Blocking filesystem I/O | `ReadText`, `WriteText`, `Exists`, `IsFile`, `IsDir`, `CreateDir` | [fs.md](std/fs.md) |
 | [`Std.Graph`](std/graph.md) | Native windowed graphics | `Application.Open`, `Application.UploadFrame`, `Application.DrawLine`, `Application.DrawText`, `Event`, `EventKind`, … | [graph.md](std/graph.md) |
 | [`Std.Tui`](std/tui.md) | Terminal application structure | Poll-style: `Application.Open`, `Application.ReadEvent`, … Hosted dispatch: `Application.Configure`, `Application.Run`, `On*` handlers — [tui-app.md](std/tui-app.md) | [tui.md](std/tui.md) |
 | [`Std.Str`](std/str.md) | String operations | `Length`, `ToUpper`, `Contains`, `Split`, `Join`, `PadLeft`, `CharAt`, `Ord`, `Chr`, `Format`, … | [str.md](std/str.md) |

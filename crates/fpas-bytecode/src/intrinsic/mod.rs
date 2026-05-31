@@ -9,6 +9,7 @@ pub mod console;
 pub mod conv;
 pub mod dict;
 pub mod env;
+pub mod fs;
 pub mod graph;
 pub mod math;
 pub mod option;
@@ -25,6 +26,7 @@ pub use console::ConsoleIntrinsic;
 pub use conv::ConvIntrinsic;
 pub use dict::DictIntrinsic;
 pub use env::EnvIntrinsic;
+pub use fs::FsIntrinsic;
 pub use graph::GraphIntrinsic;
 pub use math::MathIntrinsic;
 pub use option::OptionIntrinsic;
@@ -60,6 +62,8 @@ pub enum Intrinsic {
     Env(EnvIntrinsic),
     /// `Std.Path.*` intrinsics.
     Path(PathIntrinsic),
+    /// `Std.Fs.*` intrinsics.
+    Fs(FsIntrinsic),
     /// `Std.Graph.*` intrinsics.
     Graph(GraphIntrinsic),
     /// `Std.Result.*` intrinsics.
@@ -85,6 +89,7 @@ impl From<Intrinsic> for u16 {
             Intrinsic::Dict(x) => x as u16,
             Intrinsic::Env(x) => x as u16,
             Intrinsic::Path(x) => x as u16,
+            Intrinsic::Fs(x) => x as u16,
             Intrinsic::Graph(x) => x as u16,
             Intrinsic::Result(x) => x as u16,
             Intrinsic::Option(x) => x as u16,
@@ -128,6 +133,9 @@ impl Intrinsic {
         }
         if let Ok(x) = PathIntrinsic::try_from(raw) {
             return Some(Self::Path(x));
+        }
+        if let Ok(x) = FsIntrinsic::try_from(raw) {
+            return Some(Self::Fs(x));
         }
         if let Ok(x) = GraphIntrinsic::try_from(raw) {
             return Some(Self::Graph(x));

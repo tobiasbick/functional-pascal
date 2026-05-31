@@ -16,6 +16,15 @@ pub(in super::super) const STD_PATH_SYMBOLS: &[&str] = &[
     std_symbols::STD_PATH_NORMALIZE,
 ];
 
+pub(in super::super) const STD_FS_SYMBOLS: &[&str] = &[
+    std_symbols::STD_FS_READ_TEXT,
+    std_symbols::STD_FS_WRITE_TEXT,
+    std_symbols::STD_FS_EXISTS,
+    std_symbols::STD_FS_IS_FILE,
+    std_symbols::STD_FS_IS_DIR,
+    std_symbols::STD_FS_CREATE_DIR,
+];
+
 pub(in super::super) const STD_CONSOLE_SYMBOLS: &[&str] = &[
     std_symbols::STD_CONSOLE_WRITE_LN,
     std_symbols::STD_CONSOLE_WRITE,

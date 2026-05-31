@@ -18,6 +18,11 @@ macro_rules! std_path {
         concat!("Std.Path.", $suffix)
     };
 }
+macro_rules! std_fs {
+    ($suffix:literal) => {
+        concat!("Std.Fs.", $suffix)
+    };
+}
 macro_rules! std_tui {
     ($suffix:literal) => {
         concat!("Std.Tui.", $suffix)
@@ -170,6 +175,13 @@ pub const STD_PATH_BASE_NAME: &str = std_path!("BaseName");
 pub const STD_PATH_DIR_NAME: &str = std_path!("DirName");
 pub const STD_PATH_EXTENSION: &str = std_path!("Extension");
 pub const STD_PATH_NORMALIZE: &str = std_path!("Normalize");
+
+pub const STD_FS_READ_TEXT: &str = std_fs!("ReadText");
+pub const STD_FS_WRITE_TEXT: &str = std_fs!("WriteText");
+pub const STD_FS_EXISTS: &str = std_fs!("Exists");
+pub const STD_FS_IS_FILE: &str = std_fs!("IsFile");
+pub const STD_FS_IS_DIR: &str = std_fs!("IsDir");
+pub const STD_FS_CREATE_DIR: &str = std_fs!("CreateDir");
 
 pub const STD_TUI_APPLICATION: &str = std_tui!("Application");
 /// Hosted-dispatch handler bundle for `Std.Tui.Application.Configure`; see `docs/pascal/std/tui-app.md`.

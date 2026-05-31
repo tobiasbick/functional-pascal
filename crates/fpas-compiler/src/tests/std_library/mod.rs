@@ -8,6 +8,7 @@ mod console;
 mod conv;
 mod dict;
 mod env;
+mod fs;
 mod graph;
 mod math;
 mod path;

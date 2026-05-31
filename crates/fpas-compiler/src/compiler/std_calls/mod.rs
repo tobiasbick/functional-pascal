@@ -8,6 +8,7 @@ mod console;
 mod conv;
 mod dict;
 mod env;
+mod fs;
 mod graph;
 mod math;
 mod path;
@@ -39,6 +40,9 @@ impl Compiler {
             return Ok(true);
         }
         if self.compile_path_call(name, args, location)? {
+            return Ok(true);
+        }
+        if self.compile_fs_call(name, args, location)? {
             return Ok(true);
         }
         if self.compile_console_call(name, args, location)? {

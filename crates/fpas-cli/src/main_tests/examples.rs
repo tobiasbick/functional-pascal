@@ -1,3 +1,10 @@
+//! Smoke-runs for repository examples that exit on their own.
+//!
+//! **Do not** batch-run every file under `examples/` (many demos are interactive TUI/graph
+//! programs). Extend [`NON_INTERACTIVE_EXAMPLES`] when adding a new console example, then run:
+//! `cargo test -p fpas-cli non_interactive_examples_run_successfully`
+//! or `scripts/run-non-interactive-examples.ps1` / `scripts/run-non-interactive-examples.sh`.
+
 use super::support;
 use std::path::{Path, PathBuf};
 
@@ -6,6 +13,7 @@ struct ExampleCase {
     args: &'static [&'static str],
 }
 
+/// Canonical allowlist for automated example runs (CI, agents, local smoke).
 const NON_INTERACTIVE_EXAMPLES: &[ExampleCase] = &[
     ExampleCase {
         path: "examples/hello.fpas",
@@ -64,6 +72,14 @@ const NON_INTERACTIVE_EXAMPLES: &[ExampleCase] = &[
         args: &[],
     },
     ExampleCase {
+        path: "examples/pascal/functions/nested_functions.fpas",
+        args: &[],
+    },
+    ExampleCase {
+        path: "examples/pascal/concurrency/go_statement_example.fpas",
+        args: &[],
+    },
+    ExampleCase {
         path: "examples/pascal/generics/generic_functions.fpas",
         args: &[],
     },
@@ -97,6 +113,10 @@ const NON_INTERACTIVE_EXAMPLES: &[ExampleCase] = &[
     },
     ExampleCase {
         path: "examples/pascal/records/defaults_with_update.fpas",
+        args: &[],
+    },
+    ExampleCase {
+        path: "examples/pascal/std/array_basics.fpas",
         args: &[],
     },
     ExampleCase {

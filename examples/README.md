@@ -2,6 +2,25 @@
 
 Functional Pascal samples aligned with the **current** compiler and standard library (`Std.*`).
 
+## Automated smoke test (non-interactive only)
+
+Many examples under `examples/` are **interactive** (TUI alternate screen, native graph window, key loops). **Do not** glob-run all `*.fpas` files in a shell loop or batch script — that will hang on demos such as `math/mandelbrot/mandelbrot.fpasprj`.
+
+Use the curated allowlist in [`crates/fpas-cli/src/main_tests/examples.rs`](../crates/fpas-cli/src/main_tests/examples.rs):
+
+```sh
+cargo test -p fpas-cli non_interactive_examples_run_successfully
+```
+
+Or:
+
+```sh
+./scripts/run-non-interactive-examples.sh    # Unix
+pwsh scripts/run-non-interactive-examples.ps1
+```
+
+When you add a new **console** example that exits on its own, append it to `NON_INTERACTIVE_EXAMPLES` in that file. Interactive demos stay documented in the table below only.
+
 ## How to run
 
 ### Single-file programs

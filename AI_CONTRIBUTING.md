@@ -16,6 +16,8 @@ Useful contributions include:
 - improving structure, naming, and maintainability
 - improving examples and internal documentation
 
+When validating examples, run only the non-interactive allowlist (`cargo test -p fpas-cli non_interactive_examples_run_successfully` or `scripts/run-non-interactive-examples.*`). Never batch-run every file under `examples/` — interactive TUI and graph demos block until the user quits.
+
 ## Contribution Standard
 
 All AI contributions must follow `AGENTS.md`.

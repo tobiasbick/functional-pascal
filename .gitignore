@@ -24,3 +24,4 @@ debug/
 bin/
 
 .mcp.json
+crates/fpas-cli/_fpas_fs_demo.txt

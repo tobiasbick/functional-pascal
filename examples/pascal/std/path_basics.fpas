@@ -1,10 +1,11 @@
 { Spec: docs/pascal/std/path.md (from repository root). }
 program PathBasics;
 uses Std.Console, Std.Path;
+
 begin
-  var Joined: string := Join(['src', 'main', 'app.fpas']);
-  WriteLn('base: ', BaseName(Joined));
-  WriteLn('extension: ', Extension(Joined));
-  WriteLn('dir base: ', BaseName(DirName(Joined)));
-  WriteLn('normalized base: ', BaseName(Normalize('dir/nested/../file.txt')))
+  WriteLn('join: ', Join(['examples', 'pascal', 'std']));
+  WriteLn('base: ', BaseName('dir/nested/file.txt'));
+  WriteLn('dir: ', DirName('dir/nested/file.txt'));
+  WriteLn('ext: ', Extension('archive.tar.gz'));
+  WriteLn('norm: ', Normalize('dir/nested/../file.txt'))
 end.

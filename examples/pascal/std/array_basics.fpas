@@ -1,0 +1,21 @@
+{ Spec: docs/pascal/std/array.md (from repository root). }
+program ArrayBasics;
+uses Std.Console, Std.Conv, Std.Array;
+
+function IsEven(X: integer): boolean;
+begin
+  return (X mod 2) = 0
+end;
+
+function IsPositive(V: integer): boolean;
+begin
+  return V > 0
+end;
+
+begin
+  var Nums: array of integer := [3, 1, 4, 1, 5];
+  WriteLn('length: ', IntToStr(Length(Nums)));
+  WriteLn('sorted: ', IntToStr(IndexOf(Sort(Nums), 4)));
+  WriteLn('any even: ', Any(Nums, IsEven));
+  WriteLn('all positive: ', All(Nums, IsPositive))
+end.

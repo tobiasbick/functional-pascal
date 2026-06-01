@@ -47,10 +47,15 @@ Do **not** pass a `unit` source alone (for example `mandelbrot_color.fpas` or `m
 | `pascal/basics/literals_alias_string_index.fpas` | Constants, number literals, type aliases, and string indexing |
 | `pascal/control-flow/while_repeat_example.fpas` | `while` and `repeat until` loops |
 | `pascal/functions/mutable_nested_functions.fpas` | Mutable parameters, nested functions, and mutual recursion |
+| `pascal/functions/nested_functions.fpas` | Nested helper function (`Square` inside `Hypotenuse`) |
 | `pascal/higher-order-functions/higher_order_functions.fpas` | First-class functions and array helpers |
 | `pascal/enum-data/` | Enums with associated data and `case` |
 | `pascal/error-handling/` | `Result`, `Option`, `panic`, and `try` |
-| `pascal/for/` and `pascal/for-in/` | Counting loops, `downto`, array `for … in`, and dict key iteration |
+| `pascal/for/for_example.fpas` | Index-based counting `for` with `break` / `continue` |
+| `pascal/for/downto_example.fpas` | `for I := N downto M` |
+| `pascal/for-in/for_in_example.fpas` | `for V in array` |
+| `pascal/for-in/dict_for_in_example.fpas` | `for K in dict` (key iteration) |
+| `pascal/concurrency/go_statement_example.fpas` | Fire-and-forget `go` (no `task` handle) |
 | `pascal/generics/generic_functions.fpas` | Generic functions |
 | `pascal/generics/generic_record_methods.fpas` | Method-level generics and constraints on record methods |
 | `pascal/pattern-matching/` | Guards and exhaustiveness |
@@ -69,11 +74,13 @@ Do **not** pass a `unit` source alone (for example `mandelbrot_color.fpas` or `m
 | `pascal/std/random_basics.fpas` | `Std.Random` — random real and inclusive integer ranges |
 | `pascal/std/task_basics.fpas` | `Std.Task` — `go`, `Wait`, `WaitAll` |
 | `pascal/std/time_basics.fpas` | `Std.Time` — monotonic time, elapsed time, timestamp, sleep |
+| `pascal/std/array_basics.fpas` | `Std.Array` — `Length`, `Sort`, `Any`, `All` |
 | `math/mandelbrot/mandelbrot_graph.fpas` | `Std.Graph` — native Mandelbrot explorer |
 | `pascal/tui/local_view_paint.fpas` | `Std.Tui` — local view paint, parent-relative layout, `HostSetViewRect` |
 | `pascal/tui/view_scoped_commands.fpas` | `Std.Tui` — `HostBindCommandToView` and focus/ancestor command routing |
 | `pascal/tui/show_modal_existing_view.fpas` | `Std.Tui` — `ShowModal` for an existing view subtree |
 | `pascal/tui/show_dialog.fpas` | `Std.Tui` — `ShowDialog` plus modal-local command binding |
+| `pascal/tui/poll_redraw_timeout.fpas` | Poll-style `ReadEventTimeout` + `RedrawPending` loop (**Escape** exits) |
 | `math/julia/julia.fpas` | ASCII Julia set (**interactive** — see below) |
 | `math/julia/julia_graph.fpas` | Native-window Julia explorer with `Std.Graph` |
 
@@ -104,5 +111,6 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 | `pascal/tui/view_scoped_commands.fpas` | Focus-aware view commands; **Tab** changes focus, **Ctrl+S** resolves per panel, **Escape** quits |
 | `pascal/tui/show_modal_existing_view.fpas` | Existing view subtree becomes modal; **Tab** stays in the subtree, **Escape** closes the modal |
 | `pascal/tui/show_dialog.fpas` | Owned modal dialog; **Ctrl+D** opens it, **Escape** closes it, **Ctrl+Q** quits |
+| `pascal/tui/poll_redraw_timeout.fpas` | Poll-style loop; **Escape** exits (see `docs/pascal/std/tui.md`) |
 
 TUI apps use the dispatch model: `Application.Configure(App, Handlers)` registers `On*` handlers; `Application.Run(App)` starts the hosted loop. See `docs/pascal/std/tui-app.md` for the full dispatch API and `docs/pascal/std/tui.md` for poll-style API status. The console's own event type remains **`Std.Console.Event`**.

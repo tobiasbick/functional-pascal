@@ -1,8 +1,10 @@
-{ Spec: docs/pascal/std/proc.md (from repository root). }
+{ Spec: docs/pascal/std/proc.md — requires `fpas` on PATH. }
 program ProcBasics;
-uses Std.Console, Std.Proc, Std.Result;
+uses Std.Console, Std.Conv, Std.Proc, Std.Result;
+
 begin
-  var Status: Result of integer, string := Run('__fpas_missing_command_8f21d2f4__', []);
-  WriteLn('missing command error: ', Std.Result.IsError(Status));
-  WriteLn('fallback code: ', Std.Result.UnwrapOr(Status, -1))
+  case Run('fpas', ['--version']) of
+    Ok(Code): WriteLn('fpas --version exit: ', IntToStr(Code));
+    Error(M): WriteLn('run error: ', M)
+  end
 end.

@@ -1,9 +1,11 @@
 { Spec: docs/pascal/std/env.md (from repository root). }
 program EnvBasics;
 uses Std.Console, Std.Env, Std.Option;
+
 begin
-  var MissingName: string := 'FPAS_EXAMPLE_MISSING_ENV_7E3B9C1A';
-  var MissingValue: Option of string := Get(MissingName);
-  WriteLn('missing exists: ', Exists(MissingName));
-  WriteLn('missing is none: ', Std.Option.IsNone(MissingValue))
+  WriteLn('PATH set: ', Exists('PATH'));
+  case Get('PATH') of
+    Some(_): WriteLn('PATH lookup: some');
+    None:    WriteLn('PATH lookup: none')
+  end
 end.

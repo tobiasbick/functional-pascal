@@ -4,4 +4,4 @@ kind = "program"
 main = "mandelbrot.fpas"
 
 [sources]
-include = ["*.fpas"]
+include = ["mandelbrot.fpas", "mandelbrot_color.fpas", "mandelbrot_render.fpas"]

@@ -1,12 +1,9 @@
 { Spec: docs/pascal/std/random.md (from repository root). }
 program RandomBasics;
 uses Std.Console, Std.Conv, Std.Random;
+
 begin
   Randomize();
-
-  var Fixed: integer := RandomInt(1, 1);
-  var UnitValue: real := Random();
-
-  WriteLn('fixed int: ', IntToStr(Fixed));
-  WriteLn('random in range: ', (UnitValue >= 0.0) and (UnitValue < 1.0))
+  WriteLn('random real: ', RealToStr(Random()));
+  WriteLn('d6: ', IntToStr(RandomInt(1, 6)))
 end.

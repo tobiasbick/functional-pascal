@@ -264,3 +264,5 @@ See also: `[examples/pascal/tui/minimal_application.fpas](../../../examples/pasc
 | `Application.PollEvent` | Same as above. |
 | `Application.RequestRedraw` | Fully compatible with dispatch mode; call from any `On*` handler. |
 | `Application.RedrawPending` | Low-level flag query; not needed in dispatch mode (host invokes `OnPaint` automatically). |
+
+Poll-style sample: [`examples/pascal/tui/poll_redraw_timeout.fpas`](../../../examples/pascal/tui/poll_redraw_timeout.fpas).

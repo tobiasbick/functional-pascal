@@ -1,10 +1,9 @@
-{ Spec: docs/pascal/std/args.md (from repository root). }
+{ Run: fpas examples/pascal/std/args_basics.fpas -- alpha beta }
 program ArgsBasics;
-uses Std.Console, Std.Args, Std.Conv;
+uses Std.Console, Std.Conv, Std.Args;
+
 begin
-  WriteLn('count: ', IntToStr(ParamCount()));
-  if ParamCount() > 0 then
-    WriteLn('first: ', ParamStr(0))
-  else
-    WriteLn('first: <none>')
+  WriteLn('param count: ', IntToStr(ParamCount()));
+  for I: integer := 0 to ParamCount() - 1 do
+    WriteLn('  [', IntToStr(I), '] ', ParamStr(I))
 end.

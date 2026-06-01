@@ -1,20 +1,21 @@
-{ Spec: docs/pascal/std/fs.md (from repository root). }
+{ Spec: docs/pascal/std/fs.md — writes ./_fpas_fs_demo.txt in the working directory. }
 program FsBasics;
 uses Std.Console, Std.Fs, Std.Result;
+
+const
+  DemoPath: string := '_fpas_fs_demo.txt';
+
 begin
-  var TargetDir: Result of boolean, string := CreateDir('target');
-  var TmpDir: Result of boolean, string := CreateDir('target/tmp');
-  var FilePath: string := 'target/tmp/fpas_fs_basics.txt';
-
-  var Written: Result of boolean, string := WriteText(FilePath, 'hello from fpas');
-  WriteLn('write ok: ', Std.Result.IsOk(Written));
-
-  case ReadText(FilePath) of
-    Ok(Text): WriteLn('read: ', Text);
-    Error(Message): WriteLn('read error: ', Message)
+  case WriteText(DemoPath, 'hello from Std.Fs') of
+    Ok(_): WriteLn('write: ok');
+    Error(M): WriteLn('write error: ', M)
   end;
 
-  WriteLn('exists: ', Exists(FilePath));
-  WriteLn('is file: ', IsFile(FilePath));
-  WriteLn('target is dir: ', IsDir('target'))
+  case ReadText(DemoPath) of
+    Ok(Text): WriteLn('read: ', Text);
+    Error(M): WriteLn('read error: ', M)
+  end;
+
+  WriteLn('exists: ', Exists(DemoPath));
+  WriteLn('isFile: ', IsFile(DemoPath))
 end.

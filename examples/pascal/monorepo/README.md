@@ -33,4 +33,4 @@ fpas check libs/greet/greet.fpasprj
 fpas check apps/hello/hello.fpasprj
 ```
 
-The program project lists the library in `[dependencies].projects`. Paths are relative to each `.fpasprj` file (or absolute for libraries outside the tree).
+The program project lists the library as `workspace = ["greet"]`, matching `project.name` in `greet.fpasprj`. Alternatively use `[dependencies].projects` with a relative or absolute path to the library manifest.

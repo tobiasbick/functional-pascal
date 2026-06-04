@@ -1,7 +1,5 @@
 use super::*;
-use crate::test_support::{
-    write_library_fpasprj, write_program_fpasprj_with_deps,
-};
+use crate::test_support::{write_library_fpasprj, write_program_fpasprj_with_deps};
 
 fn toml_path(path: &std::path::Path) -> String {
     path.to_string_lossy().replace('\\', "/")

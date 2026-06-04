@@ -55,7 +55,8 @@ Declares other `.fpasprj` files whose library sources are merged into this proje
 
 | Field | Required | Description |
 |---|---|---|
-| `projects` | No | Array of paths to library `.fpasprj` files. Omitted or empty means no project dependencies. |
+| `projects` | No | Array of paths to library `.fpasprj` files. Omitted or empty means no path-based dependencies. |
+| `workspace` | No | Array of `project.name` values from members of an enclosing `.fpasworkspace` file. Resolved by walking upward from the consumer project. |
 
 Each `projects` entry can be:
 
@@ -65,6 +66,7 @@ Each `projects` entry can be:
 Rules:
 
 - Every dependency must be a `kind = "library"` project. Depending on a `program` project is an error.
+- `workspace` entries require a `.fpasworkspace` ancestor (in the consumer's parent directories). Names match `project.name` in member manifests (case-insensitive).
 - Dependencies are loaded **transitively**: if library B depends on library C, a program that depends only on B also receives C's sources.
 - Cyclic `dependencies.projects` chains are rejected.
 - Unit names must remain unique across the consumer and all transitive library sources (case-insensitive), same as within a single project.
@@ -193,6 +195,8 @@ main = "src/main.fpas"
 
 [dependencies]
 projects = ["../../libs/acme-utils/acme-utils.fpasprj"]
+# or, inside a workspace tree:
+# workspace = ["acme-utils"]
 
 [sources]
 include = ["src/**/*.fpas"]

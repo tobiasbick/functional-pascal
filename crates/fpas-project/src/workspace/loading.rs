@@ -25,6 +25,36 @@ struct WorkspaceSection {
     members: Vec<String>,
 }
 
+#[derive(Debug, Deserialize)]
+struct ProjectNameFile {
+    project: ProjectNameSection,
+}
+
+#[derive(Debug, Deserialize)]
+struct ProjectNameSection {
+    name: String,
+}
+
+/// Reads `project.name` from a member `.fpasprj` without loading sources or dependencies.
+pub(super) fn read_member_project_name(path: &Path) -> Result<String, String> {
+    let project_text = fs::read_to_string(path).map_err(|e| {
+        format!(
+            "Error reading project file `{}`: {e}",
+            path.to_string_lossy()
+        )
+    })?;
+
+    let project_file: ProjectNameFile = toml::from_str(&project_text).map_err(|e| {
+        format!(
+            "Invalid project file `{}`: {e}\n  help: Use TOML syntax with a `[project]` section.",
+            path.to_string_lossy()
+        )
+    })?;
+
+    validate_non_empty("project.name", &project_file.project.name)?;
+    Ok(project_file.project.name)
+}
+
 /// Load and validate a workspace file.
 pub fn load_workspace(path: &Path) -> Result<LoadedWorkspace, String> {
     let workspace_text = fs::read_to_string(path).map_err(|e| {

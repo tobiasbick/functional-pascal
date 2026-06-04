@@ -248,4 +248,3 @@ fn has_extension(path: &Path, extension: &str) -> bool {
         .and_then(|value| value.to_str())
         .is_some_and(|value| value.eq_ignore_ascii_case(extension))
 }
-

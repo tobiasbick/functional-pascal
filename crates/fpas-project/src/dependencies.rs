@@ -7,6 +7,7 @@ use super::model::{LoadedProject, ProjectKind};
 use super::paths::{
     canonical_project_path, merge_source_files, resolve_project_dependency_path, same_file,
 };
+use super::workspace::resolve_workspace_dependency_paths;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -36,7 +37,9 @@ pub(super) fn load_project_with_dependencies(
     let mut source_files = Vec::new();
     let mut warnings = own.warnings;
 
-    for dependency_path in dedupe_dependency_paths(&own.dependency_projects, &own.root_dir)? {
+    let dependency_paths =
+        resolve_all_dependency_paths(path, &own.dependency_projects, &own.workspace_dependencies)?;
+    for dependency_path in dependency_paths {
         let dependency_loaded = load_project_with_dependencies(&dependency_path, visiting, cache)?;
         ensure_library_dependency(&dependency_path, &dependency_loaded)?;
         merge_source_files(
@@ -61,21 +64,43 @@ pub(super) fn load_project_with_dependencies(
     Ok(loaded)
 }
 
-fn dedupe_dependency_paths(raw_paths: &[String], root_dir: &Path) -> Result<Vec<PathBuf>, String> {
+fn resolve_all_dependency_paths(
+    consumer_project: &Path,
+    project_paths: &[String],
+    workspace_names: &[String],
+) -> Result<Vec<PathBuf>, String> {
+    let root_dir = consumer_project.parent().ok_or_else(|| {
+        format!(
+            "Cannot resolve project root for `{}`.\n  help: Use a normal file path inside a directory.",
+            consumer_project.to_string_lossy()
+        )
+    })?;
+
     let mut resolved = Vec::new();
     let mut seen = Vec::<PathBuf>::new();
 
-    for raw in raw_paths {
-        let path = resolve_project_dependency_path(raw, root_dir)?;
-        let key = canonical_project_path(&path);
-        if seen.iter().any(|existing| same_file(existing, &key)) {
-            continue;
-        }
-        seen.push(key);
-        resolved.push(path);
+    for raw in project_paths {
+        insert_dependency_path(
+            resolve_project_dependency_path(raw, root_dir)?,
+            &mut resolved,
+            &mut seen,
+        );
+    }
+
+    for path in resolve_workspace_dependency_paths(consumer_project, workspace_names)? {
+        insert_dependency_path(path, &mut resolved, &mut seen);
     }
 
     Ok(resolved)
+}
+
+fn insert_dependency_path(path: PathBuf, resolved: &mut Vec<PathBuf>, seen: &mut Vec<PathBuf>) {
+    let key = canonical_project_path(&path);
+    if seen.iter().any(|existing| same_file(existing, &key)) {
+        return;
+    }
+    seen.push(key);
+    resolved.push(path);
 }
 
 fn ensure_library_dependency(path: &Path, loaded: &LoadedProject) -> Result<(), String> {

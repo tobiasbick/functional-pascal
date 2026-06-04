@@ -23,6 +23,8 @@ pub(crate) struct OwnProject {
     pub source_files: Vec<PathBuf>,
     /// Paths from `[dependencies].projects` (unresolved strings).
     pub dependency_projects: Vec<String>,
+    /// Names from `[dependencies].workspace` (resolved via enclosing `.fpasworkspace`).
+    pub workspace_dependencies: Vec<String>,
     /// Project root directory (parent of the `.fpasprj` file).
     pub root_dir: PathBuf,
     /// Non-fatal loading warnings such as duplicate include entries.
@@ -51,7 +53,10 @@ struct SourcesSection {
 
 #[derive(Debug, Deserialize)]
 struct DependenciesSection {
+    #[serde(default)]
     projects: Vec<String>,
+    #[serde(default)]
+    workspace: Vec<String>,
 }
 
 /// Parse and validate one project file's own sources and metadata.
@@ -93,12 +98,13 @@ pub(crate) fn load_own_project(path: &Path) -> Result<OwnProject, String> {
         );
     }
 
-    let dependency_projects = project_file
+    let (dependency_projects, workspace_dependencies) = project_file
         .dependencies
-        .map(|section| section.projects)
+        .map(|section| (section.projects, section.workspace))
         .unwrap_or_default();
 
-    validate_dependency_entries(&dependency_projects)?;
+    validate_dependency_entries("dependencies.projects", &dependency_projects)?;
+    validate_dependency_entries("dependencies.workspace", &workspace_dependencies)?;
 
     let (mut source_files, mut warnings) = resolve_source_files(&sources.include, root_dir)?;
     let main = match kind {
@@ -132,18 +138,18 @@ pub(crate) fn load_own_project(path: &Path) -> Result<OwnProject, String> {
         main,
         source_files,
         dependency_projects,
+        workspace_dependencies,
         root_dir: root_dir.to_path_buf(),
         warnings,
     })
 }
 
-fn validate_dependency_entries(entries: &[String]) -> Result<(), String> {
+fn validate_dependency_entries(field_name: &str, entries: &[String]) -> Result<(), String> {
     for entry in entries {
         if entry.trim().is_empty() {
-            return Err(
-                "A `dependencies.projects` entry is empty.\n  help: Remove empty entries or provide a path to a `.fpasprj` file."
-                    .to_string(),
-            );
+            return Err(format!(
+                "A `{field_name}` entry is empty.\n  help: Remove empty entries or provide a valid value."
+            ));
         }
     }
 

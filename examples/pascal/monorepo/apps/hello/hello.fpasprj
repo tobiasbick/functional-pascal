@@ -4,7 +4,7 @@ kind = "program"
 main = "src/main.fpas"
 
 [dependencies]
-projects = ["../../libs/greet/greet.fpasprj"]
+workspace = ["greet"]
 
 [sources]
 include = ["src/**/*.fpas"]

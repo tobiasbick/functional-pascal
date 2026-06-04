@@ -28,14 +28,22 @@ pub(crate) fn write_text(path: &Path, text: &str) {
 ///
 /// Spec: [Projects & CLI](../../../docs/pascal/10-projects.md).
 pub(crate) fn write_program_fpasprj(project_file: &Path, main: &str, include: &[&str]) {
-    write_fpasprj(project_file, "app", "program", Some(main), include, &[]);
+    write_fpasprj(
+        project_file,
+        "app",
+        "program",
+        Some(main),
+        include,
+        &[],
+        &[],
+    );
 }
 
 /// Writes a `.fpasprj` manifest for tests (`kind = "library"`).
 ///
 /// Spec: [Projects & CLI](../../../docs/pascal/10-projects.md).
 pub(crate) fn write_library_fpasprj(project_file: &Path, include: &[&str]) {
-    write_fpasprj(project_file, "lib", "library", None, include, &[]);
+    write_fpasprj(project_file, "lib", "library", None, include, &[], &[]);
 }
 
 pub(crate) fn write_program_fpasprj_with_deps(
@@ -51,6 +59,24 @@ pub(crate) fn write_program_fpasprj_with_deps(
         Some(main),
         include,
         dependencies,
+        &[],
+    );
+}
+
+pub(crate) fn write_program_fpasprj_with_workspace_deps(
+    project_file: &Path,
+    main: &str,
+    include: &[&str],
+    workspace_deps: &[&str],
+) {
+    write_fpasprj(
+        project_file,
+        "app",
+        "program",
+        Some(main),
+        include,
+        &[],
+        workspace_deps,
     );
 }
 
@@ -59,7 +85,15 @@ pub(crate) fn write_library_fpasprj_with_deps(
     include: &[&str],
     dependencies: &[&str],
 ) {
-    write_fpasprj(project_file, "lib", "library", None, include, dependencies);
+    write_fpasprj(
+        project_file,
+        "lib",
+        "library",
+        None,
+        include,
+        dependencies,
+        &[],
+    );
 }
 
 fn write_fpasprj(
@@ -69,6 +103,7 @@ fn write_fpasprj(
     main: Option<&str>,
     include: &[&str],
     dependencies: &[&str],
+    workspace_dependencies: &[&str],
 ) {
     let include_entries = include
         .iter()
@@ -79,21 +114,7 @@ fn write_fpasprj(
         Some(main) => format!("main = \"{main}\"\n\n"),
         None => String::new(),
     };
-    let dependencies_section = if dependencies.is_empty() {
-        String::new()
-    } else {
-        let dependency_entries = dependencies
-            .iter()
-            .map(|entry| format!("\"{entry}\""))
-            .collect::<Vec<_>>()
-            .join(", ");
-        format!(
-            r#"
-[dependencies]
-projects = [{dependency_entries}]
-"#
-        )
-    };
+    let dependencies_section = format_dependency_section(dependencies, workspace_dependencies);
 
     write_text(
         project_file,
@@ -105,4 +126,30 @@ kind = "{kind}"
 include = [{include_entries}]{dependencies_section}"#
         ),
     );
+}
+
+fn format_dependency_section(dependencies: &[&str], workspace_dependencies: &[&str]) -> String {
+    if dependencies.is_empty() && workspace_dependencies.is_empty() {
+        return String::new();
+    }
+
+    let mut section = String::from("\n\n[dependencies]\n");
+    if !dependencies.is_empty() {
+        let dependency_entries = dependencies
+            .iter()
+            .map(|entry| format!("\"{entry}\""))
+            .collect::<Vec<_>>()
+            .join(", ");
+        section.push_str(&format!("projects = [{dependency_entries}]\n"));
+    }
+    if !workspace_dependencies.is_empty() {
+        let workspace_entries = workspace_dependencies
+            .iter()
+            .map(|entry| format!("\"{entry}\""))
+            .collect::<Vec<_>>()
+            .join(", ");
+        section.push_str(&format!("workspace = [{workspace_entries}]\n"));
+    }
+
+    section
 }

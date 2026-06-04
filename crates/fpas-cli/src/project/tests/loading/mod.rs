@@ -1,6 +1,7 @@
 use super::*;
 
 mod dependencies;
+mod excludes;
 mod includes;
 mod path_resolution;
 mod project_kind;

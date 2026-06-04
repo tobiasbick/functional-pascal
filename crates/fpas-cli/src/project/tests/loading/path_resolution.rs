@@ -156,7 +156,7 @@ include = ["src/**/*"]
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
 
     assert!(
-        error.contains("matched a non-source file"),
+        error.contains("readme.md") && error.contains(".fpas"),
         "expected non-source glob error, got: {error}"
     );
 }

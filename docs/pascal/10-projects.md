@@ -78,8 +78,9 @@ Lists all source files belonging to the project. Each source file declares its n
 | Field | Required | Description |
 |---|---|---|
 | `include` | Yes | Array of file paths or glob patterns. Must contain at least one entry. |
+| `exclude` | No | Array of file paths or glob patterns. Removes matches from the include set after inclusion. |
 
-#### Include Patterns
+#### Include and Exclude Patterns
 
 These `include` entries belong to the project file format only. They are not related to Pascal compiler directives.
 
@@ -89,9 +90,9 @@ Each `include` entry can be:
 - **Relative path** — e.g. `"src/utils.fpas"`. Resolved relative to the project root.
 - **Absolute path** — e.g. `"/home/user/shared/common.fpas"`.
 
-Entries may be mixed freely. All matched files must have the `.fpas` extension.
+Entries may be mixed freely. All **included** files must have the `.fpas` extension.
 
-> `exclude` patterns are not yet supported.
+`exclude` uses the same path and glob rules. Exclude globs may match zero files without error. Non-`.fpas` paths in exclude are ignored when they do not appear in the include set.
 
 ### Source File Rules
 

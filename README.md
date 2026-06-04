@@ -151,6 +151,17 @@ end.
 
 More examples in the [`examples/`](examples/) directory.
 
+### Multi-file projects and libraries
+
+Larger programs use a `.fpasprj` project file; reusable code can live in `kind = "library"` projects referenced from `[dependencies].projects` (paths) or `[dependencies].workspace` (member `project.name` inside a `.fpasworkspace`). See [Projects](docs/pascal/10-projects.md) and the [monorepo example](examples/pascal/monorepo/).
+
+```sh
+fpas my-app.fpasprj
+fpas check my-lib.fpasprj
+cd my-suite && fpas check    # .fpasworkspace: check all members
+cd my-suite && fpas          # run the sole program member
+```
+
 ## Documentation
 
 The full language documentation is in [`docs/pascal/`](docs/pascal/):

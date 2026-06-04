@@ -5,7 +5,29 @@ use std::path::{Path, PathBuf, absolute};
 
 const SOURCE_FILE_EXTENSION: &str = "fpas";
 
+/// Resolves `sources.include` and applies optional `sources.exclude` patterns.
+///
+/// Documentation: `docs/pascal/10-projects.md`
 pub(super) fn resolve_source_files(
+    include: &[String],
+    exclude: &[String],
+    root_dir: &Path,
+) -> Result<(Vec<PathBuf>, Vec<String>), String> {
+    let (mut files, warnings) = expand_include_entries(include, root_dir)?;
+    if !exclude.is_empty() {
+        let excluded = expand_exclude_entries(exclude, root_dir)?;
+        files.retain(|path| {
+            let key = canonical_or_original(path.as_path());
+            !excluded
+                .iter()
+                .any(|excluded_path| canonical_or_original(excluded_path.as_path()) == key)
+        });
+    }
+
+    Ok((files, warnings))
+}
+
+fn expand_include_entries(
     entries: &[String],
     root_dir: &Path,
 ) -> Result<(Vec<PathBuf>, Vec<String>), String> {
@@ -14,64 +36,79 @@ pub(super) fn resolve_source_files(
     let mut seen = HashSet::<PathBuf>::new();
 
     for entry in entries {
-        let entry = entry.trim();
-        if entry.is_empty() {
-            return Err(
-                "A `sources.include` entry is empty.\n  help: Remove empty entries or provide a file path/pattern."
-                    .to_string(),
-            );
+        for matched in expand_source_pattern("sources.include", entry, root_dir, true)? {
+            validate_source_extension(&matched, "sources.include")?;
+            insert_unique_source_file(matched, &mut files, &mut seen, &mut warnings);
         }
-
-        let resolved_path = resolve_path(entry, root_dir);
-        if resolved_path.is_file() {
-            validate_source_extension(&resolved_path, "sources.include")?;
-            insert_unique_source_file(resolved_path, &mut files, &mut seen, &mut warnings);
-            continue;
-        }
-
-        if is_glob_pattern(entry) {
-            let pattern_text = resolved_path.to_string_lossy().replace('\\', "/");
-            let mut matches = Vec::<PathBuf>::new();
-            for matched in glob(&pattern_text).map_err(|e| {
-                format!(
-                    "Invalid glob pattern `{entry}`.\n  help: Use a valid glob such as `src/**/*.fpas`.\n  details: {e}"
-                )
-            })? {
-                let matched = matched.map_err(|e| {
-                    format!(
-                        "Error while evaluating glob pattern `{entry}`.\n  details: {e}"
-                    )
-                })?;
-                if matched.is_file() {
-                    matches.push(matched);
-                }
-            }
-
-            if matches.is_empty() {
-                return Err(format!(
-                    "Include pattern `{entry}` matched no files.\n  help: Check the path or pattern relative to the project directory."
-                ));
-            }
-
-            matches.sort();
-            for matched in matches {
-                if !has_source_extension(&matched) {
-                    return Err(format!(
-                        "Include pattern `{entry}` matched a non-source file `{}`.\n  help: Restrict the pattern to `.fpas` files (for example `src/**/*.fpas`).",
-                        matched.to_string_lossy()
-                    ));
-                }
-                insert_unique_source_file(matched, &mut files, &mut seen, &mut warnings);
-            }
-            continue;
-        }
-
-        let explicit_path = resolve_explicit_file_path("sources.include", entry, root_dir)?;
-        validate_source_extension(&explicit_path, "sources.include")?;
-        insert_unique_source_file(explicit_path, &mut files, &mut seen, &mut warnings);
     }
 
     Ok((files, warnings))
+}
+
+fn expand_exclude_entries(entries: &[String], root_dir: &Path) -> Result<Vec<PathBuf>, String> {
+    let mut excluded = Vec::<PathBuf>::new();
+    let mut seen = HashSet::<PathBuf>::new();
+
+    for entry in entries {
+        for matched in expand_source_pattern("sources.exclude", entry, root_dir, false)? {
+            let key = canonical_or_original(matched.as_path());
+            if seen.insert(key) {
+                excluded.push(matched);
+            }
+        }
+    }
+
+    Ok(excluded)
+}
+
+fn expand_source_pattern(
+    field_name: &str,
+    entry: &str,
+    root_dir: &Path,
+    require_glob_match: bool,
+) -> Result<Vec<PathBuf>, String> {
+    let entry = entry.trim();
+    if entry.is_empty() {
+        return Err(format!(
+            "A `{field_name}` entry is empty.\n  help: Remove empty entries or provide a file path/pattern."
+        ));
+    }
+
+    let resolved_path = resolve_path(entry, root_dir);
+    if resolved_path.is_file() {
+        return Ok(vec![resolved_path]);
+    }
+
+    if is_glob_pattern(entry) {
+        let pattern_text = resolved_path.to_string_lossy().replace('\\', "/");
+        let mut matches = Vec::<PathBuf>::new();
+        for matched in glob(&pattern_text).map_err(|e| {
+            format!(
+                "Invalid glob pattern `{entry}` in `{field_name}`.\n  help: Use a valid glob such as `src/**/*.fpas`.\n  details: {e}"
+            )
+        })? {
+            let matched = matched.map_err(|e| {
+                format!(
+                    "Error while evaluating glob pattern `{entry}` in `{field_name}`.\n  details: {e}"
+                )
+            })?;
+            if matched.is_file() {
+                matches.push(matched);
+            }
+        }
+
+        if require_glob_match && matches.is_empty() {
+            return Err(format!(
+                "Pattern `{entry}` in `{field_name}` matched no files.\n  help: Check the path or pattern relative to the project directory."
+            ));
+        }
+
+        matches.sort();
+        return Ok(matches);
+    }
+
+    let explicit_path = resolve_explicit_file_path(field_name, entry, root_dir)?;
+    Ok(vec![explicit_path])
 }
 
 const PROJECT_FILE_EXTENSION: &str = "fpasprj";

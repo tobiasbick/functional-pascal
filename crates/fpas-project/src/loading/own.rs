@@ -49,6 +49,8 @@ struct ProjectSection {
 #[derive(Debug, Deserialize)]
 struct SourcesSection {
     include: Vec<String>,
+    #[serde(default)]
+    exclude: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -106,7 +108,10 @@ pub(crate) fn load_own_project(path: &Path) -> Result<OwnProject, String> {
     validate_dependency_entries("dependencies.projects", &dependency_projects)?;
     validate_dependency_entries("dependencies.workspace", &workspace_dependencies)?;
 
-    let (mut source_files, mut warnings) = resolve_source_files(&sources.include, root_dir)?;
+    validate_dependency_entries("sources.exclude", &sources.exclude)?;
+
+    let (mut source_files, mut warnings) =
+        resolve_source_files(&sources.include, &sources.exclude, root_dir)?;
     let main = match kind {
         ProjectKind::Program => {
             let main_raw = project_file.project.main.as_deref().ok_or_else(|| {

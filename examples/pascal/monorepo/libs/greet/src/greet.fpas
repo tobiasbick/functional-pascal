@@ -1,0 +1,7 @@
+{ Unit used by the monorepo hello app via [dependencies].projects. }
+unit Demo.Greet;
+
+function Message(): string;
+begin
+  return 'Hello from library project'
+end;

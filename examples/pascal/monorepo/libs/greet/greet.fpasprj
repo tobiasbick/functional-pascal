@@ -1,0 +1,6 @@
+[project]
+name = "greet"
+kind = "library"
+
+[sources]
+include = ["src/**/*.fpas"]

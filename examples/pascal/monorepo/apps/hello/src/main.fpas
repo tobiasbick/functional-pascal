@@ -1,0 +1,5 @@
+program Hello;
+uses Demo.Greet, Std.Console;
+begin
+  WriteLn(Message)
+end.

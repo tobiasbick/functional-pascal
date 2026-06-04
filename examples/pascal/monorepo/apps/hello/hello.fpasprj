@@ -1,0 +1,10 @@
+[project]
+name = "hello"
+kind = "program"
+main = "src/main.fpas"
+
+[dependencies]
+projects = ["../../libs/greet/greet.fpasprj"]
+
+[sources]
+include = ["src/**/*.fpas"]

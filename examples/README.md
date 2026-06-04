@@ -57,6 +57,17 @@ fpas examples/math/mandelbrot/mandelbrot.fpasprj
 
 Do **not** pass a `unit` source alone (for example `mandelbrot_color.fpas` or `math_utils.fpas`) — the compiler expects a `program` as the main file.
 
+### Monorepo (library dependency + workspace)
+
+When a program lives in one project and reusable units live in another, use `kind = "library"` plus `[dependencies].projects` on the program `.fpasprj`. Optional `.fpasworkspace` lists all projects for `fpas check`:
+
+```sh
+fpas examples/pascal/monorepo/apps/hello/hello.fpasprj
+cd examples/pascal/monorepo && fpas check
+```
+
+See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/10-projects.md](../docs/pascal/10-projects.md).
+
 ## Single-file programs (by topic)
 
 | Path | Topic |
@@ -108,6 +119,7 @@ Do **not** pass a `unit` source alone (for example `mandelbrot_color.fpas` or `m
 | Path | Contents |
 |------|----------|
 | `pascal/units-basic/` | `units-basic.fpasprj`, `unit App.Math`, `App.Reporting`, program `UnitsBasic` |
+| `pascal/monorepo/` | Workspace + `Demo.Greet` library + `Hello` program via `[dependencies].projects` |
 | `math/mandelbrot/` | `mandelbrot.fpasprj`, program `MandelbrotShowcase`, units `Mandelbrot.Color` and `Mandelbrot.Render` |
 
 Helper units under those folders are built only through the project; see the one-line `{ ... }` comment at the top of each unit file.

@@ -1,0 +1,6 @@
+[workspace]
+name = "fpas-monorepo-example"
+members = [
+  "libs/greet/greet.fpasprj",
+  "apps/hello/hello.fpasprj",
+]

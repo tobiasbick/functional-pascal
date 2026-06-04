@@ -9,4 +9,4 @@ Still planned for later versions:
 
 - Public API visibility and explicit export rules beyond `private`.
 - Precompiled library artifacts.
-- Workspace files for multi-project discovery in large monorepos.
+- Workspace-aware dependency aliases (short names resolved through `members`).

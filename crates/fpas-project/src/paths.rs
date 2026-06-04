@@ -77,7 +77,7 @@ pub(super) fn resolve_source_files(
 const PROJECT_FILE_EXTENSION: &str = "fpasprj";
 
 /// Canonical path used for project dependency graphs and deduplication.
-pub(super) fn canonical_project_path(path: &Path) -> PathBuf {
+pub(crate) fn canonical_project_path(path: &Path) -> PathBuf {
     canonical_or_original(path)
 }
 
@@ -173,7 +173,7 @@ fn validate_non_empty(field_name: &str, value: &str) -> Result<(), String> {
     Ok(())
 }
 
-fn resolve_path(value: &str, root_dir: &Path) -> PathBuf {
+pub(super) fn resolve_path(value: &str, root_dir: &Path) -> PathBuf {
     let path = PathBuf::from(value);
     if path.is_absolute() {
         path

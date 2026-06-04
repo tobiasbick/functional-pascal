@@ -1,5 +1,6 @@
 mod graph;
 mod imports;
+mod library_check;
 mod parse;
 mod rewrite;
 mod source_map;
@@ -37,8 +38,14 @@ pub fn build_program(main_path: &Path, source_files: &[PathBuf]) -> Result<Progr
     Ok(build_program_with_source_map(main_path, source_files)?.program)
 }
 
+pub use library_check::build_library_check_with_source_map;
+
 /// Build a single linked `Program` together with the source-path table used to
 /// resolve diagnostics back to the originating file.
+///
+/// This resolves reachable units, checks import ambiguity, preserves private
+/// unit members, and rewrites user-unit symbols into fully qualified names as
+/// described in `docs/pascal/09-units.md`.
 pub fn build_program_with_source_map(
     main_path: &Path,
     source_files: &[PathBuf],

@@ -12,6 +12,7 @@
         reason = "CLI tests use explicit panic for structural mismatches"
     )
 )]
+mod cli_check;
 mod cli_input;
 mod cli_run;
 

@@ -16,26 +16,41 @@ pub(crate) fn run_cli(
     mut stdout: Box<dyn Write + Send>,
     stderr: &mut dyn Write,
 ) -> i32 {
-    let config = match resolve_cli_config(args, cwd) {
-        Ok(ResolvedCli::Run(config)) => config,
-        Ok(ResolvedCli::Help) => {
-            use crate::cli_input::CLI_HELP;
-            let _ = stdout.write_all(CLI_HELP.as_bytes());
-            return 0;
-        }
-        Ok(ResolvedCli::Version) => {
-            let _ = writeln!(stdout, "fpas {}", env!("CARGO_PKG_VERSION"));
-            return 0;
-        }
+    let resolved = match resolve_cli_config(args, cwd) {
+        Ok(resolved) => resolved,
         Err(message) => {
             let _ = writeln!(stderr, "{message}");
             return 1;
         }
     };
 
-    match config.input {
-        CliInput::SourceFile(path) => run_source_file(&path, config.program_args, stdout, stderr),
-        CliInput::ProjectFile(path) => run_project_file(&path, config.program_args, stdout, stderr),
+    match resolved {
+        ResolvedCli::Help => {
+            use crate::cli_input::CLI_HELP;
+            let _ = stdout.write_all(CLI_HELP.as_bytes());
+            return 0;
+        }
+        ResolvedCli::Version => {
+            let _ = writeln!(stdout, "fpas {}", env!("CARGO_PKG_VERSION"));
+            return 0;
+        }
+        ResolvedCli::Check(config) => return crate::cli_check::check_cli(config, stderr),
+        ResolvedCli::Run(config) => match config.input {
+            CliInput::SourceFile(path) => {
+                run_source_file(&path, config.program_args, stdout, stderr)
+            }
+            CliInput::ProjectFile(path) => {
+                run_project_file(&path, config.program_args, stdout, stderr)
+            }
+            CliInput::WorkspaceFile(path) => {
+                let _ = writeln!(
+                    stderr,
+                    "Cannot run workspace `{}`.\n  help: Use `fpas check` to validate workspace members, or pass a `.fpasprj` program path.",
+                    path.display()
+                );
+                1
+            }
+        },
     }
 }
 
@@ -200,7 +215,7 @@ pub(crate) fn render_cli_diagnostic(
     fpas_diagnostics::render(path, diagnostic)
 }
 
-fn render_cli_diagnostic_with_sources(
+pub(crate) fn render_cli_diagnostic_with_sources(
     fallback_path: &str,
     source_paths: Option<&[PathBuf]>,
     diagnostic: &fpas_diagnostics::Diagnostic,

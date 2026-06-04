@@ -46,6 +46,18 @@ pub(super) fn resolve_reachable_units(
     Ok(reachable)
 }
 
+/// Every unit in `units`, plus any user units reachable from their `uses` lists.
+pub(super) fn collect_library_reachable_units(
+    units: &HashMap<String, UnitFile>,
+) -> Result<HashSet<String>, String> {
+    let mut reachable = HashSet::<String>::new();
+    for (key, unit_file) in units {
+        reachable.insert(key.clone());
+        reachable.extend(resolve_reachable_units(&unit_file.unit.uses, units)?);
+    }
+    Ok(reachable)
+}
+
 pub(super) fn topo_sort_units(
     reachable: &HashSet<String>,
     units: &HashMap<String, UnitFile>,

@@ -92,9 +92,9 @@ fn resolve_cli_input_rejects_more_than_one_argument() {
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     let error = result.expect_err("multiple arguments must fail");
-    assert_eq!(
-        error,
-        "Usage: fpas [<file.fpas | file.fpasprj>] [-- <args>...]"
+    assert!(
+        error.starts_with("Usage: fpas [<file.fpas | file.fpasprj>]"),
+        "unexpected error: {error}"
     );
 }
 

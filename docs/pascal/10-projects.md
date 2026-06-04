@@ -15,6 +15,7 @@ Multi-file programs are composed with project source lists plus `unit` / `uses`.
   - `.fpasprj` — loads as a project file.
   - Other extensions — error.
 - `fpas` with more than one argument — usage error.
+- `fpas check [<path>]` — type-check a `.fpas`, `.fpasprj`, or `.fpasworkspace` without running. With no path, discovers `.fpasworkspace` or `.fpasprj` in the current directory.
 - `fpas -h` / `fpas --help` — prints usage to stdout and exits successfully.
 - `fpas -V` / `fpas --version` — prints the compiler version to stdout and exits successfully.
 
@@ -209,6 +210,38 @@ end.
 
 A library outside the monorepo uses the same `[dependencies].projects` field with an absolute path to its `.fpasprj` file.
 
-## Workspaces (Planned)
+## Checking Without Running
 
-A workspace groups multiple projects, similar to a Visual Studio solution. A workspace file would reference one or more `.fpasprj` files and allow cross-project builds and shared dependencies. This feature is not yet implemented.
+Use `fpas check` to parse, link, and type-check without executing code:
+
+```sh
+fpas check my-lib.fpasprj
+fpas check my-app.fpasprj
+fpas check hello.fpas
+fpas check suite.fpasworkspace
+fpas check
+```
+
+With no path, `fpas check` discovers a single `.fpasworkspace` in the current directory first, otherwise a single `.fpasprj`. Library projects are supported here even though `fpas my-lib.fpasprj` cannot run them.
+
+## Workspaces
+
+A workspace groups multiple projects, similar to a Visual Studio solution. Define a `.fpasworkspace` file in TOML format:
+
+```toml
+[workspace]
+name = "acme-suite"
+members = [
+  "apps/portal/portal.fpasprj",
+  "libs/acme-utils/acme-utils.fpasprj"
+]
+```
+
+| Field | Required | Description |
+|---|---|---|
+| `name` | Yes | Workspace name. Any non-empty string. |
+| `members` | Yes | Array of paths to `.fpasprj` files, relative to the workspace file or absolute. |
+
+`fpas check` with no path loads the sole `.fpasworkspace` in the current directory and checks every member project. `fpas` (run) does not execute workspaces; pass a program `.fpasprj` explicitly.
+
+Cross-project dependencies still use `[dependencies].projects` on each consumer `.fpasprj`; the workspace file does not replace per-project dependency lists.

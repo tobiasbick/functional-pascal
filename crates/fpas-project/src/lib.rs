@@ -5,6 +5,7 @@
 //! - `docs/pascal/10-projects.md`
 
 mod common;
+mod dependencies;
 mod link;
 mod loading;
 mod model;

@@ -29,6 +29,9 @@ main = "src/main.fpas"
 
 [sources]
 include = ["src/**/*.fpas"]
+
+[dependencies]
+projects = ["../my-lib/my-lib.fpasprj"]
 ```
 
 ### `[project]` Section
@@ -43,7 +46,28 @@ include = ["src/**/*.fpas"]
 ### Project Kinds
 
 - **`program`** — produces an executable. Requires `main` pointing to a file with a `program` declaration. The entry point is exactly one main program file per project.
-- **`library`** — a reusable library. Must not define `main`. Source files are expected to use `unit` declarations. The CLI can load library projects for validation but **cannot execute** them; export and consumption rules are not yet defined (see [Future: Libraries](../future/libraries.md)).
+- **`library`** — a reusable library. Must not define `main`. Source files are expected to use `unit` declarations. Other projects consume libraries via `[dependencies].projects`. The CLI cannot execute a library project directly; run a `program` project that depends on it instead.
+
+### `[dependencies]` Section
+
+Declares other `.fpasprj` files whose library sources are merged into this project before linking.
+
+| Field | Required | Description |
+|---|---|---|
+| `projects` | No | Array of paths to library `.fpasprj` files. Omitted or empty means no project dependencies. |
+
+Each `projects` entry can be:
+
+- **Relative path** — resolved relative to this project's root (the directory containing the `.fpasprj` file). Use this for monorepos, for example `"../libs/acme-utils/acme-utils.fpasprj"`.
+- **Absolute path** — used as-is. Use this when the library lives anywhere on the filesystem outside the consumer tree.
+
+Rules:
+
+- Every dependency must be a `kind = "library"` project. Depending on a `program` project is an error.
+- Dependencies are loaded **transitively**: if library B depends on library C, a program that depends only on B also receives C's sources.
+- Cyclic `dependencies.projects` chains are rejected.
+- Unit names must remain unique across the consumer and all transitive library sources (case-insensitive), same as within a single project.
+- Library sources are linked only when reachable through `uses` from the program entry point (see [09-units.md](09-units.md)).
 
 ### `[sources]` Section
 
@@ -75,7 +99,7 @@ Entries may be mixed freely. All matched files must have the `.fpas` extension.
 - If multiple entries resolve to the same file, a warning is emitted and the duplicate is ignored.
 - Duplicate unit names (case-insensitive) across different files are rejected.
 
-## Example Project
+## Example: Single Project
 
 Directory structure:
 
@@ -85,7 +109,6 @@ my-app/
   src/
     main.fpas
     math.fpas
-    color.fpas
 ```
 
 `my-app.fpasprj`:
@@ -120,6 +143,71 @@ begin
   return A + B
 end;
 ```
+
+## Example: Program With a Library Dependency
+
+Monorepo layout:
+
+```
+suite/
+  libs/
+    acme-utils/
+      acme-utils.fpasprj
+      src/math.fpas
+  apps/
+    portal/
+      portal.fpasprj
+      src/main.fpas
+```
+
+`libs/acme-utils/acme-utils.fpasprj`:
+
+```toml
+[project]
+name = "acme-utils"
+kind = "library"
+
+[sources]
+include = ["src/**/*.fpas"]
+```
+
+`libs/acme-utils/src/math.fpas`:
+
+```pascal
+unit Acme.Math;
+
+function Add(A: integer; B: integer): integer;
+begin
+  return A + B
+end;
+```
+
+`apps/portal/portal.fpasprj`:
+
+```toml
+[project]
+name = "portal"
+kind = "program"
+main = "src/main.fpas"
+
+[dependencies]
+projects = ["../../libs/acme-utils/acme-utils.fpasprj"]
+
+[sources]
+include = ["src/**/*.fpas"]
+```
+
+`apps/portal/src/main.fpas`:
+
+```pascal
+program Portal;
+uses Acme.Math, Std.Console;
+begin
+  WriteLn(Add(3, 4));
+end.
+```
+
+A library outside the monorepo uses the same `[dependencies].projects` field with an absolute path to its `.fpasprj` file.
 
 ## Workspaces (Planned)
 

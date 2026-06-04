@@ -1,5 +1,12 @@
 # Future: Libraries
 
-> Deferred. Planned for a future version.
+The project kind `library` and `[dependencies].projects` support source-level reuse today:
 
-The project kind `library` is reserved for producing reusable libraries. Details on public API visibility, export rules, and consumption by other projects are yet to be defined.
+- Define units in a `kind = "library"` project.
+- Consume them from a `program` project via `dependencies.projects` and `uses`.
+
+Still planned for later versions:
+
+- Public API visibility and explicit export rules beyond `private`.
+- Precompiled library artifacts.
+- Workspace files for multi-project discovery in large monorepos.

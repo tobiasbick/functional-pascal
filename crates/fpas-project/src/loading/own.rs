@@ -1,18 +1,39 @@
-use super::common::{parse_compilation_unit_file, qualified_id_to_string, validate_user_unit_name};
-use super::paths::{
+//! Loads a single `.fpasprj` manifest without merging dependency projects.
+//!
+//! Spec: `docs/pascal/10-projects.md`
+
+use crate::common::{parse_compilation_unit_file, qualified_id_to_string, validate_user_unit_name};
+use crate::model::ProjectKind;
+use crate::paths::{
     resolve_explicit_file_path, resolve_source_files, same_file, validate_source_extension,
 };
-use super::{LoadedProject, ProjectKind};
 use fpas_parser::CompilationUnit;
 use serde::Deserialize;
 use std::collections::HashMap;
-use std::fs;
 use std::path::{Path, PathBuf};
+
+/// One project's own metadata before dependency merging.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct OwnProject {
+    /// Declared project kind.
+    pub kind: ProjectKind,
+    /// Main program file for executable projects.
+    pub main: Option<PathBuf>,
+    /// Validated user-unit source files from this project's `[sources]`.
+    pub source_files: Vec<PathBuf>,
+    /// Paths from `[dependencies].projects` (unresolved strings).
+    pub dependency_projects: Vec<String>,
+    /// Project root directory (parent of the `.fpasprj` file).
+    pub root_dir: PathBuf,
+    /// Non-fatal loading warnings such as duplicate include entries.
+    pub warnings: Vec<String>,
+}
 
 #[derive(Debug, Deserialize)]
 struct ProjectFile {
     project: ProjectSection,
     sources: Option<SourcesSection>,
+    dependencies: Option<DependenciesSection>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -28,12 +49,14 @@ struct SourcesSection {
     include: Vec<String>,
 }
 
-/// Load and validate a Functional Pascal project file.
-///
-/// This implements project-file handling from `docs/pascal/10-projects.md`
-/// and validates user-unit naming rules from `docs/pascal/09-units.md`.
-pub fn load_project(path: &Path) -> Result<LoadedProject, String> {
-    let project_text = fs::read_to_string(path).map_err(|e| {
+#[derive(Debug, Deserialize)]
+struct DependenciesSection {
+    projects: Vec<String>,
+}
+
+/// Parse and validate one project file's own sources and metadata.
+pub(crate) fn load_own_project(path: &Path) -> Result<OwnProject, String> {
+    let project_text = std::fs::read_to_string(path).map_err(|e| {
         format!(
             "Error reading project file `{}`: {e}",
             path.to_string_lossy()
@@ -70,6 +93,13 @@ pub fn load_project(path: &Path) -> Result<LoadedProject, String> {
         );
     }
 
+    let dependency_projects = project_file
+        .dependencies
+        .map(|section| section.projects)
+        .unwrap_or_default();
+
+    validate_dependency_entries(&dependency_projects)?;
+
     let (mut source_files, mut warnings) = resolve_source_files(&sources.include, root_dir)?;
     let main = match kind {
         ProjectKind::Program => {
@@ -97,14 +127,27 @@ pub fn load_project(path: &Path) -> Result<LoadedProject, String> {
         validate_program_main_file(main_path, &mut warnings)?;
     }
 
-    source_files = validate_project_source_units(source_files, &mut warnings)?;
-
-    Ok(LoadedProject {
+    Ok(OwnProject {
         kind,
         main,
         source_files,
+        dependency_projects,
+        root_dir: root_dir.to_path_buf(),
         warnings,
     })
+}
+
+fn validate_dependency_entries(entries: &[String]) -> Result<(), String> {
+    for entry in entries {
+        if entry.trim().is_empty() {
+            return Err(
+                "A `dependencies.projects` entry is empty.\n  help: Remove empty entries or provide a path to a `.fpasprj` file."
+                    .to_string(),
+            );
+        }
+    }
+
+    Ok(())
 }
 
 fn parse_project_kind(raw_kind: &str) -> Result<ProjectKind, String> {
@@ -149,7 +192,8 @@ fn validate_program_main_file(main_path: &Path, warnings: &mut Vec<String>) -> R
     }
 }
 
-fn validate_project_source_units(
+/// Validates unit declarations and rejects duplicate unit names across `source_files`.
+pub(crate) fn validate_project_source_units(
     source_files: Vec<PathBuf>,
     warnings: &mut Vec<String>,
 ) -> Result<Vec<PathBuf>, String> {

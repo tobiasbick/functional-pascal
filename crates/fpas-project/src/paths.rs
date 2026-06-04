@@ -74,6 +74,54 @@ pub(super) fn resolve_source_files(
     Ok((files, warnings))
 }
 
+const PROJECT_FILE_EXTENSION: &str = "fpasprj";
+
+/// Canonical path used for project dependency graphs and deduplication.
+pub(super) fn canonical_project_path(path: &Path) -> PathBuf {
+    canonical_or_original(path)
+}
+
+/// Appends `incoming` to `target`, ignoring duplicate source files with a warning.
+pub(super) fn merge_source_files(
+    target: &mut Vec<PathBuf>,
+    incoming: Vec<PathBuf>,
+    warnings: &mut Vec<String>,
+) {
+    let mut seen = target
+        .iter()
+        .map(|path| canonical_or_original(path.as_path()))
+        .collect::<HashSet<_>>();
+
+    for path in incoming {
+        insert_unique_source_file(path, target, &mut seen, warnings);
+    }
+}
+
+/// Resolves a `dependencies.projects` entry to an existing `.fpasprj` file.
+pub(super) fn resolve_project_dependency_path(
+    value: &str,
+    root_dir: &Path,
+) -> Result<PathBuf, String> {
+    let path = resolve_explicit_file_path("dependencies.projects", value, root_dir)?;
+    validate_project_file_extension(&path, "dependencies.projects")?;
+    Ok(path)
+}
+
+fn validate_project_file_extension(path: &Path, field_name: &str) -> Result<(), String> {
+    if path
+        .extension()
+        .and_then(|value| value.to_str())
+        .is_some_and(|value| value.eq_ignore_ascii_case(PROJECT_FILE_EXTENSION))
+    {
+        return Ok(());
+    }
+
+    Err(format!(
+        "`{field_name}` must reference a `.fpasprj` file: `{}`.\n  help: Point each dependency at a library project manifest.",
+        path.to_string_lossy()
+    ))
+}
+
 fn insert_unique_source_file(
     path: PathBuf,
     files: &mut Vec<PathBuf>,

@@ -40,4 +40,6 @@ fpas check libs/greet/greet.fpasprj
 fpas check apps/hello/hello.fpasprj
 ```
 
-The program project lists the library as `workspace = ["greet"]`, matching `project.name` in `greet.fpasprj`. Alternatively use `[dependencies].projects` with a relative or absolute path to the library manifest.
+The program project lists the library as `workspace = ["greet"]`, matching `project.name` in `greet.fpasprj`. The library exposes only `Demo.Greet` via `[exports].units`; `Demo.Greet.Internal` is private to the library project.
+
+Alternatively use `[dependencies].projects` with a relative or absolute path to the library manifest.

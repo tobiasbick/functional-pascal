@@ -1,0 +1,6 @@
+unit Demo.Greet.Internal;
+
+function GreetingText(): string;
+begin
+  return 'Hello from library project'
+end;

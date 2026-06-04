@@ -45,17 +45,11 @@ pub(super) fn load_project_with_dependencies(
     for dependency_path in dependency_paths {
         let dependency_loaded = load_project_with_dependencies(&dependency_path, visiting, cache)?;
         ensure_library_dependency(&dependency_path, &dependency_loaded)?;
-        let dependency_canonical = canonical_project_path(&dependency_path);
-        link_meta.library_export_policies.insert(
-            dependency_canonical.clone(),
-            dependency_loaded.export_policy_for_dependents(),
+        merge_dependency_link_meta(
+            &mut link_meta,
+            &dependency_path,
+            &dependency_loaded,
         );
-        for source_path in &dependency_loaded.source_files {
-            link_meta.source_origins.insert(
-                source_path.clone(),
-                SourceOrigin::Library(dependency_canonical.clone()),
-            );
-        }
         merge_source_files(
             &mut source_files,
             dependency_loaded.source_files,
@@ -128,6 +122,36 @@ fn insert_dependency_path(path: PathBuf, resolved: &mut Vec<PathBuf>, seen: &mut
     }
     seen.push(key);
     resolved.push(path);
+}
+
+/// Merges a dependency's link metadata into the consumer, preserving transitive library origins.
+fn merge_dependency_link_meta(
+    consumer: &mut ProjectLinkMeta,
+    dependency_path: &Path,
+    dependency_loaded: &LoadedProject,
+) {
+    let dependency_canonical = canonical_project_path(dependency_path);
+    consumer.library_export_policies.insert(
+        dependency_canonical.clone(),
+        dependency_loaded.export_policy_for_dependents(),
+    );
+    consumer
+        .library_export_policies
+        .extend(dependency_loaded.link_meta.library_export_policies.clone());
+
+    for source_path in &dependency_loaded.source_files {
+        let origin = dependency_loaded
+            .link_meta
+            .source_origins
+            .get(source_path)
+            .cloned()
+            .unwrap_or(SourceOrigin::Own);
+        let remapped = match origin {
+            SourceOrigin::Own => SourceOrigin::Library(dependency_canonical.clone()),
+            SourceOrigin::Library(path) => SourceOrigin::Library(path),
+        };
+        consumer.source_origins.insert(source_path.clone(), remapped);
+    }
 }
 
 fn ensure_library_dependency(path: &Path, loaded: &LoadedProject) -> Result<(), String> {

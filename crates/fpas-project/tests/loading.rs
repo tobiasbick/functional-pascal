@@ -233,3 +233,32 @@ include = ["lib.fpas"]
 
     assert!(error.contains("No `program` projects found"));
 }
+
+#[test]
+fn load_project_rejects_unknown_export_unit_name() {
+    let dir = temp_dir("exports-unknown-unit");
+    let project = dir.join("lib.fpasprj");
+
+    write(
+        &project,
+        r#"[project]
+name = "lib"
+kind = "library"
+
+[exports]
+units = ["Missing.Unit"]
+
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    write(&dir.join("src/core.fpas"), "unit Lib.Core;\n");
+
+    let error = load_project(&project).expect_err("unknown export unit must fail");
+    fs::remove_dir_all(&dir).ok();
+
+    assert!(
+        error.contains("exports.units") && error.contains("unknown unit"),
+        "got: {error}"
+    );
+}

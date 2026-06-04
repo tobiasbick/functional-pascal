@@ -1,7 +1,9 @@
-{ Unit used by the monorepo hello app via [dependencies].projects. }
+{ Public unit for workspace hello app via [dependencies].workspace. }
 unit Demo.Greet;
+
+uses Demo.Greet.Internal;
 
 function Message(): string;
 begin
-  return 'Hello from library project'
+  return GreetingText()
 end;

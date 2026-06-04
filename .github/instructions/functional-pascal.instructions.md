@@ -380,18 +380,30 @@ See [`docs/pascal/08-concurrency.md`](../../docs/pascal/08-concurrency.md).
 
 ## Projects (.fpasprj)
 
-Multi-file projects use TOML project files:
+Multi-file projects use TOML project files. Full spec: [`docs/pascal/10-projects.md`](../../docs/pascal/10-projects.md).
 
 ```toml
 [project]
 name = "my-app"
 version = "1.0.0"   # optional
-kind = "program"
+kind = "program"    # or "library"
 main = "src/main.fpas"
+
+[dependencies]
+projects = ["../my-lib/my-lib.fpasprj"]   # path (relative or absolute)
+workspace = ["my-lib"]                      # member project.name in .fpasworkspace
 
 [sources]
 include = ["src/**/*.fpas"]
+exclude = ["src/generated/**/*.fpas"]
 ```
+
+- **`library`** — units only, no `main`; consume via `dependencies` from a `program` project. **Source-level only** (no precompiled `.fpaslib` artifacts).
+- **`fpas my-app.fpasprj`** — run a program project.
+- **`fpas check`** — type-check `.fpas`, `.fpasprj`, or `.fpasworkspace` without running.
+- **`.fpasworkspace`** — lists member `.fpasprj` files; `fpas check` validates all, `fpas` runs the sole program member in cwd.
+
+Examples: [`examples/pascal/library-deps/`](../../examples/pascal/library-deps/), [`examples/pascal/monorepo/`](../../examples/pascal/monorepo/).
 
 ## Key Rules Summary
 

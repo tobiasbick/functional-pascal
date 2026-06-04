@@ -48,6 +48,8 @@ projects = ["../my-lib/my-lib.fpasprj"]
 - **`program`** — produces an executable. Requires `main` pointing to a file with a `program` declaration. The entry point is exactly one main program file per project.
 - **`library`** — a reusable library. Must not define `main`. Source files are expected to use `unit` declarations. Other projects consume libraries via `[dependencies].projects`. The CLI cannot execute a library project directly; run a `program` project that depends on it instead.
 
+Library dependencies are **source-level only**: the loader merges `.fpas` from dependency manifests and links them with the consumer. There are no precompiled library artifacts (`.fpaslib`); see [`docs/future/libraries.md`](../future/libraries.md).
+
 ### `[dependencies]` Section
 
 Declares other `.fpasprj` files whose library sources are merged into this project before linking.

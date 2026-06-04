@@ -123,4 +123,6 @@ Unknown `uses` entries referring to `Std.*` are rejected with an error that list
 
 Units are resolved through the project `.fpasprj` file, which lists all source files belonging to the project. Each file declares its namespace via its `unit` declaration. The directory structure has no influence on the unit name — only the `unit` declaration inside the file matters.
 
+Library units from other projects are merged in when the consuming `.fpasprj` lists them under `[dependencies].projects` (path to another manifest) or `[dependencies].workspace` (member `project.name` inside an enclosing `.fpasworkspace`). See [10-projects.md](10-projects.md).
+
 A unit that is listed in the project file but not imported via `uses` is not compiled into the final program. Only units reachable from the program file's `uses` chain (including transitive dependencies) are included.

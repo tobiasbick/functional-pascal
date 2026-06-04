@@ -99,3 +99,60 @@ include = ["main.fpas"]
         "stderr: {stderr_output}"
     );
 }
+
+#[test]
+fn run_cli_errors_when_workspace_has_no_program() {
+    let cwd = create_temp_dir("run-workspace-no-program");
+    let workspace_file = cwd.join("suite.fpasworkspace");
+
+    write_text(
+        &workspace_file,
+        r#"[workspace]
+name = "suite"
+members = ["lib.fpasprj"]
+"#,
+    );
+    write_text(
+        &cwd.join("lib.fpasprj"),
+        r#"[project]
+name = "lib"
+kind = "library"
+
+[sources]
+include = ["lib.fpas"]
+"#,
+    );
+    write_text(&cwd.join("lib.fpas"), "unit L.Core;\n");
+
+    let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(&[], &cwd);
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 1);
+    assert!(
+        stderr_output.contains("No `program` projects found"),
+        "stderr: {stderr_output}"
+    );
+}
+
+#[test]
+fn run_cli_errors_when_multiple_workspace_files_in_cwd() {
+    let cwd = create_temp_dir("run-multiple-workspaces");
+    for name in ["a.fpasworkspace", "b.fpasworkspace"] {
+        write_text(
+            &cwd.join(name),
+            r#"[workspace]
+name = "suite"
+members = []
+"#,
+        );
+    }
+
+    let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(&[], &cwd);
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 1);
+    assert!(
+        stderr_output.contains("multiple `.fpasworkspace` files"),
+        "stderr: {stderr_output}"
+    );
+}

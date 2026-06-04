@@ -1,11 +1,25 @@
 # Future: Libraries
 
-The project kind `library` and `[dependencies].projects` support source-level reuse today:
+## Implemented (current scope)
 
-- Define units in a `kind = "library"` project.
-- Consume them from a `program` project via `dependencies.projects` and `uses`.
+Source-level library projects are supported today:
 
-Still planned for later versions:
+- `kind = "library"` in `.fpasprj` (units only, no `main`).
+- Consumption from a `program` via `[dependencies].projects` and `[dependencies].workspace`.
+- Transitive dependencies, cycle detection, `fpas check` on libraries and workspaces.
 
-- Public API visibility and explicit export rules beyond `private`.
-- Precompiled library artifacts.
+Spec: [`docs/pascal/10-projects.md`](../pascal/10-projects.md). Examples: [`examples/pascal/library-deps/`](../../examples/pascal/library-deps/), [`examples/pascal/monorepo/`](../../examples/pascal/monorepo/).
+
+## Explicitly out of scope (for now)
+
+Do **not** plan or implement these unless product direction changes:
+
+- Precompiled library artifacts (`.fpaslib` or similar).
+- Separate `fpas build` / install steps for third-party libraries.
+- Package registries, lockfiles, or semver dependency resolution.
+
+Dependencies stay **paths to `.fpasprj` files** (or workspace member names). The compiler always parses and links library **sources** with the consumer.
+
+## Under consideration (later)
+
+- **Project-level export API** — explicit public surface beyond per-unit `private` (for example hiding internal units from consumers without listing every symbol).

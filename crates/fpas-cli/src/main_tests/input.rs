@@ -1,5 +1,5 @@
 use super::support::run_cli_args_and_capture_output;
-use super::*;
+use super::{ResolvedCli, resolve_cli_config, *};
 
 #[test]
 fn resolve_cli_input_uses_explicit_source_file() {
@@ -32,6 +32,77 @@ fn resolve_cli_input_rejects_unknown_extension() {
     assert!(error.contains("Unsupported input"));
     assert!(error.contains(".fpas"));
     assert!(error.contains(".fpasprj"));
+}
+
+#[test]
+fn resolve_cli_input_discovers_workspace_program_when_no_args_are_given() {
+    let cwd = create_temp_dir("discover-workspace-run");
+    let workspace_file = cwd.join("suite.fpasworkspace");
+    write_text(
+        &workspace_file,
+        r#"[workspace]
+name = "suite"
+members = ["lib.fpasprj", "app.fpasprj"]
+"#,
+    );
+    write_file(&cwd.join("lib.fpasprj"));
+    write_file(&cwd.join("app.fpasprj"));
+    write_text(
+        &cwd.join("lib.fpasprj"),
+        r#"[project]
+name = "lib"
+kind = "library"
+
+[sources]
+include = ["lib.fpas"]
+"#,
+    );
+    write_text(&cwd.join("lib.fpas"), "unit L.Core;\n");
+    write_text(
+        &cwd.join("app.fpasprj"),
+        r#"[project]
+name = "app"
+kind = "program"
+main = "main.fpas"
+
+[sources]
+include = ["main.fpas"]
+"#,
+    );
+    write_text(&cwd.join("main.fpas"), "program App;\nbegin\nend.\n");
+
+    let result = resolve_cli_input(&[], &cwd);
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(result, Ok(CliInput::ProjectFile(cwd.join("app.fpasprj"))));
+}
+
+#[test]
+fn resolve_cli_input_errors_when_multiple_workspace_files_in_cwd() {
+    let cwd = create_temp_dir("discover-multiple-workspaces");
+    for name in ["a.fpasworkspace", "b.fpasworkspace"] {
+        write_text(
+            &cwd.join(name),
+            r#"[workspace]
+name = "suite"
+members = []
+"#,
+        );
+    }
+
+    let run_result = resolve_cli_input(&[], &cwd);
+    let check_result = resolve_cli_config(&[String::from("check")], &cwd);
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    let run_error = run_result.expect_err("run must fail with multiple workspaces");
+    assert!(run_error.contains("multiple `.fpasworkspace` files"));
+
+    let check_error = match check_result {
+        Ok(ResolvedCli::Check(_)) => panic!("check must fail with multiple workspaces"),
+        Ok(_) => panic!("unexpected resolved cli"),
+        Err(message) => message,
+    };
+    assert!(check_error.contains("multiple `.fpasworkspace` files"));
 }
 
 #[test]

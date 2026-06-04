@@ -172,6 +172,10 @@ const NON_INTERACTIVE_EXAMPLES: &[ExampleCase] = &[
         args: &[],
     },
     ExampleCase {
+        path: "examples/pascal/library-deps/app/app.fpasprj",
+        args: &[],
+    },
+    ExampleCase {
         path: "examples/pascal/monorepo/apps/hello/hello.fpasprj",
         args: &[],
     },

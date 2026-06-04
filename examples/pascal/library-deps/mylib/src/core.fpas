@@ -1,0 +1,6 @@
+unit MyLib.Core;
+
+function Double(X: integer): integer;
+begin
+  return X + X
+end;

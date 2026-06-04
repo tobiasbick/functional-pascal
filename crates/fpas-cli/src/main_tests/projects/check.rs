@@ -1,5 +1,8 @@
 use super::*;
-use crate::test_support::{write_library_fpasprj, write_program_fpasprj_with_deps};
+use crate::test_support::{
+    write_library_fpasprj, write_library_fpasprj_with_deps, write_program_fpasprj,
+    write_program_fpasprj_with_deps,
+};
 
 fn toml_path(path: &std::path::Path) -> String {
     path.to_string_lossy().replace('\\', "/")
@@ -75,6 +78,135 @@ members = ["libs/math.fpasprj", "apps/demo.fpasprj"]
 
     let (exit_code, _, stderr_output) =
         support::run_cli_args_and_capture_output(&[String::from("check")], &cwd);
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 0, "stderr: {stderr_output}");
+    assert!(stderr_output.is_empty());
+}
+
+#[test]
+fn check_cli_with_no_args_discovers_workspace_in_cwd() {
+    let cwd = create_temp_dir("check-workspace-discovery");
+    let workspace_file = cwd.join("suite.fpasworkspace");
+    let lib_project = cwd.join("lib.fpasprj");
+    let app_project = cwd.join("app.fpasprj");
+
+    write_text(
+        &workspace_file,
+        r#"[workspace]
+name = "suite"
+members = ["lib.fpasprj", "app.fpasprj"]
+"#,
+    );
+    write_library_fpasprj(&lib_project, &["lib.fpas"]);
+    write_text(&cwd.join("lib.fpas"), "unit L.Core;\n");
+    write_program_fpasprj(&app_project, "main.fpas", &["main.fpas"]);
+    write_text(&cwd.join("main.fpas"), "program App;\nbegin\nend.\n");
+
+    let (exit_code, _, stderr_output) =
+        support::run_cli_args_and_capture_output(&[String::from("check")], &cwd);
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 0, "stderr: {stderr_output}");
+    assert!(stderr_output.is_empty());
+}
+
+#[test]
+fn check_cli_with_explicit_workspace_path_argument() {
+    let cwd = create_temp_dir("check-workspace-explicit");
+    let workspace_file = cwd.join("suite.fpasworkspace");
+    let lib_project = cwd.join("lib.fpasprj");
+
+    write_text(
+        &workspace_file,
+        r#"[workspace]
+name = "suite"
+members = ["lib.fpasprj"]
+"#,
+    );
+    write_library_fpasprj(&lib_project, &["lib.fpas"]);
+    write_text(&cwd.join("lib.fpas"), "unit L.Core;\n");
+
+    let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
+        &[
+            String::from("check"),
+            workspace_file.to_string_lossy().to_string(),
+        ],
+        &cwd,
+    );
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 0, "stderr: {stderr_output}");
+    assert!(stderr_output.is_empty());
+}
+
+#[test]
+fn check_cli_fails_on_type_error_in_library_project() {
+    let cwd = create_temp_dir("check-library-type-error");
+    let project_file = cwd.join("lib.fpasprj");
+    write_library_fpasprj(&project_file, &["src/**/*.fpas"]);
+    write_text(
+        &cwd.join("src/math.fpas"),
+        "unit Lib.Math;\nfunction Bad(X: integer): string;\nbegin\n  return X + X\nend;\n",
+    );
+
+    let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
+        &[
+            String::from("check"),
+            project_file.to_string_lossy().to_string(),
+        ],
+        &cwd,
+    );
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 1, "expected type-check failure");
+    assert!(
+        stderr_output.contains("error"),
+        "stderr should contain compile diagnostic: {stderr_output}"
+    );
+}
+
+#[test]
+fn check_cli_validates_transitive_library_dependencies() {
+    let cwd = create_temp_dir("check-transitive-libs");
+    let base_dir = cwd.join("libs/base");
+    let util_dir = cwd.join("libs/util");
+    let app_dir = cwd.join("apps/demo");
+    let base_project = base_dir.join("base.fpasprj");
+    let util_project = util_dir.join("util.fpasprj");
+    let app_project = app_dir.join("demo.fpasprj");
+
+    write_library_fpasprj(&base_project, &["src/**/*.fpas"]);
+    write_text(
+        &base_dir.join("src/base.fpas"),
+        "unit Lib.Base;\nconst Tag: string := 'ok';\n",
+    );
+
+    write_library_fpasprj_with_deps(&util_project, &["src/**/*.fpas"], &["../base/base.fpasprj"]);
+    write_text(
+        &util_dir.join("src/util.fpas"),
+        "unit Lib.Util;\nuses Lib.Base;\nfunction Label(): string;\nbegin\n  return Tag\nend;\n",
+    );
+
+    let util_dep = toml_path(&util_project);
+    write_program_fpasprj_with_deps(
+        &app_project,
+        "src/main.fpas",
+        &["src/**/*.fpas"],
+        &[util_dep.as_str()],
+    );
+    write_text(
+        &app_dir.join("src/main.fpas"),
+        "program Demo;\nuses Lib.Util, Std.Console;\nbegin\n  WriteLn(Label())\nend.\n",
+    );
+
+    let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
+        &[
+            String::from("check"),
+            app_project.to_string_lossy().to_string(),
+        ],
+        &app_dir,
+    );
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     assert_eq!(exit_code, 0, "stderr: {stderr_output}");

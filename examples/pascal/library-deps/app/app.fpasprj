@@ -1,0 +1,10 @@
+[project]
+name = "lib-demo"
+kind = "program"
+main = "src/main.fpas"
+
+[dependencies]
+projects = ["../mylib/mylib.fpasprj"]
+
+[sources]
+include = ["src/**/*.fpas"]

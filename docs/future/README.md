@@ -14,14 +14,15 @@ Hosted terminal UI is **implemented**: Rust-owned event loop, FPAS `On*` handler
 
 Implemented today: `Std.Console`, `Std.Args`, `Std.Env`, `Std.Path`, `Std.Fs`, `Std.Time`, `Std.Graph`, `Std.Tui`, `Std.Str`, `Std.Conv`, `Std.Math`, `Std.Random`, `Std.Array`, `Std.Dict`, `Std.Result`, `Std.Option`, `Std.Task`. Planned additions (JSON, parsing): [`std-roadmap.md`](std-roadmap.md).
 
+## Projects and libraries
+
+Source-level `library` projects and `[dependencies]` are **implemented**. Precompiled artifacts are **not** planned. See [`libraries.md`](libraries.md) for scope and possible export-API work.
+
 ## Under Consideration
 
 | # | Feature | Description |
 |---|---------|-------------|
 | 9 | [`dict`](09-remove-dict.md) | Pending — may be kept |
+| — | [Libraries — export API](libraries.md) | Project-level export rules beyond per-unit `private` |
 
 ## Not Yet Planned
-
-| Feature | Description |
-|---------|-------------|
-| [Libraries](libraries.md) | Project kind `library`, export rules |

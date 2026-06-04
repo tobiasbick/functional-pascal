@@ -195,3 +195,27 @@ fn duplicate_unit_across_dependency_projects_is_rejected() {
         "expected duplicate unit error, got: {error}"
     );
 }
+
+#[test]
+fn missing_project_dependency_path_is_rejected() {
+    let dir = create_temp_dir("dep-missing-path");
+    let app_project = dir.join("app.fpasprj");
+
+    write_program_fpasprj_with_deps(
+        &app_project,
+        "src/main.fpas",
+        &["src/**/*.fpas"],
+        &["../missing/lib.fpasprj"],
+    );
+    write_text(
+        &app_project.parent().unwrap().join("src/main.fpas"),
+        "program App;\nbegin\nend.\n",
+    );
+
+    let error = load_project_error(&app_project, "missing dependency path must fail");
+    fs::remove_dir_all(&dir).expect("temp directory must be removed");
+    assert!(
+        error.contains("dependencies.projects") && error.contains("does not exist"),
+        "expected missing dependency error, got: {error}"
+    );
+}

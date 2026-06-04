@@ -153,7 +153,7 @@ More examples in the [`examples/`](examples/) directory.
 
 ### Multi-file projects and libraries
 
-Larger programs use a `.fpasprj` project file; reusable code can live in `kind = "library"` projects referenced from `[dependencies].projects` (paths) or `[dependencies].workspace` (member `project.name` inside a `.fpasworkspace`). See [Projects](docs/pascal/10-projects.md) and the [monorepo example](examples/pascal/monorepo/).
+Larger programs use a `.fpasprj` project file. Reusable code is **source-level only**: `kind = "library"` projects whose units are merged at load time (no precompiled library artifacts). Reference them from `[dependencies].projects` (paths) or `[dependencies].workspace` (member `project.name` inside a `.fpasworkspace`). See [Projects](docs/pascal/10-projects.md), [library-deps](examples/pascal/library-deps/), and [monorepo](examples/pascal/monorepo/).
 
 ```sh
 fpas my-app.fpasprj

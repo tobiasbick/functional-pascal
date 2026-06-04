@@ -2,7 +2,7 @@
 //!
 //! Spec: [Projects & CLI](../../../docs/pascal/10-projects.md).
 
-use fpas_project::discover_workspace_file;
+use fpas_project::{discover_run_project_in_workspace, discover_workspace_file};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -16,7 +16,7 @@ fpas — Functional Pascal compiler
 
 Usage:
     fpas [<file.fpas | file.fpasprj>] [-- <args>...]       Run a source file or project
-    fpas [-- <args>...]                                   Discover a `.fpasprj` in the current directory
+    fpas [-- <args>...]                                   Discover a workspace program or `.fpasprj` in cwd
     fpas check [<file.fpas | file.fpasprj | file.fpasworkspace>]
                                                           Type-check without running
     fpas check                                            Discover `.fpasworkspace` or `.fpasprj` in cwd
@@ -182,8 +182,17 @@ fn resolve_explicit_input(input: &str, cwd: &Path, mode: CliMode) -> Result<CliI
 fn discover_input(cwd: &Path, mode: CliMode) -> Result<CliInput, String> {
     match mode {
         CliMode::Check => discover_check_input(cwd),
-        CliMode::Run => discover_project_file(cwd),
+        CliMode::Run => discover_run_input(cwd),
     }
+}
+
+fn discover_run_input(cwd: &Path) -> Result<CliInput, String> {
+    if let Some(workspace_path) = discover_workspace_file(cwd)? {
+        let program_path = discover_run_project_in_workspace(&workspace_path)?;
+        return Ok(CliInput::ProjectFile(program_path));
+    }
+
+    discover_project_file(cwd)
 }
 
 fn discover_check_input(cwd: &Path) -> Result<CliInput, String> {

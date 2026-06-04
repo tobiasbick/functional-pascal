@@ -33,10 +33,33 @@ struct ProjectNameFile {
 #[derive(Debug, Deserialize)]
 struct ProjectNameSection {
     name: String,
+    kind: String,
+}
+
+/// Lightweight member manifest fields used for workspace discovery.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct MemberProjectManifest {
+    /// Declared `project.name`.
+    pub name: String,
+    /// Declared `project.kind` (`program` or `library`).
+    pub kind: crate::ProjectKind,
+}
+
+/// Reads `project.name` and `project.kind` from a member `.fpasprj` without loading sources.
+pub(super) fn read_member_project_manifest(path: &Path) -> Result<MemberProjectManifest, String> {
+    let manifest = read_member_project_manifest_raw(path)?;
+    Ok(MemberProjectManifest {
+        name: manifest.name,
+        kind: parse_member_project_kind(&manifest.kind, path)?,
+    })
 }
 
 /// Reads `project.name` from a member `.fpasprj` without loading sources or dependencies.
 pub(super) fn read_member_project_name(path: &Path) -> Result<String, String> {
+    Ok(read_member_project_manifest(path)?.name)
+}
+
+fn read_member_project_manifest_raw(path: &Path) -> Result<ProjectNameSection, String> {
     let project_text = fs::read_to_string(path).map_err(|e| {
         format!(
             "Error reading project file `{}`: {e}",
@@ -52,7 +75,19 @@ pub(super) fn read_member_project_name(path: &Path) -> Result<String, String> {
     })?;
 
     validate_non_empty("project.name", &project_file.project.name)?;
-    Ok(project_file.project.name)
+    validate_non_empty("project.kind", &project_file.project.kind)?;
+    Ok(project_file.project)
+}
+
+fn parse_member_project_kind(raw_kind: &str, path: &Path) -> Result<crate::ProjectKind, String> {
+    match raw_kind.trim() {
+        "program" => Ok(crate::ProjectKind::Program),
+        "library" => Ok(crate::ProjectKind::Library),
+        other => Err(format!(
+            "Invalid `project.kind` value `{other}` in `{}`.\n  help: Use `program` or `library`.",
+            path.to_string_lossy()
+        )),
+    }
 }
 
 /// Load and validate a workspace file.

@@ -6,10 +6,9 @@ Multi-file programs are composed with project source lists plus `unit` / `uses`.
 
 ## CLI Usage
 
-- `fpas` (no arguments) — searches the current directory for a `.fpasprj` file.
-  - No match: error.
-  - One match: loads that project file.
-  - Multiple matches: error — pass the desired `.fpasprj` path explicitly.
+- `fpas` (no arguments) — discovers what to run in the current directory:
+  - If a `.fpasworkspace` file exists: runs the sole `kind = "program"` member; errors when there are zero or multiple program members.
+  - Otherwise searches for a `.fpasprj` file (no match, one match, or multiple matches with the same rules as before).
 - `fpas <path>` — detects input type by extension:
   - `.fpas` — runs as a single source file with a `program` declaration (no project needed).
   - `.fpasprj` — loads as a project file.
@@ -246,6 +245,6 @@ members = [
 | `name` | Yes | Workspace name. Any non-empty string. |
 | `members` | Yes | Array of paths to `.fpasprj` files, relative to the workspace file or absolute. |
 
-`fpas check` with no path loads the sole `.fpasworkspace` in the current directory and checks every member project. `fpas` (run) does not execute workspaces; pass a program `.fpasprj` explicitly.
+`fpas check` with no path loads the sole `.fpasworkspace` in the current directory and checks every member project. `fpas` with no path runs the sole program member when a workspace is present; otherwise pass a `.fpasprj` explicitly or rely on a single project file in the current directory.
 
 Cross-project dependencies still use `[dependencies].projects` on each consumer `.fpasprj`; the workspace file does not replace per-project dependency lists.

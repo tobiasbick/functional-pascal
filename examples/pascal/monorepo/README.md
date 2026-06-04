@@ -17,6 +17,13 @@ From the repository root:
 fpas examples/pascal/monorepo/apps/hello/hello.fpasprj
 ```
 
+From the workspace directory (runs the sole program member `hello`):
+
+```sh
+cd examples/pascal/monorepo
+fpas
+```
+
 ## Check
 
 Type-check the whole workspace (library + program):

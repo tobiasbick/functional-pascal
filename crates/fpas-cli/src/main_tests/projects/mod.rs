@@ -9,3 +9,4 @@ mod resolution;
 mod run;
 mod support;
 mod warnings;
+mod workspace_run;

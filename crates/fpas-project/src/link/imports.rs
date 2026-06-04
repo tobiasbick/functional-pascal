@@ -1,5 +1,6 @@
 use super::{
     UnitFile,
+    import_policy::ImportPolicy,
     rewrite::declaration_name,
     rewrite::linked_decl_name,
     support::{canonical_unit_key, internal_link_error, is_std_unit, unknown_unit_error},
@@ -82,10 +83,12 @@ pub(super) struct ImportMap {
 }
 
 pub(super) fn build_imports(
+    requester_key: &str,
     uses: &[QualifiedId],
     include_self: Option<&HashMap<String, String>>,
     exports: &HashMap<String, HashMap<String, String>>,
     units: &HashMap<String, UnitFile>,
+    import_policy: &ImportPolicy<'_>,
 ) -> Result<ImportMap, String> {
     let mut candidates = HashMap::<String, BTreeSet<String>>::new();
 
@@ -94,6 +97,9 @@ pub(super) fn build_imports(
             continue;
         }
         let key = canonical_unit_key(used);
+        if !import_policy.can_import_for_unit(requester_key, &key)? {
+            return Err(import_policy.not_exported_error(&key));
+        }
         let Some(unit_exports) = exports.get(&key) else {
             return Err(unknown_unit_error(
                 &key,

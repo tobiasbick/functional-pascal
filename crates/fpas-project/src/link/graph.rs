@@ -1,5 +1,6 @@
 use super::{
     UnitFile,
+    import_policy::ImportPolicy,
     support::{
         canonical_unit_key, display_unit_key, internal_link_error, is_std_unit, unknown_unit_error,
     },
@@ -12,6 +13,7 @@ use std::collections::{HashMap, HashSet};
 pub(super) fn resolve_reachable_units(
     root_uses: &[QualifiedId],
     units: &HashMap<String, UnitFile>,
+    import_policy: &ImportPolicy<'_>,
 ) -> Result<HashSet<String>, String> {
     let mut queue = Vec::<String>::new();
     let mut reachable = HashSet::<String>::new();
@@ -39,6 +41,9 @@ pub(super) fn resolve_reachable_units(
                 let owner = qualified_id_to_string(&unit_file.unit.name);
                 return Err(unknown_unit_error(&key, units, &format!("unit `{owner}`")));
             }
+            if !import_policy.can_import_for_unit(&next, &key)? {
+                return Err(import_policy.not_exported_error(&key));
+            }
             queue.push(key);
         }
     }
@@ -50,10 +55,16 @@ pub(super) fn resolve_reachable_units(
 pub(super) fn collect_library_reachable_units(
     units: &HashMap<String, UnitFile>,
 ) -> Result<HashSet<String>, String> {
+    let unrestricted_meta = crate::model::ProjectLinkMeta::default();
+    let unrestricted = ImportPolicy::new(&unrestricted_meta, units);
     let mut reachable = HashSet::<String>::new();
     for (key, unit_file) in units {
         reachable.insert(key.clone());
-        reachable.extend(resolve_reachable_units(&unit_file.unit.uses, units)?);
+        reachable.extend(resolve_reachable_units(
+            &unit_file.unit.uses,
+            units,
+            &unrestricted,
+        )?);
     }
     Ok(reachable)
 }

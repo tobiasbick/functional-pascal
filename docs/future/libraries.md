@@ -1,12 +1,13 @@
 # Future: Libraries
 
-## Implemented (current scope)
+## Implemented
 
-Source-level library projects are supported today:
+Source-level library projects:
 
 - `kind = "library"` in `.fpasprj` (units only, no `main`).
-- Consumption from a `program` via `[dependencies].projects` and `[dependencies].workspace`.
+- Consumption via `[dependencies].projects` and `[dependencies].workspace`.
 - Transitive dependencies, cycle detection, `fpas check` on libraries and workspaces.
+- **`[exports].units`** — optional project-level public unit list for dependents (internal units stay library-private).
 
 Spec: [`docs/pascal/10-projects.md`](../pascal/10-projects.md). Examples: [`examples/pascal/library-deps/`](../../examples/pascal/library-deps/), [`examples/pascal/monorepo/`](../../examples/pascal/monorepo/).
 
@@ -22,4 +23,4 @@ Dependencies stay **paths to `.fpasprj` files** (or workspace member names). The
 
 ## Under consideration (later)
 
-- **Project-level export API** — explicit public surface beyond per-unit `private` (for example hiding internal units from consumers without listing every symbol).
+- Finer-grained export control (per-symbol export tables on the project, re-export lists, etc.) beyond unit-level `[exports]` and per-unit `private`.

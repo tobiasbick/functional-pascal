@@ -11,6 +11,7 @@ use super::support::{
     collect_std_uses, internal_link_error, internal_symbol_error, merge_std_uses,
 };
 use crate::common::qualified_id_to_string;
+use crate::model::ProjectLinkMeta;
 
 use fpas_diagnostics::DiagnosticSeverity;
 use fpas_parser::Decl;
@@ -24,6 +25,7 @@ const LIBRARY_CHECK_SOURCE: &str = "program __FpasLibraryCheck;\nbegin\nend.\n";
 /// Documentation: `docs/pascal/10-projects.md`
 pub fn build_library_check_with_source_map(
     source_files: &[PathBuf],
+    link_meta: &ProjectLinkMeta,
 ) -> Result<LinkedProgram, String> {
     let (mut main_program, parse_errors) = fpas_parser::parse(LIBRARY_CHECK_SOURCE);
     let has_errors = parse_errors
@@ -35,6 +37,7 @@ pub fn build_library_check_with_source_map(
 
     let mut source_paths = Vec::new();
     let units = parse_unit_files(source_files, &mut source_paths)?;
+    let import_policy = super::import_policy::ImportPolicy::new(link_meta, &units);
 
     let reachable_unit_keys = collect_library_reachable_units(&units)?;
     let unit_order = topo_sort_units(&reachable_unit_keys, &units)?;
@@ -62,7 +65,14 @@ pub fn build_library_check_with_source_map(
         let Some(own_symbols) = all_symbols.get(&unit_key) else {
             return Err(internal_symbol_error(&unit_key));
         };
-        let imports = build_imports(&unit_file.unit.uses, Some(own_symbols), &exports, &units)?;
+        let imports = build_imports(
+            &unit_key,
+            &unit_file.unit.uses,
+            Some(own_symbols),
+            &exports,
+            &units,
+            &import_policy,
+        )?;
 
         let mut declarations = unit_file.unit.declarations.clone();
         rename_top_level_decls(&mut declarations, &unit_name);

@@ -55,7 +55,11 @@ fn check_project_file(path: &Path, stderr: &mut dyn Write) -> i32 {
                 );
                 return 1;
             };
-            let linked = match project::build_program_with_source_map(&main, &loaded.source_files) {
+            let linked = match project::build_program_with_source_map(
+                &main,
+                &loaded.source_files,
+                &loaded.link_meta,
+            ) {
                 Ok(program) => program,
                 Err(message) => {
                     let _ = writeln!(stderr, "{message}");
@@ -71,7 +75,10 @@ fn check_project_file(path: &Path, stderr: &mut dyn Write) -> i32 {
             )
         }
         project::ProjectKind::Library => {
-            let linked = match project::build_library_check_with_source_map(&loaded.source_files) {
+            let linked = match project::build_library_check_with_source_map(
+                &loaded.source_files,
+                &loaded.link_meta,
+            ) {
                 Ok(program) => program,
                 Err(message) => {
                     let _ = writeln!(stderr, "{message}");

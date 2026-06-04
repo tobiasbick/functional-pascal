@@ -36,6 +36,7 @@ pub(crate) fn write_program_fpasprj(project_file: &Path, main: &str, include: &[
         include,
         &[],
         &[],
+        None,
     );
 }
 
@@ -43,7 +44,36 @@ pub(crate) fn write_program_fpasprj(project_file: &Path, main: &str, include: &[
 ///
 /// Spec: [Projects & CLI](../../../docs/pascal/10-projects.md).
 pub(crate) fn write_library_fpasprj(project_file: &Path, include: &[&str]) {
-    write_fpasprj(project_file, "lib", "library", None, include, &[], &[]);
+    write_fpasprj(
+        project_file,
+        "lib",
+        "library",
+        None,
+        include,
+        &[],
+        &[],
+        None,
+    );
+}
+
+/// Writes a library manifest with an `[exports].units` list.
+///
+/// Documentation: `docs/pascal/10-projects.md`
+pub(crate) fn write_library_fpasprj_with_exports(
+    project_file: &Path,
+    include: &[&str],
+    export_units: &[&str],
+) {
+    write_fpasprj(
+        project_file,
+        "lib",
+        "library",
+        None,
+        include,
+        &[],
+        &[],
+        Some(export_units),
+    );
 }
 
 pub(crate) fn write_program_fpasprj_with_deps(
@@ -60,6 +90,7 @@ pub(crate) fn write_program_fpasprj_with_deps(
         include,
         dependencies,
         &[],
+        None,
     );
 }
 
@@ -77,6 +108,7 @@ pub(crate) fn write_program_fpasprj_with_workspace_deps(
         include,
         &[],
         workspace_deps,
+        None,
     );
 }
 
@@ -93,6 +125,7 @@ pub(crate) fn write_library_fpasprj_with_deps(
         include,
         dependencies,
         &[],
+        None,
     );
 }
 
@@ -104,6 +137,7 @@ fn write_fpasprj(
     include: &[&str],
     dependencies: &[&str],
     workspace_dependencies: &[&str],
+    export_units: Option<&[&str]>,
 ) {
     let include_entries = include
         .iter()
@@ -115,6 +149,7 @@ fn write_fpasprj(
         None => String::new(),
     };
     let dependencies_section = format_dependency_section(dependencies, workspace_dependencies);
+    let exports_section = format_exports_section(export_units);
 
     write_text(
         project_file,
@@ -123,9 +158,21 @@ fn write_fpasprj(
 name = "{name}"
 kind = "{kind}"
 {main_entry}[sources]
-include = [{include_entries}]{dependencies_section}"#
+include = [{include_entries}]{dependencies_section}{exports_section}"#
         ),
     );
+}
+
+fn format_exports_section(export_units: Option<&[&str]>) -> String {
+    let Some(units) = export_units else {
+        return String::new();
+    };
+    let entries = units
+        .iter()
+        .map(|unit| format!("\"{unit}\""))
+        .collect::<Vec<_>>()
+        .join(", ");
+    format!("\n\n[exports]\nunits = [{entries}]\n")
 }
 
 fn format_dependency_section(dependencies: &[&str], workspace_dependencies: &[&str]) -> String {

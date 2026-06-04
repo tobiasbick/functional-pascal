@@ -65,6 +65,7 @@ fn build_program_reports_ambiguous_import_at_use_site() {
     let error = build_program(
         loaded.main.as_deref().expect("main path must exist"),
         &loaded.source_files,
+        &loaded.link_meta,
     )
     .expect_err("ambiguous short name should fail at use site");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -263,6 +264,7 @@ fn build_program_rejects_duplicate_top_level_names_inside_one_unit() {
     let error = build_program(
         loaded.main.as_deref().expect("main path must exist"),
         &loaded.source_files,
+        &loaded.link_meta,
     )
     .expect_err("duplicate names in one unit must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -292,6 +294,7 @@ fn build_program_reports_unknown_unit_with_sorted_available_units() {
     let error = build_program(
         loaded.main.as_deref().expect("main path must exist"),
         &loaded.source_files,
+        &loaded.link_meta,
     )
     .expect_err("unknown unit must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -358,6 +361,7 @@ fn build_program_reports_three_unit_cycle_with_stable_path() {
     let error = build_program(
         loaded.main.as_deref().expect("main path must exist"),
         &loaded.source_files,
+        &loaded.link_meta,
     )
     .expect_err("cycle must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -443,6 +447,7 @@ include = ["src/main.fpas", "{main_path_text}", "src/lib.fpas"]
     let program = build_program(
         loaded.main.as_deref().expect("main path must exist"),
         &loaded.source_files,
+        &loaded.link_meta,
     )
     .expect("project should link");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");

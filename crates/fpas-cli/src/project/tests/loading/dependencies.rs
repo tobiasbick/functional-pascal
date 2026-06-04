@@ -34,6 +34,7 @@ fn program_project_loads_relative_library_dependency() {
     let program = build_program(
         loaded.main.as_deref().expect("main path"),
         &loaded.source_files,
+        &loaded.link_meta,
     )
     .expect("program should link");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");

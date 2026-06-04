@@ -1,5 +1,6 @@
 //! Project file loading (`docs/pascal/10-projects.md`).
 
+pub(super) mod exports;
 pub(super) mod own;
 
 use crate::dependencies::load_project_with_dependencies;

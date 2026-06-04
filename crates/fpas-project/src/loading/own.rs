@@ -2,8 +2,9 @@
 //!
 //! Spec: `docs/pascal/10-projects.md`
 
+use super::exports::validate_library_exports;
 use crate::common::{parse_compilation_unit_file, qualified_id_to_string, validate_user_unit_name};
-use crate::model::ProjectKind;
+use crate::model::{LibraryExportPolicy, ProjectKind};
 use crate::paths::{
     resolve_explicit_file_path, resolve_source_files, same_file, validate_source_extension,
 };
@@ -29,6 +30,8 @@ pub(crate) struct OwnProject {
     pub root_dir: PathBuf,
     /// Non-fatal loading warnings such as duplicate include entries.
     pub warnings: Vec<String>,
+    /// Export policy applied when this library is consumed as a dependency.
+    pub export_policy: LibraryExportPolicy,
 }
 
 #[derive(Debug, Deserialize)]
@@ -36,6 +39,12 @@ struct ProjectFile {
     project: ProjectSection,
     sources: Option<SourcesSection>,
     dependencies: Option<DependenciesSection>,
+    exports: Option<ExportsSection>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ExportsSection {
+    units: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -110,6 +119,8 @@ pub(crate) fn load_own_project(path: &Path) -> Result<OwnProject, String> {
 
     validate_dependency_entries("sources.exclude", &sources.exclude)?;
 
+    let parsed_exports = parse_exports_section(kind, project_file.exports.as_ref(), path)?;
+
     let (mut source_files, mut warnings) =
         resolve_source_files(&sources.include, &sources.exclude, root_dir)?;
     let main = match kind {
@@ -138,6 +149,8 @@ pub(crate) fn load_own_project(path: &Path) -> Result<OwnProject, String> {
         validate_program_main_file(main_path, &mut warnings)?;
     }
 
+    let export_policy = resolve_export_policy(kind, parsed_exports, &source_files)?;
+
     Ok(OwnProject {
         kind,
         main,
@@ -146,7 +159,47 @@ pub(crate) fn load_own_project(path: &Path) -> Result<OwnProject, String> {
         workspace_dependencies,
         root_dir: root_dir.to_path_buf(),
         warnings,
+        export_policy,
     })
+}
+
+enum ParsedExports {
+    None,
+    UnitNames(Vec<String>),
+}
+
+fn parse_exports_section(
+    kind: ProjectKind,
+    exports: Option<&ExportsSection>,
+    project_path: &Path,
+) -> Result<ParsedExports, String> {
+    let Some(section) = exports else {
+        return Ok(ParsedExports::None);
+    };
+
+    if kind == ProjectKind::Program {
+        return Err(format!(
+            "Program project `{}` must not define `[exports]`.\n  help: Remove `[exports]` or change `project.kind` to `library`.",
+            project_path.to_string_lossy()
+        ));
+    }
+
+    Ok(ParsedExports::UnitNames(section.units.clone()))
+}
+
+fn resolve_export_policy(
+    kind: ProjectKind,
+    parsed: ParsedExports,
+    source_files: &[PathBuf],
+) -> Result<LibraryExportPolicy, String> {
+    match (kind, parsed) {
+        (_, ParsedExports::None) => Ok(LibraryExportPolicy::AllUnits),
+        (ProjectKind::Library, ParsedExports::UnitNames(names)) => {
+            let exports = validate_library_exports(&names, source_files)?;
+            Ok(LibraryExportPolicy::ListedUnits(exports.listed_units))
+        }
+        (ProjectKind::Program, ParsedExports::UnitNames(_)) => Ok(LibraryExportPolicy::AllUnits),
+    }
 }
 
 fn validate_dependency_entries(field_name: &str, entries: &[String]) -> Result<(), String> {

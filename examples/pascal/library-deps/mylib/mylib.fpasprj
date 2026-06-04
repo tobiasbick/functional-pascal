@@ -2,5 +2,8 @@
 name = "mylib"
 kind = "library"
 
+[exports]
+units = ["MyLib.Core"]
+
 [sources]
 include = ["src/**/*.fpas"]

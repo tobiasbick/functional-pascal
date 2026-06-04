@@ -396,6 +396,9 @@ workspace = ["my-lib"]                      # member project.name in .fpasworksp
 [sources]
 include = ["src/**/*.fpas"]
 exclude = ["src/generated/**/*.fpas"]
+
+[exports]
+units = ["MyLib.Core"]   # library only: units visible to dependents
 ```
 
 - **`library`** — units only, no `main`; consume via `dependencies` from a `program` project. **Source-level only** (no precompiled `.fpaslib` artifacts).

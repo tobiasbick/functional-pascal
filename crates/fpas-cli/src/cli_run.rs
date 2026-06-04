@@ -99,14 +99,17 @@ fn run_project_file(
                 );
                 return 1;
             };
-            let linked_program =
-                match project::build_program_with_source_map(&main, &loaded.source_files) {
-                    Ok(program) => program,
-                    Err(message) => {
-                        let _ = writeln!(stderr, "{message}");
-                        return 1;
-                    }
-                };
+            let linked_program = match project::build_program_with_source_map(
+                &main,
+                &loaded.source_files,
+                &loaded.link_meta,
+            ) {
+                Ok(program) => program,
+                Err(message) => {
+                    let _ = writeln!(stderr, "{message}");
+                    return 1;
+                }
+            };
 
             let main_path = main.to_string_lossy();
             run_compiled_program(

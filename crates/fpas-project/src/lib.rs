@@ -17,7 +17,7 @@ pub use link::{
     build_program_with_source_map,
 };
 pub use loading::load_project;
-pub use model::{LoadedProject, ProjectKind};
+pub use model::{LibraryExportPolicy, LoadedProject, ProjectKind, ProjectLinkMeta, SourceOrigin};
 pub use workspace::{
     LoadedWorkspace, discover_run_project_in_workspace, discover_workspace_file, load_workspace,
     resolve_workspace_dependency_paths,

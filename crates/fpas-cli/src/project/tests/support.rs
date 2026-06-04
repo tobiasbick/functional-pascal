@@ -33,6 +33,7 @@ pub(super) fn load_and_build_program(project_file: &std::path::Path) -> Program 
     build_program(
         loaded.main.as_deref().expect("main path must exist"),
         &loaded.source_files,
+        &loaded.link_meta,
     )
     .expect("project should link")
 }

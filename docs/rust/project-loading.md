@@ -8,6 +8,8 @@ How multi-file Functional Pascal programs are loaded before compile. Language ru
 |--------|----------------|
 | `loading/own.rs` | Parse one `.fpasprj`, resolve `[sources]`, validate manifest |
 | `dependencies.rs` | Merge `[dependencies].projects` and `.workspace` transitively |
+| `loading/exports.rs` | Validate library `[exports].units` |
+| `link/import_policy.rs` | Enforce cross-project unit imports for dependents |
 | `workspace/` | `.fpasworkspace` members, name index, run discovery |
 | `paths.rs` | Include/exclude globs and path resolution |
 | `link/` | Parse units, build dependency graph, rewrite to linked `Program` |

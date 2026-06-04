@@ -3,7 +3,9 @@
 //! Documentation: `docs/pascal/10-projects.md`
 
 use super::loading::own::{load_own_project, validate_project_source_units};
-use super::model::{LoadedProject, ProjectKind};
+use super::model::{
+    LibraryExportPolicy, LoadedProject, ProjectKind, ProjectLinkMeta, SourceOrigin,
+};
 use super::paths::{
     canonical_project_path, merge_source_files, resolve_project_dependency_path, same_file,
 };
@@ -36,12 +38,24 @@ pub(super) fn load_project_with_dependencies(
     let own = load_own_project(path)?;
     let mut source_files = Vec::new();
     let mut warnings = own.warnings;
+    let mut link_meta = ProjectLinkMeta::default();
 
     let dependency_paths =
         resolve_all_dependency_paths(path, &own.dependency_projects, &own.workspace_dependencies)?;
     for dependency_path in dependency_paths {
         let dependency_loaded = load_project_with_dependencies(&dependency_path, visiting, cache)?;
         ensure_library_dependency(&dependency_path, &dependency_loaded)?;
+        let dependency_canonical = canonical_project_path(&dependency_path);
+        link_meta.library_export_policies.insert(
+            dependency_canonical.clone(),
+            dependency_loaded.export_policy_for_dependents(),
+        );
+        for source_path in &dependency_loaded.source_files {
+            link_meta.source_origins.insert(
+                source_path.clone(),
+                SourceOrigin::Library(dependency_canonical.clone()),
+            );
+        }
         merge_source_files(
             &mut source_files,
             dependency_loaded.source_files,
@@ -49,14 +63,27 @@ pub(super) fn load_project_with_dependencies(
         );
     }
 
+    let own_source_paths = own.source_files.clone();
     merge_source_files(&mut source_files, own.source_files, &mut warnings);
+    for source_path in &own_source_paths {
+        link_meta
+            .source_origins
+            .insert(source_path.clone(), SourceOrigin::Own);
+    }
     source_files = validate_project_source_units(source_files, &mut warnings)?;
+
+    let export_policy_for_dependents = match own.kind {
+        ProjectKind::Library => own.export_policy.clone(),
+        ProjectKind::Program => LibraryExportPolicy::AllUnits,
+    };
 
     let loaded = LoadedProject {
         kind: own.kind,
         main: own.main,
         source_files,
         warnings,
+        link_meta,
+        export_policy_for_dependents,
     };
 
     visiting.pop();

@@ -1,0 +1,6 @@
+unit MyLib.Internal;
+
+function Scale(X: integer): integer;
+begin
+  return X + X
+end;

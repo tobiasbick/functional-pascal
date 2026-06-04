@@ -73,6 +73,29 @@ Rules:
 - Unit names must remain unique across the consumer and all transitive library sources (case-insensitive), same as within a single project.
 - Library sources are linked only when reachable through `uses` from the program entry point (see [09-units.md](09-units.md)).
 
+### `[exports]` Section (library projects only)
+
+Optional on `kind = "library"` projects. Controls which units other projects may import across a dependency boundary.
+
+| Field | Required | Description |
+|---|---|---|
+| `units` | Yes (when section present) | Array of unit names (`unit` declarations) that dependents may reference in `uses`. |
+
+Rules:
+
+- Omitted `[exports]` means **all units** in the library are importable by dependents (same as before).
+- Units not listed remain **internal**: they can still be used inside the library via `uses`, but a dependent program cannot `uses` them directly.
+- Each name must match a `unit` in the library's `[sources]` (case-insensitive).
+- Program projects must not define `[exports]`.
+- Per-unit `private` still hides symbols within a unit; `[exports]` hides whole units from other projects.
+
+Example:
+
+```toml
+[exports]
+units = ["MyLib.Core"]
+```
+
 ### `[sources]` Section
 
 Lists all source files belonging to the project. Each source file declares its namespace via a `unit` declaration (see [09-units.md](09-units.md)).

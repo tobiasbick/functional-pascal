@@ -23,6 +23,6 @@ Source-level `library` projects and `[dependencies]` are **implemented**. Precom
 | # | Feature | Description |
 |---|---------|-------------|
 | 9 | [`dict`](09-remove-dict.md) | Pending — may be kept |
-| — | [Libraries — export API](libraries.md) | Project-level export rules beyond per-unit `private` |
+| — | [Libraries — finer exports](libraries.md) | Per-symbol / re-export rules beyond `[exports].units` |
 
 ## Not Yet Planned

@@ -65,36 +65,9 @@ pub(super) fn register_application_api(checker: &mut Checker, types: &TuiTypes) 
         vec![p("App", types.application.clone(), false)],
         types.size.clone(),
     );
-    define_func(
-        checker,
-        s::STD_TUI_APPLICATION_READ_EVENT,
-        vec![p("App", types.application.clone(), false)],
-        types.event.clone(),
-    );
-    define_func(
-        checker,
-        s::STD_TUI_APPLICATION_READ_EVENT_TIMEOUT,
-        vec![
-            p("App", types.application.clone(), false),
-            p("Milliseconds", Ty::Integer, false),
-        ],
-        Ty::Option(Box::new(types.event.clone())),
-    );
-    define_func(
-        checker,
-        s::STD_TUI_APPLICATION_POLL_EVENT,
-        vec![p("App", types.application.clone(), false)],
-        Ty::Option(Box::new(types.event.clone())),
-    );
     define_proc(
         checker,
         s::STD_TUI_APPLICATION_REQUEST_REDRAW,
         vec![p("App", types.application.clone(), false)],
-    );
-    define_func(
-        checker,
-        s::STD_TUI_APPLICATION_REDRAW_PENDING,
-        vec![p("App", types.application.clone(), false)],
-        Ty::Boolean,
     );
 }

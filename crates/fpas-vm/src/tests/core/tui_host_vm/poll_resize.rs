@@ -1,58 +1,6 @@
 use super::*;
 
 #[test]
-fn tui_host_poll_next_coalesces_resize_before_key() {
-    let mut chunk = Chunk::new();
-    chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))),
-        loc(),
-    );
-    chunk.emit(Op::Dup, loc());
-    chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostPollNext))),
-        loc(),
-    );
-    chunk.emit(Op::PrintLn, loc());
-    chunk.emit(Op::Dup, loc());
-    chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostPollNext))),
-        loc(),
-    );
-    chunk.emit(Op::PrintLn, loc());
-    chunk.emit(Op::Dup, loc());
-    chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostPollNext))),
-        loc(),
-    );
-    chunk.emit(Op::PrintLn, loc());
-    chunk.emit(Op::Halt, loc());
-
-    let mut vm = Vm::new(chunk);
-    vm.push_console_event(ConsoleEvent::resize(10, 10));
-    vm.push_console_event(ConsoleEvent::resize(30, 20));
-    vm.push_console_event(ConsoleEvent::key(ConsoleKeyEvent::new(
-        key_kind_index("Escape"),
-        '\u{1b}',
-        false,
-        false,
-        false,
-        false,
-    )));
-    vm.run().expect("vm ok");
-    let lines = vm.output().lines;
-    assert_eq!(lines[0], "None", "resize-only poll buffers coalesced size");
-    assert_eq!(
-        lines[1], "None",
-        "second resize still waits for a key before flush"
-    );
-    assert!(
-        lines[2].contains("30"),
-        "third poll (key) flushes coalesced resize (width 30): {}",
-        lines[2]
-    );
-}
-
-#[test]
 fn tui_host_process_next_dispatches_on_resize_handler() {
     let mut chunk = Chunk::new();
     chunk.emit(

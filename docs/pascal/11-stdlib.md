@@ -61,30 +61,51 @@ WriteLn('Value: ', 42, ' Flag: ', true);
 ### TUI application shell
 
 ```pascal
-uses Std.Tui;
+uses Std.Console, Std.Tui;
 
-var App: Application := Application.Open();
-Application.RequestRedraw(App);
-
-case Application.ReadEventTimeout(App, 16) of
-  Some(E): if E.kind = EventKind.Resize then Application.RequestRedraw(App);
-  None: begin end
+procedure OnPaint(App: Application);
+begin
+  ClrScr();
+  WriteLn('Press Escape to exit')
 end;
 
-var SizeNow: Size := Application.Size(App);
-Application.Close(App);
+function OnKeyPressed(App: Application; Key: Std.Console.KeyEvent): boolean;
+begin
+  if Key.kind = KeyKind.Escape then
+  begin
+    Application.HostRequestQuit(App);
+    return true
+  end;
+  return false
+end;
+
+begin
+  var App: Application := Application.Open();
+  Application.Configure(App, record
+    OnPaint := OnPaint;
+    OnKeyPressed := Some(OnKeyPressed)
+  end);
+  Application.Run(App)
+end.
 ```
 
 ### Native graphics shell
 
 ```pascal
-uses Std.Graph;
+uses Std.Console, Std.Graph;
 
-var App: Application := Application.Open(320, 200, 'Graph');
-Application.Clear(App, $00000020);
-Application.DrawText(App, 8, 8, 'FPAS', $00FFFFFF);
-Application.Present(App);
-Application.Close(App);
+procedure OnPaint(App: Application);
+begin
+  Application.Clear(App, $00000020);
+  Application.DrawText(App, 8, 8, 'FPAS', $00FFFFFF);
+  Application.Present(App)
+end;
+
+begin
+  var App: Application := Application.Open(320, 200, 'Graph');
+  Application.Configure(App, record OnPaint := OnPaint end);
+  Application.Run(App)
+end.
 ```
 
 ### Strings and conversions

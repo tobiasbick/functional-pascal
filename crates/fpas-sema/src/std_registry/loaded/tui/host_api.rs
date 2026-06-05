@@ -12,12 +12,6 @@ pub(super) fn register_host_api(
     types: &TuiTypes,
     callbacks: &TuiCallbackTypes,
 ) {
-    define_func(
-        checker,
-        s::STD_TUI_APPLICATION_HOST_POLL_NEXT,
-        vec![p("App", types.application.clone(), false)],
-        Ty::Option(Box::new(types.event.clone())),
-    );
     define_proc(
         checker,
         s::STD_TUI_APPLICATION_HOST_REGISTER_ON_KEY_PRESSED,

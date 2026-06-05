@@ -1,4 +1,4 @@
-{ Spec: docs/pascal/std/graph.md (from repository root). }
+{ Spec: docs/pascal/std/graph-app.md (from repository root). }
 program JuliaGraph;
 uses Std.Array, Std.Console, Std.Conv, Std.Graph, Std.Math;
 
@@ -116,7 +116,12 @@ mutable var State: JuliaState := DefaultState();
 mutable var RenderWidth: integer := 96;
 mutable var RenderHeight: integer := 72;
 
-procedure Render(App: Application);
+procedure RequestRender(App: Application);
+begin
+  Application.RequestRedraw(App)
+end;
+
+procedure OnPaint(App: Application);
 begin
   var Screen: Size := Application.Size(App);
   RenderWidth := Max(Screen.width, 1);
@@ -124,125 +129,126 @@ begin
 
   var Frame: array of integer := BuildFrame(State, RenderWidth, RenderHeight);
   Application.UploadFrame(App, RenderWidth, RenderHeight, Frame);
-  DrawHud(App, State);
-  Application.Present(App)
+  DrawHud(App, State)
 end;
 
-procedure ResetExplorer();
+procedure ResetExplorer(App: Application);
 begin
-  State := DefaultState()
+  State := DefaultState();
+  RequestRender(App)
+end;
+
+function OnKeyPressed(App: Application; Key: Std.Console.KeyEvent): boolean;
+begin
+  var StepX: real := SpanX(State, RenderWidth, RenderHeight) * 0.12;
+  var StepY: real := State.SpanY * 0.12;
+
+  if Key.kind = KeyKind.Escape then
+  begin
+    Application.HostRequestQuit(App);
+    return true
+  end
+  else if Key.kind = KeyKind.Left then
+  begin
+    State.CenterX := State.CenterX - StepX;
+    RequestRender(App);
+    return true
+  end
+  else if Key.kind = KeyKind.Right then
+  begin
+    State.CenterX := State.CenterX + StepX;
+    RequestRender(App);
+    return true
+  end
+  else if Key.kind = KeyKind.Up then
+  begin
+    State.CenterY := State.CenterY + StepY;
+    RequestRender(App);
+    return true
+  end
+  else if Key.kind = KeyKind.Down then
+  begin
+    State.CenterY := State.CenterY - StepY;
+    RequestRender(App);
+    return true
+  end
+  else if Key.kind = KeyKind.Character then
+    case Key.ch of
+      '+', '=':
+        begin
+          State.SpanY := Max(State.SpanY * 0.85, 0.000_001);
+          RequestRender(App)
+        end;
+      '-':
+        begin
+          State.SpanY := Min(State.SpanY / 0.85, 3.5);
+          RequestRender(App)
+        end;
+      'r', 'R':
+        ResetExplorer(App);
+      'a', 'A':
+        begin
+          State.Jr := State.Jr - 0.02;
+          RequestRender(App)
+        end;
+      'd', 'D':
+        begin
+          State.Jr := State.Jr + 0.02;
+          RequestRender(App)
+        end;
+      'w', 'W':
+        begin
+          State.Ji := State.Ji + 0.02;
+          RequestRender(App)
+        end;
+      's', 'S':
+        begin
+          State.Ji := State.Ji - 0.02;
+          RequestRender(App)
+        end
+    end;
+
+  return false
+end;
+
+procedure OnMouse(App: Application; E: Event);
+begin
+  if E.mouse_action = MouseAction.Down then
+  begin
+    if E.mouse_button = MouseButton.Left then
+    begin
+      State.CenterX := ViewportCX(State, RenderWidth, RenderHeight, E.mouse_x);
+      State.CenterY := ViewportCY(State, RenderHeight, E.mouse_y);
+      RequestRender(App)
+    end
+    else if E.mouse_button = MouseButton.Middle then
+      ResetExplorer(App)
+  end
+end;
+
+procedure OnWheel(App: Application; E: Event);
+begin
+  if E.wheel_y > 0 then
+    State.SpanY := Max(State.SpanY * 0.85, 0.000_001)
+  else if E.wheel_y < 0 then
+    State.SpanY := Min(State.SpanY / 0.85, 3.5);
+  RequestRender(App)
+end;
+
+procedure OnResize(App: Application; NewSize: Size);
+begin
+  RequestRender(App)
 end;
 
 begin
   var App: Application := Application.Open(96, 72, 'Julia graph');
-  mutable var Dirty: boolean := true;
-  mutable var Quit: boolean := false;
-
-  while not Quit do
-  begin
-    if Dirty then
-    begin
-      Render(App);
-      Dirty := false
-    end;
-
-    case Application.PollEvent(App) of
-      Some(E):
-        if (E.wheel_x <> 0) or (E.wheel_y <> 0) then
-        begin
-          if E.wheel_y > 0 then
-            State.SpanY := Max(State.SpanY * 0.85, 0.000_001)
-          else if E.wheel_y < 0 then
-            State.SpanY := Min(State.SpanY / 0.85, 3.5);
-          Dirty := true
-        end
-        else if E.mouse_action = MouseAction.Down then
-        begin
-          if E.mouse_button = MouseButton.Left then
-          begin
-            State.CenterX := ViewportCX(State, RenderWidth, RenderHeight, E.mouse_x);
-            State.CenterY := ViewportCY(State, RenderHeight, E.mouse_y);
-            Dirty := true
-          end
-          else if E.mouse_button = MouseButton.Middle then
-          begin
-            ResetExplorer();
-            Dirty := true
-          end
-        end
-        else if E.key.kind <> KeyKind.Unknown then
-        begin
-          var StepX: real := SpanX(State, RenderWidth, RenderHeight) * 0.12;
-          var StepY: real := State.SpanY * 0.12;
-          if E.key.kind = KeyKind.Escape then
-            Quit := true
-          else if E.key.kind = KeyKind.Left then
-          begin
-            State.CenterX := State.CenterX - StepX;
-            Dirty := true
-          end
-          else if E.key.kind = KeyKind.Right then
-          begin
-            State.CenterX := State.CenterX + StepX;
-            Dirty := true
-          end
-          else if E.key.kind = KeyKind.Up then
-          begin
-            State.CenterY := State.CenterY + StepY;
-            Dirty := true
-          end
-          else if E.key.kind = KeyKind.Down then
-          begin
-            State.CenterY := State.CenterY - StepY;
-            Dirty := true
-          end
-          else if E.key.kind = KeyKind.Character then
-            case E.key.ch of
-              '+', '=':
-                begin
-                  State.SpanY := Max(State.SpanY * 0.85, 0.000_001);
-                  Dirty := true
-                end;
-              '-':
-                begin
-                  State.SpanY := Min(State.SpanY / 0.85, 3.5);
-                  Dirty := true
-                end;
-              'r', 'R':
-                begin
-                  ResetExplorer();
-                  Dirty := true
-                end;
-              'a', 'A':
-                begin
-                  State.Jr := State.Jr - 0.02;
-                  Dirty := true
-                end;
-              'd', 'D':
-                begin
-                  State.Jr := State.Jr + 0.02;
-                  Dirty := true
-                end;
-              'w', 'W':
-                begin
-                  State.Ji := State.Ji + 0.02;
-                  Dirty := true
-                end;
-              's', 'S':
-                begin
-                  State.Ji := State.Ji - 0.02;
-                  Dirty := true
-                end
-            end
-        end
-        else if (E.size.width > 0) or (E.size.height > 0) then
-          Dirty := true
-        else
-          Quit := true;
-      None:
-        Std.Console.Delay(16)
-    end
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+    OnKeyPressed := Some(OnKeyPressed);
+    OnMouse := Some(OnMouse);
+    OnWheel := Some(OnWheel);
+    OnResize := Some(OnResize);
   end;
-
-  Application.Close(App)
+  Application.Configure(App, Handlers);
+  Application.Run(App)
 end.

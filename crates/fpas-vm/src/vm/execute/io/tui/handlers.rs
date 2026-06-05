@@ -14,7 +14,7 @@ const TUI_APPLICATION_HANDLERS_TYPE: &str = "Std.Tui.ApplicationHandlers";
 
 impl Worker {
     /// Validates that `func` is a declared function with the expected `arity`.
-    pub(super) fn validate_host_handler_function(
+    pub(in crate::vm::execute::io) fn validate_host_handler_function(
         &self,
         func: &Value,
         arity: u8,
@@ -80,7 +80,7 @@ impl Worker {
     }
 
     /// Looks up a required field by name (case-insensitive) in a record field list.
-    pub(super) fn required_record_field<'a>(
+    pub(in crate::vm::execute::io) fn required_record_field<'a>(
         fields: &'a [(String, Value)],
         field_name: &str,
         line: SourceLocation,
@@ -104,7 +104,7 @@ impl Worker {
     }
 
     /// Reads an integer field from a record field list.
-    pub(super) fn integer_record_field(
+    pub(in crate::vm::execute::io) fn integer_record_field(
         &self,
         fields: &[(String, Value)],
         field_name: &str,
@@ -127,7 +127,7 @@ impl Worker {
     }
 
     /// Reads an optional handler field (`Some(fn)` or `None`) and validates its arity.
-    pub(super) fn optional_host_handler_field(
+    pub(in crate::vm::execute::io) fn optional_host_handler_field(
         &self,
         fields: &[(String, Value)],
         field_name: &str,

@@ -155,14 +155,6 @@ fn tui_host_leave_modal_marks_popped_modal_view_rect_damage() {
     );
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(
-            TuiIntrinsic::ApplicationRedrawPending,
-        ))),
-        loc(),
-    );
-    chunk.emit(Op::Pop, loc());
-    chunk.emit(Op::GetLocal(0), loc());
-    chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostLeaveModal))),
         loc(),
     );
@@ -243,14 +235,6 @@ fn tui_host_leave_modal_marks_popped_and_revealed_modal_view_rects() {
         ))),
         loc(),
     );
-    chunk.emit(Op::GetLocal(0), loc());
-    chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(
-            TuiIntrinsic::ApplicationRedrawPending,
-        ))),
-        loc(),
-    );
-    chunk.emit(Op::Pop, loc());
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostLeaveModal))),

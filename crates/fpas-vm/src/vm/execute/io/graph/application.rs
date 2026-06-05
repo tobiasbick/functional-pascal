@@ -1,6 +1,6 @@
-//! `Std.Graph` application lifecycle, event, and upload intrinsics.
+//! `Std.Graph` application lifecycle, hosted dispatch, and drawing intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/graph.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph.md`, `docs/pascal/std/graph-app.md` (from the repository root).
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError};
@@ -9,7 +9,7 @@ use fpas_bytecode::{GraphIntrinsic, Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 
 impl Worker {
-    /// Executes application-level `Std.Graph` intrinsics through the shared graph session.
+    /// Executes application-level `Std.Graph` intrinsics.
     pub(super) fn try_exec_graph_application_intrinsic(
         &mut self,
         intrinsic: Intrinsic,
@@ -21,8 +21,9 @@ impl Worker {
                 GraphIntrinsic::ApplicationOpen
                     | GraphIntrinsic::ApplicationClose
                     | GraphIntrinsic::ApplicationSize
-                    | GraphIntrinsic::ApplicationPollEvent
-                    | GraphIntrinsic::ApplicationReadEventTimeout
+                    | GraphIntrinsic::ApplicationRequestRedraw
+                    | GraphIntrinsic::ApplicationConfigure
+                    | GraphIntrinsic::ApplicationRun
                     | GraphIntrinsic::ApplicationUploadFrame
                     | GraphIntrinsic::ApplicationClear
                     | GraphIntrinsic::ApplicationPutPixel
@@ -57,8 +58,9 @@ impl Worker {
             }
             Intrinsic::Graph(GraphIntrinsic::ApplicationClose) => {
                 self.pop_graph_application(line)?;
-                let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
-                graph.session.close(line)?;
+                if !self.request_graph_host_stop_for_active_run() {
+                    self.close_graph_application_state(line)?;
+                }
             }
             Intrinsic::Graph(GraphIntrinsic::ApplicationSize) => {
                 self.pop_graph_application(line)?;
@@ -68,32 +70,97 @@ impl Worker {
                 };
                 self.push(Self::graph_size_record(width, height))?;
             }
-            Intrinsic::Graph(GraphIntrinsic::ApplicationPollEvent) => {
+            Intrinsic::Graph(GraphIntrinsic::ApplicationRequestRedraw) => {
                 self.pop_graph_application(line)?;
-                let event = {
-                    let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
-                    graph.session.poll_event(line)?
-                };
-                match event {
-                    Some(event) => {
-                        self.push(Value::OptionSome(Box::new(Self::graph_event_record(event))))?
-                    }
-                    None => self.push(Value::OptionNone)?,
-                }
+                self.with_graph(|graph| graph.session.request_redraw(line))?;
             }
-            Intrinsic::Graph(GraphIntrinsic::ApplicationReadEventTimeout) => {
-                let timeout_ms = self.pop_int(line)?;
+            Intrinsic::Graph(GraphIntrinsic::ApplicationConfigure) => {
+                let handlers = self.pop_graph_application_handlers(line)?;
                 self.pop_graph_application(line)?;
-                let event = {
-                    let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
-                    graph.session.read_event_timeout(timeout_ms, line)?
-                };
-                match event {
-                    Some(event) => {
-                        self.push(Value::OptionSome(Box::new(Self::graph_event_record(event))))?
-                    }
-                    None => self.push(Value::OptionNone)?,
-                }
+
+                let on_paint = Self::required_record_field(&handlers, "OnPaint", line)?.clone();
+                self.validate_host_handler_function(
+                    &on_paint,
+                    1,
+                    "OnPaint",
+                    "Set `OnPaint := Handler` where `Handler` is `procedure (Application)`.",
+                    line,
+                )?;
+                let on_key_pressed = self.optional_host_handler_field(
+                    &handlers,
+                    "OnKeyPressed",
+                    2,
+                    "OnKeyPressed",
+                    "Set `OnKeyPressed := Some(Handler)` or `None`; the handler must be `function (Application, Std.Console.KeyEvent): boolean`.",
+                    line,
+                )?;
+                let on_mouse = self.optional_host_handler_field(
+                    &handlers,
+                    "OnMouse",
+                    2,
+                    "OnMouse",
+                    "Set `OnMouse := Some(Handler)` or `None`; the handler must be `procedure (Application, Std.Graph.Event)`.",
+                    line,
+                )?;
+                let on_wheel = self.optional_host_handler_field(
+                    &handlers,
+                    "OnWheel",
+                    2,
+                    "OnWheel",
+                    "Set `OnWheel := Some(Handler)` or `None`; the handler must be `procedure (Application, Std.Graph.Event)`.",
+                    line,
+                )?;
+                let on_resize = self.optional_host_handler_field(
+                    &handlers,
+                    "OnResize",
+                    2,
+                    "OnResize",
+                    "Set `OnResize := Some(Handler)` or `None`; the handler must be `procedure (Application, Std.Graph.Size)`.",
+                    line,
+                )?;
+                let on_close_requested = self.optional_host_handler_field(
+                    &handlers,
+                    "OnCloseRequested",
+                    1,
+                    "OnCloseRequested",
+                    "Set `OnCloseRequested := Some(Handler)` or `None`; the handler must be `procedure (Application)`.",
+                    line,
+                )?;
+                let idle_interval_ms = self
+                    .integer_record_field(&handlers, "OnIdleMilliseconds", line)?
+                    .max(0);
+                let on_idle = self.optional_host_handler_field(
+                    &handlers,
+                    "OnIdle",
+                    1,
+                    "OnIdle",
+                    "Set `OnIdle := Some(Handler)` or `None`; the handler must be `procedure (Application)`.",
+                    line,
+                )?;
+                let on_exit = self.optional_host_handler_field(
+                    &handlers,
+                    "OnExit",
+                    2,
+                    "OnExit",
+                    "Set `OnExit := Some(Handler)` or `None`; the handler must be `procedure (Application, Std.Graph.ExitReason)`.",
+                    line,
+                )?;
+
+                self.with_graph(|graph| {
+                    graph.on_paint = Some(on_paint);
+                    graph.on_key_pressed = on_key_pressed;
+                    graph.on_mouse = on_mouse;
+                    graph.on_wheel = on_wheel;
+                    graph.on_resize = on_resize;
+                    graph.on_close_requested = on_close_requested;
+                    graph.idle_interval_ms = idle_interval_ms;
+                    graph.on_idle = on_idle;
+                    graph.on_exit = on_exit;
+                });
+            }
+            Intrinsic::Graph(GraphIntrinsic::ApplicationRun) => {
+                self.graph_application_run(line)?;
+                self.push(Value::Unit)?;
             }
             Intrinsic::Graph(GraphIntrinsic::ApplicationUploadFrame) => {
                 let pixels = self.pop_graph_pixels(line)?;

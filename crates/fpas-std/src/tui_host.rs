@@ -1,133 +1,19 @@
-//! Rust-hosted TUI event normalization and coalescing (framework plan Phase 2).
+//! Rust-hosted TUI event normalization and coalescing.
 //!
-//! This module does **not** call FP bytecode; it prepares a single place for the
-//! future VM bridge to consume normalized terminal input.
-//!
-//! - Dispatch-mode behavior spec: `docs/pascal/std/tui-app.md` (from the repository root)
-//! - Plan: `docs/future/tui-application-framework.md` (from the repository root)
+//! **Documentation:** `docs/pascal/std/tui-app.md` (from the repository root).
 
 use crate::console::{Console, KeyInput};
 use crate::error::StdError;
 use crate::tui::TuiSession;
-use crate::{UiEvent, UiResize};
+use crate::ui::{UiEvent, UiHost};
 use fpas_bytecode::SourceLocation;
-use std::collections::VecDeque;
 
-type TraceFn = fn(&str);
+/// Terminal hosted event queue ([`UiHost`] with terminal ingest policy).
+pub type TuiHost = UiHost;
 
-/// Coalesces rapid [`UiEvent::Resize`] bursts and exposes a small ready queue
-/// so a key following resizes yields **`Resize` (once, last size) then `Key`**.
-#[derive(Debug, Default)]
-pub struct TuiHost {
-    pending_resize: Option<(i64, i64, i64, i64)>,
-    ready: VecDeque<UiEvent>,
-    trace: Option<TraceFn>,
-}
-
-impl TuiHost {
-    #[must_use]
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Optional structured trace (no dependency on `log` / `tracing`).
-    pub fn set_trace_hook(&mut self, hook: Option<TraceFn>) {
-        self.trace = hook;
-    }
-
-    fn trace(&self, msg: &'static str) {
-        if let Some(f) = self.trace {
-            f(msg);
-        }
-    }
-
-    /// Feed one mapped [`UiEvent`] from the session / console path.
-    pub fn ingest_ui_event(&mut self, ev: UiEvent) {
-        match ev {
-            UiEvent::Resize(UiResize {
-                old_width: Some(old_width),
-                old_height: Some(old_height),
-                width,
-                height,
-            }) => {
-                self.trace("tui_host: buffer resize (coalesce)");
-                self.pending_resize = Some(
-                    self.pending_resize
-                        .map_or((old_width, old_height, width, height), |pending| {
-                            (pending.0, pending.1, width, height)
-                        }),
-                );
-            }
-            UiEvent::Key(key) => {
-                self.flush_pending_resize_before("tui_host: flush coalesced resize before key");
-                self.ready.push_back(UiEvent::Key(key));
-            }
-            UiEvent::Mouse(mouse) => {
-                self.flush_pending_resize_before("tui_host: flush coalesced resize before mouse");
-                self.ready.push_back(UiEvent::Mouse(mouse));
-            }
-            UiEvent::Paste(text) => {
-                self.flush_pending_resize_before("tui_host: flush coalesced resize before paste");
-                self.ready.push_back(UiEvent::Paste(text));
-            }
-            UiEvent::FocusGained => {
-                self.flush_pending_resize_before(
-                    "tui_host: flush coalesced resize before focus-gained",
-                );
-                self.ready.push_back(UiEvent::FocusGained);
-            }
-            UiEvent::FocusLost => {
-                self.flush_pending_resize_before(
-                    "tui_host: flush coalesced resize before focus-lost",
-                );
-                self.ready.push_back(UiEvent::FocusLost);
-            }
-            UiEvent::CloseRequested | UiEvent::Wheel(_) | UiEvent::Resize(_) => {}
-        }
-    }
-
-    fn flush_pending_resize_before(&mut self, trace_msg: &'static str) {
-        if let Some((old_width, old_height, width, height)) = self.pending_resize.take() {
-            self.trace(trace_msg);
-            self.ready.push_back(UiEvent::Resize(UiResize::new(
-                Some(old_width),
-                Some(old_height),
-                width,
-                height,
-            )));
-        }
-    }
-
-    /// Emit a single coalesced [`UiEvent::Resize`] if a resize was buffered and no key arrived yet.
-    ///
-    /// Intended for an **idle** or **timeout** tick in the outer host loop (see plan Phase 2).
-    #[must_use]
-    pub fn flush_pending_resize(&mut self) -> bool {
-        if let Some((old_width, old_height, width, height)) = self.pending_resize.take() {
-            self.trace("tui_host: flush pending resize (idle)");
-            self.ready.push_back(UiEvent::Resize(UiResize::new(
-                Some(old_width),
-                Some(old_height),
-                width,
-                height,
-            )));
-            return true;
-        }
-        false
-    }
-
-    #[must_use]
-    pub fn pop_ready_event(&mut self) -> Option<UiEvent> {
-        self.ready.pop_front()
-    }
-
-    #[must_use]
-    pub fn peek_ready_event(&self) -> Option<&UiEvent> {
-        self.ready.front()
-    }
-
+impl UiHost {
     /// Non-blocking: returns a ready [`UiEvent`] or polls the session once.
-    pub fn poll_next(
+    pub fn poll_next_terminal(
         &mut self,
         session: &TuiSession,
         console: &mut Console,
@@ -147,8 +33,8 @@ impl TuiHost {
         }
     }
 
-    /// Blocking: read until at least one [`UiEvent`] is returned (resize-only bursts keep reading).
-    pub fn read_next_blocking(
+    /// Blocking: read until at least one [`UiEvent`] is returned.
+    pub fn read_next_blocking_terminal(
         &mut self,
         session: &TuiSession,
         console: &mut Console,
@@ -174,6 +60,7 @@ mod tests {
     use crate::ConsoleKeyEvent;
     use crate::console_event::ConsoleEvent;
     use crate::key_event::key_kind_index;
+    use crate::ui::{UiHostSurface, UiResize};
 
     fn loc() -> SourceLocation {
         SourceLocation::new(1, 1)
@@ -181,7 +68,7 @@ mod tests {
 
     #[test]
     fn coalesces_multiple_resizes_before_key() {
-        let mut host = TuiHost::new();
+        let mut host = UiHost::for_terminal();
         host.ingest_ui_event(UiEvent::Resize(UiResize::new(Some(80), Some(25), 10, 10)));
         host.ingest_ui_event(UiEvent::Resize(UiResize::new(Some(10), Some(10), 20, 30)));
         host.ingest_ui_event(UiEvent::Key(ConsoleKeyEvent::new(
@@ -195,7 +82,7 @@ mod tests {
 
         assert_eq!(
             host.pop_ready_event(),
-            Some(UiEvent::Resize(UiResize::new(Some(80), Some(25), 20, 30,)))
+            Some(UiEvent::Resize(UiResize::new(Some(80), Some(25), 20, 30)))
         );
         assert!(matches!(host.pop_ready_event(), Some(UiEvent::Key(_))));
         assert_eq!(host.pop_ready_event(), None);
@@ -203,12 +90,12 @@ mod tests {
 
     #[test]
     fn flush_pending_resize_after_resize_only_stream() {
-        let mut host = TuiHost::new();
+        let mut host = UiHost::for_terminal();
         host.ingest_ui_event(UiEvent::Resize(UiResize::new(Some(80), Some(25), 80, 25)));
         assert!(host.flush_pending_resize());
         assert_eq!(
             host.pop_ready_event(),
-            Some(UiEvent::Resize(UiResize::new(Some(80), Some(25), 80, 25,)))
+            Some(UiEvent::Resize(UiResize::new(Some(80), Some(25), 80, 25)))
         );
         assert!(!host.flush_pending_resize());
     }
@@ -218,7 +105,7 @@ mod tests {
         let mut session = TuiSession::default();
         let mut console = Console::new();
         let mut key_input = KeyInput::new();
-        let mut host = TuiHost::new();
+        let mut host = UiHost::for_terminal();
 
         session
             .open(&mut console, &mut key_input, loc())
@@ -235,14 +122,14 @@ mod tests {
         )));
 
         let first = host
-            .read_next_blocking(&session, &mut console, &mut key_input, loc())
+            .read_next_blocking_terminal(&session, &mut console, &mut key_input, loc())
             .expect("resize");
         assert_eq!(
             first,
             UiEvent::Resize(UiResize::new(Some(80), Some(25), 100, 40))
         );
         let second = host
-            .read_next_blocking(&session, &mut console, &mut key_input, loc())
+            .read_next_blocking_terminal(&session, &mut console, &mut key_input, loc())
             .expect("key");
         assert!(matches!(second, UiEvent::Key(_)));
     }
@@ -257,8 +144,8 @@ mod tests {
         }
 
         CALLS.store(0, Ordering::Relaxed);
-        let mut host = TuiHost::new();
-        host.set_trace_hook(Some(hook as TraceFn));
+        let mut host = UiHost::for_terminal();
+        host.set_trace_hook(Some(hook as fn(&str)));
         host.ingest_ui_event(UiEvent::Resize(UiResize::new(Some(80), Some(25), 1, 1)));
         assert!(CALLS.load(Ordering::Relaxed) >= 1);
         let before = CALLS.load(Ordering::Relaxed);

@@ -42,27 +42,191 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Graph(GraphIntrinsic::ApplicationSize), location);
                 Ok(true)
             }
-            s::STD_GRAPH_APPLICATION_POLL_EVENT => {
-                self.expect_exact_args(s::STD_GRAPH_APPLICATION_POLL_EVENT, 1, args, location)?;
+            s::STD_GRAPH_APPLICATION_REQUEST_REDRAW => {
+                self.expect_exact_args(s::STD_GRAPH_APPLICATION_REQUEST_REDRAW, 1, args, location)?;
                 self.compile_expr(&args[0])?;
-                self.emit_intrinsic(
-                    Intrinsic::Graph(GraphIntrinsic::ApplicationPollEvent),
+                self.emit_intrinsic_unit(
+                    Intrinsic::Graph(GraphIntrinsic::ApplicationRequestRedraw),
                     location,
                 );
                 Ok(true)
             }
-            s::STD_GRAPH_APPLICATION_READ_EVENT_TIMEOUT => {
+            s::STD_GRAPH_APPLICATION_CONFIGURE => {
+                self.expect_exact_args(s::STD_GRAPH_APPLICATION_CONFIGURE, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(
+                    Intrinsic::Graph(GraphIntrinsic::ApplicationConfigure),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_GRAPH_APPLICATION_RUN => {
+                self.expect_exact_args(s::STD_GRAPH_APPLICATION_RUN, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic_unit(
+                    Intrinsic::Graph(GraphIntrinsic::ApplicationRun),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_GRAPH_APPLICATION_HOST_REQUEST_QUIT => {
                 self.expect_exact_args(
-                    s::STD_GRAPH_APPLICATION_READ_EVENT_TIMEOUT,
+                    s::STD_GRAPH_APPLICATION_HOST_REQUEST_QUIT,
+                    1,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic_unit(
+                    Intrinsic::Graph(GraphIntrinsic::HostRequestQuit),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_GRAPH_APPLICATION_HOST_REGISTER_ON_KEY_PRESSED => {
+                self.expect_exact_args(
+                    s::STD_GRAPH_APPLICATION_HOST_REGISTER_ON_KEY_PRESSED,
                     2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(
+                    Intrinsic::Graph(GraphIntrinsic::HostRegisterOnKeyPressed),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_GRAPH_APPLICATION_HOST_REGISTER_ON_RESIZE => {
+                self.expect_exact_args(
+                    s::STD_GRAPH_APPLICATION_HOST_REGISTER_ON_RESIZE,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(
+                    Intrinsic::Graph(GraphIntrinsic::HostRegisterOnResize),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_GRAPH_APPLICATION_HOST_PROCESS_NEXT => {
+                self.expect_exact_args(
+                    s::STD_GRAPH_APPLICATION_HOST_PROCESS_NEXT,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::Graph(GraphIntrinsic::HostProcessNext), location);
+                Ok(true)
+            }
+            s::STD_GRAPH_APPLICATION_HOST_REGISTER_ON_PAINT => {
+                self.expect_exact_args(
+                    s::STD_GRAPH_APPLICATION_HOST_REGISTER_ON_PAINT,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(
+                    Intrinsic::Graph(GraphIntrinsic::HostRegisterOnPaint),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_GRAPH_APPLICATION_HOST_REGISTER_ON_IDLE => {
+                self.expect_exact_args(
+                    s::STD_GRAPH_APPLICATION_HOST_REGISTER_ON_IDLE,
+                    3,
                     args,
                     location,
                 )?;
                 for arg in args {
                     self.compile_expr(arg)?;
                 }
+                self.emit_intrinsic_unit(
+                    Intrinsic::Graph(GraphIntrinsic::HostRegisterOnIdle),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_GRAPH_APPLICATION_HOST_DISPATCH_REDRAW => {
+                self.expect_exact_args(
+                    s::STD_GRAPH_APPLICATION_HOST_DISPATCH_REDRAW,
+                    1,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
                 self.emit_intrinsic(
-                    Intrinsic::Graph(GraphIntrinsic::ApplicationReadEventTimeout),
+                    Intrinsic::Graph(GraphIntrinsic::HostDispatchRedraw),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_GRAPH_APPLICATION_HOST_REGISTER_ON_EXIT => {
+                self.expect_exact_args(
+                    s::STD_GRAPH_APPLICATION_HOST_REGISTER_ON_EXIT,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(
+                    Intrinsic::Graph(GraphIntrinsic::HostRegisterOnExit),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_GRAPH_APPLICATION_HOST_REGISTER_ON_MOUSE => {
+                self.expect_exact_args(
+                    s::STD_GRAPH_APPLICATION_HOST_REGISTER_ON_MOUSE,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(
+                    Intrinsic::Graph(GraphIntrinsic::HostRegisterOnMouse),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_GRAPH_APPLICATION_HOST_REGISTER_ON_WHEEL => {
+                self.expect_exact_args(
+                    s::STD_GRAPH_APPLICATION_HOST_REGISTER_ON_WHEEL,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(
+                    Intrinsic::Graph(GraphIntrinsic::HostRegisterOnWheel),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_GRAPH_APPLICATION_HOST_REGISTER_ON_CLOSE_REQUESTED => {
+                self.expect_exact_args(
+                    s::STD_GRAPH_APPLICATION_HOST_REGISTER_ON_CLOSE_REQUESTED,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(
+                    Intrinsic::Graph(GraphIntrinsic::HostRegisterOnCloseRequested),
                     location,
                 );
                 Ok(true)

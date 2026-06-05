@@ -14,12 +14,6 @@ impl Compiler {
         location: SourceLocation,
     ) -> Result<bool, CompileError> {
         match name {
-            s::STD_TUI_APPLICATION_HOST_POLL_NEXT => {
-                self.expect_exact_args(s::STD_TUI_APPLICATION_HOST_POLL_NEXT, 1, args, location)?;
-                self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::HostPollNext), location);
-                Ok(true)
-            }
             s::STD_TUI_APPLICATION_HOST_PROCESS_NEXT => {
                 self.expect_exact_args(
                     s::STD_TUI_APPLICATION_HOST_PROCESS_NEXT,

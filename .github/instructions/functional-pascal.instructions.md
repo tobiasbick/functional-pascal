@@ -261,8 +261,8 @@ end.
 | `Std.Console` | Text I/O, CRT screen, keyboard, events | `WriteLn`, `Write`, `ReadLn`, `ReadKey`, `ReadKeyEvent`, `KeyPressed`, `ReadEvent`, `ReadEventTimeout`, `PollEvent`, `ClrScr`, `GotoXY`, `TextColor`, `TextBackground`, `TextColorRGB`, `TextColor256`, `Window`, `Delay`, `CursorOn`, `CursorOff`, raw mode / alt screen helpers |
 | `Std.Args` | Process arguments after `--` | `ParamCount`, `ParamStr` |
 | `Std.Env` | Process environment | `Get`, `Exists` |
-| `Std.Graph` | Native windowed graphics | `Application.Open`, `Application.DrawLine`, `Application.DrawText`, `Application.PollEvent`, `Event`, `EventKind`, … |
-| `Std.Tui` | Terminal applications | Hosted: `Application.Configure`, `Application.Run`, `ApplicationHandlers`, `On*` handlers. Poll-style: `Application.Open`, `Application.ReadEvent`, `Application.PollEvent`, `RequestRedraw`, `TuiEvent`, `EventKind` |
+| `Std.Graph` | Native windowed graphics | Hosted: `Application.Configure`, `Application.Run`, `ApplicationHandlers`, `On*` handlers. Drawing: `Application.Open`, `Application.DrawLine`, `Application.DrawText`, `Application.Present`, `Event`, `EventKind`, … |
+| `Std.Tui` | Terminal applications | Hosted: `Application.Configure`, `Application.Run`, `ApplicationHandlers`, `On*` handlers. Session: `Application.Open`, `Application.Size`, `Application.RequestRedraw`, `TuiEvent`, `EventKind` |
 | `Std.Str` | String operations | `Length`, `ToUpper`, `ToLower`, `Trim`, `Contains`, `StartsWith`, `EndsWith`, `Substring`, `IndexOf`, `Replace`, `Split`, `Join`, `IsNumeric`, `Format`, … |
 | `Std.Conv` | Type conversions | `IntToStr`, `StrToInt`, `IntToReal`, `RealToStr`, `StrToReal`, `CharToStr`, `BoolToStr`, … |
 | `Std.Math` | Math functions | `Pi`, `Sqrt`, `Pow`, `Floor`, `Ceil`, `Round`, `Sin`, `Cos`, `Log`, `Abs`, `Min`, `Max`, `Clamp`, … |
@@ -420,4 +420,4 @@ Examples: [`examples/pascal/library-deps/`](../../examples/pascal/library-deps/)
 8. **Single quotes for strings** — `'Hello'`, doubled for escaping: `'It''s'`
 9. **`Result`/`Option` for expected errors** — `panic` only for broken invariants
 10. **`try` propagates errors** — unwraps or returns early
-11. **Full TUI apps use hosted dispatch** — `Application.Configure` + `Application.Run`; poll-style `ReadEvent` is for scripts only
+11. **Full TUI and Graph apps use hosted dispatch** — `Application.Configure` + `Application.Run`; no poll-style `ReadEvent` / `PollEvent` on `Std.Tui` or `Std.Graph`

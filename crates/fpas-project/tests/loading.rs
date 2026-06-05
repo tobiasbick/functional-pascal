@@ -333,10 +333,7 @@ include = ["src/**/*.fpas"]
     let internal_key = loaded
         .source_files
         .iter()
-        .find(|path| {
-            path.file_name()
-                .is_some_and(|name| name == "internal.fpas")
-        })
+        .find(|path| path.file_name().is_some_and(|name| name == "internal.fpas"))
         .expect("internal source file must be merged");
 
     assert!(loaded.link_meta.enforces_export_rules());

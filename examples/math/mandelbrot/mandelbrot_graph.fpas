@@ -1,4 +1,4 @@
-{ Spec: docs/pascal/std/graph.md (from repository root). }
+{ Spec: docs/pascal/std/graph-app.md (from repository root). }
 program MandelbrotGraph;
 uses Std.Array, Std.Console, Std.Conv, Std.Graph, Std.Math, Std.Task;
 
@@ -204,7 +204,12 @@ begin
       Application.FillRect(App, OffsetX + X * Scale, OffsetY + Y * Scale, Scale, Scale, Source[Y * SourceWidth + X])
 end;
 
-procedure Render(App: Application);
+procedure RequestRender(App: Application);
+begin
+  Application.RequestRedraw(App)
+end;
+
+procedure OnPaint(App: Application);
 begin
   var Screen: Size := Application.Size(App);
   var TargetWidth: integer := Max(Screen.width, 1);
@@ -220,135 +225,138 @@ begin
 
   var Frame: array of integer := BuildFrame(State, RenderWidth, RenderHeight);
   DrawScaledFrame(App, Frame, RenderWidth, RenderHeight, DisplayScaleFactor, DisplayOffsetX, DisplayOffsetY);
-  DrawHud(App, State);
-  Application.Present(App)
+  DrawHud(App, State)
 end;
 
-procedure ResetExplorer();
+procedure ResetExplorer(App: Application);
 begin
-  State := DefaultState()
+  State := DefaultState();
+  RequestRender(App)
+end;
+
+function OnKeyPressed(App: Application; Key: Std.Console.KeyEvent): boolean;
+begin
+  var StepX: real := SpanX(State, RenderWidth, RenderHeight) * 0.14;
+  var StepY: real := State.SpanY * 0.14;
+
+  if Key.kind = KeyKind.Escape then
+  begin
+    Application.HostRequestQuit(App);
+    return true
+  end
+  else if Key.kind = KeyKind.Left then
+  begin
+    State.CenterX := State.CenterX - StepX;
+    RequestRender(App);
+    return true
+  end
+  else if Key.kind = KeyKind.Right then
+  begin
+    State.CenterX := State.CenterX + StepX;
+    RequestRender(App);
+    return true
+  end
+  else if Key.kind = KeyKind.Up then
+  begin
+    State.CenterY := State.CenterY + StepY;
+    RequestRender(App);
+    return true
+  end
+  else if Key.kind = KeyKind.Down then
+  begin
+    State.CenterY := State.CenterY - StepY;
+    RequestRender(App);
+    return true
+  end
+  else if Key.kind = KeyKind.PageUp then
+  begin
+    State.MaxIter := Min(State.MaxIter + 32, 2048);
+    RequestRender(App);
+    return true
+  end
+  else if Key.kind = KeyKind.PageDown then
+  begin
+    State.MaxIter := Max(State.MaxIter - 32, 32);
+    RequestRender(App);
+    return true
+  end
+  else if Key.kind = KeyKind.Character then
+    case Key.ch of
+      '+', '=':
+        begin
+          State.SpanY := Max(State.SpanY * 0.82, 0.000_001);
+          RequestRender(App)
+        end;
+      '-':
+        begin
+          State.SpanY := Min(State.SpanY / 0.82, 3.5);
+          RequestRender(App)
+        end;
+      '1':
+        begin
+          State.Palette := 1;
+          RequestRender(App)
+        end;
+      '2':
+        begin
+          State.Palette := 2;
+          RequestRender(App)
+        end;
+      '3':
+        begin
+          State.Palette := 3;
+          RequestRender(App)
+        end;
+      'r', 'R':
+        ResetExplorer(App)
+    end;
+
+  return false
+end;
+
+procedure OnMouse(App: Application; E: Std.Graph.Event);
+begin
+  if E.mouse_action = MouseAction.Down then
+  begin
+    if E.mouse_button = MouseButton.Left then
+    begin
+      if (E.mouse_x >= DisplayOffsetX) and (E.mouse_y >= DisplayOffsetY) and (E.mouse_x < DisplayOffsetX + DisplayWidth) and (E.mouse_y < DisplayOffsetY + DisplayHeight) then
+      begin
+        var LogicalMouseX: integer := Clamp((E.mouse_x - DisplayOffsetX) div DisplayScaleFactor, 0, RenderWidth - 1);
+        var LogicalMouseY: integer := Clamp((E.mouse_y - DisplayOffsetY) div DisplayScaleFactor, 0, RenderHeight - 1);
+        State.CenterX := ViewportCX(State, RenderWidth, RenderHeight, LogicalMouseX);
+        State.CenterY := ViewportCY(State, RenderHeight, LogicalMouseY);
+        RequestRender(App)
+      end
+    end
+    else if E.mouse_button = MouseButton.Middle then
+      ResetExplorer(App)
+  end
+end;
+
+procedure OnWheel(App: Application; E: Std.Graph.Event);
+begin
+  if E.wheel_y > 0 then
+    State.SpanY := Max(State.SpanY * 0.88, 0.000_001)
+  else if E.wheel_y < 0 then
+    State.SpanY := Min(State.SpanY / 0.88, 3.5);
+  RequestRender(App)
+end;
+
+procedure OnResize(App: Application; NewSize: Size);
+begin
+  RequestRender(App)
 end;
 
 begin
   var App: Application := Application.Open(1280, 800, 'Mandelbrot graph');
-  mutable var Dirty: boolean := true;
-  mutable var Quit: boolean := false;
-
-  while not Quit do
-  begin
-    if Dirty then
-    begin
-      Render(App);
-      Dirty := false
-    end;
-
-    case Application.PollEvent(App) of
-      Some(E):
-        if (E.wheel_x <> 0) or (E.wheel_y <> 0) then
-        begin
-          if E.wheel_y > 0 then
-            State.SpanY := Max(State.SpanY * 0.88, 0.000_001)
-          else if E.wheel_y < 0 then
-            State.SpanY := Min(State.SpanY / 0.88, 3.5);
-          Dirty := true
-        end
-        else if E.mouse_action = MouseAction.Down then
-        begin
-          if E.mouse_button = MouseButton.Left then
-          begin
-            if (E.mouse_x >= DisplayOffsetX) and (E.mouse_y >= DisplayOffsetY) and (E.mouse_x < DisplayOffsetX + DisplayWidth) and (E.mouse_y < DisplayOffsetY + DisplayHeight) then
-            begin
-              var LogicalMouseX: integer := Clamp((E.mouse_x - DisplayOffsetX) div DisplayScaleFactor, 0, RenderWidth - 1);
-              var LogicalMouseY: integer := Clamp((E.mouse_y - DisplayOffsetY) div DisplayScaleFactor, 0, RenderHeight - 1);
-              State.CenterX := ViewportCX(State, RenderWidth, RenderHeight, LogicalMouseX);
-              State.CenterY := ViewportCY(State, RenderHeight, LogicalMouseY);
-              Dirty := true
-            end
-          end
-          else if E.mouse_button = MouseButton.Middle then
-          begin
-            ResetExplorer();
-            Dirty := true
-          end
-        end
-        else if E.key.kind <> KeyKind.Unknown then
-        begin
-          var StepX: real := SpanX(State, RenderWidth, RenderHeight) * 0.14;
-          var StepY: real := State.SpanY * 0.14;
-          if E.key.kind = KeyKind.Escape then
-            Quit := true
-          else if E.key.kind = KeyKind.Left then
-          begin
-            State.CenterX := State.CenterX - StepX;
-            Dirty := true
-          end
-          else if E.key.kind = KeyKind.Right then
-          begin
-            State.CenterX := State.CenterX + StepX;
-            Dirty := true
-          end
-          else if E.key.kind = KeyKind.Up then
-          begin
-            State.CenterY := State.CenterY + StepY;
-            Dirty := true
-          end
-          else if E.key.kind = KeyKind.Down then
-          begin
-            State.CenterY := State.CenterY - StepY;
-            Dirty := true
-          end
-          else if E.key.kind = KeyKind.PageUp then
-          begin
-            State.MaxIter := Min(State.MaxIter + 32, 2048);
-            Dirty := true
-          end
-          else if E.key.kind = KeyKind.PageDown then
-          begin
-            State.MaxIter := Max(State.MaxIter - 32, 32);
-            Dirty := true
-          end
-          else if E.key.kind = KeyKind.Character then
-            case E.key.ch of
-              '+', '=':
-                begin
-                  State.SpanY := Max(State.SpanY * 0.82, 0.000_001);
-                  Dirty := true
-                end;
-              '-':
-                begin
-                  State.SpanY := Min(State.SpanY / 0.82, 3.5);
-                  Dirty := true
-                end;
-              '1':
-                begin
-                  State.Palette := 1;
-                  Dirty := true
-                end;
-              '2':
-                begin
-                  State.Palette := 2;
-                  Dirty := true
-                end;
-              '3':
-                begin
-                  State.Palette := 3;
-                  Dirty := true
-                end;
-              'r', 'R':
-                begin
-                  ResetExplorer();
-                  Dirty := true
-                end
-            end
-        end
-        else if (E.size.width > 0) or (E.size.height > 0) then
-          Dirty := true
-        else
-          Quit := true;
-      None:
-        Delay(16)
-    end
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+    OnKeyPressed := Some(OnKeyPressed);
+    OnMouse := Some(OnMouse);
+    OnWheel := Some(OnWheel);
+    OnResize := Some(OnResize);
   end;
-
-  Application.Close(App)
+  Application.Configure(App, Handlers);
+  Application.Run(App)
 end.

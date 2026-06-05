@@ -10,6 +10,15 @@ use crate::{ConsoleKeyEvent, UiEvent, UiModifiers, UiMouse, UiResize, UiWheel};
 pub const GRAPH_EVENT_KIND_VARIANTS: &[&str] =
     &["CloseRequested", "Resize", "Key", "Mouse", "Wheel"];
 
+/// Variants for `Std.Graph.ExitReason` used by hosted dispatch and `Application.Run`.
+pub const GRAPH_EXIT_REASON_VARIANTS: &[&str] = &[
+    "UserQuit",
+    "WindowClosed",
+    "HostStop",
+    "HostAndUserStop",
+    "HostShutdown",
+];
+
 /// Host-normalized event kind for `Std.Graph.Event`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GraphEventKind {
@@ -65,7 +74,7 @@ impl GraphEvent {
 
     /// Projects one internal shared UI event into the public `Std.Graph` event model.
     #[must_use]
-    pub(crate) fn from_ui_event(value: UiEvent) -> Option<Self> {
+    pub fn from_ui_event(value: UiEvent) -> Option<Self> {
         match value {
             UiEvent::CloseRequested => Some(Self::CloseRequested),
             UiEvent::Resize(resize) => Some(Self::Resize {

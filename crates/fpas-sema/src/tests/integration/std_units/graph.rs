@@ -13,8 +13,7 @@ uses Std.Graph;
 begin
   var App: Application := Application.Open(640, 480, 'Graph smoke');
   var Screen: Size := Application.Size(App);
-  var Pending: Option of Event := Application.PollEvent(App);
-    var Timed: Option of Event := Application.ReadEventTimeout(App, 16);
+  Application.RequestRedraw(App);
   var Pixels: array of integer := [$00102040, $00102040];
   var Kind: EventKind := EventKind.Resize;
     var MouseKind: EventKind := EventKind.Mouse;
@@ -45,15 +44,15 @@ program T;
 uses Std.Graph;
 begin
   var App: Application := Application.Open(320, 200, 'Graph events');
-  var Pending: Option of Event := Application.PollEvent(App);
-    var E: Event := Std.Option.Unwrap(Pending);
-    var Action: Std.Console.MouseAction := E.mouse_action;
-    var Button: Std.Console.MouseButton := E.mouse_button;
-    var X: integer := E.mouse_x;
-    var Y: integer := E.mouse_y;
-    var WheelX: integer := E.wheel_x;
-    var WheelY: integer := E.wheel_y;
-    var Shifted: boolean := E.shift
+  var Kind: EventKind := EventKind.Mouse;
+    var WheelKind: EventKind := EventKind.Wheel;
+    var Action: Std.Console.MouseAction := Std.Console.MouseAction.Down;
+    var Button: Std.Console.MouseButton := Std.Console.MouseButton.Left;
+    var X: integer := 12;
+    var Y: integer := 34;
+    var WheelX: integer := -1;
+    var WheelY: integer := 2;
+    var Shifted: boolean := true
 end.",
     );
 }
@@ -97,24 +96,6 @@ end.",
     assert!(
         errs.iter()
             .any(|e| e.message.contains("expects 3 arguments, got 2")),
-        "{errs:#?}"
-    );
-}
-
-#[test]
-fn std_graph_read_event_timeout_wrong_arg_count() {
-    let errs = check_errors(
-        "\
-program T;
-uses Std.Graph;
-begin
-  var App: Application := Application.Open(640, 480, 'Graph smoke');
-  var Ev: Option of Event := Application.ReadEventTimeout(App)
-end.",
-    );
-    assert!(
-        errs.iter()
-            .any(|e| e.message.contains("expects 2 arguments, got 1")),
         "{errs:#?}"
     );
 }

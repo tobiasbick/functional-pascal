@@ -469,8 +469,9 @@ fn graph_session_resize_event_reallocates_runtime_backbuffer() {
         });
 
         let event = session
-            .poll_event(test_location())
-            .expect("poll should succeed");
+            .read_host_ui_event_timeout(0, test_location())
+            .expect("read host ui event should succeed")
+            .and_then(GraphEvent::from_ui_event);
         assert_eq!(
             event,
             Some(GraphEvent::Resize {
@@ -672,7 +673,7 @@ fn graph_session_size_and_close_follow_open_state() {
 }
 
 #[test]
-fn graph_session_poll_event_returns_queued_event() {
+fn graph_session_read_host_ui_event_returns_queued_event() {
     with_headless(|| {
         let mut session = GraphSession::default();
         session
@@ -684,8 +685,9 @@ fn graph_session_poll_event_returns_queued_event() {
         });
 
         let event = session
-            .poll_event(test_location())
-            .expect("poll should succeed");
+            .read_host_ui_event_timeout(0, test_location())
+            .expect("read host ui event should succeed")
+            .and_then(GraphEvent::from_ui_event);
         assert_eq!(
             event,
             Some(GraphEvent::Resize {
@@ -697,7 +699,7 @@ fn graph_session_poll_event_returns_queued_event() {
 }
 
 #[test]
-fn graph_session_read_event_timeout_returns_queued_event_immediately() {
+fn graph_session_read_host_ui_event_timeout_returns_queued_event_immediately() {
     with_headless(|| {
         let mut session = GraphSession::default();
         session
@@ -709,8 +711,9 @@ fn graph_session_read_event_timeout_returns_queued_event_immediately() {
         });
 
         let event = session
-            .read_event_timeout(16, test_location())
-            .expect("read event timeout should succeed");
+            .read_host_ui_event_timeout(16, test_location())
+            .expect("read host ui event timeout should succeed")
+            .and_then(GraphEvent::from_ui_event);
         assert_eq!(
             event,
             Some(GraphEvent::Resize {
@@ -722,7 +725,7 @@ fn graph_session_read_event_timeout_returns_queued_event_immediately() {
 }
 
 #[test]
-fn graph_session_poll_event_returns_queued_close_requested_event() {
+fn graph_session_read_host_ui_event_returns_queued_close_requested_event() {
     with_headless(|| {
         let mut session = GraphSession::default();
         session
@@ -731,14 +734,15 @@ fn graph_session_poll_event_returns_queued_close_requested_event() {
         session.push_event_for_tests(GraphEvent::CloseRequested);
 
         let event = session
-            .poll_event(test_location())
-            .expect("poll should succeed");
+            .read_host_ui_event_timeout(0, test_location())
+            .expect("read host ui event should succeed")
+            .and_then(GraphEvent::from_ui_event);
         assert_eq!(event, Some(GraphEvent::CloseRequested));
     });
 }
 
 #[test]
-fn graph_session_poll_event_returns_queued_key_event() {
+fn graph_session_read_host_ui_event_returns_queued_key_event() {
     with_headless(|| {
         let mut session = GraphSession::default();
         session
@@ -754,8 +758,9 @@ fn graph_session_poll_event_returns_queued_key_event() {
         )));
 
         let event = session
-            .poll_event(test_location())
-            .expect("poll should succeed");
+            .read_host_ui_event_timeout(0, test_location())
+            .expect("read host ui event should succeed")
+            .and_then(GraphEvent::from_ui_event);
         assert_eq!(
             event,
             Some(GraphEvent::Key(ConsoleKeyEvent::new(
@@ -771,7 +776,7 @@ fn graph_session_poll_event_returns_queued_key_event() {
 }
 
 #[test]
-fn graph_session_poll_event_returns_queued_mouse_event() {
+fn graph_session_read_host_ui_event_returns_queued_mouse_event() {
     with_headless(|| {
         let mut session = GraphSession::default();
         session
@@ -789,8 +794,9 @@ fn graph_session_poll_event_returns_queued_mouse_event() {
         });
 
         let event = session
-            .poll_event(test_location())
-            .expect("poll should succeed");
+            .read_host_ui_event_timeout(0, test_location())
+            .expect("read host ui event should succeed")
+            .and_then(GraphEvent::from_ui_event);
         assert_eq!(
             event,
             Some(GraphEvent::Mouse {
@@ -808,7 +814,7 @@ fn graph_session_poll_event_returns_queued_mouse_event() {
 }
 
 #[test]
-fn graph_session_poll_event_returns_queued_wheel_event() {
+fn graph_session_read_host_ui_event_returns_queued_wheel_event() {
     with_headless(|| {
         let mut session = GraphSession::default();
         session
@@ -826,8 +832,9 @@ fn graph_session_poll_event_returns_queued_wheel_event() {
         });
 
         let event = session
-            .poll_event(test_location())
-            .expect("poll should succeed");
+            .read_host_ui_event_timeout(0, test_location())
+            .expect("read host ui event should succeed")
+            .and_then(GraphEvent::from_ui_event);
         assert_eq!(
             event,
             Some(GraphEvent::Wheel {

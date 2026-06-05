@@ -29,15 +29,9 @@ uses Std.Tui;
 begin
   var App: Application := Application.Open();
   var Screen: Size := Application.Size(App);
-  var Ev: TuiEvent := Application.ReadEvent(App);
-  var MaybeEvent: Option of TuiEvent := Application.ReadEventTimeout(App, 16);
-  var Pending: Option of TuiEvent := Application.PollEvent(App);
   Application.RequestRedraw(App);
-  var NeedsRedraw: boolean := Application.RedrawPending(App);
-  var IsResize: boolean := Ev.kind = EventKind.Resize;
-  var IsSpace: boolean := Ev.key.kind = Std.Console.KeyKind.Space;
   var Width: integer := Screen.width;
-  var Height: integer := Ev.size.height;
+  var Height: integer := Screen.height;
   Application.Close(App)
 end.",
     );
@@ -105,24 +99,6 @@ end.",
 }
 
 #[test]
-fn std_tui_read_event_timeout_wrong_arg_count() {
-    let errs = check_errors(
-        "\
-program T;
-uses Std.Tui;
-begin
-  var App: Application := Application.Open();
-  var Ev: Option of TuiEvent := Application.ReadEventTimeout(App)
-end.",
-    );
-    assert!(
-        errs.iter()
-            .any(|e| e.message.contains("expects 2 arguments, got 1")),
-        "{errs:#?}"
-    );
-}
-
-#[test]
 fn std_tui_size_unknown_field() {
     let errs = check_errors(
         "\
@@ -136,25 +112,6 @@ end.",
     );
     assert!(
         errs.iter().any(|e| e.message.contains("no field")),
-        "{errs:#?}"
-    );
-}
-
-#[test]
-fn std_tui_event_kind_unknown_member() {
-    let errs = check_errors(
-        "\
-program T;
-uses Std.Tui;
-begin
-  var App: Application := Application.Open();
-  var Ev: TuiEvent := Application.ReadEvent(App);
-  var IsCustom: boolean := Ev.kind = Std.Tui.EventKind.Custom
-end.",
-    );
-    assert!(
-        errs.iter()
-            .any(|e| e.message.contains("Undefined") || e.message.contains("unknown")),
         "{errs:#?}"
     );
 }
@@ -191,7 +148,6 @@ begin
   var App: Application := Application.Open();
     Application.HostRegisterOnPaint(App, OnPaint);
         Application.HostRegisterOnIdle(App, 16, OnIdle);
-  var Maybe: Option of TuiEvent := Application.HostPollNext(App);
   var Tag: integer := Application.HostProcessNext(App, 64);
   var Dr: integer := Application.HostDispatchRedraw(App);
   Application.HostRequestQuit(App);

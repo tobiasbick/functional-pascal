@@ -23,26 +23,29 @@ pub(super) fn register_application_api(checker: &mut Checker, types: &GraphTypes
         s::STD_GRAPH_APPLICATION_CLOSE,
         vec![p("App", types.application.clone(), false)],
     );
+    define_proc(
+        checker,
+        s::STD_GRAPH_APPLICATION_CONFIGURE,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Handlers", types.application_handlers.clone(), false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_GRAPH_APPLICATION_RUN,
+        vec![p("App", types.application.clone(), false)],
+    );
     define_func(
         checker,
         s::STD_GRAPH_APPLICATION_SIZE,
         vec![p("App", types.application.clone(), false)],
         types.size.clone(),
     );
-    define_func(
+    define_proc(
         checker,
-        s::STD_GRAPH_APPLICATION_POLL_EVENT,
+        s::STD_GRAPH_APPLICATION_REQUEST_REDRAW,
         vec![p("App", types.application.clone(), false)],
-        Ty::Option(Box::new(types.event.clone())),
-    );
-    define_func(
-        checker,
-        s::STD_GRAPH_APPLICATION_READ_EVENT_TIMEOUT,
-        vec![
-            p("App", types.application.clone(), false),
-            p("Milliseconds", Ty::Integer, false),
-        ],
-        Ty::Option(Box::new(types.event.clone())),
     );
     define_proc(
         checker,

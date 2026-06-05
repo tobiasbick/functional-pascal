@@ -1,8 +1,10 @@
 //! `Std.Graph` VM execution and value/session bridging.
 //!
-//! **Documentation:** `docs/pascal/std/graph.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph.md`, `docs/pascal/std/graph-app.md` (from the repository root).
 
 mod application;
+mod handlers;
+mod host;
 mod records;
 
 use crate::vm::Worker;
@@ -16,7 +18,9 @@ impl Worker {
         intrinsic: Intrinsic,
         line: SourceLocation,
     ) -> Result<bool, VmError> {
-        if self.try_exec_graph_application_intrinsic(intrinsic, line)? {
+        if self.try_exec_graph_application_intrinsic(intrinsic, line)?
+            || self.try_exec_graph_host_intrinsic(intrinsic, line)?
+        {
             return Ok(true);
         }
 

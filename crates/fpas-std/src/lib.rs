@@ -51,8 +51,9 @@ pub use console_event::{
 };
 pub use error::StdError;
 pub use graph::{
-    GRAPH_EVENT_KIND_VARIANTS, GraphEvent, GraphEventKind, GraphSession, UploadedFrame,
-    last_headless_graph_frame_for_tests, with_headless_graph_backend_for_tests,
+    GRAPH_EVENT_KIND_VARIANTS, GRAPH_EXIT_REASON_VARIANTS, GraphEvent, GraphEventKind, GraphHost,
+    GraphSession, UploadedFrame, last_headless_graph_frame_for_tests,
+    with_headless_graph_backend_for_tests,
 };
 pub use intrinsics::run_intrinsic;
 pub use key_event::{ConsoleKeyEvent, KEY_KIND_VARIANTS};
@@ -70,7 +71,7 @@ pub use tui_damage::DamageRegion;
 pub use tui_host::TuiHost;
 pub use tui_modal::{ModalId, ModalStack};
 pub use tui_view::{ViewId, ViewRect, ViewRegistry};
-pub use ui::{UiEvent, UiModifiers, UiMouse, UiResize, UiWheel};
+pub use ui::{UiEvent, UiHost, UiHostSurface, UiModifiers, UiMouse, UiResize, UiWheel};
 
 /// Returns the index of `name` in `variants`, or 0 if not found.
 ///

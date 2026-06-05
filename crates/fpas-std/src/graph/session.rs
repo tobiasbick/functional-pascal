@@ -26,6 +26,7 @@ pub struct GraphSession {
     pending_events: VecDeque<UiEvent>,
     backbuffer: GraphBackbuffer,
     last_uploaded_frame: Option<UploadedFrame>,
+    redraw_pending: bool,
 }
 
 impl GraphSession {
@@ -54,6 +55,7 @@ impl GraphSession {
         self.pending_events.clear();
         self.backbuffer = backbuffer;
         self.last_uploaded_frame = None;
+        self.redraw_pending = false;
         Ok(())
     }
 
@@ -71,6 +73,7 @@ impl GraphSession {
         self.pending_events.clear();
         self.backbuffer = GraphBackbuffer::default();
         self.last_uploaded_frame = None;
+        self.redraw_pending = false;
         Ok(())
     }
 
@@ -86,50 +89,74 @@ impl GraphSession {
         Ok((self.width, self.height))
     }
 
-    /// Polls the next queued graph event.
-    pub fn poll_event(&mut self, location: SourceLocation) -> Result<Option<GraphEvent>, StdError> {
+    /// Marks the active session as needing a hosted redraw.
+    pub fn request_redraw(&mut self, location: SourceLocation) -> Result<(), StdError> {
         self.ensure_open(
-            "Std.Graph.Application.PollEvent(App) requires an open graphics session.",
-            "Open the application before polling for events.",
+            "Application.RequestRedraw(App) requires an open graphics session.",
+            "Open the application before requesting a redraw.",
             location,
         )?;
-
-        if let Some(event) = self.pending_events.pop_front() {
-            self.apply_polled_event(&event, location)?;
-            return Ok(GraphEvent::from_ui_event(event));
-        }
-
-        let event = backend::poll_graph_event(location)?;
-        if let Some(event) = &event {
-            self.apply_polled_event(event, location)?;
-        }
-
-        Ok(event.and_then(GraphEvent::from_ui_event))
+        self.redraw_pending = true;
+        Ok(())
     }
 
-    /// Waits up to `timeout_ms` milliseconds for the next queued graph event.
-    pub fn read_event_timeout(
+    /// Marks the active session as needing a hosted redraw when none is already pending.
+    pub fn request_redraw_if_absent(&mut self, location: SourceLocation) -> Result<(), StdError> {
+        self.ensure_open(
+            "Application.RequestRedraw(App) requires an open graphics session.",
+            "Open the application before requesting a redraw.",
+            location,
+        )?;
+        if !self.redraw_pending {
+            self.redraw_pending = true;
+        }
+        Ok(())
+    }
+
+    /// Returns whether a hosted redraw is pending without consuming it.
+    pub fn peek_redraw_pending(&self, location: SourceLocation) -> Result<bool, StdError> {
+        self.ensure_open(
+            "Hosted graph redraw requires an open graphics session.",
+            "Open the application before querying redraw state.",
+            location,
+        )?;
+        Ok(self.redraw_pending)
+    }
+
+    /// Consumes and returns whether a hosted redraw was pending.
+    pub fn take_redraw_pending(&mut self, location: SourceLocation) -> Result<bool, StdError> {
+        self.ensure_open(
+            "Hosted graph redraw requires an open graphics session.",
+            "Open the application before consuming redraw state.",
+            location,
+        )?;
+        let pending = self.redraw_pending;
+        self.redraw_pending = false;
+        Ok(pending)
+    }
+
+    /// Waits up to `timeout_ms` for the next hosted UI event from the native backend.
+    pub fn read_host_ui_event_timeout(
         &mut self,
         timeout_ms: i64,
         location: SourceLocation,
-    ) -> Result<Option<GraphEvent>, StdError> {
+    ) -> Result<Option<UiEvent>, StdError> {
         self.ensure_open(
-            "Std.Graph.Application.ReadEventTimeout(App, Milliseconds) requires an open graphics session.",
+            "Std.Graph hosted event wait requires an open graphics session.",
             "Open the application before waiting for events.",
             location,
         )?;
 
         if let Some(event) = self.pending_events.pop_front() {
             self.apply_polled_event(&event, location)?;
-            return Ok(GraphEvent::from_ui_event(event));
+            return Ok(Some(event));
         }
 
         let event = backend::read_graph_event_timeout(timeout_ms, location)?;
         if let Some(event) = &event {
             self.apply_polled_event(event, location)?;
         }
-
-        Ok(event.and_then(GraphEvent::from_ui_event))
+        Ok(event)
     }
 
     /// Clears the runtime-owned backbuffer with one packed `$00RRGGBB` color.

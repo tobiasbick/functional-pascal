@@ -22,30 +22,10 @@ pub enum TuiIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui.md`
     ApplicationSize = 249,
-    /// `Std.Tui.Application.ReadEvent(App)` — blocking read of the next TUI event.
-    ///
-    /// **Documentation:** `docs/pascal/std/tui.md`
-    ApplicationReadEvent = 250,
-    /// `Std.Tui.Application.ReadEventTimeout(App, Ms)` — wait up to `Ms` milliseconds.
-    ///
-    /// **Documentation:** `docs/pascal/std/tui.md`
-    ApplicationReadEventTimeout = 251,
-    /// `Std.Tui.Application.PollEvent(App)` — non-blocking TUI event poll.
-    ///
-    /// **Documentation:** `docs/pascal/std/tui.md`
-    ApplicationPollEvent = 252,
     /// `Std.Tui.Application.RequestRedraw(App)` — mark the application as needing redraw.
     ///
     /// **Documentation:** `docs/pascal/std/tui.md`
     ApplicationRequestRedraw = 253,
-    /// `Std.Tui.Application.RedrawPending(App)` — consume and report redraw state.
-    ///
-    /// **Documentation:** `docs/pascal/std/tui.md`
-    ApplicationRedrawPending = 254,
-    /// `Std.Tui` host poll: next event via `fpas_std::TuiHost` (resize coalescing). Returns `Option<Std.Tui.TuiEvent>`.
-    ///
-    /// **Documentation:** `docs/pascal/std/tui-app.md`
-    HostPollNext = 255,
     /// Register `function (Application, Std.Console.KeyEvent): boolean` for host key dispatch.
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`

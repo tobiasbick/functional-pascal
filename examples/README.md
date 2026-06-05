@@ -107,7 +107,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/10-p
 | `pascal/std/dict_basics.fpas` | `Std.Dict` — literals, `Get`, `Merge`, `Map`/`Filter` (qualified when also using `Std.Array` / `Std.Option`) |
 | `pascal/std/env_basics.fpas` | `Std.Env` — environment lookup and missing values |
 | `pascal/std/fs_basics.fpas` | `Std.Fs` — create directories, write/read UTF-8 text, path checks |
-| `pascal/std/graph_basics.fpas` | `Std.Graph` — open, draw, present, poll, close |
+| `pascal/std/graph_basics.fpas` | `Std.Graph` — hosted `Configure` + `Run`, draw on `OnPaint`, quit on Escape |
 | `pascal/std/json_basics.fpas` | `Std.Json` — parse, inspect, and stringify JSON trees |
 | `pascal/std/parse_basics.fpas` | `Std.Parse` — `Result`-based integer, real, and boolean parsing |
 | `pascal/std/path_basics.fpas` | `Std.Path` — join, normalize, basename, dirname, extension |
@@ -121,7 +121,6 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/10-p
 | `pascal/tui/view_scoped_commands.fpas` | `Std.Tui` — `HostBindCommandToView` and focus/ancestor command routing |
 | `pascal/tui/show_modal_existing_view.fpas` | `Std.Tui` — `ShowModal` for an existing view subtree |
 | `pascal/tui/show_dialog.fpas` | `Std.Tui` — `ShowDialog` plus modal-local command binding |
-| `pascal/tui/poll_redraw_timeout.fpas` | Poll-style `ReadEventTimeout` + `RedrawPending` loop (**Escape** exits) |
 | `math/julia/julia.fpas` | ASCII Julia set (**interactive** — see below) |
 | `math/julia/julia_graph.fpas` | Native-window Julia explorer with `Std.Graph` |
 
@@ -154,6 +153,4 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 | `pascal/tui/view_scoped_commands.fpas` | Focus-aware view commands; **Tab** changes focus, **Ctrl+S** resolves per panel, **Escape** quits |
 | `pascal/tui/show_modal_existing_view.fpas` | Existing view subtree becomes modal; **Tab** stays in the subtree, **Escape** closes the modal |
 | `pascal/tui/show_dialog.fpas` | Owned modal dialog; **Ctrl+D** opens it, **Escape** closes it, **Ctrl+Q** quits |
-| `pascal/tui/poll_redraw_timeout.fpas` | Poll-style loop; **Escape** exits (see `docs/pascal/std/tui.md`) |
-
-TUI apps use the dispatch model: `Application.Configure(App, Handlers)` registers `On*` handlers; `Application.Run(App)` starts the hosted loop. See `docs/pascal/std/tui-app.md` for the full dispatch API and `docs/pascal/std/tui.md` for poll-style API status. The console's own event type remains **`Std.Console.Event`**.
+TUI and Graph apps use the same hosted dispatch model: `Application.Configure(App, Handlers)` registers `On*` handlers; `Application.Run(App)` starts the hosted loop. See `docs/pascal/std/tui-app.md` and `docs/pascal/std/graph-app.md`. The console's own event type remains **`Std.Console.Event`**.

@@ -1,69 +1,65 @@
 //! `Std.Graph` intrinsic discriminants.
 //!
-//! **Documentation:** `docs/pascal/std/graph.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph.md`, `docs/pascal/std/graph-app.md` (from the repository root).
 
 use num_enum::TryFromPrimitive;
 
-/// Intrinsics for `Std.Graph.Application.*` Phase 1 routines.
+/// Intrinsics for `Std.Graph.Application.*` routines.
 ///
-/// **Documentation:** `docs/pascal/std/graph.md`
+/// **Documentation:** `docs/pascal/std/graph.md`, `docs/pascal/std/graph-app.md`
 #[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u16)]
 pub enum GraphIntrinsic {
     /// `Std.Graph.Application.Open(Width, Height, Title)`.
-    ///
-    /// **Documentation:** `docs/pascal/std/graph.md`
     ApplicationOpen = 292,
     /// `Std.Graph.Application.Close(App)`.
-    ///
-    /// **Documentation:** `docs/pascal/std/graph.md`
     ApplicationClose = 293,
     /// `Std.Graph.Application.Size(App)`.
-    ///
-    /// **Documentation:** `docs/pascal/std/graph.md`
     ApplicationSize = 294,
-    /// `Std.Graph.Application.PollEvent(App)`.
-    ///
-    /// **Documentation:** `docs/pascal/std/graph.md`
-    ApplicationPollEvent = 295,
-    /// `Std.Graph.Application.ReadEventTimeout(App, Milliseconds)`.
-    ///
-    /// **Documentation:** `docs/pascal/std/graph.md`
-    ApplicationReadEventTimeout = 296,
+    /// `Std.Graph.Application.RequestRedraw(App)`.
+    ApplicationRequestRedraw = 295,
+    /// `Std.Graph.Application.Configure(App, Handlers)`.
+    ApplicationConfigure = 296,
     /// `Std.Graph.Application.UploadFrame(App, Width, Height, Pixels)`.
-    ///
-    /// **Documentation:** `docs/pascal/std/graph.md`
     ApplicationUploadFrame = 297,
     /// `Std.Graph.Application.Clear(App, Color)`.
-    ///
-    /// **Documentation:** `docs/pascal/std/graph.md`
     ApplicationClear = 298,
     /// `Std.Graph.Application.PutPixel(App, X, Y, Color)`.
-    ///
-    /// **Documentation:** `docs/pascal/std/graph.md`
     ApplicationPutPixel = 299,
     /// `Std.Graph.Application.Present(App)`.
-    ///
-    /// **Documentation:** `docs/pascal/std/graph.md`
     ApplicationPresent = 300,
-    /// `Std.Graph.Application.DrawLine(App, X1, Y1, X2, Y2, Color)`.
-    ///
-    /// **Documentation:** `docs/pascal/std/graph.md`
+    /// `Std.Graph.Application.DrawLine(...)`.
     ApplicationDrawLine = 301,
-    /// `Std.Graph.Application.DrawRect(App, X, Y, Width, Height, Color)`.
-    ///
-    /// **Documentation:** `docs/pascal/std/graph.md`
+    /// `Std.Graph.Application.DrawRect(...)`.
     ApplicationDrawRect = 302,
-    /// `Std.Graph.Application.FillRect(App, X, Y, Width, Height, Color)`.
-    ///
-    /// **Documentation:** `docs/pascal/std/graph.md`
+    /// `Std.Graph.Application.FillRect(...)`.
     ApplicationFillRect = 303,
-    /// `Std.Graph.Application.DrawCircle(App, CenterX, CenterY, Radius, Color)`.
-    ///
-    /// **Documentation:** `docs/pascal/std/graph.md`
+    /// `Std.Graph.Application.DrawCircle(...)`.
     ApplicationDrawCircle = 304,
-    /// `Std.Graph.Application.DrawText(App, X, Y, Text, Color)`.
-    ///
-    /// **Documentation:** `docs/pascal/std/graph.md`
+    /// `Std.Graph.Application.DrawText(...)`.
     ApplicationDrawText = 305,
+    /// Hosted application loop (`Std.Graph.Application.Run`).
+    ApplicationRun = 331,
+    /// Request cooperative quit during a hosted run.
+    HostRequestQuit = 332,
+    /// Register `function (Application, KeyEvent): boolean`.
+    HostRegisterOnKeyPressed = 333,
+    /// Register `procedure (Application, Size)`.
+    HostRegisterOnResize = 334,
+    /// Process at most one hosted event.
+    HostProcessNext = 335,
+    /// Register `procedure (Application)`.
+    HostRegisterOnPaint = 336,
+    /// Dispatch pending redraw through `OnPaint`.
+    HostDispatchRedraw = 337,
+    /// Register idle handler and interval.
+    HostRegisterOnIdle = 338,
+    /// Register `procedure (Application, ExitReason)`.
+    HostRegisterOnExit = 339,
+    /// Register `procedure (Application, Event)`.
+    HostRegisterOnMouse = 340,
+    /// Register `procedure (Application, Event)`.
+    HostRegisterOnWheel = 341,
+    /// Register `procedure (Application)`.
+    HostRegisterOnCloseRequested = 342,
 }

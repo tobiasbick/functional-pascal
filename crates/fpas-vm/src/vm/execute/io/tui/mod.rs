@@ -3,7 +3,6 @@
 //! **Documentation:** `docs/pascal/std/tui.md`, `docs/pascal/std/tui-app.md` (from the repository root).
 
 mod application;
-mod events;
 mod handlers;
 mod host;
 mod records;
@@ -21,7 +20,6 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<bool, VmError> {
         if self.try_exec_tui_application_intrinsic(intrinsic, line)?
-            || self.try_exec_tui_event_intrinsic(intrinsic, line)?
             || self.try_exec_tui_view_intrinsic(intrinsic, line)?
             || self.try_exec_tui_host_intrinsic(intrinsic, line)?
         {

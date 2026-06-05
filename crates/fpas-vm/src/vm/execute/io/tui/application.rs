@@ -20,7 +20,7 @@ impl Worker {
                     self.with_console_and_key_input(|console, key_input| {
                         tui.session.open(console, key_input, line)
                     })?;
-                    tui.host = fpas_std::TuiHost::new();
+                    tui.host = fpas_std::UiHost::for_terminal();
                     tui.quit_requested = false;
                     tui.host_stop_requested = false;
                     tui.on_idle = None;
@@ -185,11 +185,6 @@ impl Worker {
             Intrinsic::Tui(TuiIntrinsic::ApplicationRequestRedraw) => {
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| tui.session.request_redraw(line))?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::ApplicationRedrawPending) => {
-                self.pop_tui_application(line)?;
-                let pending = self.with_tui(|tui| tui.session.take_redraw_pending(line))?;
-                self.push(Value::Boolean(pending))?;
             }
             _ => return Ok(false),
         }

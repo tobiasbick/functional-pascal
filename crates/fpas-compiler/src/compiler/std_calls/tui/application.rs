@@ -47,47 +47,11 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::ApplicationSize), location);
                 Ok(true)
             }
-            s::STD_TUI_APPLICATION_READ_EVENT => {
-                self.expect_exact_args(s::STD_TUI_APPLICATION_READ_EVENT, 1, args, location)?;
-                self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::ApplicationReadEvent), location);
-                Ok(true)
-            }
-            s::STD_TUI_APPLICATION_READ_EVENT_TIMEOUT => {
-                self.expect_exact_args(
-                    s::STD_TUI_APPLICATION_READ_EVENT_TIMEOUT,
-                    2,
-                    args,
-                    location,
-                )?;
-                self.compile_expr(&args[0])?;
-                self.compile_expr(&args[1])?;
-                self.emit_intrinsic(
-                    Intrinsic::Tui(TuiIntrinsic::ApplicationReadEventTimeout),
-                    location,
-                );
-                Ok(true)
-            }
-            s::STD_TUI_APPLICATION_POLL_EVENT => {
-                self.expect_exact_args(s::STD_TUI_APPLICATION_POLL_EVENT, 1, args, location)?;
-                self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::ApplicationPollEvent), location);
-                Ok(true)
-            }
             s::STD_TUI_APPLICATION_REQUEST_REDRAW => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_REQUEST_REDRAW, 1, args, location)?;
                 self.compile_expr(&args[0])?;
                 self.emit_intrinsic_unit(
                     Intrinsic::Tui(TuiIntrinsic::ApplicationRequestRedraw),
-                    location,
-                );
-                Ok(true)
-            }
-            s::STD_TUI_APPLICATION_REDRAW_PENDING => {
-                self.expect_exact_args(s::STD_TUI_APPLICATION_REDRAW_PENDING, 1, args, location)?;
-                self.compile_expr(&args[0])?;
-                self.emit_intrinsic(
-                    Intrinsic::Tui(TuiIntrinsic::ApplicationRedrawPending),
                     location,
                 );
                 Ok(true)

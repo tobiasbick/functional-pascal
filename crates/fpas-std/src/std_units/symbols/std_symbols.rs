@@ -231,13 +231,7 @@ pub const STD_TUI_APPLICATION_SHOW_DIALOG: &str = std_tui!("Application.ShowDial
 /// Close the active modal dialog shown via `Application.ShowModal`.
 pub const STD_TUI_APPLICATION_CLOSE_MODAL: &str = std_tui!("Application.CloseModal");
 pub const STD_TUI_APPLICATION_SIZE: &str = std_tui!("Application.Size");
-pub const STD_TUI_APPLICATION_READ_EVENT: &str = std_tui!("Application.ReadEvent");
-pub const STD_TUI_APPLICATION_READ_EVENT_TIMEOUT: &str = std_tui!("Application.ReadEventTimeout");
-pub const STD_TUI_APPLICATION_POLL_EVENT: &str = std_tui!("Application.PollEvent");
 pub const STD_TUI_APPLICATION_REQUEST_REDRAW: &str = std_tui!("Application.RequestRedraw");
-pub const STD_TUI_APPLICATION_REDRAW_PENDING: &str = std_tui!("Application.RedrawPending");
-/// Dispatch-mode host bridge; see `docs/pascal/std/tui-app.md`.
-pub const STD_TUI_APPLICATION_HOST_POLL_NEXT: &str = std_tui!("Application.HostPollNext");
 pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_KEY_PRESSED: &str =
     std_tui!("Application.HostRegisterOnKeyPressed");
 pub const STD_TUI_APPLICATION_HOST_INVOKE_ON_KEY_PRESSED: &str =
@@ -315,15 +309,38 @@ pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT: &str =
     std_tui!("Application.HostRegisterOnViewPaint");
 
 pub const STD_GRAPH_APPLICATION: &str = std_graph!("Application");
+/// Hosted-dispatch handler bundle for `Std.Graph.Application.Configure`; see `docs/pascal/std/graph-app.md`.
+pub const STD_GRAPH_APPLICATION_HANDLERS: &str = std_graph!("ApplicationHandlers");
 pub const STD_GRAPH_SIZE: &str = std_graph!("Size");
 pub const STD_GRAPH_EVENT: &str = std_graph!("Event");
 pub const STD_GRAPH_EVENT_KIND: &str = std_graph!("EventKind");
+pub const STD_GRAPH_EXIT_REASON: &str = std_graph!("ExitReason");
 pub const STD_GRAPH_APPLICATION_OPEN: &str = std_graph!("Application.Open");
 pub const STD_GRAPH_APPLICATION_CLOSE: &str = std_graph!("Application.Close");
+pub const STD_GRAPH_APPLICATION_CONFIGURE: &str = std_graph!("Application.Configure");
+pub const STD_GRAPH_APPLICATION_RUN: &str = std_graph!("Application.Run");
 pub const STD_GRAPH_APPLICATION_SIZE: &str = std_graph!("Application.Size");
-pub const STD_GRAPH_APPLICATION_POLL_EVENT: &str = std_graph!("Application.PollEvent");
-pub const STD_GRAPH_APPLICATION_READ_EVENT_TIMEOUT: &str =
-    std_graph!("Application.ReadEventTimeout");
+pub const STD_GRAPH_APPLICATION_REQUEST_REDRAW: &str = std_graph!("Application.RequestRedraw");
+pub const STD_GRAPH_APPLICATION_HOST_REQUEST_QUIT: &str = std_graph!("Application.HostRequestQuit");
+pub const STD_GRAPH_APPLICATION_HOST_REGISTER_ON_KEY_PRESSED: &str =
+    std_graph!("Application.HostRegisterOnKeyPressed");
+pub const STD_GRAPH_APPLICATION_HOST_REGISTER_ON_RESIZE: &str =
+    std_graph!("Application.HostRegisterOnResize");
+pub const STD_GRAPH_APPLICATION_HOST_PROCESS_NEXT: &str = std_graph!("Application.HostProcessNext");
+pub const STD_GRAPH_APPLICATION_HOST_REGISTER_ON_PAINT: &str =
+    std_graph!("Application.HostRegisterOnPaint");
+pub const STD_GRAPH_APPLICATION_HOST_REGISTER_ON_IDLE: &str =
+    std_graph!("Application.HostRegisterOnIdle");
+pub const STD_GRAPH_APPLICATION_HOST_DISPATCH_REDRAW: &str =
+    std_graph!("Application.HostDispatchRedraw");
+pub const STD_GRAPH_APPLICATION_HOST_REGISTER_ON_EXIT: &str =
+    std_graph!("Application.HostRegisterOnExit");
+pub const STD_GRAPH_APPLICATION_HOST_REGISTER_ON_MOUSE: &str =
+    std_graph!("Application.HostRegisterOnMouse");
+pub const STD_GRAPH_APPLICATION_HOST_REGISTER_ON_WHEEL: &str =
+    std_graph!("Application.HostRegisterOnWheel");
+pub const STD_GRAPH_APPLICATION_HOST_REGISTER_ON_CLOSE_REQUESTED: &str =
+    std_graph!("Application.HostRegisterOnCloseRequested");
 pub const STD_GRAPH_APPLICATION_UPLOAD_FRAME: &str = std_graph!("Application.UploadFrame");
 pub const STD_GRAPH_APPLICATION_CLEAR: &str = std_graph!("Application.Clear");
 pub const STD_GRAPH_APPLICATION_PUT_PIXEL: &str = std_graph!("Application.PutPixel");

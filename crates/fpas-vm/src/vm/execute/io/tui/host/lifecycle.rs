@@ -82,7 +82,7 @@ impl Worker {
         let close_result = self.with_console_and_key_input(|console, key_input| {
             tui.session.close(console, key_input, line)
         });
-        tui.host = fpas_std::TuiHost::new();
+        tui.host = fpas_std::UiHost::for_terminal();
         tui.on_key_pressed = None;
         tui.on_mouse = None;
         tui.on_paste = None;

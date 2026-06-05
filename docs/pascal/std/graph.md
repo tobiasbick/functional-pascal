@@ -35,12 +35,12 @@ If a file also references console-side names such as `Std.Console.KeyKind.*`, `S
 
 ## Current status
 
-`Std.Graph` currently provides the first native-window graphics path in FPAS:
+`Std.Graph` provides native-window graphics with **hosted dispatch** (see `[graph-app.md](graph-app.md)`):
 
 - one native window per process
-- a bulk `UploadFrame` path for software renderers
-- a runtime-owned backbuffer with pixels, lines, rectangles, circles, text, and `Present`
-- `PollEvent` and `ReadEventTimeout` support for `CloseRequested`, `Resize`, `Key`, `Mouse`, and `Wheel`
+- `Application.Configure` + `Application.Run` with `On*` handlers (no poll API)
+- drawing via runtime backbuffer, bulk `UploadFrame`, or immediate-mode helpers inside `OnPaint`
+- shared internal event normalization with `Std.Tui` via `UiHost` / `UiEvent` in Rust
 
 Current runtime constraints:
 
@@ -59,11 +59,15 @@ Current runtime constraints:
 | type | `Size` | record with `width` and `height` |
 | type | `EventKind` | `CloseRequested`, `Resize`, `Key`, `Mouse`, `Wheel` |
 | type | `Event` | event record with size, key, mouse, wheel, and modifier fields |
+| type | `ApplicationHandlers` | bundled hosted handler registration |
+| type | `ExitReason` | why `Application.Run` stopped |
 | function | `Application.Open(Width: integer; Height: integer; Title: string): Application` | open one native window |
 | procedure | `Application.Close(App: Application)` | close the session |
+| procedure | `Application.Configure(App: Application; Handlers: ApplicationHandlers)` | register hosted handlers |
+| procedure | `Application.Run(App: Application)` | hosted main loop |
 | function | `Application.Size(App: Application): Size` | current drawable size |
-| function | `Application.PollEvent(App: Application): Option of Event` | non-blocking event poll |
-| function | `Application.ReadEventTimeout(App: Application; Milliseconds: integer): Option of Event` | wait up to N ms for one event |
+| procedure | `Application.RequestRedraw(App: Application)` | request `OnPaint` |
+| procedure | `Application.HostRequestQuit(App: Application)` | cooperative quit |
 | procedure | `Application.UploadFrame(App: Application; Width: integer; Height: integer; Pixels: array of integer)` | bulk row-major `$00RRGGBB` upload |
 | procedure | `Application.Clear(App: Application; Color: integer)` | fill the runtime backbuffer |
 | procedure | `Application.PutPixel(App: Application; X: integer; Y: integer; Color: integer)` | write one clipped pixel |
@@ -76,7 +80,13 @@ Current runtime constraints:
 
 ---
 
-## Types
+## Dispatch model
+
+Full applications use hosted dispatch — see `[graph-app.md](graph-app.md)` for handler signatures, `ExitReason`, and VM bridge details.
+
+Sample: [`examples/pascal/std/graph_basics.fpas`](../../../examples/pascal/std/graph_basics.fpas)
+
+---
 
 ### Type `Application`
 
@@ -170,17 +180,6 @@ Return the latest known drawable size.
 
 Transient native `0x0` resize callbacks are ignored, so `Size` continues to report the last positive drawable extent.
 
-### `function Application.PollEvent(App: Application): Option of Event`
-
-Return `Some(E)` when one event is queued, or `None` when no event is pending.
-
-### `function Application.ReadEventTimeout(App: Application; Milliseconds: integer): Option of Event`
-
-Wait up to `Milliseconds` for one queued event and return `Some(E)` when one arrives.
-
-- `Milliseconds <= 0` behaves like a non-blocking poll.
-- If an event is already queued, it is returned immediately.
-
 ### `procedure Application.UploadFrame(App: Application; Width: integer; Height: integer; Pixels: array of integer)`
 
 Validate and present one full row-major framebuffer.
@@ -190,7 +189,7 @@ Validate and present one full row-major framebuffer.
 - `Width` and `Height` must match the current drawable size
 - transient native `0x0` resize callbacks do not change the expected upload extent
 
-If the window is resized again after one earlier `Application.Size(App)` or `Application.PollEvent(App)` observation, a frame built for that last observed size is still accepted instead of aborting the program. The next size observation or resize event updates the expected extent.
+If the window is resized again after one earlier `Application.Size(App)` observation, a frame built for that last observed size is still accepted instead of aborting the program. The next size observation or resize handler updates the expected extent.
 
 ### `procedure Application.Clear(App: Application; Color: integer)`
 
@@ -231,22 +230,20 @@ Flush the current runtime-owned backbuffer to the native window.
 See [examples/pascal/std/graph_basics.fpas](../../../examples/pascal/std/graph_basics.fpas) for a complete smoke example, [examples/math/julia/julia_graph.fpas](../../../examples/math/julia/julia_graph.fpas) for a Julia explorer, and [examples/math/mandelbrot/mandelbrot_graph.fpas](../../../examples/math/mandelbrot/mandelbrot_graph.fpas) for a Mandelbrot explorer.
 
 ```pascal
-uses Std.Console, Std.Conv, Std.Graph, Std.Option;
+uses Std.Graph;
 
-var App: Application := Application.Open(32, 24, 'Graph basics');
-var Screen: Size := Application.Size(App);
+procedure OnPaint(App: Application);
+begin
+  var Screen: Size := Application.Size(App);
+  Application.Clear(App, $00020408);
+  Application.DrawText(App, 2, 2, 'FPAS', $00FFFFFF)
+end;
 
-Application.Clear(App, $00020408);
-Application.DrawRect(App, 0, 0, Screen.width, Screen.height, $0000C080);
-Application.DrawLine(App, 0, 0, Screen.width - 1, Screen.height - 1, $00FF8040);
-Application.DrawCircle(App, Screen.width div 2, Screen.height div 2, 5, $0040A0FF);
-Application.DrawText(App, 2, 2, 'FPAS', $00FFFFFF);
-Application.Present(App);
-
-WriteLn('size=', IntToStr(Screen.width), 'x', IntToStr(Screen.height));
-WriteLn('pending=', BoolToStr(Std.Option.IsSome(Application.PollEvent(App))));
-
-Application.Close(App)
+begin
+  var App: Application := Application.Open(32, 24, 'Graph basics');
+  Application.Configure(App, record OnPaint := OnPaint end);
+  Application.Run(App)
+end.
 ```
 
 ---

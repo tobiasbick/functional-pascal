@@ -2,97 +2,8 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui.md`, `docs/pascal/std/tui-app.md` (from the repository root).
 
-use super::super::{
-    compile_and_run, compile_err, compile_ok, compile_run_error, compile_run_with_console_events,
-};
+use super::super::{compile_and_run, compile_err, compile_ok, compile_run_error};
 use fpas_bytecode::{Intrinsic, Op, TuiIntrinsic};
-use fpas_std::{ConsoleEvent, ConsoleKeyEvent, key_event::key_kind_index};
-
-#[test]
-fn std_tui_redraw_pending_is_consumed_once() {
-    let out = compile_and_run(
-        "\
-program T;
-uses Std.Console, Std.Tui;
-
-begin
-  var App: Application := Application.Open();
-  Application.RequestRedraw(App);
-  Std.Console.WriteLn(Application.RedrawPending(App));
-  Std.Console.WriteLn(Application.RedrawPending(App));
-  Application.Close(App)
-end.",
-    );
-
-    assert_eq!(out.lines, vec!["true", "false"]);
-}
-
-#[test]
-fn std_tui_poll_event_maps_resize_and_key_events() {
-    let out = compile_run_with_console_events(
-        "\
-program T;
-uses Std.Console, Std.Tui;
-
-begin
-  var App: Application := Application.Open();
-
-  case Application.PollEvent(App) of
-    Some(E):
-      begin
-        var CurrentSize: Size := Application.Size(App);
-        Std.Console.WriteLn(E.kind = Std.Tui.EventKind.Resize);
-        Std.Console.WriteLn(E.size.width);
-        Std.Console.WriteLn(CurrentSize.width)
-      end;
-    None:
-      Std.Console.WriteLn('missing resize')
-  end;
-
-  case Application.PollEvent(App) of
-    Some(E):
-      begin
-        Std.Console.WriteLn(E.kind = Std.Tui.EventKind.Key);
-        Std.Console.WriteLn(E.key.kind = Std.Console.KeyKind.Space)
-      end;
-    None:
-      Std.Console.WriteLn('missing key')
-  end;
-
-  Application.Close(App)
-end.",
-        &[
-            ConsoleEvent::resize(120, 40),
-            ConsoleEvent::key(ConsoleKeyEvent::new(
-                key_kind_index("Space"),
-                ' ',
-                false,
-                false,
-                false,
-                false,
-            )),
-        ],
-    );
-
-    assert_eq!(out.lines, vec!["true", "120", "120", "true", "true"]);
-}
-
-#[test]
-fn std_tui_read_event_timeout_returns_none_without_events() {
-    let out = compile_and_run(
-        "\
-program T;
-uses Std.Console, Std.Option, Std.Tui;
-
-begin
-  var App: Application := Application.Open();
-  Std.Console.WriteLn(Std.Option.IsNone(Application.ReadEventTimeout(App, 0)));
-  Application.Close(App)
-end.",
-    );
-
-    assert_eq!(out.lines, vec!["true"]);
-}
 
 #[test]
 fn std_tui_open_close_and_reopen_succeeds() {
@@ -107,12 +18,11 @@ begin
 
   var Second: Application := Application.Open();
   Application.RequestRedraw(Second);
-  Std.Console.WriteLn(Application.RedrawPending(Second));
   Application.Close(Second)
 end.",
     );
 
-    assert_eq!(out.lines, vec!["true"]);
+    assert!(out.lines.is_empty());
 }
 
 #[test]
@@ -180,70 +90,6 @@ end.",
 }
 
 #[test]
-fn std_tui_poll_event_skips_unsupported_console_events() {
-    let out = compile_run_with_console_events(
-        "\
-program T;
-uses Std.Console, Std.Tui;
-
-begin
-  var App: Application := Application.Open();
-
-  case Application.PollEvent(App) of
-    Some(E):
-      Std.Console.WriteLn(E.kind = Std.Tui.EventKind.Key);
-    None:
-      Std.Console.WriteLn('none')
-  end;
-
-  Application.Close(App)
-end.",
-        &[
-            ConsoleEvent::focus_gained(),
-            ConsoleEvent::paste("ignored".to_string()),
-            ConsoleEvent::key(ConsoleKeyEvent::new(
-                key_kind_index("Space"),
-                ' ',
-                false,
-                false,
-                false,
-                false,
-            )),
-        ],
-    );
-
-    assert_eq!(out.lines, vec!["true"]);
-}
-
-#[test]
-fn std_tui_read_event_timeout_skips_unsupported_events_before_resize() {
-    let out = compile_run_with_console_events(
-        "\
-program T;
-uses Std.Console, Std.Tui;
-
-begin
-  var App: Application := Application.Open();
-
-  case Application.ReadEventTimeout(App, 50) of
-    Some(E):
-      begin
-        Std.Console.WriteLn(E.kind = Std.Tui.EventKind.Resize);
-        Std.Console.WriteLn(E.size.width)
-      end;
-    None:
-      Std.Console.WriteLn('none')
-  end;
-
-  Application.Close(App)
-end.",
-        &[ConsoleEvent::focus_gained(), ConsoleEvent::resize(77, 25)],
-    );
-
-    assert_eq!(out.lines, vec!["true", "77"]);
-}
-
-#[test]
 fn std_tui_host_process_next_returns_zero_without_events() {
     let out = compile_and_run(
         "\
@@ -258,23 +104,6 @@ end.",
     );
 
     assert_eq!(out.lines, vec!["0"]);
-}
-
-#[test]
-fn std_tui_host_poll_next_none_without_events() {
-    let out = compile_and_run(
-        "\
-program T;
-uses Std.Console, Std.Option, Std.Tui;
-
-begin
-  var App: Application := Application.Open();
-  Std.Console.WriteLn(Std.Option.IsNone(Application.HostPollNext(App)));
-  Application.Close(App)
-end.",
-    );
-
-    assert_eq!(out.lines, vec!["true"]);
 }
 
 #[test]

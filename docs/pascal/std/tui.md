@@ -28,9 +28,9 @@ After `uses Std.Tui;` you can refer to the unit in either form:
 | **Short**           | `Application.Open()`         |
 
 
-`Std.Tui` exports nested names such as `Application.Open`, `Application.ReadEvent`, and `EventKind.Resize`. These short forms are available only when `Std.Tui` appears in `uses`.
+`Std.Tui` exports nested names such as `Application.Open`, `Application.Run`, and `EventKind.Resize`. These short forms are available only when `Std.Tui` appears in `uses`.
 
-For the **Rust-hosted dispatch bridge** (`Application.HostPollNext`, `Application.HostProcessNext`, …), see `[tui-app.md](tui-app.md)`.
+For the **Rust-hosted dispatch bridge** (`Application.HostProcessNext`, `Application.HostDispatchRedraw`, …), see `[tui-app.md](tui-app.md)`.
 
 `Std.Tui` builds on `[Std.Console](console.md)`: the `key` field of `Std.Tui.TuiEvent` has type `**Std.Console.KeyEvent`** (and its `kind` field is `**Std.Console.KeyKind`**). The `**Tui**` prefix avoids clashing with `**Std.Console.Event**`. Import `**Std.Console**` alongside `**Std.Tui**` when you need short names such as `KeyKind` or `WriteLn`, or use fully qualified `Std.Console.*` names.
 
@@ -38,23 +38,22 @@ For the **Rust-hosted dispatch bridge** (`Application.HostPollNext`, `Applicatio
 
 ## Current status
 
-`Std.Tui` currently provides the first **semantic, compiler, and VM-backed** application path:
+`Std.Tui` provides a **hosted dispatch** application path:
 
 - `Application` is the TUI session handle.
 - `Size` exposes terminal width and height.
-- `TuiEvent` exposes key and resize input.
-- `Application.RequestRedraw` / `Application.RedrawPending` support redraw-oriented loops.
+- `TuiEvent` and `EventKind` describe key and resize input for handler signatures.
+- `Application.RequestRedraw` marks the session as needing a hosted redraw.
+- `Application.Configure` + `Application.Run` register `On*` handlers and run the Rust-hosted loop.
 
-The initial execution path is intentionally narrow:
+Session lifecycle:
 
-- `Application.Open` starts the initial terminal session by owning raw mode and the alternate screen when the runtime is connected to a real terminal.
-- `Application.Close` releases that session and restores the terminal state it acquired.
+- `Application.Open` starts the terminal session (raw mode and alternate screen when connected to a real terminal).
+- `Application.Close` releases that session and restores terminal state.
 - `Application.Size` reads the current terminal dimensions.
-- `Application.ReadEvent`, `Application.ReadEventTimeout`, and `Application.PollEvent` currently surface only `Key` and `Resize` events.
-- `Application.RequestRedraw` marks redraw as needed.
-- `Application.RedrawPending` reports and clears the pending redraw flag so render loops can consume it once per request.
+- `Application.Run` closes the session automatically when the hosted loop exits.
 
-The broader Rust runtime design for `Std.Tui` is still intentionally minimal and may expand in follow-up work.
+See `[tui-app.md](tui-app.md)` for the full dispatch API, `ApplicationHandlers`, modals, and view-local paint.
 
 ---
 
@@ -74,11 +73,9 @@ Everything below requires `uses Std.Tui;`. Key types for `TuiEvent.key` come fro
 | function     | `Application.Open(): Application`                                                           | create/open an application session                                 |
 | procedure    | `Application.Close(App: Application)`                                                       | close the application session                                      |
 | function     | `Application.Size(App: Application): Size`                                                  | current terminal size                                              |
-| function     | `Application.ReadEvent(App: Application): TuiEvent`                                         | blocking event read                                                |
-| function     | `Application.ReadEventTimeout(App: Application; Milliseconds: integer): Option of TuiEvent` | wait up to N ms                                                    |
-| function     | `Application.PollEvent(App: Application): Option of TuiEvent`                               | non-blocking event check                                           |
+| procedure    | `Application.Configure(App: Application; Handlers: ApplicationHandlers)`                    | register hosted `On*` handlers                                     |
+| procedure    | `Application.Run(App: Application)`                                                         | run the hosted event loop (closes the session on exit)             |
 | procedure    | `Application.RequestRedraw(App: Application)`                                               | mark the application as needing redraw                             |
-| function     | `Application.RedrawPending(App: Application): boolean`                                      | query redraw state                                                 |
 | enum members | `Std.Console.KeyKind.`* (short `KeyKind.*` with `uses Std.Console`)                         | same as `[Std.Console](console.md)`                                |
 | enum members | `EventKind.Key`, `EventKind.Resize`                                                         | TUI event kinds                                                    |
 
@@ -176,33 +173,15 @@ The initial runtime restores any terminal state acquired by `Application.Open()`
 
 Return the current terminal size for the application.
 
-### `function Application.ReadEvent(App: Application): TuiEvent`
-
-Read one event from the application event stream.
-
-### `function Application.ReadEventTimeout(App: Application; Milliseconds: integer): Option of TuiEvent`
-
-Wait up to `Milliseconds` for an event. Returns `None` if no event is available before the timeout.
-
-### `function Application.PollEvent(App: Application): Option of TuiEvent`
-
-Return the next event if one is already available; otherwise return `None`.
-
 ### `procedure Application.RequestRedraw(App: Application)`
 
-Mark the application as needing a redraw.
-
-### `function Application.RedrawPending(App: Application): boolean`
-
-Return `true` when the application should render a new frame.
-
-`Application.RedrawPending` consumes the redraw flag: the first call after `Application.RequestRedraw(App)` returns `true`, later calls return `false` until another redraw is requested.
+Mark the application as needing a redraw. The hosted loop consumes this flag before invoking `OnPaint`.
 
 **Runtime (Rust only):** `TuiSession::is_redraw_pending` in `crates/fpas-std` peeks the same flag without consuming it; used by the VM host when servicing `TuiHostDispatchRedraw` and the bounded `TuiHostRunLoop` path (see `docs/pascal/std/tui-app.md`).
 
 ---
 
-## Dispatch model (recommended)
+## Dispatch model
 
 For full applications, use `Application.Configure` + `Application.Run` instead of a manual event loop. Register `On*` handlers once; the host calls them:
 
@@ -253,16 +232,8 @@ See also: `[examples/pascal/tui/minimal_application.fpas](../../../examples/pasc
 
 ---
 
-## Poll-style API status
+## Removed poll-style APIs
 
-`Application.ReadEvent`, `Application.ReadEventTimeout`, and `Application.PollEvent` predate the hosted dispatch model. For programs using `Application.Run` and `On*` handlers, these poll-style calls are not needed: the host invokes `On*` handlers directly.
+`Application.ReadEvent`, `Application.ReadEventTimeout`, `Application.PollEvent`, and `Application.RedrawPending` are **not** part of the current `Std.Tui` surface. Use `Application.Configure` + `Application.Run` instead. See `[tui-app.md](tui-app.md)`.
 
-| Routine | Recommendation |
-|---------|----------------|
-| `Application.ReadEvent` | Superseded for full apps. Use `Application.Run` + `OnKeyPressed` / `OnResize`. Kept for non-hosted scripts. |
-| `Application.ReadEventTimeout` | Same as above. |
-| `Application.PollEvent` | Same as above. |
-| `Application.RequestRedraw` | Fully compatible with dispatch mode; call from any `On*` handler. |
-| `Application.RedrawPending` | Low-level flag query; not needed in dispatch mode (host invokes `OnPaint` automatically). |
-
-Poll-style sample: [`examples/pascal/tui/poll_redraw_timeout.fpas`](../../../examples/pascal/tui/poll_redraw_timeout.fpas).
+---

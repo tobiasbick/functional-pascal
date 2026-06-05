@@ -7,6 +7,7 @@ mod args;
 mod callbacks;
 mod console;
 mod graph;
+mod graph_run;
 mod tui;
 mod tui_run;
 

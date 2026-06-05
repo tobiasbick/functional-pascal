@@ -153,13 +153,14 @@ More examples in the [`examples/`](examples/) directory.
 
 ### Multi-file projects and libraries
 
-Larger programs use a `.fpasprj` project file. Reusable code is **source-level only**: `kind = "library"` projects whose units are merged at load time (no precompiled library artifacts). Reference them from `[dependencies].projects` (paths) or `[dependencies].workspace` (member `project.name` inside a `.fpasworkspace`). See [Projects](docs/pascal/10-projects.md), [library-deps](examples/pascal/library-deps/), and [monorepo](examples/pascal/monorepo/).
+Larger programs use a `.fpasprj` project file. Reusable code is **source-level only**: `kind = "library"` projects whose units are merged at load time (no precompiled library artifacts). Reference them from `[dependencies].projects` (paths) or `[dependencies].workspace` (member `project.name` inside a `.fpasworkspace`). Libraries may hide internal units from dependents with `[exports].units` in the library `.fpasprj`. See [Projects](docs/pascal/10-projects.md), [library-deps](examples/pascal/library-deps/), and [monorepo](examples/pascal/monorepo/).
 
 ```sh
 fpas my-app.fpasprj
 fpas check my-lib.fpasprj
-cd my-suite && fpas check    # .fpasworkspace: check all members
-cd my-suite && fpas          # run the sole program member
+fpas check my-suite.fpasworkspace   # check every workspace member
+cd my-suite && fpas check           # discover .fpasworkspace in cwd
+cd my-suite && fpas                 # run the sole program member
 ```
 
 ## Documentation

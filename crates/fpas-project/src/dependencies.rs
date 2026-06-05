@@ -45,11 +45,7 @@ pub(super) fn load_project_with_dependencies(
     for dependency_path in dependency_paths {
         let dependency_loaded = load_project_with_dependencies(&dependency_path, visiting, cache)?;
         ensure_library_dependency(&dependency_path, &dependency_loaded)?;
-        merge_dependency_link_meta(
-            &mut link_meta,
-            &dependency_path,
-            &dependency_loaded,
-        );
+        merge_dependency_link_meta(&mut link_meta, &dependency_path, &dependency_loaded);
         merge_source_files(
             &mut source_files,
             dependency_loaded.source_files,
@@ -150,7 +146,9 @@ fn merge_dependency_link_meta(
             SourceOrigin::Own => SourceOrigin::Library(dependency_canonical.clone()),
             SourceOrigin::Library(path) => SourceOrigin::Library(path),
         };
-        consumer.source_origins.insert(source_path.clone(), remapped);
+        consumer
+            .source_origins
+            .insert(source_path.clone(), remapped);
     }
 }
 

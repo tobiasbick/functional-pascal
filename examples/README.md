@@ -19,7 +19,7 @@ Or:
 pwsh scripts/run-non-interactive-examples.ps1
 ```
 
-When you add a new **console** example that exits on its own, append it to `NON_INTERACTIVE_EXAMPLES` in that file. Interactive demos stay documented in the table below only.
+When you add a new **console** example that exits on its own, append it to `NON_INTERACTIVE_EXAMPLES` in that file. Library and workspace manifests used only for `fpas check` go in `NON_INTERACTIVE_CHECK_EXAMPLES` in the same file. Interactive demos stay documented in the table below only.
 
 ## How to run
 

@@ -3,8 +3,8 @@
 //! Documentation: `docs/pascal/10-projects.md`
 
 use fpas_project::{
-    ProjectKind, discover_run_project_in_workspace, load_project, load_workspace,
-    resolve_workspace_dependency_paths,
+    LibraryExportPolicy, ProjectKind, SourceOrigin, discover_run_project_in_workspace,
+    load_project, load_workspace, resolve_workspace_dependency_paths,
 };
 use std::fs;
 use std::path::Path;
@@ -261,4 +261,103 @@ include = ["src/**/*.fpas"]
         error.contains("exports.units") && error.contains("unknown unit"),
         "got: {error}"
     );
+}
+
+#[test]
+fn load_project_preserves_transitive_library_export_policies() {
+    let dir = temp_dir("transitive-export-meta");
+    let base_dir = dir.join("libs/base");
+    let util_dir = dir.join("libs/util");
+    let app_dir = dir.join("apps/demo");
+    let base_project = base_dir.join("base.fpasprj");
+    let util_project = util_dir.join("util.fpasprj");
+    let app_project = app_dir.join("demo.fpasprj");
+
+    write(
+        &base_project,
+        r#"[project]
+name = "base"
+kind = "library"
+
+[exports]
+units = ["Lib.Base"]
+
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    write(&base_dir.join("src/base.fpas"), "unit Lib.Base;\n");
+    write(
+        &base_dir.join("src/internal.fpas"),
+        "unit Lib.Base.Internal;\n",
+    );
+
+    write(
+        &util_project,
+        r#"[project]
+name = "util"
+kind = "library"
+
+[dependencies]
+projects = ["../base/base.fpasprj"]
+
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    write(
+        &util_dir.join("src/util.fpas"),
+        "unit Lib.Util;\nuses Lib.Base;\n",
+    );
+
+    write(
+        &app_project,
+        r#"[project]
+name = "demo"
+kind = "program"
+main = "src/main.fpas"
+
+[dependencies]
+projects = ["../../libs/util/util.fpasprj"]
+
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    write(
+        &app_dir.join("src/main.fpas"),
+        "program Demo;\nuses Lib.Util;\nbegin\nend.\n",
+    );
+
+    let loaded = load_project(&app_project).expect("project should load");
+    let internal_key = loaded
+        .source_files
+        .iter()
+        .find(|path| {
+            path.file_name()
+                .is_some_and(|name| name == "internal.fpas")
+        })
+        .expect("internal source file must be merged");
+
+    assert!(loaded.link_meta.enforces_export_rules());
+    assert!(matches!(
+        loaded.link_meta.origin_for_source(internal_key),
+        SourceOrigin::Library(path) if path.ends_with("base.fpasprj")
+    ));
+    assert!(
+        loaded
+            .link_meta
+            .library_export_policies
+            .values()
+            .any(|policy| {
+                matches!(
+                    policy,
+                    LibraryExportPolicy::ListedUnits(units) if units.contains("lib.base")
+                )
+            }),
+        "expected base export policy, got: {:?}",
+        loaded.link_meta.library_export_policies
+    );
+
+    fs::remove_dir_all(&dir).ok();
 }

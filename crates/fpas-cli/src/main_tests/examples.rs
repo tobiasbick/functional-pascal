@@ -13,6 +13,12 @@ struct ExampleCase {
     args: &'static [&'static str],
 }
 
+/// Project/workspace paths for `fpas check` smoke runs from the repository root.
+const NON_INTERACTIVE_CHECK_EXAMPLES: &[&str] = &[
+    "examples/pascal/library-deps/mylib/mylib.fpasprj",
+    "examples/pascal/monorepo/monorepo.fpasworkspace",
+];
+
 /// Canonical allowlist for automated example runs (CI, agents, local smoke).
 const NON_INTERACTIVE_EXAMPLES: &[ExampleCase] = &[
     ExampleCase {
@@ -180,6 +186,27 @@ const NON_INTERACTIVE_EXAMPLES: &[ExampleCase] = &[
         args: &[],
     },
 ];
+
+#[test]
+fn non_interactive_check_examples_succeed() {
+    let root = repo_root();
+
+    for path in NON_INTERACTIVE_CHECK_EXAMPLES {
+        let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
+            &[String::from("check"), (*path).to_owned()],
+            &root,
+        );
+
+        assert_eq!(
+            exit_code, 0,
+            "`fpas check {path}` failed\nstderr:\n{stderr}"
+        );
+        assert!(
+            stderr.is_empty(),
+            "`fpas check {path}` wrote stderr: {stderr}"
+        );
+    }
+}
 
 #[test]
 fn non_interactive_examples_run_successfully() {

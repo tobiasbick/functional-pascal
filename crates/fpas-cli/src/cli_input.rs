@@ -30,6 +30,7 @@ Program arguments after `--` are visible through `Std.Args` when running program
 ";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[allow(clippy::enum_variant_names)]
 pub(crate) enum CliInput {
     SourceFile(PathBuf),
     ProjectFile(PathBuf),

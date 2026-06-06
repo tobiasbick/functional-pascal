@@ -2,6 +2,12 @@
 //!
 //! Documentation: `docs/pascal/10-projects.md`
 
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    reason = "integration tests use expect/unwrap to keep fixture setup compact"
+)]
+
 use fpas_project::{
     LibraryExportPolicy, ProjectKind, SourceOrigin, discover_run_project_in_workspace,
     load_project, load_workspace, resolve_workspace_dependency_paths,

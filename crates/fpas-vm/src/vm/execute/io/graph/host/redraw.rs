@@ -32,8 +32,11 @@ impl Worker {
         }
 
         if let Some(handler) = on_paint {
-            let _ =
-                self.call_function_sync_allowing_shutdown(&handler, &[app_rec.clone()], line)?;
+            let _ = self.call_function_sync_allowing_shutdown(
+                &handler,
+                std::slice::from_ref(&app_rec),
+                line,
+            )?;
             let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
             graph.session.present(line)?;
             Ok(5)

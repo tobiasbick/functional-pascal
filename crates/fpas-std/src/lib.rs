@@ -1,6 +1,14 @@
 #![cfg_attr(
     test,
     expect(
+        clippy::expect_used,
+        clippy::panic,
+        reason = "runtime tests use expect/panic to keep fixture assertions compact"
+    )
+)]
+#![cfg_attr(
+    test,
+    expect(
         clippy::unwrap_used,
         reason = "runtime tests use unwrap to keep console fixture assertions compact"
     )

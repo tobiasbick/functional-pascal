@@ -129,6 +129,7 @@ pub(crate) fn write_library_fpasprj_with_deps(
     );
 }
 
+#[allow(clippy::too_many_arguments)]
 fn write_fpasprj(
     project_file: &Path,
     name: &str,

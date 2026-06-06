@@ -15,7 +15,6 @@ use fpas_std::{GRAPH_EVENT_KIND_VARIANTS, GRAPH_EXIT_REASON_VARIANTS};
 pub(super) struct GraphTypes {
     application: Ty,
     size: Ty,
-    event: Ty,
     application_handlers: Ty,
 }
 
@@ -98,7 +97,6 @@ pub(super) fn register_std_graph(checker: &mut Checker) {
     let types = GraphTypes {
         application,
         size,
-        event,
         application_handlers,
     };
 

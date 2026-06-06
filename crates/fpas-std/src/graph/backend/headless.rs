@@ -33,15 +33,6 @@ impl HeadlessGraphBackend {
         Ok(())
     }
 
-    /// Polls the next queued event from the headless backend.
-    pub(crate) fn poll_event(
-        &mut self,
-        location: SourceLocation,
-    ) -> Result<Option<UiEvent>, StdError> {
-        let _ = location;
-        Ok(None)
-    }
-
     /// Waits up to `timeout_ms` milliseconds for the next queued event.
     pub(crate) fn read_event_timeout(
         &mut self,

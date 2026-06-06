@@ -5,7 +5,6 @@
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
 use fpas_bytecode::SourceLocation;
-use fpas_std::GraphHost;
 
 impl Worker {
     pub(in crate::vm::execute::io) fn request_graph_host_stop_for_active_run(&self) -> bool {

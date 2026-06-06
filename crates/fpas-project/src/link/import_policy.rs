@@ -8,7 +8,7 @@ use crate::model::{LibraryExportPolicy, ProjectLinkMeta, SourceOrigin};
 use crate::paths::same_file;
 
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::Path;
 
 /// Enforces which units a compilation unit may reference through `uses`.
 #[derive(Debug, Clone)]
@@ -88,13 +88,13 @@ impl<'a> ImportPolicy<'a> {
             }
             (SourceOrigin::Own, SourceOrigin::Library(library_project))
             | (SourceOrigin::Library(_), SourceOrigin::Library(library_project)) => {
-                self.is_unit_exported(library_project, target_key)
+                self.is_unit_exported(library_project.as_path(), target_key)
             }
             (SourceOrigin::Library(_), SourceOrigin::Own) => false,
         }
     }
 
-    fn is_unit_exported(&self, library_project: &PathBuf, target_key: &str) -> bool {
+    fn is_unit_exported(&self, library_project: &Path, target_key: &str) -> bool {
         match self.meta.export_policy_for_library(library_project) {
             LibraryExportPolicy::AllUnits => true,
             LibraryExportPolicy::ListedUnits(listed) => listed.contains(target_key),

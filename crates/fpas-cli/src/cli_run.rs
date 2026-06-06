@@ -28,13 +28,13 @@ pub(crate) fn run_cli(
         ResolvedCli::Help => {
             use crate::cli_input::CLI_HELP;
             let _ = stdout.write_all(CLI_HELP.as_bytes());
-            return 0;
+            0
         }
         ResolvedCli::Version => {
             let _ = writeln!(stdout, "fpas {}", env!("CARGO_PKG_VERSION"));
-            return 0;
+            0
         }
-        ResolvedCli::Check(config) => return crate::cli_check::check_cli(config, stderr),
+        ResolvedCli::Check(config) => crate::cli_check::check_cli(config, stderr),
         ResolvedCli::Run(config) => match config.input {
             CliInput::SourceFile(path) => {
                 run_source_file(&path, config.program_args, stdout, stderr)

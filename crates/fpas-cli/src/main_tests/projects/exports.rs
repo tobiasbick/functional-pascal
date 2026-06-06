@@ -77,7 +77,7 @@ fn run_cli_executes_library_deps_example_with_exports() {
     let app_project = repo_root.join("examples/pascal/library-deps/app/app.fpasprj");
 
     let (exit_code, stdout_output, stderr_output) =
-        support::run_cli_and_capture_output(&app_project, &repo_root);
+        support::run_cli_and_capture_output(&app_project, repo_root);
 
     assert_eq!(exit_code, 0, "stderr: {stderr_output}");
     assert_eq!(stdout_output, "42\n");

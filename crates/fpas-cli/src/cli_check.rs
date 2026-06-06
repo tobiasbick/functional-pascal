@@ -6,13 +6,13 @@ use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use crate::CliInput;
+use crate::cli_input::{CliConfig, CliInput};
 use crate::cli_run::render_cli_diagnostic_with_sources;
 use fpas_diagnostics::DiagnosticSeverity;
 use fpas_project as project;
 
 /// Checks sources from CLI-resolved input without execution.
-pub(crate) fn check_cli(config: crate::CliConfig, stderr: &mut dyn Write) -> i32 {
+pub(crate) fn check_cli(config: CliConfig, stderr: &mut dyn Write) -> i32 {
     match config.input {
         CliInput::SourceFile(path) => check_source_file(&path, stderr),
         CliInput::ProjectFile(path) => check_project_file(&path, stderr),

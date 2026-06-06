@@ -71,15 +71,6 @@ impl NativeGraphBackend {
         Ok(())
     }
 
-    /// Polls one queued native event after pumping the platform event loop.
-    pub(crate) fn poll_event(
-        &mut self,
-        location: SourceLocation,
-    ) -> Result<Option<UiEvent>, StdError> {
-        self.pump(Some(Duration::ZERO), location)?;
-        Ok(self.app.pending_events.pop_front())
-    }
-
     /// Waits up to `timeout_ms` milliseconds for one queued native event.
     pub(crate) fn read_event_timeout(
         &mut self,

@@ -60,7 +60,7 @@ mod tests {
     use crate::ConsoleKeyEvent;
     use crate::console_event::ConsoleEvent;
     use crate::key_event::key_kind_index;
-    use crate::ui::{UiHostSurface, UiResize};
+    use crate::ui::UiResize;
 
     fn loc() -> SourceLocation {
         SourceLocation::new(1, 1)

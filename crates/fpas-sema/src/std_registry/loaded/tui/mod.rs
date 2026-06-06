@@ -19,7 +19,6 @@ struct TuiTypes {
     application: Ty,
     size: Ty,
     key_event: Ty,
-    event: Ty,
     application_handlers: Ty,
 }
 
@@ -92,7 +91,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         &console_event,
         &exit_reason,
     );
-    let event = type_registration::register_record_type(
+    type_registration::register_record_type(
         checker,
         s::STD_TUI_EVENT,
         vec![
@@ -106,7 +105,6 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         application,
         size,
         key_event,
-        event,
         application_handlers,
     };
     application_api::register_application_api(checker, &types);

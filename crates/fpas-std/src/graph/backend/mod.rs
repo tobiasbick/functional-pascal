@@ -53,13 +53,6 @@ impl GraphBackend {
         }
     }
 
-    fn poll_event(&mut self, location: SourceLocation) -> Result<Option<UiEvent>, StdError> {
-        match self {
-            Self::Headless(backend) => backend.poll_event(location),
-            Self::Native(backend) => backend.poll_event(location),
-        }
-    }
-
     fn read_event_timeout(
         &mut self,
         timeout_ms: i64,
@@ -133,11 +126,6 @@ pub(crate) fn close_graph_backend(location: SourceLocation) -> Result<(), StdErr
 /// Returns the current graph surface size from the active backend.
 pub(crate) fn graph_surface_size(location: SourceLocation) -> Result<(i64, i64), StdError> {
     with_backend(location, |backend| backend.size(location))
-}
-
-/// Polls one shared UI event from the active graph backend.
-pub(crate) fn poll_graph_event(location: SourceLocation) -> Result<Option<UiEvent>, StdError> {
-    with_backend(location, |backend| backend.poll_event(location))
 }
 
 /// Waits up to `timeout_ms` milliseconds for one shared UI event from the active backend.

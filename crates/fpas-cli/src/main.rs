@@ -12,6 +12,13 @@
         reason = "CLI tests use explicit panic for structural mismatches"
     )
 )]
+#![cfg_attr(
+    test,
+    expect(
+        clippy::unwrap_used,
+        reason = "CLI tests use unwrap to keep fixture path setup compact"
+    )
+)]
 mod cli_check;
 mod cli_input;
 mod cli_run;

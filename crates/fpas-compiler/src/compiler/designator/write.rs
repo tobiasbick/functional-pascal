@@ -13,6 +13,9 @@ impl Compiler {
         value: &Expr,
         location: SourceLocation,
     ) -> Result<(), CompileError> {
+        let full_name = Self::resolve_designator_name(target);
+        let qualified = self.qualify_name(&full_name).to_string();
+
         let mut parts = target.parts.iter();
         let base_name = match parts.next() {
             Some(DesignatorPart::Ident(name, _)) => name.clone(),
@@ -27,6 +30,32 @@ impl Compiler {
         };
 
         let remaining: Vec<_> = parts.collect();
+
+        // Whole-variable assignment: `X := v` or a linked qualified name such as
+        // `Unit.__private__.State := v` (not a record field chain rooted in a local).
+        let is_simple_target = target
+            .parts
+            .iter()
+            .all(|part| matches!(part, DesignatorPart::Ident(_, _)))
+            && (target.parts.len() == 1 || self.resolve_local(&base_name).is_none());
+
+        if is_simple_target {
+            self.compile_expr(value)?;
+            if let Some(local_ref) = self.resolve_local(&qualified) {
+                match local_ref {
+                    LocalRef::Local(slot) => self.emit(Op::SetLocal(slot), location),
+                    LocalRef::Enclosing(depth, slot) => {
+                        self.emit(Op::SetEnclosing(depth, slot), location)
+                    }
+                };
+                self.emit(Op::Pop, location);
+            } else {
+                let idx = self.add_constant(Value::Str(qualified), location)?;
+                self.emit(Op::SetGlobal(idx), location);
+                self.emit(Op::Pop, location);
+            }
+            return Ok(());
+        }
 
         if remaining.is_empty() {
             self.compile_expr(value)?;

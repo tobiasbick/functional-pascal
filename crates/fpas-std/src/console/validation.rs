@@ -33,15 +33,7 @@ impl Console {
         op_name: &str,
         location: SourceLocation,
     ) -> Result<u8, StdError> {
-        if !(0..=15).contains(&raw) {
-            return Err(std_runtime_error(
-                RUNTIME_CONSOLE_STATE_ERROR,
-                format!("{op_name} expects a color index from 0 to 15, got {raw}"),
-                "Use one of the CRT color constants such as `LightRed` or an integer from 0 to 15.",
-                location,
-            ));
-        }
-        Ok(raw as u8)
+        validate_packed_crt_color(raw, op_name, location)
     }
 
     pub(super) fn validate_text_attr(
@@ -97,4 +89,21 @@ impl Console {
         }
         Ok((r as u8, g as u8, b as u8))
     }
+}
+
+/// Validate a packed CRT color index (`0..=15`).
+pub fn validate_packed_crt_color(
+    raw: i64,
+    op_name: &str,
+    location: SourceLocation,
+) -> Result<u8, StdError> {
+    if !(0..=15).contains(&raw) {
+        return Err(std_runtime_error(
+            RUNTIME_CONSOLE_STATE_ERROR,
+            format!("{op_name} expects a color index from 0 to 15, got {raw}"),
+            "Use one of the CRT color constants such as `LightRed` or an integer from 0 to 15.",
+            location,
+        ));
+    }
+    Ok(raw as u8)
 }

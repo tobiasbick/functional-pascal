@@ -169,6 +169,7 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_APPLICATION_HOST_SET_VIEW_RECT,
     std_symbols::STD_TUI_APPLICATION_HOST_SET_VIEW_PARENT,
     std_symbols::STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT,
+    std_symbols::STD_TUI_APPLICATION_HOST_CREATE_SOLID_FILL_VIEW,
 ];
 
 pub(in super::super) const STD_GRAPH_SYMBOLS: &[&str] = &[

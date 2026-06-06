@@ -4,6 +4,7 @@
 
 mod colors;
 mod cursor;
+mod fill;
 mod io;
 mod terminal;
 mod window;

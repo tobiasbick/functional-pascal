@@ -1,0 +1,8 @@
+/// Turbo Pascal-style desktop colors for the FPAS IDE.
+unit Ide.Theme;
+uses Std.Console;
+
+/// Std.Console color indices — see docs/pascal/std/console.md.
+
+/// Desktop background color (classic TP blue).
+const DesktopBg: integer := Blue;

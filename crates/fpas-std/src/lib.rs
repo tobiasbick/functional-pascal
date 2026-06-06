@@ -48,10 +48,12 @@ mod tui_damage;
 mod tui_host;
 mod tui_modal;
 mod tui_view;
+mod tui_widget;
 mod ui;
 
 pub use console::{
     CapturedOutput, Console, KeyInput, ReadLnQueue, TextInput, read_line_from_stdin,
+    validate_packed_crt_color,
 };
 pub use console_event::{
     ConsoleEvent, EVENT_KIND_VARIANTS, MOUSE_ACTION_VARIANTS, MOUSE_BUTTON_VARIANTS,
@@ -79,6 +81,7 @@ pub use tui_damage::DamageRegion;
 pub use tui_host::TuiHost;
 pub use tui_modal::{ModalId, ModalStack};
 pub use tui_view::{ViewId, ViewRect, ViewRegistry};
+pub use tui_widget::{SolidFillWidget, ViewWidget};
 pub use ui::{UiEvent, UiHost, UiHostSurface, UiModifiers, UiMouse, UiResize, UiWheel};
 
 /// Returns the index of `name` in `variants`, or 0 if not found.

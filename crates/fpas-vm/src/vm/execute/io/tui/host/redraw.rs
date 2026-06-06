@@ -15,10 +15,15 @@ impl Worker {
         &mut self,
         line: SourceLocation,
     ) -> Result<i64, VmError> {
-        let (damage, on_paint, has_view_paints) = {
+        let (damage, on_paint, has_view_paints, has_view_widgets) = {
             let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
             let damage = tui.session.peek_redraw_damage(line)?;
-            (damage, tui.on_paint.clone(), !tui.view_paints.is_empty())
+            (
+                damage,
+                tui.on_paint.clone(),
+                !tui.view_paints.is_empty(),
+                !tui.view_widgets.is_empty(),
+            )
         };
 
         let Some(expected_damage) = damage else {
@@ -27,7 +32,7 @@ impl Worker {
 
         let app_rec = Self::tui_application_record();
 
-        if on_paint.is_some() || has_view_paints {
+        if on_paint.is_some() || has_view_paints || has_view_widgets {
             {
                 let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
                 let consumed_damage = tui.session.take_redraw_damage(line)?;
@@ -42,6 +47,7 @@ impl Worker {
                     let _ =
                         self.call_function_sync_allowing_shutdown(&handler, &[app_rec], line)?;
                 }
+                let _ = self.dispatch_view_widget_paints(expected_damage, line)?;
                 let _ = self.dispatch_view_paint_handlers(expected_damage, line)?;
                 Ok(())
             })();
@@ -66,6 +72,38 @@ impl Worker {
         }
     }
 
+    fn dispatch_view_widget_paints(
+        &mut self,
+        damage: DamageRegion,
+        _line: SourceLocation,
+    ) -> Result<bool, VmError> {
+        let scheduled = {
+            let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+            tui.views
+                .paint_order()
+                .into_iter()
+                .filter_map(|view_id| {
+                    let widget = *tui.view_widgets.get(&view_id)?;
+                    let rect = tui.views.rect(view_id)?;
+                    Self::damage_intersects_rect(damage, rect).then_some((widget, rect))
+                })
+                .collect::<Vec<_>>()
+        };
+
+        if scheduled.is_empty() {
+            return Ok(false);
+        }
+
+        self.with_console(|console| {
+            for (widget, rect) in scheduled {
+                widget.paint(console, rect, damage);
+            }
+            Ok(())
+        })?;
+
+        Ok(true)
+    }
+
     fn dispatch_view_paint_handlers(
         &mut self,
         damage: DamageRegion,
@@ -77,6 +115,9 @@ impl Worker {
                 .paint_order()
                 .into_iter()
                 .filter_map(|view_id| {
+                    if tui.view_widgets.contains_key(&view_id) {
+                        return None;
+                    }
                     let handler = tui.view_paints.get(&view_id)?.clone();
                     let rect = tui.views.rect(view_id)?;
                     Self::damage_intersects_rect(damage, rect).then_some((view_id, rect, handler))

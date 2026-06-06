@@ -251,6 +251,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Tui(TuiIntrinsic::HostBindCommandToView),
     Intrinsic::Tui(TuiIntrinsic::HostBindCommandToActiveModal),
     Intrinsic::Tui(TuiIntrinsic::ApplicationShowDialog),
+    Intrinsic::Tui(TuiIntrinsic::HostCreateSolidFillView),
 ];
 
 #[test]

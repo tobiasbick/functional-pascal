@@ -151,6 +151,70 @@ impl Worker {
         }
     }
 
+    /// Reads an optional integer field from the stack.
+    pub(in crate::vm::execute::io) fn pop_optional_integer(
+        &mut self,
+        label: &str,
+        line: SourceLocation,
+    ) -> Result<Option<i64>, VmError> {
+        match self.pop(line)? {
+            Value::OptionNone => Ok(None),
+            Value::OptionSome(inner) => match *inner {
+                Value::Integer(value) => Ok(Some(value)),
+                other => Err(runtime_error(
+                    RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                    format!(
+                        "{label} expects `Option of integer`, got Some({})",
+                        other.type_name()
+                    ),
+                    "Pass `None` or `Some(<color index>)` using a CRT color constant or integer from 0 to 15.",
+                    line,
+                )),
+            },
+            other => Err(runtime_error(
+                RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                format!(
+                    "{label} expects `Option of integer`, got {}",
+                    other.type_name()
+                ),
+                "Pass `None` or `Some(<color index>)` using a CRT color constant or integer from 0 to 15.",
+                line,
+            )),
+        }
+    }
+
+    /// Reads an optional character field from the stack.
+    pub(in crate::vm::execute::io) fn pop_optional_char(
+        &mut self,
+        label: &str,
+        line: SourceLocation,
+    ) -> Result<Option<char>, VmError> {
+        match self.pop(line)? {
+            Value::OptionNone => Ok(None),
+            Value::OptionSome(inner) => match *inner {
+                Value::Char(value) => Ok(Some(value)),
+                other => Err(runtime_error(
+                    RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                    format!(
+                        "{label} expects `Option of char`, got Some({})",
+                        other.type_name()
+                    ),
+                    "Pass `None` or `Some('.')` with a single character literal.",
+                    line,
+                )),
+            },
+            other => Err(runtime_error(
+                RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                format!(
+                    "{label} expects `Option of char`, got {}",
+                    other.type_name()
+                ),
+                "Pass `None` or `Some('.')` with a single character literal.",
+                line,
+            )),
+        }
+    }
+
     /// Acquires the TUI state lock for the duration of `f`.
     ///
     /// Prefer this over bare `.lock().unwrap_or_else(...)` for simple reads/writes that do **not**

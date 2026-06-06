@@ -131,6 +131,50 @@ end;
 }
 
 #[test]
+fn private_mutable_var_usable_within_same_unit() {
+    let cwd = create_temp_dir("vis-private-mutvar-internal");
+    let project_file = cwd.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "app"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/*.fpas"]
+"#,
+    );
+    write_text(
+        &cwd.join("src/main.fpas"),
+        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetCounter())\nend.\n",
+    );
+    write_text(
+        &cwd.join("src/lib.fpas"),
+        "\
+unit App.Lib;
+
+private mutable var
+  Counter: integer := -1;
+
+function GetCounter(): integer;
+begin
+  if Counter < 0 then
+    Counter := 42;
+  return Counter
+end;
+",
+    );
+
+    let (exit_code, stdout_output, stderr_output) =
+        support::run_cli_and_capture_output(&project_file, &cwd);
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 0, "stderr: {stderr_output}");
+    assert_eq!(stdout_output, "42\n");
+}
+
+#[test]
 fn private_function_not_callable_from_other_unit() {
     let cwd = create_temp_dir("vis-private-cross-unit");
     let project_file = cwd.join("app.fpasprj");

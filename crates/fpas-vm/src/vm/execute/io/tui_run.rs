@@ -55,11 +55,11 @@ impl Worker {
                 line,
             ));
         }
-        if tui.on_paint.is_none() && tui.view_paints.is_empty() {
+        if tui.on_paint.is_none() && tui.view_paints.is_empty() && tui.view_widgets.is_empty() {
             return Err(runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                "Application.Run(App) requires a registered OnPaint handler or local view paint handler",
-                "Call `Application.HostRegisterOnPaint(App, OnPaint)` or `Application.HostRegisterOnViewPaint(App, ViewId, OnViewPaint)` before `Application.Run(App)`.",
+                "Application.Run(App) requires a registered OnPaint handler, local view paint handler, or host widget view",
+                "Call `Application.HostRegisterOnPaint(App, OnPaint)`, `Application.HostRegisterOnViewPaint(App, ViewId, OnViewPaint)`, or `Application.HostCreateSolidFillView(...)` before `Application.Run(App)`.",
                 line,
             ));
         }

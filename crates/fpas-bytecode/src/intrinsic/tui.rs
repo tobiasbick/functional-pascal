@@ -228,4 +228,11 @@ pub enum TuiIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     ApplicationShowDialog = 291,
+    /// Register a host-managed solid-fill widget view and return its opaque handle.
+    ///
+    /// Stack: `Application`, `X`, `Y`, `Width`, `Height`, `FillColor`, `TextColor`, `FillChar`
+    /// (`Option` values on top). Pushes `integer`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    HostCreateSolidFillView = 343,
 }

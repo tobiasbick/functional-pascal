@@ -1,0 +1,57 @@
+/// TUI shell for the FPAS IDE. See docs/pascal/std/tui-app.md.
+unit Ide.Shell;
+uses Ide.Theme, Std.Console, Std.Tui;
+
+{
+  Host widget view id; -1 means not created yet.
+  Unit-private state shared by handlers below.
+}
+private mutable var DesktopView: integer := -1;
+
+/// Create or resize the full-screen solid-fill desktop. Host widgets: docs/pascal/std/tui-app.md.
+private procedure EnsureDesktop(App: Application);
+begin
+  var S: Size := Application.Size(App);
+  if DesktopView < 0 then
+    DesktopView := Application.HostCreateSolidFillView(
+      App, 0, 0, S.width, S.height, DesktopBg, None, None)
+  else
+    Application.HostSetViewRect(App, DesktopView, 0, 0, S.width, S.height)
+end;
+
+{
+  Intentionally empty — the blue background is painted by the
+  HostCreateSolidFillView widget in Rust.
+}
+private procedure OnPaint(App: Application);
+begin
+end;
+
+/// Any keypress exits the session (prototype shell).
+private function OnKeyPressed(App: Application; Key: Std.Console.KeyEvent): boolean;
+begin
+  Application.HostRequestQuit(App);
+  return true
+end;
+
+/// Keep the desktop widget aligned with the terminal size.
+private procedure OnResize(App: Application; NewSize: Size);
+begin
+  if DesktopView >= 0 then
+    Application.HostSetViewRect(App, DesktopView, 0, 0, NewSize.width, NewSize.height);
+  Application.RequestRedraw(App)
+end;
+
+/// Open the terminal session, run the hosted TUI loop, and restore the terminal on exit.
+procedure Run();
+begin
+  var App: Application := Application.Open();
+  EnsureDesktop(App);
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+    OnKeyPressed := Some(OnKeyPressed);
+    OnResize := Some(OnResize);
+  end;
+  Application.Configure(App, Handlers);
+  Application.Run(App)
+end;

@@ -17,6 +17,7 @@ mod tests;
 
 pub use input::{ReadLnQueue, TextInput, read_line_from_stdin};
 pub use key_input::KeyInput;
+pub use validation::validate_packed_crt_color;
 
 use screen::{ConsoleState, DEFAULT_SCREEN_HEIGHT, DEFAULT_SCREEN_WIDTH};
 use std::io::Write;

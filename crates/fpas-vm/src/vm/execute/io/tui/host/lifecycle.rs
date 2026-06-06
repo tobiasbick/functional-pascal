@@ -94,6 +94,7 @@ impl Worker {
         tui.on_resize = None;
         tui.on_paint = None;
         tui.view_paints.clear();
+        tui.view_widgets.clear();
         tui.view_commands.clear();
         tui.on_idle = None;
         tui.idle_interval_ms = 0;

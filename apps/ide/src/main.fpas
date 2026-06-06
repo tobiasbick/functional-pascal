@@ -1,0 +1,8 @@
+/// FPAS IDE entry point — bootstrap only; TUI logic lives in Ide.Shell.
+program Ide;
+
+uses Ide.Shell;
+
+begin
+  Run()
+end.

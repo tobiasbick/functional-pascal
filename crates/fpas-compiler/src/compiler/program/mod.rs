@@ -5,7 +5,7 @@
 mod callables;
 
 use crate::error::CompileError;
-use fpas_bytecode::Op;
+use fpas_bytecode::{Op, Value};
 use fpas_parser::{Decl, Program, RecordMethod, TypeBody};
 
 use super::{Compiler, canonical_name};
@@ -35,16 +35,37 @@ impl Compiler {
         Ok(())
     }
 
+    /// Whether the current declaration is at program/unit scope (not inside a callable body).
+    fn is_module_level(&self) -> bool {
+        self.scope_depth == 0 && self.enclosing_locals.is_empty()
+    }
+
     pub(super) fn compile_decl(&mut self, decl: &Decl) -> Result<(), CompileError> {
         match decl {
             Decl::Const(const_def) => {
                 self.compile_expr(&const_def.value)?;
-                let _slot = self.add_local(&const_def.name);
+                if self.is_module_level() {
+                    let location = Self::location_of(&const_def.span);
+                    let idx =
+                        self.add_constant(Value::Str(canonical_name(&const_def.name)), location)?;
+                    self.emit(Op::SetGlobal(idx), location);
+                    self.emit(Op::Pop, location);
+                } else {
+                    let _slot = self.add_local(&const_def.name);
+                }
                 Ok(())
             }
             Decl::Var(var_def) | Decl::MutableVar(var_def) => {
                 self.compile_expr(&var_def.value)?;
-                let _slot = self.add_local(&var_def.name);
+                if self.is_module_level() {
+                    let location = Self::location_of(&var_def.span);
+                    let idx =
+                        self.add_constant(Value::Str(canonical_name(&var_def.name)), location)?;
+                    self.emit(Op::SetGlobal(idx), location);
+                    self.emit(Op::Pop, location);
+                } else {
+                    let _slot = self.add_local(&var_def.name);
+                }
                 Ok(())
             }
             Decl::TypeDef(type_def) => self.compile_type_decl(type_def),

@@ -265,4 +265,19 @@ pub(super) fn register_host_api(
             p("OnViewPaint", callbacks.on_view_paint.clone(), false),
         ],
     );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_CREATE_SOLID_FILL_VIEW,
+        vec![
+            p("App", types.application.clone(), false),
+            p("X", Ty::Integer, false),
+            p("Y", Ty::Integer, false),
+            p("Width", Ty::Integer, false),
+            p("Height", Ty::Integer, false),
+            p("FillColor", Ty::Integer, false),
+            p("TextColor", Ty::Option(Box::new(Ty::Integer)), false),
+            p("FillChar", Ty::Option(Box::new(Ty::Char)), false),
+        ],
+        Ty::Integer,
+    );
 }

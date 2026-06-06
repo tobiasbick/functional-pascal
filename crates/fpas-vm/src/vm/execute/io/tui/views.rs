@@ -8,7 +8,7 @@ use crate::vm::diagnostics::VmError;
 use crate::vm::runtime_error;
 use fpas_bytecode::{Intrinsic, SourceLocation, TuiIntrinsic, Value};
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
-use fpas_std::{ViewId, ViewRect};
+use fpas_std::{SolidFillWidget, ViewId, ViewRect, ViewWidget, validate_packed_crt_color};
 
 impl Worker {
     /// Executes `Std.Tui` view, modal, and command binding intrinsics.
@@ -228,6 +228,45 @@ impl Worker {
                     tui.view_paints.insert(view_id, func);
                 });
             }
+            Intrinsic::Tui(TuiIntrinsic::HostCreateSolidFillView) => {
+                let fill_char = self.pop_optional_char("FillChar", line)?;
+                let text_color = self.pop_optional_integer("TextColor", line)?;
+                let fill_color = self.pop_int(line)?;
+                let height = self.pop_int(line)?;
+                let width = self.pop_int(line)?;
+                let y = self.pop_int(line)?;
+                let x = self.pop_int(line)?;
+                self.pop_tui_application(line)?;
+
+                let fill_color = validate_packed_crt_color(fill_color, "FillColor", line)
+                    .map_err(VmError::from)?;
+                let text_color = match text_color {
+                    None => None,
+                    Some(color) => Some(
+                        validate_packed_crt_color(color, "TextColor", line)
+                            .map_err(VmError::from)?,
+                    ),
+                };
+
+                let view_rect = ViewRect {
+                    x,
+                    y,
+                    width,
+                    height,
+                };
+                let widget = ViewWidget::SolidFill(SolidFillWidget {
+                    fill_color,
+                    text_color,
+                    fill_char,
+                });
+                let view_id = self.with_tui(|tui| {
+                    let view_id = tui.views.register(view_rect);
+                    tui.view_widgets.insert(view_id, widget);
+                    let _ = tui.session.request_redraw_rect(view_rect, line);
+                    view_id
+                });
+                self.push(Value::Integer(i64::from(view_id.raw())))?;
+            }
             _ => return Ok(false),
         }
 
@@ -319,6 +358,7 @@ impl Worker {
     fn clear_view_local_state(tui: &mut TuiState, view_ids: &[ViewId]) {
         for view_id in view_ids {
             tui.view_paints.remove(view_id);
+            tui.view_widgets.remove(view_id);
             tui.view_commands.remove(view_id);
         }
     }

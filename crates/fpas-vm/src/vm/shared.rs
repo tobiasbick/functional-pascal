@@ -17,7 +17,7 @@
 use fpas_bytecode::{Chunk, Value};
 use fpas_std::{
     CommandRegistry, Console, GraphHost, GraphSession, KeyInput, ModalStack, TextInput, TuiSession,
-    UiHost, ViewId, ViewRegistry,
+    UiHost, ViewId, ViewRegistry, ViewWidget,
 };
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -65,6 +65,8 @@ pub(crate) struct TuiState {
     pub on_paint: Option<Value>,
     /// View-local paint handlers: `procedure (Application, integer, Std.Tui.Rect)` keyed by view.
     pub view_paints: HashMap<ViewId, Value>,
+    /// Native host widgets keyed by view id (for example solid-fill backgrounds).
+    pub view_widgets: HashMap<ViewId, ViewWidget>,
     /// View-local command bindings keyed by the view whose ancestry should resolve them.
     pub view_commands: HashMap<ViewId, CommandRegistry>,
     /// `OnIdle`-style handler: `procedure (Application)` (one argument).
@@ -105,6 +107,7 @@ impl Default for TuiState {
             on_resize: None,
             on_paint: None,
             view_paints: HashMap::new(),
+            view_widgets: HashMap::new(),
             view_commands: HashMap::new(),
             on_idle: None,
             idle_interval_ms: 0,

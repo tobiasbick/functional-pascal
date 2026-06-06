@@ -126,6 +126,22 @@ impl Compiler {
                 );
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_HOST_CREATE_SOLID_FILL_VIEW => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_CREATE_SOLID_FILL_VIEW,
+                    8,
+                    args,
+                    location,
+                )?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(
+                    Intrinsic::Tui(TuiIntrinsic::HostCreateSolidFillView),
+                    location,
+                );
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

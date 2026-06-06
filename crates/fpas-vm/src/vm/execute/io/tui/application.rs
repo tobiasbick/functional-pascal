@@ -39,6 +39,7 @@ impl Worker {
                     tui.on_resize = None;
                     tui.on_paint = None;
                     tui.view_paints.clear();
+                    tui.view_widgets.clear();
                     tui.view_commands.clear();
                     tui.commands.clear();
                     tui.modals.clear();

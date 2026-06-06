@@ -307,6 +307,9 @@ pub const STD_TUI_APPLICATION_HOST_SET_VIEW_PARENT: &str =
 /// Register a local paint handler for a host-managed view.
 pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT: &str =
     std_tui!("Application.HostRegisterOnViewPaint");
+/// Register a host-managed solid-fill widget view and return its handle.
+pub const STD_TUI_APPLICATION_HOST_CREATE_SOLID_FILL_VIEW: &str =
+    std_tui!("Application.HostCreateSolidFillView");
 
 pub const STD_GRAPH_APPLICATION: &str = std_graph!("Application");
 /// Hosted-dispatch handler bundle for `Std.Graph.Application.Configure`; see `docs/pascal/std/graph-app.md`.

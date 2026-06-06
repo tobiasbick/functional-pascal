@@ -238,14 +238,10 @@ impl Worker {
                 let x = self.pop_int(line)?;
                 self.pop_tui_application(line)?;
 
-                let fill_color = validate_packed_crt_color(fill_color, "FillColor", line)
-                    .map_err(VmError::from)?;
+                let fill_color = validate_packed_crt_color(fill_color, "FillColor", line)?;
                 let text_color = match text_color {
                     None => None,
-                    Some(color) => Some(
-                        validate_packed_crt_color(color, "TextColor", line)
-                            .map_err(VmError::from)?,
-                    ),
+                    Some(color) => Some(validate_packed_crt_color(color, "TextColor", line)?),
                 };
 
                 let view_rect = ViewRect {

@@ -174,6 +174,8 @@ end;
 
 ## Example: Program With a Library Dependency
 
+The `suite/`, `libs/acme-utils/`, and `apps/portal/` paths below are **illustrative** — they document the project-file shape only and are **not** present in this repository. Runnable samples live under [`examples/pascal/library-deps/`](../../examples/pascal/library-deps/) (path-based `[dependencies].projects`) and [`examples/pascal/monorepo/`](../../examples/pascal/monorepo/) (workspace + library). The only application under [`apps/`](../../apps/) today is [`apps/ide/`](../../apps/ide/).
+
 Monorepo layout:
 
 ```
@@ -255,7 +257,9 @@ With no path, `fpas check` discovers a single `.fpasworkspace` in the current di
 
 ## Workspaces
 
-A workspace groups multiple projects, similar to a Visual Studio solution. Define a `.fpasworkspace` file in TOML format:
+A workspace groups multiple projects, similar to a Visual Studio solution. The `acme-suite` / `apps/portal` member paths in the sample below reuse the same **illustrative** monorepo from the previous section; see [`examples/pascal/monorepo/`](../../examples/pascal/monorepo/) for a checked-in workspace.
+
+Define a `.fpasworkspace` file in TOML format:
 
 ```toml
 [workspace]

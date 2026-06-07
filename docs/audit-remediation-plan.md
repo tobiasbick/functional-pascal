@@ -28,7 +28,7 @@ Workflow per item: implement → test → update this file → commit → wait.
 
 | # | Status | Task |
 |---|--------|------|
-| 11 | pending | Split `menu_bar.rs` (716 LOC) |
+| 11 | done | Split `menu_bar.rs` (716 LOC) |
 | 12 | pending | Split `graph/tests.rs` (816 LOC) |
 | 13 | pending | Consolidate TUI siblings under `fpas-std/src/tui/`; relocate `helpers.rs` |
 | 14 | pending | Break `menu_bar`/`menu_popup` circular dependency |

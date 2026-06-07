@@ -11,7 +11,7 @@ Workflow per item: implement → test → update this file → commit → wait.
 | 1 | done | `docs/pascal/11-stdlib.md` — remove poll-style `Application.ReadEvent` from `Std.Tui` row |
 | 2 | done | `docs/pascal/std/tui-app.md` — `Application.Run` prerequisites: include host widget views |
 | 3 | done | `docs/rust/parallel-vm.md` — fix `tui.rs` path, intrinsic range, test paths |
-| 4 | pending | `docs/pascal/std/tui-app.md` — remove or mark `OnStartup` as non-shipped |
+| 4 | done | `docs/pascal/std/tui-app.md` — remove or mark `OnStartup` as non-shipped |
 
 ## P1 — Complete TUI/menu spec
 

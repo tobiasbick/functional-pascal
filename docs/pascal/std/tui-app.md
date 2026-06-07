@@ -286,8 +286,6 @@ All procedures run on the **main VM thread**. Parameters use `**App: Application
 ```pascal
 // Conceptual — final Pascal declarations ship with sema registration.
 
-procedure OnStartup(App: Application);
-
 function OnKeyPressed(App: Application; Key: Std.Console.KeyEvent): boolean;
 // Returns true if the key was consumed (no further default processing for this event).
 
@@ -306,6 +304,8 @@ procedure OnExit(App: Application; Reason: ExitReason);
 
 `**OnResize`:** `NewSize` matches `**Application.Size(App)`** after the resize is applied.
 
+`**OnStartup`:** **not shipped.** Early framework drafts mentioned a startup hook, but the current surface has no sema registration or VM dispatch for it.
+
 ---
 
 ## `OnExit`
@@ -318,7 +318,7 @@ procedure OnExit(App: Application; Reason: ExitReason);
 
 ## Redraw and paint
 
-- **Model:** **invalidation**, not “call `**OnPaint`** every host tick”. The host sets an internal **redraw pending** flag when `**Application.RequestRedraw`** is called, when `**OnResize`** fires, when `**OnStartup`** completes (implementation may auto-request redraw once), and when the backend signals damage the host maps to a redraw. Multiple requests **coalesce** to **one** hosted flush.
+- **Model:** **invalidation**, not “call `**OnPaint`** every host tick”. The host sets an internal **redraw pending** flag when `**Application.RequestRedraw`** is called, when `**OnResize`** fires, when `**Application.Run`** starts (the host auto-requests the first redraw), and when the backend signals damage the host maps to a redraw. Multiple requests **coalesce** to **one** hosted flush.
 - `**OnPaint`:** Performs a **full logical frame** draw (entire buffer for the app). The Rust host now batches each hosted paint into one deferred back-buffered present and may restrict terminal diff/flush work to tracked dirty regions plus the console mutations recorded during that frame.
 - `**OnViewPaint`:** Performs view-local paint for one host-managed view. The host runs view-local paint handlers after the global `**OnPaint`** (when present), in tree paint order, and only for views intersecting the current damage. `**Bounds`** is the view's absolute terminal rectangle after parent-relative layout has been resolved.
 - **Relation to `RedrawPending`:** In dispatch mode, user code **typically does not poll** `**RedrawPending`**; the host invokes `**OnPaint`** when a frame is due. If both APIs coexist during transition, the spec for `**RedrawPending**` in hosted mode is: host consumes the pending flag when entering `**OnPaint**` (aligned with today’s “consume once” semantics).

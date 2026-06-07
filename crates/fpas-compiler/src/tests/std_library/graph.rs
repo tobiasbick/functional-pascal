@@ -370,12 +370,21 @@ end.",
 }
 
 #[test]
-#[ignore = "graph_basics.fpas still uses removed Application.PollEvent"]
 fn std_graph_basics_example_runs_headless() {
     with_headless(|| {
-        let out = compile_and_run(GRAPH_BASICS_EXAMPLE);
+        let out = compile_run_with_graph_events(
+            GRAPH_BASICS_EXAMPLE,
+            &[GraphEvent::Key(ConsoleKeyEvent::new(
+                key_kind_index("Escape"),
+                '\0',
+                false,
+                false,
+                false,
+                false,
+            ))],
+        );
 
-        assert_eq!(out.lines, vec!["size=32x24", "pending=false"]);
+        assert!(out.lines.is_empty(), "unexpected output: {:?}", out.lines);
 
         let frame = last_headless_graph_frame_for_tests()
             .expect("present should publish a headless frame snapshot");
@@ -385,7 +394,6 @@ fn std_graph_basics_example_runs_headless() {
 }
 
 #[test]
-#[ignore = "julia_graph.fpas still uses removed Application.PollEvent"]
 fn std_graph_julia_example_renders_one_headless_frame_then_exits_on_escape() {
     with_headless(|| {
         let out = compile_run_with_graph_events(
@@ -414,7 +422,6 @@ fn std_graph_julia_example_renders_one_headless_frame_then_exits_on_escape() {
 }
 
 #[test]
-#[ignore = "mandelbrot_graph.fpas still uses removed Application.PollEvent"]
 fn std_graph_mandelbrot_example_renders_one_headless_frame_then_exits_on_escape() {
     with_headless(|| {
         let out = compile_run_with_graph_events(

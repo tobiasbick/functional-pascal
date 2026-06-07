@@ -211,7 +211,7 @@ begin
   return false
 end;
 
-procedure OnMouse(App: Application; E: Event);
+procedure OnMouse(App: Application; E: Std.Graph.Event);
 begin
   if E.mouse_action = MouseAction.Down then
   begin
@@ -226,7 +226,7 @@ begin
   end
 end;
 
-procedure OnWheel(App: Application; E: Event);
+procedure OnWheel(App: Application; E: Std.Graph.Event);
 begin
   if E.wheel_y > 0 then
     State.SpanY := Max(State.SpanY * 0.85, 0.000_001)

@@ -85,12 +85,24 @@ impl Compiler {
                 return Ok(());
             }
 
-            let idx = self.add_constant(Value::Str(name), location)?;
-            self.emit(Op::GetGlobal(idx), location);
-            for part in &d.parts {
-                if let DesignatorPart::Index(expr, _) = part {
-                    self.compile_expr(expr)?;
-                    self.emit(Op::IndexGet, location);
+            let remaining: Vec<_> = d.parts.iter().skip(1).collect();
+            if remaining.is_empty() {
+                let idx = self.add_constant(Value::Str(name), location)?;
+                self.emit(Op::GetGlobal(idx), location);
+            } else {
+                let idx = self.add_constant(Value::Str(canonical_name(&base_name)), location)?;
+                self.emit(Op::GetGlobal(idx), location);
+                for part in remaining {
+                    match part {
+                        DesignatorPart::Ident(field, _) => {
+                            let idx = self.add_constant(Value::Str(field.clone()), location)?;
+                            self.emit(Op::FieldGet(idx), location);
+                        }
+                        DesignatorPart::Index(expr, _) => {
+                            self.compile_expr(expr)?;
+                            self.emit(Op::IndexGet, location);
+                        }
+                    }
                 }
             }
         }

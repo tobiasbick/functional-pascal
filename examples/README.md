@@ -53,6 +53,7 @@ Use when the main program imports **non-library units** (for example `App.*` or 
 ```sh
 fpas examples/pascal/units-basic/units-basic.fpasprj
 fpas examples/math/mandelbrot/mandelbrot.fpasprj
+fpas apps/ide/ide.fpasprj
 ```
 
 Do **not** pass a `unit` source alone (for example `mandelbrot_color.fpas` or `math_utils.fpas`) — the compiler expects a `program` as the main file.
@@ -135,6 +136,24 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/10-p
 
 Helper units under those folders are built only through the project; see the one-line `{ ... }` comment at the top of each unit file.
 
+## Applications (`apps/`)
+
+Larger programs live outside `examples/` but follow the same `.fpasprj` workflow.
+
+| Path | Contents |
+|------|----------|
+| `apps/ide/` | `ide.fpasprj` — Turbo Pascal–style hosted TUI shell (`Ide.Shell`, `Ide.Menu`, `Ide.Status`, `Ide.Theme`) |
+
+Run from the repository root:
+
+```sh
+fpas apps/ide/ide.fpasprj
+```
+
+The IDE is **interactive**: it opens the alternate screen and blocks in `Application.Run` until you quit. Use **Alt+X** or **File → Exit** from the menu bar. Host widgets paint the chrome (menu bar, blue desktop, status bar); `OnPaint` is intentionally empty — see `apps/ide/src/shell.fpas` and `docs/pascal/std/tui-app.md`.
+
+CI compiles it with `fpas check apps/ide/ide.fpasprj` (listed in `NON_INTERACTIVE_CHECK_EXAMPLES` in [`crates/fpas-cli/src/main_tests/examples.rs`](../crates/fpas-cli/src/main_tests/examples.rs)). For a smaller single-file menu bar sample, see `pascal/tui/menu_bar.fpas`.
+
 ## Interactive demos (terminal)
 
 These run until you exit (for example **Escape**). Run from a real terminal if possible.
@@ -154,4 +173,5 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 | `pascal/tui/view_scoped_commands.fpas` | Focus-aware view commands; **Tab** changes focus, **Ctrl+S** resolves per panel, **Escape** quits |
 | `pascal/tui/show_modal_existing_view.fpas` | Existing view subtree becomes modal; **Tab** stays in the subtree, **Escape** closes the modal |
 | `pascal/tui/show_dialog.fpas` | Owned modal dialog; **Ctrl+D** opens it, **Escape** closes it, **Ctrl+Q** quits |
+| `apps/ide/ide.fpasprj` | Multi-unit IDE shell — menu bar, desktop fill, status bar; **Alt+X** or **File → Exit** quits |
 TUI and Graph apps use the same hosted dispatch model: `Application.Configure(App, Handlers)` registers `On*` handlers; `Application.Run(App)` starts the hosted loop. See `docs/pascal/std/tui-app.md` and `docs/pascal/std/graph-app.md`. The console's own event type remains **`Std.Console.Event`**.

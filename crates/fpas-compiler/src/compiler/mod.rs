@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/pascal/std/console.md`, `docs/pascal/std/math.md`, `docs/pascal/std/array.md` (from the repository root).
 //! **Maintenance:** Keep those Markdown files in sync when changing how standard calls are emitted.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use fpas_bytecode::Chunk;
 use fpas_sema::{ExprTypeMap, MethodCallMap, RecordDefaultsMap, ScalarCaseBindingMap};
@@ -75,6 +75,8 @@ pub struct Compiler {
     record_defaults: RecordDefaultsMap,
     /// Scalar `case` labels that sema resolved as guard bindings.
     scalar_case_bindings: ScalarCaseBindingMap,
+    /// Canonical names of module-level globals (`const` / `var` / `mutable var`).
+    module_globals: HashSet<String>,
 }
 
 struct LoopCtx {
@@ -109,6 +111,7 @@ impl Compiler {
             method_calls,
             record_defaults,
             scalar_case_bindings,
+            module_globals: HashSet::new(),
         }
     }
 

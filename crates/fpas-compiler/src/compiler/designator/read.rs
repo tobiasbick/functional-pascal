@@ -86,8 +86,12 @@ impl Compiler {
             }
 
             let remaining: Vec<_> = d.parts.iter().skip(1).collect();
+            let full_canonical = canonical_name(&name);
             if remaining.is_empty() {
                 let idx = self.add_constant(Value::Str(name), location)?;
+                self.emit(Op::GetGlobal(idx), location);
+            } else if self.module_globals.contains(&full_canonical) {
+                let idx = self.add_constant(Value::Str(full_canonical), location)?;
                 self.emit(Op::GetGlobal(idx), location);
             } else {
                 let idx = self.add_constant(Value::Str(canonical_name(&base_name)), location)?;

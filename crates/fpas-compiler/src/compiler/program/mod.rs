@@ -11,6 +11,17 @@ use fpas_parser::{Decl, Program, RecordMethod, TypeBody};
 use super::{Compiler, canonical_name};
 
 impl Compiler {
+    fn collect_module_globals(&mut self, program: &Program) {
+        for decl in &program.declarations {
+            let name = match decl {
+                Decl::Const(c) => &c.name,
+                Decl::Var(v) | Decl::MutableVar(v) => &v.name,
+                Decl::TypeDef(_) | Decl::Function(_) | Decl::Procedure(_) => continue,
+            };
+            self.module_globals.insert(canonical_name(name));
+        }
+    }
+
     pub fn compile_program(&mut self, program: &Program) -> Result<(), CompileError> {
         if Self::program_uses_std_console(program) {
             self.register_std_console_enums();
@@ -22,6 +33,7 @@ impl Compiler {
             self.register_std_json_enum();
         }
         self.build_short_aliases(program);
+        self.collect_module_globals(program);
 
         for decl in &program.declarations {
             self.compile_decl(decl)?;

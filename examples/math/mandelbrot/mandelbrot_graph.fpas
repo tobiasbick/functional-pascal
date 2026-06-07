@@ -209,7 +209,7 @@ begin
   Application.RequestRedraw(App)
 end;
 
-procedure OnPaint(App: Application);
+procedure UpdateDisplayLayout(App: Application);
 begin
   var Screen: Size := Application.Size(App);
   var TargetWidth: integer := Max(Screen.width, 1);
@@ -221,7 +221,12 @@ begin
   DisplayWidth := RenderWidth * DisplayScaleFactor;
   DisplayHeight := RenderHeight * DisplayScaleFactor;
   DisplayOffsetX := (TargetWidth - DisplayWidth) div 2;
-  DisplayOffsetY := (TargetHeight - DisplayHeight) div 2;
+  DisplayOffsetY := (TargetHeight - DisplayHeight) div 2
+end;
+
+procedure OnPaint(App: Application);
+begin
+  UpdateDisplayLayout(App);
 
   var Frame: array of integer := BuildFrame(State, RenderWidth, RenderHeight);
   DrawScaledFrame(App, Frame, RenderWidth, RenderHeight, DisplayScaleFactor, DisplayOffsetX, DisplayOffsetY);
@@ -316,6 +321,8 @@ end;
 
 procedure OnMouse(App: Application; E: Std.Graph.Event);
 begin
+  UpdateDisplayLayout(App);
+
   if E.mouse_action = MouseAction.Down then
   begin
     if E.mouse_button = MouseButton.Left then
@@ -350,6 +357,7 @@ end;
 
 begin
   var App: Application := Application.Open(1280, 800, 'Mandelbrot graph');
+  UpdateDisplayLayout(App);
   var Handlers: ApplicationHandlers := record
     OnPaint := OnPaint;
     OnKeyPressed := Some(OnKeyPressed);

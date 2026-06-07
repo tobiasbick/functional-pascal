@@ -134,6 +134,25 @@ end.",
 }
 
 #[test]
+fn mutable_global_record_field_read_uses_base_global() {
+    let out = compile_and_run(
+        "\
+program T;
+uses Std.Console;
+type JuliaState = record SpanY: real; end;
+function SpanY(State: JuliaState): real;
+begin
+  return State.SpanY
+end;
+begin
+  mutable var State: JuliaState := record SpanY := 2.4; end;
+  WriteLn(SpanY(State))
+end.",
+    );
+    assert_eq!(out.lines, vec!["2.4"]);
+}
+
+#[test]
 fn record_literal_named_fields_can_be_out_of_order() {
     let out = compile_and_run(
         "\

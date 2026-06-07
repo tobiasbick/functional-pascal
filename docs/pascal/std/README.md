@@ -16,7 +16,7 @@ All units are opt-in through `uses`.
 - `Std.Time` - [time.md](time.md) (wall-clock and monotonic timestamps, elapsed time, and blocking sleep)
 - `Std.Graph` - [graph.md](graph.md) (native windowed graphics, framebuffer upload, drawing primitives, text; hosted input via [graph-app.md](graph-app.md))
 - `Std.Tui` - [tui.md](tui.md) (terminal application handle, size, `RequestRedraw`; key payloads use `Std.Console.KeyKind` / `Std.Console.KeyEvent`)
-- `Std.Tui` hosted dispatch - [tui-app.md](tui-app.md) (`Application.Configure`, `Application.Run`, `ApplicationHandlers`, `Application.Host*`; VM intrinsics **256**–**291**; `OnExit` receives **`ExitReason.UserQuit`**, **`ExitReason.HostStop`**, **`ExitReason.HostAndUserStop`**, or **`ExitReason.HostShutdown`**. See [tui-application-framework.md](../../future/tui-application-framework.md).)
+- `Std.Tui` hosted dispatch - [tui-app.md](tui-app.md) (`Application.Configure`, `Application.Run`, `ApplicationHandlers`, `Application.Host*`; VM intrinsics **256**–**347**, including host widgets **343**–**347**; `OnExit` receives **`ExitReason.UserQuit`**, **`ExitReason.HostStop`**, **`ExitReason.HostAndUserStop`**, or **`ExitReason.HostShutdown`**. See [tui-application-framework.md](../../future/tui-application-framework.md).)
 - `Std.Graph` hosted dispatch - [graph-app.md](graph-app.md) (`Application.Configure`, `Application.Run`, `ApplicationHandlers`, `On*` handlers; same hosted model as TUI)
 - `Std.Str` - [str.md](str.md)
 - `Std.Conv` - [conv.md](conv.md)

@@ -20,7 +20,7 @@ Workflow per item: implement → test → update this file → commit → wait.
 | 5 | done | `tui-app.md` — add process tag 21 |
 | 6 | done | `tui-app.md` — add intrinsics 343–347 to Pascal names + VM bridge tables |
 | 7 | done | `tui-app.md` — document menu input priority and navigation |
-| 8 | pending | `docs/pascal/std/README.md` — extend intrinsic range to 256–347 |
+| 8 | done | `docs/pascal/std/README.md` — extend intrinsic range to 256–347 |
 | 9 | pending | `docs/future/README.md` — fix TUI poll claim; move Json/Parse to implemented |
 | 10 | pending | `docs/pascal/11-stdlib.md` — add `Std.Proc` and `Std.Json` rows |
 

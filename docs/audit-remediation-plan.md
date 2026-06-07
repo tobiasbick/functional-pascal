@@ -17,7 +17,7 @@ Workflow per item: implement → test → update this file → commit → wait.
 
 | # | Status | Task |
 |---|--------|------|
-| 5 | pending | `tui-app.md` — add process tag 21 |
+| 5 | done | `tui-app.md` — add process tag 21 |
 | 6 | pending | `tui-app.md` — add intrinsics 343–347 to Pascal names + VM bridge tables |
 | 7 | pending | `tui-app.md` — document menu input priority and navigation |
 | 8 | pending | `docs/pascal/std/README.md` — extend intrinsic range to 256–347 |

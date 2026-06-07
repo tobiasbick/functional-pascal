@@ -16,6 +16,7 @@ pub struct TuiSession {
     redraw_hint: Option<DamageRegion>,
     owns_raw_mode: bool,
     owns_alt_screen: bool,
+    owns_mouse: bool,
 }
 
 impl TuiSession {
@@ -39,6 +40,7 @@ impl TuiSession {
         self.redraw_hint = None;
         self.owns_raw_mode = false;
         self.owns_alt_screen = false;
+        self.owns_mouse = false;
         console.abort_tui_paint();
 
         if !console.has_terminal_writer() {
@@ -56,6 +58,16 @@ impl TuiSession {
         }
 
         self.owns_alt_screen = true;
+
+        if let Err(error) = console.enable_mouse(location) {
+            let _ = console.leave_alt_screen(location);
+            let _ = key_input.disable_raw_mode_explicit(location);
+            self.open = false;
+            self.owns_raw_mode = false;
+            self.owns_alt_screen = false;
+            return Err(error);
+        }
+        self.owns_mouse = true;
         Ok(())
     }
 
@@ -88,11 +100,19 @@ impl TuiSession {
             first_error = Some(error);
         }
 
+        if self.owns_mouse
+            && let Err(error) = console.disable_mouse(location)
+            && first_error.is_none()
+        {
+            first_error = Some(error);
+        }
+
         self.open = false;
         self.damage.clear();
         self.redraw_hint = None;
         self.owns_raw_mode = false;
         self.owns_alt_screen = false;
+        self.owns_mouse = false;
 
         if let Some(error) = first_error {
             return Err(error);

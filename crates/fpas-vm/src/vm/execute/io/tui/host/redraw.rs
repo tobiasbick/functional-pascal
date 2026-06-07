@@ -83,9 +83,11 @@ impl Worker {
                 .paint_order()
                 .into_iter()
                 .filter_map(|view_id| {
-                    let widget = tui.view_widgets.get(&view_id)?.clone();
                     let rect = tui.views.rect(view_id)?;
-                    Self::damage_intersects_rect(damage, rect).then_some((widget, rect))
+                    let widget = tui.view_widgets.get(&view_id)?;
+                    widget
+                        .intersects_damage(rect, damage)
+                        .then_some((widget.clone(), rect))
                 })
                 .collect::<Vec<_>>()
         };
@@ -95,8 +97,11 @@ impl Worker {
         }
 
         self.with_console(|console| {
-            for (widget, rect) in scheduled {
-                widget.paint(console, rect, damage);
+            for (widget, rect) in &scheduled {
+                widget.paint(console, *rect, damage);
+            }
+            for (widget, rect) in &scheduled {
+                widget.paint_menu_overlays(console, *rect, damage);
             }
             Ok(())
         })?;

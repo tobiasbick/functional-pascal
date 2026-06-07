@@ -48,11 +48,22 @@ pub struct ViewRect {
 
 impl ViewRect {
     /// Return `true` when terminal-cell position `(x, y)` is inside this rectangle.
+    ///
+    /// View rectangles use zero-based coordinates (`0` is the top-left cell).
     #[must_use]
     pub fn contains_point(self, x: i64, y: i64) -> bool {
         let max_x = self.x.saturating_add(self.width.max(0));
         let max_y = self.y.saturating_add(self.height.max(0));
         x >= self.x && y >= self.y && x < max_x && y < max_y
+    }
+
+    /// Hit-test using one-based coordinates from `Std.Console.Event` mouse fields.
+    #[must_use]
+    pub fn contains_console_mouse(self, mouse_x: i64, mouse_y: i64) -> bool {
+        self.contains_point(
+            mouse_x.saturating_sub(1),
+            mouse_y.saturating_sub(1),
+        )
     }
 }
 

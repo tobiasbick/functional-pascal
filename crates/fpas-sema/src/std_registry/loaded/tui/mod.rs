@@ -88,12 +88,30 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
     );
     type_registration::register_record_type(
         checker,
+        s::STD_TUI_MENU_POPUP_ITEM,
+        vec![
+            ("Label".into(), Ty::String),
+            ("Shortcut".into(), Ty::Char),
+            ("Enabled".into(), Ty::Boolean),
+            ("CommandId".into(), Ty::Integer),
+        ],
+    );
+    type_registration::register_record_type(
+        checker,
         s::STD_TUI_MENU_BAR_ITEM,
         vec![
             ("Label".into(), Ty::String),
             ("Shortcut".into(), Ty::Char),
             ("Enabled".into(), Ty::Boolean),
             ("CommandId".into(), Ty::Integer),
+            (
+                "Submenu".into(),
+                Ty::Array(Box::new(lookup_required_type(
+                    checker,
+                    s::STD_TUI_MENU_POPUP_ITEM,
+                    "MenuPopupItem",
+                ))),
+            ),
         ],
     );
     let menu_bar_item = lookup_required_type(checker, s::STD_TUI_MENU_BAR_ITEM, "MenuBarItem");

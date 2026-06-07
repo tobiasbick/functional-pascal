@@ -6,6 +6,11 @@ use crate::key_event::{ConsoleKeyEvent, key_kind_index};
 use crate::mouse_action_index;
 use crate::{CommandId, Console, DamageRegion, UiMouse, ViewRect};
 
+use super::menu_popup::{
+    MenuPopupItem, MenuPopupRect, paint_popup, popup_alt_shortcut_index, popup_entry_at,
+    popup_rect, popup_shortcut_index,
+};
+
 /// One declarative menu entry supplied from Pascal.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MenuBarItem {
@@ -17,6 +22,8 @@ pub struct MenuBarItem {
     pub enabled: bool,
     /// Command dispatched through `OnCommand` on click, or `-1` when not clickable.
     pub command_id: i64,
+    /// Pull-down entries shown when this top-level item is activated.
+    pub submenu: Vec<MenuPopupItem>,
 }
 
 /// CRT colors used while painting a menu bar widget.
@@ -54,10 +61,25 @@ impl Default for MenuBarStyle {
 pub enum MenuBarMouseResult {
     /// The widget did not consume the event.
     Ignored,
-    /// Hover highlight changed; caller should redraw the view.
+    /// Hover or submenu state changed; caller should redraw affected regions.
     HoverChanged,
     /// A clickable item was activated.
     Command(CommandId),
+}
+
+/// Highlight and shortcut paint colors for one menu label row.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(in crate::tui_widget) struct MenuLabelPaint {
+    pub fg: u8,
+    pub bg: u8,
+    pub accel_fg: u8,
+    pub hovered: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct OpenSubmenu {
+    bar_index: usize,
+    entry_index: usize,
 }
 
 /// Host-managed menu bar widget state.
@@ -66,6 +88,8 @@ pub struct MenuBarWidget {
     pub items: Vec<MenuBarItem>,
     pub style: MenuBarStyle,
     hovered: Option<usize>,
+    open_submenu: Option<OpenSubmenu>,
+    menu_active: bool,
 }
 
 impl MenuBarWidget {
@@ -76,6 +100,8 @@ impl MenuBarWidget {
             items,
             style,
             hovered: None,
+            open_submenu: None,
+            menu_active: false,
         }
     }
 
@@ -84,82 +110,178 @@ impl MenuBarWidget {
         self.hovered = self
             .hovered
             .filter(|index| *index < items.len() && items[*index].enabled);
+        if let Some(open) = self.open_submenu
+            && open.bar_index >= items.len()
+        {
+            self.open_submenu = None;
+            self.menu_active = false;
+        }
         self.items = items;
     }
 
-    /// Paint the menu bar clipped to `damage`.
-    pub fn paint(self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
-        let Some(clip) = clip_rect_to_damage(rect, damage) else {
-            return;
-        };
+    /// Returns terminal rectangles that may need redraw for the current state.
+    #[must_use]
+    pub fn damage_rects(&self, bar_rect: ViewRect) -> Vec<ViewRect> {
+        let mut rects = vec![bar_rect];
+        if let Some(popup) = self.open_popup_rect(bar_rect) {
+            rects.push(popup.as_view_rect());
+        }
+        rects
+    }
 
-        console.fill_rect_crt(clip, self.style.bar_fg, self.style.bar_bg, ' ');
+    /// Returns whether a point hits the bar row or an open pull-down menu.
+    ///
+    /// `mouse_x`/`mouse_y` use one-based console coordinates.
+    #[must_use]
+    pub fn contains_point(&self, bar_rect: ViewRect, mouse_x: i64, mouse_y: i64) -> bool {
+        bar_rect.contains_console_mouse(mouse_x, mouse_y)
+            || self
+                .open_popup_rect(bar_rect)
+                .is_some_and(|popup| popup.contains_view_point(view_mouse_x(mouse_x), view_mouse_y(mouse_y)))
+    }
 
-        let mut x = rect.x;
-        for (index, item) in self.items.iter().enumerate() {
-            if x >= rect.x + rect.width {
-                break;
-            }
-            let label = format!(" {} ", item.label);
-            let width = label.chars().count() as i64;
-            if width <= 0 || x + width > rect.x + rect.width {
-                break;
-            }
-
-            let hovered = self.hovered == Some(index);
-            let (fg, bg) = if !item.enabled {
-                (self.style.disabled_fg, self.style.bar_bg)
-            } else if hovered {
-                (self.style.highlight_fg, self.style.highlight_bg)
-            } else {
-                (self.style.bar_fg, self.style.bar_bg)
+    /// Paint the menu bar and any open pull-down clipped to `damage`.
+    pub fn paint(&self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
+        if intersects_damage(rect, damage) {
+            let Some(clip) = clip_rect_to_damage(rect, damage) else {
+                return;
             };
+            console.fill_rect_crt(clip, self.style.bar_fg, self.style.bar_bg, ' ');
 
-            paint_menu_label(console, x, rect.y, item, MenuLabelPaint {
-                fg,
-                bg,
-                accel_fg: self.style.accel_fg,
-                hovered,
-            });
-            x += width;
+            let mut x = rect.x;
+            for (index, item) in self.items.iter().enumerate() {
+                if x >= rect.x + rect.width {
+                    break;
+                }
+                let label = format!(" {} ", item.label);
+                let width = label.chars().count() as i64;
+                if width <= 0 || x + width > rect.x + rect.width {
+                    break;
+                }
+
+                let hovered = self.is_bar_item_active(index);
+                let (fg, bg) = bar_item_colors(item, self.style, hovered);
+                paint_bar_label(
+                    console,
+                    x,
+                    rect.y,
+                    item,
+                    MenuLabelPaint {
+                        fg,
+                        bg,
+                        accel_fg: self.style.accel_fg,
+                        hovered,
+                    },
+                );
+                x += width;
+            }
         }
     }
 
-    /// Route a mouse event within `rect` and update hover state when needed.
+    /// Paint an open pull-down menu above other views (second paint pass).
+    pub fn paint_popup_overlay(
+        &self,
+        console: &mut Console,
+        rect: ViewRect,
+        damage: DamageRegion,
+    ) {
+        if let Some((popup, entries, selected)) = self.open_popup(rect) {
+            let popup_rect = popup.as_view_rect();
+            if intersects_damage(popup_rect, damage) {
+                self.paint_popup(console, popup, entries, selected);
+            }
+        }
+    }
+
+    fn paint_popup(
+        &self,
+        console: &mut Console,
+        popup: MenuPopupRect,
+        entries: &[MenuPopupItem],
+        selected: usize,
+    ) {
+        paint_popup(console, popup, entries, self.style, selected);
+    }
+
+    /// Route a mouse event within the menu bar and open popup regions.
     pub fn handle_mouse(&mut self, rect: ViewRect, mouse: UiMouse) -> MenuBarMouseResult {
-        if !rect.contains_point(mouse.x, mouse.y) {
-            if self.hovered.take().is_some() {
+        let (mouse_x, mouse_y) = view_mouse_coords(mouse);
+        let down = mouse.action == mouse_action_index("Down");
+
+        if let Some(open) = self.open_submenu {
+            let Some(popup) = self.open_popup_rect(rect) else {
+                return MenuBarMouseResult::Ignored;
+            };
+            if popup.contains_view_point(mouse_x, mouse_y) {
+                if !down {
+                    return MenuBarMouseResult::Ignored;
+                }
+                let entry_index =
+                    popup_entry_at(popup, &self.items[open.bar_index].submenu, mouse_x, mouse_y);
+                let Some(entry_index) = entry_index else {
+                    return MenuBarMouseResult::Ignored;
+                };
+                let (command_id, enabled) = {
+                    let entry = &self.items[open.bar_index].submenu[entry_index];
+                    (entry.command_id, entry.enabled)
+                };
+                if !enabled || command_id < 0 {
+                    return MenuBarMouseResult::Ignored;
+                }
+                self.close_submenu();
+                return MenuBarMouseResult::Command(CommandId(command_id));
+            }
+            if down {
+                self.close_submenu();
+                return MenuBarMouseResult::HoverChanged;
+            }
+        }
+
+        if rect.contains_console_mouse(mouse.x, mouse.y) {
+            let item_index = item_index_at(self.items.as_slice(), rect, mouse_x);
+            if down {
+                if let Some(index) = item_index {
+                    let item = &self.items[index];
+                    if !item.enabled {
+                        return MenuBarMouseResult::Ignored;
+                    }
+                    if has_submenu(item) {
+                        return self.toggle_submenu(index);
+                    }
+                    if item.command_id >= 0 {
+                        self.hovered = Some(index);
+                        self.menu_active = true;
+                        return MenuBarMouseResult::Command(CommandId(item.command_id));
+                    }
+                }
+                return MenuBarMouseResult::Ignored;
+            }
+
+            if self.hovered != item_index {
+                self.hovered = item_index.filter(|index| self.items[*index].enabled);
                 return MenuBarMouseResult::HoverChanged;
             }
             return MenuBarMouseResult::Ignored;
         }
 
-        let item_index = item_index_at(self.items.as_slice(), rect, mouse.x);
-        let down = mouse.action == mouse_action_index("Down");
-
-        if down {
-            if let Some(index) = item_index {
-                let item = &self.items[index];
-                if item.enabled && item.command_id >= 0 {
-                    self.hovered = Some(index);
-                    return MenuBarMouseResult::Command(CommandId(item.command_id));
-                }
-            }
-            return MenuBarMouseResult::Ignored;
-        }
-
-        if self.hovered != item_index {
-            self.hovered = item_index.filter(|index| self.items[*index].enabled);
+        if self.hovered.take().is_some() || self.open_submenu.take().is_some() {
+            self.menu_active = false;
             return MenuBarMouseResult::HoverChanged;
         }
-
         MenuBarMouseResult::Ignored
     }
 
-    /// Route Alt+letter shortcuts and F10 menu activation.
+    /// Route Alt+letter shortcuts, F10 menu activation, and popup navigation keys.
     pub fn handle_key(&mut self, key: &ConsoleKeyEvent) -> MenuBarMouseResult {
+        if let Some(result) = self.handle_submenu_key(key) {
+            return result;
+        }
+        if self.handle_menu_navigation_key(key) {
+            return MenuBarMouseResult::HoverChanged;
+        }
+
         if key.kind == key_kind_index("F10") && !key.ctrl && !key.alt && !key.meta {
-            return self.activate_first_item();
+            return self.activate_menu_mode();
         }
 
         let Some(shortcut) = shortcut_letter(key) else {
@@ -174,40 +296,247 @@ impl MenuBarWidget {
             return MenuBarMouseResult::Ignored;
         };
 
-        let command_id = self.items[index].command_id;
-        if command_id >= 0 {
-            self.hovered = Some(index);
-            return MenuBarMouseResult::Command(CommandId(command_id));
-        }
-
-        if self.hovered == Some(index) {
-            return MenuBarMouseResult::Ignored;
-        }
+        self.menu_active = true;
         self.hovered = Some(index);
+        let item = &self.items[index];
+        if has_submenu(item) {
+            return self.open_submenu_at(index);
+        }
+        if item.command_id >= 0 {
+            return MenuBarMouseResult::Command(CommandId(item.command_id));
+        }
         MenuBarMouseResult::HoverChanged
     }
 
-    fn activate_first_item(&mut self) -> MenuBarMouseResult {
+    fn handle_submenu_key(&mut self, key: &ConsoleKeyEvent) -> Option<MenuBarMouseResult> {
+        let open = self.open_submenu?;
+
+        if key.kind == key_kind_index("Escape") && !key.ctrl && !key.alt && !key.meta {
+            self.close_submenu();
+            return Some(MenuBarMouseResult::HoverChanged);
+        }
+
+        if key.kind == key_kind_index("Up") && !key.ctrl && !key.alt && !key.meta {
+            self.move_popup_selection(-1);
+            return Some(MenuBarMouseResult::HoverChanged);
+        }
+        if key.kind == key_kind_index("Down") && !key.ctrl && !key.alt && !key.meta {
+            self.move_popup_selection(1);
+            return Some(MenuBarMouseResult::HoverChanged);
+        }
+        if key.kind == key_kind_index("Enter") && !key.ctrl && !key.alt && !key.meta {
+            let entry = &self.items[open.bar_index].submenu[open.entry_index];
+            if entry.enabled && entry.command_id >= 0 {
+                let command_id = entry.command_id;
+                self.close_submenu();
+                return Some(MenuBarMouseResult::Command(CommandId(command_id)));
+            }
+            return Some(MenuBarMouseResult::Ignored);
+        }
+
+        let entries = &self.items[open.bar_index].submenu;
+        if let Some(index) = popup_alt_shortcut_index(entries, key)
+            .or_else(|| popup_shortcut_key_index(entries, key))
+        {
+            let entry = &entries[index];
+            if entry.enabled && entry.command_id >= 0 {
+                let command_id = entry.command_id;
+                self.close_submenu();
+                return Some(MenuBarMouseResult::Command(CommandId(command_id)));
+            }
+        }
+
+        None
+    }
+
+    fn handle_menu_navigation_key(&mut self, key: &ConsoleKeyEvent) -> bool {
+        if !self.menu_active || self.open_submenu.is_some() {
+            return false;
+        }
+        if key.ctrl || key.alt || key.meta {
+            return false;
+        }
+
+        match key.kind {
+            k if k == key_kind_index("Escape") => {
+                self.menu_active = false;
+                self.hovered = None;
+                true
+            }
+            k if k == key_kind_index("Left") => self.move_bar_selection(-1),
+            k if k == key_kind_index("Right") => self.move_bar_selection(1),
+            k if k == key_kind_index("Down") => self
+                .hovered
+                .and_then(|index| {
+                    if has_submenu(&self.items[index]) {
+                        self.open_submenu_at(index);
+                        Some(true)
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or(false),
+            _ => false,
+        }
+    }
+
+    fn activate_menu_mode(&mut self) -> MenuBarMouseResult {
+        self.menu_active = true;
         let index = self.items.iter().position(|item| item.enabled);
         let Some(index) = index else {
             return MenuBarMouseResult::Ignored;
         };
-        if self.hovered == Some(index) {
-            return MenuBarMouseResult::Ignored;
-        }
         self.hovered = Some(index);
+        if has_submenu(&self.items[index]) {
+            return self.open_submenu_at(index);
+        }
         MenuBarMouseResult::HoverChanged
+    }
+
+    fn toggle_submenu(&mut self, index: usize) -> MenuBarMouseResult {
+        if self
+            .open_submenu
+            .is_some_and(|open| open.bar_index == index)
+        {
+            self.close_submenu();
+            MenuBarMouseResult::HoverChanged
+        } else {
+            self.open_submenu_at(index)
+        }
+    }
+
+    fn open_submenu_at(&mut self, index: usize) -> MenuBarMouseResult {
+        let first_enabled = self.items[index]
+            .submenu
+            .iter()
+            .position(|entry| entry.enabled)
+            .unwrap_or(0);
+        self.hovered = Some(index);
+        self.menu_active = true;
+        self.open_submenu = Some(OpenSubmenu {
+            bar_index: index,
+            entry_index: first_enabled,
+        });
+        MenuBarMouseResult::HoverChanged
+    }
+
+    fn close_submenu(&mut self) {
+        self.open_submenu = None;
+    }
+
+    fn move_bar_selection(&mut self, delta: i64) -> bool {
+        let Some(current) = self.hovered else {
+            return false;
+        };
+        let len = self.items.len();
+        if len == 0 {
+            return false;
+        }
+        let mut next = current as i64;
+        for _ in 0..len {
+            next = (next + delta).rem_euclid(len as i64);
+            let index = next as usize;
+            if self.items[index].enabled {
+                if self.hovered == Some(index) {
+                    return false;
+                }
+                self.hovered = Some(index);
+                self.sync_submenu_for_bar_index(index);
+                return true;
+            }
+        }
+        false
+    }
+
+    fn sync_submenu_for_bar_index(&mut self, index: usize) {
+        if !self.menu_active {
+            return;
+        }
+        if has_submenu(&self.items[index]) {
+            let entry_index = self.items[index]
+                .submenu
+                .iter()
+                .position(|entry| entry.enabled)
+                .unwrap_or(0);
+            self.open_submenu = Some(OpenSubmenu {
+                bar_index: index,
+                entry_index,
+            });
+        } else {
+            self.close_submenu();
+        }
+    }
+
+    fn move_popup_selection(&mut self, delta: i64) {
+        let Some(open) = self.open_submenu.as_mut() else {
+            return;
+        };
+        let entries = &self.items[open.bar_index].submenu;
+        let len = entries.len();
+        if len == 0 {
+            return;
+        }
+        let mut next = open.entry_index as i64;
+        for _ in 0..len {
+            next = (next + delta).rem_euclid(len as i64);
+            let index = next as usize;
+            if entries[index].enabled {
+                open.entry_index = index;
+                return;
+            }
+        }
+    }
+
+    fn is_bar_item_active(&self, index: usize) -> bool {
+        self.hovered == Some(index)
+            || self
+                .open_submenu
+                .is_some_and(|open| open.bar_index == index)
+    }
+
+    fn open_popup(&self, bar_rect: ViewRect) -> Option<(MenuPopupRect, &[MenuPopupItem], usize)> {
+        let open = self.open_submenu?;
+        let entries = &self.items[open.bar_index].submenu;
+        if entries.is_empty() {
+            return None;
+        }
+        let anchor_x = item_x_at(self.items.as_slice(), bar_rect, open.bar_index)?;
+        let popup = popup_rect(anchor_x, bar_rect.y + bar_rect.height, entries);
+        Some((popup, entries.as_slice(), open.entry_index))
+    }
+
+    fn open_popup_rect(&self, bar_rect: ViewRect) -> Option<MenuPopupRect> {
+        self.open_popup(bar_rect).map(|(popup, _, _)| popup)
     }
 }
 
-struct MenuLabelPaint {
-    fg: u8,
-    bg: u8,
-    accel_fg: u8,
-    hovered: bool,
+fn view_mouse_x(mouse_x: i64) -> i64 {
+    mouse_x.saturating_sub(1)
 }
 
-fn paint_menu_label(
+fn view_mouse_y(mouse_y: i64) -> i64 {
+    mouse_y.saturating_sub(1)
+}
+
+fn view_mouse_coords(mouse: UiMouse) -> (i64, i64) {
+    (view_mouse_x(mouse.x), view_mouse_y(mouse.y))
+}
+
+fn has_submenu(item: &MenuBarItem) -> bool {
+    !item.submenu.is_empty()
+}
+
+fn bar_item_colors(item: &MenuBarItem, style: MenuBarStyle, hovered: bool) -> (u8, u8) {
+    if !item.enabled {
+        (style.disabled_fg, style.bar_bg)
+    } else if hovered {
+        (style.highlight_fg, style.highlight_bg)
+    } else {
+        (style.bar_fg, style.bar_bg)
+    }
+}
+
+pub(in crate::tui_widget) fn paint_bar_label(
     console: &mut Console,
     x: i64,
     y: i64,
@@ -215,10 +544,22 @@ fn paint_menu_label(
     colors: MenuLabelPaint,
 ) {
     let label = format!(" {} ", item.label);
-    let highlight_index = shortcut_highlight_index(&item.label, &item.shortcut);
+    paint_labeled_text(console, x, y, &label, &item.shortcut, item.enabled, colors);
+}
+
+pub(in crate::tui_widget) fn paint_labeled_text(
+    console: &mut Console,
+    x: i64,
+    y: i64,
+    label: &str,
+    shortcut: &str,
+    enabled: bool,
+    colors: MenuLabelPaint,
+) {
+    let highlight_index = shortcut_highlight_index(label.trim(), shortcut);
     let mut col = x;
     for (index, ch) in label.chars().enumerate() {
-        let cell_fg = if colors.hovered || !item.enabled {
+        let cell_fg = if colors.hovered || !enabled {
             colors.fg
         } else if highlight_index == Some(index) {
             colors.accel_fg
@@ -230,16 +571,26 @@ fn paint_menu_label(
     }
 }
 
-fn shortcut_highlight_index(label: &str, shortcut: &str) -> Option<usize> {
+pub(in crate::tui_widget) fn shortcut_highlight_index(
+    label: &str,
+    shortcut: &str,
+) -> Option<usize> {
     let shortcut = shortcut.chars().next()?;
     if !shortcut.is_ascii_alphabetic() {
         return None;
     }
-    let inner = format!(" {} ", label);
+    let inner = format!(" {label} ");
     inner
         .char_indices()
         .find(|(_, ch)| ch.eq_ignore_ascii_case(&shortcut))
         .map(|(index, _)| index)
+}
+
+fn popup_shortcut_key_index(entries: &[MenuPopupItem], key: &ConsoleKeyEvent) -> Option<usize> {
+    if key.ctrl || key.alt || key.meta || key.kind != key_kind_index("Character") {
+        return None;
+    }
+    popup_shortcut_index(entries, key.ch)
 }
 
 fn shortcut_letter(key: &ConsoleKeyEvent) -> Option<char> {
@@ -274,8 +625,26 @@ fn item_index_at(items: &[MenuBarItem], rect: ViewRect, mouse_x: i64) -> Option<
     None
 }
 
+fn item_x_at(items: &[MenuBarItem], rect: ViewRect, index: usize) -> Option<i64> {
+    let mut x = rect.x;
+    for (current, item) in items.iter().enumerate() {
+        if current == index {
+            return Some(x);
+        }
+        x = x.saturating_add(item_display_width(item));
+    }
+    None
+}
+
 fn item_display_width(item: &MenuBarItem) -> i64 {
     (item.label.chars().count() as i64).saturating_add(2)
+}
+
+fn intersects_damage(rect: ViewRect, damage: DamageRegion) -> bool {
+    match damage {
+        DamageRegion::FullFrame => true,
+        DamageRegion::Rect(dirty) => intersect_view_rects(rect, dirty).is_some(),
+    }
 }
 
 fn clip_rect_to_damage(rect: ViewRect, damage: DamageRegion) -> Option<ViewRect> {
@@ -324,6 +693,21 @@ mod tests {
             shortcut: "F".into(),
             enabled: true,
             command_id: -1,
+            submenu: vec![MenuPopupItem {
+                label: "Exit".into(),
+                shortcut: "X".into(),
+                enabled: true,
+                command_id: 1,
+            }],
+        }
+    }
+
+    fn bar_rect() -> ViewRect {
+        ViewRect {
+            x: 0,
+            y: 0,
+            width: 20,
+            height: 1,
         }
     }
 
@@ -335,12 +719,7 @@ mod tests {
 
         MenuBarWidget::new(vec![file_item()], MenuBarStyle::default()).paint(
             &mut console,
-            ViewRect {
-                x: 0,
-                y: 0,
-                width: 10,
-                height: 1,
-            },
+            bar_rect(),
             DamageRegion::FullFrame,
         );
 
@@ -350,41 +729,47 @@ mod tests {
     }
 
     #[test]
-    fn menu_bar_alt_shortcut_highlights_item() {
+    fn menu_bar_alt_shortcut_opens_submenu() {
         let mut widget = MenuBarWidget::new(vec![file_item()], MenuBarStyle::default());
         let key = ConsoleKeyEvent::new(key_kind_index("Character"), 'f', false, false, true, false);
         assert_eq!(widget.handle_key(&key), MenuBarMouseResult::HoverChanged);
-        assert_eq!(
-            widget.handle_key(&key),
-            MenuBarMouseResult::Ignored,
-            "second Alt+F should not redraw"
-        );
+        assert_eq!(widget.damage_rects(bar_rect()).len(), 2);
     }
 
     #[test]
-    fn menu_bar_alt_shortcut_dispatches_command() {
-        let mut widget = MenuBarWidget::new(
-            vec![MenuBarItem {
-                label: "Quit".into(),
-                shortcut: "Q".into(),
-                enabled: true,
-                command_id: 99,
-            }],
-            MenuBarStyle::default(),
-        );
-        let key = ConsoleKeyEvent::new(key_kind_index("Character"), 'q', false, false, true, false);
+    fn menu_bar_submenu_enter_dispatches_command() {
+        let mut widget = MenuBarWidget::new(vec![file_item()], MenuBarStyle::default());
+        let key = ConsoleKeyEvent::new(key_kind_index("Character"), 'f', false, false, true, false);
+        let _ = widget.handle_key(&key);
+        let enter = ConsoleKeyEvent::new(key_kind_index("Enter"), '\0', false, false, false, false);
         assert_eq!(
-            widget.handle_key(&key),
-            MenuBarMouseResult::Command(CommandId(99))
+            widget.handle_key(&enter),
+            MenuBarMouseResult::Command(CommandId(1))
         );
+        assert_eq!(widget.damage_rects(bar_rect()).len(), 1);
     }
 
     #[test]
-    fn menu_bar_f10_activates_first_item() {
+    fn menu_bar_f10_opens_first_submenu() {
         let mut widget = MenuBarWidget::new(vec![file_item()], MenuBarStyle::default());
         let key = ConsoleKeyEvent::new(key_kind_index("F10"), '\0', false, false, false, false);
         assert_eq!(widget.handle_key(&key), MenuBarMouseResult::HoverChanged);
-        assert_eq!(widget.handle_key(&key), MenuBarMouseResult::Ignored);
+        assert_eq!(widget.damage_rects(bar_rect()).len(), 2);
+    }
+
+    #[test]
+    fn menu_bar_submenu_click_dispatches_command() {
+        let mut widget = MenuBarWidget::new(vec![file_item()], MenuBarStyle::default());
+        let key = ConsoleKeyEvent::new(key_kind_index("Character"), 'f', false, false, true, false);
+        let _ = widget.handle_key(&key);
+
+        // Popup entry row: view y=2 → console y=3 (one-based).
+        let result = widget.handle_mouse(
+            bar_rect(),
+            UiMouse::new(mouse_action_index("Down"), 1, 2, 3, Default::default()),
+        );
+        assert_eq!(result, MenuBarMouseResult::Command(CommandId(1)));
+        assert_eq!(widget.damage_rects(bar_rect()).len(), 1);
     }
 
     #[test]
@@ -395,18 +780,13 @@ mod tests {
                 shortcut: String::new(),
                 enabled: true,
                 command_id: 99,
+                submenu: Vec::new(),
             }],
             MenuBarStyle::default(),
         );
-        let rect = ViewRect {
-            x: 0,
-            y: 0,
-            width: 10,
-            height: 1,
-        };
         let result = widget.handle_mouse(
-            rect,
-            UiMouse::new(mouse_action_index("Down"), 1, 2, 0, Default::default()),
+            bar_rect(),
+            UiMouse::new(mouse_action_index("Down"), 1, 2, 1, Default::default()),
         );
         assert_eq!(result, MenuBarMouseResult::Command(CommandId(99)));
     }

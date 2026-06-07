@@ -82,7 +82,7 @@ pub use tui_host::TuiHost;
 pub use tui_modal::{ModalId, ModalStack};
 pub use tui_view::{ViewId, ViewRect, ViewRegistry};
 pub use tui_widget::{
-    MenuBarItem, MenuBarMouseResult, MenuBarStyle, MenuBarWidget, SolidFillWidget,
+    MenuBarItem, MenuBarMouseResult, MenuBarStyle, MenuBarWidget, MenuPopupItem, SolidFillWidget,
     StatusBarSegment, StatusBarStyle, StatusBarWidget, ViewWidget,
 };
 pub use ui::{UiEvent, UiHost, UiHostSurface, UiModifiers, UiMouse, UiResize, UiWheel};

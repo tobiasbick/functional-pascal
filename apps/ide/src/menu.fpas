@@ -18,18 +18,29 @@ begin
   end
 end;
 
+/// Pull-down entries for the File menu.
+function FileSubmenu(): array of MenuPopupItem;
+begin
+  return [
+    record Label := 'Exit'; Shortcut := 'X'; Enabled := true; CommandId := CmdFileExit; end
+  ]
+end;
+
 /// Top-level Turbo Pascal IDE menu entries (Alt+letter shortcuts shown in red).
 function DefaultItems(): array of MenuBarItem;
 begin
   return [
-    record Label := 'File'; Shortcut := 'F'; Enabled := true; CommandId := -1; end,
-    record Label := 'Edit'; Shortcut := 'E'; Enabled := true; CommandId := -1; end,
-    record Label := 'Search'; Shortcut := 'S'; Enabled := true; CommandId := -1; end,
-    record Label := 'Run'; Shortcut := 'R'; Enabled := true; CommandId := -1; end,
-    record Label := 'Compile'; Shortcut := 'C'; Enabled := true; CommandId := -1; end,
-    record Label := 'Debug'; Shortcut := 'D'; Enabled := true; CommandId := -1; end,
-    record Label := 'Options'; Shortcut := 'O'; Enabled := true; CommandId := -1; end,
-    record Label := 'Window'; Shortcut := 'W'; Enabled := true; CommandId := -1; end,
-    record Label := 'Help'; Shortcut := 'H'; Enabled := true; CommandId := -1; end
+    record
+      Label := 'File'; Shortcut := 'F'; Enabled := true; CommandId := -1;
+      Submenu := FileSubmenu();
+    end,
+    record Label := 'Edit'; Shortcut := 'E'; Enabled := true; CommandId := -1; Submenu := []; end,
+    record Label := 'Search'; Shortcut := 'S'; Enabled := true; CommandId := -1; Submenu := []; end,
+    record Label := 'Run'; Shortcut := 'R'; Enabled := true; CommandId := -1; Submenu := []; end,
+    record Label := 'Compile'; Shortcut := 'C'; Enabled := true; CommandId := -1; Submenu := []; end,
+    record Label := 'Debug'; Shortcut := 'D'; Enabled := true; CommandId := -1; Submenu := []; end,
+    record Label := 'Options'; Shortcut := 'O'; Enabled := true; CommandId := -1; Submenu := []; end,
+    record Label := 'Window'; Shortcut := 'W'; Enabled := true; CommandId := -1; Submenu := []; end,
+    record Label := 'Help'; Shortcut := 'H'; Enabled := true; CommandId := -1; Submenu := []; end
   ]
 end;

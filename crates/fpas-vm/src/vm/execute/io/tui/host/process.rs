@@ -305,7 +305,7 @@ impl Worker {
         !scope.iter().any(|view_id| {
             tui.views
                 .rect(*view_id)
-                .is_some_and(|rect| rect.contains_point(mouse.x, mouse.y))
+                .is_some_and(|rect| rect.contains_console_mouse(mouse.x, mouse.y))
         })
     }
 
@@ -371,7 +371,11 @@ impl Worker {
     fn mouse_redraw_hint(&self, modal_scope: Option<&[ViewId]>, mouse: UiMouse) -> DamageRegion {
         let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
         tui.views
-            .topmost_view_at(mouse.x, mouse.y, modal_scope)
+            .topmost_view_at(
+                mouse.x.saturating_sub(1),
+                mouse.y.saturating_sub(1),
+                modal_scope,
+            )
             .and_then(|view_id| tui.views.rect(view_id))
             .map(DamageRegion::Rect)
             .unwrap_or(DamageRegion::FullFrame)

@@ -133,10 +133,20 @@ Widget views participate in the same z-order and damage tracking as Pascal `OnVi
 | `Shortcut` | `char` | Alt+letter shortcut (case-insensitive). Use `#0` when none. The matching letter in `Label` is drawn in `MenuBarStyle.AccelFg`. |
 | `Enabled` | `boolean` | When `false`, drawn disabled and ignores clicks |
 | `CommandId` | `integer` | Dispatched through `OnCommand` on click; use `-1` for non-clickable labels |
+| `Submenu` | `array of MenuPopupItem` | Pull-down entries. Use `[]` for top-level commands without a submenu. |
+
+`MenuPopupItem` is a declarative pull-down record:
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `Label` | `string` | Visible menu text |
+| `Shortcut` | `char` | Letter shortcut while the popup is open. Use `#0` when none. |
+| `Enabled` | `boolean` | When `false`, drawn disabled and ignores activation |
+| `CommandId` | `integer` | Dispatched through `OnCommand` on activation |
 
 `MenuBarStyle` supplies CRT color indices (`0..=15`) for `BarBg`, `BarFg`, `AccelFg`, `HighlightBg`, `HighlightFg`, and `DisabledFg`.
 
-`Application.HostCreateMenuBarView(App, X, Y, Width, Height, Items, Style)` registers a host-managed menu bar. Rust paints the bar and performs hit-testing; enabled items with `CommandId >= 0` dispatch `OnCommand` on mouse click. Alt+`Shortcut` highlights the item or dispatches its command; F10 highlights the first enabled item. `Application.HostSetMenuBarItems(App, ViewId, Items)` replaces the model at runtime.
+`Application.HostCreateMenuBarView(App, X, Y, Width, Height, Items, Style)` registers a host-managed menu bar. Rust paints the bar and performs hit-testing; enabled items with `CommandId >= 0` dispatch `OnCommand` on mouse click. Items with a non-empty `Submenu` open a framed pull-down below the bar item. Alt+`Shortcut` opens or activates the item; F10 opens the first menu; arrow keys navigate open menus; Enter activates the highlighted pull-down entry. `Application.HostSetMenuBarItems(App, ViewId, Items)` replaces the model at runtime.
 
 #### `StatusBarSegment` and `StatusBarStyle`
 

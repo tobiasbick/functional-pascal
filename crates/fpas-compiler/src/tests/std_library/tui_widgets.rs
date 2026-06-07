@@ -101,7 +101,7 @@ uses Std.Console, Std.Tui;
 begin
   var App: Application := Application.Open();
   var Items: array of MenuBarItem := [
-    record Label := 'File'; Shortcut := 'F'; Enabled := true; CommandId := 1; end
+    record Label := 'File'; Shortcut := 'F'; Enabled := true; CommandId := 1; Submenu := []; end
   ];
   var Style: MenuBarStyle := record
     BarBg := LightGray;
@@ -158,16 +158,26 @@ end.",
 }
 
 #[test]
-fn std_tui_menu_bar_alt_shortcut_highlights_item() {
+fn std_tui_menu_bar_alt_shortcut_opens_submenu_and_exit() {
     let out = compile_run_with_console_events(
         "\
 program T;
 uses Std.Console, Std.Tui;
 
+function FileSubmenu(): array of MenuPopupItem;
+begin
+  return [
+    record Label := 'Exit'; Shortcut := 'X'; Enabled := true; CommandId := 1; end
+  ]
+end;
+
 function MenuItems(): array of MenuBarItem;
 begin
   return [
-    record Label := 'File'; Shortcut := 'F'; Enabled := true; CommandId := -1; end
+    record
+      Label := 'File'; Shortcut := 'F'; Enabled := true; CommandId := -1;
+      Submenu := FileSubmenu();
+    end
   ]
 end;
 
@@ -187,14 +197,9 @@ procedure OnPaint(App: Application);
 begin
 end;
 
-function OnKeyPressed(App: Application; Key: Std.Console.KeyEvent): boolean;
+procedure OnCommand(App: Application; CommandId: integer);
 begin
-  if Key.kind = Std.Console.KeyKind.Escape then
-  begin
-    Application.HostRequestQuit(App);
-    return true
-  end;
-  return false
+  Application.HostRequestQuit(App)
 end;
 
 begin
@@ -203,7 +208,7 @@ begin
     App, 0, 0, 80, 1, MenuItems(), MenuStyle());
   var Handlers: ApplicationHandlers := record
     OnPaint := OnPaint;
-    OnKeyPressed := Some(OnKeyPressed);
+    OnCommand := Some(OnCommand);
   end;
   Application.Configure(App, Handlers);
   Application.Run(App)
@@ -218,8 +223,8 @@ end.",
                 false,
             )),
             ConsoleEvent::key(ConsoleKeyEvent::new(
-                key_kind_index("Escape"),
-                '\u{1b}',
+                key_kind_index("Enter"),
+                '\0',
                 false,
                 false,
                 false,

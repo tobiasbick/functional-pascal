@@ -5,13 +5,17 @@
 use crate::vm::Worker;
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError};
 use crate::vm::runtime_error;
+use crate::vm::shared::TuiState;
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_std::{
-    MenuBarItem, MenuBarMouseResult, MenuBarStyle, ViewWidget, validate_packed_crt_color,
+    MenuBarItem, MenuBarMouseResult, MenuBarStyle, MenuPopupItem, ViewId, ViewRect, ViewRegistry,
+    ViewWidget, validate_packed_crt_color,
 };
+use std::collections::HashMap;
 
 const MENU_BAR_ITEM_TYPE: &str = "Std.Tui.MenuBarItem";
 const MENU_BAR_STYLE_TYPE: &str = "Std.Tui.MenuBarStyle";
+const MENU_POPUP_ITEM_TYPE: &str = "Std.Tui.MenuPopupItem";
 
 impl Worker {
     /// Parses `array of MenuBarItem` from the stack top.
@@ -108,8 +112,109 @@ impl Worker {
             }
         };
         let command_id = self.integer_record_field(fields, "CommandId", line)?;
+        let submenu = self.decode_menu_popup_items(fields, "Submenu", line)?;
 
         Ok(MenuBarItem {
+            label,
+            shortcut,
+            enabled,
+            command_id,
+            submenu,
+        })
+    }
+
+    fn decode_menu_popup_items(
+        &self,
+        fields: &[(String, Value)],
+        field_name: &str,
+        line: SourceLocation,
+    ) -> Result<Vec<MenuPopupItem>, VmError> {
+        match fields.iter().find(|(name, _)| name == field_name) {
+            None => Ok(Vec::new()),
+            Some((_, Value::Array(values))) => values
+                .iter()
+                .map(|value| self.decode_menu_popup_item(value, line))
+                .collect(),
+            Some((_, other)) => Err(runtime_error(
+                TYPE_MISMATCH_CODE,
+                format!(
+                    "MenuBarItem.{field_name} must be array of MenuPopupItem, got {}",
+                    other.type_name()
+                ),
+                "Set `Submenu := [record Label := 'Exit'; ... end]` or `Submenu := []`.",
+                line,
+            )),
+        }
+    }
+
+    fn decode_menu_popup_item(
+        &self,
+        value: &Value,
+        line: SourceLocation,
+    ) -> Result<MenuPopupItem, VmError> {
+        let Value::Record { type_name, fields } = value else {
+            return Err(runtime_error(
+                TYPE_MISMATCH_CODE,
+                format!("Expected {MENU_POPUP_ITEM_TYPE}, got {}", value.type_name()),
+                "Each submenu entry must be a `MenuPopupItem` record.",
+                line,
+            ));
+        };
+        if type_name != MENU_POPUP_ITEM_TYPE {
+            return Err(runtime_error(
+                TYPE_MISMATCH_CODE,
+                format!("Expected {MENU_POPUP_ITEM_TYPE}, got `{type_name}`"),
+                "Each submenu entry must be a `MenuPopupItem` record.",
+                line,
+            ));
+        }
+
+        let label = match Self::required_record_field(fields, "Label", line)? {
+            Value::Str(label) => label.clone(),
+            other => {
+                return Err(runtime_error(
+                    TYPE_MISMATCH_CODE,
+                    format!(
+                        "MenuPopupItem.Label must be string, got {}",
+                        other.type_name()
+                    ),
+                    "Set `Label := 'Exit'` with a string literal.",
+                    line,
+                ));
+            }
+        };
+        let shortcut = match Self::required_record_field(fields, "Shortcut", line)? {
+            Value::Char(ch) if *ch == '\0' => String::new(),
+            Value::Char(ch) => ch.to_string(),
+            other => {
+                return Err(runtime_error(
+                    TYPE_MISMATCH_CODE,
+                    format!(
+                        "MenuPopupItem.Shortcut must be char, got {}",
+                        other.type_name()
+                    ),
+                    "Set `Shortcut := 'X'` for a popup shortcut, or `Shortcut := #0` when none.",
+                    line,
+                ));
+            }
+        };
+        let enabled = match Self::required_record_field(fields, "Enabled", line)? {
+            Value::Boolean(flag) => *flag,
+            other => {
+                return Err(runtime_error(
+                    TYPE_MISMATCH_CODE,
+                    format!(
+                        "MenuPopupItem.Enabled must be boolean, got {}",
+                        other.type_name()
+                    ),
+                    "Set `Enabled := true` or `Enabled := false`.",
+                    line,
+                ));
+            }
+        };
+        let command_id = self.integer_record_field(fields, "CommandId", line)?;
+
+        Ok(MenuPopupItem {
             label,
             shortcut,
             enabled,
@@ -188,22 +293,16 @@ impl Worker {
     ) -> Result<Option<i64>, VmError> {
         let hit = {
             let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            tui.views
-                .paint_order()
-                .into_iter()
-                .rev()
-                .find_map(|view_id| {
-                    let rect = tui.views.rect(view_id)?;
-                    if !rect.contains_point(mouse.x, mouse.y) {
-                        return None;
-                    }
-                    let widget = tui.view_widgets.get(&view_id)?.clone();
-                    Some((view_id, rect, widget))
-                })
+            Self::widget_mouse_hit(&tui.views, &tui.view_widgets, mouse)
         };
 
         let Some((view_id, rect, mut widget)) = hit else {
             return Ok(None);
+        };
+
+        let before = match &widget {
+            ViewWidget::MenuBar(menu) => menu.damage_rects(rect),
+            _ => vec![rect],
         };
 
         let result = match &mut widget {
@@ -211,18 +310,28 @@ impl Worker {
             ViewWidget::SolidFill(_) | ViewWidget::StatusBar(_) => MenuBarMouseResult::Ignored,
         };
 
+        let after = match &widget {
+            ViewWidget::MenuBar(menu) => menu.damage_rects(rect),
+            _ => vec![rect],
+        };
+
         let dispatch_tag = match result {
             MenuBarMouseResult::Ignored => return Ok(None),
             MenuBarMouseResult::HoverChanged => {
                 self.with_tui(|tui| {
                     tui.view_widgets.insert(view_id, widget);
-                    let _ = tui.session.request_redraw_rect(rect, line);
+                    let mut regions = before;
+                    regions.extend(after);
+                    Self::request_unique_redraws(tui, &regions, line);
                 });
                 5
             }
             MenuBarMouseResult::Command(command_id) => {
                 self.with_tui(|tui| {
                     tui.view_widgets.insert(view_id, widget);
+                    let mut regions = before;
+                    regions.extend(after);
+                    Self::request_unique_redraws(tui, &regions, line);
                 });
                 return self.dispatch_tui_command(command_id, line).map(Some);
             }
@@ -244,43 +353,91 @@ impl Worker {
                 .into_iter()
                 .rev()
                 .find_map(|view_id| {
+                    let rect = tui.views.rect(view_id)?;
                     let widget = tui.view_widgets.get(&view_id)?.clone();
-                    matches!(widget, ViewWidget::MenuBar(_)).then_some((view_id, widget))
+                    matches!(widget, ViewWidget::MenuBar(_)).then_some((view_id, rect, widget))
                 })
         };
 
-        let Some((view_id, mut widget)) = hit else {
+        let Some((view_id, rect, mut widget)) = hit else {
             return Ok(None);
         };
 
-        let ViewWidget::MenuBar(menu) = &mut widget else {
+        let ViewWidget::MenuBar(menu) = &widget else {
             return Ok(None);
         };
+        let before = menu.damage_rects(rect);
 
-        let result = menu.handle_key(&key);
+        let result = match &mut widget {
+            ViewWidget::MenuBar(menu) => menu.handle_key(&key),
+            _ => unreachable!(),
+        };
+        let after = match &widget {
+            ViewWidget::MenuBar(menu) => menu.damage_rects(rect),
+            _ => vec![rect],
+        };
         let dispatch_tag = match result {
             MenuBarMouseResult::Ignored => return Ok(None),
             MenuBarMouseResult::HoverChanged => {
-                let rect = {
-                    let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                    tui.views.rect(view_id)
-                };
                 self.with_tui(|tui| {
                     tui.view_widgets.insert(view_id, widget);
-                    if let Some(rect) = rect {
-                        let _ = tui.session.request_redraw_rect(rect, line);
-                    }
+                    let mut regions = before;
+                    regions.extend(after);
+                    Self::request_unique_redraws(tui, &regions, line);
                 });
                 21
             }
             MenuBarMouseResult::Command(command_id) => {
                 self.with_tui(|tui| {
                     tui.view_widgets.insert(view_id, widget);
+                    let mut regions = before;
+                    regions.extend(after);
+                    Self::request_unique_redraws(tui, &regions, line);
                 });
                 return self.dispatch_tui_command(command_id, line).map(Some);
             }
         };
 
         Ok(Some(dispatch_tag))
+    }
+
+    /// Prefer menu bars (including open popups) over views that paint underneath them.
+    fn widget_mouse_hit(
+        views: &ViewRegistry,
+        widgets: &HashMap<ViewId, ViewWidget>,
+        mouse: fpas_std::UiMouse,
+    ) -> Option<(ViewId, ViewRect, ViewWidget)> {
+        let order = views.paint_order();
+
+        for view_id in order.iter().rev() {
+            let rect = views.rect(*view_id)?;
+            let widget = widgets.get(view_id)?.clone();
+            if let ViewWidget::MenuBar(menu) = &widget
+                && menu.contains_point(rect, mouse.x, mouse.y)
+            {
+                return Some((*view_id, rect, widget));
+            }
+        }
+
+        order.into_iter().rev().find_map(|view_id| {
+            let rect = views.rect(view_id)?;
+            let widget = widgets.get(&view_id)?.clone();
+            widget
+                .contains_point(rect, mouse.x, mouse.y)
+                .then_some((view_id, rect, widget))
+        })
+    }
+
+    fn request_unique_redraws(tui: &mut TuiState, regions: &[ViewRect], line: SourceLocation) {
+        let mut unique = Vec::new();
+        for region in regions {
+            if unique.iter().any(|existing: &ViewRect| existing == region) {
+                continue;
+            }
+            unique.push(*region);
+        }
+        for region in unique {
+            let _ = tui.session.request_redraw_rect(region, line);
+        }
     }
 }

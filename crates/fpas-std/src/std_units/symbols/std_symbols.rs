@@ -318,6 +318,7 @@ pub const STD_TUI_APPLICATION_HOST_SET_MENU_BAR_ITEMS: &str =
     std_tui!("Application.HostSetMenuBarItems");
 pub const STD_TUI_MENU_BAR_ITEM: &str = std_tui!("MenuBarItem");
 pub const STD_TUI_MENU_BAR_STYLE: &str = std_tui!("MenuBarStyle");
+pub const STD_TUI_MENU_POPUP_ITEM: &str = std_tui!("MenuPopupItem");
 /// Register a host-managed status bar widget from a Pascal segment model.
 pub const STD_TUI_APPLICATION_HOST_CREATE_STATUS_BAR_VIEW: &str =
     std_tui!("Application.HostCreateStatusBarView");

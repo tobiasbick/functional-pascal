@@ -159,7 +159,50 @@ Widget views participate in the same z-order and damage tracking as Pascal `OnVi
 
 `MenuBarStyle` supplies CRT color indices (`0..=15`) for `BarBg`, `BarFg`, `AccelFg`, `HighlightBg`, `HighlightFg`, and `DisabledFg`.
 
-`Application.HostCreateMenuBarView(App, X, Y, Width, Height, Items, Style)` registers a host-managed menu bar. Rust paints the bar and performs hit-testing; enabled items with `CommandId >= 0` dispatch `OnCommand` on mouse click. Items with a non-empty `Submenu` open a framed pull-down below the bar item. Alt+`Shortcut` opens or activates the item; F10 opens the first menu; arrow keys navigate open menus; Enter activates the highlighted pull-down entry. `Application.HostSetMenuBarItems(App, ViewId, Items)` replaces the model at runtime.
+`Application.HostCreateMenuBarView(App, X, Y, Width, Height, Items, Style)` registers a host-managed menu bar. Rust paints the bar, open pull-downs, and performs hit-testing. `Application.HostSetMenuBarItems(App, ViewId, Items)` replaces the model at runtime.
+
+##### Menu bar input priority
+
+During hosted keyboard dispatch (`TuiHostProcessNext` / `Application.Run`), the host evaluates keys in this order:
+
+1. **Tab / Shift+Tab** view focus traversal when the focus chain changes.
+2. **Menu bar widget** routing on the topmost menu bar in paint order (see **Navigation** below).
+3. **Command bindings** resolved from view-local maps, modal maps, then `Application.HostBindCommand(App, Key, CommandId)`.
+4. **`OnKeyPressed`** when registered.
+
+During hosted mouse dispatch, the host evaluates events in this order:
+
+1. **Modal scope** suppression when the active modal blocks outside mouse input.
+2. **Menu bar widget** routing, including open popup rectangles. Menu bars take priority over other host widgets underneath the pointer.
+3. **`OnMouse`** when registered.
+
+Menu-bar widget routing happens **before** global command bindings and `OnKeyPressed` / `OnMouse`. Keys consumed for hover or submenu redraw return process tag **`21`**; mouse hover redraws may return tag **`5`**. Activated menu commands still dispatch through **`OnCommand`** (tag **`16`** when a handler is registered).
+
+##### Menu bar navigation
+
+**Top-level activation**
+
+- **Alt+`Shortcut`** (bar item `Shortcut` field): enters menu mode, highlights the matching enabled top-level item, opens its `Submenu` when non-empty, otherwise dispatches `OnCommand` when `CommandId >= 0`.
+- **F10** (unmodified): enters menu mode on the first enabled top-level item and opens its submenu when present.
+- **Mouse hover** updates the highlighted enabled item; **mouse down** on a top-level item toggles/opens its submenu or dispatches `OnCommand` when `CommandId >= 0`.
+
+**Menu mode** (after F10, Alt+shortcut, or bar interaction)
+
+- **Left** / **Right**: cycle across enabled top-level items (wrap). When the highlighted item has a `Submenu`, the host opens or switches to that pull-down.
+- **Down**: opens the submenu of the highlighted top-level item when it has entries.
+- **Escape**: exits menu mode and clears the bar highlight.
+
+**Open submenu**
+
+- **Up** / **Down**: move the highlighted pull-down entry, skipping disabled rows and separators.
+- **Enter**: activates the highlighted entry when it is enabled and not a separator (`OnCommand` when `CommandId >= 0`).
+- **Escape**: closes the submenu and returns to menu mode on the same bar item.
+- **Letter key** (popup `Shortcut`, no modifiers) or **Alt+letter**: activates the first matching enabled popup entry.
+
+**Mouse on open submenu**
+
+- **Mouse down** inside the popup activates the clicked enabled entry.
+- **Mouse down** outside the popup closes it; leaving the bar clears hover when appropriate.
 
 #### `StatusBarSegment` and `StatusBarStyle`
 

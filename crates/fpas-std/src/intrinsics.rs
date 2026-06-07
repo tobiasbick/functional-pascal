@@ -214,6 +214,9 @@ pub fn run_intrinsic(
     if time::run(intrinsic, stack, location)?.is_some() {
         return Ok(());
     }
+    if crate::test::run(intrinsic, stack, location)?.is_some() {
+        return Ok(());
+    }
 
     Err(std_internal_error(
         format!("unknown or unimplemented intrinsic reached std dispatch ({intrinsic:?})"),

@@ -14,7 +14,7 @@ Step-by-step tasks to implement the FPAS test framework. Read [`README.md`](READ
 
 | Phase | Tasks | Done | Verification |
 |-------|-------|------|--------------|
-| [1 — Std.Test](#phase-1--stdtest-assertions) | 35 | 0 | [§ 1.8](#18-phase-1-verification) |
+| [1 — Std.Test](#phase-1--stdtest-assertions) | 35 | 27 | [§ 1.8](#18-phase-1-verification) |
 | [2 — fpas test](#phase-2--fpas-test-runner) | 22 | 0 | [§ 2.7](#27-phase-2-verification) |
 | [3 — Scripted input](#phase-3--scripted-consoletui-input) | 13 | 0 | [§ 3.4](#34-phase-3-verification) |
 | [4 — Graph headless](#phase-4--graph-headless-tests) | 9 | 0 | [§ 4.4](#44-phase-4-verification) |
@@ -59,29 +59,29 @@ Reference: [`docs/pascal/std/README.md`](../../pascal/std/README.md) § Shared i
 
 ### 1.1 Specification
 
-- [ ] **1.1.1** — `docs/pascal/std/test.md` — **CREATE** canonical user spec from [`std-test.md`](std-test.md)
-- [ ] **1.1.2** — `docs/pascal/std/README.md` — **MODIFY** add `Std.Test` index entry
+- [x] **1.1.1** — `docs/pascal/std/test.md` — **CREATE** canonical user spec from [`std-test.md`](std-test.md)
+- [x] **1.1.2** — `docs/pascal/std/README.md` — **MODIFY** add `Std.Test` index entry
 - [ ] **1.1.3** — `docs/pascal/11-stdlib.md` — **MODIFY** list `Std.Test` if that file enumerates units
 
 ### 1.2 `fpas-std` — unit registry and runtime
 
-- [ ] **1.2.1** — `crates/fpas-std/src/std_units/units.rs` — **MODIFY** add `STD_UNIT_TEST = "Test"`, append to `STD_UNITS_KNOWN`
-- [ ] **1.2.2** — `crates/fpas-std/src/std_units/symbols/names.rs` (or equivalent) — **MODIFY** add `STD_TEST_ASSERT_TRUE`, `STD_TEST_ASSERT_FALSE`, `STD_TEST_ASSERT_EQUALS_INT`, `STD_TEST_FAIL`, `STD_TEST_SKIP`
-- [ ] **1.2.3** — `crates/fpas-std/src/std_units/symbols/groups.rs` — **MODIFY** add `STD_TEST_SYMBOLS` slice
-- [ ] **1.2.4** — `crates/fpas-std/src/std_units/mod.rs` — **MODIFY** `canonical_std_unit_from_tail("test")`, `std_unit_symbols` match arm
-- [ ] **1.2.5** — `crates/fpas-std/src/test/mod.rs` — **CREATE** module root
-- [ ] **1.2.6** — `crates/fpas-std/src/test/state.rs` — **CREATE** `TestFailure { message, location }`; thread-local or pass-through via VM
-- [ ] **1.2.7** — `crates/fpas-std/src/test/assert.rs` — **CREATE** `assert_true`, `assert_false`, `assert_equals_integer`, `fail`, `skip` → `Result<(), StdError>`
-- [ ] **1.2.8** — `crates/fpas-std/src/lib.rs` — **MODIFY** `pub mod test;`
+- [x] **1.2.1** — `crates/fpas-std/src/std_units/units.rs` — **MODIFY** add `STD_UNIT_TEST = "Test"`, append to `STD_UNITS_KNOWN`
+- [x] **1.2.2** — `crates/fpas-std/src/std_units/symbols/names.rs` (or equivalent) — **MODIFY** add symbol constants
+- [x] **1.2.3** — `crates/fpas-std/src/std_units/symbols/groups.rs` — **MODIFY** add `STD_TEST_SYMBOLS` slice
+- [x] **1.2.4** — `crates/fpas-std/src/std_units/mod.rs` — **MODIFY** `canonical_std_unit_from_tail("test")`, `std_unit_symbols` match arm
+- [x] **1.2.5** — `crates/fpas-std/src/test/mod.rs` — **CREATE** module root
+- [ ] **1.2.6** — `crates/fpas-std/src/test/state.rs` — deferred (no separate state file; failures use **F4023** diagnostic)
+- [x] **1.2.7** — `crates/fpas-std/src/test/assert.rs` — **CREATE** assert helpers
+- [x] **1.2.8** — `crates/fpas-std/src/lib.rs` — **MODIFY** `mod test;`
 
 **Assert failure behavior (decision):** intrinsic handler prints diagnostic to stderr (reuse `fpas_diagnostics` style), then returns a dedicated `StdError` that the VM maps to **`Op::Halt`** with process exit code **1**. Do not use uncontrolled `panic!` in Rust.
 
 ### 1.3 `fpas-bytecode` — intrinsics
 
-- [ ] **1.3.1** — `crates/fpas-bytecode/src/intrinsic/test.rs` — **CREATE** `TestIntrinsic` enum (discriminants 0..N within Test domain)
-- [ ] **1.3.2** — `crates/fpas-bytecode/src/intrinsic/mod.rs` — **MODIFY** `pub mod test;`, `Test(TestIntrinsic)` variant, `From`/`try_from` arms
-- [ ] **1.3.3** — `crates/fpas-bytecode/src/lib.rs` — **MODIFY** re-export `TestIntrinsic`
-- [ ] **1.3.4** — `crates/fpas-bytecode/src/intrinsic/tests.rs` — **MODIFY** round-trip tests for new intrinsics
+- [x] **1.3.1** — `crates/fpas-bytecode/src/intrinsic/test.rs` — **CREATE** `TestIntrinsic` enum
+- [x] **1.3.2** — `crates/fpas-bytecode/src/intrinsic/mod.rs` — **MODIFY** wire `Test(TestIntrinsic)`
+- [x] **1.3.3** — `crates/fpas-bytecode/src/lib.rs` — **MODIFY** re-export `TestIntrinsic`
+- [x] **1.3.4** — `crates/fpas-bytecode/src/intrinsic/tests.rs` — **MODIFY** round-trip tests
 
 Initial variants: `AssertTrue = 0`, `AssertFalse = 1`, `AssertEqualsInteger = 2`, `Fail = 3`, `Skip = 4`.
 
@@ -89,41 +89,41 @@ Initial variants: `AssertTrue = 0`, `AssertFalse = 1`, `AssertEqualsInteger = 2`
 
 ### 1.4 `fpas-sema` — registration
 
-- [ ] **1.4.1** — `crates/fpas-sema/src/std_registry/loaded/test.rs` — **CREATE** `register_std_test` with `define_func` per assert (see `env.rs`)
-- [ ] **1.4.2** — `crates/fpas-sema/src/std_registry/loaded/mod.rs` — **MODIFY** `mod test;`, match arm `STD_UNIT_TEST => test::register_std_test(checker)`
+- [x] **1.4.1** — `crates/fpas-sema/src/std_registry/loaded/test.rs` — **CREATE** `register_std_test`
+- [x] **1.4.2** — `crates/fpas-sema/src/std_registry/loaded/mod.rs` — **MODIFY** `mod test;`, match arm
 - [ ] **1.4.3** — `crates/fpas-sema/src/tests/` — **CREATE** `check_ok` fixtures using `uses Std.Test`
 
 ### 1.5 `fpas-compiler` — lowering
 
-- [ ] **1.5.1** — `crates/fpas-compiler/src/compiler/std_calls/test.rs` — **CREATE** `compile_test_call` (mirror `env.rs`)
-- [ ] **1.5.2** — `crates/fpas-compiler/src/compiler/std_calls/mod.rs` — **MODIFY** `mod test;`, call `compile_test_call` from `compile_std_library_call`
-- [ ] **1.5.3** — `crates/fpas-compiler/src/tests/std_library/test.rs` — **CREATE** pass/fail/skip integration tests
-- [ ] **1.5.4** — `crates/fpas-compiler/src/tests/std_library/mod.rs` — **MODIFY** `mod test;`
+- [x] **1.5.1** — `crates/fpas-compiler/src/compiler/std_calls/test.rs` — **CREATE** `compile_test_call`
+- [x] **1.5.2** — `crates/fpas-compiler/src/compiler/std_calls/mod.rs` — **MODIFY** wire `compile_test_call`
+- [x] **1.5.3** — `crates/fpas-compiler/src/tests/std_library/test.rs` — **CREATE** integration tests
+- [x] **1.5.4** — `crates/fpas-compiler/src/tests/std_library/mod.rs` — **MODIFY** `mod test;`
 
 ### 1.6 `fpas-std` / `fpas-vm` — intrinsic dispatch
 
-- [ ] **1.6.1** — `crates/fpas-std/src/intrinsics.rs` — **MODIFY** route `Intrinsic::Test(...)` to `crate::test::run_test_intrinsic`
-- [ ] **1.6.2** — `crates/fpas-std/src/test/intrinsic.rs` — **CREATE** pop stack args, call assert helpers
-- [ ] **1.6.3** — `crates/fpas-vm/src/vm/execute/mod.rs` — **MODIFY** if needed: map test `StdError` to halt with exit code 1
-- [ ] **1.6.4** — `crates/fpas-vm/src/lib.rs` — **MODIFY** (optional) `pub fn test_failure_for_tests(&self)` if runner needs introspection
+- [x] **1.6.1** — `crates/fpas-std/src/intrinsics.rs` — **MODIFY** route `Intrinsic::Test(...)`
+- [x] **1.6.2** — `crates/fpas-std/src/test/intrinsic.rs` — **CREATE** pop stack args, call assert helpers
+- [x] **1.6.3** — not needed: VM already surfaces `StdError` as runtime diagnostic (**F4023**)
+- [ ] **1.6.4** — deferred until Phase 2 runner
 
 **Skip behavior:** `Skip` sets skipped flag, prints optional message, **`Halt` with exit 0**.
 
 ### 1.7 Examples and CLI smoke
 
-- [ ] **1.7.1** — `examples/pascal/test/assert_basics.fpas` — **CREATE**
-- [ ] **1.7.2** — `examples/pascal/test/assert_fail_demo.fpas` — **CREATE** documents expected failure (manual / doc only, not in CI allowlist)
+- [x] **1.7.1** — `examples/pascal/test/assert_basics.fpas` — **CREATE**
+- [ ] **1.7.2** — `examples/pascal/test/assert_fail_demo.fpas` — **CREATE** documents expected failure
 - [ ] **1.7.3** — `examples/README.md` — **MODIFY** mention `examples/pascal/test/`
-- [ ] **1.7.4** — `crates/fpas-cli/src/main_tests/examples.rs` — **MODIFY** add `assert_basics.fpas` to `NON_INTERACTIVE_EXAMPLES`
+- [x] **1.7.4** — `crates/fpas-cli/src/main_tests/examples.rs` — **MODIFY** add to allowlist
 
 ### 1.8 Phase 1 verification
 
-- [ ] `uses Std.Test` resolves in sema
-- [ ] `AssertEquals(4, 2+2)` compiles and runs
-- [ ] Failed assert: message includes line/column hint
-- [ ] `Skip('reason')` exits 0
-- [ ] `cargo test -p fpas-compiler std_library::test` passes
-- [ ] `fpas examples/pascal/test/assert_basics.fpas` exits 0
+- [x] `uses Std.Test` resolves in sema
+- [x] `AssertEquals(4, 2+2)` compiles and runs
+- [x] Failed assert: message includes expected/actual values (**F4023**)
+- [x] `Skip('reason')` exits 0
+- [x] `cargo test -p fpas-compiler std_library::test` passes
+- [ ] `fpas examples/pascal/test/assert_basics.fpas` exits 0 (rebuild `fpas` when exe not locked)
 
 ---
 

@@ -368,3 +368,11 @@ pub(in super::super) const STD_JSON_SYMBOLS: &[&str] = &[
     std_symbols::STD_JSON_PARSE,
     std_symbols::STD_JSON_STRINGIFY,
 ];
+
+pub(in super::super) const STD_TEST_SYMBOLS: &[&str] = &[
+    std_symbols::STD_TEST_ASSERT_TRUE,
+    std_symbols::STD_TEST_ASSERT_FALSE,
+    std_symbols::STD_TEST_ASSERT_EQUALS,
+    std_symbols::STD_TEST_FAIL,
+    std_symbols::STD_TEST_SKIP,
+];

@@ -29,6 +29,7 @@ All units are opt-in through `uses`.
 - `Std.Result` - [result.md](result.md) (helpers for `Result of T, E` — `Unwrap`, `UnwrapOr`, `IsOk`, `IsError`, `Map`, `AndThen`, `OrElse`)
 - `Std.Option` - [option.md](option.md) (helpers for `Option of T` — `Unwrap`, `UnwrapOr`, `IsSome`, `IsNone`, `Map`, `AndThen`, `OrElse`)
 - `Std.Task` - [task.md](task.md) (`Wait`, `WaitAll` — blocking on `task` handles from `go`; language rules in [08-concurrency.md](../08-concurrency.md); VM layout in [parallel-vm.md](../../rust/parallel-vm.md))
+- `Std.Test` - [test.md](test.md) (`AssertTrue`, `AssertFalse`, `AssertEquals`, `Fail`, `Skip` — test assertions; plan in [test-framework](../../future/test-framework/README.md))
 
 ## Shared implementation touchpoints
 

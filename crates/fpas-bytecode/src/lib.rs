@@ -9,7 +9,7 @@ pub use intrinsic::{
     ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, ConvIntrinsic, DictIntrinsic, EnvIntrinsic,
     FsIntrinsic, GraphIntrinsic, Intrinsic, JsonIntrinsic, MathIntrinsic, OptionIntrinsic,
     ParseIntrinsic, PathIntrinsic, ProcIntrinsic, RandomIntrinsic, ResultIntrinsic, StrIntrinsic,
-    TaskIntrinsic, TimeIntrinsic, TuiIntrinsic,
+    TaskIntrinsic, TestIntrinsic, TimeIntrinsic, TuiIntrinsic,
 };
 pub use op::Op;
 pub use value::Value;

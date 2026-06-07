@@ -114,6 +114,9 @@ define_codes!(RUNTIME_ALLOCATED_CODES => {
 
     /// `Std.Str.Format`: specifier count does not match argument list, or a type does not match its specifier.
     RUNTIME_FORMAT_MISMATCH = 4022;
+
+    /// `Std.Test` assertion or explicit `Fail` call.
+    RUNTIME_TEST_ASSERTION_FAILED = 4023;
 });
 
 define_codes!(INTERNAL_ALLOCATED_CODES => {

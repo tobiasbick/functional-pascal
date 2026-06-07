@@ -1,0 +1,58 @@
+//! Lowers `Std.Test` calls to runtime intrinsics.
+//!
+//! **Documentation:** `docs/pascal/std/test.md` (from the repository root).
+
+use crate::error::CompileError;
+use fpas_bytecode::{Intrinsic, SourceLocation, TestIntrinsic};
+use fpas_parser::Expr;
+use fpas_std::std_symbols as s;
+
+use super::Compiler;
+
+impl Compiler {
+    /// Compile a `Std.Test` call into a runtime intrinsic when `name` belongs to the unit.
+    pub(super) fn compile_test_call(
+        &mut self,
+        name: &str,
+        args: &[Expr],
+        location: SourceLocation,
+    ) -> Result<bool, CompileError> {
+        match name {
+            s::STD_TEST_ASSERT_TRUE => {
+                self.expect_exact_args(s::STD_TEST_ASSERT_TRUE, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic_unit(Intrinsic::Test(TestIntrinsic::AssertTrue), location);
+                Ok(true)
+            }
+            s::STD_TEST_ASSERT_FALSE => {
+                self.expect_exact_args(s::STD_TEST_ASSERT_FALSE, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic_unit(Intrinsic::Test(TestIntrinsic::AssertFalse), location);
+                Ok(true)
+            }
+            s::STD_TEST_ASSERT_EQUALS => {
+                self.expect_exact_args(s::STD_TEST_ASSERT_EQUALS, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(
+                    Intrinsic::Test(TestIntrinsic::AssertEqualsInteger),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_TEST_FAIL => {
+                self.expect_exact_args(s::STD_TEST_FAIL, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic_unit(Intrinsic::Test(TestIntrinsic::Fail), location);
+                Ok(true)
+            }
+            s::STD_TEST_SKIP => {
+                self.expect_exact_args(s::STD_TEST_SKIP, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic_unit(Intrinsic::Test(TestIntrinsic::Skip), location);
+                Ok(true)
+            }
+            _ => Ok(false),
+        }
+    }
+}

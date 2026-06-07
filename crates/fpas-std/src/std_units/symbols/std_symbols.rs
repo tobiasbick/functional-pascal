@@ -98,6 +98,11 @@ macro_rules! std_json {
         concat!("Std.Json.", $suffix)
     };
 }
+macro_rules! std_test {
+    ($suffix:literal) => {
+        concat!("Std.Test.", $suffix)
+    };
+}
 
 pub const STD_CONSOLE_WRITE_LN: &str = std_console!("WriteLn");
 pub const STD_CONSOLE_WRITE: &str = std_console!("Write");
@@ -503,3 +508,9 @@ pub const STD_JSON_VALUE_ARRAY: &str = std_json!("JsonValue.Array");
 pub const STD_JSON_VALUE_OBJECT: &str = std_json!("JsonValue.Object");
 pub const STD_JSON_PARSE: &str = std_json!("Parse");
 pub const STD_JSON_STRINGIFY: &str = std_json!("Stringify");
+
+pub const STD_TEST_ASSERT_TRUE: &str = std_test!("AssertTrue");
+pub const STD_TEST_ASSERT_FALSE: &str = std_test!("AssertFalse");
+pub const STD_TEST_ASSERT_EQUALS: &str = std_test!("AssertEquals");
+pub const STD_TEST_FAIL: &str = std_test!("Fail");
+pub const STD_TEST_SKIP: &str = std_test!("Skip");

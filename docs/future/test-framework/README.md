@@ -18,7 +18,7 @@ Implementation plan for a JUnit-style testing surface in Functional Pascal: writ
 | Phase | Status | Summary |
 |-------|--------|---------|
 | **0** Requirements | 🟡 In progress | Planning docs; open decisions pending |
-| **1** `Std.Test` | ⬜ Not started | Assertions, intrinsics, example |
+| **1** `Std.Test` | 🟡 In progress | Core assertions implemented; Phase 1 nearly complete |
 | **2** `fpas test` | ⬜ Not started | CLI runner, discovery, summary |
 | **3** Scripted input | ⬜ Not started | TOML sidecar, TUI keyboard/mouse |
 | **4** Graph headless | ⬜ Not started | Headless backend + graph events |
@@ -168,18 +168,18 @@ High-level phases are below. **Every task has a checkbox in [`implementation.md`
 
 **Deliverables**
 
-- [ ] `docs/pascal/std/test.md` — user-facing `Std.Test` spec
-- [ ] `crates/fpas-std/src/test/` — runtime: assert helpers, failure flag
-- [ ] `crates/fpas-sema/.../test.rs` — register `Std.Test` symbols
-- [ ] `crates/fpas-compiler/.../test.rs` — lower asserts to intrinsics
-- [ ] `examples/pascal/test/assert_basics.fpas` — example
-- [ ] Compiler integration tests — assert pass/fail paths
+- [x] `docs/pascal/std/test.md` — user-facing `Std.Test` spec
+- [x] `crates/fpas-std/src/test/` — runtime: assert helpers
+- [x] `crates/fpas-sema/.../test.rs` — register `Std.Test` symbols
+- [x] `crates/fpas-compiler/.../test.rs` — lower asserts to intrinsics
+- [x] `examples/pascal/test/assert_basics.fpas` — example
+- [x] Compiler integration tests — assert pass/fail paths
 
 **Success criteria**
 
-- [ ] A `.fpas` program can call `Std.Test.AssertEquals(2, 1 + 1)` and exit 0
-- [ ] Failed assert prints message with source location hint and exits non-zero
-- [ ] `fpas examples/pascal/test/assert_basics.fpas` works (direct run before dedicated `test` subcommand)
+- [x] A `.fpas` program can call `Std.Test.AssertEquals(2, 1 + 1)` and exit 0
+- [x] Failed assert prints message with expected/actual and **F4023**
+- [ ] `fpas examples/pascal/test/assert_basics.fpas` works (rebuild CLI when `fpas.exe` not locked)
 
 → Tasks: [`implementation.md` § Phase 1](implementation.md#phase-1--stdtest-assertions)
 

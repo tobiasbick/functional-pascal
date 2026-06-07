@@ -256,6 +256,11 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Tui(TuiIntrinsic::HostSetMenuBarItems),
     Intrinsic::Tui(TuiIntrinsic::HostCreateStatusBarView),
     Intrinsic::Tui(TuiIntrinsic::HostSetStatusBarSegments),
+    Intrinsic::Test(TestIntrinsic::AssertTrue),
+    Intrinsic::Test(TestIntrinsic::AssertFalse),
+    Intrinsic::Test(TestIntrinsic::AssertEqualsInteger),
+    Intrinsic::Test(TestIntrinsic::Fail),
+    Intrinsic::Test(TestIntrinsic::Skip),
 ];
 
 #[test]

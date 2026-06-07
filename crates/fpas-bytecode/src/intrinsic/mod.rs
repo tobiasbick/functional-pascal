@@ -21,6 +21,7 @@ pub mod random;
 pub mod result;
 pub mod str_ops;
 pub mod task;
+pub mod test;
 pub mod time;
 pub mod tui;
 
@@ -42,6 +43,7 @@ pub use random::RandomIntrinsic;
 pub use result::ResultIntrinsic;
 pub use str_ops::StrIntrinsic;
 pub use task::TaskIntrinsic;
+pub use test::TestIntrinsic;
 pub use time::TimeIntrinsic;
 pub use tui::TuiIntrinsic;
 
@@ -90,6 +92,8 @@ pub enum Intrinsic {
     Time(TimeIntrinsic),
     /// `Std.Tui.*` intrinsics.
     Tui(TuiIntrinsic),
+    /// `Std.Test.*` intrinsics.
+    Test(TestIntrinsic),
 }
 
 impl From<Intrinsic> for u16 {
@@ -115,6 +119,7 @@ impl From<Intrinsic> for u16 {
             Intrinsic::Task(x) => x as u16,
             Intrinsic::Time(x) => x as u16,
             Intrinsic::Tui(x) => x as u16,
+            Intrinsic::Test(x) => x as u16,
         }
     }
 }
@@ -183,6 +188,9 @@ impl Intrinsic {
         }
         if let Ok(x) = TuiIntrinsic::try_from(raw) {
             return Some(Self::Tui(x));
+        }
+        if let Ok(x) = TestIntrinsic::try_from(raw) {
+            return Some(Self::Test(x));
         }
         None
     }

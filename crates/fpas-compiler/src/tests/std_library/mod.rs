@@ -14,6 +14,7 @@ mod math;
 mod parse;
 mod path;
 mod str_ops;
+mod test;
 mod time;
 mod tui;
 mod tui_commands;

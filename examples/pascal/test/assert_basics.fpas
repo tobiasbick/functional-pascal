@@ -1,0 +1,13 @@
+program AssertBasics;
+uses Std.Test;
+
+function Double(X: integer): integer;
+begin
+  return X * 2
+end;
+
+begin
+  AssertEquals(4, Double(2));
+  AssertTrue(Double(0) = 0);
+  AssertFalse(Double(1) = 3)
+end.

@@ -20,6 +20,7 @@ mod result_option;
 mod str_ops;
 mod support;
 mod task;
+mod test;
 mod time;
 mod tui;
 
@@ -92,6 +93,9 @@ impl Compiler {
             return Ok(true);
         }
         if self.compile_time_call(name, args, location)? {
+            return Ok(true);
+        }
+        if self.compile_test_call(name, args, location)? {
             return Ok(true);
         }
         Ok(false)

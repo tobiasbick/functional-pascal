@@ -18,6 +18,10 @@ Implemented today: `Std.Console`, `Std.Args`, `Std.Env`, `Std.Proc`, `Std.Path`,
 
 Source-level `library` projects and `[dependencies]` are **implemented**. Precompiled artifacts are **not** planned. See [`libraries.md`](libraries.md) for scope and possible export-API work.
 
+## Test framework
+
+FPAS programs today are tested mainly from Rust (`compile_and_run`, VM input queues). A JUnit-style author-facing layer — `Std.Test`, `fpas test`, scripted keyboard/mouse input — is **planned**. See [`test-framework/README.md`](test-framework/README.md) (implementation tasks: [`implementation.md`](test-framework/implementation.md); API draft: [`std-test.md`](test-framework/std-test.md), runner: [`runner.md`](test-framework/runner.md), sidecar format: [`scripted-input.md`](test-framework/scripted-input.md)).
+
 ## Under Consideration
 
 | # | Feature | Description |

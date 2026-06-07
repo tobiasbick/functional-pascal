@@ -5,7 +5,7 @@
 //! **Documentation:** `docs/pascal/std/path.md` (from the repository root).
 
 use crate::error::StdError;
-use crate::helpers::{pop_array, pop_string, pop_value, value_as_string_for_join};
+use crate::intrinsic_args::{pop_array, pop_string, pop_value, value_as_string_for_join};
 use fpas_bytecode::{Intrinsic, PathIntrinsic, SourceLocation, Value};
 use std::path::{Component, MAIN_SEPARATOR, Path, PathBuf};
 

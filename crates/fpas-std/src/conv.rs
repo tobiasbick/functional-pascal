@@ -5,7 +5,7 @@
 //! `fpas-bytecode::Intrinsic`, `fpas-compiler`, and `fpas-sema` `std_registry.rs`.
 
 use crate::error::{StdError, std_runtime_error};
-use crate::helpers::{pop_bool, pop_char, pop_int, pop_real, pop_string, pop_value};
+use crate::intrinsic_args::{pop_bool, pop_char, pop_int, pop_real, pop_string, pop_value};
 use crate::numeric_text::parse_pascal_real;
 use fpas_bytecode::{ConvIntrinsic, Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_CONVERSION_FAILURE;

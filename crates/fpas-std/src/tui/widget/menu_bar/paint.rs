@@ -70,7 +70,7 @@ fn bar_item_colors(item: &MenuBarItem, style: MenuBarStyle, hovered: bool) -> (u
 }
 
 /// Paint one top-level menu bar label with optional shortcut highlighting.
-pub(in crate::tui_widget) fn paint_bar_label(
+pub(in crate::tui::widget) fn paint_bar_label(
     console: &mut Console,
     x: i64,
     y: i64,
@@ -82,7 +82,7 @@ pub(in crate::tui_widget) fn paint_bar_label(
 }
 
 /// Paint label text with Turbo Pascal-style shortcut letter highlighting.
-pub(in crate::tui_widget) fn paint_labeled_text(
+pub(in crate::tui::widget) fn paint_labeled_text(
     console: &mut Console,
     x: i64,
     y: i64,
@@ -107,7 +107,7 @@ pub(in crate::tui_widget) fn paint_labeled_text(
 }
 
 /// Returns the character index of the shortcut letter inside a padded label.
-pub(in crate::tui_widget) fn shortcut_highlight_index(
+pub(in crate::tui::widget) fn shortcut_highlight_index(
     label: &str,
     shortcut: &str,
 ) -> Option<usize> {

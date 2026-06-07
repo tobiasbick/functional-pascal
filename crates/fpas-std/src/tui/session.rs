@@ -1,9 +1,9 @@
+use super::damage::DamageTracker;
 use super::event::{TuiEvent, map_console_event, map_console_ui_event};
 use crate::DamageRegion;
 use crate::UiEvent;
 use crate::console::{Console, KeyInput};
 use crate::error::{StdError, std_runtime_error};
-use crate::tui_damage::DamageTracker;
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 use std::time::{Duration, Instant};

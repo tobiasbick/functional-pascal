@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/future/advanced-types.md`
 
 use crate::error::{StdError, std_runtime_error};
-use crate::helpers::pop_value;
+use crate::intrinsic_args::pop_value;
 use fpas_bytecode::{DictIntrinsic, Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
 

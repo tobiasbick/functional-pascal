@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/pascal/std/parse.md` (from the repository root).
 
 use crate::error::StdError;
-use crate::helpers::{pop_string, pop_value};
+use crate::intrinsic_args::{pop_string, pop_value};
 use crate::numeric_text::{parse_pascal_integer, parse_pascal_real};
 use fpas_bytecode::{Intrinsic, ParseIntrinsic, SourceLocation, Value};
 

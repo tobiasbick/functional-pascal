@@ -28,7 +28,7 @@ mod env;
 mod error;
 mod fs;
 mod graph;
-mod helpers;
+mod intrinsic_args;
 mod intrinsics;
 mod json;
 pub mod key_event;
@@ -43,12 +43,6 @@ mod std_units;
 mod str;
 mod time;
 mod tui;
-mod tui_command;
-mod tui_damage;
-mod tui_host;
-mod tui_modal;
-mod tui_view;
-mod tui_widget;
 mod ui;
 
 pub use console::{
@@ -75,15 +69,11 @@ pub use std_units::{
     canonical_std_unit_from_tail, is_std_root_segment, std_symbols, std_unit_symbols,
     std_units_list_for_hint,
 };
-pub use tui::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent, TuiSession};
-pub use tui_command::{CommandId, CommandRegistry};
-pub use tui_damage::DamageRegion;
-pub use tui_host::TuiHost;
-pub use tui_modal::{ModalId, ModalStack};
-pub use tui_view::{ViewId, ViewRect, ViewRegistry};
-pub use tui_widget::{
-    MenuBarItem, MenuBarMouseResult, MenuBarStyle, MenuBarWidget, MenuPopupItem, SolidFillWidget,
-    StatusBarSegment, StatusBarStyle, StatusBarWidget, ViewWidget,
+pub use tui::{
+    CommandId, CommandRegistry, DamageRegion, MenuBarItem, MenuBarMouseResult, MenuBarStyle,
+    MenuBarWidget, MenuPopupItem, ModalId, ModalStack, SolidFillWidget, StatusBarSegment,
+    StatusBarStyle, StatusBarWidget, TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent,
+    TuiHost, TuiSession, ViewId, ViewRect, ViewRegistry, ViewWidget,
 };
 pub use ui::{UiEvent, UiHost, UiHostSurface, UiModifiers, UiMouse, UiResize, UiWheel};
 

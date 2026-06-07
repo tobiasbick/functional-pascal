@@ -64,7 +64,9 @@ impl ViewWidget {
     pub fn contains_point(&self, rect: ViewRect, mouse_x: i64, mouse_y: i64) -> bool {
         match self {
             Self::MenuBar(widget) => widget.contains_point(rect, mouse_x, mouse_y),
-            Self::SolidFill(_) | Self::StatusBar(_) => rect.contains_console_mouse(mouse_x, mouse_y),
+            Self::SolidFill(_) | Self::StatusBar(_) => {
+                rect.contains_console_mouse(mouse_x, mouse_y)
+            }
         }
     }
 }

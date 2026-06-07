@@ -62,7 +62,7 @@ pub enum MenuBarMouseResult {
 
 /// Highlight and shortcut paint colors for one menu label row.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(in crate::tui_widget) struct MenuLabelPaint {
+pub(in crate::tui::widget) struct MenuLabelPaint {
     pub fg: u8,
     pub bg: u8,
     pub accel_fg: u8,

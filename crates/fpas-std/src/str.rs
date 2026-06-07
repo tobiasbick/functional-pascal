@@ -5,7 +5,7 @@
 //! `fpas-bytecode::Intrinsic`, `fpas-compiler` std call lowering, and `fpas-sema` `std_registry.rs`.
 
 use crate::error::{StdError, std_internal_error, std_runtime_error};
-use crate::helpers::{
+use crate::intrinsic_args::{
     pop_array, pop_char, pop_int, pop_string, pop_value, value_as_string_for_join,
 };
 use crate::numeric_text::is_pascal_numeric;

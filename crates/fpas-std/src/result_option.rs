@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/pascal/std/result.md` and `docs/pascal/std/option.md` (from the repository root).
 
 use crate::error::{StdError, std_runtime_error};
-use crate::helpers::pop_value;
+use crate::intrinsic_args::pop_value;
 use fpas_bytecode::{Intrinsic, OptionIntrinsic, ResultIntrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_UNWRAP_FAILURE;
 

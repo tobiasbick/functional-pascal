@@ -60,10 +60,7 @@ impl ViewRect {
     /// Hit-test using one-based coordinates from `Std.Console.Event` mouse fields.
     #[must_use]
     pub fn contains_console_mouse(self, mouse_x: i64, mouse_y: i64) -> bool {
-        self.contains_point(
-            mouse_x.saturating_sub(1),
-            mouse_y.saturating_sub(1),
-        )
+        self.contains_point(mouse_x.saturating_sub(1), mouse_y.saturating_sub(1))
     }
 }
 

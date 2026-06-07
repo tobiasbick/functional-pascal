@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/pascal/std/env.md` (from the repository root).
 
 use crate::error::StdError;
-use crate::helpers::{pop_string, pop_value};
+use crate::intrinsic_args::{pop_string, pop_value};
 use fpas_bytecode::{EnvIntrinsic, Intrinsic, SourceLocation, Value};
 
 /// Execute a `Std.Env` intrinsic and return `None` when another unit should handle it.

@@ -2,9 +2,9 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui-app.md` (from the repository root).
 
+use super::session::TuiSession;
 use crate::console::{Console, KeyInput};
 use crate::error::StdError;
-use crate::tui::TuiSession;
 use crate::ui::{UiEvent, UiHost};
 use fpas_bytecode::SourceLocation;
 

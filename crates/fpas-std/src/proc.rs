@@ -5,7 +5,7 @@
 //! **Documentation:** `docs/pascal/std/proc.md` (from the repository root).
 
 use crate::error::StdError;
-use crate::helpers::{pop_array, pop_string, pop_value};
+use crate::intrinsic_args::{pop_array, pop_string, pop_value};
 use fpas_bytecode::{Intrinsic, ProcIntrinsic, SourceLocation, Value};
 use std::process::Command;
 

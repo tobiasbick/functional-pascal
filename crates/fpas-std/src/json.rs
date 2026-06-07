@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/pascal/std/json.md`
 
 use crate::error::{StdError, std_runtime_error};
-use crate::helpers::{pop_string, pop_value};
+use crate::intrinsic_args::{pop_string, pop_value};
 use crate::std_units::std_symbols as s;
 use fpas_bytecode::{Intrinsic, JsonIntrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;

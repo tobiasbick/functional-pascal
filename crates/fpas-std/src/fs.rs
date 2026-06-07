@@ -5,7 +5,7 @@
 //! **Documentation:** `docs/pascal/std/fs.md` (from the repository root).
 
 use crate::error::StdError;
-use crate::helpers::{pop_string, pop_value};
+use crate::intrinsic_args::{pop_string, pop_value};
 use fpas_bytecode::{FsIntrinsic, Intrinsic, SourceLocation, Value};
 use std::fs;
 use std::io;

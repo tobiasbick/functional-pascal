@@ -147,13 +147,7 @@ fn paint_popup_separator(
     style: MenuBarStyle,
 ) {
     for offset in 0..inner_width {
-        console.write_char_at_crt(
-            x + offset,
-            y,
-            '─',
-            style.bar_fg,
-            style.bar_bg,
-        );
+        console.write_char_at_crt(x + offset, y, '─', style.bar_fg, style.bar_bg);
     }
 }
 

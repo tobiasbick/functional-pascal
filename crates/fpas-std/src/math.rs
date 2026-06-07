@@ -5,7 +5,7 @@
 //! `fpas-bytecode::Intrinsic`, `fpas-compiler` (`Std.Math.Pi` and call lowering), and `fpas-sema` `std_registry.rs`.
 
 use crate::error::{StdError, std_runtime_error};
-use crate::helpers::{pop_real, pop_value};
+use crate::intrinsic_args::{pop_real, pop_value};
 use fpas_bytecode::{Intrinsic, MathIntrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::{RUNTIME_NUMERIC_DOMAIN_ERROR, RUNTIME_VM_OPERAND_TYPE_MISMATCH};
 

@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/pascal/std/random.md` (from the repository root).
 
 use crate::error::{StdError, std_runtime_error};
-use crate::helpers::{pop_int, pop_value};
+use crate::intrinsic_args::{pop_int, pop_value};
 use fpas_bytecode::{Intrinsic, RandomIntrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_NUMERIC_DOMAIN_ERROR;
 use rand::Rng;

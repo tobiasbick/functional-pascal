@@ -12,8 +12,8 @@ mod tests;
 
 pub use types::{MenuBarItem, MenuBarMouseResult, MenuBarStyle};
 
-pub(in crate::tui_widget) use paint::shortcut_highlight_index;
-pub(in crate::tui_widget) use types::MenuLabelPaint;
+pub(in crate::tui::widget) use paint::shortcut_highlight_index;
+pub(in crate::tui::widget) use types::MenuLabelPaint;
 
 use types::OpenSubmenu;
 

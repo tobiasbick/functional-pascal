@@ -86,7 +86,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         s::STD_TUI_EXIT_REASON,
         TUI_EXIT_REASON_VARIANTS,
     );
-    type_registration::register_record_type(
+    type_registration::register_record_type_with_defaults(
         checker,
         s::STD_TUI_MENU_POPUP_ITEM,
         vec![
@@ -94,6 +94,17 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             ("Shortcut".into(), Ty::Char),
             ("Enabled".into(), Ty::Boolean),
             ("CommandId".into(), Ty::Integer),
+            ("Separator".into(), Ty::Boolean),
+        ],
+        vec![
+            ("Label".into(), None),
+            ("Shortcut".into(), None),
+            ("Enabled".into(), None),
+            ("CommandId".into(), None),
+            (
+                "Separator".into(),
+                Some(type_registration::default_false_expr()),
+            ),
         ],
     );
     type_registration::register_record_type(

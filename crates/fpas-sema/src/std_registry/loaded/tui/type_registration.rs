@@ -107,6 +107,13 @@ pub(super) fn default_zero_expr() -> Expr {
     Expr::Integer(0, builtin_span())
 }
 
+/// Build the semantic default for boolean TUI record fields.
+///
+/// **Documentation:** `docs/pascal/std/tui-app.md` (from the repository root).
+pub(super) fn default_false_expr() -> Expr {
+    Expr::Bool(false, builtin_span())
+}
+
 fn builtin_span() -> Span {
     Span {
         offset: 0,

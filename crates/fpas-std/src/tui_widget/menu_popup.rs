@@ -18,6 +18,20 @@ pub struct MenuPopupItem {
     pub enabled: bool,
     /// Command dispatched through `OnCommand` on activation.
     pub command_id: i64,
+    /// When true, draws a horizontal rule and ignores keyboard and mouse activation.
+    pub separator: bool,
+}
+
+/// Returns whether a popup row can be highlighted or activated.
+#[must_use]
+pub fn popup_entry_is_selectable(entry: &MenuPopupItem) -> bool {
+    !entry.separator
+}
+
+/// Returns whether a popup row dispatches `OnCommand`.
+#[must_use]
+pub fn popup_entry_is_actionable(entry: &MenuPopupItem) -> bool {
+    popup_entry_is_selectable(entry) && entry.enabled && entry.command_id >= 0
 }
 
 /// Absolute terminal rectangle for an open pull-down menu.
@@ -96,6 +110,10 @@ pub fn paint_popup(
 
     for (index, entry) in entries.iter().enumerate() {
         let row_y = popup.y + 1 + index as i64;
+        if entry.separator {
+            paint_popup_separator(console, popup.x + 1, row_y, popup.inner_width, style);
+            continue;
+        }
         let label = pad_to_width(&format!(" {} ", entry.label), popup.inner_width);
         let selected_row = index == selected;
         let (fg, bg) = if !entry.enabled {
@@ -117,6 +135,24 @@ pub fn paint_popup(
                 hovered: selected_row,
             },
             &label,
+        );
+    }
+}
+
+fn paint_popup_separator(
+    console: &mut Console,
+    x: i64,
+    y: i64,
+    inner_width: i64,
+    style: MenuBarStyle,
+) {
+    for offset in 0..inner_width {
+        console.write_char_at_crt(
+            x + offset,
+            y,
+            '─',
+            style.bar_fg,
+            style.bar_bg,
         );
     }
 }
@@ -193,7 +229,7 @@ pub fn popup_shortcut_index(entries: &[MenuPopupItem], ch: char) -> Option<usize
         return None;
     }
     entries.iter().position(|entry| {
-        entry.enabled
+        popup_entry_is_actionable(entry)
             && entry
                 .shortcut
                 .chars()
@@ -235,12 +271,14 @@ mod tests {
                 shortcut: String::new(),
                 enabled: true,
                 command_id: 1,
+                separator: false,
             },
             MenuPopupItem {
                 label: "Exit".into(),
                 shortcut: "X".into(),
                 enabled: true,
                 command_id: 2,
+                separator: false,
             },
         ];
         let popup = popup_rect(3, 1, &entries);
@@ -255,9 +293,39 @@ mod tests {
             shortcut: "X".into(),
             enabled: true,
             command_id: 2,
+            separator: false,
         }];
         let popup = popup_rect(0, 1, &entries);
         assert_eq!(popup_entry_at(popup, &entries, 2, 2), Some(0));
         assert_eq!(popup_entry_at(popup, &entries, 2, 1), None);
+    }
+
+    #[test]
+    fn popup_navigation_skips_separator_rows() {
+        let entries = vec![
+            MenuPopupItem {
+                label: "Open".into(),
+                shortcut: String::new(),
+                enabled: false,
+                command_id: -1,
+                separator: false,
+            },
+            MenuPopupItem {
+                label: String::new(),
+                shortcut: String::new(),
+                enabled: false,
+                command_id: -1,
+                separator: true,
+            },
+            MenuPopupItem {
+                label: "Exit".into(),
+                shortcut: "X".into(),
+                enabled: true,
+                command_id: 2,
+                separator: false,
+            },
+        ];
+        assert!(!popup_entry_is_selectable(&entries[1]));
+        assert!(popup_entry_is_actionable(&entries[2]));
     }
 }

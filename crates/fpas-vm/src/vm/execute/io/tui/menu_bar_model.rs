@@ -213,12 +213,17 @@ impl Worker {
             }
         };
         let command_id = self.integer_record_field(fields, "CommandId", line)?;
+        let separator = match fields.iter().find(|(name, _)| name == "Separator") {
+            Some((_, Value::Boolean(flag))) => *flag,
+            _ => false,
+        };
 
         Ok(MenuPopupItem {
             label,
             shortcut,
             enabled,
             command_id,
+            separator,
         })
     }
 

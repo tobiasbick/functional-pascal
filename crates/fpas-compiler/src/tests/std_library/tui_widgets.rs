@@ -167,7 +167,7 @@ uses Std.Console, Std.Tui;
 function FileSubmenu(): array of MenuPopupItem;
 begin
   return [
-    record Label := 'Exit'; Shortcut := 'X'; Enabled := true; CommandId := 1; end
+    record Label := 'Exit'; Shortcut := 'X'; Enabled := true; CommandId := 1; Separator := false; end
   ]
 end;
 
@@ -230,6 +230,95 @@ end.",
                 false,
                 false,
             )),
+        ],
+    );
+
+    assert!(out.lines.is_empty());
+}
+
+#[test]
+fn std_tui_menu_bar_mouse_click_dispatches_on_command_over_desktop() {
+    use fpas_std::{mouse_action_index, mouse_button_index};
+
+    let out = compile_run_with_console_events(
+        "\
+program T;
+uses Std.Console, Std.Tui;
+
+function FileSubmenu(): array of MenuPopupItem;
+begin
+  return [
+    record Label := 'Open...'; Shortcut := 'O'; Enabled := false; CommandId := -1; Separator := false; end,
+    record Label := ''; Shortcut := #0; Enabled := false; CommandId := -1; Separator := true; end,
+    record Label := 'Exit'; Shortcut := 'X'; Enabled := true; CommandId := 1; Separator := false; end
+  ]
+end;
+
+function MenuItems(): array of MenuBarItem;
+begin
+  return [
+    record
+      Label := 'File'; Shortcut := 'F'; Enabled := true; CommandId := -1;
+      Submenu := FileSubmenu();
+    end
+  ]
+end;
+
+function MenuStyle(): MenuBarStyle;
+begin
+  return record
+    BarBg := LightGray;
+    BarFg := Black;
+    AccelFg := Red;
+    HighlightBg := Black;
+    HighlightFg := LightGray;
+    DisabledFg := DarkGray;
+  end
+end;
+
+procedure OnPaint(App: Application);
+begin
+end;
+
+procedure OnCommand(App: Application; CommandId: integer);
+begin
+  Application.HostRequestQuit(App)
+end;
+
+begin
+  var App: Application := Application.Open();
+  var MenuBar: integer := Application.HostCreateMenuBarView(
+    App, 0, 0, 80, 1, MenuItems(), MenuStyle());
+  var Desktop: integer := Application.HostCreateSolidFillView(
+    App, 0, 1, 80, 24, Blue, None, None);
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+    OnCommand := Some(OnCommand);
+  end;
+  Application.Configure(App, Handlers);
+  Application.Run(App)
+end.",
+        &[
+            ConsoleEvent::mouse(
+                mouse_action_index("Down"),
+                mouse_button_index("Left"),
+                2,
+                1,
+                false,
+                false,
+                false,
+                false,
+            ),
+            ConsoleEvent::mouse(
+                mouse_action_index("Down"),
+                mouse_button_index("Left"),
+                2,
+                5,
+                false,
+                false,
+                false,
+                false,
+            ),
         ],
     );
 

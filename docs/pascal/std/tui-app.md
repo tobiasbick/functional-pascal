@@ -143,6 +143,7 @@ Widget views participate in the same z-order and damage tracking as Pascal `OnVi
 | `Shortcut` | `char` | Letter shortcut while the popup is open. Use `#0` when none. |
 | `Enabled` | `boolean` | When `false`, drawn disabled and ignores activation |
 | `CommandId` | `integer` | Dispatched through `OnCommand` on activation |
+| `Separator` | `boolean` | When `true`, draws a horizontal rule and ignores activation. Defaults to `false`. |
 
 `MenuBarStyle` supplies CRT color indices (`0..=15`) for `BarBg`, `BarFg`, `AccelFg`, `HighlightBg`, `HighlightFg`, and `DisabledFg`.
 

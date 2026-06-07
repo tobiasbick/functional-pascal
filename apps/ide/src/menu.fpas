@@ -22,7 +22,18 @@ end;
 function FileSubmenu(): array of MenuPopupItem;
 begin
   return [
-    record Label := 'Exit'; Shortcut := 'X'; Enabled := true; CommandId := CmdFileExit; end
+    record
+      Label := 'New'; Shortcut := 'N'; Enabled := false; CommandId := -1; Separator := false;
+    end,
+    record
+      Label := 'Open...'; Shortcut := 'O'; Enabled := false; CommandId := -1; Separator := false;
+    end,
+    record
+      Label := ''; Shortcut := #0; Enabled := false; CommandId := -1; Separator := true;
+    end,
+    record
+      Label := 'Exit'; Shortcut := 'X'; Enabled := true; CommandId := CmdFileExit; Separator := false;
+    end
   ]
 end;
 

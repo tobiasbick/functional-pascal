@@ -8,7 +8,7 @@ use crate::{CommandId, Console, DamageRegion, UiMouse, ViewRect};
 
 use super::menu_popup::{
     MenuPopupItem, MenuPopupRect, paint_popup, popup_alt_shortcut_index, popup_entry_at,
-    popup_rect, popup_shortcut_index,
+    popup_entry_is_actionable, popup_entry_is_selectable, popup_rect, popup_shortcut_index,
 };
 
 /// One declarative menu entry supplied from Pascal.
@@ -221,11 +221,11 @@ impl MenuBarWidget {
                 let Some(entry_index) = entry_index else {
                     return MenuBarMouseResult::Ignored;
                 };
-                let (command_id, enabled) = {
+                let (command_id, enabled, separator) = {
                     let entry = &self.items[open.bar_index].submenu[entry_index];
-                    (entry.command_id, entry.enabled)
+                    (entry.command_id, entry.enabled, entry.separator)
                 };
-                if !enabled || command_id < 0 {
+                if separator || !enabled || command_id < 0 {
                     return MenuBarMouseResult::Ignored;
                 }
                 self.close_submenu();
@@ -326,7 +326,7 @@ impl MenuBarWidget {
         }
         if key.kind == key_kind_index("Enter") && !key.ctrl && !key.alt && !key.meta {
             let entry = &self.items[open.bar_index].submenu[open.entry_index];
-            if entry.enabled && entry.command_id >= 0 {
+            if popup_entry_is_actionable(entry) {
                 let command_id = entry.command_id;
                 self.close_submenu();
                 return Some(MenuBarMouseResult::Command(CommandId(command_id)));
@@ -339,7 +339,7 @@ impl MenuBarWidget {
             .or_else(|| popup_shortcut_key_index(entries, key))
         {
             let entry = &entries[index];
-            if entry.enabled && entry.command_id >= 0 {
+            if popup_entry_is_actionable(entry) {
                 let command_id = entry.command_id;
                 self.close_submenu();
                 return Some(MenuBarMouseResult::Command(CommandId(command_id)));
@@ -406,16 +406,16 @@ impl MenuBarWidget {
     }
 
     fn open_submenu_at(&mut self, index: usize) -> MenuBarMouseResult {
-        let first_enabled = self.items[index]
+        let first_selectable = self.items[index]
             .submenu
             .iter()
-            .position(|entry| entry.enabled)
+            .position(popup_entry_is_selectable)
             .unwrap_or(0);
         self.hovered = Some(index);
         self.menu_active = true;
         self.open_submenu = Some(OpenSubmenu {
             bar_index: index,
-            entry_index: first_enabled,
+            entry_index: first_selectable,
         });
         MenuBarMouseResult::HoverChanged
     }
@@ -456,7 +456,7 @@ impl MenuBarWidget {
             let entry_index = self.items[index]
                 .submenu
                 .iter()
-                .position(|entry| entry.enabled)
+                .position(popup_entry_is_selectable)
                 .unwrap_or(0);
             self.open_submenu = Some(OpenSubmenu {
                 bar_index: index,
@@ -480,7 +480,7 @@ impl MenuBarWidget {
         for _ in 0..len {
             next = (next + delta).rem_euclid(len as i64);
             let index = next as usize;
-            if entries[index].enabled {
+            if popup_entry_is_selectable(&entries[index]) {
                 open.entry_index = index;
                 return;
             }
@@ -698,6 +698,7 @@ mod tests {
                 shortcut: "X".into(),
                 enabled: true,
                 command_id: 1,
+                separator: false,
             }],
         }
     }

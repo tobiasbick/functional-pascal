@@ -26,6 +26,7 @@ See [09-units.md](09-units.md) for `uses` rules, short name ambiguity, and the r
 | [`Std.Console`](std/console.md) | Console I/O, CRT screen control, terminal events | `Write`, `WriteLn`, `ReadLn`, `ClrScr`, `GotoXY`, `TextColorRGB`, `TextColor256`, `ReadEvent`, … | [console.md](std/console.md) |
 | [`Std.Args`](std/args.md) | Process arguments after `--` | `ParamCount`, `ParamStr` | [args.md](std/args.md) |
 | [`Std.Env`](std/env.md) | Process environment access | `Get`, `Exists` | [env.md](std/env.md) |
+| [`Std.Proc`](std/proc.md) | Blocking host process execution | `Run` | [proc.md](std/proc.md) |
 | [`Std.Path`](std/path.md) | Pure path manipulation | `Join`, `BaseName`, `DirName`, `Extension`, `Normalize` | [path.md](std/path.md) |
 | [`Std.Fs`](std/fs.md) | Blocking filesystem I/O | `ReadText`, `WriteText`, `Exists`, `IsFile`, `IsDir`, `CreateDir` | [fs.md](std/fs.md) |
 | [`Std.Time`](std/time.md) | Wall-clock and monotonic time | `TimestampMillis`, `MonotonicMillis`, `ElapsedMillis`, `Sleep` | [time.md](std/time.md) |
@@ -34,6 +35,7 @@ See [09-units.md](09-units.md) for `uses` rules, short name ambiguity, and the r
 | [`Std.Str`](std/str.md) | String operations | `Length`, `ToUpper`, `Contains`, `Split`, `Join`, `PadLeft`, `CharAt`, `Ord`, `Chr`, `Format`, … | [str.md](std/str.md) |
 | [`Std.Conv`](std/conv.md) | Type conversions | `IntToStr`, `StrToInt`, `RealToStr`, `BoolToStr`, `IntToHex`, … | [conv.md](std/conv.md) |
 | [`Std.Parse`](std/parse.md) | Structured text parsing | `TryInt`, `TryReal`, `TryBool` | [parse.md](std/parse.md) |
+| [`Std.Json`](std/json.md) | JSON parse and stringify | `JsonValue`, `Parse`, `Stringify` | [json.md](std/json.md) |
 | [`Std.Math`](std/math.md) | Mathematical functions | `Pi`, `Abs`, `Sqrt`, `Pow`, `Sin`, `Cos`, `Tan`, `Log`, `Exp`, `Clamp`, … | [math.md](std/math.md) |
 | [`Std.Random`](std/random.md) | Pseudo-random numbers | `Random`, `RandomInt`, `Randomize` | [random.md](std/random.md) |
 | [`Std.Array`](std/array.md) | Array helpers | `Length`, `Push`, `Pop`, `Sort`, `Slice`, `Map`, `Filter`, `Reduce`, `Find`, `Any`, `All`, … | [array.md](std/array.md) |

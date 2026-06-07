@@ -22,7 +22,7 @@ Workflow per item: implement → test → update this file → commit → wait.
 | 7 | done | `tui-app.md` — document menu input priority and navigation |
 | 8 | done | `docs/pascal/std/README.md` — extend intrinsic range to 256–347 |
 | 9 | done | `docs/future/README.md` — fix TUI poll claim; move Json/Parse to implemented |
-| 10 | pending | `docs/pascal/11-stdlib.md` — add `Std.Proc` and `Std.Json` rows |
+| 10 | done | `docs/pascal/11-stdlib.md` — add `Std.Proc` and `Std.Json` rows |
 
 ## P2 — Structure (AGENTS.md)
 

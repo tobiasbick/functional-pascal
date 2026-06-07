@@ -1,5 +1,6 @@
 use super::Checker;
 use crate::scope::{Symbol, SymbolKind};
+use crate::types::Ty;
 use fpas_diagnostics::codes::{
     SEMA_DUPLICATE_DECLARATION, SEMA_MISSING_RECORD_FIELD, SEMA_UNKNOWN_NAME,
 };
@@ -161,5 +162,33 @@ impl Checker {
             .get(&key)
             .cloned()
             .unwrap_or(crate::types::Ty::Error)
+    }
+
+    /// When a record or array-of-record expression is contextually typed, annotate it with
+    /// the named record type so the compiler emits `MakeRecord` with the runtime type tag.
+    pub(crate) fn try_annotate_expected_record_literals(&mut self, expr: &Expr, expected: &Ty) {
+        let resolved = self.resolve_visible_type(expected);
+        match (expr, &resolved) {
+            (
+                Expr::RecordLiteral {
+                    fields,
+                    span: lit_span,
+                },
+                Ty::Record(record_ty),
+            ) => {
+                self.validate_typed_record_literal(fields, record_ty, *lit_span);
+                let key = Self::expr_lookup_key(expr);
+                self.expr_types.insert(key, Ty::Record(record_ty.clone()));
+            }
+            (Expr::ArrayLiteral(elements, _), Ty::Array(element_ty)) => {
+                let element_resolved = self.resolve_visible_type(element_ty);
+                if matches!(element_resolved, Ty::Record(_)) {
+                    for element in elements {
+                        self.try_annotate_expected_record_literals(element, element_ty);
+                    }
+                }
+            }
+            _ => {}
+        }
     }
 }

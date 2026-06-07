@@ -69,6 +69,10 @@ impl Compiler {
         args: &[Expr],
         location: SourceLocation,
     ) -> Result<(), CompileError> {
+        if self.compile_std_library_call(qualified_method, args, location)? {
+            return Ok(());
+        }
+
         let receiver = Designator {
             parts: designator.parts[..designator.parts.len() - 1].to_vec(),
             span: designator.span,

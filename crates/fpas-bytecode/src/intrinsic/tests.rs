@@ -252,6 +252,10 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Tui(TuiIntrinsic::HostBindCommandToActiveModal),
     Intrinsic::Tui(TuiIntrinsic::ApplicationShowDialog),
     Intrinsic::Tui(TuiIntrinsic::HostCreateSolidFillView),
+    Intrinsic::Tui(TuiIntrinsic::HostCreateMenuBarView),
+    Intrinsic::Tui(TuiIntrinsic::HostSetMenuBarItems),
+    Intrinsic::Tui(TuiIntrinsic::HostCreateStatusBarView),
+    Intrinsic::Tui(TuiIntrinsic::HostSetStatusBarSegments),
 ];
 
 #[test]

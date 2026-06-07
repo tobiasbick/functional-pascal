@@ -1,0 +1,27 @@
+/// Declarative menu model for the IDE shell. Rendering is host-managed in Rust.
+unit Ide.Menu;
+uses Ide.Theme, Std.Tui;
+
+/// Command id dispatched when the user chooses File / Exit.
+const CmdFileExit: integer := 1;
+
+/// CRT colors for the IDE menu bar widget.
+function DefaultStyle(): MenuBarStyle;
+begin
+  return record
+    BarBg := MenuBarBg;
+    BarFg := MenuBarFg;
+    HighlightBg := MenuBarHighlightBg;
+    HighlightFg := MenuBarHighlightFg;
+    DisabledFg := MenuBarDisabledFg;
+  end
+end;
+
+/// Top-level menu entries shown in the host menu bar.
+function DefaultItems(): array of MenuBarItem;
+begin
+  return [
+    record Label := 'File'; Enabled := true; CommandId := -1; end,
+    record Label := 'Exit'; Enabled := true; CommandId := CmdFileExit; end
+  ]
+end;

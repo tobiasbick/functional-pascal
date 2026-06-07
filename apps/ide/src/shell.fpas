@@ -1,30 +1,58 @@
 /// TUI shell for the FPAS IDE. See docs/pascal/std/tui-app.md.
 unit Ide.Shell;
-uses Ide.Theme, Std.Console, Std.Tui;
+uses Ide.Menu, Ide.Status, Ide.Theme, Std.Console, Std.Tui;
 
 {
-  Host widget view id; -1 means not created yet.
+  Host widget view ids; -1 means not created yet.
   Unit-private state shared by handlers below.
 }
 private mutable var DesktopView: integer := -1;
+private mutable var MenuBarView: integer := -1;
+private mutable var StatusBarView: integer := -1;
 
-/// Create or resize the full-screen solid-fill desktop. Host widgets: docs/pascal/std/tui-app.md.
-private procedure EnsureDesktop(App: Application);
+private const MenuBarHeight: integer := 1;
+private const StatusBarHeight: integer := 1;
+
+/// Create or resize menu bar, desktop, and status bar.
+private procedure EnsureChrome(App: Application);
 begin
   var S: Size := Application.Size(App);
+  var DesktopHeight: integer := S.height - MenuBarHeight - StatusBarHeight;
+  var StatusY: integer := S.height - StatusBarHeight;
+
+  if MenuBarView < 0 then
+    MenuBarView := Application.HostCreateMenuBarView(
+      App, 0, 0, S.width, MenuBarHeight, DefaultItems(), DefaultStyle())
+  else
+    Application.HostSetViewRect(App, MenuBarView, 0, 0, S.width, MenuBarHeight);
+
   if DesktopView < 0 then
     DesktopView := Application.HostCreateSolidFillView(
-      App, 0, 0, S.width, S.height, DesktopBg, None, None)
+      App, 0, MenuBarHeight, S.width, DesktopHeight, DesktopBg, None, None)
   else
-    Application.HostSetViewRect(App, DesktopView, 0, 0, S.width, S.height)
+    Application.HostSetViewRect(
+      App, DesktopView, 0, MenuBarHeight, S.width, DesktopHeight);
+
+  if StatusBarView < 0 then
+    StatusBarView := Application.HostCreateStatusBarView(
+      App, 0, StatusY, S.width, StatusBarHeight,
+      DefaultStatusSegments(), DefaultStatusStyle())
+  else
+    Application.HostSetViewRect(App, StatusBarView, 0, StatusY, S.width, StatusBarHeight)
 end;
 
 {
-  Intentionally empty — the blue background is painted by the
-  HostCreateSolidFillView widget in Rust.
+  Intentionally empty — chrome is painted by host widgets in Rust
+  (menu bar, desktop fill, status bar).
 }
 private procedure OnPaint(App: Application);
 begin
+end;
+
+private procedure OnCommand(App: Application; CommandId: integer);
+begin
+  if CommandId = CmdFileExit then
+    Application.HostRequestQuit(App)
 end;
 
 /// Any keypress exits the session (prototype shell).
@@ -34,11 +62,20 @@ begin
   return true
 end;
 
-/// Keep the desktop widget aligned with the terminal size.
+/// Keep host widgets aligned with the terminal size.
 private procedure OnResize(App: Application; NewSize: Size);
 begin
+  var DesktopHeight: integer := NewSize.height - MenuBarHeight - StatusBarHeight;
+  var StatusY: integer := NewSize.height - StatusBarHeight;
+
+  if MenuBarView >= 0 then
+    Application.HostSetViewRect(App, MenuBarView, 0, 0, NewSize.width, MenuBarHeight);
   if DesktopView >= 0 then
-    Application.HostSetViewRect(App, DesktopView, 0, 0, NewSize.width, NewSize.height);
+    Application.HostSetViewRect(
+      App, DesktopView, 0, MenuBarHeight, NewSize.width, DesktopHeight);
+  if StatusBarView >= 0 then
+    Application.HostSetViewRect(
+      App, StatusBarView, 0, StatusY, NewSize.width, StatusBarHeight);
   Application.RequestRedraw(App)
 end;
 
@@ -46,11 +83,12 @@ end;
 procedure Run();
 begin
   var App: Application := Application.Open();
-  EnsureDesktop(App);
+  EnsureChrome(App);
   var Handlers: ApplicationHandlers := record
     OnPaint := OnPaint;
     OnKeyPressed := Some(OnKeyPressed);
     OnResize := Some(OnResize);
+    OnCommand := Some(OnCommand);
   end;
   Application.Configure(App, Handlers);
   Application.Run(App)

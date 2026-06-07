@@ -11,6 +11,9 @@ impl Checker {
                 (Some(expected), Some(expr)) => {
                     let actual = self.check_expr(expr);
                     self.check_type_compat(expected, &actual, "return value", span);
+                    if expected.compatible_with(&actual) {
+                        self.try_annotate_expected_record_literals(expr, expected);
+                    }
                 }
                 (Some(expected), None) => {
                     self.error_with_code(

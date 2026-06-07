@@ -5,7 +5,9 @@
 mod application;
 mod handlers;
 mod host;
+mod menu_bar_model;
 mod records;
+mod status_bar_model;
 mod views;
 
 use crate::vm::Worker;

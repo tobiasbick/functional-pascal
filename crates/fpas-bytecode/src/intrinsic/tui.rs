@@ -235,4 +235,28 @@ pub enum TuiIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     HostCreateSolidFillView = 343,
+    /// Register a host-managed menu bar view from a Pascal item model and return its handle.
+    ///
+    /// Stack: `Application`, `X`, `Y`, `Width`, `Height`, `Items`, `Style`. Pushes `integer`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    HostCreateMenuBarView = 344,
+    /// Replace the item model for an existing menu bar widget view.
+    ///
+    /// Stack: `Application`, `ViewId`, `Items` (`array of MenuBarItem`, top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    HostSetMenuBarItems = 345,
+    /// Register a host-managed status bar view from a Pascal segment model and return its handle.
+    ///
+    /// Stack: `Application`, `X`, `Y`, `Width`, `Height`, `Segments`, `Style`. Pushes `integer`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    HostCreateStatusBarView = 346,
+    /// Replace the segment model for an existing status bar widget view.
+    ///
+    /// Stack: `Application`, `ViewId`, `Segments` (`array of StatusBarSegment`, top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
+    HostSetStatusBarSegments = 347,
 }

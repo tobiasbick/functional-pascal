@@ -142,6 +142,70 @@ impl Compiler {
                 );
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_HOST_CREATE_MENU_BAR_VIEW => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_CREATE_MENU_BAR_VIEW,
+                    7,
+                    args,
+                    location,
+                )?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(
+                    Intrinsic::Tui(TuiIntrinsic::HostCreateMenuBarView),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_SET_MENU_BAR_ITEMS => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_SET_MENU_BAR_ITEMS,
+                    3,
+                    args,
+                    location,
+                )?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(
+                    Intrinsic::Tui(TuiIntrinsic::HostSetMenuBarItems),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_CREATE_STATUS_BAR_VIEW => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_CREATE_STATUS_BAR_VIEW,
+                    7,
+                    args,
+                    location,
+                )?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(
+                    Intrinsic::Tui(TuiIntrinsic::HostCreateStatusBarView),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_SET_STATUS_BAR_SEGMENTS => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_SET_STATUS_BAR_SEGMENTS,
+                    3,
+                    args,
+                    location,
+                )?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(
+                    Intrinsic::Tui(TuiIntrinsic::HostSetStatusBarSegments),
+                    location,
+                );
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

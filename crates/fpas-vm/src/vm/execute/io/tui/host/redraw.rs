@@ -83,7 +83,7 @@ impl Worker {
                 .paint_order()
                 .into_iter()
                 .filter_map(|view_id| {
-                    let widget = *tui.view_widgets.get(&view_id)?;
+                    let widget = tui.view_widgets.get(&view_id)?.clone();
                     let rect = tui.views.rect(view_id)?;
                     Self::damage_intersects_rect(damage, rect).then_some((widget, rect))
                 })

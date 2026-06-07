@@ -12,6 +12,7 @@ pub(super) const TEXT_MODE_MONO: i64 = 7;
 
 mod cells;
 mod frames;
+mod text_at;
 mod writing;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

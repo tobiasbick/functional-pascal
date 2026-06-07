@@ -44,24 +44,6 @@ impl SolidFillWidget {
     }
 }
 
-/// Native widget attached to a host-managed view.
-///
-/// Spec: `docs/pascal/std/tui-app.md`
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ViewWidget {
-    /// Solid CRT-color fill, optionally tiled with one character.
-    SolidFill(SolidFillWidget),
-}
-
-impl ViewWidget {
-    /// Paint the widget into `rect`, clipped to `damage`.
-    pub fn paint(self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
-        match self {
-            Self::SolidFill(widget) => widget.paint(console, rect, damage),
-        }
-    }
-}
-
 fn clip_rect_to_damage(rect: ViewRect, damage: DamageRegion) -> Option<ViewRect> {
     match damage {
         DamageRegion::FullFrame => Some(rect),

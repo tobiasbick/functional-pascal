@@ -7,4 +7,5 @@ mod cursor;
 mod fill;
 mod io;
 mod terminal;
+mod text;
 mod window;

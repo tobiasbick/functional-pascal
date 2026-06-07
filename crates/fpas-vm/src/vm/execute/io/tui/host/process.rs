@@ -150,6 +150,9 @@ impl Worker {
                 if self.modal_blocks_mouse_dispatch(modal_scope.as_deref(), mouse) {
                     return Ok(19);
                 }
+                if let Some(tag) = self.try_dispatch_widget_mouse(mouse, line)? {
+                    return Ok(tag);
+                }
                 let redraw_hint = self.mouse_redraw_hint(modal_scope.as_deref(), mouse);
                 self.dispatch_console_event_handler(
                     on_mouse,
@@ -250,7 +253,7 @@ impl Worker {
         tui.commands.resolve(key)
     }
 
-    fn dispatch_tui_command(
+    pub(in crate::vm::execute::io) fn dispatch_tui_command(
         &mut self,
         command_id: CommandId,
         line: SourceLocation,

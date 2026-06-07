@@ -280,4 +280,66 @@ pub(super) fn register_host_api(
         ],
         Ty::Integer,
     );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_CREATE_MENU_BAR_VIEW,
+        vec![
+            p("App", types.application.clone(), false),
+            p("X", Ty::Integer, false),
+            p("Y", Ty::Integer, false),
+            p("Width", Ty::Integer, false),
+            p("Height", Ty::Integer, false),
+            p(
+                "Items",
+                Ty::Array(Box::new(types.menu_bar_item.clone())),
+                false,
+            ),
+            p("Style", types.menu_bar_style.clone(), false),
+        ],
+        Ty::Integer,
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_SET_MENU_BAR_ITEMS,
+        vec![
+            p("App", types.application.clone(), false),
+            p("ViewId", Ty::Integer, false),
+            p(
+                "Items",
+                Ty::Array(Box::new(types.menu_bar_item.clone())),
+                false,
+            ),
+        ],
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_CREATE_STATUS_BAR_VIEW,
+        vec![
+            p("App", types.application.clone(), false),
+            p("X", Ty::Integer, false),
+            p("Y", Ty::Integer, false),
+            p("Width", Ty::Integer, false),
+            p("Height", Ty::Integer, false),
+            p(
+                "Segments",
+                Ty::Array(Box::new(types.status_bar_segment.clone())),
+                false,
+            ),
+            p("Style", types.status_bar_style.clone(), false),
+        ],
+        Ty::Integer,
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_SET_STATUS_BAR_SEGMENTS,
+        vec![
+            p("App", types.application.clone(), false),
+            p("ViewId", Ty::Integer, false),
+            p(
+                "Segments",
+                Ty::Array(Box::new(types.status_bar_segment.clone())),
+                false,
+            ),
+        ],
+    );
 }

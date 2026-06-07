@@ -83,11 +83,26 @@ impl Compiler {
     /// Returns `None` for anonymous literals or named types without any defaults.
     fn take_record_literal_expansion(&self, expr: &Expr) -> Option<RecordLiteralExpansion> {
         let ty = self.ty_of(expr);
-        if let Ty::Record(record_ty) = ty
-            && let Some(specs) = self.record_defaults.get(&record_ty.name)
-        {
+        let Ty::Record(record_ty) = ty else {
+            return None;
+        };
+        if record_ty.name == "<anonymous>" {
+            return None;
+        }
+
+        if let Some(specs) = self.record_defaults.get(&record_ty.name) {
             return Some((record_ty.name.clone(), specs.clone()));
         }
-        None
+
+        let Expr::RecordLiteral { fields, .. } = expr else {
+            return None;
+        };
+        Some((
+            record_ty.name.clone(),
+            fields
+                .iter()
+                .map(|field| (field.name.clone(), None))
+                .collect(),
+        ))
     }
 }

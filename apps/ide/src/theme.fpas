@@ -6,3 +6,19 @@ uses Std.Console;
 
 /// Desktop background color (classic TP blue).
 const DesktopBg: integer := Blue;
+
+/// Menu bar normal foreground (black text on gray bar, Turbo Vision style).
+const MenuBarFg: integer := Black;
+/// Menu bar normal background (classic TP IDE gray strip).
+const MenuBarBg: integer := LightGray;
+/// Menu bar hover/inverted foreground.
+const MenuBarHighlightFg: integer := LightGray;
+/// Menu bar hover/inverted background.
+const MenuBarHighlightBg: integer := Black;
+/// Disabled menu item foreground.
+const MenuBarDisabledFg: integer := DarkGray;
+
+/// Status bar foreground (black text on gray bar).
+const StatusBarFg: integer := Black;
+/// Status bar background (matches menu bar gray strip).
+const StatusBarBg: integer := LightGray;

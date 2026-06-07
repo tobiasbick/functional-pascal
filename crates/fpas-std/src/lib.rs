@@ -81,7 +81,10 @@ pub use tui_damage::DamageRegion;
 pub use tui_host::TuiHost;
 pub use tui_modal::{ModalId, ModalStack};
 pub use tui_view::{ViewId, ViewRect, ViewRegistry};
-pub use tui_widget::{SolidFillWidget, ViewWidget};
+pub use tui_widget::{
+    MenuBarItem, MenuBarMouseResult, MenuBarStyle, MenuBarWidget, SolidFillWidget,
+    StatusBarSegment, StatusBarStyle, StatusBarWidget, ViewWidget,
+};
 pub use ui::{UiEvent, UiHost, UiHostSurface, UiModifiers, UiMouse, UiResize, UiWheel};
 
 /// Returns the index of `name` in `variants`, or 0 if not found.

@@ -20,6 +20,10 @@ struct TuiTypes {
     size: Ty,
     key_event: Ty,
     application_handlers: Ty,
+    menu_bar_item: Ty,
+    menu_bar_style: Ty,
+    status_bar_segment: Ty,
+    status_bar_style: Ty,
 }
 
 struct TuiCallbackTypes {
@@ -82,6 +86,45 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         s::STD_TUI_EXIT_REASON,
         TUI_EXIT_REASON_VARIANTS,
     );
+    type_registration::register_record_type(
+        checker,
+        s::STD_TUI_MENU_BAR_ITEM,
+        vec![
+            ("Label".into(), Ty::String),
+            ("Enabled".into(), Ty::Boolean),
+            ("CommandId".into(), Ty::Integer),
+        ],
+    );
+    let menu_bar_item = lookup_required_type(checker, s::STD_TUI_MENU_BAR_ITEM, "MenuBarItem");
+    type_registration::register_record_type(
+        checker,
+        s::STD_TUI_MENU_BAR_STYLE,
+        vec![
+            ("BarBg".into(), Ty::Integer),
+            ("BarFg".into(), Ty::Integer),
+            ("HighlightBg".into(), Ty::Integer),
+            ("HighlightFg".into(), Ty::Integer),
+            ("DisabledFg".into(), Ty::Integer),
+        ],
+    );
+    let menu_bar_style = lookup_required_type(checker, s::STD_TUI_MENU_BAR_STYLE, "MenuBarStyle");
+    type_registration::register_record_type(
+        checker,
+        s::STD_TUI_STATUS_BAR_SEGMENT,
+        vec![
+            ("Text".into(), Ty::String),
+            ("AlignRight".into(), Ty::Boolean),
+        ],
+    );
+    let status_bar_segment =
+        lookup_required_type(checker, s::STD_TUI_STATUS_BAR_SEGMENT, "StatusBarSegment");
+    type_registration::register_record_type(
+        checker,
+        s::STD_TUI_STATUS_BAR_STYLE,
+        vec![("BarBg".into(), Ty::Integer), ("BarFg".into(), Ty::Integer)],
+    );
+    let status_bar_style =
+        lookup_required_type(checker, s::STD_TUI_STATUS_BAR_STYLE, "StatusBarStyle");
     let (application_handlers, callbacks) = handlers::register_application_handlers(
         checker,
         &application,
@@ -106,6 +149,10 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         size,
         key_event,
         application_handlers,
+        menu_bar_item,
+        menu_bar_style,
+        status_bar_segment,
+        status_bar_style,
     };
     application_api::register_application_api(checker, &types);
     host_api::register_host_api(checker, &types, &callbacks);

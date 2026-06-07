@@ -170,6 +170,14 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_APPLICATION_HOST_SET_VIEW_PARENT,
     std_symbols::STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT,
     std_symbols::STD_TUI_APPLICATION_HOST_CREATE_SOLID_FILL_VIEW,
+    std_symbols::STD_TUI_APPLICATION_HOST_CREATE_MENU_BAR_VIEW,
+    std_symbols::STD_TUI_APPLICATION_HOST_SET_MENU_BAR_ITEMS,
+    std_symbols::STD_TUI_MENU_BAR_ITEM,
+    std_symbols::STD_TUI_MENU_BAR_STYLE,
+    std_symbols::STD_TUI_APPLICATION_HOST_CREATE_STATUS_BAR_VIEW,
+    std_symbols::STD_TUI_APPLICATION_HOST_SET_STATUS_BAR_SEGMENTS,
+    std_symbols::STD_TUI_STATUS_BAR_SEGMENT,
+    std_symbols::STD_TUI_STATUS_BAR_STYLE,
 ];
 
 pub(in super::super) const STD_GRAPH_SYMBOLS: &[&str] = &[

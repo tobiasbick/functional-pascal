@@ -310,6 +310,22 @@ pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT: &str =
 /// Register a host-managed solid-fill widget view and return its handle.
 pub const STD_TUI_APPLICATION_HOST_CREATE_SOLID_FILL_VIEW: &str =
     std_tui!("Application.HostCreateSolidFillView");
+/// Register a host-managed menu bar widget from a Pascal item model.
+pub const STD_TUI_APPLICATION_HOST_CREATE_MENU_BAR_VIEW: &str =
+    std_tui!("Application.HostCreateMenuBarView");
+/// Replace the item model for an existing menu bar widget view.
+pub const STD_TUI_APPLICATION_HOST_SET_MENU_BAR_ITEMS: &str =
+    std_tui!("Application.HostSetMenuBarItems");
+pub const STD_TUI_MENU_BAR_ITEM: &str = std_tui!("MenuBarItem");
+pub const STD_TUI_MENU_BAR_STYLE: &str = std_tui!("MenuBarStyle");
+/// Register a host-managed status bar widget from a Pascal segment model.
+pub const STD_TUI_APPLICATION_HOST_CREATE_STATUS_BAR_VIEW: &str =
+    std_tui!("Application.HostCreateStatusBarView");
+/// Replace the segment model for an existing status bar widget view.
+pub const STD_TUI_APPLICATION_HOST_SET_STATUS_BAR_SEGMENTS: &str =
+    std_tui!("Application.HostSetStatusBarSegments");
+pub const STD_TUI_STATUS_BAR_SEGMENT: &str = std_tui!("StatusBarSegment");
+pub const STD_TUI_STATUS_BAR_STYLE: &str = std_tui!("StatusBarStyle");
 
 pub const STD_GRAPH_APPLICATION: &str = std_graph!("Application");
 /// Hosted-dispatch handler bundle for `Std.Graph.Application.Configure`; see `docs/pascal/std/graph-app.md`.

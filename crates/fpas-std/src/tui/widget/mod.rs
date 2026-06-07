@@ -4,7 +4,9 @@
 //! Spec: `docs/pascal/std/tui-app.md`
 
 mod menu_bar;
+mod menu_label_paint;
 mod menu_popup;
+mod menu_style;
 mod solid_fill;
 mod status_bar;
 

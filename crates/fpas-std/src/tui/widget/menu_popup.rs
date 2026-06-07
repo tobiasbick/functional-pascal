@@ -5,7 +5,8 @@
 use crate::key_event::{ConsoleKeyEvent, key_kind_index};
 use crate::{Console, ViewRect};
 
-use super::menu_bar::{MenuBarStyle, MenuLabelPaint, shortcut_highlight_index};
+use super::menu_label_paint::paint_labeled_text;
+use super::menu_style::{MenuBarStyle, MenuLabelPaint};
 
 /// One pull-down entry supplied from Pascal.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -159,19 +160,7 @@ fn paint_popup_label(
     colors: MenuLabelPaint,
     label: &str,
 ) {
-    let highlight_index = shortcut_highlight_index(label.trim(), &item.shortcut);
-    let mut col = x;
-    for (index, ch) in label.chars().enumerate() {
-        let cell_fg = if colors.hovered || !item.enabled {
-            colors.fg
-        } else if highlight_index == Some(index) {
-            colors.accel_fg
-        } else {
-            colors.fg
-        };
-        console.write_char_at_crt(col, y, ch, cell_fg, colors.bg);
-        col += 1;
-    }
+    paint_labeled_text(console, x, y, label, &item.shortcut, item.enabled, colors);
 }
 
 fn paint_popup_frame(console: &mut Console, outer: ViewRect, style: MenuBarStyle) {

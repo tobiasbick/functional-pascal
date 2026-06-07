@@ -4,10 +4,12 @@
 
 use crate::{Console, DamageRegion, ViewRect};
 
+use super::super::menu_label_paint::paint_labeled_text;
 use super::super::menu_popup::paint_popup;
+use super::super::menu_style::{MenuBarStyle, MenuLabelPaint};
 use super::MenuBarWidget;
 use super::geometry::{clip_rect_to_damage, intersects_damage};
-use super::types::{MenuBarItem, MenuBarStyle, MenuLabelPaint};
+use super::types::MenuBarItem;
 
 impl MenuBarWidget {
     /// Paint the menu bar and any open pull-down clipped to `damage`.
@@ -69,8 +71,7 @@ fn bar_item_colors(item: &MenuBarItem, style: MenuBarStyle, hovered: bool) -> (u
     }
 }
 
-/// Paint one top-level menu bar label with optional shortcut highlighting.
-pub(in crate::tui::widget) fn paint_bar_label(
+fn paint_bar_label(
     console: &mut Console,
     x: i64,
     y: i64,
@@ -79,45 +80,4 @@ pub(in crate::tui::widget) fn paint_bar_label(
 ) {
     let label = format!(" {} ", item.label);
     paint_labeled_text(console, x, y, &label, &item.shortcut, item.enabled, colors);
-}
-
-/// Paint label text with Turbo Pascal-style shortcut letter highlighting.
-pub(in crate::tui::widget) fn paint_labeled_text(
-    console: &mut Console,
-    x: i64,
-    y: i64,
-    label: &str,
-    shortcut: &str,
-    enabled: bool,
-    colors: MenuLabelPaint,
-) {
-    let highlight_index = shortcut_highlight_index(label.trim(), shortcut);
-    let mut col = x;
-    for (index, ch) in label.chars().enumerate() {
-        let cell_fg = if colors.hovered || !enabled {
-            colors.fg
-        } else if highlight_index == Some(index) {
-            colors.accel_fg
-        } else {
-            colors.fg
-        };
-        console.write_char_at_crt(col, y, ch, cell_fg, colors.bg);
-        col += 1;
-    }
-}
-
-/// Returns the character index of the shortcut letter inside a padded label.
-pub(in crate::tui::widget) fn shortcut_highlight_index(
-    label: &str,
-    shortcut: &str,
-) -> Option<usize> {
-    let shortcut = shortcut.chars().next()?;
-    if !shortcut.is_ascii_alphabetic() {
-        return None;
-    }
-    let inner = format!(" {label} ");
-    inner
-        .char_indices()
-        .find(|(_, ch)| ch.eq_ignore_ascii_case(&shortcut))
-        .map(|(index, _)| index)
 }

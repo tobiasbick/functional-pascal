@@ -10,10 +10,8 @@ mod types;
 #[cfg(test)]
 mod tests;
 
-pub use types::{MenuBarItem, MenuBarMouseResult, MenuBarStyle};
-
-pub(in crate::tui::widget) use paint::shortcut_highlight_index;
-pub(in crate::tui::widget) use types::MenuLabelPaint;
+pub use super::menu_style::MenuBarStyle;
+pub use types::{MenuBarItem, MenuBarMouseResult};
 
 use types::OpenSubmenu;
 

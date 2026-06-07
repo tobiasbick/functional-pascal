@@ -1,0 +1,106 @@
+{ Host-managed menu bar demo — run in a terminal. See docs/pascal/std/tui-app.md. }
+program TuiMenuBar;
+uses Std.Console, Std.Tui;
+
+const CmdExit: integer := 1;
+const MenuBarHeight: integer := 1;
+
+mutable var MenuBarView: integer := -1;
+
+function FileSubmenu(): array of MenuPopupItem;
+begin
+  return [
+    record
+      Label := 'About'; Shortcut := 'A'; Enabled := true; CommandId := -1; Separator := false;
+    end,
+    record
+      Label := ''; Shortcut := #0; Enabled := false; CommandId := -1; Separator := true;
+    end,
+    record
+      Label := 'Exit'; Shortcut := 'X'; Enabled := true; CommandId := CmdExit; Separator := false;
+    end
+  ]
+end;
+
+function MenuItems(): array of MenuBarItem;
+begin
+  return [
+    record
+      Label := 'File'; Shortcut := 'F'; Enabled := true; CommandId := -1;
+      Submenu := FileSubmenu();
+    end,
+    record
+      Label := 'Help'; Shortcut := 'H'; Enabled := true; CommandId := -1; Submenu := [];
+    end
+  ]
+end;
+
+function MenuStyle(): MenuBarStyle;
+begin
+  return record
+    BarBg := LightGray;
+    BarFg := Black;
+    AccelFg := Red;
+    HighlightBg := Black;
+    HighlightFg := LightGray;
+    DisabledFg := DarkGray;
+  end
+end;
+
+procedure EnsureMenuBar(App: Application);
+begin
+  var S: Size := Application.Size(App);
+  if MenuBarView < 0 then
+    MenuBarView := Application.HostCreateMenuBarView(
+      App, 0, 0, S.width, MenuBarHeight, MenuItems(), MenuStyle())
+  else
+    Application.HostSetViewRect(App, MenuBarView, 0, 0, S.width, MenuBarHeight)
+end;
+
+procedure OnPaint(App: Application);
+begin
+  var S: Size := Application.Size(App);
+  ClrScr();
+  GotoXY(1, MenuBarHeight + 1);
+  WriteLn('Std.Tui menu bar host widget');
+  GotoXY(1, MenuBarHeight + 2);
+  WriteLn('Alt+F opens File; choose Exit or press Escape to quit');
+  GotoXY(1, MenuBarHeight + 4);
+  WriteLn('Terminal size: ', S.width, 'x', S.height)
+end;
+
+procedure OnCommand(App: Application; CommandId: integer);
+begin
+  if CommandId = CmdExit then
+    Application.HostRequestQuit(App)
+end;
+
+function OnKeyPressed(App: Application; Key: Std.Console.KeyEvent): boolean;
+begin
+  if Key.kind = KeyKind.Escape then
+  begin
+    Application.HostRequestQuit(App);
+    return true
+  end;
+  return false
+end;
+
+procedure OnResize(App: Application; NewSize: Size);
+begin
+  if MenuBarView >= 0 then
+    Application.HostSetViewRect(App, MenuBarView, 0, 0, NewSize.width, MenuBarHeight);
+  Application.RequestRedraw(App)
+end;
+
+begin
+  var App: Application := Application.Open();
+  EnsureMenuBar(App);
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+    OnKeyPressed := Some(OnKeyPressed);
+    OnResize := Some(OnResize);
+    OnCommand := Some(OnCommand);
+  end;
+  Application.Configure(App, Handlers);
+  Application.Run(App)
+end.

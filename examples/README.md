@@ -149,6 +149,7 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 | `pascal/tui/host_dispatch_minimal.fpas` | One **`HostProcessNext`** call then **`Close`** (dispatch bridge); same TUI session behavior as `minimal_application.fpas` |
 | `pascal/tui/host_dispatch_paint.fpas` | **`HostRegisterOnPaint`** + **`HostDispatchRedraw`** (one paint pass) |
 | `pascal/tui/host_dispatch_quit.fpas` | **`HostRequestQuit`** from **`OnPaint`**, then **`HostRunLoop`** (cooperative exit) |
+| `pascal/tui/menu_bar.fpas` | **`HostCreateMenuBarView`** with Alt+letter shortcuts and pull-down **`OnCommand`** dispatch; **Escape** to quit |
 | `pascal/tui/local_view_paint.fpas` | Local view paint only; press **M** to move a child view and **Escape** to quit |
 | `pascal/tui/view_scoped_commands.fpas` | Focus-aware view commands; **Tab** changes focus, **Ctrl+S** resolves per panel, **Escape** quits |
 | `pascal/tui/show_modal_existing_view.fpas` | Existing view subtree becomes modal; **Tab** stays in the subtree, **Escape** closes the modal |

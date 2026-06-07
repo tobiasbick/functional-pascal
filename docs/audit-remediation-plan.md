@@ -39,6 +39,6 @@ Workflow per item: implement → test → update this file → commit → wait.
 |---|--------|------|
 | 15 | done | Re-enable graph compiler tests (stale `#[ignore]` reasons) |
 | 16 | done | Add `host_dispatch_*.fpas` + `apps/ide/ide.fpasprj` to CI allowlist |
-| 17 | pending | Add `examples/pascal/tui/menu_bar.fpas` |
+| 17 | done | Add `examples/pascal/tui/menu_bar.fpas` |
 | 18 | pending | Document `apps/ide/` in examples README |
 | 19 | pending | Clarify `apps/portal/` as illustrative in `10-projects.md` |

@@ -45,7 +45,7 @@ These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mo
 | `TuiHostSetViewParent`        | `Application`, `integer`, `integer`           | Reparents a host-managed view under `parent_view_id`. Pass `-1` to detach the view back to the root list. The view keeps its current absolute terminal rectangle during the reparenting step. Unknown handles are ignored. Does not push a value.                          |
 | `TuiHostRegisterOnViewPaint`  | `Application`, `integer`, `function`          | Registers `procedure (Application, integer, Std.Tui.Rect)` (arity 3) as a view-local paint handler for one host-managed view. During hosted redraw, the host invokes it in tree paint order when that view intersects the current damage region.                              |
 | `TuiApplicationConfigure`     | `Application`, `ApplicationHandlers`             | Applies a bundled hosted-dispatch configuration. Replaces the current hosted handlers with the record fields from `ApplicationHandlers`; `OnPaint` is required, optional handlers use `Some(Handler)` or `None`, and `OnIdleMilliseconds <= 0` disables idle callbacks.        |
-| `TuiApplicationRun`           | `Application`                                    | Hosted loop entrypoint. Requires a previously registered global `OnPaint` handler **or** at least one local view paint handler, auto-requests the first redraw, blocks until `Application.HostRequestQuit(App)` is observed **or** the host stops the active run, records `ExitReason.UserQuit`, `ExitReason.HostStop`, `ExitReason.HostAndUserStop`, or `ExitReason.HostShutdown`, invokes `OnExit` when registered, and performs `Application.Close` semantics before returning. Pushes `()`. |
+| `TuiApplicationRun`           | `Application`                                    | Hosted loop entrypoint. Requires a previously registered global `OnPaint` handler, at least one local view paint handler, **or** at least one host widget view (`HostCreateSolidFillView`, `HostCreateMenuBarView`, or `HostCreateStatusBarView`), auto-requests the first redraw, blocks until `Application.HostRequestQuit(App)` is observed **or** the host stops the active run, records `ExitReason.UserQuit`, `ExitReason.HostStop`, `ExitReason.HostAndUserStop`, or `ExitReason.HostShutdown`, invokes `OnExit` when registered, and performs `Application.Close` semantics before returning. Pushes `()`. |
 | `TuiApplicationShowModal`     | `Application`, `integer`, `integer`             | Pushes a modal frame anchored to the given root view. The root view is raised, the modal scope becomes that view subtree (plus any explicitly attached extra views), and focus is moved into that scope when possible. Does not push a value.                               |
 | `TuiApplicationShowDialog`    | `Application`, `integer`, `integer`, `integer`, `integer`, `integer` | Registers a new root host view for `x`, `y`, `width`, `height`, shows it as the active modal dialog, and pushes the new root `ViewId` as `integer`. Closing that modal automatically unregisters the owned root subtree.                                                     |
 | `TuiApplicationCloseModal`    | `Application`                                    | Pops the active modal frame created by `Application.ShowModal`, `Application.ShowDialog`, or `Application.HostEnterModal`. Leaving an empty modal stack is a no-op. Does not push a value.                                                                                     |
@@ -115,6 +115,8 @@ Root views use absolute terminal coordinates. `Application.HostSetViewParent(App
 
 ### Host widgets
 
+Host widget views are painted entirely in Rust and satisfy the `Application.Run` paint prerequisite on their own. When the visible frame comes from widgets only, `ApplicationHandlers.OnPaint` may be an empty no-op procedure (see `apps/ide/src/shell.fpas`).
+
 `Application.HostCreateSolidFillView(App, X, Y, Width, Height, FillColor, TextColor, FillChar)` registers a host-managed view whose background is painted directly in Rust. `FillColor` is required and uses packed CRT color indices (`0..=15`, same constants as `Std.Console`). `TextColor` and `FillChar` are optional:
 
 - `TextColor := None`, `FillChar := None` — solid fill with spaces using `FillColor` for both foreground and background.
@@ -180,15 +182,15 @@ Dispatch-mode names use the `**On` prefix** so they do not collide with legacy n
 | Step                | Meaning                                                                                                                                                               |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Application.Open`  | Same session semantics as today: acquire terminal state (raw mode, alternate screen when applicable).                                                                 |
-| `Application.Run`   | Start the **hosted** main loop for the given `Application` handle. Register handlers first with `Application.Configure(App, Handlers)`, the explicit `Application.HostRegisterOn*` helpers, or per-view `Application.HostRegisterOnViewPaint`; at least one global `OnPaint` or local view paint handler is required. The loop auto-requests the first redraw and blocks until the application requests quit. |
+| `Application.Run`   | Start the **hosted** main loop for the given `Application` handle. Register handlers first with `Application.Configure(App, Handlers)`, the explicit `Application.HostRegisterOn*` helpers, per-view `Application.HostRegisterOnViewPaint`, or host widget constructors (`HostCreateSolidFillView`, `HostCreateMenuBarView`, `HostCreateStatusBarView`); at least one global `OnPaint`, local view paint handler, or host widget view is required. The loop auto-requests the first redraw and blocks until the application requests quit. |
 | `Application.Close` | Release the session. After `**Application.Run`** completes successfully, the host **must** have restored the session as if `**Close`** ran (see **Lifecycle** below). |
 
-**Current Pascal surface:** `**Application.Configure(App, Handlers)`** lowers to a dedicated intrinsic and writes the bundled hosted handlers (`**OnPaint`** required in bundle form; optional handlers use `**Some(...)`** / `**None`**). `**Application.Run(App)`** then uses whichever handlers were registered last, whether through `**Configure`**, the explicit `**Application.HostRegisterOn*`** helpers, or the per-view `**Application.HostRegisterOnViewPaint`** registrations. `**TuiHostRunLoop**` (**262**) remains available as the low-level bounded stepping helper for tests and explicit host experimentation.
+**Current Pascal surface:** `**Application.Configure(App, Handlers)`** lowers to a dedicated intrinsic and writes the bundled hosted handlers (`**OnPaint`** required in bundle form; optional handlers use `**Some(...)`** / `**None`**). `**Application.Run(App)`** then uses whichever handlers were registered last, whether through `**Configure`**, the explicit `**Application.HostRegisterOn*`** helpers, per-view `**Application.HostRegisterOnViewPaint`** registrations, or host widget views created before `**Run`**. `**TuiHostRunLoop**` (**262**) remains available as the low-level bounded stepping helper for tests and explicit host experimentation.
 
 ### Lifecycle (normative)
 
 1. User calls `**Application.Open`** → receives `**App`**.
-2. User registers handlers with `**Application.Configure(App, Handlers)`**, `**Application.HostRegisterOn*`**, and optionally `**Application.HostRegisterOnViewPaint`** for individual views. A hosted run requires at least one global `**OnPaint`** handler or at least one local view paint handler.
+2. User registers handlers with `**Application.Configure(App, Handlers)`**, `**Application.HostRegisterOn*`**, optionally `**Application.HostRegisterOnViewPaint`** for individual views, and/or host widget views (`**HostCreateSolidFillView**`, `**HostCreateMenuBarView**`, `**HostCreateStatusBarView**`). A hosted run requires at least one global `**OnPaint`** handler, at least one local view paint handler, or at least one host widget view.
 3. User calls `**Application.Run(App)`**.
 4. While running, the host dispatches `**On*`** handlers on the **main VM thread** only (see `[parallel-vm.md](../../rust/parallel-vm.md)`).
 5. When the application requests quit, the host records `**ExitReason.UserQuit`**. If the active hosted session is stopped by low-level host control during `**Run`** (for example `**Application.Close(App)`** is invoked while the run is still active), the host records `**ExitReason.HostStop`**. If both are requested in the same turn, the host records `**ExitReason.HostAndUserStop`**. If the VM enters global shutdown while the hosted run is active (for example after a concurrent task failure), the host records `**ExitReason.HostShutdown`**. In every case it invokes `**OnExit(App, Reason)`** once if that handler is provided, then **performs `Application.Close(App)`** (or equivalent) so the program must **not** call `**Close`** again for the same successful `**Run`**.
@@ -199,15 +201,16 @@ If `**Run`** is never called, the program keeps today’s obligation: `**Open**`
 
 ## Current registration model
 
-Pascal can register hosted handlers in two equivalent ways before `**Application.Run(App)`**:
+Pascal can register hosted handlers in four equivalent ways before `**Application.Run(App)`**:
 
 1. **Bundle form** with `**Application.Configure(App, Handlers)`** using the shipped record type `**ApplicationHandlers`**.
 2. **Explicit form** with the `**Application.HostRegisterOn*`** routines.
 3. **Per-view paint form** with `**Application.HostRegisterOnViewPaint(App, ViewId, OnViewPaint)`**.
+4. **Host widget form** with `**Application.HostCreateSolidFillView**`, `**Application.HostCreateMenuBarView**`, or `**Application.HostCreateStatusBarView**` (create widgets before `**Run`**).
 
-The most recent configuration wins per slot. `**Application.Configure`** replaces the current hosted handler set with the record fields from `**ApplicationHandlers`**. View-local paint handlers are tracked separately per host view.
+The most recent configuration wins per slot. `**Application.Configure`** replaces the current hosted handler set with the record fields from `**ApplicationHandlers`**. View-local paint handlers are tracked separately per host view. Host widget views are tracked separately in the view registry.
 
-**Required** for a minimal hosted run: at least one global `**OnPaint`** or at least one local view paint handler. In bundle form, `**ApplicationHandlers.OnPaint`** remains required. Other slots are optional.
+**Required** for a minimal hosted run: at least one global `**OnPaint`**, at least one local view paint handler, or at least one host widget view. In bundle form, `**ApplicationHandlers.OnPaint`** remains required as a record field (it may be an empty no-op when widgets paint the frame). Other slots are optional.
 
 ### `ApplicationHandlers`
 

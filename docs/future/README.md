@@ -8,7 +8,7 @@ Open planning items for Functional Pascal.
 
 ## TUI roadmap
 
-Hosted terminal UI is **implemented**: Rust-owned event loop, FPAS `On*` handlers, host widgets (menu bar, status bar, solid fill), and `Application.Run` as the primary entry for full apps. Low-level terminal events (`ReadEvent`, `PollEvent`) live on **`Std.Console`** for CRT-style scripts; they are **not** part of **`Std.Tui`**. Implementation history and remaining ideas: [`tui-application-framework.md`](tui-application-framework.md). User-facing spec: [`docs/pascal/std/tui-app.md`](../pascal/std/tui-app.md).
+Hosted terminal UI is **implemented**: Rust-owned event loop, FPAS `On*` handlers, host widgets (menu bar, status bar, solid fill), and `Application.Run` as the primary entry for full apps. Low-level terminal events (`ReadEvent`, `PollEvent`) live on **`Std.Console`** for CRT-style scripts; they are **not** part of **`Std.Tui`**. Reference implementations: [`apps/ide/`](../../apps/ide/) (multi-unit shell) and [`examples/pascal/tui/`](../../examples/pascal/tui/) (including [`menu_bar.fpas`](../../examples/pascal/tui/menu_bar.fpas)). Implementation history and remaining ideas: [`tui-application-framework.md`](tui-application-framework.md). User-facing spec: [`docs/pascal/std/tui-app.md`](../pascal/std/tui-app.md).
 
 ## Standard library roadmap
 

@@ -113,6 +113,9 @@ impl Worker {
                         return Ok(if key_event.shift { 15 } else { 14 });
                     }
                 }
+                if let Some(tag) = self.try_dispatch_widget_key(key_event.clone(), line)? {
+                    return Ok(tag);
+                }
                 if let Some(command_id) = self.resolve_tui_command(&key_event) {
                     if self.modal_blocks_keyboard_dispatch(modal_scope.as_deref()) {
                         return Ok(20);

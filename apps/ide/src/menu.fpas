@@ -11,17 +11,25 @@ begin
   return record
     BarBg := MenuBarBg;
     BarFg := MenuBarFg;
+    AccelFg := MenuBarAccelFg;
     HighlightBg := MenuBarHighlightBg;
     HighlightFg := MenuBarHighlightFg;
     DisabledFg := MenuBarDisabledFg;
   end
 end;
 
-/// Top-level menu entries shown in the host menu bar.
+/// Top-level Turbo Pascal IDE menu entries (Alt+letter shortcuts shown in red).
 function DefaultItems(): array of MenuBarItem;
 begin
   return [
-    record Label := 'File'; Enabled := true; CommandId := -1; end,
-    record Label := 'Exit'; Enabled := true; CommandId := CmdFileExit; end
+    record Label := 'File'; Shortcut := 'F'; Enabled := true; CommandId := -1; end,
+    record Label := 'Edit'; Shortcut := 'E'; Enabled := true; CommandId := -1; end,
+    record Label := 'Search'; Shortcut := 'S'; Enabled := true; CommandId := -1; end,
+    record Label := 'Run'; Shortcut := 'R'; Enabled := true; CommandId := -1; end,
+    record Label := 'Compile'; Shortcut := 'C'; Enabled := true; CommandId := -1; end,
+    record Label := 'Debug'; Shortcut := 'D'; Enabled := true; CommandId := -1; end,
+    record Label := 'Options'; Shortcut := 'O'; Enabled := true; CommandId := -1; end,
+    record Label := 'Window'; Shortcut := 'W'; Enabled := true; CommandId := -1; end,
+    record Label := 'Help'; Shortcut := 'H'; Enabled := true; CommandId := -1; end
   ]
 end;

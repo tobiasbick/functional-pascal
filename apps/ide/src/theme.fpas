@@ -17,6 +17,8 @@ const MenuBarHighlightFg: integer := LightGray;
 const MenuBarHighlightBg: integer := Black;
 /// Disabled menu item foreground.
 const MenuBarDisabledFg: integer := DarkGray;
+/// Alt+letter shortcut foreground on the menu bar (Turbo Pascal red).
+const MenuBarAccelFg: integer := Red;
 
 /// Status bar foreground (black text on gray bar).
 const StatusBarFg: integer := Black;

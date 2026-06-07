@@ -13,6 +13,20 @@ private mutable var StatusBarView: integer := -1;
 private const MenuBarHeight: integer := 1;
 private const StatusBarHeight: integer := 1;
 
+/// Bind global keyboard shortcuts for the IDE shell.
+private procedure BindShortcuts(App: Application);
+begin
+  var ExitKey: Std.Console.KeyEvent := record
+    kind := Std.Console.KeyKind.Character;
+    ch := 'x';
+    shift := false;
+    ctrl := false;
+    alt := true;
+    meta := false;
+  end;
+  Application.HostBindCommand(App, ExitKey, CmdFileExit)
+end;
+
 /// Create or resize menu bar, desktop, and status bar.
 private procedure EnsureChrome(App: Application);
 begin
@@ -55,13 +69,6 @@ begin
     Application.HostRequestQuit(App)
 end;
 
-/// Any keypress exits the session (prototype shell).
-private function OnKeyPressed(App: Application; Key: Std.Console.KeyEvent): boolean;
-begin
-  Application.HostRequestQuit(App);
-  return true
-end;
-
 /// Keep host widgets aligned with the terminal size.
 private procedure OnResize(App: Application; NewSize: Size);
 begin
@@ -83,10 +90,10 @@ end;
 procedure Run();
 begin
   var App: Application := Application.Open();
+  BindShortcuts(App);
   EnsureChrome(App);
   var Handlers: ApplicationHandlers := record
     OnPaint := OnPaint;
-    OnKeyPressed := Some(OnKeyPressed);
     OnResize := Some(OnResize);
     OnCommand := Some(OnCommand);
   end;

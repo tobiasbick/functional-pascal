@@ -49,4 +49,26 @@ impl ConsoleState {
             self.mark_damage_rect(window);
         }
     }
+
+    /// Write one character at zero-based terminal coordinates using CRT color indices.
+    pub(in super::super) fn write_char_at_crt(&mut self, x: i64, y: i64, ch: char, fg: u8, bg: u8) {
+        let start_x = x.saturating_add(1);
+        let start_y = y.saturating_add(1);
+        if start_x > i64::from(self.width) || start_y > i64::from(self.height) {
+            return;
+        }
+
+        let idx = self.index(start_x as u16, start_y as u16);
+        self.cells[idx] = ScreenCell {
+            ch,
+            fg: RenderColor::Crt(fg),
+            bg: RenderColor::Crt(bg),
+        };
+        self.mark_damage_rect(WindowRect {
+            left: start_x as u16,
+            top: start_y as u16,
+            right: start_x as u16,
+            bottom: start_y as u16,
+        });
+    }
 }

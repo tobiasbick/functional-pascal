@@ -91,6 +91,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         s::STD_TUI_MENU_BAR_ITEM,
         vec![
             ("Label".into(), Ty::String),
+            ("Shortcut".into(), Ty::Char),
             ("Enabled".into(), Ty::Boolean),
             ("CommandId".into(), Ty::Integer),
         ],
@@ -102,6 +103,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         vec![
             ("BarBg".into(), Ty::Integer),
             ("BarFg".into(), Ty::Integer),
+            ("AccelFg".into(), Ty::Integer),
             ("HighlightBg".into(), Ty::Integer),
             ("HighlightFg".into(), Ty::Integer),
             ("DisabledFg".into(), Ty::Integer),

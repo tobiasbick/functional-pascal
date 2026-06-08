@@ -21,6 +21,7 @@ fn test_cli_runs_tests_from_test_project_file() {
     );
 
     let mut stderr = Vec::new();
+    let mut stdout = Vec::new();
     let exit = test_cli(
         TestCliConfig {
             input: CliInput::ProjectFile(cwd.join("tests.fpasprj")),
@@ -29,7 +30,9 @@ fn test_cli_runs_tests_from_test_project_file() {
             list_only: false,
             script_path: None,
             filter: None,
+            report: None,
         },
+        &mut stdout,
         &mut stderr,
     );
 
@@ -56,6 +59,7 @@ fn test_cli_runs_tests_from_workspace_test_member() {
     );
 
     let mut stderr = Vec::new();
+    let mut stdout = Vec::new();
     let exit = test_cli(
         TestCliConfig {
             input: CliInput::WorkspaceFile(cwd.join("root.fpasworkspace")),
@@ -64,7 +68,9 @@ fn test_cli_runs_tests_from_workspace_test_member() {
             list_only: false,
             script_path: None,
             filter: None,
+            report: None,
         },
+        &mut stdout,
         &mut stderr,
     );
 

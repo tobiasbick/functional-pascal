@@ -4,6 +4,8 @@
 
 use std::io::Write;
 
+use serde::Serialize;
+
 /// Outcome of running one test file.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum TestOutcome {
@@ -17,6 +19,22 @@ impl TestOutcome {
     pub(super) fn is_failure(self) -> bool {
         !matches!(self, Self::Pass)
     }
+
+    fn status_str(self) -> &'static str {
+        match self {
+            Self::Pass => "pass",
+            Self::AssertFailed => "assert_failed",
+            Self::CompileError => "compile_error",
+            Self::RuntimeError => "runtime_error",
+        }
+    }
+}
+
+/// One executed test file and its outcome.
+#[derive(Debug, Clone)]
+pub(super) struct TestCaseResult {
+    pub file: String,
+    pub outcome: TestOutcome,
 }
 
 /// Aggregated results for a test run.
@@ -26,16 +44,21 @@ pub(super) struct Summary {
     failed: usize,
     compile_errors: usize,
     runtime_errors: usize,
+    cases: Vec<TestCaseResult>,
 }
 
 impl Summary {
-    pub(super) fn record(&mut self, _path: &str, outcome: TestOutcome) {
+    pub(super) fn record(&mut self, path: &str, outcome: TestOutcome) {
         match outcome {
             TestOutcome::Pass => self.passed += 1,
             TestOutcome::AssertFailed => self.failed += 1,
             TestOutcome::CompileError => self.compile_errors += 1,
             TestOutcome::RuntimeError => self.runtime_errors += 1,
         }
+        self.cases.push(TestCaseResult {
+            file: path.to_string(),
+            outcome,
+        });
     }
 
     /// Exit code: 2 compile, 3 runtime, 1 assert failure, 0 all pass.
@@ -53,6 +76,28 @@ impl Summary {
     }
 }
 
+#[derive(Serialize)]
+struct JsonReport<'a> {
+    version: u32,
+    summary: JsonSummary,
+    tests: Vec<JsonTestCase<'a>>,
+}
+
+#[derive(Serialize)]
+struct JsonSummary {
+    passed: usize,
+    failed: usize,
+    compile_errors: usize,
+    runtime_errors: usize,
+    total: usize,
+}
+
+#[derive(Serialize)]
+struct JsonTestCase<'a> {
+    file: &'a str,
+    status: &'static str,
+}
+
 pub(super) fn print_summary(stderr: &mut dyn Write, summary: &Summary) -> std::io::Result<()> {
     let total = summary.passed + summary.failed + summary.compile_errors + summary.runtime_errors;
     let fail_count = summary.failed + summary.compile_errors + summary.runtime_errors;
@@ -61,4 +106,51 @@ pub(super) fn print_summary(stderr: &mut dyn Write, summary: &Summary) -> std::i
         "Summary: {} passed, {} failed ({} total)",
         summary.passed, fail_count, total
     )
+}
+
+/// Writes a machine-readable JSON report to stdout for CI consumers.
+pub(super) fn print_json_report(stdout: &mut dyn Write, summary: &Summary) -> std::io::Result<()> {
+    let total = summary.passed + summary.failed + summary.compile_errors + summary.runtime_errors;
+    let report = JsonReport {
+        version: 1,
+        summary: JsonSummary {
+            passed: summary.passed,
+            failed: summary.failed,
+            compile_errors: summary.compile_errors,
+            runtime_errors: summary.runtime_errors,
+            total,
+        },
+        tests: summary
+            .cases
+            .iter()
+            .map(|case| JsonTestCase {
+                file: case.file.as_str(),
+                status: case.outcome.status_str(),
+            })
+            .collect(),
+    };
+    let json = serde_json::to_string_pretty(&report).expect("JSON test report serialization");
+    writeln!(stdout, "{json}")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn print_json_report_serializes_summary_and_cases() {
+        let mut summary = Summary::default();
+        summary.record("alpha_test.fpas", TestOutcome::Pass);
+        summary.record("beta_test.fpas", TestOutcome::AssertFailed);
+
+        let mut stdout = Vec::new();
+        print_json_report(&mut stdout, &summary).expect("write json");
+        let text = String::from_utf8(stdout).expect("utf-8");
+        assert!(text.contains("\"version\": 1"));
+        assert!(text.contains("\"passed\": 1"));
+        assert!(text.contains("\"failed\": 1"));
+        assert!(text.contains("\"status\": \"pass\""));
+        assert!(text.contains("\"status\": \"assert_failed\""));
+        assert!(text.contains("\"file\": \"alpha_test.fpas\""));
+    }
 }

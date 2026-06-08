@@ -302,7 +302,7 @@ apps/my-app/
 Implement incrementally; no fixed order. Mark each item `[x]` when shipped.
 
 - [x] **6.1** — `--filter <pat>` in `cli_test/discover.rs` — substring on path
-- [ ] **6.2** — `--report json` in `cli_test/report.rs` — CI structured output
+- [x] **6.2** — `--report json` in `cli_test/report.rs` — CI structured output on stdout
 - [ ] **6.3** — Parallel test execution in `cli_test/run.rs` — one VM per test; verify graph headless thread safety first
 - [ ] **6.4** — Setup/Teardown convention in `Std.Test` + docs — named procedures in test units
 - [ ] **6.5** — TUI screen snapshot spike in `fpas-std` TUI session — export cell grid

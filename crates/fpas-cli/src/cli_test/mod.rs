@@ -10,14 +10,39 @@ mod run;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use crate::cli_input::TestCliConfig;
+use crate::cli_input::{TestCliConfig, TestReportFormat};
 use discover::{discover_test_files, filter_test_paths, is_test_file_name};
 use fpas_project as project;
-use report::{Summary, print_summary};
+use report::{Summary, print_json_report, print_summary};
 use run::{LinkContext, run_single_test};
 
+fn test_display_path(path: &Path) -> String {
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .map(String::from)
+        .unwrap_or_else(|| path.to_string_lossy().into_owned())
+}
+
+fn finish_test_run(
+    config: &TestCliConfig,
+    summary: &Summary,
+    stdout: &mut dyn Write,
+    stderr: &mut dyn Write,
+) -> i32 {
+    if config.report == Some(TestReportFormat::Json) {
+        let _ = print_json_report(stdout, summary);
+    } else {
+        let _ = print_summary(stderr, summary);
+    }
+    summary.exit_code()
+}
+
 /// Runs discovered tests and prints a pass/fail summary.
-pub(crate) fn test_cli(config: TestCliConfig, stderr: &mut dyn Write) -> i32 {
+pub(crate) fn test_cli(
+    config: TestCliConfig,
+    stdout: &mut dyn Write,
+    stderr: &mut dyn Write,
+) -> i32 {
     let mut paths = match discover_test_files(&config.input, config.cwd.as_path()) {
         Ok(paths) => paths,
         Err(message) => {
@@ -55,19 +80,17 @@ pub(crate) fn test_cli(config: TestCliConfig, stderr: &mut dyn Write) -> i32 {
 
     let mut summary = Summary::default();
     for path in paths {
-        let display = path.display().to_string();
+        let display = test_display_path(&path);
         let link = link_context_for_test(&path);
         let outcome = run_single_test(&path, link.as_ref(), config.script_path.as_deref(), stderr);
         if config.fail_fast && outcome.is_failure() {
             summary.record(&display, outcome);
-            let _ = print_summary(stderr, &summary);
-            return summary.exit_code();
+            return finish_test_run(&config, &summary, stdout, stderr);
         }
         summary.record(&display, outcome);
     }
 
-    let _ = print_summary(stderr, &summary);
-    summary.exit_code()
+    finish_test_run(&config, &summary, stdout, stderr)
 }
 
 fn link_context_for_test(path: &Path) -> Option<LinkContext> {
@@ -133,6 +156,7 @@ mod tests {
         );
         write_text(&cwd.join("helper.fpas"), "unit H;\nprocedure X; begin end;");
 
+        let mut stdout = Vec::new();
         let mut stderr = Vec::new();
         let exit = test_cli(
             TestCliConfig {
@@ -142,7 +166,9 @@ mod tests {
                 list_only: false,
                 script_path: None,
                 filter: None,
+                report: None,
             },
+            &mut stdout,
             &mut stderr,
         );
 
@@ -161,6 +187,7 @@ mod tests {
             "program O;\nuses Std.Test;\nbegin AssertTrue(false) end.",
         );
 
+        let mut stdout = Vec::new();
         let mut stderr = Vec::new();
         let exit = test_cli(
             TestCliConfig {
@@ -170,7 +197,9 @@ mod tests {
                 list_only: true,
                 script_path: None,
                 filter: None,
+                report: None,
             },
+            &mut stdout,
             &mut stderr,
         );
 
@@ -192,6 +221,7 @@ mod tests {
             "program O;\nuses Std.Test;\nbegin AssertTrue(false) end.",
         );
 
+        let mut stdout = Vec::new();
         let mut stderr = Vec::new();
         let exit = test_cli(
             TestCliConfig {
@@ -201,7 +231,9 @@ mod tests {
                 list_only: false,
                 script_path: None,
                 filter: Some("menu".to_string()),
+                report: None,
             },
+            &mut stdout,
             &mut stderr,
         );
 
@@ -209,5 +241,37 @@ mod tests {
         let text = String::from_utf8(stderr).expect("utf-8");
         assert!(text.contains("PASS  menu_test.fpas"));
         assert!(!text.contains("other_test.fpas"));
+    }
+
+    #[test]
+    fn test_cli_json_report_writes_summary_to_stdout() {
+        let cwd = create_temp_dir("fpas-test-json");
+        write_text(
+            &cwd.join("ok_test.fpas"),
+            "program O;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        );
+
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+        let exit = test_cli(
+            TestCliConfig {
+                input: crate::CliInput::SourceFile(cwd.clone()),
+                cwd,
+                fail_fast: false,
+                list_only: false,
+                script_path: None,
+                filter: None,
+                report: Some(TestReportFormat::Json),
+            },
+            &mut stdout,
+            &mut stderr,
+        );
+
+        assert_eq!(exit, 0);
+        let json = String::from_utf8(stdout).expect("utf-8");
+        assert!(json.contains("\"status\": \"pass\""));
+        assert!(json.contains("ok_test.fpas"));
+        let text = String::from_utf8(stderr).expect("utf-8");
+        assert!(!text.contains("Summary:"));
     }
 }

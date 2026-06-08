@@ -27,7 +27,7 @@ fpas test [<path>] [options]
 | `--fail-fast` | Stop after first failure |
 | `--script <path>` | Use explicit script file instead of sidecar auto-discovery |
 | `--list` | Print tests that would run, do not execute |
-| `--report json` | Machine-readable summary on stdout |
+| `--report json` | Machine-readable summary on stdout (version 1 JSON; human summary omitted) |
 
 ---
 

@@ -35,7 +35,7 @@ pub(crate) fn run_cli(
             0
         }
         ResolvedCli::Check(config) => crate::cli_check::check_cli(config, stderr),
-        ResolvedCli::Test(config) => crate::cli_test::test_cli(config, stderr),
+        ResolvedCli::Test(config) => crate::cli_test::test_cli(config, stdout.as_mut(), stderr),
         ResolvedCli::Run(config) => match config.input {
             CliInput::SourceFile(path) => {
                 run_source_file(&path, config.program_args, stdout, stderr)

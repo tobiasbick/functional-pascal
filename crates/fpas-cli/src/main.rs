@@ -29,7 +29,7 @@ use std::env;
 use std::process;
 
 #[cfg(test)]
-pub(crate) use cli_input::{CliConfig, TestCliConfig};
+pub(crate) use cli_input::{CliConfig, TestCliConfig, TestReportFormat};
 pub(crate) use cli_input::{CliInput, ResolvedCli, resolve_cli_config};
 pub(crate) use cli_run::run_cli;
 #[cfg(test)]

@@ -246,3 +246,31 @@ fn run_cli_help_and_version_exit_zero() {
 
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 }
+
+#[test]
+fn resolve_cli_config_parses_test_report_json_flag() {
+    let cwd = create_temp_dir("test-report-json");
+    write_text(
+        &cwd.join("demo.fpasprj"),
+        "[project]\nname = \"demo\"\nkind = \"test\"\n\n[sources]\ninclude = [\"*.fpas\"]\n",
+    );
+
+    let result = resolve_cli_config(
+        &[
+            String::from("test"),
+            String::from("--report"),
+            String::from("json"),
+            String::from("demo.fpasprj"),
+        ],
+        &cwd,
+    );
+
+    match result {
+        Ok(ResolvedCli::Test(config)) => {
+            assert_eq!(config.report, Some(crate::TestReportFormat::Json));
+        }
+        other => panic!("expected test config, got {other:?}"),
+    }
+
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+}

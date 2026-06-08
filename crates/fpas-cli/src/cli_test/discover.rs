@@ -109,11 +109,7 @@ pub(super) fn filter_test_paths(paths: Vec<PathBuf>, pattern: &str) -> Vec<PathB
 }
 
 fn path_matches_filter(path: &Path, needle: &str) -> bool {
-    if path
-        .to_string_lossy()
-        .to_lowercase()
-        .contains(&*needle)
-    {
+    if path.to_string_lossy().to_lowercase().contains(&*needle) {
         return true;
     }
     path.file_name()

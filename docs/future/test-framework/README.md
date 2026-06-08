@@ -36,7 +36,7 @@ Update the **Status** column when a phase is complete (⬜ → ✅). Detailed ta
 - [x] **Phase 3** — TUI test with `.script.toml` passes in CI (console scripts; graph deferred to Phase 4)
 - [x] **Phase 4** — Graph smoke test headless in CI
 - [x] **Phase 5** — Workspace + `kind = "test"` supported (monorepo demo; `[test]` overrides remain optional)
-- [ ] **Phase 6** — At least filter + JSON report shipped
+- [x] **Phase 6** — Filter + JSON report shipped
 
 ---
 
@@ -256,7 +256,7 @@ High-level phases are below. **Every task has a checkbox in [`implementation.md`
 - [ ] `Setup` / `Teardown` procedures in test units
 - [ ] Parallel test execution (respect VM / graph headless constraints)
 - [x] Filter: `fpas test --filter menu_bar`
-- [ ] JSON report for CI (`--report json`)
+- [x] JSON report for CI (`--report json`)
 - [ ] Runner timeout for hung interactive tests
 
 → Tasks: [`implementation.md` § Phase 6](implementation.md#phase-6--quality-and-ergonomics)

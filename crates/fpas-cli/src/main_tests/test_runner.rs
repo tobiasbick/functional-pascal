@@ -13,6 +13,7 @@ fn test_cli_runs_passing_tests_in_directory() {
     );
 
     let mut stderr = Vec::new();
+    let mut stdout = Vec::new();
     let exit = test_cli(
         TestCliConfig {
             input: CliInput::SourceFile(cwd.clone()),
@@ -21,7 +22,9 @@ fn test_cli_runs_passing_tests_in_directory() {
             list_only: false,
             script_path: None,
             filter: None,
+            report: None,
         },
+        &mut stdout,
         &mut stderr,
     );
 
@@ -65,6 +68,7 @@ fn test_cli_runs_tui_test_with_sidecar_script() {
     );
 
     let mut stderr = Vec::new();
+    let mut stdout = Vec::new();
     let exit = test_cli(
         TestCliConfig {
             input: CliInput::SourceFile(cwd.clone()),
@@ -73,7 +77,9 @@ fn test_cli_runs_tui_test_with_sidecar_script() {
             list_only: false,
             script_path: None,
             filter: None,
+            report: None,
         },
+        &mut stdout,
         &mut stderr,
     );
 

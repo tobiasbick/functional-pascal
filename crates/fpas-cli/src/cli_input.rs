@@ -22,7 +22,7 @@ Usage:
     fpas check                                            Discover `.fpasworkspace` or `.fpasprj` in cwd
     fpas test [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
                                                           Run `*_test.fpas` programs
-    fpas test [--list] [--fail-fast] [--filter <pattern>] [--script <path>] [<path>]             Discover tests in cwd when path omitted
+    fpas test [--list] [--fail-fast] [--filter <pattern>] [--report json] [--script <path>] [<path>]             Discover tests in cwd when path omitted
 
 Options:
   -h, --help      Print this help
@@ -46,6 +46,11 @@ pub(crate) struct CliConfig {
     pub program_args: Vec<String>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum TestReportFormat {
+    Json,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct TestCliConfig {
     pub input: CliInput,
@@ -54,6 +59,7 @@ pub(crate) struct TestCliConfig {
     pub list_only: bool,
     pub script_path: Option<PathBuf>,
     pub filter: Option<String>,
+    pub report: Option<TestReportFormat>,
 }
 
 /// Result of parsing CLI arguments before loading sources.
@@ -105,6 +111,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
     let mut list_only = false;
     let mut script_path = None::<PathBuf>;
     let mut filter = None::<String>;
+    let mut report = None::<TestReportFormat>;
     let mut positional = Vec::new();
     let mut index = 0;
     while index < cli_args.len() {
@@ -133,6 +140,23 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
                 };
                 if filter.replace(pattern.clone()).is_some() {
                     return Err("Duplicate `--filter` option.".to_string());
+                }
+            }
+            "--report" if mode == CliMode::Test => {
+                index += 1;
+                let Some(format) = cli_args.get(index) else {
+                    return Err(
+                        "Missing format after `--report`.\n  help: `fpas test --report json`."
+                            .to_string(),
+                    );
+                };
+                if format != "json" {
+                    return Err(format!(
+                        "Unsupported report format `{format}`.\n  help: Only `--report json` is supported."
+                    ));
+                }
+                if report.replace(TestReportFormat::Json).is_some() {
+                    return Err("Duplicate `--report` option.".to_string());
                 }
             }
             _ => positional.push(cli_args[index].clone()),
@@ -187,6 +211,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             list_only,
             script_path,
             filter,
+            report,
         }),
     })
 }
@@ -213,7 +238,7 @@ fn usage_error(mode: CliMode) -> String {
                 .to_string()
         }
         CliMode::Test => {
-            "Usage: fpas test [--list] [--fail-fast] [--filter <pattern>] [--script <path>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]\n  help: `fpas --help` shows options."
+            "Usage: fpas test [--list] [--fail-fast] [--filter <pattern>] [--report json] [--script <path>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]\n  help: `fpas --help` shows options."
                 .to_string()
         }
     }

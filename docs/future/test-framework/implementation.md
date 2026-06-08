@@ -234,16 +234,16 @@ Reuse: `cli_check.rs` (project load), `main_tests/support.rs` (`run_source_and_c
 
 ### 4.1 Headless mode in runner
 
-- [ ] **4.1.1** — `test_script/parse.rs` — **MODIFY** `[config] headless_graph = true`, graph event types
-- [ ] **4.1.2** — `test_script/graph.rs` — **CREATE** map to `GraphEvent`, `push_graph_event`
-- [ ] **4.1.3** — `cli_test/run.rs` — wrap `vm.run()` in `with_headless_graph_backend_for_tests` when config flag set
+- [x] **4.1.1** — `test_script/parse.rs` — **MODIFY** `[config] headless_graph = true`, graph event types
+- [x] **4.1.2** — `test_script/graph.rs` — **CREATE** map to `GraphEvent`, `push_graph_event`
+- [x] **4.1.3** — `cli_test/run.rs` — wrap `vm.run()` in `with_headless_graph_backend_for_tests` when config flag set
 
 Reference: [`crates/fpas-compiler/src/tests/std_library/graph.rs`](../../../crates/fpas-compiler/src/tests/std_library/graph.rs)
 
 ### 4.2 Examples
 
-- [ ] **4.2.1** — `examples/pascal/test/graph_smoke_test.fpas` — **CREATE** minimal open/draw/close
-- [ ] **4.2.2** — `examples/pascal/test/graph_smoke_test.script.toml` — **CREATE** quit key event
+- [x] **4.2.1** — `examples/pascal/test/graph_smoke_test.fpas` — **CREATE** minimal open/draw/close
+- [x] **4.2.2** — `examples/pascal/test/graph_smoke_test.script.toml` — **CREATE** quit key event
 
 ### 4.3 Phase 4b (optional) — pixel assertions
 
@@ -252,9 +252,11 @@ Reference: [`crates/fpas-compiler/src/tests/std_library/graph.rs`](../../../crat
 
 ### 4.4 Phase 4 verification
 
-- [ ] Graph test completes in CI (no window flash)
-- [ ] Scripted `graph_key` / `graph_mouse` consumed by `PollEvent` loop
-- [ ] Native graph backend not selected when headless flag set
+- [x] Graph test completes in CI (no window flash)
+- [x] Scripted `graph_key` / `graph_mouse` consumed by `PollEvent` loop
+- [x] Native graph backend not selected when headless flag set
+- [x] `cargo test -p fpas-cli test_script` includes headless graph apply test
+- [x] `fpas test examples/pascal/test/graph_smoke_test.fpas` passes
 
 ---
 

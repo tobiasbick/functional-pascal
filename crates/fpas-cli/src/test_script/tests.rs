@@ -151,6 +151,61 @@ kind = "Escape"
 }
 
 #[test]
+fn apply_graph_escape_script_runs_headless_graph_test_program() {
+    let source = "\
+program T;
+uses Std.Console, Std.Graph, Std.Test;
+
+mutable var QuitSeen: boolean := false;
+
+procedure OnPaint(App: Application);
+begin
+  Application.Clear(App, $00102030);
+  Application.Present(App)
+end;
+
+function OnKeyPressed(App: Application; Key: KeyEvent): boolean;
+begin
+  if Key.kind = KeyKind.Escape then
+  begin
+    QuitSeen := true;
+    Application.HostRequestQuit(App);
+    return true
+  end;
+  return false
+end;
+
+begin
+  var App: Application := Application.Open(32, 24, 'Graph smoke');
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+    OnKeyPressed := Some(OnKeyPressed);
+  end;
+  Application.Configure(App, Handlers);
+  Application.Run(App);
+  AssertTrue(QuitSeen)
+end.";
+    let (program, _) = parse(source);
+    let chunk = compile_all(&program).expect("compile");
+    let mut vm = fpas_vm::Vm::new(chunk);
+
+    let script = parse_script_text(
+        r#"
+[config]
+headless_graph = true
+
+[[event]]
+type = "graph_key"
+kind = "Escape"
+"#,
+        Path::new("graph_smoke.script.toml"),
+    )
+    .expect("parse");
+    apply_script_to_vm(&mut vm, &script).expect("apply");
+    fpas_std::with_headless_graph_backend_for_tests(|| vm.run()).expect("run");
+}
+
+#[test]
 fn load_script_reads_file_from_disk() {
     let dir = crate::test_support::create_temp_dir("fpas-script-load");
     let path = dir.join("input.script.toml");

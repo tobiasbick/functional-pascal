@@ -4,9 +4,10 @@
 
 mod apply;
 mod console;
+mod graph;
 mod parse;
 
-pub use parse::{ScriptFile, load_script, sidecar_path_for_test};
+pub use parse::{ScriptConfig, ScriptFile, load_script, sidecar_path_for_test};
 
 #[cfg(test)]
 pub use parse::parse_script_text;

@@ -34,7 +34,7 @@ Update the **Status** column when a phase is complete (⬜ → ✅). Detailed ta
 - [x] **Phase 1** — `Std.Test` shippable; `assert_basics_test.fpas` runs via `fpas`
 - [x] **Phase 2** — `fpas test` discovers and runs `*_test.fpas` (core runner; optional items in Phase 2.4/2.6 remain open)
 - [x] **Phase 3** — TUI test with `.script.toml` passes in CI (console scripts; graph deferred to Phase 4)
-- [ ] **Phase 4** — Graph smoke test headless in CI
+- [x] **Phase 4** — Graph smoke test headless in CI
 - [ ] **Phase 5** — Workspace + `kind = "test"` supported
 - [ ] **Phase 6** — At least filter + JSON report shipped
 
@@ -220,13 +220,14 @@ High-level phases are below. **Every task has a checkbox in [`implementation.md`
 
 **Deliverables**
 
-- [ ] Runner sets headless graph backend automatically for graph tests
-- [ ] Script support for `graph_key`, `graph_mouse`, `graph_wheel` events
+- [x] Runner sets headless graph backend when `[config] headless_graph = true`
+- [x] Script support for `graph_key`, `graph_mouse`, `graph_wheel` events
 - [ ] Optional `Std.Test.AssertPixels(...)` or Rust-only pixel hook (Phase 4b — evaluate need)
+- [x] `examples/pascal/test/graph_smoke_test.fpas` + `.script.toml`
 
 **Success criteria**
 
-- [ ] `graph_basics`-style program runs in CI with scripted quit event
+- [x] Graph smoke test runs in CI with scripted Escape quit event
 - [ ] Existing headless pixel assertions remain in Rust; optional FPAS wrapper if justified
 
 → Tasks: [`implementation.md` § Phase 4](implementation.md#phase-4--graph-headless-tests)

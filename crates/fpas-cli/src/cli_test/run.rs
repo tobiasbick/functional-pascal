@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 use super::report::TestOutcome;
 use crate::cli_run::render_cli_diagnostic_with_sources;
-use crate::test_script::{apply_script_to_vm, load_script, sidecar_path_for_test};
+use crate::test_script::{ScriptConfig, apply_script_to_vm, load_script, sidecar_path_for_test};
 use fpas_diagnostics::DiagnosticSeverity;
 use fpas_diagnostics::codes::RUNTIME_TEST_ASSERTION_FAILED;
 use fpas_parser::parse;
@@ -66,13 +66,25 @@ pub(super) fn run_single_test(
     };
 
     let mut vm = fpas_vm::Vm::new(chunk);
-    if let Err(message) = apply_test_script(path, script_override, &mut vm) {
-        let _ = writeln!(stderr, "  FAIL  {display}");
-        let _ = writeln!(stderr, "        {message}");
-        return TestOutcome::CompileError;
-    }
+    let script_config = match apply_test_script(path, script_override, &mut vm) {
+        Ok(config) => config,
+        Err(message) => {
+            let _ = writeln!(stderr, "  FAIL  {display}");
+            let _ = writeln!(stderr, "        {message}");
+            return TestOutcome::CompileError;
+        }
+    };
 
-    match vm.run() {
+    let headless_graph = script_config
+        .as_ref()
+        .is_some_and(|config| config.headless_graph);
+    let run_result = if headless_graph {
+        fpas_std::with_headless_graph_backend_for_tests(|| vm.run())
+    } else {
+        vm.run()
+    };
+
+    match run_result {
         Ok(()) => {
             let _ = writeln!(stderr, "  PASS  {display}");
             TestOutcome::Pass
@@ -128,7 +140,7 @@ fn apply_test_script(
     test_path: &Path,
     script_override: Option<&Path>,
     vm: &mut fpas_vm::Vm,
-) -> Result<(), String> {
+) -> Result<Option<ScriptConfig>, String> {
     let script_path = match script_override {
         Some(path) => path.to_path_buf(),
         None => {
@@ -136,7 +148,7 @@ fn apply_test_script(
             if sidecar.is_file() {
                 sidecar
             } else {
-                return Ok(());
+                return Ok(None);
             }
         }
     };
@@ -149,5 +161,6 @@ fn apply_test_script(
     }
 
     let script = load_script(&script_path)?;
-    apply_script_to_vm(vm, &script)
+    apply_script_to_vm(vm, &script)?;
+    Ok(Some(script.config))
 }

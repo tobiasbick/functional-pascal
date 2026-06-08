@@ -1,0 +1,34 @@
+program GraphSmokeTest;
+uses Std.Console, Std.Graph, Std.Test;
+
+mutable var QuitSeen: boolean := false;
+
+procedure OnPaint(App: Application);
+begin
+  var Screen: Size := Application.Size(App);
+  Application.Clear(App, $00020408);
+  Application.DrawText(App, 2, 2, 'FPAS', $00FFFFFF);
+  Application.Present(App)
+end;
+
+function OnKeyPressed(App: Application; Key: KeyEvent): boolean;
+begin
+  if Key.kind = KeyKind.Escape then
+  begin
+    QuitSeen := true;
+    Application.HostRequestQuit(App);
+    return true
+  end;
+  return false
+end;
+
+begin
+  var App: Application := Application.Open(32, 24, 'Graph smoke test');
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+    OnKeyPressed := Some(OnKeyPressed);
+  end;
+  Application.Configure(App, Handlers);
+  Application.Run(App);
+  AssertTrue(QuitSeen)
+end.

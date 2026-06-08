@@ -82,6 +82,56 @@ line = "Alice"
 }
 
 #[test]
+fn apply_escape_script_runs_hosted_tui_test_program() {
+    let source = "\
+program T;
+uses Std.Console, Std.Tui, Std.Test;
+
+mutable var QuitSeen: boolean := false;
+
+procedure OnPaint(App: Application);
+begin
+end;
+
+function OnKeyPressed(App: Application; Key: KeyEvent): boolean;
+begin
+  if Key.kind = KeyKind.Escape then
+  begin
+    QuitSeen := true;
+    Application.HostRequestQuit(App);
+    return true
+  end;
+  return false
+end;
+
+begin
+  var App: Application := Application.Open();
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+    OnKeyPressed := Some(OnKeyPressed);
+  end;
+  Application.Configure(App, Handlers);
+  Application.Run(App);
+  AssertTrue(QuitSeen)
+end.";
+    let (program, _) = parse(source);
+    let chunk = compile_all(&program).expect("compile");
+    let mut vm = fpas_vm::Vm::new(chunk);
+
+    let script = parse_script_text(
+        r#"
+[[event]]
+type = "console_key"
+kind = "Escape"
+"#,
+        Path::new("escape.script.toml"),
+    )
+    .expect("parse");
+    apply_script_to_vm(&mut vm, &script).expect("apply");
+    vm.run().expect("run");
+}
+
+#[test]
 fn graph_event_without_headless_flag_is_rejected_on_apply() {
     let script = parse_script_text(
         r#"

@@ -1,0 +1,33 @@
+program TuiEscapeTest;
+uses Std.Console, Std.Tui, Std.Test;
+
+mutable var QuitSeen: boolean := false;
+
+procedure OnPaint(App: Application);
+begin
+  ClrScr();
+  GotoXY(1, 1);
+  WriteLn('Press Escape to quit')
+end;
+
+function OnKeyPressed(App: Application; Key: KeyEvent): boolean;
+begin
+  if Key.kind = KeyKind.Escape then
+  begin
+    QuitSeen := true;
+    Application.HostRequestQuit(App);
+    return true
+  end;
+  return false
+end;
+
+begin
+  var App: Application := Application.Open();
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+    OnKeyPressed := Some(OnKeyPressed);
+  end;
+  Application.Configure(App, Handlers);
+  Application.Run(App);
+  AssertTrue(QuitSeen)
+end.

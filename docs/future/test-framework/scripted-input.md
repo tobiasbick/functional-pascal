@@ -112,22 +112,33 @@ Exact field set aligns with existing `GraphEvent` in `fpas-std` and compiler tes
 
 ```pascal
 program TuiEscapeTest;
-uses Std.Tui, Std.Test;
+uses Std.Console, Std.Tui, Std.Test;
 
-var QuitSeen: boolean := false;
+mutable var QuitSeen: boolean := false;
 
-procedure OnKey(App: Application; Ev: TuiEvent);
+procedure OnPaint(App: Application);
 begin
-  if Ev.kind = TuiEventKind.Key then
-    if Ev.key.kind = KeyKind.Escape then
-      QuitSeen := true
+end;
+
+function OnKeyPressed(App: Application; Key: KeyEvent): boolean;
+begin
+  if Key.kind = KeyKind.Escape then
+  begin
+    QuitSeen := true;
+    Application.HostRequestQuit(App);
+    return true
+  end;
+  return false
 end;
 
 begin
   var App: Application := Application.Open();
-  Application.Configure(App, ApplicationHandlers{ OnKeyPressed := Some(OnKey), … });
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+    OnKeyPressed := Some(OnKeyPressed);
+  end;
+  Application.Configure(App, Handlers);
   Application.Run(App);
-  Application.Close(App);
   AssertTrue(QuitSeen)
 end.
 ```

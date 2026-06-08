@@ -33,7 +33,7 @@ Update the **Status** column when a phase is complete (⬜ → ✅). Detailed ta
 - [ ] **Phase 0** — Open decisions reviewed and recorded
 - [x] **Phase 1** — `Std.Test` shippable; `assert_basics_test.fpas` runs via `fpas`
 - [x] **Phase 2** — `fpas test` discovers and runs `*_test.fpas` (core runner; optional items in Phase 2.4/2.6 remain open)
-- [ ] **Phase 3** — TUI test with `.script.toml` passes in CI
+- [x] **Phase 3** — TUI test with `.script.toml` passes in CI (console scripts; graph deferred to Phase 4)
 - [ ] **Phase 4** — Graph smoke test headless in CI
 - [ ] **Phase 5** — Workspace + `kind = "test"` supported
 - [ ] **Phase 6** — At least filter + JSON report shipped
@@ -204,14 +204,15 @@ High-level phases are below. **Every task has a checkbox in [`implementation.md`
 **Deliverables**
 
 - [x] `crates/fpas-cli/src/test_script/` — parse TOML → VM queue pushes (console + readln; graph deferred to Phase 4)
-- [ ] `examples/pascal/test/tui_escape_test.fpas` + `.script.toml` — end-to-end TUI test
+- [x] `examples/pascal/test/tui_escape_test.fpas` + `.script.toml` — end-to-end TUI test
+- [x] `examples/pascal/test/tui_mouse_test.fpas` + `.script.toml` — mouse Down dispatch test
 - [x] Runner flag `--script path` — override sidecar path
 - [x] `examples/pascal/test/readln_test.fpas` + `.script.toml` — ReadLn smoke test
 
 **Success criteria**
 
-- [ ] TUI program under `Application.Run` quits on simulated Escape without human input
-- [ ] Mouse down/up at (x, y) reaches `OnMouse` handler in test mode
+- [x] TUI program under `Application.Run` quits on simulated Escape without human input
+- [x] Mouse down at (x, y) reaches `OnMouse` handler in test mode
 
 → Tasks: [`implementation.md` § Phase 3](implementation.md#phase-3--scripted-consoletui-input)
 

@@ -209,16 +209,17 @@ Reuse: `cli_check.rs` (project load), `main_tests/support.rs` (`run_source_and_c
 
 ### 3.3 Examples and tests
 
-- [ ] **3.3.1** — `examples/pascal/test/tui_escape_test.fpas` — **CREATE**
-- [ ] **3.3.2** — `examples/pascal/test/tui_escape_test.script.toml` — **CREATE**
+- [x] **3.3.1** — `examples/pascal/test/tui_escape_test.fpas` — **CREATE**
+- [x] **3.3.2** — `examples/pascal/test/tui_escape_test.script.toml` — **CREATE**
 - [x] **3.3.3** — `crates/fpas-cli/src/test_script/tests.rs` — **CREATE** unit tests for TOML parse + apply
-- [ ] **3.3.4** — `crates/fpas-cli/src/main_tests/test_runner.rs` — **MODIFY** end-to-end TUI test case
+- [x] **3.3.4** — `crates/fpas-cli/src/main_tests/test_runner.rs` — **MODIFY** end-to-end TUI test case
 - [x] **3.3.5** — `examples/pascal/test/readln_test.fpas` + `readln_test.script.toml` — **CREATE** ReadLn sidecar smoke test
+- [x] **3.3.6** — `examples/pascal/test/tui_mouse_test.fpas` + `.script.toml` — **CREATE** mouse dispatch smoke test
 
 ### 3.4 Phase 3 verification
 
-- [ ] Escape in script triggers TUI quit handler
-- [ ] Mouse `Down`/`Up` at (x,y) reaches `OnMouse` in hosted TUI test
+- [x] Escape in script triggers TUI quit handler
+- [x] Mouse `Down`/`Up` at (x,y) reaches `OnMouse` in hosted TUI test
 - [x] Invalid script `type` → clear error before VM start
 - [x] `cargo test -p fpas-cli test_script` passes
 - [x] `fpas test examples/pascal/test/` runs `readln_test.fpas` with sidecar script

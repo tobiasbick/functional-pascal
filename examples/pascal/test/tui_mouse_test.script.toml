@@ -1,0 +1,6 @@
+[[event]]
+type = "console_mouse"
+action = "Down"
+button = "Left"
+x = 10
+y = 5

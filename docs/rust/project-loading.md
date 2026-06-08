@@ -8,6 +8,7 @@ How multi-file Functional Pascal programs are loaded before compile. Language ru
 |--------|----------------|
 | `loading/own.rs` | Parse one `.fpasprj`, resolve `[sources]`, validate manifest |
 | `test_sources.rs` | `*_test.fpas` naming; validate `kind = "test"` source lists |
+| `test_manifest.rs` | Optional `[test.overrides]` per-file `script` / `headless_graph` for `fpas test` |
 | `dependencies.rs` | Merge deps; remap `link_meta` so transitive library origins and export policies stay correct |
 | `loading/exports.rs` | Validate library `[exports].units` |
 | `link/import_policy.rs` | Enforce cross-project unit imports for dependents |

@@ -276,7 +276,7 @@ Reference: [`crates/fpas-compiler/src/tests/std_library/graph.rs`](../../../crat
 ### 5.2 Workspace discovery
 
 - [x] **5.2.1** — `cli_test/discover.rs` — **MODIFY** no path: find workspace, collect `kind = "test"` members
-- [ ] **5.2.2** — `[test]` manifest section optional: per-file `script`, `headless_graph` overrides
+- [x] **5.2.2** — `[test]` manifest section optional: per-file `script`, `headless_graph` overrides
 - [x] **5.2.3** — `examples/pascal/test/tests.fpasprj` — **CREATE** bundles example test sources
 
 Example layout:

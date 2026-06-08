@@ -107,6 +107,7 @@ fn link_context_for_test(path: &Path) -> Option<LinkContext> {
     Some(LinkContext {
         source_files: loaded.source_files,
         link_meta: loaded.link_meta,
+        test_manifest: loaded.test_manifest,
     })
 }
 

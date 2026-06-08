@@ -7,6 +7,7 @@ mod includes;
 mod path_resolution;
 mod project_kind;
 mod source_files;
+mod test_manifest;
 mod toml_errors;
 mod validation;
 mod workspace_deps;

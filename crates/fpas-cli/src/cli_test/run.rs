@@ -27,6 +27,7 @@ fn test_display_path(path: &Path) -> std::borrow::Cow<'_, str> {
 pub(super) struct LinkContext {
     pub source_files: Vec<PathBuf>,
     pub link_meta: project::ProjectLinkMeta,
+    pub test_manifest: project::TestManifest,
 }
 
 /// Compiles and runs one test file, classifying the result.
@@ -69,7 +70,8 @@ pub(super) fn run_single_test(
     };
 
     let mut vm = fpas_vm::Vm::new(chunk);
-    let script_config = match apply_test_script(path, script_override, &mut vm) {
+    let manifest_override = link.and_then(|ctx| ctx.test_manifest.override_for(path));
+    let script_config = match apply_test_script(path, script_override, manifest_override, &mut vm) {
         Ok(config) => config,
         Err(message) => {
             let _ = writeln!(stderr, "  FAIL  {display}");
@@ -78,9 +80,7 @@ pub(super) fn run_single_test(
         }
     };
 
-    let headless_graph = script_config
-        .as_ref()
-        .is_some_and(|config| config.headless_graph);
+    let headless_graph = script_config.headless_graph;
     let shutdown = vm.shutdown_handle();
     let run_result = if let Some(timeout) = timeout {
         run_with_timeout(shutdown, timeout, move || {
@@ -159,29 +159,53 @@ fn load_program(
 
 fn apply_test_script(
     test_path: &Path,
-    script_override: Option<&Path>,
+    cli_script: Option<&Path>,
+    manifest_override: Option<&project::TestFileOverride>,
     vm: &mut fpas_vm::Vm,
-) -> Result<Option<ScriptConfig>, String> {
-    let script_path = match script_override {
-        Some(path) => path.to_path_buf(),
-        None => {
-            let sidecar = sidecar_path_for_test(test_path);
-            if sidecar.is_file() {
-                sidecar
-            } else {
-                return Ok(None);
-            }
+) -> Result<ScriptConfig, String> {
+    let script_path = resolve_script_path(test_path, cli_script, manifest_override)?;
+
+    let mut config = if let Some(script_path) = script_path {
+        if !script_path.is_file() {
+            return Err(format!(
+                "Script file not found: `{}`.\n  help: Pass an existing `.script.toml` path with `--script` or fix `[test.overrides]` in the project file.",
+                script_path.display()
+            ));
         }
+
+        let script = load_script(&script_path)?;
+        apply_script_to_vm(vm, &script)?;
+        script.config
+    } else {
+        ScriptConfig::default()
     };
 
-    if !script_path.is_file() {
-        return Err(format!(
-            "Script file not found: `{}`.\n  help: Pass an existing `.script.toml` path with `--script`.",
-            script_path.display()
-        ));
+    if let Some(manifest) = manifest_override {
+        if let Some(headless_graph) = manifest.headless_graph {
+            config.headless_graph = headless_graph;
+        }
     }
 
-    let script = load_script(&script_path)?;
-    apply_script_to_vm(vm, &script)?;
-    Ok(Some(script.config))
+    Ok(config)
+}
+
+fn resolve_script_path(
+    test_path: &Path,
+    cli_script: Option<&Path>,
+    manifest_override: Option<&project::TestFileOverride>,
+) -> Result<Option<PathBuf>, String> {
+    if let Some(path) = cli_script {
+        return Ok(Some(path.to_path_buf()));
+    }
+
+    if let Some(path) = manifest_override.and_then(|value| value.script.as_ref()) {
+        return Ok(Some(path.clone()));
+    }
+
+    let sidecar = sidecar_path_for_test(test_path);
+    if sidecar.is_file() {
+        return Ok(Some(sidecar));
+    }
+
+    Ok(None)
 }

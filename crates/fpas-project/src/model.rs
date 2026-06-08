@@ -1,6 +1,8 @@
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
+use crate::TestManifest;
+
 /// Kind of `.fpasprj` project described in `docs/pascal/10-projects.md`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ProjectKind {
@@ -79,6 +81,8 @@ pub struct LoadedProject {
     pub link_meta: ProjectLinkMeta,
     /// How dependents may import units from this project when it is a library dependency.
     pub(crate) export_policy_for_dependents: LibraryExportPolicy,
+    /// Optional per-test runner overrides from `[test]` in the project manifest.
+    pub test_manifest: TestManifest,
 }
 
 impl LoadedProject {

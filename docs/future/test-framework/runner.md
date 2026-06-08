@@ -108,10 +108,11 @@ Summary: 2 passed, 1 failed, 0 skipped (24ms)
 
 ## Sidecar script discovery
 
-If `menu_bar_test.fpas` runs, look for (first match wins):
+If `menu_bar_test.fpas` runs, look for a script (first match wins):
 
-1. `menu_bar_test.script.toml` (same directory)
-2. `[test.script]` entry in `.fpasprj` keyed by source path (Phase 5)
+1. `--script <path>` CLI flag
+2. `[test.overrides."menu_bar_test.fpas"].script` in `.fpasprj`
+3. `menu_bar_test.script.toml` beside the test file (same directory)
 
 ---
 

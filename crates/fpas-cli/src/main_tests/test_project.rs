@@ -80,3 +80,41 @@ fn test_cli_runs_tests_from_workspace_test_member() {
     let text = String::from_utf8(stderr).expect("utf-8");
     assert!(text.contains("PASS  only_test.fpas"));
 }
+
+#[test]
+fn test_cli_uses_manifest_script_override() {
+    let cwd = create_temp_dir("fpas-test-manifest-script");
+    write_text(
+        &cwd.join("tests.fpasprj"),
+        "[project]\nname = \"tests\"\nkind = \"test\"\n\n[sources]\ninclude = [\"*.fpas\"]\n\n[test.overrides.\"prompt_test.fpas\"]\nscript = \"prompt.script.toml\"\n",
+    );
+    write_text(
+        &cwd.join("prompt_test.fpas"),
+        "program P;\nuses Std.Console, Std.Test;\nbegin\n  var Name: string := ReadLn();\n  AssertTrue(Name = 'Alice')\nend.",
+    );
+    write_text(
+        &cwd.join("prompt.script.toml"),
+        "[[event]]\ntype = \"readln\"\nline = \"Alice\"\n",
+    );
+
+    let mut stderr = Vec::new();
+    let mut stdout = Vec::new();
+    let exit = test_cli(
+        TestCliConfig {
+            input: CliInput::ProjectFile(cwd.join("tests.fpasprj")),
+            cwd: cwd.clone(),
+            fail_fast: false,
+            list_only: false,
+            script_path: None,
+            filter: Some("prompt".to_string()),
+            report: None,
+            timeout: None,
+        },
+        &mut stdout,
+        &mut stderr,
+    );
+
+    assert_eq!(exit, 0, "stderr={}", String::from_utf8_lossy(&stderr));
+    let text = String::from_utf8(stderr).expect("utf-8");
+    assert!(text.contains("PASS  prompt_test.fpas"));
+}

@@ -240,7 +240,7 @@ High-level phases are below. **Every task has a checkbox in [`implementation.md`
 - [x] `fpas test <tests.fpasprj>` — run bundled `*_test.fpas` with project linking
 - [x] `examples/pascal/test/tests.fpasprj` — example test project
 - [x] `fpas test` with no path — discover workspace test members only
-- [ ] `[test]` section (optional) — `script = "…"`, `headless_graph = true` per test file
+- [x] `[test]` section (optional) — `[test.overrides."name_test.fpas"]` with `script`, `headless_graph`
 
 **Success criteria**
 

@@ -8,6 +8,7 @@ use crate::model::{LibraryExportPolicy, ProjectKind};
 use crate::paths::{
     resolve_explicit_file_path, resolve_source_files, same_file, validate_source_extension,
 };
+use crate::test_manifest::{TestManifest, TestSectionRaw, parse_test_section};
 use fpas_parser::CompilationUnit;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -32,6 +33,8 @@ pub(crate) struct OwnProject {
     pub warnings: Vec<String>,
     /// Export policy applied when this library is consumed as a dependency.
     pub export_policy: LibraryExportPolicy,
+    /// Optional `[test]` overrides for `fpas test` when `kind = "test"`.
+    pub test_manifest: TestManifest,
 }
 
 #[derive(Debug, Deserialize)]
@@ -40,6 +43,7 @@ struct ProjectFile {
     sources: Option<SourcesSection>,
     dependencies: Option<DependenciesSection>,
     exports: Option<ExportsSection>,
+    test: Option<TestSectionRaw>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -159,6 +163,7 @@ pub(crate) fn load_own_project(path: &Path) -> Result<OwnProject, String> {
     }
 
     let export_policy = resolve_export_policy(kind, parsed_exports, &source_files)?;
+    let test_manifest = parse_test_section(kind, project_file.test, &source_files, root_dir, path)?;
 
     Ok(OwnProject {
         kind,
@@ -169,6 +174,7 @@ pub(crate) fn load_own_project(path: &Path) -> Result<OwnProject, String> {
         root_dir: root_dir.to_path_buf(),
         warnings,
         export_policy,
+        test_manifest,
     })
 }
 

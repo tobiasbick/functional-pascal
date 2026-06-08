@@ -10,6 +10,7 @@ mod link;
 mod loading;
 mod model;
 mod paths;
+mod test_manifest;
 mod test_sources;
 mod workspace;
 
@@ -19,6 +20,7 @@ pub use link::{
 };
 pub use loading::load_project;
 pub use model::{LibraryExportPolicy, LoadedProject, ProjectKind, ProjectLinkMeta, SourceOrigin};
+pub use test_manifest::{TestFileOverride, TestManifest};
 pub use test_sources::is_test_source_file;
 pub use workspace::{
     LoadedWorkspace, discover_run_project_in_workspace, discover_test_projects_in_workspace,

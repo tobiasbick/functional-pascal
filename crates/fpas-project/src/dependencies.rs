@@ -80,6 +80,7 @@ pub(super) fn load_project_with_dependencies(
         warnings,
         link_meta,
         export_policy_for_dependents,
+        test_manifest: own.test_manifest,
     };
 
     visiting.pop();

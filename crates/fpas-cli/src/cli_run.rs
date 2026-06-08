@@ -129,6 +129,14 @@ fn run_project_file(
             );
             1
         }
+        project::ProjectKind::Test => {
+            let _ = writeln!(
+                stderr,
+                "Test projects are not executable with `fpas run`.\n  help: Use `fpas test {}` to run `*_test.fpas` programs.",
+                path.display()
+            );
+            1
+        }
     }
 }
 

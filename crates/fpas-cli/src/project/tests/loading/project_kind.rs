@@ -161,3 +161,67 @@ include = ["src/**/*.fpas"]
     assert_eq!(loaded.source_files.len(), 1);
     assert!(loaded.warnings.is_empty());
 }
+
+#[test]
+fn test_project_loads_test_program_sources_without_main() {
+    let dir = create_temp_dir("test-project-valid");
+    let project_file = dir.join("tests.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "tests"
+kind = "test"
+
+[sources]
+include = ["*.fpas"]
+"#,
+    );
+    write_text(&dir.join("helper.fpas"), "unit Tests.Helper;\n");
+    write_text(
+        &dir.join("smoke_test.fpas"),
+        "program Smoke;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+    );
+
+    let loaded = load_project_ok(&project_file);
+    fs::remove_dir_all(&dir).expect("temp directory must be removed");
+    assert_eq!(loaded.kind, ProjectKind::Test);
+    assert!(loaded.main.is_none());
+    assert!(
+        loaded.source_files.iter().any(|path| path
+            .file_name()
+            .is_some_and(|name| name == "smoke_test.fpas")),
+        "expected smoke_test.fpas in sources"
+    );
+    assert!(
+        loaded
+            .source_files
+            .iter()
+            .any(|path| path.file_name().is_some_and(|name| name == "helper.fpas")),
+        "expected helper unit in sources"
+    );
+}
+
+#[test]
+fn test_project_rejects_main() {
+    let dir = create_temp_dir("test-main-forbidden");
+    let project_file = dir.join("tests.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "tests"
+kind = "test"
+main = "smoke_test.fpas"
+
+[sources]
+include = ["*.fpas"]
+"#,
+    );
+    write_text(
+        &dir.join("smoke_test.fpas"),
+        "program Smoke;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+    );
+
+    let error = load_project_error(&project_file, "test project must reject main");
+    fs::remove_dir_all(&dir).expect("temp directory must be removed");
+    assert!(error.contains("must not define `project.main`"));
+}

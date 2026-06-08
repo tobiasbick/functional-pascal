@@ -16,5 +16,6 @@ mod input;
 mod projects;
 mod stdlib;
 mod support;
+mod test_project;
 mod test_runner;
 mod visibility;

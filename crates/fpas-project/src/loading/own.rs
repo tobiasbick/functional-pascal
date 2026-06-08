@@ -143,6 +143,15 @@ pub(crate) fn load_own_project(path: &Path) -> Result<OwnProject, String> {
             }
             None
         }
+        ProjectKind::Test => {
+            if project_file.project.main.is_some() {
+                return Err(
+                    "Test projects must not define `project.main`.\n  help: Entry files are discovered by `*_test.fpas` naming; run them with `fpas test`."
+                        .to_string(),
+                );
+            }
+            None
+        }
     };
 
     if let Some(main_path) = main.as_deref() {
@@ -177,7 +186,7 @@ fn parse_exports_section(
         return Ok(ParsedExports::None);
     };
 
-    if kind == ProjectKind::Program {
+    if kind == ProjectKind::Program || kind == ProjectKind::Test {
         return Err(format!(
             "Program project `{}` must not define `[exports]`.\n  help: Remove `[exports]` or change `project.kind` to `library`.",
             project_path.to_string_lossy()
@@ -198,7 +207,8 @@ fn resolve_export_policy(
             let exports = validate_library_exports(&names, source_files)?;
             Ok(LibraryExportPolicy::ListedUnits(exports.listed_units))
         }
-        (ProjectKind::Program, ParsedExports::UnitNames(_)) => Ok(LibraryExportPolicy::AllUnits),
+        (ProjectKind::Program, ParsedExports::UnitNames(_))
+        | (ProjectKind::Test, ParsedExports::UnitNames(_)) => Ok(LibraryExportPolicy::AllUnits),
     }
 }
 
@@ -218,8 +228,9 @@ fn parse_project_kind(raw_kind: &str) -> Result<ProjectKind, String> {
     match raw_kind.trim() {
         "program" => Ok(ProjectKind::Program),
         "library" => Ok(ProjectKind::Library),
+        "test" => Ok(ProjectKind::Test),
         other => Err(format!(
-            "Invalid `project.kind` value `{other}`.\n  help: Use `program` or `library`."
+            "Invalid `project.kind` value `{other}`.\n  help: Use `program`, `library`, or `test`."
         )),
     }
 }

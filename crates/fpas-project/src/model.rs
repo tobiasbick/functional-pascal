@@ -8,6 +8,8 @@ pub enum ProjectKind {
     Program,
     /// Library project that contains only `unit` source files.
     Library,
+    /// Test project: `*_test.fpas` programs discovered by `fpas test`, not `fpas run`.
+    Test,
 }
 
 /// Which project contributed a merged source file during loading.

@@ -41,7 +41,7 @@ struct ProjectNameSection {
 pub(super) struct MemberProjectManifest {
     /// Declared `project.name`.
     pub name: String,
-    /// Declared `project.kind` (`program` or `library`).
+    /// Declared `project.kind` (`program`, `library`, or `test`).
     pub kind: crate::ProjectKind,
 }
 
@@ -83,8 +83,9 @@ fn parse_member_project_kind(raw_kind: &str, path: &Path) -> Result<crate::Proje
     match raw_kind.trim() {
         "program" => Ok(crate::ProjectKind::Program),
         "library" => Ok(crate::ProjectKind::Library),
+        "test" => Ok(crate::ProjectKind::Test),
         other => Err(format!(
-            "Invalid `project.kind` value `{other}` in `{}`.\n  help: Use `program` or `library`.",
+            "Invalid `project.kind` value `{other}` in `{}`.\n  help: Use `program`, `library`, or `test`.",
             path.to_string_lossy()
         )),
     }

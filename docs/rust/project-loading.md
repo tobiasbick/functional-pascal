@@ -7,6 +7,7 @@ How multi-file Functional Pascal programs are loaded before compile. Language ru
 | Module | Responsibility |
 |--------|----------------|
 | `loading/own.rs` | Parse one `.fpasprj`, resolve `[sources]`, validate manifest |
+| `test_sources.rs` | `*_test.fpas` naming; validate `kind = "test"` source lists |
 | `dependencies.rs` | Merge deps; remap `link_meta` so transitive library origins and export policies stay correct |
 | `loading/exports.rs` | Validate library `[exports].units` |
 | `link/import_policy.rs` | Enforce cross-project unit imports for dependents |
@@ -20,7 +21,8 @@ How multi-file Functional Pascal programs are loaded before compile. Language ru
 - `load_project` — full project + dependency merge, unit-name validation
 - `build_program` / `build_program_with_source_map` — link program entry + units
 - `build_library_check_with_source_map` — link all library units for type-check only
-- `load_workspace`, `discover_workspace_file`, `discover_run_project_in_workspace`
+- `load_workspace`, `discover_workspace_file`, `discover_run_project_in_workspace`, `discover_test_projects_in_workspace`
+- `is_test_source_file` — basename ends with `_test.fpas` (shared with `fpas test` discovery)
 - `resolve_workspace_dependency_paths` — map `dependencies.workspace` names to `.fpasprj` paths
 
 ## Tests

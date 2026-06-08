@@ -1,0 +1,6 @@
+[project]
+name = "fpas-test-examples"
+kind = "test"
+
+[sources]
+include = ["*_test.fpas"]

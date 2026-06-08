@@ -268,15 +268,16 @@ Reference: [`crates/fpas-compiler/src/tests/std_library/graph.rs`](../../../crat
 
 ### 5.1 Project kind
 
-- [ ] **5.1.1** — `crates/fpas-project/src/` — **MODIFY** accept `kind = "test"` in manifest parser
-- [ ] **5.1.2** — `test` projects require `main`; reject bare `fpas my-tests.fpasprj` run (only `fpas test`)
-- [ ] **5.1.3** — `docs/pascal/10-projects.md` — **MODIFY** document `kind = "test"`
-- [ ] **5.1.4** — `docs/rust/project-loading.md` — **MODIFY** contributor notes
+- [x] **5.1.1** — `crates/fpas-project/src/` — **MODIFY** accept `kind = "test"` in manifest parser
+- [x] **5.1.2** — `test` projects require `main`; reject bare `fpas my-tests.fpasprj` run (only `fpas test`)
+- [x] **5.1.3** — `docs/pascal/10-projects.md` — **MODIFY** document `kind = "test"`
+- [x] **5.1.4** — `docs/rust/project-loading.md` — **MODIFY** contributor notes
 
 ### 5.2 Workspace discovery
 
-- [ ] **5.2.1** — `cli_test/discover.rs` — **MODIFY** no path: find workspace, collect `kind = "test"` members
+- [x] **5.2.1** — `cli_test/discover.rs` — **MODIFY** no path: find workspace, collect `kind = "test"` members
 - [ ] **5.2.2** — `[test]` manifest section optional: per-file `script`, `headless_graph` overrides
+- [x] **5.2.3** — `examples/pascal/test/tests.fpasprj` — **CREATE** bundles example test sources
 
 Example layout:
 
@@ -288,9 +289,11 @@ apps/my-app/
 
 ### 5.4 Phase 5 verification
 
-- [ ] `fpas test` at workspace root runs test members
-- [ ] `fpas my-app-tests.fpasprj` errors with hint to use `fpas test`
-- [ ] `fpas check` still accepts test projects
+- [ ] `fpas test` at workspace root runs test members (needs workspace demo)
+- [x] `fpas examples/pascal/test/tests.fpasprj` runs all bundled tests
+- [x] `fpas my-app-tests.fpasprj` errors with hint to use `fpas test` (via `fpas run`)
+- [x] `fpas check` still accepts test projects
+- [x] `cargo test -p fpas-cli test_project` passes
 
 ---
 

@@ -39,10 +39,10 @@ fn discover_from_project(project_path: &Path) -> Result<Vec<PathBuf>, String> {
 }
 
 fn discover_from_workspace(workspace_path: &Path) -> Result<Vec<PathBuf>, String> {
-    let workspace = project::load_workspace(workspace_path)?;
+    let test_members = project::discover_test_projects_in_workspace(workspace_path)?;
     let mut paths = Vec::new();
-    for member in &workspace.member_projects {
-        let loaded = project::load_project(member)?;
+    for member in test_members {
+        let loaded = project::load_project(&member)?;
         paths.extend(filter_test_files(loaded.source_files));
     }
     paths.sort();
@@ -84,11 +84,7 @@ fn collect_test_files_recursive_inner(dir: &Path, out: &mut Vec<PathBuf>) {
 
 /// Returns true when `path` ends with `_test.fpas` (case-insensitive).
 pub(super) fn is_test_file_name(path: &Path) -> bool {
-    path.file_name()
-        .and_then(|name| name.to_str())
-        .is_some_and(|name| {
-            name.len() > "_test.fpas".len() && name.to_ascii_lowercase().ends_with("_test.fpas")
-        })
+    project::is_test_source_file(path)
 }
 
 fn normalize_path(path: &Path, cwd: &Path) -> PathBuf {

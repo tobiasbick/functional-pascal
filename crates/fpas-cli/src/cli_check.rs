@@ -93,7 +93,68 @@ fn check_project_file(path: &Path, stderr: &mut dyn Write) -> i32 {
                 stderr,
             )
         }
+        project::ProjectKind::Test => check_test_project(&loaded, stderr),
     }
+}
+
+fn check_test_project(loaded: &project::LoadedProject, stderr: &mut dyn Write) -> i32 {
+    let unit_files: Vec<PathBuf> = loaded
+        .source_files
+        .iter()
+        .filter(|source| !project::is_test_source_file(source))
+        .cloned()
+        .collect();
+
+    if !unit_files.is_empty() {
+        let linked =
+            match project::build_library_check_with_source_map(&unit_files, &loaded.link_meta) {
+                Ok(program) => program,
+                Err(message) => {
+                    let _ = writeln!(stderr, "{message}");
+                    return 1;
+                }
+            };
+        let path_text = "test-project-units";
+        if check_parsed_program(
+            path_text,
+            &linked.program,
+            Some(&linked.source_paths),
+            stderr,
+        ) != 0
+        {
+            return 1;
+        }
+    }
+
+    for test_path in loaded
+        .source_files
+        .iter()
+        .filter(|source| project::is_test_source_file(source))
+    {
+        let linked = match project::build_program_with_source_map(
+            test_path,
+            &loaded.source_files,
+            &loaded.link_meta,
+        ) {
+            Ok(program) => program,
+            Err(message) => {
+                let _ = writeln!(stderr, "{message}");
+                return 1;
+            }
+        };
+        let test_path_text = test_path.to_string_lossy();
+        if check_parsed_program(
+            test_path_text.as_ref(),
+            &linked.program,
+            Some(&linked.source_paths),
+            stderr,
+        ) != 0
+        {
+            return 1;
+        }
+    }
+
+    0
 }
 
 fn check_workspace_file(path: &Path, stderr: &mut dyn Write) -> i32 {

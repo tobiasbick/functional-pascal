@@ -35,7 +35,7 @@ Update the **Status** column when a phase is complete (⬜ → ✅). Detailed ta
 - [x] **Phase 2** — `fpas test` discovers and runs `*_test.fpas` (core runner; optional items in Phase 2.4/2.6 remain open)
 - [x] **Phase 3** — TUI test with `.script.toml` passes in CI (console scripts; graph deferred to Phase 4)
 - [x] **Phase 4** — Graph smoke test headless in CI
-- [ ] **Phase 5** — Workspace + `kind = "test"` supported
+- [x] **Phase 5** — Workspace + `kind = "test"` supported (core; workspace demo + `[test]` overrides remain optional)
 - [ ] **Phase 6** — At least filter + JSON report shipped
 
 ---
@@ -236,13 +236,16 @@ High-level phases are below. **Every task has a checkbox in [`implementation.md`
 
 **Deliverables**
 
-- [ ] `kind = "test"` in `.fpasprj` — dedicated test project type
-- [ ] `fpas test` with no path — discover workspace / single project like `fpas check`
+- [x] `kind = "test"` in `.fpasprj` — dedicated test project type
+- [x] `fpas test <tests.fpasprj>` — run bundled `*_test.fpas` with project linking
+- [x] `examples/pascal/test/tests.fpasprj` — example test project
+- [ ] `fpas test` with no path — discover workspace test members only
 - [ ] `[test]` section (optional) — `script = "…"`, `headless_graph = true` per test file
 
 **Success criteria**
 
-- [ ] `apps/ide/` or similar can carry a sibling `ide-tests.fpasprj`
+- [x] `fpas test examples/pascal/test/tests.fpasprj` runs all bundled tests
+- [x] `fpas run` on a test project errors with hint to use `fpas test`
 - [ ] `fpas test` at workspace root runs all member test projects
 
 → Tasks: [`implementation.md` § Phase 5](implementation.md#phase-5--test-projects-and-workspace)

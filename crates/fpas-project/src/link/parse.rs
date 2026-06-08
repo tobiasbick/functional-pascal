@@ -4,6 +4,7 @@ use super::{
     support::canonical_unit_key,
 };
 use crate::common::{parse_compilation_unit_file, qualified_id_to_string, validate_user_unit_name};
+use crate::is_test_source_file;
 
 use fpas_parser::{CompilationUnit, Program};
 use std::collections::HashMap;
@@ -30,19 +31,23 @@ pub(super) fn parse_unit_files(
     let mut by_unit = HashMap::<String, UnitFile>::new();
 
     for source_path in source_files {
+        let parsed = parse_compilation_unit_file(source_path, 0)?.0;
+        let CompilationUnit::Unit(mut unit) = parsed else {
+            if is_test_source_file(source_path) {
+                continue;
+            }
+            let CompilationUnit::Program(program) = parsed else {
+                unreachable!("compilation unit is program or unit");
+            };
+            return Err(format!(
+                "Source file `{}` declares `program {}`. Source files must use `unit` declarations.",
+                source_path.to_string_lossy(),
+                program.name
+            ));
+        };
+
         let source_id = next_source_id(source_paths.len())?;
         source_paths.push(source_path.clone());
-
-        let mut unit = match parse_compilation_unit_file(source_path, source_id)?.0 {
-            CompilationUnit::Unit(unit) => unit,
-            CompilationUnit::Program(program) => {
-                return Err(format!(
-                    "Source file `{}` declares `program {}`. Source files must use `unit` declarations.",
-                    source_path.to_string_lossy(),
-                    program.name
-                ));
-            }
-        };
         apply_unit_source_id(&mut unit, source_id);
         validate_user_unit_name(source_path, &unit.name)?;
 

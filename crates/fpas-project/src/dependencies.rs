@@ -9,6 +9,7 @@ use super::model::{
 use super::paths::{
     canonical_project_path, merge_source_files, resolve_project_dependency_path, same_file,
 };
+use super::test_sources::validate_project_test_sources;
 use super::workspace::resolve_workspace_dependency_paths;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -60,11 +61,16 @@ pub(super) fn load_project_with_dependencies(
             .source_origins
             .insert(source_path.clone(), SourceOrigin::Own);
     }
-    source_files = validate_project_source_units(source_files, &mut warnings)?;
+    source_files = match own.kind {
+        ProjectKind::Test => validate_project_test_sources(source_files, &mut warnings)?,
+        ProjectKind::Program | ProjectKind::Library => {
+            validate_project_source_units(source_files, &mut warnings)?
+        }
+    };
 
     let export_policy_for_dependents = match own.kind {
         ProjectKind::Library => own.export_policy.clone(),
-        ProjectKind::Program => LibraryExportPolicy::AllUnits,
+        ProjectKind::Program | ProjectKind::Test => LibraryExportPolicy::AllUnits,
     };
 
     let loaded = LoadedProject {

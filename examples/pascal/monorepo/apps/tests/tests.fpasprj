@@ -1,0 +1,9 @@
+[project]
+name = "tests"
+kind = "test"
+
+[dependencies]
+workspace = ["greet"]
+
+[sources]
+include = ["*_test.fpas"]

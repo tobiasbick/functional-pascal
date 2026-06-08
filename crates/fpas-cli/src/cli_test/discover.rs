@@ -94,3 +94,50 @@ fn normalize_path(path: &Path, cwd: &Path) -> PathBuf {
         cwd.join(path)
     }
 }
+
+/// Keeps paths whose file name or full path contains `pattern` (case-insensitive).
+pub(super) fn filter_test_paths(paths: Vec<PathBuf>, pattern: &str) -> Vec<PathBuf> {
+    let needle = pattern.trim();
+    if needle.is_empty() {
+        return paths;
+    }
+    let needle = needle.to_lowercase();
+    paths
+        .into_iter()
+        .filter(|path| path_matches_filter(path, &needle))
+        .collect()
+}
+
+fn path_matches_filter(path: &Path, needle: &str) -> bool {
+    if path
+        .to_string_lossy()
+        .to_lowercase()
+        .contains(&*needle)
+    {
+        return true;
+    }
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| name.to_lowercase().contains(needle))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn filter_test_paths_matches_basename_substring() {
+        let paths = vec![
+            PathBuf::from("alpha_test.fpas"),
+            PathBuf::from("beta_test.fpas"),
+        ];
+        let filtered = filter_test_paths(paths, "alpha");
+        assert_eq!(filtered, vec![PathBuf::from("alpha_test.fpas")]);
+    }
+
+    #[test]
+    fn filter_test_paths_empty_pattern_keeps_all() {
+        let paths = vec![PathBuf::from("one_test.fpas")];
+        assert_eq!(filter_test_paths(paths.clone(), ""), paths);
+    }
+}

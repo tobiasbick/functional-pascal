@@ -289,7 +289,7 @@ apps/my-app/
 
 ### 5.4 Phase 5 verification
 
-- [ ] `fpas test` at workspace root runs test members (needs workspace demo)
+- [x] `fpas test` at workspace root runs test members (`examples/pascal/monorepo`)
 - [x] `fpas examples/pascal/test/tests.fpasprj` runs all bundled tests
 - [x] `fpas my-app-tests.fpasprj` errors with hint to use `fpas test` (via `fpas run`)
 - [x] `fpas check` still accepts test projects
@@ -301,7 +301,7 @@ apps/my-app/
 
 Implement incrementally; no fixed order. Mark each item `[x]` when shipped.
 
-- [ ] **6.1** — `--filter <pat>` in `cli_test/discover.rs` — substring on path
+- [x] **6.1** — `--filter <pat>` in `cli_test/discover.rs` — substring on path
 - [ ] **6.2** — `--report json` in `cli_test/report.rs` — CI structured output
 - [ ] **6.3** — Parallel test execution in `cli_test/run.rs` — one VM per test; verify graph headless thread safety first
 - [ ] **6.4** — Setup/Teardown convention in `Std.Test` + docs — named procedures in test units

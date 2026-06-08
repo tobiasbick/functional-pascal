@@ -23,7 +23,7 @@ fpas test [<path>] [options]
 
 | Flag | Description |
 |------|-------------|
-| `--filter <pattern>` | Substring match on test file or case name |
+| `--filter <pattern>` | Substring match on test file path (case-insensitive) |
 | `--fail-fast` | Stop after first failure |
 | `--script <path>` | Use explicit script file instead of sidecar auto-discovery |
 | `--list` | Print tests that would run, do not execute |

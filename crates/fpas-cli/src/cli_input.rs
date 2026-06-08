@@ -22,7 +22,7 @@ Usage:
     fpas check                                            Discover `.fpasworkspace` or `.fpasprj` in cwd
     fpas test [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
                                                           Run `*_test.fpas` programs
-    fpas test [--list] [--fail-fast] [--script <path>] [<path>]             Discover tests in cwd when path omitted
+    fpas test [--list] [--fail-fast] [--filter <pattern>] [--script <path>] [<path>]             Discover tests in cwd when path omitted
 
 Options:
   -h, --help      Print this help
@@ -53,6 +53,7 @@ pub(crate) struct TestCliConfig {
     pub fail_fast: bool,
     pub list_only: bool,
     pub script_path: Option<PathBuf>,
+    pub filter: Option<String>,
 }
 
 /// Result of parsing CLI arguments before loading sources.
@@ -103,6 +104,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
     let mut fail_fast = false;
     let mut list_only = false;
     let mut script_path = None::<PathBuf>;
+    let mut filter = None::<String>;
     let mut positional = Vec::new();
     let mut index = 0;
     while index < cli_args.len() {
@@ -119,6 +121,18 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
                 };
                 if script_path.replace(PathBuf::from(path)).is_some() {
                     return Err("Duplicate `--script` option.".to_string());
+                }
+            }
+            "--filter" if mode == CliMode::Test => {
+                index += 1;
+                let Some(pattern) = cli_args.get(index) else {
+                    return Err(
+                        "Missing pattern after `--filter`.\n  help: `fpas test --filter menu`."
+                            .to_string(),
+                    );
+                };
+                if filter.replace(pattern.clone()).is_some() {
+                    return Err("Duplicate `--filter` option.".to_string());
                 }
             }
             _ => positional.push(cli_args[index].clone()),
@@ -172,6 +186,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             fail_fast,
             list_only,
             script_path,
+            filter,
         }),
     })
 }
@@ -198,7 +213,7 @@ fn usage_error(mode: CliMode) -> String {
                 .to_string()
         }
         CliMode::Test => {
-            "Usage: fpas test [--list] [--fail-fast] [--script <path>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]\n  help: `fpas --help` shows options."
+            "Usage: fpas test [--list] [--fail-fast] [--filter <pattern>] [--script <path>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]\n  help: `fpas --help` shows options."
                 .to_string()
         }
     }

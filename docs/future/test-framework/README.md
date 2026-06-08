@@ -35,7 +35,7 @@ Update the **Status** column when a phase is complete (⬜ → ✅). Detailed ta
 - [x] **Phase 2** — `fpas test` discovers and runs `*_test.fpas` (core runner; optional items in Phase 2.4/2.6 remain open)
 - [x] **Phase 3** — TUI test with `.script.toml` passes in CI (console scripts; graph deferred to Phase 4)
 - [x] **Phase 4** — Graph smoke test headless in CI
-- [x] **Phase 5** — Workspace + `kind = "test"` supported (core; workspace demo + `[test]` overrides remain optional)
+- [x] **Phase 5** — Workspace + `kind = "test"` supported (monorepo demo; `[test]` overrides remain optional)
 - [ ] **Phase 6** — At least filter + JSON report shipped
 
 ---
@@ -255,7 +255,7 @@ High-level phases are below. **Every task has a checkbox in [`implementation.md`
 - [ ] Terminal screen snapshot API for TUI (read back buffer as string grid) — research spike
 - [ ] `Setup` / `Teardown` procedures in test units
 - [ ] Parallel test execution (respect VM / graph headless constraints)
-- [ ] Filter: `fpas test --filter menu_bar`
+- [x] Filter: `fpas test --filter menu_bar`
 - [ ] JSON report for CI (`--report json`)
 - [ ] Runner timeout for hung interactive tests
 

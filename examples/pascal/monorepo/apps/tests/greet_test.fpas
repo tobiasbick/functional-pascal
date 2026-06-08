@@ -1,0 +1,6 @@
+program GreetTest;
+uses Demo.Greet, Std.Test;
+
+begin
+  AssertTrue(Message() = 'Hello from library project')
+end.

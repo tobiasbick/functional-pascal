@@ -20,6 +20,7 @@ fn test_cli_runs_passing_tests_in_directory() {
             fail_fast: false,
             list_only: false,
             script_path: None,
+            filter: None,
         },
         &mut stderr,
     );
@@ -71,6 +72,7 @@ fn test_cli_runs_tui_test_with_sidecar_script() {
             fail_fast: false,
             list_only: false,
             script_path: None,
+            filter: None,
         },
         &mut stderr,
     );

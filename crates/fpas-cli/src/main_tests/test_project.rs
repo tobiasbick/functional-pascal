@@ -28,6 +28,7 @@ fn test_cli_runs_tests_from_test_project_file() {
             fail_fast: false,
             list_only: false,
             script_path: None,
+            filter: None,
         },
         &mut stderr,
     );
@@ -36,4 +37,38 @@ fn test_cli_runs_tests_from_test_project_file() {
     let text = String::from_utf8(stderr).expect("utf-8");
     assert!(text.contains("PASS  alpha_test.fpas"));
     assert!(text.contains("PASS  beta_test.fpas"));
+}
+
+#[test]
+fn test_cli_runs_tests_from_workspace_test_member() {
+    let cwd = create_temp_dir("fpas-test-workspace");
+    write_text(
+        &cwd.join("root.fpasworkspace"),
+        "[workspace]\nname = \"demo\"\nmembers = [\"tests/tests.fpasprj\"]\n",
+    );
+    write_text(
+        &cwd.join("tests/tests.fpasprj"),
+        "[project]\nname = \"tests\"\nkind = \"test\"\n\n[sources]\ninclude = [\"*.fpas\"]\n",
+    );
+    write_text(
+        &cwd.join("tests/only_test.fpas"),
+        "program O;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+    );
+
+    let mut stderr = Vec::new();
+    let exit = test_cli(
+        TestCliConfig {
+            input: CliInput::WorkspaceFile(cwd.join("root.fpasworkspace")),
+            cwd: cwd.clone(),
+            fail_fast: false,
+            list_only: false,
+            script_path: None,
+            filter: None,
+        },
+        &mut stderr,
+    );
+
+    assert_eq!(exit, 0, "stderr={}", String::from_utf8_lossy(&stderr));
+    let text = String::from_utf8(stderr).expect("utf-8");
+    assert!(text.contains("PASS  only_test.fpas"));
 }

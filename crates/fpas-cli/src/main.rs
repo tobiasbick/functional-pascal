@@ -23,6 +23,7 @@ mod cli_check;
 mod cli_input;
 mod cli_run;
 mod cli_test;
+mod test_script;
 
 use std::env;
 use std::process;

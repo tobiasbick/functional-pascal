@@ -203,9 +203,10 @@ High-level phases are below. **Every task has a checkbox in [`implementation.md`
 
 **Deliverables**
 
-- [ ] `crates/fpas-cli/src/test_script/` — parse TOML → VM queue pushes
+- [x] `crates/fpas-cli/src/test_script/` — parse TOML → VM queue pushes (console + readln; graph deferred to Phase 4)
 - [ ] `examples/pascal/test/tui_escape_test.fpas` + `.script.toml` — end-to-end TUI test
-- [ ] Runner flag `--script path` — override sidecar path
+- [x] Runner flag `--script path` — override sidecar path
+- [x] `examples/pascal/test/readln_test.fpas` + `.script.toml` — ReadLn smoke test
 
 **Success criteria**
 

@@ -16,6 +16,8 @@ fpas-parser = { path = "../fpas-parser" }
 fpas-compiler = { path = "../fpas-compiler" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-vm = { path = "../fpas-vm" }
+fpas-std = { path = "../fpas-std" }
+toml = { workspace = true }
 
 [lints]
 workspace = true

@@ -484,7 +484,9 @@ dependencies = [
  "fpas-diagnostics",
  "fpas-parser",
  "fpas-project",
+ "fpas-std",
  "fpas-vm",
+ "toml",
 ]
 
 [[package]]

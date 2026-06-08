@@ -22,7 +22,7 @@ Usage:
     fpas check                                            Discover `.fpasworkspace` or `.fpasprj` in cwd
     fpas test [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
                                                           Run `*_test.fpas` programs
-    fpas test [--list] [--fail-fast] [<path>]             Discover tests in cwd when path omitted
+    fpas test [--list] [--fail-fast] [--script <path>] [<path>]             Discover tests in cwd when path omitted
 
 Options:
   -h, --help      Print this help
@@ -52,6 +52,7 @@ pub(crate) struct TestCliConfig {
     pub cwd: PathBuf,
     pub fail_fast: bool,
     pub list_only: bool,
+    pub script_path: Option<PathBuf>,
 }
 
 /// Result of parsing CLI arguments before loading sources.
@@ -101,13 +102,28 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
 
     let mut fail_fast = false;
     let mut list_only = false;
+    let mut script_path = None::<PathBuf>;
     let mut positional = Vec::new();
-    for arg in cli_args {
-        match arg.as_str() {
+    let mut index = 0;
+    while index < cli_args.len() {
+        match cli_args[index].as_str() {
             "--fail-fast" if mode == CliMode::Test => fail_fast = true,
             "--list" if mode == CliMode::Test => list_only = true,
-            _ => positional.push(arg.clone()),
+            "--script" if mode == CliMode::Test => {
+                index += 1;
+                let Some(path) = cli_args.get(index) else {
+                    return Err(
+                        "Missing path after `--script`.\n  help: `fpas test --script menu.script.toml`."
+                            .to_string(),
+                    );
+                };
+                if script_path.replace(PathBuf::from(path)).is_some() {
+                    return Err("Duplicate `--script` option.".to_string());
+                }
+            }
+            _ => positional.push(cli_args[index].clone()),
         }
+        index += 1;
     }
 
     let mut input = None::<String>;
@@ -155,6 +171,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             cwd: cwd.to_path_buf(),
             fail_fast,
             list_only,
+            script_path,
         }),
     })
 }
@@ -181,7 +198,7 @@ fn usage_error(mode: CliMode) -> String {
                 .to_string()
         }
         CliMode::Test => {
-            "Usage: fpas test [--list] [--fail-fast] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]\n  help: `fpas --help` shows options."
+            "Usage: fpas test [--list] [--fail-fast] [--script <path>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]\n  help: `fpas --help` shows options."
                 .to_string()
         }
     }

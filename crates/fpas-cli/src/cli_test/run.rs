@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 
 use super::report::TestOutcome;
 use crate::cli_run::render_cli_diagnostic_with_sources;
+use crate::test_script::{apply_script_to_vm, load_script, sidecar_path_for_test};
 use fpas_diagnostics::DiagnosticSeverity;
 use fpas_diagnostics::codes::RUNTIME_TEST_ASSERTION_FAILED;
 use fpas_parser::parse;
@@ -30,6 +31,7 @@ pub(super) struct LinkContext {
 pub(super) fn run_single_test(
     path: &Path,
     link: Option<&LinkContext>,
+    script_override: Option<&Path>,
     stderr: &mut dyn Write,
 ) -> TestOutcome {
     let display = test_display_path(path);
@@ -64,6 +66,12 @@ pub(super) fn run_single_test(
     };
 
     let mut vm = fpas_vm::Vm::new(chunk);
+    if let Err(message) = apply_test_script(path, script_override, &mut vm) {
+        let _ = writeln!(stderr, "  FAIL  {display}");
+        let _ = writeln!(stderr, "        {message}");
+        return TestOutcome::CompileError;
+    }
+
     match vm.run() {
         Ok(()) => {
             let _ = writeln!(stderr, "  PASS  {display}");
@@ -114,4 +122,32 @@ fn load_program(
         ));
     }
     Ok((program, None))
+}
+
+fn apply_test_script(
+    test_path: &Path,
+    script_override: Option<&Path>,
+    vm: &mut fpas_vm::Vm,
+) -> Result<(), String> {
+    let script_path = match script_override {
+        Some(path) => path.to_path_buf(),
+        None => {
+            let sidecar = sidecar_path_for_test(test_path);
+            if sidecar.is_file() {
+                sidecar
+            } else {
+                return Ok(());
+            }
+        }
+    };
+
+    if !script_path.is_file() {
+        return Err(format!(
+            "Script file not found: `{}`.\n  help: Pass an existing `.script.toml` path with `--script`.",
+            script_path.display()
+        ));
+    }
+
+    let script = load_script(&script_path)?;
+    apply_script_to_vm(vm, &script)
 }

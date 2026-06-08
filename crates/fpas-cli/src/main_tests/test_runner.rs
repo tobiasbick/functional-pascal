@@ -19,6 +19,7 @@ fn test_cli_runs_passing_tests_in_directory() {
             cwd,
             fail_fast: false,
             list_only: false,
+            script_path: None,
         },
         &mut stderr,
     );

@@ -1,0 +1,6 @@
+program ReadlnTest;
+uses Std.Console, Std.Test;
+
+begin
+  AssertTrue(ReadLn() = 'Alice')
+end.

@@ -172,8 +172,8 @@ Reuse: `cli_check.rs` (project load), `main_tests/support.rs` (`run_source_and_c
 
 ### 2.6 Examples
 
-- [ ] **2.6.1** — `examples/pascal/test/readln_test.fpas` — **CREATE** (script in Phase 3)
-- [ ] **2.6.2** — `examples/pascal/test/readln_test.script.toml` — **CREATE** (Phase 3)
+- [x] **2.6.1** — `examples/pascal/test/readln_test.fpas` — **CREATE** (script in Phase 3)
+- [x] **2.6.2** — `examples/pascal/test/readln_test.script.toml` — **CREATE** (Phase 3)
 - [ ] **2.6.3** — `examples/pascal/test/tests.fpasprj` — **CREATE** (optional) bundles test sources
 
 ### 2.7 Phase 2 verification
@@ -194,32 +194,34 @@ Reuse: `cli_check.rs` (project load), `main_tests/support.rs` (`run_source_and_c
 
 ### 3.1 Script parser
 
-- [ ] **3.1.1** — `crates/fpas-cli/Cargo.toml` — **MODIFY** ensure `toml` dependency (if not already)
-- [ ] **3.1.2** — `crates/fpas-cli/src/test_script/mod.rs` — **CREATE**
-- [ ] **3.1.3** — `crates/fpas-cli/src/test_script/parse.rs` — **CREATE** TOML → `Vec<ScriptEvent>` per [`scripted-input.md`](scripted-input.md)
-- [ ] **3.1.4** — `crates/fpas-cli/src/test_script/apply.rs` — **CREATE** `apply_script(vm: &mut Vm, events: &[ScriptEvent])`
-- [ ] **3.1.5** — `crates/fpas-cli/src/test_script/console.rs` — **CREATE** map to `ConsoleEvent` / `push_readln_input` / `push_readkey_input`
-- [ ] **3.1.6** — Reuse `fpas_std::{ConsoleEvent, ConsoleKeyEvent, key_kind_index, …}` — no duplicate string tables
+- [x] **3.1.1** — `crates/fpas-cli/Cargo.toml` — **MODIFY** ensure `toml` dependency (if not already)
+- [x] **3.1.2** — `crates/fpas-cli/src/test_script/mod.rs` — **CREATE**
+- [x] **3.1.3** — `crates/fpas-cli/src/test_script/parse.rs` — **CREATE** TOML → `Vec<ScriptEvent>` per [`scripted-input.md`](scripted-input.md)
+- [x] **3.1.4** — `crates/fpas-cli/src/test_script/apply.rs` — **CREATE** `apply_script(vm: &mut Vm, events: &[ScriptEvent])`
+- [x] **3.1.5** — `crates/fpas-cli/src/test_script/console.rs` — **CREATE** map to `ConsoleEvent` / `push_readln_input` / `push_readkey_input`
+- [x] **3.1.6** — Reuse `fpas_std::{ConsoleEvent, ConsoleKeyEvent, key_kind_index, …}` — no duplicate string tables
 
 ### 3.2 Runner integration
 
-- [ ] **3.2.1** — `cli_test/run.rs` — before `vm.run()`: if `<stem>.script.toml` exists beside test file, parse and apply
-- [ ] **3.2.2** — `cli_input.rs` / `cli_test.rs` — `--script <path>` overrides auto-discovery
-- [ ] **3.2.3** — Parse errors → exit 2 with file/line hint
+- [x] **3.2.1** — `cli_test/run.rs` — before `vm.run()`: if `<stem>.script.toml` exists beside test file, parse and apply
+- [x] **3.2.2** — `cli_input.rs` / `cli_test.rs` — `--script <path>` overrides auto-discovery
+- [x] **3.2.3** — Parse errors → exit 2 with file/line hint
 
 ### 3.3 Examples and tests
 
 - [ ] **3.3.1** — `examples/pascal/test/tui_escape_test.fpas` — **CREATE**
 - [ ] **3.3.2** — `examples/pascal/test/tui_escape_test.script.toml` — **CREATE**
-- [ ] **3.3.3** — `crates/fpas-cli/src/test_script/tests.rs` — **CREATE** unit tests for TOML parse + apply
+- [x] **3.3.3** — `crates/fpas-cli/src/test_script/tests.rs` — **CREATE** unit tests for TOML parse + apply
 - [ ] **3.3.4** — `crates/fpas-cli/src/main_tests/test_runner.rs` — **MODIFY** end-to-end TUI test case
+- [x] **3.3.5** — `examples/pascal/test/readln_test.fpas` + `readln_test.script.toml` — **CREATE** ReadLn sidecar smoke test
 
 ### 3.4 Phase 3 verification
 
 - [ ] Escape in script triggers TUI quit handler
 - [ ] Mouse `Down`/`Up` at (x,y) reaches `OnMouse` in hosted TUI test
-- [ ] Invalid script `type` → clear error before VM start
-- [ ] `cargo test -p fpas-cli test_script` passes
+- [x] Invalid script `type` → clear error before VM start
+- [x] `cargo test -p fpas-cli test_script` passes
+- [x] `fpas test examples/pascal/test/` runs `readln_test.fpas` with sidecar script
 
 ---
 

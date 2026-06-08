@@ -48,7 +48,7 @@ pub(crate) fn test_cli(config: TestCliConfig, stderr: &mut dyn Write) -> i32 {
     for path in paths {
         let display = path.display().to_string();
         let link = link_context_for_test(&path);
-        let outcome = run_single_test(&path, link.as_ref(), stderr);
+        let outcome = run_single_test(&path, link.as_ref(), config.script_path.as_deref(), stderr);
         if config.fail_fast && outcome.is_failure() {
             summary.record(&display, outcome);
             let _ = print_summary(stderr, &summary);
@@ -131,6 +131,7 @@ mod tests {
                 cwd: cwd.clone(),
                 fail_fast: false,
                 list_only: false,
+                script_path: None,
             },
             &mut stderr,
         );
@@ -157,6 +158,7 @@ mod tests {
                 cwd,
                 fail_fast: false,
                 list_only: true,
+                script_path: None,
             },
             &mut stderr,
         );

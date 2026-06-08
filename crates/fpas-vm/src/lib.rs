@@ -10,7 +10,7 @@
 
 mod vm;
 
-pub use vm::{Vm, VmError, VmOutput};
+pub use vm::{Vm, VmError, VmOutput, VmShutdownHandle};
 
 #[cfg(test)]
 mod tests;

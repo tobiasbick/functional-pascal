@@ -5,8 +5,10 @@
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 use super::report::TestOutcome;
+use super::timeout::{VmRunResult, run_with_timeout};
 use crate::cli_run::render_cli_diagnostic_with_sources;
 use crate::test_script::{ScriptConfig, apply_script_to_vm, load_script, sidecar_path_for_test};
 use fpas_diagnostics::DiagnosticSeverity;
@@ -32,6 +34,7 @@ pub(super) fn run_single_test(
     path: &Path,
     link: Option<&LinkContext>,
     script_override: Option<&Path>,
+    timeout: Option<Duration>,
     stderr: &mut dyn Write,
 ) -> TestOutcome {
     let display = test_display_path(path);
@@ -78,18 +81,36 @@ pub(super) fn run_single_test(
     let headless_graph = script_config
         .as_ref()
         .is_some_and(|config| config.headless_graph);
-    let run_result = if headless_graph {
-        fpas_std::with_headless_graph_backend_for_tests(|| vm.run())
+    let shutdown = vm.shutdown_handle();
+    let run_result = if let Some(timeout) = timeout {
+        run_with_timeout(shutdown, timeout, move || {
+            if headless_graph {
+                fpas_std::with_headless_graph_backend_for_tests(|| vm.run())
+            } else {
+                vm.run()
+            }
+        })
+    } else if headless_graph {
+        VmRunResult::Completed(fpas_std::with_headless_graph_backend_for_tests(|| vm.run()))
     } else {
-        vm.run()
+        VmRunResult::Completed(vm.run())
     };
 
     match run_result {
-        Ok(()) => {
+        VmRunResult::TimedOut => {
+            let seconds = timeout.map(|value| value.as_secs()).unwrap_or(0);
+            let _ = writeln!(stderr, "  TIMEOUT  {display}");
+            let _ = writeln!(
+                stderr,
+                "        test run exceeded {seconds} second timeout.\n  help: Fix an infinite loop or increase `--timeout`."
+            );
+            TestOutcome::TimedOut
+        }
+        VmRunResult::Completed(Ok(())) => {
             let _ = writeln!(stderr, "  PASS  {display}");
             TestOutcome::Pass
         }
-        Err(diagnostic) => {
+        VmRunResult::Completed(Err(diagnostic)) => {
             let _ = writeln!(stderr, "  FAIL  {display}");
             let _ = writeln!(
                 stderr,

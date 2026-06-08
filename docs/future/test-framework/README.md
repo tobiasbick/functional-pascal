@@ -239,14 +239,14 @@ High-level phases are below. **Every task has a checkbox in [`implementation.md`
 - [x] `kind = "test"` in `.fpasprj` — dedicated test project type
 - [x] `fpas test <tests.fpasprj>` — run bundled `*_test.fpas` with project linking
 - [x] `examples/pascal/test/tests.fpasprj` — example test project
-- [ ] `fpas test` with no path — discover workspace test members only
+- [x] `fpas test` with no path — discover workspace test members only
 - [ ] `[test]` section (optional) — `script = "…"`, `headless_graph = true` per test file
 
 **Success criteria**
 
 - [x] `fpas test examples/pascal/test/tests.fpasprj` runs all bundled tests
 - [x] `fpas run` on a test project errors with hint to use `fpas test`
-- [ ] `fpas test` at workspace root runs all member test projects
+- [x] `fpas test` at workspace root runs all member test projects
 
 → Tasks: [`implementation.md` § Phase 5](implementation.md#phase-5--test-projects-and-workspace)
 
@@ -257,7 +257,7 @@ High-level phases are below. **Every task has a checkbox in [`implementation.md`
 - [ ] Parallel test execution (respect VM / graph headless constraints)
 - [x] Filter: `fpas test --filter menu_bar`
 - [x] JSON report for CI (`--report json`)
-- [ ] Runner timeout for hung interactive tests
+- [x] Runner timeout for hung interactive tests (`--timeout <secs>`)
 
 → Tasks: [`implementation.md` § Phase 6](implementation.md#phase-6--quality-and-ergonomics)
 

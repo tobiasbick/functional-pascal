@@ -16,11 +16,13 @@ mod diagnostics;
 mod execute;
 mod helpers;
 mod shared;
+mod shutdown;
 mod worker;
 
 pub use diagnostics::VmError;
 pub(crate) use diagnostics::{internal_error, runtime_error};
 pub(crate) use shared::{GraphState, SharedState, TaskResultPoll, TaskState, TuiState};
+pub use shutdown::VmShutdownHandle;
 pub(crate) use worker::Worker;
 
 const STACK_MAX: usize = 4096;
@@ -195,6 +197,11 @@ impl Vm {
             .unwrap_or_else(|e| e.into_inner())
             .output()
             .clone()
+    }
+
+    /// Returns a handle for cooperative shutdown while [`Self::run`] executes on another thread.
+    pub fn shutdown_handle(&self) -> VmShutdownHandle {
+        VmShutdownHandle::new(Arc::clone(&self.shared))
     }
 
     /// Execute the loaded program.

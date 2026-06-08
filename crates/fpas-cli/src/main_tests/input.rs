@@ -248,6 +248,34 @@ fn run_cli_help_and_version_exit_zero() {
 }
 
 #[test]
+fn resolve_cli_config_parses_test_timeout_flag() {
+    let cwd = create_temp_dir("test-timeout-flag");
+    write_text(
+        &cwd.join("demo.fpasprj"),
+        "[project]\nname = \"demo\"\nkind = \"test\"\n\n[sources]\ninclude = [\"*.fpas\"]\n",
+    );
+
+    let result = resolve_cli_config(
+        &[
+            String::from("test"),
+            String::from("--timeout"),
+            String::from("30"),
+            String::from("demo.fpasprj"),
+        ],
+        &cwd,
+    );
+
+    match result {
+        Ok(ResolvedCli::Test(config)) => {
+            assert_eq!(config.timeout, Some(std::time::Duration::from_secs(30)));
+        }
+        other => panic!("expected test config, got {other:?}"),
+    }
+
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+}
+
+#[test]
 fn resolve_cli_config_parses_test_report_json_flag() {
     let cwd = create_temp_dir("test-report-json");
     write_text(

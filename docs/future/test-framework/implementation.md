@@ -306,7 +306,7 @@ Implement incrementally; no fixed order. Mark each item `[x]` when shipped.
 - [ ] **6.3** — Parallel test execution in `cli_test/run.rs` — one VM per test; verify graph headless thread safety first
 - [ ] **6.4** — Setup/Teardown convention in `Std.Test` + docs — named procedures in test units
 - [ ] **6.5** — TUI screen snapshot spike in `fpas-std` TUI session — export cell grid
-- [ ] **6.6** — Runner timeout flag for hung interactive tests
+- [x] **6.6** — `--timeout <secs>` in `cli_test/timeout.rs` — cooperative abort for hung tests
 - [ ] **6.7** — Property/fuzz for event ordering — Rust only, out of FPAS scope
 
 ---

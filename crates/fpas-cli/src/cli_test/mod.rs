@@ -6,9 +6,11 @@
 mod discover;
 mod report;
 mod run;
+mod timeout;
 
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 use crate::cli_input::{TestCliConfig, TestReportFormat};
 use discover::{discover_test_files, filter_test_paths, is_test_file_name};
@@ -82,7 +84,13 @@ pub(crate) fn test_cli(
     for path in paths {
         let display = test_display_path(&path);
         let link = link_context_for_test(&path);
-        let outcome = run_single_test(&path, link.as_ref(), config.script_path.as_deref(), stderr);
+        let outcome = run_single_test(
+            &path,
+            link.as_ref(),
+            config.script_path.as_deref(),
+            config.timeout,
+            stderr,
+        );
         if config.fail_fast && outcome.is_failure() {
             summary.record(&display, outcome);
             return finish_test_run(&config, &summary, stdout, stderr);
@@ -167,6 +175,7 @@ mod tests {
                 script_path: None,
                 filter: None,
                 report: None,
+                timeout: None,
             },
             &mut stdout,
             &mut stderr,
@@ -198,6 +207,7 @@ mod tests {
                 script_path: None,
                 filter: None,
                 report: None,
+                timeout: None,
             },
             &mut stdout,
             &mut stderr,
@@ -232,6 +242,7 @@ mod tests {
                 script_path: None,
                 filter: Some("menu".to_string()),
                 report: None,
+                timeout: None,
             },
             &mut stdout,
             &mut stderr,
@@ -262,6 +273,7 @@ mod tests {
                 script_path: None,
                 filter: None,
                 report: Some(TestReportFormat::Json),
+                timeout: None,
             },
             &mut stdout,
             &mut stderr,
@@ -273,5 +285,35 @@ mod tests {
         assert!(json.contains("ok_test.fpas"));
         let text = String::from_utf8(stderr).expect("utf-8");
         assert!(!text.contains("Summary:"));
+    }
+
+    #[test]
+    fn test_cli_timeout_aborts_infinite_loop() {
+        let cwd = create_temp_dir("fpas-test-timeout");
+        write_text(
+            &cwd.join("hang_test.fpas"),
+            "program H;\nbegin\n  while 1 = 1 do\n  begin\n  end\nend.",
+        );
+
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+        let exit = test_cli(
+            TestCliConfig {
+                input: crate::CliInput::SourceFile(cwd.join("hang_test.fpas")),
+                cwd: cwd.clone(),
+                fail_fast: false,
+                list_only: false,
+                script_path: None,
+                filter: None,
+                report: None,
+                timeout: Some(Duration::from_secs(1)),
+            },
+            &mut stdout,
+            &mut stderr,
+        );
+
+        assert_eq!(exit, 3);
+        let text = String::from_utf8(stderr).expect("utf-8");
+        assert!(text.contains("TIMEOUT  hang_test.fpas"));
     }
 }

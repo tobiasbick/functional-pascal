@@ -13,6 +13,7 @@ pub(super) enum TestOutcome {
     AssertFailed,
     CompileError,
     RuntimeError,
+    TimedOut,
 }
 
 impl TestOutcome {
@@ -26,6 +27,7 @@ impl TestOutcome {
             Self::AssertFailed => "assert_failed",
             Self::CompileError => "compile_error",
             Self::RuntimeError => "runtime_error",
+            Self::TimedOut => "timed_out",
         }
     }
 }
@@ -44,6 +46,7 @@ pub(super) struct Summary {
     failed: usize,
     compile_errors: usize,
     runtime_errors: usize,
+    timed_out: usize,
     cases: Vec<TestCaseResult>,
 }
 
@@ -54,6 +57,7 @@ impl Summary {
             TestOutcome::AssertFailed => self.failed += 1,
             TestOutcome::CompileError => self.compile_errors += 1,
             TestOutcome::RuntimeError => self.runtime_errors += 1,
+            TestOutcome::TimedOut => self.timed_out += 1,
         }
         self.cases.push(TestCaseResult {
             file: path.to_string(),
@@ -67,6 +71,9 @@ impl Summary {
             return 2;
         }
         if self.runtime_errors > 0 {
+            return 3;
+        }
+        if self.timed_out > 0 {
             return 3;
         }
         if self.failed > 0 {
@@ -89,6 +96,7 @@ struct JsonSummary {
     failed: usize,
     compile_errors: usize,
     runtime_errors: usize,
+    timed_out: usize,
     total: usize,
 }
 
@@ -99,8 +107,13 @@ struct JsonTestCase<'a> {
 }
 
 pub(super) fn print_summary(stderr: &mut dyn Write, summary: &Summary) -> std::io::Result<()> {
-    let total = summary.passed + summary.failed + summary.compile_errors + summary.runtime_errors;
-    let fail_count = summary.failed + summary.compile_errors + summary.runtime_errors;
+    let total = summary.passed
+        + summary.failed
+        + summary.compile_errors
+        + summary.runtime_errors
+        + summary.timed_out;
+    let fail_count =
+        summary.failed + summary.compile_errors + summary.runtime_errors + summary.timed_out;
     writeln!(
         stderr,
         "Summary: {} passed, {} failed ({} total)",
@@ -110,7 +123,11 @@ pub(super) fn print_summary(stderr: &mut dyn Write, summary: &Summary) -> std::i
 
 /// Writes a machine-readable JSON report to stdout for CI consumers.
 pub(super) fn print_json_report(stdout: &mut dyn Write, summary: &Summary) -> std::io::Result<()> {
-    let total = summary.passed + summary.failed + summary.compile_errors + summary.runtime_errors;
+    let total = summary.passed
+        + summary.failed
+        + summary.compile_errors
+        + summary.runtime_errors
+        + summary.timed_out;
     let report = JsonReport {
         version: 1,
         summary: JsonSummary {
@@ -118,6 +135,7 @@ pub(super) fn print_json_report(stdout: &mut dyn Write, summary: &Summary) -> st
             failed: summary.failed,
             compile_errors: summary.compile_errors,
             runtime_errors: summary.runtime_errors,
+            timed_out: summary.timed_out,
             total,
         },
         tests: summary

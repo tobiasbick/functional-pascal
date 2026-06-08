@@ -20,6 +20,9 @@ Usage:
     fpas check [<file.fpas | file.fpasprj | file.fpasworkspace>]
                                                           Type-check without running
     fpas check                                            Discover `.fpasworkspace` or `.fpasprj` in cwd
+    fpas test [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
+                                                          Run `*_test.fpas` programs
+    fpas test [--list] [--fail-fast] [<path>]             Discover tests in cwd when path omitted
 
 Options:
   -h, --help      Print this help
@@ -43,11 +46,20 @@ pub(crate) struct CliConfig {
     pub program_args: Vec<String>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct TestCliConfig {
+    pub input: CliInput,
+    pub cwd: PathBuf,
+    pub fail_fast: bool,
+    pub list_only: bool,
+}
+
 /// Result of parsing CLI arguments before loading sources.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum ResolvedCli {
     Run(CliConfig),
     Check(CliConfig),
+    Test(TestCliConfig),
     Help,
     Version,
 }
@@ -56,6 +68,7 @@ pub(crate) enum ResolvedCli {
 enum CliMode {
     Run,
     Check,
+    Test,
 }
 
 /// Resolves at most one positional path or project discovery, for unit tests only.
@@ -65,7 +78,7 @@ enum CliMode {
 pub(crate) fn resolve_cli_input(args: &[String], cwd: &Path) -> Result<CliInput, String> {
     match resolve_cli_config(args, cwd)? {
         ResolvedCli::Run(config) | ResolvedCli::Check(config) => Ok(config.input),
-        ResolvedCli::Help | ResolvedCli::Version => {
+        ResolvedCli::Test(_) | ResolvedCli::Help | ResolvedCli::Version => {
             Err("resolve_cli_input: use resolve_cli_config for --help or --version".to_string())
         }
     }
@@ -75,27 +88,38 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
     let (cli_args, program_args) = split_program_args(args);
     let (mode, cli_args) = parse_cli_mode(cli_args)?;
 
-    if mode == CliMode::Check && !program_args.is_empty() {
-        return Err(
-            "`fpas check` does not accept program arguments after `--`.\n  help: Omit `--` and trailing args when type-checking."
-                .to_string(),
-        );
+    if matches!(mode, CliMode::Check | CliMode::Test) && !program_args.is_empty() {
+        let cmd = match mode {
+            CliMode::Check => "fpas check",
+            CliMode::Test => "fpas test",
+            CliMode::Run => unreachable!(),
+        };
+        return Err(format!(
+            "`{cmd}` does not accept program arguments after `--`.\n  help: Omit `--` and trailing args when type-checking or testing."
+        ));
+    }
+
+    let mut fail_fast = false;
+    let mut list_only = false;
+    let mut positional = Vec::new();
+    for arg in cli_args {
+        match arg.as_str() {
+            "--fail-fast" if mode == CliMode::Test => fail_fast = true,
+            "--list" if mode == CliMode::Test => list_only = true,
+            _ => positional.push(arg.clone()),
+        }
     }
 
     let mut input = None::<String>;
-    let mut index = 0;
-
-    while index < cli_args.len() {
-        let arg = &cli_args[index];
-
+    for arg in &positional {
         if arg == "-h" || arg == "--help" {
-            if cli_args.len() != 1 {
+            if positional.len() != 1 {
                 return Err(usage_error(mode));
             }
             return Ok(ResolvedCli::Help);
         }
         if arg == "-V" || arg == "--version" {
-            if cli_args.len() != 1 {
+            if positional.len() != 1 {
                 return Err(usage_error(mode));
             }
             return Ok(ResolvedCli::Version);
@@ -110,7 +134,6 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
         if input.replace(arg.clone()).is_some() {
             return Err(usage_error(mode));
         }
-        index += 1;
     }
 
     let input = match input {
@@ -118,20 +141,30 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
         None => discover_input(cwd, mode),
     }?;
 
-    let config = CliConfig {
-        input,
-        program_args,
-    };
-
     Ok(match mode {
-        CliMode::Run => ResolvedCli::Run(config),
-        CliMode::Check => ResolvedCli::Check(config),
+        CliMode::Run => ResolvedCli::Run(CliConfig {
+            input,
+            program_args,
+        }),
+        CliMode::Check => ResolvedCli::Check(CliConfig {
+            input,
+            program_args,
+        }),
+        CliMode::Test => ResolvedCli::Test(TestCliConfig {
+            input,
+            cwd: cwd.to_path_buf(),
+            fail_fast,
+            list_only,
+        }),
     })
 }
 
 fn parse_cli_mode(cli_args: &[String]) -> Result<(CliMode, &[String]), String> {
     if cli_args.first().is_some_and(|arg| arg == "check") {
         return Ok((CliMode::Check, &cli_args[1..]));
+    }
+    if cli_args.first().is_some_and(|arg| arg == "test") {
+        return Ok((CliMode::Test, &cli_args[1..]));
     }
 
     Ok((CliMode::Run, cli_args))
@@ -147,6 +180,10 @@ fn usage_error(mode: CliMode) -> String {
             "Usage: fpas check [<file.fpas | file.fpasprj | file.fpasworkspace>]\n  help: `fpas --help` shows options."
                 .to_string()
         }
+        CliMode::Test => {
+            "Usage: fpas test [--list] [--fail-fast] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]\n  help: `fpas --help` shows options."
+                .to_string()
+        }
     }
 }
 
@@ -160,19 +197,28 @@ fn split_program_args(args: &[String]) -> (&[String], Vec<String>) {
 
 fn resolve_explicit_input(input: &str, cwd: &Path, mode: CliMode) -> Result<CliInput, String> {
     let path = normalize_input_path(input, cwd);
+    if path.is_dir() {
+        return Ok(CliInput::SourceFile(path));
+    }
     if has_extension(&path, SOURCE_FILE_EXTENSION) {
+        if mode == CliMode::Test {
+            crate::cli_test::validate_explicit_test_file(&path)?;
+        }
         return Ok(CliInput::SourceFile(path));
     }
     if has_extension(&path, PROJECT_FILE_EXTENSION) {
         return Ok(CliInput::ProjectFile(path));
     }
-    if mode == CliMode::Check && has_extension(&path, WORKSPACE_FILE_EXTENSION) {
+    if matches!(mode, CliMode::Check | CliMode::Test)
+        && has_extension(&path, WORKSPACE_FILE_EXTENSION)
+    {
         return Ok(CliInput::WorkspaceFile(path));
     }
 
     let expected = match mode {
         CliMode::Run => "a `.fpas` or `.fpasprj` file",
         CliMode::Check => "a `.fpas`, `.fpasprj`, or `.fpasworkspace` file",
+        CliMode::Test => "a `.fpas` file, directory, `.fpasprj`, or `.fpasworkspace` file",
     };
     Err(format!(
         "Unsupported input `{}`. Expected {expected}.",
@@ -182,7 +228,7 @@ fn resolve_explicit_input(input: &str, cwd: &Path, mode: CliMode) -> Result<CliI
 
 fn discover_input(cwd: &Path, mode: CliMode) -> Result<CliInput, String> {
     match mode {
-        CliMode::Check => discover_check_input(cwd),
+        CliMode::Check | CliMode::Test => discover_check_input(cwd),
         CliMode::Run => discover_run_input(cwd),
     }
 }

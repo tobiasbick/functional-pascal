@@ -1,4 +1,4 @@
-program AssertBasics;
+program AssertBasicsTest;
 uses Std.Test;
 
 function Double(X: integer): integer;

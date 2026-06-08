@@ -53,7 +53,7 @@ Reference: [`docs/pascal/std/README.md`](../../pascal/std/README.md) § Shared i
 
 ## Phase 1 — `Std.Test` assertions
 
-**Goal:** `fpas examples/pascal/test/assert_basics.fpas` runs; failed assert exits non-zero with a readable message.
+**Goal:** `fpas examples/pascal/test/assert_basics_test.fpas` runs; failed assert exits non-zero with a readable message.
 
 **Phase complete when:** all tasks below are `[x]` and [§ 1.8 verification](#18-phase-1-verification) passes.
 
@@ -111,7 +111,7 @@ Initial variants: `AssertTrue = 0`, `AssertFalse = 1`, `AssertEqualsInteger = 2`
 
 ### 1.7 Examples and CLI smoke
 
-- [x] **1.7.1** — `examples/pascal/test/assert_basics.fpas` — **CREATE**
+- [x] **1.7.1** — `examples/pascal/test/assert_basics_test.fpas` — **CREATE** (renamed from `assert_basics.fpas` for `*_test.fpas` discovery)
 - [ ] **1.7.2** — `examples/pascal/test/assert_fail_demo.fpas` — **CREATE** documents expected failure
 - [ ] **1.7.3** — `examples/README.md` — **MODIFY** mention `examples/pascal/test/`
 - [x] **1.7.4** — `crates/fpas-cli/src/main_tests/examples.rs` — **MODIFY** add to allowlist
@@ -123,7 +123,7 @@ Initial variants: `AssertTrue = 0`, `AssertFalse = 1`, `AssertEqualsInteger = 2`
 - [x] Failed assert: message includes expected/actual values (**F4023**)
 - [x] `Skip('reason')` exits 0
 - [x] `cargo test -p fpas-compiler std_library::test` passes
-- [ ] `fpas examples/pascal/test/assert_basics.fpas` exits 0 (rebuild `fpas` when exe not locked)
+- [x] `fpas examples/pascal/test/assert_basics_test.fpas` exits 0
 
 ---
 
@@ -135,28 +135,28 @@ Initial variants: `AssertTrue = 0`, `AssertFalse = 1`, `AssertEqualsInteger = 2`
 
 ### 2.1 CLI routing
 
-- [ ] **2.1.1** — `crates/fpas-cli/src/cli_input.rs` — **MODIFY** `CliMode::Test`, parse `fpas test`, extend `CLI_HELP`, `ResolvedCli::Test(CliConfig)`
-- [ ] **2.1.2** — `crates/fpas-cli/src/cli_run.rs` — **MODIFY** dispatch `ResolvedCli::Test` → `cli_test::test_cli`
-- [ ] **2.1.3** — `crates/fpas-cli/src/main.rs` — **MODIFY** `mod cli_test;`
-- [ ] **2.1.4** — `crates/fpas-cli/src/cli_test.rs` — **CREATE** main runner logic
-- [ ] **2.1.5** — `docs/pascal/10-projects.md` — **MODIFY** document `fpas test` (from [`runner.md`](runner.md))
+- [x] **2.1.1** — `crates/fpas-cli/src/cli_input.rs` — **MODIFY** `CliMode::Test`, parse `fpas test`, extend `CLI_HELP`, `ResolvedCli::Test(TestCliConfig)`
+- [x] **2.1.2** — `crates/fpas-cli/src/cli_run.rs` — **MODIFY** dispatch `ResolvedCli::Test` → `cli_test::test_cli`
+- [x] **2.1.3** — `crates/fpas-cli/src/main.rs` — **MODIFY** `mod cli_test;`
+- [x] **2.1.4** — `crates/fpas-cli/src/cli_test/mod.rs` — **CREATE** main runner logic (+ `discover`, `run`, `report`)
+- [x] **2.1.5** — `docs/pascal/10-projects.md` — **MODIFY** document `fpas test` (from [`runner.md`](runner.md))
 
 ### 2.2 Discovery
 
-- [ ] **2.2.1** — `crates/fpas-cli/src/cli_test/discover.rs` — **CREATE** given path: single file, directory glob, or project load
-- [ ] **2.2.2** — Filter sources: basename ends with `_test.fpas` (case-insensitive)
+- [x] **2.2.1** — `crates/fpas-cli/src/cli_test/discover.rs` — **CREATE** given path: single file, directory glob, or project load
+- [x] **2.2.2** — Filter sources: basename ends with `_test.fpas` (case-insensitive)
 - [ ] **2.2.3** — Each file must parse as `program` (not bare `unit`) — error with hint if wrong
-- [ ] **2.2.4** — `crates/fpas-project` — **MODIFY** only if needed: expose linked source list (prefer existing load API from `cli_check`)
+- [x] **2.2.4** — `crates/fpas-project` — **MODIFY** only if needed: expose linked source list (prefer existing load API from `cli_check`) — not needed; reused load API
 
 Reuse: `cli_check.rs` (project load), `main_tests/support.rs` (`run_source_and_capture_output`).
 
 ### 2.3 Execution loop
 
-- [ ] **2.3.1** — `crates/fpas-cli/src/cli_test/run.rs` — **CREATE** compile, `Vm::new`, `run()`, collect output per test
-- [ ] **2.3.2** — `crates/fpas-cli/src/cli_test/report.rs` — **CREATE** `TestResult`, human summary, exit code aggregation
-- [ ] **2.3.3** — Exit codes per [`runner.md`](runner.md): 0 ok, 1 assert fail, 2 compile, 3 runtime
-- [ ] **2.3.4** — Optional `--fail-fast` (stop after first failure)
-- [ ] **2.3.5** — Optional `--list` (print paths only)
+- [x] **2.3.1** — `crates/fpas-cli/src/cli_test/run.rs` — **CREATE** compile, `Vm::new`, `run()`, collect output per test
+- [x] **2.3.2** — `crates/fpas-cli/src/cli_test/report.rs` — **CREATE** `TestResult`, human summary, exit code aggregation
+- [x] **2.3.3** — Exit codes per [`runner.md`](runner.md): 0 ok, 1 assert fail, 2 compile, 3 runtime
+- [x] **2.3.4** — Optional `--fail-fast` (stop after first failure)
+- [x] **2.3.5** — Optional `--list` (print paths only)
 
 ### 2.4 Golden stdout (optional in Phase 2)
 
@@ -166,8 +166,9 @@ Reuse: `cli_check.rs` (project load), `main_tests/support.rs` (`run_source_and_c
 
 ### 2.5 Tests
 
-- [ ] **2.5.1** — `crates/fpas-cli/src/main_tests/test_runner.rs` — **CREATE** temp dir with 2–3 `*_test.fpas`, invoke `test_cli`
-- [ ] **2.5.2** — `crates/fpas-cli/src/main_tests/mod.rs` — **MODIFY** `mod test_runner;`
+- [x] **2.5.1** — `crates/fpas-cli/src/main_tests/test_runner.rs` — **CREATE** temp dir with 2–3 `*_test.fpas`, invoke `test_cli`
+- [x] **2.5.2** — `crates/fpas-cli/src/main_tests/mod.rs` — **MODIFY** `mod test_runner;`
+- [x] **2.5.3** — `crates/fpas-cli/src/cli_test/mod.rs` — unit tests for directory run + `--list`
 
 ### 2.6 Examples
 
@@ -177,10 +178,11 @@ Reuse: `cli_check.rs` (project load), `main_tests/support.rs` (`run_source_and_c
 
 ### 2.7 Phase 2 verification
 
-- [ ] `fpas test examples/pascal/test/` — all pass
-- [ ] One failing test → exit 1, summary shows FAIL line
+- [x] `fpas test examples/pascal/test/` — all pass
+- [x] One failing test → exit 1, summary shows FAIL line (covered by `cli_test` unit test)
 - [ ] `fpas test` with no args discovers project like `fpas check` (if single `.fpasprj` in cwd)
-- [ ] `cargo test -p fpas-cli test_runner` passes
+- [x] `cargo test -p fpas-cli test_runner` passes
+- [x] `cargo test -p fpas-cli test_cli` passes
 
 ---
 
@@ -334,7 +336,7 @@ Phase 1
  crates/fpas-sema/src/std_registry/loaded/test.rs
  crates/fpas-compiler/src/compiler/std_calls/test.rs
  crates/fpas-compiler/src/tests/std_library/test.rs
- examples/pascal/test/assert_basics.fpas
+ examples/pascal/test/assert_basics_test.fpas
 
 Phase 2
  crates/fpas-cli/src/cli_test.rs

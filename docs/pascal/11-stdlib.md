@@ -43,6 +43,7 @@ See [09-units.md](09-units.md) for `uses` rules, short name ambiguity, and the r
 | [`Std.Result`](std/result.md) | Result helpers | `Unwrap`, `UnwrapOr`, `IsOk`, `IsError`, `Map`, `AndThen`, `OrElse` | [result.md](std/result.md) |
 | [`Std.Option`](std/option.md) | Option helpers | `Unwrap`, `UnwrapOr`, `IsSome`, `IsNone`, `Map`, `AndThen`, `OrElse` | [option.md](std/option.md) |
 | [`Std.Task`](std/task.md) | Task synchronization | `Wait`, `WaitAll` | [task.md](std/task.md) |
+| [`Std.Test`](std/test.md) | Test assertions | `AssertTrue`, `AssertFalse`, `AssertEquals`, `Fail`, `Skip` | [test.md](std/test.md) |
 
 ---
 

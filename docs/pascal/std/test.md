@@ -62,10 +62,10 @@ Print `test skipped: …` to stderr and continue. Does not raise **F4023**.
 
 ## Example
 
-See [`examples/pascal/test/assert_basics.fpas`](../../../examples/pascal/test/assert_basics.fpas).
+See [`examples/pascal/test/assert_basics_test.fpas`](../../../examples/pascal/test/assert_basics_test.fpas).
 
 Run:
 
 ```sh
-fpas examples/pascal/test/assert_basics.fpas
+fpas examples/pascal/test/assert_basics_test.fpas
 ```

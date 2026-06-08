@@ -94,7 +94,7 @@ For each discovered test:
 ```text
 Running 3 tests...
 
-  PASS  assert_basics.fpas (2ms)
+  PASS  assert_basics_test.fpas (2ms)
   PASS  readln_test.fpas (4ms)
   FAIL  tui_escape_test.fpas (18ms)
         test assertion failed: expected quit handler to run

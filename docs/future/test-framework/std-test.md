@@ -85,7 +85,7 @@ Failed assert message shape (LLM-friendly, consistent with compiler style):
 ```text
 test assertion failed: expected 4, got 5
   hint: check the expression passed to AssertEquals
-  at: assert_basics.fpas:12:3
+  at: assert_basics_test.fpas:12:3
 ```
 
 Source location comes from intrinsic lowering (same mechanism as runtime errors elsewhere).

@@ -31,8 +31,8 @@ Update the **Status** column when a phase is complete (⬜ → ✅). Detailed ta
 
 - [x] **Phase 0** — Planning documents written ([`README.md`](README.md), [`implementation.md`](implementation.md), specs)
 - [ ] **Phase 0** — Open decisions reviewed and recorded
-- [ ] **Phase 1** — `Std.Test` shippable; `assert_basics.fpas` runs via `fpas`
-- [ ] **Phase 2** — `fpas test` discovers and runs `*_test.fpas`
+- [x] **Phase 1** — `Std.Test` shippable; `assert_basics_test.fpas` runs via `fpas`
+- [x] **Phase 2** — `fpas test` discovers and runs `*_test.fpas` (core runner; optional items in Phase 2.4/2.6 remain open)
 - [ ] **Phase 3** — TUI test with `.script.toml` passes in CI
 - [ ] **Phase 4** — Graph smoke test headless in CI
 - [ ] **Phase 5** — Workspace + `kind = "test"` supported
@@ -172,14 +172,14 @@ High-level phases are below. **Every task has a checkbox in [`implementation.md`
 - [x] `crates/fpas-std/src/test/` — runtime: assert helpers
 - [x] `crates/fpas-sema/.../test.rs` — register `Std.Test` symbols
 - [x] `crates/fpas-compiler/.../test.rs` — lower asserts to intrinsics
-- [x] `examples/pascal/test/assert_basics.fpas` — example
+- [x] `examples/pascal/test/assert_basics_test.fpas` — example
 - [x] Compiler integration tests — assert pass/fail paths
 
 **Success criteria**
 
 - [x] A `.fpas` program can call `Std.Test.AssertEquals(2, 1 + 1)` and exit 0
 - [x] Failed assert prints message with expected/actual and **F4023**
-- [ ] `fpas examples/pascal/test/assert_basics.fpas` works (rebuild CLI when `fpas.exe` not locked)
+- [x] `fpas examples/pascal/test/assert_basics_test.fpas` works
 
 → Tasks: [`implementation.md` § Phase 1](implementation.md#phase-1--stdtest-assertions)
 
@@ -187,14 +187,14 @@ High-level phases are below. **Every task has a checkbox in [`implementation.md`
 
 **Deliverables**
 
-- [ ] `crates/fpas-cli/src/cli_test.rs` — subcommand implementation
-- [ ] `docs/pascal/10-projects.md` — document `fpas test`
-- [ ] Discovery of `*_test.fpas` — per-project glob scan
-- [ ] Summary output — `N passed, M failed`
+- [x] `crates/fpas-cli/src/cli_test/` — subcommand implementation
+- [x] `docs/pascal/10-projects.md` — document `fpas test`
+- [x] Discovery of `*_test.fpas` — per-project glob scan
+- [x] Summary output — `N passed, M failed`
 
 **Success criteria**
 
-- [ ] `fpas test examples/pascal/test/` runs all `*_test.fpas` and returns correct exit code
+- [x] `fpas test examples/pascal/test/` runs all `*_test.fpas` and returns correct exit code
 - [ ] Works with `.fpasprj` (includes test files + app sources for `uses`)
 
 → Tasks: [`implementation.md` § Phase 2](implementation.md#phase-2--fpas-test-runner)
@@ -277,7 +277,7 @@ crates/fpas-cli/src/
 
 docs/pascal/std/test.md
 examples/pascal/test/
- ├── assert_basics.fpas
+ ├── assert_basics_test.fpas
  ├── readln_test.fpas
  └── tui_escape_test.fpas (+ .script.toml)
 ```

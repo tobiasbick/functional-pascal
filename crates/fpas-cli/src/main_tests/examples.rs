@@ -135,7 +135,7 @@ const NON_INTERACTIVE_EXAMPLES: &[ExampleCase] = &[
         args: &[],
     },
     ExampleCase {
-        path: "examples/pascal/test/assert_basics.fpas",
+        path: "examples/pascal/test/assert_basics_test.fpas",
         args: &[],
     },
     ExampleCase {

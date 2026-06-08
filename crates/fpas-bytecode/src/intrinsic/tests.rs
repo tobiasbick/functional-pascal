@@ -261,6 +261,9 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Test(TestIntrinsic::AssertEqualsInteger),
     Intrinsic::Test(TestIntrinsic::Fail),
     Intrinsic::Test(TestIntrinsic::Skip),
+    Intrinsic::Test(TestIntrinsic::AssertEqualsBoolean),
+    Intrinsic::Test(TestIntrinsic::AssertEqualsString),
+    Intrinsic::Test(TestIntrinsic::AssertEqualsReal),
 ];
 
 #[test]

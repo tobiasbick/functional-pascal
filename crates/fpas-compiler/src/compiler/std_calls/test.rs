@@ -5,6 +5,7 @@
 use crate::error::CompileError;
 use fpas_bytecode::{Intrinsic, SourceLocation, TestIntrinsic};
 use fpas_parser::Expr;
+use fpas_sema::Ty;
 use fpas_std::std_symbols as s;
 
 use super::Compiler;
@@ -32,12 +33,17 @@ impl Compiler {
             }
             s::STD_TEST_ASSERT_EQUALS => {
                 self.expect_exact_args(s::STD_TEST_ASSERT_EQUALS, 2, args, location)?;
+                let operand_ty = self.ty_of(&args[0]);
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
-                self.emit_intrinsic_unit(
-                    Intrinsic::Test(TestIntrinsic::AssertEqualsInteger),
-                    location,
-                );
+                let intrinsic = match operand_ty {
+                    Ty::Integer => TestIntrinsic::AssertEqualsInteger,
+                    Ty::Boolean => TestIntrinsic::AssertEqualsBoolean,
+                    Ty::String => TestIntrinsic::AssertEqualsString,
+                    Ty::Real => TestIntrinsic::AssertEqualsReal,
+                    _ => TestIntrinsic::AssertEqualsInteger,
+                };
+                self.emit_intrinsic_unit(Intrinsic::Test(intrinsic), location);
                 Ok(true)
             }
             s::STD_TEST_FAIL => {

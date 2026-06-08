@@ -30,7 +30,7 @@ Requires `uses Std.Test;`.
 |------|------|-------|
 | procedure | `AssertTrue(Cond: boolean)` | fail when `Cond` is false |
 | procedure | `AssertFalse(Cond: boolean)` | fail when `Cond` is true |
-| procedure | `AssertEquals(Expected: integer; Actual: integer)` | integer equality |
+| procedure | `AssertEquals(Expected; Actual)` | equality for `integer`, `boolean`, `string`, or `real` (both operands same type) |
 | procedure | `Fail(Msg: string)` | unconditional failure |
 | procedure | `Skip(Msg: string)` | print skip reason; does not fail |
 
@@ -46,9 +46,9 @@ Fail with diagnostic **F4023** when `Cond` is false.
 
 Fail with **F4023** when `Cond` is true.
 
-### `procedure AssertEquals(Expected: integer; Actual: integer)`
+### `procedure AssertEquals(Expected; Actual)`
 
-Fail with **F4023** when operands differ. Message includes expected and actual values.
+Fail with **F4023** when operands differ. Both arguments must have the same type: `integer`, `boolean`, `string`, or `real`. Message includes expected and actual values (strings are quoted).
 
 ### `procedure Fail(Msg: string)`
 

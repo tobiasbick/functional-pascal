@@ -53,6 +53,54 @@ pub(crate) fn assert_equals_integer(
     }
 }
 
+/// `AssertEquals` for boolean operands.
+pub(crate) fn assert_equals_boolean(
+    expected: bool,
+    actual: bool,
+    location: SourceLocation,
+) -> Result<(), StdError> {
+    if expected == actual {
+        Ok(())
+    } else {
+        fail_with_message(
+            format!("test assertion failed: expected {expected}, got {actual}"),
+            location,
+        )
+    }
+}
+
+/// `AssertEquals` for string operands.
+pub(crate) fn assert_equals_string(
+    expected: String,
+    actual: String,
+    location: SourceLocation,
+) -> Result<(), StdError> {
+    if expected == actual {
+        Ok(())
+    } else {
+        fail_with_message(
+            format!("test assertion failed: expected '{expected}', got '{actual}'"),
+            location,
+        )
+    }
+}
+
+/// `AssertEquals` for real operands.
+pub(crate) fn assert_equals_real(
+    expected: f64,
+    actual: f64,
+    location: SourceLocation,
+) -> Result<(), StdError> {
+    if expected == actual {
+        Ok(())
+    } else {
+        fail_with_message(
+            format!("test assertion failed: expected {expected}, got {actual}"),
+            location,
+        )
+    }
+}
+
 /// `Fail`: unconditional test failure with user message.
 pub(crate) fn fail(msg: String, location: SourceLocation) -> Result<(), StdError> {
     fail_with_message(format!("test failed: {msg}"), location)

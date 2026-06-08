@@ -2,6 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/test.md` (from the repository root).
 
+use super::super::builtins::register_assert_equals_builtin;
 use super::super::{define_proc, p};
 use crate::check::Checker;
 use crate::types::Ty;
@@ -19,14 +20,7 @@ pub(super) fn register_std_test(checker: &mut Checker) {
         s::STD_TEST_ASSERT_FALSE,
         vec![p("Cond", Ty::Boolean, false)],
     );
-    define_proc(
-        checker,
-        s::STD_TEST_ASSERT_EQUALS,
-        vec![
-            p("Expected", Ty::Integer, false),
-            p("Actual", Ty::Integer, false),
-        ],
-    );
+    register_assert_equals_builtin(checker);
     define_proc(checker, s::STD_TEST_FAIL, vec![p("Msg", Ty::String, false)]);
     define_proc(checker, s::STD_TEST_SKIP, vec![p("Msg", Ty::String, false)]);
 }

@@ -2,9 +2,12 @@
 //!
 //! **Documentation:** `docs/pascal/std/test.md` (from the repository root).
 
-use super::assert::{assert_equals_integer, assert_false, assert_true, fail, skip};
+use super::assert::{
+    assert_equals_boolean, assert_equals_integer, assert_equals_real, assert_equals_string,
+    assert_false, assert_true, fail, skip,
+};
 use crate::error::StdError;
-use crate::intrinsic_args::{pop_bool, pop_int, pop_string, pop_value};
+use crate::intrinsic_args::{pop_bool, pop_int, pop_real, pop_string, pop_value};
 use fpas_bytecode::{Intrinsic, SourceLocation, TestIntrinsic, Value};
 
 /// Execute a `Std.Test` intrinsic; returns `None` when another unit should handle it.
@@ -31,6 +34,21 @@ pub(crate) fn run(
             let actual = pop_int(pop_value(stack, location)?, location)?;
             let expected = pop_int(pop_value(stack, location)?, location)?;
             assert_equals_integer(expected, actual, location)?;
+        }
+        TestIntrinsic::AssertEqualsBoolean => {
+            let actual = pop_bool(pop_value(stack, location)?, location)?;
+            let expected = pop_bool(pop_value(stack, location)?, location)?;
+            assert_equals_boolean(expected, actual, location)?;
+        }
+        TestIntrinsic::AssertEqualsString => {
+            let actual = pop_string(pop_value(stack, location)?, location)?;
+            let expected = pop_string(pop_value(stack, location)?, location)?;
+            assert_equals_string(expected, actual, location)?;
+        }
+        TestIntrinsic::AssertEqualsReal => {
+            let actual = pop_real(pop_value(stack, location)?, location)?;
+            let expected = pop_real(pop_value(stack, location)?, location)?;
+            assert_equals_real(expected, actual, location)?;
         }
         TestIntrinsic::Fail => {
             let msg = pop_string(pop_value(stack, location)?, location)?;

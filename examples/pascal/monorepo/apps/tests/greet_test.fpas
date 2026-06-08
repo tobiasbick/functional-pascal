@@ -2,5 +2,5 @@ program GreetTest;
 uses Demo.Greet, Std.Test;
 
 begin
-  AssertTrue(Message() = 'Hello from library project')
+  AssertEquals('Hello from library project', Message())
 end.

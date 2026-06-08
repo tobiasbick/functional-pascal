@@ -20,4 +20,10 @@ pub enum TestIntrinsic {
     Fail = 351,
     /// `Std.Test.Skip(Msg)` — mark test skipped (non-failing).
     Skip = 352,
+    /// `Std.Test.AssertEquals(Expected, Actual)` for `boolean` operands.
+    AssertEqualsBoolean = 353,
+    /// `Std.Test.AssertEquals(Expected, Actual)` for `string` operands.
+    AssertEqualsString = 354,
+    /// `Std.Test.AssertEquals(Expected, Actual)` for `real` operands.
+    AssertEqualsReal = 355,
 }

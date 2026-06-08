@@ -85,7 +85,7 @@ Reference: [`docs/pascal/std/README.md`](../../pascal/std/README.md) § Shared i
 
 Initial variants: `AssertTrue = 0`, `AssertFalse = 1`, `AssertEqualsInteger = 2`, `Fail = 3`, `Skip = 4`.
 
-- [ ] **1.3.5** — (Phase 1b, optional) overload `AssertEquals` for `boolean`, `string`, `real` — separate intrinsics per type
+- [x] **1.3.5** — overload `AssertEquals` for `boolean`, `string`, `real` — separate intrinsics per type
 
 ### 1.4 `fpas-sema` — registration
 

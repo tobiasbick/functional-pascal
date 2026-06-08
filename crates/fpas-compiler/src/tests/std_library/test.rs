@@ -70,6 +70,60 @@ end.",
 }
 
 #[test]
+fn std_test_assert_equals_string_passes() {
+    compile_ok(
+        "\
+program T;
+uses Std.Test;
+begin
+  AssertEquals('hello', 'hel' + 'lo')
+end.",
+    );
+}
+
+#[test]
+fn std_test_assert_equals_boolean_passes() {
+    compile_ok(
+        "\
+program T;
+uses Std.Test;
+begin
+  AssertEquals(true, 1 = 1)
+end.",
+    );
+}
+
+#[test]
+fn std_test_assert_equals_real_passes() {
+    compile_ok(
+        "\
+program T;
+uses Std.Test;
+begin
+  AssertEquals(1.5, 3.0 / 2.0)
+end.",
+    );
+}
+
+#[test]
+fn std_test_assert_equals_string_failure_reports_values() {
+    let err = compile_run_error(
+        "\
+program T;
+uses Std.Test;
+begin
+  AssertEquals('want', 'got')
+end.",
+    );
+    assert_eq!(err.code, RUNTIME_TEST_ASSERTION_FAILED);
+    assert!(
+        err.message.contains("expected 'want', got 'got'"),
+        "message={}",
+        err.message
+    );
+}
+
+#[test]
 fn std_test_skip_does_not_fail() {
     compile_and_run(
         "\

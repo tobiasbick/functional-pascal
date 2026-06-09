@@ -25,11 +25,24 @@ fn test_display_path(path: &Path) -> std::borrow::Cow<'_, str> {
 }
 
 /// Project sources used when linking a test program with local units.
+#[derive(Clone)]
 pub(super) struct LinkContext {
     pub source_files: Vec<PathBuf>,
     pub link_meta: project::ProjectLinkMeta,
     pub test_manifest: project::TestManifest,
     pub hooks: TestHooks,
+}
+
+/// Compiles and runs one test file, capturing stderr-style output for parallel runs.
+pub(super) fn run_single_test_capture(
+    path: &Path,
+    link: Option<&LinkContext>,
+    script_override: Option<&Path>,
+    timeout: Option<Duration>,
+) -> (TestOutcome, Vec<u8>) {
+    let mut buffer = Vec::new();
+    let outcome = run_single_test(path, link, script_override, timeout, &mut buffer);
+    (outcome, buffer)
 }
 
 /// Compiles and runs one test file, classifying the result.
@@ -41,17 +54,25 @@ pub(super) fn run_single_test(
     stderr: &mut dyn Write,
 ) -> TestOutcome {
     let display = test_display_path(path);
+    let has_teardown = link.is_some_and(|context| context.hooks.teardown.is_some());
 
     if let Some(link) = link {
         if let Some(hook) = link.hooks.setup.as_ref() {
-            let outcome = run_test_hook(hook, "Setup", path, link, stderr, &display);
+            let outcome = run_test_hook(hook, "Setup", path, link, timeout, stderr, &display);
             if outcome.is_failure() {
-                let _ = run_optional_teardown(link, path, stderr, &display);
+                let _ = run_optional_teardown(link, path, timeout, stderr, &display);
                 return outcome;
             }
         }
     }
 
+    // With a teardown hook present, the PASS line is deferred until the hook
+    // also succeeded so the log never shows PASS followed by FAIL for one test.
+    let body_output = if has_teardown {
+        RunOutput::TestDeferredPass
+    } else {
+        RunOutput::Test
+    };
     let outcome = run_test_program(
         path,
         link,
@@ -59,15 +80,20 @@ pub(super) fn run_single_test(
         timeout,
         stderr,
         &display,
-        RunOutput::Test,
+        body_output,
     );
 
     if let Some(link) = link {
-        if let Some(teardown_outcome) = run_optional_teardown(link, path, stderr, &display) {
+        if let Some(teardown_outcome) = run_optional_teardown(link, path, timeout, stderr, &display)
+        {
             if outcome == TestOutcome::Pass && teardown_outcome.is_failure() {
                 return teardown_outcome;
             }
         }
+    }
+
+    if has_teardown && outcome == TestOutcome::Pass {
+        let _ = writeln!(stderr, "  PASS  {display}");
     }
 
     outcome
@@ -75,7 +101,12 @@ pub(super) fn run_single_test(
 
 /// Controls PASS/FAIL lines emitted while executing a linked program.
 enum RunOutput {
+    /// Regular test body: prints PASS and FAIL banners.
     Test,
+    /// Test body followed by a teardown hook: FAIL banners only; the caller
+    /// prints PASS after the teardown hook also passed.
+    TestDeferredPass,
+    /// Setup/Teardown hook program: no banners; the hook wrapper reports failures.
     Hook,
 }
 
@@ -85,20 +116,21 @@ impl RunOutput {
     }
 
     fn emit_fail_banner(self) -> bool {
-        matches!(self, Self::Test)
+        matches!(self, Self::Test | Self::TestDeferredPass)
     }
 }
 
 fn run_optional_teardown(
     link: &LinkContext,
     path: &Path,
+    timeout: Option<Duration>,
     stderr: &mut dyn Write,
     display: &str,
 ) -> Option<TestOutcome> {
     link.hooks
         .teardown
         .as_ref()
-        .map(|hook| run_test_hook(hook, "Teardown", path, link, stderr, display))
+        .map(|hook| run_test_hook(hook, "Teardown", path, link, timeout, stderr, display))
 }
 
 fn run_test_hook(
@@ -106,6 +138,7 @@ fn run_test_hook(
     label: &str,
     test_path: &Path,
     link: &LinkContext,
+    timeout: Option<Duration>,
     stderr: &mut dyn Write,
     display: &str,
 ) -> TestOutcome {
@@ -122,7 +155,7 @@ fn run_test_hook(
         &hook_path,
         Some(link),
         None,
-        None,
+        timeout,
         stderr,
         display,
         RunOutput::Hook,
@@ -253,17 +286,19 @@ fn run_test_program(
 }
 
 fn write_temp_hook_program(test_path: &Path, source: &str) -> Result<PathBuf, String> {
+    // Process id plus an atomic counter keeps names unique across parallel `--jobs`
+    // workers and concurrent `fpas test` processes; a timestamp alone can collide.
+    static NEXT_HOOK_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+    let unique = NEXT_HOOK_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+
     let dir = std::env::temp_dir();
-    let unique = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_err(|error| error.to_string())?
-        .as_nanos();
     let file_name = format!(
-        "fpas-test-hook-{}-{}.fpas",
+        "fpas-test-hook-{}-{}-{}.fpas",
         test_path
             .file_stem()
             .and_then(|name| name.to_str())
             .unwrap_or("test"),
+        std::process::id(),
         unique
     );
     let path = dir.join(file_name);

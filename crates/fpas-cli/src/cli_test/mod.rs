@@ -5,13 +5,13 @@
 
 mod discover;
 mod hooks;
+mod parallel;
 mod report;
 mod run;
 mod timeout;
 
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::time::Duration;
 
 use crate::cli_input::{TestCliConfig, TestReportFormat};
 use discover::{discover_test_files, filter_test_paths, is_test_file_name};
@@ -71,9 +71,11 @@ pub(crate) fn test_cli(
         return 2;
     }
 
+    // List output is the command result and goes to stdout so it can be piped;
+    // progress and summaries stay on stderr.
     if config.list_only {
         for path in &paths {
-            let _ = writeln!(stderr, "{}", path.display());
+            let _ = writeln!(stdout, "{}", path.display());
         }
         return 0;
     }
@@ -81,6 +83,20 @@ pub(crate) fn test_cli(
     let _ = writeln!(stderr, "Running {} test(s)...", paths.len());
     let _ = writeln!(stderr);
 
+    let job_count = parallel::effective_job_count(config.jobs, paths.len());
+    if job_count <= 1 {
+        return run_tests_sequential(config, paths, stdout, stderr);
+    }
+
+    run_tests_parallel(config, paths, stdout, stderr)
+}
+
+fn run_tests_sequential(
+    config: TestCliConfig,
+    paths: Vec<PathBuf>,
+    stdout: &mut dyn Write,
+    stderr: &mut dyn Write,
+) -> i32 {
     let mut summary = Summary::default();
     for path in paths {
         let display = test_display_path(&path);
@@ -106,6 +122,59 @@ pub(crate) fn test_cli(
             return finish_test_run(&config, &summary, stdout, stderr);
         }
         summary.record(&display, outcome);
+    }
+
+    finish_test_run(&config, &summary, stdout, stderr)
+}
+
+fn run_tests_parallel(
+    config: TestCliConfig,
+    paths: Vec<PathBuf>,
+    stdout: &mut dyn Write,
+    stderr: &mut dyn Write,
+) -> i32 {
+    let mut summary = Summary::default();
+    let mut prepared = Vec::new();
+    let mut preload_results = Vec::new();
+
+    for (index, path) in paths.into_iter().enumerate() {
+        let display = test_display_path(&path);
+        match link_context_for_test(&path) {
+            Ok(link) => prepared.push(parallel::PreparedTest {
+                index,
+                path,
+                display,
+                link,
+            }),
+            Err(message) => {
+                let output = format!("  FAIL  {display}\n        {message}\n");
+                preload_results.push(parallel::IndexedTestResult {
+                    index,
+                    display,
+                    outcome: TestOutcome::CompileError,
+                    output,
+                });
+            }
+        }
+    }
+
+    let mut results = preload_results;
+    results.extend(parallel::run_tests_parallel(
+        prepared,
+        config.jobs,
+        config.script_path.as_deref(),
+        config.timeout,
+        config.fail_fast,
+    ));
+    results.sort_by_key(|result| result.index);
+
+    for result in results {
+        let _ = write!(stderr, "{}", result.output);
+        if config.fail_fast && result.outcome.is_failure() {
+            summary.record(&result.display, result.outcome);
+            return finish_test_run(&config, &summary, stdout, stderr);
+        }
+        summary.record(&result.display, result.outcome);
     }
 
     finish_test_run(&config, &summary, stdout, stderr)
@@ -165,6 +234,7 @@ pub(crate) fn validate_explicit_test_file(path: &Path) -> Result<(), String> {
 mod tests {
     use super::*;
     use crate::test_support::{create_temp_dir, write_text};
+    use std::time::Duration;
 
     #[test]
     fn test_cli_runs_matching_tests_in_directory() {
@@ -191,6 +261,7 @@ mod tests {
                 filter: None,
                 report: None,
                 timeout: None,
+                jobs: 1,
             },
             &mut stdout,
             &mut stderr,
@@ -223,15 +294,18 @@ mod tests {
                 filter: None,
                 report: None,
                 timeout: None,
+                jobs: 1,
             },
             &mut stdout,
             &mut stderr,
         );
 
         assert_eq!(exit, 0);
-        let text = String::from_utf8(stderr).expect("utf-8");
-        assert!(text.contains("one_test.fpas"));
-        assert!(!text.contains("FAIL"));
+        let listed = String::from_utf8(stdout).expect("utf-8");
+        assert!(listed.contains("one_test.fpas"));
+        let progress = String::from_utf8(stderr).expect("utf-8");
+        assert!(!progress.contains("FAIL"));
+        assert!(!progress.contains("one_test.fpas"));
     }
 
     #[test]
@@ -258,6 +332,7 @@ mod tests {
                 filter: Some("menu".to_string()),
                 report: None,
                 timeout: None,
+                jobs: 1,
             },
             &mut stdout,
             &mut stderr,
@@ -289,6 +364,7 @@ mod tests {
                 filter: None,
                 report: Some(TestReportFormat::Json),
                 timeout: None,
+                jobs: 1,
             },
             &mut stdout,
             &mut stderr,
@@ -300,6 +376,42 @@ mod tests {
         assert!(json.contains("ok_test.fpas"));
         let text = String::from_utf8(stderr).expect("utf-8");
         assert!(!text.contains("Summary:"));
+    }
+
+    #[test]
+    fn test_cli_jobs_runs_tests_in_parallel_mode() {
+        let cwd = create_temp_dir("fpas-test-jobs");
+        write_text(
+            &cwd.join("one_test.fpas"),
+            "program O;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        );
+        write_text(
+            &cwd.join("two_test.fpas"),
+            "program T;\nuses Std.Test;\nbegin AssertEquals(2, 1 + 1) end.",
+        );
+
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+        let exit = test_cli(
+            TestCliConfig {
+                input: crate::CliInput::SourceFile(cwd.clone()),
+                cwd,
+                fail_fast: false,
+                list_only: false,
+                script_path: None,
+                filter: None,
+                report: None,
+                timeout: None,
+                jobs: 2,
+            },
+            &mut stdout,
+            &mut stderr,
+        );
+
+        assert_eq!(exit, 0, "stderr={}", String::from_utf8_lossy(&stderr));
+        let text = String::from_utf8(stderr).expect("utf-8");
+        assert!(text.contains("PASS  one_test.fpas"));
+        assert!(text.contains("PASS  two_test.fpas"));
     }
 
     #[test]
@@ -322,6 +434,7 @@ mod tests {
                 filter: None,
                 report: None,
                 timeout: Some(Duration::from_secs(1)),
+                jobs: 1,
             },
             &mut stdout,
             &mut stderr,

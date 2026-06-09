@@ -23,7 +23,7 @@ Usage:
     fpas check                                            Discover `.fpasworkspace` or `.fpasprj` in cwd
     fpas test [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
                                                           Run `*_test.fpas` programs
-    fpas test [--list] [--fail-fast] [--filter <pattern>] [--report json] [--timeout <secs>] [--script <path>] [<path>]             Discover tests in cwd when path omitted
+    fpas test [--list] [--fail-fast] [--filter <pattern>] [--report json] [--timeout <secs>] [--jobs <n>] [--script <path>] [<path>]             Discover tests in cwd when path omitted
 
 Options:
   -h, --help      Print this help
@@ -62,6 +62,7 @@ pub(crate) struct TestCliConfig {
     pub filter: Option<String>,
     pub report: Option<TestReportFormat>,
     pub timeout: Option<Duration>,
+    pub jobs: usize,
 }
 
 /// Result of parsing CLI arguments before loading sources.
@@ -115,6 +116,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
     let mut filter = None::<String>;
     let mut report = None::<TestReportFormat>;
     let mut timeout = None::<Duration>;
+    let mut jobs = None::<usize>;
     let mut positional = Vec::new();
     let mut index = 0;
     while index < cli_args.len() {
@@ -185,6 +187,23 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
                     return Err("Duplicate `--timeout` option.".to_string());
                 }
             }
+            "--jobs" if mode == CliMode::Test => {
+                index += 1;
+                let Some(count) = cli_args.get(index) else {
+                    return Err(
+                        "Missing count after `--jobs`.\n  help: `fpas test --jobs 4` or `fpas test --jobs 0` for machine parallelism."
+                            .to_string(),
+                    );
+                };
+                let count: usize = count.parse().map_err(|_| {
+                    format!(
+                        "Invalid `--jobs` value `{count}`.\n  help: Pass a non-negative integer (`0` uses available parallelism)."
+                    )
+                })?;
+                if jobs.replace(count).is_some() {
+                    return Err("Duplicate `--jobs` option.".to_string());
+                }
+            }
             _ => positional.push(cli_args[index].clone()),
         }
         index += 1;
@@ -239,6 +258,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             filter,
             report,
             timeout,
+            jobs: jobs.unwrap_or(1),
         }),
     })
 }
@@ -265,7 +285,7 @@ fn usage_error(mode: CliMode) -> String {
                 .to_string()
         }
         CliMode::Test => {
-            "Usage: fpas test [--list] [--fail-fast] [--filter <pattern>] [--report json] [--timeout <secs>] [--script <path>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]\n  help: `fpas --help` shows options."
+            "Usage: fpas test [--list] [--fail-fast] [--filter <pattern>] [--report json] [--timeout <secs>] [--jobs <n>] [--script <path>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]\n  help: `fpas --help` shows options."
                 .to_string()
         }
     }

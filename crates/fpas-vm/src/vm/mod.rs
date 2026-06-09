@@ -212,6 +212,15 @@ impl Vm {
         self.shared
             .abort_spawned_bytecode
             .store(false, std::sync::atomic::Ordering::Release);
+
+        // Programs without `go` never use the pool; avoid `thread::scope` so nested callers
+        // (for example `fpas test --jobs`) do not stack scoped thread blocks on worker threads.
+        if self.pool_size == 0 {
+            let _shutdown_after_main = ShutdownAfterMain(Arc::clone(&self.shared));
+            let mut main_worker = Worker::new_main(Arc::clone(&self.shared));
+            return main_worker.run();
+        }
+
         let shared = Arc::clone(&self.shared);
         let pool_size = self.pool_size;
 

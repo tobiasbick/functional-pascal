@@ -254,7 +254,7 @@ High-level phases are below. **Every task has a checkbox in [`implementation.md`
 
 - [ ] Terminal screen snapshot API for TUI (read back buffer as string grid) — research spike
 - [x] `Setup` / `Teardown` procedures in test project helper units (runner convention; see `runner.md`)
-- [ ] Parallel test execution (respect VM / graph headless constraints)
+- [x] Parallel test execution (`fpas test --jobs <n>`; `0` uses available parallelism)
 - [x] Filter: `fpas test --filter menu_bar`
 - [x] JSON report for CI (`--report json`)
 - [x] Runner timeout for hung interactive tests (`--timeout <secs>`)

@@ -15,7 +15,7 @@ Multi-file programs are composed with project source lists plus `unit` / `uses`.
   - Other extensions — error.
 - `fpas` with more than one argument — usage error.
 - `fpas check [<path>]` — type-check a `.fpas`, `.fpasprj`, or `.fpasworkspace` without running. With no path, discovers `.fpasworkspace` or `.fpasprj` in the current directory.
-- `fpas test [<path>]` — run `*_test.fpas` programs and print a pass/fail summary. With no path, discovers a workspace or `.fpasprj` like `fpas check`. Flags: `--list`, `--fail-fast`, `--filter <pattern>`, `--report json`, `--timeout <secs>`, `--script <path>`. Sidecar scripts: `<test>.script.toml` beside each test file. With `--report json`, writes a structured summary to stdout; progress lines stay on stderr.
+- `fpas test [<path>]` — run `*_test.fpas` programs and print a pass/fail summary. With no path, discovers a workspace or `.fpasprj` like `fpas check`. Flags: `--list`, `--fail-fast`, `--filter <pattern>`, `--report json`, `--timeout <secs>`, `--jobs <n>` (`0` = available CPU parallelism), `--script <path>`. Sidecar scripts: `<test>.script.toml` beside each test file. `--list` and `--report json` write results to stdout; progress lines stay on stderr.
 - `fpas -h` / `fpas --help` — prints usage to stdout and exits successfully.
 - `fpas -V` / `fpas --version` — prints the compiler version to stdout and exits successfully.
 

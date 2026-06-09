@@ -32,6 +32,7 @@ fn test_cli_runs_tests_from_test_project_file() {
             filter: None,
             report: None,
             timeout: None,
+            jobs: 1,
         },
         &mut stdout,
         &mut stderr,
@@ -71,6 +72,7 @@ fn test_cli_runs_tests_from_workspace_test_member() {
             filter: None,
             report: None,
             timeout: None,
+            jobs: 1,
         },
         &mut stdout,
         &mut stderr,
@@ -109,6 +111,7 @@ fn test_cli_uses_manifest_script_override() {
             filter: Some("prompt".to_string()),
             report: None,
             timeout: None,
+            jobs: 1,
         },
         &mut stdout,
         &mut stderr,
@@ -147,6 +150,7 @@ fn test_cli_runs_setup_and_teardown_hooks() {
             filter: None,
             report: None,
             timeout: None,
+            jobs: 1,
         },
         &mut stdout,
         &mut stderr,
@@ -186,6 +190,7 @@ fn test_cli_fails_when_teardown_hook_fails() {
             filter: None,
             report: None,
             timeout: None,
+            jobs: 1,
         },
         &mut stdout,
         &mut stderr,
@@ -194,4 +199,51 @@ fn test_cli_fails_when_teardown_hook_fails() {
     assert_eq!(exit, 1, "stderr={}", String::from_utf8_lossy(&stderr));
     let text = String::from_utf8(stderr).expect("utf-8");
     assert!(text.contains("Teardown hook failed"));
+    assert!(
+        !text.contains("PASS  demo_test.fpas"),
+        "PASS must be deferred until teardown succeeded: {text}"
+    );
+}
+
+#[test]
+fn test_cli_timeout_aborts_hanging_setup_hook() {
+    let cwd = create_temp_dir("fpas-test-hook-timeout");
+    write_text(
+        &cwd.join("tests.fpasprj"),
+        "[project]\nname = \"tests\"\nkind = \"test\"\n\n[sources]\ninclude = [\"*.fpas\"]\n",
+    );
+    write_text(
+        &cwd.join("fixture.fpas"),
+        "unit Tests.Fixture;\nprocedure Setup();\nbegin\n  while 1 = 1 do\n  begin\n  end\nend;",
+    );
+    write_text(
+        &cwd.join("demo_test.fpas"),
+        "program D;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+    );
+
+    let mut stderr = Vec::new();
+    let mut stdout = Vec::new();
+    let exit = test_cli(
+        TestCliConfig {
+            input: CliInput::ProjectFile(cwd.join("tests.fpasprj")),
+            cwd: cwd.clone(),
+            fail_fast: false,
+            list_only: false,
+            script_path: None,
+            filter: None,
+            report: None,
+            timeout: Some(std::time::Duration::from_secs(1)),
+            jobs: 1,
+        },
+        &mut stdout,
+        &mut stderr,
+    );
+
+    assert_eq!(exit, 3, "stderr={}", String::from_utf8_lossy(&stderr));
+    let text = String::from_utf8(stderr).expect("utf-8");
+    assert!(text.contains("Setup hook failed"));
+    assert!(
+        !text.contains("PASS  demo_test.fpas"),
+        "test body must not run after the setup hook timed out: {text}"
+    );
 }

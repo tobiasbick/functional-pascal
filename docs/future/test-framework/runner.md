@@ -26,9 +26,10 @@ fpas test [<path>] [options]
 | `--filter <pattern>` | Substring match on test file path (case-insensitive) |
 | `--fail-fast` | Stop after first failure |
 | `--script <path>` | Use explicit script file instead of sidecar auto-discovery |
-| `--list` | Print tests that would run, do not execute |
+| `--list` | Print tests that would run to stdout, do not execute |
 | `--report json` | Machine-readable summary on stdout (version 1 JSON; human summary omitted) |
 | `--timeout <secs>` | Abort each test run after the given wall-clock seconds (cooperative shutdown) |
+| `--jobs <n>` | Run up to `n` tests concurrently (`0` = available CPU parallelism; default `1`) |
 
 ---
 
@@ -148,6 +149,19 @@ end.
 ```
 
 Implementation: `crates/fpas-cli/src/cli_test/hooks.rs`, `run.rs`.
+
+---
+
+## Parallel execution
+
+When `--jobs` is greater than `1` (or `0` resolves above one worker), the runner executes independent tests on worker threads. Each test still gets its own compile + VM instance; scripts and timeouts apply per test.
+
+- Output is buffered per test and printed in discovery order after completion.
+- `--fail-fast` stops scheduling new tests after the first failure; in-flight tests still finish.
+- Headless graph tests are safe to run in parallel: the test backend is thread-local (`fpas-std` graph backend).
+- Test programs without `go` use a single-threaded `Vm::run` fast path (no nested `thread::scope`), so worker threads do not stack scoped thread blocks.
+
+Implementation: `crates/fpas-cli/src/cli_test/parallel.rs`, `crates/fpas-vm/src/vm/mod.rs`.
 
 ---
 

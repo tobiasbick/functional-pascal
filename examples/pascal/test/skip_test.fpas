@@ -1,0 +1,6 @@
+program SkipTest;
+uses Std.Test;
+
+begin
+  Skip('not implemented on this platform')
+end.

@@ -1,6 +1,6 @@
-# Draft: `Std.Test`
+# `Std.Test` (planning copy)
 
-User-facing specification draft for the FPAS test assertion unit. When implemented, the canonical spec moves to [`docs/pascal/std/test.md`](../../pascal/std/test.md).
+**Canonical user spec:** [`docs/pascal/std/test.md`](../../pascal/std/test.md). This file remains for planning cross-links; update the canonical doc when behavior changes.
 
 ---
 

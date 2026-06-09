@@ -2,7 +2,7 @@
 
 Implementation plan for a JUnit-style testing surface in Functional Pascal: write tests in `.fpas`, run them with `fpas test`, and drive interactive programs (console, TUI, graph) with scripted keyboard and mouse input — without blocking on a real terminal or native window.
 
-**Track progress:** check boxes in this file (overview) and in [`implementation.md`](implementation.md) (detailed tasks). Mark `[x]` when done; leave `[ ]` for open work. **Phases 0–6 are complete** as of the golden sidecar and documentation pass; future work lives in [`docs/future/`](../) outside this plan unless a new phase is added.
+**Track progress:** check boxes in this file (overview) and in [`implementation.md`](implementation.md) (detailed tasks). Mark `[x]` when done; leave `[ ]` for open work. **Phases 0–7 are complete** as of skip reporting, `--strict`, and the examples CI smoke test; future work lives in [`docs/future/`](../) outside this plan unless a new phase is added.
 
 **Principles**
 
@@ -24,6 +24,7 @@ Implementation plan for a JUnit-style testing surface in Functional Pascal: writ
 | **4** Graph headless | ✅ Complete | Headless backend, scripted events, `*.expect.pixels` spot checks |
 | **5** Test projects | ✅ Complete | `kind = "test"`, workspace |
 | **6** Ergonomics | ✅ Complete | Filter, JSON, parallel, timeout, golden sidecars, script ordering test |
+| **7** Integration | ✅ Complete | `Skip` reporting, `--strict`, examples CI smoke, `readln_order` / `skip` demos |
 
 Update the **Status** column when a phase is complete (⬜ → ✅). Detailed task checkboxes live in [`implementation.md`](implementation.md).
 
@@ -37,6 +38,7 @@ Update the **Status** column when a phase is complete (⬜ → ✅). Detailed ta
 - [x] **Phase 4** — Graph smoke test headless in CI
 - [x] **Phase 5** — Workspace + `kind = "test"` supported (monorepo demo; `[test]` overrides remain optional)
 - [x] **Phase 6** — Ergonomics complete (filter, JSON, parallel, timeout, golden sidecars)
+- [x] **Phase 7** — Skip reporting, `--strict`, `examples/pascal/test/` CI smoke, ordering/skip demos
 
 ---
 
@@ -260,6 +262,16 @@ High-level phases are below. **Every task has a checkbox in [`implementation.md`
 - [x] Runner timeout for hung interactive tests (`--timeout <secs>`)
 
 → Tasks: [`implementation.md` § Phase 6](implementation.md#phase-6--quality-and-ergonomics)
+
+### Phase 7 — Integration and CI
+
+- [x] `Std.Test.Skip` sets thread-local flag; runner prints `SKIP` and counts skipped in summary/JSON
+- [x] `fpas test --strict` — exit `1` when any test was skipped
+- [x] `examples/pascal/test/readln_order_test.fpas` — multi-line script ordering demo
+- [x] `examples/pascal/test/skip_test.fpas` — skip reporting demo
+- [x] `cargo test -p fpas-cli examples_pascal_test_suite_passes` — CI smoke for example test suite
+
+→ Tasks: [`implementation.md` § Phase 7](implementation.md#phase-7--integration-and-ci)
 
 ---
 

@@ -17,6 +17,7 @@ pub(super) struct VmExecution {
     pub stdout_lines: Vec<String>,
     pub screen_lines: Vec<String>,
     pub headless_frame: Option<UploadedFrame>,
+    pub skipped: bool,
 }
 
 /// Result of executing one VM run under an optional wall-clock limit.

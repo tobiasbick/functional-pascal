@@ -31,7 +31,9 @@ fpas test examples/pascal/test/tests.fpasprj
 fpas test examples/pascal/test/assert_basics_test.fpas
 ```
 
-Test files are named `*_test.fpas`. Interactive tests pair with optional `*.script.toml` sidecars that queue keyboard, mouse, or graph events before the VM starts (no real terminal or native window in the default run). Optional golden sidecars: `*.expect.stdout`, `*.expect.screen` (TUI), `*.expect.pixels` (headless graph). See [`docs/pascal/std/test.md`](../docs/pascal/std/test.md) and [`docs/future/test-framework/README.md`](../docs/future/test-framework/README.md).
+Test files are named `*_test.fpas`. Interactive tests pair with optional `*.script.toml` sidecars that queue keyboard, mouse, or graph events before the VM starts (no real terminal or native window in the default run). Optional golden sidecars: `*.expect.stdout`, `*.expect.screen` (TUI), `*.expect.pixels` (headless graph). `Skip` tests are reported as skipped (use `--strict` to fail the run). See [`docs/pascal/std/test.md`](../docs/pascal/std/test.md) and [`docs/future/test-framework/README.md`](../docs/future/test-framework/README.md).
+
+CI smoke: `cargo test -p fpas-cli examples_pascal_test_suite_passes`.
 
 `assert_fail_demo.fpas` is a manual failure demo (not `*_test.fpas`); run it with `fpas` to inspect **F4023** output.
 

@@ -1,0 +1,8 @@
+program ReadlnOrderTest;
+uses Std.Console, Std.Test;
+
+begin
+  AssertEquals(ReadLn(), 'first');
+  AssertEquals(ReadLn(), 'second');
+  AssertEquals(ReadLn(), 'third')
+end.

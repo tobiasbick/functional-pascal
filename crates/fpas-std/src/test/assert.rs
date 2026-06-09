@@ -108,6 +108,7 @@ pub(crate) fn fail(msg: String, location: SourceLocation) -> Result<(), StdError
 
 /// `Skip`: record skip reason on stderr; does not fail the run.
 pub(crate) fn skip(msg: String, _location: SourceLocation) -> Result<(), StdError> {
+    super::skip_state::mark_test_skipped();
     eprintln!("test skipped: {msg}");
     Ok(())
 }

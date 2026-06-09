@@ -253,9 +253,10 @@ fn run_test_program(
         }
         VmRunResult::Completed(VmExecution {
             result: Ok(()),
-            stdout_lines,
-            screen_lines,
-            headless_frame,
+            ref stdout_lines,
+            ref screen_lines,
+            ref headless_frame,
+            skipped,
         }) => {
             if matches!(output, RunOutput::Test | RunOutput::TestDeferredPass) {
                 if let Err(message) = expect_stdout::compare_stdout(path, &stdout_lines) {
@@ -282,6 +283,12 @@ fn run_test_program(
                     }
                 }
             }
+            if skipped {
+                if output.emit_pass() {
+                    let _ = writeln!(stderr, "  SKIP  {display}");
+                }
+                return TestOutcome::Skipped;
+            }
             if output.emit_pass() {
                 let _ = writeln!(stderr, "  PASS  {display}");
             }
@@ -292,6 +299,7 @@ fn run_test_program(
             stdout_lines: _,
             screen_lines: _,
             headless_frame: _,
+            skipped: _,
         }) => {
             if output.emit_fail_banner() {
                 let _ = writeln!(stderr, "  FAIL  {display}");
@@ -316,6 +324,8 @@ fn run_test_program(
 }
 
 fn execute_vm(mut vm: fpas_vm::Vm, headless_graph: bool) -> VmExecution {
+    fpas_std::reset_test_skip_state();
+
     if headless_graph {
         return fpas_std::with_headless_graph_backend_for_tests(|| {
             let result = vm.run();
@@ -324,6 +334,7 @@ fn execute_vm(mut vm: fpas_vm::Vm, headless_graph: bool) -> VmExecution {
                 stdout_lines: vm.output().lines,
                 screen_lines: vm.screen_snapshot().compact_lines(),
                 headless_frame: fpas_std::last_headless_graph_frame_for_tests(),
+                skipped: fpas_std::test_was_skipped(),
             }
         });
     }
@@ -334,6 +345,7 @@ fn execute_vm(mut vm: fpas_vm::Vm, headless_graph: bool) -> VmExecution {
         stdout_lines: vm.output().lines,
         screen_lines: vm.screen_snapshot().compact_lines(),
         headless_frame: None,
+        skipped: fpas_std::test_was_skipped(),
     }
 }
 

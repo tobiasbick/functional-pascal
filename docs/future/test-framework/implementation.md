@@ -311,6 +311,37 @@ Implement incrementally; no fixed order. Mark each item `[x]` when shipped.
 
 ---
 
+## Phase 7 — Integration and CI
+
+**Goal:** ship skip reporting, strict mode, and a CI smoke test for the example test suite.
+
+**Phase complete when:** all tasks below are `[x]` and [§ 7.2 verification](#72-phase-7-verification) passes.
+
+### 7.1 Skip and strict mode
+
+- [x] **7.1.1** — `crates/fpas-std/src/test/skip_state.rs` — **CREATE** thread-local skip flag (`reset_test_skip_state`, `test_was_skipped`, `mark_test_skipped`)
+- [x] **7.1.2** — `crates/fpas-std/src/test/assert.rs` — **MODIFY** `Skip` calls `mark_test_skipped()`
+- [x] **7.1.3** — `cli_test/run.rs` — **MODIFY** detect skip after successful run; print `SKIP` banner
+- [x] **7.1.4** — `cli_test/report.rs` — **MODIFY** `TestOutcome::Skipped`, summary counter, JSON `skipped` field
+- [x] **7.1.5** — `cli_input.rs` — **MODIFY** `--strict` flag; `exit_code(strict)` fails on skips when set
+- [x] **7.1.6** — `cli_test/mod.rs` tests — skip without strict (exit `0`); strict skip (exit `1`)
+
+### 7.2 Examples and CI
+
+- [x] **7.2.1** — `examples/pascal/test/readln_order_test.fpas` + `.script.toml` — **CREATE**
+- [x] **7.2.2** — `examples/pascal/test/skip_test.fpas` — **CREATE**
+- [x] **7.2.3** — `main_tests/test_runner.rs` — **MODIFY** `examples_pascal_test_suite_passes` runs `fpas test examples/pascal/test/`
+- [x] **7.2.4** — `docs/pascal/std/test.md` — **MODIFY** document `Skip` runner behavior and `--strict`
+
+### 7.2 Phase 7 verification
+
+- [x] `fpas test examples/pascal/test/` passes (with one `SKIP` for `skip_test.fpas`)
+- [x] `fpas test --strict examples/pascal/test/skip_test.fpas` exits `1`
+- [x] `cargo test -p fpas-cli examples_pascal_test_suite_passes` passes
+- [x] `cargo test -p fpas-cli cli_test::tests::test_cli_reports_skipped_tests_without_strict` passes
+
+---
+
 ## Dependency graph (implementation order)
 
 ```mermaid

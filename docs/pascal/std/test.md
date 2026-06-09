@@ -34,7 +34,7 @@ Requires `uses Std.Test;`.
 | procedure | `AssertFalse(Cond: boolean)` | fail when `Cond` is true |
 | procedure | `AssertEquals(Expected; Actual)` | equality for `integer`, `boolean`, `string`, or `real` (both operands same type) |
 | procedure | `Fail(Msg: string)` | unconditional failure |
-| procedure | `Skip(Msg: string)` | print skip reason; does not fail |
+| procedure | `Skip(Msg: string)` | print skip reason; runner reports `SKIP` (exit `0` unless `fpas test --strict`) |
 
 ---
 
@@ -58,7 +58,7 @@ Unconditional failure with **F4023** and user message.
 
 ### `procedure Skip(Msg: string)`
 
-Print `test skipped: …` to stderr and continue. Does not raise **F4023**.
+Print `test skipped: …` to stderr and continue. Does not raise **F4023**. The `fpas test` runner records the test as **skipped** (`SKIP` line, included in summary). Skipped tests do not fail the run unless you pass `--strict` (exit code `1` when any test was skipped).
 
 ---
 
@@ -92,6 +92,7 @@ fpas test examples/pascal/test/
 fpas test examples/pascal/test/tests.fpasprj
 fpas test --filter tui_escape
 fpas test --report json
+fpas test --strict
 ```
 
 Flags and discovery rules: [10-projects.md](../10-projects.md), [`runner.md`](../../future/test-framework/runner.md).
@@ -130,6 +131,8 @@ Details: [`runner.md`](../../future/test-framework/runner.md) (golden stdout / s
 |------|--------|
 | [`assert_basics_test.fpas`](../../../examples/pascal/test/assert_basics_test.fpas) | `AssertEquals` / `AssertTrue` / `AssertFalse` |
 | [`readln_test.fpas`](../../../examples/pascal/test/readln_test.fpas) | `ReadLn` + script sidecar |
+| [`readln_order_test.fpas`](../../../examples/pascal/test/readln_order_test.fpas) | Multiple scripted `ReadLn` lines in order |
+| [`skip_test.fpas`](../../../examples/pascal/test/skip_test.fpas) | `Skip` + runner `SKIP` reporting |
 | [`stdout_echo_test.fpas`](../../../examples/pascal/test/stdout_echo_test.fpas) | `*.expect.stdout` |
 | [`tui_escape_test.fpas`](../../../examples/pascal/test/tui_escape_test.fpas) | Hosted TUI + script + `*.expect.screen` |
 | [`tui_mouse_test.fpas`](../../../examples/pascal/test/tui_mouse_test.fpas) | Mouse dispatch in hosted TUI |

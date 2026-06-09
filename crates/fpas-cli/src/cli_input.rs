@@ -23,7 +23,7 @@ Usage:
     fpas check                                            Discover `.fpasworkspace` or `.fpasprj` in cwd
     fpas test [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
                                                           Run `*_test.fpas` programs
-    fpas test [--list] [--fail-fast] [--filter <pattern>] [--report json] [--timeout <secs>] [--jobs <n>] [--script <path>] [<path>]             Discover tests in cwd when path omitted
+    fpas test [--list] [--fail-fast] [--strict] [--filter <pattern>] [--report json] [--timeout <secs>] [--jobs <n>] [--script <path>] [<path>]             Discover tests in cwd when path omitted
 
 Options:
   -h, --help      Print this help
@@ -63,6 +63,7 @@ pub(crate) struct TestCliConfig {
     pub report: Option<TestReportFormat>,
     pub timeout: Option<Duration>,
     pub jobs: usize,
+    pub strict: bool,
 }
 
 /// Result of parsing CLI arguments before loading sources.
@@ -111,6 +112,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
     }
 
     let mut fail_fast = false;
+    let mut strict = false;
     let mut list_only = false;
     let mut script_path = None::<PathBuf>;
     let mut filter = None::<String>;
@@ -122,6 +124,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
     while index < cli_args.len() {
         match cli_args[index].as_str() {
             "--fail-fast" if mode == CliMode::Test => fail_fast = true,
+            "--strict" if mode == CliMode::Test => strict = true,
             "--list" if mode == CliMode::Test => list_only = true,
             "--script" if mode == CliMode::Test => {
                 index += 1;
@@ -259,6 +262,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             report,
             timeout,
             jobs: jobs.unwrap_or(1),
+            strict,
         }),
     })
 }

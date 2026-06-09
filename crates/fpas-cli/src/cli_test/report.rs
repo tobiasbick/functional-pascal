@@ -10,6 +10,7 @@ use serde::Serialize;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum TestOutcome {
     Pass,
+    Skipped,
     AssertFailed,
     CompileError,
     RuntimeError,
@@ -18,12 +19,13 @@ pub(super) enum TestOutcome {
 
 impl TestOutcome {
     pub(super) fn is_failure(self) -> bool {
-        !matches!(self, Self::Pass)
+        !matches!(self, Self::Pass | Self::Skipped)
     }
 
     fn status_str(self) -> &'static str {
         match self {
             Self::Pass => "pass",
+            Self::Skipped => "skipped",
             Self::AssertFailed => "assert_failed",
             Self::CompileError => "compile_error",
             Self::RuntimeError => "runtime_error",
@@ -43,6 +45,7 @@ pub(super) struct TestCaseResult {
 #[derive(Debug, Default)]
 pub(super) struct Summary {
     passed: usize,
+    skipped: usize,
     failed: usize,
     compile_errors: usize,
     runtime_errors: usize,
@@ -54,6 +57,7 @@ impl Summary {
     pub(super) fn record(&mut self, path: &str, outcome: TestOutcome) {
         match outcome {
             TestOutcome::Pass => self.passed += 1,
+            TestOutcome::Skipped => self.skipped += 1,
             TestOutcome::AssertFailed => self.failed += 1,
             TestOutcome::CompileError => self.compile_errors += 1,
             TestOutcome::RuntimeError => self.runtime_errors += 1,
@@ -65,8 +69,8 @@ impl Summary {
         });
     }
 
-    /// Exit code: 2 compile, 3 runtime, 1 assert failure, 0 all pass.
-    pub(super) fn exit_code(&self) -> i32 {
+    /// Exit code: 2 compile, 3 runtime, 1 assert failure or strict skip, 0 all pass.
+    pub(super) fn exit_code(&self, strict: bool) -> i32 {
         if self.compile_errors > 0 {
             return 2;
         }
@@ -77,6 +81,9 @@ impl Summary {
             return 3;
         }
         if self.failed > 0 {
+            return 1;
+        }
+        if strict && self.skipped > 0 {
             return 1;
         }
         0
@@ -93,6 +100,7 @@ struct JsonReport<'a> {
 #[derive(Serialize)]
 struct JsonSummary {
     passed: usize,
+    skipped: usize,
     failed: usize,
     compile_errors: usize,
     runtime_errors: usize,
@@ -108,22 +116,32 @@ struct JsonTestCase<'a> {
 
 pub(super) fn print_summary(stderr: &mut dyn Write, summary: &Summary) -> std::io::Result<()> {
     let total = summary.passed
+        + summary.skipped
         + summary.failed
         + summary.compile_errors
         + summary.runtime_errors
         + summary.timed_out;
     let fail_count =
         summary.failed + summary.compile_errors + summary.runtime_errors + summary.timed_out;
-    writeln!(
-        stderr,
-        "Summary: {} passed, {} failed ({} total)",
-        summary.passed, fail_count, total
-    )
+    if summary.skipped > 0 {
+        writeln!(
+            stderr,
+            "Summary: {} passed, {} skipped, {} failed ({} total)",
+            summary.passed, summary.skipped, fail_count, total
+        )
+    } else {
+        writeln!(
+            stderr,
+            "Summary: {} passed, {} failed ({} total)",
+            summary.passed, fail_count, total
+        )
+    }
 }
 
 /// Writes a machine-readable JSON report to stdout for CI consumers.
 pub(super) fn print_json_report(stdout: &mut dyn Write, summary: &Summary) -> std::io::Result<()> {
     let total = summary.passed
+        + summary.skipped
         + summary.failed
         + summary.compile_errors
         + summary.runtime_errors
@@ -132,6 +150,7 @@ pub(super) fn print_json_report(stdout: &mut dyn Write, summary: &Summary) -> st
         version: 1,
         summary: JsonSummary {
             passed: summary.passed,
+            skipped: summary.skipped,
             failed: summary.failed,
             compile_errors: summary.compile_errors,
             runtime_errors: summary.runtime_errors,
@@ -160,15 +179,26 @@ mod tests {
         let mut summary = Summary::default();
         summary.record("alpha_test.fpas", TestOutcome::Pass);
         summary.record("beta_test.fpas", TestOutcome::AssertFailed);
+        summary.record("gamma_test.fpas", TestOutcome::Skipped);
 
         let mut stdout = Vec::new();
         print_json_report(&mut stdout, &summary).expect("write json");
         let text = String::from_utf8(stdout).expect("utf-8");
         assert!(text.contains("\"version\": 1"));
         assert!(text.contains("\"passed\": 1"));
+        assert!(text.contains("\"skipped\": 1"));
         assert!(text.contains("\"failed\": 1"));
         assert!(text.contains("\"status\": \"pass\""));
         assert!(text.contains("\"status\": \"assert_failed\""));
+        assert!(text.contains("\"status\": \"skipped\""));
         assert!(text.contains("\"file\": \"alpha_test.fpas\""));
+    }
+
+    #[test]
+    fn exit_code_treats_skipped_as_success_unless_strict() {
+        let mut summary = Summary::default();
+        summary.record("skip_test.fpas", TestOutcome::Skipped);
+        assert_eq!(summary.exit_code(false), 0);
+        assert_eq!(summary.exit_code(true), 1);
     }
 }

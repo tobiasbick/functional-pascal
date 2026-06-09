@@ -25,6 +25,7 @@ fpas test [<path>] [options]
 |------|-------------|
 | `--filter <pattern>` | Substring match on test file path (case-insensitive) |
 | `--fail-fast` | Stop after first failure |
+| `--strict` | Exit `1` when any test was skipped (`Skip`); default treats skips as success |
 | `--script <path>` | Use explicit script file instead of sidecar auto-discovery |
 | `--list` | Print tests that would run to stdout, do not execute |
 | `--report json` | Machine-readable summary on stdout (version 1 JSON; human summary omitted) |

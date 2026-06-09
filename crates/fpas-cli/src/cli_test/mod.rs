@@ -40,7 +40,7 @@ fn finish_test_run(
     } else {
         let _ = print_summary(stderr, summary);
     }
-    summary.exit_code()
+    summary.exit_code(config.strict)
 }
 
 /// Runs discovered tests and prints a pass/fail summary.
@@ -265,6 +265,7 @@ mod tests {
                 report: None,
                 timeout: None,
                 jobs: 1,
+                strict: false,
             },
             &mut stdout,
             &mut stderr,
@@ -298,6 +299,7 @@ mod tests {
                 report: None,
                 timeout: None,
                 jobs: 1,
+                strict: false,
             },
             &mut stdout,
             &mut stderr,
@@ -336,6 +338,7 @@ mod tests {
                 report: None,
                 timeout: None,
                 jobs: 1,
+                strict: false,
             },
             &mut stdout,
             &mut stderr,
@@ -368,6 +371,7 @@ mod tests {
                 report: Some(TestReportFormat::Json),
                 timeout: None,
                 jobs: 1,
+                strict: false,
             },
             &mut stdout,
             &mut stderr,
@@ -406,6 +410,7 @@ mod tests {
                 report: None,
                 timeout: None,
                 jobs: 2,
+                strict: false,
             },
             &mut stdout,
             &mut stderr,
@@ -473,6 +478,7 @@ mod tests {
                 report: None,
                 timeout: None,
                 jobs: 1,
+                strict: false,
             },
             &mut stdout,
             &mut stderr,
@@ -529,6 +535,7 @@ mod tests {
                 report: None,
                 timeout: None,
                 jobs: 1,
+                strict: false,
             },
             &mut stdout,
             &mut stderr,
@@ -561,6 +568,7 @@ mod tests {
                 report: None,
                 timeout: None,
                 jobs: 1,
+                strict: false,
             },
             &mut stdout,
             &mut stderr,
@@ -593,6 +601,7 @@ mod tests {
                 report: None,
                 timeout: None,
                 jobs: 1,
+                strict: false,
             },
             &mut stdout,
             &mut stderr,
@@ -624,6 +633,7 @@ mod tests {
                 report: None,
                 timeout: None,
                 jobs: 1,
+                strict: false,
             },
             &mut stdout,
             &mut stderr,
@@ -656,6 +666,7 @@ mod tests {
                 report: None,
                 timeout: Some(Duration::from_secs(1)),
                 jobs: 1,
+                strict: false,
             },
             &mut stdout,
             &mut stderr,
@@ -664,5 +675,70 @@ mod tests {
         assert_eq!(exit, 3);
         let text = String::from_utf8(stderr).expect("utf-8");
         assert!(text.contains("TIMEOUT  hang_test.fpas"));
+    }
+
+    #[test]
+    fn test_cli_reports_skipped_tests_without_strict() {
+        let cwd = create_temp_dir("fpas-test-skip");
+        write_text(
+            &cwd.join("skip_test.fpas"),
+            "program S;\nuses Std.Test;\nbegin Skip('later') end.",
+        );
+
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+        let exit = test_cli(
+            TestCliConfig {
+                input: crate::CliInput::SourceFile(cwd.clone()),
+                cwd,
+                fail_fast: false,
+                list_only: false,
+                script_path: None,
+                filter: None,
+                report: None,
+                timeout: None,
+                jobs: 1,
+                strict: false,
+            },
+            &mut stdout,
+            &mut stderr,
+        );
+
+        assert_eq!(exit, 0);
+        let text = String::from_utf8(stderr).expect("utf-8");
+        assert!(text.contains("SKIP  skip_test.fpas"));
+        assert!(text.contains("1 skipped"));
+    }
+
+    #[test]
+    fn test_cli_strict_fails_when_tests_are_skipped() {
+        let cwd = create_temp_dir("fpas-test-strict-skip");
+        write_text(
+            &cwd.join("skip_test.fpas"),
+            "program S;\nuses Std.Test;\nbegin Skip('later') end.",
+        );
+
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+        let exit = test_cli(
+            TestCliConfig {
+                input: crate::CliInput::SourceFile(cwd.clone()),
+                cwd,
+                fail_fast: false,
+                list_only: false,
+                script_path: None,
+                filter: None,
+                report: None,
+                timeout: None,
+                jobs: 1,
+                strict: true,
+            },
+            &mut stdout,
+            &mut stderr,
+        );
+
+        assert_eq!(exit, 1);
+        let text = String::from_utf8(stderr).expect("utf-8");
+        assert!(text.contains("SKIP  skip_test.fpas"));
     }
 }

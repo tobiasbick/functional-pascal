@@ -1,0 +1,10 @@
+{ Demonstrates intentional assertion failure (F4023). Not auto-discovered by `fpas test`
+  because the file name does not end with `_test.fpas`. Run manually:
+    fpas examples/pascal/test/assert_fail_demo.fpas
+  Expect exit code 1 and a message with expected/actual values. }
+program AssertFailDemo;
+uses Std.Test;
+
+begin
+  AssertEquals(4, 2 + 3)
+end.

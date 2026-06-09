@@ -14,12 +14,12 @@ Step-by-step tasks to implement the FPAS test framework. Read [`README.md`](READ
 
 | Phase | Tasks | Done | Verification |
 |-------|-------|------|--------------|
-| [1 — Std.Test](#phase-1--stdtest-assertions) | 35 | 27 | [§ 1.8](#18-phase-1-verification) |
-| [2 — fpas test](#phase-2--fpas-test-runner) | 22 | 0 | [§ 2.7](#27-phase-2-verification) |
-| [3 — Scripted input](#phase-3--scripted-consoletui-input) | 13 | 0 | [§ 3.4](#34-phase-3-verification) |
-| [4 — Graph headless](#phase-4--graph-headless-tests) | 9 | 0 | [§ 4.4](#44-phase-4-verification) |
-| [5 — Test projects](#phase-5--test-projects-and-workspace) | 8 | 0 | [§ 5.4](#54-phase-5-verification) |
-| [6 — Ergonomics](#phase-6--quality-and-ergonomics) | 7 | 0 | — |
+| [1 — Std.Test](#phase-1--stdtest-assertions) | 35 | 33 | [§ 1.8](#18-phase-1-verification) |
+| [2 — fpas test](#phase-2--fpas-test-runner) | 22 | 19 | [§ 2.7](#27-phase-2-verification) |
+| [3 — Scripted input](#phase-3--scripted-consoletui-input) | 13 | 13 | [§ 3.4](#34-phase-3-verification) |
+| [4 — Graph headless](#phase-4--graph-headless-tests) | 9 | 7 | [§ 4.4](#44-phase-4-verification) |
+| [5 — Test projects](#phase-5--test-projects-and-workspace) | 8 | 8 | [§ 5.4](#54-phase-5-verification) |
+| [6 — Ergonomics](#phase-6--quality-and-ergonomics) | 7 | 5 | — |
 
 _Update the **Done** column as you check off tasks above._
 
@@ -61,7 +61,7 @@ Reference: [`docs/pascal/std/README.md`](../../pascal/std/README.md) § Shared i
 
 - [x] **1.1.1** — `docs/pascal/std/test.md` — **CREATE** canonical user spec from [`std-test.md`](std-test.md)
 - [x] **1.1.2** — `docs/pascal/std/README.md` — **MODIFY** add `Std.Test` index entry
-- [ ] **1.1.3** — `docs/pascal/11-stdlib.md` — **MODIFY** list `Std.Test` if that file enumerates units
+- [x] **1.1.3** — `docs/pascal/11-stdlib.md` — **MODIFY** list `Std.Test` if that file enumerates units
 
 ### 1.2 `fpas-std` — unit registry and runtime
 
@@ -91,7 +91,7 @@ Initial variants: `AssertTrue = 0`, `AssertFalse = 1`, `AssertEqualsInteger = 2`
 
 - [x] **1.4.1** — `crates/fpas-sema/src/std_registry/loaded/test.rs` — **CREATE** `register_std_test`
 - [x] **1.4.2** — `crates/fpas-sema/src/std_registry/loaded/mod.rs` — **MODIFY** `mod test;`, match arm
-- [ ] **1.4.3** — `crates/fpas-sema/src/tests/` — **CREATE** `check_ok` fixtures using `uses Std.Test`
+- [x] **1.4.3** — `crates/fpas-sema/src/tests/integration/std_units/test.rs` — **CREATE** `check_ok` fixtures using `uses Std.Test`
 
 ### 1.5 `fpas-compiler` — lowering
 
@@ -112,8 +112,8 @@ Initial variants: `AssertTrue = 0`, `AssertFalse = 1`, `AssertEqualsInteger = 2`
 ### 1.7 Examples and CLI smoke
 
 - [x] **1.7.1** — `examples/pascal/test/assert_basics_test.fpas` — **CREATE** (renamed from `assert_basics.fpas` for `*_test.fpas` discovery)
-- [ ] **1.7.2** — `examples/pascal/test/assert_fail_demo.fpas` — **CREATE** documents expected failure
-- [ ] **1.7.3** — `examples/README.md` — **MODIFY** mention `examples/pascal/test/`
+- [x] **1.7.2** — `examples/pascal/test/assert_fail_demo.fpas` — **CREATE** documents expected failure (manual run)
+- [x] **1.7.3** — `examples/README.md` — **MODIFY** `fpas test` section for `examples/pascal/test/`
 - [x] **1.7.4** — `crates/fpas-cli/src/main_tests/examples.rs` — **MODIFY** add to allowlist
 
 ### 1.8 Phase 1 verification
@@ -145,7 +145,7 @@ Initial variants: `AssertTrue = 0`, `AssertFalse = 1`, `AssertEqualsInteger = 2`
 
 - [x] **2.2.1** — `crates/fpas-cli/src/cli_test/discover.rs` — **CREATE** given path: single file, directory glob, or project load
 - [x] **2.2.2** — Filter sources: basename ends with `_test.fpas` (case-insensitive)
-- [ ] **2.2.3** — Each file must parse as `program` (not bare `unit`) — error with hint if wrong
+- [x] **2.2.3** — Each file must parse as `program` (not bare `unit`) — error with hint if wrong
 - [x] **2.2.4** — `crates/fpas-project` — **MODIFY** only if needed: expose linked source list (prefer existing load API from `cli_check`) — not needed; reused load API
 
 Reuse: `cli_check.rs` (project load), `main_tests/support.rs` (`run_source_and_capture_output`).
@@ -174,13 +174,13 @@ Reuse: `cli_check.rs` (project load), `main_tests/support.rs` (`run_source_and_c
 
 - [x] **2.6.1** — `examples/pascal/test/readln_test.fpas` — **CREATE** (script in Phase 3)
 - [x] **2.6.2** — `examples/pascal/test/readln_test.script.toml` — **CREATE** (Phase 3)
-- [ ] **2.6.3** — `examples/pascal/test/tests.fpasprj` — **CREATE** (optional) bundles test sources
+- [x] **2.6.3** — `examples/pascal/test/tests.fpasprj` — **CREATE** (optional) bundles test sources
 
 ### 2.7 Phase 2 verification
 
 - [x] `fpas test examples/pascal/test/` — all pass
 - [x] One failing test → exit 1, summary shows FAIL line (covered by `cli_test` unit test)
-- [ ] `fpas test` with no args discovers project like `fpas check` (if single `.fpasprj` in cwd)
+- [x] `fpas test` with no args discovers project like `fpas check` (if single `.fpasprj` in cwd)
 - [x] `cargo test -p fpas-cli test_runner` passes
 - [x] `cargo test -p fpas-cli test_cli` passes
 

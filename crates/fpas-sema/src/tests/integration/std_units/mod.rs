@@ -4,6 +4,7 @@ mod builtins;
 mod console;
 mod graph;
 mod proc;
+mod test;
 mod tui;
 mod tui_configure;
 mod units;

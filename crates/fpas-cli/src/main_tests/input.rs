@@ -248,6 +248,29 @@ fn run_cli_help_and_version_exit_zero() {
 }
 
 #[test]
+fn resolve_cli_config_discovers_project_when_test_has_no_path() {
+    let cwd = create_temp_dir("test-discover-one");
+    write_text(
+        &cwd.join("tests.fpasprj"),
+        "[project]\nname = \"tests\"\nkind = \"test\"\n\n[sources]\ninclude = [\"*.fpas\"]\n",
+    );
+
+    let result = resolve_cli_config(&[String::from("test")], &cwd);
+
+    match result {
+        Ok(ResolvedCli::Test(config)) => {
+            assert_eq!(
+                config.input,
+                CliInput::ProjectFile(cwd.join("tests.fpasprj"))
+            );
+        }
+        other => panic!("expected test config, got {other:?}"),
+    }
+
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+}
+
+#[test]
 fn resolve_cli_config_parses_test_timeout_flag() {
     let cwd = create_temp_dir("test-timeout-flag");
     write_text(

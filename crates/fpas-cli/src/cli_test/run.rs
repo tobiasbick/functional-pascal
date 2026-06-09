@@ -14,7 +14,7 @@ use crate::cli_run::render_cli_diagnostic_with_sources;
 use crate::test_script::{ScriptConfig, apply_script_to_vm, load_script, sidecar_path_for_test};
 use fpas_diagnostics::DiagnosticSeverity;
 use fpas_diagnostics::codes::RUNTIME_TEST_ASSERTION_FAILED;
-use fpas_parser::parse;
+use fpas_parser::{CompilationUnit, parse_compilation_unit};
 use fpas_project as project;
 
 fn test_display_path(path: &Path) -> std::borrow::Cow<'_, str> {
@@ -324,7 +324,7 @@ fn load_program(
 
     let source = fs::read_to_string(path)
         .map_err(|error| format!("Error reading `{}`: {error}", path.display()))?;
-    let (program, errors) = parse(&source);
+    let (unit, errors) = parse_compilation_unit(&source);
     let has_errors = errors
         .iter()
         .any(|diagnostic| diagnostic.as_diagnostic().severity == DiagnosticSeverity::Error);
@@ -334,7 +334,16 @@ fn load_program(
             path.display()
         ));
     }
-    Ok((program, None))
+    match unit {
+        CompilationUnit::Program(program) => Ok((program, None)),
+        CompilationUnit::Unit(unit) => {
+            let unit_name = unit.name.parts.join(".").trim().to_string();
+            Err(format!(
+                "Test file `{}` declares `unit {unit_name}`, but test entry points must be `program` files.\n  help: Rename to a `program …_test` file or import the unit from a test program.",
+                path.display()
+            ))
+        }
+    }
 }
 
 fn apply_test_script(

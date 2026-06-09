@@ -17,20 +17,20 @@ Implementation plan for a JUnit-style testing surface in Functional Pascal: writ
 
 | Phase | Status | Summary |
 |-------|--------|---------|
-| **0** Requirements | 🟡 In progress | Planning docs; open decisions pending |
-| **1** `Std.Test` | 🟡 In progress | Core assertions implemented; Phase 1 nearly complete |
-| **2** `fpas test` | ⬜ Not started | CLI runner, discovery, summary |
-| **3** Scripted input | ⬜ Not started | TOML sidecar, TUI keyboard/mouse |
-| **4** Graph headless | ⬜ Not started | Headless backend + graph events |
-| **5** Test projects | ⬜ Not started | `kind = "test"`, workspace |
-| **6** Ergonomics | ⬜ Not started | Filter, JSON report, snapshots |
+| **0** Requirements | ✅ Complete | Planning docs; decisions recorded |
+| **1** `Std.Test` | ✅ Complete | Assertions, intrinsics, examples, sema fixtures |
+| **2** `fpas test` | ✅ Complete | CLI runner, discovery, summary (optional golden stdout open) |
+| **3** Scripted input | ✅ Complete | TOML sidecar, TUI keyboard/mouse |
+| **4** Graph headless | ✅ Complete | Headless backend + graph events (pixel API deferred) |
+| **5** Test projects | ✅ Complete | `kind = "test"`, workspace |
+| **6** Ergonomics | 🟡 In progress | Filter, JSON report, parallel, timeout shipped; TUI snapshot spike open |
 
 Update the **Status** column when a phase is complete (⬜ → ✅). Detailed task checkboxes live in [`implementation.md`](implementation.md).
 
 ### Phase gates (mark `[x]` when the whole phase is done)
 
 - [x] **Phase 0** — Planning documents written ([`README.md`](README.md), [`implementation.md`](implementation.md), specs)
-- [ ] **Phase 0** — Open decisions reviewed and recorded
+- [x] **Phase 0** — Open decisions reviewed and recorded
 - [x] **Phase 1** — `Std.Test` shippable; `assert_basics_test.fpas` runs via `fpas`
 - [x] **Phase 2** — `fpas test` discovers and runs `*_test.fpas` (core runner; optional items in Phase 2.4/2.6 remain open)
 - [x] **Phase 3** — TUI test with `.script.toml` passes in CI (console scripts; graph deferred to Phase 4)
@@ -161,8 +161,8 @@ High-level phases are below. **Every task has a checkbox in [`implementation.md`
 - [x] Problem statement and scope
 - [x] Architecture and phased roadmap documented
 - [x] Contributor task breakdown ([`implementation.md`](implementation.md))
-- [ ] Review open decisions (below) and mark resolved
-- [ ] Align naming with existing `Std.*` conventions
+- [x] Review open decisions (below) and mark resolved
+- [x] Align naming with existing `Std.*` conventions (`Std.Test`, `AssertEquals`, …)
 
 ### Phase 1 — Minimal assertions + manual run
 
@@ -195,7 +195,7 @@ High-level phases are below. **Every task has a checkbox in [`implementation.md`
 **Success criteria**
 
 - [x] `fpas test examples/pascal/test/` runs all `*_test.fpas` and returns correct exit code
-- [ ] Works with `.fpasprj` (includes test files + app sources for `uses`)
+- [x] Works with `.fpasprj` (includes test files + app sources for `uses`)
 
 → Tasks: [`implementation.md` § Phase 2](implementation.md#phase-2--fpas-test-runner)
 
@@ -294,14 +294,14 @@ examples/pascal/test/
 
 Mark **Resolved** with `[x]` when decided; record outcome in the **Decision** column.
 
-| Done | # | Question | Proposal |
+| Done | # | Question | Decision |
 |------|---|----------|----------|
-| [ ] | 1 | Separate `kind = "test"` or only `*_test.fpas` naming? | Start with naming; add `kind = "test"` in Phase 5 |
-| [ ] | 2 | Assert implementation: intrinsics vs ordinary FPAS-visible functions? | Intrinsics for reliable source locations and failure capture |
-| [ ] | 3 | Exit codes: one code for assert fail vs runtime error? | Distinct codes (e.g. 1 = assert, 2 = compile, 3 = runtime) |
-| [ ] | 4 | Should `Std.Test` expose captured stdout to FPAS? | Defer; runner compares output in Phase 2 via `--expect-stdout` file |
-| [ ] | 5 | TUI screen assertions | Phase 6 spike; until then assert on `WriteLn` side effects or handler flags |
-| [ ] | 6 | Test programs vs test units | Allow both: `program …_test` entry files and `unit MyApp.Tests` imported by aggregator |
+| [x] | 1 | Separate `kind = "test"` or only `*_test.fpas` naming? | **Both:** `*_test.fpas` discovery everywhere; optional `kind = "test"` projects in Phase 5 |
+| [x] | 2 | Assert implementation: intrinsics vs ordinary FPAS-visible functions? | **Intrinsics** (`TestIntrinsic`) for source locations and **F4023** failure capture |
+| [x] | 3 | Exit codes: one code for assert fail vs runtime error? | **Distinct:** 0 ok, 1 assert, 2 compile/script, 3 runtime/timeout (see `runner.md`) |
+| [x] | 4 | Should `Std.Test` expose captured stdout to FPAS? | **Deferred;** runner-side stdout compare via optional `*.expect.stdout` (Phase 2.4, not shipped) |
+| [ ] | 5 | TUI screen assertions | **Open:** Phase 6.5 spike; until then assert on `WriteLn` or handler flags |
+| [x] | 6 | Test programs vs test units | **Both:** `program …_test` entry files; helper `unit` sources + Setup/Teardown hooks |
 
 ---
 

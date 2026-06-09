@@ -153,6 +153,27 @@ end.",
 }
 
 #[test]
+fn mutable_global_record_field_write_updates_base_global() {
+    let out = compile_and_run(
+        "\
+program T;
+uses Std.Console;
+type Counter = record Value: integer; end;
+mutable var State: Counter := record Value := 1; end;
+procedure Bump();
+begin
+  State.Value := State.Value + 1
+end;
+begin
+  Bump();
+  Bump();
+  WriteLn(State.Value)
+end.",
+    );
+    assert_eq!(out.lines, vec!["3"]);
+}
+
+#[test]
 fn record_literal_named_fields_can_be_out_of_order() {
     let out = compile_and_run(
         "\

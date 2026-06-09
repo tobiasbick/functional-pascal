@@ -3,6 +3,7 @@ use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_diagnostics::codes::COMPILE_INVALID_ASSIGNMENT_TARGET;
 use fpas_parser::{Designator, DesignatorPart, Expr};
 
+use super::super::canonical_name;
 use super::{Compiler, LocalRef};
 
 impl Compiler {
@@ -31,13 +32,20 @@ impl Compiler {
 
         let remaining: Vec<_> = parts.collect();
 
-        // Whole-variable assignment: `X := v` or a linked qualified name such as
-        // `Unit.__private__.State := v` (not a record field chain rooted in a local).
-        let is_simple_target = target
+        // Whole-variable assignment: `X := v`, a linked qualified name registered as a
+        // local (e.g. `Unit.__private__.State := v`), or a dotted module global.
+        // A dotted chain rooted in a global record (e.g. `State.CenterX := v`) is NOT a
+        // whole-variable write and must compile as a field-write chain on the base global,
+        // mirroring `compile_designator_read`.
+        let all_idents = target
             .parts
             .iter()
-            .all(|part| matches!(part, DesignatorPart::Ident(_, _)))
-            && (target.parts.len() == 1 || self.resolve_local(&base_name).is_none());
+            .all(|part| matches!(part, DesignatorPart::Ident(_, _)));
+        let is_simple_target = all_idents
+            && (target.parts.len() == 1
+                || (self.resolve_local(&base_name).is_none()
+                    && (self.resolve_local(&qualified).is_some()
+                        || self.module_globals.contains(&canonical_name(&qualified)))));
 
         if is_simple_target {
             self.compile_expr(value)?;

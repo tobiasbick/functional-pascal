@@ -115,6 +115,14 @@ If `greet_test.expect.stdout` exists beside `greet_test.fpas`, the runner compar
 - Omitted sidecar: no stdout check (assertions-only tests unchanged).
 - Setup/Teardown hook runs do not compare golden stdout.
 
+## Golden screen (optional, TUI)
+
+If `menu_bar_test.expect.screen` exists beside a test file, the runner compares the compact CRT screen snapshot (`vm.screen_snapshot().compact_lines()`) after a successful run. Use this for hosted `Std.Tui` paint assertions (positioned text, not only `WriteLn` capture).
+
+- One line per screen row; leading/trailing blank rows and trailing spaces are stripped before compare.
+- `fpas-std` exports [`ScreenSnapshot`](../../../crates/fpas-std/src/console/snapshot.rs) for Rust-side inspection.
+- Omitted sidecar: no screen check.
+
 ---
 
 ## Sidecar script discovery

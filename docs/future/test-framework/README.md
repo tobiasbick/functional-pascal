@@ -23,7 +23,7 @@ Implementation plan for a JUnit-style testing surface in Functional Pascal: writ
 | **3** Scripted input | ✅ Complete | TOML sidecar, TUI keyboard/mouse |
 | **4** Graph headless | ✅ Complete | Headless backend + graph events (pixel API deferred) |
 | **5** Test projects | ✅ Complete | `kind = "test"`, workspace |
-| **6** Ergonomics | 🟡 In progress | Filter, JSON report, parallel, timeout shipped; TUI snapshot spike open |
+| **6** Ergonomics | 🟡 In progress | Filter, JSON report, parallel, timeout, screen snapshots shipped |
 
 Update the **Status** column when a phase is complete (⬜ → ✅). Detailed task checkboxes live in [`implementation.md`](implementation.md).
 
@@ -252,7 +252,7 @@ High-level phases are below. **Every task has a checkbox in [`implementation.md`
 
 ### Phase 6 — Quality and ergonomics
 
-- [ ] Terminal screen snapshot API for TUI (read back buffer as string grid) — research spike
+- [x] Terminal screen snapshot API for TUI (`ScreenSnapshot` + `*.expect.screen` sidecar)
 - [x] `Setup` / `Teardown` procedures in test project helper units (runner convention; see `runner.md`)
 - [x] Parallel test execution (`fpas test --jobs <n>`; `0` uses available parallelism)
 - [x] Filter: `fpas test --filter menu_bar`
@@ -300,7 +300,7 @@ Mark **Resolved** with `[x]` when decided; record outcome in the **Decision** co
 | [x] | 2 | Assert implementation: intrinsics vs ordinary FPAS-visible functions? | **Intrinsics** (`TestIntrinsic`) for source locations and **F4023** failure capture |
 | [x] | 3 | Exit codes: one code for assert fail vs runtime error? | **Distinct:** 0 ok, 1 assert, 2 compile/script, 3 runtime/timeout (see `runner.md`) |
 | [x] | 4 | Should `Std.Test` expose captured stdout to FPAS? | **Deferred in language;** runner compares optional `*.expect.stdout` sidecar (Phase 2.4) |
-| [ ] | 5 | TUI screen assertions | **Open:** Phase 6.5 spike; until then assert on `WriteLn` or handler flags |
+| [x] | 5 | TUI screen assertions | **Runner sidecar** `*.expect.screen` + `ScreenSnapshot`; FPAS-visible API deferred |
 | [x] | 6 | Test programs vs test units | **Both:** `program …_test` entry files; helper `unit` sources + Setup/Teardown hooks |
 
 ---

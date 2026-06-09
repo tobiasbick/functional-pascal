@@ -19,7 +19,7 @@ Step-by-step tasks to implement the FPAS test framework. Read [`README.md`](READ
 | [3 — Scripted input](#phase-3--scripted-consoletui-input) | 13 | 13 | [§ 3.4](#34-phase-3-verification) |
 | [4 — Graph headless](#phase-4--graph-headless-tests) | 9 | 7 | [§ 4.4](#44-phase-4-verification) |
 | [5 — Test projects](#phase-5--test-projects-and-workspace) | 8 | 8 | [§ 5.4](#54-phase-5-verification) |
-| [6 — Ergonomics](#phase-6--quality-and-ergonomics) | 7 | 5 | — |
+| [6 — Ergonomics](#phase-6--quality-and-ergonomics) | 7 | 6 | — |
 
 _Update the **Done** column as you check off tasks above._
 
@@ -305,7 +305,7 @@ Implement incrementally; no fixed order. Mark each item `[x]` when shipped.
 - [x] **6.2** — `--report json` in `cli_test/report.rs` — CI structured output on stdout
 - [x] **6.3** — Parallel test execution in `cli_test/parallel.rs` — `--jobs <n>` (`0` = machine parallelism); one VM per test; headless graph uses thread-local backend
 - [x] **6.4** — Setup/Teardown hooks in `cli_test/hooks.rs` + `run.rs` — parameterless `Setup` / `Teardown` in non-test helper units; runner executes before/after each test
-- [ ] **6.5** — TUI screen snapshot spike in `fpas-std` TUI session — export cell grid
+- [x] **6.5** — TUI screen snapshot in `fpas-std` (`ScreenSnapshot`) + runner `*.expect.screen` sidecar
 - [x] **6.6** — `--timeout <secs>` in `cli_test/timeout.rs` — cooperative abort for hung tests
 - [ ] **6.7** — Property/fuzz for event ordering — Rust only, out of FPAS scope
 

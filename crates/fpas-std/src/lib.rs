@@ -47,8 +47,8 @@ mod tui;
 mod ui;
 
 pub use console::{
-    CapturedOutput, Console, KeyInput, ReadLnQueue, TextInput, read_line_from_stdin,
-    validate_packed_crt_color,
+    CapturedOutput, Console, KeyInput, ReadLnQueue, ScreenSnapshot, TextInput,
+    read_line_from_stdin, validate_packed_crt_color,
 };
 pub use console_event::{
     ConsoleEvent, EVENT_KIND_VARIANTS, MOUSE_ACTION_VARIANTS, MOUSE_BUTTON_VARIANTS,

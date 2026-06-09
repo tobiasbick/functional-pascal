@@ -10,10 +10,11 @@ use fpas_vm::{VmError, VmShutdownHandle};
 
 const SHUTDOWN_GRACE: Duration = Duration::from_secs(2);
 
-/// Captured result and stdout from one VM execution.
+/// Captured result and output from one VM execution.
 pub(super) struct VmExecution {
     pub result: Result<(), VmError>,
     pub stdout_lines: Vec<String>,
+    pub screen_lines: Vec<String>,
 }
 
 /// Result of executing one VM run under an optional wall-clock limit.

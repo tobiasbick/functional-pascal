@@ -24,7 +24,7 @@ pub(super) fn load_expect_stdout(path: &Path) -> Result<Option<Vec<String>>, Str
     Ok(Some(parse_expect_stdout_lines(&text)))
 }
 
-fn parse_expect_stdout_lines(text: &str) -> Vec<String> {
+pub(super) fn parse_expect_stdout_lines(text: &str) -> Vec<String> {
     let normalized = text.replace("\r\n", "\n");
     let trimmed = normalized.strip_suffix('\n').unwrap_or(normalized.as_str());
     if trimmed.is_empty() {

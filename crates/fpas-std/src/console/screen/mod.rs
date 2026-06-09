@@ -359,11 +359,24 @@ impl ConsoleState {
         self.active_bg = RenderColor::Ansi256(index);
     }
 
-    #[cfg(test)]
-    pub(super) fn line_text(&self, y: u16) -> String {
+    pub(super) fn width(&self) -> u16 {
+        self.width
+    }
+
+    pub(super) fn height(&self) -> u16 {
+        self.height
+    }
+
+    /// Returns the character content of one screen row (full width, space-padded).
+    pub(super) fn row_text(&self, y: u16) -> String {
         (1..=self.width)
             .map(|x| self.cells[self.index(x, y)].ch)
             .collect()
+    }
+
+    #[cfg(test)]
+    pub(super) fn line_text(&self, y: u16) -> String {
+        self.row_text(y)
     }
 
     #[cfg(test)]

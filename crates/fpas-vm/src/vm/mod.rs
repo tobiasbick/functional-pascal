@@ -6,7 +6,9 @@
 //! **Documentation:** `docs/rust/parallel-vm.md`, `docs/pascal/08-concurrency.md`
 
 use fpas_bytecode::{Chunk, SourceLocation};
-use fpas_std::{Console, ConsoleEvent, ConsoleKeyEvent, GraphEvent, KeyInput, TextInput};
+use fpas_std::{
+    Console, ConsoleEvent, ConsoleKeyEvent, GraphEvent, KeyInput, ScreenSnapshot, TextInput,
+};
 use std::collections::HashMap;
 use std::io::Write;
 use std::sync::atomic::{AtomicBool, AtomicU64};
@@ -197,6 +199,15 @@ impl Vm {
             .unwrap_or_else(|e| e.into_inner())
             .output()
             .clone()
+    }
+
+    /// Returns the current logical CRT screen snapshot (for test assertions).
+    pub fn screen_snapshot(&self) -> ScreenSnapshot {
+        self.shared
+            .console
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .screen_snapshot()
     }
 
     /// Returns a handle for cooperative shutdown while [`Self::run`] executes on another thread.

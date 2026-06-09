@@ -10,6 +10,7 @@ mod key_input;
 mod operations;
 mod render;
 mod screen;
+mod snapshot;
 mod validation;
 
 #[cfg(test)]
@@ -17,6 +18,7 @@ mod tests;
 
 pub use input::{ReadLnQueue, TextInput, read_line_from_stdin};
 pub use key_input::KeyInput;
+pub use snapshot::ScreenSnapshot;
 pub use validation::validate_packed_crt_color;
 
 use screen::{ConsoleState, DEFAULT_SCREEN_HEIGHT, DEFAULT_SCREEN_WIDTH};
@@ -74,6 +76,11 @@ impl Console {
     /// Access captured output (for test assertions).
     pub fn output(&self) -> &CapturedOutput {
         &self.captured
+    }
+
+    /// Returns the current logical CRT screen as a text grid snapshot.
+    pub fn screen_snapshot(&self) -> ScreenSnapshot {
+        ScreenSnapshot::from_state(&self.state)
     }
 
     pub(crate) fn has_terminal_writer(&self) -> bool {

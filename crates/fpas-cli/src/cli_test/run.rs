@@ -7,6 +7,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
+use super::expect_screen;
 use super::expect_stdout;
 use super::hooks::{TestHook, TestHooks, hook_program_source};
 use super::report::TestOutcome;
@@ -252,9 +253,17 @@ fn run_test_program(
         VmRunResult::Completed(VmExecution {
             result: Ok(()),
             stdout_lines,
+            screen_lines,
         }) => {
             if matches!(output, RunOutput::Test | RunOutput::TestDeferredPass) {
                 if let Err(message) = expect_stdout::compare_stdout(path, &stdout_lines) {
+                    if output.emit_fail_banner() {
+                        let _ = writeln!(stderr, "  FAIL  {display}");
+                    }
+                    let _ = writeln!(stderr, "        {message}");
+                    return TestOutcome::AssertFailed;
+                }
+                if let Err(message) = expect_screen::compare_screen(path, &screen_lines) {
                     if output.emit_fail_banner() {
                         let _ = writeln!(stderr, "  FAIL  {display}");
                     }
@@ -270,6 +279,7 @@ fn run_test_program(
         VmRunResult::Completed(VmExecution {
             result: Err(diagnostic),
             stdout_lines: _,
+            screen_lines: _,
         }) => {
             if output.emit_fail_banner() {
                 let _ = writeln!(stderr, "  FAIL  {display}");
@@ -302,6 +312,7 @@ fn execute_vm(mut vm: fpas_vm::Vm, headless_graph: bool) -> VmExecution {
     VmExecution {
         result,
         stdout_lines: vm.output().lines,
+        screen_lines: vm.screen_snapshot().compact_lines(),
     }
 }
 

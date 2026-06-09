@@ -21,7 +21,7 @@ Implementation plan for a JUnit-style testing surface in Functional Pascal: writ
 | **1** `Std.Test` | ✅ Complete | Assertions, intrinsics, examples, sema fixtures |
 | **2** `fpas test` | ✅ Complete | CLI runner, discovery, summary, golden stdout |
 | **3** Scripted input | ✅ Complete | TOML sidecar, TUI keyboard/mouse |
-| **4** Graph headless | ✅ Complete | Headless backend + graph events (pixel API deferred) |
+| **4** Graph headless | ✅ Complete | Headless backend, scripted events, `*.expect.pixels` spot checks |
 | **5** Test projects | ✅ Complete | `kind = "test"`, workspace |
 | **6** Ergonomics | 🟡 In progress | Filter, JSON report, parallel, timeout, screen snapshots shipped |
 
@@ -222,13 +222,13 @@ High-level phases are below. **Every task has a checkbox in [`implementation.md`
 
 - [x] Runner sets headless graph backend when `[config] headless_graph = true`
 - [x] Script support for `graph_key`, `graph_mouse`, `graph_wheel` events
-- [ ] Optional `Std.Test.AssertPixels(...)` or Rust-only pixel hook (Phase 4b — evaluate need)
+- [x] Runner `*.expect.pixels` spot checks for headless graph frames (no FPAS intrinsic)
 - [x] `examples/pascal/test/graph_smoke_test.fpas` + `.script.toml`
 
 **Success criteria**
 
 - [x] Graph smoke test runs in CI with scripted Escape quit event
-- [ ] Existing headless pixel assertions remain in Rust; optional FPAS wrapper if justified
+- [x] Existing headless pixel assertions remain in Rust; runner sidecar covers author-facing checks
 
 → Tasks: [`implementation.md` § Phase 4](implementation.md#phase-4--graph-headless-tests)
 

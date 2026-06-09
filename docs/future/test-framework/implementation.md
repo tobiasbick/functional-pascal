@@ -17,7 +17,7 @@ Step-by-step tasks to implement the FPAS test framework. Read [`README.md`](READ
 | [1 — Std.Test](#phase-1--stdtest-assertions) | 35 | 33 | [§ 1.8](#18-phase-1-verification) |
 | [2 — fpas test](#phase-2--fpas-test-runner) | 22 | 22 | [§ 2.7](#27-phase-2-verification) |
 | [3 — Scripted input](#phase-3--scripted-consoletui-input) | 13 | 13 | [§ 3.4](#34-phase-3-verification) |
-| [4 — Graph headless](#phase-4--graph-headless-tests) | 9 | 7 | [§ 4.4](#44-phase-4-verification) |
+| [4 — Graph headless](#phase-4--graph-headless-tests) | 9 | 9 | [§ 4.4](#44-phase-4-verification) |
 | [5 — Test projects](#phase-5--test-projects-and-workspace) | 8 | 8 | [§ 5.4](#54-phase-5-verification) |
 | [6 — Ergonomics](#phase-6--quality-and-ergonomics) | 7 | 6 | — |
 
@@ -247,8 +247,8 @@ Reference: [`crates/fpas-compiler/src/tests/std_library/graph.rs`](../../../crat
 
 ### 4.3 Phase 4b (optional) — pixel assertions
 
-- [ ] **4.3.1** — Evaluate `Std.Test.AssertPixel` vs runner-only Rust hook — defer unless strong need
-- [ ] **4.3.2** — If added: expose `last_headless_graph_frame_for_tests` through intrinsic
+- [x] **4.3.1** — **Runner-only** `*.expect.pixels` spot checks (no `Std.Test.AssertPixel` intrinsic)
+- [x] **4.3.2** — Reuse existing `last_headless_graph_frame_for_tests` from `fpas-cli` runner (no FPAS intrinsic)
 
 ### 4.4 Phase 4 verification
 
@@ -348,7 +348,7 @@ Phase 1
 
 Phase 2
  crates/fpas-cli/src/cli_test.rs
- crates/fpas-cli/src/cli_test/{discover,expect_stdout,hooks,parallel,run,report,timeout}.rs
+ crates/fpas-cli/src/cli_test/{discover,expect_pixels,expect_screen,expect_stdout,hooks,parallel,run,report,timeout}.rs
  crates/fpas-cli/src/main_tests/test_runner.rs
 
 Phase 3

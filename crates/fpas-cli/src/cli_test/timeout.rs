@@ -6,6 +6,7 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 
+use fpas_std::UploadedFrame;
 use fpas_vm::{VmError, VmShutdownHandle};
 
 const SHUTDOWN_GRACE: Duration = Duration::from_secs(2);
@@ -15,6 +16,7 @@ pub(super) struct VmExecution {
     pub result: Result<(), VmError>,
     pub stdout_lines: Vec<String>,
     pub screen_lines: Vec<String>,
+    pub headless_frame: Option<UploadedFrame>,
 }
 
 /// Result of executing one VM run under an optional wall-clock limit.

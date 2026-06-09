@@ -115,6 +115,22 @@ If `greet_test.expect.stdout` exists beside `greet_test.fpas`, the runner compar
 - Omitted sidecar: no stdout check (assertions-only tests unchanged).
 - Setup/Teardown hook runs do not compare golden stdout.
 
+## Golden pixels (optional, headless graph)
+
+If `graph_smoke_test.expect.pixels` exists beside a test file, the runner spot-checks colors from the last headless `Present` frame (`last_headless_graph_frame_for_tests`) after a successful run. Requires `headless_graph = true` in the test script or manifest.
+
+Format (one spot check per line, `#` comments allowed):
+
+```text
+# size 32 24
+0 0 0x00020408
+2 2 0x00FFFFFF
+```
+
+Mismatch fails the test (exit code `1`) with coordinate and color hints. Full-frame dumps are intentionally not required.
+
+---
+
 ## Golden screen (optional, TUI)
 
 If `menu_bar_test.expect.screen` exists beside a test file, the runner compares the compact CRT screen snapshot (`vm.screen_snapshot().compact_lines()`) after a successful run. Use this for hosted `Std.Tui` paint assertions (positioned text, not only `WriteLn` capture).

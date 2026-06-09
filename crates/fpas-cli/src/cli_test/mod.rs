@@ -4,6 +4,7 @@
 //! [`docs/future/test-framework/runner.md`](../../../docs/future/test-framework/runner.md).
 
 mod discover;
+mod expect_pixels;
 mod expect_screen;
 mod expect_stdout;
 mod hooks;
@@ -414,6 +415,72 @@ mod tests {
         let text = String::from_utf8(stderr).expect("utf-8");
         assert!(text.contains("PASS  one_test.fpas"));
         assert!(text.contains("PASS  two_test.fpas"));
+    }
+
+    #[test]
+    fn test_cli_compares_golden_pixels_for_headless_graph() {
+        let cwd = create_temp_dir("fpas-test-expect-pixels");
+        write_text(
+            &cwd.join("graph_test.fpas"),
+            "program G;\nuses Std.Console, Std.Graph, Std.Test;\n\
+             mutable var QuitSeen: boolean := false;\n\
+             procedure OnPaint(App: Application);\n\
+             begin\n\
+               Application.Clear(App, $00020408);\n\
+               Application.DrawText(App, 2, 2, 'FPAS', $00FFFFFF);\n\
+               Application.Present(App)\n\
+             end;\n\
+             function OnKeyPressed(App: Application; Key: KeyEvent): boolean;\n\
+             begin\n\
+               if Key.kind = KeyKind.Escape then\n\
+               begin\n\
+                 QuitSeen := true;\n\
+                 Application.HostRequestQuit(App);\n\
+                 return true\n\
+               end;\n\
+               return false\n\
+             end;\n\
+             begin\n\
+               var App: Application := Application.Open(32, 24, 'Graph');\n\
+               var Handlers: ApplicationHandlers := record\n\
+                 OnPaint := OnPaint;\n\
+                 OnKeyPressed := Some(OnKeyPressed);\n\
+               end;\n\
+               Application.Configure(App, Handlers);\n\
+               Application.Run(App);\n\
+               AssertTrue(QuitSeen)\n\
+             end.",
+        );
+        write_text(
+            &cwd.join("graph_test.script.toml"),
+            "[config]\nheadless_graph = true\n\n[[event]]\ntype = \"graph_key\"\nkind = \"Escape\"\n",
+        );
+        write_text(
+            &cwd.join("graph_test.expect.pixels"),
+            "# size 32 24\n0 0 0x00020408\n2 2 0x00FFFFFF\n",
+        );
+
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+        let exit = test_cli(
+            TestCliConfig {
+                input: crate::CliInput::SourceFile(cwd.join("graph_test.fpas")),
+                cwd: cwd.clone(),
+                fail_fast: false,
+                list_only: false,
+                script_path: None,
+                filter: None,
+                report: None,
+                timeout: None,
+                jobs: 1,
+            },
+            &mut stdout,
+            &mut stderr,
+        );
+
+        assert_eq!(exit, 0, "stderr={}", String::from_utf8_lossy(&stderr));
+        let text = String::from_utf8(stderr).expect("utf-8");
+        assert!(text.contains("PASS  graph_test.fpas"));
     }
 
     #[test]

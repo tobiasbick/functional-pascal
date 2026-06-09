@@ -118,3 +118,80 @@ fn test_cli_uses_manifest_script_override() {
     let text = String::from_utf8(stderr).expect("utf-8");
     assert!(text.contains("PASS  prompt_test.fpas"));
 }
+
+#[test]
+fn test_cli_runs_setup_and_teardown_hooks() {
+    let cwd = create_temp_dir("fpas-test-hooks");
+    write_text(
+        &cwd.join("tests.fpasprj"),
+        "[project]\nname = \"tests\"\nkind = \"test\"\n\n[sources]\ninclude = [\"*.fpas\"]\n",
+    );
+    write_text(
+        &cwd.join("fixture.fpas"),
+        "unit Tests.Fixture;\nuses Std.Test;\nprocedure Setup();\nbegin AssertTrue(true) end;\nprocedure Teardown();\nbegin AssertTrue(true) end;",
+    );
+    write_text(
+        &cwd.join("demo_test.fpas"),
+        "program D;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+    );
+
+    let mut stderr = Vec::new();
+    let mut stdout = Vec::new();
+    let exit = test_cli(
+        TestCliConfig {
+            input: CliInput::ProjectFile(cwd.join("tests.fpasprj")),
+            cwd: cwd.clone(),
+            fail_fast: false,
+            list_only: false,
+            script_path: None,
+            filter: None,
+            report: None,
+            timeout: None,
+        },
+        &mut stdout,
+        &mut stderr,
+    );
+
+    assert_eq!(exit, 0, "stderr={}", String::from_utf8_lossy(&stderr));
+    let text = String::from_utf8(stderr).expect("utf-8");
+    assert!(text.contains("PASS  demo_test.fpas"));
+    assert_eq!(text.matches("PASS  demo_test.fpas").count(), 1);
+}
+
+#[test]
+fn test_cli_fails_when_teardown_hook_fails() {
+    let cwd = create_temp_dir("fpas-test-teardown-fail");
+    write_text(
+        &cwd.join("tests.fpasprj"),
+        "[project]\nname = \"tests\"\nkind = \"test\"\n\n[sources]\ninclude = [\"*.fpas\"]\n",
+    );
+    write_text(
+        &cwd.join("fixture.fpas"),
+        "unit Tests.Fixture;\nuses Std.Test;\nprocedure Teardown();\nbegin AssertTrue(false) end;",
+    );
+    write_text(
+        &cwd.join("demo_test.fpas"),
+        "program D;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+    );
+
+    let mut stderr = Vec::new();
+    let mut stdout = Vec::new();
+    let exit = test_cli(
+        TestCliConfig {
+            input: CliInput::ProjectFile(cwd.join("tests.fpasprj")),
+            cwd: cwd.clone(),
+            fail_fast: false,
+            list_only: false,
+            script_path: None,
+            filter: None,
+            report: None,
+            timeout: None,
+        },
+        &mut stdout,
+        &mut stderr,
+    );
+
+    assert_eq!(exit, 1, "stderr={}", String::from_utf8_lossy(&stderr));
+    let text = String::from_utf8(stderr).expect("utf-8");
+    assert!(text.contains("Teardown hook failed"));
+}

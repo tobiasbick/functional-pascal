@@ -7,6 +7,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
+use super::hooks::{TestHook, TestHooks, hook_program_source};
 use super::report::TestOutcome;
 use super::timeout::{VmRunResult, run_with_timeout};
 use crate::cli_run::render_cli_diagnostic_with_sources;
@@ -28,6 +29,7 @@ pub(super) struct LinkContext {
     pub source_files: Vec<PathBuf>,
     pub link_meta: project::ProjectLinkMeta,
     pub test_manifest: project::TestManifest,
+    pub hooks: TestHooks,
 }
 
 /// Compiles and runs one test file, classifying the result.
@@ -39,11 +41,120 @@ pub(super) fn run_single_test(
     stderr: &mut dyn Write,
 ) -> TestOutcome {
     let display = test_display_path(path);
+
+    if let Some(link) = link {
+        if let Some(hook) = link.hooks.setup.as_ref() {
+            let outcome = run_test_hook(hook, "Setup", path, link, stderr, &display);
+            if outcome.is_failure() {
+                let _ = run_optional_teardown(link, path, stderr, &display);
+                return outcome;
+            }
+        }
+    }
+
+    let outcome = run_test_program(
+        path,
+        link,
+        script_override,
+        timeout,
+        stderr,
+        &display,
+        RunOutput::Test,
+    );
+
+    if let Some(link) = link {
+        if let Some(teardown_outcome) = run_optional_teardown(link, path, stderr, &display) {
+            if outcome == TestOutcome::Pass && teardown_outcome.is_failure() {
+                return teardown_outcome;
+            }
+        }
+    }
+
+    outcome
+}
+
+/// Controls PASS/FAIL lines emitted while executing a linked program.
+enum RunOutput {
+    Test,
+    Hook,
+}
+
+impl RunOutput {
+    fn emit_pass(self) -> bool {
+        matches!(self, Self::Test)
+    }
+
+    fn emit_fail_banner(self) -> bool {
+        matches!(self, Self::Test)
+    }
+}
+
+fn run_optional_teardown(
+    link: &LinkContext,
+    path: &Path,
+    stderr: &mut dyn Write,
+    display: &str,
+) -> Option<TestOutcome> {
+    link.hooks
+        .teardown
+        .as_ref()
+        .map(|hook| run_test_hook(hook, "Teardown", path, link, stderr, display))
+}
+
+fn run_test_hook(
+    hook: &TestHook,
+    label: &str,
+    test_path: &Path,
+    link: &LinkContext,
+    stderr: &mut dyn Write,
+    display: &str,
+) -> TestOutcome {
+    let hook_path = match write_temp_hook_program(test_path, &hook_program_source(hook)) {
+        Ok(path) => path,
+        Err(message) => {
+            let _ = writeln!(stderr, "  FAIL  {display}");
+            let _ = writeln!(stderr, "        {label} hook failed: {message}");
+            return TestOutcome::CompileError;
+        }
+    };
+
+    let outcome = run_test_program(
+        &hook_path,
+        Some(link),
+        None,
+        None,
+        stderr,
+        display,
+        RunOutput::Hook,
+    );
+    let _ = fs::remove_file(&hook_path);
+
+    if outcome.is_failure() {
+        let _ = writeln!(stderr, "  FAIL  {display}");
+        let _ = writeln!(
+            stderr,
+            "        {label} hook failed.\n  help: Fix the `{label}` procedure in the test project helper unit."
+        );
+    }
+    outcome
+}
+
+fn run_test_program(
+    path: &Path,
+    link: Option<&LinkContext>,
+    script_override: Option<&Path>,
+    timeout: Option<Duration>,
+    stderr: &mut dyn Write,
+    display: &str,
+    output: RunOutput,
+) -> TestOutcome {
     let path_text = path.to_string_lossy();
     let (program, source_paths) = match load_program(path, link) {
         Ok(value) => value,
         Err(message) => {
-            let _ = writeln!(stderr, "  FAIL  {display}");
+            if output.emit_fail_banner() {
+                let _ = writeln!(stderr, "  FAIL  {display}");
+            }
             let _ = writeln!(stderr, "        {message}");
             return TestOutcome::CompileError;
         }
@@ -52,7 +163,9 @@ pub(super) fn run_single_test(
     let chunk = match fpas_compiler::compile_all(&program) {
         Ok(chunk) => chunk,
         Err(diagnostics) => {
-            let _ = writeln!(stderr, "  FAIL  {display}");
+            if output.emit_fail_banner() {
+                let _ = writeln!(stderr, "  FAIL  {display}");
+            }
             for diagnostic in &diagnostics {
                 let _ = writeln!(
                     stderr,
@@ -74,7 +187,9 @@ pub(super) fn run_single_test(
     let script_config = match apply_test_script(path, script_override, manifest_override, &mut vm) {
         Ok(config) => config,
         Err(message) => {
-            let _ = writeln!(stderr, "  FAIL  {display}");
+            if output.emit_fail_banner() {
+                let _ = writeln!(stderr, "  FAIL  {display}");
+            }
             let _ = writeln!(stderr, "        {message}");
             return TestOutcome::CompileError;
         }
@@ -99,7 +214,9 @@ pub(super) fn run_single_test(
     match run_result {
         VmRunResult::TimedOut => {
             let seconds = timeout.map(|value| value.as_secs()).unwrap_or(0);
-            let _ = writeln!(stderr, "  TIMEOUT  {display}");
+            if output.emit_fail_banner() {
+                let _ = writeln!(stderr, "  TIMEOUT  {display}");
+            }
             let _ = writeln!(
                 stderr,
                 "        test run exceeded {seconds} second timeout.\n  help: Fix an infinite loop or increase `--timeout`."
@@ -107,11 +224,15 @@ pub(super) fn run_single_test(
             TestOutcome::TimedOut
         }
         VmRunResult::Completed(Ok(())) => {
-            let _ = writeln!(stderr, "  PASS  {display}");
+            if output.emit_pass() {
+                let _ = writeln!(stderr, "  PASS  {display}");
+            }
             TestOutcome::Pass
         }
         VmRunResult::Completed(Err(diagnostic)) => {
-            let _ = writeln!(stderr, "  FAIL  {display}");
+            if output.emit_fail_banner() {
+                let _ = writeln!(stderr, "  FAIL  {display}");
+            }
             let _ = writeln!(
                 stderr,
                 "        {}",
@@ -129,6 +250,30 @@ pub(super) fn run_single_test(
             }
         }
     }
+}
+
+fn write_temp_hook_program(test_path: &Path, source: &str) -> Result<PathBuf, String> {
+    let dir = std::env::temp_dir();
+    let unique = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|error| error.to_string())?
+        .as_nanos();
+    let file_name = format!(
+        "fpas-test-hook-{}-{}.fpas",
+        test_path
+            .file_stem()
+            .and_then(|name| name.to_str())
+            .unwrap_or("test"),
+        unique
+    );
+    let path = dir.join(file_name);
+    fs::write(&path, source).map_err(|error| {
+        format!(
+            "Error writing temporary hook program `{}`: {error}",
+            path.display()
+        )
+    })?;
+    Ok(path)
 }
 
 fn load_program(

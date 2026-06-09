@@ -4,6 +4,7 @@
 //! [`docs/future/test-framework/runner.md`](../../../docs/future/test-framework/runner.md).
 
 mod discover;
+mod hooks;
 mod report;
 mod run;
 mod timeout;
@@ -15,7 +16,7 @@ use std::time::Duration;
 use crate::cli_input::{TestCliConfig, TestReportFormat};
 use discover::{discover_test_files, filter_test_paths, is_test_file_name};
 use fpas_project as project;
-use report::{Summary, print_json_report, print_summary};
+use report::{Summary, TestOutcome, print_json_report, print_summary};
 use run::{LinkContext, run_single_test};
 
 fn test_display_path(path: &Path) -> String {
@@ -83,7 +84,16 @@ pub(crate) fn test_cli(
     let mut summary = Summary::default();
     for path in paths {
         let display = test_display_path(&path);
-        let link = link_context_for_test(&path);
+        let link = match link_context_for_test(&path) {
+            Ok(Some(context)) => Some(context),
+            Ok(None) => None,
+            Err(message) => {
+                let _ = writeln!(stderr, "  FAIL  {display}");
+                let _ = writeln!(stderr, "        {message}");
+                summary.record(&display, TestOutcome::CompileError);
+                continue;
+            }
+        };
         let outcome = run_single_test(
             &path,
             link.as_ref(),
@@ -101,14 +111,18 @@ pub(crate) fn test_cli(
     finish_test_run(&config, &summary, stdout, stderr)
 }
 
-fn link_context_for_test(path: &Path) -> Option<LinkContext> {
-    let project_file = find_enclosing_project(path)?;
-    let loaded = project::load_project(&project_file).ok()?;
-    Some(LinkContext {
+fn link_context_for_test(path: &Path) -> Result<Option<LinkContext>, String> {
+    let Some(project_file) = find_enclosing_project(path) else {
+        return Ok(None);
+    };
+    let loaded = project::load_project(&project_file)?;
+    let hooks = hooks::discover_test_hooks(&loaded.source_files)?;
+    Ok(Some(LinkContext {
         source_files: loaded.source_files,
         link_meta: loaded.link_meta,
         test_manifest: loaded.test_manifest,
-    })
+        hooks,
+    }))
 }
 
 fn find_enclosing_project(start: &Path) -> Option<PathBuf> {

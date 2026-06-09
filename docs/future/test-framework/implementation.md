@@ -304,7 +304,7 @@ Implement incrementally; no fixed order. Mark each item `[x]` when shipped.
 - [x] **6.1** — `--filter <pat>` in `cli_test/discover.rs` — substring on path
 - [x] **6.2** — `--report json` in `cli_test/report.rs` — CI structured output on stdout
 - [ ] **6.3** — Parallel test execution in `cli_test/run.rs` — one VM per test; verify graph headless thread safety first
-- [ ] **6.4** — Setup/Teardown convention in `Std.Test` + docs — named procedures in test units
+- [x] **6.4** — Setup/Teardown hooks in `cli_test/hooks.rs` + `run.rs` — parameterless `Setup` / `Teardown` in non-test helper units; runner executes before/after each test
 - [ ] **6.5** — TUI screen snapshot spike in `fpas-std` TUI session — export cell grid
 - [x] **6.6** — `--timeout <secs>` in `cli_test/timeout.rs` — cooperative abort for hung tests
 - [ ] **6.7** — Property/fuzz for event ordering — Rust only, out of FPAS scope
@@ -348,7 +348,7 @@ Phase 1
 
 Phase 2
  crates/fpas-cli/src/cli_test.rs
- crates/fpas-cli/src/cli_test/{discover,run,report}.rs
+ crates/fpas-cli/src/cli_test/{discover,hooks,run,report,timeout}.rs
  crates/fpas-cli/src/main_tests/test_runner.rs
 
 Phase 3

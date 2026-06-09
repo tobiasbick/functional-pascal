@@ -253,7 +253,7 @@ High-level phases are below. **Every task has a checkbox in [`implementation.md`
 ### Phase 6 — Quality and ergonomics
 
 - [ ] Terminal screen snapshot API for TUI (read back buffer as string grid) — research spike
-- [ ] `Setup` / `Teardown` procedures in test units
+- [x] `Setup` / `Teardown` procedures in test project helper units (runner convention; see `runner.md`)
 - [ ] Parallel test execution (respect VM / graph headless constraints)
 - [x] Filter: `fpas test --filter menu_bar`
 - [x] JSON report for CI (`--report json`)

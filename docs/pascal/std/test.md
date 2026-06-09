@@ -60,6 +60,21 @@ Print `test skipped: …` to stderr and continue. Does not raise **F4023**.
 
 ---
 
+## Setup / Teardown (test projects)
+
+When tests run via `fpas test` inside a `kind = "test"` project, the runner may execute optional hooks from **helper units** (project sources whose basename is not `*_test.fpas`):
+
+| Procedure | When run |
+|-----------|----------|
+| `Setup` | Before each test program (at most one per project) |
+| `Teardown` | After each test program, even if the test failed (at most one per project) |
+
+Hooks must be parameterless procedures. Names are matched case-insensitively. Use `uses Std.Test` in the helper unit if hooks need assertions.
+
+See [`docs/future/test-framework/runner.md`](../../future/test-framework/runner.md#setup--teardown-hooks-test-projects).
+
+---
+
 ## Example
 
 See [`examples/pascal/test/assert_basics_test.fpas`](../../../examples/pascal/test/assert_basics_test.fpas).

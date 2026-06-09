@@ -116,6 +116,41 @@ If `menu_bar_test.fpas` runs, look for a script (first match wins):
 
 ---
 
+## Setup / Teardown hooks (test projects)
+
+In `kind = "test"` projects, helper units (any `*.fpas` that is **not** `*_test.fpas`) may declare parameterless procedures named `Setup` and/or `Teardown` (case-insensitive). The runner discovers at most one of each across the project.
+
+For every discovered test file:
+
+```text
+1. if Setup exists: compile and run synthetic hook program (linked like the test)
+2. run the test program (scripts apply only to the test, not hooks)
+3. if Teardown exists: run teardown even when the test failed
+```
+
+- Setup failure skips the test body; teardown still runs when declared.
+- Teardown failure fails an otherwise passing test; it does not change an already-failing test outcome.
+- Duplicate `Setup` or `Teardown` across multiple units is a project load error.
+
+Example helper unit:
+
+```pascal
+unit Tests.Fixture;
+uses Std.Test;
+procedure Setup();
+begin
+  AssertTrue(true)
+end;
+procedure Teardown();
+begin
+  AssertTrue(true)
+end.
+```
+
+Implementation: `crates/fpas-cli/src/cli_test/hooks.rs`, `run.rs`.
+
+---
+
 ## Relationship to existing smoke tests
 
 | Mechanism | Scope |

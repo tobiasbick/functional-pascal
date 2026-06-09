@@ -167,7 +167,13 @@ type = "readln"
 line = "World"
 ```
 
-Runner may additionally support golden stdout file `greet_test.expect.stdout` (Phase 2 runner feature, not sidecar):
+The runner also supports golden assertion sidecars (separate files, not TOML):
+
+- `greet_test.expect.stdout` — captured `WriteLn` lines (shipped)
+- `menu_bar_test.expect.screen` — compact TUI CRT rows (shipped)
+- `graph_smoke_test.expect.pixels` — headless graph spot checks (shipped)
+
+Example stdout golden file:
 
 ```text
 Hello, World

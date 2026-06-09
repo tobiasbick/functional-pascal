@@ -2,7 +2,7 @@
 
 Implementation plan for a JUnit-style testing surface in Functional Pascal: write tests in `.fpas`, run them with `fpas test`, and drive interactive programs (console, TUI, graph) with scripted keyboard and mouse input — without blocking on a real terminal or native window.
 
-**Track progress:** check boxes in this file (overview) and in [`implementation.md`](implementation.md) (detailed tasks). Mark `[x]` when done; leave `[ ]` for open work.
+**Track progress:** check boxes in this file (overview) and in [`implementation.md`](implementation.md) (detailed tasks). Mark `[x]` when done; leave `[ ]` for open work. **Phases 0–6 are complete** as of the golden sidecar and documentation pass; future work lives in [`docs/future/`](../) outside this plan unless a new phase is added.
 
 **Principles**
 
@@ -23,7 +23,7 @@ Implementation plan for a JUnit-style testing surface in Functional Pascal: writ
 | **3** Scripted input | ✅ Complete | TOML sidecar, TUI keyboard/mouse |
 | **4** Graph headless | ✅ Complete | Headless backend, scripted events, `*.expect.pixels` spot checks |
 | **5** Test projects | ✅ Complete | `kind = "test"`, workspace |
-| **6** Ergonomics | 🟡 In progress | Filter, JSON report, parallel, timeout, screen snapshots shipped |
+| **6** Ergonomics | ✅ Complete | Filter, JSON, parallel, timeout, golden sidecars, script ordering test |
 
 Update the **Status** column when a phase is complete (⬜ → ✅). Detailed task checkboxes live in [`implementation.md`](implementation.md).
 
@@ -36,7 +36,7 @@ Update the **Status** column when a phase is complete (⬜ → ✅). Detailed ta
 - [x] **Phase 3** — TUI test with `.script.toml` passes in CI (console scripts; graph deferred to Phase 4)
 - [x] **Phase 4** — Graph smoke test headless in CI
 - [x] **Phase 5** — Workspace + `kind = "test"` supported (monorepo demo; `[test]` overrides remain optional)
-- [x] **Phase 6** — Filter + JSON report shipped
+- [x] **Phase 6** — Ergonomics complete (filter, JSON, parallel, timeout, golden sidecars)
 
 ---
 

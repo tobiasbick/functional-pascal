@@ -206,6 +206,41 @@ kind = "Escape"
 }
 
 #[test]
+fn apply_readln_events_are_consumed_in_script_order() {
+    let source = "\
+program T;
+uses Std.Console, Std.Test;
+begin
+  AssertEquals(ReadLn(), 'first');
+  AssertEquals(ReadLn(), 'second');
+  AssertEquals(ReadLn(), 'third')
+end.";
+    let (program, _) = parse(source);
+    let chunk = compile_all(&program).expect("compile");
+    let mut vm = fpas_vm::Vm::new(chunk);
+
+    let script = parse_script_text(
+        r#"
+[[event]]
+type = "readln"
+line = "first"
+
+[[event]]
+type = "readln"
+line = "second"
+
+[[event]]
+type = "readln"
+line = "third"
+"#,
+        Path::new("order.script.toml"),
+    )
+    .expect("parse");
+    apply_script_to_vm(&mut vm, &script).expect("apply");
+    vm.run().expect("run");
+}
+
+#[test]
 fn load_script_reads_file_from_disk() {
     let dir = crate::test_support::create_temp_dir("fpas-script-load");
     let path = dir.join("input.script.toml");

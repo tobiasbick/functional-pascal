@@ -4,6 +4,7 @@
 //! [`docs/future/test-framework/runner.md`](../../../docs/future/test-framework/runner.md).
 
 mod discover;
+mod expect_stdout;
 mod hooks;
 mod parallel;
 mod report;
@@ -415,6 +416,70 @@ mod tests {
     }
 
     #[test]
+    fn test_cli_compares_golden_stdout_sidecar() {
+        let cwd = create_temp_dir("fpas-test-expect-stdout");
+        write_text(
+            &cwd.join("echo_test.fpas"),
+            "program E;\nuses Std.Console, Std.Test;\nbegin WriteLn('Hello'); WriteLn('World') end.",
+        );
+        write_text(&cwd.join("echo_test.expect.stdout"), "Hello\nWorld\n");
+
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+        let exit = test_cli(
+            TestCliConfig {
+                input: crate::CliInput::SourceFile(cwd.join("echo_test.fpas")),
+                cwd: cwd.clone(),
+                fail_fast: false,
+                list_only: false,
+                script_path: None,
+                filter: None,
+                report: None,
+                timeout: None,
+                jobs: 1,
+            },
+            &mut stdout,
+            &mut stderr,
+        );
+
+        assert_eq!(exit, 0);
+        let text = String::from_utf8(stderr).expect("utf-8");
+        assert!(text.contains("PASS  echo_test.fpas"));
+    }
+
+    #[test]
+    fn test_cli_fails_on_stdout_mismatch() {
+        let cwd = create_temp_dir("fpas-test-expect-stdout-fail");
+        write_text(
+            &cwd.join("echo_test.fpas"),
+            "program E;\nuses Std.Console, Std.Test;\nbegin WriteLn('Hi') end.",
+        );
+        write_text(&cwd.join("echo_test.expect.stdout"), "Hello\n");
+
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+        let exit = test_cli(
+            TestCliConfig {
+                input: crate::CliInput::SourceFile(cwd.join("echo_test.fpas")),
+                cwd: cwd.clone(),
+                fail_fast: false,
+                list_only: false,
+                script_path: None,
+                filter: None,
+                report: None,
+                timeout: None,
+                jobs: 1,
+            },
+            &mut stdout,
+            &mut stderr,
+        );
+
+        assert_eq!(exit, 1);
+        let text = String::from_utf8(stderr).expect("utf-8");
+        assert!(text.contains("stdout mismatch"));
+    }
+
+    #[test]
     fn test_cli_rejects_unit_file_as_test_entry() {
         let cwd = create_temp_dir("fpas-test-unit-reject");
         write_text(
@@ -442,10 +507,7 @@ mod tests {
 
         assert_eq!(exit, 2);
         let text = String::from_utf8(stderr).expect("utf-8");
-        assert!(
-            text.contains("must be `program` files"),
-            "stderr={text}"
-        );
+        assert!(text.contains("must be `program` files"), "stderr={text}");
         assert!(text.contains("unit Tests.Helper"), "stderr={text}");
     }
 

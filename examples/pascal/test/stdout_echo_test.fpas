@@ -1,0 +1,7 @@
+program StdoutEchoTest;
+uses Std.Console, Std.Test;
+
+begin
+  WriteLn('Hello');
+  WriteLn('World')
+end.

@@ -15,7 +15,7 @@ Step-by-step tasks to implement the FPAS test framework. Read [`README.md`](READ
 | Phase | Tasks | Done | Verification |
 |-------|-------|------|--------------|
 | [1 — Std.Test](#phase-1--stdtest-assertions) | 35 | 33 | [§ 1.8](#18-phase-1-verification) |
-| [2 — fpas test](#phase-2--fpas-test-runner) | 22 | 19 | [§ 2.7](#27-phase-2-verification) |
+| [2 — fpas test](#phase-2--fpas-test-runner) | 22 | 22 | [§ 2.7](#27-phase-2-verification) |
 | [3 — Scripted input](#phase-3--scripted-consoletui-input) | 13 | 13 | [§ 3.4](#34-phase-3-verification) |
 | [4 — Graph headless](#phase-4--graph-headless-tests) | 9 | 7 | [§ 4.4](#44-phase-4-verification) |
 | [5 — Test projects](#phase-5--test-projects-and-workspace) | 8 | 8 | [§ 5.4](#54-phase-5-verification) |
@@ -160,9 +160,9 @@ Reuse: `cli_check.rs` (project load), `main_tests/support.rs` (`run_source_and_c
 
 ### 2.4 Golden stdout (optional in Phase 2)
 
-- [ ] **2.4.1** — Sidecar `*.expect.stdout` next to test file
-- [ ] **2.4.2** — `cli_test/run.rs` — compare `vm.output().lines` after successful run
-- [ ] **2.4.3** — Mismatch → test failure with diff hint
+- [x] **2.4.1** — Sidecar `*.expect.stdout` next to test file
+- [x] **2.4.2** — `cli_test/expect_stdout.rs` + `run.rs` — compare `vm.output().lines` after successful run
+- [x] **2.4.3** — Mismatch → test failure with diff hint
 
 ### 2.5 Tests
 
@@ -348,7 +348,7 @@ Phase 1
 
 Phase 2
  crates/fpas-cli/src/cli_test.rs
- crates/fpas-cli/src/cli_test/{discover,hooks,parallel,run,report,timeout}.rs
+ crates/fpas-cli/src/cli_test/{discover,expect_stdout,hooks,parallel,run,report,timeout}.rs
  crates/fpas-cli/src/main_tests/test_runner.rs
 
 Phase 3

@@ -10,9 +10,15 @@ use fpas_vm::{VmError, VmShutdownHandle};
 
 const SHUTDOWN_GRACE: Duration = Duration::from_secs(2);
 
+/// Captured result and stdout from one VM execution.
+pub(super) struct VmExecution {
+    pub result: Result<(), VmError>,
+    pub stdout_lines: Vec<String>,
+}
+
 /// Result of executing one VM run under an optional wall-clock limit.
 pub(super) enum VmRunResult {
-    Completed(Result<(), VmError>),
+    Completed(VmExecution),
     TimedOut,
 }
 
@@ -20,7 +26,7 @@ pub(super) enum VmRunResult {
 pub(super) fn run_with_timeout(
     shutdown: VmShutdownHandle,
     timeout: Duration,
-    run: impl FnOnce() -> Result<(), VmError> + Send + 'static,
+    run: impl FnOnce() -> VmExecution + Send + 'static,
 ) -> VmRunResult {
     let (tx, rx) = mpsc::channel();
     let handle = thread::spawn(move || {
@@ -28,9 +34,9 @@ pub(super) fn run_with_timeout(
     });
 
     match rx.recv_timeout(timeout) {
-        Ok(result) => {
+        Ok(execution) => {
             let _ = handle.join();
-            VmRunResult::Completed(result)
+            VmRunResult::Completed(execution)
         }
         Err(mpsc::RecvTimeoutError::Timeout) => {
             shutdown.request_cooperative_shutdown();

@@ -7,9 +7,10 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
+use super::expect_stdout;
 use super::hooks::{TestHook, TestHooks, hook_program_source};
 use super::report::TestOutcome;
-use super::timeout::{VmRunResult, run_with_timeout};
+use super::timeout::{VmExecution, VmRunResult, run_with_timeout};
 use crate::cli_run::render_cli_diagnostic_with_sources;
 use crate::test_script::{ScriptConfig, apply_script_to_vm, load_script, sidecar_path_for_test};
 use fpas_diagnostics::DiagnosticSeverity;
@@ -231,17 +232,9 @@ fn run_test_program(
     let headless_graph = script_config.headless_graph;
     let shutdown = vm.shutdown_handle();
     let run_result = if let Some(timeout) = timeout {
-        run_with_timeout(shutdown, timeout, move || {
-            if headless_graph {
-                fpas_std::with_headless_graph_backend_for_tests(|| vm.run())
-            } else {
-                vm.run()
-            }
-        })
-    } else if headless_graph {
-        VmRunResult::Completed(fpas_std::with_headless_graph_backend_for_tests(|| vm.run()))
+        run_with_timeout(shutdown, timeout, move || execute_vm(vm, headless_graph))
     } else {
-        VmRunResult::Completed(vm.run())
+        VmRunResult::Completed(execute_vm(vm, headless_graph))
     };
 
     match run_result {
@@ -256,13 +249,28 @@ fn run_test_program(
             );
             TestOutcome::TimedOut
         }
-        VmRunResult::Completed(Ok(())) => {
+        VmRunResult::Completed(VmExecution {
+            result: Ok(()),
+            stdout_lines,
+        }) => {
+            if matches!(output, RunOutput::Test | RunOutput::TestDeferredPass) {
+                if let Err(message) = expect_stdout::compare_stdout(path, &stdout_lines) {
+                    if output.emit_fail_banner() {
+                        let _ = writeln!(stderr, "  FAIL  {display}");
+                    }
+                    let _ = writeln!(stderr, "        {message}");
+                    return TestOutcome::AssertFailed;
+                }
+            }
             if output.emit_pass() {
                 let _ = writeln!(stderr, "  PASS  {display}");
             }
             TestOutcome::Pass
         }
-        VmRunResult::Completed(Err(diagnostic)) => {
+        VmRunResult::Completed(VmExecution {
+            result: Err(diagnostic),
+            stdout_lines: _,
+        }) => {
             if output.emit_fail_banner() {
                 let _ = writeln!(stderr, "  FAIL  {display}");
             }
@@ -282,6 +290,18 @@ fn run_test_program(
                 TestOutcome::RuntimeError
             }
         }
+    }
+}
+
+fn execute_vm(mut vm: fpas_vm::Vm, headless_graph: bool) -> VmExecution {
+    let result = if headless_graph {
+        fpas_std::with_headless_graph_backend_for_tests(|| vm.run())
+    } else {
+        vm.run()
+    };
+    VmExecution {
+        result,
+        stdout_lines: vm.output().lines,
     }
 }
 

@@ -107,6 +107,16 @@ Summary: 2 passed, 1 failed, 0 skipped (24ms)
 
 ---
 
+## Golden stdout (optional)
+
+If `greet_test.expect.stdout` exists beside `greet_test.fpas`, the runner compares captured `WriteLn` output (`vm.output().lines`) after a successful test run. Mismatch fails the test (exit code `1`) with expected/actual line hints.
+
+- One line per `WriteLn` result; file may end with a trailing newline.
+- Omitted sidecar: no stdout check (assertions-only tests unchanged).
+- Setup/Teardown hook runs do not compare golden stdout.
+
+---
+
 ## Sidecar script discovery
 
 If `menu_bar_test.fpas` runs, look for a script (first match wins):

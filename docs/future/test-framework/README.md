@@ -19,7 +19,7 @@ Implementation plan for a JUnit-style testing surface in Functional Pascal: writ
 |-------|--------|---------|
 | **0** Requirements | ✅ Complete | Planning docs; decisions recorded |
 | **1** `Std.Test` | ✅ Complete | Assertions, intrinsics, examples, sema fixtures |
-| **2** `fpas test` | ✅ Complete | CLI runner, discovery, summary (optional golden stdout open) |
+| **2** `fpas test` | ✅ Complete | CLI runner, discovery, summary, golden stdout |
 | **3** Scripted input | ✅ Complete | TOML sidecar, TUI keyboard/mouse |
 | **4** Graph headless | ✅ Complete | Headless backend + graph events (pixel API deferred) |
 | **5** Test projects | ✅ Complete | `kind = "test"`, workspace |
@@ -299,7 +299,7 @@ Mark **Resolved** with `[x]` when decided; record outcome in the **Decision** co
 | [x] | 1 | Separate `kind = "test"` or only `*_test.fpas` naming? | **Both:** `*_test.fpas` discovery everywhere; optional `kind = "test"` projects in Phase 5 |
 | [x] | 2 | Assert implementation: intrinsics vs ordinary FPAS-visible functions? | **Intrinsics** (`TestIntrinsic`) for source locations and **F4023** failure capture |
 | [x] | 3 | Exit codes: one code for assert fail vs runtime error? | **Distinct:** 0 ok, 1 assert, 2 compile/script, 3 runtime/timeout (see `runner.md`) |
-| [x] | 4 | Should `Std.Test` expose captured stdout to FPAS? | **Deferred;** runner-side stdout compare via optional `*.expect.stdout` (Phase 2.4, not shipped) |
+| [x] | 4 | Should `Std.Test` expose captured stdout to FPAS? | **Deferred in language;** runner compares optional `*.expect.stdout` sidecar (Phase 2.4) |
 | [ ] | 5 | TUI screen assertions | **Open:** Phase 6.5 spike; until then assert on `WriteLn` or handler flags |
 | [x] | 6 | Test programs vs test units | **Both:** `program …_test` entry files; helper `unit` sources + Setup/Teardown hooks |
 

@@ -351,3 +351,28 @@ fn resolve_cli_config_parses_test_jobs_flag() {
 
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 }
+
+#[test]
+fn resolve_cli_config_parses_test_strict_flag() {
+    let cwd = create_temp_dir("test-strict-flag");
+    write_text(
+        &cwd.join("demo.fpasprj"),
+        "[project]\nname = \"demo\"\nkind = \"test\"\n\n[sources]\ninclude = [\"*.fpas\"]\n",
+    );
+
+    let result = resolve_cli_config(
+        &[
+            String::from("test"),
+            String::from("--strict"),
+            String::from("demo.fpasprj"),
+        ],
+        &cwd,
+    );
+
+    match result {
+        Ok(ResolvedCli::Test(config)) => assert!(config.strict),
+        other => panic!("expected test config, got {other:?}"),
+    }
+
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+}

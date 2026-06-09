@@ -322,8 +322,8 @@ Mark **Resolved** with `[x]` when decided; record outcome in the **Decision** co
 | Document | Relevance |
 |----------|-----------|
 | [`implementation.md`](implementation.md) | **Contributor guide** — checkbox task list per phase |
-| [`std-test.md`](std-test.md) | Draft `Std.Test` API |
-| [`runner.md`](runner.md) | `fpas test` CLI behavior |
+| [`std-test.md`](std-test.md) | Planning copy of `Std.Test` (canonical: `docs/pascal/std/test.md`) |
+| [`runner.md`](runner.md) | Detailed `fpas test` runner behavior (canonical CLI: `10-projects.md`) |
 | [`scripted-input.md`](scripted-input.md) | Sidecar event script format |
 | [`docs/pascal/std/console.md`](../../pascal/std/console.md) | Event queues, test mode |
 | [`docs/pascal/std/tui-app.md`](../../pascal/std/tui-app.md) | Hosted TUI under test |

@@ -1,6 +1,6 @@
-# Draft: `fpas test` runner
+# `fpas test` runner (planning copy)
 
-CLI specification draft for the test subcommand. When implemented, the canonical spec is merged into [`docs/pascal/10-projects.md`](../../pascal/10-projects.md).
+**Canonical CLI summary:** [`docs/pascal/10-projects.md`](../../pascal/10-projects.md) (test flags) and [`docs/pascal/std/test.md`](../../pascal/std/test.md) (author workflow). This file keeps detailed runner behavior for contributors.
 
 ---
 
@@ -19,7 +19,7 @@ fpas test [<path>] [options]
 
 ---
 
-## Options (planned)
+## Options
 
 | Flag | Description |
 |------|-------------|

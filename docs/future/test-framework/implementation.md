@@ -14,14 +14,15 @@ Step-by-step tasks to implement the FPAS test framework. Read [`README.md`](READ
 
 | Phase | Tasks | Done | Verification |
 |-------|-------|------|--------------|
-| [1 — Std.Test](#phase-1--stdtest-assertions) | 35 | 33 | [§ 1.8](#18-phase-1-verification) |
+| [1 — Std.Test](#phase-1--stdtest-assertions) | 35 | 35 | [§ 1.8](#18-phase-1-verification) |
 | [2 — fpas test](#phase-2--fpas-test-runner) | 22 | 22 | [§ 2.7](#27-phase-2-verification) |
 | [3 — Scripted input](#phase-3--scripted-consoletui-input) | 13 | 13 | [§ 3.4](#34-phase-3-verification) |
 | [4 — Graph headless](#phase-4--graph-headless-tests) | 9 | 9 | [§ 4.4](#44-phase-4-verification) |
 | [5 — Test projects](#phase-5--test-projects-and-workspace) | 8 | 8 | [§ 5.4](#54-phase-5-verification) |
 | [6 — Ergonomics](#phase-6--quality-and-ergonomics) | 7 | 7 | — |
+| [7 — Integration](#phase-7--integration-and-ci) | 10 | 10 | [§ 7.2](#72-phase-7-verification) |
 
-_Update the **Done** column as you check off tasks above._
+**All phases complete.** Deferred items [1.2.6](#12-fpas-std--unit-registry-and-runtime) and [1.6.4](#16-fpas-std--fpas-vm--intrinsic-dispatch) are resolved below (no further test-framework phases planned in this doc).
 
 ---
 
@@ -70,7 +71,7 @@ Reference: [`docs/pascal/std/README.md`](../../pascal/std/README.md) § Shared i
 - [x] **1.2.3** — `crates/fpas-std/src/std_units/symbols/groups.rs` — **MODIFY** add `STD_TEST_SYMBOLS` slice
 - [x] **1.2.4** — `crates/fpas-std/src/std_units/mod.rs` — **MODIFY** `canonical_std_unit_from_tail("test")`, `std_unit_symbols` match arm
 - [x] **1.2.5** — `crates/fpas-std/src/test/mod.rs` — **CREATE** module root
-- [ ] **1.2.6** — `crates/fpas-std/src/test/state.rs` — deferred (no separate state file; failures use **F4023** diagnostic)
+- [x] **1.2.6** — `state.rs` — **cancelled:** no separate failure-state file; assert failures use **F4023**; skip uses `skip_state.rs` (Phase 7)
 - [x] **1.2.7** — `crates/fpas-std/src/test/assert.rs` — **CREATE** assert helpers
 - [x] **1.2.8** — `crates/fpas-std/src/lib.rs` — **MODIFY** `mod test;`
 
@@ -105,9 +106,9 @@ Initial variants: `AssertTrue = 0`, `AssertFalse = 1`, `AssertEqualsInteger = 2`
 - [x] **1.6.1** — `crates/fpas-std/src/intrinsics.rs` — **MODIFY** route `Intrinsic::Test(...)`
 - [x] **1.6.2** — `crates/fpas-std/src/test/intrinsic.rs` — **CREATE** pop stack args, call assert helpers
 - [x] **1.6.3** — not needed: VM already surfaces `StdError` as runtime diagnostic (**F4023**)
-- [ ] **1.6.4** — deferred until Phase 2 runner
+- [x] **1.6.4** — skip outcome wired in Phase 7 runner (`skip_state.rs`, `TestOutcome::Skipped`, `--strict`)
 
-**Skip behavior:** `Skip` sets skipped flag, prints optional message, **`Halt` with exit 0**.
+**Skip behavior:** `Skip` sets thread-local skip flag, prints message to stderr, continues; `fpas test` records **skipped** (exit `0` unless `--strict`).
 
 ### 1.7 Examples and CLI smoke
 
@@ -121,7 +122,7 @@ Initial variants: `AssertTrue = 0`, `AssertFalse = 1`, `AssertEqualsInteger = 2`
 - [x] `uses Std.Test` resolves in sema
 - [x] `AssertEquals(4, 2+2)` compiles and runs
 - [x] Failed assert: message includes expected/actual values (**F4023**)
-- [x] `Skip('reason')` exits 0
+- [x] `Skip('reason')` does not fail; runner reports skipped (Phase 7)
 - [x] `cargo test -p fpas-compiler std_library::test` passes
 - [x] `fpas examples/pascal/test/assert_basics_test.fpas` exits 0
 

@@ -37,6 +37,17 @@ CI smoke: `cargo test -p fpas-cli examples_pascal_test_suite_passes`.
 
 `assert_fail_demo.fpas` is a manual failure demo (not `*_test.fpas`); run it with `fpas` to inspect **F4023** output.
 
+## Stdlib regression suite (`tests/`)
+
+The full **Std.*** runtime regression suite (~330 programs) lives in [`tests/`](../tests/) as `*_test.fpas` files with optional `*.expect.stdout` sidecars. Run via:
+
+```sh
+fpas test tests/
+cargo test -p fpas-cli fpas_regression_suite_passes
+```
+
+Expected failures (runtime/compile errors, CLI args) are exercised from `test_suite_negative.rs`.
+
 ## How to run
 
 ### Single-file programs

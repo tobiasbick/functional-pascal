@@ -9,13 +9,13 @@ use fpas_diagnostics::{Diagnostic, DiagnosticStage, SourceSpan};
 use std::fs;
 use std::path::Path;
 
-mod concurrency;
 mod diagnostics;
 mod examples;
 mod input;
 mod projects;
-mod stdlib;
 mod support;
 mod test_project;
 mod test_runner;
+mod test_suite;
+mod test_suite_negative;
 mod visibility;

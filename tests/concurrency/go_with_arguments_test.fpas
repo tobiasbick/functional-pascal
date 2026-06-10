@@ -1,0 +1,12 @@
+program GoArgs;
+uses Std.Console, Std.Task;
+
+function Add(A: integer; B: integer): integer;
+begin
+  return A + B
+end;
+
+begin
+  var T: task := go Add(10, 32);
+  WriteLn(Std.Task.Wait(T))
+end.

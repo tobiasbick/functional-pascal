@@ -1,0 +1,6 @@
+program T;
+uses Std.Console, Std.Array;
+begin
+  var C: array of integer := Concat([1, 2], []);
+  WriteLn(Length(C))
+end.

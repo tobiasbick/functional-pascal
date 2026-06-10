@@ -1,0 +1,6 @@
+program T;
+uses Std.Console, Std.Dict;
+begin
+  var D: dict of string to integer := ['A': 1, 'B': 2];
+  WriteLn(Std.Dict.Length(D))
+end.

@@ -1,0 +1,5 @@
+program T;
+uses Std.Console, Std.Str;
+begin
+  WriteLn(IsNumeric('-7'))
+end.

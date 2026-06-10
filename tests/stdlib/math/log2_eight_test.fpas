@@ -1,0 +1,5 @@
+program T;
+uses Std.Console, Std.Math;
+begin
+  WriteLn(Log2(8.0))
+end.

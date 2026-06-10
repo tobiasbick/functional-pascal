@@ -1,0 +1,4 @@
+            program T;
+            begin
+              WriteLn('hello')
+end.

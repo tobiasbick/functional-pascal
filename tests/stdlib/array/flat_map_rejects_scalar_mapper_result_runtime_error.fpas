@@ -1,0 +1,9 @@
+program T;
+uses Std.Array;
+function Identity(V: integer): integer;
+begin
+  return V
+end;
+begin
+  var X: integer := FlatMap([1, 2], Identity)
+end.

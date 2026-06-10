@@ -1,0 +1,9 @@
+program T;
+uses Std.Console, Std.Dict, Std.Conv;
+begin
+  var Outer: dict of string to integer := ['a': 1, 'b': 2];
+  var Inner: dict of string to integer := ['x': 10, 'y': 20];
+  for Ko: string in Outer do
+    for Ki: string in Inner do
+      WriteLn(Ko + Ki)
+end.

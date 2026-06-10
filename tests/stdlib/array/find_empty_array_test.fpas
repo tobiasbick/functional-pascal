@@ -1,0 +1,11 @@
+program T;
+uses Std.Console, Std.Array, Std.Option;
+function AlwaysTrue(X: integer): boolean;
+begin
+  return true
+end;
+begin
+  var A: array of integer := [];
+  var R: Option of integer := Find(A, AlwaysTrue);
+  WriteLn(IsNone(R))
+end.

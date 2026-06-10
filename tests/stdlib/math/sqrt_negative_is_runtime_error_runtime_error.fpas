@@ -1,0 +1,5 @@
+program T;
+uses Std.Console, Std.Math;
+begin
+  WriteLn(Sqrt(-1.0))
+end.

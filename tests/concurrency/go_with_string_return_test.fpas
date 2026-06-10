@@ -1,0 +1,12 @@
+program GoStr;
+uses Std.Console, Std.Task;
+
+function Greet(): string;
+begin
+  return 'hello'
+end;
+
+begin
+  var T: task := go Greet();
+  WriteLn(Std.Task.Wait(T))
+end.

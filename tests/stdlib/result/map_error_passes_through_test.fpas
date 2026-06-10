@@ -1,0 +1,11 @@
+program T;
+uses Std.Console, Std.Result;
+function AlwaysOk(V: integer): string;
+begin
+  return 'ok'
+end;
+begin
+  var R: Result of integer, string := Error('fail');
+  var M: Result of string, string := Map(R, AlwaysOk);
+  WriteLn(IsError(M))
+end.

@@ -1,0 +1,12 @@
+program T;
+uses Std.Console, Std.Option;
+function PositiveOk(V: integer): Option of string;
+begin
+  if V > 0 then return Some('ok')
+  else return None
+end;
+begin
+  var O: Option of integer := Some(-1);
+  var M: Option of string := AndThen(O, PositiveOk);
+  WriteLn(IsNone(M))
+end.

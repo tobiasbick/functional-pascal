@@ -1,0 +1,17 @@
+program T;
+uses Std.Console, Std.Result, Std.Conv;
+function Double(V: integer): integer;
+begin
+  return V * 2
+end;
+function PositiveToStr(V: integer): Result of string, string;
+begin
+  if V > 0 then return Ok(IntToStr(V))
+  else return Error('non-positive')
+end;
+begin
+  var R: Result of integer, string := Ok(5);
+  var Doubled: Result of integer, string := Map(R, Double);
+  var Final: Result of string, string := AndThen(Doubled, PositiveToStr);
+  WriteLn(Unwrap(Final))
+end.

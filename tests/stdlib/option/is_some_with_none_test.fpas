@@ -1,0 +1,6 @@
+program T;
+uses Std.Console, Std.Option;
+begin
+  var O: Option of integer := None;
+  WriteLn(IsSome(O))
+end.

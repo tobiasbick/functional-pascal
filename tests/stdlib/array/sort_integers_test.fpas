@@ -1,0 +1,9 @@
+program T;
+uses Std.Console, Std.Array;
+begin
+  var A: array of integer := [3, 1, 2];
+  var B: array of integer := Sort(A);
+  WriteLn(B[0]);
+  WriteLn(B[1]);
+  WriteLn(B[2])
+end.

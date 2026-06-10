@@ -1,0 +1,8 @@
+program T;
+uses Std.Console, Std.Dict, Std.Array;
+begin
+  var D: dict of string to integer := ['B': 2, 'A': 1];
+  var K: array of string := Std.Dict.Keys(D);
+  WriteLn(K[0]);
+  WriteLn(K[1])
+end.

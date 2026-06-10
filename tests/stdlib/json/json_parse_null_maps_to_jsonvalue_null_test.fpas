@@ -1,0 +1,13 @@
+program T;
+uses Std.Console, Std.Json;
+begin
+  var R: Result of JsonValue, string := Parse('null');
+  case R of
+    Ok(V):
+      case V of
+        JsonValue.Null: WriteLn('null');
+        else WriteLn('not-null')
+      end;
+    Error(E): WriteLn('error: ' + E)
+  end
+end.

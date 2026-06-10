@@ -1,0 +1,9 @@
+program T;
+uses Std.Console, Std.Str, Std.Array;
+begin
+  var Parts: array of string := Split('a,b,c', ',');
+  WriteLn(Std.Array.Length(Parts));
+  WriteLn(Parts[0]);
+  WriteLn(Parts[1]);
+  WriteLn(Parts[2])
+end.

@@ -1,0 +1,5 @@
+program T;
+uses Std.Console, Std.Math;
+begin
+  WriteLn(Clamp(1.5, 0.0, 1.0))
+end.

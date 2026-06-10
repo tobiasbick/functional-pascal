@@ -1,0 +1,11 @@
+program T;
+uses Std.Console, Std.Array;
+function AddAcc(Acc: integer; V: integer): integer;
+begin
+  return Acc + V
+end;
+begin
+  var A: array of integer := [];
+  var Val: integer := Reduce(A, 99, AddAcc);
+  WriteLn(Val)
+end.

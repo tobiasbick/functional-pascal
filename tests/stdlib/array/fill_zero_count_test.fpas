@@ -1,0 +1,6 @@
+program T;
+uses Std.Console, Std.Array;
+begin
+  var A: array of integer := Fill(7, 0);
+  WriteLn(Length(A))
+end.

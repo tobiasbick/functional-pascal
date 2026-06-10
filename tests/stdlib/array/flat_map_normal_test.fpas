@@ -1,0 +1,14 @@
+program T;
+uses Std.Console, Std.Array;
+function Expand(X: integer): array of integer;
+begin
+  return [X, X * 10]
+end;
+begin
+  var R: array of integer := FlatMap([1, 2, 3], Expand);
+  WriteLn(Length(R));
+  WriteLn(R[0]);
+  WriteLn(R[1]);
+  WriteLn(R[4]);
+  WriteLn(R[5])
+end.

@@ -1,0 +1,11 @@
+program T;
+uses Std.Console, Std.Array;
+function AddAcc(Acc: integer; V: integer): integer;
+begin
+  return Acc + V
+end;
+begin
+  var Nums: array of integer := [1, 2, 3, 4, 5];
+  var Sum: integer := Reduce(Nums, 0, AddAcc);
+  WriteLn(Sum)
+end.

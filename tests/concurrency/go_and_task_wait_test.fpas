@@ -1,0 +1,12 @@
+program GoWait;
+uses Std.Console, Std.Task;
+
+function Worker(): integer;
+begin
+  return 42
+end;
+
+begin
+  var T: task := go Worker();
+  WriteLn(Std.Task.Wait(T))
+end.

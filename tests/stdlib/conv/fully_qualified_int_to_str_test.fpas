@@ -1,0 +1,5 @@
+program T;
+uses Std.Console, Std.Conv;
+begin
+  WriteLn(Std.Conv.IntToStr(99))
+end.

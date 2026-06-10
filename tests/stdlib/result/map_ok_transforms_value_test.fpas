@@ -1,0 +1,11 @@
+program T;
+uses Std.Console, Std.Result, Std.Conv;
+function DoubleToStr(V: integer): string;
+begin
+  return IntToStr(V * 2)
+end;
+begin
+  var R: Result of integer, string := Ok(21);
+  var M: Result of string, string := Map(R, DoubleToStr);
+  WriteLn(Unwrap(M))
+end.

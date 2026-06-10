@@ -1,0 +1,8 @@
+program T;
+uses Std.Console, Std.Dict;
+begin
+  var D: dict of string to integer := ['A': 1, 'B': 2];
+  var D2: dict of string to integer := Std.Dict.Remove(D, 'A');
+  WriteLn(Std.Dict.Length(D));
+  WriteLn(Std.Dict.Length(D2))
+end.

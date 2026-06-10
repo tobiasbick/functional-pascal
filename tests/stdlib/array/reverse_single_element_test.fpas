@@ -1,0 +1,7 @@
+program T;
+uses Std.Console, Std.Array;
+begin
+  var A: array of integer := [42];
+  var R: array of integer := Reverse(A);
+  WriteLn(R[0])
+end.

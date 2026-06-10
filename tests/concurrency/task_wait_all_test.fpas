@@ -1,0 +1,16 @@
+program WaitAll;
+uses Std.Console, Std.Task;
+
+function Double(X: integer): integer;
+begin
+  return X * 2
+end;
+
+begin
+  var T1: task := go Double(1);
+  var T2: task := go Double(2);
+  var T3: task := go Double(3);
+  var Results: array of task := [T1, T2, T3];
+  Std.Task.WaitAll(Results);
+  WriteLn('done')
+end.

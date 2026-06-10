@@ -1,0 +1,11 @@
+program T;
+uses Std.Console, Std.Option;
+function AlwaysOk(V: integer): string;
+begin
+  return 'ok'
+end;
+begin
+  var O: Option of integer := None;
+  var M: Option of string := Map(O, AlwaysOk);
+  WriteLn(IsNone(M))
+end.

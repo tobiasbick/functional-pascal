@@ -1,0 +1,7 @@
+program T;
+uses Std.Console, Std.Args;
+begin
+  WriteLn(ParamCount());
+  WriteLn(ParamStr(0));
+  WriteLn(ParamStr(1))
+end.

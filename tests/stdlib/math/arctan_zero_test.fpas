@@ -1,0 +1,5 @@
+program T;
+uses Std.Console, Std.Math;
+begin
+  WriteLn(ArcTan(0.0))
+end.

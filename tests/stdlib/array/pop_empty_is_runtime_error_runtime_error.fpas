@@ -1,0 +1,6 @@
+program T;
+uses Std.Console, Std.Array;
+begin
+  mutable var A: array of integer := [];
+  var X: integer := Pop(A)
+end.

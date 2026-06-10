@@ -1,0 +1,7 @@
+program T;
+uses Std.Console, Std.Dict, Std.Option;
+begin
+  var D: dict of string to integer := [:];
+  var R: Option of integer := Std.Dict.Get(D, 'X');
+  WriteLn(IsNone(R))
+end.

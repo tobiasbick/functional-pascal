@@ -1,0 +1,6 @@
+[project]
+name = "fpas-regression-tests"
+kind = "test"
+
+[sources]
+include = ["stdlib/**/*_test.fpas", "concurrency/**/*_test.fpas"]

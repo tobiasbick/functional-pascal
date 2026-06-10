@@ -1,0 +1,9 @@
+program T;
+uses Std.Console, Std.Array;
+begin
+  var A: array of integer := [10, 20, 30, 40];
+  var C: array of integer := Slice(A, 1, 2);
+  WriteLn(Length(C));
+  WriteLn(C[0]);
+  WriteLn(C[1])
+end.

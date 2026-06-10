@@ -1,0 +1,5 @@
+program T;
+uses Std.Console, Std.Math;
+begin
+  WriteLn(Ceil(2.1))
+end.

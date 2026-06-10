@@ -1,0 +1,7 @@
+program T;
+uses Std.Console, Std.Random;
+begin
+  var R: real := Random();
+  WriteLn(R >= 0.0);
+  WriteLn(R < 1.0)
+end.

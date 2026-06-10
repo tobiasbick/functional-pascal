@@ -1,0 +1,8 @@
+program WaitAllEmpty;
+uses Std.Console, Std.Task;
+
+begin
+  var Tasks: array of task := [];
+  Std.Task.WaitAll(Tasks);
+  WriteLn('ok')
+end.

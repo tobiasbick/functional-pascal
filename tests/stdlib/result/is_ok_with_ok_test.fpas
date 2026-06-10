@@ -1,0 +1,6 @@
+program T;
+uses Std.Console, Std.Result;
+begin
+  var R: Result of integer, string := Ok(42);
+  WriteLn(IsOk(R))
+end.

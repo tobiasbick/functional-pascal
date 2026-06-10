@@ -1,0 +1,7 @@
+program T;
+uses Std.Console, Std.Dict, Std.Array;
+begin
+  var D: dict of string to integer := [:];
+  var K: array of string := Std.Dict.Keys(D);
+  WriteLn(Std.Array.Length(K))
+end.

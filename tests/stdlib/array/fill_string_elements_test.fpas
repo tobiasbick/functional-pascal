@@ -1,0 +1,7 @@
+program T;
+uses Std.Console, Std.Array;
+begin
+  var A: array of string := Fill('x', 2);
+  WriteLn(A[0]);
+  WriteLn(A[1])
+end.

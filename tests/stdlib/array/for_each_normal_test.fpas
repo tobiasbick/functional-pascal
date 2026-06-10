@@ -1,0 +1,9 @@
+program T;
+uses Std.Console, Std.Array;
+procedure PrintValue(X: integer);
+begin
+  WriteLn(X)
+end;
+begin
+  ForEach([10, 20, 30], PrintValue)
+end.

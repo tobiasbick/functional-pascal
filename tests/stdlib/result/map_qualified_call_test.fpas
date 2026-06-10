@@ -1,0 +1,11 @@
+program T;
+uses Std.Console, Std.Result, Std.Conv;
+function ToStr(V: integer): string;
+begin
+  return IntToStr(V)
+end;
+begin
+  var R: Result of integer, string := Ok(5);
+  var M: Result of string, string := Std.Result.Map(R, ToStr);
+  WriteLn(Unwrap(M))
+end.

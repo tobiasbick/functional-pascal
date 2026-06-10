@@ -1,0 +1,6 @@
+program T;
+uses Std.Console, Std.Result;
+begin
+  var R: Result of string, string := Ok('hello');
+  WriteLn(Unwrap(R))
+end.

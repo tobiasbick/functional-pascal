@@ -22,6 +22,10 @@ Source-level `library` projects and `[dependencies]` are **implemented**. Precom
 
 FPAS programs today are tested mainly from Rust (`compile_and_run`, VM input queues). A JUnit-style author-facing layer — `Std.Test`, `fpas test`, scripted keyboard/mouse input — is **planned**. See [`test-framework/README.md`](test-framework/README.md) (implementation tasks: [`implementation.md`](test-framework/implementation.md); API draft: [`std-test.md`](test-framework/std-test.md), runner: [`runner.md`](test-framework/runner.md), sidecar format: [`scripted-input.md`](test-framework/scripted-input.md)).
 
+## Source formatter
+
+AST-based `fpas fmt` is **planned** (not implemented). Approach: `fpas-fmt` crate, canonical pretty-print (explicit `begin`/`end`, fixed blank lines after `program`/`uses`, lossy comments/literals). Task list: [`formater/README.md`](formater/README.md) (normative style: [`formater/style.md`](formater/style.md); CLI TBD: [`formater/cli.md`](formater/cli.md)).
+
 ## Under Consideration
 
 | # | Feature | Description |

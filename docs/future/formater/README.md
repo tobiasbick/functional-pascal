@@ -4,7 +4,7 @@ Planning for a canonical Functional Pascal source formatter. User-facing CLI beh
 
 ## Status
 
-**Style locked for v1; implementation not started.** No `fpas-fmt` crate or `fpas fmt` command yet. Canonical output rules and **full-file golden examples** are in [style.md — Formatted output](style.md#formatted-output-fpas-fmt). Next step: [implementation.md — Phase 1](implementation.md#phase-1--crate-scaffold).
+**Style locked for v1; Phase 1 scaffold done.** Crate [`crates/fpas-fmt/`](../../../crates/fpas-fmt/) exists (`Emitter`, public API stubs); no CLI yet. Golden examples: [style.md — Formatted output](style.md#formatted-output-fpas-fmt). Next step: [implementation.md — Phase 2](implementation.md#phase-2--types-and-expressions-leaf-emitters).
 
 ## Principles
 

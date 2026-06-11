@@ -24,7 +24,7 @@ FPAS programs today are tested mainly from Rust (`compile_and_run`, VM input que
 
 ## Source formatter
 
-AST-based `fpas fmt` is **planned** (not implemented). Approach: `fpas-fmt` crate, canonical pretty-print (explicit `begin`/`end`, fixed blank lines after `program`/`uses`, lossy comments/literals). Task list: [`formater/README.md`](formater/README.md) (normative style: [`formater/style.md`](formater/style.md); CLI TBD: [`formater/cli.md`](formater/cli.md)).
+AST-based `fpas fmt` is **in progress**: [`fpas-fmt`](../../crates/fpas-fmt/) scaffold (Phase 1); emitter and CLI not wired yet. Plan: [`formater/README.md`](formater/README.md) (style: [`formater/style.md`](formater/style.md); CLI TBD: [`formater/cli.md`](formater/cli.md)).
 
 ## Under Consideration
 

@@ -509,6 +509,13 @@ name = "fpas-diagnostics"
 version = "0.0.1"
 
 [[package]]
+name = "fpas-fmt"
+version = "0.0.1"
+dependencies = [
+ "fpas-parser",
+]
+
+[[package]]
 name = "fpas-lexer"
 version = "0.0.1"
 dependencies = [

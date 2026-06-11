@@ -43,12 +43,13 @@ crates/fpas-fmt/
  │     └── types.rs      — TypeExpr, formals, generics
 ```
 
-- [ ] Add `fpas-fmt` to workspace `crates/*` (new directory under `crates/`).
-- [ ] `Cargo.toml`: `fpas-parser` path dependency; no CLI / project / compiler deps.
-- [ ] `lib.rs`: crate docs linking to `docs/future/formater/style.md` and `docs/pascal/`.
-- [ ] `style.rs`: `INDENT_WIDTH`, keyword strings, helpers for canonical literals.
-- [ ] `emit/mod.rs`: `Emitter` with `write`, `writeln`, `indent`, `dedent`, `with_indent`, `blank_line`.
-- [ ] `cargo build -p fpas-fmt` succeeds (empty stubs).
+- [x] Add `fpas-fmt` to workspace `crates/*` (new directory under `crates/`).
+- [x] `Cargo.toml`: `fpas-parser` path dependency; no CLI / project / compiler deps.
+- [x] `lib.rs`: crate docs linking to `docs/future/formater/style.md` and `docs/pascal/`; public API stubs (`format_compilation_unit`, `format_program`, `format_unit`).
+- [x] `style.rs`: `INDENT_WIDTH`, `INDENT`.
+- [x] `emit/mod.rs`: `Emitter` with `writeln`, `indent`, `dedent`, `with_indent`, `blank_line`.
+- [x] `emit/{program,decl,stmt,expr,types}.rs`: placeholder modules for Phases 2–5.
+- [x] `cargo build -p fpas-fmt` and `cargo test -p fpas-fmt` succeed.
 
 ---
 

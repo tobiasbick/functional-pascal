@@ -1,0 +1,13 @@
+[package]
+name = "fpas-fmt"
+description = "Canonical source formatter for Functional Pascal"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+fpas-parser = { path = "../fpas-parser" }
+
+[lints]
+workspace = true

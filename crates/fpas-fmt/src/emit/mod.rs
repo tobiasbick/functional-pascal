@@ -92,6 +92,20 @@ impl Emitter {
             self.out.push_str(INDENT);
         }
     }
+
+    /// Ends a statement line: `;` between statements, no extra blank line when already newline-terminated.
+    pub(crate) fn finish_statement(&mut self, is_last: bool) {
+        if !is_last {
+            if self.out.ends_with('\n') {
+                self.out.insert(self.out.len() - 1, ';');
+            } else {
+                self.out.push(';');
+                self.out.push('\n');
+            }
+        } else if !self.out.ends_with('\n') {
+            self.out.push('\n');
+        }
+    }
 }
 
 #[cfg(test)]

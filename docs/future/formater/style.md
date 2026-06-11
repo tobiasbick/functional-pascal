@@ -389,6 +389,21 @@ type
 
 **Not emitted.** Formatter is lossy with respect to `{ }`, `(* *)`, and `//` comments.
 
+## Intentional diffs from source
+
+The formatter **normalizes** valid input. These changes are deliberate (not bugs):
+
+| Source may have | Formatted output |
+|-----------------|------------------|
+| Comments (`{ }`, `(* *)`, `//`) | Removed |
+| Keyword casing (`PROGRAM`, `Begin`, `WRITELN`) | Lowercase keywords; identifiers keep source spelling |
+| Hex integers (`$FF`) or digit separators (`1_000`) | Decimal literals only |
+| Optional single-statement branches (`if x then return y`) | Always `begin` … `end` around branch bodies |
+| User-placed blank lines | Only the fixed rules in [Blank lines](#blank-lines) |
+| `uses` on same line as header | Header blank line + `uses` on its own line |
+| Extra parentheses from parse tree | May differ where precedence makes them redundant |
+| `uses` unit name casing (`Std.array`) | Canonical qualified id spelling from the AST |
+
 ## Non-goals (v1)
 
 - Configurable style (width, indent size, keyword case).

@@ -111,6 +111,9 @@ fn emit_decl_run(emitter: &mut Emitter, decls: &[Decl]) {
         }
         DeclRunKind::Routine => {
             for (index, decl) in decls.iter().enumerate() {
+                if index > 0 {
+                    emitter.blank_line();
+                }
                 emit_decl(emitter, decl, index + 1 == decls.len());
             }
         }
@@ -341,11 +344,8 @@ fn write_decl_line_start(emitter: &mut Emitter) {
     }
 }
 
-fn finish_decl_line(emitter: &mut Emitter, is_last: bool) {
-    if !is_last {
-        emitter.write(";");
-    }
-    emitter.write("\n");
+fn finish_decl_line(emitter: &mut Emitter, _is_last: bool) {
+    emitter.write(";\n");
 }
 
 #[cfg(test)]

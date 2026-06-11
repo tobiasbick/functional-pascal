@@ -344,10 +344,7 @@ fn write_indented(emitter: &mut Emitter) {
 }
 
 fn emit_trailing_semicolon(emitter: &mut Emitter, is_last: bool) {
-    if !is_last {
-        emitter.write(";");
-    }
-    emitter.write("\n");
+    emitter.finish_statement(is_last);
 }
 
 #[cfg(test)]

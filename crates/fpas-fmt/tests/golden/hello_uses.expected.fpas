@@ -1,0 +1,7 @@
+program Hello;
+
+uses Std.Console;
+
+begin
+  WriteLn('Hello, World!')
+end.

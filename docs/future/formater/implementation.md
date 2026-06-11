@@ -109,10 +109,10 @@ crates/fpas-fmt/
 
 ## Phase 6 — Hardening
 
-- [ ] Snapshot or golden-file test harness (optional: `insta` or plain `assert_eq!` on strings in `tests/`).
-- [ ] Fuzz-light: random valid examples from parser tests → format → re-parse (no panic).
-- [ ] Document known intentional diffs: comments stripped, `$FF` → decimal, keyword lowercase, optional single-statement branches → `begin` / `end`, extra blank lines inserted.
-- [ ] `cargo fmt`, `cargo build --workspace`, `cargo test -p fpas-fmt`.
+- [x] Golden-file test harness: `tests/golden/*.expected.fpas` + `tests/golden_output.rs` (`assert_eq!`).
+- [x] Fuzz-light: `tests/common/corpus.rs` (parser-test snippets) + `tests/round_trip.rs` (`examples/pascal/**/*.fpas`).
+- [x] Document known intentional diffs: [style.md — Intentional diffs from source](style.md#intentional-diffs-from-source).
+- [x] `cargo fmt`, `cargo build --workspace`, `cargo test -p fpas-fmt`.
 
 ---
 

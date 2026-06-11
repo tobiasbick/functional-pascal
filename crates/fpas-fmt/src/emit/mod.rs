@@ -14,6 +14,8 @@ mod program;
 mod stmt;
 mod types;
 
+pub(crate) use program::{format_program, format_unit};
+
 use crate::style::INDENT;
 
 /// Buffered pretty-printer with indent tracking.

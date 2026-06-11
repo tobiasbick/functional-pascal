@@ -98,7 +98,8 @@ pub(crate) fn emit_expr(emitter: &mut Emitter, expr: &Expr, min_prec: u8) {
         Expr::RecordUpdate { base, fields, .. } => {
             emit_expr(emitter, base, 0);
             emitter.write(" with ");
-            emit_record_fields(emitter, fields);
+            emit_record_field_inits(emitter, fields);
+            emitter.write(record_literal_end(fields));
         }
         Expr::ResultOk(inner, ..) => {
             emitter.write("Ok(");
@@ -160,6 +161,11 @@ pub(crate) fn emit_arg_list(emitter: &mut Emitter, args: &[Expr]) {
 
 fn emit_record_fields(emitter: &mut Emitter, fields: &[FieldInit]) {
     emitter.write("record ");
+    emit_record_field_inits(emitter, fields);
+    emitter.write(record_literal_end(fields));
+}
+
+fn emit_record_field_inits(emitter: &mut Emitter, fields: &[FieldInit]) {
     for (index, field) in fields.iter().enumerate() {
         if index > 0 {
             emitter.write("; ");
@@ -168,7 +174,10 @@ fn emit_record_fields(emitter: &mut Emitter, fields: &[FieldInit]) {
         emitter.write(" := ");
         emit_expr(emitter, &field.value, 0);
     }
-    emitter.write(" end");
+}
+
+fn record_literal_end(fields: &[FieldInit]) -> &'static str {
+    if fields.is_empty() { " end" } else { "; end" }
 }
 
 fn format_string(value: &str) -> String {
@@ -315,7 +324,7 @@ mod tests {
             expr_from_body(
                 "program T; type Point = record X: integer; Y: integer; end; begin var X: Point := record X := 1; Y := 2; end; end."
             ),
-            "record X := 1; Y := 2 end"
+            "record X := 1; Y := 2; end"
         );
         assert_eq!(
             expr_from_body("program T; begin var X: result of integer, string := Ok(42); end."),

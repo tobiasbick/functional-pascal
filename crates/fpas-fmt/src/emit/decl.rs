@@ -14,8 +14,13 @@ use super::types::{emit_formal_params, emit_type_expr, format_type_params};
 #[must_use]
 pub(crate) fn format_decls(decls: &[Decl]) -> String {
     let mut emitter = Emitter::new();
-    emit_decl_list(&mut emitter, decls);
+    emit_decls(&mut emitter, decls);
     emitter.finish()
+}
+
+/// Appends formatted declarations to `emitter`.
+pub(crate) fn emit_decls(emitter: &mut Emitter, decls: &[Decl]) {
+    emit_decl_list(emitter, decls);
 }
 
 fn emit_decl_list(emitter: &mut Emitter, decls: &[Decl]) {
@@ -179,7 +184,10 @@ fn emit_record_type(emitter: &mut Emitter, record: &RecordType) {
         if !record.fields.is_empty() && !record.methods.is_empty() {
             inner.write("\n");
         }
-        for method in &record.methods {
+        for (index, method) in record.methods.iter().enumerate() {
+            if index > 0 {
+                inner.write("\n");
+            }
             emit_record_method(inner, method);
         }
     });

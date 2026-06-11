@@ -77,7 +77,7 @@ pub(crate) fn emit_type_expr(emitter: &mut Emitter, ty: &TypeExpr) {
     }
 }
 
-fn emit_qualified_id(emitter: &mut Emitter, id: &QualifiedId) {
+pub(crate) fn emit_qualified_id(emitter: &mut Emitter, id: &QualifiedId) {
     for (index, part) in id.parts.iter().enumerate() {
         if index > 0 {
             emitter.write(".");

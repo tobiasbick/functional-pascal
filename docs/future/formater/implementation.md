@@ -95,15 +95,15 @@ crates/fpas-fmt/
 
 ## Phase 5 — Compilation units
 
-- [ ] `emit/program.rs`: `program Name;` + blank line + `uses` + blank line + optional `type` + blank line + `begin` … `end.`
-- [ ] `emit/program.rs`: `unit Qualified.Name;` + blank line + `uses` + blank line + declarations.
-- [ ] `emit/program.rs`: `format_compilation_unit` dispatches `Program` vs `Unit`.
-- [ ] End-to-end tests on full files (formatted output compared to style.md patterns, not necessarily identical to current repo layout):
-  - [ ] `examples/hello.fpas`
-  - [ ] `examples/pascal/units-basic/src/math_utils.fpas`
-  - [ ] `examples/pascal/generics/generic_functions.fpas`
-  - [ ] `examples/pascal/pattern-matching/guards.fpas`
-  - [ ] `examples/pascal/record-methods/point.fpas`
+- [x] `emit/program.rs`: `program Name;` + blank line + `uses` + blank line + optional `type` + blank line + `begin` … `end.`
+- [x] `emit/program.rs`: `unit Qualified.Name;` + blank line + `uses` + blank line + declarations.
+- [x] `emit/program.rs`: `format_compilation_unit` dispatches `Program` vs `Unit`.
+- [x] End-to-end round-trip tests (`parse` → `format` → `parse`) on:
+  - [x] `examples/hello.fpas`
+  - [x] `examples/pascal/units-basic/src/math_utils.fpas`
+  - [x] `examples/pascal/generics/generic_functions.fpas`
+  - [x] `examples/pascal/pattern-matching/guards.fpas`
+  - [x] `examples/pascal/record-methods/point.fpas`
 
 ---
 

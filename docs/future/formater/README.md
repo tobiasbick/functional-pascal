@@ -4,7 +4,7 @@ Planning and implementation for a canonical Functional Pascal source formatter (
 
 ## Status
 
-**v1 complete.** Emitter [`crates/fpas-fmt/`](../../../crates/fpas-fmt/); CLI [`fpas fmt`](../../../crates/fpas-cli/src/cli_fmt.rs) per [cli.md](cli.md). Golden examples: [style.md — Formatted output](style.md#formatted-output-fpas-fmt).
+**v1 complete.** Emitter [`crates/fpas-fmt/`](../../../crates/fpas-fmt/); CLI [`fpas fmt`](../../../crates/fpas-cli/src/cli_fmt.rs) per [cli.md](cli.md). Golden examples: [style.md — Formatted output](style.md#formatted-output-fpas-fmt). **Next:** [implementation-v2.md](implementation-v2.md).
 
 ## Principles
 
@@ -15,14 +15,16 @@ Planning and implementation for a canonical Functional Pascal source formatter (
 - **Fixed blank lines.** After `program` / `unit` and after `uses`: exactly one blank line each; one blank line between record fields and methods; no other user-placed blank lines preserved ([style.md — Blank lines](style.md#blank-lines)).
 - **Parse errors block formatting.** Same diagnostics surface as `fpas check` / `fpas_parser::parse_compilation_unit`.
 - **Deterministic output.** Same input AST always yields the same text (stable ordering, 2-space indent).
+- **One official style.** [style.md](style.md) is normative; no `.fpasfmt.toml` or per-project overrides (v1 and v2).
 
 ## Documents
 
 | File | Purpose |
 |------|---------|
 | [style.md](style.md) | **Normative** formatting rules and examples (edit here first) |
-| [implementation.md](implementation.md) | Phased task list for `fpas-fmt` |
-| [cli.md](cli.md) | CLI input, discovery, globs — **discussion deferred** |
+| [implementation.md](implementation.md) | Phased task list for v1 (`fpas-fmt`) — **complete** |
+| [implementation-v2.md](implementation-v2.md) | Phased task list for v2 (CLI, wrapping, comments, CI) — **fixed style, no config** |
+| [cli.md](cli.md) | CLI usage and exit codes |
 
 ## Related
 

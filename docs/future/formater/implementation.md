@@ -129,8 +129,8 @@ Implemented per [cli.md](cli.md).
 
 ## Out of scope (v1)
 
-- Trivia-preserving lexer / comment retention.
-- `.fpasfmt.toml` configuration.
+- Trivia-preserving lexer / comment retention (v2 adds selective doc comments — see [implementation-v2.md](implementation-v2.md)).
+- `.fpasfmt.toml` or any configurable style — **rejected**; [style.md](style.md) is the only official output.
 - Formatting inside string literals.
 - Emitting optional single-statement form (language allows it; formatter does not).
 - `fpas fmt` as a library stable ABI beyond the Rust API.

@@ -404,9 +404,9 @@ The formatter **normalizes** valid input. These changes are deliberate (not bugs
 | Extra parentheses from parse tree | May differ where precedence makes them redundant |
 | `uses` unit name casing (`Std.array`) | Canonical qualified id spelling from the AST |
 
-## Non-goals (v1)
+## Non-goals (v1 and later)
 
-- Configurable style (width, indent size, keyword case).
+- Configurable style (`.fpasfmt.toml`, line width, indent size, keyword case) — **one official style only**; see [implementation-v2.md — Official style policy](implementation-v2.md#official-style-policy-v2).
 - Preserving blank lines between user-chosen sections (except the fixed rules above).
 - Sorting `uses` clauses or declaration order.
 - Formatting invalid or partial syntax (recovery).

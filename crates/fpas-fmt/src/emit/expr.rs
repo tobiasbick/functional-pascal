@@ -12,7 +12,7 @@ pub(crate) fn format_expr(expr: &Expr) -> String {
     emitter.finish()
 }
 
-fn emit_expr(emitter: &mut Emitter, expr: &Expr, min_prec: u8) {
+pub(crate) fn emit_expr(emitter: &mut Emitter, expr: &Expr, min_prec: u8) {
     match expr {
         Expr::Integer(value, ..) => emitter.write(&value.to_string()),
         Expr::Real(value, ..) => emitter.write(&format_real(*value)),
@@ -128,7 +128,7 @@ fn emit_expr(emitter: &mut Emitter, expr: &Expr, min_prec: u8) {
     }
 }
 
-fn emit_designator(emitter: &mut Emitter, designator: &Designator) {
+pub(crate) fn emit_designator(emitter: &mut Emitter, designator: &Designator) {
     for (index, part) in designator.parts.iter().enumerate() {
         match part {
             DesignatorPart::Ident(name, ..) => {
@@ -149,7 +149,7 @@ fn emit_designator(emitter: &mut Emitter, designator: &Designator) {
     }
 }
 
-fn emit_arg_list(emitter: &mut Emitter, args: &[Expr]) {
+pub(crate) fn emit_arg_list(emitter: &mut Emitter, args: &[Expr]) {
     for (index, arg) in args.iter().enumerate() {
         if index > 0 {
             emitter.write(", ");

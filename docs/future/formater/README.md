@@ -4,7 +4,7 @@ Planning for a canonical Functional Pascal source formatter. User-facing CLI beh
 
 ## Status
 
-**Style locked for v1; Phase 2 done.** Crate [`crates/fpas-fmt/`](../../../crates/fpas-fmt/) emits types and expressions (`format_type_expr`, `format_expr`); program/unit formatting and CLI not wired yet. Golden examples: [style.md — Formatted output](style.md#formatted-output-fpas-fmt). Next step: [implementation.md — Phase 3](implementation.md#phase-3--statements).
+**Style locked for v1; Phase 3 done.** Crate [`crates/fpas-fmt/`](../../../crates/fpas-fmt/) emits types, expressions, and statements (`format_block_stmts`); declarations and full units not wired yet. Golden examples: [style.md — Formatted output](style.md#formatted-output-fpas-fmt). Next step: [implementation.md — Phase 4](implementation.md#phase-4--declarations).
 
 ## Principles
 

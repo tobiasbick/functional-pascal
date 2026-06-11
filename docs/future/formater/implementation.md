@@ -69,16 +69,16 @@ crates/fpas-fmt/
 
 ## Phase 3 — Statements
 
-- [ ] `emit/stmt.rs`: `Block` with semicolon rules from [style.md](style.md).
-- [ ] `emit/stmt.rs`: `var` / `mutable var` statements.
-- [ ] `emit/stmt.rs`: assignment, `return`, `panic`.
-- [ ] `emit/stmt.rs`: `if` / `else if` / `else` — **always** wrap branch bodies in `begin` / `end` (even for a single `return`).
-- [ ] `emit/stmt.rs`: `case` / `of` — label on own line; arm body in `begin` / `end`; `;` after each arm’s `end`; guarded arms.
-- [ ] `emit/stmt.rs`: `for` / `for .. in` — `begin` / `end` loop body.
-- [ ] `emit/stmt.rs`: `while` — `begin` / `end` body.
-- [ ] `emit/stmt.rs`: `repeat` / `until` — statement list **without** extra `begin` / `end` wrapper.
-- [ ] `emit/stmt.rs`: `break`, `continue`, call statements, `go`.
-- [ ] Integration tests: snippets from [style.md — Examples — statements](style.md#examples--statements) → format → parse → snapshot.
+- [x] `emit/stmt.rs`: `Block` with semicolon rules from [style.md](style.md).
+- [x] `emit/stmt.rs`: `var` / `mutable var` statements.
+- [x] `emit/stmt.rs`: assignment, `return`, `panic`.
+- [x] `emit/stmt.rs`: `if` / `else if` / `else` — **always** wrap branch bodies in `begin` / `end` (even for a single `return`).
+- [x] `emit/stmt.rs`: `case` / `of` — label on own line; arm body in `begin` / `end`; `;` after each arm’s `end` (except last before `else`); guards and destructure labels.
+- [x] `emit/stmt.rs`: `for` / `for .. in` — `begin` / `end` loop body.
+- [x] `emit/stmt.rs`: `while` — `begin` / `end` body.
+- [x] `emit/stmt.rs`: `repeat` / `until` — statement list **without** extra `begin` / `end` wrapper.
+- [x] `emit/stmt.rs`: `break`, `continue`, call statements, `go`.
+- [x] Tests: `format_block_stmts` on parsed program bodies (`if`, `case`, loops, `var`/assign/call).
 
 ---
 

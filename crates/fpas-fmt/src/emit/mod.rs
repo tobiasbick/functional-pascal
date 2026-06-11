@@ -1,8 +1,11 @@
 //! AST-to-text emission.
 
-#![expect(
-    dead_code,
-    reason = "Emitter helpers used fully once program/stmt emitters land"
+#![cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "emit API used from stmt/decl/program and unit tests"
+    )
 )]
 
 mod decl;

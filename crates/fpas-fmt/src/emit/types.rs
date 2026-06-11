@@ -86,7 +86,7 @@ fn emit_qualified_id(emitter: &mut Emitter, id: &QualifiedId) {
     }
 }
 
-fn emit_type_param(emitter: &mut Emitter, param: &TypeParam) {
+pub(crate) fn emit_type_param(emitter: &mut Emitter, param: &TypeParam) {
     emitter.write(&param.name);
     if let Some(constraint) = &param.constraint {
         emitter.write(": ");
@@ -94,7 +94,7 @@ fn emit_type_param(emitter: &mut Emitter, param: &TypeParam) {
     }
 }
 
-fn emit_formal_params(emitter: &mut Emitter, params: &[FormalParam]) {
+pub(crate) fn emit_formal_params(emitter: &mut Emitter, params: &[FormalParam]) {
     for (index, param) in params.iter().enumerate() {
         if index > 0 {
             emitter.write("; ");

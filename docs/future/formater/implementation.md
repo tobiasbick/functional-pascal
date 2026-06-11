@@ -84,11 +84,12 @@ crates/fpas-fmt/
 
 ## Phase 4 — Declarations
 
-- [ ] `emit/decl.rs`: `const`, `var`, `mutable var` with visibility (`private` prefix when needed).
-- [ ] `emit/decl.rs`: `type` aliases, `record` (fields with trailing `;` on every field, blank line before methods), `enum` (variants, associated data, backing values).
-- [ ] `emit/decl.rs`: `function` / `procedure` (signature, generics, `forward`, `begin` / `end` body).
-- [ ] `emit/decl.rs`: nested declarations inside `type` blocks.
-- [ ] Tests: [style.md — Examples — record types](style.md#examples--record-types) (1 field, 5 fields, defaults, methods).
+- [x] `emit/decl.rs`: `const`, `var`, `mutable var` with visibility (`private` prefix when needed).
+- [x] `emit/decl.rs`: `type` aliases, `record` (fields with trailing `;` on every field, blank line before methods), `enum` (variants, associated data, backing values).
+- [x] `emit/decl.rs`: `function` / `procedure` (signature, generics, `begin` / `end` body).
+- [ ] `emit/decl.rs`: `forward` — **N/A** (parser rejects `forward` in current grammar).
+- [x] `emit/decl.rs`: nested declarations inside `type` blocks.
+- [x] Tests: [style.md — Examples — record types](style.md#examples--record-types) (1 field, 5 fields, defaults, methods).
 
 ---
 

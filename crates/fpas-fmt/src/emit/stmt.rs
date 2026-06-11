@@ -22,7 +22,7 @@ pub(crate) fn format_stmt(stmt: &Stmt) -> String {
     emitter.finish()
 }
 
-fn emit_stmts_in_block(emitter: &mut Emitter, stmts: &[Stmt]) {
+pub(crate) fn emit_stmts_in_block(emitter: &mut Emitter, stmts: &[Stmt]) {
     for (index, stmt) in stmts.iter().enumerate() {
         let is_last = index + 1 == stmts.len();
         emit_stmt_in_block(emitter, stmt, is_last);

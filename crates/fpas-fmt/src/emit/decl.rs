@@ -36,9 +36,9 @@ fn emit_decl_list(emitter: &mut Emitter, decls: &[Decl]) {
 }
 
 fn decl_run_end(decls: &[Decl], start: usize) -> usize {
-    let kind = decl_run_kind(&decls[start]);
+    let key = decl_run_key(&decls[start]);
     let mut end = start + 1;
-    while end < decls.len() && decl_run_kind(&decls[end]) == kind {
+    while end < decls.len() && decl_run_key(&decls[end]) == key {
         end += 1;
     }
     end
@@ -53,6 +53,23 @@ enum DeclRunKind {
     Routine,
 }
 
+/// Groups consecutive declarations for block emission (`const` / `var` / `type` sections).
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct DeclRunKey {
+    kind: DeclRunKind,
+    /// `true` only for public `const` / `var` / `mutable var` / `type` lists.
+    block: bool,
+}
+
+fn decl_run_key(decl: &Decl) -> DeclRunKey {
+    let kind = decl_run_kind(decl);
+    let block = matches!(
+        kind,
+        DeclRunKind::Const | DeclRunKind::Var | DeclRunKind::MutableVar | DeclRunKind::Type
+    ) && decl.visibility() == Visibility::Public;
+    DeclRunKey { kind, block }
+}
+
 fn decl_run_kind(decl: &Decl) -> DeclRunKind {
     match decl {
         Decl::Const(_) => DeclRunKind::Const,
@@ -64,7 +81,18 @@ fn decl_run_kind(decl: &Decl) -> DeclRunKind {
 }
 
 fn emit_decl_run(emitter: &mut Emitter, decls: &[Decl]) {
-    match decl_run_kind(&decls[0]) {
+    let key = decl_run_key(&decls[0]);
+    if !key.block {
+        for (index, decl) in decls.iter().enumerate() {
+            if index > 0 && decl_run_kind(decl) == DeclRunKind::Routine {
+                emitter.blank_line();
+            }
+            emit_decl(emitter, decl, index + 1 == decls.len());
+        }
+        return;
+    }
+
+    match key.kind {
         DeclRunKind::Const => {
             emitter.writeln("const");
             emitter.with_indent(|inner| {
@@ -72,7 +100,7 @@ fn emit_decl_run(emitter: &mut Emitter, decls: &[Decl]) {
                     let Decl::Const(def) = decl else {
                         continue;
                     };
-                    emit_const_def(inner, def, index + 1 == decls.len());
+                    emit_const_def(inner, def, index + 1 == decls.len(), true);
                 }
             });
         }
@@ -122,7 +150,7 @@ fn emit_decl_run(emitter: &mut Emitter, decls: &[Decl]) {
 
 fn emit_decl(emitter: &mut Emitter, decl: &Decl, is_last: bool) {
     match decl {
-        Decl::Const(def) => emit_const_def(emitter, def, is_last),
+        Decl::Const(def) => emit_const_def(emitter, def, is_last, false),
         Decl::Var(def) => emit_var_def(emitter, "var", def, is_last),
         Decl::MutableVar(def) => emit_var_def(emitter, "mutable var", def, is_last),
         Decl::TypeDef(def) => emit_type_def(emitter, def, is_last),
@@ -137,9 +165,12 @@ fn emit_visibility(emitter: &mut Emitter, visibility: Visibility) {
     }
 }
 
-fn emit_const_def(emitter: &mut Emitter, def: &ConstDef, is_last: bool) {
+fn emit_const_def(emitter: &mut Emitter, def: &ConstDef, is_last: bool, in_const_block: bool) {
     write_decl_line_start(emitter);
     emit_visibility(emitter, def.visibility);
+    if !in_const_block {
+        emitter.write("const ");
+    }
     emitter.write(&def.name);
     emitter.write(": ");
     emit_type_expr(emitter, &def.type_expr);
@@ -428,5 +459,42 @@ end.",
         );
         assert!(formatted.contains("function Clamp"));
         assert!(formatted.contains("private function Hidden"));
+    }
+
+    #[test]
+    fn unit_private_vars_and_consts_are_not_block_grouped() {
+        let formatted = format_unit_decls(
+            "unit U; private mutable var A: integer := 1; private mutable var B: integer := 2; private const C: integer := 3; private const D: integer := 4;",
+        );
+        assert!(formatted.contains("private mutable var A: integer := 1;\n"));
+        assert!(formatted.contains("private const C: integer := 3;\n"));
+        assert!(
+            !formatted.contains("mutable var\n"),
+            "formatted:\n{formatted}"
+        );
+        assert!(
+            !formatted.contains("const\n  private"),
+            "formatted:\n{formatted}"
+        );
+    }
+
+    #[test]
+    fn unit_shell_private_state_round_trip() {
+        let source = include_str!("../../../../apps/ide/src/shell.fpas");
+        let (unit, errors) = parse_compilation_unit(source);
+        assert!(errors.is_empty(), "{errors:?}");
+        let fpas_parser::CompilationUnit::Unit(unit) = unit else {
+            panic!("expected unit");
+        };
+        let formatted = format_decls(&unit.declarations);
+        let (_, errors) = parse_compilation_unit(&format!(
+            "unit Ide.Shell;\nuses Ide.Menu, Ide.Status, Ide.Theme, Std.Console, Std.Tui;\n\n{formatted}"
+        ));
+        assert!(
+            errors.is_empty(),
+            "{errors:?}\n--- formatted ---\n{formatted}"
+        );
+        assert!(formatted.contains("private mutable var DesktopView"));
+        assert!(!formatted.contains("mutable var\n  private"));
     }
 }

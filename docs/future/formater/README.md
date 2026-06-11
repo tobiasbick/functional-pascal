@@ -1,10 +1,10 @@
 # Source formatter (`fpas fmt`)
 
-Planning for a canonical Functional Pascal source formatter. User-facing CLI behavior is tracked separately — see [CLI (deferred)](cli.md).
+Planning and implementation for a canonical Functional Pascal source formatter (`fpas fmt`). CLI: [cli.md](cli.md).
 
 ## Status
 
-**Style locked for v1; Phase 6 done.** Crate [`crates/fpas-fmt/`](../../../crates/fpas-fmt/) formats full `program` / `unit` files; golden and round-trip tests in `tests/`. Golden examples: [style.md — Formatted output](style.md#formatted-output-fpas-fmt). Next step: [implementation.md — Phase 7](implementation.md#phase-7--cli-separate-track) (`fpas fmt` CLI).
+**v1 complete.** Emitter [`crates/fpas-fmt/`](../../../crates/fpas-fmt/); CLI [`fpas fmt`](../../../crates/fpas-cli/src/cli_fmt.rs) per [cli.md](cli.md). Golden examples: [style.md — Formatted output](style.md#formatted-output-fpas-fmt).
 
 ## Principles
 

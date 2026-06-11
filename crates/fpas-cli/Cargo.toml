@@ -12,6 +12,7 @@ path = "src/main.rs"
 
 [dependencies]
 fpas-project = { path = "../fpas-project" }
+fpas-fmt = { path = "../fpas-fmt" }
 fpas-parser = { path = "../fpas-parser" }
 fpas-compiler = { path = "../fpas-compiler" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }

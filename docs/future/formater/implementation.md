@@ -116,14 +116,14 @@ crates/fpas-fmt/
 
 ---
 
-## Phase 7 — CLI (separate track)
+## Phase 7 — CLI
 
-Discuss and implement per [cli.md](cli.md). Summary placeholder:
+Implemented per [cli.md](cli.md).
 
-- [ ] `fpas fmt` subcommand in `fpas-cli`.
-- [ ] File discovery / project / workspace paths.
-- [ ] Write-in-place only when content changes.
-- [ ] `--check` exit code for CI.
+- [x] `fpas fmt` subcommand in `fpas-cli`.
+- [x] File discovery / project / workspace paths (parity with `fpas check`).
+- [x] Write-in-place only when content changes.
+- [x] `--check` exit code `2` for CI.
 
 ---
 

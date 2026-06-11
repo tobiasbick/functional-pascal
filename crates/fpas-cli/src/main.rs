@@ -20,6 +20,7 @@
     )
 )]
 mod cli_check;
+mod cli_fmt;
 mod cli_input;
 mod cli_run;
 mod cli_test;

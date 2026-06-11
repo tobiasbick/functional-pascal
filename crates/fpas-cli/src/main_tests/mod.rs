@@ -11,6 +11,7 @@ use std::path::Path;
 
 mod diagnostics;
 mod examples;
+mod fmt;
 mod input;
 mod projects;
 mod support;

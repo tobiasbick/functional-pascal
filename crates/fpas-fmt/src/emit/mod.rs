@@ -1,6 +1,9 @@
 //! AST-to-text emission.
 
-#![expect(dead_code, reason = "Phase 1 scaffold; emitters wired in Phases 2–5")]
+#![expect(
+    dead_code,
+    reason = "Emitter helpers used fully once program/stmt emitters land"
+)]
 
 mod decl;
 mod expr;
@@ -29,7 +32,7 @@ impl Emitter {
         self.out
     }
 
-    /// Current indent depth in levels (each level is [`INDENT_WIDTH`] spaces).
+    /// Current indent depth in levels (each level is two spaces).
     pub(crate) fn indent_level(&self) -> usize {
         self.indent_level
     }
@@ -65,6 +68,11 @@ impl Emitter {
         } else {
             self.out.push_str("\n\n");
         }
+    }
+
+    /// Appends text without a leading indent or trailing newline.
+    pub(crate) fn write(&mut self, text: &str) {
+        self.out.push_str(text);
     }
 
     /// Appends a line with the current indent prefix.

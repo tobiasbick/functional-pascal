@@ -55,15 +55,15 @@ crates/fpas-fmt/
 
 ## Phase 2 — Types and expressions (leaf emitters)
 
-- [ ] `emit/types.rs`: `TypeExpr` (primitives, named, `array of`, `dict of K to V`, `Result of`, `Option of`, generics `of` syntax).
-- [ ] `emit/types.rs`: formal parameters (`name: type`, `mutable`, type params `<T>` / constraints).
-- [ ] `emit/expr.rs`: literals (int decimal, real, string, bool per style.md).
-- [ ] `emit/expr.rs`: identifiers and qualified designators (`a.b`, `a[i]`, calls).
-- [ ] `emit/expr.rs`: unary / binary operators with precedence-aware parenthesis re-insertion.
-- [ ] `emit/expr.rs`: `record` / `array` / `dict` literals (single-line when short).
-- [ ] `emit/expr.rs`: `case` in expression position if applicable; `try` prefix.
-- [ ] `emit/expr.rs`: anonymous `function` / `procedure` expressions (`begin` / `end` body).
-- [ ] Unit tests per module; golden strings from [style.md](style.md) examples where applicable.
+- [x] `emit/types.rs`: `TypeExpr` (named, `array of`, `dict of K to V`, `result of`, `option of`, `function` / `procedure` types).
+- [x] `emit/types.rs`: formal parameters (`name: type`, `mutable`); `format_type_params` for `<T>` / `<T: Constraint>`.
+- [x] `emit/expr.rs`: literals (int decimal, real, string, bool per style.md).
+- [x] `emit/expr.rs`: identifiers and qualified designators (`a.b`, `a[i]`, calls).
+- [x] `emit/expr.rs`: unary / binary operators with precedence-aware parenthesis re-insertion.
+- [x] `emit/expr.rs`: `record` / `array` / `dict` literals; `record … with … end` updates.
+- [x] `emit/expr.rs`: `Ok` / `Error` / `Some` / `None`, `try`, `go`.
+- [ ] `emit/expr.rs`: anonymous `function` / `procedure` expressions — **N/A** (not in expression AST; only `function` / `procedure` *types*).
+- [x] Unit tests in `emit/types.rs` and `emit/expr.rs` (parse snippet → format → assert).
 
 ---
 

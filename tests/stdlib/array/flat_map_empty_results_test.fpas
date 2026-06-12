@@ -1,9 +1,12 @@
 program T;
+
 uses Std.Console, Std.Array;
+
 function EmptyArray(X: integer): array of integer;
 begin
   return []
 end;
+
 begin
   var R: array of integer := FlatMap([1, 2, 3], EmptyArray);
   WriteLn(Length(R))

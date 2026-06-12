@@ -1,4 +1,5 @@
 program GoArgs;
+
 uses Std.Console, Std.Task;
 
 function Add(A: integer; B: integer): integer;

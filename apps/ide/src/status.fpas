@@ -1,21 +1,23 @@
 /// Declarative status bar model for the IDE shell. Rendering is host-managed in Rust.
+
 unit Ide.Status;
+
 uses Ide.Theme, Std.Tui;
 
 /// CRT colors for the IDE status bar widget.
+
 function DefaultStatusStyle(): StatusBarStyle;
 begin
-  return record
-    BarBg := StatusBarBg;
-    BarFg := StatusBarFg;
-  end
+  return record BarBg := StatusBarBg; BarFg := StatusBarFg; end
 end;
 
 /// Status segments shown in the host status bar (Turbo Pascal IDE hints).
+
 function DefaultStatusSegments(): array of StatusBarSegment;
 begin
   return [
-    record Text := ' F10 Menu '; AlignRight := false; end,
-    record Text := 'Ln 1, Col 1  Insert'; AlignRight := true; end
-  ]
+           record Text := ' F10 Menu '; AlignRight := false; end,
+           record Text := 'Ln 1, Col 1  Insert'; AlignRight := true; end
+
+         ]
 end;

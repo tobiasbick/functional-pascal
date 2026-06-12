@@ -1,7 +1,9 @@
 program HigherOrderFunctionsExample;
+
 uses Std.Console, Std.Array;
 
 { First-class named functions }
+
 function Square(X: integer): integer;
 begin
   return X * X
@@ -28,43 +30,39 @@ begin
 end;
 
 { Higher-order: accepts any integer->integer function }
+
 function Apply(F: function(X: integer): integer; Value: integer): integer;
 begin
   return F(Value)
 end;
 
 begin
-  { 1. Named function as a first-class value }
   WriteLn('Apply(Square, 6) = ', Apply(Square, 6));
-
-  { 2. Named function assigned to a variable }
   var Op: function(X: integer): integer := Double;
   WriteLn('Op(7) = ', Op(7));
-
-  { 3. Map — double every element }
   var Nums: array of integer := [1, 2, 3, 4, 5];
   var Doubled: array of integer := Map(Nums, Double);
   Write('Map double: ');
   for V: integer in Doubled do
-    Write(V, ' ');
+  begin
+    Write(V, ' ')
+  end;
   WriteLn('');
-
-  { 4. Filter — keep only values > 3 }
   var Big: array of integer := Filter(Nums, IsGreaterThanThree);
   Write('Filter > 3: ');
   for V: integer in Big do
-    Write(V, ' ');
+  begin
+    Write(V, ' ')
+  end;
   WriteLn('');
-
-  { 5. Reduce — sum all elements }
   var Total: integer := Reduce(Nums, 0, Sum);
   WriteLn('Reduce sum: ', Total);
-
-  { 6. Chained: square, then keep only values > 10 }
   var Squared: array of integer := Map(Nums, Square);
   var LargeSquares: array of integer := Filter(Squared, IsGreaterThanTen);
   Write('Squares > 10: ');
   for V: integer in LargeSquares do
-    Write(V, ' ');
+  begin
+    Write(V, ' ')
+  end;
   WriteLn('')
 end.

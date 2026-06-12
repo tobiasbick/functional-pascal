@@ -1,11 +1,14 @@
 program T;
+
 uses Std.Console, Std.Option;
-function AlwaysSomeOk(V: integer): Option of string;
+
+function AlwaysSomeOk(V: integer): option of string;
 begin
   return Some('ok')
 end;
+
 begin
-  var O: Option of integer := None;
-  var M: Option of string := AndThen(O, AlwaysSomeOk);
+  var O: option of integer := None;
+  var M: option of string := AndThen(O, AlwaysSomeOk);
   WriteLn(IsNone(M))
 end.

@@ -1,11 +1,14 @@
 program T;
+
 uses Std.Console, Std.Result;
-function AlwaysOk(V: integer): Result of string, string;
+
+function AlwaysOk(V: integer): result of string, string;
 begin
   return Ok('ok')
 end;
+
 begin
-  var R: Result of integer, string := Error('original');
-  var M: Result of string, string := AndThen(R, AlwaysOk);
+  var R: result of integer, string := Error('original');
+  var M: result of string, string := AndThen(R, AlwaysOk);
   WriteLn(IsError(M))
 end.

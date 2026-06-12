@@ -1,30 +1,43 @@
 { Spec: docs/pascal/04-functions.md (from repository root). }
+
 program MutableNestedFunctions;
+
 uses Std.Console, Std.Conv;
 
 procedure ClampToRange(mutable Value: integer; Min: integer; Max: integer);
 begin
   if Value < Min then
+  begin
     Value := Min
+  end
   else if Value > Max then
-    Value := Max;
-
+  begin
+    Value := Max
+  end;
   WriteLn('clamped local: ', IntToStr(Value))
 end;
 
 function IsEven(N: integer): boolean;
-  function IsOdd(X: integer): boolean;
+function IsOdd(X: integer): boolean;
+begin
+  if X = 0 then
   begin
-    if X = 0 then
-      return false
-    else
-      return IsEven(X - 1)
-  end;
+    return false
+  end
+  else
+  begin
+    return IsEven(X - 1)
+  end
+end;
 begin
   if N = 0 then
+  begin
     return true
+  end
   else
+  begin
     return IsOdd(N - 1)
+  end
 end;
 
 begin

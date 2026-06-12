@@ -1,13 +1,15 @@
 program GraphSmokeTest;
+
 uses Std.Console, Std.Graph, Std.Test;
 
-mutable var QuitSeen: boolean := false;
+mutable var
+  mutable var QuitSeen: boolean := false;
 
 procedure OnPaint(App: Application);
 begin
   var Screen: Size := Application.Size(App);
-  Application.Clear(App, $00020408);
-  Application.DrawText(App, 2, 2, 'FPAS', $00FFFFFF);
+  Application.Clear(App, 132104);
+  Application.DrawText(App, 2, 2, 'FPAS', 16777215);
   Application.Present(App)
 end;
 

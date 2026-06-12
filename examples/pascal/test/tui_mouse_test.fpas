@@ -1,9 +1,11 @@
 program TuiMouseTest;
+
 uses Std.Console, Std.Tui, Std.Test;
 
-mutable var MouseSeen: boolean := false;
-mutable var MouseX: integer := 0;
-mutable var MouseY: integer := 0;
+mutable var
+  mutable var MouseSeen: boolean := false;
+  mutable var MouseX: integer := 0;
+  mutable var MouseY: integer := 0;
 
 procedure OnPaint(App: Application);
 begin
@@ -22,10 +24,7 @@ end;
 
 begin
   var App: Application := Application.Open();
-  var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
-    OnMouse := Some(OnMouse);
-  end;
+  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; OnMouse := Some(OnMouse); end;
   Application.Configure(App, Handlers);
   Application.Run(App);
   AssertTrue(MouseSeen);

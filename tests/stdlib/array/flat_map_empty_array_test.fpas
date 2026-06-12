@@ -1,9 +1,12 @@
 program T;
+
 uses Std.Console, Std.Array;
+
 function Wrap(X: integer): array of integer;
 begin
   return [X]
 end;
+
 begin
   var R: array of integer := FlatMap([], Wrap);
   WriteLn(Length(R))

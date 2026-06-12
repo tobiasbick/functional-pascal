@@ -1,9 +1,12 @@
 program T;
+
 uses Std.Console, Std.Array;
+
 function AddOne(X: integer): integer;
 begin
   return X + 1
 end;
+
 begin
   var A: array of integer := [];
   var B: array of integer := Map(A, AddOne);

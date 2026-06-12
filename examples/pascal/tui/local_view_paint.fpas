@@ -1,18 +1,23 @@
 { Local view paint demo — parent-relative layout plus per-view paint handlers. Press M to move the badge and Escape to quit. }
+
 program TuiLocalViewPaint;
+
 uses Std.Console, Std.Tui;
 
-mutable var RootView: integer := -1;
-mutable var BadgeView: integer := -1;
-mutable var BadgeColumn: integer := 2;
+mutable var
+  mutable var RootView: integer := -1;
+  mutable var BadgeView: integer := -1;
+  mutable var BadgeColumn: integer := 2;
 
 procedure ClearBounds(Bounds: Std.Tui.Rect);
 begin
   for Row: integer := 0 to Bounds.height - 1 do
   begin
-    GotoXY(Bounds.x + 1, Bounds.y + Row + 1);
+    GotoXY(Bounds.x + 1, (Bounds.y + Row) + 1);
     for Col: integer := 0 to Bounds.width - 1 do
+    begin
       Write(' ')
+    end
   end
 end;
 
@@ -42,18 +47,20 @@ begin
     Application.HostRequestQuit(App);
     return true
   end;
-
   if (Key.kind = KeyKind.Character) and ((Key.ch = 'm') or (Key.ch = 'M')) then
   begin
     if BadgeColumn = 2 then
+    begin
       BadgeColumn := 20
+    end
     else
-      BadgeColumn := 2;
+    begin
+      BadgeColumn := 2
+    end;
     Application.HostSetViewRect(App, BadgeView, BadgeColumn, 4, 7, 1);
     Application.RequestRedraw(App);
     return true
   end;
-
   return false
 end;
 

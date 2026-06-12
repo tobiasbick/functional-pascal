@@ -1,11 +1,14 @@
 program T;
+
 uses Std.Console, Std.Option;
-function FallbackNinetyNine(): Option of integer;
+
+function FallbackNinetyNine(): option of integer;
 begin
   return Some(99)
 end;
+
 begin
-  var O: Option of integer := None;
-  var M: Option of integer := OrElse(O, FallbackNinetyNine);
+  var O: option of integer := None;
+  var M: option of integer := OrElse(O, FallbackNinetyNine);
   WriteLn(Unwrap(M))
 end.

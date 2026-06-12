@@ -1,5 +1,7 @@
 { Spec: docs/pascal/std/fs.md — writes ./_fpas_fs_demo.txt in the working directory. }
+
 program FsBasics;
+
 uses Std.Console, Std.Fs, Std.Result;
 
 const
@@ -7,15 +9,25 @@ const
 
 begin
   case WriteText(DemoPath, 'hello from Std.Fs') of
-    Ok(_): WriteLn('write: ok');
-    Error(M): WriteLn('write error: ', M)
+    Ok(_):
+    begin
+      WriteLn('write: ok')
+    end;
+    Error(M):
+    begin
+      WriteLn('write error: ', M)
+    end
   end;
-
   case ReadText(DemoPath) of
-    Ok(Text): WriteLn('read: ', Text);
-    Error(M): WriteLn('read error: ', M)
+    Ok(Text):
+    begin
+      WriteLn('read: ', Text)
+    end;
+    Error(M):
+    begin
+      WriteLn('read error: ', M)
+    end
   end;
-
   WriteLn('exists: ', Exists(DemoPath));
   WriteLn('isFile: ', IsFile(DemoPath))
 end.

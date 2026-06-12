@@ -1,5 +1,7 @@
 program T;
+
 uses Std.Console, Std.Math;
+
 begin
   WriteLn(Log10(0.0))
 end.

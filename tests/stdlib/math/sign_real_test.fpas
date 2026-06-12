@@ -1,5 +1,7 @@
 program T;
+
 uses Std.Console, Std.Math;
+
 begin
   WriteLn(Sign(-3.14))
 end.

@@ -1,11 +1,14 @@
 /// TUI shell for the FPAS IDE. See docs/pascal/std/tui-app.md.
+
 unit Ide.Shell;
+
 uses Ide.Menu, Ide.Status, Ide.Theme, Std.Console, Std.Tui;
 
 {
   Host widget view ids; -1 means not created yet.
   Unit-private state shared by handlers below.
 }
+
 private mutable var DesktopView: integer := -1;
 private mutable var MenuBarView: integer := -1;
 private mutable var StatusBarView: integer := -1;
@@ -14,6 +17,7 @@ private const MenuBarHeight: integer := 1;
 private const StatusBarHeight: integer := 1;
 
 /// Bind global keyboard shortcuts for the IDE shell.
+
 private procedure BindShortcuts(App: Application);
 begin
   var ExitKey: Std.Console.KeyEvent := record
@@ -28,37 +32,43 @@ begin
 end;
 
 /// Create or resize menu bar, desktop, and status bar.
+
 private procedure EnsureChrome(App: Application);
 begin
   var S: Size := Application.Size(App);
-  var DesktopHeight: integer := S.height - MenuBarHeight - StatusBarHeight;
+  var DesktopHeight: integer := (S.height - MenuBarHeight) - StatusBarHeight;
   var StatusY: integer := S.height - StatusBarHeight;
-
   if MenuBarView < 0 then
-    MenuBarView := Application.HostCreateMenuBarView(
-      App, 0, 0, S.width, MenuBarHeight, DefaultItems(), DefaultStyle())
+  begin
+    MenuBarView := Application.HostCreateMenuBarView(App, 0, 0, S.width, MenuBarHeight, DefaultItems(), DefaultStyle())
+  end
   else
-    Application.HostSetViewRect(App, MenuBarView, 0, 0, S.width, MenuBarHeight);
-
+  begin
+    Application.HostSetViewRect(App, MenuBarView, 0, 0, S.width, MenuBarHeight)
+  end;
   if DesktopView < 0 then
-    DesktopView := Application.HostCreateSolidFillView(
-      App, 0, MenuBarHeight, S.width, DesktopHeight, DesktopBg, None, None)
+  begin
+    DesktopView := Application.HostCreateSolidFillView(App, 0, MenuBarHeight, S.width, DesktopHeight, DesktopBg, None, None)
+  end
   else
-    Application.HostSetViewRect(
-      App, DesktopView, 0, MenuBarHeight, S.width, DesktopHeight);
-
+  begin
+    Application.HostSetViewRect(App, DesktopView, 0, MenuBarHeight, S.width, DesktopHeight)
+  end;
   if StatusBarView < 0 then
-    StatusBarView := Application.HostCreateStatusBarView(
-      App, 0, StatusY, S.width, StatusBarHeight,
-      DefaultStatusSegments(), DefaultStatusStyle())
+  begin
+    StatusBarView := Application.HostCreateStatusBarView(App, 0, StatusY, S.width, StatusBarHeight, DefaultStatusSegments(), DefaultStatusStyle())
+  end
   else
+  begin
     Application.HostSetViewRect(App, StatusBarView, 0, StatusY, S.width, StatusBarHeight)
+  end
 end;
 
 {
   Intentionally empty — chrome is painted by host widgets in Rust
   (menu bar, desktop fill, status bar).
 }
+
 private procedure OnPaint(App: Application);
 begin
 end;
@@ -66,27 +76,34 @@ end;
 private procedure OnCommand(App: Application; CommandId: integer);
 begin
   if CommandId = CmdFileExit then
+  begin
     Application.HostRequestQuit(App)
+  end
 end;
 
 /// Keep host widgets aligned with the terminal size.
+
 private procedure OnResize(App: Application; NewSize: Size);
 begin
-  var DesktopHeight: integer := NewSize.height - MenuBarHeight - StatusBarHeight;
+  var DesktopHeight: integer := (NewSize.height - MenuBarHeight) - StatusBarHeight;
   var StatusY: integer := NewSize.height - StatusBarHeight;
-
   if MenuBarView >= 0 then
-    Application.HostSetViewRect(App, MenuBarView, 0, 0, NewSize.width, MenuBarHeight);
+  begin
+    Application.HostSetViewRect(App, MenuBarView, 0, 0, NewSize.width, MenuBarHeight)
+  end;
   if DesktopView >= 0 then
-    Application.HostSetViewRect(
-      App, DesktopView, 0, MenuBarHeight, NewSize.width, DesktopHeight);
+  begin
+    Application.HostSetViewRect(App, DesktopView, 0, MenuBarHeight, NewSize.width, DesktopHeight)
+  end;
   if StatusBarView >= 0 then
-    Application.HostSetViewRect(
-      App, StatusBarView, 0, StatusY, NewSize.width, StatusBarHeight);
+  begin
+    Application.HostSetViewRect(App, StatusBarView, 0, StatusY, NewSize.width, StatusBarHeight)
+  end;
   Application.RequestRedraw(App)
 end;
 
 /// Open the terminal session, run the hosted TUI loop, and restore the terminal on exit.
+
 procedure Run();
 begin
   var App: Application := Application.Open();

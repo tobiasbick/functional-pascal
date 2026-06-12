@@ -1,4 +1,5 @@
 program ShapesExample;
+
 uses Std.Console, Std.Conv, Std.Math;
 
 type
@@ -12,11 +13,17 @@ function Area(S: Shape): real;
 begin
   case S of
     Shape.Circle(R):
-      return Pi * R * R;
+    begin
+      return (Pi * R) * R
+    end;
     Shape.Rectangle(W, H):
-      return W * H;
+    begin
+      return W * H
+    end;
     Shape.Point:
+    begin
       return 0.0
+    end
   end
 end;
 
@@ -24,11 +31,17 @@ function Describe(S: Shape): string;
 begin
   case S of
     Shape.Circle(R):
-      return 'Circle with radius ' + RealToStr(R);
+    begin
+      return 'Circle with radius ' + RealToStr(R)
+    end;
     Shape.Rectangle(W, H):
-      return 'Rectangle ' + RealToStr(W) + ' x ' + RealToStr(H);
+    begin
+      return (('Rectangle ' + RealToStr(W)) + ' x ') + RealToStr(H)
+    end;
     Shape.Point:
+    begin
       return 'Point'
+    end
   end
 end;
 
@@ -36,8 +49,7 @@ begin
   var C: Shape := Shape.Circle(5.0);
   var R: Shape := Shape.Rectangle(10.0, 3.0);
   var P: Shape := Shape.Point;
-
-  WriteLn(Describe(C) + ' -> area = ' + RealToStr(Area(C)));
-  WriteLn(Describe(R) + ' -> area = ' + RealToStr(Area(R)));
-  WriteLn(Describe(P) + ' -> area = ' + RealToStr(Area(P)))
+  WriteLn((Describe(C) + ' -> area = ') + RealToStr(Area(C)));
+  WriteLn((Describe(R) + ' -> area = ') + RealToStr(Area(R)));
+  WriteLn((Describe(P) + ' -> area = ') + RealToStr(Area(P)))
 end.

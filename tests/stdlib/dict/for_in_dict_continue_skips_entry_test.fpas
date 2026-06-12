@@ -1,10 +1,15 @@
 program T;
+
 uses Std.Console, Std.Dict;
+
 begin
   var D: dict of string to integer := ['A': 1, 'B': 2, 'C': 3];
   for K: string in D do
   begin
-    if K = 'B' then continue;
+    if K = 'B' then
+    begin
+      continue
+    end;
     WriteLn(K)
   end
 end.

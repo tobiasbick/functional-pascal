@@ -1,8 +1,10 @@
 program T;
+
 uses Std.Console, Std.Dict, Std.Option;
+
 begin
   var D: dict of string to integer := ['Alice': 30, 'Bob': 25];
-  var R: Option of integer := Std.Dict.Get(D, 'Alice');
+  var R: option of integer := Std.Dict.Get(D, 'Alice');
   WriteLn(IsSome(R));
   WriteLn(Unwrap(R))
 end.

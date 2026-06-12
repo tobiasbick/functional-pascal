@@ -1,4 +1,5 @@
 program PointExample;
+
 uses Std.Console, Std.Conv;
 
 type
@@ -20,19 +21,16 @@ type
 
     procedure Print(Self: Point);
     begin
-      WriteLn('(' + IntToStr(Self.X) + ', ' + IntToStr(Self.Y) + ')')
+      WriteLn(((('(' + IntToStr(Self.X)) + ', ') + IntToStr(Self.Y)) + ')')
     end;
   end;
 
 begin
   var A: Point := record X := 3; Y := 4; end;
   var B: Point := record X := 10; Y := 20; end;
-
   A.Print();
   B.Print();
-
   WriteLn('Sum of A: ' + IntToStr(A.Sum()));
-
   var C: Point := A.Add(B);
   WriteLn('A + B =');
   C.Print()

@@ -1,7 +1,9 @@
 program TuiEscapeTest;
+
 uses Std.Console, Std.Tui, Std.Test;
 
-mutable var QuitSeen: boolean := false;
+mutable var
+  mutable var QuitSeen: boolean := false;
 
 procedure OnPaint(App: Application);
 begin

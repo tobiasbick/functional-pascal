@@ -1,4 +1,5 @@
 program GoStr;
+
 uses Std.Console, Std.Task;
 
 function Greet(): string;

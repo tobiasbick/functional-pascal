@@ -1,33 +1,36 @@
 program PanicExample;
+
 uses Std.Console;
 
 function DivideChecked(A: integer; B: integer): integer;
 begin
   if B = 0 then
-    panic('Division by zero');
+  begin
+    panic('Division by zero')
+  end;
   return A div B
 end;
 
 function DayKind(Day: string): string;
 begin
   case Day of
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday':     return 'Weekday';
-    'Saturday',
-    'Sunday':     return 'Weekend';
-  else
-    panic('Invalid day: ' + Day)
+    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday':
+    begin
+      return 'Weekday'
+    end;
+    'Saturday', 'Sunday':
+    begin
+      return 'Weekend'
+    end
+    else
+    begin
+      panic('Invalid day: ' + Day)
+    end
   end
 end;
 
 begin
   WriteLn('10 / 3 = ', DivideChecked(10, 3));
   WriteLn('Monday is a ', DayKind('Monday'));
-  WriteLn('Saturday is a ', DayKind('Saturday'));
-
-  { Uncomment the next line to see a panic in action: }
-  { WriteLn(DivideChecked(1, 0)) }
+  WriteLn('Saturday is a ', DayKind('Saturday'))
 end.

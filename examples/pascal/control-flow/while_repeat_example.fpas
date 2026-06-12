@@ -1,4 +1,5 @@
 program WhileRepeatExample;
+
 uses Std.Console, Std.Conv;
 
 begin
@@ -8,7 +9,6 @@ begin
     WriteLn('while step: ', IntToStr(Count));
     Count := Count + 1
   end;
-
   mutable var Attempts: integer := 0;
   repeat
     WriteLn('repeat step: ', IntToStr(Attempts));

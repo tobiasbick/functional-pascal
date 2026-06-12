@@ -4,16 +4,16 @@ Phased checklist for **`fpas fmt` v2**, building on the completed v1 plan ([impl
 
 **Prerequisite:** v1 shipped — emitter, CLI, golden/round-trip tests, [style.md](style.md) locked for v1 output.
 
-**Status (2026-06-10):** Phases **0–3 complete** on `main`. Next: **Phase 4** (repo / CI).
+**Status (2026-06-10):** Phases **0–4 complete** on `main`. Next: **Phase 5** (hardening).
 
 | Phase | Status | Commit (local `main`) |
 |-------|--------|------------------------|
 | 0 — Scope lock-in | done | docs in `5152c5b`, `0b8bea3` |
 | 1 — CLI ergonomics | done | `0b8bea3` — multi-path, `--stdout`, `--check --list`, globs |
 | 2 — Line wrapping | done | `26f08af` — `wrap.rs`, 100-col breaks, golden tests |
-| 3 — Comments | done | (this commit) — `CommentMap`, `format_source`, lexer comments |
-| 4 — Repo / CI | **next** | — |
-| 5 — Hardening | pending | — |
+| 3 — Comments | done | `ae47e7b` — `CommentMap`, `format_source`, lexer comments |
+| 4 — Repo / CI | done | (this commit) — mass format, scripts, GitHub Actions |
+| 5 — Hardening | **next** | — |
 
 **How to use this doc:** Work one phase at a time. Check boxes when done. Stop after any phase; the next session picks up at the first unchecked item. Do not start a phase until the previous phase’s exit criteria pass.
 
@@ -122,12 +122,12 @@ Depends on Phase 0 comment strategy. Skip entire phase if Option B deferred.
 
 Mostly docs and one-time repo policy — minimal code.
 
-- [ ] Script or documented command: format all `.fpas` in repo (exclude `target/`).
-- [ ] Run once on `examples/`, `tests/`, `apps/`, `crates/` (if any `.fpas`) after Phases 1–3 stable.
-- [ ] Add CI step: `fpas fmt --check` (or `--check --list`) on PR — document in contributor guide / `AGENTS.md` if desired.
-- [ ] Pre-commit hook **example** (optional script under `scripts/`, not mandatory install).
-- [ ] Verify `cargo test --workspace` green after mass-format.
-- [ ] Note in [README.md](README.md): repo uses the official style from style.md.
+- [x] Script or documented command: [`scripts/format-fpas-sources.sh`](../../../scripts/format-fpas-sources.sh) / [`.ps1`](../../../scripts/format-fpas-sources.ps1) — `fpas fmt examples tests apps` (skips `target/`).
+- [x] Run once on `examples/`, `tests/`, `apps/` after Phases 1–3 stable.
+- [x] CI step: [`.github/workflows/ci.yml`](../../../.github/workflows/ci.yml) runs `fpas fmt --check examples tests apps`; noted in [AGENTS.md](../../../AGENTS.md).
+- [x] Pre-commit hook **example**: [`scripts/pre-commit-fmt.example`](../../../scripts/pre-commit-fmt.example) (optional install).
+- [x] `cargo test --workspace` green after mass-format.
+- [x] Note in [README.md](../../../README.md): repo uses the official style from [style.md](style.md).
 
 **Phase 4 exit:** tree formatted; CI check documented; workspace tests green.
 
@@ -174,8 +174,8 @@ fpas-cli ──► fpas-fmt ──► fpas-parser ──► fpas-lexer
 2. ~~**Phase 1**~~ — CLI ergonomics (done).
 3. ~~**Phase 2**~~ — line wrapping (done).
 4. ~~**Phase 3**~~ — comments; lexer + `CommentMap` + `format_source` (done).
-5. **Phase 4** — mass-format repo + CI docs. **← resume here**
-6. **Phase 5** — hardening pass.
+5. ~~**Phase 4**~~ — mass-format repo + CI docs (done).
+6. **Phase 5** — hardening pass. **← resume here**
 
 Stop after any numbered phase; resume at the first unchecked `- [ ]` in the next phase.
 
@@ -185,4 +185,4 @@ Stop after any numbered phase; resume at the first unchecked `- [ ]` in the next
 
 Completed in [implementation.md](implementation.md): scaffold, emitters, compilation units, golden/round-trip tests, `fpas fmt` + `--check`, private unit decl fix (`ae55c1a`).
 
-**v2 so far (do not redo):** Phase 0 style lock-in; Phase 1 CLI (`cli_fmt/`, globs); Phase 2 wrapping (`emit/wrap.rs`, column tracking on `Emitter`, golden `long_uses` / `wrapped_record`); Phase 3 comments (`fpas-lexer` comment API, `CommentMap`, `format_source`, preamble-aware attachment).
+**v2 so far (do not redo):** Phase 0 style lock-in; Phase 1 CLI (`cli_fmt/`, globs); Phase 2 wrapping (`emit/wrap.rs`, column tracking on `Emitter`, golden `long_uses` / `wrapped_record`); Phase 3 comments (`fpas-lexer` comment API, `CommentMap`, `format_source`, preamble-aware attachment); Phase 4 repo format (`scripts/format-fpas-sources.*`, `.github/workflows/ci.yml`, emitter fixes for private `type` and case `else` idempotency).

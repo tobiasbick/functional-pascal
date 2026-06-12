@@ -1,5 +1,7 @@
-            program T;
-            uses Std.Console;
-            begin
-              WriteLn('val=', 42, ' ok=', true)
+program T;
+
+uses Std.Console;
+
+begin
+  WriteLn('val=', 42, ' ok=', true)
 end.

@@ -1,5 +1,7 @@
 { Spec: docs/pascal/std/time.md (from repository root). }
+
 program TimeBasics;
+
 uses Std.Console, Std.Conv, Std.Time;
 
 begin

@@ -1,9 +1,12 @@
 program T;
+
 uses Std.Console, Std.Array;
+
 function IsGreaterThanFifteen(X: integer): boolean;
 begin
   return X > 15
 end;
+
 begin
   var A: array of integer := [10, 20, 30];
   var Idx: integer := FindIndex(A, IsGreaterThanFifteen);

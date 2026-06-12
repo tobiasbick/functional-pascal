@@ -1,5 +1,7 @@
 program T;
+
 uses Std.Console, Std.Dict;
+
 begin
   var A: dict of string to integer := ['X': 1];
   var B: dict of string to integer := [:];

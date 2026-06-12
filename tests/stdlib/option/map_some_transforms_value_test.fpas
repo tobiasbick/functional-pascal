@@ -1,11 +1,14 @@
 program T;
+
 uses Std.Console, Std.Option, Std.Conv;
+
 function TripleToStr(V: integer): string;
 begin
   return IntToStr(V * 3)
 end;
+
 begin
-  var O: Option of integer := Some(7);
-  var M: Option of string := Map(O, TripleToStr);
+  var O: option of integer := Some(7);
+  var M: option of string := Map(O, TripleToStr);
   WriteLn(Unwrap(M))
 end.

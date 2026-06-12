@@ -1,5 +1,7 @@
 program T;
+
 uses Std.Console, Std.Str;
+
 begin
   WriteLn(PadLeft('42', 5, '0'))
 end.

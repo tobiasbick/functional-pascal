@@ -1,8 +1,10 @@
 program ExpressionEval;
+
 uses Std.Console, Std.Conv;
 
-{ A simple expression tree using enums with associated data }
 type
+  { A simple expression tree using enums with associated data }
+
   Expr = enum
     Num(Value: integer);
     Add(Left: integer; Right: integer);
@@ -13,11 +15,17 @@ function Eval(E: Expr): integer;
 begin
   case E of
     Expr.Num(V):
-      return V;
+    begin
+      return V
+    end;
     Expr.Add(L, R):
-      return L + R;
+    begin
+      return L + R
+    end;
     Expr.Mul(L, R):
+    begin
       return L * R
+    end
   end
 end;
 
@@ -25,11 +33,17 @@ function Show(E: Expr): string;
 begin
   case E of
     Expr.Num(V):
-      return IntToStr(V);
+    begin
+      return IntToStr(V)
+    end;
     Expr.Add(L, R):
-      return IntToStr(L) + ' + ' + IntToStr(R);
+    begin
+      return (IntToStr(L) + ' + ') + IntToStr(R)
+    end;
     Expr.Mul(L, R):
-      return IntToStr(L) + ' * ' + IntToStr(R)
+    begin
+      return (IntToStr(L) + ' * ') + IntToStr(R)
+    end
   end
 end;
 
@@ -37,8 +51,7 @@ begin
   var E1: Expr := Expr.Num(42);
   var E2: Expr := Expr.Add(3, 7);
   var E3: Expr := Expr.Mul(4, 5);
-
-  WriteLn(Show(E1) + ' = ' + IntToStr(Eval(E1)));
-  WriteLn(Show(E2) + ' = ' + IntToStr(Eval(E2)));
-  WriteLn(Show(E3) + ' = ' + IntToStr(Eval(E3)))
+  WriteLn((Show(E1) + ' = ') + IntToStr(Eval(E1)));
+  WriteLn((Show(E2) + ' = ') + IntToStr(Eval(E2)));
+  WriteLn((Show(E3) + ' = ') + IntToStr(Eval(E3)))
 end.

@@ -1,5 +1,7 @@
 program T;
+
 uses Std.Console, Std.Str;
+
 begin
   WriteLn(IsNumeric('3.14'))
 end.

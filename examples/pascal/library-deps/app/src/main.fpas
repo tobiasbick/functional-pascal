@@ -1,5 +1,7 @@
 program LibDemo;
+
 uses MyLib.Core, Std.Console;
+
 begin
   WriteLn(Double(21))
 end.

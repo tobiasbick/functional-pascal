@@ -1,20 +1,38 @@
 { Spec: docs/pascal/std/parse.md (from repository root). }
+
 program ParseBasics;
+
 uses Std.Console, Std.Parse, Std.Result, Std.Conv;
 
 begin
   case TryInt(' +1_024 ') of
-    Ok(N): WriteLn('try int: ', IntToStr(N));
-    Error(M): WriteLn('try int error: ', M)
+    Ok(N):
+    begin
+      WriteLn('try int: ', IntToStr(N))
+    end;
+    Error(M):
+    begin
+      WriteLn('try int error: ', M)
+    end
   end;
-
   case TryReal('1_024.0e-2') of
-    Ok(R): WriteLn('try real: ', RealToStr(R));
-    Error(M): WriteLn('try real error: ', M)
+    Ok(R):
+    begin
+      WriteLn('try real: ', RealToStr(R))
+    end;
+    Error(M):
+    begin
+      WriteLn('try real error: ', M)
+    end
   end;
-
   case TryBool(' FALSE ') of
-    Ok(B): WriteLn('try bool: ', BoolToStr(B));
-    Error(M): WriteLn('try bool error: ', M)
+    Ok(B):
+    begin
+      WriteLn('try bool: ', BoolToStr(B))
+    end;
+    Error(M):
+    begin
+      WriteLn('try bool error: ', M)
+    end
   end
 end.

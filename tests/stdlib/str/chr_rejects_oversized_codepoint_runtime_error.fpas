@@ -1,5 +1,7 @@
 program T;
+
 uses Std.Console, Std.Str;
+
 begin
   WriteLn(Chr(4294967296))
 end.

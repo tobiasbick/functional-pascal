@@ -1,4 +1,5 @@
 program WaitAll;
+
 uses Std.Console, Std.Task;
 
 function Double(X: integer): integer;

@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Example Git pre-commit hook for Functional Pascal source formatting.
+#
+# Install (optional):
+#   cp scripts/pre-commit-fmt.example .git/hooks/pre-commit
+#   chmod +x .git/hooks/pre-commit
+#
+# Requires a built `fpas` CLI (`cargo build -p fpas-cli`).
+
+set -euo pipefail
+root="$(git rev-parse --show-toplevel)"
+cd "$root"
+
+if ! cargo run -q -p fpas-cli -- fmt --check examples tests apps; then
+  echo ""
+  echo "fpas fmt: one or more .fpas files are not formatted."
+  echo "  fix: scripts/format-fpas-sources.sh"
+  exit 1
+fi

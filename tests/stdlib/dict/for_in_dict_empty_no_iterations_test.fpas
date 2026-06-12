@@ -1,9 +1,13 @@
 program T;
+
 uses Std.Console, Std.Dict;
+
 begin
   var D: dict of string to integer := [:];
   mutable var Count: integer := 0;
   for K: string in D do
-    Count := Count + 1;
+  begin
+    Count := Count + 1
+  end;
   WriteLn(Count)
 end.

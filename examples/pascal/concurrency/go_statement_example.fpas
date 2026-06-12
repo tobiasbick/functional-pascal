@@ -1,5 +1,7 @@
 { Spec: docs/pascal/08-concurrency.md — fire-and-forget `go` statement (no task handle). }
+
 program GoStatementExample;
+
 uses Std.Console, Std.Time;
 
 procedure LogLine(Message: string);

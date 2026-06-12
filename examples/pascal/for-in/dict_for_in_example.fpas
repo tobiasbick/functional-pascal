@@ -1,10 +1,12 @@
 program DictForInExample;
+
 uses Std.Console, Std.Conv, Std.Dict;
 
 begin
   var Ages: dict of string to integer := ['Alice': 30, 'Bob': 25, 'Cara': 31];
-
   WriteLn('for Name in Ages (insertion order):');
   for Name: string in Ages do
+  begin
     WriteLn('  ', Name, ' -> ', IntToStr(Ages[Name]))
+  end
 end.

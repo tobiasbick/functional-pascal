@@ -1,9 +1,13 @@
 { Run: fpas examples/pascal/std/args_basics.fpas -- alpha beta }
+
 program ArgsBasics;
+
 uses Std.Console, Std.Conv, Std.Args;
 
 begin
   WriteLn('param count: ', IntToStr(ParamCount()));
   for I: integer := 0 to ParamCount() - 1 do
+  begin
     WriteLn('  [', IntToStr(I), '] ', ParamStr(I))
+  end
 end.

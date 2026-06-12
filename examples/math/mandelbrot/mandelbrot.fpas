@@ -1,5 +1,7 @@
 { Run as `fpas mandelbrot.fpasprj` (multi-unit project). Interactive; see examples/README.md. }
+
 program MandelbrotShowcase;
+
 uses Std.Console, Std.Conv, Std.Math, Std.Str, Std.Tui, Mandelbrot.Color, Mandelbrot.Render;
 
 type
@@ -14,7 +16,7 @@ type
     begin
       var SafeWidth: integer := Max(Width, 1);
       var SafeHeight: integer := Max(Height, 1);
-      return Self.SpanY * (IntToReal(SafeWidth) / IntToReal(SafeHeight)) * 0.5
+      return (Self.SpanY * (IntToReal(SafeWidth) / IntToReal(SafeHeight))) * 0.5
     end;
 
     function XMin(Self: ExplorerState; Width: integer; Height: integer): real;
@@ -65,10 +67,13 @@ begin
 end;
 
 { 1-based cell in the render viewport → complex plane (same mapping as row iteration) }
+
 function ViewportCX(State: ExplorerState; W: integer; H: integer; CellX: integer): real;
 begin
   var Wr: integer := Max(W - 1, 1);
-  return State.XMin(W, H) + (IntToReal(CellX - 1) / IntToReal(Wr)) * (State.XMax(W, H) - State.XMin(W, H))
+  return State.XMin(W, H) +
+
+         (IntToReal(CellX - 1) / IntToReal(Wr)) * (State.XMax(W, H) - State.XMin(W, H))
 end;
 
 function ViewportCY(State: ExplorerState; W: integer; H: integer; CellY: integer): real;
@@ -84,35 +89,26 @@ begin
   Window(1, HudTop, ScreenWidth(), ScreenHeight());
   NormVideo();
   ClrScr();
-
   GotoXY(1, 1);
   TextColorRGB(255, 220, 120);
   Write('Functional Pascal Mandelbrot');
   TextColorRGB(156, 204, 255);
   Write('  tasks | units | records | truecolor | mouse | focus | paste');
-
   if ScreenHeight() >= 2 then
   begin
     GotoXY(1, 2);
     NormVideo();
-    Write(Format('size=%dx%d  center=(%f, %f)  zoom=%f  iter=%d  palette=%s',
-      Width,
-      Height,
-      S.CenterX,
-      S.CenterY,
-      ZoomLevel(S),
-      S.MaxIter,
-      PaletteName(S.Palette)));
+    Write(Format('size=%dx%d  center=(%f, %f)  zoom=%f  iter=%d  palette=%s', Width, Height, S.CenterX, S.CenterY, ZoomLevel(S), S.MaxIter, PaletteName(S.Palette)));
     Write('  click center  wheel zoom  M middle=reset  arrows  +/-  PgUp/Dn  1/2/3  R  Esc')
   end;
-
   NormVideo();
   Window(1, 1, Width, Height)
 end;
 
-mutable var State: ExplorerState := DefaultState();
-mutable var RenderW: integer := 1;
-mutable var RenderH: integer := 1;
+mutable var
+  mutable var State: ExplorerState := DefaultState();
+  mutable var RenderW: integer := 1;
+  mutable var RenderH: integer := 1;
 
 procedure OnPaint(App: Application);
 begin
@@ -120,15 +116,7 @@ begin
   RenderH := RenderHeight();
   Window(1, 1, RenderW, RenderH);
   ClrScr();
-  Render(
-    State.XMin(RenderW, RenderH),
-    State.XMax(RenderW, RenderH),
-    State.YMin(),
-    State.YMax(),
-    RenderW,
-    RenderH,
-    State.MaxIter,
-    State.Palette);
+  Render(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter, State.Palette);
   DrawHud(State, RenderW, RenderH)
 end;
 
@@ -136,7 +124,6 @@ function OnKeyPressed(App: Application; Key: Std.Console.KeyEvent): boolean;
 begin
   var StepX: real := State.SpanX(RenderW, RenderH) * 0.14;
   var StepY: real := State.SpanY * 0.14;
-
   if Key.kind = KeyKind.Escape then
   begin
     Application.HostRequestQuit(App);
@@ -182,41 +169,41 @@ begin
   begin
     case Key.ch of
       '+', '=':
-        begin
-          State.SpanY := Max(State.SpanY * 0.82, 0.000_001);
-          Application.RequestRedraw(App);
-          return true
-        end;
+      begin
+        State.SpanY := Max(State.SpanY * 0.82, 0.000001);
+        Application.RequestRedraw(App);
+        return true
+      end;
       '-':
-        begin
-          State.SpanY := Min(State.SpanY / 0.82, 3.5);
-          Application.RequestRedraw(App);
-          return true
-        end;
+      begin
+        State.SpanY := Min(State.SpanY / 0.82, 3.5);
+        Application.RequestRedraw(App);
+        return true
+      end;
       '1':
-        begin
-          State.Palette := PaletteKind.DeepOcean;
-          Application.RequestRedraw(App);
-          return true
-        end;
+      begin
+        State.Palette := PaletteKind.DeepOcean;
+        Application.RequestRedraw(App);
+        return true
+      end;
       '2':
-        begin
-          State.Palette := PaletteKind.Ember;
-          Application.RequestRedraw(App);
-          return true
-        end;
+      begin
+        State.Palette := PaletteKind.Ember;
+        Application.RequestRedraw(App);
+        return true
+      end;
       '3':
-        begin
-          State.Palette := PaletteKind.Aurora;
-          Application.RequestRedraw(App);
-          return true
-        end;
+      begin
+        State.Palette := PaletteKind.Aurora;
+        Application.RequestRedraw(App);
+        return true
+      end;
       'r', 'R':
-        begin
-          State := DefaultState();
-          Application.RequestRedraw(App);
-          return true
-        end
+      begin
+        State := DefaultState();
+        Application.RequestRedraw(App);
+        return true
+      end
     end
   end;
   return false
@@ -224,12 +211,10 @@ end;
 
 procedure OnMouse(App: Application; Event: Std.Console.Event);
 begin
-  var InView: boolean := (Event.mouse_x >= 1) and (Event.mouse_x <= RenderW)
-    and (Event.mouse_y >= 1) and (Event.mouse_y <= RenderH);
-
+  var InView: boolean := Event.mouse_x >= 1;
   if Event.mouse_action = MouseAction.ScrollUp then
   begin
-    State.SpanY := Max(State.SpanY * 0.88, 0.000_001);
+    State.SpanY := Max(State.SpanY * 0.88, 0.000001);
     Application.RequestRedraw(App)
   end
   else if Event.mouse_action = MouseAction.ScrollDown then

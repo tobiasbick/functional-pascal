@@ -1,5 +1,7 @@
 program T;
+
 uses Std.Console, Std.Math;
+
 begin
   WriteLn(Pow(2.0, 3.0))
 end.

@@ -1,11 +1,14 @@
 program T;
+
 uses Std.Console, Std.Result;
-function ReplaceError(E: string): Result of integer, string;
+
+function ReplaceError(E: string): result of integer, string;
 begin
   return Error('second')
 end;
+
 begin
-  var R: Result of integer, string := Error('first');
-  var M: Result of integer, string := OrElse(R, ReplaceError);
+  var R: result of integer, string := Error('first');
+  var M: result of integer, string := OrElse(R, ReplaceError);
   WriteLn(IsError(M))
 end.

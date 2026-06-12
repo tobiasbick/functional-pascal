@@ -1,4 +1,5 @@
 program SkipTest;
+
 uses Std.Test;
 
 begin

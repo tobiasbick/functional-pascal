@@ -1,17 +1,27 @@
 program T;
+
 uses Std.Console, Std.Option, Std.Conv;
+
 function Double(V: integer): integer;
 begin
   return V * 2
 end;
-function PositiveToStr(V: integer): Option of string;
+
+function PositiveToStr(V: integer): option of string;
 begin
-  if V > 0 then return Some(IntToStr(V))
-  else return None
+  if V > 0 then
+  begin
+    return Some(IntToStr(V))
+  end
+  else
+  begin
+    return None
+  end
 end;
+
 begin
-  var O: Option of integer := Some(5);
-  var Doubled: Option of integer := Map(O, Double);
-  var Final: Option of string := AndThen(Doubled, PositiveToStr);
+  var O: option of integer := Some(5);
+  var Doubled: option of integer := Map(O, Double);
+  var Final: option of string := AndThen(Doubled, PositiveToStr);
   WriteLn(Unwrap(Final))
 end.

@@ -1,14 +1,21 @@
 { Built only via units-basic.fpasprj — not a standalone program. }
+
 unit App.Math;
 
 function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
   if Value < Min then
+  begin
     return Min
+  end
   else if Value > Max then
+  begin
     return Max
+  end
   else
+  begin
     return Value
+  end
 end;
 
 function Scale(Value: integer; Factor: integer): integer;

@@ -1,5 +1,7 @@
 { Dispatch-mode TUI demo — run in a terminal; Escape exits. See examples/README.md. }
+
 program TuiMinimalApplication;
+
 uses Std.Console, Std.Tui;
 
 procedure OnPaint(App: Application);

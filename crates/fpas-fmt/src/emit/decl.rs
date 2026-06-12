@@ -139,7 +139,7 @@ fn emit_decl_run(emitter: &mut Emitter, decls: &[Decl], comments: &CommentMap) {
                         continue;
                     };
                     emit_leading_comments(inner, comments, def.span.offset);
-                    emit_type_def(inner, def, index + 1 == decls.len(), comments);
+                    emit_type_def(inner, def, index + 1 == decls.len(), comments, true);
                 }
             });
         }
@@ -160,7 +160,7 @@ fn emit_decl(emitter: &mut Emitter, decl: &Decl, is_last: bool, comments: &Comme
         Decl::Const(def) => emit_const_def(emitter, def, is_last, false),
         Decl::Var(def) => emit_var_def(emitter, "var", def, is_last),
         Decl::MutableVar(def) => emit_var_def(emitter, "mutable var", def, is_last),
-        Decl::TypeDef(def) => emit_type_def(emitter, def, is_last, comments),
+        Decl::TypeDef(def) => emit_type_def(emitter, def, is_last, comments, false),
         Decl::Function(function) => emit_function_decl(emitter, function, is_last, comments),
         Decl::Procedure(procedure) => emit_procedure_decl(emitter, procedure, is_last, comments),
     }
@@ -199,9 +199,18 @@ fn emit_var_def(emitter: &mut Emitter, keyword: &str, def: &VarDef, is_last: boo
     finish_decl_line(emitter, is_last);
 }
 
-fn emit_type_def(emitter: &mut Emitter, def: &TypeDef, _is_last: bool, comments: &CommentMap) {
+fn emit_type_def(
+    emitter: &mut Emitter,
+    def: &TypeDef,
+    _is_last: bool,
+    comments: &CommentMap,
+    in_type_block: bool,
+) {
     write_decl_line_start(emitter);
     emit_visibility(emitter, def.visibility);
+    if !in_type_block {
+        emitter.write("type ");
+    }
     emitter.write(&def.name);
     emitter.write(" = ");
     emit_type_body(emitter, &def.body, comments);
@@ -495,6 +504,17 @@ end.",
         );
         assert!(
             !formatted.contains("const\n  private"),
+            "formatted:\n{formatted}"
+        );
+    }
+
+    #[test]
+    fn unit_private_type_keeps_type_keyword() {
+        let formatted = format_unit_decls(
+            "unit U; private type Complex = record Re: real; Im: real; end;",
+        );
+        assert!(
+            formatted.contains("private type Complex = record\n"),
             "formatted:\n{formatted}"
         );
     }

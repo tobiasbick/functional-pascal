@@ -1,5 +1,7 @@
 program T;
+
 uses Std.Console, Std.Dict;
+
 begin
   var D: dict of string to integer := ['A': 1, 'B': 2, 'C': 3];
   var D2: dict of string to integer := Std.Dict.Remove(D, 'B');

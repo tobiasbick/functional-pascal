@@ -1,12 +1,15 @@
 program T;
+
 uses Std.Console, Std.Array, Std.Option;
+
 function IsGreaterThanThree(X: integer): boolean;
 begin
   return X > 3
 end;
+
 begin
   var A: array of integer := [1, 2, 3, 4, 5];
-  var R: Option of integer := Find(A, IsGreaterThanThree);
+  var R: option of integer := Find(A, IsGreaterThanThree);
   WriteLn(IsSome(R));
   WriteLn(Unwrap(R))
 end.

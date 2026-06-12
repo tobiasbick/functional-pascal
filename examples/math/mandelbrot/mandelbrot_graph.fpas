@@ -1,5 +1,7 @@
 { Spec: docs/pascal/std/graph-app.md (from repository root). }
+
 program MandelbrotGraph;
+
 uses Std.Array, Std.Console, Std.Conv, Std.Graph, Std.Math, Std.Task;
 
 type
@@ -13,13 +15,7 @@ type
 
 function DefaultState(): MandelbrotState;
 begin
-  return record
-    CenterX := -0.75;
-    CenterY := 0.0;
-    SpanY := 2.4;
-    MaxIter := 160;
-    Palette := 1;
-  end
+  return record CenterX := -0.75; CenterY := 0.0; SpanY := 2.4; MaxIter := 160; Palette := 1; end
 end;
 
 function SpanX(State: MandelbrotState; Width: integer; Height: integer): real;
@@ -46,66 +42,187 @@ end;
 function PaletteName(Palette: integer): string;
 begin
   case Palette of
-    1: return 'OCEAN';
-    2: return 'EMBER';
-    3: return 'AURORA';
-  else
-    return 'OCEAN'
+    1:
+    begin
+      return 'OCEAN'
+    end;
+    2:
+    begin
+      return 'EMBER'
+    end;
+    3:
+    begin
+      return 'AURORA'
+    end
+    else
+    begin
+      return 'OCEAN'
+    end
   end
 end;
 
 function SampleColor(Palette: integer; EscapeValue: real): integer;
 begin
   var Band: integer := Clamp(Trunc(Frac(EscapeValue * 0.08) * 12.0), 0, 11);
-
   if Palette = 2 then
+  begin
     case Band of
-      0: return $00400000;
-      1: return $006A0A00;
-      2: return $008A1E00;
-      3: return $00B03A00;
-      4: return $00D45A00;
-      5: return $00F07A00;
-      6: return $00FF9F1A;
-      7: return $00FFBE4A;
-      8: return $00FFD978;
-      9: return $00FFE7A6;
-      10: return $00FFF1CC;
-    else
-      return $00FFF8E8
+      0:
+      begin
+        return 4194304
+      end;
+      1:
+      begin
+        return 6949376
+      end;
+      2:
+      begin
+        return 9051648
+      end;
+      3:
+      begin
+        return 11549184
+      end;
+      4:
+      begin
+        return 13916672
+      end;
+      5:
+      begin
+        return 15759872
+      end;
+      6:
+      begin
+        return 16752410
+      end;
+      7:
+      begin
+        return 16760394
+      end;
+      8:
+      begin
+        return 16767352
+      end;
+      9:
+      begin
+        return 16770982
+      end;
+      10:
+      begin
+        return 16773580
+      end
+      else
+      begin
+        return 16775400
+      end
     end
+  end
   else if Palette = 3 then
+  begin
     case Band of
-      0: return $00041020;
-      1: return $000A2E48;
-      2: return $00104D6A;
-      3: return $00146886;
-      4: return $00197C8F;
-      5: return $00238E7C;
-      6: return $0034A968;
-      7: return $0064BF64;
-      8: return $0094D976;
-      9: return $00C8E68A;
-      10: return $00EAF0B4;
-    else
-      return $00F8F8E0
+      0:
+      begin
+        return 266272
+      end;
+      1:
+      begin
+        return 667208
+      end;
+      2:
+      begin
+        return 1068394
+      end;
+      3:
+      begin
+        return 1337478
+      end;
+      4:
+      begin
+        return 1670287
+      end;
+      5:
+      begin
+        return 2330236
+      end;
+      6:
+      begin
+        return 3451240
+      end;
+      7:
+      begin
+        return 6602596
+      end;
+      8:
+      begin
+        return 9754998
+      end;
+      9:
+      begin
+        return 13166218
+      end;
+      10:
+      begin
+        return 15397044
+      end
+      else
+      begin
+        return 16316640
+      end
     end
+  end
   else
+  begin
     case Band of
-      0: return $00051025;
-      1: return $000B1F46;
-      2: return $0010336A;
-      3: return $00144A8A;
-      4: return $001A63A7;
-      5: return $00227FC1;
-      6: return $002E9CCF;
-      7: return $004CB7D8;
-      8: return $0070D0DB;
-      9: return $00A1E0D8;
-      10: return $00D4EDE8;
-    else
-      return $00F2F8FF
+      0:
+      begin
+        return 331813
+      end;
+      1:
+      begin
+        return 728902
+      end;
+      2:
+      begin
+        return 1061738
+      end;
+      3:
+      begin
+        return 1329802
+      end;
+      4:
+      begin
+        return 1729447
+      end;
+      5:
+      begin
+        return 2260929
+      end;
+      6:
+      begin
+        return 3054799
+      end;
+      7:
+      begin
+        return 5027800
+      end;
+      8:
+      begin
+        return 7393499
+      end;
+      9:
+      begin
+        return 10608856
+      end;
+      10:
+      begin
+        return 13954536
+      end
+      else
+      begin
+        return 15923455
+      end
     end
+  end
 end;
 
 function BuildFrameRow(State: MandelbrotState; Width: integer; Height: integer; Py: integer): array of integer;
@@ -119,33 +236,31 @@ begin
   var YMax: real := State.CenterY + (State.SpanY * 0.5);
   var Cy: real := YMax - (IntToReal(Py) / IntToReal(HeightRange)) * (YMax - YMin);
   mutable var Row: array of integer := [];
-
   for Px: integer := 0 to Width - 1 do
   begin
     var Cx: real := XMin + (IntToReal(Px) / IntToReal(WidthRange)) * (XMax - XMin);
     mutable var Zr: real := 0.0;
     mutable var Zi: real := 0.0;
     mutable var N: integer := 0;
-
     while (N < State.MaxIter) and ((Zr * Zr + Zi * Zi) <= 256.0) do
     begin
-      var Tr: real := Zr * Zr - Zi * Zi + Cx;
-      var Ti: real := 2.0 * Zr * Zi + Cy;
+      var Tr: real := (Zr * Zr - Zi * Zi) + Cx;
+      var Ti: real := (2.0 * Zr) * Zi + Cy;
       Zr := Tr;
       Zi := Ti;
       N := N + 1
     end;
-
     if N >= State.MaxIter then
-      Push(Row, $00020408)
+    begin
+      Push(Row, 132104)
+    end
     else
     begin
       var MagnitudeSq: real := Max(Zr * Zr + Zi * Zi, 4.0);
-      var Smooth: real := IntToReal(N) + 1.0 - (Log(Log(MagnitudeSq) * 0.5) / Log(2.0));
+      var Smooth: real := (IntToReal(N) + 1.0) - (Log(Log(MagnitudeSq) * 0.5) / Log(2.0));
       Push(Row, SampleColor(State.Palette, Smooth))
     end
   end;
-
   return Row
 end;
 
@@ -153,55 +268,82 @@ function BuildFrame(State: MandelbrotState; Width: integer; Height: integer): ar
 begin
   mutable var Tasks: array of task := [];
   mutable var Pixels: array of integer := [];
-
   for Py: integer := 0 to Height - 1 do
-    Push(Tasks, go BuildFrameRow(State, Width, Height, Py));
-
+  begin
+    Push(Tasks, go BuildFrameRow(State, Width, Height, Py))
+  end;
   for Py: integer := 0 to Height - 1 do
   begin
     var Row: array of integer := Wait(Tasks[Py]);
     for Px: integer := 0 to Width - 1 do
+    begin
       Push(Pixels, Row[Px])
+    end
   end;
-
   return Pixels
 end;
 
 procedure DrawHud(App: Application; State: MandelbrotState);
 begin
-  Application.FillRect(App, 0, 0, 92, 61, $00000010);
-  Application.DrawRect(App, 0, 0, 92, 61, $00FFFFFF);
-  Application.DrawText(App, 4, 4, 'MANDELBROT', $00FFFFFF);
-  Application.DrawText(App, 4, 13, 'ZOOM ' + RealToStr(2.4 / State.SpanY), $00FFFFFF);
-  Application.DrawText(App, 4, 22, 'ITER ' + IntToStr(State.MaxIter), $00FFFFFF);
-  Application.DrawText(App, 4, 31, 'PAL ' + PaletteName(State.Palette), $00FFFFFF);
-  Application.DrawText(App, 4, 40, 'ESC R ARROWS', $00FFFFFF);
-  Application.DrawText(App, 4, 49, '+ - PGUP PGDN', $00FFFFFF);
-  Application.DrawText(App, 4, 58, '1 2 3 WHEEL', $00FFFFFF)
+  Application.FillRect(App, 0, 0, 92, 61, 16);
+  Application.DrawRect(App, 0, 0, 92, 61, 16777215);
+  Application.DrawText(App, 4, 4, 'MANDELBROT', 16777215);
+  Application.DrawText(App, 4, 13, 'ZOOM ' + RealToStr(2.4 / State.SpanY), 16777215);
+  Application.DrawText(App, 4, 22, 'ITER ' + IntToStr(State.MaxIter), 16777215);
+  Application.DrawText(App, 4, 31, 'PAL ' + PaletteName(State.Palette), 16777215);
+  Application.DrawText(App, 4, 40, 'ESC R ARROWS', 16777215);
+  Application.DrawText(App, 4, 49, '+ - PGUP PGDN', 16777215);
+  Application.DrawText(App, 4, 58, '1 2 3 WHEEL', 16777215)
 end;
 
-mutable var State: MandelbrotState := DefaultState();
-var LogicalWidth: integer := 160;
-var LogicalHeight: integer := 100;
-mutable var RenderWidth: integer := 160;
-mutable var RenderHeight: integer := 100;
-mutable var DisplayScaleFactor: integer := 1;
-mutable var DisplayOffsetX: integer := 0;
-mutable var DisplayOffsetY: integer := 0;
-mutable var DisplayWidth: integer := 160;
-mutable var DisplayHeight: integer := 100;
+mutable var
+  mutable var State: MandelbrotState := DefaultState();
 
-function ComputeDisplayScale(TargetWidth: integer; TargetHeight: integer; SourceWidth: integer; SourceHeight: integer): integer;
+var
+  var LogicalWidth: integer := 160;
+  var LogicalHeight: integer := 100;
+
+mutable var
+  mutable var RenderWidth: integer := 160;
+  mutable var RenderHeight: integer := 100;
+  mutable var DisplayScaleFactor: integer := 1;
+  mutable var DisplayOffsetX: integer := 0;
+  mutable var DisplayOffsetY: integer := 0;
+  mutable var DisplayWidth: integer := 160;
+  mutable var DisplayHeight: integer := 100;
+
+function ComputeDisplayScale(
+  TargetWidth: integer;
+  TargetHeight: integer;
+  SourceWidth: integer;
+  SourceHeight: integer
+): integer;
 begin
-  return Max(1, Min(Max(TargetWidth, 1) div Max(SourceWidth, 1), Max(TargetHeight, 1) div Max(SourceHeight, 1)))
+  return Max(1, Min(Max(TargetWidth, 1) div Max(SourceWidth, 1), Max(TargetHeight, 1) div
+
+                                                                 Max(SourceHeight, 1)))
 end;
 
-procedure DrawScaledFrame(App: Application; Source: array of integer; SourceWidth: integer; SourceHeight: integer; Scale: integer; OffsetX: integer; OffsetY: integer);
+procedure DrawScaledFrame(
+  App: Application;
+  Source: array of integer;
+  SourceWidth: integer;
+  SourceHeight: integer;
+  Scale: integer;
+  OffsetX: integer;
+  OffsetY: integer
+);
 begin
-  Application.Clear(App, $00000000);
+  Application.Clear(App, 0);
   for Y: integer := 0 to SourceHeight - 1 do
+  begin
     for X: integer := 0 to SourceWidth - 1 do
-      Application.FillRect(App, OffsetX + X * Scale, OffsetY + Y * Scale, Scale, Scale, Source[Y * SourceWidth + X])
+    begin
+      Application.FillRect(App, OffsetX + X * Scale, OffsetY + Y * Scale, Scale, Scale, Source[Y * SourceWidth +
+
+                                                                                               X])
+    end
+  end
 end;
 
 procedure RequestRender(App: Application);
@@ -214,7 +356,6 @@ begin
   var Screen: Size := Application.Size(App);
   var TargetWidth: integer := Max(Screen.width, 1);
   var TargetHeight: integer := Max(Screen.height, 1);
-
   RenderWidth := LogicalWidth;
   RenderHeight := LogicalHeight;
   DisplayScaleFactor := ComputeDisplayScale(TargetWidth, TargetHeight, RenderWidth, RenderHeight);
@@ -227,7 +368,6 @@ end;
 procedure OnPaint(App: Application);
 begin
   UpdateDisplayLayout(App);
-
   var Frame: array of integer := BuildFrame(State, RenderWidth, RenderHeight);
   DrawScaledFrame(App, Frame, RenderWidth, RenderHeight, DisplayScaleFactor, DisplayOffsetX, DisplayOffsetY);
   DrawHud(App, State)
@@ -243,7 +383,6 @@ function OnKeyPressed(App: Application; Key: Std.Console.KeyEvent): boolean;
 begin
   var StepX: real := SpanX(State, RenderWidth, RenderHeight) * 0.14;
   var StepY: real := State.SpanY * 0.14;
-
   if Key.kind = KeyKind.Escape then
   begin
     Application.HostRequestQuit(App);
@@ -286,67 +425,79 @@ begin
     return true
   end
   else if Key.kind = KeyKind.Character then
+  begin
     case Key.ch of
       '+', '=':
-        begin
-          State.SpanY := Max(State.SpanY * 0.82, 0.000_001);
-          RequestRender(App)
-        end;
+      begin
+        State.SpanY := Max(State.SpanY * 0.82, 0.000001);
+        RequestRender(App)
+      end;
       '-':
-        begin
-          State.SpanY := Min(State.SpanY / 0.82, 3.5);
-          RequestRender(App)
-        end;
+      begin
+        State.SpanY := Min(State.SpanY / 0.82, 3.5);
+        RequestRender(App)
+      end;
       '1':
-        begin
-          State.Palette := 1;
-          RequestRender(App)
-        end;
+      begin
+        State.Palette := 1;
+        RequestRender(App)
+      end;
       '2':
-        begin
-          State.Palette := 2;
-          RequestRender(App)
-        end;
+      begin
+        State.Palette := 2;
+        RequestRender(App)
+      end;
       '3':
-        begin
-          State.Palette := 3;
-          RequestRender(App)
-        end;
+      begin
+        State.Palette := 3;
+        RequestRender(App)
+      end;
       'r', 'R':
+      begin
         ResetExplorer(App)
-    end;
-
+      end
+    end
+  end;
   return false
 end;
 
 procedure OnMouse(App: Application; E: Std.Graph.Event);
 begin
   UpdateDisplayLayout(App);
-
   if E.mouse_action = MouseAction.Down then
   begin
     if E.mouse_button = MouseButton.Left then
     begin
-      if (E.mouse_x >= DisplayOffsetX) and (E.mouse_y >= DisplayOffsetY) and (E.mouse_x < DisplayOffsetX + DisplayWidth) and (E.mouse_y < DisplayOffsetY + DisplayHeight) then
+      if E.mouse_x >= DisplayOffsetX then
       begin
-        var LogicalMouseX: integer := Clamp((E.mouse_x - DisplayOffsetX) div DisplayScaleFactor, 0, RenderWidth - 1);
-        var LogicalMouseY: integer := Clamp((E.mouse_y - DisplayOffsetY) div DisplayScaleFactor, 0, RenderHeight - 1);
+        var LogicalMouseX: integer := Clamp((E.mouse_x - DisplayOffsetX) div DisplayScaleFactor, 0, RenderWidth -
+
+                                                                                                    1);
+        var LogicalMouseY: integer := Clamp((E.mouse_y - DisplayOffsetY) div DisplayScaleFactor, 0, RenderHeight -
+
+                                                                                                    1);
         State.CenterX := ViewportCX(State, RenderWidth, RenderHeight, LogicalMouseX);
         State.CenterY := ViewportCY(State, RenderHeight, LogicalMouseY);
         RequestRender(App)
       end
     end
     else if E.mouse_button = MouseButton.Middle then
+    begin
       ResetExplorer(App)
+    end
   end
 end;
 
 procedure OnWheel(App: Application; E: Std.Graph.Event);
 begin
   if E.wheel_y > 0 then
-    State.SpanY := Max(State.SpanY * 0.88, 0.000_001)
+  begin
+    State.SpanY := Max(State.SpanY * 0.88, 0.000001)
+  end
   else if E.wheel_y < 0 then
-    State.SpanY := Min(State.SpanY / 0.88, 3.5);
+  begin
+    State.SpanY := Min(State.SpanY / 0.88, 3.5)
+  end;
   RequestRender(App)
 end;
 

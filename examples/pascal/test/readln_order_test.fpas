@@ -1,4 +1,5 @@
 program ReadlnOrderTest;
+
 uses Std.Console, Std.Test;
 
 begin

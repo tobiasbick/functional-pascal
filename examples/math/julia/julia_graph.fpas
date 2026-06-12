@@ -1,5 +1,7 @@
 { Spec: docs/pascal/std/graph-app.md (from repository root). }
+
 program JuliaGraph;
+
 uses Std.Array, Std.Console, Std.Conv, Std.Graph, Std.Math;
 
 type
@@ -48,18 +50,42 @@ end;
 function SampleColor(Iter: integer; MaxIter: integer): integer;
 begin
   if Iter >= MaxIter then
-    return $00020408;
-
+  begin
+    return 132104
+  end;
   case Iter mod 8 of
-    0: return $0012246B;
-    1: return $001A4C8F;
-    2: return $002A7ABF;
-    3: return $003CA6D8;
-    4: return $0056C86B;
-    5: return $00D1BE32;
-    6: return $00EE8A3A;
-  else
-    return $00D94C66
+    0:
+    begin
+      return 1188971
+    end;
+    1:
+    begin
+      return 1723535
+    end;
+    2:
+    begin
+      return 2783935
+    end;
+    3:
+    begin
+      return 3974872
+    end;
+    4:
+    begin
+      return 5687403
+    end;
+    5:
+    begin
+      return 13745714
+    end;
+    6:
+    begin
+      return 15632954
+    end
+    else
+    begin
+      return 14240870
+    end
   end
 end;
 
@@ -73,7 +99,6 @@ begin
   var YMin: real := State.CenterY - (State.SpanY * 0.5);
   var YMax: real := State.CenterY + (State.SpanY * 0.5);
   mutable var Pixels: array of integer := [];
-
   for Py: integer := 0 to Height - 1 do
   begin
     var Zy0: real := YMax - (IntToReal(Py) / IntToReal(HeightRange)) * (YMax - YMin);
@@ -83,38 +108,36 @@ begin
       mutable var Zr: real := Zx0;
       mutable var Zi: real := Zy0;
       mutable var N: integer := 0;
-
       while (N < State.MaxIter) and ((Zr * Zr + Zi * Zi) <= 4.0) do
       begin
-        var Tr: real := Zr * Zr - Zi * Zi + State.Jr;
-        var Ti: real := 2.0 * Zr * Zi + State.Ji;
+        var Tr: real := (Zr * Zr - Zi * Zi) + State.Jr;
+        var Ti: real := (2.0 * Zr) * Zi + State.Ji;
         Zr := Tr;
         Zi := Ti;
         N := N + 1
       end;
-
       Push(Pixels, SampleColor(N, State.MaxIter))
     end
   end;
-
   return Pixels
 end;
 
 procedure DrawHud(App: Application; State: JuliaState);
 begin
-  Application.FillRect(App, 0, 0, 92, 52, $00000010);
-  Application.DrawRect(App, 0, 0, 92, 52, $00FFFFFF);
-  Application.DrawText(App, 4, 4, 'JULIA', $00FFFFFF);
-  Application.DrawText(App, 4, 13, 'JR ' + RealToStr(State.Jr), $00FFFFFF);
-  Application.DrawText(App, 4, 22, 'JI ' + RealToStr(State.Ji), $00FFFFFF);
-  Application.DrawText(App, 4, 31, 'ZOOM ' + RealToStr(2.4 / State.SpanY), $00FFFFFF);
-  Application.DrawText(App, 4, 40, 'ESC R ARROWS', $00FFFFFF);
-  Application.DrawText(App, 4, 49, 'WASD WHEEL', $00FFFFFF)
+  Application.FillRect(App, 0, 0, 92, 52, 16);
+  Application.DrawRect(App, 0, 0, 92, 52, 16777215);
+  Application.DrawText(App, 4, 4, 'JULIA', 16777215);
+  Application.DrawText(App, 4, 13, 'JR ' + RealToStr(State.Jr), 16777215);
+  Application.DrawText(App, 4, 22, 'JI ' + RealToStr(State.Ji), 16777215);
+  Application.DrawText(App, 4, 31, 'ZOOM ' + RealToStr(2.4 / State.SpanY), 16777215);
+  Application.DrawText(App, 4, 40, 'ESC R ARROWS', 16777215);
+  Application.DrawText(App, 4, 49, 'WASD WHEEL', 16777215)
 end;
 
-mutable var State: JuliaState := DefaultState();
-mutable var RenderWidth: integer := 96;
-mutable var RenderHeight: integer := 72;
+mutable var
+  mutable var State: JuliaState := DefaultState();
+  mutable var RenderWidth: integer := 96;
+  mutable var RenderHeight: integer := 72;
 
 procedure RequestRender(App: Application);
 begin
@@ -126,7 +149,6 @@ begin
   var Screen: Size := Application.Size(App);
   RenderWidth := Max(Screen.width, 1);
   RenderHeight := Max(Screen.height, 1);
-
   var Frame: array of integer := BuildFrame(State, RenderWidth, RenderHeight);
   Application.UploadFrame(App, RenderWidth, RenderHeight, Frame);
   DrawHud(App, State)
@@ -142,7 +164,6 @@ function OnKeyPressed(App: Application; Key: Std.Console.KeyEvent): boolean;
 begin
   var StepX: real := SpanX(State, RenderWidth, RenderHeight) * 0.12;
   var StepY: real := State.SpanY * 0.12;
-
   if Key.kind = KeyKind.Escape then
   begin
     Application.HostRequestQuit(App);
@@ -173,41 +194,44 @@ begin
     return true
   end
   else if Key.kind = KeyKind.Character then
+  begin
     case Key.ch of
       '+', '=':
-        begin
-          State.SpanY := Max(State.SpanY * 0.85, 0.000_001);
-          RequestRender(App)
-        end;
+      begin
+        State.SpanY := Max(State.SpanY * 0.85, 0.000001);
+        RequestRender(App)
+      end;
       '-':
-        begin
-          State.SpanY := Min(State.SpanY / 0.85, 3.5);
-          RequestRender(App)
-        end;
+      begin
+        State.SpanY := Min(State.SpanY / 0.85, 3.5);
+        RequestRender(App)
+      end;
       'r', 'R':
-        ResetExplorer(App);
+      begin
+        ResetExplorer(App)
+      end;
       'a', 'A':
-        begin
-          State.Jr := State.Jr - 0.02;
-          RequestRender(App)
-        end;
+      begin
+        State.Jr := State.Jr - 0.02;
+        RequestRender(App)
+      end;
       'd', 'D':
-        begin
-          State.Jr := State.Jr + 0.02;
-          RequestRender(App)
-        end;
+      begin
+        State.Jr := State.Jr + 0.02;
+        RequestRender(App)
+      end;
       'w', 'W':
-        begin
-          State.Ji := State.Ji + 0.02;
-          RequestRender(App)
-        end;
+      begin
+        State.Ji := State.Ji + 0.02;
+        RequestRender(App)
+      end;
       's', 'S':
-        begin
-          State.Ji := State.Ji - 0.02;
-          RequestRender(App)
-        end
-    end;
-
+      begin
+        State.Ji := State.Ji - 0.02;
+        RequestRender(App)
+      end
+    end
+  end;
   return false
 end;
 
@@ -222,16 +246,22 @@ begin
       RequestRender(App)
     end
     else if E.mouse_button = MouseButton.Middle then
+    begin
       ResetExplorer(App)
+    end
   end
 end;
 
 procedure OnWheel(App: Application; E: Std.Graph.Event);
 begin
   if E.wheel_y > 0 then
-    State.SpanY := Max(State.SpanY * 0.85, 0.000_001)
+  begin
+    State.SpanY := Max(State.SpanY * 0.85, 0.000001)
+  end
   else if E.wheel_y < 0 then
-    State.SpanY := Min(State.SpanY / 0.85, 3.5);
+  begin
+    State.SpanY := Min(State.SpanY / 0.85, 3.5)
+  end;
   RequestRender(App)
 end;
 

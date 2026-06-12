@@ -1,11 +1,19 @@
 { Spec: docs/pascal/std/env.md (from repository root). }
+
 program EnvBasics;
+
 uses Std.Console, Std.Env, Std.Option;
 
 begin
   WriteLn('PATH set: ', Exists('PATH'));
   case Get('PATH') of
-    Some(_): WriteLn('PATH lookup: some');
-    None:    WriteLn('PATH lookup: none')
+    Some(_):
+    begin
+      WriteLn('PATH lookup: some')
+    end;
+    None:
+    begin
+      WriteLn('PATH lookup: none')
+    end
   end
 end.

@@ -1,5 +1,7 @@
 { Built only via mandelbrot.fpasprj — not a standalone program. }
+
 unit Mandelbrot.Color;
+
 uses Std.Console, Std.Math;
 
 type
@@ -12,9 +14,18 @@ type
 function PaletteName(Kind: PaletteKind): string;
 begin
   case Kind of
-    PaletteKind.DeepOcean: return 'Deep Ocean';
-    PaletteKind.Ember:     return 'Ember';
-    PaletteKind.Aurora:    return 'Aurora'
+    PaletteKind.DeepOcean:
+    begin
+      return 'Deep Ocean'
+    end;
+    PaletteKind.Ember:
+    begin
+      return 'Ember'
+    end;
+    PaletteKind.Aurora:
+    begin
+      return 'Aurora'
+    end
   end
 end;
 
@@ -28,53 +39,164 @@ begin
   var Band: integer := BandIndex(EscapeValue);
   case Kind of
     PaletteKind.DeepOcean:
+    begin
       case Band of
-        0: return Blue;
-        1: return Blue;
-        2: return LightBlue;
-        3: return Cyan;
-        4: return LightCyan;
-        5: return LightCyan;
-        6: return Green;
-        7: return LightGreen;
-        8: return Yellow;
-        9: return LightGray;
-        10: return White;
-      else
-        return White
-      end;
-    PaletteKind.Ember:
-      case Band of
-        0: return Red;
-        1: return Red;
-        2: return LightRed;
-        3: return Brown;
-        4: return Yellow;
-        5: return Yellow;
-        6: return LightGray;
-        7: return White;
-        8: return LightMagenta;
-        9: return Magenta;
-        10: return LightRed;
-      else
-        return White
-      end;
-    PaletteKind.Aurora:
-      case Band of
-        0: return DarkGray;
-        1: return Blue;
-        2: return LightBlue;
-        3: return Cyan;
-        4: return LightCyan;
-        5: return Green;
-        6: return LightGreen;
-        7: return LightGreen;
-        8: return Yellow;
-        9: return LightGray;
-        10: return White;
-      else
-        return White
+        0:
+        begin
+          return Blue
+        end;
+        1:
+        begin
+          return Blue
+        end;
+        2:
+        begin
+          return LightBlue
+        end;
+        3:
+        begin
+          return Cyan
+        end;
+        4:
+        begin
+          return LightCyan
+        end;
+        5:
+        begin
+          return LightCyan
+        end;
+        6:
+        begin
+          return Green
+        end;
+        7:
+        begin
+          return LightGreen
+        end;
+        8:
+        begin
+          return Yellow
+        end;
+        9:
+        begin
+          return LightGray
+        end;
+        10:
+        begin
+          return White
+        end
+        else
+        begin
+          return White
+        end
       end
+    end;
+    PaletteKind.Ember:
+    begin
+      case Band of
+        0:
+        begin
+          return Red
+        end;
+        1:
+        begin
+          return Red
+        end;
+        2:
+        begin
+          return LightRed
+        end;
+        3:
+        begin
+          return Brown
+        end;
+        4:
+        begin
+          return Yellow
+        end;
+        5:
+        begin
+          return Yellow
+        end;
+        6:
+        begin
+          return LightGray
+        end;
+        7:
+        begin
+          return White
+        end;
+        8:
+        begin
+          return LightMagenta
+        end;
+        9:
+        begin
+          return Magenta
+        end;
+        10:
+        begin
+          return LightRed
+        end
+        else
+        begin
+          return White
+        end
+      end
+    end;
+    PaletteKind.Aurora:
+    begin
+      case Band of
+        0:
+        begin
+          return DarkGray
+        end;
+        1:
+        begin
+          return Blue
+        end;
+        2:
+        begin
+          return LightBlue
+        end;
+        3:
+        begin
+          return Cyan
+        end;
+        4:
+        begin
+          return LightCyan
+        end;
+        5:
+        begin
+          return Green
+        end;
+        6:
+        begin
+          return LightGreen
+        end;
+        7:
+        begin
+          return LightGreen
+        end;
+        8:
+        begin
+          return Yellow
+        end;
+        9:
+        begin
+          return LightGray
+        end;
+        10:
+        begin
+          return White
+        end
+        else
+        begin
+          return White
+        end
+      end
+    end
   end
 end;
 

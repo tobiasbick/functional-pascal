@@ -1,6 +1,8 @@
-            program T;
-            uses Std.Console;
-            begin
-              WriteLn(true);
+program T;
+
+uses Std.Console;
+
+begin
+  WriteLn(true);
   WriteLn(false)
 end.

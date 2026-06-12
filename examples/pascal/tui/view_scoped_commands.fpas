@@ -1,12 +1,15 @@
 { View-scoped command demo — Tab focuses child views; Ctrl+S resolves through the focused view's ancestor chain; Escape exits. }
+
 program TuiViewScopedCommands;
+
 uses Std.Console, Std.Tui;
 
-mutable var Status: string := 'Press Tab to focus a button. Ctrl+S uses the focused panel command.';
-mutable var LeftPanel: integer := -1;
-mutable var RightPanel: integer := -1;
-mutable var LeftButton: integer := -1;
-mutable var RightButton: integer := -1;
+mutable var
+  mutable var Status: string := 'Press Tab to focus a button. Ctrl+S uses the focused panel command.';
+  mutable var LeftPanel: integer := -1;
+  mutable var RightPanel: integer := -1;
+  mutable var LeftButton: integer := -1;
+  mutable var RightButton: integer := -1;
 
 procedure OnPaint(App: Application);
 begin
@@ -36,19 +39,26 @@ end;
 procedure OnCommand(App: Application; CommandId: integer);
 begin
   if CommandId = 10 then
+  begin
     Status := 'Global Ctrl+S fired (no scoped view override).'
+  end
   else if CommandId = 20 then
+  begin
     Status := 'Left panel Ctrl+S fired through ancestor lookup.'
+  end
   else if CommandId = 30 then
+  begin
     Status := 'Right panel Ctrl+S fired through ancestor lookup.'
+  end
   else if CommandId = 99 then
   begin
     Application.HostRequestQuit(App);
     return
   end
   else
-    Status := 'Unhandled command id';
-
+  begin
+    Status := 'Unhandled command id'
+  end;
   Application.RequestRedraw(App)
 end;
 
@@ -59,7 +69,6 @@ begin
     Application.HostRequestQuit(App);
     return true
   end;
-
   return false
 end;
 
@@ -86,26 +95,21 @@ begin
     alt := false;
     meta := false;
   end;
-
   LeftPanel := Application.HostRegisterView(App, 4, 9, 28, 4);
   RightPanel := Application.HostRegisterView(App, 36, 9, 28, 4);
   LeftButton := Application.HostRegisterView(App, 2, 1, 20, 1);
   RightButton := Application.HostRegisterView(App, 2, 1, 20, 1);
-
   Application.HostSetViewParent(App, LeftButton, LeftPanel);
   Application.HostSetViewParent(App, RightButton, RightPanel);
   Application.HostPushChildView(App, LeftButton);
   Application.HostPushChildView(App, RightButton);
-
   Application.HostRegisterOnPaint(App, OnPaint);
   Application.HostRegisterOnCommand(App, OnCommand);
   Application.HostRegisterOnKeyPressed(App, OnKeyPressed);
   Application.HostRegisterOnResize(App, OnResize);
-
   Application.HostBindCommand(App, SaveKey, 10);
   Application.HostBindCommand(App, QuitKey, 99);
   Application.HostBindCommandToView(App, LeftPanel, SaveKey, 20);
   Application.HostBindCommandToView(App, RightPanel, SaveKey, 30);
-
   Application.Run(App)
 end.

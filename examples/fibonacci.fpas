@@ -1,16 +1,23 @@
 program Fibonacci;
+
 uses Std.Console;
 
 function Fib(N: integer): integer;
 begin
   if N <= 1 then
+  begin
     return N
+  end
   else
+  begin
     return Fib(N - 1) + Fib(N - 2)
+  end
 end;
 
 begin
   WriteLn('Fibonacci sequence:');
   for I: integer := 0 to 9 do
+  begin
     WriteLn(Fib(I))
+  end
 end.

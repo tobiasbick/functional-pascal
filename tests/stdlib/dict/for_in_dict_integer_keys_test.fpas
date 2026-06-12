@@ -1,7 +1,11 @@
 program T;
+
 uses Std.Console, Std.Dict, Std.Conv;
+
 begin
   var D: dict of integer to string := [1: 'one', 2: 'two', 3: 'three'];
   for K: integer in D do
+  begin
     WriteLn(IntToStr(K))
+  end
 end.

@@ -1,11 +1,14 @@
 program T;
+
 uses Std.Console, Std.Result;
-function RecoverZero(E: string): Result of integer, string;
+
+function RecoverZero(E: string): result of integer, string;
 begin
   return Ok(0)
 end;
+
 begin
-  var R: Result of integer, string := Error('oops');
-  var M: Result of integer, string := OrElse(R, RecoverZero);
+  var R: result of integer, string := Error('oops');
+  var M: result of integer, string := OrElse(R, RecoverZero);
   WriteLn(Unwrap(M))
 end.

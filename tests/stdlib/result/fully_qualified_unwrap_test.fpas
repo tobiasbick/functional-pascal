@@ -1,6 +1,8 @@
 program T;
+
 uses Std.Console, Std.Result;
+
 begin
-  var R: Result of integer, string := Ok(99);
+  var R: result of integer, string := Ok(99);
   WriteLn(Std.Result.Unwrap(R))
 end.

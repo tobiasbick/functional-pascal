@@ -1,5 +1,7 @@
 program T;
+
 uses Std.Console, Std.Math;
+
 begin
   WriteLn(Cos(0.0))
 end.

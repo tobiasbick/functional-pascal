@@ -1,5 +1,7 @@
 program T;
+
 uses Std.Console, Std.Math;
+
 begin
   WriteLn(Min(3.5, 1.2));
   WriteLn(Min(-0.5, 0.5))

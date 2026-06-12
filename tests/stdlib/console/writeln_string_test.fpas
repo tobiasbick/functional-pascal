@@ -1,5 +1,7 @@
-            program T;
-            uses Std.Console;
-            begin
-              WriteLn('hello')
+program T;
+
+uses Std.Console;
+
+begin
+  WriteLn('hello')
 end.

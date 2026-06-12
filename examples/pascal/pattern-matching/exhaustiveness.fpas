@@ -1,11 +1,10 @@
 program ExhaustivenessExample;
+
 uses Std.Console, Std.Conv, Std.Array;
 
-{ The compiler checks that case statements on enum, Result, and Option }
-{ types cover all variants. A missing variant is a compile-time error  }
-{ unless an else branch is present.                                    }
-
 type
+  { unless an else branch is present.                                    }
+
   Light = enum
     Red;
     Yellow;
@@ -14,19 +13,31 @@ type
 
 function TrafficAdvice(L: Light): string;
 begin
-  { All three variants are covered — no else needed. }
   case L of
-    Light.Red:    return 'Stop';
-    Light.Yellow: return 'Caution';
-    Light.Green:  return 'Go'
+    Light.Red:
+    begin
+      return 'Stop'
+    end;
+    Light.Yellow:
+    begin
+      return 'Caution'
+    end;
+    Light.Green:
+    begin
+      return 'Go'
+    end
   end
 end;
 
-function SafeLookup(Items: array of integer; Target: integer): Option of integer;
+function SafeLookup(Items: array of integer; Target: integer): option of integer;
 begin
   for I: integer := 0 to Length(Items) - 1 do
+  begin
     if Items[I] = Target then
-      return Some(I);
+    begin
+      return Some(I)
+    end
+  end;
   return None
 end;
 
@@ -35,20 +46,28 @@ begin
   WriteLn(TrafficAdvice(Light.Red));
   WriteLn(TrafficAdvice(Light.Yellow));
   WriteLn(TrafficAdvice(Light.Green));
-
   WriteLn('--- Option exhaustiveness ---');
-  var Idx: Option of integer := SafeLookup([10, 20, 30], 20);
-  { Both Some and None are covered. }
+  var Idx: option of integer := SafeLookup([10, 20, 30], 20);
   case Idx of
-    Some(I): WriteLn('Found at index ' + IntToStr(I));
-    None:    WriteLn('Not found')
+    Some(I):
+    begin
+      WriteLn('Found at index ' + IntToStr(I))
+    end;
+    None:
+    begin
+      WriteLn('Not found')
+    end
   end;
-
   WriteLn('--- Result exhaustiveness ---');
-  var R: Result of integer, string := Ok(42);
-  { Both Ok and Error are covered. }
+  var R: result of integer, string := Ok(42);
   case R of
-    Ok(V):  WriteLn('Value: ' + IntToStr(V));
-    Error(E): WriteLn('Error: ' + E)
+    Ok(V):
+    begin
+      WriteLn('Value: ' + IntToStr(V))
+    end;
+    Error(E):
+    begin
+      WriteLn('Error: ' + E)
+    end
   end
 end.

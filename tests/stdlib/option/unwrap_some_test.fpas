@@ -1,6 +1,8 @@
 program T;
+
 uses Std.Console, Std.Option;
+
 begin
-  var O: Option of integer := Some(7);
+  var O: option of integer := Some(7);
   WriteLn(Unwrap(O))
 end.

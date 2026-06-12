@@ -1,12 +1,21 @@
 program T;
+
 uses Std.Console, Std.Result, Std.Conv;
-function PositiveToStr(V: integer): Result of string, string;
+
+function PositiveToStr(V: integer): result of string, string;
 begin
-  if V > 0 then return Ok(IntToStr(V))
-  else return Error('non-positive')
+  if V > 0 then
+  begin
+    return Ok(IntToStr(V))
+  end
+  else
+  begin
+    return Error('non-positive')
+  end
 end;
+
 begin
-  var R: Result of integer, string := Ok(10);
-  var M: Result of string, string := AndThen(R, PositiveToStr);
+  var R: result of integer, string := Ok(10);
+  var M: result of string, string := AndThen(R, PositiveToStr);
   WriteLn(Unwrap(M))
 end.

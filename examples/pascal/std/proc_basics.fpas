@@ -1,10 +1,18 @@
 { Spec: docs/pascal/std/proc.md — requires `fpas` on PATH. }
+
 program ProcBasics;
+
 uses Std.Console, Std.Conv, Std.Proc, Std.Result;
 
 begin
   case Run('fpas', ['--version']) of
-    Ok(Code): WriteLn('fpas --version exit: ', IntToStr(Code));
-    Error(M): WriteLn('run error: ', M)
+    Ok(Code):
+    begin
+      WriteLn('fpas --version exit: ', IntToStr(Code))
+    end;
+    Error(M):
+    begin
+      WriteLn('run error: ', M)
+    end
   end
 end.

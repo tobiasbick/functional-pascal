@@ -1,5 +1,7 @@
 { Spec: docs/pascal/std/array.md (from repository root). }
+
 program ArrayBasics;
+
 uses Std.Console, Std.Conv, Std.Array;
 
 function IsEven(X: integer): boolean;

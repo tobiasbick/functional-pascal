@@ -1,4 +1,5 @@
 program WaitAllEmpty;
+
 uses Std.Console, Std.Task;
 
 begin

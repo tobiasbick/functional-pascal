@@ -1,8 +1,10 @@
 program T;
+
 uses Std.Console, Std.Result, Std.Option;
+
 begin
-  var R: Result of integer, string := Ok(42);
-  var O: Option of integer := Some(7);
+  var R: result of integer, string := Ok(42);
+  var O: option of integer := Some(7);
   WriteLn(Std.Result.Unwrap(R));
   WriteLn(Std.Option.Unwrap(O))
 end.

@@ -1,26 +1,34 @@
 /// Turbo Pascal-style desktop colors for the FPAS IDE.
+
 unit Ide.Theme;
+
 uses Std.Console;
 
-/// Std.Console color indices — see docs/pascal/std/console.md.
+const
+  /// Desktop background color (classic TP blue).
 
-/// Desktop background color (classic TP blue).
-const DesktopBg: integer := Blue;
+  DesktopBg: integer := Blue;
+  /// Menu bar normal foreground (black text on gray bar, Turbo Vision style).
 
-/// Menu bar normal foreground (black text on gray bar, Turbo Vision style).
-const MenuBarFg: integer := Black;
-/// Menu bar normal background (classic TP IDE gray strip).
-const MenuBarBg: integer := LightGray;
-/// Menu bar hover/inverted foreground.
-const MenuBarHighlightFg: integer := LightGray;
-/// Menu bar hover/inverted background.
-const MenuBarHighlightBg: integer := Black;
-/// Disabled menu item foreground.
-const MenuBarDisabledFg: integer := DarkGray;
-/// Alt+letter shortcut foreground on the menu bar (Turbo Pascal red).
-const MenuBarAccelFg: integer := Red;
+  MenuBarFg: integer := Black;
+  /// Menu bar normal background (classic TP IDE gray strip).
 
-/// Status bar foreground (black text on gray bar).
-const StatusBarFg: integer := Black;
-/// Status bar background (matches menu bar gray strip).
-const StatusBarBg: integer := LightGray;
+  MenuBarBg: integer := LightGray;
+  /// Menu bar hover/inverted foreground.
+
+  MenuBarHighlightFg: integer := LightGray;
+  /// Menu bar hover/inverted background.
+
+  MenuBarHighlightBg: integer := Black;
+  /// Disabled menu item foreground.
+
+  MenuBarDisabledFg: integer := DarkGray;
+  /// Alt+letter shortcut foreground on the menu bar (Turbo Pascal red).
+
+  MenuBarAccelFg: integer := Red;
+  /// Status bar foreground (black text on gray bar).
+
+  StatusBarFg: integer := Black;
+  /// Status bar background (matches menu bar gray strip).
+
+  StatusBarBg: integer := LightGray;

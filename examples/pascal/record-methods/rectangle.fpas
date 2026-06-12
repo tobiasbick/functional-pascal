@@ -1,4 +1,5 @@
 program RectangleExample;
+
 uses Std.Console, Std.Conv;
 
 type
@@ -25,17 +26,18 @@ type
     begin
       mutable var Kind: string := 'Rectangle';
       if Self.IsSquare() then
-        Kind := 'Square';
-      WriteLn(Kind + ' ' + IntToStr(Self.W) + 'x' + IntToStr(Self.H)
-        + ' area=' + IntToStr(Self.Area())
-        + ' perimeter=' + IntToStr(Self.Perimeter()))
+      begin
+        Kind := 'Square'
+      end;
+      WriteLn((((((((Kind + ' ') + IntToStr(Self.W)) + 'x') + IntToStr(Self.H)) + ' area=') + IntToStr(Self.Area())) + ' perimeter=') +
+
+              IntToStr(Self.Perimeter()))
     end;
   end;
 
 begin
   var R: Rect := record W := 5; H := 3; end;
   R.Describe();
-
   var S: Rect := record W := 4; H := 4; end;
   S.Describe()
 end.

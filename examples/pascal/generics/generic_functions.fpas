@@ -1,4 +1,5 @@
 program GenericFunctionsExample;
+
 uses Std.Console, Std.Array, Std.Conv;
 
 function Identity<T>(Value: T): T;
@@ -20,11 +21,9 @@ begin
   WriteLn('Identity(integer): ', Identity(42));
   WriteLn('Identity(string): ', Identity('hello'));
   WriteLn('Identity(boolean): ', Identity(true));
-
   var Numbers: array of integer := Wrap(99);
   WriteLn('Wrapped length: ', IntToStr(Std.Array.Length(Numbers)));
   WriteLn('First wrapped value: ', FirstElement(Numbers));
-
   var Words: array of string := ['red', 'green', 'blue'];
   WriteLn('First word: ', FirstElement(Words))
 end.

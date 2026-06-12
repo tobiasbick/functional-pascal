@@ -1,5 +1,7 @@
 program T;
+
 uses Std.Console, Std.Random;
+
 begin
   WriteLn(Std.Random.RandomInt(4, 4))
 end.

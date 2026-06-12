@@ -1,17 +1,22 @@
 { ShowDialog demo — an owned dialog root is created on demand and modal-local commands close it. }
+
 program TuiShowDialog;
+
 uses Std.Console, Std.Tui;
 
-mutable var DialogView: integer := -1;
-mutable var Status: string := 'Ctrl+D opens an owned dialog. Ctrl+Q exits.';
+mutable var
+  mutable var DialogView: integer := -1;
+  mutable var Status: string := 'Ctrl+D opens an owned dialog. Ctrl+Q exits.';
 
 procedure ClearBounds(Bounds: Std.Tui.Rect);
 begin
   for Row: integer := 0 to Bounds.height - 1 do
   begin
-    GotoXY(Bounds.x + 1, Bounds.y + Row + 1);
+    GotoXY(Bounds.x + 1, (Bounds.y + Row) + 1);
     for Col: integer := 0 to Bounds.width - 1 do
+    begin
       Write(' ')
+    end
   end
 end;
 
@@ -54,7 +59,7 @@ begin
     begin
       var EscapeKey: Std.Console.KeyEvent := record
         kind := Std.Console.KeyKind.Escape;
-        ch := #27;
+        ch := '';
         shift := false;
         ctrl := false;
         alt := false;
@@ -66,8 +71,9 @@ begin
       Status := 'Dialog open. Escape closes it.'
     end
     else
-      Status := 'Dialog already open.';
-
+    begin
+      Status := 'Dialog already open.'
+    end;
     Application.RequestRedraw(App)
   end
   else if CommandId = 2 then
@@ -81,7 +87,9 @@ begin
     end
   end
   else if CommandId = 99 then
+  begin
     Application.HostRequestQuit(App)
+  end
 end;
 
 procedure OnResize(App: Application; NewSize: Size);
@@ -107,7 +115,6 @@ begin
     alt := false;
     meta := false;
   end;
-
   Application.HostRegisterOnPaint(App, OnPaint);
   Application.HostRegisterOnCommand(App, OnCommand);
   Application.HostRegisterOnResize(App, OnResize);

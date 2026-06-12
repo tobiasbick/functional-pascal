@@ -1,11 +1,14 @@
 program T;
+
 uses Std.Console, Std.Json;
+
 begin
   var V: JsonValue := JsonValue.Array([
-    JsonValue.Bool(true),
-    JsonValue.Null,
-    JsonValue.String('hi'),
-    JsonValue.Number(1.5)
-  ]);
+                                        JsonValue.Bool(true),
+                                        JsonValue.Null,
+                                        JsonValue.String('hi'),
+                                        JsonValue.Number(1.5)
+
+                                      ]);
   WriteLn(Stringify(V))
 end.

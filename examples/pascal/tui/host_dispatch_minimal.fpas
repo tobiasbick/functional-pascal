@@ -1,9 +1,11 @@
 { Minimal host-dispatch API: one ProcessNext spin then exit. See docs/pascal/std/tui-app.md. }
+
 program TuiHostDispatchMinimal;
+
 uses Std.Console, Std.Tui;
+
 begin
   var App: Application := Application.Open();
-  { Tag 0 = no event processed this step (typical with no queued input). }
   Std.Console.WriteLn(Application.HostProcessNext(App, 32));
   Application.Close(App)
 end.

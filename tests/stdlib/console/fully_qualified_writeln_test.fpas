@@ -1,5 +1,7 @@
-            program T;
-            uses Std.Console;
-            begin
-              Std.Console.WriteLn('qualified')
+program T;
+
+uses Std.Console;
+
+begin
+  Std.Console.WriteLn('qualified')
 end.

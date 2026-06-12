@@ -1,9 +1,17 @@
 program T;
+
 uses Std.Console, Std.Json;
+
 begin
-  var R: Result of JsonValue, string := Parse('{bad json');
+  var R: result of JsonValue, string := Parse('{bad json');
   case R of
-    Ok(V): WriteLn(Stringify(V));
-    Error(E): WriteLn('error')
+    Ok(V):
+    begin
+      WriteLn(Stringify(V))
+    end;
+    Error(E):
+    begin
+      WriteLn('error')
+    end
   end
 end.

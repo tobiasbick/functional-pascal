@@ -1,6 +1,8 @@
 program T;
+
 uses Std.Console, Std.Result;
+
 begin
-  var R: Result of integer, string := Error('fail');
+  var R: result of integer, string := Error('fail');
   WriteLn(UnwrapOr(R, 0))
 end.

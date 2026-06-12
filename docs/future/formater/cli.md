@@ -1,6 +1,6 @@
 # Formatter CLI (`fpas fmt`)
 
-**Status: v1 + v2 Phase 1.** Output shape: [style.md](style.md). Emitter: [`crates/fpas-fmt/`](../../../crates/fpas-fmt/).
+**Status: v1 + v2 Phase 4.** Output shape: [style.md](style.md). Emitter: [`crates/fpas-fmt/`](../../../crates/fpas-fmt/).
 
 ## Usage
 
@@ -39,7 +39,9 @@ Each `<path>` may be:
 ## Implementation
 
 - [`crates/fpas-cli/src/cli_input.rs`](../../../crates/fpas-cli/src/cli_input.rs) — `fpas fmt`, flags, discovery.
-- [`crates/fpas-cli/src/cli_fmt/`](../../../crates/fpas-cli/src/cli_fmt/) — path resolution, read → `parse_compilation_unit` → `fpas_fmt::format_compilation_unit` → write or stdout.
+- [`crates/fpas-cli/src/cli_fmt/`](../../../crates/fpas-cli/src/cli_fmt/) — path resolution, read → `parse_compilation_unit` → `fpas_fmt::format_source` → write or stdout.
+- [`scripts/format-fpas-sources.sh`](../../../scripts/format-fpas-sources.sh) — format `examples/`, `tests/`, `apps/` in one command.
+- [`.github/workflows/ci.yml`](../../../.github/workflows/ci.yml) — `fpas fmt --check` on pull requests.
 
 ## Deferred (post-v2 Phase 1)
 

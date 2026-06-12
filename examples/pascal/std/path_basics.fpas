@@ -1,5 +1,7 @@
 { Spec: docs/pascal/std/path.md (from repository root). }
+
 program PathBasics;
+
 uses Std.Console, Std.Path;
 
 begin

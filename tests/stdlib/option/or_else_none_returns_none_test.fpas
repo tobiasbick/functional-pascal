@@ -1,11 +1,14 @@
 program T;
+
 uses Std.Console, Std.Option;
-function AlwaysNone(): Option of integer;
+
+function AlwaysNone(): option of integer;
 begin
   return None
 end;
+
 begin
-  var O: Option of integer := None;
-  var M: Option of integer := OrElse(O, AlwaysNone);
+  var O: option of integer := None;
+  var M: option of integer := OrElse(O, AlwaysNone);
   WriteLn(IsNone(M))
 end.

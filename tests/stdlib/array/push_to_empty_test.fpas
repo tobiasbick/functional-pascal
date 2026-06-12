@@ -1,5 +1,7 @@
 program T;
+
 uses Std.Console, Std.Array;
+
 begin
   mutable var A: array of integer := [];
   Push(A, 42);

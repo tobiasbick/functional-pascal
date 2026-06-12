@@ -1,6 +1,8 @@
 program T;
+
 uses Std.Console, Std.Option;
+
 begin
-  var O: Option of integer := None;
+  var O: option of integer := None;
   WriteLn(IsNone(O))
 end.

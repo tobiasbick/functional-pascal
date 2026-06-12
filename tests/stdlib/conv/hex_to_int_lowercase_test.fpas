@@ -1,5 +1,7 @@
 program T;
+
 uses Std.Console, Std.Conv;
+
 begin
   WriteLn(HexToInt('ff'))
 end.

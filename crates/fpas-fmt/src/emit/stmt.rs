@@ -199,9 +199,13 @@ fn emit_case(emitter: &mut Emitter, stmt: &Stmt) {
 
         if let Some(else_stmts) = else_body {
             inner.writeln("else");
-            inner.writeln("begin");
-            inner.with_indent(|body| emit_stmts_in_block(body, else_stmts));
-            inner.writeln("end");
+            if else_stmts.len() == 1 {
+                emit_wrapped_branch_with_semicolon(inner, &else_stmts[0], false);
+            } else {
+                inner.writeln("begin");
+                inner.with_indent(|body| emit_stmts_in_block(body, else_stmts));
+                inner.writeln("end");
+            }
         }
     });
 
@@ -397,6 +401,24 @@ end.",
         assert!(formatted.contains("repeat\n"));
         assert!(!formatted.contains("repeat\nbegin\n"));
         assert!(formatted.ends_with("until N >= 3\n"));
+    }
+
+    #[test]
+    fn case_else_with_block_body_is_idempotent() {
+        let source = "program T; begin case X of 1: WriteLn('one') else begin WriteLn('other') end end end.";
+        let formatted_once = format_body(source);
+        let formatted_twice = format_body(&format!(
+            "program T; begin {} end.",
+            formatted_once.trim_end()
+        ));
+        assert_eq!(
+            formatted_once, formatted_twice,
+            "once:\n{formatted_once}\ntwice:\n{formatted_twice}"
+        );
+        assert!(
+            !formatted_once.contains("begin\n    begin\n    begin"),
+            "formatted:\n{formatted_once}"
+        );
     }
 
     #[test]

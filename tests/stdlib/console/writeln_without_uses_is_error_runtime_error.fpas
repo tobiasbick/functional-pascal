@@ -1,4 +1,5 @@
-            program T;
-            begin
-              WriteLn('hello')
+program T;
+
+begin
+  WriteLn('hello')
 end.

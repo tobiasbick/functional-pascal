@@ -1,6 +1,8 @@
 program T;
+
 uses Std.Console, Std.Option;
+
 begin
-  var O: Option of string := Some('hello');
+  var O: option of string := Some('hello');
   WriteLn(Unwrap(O))
 end.

@@ -1,6 +1,8 @@
-            program T;
-            uses Std.Console;
-            begin
-              Std.Console.Write('a');
-  Std.Console.WriteLn
+program T;
+
+uses Std.Console;
+
+begin
+  Std.Console.Write('a');
+  Std.Console.WriteLn()
 end.

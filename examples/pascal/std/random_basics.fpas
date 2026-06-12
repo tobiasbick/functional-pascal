@@ -1,5 +1,7 @@
 { Spec: docs/pascal/std/random.md (from repository root). }
+
 program RandomBasics;
+
 uses Std.Console, Std.Conv, Std.Random;
 
 begin

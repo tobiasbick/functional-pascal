@@ -1,5 +1,7 @@
 program T;
+
 uses Std.Console, Std.Dict;
+
 begin
   mutable var D: dict of string to integer := ['A': 1];
   D['A'] := 2;

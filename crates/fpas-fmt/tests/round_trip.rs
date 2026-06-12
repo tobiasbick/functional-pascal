@@ -1,8 +1,10 @@
-//! Format → re-parse round-trip tests (parser corpus and example programs).
+//! Format → re-parse round-trip tests (parser corpus and repository sources).
 
 mod common;
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
+
+use common::walk::{repo_root, walk_fpas_files};
 
 #[test]
 fn parser_corpus_round_trip() {
@@ -12,30 +14,26 @@ fn parser_corpus_round_trip() {
 }
 
 #[test]
-fn examples_pascal_round_trip() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/pascal");
-    walk_fpas_files(&root, &mut |path, source| {
-        let label = path.strip_prefix(&root).unwrap_or(path).to_string_lossy();
-        common::assert_round_trip(&label, source);
-    });
+fn examples_tree_round_trip() {
+    round_trip_tree("examples", &repo_root("examples"));
 }
 
-fn walk_fpas_files(dir: &Path, visit: &mut dyn FnMut(&Path, &str)) {
-    let Ok(entries) = std::fs::read_dir(dir) else {
-        return;
-    };
-    for entry in entries.flatten() {
-        let path = entry.path();
-        if path.is_dir() {
-            walk_fpas_files(&path, visit);
-            continue;
-        }
-        if path.extension().is_none_or(|ext| ext != "fpas") {
-            continue;
-        }
-        let source = std::fs::read_to_string(&path).unwrap_or_else(|err| {
-            panic!("failed to read {}: {err}", path.display());
-        });
-        visit(&path, &source);
-    }
+#[test]
+fn tests_tree_round_trip() {
+    round_trip_tree("tests", &repo_root("tests"));
+}
+
+#[test]
+fn apps_tree_round_trip() {
+    round_trip_tree("apps", &repo_root("apps"));
+}
+
+fn round_trip_tree(label: &str, root: &Path) {
+    walk_fpas_files(root, &mut |path, source| {
+        let relative = path
+            .strip_prefix(&repo_root("."))
+            .unwrap_or(path)
+            .to_string_lossy();
+        common::assert_round_trip(&format!("{label}/{relative}"), source);
+    });
 }

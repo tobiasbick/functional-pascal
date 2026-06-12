@@ -4,7 +4,7 @@ Planning and implementation for a canonical Functional Pascal source formatter (
 
 ## Status
 
-**v1 complete; v2 Phase 0–4 complete.** Emitter [`crates/fpas-fmt/`](../../../crates/fpas-fmt/); CLI [`fpas fmt`](../../../crates/fpas-cli/src/cli_fmt/) per [cli.md](cli.md). Golden examples: [style.md — Formatted output](style.md#formatted-output-fpas-fmt). Repo sources formatted; CI: [`.github/workflows/ci.yml`](../../../.github/workflows/ci.yml). **Next:** v2 Phase 5 (hardening) in [implementation-v2.md](implementation-v2.md).
+**v1 and v2 complete.** Emitter [`crates/fpas-fmt/`](../../../crates/fpas-fmt/); CLI [`fpas fmt`](../../../crates/fpas-cli/src/cli_fmt/) per [cli.md](cli.md). Golden examples: [style.md — Formatted output](style.md#formatted-output-fpas-fmt). Repo sources formatted; CI: [`.github/workflows/ci.yml`](../../../.github/workflows/ci.yml). Hardening: [`round_trip.rs`](../../../crates/fpas-fmt/tests/round_trip.rs), [`fuzz_light.rs`](../../../crates/fpas-fmt/tests/fuzz_light.rs). Deferred items: [cli.md — Deferred to v3+](cli.md#deferred-to-v3).
 
 ## Principles
 
@@ -23,7 +23,7 @@ Planning and implementation for a canonical Functional Pascal source formatter (
 |------|---------|
 | [style.md](style.md) | **Normative** formatting rules and examples (edit here first) |
 | [implementation.md](implementation.md) | Phased task list for v1 (`fpas-fmt`) — **complete** |
-| [implementation-v2.md](implementation-v2.md) | Phased task list for v2 (CLI, wrapping, comments, CI) — **fixed style, no config** |
+| [implementation-v2.md](implementation-v2.md) | Phased task list for v2 (CLI, wrapping, comments, CI) — **complete** |
 | [cli.md](cli.md) | CLI usage and exit codes |
 
 ## Related

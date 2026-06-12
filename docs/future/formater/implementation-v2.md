@@ -4,7 +4,7 @@ Phased checklist for **`fpas fmt` v2**, building on the completed v1 plan ([impl
 
 **Prerequisite:** v1 shipped — emitter, CLI, golden/round-trip tests, [style.md](style.md) locked for v1 output.
 
-**Status (2026-06-10):** Phases **0–4 complete** on `main`. Next: **Phase 5** (hardening).
+**Status (2026-06-10):** **v2 complete** on `main`.
 
 | Phase | Status | Commit (local `main`) |
 |-------|--------|------------------------|
@@ -12,8 +12,8 @@ Phased checklist for **`fpas fmt` v2**, building on the completed v1 plan ([impl
 | 1 — CLI ergonomics | done | `0b8bea3` — multi-path, `--stdout`, `--check --list`, globs |
 | 2 — Line wrapping | done | `26f08af` — `wrap.rs`, 100-col breaks, golden tests |
 | 3 — Comments | done | `ae47e7b` — `CommentMap`, `format_source`, lexer comments |
-| 4 — Repo / CI | done | (this commit) — mass format, scripts, GitHub Actions |
-| 5 — Hardening | **next** | — |
+| 4 — Repo / CI | done | `667029e` — mass format, scripts, GitHub Actions |
+| 5 — Hardening | done | (this commit) — full tree round-trip, fuzz-light sample |
 
 **How to use this doc:** Work one phase at a time. Check boxes when done. Stop after any phase; the next session picks up at the first unchecked item. Do not start a phase until the previous phase’s exit criteria pass.
 
@@ -135,11 +135,11 @@ Mostly docs and one-time repo policy — minimal code.
 
 ## Phase 5 — Hardening and coverage
 
-- [ ] Expand round-trip corpus: all `tests/**/*.fpas`, `apps/**/*.fpas` (not only `examples/pascal`).
-- [ ] Fuzz-light: sample N files from full tree → format → re-parse (no panic).
-- [ ] Fix any emitter bugs found (track in issues; patch in this phase).
-- [ ] `cargo fmt`, `cargo build --workspace`, `cargo test --workspace`.
-- [ ] Mark v2 complete in [README.md](README.md); archive open questions in [cli.md](cli.md).
+- [x] Expand round-trip corpus: all `tests/**/*.fpas`, `apps/**/*.fpas`, and full `examples/` tree ([`round_trip.rs`](../../../crates/fpas-fmt/tests/round_trip.rs)).
+- [x] Fuzz-light: deterministic sample (stride 11) from `examples/`, `tests/`, `apps/` → format → re-parse → idempotent ([`fuzz_light.rs`](../../../crates/fpas-fmt/tests/fuzz_light.rs)).
+- [x] Fix any emitter bugs found (private `type` keyword, case `else` idempotency — fixed in Phase 4).
+- [x] `cargo fmt`, `cargo build --workspace`, `cargo test --workspace`.
+- [x] Mark v2 complete in [README.md](README.md); archive open questions in [cli.md](cli.md).
 
 **Phase 5 exit:** v2 signed off; this checklist fully checked or explicitly deferred items moved to v3 section below.
 
@@ -175,9 +175,9 @@ fpas-cli ──► fpas-fmt ──► fpas-parser ──► fpas-lexer
 3. ~~**Phase 2**~~ — line wrapping (done).
 4. ~~**Phase 3**~~ — comments; lexer + `CommentMap` + `format_source` (done).
 5. ~~**Phase 4**~~ — mass-format repo + CI docs (done).
-6. **Phase 5** — hardening pass. **← resume here**
+6. ~~**Phase 5**~~ — hardening pass (done).
 
-Stop after any numbered phase; resume at the first unchecked `- [ ]` in the next phase.
+**v2 is complete.** Further work lives under [Explicitly deferred to v3+](#explicitly-deferred-to-v3) or a future v3 plan.
 
 ---
 
@@ -185,4 +185,4 @@ Stop after any numbered phase; resume at the first unchecked `- [ ]` in the next
 
 Completed in [implementation.md](implementation.md): scaffold, emitters, compilation units, golden/round-trip tests, `fpas fmt` + `--check`, private unit decl fix (`ae55c1a`).
 
-**v2 so far (do not redo):** Phase 0 style lock-in; Phase 1 CLI (`cli_fmt/`, globs); Phase 2 wrapping (`emit/wrap.rs`, column tracking on `Emitter`, golden `long_uses` / `wrapped_record`); Phase 3 comments (`fpas-lexer` comment API, `CommentMap`, `format_source`, preamble-aware attachment); Phase 4 repo format (`scripts/format-fpas-sources.*`, `.github/workflows/ci.yml`, emitter fixes for private `type` and case `else` idempotency).
+**v2 so far (do not redo):** Phase 0 style lock-in; Phase 1 CLI (`cli_fmt/`, globs); Phase 2 wrapping (`emit/wrap.rs`, column tracking on `Emitter`, golden `long_uses` / `wrapped_record`); Phase 3 comments (`fpas-lexer` comment API, `CommentMap`, `format_source`, preamble-aware attachment); Phase 4 repo format (`scripts/format-fpas-sources.*`, `.github/workflows/ci.yml`, emitter fixes for private `type` and case `else` idempotency); Phase 5 hardening (`round_trip` full tree, `fuzz_light` sample).

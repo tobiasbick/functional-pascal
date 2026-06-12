@@ -1,6 +1,7 @@
 //! Shared helpers for integration tests.
 
 pub mod corpus;
+pub mod walk;
 
 use fpas_fmt::format_source;
 use fpas_parser::parse_compilation_unit;

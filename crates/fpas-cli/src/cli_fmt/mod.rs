@@ -2,32 +2,47 @@
 //!
 //! Documentation: `docs/future/formater/style.md`, `docs/pascal/10-projects.md`
 
+mod paths;
+
 use std::fs;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-use crate::cli_input::{CliInput, FmtCliConfig};
+use crate::cli_input::FmtCliConfig;
 use crate::cli_run::render_cli_diagnostic;
 use fpas_diagnostics::DiagnosticSeverity;
 use fpas_fmt::format_compilation_unit;
 use fpas_parser::parse_compilation_unit;
-use fpas_project as project;
 
 /// Exit code when `--check` finds files that would change.
 pub(crate) const EXIT_WOULD_CHANGE: i32 = 2;
 
 /// Formats sources from CLI-resolved input.
-pub(crate) fn format_cli(config: FmtCliConfig, stderr: &mut dyn Write) -> i32 {
-    let paths = match collect_format_paths(&config.input, stderr) {
+pub(crate) fn format_cli(
+    config: FmtCliConfig,
+    stdout: &mut dyn Write,
+    stderr: &mut dyn Write,
+) -> i32 {
+    let paths = match paths::collect_format_paths(&config.cwd, &config.explicit_args, stderr) {
         Ok(paths) => paths,
         Err(exit_code) => return exit_code,
     };
 
+    if config.stdout {
+        if paths.len() != 1 {
+            let _ = writeln!(
+                stderr,
+                "`fpas fmt --stdout` requires exactly one `.fpas` file.\n  help: Pass a single source path."
+            );
+            return 1;
+        }
+    }
+
     let mut exit_code = 0;
     let mut would_change = false;
 
-    for path in paths {
-        match format_source_file(&path, config.check_only, stderr) {
+    for path in &paths {
+        match format_source_file(path, &config, stdout, stderr) {
             Ok(changed) => {
                 if changed {
                     would_change = true;
@@ -47,48 +62,12 @@ pub(crate) fn format_cli(config: FmtCliConfig, stderr: &mut dyn Write) -> i32 {
     0
 }
 
-fn collect_format_paths(input: &CliInput, stderr: &mut dyn Write) -> Result<Vec<PathBuf>, i32> {
-    match input {
-        CliInput::SourceFile(path) => Ok(vec![path.clone()]),
-        CliInput::ProjectFile(path) => collect_project_paths(path, stderr),
-        CliInput::WorkspaceFile(path) => collect_workspace_paths(path, stderr),
-    }
-}
-
-fn collect_project_paths(path: &Path, stderr: &mut dyn Write) -> Result<Vec<PathBuf>, i32> {
-    let loaded = match project::load_project(path) {
-        Ok(loaded) => loaded,
-        Err(message) => {
-            let _ = writeln!(stderr, "{message}");
-            return Err(1);
-        }
-    };
-
-    for warning in &loaded.warnings {
-        let _ = writeln!(stderr, "warning: {warning}");
-    }
-
-    Ok(loaded.source_files)
-}
-
-fn collect_workspace_paths(path: &Path, stderr: &mut dyn Write) -> Result<Vec<PathBuf>, i32> {
-    let workspace = match project::load_workspace(path) {
-        Ok(workspace) => workspace,
-        Err(message) => {
-            let _ = writeln!(stderr, "{message}");
-            return Err(1);
-        }
-    };
-
-    let mut paths = Vec::new();
-    for member in &workspace.member_projects {
-        paths.extend(collect_project_paths(member, stderr)?);
-    }
-
-    Ok(paths)
-}
-
-fn format_source_file(path: &Path, check_only: bool, stderr: &mut dyn Write) -> Result<bool, i32> {
+fn format_source_file(
+    path: &Path,
+    config: &FmtCliConfig,
+    stdout: &mut dyn Write,
+    stderr: &mut dyn Write,
+) -> Result<bool, i32> {
     let source = match fs::read_to_string(path) {
         Ok(source) => source,
         Err(error) => {
@@ -116,7 +95,16 @@ fn format_source_file(path: &Path, check_only: bool, stderr: &mut dyn Write) -> 
     let formatted = format_compilation_unit(&unit);
     let changed = normalize_newlines(&source) != formatted;
 
-    if changed && !check_only {
+    if config.list_changed && config.check_only && changed {
+        let _ = writeln!(stdout, "{}", path.display());
+    }
+
+    if config.stdout {
+        let _ = write!(stdout, "{formatted}");
+        return Ok(changed);
+    }
+
+    if changed && !config.check_only {
         if let Err(error) = fs::write(path, &formatted) {
             let _ = writeln!(stderr, "Error writing `{}`: {error}", path.display());
             return Err(1);

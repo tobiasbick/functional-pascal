@@ -1,5 +1,9 @@
 //! Canonical formatting constants from [`style.md`](../../../docs/future/formater/style.md).
 
+/// Maximum line width before wrapping (v2; emitter applies in Phase 2).
+#[allow(dead_code)]
+pub const MAX_LINE_WIDTH: usize = 100;
+
 /// Spaces per indentation level.
 pub const INDENT_WIDTH: usize = 2;
 

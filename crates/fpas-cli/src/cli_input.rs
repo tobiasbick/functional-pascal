@@ -24,10 +24,9 @@ Usage:
     fpas test [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
                                                           Run `*_test.fpas` programs
     fpas test [--list] [--fail-fast] [--strict] [--filter <pattern>] [--report json] [--timeout <secs>] [--jobs <n>] [--script <path>] [<path>]             Discover tests in cwd when path omitted
-    fpas fmt [<file.fpas | file.fpasprj | file.fpasworkspace>]
-                                                          Format sources in place
-    fpas fmt [--check] [<file.fpas | file.fpasprj | file.fpasworkspace>]
-                                                          Check formatting (exit 2 if changes needed)
+    fpas fmt [<path>...]                                  Format sources in place (multiple paths ok)
+    fpas fmt [--check] [--list] [<path>...]               Check formatting (exit 2 if changes needed)
+    fpas fmt --stdout <file.fpas>                         Print formatted text to stdout (one file)
     fpas fmt                                              Discover `.fpasworkspace` or `.fpasprj` in cwd
 
 Options:
@@ -59,8 +58,11 @@ pub(crate) enum TestReportFormat {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct FmtCliConfig {
-    pub input: CliInput,
+    pub explicit_args: Vec<String>,
+    pub cwd: PathBuf,
     pub check_only: bool,
+    pub stdout: bool,
+    pub list_changed: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -103,7 +105,9 @@ enum CliMode {
 pub(crate) fn resolve_cli_input(args: &[String], cwd: &Path) -> Result<CliInput, String> {
     match resolve_cli_config(args, cwd)? {
         ResolvedCli::Run(config) | ResolvedCli::Check(config) => Ok(config.input),
-        ResolvedCli::Fmt(config) => Ok(config.input),
+        ResolvedCli::Fmt(_) => {
+            Err("resolve_cli_input: use resolve_cli_config for `fpas fmt`".to_string())
+        }
         ResolvedCli::Test(_) | ResolvedCli::Help | ResolvedCli::Version => {
             Err("resolve_cli_input: use resolve_cli_config for --help or --version".to_string())
         }
@@ -127,6 +131,8 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
     }
 
     let mut check_only = false;
+    let mut stdout_mode = false;
+    let mut list_changed = false;
     let mut fail_fast = false;
     let mut strict = false;
     let mut list_only = false;
@@ -140,6 +146,18 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
     while index < cli_args.len() {
         match cli_args[index].as_str() {
             "--check" if mode == CliMode::Fmt => check_only = true,
+            "--stdout" if mode == CliMode::Fmt => {
+                if stdout_mode {
+                    return Err("Duplicate `--stdout` option.".to_string());
+                }
+                stdout_mode = true;
+            }
+            "--list" if mode == CliMode::Fmt => {
+                if list_changed {
+                    return Err("Duplicate `--list` option.".to_string());
+                }
+                list_changed = true;
+            }
             "--fail-fast" if mode == CliMode::Test => fail_fast = true,
             "--strict" if mode == CliMode::Test => strict = true,
             "--list" if mode == CliMode::Test => list_only = true,
@@ -229,6 +247,47 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
         index += 1;
     }
 
+    if mode == CliMode::Fmt {
+        if stdout_mode && check_only {
+            return Err(
+                "`fpas fmt --stdout` cannot be combined with `--check`.\n  help: Use `--stdout` to print formatted output, or `--check` to verify on disk."
+                    .to_string(),
+            );
+        }
+        if list_changed && !check_only {
+            return Err(
+                "`fpas fmt --list` requires `--check`.\n  help: `fpas fmt --check --list <path>...` prints paths that would change."
+                    .to_string(),
+            );
+        }
+        for arg in &positional {
+            if arg == "-h" || arg == "--help" {
+                if positional.len() != 1 {
+                    return Err(usage_error(mode));
+                }
+                return Ok(ResolvedCli::Help);
+            }
+            if arg == "-V" || arg == "--version" {
+                if positional.len() != 1 {
+                    return Err(usage_error(mode));
+                }
+                return Ok(ResolvedCli::Version);
+            }
+            if arg.starts_with('-') {
+                return Err(format!(
+                    "Unknown option `{arg}`.\n  help: Pass one or more paths, or `fpas fmt --help`."
+                ));
+            }
+        }
+        return Ok(ResolvedCli::Fmt(FmtCliConfig {
+            explicit_args: positional,
+            cwd: cwd.to_path_buf(),
+            check_only,
+            stdout: stdout_mode,
+            list_changed,
+        }));
+    }
+
     let mut input = None::<String>;
     for arg in &positional {
         if arg == "-h" || arg == "--help" {
@@ -269,7 +328,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             input,
             program_args,
         }),
-        CliMode::Fmt => ResolvedCli::Fmt(FmtCliConfig { input, check_only }),
+        CliMode::Fmt => unreachable!("fmt mode handled above"),
         CliMode::Test => ResolvedCli::Test(TestCliConfig {
             input,
             cwd: cwd.to_path_buf(),
@@ -310,7 +369,7 @@ fn usage_error(mode: CliMode) -> String {
                 .to_string()
         }
         CliMode::Fmt => {
-            "Usage: fpas fmt [--check] [<file.fpas | file.fpasprj | file.fpasworkspace>]\n  help: `fpas --help` shows options."
+            "Usage: fpas fmt [--check] [--list] [--stdout] [<path>...]\n  help: `fpas --help` shows options."
                 .to_string()
         }
         CliMode::Test => {
@@ -373,6 +432,11 @@ fn discover_run_input(cwd: &Path) -> Result<CliInput, String> {
     }
 
     discover_project_file(cwd)
+}
+
+/// Discovers workspace or project input for `fpas fmt` when no paths are given.
+pub(crate) fn discover_fmt_input(cwd: &Path) -> Result<CliInput, String> {
+    discover_check_input(cwd)
 }
 
 fn discover_check_input(cwd: &Path) -> Result<CliInput, String> {

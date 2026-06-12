@@ -4,7 +4,7 @@ Planning and implementation for a canonical Functional Pascal source formatter (
 
 ## Status
 
-**v1 complete.** Emitter [`crates/fpas-fmt/`](../../../crates/fpas-fmt/); CLI [`fpas fmt`](../../../crates/fpas-cli/src/cli_fmt.rs) per [cli.md](cli.md). Golden examples: [style.md — Formatted output](style.md#formatted-output-fpas-fmt). **Next:** [implementation-v2.md](implementation-v2.md).
+**v1 complete; v2 Phase 0–1 complete.** Emitter [`crates/fpas-fmt/`](../../../crates/fpas-fmt/); CLI [`fpas fmt`](../../../crates/fpas-cli/src/cli_fmt/) per [cli.md](cli.md). Golden examples: [style.md — Formatted output](style.md#formatted-output-fpas-fmt). **Next:** v2 Phase 2 (line wrapping) in [implementation-v2.md](implementation-v2.md).
 
 ## Principles
 

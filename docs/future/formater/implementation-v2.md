@@ -36,38 +36,38 @@ Phased checklist for **`fpas fmt` v2**, building on the completed v1 plan ([impl
 
 Exit criteria: written decisions in this file + [style.md](style.md); no code until sign-off.
 
-- [ ] Review v1 deferred items: [cli.md — Deferred](cli.md#deferred-post-v1), [style.md — Non-goals (v1)](style.md#non-goals-v1).
-- [ ] Confirm v2 **in scope** list (table above) or trim before coding.
-- [ ] Confirm **no config file** policy (see [Official style policy](#official-style-policy-v2)) — document in style.md under Non-goals.
-- [ ] **Line width:** fixed max line length (proposal: **100** columns). Single constant in `style.rs`; normative rule in style.md.
-- [ ] **Wrapping rules:** which constructs break across lines when over width:
-  - [ ] `uses` clause (style.md already says wrap with 2-space indent)
-  - [ ] `function` / `procedure` formal lists
-  - [ ] Multi-field `record` literals (style.md: single line when fits)
-  - [ ] Long binary chains / calls (parenthesis-aware)
-- [ ] **Comments strategy** — pick one (blocks Phase 3):
-  - [ ] **Option A (recommended):** Lexer comment map keyed by span; emitter re-attaches `///` and `{ }` before the declaration they preceded in source (lossy for intra-block comments).
-  - [ ] **Option B:** Full trivia-preserving formatter — **defer to v3** (separate crate or major rewrite).
-- [ ] Add **v2 golden examples** to style.md (at least: long `uses`, wrapped record literal, file with doc comments after format).
-- [ ] Sign off Phase 0 in chat / PR before Phase 1.
+- [x] Review v1 deferred items: [cli.md — Deferred](cli.md#deferred-post-v2-phase-1), [style.md — Non-goals (v1)](style.md#non-goals-v1-and-later).
+- [x] Confirm v2 **in scope** list (table above) or trim before coding.
+- [x] Confirm **no config file** policy (see [Official style policy](#official-style-policy-v2)) — document in style.md under Non-goals.
+- [x] **Line width:** fixed max line length (**100** columns). Single constant in `style.rs`; normative rule in style.md.
+- [x] **Wrapping rules:** which constructs break across lines when over width:
+  - [x] `uses` clause (style.md already says wrap with 2-space indent)
+  - [x] `function` / `procedure` formal lists
+  - [x] Multi-field `record` literals (style.md: single line when fits)
+  - [x] Long binary chains / calls (parenthesis-aware)
+- [x] **Comments strategy** — pick one (blocks Phase 3):
+  - [x] **Option A (recommended):** Lexer comment map keyed by span; emitter re-attaches `///` and `{ }` before the declaration they preceded in source (lossy for intra-block comments).
+  - [x] **Option B:** Full trivia-preserving formatter — **defer to v3** (separate crate or major rewrite).
+- [x] Add **v2 golden examples** to style.md (long `uses`, wrapped record literal; doc-comment file deferred to Phase 3).
+- [x] Sign off Phase 0 in chat / PR before Phase 1.
 
 ---
 
 ## Phase 1 — CLI ergonomics
 
-Target: [`crates/fpas-cli/src/cli_fmt.rs`](../../../crates/fpas-cli/src/cli_fmt.rs), [`cli_input.rs`](../../../crates/fpas-cli/src/cli_input.rs).
+Target: [`crates/fpas-cli/src/cli_fmt/`](../../../crates/fpas-cli/src/cli_fmt/), [`cli_input.rs`](../../../crates/fpas-cli/src/cli_input.rs).
 
-- [ ] **Multiple positional paths:** `fpas fmt a.fpas b.fpas dir/` — format each resolved `.fpas` (directory → all `.fpas` recursively, skip `target/`).
-- [ ] **`--stdout`:** print formatted text to stdout; do not write file (mutually exclusive with `--check`; error if both).
-- [ ] **`--list` (optional):** with `--check`, print paths that would change (one per line) — helps CI scripts.
-- [ ] **Built-in glob:** if a single path argument contains unexpanded `*` / `?`, expand via `fpas-project` glob helper (same as project sources) instead of requiring shell expansion.
-- [ ] Update `CLI_HELP` and [cli.md](cli.md) with v2 usage and exit codes (unchanged: `0` / `1` / `2`).
-- [ ] Tests in `crates/fpas-cli/src/main_tests/fmt.rs`:
-  - [ ] two explicit `.fpas` paths
-  - [ ] `--stdout` does not modify file on disk
-  - [ ] `--check --list` prints dirty paths only
-  - [ ] glob path (if implemented)
-- [ ] `cargo test -p fpas-cli fmt`
+- [x] **Multiple positional paths:** `fpas fmt a.fpas b.fpas dir/` — format each resolved `.fpas` (directory → all `.fpas` recursively, skip `target/`).
+- [x] **`--stdout`:** print formatted text to stdout; do not write file (mutually exclusive with `--check`; error if both).
+- [x] **`--list` (optional):** with `--check`, print paths that would change (one per line) — helps CI scripts.
+- [x] **Built-in glob:** if a path argument contains unexpanded `*` / `?`, expand via `glob` crate (shell-independent).
+- [x] Update `CLI_HELP` and [cli.md](cli.md) with v2 usage and exit codes (unchanged: `0` / `1` / `2`).
+- [x] Tests in `crates/fpas-cli/src/main_tests/fmt.rs`:
+  - [x] two explicit `.fpas` paths
+  - [x] `--stdout` does not modify file on disk
+  - [x] `--check --list` prints dirty paths only
+  - [x] glob path
+- [x] `cargo test -p fpas-cli fmt`
 
 **Phase 1 exit:** `fpas fmt a.fpas b.fpas` and `fpas fmt --stdout file.fpas` work; docs updated.
 
@@ -77,7 +77,7 @@ Target: [`crates/fpas-cli/src/cli_fmt.rs`](../../../crates/fpas-cli/src/cli_fmt.
 
 Target: [`crates/fpas-fmt/src/emit/`](../../../crates/fpas-fmt/src/emit/) — likely new `wrap.rs` or width-aware helpers on `Emitter`.
 
-- [ ] `style.rs`: `MAX_LINE_WIDTH` constant (value from Phase 0); no runtime overrides.
+- [x] `style.rs`: `MAX_LINE_WIDTH` constant (value from Phase 0); no runtime overrides.
 - [ ] Measure rendered line length excluding leading indent (or document inclusive rule in style.md).
 - [ ] **`uses` wrapping:** break after commas; continuation lines indented per [style.md — Indentation](style.md#indentation).
 - [ ] **Formal parameter lists:** break after `;` in long `function` / `procedure` headers.

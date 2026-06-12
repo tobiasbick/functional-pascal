@@ -2,7 +2,7 @@
 
 Canonical output rules for the AST pretty-printer. These are **normative for `fpas fmt`** once implemented. The emitter encodes them; this file is the human-readable spec.
 
-**Status:** agreed for v1 (2026-06). Edit golden examples when the style changes; the emitter must match them.
+**Status:** agreed for v1 (2026-06); v2 scope locked (2026-06-10). Edit golden examples when the style changes; the emitter must match them.
 
 **How to read this file**
 
@@ -218,13 +218,28 @@ end;
 - No trailing whitespace on lines.
 - Case-insensitive language; emitter uses **fixed canonical spellings** (see below), not source casing.
 
+## Line width (v2)
+
+- **Maximum line length: 100 columns** (`MAX_LINE_WIDTH` in `crates/fpas-fmt/src/style.rs`).
+- Count includes leading indentation unless a rule below says otherwise.
+- v1 emitter may emit longer lines; Phase 2 wrapping applies these rules. Until then, golden v1 examples remain valid.
+
+### Wrapping (v2, when over max width)
+
+| Construct | Break rule |
+|-----------|------------|
+| `uses` clause | After commas; continuation lines indented **2 spaces** from column 0 |
+| `function` / `procedure` formal lists | After `;` between parameters |
+| `record` / array literals | Multi-line when over width; keep v1 semicolon rules inside |
+| Long binary chains / calls | Break at lowest-precedence operator; never inside string literals |
+
 ## Indentation
 
 - **2 spaces** per block level. No tabs.
 - `begin` / `end` bodies indent one level.
 - `case` arms: label on its own line; `begin` / `end` body indented one level under the label.
 - `record` / `enum` type bodies indent one level.
-- Continuation lines for long `uses` lists: wrap with 2-space indent from the line start.
+- Continuation lines for long `uses` lists: wrap with 2-space indent from the line start (see [Line width](#line-width-v2)).
 
 ## Blocks (`begin` / `end`)
 
@@ -350,6 +365,33 @@ record X := 3; Y := 4; end
 record Host := 'api'; Port := 443; Retries := 5; end
 ```
 
+### Long `uses` (wrapped, v2 golden)
+
+When the `uses` line exceeds 100 columns, break after commas:
+
+```pascal
+program LongUses;
+
+uses
+  Std.Console, Std.Conv, Std.Array, Std.Dict, Std.Option, Std.Result, Std.String,
+  MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two;
+
+begin
+  WriteLn('ok')
+end.
+```
+
+### Wrapped record literal (v2 golden)
+
+```pascal
+record
+  Host := 'api.example.com';
+  Port := 443;
+  Retries := 5;
+  TimeoutSeconds := 30;
+end
+```
+
 ---
 
 ## More examples — other types (snippet)
@@ -387,7 +429,9 @@ type
 
 ## Comments
 
-**Not emitted.** Formatter is lossy with respect to `{ }`, `(* *)`, and `//` comments.
+**v1:** Not emitted. Formatter is lossy with respect to `{ }`, `(* *)`, and `//` comments.
+
+**v2 (Phase 3 — Option A):** Re-attach leading `///` and declaration `{ }` / `(* *)` blocks that immediately preceded a declaration in source (lexer comment map keyed by span). End-of-line and intra-statement comments remain removed. One blank line after a doc block before the declaration.
 
 ## Intentional diffs from source
 

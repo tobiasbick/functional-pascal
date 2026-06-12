@@ -76,6 +76,134 @@ fn fmt_cli_check_passes_on_canonical_file() {
 }
 
 #[test]
+fn fmt_cli_formats_two_explicit_source_files() {
+    let cwd = create_temp_dir("fmt-two-files");
+    let first = cwd.join("a.fpas");
+    let second = cwd.join("b.fpas");
+    let messy = "program Hello; uses Std.Console; begin WriteLn('hi') end.";
+    write_text(&first, messy);
+    write_text(&second, messy);
+
+    let (exit_code, _, stderr_output) = run_cli_args_and_capture_output(
+        &[
+            String::from("fmt"),
+            first.to_string_lossy().to_string(),
+            second.to_string_lossy().to_string(),
+        ],
+        &cwd,
+    );
+
+    let formatted_first = fs::read_to_string(&first).expect("first file must exist");
+    let formatted_second = fs::read_to_string(&second).expect("second file must exist");
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 0, "stderr: {stderr_output}");
+    assert!(formatted_first.contains("program Hello;\n\nuses Std.Console;\n\nbegin\n"));
+    assert!(formatted_second.contains("program Hello;\n\nuses Std.Console;\n\nbegin\n"));
+}
+
+#[test]
+fn fmt_cli_stdout_does_not_modify_file_on_disk() {
+    let cwd = create_temp_dir("fmt-stdout");
+    let source_path = cwd.join("hello.fpas");
+    let original = "program Hello; uses Std.Console; begin WriteLn('hi') end.";
+    write_text(&source_path, original);
+
+    let (exit_code, stdout_output, stderr_output) = run_cli_args_and_capture_output(
+        &[
+            String::from("fmt"),
+            String::from("--stdout"),
+            source_path.to_string_lossy().to_string(),
+        ],
+        &cwd,
+    );
+
+    let unchanged = fs::read_to_string(&source_path).expect("source file must exist");
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 0, "stderr: {stderr_output}");
+    assert_eq!(unchanged, original);
+    assert!(stdout_output.contains("program Hello;\n\nuses Std.Console;\n\nbegin\n"));
+}
+
+#[test]
+fn fmt_cli_check_list_prints_dirty_paths_only() {
+    let cwd = create_temp_dir("fmt-check-list");
+    let dirty = cwd.join("dirty.fpas");
+    let clean = cwd.join("clean.fpas");
+    write_text(
+        &dirty,
+        "program Dirty; uses Std.Console; begin WriteLn('dirty') end.",
+    );
+    write_text(
+        &clean,
+        "program Clean;\n\nuses Std.Console;\n\nbegin\n  WriteLn('clean')\nend.\n",
+    );
+
+    let (exit_code, stdout_output, stderr_output) = run_cli_args_and_capture_output(
+        &[
+            String::from("fmt"),
+            String::from("--check"),
+            String::from("--list"),
+            dirty.to_string_lossy().to_string(),
+            clean.to_string_lossy().to_string(),
+        ],
+        &cwd,
+    );
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, EXIT_WOULD_CHANGE, "stderr: {stderr_output}");
+    assert_eq!(stdout_output.trim(), dirty.display().to_string());
+}
+
+#[test]
+fn fmt_cli_expands_glob_pattern() {
+    let cwd = create_temp_dir("fmt-glob");
+    let src_dir = cwd.join("src");
+    fs::create_dir_all(&src_dir).expect("src directory must exist");
+    let nested = src_dir.join("nested.fpas");
+    write_text(
+        &nested,
+        "program Nested; uses Std.Console; begin WriteLn('nested') end.",
+    );
+
+    let (exit_code, _, stderr_output) = run_cli_args_and_capture_output(
+        &[String::from("fmt"), String::from("src/**/*.fpas")],
+        &cwd,
+    );
+
+    let formatted = fs::read_to_string(&nested).expect("nested file must exist");
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 0, "stderr: {stderr_output}");
+    assert!(formatted.contains("program Nested;\n\nuses Std.Console;\n\nbegin\n"));
+}
+
+#[test]
+fn fmt_cli_rejects_stdout_with_check() {
+    let cwd = create_temp_dir("fmt-stdout-check");
+    let source_path = cwd.join("hello.fpas");
+    write_text(
+        &source_path,
+        "program Hello; uses Std.Console; begin WriteLn('hi') end.",
+    );
+
+    let (exit_code, _, stderr_output) = run_cli_args_and_capture_output(
+        &[
+            String::from("fmt"),
+            String::from("--stdout"),
+            String::from("--check"),
+            source_path.to_string_lossy().to_string(),
+        ],
+        &cwd,
+    );
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 1);
+    assert!(stderr_output.contains("cannot be combined"));
+}
+
+#[test]
 fn fmt_cli_rejects_program_args_after_separator() {
     let cwd = create_temp_dir("fmt-program-args");
     let (exit_code, _, stderr_output) = run_cli_args_and_capture_output(

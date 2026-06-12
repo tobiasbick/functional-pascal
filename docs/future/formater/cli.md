@@ -1,42 +1,53 @@
 # Formatter CLI (`fpas fmt`)
 
-**Status: implemented (v1).** Output shape: [style.md](style.md). Emitter: [`crates/fpas-fmt/`](../../../crates/fpas-fmt/).
+**Status: v1 + v2 Phase 1.** Output shape: [style.md](style.md). Emitter: [`crates/fpas-fmt/`](../../../crates/fpas-fmt/).
 
 ## Usage
 
 ```text
-fpas fmt [<file.fpas | file.fpasprj | file.fpasworkspace>]
-fpas fmt [--check] [<file.fpas | file.fpasprj | file.fpasworkspace>]
+fpas fmt [<path>...]
+fpas fmt [--check] [--list] [<path>...]
+fpas fmt --stdout <file.fpas>
 fpas fmt                                              # discover `.fpasworkspace` or `.fpasprj` in cwd
 ```
 
-- **Single path** (same discovery rules as `fpas check`).
-- **Shell globs** — rely on shell expansion (`fpas fmt src/*.fpas` passes multiple invocations or one path per run; v1 accepts one positional path like `check`).
-- **Projects / workspaces** — formats every `.fpas` file listed in `project.sources` for the project or each workspace member.
-- **Write in place** only when normalized content would change (LF output per [style.md](style.md)).
-- **`--check`** — no writes; exit `2` if any file would change (CI).
+Each `<path>` may be:
+
+- a `.fpas` file
+- a directory (all `.fpas` files recursively; skips `target/`)
+- a `.fpasprj` or `.fpasworkspace` (formats every listed source)
+- a glob pattern containing `*`, `?`, or `[` (expanded by the CLI, e.g. `src/**/*.fpas`)
+
+## Options
+
+| Flag | Meaning |
+|------|---------|
+| `--check` | No writes; exit `2` if any file would change |
+| `--list` | With `--check`, print paths that would change (one per line on stdout) |
+| `--stdout` | Print formatted text to stdout for exactly one `.fpas`; do not write the file |
+
+`--stdout` and `--check` are mutually exclusive.
 
 ## Exit codes
 
 | Code | Meaning |
 |------|---------|
 | `0` | Success (all files formatted, or `--check` found no changes) |
-| `1` | I/O, parse, or project-load error |
+| `1` | I/O, parse, project-load, or usage error |
 | `2` | `--check` would modify one or more files |
 
 ## Implementation
 
-- [`crates/fpas-cli/src/cli_input.rs`](../../../crates/fpas-cli/src/cli_input.rs) — `fpas fmt`, `--check`, discovery.
-- [`crates/fpas-cli/src/cli_fmt.rs`](../../../crates/fpas-cli/src/cli_fmt.rs) — read → `parse_compilation_unit` → `fpas_fmt::format_compilation_unit` → write.
+- [`crates/fpas-cli/src/cli_input.rs`](../../../crates/fpas-cli/src/cli_input.rs) — `fpas fmt`, flags, discovery.
+- [`crates/fpas-cli/src/cli_fmt/`](../../../crates/fpas-cli/src/cli_fmt/) — path resolution, read → `parse_compilation_unit` → `fpas_fmt::format_compilation_unit` → write or stdout.
 
-## Deferred (post-v1)
+## Deferred (post-v2 Phase 1)
 
-- Multiple positional paths in one invocation.
-- Built-in glob (workspace already uses `glob` in `fpas-project`).
-- `fpas fmt --stdout file.fpas` for piping.
 - Watch mode / format on save.
+- LSP format-on-save integration.
 
-## Non-goals (v1)
+## Non-goals
 
 - Formatting non-`.fpas` files.
 - Formatting invalid or partial syntax (recovery).
+- Configurable style (`.fpasfmt.toml`, line width overrides) — one official style only ([style.md](style.md)).

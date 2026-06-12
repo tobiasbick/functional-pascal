@@ -487,6 +487,7 @@ dependencies = [
  "fpas-project",
  "fpas-std",
  "fpas-vm",
+ "glob",
  "serde",
  "serde_json",
  "toml",

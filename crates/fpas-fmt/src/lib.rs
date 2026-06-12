@@ -5,6 +5,7 @@
 
 mod comments;
 mod emit;
+mod span;
 mod style;
 
 use comments::CommentMap;
@@ -18,10 +19,7 @@ use fpas_parser::{CompilationUnit, Program, Unit};
 /// **Documentation:** `docs/future/formater/style.md`
 #[must_use]
 pub fn format_compilation_unit(unit: &CompilationUnit) -> String {
-    match unit {
-        CompilationUnit::Program(program) => emit_program(program, &CommentMap::default()),
-        CompilationUnit::Unit(unit) => emit_unit(unit, &CommentMap::default()),
-    }
+    format_with_comments(unit, &CommentMap::default())
 }
 
 /// Formats `unit` using `source` to preserve leading doc and declaration comments.
@@ -29,11 +27,7 @@ pub fn format_compilation_unit(unit: &CompilationUnit) -> String {
 /// **Documentation:** `docs/future/formater/style.md#comments`
 #[must_use]
 pub fn format_source(source: &str, unit: &CompilationUnit) -> String {
-    let comments = CommentMap::build(source, unit);
-    match unit {
-        CompilationUnit::Program(program) => emit_program(program, &comments),
-        CompilationUnit::Unit(unit) => emit_unit(unit, &comments),
-    }
+    format_with_comments(unit, &CommentMap::build(source, unit))
 }
 
 /// Formats a `program` declaration and its body.
@@ -50,4 +44,11 @@ pub fn format_program(program: &Program) -> String {
 #[must_use]
 pub fn format_unit(unit: &Unit) -> String {
     emit_unit(unit, &CommentMap::default())
+}
+
+fn format_with_comments(unit: &CompilationUnit, comments: &CommentMap) -> String {
+    match unit {
+        CompilationUnit::Program(program) => emit_program(program, comments),
+        CompilationUnit::Unit(unit) => emit_unit(unit, comments),
+    }
 }

@@ -10,13 +10,3 @@ pub const INDENT_WIDTH: usize = 2;
 pub const INDENT: &str = "  ";
 
 const _: () = assert!(INDENT.len() == INDENT_WIDTH);
-
-#[cfg(test)]
-mod tests {
-    use super::{INDENT, INDENT_WIDTH};
-
-    #[test]
-    fn indent_matches_width() {
-        assert_eq!(INDENT.len(), INDENT_WIDTH);
-    }
-}

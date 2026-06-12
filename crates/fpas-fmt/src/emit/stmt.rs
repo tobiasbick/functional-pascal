@@ -14,14 +14,6 @@ pub(crate) fn format_block_stmts(stmts: &[Stmt]) -> String {
     emitter.finish()
 }
 
-/// Formats a single statement (no trailing block semicolon rules).
-#[must_use]
-pub(crate) fn format_stmt(stmt: &Stmt) -> String {
-    let mut emitter = Emitter::new();
-    emit_stmt_in_block(&mut emitter, stmt, true);
-    emitter.finish()
-}
-
 pub(crate) fn emit_stmts_in_block(emitter: &mut Emitter, stmts: &[Stmt]) {
     for (index, stmt) in stmts.iter().enumerate() {
         let is_last = index + 1 == stmts.len();
@@ -342,9 +334,7 @@ fn emit_repeat(emitter: &mut Emitter, stmt: &Stmt) {
 }
 
 fn write_indented(emitter: &mut Emitter) {
-    for _ in 0..emitter.indent_level() {
-        emitter.write(crate::style::INDENT);
-    }
+    emitter.write_current_indent();
 }
 
 fn emit_trailing_semicolon(emitter: &mut Emitter, is_last: bool) {
@@ -405,7 +395,8 @@ end.",
 
     #[test]
     fn case_else_with_block_body_is_idempotent() {
-        let source = "program T; begin case X of 1: WriteLn('one') else begin WriteLn('other') end end end.";
+        let source =
+            "program T; begin case X of 1: WriteLn('one') else begin WriteLn('other') end end end.";
         let formatted_once = format_body(source);
         let formatted_twice = format_body(&format!(
             "program T; begin {} end.",

@@ -91,15 +91,6 @@ pub(crate) fn emit_type_param(emitter: &mut Emitter, param: &TypeParam) {
     }
 }
 
-pub(crate) fn emit_formal_params(emitter: &mut Emitter, params: &[FormalParam]) {
-    for (index, param) in params.iter().enumerate() {
-        if index > 0 {
-            emitter.write("; ");
-        }
-        emit_formal_param(emitter, param);
-    }
-}
-
 /// Emits formal parameters inside parentheses, wrapping after `;` when over max width.
 pub(crate) fn emit_formal_params_in_parens(
     emitter: &mut Emitter,

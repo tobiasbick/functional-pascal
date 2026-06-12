@@ -22,10 +22,6 @@ pub(crate) fn format_decls(decls: &[Decl]) -> String {
 
 /// Appends formatted declarations to `emitter`.
 pub(crate) fn emit_decls(emitter: &mut Emitter, decls: &[Decl], comments: &CommentMap) {
-    emit_decl_list(emitter, decls, comments);
-}
-
-fn emit_decl_list(emitter: &mut Emitter, decls: &[Decl], comments: &CommentMap) {
     let mut index = 0;
     while index < decls.len() {
         let run_end = decl_run_end(decls, index);
@@ -89,7 +85,7 @@ fn emit_decl_run(emitter: &mut Emitter, decls: &[Decl], comments: &CommentMap) {
             if index > 0 && decl_run_kind(decl) == DeclRunKind::Routine {
                 emitter.blank_line();
             }
-            emit_decl(emitter, decl, index + 1 == decls.len(), comments);
+            emit_decl(emitter, decl, comments);
         }
         return;
     }
@@ -98,71 +94,64 @@ fn emit_decl_run(emitter: &mut Emitter, decls: &[Decl], comments: &CommentMap) {
         DeclRunKind::Const => {
             emitter.writeln("const");
             emitter.with_indent(|inner| {
-                for (index, decl) in decls.iter().enumerate() {
+                for decl in decls {
                     let Decl::Const(def) = decl else {
                         continue;
                     };
                     emit_leading_comments(inner, comments, def.span.offset);
-                    emit_const_def(inner, def, index + 1 == decls.len(), true);
+                    emit_const_def(inner, def, true);
                 }
             });
         }
         DeclRunKind::Var => {
             emitter.writeln("var");
             emitter.with_indent(|inner| {
-                for (index, decl) in decls.iter().enumerate() {
+                for decl in decls {
                     let Decl::Var(def) = decl else {
                         continue;
                     };
                     emit_leading_comments(inner, comments, def.span.offset);
-                    emit_var_def(inner, "var", def, index + 1 == decls.len());
+                    emit_var_def(inner, "var", def);
                 }
             });
         }
         DeclRunKind::MutableVar => {
             emitter.writeln("mutable var");
             emitter.with_indent(|inner| {
-                for (index, decl) in decls.iter().enumerate() {
+                for decl in decls {
                     let Decl::MutableVar(def) = decl else {
                         continue;
                     };
                     emit_leading_comments(inner, comments, def.span.offset);
-                    emit_var_def(inner, "mutable var", def, index + 1 == decls.len());
+                    emit_var_def(inner, "mutable var", def);
                 }
             });
         }
         DeclRunKind::Type => {
             emitter.writeln("type");
             emitter.with_indent(|inner| {
-                for (index, decl) in decls.iter().enumerate() {
+                for decl in decls {
                     let Decl::TypeDef(def) = decl else {
                         continue;
                     };
                     emit_leading_comments(inner, comments, def.span.offset);
-                    emit_type_def(inner, def, index + 1 == decls.len(), comments, true);
+                    emit_type_def(inner, def, comments, true);
                 }
             });
         }
-        DeclRunKind::Routine => {
-            for (index, decl) in decls.iter().enumerate() {
-                if index > 0 {
-                    emitter.blank_line();
-                }
-                emit_decl(emitter, decl, index + 1 == decls.len(), comments);
-            }
-        }
+        DeclRunKind::Routine => unreachable!("block grouping excludes routines"),
     }
 }
 
-fn emit_decl(emitter: &mut Emitter, decl: &Decl, is_last: bool, comments: &CommentMap) {
-    emit_leading_comments(emitter, comments, decl_span(decl));
+fn emit_decl(emitter: &mut Emitter, decl: &Decl, comments: &CommentMap) {
+    emit_leading_comments(emitter, comments, crate::span::decl_span(decl));
     match decl {
-        Decl::Const(def) => emit_const_def(emitter, def, is_last, false),
-        Decl::Var(def) => emit_var_def(emitter, "var", def, is_last),
-        Decl::MutableVar(def) => emit_var_def(emitter, "mutable var", def, is_last),
-        Decl::TypeDef(def) => emit_type_def(emitter, def, is_last, comments, false),
-        Decl::Function(function) => emit_function_decl(emitter, function, is_last, comments),
-        Decl::Procedure(procedure) => emit_procedure_decl(emitter, procedure, is_last, comments),
+        Decl::Const(def) => emit_const_def(emitter, def, false),
+        Decl::Var(def) => emit_var_def(emitter, "var", def),
+        Decl::MutableVar(def) => emit_var_def(emitter, "mutable var", def),
+        Decl::TypeDef(def) => emit_type_def(emitter, def, comments, false),
+        Decl::Function(function) => emit_function_decl(emitter, function, comments),
+        Decl::Procedure(procedure) => emit_procedure_decl(emitter, procedure, comments),
     }
 }
 
@@ -172,8 +161,8 @@ fn emit_visibility(emitter: &mut Emitter, visibility: Visibility) {
     }
 }
 
-fn emit_const_def(emitter: &mut Emitter, def: &ConstDef, is_last: bool, in_const_block: bool) {
-    write_decl_line_start(emitter);
+fn emit_const_def(emitter: &mut Emitter, def: &ConstDef, in_const_block: bool) {
+    emitter.write_current_indent();
     emit_visibility(emitter, def.visibility);
     if !in_const_block {
         emitter.write("const ");
@@ -183,11 +172,11 @@ fn emit_const_def(emitter: &mut Emitter, def: &ConstDef, is_last: bool, in_const
     emit_type_expr(emitter, &def.type_expr);
     emitter.write(" := ");
     emit_expr(emitter, &def.value, 0);
-    finish_decl_line(emitter, is_last);
+    finish_decl_line(emitter);
 }
 
-fn emit_var_def(emitter: &mut Emitter, keyword: &str, def: &VarDef, is_last: bool) {
-    write_decl_line_start(emitter);
+fn emit_var_def(emitter: &mut Emitter, keyword: &str, def: &VarDef) {
+    emitter.write_current_indent();
     emit_visibility(emitter, def.visibility);
     emitter.write(keyword);
     emitter.write(" ");
@@ -196,17 +185,11 @@ fn emit_var_def(emitter: &mut Emitter, keyword: &str, def: &VarDef, is_last: boo
     emit_type_expr(emitter, &def.type_expr);
     emitter.write(" := ");
     emit_expr(emitter, &def.value, 0);
-    finish_decl_line(emitter, is_last);
+    finish_decl_line(emitter);
 }
 
-fn emit_type_def(
-    emitter: &mut Emitter,
-    def: &TypeDef,
-    _is_last: bool,
-    comments: &CommentMap,
-    in_type_block: bool,
-) {
-    write_decl_line_start(emitter);
+fn emit_type_def(emitter: &mut Emitter, def: &TypeDef, comments: &CommentMap, in_type_block: bool) {
+    emitter.write_current_indent();
     emit_visibility(emitter, def.visibility);
     if !in_type_block {
         emitter.write("type ");
@@ -241,12 +224,12 @@ fn emit_record_type(emitter: &mut Emitter, record: &RecordType, comments: &Comme
             emit_record_method(inner, method, comments);
         }
     });
-    write_decl_line_start(emitter);
+    emitter.write_current_indent();
     emitter.write("end");
 }
 
 fn emit_field_def(emitter: &mut Emitter, field: &FieldDef) {
-    write_decl_line_start(emitter);
+    emitter.write_current_indent();
     emitter.write(&field.name);
     emitter.write(": ");
     emit_type_expr(emitter, &field.type_expr);
@@ -261,7 +244,7 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
     match method {
         RecordMethod::Function(function) => {
             emit_leading_comments(emitter, comments, function.span.offset);
-            write_decl_line_start(emitter);
+            emitter.write_current_indent();
             emit_function_header(
                 emitter,
                 &function.name,
@@ -275,7 +258,7 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
         }
         RecordMethod::Procedure(procedure) => {
             emit_leading_comments(emitter, comments, procedure.span.offset);
-            write_decl_line_start(emitter);
+            emitter.write_current_indent();
             emit_procedure_header(
                 emitter,
                 &procedure.name,
@@ -291,16 +274,16 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
 fn emit_enum_type(emitter: &mut Emitter, enum_type: &EnumType) {
     emitter.write("enum\n");
     emitter.with_indent(|inner| {
-        for (index, member) in enum_type.members.iter().enumerate() {
-            emit_enum_member(inner, member, index + 1 == enum_type.members.len());
+        for member in &enum_type.members {
+            emit_enum_member(inner, member);
         }
     });
-    write_decl_line_start(emitter);
+    emitter.write_current_indent();
     emitter.write("end");
 }
 
-fn emit_enum_member(emitter: &mut Emitter, member: &EnumMember, _is_last: bool) {
-    write_decl_line_start(emitter);
+fn emit_enum_member(emitter: &mut Emitter, member: &EnumMember) {
+    emitter.write_current_indent();
     emitter.write(&member.name);
     if !member.fields.is_empty() {
         emitter.write("(");
@@ -320,13 +303,8 @@ fn emit_enum_member(emitter: &mut Emitter, member: &EnumMember, _is_last: bool) 
     emitter.write(";\n");
 }
 
-fn emit_function_decl(
-    emitter: &mut Emitter,
-    function: &FunctionDecl,
-    _is_last: bool,
-    comments: &CommentMap,
-) {
-    write_decl_line_start(emitter);
+fn emit_function_decl(emitter: &mut Emitter, function: &FunctionDecl, comments: &CommentMap) {
+    emitter.write_current_indent();
     emit_visibility(emitter, function.visibility);
     emit_function_header(
         emitter,
@@ -340,13 +318,8 @@ fn emit_function_decl(
     emit_func_body(emitter, &function.body, comments);
 }
 
-fn emit_procedure_decl(
-    emitter: &mut Emitter,
-    procedure: &ProcedureDecl,
-    _is_last: bool,
-    comments: &CommentMap,
-) {
-    write_decl_line_start(emitter);
+fn emit_procedure_decl(emitter: &mut Emitter, procedure: &ProcedureDecl, comments: &CommentMap) {
+    emitter.write_current_indent();
     emit_visibility(emitter, procedure.visibility);
     emit_procedure_header(
         emitter,
@@ -380,32 +353,16 @@ fn emit_procedure_header(
 
 fn emit_func_body(emitter: &mut Emitter, body: &FuncBody, comments: &CommentMap) {
     let FuncBody::Block { nested, stmts } = body;
-    for (index, decl) in nested.iter().enumerate() {
-        emit_decl(emitter, decl, index + 1 == nested.len(), comments);
+    for decl in nested {
+        emit_decl(emitter, decl, comments);
     }
     emitter.writeln("begin");
     emitter.with_indent(|inner| emit_stmts_in_block(inner, stmts));
-    write_decl_line_start(emitter);
+    emitter.write_current_indent();
     emitter.write("end;\n");
 }
 
-fn decl_span(decl: &Decl) -> usize {
-    match decl {
-        Decl::Const(def) => def.span.offset,
-        Decl::Var(def) | Decl::MutableVar(def) => def.span.offset,
-        Decl::TypeDef(def) => def.span.offset,
-        Decl::Function(function) => function.span.offset,
-        Decl::Procedure(procedure) => procedure.span.offset,
-    }
-}
-
-fn write_decl_line_start(emitter: &mut Emitter) {
-    for _ in 0..emitter.indent_level() {
-        emitter.write(crate::style::INDENT);
-    }
-}
-
-fn finish_decl_line(emitter: &mut Emitter, _is_last: bool) {
+fn finish_decl_line(emitter: &mut Emitter) {
     emitter.write(";\n");
 }
 
@@ -510,9 +467,8 @@ end.",
 
     #[test]
     fn unit_private_type_keeps_type_keyword() {
-        let formatted = format_unit_decls(
-            "unit U; private type Complex = record Re: real; Im: real; end;",
-        );
+        let formatted =
+            format_unit_decls("unit U; private type Complex = record Re: real; Im: real; end;");
         assert!(
             formatted.contains("private type Complex = record\n"),
             "formatted:\n{formatted}"

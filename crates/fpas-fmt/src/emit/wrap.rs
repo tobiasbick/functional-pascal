@@ -37,7 +37,7 @@ pub(crate) fn emit_wrapped_comma_list(
 ) {
     assert!(!items.is_empty());
 
-    let single_line = format!("{first_line_prefix}{}{terminator}", join_with(items, ", "));
+    let single_line = format!("{first_line_prefix}{}{terminator}", items.join(", "));
     if text_width(&single_line) <= MAX_LINE_WIDTH {
         emitter.write(&single_line);
         emitter.write("\n");
@@ -120,7 +120,7 @@ pub(crate) fn emit_wrapped_semicolon_paren_list(
 
     let inline = format!(
         "{open_prefix}{items}){close_suffix}",
-        items = join_with(items, "; ")
+        items = items.join("; ")
     );
     if text_width(&inline) <= MAX_LINE_WIDTH {
         emitter.write(&inline);
@@ -145,10 +145,6 @@ pub(crate) fn emit_wrapped_semicolon_paren_list(
 
     emitter.write(")");
     emitter.write(close_suffix);
-}
-
-fn join_with(items: &[String], sep: &str) -> String {
-    items.join(sep)
 }
 
 #[cfg(test)]

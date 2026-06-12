@@ -111,11 +111,16 @@ impl Emitter {
         self.column = 0;
     }
 
-    fn write_indent(&mut self) {
+    /// Appends the current indent prefix without advancing to a new line.
+    pub(crate) fn write_current_indent(&mut self) {
         for _ in 0..self.indent_level {
             self.out.push_str(INDENT);
         }
         self.column = self.indent_level * INDENT.len();
+    }
+
+    fn write_indent(&mut self) {
+        self.write_current_indent();
     }
 
     /// Ends a statement line: `;` between statements, no extra blank line when already newline-terminated.

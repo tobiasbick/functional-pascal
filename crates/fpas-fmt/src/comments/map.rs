@@ -3,9 +3,7 @@
 use std::collections::BTreeMap;
 
 use fpas_lexer::SourceComment;
-use fpas_parser::{
-    CompilationUnit, Decl, FunctionDecl, ProcedureDecl, Program, RecordMethod, Unit,
-};
+use fpas_parser::{CompilationUnit, Decl, RecordMethod};
 
 /// Comments to emit immediately before an anchor offset in source.
 #[derive(Debug, Default, Clone)]
@@ -63,9 +61,7 @@ fn nearest_following_anchor(comment_end: usize, anchors: &[usize], source: &str)
     anchors
         .iter()
         .copied()
-        .filter(|anchor| {
-            *anchor > comment_end && gap_leads_to_anchor(source, comment_end, *anchor)
-        })
+        .filter(|anchor| *anchor > comment_end && gap_leads_to_anchor(source, comment_end, *anchor))
         .min()
 }
 
@@ -117,24 +113,16 @@ fn normalize_comment_text(text: &str) -> String {
 
 fn collect_anchors(unit: &CompilationUnit) -> Vec<usize> {
     match unit {
-        CompilationUnit::Program(program) => program_anchors(program),
-        CompilationUnit::Unit(unit) => unit_anchors(unit),
+        CompilationUnit::Program(program) => {
+            collect_decl_anchors(program.span.offset, &program.declarations)
+        }
+        CompilationUnit::Unit(unit) => collect_decl_anchors(unit.span.offset, &unit.declarations),
     }
 }
 
-fn program_anchors(program: &Program) -> Vec<usize> {
-    let mut anchors = vec![program.span.offset];
-    for decl in &program.declarations {
-        push_decl_anchors(&mut anchors, decl);
-    }
-    anchors.sort_unstable();
-    anchors.dedup();
-    anchors
-}
-
-fn unit_anchors(unit: &Unit) -> Vec<usize> {
-    let mut anchors = vec![unit.span.offset];
-    for decl in &unit.declarations {
+fn collect_decl_anchors(root_offset: usize, decls: &[Decl]) -> Vec<usize> {
+    let mut anchors = vec![root_offset];
+    for decl in decls {
         push_decl_anchors(&mut anchors, decl);
     }
     anchors.sort_unstable();
@@ -143,7 +131,7 @@ fn unit_anchors(unit: &Unit) -> Vec<usize> {
 }
 
 fn push_decl_anchors(out: &mut Vec<usize>, decl: &Decl) {
-    out.push(decl_span(decl));
+    out.push(crate::span::decl_span(decl));
     if let Decl::TypeDef(type_def) = decl {
         if let fpas_parser::TypeBody::Record(record) = &type_def.body {
             for method in &record.methods {
@@ -152,17 +140,6 @@ fn push_decl_anchors(out: &mut Vec<usize>, decl: &Decl) {
                     RecordMethod::Procedure(procedure) => out.push(procedure.span.offset),
                 }
             }
-        }
-    }
-}
-
-fn decl_span(decl: &Decl) -> usize {
-    match decl {
-        Decl::Const(def) => def.span.offset,
-        Decl::Var(def) | Decl::MutableVar(def) => def.span.offset,
-        Decl::TypeDef(def) => def.span.offset,
-        Decl::Function(FunctionDecl { span, .. }) | Decl::Procedure(ProcedureDecl { span, .. }) => {
-            span.offset
         }
     }
 }
@@ -183,7 +160,7 @@ mod tests {
             _ => panic!("expected unit"),
         };
         assert_eq!(map.comments_at(unit_anchor), ["/// Unit doc."]);
-        let decl_anchor = super::decl_span(match &unit {
+        let decl_anchor = crate::span::decl_span(match &unit {
             fpas_parser::CompilationUnit::Unit(unit) => &unit.declarations[0],
             _ => panic!("expected unit"),
         });

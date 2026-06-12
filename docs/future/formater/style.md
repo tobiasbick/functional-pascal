@@ -221,8 +221,8 @@ end;
 ## Line width (v2)
 
 - **Maximum line length: 100 columns** (`MAX_LINE_WIDTH` in `crates/fpas-fmt/src/style.rs`).
-- Count includes leading indentation unless a rule below says otherwise.
-- v1 emitter may emit longer lines; Phase 2 wrapping applies these rules. Until then, golden v1 examples remain valid.
+- Count includes leading indentation on the line being measured.
+- Lines at or below [`MAX_LINE_WIDTH`](../../../crates/fpas-fmt/src/style.rs) stay on one line; wrapping applies only when the rendered line would exceed the limit.
 
 ### Wrapping (v2, when over max width)
 

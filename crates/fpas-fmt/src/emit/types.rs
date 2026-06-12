@@ -3,6 +3,7 @@
 use fpas_parser::{FormalParam, QualifiedId, TypeExpr, TypeParam};
 
 use super::Emitter;
+use super::wrap::{emit_wrapped_semicolon_paren_list, measure_emit};
 
 /// Formats a type expression.
 #[must_use]
@@ -42,15 +43,11 @@ pub(crate) fn emit_type_expr(emitter: &mut Emitter, ty: &TypeExpr) {
             return_type,
             ..
         } => {
-            emitter.write("function(");
-            emit_formal_params(emitter, params);
-            emitter.write("): ");
-            emit_type_expr(emitter, return_type);
+            let return_text = format_type_expr(return_type);
+            emit_formal_params_in_parens(emitter, "function(", params, &format!(": {return_text}"));
         }
         TypeExpr::ProcedureType { params, .. } => {
-            emitter.write("procedure(");
-            emit_formal_params(emitter, params);
-            emitter.write(")");
+            emit_formal_params_in_parens(emitter, "procedure(", params, "");
         }
         TypeExpr::Result {
             ok_type, err_type, ..
@@ -101,6 +98,20 @@ pub(crate) fn emit_formal_params(emitter: &mut Emitter, params: &[FormalParam]) 
         }
         emit_formal_param(emitter, param);
     }
+}
+
+/// Emits formal parameters inside parentheses, wrapping after `;` when over max width.
+pub(crate) fn emit_formal_params_in_parens(
+    emitter: &mut Emitter,
+    open_prefix: &str,
+    params: &[FormalParam],
+    close_suffix: &str,
+) {
+    let items: Vec<String> = params
+        .iter()
+        .map(|param| measure_emit(|inner| emit_formal_param(inner, param)))
+        .collect();
+    emit_wrapped_semicolon_paren_list(emitter, open_prefix, &items, close_suffix);
 }
 
 fn emit_formal_param(emitter: &mut Emitter, param: &FormalParam) {
@@ -175,6 +186,16 @@ mod tests {
                 "program T; begin var F: function(A: integer; mutable B: integer): boolean := Check; end."
             ),
             "function(A: integer; mutable B: integer): boolean"
+        );
+    }
+
+    #[test]
+    fn long_formal_param_list_wraps() {
+        assert_eq!(
+            type_from_var(
+                "program T; begin var F: function(AlphaParameter: integer; BetaParameter: integer; GammaParameter: integer; DeltaParameter: integer): boolean := Check; end.",
+            ),
+            "function(\n  AlphaParameter: integer;\n  BetaParameter: integer;\n  GammaParameter: integer;\n  DeltaParameter: integer\n): boolean"
         );
     }
 }

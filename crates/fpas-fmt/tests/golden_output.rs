@@ -28,3 +28,21 @@ fn unit_clamp() {
         include_str!("golden/unit_clamp.expected.fpas"),
     );
 }
+
+#[test]
+fn long_uses() {
+    common::assert_golden(
+        "long_uses",
+        "program LongUses; uses Std.Console, Std.Conv, Std.Array, Std.Dict, Std.Option, Std.Result, Std.String, MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two; begin WriteLn('ok') end.",
+        include_str!("golden/long_uses.expected.fpas"),
+    );
+}
+
+#[test]
+fn wrapped_record_literal() {
+    common::assert_golden(
+        "wrapped_record",
+        "program T; type Config = record Host: string; Port: integer; Retries: integer; TimeoutSeconds: integer; end; begin var C: Config := record Host := 'api.example.com'; Port := 443; Retries := 5; TimeoutSeconds := 30; end; end.",
+        include_str!("golden/wrapped_record.expected.fpas"),
+    );
+}

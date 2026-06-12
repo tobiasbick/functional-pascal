@@ -6,6 +6,7 @@ use super::Emitter;
 use super::decl::emit_decls;
 use super::stmt::emit_stmts_in_block;
 use super::types::emit_qualified_id;
+use super::wrap::{emit_wrapped_comma_list, measure_emit};
 
 /// Formats a `program` compilation unit.
 #[must_use]
@@ -51,14 +52,11 @@ fn emit_optional_uses(emitter: &mut Emitter, uses: &[QualifiedId]) {
     if uses.is_empty() {
         return;
     }
-    emitter.write("uses ");
-    for (index, unit_name) in uses.iter().enumerate() {
-        if index > 0 {
-            emitter.write(", ");
-        }
-        emit_qualified_id(emitter, unit_name);
-    }
-    emitter.write(";\n");
+    let items: Vec<String> = uses
+        .iter()
+        .map(|unit_name| measure_emit(|inner| emit_qualified_id(inner, unit_name)))
+        .collect();
+    emit_wrapped_comma_list(emitter, "uses ", crate::style::INDENT_WIDTH, &items, ";");
     emitter.blank_line();
 }
 
@@ -111,6 +109,26 @@ mod tests {
         );
         assert!(formatted.contains("type\n  Point = record\n"));
         assert!(formatted.contains("end;\n\nbegin\n"));
+    }
+
+    #[test]
+    fn array_literal_short_stays_single_line() {
+        let formatted = parse_and_format(
+            "program T; begin var Words: array of string := ['red', 'green', 'blue']; end.",
+        );
+        assert!(
+            formatted.contains("['red', 'green', 'blue']"),
+            "formatted:\n{formatted}"
+        );
+    }
+
+    #[test]
+    fn long_uses_clause_wraps() {
+        let formatted = parse_and_format(
+            "program LongUses; uses Std.Console, Std.Conv, Std.Array, Std.Dict, Std.Option, Std.Result, Std.String, MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two; begin WriteLn('ok') end.",
+        );
+        assert!(formatted.contains("uses\n"));
+        assert!(formatted.contains("MyApp.Very.Long.Namespace.Two"));
     }
 
     #[test]

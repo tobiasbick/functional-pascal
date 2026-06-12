@@ -1,0 +1,9 @@
+program LongUses;
+
+uses
+  Std.Console, Std.Conv, Std.Array, Std.Dict, Std.Option, Std.Result, Std.String,
+  MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two;
+
+begin
+  WriteLn('ok')
+end.

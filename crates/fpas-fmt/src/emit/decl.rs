@@ -8,7 +8,7 @@ use fpas_parser::{
 use super::Emitter;
 use super::expr::emit_expr;
 use super::stmt::emit_stmts_in_block;
-use super::types::{emit_formal_params, emit_type_expr, format_type_params};
+use super::types::{emit_formal_params_in_parens, emit_type_expr, format_type_params};
 
 /// Formats a declaration list (unit declarations or program `type` / top-level decls).
 #[must_use]
@@ -336,12 +336,8 @@ fn emit_function_header(
     type_params: &[fpas_parser::TypeParam],
     params: &[fpas_parser::FormalParam],
 ) {
-    emitter.write("function ");
-    emitter.write(name);
-    emitter.write(&format_type_params(type_params));
-    emitter.write("(");
-    emit_formal_params(emitter, params);
-    emitter.write(")");
+    let open = format!("function {name}{}(", format_type_params(type_params));
+    emit_formal_params_in_parens(emitter, &open, params, "");
 }
 
 fn emit_procedure_header(
@@ -350,12 +346,8 @@ fn emit_procedure_header(
     type_params: &[fpas_parser::TypeParam],
     params: &[fpas_parser::FormalParam],
 ) {
-    emitter.write("procedure ");
-    emitter.write(name);
-    emitter.write(&format_type_params(type_params));
-    emitter.write("(");
-    emit_formal_params(emitter, params);
-    emitter.write(")");
+    let open = format!("procedure {name}{}(", format_type_params(type_params));
+    emit_formal_params_in_parens(emitter, &open, params, "");
 }
 
 fn emit_func_body(emitter: &mut Emitter, body: &FuncBody) {

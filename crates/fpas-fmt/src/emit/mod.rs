@@ -13,6 +13,7 @@ mod expr;
 mod program;
 mod stmt;
 mod types;
+mod wrap;
 
 pub(crate) use program::{format_program, format_unit};
 
@@ -23,6 +24,7 @@ use crate::style::INDENT;
 pub(crate) struct Emitter {
     out: String,
     indent_level: usize,
+    column: usize,
 }
 
 impl Emitter {
@@ -75,9 +77,30 @@ impl Emitter {
         }
     }
 
+    /// Current column on the active line (includes leading spaces).
+    pub(crate) fn column(&self) -> usize {
+        self.column
+    }
+
+    /// Appends a newline and spaces to reach `target_column`, resetting the active column.
+    pub(crate) fn newline_to_column(&mut self, target_column: usize) {
+        self.out.push('\n');
+        for _ in 0..target_column {
+            self.out.push(' ');
+        }
+        self.column = target_column;
+    }
+
     /// Appends text without a leading indent or trailing newline.
     pub(crate) fn write(&mut self, text: &str) {
-        self.out.push_str(text);
+        for ch in text.chars() {
+            self.out.push(ch);
+            if ch == '\n' {
+                self.column = 0;
+            } else {
+                self.column += 1;
+            }
+        }
     }
 
     /// Appends a line with the current indent prefix.
@@ -85,12 +108,14 @@ impl Emitter {
         self.write_indent();
         self.out.push_str(line);
         self.out.push('\n');
+        self.column = 0;
     }
 
     fn write_indent(&mut self) {
         for _ in 0..self.indent_level {
             self.out.push_str(INDENT);
         }
+        self.column = self.indent_level * INDENT.len();
     }
 
     /// Ends a statement line: `;` between statements, no extra blank line when already newline-terminated.
@@ -102,8 +127,10 @@ impl Emitter {
                 self.out.push(';');
                 self.out.push('\n');
             }
+            self.column = 0;
         } else if !self.out.ends_with('\n') {
             self.out.push('\n');
+            self.column = 0;
         }
     }
 }

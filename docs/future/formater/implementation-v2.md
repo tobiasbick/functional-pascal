@@ -78,14 +78,14 @@ Target: [`crates/fpas-cli/src/cli_fmt/`](../../../crates/fpas-cli/src/cli_fmt/),
 Target: [`crates/fpas-fmt/src/emit/`](../../../crates/fpas-fmt/src/emit/) — likely new `wrap.rs` or width-aware helpers on `Emitter`.
 
 - [x] `style.rs`: `MAX_LINE_WIDTH` constant (value from Phase 0); no runtime overrides.
-- [ ] Measure rendered line length excluding leading indent (or document inclusive rule in style.md).
-- [ ] **`uses` wrapping:** break after commas; continuation lines indented per [style.md — Indentation](style.md#indentation).
-- [ ] **Formal parameter lists:** break after `;` in long `function` / `procedure` headers.
-- [ ] **Record / array literals:** multi-line when over width; keep v1 semicolon rules.
-- [ ] **Expressions:** break long binary chains at lowest-precedence operator; do not break inside string literals.
-- [ ] **Stability:** same AST → same breaks (no random wrapping); add width to golden tests.
-- [ ] Golden files under `crates/fpas-fmt/tests/golden/` for at least one wrapped `uses` and one wrapped record literal.
-- [ ] Round-trip tests still pass (`cargo test -p fpas-fmt`).
+- [x] Measure rendered line length including leading indent ([style.md — Line width](style.md#line-width-v2)).
+- [x] **`uses` wrapping:** break after commas; continuation lines indented per [style.md — Indentation](style.md#indentation).
+- [x] **Formal parameter lists:** break after `;` in long `function` / `procedure` headers.
+- [x] **Record / array literals:** multi-line when over width; keep v1 semicolon rules.
+- [x] **Expressions:** break long binary chains at lowest-precedence operator; do not break inside string literals.
+- [x] **Stability:** same AST → same breaks (no random wrapping); add width to golden tests.
+- [x] Golden files under `crates/fpas-fmt/tests/golden/` for wrapped `uses` and wrapped record literal.
+- [x] Round-trip tests still pass (`cargo test -p fpas-fmt`).
 
 **Phase 2 exit:** files over max width wrap predictably; golden tests cover wrapping.
 

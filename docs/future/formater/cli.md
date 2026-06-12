@@ -1,6 +1,6 @@
 # Formatter CLI (`fpas fmt`)
 
-**Status: v1 + v2 complete.** Output shape: [style.md](style.md). Emitter: [`crates/fpas-fmt/`](../../../crates/fpas-fmt/).
+**Status: v1 + v2 complete; v3 Phase 0 complete.** v3 plan: [implementation-v3.md](implementation-v3.md). Output shape: [style.md](style.md) (v2 normative; v3 planned section in [Comments (v3 planned)](style.md#comments-v3-planned)).
 
 ## Usage
 
@@ -47,12 +47,22 @@ Each `<path>` may be:
 
 ## Deferred to v3+
 
-Moved from earlier drafts; not planned for v2:
+Active plan: [implementation-v3.md](implementation-v3.md). **Resume at Phase 1** (trivia stream).
 
-- Watch mode / format on save.
-- LSP format-on-save integration.
-- Full trivia-preserving formatter (all comment positions) — see [implementation-v2.md — Option B](implementation-v2.md#phase-0--scope-and-design-lock-in).
-- Sort `uses` / declarations.
+| Item | v3 phase |
+|------|----------|
+| Full trivia (Option B) | Phases 1–4 |
+| `fpas fmt --watch` | Phase 5 |
+| Format-on-save (editor docs MVP) | Phase 5 |
+| Dedicated LSP server crate | v4+ |
+
+Still **not planned:** configurable style, sort `uses`/declarations, invalid-syntax recovery.
+
+## Deferred to v4+
+
+| Item | Reason |
+|------|--------|
+| Dedicated LSP server crate | Editor CLI/docs MVP in v3 Phase 5 first |
 
 ## Non-goals
 

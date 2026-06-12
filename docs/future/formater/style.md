@@ -433,6 +433,18 @@ type
 
 **v2 (Phase 3 — Option A):** When formatting with source text ([`format_source`](../../../crates/fpas-fmt/src/lib.rs)), re-attach leading `///` and declaration `{ }` / `(* *)` blocks that immediately preceded a declaration in source. Attachment uses lexer comment spans and declaration anchors; gaps may contain only whitespace or visibility/keyword prefixes (`private`, `public`, `mutable var`, `const`, `type`, `function`, `procedure`) before the parser anchor. End-of-line and intra-statement comments remain removed. One blank line after a preserved comment block before the declaration. [`format_compilation_unit`](../../../crates/fpas-fmt/src/lib.rs) without source still strips all comments.
 
+### Comments (v3 planned)
+
+**Not yet normative.** Implementation plan: [implementation-v3.md — v3 golden targets](implementation-v3.md#v3-golden-targets-for-stylemd-phase-3).
+
+When v3 ships, this section will replace the v2-only rules above with:
+
+- All comment styles preserved (`///`, `{ }`, `(* *)`, `//`, including end-of-line).
+- User blank lines between sections preserved (required minimum blank lines from [Blank lines](#blank-lines) still enforced if missing).
+- Layout (indent, wrap, `begin`/`end`, keywords, literals) unchanged from v2.
+
+Until Phase 3 completes, **`fpas fmt` behavior follows the v2 rules** in the paragraph above.
+
 ## Intentional diffs from source
 
 The formatter **normalizes** valid input. These changes are deliberate (not bugs):

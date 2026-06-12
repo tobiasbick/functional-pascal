@@ -177,7 +177,7 @@ fpas-cli ──► fpas-fmt ──► fpas-parser ──► fpas-lexer
 5. ~~**Phase 4**~~ — mass-format repo + CI docs (done).
 6. ~~**Phase 5**~~ — hardening pass (done).
 
-**v2 is complete.** Further work lives under [Explicitly deferred to v3+](#explicitly-deferred-to-v3) or a future v3 plan.
+**v2 is complete.** Active work: [implementation-v3.md](implementation-v3.md) (Phase 0 done, Phase 1 next). Permanently rejected items remain in [Explicitly deferred to v3+](#explicitly-deferred-to-v3) in v2 and [Explicitly deferred to v4+](implementation-v3.md#explicitly-deferred-to-v4) in v3.
 
 ---
 

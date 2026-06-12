@@ -1,5 +1,10 @@
 //! Source locations and spans shared across diagnostics.
 
+fn validate_one_based_location(line: u32, column: u32) {
+    debug_assert!(line > 0, "source line must be 1-based");
+    debug_assert!(column > 0, "source column must be 1-based");
+}
+
 /// A 1-based location within a source input.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SourceLocation {
@@ -18,8 +23,7 @@ impl SourceLocation {
     /// Creates a location with an explicit source identifier.
     #[must_use]
     pub fn new_with_source(line: u32, column: u32, source_id: u32) -> Self {
-        assert!(line > 0, "source line must be 1-based");
-        assert!(column > 0, "source column must be 1-based");
+        validate_one_based_location(line, column);
         Self {
             line,
             column,
@@ -60,8 +64,7 @@ impl SourceSpan {
         column: u32,
         source_id: u32,
     ) -> Self {
-        assert!(line > 0, "source line must be 1-based");
-        assert!(column > 0, "source column must be 1-based");
+        validate_one_based_location(line, column);
         Self {
             offset,
             length,
@@ -69,6 +72,12 @@ impl SourceSpan {
             column,
             source_id,
         }
+    }
+
+    /// Placeholder span when only a [`SourceLocation`] is known (byte offsets unset).
+    #[must_use]
+    pub fn synthetic_from_location(location: SourceLocation) -> Self {
+        Self::new_with_source(0, 1, location.line, location.column, location.source_id)
     }
 
     /// Returns the starting location of this span.
@@ -98,5 +107,14 @@ mod tests {
     fn source_span_location_preserves_source_id() {
         let span = SourceSpan::new_with_source(7, 5, 21, 3, 9);
         assert_eq!(span.location(), SourceLocation::new_with_source(21, 3, 9));
+    }
+
+    #[test]
+    fn synthetic_from_location_uses_placeholder_offsets() {
+        let location = SourceLocation::new_with_source(4, 2, 3);
+        let span = SourceSpan::synthetic_from_location(location);
+        assert_eq!(span.offset, 0);
+        assert_eq!(span.length, 1);
+        assert_eq!(span.location(), location);
     }
 }

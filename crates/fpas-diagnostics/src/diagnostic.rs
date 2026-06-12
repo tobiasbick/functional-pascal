@@ -33,7 +33,34 @@ pub struct Diagnostic {
     pub span: SourceSpan,
 }
 
+impl DiagnosticCode {
+    /// Returns the toolchain stage implied by this code's numeric range.
+    #[must_use]
+    pub const fn stage(self) -> DiagnosticStage {
+        match self.value() {
+            1..=10 => DiagnosticStage::Lex,
+            1001..=1999 => DiagnosticStage::Parse,
+            2001..=2999 => DiagnosticStage::Sema,
+            3001..=3999 => DiagnosticStage::Compile,
+            4001..=4999 => DiagnosticStage::Runtime,
+            _ => DiagnosticStage::Internal,
+        }
+    }
+}
+
 impl Diagnostic {
+    /// Returns `true` when this diagnostic blocks compilation or execution.
+    #[must_use]
+    pub fn is_error(&self) -> bool {
+        matches!(self.severity, DiagnosticSeverity::Error)
+    }
+
+    /// Returns `true` when this diagnostic is non-fatal.
+    #[must_use]
+    pub fn is_warning(&self) -> bool {
+        matches!(self.severity, DiagnosticSeverity::Warning)
+    }
+
     /// Creates a warning diagnostic.
     #[must_use]
     pub fn warning(
@@ -43,14 +70,14 @@ impl Diagnostic {
         help: Option<String>,
         span: SourceSpan,
     ) -> Self {
-        Self {
+        Self::new(
+            DiagnosticSeverity::Warning,
             code,
             stage,
-            severity: DiagnosticSeverity::Warning,
-            message: message.into(),
+            message,
             help,
             span,
-        }
+        )
     }
 
     /// Creates an error diagnostic.
@@ -62,10 +89,21 @@ impl Diagnostic {
         help: Option<String>,
         span: SourceSpan,
     ) -> Self {
+        Self::new(DiagnosticSeverity::Error, code, stage, message, help, span)
+    }
+
+    fn new(
+        severity: DiagnosticSeverity,
+        code: DiagnosticCode,
+        stage: DiagnosticStage,
+        message: impl Into<String>,
+        help: Option<String>,
+        span: SourceSpan,
+    ) -> Self {
         Self {
             code,
             stage,
-            severity: DiagnosticSeverity::Error,
+            severity,
             message: message.into(),
             help,
             span,
@@ -76,9 +114,10 @@ impl Diagnostic {
 /// Renders a diagnostic as a single-line summary with an optional help line.
 #[must_use]
 pub fn render(path: &str, diagnostic: &Diagnostic) -> String {
-    let severity = match diagnostic.severity {
-        DiagnosticSeverity::Warning => "warning",
-        DiagnosticSeverity::Error => "error",
+    let severity = if diagnostic.is_warning() {
+        "warning"
+    } else {
+        "error"
     };
 
     let mut rendered = format!(
@@ -135,6 +174,15 @@ mod tests {
             rendered,
             "path/to/file.fpas:12:8: error[F1003]: Expected `then`, found `do`\n  help: Insert `then` after the condition."
         );
+    }
+
+    #[test]
+    fn diagnostic_code_stage_matches_numeric_range() {
+        use super::DiagnosticStage;
+
+        assert_eq!(DiagnosticCode::new(5).stage(), DiagnosticStage::Lex);
+        assert_eq!(DiagnosticCode::new(1003).stage(), DiagnosticStage::Parse);
+        assert_eq!(DiagnosticCode::new(9002).stage(), DiagnosticStage::Internal);
     }
 
     #[test]

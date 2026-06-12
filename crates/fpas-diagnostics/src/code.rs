@@ -1,7 +1,7 @@
 //! Stable strongly typed FPAS diagnostic codes.
 
 /// A stable FPAS diagnostic code in the `F0000` to `F9999` range.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DiagnosticCode(u16);
 
 impl DiagnosticCode {

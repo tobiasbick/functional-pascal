@@ -107,6 +107,7 @@ define_codes!(RUNTIME_ALLOCATED_CODES => {
     RUNTIME_CONVERSION_FAILURE = 4013;
     RUNTIME_CONSOLE_STATE_ERROR = 4014;
     RUNTIME_UNWRAP_FAILURE = 4015;
+    // Reserved: 4016–4017 (gap before task/runtime codes; do not reuse without audit).
     RUNTIME_INVALID_TASK = 4018;
     RUNTIME_DICT_KEY_NOT_FOUND = 4019;
     RUNTIME_VM_SHUTDOWN = 4020;
@@ -125,23 +126,24 @@ define_codes!(INTERNAL_ALLOCATED_CODES => {
 });
 
 #[cfg(test)]
+const ALL_CODE_INVENTORIES: &[&[DiagnosticCode]] = &[
+    LEX_ALLOCATED_CODES,
+    PARSE_ALLOCATED_CODES,
+    SEMA_ALLOCATED_CODES,
+    COMPILE_ALLOCATED_CODES,
+    RUNTIME_ALLOCATED_CODES,
+    INTERNAL_ALLOCATED_CODES,
+];
+
+#[cfg(test)]
 mod tests {
     use super::*;
     use std::collections::HashSet;
 
     #[test]
     fn allocated_codes_are_unique() {
-        let allocated_codes = [
-            LEX_ALLOCATED_CODES,
-            PARSE_ALLOCATED_CODES,
-            SEMA_ALLOCATED_CODES,
-            COMPILE_ALLOCATED_CODES,
-            RUNTIME_ALLOCATED_CODES,
-            INTERNAL_ALLOCATED_CODES,
-        ];
-
         let mut seen = HashSet::new();
-        for stage_codes in allocated_codes {
+        for stage_codes in ALL_CODE_INVENTORIES {
             for code in stage_codes.iter().copied() {
                 assert!(
                     seen.insert(code.value()),

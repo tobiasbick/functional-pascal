@@ -94,7 +94,7 @@ impl Compiler {
         let saved_scope_depth = self.scope_depth;
         self.next_slot = 0;
         self.scope_depth = 0;
-        self.enclosing_locals.push(saved_locals.clone());
+        self.enclosing_locals.push(saved_locals);
 
         self.begin_scope();
 
@@ -116,8 +116,7 @@ impl Compiler {
 
         let body_end = self.chunk.len();
 
-        self.enclosing_locals.pop();
-        self.locals = saved_locals;
+        self.locals = self.enclosing_locals.pop().expect("enclosing locals frame");
         self.next_slot = saved_next_slot;
         self.scope_depth = saved_scope_depth;
 

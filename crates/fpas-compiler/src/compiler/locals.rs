@@ -5,8 +5,8 @@
 use fpas_parser::{Designator, DesignatorPart, Program};
 use fpas_std::key_event::KEY_KIND_VARIANTS;
 use fpas_std::{
-    EVENT_KIND_VARIANTS, MOUSE_ACTION_VARIANTS, MOUSE_BUTTON_VARIANTS, STD_UNIT_CONSOLE,
-    STD_UNIT_JSON, STD_UNIT_TUI, TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS,
+    EVENT_KIND_VARIANTS, MOUSE_ACTION_VARIANTS, MOUSE_BUTTON_VARIANTS, TUI_EVENT_KIND_VARIANTS,
+    TUI_EXIT_REASON_VARIANTS,
     canonical_std_unit_from_segments, is_std_root_segment, std_symbols as s,
 };
 
@@ -72,28 +72,11 @@ impl Compiler {
         result
     }
 
-    pub(super) fn program_uses_std_console(program: &Program) -> bool {
+    pub(super) fn program_uses_std_unit(program: &Program, unit: &str) -> bool {
         program.uses.iter().any(|u| {
             u.parts.len() == 2
                 && is_std_root_segment(&u.parts[0])
-                && canonical_std_unit_from_segments(&u.parts[0], &u.parts[1])
-                    == Some(STD_UNIT_CONSOLE)
-        })
-    }
-
-    pub(super) fn program_uses_std_tui(program: &Program) -> bool {
-        program.uses.iter().any(|u| {
-            u.parts.len() == 2
-                && is_std_root_segment(&u.parts[0])
-                && canonical_std_unit_from_segments(&u.parts[0], &u.parts[1]) == Some(STD_UNIT_TUI)
-        })
-    }
-
-    pub(super) fn program_uses_std_json(program: &Program) -> bool {
-        program.uses.iter().any(|u| {
-            u.parts.len() == 2
-                && is_std_root_segment(&u.parts[0])
-                && canonical_std_unit_from_segments(&u.parts[0], &u.parts[1]) == Some(STD_UNIT_JSON)
+                && canonical_std_unit_from_segments(&u.parts[0], &u.parts[1]) == Some(unit)
         })
     }
 

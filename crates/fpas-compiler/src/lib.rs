@@ -29,10 +29,7 @@ use fpas_parser::Program;
 ///
 /// **Documentation:** `docs/pascal/10-projects.md` (from the repository root).
 pub fn compile(program: &Program) -> Result<Chunk, CompileError> {
-    match compile_all(program) {
-        Ok(chunk) => Ok(chunk),
-        Err(mut errors) => Err(errors.remove(0)),
-    }
+    compile_all(program).map_err(|mut errors| errors.remove(0))
 }
 
 /// Like [`compile`], but returns **all** semantic-analysis errors when sema fails, or a single

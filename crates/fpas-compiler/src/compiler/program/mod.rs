@@ -6,7 +6,9 @@ mod callables;
 
 use crate::error::CompileError;
 use fpas_bytecode::{Op, Value};
-use fpas_parser::{Decl, Program, RecordMethod, TypeBody};
+use fpas_parser::{Decl, Program, TypeBody};
+
+use fpas_std::{STD_UNIT_CONSOLE, STD_UNIT_JSON, STD_UNIT_TUI};
 
 use super::{Compiler, canonical_name};
 
@@ -23,13 +25,13 @@ impl Compiler {
     }
 
     pub fn compile_program(&mut self, program: &Program) -> Result<(), CompileError> {
-        if Self::program_uses_std_console(program) {
+        if Self::program_uses_std_unit(program, STD_UNIT_CONSOLE) {
             self.register_std_console_enums();
         }
-        if Self::program_uses_std_tui(program) {
+        if Self::program_uses_std_unit(program, STD_UNIT_TUI) {
             self.register_std_tui_enums();
         }
-        if Self::program_uses_std_json(program) {
+        if Self::program_uses_std_unit(program, STD_UNIT_JSON) {
             self.register_std_json_enum();
         }
         self.build_short_aliases(program);
@@ -115,18 +117,6 @@ impl Compiler {
         }
 
         if let TypeBody::Record(record) = &type_def.body {
-            let method_names: Vec<String> = record
-                .methods
-                .iter()
-                .map(|method| match method {
-                    RecordMethod::Function(function) => function.name.clone(),
-                    RecordMethod::Procedure(procedure) => procedure.name.clone(),
-                })
-                .collect();
-            if !method_names.is_empty() {
-                self.record_methods
-                    .insert(type_def.name.clone(), method_names);
-            }
             for method in &record.methods {
                 self.compile_record_method(&type_def.name, method)?;
             }

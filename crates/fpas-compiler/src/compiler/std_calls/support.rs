@@ -30,16 +30,6 @@ impl Compiler {
         }
     }
 
-    pub(super) fn call_site_span(location: SourceLocation) -> fpas_lexer::Span {
-        fpas_lexer::Span {
-            offset: 0,
-            length: 0,
-            line: location.line,
-            column: location.column,
-            source_id: location.source_id,
-        }
-    }
-
     pub(super) fn zero_arg_error(&self, call_name: &str, location: SourceLocation) -> CompileError {
         compile_error(
             COMPILE_INTRINSIC_ARITY_MISMATCH,

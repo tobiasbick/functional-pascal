@@ -45,7 +45,7 @@ impl IntoEmitLocation for u32 {
 }
 
 impl Compiler {
-    fn span_at(location: SourceLocation) -> Span {
+    pub(super) fn call_site_span(location: SourceLocation) -> Span {
         Span {
             offset: 0,
             length: 0,
@@ -76,7 +76,7 @@ impl Compiler {
                 format!(
                     "Reduce the number of distinct constants to at most {max_constants}."
                 ),
-                Self::span_at(location),
+                Self::call_site_span(location),
             ),
             other => internal_compiler_error(
                 format!("Compiler failed to add a constant: {other}"),
@@ -119,7 +119,7 @@ impl Compiler {
         location: impl IntoEmitLocation,
     ) -> Result<u8, CompileError> {
         let location = location.into_emit_location();
-        Self::checked_u8(count, what, Self::span_at(location))
+        Self::checked_u8(count, what, Self::call_site_span(location))
     }
 
     pub(super) fn checked_u16(

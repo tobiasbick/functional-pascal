@@ -64,8 +64,6 @@ pub struct Compiler {
     /// Short (unqualified) name → fully-qualified `Std.*` name.
     short_aliases: HashMap<String, String>,
     expr_types: ExprTypeMap,
-    /// Record type name → set of method names (for method call dispatch).
-    record_methods: HashMap<String, Vec<String>>,
     /// Maps call-expression/designator identity to qualified method name.
     method_calls: MethodCallMap,
     /// Named record type → ordered (field_name, optional_default_expr) pairs.
@@ -107,7 +105,6 @@ impl Compiler {
             enclosing_locals: Vec::new(),
             short_aliases: HashMap::new(),
             expr_types,
-            record_methods: HashMap::new(),
             method_calls,
             record_defaults,
             scalar_case_bindings,

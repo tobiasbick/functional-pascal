@@ -90,7 +90,7 @@ impl Compiler {
     }
 
     fn go_call_returns_value(&self, expr: &Expr) -> bool {
-        let key = std::ptr::from_ref(expr) as usize;
+        let key = fpas_sema::expr_lookup_key(expr);
         self.expr_types
             .get(&key)
             .is_none_or(|ty| !matches!(ty, Ty::Unit))

@@ -166,7 +166,12 @@ pub(super) fn print_json_report(stdout: &mut dyn Write, summary: &Summary) -> st
             })
             .collect(),
     };
-    let json = serde_json::to_string_pretty(&report).expect("JSON test report serialization");
+    let json = serde_json::to_string_pretty(&report).map_err(|error| {
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("failed to serialize JSON test report: {error}"),
+        )
+    })?;
     writeln!(stdout, "{json}")
 }
 

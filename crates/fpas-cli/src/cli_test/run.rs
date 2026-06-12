@@ -20,7 +20,7 @@ use fpas_diagnostics::codes::RUNTIME_TEST_ASSERTION_FAILED;
 use fpas_parser::{CompilationUnit, parse_compilation_unit};
 use fpas_project as project;
 
-fn test_display_path(path: &Path) -> std::borrow::Cow<'_, str> {
+pub(super) fn test_display_path(path: &Path) -> std::borrow::Cow<'_, str> {
     path.file_name()
         .and_then(|name| name.to_str())
         .map(std::borrow::Cow::from)
@@ -381,8 +381,7 @@ fn load_program(
 ) -> Result<(fpas_parser::Program, Option<Vec<PathBuf>>), String> {
     if let Some(link) = link {
         let linked =
-            project::build_program_with_source_map(path, &link.source_files, &link.link_meta)
-                .map_err(|message| message)?;
+            project::build_program_with_source_map(path, &link.source_files, &link.link_meta)?;
         return Ok((linked.program, Some(linked.source_paths)));
     }
 

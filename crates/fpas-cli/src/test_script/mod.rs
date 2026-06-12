@@ -5,6 +5,7 @@
 mod apply;
 mod console;
 mod graph;
+mod input;
 mod parse;
 
 pub use parse::{ScriptConfig, ScriptFile, load_script, sidecar_path_for_test};

@@ -6,6 +6,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::CliInput;
+use crate::cli_paths::normalize_path;
 use fpas_project as project;
 
 /// Returns sorted paths to `*_test.fpas` files for the CLI input.
@@ -23,7 +24,7 @@ fn discover_from_path(path: &Path, cwd: &Path) -> Result<Vec<PathBuf>, String> {
         return Ok(collect_test_files_recursive(&resolved));
     }
 
-    if is_test_file_name(&resolved) {
+    if project::is_test_source_file(&resolved) {
         return Ok(vec![resolved]);
     }
 
@@ -53,7 +54,7 @@ fn discover_from_workspace(workspace_path: &Path) -> Result<Vec<PathBuf>, String
 fn filter_test_files(source_files: Vec<PathBuf>) -> Vec<PathBuf> {
     let mut paths: Vec<PathBuf> = source_files
         .into_iter()
-        .filter(|path| is_test_file_name(path))
+        .filter(|path| project::is_test_source_file(path))
         .collect();
     paths.sort();
     paths
@@ -75,23 +76,16 @@ fn collect_test_files_recursive_inner(dir: &Path, out: &mut Vec<PathBuf>) {
     for entry in read_dir.flatten() {
         let path = entry.path();
         if path.is_dir() {
+            if path
+                .file_name()
+                .is_some_and(|name| name.eq_ignore_ascii_case("target"))
+            {
+                continue;
+            }
             collect_test_files_recursive_inner(&path, out);
-        } else if is_test_file_name(&path) {
+        } else if project::is_test_source_file(&path) {
             out.push(path);
         }
-    }
-}
-
-/// Returns true when `path` ends with `_test.fpas` (case-insensitive).
-pub(super) fn is_test_file_name(path: &Path) -> bool {
-    project::is_test_source_file(path)
-}
-
-fn normalize_path(path: &Path, cwd: &Path) -> PathBuf {
-    if path.is_absolute() {
-        path.to_path_buf()
-    } else {
-        cwd.join(path)
     }
 }
 
@@ -109,12 +103,7 @@ pub(super) fn filter_test_paths(paths: Vec<PathBuf>, pattern: &str) -> Vec<PathB
 }
 
 fn path_matches_filter(path: &Path, needle: &str) -> bool {
-    if path.to_string_lossy().to_lowercase().contains(&*needle) {
-        return true;
-    }
-    path.file_name()
-        .and_then(|name| name.to_str())
-        .is_some_and(|name| name.to_lowercase().contains(needle))
+    path.to_string_lossy().to_lowercase().contains(needle)
 }
 
 #[cfg(test)]

@@ -4,12 +4,12 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use crate::cli_input::CliInput;
+use crate::cli_paths::{
+    PROJECT_FILE_EXTENSION, SOURCE_FILE_EXTENSION, WORKSPACE_FILE_EXTENSION, has_extension,
+    normalize_input_path,
+};
 use fpas_project as project;
 use glob::glob;
-
-const SOURCE_FILE_EXTENSION: &str = "fpas";
-const PROJECT_FILE_EXTENSION: &str = "fpasprj";
-const WORKSPACE_FILE_EXTENSION: &str = "fpasworkspace";
 
 /// Collects `.fpas` paths from explicit CLI arguments, or from discovery when `args` is empty.
 pub(super) fn collect_format_paths(
@@ -18,7 +18,7 @@ pub(super) fn collect_format_paths(
     stderr: &mut dyn Write,
 ) -> Result<Vec<PathBuf>, i32> {
     if explicit_args.is_empty() {
-        let input = crate::cli_input::discover_fmt_input(cwd).map_err(|message| {
+        let input = crate::cli_input::discover_check_input(cwd).map_err(|message| {
             let _ = writeln!(stderr, "{message}");
             1
         })?;
@@ -29,10 +29,7 @@ pub(super) fn collect_format_paths(
     for arg in explicit_args {
         match resolve_fmt_arg(arg, cwd, stderr) {
             Ok(mut resolved) => paths.append(&mut resolved),
-            Err(message) => {
-                let _ = writeln!(stderr, "{message}");
-                return Err(1);
-            }
+            Err(code) => return Err(code),
         }
     }
 
@@ -80,19 +77,20 @@ fn collect_workspace_paths(path: &Path, stderr: &mut dyn Write) -> Result<Vec<Pa
     Ok(paths)
 }
 
-fn resolve_fmt_arg(arg: &str, cwd: &Path, stderr: &mut dyn Write) -> Result<Vec<PathBuf>, String> {
+fn resolve_fmt_arg(arg: &str, cwd: &Path, stderr: &mut dyn Write) -> Result<Vec<PathBuf>, i32> {
     if contains_glob_metacharacters(arg) {
-        return expand_glob(arg, cwd);
+        return expand_glob(arg, cwd).map_err(|message| {
+            let _ = writeln!(stderr, "{message}");
+            1
+        });
     }
 
     let path = normalize_input_path(arg, cwd);
     if path.is_dir() {
         let files = collect_fpas_files_in_dir(&path);
         if files.is_empty() {
-            return Err(format!(
-                "No `.fpas` files found under `{}`.",
-                path.display()
-            ));
+            let _ = writeln!(stderr, "No `.fpas` files found under `{}`.", path.display());
+            return Err(1);
         }
         return Ok(files);
     }
@@ -101,17 +99,17 @@ fn resolve_fmt_arg(arg: &str, cwd: &Path, stderr: &mut dyn Write) -> Result<Vec<
         return Ok(vec![path]);
     }
     if has_extension(&path, PROJECT_FILE_EXTENSION) {
-        return collect_input_paths(&CliInput::ProjectFile(path), stderr)
-            .map_err(|_| "failed to load project".to_string());
+        return collect_project_paths(&path, stderr);
     }
     if has_extension(&path, WORKSPACE_FILE_EXTENSION) {
-        return collect_input_paths(&CliInput::WorkspaceFile(path), stderr)
-            .map_err(|_| "failed to load workspace".to_string());
+        return collect_workspace_paths(&path, stderr);
     }
 
-    Err(format!(
+    let _ = writeln!(
+        stderr,
         "Unsupported input `{arg}`. Expected a `.fpas` file, directory, `.fpasprj`, or `.fpasworkspace`."
-    ))
+    );
+    Err(1)
 }
 
 fn expand_glob(pattern: &str, cwd: &Path) -> Result<Vec<PathBuf>, String> {
@@ -173,21 +171,6 @@ fn walk_fpas_files(dir: &Path, out: &mut Vec<PathBuf>) {
 
 fn contains_glob_metacharacters(value: &str) -> bool {
     value.contains('*') || value.contains('?') || value.contains('[')
-}
-
-fn normalize_input_path(input: &str, cwd: &Path) -> PathBuf {
-    let path = PathBuf::from(input);
-    if path.is_absolute() {
-        path
-    } else {
-        cwd.join(path)
-    }
-}
-
-fn has_extension(path: &Path, extension: &str) -> bool {
-    path.extension()
-        .and_then(|value| value.to_str())
-        .is_some_and(|value| value.eq_ignore_ascii_case(extension))
 }
 
 fn dedupe_paths(paths: Vec<PathBuf>) -> Vec<PathBuf> {

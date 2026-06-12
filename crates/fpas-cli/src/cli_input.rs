@@ -2,14 +2,14 @@
 //!
 //! Spec: [Projects & CLI](../../../docs/pascal/10-projects.md).
 
+use crate::cli_paths::{
+    PROJECT_FILE_EXTENSION, SOURCE_FILE_EXTENSION, WORKSPACE_FILE_EXTENSION, has_extension,
+    normalize_input_path,
+};
 use fpas_project::{discover_run_project_in_workspace, discover_workspace_file};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
-
-const SOURCE_FILE_EXTENSION: &str = "fpas";
-const PROJECT_FILE_EXTENSION: &str = "fpasprj";
-const WORKSPACE_FILE_EXTENSION: &str = "fpasworkspace";
 
 /// Text printed for `fpas -h` / `fpas --help` (stdout).
 pub(crate) const CLI_HELP: &str = "\
@@ -434,26 +434,13 @@ fn discover_run_input(cwd: &Path) -> Result<CliInput, String> {
     discover_project_file(cwd)
 }
 
-/// Discovers workspace or project input for `fpas fmt` when no paths are given.
-pub(crate) fn discover_fmt_input(cwd: &Path) -> Result<CliInput, String> {
-    discover_check_input(cwd)
-}
-
-fn discover_check_input(cwd: &Path) -> Result<CliInput, String> {
+/// Discovers workspace or project input for `fpas check`, `fpas fmt`, and `fpas test` when no path is given.
+pub(crate) fn discover_check_input(cwd: &Path) -> Result<CliInput, String> {
     if let Some(workspace_path) = discover_workspace_file(cwd)? {
         return Ok(CliInput::WorkspaceFile(workspace_path));
     }
 
     discover_project_file(cwd)
-}
-
-fn normalize_input_path(input: &str, cwd: &Path) -> PathBuf {
-    let path = PathBuf::from(input);
-    if path.is_absolute() {
-        path
-    } else {
-        cwd.join(path)
-    }
 }
 
 fn discover_project_file(cwd: &Path) -> Result<CliInput, String> {
@@ -494,10 +481,4 @@ fn discover_project_file(cwd: &Path) -> Result<CliInput, String> {
             ))
         }
     }
-}
-
-fn has_extension(path: &Path, extension: &str) -> bool {
-    path.extension()
-        .and_then(|value| value.to_str())
-        .is_some_and(|value| value.eq_ignore_ascii_case(extension))
 }

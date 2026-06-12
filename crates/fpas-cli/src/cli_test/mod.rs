@@ -17,17 +17,10 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use crate::cli_input::{TestCliConfig, TestReportFormat};
-use discover::{discover_test_files, filter_test_paths, is_test_file_name};
+use discover::{discover_test_files, filter_test_paths};
 use fpas_project as project;
 use report::{Summary, TestOutcome, print_json_report, print_summary};
-use run::{LinkContext, run_single_test};
-
-fn test_display_path(path: &Path) -> String {
-    path.file_name()
-        .and_then(|name| name.to_str())
-        .map(String::from)
-        .unwrap_or_else(|| path.to_string_lossy().into_owned())
-}
+use run::{LinkContext, run_single_test, test_display_path};
 
 fn finish_test_run(
     config: &TestCliConfig,
@@ -102,7 +95,7 @@ fn run_tests_sequential(
 ) -> i32 {
     let mut summary = Summary::default();
     for path in paths {
-        let display = test_display_path(&path);
+        let display = test_display_path(&path).into_owned();
         let link = match link_context_for_test(&path) {
             Ok(Some(context)) => Some(context),
             Ok(None) => None,
@@ -141,7 +134,7 @@ fn run_tests_parallel(
     let mut preload_results = Vec::new();
 
     for (index, path) in paths.into_iter().enumerate() {
-        let display = test_display_path(&path);
+        let display = test_display_path(&path).into_owned();
         match link_context_for_test(&path) {
             Ok(link) => prepared.push(parallel::PreparedTest {
                 index,
@@ -184,7 +177,7 @@ fn run_tests_parallel(
 }
 
 fn link_context_for_test(path: &Path) -> Result<Option<LinkContext>, String> {
-    let Some(project_file) = find_enclosing_project(path) else {
+    let Some(project_file) = find_enclosing_project(path)? else {
         return Ok(None);
     };
     let loaded = project::load_project(&project_file)?;
@@ -197,34 +190,53 @@ fn link_context_for_test(path: &Path) -> Result<Option<LinkContext>, String> {
     }))
 }
 
-fn find_enclosing_project(start: &Path) -> Option<PathBuf> {
-    let mut dir = start.parent()?.to_path_buf();
+fn find_enclosing_project(start: &Path) -> Result<Option<PathBuf>, String> {
+    use crate::cli_paths::{PROJECT_FILE_EXTENSION, has_extension};
+
+    let mut dir = start
+        .parent()
+        .ok_or_else(|| {
+            format!(
+                "Cannot resolve enclosing project for `{}`.",
+                start.display()
+            )
+        })?
+        .to_path_buf();
     loop {
+        let mut candidates = Vec::new();
         if let Ok(read_dir) = std::fs::read_dir(&dir) {
             for entry in read_dir.flatten() {
                 let path = entry.path();
-                if path.is_file()
-                    && path
-                        .extension()
-                        .and_then(|ext| ext.to_str())
-                        .is_some_and(|ext| ext.eq_ignore_ascii_case("fpasprj"))
-                {
-                    return Some(path);
+                if path.is_file() && has_extension(&path, PROJECT_FILE_EXTENSION) {
+                    candidates.push(path);
                 }
             }
         }
+        candidates.sort();
+        match candidates.len() {
+            0 => {}
+            1 => return Ok(Some(candidates.remove(0))),
+            _ => {
+                let entries = candidates
+                    .iter()
+                    .map(|path| path.display().to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                return Err(format!(
+                    "Found multiple `.fpasprj` files in `{}`: {entries}.\n  help: Keep one project manifest per directory or pass an explicit `.fpasprj` path.",
+                    dir.display()
+                ));
+            }
+        }
         if !dir.pop() {
-            return None;
+            return Ok(None);
         }
     }
 }
 
 /// Validates that an explicit single-file test target looks like a test program.
 pub(crate) fn validate_explicit_test_file(path: &Path) -> Result<(), String> {
-    if path.is_dir() {
-        return Ok(());
-    }
-    if !is_test_file_name(path) {
+    if !project::is_test_source_file(path) {
         return Err(format!(
             "`{}` is not a test file.\n  help: Test files must be named `*_test.fpas`.",
             path.display()

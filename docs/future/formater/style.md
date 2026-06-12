@@ -431,7 +431,7 @@ type
 
 **v1:** Not emitted. Formatter is lossy with respect to `{ }`, `(* *)`, and `//` comments.
 
-**v2 (Phase 3 — Option A):** Re-attach leading `///` and declaration `{ }` / `(* *)` blocks that immediately preceded a declaration in source (lexer comment map keyed by span). End-of-line and intra-statement comments remain removed. One blank line after a doc block before the declaration.
+**v2 (Phase 3 — Option A):** When formatting with source text ([`format_source`](../../../crates/fpas-fmt/src/lib.rs)), re-attach leading `///` and declaration `{ }` / `(* *)` blocks that immediately preceded a declaration in source. Attachment uses lexer comment spans and declaration anchors; gaps may contain only whitespace or visibility/keyword prefixes (`private`, `public`, `mutable var`, `const`, `type`, `function`, `procedure`) before the parser anchor. End-of-line and intra-statement comments remain removed. One blank line after a preserved comment block before the declaration. [`format_compilation_unit`](../../../crates/fpas-fmt/src/lib.rs) without source still strips all comments.
 
 ## Intentional diffs from source
 
@@ -439,7 +439,8 @@ The formatter **normalizes** valid input. These changes are deliberate (not bugs
 
 | Source may have | Formatted output |
 |-----------------|------------------|
-| Comments (`{ }`, `(* *)`, `//`) | Removed |
+| Leading `///` / `{ }` / `(* *)` before a declaration (with source) | Preserved before that declaration |
+| End-of-line or intra-statement comments (`{ }`, `(* *)`, `//`) | Removed |
 | Keyword casing (`PROGRAM`, `Begin`, `WRITELN`) | Lowercase keywords; identifiers keep source spelling |
 | Hex integers (`$FF`) or digit separators (`1_000`) | Decimal literals only |
 | Optional single-statement branches (`if x then return y`) | Always `begin` … `end` around branch bodies |

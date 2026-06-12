@@ -514,6 +514,7 @@ version = "0.0.1"
 name = "fpas-fmt"
 version = "0.0.1"
 dependencies = [
+ "fpas-lexer",
  "fpas-parser",
 ]
 

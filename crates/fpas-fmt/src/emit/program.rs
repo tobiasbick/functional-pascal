@@ -2,6 +2,8 @@
 
 use fpas_parser::{Program, QualifiedId, Unit};
 
+use crate::comments::{CommentMap, emit_leading_comments};
+
 use super::Emitter;
 use super::decl::emit_decls;
 use super::stmt::emit_stmts_in_block;
@@ -10,26 +12,27 @@ use super::wrap::{emit_wrapped_comma_list, measure_emit};
 
 /// Formats a `program` compilation unit.
 #[must_use]
-pub(crate) fn format_program(program: &Program) -> String {
+pub(crate) fn format_program(program: &Program, comments: &CommentMap) -> String {
     let mut emitter = Emitter::new();
-    emit_program(&mut emitter, program);
+    emit_program(&mut emitter, program, comments);
     emitter.finish()
 }
 
 /// Formats a `unit` compilation unit.
 #[must_use]
-pub(crate) fn format_unit(unit: &Unit) -> String {
+pub(crate) fn format_unit(unit: &Unit, comments: &CommentMap) -> String {
     let mut emitter = Emitter::new();
-    emit_unit(&mut emitter, unit);
+    emit_unit(&mut emitter, unit, comments);
     emitter.finish()
 }
 
-fn emit_program(emitter: &mut Emitter, program: &Program) {
+fn emit_program(emitter: &mut Emitter, program: &Program, comments: &CommentMap) {
+    emit_leading_comments(emitter, comments, program.span.offset);
     emitter.writeln(&format!("program {};", program.name));
     emitter.blank_line();
     emit_optional_uses(emitter, &program.uses);
     if !program.declarations.is_empty() {
-        emit_decls(emitter, &program.declarations);
+        emit_decls(emitter, &program.declarations, comments);
         emitter.blank_line();
     }
     emitter.writeln("begin");
@@ -37,14 +40,15 @@ fn emit_program(emitter: &mut Emitter, program: &Program) {
     emitter.writeln("end.");
 }
 
-fn emit_unit(emitter: &mut Emitter, unit: &Unit) {
+fn emit_unit(emitter: &mut Emitter, unit: &Unit, comments: &CommentMap) {
+    emit_leading_comments(emitter, comments, unit.span.offset);
     emitter.write("unit ");
     emit_qualified_id(emitter, &unit.name);
     emitter.write(";\n");
     emitter.blank_line();
     emit_optional_uses(emitter, &unit.uses);
     if !unit.declarations.is_empty() {
-        emit_decls(emitter, &unit.declarations);
+        emit_decls(emitter, &unit.declarations, comments);
     }
 }
 
@@ -63,13 +67,14 @@ fn emit_optional_uses(emitter: &mut Emitter, uses: &[QualifiedId]) {
 #[cfg(test)]
 mod tests {
     use super::format_program;
-    use crate::format_compilation_unit;
+    use crate::comments::CommentMap;
+    use crate::format_source;
     use fpas_parser::parse_compilation_unit;
 
     fn parse_and_format(source: &str) -> String {
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
-        format_compilation_unit(&unit)
+        format_source(source, &unit)
     }
 
     #[test]
@@ -137,7 +142,10 @@ mod tests {
         let formatted = parse_and_format(source);
         let (_, errors) = parse_compilation_unit(&formatted);
         assert!(errors.is_empty(), "{errors:?}");
-        assert_eq!(formatted, format_program(&fpas_parser::parse(source).0));
+        assert_eq!(
+            formatted,
+            format_program(&fpas_parser::parse(source).0, &CommentMap::default())
+        );
     }
 
     #[test]

@@ -11,7 +11,7 @@ use std::path::Path;
 use crate::cli_input::FmtCliConfig;
 use crate::cli_run::render_cli_diagnostic;
 use fpas_diagnostics::DiagnosticSeverity;
-use fpas_fmt::format_compilation_unit;
+use fpas_fmt::format_source;
 use fpas_parser::parse_compilation_unit;
 
 /// Exit code when `--check` finds files that would change.
@@ -92,7 +92,7 @@ fn format_source_file(
         return Err(1);
     }
 
-    let formatted = format_compilation_unit(&unit);
+    let formatted = format_source(&source, &unit);
     let changed = normalize_newlines(&source) != formatted;
 
     if config.list_changed && config.check_only && changed {

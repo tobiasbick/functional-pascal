@@ -10,7 +10,7 @@ mod strings;
 mod symbols;
 mod trivia;
 
-use crate::{LexError, SpannedToken, Token};
+use crate::{LexError, SourceComment, SpannedToken, Token};
 use fpas_diagnostics::codes::LEX_UNEXPECTED_CHARACTER;
 
 pub struct Lexer<'a> {
@@ -20,6 +20,7 @@ pub struct Lexer<'a> {
     col: u32,
     source_id: u32,
     tokens: Vec<SpannedToken>,
+    comments: Vec<SourceComment>,
     errors: Vec<LexError>,
 }
 
@@ -36,13 +37,21 @@ impl<'a> Lexer<'a> {
             col: 1,
             source_id,
             tokens: Vec::new(),
+            comments: Vec::new(),
             errors: Vec::new(),
         }
     }
 
-    pub fn tokenize(mut self) -> (Vec<SpannedToken>, Vec<LexError>) {
+    pub fn tokenize(self) -> (Vec<SpannedToken>, Vec<LexError>) {
+        let (tokens, _, errors) = self.tokenize_with_comments();
+        (tokens, errors)
+    }
+
+    pub fn tokenize_with_comments(
+        mut self,
+    ) -> (Vec<SpannedToken>, Vec<SourceComment>, Vec<LexError>) {
         self.scan_all();
-        (self.tokens, self.errors)
+        (self.tokens, self.comments, self.errors)
     }
 
     fn scan_all(&mut self) {

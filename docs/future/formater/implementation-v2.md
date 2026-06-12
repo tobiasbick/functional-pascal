@@ -4,15 +4,15 @@ Phased checklist for **`fpas fmt` v2**, building on the completed v1 plan ([impl
 
 **Prerequisite:** v1 shipped — emitter, CLI, golden/round-trip tests, [style.md](style.md) locked for v1 output.
 
-**Status (2026-06-10):** Phases **0–2 complete** on `main`. Next: **Phase 3** (doc/declaration comments).
+**Status (2026-06-10):** Phases **0–3 complete** on `main`. Next: **Phase 4** (repo / CI).
 
 | Phase | Status | Commit (local `main`) |
 |-------|--------|------------------------|
 | 0 — Scope lock-in | done | docs in `5152c5b`, `0b8bea3` |
 | 1 — CLI ergonomics | done | `0b8bea3` — multi-path, `--stdout`, `--check --list`, globs |
 | 2 — Line wrapping | done | `26f08af` — `wrap.rs`, 100-col breaks, golden tests |
-| 3 — Comments | **next** | — |
-| 4 — Repo / CI | pending | — |
+| 3 — Comments | done | (this commit) — `CommentMap`, `format_source`, lexer comments |
+| 4 — Repo / CI | **next** | — |
 | 5 — Hardening | pending | — |
 
 **How to use this doc:** Work one phase at a time. Check boxes when done. Stop after any phase; the next session picks up at the first unchecked item. Do not start a phase until the previous phase’s exit criteria pass.
@@ -106,13 +106,13 @@ Target: [`crates/fpas-fmt/src/emit/wrap.rs`](../../../crates/fpas-fmt/src/emit/w
 
 Depends on Phase 0 comment strategy. Skip entire phase if Option B deferred.
 
-- [ ] Parser/lexer: expose comment tokens with spans (audit `fpas-lexer` — may already exist for diagnostics).
-- [ ] Build `CommentMap` (file path → sorted comments by offset).
-- [ ] Attach leading `///` / `{ }` / `(* *)` to nearest following declaration in same file.
-- [ ] Emitter: print preserved comments before the declaration they belong to; **still strip** end-of-line and intra-statement comments in v2 unless explicitly scoped.
-- [ ] Blank-line rules: one blank line after a doc block before the declaration (document in style.md).
-- [ ] Golden test: `apps/ide/src/shell.fpas`-style unit with `///` on routines — comments survive format.
-- [ ] Update [style.md — Comments](style.md#comments) and [Intentional diffs](style.md#intentional-diffs-from-source) for v2.
+- [x] Parser/lexer: expose comment tokens with spans (`fpas-lexer`: `SourceComment`, `collect_comments`, `CommentStyle`).
+- [x] Build `CommentMap` keyed by declaration anchor offset (`crates/fpas-fmt/src/comments/map.rs`).
+- [x] Attach leading `///` / `{ }` / `(* *)` to nearest following declaration (whitespace or visibility/keyword preamble before parser anchor).
+- [x] Emitter: print preserved comments before the declaration they belong to; **still strip** end-of-line and intra-statement comments in v2 unless explicitly scoped.
+- [x] Blank-line rules: one blank line after a doc block before the declaration (document in style.md).
+- [x] Tests: `CommentMap` unit test (doc + block on private decl); `shell.fpas` private-state round-trip; CLI and round-trip corpus use `format_source`.
+- [x] Update [style.md — Comments](style.md#comments) and [Intentional diffs](style.md#intentional-diffs-from-source) for v2.
 
 **Phase 3 exit:** doc comments on units/routines/types survive `fpas fmt`; block comments on declarations survive; statement comments still removed (documented).
 
@@ -173,8 +173,8 @@ fpas-cli ──► fpas-fmt ──► fpas-parser ──► fpas-lexer
 1. ~~**Phase 0**~~ — scope and fixed style rules (done).
 2. ~~**Phase 1**~~ — CLI ergonomics (done).
 3. ~~**Phase 2**~~ — line wrapping (done).
-4. **Phase 3** — comments; touch lexer + emitter. **← resume here**
-5. **Phase 4** — mass-format repo + CI docs.
+4. ~~**Phase 3**~~ — comments; lexer + `CommentMap` + `format_source` (done).
+5. **Phase 4** — mass-format repo + CI docs. **← resume here**
 6. **Phase 5** — hardening pass.
 
 Stop after any numbered phase; resume at the first unchecked `- [ ]` in the next phase.
@@ -185,4 +185,4 @@ Stop after any numbered phase; resume at the first unchecked `- [ ]` in the next
 
 Completed in [implementation.md](implementation.md): scaffold, emitters, compilation units, golden/round-trip tests, `fpas fmt` + `--check`, private unit decl fix (`ae55c1a`).
 
-**v2 so far (do not redo):** Phase 0 style lock-in; Phase 1 CLI (`cli_fmt/`, globs); Phase 2 wrapping (`emit/wrap.rs`, column tracking on `Emitter`, golden `long_uses` / `wrapped_record`).
+**v2 so far (do not redo):** Phase 0 style lock-in; Phase 1 CLI (`cli_fmt/`, globs); Phase 2 wrapping (`emit/wrap.rs`, column tracking on `Emitter`, golden `long_uses` / `wrapped_record`); Phase 3 comments (`fpas-lexer` comment API, `CommentMap`, `format_source`, preamble-aware attachment).

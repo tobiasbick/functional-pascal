@@ -72,30 +72,6 @@ impl Value {
             Value::Task(_) => "task",
         }
     }
-
-    pub fn as_integer(&self) -> Option<i64> {
-        if let Value::Integer(n) = self {
-            Some(*n)
-        } else {
-            None
-        }
-    }
-
-    pub fn as_real(&self) -> Option<f64> {
-        if let Value::Real(n) = self {
-            Some(*n)
-        } else {
-            None
-        }
-    }
-
-    pub fn as_boolean(&self) -> Option<bool> {
-        if let Value::Boolean(b) = self {
-            Some(*b)
-        } else {
-            None
-        }
-    }
 }
 
 impl std::fmt::Display for Value {

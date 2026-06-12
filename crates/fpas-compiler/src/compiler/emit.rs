@@ -171,7 +171,7 @@ impl Compiler {
                 ),
                 ChunkError::NonJumpInstruction { offset, opcode } => internal_compiler_error(
                     format!(
-                        "Compiler tried to patch instruction {offset}, but it is not a jump opcode ({opcode})."
+                        "Compiler tried to patch instruction {offset}, but it is not a jump opcode ({opcode:?})."
                     ),
                     "This is an internal compiler error. Re-run compilation and report the source program.",
                     location.line,

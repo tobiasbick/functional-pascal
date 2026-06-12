@@ -30,7 +30,13 @@ When asked to implement or modify behavior:
 3. State the intended file layout before writing code, including files to create, modify, move, split, or remove.
 4. Implement surgically. Match the surrounding style and touch only what the task requires.
 5. Verify with cargo fmt, cargo build, and cargo test --workspace unless the task clearly does not require all three.
-6. When editing `.fpas` under `examples/`, `tests/`, or `apps/`, run `scripts/format-fpas-sources.sh` (or `fpas fmt --check` on those paths) so output matches [docs/future/formater/style.md](docs/future/formater/style.md). CI enforces this via `.github/workflows/ci.yml`.
+6. When editing `.fpas` under `examples/`, `tests/`, or `apps/`, run `scripts/format-fpas-sources.sh` (or `fpas fmt --check` on those paths) so output matches [docs/future/formater/style.md](docs/future/formater/style.md).
+
+## CI and automation
+
+- **No GitHub Actions workflows.** Do not add `.github/workflows/`, Dependabot, or similar CI/automation config.
+- **Keep** existing `.github/instructions/` files (e.g. Copilot instructions) unless the user asks to change them.
+- **Do not recreate** removed CI workflow configuration. Verify changes locally with `cargo fmt`, `cargo build`, `cargo test --workspace`, and `fpas fmt --check` when relevant.
 
 ## Structural Rules
 

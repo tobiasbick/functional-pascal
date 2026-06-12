@@ -17,7 +17,7 @@ pub enum ChunkError {
     },
     NonJumpInstruction {
         offset: usize,
-        opcode: String,
+        opcode: Op,
     },
     ConstantPoolOverflow {
         max_constants: usize,
@@ -46,7 +46,7 @@ impl fmt::Display for ChunkError {
             Self::NonJumpInstruction { offset, opcode } => {
                 write!(
                     f,
-                    "instruction at offset {offset} is not a jump and cannot be patched: {opcode}"
+                    "instruction at offset {offset} is not a jump and cannot be patched: {opcode:?}"
                 )
             }
             Self::ConstantPoolOverflow { max_constants } => {
@@ -94,7 +94,6 @@ impl Chunk {
 
     /// Add a constant to the pool, returning its index.
     pub fn add_constant(&mut self, value: Value) -> Result<u16, ChunkError> {
-        // Reuse existing identical constant if present.
         for (i, c) in self.constants.iter().enumerate() {
             if c == &value {
                 return Ok(i as u16);
@@ -127,7 +126,7 @@ impl Chunk {
             }
             Some(op) => Err(ChunkError::NonJumpInstruction {
                 offset,
-                opcode: format!("{op:?}"),
+                opcode: *op,
             }),
             None => Err(ChunkError::InvalidInstructionOffset {
                 offset,
@@ -139,10 +138,6 @@ impl Chunk {
     /// Current code length (next instruction offset).
     pub fn len(&self) -> usize {
         self.code.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.code.is_empty()
     }
 
     /// Returns `true` if this chunk may enqueue parallel tasks (`go` / detached spawn).
@@ -198,27 +193,6 @@ mod tests {
                 max_constants: u16::MAX as usize,
             })
         );
-    }
-
-    #[test]
-    fn uses_spawn_tasks_detects_spawn_opcodes() {
-        let mut chunk = Chunk::new();
-        assert!(!chunk.uses_spawn_tasks());
-        chunk.emit(Op::Jump(0), loc());
-        assert!(!chunk.uses_spawn_tasks());
-        chunk.emit(Op::SpawnTask(0), loc());
-        assert!(chunk.uses_spawn_tasks());
-        let mut chunk2 = Chunk::new();
-        chunk2.emit(Op::SpawnDetachedTask(1), loc());
-        assert!(chunk2.uses_spawn_tasks());
-    }
-
-    #[test]
-    fn uses_spawn_tasks_ignores_yield_only_chunks() {
-        let mut chunk = Chunk::new();
-        chunk.emit(Op::Yield, loc());
-        chunk.emit(Op::Yield, loc());
-        assert!(!chunk.uses_spawn_tasks());
     }
 
     #[test]

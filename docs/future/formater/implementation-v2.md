@@ -4,6 +4,17 @@ Phased checklist for **`fpas fmt` v2**, building on the completed v1 plan ([impl
 
 **Prerequisite:** v1 shipped — emitter, CLI, golden/round-trip tests, [style.md](style.md) locked for v1 output.
 
+**Status (2026-06-10):** Phases **0–2 complete** on `main`. Next: **Phase 3** (doc/declaration comments).
+
+| Phase | Status | Commit (local `main`) |
+|-------|--------|------------------------|
+| 0 — Scope lock-in | done | docs in `5152c5b`, `0b8bea3` |
+| 1 — CLI ergonomics | done | `0b8bea3` — multi-path, `--stdout`, `--check --list`, globs |
+| 2 — Line wrapping | done | `26f08af` — `wrap.rs`, 100-col breaks, golden tests |
+| 3 — Comments | **next** | — |
+| 4 — Repo / CI | pending | — |
+| 5 — Hardening | pending | — |
+
 **How to use this doc:** Work one phase at a time. Check boxes when done. Stop after any phase; the next session picks up at the first unchecked item. Do not start a phase until the previous phase’s exit criteria pass.
 
 **Normative style:** [style.md](style.md) is the **only** official output spec. v2 additions (wrapping width, comment placement) are written into `style.md` as fixed rules — not options. There is **no** `.fpasfmt.toml`, no `FormatOptions`, and no per-project style overrides.
@@ -75,7 +86,7 @@ Target: [`crates/fpas-cli/src/cli_fmt/`](../../../crates/fpas-cli/src/cli_fmt/),
 
 ## Phase 2 — Line wrapping (emitter)
 
-Target: [`crates/fpas-fmt/src/emit/`](../../../crates/fpas-fmt/src/emit/) — likely new `wrap.rs` or width-aware helpers on `Emitter`.
+Target: [`crates/fpas-fmt/src/emit/wrap.rs`](../../../crates/fpas-fmt/src/emit/wrap.rs), [`emit/mod.rs`](../../../crates/fpas-fmt/src/emit/mod.rs), [`program.rs`](../../../crates/fpas-fmt/src/emit/program.rs), [`types.rs`](../../../crates/fpas-fmt/src/emit/types.rs), [`expr.rs`](../../../crates/fpas-fmt/src/emit/expr.rs).
 
 - [x] `style.rs`: `MAX_LINE_WIDTH` constant (value from Phase 0); no runtime overrides.
 - [x] Measure rendered line length including leading indent ([style.md — Line width](style.md#line-width-v2)).
@@ -159,10 +170,10 @@ fpas-cli ──► fpas-fmt ──► fpas-parser ──► fpas-lexer
 
 ## Suggested session order
 
-1. **Phase 0** — agree scope and fixed style rules (1 discussion, no code).
-2. **Phase 1** — CLI only; immediate daily-use win.
-3. **Phase 2** — wrapping; may change many golden files.
-4. **Phase 3** — comments; touch lexer + emitter.
+1. ~~**Phase 0**~~ — scope and fixed style rules (done).
+2. ~~**Phase 1**~~ — CLI ergonomics (done).
+3. ~~**Phase 2**~~ — line wrapping (done).
+4. **Phase 3** — comments; touch lexer + emitter. **← resume here**
 5. **Phase 4** — mass-format repo + CI docs.
 6. **Phase 5** — hardening pass.
 
@@ -173,3 +184,5 @@ Stop after any numbered phase; resume at the first unchecked `- [ ]` in the next
 ## v1 reference (do not redo)
 
 Completed in [implementation.md](implementation.md): scaffold, emitters, compilation units, golden/round-trip tests, `fpas fmt` + `--check`, private unit decl fix (`ae55c1a`).
+
+**v2 so far (do not redo):** Phase 0 style lock-in; Phase 1 CLI (`cli_fmt/`, globs); Phase 2 wrapping (`emit/wrap.rs`, column tracking on `Emitter`, golden `long_uses` / `wrapped_record`).

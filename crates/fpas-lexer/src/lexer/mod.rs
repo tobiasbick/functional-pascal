@@ -42,11 +42,6 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    pub fn tokenize(self) -> (Vec<SpannedToken>, Vec<LexError>) {
-        let (tokens, _, errors) = self.tokenize_with_comments();
-        (tokens, errors)
-    }
-
     pub fn tokenize_with_comments(
         mut self,
     ) -> (Vec<SpannedToken>, Vec<SourceComment>, Vec<LexError>) {
@@ -68,7 +63,7 @@ impl<'a> Lexer<'a> {
 
     fn scan_token(&mut self) {
         match self.current() {
-            b'{' if self.peek_at(1) == Some(b'$') => self.scan_directive(),
+            b'{' if self.is_directive_after_brace() => self.scan_directive(),
             b'a'..=b'z' | b'A'..=b'Z' | b'_' => self.scan_ident_or_keyword(),
             b'0'..=b'9' => self.scan_number(),
             b'$' => self.scan_hex_integer(),

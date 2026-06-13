@@ -10,7 +10,7 @@ impl Lexer<'_> {
                 break;
             }
             match self.current() {
-                b'{' if self.peek_at(1) == Some(b'$') => break,
+                b'{' if self.is_directive_after_brace() => break,
                 b'{' => self.skip_brace_comment(),
                 b'(' if self.peek_at(1) == Some(b'*') => self.skip_paren_comment(),
                 b'/' if self.peek_at(1) == Some(b'/') => self.skip_line_comment(),
@@ -36,17 +36,28 @@ impl Lexer<'_> {
         self.comments.push(SourceComment { style, span });
     }
 
-    pub(super) fn skip_brace_comment(&mut self) {
-        let (so, sl, sc) = self.span_here();
-        self.advance();
-
+    /// Scans past `opener_advances` bytes, then until a closing `}`.
+    ///
+    /// Returns `true` when the closing brace was found and consumed.
+    pub(super) fn scan_brace_body(&mut self, opener_advances: usize) -> bool {
+        for _ in 0..opener_advances {
+            self.advance();
+        }
         while !self.at_end() {
             if self.current() == b'}' {
                 self.advance();
-                self.record_comment(CommentStyle::Brace, so, sl, sc);
-                return;
+                return true;
             }
             self.advance();
+        }
+        false
+    }
+
+    pub(super) fn skip_brace_comment(&mut self) {
+        let (so, sl, sc) = self.span_here();
+        if self.scan_brace_body(1) {
+            self.record_comment(CommentStyle::Brace, so, sl, sc);
+            return;
         }
 
         self.push_err(

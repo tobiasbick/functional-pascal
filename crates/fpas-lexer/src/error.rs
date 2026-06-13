@@ -1,5 +1,5 @@
 use crate::Span;
-use fpas_diagnostics::{Diagnostic, DiagnosticCode, DiagnosticStage};
+use fpas_diagnostics::{Diagnostic, DiagnosticCode};
 
 pub type LexError = Diagnostic;
 
@@ -10,11 +10,5 @@ pub fn lex_error(
     hint: impl Into<String>,
     span: Span,
 ) -> LexError {
-    Diagnostic::error(
-        code,
-        DiagnosticStage::Lex,
-        message,
-        Some(hint.into()),
-        span.into(),
-    )
+    Diagnostic::error(code, code.stage(), message, Some(hint.into()), span.into())
 }

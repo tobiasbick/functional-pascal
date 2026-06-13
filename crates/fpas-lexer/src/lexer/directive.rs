@@ -13,23 +13,16 @@ impl Lexer<'_> {
     /// On an unterminated sequence (no closing `}` before EOF) an unterminated-brace error is pushed.
     pub(super) fn scan_directive(&mut self) {
         let (so, sl, sc) = self.span_here();
-        self.advance(); // consume '{'
-        self.advance(); // consume '$'
-
-        while !self.at_end() {
-            if self.current() == b'}' {
-                self.advance(); // consume '}'
-                self.push_err(
-                    LEX_COMPILER_DIRECTIVE_NOT_SUPPORTED,
-                    "`{$...}` is not valid source syntax",
-                    "Remove this sequence. Put shared declarations in another `.fpas` file and import the unit with `uses`.",
-                    so,
-                    sl,
-                    sc,
-                );
-                return;
-            }
-            self.advance();
+        if self.scan_brace_body(2) {
+            self.push_err(
+                LEX_COMPILER_DIRECTIVE_NOT_SUPPORTED,
+                "`{$...}` is not valid source syntax",
+                "Remove this sequence. Put shared declarations in another `.fpas` file and import the unit with `uses`.",
+                so,
+                sl,
+                sc,
+            );
+            return;
         }
 
         self.push_err(

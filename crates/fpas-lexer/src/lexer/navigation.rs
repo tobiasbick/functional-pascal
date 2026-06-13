@@ -22,6 +22,11 @@ impl Lexer<'_> {
         self.src.get(self.pos + offset).copied()
     }
 
+    /// True when the byte after `{` is `$` (`{$...}` compiler-directive syntax).
+    pub(super) fn is_directive_after_brace(&self) -> bool {
+        self.peek_at(1) == Some(b'$')
+    }
+
     pub(super) fn advance(&mut self) -> u8 {
         let ch = self.src[self.pos];
         self.pos += 1;
@@ -58,13 +63,12 @@ impl Lexer<'_> {
     ///
     /// Panics if called at end of input.
     pub(super) fn advance_utf8_char(&mut self) -> char {
-        let remaining = match std::str::from_utf8(&self.src[self.pos..]) {
-            Ok(remaining) => remaining,
-            Err(_) => unreachable!("lexer source is always valid UTF-8"),
-        };
-        let Some(ch) = remaining.chars().next() else {
-            unreachable!("advance_utf8_char called past end of input");
-        };
+        let remaining =
+            std::str::from_utf8(&self.src[self.pos..]).expect("lexer source is always valid UTF-8");
+        let ch = remaining
+            .chars()
+            .next()
+            .expect("advance_utf8_char called past end of input");
         for _ in 0..ch.len_utf8() {
             self.advance();
         }

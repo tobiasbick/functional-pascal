@@ -23,7 +23,7 @@ impl Lexer<'_> {
         self.push_tok(Token::Str(value), so, sl, sc);
     }
 
-    pub(super) fn scan_quoted_part(&mut self, buf: &mut String) {
+    fn scan_quoted_part(&mut self, buf: &mut String) {
         let (so, sl, sc) = self.span_here();
         self.advance();
 
@@ -53,7 +53,7 @@ impl Lexer<'_> {
         }
     }
 
-    pub(super) fn scan_char_code_part(&mut self, buf: &mut String) {
+    fn scan_char_code_part(&mut self, buf: &mut String) {
         let (so, sl, sc) = self.span_here();
         self.advance();
 

@@ -43,7 +43,9 @@ pub fn collect_comments(source: &str) -> Vec<SourceComment> {
 /// Like [`lex`], but attaches `source_id` to every token and lexer diagnostic span.
 #[must_use]
 pub fn lex_with_source_id(source: &str, source_id: u32) -> (Vec<SpannedToken>, Vec<LexError>) {
-    lexer::Lexer::with_source_id(source, source_id).tokenize()
+    let (tokens, _, errors) =
+        lexer::Lexer::with_source_id(source, source_id).tokenize_with_comments();
+    (tokens, errors)
 }
 
 #[cfg(test)]

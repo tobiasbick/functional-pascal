@@ -4,7 +4,7 @@
 
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError};
 use crate::vm::shared::TuiState;
-use crate::vm::{Worker, canonical_name, runtime_error};
+use crate::vm::{Worker, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_UNDEFINED_FUNCTION, RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_WRONG_CALL_ARITY,
@@ -24,21 +24,14 @@ impl Worker {
     ) -> Result<(), VmError> {
         match func {
             Value::Function { name, .. } => {
-                let (_, found_arity) = self
-                    .shared
-                    .chunk
-                    .functions
-                    .get(name.as_str())
-                    .or_else(|| self.shared.chunk.functions.get(&canonical_name(name)))
-                    .copied()
-                    .ok_or_else(|| {
-                        runtime_error(
-                            RUNTIME_UNDEFINED_FUNCTION,
-                            format!("Undefined function `{name}` for {label}"),
-                            "Declare the handler before registering it.",
-                            line,
-                        )
-                    })?;
+                let (_, found_arity) = self.lookup_function_entry(name).ok_or_else(|| {
+                    runtime_error(
+                        RUNTIME_UNDEFINED_FUNCTION,
+                        format!("Undefined function `{name}` for {label}"),
+                        "Declare the handler before registering it.",
+                        line,
+                    )
+                })?;
                 if found_arity != arity {
                     return Err(runtime_error(
                         RUNTIME_WRONG_CALL_ARITY,

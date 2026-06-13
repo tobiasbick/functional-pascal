@@ -1,5 +1,5 @@
 use crate::vm::diagnostics::VmError;
-use crate::vm::{CallFrame, Worker, canonical_name, internal_error, runtime_error};
+use crate::vm::{CallFrame, Worker, internal_error, runtime_error};
 use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_UNDEFINED_FUNCTION, RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_WRONG_CALL_ARITY,
@@ -67,22 +67,14 @@ impl Worker {
         argc: u8,
         line: SourceLocation,
     ) -> Result<(), VmError> {
-        let canonical = canonical_name(name);
-        let (code_start, expected_arity) = self
-            .shared
-            .chunk
-            .functions
-            .get(name)
-            .or_else(|| self.shared.chunk.functions.get(&canonical))
-            .copied()
-            .ok_or_else(|| {
-                runtime_error(
-                    RUNTIME_UNDEFINED_FUNCTION,
-                    format!("Undefined function `{name}`"),
-                    "Declare the function before calling it, or fix the function name.",
-                    line,
-                )
-            })?;
+        let (code_start, expected_arity) = self.lookup_function_entry(name).ok_or_else(|| {
+            runtime_error(
+                RUNTIME_UNDEFINED_FUNCTION,
+                format!("Undefined function `{name}`"),
+                "Declare the function before calling it, or fix the function name.",
+                line,
+            )
+        })?;
 
         if argc != expected_arity {
             return Err(runtime_error(

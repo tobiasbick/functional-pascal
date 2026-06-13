@@ -8,6 +8,7 @@ mod callbacks;
 mod console;
 mod graph;
 mod graph_run;
+mod hosted_common;
 mod tui;
 mod tui_run;
 

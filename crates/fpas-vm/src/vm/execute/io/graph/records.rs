@@ -37,87 +37,23 @@ impl Worker {
     /// Converts a normalized `GraphEvent` into a `Std.Graph.Event` record.
     pub(in crate::vm::execute::io) fn graph_event_record(event: GraphEvent) -> Value {
         match event {
-            GraphEvent::CloseRequested => Value::Record {
-                type_name: GRAPH_EVENT_TYPE.into(),
-                fields: vec![
-                    (
-                        "kind".into(),
-                        Self::graph_event_kind_value(GraphEventKind::CloseRequested),
-                    ),
-                    ("size".into(), Self::graph_size_record(0, 0)),
-                    ("key".into(), Self::graph_unknown_key_event()),
-                    (
-                        "mouse_action".into(),
-                        Value::Integer(mouse_action_index("Unknown") as i64),
-                    ),
-                    (
-                        "mouse_button".into(),
-                        Value::Integer(mouse_button_index("None") as i64),
-                    ),
-                    ("mouse_x".into(), Value::Integer(0)),
-                    ("mouse_y".into(), Value::Integer(0)),
-                    ("wheel_x".into(), Value::Integer(0)),
-                    ("wheel_y".into(), Value::Integer(0)),
-                    ("shift".into(), Value::Boolean(false)),
-                    ("ctrl".into(), Value::Boolean(false)),
-                    ("alt".into(), Value::Boolean(false)),
-                    ("meta".into(), Value::Boolean(false)),
-                ],
-            },
-            GraphEvent::Resize { width, height } => Value::Record {
-                type_name: GRAPH_EVENT_TYPE.into(),
-                fields: vec![
-                    (
-                        "kind".into(),
-                        Self::graph_event_kind_value(GraphEventKind::Resize),
-                    ),
-                    ("size".into(), Self::graph_size_record(width, height)),
-                    ("key".into(), Self::graph_unknown_key_event()),
-                    (
-                        "mouse_action".into(),
-                        Value::Integer(mouse_action_index("Unknown") as i64),
-                    ),
-                    (
-                        "mouse_button".into(),
-                        Value::Integer(mouse_button_index("None") as i64),
-                    ),
-                    ("mouse_x".into(), Value::Integer(0)),
-                    ("mouse_y".into(), Value::Integer(0)),
-                    ("wheel_x".into(), Value::Integer(0)),
-                    ("wheel_y".into(), Value::Integer(0)),
-                    ("shift".into(), Value::Boolean(false)),
-                    ("ctrl".into(), Value::Boolean(false)),
-                    ("alt".into(), Value::Boolean(false)),
-                    ("meta".into(), Value::Boolean(false)),
-                ],
-            },
-            GraphEvent::Key(key) => Value::Record {
-                type_name: GRAPH_EVENT_TYPE.into(),
-                fields: vec![
-                    (
-                        "kind".into(),
-                        Self::graph_event_kind_value(GraphEventKind::Key),
-                    ),
-                    ("size".into(), Self::graph_size_record(0, 0)),
+            GraphEvent::CloseRequested => {
+                Self::graph_event_record_with_fields(GraphEventKind::CloseRequested, (0, 0), &[])
+            }
+            GraphEvent::Resize { width, height } => {
+                Self::graph_event_record_with_fields(GraphEventKind::Resize, (width, height), &[])
+            }
+            GraphEvent::Key(key) => Self::graph_event_record_with_fields(
+                GraphEventKind::Key,
+                (0, 0),
+                &[
                     ("key".into(), Self::key_event_record(key.clone())),
-                    (
-                        "mouse_action".into(),
-                        Value::Integer(mouse_action_index("Unknown") as i64),
-                    ),
-                    (
-                        "mouse_button".into(),
-                        Value::Integer(mouse_button_index("None") as i64),
-                    ),
-                    ("mouse_x".into(), Value::Integer(0)),
-                    ("mouse_y".into(), Value::Integer(0)),
-                    ("wheel_x".into(), Value::Integer(0)),
-                    ("wheel_y".into(), Value::Integer(0)),
                     ("shift".into(), Value::Boolean(key.shift)),
                     ("ctrl".into(), Value::Boolean(key.ctrl)),
                     ("alt".into(), Value::Boolean(key.alt)),
                     ("meta".into(), Value::Boolean(key.meta)),
                 ],
-            },
+            ),
             GraphEvent::Mouse {
                 action,
                 button,
@@ -127,27 +63,20 @@ impl Worker {
                 ctrl,
                 alt,
                 meta,
-            } => Value::Record {
-                type_name: GRAPH_EVENT_TYPE.into(),
-                fields: vec![
-                    (
-                        "kind".into(),
-                        Self::graph_event_kind_value(GraphEventKind::Mouse),
-                    ),
-                    ("size".into(), Self::graph_size_record(0, 0)),
-                    ("key".into(), Self::graph_unknown_key_event()),
+            } => Self::graph_event_record_with_fields(
+                GraphEventKind::Mouse,
+                (0, 0),
+                &[
                     ("mouse_action".into(), Value::Integer(action as i64)),
                     ("mouse_button".into(), Value::Integer(button as i64)),
                     ("mouse_x".into(), Value::Integer(x)),
                     ("mouse_y".into(), Value::Integer(y)),
-                    ("wheel_x".into(), Value::Integer(0)),
-                    ("wheel_y".into(), Value::Integer(0)),
                     ("shift".into(), Value::Boolean(shift)),
                     ("ctrl".into(), Value::Boolean(ctrl)),
                     ("alt".into(), Value::Boolean(alt)),
                     ("meta".into(), Value::Boolean(meta)),
                 ],
-            },
+            ),
             GraphEvent::Wheel {
                 delta_x,
                 delta_y,
@@ -157,23 +86,10 @@ impl Worker {
                 ctrl,
                 alt,
                 meta,
-            } => Value::Record {
-                type_name: GRAPH_EVENT_TYPE.into(),
-                fields: vec![
-                    (
-                        "kind".into(),
-                        Self::graph_event_kind_value(GraphEventKind::Wheel),
-                    ),
-                    ("size".into(), Self::graph_size_record(0, 0)),
-                    ("key".into(), Self::graph_unknown_key_event()),
-                    (
-                        "mouse_action".into(),
-                        Value::Integer(mouse_action_index("Unknown") as i64),
-                    ),
-                    (
-                        "mouse_button".into(),
-                        Value::Integer(mouse_button_index("None") as i64),
-                    ),
+            } => Self::graph_event_record_with_fields(
+                GraphEventKind::Wheel,
+                (0, 0),
+                &[
                     ("mouse_x".into(), Value::Integer(x)),
                     ("mouse_y".into(), Value::Integer(y)),
                     ("wheel_x".into(), Value::Integer(delta_x)),
@@ -183,7 +99,7 @@ impl Worker {
                     ("alt".into(), Value::Boolean(alt)),
                     ("meta".into(), Value::Boolean(meta)),
                 ],
-            },
+            ),
         }
     }
 
@@ -215,6 +131,49 @@ impl Worker {
             GraphEventKind::Wheel => 4,
         };
         Value::Integer(index)
+    }
+
+    fn graph_event_idle_fields() -> Vec<(String, Value)> {
+        vec![
+            ("key".into(), Self::graph_unknown_key_event()),
+            (
+                "mouse_action".into(),
+                Value::Integer(mouse_action_index("Unknown") as i64),
+            ),
+            (
+                "mouse_button".into(),
+                Value::Integer(mouse_button_index("None") as i64),
+            ),
+            ("mouse_x".into(), Value::Integer(0)),
+            ("mouse_y".into(), Value::Integer(0)),
+            ("wheel_x".into(), Value::Integer(0)),
+            ("wheel_y".into(), Value::Integer(0)),
+            ("shift".into(), Value::Boolean(false)),
+            ("ctrl".into(), Value::Boolean(false)),
+            ("alt".into(), Value::Boolean(false)),
+            ("meta".into(), Value::Boolean(false)),
+        ]
+    }
+
+    fn graph_event_record_with_fields(
+        kind: GraphEventKind,
+        size: (i64, i64),
+        overrides: &[(String, Value)],
+    ) -> Value {
+        let mut fields = vec![
+            ("kind".into(), Self::graph_event_kind_value(kind)),
+            ("size".into(), Self::graph_size_record(size.0, size.1)),
+        ];
+        fields.extend(Self::graph_event_idle_fields());
+        for (name, value) in overrides {
+            if let Some(entry) = fields.iter_mut().find(|(key, _)| key == name) {
+                entry.1 = value.clone();
+            }
+        }
+        Value::Record {
+            type_name: GRAPH_EVENT_TYPE.into(),
+            fields,
+        }
     }
 
     fn graph_unknown_key_event() -> Value {

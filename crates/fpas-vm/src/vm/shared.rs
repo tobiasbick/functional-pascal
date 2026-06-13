@@ -280,16 +280,10 @@ impl SharedState {
         self.task_available.notify_all();
     }
 
-    /// Returns true once a retained task has finished and an entry exists in [`Self::task_results`].
-    ///
-    /// The entry remains after [`Self::poll_task_result`] consumes the value (state becomes
-    /// [`TaskResultState::Consumed`]); callers that need a still-available result must use
-    /// [`Self::poll_task_result`].
-    pub(crate) fn task_completion_recorded(&self, id: u64) -> bool {
-        self.task_results
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .contains_key(&id)
+    /// Returns `true` when every task id in `task_ids` has a recorded result.
+    pub(crate) fn all_tasks_recorded(&self, task_ids: &[u64]) -> bool {
+        let guard = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
+        task_ids.iter().all(|id| guard.contains_key(id))
     }
 
     /// Consume a completed task result if it is still available.

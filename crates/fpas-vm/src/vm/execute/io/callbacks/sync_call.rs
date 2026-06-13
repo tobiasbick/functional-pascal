@@ -1,6 +1,6 @@
 use crate::vm::diagnostics::VmError;
 use crate::vm::execute::StepResult;
-use crate::vm::{CallFrame, Worker, canonical_name, internal_error, runtime_error};
+use crate::vm::{CallFrame, Worker, internal_error, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_UNDEFINED_FUNCTION, RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_WRONG_CALL_ARITY,
@@ -18,35 +18,25 @@ impl Worker {
         args: &[Value],
         line: SourceLocation,
     ) -> Result<Value, VmError> {
-        let (name, captures) = match func {
-            Value::Function { name, captures } => (name.clone(), captures.clone()),
-            other => {
-                return Err(runtime_error(
-                    RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-                    format!("Expected function value, got `{}`", other.type_name()),
-                    "Pass a function (named or anonymous) as the callback argument.",
-                    line,
-                ));
-            }
+        let Value::Function { name, captures } = func else {
+            return Err(runtime_error(
+                RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                format!("Expected function value, got `{}`", func.type_name()),
+                "Pass a function (named or anonymous) as the callback argument.",
+                line,
+            ));
         };
 
-        let (code_start, expected_arity) = self
-            .shared
-            .chunk
-            .functions
-            .get(name.as_str())
-            .or_else(|| self.shared.chunk.functions.get(&canonical_name(&name)))
-            .copied()
-            .ok_or_else(|| {
-                runtime_error(
-                    RUNTIME_UNDEFINED_FUNCTION,
-                    format!("Undefined function `{name}`"),
-                    "Declare the function before calling it.",
-                    line,
-                )
-            })?;
+        let (code_start, expected_arity) = self.lookup_function_entry(name).ok_or_else(|| {
+            runtime_error(
+                RUNTIME_UNDEFINED_FUNCTION,
+                format!("Undefined function `{name}`"),
+                "Declare the function before calling it.",
+                line,
+            )
+        })?;
 
-        if args.len() as u8 != expected_arity {
+        if args.len() != expected_arity as usize {
             return Err(runtime_error(
                 RUNTIME_WRONG_CALL_ARITY,
                 format!(
@@ -68,7 +58,7 @@ impl Worker {
             return_ip: self.ip,
             base_slot,
         });
-        for capture in captures {
+        for capture in captures.clone() {
             self.push(capture)?;
         }
         let saved_ip = self.ip;

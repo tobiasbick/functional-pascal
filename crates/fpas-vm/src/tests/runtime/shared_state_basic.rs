@@ -65,7 +65,7 @@ fn store_poll_available_then_consumed() {
     let v = Value::Integer(42);
     shared.store_task_result(5, v.clone());
 
-    assert!(shared.task_completion_recorded(5));
+    assert!(shared.all_tasks_recorded(&[5]));
 
     assert!(matches!(
         shared.poll_task_result(5),
@@ -78,7 +78,7 @@ fn store_poll_available_then_consumed() {
     ));
 
     assert!(
-        shared.task_completion_recorded(5),
+        shared.all_tasks_recorded(&[5]),
         "completion remains recorded after consume so Wait semantics can detect finished tasks"
     );
 }

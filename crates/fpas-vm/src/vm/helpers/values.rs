@@ -1,5 +1,5 @@
 use crate::vm::diagnostics::TYPE_MISMATCH_CODE;
-use crate::vm::{VmError, Worker, internal_error, runtime_error};
+use crate::vm::{VmError, Worker, canonical_name, internal_error, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 
 impl Worker {
@@ -22,6 +22,30 @@ impl Worker {
                     location,
                 )
             })
+    }
+
+    /// Returns a string constant from the chunk pool without cloning.
+    pub(in crate::vm) fn const_str_ref(
+        &self,
+        idx: u16,
+        location: SourceLocation,
+    ) -> Result<&str, VmError> {
+        match self.const_value(idx, location)? {
+            Value::Str(value) => Ok(value.as_str()),
+            _ => Err(internal_error(
+                "Expected string constant",
+                "This indicates a compiler constant-pool bug. Please report it.",
+                location,
+            )),
+        }
+    }
+
+    /// Looks up a function entry by name, falling back to the canonical lowercase name.
+    pub(in crate::vm) fn lookup_function_entry(&self, name: &str) -> Option<(usize, u8)> {
+        self.shared.chunk.functions.get(name).copied().or_else(|| {
+            let canonical = canonical_name(name);
+            self.shared.chunk.functions.get(&canonical).copied()
+        })
     }
 
     pub(in crate::vm) fn pop_int(&mut self, location: SourceLocation) -> Result<i64, VmError> {
@@ -65,13 +89,6 @@ impl Worker {
         idx: u16,
         location: SourceLocation,
     ) -> Result<String, VmError> {
-        match self.const_value(idx, location)? {
-            Value::Str(value) => Ok(value.clone()),
-            _ => Err(internal_error(
-                "Expected string constant",
-                "This indicates a compiler constant-pool bug. Please report it.",
-                location,
-            )),
-        }
+        Ok(self.const_str_ref(idx, location)?.to_string())
     }
 }

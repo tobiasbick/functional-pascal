@@ -41,34 +41,37 @@ impl Worker {
                 Ok(true)
             }
             Op::GetGlobal(idx) => {
-                let name = self.const_str(idx, line)?;
-                let canonical = canonical_name(&name);
-                let val = self
-                    .shared
-                    .globals
-                    .read()
-                    .unwrap_or_else(|e| e.into_inner())
-                    .get(&canonical)
-                    .cloned()
-                    .ok_or_else(|| {
-                        runtime_error(
-                            RUNTIME_UNDEFINED_GLOBAL,
-                            format!("Undefined global variable `{name}`"),
-                            "Declare the global variable before reading it, or fix the variable name.",
-                            line,
-                        )
-                    })?;
+                let val = {
+                    let name = self.const_str_ref(idx, line)?;
+                    let globals = self
+                        .shared
+                        .globals
+                        .read()
+                        .unwrap_or_else(|e| e.into_inner());
+                    globals
+                        .get(name)
+                        .or_else(|| globals.get(&canonical_name(name)))
+                        .cloned()
+                        .ok_or_else(|| {
+                            runtime_error(
+                                RUNTIME_UNDEFINED_GLOBAL,
+                                format!("Undefined global variable `{name}`"),
+                                "Declare the global variable before reading it, or fix the variable name.",
+                                line,
+                            )
+                        })?
+                };
                 self.push(val)?;
                 Ok(true)
             }
             Op::SetGlobal(idx) => {
-                let name = self.const_str(idx, line)?;
+                let name = self.const_str_ref(idx, line)?;
                 let val = self.peek(line)?.clone();
                 self.shared
                     .globals
                     .write()
                     .unwrap_or_else(|e| e.into_inner())
-                    .insert(canonical_name(&name), val);
+                    .insert(canonical_name(name), val);
                 Ok(true)
             }
             Op::GetEnclosing(depth, slot) => {

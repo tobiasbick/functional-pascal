@@ -106,9 +106,7 @@ impl Worker {
             task_ids.push(*id);
         }
 
-        let all_done = task_ids
-            .iter()
-            .all(|task_id| self.shared.task_completion_recorded(*task_id));
+        let all_done = self.shared.all_tasks_recorded(&task_ids);
 
         if all_done {
             // `WaitAll` observes completion but does not consume task results.
@@ -126,10 +124,7 @@ impl Worker {
                 if self.exec_yield() {
                     return Ok(());
                 }
-                let all_done = task_ids
-                    .iter()
-                    .all(|task_id| self.shared.task_completion_recorded(*task_id));
-                if all_done {
+                if self.shared.all_tasks_recorded(&task_ids) {
                     let _ = self.pop(line)?;
                     self.ip += 1;
                     return Ok(());

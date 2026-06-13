@@ -1,5 +1,5 @@
 use crate::vm::diagnostics::VmError;
-use crate::vm::{TaskState, Worker, canonical_name, internal_error, runtime_error};
+use crate::vm::{TaskState, Worker, internal_error, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_INVALID_TASK, RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_WRONG_CALL_ARITY,
@@ -31,21 +31,14 @@ impl Worker {
             }
         };
 
-        let (code_start, expected_arity) = self
-            .shared
-            .chunk
-            .functions
-            .get(name.as_str())
-            .or_else(|| self.shared.chunk.functions.get(&canonical_name(&name)))
-            .copied()
-            .ok_or_else(|| {
-                runtime_error(
-                    RUNTIME_INVALID_TASK,
-                    format!("Function `{name}` not found for task spawn"),
-                    "Ensure the function is defined before spawning it as a task.",
-                    line,
-                )
-            })?;
+        let (code_start, expected_arity) = self.lookup_function_entry(&name).ok_or_else(|| {
+            runtime_error(
+                RUNTIME_INVALID_TASK,
+                format!("Function `{name}` not found for task spawn"),
+                "Ensure the function is defined before spawning it as a task.",
+                line,
+            )
+        })?;
 
         if argc != expected_arity {
             return Err(runtime_error(

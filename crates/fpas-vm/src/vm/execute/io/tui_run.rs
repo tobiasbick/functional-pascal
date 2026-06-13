@@ -8,6 +8,8 @@ use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 use fpas_std::UiEvent;
 
+use super::hosted_common::hosted_exit_reason;
+
 const TUI_EXIT_REASON_TYPE: &str = "Std.Tui.ExitReason";
 const USER_QUIT_EXIT_REASON: &str = "UserQuit";
 const HOST_STOP_EXIT_REASON: &str = "HostStop";
@@ -251,34 +253,18 @@ impl Worker {
     }
 
     fn user_quit_exit_reason() -> Value {
-        Value::Enum {
-            type_name: TUI_EXIT_REASON_TYPE.into(),
-            variant: USER_QUIT_EXIT_REASON.into(),
-            fields: vec![],
-        }
+        hosted_exit_reason(TUI_EXIT_REASON_TYPE, USER_QUIT_EXIT_REASON)
     }
 
     fn host_stop_exit_reason() -> Value {
-        Value::Enum {
-            type_name: TUI_EXIT_REASON_TYPE.into(),
-            variant: HOST_STOP_EXIT_REASON.into(),
-            fields: vec![],
-        }
+        hosted_exit_reason(TUI_EXIT_REASON_TYPE, HOST_STOP_EXIT_REASON)
     }
 
     fn host_and_user_stop_exit_reason() -> Value {
-        Value::Enum {
-            type_name: TUI_EXIT_REASON_TYPE.into(),
-            variant: HOST_AND_USER_STOP_EXIT_REASON.into(),
-            fields: vec![],
-        }
+        hosted_exit_reason(TUI_EXIT_REASON_TYPE, HOST_AND_USER_STOP_EXIT_REASON)
     }
 
     fn host_shutdown_exit_reason() -> Value {
-        Value::Enum {
-            type_name: TUI_EXIT_REASON_TYPE.into(),
-            variant: HOST_SHUTDOWN_EXIT_REASON.into(),
-            fields: vec![],
-        }
+        hosted_exit_reason(TUI_EXIT_REASON_TYPE, HOST_SHUTDOWN_EXIT_REASON)
     }
 }

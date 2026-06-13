@@ -8,22 +8,26 @@ use fpas_diagnostics::codes::{
     INTERNAL_VM_INVARIANT_FAILURE, RUNTIME_INTRINSIC_STACK_STATE_ERROR,
     RUNTIME_VM_OPERAND_TYPE_MISMATCH,
 };
-use fpas_diagnostics::{Diagnostic, DiagnosticStage, SourceSpan};
+use fpas_diagnostics::{Diagnostic, DiagnosticCode, SourceSpan};
 
 pub type VmError = Diagnostic;
 
+fn synthetic_span(location: SourceLocation) -> SourceSpan {
+    SourceSpan::new_with_source(0, 1, location.line, location.column, location.source_id)
+}
+
 pub(crate) fn runtime_error(
-    code: fpas_diagnostics::DiagnosticCode,
+    code: DiagnosticCode,
     message: impl Into<String>,
     help: impl Into<String>,
     location: SourceLocation,
 ) -> VmError {
     Diagnostic::error(
         code,
-        DiagnosticStage::Runtime,
-        message,
+        code.stage(),
+        message.into(),
         Some(help.into()),
-        SourceSpan::new_with_source(0, 1, location.line, location.column, location.source_id),
+        synthetic_span(location),
     )
 }
 
@@ -34,10 +38,10 @@ pub(crate) fn internal_error(
 ) -> VmError {
     Diagnostic::error(
         INTERNAL_VM_INVARIANT_FAILURE,
-        DiagnosticStage::Internal,
-        message,
+        INTERNAL_VM_INVARIANT_FAILURE.stage(),
+        message.into(),
         Some(help.into()),
-        SourceSpan::new_with_source(0, 1, location.line, location.column, location.source_id),
+        synthetic_span(location),
     )
 }
 

@@ -41,16 +41,17 @@ impl Worker {
             }
             Value::Str(s) => {
                 let idx = array_index_from_key(&key, line)?;
-                let chars: Vec<char> = s.chars().collect();
-                if idx >= chars.len() {
-                    return Err(runtime_error(
-                        RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
-                        format!("String index {idx} out of bounds (length {})", chars.len()),
-                        "Check the index is in the range 0 .. Length(S) - 1.",
-                        line,
-                    ));
+                match s.chars().nth(idx) {
+                    Some(ch) => self.push(Value::Char(ch))?,
+                    None => {
+                        return Err(runtime_error(
+                            RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
+                            format!("String index {idx} out of bounds"),
+                            "Check the index is in the range 0 .. Length(S) - 1.",
+                            line,
+                        ));
+                    }
                 }
-                self.push(Value::Char(chars[idx]))?;
             }
             other => return Err(index_operand_error("IndexGet", &other, line)),
         }

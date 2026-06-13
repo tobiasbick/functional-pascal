@@ -1,4 +1,4 @@
-//! Golden-file output tests ([`docs/future/formater/style.md`](../../docs/future/formater/style.md)).
+//! Golden-file output tests ([`docs/rust/fmt-style.md`](../../docs/rust/fmt-style.md)).
 
 mod common;
 

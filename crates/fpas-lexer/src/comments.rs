@@ -1,6 +1,6 @@
 //! Comment tokens with source spans for formatters and tooling.
 //!
-//! **Documentation:** `docs/future/formater/style.md#comments`
+//! **Documentation:** `docs/rust/fmt-style.md#comments`
 
 use crate::Span;
 

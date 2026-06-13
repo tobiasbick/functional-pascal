@@ -2,7 +2,7 @@
 
 Canonical output rules for the AST pretty-printer. These are **normative for `fpas fmt`** once implemented. The emitter encodes them; this file is the human-readable spec.
 
-**Status:** agreed for v1 (2026-06); v2 scope locked (2026-06-10). Edit golden examples when the style changes; the emitter must match them.
+**Status:** **complete** (2026-06). Normative for [`fpas fmt`](../../crates/fpas-cli/src/cli_fmt/); invoke manually — no watch/LSP. Edit golden examples when the style changes; the emitter must match them.
 
 **How to read this file**
 
@@ -14,7 +14,7 @@ Canonical output rules for the AST pretty-printer. These are **normative for `fp
 
 There is **no** “messy input” column in this doc yet. Source before formatting may omit `begin` / `end`, use `WRITELN`, extra blank lines, or comments — all of that is normalized away in the golden blocks.
 
-Spec links: [`docs/pascal/02-basics.md`](../../pascal/02-basics.md), [`docs/pascal/03-control-flow.md`](../../pascal/03-control-flow.md), [`.cursor/rules/functional-pascal.mdc`](../../../.cursor/rules/functional-pascal.mdc).
+Spec links: [`docs/pascal/02-basics.md`](../pascal/02-basics.md), [`docs/pascal/03-control-flow.md`](../pascal/03-control-flow.md), [`.cursor/rules/functional-pascal.mdc`](../../.cursor/rules/functional-pascal.mdc).
 
 ---
 
@@ -116,7 +116,7 @@ end.
 
 ### Program — `type` + record methods + `begin` body
 
-Golden output for a file like [`examples/pascal/record-methods/point.fpas`](../../../examples/pascal/record-methods/point.fpas) (comments, extra blank lines, and missing header blank lines from the repo copy are **not** in the output).
+Golden output for a file like [`examples/pascal/record-methods/point.fpas`](../../examples/pascal/record-methods/point.fpas) (comments, extra blank lines, and missing header blank lines from the repo copy are **not** in the output).
 
 ```pascal
 program PointExample;
@@ -160,7 +160,7 @@ end.
 
 ### Unit — `Clamp` (`if` branches always get `begin` / `end`)
 
-The language allows the compact form (see [`09-units.md`](../../pascal/09-units.md)); **`fpas fmt` does not emit it.** Golden unit file:
+The language allows the compact form (see [`09-units.md`](../pascal/09-units.md)); **`fpas fmt` does not emit it.** Golden unit file:
 
 ```pascal
 unit MyApp.Utils;
@@ -222,7 +222,7 @@ end;
 
 - **Maximum line length: 100 columns** (`MAX_LINE_WIDTH` in `crates/fpas-fmt/src/style.rs`).
 - Count includes leading indentation on the line being measured.
-- Lines at or below [`MAX_LINE_WIDTH`](../../../crates/fpas-fmt/src/style.rs) stay on one line; wrapping applies only when the rendered line would exceed the limit.
+- Lines at or below [`MAX_LINE_WIDTH`](../../crates/fpas-fmt/src/style.rs) stay on one line; wrapping applies only when the rendered line would exceed the limit.
 
 ### Wrapping (v2, when over max width)
 
@@ -243,7 +243,7 @@ end;
 
 ## Blocks (`begin` / `end`)
 
-The language allows a **single statement** without `begin` / `end` after `then`, `else`, `do`, and `case` labels ([`03-control-flow.md`](../../pascal/03-control-flow.md)). The formatter **always** emits an explicit `begin` / `end` wrapper anyway. We are not changing the language — only canonical output.
+The language allows a **single statement** without `begin` / `end` after `then`, `else`, `do`, and `case` labels ([`03-control-flow.md`](../pascal/03-control-flow.md)). The formatter **always** emits an explicit `begin` / `end` wrapper anyway. We are not changing the language — only canonical output.
 
 | Construct | Formatter output |
 |-----------|------------------|
@@ -302,7 +302,7 @@ Semicolons are **separators**, not terminators:
 - Between statements in a block: `;` after each statement except the last before `end`.
 - No semicolon immediately before `end`, `else`, or `until`.
 - Declarations in `type` blocks and unit/program headers: `;` between siblings; no trailing `;` before closing `end` of a nested block.
-- `case` arm labels: `;` after each arm’s closing `end` (including the last arm before `else`); `else` branch follows [`03-control-flow.md`](../../pascal/03-control-flow.md).
+- `case` arm labels: `;` after each arm’s closing `end` (including the last arm before `else`); `else` branch follows [`03-control-flow.md`](../pascal/03-control-flow.md).
 - Fields inside a `record` type: `;` after **every** field, including the last field before `end`, a blank line, or methods (matches existing FPAS sources).
 
 ## Spacing
@@ -429,21 +429,7 @@ type
 
 ## Comments
 
-**v1:** Not emitted. Formatter is lossy with respect to `{ }`, `(* *)`, and `//` comments.
-
-**v2 (Phase 3 — Option A):** When formatting with source text ([`format_source`](../../../crates/fpas-fmt/src/lib.rs)), re-attach leading `///` and declaration `{ }` / `(* *)` blocks that immediately preceded a declaration in source. Attachment uses lexer comment spans and declaration anchors; gaps may contain only whitespace or visibility/keyword prefixes (`private`, `public`, `mutable var`, `const`, `type`, `function`, `procedure`) before the parser anchor. End-of-line and intra-statement comments remain removed. One blank line after a preserved comment block before the declaration. [`format_compilation_unit`](../../../crates/fpas-fmt/src/lib.rs) without source still strips all comments.
-
-### Comments (v3 planned)
-
-**Not yet normative.** Implementation plan: [implementation-v3.md — v3 golden targets](implementation-v3.md#v3-golden-targets-for-stylemd-phase-3).
-
-When v3 ships, this section will replace the v2-only rules above with:
-
-- All comment styles preserved (`///`, `{ }`, `(* *)`, `//`, including end-of-line).
-- User blank lines between sections preserved (required minimum blank lines from [Blank lines](#blank-lines) still enforced if missing).
-- Layout (indent, wrap, `begin`/`end`, keywords, literals) unchanged from v2.
-
-Until Phase 3 completes, **`fpas fmt` behavior follows the v2 rules** in the paragraph above.
+**Declaration comments:** When formatting with source text ([`format_source`](../../crates/fpas-fmt/src/lib.rs)), re-attach leading `///` and declaration `{ }` / `(* *)` blocks that immediately preceded a declaration in source. End-of-line and intra-statement comments remain removed. One blank line after a preserved comment block before the declaration. [`format_compilation_unit`](../../crates/fpas-fmt/src/lib.rs) without source strips all comments.
 
 ## Intentional diffs from source
 
@@ -463,7 +449,8 @@ The formatter **normalizes** valid input. These changes are deliberate (not bugs
 
 ## Non-goals (v1 and later)
 
-- Configurable style (`.fpasfmt.toml`, line width, indent size, keyword case) — **one official style only**; see [implementation-v2.md — Official style policy](implementation-v2.md#official-style-policy-v2).
+- Configurable style (`.fpasfmt.toml`, line width, indent size, keyword case) — **one official style only**; no per-project overrides.
+- Automatic formatting (`--watch`, LSP format-on-save) — user runs `fpas fmt` explicitly.
 - Preserving blank lines between user-chosen sections (except the fixed rules above).
 - Sorting `uses` clauses or declaration order.
 - Formatting invalid or partial syntax (recovery).

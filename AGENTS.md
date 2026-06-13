@@ -30,7 +30,7 @@ When asked to implement or modify behavior:
 3. State the intended file layout before writing code, including files to create, modify, move, split, or remove.
 4. Implement surgically. Match the surrounding style and touch only what the task requires.
 5. Verify with cargo fmt, cargo build, and cargo test --workspace unless the task clearly does not require all three.
-6. When editing `.fpas` under `examples/`, `tests/`, or `apps/`, run `scripts/format-fpas-sources.sh` (or `fpas fmt --check` on those paths) so output matches [docs/future/formater/style.md](docs/future/formater/style.md).
+6. When editing `.fpas` under `examples/`, `tests/`, or `apps/`, run `scripts/format-fpas-sources.sh` (or `fpas fmt --check` on those paths) so output matches [docs/rust/fmt-style.md](docs/rust/fmt-style.md).
 
 ## CI and automation
 

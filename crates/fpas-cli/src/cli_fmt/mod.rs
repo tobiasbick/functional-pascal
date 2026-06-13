@@ -1,6 +1,6 @@
 //! Format `.fpas` compilation units in place.
 //!
-//! Documentation: `docs/future/formater/style.md`, `docs/pascal/10-projects.md`
+//! Documentation: `docs/rust/fmt-style.md`, `docs/pascal/10-projects.md`
 
 mod paths;
 

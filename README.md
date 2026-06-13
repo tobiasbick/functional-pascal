@@ -57,7 +57,7 @@ fpas hello.fpas
 
 ### Formatting
 
-`.fpas` sources under `examples/`, `tests/`, and `apps/` follow the official formatter style ([`docs/future/formater/style.md`](docs/future/formater/style.md)). Format in place:
+`.fpas` sources under `examples/`, `tests/`, and `apps/` follow the official formatter style ([`docs/rust/fmt-style.md`](docs/rust/fmt-style.md)). Format in place:
 
 ```sh
 scripts/format-fpas-sources.sh          # Unix
@@ -65,11 +65,13 @@ scripts/format-fpas-sources.ps1         # Windows
 # or: cargo run -p fpas-cli -- fmt examples tests apps
 ```
 
-Check without writing (CI uses this):
+Check without writing:
 
 ```sh
 cargo run -p fpas-cli -- fmt --check examples tests apps
 ```
+
+Run `fpas fmt` manually when you want to apply formatting — there is no format-on-save or watch mode.
 
 ## Examples
 

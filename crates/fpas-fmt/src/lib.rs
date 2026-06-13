@@ -1,6 +1,6 @@
 //! Canonical source formatter for Functional Pascal (AST pretty-printer).
 //!
-//! Normative style: [`docs/future/formater/style.md`](../../../docs/future/formater/style.md).
+//! Normative style: [`docs/rust/fmt-style.md`](../../../docs/rust/fmt-style.md).
 //! Language reference: [`docs/pascal/`](../../../docs/pascal/).
 
 mod comments;
@@ -16,7 +16,7 @@ use fpas_parser::{CompilationUnit, Program, Unit};
 ///
 /// Prefer [`format_source`] when the original text is available.
 ///
-/// **Documentation:** `docs/future/formater/style.md`
+/// **Documentation:** `docs/rust/fmt-style.md`
 #[must_use]
 pub fn format_compilation_unit(unit: &CompilationUnit) -> String {
     format_with_comments(unit, &CommentMap::default())
@@ -24,7 +24,7 @@ pub fn format_compilation_unit(unit: &CompilationUnit) -> String {
 
 /// Formats `unit` using `source` to preserve leading doc and declaration comments.
 ///
-/// **Documentation:** `docs/future/formater/style.md#comments`
+/// **Documentation:** `docs/rust/fmt-style.md#comments`
 #[must_use]
 pub fn format_source(source: &str, unit: &CompilationUnit) -> String {
     format_with_comments(unit, &CommentMap::build(source, unit))
@@ -32,7 +32,7 @@ pub fn format_source(source: &str, unit: &CompilationUnit) -> String {
 
 /// Formats a `program` declaration and its body.
 ///
-/// **Documentation:** `docs/future/formater/style.md`
+/// **Documentation:** `docs/rust/fmt-style.md`
 #[must_use]
 pub fn format_program(program: &Program) -> String {
     emit_program(program, &CommentMap::default())
@@ -40,7 +40,7 @@ pub fn format_program(program: &Program) -> String {
 
 /// Formats a `unit` declaration and its declarations.
 ///
-/// **Documentation:** `docs/future/formater/style.md`
+/// **Documentation:** `docs/rust/fmt-style.md`
 #[must_use]
 pub fn format_unit(unit: &Unit) -> String {
     emit_unit(unit, &CommentMap::default())

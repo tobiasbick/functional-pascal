@@ -3,7 +3,10 @@
 //! Spec: `docs/pascal/10-projects.md`
 
 use super::exports::validate_library_exports;
-use crate::common::{parse_compilation_unit_file, qualified_id_to_string, validate_user_unit_name};
+use crate::common::{
+    parse_compilation_unit_file, qualified_id_to_string, validate_non_empty,
+    validate_user_unit_name,
+};
 use crate::model::{LibraryExportPolicy, ProjectKind};
 use crate::paths::{
     resolve_explicit_file_path, resolve_source_files, same_file, validate_source_extension,
@@ -27,8 +30,6 @@ pub(crate) struct OwnProject {
     pub dependency_projects: Vec<String>,
     /// Names from `[dependencies].workspace` (resolved via enclosing `.fpasworkspace`).
     pub workspace_dependencies: Vec<String>,
-    /// Project root directory (parent of the `.fpasprj` file).
-    pub root_dir: PathBuf,
     /// Non-fatal loading warnings such as duplicate include entries.
     pub warnings: Vec<String>,
     /// Export policy applied when this library is consumed as a dependency.
@@ -93,7 +94,7 @@ pub(crate) fn load_own_project(path: &Path) -> Result<OwnProject, String> {
     validate_non_empty("project.name", &project_file.project.name)?;
     validate_optional_non_empty("project.version", project_file.project.version.as_deref())?;
 
-    let kind = parse_project_kind(&project_file.project.kind)?;
+    let kind = ProjectKind::parse(&project_file.project.kind)?;
     let root_dir = path.parent().ok_or_else(|| {
         format!(
             "Cannot resolve project root for `{}`.\n  help: Use a normal file path inside a directory.",
@@ -171,7 +172,6 @@ pub(crate) fn load_own_project(path: &Path) -> Result<OwnProject, String> {
         source_files,
         dependency_projects,
         workspace_dependencies,
-        root_dir: root_dir.to_path_buf(),
         warnings,
         export_policy,
         test_manifest,
@@ -192,9 +192,10 @@ fn parse_exports_section(
         return Ok(ParsedExports::None);
     };
 
-    if kind == ProjectKind::Program || kind == ProjectKind::Test {
+    if kind != ProjectKind::Library {
         return Err(format!(
-            "Program project `{}` must not define `[exports]`.\n  help: Remove `[exports]` or change `project.kind` to `library`.",
+            "{} project `{}` must not define `[exports]`.\n  help: Remove `[exports]` or change `project.kind` to `library`.",
+            kind.label(),
             project_path.to_string_lossy()
         ));
     }
@@ -210,11 +211,10 @@ fn resolve_export_policy(
     match (kind, parsed) {
         (_, ParsedExports::None) => Ok(LibraryExportPolicy::AllUnits),
         (ProjectKind::Library, ParsedExports::UnitNames(names)) => {
-            let exports = validate_library_exports(&names, source_files)?;
-            Ok(LibraryExportPolicy::ListedUnits(exports.listed_units))
+            let listed_units = validate_library_exports(&names, source_files)?;
+            Ok(LibraryExportPolicy::ListedUnits(listed_units))
         }
-        (ProjectKind::Program, ParsedExports::UnitNames(_))
-        | (ProjectKind::Test, ParsedExports::UnitNames(_)) => Ok(LibraryExportPolicy::AllUnits),
+        (_, ParsedExports::UnitNames(_)) => Ok(LibraryExportPolicy::AllUnits),
     }
 }
 
@@ -225,27 +225,6 @@ fn validate_dependency_entries(field_name: &str, entries: &[String]) -> Result<(
                 "A `{field_name}` entry is empty.\n  help: Remove empty entries or provide a valid value."
             ));
         }
-    }
-
-    Ok(())
-}
-
-fn parse_project_kind(raw_kind: &str) -> Result<ProjectKind, String> {
-    match raw_kind.trim() {
-        "program" => Ok(ProjectKind::Program),
-        "library" => Ok(ProjectKind::Library),
-        "test" => Ok(ProjectKind::Test),
-        other => Err(format!(
-            "Invalid `project.kind` value `{other}`.\n  help: Use `program`, `library`, or `test`."
-        )),
-    }
-}
-
-fn validate_non_empty(field_name: &str, value: &str) -> Result<(), String> {
-    if value.trim().is_empty() {
-        return Err(format!(
-            "`{field_name}` must be a non-empty string.\n  help: Provide a value such as `\"my-app\"`."
-        ));
     }
 
     Ok(())

@@ -10,46 +10,18 @@ use crate::common::qualified_id_to_string;
 use fpas_parser::{QualifiedId, Visibility};
 use std::collections::{BTreeSet, HashMap, HashSet};
 
-pub(super) fn collect_unit_exports(
+pub(super) fn collect_unit_symbol_maps(
     reachable: &HashSet<String>,
     units: &HashMap<String, UnitFile>,
-) -> Result<HashMap<String, HashMap<String, String>>, String> {
+) -> Result<
+    (
+        HashMap<String, HashMap<String, String>>,
+        HashMap<String, HashMap<String, String>>,
+    ),
+    String,
+> {
     let mut exports = HashMap::<String, HashMap<String, String>>::new();
-
-    for unit_key in reachable {
-        let Some(unit_file) = units.get(unit_key) else {
-            return Err(internal_link_error(unit_key, "collecting unit exports"));
-        };
-        let unit_name = qualified_id_to_string(&unit_file.unit.name);
-
-        let mut unit_exports = HashMap::<String, String>::new();
-        for decl in &unit_file.unit.declarations {
-            if decl.visibility() == Visibility::Private {
-                continue;
-            }
-            let short_name = declaration_name(decl);
-            if unit_exports.contains_key(short_name) {
-                return Err(format!(
-                    "Duplicate declaration `{short_name}` in unit `{unit_name}`.\n  help: Use unique top-level declaration names per unit."
-                ));
-            }
-            unit_exports.insert(
-                short_name.to_string(),
-                linked_decl_name(&unit_name, short_name, decl.visibility()),
-            );
-        }
-
-        exports.insert(unit_key.clone(), unit_exports);
-    }
-
-    Ok(exports)
-}
-
-pub(super) fn collect_all_unit_symbols(
-    reachable: &HashSet<String>,
-    units: &HashMap<String, UnitFile>,
-) -> Result<HashMap<String, HashMap<String, String>>, String> {
-    let mut all = HashMap::<String, HashMap<String, String>>::new();
+    let mut all_symbols = HashMap::<String, HashMap<String, String>>::new();
 
     for unit_key in reachable {
         let Some(unit_file) = units.get(unit_key) else {
@@ -57,6 +29,7 @@ pub(super) fn collect_all_unit_symbols(
         };
         let unit_name = qualified_id_to_string(&unit_file.unit.name);
 
+        let mut unit_exports = HashMap::<String, String>::new();
         let mut symbols = HashMap::<String, String>::new();
         for decl in &unit_file.unit.declarations {
             let short_name = declaration_name(decl);
@@ -65,16 +38,23 @@ pub(super) fn collect_all_unit_symbols(
                     "Duplicate declaration `{short_name}` in unit `{unit_name}`.\n  help: Use unique top-level declaration names per unit."
                 ));
             }
-            symbols.insert(
-                short_name.to_string(),
-                linked_decl_name(&unit_name, short_name, decl.visibility()),
-            );
+            let linked_name = linked_decl_name(&unit_name, short_name, decl.visibility());
+            symbols.insert(short_name.to_string(), linked_name.clone());
+            if decl.visibility() != Visibility::Private {
+                if unit_exports.contains_key(short_name) {
+                    return Err(format!(
+                        "Duplicate declaration `{short_name}` in unit `{unit_name}`.\n  help: Use unique top-level declaration names per unit."
+                    ));
+                }
+                unit_exports.insert(short_name.to_string(), linked_name);
+            }
         }
 
-        all.insert(unit_key.clone(), symbols);
+        exports.insert(unit_key.clone(), unit_exports);
+        all_symbols.insert(unit_key.clone(), symbols);
     }
 
-    Ok(all)
+    Ok((exports, all_symbols))
 }
 
 pub(super) struct ImportMap {

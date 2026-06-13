@@ -3,6 +3,8 @@ use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf, absolute};
 
+use crate::common::validate_non_empty;
+
 const SOURCE_FILE_EXTENSION: &str = "fpas";
 
 /// Resolves `sources.include` and applies optional `sources.exclude` patterns.
@@ -198,16 +200,6 @@ pub(super) fn resolve_explicit_file_path(
     }
 
     Ok(path)
-}
-
-fn validate_non_empty(field_name: &str, value: &str) -> Result<(), String> {
-    if value.trim().is_empty() {
-        return Err(format!(
-            "`{field_name}` must be a non-empty string.\n  help: Provide a value such as `\"my-app\"`."
-        ));
-    }
-
-    Ok(())
 }
 
 pub(super) fn resolve_path(value: &str, root_dir: &Path) -> PathBuf {

@@ -1,5 +1,7 @@
 //! Loads `.fpasworkspace` manifests (`docs/pascal/10-projects.md`).
 
+use crate::ProjectKind;
+use crate::common::validate_non_empty;
 use crate::paths::resolve_explicit_file_path;
 use serde::Deserialize;
 use std::fs;
@@ -50,7 +52,7 @@ pub(super) fn read_member_project_manifest(path: &Path) -> Result<MemberProjectM
     let manifest = read_member_project_manifest_raw(path)?;
     Ok(MemberProjectManifest {
         name: manifest.name,
-        kind: parse_member_project_kind(&manifest.kind, path)?,
+        kind: ProjectKind::parse_in_file(&manifest.kind, Some(path))?,
     })
 }
 
@@ -77,18 +79,6 @@ fn read_member_project_manifest_raw(path: &Path) -> Result<ProjectNameSection, S
     validate_non_empty("project.name", &project_file.project.name)?;
     validate_non_empty("project.kind", &project_file.project.kind)?;
     Ok(project_file.project)
-}
-
-fn parse_member_project_kind(raw_kind: &str, path: &Path) -> Result<crate::ProjectKind, String> {
-    match raw_kind.trim() {
-        "program" => Ok(crate::ProjectKind::Program),
-        "library" => Ok(crate::ProjectKind::Library),
-        "test" => Ok(crate::ProjectKind::Test),
-        other => Err(format!(
-            "Invalid `project.kind` value `{other}` in `{}`.\n  help: Use `program`, `library`, or `test`.",
-            path.to_string_lossy()
-        )),
-    }
 }
 
 /// Load and validate a workspace file.
@@ -135,7 +125,6 @@ pub fn load_workspace(path: &Path) -> Result<LoadedWorkspace, String> {
         }
 
         let member_path = resolve_workspace_member_path(member, root_dir)?;
-        validate_workspace_member_extension(&member_path)?;
         let key = crate::paths::canonical_project_path(&member_path);
         if seen
             .iter()
@@ -222,14 +211,4 @@ fn is_workspace_member_project(path: &Path) -> bool {
     path.extension()
         .and_then(|value| value.to_str())
         .is_some_and(|value| value.eq_ignore_ascii_case("fpasprj"))
-}
-
-fn validate_non_empty(field_name: &str, value: &str) -> Result<(), String> {
-    if value.trim().is_empty() {
-        return Err(format!(
-            "`{field_name}` must be a non-empty string.\n  help: Provide a value such as `\"my-suite\"`."
-        ));
-    }
-
-    Ok(())
 }

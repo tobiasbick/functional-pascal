@@ -3,7 +3,8 @@
 //! Documentation: `docs/pascal/10-projects.md`
 
 use super::UnitFile;
-use super::support::{canonical_unit_key, display_unit_key};
+use super::support::canonical_unit_key;
+use crate::common::display_unit_key;
 use crate::model::{LibraryExportPolicy, ProjectLinkMeta, SourceOrigin};
 use crate::paths::same_file;
 
@@ -22,16 +23,12 @@ impl<'a> ImportPolicy<'a> {
         Self { meta, units }
     }
 
-    pub(super) fn active(&self) -> bool {
-        self.meta.enforces_export_rules()
-    }
-
     /// Root program `uses` entries must target importable units.
     pub(super) fn validate_root_uses(
         &self,
         uses: &[fpas_parser::QualifiedId],
     ) -> Result<(), String> {
-        if !self.active() {
+        if !self.meta.enforces_export_rules() {
             return Ok(());
         }
         for used in uses {
@@ -51,7 +48,7 @@ impl<'a> ImportPolicy<'a> {
         requester_key: &str,
         target_key: &str,
     ) -> Result<bool, String> {
-        if !self.active() {
+        if !self.meta.enforces_export_rules() {
             return Ok(true);
         }
         let requester_origin = self.origin_for_unit_key(requester_key)?;

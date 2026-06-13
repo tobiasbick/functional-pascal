@@ -4,7 +4,7 @@
 
 use super::LinkedProgram;
 use super::graph::{collect_library_reachable_units, topo_sort_units};
-use super::imports::{build_imports, collect_all_unit_symbols, collect_unit_exports};
+use super::imports::{build_imports, collect_unit_symbol_maps};
 use super::parse::parse_unit_files;
 use super::rewrite::{NameRewriter, rename_top_level_decls};
 use super::support::{
@@ -13,7 +13,6 @@ use super::support::{
 use crate::common::qualified_id_to_string;
 use crate::model::ProjectLinkMeta;
 
-use fpas_diagnostics::DiagnosticSeverity;
 use fpas_parser::Decl;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -30,7 +29,7 @@ pub fn build_library_check_with_source_map(
     let (mut main_program, parse_errors) = fpas_parser::parse(LIBRARY_CHECK_SOURCE);
     let has_errors = parse_errors
         .iter()
-        .any(|diagnostic| diagnostic.as_diagnostic().severity == DiagnosticSeverity::Error);
+        .any(|diagnostic| diagnostic.as_diagnostic().is_error());
     if has_errors {
         return Err("Internal error: failed to parse the library check stub program.".to_string());
     }
@@ -41,8 +40,7 @@ pub fn build_library_check_with_source_map(
 
     let reachable_unit_keys = collect_library_reachable_units(&units)?;
     let unit_order = topo_sort_units(&reachable_unit_keys, &units)?;
-    let exports = collect_unit_exports(&reachable_unit_keys, &units)?;
-    let all_symbols = collect_all_unit_symbols(&reachable_unit_keys, &units)?;
+    let (exports, all_symbols) = collect_unit_symbol_maps(&reachable_unit_keys, &units)?;
 
     let canonical_units: HashMap<String, Vec<String>> = units
         .iter()

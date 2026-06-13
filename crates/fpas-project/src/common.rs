@@ -1,8 +1,42 @@
-use fpas_diagnostics::{Diagnostic, DiagnosticSeverity};
+use fpas_diagnostics::Diagnostic;
 use fpas_lexer::lex_with_source_id;
 use fpas_parser::{CompilationUnit, QualifiedId, parse_tokens_compilation_unit};
 use std::fs;
 use std::path::Path;
+
+/// Pascal-cases a lowercase dotted unit key for diagnostics (`mylib.core` → `Mylib.Core`).
+pub(super) fn display_unit_key(key: &str) -> String {
+    let mut result = String::new();
+    for (index, segment) in key.split('.').enumerate() {
+        if index > 0 {
+            result.push('.');
+        }
+        let mut chars = segment.chars();
+        if let Some(first) = chars.next() {
+            result.push(first.to_ascii_uppercase());
+            result.push_str(chars.as_str());
+        }
+    }
+    result
+}
+
+pub(super) fn validate_non_empty(field_name: &str, value: &str) -> Result<(), String> {
+    if value.trim().is_empty() {
+        return Err(format!(
+            "`{field_name}` must be a non-empty string.\n  help: Provide a value such as `\"my-app\"`."
+        ));
+    }
+    Ok(())
+}
+
+pub(super) fn validate_non_empty_entry(field_name: &str, value: &str) -> Result<(), String> {
+    if value.trim().is_empty() {
+        return Err(format!(
+            "A `{field_name}` entry is empty.\n  help: Remove empty entries or provide a valid value."
+        ));
+    }
+    Ok(())
+}
 
 pub(super) fn parse_compilation_unit_file(
     path: &Path,
@@ -27,7 +61,7 @@ pub(super) fn parse_compilation_unit_file(
 
     let mut warnings = Vec::new();
     for diagnostic in diagnostics {
-        if diagnostic.severity == DiagnosticSeverity::Error {
+        if diagnostic.is_error() {
             let path_text = path.to_string_lossy();
             return Err(format!(
                 "Failed to parse `{}`:\n  {}",

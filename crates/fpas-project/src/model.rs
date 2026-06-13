@@ -14,6 +14,42 @@ pub enum ProjectKind {
     Test,
 }
 
+impl ProjectKind {
+    /// Parses `project.kind` from a project manifest.
+    pub(super) fn parse(raw: &str) -> Result<Self, String> {
+        Self::parse_in_file(raw, None)
+    }
+
+    /// Like [`parse`](Self::parse), with optional manifest path in the error message.
+    pub(super) fn parse_in_file(raw: &str, path: Option<&Path>) -> Result<Self, String> {
+        match raw.trim() {
+            "program" => Ok(Self::Program),
+            "library" => Ok(Self::Library),
+            "test" => Ok(Self::Test),
+            other => {
+                let base = format!("Invalid `project.kind` value `{other}`");
+                Err(if let Some(path) = path {
+                    format!(
+                        "{base} in `{}`.\n  help: Use `program`, `library`, or `test`.",
+                        path.display()
+                    )
+                } else {
+                    format!("{base}.\n  help: Use `program`, `library`, or `test`.")
+                })
+            }
+        }
+    }
+
+    /// Short label for diagnostics (`Program`, `Library`, `Test`).
+    pub(super) fn label(self) -> &'static str {
+        match self {
+            Self::Program => "Program",
+            Self::Library => "Library",
+            Self::Test => "Test",
+        }
+    }
+}
+
 /// Which project contributed a merged source file during loading.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SourceOrigin {
@@ -83,11 +119,4 @@ pub struct LoadedProject {
     pub(crate) export_policy_for_dependents: LibraryExportPolicy,
     /// Optional per-test runner overrides from `[test]` in the project manifest.
     pub test_manifest: TestManifest,
-}
-
-impl LoadedProject {
-    /// Export policy applied when this project is consumed as a library dependency.
-    pub(crate) fn export_policy_for_dependents(&self) -> LibraryExportPolicy {
-        self.export_policy_for_dependents.clone()
-    }
 }

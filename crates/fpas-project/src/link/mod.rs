@@ -11,7 +11,7 @@ use crate::common::qualified_id_to_string;
 use crate::model::ProjectLinkMeta;
 use graph::{resolve_reachable_units, topo_sort_units};
 use import_policy::ImportPolicy;
-use imports::{build_imports, collect_all_unit_symbols, collect_unit_exports};
+use imports::{build_imports, collect_unit_symbol_maps};
 use parse::{parse_program_file, parse_unit_files};
 use rewrite::{NameRewriter, rename_top_level_decls};
 use support::{collect_std_uses, internal_link_error, internal_symbol_error, merge_std_uses};
@@ -68,8 +68,7 @@ pub fn build_program_with_source_map(
 
     let reachable_unit_keys = resolve_reachable_units(&main_program.uses, &units, &import_policy)?;
     let unit_order = topo_sort_units(&reachable_unit_keys, &units)?;
-    let exports = collect_unit_exports(&reachable_unit_keys, &units)?;
-    let all_symbols = collect_all_unit_symbols(&reachable_unit_keys, &units)?;
+    let (exports, all_symbols) = collect_unit_symbol_maps(&reachable_unit_keys, &units)?;
 
     let canonical_units: std::collections::HashMap<String, Vec<String>> = units
         .iter()

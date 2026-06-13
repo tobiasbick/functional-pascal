@@ -11,7 +11,7 @@ use super::paths::{
 };
 use super::test_sources::validate_project_test_sources;
 use super::workspace::resolve_workspace_dependency_paths;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 /// Loads a project together with transitive library dependencies.
@@ -101,7 +101,7 @@ fn resolve_all_dependency_paths(
     })?;
 
     let mut resolved = Vec::new();
-    let mut seen = Vec::<PathBuf>::new();
+    let mut seen = HashSet::<PathBuf>::new();
 
     for raw in project_paths {
         insert_dependency_path(
@@ -118,12 +118,11 @@ fn resolve_all_dependency_paths(
     Ok(resolved)
 }
 
-fn insert_dependency_path(path: PathBuf, resolved: &mut Vec<PathBuf>, seen: &mut Vec<PathBuf>) {
+fn insert_dependency_path(path: PathBuf, resolved: &mut Vec<PathBuf>, seen: &mut HashSet<PathBuf>) {
     let key = canonical_project_path(&path);
-    if seen.iter().any(|existing| same_file(existing, &key)) {
+    if !seen.insert(key) {
         return;
     }
-    seen.push(key);
     resolved.push(path);
 }
 
@@ -136,7 +135,7 @@ fn merge_dependency_link_meta(
     let dependency_canonical = canonical_project_path(dependency_path);
     consumer.library_export_policies.insert(
         dependency_canonical.clone(),
-        dependency_loaded.export_policy_for_dependents(),
+        dependency_loaded.export_policy_for_dependents.clone(),
     );
     consumer
         .library_export_policies

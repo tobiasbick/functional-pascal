@@ -1,6 +1,8 @@
 use super::UnitFile;
 use crate::common::qualified_id_to_string;
 
+pub(super) use crate::common::display_unit_key;
+
 use fpas_parser::QualifiedId;
 use std::collections::HashMap;
 
@@ -34,21 +36,6 @@ pub(super) fn is_std_unit(used: &QualifiedId) -> bool {
 
 pub(super) fn canonical_unit_key(id: &QualifiedId) -> String {
     qualified_id_to_string(id).to_ascii_lowercase()
-}
-
-pub(super) fn display_unit_key(key: &str) -> String {
-    let mut result = String::new();
-    for (i, segment) in key.split('.').enumerate() {
-        if i > 0 {
-            result.push('.');
-        }
-        let mut chars = segment.chars();
-        if let Some(first) = chars.next() {
-            result.push(first.to_ascii_uppercase());
-            result.push_str(chars.as_str());
-        }
-    }
-    result
 }
 
 pub(super) fn internal_link_error(unit_key: &str, context: &str) -> String {

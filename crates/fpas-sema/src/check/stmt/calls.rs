@@ -12,55 +12,55 @@ impl Checker {
         let name = Self::resolve_designator_name(designator);
         self.ensure_fq_std_unit_loaded(&name);
 
-        if let Some(symbol) = self.scopes.lookup(&name)
-            && symbol.kind == SymbolKind::BuiltinStd
-        {
-            let dispatch = self.builtin_std_dispatch_name(&name);
-            let _ = crate::std_registry::check_builtin_std_call(self, &dispatch, args, span);
+        if let Some(symbol) = self.scopes.lookup(&name) {
+            if symbol.kind == SymbolKind::BuiltinStd {
+                let dispatch = self.builtin_std_dispatch_name(&name);
+                let _ = crate::std_registry::check_builtin_std_call(self, &dispatch, args, span);
+                return;
+            }
+
+            match symbol.ty.clone() {
+                Ty::Procedure(proc_ty) => {
+                    self.check_procedure_call_args(&name, &proc_ty, args, span);
+                    return;
+                }
+                Ty::Function(func_ty) => {
+                    self.check_function_call_args(&name, &func_ty, args, span);
+                    return;
+                }
+                _ => {
+                    self.error_with_code(
+                        SEMA_TYPE_MISMATCH,
+                        format!("`{name}` is not a procedure or function"),
+                        "Only procedures and functions can be called.",
+                        span,
+                    );
+                    self.check_args_only(args);
+                    return;
+                }
+            }
+        }
+
+        if self.try_check_method_call_stmt(designator, args, span) {
             return;
         }
 
-        let symbol_ty = self.scopes.lookup(&name).map(|symbol| symbol.ty.clone());
-        match symbol_ty {
-            Some(Ty::Procedure(proc_ty)) => {
-                self.check_procedure_call_args(&name, &proc_ty, args, span)
-            }
-            Some(Ty::Function(func_ty)) => {
-                self.check_function_call_args(&name, &func_ty, args, span);
-            }
-            Some(_) => {
-                self.error_with_code(
-                    SEMA_TYPE_MISMATCH,
-                    format!("`{name}` is not a procedure or function"),
-                    "Only procedures and functions can be called.",
-                    span,
-                );
-                self.check_args_only(args);
-            }
-            None => {
-                if self.try_check_method_call_stmt(designator, args, span) {
-                    return;
-                }
+        let (code, message, hint) = if let Some(ambiguous_hint) = self.ambiguous_hint(&name) {
+            (
+                SEMA_AMBIGUOUS_IMPORTED_NAME,
+                format!("Ambiguous name `{name}`"),
+                ambiguous_hint,
+            )
+        } else {
+            (
+                SEMA_UNKNOWN_NAME,
+                format!("Unknown procedure `{name}`"),
+                self.hint_unknown_callable(&name),
+            )
+        };
 
-                let (code, message, hint) = if let Some(ambiguous_hint) = self.ambiguous_hint(&name)
-                {
-                    (
-                        SEMA_AMBIGUOUS_IMPORTED_NAME,
-                        format!("Ambiguous name `{name}`"),
-                        ambiguous_hint,
-                    )
-                } else {
-                    (
-                        SEMA_UNKNOWN_NAME,
-                        format!("Unknown procedure `{name}`"),
-                        self.hint_unknown_callable(&name),
-                    )
-                };
-
-                self.error_with_code(code, message, hint, span);
-                self.check_args_only(args);
-            }
-        }
+        self.error_with_code(code, message, hint, span);
+        self.check_args_only(args);
     }
 
     /// Try to resolve a call statement as a record or interface method call.

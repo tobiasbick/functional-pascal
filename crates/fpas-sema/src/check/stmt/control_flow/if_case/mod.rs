@@ -22,7 +22,7 @@ impl Checker {
                 SEMA_INVALID_PANIC_ARGUMENT,
                 "panic() argument must be a string",
                 "panic('error message')",
-                super::super::super::spans::expr_span(expr),
+                expr.span(),
             );
         }
     }

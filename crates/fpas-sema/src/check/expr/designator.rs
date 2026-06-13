@@ -118,7 +118,7 @@ impl Checker {
                                             SEMA_TYPE_MISMATCH,
                                             "Array index must be integer",
                                             "Use an integer index expression.",
-                                            super::super::spans::expr_span(index_expr),
+                                            index_expr.span(),
                                         );
                                     }
                                     *inner.clone()
@@ -131,7 +131,7 @@ impl Checker {
                                                 "Dict key type mismatch: expected `{key_ty}`, got `{index_ty}`"
                                             ),
                                             "Use a key matching the dict's key type.",
-                                            super::super::spans::expr_span(index_expr),
+                                            index_expr.span(),
                                         );
                                     }
                                     *val_ty.clone()
@@ -142,7 +142,7 @@ impl Checker {
                                             SEMA_TYPE_MISMATCH,
                                             "String index must be an integer",
                                             "Use an integer index, e.g. S[0].",
-                                            super::super::spans::expr_span(index_expr),
+                                            index_expr.span(),
                                         );
                                     }
                                     Ty::Char

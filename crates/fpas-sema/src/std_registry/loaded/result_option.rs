@@ -8,41 +8,43 @@ use crate::types::{FunctionTy, Ty};
 use fpas_std::std_symbols as s;
 
 pub(super) fn register_std_result(checker: &mut Checker) {
-    let placeholder = Ty::Function(FunctionTy {
-        type_params: Vec::new(),
-        params: vec![],
-        return_type: Box::new(Ty::Error),
-        variadic: false,
-    });
-    for name in [
-        s::STD_RESULT_UNWRAP,
-        s::STD_RESULT_UNWRAP_OR,
-        s::STD_RESULT_IS_OK,
-        s::STD_RESULT_IS_ERR,
-        s::STD_RESULT_MAP,
-        s::STD_RESULT_AND_THEN,
-        s::STD_RESULT_OR_ELSE,
-    ] {
-        define_builtin_std(checker, name, placeholder.clone());
-    }
+    register_builtin_std_placeholders(
+        checker,
+        &[
+            s::STD_RESULT_UNWRAP,
+            s::STD_RESULT_UNWRAP_OR,
+            s::STD_RESULT_IS_OK,
+            s::STD_RESULT_IS_ERR,
+            s::STD_RESULT_MAP,
+            s::STD_RESULT_AND_THEN,
+            s::STD_RESULT_OR_ELSE,
+        ],
+    );
 }
 
 pub(super) fn register_std_option(checker: &mut Checker) {
+    register_builtin_std_placeholders(
+        checker,
+        &[
+            s::STD_OPTION_UNWRAP,
+            s::STD_OPTION_UNWRAP_OR,
+            s::STD_OPTION_IS_SOME,
+            s::STD_OPTION_IS_NONE,
+            s::STD_OPTION_MAP,
+            s::STD_OPTION_AND_THEN,
+            s::STD_OPTION_OR_ELSE,
+        ],
+    );
+}
+
+fn register_builtin_std_placeholders(checker: &mut Checker, names: &[&str]) {
     let placeholder = Ty::Function(FunctionTy {
         type_params: Vec::new(),
         params: vec![],
         return_type: Box::new(Ty::Error),
         variadic: false,
     });
-    for name in [
-        s::STD_OPTION_UNWRAP,
-        s::STD_OPTION_UNWRAP_OR,
-        s::STD_OPTION_IS_SOME,
-        s::STD_OPTION_IS_NONE,
-        s::STD_OPTION_MAP,
-        s::STD_OPTION_AND_THEN,
-        s::STD_OPTION_OR_ELSE,
-    ] {
+    for name in names {
         define_builtin_std(checker, name, placeholder.clone());
     }
 }

@@ -8,9 +8,9 @@
 mod application_api;
 mod handlers;
 mod host_api;
-mod type_registration;
 
 use crate::check::Checker;
+use crate::std_registry::loaded::type_registration;
 use crate::types::Ty;
 use fpas_std::std_symbols as s;
 use fpas_std::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS};
@@ -66,12 +66,12 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             ("height".into(), Ty::Integer),
         ],
     );
-    let key_event = lookup_required_type(
+    let key_event = type_registration::lookup_required_type(
         checker,
         s::STD_CONSOLE_KEY_EVENT,
         "Std.Console.KeyEvent must be registered before Std.Tui (see loaded/mod.rs)",
     );
-    let console_event = lookup_required_type(
+    let console_event = type_registration::lookup_required_type(
         checker,
         s::STD_CONSOLE_EVENT,
         "Std.Console.Event must be registered before Std.Tui (see loaded/mod.rs)",
@@ -117,7 +117,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             ("CommandId".into(), Ty::Integer),
             (
                 "Submenu".into(),
-                Ty::Array(Box::new(lookup_required_type(
+                Ty::Array(Box::new(type_registration::lookup_required_type(
                     checker,
                     s::STD_TUI_MENU_POPUP_ITEM,
                     "MenuPopupItem",
@@ -125,7 +125,8 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             ),
         ],
     );
-    let menu_bar_item = lookup_required_type(checker, s::STD_TUI_MENU_BAR_ITEM, "MenuBarItem");
+    let menu_bar_item =
+        type_registration::lookup_required_type(checker, s::STD_TUI_MENU_BAR_ITEM, "MenuBarItem");
     type_registration::register_record_type(
         checker,
         s::STD_TUI_MENU_BAR_STYLE,
@@ -138,7 +139,8 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             ("DisabledFg".into(), Ty::Integer),
         ],
     );
-    let menu_bar_style = lookup_required_type(checker, s::STD_TUI_MENU_BAR_STYLE, "MenuBarStyle");
+    let menu_bar_style =
+        type_registration::lookup_required_type(checker, s::STD_TUI_MENU_BAR_STYLE, "MenuBarStyle");
     type_registration::register_record_type(
         checker,
         s::STD_TUI_STATUS_BAR_SEGMENT,
@@ -147,15 +149,21 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             ("AlignRight".into(), Ty::Boolean),
         ],
     );
-    let status_bar_segment =
-        lookup_required_type(checker, s::STD_TUI_STATUS_BAR_SEGMENT, "StatusBarSegment");
+    let status_bar_segment = type_registration::lookup_required_type(
+        checker,
+        s::STD_TUI_STATUS_BAR_SEGMENT,
+        "StatusBarSegment",
+    );
     type_registration::register_record_type(
         checker,
         s::STD_TUI_STATUS_BAR_STYLE,
         vec![("BarBg".into(), Ty::Integer), ("BarFg".into(), Ty::Integer)],
     );
-    let status_bar_style =
-        lookup_required_type(checker, s::STD_TUI_STATUS_BAR_STYLE, "StatusBarStyle");
+    let status_bar_style = type_registration::lookup_required_type(
+        checker,
+        s::STD_TUI_STATUS_BAR_STYLE,
+        "StatusBarStyle",
+    );
     let (application_handlers, callbacks) = handlers::register_application_handlers(
         checker,
         &application,
@@ -187,12 +195,4 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
     };
     application_api::register_application_api(checker, &types);
     host_api::register_host_api(checker, &types, &callbacks);
-}
-
-fn lookup_required_type(checker: &Checker, qualified_name: &str, message: &str) -> Ty {
-    checker
-        .scopes
-        .lookup(qualified_name)
-        .map(|symbol| symbol.ty.clone())
-        .unwrap_or_else(|| unreachable!("{message}"))
 }

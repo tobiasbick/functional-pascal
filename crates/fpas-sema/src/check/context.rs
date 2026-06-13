@@ -40,8 +40,6 @@ pub struct Checker {
     pub(crate) record_defaults: RecordDefaultsMap,
     /// `case` label expressions that bind the scrutinee for a guarded scalar arm.
     pub(crate) scalar_case_bindings: ScalarCaseBindingMap,
-    /// Record names currently registered as placeholders while their fields are being resolved.
-    pub(crate) pending_record_types: HashSet<String>,
 }
 
 impl Checker {
@@ -57,7 +55,6 @@ impl Checker {
             std_short_alias_keys: HashSet::new(),
             record_defaults: RecordDefaultsMap::new(),
             scalar_case_bindings: ScalarCaseBindingMap::new(),
-            pending_record_types: HashSet::new(),
         }
     }
 

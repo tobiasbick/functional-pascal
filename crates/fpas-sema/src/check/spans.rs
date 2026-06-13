@@ -1,6 +1,13 @@
 use fpas_lexer::Span;
-use fpas_parser::Expr;
 
-pub(crate) fn expr_span(expr: &Expr) -> Span {
-    expr.span()
+/// Span for synthetic std/builtin AST nodes that have no source location.
+#[must_use]
+pub(crate) fn synthetic_span() -> Span {
+    Span {
+        offset: 0,
+        length: 0,
+        line: 1,
+        column: 1,
+        source_id: 0,
+    }
 }

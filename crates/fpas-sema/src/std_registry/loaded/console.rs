@@ -1,54 +1,19 @@
 use super::super::{define_const, define_func, define_proc, define_proc_variadic, p};
 use crate::check::Checker;
-use crate::scope::{Symbol, SymbolKind};
-use crate::types::{EnumTy, EnumVariantTy, RecordTy, Ty};
+use crate::std_registry::loaded::type_registration;
+use crate::types::Ty;
 use fpas_std::key_event::KEY_KIND_VARIANTS;
 use fpas_std::std_symbols as s;
 use fpas_std::{EVENT_KIND_VARIANTS, MOUSE_ACTION_VARIANTS, MOUSE_BUTTON_VARIANTS};
 
-fn register_enum_type(checker: &mut Checker, qualified_name: &str, variants: &[&str]) -> Ty {
-    let variants: Vec<EnumVariantTy> = variants
-        .iter()
-        .map(|variant| EnumVariantTy {
-            name: (*variant).to_string(),
-            fields: vec![],
-        })
-        .collect();
-    let member_names: Vec<String> = variants.iter().map(|v| v.name.clone()).collect();
-    let enum_ty = Ty::Enum(EnumTy {
-        name: qualified_name.into(),
-        variants,
-    });
-    checker.scopes.define(
-        qualified_name,
-        Symbol {
-            ty: enum_ty.clone(),
-            mutable: false,
-            kind: SymbolKind::Type,
-        },
-    );
-
-    for member in &member_names {
-        let qualified = format!("{qualified_name}.{member}");
-        checker.scopes.define(
-            &qualified,
-            Symbol {
-                ty: enum_ty.clone(),
-                mutable: false,
-                kind: SymbolKind::EnumMember,
-            },
-        );
-    }
-
-    enum_ty
-}
-
 pub(super) fn register_std_console_key_api(checker: &mut Checker) {
-    let key_kind_ty = register_enum_type(checker, s::STD_CONSOLE_KEY_KIND, KEY_KIND_VARIANTS);
+    let key_kind_ty =
+        type_registration::register_enum_type(checker, s::STD_CONSOLE_KEY_KIND, KEY_KIND_VARIANTS);
 
-    let key_event_ty = Ty::Record(RecordTy {
-        name: s::STD_CONSOLE_KEY_EVENT.into(),
-        fields: vec![
+    let key_event_ty = type_registration::register_record_type(
+        checker,
+        s::STD_CONSOLE_KEY_EVENT,
+        vec![
             ("kind".into(), key_kind_ty.clone()),
             ("ch".into(), Ty::Char),
             ("shift".into(), Ty::Boolean),
@@ -56,15 +21,6 @@ pub(super) fn register_std_console_key_api(checker: &mut Checker) {
             ("alt".into(), Ty::Boolean),
             ("meta".into(), Ty::Boolean),
         ],
-        methods: Vec::new(),
-    });
-    checker.scopes.define(
-        s::STD_CONSOLE_KEY_EVENT,
-        Symbol {
-            ty: key_event_ty.clone(),
-            mutable: false,
-            kind: SymbolKind::Type,
-        },
     );
     define_func(
         checker,
@@ -73,15 +29,26 @@ pub(super) fn register_std_console_key_api(checker: &mut Checker) {
         key_event_ty.clone(),
     );
 
-    let event_kind_ty = register_enum_type(checker, s::STD_CONSOLE_EVENT_KIND, EVENT_KIND_VARIANTS);
-    let mouse_action_ty =
-        register_enum_type(checker, s::STD_CONSOLE_MOUSE_ACTION, MOUSE_ACTION_VARIANTS);
-    let mouse_button_ty =
-        register_enum_type(checker, s::STD_CONSOLE_MOUSE_BUTTON, MOUSE_BUTTON_VARIANTS);
+    let event_kind_ty = type_registration::register_enum_type(
+        checker,
+        s::STD_CONSOLE_EVENT_KIND,
+        EVENT_KIND_VARIANTS,
+    );
+    let mouse_action_ty = type_registration::register_enum_type(
+        checker,
+        s::STD_CONSOLE_MOUSE_ACTION,
+        MOUSE_ACTION_VARIANTS,
+    );
+    let mouse_button_ty = type_registration::register_enum_type(
+        checker,
+        s::STD_CONSOLE_MOUSE_BUTTON,
+        MOUSE_BUTTON_VARIANTS,
+    );
 
-    let event_ty = Ty::Record(RecordTy {
-        name: s::STD_CONSOLE_EVENT.into(),
-        fields: vec![
+    let event_ty = type_registration::register_record_type(
+        checker,
+        s::STD_CONSOLE_EVENT,
+        vec![
             ("kind".into(), event_kind_ty),
             ("key".into(), key_event_ty),
             ("mouse_action".into(), mouse_action_ty),
@@ -96,15 +63,6 @@ pub(super) fn register_std_console_key_api(checker: &mut Checker) {
             ("alt".into(), Ty::Boolean),
             ("meta".into(), Ty::Boolean),
         ],
-        methods: Vec::new(),
-    });
-    checker.scopes.define(
-        s::STD_CONSOLE_EVENT,
-        Symbol {
-            ty: event_ty.clone(),
-            mutable: false,
-            kind: SymbolKind::Type,
-        },
     );
     define_func(checker, s::STD_CONSOLE_READ_EVENT, vec![], event_ty.clone());
     define_func(checker, s::STD_CONSOLE_EVENT_PENDING, vec![], Ty::Boolean);

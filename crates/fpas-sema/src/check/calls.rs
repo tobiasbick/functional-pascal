@@ -1,5 +1,5 @@
 use super::Checker;
-use crate::types::{FunctionTy, GenericParamDef, ProcedureTy, Ty};
+use crate::types::{FunctionTy, GenericParamDef, ParamTy, ProcedureTy, Ty};
 use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_WRONG_ARGUMENT_COUNT};
 use fpas_lexer::Span;
 use fpas_parser::Expr;
@@ -13,45 +13,15 @@ impl Checker {
         args: &[Expr],
         span: Span,
     ) {
-        if func_ty.variadic && args.len() < func_ty.params.len() {
-            self.error_with_code(
-                SEMA_WRONG_ARGUMENT_COUNT,
-                format!(
-                    "Function `{name}` expects at least {} arguments, got {}",
-                    func_ty.params.len(),
-                    args.len()
-                ),
-                "Pass all required arguments before any variadic arguments.",
-                span,
-            );
-        } else if !func_ty.variadic && func_ty.params.len() != args.len() {
-            self.error_with_code(
-                SEMA_WRONG_ARGUMENT_COUNT,
-                format!(
-                    "Function `{name}` expects {} arguments, got {}",
-                    func_ty.params.len(),
-                    args.len()
-                ),
-                "Check the number of arguments.",
-                span,
-            );
-        }
-
-        let mut arg_types = Vec::with_capacity(args.len());
-        for (index, arg) in args.iter().enumerate() {
-            let arg_ty = self.check_expr(arg);
-            if let Some(param) = func_ty.params.get(index) {
-                self.check_type_compat(
-                    &param.ty,
-                    &arg_ty,
-                    &format!("argument {}", index + 1),
-                    span,
-                );
-            }
-            arg_types.push(arg_ty);
-        }
-
-        self.validate_routine_constraints(&func_ty.type_params, &func_ty.params, &arg_types, span);
+        self.check_routine_call_args(
+            name,
+            "Function",
+            &func_ty.type_params,
+            &func_ty.params,
+            func_ty.variadic,
+            args,
+            span,
+        );
     }
 
     pub(crate) fn check_procedure_call_args(
@@ -61,23 +31,44 @@ impl Checker {
         args: &[Expr],
         span: Span,
     ) {
-        if proc_ty.variadic && args.len() < proc_ty.params.len() {
+        self.check_routine_call_args(
+            name,
+            "Procedure",
+            &proc_ty.type_params,
+            &proc_ty.params,
+            proc_ty.variadic,
+            args,
+            span,
+        );
+    }
+
+    fn check_routine_call_args(
+        &mut self,
+        name: &str,
+        routine_label: &str,
+        type_params: &[GenericParamDef],
+        params: &[ParamTy],
+        variadic: bool,
+        args: &[Expr],
+        span: Span,
+    ) {
+        if variadic && args.len() < params.len() {
             self.error_with_code(
                 SEMA_WRONG_ARGUMENT_COUNT,
                 format!(
-                    "Procedure `{name}` expects at least {} arguments, got {}",
-                    proc_ty.params.len(),
+                    "{routine_label} `{name}` expects at least {} arguments, got {}",
+                    params.len(),
                     args.len()
                 ),
                 "Pass all required arguments before any variadic arguments.",
                 span,
             );
-        } else if !proc_ty.variadic && proc_ty.params.len() != args.len() {
+        } else if !variadic && params.len() != args.len() {
             self.error_with_code(
                 SEMA_WRONG_ARGUMENT_COUNT,
                 format!(
-                    "Procedure `{name}` expects {} arguments, got {}",
-                    proc_ty.params.len(),
+                    "{routine_label} `{name}` expects {} arguments, got {}",
+                    params.len(),
                     args.len()
                 ),
                 "Check the number of arguments.",
@@ -88,7 +79,7 @@ impl Checker {
         let mut arg_types = Vec::with_capacity(args.len());
         for (index, arg) in args.iter().enumerate() {
             let arg_ty = self.check_expr(arg);
-            if let Some(param) = proc_ty.params.get(index) {
+            if let Some(param) = params.get(index) {
                 self.check_type_compat(
                     &param.ty,
                     &arg_ty,
@@ -99,7 +90,7 @@ impl Checker {
             arg_types.push(arg_ty);
         }
 
-        self.validate_routine_constraints(&proc_ty.type_params, &proc_ty.params, &arg_types, span);
+        self.validate_routine_constraints(type_params, params, &arg_types, span);
     }
 
     /// Infer type arguments from argument types, enforce consistent reuse, and

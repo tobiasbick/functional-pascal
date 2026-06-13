@@ -1,7 +1,11 @@
+//! Shared std unit type registration helpers.
+//!
+//! **Documentation:** `docs/pascal/05-types.md`
+
 use crate::check::Checker;
+use crate::check::spans::synthetic_span;
 use crate::scope::{Symbol, SymbolKind};
 use crate::types::{EnumTy, EnumVariantTy, RecordTy, Ty};
-use fpas_lexer::Span;
 use fpas_parser::Expr;
 
 /// Register a simple enum type and expose each variant as a qualified enum member.
@@ -17,13 +21,9 @@ pub(super) fn register_enum_type(
             fields: vec![],
         })
         .collect();
-    let member_names: Vec<String> = variants
-        .iter()
-        .map(|variant| variant.name.clone())
-        .collect();
     let enum_ty = Ty::Enum(EnumTy {
         name: qualified_name.into(),
-        variants,
+        variants: variants.clone(),
     });
     checker.scopes.define(
         qualified_name,
@@ -34,8 +34,8 @@ pub(super) fn register_enum_type(
         },
     );
 
-    for member_name in &member_names {
-        let qualified_member = format!("{qualified_name}.{member_name}");
+    for variant in &variants {
+        let qualified_member = format!("{qualified_name}.{}", variant.name);
         checker.scopes.define(
             &qualified_member,
             Symbol {
@@ -87,22 +87,26 @@ pub(super) fn register_record_type_with_defaults(
     record_ty
 }
 
-/// Build the semantic default for optional graph handlers.
+/// Build the semantic default for optional handler fields.
 pub(super) fn default_none_expr() -> Expr {
-    Expr::OptionNone(builtin_span())
+    Expr::OptionNone(synthetic_span())
 }
 
-/// Build the semantic default for integer graph handler fields.
+/// Build the semantic default for integer handler fields.
 pub(super) fn default_zero_expr() -> Expr {
-    Expr::Integer(0, builtin_span())
+    Expr::Integer(0, synthetic_span())
 }
 
-fn builtin_span() -> Span {
-    Span {
-        offset: 0,
-        length: 0,
-        line: 1,
-        column: 1,
-        source_id: 0,
-    }
+/// Build the semantic default for boolean record fields.
+pub(super) fn default_false_expr() -> Expr {
+    Expr::Bool(false, synthetic_span())
+}
+
+/// Look up a type symbol registered earlier in std unit loading.
+pub(super) fn lookup_required_type(checker: &Checker, qualified_name: &str, message: &str) -> Ty {
+    checker
+        .scopes
+        .lookup(qualified_name)
+        .map(|symbol| symbol.ty.clone())
+        .unwrap_or_else(|| unreachable!("{message}"))
 }

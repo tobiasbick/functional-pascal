@@ -1,5 +1,4 @@
 use super::Checker;
-use crate::check::spans::expr_span;
 use crate::scope::SymbolKind;
 use crate::types::{EnumTy, Ty};
 use fpas_diagnostics::codes::{
@@ -108,7 +107,7 @@ impl Checker {
                     SEMA_TYPE_MISMATCH,
                     "Nested enum patterns are not supported; use single-level destructuring only",
                     "Replace the nested pattern with a binding name, then use a guard clause: `Outer.Wrap(Inner) if ...:`.",
-                    expr_span(expr),
+                    expr.span(),
                 );
                 Vec::new()
             }
@@ -119,7 +118,7 @@ impl Checker {
                             SEMA_TYPE_MISMATCH,
                             "Wildcard `_` is not supported in patterns; use a named binding instead",
                             "Replace `_` with a name like `Ignored` if you do not need the value.",
-                            expr_span(expr),
+                            expr.span(),
                         );
                         Vec::new()
                     }
@@ -137,7 +136,7 @@ impl Checker {
                     SEMA_TYPE_MISMATCH,
                     "Literal matching inside enum patterns is not supported; use a guard clause instead",
                     "Replace the literal with a binding `X` and add a guard: `Variant(X) if X = 0:`.",
-                    expr_span(expr),
+                    expr.span(),
                 );
                 Vec::new()
             }
@@ -146,7 +145,7 @@ impl Checker {
                     SEMA_TYPE_MISMATCH,
                     "Enum pattern fields must be identifier bindings",
                     "Use a named binding such as `R` or `Value` for each enum field.",
-                    expr_span(expr),
+                    expr.span(),
                 );
                 Vec::new()
             }
@@ -155,7 +154,7 @@ impl Checker {
                     SEMA_TYPE_MISMATCH,
                     "Data-enum case labels must be enum variant patterns",
                     "Use `Variant(...)`, `Type.Variant(...)`, or a fieldless variant like `Type.Point`.",
-                    expr_span(expr),
+                    expr.span(),
                 );
                 Vec::new()
             }

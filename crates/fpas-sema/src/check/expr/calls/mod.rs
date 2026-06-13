@@ -223,7 +223,7 @@ impl Checker {
                         field_ty,
                         &arg_ty,
                         &format!("`{name}` argument"),
-                        super::super::spans::expr_span(arg),
+                        arg.span(),
                     );
                 }
 

@@ -1,6 +1,7 @@
 use super::super::super::p;
-use super::{TuiCallbackTypes, type_registration};
+use super::TuiCallbackTypes;
 use crate::check::Checker;
+use crate::std_registry::loaded::type_registration;
 use crate::types::{FunctionTy, ProcedureTy, Ty};
 use fpas_std::std_symbols as s;
 

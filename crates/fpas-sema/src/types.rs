@@ -14,11 +14,14 @@ pub enum TypeConstraint {
 impl TypeConstraint {
     /// Resolve a constraint name (case-insensitive) to a built-in constraint.
     pub fn from_name(name: &str) -> Option<Self> {
-        match name.to_ascii_lowercase().as_str() {
-            "comparable" => Some(Self::Comparable),
-            "numeric" => Some(Self::Numeric),
-            "printable" => Some(Self::Printable),
-            _ => None,
+        if name.eq_ignore_ascii_case("comparable") {
+            Some(Self::Comparable)
+        } else if name.eq_ignore_ascii_case("numeric") {
+            Some(Self::Numeric)
+        } else if name.eq_ignore_ascii_case("printable") {
+            Some(Self::Printable)
+        } else {
+            None
         }
     }
 
@@ -51,16 +54,6 @@ impl TypeConstraint {
 pub struct GenericParamDef {
     pub name: String,
     pub constraint: Option<TypeConstraint>,
-}
-
-impl GenericParamDef {
-    /// Create an unconstrained parameter.
-    pub fn unconstrained(name: String) -> Self {
-        Self {
-            name,
-            constraint: None,
-        }
-    }
 }
 
 /// Resolved type representation used during semantic analysis.
@@ -135,11 +128,6 @@ impl EnumTy {
     /// True when at least one variant carries associated data.
     pub fn has_data(&self) -> bool {
         self.variants.iter().any(|v| !v.fields.is_empty())
-    }
-
-    /// Variant names as a plain list (for backwards-compatible helpers).
-    pub fn member_names(&self) -> Vec<String> {
-        self.variants.iter().map(|v| v.name.clone()).collect()
     }
 }
 

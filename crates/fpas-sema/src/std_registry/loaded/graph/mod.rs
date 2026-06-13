@@ -5,9 +5,9 @@
 mod application_api;
 mod handlers;
 mod host_api;
-mod type_registration;
 
 use crate::check::Checker;
+use crate::std_registry::loaded::type_registration;
 use crate::types::Ty;
 use fpas_std::std_symbols as s;
 use fpas_std::{GRAPH_EVENT_KIND_VARIANTS, GRAPH_EXIT_REASON_VARIANTS};
@@ -40,17 +40,17 @@ pub(super) fn register_std_graph(checker: &mut Checker) {
             ("height".into(), Ty::Integer),
         ],
     );
-    let key_event = lookup_required_type(
+    let key_event = type_registration::lookup_required_type(
         checker,
         s::STD_CONSOLE_KEY_EVENT,
         "Std.Console.KeyEvent must be registered before Std.Graph (see loaded/mod.rs)",
     );
-    let mouse_action = lookup_required_type(
+    let mouse_action = type_registration::lookup_required_type(
         checker,
         s::STD_CONSOLE_MOUSE_ACTION,
         "Std.Console.MouseAction must be registered before Std.Graph (see loaded/mod.rs)",
     );
-    let mouse_button = lookup_required_type(
+    let mouse_button = type_registration::lookup_required_type(
         checker,
         s::STD_CONSOLE_MOUSE_BUTTON,
         "Std.Console.MouseButton must be registered before Std.Graph (see loaded/mod.rs)",
@@ -102,12 +102,4 @@ pub(super) fn register_std_graph(checker: &mut Checker) {
 
     application_api::register_application_api(checker, &types);
     host_api::register_host_api(checker, &types, &callbacks);
-}
-
-fn lookup_required_type(checker: &Checker, qualified_name: &str, message: &str) -> Ty {
-    checker
-        .scopes
-        .lookup(qualified_name)
-        .map(|symbol| symbol.ty.clone())
-        .unwrap_or_else(|| unreachable!("{message}"))
 }

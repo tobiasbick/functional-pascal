@@ -102,12 +102,7 @@ impl Checker {
         let first_ty = self.check_expr(&elements[0]);
         for element in &elements[1..] {
             let element_ty = self.check_expr(element);
-            self.check_type_compat(
-                &first_ty,
-                &element_ty,
-                "array element",
-                super::spans::expr_span(element),
-            );
+            self.check_type_compat(&first_ty, &element_ty, "array element", element.span());
         }
 
         Ty::Array(Box::new(first_ty))
@@ -122,19 +117,9 @@ impl Checker {
         let first_val_ty = self.check_expr(&pairs[0].1);
         for (key, val) in &pairs[1..] {
             let key_ty = self.check_expr(key);
-            self.check_type_compat(
-                &first_key_ty,
-                &key_ty,
-                "dict key",
-                super::spans::expr_span(key),
-            );
+            self.check_type_compat(&first_key_ty, &key_ty, "dict key", key.span());
             let val_ty = self.check_expr(val);
-            self.check_type_compat(
-                &first_val_ty,
-                &val_ty,
-                "dict value",
-                super::spans::expr_span(val),
-            );
+            self.check_type_compat(&first_val_ty, &val_ty, "dict value", val.span());
         }
 
         Ty::Dict(Box::new(first_key_ty), Box::new(first_val_ty))

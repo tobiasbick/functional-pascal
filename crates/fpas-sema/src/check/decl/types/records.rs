@@ -27,7 +27,6 @@ impl Checker {
             );
             return;
         }
-        self.pending_record_types.insert(td.name.clone());
 
         let mut seen_fields = HashSet::new();
         let mut field_indexes = Vec::new();
@@ -89,7 +88,6 @@ impl Checker {
         if let Some(existing) = self.scopes.lookup_mut(&td.name) {
             *existing.ty_mut() = ty;
         }
-        self.pending_record_types.remove(&td.name);
     }
 
     fn check_record_methods(

@@ -53,7 +53,7 @@ fn expect_task_arg(c: &mut Checker, expr: &Expr, context: &str) -> Option<Ty> {
                 SEMA_TYPE_MISMATCH,
                 format!("Type mismatch in {context}: expected a task, found `{other}`"),
                 "Pass a task handle produced by `go FunctionName(args)`.",
-                crate::check::spans::expr_span(expr),
+                expr.span(),
             );
             None
         }
@@ -83,7 +83,7 @@ fn check_task_wait_all(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
                     "Type mismatch in task list: expected `array of task`, found `array of {inner}`"
                 ),
                 "Pass an array of task handles such as `[T1, T2, T3]`.",
-                crate::check::spans::expr_span(&args[0]),
+                args[0].span(),
             );
             Ty::Unit
         }
@@ -93,7 +93,7 @@ fn check_task_wait_all(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
                 SEMA_TYPE_MISMATCH,
                 format!("Type mismatch in task list: expected `array of task`, found `{other}`"),
                 "Pass an array of task handles such as `[T1, T2, T3]`.",
-                crate::check::spans::expr_span(&args[0]),
+                args[0].span(),
             );
             Ty::Unit
         }

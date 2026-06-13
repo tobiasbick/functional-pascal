@@ -18,6 +18,7 @@ mod str_ops;
 mod test;
 mod time;
 mod tui;
+mod type_registration;
 
 use crate::check::Checker;
 use fpas_std::std_symbols as s;
@@ -59,20 +60,21 @@ pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
         STD_UNIT_JSON => json::register_std_json(checker),
         STD_UNIT_TEST => test::register_std_test(checker),
         STD_UNIT_GRAPH => {
-            if checker.scopes.lookup(s::STD_CONSOLE_KEY_EVENT).is_none() {
-                console::register_std_console_key_api(checker);
-            }
+            ensure_console_key_api(checker);
             graph::register_std_graph(checker);
         }
         STD_UNIT_TUI => {
-            // `Std.Tui.TuiEvent.key` uses `Std.Console.KeyEvent`; register console key API first if needed.
-            if checker.scopes.lookup(s::STD_CONSOLE_KEY_EVENT).is_none() {
-                console::register_std_console_key_api(checker);
-            }
+            ensure_console_key_api(checker);
             tui::register_std_tui(checker);
         }
         _ => unreachable!(
             "register_single_std_unit: unhandled std unit `{unit}` — add a match arm for every entry in fpas_std::STD_UNITS_KNOWN"
         ),
+    }
+}
+
+fn ensure_console_key_api(checker: &mut Checker) {
+    if checker.scopes.lookup(s::STD_CONSOLE_KEY_EVENT).is_none() {
+        console::register_std_console_key_api(checker);
     }
 }

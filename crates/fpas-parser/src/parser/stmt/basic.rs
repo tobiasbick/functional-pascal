@@ -17,19 +17,7 @@ impl Parser {
             self.advance();
         }
         self.advance();
-        let (name, _) = match self.expect_ident() {
-            Some(ident) => ident,
-            None => {
-                if !self.at_end() {
-                    self.advance();
-                }
-                ("_error_".into(), start)
-            }
-        };
-        self.expect(&Token::Colon);
-        let type_expr = self.parse_type_expr();
-        self.expect(&Token::ColonAssign);
-        let value = self.parse_expression();
+        let (name, type_expr, value) = self.parse_typed_init_fields(start);
         let var_def = VarDef {
             name,
             type_expr,

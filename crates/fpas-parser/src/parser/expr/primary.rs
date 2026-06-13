@@ -46,28 +46,16 @@ impl Parser {
             Token::LBracket => self.parse_array_or_dict_literal(),
             Token::Record => self.parse_record_literal(),
             Token::Ok => {
-                let start = self.current_span();
-                self.advance();
-                self.expect(&Token::LParen);
-                let inner = self.parse_expression();
-                self.expect(&Token::RParen);
-                Expr::ResultOk(Box::new(inner), self.span_from(start))
+                let (inner, span) = self.parse_paren_wrapped_after_keyword();
+                Expr::ResultOk(Box::new(inner), span)
             }
             Token::Error => {
-                let start = self.current_span();
-                self.advance();
-                self.expect(&Token::LParen);
-                let inner = self.parse_expression();
-                self.expect(&Token::RParen);
-                Expr::ResultError(Box::new(inner), self.span_from(start))
+                let (inner, span) = self.parse_paren_wrapped_after_keyword();
+                Expr::ResultError(Box::new(inner), span)
             }
             Token::Some => {
-                let start = self.current_span();
-                self.advance();
-                self.expect(&Token::LParen);
-                let inner = self.parse_expression();
-                self.expect(&Token::RParen);
-                Expr::OptionSome(Box::new(inner), self.span_from(start))
+                let (inner, span) = self.parse_paren_wrapped_after_keyword();
+                Expr::OptionSome(Box::new(inner), span)
             }
             Token::None => {
                 let span = self.current_span();
@@ -95,6 +83,15 @@ impl Parser {
                 Expr::Error(span)
             }
         }
+    }
+
+    fn parse_paren_wrapped_after_keyword(&mut self) -> (Expr, fpas_lexer::Span) {
+        let start = self.current_span();
+        self.advance();
+        self.expect(&Token::LParen);
+        let inner = self.parse_expression();
+        self.expect(&Token::RParen);
+        (inner, self.span_from(start))
     }
 
     fn parse_array_or_dict_literal(&mut self) -> Expr {
@@ -159,7 +156,7 @@ impl Parser {
             let field_start = self.current_span();
             let (name, _) = self
                 .expect_ident()
-                .unwrap_or(("_error_".into(), field_start));
+                .unwrap_or_else(|| self.error_ident(field_start));
             self.expect(&Token::ColonAssign);
             let value = self.parse_expression();
             self.expect_semi();

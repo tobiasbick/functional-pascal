@@ -14,11 +14,7 @@ impl Parser {
 
     fn parse_const_def(&mut self, visibility: Visibility) -> ConstDef {
         let start = self.current_span();
-        let (name, _) = self.expect_ident().unwrap_or(("_error_".into(), start));
-        self.expect(&Token::Colon);
-        let type_expr = self.parse_type_expr();
-        self.expect(&Token::ColonAssign);
-        let value = self.parse_expression();
+        let (name, type_expr, value) = self.parse_typed_init_fields(start);
         self.expect_semi();
         ConstDef {
             name,
@@ -50,21 +46,21 @@ impl Parser {
         defs
     }
 
-    fn parse_var_def(&mut self, visibility: Visibility) -> VarDef {
-        let start = self.current_span();
-        let (name, _) = match self.expect_ident() {
-            Some(ident) => ident,
-            None => {
-                if !self.at_end() {
-                    self.advance();
-                }
-                ("_error_".into(), start)
-            }
-        };
+    pub(in crate::parser) fn parse_typed_init_fields(
+        &mut self,
+        start: fpas_lexer::Span,
+    ) -> (String, TypeExpr, Expr) {
+        let (name, _) = self.expect_ident_or_error(start);
         self.expect(&Token::Colon);
         let type_expr = self.parse_type_expr();
         self.expect(&Token::ColonAssign);
         let value = self.parse_expression();
+        (name, type_expr, value)
+    }
+
+    pub(in crate::parser) fn parse_var_def(&mut self, visibility: Visibility) -> VarDef {
+        let start = self.current_span();
+        let (name, type_expr, value) = self.parse_typed_init_fields(start);
         self.expect_semi();
         VarDef {
             name,

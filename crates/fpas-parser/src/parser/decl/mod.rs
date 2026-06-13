@@ -15,13 +15,10 @@ impl Parser {
             match self.current_token() {
                 Token::Const => decls.extend(self.parse_const_block(visibility)),
                 Token::Var => decls.extend(self.parse_var_block(false, visibility)),
-                Token::Mutable => {
-                    if self.peek_token() == &Token::Var {
-                        decls.extend(self.parse_var_block(true, visibility));
-                    } else {
-                        break;
-                    }
+                Token::Mutable if self.is_mutable_var_start() => {
+                    decls.extend(self.parse_var_block(true, visibility));
                 }
+                Token::Mutable => break,
                 Token::Type => decls.extend(self.parse_type_block(visibility)),
                 Token::Function => {
                     decls.push(Decl::Function(self.parse_function_decl(visibility)));

@@ -31,10 +31,7 @@ fn expected_token_has_correct_code() {
 
     let (_, errs) = parse_with_errors("program Hello begin end.");
     assert!(!errs.is_empty());
-    let parse_err = errs.iter().find_map(|e| match e {
-        ParseDiagnostic::Parser(d) => Some(d),
-        _ => None,
-    });
+    let parse_err = errs.iter().find_map(ParseDiagnostic::as_parser_error);
     let d = parse_err.expect("expected a parser diagnostic");
     assert_eq!(d.code, PARSE_EXPECTED_TOKEN, "wrong diagnostic code");
     assert_eq!(d.span.line, 1, "wrong line");
@@ -49,9 +46,9 @@ fn expected_expression_has_correct_code() {
     use fpas_diagnostics::codes::PARSE_EXPECTED_EXPRESSION;
 
     let (_, errs) = parse_with_errors("program T; begin X := end.");
-    let parse_err = errs.iter().find_map(|e| match e {
-        ParseDiagnostic::Parser(d) if d.code == PARSE_EXPECTED_EXPRESSION => Some(d),
-        _ => None,
+    let parse_err = errs.iter().find_map(|d| {
+        d.as_parser_error()
+            .filter(|e| e.code == PARSE_EXPECTED_EXPRESSION)
     });
     assert!(
         parse_err.is_some(),

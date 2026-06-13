@@ -18,7 +18,8 @@ impl Parser {
         let (name, name_span) = if let Some(p) = self.try_consume_std_keyword_path_segment() {
             p
         } else {
-            self.expect_ident().unwrap_or(("_error_".into(), start))
+            self.expect_ident()
+                .unwrap_or_else(|| self.error_ident(start))
         };
         parts.push(DesignatorPart::Ident(name, name_span));
 
@@ -26,7 +27,7 @@ impl Parser {
             if self.eat(&Token::Dot) {
                 let (name, name_span) = self
                     .expect_ident_after_dot()
-                    .unwrap_or(("_error_".into(), self.current_span()));
+                    .unwrap_or_else(|| self.error_ident(self.current_span()));
                 parts.push(DesignatorPart::Ident(name, name_span));
             } else if self.eat(&Token::LBracket) {
                 let idx_start = self.current_span();

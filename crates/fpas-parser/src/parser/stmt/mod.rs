@@ -37,13 +37,8 @@ impl Parser {
         match self.current_token() {
             Token::Begin => self.parse_block(),
             Token::Var => self.parse_var_stmt(false),
-            Token::Mutable => {
-                if self.peek_token() == &Token::Var {
-                    self.parse_var_stmt(true)
-                } else {
-                    self.parse_invalid_statement_start()
-                }
-            }
+            Token::Mutable if self.is_mutable_var_start() => self.parse_var_stmt(true),
+            Token::Mutable => self.parse_invalid_statement_start(),
             Token::Return => self.parse_return_stmt(),
             Token::Panic => self.parse_panic_stmt(),
             Token::If => self.parse_if_stmt(),

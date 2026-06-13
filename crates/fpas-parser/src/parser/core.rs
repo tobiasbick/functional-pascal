@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/01-overview.md` (keywords), `docs/pascal/11-stdlib.md` (`Std.*` paths).
 
-use super::Parser;
+use super::{ERROR_IDENT, Parser};
 use crate::error::parse_error;
 use fpas_diagnostics::codes::{PARSE_EXPECTED_IDENTIFIER, PARSE_EXPECTED_TOKEN};
 use fpas_lexer::{Span, SpannedToken, Token};
@@ -101,6 +101,26 @@ impl Parser {
         }
     }
 
+    pub(crate) fn error_ident(&self, span: Span) -> (String, Span) {
+        (ERROR_IDENT.to_owned(), span)
+    }
+
+    pub(crate) fn expect_ident_or_error(&mut self, start: Span) -> (String, Span) {
+        match self.expect_ident() {
+            Some(ident) => ident,
+            None => {
+                if !self.at_end() {
+                    self.advance();
+                }
+                self.error_ident(start)
+            }
+        }
+    }
+
+    pub(crate) fn is_mutable_var_start(&self) -> bool {
+        matches!(self.current_token(), Token::Mutable) && self.peek_token() == &Token::Var
+    }
+
     pub(crate) fn expect_ident(&mut self) -> Option<(String, Span)> {
         let Token::Ident(name) = self.current_token().clone() else {
             let span = self.current_span();
@@ -128,26 +148,16 @@ impl Parser {
     /// designator when immediately followed by `.` (so `array of T` remains the array type and
     /// `result of T, E` remains the result type).
     pub(crate) fn try_consume_std_keyword_path_segment(&mut self) -> Option<(String, Span)> {
+        let segment = match self.current_token() {
+            Token::Array => "Array",
+            Token::Result => "Result",
+            Token::OptionKw => "Option",
+            Token::Dict => "Dict",
+            _ => return None,
+        };
         let span = self.current_span();
-        match self.current_token() {
-            Token::Array => {
-                self.advance();
-                Some(("Array".to_string(), span))
-            }
-            Token::Result => {
-                self.advance();
-                Some(("Result".to_string(), span))
-            }
-            Token::OptionKw => {
-                self.advance();
-                Some(("Option".to_string(), span))
-            }
-            Token::Dict => {
-                self.advance();
-                Some(("Dict".to_string(), span))
-            }
-            _ => None,
-        }
+        self.advance();
+        Some((segment.to_owned(), span))
     }
 
     pub(crate) fn is_std_keyword_path_start(&self) -> bool {

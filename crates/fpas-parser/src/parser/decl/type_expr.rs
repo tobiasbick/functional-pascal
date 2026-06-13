@@ -123,11 +123,11 @@ impl Parser {
     fn parse_single_type_param(&mut self) -> crate::TypeParam {
         let (name, _) = self
             .expect_ident()
-            .unwrap_or(("_error_".into(), self.current_span()));
+            .unwrap_or_else(|| self.error_ident(self.current_span()));
         let constraint = if self.eat(&Token::Colon) {
             let (constraint_name, _) = self
                 .expect_ident()
-                .unwrap_or(("_error_".into(), self.current_span()));
+                .unwrap_or_else(|| self.error_ident(self.current_span()));
             Some(constraint_name)
         } else {
             None

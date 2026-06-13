@@ -47,10 +47,7 @@ fn invalid_statement_start_uses_statement_start_code() {
     let (_, errors) = parse_with_errors("program T; begin ; end.");
     let error = errors
         .iter()
-        .find_map(|diagnostic| match diagnostic {
-            ParseDiagnostic::Parser(error) => Some(error),
-            ParseDiagnostic::Lexer(_) => None,
-        })
+        .find_map(ParseDiagnostic::as_parser_error)
         .expect("expected parser diagnostic");
     assert_eq!(error.code, PARSE_INVALID_STATEMENT_START);
 }

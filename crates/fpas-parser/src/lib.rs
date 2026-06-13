@@ -50,6 +50,15 @@ impl ParseDiagnostic {
             Self::Lexer(diagnostic) | Self::Parser(diagnostic) => diagnostic,
         }
     }
+
+    /// Returns the parser-stage diagnostic when this entry is not a lexer error.
+    #[must_use]
+    pub fn as_parser_error(&self) -> Option<&Diagnostic> {
+        match self {
+            Self::Parser(diagnostic) => Some(diagnostic),
+            Self::Lexer(_) => None,
+        }
+    }
 }
 
 /// Lex `source` into tokens and lexer diagnostics.
@@ -59,42 +68,38 @@ fn tokenize(source: &str) -> (Vec<SpannedToken>, Vec<ParseDiagnostic>) {
     (tokens, errors)
 }
 
-pub fn parse(source: &str) -> (Program, Vec<ParseDiagnostic>) {
-    let (tokens, mut errors) = tokenize(source);
-    let (program, parse_errors) = parser::Parser::new(tokens).parse_program();
+fn append_parser_errors(
+    mut errors: Vec<ParseDiagnostic>,
+    parse_errors: Vec<ParseError>,
+) -> Vec<ParseDiagnostic> {
     errors.extend(parse_errors.into_iter().map(ParseDiagnostic::Parser));
-    (program, errors)
+    errors
+}
+
+fn parser_diagnostics(parse_errors: Vec<ParseError>) -> Vec<ParseDiagnostic> {
+    parse_errors
+        .into_iter()
+        .map(ParseDiagnostic::Parser)
+        .collect()
+}
+
+pub fn parse(source: &str) -> (Program, Vec<ParseDiagnostic>) {
+    let (tokens, errors) = tokenize(source);
+    let (program, parse_errors) = parser::Parser::new(tokens).parse_program();
+    (program, append_parser_errors(errors, parse_errors))
 }
 
 pub fn parse_compilation_unit(source: &str) -> (CompilationUnit, Vec<ParseDiagnostic>) {
-    let (tokens, mut errors) = tokenize(source);
+    let (tokens, errors) = tokenize(source);
     let (unit, parse_errors) = parser::Parser::new(tokens).parse_compilation_unit();
-    errors.extend(parse_errors.into_iter().map(ParseDiagnostic::Parser));
-    (unit, errors)
-}
-
-pub fn parse_tokens(tokens: Vec<SpannedToken>) -> (Program, Vec<ParseDiagnostic>) {
-    let (program, parse_errors) = parser::Parser::new(tokens).parse_program();
-    (
-        program,
-        parse_errors
-            .into_iter()
-            .map(ParseDiagnostic::Parser)
-            .collect(),
-    )
+    (unit, append_parser_errors(errors, parse_errors))
 }
 
 pub fn parse_tokens_compilation_unit(
     tokens: Vec<SpannedToken>,
 ) -> (CompilationUnit, Vec<ParseDiagnostic>) {
     let (unit, parse_errors) = parser::Parser::new(tokens).parse_compilation_unit();
-    (
-        unit,
-        parse_errors
-            .into_iter()
-            .map(ParseDiagnostic::Parser)
-            .collect(),
-    )
+    (unit, parser_diagnostics(parse_errors))
 }
 
 #[cfg(test)]

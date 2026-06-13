@@ -15,7 +15,9 @@ impl Parser {
 
     fn parse_type_def(&mut self, visibility: Visibility) -> TypeDef {
         let start = self.current_span();
-        let (name, _) = self.expect_ident().unwrap_or(("_error_".into(), start));
+        let (name, _) = self
+            .expect_ident()
+            .unwrap_or_else(|| self.error_ident(start));
         if self.check(&Token::Less) {
             let span = self.current_span();
             self.error_with_code(
@@ -82,7 +84,7 @@ impl Parser {
                 if !self.at_end() && !self.check(&Token::Semicolon) && !self.check(&Token::End) {
                     self.advance();
                 }
-                ("_error_".into(), start)
+                self.error_ident(start)
             }
         };
         self.expect(&Token::Colon);
@@ -123,7 +125,7 @@ impl Parser {
                 if !self.at_end() && !self.check(&Token::End) {
                     self.advance();
                 }
-                ("_error_".into(), start)
+                self.error_ident(start)
             }
         };
 
@@ -133,7 +135,7 @@ impl Parser {
                 let field_start = self.current_span();
                 let (field_name, _) = self
                     .expect_ident()
-                    .unwrap_or(("_error_".into(), field_start));
+                    .unwrap_or_else(|| self.error_ident(field_start));
                 self.expect(&Token::Colon);
                 let type_expr = self.parse_type_expr();
                 field_defs.push(EnumMemberField {

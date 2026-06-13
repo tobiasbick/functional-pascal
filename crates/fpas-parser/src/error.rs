@@ -1,4 +1,4 @@
-use fpas_diagnostics::{Diagnostic, DiagnosticCode, DiagnosticStage};
+use fpas_diagnostics::{Diagnostic, DiagnosticCode};
 use fpas_lexer::Span;
 
 pub type ParseError = Diagnostic;
@@ -10,11 +10,5 @@ pub fn parse_error(
     hint: impl Into<String>,
     span: Span,
 ) -> ParseError {
-    Diagnostic::error(
-        code,
-        DiagnosticStage::Parse,
-        message,
-        Some(hint.into()),
-        span.into(),
-    )
+    Diagnostic::error(code, code.stage(), message, Some(hint.into()), span.into())
 }

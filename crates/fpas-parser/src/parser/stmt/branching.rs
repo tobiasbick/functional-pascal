@@ -30,10 +30,10 @@ impl Parser {
         self.expect(&Token::Of);
 
         let mut arms = Vec::new();
-        while !matches!(self.current_token(), Token::End | Token::Else | Token::Eof) {
+        while !self.is_case_arm_end() {
             arms.push(self.parse_case_arm());
             if !self.eat(&Token::Semicolon) {
-                if !matches!(self.current_token(), Token::End | Token::Else | Token::Eof) {
+                if !self.is_case_arm_end() {
                     let span = self.current_span();
                     self.error_with_code(
                         PARSE_EXPECTED_TOKEN,
@@ -47,7 +47,7 @@ impl Parser {
                 }
                 break;
             }
-            if matches!(self.current_token(), Token::End | Token::Else | Token::Eof) {
+            if self.is_case_arm_end() {
                 break;
             }
         }
@@ -67,6 +67,10 @@ impl Parser {
             else_body,
             span: self.span_from(start),
         }
+    }
+
+    fn is_case_arm_end(&self) -> bool {
+        matches!(self.current_token(), Token::End | Token::Else | Token::Eof)
     }
 
     fn parse_case_arm(&mut self) -> CaseArm {
@@ -99,30 +103,27 @@ impl Parser {
     fn parse_case_label(&mut self) -> CaseLabel {
         let start = self.current_span();
 
-        // Destructure patterns: Ok(ident), Error(ident), Some(ident), None
         match self.current_token() {
-            Token::Ok | Token::Error | Token::Some => {
+            Token::Ok | Token::Error | Token::Some | Token::None => {
                 let variant = match self.current_token() {
                     Token::Ok => DestructureVariant::Ok,
                     Token::Error => DestructureVariant::Error,
                     Token::Some => DestructureVariant::Some,
+                    Token::None => DestructureVariant::None,
                     _ => unreachable!(),
                 };
                 self.advance();
-                self.expect(&Token::LParen);
-                let binding = self.expect_ident().map(|(name, _)| name);
-                self.expect(&Token::RParen);
+                let binding = if variant == DestructureVariant::None {
+                    None
+                } else {
+                    self.expect(&Token::LParen);
+                    let binding = self.expect_ident().map(|(name, _)| name);
+                    self.expect(&Token::RParen);
+                    binding
+                };
                 return CaseLabel::Destructure {
                     variant,
                     binding,
-                    span: self.span_from(start),
-                };
-            }
-            Token::None => {
-                self.advance();
-                return CaseLabel::Destructure {
-                    variant: DestructureVariant::None,
-                    binding: None,
                     span: self.span_from(start),
                 };
             }

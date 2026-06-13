@@ -37,16 +37,10 @@ impl Parser {
         self.expect(&Token::Program);
         let (name, name_span) = self
             .expect_ident()
-            .unwrap_or_else(|| ("_error_".to_string(), self.current_span()));
+            .unwrap_or_else(|| self.error_ident(self.current_span()));
         self.expect_semi();
 
-        let uses = if self.check(&Token::Uses) {
-            self.parse_uses_clause()
-        } else {
-            Vec::new()
-        };
-
-        let declarations = self.parse_declarations(false);
+        let (uses, declarations) = self.parse_uses_and_declarations(false);
 
         self.expect(&Token::Begin);
         let body = self.parse_statement_list();
@@ -71,13 +65,7 @@ impl Parser {
         let name = self.parse_qualified_id();
         self.expect_semi();
 
-        let uses = if self.check(&Token::Uses) {
-            self.parse_uses_clause()
-        } else {
-            Vec::new()
-        };
-
-        let declarations = self.parse_declarations(true);
+        let (uses, declarations) = self.parse_uses_and_declarations(true);
 
         if !self.check(&Token::Eof) {
             let span = self.current_span();
@@ -104,6 +92,19 @@ impl Parser {
         }
     }
 
+    fn parse_uses_and_declarations(
+        &mut self,
+        allow_visibility: bool,
+    ) -> (Vec<QualifiedId>, Vec<Decl>) {
+        let uses = if self.check(&Token::Uses) {
+            self.parse_uses_clause()
+        } else {
+            Vec::new()
+        };
+        let declarations = self.parse_declarations(allow_visibility);
+        (uses, declarations)
+    }
+
     fn parse_uses_clause(&mut self) -> Vec<QualifiedId> {
         self.advance();
         let mut units = Vec::new();
@@ -128,7 +129,7 @@ impl Parser {
                     if !self.at_end() && !self.is_qualified_id_recovery_boundary() {
                         self.advance();
                     }
-                    parts.push("_error_".to_string());
+                    parts.push(super::ERROR_IDENT.to_owned());
                 }
             }
         }
@@ -139,7 +140,7 @@ impl Parser {
                 if !self.at_end() && !self.is_qualified_id_recovery_boundary() {
                     self.advance();
                 }
-                parts.push("_error_".to_string());
+                parts.push(super::ERROR_IDENT.to_owned());
                 break;
             }
         }

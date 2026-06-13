@@ -7,7 +7,9 @@ impl Parser {
     pub(super) fn parse_for_stmt(&mut self) -> Stmt {
         let start = self.current_span();
         self.advance();
-        let (var_name, _) = self.expect_ident().unwrap_or(("_error_".into(), start));
+        let (var_name, _) = self
+            .expect_ident()
+            .unwrap_or_else(|| self.error_ident(start));
         self.expect(&Token::Colon);
         let var_type = self.parse_type_expr();
 

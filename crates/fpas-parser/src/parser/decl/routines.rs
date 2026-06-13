@@ -16,7 +16,9 @@ impl Parser {
     ) -> (String, Vec<TypeParam>, Vec<FormalParam>, TypeExpr, Span) {
         let start = self.current_span();
         self.advance();
-        let (name, _) = self.expect_ident().unwrap_or(("_error_".into(), start));
+        let (name, _) = self
+            .expect_ident()
+            .unwrap_or_else(|| self.error_ident(start));
         let type_params = self.parse_type_params();
         self.expect(&Token::LParen);
         let params = self.parse_formal_param_list();
@@ -33,7 +35,9 @@ impl Parser {
     fn parse_procedure_header(&mut self) -> (String, Vec<TypeParam>, Vec<FormalParam>, Span) {
         let start = self.current_span();
         self.advance();
-        let (name, _) = self.expect_ident().unwrap_or(("_error_".into(), start));
+        let (name, _) = self
+            .expect_ident()
+            .unwrap_or_else(|| self.error_ident(start));
         let type_params = self.parse_type_params();
         self.expect(&Token::LParen);
         let params = self.parse_formal_param_list();
@@ -114,7 +118,9 @@ impl Parser {
     fn parse_formal_param(&mut self) -> FormalParam {
         let start = self.current_span();
         let mutable = self.eat(&Token::Mutable);
-        let (name, _) = self.expect_ident().unwrap_or(("_error_".into(), start));
+        let (name, _) = self
+            .expect_ident()
+            .unwrap_or_else(|| self.error_ident(start));
         self.expect(&Token::Colon);
         let type_expr = self.parse_type_expr();
         FormalParam {

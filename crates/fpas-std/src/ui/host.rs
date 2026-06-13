@@ -122,22 +122,18 @@ impl UiHost {
     }
 
     fn flush_pending_resize_before(&mut self, trace_msg: &'static str) {
-        if let Some((old_width, old_height, width, height)) = self.pending_resize.take() {
-            self.trace(trace_msg);
-            self.ready.push_back(UiEvent::Resize(UiResize::new(
-                Some(old_width),
-                Some(old_height),
-                width,
-                height,
-            )));
-        }
+        self.push_pending_resize(trace_msg);
     }
 
     /// Emits one coalesced [`UiEvent::Resize`] when a resize burst ended without a following input event.
     #[must_use]
     pub fn flush_pending_resize(&mut self) -> bool {
+        self.push_pending_resize("ui_host: flush pending resize (idle)")
+    }
+
+    fn push_pending_resize(&mut self, trace_msg: &'static str) -> bool {
         if let Some((old_width, old_height, width, height)) = self.pending_resize.take() {
-            self.trace("ui_host: flush pending resize (idle)");
+            self.trace(trace_msg);
             self.ready.push_back(UiEvent::Resize(UiResize::new(
                 Some(old_width),
                 Some(old_height),

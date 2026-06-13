@@ -37,6 +37,7 @@ impl MenuBarWidget {
                     console,
                     x,
                     rect.y,
+                    &label,
                     item,
                     MenuLabelPaint {
                         fg,
@@ -75,9 +76,9 @@ fn paint_bar_label(
     console: &mut Console,
     x: i64,
     y: i64,
+    label: &str,
     item: &MenuBarItem,
     colors: MenuLabelPaint,
 ) {
-    let label = format!(" {} ", item.label);
-    paint_labeled_text(console, x, y, &label, &item.shortcut, item.enabled, colors);
+    paint_labeled_text(console, x, y, label, &item.shortcut, item.enabled, colors);
 }

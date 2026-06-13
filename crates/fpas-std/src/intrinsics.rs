@@ -24,6 +24,28 @@ use fpas_bytecode::{
     ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, DictIntrinsic, GraphIntrinsic, Intrinsic,
     OptionIntrinsic, ResultIntrinsic, SourceLocation, TaskIntrinsic, TuiIntrinsic, Value,
 };
+
+type StdUnitDispatch =
+    fn(Intrinsic, &mut Vec<Value>, SourceLocation) -> Result<Option<()>, StdError>;
+
+const STD_UNIT_DISPATCHERS: &[StdUnitDispatch] = &[
+    env::run,
+    path::run,
+    proc::run,
+    fs::run,
+    str::run,
+    conv::run,
+    parse::run,
+    math::run,
+    random::run,
+    array::run,
+    result_option::run,
+    dict::run,
+    json::run,
+    time::run,
+    crate::test::run,
+];
+
 /// Execute a standard-library intrinsic; mutates `stack` (Pascal call order: args already pushed).
 pub fn run_intrinsic(
     intrinsic: Intrinsic,
@@ -172,50 +194,10 @@ pub fn run_intrinsic(
         ));
     }
 
-    if env::run(intrinsic, stack, location)?.is_some() {
-        return Ok(());
-    }
-    if path::run(intrinsic, stack, location)?.is_some() {
-        return Ok(());
-    }
-    if proc::run(intrinsic, stack, location)?.is_some() {
-        return Ok(());
-    }
-    if fs::run(intrinsic, stack, location)?.is_some() {
-        return Ok(());
-    }
-    if str::run(intrinsic, stack, location)?.is_some() {
-        return Ok(());
-    }
-    if conv::run(intrinsic, stack, location)?.is_some() {
-        return Ok(());
-    }
-    if parse::run(intrinsic, stack, location)?.is_some() {
-        return Ok(());
-    }
-    if math::run(intrinsic, stack, location)?.is_some() {
-        return Ok(());
-    }
-    if random::run(intrinsic, stack, location)?.is_some() {
-        return Ok(());
-    }
-    if array::run(intrinsic, stack, location)?.is_some() {
-        return Ok(());
-    }
-    if result_option::run(intrinsic, stack, location)?.is_some() {
-        return Ok(());
-    }
-    if dict::run(intrinsic, stack, location)?.is_some() {
-        return Ok(());
-    }
-    if json::run(intrinsic, stack, location)?.is_some() {
-        return Ok(());
-    }
-    if time::run(intrinsic, stack, location)?.is_some() {
-        return Ok(());
-    }
-    if crate::test::run(intrinsic, stack, location)?.is_some() {
-        return Ok(());
+    for dispatch in STD_UNIT_DISPATCHERS {
+        if dispatch(intrinsic, stack, location)?.is_some() {
+            return Ok(());
+        }
     }
 
     Err(std_internal_error(

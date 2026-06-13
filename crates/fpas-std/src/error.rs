@@ -5,7 +5,7 @@
 //! column, and `source_id` from the VM, not byte offsets into source text.
 
 use fpas_diagnostics::codes::INTERNAL_VM_INVARIANT_FAILURE;
-use fpas_diagnostics::{Diagnostic, DiagnosticCode, DiagnosticStage, SourceLocation, SourceSpan};
+use fpas_diagnostics::{Diagnostic, DiagnosticCode, SourceLocation, SourceSpan};
 
 pub type StdError = Diagnostic;
 
@@ -24,7 +24,7 @@ pub fn std_runtime_error_opt(
 ) -> StdError {
     Diagnostic::error(
         code,
-        DiagnosticStage::Runtime,
+        code.stage(),
         message.into(),
         help,
         synthetic_span(location),
@@ -50,7 +50,7 @@ pub fn std_internal_error(
 ) -> StdError {
     Diagnostic::error(
         INTERNAL_VM_INVARIANT_FAILURE,
-        DiagnosticStage::Internal,
+        INTERNAL_VM_INVARIANT_FAILURE.stage(),
         message.into(),
         Some(help.into()),
         synthetic_span(location),

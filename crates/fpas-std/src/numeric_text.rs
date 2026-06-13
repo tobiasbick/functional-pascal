@@ -3,6 +3,17 @@
 //! **Documentation:** `docs/pascal/02-basics.md`, `docs/pascal/std/conv.md`,
 //! and `docs/pascal/std/str.md` (from the repository root).
 
+/// Parses `true` or `false` after trimming whitespace (case-insensitive).
+pub(crate) fn parse_bool_text(text: &str) -> Option<bool> {
+    if text.trim().eq_ignore_ascii_case("true") {
+        Some(true)
+    } else if text.trim().eq_ignore_ascii_case("false") {
+        Some(false)
+    } else {
+        None
+    }
+}
+
 /// Returns `true` when `text` is a valid Pascal integer or real literal after trimming.
 pub(crate) fn is_pascal_numeric(text: &str) -> bool {
     parse_pascal_integer(text).is_some() || parse_pascal_real(text).is_some()

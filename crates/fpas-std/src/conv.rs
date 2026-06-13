@@ -6,7 +6,7 @@
 
 use crate::error::{StdError, std_runtime_error};
 use crate::intrinsic_args::{pop_bool, pop_char, pop_int, pop_real, pop_string, pop_value};
-use crate::numeric_text::parse_pascal_real;
+use crate::numeric_text::{parse_bool_text, parse_pascal_integer, parse_pascal_real};
 use fpas_bytecode::{ConvIntrinsic, Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_CONVERSION_FAILURE;
 
@@ -22,11 +22,11 @@ pub(crate) fn run(
         }
         Intrinsic::Conv(ConvIntrinsic::StrToInt) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
-            let n = s.trim().parse::<i64>().map_err(|_| {
+            let n = parse_pascal_integer(&s).ok_or_else(|| {
                 std_runtime_error(
                     RUNTIME_CONVERSION_FAILURE,
                     format!("StrToInt: invalid integer `{s}`"),
-                    "Provide a valid base-10 integer string, for example `42` or `-7`.",
+                    "Provide a valid Pascal integer string, for example `42`, `-7`, or `1_000`.",
                     location,
                 )
             })?;
@@ -66,18 +66,15 @@ pub(crate) fn run(
         }
         Intrinsic::Conv(ConvIntrinsic::StrToBool) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
-            match s.trim().to_lowercase().as_str() {
-                "true" => stack.push(Value::Boolean(true)),
-                "false" => stack.push(Value::Boolean(false)),
-                _ => {
-                    return Err(std_runtime_error(
-                        RUNTIME_CONVERSION_FAILURE,
-                        format!("StrToBool: invalid boolean `{s}`"),
-                        "Provide `true` or `false` (case-insensitive).",
-                        location,
-                    ));
-                }
-            }
+            let b = parse_bool_text(&s).ok_or_else(|| {
+                std_runtime_error(
+                    RUNTIME_CONVERSION_FAILURE,
+                    format!("StrToBool: invalid boolean `{s}`"),
+                    "Provide `true` or `false` (case-insensitive).",
+                    location,
+                )
+            })?;
+            stack.push(Value::Boolean(b));
         }
         Intrinsic::Conv(ConvIntrinsic::IntToHex) => {
             let digits = pop_int(pop_value(stack, location)?, location)?;

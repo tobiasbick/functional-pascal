@@ -81,6 +81,21 @@ pub(crate) fn pop_bool(v: Value, location: SourceLocation) -> Result<bool, StdEr
     }
 }
 
+pub(crate) fn pop_dict(
+    v: Value,
+    location: SourceLocation,
+) -> Result<Vec<(Value, Value)>, StdError> {
+    match v {
+        Value::Dict(pairs) => Ok(pairs),
+        other => Err(std_runtime_error(
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+            format!("expected dict, got {}", other.type_name()),
+            "Pass a `dict of K to V` value.",
+            location,
+        )),
+    }
+}
+
 pub(crate) fn pop_array(v: Value, location: SourceLocation) -> Result<Vec<Value>, StdError> {
     match v {
         Value::Array(a) => Ok(a),

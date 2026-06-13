@@ -7,8 +7,8 @@ impl Console {
         self.sync_terminal_size();
         self.enable_crt_mode();
         let (Some(x), Some(y)) = (
-            self.check_relative_coord(x, self.state.window_width()),
-            self.check_relative_coord(y, self.state.window_height()),
+            self.check_coord(x, self.state.window_width()),
+            self.check_coord(y, self.state.window_height()),
         ) else {
             return Ok(());
         };

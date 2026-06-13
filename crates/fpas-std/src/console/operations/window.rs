@@ -59,10 +59,10 @@ impl Console {
         self.sync_terminal_size();
         self.enable_crt_mode();
         let (Some(x1), Some(y1), Some(x2), Some(y2)) = (
-            self.check_absolute_coord(x1, self.state.width),
-            self.check_absolute_coord(y1, self.state.height),
-            self.check_absolute_coord(x2, self.state.width),
-            self.check_absolute_coord(y2, self.state.height),
+            self.check_coord(x1, self.state.width),
+            self.check_coord(y1, self.state.height),
+            self.check_coord(x2, self.state.width),
+            self.check_coord(y2, self.state.height),
         ) else {
             return Ok(());
         };

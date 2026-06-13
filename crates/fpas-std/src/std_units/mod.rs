@@ -27,30 +27,34 @@ pub fn is_std_root_segment(segment: &str) -> bool {
 }
 
 pub fn canonical_std_unit_from_tail(tail: &str) -> Option<&'static str> {
-    match tail.to_ascii_lowercase().as_str() {
-        "args" => Some(STD_UNIT_ARGS),
-        "env" => Some(STD_UNIT_ENV),
-        "proc" => Some(STD_UNIT_PROC),
-        "path" => Some(STD_UNIT_PATH),
-        "fs" => Some(STD_UNIT_FS),
-        "time" => Some(STD_UNIT_TIME),
-        "console" => Some(STD_UNIT_CONSOLE),
-        "tui" => Some(STD_UNIT_TUI),
-        "graph" => Some(STD_UNIT_GRAPH),
-        "str" => Some(STD_UNIT_STR),
-        "conv" => Some(STD_UNIT_CONV),
-        "parse" => Some(STD_UNIT_PARSE),
-        "math" => Some(STD_UNIT_MATH),
-        "random" => Some(STD_UNIT_RANDOM),
-        "array" => Some(STD_UNIT_ARRAY),
-        "result" => Some(STD_UNIT_RESULT),
-        "option" => Some(STD_UNIT_OPTION),
-        "task" => Some(STD_UNIT_TASK),
-        "dict" => Some(STD_UNIT_DICT),
-        "json" => Some(STD_UNIT_JSON),
-        "test" => Some(STD_UNIT_TEST),
-        _ => None,
-    }
+    const UNITS: &[(&str, &str)] = &[
+        ("args", STD_UNIT_ARGS),
+        ("env", STD_UNIT_ENV),
+        ("proc", STD_UNIT_PROC),
+        ("path", STD_UNIT_PATH),
+        ("fs", STD_UNIT_FS),
+        ("time", STD_UNIT_TIME),
+        ("console", STD_UNIT_CONSOLE),
+        ("tui", STD_UNIT_TUI),
+        ("graph", STD_UNIT_GRAPH),
+        ("str", STD_UNIT_STR),
+        ("conv", STD_UNIT_CONV),
+        ("parse", STD_UNIT_PARSE),
+        ("math", STD_UNIT_MATH),
+        ("random", STD_UNIT_RANDOM),
+        ("array", STD_UNIT_ARRAY),
+        ("result", STD_UNIT_RESULT),
+        ("option", STD_UNIT_OPTION),
+        ("task", STD_UNIT_TASK),
+        ("dict", STD_UNIT_DICT),
+        ("json", STD_UNIT_JSON),
+        ("test", STD_UNIT_TEST),
+    ];
+
+    UNITS
+        .iter()
+        .find(|(name, _)| tail.eq_ignore_ascii_case(name))
+        .map(|(_, unit)| *unit)
 }
 
 pub fn canonical_std_unit_from_segments(root: &str, tail: &str) -> Option<&'static str> {

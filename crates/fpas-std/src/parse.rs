@@ -4,7 +4,7 @@
 
 use crate::error::StdError;
 use crate::intrinsic_args::{pop_string, pop_value};
-use crate::numeric_text::{parse_pascal_integer, parse_pascal_real};
+use crate::numeric_text::{parse_bool_text, parse_pascal_integer, parse_pascal_real};
 use fpas_bytecode::{Intrinsic, ParseIntrinsic, SourceLocation, Value};
 
 pub(crate) fn run(
@@ -49,10 +49,9 @@ fn parse_real_result(text: &str) -> Value {
 }
 
 fn parse_bool_result(text: &str) -> Value {
-    match text.trim().to_ascii_lowercase().as_str() {
-        "true" => ok(Value::Boolean(true)),
-        "false" => ok(Value::Boolean(false)),
-        _ => err(format!(
+    match parse_bool_text(text) {
+        Some(value) => ok(Value::Boolean(value)),
+        None => err(format!(
             "invalid boolean `{text}`; expected `true` or `false`"
         )),
     }

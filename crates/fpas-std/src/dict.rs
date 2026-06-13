@@ -2,22 +2,9 @@
 //!
 //! **Documentation:** `docs/future/advanced-types.md`
 
-use crate::error::{StdError, std_runtime_error};
-use crate::intrinsic_args::pop_value;
+use crate::error::StdError;
+use crate::intrinsic_args::{pop_dict, pop_value};
 use fpas_bytecode::{DictIntrinsic, Intrinsic, SourceLocation, Value};
-use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
-
-fn pop_dict(val: Value, location: SourceLocation) -> Result<Vec<(Value, Value)>, StdError> {
-    match val {
-        Value::Dict(pairs) => Ok(pairs),
-        other => Err(std_runtime_error(
-            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-            format!("expected dict, got {}", other.type_name()),
-            "Pass a `dict of K to V` value.",
-            location,
-        )),
-    }
-}
 
 pub(crate) fn run(
     intrinsic: Intrinsic,

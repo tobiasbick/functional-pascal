@@ -6,6 +6,7 @@ mod application;
 mod handlers;
 mod host;
 mod menu_bar_model;
+mod query_host;
 mod records;
 mod status_bar_model;
 mod test_host;
@@ -24,6 +25,7 @@ impl Worker {
     ) -> Result<bool, VmError> {
         if self.try_exec_tui_application_intrinsic(intrinsic, line)?
             || self.try_exec_tui_test_host_intrinsic(intrinsic, line)?
+            || self.try_exec_tui_query_host_intrinsic(intrinsic, line)?
             || self.try_exec_tui_view_intrinsic(intrinsic, line)?
             || self.try_exec_tui_host_intrinsic(intrinsic, line)?
         {

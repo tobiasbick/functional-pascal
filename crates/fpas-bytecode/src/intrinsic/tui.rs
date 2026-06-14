@@ -327,7 +327,26 @@ pub enum TuiIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
     TestFocus = 366,
-    // Reserved **367..=378** for remaining native TUI testing API
+
+    /// Read the logical CRT screen size.
+    ///
+    /// Stack: `Application`. Pushes `Std.Tui.Size`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    QueryScreenSize = 367,
+    /// Read one screen row as a string (`Y` one-based).
+    ///
+    /// Stack: `Application`, `Y` (`Y` on top). Pushes `string`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    QueryScreenLine = 368,
+    /// Read one CRT cell (`X`/`Y` one-based) as `ScreenCell`.
+    ///
+    /// Stack: `Application`, `X`, `Y` (`Y` on top). Pushes `ScreenCell`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    QueryScreenCell = 369,
+    // Reserved **370..=378** for remaining native TUI testing API
     // (see docs/future/tui-tests-fpas/implementation-plan.md Appendix B).
     // Note: **348..=355** are owned by `Std.Test` (`TestIntrinsic`).
 }

@@ -220,6 +220,7 @@ pub const STD_TUI_APPLICATION: &str = std_tui!("Application");
 pub const STD_TUI_APPLICATION_HANDLERS: &str = std_tui!("ApplicationHandlers");
 pub const STD_TUI_RECT: &str = std_tui!("Rect");
 pub const STD_TUI_SIZE: &str = std_tui!("Size");
+pub const STD_TUI_SCREEN_CELL: &str = std_tui!("ScreenCell");
 pub const STD_TUI_EVENT: &str = std_tui!("TuiEvent");
 pub const STD_TUI_EVENT_KIND: &str = std_tui!("EventKind");
 pub const STD_TUI_EXIT_REASON: &str = std_tui!("ExitReason");
@@ -249,6 +250,9 @@ pub const STD_TUI_APPLICATION_TEST_CLICK_MOUSE: &str = std_tui!("Application.Tes
 pub const STD_TUI_APPLICATION_TEST_RESIZE: &str = std_tui!("Application.TestResize");
 pub const STD_TUI_APPLICATION_TEST_PASTE: &str = std_tui!("Application.TestPaste");
 pub const STD_TUI_APPLICATION_TEST_FOCUS: &str = std_tui!("Application.TestFocus");
+pub const STD_TUI_APPLICATION_QUERY_SCREEN_SIZE: &str = std_tui!("Application.QueryScreenSize");
+pub const STD_TUI_APPLICATION_QUERY_SCREEN_LINE: &str = std_tui!("Application.QueryScreenLine");
+pub const STD_TUI_APPLICATION_QUERY_SCREEN_CELL: &str = std_tui!("Application.QueryScreenCell");
 pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_KEY_PRESSED: &str =
     std_tui!("Application.HostRegisterOnKeyPressed");
 pub const STD_TUI_APPLICATION_HOST_INVOKE_ON_KEY_PRESSED: &str =

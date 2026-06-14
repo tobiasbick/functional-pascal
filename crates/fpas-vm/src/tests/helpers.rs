@@ -69,6 +69,27 @@ pub(super) fn key_event_value(ev: ConsoleKeyEvent) -> Value {
     }
 }
 
+pub(super) fn tui_size_value(width: i64, height: i64) -> Value {
+    Value::Record {
+        type_name: "Std.Tui.Size".into(),
+        fields: vec![
+            ("width".into(), Value::Integer(width)),
+            ("height".into(), Value::Integer(height)),
+        ],
+    }
+}
+
+pub(super) fn tui_screen_cell_value(ch: char, fg: i64, bg: i64) -> Value {
+    Value::Record {
+        type_name: "Std.Tui.ScreenCell".into(),
+        fields: vec![
+            ("ch".into(), Value::Char(ch)),
+            ("fg".into(), Value::Integer(fg)),
+            ("bg".into(), Value::Integer(bg)),
+        ],
+    }
+}
+
 /// Builds a `Std.Console.Event` record for bytecode-level injection tests.
 pub(super) fn console_event_value(event: ConsoleEvent) -> Value {
     Value::Record {

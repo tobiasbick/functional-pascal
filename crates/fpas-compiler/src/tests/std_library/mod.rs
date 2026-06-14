@@ -22,4 +22,5 @@ mod tui_configure;
 mod tui_focus;
 mod tui_modal;
 mod tui_test_host;
+mod tui_test_query;
 mod tui_widgets;

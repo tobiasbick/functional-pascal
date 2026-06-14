@@ -1,6 +1,6 @@
 # Native TUI testing in FPAS — implementation plan
 
-**Status:** Phase 2 complete; Phase 3 next.
+**Status:** Phase 3 complete; Phase 4 next.
 **Design:** [`README.md`](README.md).
 
 Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and a verification step. After a context loss, **start by reading the "Resume here" marker** below, then continue at the first unchecked task.
@@ -19,9 +19,9 @@ Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and 
 
 ## Resume here
 
-> **Next task:** Phase 3, Task 3.1 (`ScreenCell` / `Size` registry types).
+> **Next task:** Phase 4, Task **4.1** (`QueryRootViews`).
 > **Last updated:** 2026-06-14
-> **Notes:** Phase 2 done. Input injectors **360..=366** enqueue console events for `TestPump`. Use `Std.Console.EventKind` when building full `Event` records in FPAS.
+> **Notes:** Phase 3 done. Screen queries **367..=369** read the CRT back buffer via `Console::query_screen_line` / `query_screen_cell`. `ScreenCell` registered in sema; smoke test `tui_screen_query_test.fpas`.
 
 ---
 
@@ -85,11 +85,11 @@ Goal: inject keyboard/mouse/resize/paste/focus from FPAS, reusing `Vm::push_cons
 
 Goal: read the CRT back buffer (chars + colors) as FPAS values.
 
-- [ ] **3.1 Define `ScreenCell` and `Size` (if missing) in `Std.Tui` registry.** Add record types in `crates/fpas-sema/src/std_registry/loaded/tui/`. **Verify:** `cargo build`; type usable in a test program.
-- [ ] **3.2 `Application.QueryScreenSize(App): Size`.** From `ConsoleState` width/height. **Verify:** open 80x25, assert returned size.
-- [ ] **3.3 `Application.QueryScreenLine(App, Y): string`.** Row characters; reuse `ScreenSnapshot` row access in `crates/fpas-std/src/console/snapshot.rs`. **Verify:** paint known text, assert line.
-- [ ] **3.4 `Application.QueryScreenCell(App, X, Y): ScreenCell`.** Char + fg + bg; reuse `ConsoleState` cell access used by `console.test_cell`. **Verify:** paint a menu bar, assert accel-letter cell color matches `menu_bar_paints_shortcut_letter_in_accel_color`.
-- [ ] **3.5 Phase-3 FPAS test.** `examples/pascal/test/tui_screen_query_test.fpas`: paint text via `OnPaint`, pump, assert line + a colored cell. **Verify:** `fpas test` passes.
+- [x] **3.1 Define `ScreenCell` and `Size` (if missing) in `Std.Tui` registry.** Add record types in `crates/fpas-sema/src/std_registry/loaded/tui/`. **Verify:** `cargo build`; type usable in a test program.
+- [x] **3.2 `Application.QueryScreenSize(App): Size`.** From `ConsoleState` width/height. **Verify:** open 80x25, assert returned size.
+- [x] **3.3 `Application.QueryScreenLine(App, Y): string`.** Row characters; reuse `ScreenSnapshot` row access in `crates/fpas-std/src/console/snapshot.rs`. **Verify:** paint known text, assert line.
+- [x] **3.4 `Application.QueryScreenCell(App, X, Y): ScreenCell`.** Char + fg + bg; reuse `ConsoleState` cell access used by `console.test_cell`. **Verify:** paint a menu bar, assert accel-letter cell color matches `menu_bar_paints_shortcut_letter_in_accel_color`.
+- [x] **3.5 Phase-3 FPAS test.** `examples/pascal/test/tui_screen_query_test.fpas`: paint text via `OnPaint`, pump, assert line + a colored cell. **Verify:** `fpas test` passes.
 
 ---
 
@@ -180,9 +180,9 @@ Running list of new intrinsics and their assigned discriminants (reserved in Pha
 | `TestResize` | 364 | 2.5 | [x] |
 | `TestPaste` | 365 | 2.5 | [x] |
 | `TestFocus` | 366 | 2.5 | [x] |
-| `QueryScreenSize` | 367 | 3.2 | [ ] |
-| `QueryScreenLine` | 368 | 3.3 | [ ] |
-| `QueryScreenCell` | 369 | 3.4 | [ ] |
+| `QueryScreenSize` | 367 | 3.2 | [x] |
+| `QueryScreenLine` | 368 | 3.3 | [x] |
+| `QueryScreenCell` | 369 | 3.4 | [x] |
 | `QueryRootViews` | 370 | 4.1 | [ ] |
 | `QueryViewRect` | 371 | 4.2 | [ ] |
 | `QueryViewParent` | 372 | 4.3 | [ ] |
@@ -198,6 +198,7 @@ Renames (no new discriminant): `QueryFocusedViewId` replaces Pascal name for **2
 
 Append one entry per working session: date, tasks completed, surprises, and the next task to resume from.
 
+- **2026-06-14:** Completed **Phase 3** (3.1–3.5). Registered `ScreenCell`; added `QueryScreenSize` / `QueryScreenLine` / `QueryScreenCell` (**367..=369**); `Console::query_screen_line` / `query_screen_cell`; VM + compiler tests; `examples/pascal/test/tui_screen_query_test.fpas`. Next: **4.1** `QueryRootViews`.
 - **2026-06-14:** Completed **Phase 2** (2.1–2.6). Added input injectors `TestSendKey` … `TestFocus` (**360..=366**); `pop_console_event` in VM; `examples/pascal/test/tui_inject_key_test.fpas`. Next: **3.1** `ScreenCell` registry.
 - **2026-06-14:** Completed **Phase 1** (1.1–1.5). Added `OpenForTest`, `TestPump`, `TestPumpUntilIdle`, `CloseForTest` (discriminants **356..=359**); headless `TuiSession::open_for_test`; `examples/pascal/test/tui_pump_test.fpas`. Corrected intrinsic range to **356..=378** (collision with `Std.Test` at **348..=355**). Next: **2.1** `TestSendKey`.
 - **2026-06-14:** Completed **0.3–0.5** (Phase 0 done). `ScreenCell` uses CRT `0..=15` + `Std.Console` constants; TUI sidecars deprecated (remove Phase 8); reserved intrinsics **356..=378** in `tui.rs`. Next: **1.1** `OpenForTest`.

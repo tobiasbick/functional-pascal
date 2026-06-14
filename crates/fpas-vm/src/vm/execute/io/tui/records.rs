@@ -9,6 +9,7 @@ use fpas_std::ViewRect;
 const TUI_APPLICATION_TYPE: &str = "Std.Tui.Application";
 const TUI_RECT_TYPE: &str = "Std.Tui.Rect";
 const TUI_SIZE_TYPE: &str = "Std.Tui.Size";
+const TUI_SCREEN_CELL_TYPE: &str = "Std.Tui.ScreenCell";
 
 impl Worker {
     /// Constructs an empty `Std.Tui.Application` record.
@@ -26,6 +27,18 @@ impl Worker {
             fields: vec![
                 ("width".into(), Value::Integer(width)),
                 ("height".into(), Value::Integer(height)),
+            ],
+        }
+    }
+
+    /// Constructs a `Std.Tui.ScreenCell` record with `ch`, `fg`, and `bg` fields.
+    pub(in crate::vm::execute::io) fn tui_screen_cell_record(ch: char, fg: u8, bg: u8) -> Value {
+        Value::Record {
+            type_name: TUI_SCREEN_CELL_TYPE.into(),
+            fields: vec![
+                ("ch".into(), Value::Char(ch)),
+                ("fg".into(), Value::Integer(i64::from(fg))),
+                ("bg".into(), Value::Integer(i64::from(bg))),
             ],
         }
     }

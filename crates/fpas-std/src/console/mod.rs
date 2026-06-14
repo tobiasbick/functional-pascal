@@ -83,6 +83,20 @@ impl Console {
         ScreenSnapshot::from_state(&self.state)
     }
 
+    /// Returns the character content of one screen row (`y` is one-based).
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md` (`Application.QueryScreenLine`)
+    pub fn query_screen_line(&self, y: u16) -> String {
+        self.state.row_text(y)
+    }
+
+    /// Returns one CRT cell (`x`/`y` one-based) as `(ch, fg, bg)` with packed colors `0..=15`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md` (`Application.QueryScreenCell`)
+    pub fn query_screen_cell(&self, x: u16, y: u16) -> Option<(char, u8, u8)> {
+        self.state.packed_cell_at(x, y)
+    }
+
     pub(crate) fn has_terminal_writer(&self) -> bool {
         self.writer.is_some()
     }

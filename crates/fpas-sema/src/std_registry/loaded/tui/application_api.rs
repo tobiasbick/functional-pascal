@@ -153,4 +153,29 @@ pub(super) fn register_application_api(checker: &mut Checker, types: &TuiTypes) 
             p("Gained", Ty::Boolean, false),
         ],
     );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_QUERY_SCREEN_SIZE,
+        vec![p("App", types.application.clone(), false)],
+        types.size.clone(),
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_QUERY_SCREEN_LINE,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Y", Ty::Integer, false),
+        ],
+        Ty::String,
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_QUERY_SCREEN_CELL,
+        vec![
+            p("App", types.application.clone(), false),
+            p("X", Ty::Integer, false),
+            p("Y", Ty::Integer, false),
+        ],
+        types.screen_cell.clone(),
+    );
 }

@@ -5,6 +5,7 @@
 mod application;
 mod host;
 mod modal;
+mod query_host;
 mod test_host;
 mod views;
 
@@ -26,6 +27,9 @@ impl Compiler {
             return Ok(true);
         }
         if self.compile_tui_test_host_call(name, args, location)? {
+            return Ok(true);
+        }
+        if self.compile_tui_query_host_call(name, args, location)? {
             return Ok(true);
         }
         if self.compile_tui_modal_call(name, args, location)? {

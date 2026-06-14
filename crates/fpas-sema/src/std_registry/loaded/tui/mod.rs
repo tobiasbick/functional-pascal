@@ -18,6 +18,7 @@ use fpas_std::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS};
 struct TuiTypes {
     application: Ty,
     size: Ty,
+    screen_cell: Ty,
     key_event: Ty,
     console_event: Ty,
     application_handlers: Ty,
@@ -65,6 +66,15 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         vec![
             ("width".into(), Ty::Integer),
             ("height".into(), Ty::Integer),
+        ],
+    );
+    let screen_cell = type_registration::register_record_type(
+        checker,
+        s::STD_TUI_SCREEN_CELL,
+        vec![
+            ("ch".into(), Ty::Char),
+            ("fg".into(), Ty::Integer),
+            ("bg".into(), Ty::Integer),
         ],
     );
     let key_event = type_registration::lookup_required_type(
@@ -187,6 +197,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
     let types = TuiTypes {
         application,
         size,
+        screen_cell,
         key_event,
         console_event,
         application_handlers,

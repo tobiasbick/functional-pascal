@@ -156,8 +156,8 @@ impl RenderColor {
         }
     }
 
-    #[cfg(test)]
-    fn packed_index(self) -> Option<u8> {
+    /// Returns packed CRT index when this color is palette-backed.
+    pub(super) fn packed_index(self) -> Option<u8> {
         match self {
             Self::Crt(index) => Some(index),
             Self::Rgb { .. } | Self::Ansi256(_) => None,
@@ -374,19 +374,22 @@ impl ConsoleState {
             .collect()
     }
 
-    #[cfg(test)]
-    pub(super) fn line_text(&self, y: u16) -> String {
-        self.row_text(y)
+    /// Returns one CRT cell (`x`/`y` one-based) when both colors are packed palette indices.
+    pub(super) fn packed_cell_at(&self, x: u16, y: u16) -> Option<(char, u8, u8)> {
+        let cell = self.cell_at(x, y);
+        let fg = cell.fg.packed_index()?;
+        let bg = cell.bg.packed_index()?;
+        Some((cell.ch, fg, bg))
     }
 
     #[cfg(test)]
     pub(super) fn cell_at_packed(&self, x: u16, y: u16) -> (char, u8, u8) {
-        let cell = self.cell_at(x, y);
-        let fg = cell.fg.packed_index();
-        let bg = cell.bg.packed_index();
-        assert!(fg.is_some(), "expected packed foreground color");
-        assert!(bg.is_some(), "expected packed background color");
-        (cell.ch, fg.unwrap_or_default(), bg.unwrap_or_default())
+        self.packed_cell_at(x, y).expect("expected packed CRT colors")
+    }
+
+    #[cfg(test)]
+    pub(super) fn line_text(&self, y: u16) -> String {
+        self.row_text(y)
     }
 
     #[cfg(test)]

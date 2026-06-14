@@ -1,6 +1,6 @@
 # Native TUI testing in FPAS — implementation plan
 
-**Status:** not started.
+**Status:** in progress (Phase 0).
 **Design:** [`README.md`](README.md).
 
 Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and a verification step. After a context loss, **start by reading the "Resume here" marker** below, then continue at the first unchecked task.
@@ -19,9 +19,9 @@ Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and 
 
 ## Resume here
 
-> **Next task:** Phase 0, Task 0.1.
-> **Last updated:** (none yet)
-> **Notes:** Plan created; no code written.
+> **Next task:** Phase 0, Task 0.2.
+> **Last updated:** 2026-06-14
+> **Notes:** Task 0.1 complete — naming convention documented in `docs/pascal/std/tui-app.md` (`Test*` / `Query*` / `Host*`); planned renames for `QueryFocusedViewId`, `QueryModalDepth`.
 
 ---
 
@@ -48,7 +48,7 @@ Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and 
 
 Resolve the [open decisions](README.md#open-decisions) before writing intrinsics, because they change signatures.
 
-- [ ] **0.1 Decide naming scheme.** Pick one prefix family (`Test*` for injection/pump, `Query*` for read, keep `Host*` only for mutators). Record the decision in `docs/pascal/std/tui-app.md`. **Verify:** decision written in spec; this plan's task names updated if they diverge.
+- [x] **0.1 Decide naming scheme.** Pick one prefix family (`Test*` for injection/pump, `Query*` for read, keep `Host*` only for mutators). Record the decision in `docs/pascal/std/tui-app.md`. **Verify:** decision written in spec; this plan's task names updated if they diverge.
 - [ ] **0.2 Decide `ViewId` representation.** Real opaque FPAS type vs bare `integer`. **Verify:** decision recorded in `README.md` open-decisions section with rationale.
 - [ ] **0.3 Decide `ScreenCell` color type.** Reuse `Std.Console` CRT color enum (`0..=15`) vs richer type. **Verify:** chosen type referenced in spec.
 - [ ] **0.4 Decide fate of sidecars.** Keep `*.script.toml` / `*.expect.screen` as sugar or deprecate. **Verify:** decision recorded; if deprecating, list affected files (`crates/fpas-cli/src/test_script/`, `crates/fpas-cli/src/cli_test/expect_screen.rs`).
@@ -103,7 +103,7 @@ Goal: expose `ViewRegistry` and `MenuBarWidget` internals as FPAS values.
 - [ ] **4.4 `Application.QueryViewChildren(App, ViewId): array of ViewId`.** **Verify:** push children, assert list + z-order.
 - [ ] **4.5 Define `MenuBarState` record in registry.** Fields per design (`menuActive`, `hoveredIndex`, `submenuOpen`, `submenuBarIndex`, `selectedEntry`). **Verify:** `cargo build`.
 - [ ] **4.6 Expose `MenuBarWidget` state.** Add getters in `crates/fpas-std/src/tui/widget/menu_bar/` (e.g. `mod.rs`) for hovered/open/selected; keep fields private, expose a snapshot struct. **Verify:** Rust unit test reads snapshot.
-- [ ] **4.7 `Application.HostQueryMenuBarState(App, ViewId): MenuBarState`.** Map widget snapshot → FPAS record. **Verify:** VM test: open submenu via key, assert `submenuOpen = true`.
+- [ ] **4.7 `Application.QueryMenuBarState(App, ViewId): MenuBarState`.** Map widget snapshot → FPAS record. **Verify:** VM test: open submenu via key, assert `submenuOpen = true`.
 - [ ] **4.8 Phase-4 FPAS test.** `examples/pascal/test/tui_view_query_test.fpas`: create menu bar, query rect + initial menu state. **Verify:** `fpas test` passes.
 
 ---
@@ -187,10 +187,10 @@ Running list of new intrinsics and their assigned discriminants. Fill in during 
 | `QueryViewRect` | TBD | 4.2 | [ ] |
 | `QueryViewParent` | TBD | 4.3 | [ ] |
 | `QueryViewChildren` | TBD | 4.4 | [ ] |
-| `HostQueryMenuBarState` | TBD | 4.7 | [ ] |
+| `QueryMenuBarState` | TBD | 4.7 | [ ] |
 
 ## Progress log
 
 Append one entry per working session: date, tasks completed, surprises, and the next task to resume from.
 
-- _(empty)_
+- **2026-06-14:** Completed **0.1** — naming convention decided and documented in `docs/pascal/std/tui-app.md` § Native TUI testing API. Scheme: `Test*` (pump/inject/lifecycle), `Query*` (read-only), `Host*` (mutators). Planned renames: `HostQueryFocusedViewId` → `QueryFocusedViewId`, `HostModalDepth` → `QueryModalDepth`. Next: **0.2** (`ViewId` type decision).

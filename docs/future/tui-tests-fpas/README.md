@@ -61,7 +61,7 @@ begin
   Application.TestMoveMouse(App, 4, 3);
   Application.TestPump(App);
 
-  var Sub: MenuBarState := Application.HostQueryMenuBarState(App, Bar);
+  var Sub: MenuBarState := Application.QueryMenuBarState(App, Bar);
   AssertTrue(Sub.submenuOpen);
   AssertEquals(1, Sub.selectedEntry);
 
@@ -156,9 +156,9 @@ Per the mandate, candidate changes (decide during implementation):
 | ------- | ------------------ |
 | `*.script.toml` pre-run injection | Keep only as optional sugar, or remove in favor of FPAS injectors |
 | `*.expect.screen` character golden | Keep for coarse snapshots, or replace with `AssertScreenLine` |
-| `HostQueryFocusedViewId` / `HostModalDepth` as lone queries | Fold into a coherent `Query*` family with consistent naming |
+| `HostQueryFocusedViewId` / `HostModalDepth` | Fold into coherent `Query*` family; see [naming convention](../../pascal/std/tui-app.md#naming-convention-decided) |
 | `Application.Run` as the only entry | Add `OpenForTest` + `TestPump`; keep `Run` for real apps |
-| Rust-only `MenuBarWidget` state | Expose via `HostQueryMenuBarState` |
+| Rust-only `MenuBarWidget` state | Expose via `QueryMenuBarState` |
 
 No compatibility shims. If a name or shape is wrong, change it.
 
@@ -184,7 +184,7 @@ Intrinsics extend the existing `TuiIntrinsic` enum (`crates/fpas-bytecode/src/in
 | `TestSendKey` / `TestSendMouse` / … | `Vm::push_console_event` (`crates/fpas-vm/src/vm/mod.rs`), mapping in `crates/fpas-cli/src/test_script/console.rs` |
 | `QueryScreenCell` / `QueryScreenLine` | `ConsoleState` cell access already used by Rust test helpers (`console.test_cell`) |
 | `Query*View*` | `ViewRegistry` in `TuiState` (`crates/fpas-vm/src/vm/shared.rs`) |
-| `HostQueryMenuBarState` | `MenuBarWidget` fields (`crates/fpas-std/src/tui/widget/menu_bar/`) |
+| `QueryMenuBarState` | `MenuBarWidget` fields (`crates/fpas-std/src/tui/widget/menu_bar/`) |
 
 Sema registration follows `crates/fpas-sema/src/std_registry/loaded/tui/`; lowering follows `crates/fpas-compiler/src/compiler/std_calls/tui/`. New record types (`ScreenCell`, `MenuBarState`, `Rect`, `ViewId` as a real type rather than a bare integer) are declared in the `Std.Tui` registry.
 
@@ -194,12 +194,12 @@ Sema registration follows `crates/fpas-sema/src/std_registry/loaded/tui/`; lower
 2. **Do injectors require headless mode, or also work during a live `Run` (for the control server to reuse)?** Sharing one injection path is cleaner.
 3. **Keep `*.script.toml` and `*.expect.screen` at all?** They overlap with the FPAS-native path; decide whether to deprecate.
 4. **Color representation in `ScreenCell`** — reuse the `Std.Console` CRT color enum (`0..=15`) or a richer color type for future truecolor support.
-5. **Naming:** `Test*` vs `Host*` vs `Query*` prefixes. Pick one coherent scheme and rename existing host queries to match.
+5. ~~**Naming:** `Test*` vs `Host*` vs `Query*` prefixes.~~ **Decided** — see [`docs/pascal/std/tui-app.md` § Native TUI testing API](../../pascal/std/tui-app.md#naming-convention-decided): `Test*` = pump/inject, `Query*` = read, `Host*` = mutators only; rename `HostQueryFocusedViewId` → `QueryFocusedViewId`, `HostModalDepth` → `QueryModalDepth`.
 
 ## Success criteria (when implemented)
 
 1. A `*_test.fpas` opens a headless TUI, injects mouse `Move` over a menu item, pumps, and asserts the highlight color via `QueryScreenCell` — passing under `fpas test`.
-2. The same test opens a submenu, hovers an entry by mouse, and asserts `selectedEntry` via `HostQueryMenuBarState` (requires the submenu-hover host fix).
+2. The same test opens a submenu, hovers an entry by mouse, and asserts `selectedEntry` via `QueryMenuBarState` (requires the submenu-hover host fix).
 3. View geometry (`QueryViewRect`) and tree (`QueryRootViews`) are assertable in FPAS.
 4. No real terminal, no Rust integration test, and no golden sidecar are needed for the above.
 5. `fpas test` remains the single runner; `Application.Run` still serves real apps unchanged.

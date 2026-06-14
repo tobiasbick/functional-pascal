@@ -450,3 +450,85 @@ Handlers that depend on terminal or OS capability (**key release**, **paste**, *
 ## Single entry point rule
 
 There must be **at most one** active `**Application.Run`** (or equivalent hosted loop) per process for a given session handle. Modal nesting is expressed through `**Application.ShowModal`** / `**Application.CloseModal`**; nested `**Run`** remains **forbidden**.
+
+---
+
+## Native TUI testing API (planned)
+
+**Status:** naming decided; intrinsics not yet implemented. Design: [`docs/future/tui-tests-fpas/README.md`](../../future/tui-tests-fpas/README.md). Tracking: [`implementation-plan.md`](../../future/tui-tests-fpas/implementation-plan.md).
+
+Goal: test hosted `Std.Tui` entirely from FPAS under `fpas test` — headless session, stepwise event pump, input injection, and read-only introspection of screen, views, and widget state.
+
+### Naming convention (decided)
+
+`Application.*` routines use **one prefix per role**. Do not mix roles under the same prefix.
+
+| Prefix | Role | Examples |
+| ------ | ---- | -------- |
+| **`Test*`** | Headless test lifecycle, event pump, and input injection | `OpenForTest`, `TestPump`, `TestSendKey`, `TestMoveMouse`, `CloseForTest` |
+| **`Query*`** | Read-only host introspection (no mutation) | `QueryScreenCell`, `QueryViewRect`, `QueryFocusedViewId`, `QueryMenuBarState` |
+| **`Host*`** | Host mutators: register handlers, create/set views and widgets, bind commands, modal stack writes | `HostRegisterView`, `HostCreateMenuBarView`, `HostSetViewRect`, `HostBindCommand` |
+| *(none)* | Application-level entry points unchanged | `Open`, `Configure`, `Run`, `ShowModal`, `CloseModal`, `Close` |
+
+Rules:
+
+- **`Query*`** never changes host or screen state. Screen reads reflect the CRT back buffer after the last completed pump/redraw.
+- **`Test*`** injectors enqueue input for the next `TestPump` / `TestPumpUntilIdle`; they do not run the host loop themselves.
+- **`Host*`** keeps its current meaning for production app setup. New read APIs use **`Query*`**, not `HostQuery*`.
+- Intrinsic Rust names mirror Pascal: `TuiTestPump`, `TuiQueryScreenCell`, `TuiHostRegisterView`.
+
+### Planned renames (existing read APIs)
+
+No backward compatibility is required. When native testing lands, rename existing read-only `Host*` calls to **`Query*`**:
+
+| Current (to remove) | New name |
+| ------------------- | -------- |
+| `Application.HostQueryFocusedViewId(App)` | `Application.QueryFocusedViewId(App): ViewId` |
+| `Application.HostModalDepth(App)` | `Application.QueryModalDepth(App): integer` |
+
+Until the rename is implemented, the old names remain in the registry; new tests and docs should use the **`Query*`** names above.
+
+### Planned new routines (summary)
+
+Headless lifecycle and pump:
+
+| Pascal call | Returns | Role |
+| ----------- | ------- | ---- |
+| `Application.OpenForTest(Width, Height)` | `Application` | Virtual screen, no terminal writer |
+| `Application.TestPump(App)` | `()` | Process one queued event + redraw |
+| `Application.TestPumpUntilIdle(App)` | `()` | Drain queue and settle redraws |
+| `Application.CloseForTest(App)` | `()` | Deterministic teardown |
+
+Input injection (`Test*`):
+
+| Pascal call | Notes |
+| ----------- | ----- |
+| `Application.TestSendKey(App, Key)` | Full `KeyEvent` |
+| `Application.TestSendMouse(App, Event)` | Full `Std.Console.Event` mouse variant |
+| `Application.TestMoveMouse(App, X, Y)` | Convenience: `Move`, one-based coords |
+| `Application.TestClickMouse(App, X, Y)` | `Down` then `Up` |
+| `Application.TestResize(App, Width, Height)` | Terminal resize |
+| `Application.TestPaste(App, Text)` | Bracketed paste |
+| `Application.TestFocus(App, Gained: boolean)` | Focus gained/lost |
+
+Screen introspection (`Query*`):
+
+| Pascal call | Returns |
+| ----------- | ------- |
+| `Application.QueryScreenSize(App)` | `Size` |
+| `Application.QueryScreenLine(App, Y)` | `string` |
+| `Application.QueryScreenCell(App, X, Y)` | `ScreenCell` (`ch`, `fg`, `bg`) |
+
+View and widget introspection (`Query*`):
+
+| Pascal call | Returns |
+| ----------- | ------- |
+| `Application.QueryRootViews(App)` | `array of ViewId` |
+| `Application.QueryViewRect(App, ViewId)` | `Rect` |
+| `Application.QueryViewParent(App, ViewId)` | `Option of ViewId` |
+| `Application.QueryViewChildren(App, ViewId)` | `array of ViewId` |
+| `Application.QueryFocusedViewId(App)` | `ViewId` (or sentinel for none) |
+| `Application.QueryModalDepth(App)` | `integer` |
+| `Application.QueryMenuBarState(App, ViewId)` | `MenuBarState` |
+
+See the implementation plan for intrinsic discriminants, verification steps, and phase order.

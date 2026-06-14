@@ -5,6 +5,7 @@
 mod application;
 mod host;
 mod modal;
+mod test_host;
 mod views;
 
 use crate::error::CompileError;
@@ -22,6 +23,9 @@ impl Compiler {
         location: SourceLocation,
     ) -> Result<bool, CompileError> {
         if self.compile_tui_application_call(name, args, location)? {
+            return Ok(true);
+        }
+        if self.compile_tui_test_host_call(name, args, location)? {
             return Ok(true);
         }
         if self.compile_tui_modal_call(name, args, location)? {

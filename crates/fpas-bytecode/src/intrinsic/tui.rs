@@ -260,23 +260,31 @@ pub enum TuiIntrinsic {
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     HostSetStatusBarSegments = 347,
 
-    // -------------------------------------------------------------------------
-    // Reserved **348..=370** for native TUI testing (`docs/future/tui-tests-fpas/`).
-    // Do not assign other discriminants in this range.
-    //
-    // Planned allocation (Appendix B in implementation-plan.md):
-    //   348 OpenForTest          359 QueryScreenSize
-    //   349 TestPump             360 QueryScreenLine
-    //   350 TestPumpUntilIdle    361 QueryScreenCell
-    //   351 CloseForTest         362 QueryRootViews
-    //   352 TestSendKey          363 QueryViewRect
-    //   353 TestSendMouse        364 QueryViewParent
-    //   354 TestMoveMouse        365 QueryViewChildren
-    //   355 TestClickMouse       366 QueryMenuBarState
-    //   356 TestResize           367..=370 spare
-    //   357 TestPaste
-    //   358 TestFocus
-    //
-    // Renames reuse existing slots: QueryFocusedViewId ← 282, QueryModalDepth ← 278.
-    // -------------------------------------------------------------------------
+    /// Open a headless TUI session with a fixed virtual screen size for native tests.
+    ///
+    /// Stack: `Width`, `Height` (`integer`, top). Pushes `Application`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    OpenForTest = 356,
+    /// Process one queued hosted event and settle the resulting redraw.
+    ///
+    /// Stack: `Application`. Pushes `()`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    TestPump = 357,
+    /// Drain queued events and pending redraws until idle.
+    ///
+    /// Stack: `Application`. Pushes `()`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    TestPumpUntilIdle = 358,
+    /// Close a headless test session and reset hosted TUI state.
+    ///
+    /// Stack: `Application`. Pushes `()`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    CloseForTest = 359,
+    // Reserved **360..=378** for remaining native TUI testing API
+    // (see docs/future/tui-tests-fpas/implementation-plan.md Appendix B).
+    // Note: **348..=355** are owned by `Std.Test` (`TestIntrinsic`).
 }

@@ -12,6 +12,27 @@ fn test_location() -> SourceLocation {
 }
 
 #[test]
+fn tui_session_open_for_test_is_headless_and_reopen_succeeds() {
+    let mut session = TuiSession::default();
+    let mut console = Console::new();
+    let mut key_input = KeyInput::new();
+
+    session
+        .open_for_test(&mut console, test_location())
+        .expect("first open_for_test should succeed");
+    assert!(session.is_headless());
+    session
+        .close(&mut console, &mut key_input, test_location())
+        .expect("close should succeed");
+    assert!(!session.is_headless());
+
+    session
+        .open_for_test(&mut console, test_location())
+        .expect("reopen should succeed");
+    assert!(session.is_headless());
+}
+
+#[test]
 fn tui_session_open_close_reopen_succeeds_without_terminal_writer() {
     let mut session = TuiSession::default();
     let mut console = Console::new();

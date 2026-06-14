@@ -8,6 +8,7 @@ mod host;
 mod menu_bar_model;
 mod records;
 mod status_bar_model;
+mod test_host;
 mod views;
 
 use crate::vm::Worker;
@@ -22,6 +23,7 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<bool, VmError> {
         if self.try_exec_tui_application_intrinsic(intrinsic, line)?
+            || self.try_exec_tui_test_host_intrinsic(intrinsic, line)?
             || self.try_exec_tui_view_intrinsic(intrinsic, line)?
             || self.try_exec_tui_host_intrinsic(intrinsic, line)?
         {

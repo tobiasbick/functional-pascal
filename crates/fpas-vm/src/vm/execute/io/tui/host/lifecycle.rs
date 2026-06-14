@@ -109,4 +109,32 @@ impl Worker {
         close_result?;
         Ok(())
     }
+
+    /// Clears hosted TUI dispatch state before opening a new application session.
+    pub(in crate::vm::execute::io) fn reset_tui_host_state(&self) {
+        let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+        tui.host = fpas_std::UiHost::for_terminal();
+        tui.quit_requested = false;
+        tui.host_stop_requested = false;
+        tui.on_idle = None;
+        tui.idle_interval_ms = 0;
+        tui.on_exit = None;
+        tui.last_exit_reason = None;
+        tui.run_active = false;
+        tui.on_key_pressed = None;
+        tui.on_mouse = None;
+        tui.on_paste = None;
+        tui.on_focus_gained = None;
+        tui.on_focus_lost = None;
+        tui.on_activate = None;
+        tui.on_deactivate = None;
+        tui.on_command = None;
+        tui.on_resize = None;
+        tui.on_paint = None;
+        tui.view_paints.clear();
+        tui.view_widgets.clear();
+        tui.view_commands.clear();
+        tui.commands.clear();
+        tui.modals.clear();
+    }
 }

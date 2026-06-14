@@ -6,8 +6,8 @@ use fpas_parser::{Designator, DesignatorPart, Program};
 use fpas_std::key_event::KEY_KIND_VARIANTS;
 use fpas_std::{
     EVENT_KIND_VARIANTS, MOUSE_ACTION_VARIANTS, MOUSE_BUTTON_VARIANTS, TUI_EVENT_KIND_VARIANTS,
-    TUI_EXIT_REASON_VARIANTS,
-    canonical_std_unit_from_segments, is_std_root_segment, std_symbols as s,
+    TUI_EXIT_REASON_VARIANTS, canonical_std_unit_from_segments, is_std_root_segment,
+    std_symbols as s,
 };
 
 use super::{Compiler, EnumInfo, EnumVariantInfo, Local, LocalRef, canonical_name};

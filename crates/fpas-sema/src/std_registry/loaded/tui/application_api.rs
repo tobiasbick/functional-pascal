@@ -70,4 +70,28 @@ pub(super) fn register_application_api(checker: &mut Checker, types: &TuiTypes) 
         s::STD_TUI_APPLICATION_REQUEST_REDRAW,
         vec![p("App", types.application.clone(), false)],
     );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_OPEN_FOR_TEST,
+        vec![
+            p("Width", Ty::Integer, false),
+            p("Height", Ty::Integer, false),
+        ],
+        types.application.clone(),
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_TEST_PUMP,
+        vec![p("App", types.application.clone(), false)],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_TEST_PUMP_UNTIL_IDLE,
+        vec![p("App", types.application.clone(), false)],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_CLOSE_FOR_TEST,
+        vec![p("App", types.application.clone(), false)],
+    );
 }

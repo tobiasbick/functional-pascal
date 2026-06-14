@@ -237,6 +237,11 @@ pub const STD_TUI_APPLICATION_SHOW_DIALOG: &str = std_tui!("Application.ShowDial
 pub const STD_TUI_APPLICATION_CLOSE_MODAL: &str = std_tui!("Application.CloseModal");
 pub const STD_TUI_APPLICATION_SIZE: &str = std_tui!("Application.Size");
 pub const STD_TUI_APPLICATION_REQUEST_REDRAW: &str = std_tui!("Application.RequestRedraw");
+pub const STD_TUI_APPLICATION_OPEN_FOR_TEST: &str = std_tui!("Application.OpenForTest");
+pub const STD_TUI_APPLICATION_TEST_PUMP: &str = std_tui!("Application.TestPump");
+pub const STD_TUI_APPLICATION_TEST_PUMP_UNTIL_IDLE: &str =
+    std_tui!("Application.TestPumpUntilIdle");
+pub const STD_TUI_APPLICATION_CLOSE_FOR_TEST: &str = std_tui!("Application.CloseForTest");
 pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_KEY_PRESSED: &str =
     std_tui!("Application.HostRegisterOnKeyPressed");
 pub const STD_TUI_APPLICATION_HOST_INVOKE_ON_KEY_PRESSED: &str =

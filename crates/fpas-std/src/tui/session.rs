@@ -17,6 +17,8 @@ pub struct TuiSession {
     owns_raw_mode: bool,
     owns_alt_screen: bool,
     owns_mouse: bool,
+    /// When true, the session was opened with [`TuiSession::open_for_test`] (no terminal I/O).
+    headless: bool,
 }
 
 impl TuiSession {
@@ -36,6 +38,7 @@ impl TuiSession {
         }
 
         self.open = true;
+        self.headless = false;
         self.damage.clear();
         self.redraw_hint = None;
         self.owns_raw_mode = false;
@@ -113,12 +116,47 @@ impl TuiSession {
         self.owns_raw_mode = false;
         self.owns_alt_screen = false;
         self.owns_mouse = false;
+        self.headless = false;
 
         if let Some(error) = first_error {
             return Err(error);
         }
 
         Ok(())
+    }
+
+    /// Open a headless TUI session for native FPAS tests (`Application.OpenForTest`).
+    ///
+    /// Does not acquire raw mode, alternate screen, or mouse capture. Resize the logical
+    /// console to the desired virtual terminal size before calling this method.
+    pub fn open_for_test(
+        &mut self,
+        console: &mut Console,
+        location: SourceLocation,
+    ) -> Result<(), StdError> {
+        if self.open {
+            return Err(session_state_error(
+                "Application.OpenForTest() cannot open a second Std.Tui session while one is already active.",
+                "Close the current application with `Application.CloseForTest(App)` before opening a new one.",
+                location,
+            ));
+        }
+
+        console.abort_tui_paint();
+        self.open = true;
+        self.headless = true;
+        self.damage.clear();
+        self.redraw_hint = None;
+        self.owns_raw_mode = false;
+        self.owns_alt_screen = false;
+        self.owns_mouse = false;
+        Ok(())
+    }
+
+    /// Returns whether this session was opened headlessly for native tests.
+    #[must_use]
+    pub fn is_headless(&self) -> bool {
+        self.headless
     }
 
     /// Return the current terminal size for the active application session.

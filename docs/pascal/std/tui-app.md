@@ -530,16 +530,16 @@ No backward compatibility is required. When native testing lands, rename existin
 
 Until the rename is implemented, the old names remain in the registry; new tests and docs should use the **`Query*`** names above.
 
-### Planned new routines (summary)
-
-Headless lifecycle and pump:
+### Headless lifecycle and pump (Phase 1 — implemented)
 
 | Pascal call | Returns | Role |
 | ----------- | ------- | ---- |
 | `Application.OpenForTest(Width, Height)` | `Application` | Virtual screen, no terminal writer |
-| `Application.TestPump(App)` | `()` | Process one queued event + redraw |
-| `Application.TestPumpUntilIdle(App)` | `()` | Drain queue and settle redraws |
+| `Application.TestPump(App)` | `()` | Ingest queued input, flush coalesced resize, process one event, redraw |
+| `Application.TestPumpUntilIdle(App)` | `()` | Repeat pump until idle |
 | `Application.CloseForTest(App)` | `()` | Deterministic teardown |
+
+### Planned new routines (summary)
 
 Input injection (`Test*`):
 

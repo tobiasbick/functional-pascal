@@ -1,6 +1,6 @@
 # Native TUI testing in FPAS — implementation plan
 
-**Status:** Phase 0 complete; Phase 1 next.
+**Status:** Phase 1 complete; Phase 2 next.
 **Design:** [`README.md`](README.md).
 
 Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and a verification step. After a context loss, **start by reading the "Resume here" marker** below, then continue at the first unchecked task.
@@ -19,9 +19,9 @@ Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and 
 
 ## Resume here
 
-> **Next task:** Phase 1, Task 1.1 (`Application.OpenForTest`).
+> **Next task:** Phase 2, Task 2.1 (`Application.TestSendKey`).
 > **Last updated:** 2026-06-14
-> **Notes:** Phase 0 complete. ScreenCell uses CRT 0..15; sidecars deprecated for TUI (remove Phase 8); intrinsics **348..=370** reserved in `tui.rs`.
+> **Notes:** Phase 1 done. Native TUI test intrinsics use **356..=378** (`348..=355` are `Std.Test`). `TestPump` ingests console events, flushes coalesced resize, then process+redraw.
 
 ---
 
@@ -52,7 +52,7 @@ Resolve the [open decisions](README.md#open-decisions) before writing intrinsics
 - [x] **0.2 Decide `ViewId` representation.** Real opaque FPAS type vs bare `integer`. **Verify:** decision recorded in `README.md` open-decisions section with rationale.
 - [x] **0.3 Decide `ScreenCell` color type.** Reuse `Std.Console` CRT color enum (`0..=15`) vs richer type. **Verify:** chosen type referenced in spec.
 - [x] **0.4 Decide fate of sidecars.** Keep `*.script.toml` / `*.expect.screen` as sugar or deprecate. **Verify:** decision recorded; if deprecating, list affected files (`crates/fpas-cli/src/test_script/`, `crates/fpas-cli/src/cli_test/expect_screen.rs`).
-- [x] **0.5 Reserve intrinsic discriminant range.** Allocate a contiguous block after `347` (e.g. `348..=370`) in `crates/fpas-bytecode/src/intrinsic/tui.rs` and document it. **Verify:** `cargo build` passes; range comment present.
+- [x] **0.5 Reserve intrinsic discriminant range.** Allocate **356..=378** in `crates/fpas-bytecode/src/intrinsic/tui.rs` (skips **348..=355**, owned by `Std.Test`). **Verify:** `cargo build` passes; range comment present.
 
 ---
 
@@ -60,11 +60,11 @@ Resolve the [open decisions](README.md#open-decisions) before writing intrinsics
 
 Goal: open a TUI bound to a virtual screen and pump events one at a time, no terminal, no blocking `Run`.
 
-- [ ] **1.1 `Application.OpenForTest(Width, Height): Application`.** Open a `TuiSession` with a fixed-size virtual `ConsoleState` and no terminal writer. Reuse `Console::new` sizing path in `crates/fpas-std/src/console/mod.rs`. Follow [Appendix A](#appendix-a-per-intrinsic-checklist). **Verify:** VM test opens, asserts `QueryScreenSize` once 3.x exists; until then assert no panic + session active.
-- [ ] **1.2 `Application.TestPump(App)`.** Process exactly one queued event and settle the resulting redraw. Reuse `TuiHostProcessNext` + `TuiHostDispatchRedraw` in `crates/fpas-vm/src/vm/execute/io/tui_run.rs` and `tui/host/process.rs`. Guarantee back buffer reflects the event before returning. **Verify:** VM test: push a resize, pump, assert dispatched (via existing focus/resize observation).
-- [ ] **1.3 `Application.TestPumpUntilIdle(App)`.** Loop `TestPump` until the event queue is empty and no redraw is pending. **Verify:** VM test: push N events, one call drains all.
-- [ ] **1.4 `Application.CloseForTest(App)`.** Deterministic teardown mirroring `close_tui_application_state` (`crates/fpas-vm/src/vm/execute/io/tui/host/lifecycle.rs`). **Verify:** state cleared; re-open works in same program.
-- [ ] **1.5 Phase-1 FPAS smoke test.** `examples/pascal/test/tui_pump_test.fpas`: open → pump with no events → close, assert no error. **Verify:** `fpas test examples/pascal/test/tui_pump_test.fpas` passes.
+- [x] **1.1 `Application.OpenForTest(Width, Height): Application`.** Open a `TuiSession` with a fixed-size virtual `ConsoleState` and no terminal writer. Reuse `Console::new` sizing path in `crates/fpas-std/src/console/mod.rs`. Follow [Appendix A](#appendix-a-per-intrinsic-checklist). **Verify:** VM test opens, asserts `QueryScreenSize` once 3.x exists; until then assert no panic + session active.
+- [x] **1.2 `Application.TestPump(App)`.** Process exactly one queued event and settle the resulting redraw. Reuse `TuiHostProcessNext` + `TuiHostDispatchRedraw` in `crates/fpas-vm/src/vm/execute/io/tui_run.rs` and `tui/host/process.rs`. Guarantee back buffer reflects the event before returning. **Verify:** VM test: push a resize, pump, assert dispatched (via existing focus/resize observation).
+- [x] **1.3 `Application.TestPumpUntilIdle(App)`.** Loop `TestPump` until the event queue is empty and no redraw is pending. **Verify:** VM test: push N events, one call drains all.
+- [x] **1.4 `Application.CloseForTest(App)`.** Deterministic teardown mirroring `close_tui_application_state` (`crates/fpas-vm/src/vm/execute/io/tui/host/lifecycle.rs`). **Verify:** state cleared; re-open works in same program.
+- [x] **1.5 Phase-1 FPAS smoke test.** `examples/pascal/test/tui_pump_test.fpas`: open → pump with no events → close, assert no error. **Verify:** `fpas test examples/pascal/test/tui_pump_test.fpas` passes.
 
 ---
 
@@ -169,26 +169,28 @@ Running list of new intrinsics and their assigned discriminants (reserved in Pha
 
 | Intrinsic | Discriminant | Phase | Done |
 | --------- | ------------ | ----- | ---- |
-| `OpenForTest` | 348 | 1.1 | [ ] |
-| `TestPump` | 349 | 1.2 | [ ] |
-| `TestPumpUntilIdle` | 350 | 1.3 | [ ] |
-| `CloseForTest` | 351 | 1.4 | [ ] |
-| `TestSendKey` | 352 | 2.1 | [ ] |
-| `TestSendMouse` | 353 | 2.2 | [ ] |
-| `TestMoveMouse` | 354 | 2.3 | [ ] |
-| `TestClickMouse` | 355 | 2.4 | [ ] |
-| `TestResize` | 356 | 2.5 | [ ] |
-| `TestPaste` | 357 | 2.5 | [ ] |
-| `TestFocus` | 358 | 2.5 | [ ] |
-| `QueryScreenSize` | 359 | 3.2 | [ ] |
-| `QueryScreenLine` | 360 | 3.3 | [ ] |
-| `QueryScreenCell` | 361 | 3.4 | [ ] |
-| `QueryRootViews` | 362 | 4.1 | [ ] |
-| `QueryViewRect` | 363 | 4.2 | [ ] |
-| `QueryViewParent` | 364 | 4.3 | [ ] |
-| `QueryViewChildren` | 365 | 4.4 | [ ] |
-| `QueryMenuBarState` | 366 | 4.7 | [ ] |
-| *(spare)* | 367..=370 | — | — |
+| `OpenForTest` | 356 | 1.1 | [x] |
+| `TestPump` | 357 | 1.2 | [x] |
+| `TestPumpUntilIdle` | 358 | 1.3 | [x] |
+| `CloseForTest` | 359 | 1.4 | [x] |
+| `TestSendKey` | 360 | 2.1 | [ ] |
+| `TestSendMouse` | 361 | 2.2 | [ ] |
+| `TestMoveMouse` | 362 | 2.3 | [ ] |
+| `TestClickMouse` | 363 | 2.4 | [ ] |
+| `TestResize` | 364 | 2.5 | [ ] |
+| `TestPaste` | 365 | 2.5 | [ ] |
+| `TestFocus` | 366 | 2.5 | [ ] |
+| `QueryScreenSize` | 367 | 3.2 | [ ] |
+| `QueryScreenLine` | 368 | 3.3 | [ ] |
+| `QueryScreenCell` | 369 | 3.4 | [ ] |
+| `QueryRootViews` | 370 | 4.1 | [ ] |
+| `QueryViewRect` | 371 | 4.2 | [ ] |
+| `QueryViewParent` | 372 | 4.3 | [ ] |
+| `QueryViewChildren` | 373 | 4.4 | [ ] |
+| `QueryMenuBarState` | 374 | 4.7 | [ ] |
+| *(spare)* | 375..=378 | — | — |
+
+**348..=355** are reserved for `Std.Test` (`TestIntrinsic`); do not assign TUI testing discriminants in that range.
 
 Renames (no new discriminant): `QueryFocusedViewId` replaces Pascal name for **282**; `QueryModalDepth` replaces Pascal name for **278**.
 
@@ -196,6 +198,7 @@ Renames (no new discriminant): `QueryFocusedViewId` replaces Pascal name for **2
 
 Append one entry per working session: date, tasks completed, surprises, and the next task to resume from.
 
-- **2026-06-14:** Completed **0.3–0.5** (Phase 0 done). `ScreenCell` uses CRT `0..=15` + `Std.Console` constants; TUI sidecars deprecated (remove Phase 8); reserved intrinsics **348..=366** (+ spare **367..=370**) in `tui.rs`. Next: **1.1** `OpenForTest`.
+- **2026-06-14:** Completed **Phase 1** (1.1–1.5). Added `OpenForTest`, `TestPump`, `TestPumpUntilIdle`, `CloseForTest` (discriminants **356..=359**); headless `TuiSession::open_for_test`; `examples/pascal/test/tui_pump_test.fpas`. Corrected intrinsic range to **356..=378** (collision with `Std.Test` at **348..=355**). Next: **2.1** `TestSendKey`.
+- **2026-06-14:** Completed **0.3–0.5** (Phase 0 done). `ScreenCell` uses CRT `0..=15` + `Std.Console` constants; TUI sidecars deprecated (remove Phase 8); reserved intrinsics **356..=378** in `tui.rs`. Next: **1.1** `OpenForTest`.
 - **2026-06-14:** Completed **0.2** — `ViewId` decided as real opaque FPAS type (`Std.Tui.ViewId`, empty record like `Application`). `Option of ViewId` replaces integer `-1` for focus/parent detach. Documented in `tui-app.md` § ViewId type. Next: **0.3** (`ScreenCell` color type).
 - **2026-06-14:** Completed **0.1** — naming convention decided and documented in `docs/pascal/std/tui-app.md` § Native TUI testing API. Scheme: `Test*` (pump/inject/lifecycle), `Query*` (read-only), `Host*` (mutators). Planned renames: `HostQueryFocusedViewId` → `QueryFocusedViewId`, `HostModalDepth` → `QueryModalDepth`. Next: **0.2** (`ViewId` type decision).

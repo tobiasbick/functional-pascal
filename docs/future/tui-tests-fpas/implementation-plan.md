@@ -1,6 +1,6 @@
 # Native TUI testing in FPAS — implementation plan
 
-**Status:** Phase 3 complete; Phase 4 next.
+**Status:** Phase 4 in progress (4.1 done); Task 4.2 next.
 **Design:** [`README.md`](README.md).
 
 Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and a verification step. After a context loss, **start by reading the "Resume here" marker** below, then continue at the first unchecked task.
@@ -19,9 +19,9 @@ Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and 
 
 ## Resume here
 
-> **Next task:** Phase 4, Task **4.1** (`QueryRootViews`).
+> **Next task:** Phase 4, Task **4.2** (`QueryViewRect`).
 > **Last updated:** 2026-06-14
-> **Notes:** Phase 3 done. Screen queries **367..=369** read the CRT back buffer via `Console::query_screen_line` / `query_screen_cell`. `ScreenCell` registered in sema; smoke test `tui_screen_query_test.fpas`.
+> **Notes:** `QueryRootViews` (**370**) returns root view handles as `array of integer` until `ViewId` sema migration lands.
 
 ---
 
@@ -97,7 +97,7 @@ Goal: read the CRT back buffer (chars + colors) as FPAS values.
 
 Goal: expose `ViewRegistry` and `MenuBarWidget` internals as FPAS values.
 
-- [ ] **4.1 `Application.QueryRootViews(App): array of ViewId`.** From `ViewRegistry` roots (`crates/fpas-std/src/tui/view/`). **Verify:** create two root views, assert count/order.
+- [x] **4.1 `Application.QueryRootViews(App): array of ViewId`.** From `ViewRegistry` roots (`crates/fpas-std/src/tui/view/`). **Verify:** create two root views, assert count/order.
 - [ ] **4.2 `Application.QueryViewRect(App, ViewId): Rect`.** Absolute rect; reuse `ViewRegistry::rect`. **Verify:** create view at known coords, assert rect.
 - [ ] **4.3 `Application.QueryViewParent(App, ViewId): Option of ViewId`.** **Verify:** reparent, assert parent.
 - [ ] **4.4 `Application.QueryViewChildren(App, ViewId): array of ViewId`.** **Verify:** push children, assert list + z-order.
@@ -183,7 +183,7 @@ Running list of new intrinsics and their assigned discriminants (reserved in Pha
 | `QueryScreenSize` | 367 | 3.2 | [x] |
 | `QueryScreenLine` | 368 | 3.3 | [x] |
 | `QueryScreenCell` | 369 | 3.4 | [x] |
-| `QueryRootViews` | 370 | 4.1 | [ ] |
+| `QueryRootViews` | 370 | 4.1 | [x] |
 | `QueryViewRect` | 371 | 4.2 | [ ] |
 | `QueryViewParent` | 372 | 4.3 | [ ] |
 | `QueryViewChildren` | 373 | 4.4 | [ ] |
@@ -198,6 +198,7 @@ Renames (no new discriminant): `QueryFocusedViewId` replaces Pascal name for **2
 
 Append one entry per working session: date, tasks completed, surprises, and the next task to resume from.
 
+- **2026-06-14:** Completed **4.1** `QueryRootViews` (**370**); `ViewRegistry::roots()`; VM + compiler tests. Return type is `array of integer` until `ViewId` migration. Next: **4.2** `QueryViewRect`.
 - **2026-06-14:** Completed **Phase 3** (3.1–3.5). Registered `ScreenCell`; added `QueryScreenSize` / `QueryScreenLine` / `QueryScreenCell` (**367..=369**); `Console::query_screen_line` / `query_screen_cell`; VM + compiler tests; `examples/pascal/test/tui_screen_query_test.fpas`. Next: **4.1** `QueryRootViews`.
 - **2026-06-14:** Completed **Phase 2** (2.1–2.6). Added input injectors `TestSendKey` … `TestFocus` (**360..=366**); `pop_console_event` in VM; `examples/pascal/test/tui_inject_key_test.fpas`. Next: **3.1** `ScreenCell` registry.
 - **2026-06-14:** Completed **Phase 1** (1.1–1.5). Added `OpenForTest`, `TestPump`, `TestPumpUntilIdle`, `CloseForTest` (discriminants **356..=359**); headless `TuiSession::open_for_test`; `examples/pascal/test/tui_pump_test.fpas`. Corrected intrinsic range to **356..=378** (collision with `Std.Test` at **348..=355**). Next: **2.1** `TestSendKey`.

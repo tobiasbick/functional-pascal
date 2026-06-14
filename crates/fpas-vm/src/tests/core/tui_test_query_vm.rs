@@ -1,4 +1,4 @@
-//! VM tests for native TUI screen queries (Phase 3).
+//! VM tests for native TUI query intrinsics (Phase 3–4).
 //!
 //! **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
 
@@ -158,8 +158,56 @@ fn tui_query_screen_cell_reads_menu_bar_accel_color() {
     let mut worker = Worker::new_main(shared);
     worker.run().expect("query screen cell should succeed");
 
-    assert_eq!(
-        worker.stack.last(),
-        Some(&tui_screen_cell_value('F', 4, 7))
+    assert_eq!(worker.stack.last(), Some(&tui_screen_cell_value('F', 4, 7)));
+}
+
+#[test]
+fn tui_query_root_views_lists_registered_roots_in_order() {
+    let mut chunk = Chunk::new();
+    emit_open_for_test(&mut chunk, 80, 25);
+    emit_constant(&mut chunk, tui_application_value());
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(80));
+    emit_constant(&mut chunk, Value::Integer(1));
+    emit_constant(
+        &mut chunk,
+        Value::Array(vec![menu_bar_file_item()]),
     );
+    emit_constant(&mut chunk, default_menu_bar_style());
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(
+            TuiIntrinsic::HostCreateMenuBarView,
+        ))),
+        loc(),
+    );
+    emit_constant(&mut chunk, tui_application_value());
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(1));
+    emit_constant(&mut chunk, Value::Integer(80));
+    emit_constant(&mut chunk, Value::Integer(24));
+    emit_constant(&mut chunk, Value::Integer(1));
+    emit_constant(&mut chunk, Value::OptionNone);
+    emit_constant(&mut chunk, Value::OptionNone);
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(
+            TuiIntrinsic::HostCreateSolidFillView,
+        ))),
+        loc(),
+    );
+    emit_constant(&mut chunk, tui_application_value());
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::QueryRootViews))),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(shared);
+    worker.run().expect("query root views should succeed");
+
+    let Value::Array(roots) = worker.stack.last().expect("roots on stack") else {
+        panic!("expected root view array");
+    };
+    assert_eq!(roots, &[Value::Integer(0), Value::Integer(1),]);
 }

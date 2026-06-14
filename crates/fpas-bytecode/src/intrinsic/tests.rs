@@ -270,6 +270,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Tui(TuiIntrinsic::QueryScreenSize),
     Intrinsic::Tui(TuiIntrinsic::QueryScreenLine),
     Intrinsic::Tui(TuiIntrinsic::QueryScreenCell),
+    Intrinsic::Tui(TuiIntrinsic::QueryRootViews),
     Intrinsic::Test(TestIntrinsic::AssertTrue),
     Intrinsic::Test(TestIntrinsic::AssertFalse),
     Intrinsic::Test(TestIntrinsic::AssertEqualsInteger),

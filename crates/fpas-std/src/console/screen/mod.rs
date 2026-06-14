@@ -384,7 +384,8 @@ impl ConsoleState {
 
     #[cfg(test)]
     pub(super) fn cell_at_packed(&self, x: u16, y: u16) -> (char, u8, u8) {
-        self.packed_cell_at(x, y).expect("expected packed CRT colors")
+        self.packed_cell_at(x, y)
+            .expect("expected packed CRT colors")
     }
 
     #[cfg(test)]

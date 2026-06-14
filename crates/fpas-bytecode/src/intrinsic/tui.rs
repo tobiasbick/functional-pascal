@@ -346,7 +346,14 @@ pub enum TuiIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
     QueryScreenCell = 369,
-    // Reserved **370..=378** for remaining native TUI testing API
+
+    /// List root view handles in root-list order.
+    ///
+    /// Stack: `Application`. Pushes `array of integer` (view handles until `ViewId` migration).
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    QueryRootViews = 370,
+    // Reserved **371..=378** for remaining native TUI testing API
     // (see docs/future/tui-tests-fpas/implementation-plan.md Appendix B).
     // Note: **348..=355** are owned by `Std.Test` (`TestIntrinsic`).
 }

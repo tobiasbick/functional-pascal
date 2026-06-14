@@ -41,6 +41,17 @@ impl Worker {
                 })?;
                 self.push(Self::tui_screen_cell_record(ch, fg, bg))?;
             }
+            Intrinsic::Tui(TuiIntrinsic::QueryRootViews) => {
+                self.pop_tui_application(line)?;
+                let ids = self.with_tui(|tui| {
+                    tui.views
+                        .roots()
+                        .iter()
+                        .map(|id| Value::Integer(i64::from(id.raw())))
+                        .collect::<Vec<_>>()
+                });
+                self.push(Value::Array(ids))?;
+            }
             _ => return Ok(false),
         }
 

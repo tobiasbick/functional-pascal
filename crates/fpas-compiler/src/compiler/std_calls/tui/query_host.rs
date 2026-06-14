@@ -50,6 +50,12 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::QueryScreenCell), location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_QUERY_ROOT_VIEWS => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_QUERY_ROOT_VIEWS, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::QueryRootViews), location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

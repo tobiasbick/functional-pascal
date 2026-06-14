@@ -253,6 +253,7 @@ pub const STD_TUI_APPLICATION_TEST_FOCUS: &str = std_tui!("Application.TestFocus
 pub const STD_TUI_APPLICATION_QUERY_SCREEN_SIZE: &str = std_tui!("Application.QueryScreenSize");
 pub const STD_TUI_APPLICATION_QUERY_SCREEN_LINE: &str = std_tui!("Application.QueryScreenLine");
 pub const STD_TUI_APPLICATION_QUERY_SCREEN_CELL: &str = std_tui!("Application.QueryScreenCell");
+pub const STD_TUI_APPLICATION_QUERY_ROOT_VIEWS: &str = std_tui!("Application.QueryRootViews");
 pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_KEY_PRESSED: &str =
     std_tui!("Application.HostRegisterOnKeyPressed");
 pub const STD_TUI_APPLICATION_HOST_INVOKE_ON_KEY_PRESSED: &str =

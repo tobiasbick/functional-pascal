@@ -1,4 +1,4 @@
-//! Compiler integration tests for native TUI screen queries (Phase 3).
+//! Compiler integration tests for native TUI query intrinsics (Phase 3–4).
 //!
 //! **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
 
@@ -15,6 +15,7 @@ begin
   var ScreenSize: Size := Application.QueryScreenSize(App);
   var Line: string := Application.QueryScreenLine(App, 1);
   var Cell: ScreenCell := Application.QueryScreenCell(App, 1, 1);
+  var Roots: array of integer := Application.QueryRootViews(App);
   Application.CloseForTest(App)
 end.",
     );
@@ -53,6 +54,59 @@ begin
   AssertTrue(Bang.ch = '!');
   AssertEquals(Red, Bang.fg);
 
+  Application.CloseForTest(App)
+end.",
+    );
+
+    assert!(out.lines.is_empty());
+}
+
+#[test]
+fn std_tui_query_root_views_lists_registered_roots_in_order() {
+    let out = compile_and_run(
+        "\
+program T;
+uses Std.Console, Std.Tui, Std.Test;
+
+function FileSubmenu(): array of MenuPopupItem;
+begin
+  return [
+    record Label := 'Exit'; Shortcut := 'X'; Enabled := true; CommandId := 1; Separator := false; end
+  ]
+end;
+
+function MenuItems(): array of MenuBarItem;
+begin
+  return [
+    record
+      Label := 'File'; Shortcut := 'F'; Enabled := true; CommandId := -1;
+      Submenu := FileSubmenu();
+    end
+  ]
+end;
+
+function MenuStyle(): MenuBarStyle;
+begin
+  return record
+    BarBg := LightGray;
+    BarFg := Black;
+    AccelFg := Red;
+    HighlightBg := Black;
+    HighlightFg := LightGray;
+    DisabledFg := DarkGray;
+  end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  var MenuBar: integer := Application.HostCreateMenuBarView(
+    App, 0, 0, 80, 1, MenuItems(), MenuStyle());
+  var Desktop: integer := Application.HostCreateSolidFillView(
+    App, 0, 1, 80, 24, Blue, None, None);
+  var Roots: array of integer := Application.QueryRootViews(App);
+  AssertEquals(2, Std.Array.Length(Roots));
+  AssertEquals(MenuBar, Roots[0]);
+  AssertEquals(Desktop, Roots[1]);
   Application.CloseForTest(App)
 end.",
     );

@@ -116,6 +116,12 @@ impl ViewRegistry {
         self.views.iter().map(|entry| entry.id)
     }
 
+    /// Return root view ids in root-list order (back-to-front z-order within the root tier).
+    #[must_use]
+    pub fn roots(&self) -> &[ViewId] {
+        &self.roots
+    }
+
     /// Return the subtree rooted at `root` in paint order.
     #[must_use]
     pub fn subtree_ids(&self, root: ViewId) -> Vec<ViewId> {

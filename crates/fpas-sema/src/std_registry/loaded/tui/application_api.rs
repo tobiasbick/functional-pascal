@@ -178,4 +178,10 @@ pub(super) fn register_application_api(checker: &mut Checker, types: &TuiTypes) 
         ],
         types.screen_cell.clone(),
     );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_QUERY_ROOT_VIEWS,
+        vec![p("App", types.application.clone(), false)],
+        Ty::Array(Box::new(Ty::Integer)),
+    );
 }

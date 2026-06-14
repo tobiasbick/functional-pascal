@@ -20,6 +20,15 @@ fn register_returns_distinct_ids() {
 }
 
 #[test]
+fn roots_lists_root_views_in_registration_order() {
+    let mut registry = ViewRegistry::default();
+    let first = registry.register(rect(0, 0, 10, 1));
+    let second = registry.register(rect(0, 1, 10, 9));
+
+    assert_eq!(registry.roots(), &[first, second]);
+}
+
+#[test]
 fn register_wraps_id_allocator_without_reusing_live_ids() {
     let mut registry = ViewRegistry {
         next_id: u32::MAX,

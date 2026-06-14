@@ -259,4 +259,24 @@ pub enum TuiIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     HostSetStatusBarSegments = 347,
+
+    // -------------------------------------------------------------------------
+    // Reserved **348..=370** for native TUI testing (`docs/future/tui-tests-fpas/`).
+    // Do not assign other discriminants in this range.
+    //
+    // Planned allocation (Appendix B in implementation-plan.md):
+    //   348 OpenForTest          359 QueryScreenSize
+    //   349 TestPump             360 QueryScreenLine
+    //   350 TestPumpUntilIdle    361 QueryScreenCell
+    //   351 CloseForTest         362 QueryRootViews
+    //   352 TestSendKey          363 QueryViewRect
+    //   353 TestSendMouse        364 QueryViewParent
+    //   354 TestMoveMouse        365 QueryViewChildren
+    //   355 TestClickMouse       366 QueryMenuBarState
+    //   356 TestResize           367..=370 spare
+    //   357 TestPaste
+    //   358 TestFocus
+    //
+    // Renames reuse existing slots: QueryFocusedViewId ← 282, QueryModalDepth ← 278.
+    // -------------------------------------------------------------------------
 }

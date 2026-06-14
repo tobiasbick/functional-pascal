@@ -154,8 +154,8 @@ Per the mandate, candidate changes (decide during implementation):
 
 | Current | Proposed direction |
 | ------- | ------------------ |
-| `*.script.toml` pre-run injection | Keep only as optional sugar, or remove in favor of FPAS injectors |
-| `*.expect.screen` character golden | Keep for coarse snapshots, or replace with `AssertScreenLine` |
+| `*.script.toml` pre-run injection | Deprecated for TUI; remove Phase 8 — see [sidecar deprecation](../../pascal/std/tui-app.md#sidecar-deprecation-decided) |
+| `*.expect.screen` character golden | Deprecated; replace with `QueryScreenCell` / `AssertScreenLine` |
 | Bare `integer` view handles + `-1` sentinels | Typed `ViewId` + `Option of ViewId`; see [ViewId type decision](../../pascal/std/tui-app.md#viewid-type-decided) |
 | `Application.Run` as the only entry | Add `OpenForTest` + `TestPump`; keep `Run` for real apps |
 | Rust-only `MenuBarWidget` state | Expose via `QueryMenuBarState` |
@@ -192,8 +192,8 @@ Sema registration follows `crates/fpas-sema/src/std_registry/loaded/tui/`; lower
 
 1. ~~**Is `ViewId` a real opaque type or still a bare `integer` in FPAS?**~~ **Decided** — real type `Std.Tui.ViewId` (empty opaque record, same pattern as `Application`). Host routines return `ViewId`; missing views use `Option of ViewId` instead of `-1`. Rationale: type safety, readable tests, removes magic sentinels. See [`tui-app.md` § ViewId type](../../pascal/std/tui-app.md#viewid-type-decided).
 2. **Do injectors require headless mode, or also work during a live `Run` (for the control server to reuse)?** Sharing one injection path is cleaner.
-3. **Keep `*.script.toml` and `*.expect.screen` at all?** They overlap with the FPAS-native path; decide whether to deprecate.
-4. **Color representation in `ScreenCell`** — reuse the `Std.Console` CRT color enum (`0..=15`) or a richer color type for future truecolor support.
+3. ~~**Keep `*.script.toml` and `*.expect.screen` at all?**~~ **Decided** — deprecated for TUI; remove in Phase 8 after migrating to native FPAS tests. Keep `*.expect.stdout` for non-TUI tests. See [`tui-app.md` § Sidecar deprecation](../../pascal/std/tui-app.md#sidecar-deprecation-decided).
+4. ~~**Color representation in `ScreenCell`**~~ **Decided** — CRT packed colors `0..=15` as `integer`, use `Std.Console` constants in assertions. Truecolor/256-color out of scope for v1. See [`tui-app.md` § ScreenCell type](../../pascal/std/tui-app.md#screencell-type-decided).
 5. ~~**Naming:** `Test*` vs `Host*` vs `Query*` prefixes.~~ **Decided** — see [`docs/pascal/std/tui-app.md` § Native TUI testing API](../../pascal/std/tui-app.md#naming-convention-decided): `Test*` = pump/inject, `Query*` = read, `Host*` = mutators only; rename `HostQueryFocusedViewId` → `QueryFocusedViewId`, `HostModalDepth` → `QueryModalDepth`.
 
 ## Success criteria (when implemented)

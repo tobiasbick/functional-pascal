@@ -1,6 +1,6 @@
 # Native TUI testing in FPAS — implementation plan
 
-**Status:** in progress (Phase 0).
+**Status:** Phase 0 complete; Phase 1 next.
 **Design:** [`README.md`](README.md).
 
 Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and a verification step. After a context loss, **start by reading the "Resume here" marker** below, then continue at the first unchecked task.
@@ -19,9 +19,9 @@ Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and 
 
 ## Resume here
 
-> **Next task:** Phase 0, Task 0.3.
+> **Next task:** Phase 1, Task 1.1 (`Application.OpenForTest`).
 > **Last updated:** 2026-06-14
-> **Notes:** Task 0.2 complete — `ViewId` is a real opaque FPAS type (`record end`); `Option of ViewId` replaces `-1` sentinels.
+> **Notes:** Phase 0 complete. ScreenCell uses CRT 0..15; sidecars deprecated for TUI (remove Phase 8); intrinsics **348..=370** reserved in `tui.rs`.
 
 ---
 
@@ -50,9 +50,9 @@ Resolve the [open decisions](README.md#open-decisions) before writing intrinsics
 
 - [x] **0.1 Decide naming scheme.** Pick one prefix family (`Test*` for injection/pump, `Query*` for read, keep `Host*` only for mutators). Record the decision in `docs/pascal/std/tui-app.md`. **Verify:** decision written in spec; this plan's task names updated if they diverge.
 - [x] **0.2 Decide `ViewId` representation.** Real opaque FPAS type vs bare `integer`. **Verify:** decision recorded in `README.md` open-decisions section with rationale.
-- [ ] **0.3 Decide `ScreenCell` color type.** Reuse `Std.Console` CRT color enum (`0..=15`) vs richer type. **Verify:** chosen type referenced in spec.
-- [ ] **0.4 Decide fate of sidecars.** Keep `*.script.toml` / `*.expect.screen` as sugar or deprecate. **Verify:** decision recorded; if deprecating, list affected files (`crates/fpas-cli/src/test_script/`, `crates/fpas-cli/src/cli_test/expect_screen.rs`).
-- [ ] **0.5 Reserve intrinsic discriminant range.** Allocate a contiguous block after `347` (e.g. `348..=370`) in `crates/fpas-bytecode/src/intrinsic/tui.rs` and document it. **Verify:** `cargo build` passes; range comment present.
+- [x] **0.3 Decide `ScreenCell` color type.** Reuse `Std.Console` CRT color enum (`0..=15`) vs richer type. **Verify:** chosen type referenced in spec.
+- [x] **0.4 Decide fate of sidecars.** Keep `*.script.toml` / `*.expect.screen` as sugar or deprecate. **Verify:** decision recorded; if deprecating, list affected files (`crates/fpas-cli/src/test_script/`, `crates/fpas-cli/src/cli_test/expect_screen.rs`).
+- [x] **0.5 Reserve intrinsic discriminant range.** Allocate a contiguous block after `347` (e.g. `348..=370`) in `crates/fpas-bytecode/src/intrinsic/tui.rs` and document it. **Verify:** `cargo build` passes; range comment present.
 
 ---
 
@@ -165,33 +165,37 @@ For **every** new intrinsic, all of these must be done before its task box is ch
 
 ## Appendix B — intrinsic inventory
 
-Running list of new intrinsics and their assigned discriminants. Fill in during Phase 0.5.
+Running list of new intrinsics and their assigned discriminants (reserved in Phase 0.5).
 
 | Intrinsic | Discriminant | Phase | Done |
 | --------- | ------------ | ----- | ---- |
-| `OpenForTest` | TBD | 1.1 | [ ] |
-| `TestPump` | TBD | 1.2 | [ ] |
-| `TestPumpUntilIdle` | TBD | 1.3 | [ ] |
-| `CloseForTest` | TBD | 1.4 | [ ] |
-| `TestSendKey` | TBD | 2.1 | [ ] |
-| `TestSendMouse` | TBD | 2.2 | [ ] |
-| `TestMoveMouse` | TBD | 2.3 | [ ] |
-| `TestClickMouse` | TBD | 2.4 | [ ] |
-| `TestResize` | TBD | 2.5 | [ ] |
-| `TestPaste` | TBD | 2.5 | [ ] |
-| `TestFocus` | TBD | 2.5 | [ ] |
-| `QueryScreenSize` | TBD | 3.2 | [ ] |
-| `QueryScreenLine` | TBD | 3.3 | [ ] |
-| `QueryScreenCell` | TBD | 3.4 | [ ] |
-| `QueryRootViews` | TBD | 4.1 | [ ] |
-| `QueryViewRect` | TBD | 4.2 | [ ] |
-| `QueryViewParent` | TBD | 4.3 | [ ] |
-| `QueryViewChildren` | TBD | 4.4 | [ ] |
-| `QueryMenuBarState` | TBD | 4.7 | [ ] |
+| `OpenForTest` | 348 | 1.1 | [ ] |
+| `TestPump` | 349 | 1.2 | [ ] |
+| `TestPumpUntilIdle` | 350 | 1.3 | [ ] |
+| `CloseForTest` | 351 | 1.4 | [ ] |
+| `TestSendKey` | 352 | 2.1 | [ ] |
+| `TestSendMouse` | 353 | 2.2 | [ ] |
+| `TestMoveMouse` | 354 | 2.3 | [ ] |
+| `TestClickMouse` | 355 | 2.4 | [ ] |
+| `TestResize` | 356 | 2.5 | [ ] |
+| `TestPaste` | 357 | 2.5 | [ ] |
+| `TestFocus` | 358 | 2.5 | [ ] |
+| `QueryScreenSize` | 359 | 3.2 | [ ] |
+| `QueryScreenLine` | 360 | 3.3 | [ ] |
+| `QueryScreenCell` | 361 | 3.4 | [ ] |
+| `QueryRootViews` | 362 | 4.1 | [ ] |
+| `QueryViewRect` | 363 | 4.2 | [ ] |
+| `QueryViewParent` | 364 | 4.3 | [ ] |
+| `QueryViewChildren` | 365 | 4.4 | [ ] |
+| `QueryMenuBarState` | 366 | 4.7 | [ ] |
+| *(spare)* | 367..=370 | — | — |
+
+Renames (no new discriminant): `QueryFocusedViewId` replaces Pascal name for **282**; `QueryModalDepth` replaces Pascal name for **278**.
 
 ## Progress log
 
 Append one entry per working session: date, tasks completed, surprises, and the next task to resume from.
 
+- **2026-06-14:** Completed **0.3–0.5** (Phase 0 done). `ScreenCell` uses CRT `0..=15` + `Std.Console` constants; TUI sidecars deprecated (remove Phase 8); reserved intrinsics **348..=366** (+ spare **367..=370**) in `tui.rs`. Next: **1.1** `OpenForTest`.
 - **2026-06-14:** Completed **0.2** — `ViewId` decided as real opaque FPAS type (`Std.Tui.ViewId`, empty record like `Application`). `Option of ViewId` replaces integer `-1` for focus/parent detach. Documented in `tui-app.md` § ViewId type. Next: **0.3** (`ScreenCell` color type).
 - **2026-06-14:** Completed **0.1** — naming convention decided and documented in `docs/pascal/std/tui-app.md` § Native TUI testing API. Scheme: `Test*` (pump/inject/lifecycle), `Query*` (read-only), `Host*` (mutators). Planned renames: `HostQueryFocusedViewId` → `QueryFocusedViewId`, `HostModalDepth` → `QueryModalDepth`. Next: **0.2** (`ViewId` type decision).

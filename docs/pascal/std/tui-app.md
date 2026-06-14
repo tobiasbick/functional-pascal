@@ -561,6 +561,8 @@ Screen introspection (`Query*`):
 | `Application.QueryScreenLine(App, Y)` | `string` |
 | `Application.QueryScreenCell(App, X, Y)` | `ScreenCell` (`ch`, `fg`, `bg`) |
 
+See [ScreenCell type (decided)](#screencell-type-decided) for color representation.
+
 View and widget introspection (`Query*`):
 
 | Pascal call | Returns |
@@ -574,3 +576,50 @@ View and widget introspection (`Query*`):
 | `Application.QueryMenuBarState(App, ViewId)` | `MenuBarState` |
 
 See the implementation plan for intrinsic discriminants, verification steps, and phase order.
+
+### ScreenCell type (decided)
+
+`QueryScreenCell` returns a **`ScreenCell`** record. Colors use the **packed CRT model** (`0..=15`), same as `TextColor` / `TextBackground` and host widgets such as `MenuBarStyle`.
+
+```pascal
+type ScreenCell = record
+  ch: char;
+  fg: integer;   { CRT foreground 0..15 — use Std.Console color constants }
+  bg: integer;    { CRT background 0..15 }
+end;
+```
+
+**Rationale**
+
+- The TUI hosted back buffer stores **packed 16-color attributes** per cell (`ConsoleState`), not truecolor or 256-color palette state.
+- Menu hover tests assert the same colors `MenuBarStyle` already uses (`LightGray`, `Black`, …).
+- Assertions stay readable: `AssertEquals(LightGray, Cell.fg)` with `uses Std.Console`.
+
+**Rules**
+
+| Rule | Detail |
+| ---- | ------ |
+| Valid range | `fg` and `bg` are always `0..=15` for cells returned by `QueryScreenCell`. |
+| Constants | Prefer `Std.Console` names (`Black`, `LightGray`, `Red`, …) over raw integers in tests. |
+| Truecolor / 256-color | **Out of scope for v1.** Extended terminal colors from `TextColorRGB` / `TextColor256` are not represented in the logical screen model; do not add a richer `ScreenCell` shape until the back buffer supports it. |
+| Errors | Out-of-bounds coordinates are a runtime error with a concrete hint (row/column and screen size). |
+
+### Sidecar deprecation (decided)
+
+Runner sidecars **overlap** with the native FPAS test API and are **deprecated** for TUI work:
+
+| Sidecar | Status | Replacement |
+| ------- | ------ | ----------- |
+| `<test>.script.toml` (console/TUI events) | Deprecated; remove in Phase 8 | `Application.TestSendKey`, `TestMoveMouse`, … + `TestPump` |
+| `<test>.script.toml` (`readln` only) | Deprecated; remove in Phase 8 | `Application.TestReadLn` (add when needed) or inline test setup |
+| `<test>.expect.screen` | Deprecated; remove in Phase 8 | `QueryScreenLine` / `QueryScreenCell` + `Std.Test` assertions |
+| `<test>.expect.stdout` | **Keep** | Still useful for non-TUI output-only tests |
+| `<test>.expect.pixels` | **Keep** until graph native testing exists | Graph-specific |
+
+Affected implementation paths (remove in Phase 8 after migration):
+
+- `crates/fpas-cli/src/test_script/` — TOML parse/apply for pre-run input
+- `crates/fpas-cli/src/cli_test/expect_screen.rs` — golden screen compare
+- `examples/pascal/test/tui_escape_test.script.toml`, `tui_mouse_test.script.toml`, `tui_escape_test.expect.screen` — migrate to native FPAS tests in Phase 7/8
+
+Until Phase 8, the runner keeps sidecar support so existing tests keep passing during implementation.

@@ -49,7 +49,7 @@ begin
   Application.TestPump(App);
 
   { Hover is reflected in widget state and on screen. }
-  var State: MenuBarState := Application.HostQueryMenuBarState(App, Bar);
+  var State: MenuBarState := Application.QueryMenuBarState(App, Bar);
   AssertEquals(0, State.hoveredIndex);
 
   var Cell: ScreenCell := Application.QueryScreenCell(App, 2, 0);
@@ -116,7 +116,7 @@ Expose the host view registry and widget internals as FPAS values:
 - `Application.QueryViewParent(App, ViewId): Option of ViewId`.
 - `Application.QueryViewChildren(App, ViewId): array of ViewId`.
 - `Application.QueryRootViews(App): array of ViewId`.
-- `Application.HostQueryMenuBarState(App, ViewId): MenuBarState` where
+- `Application.QueryMenuBarState(App, ViewId): MenuBarState` where
 
   ```pascal
   type MenuBarState = record
@@ -156,7 +156,7 @@ Per the mandate, candidate changes (decide during implementation):
 | ------- | ------------------ |
 | `*.script.toml` pre-run injection | Keep only as optional sugar, or remove in favor of FPAS injectors |
 | `*.expect.screen` character golden | Keep for coarse snapshots, or replace with `AssertScreenLine` |
-| `HostQueryFocusedViewId` / `HostModalDepth` | Fold into coherent `Query*` family; see [naming convention](../../pascal/std/tui-app.md#naming-convention-decided) |
+| Bare `integer` view handles + `-1` sentinels | Typed `ViewId` + `Option of ViewId`; see [ViewId type decision](../../pascal/std/tui-app.md#viewid-type-decided) |
 | `Application.Run` as the only entry | Add `OpenForTest` + `TestPump`; keep `Run` for real apps |
 | Rust-only `MenuBarWidget` state | Expose via `QueryMenuBarState` |
 
@@ -186,11 +186,11 @@ Intrinsics extend the existing `TuiIntrinsic` enum (`crates/fpas-bytecode/src/in
 | `Query*View*` | `ViewRegistry` in `TuiState` (`crates/fpas-vm/src/vm/shared.rs`) |
 | `QueryMenuBarState` | `MenuBarWidget` fields (`crates/fpas-std/src/tui/widget/menu_bar/`) |
 
-Sema registration follows `crates/fpas-sema/src/std_registry/loaded/tui/`; lowering follows `crates/fpas-compiler/src/compiler/std_calls/tui/`. New record types (`ScreenCell`, `MenuBarState`, `Rect`, `ViewId` as a real type rather than a bare integer) are declared in the `Std.Tui` registry.
+Sema registration follows `crates/fpas-sema/src/std_registry/loaded/tui/`; lowering follows `crates/fpas-compiler/src/compiler/std_calls/tui/`. New record types (`ScreenCell`, `MenuBarState`, `Rect`, `ViewId`) are declared in the `Std.Tui` registry — `ViewId` as an empty opaque record per the [ViewId decision](../../pascal/std/tui-app.md#viewid-type-decided).
 
 ## Open decisions
 
-1. **Is `ViewId` a real opaque type or still a bare `integer` in FPAS?** A real type improves test readability and type safety; it is a language-surface change.
+1. ~~**Is `ViewId` a real opaque type or still a bare `integer` in FPAS?**~~ **Decided** — real type `Std.Tui.ViewId` (empty opaque record, same pattern as `Application`). Host routines return `ViewId`; missing views use `Option of ViewId` instead of `-1`. Rationale: type safety, readable tests, removes magic sentinels. See [`tui-app.md` § ViewId type](../../pascal/std/tui-app.md#viewid-type-decided).
 2. **Do injectors require headless mode, or also work during a live `Run` (for the control server to reuse)?** Sharing one injection path is cleaner.
 3. **Keep `*.script.toml` and `*.expect.screen` at all?** They overlap with the FPAS-native path; decide whether to deprecate.
 4. **Color representation in `ScreenCell`** — reuse the `Std.Console` CRT color enum (`0..=15`) or a richer color type for future truecolor support.

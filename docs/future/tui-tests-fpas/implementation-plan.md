@@ -19,9 +19,9 @@ Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and 
 
 ## Resume here
 
-> **Next task:** Phase 0, Task 0.2.
+> **Next task:** Phase 0, Task 0.3.
 > **Last updated:** 2026-06-14
-> **Notes:** Task 0.1 complete — naming convention documented in `docs/pascal/std/tui-app.md` (`Test*` / `Query*` / `Host*`); planned renames for `QueryFocusedViewId`, `QueryModalDepth`.
+> **Notes:** Task 0.2 complete — `ViewId` is a real opaque FPAS type (`record end`); `Option of ViewId` replaces `-1` sentinels.
 
 ---
 
@@ -49,7 +49,7 @@ Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and 
 Resolve the [open decisions](README.md#open-decisions) before writing intrinsics, because they change signatures.
 
 - [x] **0.1 Decide naming scheme.** Pick one prefix family (`Test*` for injection/pump, `Query*` for read, keep `Host*` only for mutators). Record the decision in `docs/pascal/std/tui-app.md`. **Verify:** decision written in spec; this plan's task names updated if they diverge.
-- [ ] **0.2 Decide `ViewId` representation.** Real opaque FPAS type vs bare `integer`. **Verify:** decision recorded in `README.md` open-decisions section with rationale.
+- [x] **0.2 Decide `ViewId` representation.** Real opaque FPAS type vs bare `integer`. **Verify:** decision recorded in `README.md` open-decisions section with rationale.
 - [ ] **0.3 Decide `ScreenCell` color type.** Reuse `Std.Console` CRT color enum (`0..=15`) vs richer type. **Verify:** chosen type referenced in spec.
 - [ ] **0.4 Decide fate of sidecars.** Keep `*.script.toml` / `*.expect.screen` as sugar or deprecate. **Verify:** decision recorded; if deprecating, list affected files (`crates/fpas-cli/src/test_script/`, `crates/fpas-cli/src/cli_test/expect_screen.rs`).
 - [ ] **0.5 Reserve intrinsic discriminant range.** Allocate a contiguous block after `347` (e.g. `348..=370`) in `crates/fpas-bytecode/src/intrinsic/tui.rs` and document it. **Verify:** `cargo build` passes; range comment present.
@@ -193,4 +193,5 @@ Running list of new intrinsics and their assigned discriminants. Fill in during 
 
 Append one entry per working session: date, tasks completed, surprises, and the next task to resume from.
 
+- **2026-06-14:** Completed **0.2** — `ViewId` decided as real opaque FPAS type (`Std.Tui.ViewId`, empty record like `Application`). `Option of ViewId` replaces integer `-1` for focus/parent detach. Documented in `tui-app.md` § ViewId type. Next: **0.3** (`ScreenCell` color type).
 - **2026-06-14:** Completed **0.1** — naming convention decided and documented in `docs/pascal/std/tui-app.md` § Native TUI testing API. Scheme: `Test*` (pump/inject/lifecycle), `Query*` (read-only), `Host*` (mutators). Planned renames: `HostQueryFocusedViewId` → `QueryFocusedViewId`, `HostModalDepth` → `QueryModalDepth`. Next: **0.2** (`ViewId` type decision).

@@ -115,13 +115,15 @@ Samples: [`examples/pascal/tui/host_dispatch_minimal.fpas`](../../../examples/pa
 
 ### Host view handles
 
-`Application.HostRegisterView(App, X, Y, Width, Height)` returns an opaque integer view handle owned by the host. The current FPAS surface treats that handle as an integer token; pass it back unchanged to `Application.HostUnregisterView(App, ViewId)`, `Application.HostPushChildView(App, ViewId)`, `Application.HostSetViewRect(App, ViewId, X, Y, Width, Height)`, `Application.HostSetViewParent(App, ViewId, ParentViewId)`, `Application.HostRegisterOnViewPaint(App, ViewId, OnViewPaint)`, and `Application.HostBindCommandToView(App, ViewId, Key, CommandId)`.
+`Application.HostRegisterView(App, X, Y, Width, Height)` returns an opaque **`ViewId`** owned by the host (see [ViewId type (decided)](#viewid-type-decided) under Native TUI testing API). Pass it to `Application.HostUnregisterView`, `Application.HostPushChildView`, `Application.HostSetViewRect`, `Application.HostSetViewParent`, `Application.HostRegisterOnViewPaint`, and `Application.HostBindCommandToView`.
 
-`Application.HostPushChildView(App, ViewId)` appends the handle to the focus chain used by Tab / Shift+Tab traversal. `Application.HostQueryFocusedViewId(App)` returns the currently focused handle or `-1` when no host-managed view is focused.
+`Application.HostPushChildView(App, ViewId)` appends the handle to the focus chain used by Tab / Shift+Tab traversal. `Application.QueryFocusedViewId(App)` returns `Some(ViewId)` when a host-managed view is focused, otherwise `None`.
 
-Root views use absolute terminal coordinates. `Application.HostSetViewParent(App, ViewId, ParentViewId)` reparents a view under another view; pass `-1` as `ParentViewId` to detach it back to the root list. Reparenting preserves the current absolute terminal rectangle. After a view has a parent, `Application.HostSetViewRect(App, ViewId, X, Y, Width, Height)` interprets `X` and `Y` relative to that parent. Sibling order defines z-order, and `Application.ShowModal` scopes to a root view subtree.
+Root views use absolute terminal coordinates. `Application.HostSetViewParent(App, ViewId, Parent)` reparents a view under `Parent`; pass `None` to detach it back to the root list. Reparenting preserves the current absolute terminal rectangle. After a view has a parent, `Application.HostSetViewRect(App, ViewId, X, Y, Width, Height)` interprets `X` and `Y` relative to that parent. Sibling order defines z-order, and `Application.ShowModal` scopes to a root view subtree.
 
 `Application.HostRegisterOnViewPaint(App, ViewId, OnViewPaint)` registers a local paint handler for one view. During hosted redraw, the host first runs global `OnPaint` when present and then runs view-local paint handlers in tree paint order for views intersecting the current damage. The `Bounds` argument is the view's absolute terminal rectangle.
+
+> **Migration note:** until `ViewId` lands in sema/registry, the implemented surface still uses bare `integer` tokens and `-1` sentinels. The types above are the target contract.
 
 ### Host widgets
 
@@ -455,7 +457,7 @@ There must be **at most one** active `**Application.Run`** (or equivalent hosted
 
 ## Native TUI testing API (planned)
 
-**Status:** naming decided; intrinsics not yet implemented. Design: [`docs/future/tui-tests-fpas/README.md`](../../future/tui-tests-fpas/README.md). Tracking: [`implementation-plan.md`](../../future/tui-tests-fpas/implementation-plan.md).
+**Status:** naming and `ViewId` type decided; intrinsics not yet implemented. Design: [`docs/future/tui-tests-fpas/README.md`](../../future/tui-tests-fpas/README.md). Tracking: [`implementation-plan.md`](../../future/tui-tests-fpas/implementation-plan.md).
 
 Goal: test hosted `Std.Tui` entirely from FPAS under `fpas test` — headless session, stepwise event pump, input injection, and read-only introspection of screen, views, and widget state.
 
@@ -477,13 +479,53 @@ Rules:
 - **`Host*`** keeps its current meaning for production app setup. New read APIs use **`Query*`**, not `HostQuery*`.
 - Intrinsic Rust names mirror Pascal: `TuiTestPump`, `TuiQueryScreenCell`, `TuiHostRegisterView`.
 
+### ViewId type (decided)
+
+Introduce **`Std.Tui.ViewId`** as a real opaque FPAS type. Do **not** use bare `integer` for host view handles in new or migrated APIs.
+
+```pascal
+type ViewId = record end;  { opaque host-owned handle — same pattern as Application }
+```
+
+Sema registers `Std.Tui.ViewId` as an empty record; only host routines may produce values. Authors cannot write record literals for `ViewId`.
+
+**Rationale**
+
+- **Type safety:** view handles cannot be confused with coordinates, command ids, or modal ids.
+- **Test readability:** `var Bar: ViewId := Application.HostCreateMenuBarView(...)` documents intent at call sites.
+- **Remove magic sentinels:** replace integer `-1` with `Option of ViewId` where “no view” is needed.
+- **Matches the Rust host:** the VM already stores `ViewId(u32)` in [`ViewRegistry`](../../../crates/fpas-std/src/tui/view/mod.rs); the FPAS type is the language-facing wrapper around that token.
+
+**Rules**
+
+| Rule | Detail |
+| ---- | ------ |
+| Construction | Only host routines return `ViewId` (`HostRegisterView`, `HostCreateMenuBarView`, `ShowDialog`, …). |
+| User literals | Sema rejects `42 as ViewId`, integer variables passed where `ViewId` is expected, and arithmetic on `ViewId`. |
+| Equality | `ViewId = ViewId` is allowed when comparing handles returned by the same session. |
+| Missing view | Use `Option of ViewId` / `None`, not `-1`. |
+| Detach to roots | `Application.HostSetViewParent(App, Child, None)` replaces `ParentViewId := -1`. |
+| Focus query | `Application.QueryFocusedViewId(App): Option of ViewId` replaces `HostQueryFocusedViewId` returning `-1`. |
+| View-local paint | The view-local handler keeps `(App, ViewId, Rect)` — the middle argument becomes typed `ViewId` instead of `integer`. |
+
+**Migration (no compatibility layer)**
+
+| Current surface | New surface |
+| --------------- | ----------- |
+| `HostRegisterView` / widget creators push `integer` | push `ViewId` |
+| All `Host*` / `Show*` parameters named `ViewId` but typed `integer` | typed `ViewId` |
+| `HostQueryFocusedViewId` → `integer` (`-1`) | `QueryFocusedViewId` → `Option of ViewId` |
+| `HostSetViewParent(..., ParentViewId: integer)` with `-1` | `HostSetViewParent(..., Parent: Option of ViewId)` |
+
+Until migration is implemented, existing programs still use integer tokens; new tests and docs use **`ViewId`** and **`Option of ViewId`** as above.
+
 ### Planned renames (existing read APIs)
 
 No backward compatibility is required. When native testing lands, rename existing read-only `Host*` calls to **`Query*`**:
 
 | Current (to remove) | New name |
 | ------------------- | -------- |
-| `Application.HostQueryFocusedViewId(App)` | `Application.QueryFocusedViewId(App): ViewId` |
+| `Application.HostQueryFocusedViewId(App)` | `Application.QueryFocusedViewId(App): Option of ViewId` |
 | `Application.HostModalDepth(App)` | `Application.QueryModalDepth(App): integer` |
 
 Until the rename is implemented, the old names remain in the registry; new tests and docs should use the **`Query*`** names above.
@@ -527,7 +569,7 @@ View and widget introspection (`Query*`):
 | `Application.QueryViewRect(App, ViewId)` | `Rect` |
 | `Application.QueryViewParent(App, ViewId)` | `Option of ViewId` |
 | `Application.QueryViewChildren(App, ViewId)` | `array of ViewId` |
-| `Application.QueryFocusedViewId(App)` | `ViewId` (or sentinel for none) |
+| `Application.QueryFocusedViewId(App)` | `Option of ViewId` |
 | `Application.QueryModalDepth(App)` | `integer` |
 | `Application.QueryMenuBarState(App, ViewId)` | `MenuBarState` |
 

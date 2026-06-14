@@ -13,3 +13,4 @@ mod tui_latency_vm;
 mod tui_run_vm;
 mod tui_spec_links;
 mod tui_test_host_vm;
+mod tui_test_inject_vm;

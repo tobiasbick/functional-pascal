@@ -539,19 +539,21 @@ Until the rename is implemented, the old names remain in the registry; new tests
 | `Application.TestPumpUntilIdle(App)` | `()` | Repeat pump until idle |
 | `Application.CloseForTest(App)` | `()` | Deterministic teardown |
 
-### Planned new routines (summary)
-
-Input injection (`Test*`):
+### Input injection (`Test*` — Phase 2, implemented)
 
 | Pascal call | Notes |
 | ----------- | ----- |
-| `Application.TestSendKey(App, Key)` | Full `KeyEvent` |
-| `Application.TestSendMouse(App, Event)` | Full `Std.Console.Event` mouse variant |
+| `Application.TestSendKey(App, Key)` | Full `KeyEvent`; enqueues for next pump |
+| `Application.TestSendMouse(App, Event)` | Full `Std.Console.Event` (typically mouse) |
 | `Application.TestMoveMouse(App, X, Y)` | Convenience: `Move`, one-based coords |
 | `Application.TestClickMouse(App, X, Y)` | `Down` then `Up` |
 | `Application.TestResize(App, Width, Height)` | Terminal resize |
 | `Application.TestPaste(App, Text)` | Bracketed paste |
 | `Application.TestFocus(App, Gained: boolean)` | Focus gained/lost |
+
+Use `Std.Console.EventKind` (not bare `EventKind`) when both `Std.Console` and `Std.Tui` are in scope.
+
+### Planned new routines (summary)
 
 Screen introspection (`Query*`):
 

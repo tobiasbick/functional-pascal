@@ -1,6 +1,6 @@
 # Native TUI testing in FPAS — implementation plan
 
-**Status:** Phase 1 complete; Phase 2 next.
+**Status:** Phase 2 complete; Phase 3 next.
 **Design:** [`README.md`](README.md).
 
 Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and a verification step. After a context loss, **start by reading the "Resume here" marker** below, then continue at the first unchecked task.
@@ -19,9 +19,9 @@ Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and 
 
 ## Resume here
 
-> **Next task:** Phase 2, Task 2.1 (`Application.TestSendKey`).
+> **Next task:** Phase 3, Task 3.1 (`ScreenCell` / `Size` registry types).
 > **Last updated:** 2026-06-14
-> **Notes:** Phase 1 done. Native TUI test intrinsics use **356..=378** (`348..=355` are `Std.Test`). `TestPump` ingests console events, flushes coalesced resize, then process+redraw.
+> **Notes:** Phase 2 done. Input injectors **360..=366** enqueue console events for `TestPump`. Use `Std.Console.EventKind` when building full `Event` records in FPAS.
 
 ---
 
@@ -72,12 +72,12 @@ Goal: open a TUI bound to a virtual screen and pump events one at a time, no ter
 
 Goal: inject keyboard/mouse/resize/paste/focus from FPAS, reusing `Vm::push_console_event`.
 
-- [ ] **2.1 `Application.TestSendKey(App, Key: KeyEvent)`.** Map to `ConsoleEvent::key`; reuse mapping in `crates/fpas-cli/src/test_script/console.rs`. **Verify:** VM test: send Escape, pump, `OnKeyPressed` observed.
-- [ ] **2.2 `Application.TestSendMouse(App, Event)`.** Full mouse event injection. **Verify:** VM test: send Down on a menu item, pump, `OnCommand` observed (mirror `std_tui_menu_bar_mouse_click_dispatches_on_command_over_desktop`).
-- [ ] **2.3 `Application.TestMoveMouse(App, X, Y)`.** Convenience for a `Move` action. **Verify:** VM test: move over bar item, pump, hover state changes (needs Phase 4/5 to assert; until then assert dispatch tag).
-- [ ] **2.4 `Application.TestClickMouse(App, X, Y)`.** `Down` then `Up` at one point. **Verify:** VM test: click bar item with submenu opens it.
-- [ ] **2.5 `Application.TestResize / TestPaste / TestFocus`.** One intrinsic each, reusing existing `ConsoleEvent` constructors. **Verify:** VM test per event type: handler observed after pump.
-- [ ] **2.6 Phase-2 FPAS test.** `examples/pascal/test/tui_inject_key_test.fpas`: open → `TestSendKey(Escape)` → pump → assert `OnKeyPressed` flag. **Verify:** `fpas test` passes.
+- [x] **2.1 `Application.TestSendKey(App, Key: KeyEvent)`.** Map to `ConsoleEvent::key`; reuse mapping in `crates/fpas-cli/src/test_script/console.rs`. **Verify:** VM test: send Escape, pump, `OnKeyPressed` observed.
+- [x] **2.2 `Application.TestSendMouse(App, Event)`.** Full mouse event injection. **Verify:** VM test: send Down on a menu item, pump, `OnCommand` observed (mirror `std_tui_menu_bar_mouse_click_dispatches_on_command_over_desktop`).
+- [x] **2.3 `Application.TestMoveMouse(App, X, Y)`.** Convenience for a `Move` action. **Verify:** VM test: move over bar item, pump, hover state changes (needs Phase 4/5 to assert; until then assert dispatch tag).
+- [x] **2.4 `Application.TestClickMouse(App, X, Y)`.** `Down` then `Up` at one point. **Verify:** VM test: click bar item with submenu opens it.
+- [x] **2.5 `Application.TestResize / TestPaste / TestFocus`.** One intrinsic each, reusing existing `ConsoleEvent` constructors. **Verify:** VM test per event type: handler observed after pump.
+- [x] **2.6 Phase-2 FPAS test.** `examples/pascal/test/tui_inject_key_test.fpas`: open → `TestSendKey(Escape)` → pump → assert `OnKeyPressed` flag. **Verify:** `fpas test` passes.
 
 ---
 
@@ -173,13 +173,13 @@ Running list of new intrinsics and their assigned discriminants (reserved in Pha
 | `TestPump` | 357 | 1.2 | [x] |
 | `TestPumpUntilIdle` | 358 | 1.3 | [x] |
 | `CloseForTest` | 359 | 1.4 | [x] |
-| `TestSendKey` | 360 | 2.1 | [ ] |
-| `TestSendMouse` | 361 | 2.2 | [ ] |
-| `TestMoveMouse` | 362 | 2.3 | [ ] |
-| `TestClickMouse` | 363 | 2.4 | [ ] |
-| `TestResize` | 364 | 2.5 | [ ] |
-| `TestPaste` | 365 | 2.5 | [ ] |
-| `TestFocus` | 366 | 2.5 | [ ] |
+| `TestSendKey` | 360 | 2.1 | [x] |
+| `TestSendMouse` | 361 | 2.2 | [x] |
+| `TestMoveMouse` | 362 | 2.3 | [x] |
+| `TestClickMouse` | 363 | 2.4 | [x] |
+| `TestResize` | 364 | 2.5 | [x] |
+| `TestPaste` | 365 | 2.5 | [x] |
+| `TestFocus` | 366 | 2.5 | [x] |
 | `QueryScreenSize` | 367 | 3.2 | [ ] |
 | `QueryScreenLine` | 368 | 3.3 | [ ] |
 | `QueryScreenCell` | 369 | 3.4 | [ ] |
@@ -198,6 +198,7 @@ Renames (no new discriminant): `QueryFocusedViewId` replaces Pascal name for **2
 
 Append one entry per working session: date, tasks completed, surprises, and the next task to resume from.
 
+- **2026-06-14:** Completed **Phase 2** (2.1–2.6). Added input injectors `TestSendKey` … `TestFocus` (**360..=366**); `pop_console_event` in VM; `examples/pascal/test/tui_inject_key_test.fpas`. Next: **3.1** `ScreenCell` registry.
 - **2026-06-14:** Completed **Phase 1** (1.1–1.5). Added `OpenForTest`, `TestPump`, `TestPumpUntilIdle`, `CloseForTest` (discriminants **356..=359**); headless `TuiSession::open_for_test`; `examples/pascal/test/tui_pump_test.fpas`. Corrected intrinsic range to **356..=378** (collision with `Std.Test` at **348..=355**). Next: **2.1** `TestSendKey`.
 - **2026-06-14:** Completed **0.3–0.5** (Phase 0 done). `ScreenCell` uses CRT `0..=15` + `Std.Console` constants; TUI sidecars deprecated (remove Phase 8); reserved intrinsics **356..=378** in `tui.rs`. Next: **1.1** `OpenForTest`.
 - **2026-06-14:** Completed **0.2** — `ViewId` decided as real opaque FPAS type (`Std.Tui.ViewId`, empty record like `Application`). `Option of ViewId` replaces integer `-1` for focus/parent detach. Documented in `tui-app.md` § ViewId type. Next: **0.3** (`ScreenCell` color type).

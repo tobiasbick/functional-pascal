@@ -1,7 +1,7 @@
 use crate::Vm;
 use crate::vm::{GraphState, SharedState};
 use fpas_bytecode::{Chunk, Op, SourceLocation, Value};
-use fpas_std::{Console, ConsoleKeyEvent, KeyInput, TextInput};
+use fpas_std::{Console, ConsoleEvent, ConsoleKeyEvent, KeyInput, TextInput};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU64};
 use std::sync::{Condvar, Mutex, RwLock};
@@ -65,6 +65,34 @@ pub(super) fn key_event_value(ev: ConsoleKeyEvent) -> Value {
             ("ctrl".into(), Value::Boolean(ev.ctrl)),
             ("alt".into(), Value::Boolean(ev.alt)),
             ("meta".into(), Value::Boolean(ev.meta)),
+        ],
+    }
+}
+
+/// Builds a `Std.Console.Event` record for bytecode-level injection tests.
+pub(super) fn console_event_value(event: ConsoleEvent) -> Value {
+    Value::Record {
+        type_name: "Std.Console.Event".into(),
+        fields: vec![
+            ("kind".into(), Value::Integer(event.kind as i64)),
+            ("key".into(), key_event_value(event.key)),
+            (
+                "mouse_action".into(),
+                Value::Integer(event.mouse_action as i64),
+            ),
+            (
+                "mouse_button".into(),
+                Value::Integer(event.mouse_button as i64),
+            ),
+            ("mouse_x".into(), Value::Integer(event.mouse_x)),
+            ("mouse_y".into(), Value::Integer(event.mouse_y)),
+            ("width".into(), Value::Integer(event.width)),
+            ("height".into(), Value::Integer(event.height)),
+            ("text".into(), Value::Str(event.text)),
+            ("shift".into(), Value::Boolean(event.shift)),
+            ("ctrl".into(), Value::Boolean(event.ctrl)),
+            ("alt".into(), Value::Boolean(event.alt)),
+            ("meta".into(), Value::Boolean(event.meta)),
         ],
     }
 }

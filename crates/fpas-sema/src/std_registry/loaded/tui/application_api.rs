@@ -94,4 +94,63 @@ pub(super) fn register_application_api(checker: &mut Checker, types: &TuiTypes) 
         s::STD_TUI_APPLICATION_CLOSE_FOR_TEST,
         vec![p("App", types.application.clone(), false)],
     );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_TEST_SEND_KEY,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Key", types.key_event.clone(), false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_TEST_SEND_MOUSE,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Event", types.console_event.clone(), false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_TEST_MOVE_MOUSE,
+        vec![
+            p("App", types.application.clone(), false),
+            p("X", Ty::Integer, false),
+            p("Y", Ty::Integer, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_TEST_CLICK_MOUSE,
+        vec![
+            p("App", types.application.clone(), false),
+            p("X", Ty::Integer, false),
+            p("Y", Ty::Integer, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_TEST_RESIZE,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Width", Ty::Integer, false),
+            p("Height", Ty::Integer, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_TEST_PASTE,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Text", Ty::String, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_TEST_FOCUS,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Gained", Ty::Boolean, false),
+        ],
+    );
 }

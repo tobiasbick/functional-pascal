@@ -522,4 +522,105 @@ impl Worker {
 
         Ok(ConsoleKeyEvent::new(kind, ch, shift, ctrl, alt, meta))
     }
+
+    /// Pop a `Std.Console.Event` record and convert it to the runtime event model.
+    pub(in crate::vm::execute::io) fn pop_console_event(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<fpas_std::ConsoleEvent, VmError> {
+        const EVENT: &str = "Std.Console.Event";
+        match self.pop(line)? {
+            Value::Record { type_name, fields } if type_name == EVENT => {
+                Self::console_event_from_fields(&fields, line)
+            }
+            Value::Record { type_name, fields } if type_name == "<record>" => {
+                Self::console_event_from_fields(&fields, line)
+            }
+            other => Err(runtime_error(
+                TYPE_MISMATCH_CODE,
+                format!("Expected {EVENT}, got {}", other.type_name()),
+                "Pass a `Std.Console.Event` value.",
+                line,
+            )),
+        }
+    }
+
+    fn console_event_from_fields(
+        fields: &[(String, Value)],
+        line: SourceLocation,
+    ) -> Result<fpas_std::ConsoleEvent, VmError> {
+        let field = |name: &str| -> Result<&Value, VmError> {
+            fields
+                .iter()
+                .find(|(k, _)| k == name)
+                .map(|(_, v)| v)
+                .ok_or_else(|| {
+                    internal_error(
+                        format!("Std.Console.Event missing field `{name}`"),
+                        "This indicates a compiler/runtime mismatch.",
+                        line,
+                    )
+                })
+        };
+
+        let read_int = |name: &str| -> Result<i64, VmError> {
+            match field(name)? {
+                Value::Integer(i) => Ok(*i),
+                _ => Err(internal_error(
+                    format!("Std.Console.Event.{name} must be an integer"),
+                    "This indicates a compiler/runtime mismatch.",
+                    line,
+                )),
+            }
+        };
+
+        let read_bool = |name: &str| -> Result<bool, VmError> {
+            match field(name)? {
+                Value::Boolean(b) => Ok(*b),
+                _ => Err(internal_error(
+                    format!("Std.Console.Event.{name} must be a boolean"),
+                    "This indicates a compiler/runtime mismatch.",
+                    line,
+                )),
+            }
+        };
+
+        let kind = read_int("kind")? as usize;
+        let key = match field("key")? {
+            Value::Record { fields, .. } => Self::console_key_event_from_fields(fields, line)?,
+            _ => {
+                return Err(internal_error(
+                    "Std.Console.Event.key must be a KeyEvent record",
+                    "This indicates a compiler/runtime mismatch.",
+                    line,
+                ));
+            }
+        };
+        let text = match field("text")? {
+            Value::Str(s) => s.clone(),
+            _ => {
+                return Err(internal_error(
+                    "Std.Console.Event.text must be a string",
+                    "This indicates a compiler/runtime mismatch.",
+                    line,
+                ));
+            }
+        };
+
+        Ok(fpas_std::ConsoleEvent {
+            kind,
+            key,
+            mouse_action: read_int("mouse_action")? as usize,
+            mouse_button: read_int("mouse_button")? as usize,
+            mouse_x: read_int("mouse_x")?,
+            mouse_y: read_int("mouse_y")?,
+            width: read_int("width")?,
+            height: read_int("height")?,
+            text,
+            shift: read_bool("shift")?,
+            ctrl: read_bool("ctrl")?,
+            alt: read_bool("alt")?,
+            meta: read_bool("meta")?,
+        })
+    }
 }

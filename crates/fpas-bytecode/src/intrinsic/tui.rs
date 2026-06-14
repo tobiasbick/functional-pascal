@@ -284,7 +284,50 @@ pub enum TuiIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
     CloseForTest = 359,
-    // Reserved **360..=378** for remaining native TUI testing API
+
+    /// Enqueue a keyboard event for the next test pump.
+    ///
+    /// Stack: `Application`, `KeyEvent` (`KeyEvent` on top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    TestSendKey = 360,
+    /// Enqueue a full `Std.Console.Event` (typically mouse) for the next test pump.
+    ///
+    /// Stack: `Application`, `Event` (`Event` on top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    TestSendMouse = 361,
+    /// Enqueue a mouse `Move` at one-based `(X, Y)`.
+    ///
+    /// Stack: `Application`, `X`, `Y` (`Y` on top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    TestMoveMouse = 362,
+    /// Enqueue mouse `Down` then `Up` at one-based `(X, Y)`.
+    ///
+    /// Stack: `Application`, `X`, `Y` (`Y` on top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    TestClickMouse = 363,
+    /// Enqueue a terminal resize event.
+    ///
+    /// Stack: `Application`, `Width`, `Height` (`Height` on top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    TestResize = 364,
+    /// Enqueue bracketed-paste text.
+    ///
+    /// Stack: `Application`, `Text` (`Text` on top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    TestPaste = 365,
+    /// Enqueue focus gained (`true`) or focus lost (`false`).
+    ///
+    /// Stack: `Application`, `Gained` (`Gained` on top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    TestFocus = 366,
+    // Reserved **367..=378** for remaining native TUI testing API
     // (see docs/future/tui-tests-fpas/implementation-plan.md Appendix B).
     // Note: **348..=355** are owned by `Std.Test` (`TestIntrinsic`).
 }

@@ -25,16 +25,19 @@ impl MenuBarWidget {
                 return MenuBarMouseResult::Ignored;
             };
             if popup.contains_view_point(mouse_x, mouse_y) {
+                let entries = &self.items[open.bar_index].submenu;
+                let entry_index = popup_entry_at(popup, entries, mouse_x, mouse_y);
                 if !down {
+                    if mouse.action == mouse_action_index("Move") {
+                        return self.hover_submenu_entry(open.bar_index, entry_index);
+                    }
                     return MenuBarMouseResult::Ignored;
                 }
-                let entry_index =
-                    popup_entry_at(popup, &self.items[open.bar_index].submenu, mouse_x, mouse_y);
                 let Some(entry_index) = entry_index else {
                     return MenuBarMouseResult::Ignored;
                 };
                 let (command_id, enabled, separator) = {
-                    let entry = &self.items[open.bar_index].submenu[entry_index];
+                    let entry = &entries[entry_index];
                     (entry.command_id, entry.enabled, entry.separator)
                 };
                 if separator || !enabled || command_id < 0 {
@@ -297,6 +300,30 @@ impl MenuBarWidget {
                 return;
             }
         }
+    }
+
+    fn hover_submenu_entry(
+        &mut self,
+        bar_index: usize,
+        entry_index: Option<usize>,
+    ) -> MenuBarMouseResult {
+        let Some(entry_index) = entry_index else {
+            return MenuBarMouseResult::Ignored;
+        };
+        let entry = &self.items[bar_index].submenu[entry_index];
+        if !popup_entry_is_selectable(entry) {
+            return MenuBarMouseResult::Ignored;
+        }
+        if self
+            .open_submenu
+            .is_some_and(|open| open.bar_index == bar_index && open.entry_index == entry_index)
+        {
+            return MenuBarMouseResult::Ignored;
+        }
+        if let Some(open) = self.open_submenu.as_mut() {
+            open.entry_index = entry_index;
+        }
+        MenuBarMouseResult::HoverChanged
     }
 }
 

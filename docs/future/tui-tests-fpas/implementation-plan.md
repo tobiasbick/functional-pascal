@@ -19,7 +19,7 @@ Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and 
 
 ## Resume here
 
-> **Next task:** Phase 5, Task **5.1** (submenu mouse hover in `menu_bar/input.rs`).
+> **Next task:** Phase 5, Task **5.2** (bar item hover via `Move`).
 > **Last updated:** 2026-06-14
 > **Notes:** View-tree queries **371..=373** and `QueryMenuBarState` (**374**) use integer handles until `ViewId` migration.
 
@@ -112,7 +112,7 @@ Goal: expose `ViewRegistry` and `MenuBarWidget` internals as FPAS values.
 
 These are real host changes, not test plumbing. Without them, hover has nothing to assert.
 
-- [ ] **5.1 Submenu mouse hover.** In `crates/fpas-std/src/tui/widget/menu_bar/input.rs`, `handle_mouse`: when a popup is open and action is `Move` over a popup row, update the selected entry and return `HoverChanged` (mirror keyboard `Up`/`Down`). Currently non-`Down` events return `Ignored`. **Verify:** Rust unit test `menu_bar_submenu_mouse_move_changes_selection` in `widget/menu_bar/tests.rs`.
+- [x] **5.1 Submenu mouse hover.** In `crates/fpas-std/src/tui/widget/menu_bar/input.rs`, `handle_mouse`: when a popup is open and action is `Move` over a popup row, update the selected entry and return `HoverChanged` (mirror keyboard `Up`/`Down`). Currently non-`Down` events return `Ignored`. **Verify:** Rust unit test `menu_bar_submenu_mouse_move_changes_selection` in `widget/menu_bar/tests.rs`.
 - [ ] **5.2 Bar item hover via `Move`.** Confirm/repair `Move` over a bar item sets `hovered` and paint reflects highlight colors. **Verify:** Rust unit test asserting hovered index + a `test_cell` color after a `Move`.
 - [ ] **5.3 Redraw determinism after pump.** Ensure `TestPump` flushes the back buffer so the next FPAS query sees post-event state (ties to 1.2). **Verify:** FPAS test: move → pump → `QueryScreenCell` shows highlight in the same program.
 
@@ -198,6 +198,7 @@ Renames (no new discriminant): `QueryFocusedViewId` replaces Pascal name for **2
 
 Append one entry per working session: date, tasks completed, surprises, and the next task to resume from.
 
+- **2026-06-14:** Completed **5.1** submenu mouse hover: `Move` over popup rows updates `selectedEntry`; unit test `menu_bar_submenu_mouse_move_changes_selection`. Next: **5.2** bar item hover via `Move`.
 - **2026-06-14:** Completed **Phase 4** (4.5–4.8): `MenuBarState` registry; `MenuBarWidget::query_state`; `QueryMenuBarState` (**374**); VM + compiler tests; `examples/pascal/test/tui_view_query_test.fpas`. Next: **5.1** submenu mouse hover.
 - **2026-06-14:** Completed **4.2–4.4** view-tree queries (**371..=373**): `QueryViewRect`, `QueryViewParent`, `QueryViewChildren`; `ViewRegistry::parent` / `children`. Next: **4.5** `MenuBarState`.
 - **2026-06-14:** Completed **4.1** `QueryRootViews` (**370**); `ViewRegistry::roots()`; VM + compiler tests. Return type is `array of integer` until `ViewId` migration. Next: **4.2** `QueryViewRect`.

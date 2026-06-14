@@ -29,6 +29,31 @@ fn file_item() -> MenuBarItem {
     }
 }
 
+fn file_item_with_two_entries() -> MenuBarItem {
+    MenuBarItem {
+        label: "File".into(),
+        shortcut: "F".into(),
+        enabled: true,
+        command_id: -1,
+        submenu: vec![
+            MenuPopupItem {
+                label: "Open".into(),
+                shortcut: String::new(),
+                enabled: true,
+                command_id: 10,
+                separator: false,
+            },
+            MenuPopupItem {
+                label: "Exit".into(),
+                shortcut: "X".into(),
+                enabled: true,
+                command_id: 1,
+                separator: false,
+            },
+        ],
+    }
+}
+
 fn bar_rect() -> ViewRect {
     ViewRect {
         x: 0,
@@ -111,6 +136,22 @@ fn menu_bar_submenu_click_dispatches_command() {
     );
     assert_eq!(result, MenuBarMouseResult::Command(CommandId(1)));
     assert_eq!(widget.damage_rects(bar_rect()).len(), 1);
+}
+
+#[test]
+fn menu_bar_submenu_mouse_move_changes_selection() {
+    let mut widget =
+        MenuBarWidget::new(vec![file_item_with_two_entries()], MenuBarStyle::default());
+    let key = ConsoleKeyEvent::new(key_kind_index("Character"), 'f', false, false, true, false);
+    let _ = widget.handle_key(&key);
+    assert_eq!(widget.query_state().selected_entry, 0);
+
+    let result = widget.handle_mouse(
+        bar_rect(),
+        UiMouse::new(mouse_action_index("Move"), 1, 2, 4, Default::default()),
+    );
+    assert_eq!(result, MenuBarMouseResult::HoverChanged);
+    assert_eq!(widget.query_state().selected_entry, 1);
 }
 
 #[test]

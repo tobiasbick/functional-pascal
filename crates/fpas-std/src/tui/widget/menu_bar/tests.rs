@@ -81,6 +81,25 @@ fn menu_bar_paints_shortcut_letter_in_accel_color() {
 }
 
 #[test]
+fn menu_bar_mouse_move_highlights_bar_item() {
+    let mut widget = MenuBarWidget::new(vec![file_item()], MenuBarStyle::default());
+    let result = widget.handle_mouse(
+        bar_rect(),
+        UiMouse::new(mouse_action_index("Move"), 1, 2, 1, Default::default()),
+    );
+    assert_eq!(result, MenuBarMouseResult::HoverChanged);
+    assert_eq!(widget.query_state().hovered_index, 0);
+
+    let mut console = Console::new();
+    console.assign_crt().unwrap();
+    console.begin_tui_paint(DamageRegion::FullFrame);
+    widget.paint(&mut console, bar_rect(), DamageRegion::FullFrame);
+    console.finish_tui_paint(loc()).unwrap();
+    assert_eq!(console.test_cell(2, 1), ('F', 7, 0));
+    assert_eq!(console.test_cell(3, 1), ('i', 7, 0));
+}
+
+#[test]
 fn menu_bar_alt_shortcut_opens_submenu() {
     let mut widget = MenuBarWidget::new(vec![file_item()], MenuBarStyle::default());
     let key = ConsoleKeyEvent::new(key_kind_index("Character"), 'f', false, false, true, false);

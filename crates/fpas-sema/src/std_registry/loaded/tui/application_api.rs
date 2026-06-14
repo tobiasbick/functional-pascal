@@ -184,4 +184,31 @@ pub(super) fn register_application_api(checker: &mut Checker, types: &TuiTypes) 
         vec![p("App", types.application.clone(), false)],
         Ty::Array(Box::new(Ty::Integer)),
     );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_QUERY_VIEW_RECT,
+        vec![
+            p("App", types.application.clone(), false),
+            p("ViewId", Ty::Integer, false),
+        ],
+        types.rect.clone(),
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_QUERY_VIEW_PARENT,
+        vec![
+            p("App", types.application.clone(), false),
+            p("ViewId", Ty::Integer, false),
+        ],
+        Ty::Option(Box::new(Ty::Integer)),
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_QUERY_VIEW_CHILDREN,
+        vec![
+            p("App", types.application.clone(), false),
+            p("ViewId", Ty::Integer, false),
+        ],
+        Ty::Array(Box::new(Ty::Integer)),
+    );
 }

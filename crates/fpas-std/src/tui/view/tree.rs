@@ -122,6 +122,20 @@ impl ViewRegistry {
         &self.roots
     }
 
+    /// Return direct child ids in sibling order (back-to-front within the tier).
+    #[must_use]
+    pub fn children(&self, id: ViewId) -> &[ViewId] {
+        self.entry(id)
+            .map(|entry| entry.children.as_slice())
+            .unwrap_or(&[])
+    }
+
+    /// Return the parent of `id`, or `None` when the view is a root.
+    #[must_use]
+    pub fn parent(&self, id: ViewId) -> Option<ViewId> {
+        self.entry(id).and_then(|entry| entry.parent)
+    }
+
     /// Return the subtree rooted at `root` in paint order.
     #[must_use]
     pub fn subtree_ids(&self, root: ViewId) -> Vec<ViewId> {

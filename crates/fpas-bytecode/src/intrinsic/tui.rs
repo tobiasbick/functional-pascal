@@ -353,7 +353,26 @@ pub enum TuiIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
     QueryRootViews = 370,
-    // Reserved **371..=378** for remaining native TUI testing API
+
+    /// Read the absolute terminal rectangle of a registered view.
+    ///
+    /// Stack: `Application`, `ViewId` (`ViewId` on top). Pushes `Std.Tui.Rect`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    QueryViewRect = 371,
+    /// Read the parent view handle, or `None` for roots.
+    ///
+    /// Stack: `Application`, `ViewId` (`ViewId` on top). Pushes `Option of integer`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    QueryViewParent = 372,
+    /// Read direct child view handles in sibling order.
+    ///
+    /// Stack: `Application`, `ViewId` (`ViewId` on top). Pushes `array of integer`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    QueryViewChildren = 373,
+    // Reserved **374..=378** for remaining native TUI testing API
     // (see docs/future/tui-tests-fpas/implementation-plan.md Appendix B).
     // Note: **348..=355** are owned by `Std.Test` (`TestIntrinsic`).
 }

@@ -56,6 +56,37 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::QueryRootViews), location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_QUERY_VIEW_RECT => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_QUERY_VIEW_RECT, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::QueryViewRect), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_QUERY_VIEW_PARENT => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_QUERY_VIEW_PARENT,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::QueryViewParent), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_QUERY_VIEW_CHILDREN => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_QUERY_VIEW_CHILDREN,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::QueryViewChildren), location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

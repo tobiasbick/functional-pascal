@@ -17,6 +17,7 @@ use fpas_std::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS};
 
 struct TuiTypes {
     application: Ty,
+    rect: Ty,
     size: Ty,
     screen_cell: Ty,
     key_event: Ty,
@@ -196,6 +197,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
 
     let types = TuiTypes {
         application,
+        rect,
         size,
         screen_cell,
         key_event,

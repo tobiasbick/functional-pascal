@@ -254,6 +254,9 @@ pub const STD_TUI_APPLICATION_QUERY_SCREEN_SIZE: &str = std_tui!("Application.Qu
 pub const STD_TUI_APPLICATION_QUERY_SCREEN_LINE: &str = std_tui!("Application.QueryScreenLine");
 pub const STD_TUI_APPLICATION_QUERY_SCREEN_CELL: &str = std_tui!("Application.QueryScreenCell");
 pub const STD_TUI_APPLICATION_QUERY_ROOT_VIEWS: &str = std_tui!("Application.QueryRootViews");
+pub const STD_TUI_APPLICATION_QUERY_VIEW_RECT: &str = std_tui!("Application.QueryViewRect");
+pub const STD_TUI_APPLICATION_QUERY_VIEW_PARENT: &str = std_tui!("Application.QueryViewParent");
+pub const STD_TUI_APPLICATION_QUERY_VIEW_CHILDREN: &str = std_tui!("Application.QueryViewChildren");
 pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_KEY_PRESSED: &str =
     std_tui!("Application.HostRegisterOnKeyPressed");
 pub const STD_TUI_APPLICATION_HOST_INVOKE_ON_KEY_PRESSED: &str =

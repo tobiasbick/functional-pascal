@@ -346,7 +346,10 @@ impl Worker {
         Ok(true)
     }
 
-    fn pop_tui_view_id(&mut self, line: SourceLocation) -> Result<ViewId, VmError> {
+    pub(in crate::vm::execute::io::tui) fn pop_tui_view_id(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<ViewId, VmError> {
         let raw = self.pop_int(line)?;
         let raw = u32::try_from(raw).map_err(|_| {
             runtime_error(
@@ -359,7 +362,7 @@ impl Worker {
         Ok(ViewId::from_raw(raw))
     }
 
-    fn require_registered_tui_view(
+    pub(in crate::vm::execute::io::tui) fn require_registered_tui_view(
         &self,
         view_id: ViewId,
         line: SourceLocation,

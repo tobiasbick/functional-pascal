@@ -29,6 +29,22 @@ fn roots_lists_root_views_in_registration_order() {
 }
 
 #[test]
+fn parent_and_children_track_reparenting() {
+    let mut registry = ViewRegistry::default();
+    let parent = registry.register(rect(0, 0, 40, 20));
+    let first = registry.register(rect(1, 1, 10, 5));
+    let second = registry.register(rect(12, 1, 10, 5));
+
+    assert!(registry.set_parent(first, Some(parent)));
+    assert!(registry.set_parent(second, Some(parent)));
+
+    assert_eq!(registry.parent(first), Some(parent));
+    assert_eq!(registry.parent(second), Some(parent));
+    assert_eq!(registry.parent(parent), None);
+    assert_eq!(registry.children(parent), &[first, second]);
+}
+
+#[test]
 fn register_wraps_id_allocator_without_reusing_live_ids() {
     let mut registry = ViewRegistry {
         next_id: u32::MAX,

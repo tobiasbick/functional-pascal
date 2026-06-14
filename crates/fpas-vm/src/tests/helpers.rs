@@ -90,6 +90,18 @@ pub(super) fn tui_screen_cell_value(ch: char, fg: i64, bg: i64) -> Value {
     }
 }
 
+pub(super) fn tui_rect_value(x: i64, y: i64, width: i64, height: i64) -> Value {
+    Value::Record {
+        type_name: "Std.Tui.Rect".into(),
+        fields: vec![
+            ("x".into(), Value::Integer(x)),
+            ("y".into(), Value::Integer(y)),
+            ("width".into(), Value::Integer(width)),
+            ("height".into(), Value::Integer(height)),
+        ],
+    }
+}
+
 /// Builds a `Std.Console.Event` record for bytecode-level injection tests.
 pub(super) fn console_event_value(event: ConsoleEvent) -> Value {
     Value::Record {

@@ -1,4 +1,4 @@
-//! Native TUI screen introspection intrinsics (Phase 3).
+//! Native TUI query intrinsics (Phase 3–4).
 //!
 //! **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
 
@@ -6,9 +6,10 @@ use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use fpas_bytecode::{Intrinsic, SourceLocation, TuiIntrinsic, Value};
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
+use fpas_std::ViewId;
 
 impl Worker {
-    /// Executes read-only native TUI screen query intrinsics.
+    /// Executes read-only native TUI query intrinsics.
     pub(super) fn try_exec_tui_query_host_intrinsic(
         &mut self,
         intrinsic: Intrinsic,
@@ -52,10 +53,44 @@ impl Worker {
                 });
                 self.push(Value::Array(ids))?;
             }
+            Intrinsic::Tui(TuiIntrinsic::QueryViewRect) => {
+                let view_id = self.pop_query_view_id(line)?;
+                self.pop_tui_application(line)?;
+                let rect = self
+                    .with_tui(|tui| tui.views.rect(view_id))
+                    .ok_or_else(|| query_view_rect_error(view_id, line))?;
+                self.push(Self::tui_rect_record(rect))?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::QueryViewParent) => {
+                let view_id = self.pop_query_view_id(line)?;
+                self.pop_tui_application(line)?;
+                let parent = self.with_tui(|tui| tui.views.parent(view_id));
+                self.push(match parent {
+                    Some(id) => Value::OptionSome(Box::new(Value::Integer(i64::from(id.raw())))),
+                    None => Value::OptionNone,
+                })?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::QueryViewChildren) => {
+                let view_id = self.pop_query_view_id(line)?;
+                self.pop_tui_application(line)?;
+                let children = self.with_tui(|tui| {
+                    tui.views
+                        .children(view_id)
+                        .iter()
+                        .map(|id| Value::Integer(i64::from(id.raw())))
+                        .collect::<Vec<_>>()
+                });
+                self.push(Value::Array(children))?;
+            }
             _ => return Ok(false),
         }
 
         Ok(true)
+    }
+
+    fn pop_query_view_id(&mut self, line: SourceLocation) -> Result<ViewId, VmError> {
+        let view_id = self.pop_tui_view_id(line)?;
+        self.require_registered_tui_view(view_id, line)
     }
 
     fn screen_row_to_u16(y: i64, line: SourceLocation) -> Result<u16, VmError> {
@@ -96,6 +131,18 @@ fn query_cell_error(x: u16, y: u16, line: SourceLocation) -> VmError {
             "Application.QueryScreenCell(App, {x}, {y}) is out of range or uses non-CRT colors."
         ),
         "Query cells inside the virtual screen after paint; v1 supports packed CRT colors only (0..=15).",
+        line,
+    )
+}
+
+fn query_view_rect_error(view_id: ViewId, line: SourceLocation) -> VmError {
+    runtime_error(
+        RUNTIME_CONSOLE_STATE_ERROR,
+        format!(
+            "Application.QueryViewRect(App, {}) could not resolve the view rectangle.",
+            view_id.raw()
+        ),
+        "Pass a view handle returned by `Application.HostRegisterView` or a host widget constructor.",
         line,
     )
 }

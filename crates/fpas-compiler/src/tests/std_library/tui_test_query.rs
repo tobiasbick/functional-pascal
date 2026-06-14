@@ -16,6 +16,9 @@ begin
   var Line: string := Application.QueryScreenLine(App, 1);
   var Cell: ScreenCell := Application.QueryScreenCell(App, 1, 1);
   var Roots: array of integer := Application.QueryRootViews(App);
+  var ViewRect: Rect := Application.QueryViewRect(App, 0);
+  var Parent: Option of integer := Application.QueryViewParent(App, 0);
+  var Children: array of integer := Application.QueryViewChildren(App, 0);
   Application.CloseForTest(App)
 end.",
     );
@@ -107,6 +110,59 @@ begin
   AssertEquals(2, Std.Array.Length(Roots));
   AssertEquals(MenuBar, Roots[0]);
   AssertEquals(Desktop, Roots[1]);
+  Application.CloseForTest(App)
+end.",
+    );
+
+    assert!(out.lines.is_empty());
+}
+
+#[test]
+fn std_tui_query_view_rect_parent_and_children_reflect_tree() {
+    let out = compile_and_run(
+        "\
+program T;
+uses Std.Console, Std.Tui, Std.Test, Std.Array;
+
+mutable var
+  mutable var GotParent: integer := -1;
+  mutable var RootHasParent: boolean := false;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  var Parent: integer := Application.HostRegisterView(App, 0, 0, 40, 20);
+  var First: integer := Application.HostRegisterView(App, 1, 1, 10, 5);
+  var Second: integer := Application.HostRegisterView(App, 12, 1, 10, 5);
+  Application.HostSetViewParent(App, First, Parent);
+  Application.HostSetViewParent(App, Second, Parent);
+
+  var Bounds: Rect := Application.QueryViewRect(App, Parent);
+  AssertEquals(0, Bounds.x);
+  AssertEquals(0, Bounds.y);
+  AssertEquals(40, Bounds.width);
+  AssertEquals(20, Bounds.height);
+
+  var ParentOfFirst: Option of integer := Application.QueryViewParent(App, First);
+  GotParent := -1;
+  case ParentOfFirst of
+    Some(P): GotParent := P;
+    None: GotParent := -1
+  end;
+  AssertEquals(Parent, GotParent);
+
+  var ParentOfRoot: Option of integer := Application.QueryViewParent(App, Parent);
+  RootHasParent := false;
+  case ParentOfRoot of
+    None: RootHasParent := false;
+    Some(_): RootHasParent := true
+  end;
+  AssertFalse(RootHasParent);
+
+  var Kids: array of integer := Application.QueryViewChildren(App, Parent);
+  AssertEquals(2, Std.Array.Length(Kids));
+  AssertEquals(First, Kids[0]);
+  AssertEquals(Second, Kids[1]);
+
   Application.CloseForTest(App)
 end.",
     );

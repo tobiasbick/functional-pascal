@@ -30,6 +30,23 @@ pub enum MenuBarMouseResult {
     Command(crate::CommandId),
 }
 
+/// Read-only menu bar widget snapshot for native TUI tests.
+///
+/// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MenuBarState {
+    /// Whether keyboard menu navigation mode is active.
+    pub menu_active: bool,
+    /// Hovered top-level bar index, or `-1` when none.
+    pub hovered_index: i64,
+    /// Whether a pull-down submenu is open.
+    pub submenu_open: bool,
+    /// Bar item index owning the open submenu, or `-1` when none.
+    pub submenu_bar_index: i64,
+    /// Selected popup row index, or `-1` when none.
+    pub selected_entry: i64,
+}
+
 /// Tracks which bar item and popup row are open.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct OpenSubmenu {

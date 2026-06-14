@@ -211,4 +211,13 @@ pub(super) fn register_application_api(checker: &mut Checker, types: &TuiTypes) 
         ],
         Ty::Array(Box::new(Ty::Integer)),
     );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_QUERY_MENU_BAR_STATE,
+        vec![
+            p("App", types.application.clone(), false),
+            p("ViewId", Ty::Integer, false),
+        ],
+        types.menu_bar_state.clone(),
+    );
 }

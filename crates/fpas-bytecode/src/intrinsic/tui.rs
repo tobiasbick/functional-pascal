@@ -372,7 +372,14 @@ pub enum TuiIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
     QueryViewChildren = 373,
-    // Reserved **374..=378** for remaining native TUI testing API
+
+    /// Read menu bar widget hover and submenu state.
+    ///
+    /// Stack: `Application`, `ViewId` (`ViewId` on top). Pushes `MenuBarState`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    QueryMenuBarState = 374,
+    // Reserved **375..=378** for remaining native TUI testing API
     // (see docs/future/tui-tests-fpas/implementation-plan.md Appendix B).
     // Note: **348..=355** are owned by `Std.Test` (`TestIntrinsic`).
 }

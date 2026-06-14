@@ -1,6 +1,6 @@
 # Native TUI testing in FPAS — implementation plan
 
-**Status:** Phase 4 in progress (4.1–4.4 done); Task 4.5 next.
+**Status:** Phase 4 complete; Phase 5 next.
 **Design:** [`README.md`](README.md).
 
 Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and a verification step. After a context loss, **start by reading the "Resume here" marker** below, then continue at the first unchecked task.
@@ -19,9 +19,9 @@ Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and 
 
 ## Resume here
 
-> **Next task:** Phase 4, Task **4.5** (`MenuBarState` registry).
+> **Next task:** Phase 5, Task **5.1** (submenu mouse hover in `menu_bar/input.rs`).
 > **Last updated:** 2026-06-14
-> **Notes:** View-tree queries **371..=373** (`QueryViewRect`, `QueryViewParent`, `QueryViewChildren`) use integer handles until `ViewId` migration.
+> **Notes:** View-tree queries **371..=373** and `QueryMenuBarState` (**374**) use integer handles until `ViewId` migration.
 
 ---
 
@@ -101,10 +101,10 @@ Goal: expose `ViewRegistry` and `MenuBarWidget` internals as FPAS values.
 - [x] **4.2 `Application.QueryViewRect(App, ViewId): Rect`.** Absolute rect; reuse `ViewRegistry::rect`. **Verify:** create view at known coords, assert rect.
 - [x] **4.3 `Application.QueryViewParent(App, ViewId): Option of ViewId`.** **Verify:** reparent, assert parent.
 - [x] **4.4 `Application.QueryViewChildren(App, ViewId): array of ViewId`.** **Verify:** push children, assert list + z-order.
-- [ ] **4.5 Define `MenuBarState` record in registry.** Fields per design (`menuActive`, `hoveredIndex`, `submenuOpen`, `submenuBarIndex`, `selectedEntry`). **Verify:** `cargo build`.
-- [ ] **4.6 Expose `MenuBarWidget` state.** Add getters in `crates/fpas-std/src/tui/widget/menu_bar/` (e.g. `mod.rs`) for hovered/open/selected; keep fields private, expose a snapshot struct. **Verify:** Rust unit test reads snapshot.
-- [ ] **4.7 `Application.QueryMenuBarState(App, ViewId): MenuBarState`.** Map widget snapshot → FPAS record. **Verify:** VM test: open submenu via key, assert `submenuOpen = true`.
-- [ ] **4.8 Phase-4 FPAS test.** `examples/pascal/test/tui_view_query_test.fpas`: create menu bar, query rect + initial menu state. **Verify:** `fpas test` passes.
+- [x] **4.5 Define `MenuBarState` record in registry.** Fields per design (`menuActive`, `hoveredIndex`, `submenuOpen`, `submenuBarIndex`, `selectedEntry`). **Verify:** `cargo build`.
+- [x] **4.6 Expose `MenuBarWidget` state.** Add getters in `crates/fpas-std/src/tui/widget/menu_bar/` (e.g. `mod.rs`) for hovered/open/selected; keep fields private, expose a snapshot struct. **Verify:** Rust unit test reads snapshot.
+- [x] **4.7 `Application.QueryMenuBarState(App, ViewId): MenuBarState`.** Map widget snapshot → FPAS record. **Verify:** VM test: open submenu via key, assert `submenuOpen = true`.
+- [x] **4.8 Phase-4 FPAS test.** `examples/pascal/test/tui_view_query_test.fpas`: create menu bar, query rect + initial menu state. **Verify:** `fpas test` passes.
 
 ---
 
@@ -187,7 +187,7 @@ Running list of new intrinsics and their assigned discriminants (reserved in Pha
 | `QueryViewRect` | 371 | 4.2 | [x] |
 | `QueryViewParent` | 372 | 4.3 | [x] |
 | `QueryViewChildren` | 373 | 4.4 | [x] |
-| `QueryMenuBarState` | 374 | 4.7 | [ ] |
+| `QueryMenuBarState` | 374 | 4.7 | [x] |
 | *(spare)* | 375..=378 | — | — |
 
 **348..=355** are reserved for `Std.Test` (`TestIntrinsic`); do not assign TUI testing discriminants in that range.
@@ -198,6 +198,7 @@ Renames (no new discriminant): `QueryFocusedViewId` replaces Pascal name for **2
 
 Append one entry per working session: date, tasks completed, surprises, and the next task to resume from.
 
+- **2026-06-14:** Completed **Phase 4** (4.5–4.8): `MenuBarState` registry; `MenuBarWidget::query_state`; `QueryMenuBarState` (**374**); VM + compiler tests; `examples/pascal/test/tui_view_query_test.fpas`. Next: **5.1** submenu mouse hover.
 - **2026-06-14:** Completed **4.2–4.4** view-tree queries (**371..=373**): `QueryViewRect`, `QueryViewParent`, `QueryViewChildren`; `ViewRegistry::parent` / `children`. Next: **4.5** `MenuBarState`.
 - **2026-06-14:** Completed **4.1** `QueryRootViews` (**370**); `ViewRegistry::roots()`; VM + compiler tests. Return type is `array of integer` until `ViewId` migration. Next: **4.2** `QueryViewRect`.
 - **2026-06-14:** Completed **Phase 3** (3.1–3.5). Registered `ScreenCell`; added `QueryScreenSize` / `QueryScreenLine` / `QueryScreenCell` (**367..=369**); `Console::query_screen_line` / `query_screen_cell`; VM + compiler tests; `examples/pascal/test/tui_screen_query_test.fpas`. Next: **4.1** `QueryRootViews`.

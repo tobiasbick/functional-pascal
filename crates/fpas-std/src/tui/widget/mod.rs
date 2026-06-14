@@ -10,7 +10,7 @@ mod menu_style;
 mod solid_fill;
 mod status_bar;
 
-pub use menu_bar::{MenuBarItem, MenuBarMouseResult, MenuBarStyle, MenuBarWidget};
+pub use menu_bar::{MenuBarItem, MenuBarMouseResult, MenuBarState, MenuBarStyle, MenuBarWidget};
 pub use menu_popup::MenuPopupItem;
 pub use solid_fill::SolidFillWidget;
 pub use status_bar::{StatusBarSegment, StatusBarStyle, StatusBarWidget};

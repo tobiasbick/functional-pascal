@@ -4,12 +4,13 @@
 
 use crate::vm::Worker;
 use fpas_bytecode::Value;
-use fpas_std::ViewRect;
+use fpas_std::{MenuBarState, ViewRect};
 
 const TUI_APPLICATION_TYPE: &str = "Std.Tui.Application";
 const TUI_RECT_TYPE: &str = "Std.Tui.Rect";
 const TUI_SIZE_TYPE: &str = "Std.Tui.Size";
 const TUI_SCREEN_CELL_TYPE: &str = "Std.Tui.ScreenCell";
+const TUI_MENU_BAR_STATE_TYPE: &str = "Std.Tui.MenuBarState";
 
 impl Worker {
     /// Constructs an empty `Std.Tui.Application` record.
@@ -52,6 +53,23 @@ impl Worker {
                 ("y".into(), Value::Integer(rect.y)),
                 ("width".into(), Value::Integer(rect.width)),
                 ("height".into(), Value::Integer(rect.height)),
+            ],
+        }
+    }
+
+    /// Constructs a `Std.Tui.MenuBarState` record from a widget snapshot.
+    pub(in crate::vm::execute::io) fn tui_menu_bar_state_record(state: MenuBarState) -> Value {
+        Value::Record {
+            type_name: TUI_MENU_BAR_STATE_TYPE.into(),
+            fields: vec![
+                ("menuActive".into(), Value::Boolean(state.menu_active)),
+                ("hoveredIndex".into(), Value::Integer(state.hovered_index)),
+                ("submenuOpen".into(), Value::Boolean(state.submenu_open)),
+                (
+                    "submenuBarIndex".into(),
+                    Value::Integer(state.submenu_bar_index),
+                ),
+                ("selectedEntry".into(), Value::Integer(state.selected_entry)),
             ],
         }
     }

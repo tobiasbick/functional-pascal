@@ -257,6 +257,8 @@ pub const STD_TUI_APPLICATION_QUERY_ROOT_VIEWS: &str = std_tui!("Application.Que
 pub const STD_TUI_APPLICATION_QUERY_VIEW_RECT: &str = std_tui!("Application.QueryViewRect");
 pub const STD_TUI_APPLICATION_QUERY_VIEW_PARENT: &str = std_tui!("Application.QueryViewParent");
 pub const STD_TUI_APPLICATION_QUERY_VIEW_CHILDREN: &str = std_tui!("Application.QueryViewChildren");
+pub const STD_TUI_APPLICATION_QUERY_MENU_BAR_STATE: &str =
+    std_tui!("Application.QueryMenuBarState");
 pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_KEY_PRESSED: &str =
     std_tui!("Application.HostRegisterOnKeyPressed");
 pub const STD_TUI_APPLICATION_HOST_INVOKE_ON_KEY_PRESSED: &str =
@@ -341,6 +343,7 @@ pub const STD_TUI_APPLICATION_HOST_CREATE_MENU_BAR_VIEW: &str =
 /// Replace the item model for an existing menu bar widget view.
 pub const STD_TUI_APPLICATION_HOST_SET_MENU_BAR_ITEMS: &str =
     std_tui!("Application.HostSetMenuBarItems");
+pub const STD_TUI_MENU_BAR_STATE: &str = std_tui!("MenuBarState");
 pub const STD_TUI_MENU_BAR_ITEM: &str = std_tui!("MenuBarItem");
 pub const STD_TUI_MENU_BAR_STYLE: &str = std_tui!("MenuBarStyle");
 pub const STD_TUI_MENU_POPUP_ITEM: &str = std_tui!("MenuPopupItem");

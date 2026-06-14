@@ -72,10 +72,11 @@ pub use std_units::{
 };
 pub use test::{reset_test_skip_state, test_was_skipped};
 pub use tui::{
-    CommandId, CommandRegistry, DamageRegion, MenuBarItem, MenuBarMouseResult, MenuBarStyle,
-    MenuBarWidget, MenuPopupItem, ModalId, ModalStack, SolidFillWidget, StatusBarSegment,
-    StatusBarStyle, StatusBarWidget, TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent,
-    TuiHost, TuiSession, ViewId, ViewRect, ViewRegistry, ViewWidget,
+    CommandId, CommandRegistry, DamageRegion, MenuBarItem, MenuBarMouseResult, MenuBarState,
+    MenuBarStyle, MenuBarWidget, MenuPopupItem, ModalId, ModalStack, SolidFillWidget,
+    StatusBarSegment, StatusBarStyle, StatusBarWidget, TUI_EVENT_KIND_VARIANTS,
+    TUI_EXIT_REASON_VARIANTS, TuiEvent, TuiHost, TuiSession, ViewId, ViewRect, ViewRegistry,
+    ViewWidget,
 };
 pub use ui::{UiEvent, UiHost, UiHostSurface, UiModifiers, UiMouse, UiResize, UiWheel};
 

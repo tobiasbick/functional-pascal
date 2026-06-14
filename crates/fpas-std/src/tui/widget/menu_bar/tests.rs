@@ -64,6 +64,20 @@ fn menu_bar_alt_shortcut_opens_submenu() {
 }
 
 #[test]
+fn menu_bar_query_state_reflects_open_submenu() {
+    let mut widget = MenuBarWidget::new(vec![file_item()], MenuBarStyle::default());
+    let key = ConsoleKeyEvent::new(key_kind_index("Character"), 'f', false, false, true, false);
+    let _ = widget.handle_key(&key);
+
+    let state = widget.query_state();
+    assert!(state.menu_active);
+    assert_eq!(state.hovered_index, 0);
+    assert!(state.submenu_open);
+    assert_eq!(state.submenu_bar_index, 0);
+    assert_eq!(state.selected_entry, 0);
+}
+
+#[test]
 fn menu_bar_submenu_enter_dispatches_command() {
     let mut widget = MenuBarWidget::new(vec![file_item()], MenuBarStyle::default());
     let key = ConsoleKeyEvent::new(key_kind_index("Character"), 'f', false, false, true, false);

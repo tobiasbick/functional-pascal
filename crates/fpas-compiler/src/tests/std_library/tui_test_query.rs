@@ -19,6 +19,7 @@ begin
   var ViewRect: Rect := Application.QueryViewRect(App, 0);
   var Parent: Option of integer := Application.QueryViewParent(App, 0);
   var Children: array of integer := Application.QueryViewChildren(App, 0);
+  var MenuState: MenuBarState := Application.QueryMenuBarState(App, 0);
   Application.CloseForTest(App)
 end.",
     );
@@ -224,6 +225,128 @@ begin
   AssertTrue(Accel.ch = 'F');
   AssertEquals(Red, Accel.fg);
   AssertEquals(LightGray, Accel.bg);
+
+  Application.CloseForTest(App)
+end.",
+    );
+
+    assert!(out.lines.is_empty());
+}
+
+#[test]
+fn std_tui_query_menu_bar_state_reads_initial_snapshot() {
+    let out = compile_and_run(
+        "\
+program T;
+uses Std.Console, Std.Tui, Std.Test;
+
+function FileSubmenu(): array of MenuPopupItem;
+begin
+  return [
+    record Label := 'Exit'; Shortcut := 'X'; Enabled := true; CommandId := 1; Separator := false; end
+  ]
+end;
+
+function MenuItems(): array of MenuBarItem;
+begin
+  return [
+    record
+      Label := 'File'; Shortcut := 'F'; Enabled := true; CommandId := -1;
+      Submenu := FileSubmenu();
+    end
+  ]
+end;
+
+function MenuStyle(): MenuBarStyle;
+begin
+  return record
+    BarBg := LightGray;
+    BarFg := Black;
+    AccelFg := Red;
+    HighlightBg := Black;
+    HighlightFg := LightGray;
+    DisabledFg := DarkGray;
+  end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  var MenuBar: integer := Application.HostCreateMenuBarView(
+    App, 0, 0, 80, 1, MenuItems(), MenuStyle());
+
+  var Bounds: Rect := Application.QueryViewRect(App, MenuBar);
+  AssertEquals(0, Bounds.x);
+  AssertEquals(80, Bounds.width);
+
+  var State: MenuBarState := Application.QueryMenuBarState(App, MenuBar);
+  AssertFalse(State.menuActive);
+  AssertEquals(-1, State.hoveredIndex);
+  AssertFalse(State.submenuOpen);
+
+  Application.CloseForTest(App)
+end.",
+    );
+
+    assert!(out.lines.is_empty());
+}
+
+#[test]
+fn std_tui_query_menu_bar_state_reflects_submenu_after_alt_shortcut() {
+    let out = compile_and_run(
+        "\
+program T;
+uses Std.Console, Std.Tui, Std.Test;
+
+function FileSubmenu(): array of MenuPopupItem;
+begin
+  return [
+    record Label := 'Exit'; Shortcut := 'X'; Enabled := true; CommandId := 1; Separator := false; end
+  ]
+end;
+
+function MenuItems(): array of MenuBarItem;
+begin
+  return [
+    record
+      Label := 'File'; Shortcut := 'F'; Enabled := true; CommandId := -1;
+      Submenu := FileSubmenu();
+    end
+  ]
+end;
+
+function MenuStyle(): MenuBarStyle;
+begin
+  return record
+    BarBg := LightGray;
+    BarFg := Black;
+    AccelFg := Red;
+    HighlightBg := Black;
+    HighlightFg := LightGray;
+    DisabledFg := DarkGray;
+  end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  var MenuBar: integer := Application.HostCreateMenuBarView(
+    App, 0, 0, 80, 1, MenuItems(), MenuStyle());
+  var Key: KeyEvent := record
+    kind := KeyKind.Character;
+    ch := 'f';
+    shift := false;
+    ctrl := false;
+    alt := true;
+    meta := false;
+  end;
+  Application.TestSendKey(App, Key);
+  Application.TestPump(App);
+
+  var State: MenuBarState := Application.QueryMenuBarState(App, MenuBar);
+  AssertTrue(State.menuActive);
+  AssertEquals(0, State.hoveredIndex);
+  AssertTrue(State.submenuOpen);
+  AssertEquals(0, State.submenuBarIndex);
+  AssertEquals(0, State.selectedEntry);
 
   Application.CloseForTest(App)
 end.",

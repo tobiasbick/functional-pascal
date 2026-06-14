@@ -20,6 +20,7 @@ struct TuiTypes {
     rect: Ty,
     size: Ty,
     screen_cell: Ty,
+    menu_bar_state: Ty,
     key_event: Ty,
     console_event: Ty,
     application_handlers: Ty,
@@ -76,6 +77,17 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             ("ch".into(), Ty::Char),
             ("fg".into(), Ty::Integer),
             ("bg".into(), Ty::Integer),
+        ],
+    );
+    let menu_bar_state = type_registration::register_record_type(
+        checker,
+        s::STD_TUI_MENU_BAR_STATE,
+        vec![
+            ("menuActive".into(), Ty::Boolean),
+            ("hoveredIndex".into(), Ty::Integer),
+            ("submenuOpen".into(), Ty::Boolean),
+            ("submenuBarIndex".into(), Ty::Integer),
+            ("selectedEntry".into(), Ty::Integer),
         ],
     );
     let key_event = type_registration::lookup_required_type(
@@ -200,6 +212,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         rect,
         size,
         screen_cell,
+        menu_bar_state,
         key_event,
         console_event,
         application_handlers,

@@ -22,6 +22,6 @@ pub use modal::{ModalId, ModalStack};
 pub use session::TuiSession;
 pub use view::{ViewId, ViewRect, ViewRegistry};
 pub use widget::{
-    MenuBarItem, MenuBarMouseResult, MenuBarStyle, MenuBarWidget, MenuPopupItem, SolidFillWidget,
-    StatusBarSegment, StatusBarStyle, StatusBarWidget, ViewWidget,
+    MenuBarItem, MenuBarMouseResult, MenuBarState, MenuBarStyle, MenuBarWidget, MenuPopupItem,
+    SolidFillWidget, StatusBarSegment, StatusBarStyle, StatusBarWidget, ViewWidget,
 };

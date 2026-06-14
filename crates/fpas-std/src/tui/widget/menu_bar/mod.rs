@@ -11,7 +11,7 @@ mod types;
 mod tests;
 
 pub use super::menu_style::MenuBarStyle;
-pub use types::{MenuBarItem, MenuBarMouseResult};
+pub use types::{MenuBarItem, MenuBarMouseResult, MenuBarState};
 
 use types::OpenSubmenu;
 
@@ -52,5 +52,30 @@ impl MenuBarWidget {
             self.menu_active = false;
         }
         self.items = items;
+    }
+
+    /// Returns a read-only snapshot of hover, activation, and submenu state.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui-app.md` (`Application.QueryMenuBarState`)
+    #[must_use]
+    pub fn query_state(&self) -> MenuBarState {
+        let (submenu_open, submenu_bar_index, selected_entry) = match self.open_submenu {
+            Some(open) => (
+                true,
+                i64::try_from(open.bar_index).unwrap_or(-1),
+                i64::try_from(open.entry_index).unwrap_or(-1),
+            ),
+            None => (false, -1, -1),
+        };
+        MenuBarState {
+            menu_active: self.menu_active,
+            hovered_index: self
+                .hovered
+                .and_then(|index| i64::try_from(index).ok())
+                .unwrap_or(-1),
+            submenu_open,
+            submenu_bar_index,
+            selected_entry,
+        }
     }
 }

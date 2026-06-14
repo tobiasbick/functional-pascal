@@ -274,6 +274,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Tui(TuiIntrinsic::QueryViewRect),
     Intrinsic::Tui(TuiIntrinsic::QueryViewParent),
     Intrinsic::Tui(TuiIntrinsic::QueryViewChildren),
+    Intrinsic::Tui(TuiIntrinsic::QueryMenuBarState),
     Intrinsic::Test(TestIntrinsic::AssertTrue),
     Intrinsic::Test(TestIntrinsic::AssertFalse),
     Intrinsic::Test(TestIntrinsic::AssertEqualsInteger),

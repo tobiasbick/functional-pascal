@@ -27,16 +27,14 @@ begin
     OnKeyPressed := Some(OnKeyPressed);
   end;
   Application.Configure(App, Handlers);
-  Application.TestSendKey(
-    App,
-    record
-      kind := KeyKind.Escape;
-      ch := #27;
-      shift := false;
-      ctrl := false;
-      alt := false;
-      meta := false;
-    end);
+  Application.TestSendKey(App, record
+    kind := KeyKind.Escape;
+    ch := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end);
   Application.TestPump(App);
   Application.CloseForTest(App);
   AssertTrue(QuitSeen)

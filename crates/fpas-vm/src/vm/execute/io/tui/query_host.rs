@@ -82,6 +82,19 @@ impl Worker {
                 });
                 self.push(Value::Array(children))?;
             }
+            Intrinsic::Tui(TuiIntrinsic::QueryMenuBarState) => {
+                let view_id = self.pop_query_view_id(line)?;
+                self.pop_tui_application(line)?;
+                let snapshot = self.with_tui(|tui| match tui.view_widgets.get(&view_id) {
+                    Some(fpas_std::ViewWidget::MenuBar(menu)) => Some(menu.query_state()),
+                    Some(_) => None,
+                    None => None,
+                });
+                let Some(state) = snapshot else {
+                    return Err(query_menu_bar_state_error(view_id, line));
+                };
+                self.push(Self::tui_menu_bar_state_record(state))?;
+            }
             _ => return Ok(false),
         }
 
@@ -143,6 +156,18 @@ fn query_view_rect_error(view_id: ViewId, line: SourceLocation) -> VmError {
             view_id.raw()
         ),
         "Pass a view handle returned by `Application.HostRegisterView` or a host widget constructor.",
+        line,
+    )
+}
+
+fn query_menu_bar_state_error(view_id: ViewId, line: SourceLocation) -> VmError {
+    runtime_error(
+        RUNTIME_CONSOLE_STATE_ERROR,
+        format!(
+            "Application.QueryMenuBarState(App, {}) requires a menu bar view handle.",
+            view_id.raw()
+        ),
+        "Pass the view id returned by `Application.HostCreateMenuBarView`.",
         line,
     )
 }

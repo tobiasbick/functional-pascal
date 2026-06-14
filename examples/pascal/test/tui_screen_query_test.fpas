@@ -13,20 +13,15 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(80, 25);
-  var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
-  end;
+  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
   Application.Configure(App, Handlers);
   Application.RequestRedraw(App);
   Application.TestPump(App);
-
   var ScreenSize: Size := Application.QueryScreenSize(App);
   AssertEquals(80, ScreenSize.width);
   AssertEquals(25, ScreenSize.height);
-
   var Bang: ScreenCell := Application.QueryScreenCell(App, 3, 1);
   AssertTrue(Bang.ch = '!');
   AssertEquals(Red, Bang.fg);
-
   Application.CloseForTest(App)
 end.

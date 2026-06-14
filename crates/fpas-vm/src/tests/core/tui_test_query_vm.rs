@@ -3,11 +3,13 @@
 //! **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
 
 use crate::tests::helpers::{
-    emit_constant, loc, minimal_shared_state, tui_application_value, tui_rect_value,
-    tui_screen_cell_value, tui_size_value,
+    emit_constant, key_event_value, loc, minimal_shared_state, tui_application_value,
+    tui_rect_value, tui_screen_cell_value, tui_size_value,
 };
 use crate::vm::Worker;
 use fpas_bytecode::{Chunk, Intrinsic, Op, TuiIntrinsic, Value};
+use fpas_std::ConsoleKeyEvent;
+use fpas_std::key_event::key_kind_index;
 use std::sync::Arc;
 
 fn emit_open_for_test(chunk: &mut Chunk, width: i64, height: i64) {
@@ -289,4 +291,79 @@ fn tui_query_view_parent_and_children_reflect_tree() {
         .get(worker.stack.len() - 2)
         .expect("parent on stack");
     assert_eq!(parent, &Value::OptionSome(Box::new(Value::Integer(0))));
+}
+
+fn tui_menu_bar_state_value(
+    menu_active: bool,
+    hovered_index: i64,
+    submenu_open: bool,
+    submenu_bar_index: i64,
+    selected_entry: i64,
+) -> Value {
+    Value::Record {
+        type_name: "Std.Tui.MenuBarState".into(),
+        fields: vec![
+            ("menuActive".into(), Value::Boolean(menu_active)),
+            ("hoveredIndex".into(), Value::Integer(hovered_index)),
+            ("submenuOpen".into(), Value::Boolean(submenu_open)),
+            ("submenuBarIndex".into(), Value::Integer(submenu_bar_index)),
+            ("selectedEntry".into(), Value::Integer(selected_entry)),
+        ],
+    }
+}
+
+#[test]
+fn tui_query_menu_bar_state_reflects_submenu_after_alt_shortcut() {
+    let mut chunk = Chunk::new();
+    emit_open_for_test(&mut chunk, 80, 25);
+    emit_constant(&mut chunk, tui_application_value());
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(80));
+    emit_constant(&mut chunk, Value::Integer(1));
+    emit_constant(&mut chunk, Value::Array(vec![menu_bar_file_item()]));
+    emit_constant(&mut chunk, default_menu_bar_style());
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(
+            TuiIntrinsic::HostCreateMenuBarView,
+        ))),
+        loc(),
+    );
+    emit_constant(&mut chunk, tui_application_value());
+    emit_constant(
+        &mut chunk,
+        key_event_value(ConsoleKeyEvent::new(
+            key_kind_index("Character"),
+            'f',
+            false,
+            false,
+            true,
+            false,
+        )),
+    );
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::TestSendKey))),
+        loc(),
+    );
+    emit_constant(&mut chunk, tui_application_value());
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::TestPump))),
+        loc(),
+    );
+    emit_constant(&mut chunk, tui_application_value());
+    emit_constant(&mut chunk, Value::Integer(0));
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::QueryMenuBarState))),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(shared);
+    worker.run().expect("query menu bar state should succeed");
+
+    assert_eq!(
+        worker.stack.last(),
+        Some(&tui_menu_bar_state_value(true, 0, true, 0, 0))
+    );
 }

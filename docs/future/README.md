@@ -22,7 +22,9 @@ Source-level `library` projects and `[dependencies]` are **implemented**. Precom
 
 FPAS programs today are tested mainly from Rust (`compile_and_run`, VM input queues). Author-facing tests use `Std.Test`, `fpas test`, and scripted keyboard/mouse sidecars — see [`docs/pascal/std/test.md`](../pascal/std/test.md). Planned runner docs: [`test-framework/README.md`](test-framework/README.md) (when present).
 
-**Under consideration:** a localhost HTTP control server for live TUI inspection and event injection (Playwright-style automation without PTY). Proposal: [`tui-test/README.md`](tui-test/README.md) (API: [`control-server-api.md`](tui-test/control-server-api.md), architecture: [`architecture.md`](tui-test/architecture.md)).
+**Under consideration:** two complementary directions for richer TUI testing —
+- In-process: test the hosted TUI fully from FPAS via `fpas test` (headless pump, input injection, screen/view/widget introspection). Proposal: [`tui-tests-fpas/README.md`](tui-tests-fpas/README.md).
+- Out-of-process: a localhost HTTP control server for live inspection and event injection (Playwright-style, no PTY). Proposal: [`tui-test/README.md`](tui-test/README.md) (API: [`control-server-api.md`](tui-test/control-server-api.md), architecture: [`architecture.md`](tui-test/architecture.md)).
 
 ## Source formatter
 
@@ -33,6 +35,7 @@ FPAS programs today are tested mainly from Rust (`compile_and_run`, VM input que
 | # | Feature | Description |
 |---|---------|-------------|
 | 9 | [`dict`](09-remove-dict.md) | Pending — may be kept |
+| — | [Native TUI testing in FPAS](tui-tests-fpas/README.md) | Test the hosted TUI fully from `fpas test`: headless pump, input injection, screen/view/widget introspection |
 | — | [TUI live control server](tui-test/README.md) | Localhost HTTP API to query screen/views and inject events during `Application.Run` |
 | — | [Libraries — finer exports](libraries.md) | Per-symbol / re-export rules beyond `[exports].units` |
 

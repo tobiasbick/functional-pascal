@@ -1,6 +1,6 @@
 # Native TUI testing in FPAS — implementation plan
 
-**Status:** Phase 6 complete; Phase 7 next.
+**Status:** Phase 7 complete; Phase 8 next.
 **Design:** [`README.md`](README.md).
 
 Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and a verification step. After a context loss, **start by reading the "Resume here" marker** below, then continue at the first unchecked task.
@@ -19,8 +19,8 @@ Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and 
 
 ## Resume here
 
-> **Next task:** Phase 7, Task **7.1** (`tui_menu_hover_test.fpas` capstone).
-> **Last updated:** 2026-06-14
+> **Next task:** Phase 8, Task **8.1** (apply Phase-0 sidecar deprecations).
+> **Last updated:** 2026-06-15
 > **Notes:** View-tree queries **371..=373** and `QueryMenuBarState` (**374**) use integer handles until `ViewId` migration.
 
 ---
@@ -133,9 +133,9 @@ Pure wrappers over Phase 3/4 queries. Live in `crates/fpas-std/src/test/` + sema
 
 The target experience from the design doc, fully under `fpas test`.
 
-- [ ] **7.1 `examples/pascal/test/tui_menu_hover_test.fpas`.** Reproduce the README target program: open headless, move over "File", pump, assert highlight cell + `hoveredIndex`; click to open submenu, move over entry, pump, assert `submenuOpen` + `selectedEntry`. **Verify:** `fpas test examples/pascal/test/tui_menu_hover_test.fpas` passes.
-- [ ] **7.2 Add to test discovery.** Ensure it runs under `examples_pascal_test_suite_passes`. **Verify:** `cargo test -p fpas-cli examples_pascal_test_suite_passes`.
-- [ ] **7.3 Port one real menu regression.** Convert the bug that motivated this work into a native FPAS test. **Verify:** test reproduces the bug pre-fix and passes post-fix.
+- [x] **7.1 `examples/pascal/test/tui_menu_hover_test.fpas`.** Reproduce the README target program: open headless, move over "File", pump, assert highlight cell + `hoveredIndex`; click to open submenu, move over entry, pump, assert `submenuOpen` + `selectedEntry`. **Verify:** `fpas test examples/pascal/test/tui_menu_hover_test.fpas` passes.
+- [x] **7.2 Add to test discovery.** Ensure it runs under `examples_pascal_test_suite_passes`. **Verify:** `cargo test -p fpas-cli examples_pascal_test_suite_passes`.
+- [x] **7.3 Port one real menu regression.** Convert the bug that motivated this work into a native FPAS test. **Verify:** test reproduces the bug pre-fix and passes post-fix.
 
 ---
 
@@ -201,6 +201,7 @@ Renames (no new discriminant): `QueryFocusedViewId` replaces Pascal name for **2
 
 Append one entry per working session: date, tasks completed, surprises, and the next task to resume from.
 
+- **2026-06-15:** Completed **Phase 7** (7.1–7.3): capstone `tui_menu_hover_test.fpas` (bar hover + submenu `Move` selection); runs under `examples_pascal_test_suite_passes`; submenu mouse-hover regression from README now covered natively (`TestPumpUntilIdle` after multi-event injectors). Next: **8.1** sidecar deprecations.
 - **2026-06-14:** Completed **Phase 6** (6.1–6.4): `AssertScreenLine` / `AssertScreenCell` / `AssertViewRect` (`TestIntrinsic` **375..=377**); VM `test_host.rs`; compiler pass/fail tests; `docs/pascal/std/test.md`. Next: **7.1** capstone menu hover test.
 - **2026-06-14:** Completed **Phase 5** (5.2–5.3): confirmed bar hover via `Move` (unit test `menu_bar_mouse_move_highlights_bar_item`); FPAS end-to-end test `tui_menu_bar_hover_test.fpas` (move → pump → highlight cell). Next: **6.1** `AssertScreenLine`.
 - **2026-06-14:** Completed **5.1** submenu mouse hover: `Move` over popup rows updates `selectedEntry`; unit test `menu_bar_submenu_mouse_move_changes_selection`. Next: **5.2** bar item hover via `Move`.

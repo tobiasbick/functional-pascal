@@ -6,7 +6,7 @@ use super::assert::{
     assert_equals_boolean, assert_equals_integer, assert_equals_real, assert_equals_string,
     assert_false, assert_true, fail, skip,
 };
-use crate::error::StdError;
+use crate::error::{StdError, std_internal_error};
 use crate::intrinsic_args::{pop_bool, pop_int, pop_real, pop_string, pop_value};
 use fpas_bytecode::{Intrinsic, SourceLocation, TestIntrinsic, Value};
 
@@ -57,6 +57,15 @@ pub(crate) fn run(
         TestIntrinsic::Skip => {
             let msg = pop_string(pop_value(stack, location)?, location)?;
             skip(msg, location)?;
+        }
+        TestIntrinsic::AssertScreenLine
+        | TestIntrinsic::AssertScreenCell
+        | TestIntrinsic::AssertViewRect => {
+            return Err(std_internal_error(
+                "internal: Std.Test screen/view assertions are handled in the VM",
+                "This indicates a VM dispatch bug. Please report this as a compiler/runtime bug.",
+                location,
+            ));
         }
     }
 

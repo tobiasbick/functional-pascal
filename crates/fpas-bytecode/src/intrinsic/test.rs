@@ -26,4 +26,23 @@ pub enum TestIntrinsic {
     AssertEqualsString = 354,
     /// `Std.Test.AssertEquals(Expected, Actual)` for `real` operands.
     AssertEqualsReal = 355,
+
+    /// `Std.Test.AssertScreenLine(Expected, Y)` — compare CRT row text.
+    ///
+    /// Stack: `Expected`, `Y` (`Y` on top). Reads the virtual screen directly.
+    ///
+    /// **Documentation:** `docs/pascal/std/test.md`, `docs/future/tui-tests-fpas/README.md`
+    AssertScreenLine = 375,
+    /// `Std.Test.AssertScreenCell(X, Y, Ch, Fg, Bg)` — compare one CRT cell.
+    ///
+    /// Stack: `X`, `Y`, `Ch`, `Fg`, `Bg` (`Bg` on top). Colors are packed CRT `0..=15`.
+    ///
+    /// **Documentation:** `docs/pascal/std/test.md`, `docs/future/tui-tests-fpas/README.md`
+    AssertScreenCell = 376,
+    /// `Std.Test.AssertViewRect(App, V, X, Y, W, H)` — compare a view rectangle.
+    ///
+    /// Stack: `App`, `V`, `X`, `Y`, `W`, `H` (`H` on top).
+    ///
+    /// **Documentation:** `docs/pascal/std/test.md`, `docs/future/tui-tests-fpas/README.md`
+    AssertViewRect = 377,
 }

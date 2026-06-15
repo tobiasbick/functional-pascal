@@ -346,7 +346,7 @@ impl Worker {
         Ok(true)
     }
 
-    pub(in crate::vm::execute::io::tui) fn pop_tui_view_id(
+    pub(in crate::vm::execute::io) fn pop_tui_view_id(
         &mut self,
         line: SourceLocation,
     ) -> Result<ViewId, VmError> {
@@ -362,7 +362,7 @@ impl Worker {
         Ok(ViewId::from_raw(raw))
     }
 
-    pub(in crate::vm::execute::io::tui) fn require_registered_tui_view(
+    pub(in crate::vm::execute::io) fn require_registered_tui_view(
         &self,
         view_id: ViewId,
         line: SourceLocation,

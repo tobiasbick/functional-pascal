@@ -379,7 +379,6 @@ pub enum TuiIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
     QueryMenuBarState = 374,
-    // Reserved **375..=378** for remaining native TUI testing API
-    // (see docs/future/tui-tests-fpas/implementation-plan.md Appendix B).
+    // **378** spare; **375..=377** are `Std.Test` screen/view assertions (see `TestIntrinsic`).
     // Note: **348..=355** are owned by `Std.Test` (`TestIntrinsic`).
 }

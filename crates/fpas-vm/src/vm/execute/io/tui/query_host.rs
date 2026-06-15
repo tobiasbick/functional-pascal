@@ -101,12 +101,18 @@ impl Worker {
         Ok(true)
     }
 
-    fn pop_query_view_id(&mut self, line: SourceLocation) -> Result<ViewId, VmError> {
+    pub(in crate::vm::execute::io) fn pop_query_view_id(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<ViewId, VmError> {
         let view_id = self.pop_tui_view_id(line)?;
         self.require_registered_tui_view(view_id, line)
     }
 
-    fn screen_row_to_u16(y: i64, line: SourceLocation) -> Result<u16, VmError> {
+    pub(in crate::vm::execute::io) fn screen_row_to_u16(
+        y: i64,
+        line: SourceLocation,
+    ) -> Result<u16, VmError> {
         if y <= 0 || y > i64::from(u16::MAX) {
             return Err(runtime_error(
                 RUNTIME_CONSOLE_STATE_ERROR,
@@ -121,7 +127,10 @@ impl Worker {
         Ok(y as u16)
     }
 
-    fn screen_column_to_u16(x: i64, line: SourceLocation) -> Result<u16, VmError> {
+    pub(in crate::vm::execute::io) fn screen_column_to_u16(
+        x: i64,
+        line: SourceLocation,
+    ) -> Result<u16, VmError> {
         if x <= 0 || x > i64::from(u16::MAX) {
             return Err(runtime_error(
                 RUNTIME_CONSOLE_STATE_ERROR,

@@ -283,6 +283,9 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Test(TestIntrinsic::AssertEqualsBoolean),
     Intrinsic::Test(TestIntrinsic::AssertEqualsString),
     Intrinsic::Test(TestIntrinsic::AssertEqualsReal),
+    Intrinsic::Test(TestIntrinsic::AssertScreenLine),
+    Intrinsic::Test(TestIntrinsic::AssertScreenCell),
+    Intrinsic::Test(TestIntrinsic::AssertViewRect),
 ];
 
 #[test]

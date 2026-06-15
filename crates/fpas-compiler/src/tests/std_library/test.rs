@@ -134,3 +134,232 @@ begin
 end.",
     );
 }
+
+#[test]
+fn std_test_assert_screen_line_passes_and_fails() {
+    compile_ok(
+        "\
+program T;
+uses Std.Console, Std.Tui, Std.Test;
+
+procedure OnPaint(App: Application);
+begin
+  ClrScr();
+  GotoXY(1, 1);
+  Write('Hi')
+end;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+  end;
+  Application.Configure(App, Handlers);
+  Application.RequestRedraw(App);
+  Application.TestPump(App);
+  AssertScreenLine('Hi', 1);
+  Application.CloseForTest(App)
+end.",
+    );
+
+    let err = compile_run_error(
+        "\
+program T;
+uses Std.Console, Std.Tui, Std.Test;
+
+procedure OnPaint(App: Application);
+begin
+  ClrScr();
+  GotoXY(1, 1);
+  Write('Hi')
+end;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+  end;
+  Application.Configure(App, Handlers);
+  Application.RequestRedraw(App);
+  Application.TestPump(App);
+  AssertScreenLine('Bye', 1);
+  Application.CloseForTest(App)
+end.",
+    );
+    assert_eq!(err.code, RUNTIME_TEST_ASSERTION_FAILED);
+    assert!(
+        err.message.contains("expected 'Bye', got 'Hi'"),
+        "message={}",
+        err.message
+    );
+}
+
+#[test]
+fn std_test_assert_screen_line_passes_at_runtime() {
+    compile_and_run(
+        "\
+program T;
+uses Std.Console, Std.Tui, Std.Test;
+
+procedure OnPaint(App: Application);
+begin
+  ClrScr();
+  GotoXY(1, 1);
+  Write('Hi')
+end;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+  end;
+  Application.Configure(App, Handlers);
+  Application.RequestRedraw(App);
+  Application.TestPump(App);
+  AssertScreenLine('Hi', 1);
+  Application.CloseForTest(App)
+end.",
+    );
+}
+
+#[test]
+fn std_test_assert_screen_cell_passes_and_fails() {
+    compile_ok(
+        "\
+program T;
+uses Std.Console, Std.Tui, Std.Test;
+
+procedure OnPaint(App: Application);
+begin
+  ClrScr();
+  GotoXY(1, 1);
+  TextColor(Red);
+  Write('!')
+end;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+  end;
+  Application.Configure(App, Handlers);
+  Application.RequestRedraw(App);
+  Application.TestPump(App);
+  AssertScreenCell(1, 1, '!', Red, Black);
+  Application.CloseForTest(App)
+end.",
+    );
+
+    let err = compile_run_error(
+        "\
+program T;
+uses Std.Console, Std.Tui, Std.Test;
+
+procedure OnPaint(App: Application);
+begin
+  ClrScr();
+  GotoXY(1, 1);
+  TextColor(Red);
+  Write('!')
+end;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+  end;
+  Application.Configure(App, Handlers);
+  Application.RequestRedraw(App);
+  Application.TestPump(App);
+  AssertScreenCell(1, 1, '!', Blue, Black);
+  Application.CloseForTest(App)
+end.",
+    );
+    assert_eq!(err.code, RUNTIME_TEST_ASSERTION_FAILED);
+    assert!(
+        err.message.contains("expected 1, got 4") || err.message.contains("expected 4, got 1"),
+        "message={}",
+        err.message
+    );
+}
+
+#[test]
+fn std_test_assert_view_rect_passes_and_fails() {
+    compile_ok(
+        "\
+program T;
+uses Std.Console, Std.Tui, Std.Test;
+
+function MenuItems(): array of MenuBarItem;
+begin
+  return [
+    record
+      Label := 'File'; Shortcut := 'F'; Enabled := true; CommandId := -1;
+      Submenu := [];
+    end
+  ]
+end;
+
+function MenuStyle(): MenuBarStyle;
+begin
+  return record
+    BarBg := LightGray;
+    BarFg := Black;
+    AccelFg := Red;
+    HighlightBg := Black;
+    HighlightFg := LightGray;
+    DisabledFg := DarkGray;
+  end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  var MenuBar: integer := Application.HostCreateMenuBarView(
+    App, 0, 0, 80, 1, MenuItems(), MenuStyle());
+  AssertViewRect(App, MenuBar, 0, 0, 80, 1);
+  Application.CloseForTest(App)
+end.",
+    );
+
+    let err = compile_run_error(
+        "\
+program T;
+uses Std.Console, Std.Tui, Std.Test;
+
+function MenuItems(): array of MenuBarItem;
+begin
+  return [
+    record
+      Label := 'File'; Shortcut := 'F'; Enabled := true; CommandId := -1;
+      Submenu := [];
+    end
+  ]
+end;
+
+function MenuStyle(): MenuBarStyle;
+begin
+  return record
+    BarBg := LightGray;
+    BarFg := Black;
+    AccelFg := Red;
+    HighlightBg := Black;
+    HighlightFg := LightGray;
+    DisabledFg := DarkGray;
+  end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  var MenuBar: integer := Application.HostCreateMenuBarView(
+    App, 0, 0, 80, 1, MenuItems(), MenuStyle());
+  AssertViewRect(App, MenuBar, 0, 0, 40, 1);
+  Application.CloseForTest(App)
+end.",
+    );
+    assert_eq!(err.code, RUNTIME_TEST_ASSERTION_FAILED);
+    assert!(
+        err.message.contains("expected 40, got 80"),
+        "message={}",
+        err.message
+    );
+}

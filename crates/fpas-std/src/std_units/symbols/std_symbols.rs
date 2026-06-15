@@ -537,3 +537,6 @@ pub const STD_TEST_ASSERT_FALSE: &str = std_test!("AssertFalse");
 pub const STD_TEST_ASSERT_EQUALS: &str = std_test!("AssertEquals");
 pub const STD_TEST_FAIL: &str = std_test!("Fail");
 pub const STD_TEST_SKIP: &str = std_test!("Skip");
+pub const STD_TEST_ASSERT_SCREEN_LINE: &str = std_test!("AssertScreenLine");
+pub const STD_TEST_ASSERT_SCREEN_CELL: &str = std_test!("AssertScreenCell");
+pub const STD_TEST_ASSERT_VIEW_RECT: &str = std_test!("AssertViewRect");

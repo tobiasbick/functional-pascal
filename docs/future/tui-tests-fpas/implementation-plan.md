@@ -1,6 +1,6 @@
 # Native TUI testing in FPAS — implementation plan
 
-**Status:** Phase 5 complete; Phase 6 next.
+**Status:** Phase 6 complete; Phase 7 next.
 **Design:** [`README.md`](README.md).
 
 Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and a verification step. After a context loss, **start by reading the "Resume here" marker** below, then continue at the first unchecked task.
@@ -19,7 +19,7 @@ Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and 
 
 ## Resume here
 
-> **Next task:** Phase 6, Task **6.1** (`AssertScreenLine` in `Std.Test`).
+> **Next task:** Phase 7, Task **7.1** (`tui_menu_hover_test.fpas` capstone).
 > **Last updated:** 2026-06-14
 > **Notes:** View-tree queries **371..=373** and `QueryMenuBarState` (**374**) use integer handles until `ViewId` migration.
 
@@ -122,10 +122,10 @@ These are real host changes, not test plumbing. Without them, hover has nothing 
 
 Pure wrappers over Phase 3/4 queries. Live in `crates/fpas-std/src/test/` + sema/compiler/bytecode wiring like other `Std.Test` procedures.
 
-- [ ] **6.1 `AssertScreenLine(Expected: string; Y: integer)`.** **Verify:** passing and failing cases (failing emits `F4023`).
-- [ ] **6.2 `AssertScreenCell(X, Y: integer; Ch: char; Fg, Bg: Color)`.** **Verify:** pass/fail cases.
-- [ ] **6.3 `AssertViewRect(App, V: ViewId; X, Y, W, H)`.** **Verify:** pass/fail cases.
-- [ ] **6.4 Update `docs/pascal/std/test.md`** with the new assertions. **Verify:** spec lists them; links valid.
+- [x] **6.1 `AssertScreenLine(Expected: string; Y: integer)`.** **Verify:** passing and failing cases (failing emits `F4023`).
+- [x] **6.2 `AssertScreenCell(X, Y: integer; Ch: char; Fg, Bg: Color)`.** **Verify:** pass/fail cases.
+- [x] **6.3 `AssertViewRect(App, V: ViewId; X, Y, W, H)`.** **Verify:** pass/fail cases.
+- [x] **6.4 Update `docs/pascal/std/test.md`** with the new assertions. **Verify:** spec lists them; links valid.
 
 ---
 
@@ -188,7 +188,10 @@ Running list of new intrinsics and their assigned discriminants (reserved in Pha
 | `QueryViewParent` | 372 | 4.3 | [x] |
 | `QueryViewChildren` | 373 | 4.4 | [x] |
 | `QueryMenuBarState` | 374 | 4.7 | [x] |
-| *(spare)* | 375..=378 | — | — |
+| `AssertScreenLine` | 375 | 6.1 | [x] (`TestIntrinsic`) |
+| `AssertScreenCell` | 376 | 6.2 | [x] (`TestIntrinsic`) |
+| `AssertViewRect` | 377 | 6.3 | [x] (`TestIntrinsic`) |
+| *(spare)* | 378 | — | — |
 
 **348..=355** are reserved for `Std.Test` (`TestIntrinsic`); do not assign TUI testing discriminants in that range.
 
@@ -198,6 +201,7 @@ Renames (no new discriminant): `QueryFocusedViewId` replaces Pascal name for **2
 
 Append one entry per working session: date, tasks completed, surprises, and the next task to resume from.
 
+- **2026-06-14:** Completed **Phase 6** (6.1–6.4): `AssertScreenLine` / `AssertScreenCell` / `AssertViewRect` (`TestIntrinsic` **375..=377**); VM `test_host.rs`; compiler pass/fail tests; `docs/pascal/std/test.md`. Next: **7.1** capstone menu hover test.
 - **2026-06-14:** Completed **Phase 5** (5.2–5.3): confirmed bar hover via `Move` (unit test `menu_bar_mouse_move_highlights_bar_item`); FPAS end-to-end test `tui_menu_bar_hover_test.fpas` (move → pump → highlight cell). Next: **6.1** `AssertScreenLine`.
 - **2026-06-14:** Completed **5.1** submenu mouse hover: `Move` over popup rows updates `selectedEntry`; unit test `menu_bar_submenu_mouse_move_changes_selection`. Next: **5.2** bar item hover via `Move`.
 - **2026-06-14:** Completed **Phase 4** (4.5–4.8): `MenuBarState` registry; `MenuBarWidget::query_state`; `QueryMenuBarState` (**374**); VM + compiler tests; `examples/pascal/test/tui_view_query_test.fpas`. Next: **5.1** submenu mouse hover.

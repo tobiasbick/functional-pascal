@@ -58,6 +58,35 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::Test(TestIntrinsic::Skip), location);
                 Ok(true)
             }
+            s::STD_TEST_ASSERT_SCREEN_LINE => {
+                self.expect_exact_args(s::STD_TEST_ASSERT_SCREEN_LINE, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(
+                    Intrinsic::Test(TestIntrinsic::AssertScreenLine),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_TEST_ASSERT_SCREEN_CELL => {
+                self.expect_exact_args(s::STD_TEST_ASSERT_SCREEN_CELL, 5, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(
+                    Intrinsic::Test(TestIntrinsic::AssertScreenCell),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_TEST_ASSERT_VIEW_RECT => {
+                self.expect_exact_args(s::STD_TEST_ASSERT_VIEW_RECT, 6, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Test(TestIntrinsic::AssertViewRect), location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

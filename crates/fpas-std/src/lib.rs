@@ -70,7 +70,10 @@ pub use std_units::{
     canonical_std_unit_from_tail, is_std_root_segment, std_symbols, std_unit_symbols,
     std_units_list_for_hint,
 };
-pub use test::{reset_test_skip_state, test_was_skipped};
+pub use test::{
+    assert_screen_cell, assert_screen_line, assert_view_rect, reset_test_skip_state,
+    test_was_skipped,
+};
 pub use tui::{
     CommandId, CommandRegistry, DamageRegion, MenuBarItem, MenuBarMouseResult, MenuBarState,
     MenuBarStyle, MenuBarWidget, MenuPopupItem, ModalId, ModalStack, SolidFillWidget,

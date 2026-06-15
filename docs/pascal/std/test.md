@@ -35,6 +35,9 @@ Requires `uses Std.Test;`.
 | procedure | `AssertEquals(Expected; Actual)` | equality for `integer`, `boolean`, `string`, or `real` (both operands same type) |
 | procedure | `Fail(Msg: string)` | unconditional failure |
 | procedure | `Skip(Msg: string)` | print skip reason; runner reports `SKIP` (exit `0` unless `fpas test --strict`) |
+| procedure | `AssertScreenLine(Expected: string; Y: integer)` | fail when CRT row `Y` text differs (headless/TUI back buffer) |
+| procedure | `AssertScreenCell(X, Y: integer; Ch: char; Fg, Bg: integer)` | fail when one CRT cell differs (`Fg`/`Bg` are packed colors `0..=15`) |
+| procedure | `AssertViewRect(App: Application; V: integer; X, Y, W, H: integer)` | fail when view bounds differ (`uses Std.Tui` required) |
 
 ---
 
@@ -59,6 +62,18 @@ Unconditional failure with **F4023** and user message.
 ### `procedure Skip(Msg: string)`
 
 Print `test skipped: …` to stderr and continue. Does not raise **F4023**. The `fpas test` runner records the test as **skipped** (`SKIP` line, included in summary). Skipped tests do not fail the run unless you pass `--strict` (exit code `1` when any test was skipped).
+
+### `procedure AssertScreenLine(Expected: string; Y: integer)`
+
+Fail with **F4023** when row `Y` (one-based) of the virtual CRT back buffer does not equal `Expected`. Use after `Application.TestPump` in headless TUI tests. Requires `uses Std.Console` (or `Std.Tui`, which pulls console symbols).
+
+### `procedure AssertScreenCell(X, Y: integer; Ch: char; Fg, Bg: integer)`
+
+Fail with **F4023** when cell `(X, Y)` (one-based) does not match the expected character and packed CRT colors. Use `Std.Console` color constants (for example `Red`, `Black`) for `Fg` and `Bg`.
+
+### `procedure AssertViewRect(App: Application; V: integer; X, Y, W, H: integer)`
+
+Fail with **F4023** when the absolute rectangle of view handle `V` differs from `(X, Y, W, H)`. Requires `uses Std.Tui` (for `Application` and host view constructors).
 
 ---
 

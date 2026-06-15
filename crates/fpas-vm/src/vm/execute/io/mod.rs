@@ -9,6 +9,7 @@ mod console;
 mod graph;
 mod graph_run;
 mod hosted_common;
+mod test_host;
 mod tui;
 mod tui_run;
 
@@ -50,6 +51,9 @@ impl Worker {
                     return Ok(true);
                 }
                 if self.try_exec_concurrency_intrinsic(intrinsic, line)? {
+                    return Ok(true);
+                }
+                if self.try_exec_test_host_intrinsic(intrinsic, line)? {
                     return Ok(true);
                 }
 

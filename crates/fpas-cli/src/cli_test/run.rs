@@ -8,7 +8,6 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use super::expect_pixels;
-use super::expect_screen;
 use super::expect_stdout;
 use super::hooks::{TestHook, TestHooks, hook_program_source};
 use super::report::TestOutcome;
@@ -254,19 +253,12 @@ fn run_test_program(
         VmRunResult::Completed(VmExecution {
             result: Ok(()),
             ref stdout_lines,
-            ref screen_lines,
+            screen_lines: _,
             ref headless_frame,
             skipped,
         }) => {
             if matches!(output, RunOutput::Test | RunOutput::TestDeferredPass) {
                 if let Err(message) = expect_stdout::compare_stdout(path, &stdout_lines) {
-                    if output.emit_fail_banner() {
-                        let _ = writeln!(stderr, "  FAIL  {display}");
-                    }
-                    let _ = writeln!(stderr, "        {message}");
-                    return TestOutcome::AssertFailed;
-                }
-                if let Err(message) = expect_screen::compare_screen(path, &screen_lines) {
                     if output.emit_fail_banner() {
                         let _ = writeln!(stderr, "  FAIL  {display}");
                     }

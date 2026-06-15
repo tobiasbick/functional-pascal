@@ -47,7 +47,7 @@ fn test_cli_runs_passing_tests_in_directory() {
 }
 
 #[test]
-fn test_cli_runs_tui_test_with_sidecar_script() {
+fn test_cli_runs_native_tui_headless_test() {
     let cwd = create_temp_dir("fpas-tui-test");
     write_text(
         &cwd.join("escape_test.fpas"),
@@ -59,25 +59,22 @@ fn test_cli_runs_tui_test_with_sidecar_script() {
            if Key.kind = KeyKind.Escape then\n\
            begin\n\
              QuitSeen := true;\n\
-             Application.HostRequestQuit(App);\n\
              return true\n\
            end;\n\
            return false\n\
          end;\n\
          begin\n\
-           var App: Application := Application.Open();\n\
+           var App: Application := Application.OpenForTest(80, 25);\n\
            var Handlers: ApplicationHandlers := record\n\
              OnPaint := OnPaint;\n\
              OnKeyPressed := Some(OnKeyPressed);\n\
            end;\n\
            Application.Configure(App, Handlers);\n\
-           Application.Run(App);\n\
+           Application.TestSendKey(App, record kind := KeyKind.Escape; ch := #27; shift := false; ctrl := false; alt := false; meta := false; end);\n\
+           Application.TestPump(App);\n\
+           Application.CloseForTest(App);\n\
            AssertTrue(QuitSeen)\n\
          end.",
-    );
-    write_text(
-        &cwd.join("escape_test.script.toml"),
-        "[[event]]\ntype = \"console_key\"\nkind = \"Escape\"\n",
     );
 
     let mut stderr = Vec::new();

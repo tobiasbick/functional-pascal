@@ -618,10 +618,10 @@ Runner sidecars **overlap** with the native FPAS test API and are **deprecated**
 | `<test>.expect.stdout` | **Keep** | Still useful for non-TUI output-only tests |
 | `<test>.expect.pixels` | **Keep** until graph native testing exists | Graph-specific |
 
-Affected implementation paths (remove in Phase 8 after migration):
+Affected implementation paths (TUI sidecars removed in Phase 8.1):
 
-- `crates/fpas-cli/src/test_script/` — TOML parse/apply for pre-run input
-- `crates/fpas-cli/src/cli_test/expect_screen.rs` — golden screen compare
-- `examples/pascal/test/tui_escape_test.script.toml`, `tui_mouse_test.script.toml`, `tui_escape_test.expect.screen` — migrate to native FPAS tests in Phase 7/8
+- ~~`crates/fpas-cli/src/test_script/console.rs`~~ — removed (console/TUI script events)
+- ~~`crates/fpas-cli/src/cli_test/expect_screen.rs`~~ — removed (golden screen compare)
+- ~~`examples/pascal/test/tui_escape_test.script.toml`~~, ~~`tui_mouse_test.script.toml`~~, ~~`tui_escape_test.expect.screen`~~ — migrated to native FPAS tests
 
-Until Phase 8, the runner keeps sidecar support so existing tests keep passing during implementation.
+`*.script.toml` remains for `readln` / graph sidecars until those paths are migrated separately.

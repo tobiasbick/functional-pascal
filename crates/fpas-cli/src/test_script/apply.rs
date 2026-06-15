@@ -2,7 +2,6 @@
 //!
 //! **Documentation:** [`docs/future/test-framework/scripted-input.md`](../../../docs/future/test-framework/scripted-input.md)
 
-use super::console;
 use super::graph;
 use super::parse::{ScriptEvent, ScriptFile};
 
@@ -27,16 +26,6 @@ fn apply_one_event(
         }
         ScriptEvent::ReadkeyChars { chars } => {
             vm.push_readkey_input(chars);
-            Ok(())
-        }
-        ScriptEvent::ConsoleKey { .. }
-        | ScriptEvent::ConsoleMouse { .. }
-        | ScriptEvent::ConsoleResize { .. }
-        | ScriptEvent::ConsolePaste { .. }
-        | ScriptEvent::ConsoleFocusGained
-        | ScriptEvent::ConsoleFocusLost => {
-            let console_event = console::console_event_from_script(event)?;
-            vm.push_console_event(console_event);
             Ok(())
         }
         ScriptEvent::GraphKey { .. }

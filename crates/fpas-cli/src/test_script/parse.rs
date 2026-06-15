@@ -21,33 +21,6 @@ pub enum ScriptEvent {
     ReadkeyChars {
         chars: String,
     },
-    ConsoleKey {
-        kind: String,
-        ch: Option<char>,
-        shift: bool,
-        ctrl: bool,
-        alt: bool,
-        meta: bool,
-    },
-    ConsoleMouse {
-        action: String,
-        button: String,
-        x: i64,
-        y: i64,
-        shift: bool,
-        ctrl: bool,
-        alt: bool,
-        meta: bool,
-    },
-    ConsoleResize {
-        width: i64,
-        height: i64,
-    },
-    ConsolePaste {
-        text: String,
-    },
-    ConsoleFocusGained,
-    ConsoleFocusLost,
     GraphKey {
         kind: String,
         ch: Option<char>,
@@ -174,41 +147,6 @@ fn parse_event_table(
         "readkey_chars" => Ok(ScriptEvent::ReadkeyChars {
             chars: required_string(table, "chars", index, path)?,
         }),
-        "console_key" => Ok(ScriptEvent::ConsoleKey {
-            kind: required_string(table, "kind", index, path)?,
-            ch: optional_char(table, "ch", index, path)?,
-            shift: optional_bool(table, "shift").unwrap_or(false),
-            ctrl: optional_bool(table, "ctrl").unwrap_or(false),
-            alt: optional_bool(table, "alt").unwrap_or(false),
-            meta: optional_bool(table, "meta").unwrap_or(false),
-        }),
-        "console_mouse" => Ok(ScriptEvent::ConsoleMouse {
-            action: required_string(table, "action", index, path)?,
-            button: required_string(table, "button", index, path)?,
-            x: required_i64(table, "x", index, path)?,
-            y: required_i64(table, "y", index, path)?,
-            shift: optional_bool(table, "shift").unwrap_or(false),
-            ctrl: optional_bool(table, "ctrl").unwrap_or(false),
-            alt: optional_bool(table, "alt").unwrap_or(false),
-            meta: optional_bool(table, "meta").unwrap_or(false),
-        }),
-        "console_resize" => {
-            let width = required_i64(table, "width", index, path)?;
-            let height = required_i64(table, "height", index, path)?;
-            if width <= 0 || height <= 0 {
-                return Err(format!(
-                    "Invalid `[[event]]` #{index} in `{}`: resize width and height must be positive (got {width}x{height}).",
-                    path.display()
-                ));
-            }
-            Ok(ScriptEvent::ConsoleResize { width, height })
-        }
-        "console_paste" => Ok(ScriptEvent::ConsolePaste {
-            text: required_string(table, "paste", index, path)
-                .or_else(|_| required_string(table, "text", index, path))?,
-        }),
-        "console_focus_gained" => Ok(ScriptEvent::ConsoleFocusGained),
-        "console_focus_lost" => Ok(ScriptEvent::ConsoleFocusLost),
         "graph_key" => Ok(ScriptEvent::GraphKey {
             kind: required_string(table, "kind", index, path)?,
             ch: optional_char(table, "ch", index, path)?,
@@ -236,7 +174,7 @@ fn parse_event_table(
             meta: optional_bool(table, "meta").unwrap_or(false),
         }),
         other => Err(format!(
-            "Unknown event type `{other}` in `[[event]]` #{index} of `{}`.\n  help: Supported types include `readln`, `console_key`, and `console_mouse`.",
+            "Unknown event type `{other}` in `[[event]]` #{index} of `{}`.\n  help: Supported types include `readln`, `readkey_chars`, and graph events (`graph_key`, `graph_mouse`, `graph_wheel`).",
             path.display()
         )),
     }

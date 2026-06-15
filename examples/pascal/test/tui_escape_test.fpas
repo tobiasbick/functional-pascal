@@ -17,19 +17,30 @@ begin
   if Key.kind = KeyKind.Escape then
   begin
     QuitSeen := true;
-    Application.HostRequestQuit(App);
     return true
   end;
   return false
 end;
 
 begin
-  var App: Application := Application.Open();
+  var App: Application := Application.OpenForTest(80, 25);
   var Handlers: ApplicationHandlers := record
     OnPaint := OnPaint;
     OnKeyPressed := Some(OnKeyPressed);
   end;
   Application.Configure(App, Handlers);
-  Application.Run(App);
+  Application.RequestRedraw(App);
+  Application.TestPump(App);
+  AssertScreenLine('Press Escape to quit', 1);
+  Application.TestSendKey(App, record
+    kind := KeyKind.Escape;
+    ch := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end);
+  Application.TestPump(App);
+  Application.CloseForTest(App);
   AssertTrue(QuitSeen)
 end.

@@ -5,7 +5,6 @@
 
 mod discover;
 mod expect_pixels;
-mod expect_screen;
 mod expect_stdout;
 mod hooks;
 mod parallel;
@@ -499,63 +498,6 @@ mod tests {
         assert_eq!(exit, 0, "stderr={}", String::from_utf8_lossy(&stderr));
         let text = String::from_utf8(stderr).expect("utf-8");
         assert!(text.contains("PASS  graph_test.fpas"));
-    }
-
-    #[test]
-    fn test_cli_compares_golden_screen_sidecar_for_tui() {
-        let cwd = create_temp_dir("fpas-test-expect-screen-tui");
-        write_text(
-            &cwd.join("paint_test.fpas"),
-            "program P;\nuses Std.Console, Std.Tui, Std.Test;\n\
-             procedure OnPaint(App: Application); begin ClrScr(); GotoXY(1, 1); WriteLn('Hi') end;\n\
-             function OnKeyPressed(App: Application; Key: KeyEvent): boolean;\n\
-             begin\n\
-               if Key.kind = KeyKind.Escape then\n\
-               begin\n\
-                 Application.HostRequestQuit(App);\n\
-                 return true\n\
-               end;\n\
-               return false\n\
-             end;\n\
-             begin\n\
-               var App: Application := Application.Open();\n\
-               var Handlers: ApplicationHandlers := record\n\
-                 OnPaint := OnPaint;\n\
-                 OnKeyPressed := Some(OnKeyPressed);\n\
-               end;\n\
-               Application.Configure(App, Handlers);\n\
-               Application.Run(App);\n\
-               AssertTrue(true)\n\
-             end.",
-        );
-        write_text(
-            &cwd.join("paint_test.script.toml"),
-            "[[event]]\ntype = \"console_key\"\nkind = \"Escape\"\n",
-        );
-        write_text(&cwd.join("paint_test.expect.screen"), "Hi\n");
-
-        let mut stdout = Vec::new();
-        let mut stderr = Vec::new();
-        let exit = test_cli(
-            TestCliConfig {
-                input: crate::CliInput::SourceFile(cwd.join("paint_test.fpas")),
-                cwd: cwd.clone(),
-                fail_fast: false,
-                list_only: false,
-                script_path: None,
-                filter: None,
-                report: None,
-                timeout: None,
-                jobs: 1,
-                strict: false,
-            },
-            &mut stdout,
-            &mut stderr,
-        );
-
-        assert_eq!(exit, 0, "stderr={}", String::from_utf8_lossy(&stderr));
-        let text = String::from_utf8(stderr).expect("utf-8");
-        assert!(text.contains("PASS  paint_test.fpas"));
     }
 
     #[test]

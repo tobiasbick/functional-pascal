@@ -3,7 +3,6 @@
 //! **Documentation:** [`docs/future/test-framework/scripted-input.md`](../../../docs/future/test-framework/scripted-input.md)
 
 mod apply;
-mod console;
 mod graph;
 mod input;
 mod parse;

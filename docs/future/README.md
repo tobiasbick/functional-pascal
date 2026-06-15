@@ -37,6 +37,7 @@ FPAS programs today are tested mainly from Rust (`compile_and_run`, VM input que
 | 9 | [`dict`](09-remove-dict.md) | Pending — may be kept |
 | — | [Native TUI testing in FPAS](tui-tests-fpas/README.md) | Test the hosted TUI fully from `fpas test`: headless pump, input injection, screen/view/widget introspection |
 | — | [TUI live control server](tui-test/README.md) | Localhost HTTP API to query screen/views and inject events during `Application.Run` |
+| — | [Task memory benchmark](task-memory-benchmark.md) | Reproduce pkolaczk async memory bench with `go` + `WaitAll`; blocked on cooperative sleep and scale validation |
 | — | [Libraries — finer exports](libraries.md) | Per-symbol / re-export rules beyond `[exports].units` |
 
 ## Not Yet Planned

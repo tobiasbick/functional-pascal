@@ -40,21 +40,20 @@ pub(super) fn register_std_test(checker: &mut Checker) {
             p("Bg", Ty::Integer, false),
         ],
     );
-    let application = if checker.scopes.lookup(s::STD_TUI_APPLICATION).is_some() {
-        type_registration::lookup_required_type(checker, s::STD_TUI_APPLICATION, "Application")
-    } else {
-        type_registration::register_record_type(checker, s::STD_TUI_APPLICATION, Vec::new())
-    };
-    define_proc(
-        checker,
-        s::STD_TEST_ASSERT_VIEW_RECT,
-        vec![
-            p("App", application, false),
-            p("V", Ty::Integer, false),
-            p("X", Ty::Integer, false),
-            p("Y", Ty::Integer, false),
-            p("W", Ty::Integer, false),
-            p("H", Ty::Integer, false),
-        ],
-    );
+    if checker.scopes.lookup(s::STD_TUI_APPLICATION).is_some() {
+        let application =
+            type_registration::lookup_required_type(checker, s::STD_TUI_APPLICATION, "Application");
+        define_proc(
+            checker,
+            s::STD_TEST_ASSERT_VIEW_RECT,
+            vec![
+                p("App", application, false),
+                p("V", Ty::Integer, false),
+                p("X", Ty::Integer, false),
+                p("Y", Ty::Integer, false),
+                p("W", Ty::Integer, false),
+                p("H", Ty::Integer, false),
+            ],
+        );
+    }
 }

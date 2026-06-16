@@ -691,7 +691,7 @@ Runner sidecars **overlap** with the native FPAS test API and are **deprecated**
 | ------- | ------ | ----------- |
 | `<test>.script.toml` (console/TUI events) | **Removed** (Phase 8.1) | `TestSendKey`, `TestMoveMouse`, … + `TestPump` |
 | `<test>.expect.screen` | **Removed** (Phase 8.1) | `QueryScreenLine` / `QueryScreenCell` + `Std.Test` assertions |
-| `<test>.script.toml` (`readln` / graph) | **Removed** from examples | `Std.Test.PushReadLn`, `Application.OpenForTest` + `TestSendKey` |
+| `<test>.script.toml` (`readln` / graph) | **Removed** (legacy sidecars) | `Std.Test.PushReadLn`, `Application.OpenForTest` + `TestSendKey` |
 | `<test>.expect.stdout` | **Keep** | Non-TUI output tests |
 | `<test>.expect.pixels` | **Keep** | Headless graph |
 

@@ -23,6 +23,13 @@ When validating examples, use the curated allowlists in [`crates/fpas-cli/src/ma
 
 Or run `scripts/run-non-interactive-examples.*` for the run allowlist. Never batch-run every file under `examples/` — interactive TUI and graph demos block until the user quits.
 
+**FPAS tests** (`*_test.fpas`, `uses Std.Test`) belong under [`tests/`](tests/), not `examples/`. Layout: `tests/stdlib/`, `tests/concurrency/`, `tests/runner/`, `tests/console/`, `tests/tui/`, `tests/graph/` (see [`examples/README.md`](examples/README.md) § Stdlib regression suite). Run and verify with:
+
+- `fpas test tests/` or `fpas test tests/suite.fpasprj`
+- `cargo test -p fpas-cli fpas_regression_suite_passes`
+
+Spec: [`docs/pascal/std/test.md`](docs/pascal/std/test.md).
+
 ## Contribution Standard
 
 All AI contributions must follow `AGENTS.md`.
@@ -61,7 +68,7 @@ When contributing:
 2. Read the relevant document in `docs/pascal/`.
 3. Inspect the existing implementation.
 4. Prefer simplification and consolidation.
-5. Add or update tests.
+5. Add or update tests (Rust in `crates/*/src/tests/` or `crates/*/tests/`; FPAS `*_test.fpas` under `tests/`).
 6. Ensure the final result matches the current specification.
 
 ## Non-Goals

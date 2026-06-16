@@ -32,6 +32,12 @@ When asked to implement or modify behavior:
 5. Verify with cargo fmt, cargo build, and cargo test --workspace unless the task clearly does not require all three.
 6. When editing `.fpas` under `examples/`, `tests/`, or `apps/`, run `scripts/format-fpas-sources.sh` (or `fpas fmt --check` on those paths) so output matches [docs/rust/fmt-style.md](docs/rust/fmt-style.md).
 
+## FPAS sources (`examples/` vs `tests/`)
+
+- **`examples/`** — runnable demos and tutorials. Do not add `*_test.fpas` here.
+- **`tests/`** — FPAS regression and integration tests (`*_test.fpas`, optional golden sidecars). Group by theme (`stdlib/`, `concurrency/`, `runner/`, `console/`, `tui/`, `graph/`). Bundle via [`tests/suite.fpasprj`](tests/suite.fpasprj).
+- After FPAS test changes, run `fpas test tests/` or `cargo test -p fpas-cli fpas_regression_suite_passes`. Spec: [`docs/pascal/std/test.md`](docs/pascal/std/test.md).
+
 ## CI and automation
 
 - **No GitHub Actions workflows.** Do not add `.github/workflows/`, Dependabot, or similar CI/automation config.

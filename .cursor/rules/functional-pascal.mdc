@@ -262,8 +262,8 @@ end.
 | `Std.Console` | Text I/O, CRT screen, keyboard, events | `WriteLn`, `Write`, `ReadLn`, `ReadKey`, `ReadKeyEvent`, `KeyPressed`, `ReadEvent`, `ReadEventTimeout`, `PollEvent`, `ClrScr`, `GotoXY`, `TextColor`, `TextBackground`, `TextColorRGB`, `TextColor256`, `Window`, `Delay`, `CursorOn`, `CursorOff`, raw mode / alt screen helpers |
 | `Std.Args` | Process arguments after `--` | `ParamCount`, `ParamStr` |
 | `Std.Env` | Process environment | `Get`, `Exists` |
-| `Std.Graph` | Native windowed graphics | `Application.Open`, `Application.DrawLine`, `Application.DrawText`, `Application.PollEvent`, `Event`, `EventKind`, … |
-| `Std.Tui` | Terminal applications | Hosted: `Application.Configure`, `Application.Run`, `ApplicationHandlers`, `On*` handlers. Poll-style: `Application.Open`, `Application.ReadEvent`, `Application.PollEvent`, `RequestRedraw`, `TuiEvent`, `EventKind` |
+| `Std.Graph` | Native windowed graphics | Hosted: `Application.Configure`, `Application.Run`, `ApplicationHandlers`, `On*` handlers. Drawing: `Application.Open`, `Application.DrawLine`, `Application.DrawText`, `Application.Present`, `Event`, `EventKind`, … |
+| `Std.Tui` | Terminal applications | Hosted: `Application.Configure`, `Application.Run`, `ApplicationHandlers`, `On*` handlers. Session: `Application.Open`, `Application.Size`, `Application.RequestRedraw`, `TuiEvent`, `EventKind` |
 | `Std.Str` | String operations | `Length`, `ToUpper`, `ToLower`, `Trim`, `Contains`, `StartsWith`, `EndsWith`, `Substring`, `IndexOf`, `Replace`, `Split`, `Join`, `IsNumeric`, `Format`, … |
 | `Std.Conv` | Type conversions | `IntToStr`, `StrToInt`, `IntToReal`, `RealToStr`, `StrToReal`, `CharToStr`, `BoolToStr`, … |
 | `Std.Math` | Math functions | `Pi`, `Sqrt`, `Pow`, `Floor`, `Ceil`, `Round`, `Sin`, `Cos`, `Log`, `Abs`, `Min`, `Max`, `Clamp`, … |
@@ -381,18 +381,39 @@ See [`docs/pascal/08-concurrency.md`](../../docs/pascal/08-concurrency.md).
 
 ## Projects (.fpasprj)
 
-Multi-file projects use TOML project files:
+Multi-file projects use TOML project files. Full spec: [`docs/pascal/10-projects.md`](../../docs/pascal/10-projects.md).
 
 ```toml
 [project]
 name = "my-app"
 version = "1.0.0"   # optional
-kind = "program"
+kind = "program"    # or "library"
 main = "src/main.fpas"
+
+[dependencies]
+projects = ["../my-lib/my-lib.fpasprj"]   # path (relative or absolute)
+workspace = ["my-lib"]                      # member project.name in .fpasworkspace
 
 [sources]
 include = ["src/**/*.fpas"]
+exclude = ["src/generated/**/*.fpas"]
+
+[exports]
+units = ["MyLib.Core"]   # library only: units visible to dependents
 ```
+
+- **`library`** — units only, no `main`; consume via `dependencies` from a `program` project. **Source-level only** (no precompiled `.fpaslib` artifacts).
+- **`fpas my-app.fpasprj`** — run a program project.
+- **`fpas check`** — type-check `.fpas`, `.fpasprj`, or `.fpasworkspace` without running.
+- **`.fpasworkspace`** — lists member `.fpasprj` files; `fpas check` validates all, `fpas` runs the sole program member in cwd.
+
+Examples: [`examples/pascal/library-deps/`](../../examples/pascal/library-deps/), [`examples/pascal/monorepo/`](../../examples/pascal/monorepo/).
+
+## Tests (`fpas test`)
+
+- Test entry files are named `*_test.fpas` and live under [`tests/`](../../tests/) (not `examples/`).
+- Run a directory, project, or single file: `fpas test tests/`, `fpas test tests/suite.fpasprj`, `fpas test tests/tui/tui_escape_test.fpas`.
+- Assertions and runner behavior: [`docs/pascal/std/test.md`](../../docs/pascal/std/test.md).
 
 ## Key Rules Summary
 
@@ -406,4 +427,4 @@ include = ["src/**/*.fpas"]
 8. **Single quotes for strings** — `'Hello'`, doubled for escaping: `'It''s'`
 9. **`Result`/`Option` for expected errors** — `panic` only for broken invariants
 10. **`try` propagates errors** — unwraps or returns early
-11. **Full TUI apps use hosted dispatch** — `Application.Configure` + `Application.Run`; poll-style `ReadEvent` is for scripts only
+11. **Full TUI and Graph apps use hosted dispatch** — `Application.Configure` + `Application.Run`; no poll-style `ReadEvent` / `PollEvent` on `Std.Tui` or `Std.Graph`

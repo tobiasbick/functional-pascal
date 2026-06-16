@@ -408,6 +408,12 @@ units = ["MyLib.Core"]   # library only: units visible to dependents
 
 Examples: [`examples/pascal/library-deps/`](../../examples/pascal/library-deps/), [`examples/pascal/monorepo/`](../../examples/pascal/monorepo/).
 
+## Tests (`fpas test`)
+
+- Test entry files are named `*_test.fpas` and live under [`tests/`](../../tests/) (not `examples/`).
+- Run a directory, project, or single file: `fpas test tests/`, `fpas test tests/suite.fpasprj`, `fpas test tests/tui/tui_escape_test.fpas`.
+- Assertions and runner behavior: [`docs/pascal/std/test.md`](../../docs/pascal/std/test.md).
+
 ## Key Rules Summary
 
 1. **Immutable by default** — use `mutable var` only when needed

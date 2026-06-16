@@ -169,6 +169,10 @@ end.
 
 More examples in the [`examples/`](examples/) directory.
 
+### Tests
+
+Author-facing tests are `*_test.fpas` programs under [`tests/`](tests/) (`stdlib/`, `concurrency/`, `runner/`, `console/`, `tui/`, `graph/`). Run the full suite with `fpas test tests/` or `cargo test -p fpas-cli fpas_regression_suite_passes`. See [`docs/pascal/std/test.md`](docs/pascal/std/test.md) and [`examples/README.md`](examples/README.md).
+
 ### Multi-file projects and libraries
 
 Larger programs use a `.fpasprj` project file. Reusable code is **source-level only**: `kind = "library"` projects whose units are merged at load time (no precompiled library artifacts). Reference them from `[dependencies].projects` (paths) or `[dependencies].workspace` (member `project.name` inside a `.fpasworkspace`). Libraries may hide internal units from dependents with `[exports].units` in the library `.fpasprj`. See [Projects](docs/pascal/10-projects.md), [library-deps](examples/pascal/library-deps/), and [monorepo](examples/pascal/monorepo/).
@@ -204,6 +208,7 @@ Rust contributor docs (VM layout, TUI checklists): [`docs/rust/`](docs/rust/).
 - Language spec: [`docs/pascal/`](docs/pascal/) (source of truth)
 - AI agents: [`AI_CONTRIBUTING.md`](AI_CONTRIBUTING.md) and [`AGENTS.md`](AGENTS.md)
 - Examples: [`examples/README.md`](examples/README.md)
+- FPAS tests: [`tests/`](tests/) and [`docs/pascal/std/test.md`](docs/pascal/std/test.md)
 
 ## Project Structure
 

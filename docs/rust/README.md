@@ -14,6 +14,7 @@ Material for **Rust contributors**: where things live in the workspace, how subs
 |----------|---------|
 | [`project-loading.md`](project-loading.md) | `fpas-project`: `.fpasprj`, dependencies, workspace, linking. |
 | [`fmt-style.md`](fmt-style.md) | Normative output rules for `fpas fmt` (`fpas-fmt` emitter). |
+| [`../pascal/std/test.md`](../pascal/std/test.md) | FPAS `*_test.fpas` layout under `tests/`, `fpas test` runner, golden sidecars. |
 | [`parallel-vm.md`](parallel-vm.md) | Parallel task VM in `fpas-vm` / bytecode / compiler touchpoints (through shutdown). |
 | [`tui-performance-budget.md`](tui-performance-budget.md) | Latency budget and regression-test anchors for hosted `Std.Tui` dispatch. |
 | [`tui-terminal-checklist.md`](tui-terminal-checklist.md) | Real-terminal verification checklist for hosted `Std.Tui` dispatch behavior. |

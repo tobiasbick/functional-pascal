@@ -1,18 +1,18 @@
-# Native TUI testing in FPAS (proposal)
+# Native TUI testing in FPAS
 
-**Status:** design only — not implemented.
+**Status:** **implemented** (2026-06-15). User spec: [`docs/pascal/std/tui-app.md`](../pascal/std/tui-app.md) § Native TUI testing API. Example tests: [`examples/pascal/test/`](../../examples/pascal/test/) (`tui_*_test.fpas`).
 
-Goal: **test the hosted `Std.Tui` surface completely from inside FPAS**, using `fpas test` as the only runner. A `*_test.fpas` program should be able to build a UI, drive input, and assert on the resulting host state (screen, views, focus, modal stack, widget state) without Rust integration tests, golden sidecar files, or an external control server.
+Goal: **test the hosted `Std.Tui` surface completely from inside FPAS**, using `fpas test` as the only runner. A `*_test.fpas` program can build a UI, drive input stepwise, and assert on screen cells, view geometry, and widget state (e.g. menu bar hover) without Rust integration tests, TUI golden sidecars, or an external control server.
 
 This is the in-process counterpart to the out-of-process [TUI control server](../tui-test/README.md). Both can coexist; this document covers the **language / standard-library** path.
 
-**Implementation tracking:** [`implementation-plan.md`](implementation-plan.md) — resumable, checkbox-driven plan with file anchors and verification steps. Start there to begin or continue the work.
+**Implementation tracking:** [`implementation-plan.md`](implementation-plan.md) — **complete** (Phases 0–8). Remaining follow-ups (not blocking): `ViewId` type migration for view handles, `QueryFocusedViewId` / `QueryModalDepth` renames from legacy `Host*` names.
 
 ## Mandate
 
 This is a hobby project with **no legacy or backward-compatibility constraints**. Any existing API, intrinsic, sidecar format, or test convention may be **redesigned or removed** if it makes native TUI testing cleaner. Prefer the best end state over preserving current shapes. Existing surfaces referenced here (`HostQueryFocusedViewId`, `*.script.toml`, `*.expect.screen`) are starting points, not fixed contracts.
 
-## Why this is currently impossible
+## Why this was needed (historical)
 
 A FPAS test today can only observe the hosted TUI through:
 

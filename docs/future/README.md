@@ -8,7 +8,7 @@ Open planning items for Functional Pascal.
 
 ## TUI roadmap
 
-Hosted terminal UI is **implemented**: Rust-owned event loop, FPAS `On*` handlers, host widgets (menu bar, status bar, solid fill), and `Application.Run` as the primary entry for full apps. Low-level terminal events (`ReadEvent`, `PollEvent`) live on **`Std.Console`** for CRT-style scripts; they are **not** part of **`Std.Tui`**. Reference implementations: [`apps/ide/`](../../apps/ide/) (multi-unit shell) and [`examples/pascal/tui/`](../../examples/pascal/tui/) (including [`menu_bar.fpas`](../../examples/pascal/tui/menu_bar.fpas)). Implementation history and remaining ideas: [`tui-application-framework.md`](tui-application-framework.md). User-facing spec: [`docs/pascal/std/tui-app.md`](../pascal/std/tui-app.md).
+Hosted terminal UI is **implemented**: Rust-owned event loop, FPAS `On*` handlers, host widgets (menu bar, status bar, solid fill), and `Application.Run` as the primary entry for full apps. **Native headless TUI tests** (`OpenForTest`, `TestPump`, `Query*`, `Std.Test` screen assertions) run under `fpas test` without a real terminal — see [`tui-app.md`](../pascal/std/tui-app.md) § Native TUI testing API and [`examples/pascal/test/`](../../examples/pascal/test/). Low-level terminal events (`ReadEvent`, `PollEvent`) live on **`Std.Console`** for CRT-style scripts; they are **not** part of **`Std.Tui`**. Reference implementations: [`apps/ide/`](../../apps/ide/) (multi-unit shell) and [`examples/pascal/tui/`](../../examples/pascal/tui/) (including [`menu_bar.fpas`](../../examples/pascal/tui/menu_bar.fpas)). Implementation history: [`tui-application-framework.md`](tui-application-framework.md), native test design: [`tui-tests-fpas/README.md`](tui-tests-fpas/README.md). User-facing spec: [`docs/pascal/std/tui-app.md`](../pascal/std/tui-app.md).
 
 ## Standard library roadmap
 
@@ -20,11 +20,11 @@ Source-level `library` projects and `[dependencies]` are **implemented**. Precom
 
 ## Test framework
 
-FPAS programs today are tested mainly from Rust (`compile_and_run`, VM input queues). Author-facing tests use `Std.Test`, `fpas test`, and scripted keyboard/mouse sidecars — see [`docs/pascal/std/test.md`](../pascal/std/test.md). Planned runner docs: [`test-framework/README.md`](test-framework/README.md) (when present).
+FPAS programs today are tested mainly from Rust (`compile_and_run`, VM input queues). Author-facing tests use `Std.Test`, `fpas test`, and optional sidecars — see [`docs/pascal/std/test.md`](../pascal/std/test.md). Planned runner docs: [`test-framework/README.md`](test-framework/README.md) (when present).
 
-**Under consideration:** two complementary directions for richer TUI testing —
-- In-process: test the hosted TUI fully from FPAS via `fpas test` (headless pump, input injection, screen/view/widget introspection). Proposal: [`tui-tests-fpas/README.md`](tui-tests-fpas/README.md).
-- Out-of-process: a localhost HTTP control server for live inspection and event injection (Playwright-style, no PTY). Proposal: [`tui-test/README.md`](tui-test/README.md) (API: [`control-server-api.md`](tui-test/control-server-api.md), architecture: [`architecture.md`](tui-test/architecture.md)).
+**Native TUI testing in FPAS** is **implemented**: headless `OpenForTest` / `TestPump`, input injectors, screen/view/widget queries, and `Std.Test` screen assertions under `fpas test` with no real terminal or TUI sidecar files. User spec: [`docs/pascal/std/tui-app.md`](../pascal/std/tui-app.md) § Native TUI testing API. Examples: [`examples/pascal/test/tui_*_test.fpas`](../../examples/pascal/test/). Design history: [`tui-tests-fpas/README.md`](tui-tests-fpas/README.md).
+
+**Still under consideration:** out-of-process live TUI control during `Application.Run` — localhost HTTP API (Playwright-style). Proposal: [`tui-test/README.md`](tui-test/README.md) (API: [`control-server-api.md`](tui-test/control-server-api.md), architecture: [`architecture.md`](tui-test/architecture.md)).
 
 ## Source formatter
 
@@ -35,7 +35,6 @@ FPAS programs today are tested mainly from Rust (`compile_and_run`, VM input que
 | # | Feature | Description |
 |---|---------|-------------|
 | 9 | [`dict`](09-remove-dict.md) | Pending — may be kept |
-| — | [Native TUI testing in FPAS](tui-tests-fpas/README.md) | Test the hosted TUI fully from `fpas test`: headless pump, input injection, screen/view/widget introspection |
 | — | [TUI live control server](tui-test/README.md) | Localhost HTTP API to query screen/views and inject events during `Application.Run` |
 | — | [Task memory benchmark](task-memory-benchmark.md) | Reproduce pkolaczk async memory bench with `go` + `WaitAll`; blocked on cooperative sleep and scale validation |
 | — | [Libraries — finer exports](libraries.md) | Per-symbol / re-export rules beyond `[exports].units` |

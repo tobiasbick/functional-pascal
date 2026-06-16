@@ -107,11 +107,6 @@ impl Worker {
                     Self::close_active_modal(tui, line);
                 });
             }
-            Intrinsic::Tui(TuiIntrinsic::HostModalDepth) => {
-                self.pop_tui_application(line)?;
-                let depth = self.with_tui(|tui| tui.modals.depth() as i64);
-                self.push(Value::Integer(depth))?;
-            }
             Intrinsic::Tui(TuiIntrinsic::HostRegisterView) => {
                 let height = self.pop_int(line)?;
                 let width = self.pop_int(line)?;
@@ -145,14 +140,6 @@ impl Worker {
                 self.with_tui(|tui| {
                     let _ = tui.views.push_child(view_id);
                 });
-            }
-            Intrinsic::Tui(TuiIntrinsic::HostQueryFocusedViewId) => {
-                self.pop_tui_application(line)?;
-                let focused_id = self.with_tui(|tui| tui.views.focused_id());
-                self.push(match focused_id {
-                    Some(id) => Value::OptionSome(Box::new(Self::tui_view_id_record(id))),
-                    None => Value::OptionNone,
-                })?;
             }
             Intrinsic::Tui(TuiIntrinsic::HostAttachViewToActiveModal) => {
                 let view_id = self.pop_tui_view_id(line)?;

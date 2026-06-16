@@ -99,6 +99,28 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::QueryMenuBarState), location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_QUERY_MODAL_DEPTH => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_QUERY_MODAL_DEPTH,
+                    1,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::QueryModalDepth), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_QUERY_FOCUSED_VIEW_ID => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_QUERY_FOCUSED_VIEW_ID,
+                    1,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::QueryFocusedViewId), location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

@@ -189,12 +189,6 @@ pub(super) fn register_host_api(
     );
     define_func(
         checker,
-        s::STD_TUI_APPLICATION_HOST_MODAL_DEPTH,
-        vec![p("App", types.application.clone(), false)],
-        Ty::Integer,
-    );
-    define_func(
-        checker,
         s::STD_TUI_APPLICATION_HOST_REGISTER_VIEW,
         vec![
             p("App", types.application.clone(), false),
@@ -220,12 +214,6 @@ pub(super) fn register_host_api(
             p("App", types.application.clone(), false),
             p("ViewId", types.view_id.clone(), false),
         ],
-    );
-    define_func(
-        checker,
-        s::STD_TUI_APPLICATION_HOST_QUERY_FOCUSED_VIEW_ID,
-        vec![p("App", types.application.clone(), false)],
-        Ty::Option(Box::new(types.view_id.clone())),
     );
     define_proc(
         checker,

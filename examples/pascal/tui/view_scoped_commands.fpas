@@ -17,7 +17,7 @@ begin
   GotoXY(1, 1);
   WriteLn('View-scoped commands');
   GotoXY(1, 2);
-  WriteLn('Focused view: ', Application.HostQueryFocusedViewId(App));
+  WriteLn('Focused view: ', Application.QueryFocusedViewId(App));
   GotoXY(1, 3);
   WriteLn(Status);
   GotoXY(1, 5);

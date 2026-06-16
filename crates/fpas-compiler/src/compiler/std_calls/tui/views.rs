@@ -70,20 +70,6 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostPushChildView), location);
                 Ok(true)
             }
-            s::STD_TUI_APPLICATION_HOST_QUERY_FOCUSED_VIEW_ID => {
-                self.expect_exact_args(
-                    s::STD_TUI_APPLICATION_HOST_QUERY_FOCUSED_VIEW_ID,
-                    1,
-                    args,
-                    location,
-                )?;
-                self.compile_expr(&args[0])?;
-                self.emit_intrinsic(
-                    Intrinsic::Tui(TuiIntrinsic::HostQueryFocusedViewId),
-                    location,
-                );
-                Ok(true)
-            }
             s::STD_TUI_APPLICATION_HOST_SET_VIEW_RECT => {
                 self.expect_exact_args(
                     s::STD_TUI_APPLICATION_HOST_SET_VIEW_RECT,

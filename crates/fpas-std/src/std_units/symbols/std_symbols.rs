@@ -260,6 +260,9 @@ pub const STD_TUI_APPLICATION_QUERY_VIEW_PARENT: &str = std_tui!("Application.Qu
 pub const STD_TUI_APPLICATION_QUERY_VIEW_CHILDREN: &str = std_tui!("Application.QueryViewChildren");
 pub const STD_TUI_APPLICATION_QUERY_MENU_BAR_STATE: &str =
     std_tui!("Application.QueryMenuBarState");
+pub const STD_TUI_APPLICATION_QUERY_MODAL_DEPTH: &str = std_tui!("Application.QueryModalDepth");
+pub const STD_TUI_APPLICATION_QUERY_FOCUSED_VIEW_ID: &str =
+    std_tui!("Application.QueryFocusedViewId");
 pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_KEY_PRESSED: &str =
     std_tui!("Application.HostRegisterOnKeyPressed");
 pub const STD_TUI_APPLICATION_HOST_INVOKE_ON_KEY_PRESSED: &str =
@@ -311,9 +314,7 @@ pub const STD_TUI_APPLICATION_HOST_BIND_COMMAND_TO_ACTIVE_MODAL: &str =
 pub const STD_TUI_APPLICATION_HOST_ENTER_MODAL: &str = std_tui!("Application.HostEnterModal");
 /// Pop the active hosted modal frame, if any.
 pub const STD_TUI_APPLICATION_HOST_LEAVE_MODAL: &str = std_tui!("Application.HostLeaveModal");
-/// Return the active hosted modal stack depth.
-pub const STD_TUI_APPLICATION_HOST_MODAL_DEPTH: &str = std_tui!("Application.HostModalDepth");
-/// Register a host-managed view and return its opaque integer handle.
+/// Register a host-managed view and return its opaque `ViewId`.
 pub const STD_TUI_APPLICATION_HOST_REGISTER_VIEW: &str = std_tui!("Application.HostRegisterView");
 /// Remove a host-managed view by handle.
 pub const STD_TUI_APPLICATION_HOST_UNREGISTER_VIEW: &str =
@@ -321,9 +322,6 @@ pub const STD_TUI_APPLICATION_HOST_UNREGISTER_VIEW: &str =
 /// Append a host-managed view to the focus chain.
 pub const STD_TUI_APPLICATION_HOST_PUSH_CHILD_VIEW: &str =
     std_tui!("Application.HostPushChildView");
-/// Return the currently focused host-managed view handle, or `-1` when none is focused.
-pub const STD_TUI_APPLICATION_HOST_QUERY_FOCUSED_VIEW_ID: &str =
-    std_tui!("Application.HostQueryFocusedViewId");
 /// Attach a host-managed view handle to the active modal scope.
 pub const STD_TUI_APPLICATION_HOST_ATTACH_VIEW_TO_ACTIVE_MODAL: &str =
     std_tui!("Application.HostAttachViewToActiveModal");

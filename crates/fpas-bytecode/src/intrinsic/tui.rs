@@ -143,12 +143,12 @@ pub enum TuiIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     HostLeaveModal = 277,
-    /// Return the active host modal stack depth.
+    /// Return the active modal stack depth.
     ///
     /// Stack: `Application`. Pushes `integer`.
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
-    HostModalDepth = 278,
+    QueryModalDepth = 278,
     /// Register a host-managed view and return its opaque handle.
     ///
     /// Stack: `Application`, `X`, `Y`, `Width`, `Height` (`integer`, top). Pushes `integer`.
@@ -167,12 +167,12 @@ pub enum TuiIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     HostPushChildView = 281,
-    /// Return the focused host-managed view handle, or `-1` when no view is focused.
+    /// Return the focused host-managed view handle, or `None` when no view is focused.
     ///
-    /// Stack: `Application`. Pushes `integer`.
+    /// Stack: `Application`. Pushes `Option of ViewId`.
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
-    HostQueryFocusedViewId = 282,
+    QueryFocusedViewId = 282,
     /// Attach a host-managed view handle to the active modal scope.
     ///
     /// Stack: `Application`, `ViewId` (`integer`, top). Does not push a value.

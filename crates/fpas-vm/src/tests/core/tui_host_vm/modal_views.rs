@@ -21,7 +21,7 @@ fn tui_host_modal_depth_tracks_enter_and_leave() {
     );
     chunk.emit(Op::Dup, loc());
     chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostModalDepth))),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::QueryModalDepth))),
         loc(),
     );
     chunk.emit(Op::PrintLn, loc());
@@ -31,7 +31,7 @@ fn tui_host_modal_depth_tracks_enter_and_leave() {
         loc(),
     );
     chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostModalDepth))),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::QueryModalDepth))),
         loc(),
     );
     chunk.emit(Op::PrintLn, loc());

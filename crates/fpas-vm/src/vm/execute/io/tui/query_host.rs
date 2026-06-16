@@ -95,6 +95,19 @@ impl Worker {
                 };
                 self.push(Self::tui_menu_bar_state_record(state))?;
             }
+            Intrinsic::Tui(TuiIntrinsic::QueryModalDepth) => {
+                self.pop_tui_application(line)?;
+                let depth = self.with_tui(|tui| tui.modals.depth() as i64);
+                self.push(Value::Integer(depth))?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::QueryFocusedViewId) => {
+                self.pop_tui_application(line)?;
+                let focused_id = self.with_tui(|tui| tui.views.focused_id());
+                self.push(match focused_id {
+                    Some(id) => Value::OptionSome(Box::new(Self::tui_view_id_record(id))),
+                    None => Value::OptionNone,
+                })?;
+            }
             _ => return Ok(false),
         }
 

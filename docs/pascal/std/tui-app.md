@@ -35,11 +35,11 @@ These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mo
 | `TuiHostBindCommandToActiveModal` | `Application`, `Std.Console.KeyEvent`, `integer` | Binds a complete key event to a command id for the active modal frame only. The binding disappears when that modal frame is closed.                                                                                                                                             |
 | `TuiHostEnterModal`           | `Application`, `integer`                         | Pushes an application-defined modal id onto the host modal stack. Does not push a value.                                                                                                                                                                                           |
 | `TuiHostLeaveModal`           | `Application`                                    | Pops the active host modal frame, if any. Leaving an empty modal stack is a no-op. Does not push a value.                                                                                                                                                                          |
-| `TuiHostModalDepth`           | `Application`                                    | Pushes `integer`: the active modal stack depth.                                                                                                                                                                                                                                    |
 | `TuiHostRegisterView`         | `Application`, `integer`, `integer`, `integer`, `integer` | Registers a host-managed view from `x`, `y`, `width`, `height` and pushes `Std.Tui.ViewId`. Registration order remains the host paint order.                                                                                                                        |
 | `TuiHostUnregisterView`       | `Application`, `ViewId`                         | Removes a host-managed view by handle. Unknown handles are ignored. Does not push a value.                                                                                                                                                                                        |
 | `TuiHostPushChildView`        | `Application`, `ViewId`                         | Appends a host-managed view handle to the focus chain used by Tab / Shift+Tab traversal. Does not push a value.                                                                                                                                                                  |
-| `TuiHostQueryFocusedViewId`   | `Application`                                    | Pushes `Option of ViewId`: the currently focused view handle, or `None` when no host-managed view is focused.                                                                                                                                                                               |
+| `TuiQueryModalDepth`          | `Application`                                    | Pushes `integer`: the active modal stack depth.                                                                                                                                                                                                                                    |
+| `TuiQueryFocusedViewId`       | `Application`                                    | Pushes `Option of ViewId`: the currently focused view handle, or `None` when no host-managed view is focused.                                                                                                                                                                               |
 | `TuiHostAttachViewToActiveModal` | `Application`, `ViewId`                      | Attaches a host-managed view handle to the currently active modal frame. Attached views define the modal focus/mouse scope for the topmost modal. Does not push a value.                                                                                                      |
 | `TuiHostSetViewRect`          | `Application`, `ViewId`, `integer`, `integer`, `integer`, `integer` | Updates a host-managed view handle to `x`, `y`, `width`, `height`. Unknown handles are ignored. Does not push a value.                                                                                                                                      |
 | `TuiHostSetViewParent`        | `Application`, `ViewId`, `Option of ViewId`           | Reparents a host-managed view under `Parent`. Pass `None` to detach the view back to the root list. The view keeps its current absolute terminal rectangle during the reparenting step. Unknown handles are ignored. Does not push a value.                          |
@@ -81,11 +81,11 @@ These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mo
 | `Application.HostBindCommandToActiveModal(App, Key, CommandId)` | `TuiHostBindCommandToActiveModal` |
 | `Application.HostEnterModal(App, ModalId)` | `TuiHostEnterModal` |
 | `Application.HostLeaveModal(App)` | `TuiHostLeaveModal` |
-| `Application.HostModalDepth(App)` | `TuiHostModalDepth` |
+| `Application.QueryModalDepth(App)` | `TuiQueryModalDepth` |
 | `Application.HostRegisterView(App, X, Y, Width, Height)` | `TuiHostRegisterView` |
 | `Application.HostUnregisterView(App, ViewId)` | `TuiHostUnregisterView` |
 | `Application.HostPushChildView(App, ViewId)` | `TuiHostPushChildView` |
-| `Application.HostQueryFocusedViewId(App)` | `TuiHostQueryFocusedViewId` |
+| `Application.QueryFocusedViewId(App)` | `TuiQueryFocusedViewId` |
 | `Application.HostAttachViewToActiveModal(App, ViewId)` | `TuiHostAttachViewToActiveModal` |
 | `Application.HostSetViewRect(App, ViewId, X, Y, Width, Height)` | `TuiHostSetViewRect` |
 | `Application.HostSetViewParent(App, ViewId, Parent)` | `TuiHostSetViewParent` |
@@ -103,7 +103,7 @@ These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mo
 
 Samples: [`examples/pascal/tui/host_dispatch_minimal.fpas`](../../../examples/pascal/tui/host_dispatch_minimal.fpas) (one `HostProcessNext` step), [`examples/pascal/tui/host_dispatch_paint.fpas`](../../../examples/pascal/tui/host_dispatch_paint.fpas) (register `OnPaint` + `HostDispatchRedraw`), [`examples/pascal/tui/host_dispatch_quit.fpas`](../../../examples/pascal/tui/host_dispatch_quit.fpas) (`HostRequestQuit` from `OnPaint` + `HostRunLoop`).
 
-**Bytecode discriminants** (authoritative enum: [`TuiIntrinsic`](../../../crates/fpas-bytecode/src/intrinsic/tui.rs)): **256** `TuiHostRegisterOnKeyPressed`, **257** `TuiHostInvokeOnKeyPressed`, **258** `TuiHostRegisterOnResize`, **259** `TuiHostProcessNext`, **260** `TuiHostRegisterOnPaint`, **261** `TuiHostDispatchRedraw`, **262** `TuiHostRunLoop`, **263** `TuiHostRequestQuit`, **264** `TuiHostRegisterOnExit`, **265** `TuiApplicationRun`, **266** `TuiHostRegisterOnIdle`, **267** `TuiApplicationConfigure`, **268** `TuiHostRegisterOnMouse`, **269** `TuiHostRegisterOnPaste`, **270** `TuiHostRegisterOnFocusGained`, **271** `TuiHostRegisterOnFocusLost`, **272** `TuiHostRegisterOnActivate`, **273** `TuiHostRegisterOnDeactivate`, **274** `TuiHostRegisterOnCommand`, **275** `TuiHostBindCommand`, **276** `TuiHostEnterModal`, **277** `TuiHostLeaveModal`, **278** `TuiHostModalDepth`, **279** `TuiHostRegisterView`, **280** `TuiHostUnregisterView`, **281** `TuiHostPushChildView`, **282** `TuiHostQueryFocusedViewId`, **283** `TuiHostAttachViewToActiveModal`, **284** `TuiHostSetViewRect`, **285** `TuiHostSetViewParent`, **286** `TuiHostRegisterOnViewPaint`, **287** `TuiApplicationShowModal`, **288** `TuiApplicationCloseModal`, **289** `TuiHostBindCommandToView`, **290** `TuiHostBindCommandToActiveModal`, **291** `TuiApplicationShowDialog`, **343** `TuiHostCreateSolidFillView`, **344** `TuiHostCreateMenuBarView`, **345** `TuiHostSetMenuBarItems`, **346** `TuiHostCreateStatusBarView`, **347** `TuiHostSetStatusBarSegments`. Native headless testing uses **356..=374** (see [Native TUI testing API](#native-tui-testing-api)). **348..=355** and **375..=377** are `Std.Test` intrinsics, not TUI.
+**Bytecode discriminants** (authoritative enum: [`TuiIntrinsic`](../../../crates/fpas-bytecode/src/intrinsic/tui.rs)): **256** `TuiHostRegisterOnKeyPressed`, **257** `TuiHostInvokeOnKeyPressed`, **258** `TuiHostRegisterOnResize`, **259** `TuiHostProcessNext`, **260** `TuiHostRegisterOnPaint`, **261** `TuiHostDispatchRedraw`, **262** `TuiHostRunLoop`, **263** `TuiHostRequestQuit`, **264** `TuiHostRegisterOnExit`, **265** `TuiApplicationRun`, **266** `TuiHostRegisterOnIdle`, **267** `TuiApplicationConfigure`, **268** `TuiHostRegisterOnMouse`, **269** `TuiHostRegisterOnPaste`, **270** `TuiHostRegisterOnFocusGained`, **271** `TuiHostRegisterOnFocusLost`, **272** `TuiHostRegisterOnActivate`, **273** `TuiHostRegisterOnDeactivate`, **274** `TuiHostRegisterOnCommand`, **275** `TuiHostBindCommand`, **276** `TuiHostEnterModal`, **277** `TuiHostLeaveModal`, **278** `TuiQueryModalDepth`, **279** `TuiHostRegisterView`, **280** `TuiHostUnregisterView`, **281** `TuiHostPushChildView`, **282** `TuiQueryFocusedViewId`, **283** `TuiHostAttachViewToActiveModal`, **284** `TuiHostSetViewRect`, **285** `TuiHostSetViewParent`, **286** `TuiHostRegisterOnViewPaint`, **287** `TuiApplicationShowModal`, **288** `TuiApplicationCloseModal`, **289** `TuiHostBindCommandToView`, **290** `TuiHostBindCommandToActiveModal`, **291** `TuiApplicationShowDialog`, **343** `TuiHostCreateSolidFillView`, **344** `TuiHostCreateMenuBarView`, **345** `TuiHostSetMenuBarItems`, **346** `TuiHostCreateStatusBarView`, **347** `TuiHostSetStatusBarSegments`. Native headless testing uses **356..=374** (see [Native TUI testing API](#native-tui-testing-api)). **348..=355** and **375..=377** are `Std.Test` intrinsics, not TUI.
 
 `Application.Close` clears registered host handlers (`OnKeyPressed`, `OnResize`, `OnPaint`, `OnIdle`, `OnExit`, `OnMouse`, `OnPaste`, `OnFocusGained`, `OnFocusLost`, `OnActivate`, `OnDeactivate`, `OnCommand`), clears local view paint handlers, clears local view command maps, resets the host pump state, clears the view registry (including the focus chain), clears global command bindings, clears the modal stack (including modal-local command bindings), and closes the session as today.
 
@@ -111,13 +111,13 @@ Samples: [`examples/pascal/tui/host_dispatch_minimal.fpas`](../../../examples/pa
 
 `Application.ShowModal(App, ModalId, RootViewId)` is the Phase 7 high-level modal surface. It pushes an application-defined modal id together with a root host view, raises that root, and scopes focus, mouse, and command routing to the root subtree. `Application.ShowDialog(App, ModalId, X, Y, Width, Height)` builds on that surface by registering a fresh root host view and returning its `ViewId`; closing that modal automatically unregisters the owned root subtree. `Application.CloseModal(App)` pops the active modal frame and is a no-op when the stack is empty.
 
-`Application.HostEnterModal(App, ModalId)` / `Application.HostLeaveModal(App)` remain the low-level modal-stack primitives, and `Application.HostModalDepth(App)` returns the current stack depth. `Application.HostAttachViewToActiveModal(App, ViewId)` can extend the active modal scope with extra host-managed views beyond the modal root subtree. `Application.HostBindCommandToActiveModal(App, Key, CommandId)` binds shortcuts that only exist while the current modal frame is active. When the active modal has one or more scoped views, Tab / Shift+Tab traversal is limited to those views, mouse events outside their rectangles are suppressed, and key / command dispatch is blocked while focus is on a non-modal view.
+`Application.HostEnterModal(App, ModalId)` / `Application.HostLeaveModal(App)` remain the low-level modal-stack primitives, and `Application.QueryModalDepth(App)` returns the current stack depth. `Application.HostAttachViewToActiveModal(App, ViewId)` can extend the active modal scope with extra host-managed views beyond the modal root subtree. `Application.HostBindCommandToActiveModal(App, Key, CommandId)` binds shortcuts that only exist while the current modal frame is active. When the active modal has one or more scoped views, Tab / Shift+Tab traversal is limited to those views, mouse events outside their rectangles are suppressed, and key / command dispatch is blocked while focus is on a non-modal view.
 
 ### Host view handles
 
 `Application.HostRegisterView(App, X, Y, Width, Height)` returns an opaque **`ViewId`** owned by the host (see [ViewId type (decided)](#viewid-type-decided) under Native TUI testing API). Pass it to `Application.HostUnregisterView`, `Application.HostPushChildView`, `Application.HostSetViewRect`, `Application.HostSetViewParent`, `Application.HostRegisterOnViewPaint`, and `Application.HostBindCommandToView`.
 
-`Application.HostPushChildView(App, ViewId)` appends the handle to the focus chain used by Tab / Shift+Tab traversal. `Application.HostQueryFocusedViewId(App)` returns `Option of ViewId` for the focused view (`None` when none). A future rename to `Application.QueryFocusedViewId` is planned (see [Pending renames](#pending-renames-existing-read-apis)).
+`Application.HostPushChildView(App, ViewId)` appends the handle to the focus chain used by Tab / Shift+Tab traversal. `Application.QueryFocusedViewId(App)` returns `Option of ViewId` for the focused view (`None` when none).
 
 Root views use absolute terminal coordinates. `Application.HostSetViewParent(App, ViewId, Parent)` reparents a view under `Some(Parent)`; pass `None` to detach it back to the root list. Reparenting preserves the current absolute terminal rectangle. After a view has a parent, `Application.HostSetViewRect(App, ViewId, X, Y, Width, Height)` interprets `X` and `Y` relative to that parent. Sibling order defines z-order, and `Application.ShowModal` scopes to a root view subtree.
 
@@ -466,7 +466,7 @@ Goal: test hosted `Std.Tui` entirely from FPAS under `fpas test` — headless se
 | Prefix | Role | Examples |
 | ------ | ---- | -------- |
 | **`Test*`** | Headless test lifecycle, event pump, and input injection | `OpenForTest`, `TestPump`, `TestSendKey`, `TestMoveMouse`, `CloseForTest` |
-| **`Query*`** | Read-only host introspection (no mutation) | `QueryScreenCell`, `QueryViewRect`, `QueryFocusedViewId`, `QueryMenuBarState` |
+| **`Query*`** | Read-only host introspection (no mutation) | `QueryScreenCell`, `QueryViewRect`, `QueryFocusedViewId`, `QueryModalDepth`, `QueryMenuBarState` |
 | **`Host*`** | Host mutators: register handlers, create/set views and widgets, bind commands, modal stack writes | `HostRegisterView`, `HostCreateMenuBarView`, `HostSetViewRect`, `HostBindCommand` |
 | *(none)* | Application-level entry points unchanged | `Open`, `Configure`, `Run`, `ShowModal`, `CloseModal`, `Close` |
 
@@ -503,19 +503,10 @@ Sema registers `Std.Tui.ViewId` as an empty record; only host routines may produ
 | Equality | `ViewId = ViewId` is allowed when comparing handles returned by the same session. |
 | Missing view | Use `Option of ViewId` / `None`, not `-1`. |
 | Detach to roots | `Application.HostSetViewParent(App, Child, None)` replaces `ParentViewId := -1`. |
-| Focus query | `Application.QueryFocusedViewId(App): Option of ViewId` replaces `HostQueryFocusedViewId` returning `-1`. |
-| View-local paint | The view-local handler keeps `(App, ViewId, Rect)` — the middle argument becomes typed `ViewId` instead of `integer`. |
+| Focus query | `Application.QueryFocusedViewId(App): Option of ViewId` (replaces the former `-1` sentinel). |
+| View-local paint | The view-local handler keeps `(App, ViewId, Rect)` — the middle argument is typed `ViewId`. |
 
-**Status:** `ViewId` migration is **implemented** (sema, VM, tests, and examples). Remaining follow-up: rename `HostQueryFocusedViewId` → `QueryFocusedViewId` and `HostModalDepth` → `QueryModalDepth` (see below).
-
-### Pending renames (existing read APIs)
-
-Until a dedicated rename pass, host routines and queries still use the `HostQueryFocusedViewId` name; new tests and docs should prefer the **`Query*`** names where listed below.
-
-| Current (still registered) | Preferred name | Discriminant |
-| -------------------------- | -------------- | ------------ |
-| `Application.HostQueryFocusedViewId(App)` | `Application.QueryFocusedViewId(App): Option of ViewId` | **282** |
-| `Application.HostModalDepth(App)` | `Application.QueryModalDepth(App): integer` | **278** |
+**Status:** `ViewId` migration and `Query*` renames for focus/modal depth are **implemented** (sema, VM, tests, and examples).
 
 ### Headless lifecycle and pump (Phase 1 — implemented)
 
@@ -558,14 +549,16 @@ Screen reads:
 | `Application.QueryScreenLine(App, Y)` | `string` |
 | `Application.QueryScreenCell(App, X, Y)` | `ScreenCell` (`ch`, `fg`, `bg`) |
 
-View and widget reads (view handles are `integer` until `ViewId` migration):
+View and widget reads:
 
 | Pascal call | Returns |
 | ----------- | ------- |
-| `Application.QueryRootViews(App)` | `array of integer` |
+| `Application.QueryModalDepth(App)` | `integer` |
+| `Application.QueryFocusedViewId(App)` | `Option of ViewId` |
+| `Application.QueryRootViews(App)` | `array of ViewId` |
 | `Application.QueryViewRect(App, ViewId)` | `Rect` |
-| `Application.QueryViewParent(App, ViewId)` | `Option of integer` |
-| `Application.QueryViewChildren(App, ViewId)` | `array of integer` |
+| `Application.QueryViewParent(App, ViewId)` | `Option of ViewId` |
+| `Application.QueryViewChildren(App, ViewId)` | `array of ViewId` |
 | `Application.QueryMenuBarState(App, ViewId)` | `MenuBarState` |
 
 See [ScreenCell type](#screencell-type-decided) and [MenuBarState type](#menubarstate-type) below.

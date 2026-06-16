@@ -220,4 +220,16 @@ pub(super) fn register_application_api(checker: &mut Checker, types: &TuiTypes) 
         ],
         types.menu_bar_state.clone(),
     );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_QUERY_MODAL_DEPTH,
+        vec![p("App", types.application.clone(), false)],
+        Ty::Integer,
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_QUERY_FOCUSED_VIEW_ID,
+        vec![p("App", types.application.clone(), false)],
+        Ty::Option(Box::new(types.view_id.clone())),
+    );
 }

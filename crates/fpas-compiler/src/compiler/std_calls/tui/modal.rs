@@ -74,12 +74,6 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostLeaveModal), location);
                 Ok(true)
             }
-            s::STD_TUI_APPLICATION_HOST_MODAL_DEPTH => {
-                self.expect_exact_args(s::STD_TUI_APPLICATION_HOST_MODAL_DEPTH, 1, args, location)?;
-                self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::HostModalDepth), location);
-                Ok(true)
-            }
             s::STD_TUI_APPLICATION_HOST_ATTACH_VIEW_TO_ACTIVE_MODAL => {
                 self.expect_exact_args(
                     s::STD_TUI_APPLICATION_HOST_ATTACH_VIEW_TO_ACTIVE_MODAL,

@@ -21,7 +21,7 @@ begin
   end
 end;
 
-procedure OnViewPaint(App: Application; ViewId: integer; Bounds: Std.Tui.Rect);
+procedure OnViewPaint(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
 begin
   if ViewId = RootView then
   begin
@@ -73,7 +73,7 @@ begin
   var App: Application := Application.Open();
   RootView := Application.HostRegisterView(App, 4, 3, 40, 8);
   BadgeView := Application.HostRegisterView(App, 2, 4, 7, 1);
-  Application.HostSetViewParent(App, BadgeView, RootView);
+  Application.HostSetViewParent(App, BadgeView, Some(RootView));
   Application.HostRegisterOnViewPaint(App, RootView, OnViewPaint);
   Application.HostRegisterOnViewPaint(App, BadgeView, OnViewPaint);
   Application.HostRegisterOnKeyPressed(App, OnKeyPressed);

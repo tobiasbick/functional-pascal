@@ -314,7 +314,7 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(80, 25);
-  var MenuBar: integer := Application.HostCreateMenuBarView(
+  var MenuBar: ViewId := Application.HostCreateMenuBarView(
     App, 0, 0, 80, 1, MenuItems(), MenuStyle());
   AssertViewRect(App, MenuBar, 0, 0, 80, 1);
   Application.CloseForTest(App)
@@ -350,7 +350,7 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(80, 25);
-  var MenuBar: integer := Application.HostCreateMenuBarView(
+  var MenuBar: ViewId := Application.HostCreateMenuBarView(
     App, 0, 0, 80, 1, MenuItems(), MenuStyle());
   AssertViewRect(App, MenuBar, 0, 0, 40, 1);
   Application.CloseForTest(App)

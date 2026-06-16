@@ -20,7 +20,7 @@ begin
   end
 end;
 
-procedure OnDialogPaint(App: Application; ViewId: integer; Bounds: Std.Tui.Rect);
+procedure OnDialogPaint(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
 begin
   ClearBounds(Bounds);
   GotoXY(Bounds.x + 2, Bounds.y + 2);

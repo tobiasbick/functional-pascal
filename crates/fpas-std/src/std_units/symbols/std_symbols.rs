@@ -216,6 +216,7 @@ pub const STD_TIME_ELAPSED_MILLIS: &str = std_time!("ElapsedMillis");
 pub const STD_TIME_SLEEP: &str = std_time!("Sleep");
 
 pub const STD_TUI_APPLICATION: &str = std_tui!("Application");
+pub const STD_TUI_VIEW_ID: &str = std_tui!("ViewId");
 /// Hosted-dispatch handler bundle for `Std.Tui.Application.Configure`; see `docs/pascal/std/tui-app.md`.
 pub const STD_TUI_APPLICATION_HANDLERS: &str = std_tui!("ApplicationHandlers");
 pub const STD_TUI_RECT: &str = std_tui!("Rect");
@@ -328,7 +329,7 @@ pub const STD_TUI_APPLICATION_HOST_ATTACH_VIEW_TO_ACTIVE_MODAL: &str =
     std_tui!("Application.HostAttachViewToActiveModal");
 /// Update the bounding rectangle for a host-managed view handle.
 pub const STD_TUI_APPLICATION_HOST_SET_VIEW_RECT: &str = std_tui!("Application.HostSetViewRect");
-/// Re-parent a host-managed view. Pass `-1` as `ParentViewId` to detach it back to the root list.
+/// Re-parent a host-managed view. Pass `None` as `Parent` to detach it back to the root list.
 pub const STD_TUI_APPLICATION_HOST_SET_VIEW_PARENT: &str =
     std_tui!("Application.HostSetViewParent");
 /// Register a local paint handler for a host-managed view.

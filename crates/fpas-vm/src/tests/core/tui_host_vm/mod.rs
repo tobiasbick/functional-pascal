@@ -14,7 +14,7 @@ use std::sync::Arc;
 use crate::Vm;
 use crate::tests::helpers::{
     emit_constant, key_event_value, loc, minimal_shared_state, run_err, run_ok_output,
-    tui_application_value,
+    tui_application_value, tui_view_id_value,
 };
 use crate::vm::Worker;
 

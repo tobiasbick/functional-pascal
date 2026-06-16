@@ -142,11 +142,11 @@ fn std_tui_view_host_calls_lower_to_intrinsics() {
 
     begin
       var App: Application := Application.Open();
-      var ViewId: integer := Application.HostRegisterView(App, 0, 0, 10, 5);
-      Application.HostSetViewRect(App, ViewId, 1, 2, 11, 6);
-      Application.HostPushChildView(App, ViewId);
-      Application.HostUnregisterView(App, ViewId);
-      var Focused: integer := Application.HostQueryFocusedViewId(App);
+      var ViewHandle: ViewId := Application.HostRegisterView(App, 0, 0, 10, 5);
+      Application.HostSetViewRect(App, ViewHandle, 1, 2, 11, 6);
+      Application.HostPushChildView(App, ViewHandle);
+      Application.HostUnregisterView(App, ViewHandle);
+      var Focused: Option of ViewId := Application.HostQueryFocusedViewId(App);
       Application.Close(App)
     end.",
     );
@@ -195,15 +195,15 @@ fn std_tui_view_tree_calls_lower_to_intrinsics() {
     program T;
     uses Std.Tui;
 
-    procedure OnViewPaint(App: Application; ViewId: integer; Bounds: Std.Tui.Rect);
+    procedure OnViewPaint(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
     begin
     end;
 
     begin
       var App: Application := Application.Open();
-      var Parent: integer := Application.HostRegisterView(App, 10, 10, 20, 10);
-      var Child: integer := Application.HostRegisterView(App, 0, 0, 1, 1);
-      Application.HostSetViewParent(App, Child, Parent);
+      var Parent: ViewId := Application.HostRegisterView(App, 10, 10, 20, 10);
+      var Child: ViewId := Application.HostRegisterView(App, 0, 0, 1, 1);
+      Application.HostSetViewParent(App, Child, Some(Parent));
       Application.HostRegisterOnViewPaint(App, Child, OnViewPaint);
       Application.Close(App)
     end.",
@@ -226,7 +226,7 @@ fn std_tui_view_tree_calls_lower_to_intrinsics() {
 }
 
 #[test]
-fn std_tui_register_view_returns_integer_handles() {
+fn std_tui_register_view_returns_view_id_handles() {
     let out = compile_and_run(
         "\
     program T;
@@ -234,8 +234,8 @@ fn std_tui_register_view_returns_integer_handles() {
 
     begin
       var App: Application := Application.Open();
-      var A: integer := Application.HostRegisterView(App, 0, 0, 10, 5);
-      var B: integer := Application.HostRegisterView(App, 10, 0, 10, 5);
+      var A: ViewId := Application.HostRegisterView(App, 0, 0, 10, 5);
+      var B: ViewId := Application.HostRegisterView(App, 10, 0, 10, 5);
       Std.Console.WriteLn(A);
       Std.Console.WriteLn(B);
       Application.Close(App)
@@ -265,8 +265,8 @@ fn std_tui_view_focus_can_be_seeded_via_host_calls() {
 
     begin
       var App: Application := Application.Open();
-      var First: integer := Application.HostRegisterView(App, 0, 0, 10, 5);
-      var Second: integer := Application.HostRegisterView(App, 10, 0, 10, 5);
+      var First: ViewId := Application.HostRegisterView(App, 0, 0, 10, 5);
+      var Second: ViewId := Application.HostRegisterView(App, 10, 0, 10, 5);
       Application.HostPushChildView(App, First);
       Application.HostPushChildView(App, Second);
       Application.HostRegisterOnPaint(App, OnPaint);
@@ -283,7 +283,7 @@ fn std_tui_view_focus_can_be_seeded_via_host_calls() {
         ))],
     );
 
-    assert_eq!(out.lines, vec!["paint", "0"]);
+    assert_eq!(out.lines, vec!["paint", "Some(0)"]);
 }
 
 #[test]
@@ -293,7 +293,7 @@ fn std_tui_local_view_paint_can_drive_application_run() {
 program T;
 uses Std.Console, Std.Tui;
 
-procedure OnViewPaint(App: Application; ViewId: integer; Bounds: Std.Tui.Rect);
+procedure OnViewPaint(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
 begin
   Std.Console.WriteLn(ViewId);
   Std.Console.WriteLn(Bounds.x);
@@ -305,9 +305,9 @@ end;
 
 begin
   var App: Application := Application.Open();
-  var Parent: integer := Application.HostRegisterView(App, 10, 10, 20, 10);
-  var Child: integer := Application.HostRegisterView(App, 0, 0, 1, 1);
-  Application.HostSetViewParent(App, Child, Parent);
+  var Parent: ViewId := Application.HostRegisterView(App, 10, 10, 20, 10);
+  var Child: ViewId := Application.HostRegisterView(App, 0, 0, 1, 1);
+  Application.HostSetViewParent(App, Child, Some(Parent));
   Application.HostSetViewRect(App, Child, 2, 3, 4, 2);
   Application.HostRegisterOnViewPaint(App, Child, OnViewPaint);
   Application.Run(App)

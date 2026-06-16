@@ -166,11 +166,11 @@ begin
     alt := false;
     meta := false;
   end;
-  var Dialog: integer := Application.HostRegisterView(App, 10, 10, 8, 4);
+  var Dialog: ViewId := Application.HostRegisterView(App, 10, 10, 8, 4);
   Application.HostBindCommandToView(App, Dialog, SaveKey, 20);
   Application.ShowModal(App, 10, Dialog);
   Application.HostBindCommandToActiveModal(App, SaveKey, 30);
-  var OwnedDialog: integer := Application.ShowDialog(App, 20, 5, 6, 7, 8);
+  var OwnedDialog: ViewId := Application.ShowDialog(App, 20, 5, 6, 7, 8);
   Application.Close(App)
 end.",
     );
@@ -226,9 +226,9 @@ begin
     alt := false;
     meta := false;
   end;
-  var Dialog: integer := Application.HostRegisterView(App, 10, 10, 8, 4);
-  var Button: integer := Application.HostRegisterView(App, 1, 1, 1, 1);
-  Application.HostSetViewParent(App, Button, Dialog);
+  var Dialog: ViewId := Application.HostRegisterView(App, 10, 10, 8, 4);
+  var Button: ViewId := Application.HostRegisterView(App, 1, 1, 1, 1);
+  Application.HostSetViewParent(App, Button, Some(Dialog));
   Application.HostPushChildView(App, Button);
   Application.HostRegisterOnPaint(App, OnPaint);
   Application.HostRegisterOnCommand(App, OnCommand);
@@ -287,7 +287,7 @@ begin
     alt := false;
     meta := false;
   end;
-  var Dialog: integer := Application.HostRegisterView(App, 10, 10, 8, 4);
+  var Dialog: ViewId := Application.HostRegisterView(App, 10, 10, 8, 4);
   Application.HostPushChildView(App, Dialog);
   Application.HostRegisterOnPaint(App, OnPaint);
   Application.HostRegisterOnCommand(App, OnCommand);

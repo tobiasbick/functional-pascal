@@ -5,13 +5,13 @@ unit Ide.Shell;
 uses Ide.Menu, Ide.Status, Ide.Theme, Std.Console, Std.Tui;
 
 {
-  Host widget view ids; -1 means not created yet.
+  Host widget view ids; `None` means not created yet.
   Unit-private state shared by handlers below.
 }
 
-private mutable var DesktopView: integer := -1;
-private mutable var MenuBarView: integer := -1;
-private mutable var StatusBarView: integer := -1;
+private mutable var DesktopView: option of ViewId := None;
+private mutable var MenuBarView: option of ViewId := None;
+private mutable var StatusBarView: option of ViewId := None;
 
 private const MenuBarHeight: integer := 1;
 private const StatusBarHeight: integer := 1;
@@ -38,29 +38,35 @@ begin
   var S: Size := Application.Size(App);
   var DesktopHeight: integer := (S.height - MenuBarHeight) - StatusBarHeight;
   var StatusY: integer := S.height - StatusBarHeight;
-  if MenuBarView < 0 then
-  begin
-    MenuBarView := Application.HostCreateMenuBarView(App, 0, 0, S.width, MenuBarHeight, DefaultItems(), DefaultStyle())
-  end
-  else
-  begin
-    Application.HostSetViewRect(App, MenuBarView, 0, 0, S.width, MenuBarHeight)
+  case MenuBarView of
+    None:
+    begin
+      MenuBarView := Some(Application.HostCreateMenuBarView(App, 0, 0, S.width, MenuBarHeight, DefaultItems(), DefaultStyle()))
+    end;
+    Some(Bar):
+    begin
+      Application.HostSetViewRect(App, Bar, 0, 0, S.width, MenuBarHeight)
+    end
   end;
-  if DesktopView < 0 then
-  begin
-    DesktopView := Application.HostCreateSolidFillView(App, 0, MenuBarHeight, S.width, DesktopHeight, DesktopBg, None, None)
-  end
-  else
-  begin
-    Application.HostSetViewRect(App, DesktopView, 0, MenuBarHeight, S.width, DesktopHeight)
+  case DesktopView of
+    None:
+    begin
+      DesktopView := Some(Application.HostCreateSolidFillView(App, 0, MenuBarHeight, S.width, DesktopHeight, DesktopBg, None, None))
+    end;
+    Some(Desktop):
+    begin
+      Application.HostSetViewRect(App, Desktop, 0, MenuBarHeight, S.width, DesktopHeight)
+    end
   end;
-  if StatusBarView < 0 then
-  begin
-    StatusBarView := Application.HostCreateStatusBarView(App, 0, StatusY, S.width, StatusBarHeight, DefaultStatusSegments(), DefaultStatusStyle())
-  end
-  else
-  begin
-    Application.HostSetViewRect(App, StatusBarView, 0, StatusY, S.width, StatusBarHeight)
+  case StatusBarView of
+    None:
+    begin
+      StatusBarView := Some(Application.HostCreateStatusBarView(App, 0, StatusY, S.width, StatusBarHeight, DefaultStatusSegments(), DefaultStatusStyle()))
+    end;
+    Some(Status):
+    begin
+      Application.HostSetViewRect(App, Status, 0, StatusY, S.width, StatusBarHeight)
+    end
   end
 end;
 
@@ -87,17 +93,32 @@ private procedure OnResize(App: Application; NewSize: Size);
 begin
   var DesktopHeight: integer := (NewSize.height - MenuBarHeight) - StatusBarHeight;
   var StatusY: integer := NewSize.height - StatusBarHeight;
-  if MenuBarView >= 0 then
-  begin
-    Application.HostSetViewRect(App, MenuBarView, 0, 0, NewSize.width, MenuBarHeight)
+  case MenuBarView of
+    Some(Bar):
+    begin
+      Application.HostSetViewRect(App, Bar, 0, 0, NewSize.width, MenuBarHeight)
+    end;
+    None:
+    begin
+    end
   end;
-  if DesktopView >= 0 then
-  begin
-    Application.HostSetViewRect(App, DesktopView, 0, MenuBarHeight, NewSize.width, DesktopHeight)
+  case DesktopView of
+    Some(Desktop):
+    begin
+      Application.HostSetViewRect(App, Desktop, 0, MenuBarHeight, NewSize.width, DesktopHeight)
+    end;
+    None:
+    begin
+    end
   end;
-  if StatusBarView >= 0 then
-  begin
-    Application.HostSetViewRect(App, StatusBarView, 0, StatusY, NewSize.width, StatusBarHeight)
+  case StatusBarView of
+    Some(Status):
+    begin
+      Application.HostSetViewRect(App, Status, 0, StatusY, NewSize.width, StatusBarHeight)
+    end;
+    None:
+    begin
+    end
   end;
   Application.RequestRedraw(App)
 end;

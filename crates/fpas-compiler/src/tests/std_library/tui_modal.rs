@@ -75,9 +75,9 @@ uses Std.Tui;
 
 begin
   var App: Application := Application.Open();
-  var ViewId: integer := Application.HostRegisterView(App, 0, 0, 10, 5);
+  var ViewHandle: ViewId := Application.HostRegisterView(App, 0, 0, 10, 5);
   Application.HostEnterModal(App, 10);
-  Application.HostAttachViewToActiveModal(App, ViewId);
+  Application.HostAttachViewToActiveModal(App, ViewHandle);
   Application.Close(App)
 end.",
     );
@@ -100,7 +100,7 @@ uses Std.Tui;
 
 begin
   var App: Application := Application.Open();
-  var Dialog: integer := Application.HostRegisterView(App, 10, 10, 20, 10);
+  var Dialog: ViewId := Application.HostRegisterView(App, 10, 10, 20, 10);
   Application.ShowModal(App, 10, Dialog);
   Application.CloseModal(App);
   Application.Close(App)
@@ -132,7 +132,7 @@ uses Std.Tui;
 
 begin
   var App: Application := Application.Open();
-  var Dialog: integer := Application.ShowDialog(App, 10, 5, 6, 7, 8);
+  var Dialog: ViewId := Application.ShowDialog(App, 10, 5, 6, 7, 8);
   Application.Close(App)
 end.",
     );
@@ -155,7 +155,7 @@ uses Std.Console, Std.Tui;
 
 begin
   var App: Application := Application.Open();
-  var Dialog: integer := Application.ShowDialog(App, 10, 5, 6, 7, 8);
+  var Dialog: ViewId := Application.ShowDialog(App, 10, 5, 6, 7, 8);
   Std.Console.WriteLn(Dialog);
   Std.Console.WriteLn(Application.HostModalDepth(App));
   Application.CloseModal(App);
@@ -176,9 +176,9 @@ uses Std.Console, Std.Tui;
 
 begin
   var App: Application := Application.Open();
-  var Background: integer := Application.HostRegisterView(App, 0, 0, 5, 5);
-  var DialogA: integer := Application.HostRegisterView(App, 10, 10, 5, 5);
-  var DialogB: integer := Application.HostRegisterView(App, 20, 10, 5, 5);
+  var Background: ViewId := Application.HostRegisterView(App, 0, 0, 5, 5);
+  var DialogA: ViewId := Application.HostRegisterView(App, 10, 10, 5, 5);
+  var DialogB: ViewId := Application.HostRegisterView(App, 20, 10, 5, 5);
   Application.HostPushChildView(App, Background);
   Application.HostPushChildView(App, DialogA);
   Application.HostPushChildView(App, DialogB);
@@ -199,7 +199,7 @@ end.",
         ))],
     );
 
-    assert_eq!(out.lines, vec!["14", "1"]);
+    assert_eq!(out.lines, vec!["14", "Some(1)"]);
 }
 
 #[test]
@@ -211,10 +211,10 @@ uses Std.Console, Std.Tui;
 
 begin
   var App: Application := Application.Open();
-  var Background: integer := Application.HostRegisterView(App, 0, 0, 5, 5);
-  var Dialog: integer := Application.HostRegisterView(App, 10, 10, 8, 4);
-  var Button: integer := Application.HostRegisterView(App, 0, 0, 1, 1);
-  Application.HostSetViewParent(App, Button, Dialog);
+  var Background: ViewId := Application.HostRegisterView(App, 0, 0, 5, 5);
+  var Dialog: ViewId := Application.HostRegisterView(App, 10, 10, 8, 4);
+  var Button: ViewId := Application.HostRegisterView(App, 0, 0, 1, 1);
+  Application.HostSetViewParent(App, Button, Some(Dialog));
   Application.HostSetViewRect(App, Button, 1, 1, 3, 1);
   Application.HostPushChildView(App, Background);
   Application.HostPushChildView(App, Dialog);
@@ -237,7 +237,7 @@ end.",
         ))],
     );
 
-    assert_eq!(out.lines, vec!["1", "14", "2", "0"]);
+    assert_eq!(out.lines, vec!["Some(1)", "14", "Some(2)", "0"]);
 }
 
 #[test]
@@ -254,7 +254,7 @@ end;
 
 begin
   var App: Application := Application.Open();
-  var Dialog: integer := Application.HostRegisterView(App, 10, 10, 5, 5);
+  var Dialog: ViewId := Application.HostRegisterView(App, 10, 10, 5, 5);
   Application.HostRegisterOnMouse(App, OnMouse);
   Application.HostEnterModal(App, 10);
   Application.HostAttachViewToActiveModal(App, Dialog);
@@ -298,8 +298,8 @@ begin
     alt := false;
     meta := false;
   end;
-  var Background: integer := Application.HostRegisterView(App, 0, 0, 5, 5);
-  var Dialog: integer := Application.HostRegisterView(App, 10, 10, 5, 5);
+  var Background: ViewId := Application.HostRegisterView(App, 0, 0, 5, 5);
+  var Dialog: ViewId := Application.HostRegisterView(App, 10, 10, 5, 5);
   Application.HostPushChildView(App, Background);
   Application.HostPushChildView(App, Dialog);
   Std.Console.WriteLn(Application.HostProcessNext(App, 64));

@@ -150,9 +150,9 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(80, 25);
-  var MenuBar: integer := Application.HostCreateMenuBarView(
+  var MenuBar: ViewId := Application.HostCreateMenuBarView(
     App, 0, 0, 80, 1, MenuItems(), MenuStyle());
-  var Desktop: integer := Application.HostCreateSolidFillView(
+  var Desktop: ViewId := Application.HostCreateSolidFillView(
     App, 0, 1, 80, 24, Blue, None, None);
   var Handlers: ApplicationHandlers := record
     OnPaint := OnPaint;

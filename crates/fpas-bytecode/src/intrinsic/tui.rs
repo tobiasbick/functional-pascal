@@ -187,7 +187,7 @@ pub enum TuiIntrinsic {
     HostSetViewRect = 284,
     /// Re-parent a host-managed view.
     ///
-    /// Stack: `Application`, `ViewId`, `ParentViewId` (`integer`, top; `-1` detaches back to the root list).
+    /// Stack: `Application`, `ViewId`, `Parent` (`Option of ViewId`, top; `None` detaches back to the root list).
     /// Does not push a value.
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`

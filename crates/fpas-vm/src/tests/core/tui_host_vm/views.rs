@@ -49,7 +49,7 @@ fn tui_host_push_child_view_rejects_unknown_view_id() {
         loc(),
     );
     chunk.emit(Op::GetLocal(0), loc());
-    emit_constant(&mut chunk, Value::Integer(99));
+    emit_constant(&mut chunk, tui_view_id_value(99));
     chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostPushChildView))),
         loc(),
@@ -72,7 +72,7 @@ fn tui_host_attach_view_to_active_modal_rejects_unknown_view_id() {
         loc(),
     );
     chunk.emit(Op::GetLocal(0), loc());
-    emit_constant(&mut chunk, Value::Integer(99));
+    emit_constant(&mut chunk, tui_view_id_value(99));
     chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(
             TuiIntrinsic::HostAttachViewToActiveModal,
@@ -97,7 +97,7 @@ fn tui_host_unregister_view_marks_removed_rect_damage() {
         loc(),
     );
     chunk.emit(Op::GetLocal(0), loc());
-    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, tui_view_id_value(0));
     chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostUnregisterView))),
         loc(),
@@ -145,7 +145,7 @@ fn tui_host_unregister_focused_view_marks_removed_and_new_focus_rects() {
         loc(),
     );
     chunk.emit(Op::GetLocal(0), loc());
-    emit_constant(&mut chunk, Value::Integer(1));
+    emit_constant(&mut chunk, tui_view_id_value(1));
     chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostUnregisterView))),
         loc(),
@@ -203,7 +203,7 @@ fn tui_host_set_view_rect_marks_old_and_new_rect_damage() {
         loc(),
     );
     chunk.emit(Op::GetLocal(0), loc());
-    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, tui_view_id_value(0));
     emit_constant(&mut chunk, Value::Integer(3));
     emit_constant(&mut chunk, Value::Integer(4));
     emit_constant(&mut chunk, Value::Integer(7));
@@ -262,7 +262,7 @@ fn tui_host_set_view_rect_ignores_unknown_view_ids() {
         loc(),
     );
     chunk.emit(Op::GetLocal(0), loc());
-    emit_constant(&mut chunk, Value::Integer(99));
+    emit_constant(&mut chunk, tui_view_id_value(99));
     emit_constant(&mut chunk, Value::Integer(3));
     emit_constant(&mut chunk, Value::Integer(4));
     emit_constant(&mut chunk, Value::Integer(7));

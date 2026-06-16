@@ -269,6 +269,7 @@ fn tui_host_view_command_shortcut_uses_focused_ancestor_binding() {
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(Op::GetLocal(2), loc());
     chunk.emit(Op::GetLocal(1), loc());
+    chunk.emit(Op::MakeSome, loc());
     chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostSetViewParent))),
         loc(),

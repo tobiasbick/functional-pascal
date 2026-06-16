@@ -4,7 +4,8 @@
 
 use crate::tests::helpers::{
     emit_constant, key_event_value, loc, minimal_shared_state, tui_application_value,
-    tui_rect_value, tui_screen_cell_value, tui_size_value,
+    tui_rect_value, tui_screen_cell_value, tui_size_value, tui_view_id_option_some,
+    tui_view_id_value,
 };
 use crate::vm::Worker;
 use fpas_bytecode::{Chunk, Intrinsic, Op, TuiIntrinsic, Value};
@@ -208,7 +209,7 @@ fn tui_query_root_views_lists_registered_roots_in_order() {
     let Value::Array(roots) = worker.stack.last().expect("roots on stack") else {
         panic!("expected root view array");
     };
-    assert_eq!(roots, &[Value::Integer(0), Value::Integer(1),]);
+    assert_eq!(roots, &[tui_view_id_value(0), tui_view_id_value(1),]);
 }
 
 fn emit_host_register_view(chunk: &mut Chunk, x: i64, y: i64, width: i64, height: i64) {
@@ -223,10 +224,10 @@ fn emit_host_register_view(chunk: &mut Chunk, x: i64, y: i64, width: i64, height
     );
 }
 
-fn emit_host_set_view_parent(chunk: &mut Chunk, child: i64, parent: i64) {
+fn emit_host_set_view_parent(chunk: &mut Chunk, child: u32, parent: u32) {
     emit_constant(chunk, tui_application_value());
-    emit_constant(chunk, Value::Integer(child));
-    emit_constant(chunk, Value::Integer(parent));
+    emit_constant(chunk, tui_view_id_value(child));
+    emit_constant(chunk, tui_view_id_option_some(parent));
     chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostSetViewParent))),
         loc(),
@@ -239,7 +240,7 @@ fn tui_query_view_rect_returns_absolute_geometry() {
     emit_open_for_test(&mut chunk, 80, 25);
     emit_host_register_view(&mut chunk, 0, 0, 80, 1);
     emit_constant(&mut chunk, tui_application_value());
-    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, tui_view_id_value(0));
     chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::QueryViewRect))),
         loc(),
@@ -264,13 +265,13 @@ fn tui_query_view_parent_and_children_reflect_tree() {
     emit_host_set_view_parent(&mut chunk, 2, 0);
 
     emit_constant(&mut chunk, tui_application_value());
-    emit_constant(&mut chunk, Value::Integer(1));
+    emit_constant(&mut chunk, tui_view_id_value(1));
     chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::QueryViewParent))),
         loc(),
     );
     emit_constant(&mut chunk, tui_application_value());
-    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, tui_view_id_value(0));
     chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::QueryViewChildren))),
         loc(),
@@ -284,13 +285,13 @@ fn tui_query_view_parent_and_children_reflect_tree() {
     let Value::Array(children) = worker.stack.last().expect("children on stack") else {
         panic!("expected children array");
     };
-    assert_eq!(children, &[Value::Integer(1), Value::Integer(2)]);
+    assert_eq!(children, &[tui_view_id_value(1), tui_view_id_value(2)]);
 
     let parent = worker
         .stack
         .get(worker.stack.len() - 2)
         .expect("parent on stack");
-    assert_eq!(parent, &Value::OptionSome(Box::new(Value::Integer(0))));
+    assert_eq!(parent, &Value::OptionSome(Box::new(tui_view_id_value(0))));
 }
 
 fn tui_menu_bar_state_value(
@@ -351,7 +352,7 @@ fn tui_query_menu_bar_state_reflects_submenu_after_alt_shortcut() {
         loc(),
     );
     emit_constant(&mut chunk, tui_application_value());
-    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, tui_view_id_value(0));
     chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::QueryMenuBarState))),
         loc(),

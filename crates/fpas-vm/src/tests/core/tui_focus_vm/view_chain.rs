@@ -109,7 +109,7 @@ fn host_push_child_view_populates_focus_chain_and_query_focused_view_id() {
     worker.run().expect("VM should succeed");
 
     let lines = shared.console.lock().unwrap().output().lines.clone();
-    assert_eq!(lines, vec!["14", "0"]);
+    assert_eq!(lines, vec!["14", "Some(0)"]);
 }
 
 #[test]
@@ -159,7 +159,7 @@ fn host_unregister_view_removes_it_from_focus_chain() {
     worker.run().expect("VM should succeed");
 
     let lines = shared.console.lock().unwrap().output().lines.clone();
-    assert_eq!(lines, vec!["-1"]);
+    assert_eq!(lines, vec!["None"]);
 
     let tui = shared.tui.lock().unwrap();
     assert!(!tui.views.has_focusable_children());

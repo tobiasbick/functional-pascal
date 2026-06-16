@@ -36,24 +36,24 @@ These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mo
 | `TuiHostEnterModal`           | `Application`, `integer`                         | Pushes an application-defined modal id onto the host modal stack. Does not push a value.                                                                                                                                                                                           |
 | `TuiHostLeaveModal`           | `Application`                                    | Pops the active host modal frame, if any. Leaving an empty modal stack is a no-op. Does not push a value.                                                                                                                                                                          |
 | `TuiHostModalDepth`           | `Application`                                    | Pushes `integer`: the active modal stack depth.                                                                                                                                                                                                                                    |
-| `TuiHostRegisterView`         | `Application`, `integer`, `integer`, `integer`, `integer` | Registers a host-managed view from `x`, `y`, `width`, `height` and pushes an opaque integer handle. Registration order remains the host paint order.                                                                                                                        |
-| `TuiHostUnregisterView`       | `Application`, `integer`                         | Removes a host-managed view by handle. Unknown handles are ignored. Does not push a value.                                                                                                                                                                                        |
-| `TuiHostPushChildView`        | `Application`, `integer`                         | Appends a host-managed view handle to the focus chain used by Tab / Shift+Tab traversal. Does not push a value.                                                                                                                                                                  |
-| `TuiHostQueryFocusedViewId`   | `Application`                                    | Pushes `integer`: the currently focused view handle, or `-1` when no host-managed view is focused.                                                                                                                                                                               |
-| `TuiHostAttachViewToActiveModal` | `Application`, `integer`                      | Attaches a host-managed view handle to the currently active modal frame. Attached views define the modal focus/mouse scope for the topmost modal. Does not push a value.                                                                                                      |
-| `TuiHostSetViewRect`          | `Application`, `integer`, `integer`, `integer`, `integer`, `integer` | Updates a host-managed view handle to `x`, `y`, `width`, `height`. Unknown handles are ignored. Does not push a value.                                                                                                                                      |
-| `TuiHostSetViewParent`        | `Application`, `integer`, `integer`           | Reparents a host-managed view under `parent_view_id`. Pass `-1` to detach the view back to the root list. The view keeps its current absolute terminal rectangle during the reparenting step. Unknown handles are ignored. Does not push a value.                          |
-| `TuiHostRegisterOnViewPaint`  | `Application`, `integer`, `function`          | Registers `procedure (Application, integer, Std.Tui.Rect)` (arity 3) as a view-local paint handler for one host-managed view. During hosted redraw, the host invokes it in tree paint order when that view intersects the current damage region.                              |
+| `TuiHostRegisterView`         | `Application`, `integer`, `integer`, `integer`, `integer` | Registers a host-managed view from `x`, `y`, `width`, `height` and pushes `Std.Tui.ViewId`. Registration order remains the host paint order.                                                                                                                        |
+| `TuiHostUnregisterView`       | `Application`, `ViewId`                         | Removes a host-managed view by handle. Unknown handles are ignored. Does not push a value.                                                                                                                                                                                        |
+| `TuiHostPushChildView`        | `Application`, `ViewId`                         | Appends a host-managed view handle to the focus chain used by Tab / Shift+Tab traversal. Does not push a value.                                                                                                                                                                  |
+| `TuiHostQueryFocusedViewId`   | `Application`                                    | Pushes `Option of ViewId`: the currently focused view handle, or `None` when no host-managed view is focused.                                                                                                                                                                               |
+| `TuiHostAttachViewToActiveModal` | `Application`, `ViewId`                      | Attaches a host-managed view handle to the currently active modal frame. Attached views define the modal focus/mouse scope for the topmost modal. Does not push a value.                                                                                                      |
+| `TuiHostSetViewRect`          | `Application`, `ViewId`, `integer`, `integer`, `integer`, `integer` | Updates a host-managed view handle to `x`, `y`, `width`, `height`. Unknown handles are ignored. Does not push a value.                                                                                                                                      |
+| `TuiHostSetViewParent`        | `Application`, `ViewId`, `Option of ViewId`           | Reparents a host-managed view under `Parent`. Pass `None` to detach the view back to the root list. The view keeps its current absolute terminal rectangle during the reparenting step. Unknown handles are ignored. Does not push a value.                          |
+| `TuiHostRegisterOnViewPaint`  | `Application`, `ViewId`, `function`          | Registers `procedure (Application, ViewId, Std.Tui.Rect)` (arity 3) as a view-local paint handler for one host-managed view. During hosted redraw, the host invokes it in tree paint order when that view intersects the current damage region.                              |
 | `TuiApplicationConfigure`     | `Application`, `ApplicationHandlers`             | Applies a bundled hosted-dispatch configuration. Replaces the current hosted handlers with the record fields from `ApplicationHandlers`; `OnPaint` is required, optional handlers use `Some(Handler)` or `None`, and `OnIdleMilliseconds <= 0` disables idle callbacks.        |
 | `TuiApplicationRun`           | `Application`                                    | Hosted loop entrypoint. Requires a previously registered global `OnPaint` handler, at least one local view paint handler, **or** at least one host widget view (`HostCreateSolidFillView`, `HostCreateMenuBarView`, or `HostCreateStatusBarView`), auto-requests the first redraw, blocks until `Application.HostRequestQuit(App)` is observed **or** the host stops the active run, records `ExitReason.UserQuit`, `ExitReason.HostStop`, `ExitReason.HostAndUserStop`, or `ExitReason.HostShutdown`, invokes `OnExit` when registered, and performs `Application.Close` semantics before returning. Pushes `()`. |
-| `TuiApplicationShowModal`     | `Application`, `integer`, `integer`             | Pushes a modal frame anchored to the given root view. The root view is raised, the modal scope becomes that view subtree (plus any explicitly attached extra views), and focus is moved into that scope when possible. Does not push a value.                               |
-| `TuiApplicationShowDialog`    | `Application`, `integer`, `integer`, `integer`, `integer`, `integer` | Registers a new root host view for `x`, `y`, `width`, `height`, shows it as the active modal dialog, and pushes the new root `ViewId` as `integer`. Closing that modal automatically unregisters the owned root subtree.                                                     |
+| `TuiApplicationShowModal`     | `Application`, `integer`, `ViewId`             | Pushes a modal frame anchored to the given root view. The root view is raised, the modal scope becomes that view subtree (plus any explicitly attached extra views), and focus is moved into that scope when possible. Does not push a value.                               |
+| `TuiApplicationShowDialog`    | `Application`, `integer`, `integer`, `integer`, `integer`, `integer` | Registers a new root host view for `x`, `y`, `width`, `height`, shows it as the active modal dialog, and pushes the new root `ViewId`. Closing that modal automatically unregisters the owned root subtree.                                                     |
 | `TuiApplicationCloseModal`    | `Application`                                    | Pops the active modal frame created by `Application.ShowModal`, `Application.ShowDialog`, or `Application.HostEnterModal`. Leaving an empty modal stack is a no-op. Does not push a value.                                                                                     |
-| `TuiHostCreateSolidFillView`  | `Application`, `integer`, `integer`, `integer`, `integer`, `integer`, `Option of integer`, `Option of char` | Registers a host-managed solid-fill widget view from `x`, `y`, `width`, `height`, `FillColor`, optional `TextColor`, and optional `FillChar`. Pushes opaque `ViewId` as `integer`. |
-| `TuiHostCreateMenuBarView`    | `Application`, `integer`, `integer`, `integer`, `integer`, `array of MenuBarItem`, `MenuBarStyle` | Registers a host-managed menu bar widget from geometry and a declarative item model. Pushes opaque `ViewId` as `integer`. |
-| `TuiHostSetMenuBarItems`      | `Application`, `integer`, `array of MenuBarItem` | Replaces the menu bar item model for an existing menu bar widget `ViewId`. Does not push a value. |
-| `TuiHostCreateStatusBarView`  | `Application`, `integer`, `integer`, `integer`, `integer`, `array of StatusBarSegment`, `StatusBarStyle` | Registers a host-managed status bar widget from geometry and a declarative segment model. Pushes opaque `ViewId` as `integer`. |
-| `TuiHostSetStatusBarSegments` | `Application`, `integer`, `array of StatusBarSegment` | Replaces the status bar segment model for an existing status bar widget `ViewId`. Does not push a value. |
+| `TuiHostCreateSolidFillView`  | `Application`, `integer`, `integer`, `integer`, `integer`, `integer`, `Option of integer`, `Option of char` | Registers a host-managed solid-fill widget view from `x`, `y`, `width`, `height`, `FillColor`, optional `TextColor`, and optional `FillChar`. Pushes `ViewId`. |
+| `TuiHostCreateMenuBarView`    | `Application`, `integer`, `integer`, `integer`, `integer`, `array of MenuBarItem`, `MenuBarStyle` | Registers a host-managed menu bar widget from geometry and a declarative item model. Pushes `ViewId`. |
+| `TuiHostSetMenuBarItems`      | `Application`, `ViewId`, `array of MenuBarItem` | Replaces the menu bar item model for an existing menu bar widget `ViewId`. Does not push a value. |
+| `TuiHostCreateStatusBarView`  | `Application`, `integer`, `integer`, `integer`, `integer`, `array of StatusBarSegment`, `StatusBarStyle` | Registers a host-managed status bar widget from geometry and a declarative segment model. Pushes `ViewId`. |
+| `TuiHostSetStatusBarSegments` | `Application`, `ViewId`, `array of StatusBarSegment` | Replaces the status bar segment model for an existing status bar widget `ViewId`. Does not push a value. |
 
 ### Pascal names (registry + compiler)
 
@@ -88,7 +88,7 @@ These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mo
 | `Application.HostQueryFocusedViewId(App)` | `TuiHostQueryFocusedViewId` |
 | `Application.HostAttachViewToActiveModal(App, ViewId)` | `TuiHostAttachViewToActiveModal` |
 | `Application.HostSetViewRect(App, ViewId, X, Y, Width, Height)` | `TuiHostSetViewRect` |
-| `Application.HostSetViewParent(App, ViewId, ParentViewId)` | `TuiHostSetViewParent` |
+| `Application.HostSetViewParent(App, ViewId, Parent)` | `TuiHostSetViewParent` |
 | `Application.HostRegisterOnViewPaint(App, ViewId, OnViewPaint)` | `TuiHostRegisterOnViewPaint` |
 | `Application.Configure(App, Handlers)` | `TuiApplicationConfigure` |
 | `Application.Run(App)` | `TuiApplicationRun` |
@@ -117,13 +117,11 @@ Samples: [`examples/pascal/tui/host_dispatch_minimal.fpas`](../../../examples/pa
 
 `Application.HostRegisterView(App, X, Y, Width, Height)` returns an opaque **`ViewId`** owned by the host (see [ViewId type (decided)](#viewid-type-decided) under Native TUI testing API). Pass it to `Application.HostUnregisterView`, `Application.HostPushChildView`, `Application.HostSetViewRect`, `Application.HostSetViewParent`, `Application.HostRegisterOnViewPaint`, and `Application.HostBindCommandToView`.
 
-`Application.HostPushChildView(App, ViewId)` appends the handle to the focus chain used by Tab / Shift+Tab traversal. `Application.HostQueryFocusedViewId(App)` returns the focused view handle, or `-1` when none (future: `QueryFocusedViewId` → `Option of ViewId`).
+`Application.HostPushChildView(App, ViewId)` appends the handle to the focus chain used by Tab / Shift+Tab traversal. `Application.HostQueryFocusedViewId(App)` returns `Option of ViewId` for the focused view (`None` when none). A future rename to `Application.QueryFocusedViewId` is planned (see [Pending renames](#pending-renames-existing-read-apis)).
 
-Root views use absolute terminal coordinates. `Application.HostSetViewParent(App, ViewId, Parent)` reparents a view under `Parent`; pass `None` to detach it back to the root list. Reparenting preserves the current absolute terminal rectangle. After a view has a parent, `Application.HostSetViewRect(App, ViewId, X, Y, Width, Height)` interprets `X` and `Y` relative to that parent. Sibling order defines z-order, and `Application.ShowModal` scopes to a root view subtree.
+Root views use absolute terminal coordinates. `Application.HostSetViewParent(App, ViewId, Parent)` reparents a view under `Some(Parent)`; pass `None` to detach it back to the root list. Reparenting preserves the current absolute terminal rectangle. After a view has a parent, `Application.HostSetViewRect(App, ViewId, X, Y, Width, Height)` interprets `X` and `Y` relative to that parent. Sibling order defines z-order, and `Application.ShowModal` scopes to a root view subtree.
 
 `Application.HostRegisterOnViewPaint(App, ViewId, OnViewPaint)` registers a local paint handler for one view. During hosted redraw, the host first runs global `OnPaint` when present and then runs view-local paint handlers in tree paint order for views intersecting the current damage. The `Bounds` argument is the view's absolute terminal rectangle.
-
-> **Migration note:** until `ViewId` lands in sema/registry, the implemented surface still uses bare `integer` tokens and `-1` sentinels. The types above are the target contract.
 
 ### Host widgets
 
@@ -479,7 +477,7 @@ Rules:
 - **`Host*`** keeps its current meaning for production app setup. New read APIs use **`Query*`**, not `HostQuery*`.
 - Intrinsic Rust names mirror Pascal: `TuiTestPump`, `TuiQueryScreenCell`, `TuiHostRegisterView`.
 
-### ViewId type (decided)
+### ViewId type (implemented)
 
 Introduce **`Std.Tui.ViewId`** as a real opaque FPAS type. Do **not** use bare `integer` for host view handles in new or migrated APIs.
 
@@ -508,20 +506,11 @@ Sema registers `Std.Tui.ViewId` as an empty record; only host routines may produ
 | Focus query | `Application.QueryFocusedViewId(App): Option of ViewId` replaces `HostQueryFocusedViewId` returning `-1`. |
 | View-local paint | The view-local handler keeps `(App, ViewId, Rect)` — the middle argument becomes typed `ViewId` instead of `integer`. |
 
-**Migration (no compatibility layer)**
-
-| Current surface | New surface |
-| --------------- | ----------- |
-| `HostRegisterView` / widget creators push `integer` | push `ViewId` |
-| All `Host*` / `Show*` parameters named `ViewId` but typed `integer` | typed `ViewId` |
-| `HostQueryFocusedViewId` → `integer` (`-1`) | `QueryFocusedViewId` → `Option of ViewId` |
-| `HostSetViewParent(..., ParentViewId: integer)` with `-1` | `HostSetViewParent(..., Parent: Option of ViewId)` |
-
-Until `ViewId` migration lands, host routines and queries still pass view handles as **`integer`** tokens (`QueryRootViews` / `QueryViewChildren` return `array of integer`; `QueryViewParent` returns `Option of integer`). New tests and docs already use the **`ViewId`** name at call sites where the type is registered.
+**Status:** `ViewId` migration is **implemented** (sema, VM, tests, and examples). Remaining follow-up: rename `HostQueryFocusedViewId` → `QueryFocusedViewId` and `HostModalDepth` → `QueryModalDepth` (see below).
 
 ### Pending renames (existing read APIs)
 
-No backward compatibility is required. These read-only `Host*` names remain in the registry until a dedicated rename pass; new tests and docs should prefer the **`Query*`** names:
+Until a dedicated rename pass, host routines and queries still use the `HostQueryFocusedViewId` name; new tests and docs should prefer the **`Query*`** names where listed below.
 
 | Current (still registered) | Preferred name | Discriminant |
 | -------------------------- | -------------- | ------------ |

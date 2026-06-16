@@ -99,8 +99,8 @@ begin
   RightPanel := Application.HostRegisterView(App, 36, 9, 28, 4);
   LeftButton := Application.HostRegisterView(App, 2, 1, 20, 1);
   RightButton := Application.HostRegisterView(App, 2, 1, 20, 1);
-  Application.HostSetViewParent(App, LeftButton, LeftPanel);
-  Application.HostSetViewParent(App, RightButton, RightPanel);
+  Application.HostSetViewParent(App, LeftButton, Some(LeftPanel));
+  Application.HostSetViewParent(App, RightButton, Some(RightPanel));
   Application.HostPushChildView(App, LeftButton);
   Application.HostPushChildView(App, RightButton);
   Application.HostRegisterOnPaint(App, OnPaint);

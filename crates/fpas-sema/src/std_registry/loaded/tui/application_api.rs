@@ -38,7 +38,7 @@ pub(super) fn register_application_api(checker: &mut Checker, types: &TuiTypes) 
         vec![
             p("App", types.application.clone(), false),
             p("ModalId", Ty::Integer, false),
-            p("RootViewId", Ty::Integer, false),
+            p("RootViewId", types.view_id.clone(), false),
         ],
     );
     define_func(
@@ -52,7 +52,7 @@ pub(super) fn register_application_api(checker: &mut Checker, types: &TuiTypes) 
             p("Width", Ty::Integer, false),
             p("Height", Ty::Integer, false),
         ],
-        Ty::Integer,
+        types.view_id.clone(),
     );
     define_proc(
         checker,
@@ -182,14 +182,14 @@ pub(super) fn register_application_api(checker: &mut Checker, types: &TuiTypes) 
         checker,
         s::STD_TUI_APPLICATION_QUERY_ROOT_VIEWS,
         vec![p("App", types.application.clone(), false)],
-        Ty::Array(Box::new(Ty::Integer)),
+        Ty::Array(Box::new(types.view_id.clone())),
     );
     define_func(
         checker,
         s::STD_TUI_APPLICATION_QUERY_VIEW_RECT,
         vec![
             p("App", types.application.clone(), false),
-            p("ViewId", Ty::Integer, false),
+            p("ViewId", types.view_id.clone(), false),
         ],
         types.rect.clone(),
     );
@@ -198,25 +198,25 @@ pub(super) fn register_application_api(checker: &mut Checker, types: &TuiTypes) 
         s::STD_TUI_APPLICATION_QUERY_VIEW_PARENT,
         vec![
             p("App", types.application.clone(), false),
-            p("ViewId", Ty::Integer, false),
+            p("ViewId", types.view_id.clone(), false),
         ],
-        Ty::Option(Box::new(Ty::Integer)),
+        Ty::Option(Box::new(types.view_id.clone())),
     );
     define_func(
         checker,
         s::STD_TUI_APPLICATION_QUERY_VIEW_CHILDREN,
         vec![
             p("App", types.application.clone(), false),
-            p("ViewId", Ty::Integer, false),
+            p("ViewId", types.view_id.clone(), false),
         ],
-        Ty::Array(Box::new(Ty::Integer)),
+        Ty::Array(Box::new(types.view_id.clone())),
     );
     define_func(
         checker,
         s::STD_TUI_APPLICATION_QUERY_MENU_BAR_STATE,
         vec![
             p("App", types.application.clone(), false),
-            p("ViewId", Ty::Integer, false),
+            p("ViewId", types.view_id.clone(), false),
         ],
         types.menu_bar_state.clone(),
     );

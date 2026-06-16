@@ -11,6 +11,7 @@ use fpas_std::std_symbols as s;
 pub(super) fn register_application_handlers(
     checker: &mut Checker,
     application_ty: &Ty,
+    view_id_ty: &Ty,
     rect_ty: &Ty,
     size_ty: &Ty,
     key_event_ty: &Ty,
@@ -55,7 +56,7 @@ pub(super) fn register_application_handlers(
         type_params: Vec::new(),
         params: vec![
             p("App", application_ty.clone(), false),
-            p("ViewId", Ty::Integer, false),
+            p("ViewId", view_id_ty.clone(), false),
             p("Rect", rect_ty.clone(), false),
         ],
         variadic: false,

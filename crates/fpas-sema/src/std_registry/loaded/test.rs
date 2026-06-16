@@ -43,12 +43,14 @@ pub(super) fn register_std_test(checker: &mut Checker) {
     if checker.scopes.lookup(s::STD_TUI_APPLICATION).is_some() {
         let application =
             type_registration::lookup_required_type(checker, s::STD_TUI_APPLICATION, "Application");
+        let view_id =
+            type_registration::lookup_required_type(checker, s::STD_TUI_VIEW_ID, "ViewId");
         define_proc(
             checker,
             s::STD_TEST_ASSERT_VIEW_RECT,
             vec![
                 p("App", application, false),
-                p("V", Ty::Integer, false),
+                p("V", view_id, false),
                 p("X", Ty::Integer, false),
                 p("Y", Ty::Integer, false),
                 p("W", Ty::Integer, false),

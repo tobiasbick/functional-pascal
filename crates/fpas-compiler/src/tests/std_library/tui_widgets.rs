@@ -15,7 +15,7 @@ uses Std.Console, Std.Tui;
 
 begin
   var App: Application := Application.Open();
-  var ViewId: integer := Application.HostCreateSolidFillView(
+  var Handle: ViewId := Application.HostCreateSolidFillView(
     App, 0, 0, 10, 5, Blue, None, None);
   Application.Close(App)
 end.",
@@ -49,7 +49,7 @@ end;
 
 begin
   var App: Application := Application.Open();
-  var Desktop: integer := Application.HostCreateSolidFillView(
+  var Desktop: ViewId := Application.HostCreateSolidFillView(
     App, 0, 0, 80, 25, Blue, None, None);
   var Handlers: ApplicationHandlers := record
     OnPaint := OnPaint;
@@ -80,8 +80,8 @@ uses Std.Console, Std.Tui;
 
 begin
   var App: Application := Application.Open();
-  var A: integer := Application.HostCreateSolidFillView(App, 0, 0, 10, 5, Blue, None, None);
-  var B: integer := Application.HostCreateSolidFillView(App, 10, 0, 10, 5, LightBlue, None, None);
+  var A: ViewId := Application.HostCreateSolidFillView(App, 0, 0, 10, 5, Blue, None, None);
+  var B: ViewId := Application.HostCreateSolidFillView(App, 10, 0, 10, 5, LightBlue, None, None);
   WriteLn(A);
   WriteLn(B);
   Application.Close(App)
@@ -111,7 +111,7 @@ begin
     HighlightFg := LightGray;
     DisabledFg := DarkGray;
   end;
-  var ViewId: integer := Application.HostCreateMenuBarView(
+  var Handle: ViewId := Application.HostCreateMenuBarView(
     App, 0, 0, 80, 1, Items, Style);
   Application.Close(App)
 end.",
@@ -142,7 +142,7 @@ begin
     BarBg := LightGray;
     BarFg := Black;
   end;
-  var ViewId: integer := Application.HostCreateStatusBarView(
+  var Handle: ViewId := Application.HostCreateStatusBarView(
     App, 0, 24, 80, 1, Segments, Style);
   Application.Close(App)
 end.",
@@ -204,7 +204,7 @@ end;
 
 begin
   var App: Application := Application.Open();
-  var MenuBar: integer := Application.HostCreateMenuBarView(
+  var MenuBar: ViewId := Application.HostCreateMenuBarView(
     App, 0, 0, 80, 1, MenuItems(), MenuStyle());
   var Handlers: ApplicationHandlers := record
     OnPaint := OnPaint;
@@ -287,9 +287,9 @@ end;
 
 begin
   var App: Application := Application.Open();
-  var MenuBar: integer := Application.HostCreateMenuBarView(
+  var MenuBar: ViewId := Application.HostCreateMenuBarView(
     App, 0, 0, 80, 1, MenuItems(), MenuStyle());
-  var Desktop: integer := Application.HostCreateSolidFillView(
+  var Desktop: ViewId := Application.HostCreateSolidFillView(
     App, 0, 1, 80, 24, Blue, None, None);
   var Handlers: ApplicationHandlers := record
     OnPaint := OnPaint;

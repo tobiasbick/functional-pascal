@@ -17,6 +17,7 @@ use fpas_std::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS};
 
 struct TuiTypes {
     application: Ty,
+    view_id: Ty,
     rect: Ty,
     size: Ty,
     screen_cell: Ty,
@@ -52,6 +53,7 @@ struct TuiCallbackTypes {
 pub(super) fn register_std_tui(checker: &mut Checker) {
     let application =
         type_registration::register_record_type(checker, s::STD_TUI_APPLICATION, Vec::new());
+    let view_id = type_registration::register_record_type(checker, s::STD_TUI_VIEW_ID, Vec::new());
     let rect = type_registration::register_record_type(
         checker,
         s::STD_TUI_RECT,
@@ -191,6 +193,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
     let (application_handlers, callbacks) = handlers::register_application_handlers(
         checker,
         &application,
+        &view_id,
         &rect,
         &size,
         &key_event,
@@ -209,6 +212,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
 
     let types = TuiTypes {
         application,
+        view_id,
         rect,
         size,
         screen_cell,

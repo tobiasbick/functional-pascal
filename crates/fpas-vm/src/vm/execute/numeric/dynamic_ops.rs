@@ -190,6 +190,10 @@ impl Worker {
 /// Compare two runtime values, returning `None` for incompatible or
 /// unordered pairs (e.g. NaN).
 fn dyn_compare(left: &Value, right: &Value) -> Option<std::cmp::Ordering> {
+    if let (Some(left_id), Some(right_id)) = (tui_view_id_raw(left), tui_view_id_raw(right)) {
+        return Some(left_id.cmp(&right_id));
+    }
+
     match (left, right) {
         (Value::Integer(a), Value::Integer(b)) => Some(a.cmp(b)),
         (Value::Real(a), Value::Real(b)) => a.partial_cmp(b),
@@ -200,4 +204,24 @@ fn dyn_compare(left: &Value, right: &Value) -> Option<std::cmp::Ordering> {
         (Value::Str(a), Value::Str(b)) => Some(a.cmp(b)),
         _ => None,
     }
+}
+
+fn tui_view_id_raw(value: &Value) -> Option<u32> {
+    const TUI_VIEW_ID_TYPE: &str = "Std.Tui.ViewId";
+    const TUI_VIEW_ID_RAW_FIELD: &str = "__id";
+
+    let Value::Record { type_name, fields } = value else {
+        return None;
+    };
+    if type_name != TUI_VIEW_ID_TYPE {
+        return None;
+    }
+    let Value::Integer(raw) = fields
+        .iter()
+        .find(|(name, _)| name == TUI_VIEW_ID_RAW_FIELD)
+        .map(|(_, value)| value)?
+    else {
+        return None;
+    };
+    u32::try_from(*raw).ok()
 }

@@ -38,6 +38,17 @@ pub(super) fn tui_application_value() -> Value {
     }
 }
 
+pub(super) fn tui_view_id_value(raw: u32) -> Value {
+    Value::Record {
+        type_name: "Std.Tui.ViewId".into(),
+        fields: vec![("__id".into(), Value::Integer(i64::from(raw)))],
+    }
+}
+
+pub(super) fn tui_view_id_option_some(raw: u32) -> Value {
+    Value::OptionSome(Box::new(tui_view_id_value(raw)))
+}
+
 pub(super) fn graph_application_value() -> Value {
     Value::Record {
         type_name: "Std.Graph.Application".into(),

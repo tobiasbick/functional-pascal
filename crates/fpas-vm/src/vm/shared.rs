@@ -63,7 +63,7 @@ pub(crate) struct TuiState {
     pub on_resize: Option<Value>,
     /// `OnPaint`-style handler: `procedure (Application)` (one argument).
     pub on_paint: Option<Value>,
-    /// View-local paint handlers: `procedure (Application, integer, Std.Tui.Rect)` keyed by view.
+    /// View-local paint handlers: `procedure (Application, ViewId, Std.Tui.Rect)` keyed by view.
     pub view_paints: HashMap<ViewId, Value>,
     /// Native host widgets keyed by view id (for example solid-fill backgrounds).
     pub view_widgets: HashMap<ViewId, ViewWidget>,

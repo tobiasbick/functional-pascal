@@ -48,7 +48,7 @@ impl Worker {
                     tui.views
                         .roots()
                         .iter()
-                        .map(|id| Value::Integer(i64::from(id.raw())))
+                        .map(|id| Self::tui_view_id_record(*id))
                         .collect::<Vec<_>>()
                 });
                 self.push(Value::Array(ids))?;
@@ -66,7 +66,7 @@ impl Worker {
                 self.pop_tui_application(line)?;
                 let parent = self.with_tui(|tui| tui.views.parent(view_id));
                 self.push(match parent {
-                    Some(id) => Value::OptionSome(Box::new(Value::Integer(i64::from(id.raw())))),
+                    Some(id) => Value::OptionSome(Box::new(Self::tui_view_id_record(id))),
                     None => Value::OptionNone,
                 })?;
             }
@@ -77,7 +77,7 @@ impl Worker {
                     tui.views
                         .children(view_id)
                         .iter()
-                        .map(|id| Value::Integer(i64::from(id.raw())))
+                        .map(|id| Self::tui_view_id_record(*id))
                         .collect::<Vec<_>>()
                 });
                 self.push(Value::Array(children))?;

@@ -2,9 +2,18 @@ use crate::error::CompileError;
 use fpas_bytecode::{Op, SourceLocation};
 use fpas_parser::{BinaryOp, Expr};
 use fpas_sema::Ty;
+use fpas_std::std_symbols as s;
 
 use super::super::Compiler;
 use super::is_generic_param;
+
+fn is_tui_view_id(ty: &Ty) -> bool {
+    match ty {
+        Ty::Named(name) if name.eq_ignore_ascii_case(s::STD_TUI_VIEW_ID) => true,
+        Ty::Record(record) if record.name.eq_ignore_ascii_case(s::STD_TUI_VIEW_ID) => true,
+        _ => false,
+    }
+}
 
 impl Compiler {
     pub(super) fn compile_equality(
@@ -72,6 +81,19 @@ impl Compiler {
                 } else {
                     Op::NeqStr
                 },
+                location,
+            );
+        }
+
+        if is_tui_view_id(lt) && is_tui_view_id(rt) {
+            return self.compile_direct_binary(
+                if op == BinaryOp::Eq {
+                    Op::EqDyn
+                } else {
+                    Op::NeqDyn
+                },
+                left,
+                right,
                 location,
             );
         }

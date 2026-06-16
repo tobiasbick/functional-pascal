@@ -123,6 +123,7 @@ pub(in super::super) const STD_CONSOLE_SYMBOLS: &[&str] = &[
 
 pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_APPLICATION,
+    std_symbols::STD_TUI_VIEW_ID,
     std_symbols::STD_TUI_APPLICATION_HANDLERS,
     std_symbols::STD_TUI_RECT,
     std_symbols::STD_TUI_SIZE,

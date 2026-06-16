@@ -160,7 +160,7 @@ pub(super) fn register_host_api(
         s::STD_TUI_APPLICATION_HOST_BIND_COMMAND_TO_VIEW,
         vec![
             p("App", types.application.clone(), false),
-            p("ViewId", Ty::Integer, false),
+            p("ViewId", types.view_id.clone(), false),
             p("Key", types.key_event.clone(), false),
             p("CommandId", Ty::Integer, false),
         ],
@@ -203,14 +203,14 @@ pub(super) fn register_host_api(
             p("Width", Ty::Integer, false),
             p("Height", Ty::Integer, false),
         ],
-        Ty::Integer,
+        types.view_id.clone(),
     );
     define_proc(
         checker,
         s::STD_TUI_APPLICATION_HOST_UNREGISTER_VIEW,
         vec![
             p("App", types.application.clone(), false),
-            p("ViewId", Ty::Integer, false),
+            p("ViewId", types.view_id.clone(), false),
         ],
     );
     define_proc(
@@ -218,21 +218,21 @@ pub(super) fn register_host_api(
         s::STD_TUI_APPLICATION_HOST_PUSH_CHILD_VIEW,
         vec![
             p("App", types.application.clone(), false),
-            p("ViewId", Ty::Integer, false),
+            p("ViewId", types.view_id.clone(), false),
         ],
     );
     define_func(
         checker,
         s::STD_TUI_APPLICATION_HOST_QUERY_FOCUSED_VIEW_ID,
         vec![p("App", types.application.clone(), false)],
-        Ty::Integer,
+        Ty::Option(Box::new(types.view_id.clone())),
     );
     define_proc(
         checker,
         s::STD_TUI_APPLICATION_HOST_ATTACH_VIEW_TO_ACTIVE_MODAL,
         vec![
             p("App", types.application.clone(), false),
-            p("ViewId", Ty::Integer, false),
+            p("ViewId", types.view_id.clone(), false),
         ],
     );
     define_proc(
@@ -240,7 +240,7 @@ pub(super) fn register_host_api(
         s::STD_TUI_APPLICATION_HOST_SET_VIEW_RECT,
         vec![
             p("App", types.application.clone(), false),
-            p("ViewId", Ty::Integer, false),
+            p("ViewId", types.view_id.clone(), false),
             p("X", Ty::Integer, false),
             p("Y", Ty::Integer, false),
             p("Width", Ty::Integer, false),
@@ -252,8 +252,8 @@ pub(super) fn register_host_api(
         s::STD_TUI_APPLICATION_HOST_SET_VIEW_PARENT,
         vec![
             p("App", types.application.clone(), false),
-            p("ViewId", Ty::Integer, false),
-            p("ParentViewId", Ty::Integer, false),
+            p("ViewId", types.view_id.clone(), false),
+            p("Parent", Ty::Option(Box::new(types.view_id.clone())), false),
         ],
     );
     define_proc(
@@ -261,7 +261,7 @@ pub(super) fn register_host_api(
         s::STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT,
         vec![
             p("App", types.application.clone(), false),
-            p("ViewId", Ty::Integer, false),
+            p("ViewId", types.view_id.clone(), false),
             p("OnViewPaint", callbacks.on_view_paint.clone(), false),
         ],
     );
@@ -278,7 +278,7 @@ pub(super) fn register_host_api(
             p("TextColor", Ty::Option(Box::new(Ty::Integer)), false),
             p("FillChar", Ty::Option(Box::new(Ty::Char)), false),
         ],
-        Ty::Integer,
+        types.view_id.clone(),
     );
     define_func(
         checker,
@@ -296,14 +296,14 @@ pub(super) fn register_host_api(
             ),
             p("Style", types.menu_bar_style.clone(), false),
         ],
-        Ty::Integer,
+        types.view_id.clone(),
     );
     define_proc(
         checker,
         s::STD_TUI_APPLICATION_HOST_SET_MENU_BAR_ITEMS,
         vec![
             p("App", types.application.clone(), false),
-            p("ViewId", Ty::Integer, false),
+            p("ViewId", types.view_id.clone(), false),
             p(
                 "Items",
                 Ty::Array(Box::new(types.menu_bar_item.clone())),
@@ -327,14 +327,14 @@ pub(super) fn register_host_api(
             ),
             p("Style", types.status_bar_style.clone(), false),
         ],
-        Ty::Integer,
+        types.view_id.clone(),
     );
     define_proc(
         checker,
         s::STD_TUI_APPLICATION_HOST_SET_STATUS_BAR_SEGMENTS,
         vec![
             p("App", types.application.clone(), false),
-            p("ViewId", Ty::Integer, false),
+            p("ViewId", types.view_id.clone(), false),
             p(
                 "Segments",
                 Ty::Array(Box::new(types.status_bar_segment.clone())),

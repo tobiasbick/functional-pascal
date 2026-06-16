@@ -4,7 +4,7 @@
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
-use fpas_bytecode::{SourceLocation, Value};
+use fpas_bytecode::SourceLocation;
 use fpas_std::{DamageRegion, ViewRect};
 
 impl Worker {
@@ -140,7 +140,7 @@ impl Worker {
                 &handler,
                 &[
                     app_rec.clone(),
-                    Value::Integer(i64::from(view_id.raw())),
+                    Self::tui_view_id_record(view_id),
                     Self::tui_rect_record(rect),
                 ],
                 line,

@@ -55,7 +55,7 @@ impl Worker {
                     let _ = tui.views.focus_first_in_scope(&next_scope);
                     view_id
                 });
-                self.push(Value::Integer(i64::from(dialog_root.raw())))?;
+                self.push(Self::tui_view_id_record(dialog_root))?;
             }
             Intrinsic::Tui(TuiIntrinsic::ApplicationCloseModal) => {
                 self.pop_tui_application(line)?;
@@ -129,7 +129,7 @@ impl Worker {
                     let _ = tui.session.request_redraw_rect(view_rect, line);
                     view_id
                 });
-                self.push(Value::Integer(i64::from(view_id.raw())))?;
+                self.push(Self::tui_view_id_record(view_id))?;
             }
             Intrinsic::Tui(TuiIntrinsic::HostUnregisterView) => {
                 let view_id = self.pop_tui_view_id(line)?;
@@ -149,8 +149,10 @@ impl Worker {
             Intrinsic::Tui(TuiIntrinsic::HostQueryFocusedViewId) => {
                 self.pop_tui_application(line)?;
                 let focused_id = self.with_tui(|tui| tui.views.focused_id());
-                let packed = focused_id.map_or(-1, |id| i64::from(id.raw()));
-                self.push(Value::Integer(packed))?;
+                self.push(match focused_id {
+                    Some(id) => Value::OptionSome(Box::new(Self::tui_view_id_record(id))),
+                    None => Value::OptionNone,
+                })?;
             }
             Intrinsic::Tui(TuiIntrinsic::HostAttachViewToActiveModal) => {
                 let view_id = self.pop_tui_view_id(line)?;
@@ -187,22 +189,17 @@ impl Worker {
                 });
             }
             Intrinsic::Tui(TuiIntrinsic::HostSetViewParent) => {
-                let parent_raw = self.pop_int(line)?;
+                let parent = self.pop_optional_tui_view_id("Parent", line)?;
                 let view_id = self.pop_tui_view_id(line)?;
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| {
-                    let parent_id = if parent_raw < 0 {
-                        None
-                    } else {
-                        Some(ViewId::from_raw(parent_raw as u32))
-                    };
                     let previous_rect = tui.views.rect(view_id);
-                    if let Some(parent_id) = parent_id
+                    if let Some(parent_id) = parent
                         && tui.views.rect(parent_id).is_none()
                     {
                         return;
                     }
-                    if tui.views.set_parent(view_id, parent_id) {
+                    if tui.views.set_parent(view_id, parent) {
                         if let Some(rect) = previous_rect {
                             let _ = tui.session.request_redraw_rect(rect, line);
                         }
@@ -221,7 +218,7 @@ impl Worker {
                     &func,
                     3,
                     "OnViewPaint",
-                    "Pass a `procedure (Application, integer, Std.Tui.Rect)` handler for a registered host view.",
+                    "Pass a `procedure (Application, ViewId, Std.Tui.Rect)` handler for a registered host view.",
                     line,
                 )?;
                 self.with_tui(|tui| {
@@ -261,7 +258,7 @@ impl Worker {
                     let _ = tui.session.request_redraw_rect(view_rect, line);
                     view_id
                 });
-                self.push(Value::Integer(i64::from(view_id.raw())))?;
+                self.push(Self::tui_view_id_record(view_id))?;
             }
             Intrinsic::Tui(TuiIntrinsic::HostCreateMenuBarView) => {
                 let style = self.pop_menu_bar_style(line)?;
@@ -285,7 +282,7 @@ impl Worker {
                     let _ = tui.session.request_redraw_rect(view_rect, line);
                     view_id
                 });
-                self.push(Value::Integer(i64::from(view_id.raw())))?;
+                self.push(Self::tui_view_id_record(view_id))?;
             }
             Intrinsic::Tui(TuiIntrinsic::HostSetMenuBarItems) => {
                 let items = self.pop_menu_bar_items(line)?;
@@ -323,7 +320,7 @@ impl Worker {
                     let _ = tui.session.request_redraw_rect(view_rect, line);
                     view_id
                 });
-                self.push(Value::Integer(i64::from(view_id.raw())))?;
+                self.push(Self::tui_view_id_record(view_id))?;
             }
             Intrinsic::Tui(TuiIntrinsic::HostSetStatusBarSegments) => {
                 let segments = self.pop_status_bar_segments(line)?;
@@ -350,16 +347,28 @@ impl Worker {
         &mut self,
         line: SourceLocation,
     ) -> Result<ViewId, VmError> {
-        let raw = self.pop_int(line)?;
-        let raw = u32::try_from(raw).map_err(|_| {
-            runtime_error(
+        let value = self.pop(line)?;
+        Self::tui_view_id_from_value(&value, line)
+    }
+
+    pub(in crate::vm::execute::io) fn pop_optional_tui_view_id(
+        &mut self,
+        label: &str,
+        line: SourceLocation,
+    ) -> Result<Option<ViewId>, VmError> {
+        match self.pop(line)? {
+            Value::OptionNone => Ok(None),
+            Value::OptionSome(inner) => Ok(Some(Self::tui_view_id_from_value(&inner, line)?)),
+            other => Err(runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                format!("ViewId {raw} is out of range (expected 0..={})", u32::MAX),
-                "Pass the integer handle returned by `Application.HostRegisterView(App, X, Y, Width, Height)`.",
+                format!(
+                    "{label} expects `Option of ViewId`, got {}",
+                    other.type_name()
+                ),
+                "Pass `None` to detach a view to the root list or `Some(Parent)` to reparent it.",
                 line,
-            )
-        })?;
-        Ok(ViewId::from_raw(raw))
+            )),
+        }
     }
 
     pub(in crate::vm::execute::io) fn require_registered_tui_view(
@@ -374,7 +383,7 @@ impl Worker {
             Err(runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,
                 format!("Unknown host view handle {}", view_id.raw()),
-                "Pass a view id returned by `Application.HostRegisterView(App, X, Y, Width, Height)`.",
+                "Pass a `Std.Tui.ViewId` returned by `Application.HostRegisterView(App, X, Y, Width, Height)`.",
                 line,
             ))
         }

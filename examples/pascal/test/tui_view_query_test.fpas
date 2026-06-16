@@ -44,7 +44,7 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(80, 25);
-  var MenuBar: integer := Application.HostCreateMenuBarView(App, 0, 0, 80, 1, MenuItems(), MenuStyle());
+  var MenuBar: ViewId := Application.HostCreateMenuBarView(App, 0, 0, 80, 1, MenuItems(), MenuStyle());
   var Bounds: Rect := Application.QueryViewRect(App, MenuBar);
   AssertEquals(0, Bounds.x);
   AssertEquals(0, Bounds.y);

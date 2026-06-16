@@ -9,10 +9,12 @@ debug/
 # VS Code
 .vscode/
 
-# Cursor — ignore local state; keep shared plans
+# Cursor — ignore local state; keep shared plans and rules
 .cursor/**
 !.cursor/plans/
 !.cursor/plans/**
+!.cursor/rules/
+!.cursor/rules/**
 
 # Codex
 .codex-review/

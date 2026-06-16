@@ -681,7 +681,7 @@ Runner sidecars **overlap** with the native FPAS test API and are **deprecated**
 | ------- | ------ | ----------- |
 | `<test>.script.toml` (console/TUI events) | **Removed** (Phase 8.1) | `TestSendKey`, `TestMoveMouse`, … + `TestPump` |
 | `<test>.expect.screen` | **Removed** (Phase 8.1) | `QueryScreenLine` / `QueryScreenCell` + `Std.Test` assertions |
-| `<test>.script.toml` (`readln` only) | Deprecated | Inline setup or future `TestReadLn` |
+| `<test>.script.toml` (`readln` / graph) | **Removed** from examples | `Std.Test.PushReadLn`, `Application.OpenForTest` + `TestSendKey` |
 | `<test>.expect.stdout` | **Keep** | Non-TUI output tests |
 | `<test>.expect.pixels` | **Keep** | Headless graph |
 
@@ -690,5 +690,6 @@ Affected implementation paths (TUI sidecars removed in Phase 8.1):
 - ~~`crates/fpas-cli/src/test_script/console.rs`~~ — removed (console/TUI script events)
 - ~~`crates/fpas-cli/src/cli_test/expect_screen.rs`~~ — removed (golden screen compare)
 - ~~`examples/pascal/test/tui_escape_test.script.toml`~~, ~~`tui_mouse_test.script.toml`~~, ~~`tui_escape_test.expect.screen`~~ — migrated to native FPAS tests
+- ~~`examples/pascal/test/readln_test.script.toml`~~, ~~`readln_order_test.script.toml`~~, ~~`graph_smoke_test.script.toml`~~ — migrated to `PushReadLn` / graph test APIs
 
-`*.script.toml` remains for `readln` / graph sidecars until those paths are migrated separately.
+`*.script.toml` remains available for `[test.overrides]` and `--script` only; new tests should use native FPAS injectors.

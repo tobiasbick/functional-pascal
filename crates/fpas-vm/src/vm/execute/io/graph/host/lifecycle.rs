@@ -40,6 +40,10 @@ impl Worker {
         graph.host_stop_requested = false;
         graph.run_active = false;
         graph.pending_test_events.clear();
+        if graph.headless_test_open {
+            fpas_std::pop_headless_graph_test_mode();
+            graph.headless_test_open = false;
+        }
         close_result?;
         Ok(())
     }

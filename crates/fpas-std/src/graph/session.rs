@@ -77,6 +77,11 @@ impl GraphSession {
         Ok(())
     }
 
+    /// Returns whether a graph session is currently open.
+    pub fn is_open(&self) -> bool {
+        self.open
+    }
+
     /// Returns the current logical surface size for the active session.
     pub fn size(&mut self, location: SourceLocation) -> Result<(i64, i64), StdError> {
         self.ensure_open(

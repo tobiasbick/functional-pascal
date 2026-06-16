@@ -40,7 +40,10 @@ impl Worker {
             .unwrap_or_else(|e| e.into_inner()))
     }
 
-    fn with_text_input<R>(&self, f: impl FnOnce(&mut TextInput) -> R) -> R {
+    pub(in crate::vm::execute::io) fn with_text_input<R>(
+        &self,
+        f: impl FnOnce(&mut TextInput) -> R,
+    ) -> R {
         f(&mut self
             .shared
             .text_input

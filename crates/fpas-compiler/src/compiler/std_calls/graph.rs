@@ -328,6 +328,20 @@ impl Compiler {
                 );
                 Ok(true)
             }
+            s::STD_GRAPH_APPLICATION_OPEN_FOR_TEST => {
+                self.expect_exact_args(s::STD_GRAPH_APPLICATION_OPEN_FOR_TEST, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::Graph(GraphIntrinsic::OpenForTest), location);
+                Ok(true)
+            }
+            s::STD_GRAPH_APPLICATION_TEST_SEND_KEY => {
+                self.expect_exact_args(s::STD_GRAPH_APPLICATION_TEST_SEND_KEY, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(Intrinsic::Graph(GraphIntrinsic::TestSendKey), location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

@@ -35,6 +35,7 @@ Requires `uses Std.Test;`.
 | procedure | `AssertEquals(Expected; Actual)` | equality for `integer`, `boolean`, `string`, or `real` (both operands same type) |
 | procedure | `Fail(Msg: string)` | unconditional failure |
 | procedure | `Skip(Msg: string)` | print skip reason; runner reports `SKIP` (exit `0` unless `fpas test --strict`) |
+| procedure | `PushReadLn(Line: string)` | queue one line for the next `Std.Console.ReadLn` (native tests) |
 | procedure | `AssertScreenLine(Expected: string; Y: integer)` | fail when CRT row `Y` text differs (headless/TUI back buffer) |
 | procedure | `AssertScreenCell(X, Y: integer; Ch: char; Fg, Bg: integer)` | fail when one CRT cell differs (`Fg`/`Bg` are packed colors `0..=15`) |
 | procedure | `AssertViewRect(App: Application; V: integer; X, Y, W, H: integer)` | fail when view bounds differ (`uses Std.Tui` required) |
@@ -62,6 +63,10 @@ Unconditional failure with **F4023** and user message.
 ### `procedure Skip(Msg: string)`
 
 Print `test skipped: …` to stderr and continue. Does not raise **F4023**. The `fpas test` runner records the test as **skipped** (`SKIP` line, included in summary). Skipped tests do not fail the run unless you pass `--strict` (exit code `1` when any test was skipped).
+
+### `procedure PushReadLn(Line: string)`
+
+Queue one input line for the next blocking `Std.Console.ReadLn` (or line-buffered `Read`). Call before `ReadLn` in native tests instead of a `*.script.toml` readln sidecar.
 
 ### `procedure AssertScreenLine(Expected: string; Y: integer)`
 
@@ -114,15 +119,19 @@ Flags and discovery rules: [10-projects.md](../10-projects.md), [`runner.md`](..
 
 ---
 
-## Scripted input (interactive tests)
+## Scripted input (legacy)
 
-TUI, graph, and `ReadLn` tests pair with an optional `<test>.script.toml` sidecar that queues events before `vm.run()`. The runner auto-discovers the sidecar beside each test file; override with `fpas test --script <path>`.
+`fpas test` still accepts optional `<test>.script.toml` sidecars for project overrides (`--script`, `[test.overrides]`). **Prefer native FPAS test APIs** for new tests:
 
-Format and event types: [`scripted-input.md`](../../future/test-framework/scripted-input.md).
+| Need | Native API |
+| ---- | ---------- |
+| `ReadLn` input | `Std.Test.PushReadLn` |
+| Hosted TUI input | `Application.TestSendKey`, `TestPump`, … (`docs/pascal/std/tui-app.md`) |
+| Headless graph input | `Application.OpenForTest`, `Application.TestSendKey` |
 
-Example: [`tui_escape_test.fpas`](../../../examples/pascal/test/tui_escape_test.fpas) + [`tui_escape_test.script.toml`](../../../examples/pascal/test/tui_escape_test.script.toml).
+Format and remaining script event types: [`scripted-input.md`](../../future/test-framework/scripted-input.md).
 
-Graph tests set `[config] headless_graph = true` in the script so CI never opens a native window.
+Graph golden pixel checks (`*.expect.pixels`) still run runner-side after `Application.OpenForTest` + `Present`.
 
 ---
 
@@ -145,13 +154,13 @@ Details: [`runner.md`](../../future/test-framework/runner.md) (golden stdout / s
 | Path | Topic |
 |------|--------|
 | [`assert_basics_test.fpas`](../../../examples/pascal/test/assert_basics_test.fpas) | `AssertEquals` / `AssertTrue` / `AssertFalse` |
-| [`readln_test.fpas`](../../../examples/pascal/test/readln_test.fpas) | `ReadLn` + script sidecar |
-| [`readln_order_test.fpas`](../../../examples/pascal/test/readln_order_test.fpas) | Multiple scripted `ReadLn` lines in order |
+| [`readln_test.fpas`](../../../examples/pascal/test/readln_test.fpas) | `PushReadLn` + `ReadLn` |
+| [`readln_order_test.fpas`](../../../examples/pascal/test/readln_order_test.fpas) | Multiple `PushReadLn` lines in order |
 | [`skip_test.fpas`](../../../examples/pascal/test/skip_test.fpas) | `Skip` + runner `SKIP` reporting |
 | [`stdout_echo_test.fpas`](../../../examples/pascal/test/stdout_echo_test.fpas) | `*.expect.stdout` |
 | [`tui_escape_test.fpas`](../../../examples/pascal/test/tui_escape_test.fpas) | Hosted TUI + script + `*.expect.screen` |
 | [`tui_mouse_test.fpas`](../../../examples/pascal/test/tui_mouse_test.fpas) | Mouse dispatch in hosted TUI |
-| [`graph_smoke_test.fpas`](../../../examples/pascal/test/graph_smoke_test.fpas) | Headless graph + script + `*.expect.pixels` |
+| [`graph_smoke_test.fpas`](../../../examples/pascal/test/graph_smoke_test.fpas) | Headless graph (`OpenForTest` + `TestSendKey`) + `*.expect.pixels` |
 | [`tests.fpasprj`](../../../examples/pascal/test/tests.fpasprj) | `kind = "test"` project bundle |
 
 Manual failure demo (not auto-discovered): [`assert_fail_demo.fpas`](../../../examples/pascal/test/assert_fail_demo.fpas).

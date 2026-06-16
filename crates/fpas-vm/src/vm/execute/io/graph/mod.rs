@@ -6,6 +6,7 @@ mod application;
 mod handlers;
 mod host;
 mod records;
+mod test_host;
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
@@ -20,6 +21,7 @@ impl Worker {
     ) -> Result<bool, VmError> {
         if self.try_exec_graph_application_intrinsic(intrinsic, line)?
             || self.try_exec_graph_host_intrinsic(intrinsic, line)?
+            || self.try_exec_graph_test_host_intrinsic(intrinsic, line)?
         {
             return Ok(true);
         }

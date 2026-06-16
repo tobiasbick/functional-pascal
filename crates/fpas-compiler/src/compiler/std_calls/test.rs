@@ -87,6 +87,12 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::Test(TestIntrinsic::AssertViewRect), location);
                 Ok(true)
             }
+            s::STD_TEST_PUSH_READLN => {
+                self.expect_exact_args(s::STD_TEST_PUSH_READLN, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic_unit(Intrinsic::Test(TestIntrinsic::PushReadLn), location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

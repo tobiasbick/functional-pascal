@@ -27,6 +27,22 @@ enum GraphBackend {
 thread_local! {
     static GRAPH_BACKEND: RefCell<Option<GraphBackend>> = const { RefCell::new(None) };
     static BACKEND_MODE: Cell<BackendMode> = const { Cell::new(BackendMode::Native) };
+    static HEADLESS_TEST_DEPTH: Cell<u32> = const { Cell::new(0) };
+    static HEADLESS_TEST_GUARD: RefCell<Option<HeadlessTestGuard>> = const { RefCell::new(None) };
+}
+
+struct HeadlessTestGuard {
+    previous: BackendMode,
+}
+
+impl Drop for HeadlessTestGuard {
+    fn drop(&mut self) {
+        GRAPH_BACKEND.with(|slot| {
+            slot.borrow_mut().take();
+        });
+        headless::reset_last_presented_frame_for_tests();
+        BACKEND_MODE.with(|mode| mode.set(self.previous));
+    }
 }
 
 impl GraphBackend {
@@ -149,27 +165,44 @@ pub(crate) fn present_graph_frame(
 /// Runs `f` with a deterministic headless graph backend on the current thread.
 #[doc(hidden)]
 pub fn with_headless_graph_backend_for_tests<T>(f: impl FnOnce() -> T) -> T {
-    struct ResetGuard {
-        previous: BackendMode,
-    }
+    push_headless_graph_test_mode();
+    let result = f();
+    pop_headless_graph_test_mode();
+    result
+}
 
-    impl Drop for ResetGuard {
-        fn drop(&mut self) {
+/// Enables the headless graph backend for one native test session (`Application.OpenForTest`).
+#[doc(hidden)]
+pub fn push_headless_graph_test_mode() {
+    HEADLESS_TEST_DEPTH.with(|depth| {
+        if depth.get() == 0 {
+            let previous = BACKEND_MODE.with(|mode| mode.replace(BackendMode::Headless));
             GRAPH_BACKEND.with(|slot| {
                 slot.borrow_mut().take();
             });
             headless::reset_last_presented_frame_for_tests();
-            BACKEND_MODE.with(|mode| mode.set(self.previous));
+            HEADLESS_TEST_GUARD.with(|guard| {
+                *guard.borrow_mut() = Some(HeadlessTestGuard { previous });
+            });
         }
-    }
-
-    let previous = BACKEND_MODE.with(|mode| mode.replace(BackendMode::Headless));
-    GRAPH_BACKEND.with(|slot| {
-        slot.borrow_mut().take();
+        depth.set(depth.get().saturating_add(1));
     });
-    headless::reset_last_presented_frame_for_tests();
-    let _reset = ResetGuard { previous };
-    f()
+}
+
+/// Restores the graph backend after a native test session opened with [`push_headless_graph_test_mode`].
+#[doc(hidden)]
+pub fn pop_headless_graph_test_mode() {
+    HEADLESS_TEST_DEPTH.with(|depth| {
+        if depth.get() == 0 {
+            return;
+        }
+        depth.set(depth.get() - 1);
+        if depth.get() == 0 {
+            HEADLESS_TEST_GUARD.with(|guard| {
+                guard.borrow_mut().take();
+            });
+        }
+    });
 }
 
 /// Returns the last frame presented by the headless graph backend on the current thread.

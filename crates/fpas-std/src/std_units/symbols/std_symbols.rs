@@ -397,6 +397,8 @@ pub const STD_GRAPH_APPLICATION_DRAW_RECT: &str = std_graph!("Application.DrawRe
 pub const STD_GRAPH_APPLICATION_FILL_RECT: &str = std_graph!("Application.FillRect");
 pub const STD_GRAPH_APPLICATION_DRAW_CIRCLE: &str = std_graph!("Application.DrawCircle");
 pub const STD_GRAPH_APPLICATION_DRAW_TEXT: &str = std_graph!("Application.DrawText");
+pub const STD_GRAPH_APPLICATION_OPEN_FOR_TEST: &str = std_graph!("Application.OpenForTest");
+pub const STD_GRAPH_APPLICATION_TEST_SEND_KEY: &str = std_graph!("Application.TestSendKey");
 
 pub const STD_STR_LENGTH: &str = std_str!("Length");
 pub const STD_STR_TO_UPPER: &str = std_str!("ToUpper");
@@ -539,3 +541,4 @@ pub const STD_TEST_SKIP: &str = std_test!("Skip");
 pub const STD_TEST_ASSERT_SCREEN_LINE: &str = std_test!("AssertScreenLine");
 pub const STD_TEST_ASSERT_SCREEN_CELL: &str = std_test!("AssertScreenCell");
 pub const STD_TEST_ASSERT_VIEW_RECT: &str = std_test!("AssertViewRect");
+pub const STD_TEST_PUSH_READLN: &str = std_test!("PushReadLn");

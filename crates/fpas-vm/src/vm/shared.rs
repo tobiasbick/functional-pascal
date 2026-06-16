@@ -160,6 +160,8 @@ pub(crate) struct GraphState {
     pub run_active: bool,
     /// Test-only events queued before `Application.Open`.
     pub pending_test_events: Vec<fpas_std::GraphEvent>,
+    /// Whether the active session was opened with `Application.OpenForTest`.
+    pub headless_test_open: bool,
 }
 
 impl Default for GraphState {
@@ -182,6 +184,7 @@ impl Default for GraphState {
             host_stop_requested: false,
             run_active: false,
             pending_test_events: Vec::new(),
+            headless_test_open: false,
         }
     }
 }

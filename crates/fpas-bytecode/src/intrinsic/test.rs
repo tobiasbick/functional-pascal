@@ -45,4 +45,11 @@ pub enum TestIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/test.md`, `docs/future/tui-tests-fpas/README.md`
     AssertViewRect = 377,
+
+    /// `Std.Test.PushReadLn(Line)` — queue one line for the next `Std.Console.ReadLn`.
+    ///
+    /// Stack: `Line`. Replaces pre-run `*.script.toml` readln events in native tests.
+    ///
+    /// **Documentation:** `docs/pascal/std/test.md`
+    PushReadLn = 378,
 }

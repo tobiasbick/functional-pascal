@@ -318,26 +318,21 @@ fn run_test_program(
 fn execute_vm(mut vm: fpas_vm::Vm, headless_graph: bool) -> VmExecution {
     fpas_std::reset_test_skip_state();
 
-    if headless_graph {
-        return fpas_std::with_headless_graph_backend_for_tests(|| {
-            let result = vm.run();
-            VmExecution {
-                result,
-                stdout_lines: vm.output().lines,
-                screen_lines: vm.screen_snapshot().compact_lines(),
-                headless_frame: fpas_std::last_headless_graph_frame_for_tests(),
-                skipped: fpas_std::test_was_skipped(),
-            }
-        });
-    }
+    let mut run = || {
+        let result = vm.run();
+        VmExecution {
+            result,
+            stdout_lines: vm.output().lines,
+            screen_lines: vm.screen_snapshot().compact_lines(),
+            headless_frame: fpas_std::last_headless_graph_frame_for_tests(),
+            skipped: fpas_std::test_was_skipped(),
+        }
+    };
 
-    let result = vm.run();
-    VmExecution {
-        result,
-        stdout_lines: vm.output().lines,
-        screen_lines: vm.screen_snapshot().compact_lines(),
-        headless_frame: None,
-        skipped: fpas_std::test_was_skipped(),
+    if headless_graph {
+        fpas_std::with_headless_graph_backend_for_tests(run)
+    } else {
+        run()
     }
 }
 

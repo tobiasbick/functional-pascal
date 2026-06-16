@@ -66,6 +66,10 @@ impl Worker {
                     line,
                 )?;
             }
+            Intrinsic::Test(TestIntrinsic::PushReadLn) => {
+                let line_text = self.pop_string(line)?;
+                self.with_text_input(|input| input.push_line(&line_text));
+            }
             _ => return Ok(false),
         }
 

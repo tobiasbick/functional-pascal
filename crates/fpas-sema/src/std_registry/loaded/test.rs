@@ -40,6 +40,11 @@ pub(super) fn register_std_test(checker: &mut Checker) {
             p("Bg", Ty::Integer, false),
         ],
     );
+    define_proc(
+        checker,
+        s::STD_TEST_PUSH_READLN,
+        vec![p("Line", Ty::String, false)],
+    );
     if checker.scopes.lookup(s::STD_TUI_APPLICATION).is_some() {
         let application =
             type_registration::lookup_required_type(checker, s::STD_TUI_APPLICATION, "Application");

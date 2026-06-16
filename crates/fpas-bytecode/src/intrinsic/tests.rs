@@ -209,6 +209,8 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Graph(GraphIntrinsic::HostRegisterOnMouse),
     Intrinsic::Graph(GraphIntrinsic::HostRegisterOnWheel),
     Intrinsic::Graph(GraphIntrinsic::HostRegisterOnCloseRequested),
+    Intrinsic::Graph(GraphIntrinsic::OpenForTest),
+    Intrinsic::Graph(GraphIntrinsic::TestSendKey),
     Intrinsic::Json(JsonIntrinsic::Parse),
     Intrinsic::Json(JsonIntrinsic::Stringify),
     Intrinsic::Tui(TuiIntrinsic::ApplicationOpen),
@@ -286,6 +288,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Test(TestIntrinsic::AssertScreenLine),
     Intrinsic::Test(TestIntrinsic::AssertScreenCell),
     Intrinsic::Test(TestIntrinsic::AssertViewRect),
+    Intrinsic::Test(TestIntrinsic::PushReadLn),
 ];
 
 #[test]

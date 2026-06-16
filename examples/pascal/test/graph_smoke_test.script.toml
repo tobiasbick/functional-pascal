@@ -1,6 +1,0 @@
-[config]
-headless_graph = true
-
-[[event]]
-type = "graph_key"
-kind = "Escape"

@@ -1,6 +1,7 @@
 use super::super::super::{define_func, define_proc, p};
 use super::GraphTypes;
 use crate::check::Checker;
+use crate::std_registry::loaded::type_registration;
 use crate::types::Ty;
 use fpas_std::std_symbols as s;
 
@@ -136,6 +137,28 @@ pub(super) fn register_application_api(checker: &mut Checker, types: &GraphTypes
             p("Y", Ty::Integer, false),
             p("Text", Ty::String, false),
             p("Color", Ty::Integer, false),
+        ],
+    );
+    let key_event = type_registration::lookup_required_type(
+        checker,
+        s::STD_CONSOLE_KEY_EVENT,
+        "Std.Console.KeyEvent must be registered before Std.Graph (see loaded/mod.rs)",
+    );
+    define_func(
+        checker,
+        s::STD_GRAPH_APPLICATION_OPEN_FOR_TEST,
+        vec![
+            p("Width", Ty::Integer, false),
+            p("Height", Ty::Integer, false),
+        ],
+        types.application.clone(),
+    );
+    define_proc(
+        checker,
+        s::STD_GRAPH_APPLICATION_TEST_SEND_KEY,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Key", key_event, false),
         ],
     );
 }

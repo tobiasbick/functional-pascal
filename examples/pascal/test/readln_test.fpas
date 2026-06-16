@@ -3,5 +3,6 @@ program ReadlnTest;
 uses Std.Console, Std.Test;
 
 begin
+  PushReadLn('Alice');
   AssertTrue(ReadLn() = 'Alice')
 end.

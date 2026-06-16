@@ -25,12 +25,21 @@ begin
 end;
 
 begin
-  var App: Application := Application.Open(32, 24, 'Graph smoke test');
+  var App: Application := Application.OpenForTest(32, 24);
+  var EscapeKey: Std.Console.KeyEvent := record
+    kind := Std.Console.KeyKind.Escape;
+    ch := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end;
   var Handlers: ApplicationHandlers := record
     OnPaint := OnPaint;
     OnKeyPressed := Some(OnKeyPressed);
   end;
   Application.Configure(App, Handlers);
+  Application.TestSendKey(App, EscapeKey);
   Application.Run(App);
   AssertTrue(QuitSeen)
 end.

@@ -457,19 +457,24 @@ mod tests {
                return false\n\
              end;\n\
              begin\n\
-               var App: Application := Application.Open(32, 24, 'Graph');\n\
+               var App: Application := Application.OpenForTest(32, 24);\n\
+               var EscapeKey: Std.Console.KeyEvent := record\n\
+                 kind := Std.Console.KeyKind.Escape;\n\
+                 ch := #27;\n\
+                 shift := false;\n\
+                 ctrl := false;\n\
+                 alt := false;\n\
+                 meta := false;\n\
+               end;\n\
                var Handlers: ApplicationHandlers := record\n\
                  OnPaint := OnPaint;\n\
                  OnKeyPressed := Some(OnKeyPressed);\n\
                end;\n\
                Application.Configure(App, Handlers);\n\
+               Application.TestSendKey(App, EscapeKey);\n\
                Application.Run(App);\n\
                AssertTrue(QuitSeen)\n\
              end.",
-        );
-        write_text(
-            &cwd.join("graph_test.script.toml"),
-            "[config]\nheadless_graph = true\n\n[[event]]\ntype = \"graph_key\"\nkind = \"Escape\"\n",
         );
         write_text(
             &cwd.join("graph_test.expect.pixels"),

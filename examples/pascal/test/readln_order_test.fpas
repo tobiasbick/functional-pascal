@@ -3,6 +3,9 @@ program ReadlnOrderTest;
 uses Std.Console, Std.Test;
 
 begin
+  PushReadLn('first');
+  PushReadLn('second');
+  PushReadLn('third');
   AssertEquals(ReadLn(), 'first');
   AssertEquals(ReadLn(), 'second');
   AssertEquals(ReadLn(), 'third')

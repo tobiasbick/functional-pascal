@@ -236,6 +236,8 @@ pub(in super::super) const STD_GRAPH_SYMBOLS: &[&str] = &[
     std_symbols::STD_GRAPH_APPLICATION_FILL_RECT,
     std_symbols::STD_GRAPH_APPLICATION_DRAW_CIRCLE,
     std_symbols::STD_GRAPH_APPLICATION_DRAW_TEXT,
+    std_symbols::STD_GRAPH_APPLICATION_OPEN_FOR_TEST,
+    std_symbols::STD_GRAPH_APPLICATION_TEST_SEND_KEY,
 ];
 
 pub(in super::super) const STD_STR_SYMBOLS: &[&str] = &[
@@ -400,4 +402,5 @@ pub(in super::super) const STD_TEST_SYMBOLS: &[&str] = &[
     std_symbols::STD_TEST_ASSERT_SCREEN_LINE,
     std_symbols::STD_TEST_ASSERT_SCREEN_CELL,
     std_symbols::STD_TEST_ASSERT_VIEW_RECT,
+    std_symbols::STD_TEST_PUSH_READLN,
 ];

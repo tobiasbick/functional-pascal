@@ -62,4 +62,18 @@ pub enum GraphIntrinsic {
     HostRegisterOnWheel = 341,
     /// Register `procedure (Application)`.
     HostRegisterOnCloseRequested = 342,
+
+    /// Open a headless graph session for native FPAS tests (`Application.OpenForTest`).
+    ///
+    /// Stack: `Width`, `Height` (`Height` on top). Pushes `Application`.
+    ///
+    /// **Documentation:** `docs/pascal/std/graph-app.md`, `docs/pascal/std/test.md`
+    OpenForTest = 379,
+
+    /// Enqueue one key event for the active hosted graph run (`Application.TestSendKey`).
+    ///
+    /// Stack: `Application`, `Std.Console.KeyEvent`. Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/graph-app.md`, `docs/pascal/std/test.md`
+    TestSendKey = 380,
 }

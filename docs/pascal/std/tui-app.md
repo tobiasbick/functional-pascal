@@ -455,9 +455,11 @@ There must be **at most one** active `**Application.Run`** (or equivalent hosted
 
 ## Native TUI testing API
 
-**Status:** implemented (Phases 1–7). Design: [`docs/future/tui-tests-fpas/README.md`](../../future/tui-tests-fpas/README.md). Tracking: [`implementation-plan.md`](../../future/tui-tests-fpas/implementation-plan.md).
+**Status:** implemented. Run under `fpas test` with example programs in [`examples/pascal/test/`](../../../examples/pascal/test/) (`tui_*_test.fpas`).
 
 Goal: test hosted `Std.Tui` entirely from FPAS under `fpas test` — headless session, stepwise event pump, input injection, and read-only introspection of screen, views, and widget state. No real terminal, Rust integration test, or TUI sidecar file is required.
+
+Out-of-process live debugging during real `Application.Run` remains a separate proposal: [`docs/future/tui-test/README.md`](../../future/tui-test/README.md).
 
 ### Naming convention (decided)
 
@@ -598,7 +600,7 @@ uses Std.Console, Std.Tui, Std.Test;
 
 begin
   var App: Application := Application.OpenForTest(80, 25);
-  var Bar: integer := Application.HostCreateMenuBarView(App, 0, 0, 80, 1, MenuItems(), MenuStyle());
+  var Bar: ViewId := Application.HostCreateMenuBarView(App, 0, 0, 80, 1, MenuItems(), MenuStyle());
   Application.Configure(App, Handlers);
   Application.RequestRedraw(App);
   Application.TestPump(App);
@@ -616,6 +618,14 @@ end.
 ```
 
 `Std.Test` helpers `AssertScreenLine`, `AssertScreenCell`, and `AssertViewRect` (when `uses Std.Tui` is present) wrap the query intrinsics; see [`test.md`](test.md).
+
+### Where to test what
+
+| Layer | Test where | Why |
+| ----- | ---------- | --- |
+| Pure widget routing (hit-testing, geometry) | Rust unit tests in `fpas-std` | Fast, no VM |
+| App flows, dispatch, hover-to-screen, modal scope | FPAS `*_test.fpas` | Integrated host + dispatch path |
+| Live exploration during real `Run` | [Control server proposal](../../future/tui-test/README.md) | Out-of-process |
 
 ### Example tests
 

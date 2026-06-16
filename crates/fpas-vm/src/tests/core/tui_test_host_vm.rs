@@ -1,6 +1,6 @@
 //! VM tests for headless native TUI testing (Phase 1).
 //!
-//! **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+//! **Documentation:** `docs/pascal/std/tui-app.md`
 
 use fpas_bytecode::{Chunk, Intrinsic, Op, TuiIntrinsic, Value};
 use fpas_std::ConsoleEvent;

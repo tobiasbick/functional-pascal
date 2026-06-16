@@ -158,8 +158,8 @@ Details: [`runner.md`](../../future/test-framework/runner.md) (golden stdout / s
 | [`readln_order_test.fpas`](../../../examples/pascal/test/readln_order_test.fpas) | Multiple `PushReadLn` lines in order |
 | [`skip_test.fpas`](../../../examples/pascal/test/skip_test.fpas) | `Skip` + runner `SKIP` reporting |
 | [`stdout_echo_test.fpas`](../../../examples/pascal/test/stdout_echo_test.fpas) | `*.expect.stdout` |
-| [`tui_escape_test.fpas`](../../../examples/pascal/test/tui_escape_test.fpas) | Hosted TUI + script + `*.expect.screen` |
-| [`tui_mouse_test.fpas`](../../../examples/pascal/test/tui_mouse_test.fpas) | Mouse dispatch in hosted TUI |
+| [`tui_escape_test.fpas`](../../../examples/pascal/test/tui_escape_test.fpas) | Escape + `AssertScreenLine` (native headless API) |
+| [`tui_mouse_test.fpas`](../../../examples/pascal/test/tui_mouse_test.fpas) | `TestSendMouse` + `OnMouse` (native headless API) |
 | [`graph_smoke_test.fpas`](../../../examples/pascal/test/graph_smoke_test.fpas) | Headless graph (`OpenForTest` + `TestSendKey`) + `*.expect.pixels` |
 | [`tests.fpasprj`](../../../examples/pascal/test/tests.fpasprj) | `kind = "test"` project bundle |
 

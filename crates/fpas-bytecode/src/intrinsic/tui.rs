@@ -264,120 +264,120 @@ pub enum TuiIntrinsic {
     ///
     /// Stack: `Width`, `Height` (`integer`, top). Pushes `Application`.
     ///
-    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
     OpenForTest = 356,
     /// Process one queued hosted event and settle the resulting redraw.
     ///
     /// Stack: `Application`. Pushes `()`.
     ///
-    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
     TestPump = 357,
     /// Drain queued events and pending redraws until idle.
     ///
     /// Stack: `Application`. Pushes `()`.
     ///
-    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
     TestPumpUntilIdle = 358,
     /// Close a headless test session and reset hosted TUI state.
     ///
     /// Stack: `Application`. Pushes `()`.
     ///
-    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
     CloseForTest = 359,
 
     /// Enqueue a keyboard event for the next test pump.
     ///
     /// Stack: `Application`, `KeyEvent` (`KeyEvent` on top). Does not push a value.
     ///
-    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
     TestSendKey = 360,
     /// Enqueue a full `Std.Console.Event` (typically mouse) for the next test pump.
     ///
     /// Stack: `Application`, `Event` (`Event` on top). Does not push a value.
     ///
-    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
     TestSendMouse = 361,
     /// Enqueue a mouse `Move` at one-based `(X, Y)`.
     ///
     /// Stack: `Application`, `X`, `Y` (`Y` on top). Does not push a value.
     ///
-    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
     TestMoveMouse = 362,
     /// Enqueue mouse `Down` then `Up` at one-based `(X, Y)`.
     ///
     /// Stack: `Application`, `X`, `Y` (`Y` on top). Does not push a value.
     ///
-    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
     TestClickMouse = 363,
     /// Enqueue a terminal resize event.
     ///
     /// Stack: `Application`, `Width`, `Height` (`Height` on top). Does not push a value.
     ///
-    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
     TestResize = 364,
     /// Enqueue bracketed-paste text.
     ///
     /// Stack: `Application`, `Text` (`Text` on top). Does not push a value.
     ///
-    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
     TestPaste = 365,
     /// Enqueue focus gained (`true`) or focus lost (`false`).
     ///
     /// Stack: `Application`, `Gained` (`Gained` on top). Does not push a value.
     ///
-    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
     TestFocus = 366,
 
     /// Read the logical CRT screen size.
     ///
     /// Stack: `Application`. Pushes `Std.Tui.Size`.
     ///
-    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
     QueryScreenSize = 367,
     /// Read one screen row as a string (`Y` one-based).
     ///
     /// Stack: `Application`, `Y` (`Y` on top). Pushes `string`.
     ///
-    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
     QueryScreenLine = 368,
     /// Read one CRT cell (`X`/`Y` one-based) as `ScreenCell`.
     ///
     /// Stack: `Application`, `X`, `Y` (`Y` on top). Pushes `ScreenCell`.
     ///
-    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
     QueryScreenCell = 369,
 
     /// List root view handles in root-list order.
     ///
     /// Stack: `Application`. Pushes `array of integer` (view handles until `ViewId` migration).
     ///
-    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
     QueryRootViews = 370,
 
     /// Read the absolute terminal rectangle of a registered view.
     ///
     /// Stack: `Application`, `ViewId` (`ViewId` on top). Pushes `Std.Tui.Rect`.
     ///
-    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
     QueryViewRect = 371,
     /// Read the parent view handle, or `None` for roots.
     ///
     /// Stack: `Application`, `ViewId` (`ViewId` on top). Pushes `Option of integer`.
     ///
-    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
     QueryViewParent = 372,
     /// Read direct child view handles in sibling order.
     ///
     /// Stack: `Application`, `ViewId` (`ViewId` on top). Pushes `array of integer`.
     ///
-    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
     QueryViewChildren = 373,
 
     /// Read menu bar widget hover and submenu state.
     ///
     /// Stack: `Application`, `ViewId` (`ViewId` on top). Pushes `MenuBarState`.
     ///
-    /// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+    /// **Documentation:** `docs/pascal/std/tui-app.md`
     QueryMenuBarState = 374,
     // **378** spare; **375..=377** are `Std.Test` screen/view assertions (see `TestIntrinsic`).
     // Note: **348..=355** are owned by `Std.Test` (`TestIntrinsic`).

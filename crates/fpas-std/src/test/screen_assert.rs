@@ -1,6 +1,6 @@
 //! Screen and view assertion helpers for `Std.Test` (VM-dispatched).
 //!
-//! **Documentation:** `docs/pascal/std/test.md`, `docs/future/tui-tests-fpas/README.md`
+//! **Documentation:** `docs/pascal/std/test.md`
 
 use super::assert::{assert_equals_integer, assert_equals_string, fail_with_message};
 use crate::ViewRect;

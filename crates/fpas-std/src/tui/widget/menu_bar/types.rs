@@ -32,7 +32,7 @@ pub enum MenuBarMouseResult {
 
 /// Read-only menu bar widget snapshot for native TUI tests.
 ///
-/// **Documentation:** `docs/pascal/std/tui-app.md`, `docs/future/tui-tests-fpas/README.md`
+/// **Documentation:** `docs/pascal/std/tui-app.md`
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MenuBarState {
     /// Whether keyboard menu navigation mode is active.

@@ -21,30 +21,32 @@ pwsh scripts/run-non-interactive-examples.ps1
 
 When you add a new **console** example that exits on its own, append it to `NON_INTERACTIVE_EXAMPLES` in that file. Library and workspace manifests used only for `fpas check` go in `NON_INTERACTIVE_CHECK_EXAMPLES` in the same file. Interactive demos stay documented in the table below only.
 
-## FPAS unit tests (`fpas test`)
-
-Programs under `examples/pascal/test/` are **JUnit-style tests** written in FPAS (`uses Std.Test`) and run with the test runner:
-
-```sh
-fpas test examples/pascal/test/
-fpas test examples/pascal/test/tests.fpasprj
-fpas test examples/pascal/test/assert_basics_test.fpas
-```
-
-Test files are named `*_test.fpas`. Interactive tests pair with optional `*.script.toml` sidecars that queue keyboard, mouse, or graph events before the VM starts (no real terminal or native window in the default run). Optional golden sidecars: `*.expect.stdout`, `*.expect.screen` (TUI), `*.expect.pixels` (headless graph). `Skip` tests are reported as skipped (use `--strict` to fail the run). See [`docs/pascal/std/test.md`](../docs/pascal/std/test.md) and [`docs/future/test-framework/README.md`](../docs/future/test-framework/README.md).
-
-CI smoke: `cargo test -p fpas-cli examples_pascal_test_suite_passes`.
-
-`assert_fail_demo.fpas` is a manual failure demo (not `*_test.fpas`); run it with `fpas` to inspect **F4023** output.
-
 ## Stdlib regression suite (`tests/`)
 
-The full **Std.*** runtime regression suite (~330 programs) lives in [`tests/`](../tests/) as `*_test.fpas` files with optional `*.expect.stdout` sidecars. Run via:
+The **FPAS regression suite** lives in [`tests/`](../tests/) as `*_test.fpas` files with optional golden sidecars (`*.expect.stdout`, `*.expect.pixels`). Layout:
+
+| Directory | Contents |
+|-----------|----------|
+| `tests/stdlib/` | `Std.*` runtime checks (~330 programs) |
+| `tests/concurrency/` | `go` / task concurrency |
+| `tests/runner/` | `Std.Test` basics, `Skip`, stdout golden |
+| `tests/console/` | `PushReadLn` + `ReadLn` |
+| `tests/tui/` | Native headless TUI (`OpenForTest`, `TestPump`, …) |
+| `tests/graph/` | Headless graph smoke + pixel golden |
+| `tests/manual/` | Manual demos (not auto-discovered) |
+
+Run via:
 
 ```sh
 fpas test tests/
+fpas test tests/suite.fpasprj
+fpas test tests/runner/assert_basics_test.fpas
 cargo test -p fpas-cli fpas_regression_suite_passes
 ```
+
+Test files are named `*_test.fpas`. `Skip` tests are reported as skipped (use `--strict` to fail the run). See [`docs/pascal/std/test.md`](../docs/pascal/std/test.md) and [`docs/future/test-framework/README.md`](../docs/future/test-framework/README.md).
+
+`tests/manual/assert_fail_demo.fpas` is a manual failure demo (not `*_test.fpas`); run it with `fpas tests/manual/assert_fail_demo.fpas` to inspect **F4023** output.
 
 Expected failures (runtime/compile errors, CLI args) are exercised from `test_suite_negative.rs`.
 

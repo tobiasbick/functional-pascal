@@ -1,18 +1,8 @@
 //! Integration tests for `fpas test`.
 
-use std::path::{Path, PathBuf};
-
 use crate::cli_test::test_cli;
 use crate::test_support::{create_temp_dir, write_text};
 use crate::{CliInput, TestCliConfig};
-
-fn repo_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .ancestors()
-        .nth(2)
-        .expect("fpas-cli crate must live two levels below the repository root")
-        .to_path_buf()
-}
 
 #[test]
 fn test_cli_runs_passing_tests_in_directory() {
@@ -99,22 +89,4 @@ fn test_cli_runs_native_tui_headless_test() {
     assert_eq!(exit, 0, "stderr={}", String::from_utf8_lossy(&stderr));
     let text = String::from_utf8(stderr).expect("utf-8");
     assert!(text.contains("PASS  escape_test.fpas"));
-}
-
-#[test]
-fn examples_pascal_test_suite_passes() {
-    let root = repo_root();
-    let (exit, _, stderr) = super::support::run_cli_args_and_capture_output(
-        &[String::from("test"), String::from("examples/pascal/test/")],
-        &root,
-    );
-
-    assert_eq!(
-        exit, 0,
-        "fpas test examples/pascal/test/ failed\nstderr:\n{stderr}"
-    );
-    assert!(
-        stderr.contains("SKIP  skip_test.fpas"),
-        "expected skip_test.fpas to be reported as skipped\nstderr:\n{stderr}"
-    );
 }

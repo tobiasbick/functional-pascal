@@ -102,14 +102,14 @@ See [`docs/future/test-framework/runner.md`](../../future/test-framework/runner.
 ### Single file
 
 ```sh
-fpas examples/pascal/test/assert_basics_test.fpas
+fpas tests/runner/assert_basics_test.fpas
 ```
 
 ### Batch runner
 
 ```sh
-fpas test examples/pascal/test/
-fpas test examples/pascal/test/tests.fpasprj
+fpas test tests/
+fpas test tests/suite.fpasprj
 fpas test --filter tui_escape
 fpas test --report json
 fpas test --strict
@@ -153,14 +153,14 @@ Details: [`runner.md`](../../future/test-framework/runner.md) (golden stdout / s
 
 | Path | Topic |
 |------|--------|
-| [`assert_basics_test.fpas`](../../../examples/pascal/test/assert_basics_test.fpas) | `AssertEquals` / `AssertTrue` / `AssertFalse` |
-| [`readln_test.fpas`](../../../examples/pascal/test/readln_test.fpas) | `PushReadLn` + `ReadLn` |
-| [`readln_order_test.fpas`](../../../examples/pascal/test/readln_order_test.fpas) | Multiple `PushReadLn` lines in order |
-| [`skip_test.fpas`](../../../examples/pascal/test/skip_test.fpas) | `Skip` + runner `SKIP` reporting |
-| [`stdout_echo_test.fpas`](../../../examples/pascal/test/stdout_echo_test.fpas) | `*.expect.stdout` |
-| [`tui_escape_test.fpas`](../../../examples/pascal/test/tui_escape_test.fpas) | Escape + `AssertScreenLine` (native headless API) |
-| [`tui_mouse_test.fpas`](../../../examples/pascal/test/tui_mouse_test.fpas) | `TestSendMouse` + `OnMouse` (native headless API) |
-| [`graph_smoke_test.fpas`](../../../examples/pascal/test/graph_smoke_test.fpas) | Headless graph (`OpenForTest` + `TestSendKey`) + `*.expect.pixels` |
-| [`tests.fpasprj`](../../../examples/pascal/test/tests.fpasprj) | `kind = "test"` project bundle |
+| [`runner/assert_basics_test.fpas`](../../../tests/runner/assert_basics_test.fpas) | `AssertEquals` / `AssertTrue` / `AssertFalse` |
+| [`console/readln_test.fpas`](../../../tests/console/readln_test.fpas) | `PushReadLn` + `ReadLn` |
+| [`console/readln_order_test.fpas`](../../../tests/console/readln_order_test.fpas) | Multiple `PushReadLn` lines in order |
+| [`runner/skip_test.fpas`](../../../tests/runner/skip_test.fpas) | `Skip` + runner `SKIP` reporting |
+| [`runner/stdout_echo_test.fpas`](../../../tests/runner/stdout_echo_test.fpas) | `*.expect.stdout` |
+| [`tui/tui_escape_test.fpas`](../../../tests/tui/tui_escape_test.fpas) | Escape + `AssertScreenLine` (native headless API) |
+| [`tui/tui_mouse_test.fpas`](../../../tests/tui/tui_mouse_test.fpas) | `TestSendMouse` + `OnMouse` (native headless API) |
+| [`graph/graph_smoke_test.fpas`](../../../tests/graph/graph_smoke_test.fpas) | Headless graph (`OpenForTest` + `TestSendKey`) + `*.expect.pixels` |
+| [`suite.fpasprj`](../../../tests/suite.fpasprj) | `kind = "test"` project bundle |
 
-Manual failure demo (not auto-discovered): [`assert_fail_demo.fpas`](../../../examples/pascal/test/assert_fail_demo.fpas).
+Manual failure demo (not auto-discovered): [`manual/assert_fail_demo.fpas`](../../../tests/manual/assert_fail_demo.fpas).

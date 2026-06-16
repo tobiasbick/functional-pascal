@@ -19,4 +19,8 @@ fn fpas_regression_suite_passes() {
     );
 
     assert_eq!(exit, 0, "fpas test tests/ failed\nstderr:\n{stderr}");
+    assert!(
+        stderr.contains("SKIP  skip_test.fpas"),
+        "expected skip_test.fpas to be reported as skipped\nstderr:\n{stderr}"
+    );
 }

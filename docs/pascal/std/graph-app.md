@@ -95,7 +95,7 @@ Hosted Graph intrinsics use discriminants **331–342** (see [`graph.rs`](../../
 
 Shared internal event normalization lives in [`fpas-std/src/ui/`](../../../crates/fpas-std/src/ui/mod.rs) (`UiHost`, `UiEvent`).
 
-Test intrinsics **379–380** are documented in [`test.md`](test.md). Example: [`graph_smoke_test.fpas`](../../../examples/pascal/test/graph_smoke_test.fpas).
+Test intrinsics **379–380** are documented in [`test.md`](test.md). Example: [`graph_smoke_test.fpas`](../../../tests/graph/graph_smoke_test.fpas).
 
 ## Example
 

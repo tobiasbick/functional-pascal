@@ -3,4 +3,11 @@ name = "fpas-regression-tests"
 kind = "test"
 
 [sources]
-include = ["stdlib/**/*_test.fpas", "concurrency/**/*_test.fpas"]
+include = [
+  "stdlib/**/*_test.fpas",
+  "concurrency/**/*_test.fpas",
+  "runner/**/*_test.fpas",
+  "console/**/*_test.fpas",
+  "tui/**/*_test.fpas",
+  "graph/**/*_test.fpas",
+]

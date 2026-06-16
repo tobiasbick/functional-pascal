@@ -7,10 +7,10 @@ use std::path::Path;
 
 #[test]
 fn sidecar_path_replaces_fpas_extension() {
-    let path = Path::new("examples/pascal/test/readln_test.fpas");
+    let path = Path::new("tests/console/readln_test.fpas");
     assert_eq!(
         sidecar_path_for_test(path),
-        Path::new("examples/pascal/test/readln_test.script.toml")
+        Path::new("tests/console/readln_test.script.toml")
     );
 }
 

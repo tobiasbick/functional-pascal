@@ -455,7 +455,7 @@ There must be **at most one** active `**Application.Run`** (or equivalent hosted
 
 ## Native TUI testing API
 
-**Status:** implemented. Run under `fpas test` with example programs in [`examples/pascal/test/`](../../../examples/pascal/test/) (`tui_*_test.fpas`).
+**Status:** implemented. Run under `fpas test` with programs in [`tests/tui/`](../../../tests/tui/) (`tui_*_test.fpas`).
 
 Goal: test hosted `Std.Tui` entirely from FPAS under `fpas test` — headless session, stepwise event pump, input injection, and read-only introspection of screen, views, and widget state. No real terminal, Rust integration test, or TUI sidecar file is required.
 
@@ -631,14 +631,14 @@ end.
 
 | Path | Topic |
 | ---- | ----- |
-| [`tui_pump_test.fpas`](../../../examples/pascal/test/tui_pump_test.fpas) | Open/pump/close smoke |
-| [`tui_inject_key_test.fpas`](../../../examples/pascal/test/tui_inject_key_test.fpas) | `TestSendKey` + `OnKeyPressed` |
-| [`tui_escape_test.fpas`](../../../examples/pascal/test/tui_escape_test.fpas) | Escape + `AssertScreenLine` |
-| [`tui_mouse_test.fpas`](../../../examples/pascal/test/tui_mouse_test.fpas) | `TestSendMouse` + `OnMouse` |
-| [`tui_screen_query_test.fpas`](../../../examples/pascal/test/tui_screen_query_test.fpas) | Screen queries after paint |
-| [`tui_view_query_test.fpas`](../../../examples/pascal/test/tui_view_query_test.fpas) | View rect + initial menu state |
-| [`tui_menu_bar_hover_test.fpas`](../../../examples/pascal/test/tui_menu_bar_hover_test.fpas) | Bar hover colors |
-| [`tui_menu_hover_test.fpas`](../../../examples/pascal/test/tui_menu_hover_test.fpas) | Capstone: bar hover + submenu selection |
+| [`tui_pump_test.fpas`](../../../tests/tui/tui_pump_test.fpas) | Open/pump/close smoke |
+| [`tui_inject_key_test.fpas`](../../../tests/tui/tui_inject_key_test.fpas) | `TestSendKey` + `OnKeyPressed` |
+| [`tui_escape_test.fpas`](../../../tests/tui/tui_escape_test.fpas) | Escape + `AssertScreenLine` |
+| [`tui_mouse_test.fpas`](../../../tests/tui/tui_mouse_test.fpas) | `TestSendMouse` + `OnMouse` |
+| [`tui_screen_query_test.fpas`](../../../tests/tui/tui_screen_query_test.fpas) | Screen queries after paint |
+| [`tui_view_query_test.fpas`](../../../tests/tui/tui_view_query_test.fpas) | View rect + initial menu state |
+| [`tui_menu_bar_hover_test.fpas`](../../../tests/tui/tui_menu_bar_hover_test.fpas) | Bar hover colors |
+| [`tui_menu_hover_test.fpas`](../../../tests/tui/tui_menu_hover_test.fpas) | Capstone: bar hover + submenu selection |
 
 ### ScreenCell type (decided)
 
@@ -699,7 +699,7 @@ Affected implementation paths (TUI sidecars removed in Phase 8.1):
 
 - ~~`crates/fpas-cli/src/test_script/console.rs`~~ — removed (console/TUI script events)
 - ~~`crates/fpas-cli/src/cli_test/expect_screen.rs`~~ — removed (golden screen compare)
-- ~~`examples/pascal/test/tui_escape_test.script.toml`~~, ~~`tui_mouse_test.script.toml`~~, ~~`tui_escape_test.expect.screen`~~ — migrated to native FPAS tests
-- ~~`examples/pascal/test/readln_test.script.toml`~~, ~~`readln_order_test.script.toml`~~, ~~`graph_smoke_test.script.toml`~~ — migrated to `PushReadLn` / graph test APIs
+- ~~`tests/tui/tui_escape_test.script.toml`~~, ~~`tui_mouse_test.script.toml`~~, ~~`tui_escape_test.expect.screen`~~ — migrated to native FPAS tests
+- ~~`tests/console/readln_test.script.toml`~~, ~~`readln_order_test.script.toml`~~, ~~`tests/graph/graph_smoke_test.script.toml`~~ — migrated to `PushReadLn` / graph test APIs
 
 `*.script.toml` remains available for `[test.overrides]` and `--script` only; new tests should use native FPAS injectors.

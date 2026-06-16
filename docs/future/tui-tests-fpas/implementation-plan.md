@@ -19,7 +19,7 @@ Trackable, resumable plan. Each task has a checkbox, concrete file anchors, and 
 
 ## Resume here
 
-> **Next task:** Phase 8, Task **8.2** (document native TUI test API in `tui-app.md`).
+> **Next task:** Phase 8, Task **8.3** (update `docs/future/README.md` status).
 > **Last updated:** 2026-06-15
 > **Notes:** View-tree queries **371..=373** and `QueryMenuBarState` (**374**) use integer handles until `ViewId` migration.
 
@@ -142,7 +142,7 @@ The target experience from the design doc, fully under `fpas test`.
 ## Phase 8 — Cleanup, docs, and removals
 
 - [x] **8.1 Apply Phase-0 deprecations.** If sidecars are being dropped, remove/retire the relevant code in `crates/fpas-cli/src/test_script/` and `cli_test/expect_screen.rs`, and migrate existing TUI tests. **Verify:** `cargo test --workspace` green; no orphaned modules.
-- [ ] **8.2 Update `docs/pascal/std/tui-app.md`.** Document every new intrinsic, record type, and the headless test flow. Add bytecode discriminants list entry. **Verify:** `tui_rust_sources_link_to_pascal_spec_docs` test passes; `cargo test -p fpas-vm tui_spec_links`.
+- [x] **8.2 Update `docs/pascal/std/tui-app.md`.** Document every new intrinsic, record type, and the headless test flow. Add bytecode discriminants list entry. **Verify:** `tui_rust_sources_link_to_pascal_spec_docs` test passes; `cargo test -p fpas-vm tui_spec_links`.
 - [ ] **8.3 Update `docs/future/README.md` status.** Mark this proposal as implemented or in-progress. **Verify:** link + status accurate.
 - [ ] **8.4 Update this plan's status header** to `complete` and finalize the progress log.
 
@@ -201,6 +201,7 @@ Renames (no new discriminant): `QueryFocusedViewId` replaces Pascal name for **2
 
 Append one entry per working session: date, tasks completed, surprises, and the next task to resume from.
 
+- **2026-06-15:** Completed **8.2** `tui-app.md`: native testing API marked implemented; discriminants **356..=374** table; `MenuBarState`, pump rules, example tests, sidecar removal notes. Next: **8.3** future README status.
 - **2026-06-15:** Completed **8.1** sidecar deprecation: migrated `tui_escape_test.fpas` / `tui_mouse_test.fpas` to native headless API; removed `expect_screen.rs`, `test_script/console.rs`, TUI sidecar files; dropped console event types from script parser. Next: **8.2** `tui-app.md` API docs.
 - **2026-06-15:** Completed **Phase 7** (7.1–7.3): capstone `tui_menu_hover_test.fpas` (bar hover + submenu `Move` selection); runs under `examples_pascal_test_suite_passes`; submenu mouse-hover regression from README now covered natively (`TestPumpUntilIdle` after multi-event injectors). Next: **8.1** sidecar deprecations.
 - **2026-06-14:** Completed **Phase 6** (6.1–6.4): `AssertScreenLine` / `AssertScreenCell` / `AssertViewRect` (`TestIntrinsic` **375..=377**); VM `test_host.rs`; compiler pass/fail tests; `docs/pascal/std/test.md`. Next: **7.1** capstone menu hover test.

@@ -103,7 +103,7 @@ These `[fpas_bytecode::Intrinsic](../../../crates/fpas-bytecode/src/intrinsic/mo
 
 Samples: [`examples/pascal/tui/host_dispatch_minimal.fpas`](../../../examples/pascal/tui/host_dispatch_minimal.fpas) (one `HostProcessNext` step), [`examples/pascal/tui/host_dispatch_paint.fpas`](../../../examples/pascal/tui/host_dispatch_paint.fpas) (register `OnPaint` + `HostDispatchRedraw`), [`examples/pascal/tui/host_dispatch_quit.fpas`](../../../examples/pascal/tui/host_dispatch_quit.fpas) (`HostRequestQuit` from `OnPaint` + `HostRunLoop`).
 
-**Bytecode discriminants** (authoritative enum: [`Intrinsic`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs)): **256** `TuiHostRegisterOnKeyPressed`, **257** `TuiHostInvokeOnKeyPressed`, **258** `TuiHostRegisterOnResize`, **259** `TuiHostProcessNext`, **260** `TuiHostRegisterOnPaint`, **261** `TuiHostDispatchRedraw`, **262** `TuiHostRunLoop`, **263** `TuiHostRequestQuit`, **264** `TuiHostRegisterOnExit`, **265** `TuiApplicationRun`, **266** `TuiHostRegisterOnIdle`, **267** `TuiApplicationConfigure`, **268** `TuiHostRegisterOnMouse`, **269** `TuiHostRegisterOnPaste`, **270** `TuiHostRegisterOnFocusGained`, **271** `TuiHostRegisterOnFocusLost`, **272** `TuiHostRegisterOnActivate`, **273** `TuiHostRegisterOnDeactivate`, **274** `TuiHostRegisterOnCommand`, **275** `TuiHostBindCommand`, **276** `TuiHostEnterModal`, **277** `TuiHostLeaveModal`, **278** `TuiHostModalDepth`, **279** `TuiHostRegisterView`, **280** `TuiHostUnregisterView`, **281** `TuiHostPushChildView`, **282** `TuiHostQueryFocusedViewId`, **283** `TuiHostAttachViewToActiveModal`, **284** `TuiHostSetViewRect`, **285** `TuiHostSetViewParent`, **286** `TuiHostRegisterOnViewPaint`, **287** `TuiApplicationShowModal`, **288** `TuiApplicationCloseModal`, **289** `TuiHostBindCommandToView`, **290** `TuiHostBindCommandToActiveModal`, **291** `TuiApplicationShowDialog`, **343** `TuiHostCreateSolidFillView`, **344** `TuiHostCreateMenuBarView`, **345** `TuiHostSetMenuBarItems`, **346** `TuiHostCreateStatusBarView`, **347** `TuiHostSetStatusBarSegments`.
+**Bytecode discriminants** (authoritative enum: [`TuiIntrinsic`](../../../crates/fpas-bytecode/src/intrinsic/tui.rs)): **256** `TuiHostRegisterOnKeyPressed`, **257** `TuiHostInvokeOnKeyPressed`, **258** `TuiHostRegisterOnResize`, **259** `TuiHostProcessNext`, **260** `TuiHostRegisterOnPaint`, **261** `TuiHostDispatchRedraw`, **262** `TuiHostRunLoop`, **263** `TuiHostRequestQuit`, **264** `TuiHostRegisterOnExit`, **265** `TuiApplicationRun`, **266** `TuiHostRegisterOnIdle`, **267** `TuiApplicationConfigure`, **268** `TuiHostRegisterOnMouse`, **269** `TuiHostRegisterOnPaste`, **270** `TuiHostRegisterOnFocusGained`, **271** `TuiHostRegisterOnFocusLost`, **272** `TuiHostRegisterOnActivate`, **273** `TuiHostRegisterOnDeactivate`, **274** `TuiHostRegisterOnCommand`, **275** `TuiHostBindCommand`, **276** `TuiHostEnterModal`, **277** `TuiHostLeaveModal`, **278** `TuiHostModalDepth`, **279** `TuiHostRegisterView`, **280** `TuiHostUnregisterView`, **281** `TuiHostPushChildView`, **282** `TuiHostQueryFocusedViewId`, **283** `TuiHostAttachViewToActiveModal`, **284** `TuiHostSetViewRect`, **285** `TuiHostSetViewParent`, **286** `TuiHostRegisterOnViewPaint`, **287** `TuiApplicationShowModal`, **288** `TuiApplicationCloseModal`, **289** `TuiHostBindCommandToView`, **290** `TuiHostBindCommandToActiveModal`, **291** `TuiApplicationShowDialog`, **343** `TuiHostCreateSolidFillView`, **344** `TuiHostCreateMenuBarView`, **345** `TuiHostSetMenuBarItems`, **346** `TuiHostCreateStatusBarView`, **347** `TuiHostSetStatusBarSegments`. Native headless testing uses **356..=374** (see [Native TUI testing API](#native-tui-testing-api)). **348..=355** and **375..=377** are `Std.Test` intrinsics, not TUI.
 
 `Application.Close` clears registered host handlers (`OnKeyPressed`, `OnResize`, `OnPaint`, `OnIdle`, `OnExit`, `OnMouse`, `OnPaste`, `OnFocusGained`, `OnFocusLost`, `OnActivate`, `OnDeactivate`, `OnCommand`), clears local view paint handlers, clears local view command maps, resets the host pump state, clears the view registry (including the focus chain), clears global command bindings, clears the modal stack (including modal-local command bindings), and closes the session as today.
 
@@ -117,7 +117,7 @@ Samples: [`examples/pascal/tui/host_dispatch_minimal.fpas`](../../../examples/pa
 
 `Application.HostRegisterView(App, X, Y, Width, Height)` returns an opaque **`ViewId`** owned by the host (see [ViewId type (decided)](#viewid-type-decided) under Native TUI testing API). Pass it to `Application.HostUnregisterView`, `Application.HostPushChildView`, `Application.HostSetViewRect`, `Application.HostSetViewParent`, `Application.HostRegisterOnViewPaint`, and `Application.HostBindCommandToView`.
 
-`Application.HostPushChildView(App, ViewId)` appends the handle to the focus chain used by Tab / Shift+Tab traversal. `Application.QueryFocusedViewId(App)` returns `Some(ViewId)` when a host-managed view is focused, otherwise `None`.
+`Application.HostPushChildView(App, ViewId)` appends the handle to the focus chain used by Tab / Shift+Tab traversal. `Application.HostQueryFocusedViewId(App)` returns the focused view handle, or `-1` when none (future: `QueryFocusedViewId` → `Option of ViewId`).
 
 Root views use absolute terminal coordinates. `Application.HostSetViewParent(App, ViewId, Parent)` reparents a view under `Parent`; pass `None` to detach it back to the root list. Reparenting preserves the current absolute terminal rectangle. After a view has a parent, `Application.HostSetViewRect(App, ViewId, X, Y, Width, Height)` interprets `X` and `Y` relative to that parent. Sibling order defines z-order, and `Application.ShowModal` scopes to a root view subtree.
 
@@ -455,11 +455,11 @@ There must be **at most one** active `**Application.Run`** (or equivalent hosted
 
 ---
 
-## Native TUI testing API (planned)
+## Native TUI testing API
 
-**Status:** naming and `ViewId` type decided; intrinsics not yet implemented. Design: [`docs/future/tui-tests-fpas/README.md`](../../future/tui-tests-fpas/README.md). Tracking: [`implementation-plan.md`](../../future/tui-tests-fpas/implementation-plan.md).
+**Status:** implemented (Phases 1–7). Design: [`docs/future/tui-tests-fpas/README.md`](../../future/tui-tests-fpas/README.md). Tracking: [`implementation-plan.md`](../../future/tui-tests-fpas/implementation-plan.md).
 
-Goal: test hosted `Std.Tui` entirely from FPAS under `fpas test` — headless session, stepwise event pump, input injection, and read-only introspection of screen, views, and widget state.
+Goal: test hosted `Std.Tui` entirely from FPAS under `fpas test` — headless session, stepwise event pump, input injection, and read-only introspection of screen, views, and widget state. No real terminal, Rust integration test, or TUI sidecar file is required.
 
 ### Naming convention (decided)
 
@@ -517,18 +517,16 @@ Sema registers `Std.Tui.ViewId` as an empty record; only host routines may produ
 | `HostQueryFocusedViewId` → `integer` (`-1`) | `QueryFocusedViewId` → `Option of ViewId` |
 | `HostSetViewParent(..., ParentViewId: integer)` with `-1` | `HostSetViewParent(..., Parent: Option of ViewId)` |
 
-Until migration is implemented, existing programs still use integer tokens; new tests and docs use **`ViewId`** and **`Option of ViewId`** as above.
+Until `ViewId` migration lands, host routines and queries still pass view handles as **`integer`** tokens (`QueryRootViews` / `QueryViewChildren` return `array of integer`; `QueryViewParent` returns `Option of integer`). New tests and docs already use the **`ViewId`** name at call sites where the type is registered.
 
-### Planned renames (existing read APIs)
+### Pending renames (existing read APIs)
 
-No backward compatibility is required. When native testing lands, rename existing read-only `Host*` calls to **`Query*`**:
+No backward compatibility is required. These read-only `Host*` names remain in the registry until a dedicated rename pass; new tests and docs should prefer the **`Query*`** names:
 
-| Current (to remove) | New name |
-| ------------------- | -------- |
-| `Application.HostQueryFocusedViewId(App)` | `Application.QueryFocusedViewId(App): Option of ViewId` |
-| `Application.HostModalDepth(App)` | `Application.QueryModalDepth(App): integer` |
-
-Until the rename is implemented, the old names remain in the registry; new tests and docs should use the **`Query*`** names above.
+| Current (still registered) | Preferred name | Discriminant |
+| -------------------------- | -------------- | ------------ |
+| `Application.HostQueryFocusedViewId(App)` | `Application.QueryFocusedViewId(App): Option of ViewId` | **282** |
+| `Application.HostModalDepth(App)` | `Application.QueryModalDepth(App): integer` | **278** |
 
 ### Headless lifecycle and pump (Phase 1 — implemented)
 
@@ -553,9 +551,17 @@ Until the rename is implemented, the old names remain in the registry; new tests
 
 Use `Std.Console.EventKind` (not bare `EventKind`) when both `Std.Console` and `Std.Tui` are in scope.
 
-### Planned new routines (summary)
+**Pump rules**
 
-Screen introspection (`Query*`):
+- `Test*` injectors only enqueue events; call `TestPump` or `TestPumpUntilIdle` to run the host loop.
+- `TestPump` processes **one** queued event (plus coalesced resize flush) and settles redraws before returning.
+- `TestClickMouse` enqueues **two** events (`Down` then `Up`). After a click, use `TestPumpUntilIdle` (or two `TestPump` calls) before the next assertion or injection.
+- Call `RequestRedraw` after `Configure` when the first paint must run before any input.
+- Screen and widget queries reflect state **after** the most recent completed pump.
+
+### Screen and view introspection (`Query*` — implemented)
+
+Screen reads:
 
 | Pascal call | Returns |
 | ----------- | ------- |
@@ -563,21 +569,84 @@ Screen introspection (`Query*`):
 | `Application.QueryScreenLine(App, Y)` | `string` |
 | `Application.QueryScreenCell(App, X, Y)` | `ScreenCell` (`ch`, `fg`, `bg`) |
 
-See [ScreenCell type (decided)](#screencell-type-decided) for color representation.
-
-View and widget introspection (`Query*`):
+View and widget reads (view handles are `integer` until `ViewId` migration):
 
 | Pascal call | Returns |
 | ----------- | ------- |
-| `Application.QueryRootViews(App)` | `array of ViewId` |
+| `Application.QueryRootViews(App)` | `array of integer` |
 | `Application.QueryViewRect(App, ViewId)` | `Rect` |
-| `Application.QueryViewParent(App, ViewId)` | `Option of ViewId` |
-| `Application.QueryViewChildren(App, ViewId)` | `array of ViewId` |
-| `Application.QueryFocusedViewId(App)` | `Option of ViewId` |
-| `Application.QueryModalDepth(App)` | `integer` |
+| `Application.QueryViewParent(App, ViewId)` | `Option of integer` |
+| `Application.QueryViewChildren(App, ViewId)` | `array of integer` |
 | `Application.QueryMenuBarState(App, ViewId)` | `MenuBarState` |
 
-See the implementation plan for intrinsic discriminants, verification steps, and phase order.
+See [ScreenCell type](#screencell-type-decided) and [MenuBarState type](#menubarstate-type) below.
+
+### Native testing bytecode discriminants
+
+Reserved range **356..=378** in [`TuiIntrinsic`](../../../crates/fpas-bytecode/src/intrinsic/tui.rs). **348..=355** are `Std.Test`; **375..=377** are `Std.Test` screen/view assertions (see [`test.md`](test.md)).
+
+| Discriminant | Pascal surface | Notes |
+| ------------ | -------------- | ----- |
+| **356** | `OpenForTest` | Virtual CRT, no terminal writer |
+| **357** | `TestPump` | One event + redraw settle |
+| **358** | `TestPumpUntilIdle` | Drain queue |
+| **359** | `CloseForTest` | Teardown |
+| **360** | `TestSendKey` | Enqueue `KeyEvent` |
+| **361** | `TestSendMouse` | Enqueue full `Std.Console.Event` |
+| **362** | `TestMoveMouse` | Enqueue `Move` |
+| **363** | `TestClickMouse` | Enqueue `Down` + `Up` |
+| **364** | `TestResize` | Terminal resize |
+| **365** | `TestPaste` | Bracketed paste |
+| **366** | `TestFocus` | Focus gained/lost |
+| **367** | `QueryScreenSize` | |
+| **368** | `QueryScreenLine` | `Y` one-based |
+| **369** | `QueryScreenCell` | `X`/`Y` one-based |
+| **370** | `QueryRootViews` | |
+| **371** | `QueryViewRect` | |
+| **372** | `QueryViewParent` | |
+| **373** | `QueryViewChildren` | |
+| **374** | `QueryMenuBarState` | Menu bar widget only |
+| **378** | *(spare)* | |
+
+### Headless test flow (example)
+
+```pascal
+program MenuHoverTest;
+uses Std.Console, Std.Tui, Std.Test;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  var Bar: integer := Application.HostCreateMenuBarView(App, 0, 0, 80, 1, MenuItems(), MenuStyle());
+  Application.Configure(App, Handlers);
+  Application.RequestRedraw(App);
+  Application.TestPump(App);
+  Application.TestMoveMouse(App, 2, 1);
+  Application.TestPump(App);
+  AssertScreenCell(2, 1, 'F', LightGray, Black);
+  AssertEquals(0, Application.QueryMenuBarState(App, Bar).hoveredIndex);
+  Application.TestClickMouse(App, 2, 1);
+  Application.TestPumpUntilIdle(App);
+  Application.TestMoveMouse(App, 2, 4);
+  Application.TestPumpUntilIdle(App);
+  AssertEquals(1, Application.QueryMenuBarState(App, Bar).selectedEntry);
+  Application.CloseForTest(App)
+end.
+```
+
+`Std.Test` helpers `AssertScreenLine`, `AssertScreenCell`, and `AssertViewRect` (when `uses Std.Tui` is present) wrap the query intrinsics; see [`test.md`](test.md).
+
+### Example tests
+
+| Path | Topic |
+| ---- | ----- |
+| [`tui_pump_test.fpas`](../../../examples/pascal/test/tui_pump_test.fpas) | Open/pump/close smoke |
+| [`tui_inject_key_test.fpas`](../../../examples/pascal/test/tui_inject_key_test.fpas) | `TestSendKey` + `OnKeyPressed` |
+| [`tui_escape_test.fpas`](../../../examples/pascal/test/tui_escape_test.fpas) | Escape + `AssertScreenLine` |
+| [`tui_mouse_test.fpas`](../../../examples/pascal/test/tui_mouse_test.fpas) | `TestSendMouse` + `OnMouse` |
+| [`tui_screen_query_test.fpas`](../../../examples/pascal/test/tui_screen_query_test.fpas) | Screen queries after paint |
+| [`tui_view_query_test.fpas`](../../../examples/pascal/test/tui_view_query_test.fpas) | View rect + initial menu state |
+| [`tui_menu_bar_hover_test.fpas`](../../../examples/pascal/test/tui_menu_bar_hover_test.fpas) | Bar hover colors |
+| [`tui_menu_hover_test.fpas`](../../../examples/pascal/test/tui_menu_hover_test.fpas) | Capstone: bar hover + submenu selection |
 
 ### ScreenCell type (decided)
 
@@ -606,17 +675,33 @@ end;
 | Truecolor / 256-color | **Out of scope for v1.** Extended terminal colors from `TextColorRGB` / `TextColor256` are not represented in the logical screen model; do not add a richer `ScreenCell` shape until the back buffer supports it. |
 | Errors | Out-of-bounds coordinates are a runtime error with a concrete hint (row/column and screen size). |
 
-### Sidecar deprecation (decided)
+### MenuBarState type
+
+`Application.QueryMenuBarState` returns a snapshot of menu bar hover, keyboard activation, and pull-down state for a `HostCreateMenuBarView` widget.
+
+```pascal
+type MenuBarState = record
+  menuActive: boolean;       { keyboard menu navigation mode }
+  hoveredIndex: integer;     { top-level bar index, or -1 }
+  submenuOpen: boolean;
+  submenuBarIndex: integer;  { bar item owning the open popup, or -1 }
+  selectedEntry: integer;    { highlighted popup row, or -1 }
+end;
+```
+
+Sentinel **`-1`** means “none” for index fields until `Option of integer` migration.
+
+### Sidecar deprecation (TUI removed in Phase 8.1)
 
 Runner sidecars **overlap** with the native FPAS test API and are **deprecated** for TUI work:
 
 | Sidecar | Status | Replacement |
 | ------- | ------ | ----------- |
-| `<test>.script.toml` (console/TUI events) | Deprecated; remove in Phase 8 | `Application.TestSendKey`, `TestMoveMouse`, … + `TestPump` |
-| `<test>.script.toml` (`readln` only) | Deprecated; remove in Phase 8 | `Application.TestReadLn` (add when needed) or inline test setup |
-| `<test>.expect.screen` | Deprecated; remove in Phase 8 | `QueryScreenLine` / `QueryScreenCell` + `Std.Test` assertions |
-| `<test>.expect.stdout` | **Keep** | Still useful for non-TUI output-only tests |
-| `<test>.expect.pixels` | **Keep** until graph native testing exists | Graph-specific |
+| `<test>.script.toml` (console/TUI events) | **Removed** (Phase 8.1) | `TestSendKey`, `TestMoveMouse`, … + `TestPump` |
+| `<test>.expect.screen` | **Removed** (Phase 8.1) | `QueryScreenLine` / `QueryScreenCell` + `Std.Test` assertions |
+| `<test>.script.toml` (`readln` only) | Deprecated | Inline setup or future `TestReadLn` |
+| `<test>.expect.stdout` | **Keep** | Non-TUI output tests |
+| `<test>.expect.pixels` | **Keep** | Headless graph |
 
 Affected implementation paths (TUI sidecars removed in Phase 8.1):
 

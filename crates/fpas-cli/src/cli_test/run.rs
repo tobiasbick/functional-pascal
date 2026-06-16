@@ -253,7 +253,6 @@ fn run_test_program(
         VmRunResult::Completed(VmExecution {
             result: Ok(()),
             ref stdout_lines,
-            screen_lines: _,
             ref headless_frame,
             skipped,
         }) => {
@@ -289,7 +288,6 @@ fn run_test_program(
         VmRunResult::Completed(VmExecution {
             result: Err(diagnostic),
             stdout_lines: _,
-            screen_lines: _,
             headless_frame: _,
             skipped: _,
         }) => {
@@ -323,7 +321,6 @@ fn execute_vm(mut vm: fpas_vm::Vm, headless_graph: bool) -> VmExecution {
         VmExecution {
             result,
             stdout_lines: vm.output().lines,
-            screen_lines: vm.screen_snapshot().compact_lines(),
             headless_frame: fpas_std::last_headless_graph_frame_for_tests(),
             skipped: fpas_std::test_was_skipped(),
         }

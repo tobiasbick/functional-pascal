@@ -15,7 +15,6 @@ const SHUTDOWN_GRACE: Duration = Duration::from_secs(2);
 pub(super) struct VmExecution {
     pub result: Result<(), VmError>,
     pub stdout_lines: Vec<String>,
-    pub screen_lines: Vec<String>,
     pub headless_frame: Option<UploadedFrame>,
     pub skipped: bool,
 }

@@ -57,7 +57,8 @@ pub use console_event::{
 pub use error::StdError;
 pub use graph::{
     GRAPH_EVENT_KIND_VARIANTS, GRAPH_EXIT_REASON_VARIANTS, GraphEvent, GraphEventKind, GraphHost,
-    GraphSession, UploadedFrame, last_headless_graph_frame_for_tests, pop_headless_graph_test_mode,
+    GraphSession, HeadlessGraphTestModeGuard, UploadedFrame, headless_graph_test_depth_for_tests,
+    last_headless_graph_frame_for_tests, pop_headless_graph_test_mode,
     push_headless_graph_test_mode, with_headless_graph_backend_for_tests,
 };
 pub use intrinsics::run_intrinsic;

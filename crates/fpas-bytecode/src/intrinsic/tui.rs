@@ -151,19 +151,19 @@ pub enum TuiIntrinsic {
     QueryModalDepth = 278,
     /// Register a host-managed view and return its opaque handle.
     ///
-    /// Stack: `Application`, `X`, `Y`, `Width`, `Height` (`integer`, top). Pushes `integer`.
+    /// Stack: `Application`, `X`, `Y`, `Width`, `Height` (`integer`, top). Pushes `ViewId`.
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     HostRegisterView = 279,
     /// Remove a host-managed view by handle.
     ///
-    /// Stack: `Application`, `ViewId` (`integer`, top). Does not push a value.
+    /// Stack: `Application`, `ViewId` (`ViewId` on top). Does not push a value.
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     HostUnregisterView = 280,
     /// Append a host-managed view to the focus chain.
     ///
-    /// Stack: `Application`, `ViewId` (`integer`, top). Does not push a value.
+    /// Stack: `Application`, `ViewId` (`ViewId` on top). Does not push a value.
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     HostPushChildView = 281,
@@ -349,7 +349,7 @@ pub enum TuiIntrinsic {
 
     /// List root view handles in root-list order.
     ///
-    /// Stack: `Application`. Pushes `array of integer` (view handles until `ViewId` migration).
+    /// Stack: `Application`. Pushes `array of ViewId`.
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     QueryRootViews = 370,
@@ -362,13 +362,13 @@ pub enum TuiIntrinsic {
     QueryViewRect = 371,
     /// Read the parent view handle, or `None` for roots.
     ///
-    /// Stack: `Application`, `ViewId` (`ViewId` on top). Pushes `Option of integer`.
+    /// Stack: `Application`, `ViewId` (`ViewId` on top). Pushes `Option of ViewId`.
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     QueryViewParent = 372,
     /// Read direct child view handles in sibling order.
     ///
-    /// Stack: `Application`, `ViewId` (`ViewId` on top). Pushes `array of integer`.
+    /// Stack: `Application`, `ViewId` (`ViewId` on top). Pushes `array of ViewId`.
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     QueryViewChildren = 373,
@@ -379,6 +379,6 @@ pub enum TuiIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui-app.md`
     QueryMenuBarState = 374,
-    // **378** spare; **375..=377** are `Std.Test` screen/view assertions (see `TestIntrinsic`).
+    // **375..=377** are `Std.Test` screen/view assertions; **378** is `Std.Test.PushReadLn` (see `TestIntrinsic`).
     // Note: **348..=355** are owned by `Std.Test` (`TestIntrinsic`).
 }

@@ -34,8 +34,8 @@ The server starts when the VM begins execution and stops when the program exits 
 
 ### View identifiers
 
-- `view_id` is the opaque integer returned by `Application.HostRegisterView` and related host APIs.
-- `-1` means “no focused view” (same as `Application.HostQueryFocusedViewId`).
+- `view_id` is the opaque `Std.Tui.ViewId` returned by `Application.HostRegisterView` and related host APIs.
+- `null` / absent focused view means no focused view (same as `Application.QueryFocusedViewId` returning `None`).
 
 ### Event kind strings
 
@@ -157,7 +157,7 @@ Focused view and modal stack summary.
 }
 ```
 
-Maps to `Application.HostQueryFocusedViewId` and `Application.HostModalDepth`.
+Maps to `Application.QueryFocusedViewId` and `Application.QueryModalDepth`.
 
 ---
 
@@ -543,6 +543,6 @@ A Cursor MCP server can expose thin tools that call this HTTP API (`fpas_tui_scr
 | Event POST endpoints | [`Vm::push_console_event`](../../../crates/fpas-vm/src/vm/mod.rs), [`test_script/console.rs`](../../../crates/fpas-cli/src/test_script/console.rs) |
 | Readln / readkey POST | [`Vm::push_readln_input`](../../../crates/fpas-vm/src/vm/mod.rs), script `Readln` / `ReadkeyChars` |
 | `/screen` | [`Vm::screen_snapshot`](../../../crates/fpas-vm/src/vm/mod.rs), [`ScreenSnapshot`](../../../crates/fpas-std/src/console/snapshot.rs) |
-| `/focus` | `TuiHostQueryFocusedViewId`, `TuiHostModalDepth` intrinsics |
+| `/focus` | `TuiQueryFocusedViewId`, `TuiQueryModalDepth` intrinsics |
 | `/views` | [`ViewRegistry`](../../../crates/fpas-std/src/tui/view/mod.rs) in `TuiState` |
 | `/control/quit` | `TuiHostRequestQuit` intrinsic path |

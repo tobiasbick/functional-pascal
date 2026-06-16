@@ -352,3 +352,23 @@ end.",
 
     assert!(out.lines.is_empty());
 }
+
+#[test]
+fn std_tui_view_id_equality_compares_opaque_handles() {
+    let out = compile_and_run(
+        "\
+program T;
+uses Std.Tui, Std.Test;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  var A: ViewId := Application.HostRegisterView(App, 0, 0, 10, 5);
+  var B: ViewId := Application.HostRegisterView(App, 10, 0, 10, 5);
+  AssertTrue(A = A);
+  AssertFalse(A = B);
+  Application.CloseForTest(App)
+end.",
+    );
+
+    assert!(out.lines.is_empty());
+}

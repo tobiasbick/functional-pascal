@@ -179,7 +179,7 @@ impl Worker {
             runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 "Dynamic comparison requires comparable operands of compatible types",
-                "Ensure both operands are comparable types (integer, real, boolean, char, string).",
+                "Ensure both operands are comparable types (integer, real, boolean, char, string, or ViewId).",
                 line,
             )
         })?;

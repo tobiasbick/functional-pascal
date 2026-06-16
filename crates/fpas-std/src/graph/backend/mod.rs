@@ -189,6 +189,41 @@ pub fn push_headless_graph_test_mode() {
     });
 }
 
+/// Scoped guard that pairs one [`push_headless_graph_test_mode`] with [`pop_headless_graph_test_mode`] on drop.
+#[doc(hidden)]
+pub struct HeadlessGraphTestModeGuard {
+    active: bool,
+}
+
+impl HeadlessGraphTestModeGuard {
+    /// Enables headless graph mode until this guard is dropped or [`Self::release`] is called.
+    #[doc(hidden)]
+    pub fn push() -> Self {
+        push_headless_graph_test_mode();
+        Self { active: true }
+    }
+
+    /// Hands teardown off to `Application.Close` / `Application.Run` without popping headless mode.
+    #[doc(hidden)]
+    pub fn release(mut self) {
+        self.active = false;
+    }
+}
+
+impl Drop for HeadlessGraphTestModeGuard {
+    fn drop(&mut self) {
+        if self.active {
+            pop_headless_graph_test_mode();
+        }
+    }
+}
+
+/// Returns the active headless graph test nesting depth on the current thread.
+#[doc(hidden)]
+pub fn headless_graph_test_depth_for_tests() -> u32 {
+    HEADLESS_TEST_DEPTH.with(|depth| depth.get())
+}
+
 /// Restores the graph backend after a native test session opened with [`push_headless_graph_test_mode`].
 #[doc(hidden)]
 pub fn pop_headless_graph_test_mode() {

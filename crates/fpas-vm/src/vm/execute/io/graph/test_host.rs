@@ -5,8 +5,9 @@
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use fpas_bytecode::{GraphIntrinsic, Intrinsic, SourceLocation};
+use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
-use fpas_std::{GraphEvent, push_headless_graph_test_mode};
+use fpas_std::{GraphEvent, HeadlessGraphTestModeGuard};
 
 impl Worker {
     /// Executes headless native graph testing intrinsics.
@@ -19,6 +20,8 @@ impl Worker {
             Intrinsic::Graph(GraphIntrinsic::OpenForTest) => {
                 let height = self.pop_int(line)?;
                 let width = self.pop_int(line)?;
+                Self::validate_graph_test_dimension(width, "Width", line)?;
+                Self::validate_graph_test_dimension(height, "Height", line)?;
                 if self.current_task_id != 0 {
                     return Err(runtime_error(
                         RUNTIME_INTRINSIC_STACK_STATE_ERROR,
@@ -27,20 +30,29 @@ impl Worker {
                         line,
                     ));
                 }
-                push_headless_graph_test_mode();
-                {
+
+                let headless_guard = HeadlessGraphTestModeGuard::push();
+                let open_result = (|| -> Result<(), VmError> {
                     let mut graph = self.shared.graph.lock().unwrap_or_else(|e| e.into_inner());
                     if graph.session.is_open() {
                         return Err(open_for_test_second_session_error(line));
                     }
-                    graph.headless_test_open = true;
                     graph.session.open(width, height, "", line)?;
+                    graph.headless_test_open = true;
                     let pending = std::mem::take(&mut graph.pending_test_events);
                     for event in pending {
                         graph.session.push_event(event, line)?;
                     }
+                    Ok(())
+                })();
+
+                match open_result {
+                    Ok(()) => {
+                        headless_guard.release();
+                        self.push(Self::graph_application_record())?;
+                    }
+                    Err(error) => return Err(error),
                 }
-                self.push(Self::graph_application_record())?;
             }
             Intrinsic::Graph(GraphIntrinsic::TestSendKey) => {
                 let key = self.pop_console_key_event(line)?;
@@ -51,6 +63,24 @@ impl Worker {
         }
 
         Ok(true)
+    }
+
+    fn validate_graph_test_dimension(
+        value: i64,
+        name: &str,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        if value <= 0 {
+            return Err(runtime_error(
+                RUNTIME_CONSOLE_STATE_ERROR,
+                format!(
+                    "Application.OpenForTest({name}, …) requires positive {name}, got {value}."
+                ),
+                "Pass positive pixel dimensions, e.g. `Application.OpenForTest(640, 480)`.",
+                line,
+            ));
+        }
+        Ok(())
     }
 
     fn enqueue_graph_test_event(

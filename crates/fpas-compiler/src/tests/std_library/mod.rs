@@ -10,6 +10,7 @@ mod dict;
 mod env;
 mod fs;
 mod graph;
+mod graph_test_host;
 mod math;
 mod parse;
 mod path;

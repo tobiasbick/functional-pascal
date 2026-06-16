@@ -53,6 +53,18 @@ Register once with `Application.Configure(App, Handlers)` or the explicit `Appli
 
 Drawing helpers (`Clear`, `DrawLine`, `Present`, …) remain available inside `OnPaint` and other handlers. The host calls `Present` automatically after `OnPaint` during hosted redraw.
 
+### Native test lifecycle
+
+Headless graph tests use in-program APIs instead of `*.script.toml` graph events. See [`test.md`](test.md).
+
+| Call | Role |
+|------|------|
+| `Application.OpenForTest(Width, Height)` | Open a deterministic headless session (no native window) |
+| `Application.TestSendKey(App, Key)` | Enqueue one `Std.Console.KeyEvent` for the next hosted pump |
+| `Application.Run(App)` | Pump events and paint; auto-closes on exit (restores native backend) |
+
+Golden pixel checks (`*.expect.pixels`) still run runner-side after `Present` inside `OnPaint`.
+
 ---
 
 ## `ExitReason`
@@ -78,10 +90,12 @@ Hosted Graph intrinsics use discriminants **331–342** (see [`graph.rs`](../../
 | `Application.HostRequestQuit` | `HostRequestQuit` (332) |
 | `Application.HostProcessNext` | `HostProcessNext` (335) |
 | `Application.HostDispatchRedraw` | `HostDispatchRedraw` (337) |
+| `Application.OpenForTest` | `OpenForTest` (379) |
+| `Application.TestSendKey` | `TestSendKey` (380) |
 
 Shared internal event normalization lives in [`fpas-std/src/ui/`](../../../crates/fpas-std/src/ui/mod.rs) (`UiHost`, `UiEvent`).
 
----
+Test intrinsics **379–380** are documented in [`test.md`](test.md). Example: [`graph_smoke_test.fpas`](../../../examples/pascal/test/graph_smoke_test.fpas).
 
 ## Example
 

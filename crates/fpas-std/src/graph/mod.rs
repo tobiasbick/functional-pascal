@@ -25,7 +25,10 @@ pub use backend::set_headless_graph_surface_size_for_tests;
 #[doc(hidden)]
 pub use backend::with_headless_graph_backend_for_tests;
 #[doc(hidden)]
-pub use backend::{pop_headless_graph_test_mode, push_headless_graph_test_mode};
+pub use backend::{
+    HeadlessGraphTestModeGuard, headless_graph_test_depth_for_tests, pop_headless_graph_test_mode,
+    push_headless_graph_test_mode,
+};
 pub use event::{
     GRAPH_EVENT_KIND_VARIANTS, GRAPH_EXIT_REASON_VARIANTS, GraphEvent, GraphEventKind,
 };

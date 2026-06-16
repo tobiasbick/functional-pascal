@@ -378,3 +378,111 @@ fn graph_intrinsics_fail_on_non_main_tasks() {
         assert!(error.message.contains("must run on the main task"));
     });
 }
+
+#[test]
+fn graph_open_for_test_opens_headless_session() {
+    assert_eq!(fpas_std::headless_graph_test_depth_for_tests(), 0);
+
+    let mut chunk = Chunk::new();
+    emit_constant(&mut chunk, Value::Integer(32));
+    emit_constant(&mut chunk, Value::Integer(24));
+    emit_graph_intrinsic(&mut chunk, GraphIntrinsic::OpenForTest);
+    chunk.emit(Op::Dup, loc());
+    emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationClose);
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("graph open for test should succeed");
+
+    assert_eq!(worker.stack, vec![graph_application_value()]);
+    assert_eq!(fpas_std::headless_graph_test_depth_for_tests(), 0);
+
+    let size = shared
+        .graph
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .session
+        .size(loc())
+        .expect_err("session should be closed");
+    assert!(size.message.contains("requires an open graphics session"));
+}
+
+#[test]
+fn graph_open_for_test_invalid_dimensions_restore_headless_mode() {
+    assert_eq!(fpas_std::headless_graph_test_depth_for_tests(), 0);
+
+    let mut chunk = Chunk::new();
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(24));
+    emit_graph_intrinsic(&mut chunk, GraphIntrinsic::OpenForTest);
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(shared);
+    let error = worker
+        .run()
+        .expect_err("zero width should fail before opening a session");
+
+    assert!(error.message.contains("requires positive Width"));
+    assert_eq!(fpas_std::headless_graph_test_depth_for_tests(), 0);
+}
+
+#[test]
+fn graph_open_for_test_second_session_error_restores_headless_nesting() {
+    assert_eq!(fpas_std::headless_graph_test_depth_for_tests(), 0);
+
+    let mut open_chunk = Chunk::new();
+    emit_constant(&mut open_chunk, Value::Integer(32));
+    emit_constant(&mut open_chunk, Value::Integer(24));
+    emit_graph_intrinsic(&mut open_chunk, GraphIntrinsic::OpenForTest);
+    open_chunk.emit(Op::Halt, loc());
+
+    let mut shared = Arc::new(minimal_shared_state(open_chunk));
+    {
+        let mut worker = Worker::new_main(Arc::clone(&shared));
+        worker
+            .run()
+            .expect("first open for test should succeed");
+    }
+    assert_eq!(fpas_std::headless_graph_test_depth_for_tests(), 1);
+
+    let mut second_open_chunk = Chunk::new();
+    emit_constant(&mut second_open_chunk, Value::Integer(16));
+    emit_constant(&mut second_open_chunk, Value::Integer(16));
+    emit_graph_intrinsic(&mut second_open_chunk, GraphIntrinsic::OpenForTest);
+    second_open_chunk.emit(Op::Halt, loc());
+
+    Arc::get_mut(&mut shared)
+        .expect("shared state should be unique in this test")
+        .chunk = second_open_chunk;
+    {
+        let mut worker = Worker::new_main(Arc::clone(&shared));
+        let error = worker
+            .run()
+            .expect_err("second open for test should fail while session is active");
+
+        assert!(
+            error
+                .message
+                .contains("cannot open a second graphics session")
+        );
+    }
+    assert_eq!(fpas_std::headless_graph_test_depth_for_tests(), 1);
+
+    let mut close_chunk = Chunk::new();
+    emit_constant(&mut close_chunk, graph_application_value());
+    emit_graph_intrinsic(&mut close_chunk, GraphIntrinsic::ApplicationClose);
+    close_chunk.emit(Op::Halt, loc());
+
+    Arc::get_mut(&mut shared)
+        .expect("shared state should be unique in this test")
+        .chunk = close_chunk;
+    {
+        let mut worker = Worker::new_main(shared);
+        worker
+            .run()
+            .expect("close should tear down the first test session");
+    }
+    assert_eq!(fpas_std::headless_graph_test_depth_for_tests(), 0);
+}

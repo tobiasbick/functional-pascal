@@ -10,7 +10,7 @@ Today's TUI tests rely on:
 
 - **Pre-run script sidecars** (`<test>.script.toml`) that queue events before `vm.run()`.
 - **Post-run golden files** (`*.expect.screen`) that compare the CRT back buffer.
-- **In-program assertions** (`Std.Test`) and a few host query intrinsics (`Application.HostQueryFocusedViewId`, `Application.HostModalDepth`).
+- **In-program assertions** (`Std.Test`) and host query intrinsics (`Application.QueryFocusedViewId`, `Application.QueryModalDepth`).
 
 That works well for CI regression but not for:
 

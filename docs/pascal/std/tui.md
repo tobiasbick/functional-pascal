@@ -231,9 +231,3 @@ end.
 See also: `[examples/pascal/tui/minimal_application.fpas](../../../examples/pascal/tui/minimal_application.fpas)`
 
 ---
-
-## Removed poll-style APIs
-
-`Application.ReadEvent`, `Application.ReadEventTimeout`, `Application.PollEvent`, and `Application.RedrawPending` are **not** part of the current `Std.Tui` surface. Use `Application.Configure` + `Application.Run` instead. See `[tui-app.md](tui-app.md)`.
-
----

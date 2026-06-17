@@ -1,6 +1,6 @@
 # `Std.Tui` — dispatch-mode application
 
-**Status:** current specification for the Rust-hosted event loop and `On*` handlers described in `[docs/future/tui-application-framework.md](../../future/tui-application-framework.md)`. **`Application.Host*`** dispatch helpers are **registered and lowered**, **`ApplicationHandlers`** / **`Application.Configure(App, Handlers)`** are available as the bundled registration surface, **`Application.Run(App)`** is available as the hosted loop entrypoint, and the current Phase 7 structure layer includes **`Std.Tui.Rect`**, **`Application.HostSetViewParent`**, **`Application.HostRegisterOnViewPaint`**, **`Application.HostBindCommandToView`**, **`Application.HostBindCommandToActiveModal`**, **`Application.ShowModal`**, **`Application.ShowDialog`**, and **`Application.CloseModal`**. `OnIdle` remains available through both `Application.HostRegisterOnIdle(App, Milliseconds, OnIdle)` and the bundle field pair `OnIdleMilliseconds` + `OnIdle`. Poll-style `Application.ReadEvent` / `Application.PollEvent` are **not** part of the current surface — use hosted dispatch instead (see `[tui.md](tui.md)`).
+**Status:** current specification for the Rust-hosted event loop and `On*` handlers described in `[docs/future/tui-application-framework.md](../../future/tui-application-framework.md)`. **`Application.Host*`** dispatch helpers are **registered and lowered**, **`ApplicationHandlers`** / **`Application.Configure(App, Handlers)`** are available as the bundled registration surface, **`Application.Run(App)`** is the hosted loop entrypoint, and the current Phase 7 structure layer includes **`Std.Tui.Rect`**, **`Application.HostSetViewParent`**, **`Application.HostRegisterOnViewPaint`**, **`Application.HostBindCommandToView`**, **`Application.HostBindCommandToActiveModal`**, **`Application.ShowModal`**, **`Application.ShowDialog`**, and **`Application.CloseModal`**. `OnIdle` is available through `Application.HostRegisterOnIdle(App, Milliseconds, OnIdle)` and the bundle fields `OnIdleMilliseconds` + `OnIdle`. Session handle APIs: `[tui.md](tui.md)`.
 
 **Maintenance (implementers only):** keep the types and routines in [`loaded/tui/`](../../../crates/fpas-sema/src/std_registry/loaded/tui/mod.rs) aligned with this file (see root [AGENTS.md](../../../AGENTS.md)).
 
@@ -223,7 +223,7 @@ Command resolution is ordered from most local to least local: when a focused hos
 
 ## Relationship to session APIs
 
-`[tui.md](tui.md)` documents the session handle (`Application.Open`, `Application.Size`, `Application.RequestRedraw`) and the hosted entry points (`Application.Configure`, `Application.Run`). Poll-style `Application.ReadEvent`, `Application.ReadEventTimeout`, `Application.PollEvent`, and `Application.RedrawPending` are **not** part of the current surface.
+`[tui.md](tui.md)` documents the session handle (`Application.Open`, `Application.Size`, `Application.RequestRedraw`) and the hosted entry points (`Application.Configure`, `Application.Run`).
 
 Dispatch-mode names use the `**On` prefix** so they do not collide with legacy names such as console `**KeyPressed`** (boolean poll).
 
@@ -357,14 +357,12 @@ procedure OnExit(App: Application; Reason: ExitReason);
 
 `**OnResize`:** `NewSize` matches `**Application.Size(App)`** after the resize is applied.
 
-`**OnStartup`:** **not shipped.** Early framework drafts mentioned a startup hook, but the current surface has no sema registration or VM dispatch for it.
-
 ---
 
 ## `OnExit`
 
 - **When:** Invoked **once** after the host decides to stop the loop and **before** terminal restore (`**Close`** semantics).
-- **Veto:** **Not supported** in v1: `**OnExit`** cannot cancel shutdown. It is for teardown of user state only.
+- **Purpose:** teardown of user state (runs once per shutdown).
 - **Ordering:** `**OnExit`** runs **after** the last `**OnPaint`** / input handler for that run; no further `**On*`** run after `**OnExit`** except what the implementation documents for catastrophic failure paths.
 
 ---

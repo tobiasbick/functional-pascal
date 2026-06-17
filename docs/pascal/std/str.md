@@ -210,7 +210,7 @@ WriteLn(IsNumeric('nope'))
 
 Returns `S` concatenated `Count` times. `Count` ≤ 0 yields an empty string.
 
-> **Note:** `Repeat` cannot be used as a short name because `repeat` is a reserved keyword (`repeat … until` loop). Use the qualified form `Std.Str.RepeatStr` or the short name `RepeatStr`.
+> **Note:** After `uses Std.Str`, call this routine as `RepeatStr` (the name `Repeat` is reserved for the `repeat … until` loop).
 
 ```pascal
 WriteLn(RepeatStr('ab', 3))  { ababab }

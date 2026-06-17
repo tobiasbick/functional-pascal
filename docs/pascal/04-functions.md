@@ -2,6 +2,28 @@
 
 Functions are the primary building block in Functional Pascal. They can be stored in variables, passed as arguments, and nested inside other functions.
 
+Formal syntax: [`docs/specs/grammar.ebnf`](../specs/grammar.ebnf) (`function_decl`, `procedure_decl`, `function_type`, `procedure_type`).
+
+## Declaration shape
+
+```text
+function Name [<T>] ( [ params ] ) : RetType ;
+  { nested function | nested procedure }
+begin
+  ...
+end;
+
+procedure Name [<T>] ( [ params ] ) ;
+  { nested function | nested procedure }
+begin
+  ...
+end;
+```
+
+- The header ends with `;` before the body. The body ends with `end;` (including top-level declarations in a program or unit).
+- Use `()` when there are no parameters: `function Pi(): real;`.
+- Parameter lists use `;` between parameters; call sites use `,`.
+
 ## Functions
 
 A function returns a value using `return`:
@@ -21,6 +43,18 @@ A procedure performs an action but returns no value:
 procedure SayHello(Name: string);
 begin
   WriteLn('Hello, ' + Name + '!');
+end;
+```
+
+Procedures use bare `return` to exit early without a value:
+
+```pascal
+procedure LogIfPositive(mutable Count: integer; Value: integer);
+begin
+  if Value <= 0 then
+    return;
+  Count := Count + 1;
+  WriteLn('logged ', Value);
 end;
 ```
 
@@ -84,11 +118,12 @@ end;
 
 begin
   var R: integer := Apply(Double, 5);  { 10 }
-  WriteLn(R);
+  var Op: function(X: integer): integer := Double;
+  WriteLn(Op(7));                        { 14 }
 end.
 ```
 
-Call sites must pass a named function or procedure. Inline anonymous function expressions are not part of the language.
+Call sites pass a **named** function or procedure, or a **variable** whose type is a function or procedure type. Qualified routines work the same way: `Std.Console.WriteLn(...)`.
 
 ## Nested Functions
 

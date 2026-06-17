@@ -1,5 +1,7 @@
 # 2. Basics
 
+Lexical and expression basics for Functional Pascal. Formal syntax: [`docs/specs/grammar.ebnf`](../specs/grammar.ebnf) (Part 1 — lexical grammar, Part 2 § expressions).
+
 ## Primitive Types
 
 | Type      | Description                  | Example              |
@@ -30,7 +32,7 @@ Violets are blue';
 
 ### Character Codes
 
-Like FreePascal, the `#` prefix denotes a character by its ASCII code. These can be concatenated directly with string literals:
+Like FreePascal, the `#` prefix denotes a character by its ASCII code (decimal, range **0..255**). These can be concatenated directly with string literals:
 
 ```pascal
 var
@@ -115,7 +117,7 @@ var
   W: real := 0.5;              { OK — not .5 }
 ```
 
-`.5` and `5.` are **not** valid — always write `0.5` or `5.0`.
+`.5` and `5.` are **not** valid — always write `0.5` or `5.0`. Integer literals must fit in a signed 64-bit range (`9223372036854775807` max).
 
 Negative numbers are parsed as unary minus + literal: `-42` is `-(42)`.
 
@@ -159,8 +161,22 @@ type
 ```pascal
 WriteLn(2 in [1, 2, 3]);
 WriteLn('Alice' in ['Alice': 30]);
+WriteLn('a' in 'pascal');
 WriteLn('asc' in 'pascal')
 ```
+
+### Operator precedence
+
+From highest to lowest binding strength (see [`grammar.ebnf`](../specs/grammar.ebnf) § expressions):
+
+| Level | Operators |
+| ----- | --------- |
+| 1 | `not`, unary `-`, `try` |
+| 2 | `*`, `/`, `div`, `mod`, `and`, `shl`, `shr` |
+| 3 | `+`, `-`, `or`, `xor` |
+| 4 | `=`, `<>`, `<`, `>`, `<=`, `>=`, `in` |
+
+Record update (`expr with Field := Value; … end`) binds tighter than binary operators because it is postfix on the primary expression.
 
 ### Logical / Bitwise
 
@@ -204,9 +220,7 @@ var
 
 ## Comments
 
-Three comment styles are supported. Comments do **not** nest.
-
-`{$...}` is **not** a comment form in Functional Pascal. Pascal-style compiler directives and source-level includes such as `{$I}` / `{$INCLUDE}` are not supported; the lexer reports them as errors.
+Three comment styles are supported. Comments do **not** nest. Shared declarations belong in units imported via `uses`.
 
 ```pascal
 { Brace comment — single or multi-line }
@@ -214,6 +228,8 @@ Three comment styles are supported. Comments do **not** nest.
 (* Parenthesis-star comment — single or multi-line *)
 
 // Line comment — to end of line
+
+/// Doc line comment — same as `//`, preserved by `fpas fmt` when attached to declarations
 ```
 
 `{ outer { inner } ← closes here` — the first `}` ends the comment.
@@ -238,6 +254,7 @@ Arrays are declared with the `array of` syntax:
 var
   Numbers: array of integer := [1, 2, 3, 4, 5];
   Names: array of string := ['Alice', 'Bob', 'Charlie'];
+  Empty: array of integer := [];
 ```
 
 Accessing elements uses bracket notation (0-based index):

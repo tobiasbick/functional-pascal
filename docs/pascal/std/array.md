@@ -51,7 +51,7 @@ All routines are **generic over element type `T`** (your array’s element type)
 
 **Mutating calls:** `Push` and `Pop` require **`A` to be a simple mutable array variable** (typically `mutable var Name: array of T := …`). The compiler rejects other targets.
 
-**Callbacks:** parameters such as `F: function(...)` or `F: procedure(...)` accept named functions or procedures. Anonymous function expressions are not supported.
+**Callbacks:** pass a named function or procedure whose type matches the parameter (e.g. `F: function(X: T): boolean`).
 
 ---
 

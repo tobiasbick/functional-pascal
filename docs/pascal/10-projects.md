@@ -2,7 +2,7 @@
 
 A project groups source files into a buildable unit. Projects are defined by a `.fpasprj` file using TOML format.
 
-Multi-file programs are composed with project source lists plus `unit` / `uses`. There is no source-level include mechanism such as `{$I}` or `{$INCLUDE}`.
+Multi-file programs compose source lists in the project file with `unit` declarations and `uses` imports.
 
 ## CLI Usage
 
@@ -47,10 +47,10 @@ projects = ["../my-lib/my-lib.fpasprj"]
 ### Project Kinds
 
 - **`program`** — produces an executable. Requires `main` pointing to a file with a `program` declaration. The entry point is exactly one main program file per project.
-- **`library`** — a reusable library. Must not define `main`. Source files are expected to use `unit` declarations. Other projects consume libraries via `[dependencies].projects`. The CLI cannot execute a library project directly; run a `program` project that depends on it instead.
-- **`test`** — a test bundle for `fpas test`. Must not define `main`. `[sources]` lists `unit` helpers and `*_test.fpas` program entry files. Optional `[test.overrides."<file>_test.fpas"]` tables set per-test `script` and `headless_graph` for the runner. Not runnable with `fpas run`; use `fpas test [<path/to/tests.fpasprj>]`. In a workspace, `fpas test` with no path runs tests from all `kind = "test"` members only.
+- **`library`** — reusable code as `unit` files. Other projects consume libraries via `[dependencies].projects`. Run library code through a `program` project that depends on it (`fpas check` type-checks a library manifest directly).
+- **`test`** — a test bundle for `fpas test`. Lists `unit` helpers and `*_test.fpas` program entry files in `[sources]`. Optional `[test.overrides."<file>_test.fpas"]` tables set per-test `script` and `headless_graph` for the runner. In a workspace, `fpas test` with no path runs tests from all `kind = "test"` members only.
 
-Library dependencies are **source-level only**: the loader merges `.fpas` from dependency manifests and links them with the consumer. There are no precompiled library artifacts (`.fpaslib`); see [`docs/future/libraries.md`](../future/libraries.md).
+Library dependencies are **source-level**: the loader merges `.fpas` from dependency manifests and links them with the consumer.
 
 ### `[dependencies]` Section
 
@@ -68,7 +68,7 @@ Each `projects` entry can be:
 
 Rules:
 
-- Every dependency must be a `kind = "library"` project. Depending on a `program` project is an error.
+- Every dependency must be a `kind = "library"` project.
 - `workspace` entries require a `.fpasworkspace` ancestor (in the consumer's parent directories). Names match `project.name` in member manifests (case-insensitive).
 - Dependencies are loaded **transitively**: if library B depends on library C, a program that depends only on B also receives C's sources.
 - Cyclic `dependencies.projects` chains are rejected.
@@ -86,9 +86,9 @@ Optional on `kind = "library"` projects. Controls which units other projects may
 Rules:
 
 - Omitted `[exports]` means **all units** in the library are importable by dependents (same as before).
-- Units not listed remain **internal**: they can still be used inside the library via `uses`, but a dependent program cannot `uses` them directly.
+- `[exports].units` lists unit names that dependents may reference in `uses`. Other units in the library remain available only inside the library via `uses`.
 - Each name must match a `unit` in the library's `[sources]` (case-insensitive).
-- Program projects must not define `[exports]`.
+- `[exports]` applies to `kind = "library"` projects only.
 - Per-unit `private` still hides symbols within a unit; `[exports]` hides whole units from other projects.
 
 Example:
@@ -108,8 +108,6 @@ Lists all source files belonging to the project. Each source file declares its n
 | `exclude` | No | Array of file paths or glob patterns. Removes matches from the include set after inclusion. |
 
 #### Include and Exclude Patterns
-
-These `include` entries belong to the project file format only. They are not related to Pascal compiler directives.
 
 Each `include` entry can be:
 
@@ -255,7 +253,7 @@ fpas check suite.fpasworkspace
 fpas check
 ```
 
-With no path, `fpas check` discovers a single `.fpasworkspace` in the current directory first, otherwise a single `.fpasprj`. Library projects are supported here even though `fpas my-lib.fpasprj` cannot run them.
+With no path, `fpas check` discovers a single `.fpasworkspace` in the current directory first, otherwise a single `.fpasprj`. Library projects type-check here the same as program projects.
 
 ## Workspaces
 

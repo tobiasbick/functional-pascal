@@ -2,6 +2,8 @@
 
 Functional Pascal provides structured error handling with `Result` and `Option` types for expected failures, and `panic` for unrecoverable errors.
 
+Formal syntax: [`docs/specs/grammar.ebnf`](../specs/grammar.ebnf) (`result_type`, `option_type`, `try` expression, `panic_stmt`, `destructure_label`).
+
 ## The Result Type
 
 `Result of T, E` represents either a success (`Ok`) or a failure (`Error`):

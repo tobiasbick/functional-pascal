@@ -68,6 +68,7 @@ When asked to implement or modify behavior:
 - When implementing documented language behavior, add a link to the relevant file under `docs/pascal/` in the Rust source. User-facing docs live under `docs/pascal/`; plans under `docs/future/` only.
 - Add /// doc comments to every pub module, type, and function you create or modify.
 - Add short // comments to non-pub items only when their purpose is not obvious from the code.
+- Do not document what is not there — describe only what exists. Do not refer to future features or hypothetical alternatives in current code.
 
 ## Diagnostics
 

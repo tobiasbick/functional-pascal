@@ -5,7 +5,7 @@ description: "Functional Pascal (FPAS) — syntax, mutability, Std library, pitf
 
 # Functional Pascal Language Guide
 
-Functional Pascal is a modern Pascal dialect with immutability-by-default, first-class functions, and a module system. Files use `.fpas` extension. The language is **case-insensitive** for keywords and identifiers. Authoritative documentation lives in [`docs/pascal/`](../../docs/pascal/).
+Functional Pascal is a modern Pascal dialect with immutability-by-default, first-class **named** functions, and a module system. Files use `.fpas` extension. The language is **case-insensitive** for keywords and identifiers. Authoritative documentation: [`docs/pascal/`](../../docs/pascal/). Formal syntax: [`docs/specs/grammar.ebnf`](../../docs/specs/grammar.ebnf).
 
 ## Program Structure
 
@@ -69,10 +69,12 @@ end;
 
 - Parameters: semicolons in declarations, commas in calls
 - `mutable` parameter keyword allows reassignment inside the function
-- Nested functions have lexical scope access
-- `forward` enables mutual recursion: `function Foo(...): T; forward;`
+- Nested functions have lexical scope access; nest helpers for mutual recursion
+- Routine headers end with `;`; bodies end with `end;`. Empty parameter lists use `()`
 
-## Function Types
+## Function Types and First-Class Functions
+
+Pass **named** routines or **variables** whose type is a function/procedure type.
 
 ```pascal
 type IntOp = function(A: integer; B: integer): integer;
@@ -81,24 +83,18 @@ function Apply(F: function(X: integer): integer; Value: integer): integer;
 begin
   return F(Value)
 end;
-```
 
-## Anonymous Functions and Closures
-
-Anonymous functions (lambdas) use `function(...): Type begin ... end` inline. They capture enclosing variables by value:
-
-```pascal
-var Square := function(X: integer): integer begin return X * X end;
-
-{ Closure — captures N from enclosing scope }
-function MakeAdder(N: integer): function(X: integer): integer;
+function Double(X: integer): integer;
 begin
-  return function(X: integer): integer begin return X + N end
+  return X * 2
 end;
 
-{ Higher-order: Map/Filter/Reduce }
-var Doubled := Map([1, 2, 3],
-  function(X: integer): integer begin return X * 2 end);
+begin
+  var R: integer := Apply(Double, 5);
+  var Op: function(X: integer): integer := Double;
+  WriteLn(Op(7));
+  var Doubled: array of integer := Map([1, 2, 3], Double)
+end.
 ```
 
 ## Control Flow
@@ -194,30 +190,28 @@ Backing values (`Success = 200`) cannot be combined with associated data on the 
 
 ## Generics
 
-Type parameters are declared in angle brackets (`<T>`). Concrete type arguments use the `of` keyword at usage sites.
+Type parameters apply to **functions and procedures** (including record methods). See [`docs/pascal/05-types.md`](../../docs/pascal/05-types.md#generics).
 
 ```pascal
-type
-  Box<T> = record
-    Value: T;
-  end;
-
-  Maybe<T> = enum
-    Just(Value: T);
-    Nothing;
-  end;
-
 function Identity<T>(Value: T): T;
 begin
   return Value
 end;
 
-var B: Box of string := record Value := 'hi'; end;
-var M: Maybe of integer := Maybe.Just(42);
-var X: integer := Identity(7);  { T inferred }
+type
+  Box = record
+    Value: integer;
+
+    function Map<R>(Self: Box; F: function(X: integer): R): R;
+    begin
+      return F(Self.Value)
+    end;
+  end;
+
+var X: integer := Identity(42);  { T inferred }
 ```
 
-Multiple type parameters: `Pair<A, B>`, used as `Pair of integer, string`. Type aliases can specialize generics: `type IntBox = Box of integer;`. Generics use type erasure — no monomorphization.
+Constraints: `<T: Comparable>`, `<T: Numeric>`, `<T: Printable>`. Details: [`docs/pascal/05-types.md`](../../docs/pascal/05-types.md#generics).
 
 ## Visibility
 
@@ -283,10 +277,10 @@ Full TUI dispatch details: [`docs/pascal/std/tui-app.md`](../../docs/pascal/std/
 
 | Precedence | Operators |
 |-----------|----------|
-| 1 (highest) | `not`, unary `-` |
+| 1 (highest) | `not`, unary `-`, `try` |
 | 2 | `*`, `/`, `div`, `mod`, `and`, `shl`, `shr` |
 | 3 | `+`, `-`, `or`, `xor` |
-| 4 (lowest) | `=`, `<>`, `<`, `>`, `<=`, `>=` |
+| 4 (lowest) | `=`, `<>`, `<`, `>`, `<=`, `>=`, `in` |
 
 `/` always returns `real`. Use `div` for integer division.
 
@@ -308,9 +302,10 @@ end
 { Brace comment }
 (* Parenthesis-star comment *)
 // Line comment
+/// Doc line (preserved by fpas fmt on declarations)
 ```
 
-Comments do **not** nest.
+Comments do **not** nest. Shared code belongs in units imported via `uses`.
 
 ## Error Handling
 
@@ -426,4 +421,5 @@ Examples: [`examples/pascal/library-deps/`](../../examples/pascal/library-deps/)
 8. **Single quotes for strings** — `'Hello'`, doubled for escaping: `'It''s'`
 9. **`Result`/`Option` for expected errors** — `panic` only for broken invariants
 10. **`try` propagates errors** — unwraps or returns early
-11. **Full TUI and Graph apps use hosted dispatch** — `Application.Configure` + `Application.Run`; no poll-style `ReadEvent` / `PollEvent` on `Std.Tui` or `Std.Graph`
+11. **First-class calls** — pass named routines or function-typed variables; nest helpers for mutual recursion
+12. **Full TUI and Graph apps use hosted dispatch** — `Application.Configure` + `Application.Run`

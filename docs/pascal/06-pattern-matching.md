@@ -2,6 +2,23 @@
 
 The `case of` statement matches a value against constants, ranges, or enum variants.
 
+Formal syntax: [`docs/specs/grammar.ebnf`](../specs/grammar.ebnf) (`case_stmt`, `case_arm`, `case_label`).
+
+## Syntax
+
+```text
+case <expression> of
+  <label> { , <label> } [ if <boolean> ] : <statement> ;
+  ...
+[ else
+    <statement> { ; <statement> } [ ; ] ]
+end
+```
+
+- Separate arms with `;`. A trailing `;` before `else` or `end` is optional.
+- Do not put `;` immediately before `else` or `end` (semicolons are separators, not terminators).
+- Each arm has one statement; use `begin … end` for multiple statements (see [Block Arms](#block-arms)).
+
 ## Basic Matching
 
 ```pascal
@@ -16,7 +33,7 @@ end;
 
 ## Multiple Values
 
-Separate multiple values with commas:
+Separate multiple values with commas. Every label in the list shares the same arm body (and the same pattern bindings when applicable):
 
 ```pascal
 case Day of
@@ -26,6 +43,15 @@ case Day of
   'Sunday':    WriteLn('Weekend');
 else
   WriteLn('Midweek');
+end;
+```
+
+For `Result` and `Option`, multiple destructure labels in one arm may reuse one binding name:
+
+```pascal
+case R of
+  Ok(Msg), Error(Msg):
+    WriteLn(Msg)
 end;
 ```
 
@@ -82,11 +108,9 @@ end;
 
 Rules:
 
-- Each field position must be a bare identifier binding.
-- Nested patterns are not supported.
-- `_` is not supported as a wildcard binding.
-- Ranges (`a..b`) are not allowed on enum variant labels.
-- Use a guard clause when you need additional constraints on a bound value.
+- Each field position is a bare identifier binding, matched positionally to the variant fields.
+- A pattern variant must belong to the scrutinee enum type (`Shape.Circle` when matching `Shape`).
+- Use a `when` guard for additional constraints on a bound value (literals, ranges, or comparisons).
 
 ## Else Branch
 
@@ -154,7 +178,7 @@ end;
 ```
 
 The guard expression has access to any bindings introduced by the label.
-For enum patterns, guards are the way to express additional checks because pattern arguments cannot contain literals, wildcards, or nested enum patterns.
+For enum patterns, pattern arguments bind names only; put literals and extra checks in the `when` guard.
 
 ### Scalar Guard Bindings
 
@@ -239,8 +263,8 @@ end;
 
 ### Rules
 
-- Enum types: all variants must be covered or `else` present.
-- `Result`: both `Ok` and `Error` must be handled or `else` present.
-- `Option`: both `Some` and `None` must be handled or `else` present.
+- Enum types: every variant name must appear on an **unguarded** arm, or `else` must be present. Data-carrying variants count by name (`Shape.Circle`, not by field values).
+- `Result`: both `Ok` and `Error` must appear on unguarded arms, or `else` must be present.
+- `Option`: both `Some` and `None` must appear on unguarded arms, or `else` must be present.
 - Scalar types (`integer`, `string`, `char`, `boolean`): `else` is recommended but not required.
-- Guard clauses do not count toward exhaustiveness — `Shape.Circle(R) if R > 0` does not cover `Shape.Circle`.
+- Guard clauses do not count toward exhaustiveness — `Shape.Circle(R) if R > 0` does not cover variant `Circle`; add an unguarded `Shape.Circle(R)` arm or `else`.

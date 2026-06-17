@@ -37,7 +37,7 @@ After `uses Std.Option;` use short names (`Unwrap`, `IsSome`, …) or qualified 
 
 ---
 
-Examples below use named helper functions. Anonymous function expressions are not supported.
+Examples pass named helper functions whose types match each callback parameter.
 
 ---
 

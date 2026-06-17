@@ -109,7 +109,7 @@ end;
 
 `Point` and `Distance` are public. `Square` is private — only callable from within `MyApp.Geometry`.
 
-The `private` and `public` keywords apply to `function`, `procedure`, `type`, `const`, and `var` declarations in units. They are not valid in `program` files (program-level declarations have no importers).
+The `private` and `public` keywords apply to `function`, `procedure`, `type`, `const`, and `var` declarations in units. In `program` files, top-level declarations are always visible.
 
 ## Reserved Namespace `Std`
 

@@ -22,7 +22,7 @@ impl Worker {
             return Err(runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 format!("Expected function value, got `{}`", func.type_name()),
-                "Pass a function (named or anonymous) as the callback argument.",
+                "Pass a named function or a function-typed variable as the callback argument.",
                 line,
             ));
         };

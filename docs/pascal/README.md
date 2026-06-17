@@ -29,6 +29,7 @@ Planned features: [`docs/future/`](../future/).
 10. [Projects](10-projects.md) — `.fpasprj` project files, CLI, program/library kinds
 11. [Standard Library](11-stdlib.md) — `Std.*` built-in libraries
 12. [Formatter style](fmt-style.md) — normative output rules for `fpas fmt`
+13. [Formal grammar](../specs/grammar.ebnf) — ISO EBNF syntax annex (lexer + parser)
 
 ## Future Features
 

@@ -1,5 +1,7 @@
 # 3. Control Flow
 
+Formal syntax: [`docs/specs/grammar.ebnf`](../specs/grammar.ebnf) (`if_stmt`, `case_stmt`, `for_stmt`, `for_in_stmt`, `while_stmt`, `repeat_stmt`, `break_stmt`, `continue_stmt`).
+
 ## If / Then / Else
 
 ```pascal

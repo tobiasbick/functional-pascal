@@ -73,7 +73,7 @@ begin
 end.
 ```
 
-The first segment `Std` in a unit name is reserved for the implementation-defined standard library. When user-defined units exist, their names must not start with `Std.`; see the standard library section for valid `Std.*` units and `uses` rules.
+The first segment `Std` in a unit name is reserved for the standard library. User-defined units use another root segment (for example `MyApp.Utils`); see [9. Units](09-units.md) and [11. Standard Library](11-stdlib.md) for `uses` rules.
 
 ## Keywords
 

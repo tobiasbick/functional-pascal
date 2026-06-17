@@ -7,7 +7,10 @@
 (*   { }  repetition       ( )  grouping                            *)
 (*   '…'  terminal string  (* … *)  comment                        *)
 (*                                                                  *)
-(* Keywords are case-insensitive: 'begin' matches BEGIN, Begin, etc *)
+(* Keywords are case-insensitive: 'begin' matches BEGIN, Begin, etc. *)
+(*                                                                  *)
+(* Normative language behavior: docs/pascal/                        *)
+(* This file is the formal syntax annex (lexer + parser shape).       *)
 (* ================================================================ *)
 
 
@@ -63,14 +66,17 @@ char_code       = '#' decimal_digits ;
 brace_comment   = '{' { (* any char except '}' *) } '}' ;
 paren_comment   = '(*' { (* any char except closing '*)' *) } '*)' ;
 line_comment    = '//' { (* any char except newline *) } newline ;
+doc_line_comment = '//' '/' { (* any char except newline *) } newline ;
 
 (* Comments do NOT nest.                                            *)
 (* { outer { inner } ← first } closes the comment.                 *)
-(* A `{` immediately followed by `$` is not a comment: the lexer    *)
-(* reports an error for that sequence. There are no compiler        *)
-(* directives or source-level include forms in the language.        *)
+(* A `{` immediately followed by `$` (`{$...}`) is not a comment:   *)
+(* the lexer reports an error for that sequence. There are no       *)
+(* compiler directives or source-level include forms in the language. *)
+(* `///` is lexically a line comment; formatters treat it as a      *)
+(* preservable doc line (see docs/pascal/fmt-style.md).             *)
 
-(* ---- Keywords (55, case-insensitive) --------------------------- *)
+(* ---- Keywords (53, case-insensitive) --------------------------- *)
 
 keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'var'       | 'mutable'   | 'function'  | 'procedure'
@@ -187,13 +193,17 @@ constraint_name     = 'Comparable' | 'Numeric' | 'Printable' ;
 
 (* ---- 2.3 Type Expressions ------------------------------------- *)
 
+(* Built-in named types (via qualified_id): integer, real, boolean, *)
+(* char, string, task. See docs/pascal/02-basics.md and            *)
+(* docs/pascal/08-concurrency.md.                                  *)
+
 type_expr           = 'array' 'of' type_expr            (* array type     *)
                     | 'dict' 'of' type_expr 'to' type_expr (* dict type    *)
                     | 'result' 'of' type_expr ',' type_expr  (* result type *)
                     | 'option' 'of' type_expr            (* option type    *)
                     | function_type                      (* function type  *)
                     | procedure_type                     (* procedure type *)
-                    | qualified_id ;   (* named type: user types, `task`, etc. *)
+                    | qualified_id ;   (* named / built-in / user type     *)
 
 function_type       = 'function' '(' [ formal_type_list ] ')' ':' type_expr ;
 procedure_type      = 'procedure' '(' [ formal_type_list ] ')' ;
@@ -318,10 +328,9 @@ enum_pattern        = qualified_id '(' pattern_arg { ',' pattern_arg } ')'
 
 pattern_arg         = identifier ;                       (* binding only   *)
 
-(* Each field position in an enum pattern must be a plain identifier *)
-(* binding — wildcards, literals, and nested patterns are not        *)
-(* supported.  Use a guard clause for additional constraints:        *)
-(*   Shape.Circle(R) if R > 10.0: ...                               *)
+(* Each field position in an enum pattern is a plain identifier binding. *)
+(* Use a guard clause for additional constraints:                       *)
+(*   Shape.Circle(R) if R > 10.0: ...                                *)
 (*                                                                  *)
 (* Value labels must be compile-time constants: integer, char,      *)
 (* string, boolean, or enum literals. Ranges use '..'.              *)
@@ -459,10 +468,14 @@ dict_literal        = '[' ( ':' ']'                                      (* empt
 (* -- Designator (variable, field, or indexed access) -- *)
 (* Index expression '[' expression ']' applies to: array (integer index),
    dict (key of matching type), and string (integer index → char).        *)
-designator          = identifier { '.' identifier | '[' expression ']' } ;
+(* path_segment allows keyword roots array/result/option/dict when       *)
+(* followed by '.' (parser extension for qualified type-like paths).       *)
+path_segment        = identifier
+                    | 'array' | 'result' | 'option' | 'dict' ;
+designator          = path_segment { '.' path_segment | '[' expression ']' } ;
 
 (* -- Qualified identifier (for uses, types — no indexing) -- *)
-qualified_id        = identifier { '.' identifier } ;
+qualified_id        = path_segment { '.' path_segment } ;
 
 (* ================================================================ *)
 (* END OF GRAMMAR                                                   *)

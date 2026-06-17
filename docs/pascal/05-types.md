@@ -282,7 +282,7 @@ end;
 ```
 
 Each binding name in the pattern is positional — it corresponds to the field at that position in the variant declaration. A variant without fields (like `Point` above) uses no parentheses.
-Each field position must use a plain identifier binding. Nested patterns and `_` are not supported in enum patterns; use a guard on the `case` arm for extra constraints.
+Each field position uses a plain identifier binding; use a `when` guard on the `case` arm for extra constraints.
 
 Backing values cannot be combined with associated data on the same variant.
 
@@ -349,7 +349,7 @@ type
 
 ## Generics
 
-Functions and procedures can be parameterized with type parameters declared in angle brackets (`<T>`). Records, enums, and type aliases are not generic — only functions and procedures support type parameters.
+Functions and procedures declare type parameters in angle brackets (`<T>`). Record methods may declare type parameters on the method itself.
 
 ### Generic Functions and Procedures
 
@@ -375,8 +375,7 @@ var
 
 ### Generic Record Methods
 
-Record methods may declare their own type parameters even when the record itself is not generic.
-The type parameters belong to the method, not to the surrounding record.
+Record methods declare type parameters in the method header; those parameters are scoped to the method.
 
 ```pascal
 type

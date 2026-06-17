@@ -256,7 +256,7 @@ The language allows a **single statement** without `begin` / `end` after `then`,
 | program `begin` … `end.` | already required — unchanged |
 | `repeat` … `until` | **no** extra wrapper — statement list stays directly under `repeat` |
 | `record` / `enum` type, record literals | `record` … `end` / `enum` … `end` — not `begin` |
-| anonymous `function` … `begin` … `end` | already required — unchanged |
+| nested `function` / `procedure` body | already required — unchanged |
 
 ## Blank lines
 
@@ -425,7 +425,6 @@ type
 
 - Parentheses: omit redundant parens where parser precedence is unambiguous; always emit parens present in `Expr::Paren`.
 - Function/procedure calls: `Name(arg1, arg2)` — commas in calls, semicolons only in declarations.
-- Anonymous functions: `function(X: integer): integer begin ... end` inline when in AST.
 
 ## Comments
 

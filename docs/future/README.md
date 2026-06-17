@@ -31,5 +31,6 @@ FPAS programs today are tested mainly from Rust (`compile_and_run`, VM input que
 | 9 | [`dict`](09-remove-dict.md) | Pending — may be kept |
 | — | [Task memory benchmark](task-memory-benchmark.md) | Reproduce pkolaczk async memory bench with `go` + `WaitAll`; blocked on cooperative sleep and scale validation |
 | — | [Libraries — finer exports](libraries.md) | Per-symbol / re-export rules beyond `[exports].units` |
+| — | [Pascal docs restructure](pascal-docs-restructure.md) | Replace numbered `01-`…`11-` chapters with topic directories and small pages |
 
 ## Not Yet Planned

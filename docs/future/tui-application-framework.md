@@ -52,11 +52,10 @@ Implementation plan for evolving Functional Pascal's terminal UI from poll-style
 
 **Status:** Next active phase.
 
-1. **Integration test**: headless or scripted terminal; manual real-terminal checklist is documented in [`docs/rust/tui-terminal-checklist.md`](../rust/tui-terminal-checklist.md).
+1. **Integration test**: headless or scripted terminal; manual real-terminal checklist is documented in [`docs/pascal/std/tui-terminal-checklist.md`](../pascal/std/tui-terminal-checklist.md).
 2. **Fuzz / property-test** event ordering (resize bursts, rapid keys).
-3. **Performance budget**: hosted-dispatch latency targets are documented in [`docs/rust/tui-performance-budget.md`](../rust/tui-performance-budget.md).
-4. Verify TUI Rust sources link to the canonical `docs/pascal/` spec (covered by `tui_rust_sources_link_to_pascal_spec_docs`).
-5. Archive or move this file now that Phase 7 is complete.
+3. Verify TUI Rust sources link to the canonical `docs/pascal/` spec (covered by `tui_rust_sources_link_to_pascal_spec_docs`).
+4. Archive or move this file now that Phase 7 is complete.
 
 ---
 
@@ -75,5 +74,4 @@ Implementation plan for evolving Functional Pascal's terminal UI from poll-style
 | `[docs/pascal/std/tui-app.md](../pascal/std/tui-app.md)`       | Dispatch-mode API (`Application.Run`, `On`*, `ExitReason`) |
 | `[docs/pascal/std/tui.md](../pascal/std/tui.md)`               | Poll-style API status and superseded surface               |
 | `[docs/pascal/std/console.md](../pascal/std/console.md)`       | Key types and legacy I/O                                   |
-| `[docs/rust/parallel-vm.md](../rust/parallel-vm.md)`           | VM task runtime; shared I/O and mutex ordering             |
-| `[docs/pascal/08-concurrency.md](../pascal/08-concurrency.md)` | Task model vs TUI main thread                              |
+| `[docs/pascal/08-concurrency.md](../pascal/08-concurrency.md)` | Task model; TUI `On*` handlers run on the main thread      |

@@ -1,6 +1,6 @@
 //! Main-only `Yield`, single-child reschedule, and spawn+`Yield` without runtime error.
 //!
-//! **Documentation:** `docs/rust/parallel-vm.md` (Phase 7), `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/pascal/08-concurrency.md` (Phase 7), `docs/pascal/08-concurrency.md`
 
 use crate::Vm;
 use fpas_bytecode::{Chunk, Intrinsic, Op, TaskIntrinsic, Value};

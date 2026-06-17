@@ -1,6 +1,6 @@
 //! [`Op::Yield`] on spawned tasks (retained and detached) and main-task yields before `TaskWait`.
 //!
-//! **Documentation:** `docs/rust/parallel-vm.md` (Phase 7), `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/pascal/08-concurrency.md` (Phase 7), `docs/pascal/08-concurrency.md`
 
 use fpas_bytecode::{Chunk, Intrinsic, Op, TaskIntrinsic, Value};
 

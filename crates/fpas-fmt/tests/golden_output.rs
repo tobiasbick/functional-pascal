@@ -1,4 +1,4 @@
-//! Golden-file output tests ([`docs/rust/fmt-style.md`](../../docs/rust/fmt-style.md)).
+//! Golden-file output tests ([`docs/pascal/fmt-style.md`](../../docs/pascal/fmt-style.md)).
 
 mod common;
 

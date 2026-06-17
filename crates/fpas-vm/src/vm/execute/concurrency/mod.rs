@@ -1,6 +1,6 @@
 //! Cooperative concurrency: task spawning, yielding, and scheduling.
 //!
-//! **Documentation:** `docs/pascal/08-concurrency.md`, `docs/rust/parallel-vm.md`
+//! **Documentation:** `docs/pascal/08-concurrency.md`, `docs/pascal/08-concurrency.md`
 
 mod tasks;
 

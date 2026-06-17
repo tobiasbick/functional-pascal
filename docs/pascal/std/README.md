@@ -17,6 +17,7 @@ All units are opt-in through `uses`.
 - `Std.Graph` - [graph.md](graph.md) (native windowed graphics, framebuffer upload, drawing primitives, text; hosted input via [graph-app.md](graph-app.md))
 - `Std.Tui` - [tui.md](tui.md) (terminal application handle, size, `RequestRedraw`; key payloads use `Std.Console.KeyKind` / `Std.Console.KeyEvent`)
 - `Std.Tui` hosted dispatch - [tui-app.md](tui-app.md) (`Application.Configure`, `Application.Run`, `ApplicationHandlers`, `Application.Host*`; VM intrinsics **256**–**347**, including host widgets **343**–**347**; `OnExit` receives **`ExitReason.UserQuit`**, **`ExitReason.HostStop`**, **`ExitReason.HostAndUserStop`**, or **`ExitReason.HostShutdown`**. See [tui-application-framework.md](../../future/tui-application-framework.md).)
+- TUI real-terminal checks - [tui-terminal-checklist.md](tui-terminal-checklist.md) (manual smoke tests for hosted apps)
 - `Std.Graph` hosted dispatch - [graph-app.md](graph-app.md) (`Application.Configure`, `Application.Run`, `ApplicationHandlers`, `On*` handlers; same hosted model as TUI)
 - `Std.Str` - [str.md](str.md)
 - `Std.Conv` - [conv.md](conv.md)
@@ -28,7 +29,7 @@ All units are opt-in through `uses`.
 - `Std.Json` - [json.md](json.md) (`JsonValue`, `Parse`, `Stringify` for JSON trees)
 - `Std.Result` - [result.md](result.md) (helpers for `Result of T, E` — `Unwrap`, `UnwrapOr`, `IsOk`, `IsError`, `Map`, `AndThen`, `OrElse`)
 - `Std.Option` - [option.md](option.md) (helpers for `Option of T` — `Unwrap`, `UnwrapOr`, `IsSome`, `IsNone`, `Map`, `AndThen`, `OrElse`)
-- `Std.Task` - [task.md](task.md) (`Wait`, `WaitAll` — blocking on `task` handles from `go`; language rules in [08-concurrency.md](../08-concurrency.md); VM layout in [parallel-vm.md](../../rust/parallel-vm.md))
+- `Std.Task` - [task.md](task.md) (`Wait`, `WaitAll` — blocking on `task` handles from `go`; see [08-concurrency.md](../08-concurrency.md))
 - `Std.Test` - [test.md](test.md) (`AssertTrue`, `AssertFalse`, `AssertEquals`, `Fail`, `Skip` — assertions and `fpas test` runner; see [test-framework](../../future/test-framework/README.md))
 
 ## Shared implementation touchpoints

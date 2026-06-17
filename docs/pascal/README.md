@@ -2,6 +2,10 @@
 
 A function-first programming language built on Pascal's readable syntax and clean structure. Runs on a managed virtual machine — no pointers, no manual memory management.
 
+Language specification: [`docs/pascal/`](.) — implemented behavior and stdlib reference.
+
+Planned features: [`docs/future/`](../future/).
+
 ## Design Principles
 
 - **Function First** — Functions are the primary abstraction. No classical classes or object hierarchies.
@@ -24,6 +28,7 @@ A function-first programming language built on Pascal's readable syntax and clea
 9. [Units](09-units.md) — Unit system, `uses`, namespaces, visibility
 10. [Projects](10-projects.md) — `.fpasprj` project files, CLI, program/library kinds
 11. [Standard Library](11-stdlib.md) — `Std.*` built-in libraries
+12. [Formatter style](fmt-style.md) — normative output rules for `fpas fmt`
 
 ## Future Features
 

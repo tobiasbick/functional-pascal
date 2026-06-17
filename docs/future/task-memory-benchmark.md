@@ -36,7 +36,6 @@ So we **cannot** yet claim FPAS numbers comparable to the blog post, and we shou
 ## Related docs
 
 - Language: [`docs/pascal/08-concurrency.md`](../pascal/08-concurrency.md), [`docs/pascal/std/task.md`](../pascal/std/task.md), [`docs/pascal/std/time.md`](../pascal/std/time.md)
-- VM layout: [`docs/rust/parallel-vm.md`](../rust/parallel-vm.md)
 
 ## Sketch (not runnable yet)
 

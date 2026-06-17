@@ -3,7 +3,7 @@
 //! The VM executes the main program on the calling thread. Tasks created with
 //! `go` are distributed across a thread pool for true parallel execution.
 //!
-//! **Documentation:** `docs/rust/parallel-vm.md`, `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/pascal/08-concurrency.md`, `docs/pascal/08-concurrency.md`
 
 use fpas_bytecode::{Chunk, SourceLocation};
 use fpas_std::{
@@ -33,7 +33,7 @@ const TIMESLICE: u32 = 256;
 /// Drops after [`Worker::run`] returns or unwinds so [`SharedState::request_shutdown`] always runs.
 /// Pool workers block on the task condvar; without this, a panic in the main worker could strand them.
 ///
-/// **Documentation:** `docs/rust/parallel-vm.md` (Phase 9).
+/// **Documentation:** `docs/pascal/08-concurrency.md`.
 struct ShutdownAfterMain(Arc<SharedState>);
 
 impl Drop for ShutdownAfterMain {

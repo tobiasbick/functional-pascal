@@ -1,15 +1,15 @@
 # 8. Concurrency
 
-Functional Pascal provides Go-inspired lightweight task concurrency. Tasks created with `go` may run on worker threads in parallel with the main program; the main program always runs on the OS thread that starts VM execution. For bytecode and scheduling details, see [`docs/rust/parallel-vm.md`](../rust/parallel-vm.md).
+Functional Pascal provides Go-inspired lightweight task concurrency. Tasks created with `go` may run on worker threads in parallel with the main program; the main program always runs on the OS thread that starts execution.
 
-## Bytecode mapping (implementation)
+## Bytecode mapping
 
-The compiler lowers `go` to dedicated VM opcodes (see Phase 1–2 in [`parallel-vm.md`](../rust/parallel-vm.md)); the VM execute path for those opcodes is covered in Phase 6 of that layout (`fpas-vm` [`spawn.rs`](../../crates/fpas-vm/src/vm/execute/concurrency/tasks/spawn.rs)):
+The compiler lowers `go` to dedicated VM opcodes:
 
 - **`go` as an expression** (e.g. assigned to a `task` variable) emits a **retained** spawn: the callee and arguments are popped and a task handle is pushed for later `Wait`.
 - **`go` as a statement** (fire-and-forget) emits a **detached** spawn: same stack effect except **no** handle is retained for the caller.
 
-At VM construction time, the runtime uses a **static scan** of the compiled instruction stream: if the chunk contains **no** retained or detached spawn opcodes, it does **not** start a background worker pool. Opcodes used only for cooperative scheduling (for example **`Yield`**) do **not** by themselves imply a pool — only spawn opcodes do.
+At startup, the runtime scans the compiled instruction stream: if the program contains **no** retained or detached spawn opcodes, it does **not** start background worker threads. Opcodes used only for cooperative scheduling (for example **`Yield`**) do **not** by themselves imply a pool — only spawn opcodes do.
 
 ## Tasks
 
@@ -54,19 +54,19 @@ Bare values, operators, and non-call expressions are rejected by the parser or s
 
 ### Thread pool
 
-If the compiled chunk contains **no** spawn opcodes for tasks (equivalently: the program never uses `go` in a way that reaches bytecode), the VM does **not** start background worker threads.
+If the compiled program contains **no** spawn opcodes for tasks (equivalently: the program never uses `go` in a way that reaches bytecode), the runtime does **not** start background worker threads.
 
-If it does emit spawn bytecode, the VM starts **`max(1, available_parallelism − 1)`** worker threads that share a ready queue, while the **main task** (task id `0`) still runs on the thread that invoked VM execution. Each pool thread runs **at most one** ready task at a time: workers block when the queue is empty and are woken when work is enqueued or the VM shuts down (see Phase 5 in [`parallel-vm.md`](../rust/parallel-vm.md)). Together, this matches typical machine parallelism without starting idle workers for programs that never spawn tasks.
+If it does emit spawn bytecode, the runtime starts **`max(1, available_parallelism − 1)`** worker threads that share a ready queue, while the **main task** (task id `0`) still runs on the thread that started execution. Each pool thread runs **at most one** ready task at a time: workers block when the queue is empty and are woken when work is enqueued or the runtime shuts down. Together, this matches typical machine parallelism without starting idle workers for programs that never spawn tasks.
 
-Those background workers exist only for a single **`Vm::run`** invocation: the runtime **joins** pool threads before `run` returns so short-lived hosts do not accumulate stray threads across many runs.
+Background workers exist only for a single program run: the runtime **joins** pool threads before execution returns so short-lived hosts do not accumulate stray threads across many runs.
 
-When the **main task** finishes (normally or with a runtime error), the VM signals **teardown shutdown** so idle workers wake and exit once the ready queue is drained; this is separate from **`signal_runtime_failure`**, which also sets **`abort_spawned_bytecode`** after a concurrent task fails so other spawned tasks stop at the next instruction-boundary check. **`Vm::run`** returns **one** primary diagnostic: if the main task failed, that error wins; otherwise a pool worker error (for example after a spawned task **`panic`s**) is surfaced. Background Rust panics in pool threads are mapped to an internal VM diagnostic. Details: Phase 9 in [`docs/rust/parallel-vm.md`](../rust/parallel-vm.md).
+When the **main task** finishes (normally or with a runtime error), the runtime signals **teardown shutdown** so idle workers wake and exit once the ready queue is drained. This is separate from **task failure**: when a spawned task aborts with a runtime error, other spawned work may be stopped cooperatively at the next instruction boundary. The host surfaces **one** primary diagnostic: if the main task failed, that error wins; otherwise a worker error (for example after a spawned task **`panic`s**) is reported.
 
-**Cooperative scheduling (implementation):** Spawned tasks can be **preempted cooperatively** after a fixed instruction budget and on the **`Yield`** opcode so long-running bytecode cannot starve other queued tasks on the same worker. The **main** program task always runs on the thread that called `Vm::run` and is **not** placed on the shared ready queue; a main-thread `Yield` yields the OS thread so pool workers can run. Details: Phase 7 in [`docs/rust/parallel-vm.md`](../rust/parallel-vm.md).
+**Cooperative scheduling:** Spawned tasks can be **preempted cooperatively** after a fixed instruction budget and on the **`Yield`** opcode so long-running bytecode cannot starve other queued tasks on the same worker. The **main** program task always runs on the thread that started execution and is **not** placed on the shared ready queue; a main-thread `Yield` yields the OS thread so pool workers can run.
 
-### Shared runtime state (implementation)
+### Shared runtime state
 
-Worker threads and the main execution thread share one **`Arc<SharedState>`** value: immutable bytecode (`Chunk`), a mutex-protected **ready queue** of suspended tasks paired with a **condition variable** so idle workers block instead of spinning, **task id** allocation, **task result** storage for handles used with `Wait`, an **atomic shutdown** flag, and mutex-protected **console** and **input** (and minimal **TUI**) state so concurrent tasks do not corrupt I/O. Lock ordering between those mutexes is documented in the VM source. For process shape (scoped `run`, conditional pool sizing, shutdown), see Phase 4; for queues and I/O mutexes see Phase 3 in [`docs/rust/parallel-vm.md`](../rust/parallel-vm.md).
+Worker threads and the main execution thread share one runtime state: immutable bytecode, a mutex-protected **ready queue** of suspended tasks paired with a **condition variable** so idle workers block instead of spinning, **task id** allocation, **task result** storage for handles used with `Wait`, a **shutdown** flag, and mutex-protected **console**, **input**, and **TUI** state so concurrent tasks do not corrupt I/O. Hosted TUI `On*` handlers run on the **main** thread only.
 
 ### Task Type
 
@@ -80,7 +80,7 @@ var T: task := go ComputeSomething(Data);
 
 ### Waiting for a Task
 
-`Std.Task.Wait` blocks until the task completes and returns its result type **`T`** (the VM waits on the same shared condition variable as the task queue — it does not hot-spin):
+`Std.Task.Wait` blocks until the task completes and returns its result type **`T`** (the runtime waits on the same shared condition variable as the task queue — it does not hot-spin):
 
 ```pascal
 var T: task := go Compute(100);

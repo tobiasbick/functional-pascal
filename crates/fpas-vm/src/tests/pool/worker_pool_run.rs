@@ -1,6 +1,6 @@
 //! Scoped [`Vm::run`] completion and integration with pool join.
 //!
-//! **Documentation:** `docs/rust/parallel-vm.md` (Phase 4 checklist), `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/pascal/08-concurrency.md` (Phase 4 checklist), `docs/pascal/08-concurrency.md`
 
 use crate::Vm;
 use fpas_bytecode::{Chunk, Op, Value};

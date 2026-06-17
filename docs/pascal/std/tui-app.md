@@ -245,7 +245,7 @@ Dispatch-mode names use the `**On` prefix** so they do not collide with legacy n
 1. User calls `**Application.Open`** → receives `**App`**.
 2. User registers handlers with `**Application.Configure(App, Handlers)`**, `**Application.HostRegisterOn*`**, optionally `**Application.HostRegisterOnViewPaint`** for individual views, and/or host widget views (`**HostCreateSolidFillView**`, `**HostCreateMenuBarView**`, `**HostCreateStatusBarView**`). A hosted run requires at least one global `**OnPaint`** handler, at least one local view paint handler, or at least one host widget view.
 3. User calls `**Application.Run(App)`**.
-4. While running, the host dispatches `**On*`** handlers on the **main VM thread** only (see `[parallel-vm.md](../../rust/parallel-vm.md)`).
+4. While running, the host dispatches `**On*`** handlers on the **main VM thread** only (see `[08-concurrency.md](../08-concurrency.md)`).
 5. When the application requests quit, the host records `**ExitReason.UserQuit`**. If the active hosted session is stopped by low-level host control during `**Run`** (for example `**Application.Close(App)`** is invoked while the run is still active), the host records `**ExitReason.HostStop`**. If both are requested in the same turn, the host records `**ExitReason.HostAndUserStop`**. If the VM enters global shutdown while the hosted run is active (for example after a concurrent task failure), the host records `**ExitReason.HostShutdown`**. In every case it invokes `**OnExit(App, Reason)`** once if that handler is provided, then **performs `Application.Close(App)`** (or equivalent) so the program must **not** call `**Close`** again for the same successful `**Run`**.
 
 If `**Run`** is never called, the program keeps today’s obligation: `**Open**` / `**Close**` pairing without `**Run**`.
@@ -459,7 +459,7 @@ There must be **at most one** active `**Application.Run`** (or equivalent hosted
 
 Goal: test hosted `Std.Tui` entirely from FPAS under `fpas test` — headless session, stepwise event pump, input injection, and read-only introspection of screen, views, and widget state. No real terminal, Rust integration test, or TUI sidecar file is required.
 
-Out-of-process live debugging during real `Application.Run` remains a separate proposal: [`docs/future/tui-test/README.md`](../../future/tui-test/README.md).
+For real-terminal behavior (alternate screen, cursor restore, resize flicker), use the manual checklist in [tui-terminal-checklist.md](tui-terminal-checklist.md).
 
 ### Naming convention (decided)
 
@@ -625,7 +625,7 @@ end.
 | ----- | ---------- | --- |
 | Pure widget routing (hit-testing, geometry) | Rust unit tests in `fpas-std` | Fast, no VM |
 | App flows, dispatch, hover-to-screen, modal scope | FPAS `*_test.fpas` | Integrated host + dispatch path |
-| Live exploration during real `Run` | [Control server proposal](../../future/tui-test/README.md) | Out-of-process |
+| Real terminal during `Run` | [tui-terminal-checklist.md](tui-terminal-checklist.md) | Alternate screen, cursor, flicker, live resize |
 
 ### Example tests
 

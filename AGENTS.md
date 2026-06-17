@@ -30,7 +30,7 @@ When asked to implement or modify behavior:
 3. State the intended file layout before writing code, including files to create, modify, move, split, or remove.
 4. Implement surgically. Match the surrounding style and touch only what the task requires.
 5. Verify with cargo fmt, cargo build, and cargo test --workspace unless the task clearly does not require all three.
-6. When editing `.fpas` under `examples/`, `tests/`, or `apps/`, run `scripts/format-fpas-sources.sh` (or `fpas fmt --check` on those paths) so output matches [docs/rust/fmt-style.md](docs/rust/fmt-style.md).
+6. When editing `.fpas` under `examples/`, `tests/`, or `apps/`, run `scripts/format-fpas-sources.sh` (or `fpas fmt --check` on those paths) so output matches [docs/pascal/fmt-style.md](docs/pascal/fmt-style.md).
 
 ## FPAS sources (`examples/` vs `tests/`)
 
@@ -65,7 +65,7 @@ When asked to implement or modify behavior:
 - Use Rust edition 2024 conventions.
 - There is no backward compatibility requirement. Implement the current spec only.
 - All code, comments, documentation, and identifiers must be in English.
-- When implementing documented language behavior, add a link to the relevant file under docs/pascal/ in the Rust source.
+- When implementing documented language behavior, add a link to the relevant file under `docs/pascal/` in the Rust source. User-facing docs live under `docs/pascal/`; plans under `docs/future/` only.
 - Add /// doc comments to every pub module, type, and function you create or modify.
 - Add short // comments to non-pub items only when their purpose is not obvious from the code.
 
@@ -79,7 +79,7 @@ When asked to implement or modify behavior:
 - **Source-level reuse only.** Libraries are `kind = "library"` projects consumed via `[dependencies].projects` (relative or absolute `.fpasprj` paths) or `[dependencies].workspace` (member `project.name` in an enclosing `.fpasworkspace`). Spec: [`docs/pascal/10-projects.md`](docs/pascal/10-projects.md).
 - **Do not implement precompiled library artifacts** (no `.fpaslib`, no separate link step, no artifact cache) unless the user explicitly changes this policy.
 - **Do not add package managers, registries, or semver dependency pins** as part of library work; path/workspace references are the current model.
-- Loading and linking live in `fpas-project`; CLI discovery/check/run in `fpas-cli`. Contributor map: [`docs/rust/project-loading.md`](docs/rust/project-loading.md).
+- Loading and linking live in `fpas-project`; CLI discovery/check/run in `fpas-cli`.
 - Library projects may list public units in `[exports].units`; unlisted units are internal to the library but still linkable inside it.
 - Possible later work: finer per-symbol export tables — see [`docs/future/libraries.md`](docs/future/libraries.md).
 

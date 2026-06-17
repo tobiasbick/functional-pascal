@@ -1,6 +1,6 @@
 //! Successful [`Vm::run`] paths leave global shutdown set for pool teardown.
 //!
-//! **Documentation:** `docs/rust/parallel-vm.md` (Phase 9), `docs/pascal/08-concurrency.md`,
+//! **Documentation:** `docs/pascal/08-concurrency.md` (Phase 9), `docs/pascal/08-concurrency.md`,
 //! `docs/pascal/std/task.md`
 
 use crate::Vm;

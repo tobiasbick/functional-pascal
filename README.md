@@ -57,7 +57,7 @@ fpas hello.fpas
 
 ### Formatting
 
-`.fpas` sources under `examples/`, `tests/`, and `apps/` follow the official formatter style ([`docs/rust/fmt-style.md`](docs/rust/fmt-style.md)). Format in place:
+`.fpas` sources under `examples/`, `tests/`, and `apps/` follow the official formatter style ([`docs/pascal/fmt-style.md`](docs/pascal/fmt-style.md)). Format in place:
 
 ```sh
 scripts/format-fpas-sources.sh          # Unix
@@ -200,8 +200,7 @@ The full language documentation is in [`docs/pascal/`](docs/pascal/):
 9. [Units](docs/pascal/09-units.md)
 10. [Projects](docs/pascal/10-projects.md)
 11. [Standard Library](docs/pascal/11-stdlib.md)
-
-Rust contributor docs (VM layout, TUI checklists): [`docs/rust/`](docs/rust/).
+12. [Formatter style](docs/pascal/fmt-style.md)
 
 ## Contributing
 

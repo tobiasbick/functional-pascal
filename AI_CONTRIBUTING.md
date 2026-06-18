@@ -61,7 +61,7 @@ When editing user-facing docs under `docs/pascal/std/`:
 
 - Unit and session pages: quick reference, then per-symbol detail; end with `## Implementation (contributors)` (table) and `## See also` (area index + [std index](docs/pascal/std/README.md))
 - Large units live in themed subdirectories with a hub `README.md` (same pattern as `console/`, `text/str/`, `tui/app/`)
-- After moving or renaming std doc paths, run `python scripts/update-std-doc-paths.py` and `python scripts/normalize-std-docs.py`
+- When moving or renaming std doc paths, update links in `docs/pascal/`, Rust `///` comments, examples, and tests (search the repo for the old path)
 - Rust `///` doc links should point at the matching file under `docs/pascal/std/…`
 
 When editing `.fpas` under `examples/`, `tests/`, or `apps/`, format to match [`docs/pascal/tools/fmt-style.md`](docs/pascal/tools/fmt-style.md) (`scripts/format-fpas-sources.sh` or `fpas fmt`).

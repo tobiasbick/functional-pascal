@@ -2,7 +2,7 @@ use super::super::*;
 
 // ===========================================================================
 // Negative tests — type mismatches and structural errors in case-of patterns
-// doc: docs/pascal/06-pattern-matching.md
+// doc: docs/pascal/language/pattern-matching/README.md
 // ===========================================================================
 
 // ---------------------------------------------------------------------------
@@ -467,7 +467,7 @@ end.",
 
 // ---------------------------------------------------------------------------
 // Range on data-enum is not supported
-// doc: docs/pascal/06-pattern-matching.md
+// doc: docs/pascal/language/pattern-matching/README.md
 // ---------------------------------------------------------------------------
 
 #[test]
@@ -500,7 +500,7 @@ end.",
 
 // ---------------------------------------------------------------------------
 // Destructure patterns (Ok/Error/Some/None) on non-Result/Option types
-// doc: docs/pascal/06-pattern-matching.md
+// doc: docs/pascal/language/pattern-matching/README.md
 // ---------------------------------------------------------------------------
 
 #[test]

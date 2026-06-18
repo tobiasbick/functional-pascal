@@ -36,7 +36,7 @@ Topic-based layout (Microsoft Learn style). **Types** is migrated; other areas l
 3. [Control Flow](language/control-flow/README.md) — Conditionals, loops, branching *(migrated)*
 4. [Functions](language/functions/README.md) — Functions, procedures, first-class functions, nested functions *(migrated)*
 5. [Types](language/types/README.md) — Records, enumerations, arrays, type aliases *(migrated)*
-6. [Case Of](06-pattern-matching.md) — Value, range, and enum matching
+6. [Case Of](language/pattern-matching/README.md) — Value, range, and enum matching *(migrated)*
 7. [Error Handling](07-error-handling.md) — `Result`, `Option`, `try`, `panic`
 8. [Concurrency](08-concurrency.md) — Tasks, task handles, and fork-join patterns
 9. [Units](program-structure/units.md) — Unit system, `uses`, namespaces *(migrated)*

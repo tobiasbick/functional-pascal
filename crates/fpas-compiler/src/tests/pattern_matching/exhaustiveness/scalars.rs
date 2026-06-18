@@ -4,7 +4,7 @@ use super::super::*;
 // Exhaustiveness: scalar types do NOT require exhaustive matching.
 // Spec: "Scalar types (integer, string, char, boolean): else is recommended
 // but not required."
-// doc: docs/pascal/06-pattern-matching.md § Exhaustiveness Checking / Rules
+// doc: docs/pascal/language/pattern-matching/README.md § Exhaustiveness Checking / Rules
 // ===========================================================================
 
 #[test]

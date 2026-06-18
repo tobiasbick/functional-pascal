@@ -8,7 +8,7 @@ Core language reference: types, control flow, functions, pattern matching, error
 | [Basics](basics/README.md) | **migrated** | Primitives, variables, operators |
 | [Control flow](control-flow/README.md) | **migrated** | `if`, loops, `case` intro |
 | [Functions](functions/README.md) | **migrated** | Routines, first-class calls |
-| [Pattern matching](pattern-matching/README.md) | planned | Guards, exhaustiveness |
+| [Pattern matching](pattern-matching/README.md) | **migrated** | Guards, exhaustiveness |
 | [Error handling](error-handling/README.md) | planned | `Result`, `Option`, `try` |
 | [Concurrency](concurrency/README.md) | planned | `go`, tasks |
 

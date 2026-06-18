@@ -77,4 +77,4 @@ A variant uses either backing values or associated data fields, not both on the 
 
 ## See also
 
-- [Pattern matching](../../06-pattern-matching.md)
+- [Pattern matching](../pattern-matching/README.md)

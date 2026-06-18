@@ -1,7 +1,7 @@
 use super::*;
 
 // ===========================================================================
-// Guard edge cases — doc: docs/pascal/06-pattern-matching.md § Guard Clauses
+// Guard edge cases — doc: docs/pascal/language/pattern-matching/README.md § Guard Clauses
 // ===========================================================================
 
 #[test]

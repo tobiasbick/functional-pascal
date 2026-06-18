@@ -16,7 +16,7 @@ pub(super) struct PatternCall {
 /// Supports only one-level destructuring: `Shape.Circle(R)` or `Shape.Point`.
 /// Each field position must be a plain identifier binding.
 ///
-/// **Documentation:** `docs/pascal/06-pattern-matching.md`
+/// **Documentation:** `docs/pascal/language/pattern-matching/enum-patterns.md`
 pub(super) struct DataEnumPattern {
     /// Variant name at the root of the pattern (e.g. `"Circle"`).
     pub(super) root_variant_name: Option<String>,

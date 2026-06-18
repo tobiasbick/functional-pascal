@@ -19,5 +19,5 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_decl`, `type
 ## See also
 
 - [Error handling](../../07-error-handling.md) — `try`, `panic`, combinators for `Result` / `Option`
-- [Pattern matching](../../06-pattern-matching.md) — enum and `Result` / `Option` `case` arms
+- [Pattern matching](../pattern-matching/README.md) — enum and `Result` / `Option` `case` arms
 - [Basics](../basics/README.md) — primitive types and operators

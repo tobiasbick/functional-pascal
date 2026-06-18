@@ -1,7 +1,7 @@
 use super::super::*;
 
 // ===========================================================================
-// Edge cases for basic case-of — doc: docs/pascal/06-pattern-matching.md
+// Edge cases for basic case-of — doc: docs/pascal/language/pattern-matching/README.md
 // ===========================================================================
 
 #[test]

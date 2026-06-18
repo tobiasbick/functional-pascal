@@ -81,7 +81,7 @@ impl Checker {
     /// a plain identifier binding — wildcards, nested patterns, and literals are
     /// rejected with a diagnostic.
     ///
-    /// **Documentation:** `docs/pascal/06-pattern-matching.md`
+    /// **Documentation:** `docs/pascal/language/pattern-matching/guards.md`
     pub(super) fn check_data_enum_pattern(
         &mut self,
         case_ty: &Ty,

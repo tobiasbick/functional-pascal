@@ -15,7 +15,7 @@ impl Compiler {
     /// name is extracted and `IsVariant` + `EnumField` ops are emitted for
     /// matching and binding. Only single-level destructuring is supported.
     ///
-    /// **Documentation:** `docs/pascal/06-pattern-matching.md`
+    /// **Documentation:** `docs/pascal/language/pattern-matching/enum-patterns.md`
     pub(super) fn compile_case_data_enum(
         &mut self,
         arms: &[CaseArm],

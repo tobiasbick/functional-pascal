@@ -8,7 +8,7 @@ impl Checker {
     /// Check that a `case` statement covers all variants of an enum, Result,
     /// or Option type. Arms with guard clauses do not count toward coverage.
     ///
-    /// **Documentation:** `docs/pascal/06-pattern-matching.md`
+    /// **Documentation:** `docs/pascal/language/pattern-matching/exhaustiveness.md`
     pub(super) fn check_exhaustiveness(&mut self, case_ty: &Ty, arms: &[CaseArm], span: Span) {
         match case_ty {
             Ty::Enum(enum_ty) => {

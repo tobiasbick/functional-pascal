@@ -191,7 +191,7 @@ Area `README.md` files list child pages in a table (title + one-line description
 1. **`language/types/`** — split `05-types.md` first (highest line count).
 2. **`language/basics/`** — split `02-basics.md`. **Done.**
 3. **`program-structure/`** — split `10-projects.md`, move `09-units.md`. **Done.**
-4. **`language/functions/`** **done**, **`pattern-matching/`**, **`control-flow/`** — `control-flow/` **done**.
+4. **`language/functions/`** **done**, **`pattern-matching/`** **done**, **`control-flow/`** **done**.
 5. **`getting-started/`**, **`error-handling/`**, **`concurrency/`**.
 6. **`tools/fmt-style.md`** — move file; update `fpas fmt` / `AGENTS.md` references.
 7. Merge `11-stdlib.md` overview into `std/README.md`; drop duplicate hub if redundant.

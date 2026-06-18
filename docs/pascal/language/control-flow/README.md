@@ -17,5 +17,5 @@ Advanced `case` patterns: [Pattern matching](../pattern-matching/README.md).
 
 ## See also
 
-- [Pattern matching](../../06-pattern-matching.md)
+- [Pattern matching](../pattern-matching/README.md)
 - [Error handling](../../07-error-handling.md)

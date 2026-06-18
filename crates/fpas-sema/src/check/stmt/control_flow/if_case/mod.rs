@@ -1,6 +1,6 @@
 //! Statement checking for `if`, `case`, and `panic`.
 //!
-//! **Documentation:** `docs/pascal/language/control-flow/README.md`, `docs/pascal/06-pattern-matching.md`, `docs/pascal/07-error-handling.md` (from the repository root).
+//! **Documentation:** `docs/pascal/language/control-flow/README.md`, `docs/pascal/language/pattern-matching/README.md`, `docs/pascal/07-error-handling.md` (from the repository root).
 
 mod exhaustiveness;
 mod labels;

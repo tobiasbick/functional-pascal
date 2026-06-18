@@ -1,6 +1,6 @@
 //! Hosted `Std.Graph.Application.Run` execution.
 //!
-//! **Documentation:** `docs/pascal/std/graph/app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph/app/README.md` (from the repository root).
 
 use crate::vm::diagnostics::VmError;
 use crate::vm::{Worker, runtime_error};

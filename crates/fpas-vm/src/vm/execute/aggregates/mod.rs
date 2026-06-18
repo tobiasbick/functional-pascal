@@ -1,6 +1,6 @@
 //! Aggregate value execution: arrays, dicts, records, and local array mutation.
 //!
-//! **Documentation:** `docs/pascal/language/basics/arrays-intro.md`, `docs/pascal/std/collections/array.md` (from the repository root).
+//! **Documentation:** `docs/pascal/language/basics/arrays-intro.md`, `docs/pascal/std/collections/array/README.md` (from the repository root).
 
 mod array_locals;
 mod indexing;

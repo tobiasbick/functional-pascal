@@ -34,3 +34,10 @@ For each smoke check, verify these points before marking the run clean:
 6. Escape or the documented quit shortcut exits exactly once and does not require a second key press.
 7. Mouse-enabled examples do not leak clicks from an active modal to background views.
 8. Paste/focus events, where supported by the terminal, do not panic and do not starve paint or quit handling.
+
+## See also
+
+- [Native testing](app/testing.md)
+- [Hosted dispatch](app/README.md)
+- [Terminal UI index](README.md)
+- [Standard library index](../README.md)

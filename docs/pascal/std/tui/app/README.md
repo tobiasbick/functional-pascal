@@ -1,6 +1,6 @@
 # `Std.Tui` — dispatch-mode application
 
-**Status:** current specification for the Rust-hosted event loop and `On*` handlers described in `[docs/future/tui-application-framework.md](../../../../../future/tui-application-framework.md)`. **`Application.Host*`** dispatch helpers are **registered and lowered**, **`ApplicationHandlers`** / **`Application.Configure(App, Handlers)`** are available as the bundled registration surface, **`Application.Run(App)`** is the hosted loop entrypoint, and the current Phase 7 structure layer includes **`Std.Tui.Rect`**, **`Application.HostSetViewParent`**, **`Application.HostRegisterOnViewPaint`**, **`Application.HostBindCommandToView`**, **`Application.HostBindCommandToActiveModal`**, **`Application.ShowModal`**, **`Application.ShowDialog`**, and **`Application.CloseModal`**. `OnIdle` is available through `Application.HostRegisterOnIdle(App, Milliseconds, OnIdle)` and the bundle fields `OnIdleMilliseconds` + `OnIdle`. Session handle APIs: [Session API](../session.md).
+**Status:** current specification for the Rust-hosted event loop and `On*` handlers described in [TUI framework](../../../../future/tui-application-framework.md). **`Application.Host*`** dispatch helpers are **registered and lowered**, **`ApplicationHandlers`** / **`Application.Configure(App, Handlers)`** are available as the bundled registration surface, **`Application.Run(App)`** is the hosted loop entrypoint, and the current Phase 7 structure layer includes **`Std.Tui.Rect`**, **`Application.HostSetViewParent`**, **`Application.HostRegisterOnViewPaint`**, **`Application.HostBindCommandToView`**, **`Application.HostBindCommandToActiveModal`**, **`Application.ShowModal`**, **`Application.ShowDialog`**, and **`Application.CloseModal`**. `OnIdle` is available through `Application.HostRegisterOnIdle(App, Milliseconds, OnIdle)` and the bundle fields `OnIdleMilliseconds` + `OnIdle`. Session handle APIs: [Session API](../session.md).
 
 | Topic | Description |
 |-------|-------------|
@@ -12,11 +12,15 @@
 
 ## Implementation (contributors)
 
-Keep types and routines in [`loaded/tui/`](../../../../../../crates/fpas-sema/src/std_registry/loaded/tui/mod.rs) aligned with these pages. See [AGENTS.md](../../../../../../AGENTS.md).
+| Concern | Location |
+|---------|----------|
+| Sema registry | [`loaded/tui/mod.rs`](../../../../../crates/fpas-sema/src/std_registry/loaded/tui/mod.rs) |
+| Contributor guide | [AGENTS.md](../../../../../AGENTS.md) |
 
 ## See also
 
 - [Session API](../session.md)
 - [`Std.Console`](../../console/README.md)
 - [Terminal UI index](../README.md)
-- [TUI framework](../../../../../future/tui-application-framework.md)
+- [TUI framework](../../../../future/tui-application-framework.md)
+- [Standard library index](../../README.md)

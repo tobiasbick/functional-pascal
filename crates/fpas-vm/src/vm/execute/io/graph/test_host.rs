@@ -1,6 +1,6 @@
 //! Headless native graph testing intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/graph/app.md`, `docs/pascal/std/testing/test.md`
+//! **Documentation:** `docs/pascal/std/graph/app/README.md`, `docs/pascal/std/testing/test.md`
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};

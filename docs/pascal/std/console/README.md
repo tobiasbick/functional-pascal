@@ -108,11 +108,6 @@ Extended color procedures (`TextColorRGB`, `TextBackgroundRGB`, `TextColor256`, 
 | [Terminal events](events.md) | `ReadEvent`, raw mode, alt screen |
 | [Using together](using-together.md) | Mixing line and key input |
 
-## See also
-
-- [`Std.Tui`](../tui/session.md) — hosted terminal applications
-- [Standard library index](../README.md)
-
 ## Implementation (contributors)
 
 | Concern | Location |
@@ -122,3 +117,8 @@ Extended color procedures (`TextColorRGB`, `TextBackgroundRGB`, `TextColor256`, 
 | Key and event types | [`key_event.rs`](../../../../crates/fpas-std/src/key_event.rs), [`console_event.rs`](../../../../crates/fpas-std/src/console_event.rs) |
 | Bytecode / VM | [`intrinsic/mod.rs`](../../../../crates/fpas-bytecode/src/intrinsic/mod.rs), [`vm/mod.rs`](../../../../crates/fpas-vm/src/vm/mod.rs) |
 | Code generation | [`std_calls/console/`](../../../../crates/fpas-compiler/src/compiler/std_calls/console/mod.rs) |
+
+## See also
+
+- [`Std.Tui`](../tui/session.md) — hosted terminal applications
+- [Standard library index](../README.md)

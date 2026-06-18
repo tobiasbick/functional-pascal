@@ -32,7 +32,7 @@ If a file also references console-side names such as `Std.Console.KeyKind.*`, `S
 
 ## Current status
 
-`Std.Graph` provides native-window graphics with **hosted dispatch** (see `[graph-app.md](graph/app.md)`):
+`Std.Graph` provides native-window graphics with **hosted dispatch** (see [Hosted dispatch](app/README.md)):
 
 - one native window per process
 - `Application.Configure` + `Application.Run` with `On*` handlers
@@ -79,7 +79,7 @@ Current runtime constraints:
 
 ## Dispatch model
 
-Full applications use hosted dispatch — see `[graph-app.md](graph/app.md)` for handler signatures, `ExitReason`, and VM bridge details.
+Full applications use hosted dispatch — see [Hosted dispatch](app/README.md) for handler signatures, `ExitReason`, and VM bridge details.
 
 Sample: [`examples/pascal/std/graph_basics.fpas`](../../../../examples/pascal/std/graph_basics.fpas)
 
@@ -258,4 +258,5 @@ end.
 ## See also
 
 - [Graphics index](README.md)
+- [Hosted dispatch](app/README.md)
 - [Standard library index](../README.md)

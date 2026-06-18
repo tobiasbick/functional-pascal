@@ -51,6 +51,7 @@ Requires `uses Std.Str;`.
 | function | `TrimRight(S: string): string` | strip trailing whitespace |
 | function | `LastIndexOf(S: string; Sub: string): integer` | last index or `-1` |
 | function | `Format(Template: string; ...): string` | printf-style string formatting |
+
 **Indexing:** all “character index” parameters are in **Unicode scalar** units (user-visible characters), not UTF-8 bytes.
 
 **Variadic formatting:** `Format` always requires the first argument `Template: string`. Each specifier other than `%%` consumes exactly one additional argument. Placeholder compatibility is validated at runtime.

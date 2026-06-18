@@ -164,7 +164,12 @@ Manual failure demo (not auto-discovered): [`manual/assert_fail_demo.fpas`](../.
 
 ## Implementation (contributors)
 
-Keep implementation aligned with source paths referenced in the original maintenance note: align with [`std_registry/loaded/test.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/test.rs), [`std_calls/test.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/test.rs), [`test/`](../../../../crates/fpas-std/src/test/), and [`intrinsic/test.rs`](../../../../crates/fpas-bytecode/src/intrinsic/test.rs).
+| Concern | Location |
+|---------|----------|
+| Registration | [`std_registry/loaded/test.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/test.rs) |
+| Compiler | [`std_calls/test.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/test.rs) |
+| Runtime | [`test/`](../../../../crates/fpas-std/src/test/) |
+| Intrinsics | [`intrinsic/test.rs`](../../../../crates/fpas-bytecode/src/intrinsic/test.rs) |
 
 ## See also
 

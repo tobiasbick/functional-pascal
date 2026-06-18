@@ -1,6 +1,6 @@
 //! Compiler integration tests for headless native graph testing.
 //!
-//! **Documentation:** `docs/pascal/std/graph/app.md`, `docs/pascal/std/testing/test.md`
+//! **Documentation:** `docs/pascal/std/graph/app/README.md`, `docs/pascal/std/testing/test.md`
 
 use super::super::{compile_and_run, compile_ok};
 use fpas_bytecode::intrinsic::GraphIntrinsic;

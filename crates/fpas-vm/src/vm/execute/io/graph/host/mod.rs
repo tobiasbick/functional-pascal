@@ -1,6 +1,6 @@
 //! `Std.Graph` host-control intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/graph/app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph/app/README.md` (from the repository root).
 
 mod lifecycle;
 mod process;

@@ -1,6 +1,6 @@
 //! `Std.Graph` VM execution and value/session bridging.
 //!
-//! **Documentation:** `docs/pascal/std/graph/session.md`, `docs/pascal/std/graph/app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph/session.md`, `docs/pascal/std/graph/app/README.md` (from the repository root).
 
 mod application;
 mod handlers;

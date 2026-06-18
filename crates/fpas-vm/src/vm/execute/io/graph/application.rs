@@ -1,6 +1,6 @@
 //! `Std.Graph` application lifecycle, hosted dispatch, and drawing intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/graph/session.md`, `docs/pascal/std/graph/app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph/session.md`, `docs/pascal/std/graph/app/README.md` (from the repository root).
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError};

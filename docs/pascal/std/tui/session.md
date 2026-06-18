@@ -231,10 +231,14 @@ Example: [`examples/pascal/tui/minimal_application.fpas`](../../../../examples/p
 
 ## Implementation (contributors)
 
-Keep implementation aligned with source paths referenced in the original maintenance note: keep this file aligned with [`loaded/tui/`](../../../../crates/fpas-sema/src/std_registry/loaded/tui/mod.rs) and the standard-unit registry under [`crates/fpas-std/src/std_units/`](../../../../crates/fpas-std/src/std_units/mod.rs).
+| Concern | Location |
+|---------|----------|
+| Sema registry | [`loaded/tui/mod.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/tui/mod.rs) |
+| Std units | [`std_units/mod.rs`](../../../../crates/fpas-std/src/std_units/mod.rs) |
 
 ## See also
 
 - [Terminal UI index](README.md)
 - [Hosted dispatch](app/README.md)
 - [`Std.Console`](../console/README.md)
+- [Standard library index](../README.md)

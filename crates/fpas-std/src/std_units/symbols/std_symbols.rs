@@ -356,7 +356,7 @@ pub const STD_TUI_STATUS_BAR_SEGMENT: &str = std_tui!("StatusBarSegment");
 pub const STD_TUI_STATUS_BAR_STYLE: &str = std_tui!("StatusBarStyle");
 
 pub const STD_GRAPH_APPLICATION: &str = std_graph!("Application");
-/// Hosted-dispatch handler bundle for `Std.Graph.Application.Configure`; see `docs/pascal/std/graph/app.md`.
+/// Hosted-dispatch handler bundle for `Std.Graph.Application.Configure`; see `docs/pascal/std/graph/app/README.md`.
 pub const STD_GRAPH_APPLICATION_HANDLERS: &str = std_graph!("ApplicationHandlers");
 pub const STD_GRAPH_SIZE: &str = std_graph!("Size");
 pub const STD_GRAPH_EVENT: &str = std_graph!("Event");

@@ -2,7 +2,7 @@
 
 Assertions and the `fpas test` runner integration.
 
-| Topic | Description |
+| Unit | Description |
 |-------|-------------|
 | [Std.Test](test.md) | `AssertTrue`, `AssertEquals`, `Fail`, `Skip` |
 

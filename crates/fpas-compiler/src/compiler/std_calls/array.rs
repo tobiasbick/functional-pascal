@@ -1,6 +1,6 @@
 //! Lowers `Std.Array` calls to VM intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/collections/array.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/collections/array/README.md` (from the repository root).
 
 use crate::error::CompileError;
 use fpas_bytecode::{ArrayIntrinsic, Intrinsic, Op, SourceLocation};

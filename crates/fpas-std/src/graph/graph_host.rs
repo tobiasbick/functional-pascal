@@ -1,6 +1,6 @@
 //! Graph-specific hosted event queue wrapper.
 //!
-//! **Documentation:** `docs/pascal/std/graph/app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph/app/README.md` (from the repository root).
 
 use crate::ui::UiHost;
 

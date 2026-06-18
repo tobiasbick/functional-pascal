@@ -203,4 +203,4 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 | `pascal/tui/show_modal_existing_view.fpas` | Existing view subtree becomes modal; **Tab** stays in the subtree, **Escape** closes the modal |
 | `pascal/tui/show_dialog.fpas` | Owned modal dialog; **Ctrl+D** opens it, **Escape** closes it, **Ctrl+Q** quits |
 | `apps/ide/ide.fpasprj` | Multi-unit IDE shell — menu bar, desktop fill, status bar; **Alt+X** or **File → Exit** quits |
-TUI and Graph apps use the same hosted dispatch model: `Application.Configure(App, Handlers)` registers `On*` handlers; `Application.Run(App)` starts the hosted loop. See `docs/pascal/std/tui/app/README.md` and `docs/pascal/std/graph/app.md`. The console's own event type remains **`Std.Console.Event`**.
+TUI and Graph apps use the same hosted dispatch model: `Application.Configure(App, Handlers)` registers `On*` handlers; `Application.Run(App)` starts the hosted loop. See `docs/pascal/std/tui/app/README.md` and `docs/pascal/std/graph/app/README.md`. The console's own event type remains **`Std.Console.Event`**.

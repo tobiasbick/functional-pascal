@@ -128,7 +128,7 @@ impl Default for TuiState {
 pub(crate) struct GraphState {
     /// Current graph session and runtime-owned backbuffer state.
     pub session: GraphSession,
-    /// Resize coalescing and the hosted-loop event pump (`docs/pascal/std/graph/app.md`).
+    /// Resize coalescing and the hosted-loop event pump (`docs/pascal/std/graph/app/README.md`).
     pub host: GraphHost,
     /// `OnKeyPressed`-style handler: `function (Application, KeyEvent): boolean`.
     pub on_key_pressed: Option<Value>,

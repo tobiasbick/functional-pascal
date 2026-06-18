@@ -1,6 +1,6 @@
 //! Hosted `Std.Graph` event processing and handler dispatch.
 //!
-//! **Documentation:** `docs/pascal/std/graph/app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph/app/README.md` (from the repository root).
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;

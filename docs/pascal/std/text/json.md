@@ -88,7 +88,12 @@ Malformed runtime payloads, such as an enum value pretending to be `JsonValue`, 
 
 ## Implementation (contributors)
 
-Keep implementation aligned with source paths referenced in the original maintenance note: align with [`loaded/json.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/json.rs), [`json.rs`](../../../../crates/fpas-std/src/json.rs), [`std_calls/json.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/json.rs), and [`intrinsic/json.rs`](../../../../crates/fpas-bytecode/src/intrinsic/json.rs).
+| Concern | Location |
+|---------|----------|
+| Registration | [`loaded/json.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/json.rs) |
+| Runtime | [`json.rs`](../../../../crates/fpas-std/src/json.rs) |
+| Compiler | [`std_calls/json.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/json.rs) |
+| Intrinsics | [`intrinsic/json.rs`](../../../../crates/fpas-bytecode/src/intrinsic/json.rs) |
 
 ## See also
 

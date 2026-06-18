@@ -4,7 +4,7 @@ Array and dictionary helpers.
 
 | Unit | Description |
 |------|-------------|
-| [`Std.Array`](array.md) | `Push`, `Sort`, `Map`, `Filter`, … |
+| [`Std.Array`](array/README.md) | `Push`, `Sort`, `Map`, `Filter`, … |
 | [`Std.Dict`](dict.md) | `Keys`, `Values`, `Merge`, `Map`, `Filter` |
 
 ## See also

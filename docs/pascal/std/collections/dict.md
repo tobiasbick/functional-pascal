@@ -212,7 +212,12 @@ The expression operator `Key in D` is shorthand for checking key membership and 
 
 ## Implementation (contributors)
 
-Keep implementation aligned with source paths referenced in the original maintenance note: align with [`std_registry/builtins/dict.rs`](../../../../crates/fpas-sema/src/std_registry/builtins/dict.rs), [`dict.rs`](../../../../crates/fpas-std/src/dict.rs), [`std_calls/dict.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/dict.rs), and [`intrinsic/mod.rs`](../../../../crates/fpas-bytecode/src/intrinsic/mod.rs).
+| Concern | Location |
+|---------|----------|
+| Registration | [`std_registry/builtins/dict.rs`](../../../../crates/fpas-sema/src/std_registry/builtins/dict.rs) |
+| Runtime | [`dict.rs`](../../../../crates/fpas-std/src/dict.rs) |
+| Compiler | [`std_calls/dict.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/dict.rs) |
+| Intrinsics | [`intrinsic/mod.rs`](../../../../crates/fpas-bytecode/src/intrinsic/mod.rs) |
 
 ## See also
 

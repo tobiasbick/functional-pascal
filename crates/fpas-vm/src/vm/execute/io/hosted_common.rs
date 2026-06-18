@@ -1,6 +1,6 @@
 //! Shared helpers for hosted `Application.Run` loops (TUI and Graph).
 //!
-//! **Documentation:** `docs/pascal/std/tui/app/README.md`, `docs/pascal/std/graph/app.md`
+//! **Documentation:** `docs/pascal/std/tui/app/README.md`, `docs/pascal/std/graph/app/README.md`
 
 use fpas_bytecode::Value;
 

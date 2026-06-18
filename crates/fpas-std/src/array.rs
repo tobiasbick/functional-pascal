@@ -1,6 +1,6 @@
 //! `Std.Array.*` intrinsic implementations (non-mutating; `Push`/`Pop` use dedicated VM opcodes).
 //!
-//! **Documentation:** `docs/pascal/std/collections/array.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/collections/array/README.md` (from the repository root).
 //! **Maintenance:** Keep that Markdown file aligned with this file, `intrinsics.rs`,
 //! `fpas-vm` (`ArrayPushLocal` / `ArrayPopLocal`), `fpas-compiler`, and `fpas-sema` `std_registry.rs`.
 

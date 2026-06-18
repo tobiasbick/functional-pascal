@@ -6,7 +6,7 @@
 
 Goal: test hosted `Std.Tui` entirely from FPAS under `fpas test` — headless session, stepwise event pump, input injection, and read-only introspection of screen, views, and widget state. No real terminal, Rust integration test, or TUI sidecar file is required.
 
-For real-terminal behavior (alternate screen, cursor restore, resize flicker), use the manual checklist in [tui-terminal-checklist.md](tui-terminal-checklist.md).
+For real-terminal behavior (alternate screen, cursor restore, resize flicker), use the manual checklist in [Terminal checklist](../terminal-checklist.md)(../terminal-checklist.md).
 
 ### Naming convention (decided)
 
@@ -172,7 +172,7 @@ end.
 | ----- | ---------- | --- |
 | Pure widget routing (hit-testing, geometry) | Rust unit tests in `fpas-std` | Fast, no VM |
 | App flows, dispatch, hover-to-screen, modal scope | FPAS `*_test.fpas` | Integrated host + dispatch path |
-| Real terminal during `Run` | [tui-terminal-checklist.md](tui-terminal-checklist.md) | Alternate screen, cursor, flicker, live resize |
+| Real terminal during `Run` | [Terminal checklist](../terminal-checklist.md)(../terminal-checklist.md) | Alternate screen, cursor, flicker, live resize |
 
 ### Example tests
 
@@ -253,6 +253,6 @@ Affected implementation paths (TUI sidecars removed in Phase 8.1):
 
 ## See also
 
-- [`Std.Test`](../../../testing/test.md)
+- [`Std.Test`](../../testing/test.md)
 - [Terminal checklist](../terminal-checklist.md)
 - [Hosted dispatch overview](README.md)

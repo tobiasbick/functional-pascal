@@ -56,7 +56,7 @@ impl Worker {
 
     /// `Std.Array.Find(Arr, Pred)` — first matching element or None.
     ///
-    /// **Documentation:** `docs/pascal/std/collections/array.md`
+    /// **Documentation:** `docs/pascal/std/collections/array/README.md`
     pub(super) fn exec_array_find(&mut self, line: SourceLocation) -> Result<(), VmError> {
         let func = self.pop(line)?;
         let array = self.pop_array_value(line, "Std.Array.Find")?;
@@ -74,7 +74,7 @@ impl Worker {
 
     /// `Std.Array.FindIndex(Arr, Pred)` — index of first match or -1.
     ///
-    /// **Documentation:** `docs/pascal/std/collections/array.md`
+    /// **Documentation:** `docs/pascal/std/collections/array/README.md`
     pub(super) fn exec_array_find_index(&mut self, line: SourceLocation) -> Result<(), VmError> {
         let func = self.pop(line)?;
         let array = self.pop_array_value(line, "Std.Array.FindIndex")?;
@@ -92,7 +92,7 @@ impl Worker {
 
     /// `Std.Array.Any(Arr, Pred)` — true if any element matches.
     ///
-    /// **Documentation:** `docs/pascal/std/collections/array.md`
+    /// **Documentation:** `docs/pascal/std/collections/array/README.md`
     pub(super) fn exec_array_any(&mut self, line: SourceLocation) -> Result<(), VmError> {
         let func = self.pop(line)?;
         let array = self.pop_array_value(line, "Std.Array.Any")?;
@@ -110,7 +110,7 @@ impl Worker {
 
     /// `Std.Array.All(Arr, Pred)` — true if all elements match.
     ///
-    /// **Documentation:** `docs/pascal/std/collections/array.md`
+    /// **Documentation:** `docs/pascal/std/collections/array/README.md`
     pub(super) fn exec_array_all(&mut self, line: SourceLocation) -> Result<(), VmError> {
         let func = self.pop(line)?;
         let array = self.pop_array_value(line, "Std.Array.All")?;
@@ -128,7 +128,7 @@ impl Worker {
 
     /// `Std.Array.FlatMap(Arr, F)` — map then flatten one level.
     ///
-    /// **Documentation:** `docs/pascal/std/collections/array.md`
+    /// **Documentation:** `docs/pascal/std/collections/array/README.md`
     pub(super) fn exec_array_flat_map(&mut self, line: SourceLocation) -> Result<(), VmError> {
         let func = self.pop(line)?;
         let array = self.pop_array_value(line, "Std.Array.FlatMap")?;
@@ -147,7 +147,7 @@ impl Worker {
 
     /// `Std.Array.ForEach(Arr, F)` — apply F to each element, return unit.
     ///
-    /// **Documentation:** `docs/pascal/std/collections/array.md`
+    /// **Documentation:** `docs/pascal/std/collections/array/README.md`
     pub(super) fn exec_array_for_each(&mut self, line: SourceLocation) -> Result<(), VmError> {
         let func = self.pop(line)?;
         let array = self.pop_array_value(line, "Std.Array.ForEach")?;

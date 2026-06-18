@@ -1,12 +1,12 @@
 //! `Std.Graph` intrinsic discriminants.
 //!
-//! **Documentation:** `docs/pascal/std/graph/session.md`, `docs/pascal/std/graph/app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph/session.md`, `docs/pascal/std/graph/app/README.md` (from the repository root).
 
 use num_enum::TryFromPrimitive;
 
 /// Intrinsics for `Std.Graph.Application.*` routines.
 ///
-/// **Documentation:** `docs/pascal/std/graph/session.md`, `docs/pascal/std/graph/app.md`
+/// **Documentation:** `docs/pascal/std/graph/session.md`, `docs/pascal/std/graph/app/README.md`
 #[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u16)]
 pub enum GraphIntrinsic {
@@ -67,13 +67,13 @@ pub enum GraphIntrinsic {
     ///
     /// Stack: `Width`, `Height` (`Height` on top). Pushes `Application`.
     ///
-    /// **Documentation:** `docs/pascal/std/graph/app.md`, `docs/pascal/std/testing/test.md`
+    /// **Documentation:** `docs/pascal/std/graph/app/README.md`, `docs/pascal/std/testing/test.md`
     OpenForTest = 379,
 
     /// Enqueue one key event for the active hosted graph run (`Application.TestSendKey`).
     ///
     /// Stack: `Application`, `Std.Console.KeyEvent`. Does not push a value.
     ///
-    /// **Documentation:** `docs/pascal/std/graph/app.md`, `docs/pascal/std/testing/test.md`
+    /// **Documentation:** `docs/pascal/std/graph/app/README.md`, `docs/pascal/std/testing/test.md`
     TestSendKey = 380,
 }

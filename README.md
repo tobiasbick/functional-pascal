@@ -191,7 +191,7 @@ The full language documentation is in [`docs/pascal/`](docs/pascal/):
 
 1. [Overview](docs/pascal/01-overview.md)
 2. [Basics](docs/pascal/language/basics/README.md)
-3. [Control Flow](docs/pascal/03-control-flow.md)
+3. [Control Flow](docs/pascal/language/control-flow/README.md)
 4. [Functions](docs/pascal/04-functions.md)
 5. [Types](docs/pascal/language/types/README.md)
 6. [Pattern Matching](docs/pascal/06-pattern-matching.md)

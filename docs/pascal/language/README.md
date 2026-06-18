@@ -6,7 +6,7 @@ Core language reference: types, control flow, functions, pattern matching, error
 |------|--------|-----|
 | [Types](types/README.md) | **migrated** | Records, enums, arrays, dicts, generics |
 | [Basics](basics/README.md) | **migrated** | Primitives, variables, operators |
-| [Control flow](control-flow/README.md) | planned | `if`, loops, `case` intro |
+| [Control flow](control-flow/README.md) | **migrated** | `if`, loops, `case` intro |
 | [Functions](functions/README.md) | planned | Routines, first-class calls |
 | [Pattern matching](pattern-matching/README.md) | planned | Guards, exhaustiveness |
 | [Error handling](error-handling/README.md) | planned | `Result`, `Option`, `try` |

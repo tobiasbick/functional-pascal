@@ -27,4 +27,4 @@ Use `Std.Dict` for helpers such as `Length`, `ContainsKey`, `Get`, `Keys`, `Valu
 
 ## See also
 
-- [Control flow — for-in over dict keys](../../03-control-flow.md#for-in-dict-key-iteration)
+- [For-in](../control-flow/for-in.md)

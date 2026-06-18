@@ -24,4 +24,4 @@ For growth, mutation, and stdlib helpers, see [Arrays](../types/arrays.md).
 ## See also
 
 - [Arrays](../types/arrays.md)
-- [Control flow — for-in](../../03-control-flow.md#for-in-array-iteration)
+- [For-in](../control-flow/for-in.md)

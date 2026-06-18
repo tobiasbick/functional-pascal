@@ -1,6 +1,6 @@
 /// Comprehensive tests for `if / then / else`.
 ///
-/// **Documentation:** `docs/pascal/03-control-flow.md`
+/// **Documentation:** `docs/pascal/language/control-flow/README.md`
 use super::*;
 
 mod basic;

@@ -30,4 +30,4 @@ Use `Std.Array` for `Map`, `Filter`, `Reduce`, and other helpers — see [`Std.A
 ## See also
 
 - [Arrays intro](../basics/arrays-intro.md)
-- [Control flow — for-in](../../03-control-flow.md#for-in-array-iteration)
+- [For-in](../control-flow/for-in.md)

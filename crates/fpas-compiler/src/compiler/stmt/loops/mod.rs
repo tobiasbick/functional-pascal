@@ -1,6 +1,6 @@
 //! Statement lowering for `while`, `repeat`, `for`, `for-in`, `break`, and `continue`.
 //!
-//! **Documentation:** `docs/pascal/03-control-flow.md` (from the repository root).
+//! **Documentation:** `docs/pascal/language/control-flow/README.md` (from the repository root).
 
 mod control;
 mod for_loops;

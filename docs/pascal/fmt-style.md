@@ -14,7 +14,7 @@ Canonical output rules for the AST pretty-printer. These are **normative for `fp
 
 There is **no** “messy input” column in this doc yet. Source before formatting may omit `begin` / `end`, use `WRITELN`, extra blank lines, or comments — all of that is normalized away in the golden blocks.
 
-Spec links: [`language/basics/README.md`](language/basics/README.md), [`03-control-flow.md`](03-control-flow.md), [`.cursor/rules/functional-pascal.mdc`](../../.cursor/rules/functional-pascal.mdc).
+Spec links: [`language/basics/README.md`](language/basics/README.md), [`language/control-flow/README.md`](language/control-flow/README.md), [`.cursor/rules/functional-pascal.mdc`](../../.cursor/rules/functional-pascal.mdc).
 
 ---
 
@@ -243,7 +243,7 @@ end;
 
 ## Blocks (`begin` / `end`)
 
-The language allows a **single statement** without `begin` / `end` after `then`, `else`, `do`, and `case` labels ([`03-control-flow.md`](../pascal/03-control-flow.md)). The formatter **always** emits an explicit `begin` / `end` wrapper anyway. We are not changing the language — only canonical output.
+The language allows a **single statement** without `begin` / `end` after `then`, `else`, `do`, and `case` labels ([`language/control-flow/README.md`](language/control-flow/README.md)). The formatter **always** emits an explicit `begin` / `end` wrapper anyway. We are not changing the language — only canonical output.
 
 | Construct | Formatter output |
 |-----------|------------------|
@@ -302,7 +302,7 @@ Semicolons are **separators**, not terminators:
 - Between statements in a block: `;` after each statement except the last before `end`.
 - No semicolon immediately before `end`, `else`, or `until`.
 - Declarations in `type` blocks and unit/program headers: `;` between siblings; no trailing `;` before closing `end` of a nested block.
-- `case` arm labels: `;` after each arm’s closing `end` (including the last arm before `else`); `else` branch follows [`03-control-flow.md`](../pascal/03-control-flow.md).
+- `case` arm labels: `;` after each arm’s closing `end` (including the last arm before `else`); `else` branch follows [`language/control-flow/case-of-intro.md`](language/control-flow/case-of-intro.md).
 - Fields inside a `record` type: `;` after **every** field, including the last field before `end`, a blank line, or methods (matches existing FPAS sources).
 
 ## Spacing

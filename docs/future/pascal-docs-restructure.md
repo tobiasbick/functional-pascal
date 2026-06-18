@@ -194,7 +194,7 @@ Area `README.md` files list child pages in a table (title + one-line description
 4. **`language/functions/`** **done**, **`pattern-matching/`** **done**, **`control-flow/`** **done**.
 5. **`getting-started/`** **done**, **`error-handling/`** **done**, **`concurrency/`** **done**.
 6. **`tools/fmt-style.md`** **done** — move file; update `fpas fmt` / `AGENTS.md` references.
-7. Merge `11-stdlib.md` overview into `std/README.md`; drop duplicate hub if redundant.
+7. Merge `11-stdlib.md` overview into `std/README.md`; drop duplicate hub if redundant. **Done.**
 
 ### Phase 3 — Update references
 

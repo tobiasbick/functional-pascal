@@ -26,7 +26,7 @@ Topic-based layout (Microsoft Learn style). Legacy numbered chapters remain only
 | [Types](language/types/README.md) | Records, enums, arrays, generics |
 | [Basics](language/basics/README.md) | Primitives, variables, operators |
 | [Program structure](program-structure/README.md) | **migrated** | Units, projects, CLI, workspaces |
-| [Standard library](std/README.md) | `Std.*` reference |
+| [Standard library](std/README.md) | **migrated** | `Std.*` reference |
 | [Tools](tools/README.md) | **migrated** | `fpas fmt` |
 
 ## Table of Contents (legacy numbered chapters)
@@ -41,7 +41,7 @@ Topic-based layout (Microsoft Learn style). Legacy numbered chapters remain only
 8. [Concurrency](language/concurrency/README.md) — Tasks, task handles, and fork-join patterns *(migrated)*
 9. [Units](program-structure/units.md) — Unit system, `uses`, namespaces *(migrated)*
 10. [Projects](program-structure/projects.md) — `.fpasprj` project files, CLI, program/library kinds *(migrated)*
-11. [Standard Library](11-stdlib.md) — `Std.*` built-in libraries
+11. [Standard Library](std/README.md) — `Std.*` built-in libraries *(migrated)*
 12. [Formatter style](tools/fmt-style.md) — normative output rules for `fpas fmt` *(migrated)*
 13. [Formal grammar](../specs/grammar.ebnf) — ISO EBNF syntax annex (lexer + parser)
 

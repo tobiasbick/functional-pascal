@@ -111,7 +111,7 @@ pub fn hint_for_unknown_std_name(name: &str, loaded: &HashSet<String>) -> String
             );
         }
         return format!(
-            "The standard unit `{unit}` is listed in `uses`, but `{name}` is not implemented in the runtime. Check docs/pascal/11-stdlib.md for supported members."
+            "The standard unit `{unit}` is listed in `uses`, but `{name}` is not implemented in the runtime. Check docs/pascal/std/README.md for supported members."
         );
     }
 

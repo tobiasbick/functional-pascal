@@ -199,7 +199,7 @@ The full language documentation is in [`docs/pascal/`](docs/pascal/):
 8. [Concurrency](docs/pascal/language/concurrency/README.md)
 9. [Units](docs/pascal/program-structure/units.md)
 10. [Projects](docs/pascal/program-structure/projects.md)
-11. [Standard Library](docs/pascal/11-stdlib.md)
+11. [Standard Library](docs/pascal/std/README.md)
 12. [Formatter style](docs/pascal/tools/fmt-style.md)
 
 ## Contributing

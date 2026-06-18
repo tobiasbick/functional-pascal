@@ -1,12 +1,12 @@
 //! `Std.Str` intrinsic discriminants.
 //!
-//! **Documentation:** `docs/pascal/std/text/str.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/text/str/README.md` (from the repository root).
 
 use num_enum::TryFromPrimitive;
 
 /// Intrinsics for `Std.Str.*`.
 ///
-/// **Documentation:** `docs/pascal/std/text/str.md`
+/// **Documentation:** `docs/pascal/std/text/str/README.md`
 #[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u16)]
 pub enum StrIntrinsic {
@@ -25,69 +25,69 @@ pub enum StrIntrinsic {
     IsNumeric = 32,
     /// `Std.Str.RepeatStr(S, N)` — repeat string N times; `N <= 0` returns `''`.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str.md`
+    /// **Documentation:** `docs/pascal/std/text/str/README.md`
     Repeat = 200,
     /// `Std.Str.PadLeft(S, Width, PadChar)` — left-pad string to width.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str.md`
+    /// **Documentation:** `docs/pascal/std/text/str/README.md`
     PadLeft = 201,
     /// `Std.Str.PadRight(S, Width, PadChar)` — right-pad string to width.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str.md`
+    /// **Documentation:** `docs/pascal/std/text/str/README.md`
     PadRight = 202,
     /// `Std.Str.PadCenter(S, Width, PadChar)` — center-pad string to width.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str.md`
+    /// **Documentation:** `docs/pascal/std/text/str/README.md`
     PadCenter = 203,
     /// `Std.Str.FromChar(C, N)` — create string of N copies of char C.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str.md`
+    /// **Documentation:** `docs/pascal/std/text/str/README.md`
     FromChar = 204,
     /// `Std.Str.CharAt(S, Index)` — character at zero-based index.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str.md`
+    /// **Documentation:** `docs/pascal/std/text/str/README.md`
     CharAt = 205,
     /// `Std.Str.SetCharAt(S, Index, C)` — return new string with char replaced.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str.md`
+    /// **Documentation:** `docs/pascal/std/text/str/README.md`
     SetCharAt = 206,
     /// `Std.Str.Ord(C)` — Unicode code point of a char.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str.md`
+    /// **Documentation:** `docs/pascal/std/text/str/README.md`
     Ord = 207,
     /// `Std.Str.Chr(N)` — char from Unicode code point.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str.md`
+    /// **Documentation:** `docs/pascal/std/text/str/README.md`
     Chr = 208,
     /// `Std.Str.Insert(S, Index, Sub)` — insert substring at index.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str.md`
+    /// **Documentation:** `docs/pascal/std/text/str/README.md`
     Insert = 209,
     /// `Std.Str.Delete(S, Index, Len)` — delete Len chars starting at Index.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str.md`
+    /// **Documentation:** `docs/pascal/std/text/str/README.md`
     Delete = 210,
     /// `Std.Str.Reverse(S)` — reverse a string.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str.md`
+    /// **Documentation:** `docs/pascal/std/text/str/README.md`
     Reverse = 211,
     /// `Std.Str.TrimLeft(S)` — trim leading whitespace.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str.md`
+    /// **Documentation:** `docs/pascal/std/text/str/README.md`
     TrimLeft = 212,
     /// `Std.Str.TrimRight(S)` — trim trailing whitespace.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str.md`
+    /// **Documentation:** `docs/pascal/std/text/str/README.md`
     TrimRight = 213,
     /// `Std.Str.LastIndexOf(S, Sub)` — last occurrence index or -1.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str.md`
+    /// **Documentation:** `docs/pascal/std/text/str/README.md`
     LastIndexOf = 214,
     /// `Std.Str.Format(Template, ...)` — printf-style string formatting.
     ///
     /// Stack convention: template pushed first, then each arg, then arg count as integer.
     /// Specifiers: `%d` integer, `%f` real, `%s` string, `%%` literal percent.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str.md`
+    /// **Documentation:** `docs/pascal/std/text/str/README.md`
     Format = 242,
 }

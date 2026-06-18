@@ -4,7 +4,7 @@
 //! These tests populate `TuiState.views` directly from Rust where convenient, and also cover
 //! the additive FPAS-facing host view API introduced after the initial focus-chain step.
 //!
-//! **Documentation:** `docs/pascal/std/tui/app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 use fpas_bytecode::{Chunk, Intrinsic, Op, TuiIntrinsic, Value};
 use fpas_std::{ConsoleEvent, ConsoleKeyEvent, DamageRegion, ViewRect, key_event::key_kind_index};

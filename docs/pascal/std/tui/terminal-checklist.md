@@ -2,7 +2,7 @@
 
 Manual terminal checks for hosted `Std.Tui` applications.
 
-Use this checklist after changes to terminal behavior, hosted dispatch, focus, modals, or view paint. Headless regression tests run under `fpas test` — see [tui-app.md](tui/app.md) § Native TUI testing API. API reference: [tui-app.md](tui/app.md).
+Use this checklist after changes to terminal behavior, hosted dispatch, focus, modals, or view paint. Headless regression tests run under `fpas test` — see [Native testing](app/testing.md). API reference: [Hosted dispatch](app/README.md).
 
 ## Prerequisites
 

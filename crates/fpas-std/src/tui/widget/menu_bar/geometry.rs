@@ -1,6 +1,6 @@
 //! Menu bar layout, hit-testing, and damage-region geometry.
 //!
-//! Spec: `docs/pascal/std/tui/app.md`
+//! Spec: `docs/pascal/std/tui/app/README.md`
 
 use crate::{DamageRegion, UiMouse, ViewRect};
 

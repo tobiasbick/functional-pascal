@@ -1,6 +1,6 @@
 //! Rust-hosted TUI event normalization and coalescing.
 //!
-//! **Documentation:** `docs/pascal/std/tui/app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 use super::session::TuiSession;
 use crate::console::{Console, KeyInput};

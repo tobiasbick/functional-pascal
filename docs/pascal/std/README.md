@@ -65,7 +65,7 @@ begin
 end.
 ```
 
-See [tui/app.md](tui/app.md) for handler registration and host widgets.
+See [Hosted dispatch](tui/app/README.md) for handler registration and host widgets.
 
 ### Error handling helpers
 

@@ -1,4 +1,4 @@
-{ Register an OnPaint handler and dispatch one redraw. See docs/pascal/std/tui/app.md. }
+{ Register an OnPaint handler and dispatch one redraw. See docs/pascal/std/tui/app/README.md. }
 
 program TuiHostDispatchPaint;
 

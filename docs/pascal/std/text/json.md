@@ -14,9 +14,6 @@ begin
 end.
 ```
 
-**Maintenance (implementers only):** align with [`loaded/json.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/json.rs), [`json.rs`](../../../../crates/fpas-std/src/json.rs), [`std_calls/json.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/json.rs), and [`intrinsic/json.rs`](../../../../crates/fpas-bytecode/src/intrinsic/json.rs).
-
----
 
 ## Importing and names
 
@@ -88,6 +85,10 @@ WriteLn(Std.Json.Stringify(Value))  { [true,null,"hi",1.5] }
 ```
 
 Malformed runtime payloads, such as an enum value pretending to be `JsonValue`, raise a runtime error. Normal parse failures should be handled through the `Result` returned by `Parse`.
+
+## Implementation (contributors)
+
+Keep implementation aligned with source paths referenced in the original maintenance note: align with [`loaded/json.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/json.rs), [`json.rs`](../../../../crates/fpas-std/src/json.rs), [`std_calls/json.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/json.rs), and [`intrinsic/json.rs`](../../../../crates/fpas-bytecode/src/intrinsic/json.rs).
 
 ## See also
 

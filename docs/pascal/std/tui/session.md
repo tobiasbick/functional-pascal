@@ -13,9 +13,6 @@ begin
 end.
 ```
 
-**Maintenance (implementers only):** keep this file aligned with [`loaded/tui/`](../../../../crates/fpas-sema/src/std_registry/loaded/tui/mod.rs) and the standard-unit registry under [`crates/fpas-std/src/std_units/`](../../../../crates/fpas-std/src/std_units/mod.rs).
-
----
 
 ## Importing and names
 
@@ -30,7 +27,7 @@ After `uses Std.Tui;` you can refer to the unit in either form:
 
 `Std.Tui` exports nested names such as `Application.Open`, `Application.Run`, and `EventKind.Resize`. These short forms are available only when `Std.Tui` appears in `uses`.
 
-For the **Rust-hosted dispatch bridge** (`Application.HostProcessNext`, `Application.HostDispatchRedraw`, …), see `[tui-app.md](tui/app.md)`.
+For the **Rust-hosted dispatch bridge** (`Application.HostProcessNext`, `Application.HostDispatchRedraw`, …), see [Hosted dispatch](app/README.md).
 
 `Std.Tui` builds on `[Std.Console](console/README.md)`: the `key` field of `Std.Tui.TuiEvent` has type `**Std.Console.KeyEvent`** (and its `kind` field is `**Std.Console.KeyKind`**). The `**Tui**` prefix avoids clashing with `**Std.Console.Event**`. Import `**Std.Console**` alongside `**Std.Tui**` when you need short names such as `KeyKind` or `WriteLn`, or use fully qualified `Std.Console.*` names.
 
@@ -53,7 +50,7 @@ Session lifecycle:
 - `Application.Size` reads the current terminal dimensions.
 - `Application.Run` closes the session automatically when the hosted loop exits.
 
-See `[tui-app.md](tui/app.md)` for the full dispatch API, `ApplicationHandlers`, modals, and view-local paint.
+See [Hosted dispatch](app/README.md) for the full dispatch API, `ApplicationHandlers`, modals, and view-local paint.
 
 ---
 
@@ -177,7 +174,7 @@ Return the current terminal size for the application.
 
 Mark the application as needing a redraw. The hosted loop consumes this flag before invoking `OnPaint`.
 
-**Runtime (Rust only):** `TuiSession::is_redraw_pending` in `crates/fpas-std` peeks the same flag without consuming it; used by the VM host when servicing `TuiHostDispatchRedraw` and the bounded `TuiHostRunLoop` path (see `docs/pascal/std/tui/app.md`).
+**Runtime (Rust only):** `TuiSession::is_redraw_pending` in `crates/fpas-std` peeks the same flag without consuming it; used by the VM host when servicing `TuiHostDispatchRedraw` and the bounded `TuiHostRunLoop` path (see `docs/pascal/std/tui/app/README.md`).
 
 ---
 
@@ -226,14 +223,18 @@ begin
 end.
 ```
 
-`Application.Run` performs `Application.Close` automatically after the loop exits. See [Hosted dispatch](app.md) for the full dispatch API and `ApplicationHandlers` fields.
+`Application.Run` performs `Application.Close` automatically after the loop exits. See [Hosted dispatch](app/README.md) for the full dispatch API and `ApplicationHandlers` fields.
 
 Example: [`examples/pascal/tui/minimal_application.fpas`](../../../../examples/pascal/tui/minimal_application.fpas)
 
 ---
 
+## Implementation (contributors)
+
+Keep implementation aligned with source paths referenced in the original maintenance note: keep this file aligned with [`loaded/tui/`](../../../../crates/fpas-sema/src/std_registry/loaded/tui/mod.rs) and the standard-unit registry under [`crates/fpas-std/src/std_units/`](../../../../crates/fpas-std/src/std_units/mod.rs).
+
 ## See also
 
 - [Terminal UI index](README.md)
-- [Hosted dispatch](app.md)
+- [Hosted dispatch](app/README.md)
 - [`Std.Console`](../console/README.md)

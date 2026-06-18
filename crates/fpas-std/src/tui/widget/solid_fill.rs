@@ -2,7 +2,7 @@ use crate::{Console, DamageRegion, ViewRect};
 
 /// Host-managed widget that fills a view rectangle with one CRT color.
 ///
-/// Spec: `docs/pascal/std/tui/app.md`
+/// Spec: `docs/pascal/std/tui/app/README.md`
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SolidFillWidget {
     /// Packed CRT background color (`0..=15`).

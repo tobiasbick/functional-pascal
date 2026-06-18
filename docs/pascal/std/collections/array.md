@@ -11,9 +11,6 @@ begin
 end.
 ```
 
-**Maintenance (implementers only):** align with [`std_registry/`](../../../../crates/fpas-sema/src/std_registry/mod.rs), [`array.rs`](../../../../crates/fpas-std/src/array.rs), [`vm/`](../../../../crates/fpas-vm/src/vm/mod.rs) and [`std_calls/array.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/array.rs) for `Push`/`Pop`, plus [`intrinsics.rs`](../../../../crates/fpas-std/src/intrinsics.rs) / [`intrinsic/mod.rs`](../../../../crates/fpas-bytecode/src/intrinsic/mod.rs).
-
----
 
 ## Importing and names
 

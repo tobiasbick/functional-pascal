@@ -12,9 +12,6 @@ begin
 end.
 ```
 
-**Maintenance (implementers only):** align with [`std_registry/builtins/dict.rs`](../../../../crates/fpas-sema/src/std_registry/builtins/dict.rs), [`dict.rs`](../../../../crates/fpas-std/src/dict.rs), [`std_calls/dict.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/dict.rs), and [`intrinsic/mod.rs`](../../../../crates/fpas-bytecode/src/intrinsic/mod.rs).
-
----
 
 ## Importing and names
 
@@ -212,6 +209,10 @@ M['B'] := 3                           { insert new key }
 Accessing a non-existent key raises a runtime error. Use `Std.Dict.ContainsKey` to check first.
 
 The expression operator `Key in D` is shorthand for checking key membership and returns `boolean`.
+
+## Implementation (contributors)
+
+Keep implementation aligned with source paths referenced in the original maintenance note: align with [`std_registry/builtins/dict.rs`](../../../../crates/fpas-sema/src/std_registry/builtins/dict.rs), [`dict.rs`](../../../../crates/fpas-std/src/dict.rs), [`std_calls/dict.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/dict.rs), and [`intrinsic/mod.rs`](../../../../crates/fpas-bytecode/src/intrinsic/mod.rs).
 
 ## See also
 

@@ -1,6 +1,6 @@
 //! Shared CRT color styles for menu bar and pull-down popup painting.
 //!
-//! Spec: `docs/pascal/std/tui/app.md`
+//! Spec: `docs/pascal/std/tui/app/README.md`
 
 /// CRT colors used while painting menu bar and popup widgets.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -13,9 +13,6 @@ begin
 end.
 ```
 
-**Maintenance (implementers only):** keep this file aligned with [crates/fpas-sema/src/std_registry/loaded/graph/mod.rs](../../../../crates/fpas-sema/src/std_registry/loaded/graph/mod.rs), [crates/fpas-sema/src/std_registry/loaded/graph/application_api.rs](../../../../crates/fpas-sema/src/std_registry/loaded/graph/application_api.rs), [crates/fpas-compiler/src/compiler/std_calls/graph.rs](../../../../crates/fpas-compiler/src/compiler/std_calls/graph.rs), [crates/fpas-vm/src/vm/execute/io/graph/](../../../../crates/fpas-vm/src/vm/execute/io/graph/mod.rs), [crates/fpas-std/src/graph/](../../../../crates/fpas-std/src/graph/mod.rs), and [crates/fpas-bytecode/src/intrinsic/graph.rs](../../../../crates/fpas-bytecode/src/intrinsic/graph.rs).
-
----
 
 ## Importing and names
 

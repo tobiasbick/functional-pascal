@@ -267,7 +267,7 @@ end.
 | `Std.Option` | Option helpers | `Unwrap`, `UnwrapOr`, `IsSome`, `IsNone`, `Map`, `AndThen`, `OrElse` |
 | `Std.Task` | Task synchronization (`go`) | `Wait`, `WaitAll` |
 
-Full TUI dispatch details: [`docs/pascal/std/tui/app.md`](../../docs/pascal/std/tui/app.md). Per-unit reference: [`docs/pascal/std/README.md`](../../docs/pascal/std/README.md).
+Full TUI dispatch details: [`docs/pascal/std/tui/app/README.md`](../../docs/pascal/std/tui/app/README.md). Per-unit reference: [`docs/pascal/std/README.md`](../../docs/pascal/std/README.md).
 
 **Ambiguous names** — always qualify these:
 - `Length`, `Contains`, `IndexOf` across `Std.Str`, `Std.Array`, `Std.Dict`

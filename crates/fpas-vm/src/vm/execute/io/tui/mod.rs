@@ -1,6 +1,6 @@
 //! `Std.Tui` VM execution — intrinsic dispatch.
 //!
-//! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 mod application;
 mod handlers;

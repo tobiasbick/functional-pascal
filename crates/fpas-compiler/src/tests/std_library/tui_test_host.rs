@@ -1,6 +1,6 @@
 //! Compiler integration tests for headless native TUI testing (Phase 1–2).
 //!
-//! **Documentation:** `docs/pascal/std/tui/app.md`
+//! **Documentation:** `docs/pascal/std/tui/app/README.md`
 
 use super::super::{compile_and_run, compile_ok};
 

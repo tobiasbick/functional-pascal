@@ -39,7 +39,7 @@ pub(crate) enum TaskResultState {
 #[derive(Debug)]
 pub(crate) struct TuiState {
     pub session: TuiSession,
-    /// Resize coalescing and the hosted-loop event pump (`docs/pascal/std/tui/app.md`).
+    /// Resize coalescing and the hosted-loop event pump (`docs/pascal/std/tui/app/README.md`).
     pub host: UiHost,
     /// `OnKeyPressed`-style handler: `function (Application, KeyEvent): boolean`.
     pub on_key_pressed: Option<Value>,

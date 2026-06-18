@@ -2,9 +2,6 @@
 
 **Status:** current specification for the Rust-hosted event loop and `On*` handlers for native window programs.
 
-**Maintenance (implementers only):** keep this file aligned with [`loaded/graph/`](../../../../crates/fpas-sema/src/std_registry/loaded/graph/mod.rs) (see root [AGENTS.md](../../../../AGENTS.md)).
-
----
 
 ## Model
 
@@ -100,6 +97,10 @@ Test intrinsics **379–380** are documented in [`test.md`](../testing/test.md).
 ## Example
 
 See [`examples/pascal/std/graph_basics.fpas`](../../../../examples/pascal/std/graph_basics.fpas) and [`examples/math/julia/julia_graph.fpas`](../../../../examples/math/julia/julia_graph.fpas).
+
+## Implementation (contributors)
+
+Keep implementation aligned with source paths referenced in the original maintenance note: keep this file aligned with [`loaded/graph/`](../../../../crates/fpas-sema/src/std_registry/loaded/graph/mod.rs) (see root [AGENTS.md](../../../../AGENTS.md)).
 
 ## See also
 

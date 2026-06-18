@@ -5,7 +5,7 @@ Hosted terminal applications and session APIs.
 | Topic | Description |
 |-------|-------------|
 | [Session API](session.md) | `Application.Open`, size, `RequestRedraw` |
-| [Hosted dispatch](app.md) | `Configure`, `Run`, `On*` handlers, host widgets |
+| [Hosted dispatch](app/README.md) | `Configure`, `Run`, `On*` handlers, host widgets |
 | [Terminal checklist](terminal-checklist.md) | Manual smoke tests |
 
 ## See also

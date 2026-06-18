@@ -1,6 +1,6 @@
 //! Shared hosted-application event queue and resize coalescing.
 //!
-//! **Documentation:** `docs/pascal/std/tui/app.md`, `docs/pascal/std/graph/app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/tui/app/README.md`, `docs/pascal/std/graph/app.md` (from the repository root).
 
 use super::event::{UiEvent, UiResize};
 use std::collections::VecDeque;

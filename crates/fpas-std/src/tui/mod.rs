@@ -1,6 +1,6 @@
 //! `Std.Tui` runtime: session, host bridge, views, widgets, and dispatch helpers.
 //!
-//! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 mod command;
 mod damage;

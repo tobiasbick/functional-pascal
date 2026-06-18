@@ -10,9 +10,6 @@ begin
 end.
 ```
 
-**Maintenance (implementers only):** align with [`std_registry/`](../../../../crates/fpas-sema/src/std_registry/mod.rs), [`math.rs`](../../../../crates/fpas-std/src/math.rs), [`std_calls/math.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/math.rs) (`Pi` and call lowering), [`intrinsics.rs`](../../../../crates/fpas-std/src/intrinsics.rs), and [`intrinsic/mod.rs`](../../../../crates/fpas-bytecode/src/intrinsic/mod.rs).
-
----
 
 ## Importing and names
 

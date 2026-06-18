@@ -1,6 +1,6 @@
 //! Hosted `Std.Tui` run-loop coordination and lifecycle helpers.
 //!
-//! **Documentation:** `docs/pascal/std/tui/app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError};

@@ -1,6 +1,6 @@
 //! Host-managed horizontal menu bar painted in Rust from a Pascal item model.
 //!
-//! Spec: `docs/pascal/std/tui/app.md`
+//! Spec: `docs/pascal/std/tui/app/README.md`
 
 mod geometry;
 mod input;
@@ -56,7 +56,7 @@ impl MenuBarWidget {
 
     /// Returns a read-only snapshot of hover, activation, and submenu state.
     ///
-    /// **Documentation:** `docs/pascal/std/tui/app.md` (`Application.QueryMenuBarState`)
+    /// **Documentation:** `docs/pascal/std/tui/app/README.md` (`Application.QueryMenuBarState`)
     #[must_use]
     pub fn query_state(&self) -> MenuBarState {
         let (submenu_open, submenu_bar_index, selected_entry) = match self.open_submenu {

@@ -1,4 +1,4 @@
-{ Cooperative quit from OnPaint ends HostRunLoop early. See docs/pascal/std/tui/app.md. }
+{ Cooperative quit from OnPaint ends HostRunLoop early. See docs/pascal/std/tui/app/README.md. }
 
 program TuiHostDispatchQuit;
 

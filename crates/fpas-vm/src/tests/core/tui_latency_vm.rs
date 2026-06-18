@@ -1,6 +1,6 @@
 //! VM-level latency-priority tests for hosted `Std.Tui.Application.Run`.
 //!
-//! **Documentation:** `docs/pascal/std/tui/app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 use fpas_bytecode::{Chunk, Intrinsic, Op, TuiIntrinsic, Value};
 use fpas_std::{ConsoleEvent, ConsoleKeyEvent, key_event::key_kind_index};

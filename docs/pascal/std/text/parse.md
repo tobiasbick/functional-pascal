@@ -11,9 +11,6 @@ begin
 end.
 ```
 
-**Maintenance (implementers only):** align with [`std_registry/loaded/parse.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/parse.rs), [`parse.rs`](../../../../crates/fpas-std/src/parse.rs), [`std_calls/parse.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/parse.rs), [`intrinsics.rs`](../../../../crates/fpas-std/src/intrinsics.rs), and [`intrinsic/parse.rs`](../../../../crates/fpas-bytecode/src/intrinsic/parse.rs).
-
----
 
 ## Importing and names
 
@@ -76,6 +73,10 @@ end
 ```
 
 [<- Standard library index](README.md)
+
+## Implementation (contributors)
+
+Keep implementation aligned with source paths referenced in the original maintenance note: align with [`std_registry/loaded/parse.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/parse.rs), [`parse.rs`](../../../../crates/fpas-std/src/parse.rs), [`std_calls/parse.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/parse.rs), [`intrinsics.rs`](../../../../crates/fpas-std/src/intrinsics.rs), and [`intrinsic/parse.rs`](../../../../crates/fpas-bytecode/src/intrinsic/parse.rs).
 
 ## See also
 

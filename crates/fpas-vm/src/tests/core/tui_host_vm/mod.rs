@@ -1,6 +1,6 @@
-//! VM bridge for `TuiHost` (Phase 3): host poll/register/process intrinsics (see `docs/pascal/std/tui/app.md`).
+//! VM bridge for `TuiHost` (Phase 3): host poll/register/process intrinsics (see `docs/pascal/std/tui/app/README.md`).
 //!
-//! **Documentation:** `docs/pascal/std/tui/app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 use fpas_bytecode::{Chunk, Intrinsic, Op, TuiIntrinsic, Value};
 use fpas_std::ConsoleEvent;

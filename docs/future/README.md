@@ -4,7 +4,7 @@ Open planning items for Functional Pascal.
 
 ## TUI roadmap
 
-Hosted terminal UI is **implemented**: Rust-owned event loop, FPAS `On*` handlers, host widgets (menu bar, status bar, solid fill), and `Application.Run` as the primary entry for full apps. **Native headless TUI tests** (`OpenForTest`, `TestPump`, `Query*`, `Std.Test` screen assertions) run under `fpas test` without a real terminal — see [`tui-app.md`](../pascal/std/tui/app.md) § Native TUI testing API and [`tests/tui/`](../../tests/tui/). CRT-style terminal input (`ReadEvent`, `PollEvent`) lives on **`Std.Console`**; full apps use **`Std.Tui`** hosted dispatch. Reference implementations: [`apps/ide/`](../../apps/ide/) (multi-unit shell) and [`examples/pascal/tui/`](../../examples/pascal/tui/) (including [`menu_bar.fpas`](../../examples/pascal/tui/menu_bar.fpas)). Implementation history: [`tui-application-framework.md`](tui-application-framework.md). User-facing spec: [`docs/pascal/std/tui/app.md`](../pascal/std/tui/app.md).
+Hosted terminal UI is **implemented**: Rust-owned event loop, FPAS `On*` handlers, host widgets (menu bar, status bar, solid fill), and `Application.Run` as the primary entry for full apps. **Native headless TUI tests** (`OpenForTest`, `TestPump`, `Query*`, `Std.Test` screen assertions) run under `fpas test` without a real terminal — see [`tui-app.md`](../pascal/std/tui/app/README.md) § Native TUI testing API and [`tests/tui/`](../../tests/tui/). CRT-style terminal input (`ReadEvent`, `PollEvent`) lives on **`Std.Console`**; full apps use **`Std.Tui`** hosted dispatch. Reference implementations: [`apps/ide/`](../../apps/ide/) (multi-unit shell) and [`examples/pascal/tui/`](../../examples/pascal/tui/) (including [`menu_bar.fpas`](../../examples/pascal/tui/menu_bar.fpas)). Implementation history: [`tui-application-framework.md`](tui-application-framework.md). User-facing spec: [`docs/pascal/std/tui/app/README.md`](../pascal/std/tui/app/README.md).
 
 ## Standard library roadmap
 
@@ -18,7 +18,7 @@ Source-level `library` projects and `[dependencies]` are **implemented** — the
 
 FPAS programs today are tested mainly from Rust (`compile_and_run`, VM input queues). Author-facing tests use `Std.Test`, `fpas test`, and optional sidecars — see [`docs/pascal/std/testing/test.md`](../pascal/std/test.md). Planned runner docs: [`test-framework/README.md`](test-framework/README.md) (when present).
 
-**Native TUI testing in FPAS** is **implemented**: headless `OpenForTest` / `TestPump`, input injectors, screen/view/widget queries, and `Std.Test` screen assertions under `fpas test` with no real terminal or TUI sidecar files. User spec: [`docs/pascal/std/tui/app.md`](../pascal/std/tui/app.md) § Native TUI testing API. Examples: [`tests/tui/tui_*_test.fpas`](../../tests/tui/). Real-terminal smoke checks: [`docs/pascal/std/tui/terminal-checklist.md`](../pascal/std/tui-terminal-checklist.md).
+**Native TUI testing in FPAS** is **implemented**: headless `OpenForTest` / `TestPump`, input injectors, screen/view/widget queries, and `Std.Test` screen assertions under `fpas test` with no real terminal or TUI sidecar files. User spec: [`docs/pascal/std/tui/app/README.md`](../pascal/std/tui/app/README.md) § Native TUI testing API. Examples: [`tests/tui/tui_*_test.fpas`](../../tests/tui/). Real-terminal smoke checks: [`docs/pascal/std/tui/terminal-checklist.md`](../pascal/std/tui-terminal-checklist.md).
 
 ## Source formatter
 

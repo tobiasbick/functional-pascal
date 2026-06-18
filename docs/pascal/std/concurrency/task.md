@@ -15,9 +15,6 @@ begin
 end.
 ```
 
-**Maintenance (implementers only):** align with [`std_registry/loaded/channel_task.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/channel_task.rs), [`std_registry/builtins/channel_task.rs`](../../../../crates/fpas-sema/src/std_registry/builtins/channel_task.rs), [`std_calls/task.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/task.rs), [`compiler/stmt/concurrency/mod.rs`](../../../../crates/fpas-compiler/src/compiler/stmt/concurrency/mod.rs) and [`compiler/expr/mod.rs`](../../../../crates/fpas-compiler/src/compiler/expr/mod.rs) (`go` → `Op::SpawnDetachedTask` / `Op::SpawnTask`), [`chunk.rs`](../../../../crates/fpas-bytecode/src/chunk.rs) (`Chunk::uses_spawn_tasks` for pool sizing), [`shared.rs`](../../../../crates/fpas-vm/src/vm/shared.rs) (cross-thread `SharedState`: task results, ready queue, I/O), [`tasks/spawn.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/tasks/spawn.rs) (spawn opcode execution), [`tasks/wait.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/tasks/wait.rs) (VM execution; pending wait **cooperatively yields** then blocks on the shared condvar until progress — no hot-spin), [`tasks/scheduling.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/tasks/scheduling.rs) (instruction timeslice for spawned tasks), [`concurrency/mod.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/mod.rs) (intrinsic dispatch), and [`intrinsic/mod.rs`](../../../../crates/fpas-bytecode/src/intrinsic/mod.rs) (`TaskWait`, `TaskWaitAll`). These intrinsics are **not** dispatched through `fpas-std::run_intrinsic`.
-
----
 
 ## Importing and names
 
@@ -70,6 +67,10 @@ An empty array completes immediately.
 
 - **`Wait` after the result was already taken:** wait each task handle at most once for its return value (see VM hint: do not double-await the same completion).
 - **Task failure / VM shutdown:** if a spawned task aborts with a runtime error, the runtime sets a **failure** path (not just “main finished” teardown) so other spawned work can stop; a waiter may see an execution-aborted diagnostic. Fix the fault in the spawned task. See [Scheduling](../../language/concurrency/scheduling.md).
+
+## Implementation (contributors)
+
+Keep implementation aligned with source paths referenced in the original maintenance note: align with [`std_registry/loaded/channel_task.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/channel_task.rs), [`std_registry/builtins/channel_task.rs`](../../../../crates/fpas-sema/src/std_registry/builtins/channel_task.rs), [`std_calls/task.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/task.rs), [`compiler/stmt/concurrency/mod.rs`](../../../../crates/fpas-compiler/src/compiler/stmt/concurrency/mod.rs) and [`compiler/expr/mod.rs`](../../../../crates/fpas-compiler/src/compiler/expr/mod.rs) (`go` → `Op::SpawnDetachedTask` / `Op::SpawnTask`), [`chunk.rs`](../../../../crates/fpas-bytecode/src/chunk.rs) (`Chunk::uses_spawn_tasks` for pool sizing), [`shared.rs`](../../../../crates/fpas-vm/src/vm/shared.rs) (cross-thread `SharedState`: task results, ready queue, I/O), [`tasks/spawn.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/tasks/spawn.rs) (spawn opcode execution), [`tasks/wait.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/tasks/wait.rs) (VM execution; pending wait **cooperatively yields** then blocks on the shared condvar until progress — no hot-spin), [`tasks/scheduling.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/tasks/scheduling.rs) (instruction timeslice for spawned tasks), [`concurrency/mod.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/mod.rs) (intrinsic dispatch), and [`intrinsic/mod.rs`](../../../../crates/fpas-bytecode/src/intrinsic/mod.rs) (`TaskWait`, `TaskWaitAll`). These intrinsics are **not** dispatched through `fpas-std::run_intrinsic`.
 
 ## See also
 

@@ -1,4 +1,4 @@
-{ Spec: docs/pascal/std/text/str.md (from repository root). }
+{ Spec: docs/pascal/std/text/str/README.md (from repository root). }
 
 program StrBasics;
 

@@ -15,9 +15,6 @@ end.
 
 `Std.Proc` starts a host process, waits for it to finish, and returns the process exit status. The initial API is intentionally small: it does not expose process handles, stdin/stdout/stderr pipes, environment overrides, or working-directory controls.
 
-**Maintenance (implementers only):** align with [`std_registry/`](../../../../crates/fpas-sema/src/std_registry/mod.rs), [`std_calls/proc.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/proc.rs), [`proc.rs`](../../../../crates/fpas-std/src/proc.rs), and [`intrinsic/proc.rs`](../../../../crates/fpas-bytecode/src/intrinsic/proc.rs).
-
----
 
 ## Importing and names
 

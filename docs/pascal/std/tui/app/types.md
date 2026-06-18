@@ -1,0 +1,63 @@
+# Types and registration
+
+## Types and signatures
+
+Reuse existing types from `**Std.Tui`** and `**Std.Console`** where possible: `**Application**`, `**Size**`, `**Std.Console.KeyEvent**`.
+
+### `Rect`
+
+Record describing the absolute terminal bounds for a host-managed view during local paint dispatch.
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `x` | `integer` | Left edge in terminal cells. |
+| `y` | `integer` | Top edge in terminal cells. |
+| `width` | `integer` | Width in terminal cells. |
+| `height` | `integer` | Height in terminal cells. |
+
+### `ExitReason`
+
+Enum describing why the hosted loop stopped (`**Std.Tui.ExitReason`**). **Registry:** the type and variants `**UserQuit**`, `**HostStop`**, `**HostAndUserStop**`, `**HostShutdown**` are registered in [`loaded/tui/`](../../../../../crates/fpas-sema/src/std_registry/loaded/tui/mod.rs) and known to the compiler enum tables. **VM:** [`Application.Run`](../../../../../crates/fpas-vm/src/vm/execute/io/tui_run.rs) records `**last_exit_reason**`, invokes the registered `**OnExit**`, and then performs close semantics. The current hosted loop reports `**UserQuit`** when `**Application.HostRequestQuit(App)`** ends the run, `**HostStop`** when low-level code stops the active hosted session during `**Run`**, `**HostAndUserStop`** when both stop signals are present in the same turn, and `**HostShutdown`** when VM global shutdown is requested while the hosted run is active.
+
+
+| Variant    | Meaning                                                                                                                                                    |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `UserQuit` | Normal exit requested by the application (for example Escape handled in `**OnKeyPressed**` calling a host **quit** primitive—Phase 3 names the intrinsic). |
+| `HostStop` | Host ended the loop for an internal reason (documented per implementation).                                                                                |
+| `HostAndUserStop` | Host stop and user quit were both requested in the same dispatch turn; host stop takes precedence but the combined reason is preserved. |
+| `HostShutdown` | The VM entered global shutdown while `Application.Run` was active (for example due to a concurrent task failure). |
+
+
+Future variants (signals, fatal I/O) may extend this enum; handlers must tolerate unknown variants if the language allows exhaustiveness rules.
+
+### Handler signatures (normative)
+
+All procedures run on the **main VM thread**. Parameters use `**App: Application`** for session context.
+
+```pascal
+// Conceptual — final Pascal declarations ship with sema registration.
+
+function OnKeyPressed(App: Application; Key: Std.Console.KeyEvent): boolean;
+// Returns true if the key was consumed (no further default processing for this event).
+
+procedure OnResize(App: Application; NewSize: Size);
+
+procedure OnViewPaint(App: Application; ViewId: integer; Bounds: Rect);
+
+procedure OnPaint(App: Application);
+
+procedure OnIdle(App: Application);
+
+procedure OnExit(App: Application; Reason: ExitReason);
+```
+
+`**OnKeyPressed` return value:** `true` = **consumed**. The host does not promise a second consumer; later phases may use consumption for command routing.
+
+`**OnResize`:** `NewSize` matches `**Application.Size(App)`** after the resize is applied.
+
+---
+
+## See also
+
+- [Handlers](handlers.md)
+- [Hosted dispatch overview](README.md)

@@ -1,6 +1,6 @@
 //! `Std.Tui` value constructors: `Application`, `ViewId`, `Size`, and `Rect` records.
 //!
-//! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};

@@ -1,6 +1,6 @@
 //! Headless native TUI testing intrinsics (Phase 1–2).
 //!
-//! **Documentation:** `docs/pascal/std/tui/app.md`
+//! **Documentation:** `docs/pascal/std/tui/app/README.md`
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};

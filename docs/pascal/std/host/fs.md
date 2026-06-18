@@ -16,9 +16,6 @@ end.
 
 Text reads and writes use UTF-8.
 
-**Maintenance (implementers only):** align with [`std_registry/`](../../../../crates/fpas-sema/src/std_registry/mod.rs), [`std_calls/fs.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/fs.rs), [`fs.rs`](../../../../crates/fpas-std/src/fs.rs), and [`intrinsic/fs.rs`](../../../../crates/fpas-bytecode/src/intrinsic/fs.rs).
-
----
 
 ## Importing and names
 

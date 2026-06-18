@@ -11,9 +11,6 @@ begin
 end.
 ```
 
-**Maintenance (implementers only):** align with [`std_registry/`](../../../../crates/fpas-sema/src/std_registry/mod.rs), [`random.rs`](../../../../crates/fpas-std/src/random.rs), [`std_calls/random.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/random.rs), [`intrinsics.rs`](../../../../crates/fpas-std/src/intrinsics.rs), and [`intrinsic/random.rs`](../../../../crates/fpas-bytecode/src/intrinsic/random.rs).
-
----
 
 ## Importing and names
 

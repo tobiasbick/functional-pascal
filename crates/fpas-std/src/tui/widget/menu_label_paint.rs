@@ -1,6 +1,6 @@
 //! Shared label painting helpers for menu bar and popup rows.
 //!
-//! Spec: `docs/pascal/std/tui/app.md`
+//! Spec: `docs/pascal/std/tui/app/README.md`
 
 use crate::Console;
 

@@ -12,9 +12,6 @@ end.
 
 `Std.Path` works on path strings only. It does not read the filesystem, resolve the current working directory, or check whether paths exist.
 
-**Maintenance (implementers only):** align with [`std_registry/`](../../../../crates/fpas-sema/src/std_registry/mod.rs), [`std_calls/path.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/path.rs), [`path.rs`](../../../../crates/fpas-std/src/path.rs), and [`intrinsic/path.rs`](../../../../crates/fpas-bytecode/src/intrinsic/path.rs).
-
----
 
 ## Importing and names
 

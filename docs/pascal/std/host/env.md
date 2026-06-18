@@ -13,9 +13,6 @@ end.
 
 `Std.Env` reads the environment visible to the host process. It is UI-independent: console, TUI, graph, and background-task programs can import it when they need environment values.
 
-**Maintenance (implementers only):** align with [`std_registry/`](../../../../crates/fpas-sema/src/std_registry/mod.rs), [`std_calls/env.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/env.rs), [`env.rs`](../../../../crates/fpas-std/src/env.rs), and [`intrinsic/env.rs`](../../../../crates/fpas-bytecode/src/intrinsic/env.rs).
-
----
 
 ## Importing and names
 

@@ -1,6 +1,6 @@
 //! VM tests for native TUI query intrinsics (Phase 3–4).
 //!
-//! **Documentation:** `docs/pascal/std/tui/app.md`
+//! **Documentation:** `docs/pascal/std/tui/app/README.md`
 
 use crate::tests::helpers::{
     emit_constant, key_event_value, loc, minimal_shared_state, tui_application_value,

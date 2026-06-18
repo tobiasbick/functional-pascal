@@ -217,7 +217,7 @@ pub const STD_TIME_SLEEP: &str = std_time!("Sleep");
 
 pub const STD_TUI_APPLICATION: &str = std_tui!("Application");
 pub const STD_TUI_VIEW_ID: &str = std_tui!("ViewId");
-/// Hosted-dispatch handler bundle for `Std.Tui.Application.Configure`; see `docs/pascal/std/tui/app.md`.
+/// Hosted-dispatch handler bundle for `Std.Tui.Application.Configure`; see `docs/pascal/std/tui/app/README.md`.
 pub const STD_TUI_APPLICATION_HANDLERS: &str = std_tui!("ApplicationHandlers");
 pub const STD_TUI_RECT: &str = std_tui!("Rect");
 pub const STD_TUI_SIZE: &str = std_tui!("Size");
@@ -227,9 +227,9 @@ pub const STD_TUI_EVENT_KIND: &str = std_tui!("EventKind");
 pub const STD_TUI_EXIT_REASON: &str = std_tui!("ExitReason");
 pub const STD_TUI_APPLICATION_OPEN: &str = std_tui!("Application.Open");
 pub const STD_TUI_APPLICATION_CLOSE: &str = std_tui!("Application.Close");
-/// Configure hosted-dispatch handlers from a single bundle; see `docs/pascal/std/tui/app.md`.
+/// Configure hosted-dispatch handlers from a single bundle; see `docs/pascal/std/tui/app/README.md`.
 pub const STD_TUI_APPLICATION_CONFIGURE: &str = std_tui!("Application.Configure");
-/// Dispatch-mode hosted application loop; see `docs/pascal/std/tui/app.md`.
+/// Dispatch-mode hosted application loop; see `docs/pascal/std/tui/app/README.md`.
 pub const STD_TUI_APPLICATION_RUN: &str = std_tui!("Application.Run");
 /// High-level modal helper rooted at a host-managed view subtree.
 pub const STD_TUI_APPLICATION_SHOW_MODAL: &str = std_tui!("Application.ShowModal");

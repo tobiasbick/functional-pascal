@@ -14,9 +14,6 @@ end.
 
 `Std.Time` exposes host clock values and blocking sleep. It is separate from `Std.Console.Delay`, which remains available for CRT-style console programs.
 
-**Maintenance (implementers only):** align with [`std_registry/`](../../../../crates/fpas-sema/src/std_registry/mod.rs), [`std_calls/time.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/time.rs), [`time.rs`](../../../../crates/fpas-std/src/time.rs), and [`intrinsic/time.rs`](../../../../crates/fpas-bytecode/src/intrinsic/time.rs).
-
----
 
 ## Importing and names
 

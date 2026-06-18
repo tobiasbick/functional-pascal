@@ -1,7 +1,7 @@
 //! Rust-hosted TUI widgets painted directly by the VM host.
 //!
 //! Plan: `docs/future/tui-application-framework.md`
-//! Spec: `docs/pascal/std/tui/app.md`
+//! Spec: `docs/pascal/std/tui/app/README.md`
 
 mod menu_bar;
 mod menu_label_paint;
@@ -19,7 +19,7 @@ use crate::{Console, DamageRegion, ViewRect};
 
 /// Native widget attached to a host-managed view.
 ///
-/// Spec: `docs/pascal/std/tui/app.md`
+/// Spec: `docs/pascal/std/tui/app/README.md`
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ViewWidget {
     /// Solid CRT-color fill, optionally tiled with one character.

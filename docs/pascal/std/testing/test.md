@@ -14,9 +14,6 @@ end.
 
 Test entry files are named `*_test.fpas` and must declare a `program` (not a bare `unit`).
 
-**Maintenance (implementers only):** align with [`std_registry/loaded/test.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/test.rs), [`std_calls/test.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/test.rs), [`test/`](../../../../crates/fpas-std/src/test/), and [`intrinsic/test.rs`](../../../../crates/fpas-bytecode/src/intrinsic/test.rs).
-
----
 
 ## Importing and names
 
@@ -126,7 +123,7 @@ Flags and discovery rules: [CLI](../../program-structure/cli.md), [`runner.md`](
 | Need | Native API |
 | ---- | ---------- |
 | `ReadLn` input | `Std.Test.PushReadLn` |
-| Hosted TUI input | `Application.TestSendKey`, `TestPump`, … (`docs/pascal/std/tui/app.md`) |
+| Hosted TUI input | `Application.TestSendKey`, `TestPump`, … (`docs/pascal/std/tui/app/README.md`) |
 | Headless graph input | `Application.OpenForTest`, `Application.TestSendKey` |
 
 Format and remaining script event types: [`scripted-input.md`](../../../future/test-framework/scripted-input.md).
@@ -164,6 +161,10 @@ Details: [`runner.md`](../../../future/test-framework/runner.md) (golden stdout 
 | [`suite.fpasprj`](../../../tests/suite.fpasprj) | `kind = "test"` project bundle |
 
 Manual failure demo (not auto-discovered): [`manual/assert_fail_demo.fpas`](../../../tests/manual/assert_fail_demo.fpas).
+
+## Implementation (contributors)
+
+Keep implementation aligned with source paths referenced in the original maintenance note: align with [`std_registry/loaded/test.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/test.rs), [`std_calls/test.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/test.rs), [`test/`](../../../../crates/fpas-std/src/test/), and [`intrinsic/test.rs`](../../../../crates/fpas-bytecode/src/intrinsic/test.rs).
 
 ## See also
 

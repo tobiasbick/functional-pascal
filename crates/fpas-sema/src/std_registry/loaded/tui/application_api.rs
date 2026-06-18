@@ -6,7 +6,7 @@ use fpas_std::std_symbols as s;
 
 /// Register the user-facing `Std.Tui.Application` calls.
 ///
-/// **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app.md` (from the repository root).
+/// **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 pub(super) fn register_application_api(checker: &mut Checker, types: &TuiTypes) {
     define_func(
         checker,

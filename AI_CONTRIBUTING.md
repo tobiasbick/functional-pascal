@@ -47,9 +47,24 @@ Core expectations:
 
 ## Source Of Truth
 
-The current documentation in `docs/pascal/` is the source of truth.
+The current documentation in `docs/pascal/` is the source of truth for **implemented** behavior.
+
+- Navigation hub: [`docs/pascal/README.md`](docs/pascal/README.md)
+- Standard library reference: [`docs/pascal/std/README.md`](docs/pascal/std/README.md) — area hubs (`host/`, `text/`, `collections/`, …) and split unit pages (`text/str/`, `tui/app/`, `collections/array/`, `graph/app/`, `console/`, …)
+- Plans and history only: [`docs/future/`](docs/future/) — do not describe unimplemented behavior in `docs/pascal/`
 
 Contributions should implement and document the current specification only.
+
+## Documentation Conventions
+
+When editing user-facing docs under `docs/pascal/std/`:
+
+- Unit and session pages: quick reference, then per-symbol detail; end with `## Implementation (contributors)` (table) and `## See also` (area index + [std index](docs/pascal/std/README.md))
+- Large units live in themed subdirectories with a hub `README.md` (same pattern as `console/`, `text/str/`, `tui/app/`)
+- After moving or renaming std doc paths, run `python scripts/update-std-doc-paths.py` and `python scripts/normalize-std-docs.py`
+- Rust `///` doc links should point at the matching file under `docs/pascal/std/…`
+
+When editing `.fpas` under `examples/`, `tests/`, or `apps/`, format to match [`docs/pascal/tools/fmt-style.md`](docs/pascal/tools/fmt-style.md) (`scripts/format-fpas-sources.sh` or `fpas fmt`).
 
 ## Preferred Behavior For AI Agents
 
@@ -65,11 +80,12 @@ When contributing:
 ## Contribution Flow
 
 1. Read `AGENTS.md`.
-2. Read the relevant document in `docs/pascal/`.
+2. Read the relevant area hub in `docs/pascal/` (for std work, start at [`docs/pascal/std/README.md`](docs/pascal/std/README.md)).
 3. Inspect the existing implementation.
 4. Prefer simplification and consolidation.
 5. Add or update tests (Rust in `crates/*/src/tests/` or `crates/*/tests/`; FPAS `*_test.fpas` under `tests/`).
 6. Ensure the final result matches the current specification.
+7. Verify with `cargo fmt`, `cargo build`, and `cargo test --workspace` unless the change is docs-only.
 
 ## Non-Goals
 

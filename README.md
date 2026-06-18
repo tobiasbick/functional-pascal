@@ -187,7 +187,18 @@ cd my-suite && fpas                 # run the sole program member
 
 ## Documentation
 
-The full language documentation is in [`docs/pascal/`](docs/pascal/):
+The full language specification lives in [`docs/pascal/`](docs/pascal/). Start with the [documentation hub](docs/pascal/README.md) for area navigation and the learning path.
+
+| Area | Hub |
+|------|-----|
+| Getting started | [getting-started/](docs/pascal/getting-started/README.md) |
+| Language | [language/](docs/pascal/language/README.md) |
+| Program structure | [program-structure/](docs/pascal/program-structure/README.md) |
+| Standard library | [std/](docs/pascal/std/README.md) — themed subdirs (`host/`, `text/str/`, `console/`, `tui/app/`, `graph/app/`, …) |
+| Tools | [tools/](docs/pascal/tools/README.md) |
+| Formal grammar | [grammar.ebnf](docs/specs/grammar.ebnf) |
+
+Ordered learning path:
 
 1. [Overview](docs/pascal/getting-started/README.md)
 2. [Basics](docs/pascal/language/basics/README.md)
@@ -202,14 +213,16 @@ The full language documentation is in [`docs/pascal/`](docs/pascal/):
 11. [CLI](docs/pascal/program-structure/cli.md)
 12. [Standard Library](docs/pascal/std/README.md)
 13. [Formatter style](docs/pascal/tools/fmt-style.md)
-14. [Formal grammar](docs/specs/grammar.ebnf)
+
+Planned work (not current behavior): [`docs/future/`](docs/future/).
 
 ## Contributing
 
-- Language spec: [`docs/pascal/`](docs/pascal/) (source of truth)
+- Language spec: [`docs/pascal/`](docs/pascal/) ([hub](docs/pascal/README.md)) — source of truth for implemented behavior
 - AI agents: [`AI_CONTRIBUTING.md`](AI_CONTRIBUTING.md) and [`AGENTS.md`](AGENTS.md)
 - Examples: [`examples/README.md`](examples/README.md)
 - FPAS tests: [`tests/`](tests/) and [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md)
+- Verify locally: `cargo fmt`, `cargo build`, `cargo test --workspace`, and `fpas fmt --check` on touched `.fpas` paths when relevant
 
 ## Project Structure
 

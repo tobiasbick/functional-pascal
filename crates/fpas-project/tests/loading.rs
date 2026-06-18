@@ -1,6 +1,6 @@
 //! Integration tests for `fpas_project` loading and workspace resolution.
 //!
-//! Documentation: `docs/pascal/10-projects.md`
+//! Documentation: `docs/pascal/program-structure/projects.md`
 
 #![allow(
     clippy::expect_used,

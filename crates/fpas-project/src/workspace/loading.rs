@@ -1,4 +1,4 @@
-//! Loads `.fpasworkspace` manifests (`docs/pascal/10-projects.md`).
+//! Loads `.fpasworkspace` manifests (`docs/pascal/program-structure/workspaces.md`).
 
 use crate::ProjectKind;
 use crate::common::validate_non_empty;

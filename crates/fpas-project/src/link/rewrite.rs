@@ -19,7 +19,7 @@ pub(super) fn declaration_name(decl: &Decl) -> &str {
 }
 
 /// Implements qualified user-unit names and private-unit encapsulation from
-/// `docs/pascal/09-units.md`.
+/// `docs/pascal/program-structure/units.md`.
 pub(super) fn linked_decl_name(
     unit_name: &str,
     short_name: &str,

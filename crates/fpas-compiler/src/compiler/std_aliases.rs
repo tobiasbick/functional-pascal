@@ -1,6 +1,6 @@
 //! Resolves `uses` units and builds short-name → qualified `Std.*` aliases.
 //!
-//! **Documentation:** `docs/pascal/09-units.md` (from the repository root).
+//! **Documentation:** `docs/pascal/program-structure/units.md` (from the repository root).
 
 use std::collections::HashMap;
 

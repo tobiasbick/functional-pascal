@@ -26,7 +26,7 @@ pub(crate) fn write_text(path: &Path, text: &str) {
 
 /// Writes a `.fpasprj` manifest for tests (`kind = "program"`).
 ///
-/// Spec: [Projects & CLI](../../../docs/pascal/10-projects.md).
+/// Spec: [Projects & CLI](../../../docs/pascal/program-structure/cli.md).
 pub(crate) fn write_program_fpasprj(project_file: &Path, main: &str, include: &[&str]) {
     write_fpasprj(
         project_file,
@@ -42,7 +42,7 @@ pub(crate) fn write_program_fpasprj(project_file: &Path, main: &str, include: &[
 
 /// Writes a `.fpasprj` manifest for tests (`kind = "library"`).
 ///
-/// Spec: [Projects & CLI](../../../docs/pascal/10-projects.md).
+/// Spec: [Projects & CLI](../../../docs/pascal/program-structure/cli.md).
 pub(crate) fn write_library_fpasprj(project_file: &Path, include: &[&str]) {
     write_fpasprj(
         project_file,
@@ -58,7 +58,7 @@ pub(crate) fn write_library_fpasprj(project_file: &Path, include: &[&str]) {
 
 /// Writes a library manifest with an `[exports].units` list.
 ///
-/// Documentation: `docs/pascal/10-projects.md`
+/// Documentation: `docs/pascal/program-structure/projects.md`
 pub(crate) fn write_library_fpasprj_with_exports(
     project_file: &Path,
     include: &[&str],

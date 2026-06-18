@@ -1,6 +1,6 @@
 # `Std.Test`
 
-Assertion procedures for FPAS test programs. Run single tests with `fpas` or batch-discover them with `fpas test` (see [10-projects.md](../10-projects.md) and [`docs/future/test-framework/README.md`](../../future/test-framework/README.md)).
+Assertion procedures for FPAS test programs. Run single tests with `fpas` or batch-discover them with `fpas test` (see [CLI](../program-structure/cli.md) and [`docs/future/test-framework/README.md`](../../future/test-framework/README.md)).
 
 ```pascal
 program Example;
@@ -115,7 +115,7 @@ fpas test --report json
 fpas test --strict
 ```
 
-Flags and discovery rules: [10-projects.md](../10-projects.md), [`runner.md`](../../future/test-framework/runner.md).
+Flags and discovery rules: [CLI](../program-structure/cli.md), [`runner.md`](../../future/test-framework/runner.md).
 
 ---
 

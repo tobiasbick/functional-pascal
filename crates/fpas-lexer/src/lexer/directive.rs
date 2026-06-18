@@ -1,6 +1,6 @@
 //! Lexer handling for a `{` immediately followed by `$`: the sequence is rejected.
 //!
-//! **Documentation:** `docs/pascal/10-projects.md` (multi-file projects and `uses`)
+//! **Documentation:** `docs/pascal/program-structure/projects.md` (multi-file projects and `uses`)
 
 use super::Lexer;
 use fpas_diagnostics::codes::{

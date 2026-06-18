@@ -160,7 +160,7 @@ end.
 
 ### Unit — `Clamp` (`if` branches always get `begin` / `end`)
 
-The language allows the compact form (see [`09-units.md`](../pascal/09-units.md)); **`fpas fmt` does not emit it.** Golden unit file:
+The language allows the compact form (see [`program-structure/units.md`](program-structure/units.md)); **`fpas fmt` does not emit it.** Golden unit file:
 
 ```pascal
 unit MyApp.Utils;

@@ -1,6 +1,6 @@
 //! Run compile and VM from CLI-resolved input.
 //!
-//! Spec: [Projects & CLI](../../../docs/pascal/10-projects.md).
+//! Spec: [Projects & CLI](../../../docs/pascal/program-structure/cli.md).
 
 use std::fs;
 use std::io::Write;

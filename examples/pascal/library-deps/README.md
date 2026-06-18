@@ -19,4 +19,4 @@ fpas examples/pascal/library-deps/app/app.fpasprj
 fpas check examples/pascal/library-deps/mylib/mylib.fpasprj
 ```
 
-The program imports `MyLib.Core` through `uses`. `MyLib.Internal` is used inside the library but omitted from `[exports].units`, so dependents cannot import it directly. Sources are merged at load time (see [Projects](../../docs/pascal/10-projects.md)).
+The program imports `MyLib.Core` through `uses`. `MyLib.Internal` is used inside the library but omitted from `[exports].units`, so dependents cannot import it directly. Sources are merged at load time (see [Projects](../../docs/pascal/program-structure/projects.md)).

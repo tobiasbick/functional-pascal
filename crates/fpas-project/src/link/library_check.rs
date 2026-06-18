@@ -1,6 +1,6 @@
 //! Links all library units into a stub program for type-checking.
 //!
-//! Documentation: `docs/pascal/10-projects.md`
+//! Documentation: `docs/pascal/program-structure/projects.md`
 
 use super::LinkedProgram;
 use super::graph::{collect_library_reachable_units, topo_sort_units};
@@ -21,7 +21,7 @@ const LIBRARY_CHECK_SOURCE: &str = "program __FpasLibraryCheck;\nbegin\nend.\n";
 
 /// Build a linked stub `Program` that contains every project unit for semantic checking.
 ///
-/// Documentation: `docs/pascal/10-projects.md`
+/// Documentation: `docs/pascal/program-structure/projects.md`
 pub fn build_library_check_with_source_map(
     source_files: &[PathBuf],
     link_meta: &ProjectLinkMeta,

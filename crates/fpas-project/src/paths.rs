@@ -9,7 +9,7 @@ const SOURCE_FILE_EXTENSION: &str = "fpas";
 
 /// Resolves `sources.include` and applies optional `sources.exclude` patterns.
 ///
-/// Documentation: `docs/pascal/10-projects.md`
+/// Documentation: `docs/pascal/program-structure/projects.md`
 pub(super) fn resolve_source_files(
     include: &[String],
     exclude: &[String],

@@ -1,6 +1,6 @@
 //! Workspace loading for multi-project repositories.
 //!
-//! Documentation: `docs/pascal/10-projects.md`
+//! Documentation: `docs/pascal/program-structure/workspaces.md`
 
 mod discover;
 mod loading;

@@ -32,7 +32,7 @@ impl Parser {
         decls
     }
 
-    /// `docs/pascal/09-units.md`: visibility modifiers are valid only in `unit` files.
+    /// `docs/pascal/program-structure/units.md`: visibility modifiers are valid only in `unit` files.
     fn parse_visibility(&mut self, allow_visibility: bool) -> Visibility {
         match self.current_token() {
             Token::Public => {

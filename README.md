@@ -175,7 +175,7 @@ Author-facing tests are `*_test.fpas` programs under [`tests/`](tests/) (`stdlib
 
 ### Multi-file projects and libraries
 
-Larger programs use a `.fpasprj` project file. Reusable code is **source-level only**: `kind = "library"` projects whose units are merged at load time (no precompiled library artifacts). Reference them from `[dependencies].projects` (paths) or `[dependencies].workspace` (member `project.name` inside a `.fpasworkspace`). Libraries may hide internal units from dependents with `[exports].units` in the library `.fpasprj`. See [Projects](docs/pascal/10-projects.md), [library-deps](examples/pascal/library-deps/), and [monorepo](examples/pascal/monorepo/).
+Larger programs use a `.fpasprj` project file. Reusable code is **source-level only**: `kind = "library"` projects whose units are merged at load time (no precompiled library artifacts). Reference them from `[dependencies].projects` (paths) or `[dependencies].workspace` (member `project.name` inside a `.fpasworkspace`). Libraries may hide internal units from dependents with `[exports].units` in the library `.fpasprj`. See [Projects](docs/pascal/program-structure/projects.md), [library-deps](examples/pascal/library-deps/), and [monorepo](examples/pascal/monorepo/).
 
 ```sh
 fpas my-app.fpasprj
@@ -197,8 +197,8 @@ The full language documentation is in [`docs/pascal/`](docs/pascal/):
 6. [Pattern Matching](docs/pascal/06-pattern-matching.md)
 7. [Error Handling](docs/pascal/07-error-handling.md)
 8. [Concurrency](docs/pascal/08-concurrency.md)
-9. [Units](docs/pascal/09-units.md)
-10. [Projects](docs/pascal/10-projects.md)
+9. [Units](docs/pascal/program-structure/units.md)
+10. [Projects](docs/pascal/program-structure/projects.md)
 11. [Standard Library](docs/pascal/11-stdlib.md)
 12. [Formatter style](docs/pascal/fmt-style.md)
 

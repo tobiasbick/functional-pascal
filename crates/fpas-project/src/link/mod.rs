@@ -37,7 +37,7 @@ pub struct LinkedProgram {
 ///
 /// This resolves reachable units, checks import ambiguity, preserves private
 /// unit members, and rewrites user-unit symbols into fully qualified names as
-/// described in `docs/pascal/09-units.md`.
+/// described in `docs/pascal/program-structure/units.md`.
 pub fn build_program(
     main_path: &Path,
     source_files: &[PathBuf],
@@ -53,7 +53,7 @@ pub use library_check::build_library_check_with_source_map;
 ///
 /// This resolves reachable units, checks import ambiguity, preserves private
 /// unit members, and rewrites user-unit symbols into fully qualified names as
-/// described in `docs/pascal/09-units.md`.
+/// described in `docs/pascal/program-structure/units.md`.
 pub fn build_program_with_source_map(
     main_path: &Path,
     source_files: &[PathBuf],

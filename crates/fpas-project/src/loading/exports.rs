@@ -1,6 +1,6 @@
 //! `[exports]` manifest validation for library projects.
 //!
-//! Documentation: `docs/pascal/10-projects.md`
+//! Documentation: `docs/pascal/program-structure/projects.md`
 
 use crate::common::{
     display_unit_key, parse_compilation_unit_file, qualified_id_to_string, validate_non_empty_entry,

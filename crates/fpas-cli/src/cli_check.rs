@@ -1,6 +1,6 @@
 //! Type-check projects and workspaces without running the VM.
 //!
-//! Documentation: `docs/pascal/10-projects.md`
+//! Documentation: `docs/pascal/program-structure/cli.md`
 
 use std::fs;
 use std::io::Write;

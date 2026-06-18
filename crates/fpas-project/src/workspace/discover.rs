@@ -1,6 +1,6 @@
 //! Workspace discovery helpers for the CLI run command.
 //!
-//! Documentation: `docs/pascal/10-projects.md`
+//! Documentation: `docs/pascal/program-structure/workspaces.md`
 
 use super::loading::{load_workspace, read_member_project_manifest};
 use crate::ProjectKind;
@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 /// Returns the sole `kind = "program"` member when a workspace has exactly one.
 ///
-/// Documentation: `docs/pascal/10-projects.md`
+/// Documentation: `docs/pascal/program-structure/workspaces.md`
 pub fn discover_run_project_in_workspace(workspace_path: &Path) -> Result<PathBuf, String> {
     let workspace = load_workspace(workspace_path)?;
     let mut program_members = Vec::<PathBuf>::new();

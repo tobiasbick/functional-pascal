@@ -1,6 +1,6 @@
 //! Cross-project import rules for library `[exports]`.
 //!
-//! Documentation: `docs/pascal/10-projects.md`
+//! Documentation: `docs/pascal/program-structure/projects.md`
 
 use super::UnitFile;
 use super::support::canonical_unit_key;

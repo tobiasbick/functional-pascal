@@ -1,6 +1,6 @@
 //! Format `.fpas` compilation units in place.
 //!
-//! Documentation: `docs/pascal/fmt-style.md`, `docs/pascal/10-projects.md`
+//! Documentation: `docs/pascal/fmt-style.md`, `docs/pascal/program-structure/projects.md`
 
 mod paths;
 

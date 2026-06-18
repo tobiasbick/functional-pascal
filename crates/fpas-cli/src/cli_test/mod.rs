@@ -1,6 +1,6 @@
 //! `fpas test` — discover and run `*_test.fpas` programs.
 //!
-//! Spec: [`docs/pascal/10-projects.md`](../../../docs/pascal/10-projects.md),
+//! Spec: [`docs/pascal/program-structure/cli.md`](../../../docs/pascal/program-structure/cli.md),
 //! [`docs/future/test-framework/runner.md`](../../../docs/future/test-framework/runner.md).
 
 mod discover;

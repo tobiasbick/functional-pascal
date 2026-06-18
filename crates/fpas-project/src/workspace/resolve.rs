@@ -1,6 +1,6 @@
 //! Resolves `[dependencies].workspace` names against an enclosing `.fpasworkspace`.
 //!
-//! Documentation: `docs/pascal/10-projects.md`
+//! Documentation: `docs/pascal/program-structure/workspaces.md`
 
 use super::loading::discover_workspace_file;
 use super::loading::{load_workspace, read_member_project_name};

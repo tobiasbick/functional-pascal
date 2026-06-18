@@ -1,5 +1,16 @@
 # Program structure
 
-Units, projects, and workspaces. Content still lives in [09-units.md](../09-units.md) and [10-projects.md](../10-projects.md) until migrated.
+Units, projects, workspaces, and the `fpas` CLI.
 
-See [restructure plan](../../future/pascal-docs-restructure.md).
+| Topic | Description |
+|-------|-------------|
+| [Units](units.md) | `unit` / `program`, `uses`, names, resolution |
+| [Visibility](visibility.md) | `private` / `public` in units |
+| [Projects](projects.md) | `.fpasprj` format, kinds, dependencies |
+| [CLI](cli.md) | `fpas`, `fpas check`, `fpas test` |
+| [Workspaces](workspaces.md) | `.fpasworkspace` multi-project layout |
+
+## See also
+
+- [Standard library](../std/README.md)
+- [Formatter style](../fmt-style.md)

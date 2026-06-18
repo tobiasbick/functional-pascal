@@ -1,25 +1,10 @@
-# 10. Projects
+# Projects
 
 A project groups source files into a buildable unit. Projects are defined by a `.fpasprj` file using TOML format.
 
 Multi-file programs compose source lists in the project file with `unit` declarations and `uses` imports.
 
-## CLI Usage
-
-- `fpas` (no arguments) — discovers what to run in the current directory:
-  - If a `.fpasworkspace` file exists: runs the sole `kind = "program"` member; errors when there are zero or multiple program members.
-  - Otherwise searches for a `.fpasprj` file (no match, one match, or multiple matches with the same rules as before).
-- `fpas <path>` — detects input type by extension:
-  - `.fpas` — runs as a single source file with a `program` declaration (no project needed).
-  - `.fpasprj` — loads as a project file.
-  - Other extensions — error.
-- `fpas` with more than one argument — usage error.
-- `fpas check [<path>]` — type-check a `.fpas`, `.fpasprj`, or `.fpasworkspace` without running. With no path, discovers `.fpasworkspace` or `.fpasprj` in the current directory.
-- `fpas test [<path>]` — run `*_test.fpas` programs and print a pass/fail/skip summary. With no path, discovers a workspace or `.fpasprj` like `fpas check`. Flags: `--list`, `--fail-fast`, `--strict` (exit `1` when any test called `Skip`), `--filter <pattern>`, `--report json`, `--timeout <secs>`, `--jobs <n>` (`0` = available CPU parallelism), `--script <path>`. Sidecars beside each test file (all optional): `<test>.script.toml` (queued input events), `<test>.expect.stdout`, `<test>.expect.screen` (TUI), `<test>.expect.pixels` (headless graph). See [`std/test.md`](std/test.md) and [`docs/future/test-framework/runner.md`](../future/test-framework/runner.md). `--list` and `--report json` write results to stdout; progress lines stay on stderr.
-- `fpas -h` / `fpas --help` — prints usage to stdout and exits successfully.
-- `fpas -V` / `fpas --version` — prints the compiler version to stdout and exits successfully.
-
-## Project File Format
+## Project file format
 
 ```toml
 [project]
@@ -35,7 +20,7 @@ include = ["src/**/*.fpas"]
 projects = ["../my-lib/my-lib.fpasprj"]
 ```
 
-### `[project]` Section
+### `[project]` section
 
 | Field | Required | Description |
 |---|---|---|
@@ -44,7 +29,7 @@ projects = ["../my-lib/my-lib.fpasprj"]
 | `kind` | Yes | `"program"`, `"library"`, or `"test"`. |
 | `main` | Program only | Path to the program file (relative to project root or absolute). |
 
-### Project Kinds
+### Project kinds
 
 - **`program`** — produces an executable. Requires `main` pointing to a file with a `program` declaration. The entry point is exactly one main program file per project.
 - **`library`** — reusable code as `unit` files. Other projects consume libraries via `[dependencies].projects`. Run library code through a `program` project that depends on it (`fpas check` type-checks a library manifest directly).
@@ -52,7 +37,7 @@ projects = ["../my-lib/my-lib.fpasprj"]
 
 Library dependencies are **source-level**: the loader merges `.fpas` from dependency manifests and links them with the consumer.
 
-### `[dependencies]` Section
+### `[dependencies]` section
 
 Declares other `.fpasprj` files whose library sources are merged into this project before linking.
 
@@ -73,9 +58,9 @@ Rules:
 - Dependencies are loaded **transitively**: if library B depends on library C, a program that depends only on B also receives C's sources.
 - Cyclic `dependencies.projects` chains are rejected.
 - Unit names must remain unique across the consumer and all transitive library sources (case-insensitive), same as within a single project.
-- Library sources are linked only when reachable through `uses` from the program entry point (see [09-units.md](09-units.md)).
+- Library sources are linked only when reachable through `uses` from the program entry point (see [Units](units.md)).
 
-### `[exports]` Section (library projects only)
+### Exports section (library projects only)
 
 Optional on `kind = "library"` projects. Controls which units other projects may import across a dependency boundary.
 
@@ -98,16 +83,16 @@ Example:
 units = ["MyLib.Core"]
 ```
 
-### `[sources]` Section
+### `[sources]` section
 
-Lists all source files belonging to the project. Each source file declares its namespace via a `unit` declaration (see [09-units.md](09-units.md)).
+Lists all source files belonging to the project. Each source file declares its namespace via a `unit` declaration (see [Units](units.md)).
 
 | Field | Required | Description |
 |---|---|---|
 | `include` | Yes | Array of file paths or glob patterns. Must contain at least one entry. |
 | `exclude` | No | Array of file paths or glob patterns. Removes matches from the include set after inclusion. |
 
-#### Include and Exclude Patterns
+#### Include and exclude patterns
 
 Each `include` entry can be:
 
@@ -119,7 +104,7 @@ Entries may be mixed freely. All **included** files must have the `.fpas` extens
 
 `exclude` uses the same path and glob rules. Exclude globs may match zero files without error. Non-`.fpas` paths in exclude are ignored when they do not appear in the include set.
 
-### Source File Rules
+### Source file rules
 
 - The program file (`main`) is automatically excluded from the source list, even if matched by an include pattern.
 - If another source file contains a `program` declaration instead of `unit`, a warning is emitted and the file is skipped.
@@ -127,7 +112,7 @@ Entries may be mixed freely. All **included** files must have the `.fpas` extens
 - If multiple entries resolve to the same file, a warning is emitted and the duplicate is ignored.
 - Duplicate unit names (case-insensitive) across different files are rejected.
 
-## Example: Single Project
+## Example: single project
 
 Directory structure:
 
@@ -172,7 +157,7 @@ begin
 end;
 ```
 
-## Example: Program With a Library Dependency
+## Example: program with a library dependency
 
 The `suite/`, `libs/acme-utils/`, and `apps/portal/` paths below are **illustrative** — they document the project-file shape only and are **not** present in this repository. Runnable samples live under [`examples/pascal/library-deps/`](../../examples/pascal/library-deps/) (path-based `[dependencies].projects`) and [`examples/pascal/monorepo/`](../../examples/pascal/monorepo/) (workspace + library). The only application under [`apps/`](../../apps/) today is [`apps/ide/`](../../apps/ide/).
 
@@ -241,40 +226,8 @@ end.
 
 A library outside the monorepo uses the same `[dependencies].projects` field with an absolute path to its `.fpasprj` file.
 
-## Checking Without Running
+## See also
 
-Use `fpas check` to parse, link, and type-check without executing code:
-
-```sh
-fpas check my-lib.fpasprj
-fpas check my-app.fpasprj
-fpas check hello.fpas
-fpas check suite.fpasworkspace
-fpas check
-```
-
-With no path, `fpas check` discovers a single `.fpasworkspace` in the current directory first, otherwise a single `.fpasprj`. Library projects type-check here the same as program projects.
-
-## Workspaces
-
-A workspace groups multiple projects, similar to a Visual Studio solution. The `acme-suite` / `apps/portal` member paths in the sample below reuse the same **illustrative** monorepo from the previous section; see [`examples/pascal/monorepo/`](../../examples/pascal/monorepo/) for a checked-in workspace.
-
-Define a `.fpasworkspace` file in TOML format:
-
-```toml
-[workspace]
-name = "acme-suite"
-members = [
-  "apps/portal/portal.fpasprj",
-  "libs/acme-utils/acme-utils.fpasprj"
-]
-```
-
-| Field | Required | Description |
-|---|---|---|
-| `name` | Yes | Workspace name. Any non-empty string. |
-| `members` | Yes | Array of paths to `.fpasprj` files, relative to the workspace file or absolute. |
-
-`fpas check` with no path loads the sole `.fpasworkspace` in the current directory and checks every member project. `fpas` with no path runs the sole program member when a workspace is present; otherwise pass a `.fpasprj` explicitly or rely on a single project file in the current directory.
-
-Cross-project dependencies still use `[dependencies].projects` on each consumer `.fpasprj`; the workspace file does not replace per-project dependency lists.
+- [Units](units.md)
+- [CLI](cli.md)
+- [Workspaces](workspaces.md)

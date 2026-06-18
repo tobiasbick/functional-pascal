@@ -1,6 +1,6 @@
 //! CLI argument resolution and project discovery.
 //!
-//! Spec: [Projects & CLI](../../../docs/pascal/10-projects.md).
+//! Spec: [Projects & CLI](../../../docs/pascal/program-structure/cli.md).
 
 use crate::cli_paths::{
     PROJECT_FILE_EXTENSION, SOURCE_FILE_EXTENSION, WORKSPACE_FILE_EXTENSION, has_extension,

@@ -1,8 +1,8 @@
 //! Project loading and user-unit linking for Functional Pascal.
 //!
 //! Documentation:
-//! - `docs/pascal/09-units.md`
-//! - `docs/pascal/10-projects.md`
+//! - `docs/pascal/program-structure/units.md`
+//! - `docs/pascal/program-structure/projects.md`
 
 mod common;
 mod dependencies;

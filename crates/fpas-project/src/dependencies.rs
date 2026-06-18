@@ -1,6 +1,6 @@
 //! Resolves `[dependencies].projects` and merges library sources into a consumer.
 //!
-//! Documentation: `docs/pascal/10-projects.md`
+//! Documentation: `docs/pascal/program-structure/projects.md`
 
 use super::loading::own::{load_own_project, validate_project_source_units};
 use super::model::{

@@ -83,7 +83,7 @@ pub(super) fn qualified_id_to_string(id: &QualifiedId) -> String {
     id.parts.join(".")
 }
 
-/// `docs/pascal/09-units.md`: `Std.*` is reserved for implementation-defined standard units.
+/// `docs/pascal/program-structure/units.md`: `Std.*` is reserved for implementation-defined standard units.
 pub(super) fn validate_user_unit_name(path: &Path, id: &QualifiedId) -> Result<(), String> {
     if id
         .parts

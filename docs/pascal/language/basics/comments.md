@@ -19,4 +19,4 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (Part 1 — comment
 ## See also
 
 - [Formatter style](../../fmt-style.md)
-- [Units](../../09-units.md)
+- [Units](../program-structure/units.md)

@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 
 use crate::TestManifest;
 
-/// Kind of `.fpasprj` project described in `docs/pascal/10-projects.md`.
+/// Kind of `.fpasprj` project described in `docs/pascal/program-structure/projects.md`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ProjectKind {
     /// Executable project with a single `program` entry file.
@@ -70,7 +70,7 @@ pub enum LibraryExportPolicy {
 
 /// Per-file origins and per-library export rules used during linking.
 ///
-/// Documentation: `docs/pascal/10-projects.md` (`[exports]`).
+/// Documentation: `docs/pascal/program-structure/projects.md` (`[exports]`).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ProjectLinkMeta {
     /// Maps each merged `.fpas` path to the project that owns it.

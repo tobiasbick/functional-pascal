@@ -107,7 +107,7 @@ fpas examples/pascal/monorepo/apps/hello/hello.fpasprj
 cd examples/pascal/monorepo && fpas check
 ```
 
-See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/10-projects.md](../docs/pascal/10-projects.md).
+See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/program-structure/projects.md](../docs/pascal/program-structure/projects.md).
 
 ## Single-file programs (by topic)
 

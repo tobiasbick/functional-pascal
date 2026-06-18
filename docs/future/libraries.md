@@ -9,7 +9,7 @@ Source-level library projects:
 - Transitive dependencies, cycle detection, `fpas check` on libraries and workspaces.
 - **`[exports].units`** — optional project-level public unit list for dependents (internal units stay library-private).
 
-Spec: [`docs/pascal/10-projects.md`](../pascal/10-projects.md). Examples: [`examples/pascal/library-deps/`](../../examples/pascal/library-deps/), [`examples/pascal/monorepo/`](../../examples/pascal/monorepo/).
+Spec: [`docs/pascal/program-structure/projects.md`](../pascal/program-structure/projects.md). Examples: [`examples/pascal/library-deps/`](../../examples/pascal/library-deps/), [`examples/pascal/monorepo/`](../../examples/pascal/monorepo/).
 
 ## Explicitly out of scope (for now)
 

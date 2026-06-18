@@ -77,7 +77,7 @@ When asked to implement or modify behavior:
 
 ## Projects and libraries
 
-- **Source-level reuse only.** Libraries are `kind = "library"` projects consumed via `[dependencies].projects` (relative or absolute `.fpasprj` paths) or `[dependencies].workspace` (member `project.name` in an enclosing `.fpasworkspace`). Spec: [`docs/pascal/10-projects.md`](docs/pascal/10-projects.md).
+- **Source-level reuse only.** Libraries are `kind = "library"` projects consumed via `[dependencies].projects` (relative or absolute `.fpasprj` paths) or `[dependencies].workspace` (member `project.name` in an enclosing `.fpasworkspace`). Spec: [`docs/pascal/program-structure/projects.md`](docs/pascal/program-structure/projects.md).
 - **Do not implement precompiled library artifacts** (no `.fpaslib`, no separate link step, no artifact cache) unless the user explicitly changes this policy.
 - **Do not add package managers, registries, or semver dependency pins** as part of library work; path/workspace references are the current model.
 - Loading and linking live in `fpas-project`; CLI discovery/check/run in `fpas-cli`.

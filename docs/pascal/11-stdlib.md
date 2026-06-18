@@ -15,7 +15,7 @@ begin
 end.
 ```
 
-See [09-units.md](09-units.md) for `uses` rules, short name ambiguity, and the reserved `Std` namespace. Full per-unit reference with examples and edge cases lives in [std/](std/README.md).
+See [Units](program-structure/units.md) for `uses` rules, short name ambiguity, and the reserved `Std` namespace. Full per-unit reference with examples and edge cases lives in [std/](std/README.md).
 
 ---
 

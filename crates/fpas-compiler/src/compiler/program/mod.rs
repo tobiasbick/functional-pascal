@@ -1,6 +1,6 @@
 //! Program- and declaration-level lowering.
 //!
-//! **Documentation:** `docs/pascal/04-functions.md`, `docs/pascal/09-units.md` (from the repository root).
+//! **Documentation:** `docs/pascal/04-functions.md`, `docs/pascal/program-structure/units.md` (from the repository root).
 
 mod callables;
 

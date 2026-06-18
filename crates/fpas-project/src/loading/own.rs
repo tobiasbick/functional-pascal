@@ -1,6 +1,6 @@
 //! Loads a single `.fpasprj` manifest without merging dependency projects.
 //!
-//! Spec: `docs/pascal/10-projects.md`
+//! Spec: `docs/pascal/program-structure/projects.md`
 
 use super::exports::validate_library_exports;
 use crate::common::{

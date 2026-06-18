@@ -1,6 +1,6 @@
 //! Source-ID assignment for linked project programs.
 //!
-//! **Documentation:** `docs/pascal/09-units.md`, `docs/pascal/10-projects.md`
+//! **Documentation:** `docs/pascal/program-structure/units.md`, `docs/pascal/program-structure/projects.md`
 
 mod declarations;
 mod expressions;

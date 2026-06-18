@@ -27,7 +27,7 @@ use fpas_parser::Program;
 /// Returns the first error encountered (sema or codegen). Prefer [`compile_all`] when you need
 /// every semantic error at once (for example CLI or IDE integration).
 ///
-/// **Documentation:** `docs/pascal/10-projects.md` (from the repository root).
+/// **Documentation:** `docs/pascal/program-structure/projects.md` (from the repository root).
 pub fn compile(program: &Program) -> Result<Chunk, CompileError> {
     compile_all(program).map_err(|mut errors| errors.remove(0))
 }
@@ -35,7 +35,7 @@ pub fn compile(program: &Program) -> Result<Chunk, CompileError> {
 /// Like [`compile`], but returns **all** semantic-analysis errors when sema fails, or a single
 /// element when codegen fails after successful sema.
 ///
-/// **Documentation:** `docs/pascal/10-projects.md` (from the repository root).
+/// **Documentation:** `docs/pascal/program-structure/projects.md` (from the repository root).
 pub fn compile_all(program: &Program) -> Result<Chunk, Vec<CompileError>> {
     let (sema_errors, expr_types, method_calls, record_defaults, scalar_case_bindings) =
         fpas_sema::analyze_with_types(program);

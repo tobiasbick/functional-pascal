@@ -371,7 +371,7 @@ end.
 - `Wait(T)` — block until the task finishes, return its result
 - `WaitAll([T1, T2, …])` — block until every task in the array completes
 
-See [`docs/pascal/08-concurrency.md`](../../docs/pascal/08-concurrency.md).
+See [`docs/pascal/language/concurrency/README.md`](../../docs/pascal/language/concurrency/README.md).
 
 ## Projects (.fpasprj)
 

@@ -1,6 +1,6 @@
 //! Task switching: [`Worker::exec_yield`], [`Worker::switch_to_next_ready_task`], and spawn/wait.
 //!
-//! **Documentation:** `docs/pascal/08-concurrency.md` (Phases 6–8), `docs/pascal/08-concurrency.md`, `docs/pascal/std/task.md`
+//! **Documentation:** `docs/pascal/language/concurrency/README.md` (Phases 6–8), `docs/pascal/language/concurrency/README.md`, `docs/pascal/std/task.md`
 
 use crate::vm::Worker;
 

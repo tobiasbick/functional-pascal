@@ -10,7 +10,7 @@ Core language reference: types, control flow, functions, pattern matching, error
 | [Functions](functions/README.md) | **migrated** | Routines, first-class calls |
 | [Pattern matching](pattern-matching/README.md) | **migrated** | Guards, exhaustiveness |
 | [Error handling](error-handling/README.md) | **migrated** | `Result`, `Option`, `try` |
-| [Concurrency](concurrency/README.md) | planned | `go`, tasks |
+| [Concurrency](concurrency/README.md) | **migrated** | `go`, tasks |
 
 Formal syntax: [`grammar.ebnf`](../../specs/grammar.ebnf).
 

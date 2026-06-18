@@ -75,7 +75,7 @@ pub enum Expr {
 
     /// `go expr` — spawn a concurrent task.
     ///
-    /// **Documentation:** `docs/pascal/08-concurrency.md`
+    /// **Documentation:** `docs/pascal/language/concurrency/README.md`
     Go(Box<Expr>, Span),
     /// `base with Field := Value; … end` — record update expression.
     ///

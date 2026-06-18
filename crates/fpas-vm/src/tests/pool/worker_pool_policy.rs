@@ -1,6 +1,6 @@
 //! Worker pool sizing when the chunk uses spawn opcodes.
 //!
-//! **Documentation:** `docs/pascal/08-concurrency.md` (Phase 4 checklist), `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/pascal/language/concurrency/README.md` (Phase 4 checklist), `docs/pascal/language/concurrency/README.md`
 
 use crate::Vm;
 use fpas_bytecode::{Chunk, Op};

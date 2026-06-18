@@ -1,6 +1,6 @@
 //! Detached [`Op::SpawnDetachedTask`]: stack effect (no retained handle).
 //!
-//! **Documentation:** `docs/pascal/08-concurrency.md` (Phase 6), `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/pascal/language/concurrency/README.md` (Phase 6), `docs/pascal/language/concurrency/README.md`
 
 use fpas_bytecode::{Op, Value};
 

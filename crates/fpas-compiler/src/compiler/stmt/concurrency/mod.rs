@@ -1,6 +1,6 @@
 //! Statement lowering for `go` (task spawning).
 //!
-//! **Documentation:** `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/pascal/language/concurrency/README.md`
 
 mod wrapper;
 

@@ -30,7 +30,7 @@ impl Compiler {
     /// in the chunk, then patches the jump and pushes the resulting `Value::Function`
     /// on the stack. No user-visible syntax is involved.
     ///
-    /// **Documentation:** `docs/pascal/08-concurrency.md`
+    /// **Documentation:** `docs/pascal/language/concurrency/README.md`
     pub(in crate::compiler) fn compile_callable_wrapper(
         &mut self,
         params: &[FormalParam],

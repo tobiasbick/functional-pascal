@@ -1,6 +1,6 @@
 //! Spawn arity and invalid double-`Wait` on the same task handle.
 //!
-//! **Documentation:** `docs/pascal/std/task.md`, `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/pascal/std/task.md`, `docs/pascal/language/concurrency/README.md`
 
 use fpas_bytecode::{Intrinsic, Op, TaskIntrinsic, Value};
 use fpas_diagnostics::codes::{RUNTIME_INVALID_TASK, RUNTIME_WRONG_CALL_ARITY};

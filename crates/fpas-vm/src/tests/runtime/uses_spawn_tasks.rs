@@ -1,6 +1,6 @@
 //! `Chunk::uses_spawn_tasks` and VM construction: programs without spawn bytecode run without a worker pool.
 //!
-//! **Documentation:** `docs/pascal/08-concurrency.md`, `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/pascal/language/concurrency/README.md`, `docs/pascal/language/concurrency/README.md`
 
 use crate::Vm;
 use fpas_bytecode::{Chunk, Op};

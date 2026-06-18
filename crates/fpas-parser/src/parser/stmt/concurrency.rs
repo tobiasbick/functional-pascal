@@ -4,7 +4,7 @@ use crate::ast::*;
 impl Parser {
     /// Parse `go <call-expression>`.
     ///
-    /// **Documentation:** `docs/pascal/08-concurrency.md`
+    /// **Documentation:** `docs/pascal/language/concurrency/README.md`
     pub(crate) fn parse_go_stmt(&mut self) -> Stmt {
         let start = self.current_span();
         self.advance(); // consume `go`

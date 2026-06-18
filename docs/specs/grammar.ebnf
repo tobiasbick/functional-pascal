@@ -195,7 +195,7 @@ constraint_name     = 'Comparable' | 'Numeric' | 'Printable' ;
 
 (* Built-in named types (via qualified_id): integer, real, boolean, *)
 (* char, string, task. See docs/pascal/language/basics/ and            *)
-(* docs/pascal/08-concurrency.md.                                  *)
+(* docs/pascal/language/concurrency/README.md.                                  *)
 
 type_expr           = 'array' 'of' type_expr            (* array type     *)
                     | 'dict' 'of' type_expr 'to' type_expr (* dict type    *)
@@ -387,7 +387,7 @@ continue_stmt       = 'continue' ;
 (* a bare designator or other expression). Semantics: statement     *)
 (* `go` … is fire-and-forget (no handle); expression `go` … has type *)
 (* `task` and retains the result for `Std.Task.Wait`. See           *)
-(* docs/pascal/08-concurrency.md.                                   *)
+(* docs/pascal/language/concurrency/README.md.                                   *)
 go_call             = designator '(' [ arg_list ] ')' ;
 go_stmt             = 'go' go_call ;
 

@@ -1,6 +1,6 @@
 //! Two pool workers competing for a single queued task (exactly one runs the body).
 //!
-//! **Documentation:** `docs/pascal/08-concurrency.md` (Phase 5 checklist), `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/pascal/language/concurrency/README.md` (Phase 5 checklist), `docs/pascal/language/concurrency/README.md`
 
 use crate::vm::{TaskState, Worker};
 use fpas_bytecode::{Chunk, Op, Value};

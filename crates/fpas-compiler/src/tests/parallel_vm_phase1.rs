@@ -1,6 +1,6 @@
-//! Spawn opcodes and `Chunk::uses_spawn_tasks` scan (`docs/pascal/08-concurrency.md`): emitted spawn opcodes and `Chunk::uses_spawn_tasks`.
+//! Spawn opcodes and `Chunk::uses_spawn_tasks` scan (`docs/pascal/language/concurrency/README.md`): emitted spawn opcodes and `Chunk::uses_spawn_tasks`.
 //!
-//! **Documentation:** `docs/pascal/08-concurrency.md` (Phase 1), `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/pascal/language/concurrency/README.md` (Phase 1), `docs/pascal/language/concurrency/README.md`
 
 use super::compile_ok;
 use fpas_bytecode::Op;

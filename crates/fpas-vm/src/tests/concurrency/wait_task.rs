@@ -1,6 +1,6 @@
 //! Blocking [`Std.Task.Wait`]: single-task wait, timeslice-heavy children, panic → shutdown.
 //!
-//! **Documentation:** `docs/pascal/08-concurrency.md` (Phase 8), `docs/pascal/std/task.md`, `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/pascal/language/concurrency/README.md` (Phase 8), `docs/pascal/std/task.md`, `docs/pascal/language/concurrency/README.md`
 
 use fpas_bytecode::{Intrinsic, Op, TaskIntrinsic, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN;

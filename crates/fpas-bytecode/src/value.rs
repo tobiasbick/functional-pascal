@@ -46,7 +46,7 @@ pub enum Value {
     },
     /// Task handle (runtime id).
     ///
-    /// **Documentation:** `docs/pascal/08-concurrency.md`
+    /// **Documentation:** `docs/pascal/language/concurrency/README.md`
     Task(u64),
 }
 

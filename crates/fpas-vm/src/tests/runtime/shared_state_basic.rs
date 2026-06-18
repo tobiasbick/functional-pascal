@@ -1,6 +1,6 @@
 //! [`SharedState`](crate::vm::SharedState): task ids, ready queue, task result polling.
 //!
-//! **Documentation:** `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/pascal/language/concurrency/README.md`
 
 use crate::vm::TaskResultPoll;
 use fpas_bytecode::Value;

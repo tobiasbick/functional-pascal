@@ -196,7 +196,7 @@ The full language documentation is in [`docs/pascal/`](docs/pascal/):
 5. [Types](docs/pascal/language/types/README.md)
 6. [Pattern Matching](docs/pascal/language/pattern-matching/README.md)
 7. [Error Handling](docs/pascal/language/error-handling/README.md)
-8. [Concurrency](docs/pascal/08-concurrency.md)
+8. [Concurrency](docs/pascal/language/concurrency/README.md)
 9. [Units](docs/pascal/program-structure/units.md)
 10. [Projects](docs/pascal/program-structure/projects.md)
 11. [Standard Library](docs/pascal/11-stdlib.md)

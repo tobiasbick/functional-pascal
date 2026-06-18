@@ -1,6 +1,6 @@
 //! Registration of `Std.Task`.
 //!
-//! **Documentation:** `docs/pascal/std/task.md` (from the repository root); language rules: `docs/pascal/08-concurrency.md`.
+//! **Documentation:** `docs/pascal/std/task.md` (from the repository root); language rules: `docs/pascal/language/concurrency/README.md`.
 
 use super::super::define_builtin_std;
 use crate::check::Checker;

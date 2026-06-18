@@ -1,6 +1,6 @@
 //! Pool worker constructors, [`TaskState`] save/load, timeslice reset after `load_task`.
 //!
-//! **Documentation:** `docs/pascal/08-concurrency.md` (Phase 5 checklist), `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/pascal/language/concurrency/README.md` (Phase 5 checklist), `docs/pascal/language/concurrency/README.md`
 
 use crate::vm::{CallFrame, TaskState, Worker};
 use fpas_bytecode::{Chunk, Value};

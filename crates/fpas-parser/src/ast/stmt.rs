@@ -60,7 +60,7 @@ pub enum Stmt {
     },
     /// `go` statement: spawn a concurrent task.
     ///
-    /// **Documentation:** `docs/pascal/08-concurrency.md`
+    /// **Documentation:** `docs/pascal/language/concurrency/README.md`
     Go {
         expr: Expr,
         span: Span,

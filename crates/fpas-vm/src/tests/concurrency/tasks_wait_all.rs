@@ -1,6 +1,6 @@
 //! [`TaskWaitAll`] / [`TaskWait`] operand checks and `WaitAll` → `Wait` result chaining.
 //!
-//! **Documentation:** `docs/pascal/std/task.md`, `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/pascal/std/task.md`, `docs/pascal/language/concurrency/README.md`
 
 use crate::Vm;
 use fpas_bytecode::{Chunk, Intrinsic, Op, TaskIntrinsic, Value};

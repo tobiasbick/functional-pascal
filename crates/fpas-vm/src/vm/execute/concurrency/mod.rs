@@ -1,6 +1,6 @@
 //! Cooperative concurrency: task spawning, yielding, and scheduling.
 //!
-//! **Documentation:** `docs/pascal/08-concurrency.md`, `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/pascal/language/concurrency/README.md`, `docs/pascal/language/concurrency/README.md`
 
 mod tasks;
 

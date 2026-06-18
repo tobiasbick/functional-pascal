@@ -1,6 +1,6 @@
 //! Shutdown flag and [`SharedState::wait_for_task_progress`](crate::vm::SharedState::wait_for_task_progress).
 //!
-//! **Documentation:** `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/pascal/language/concurrency/README.md`
 
 use fpas_bytecode::Value;
 use std::sync::Arc;

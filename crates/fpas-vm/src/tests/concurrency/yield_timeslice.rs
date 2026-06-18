@@ -1,6 +1,6 @@
 //! Instruction timeslice scheduling: CPU-heavy spawned tasks and main-task ready-queue rules.
 //!
-//! **Documentation:** `docs/pascal/08-concurrency.md` (Phase 7), `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/pascal/language/concurrency/README.md` (Phase 7), `docs/pascal/language/concurrency/README.md`
 
 use crate::vm::Worker;
 use fpas_bytecode::{Chunk, Intrinsic, Op, TaskIntrinsic, Value};

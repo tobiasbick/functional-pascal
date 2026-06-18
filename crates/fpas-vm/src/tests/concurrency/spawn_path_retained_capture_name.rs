@@ -1,6 +1,6 @@
 //! Retained spawn: closure captures on child stack and canonical function-name lookup.
 //!
-//! **Documentation:** `docs/pascal/08-concurrency.md` (Phase 6), `docs/pascal/08-concurrency.md`
+//! **Documentation:** `docs/pascal/language/concurrency/README.md` (Phase 6), `docs/pascal/language/concurrency/README.md`
 
 use fpas_bytecode::{Chunk, Intrinsic, Op, TaskIntrinsic, Value};
 

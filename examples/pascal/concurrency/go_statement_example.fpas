@@ -1,4 +1,4 @@
-{ Spec: docs/pascal/08-concurrency.md — fire-and-forget `go` statement (no task handle). }
+{ Spec: docs/pascal/language/concurrency/go.md — fire-and-forget `go` statement (no task handle). }
 
 program GoStatementExample;
 

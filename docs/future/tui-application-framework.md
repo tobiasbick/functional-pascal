@@ -74,4 +74,4 @@ Implementation plan for evolving Functional Pascal's terminal UI from poll-style
 | `[docs/pascal/std/tui-app.md](../pascal/std/tui-app.md)`       | Dispatch-mode API (`Application.Run`, `On`*, `ExitReason`) |
 | `[docs/pascal/std/tui.md](../pascal/std/tui.md)`               | Poll-style API status and superseded surface               |
 | `[docs/pascal/std/console.md](../pascal/std/console.md)`       | Key types and legacy I/O                                   |
-| `[docs/pascal/08-concurrency.md](../pascal/08-concurrency.md)` | Task model; TUI `On*` handlers run on the main thread      |
+| `[docs/pascal/language/concurrency/README.md](../pascal/language/concurrency/README.md)` | Task model; TUI `On*` handlers run on the main thread      |

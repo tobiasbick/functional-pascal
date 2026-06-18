@@ -1,6 +1,6 @@
 //! Task-wait validation and empty `WaitAll` after spawn under shutdown semantics.
 //!
-//! **Documentation:** `docs/pascal/08-concurrency.md` (Phase 9), `docs/pascal/08-concurrency.md`,
+//! **Documentation:** `docs/pascal/language/concurrency/README.md` (Phase 9), `docs/pascal/language/concurrency/README.md`,
 //! `docs/pascal/std/task.md`
 
 use crate::Vm;

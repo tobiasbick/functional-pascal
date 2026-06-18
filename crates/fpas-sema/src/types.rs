@@ -88,7 +88,7 @@ pub enum Ty {
     Dict(Box<Ty>, Box<Ty>),
     /// `task` — handle to a spawned concurrent task (return type erased at runtime).
     ///
-    /// **Documentation:** `docs/pascal/08-concurrency.md`
+    /// **Documentation:** `docs/pascal/language/concurrency/README.md`
     Task(Box<Ty>),
     /// Placeholder for errors — compatible with anything to avoid cascading.
     Error,

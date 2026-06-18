@@ -38,7 +38,7 @@ Topic-based layout (Microsoft Learn style). **Types** is migrated; other areas l
 5. [Types](language/types/README.md) — Records, enumerations, arrays, type aliases *(migrated)*
 6. [Case Of](language/pattern-matching/README.md) — Value, range, and enum matching *(migrated)*
 7. [Error Handling](language/error-handling/README.md) — `Result`, `Option`, `try`, `panic` *(migrated)*
-8. [Concurrency](08-concurrency.md) — Tasks, task handles, and fork-join patterns
+8. [Concurrency](language/concurrency/README.md) — Tasks, task handles, and fork-join patterns *(migrated)*
 9. [Units](program-structure/units.md) — Unit system, `uses`, namespaces *(migrated)*
 10. [Projects](program-structure/projects.md) — `.fpasprj` project files, CLI, program/library kinds *(migrated)*
 11. [Standard Library](11-stdlib.md) — `Std.*` built-in libraries

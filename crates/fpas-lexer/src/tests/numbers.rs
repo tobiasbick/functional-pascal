@@ -131,7 +131,7 @@ fn multiple_numbers() {
     );
 }
 
-// ── Edge Cases (02-basics.md) ───────────────────────────────────
+// ── Edge Cases (language/basics) ───────────────────────────────────
 
 #[test]
 fn dot_digit_is_not_real() {

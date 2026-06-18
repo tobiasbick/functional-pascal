@@ -1,6 +1,6 @@
 //! Binary operator lowering for arithmetic, comparisons, and string concatenation.
 //!
-//! **Documentation:** `docs/pascal/02-basics.md` (from the repository root).
+//! **Documentation:** `docs/pascal/language/basics/operators.md` (from the repository root).
 
 mod arithmetic;
 mod comparisons;

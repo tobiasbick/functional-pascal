@@ -139,7 +139,7 @@ pub enum Op {
     /// Supports arrays (element membership), dicts (key membership), and strings
     /// (character or substring membership).
     ///
-    /// **Documentation:** `docs/pascal/02-basics.md`, `docs/specs/grammar.ebnf`
+    /// **Documentation:** `docs/pascal/language/basics/operators.md`, `docs/specs/grammar.ebnf`
     Contains,
 
     // ── Dicts ───────────────────────────────────────────────

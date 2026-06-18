@@ -7,7 +7,7 @@ pub(crate) fn canonical_symbol_name(name: &str) -> String {
 
 /// A symbol in the scope.
 ///
-/// **Documentation:** `docs/pascal/02-basics.md` (from the repository root).
+/// **Documentation:** `docs/pascal/language/basics/variables.md` (from the repository root).
 #[derive(Debug, Clone)]
 pub struct Symbol {
     pub ty: Ty,

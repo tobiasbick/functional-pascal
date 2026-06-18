@@ -165,7 +165,7 @@ end.",
     );
 }
 
-// ── 02-basics.md: Number Literals ───────────────────────────────
+// ── language/basics: Number Literals ───────────────────────────────
 
 #[test]
 fn hex_literal_value() {
@@ -208,7 +208,7 @@ end.",
     assert_eq!(out.lines, vec!["150", "0.3"]);
 }
 
-// ── 02-basics.md: String Concatenation ──────────────────────────
+// ── language/basics: String Concatenation ──────────────────────────
 
 #[test]
 fn string_concat_with_plus() {
@@ -237,7 +237,7 @@ end.",
     assert_eq!(out.lines, vec!["It's Pascal"]);
 }
 
-// ── 02-basics.md: div and mod ───────────────────────────────────
+// ── language/basics: div and mod ───────────────────────────────────
 
 #[test]
 fn div_and_mod_execution() {
@@ -253,7 +253,7 @@ end.",
     assert_eq!(out.lines, vec!["3", "1"]);
 }
 
-// ── 02-basics.md: Constants with various types ──────────────────
+// ── language/basics: Constants with various types ──────────────────
 
 #[test]
 fn const_real_and_string_and_boolean() {
@@ -274,7 +274,7 @@ end.",
     assert_eq!(out.lines, vec!["3.14", "Hello", "true"]);
 }
 
-// ── 02-basics.md: Var block with multiple declarations ──────────
+// ── language/basics: Var block with multiple declarations ──────────
 
 #[test]
 fn var_block_multiple_declarations() {
@@ -293,7 +293,7 @@ end.",
     assert_eq!(out.lines, vec!["Alice", "30"]);
 }
 
-// ── 02-basics.md: Immutable variable reassign is error ──────────
+// ── language/basics: Immutable variable reassign is error ──────────
 
 #[test]
 fn immutable_var_reassign_is_compile_error() {
@@ -309,7 +309,7 @@ end.",
     assert_eq!(err.code, fpas_diagnostics::codes::SEMA_IMMUTABLE_ASSIGNMENT);
 }
 
-// ── 02-basics.md: Local variable in function ────────────────────
+// ── language/basics: Local variable in function ────────────────────
 
 #[test]
 fn local_var_inside_function() {
@@ -331,7 +331,7 @@ end.",
     assert_eq!(out.lines, vec!["John Doe"]);
 }
 
-// ── 02-basics.md: Comments are ignored in full programs ─────────
+// ── language/basics: Comments are ignored in full programs ─────────
 
 #[test]
 fn comments_ignored_in_program() {
@@ -351,7 +351,7 @@ end.",
     assert_eq!(out.lines, vec!["A", "B", "C"]);
 }
 
-// ── 02-basics.md: Type alias used in program ────────────────────
+// ── language/basics: Type alias used in program ────────────────────
 
 #[test]
 fn type_alias_end_to_end() {
@@ -372,7 +372,7 @@ end.",
     assert_eq!(out.lines, vec!["Alice", "30"]);
 }
 
-// ── 02-basics.md: Comparison operators ──────────────────────────
+// ── language/basics: Comparison operators ──────────────────────────
 
 #[test]
 fn comparison_operators_all() {
@@ -395,7 +395,7 @@ end.",
     );
 }
 
-// ── 02-basics.md: Logical operators on booleans ─────────────────
+// ── language/basics: Logical operators on booleans ─────────────────
 
 #[test]
 fn logical_operators_full() {
@@ -419,7 +419,7 @@ end.",
     );
 }
 
-// ── 02-basics.md: Bitwise operators on integers ─────────────────
+// ── language/basics: Bitwise operators on integers ─────────────────
 
 #[test]
 fn bitwise_and_or_not() {

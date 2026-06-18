@@ -1,6 +1,6 @@
 //! Expression lowering, including calls, literals, operators, and `try`.
 //!
-//! **Documentation:** `docs/pascal/02-basics.md`, `docs/pascal/04-functions.md`, `docs/pascal/07-error-handling.md` (from the repository root).
+//! **Documentation:** `docs/pascal/language/basics/README.md`, `docs/pascal/04-functions.md`, `docs/pascal/07-error-handling.md` (from the repository root).
 
 mod call;
 mod constructors;

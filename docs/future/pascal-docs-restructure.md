@@ -189,7 +189,7 @@ Area `README.md` files list child pages in a table (title + one-line description
 ### Phase 2 — Move and split content
 
 1. **`language/types/`** — split `05-types.md` first (highest line count).
-2. **`language/basics/`** — split `02-basics.md`.
+2. **`language/basics/`** — split `02-basics.md`. **Done.**
 3. **`program-structure/`** — split `10-projects.md`, move `09-units.md`.
 4. **`language/functions/`**, **`pattern-matching/`**, **`control-flow/`**.
 5. **`getting-started/`**, **`error-handling/`**, **`concurrency/`**.

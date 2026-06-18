@@ -1,6 +1,6 @@
 //! Constant declaration checking.
 //!
-//! **Documentation:** `docs/pascal/02-basics.md` (from the repository root).
+//! **Documentation:** `docs/pascal/language/basics/constants.md` (from the repository root).
 
 use super::Checker;
 use crate::scope::{Symbol, SymbolKind};

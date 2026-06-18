@@ -29,5 +29,5 @@ Use `Std.Array` for `Map`, `Filter`, `Reduce`, and other helpers — see [`Std.A
 
 ## See also
 
-- [Basics — arrays intro](../../02-basics.md#arrays)
+- [Arrays intro](../basics/arrays-intro.md)
 - [Control flow — for-in](../../03-control-flow.md#for-in-array-iteration)

@@ -20,4 +20,4 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_decl`, `type
 
 - [Error handling](../../07-error-handling.md) — `try`, `panic`, combinators for `Result` / `Option`
 - [Pattern matching](../../06-pattern-matching.md) — enum and `Result` / `Option` `case` arms
-- [Basics](../../02-basics.md) — primitive types and operators
+- [Basics](../basics/README.md) — primitive types and operators

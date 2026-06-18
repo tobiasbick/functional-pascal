@@ -141,7 +141,7 @@ fn space_between_char_codes() {
     );
 }
 
-// ── Edge Cases (02-basics.md) ───────────────────────────────────
+// ── Edge Cases (language/basics) ───────────────────────────────────
 
 #[test]
 fn char_codes_only() {

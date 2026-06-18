@@ -194,7 +194,7 @@ constraint_name     = 'Comparable' | 'Numeric' | 'Printable' ;
 (* ---- 2.3 Type Expressions ------------------------------------- *)
 
 (* Built-in named types (via qualified_id): integer, real, boolean, *)
-(* char, string, task. See docs/pascal/02-basics.md and            *)
+(* char, string, task. See docs/pascal/language/basics/ and            *)
 (* docs/pascal/08-concurrency.md.                                  *)
 
 type_expr           = 'array' 'of' type_expr            (* array type     *)

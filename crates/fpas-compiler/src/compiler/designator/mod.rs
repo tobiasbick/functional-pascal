@@ -1,6 +1,6 @@
 //! Designator lowering (read/write paths, builtins, enum constants).
 //!
-//! **Documentation:** `docs/pascal/02-basics.md` (from the repository root).
+//! **Documentation:** `docs/pascal/language/basics/operators.md` (from the repository root).
 
 mod builtin_consts;
 mod enum_consts;

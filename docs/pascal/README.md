@@ -24,6 +24,7 @@ Topic-based layout (Microsoft Learn style). **Types** is migrated; other areas l
 | [Getting started](getting-started/README.md) | Overview, hello world |
 | [Language](language/README.md) | Core reference |
 | [Types](language/types/README.md) | Records, enums, arrays, generics |
+| [Basics](language/basics/README.md) | Primitives, variables, operators |
 | [Program structure](program-structure/README.md) | Units, projects |
 | [Standard library](std/README.md) | `Std.*` reference |
 | [Tools](tools/README.md) | `fpas fmt` |
@@ -31,7 +32,7 @@ Topic-based layout (Microsoft Learn style). **Types** is migrated; other areas l
 ## Table of Contents (legacy numbered chapters)
 
 1. [Overview](01-overview.md) — Philosophy, hello world, first taste
-2. [Basics](02-basics.md) — Primitive types, variables, constants, operators
+2. [Basics](language/basics/README.md) — Primitive types, variables, constants, operators *(migrated)*
 3. [Control Flow](03-control-flow.md) — Conditionals, loops, branching
 4. [Functions](04-functions.md) — Functions, procedures, first-class functions, nested functions
 5. [Types](language/types/README.md) — Records, enumerations, arrays, type aliases *(migrated)*

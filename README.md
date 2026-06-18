@@ -190,7 +190,7 @@ cd my-suite && fpas                 # run the sole program member
 The full language documentation is in [`docs/pascal/`](docs/pascal/):
 
 1. [Overview](docs/pascal/01-overview.md)
-2. [Basics](docs/pascal/02-basics.md)
+2. [Basics](docs/pascal/language/basics/README.md)
 3. [Control Flow](docs/pascal/03-control-flow.md)
 4. [Functions](docs/pascal/04-functions.md)
 5. [Types](docs/pascal/language/types/README.md)

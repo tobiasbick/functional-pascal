@@ -118,7 +118,7 @@ fn slash_not_comment() {
     );
 }
 
-// ── Non-nesting and cross-style (02-basics.md) ──────────────────
+// ── Non-nesting and cross-style (language/basics) ──────────────────
 
 #[test]
 fn paren_comment_does_not_nest() {

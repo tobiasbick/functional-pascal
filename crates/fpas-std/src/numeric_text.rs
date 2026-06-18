@@ -1,6 +1,6 @@
 //! Helpers for parsing Pascal numeric text used by `Std.Conv` and `Std.Str`.
 //!
-//! **Documentation:** `docs/pascal/02-basics.md`, `docs/pascal/std/conv.md`,
+//! **Documentation:** `docs/pascal/language/basics/number-literals.md`, `docs/pascal/std/conv.md`,
 //! and `docs/pascal/std/str.md` (from the repository root).
 
 /// Parses `true` or `false` after trimming whitespace (case-insensitive).

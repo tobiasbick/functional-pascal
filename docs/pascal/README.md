@@ -34,7 +34,7 @@ Topic-based layout (Microsoft Learn style). **Types** is migrated; other areas l
 1. [Overview](01-overview.md) — Philosophy, hello world, first taste
 2. [Basics](language/basics/README.md) — Primitive types, variables, constants, operators *(migrated)*
 3. [Control Flow](language/control-flow/README.md) — Conditionals, loops, branching *(migrated)*
-4. [Functions](04-functions.md) — Functions, procedures, first-class functions, nested functions
+4. [Functions](language/functions/README.md) — Functions, procedures, first-class functions, nested functions *(migrated)*
 5. [Types](language/types/README.md) — Records, enumerations, arrays, type aliases *(migrated)*
 6. [Case Of](06-pattern-matching.md) — Value, range, and enum matching
 7. [Error Handling](07-error-handling.md) — `Result`, `Option`, `try`, `panic`

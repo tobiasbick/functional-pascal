@@ -1,6 +1,6 @@
 /// Tests for nested functions with lexical scope access.
 ///
-/// **Documentation:** [docs/pascal/04-functions.md](docs/pascal/04-functions.md)
+/// **Documentation:** [docs/pascal/language/functions/nested.md](docs/pascal/language/functions/nested.md)
 use super::*;
 
 #[test]

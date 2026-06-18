@@ -1,6 +1,6 @@
 /// Tests for routine declaration order and mutual recursion without `forward`.
 ///
-/// **Documentation:** `docs/pascal/04-functions.md` (from the repository root).
+/// **Documentation:** `docs/pascal/language/functions/README.md` (from the repository root).
 use super::*;
 
 #[test]

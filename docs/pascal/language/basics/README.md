@@ -20,4 +20,4 @@ Type alias declarations: [Type aliases](../types/type-aliases.md).
 ## See also
 
 - [Types](../types/README.md) — records, enums, array/dict semantics
-- [Functions](../../04-functions.md)
+- [Functions](../functions/README.md)

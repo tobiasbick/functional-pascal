@@ -1,6 +1,6 @@
 //! Compiling named functions and procedures.
 //!
-//! **Documentation:** `docs/pascal/04-functions.md` (from the repository root).
+//! **Documentation:** `docs/pascal/language/functions/declarations.md` (from the repository root).
 
 use crate::error::CompileError;
 use fpas_bytecode::Op;

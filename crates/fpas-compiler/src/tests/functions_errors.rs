@@ -1,6 +1,6 @@
 /// Negative tests for function and procedure declarations.
 ///
-/// **Documentation:** [docs/pascal/04-functions.md](docs/pascal/04-functions.md)
+/// **Documentation:** [docs/pascal/language/functions/README.md](docs/pascal/language/functions/README.md)
 use super::*;
 
 fn comma_separated_params(count: usize) -> String {

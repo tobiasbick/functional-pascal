@@ -27,7 +27,7 @@ pub struct ProcedureDecl {
 
 /// Callable body shape.
 ///
-/// **Documentation:** `docs/pascal/04-functions.md` (from the repository root).
+/// **Documentation:** `docs/pascal/language/functions/README.md` (from the repository root).
 #[derive(Debug, Clone, PartialEq)]
 pub enum FuncBody {
     Block { nested: Vec<Decl>, stmts: Vec<Stmt> },

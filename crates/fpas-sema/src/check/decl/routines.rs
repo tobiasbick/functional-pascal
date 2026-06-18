@@ -6,7 +6,7 @@ use fpas_lexer::Span;
 use fpas_parser::{FuncBody, FunctionDecl, ProcedureDecl};
 
 impl Checker {
-    /// Check function declarations against `docs/pascal/04-functions.md`.
+    /// Check function declarations against `docs/pascal/language/functions/README.md`.
     pub(super) fn check_function_decl(&mut self, f: &FunctionDecl) {
         self.check_unique_formal_param_names(&f.params);
 
@@ -39,7 +39,7 @@ impl Checker {
         self.check_routine_body(&f.name, &f.type_params, &params, Some(return_ty), &f.body);
     }
 
-    /// Check procedure declarations against `docs/pascal/04-functions.md`.
+    /// Check procedure declarations against `docs/pascal/language/functions/README.md`.
     pub(super) fn check_procedure_decl(&mut self, p: &ProcedureDecl) {
         self.check_unique_formal_param_names(&p.params);
 

@@ -62,7 +62,7 @@ pub fn expr_lookup_key(expr: &fpas_parser::Expr) -> usize {
 
 /// Stable key for call-statement method resolution (address of the call's [`Designator`] in the AST).
 ///
-/// **Documentation:** `docs/pascal/04-functions.md` (record method calls; from the repository root).
+/// **Documentation:** `docs/pascal/language/functions/README.md` (record method calls; from the repository root).
 #[must_use]
 pub fn designator_lookup_key(designator: &fpas_parser::Designator) -> usize {
     std::ptr::from_ref(designator) as usize

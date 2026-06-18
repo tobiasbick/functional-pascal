@@ -1,6 +1,6 @@
 /// Tests for basic function and procedure declarations.
 ///
-/// **Documentation:** [docs/pascal/04-functions.md](docs/pascal/04-functions.md)
+/// **Documentation:** [docs/pascal/language/functions/README.md](docs/pascal/language/functions/README.md)
 use super::*;
 
 // ═══════════════════════════════════════════════════════════════

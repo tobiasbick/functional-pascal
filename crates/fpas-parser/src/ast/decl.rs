@@ -52,7 +52,7 @@ pub struct VarDef {
 ///
 /// Used on function and procedure headings: `function Foo<T>(x: T): T`.
 ///
-/// **Documentation:** `docs/pascal/04-functions.md` (Generic Functions)
+/// **Documentation:** `docs/pascal/language/functions/generic-routines.md`
 #[derive(Debug, Clone, PartialEq)]
 pub struct TypeParam {
     pub name: String,

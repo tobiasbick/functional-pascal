@@ -1,6 +1,6 @@
 /// Tests for first-class named functions and Map/Filter/Reduce.
 ///
-/// **Documentation:** [docs/pascal/04-functions.md](docs/pascal/04-functions.md)
+/// **Documentation:** [docs/pascal/language/functions/README.md](docs/pascal/language/functions/README.md)
 use super::*;
 mod array_ops;
 mod errors;

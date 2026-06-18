@@ -8,7 +8,7 @@ impl Checker {
     ///
     /// Used during generic function call checking.
     ///
-    /// **Documentation:** `docs/pascal/04-functions.md` (Generic Functions)
+    /// **Documentation:** `docs/pascal/language/functions/generic-routines.md`
     pub(crate) fn validate_constraints(
         &mut self,
         type_params: &[GenericParamDef],

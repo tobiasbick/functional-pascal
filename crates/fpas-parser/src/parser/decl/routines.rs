@@ -1,6 +1,6 @@
 //! Routine declarations (`function` / `procedure`).
 //!
-//! **Documentation:** `docs/pascal/04-functions.md` (from the repository root).
+//! **Documentation:** `docs/pascal/language/functions/declarations.md` (from the repository root).
 
 use super::super::Parser;
 use crate::ast::*;

@@ -104,4 +104,4 @@ var
 ## See also
 
 - [Record methods](record-methods.md)
-- [Functions — generic routines](../../04-functions.md#generic-functions)
+- [Generic routines](../functions/generic-routines.md)

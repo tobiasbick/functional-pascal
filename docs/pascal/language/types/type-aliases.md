@@ -13,4 +13,4 @@ type
 
 ## See also
 
-- [Functions — function types](../../04-functions.md#function-types)
+- [Function types](../functions/function-types.md)

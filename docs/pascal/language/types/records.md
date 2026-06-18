@@ -93,4 +93,4 @@ var
 
 - [Record methods](record-methods.md)
 - [Record update](record-update.md)
-- [Functions — mutable parameters](../../04-functions.md#mutable-parameters)
+- [Mutable parameters](../functions/mutable-parameters.md)

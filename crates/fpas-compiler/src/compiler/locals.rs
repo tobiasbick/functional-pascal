@@ -1,6 +1,6 @@
 //! Local bindings, scopes, and name resolution for codegen.
 //!
-//! **Documentation:** `docs/pascal/04-functions.md` (from the repository root).
+//! **Documentation:** `docs/pascal/language/functions/README.md` (from the repository root).
 
 use fpas_parser::{Designator, DesignatorPart, Program};
 use fpas_std::key_event::KEY_KIND_VARIANTS;

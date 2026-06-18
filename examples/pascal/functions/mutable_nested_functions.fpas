@@ -1,4 +1,4 @@
-{ Spec: docs/pascal/04-functions.md (from repository root). }
+{ Spec: docs/pascal/language/functions/README.md (from repository root). }
 
 program MutableNestedFunctions;
 

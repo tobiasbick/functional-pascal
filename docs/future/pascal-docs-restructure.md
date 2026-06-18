@@ -2,9 +2,9 @@
 
 Plan to replace the flat numbered chapters (`01-overview.md` … `11-stdlib.md`) with **topic areas** (directories) and **small, themed pages** — similar to [Microsoft Learn](https://learn.microsoft.com/) language reference layout.
 
-**Status:** in progress — `language/types/` migrated (Phase 1 scaffold + types split done).
+**Status:** **implemented** (2026-06) — numbered chapters removed; spec lives in topic directories under [`docs/pascal/`](../pascal/).
 
-**Normative spec today:** [`docs/pascal/`](../pascal/) (flat numbered files).
+**Normative spec today:** [`docs/pascal/`](../pascal/) (topic areas and area hubs).
 
 ---
 
@@ -188,51 +188,34 @@ Area `README.md` files list child pages in a table (title + one-line description
 
 ### Phase 2 — Move and split content
 
-1. **`language/types/`** — split `05-types.md` first (highest line count).
+1. **`language/types/`** — split `05-types.md` first (highest line count). **Done.**
 2. **`language/basics/`** — split `02-basics.md`. **Done.**
 3. **`program-structure/`** — split `10-projects.md`, move `09-units.md`. **Done.**
-4. **`language/functions/`** **done**, **`pattern-matching/`** **done**, **`control-flow/`** **done**.
-5. **`getting-started/`** **done**, **`error-handling/`** **done**, **`concurrency/`** **done**.
-6. **`tools/fmt-style.md`** **done** — move file; update `fpas fmt` / `AGENTS.md` references.
+4. **`language/functions/`**, **`pattern-matching/`**, **`control-flow/`** — **Done.**
+5. **`getting-started/`**, **`error-handling/`**, **`concurrency/`** — **Done.**
+6. **`tools/fmt-style.md`** — move file; update `fpas fmt` / `AGENTS.md` references. **Done.**
 7. Merge `11-stdlib.md` overview into `std/README.md`; drop duplicate hub if redundant. **Done.**
 
-### Phase 3 — Update references
+### Phase 3 — Update references **Done**
 
-Bulk-update paths in:
+Bulk-updated paths in Rust `///` / `//!` links, `AGENTS.md`, area cross-links, root README, and grammar comments.
 
-| Location | Estimate |
-|----------|----------|
-| Rust `///` and `//!` doc links | ~100+ |
-| [`AGENTS.md`](../../AGENTS.md) | few |
-| [`.cursor/rules/functional-pascal.mdc`](../../.cursor/rules/functional-pascal.mdc) | few |
-| [`.github/instructions/functional-pascal.instructions.md`](../../.github/instructions/functional-pascal.instructions.md) | few |
-| [`docs/pascal/`](../pascal/) internal cross-links | all pages |
-| [`docs/future/`](../future/) | grep and fix |
-| [`README.md`](../../README.md), [`examples/README.md`](../../examples/README.md) | few |
-| [`docs/specs/grammar.ebnf`](../specs/grammar.ebnf) comments | few |
+### Phase 4 — Remove legacy paths **Done**
 
-Use ripgrep before/after:
-
-```sh
-rg 'docs/pascal/0[0-9]-|docs/pascal/1[01]-|docs/pascal/fmt-style'
-```
-
-### Phase 4 — Remove legacy paths
-
-1. Delete `01-overview.md` … `11-stdlib.md` and root `fmt-style.md`.
-2. Confirm zero matches for old paths.
-3. Update this file **Status** to *implemented* and move summary to [`README.md`](README.md) § Documentation.
+1. Deleted `01-overview.md` … `11-stdlib.md` and root `fmt-style.md`.
+2. Confirmed zero live references to old numbered paths (plan file retains historical mapping only).
+3. Root [`docs/pascal/README.md`](../pascal/README.md) uses topic areas and a **Start here** learning path.
 
 ---
 
 ## Verification
 
-- [ ] Every old `##` section from numbered files has a new home (checklist in PR description).
-- [ ] Root `docs/pascal/README.md` learning path is complete and ordered.
-- [ ] Each area `README.md` lists all child pages.
-- [ ] `rg 'docs/pascal/0[0-9]-'` returns no hits in the repo.
-- [ ] Spot-check Rust links from `fpas-sema`, `fpas-compiler`, `fpas-vm`, `fpas-project`.
-- [ ] No new `docs/rust/` paths introduced.
+- [x] Every old `##` section from numbered files has a new home.
+- [x] Root `docs/pascal/README.md` learning path is complete and ordered.
+- [x] Each area `README.md` lists all child pages.
+- [x] `rg 'docs/pascal/0[0-9]-'` returns no hits outside this plan file.
+- [x] Rust links spot-checked from `fpas-sema`, `fpas-compiler`, `fpas-vm`, `fpas-project`.
+- [x] No new `docs/rust/` paths introduced.
 
 ---
 

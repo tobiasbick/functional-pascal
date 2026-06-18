@@ -17,33 +17,33 @@ Planned features: [`docs/future/`](../future/).
 
 ## Documentation areas
 
-Topic-based layout (Microsoft Learn style). Legacy numbered chapters remain only where not yet migrated.
+Topic-based layout (Microsoft Learn style).
 
-| Area | Hub |
-|------|-----|
-| [Getting started](getting-started/README.md) | **migrated** | Overview, hello world |
-| [Language](language/README.md) | Core reference |
-| [Types](language/types/README.md) | Records, enums, arrays, generics |
-| [Basics](language/basics/README.md) | Primitives, variables, operators |
-| [Program structure](program-structure/README.md) | **migrated** | Units, projects, CLI, workspaces |
-| [Standard library](std/README.md) | **migrated** | `Std.*` reference |
-| [Tools](tools/README.md) | **migrated** | `fpas fmt` |
+| Area | Hub | Topics |
+|------|-----|--------|
+| Getting started | [getting-started/](getting-started/README.md) | Overview, hello world, keywords |
+| Language | [language/](language/README.md) | Types, basics, control flow, functions, pattern matching, errors, concurrency |
+| Program structure | [program-structure/](program-structure/README.md) | Units, projects, CLI, workspaces |
+| Standard library | [std/](std/README.md) | `Std.*` reference |
+| Tools | [tools/](tools/README.md) | `fpas fmt` |
+| Formal grammar | [../specs/grammar.ebnf](../specs/grammar.ebnf) | Lexer and parser syntax |
 
-## Table of Contents (legacy numbered chapters)
+## Start here
 
-1. [Overview](getting-started/README.md) — Philosophy, hello world, first taste *(migrated)*
-2. [Basics](language/basics/README.md) — Primitive types, variables, constants, operators *(migrated)*
-3. [Control Flow](language/control-flow/README.md) — Conditionals, loops, branching *(migrated)*
-4. [Functions](language/functions/README.md) — Functions, procedures, first-class functions, nested functions *(migrated)*
-5. [Types](language/types/README.md) — Records, enumerations, arrays, type aliases *(migrated)*
-6. [Case Of](language/pattern-matching/README.md) — Value, range, and enum matching *(migrated)*
-7. [Error Handling](language/error-handling/README.md) — `Result`, `Option`, `try`, `panic` *(migrated)*
-8. [Concurrency](language/concurrency/README.md) — Tasks, task handles, and fork-join patterns *(migrated)*
-9. [Units](program-structure/units.md) — Unit system, `uses`, namespaces *(migrated)*
-10. [Projects](program-structure/projects.md) — `.fpasprj` project files, CLI, program/library kinds *(migrated)*
-11. [Standard Library](std/README.md) — `Std.*` built-in libraries *(migrated)*
-12. [Formatter style](tools/fmt-style.md) — normative output rules for `fpas fmt` *(migrated)*
-13. [Formal grammar](../specs/grammar.ebnf) — ISO EBNF syntax annex (lexer + parser)
+Ordered learning path for newcomers:
+
+1. [Getting started](getting-started/README.md) — philosophy, hello world, first program
+2. [Basics](language/basics/README.md) — primitives, variables, operators
+3. [Control flow](language/control-flow/README.md) — `if`, loops, `case` intro
+4. [Functions](language/functions/README.md) — routines, first-class calls
+5. [Types](language/types/README.md) — records, enums, arrays, generics
+6. [Pattern matching](language/pattern-matching/README.md) — guards, exhaustiveness
+7. [Error handling](language/error-handling/README.md) — `Result`, `Option`, `try`, `panic`
+8. [Concurrency](language/concurrency/README.md) — `go`, tasks, fork-join
+9. [Units](program-structure/units.md) — `uses`, namespaces
+10. [Projects](program-structure/projects.md) — `.fpasprj`, CLI, workspaces
+11. [Standard library](std/README.md) — `Std.*` built-in units
+12. [Formatter style](tools/fmt-style.md) — normative rules for `fpas fmt`
 
 ## Future Features
 

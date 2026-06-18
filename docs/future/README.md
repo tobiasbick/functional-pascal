@@ -24,6 +24,10 @@ FPAS programs today are tested mainly from Rust (`compile_and_run`, VM input que
 
 [`fpas fmt`](../../crates/fpas-cli/src/cli_fmt/) is **implemented** ([`fpas-fmt`](../../crates/fpas-fmt/)). Manual CLI only — run when you want formatted output. Normative rules: [`docs/pascal/tools/fmt-style.md`](../pascal/tools/fmt-style.md).
 
+## Documentation layout
+
+Topic directories under [`docs/pascal/`](../pascal/) replaced the flat numbered chapters (`01-overview.md` … `11-stdlib.md`). Migration record: [`pascal-docs-restructure.md`](pascal-docs-restructure.md).
+
 ## Under Consideration
 
 | # | Feature | Description |
@@ -31,6 +35,5 @@ FPAS programs today are tested mainly from Rust (`compile_and_run`, VM input que
 | 9 | [`dict`](09-remove-dict.md) | Pending — may be kept |
 | — | [Task memory benchmark](task-memory-benchmark.md) | Reproduce pkolaczk async memory bench with `go` + `WaitAll`; blocked on cooperative sleep and scale validation |
 | — | [Libraries — finer exports](libraries.md) | Per-symbol / re-export rules beyond `[exports].units` |
-| — | [Pascal docs restructure](pascal-docs-restructure.md) | Replace numbered `01-`…`11-` chapters with topic directories and small pages |
 
 ## Not Yet Planned

@@ -201,6 +201,7 @@ The full language documentation is in [`docs/pascal/`](docs/pascal/):
 10. [Projects](docs/pascal/program-structure/projects.md)
 11. [Standard Library](docs/pascal/std/README.md)
 12. [Formatter style](docs/pascal/tools/fmt-style.md)
+13. [Formal grammar](docs/specs/grammar.ebnf)
 
 ## Contributing
 

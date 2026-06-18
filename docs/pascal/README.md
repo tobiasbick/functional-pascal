@@ -17,11 +17,11 @@ Planned features: [`docs/future/`](../future/).
 
 ## Documentation areas
 
-Topic-based layout (Microsoft Learn style). **Types** is migrated; other areas link to legacy chapters until moved.
+Topic-based layout (Microsoft Learn style). Legacy numbered chapters remain only where not yet migrated.
 
 | Area | Hub |
 |------|-----|
-| [Getting started](getting-started/README.md) | Overview, hello world |
+| [Getting started](getting-started/README.md) | **migrated** | Overview, hello world |
 | [Language](language/README.md) | Core reference |
 | [Types](language/types/README.md) | Records, enums, arrays, generics |
 | [Basics](language/basics/README.md) | Primitives, variables, operators |
@@ -31,7 +31,7 @@ Topic-based layout (Microsoft Learn style). **Types** is migrated; other areas l
 
 ## Table of Contents (legacy numbered chapters)
 
-1. [Overview](01-overview.md) — Philosophy, hello world, first taste
+1. [Overview](getting-started/README.md) — Philosophy, hello world, first taste *(migrated)*
 2. [Basics](language/basics/README.md) — Primitive types, variables, constants, operators *(migrated)*
 3. [Control Flow](language/control-flow/README.md) — Conditionals, loops, branching *(migrated)*
 4. [Functions](language/functions/README.md) — Functions, procedures, first-class functions, nested functions *(migrated)*

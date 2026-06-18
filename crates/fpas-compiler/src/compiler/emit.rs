@@ -1,6 +1,6 @@
 //! Emits VM opcodes and constants into the current chunk, with span-to-source mapping.
 //!
-//! **Documentation:** `docs/pascal/01-overview.md` (virtual machine model; from the repository root).
+//! **Documentation:** `docs/pascal/getting-started/overview.md` (virtual machine model; from the repository root).
 
 use fpas_bytecode::{ChunkError, Op, SourceLocation, Value};
 

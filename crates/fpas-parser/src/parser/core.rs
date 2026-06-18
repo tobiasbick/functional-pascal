@@ -1,6 +1,6 @@
 //! Parser primitives (token helpers, identifier paths).
 //!
-//! **Documentation:** `docs/pascal/01-overview.md` (keywords), `docs/pascal/11-stdlib.md` (`Std.*` paths).
+//! **Documentation:** `docs/pascal/getting-started/keywords.md` (keywords), `docs/pascal/11-stdlib.md` (`Std.*` paths).
 
 use super::{ERROR_IDENT, Parser};
 use crate::error::parse_error;

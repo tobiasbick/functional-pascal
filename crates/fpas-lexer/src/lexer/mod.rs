@@ -1,6 +1,6 @@
 //! Main lexer driver: token dispatch, trivia skipping, and EOF handling.
 //!
-//! **Documentation:** `docs/pascal/01-overview.md` (lexical structure and keywords).
+//! **Documentation:** `docs/pascal/getting-started/README.md` (lexical structure and keywords).
 
 mod directive;
 mod identifiers;

@@ -1,9 +1,16 @@
 # Getting started
 
-Introduction and first programs. Content still lives in [01-overview.md](../01-overview.md) until this area is migrated.
+Introduction, first programs, and reserved keywords.
 
-| Topic | Current location |
-|-------|------------------|
-| Overview and philosophy | [01-overview.md](../01-overview.md) |
+| Topic | Description |
+|-------|-------------|
+| [Overview](overview.md) | Language goals and design philosophy |
+| [Hello world](hello-world.md) | Minimal program |
+| [First program](first-program.md) | Functions and program layout |
+| [Keywords](keywords.md) | Reserved words (case-insensitive) |
 
-See [restructure plan](../../future/pascal-docs-restructure.md).
+## See also
+
+- [Basics](../language/basics/README.md) — types, variables, operators
+- [Program structure](../program-structure/README.md) — units and projects
+- [Formal grammar](../../specs/grammar.ebnf)

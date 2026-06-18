@@ -17,4 +17,4 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`case_stmt`, `case
 ## See also
 
 - [Control flow — case intro](../control-flow/case-of-intro.md)
-- [Error handling](../../07-error-handling.md)
+- [Error handling](../error-handling/README.md)

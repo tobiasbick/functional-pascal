@@ -1,4 +1,4 @@
-/// Tests for functions returning `Result` — `docs/pascal/07-error-handling.md`.
+/// Tests for functions returning `Result` — `docs/pascal/language/error-handling/result.md`.
 use super::compile_and_run;
 
 // ── Divide pattern from the docs ────────────────────────────────────────

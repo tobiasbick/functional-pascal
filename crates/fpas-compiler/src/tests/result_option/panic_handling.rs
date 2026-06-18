@@ -1,4 +1,4 @@
-/// Tests for the `panic` statement from `docs/pascal/07-error-handling.md`.
+/// Tests for the `panic` statement from `docs/pascal/language/error-handling/panic.md`.
 use super::{compile_and_run, compile_err, compile_run_err, compile_run_error, parse_fails};
 
 // ── Happy path ──────────────────────────────────────────────────────────

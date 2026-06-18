@@ -29,10 +29,10 @@ end;
 
 Use `try` to propagate `Error(...)` and `None` automatically from functions that return
 `Result` or `Option`. For propagation rules, combinators, and standard-library helpers, see
-[Error handling](../../07-error-handling.md).
+[Error handling](../error-handling/README.md).
 
 ## See also
 
-- [Error handling](../../07-error-handling.md)
+- [Error handling](../error-handling/README.md)
 - [Pattern matching](../pattern-matching/README.md)
 - [`Std.Result`](../../std/result.md), [`Std.Option`](../../std/option.md)

@@ -1,6 +1,6 @@
 //! Edge cases and negative tests for the `try` operator.
 //!
-//! Spec: [`docs/pascal/07-error-handling.md`](../../../../../../docs/pascal/07-error-handling.md).
+//! Spec: [`docs/pascal/language/error-handling/README.md`](../../../../../../docs/pascal/language/error-handling/README.md).
 
 mod error_content_preservation_through_try;
 mod multiple_try_in_one_function;

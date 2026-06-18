@@ -1,6 +1,6 @@
 # `Std.Result`
 
-Helper functions for `Result of T, E` values. See [07-error-handling.md](../07-error-handling.md) for the type itself, constructors (`Ok`, `Error`), the `try` operator, and `case` destructuring.
+Helper functions for `Result of T, E` values. See [Error handling](../language/error-handling/README.md) for the type itself, constructors (`Ok`, `Error`), the `try` operator, and `case` destructuring.
 
 ```pascal
 program Example;

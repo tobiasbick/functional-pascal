@@ -90,4 +90,4 @@ var
 ## See also
 
 - [Record update](../types/record-update.md)
-- [Error handling — `try`](../../07-error-handling.md)
+- [Error handling — `try`](../error-handling/try.md)

@@ -151,7 +151,7 @@ var Sorted: array of integer := Sort(Nums);
 
 ### Error handling (Result and Option)
 
-See [07-error-handling.md](07-error-handling.md) for the `Result of T, E` and `Option of T` types, constructors (`Ok`, `Error`, `Some`, `None`), the `try` operator, and `case` destructuring.
+See [Error handling](language/error-handling/README.md) for the `Result of T, E` and `Option of T` types, constructors (`Ok`, `Error`, `Some`, `None`), the `try` operator, and `case` destructuring.
 
 ```pascal
 uses Std.Result, Std.Option;

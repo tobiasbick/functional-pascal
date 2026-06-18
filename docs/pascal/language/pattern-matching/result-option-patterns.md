@@ -26,5 +26,5 @@ end;
 ## See also
 
 - [Types — Result and Option](../types/result-option-types.md)
-- [Error handling](../../07-error-handling.md)
+- [Error handling](../error-handling/README.md)
 - [Exhaustiveness](exhaustiveness.md)

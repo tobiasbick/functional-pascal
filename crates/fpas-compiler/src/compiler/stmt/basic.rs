@@ -1,6 +1,6 @@
 //! Statement lowering for block, assignment, return, panic, and call forms.
 //!
-//! **Documentation:** `docs/pascal/language/control-flow/README.md`, `docs/pascal/language/functions/README.md`, `docs/pascal/07-error-handling.md` (from the repository root).
+//! **Documentation:** `docs/pascal/language/control-flow/README.md`, `docs/pascal/language/functions/README.md`, `docs/pascal/language/error-handling/README.md` (from the repository root).
 
 use super::super::Compiler;
 use crate::error::CompileError;

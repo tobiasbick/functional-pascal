@@ -1,7 +1,7 @@
 /// Tests that `Result`, `Option`, `Ok`, `Error`, `Some`, `None`, `try`, `panic` are
 /// reserved keywords and cannot be used as identifiers.
 ///
-/// **Spec:** `docs/pascal/07-error-handling.md`, line 155.
+/// **Spec:** `docs/pascal/language/error-handling/README.md` (Keywords).
 use super::parse_fails;
 
 // ── Variable names ──────────────────────────────────────────────────────

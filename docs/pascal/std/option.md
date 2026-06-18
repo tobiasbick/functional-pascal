@@ -1,6 +1,6 @@
 # `Std.Option`
 
-Helper functions for `Option of T` values. See [07-error-handling.md](../07-error-handling.md) for the type itself, constructors (`Some`, `None`), the `try` operator, and `case` destructuring.
+Helper functions for `Option of T` values. See [Error handling](../language/error-handling/README.md) for the type itself, constructors (`Some`, `None`), the `try` operator, and `case` destructuring.
 
 ```pascal
 program Example;

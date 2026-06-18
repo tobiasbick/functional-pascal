@@ -1,7 +1,7 @@
 //! Expression typing.
 //!
 //! **Documentation:** `docs/pascal/language/basics/README.md`, `docs/pascal/language/functions/README.md`,
-//! and `docs/pascal/07-error-handling.md` (from the repository root).
+//! and `docs/pascal/language/error-handling/README.md` (from the repository root).
 
 mod calls;
 mod designator;

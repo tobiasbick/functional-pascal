@@ -1,4 +1,4 @@
-/// Tests for functions returning `Option` — `docs/pascal/07-error-handling.md`.
+/// Tests for functions returning `Option` — `docs/pascal/language/error-handling/option.md`.
 use super::compile_and_run;
 
 // ── FindIndex pattern from the docs ─────────────────────────────────────

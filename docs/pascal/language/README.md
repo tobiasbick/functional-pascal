@@ -9,7 +9,7 @@ Core language reference: types, control flow, functions, pattern matching, error
 | [Control flow](control-flow/README.md) | **migrated** | `if`, loops, `case` intro |
 | [Functions](functions/README.md) | **migrated** | Routines, first-class calls |
 | [Pattern matching](pattern-matching/README.md) | **migrated** | Guards, exhaustiveness |
-| [Error handling](error-handling/README.md) | planned | `Result`, `Option`, `try` |
+| [Error handling](error-handling/README.md) | **migrated** | `Result`, `Option`, `try` |
 | [Concurrency](concurrency/README.md) | planned | `go`, tasks |
 
 Formal syntax: [`grammar.ebnf`](../../specs/grammar.ebnf).

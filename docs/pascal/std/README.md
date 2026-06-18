@@ -30,8 +30,8 @@ Each unit page is a **self-contained handbook**: importing and short vs qualifie
 | [`Std.Path`](path.md) | Pure path manipulation | `Join`, `BaseName`, `DirName`, `Extension`, `Normalize` | [path.md](path.md) |
 | [`Std.Fs`](fs.md) | Blocking filesystem I/O | `ReadText`, `WriteText`, `Exists`, `IsFile`, `IsDir`, `CreateDir` | [fs.md](fs.md) |
 | [`Std.Time`](time.md) | Wall-clock and monotonic time | `TimestampMillis`, `MonotonicMillis`, `ElapsedMillis`, `Sleep` | [time.md](time.md) |
-| [`Std.Graph`](graph.md) | Native windowed graphics | `Application.Open`, `Application.UploadFrame`, `Application.DrawLine`, `Application.DrawText`, `Event`, `EventKind`, … | [graph.md](graph.md) |
-| [`Std.Tui`](tui.md) | Terminal application structure | `Application.Open`, `Application.Configure`, `Application.Run`, `On*` handlers, host widgets | [tui.md](tui.md) |
+| [`Std.Graph`](graph.md) | Native windowed graphics | `Application.Open`, `Application.UploadFrame`, `Application.DrawLine`, `Application.DrawText`, `Event`, `EventKind`, … — hosted dispatch in [graph-app.md](graph-app.md) | [graph.md](graph.md) |
+| [`Std.Tui`](tui.md) | Terminal application structure | `Application.Open`, `Application.Configure`, `Application.Run`, `On*` handlers, host widgets — [tui-app.md](tui-app.md) (VM intrinsics **256**–**347**; see [TUI framework](../../future/tui-application-framework.md)) | [tui.md](tui.md) |
 | [`Std.Str`](str.md) | String operations | `Length`, `ToUpper`, `Contains`, `Split`, `Join`, `PadLeft`, `CharAt`, `Ord`, `Chr`, `Format`, … | [str.md](str.md) |
 | [`Std.Conv`](conv.md) | Type conversions | `IntToStr`, `StrToInt`, `RealToStr`, `BoolToStr`, `IntToHex`, … | [conv.md](conv.md) |
 | [`Std.Parse`](parse.md) | Structured text parsing | `TryInt`, `TryReal`, `TryBool` | [parse.md](parse.md) |
@@ -39,7 +39,7 @@ Each unit page is a **self-contained handbook**: importing and short vs qualifie
 | [`Std.Math`](math.md) | Mathematical functions | `Pi`, `Abs`, `Sqrt`, `Pow`, `Sin`, `Cos`, `Tan`, `Log`, `Exp`, `Clamp`, … | [math.md](math.md) |
 | [`Std.Random`](random.md) | Pseudo-random numbers | `Random`, `RandomInt`, `Randomize` | [random.md](random.md) |
 | [`Std.Array`](array.md) | Array helpers | `Length`, `Push`, `Pop`, `Sort`, `Slice`, `Map`, `Filter`, `Reduce`, `Find`, `Any`, `All`, … | [array.md](array.md) |
-| [`Std.Dict`](dict.md) | Dictionary helpers | `Length`, `ContainsKey`, `Keys`, `Values`, `Remove`, `Get`, `Merge` | [dict.md](dict.md) |
+| [`Std.Dict`](dict.md) | Dictionary helpers | `Length`, `ContainsKey`, `Keys`, `Values`, `Remove`, `Get`, `Merge`, `Map`, `Filter` | [dict.md](dict.md) |
 | [`Std.Result`](result.md) | Result helpers | `Unwrap`, `UnwrapOr`, `IsOk`, `IsError`, `Map`, `AndThen`, `OrElse` | [result.md](result.md) |
 | [`Std.Option`](option.md) | Option helpers | `Unwrap`, `UnwrapOr`, `IsSome`, `IsNone`, `Map`, `AndThen`, `OrElse` | [option.md](option.md) |
 | [`Std.Task`](task.md) | Task synchronization | `Wait`, `WaitAll` | [task.md](task.md) |

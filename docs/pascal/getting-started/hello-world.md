@@ -11,7 +11,7 @@ begin
 end.
 ```
 
-Run with `fpas run` from a project that includes this program, or compile and execute via your project's main entry.
+Run with `fpas` from a project directory that includes this program, or pass the `.fpas` file path directly (`fpas hello.fpas`).
 
 ## See also
 

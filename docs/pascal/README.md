@@ -40,10 +40,11 @@ Ordered learning path for newcomers:
 6. [Pattern matching](language/pattern-matching/README.md) — guards, exhaustiveness
 7. [Error handling](language/error-handling/README.md) — `Result`, `Option`, `try`, `panic`
 8. [Concurrency](language/concurrency/README.md) — `go`, tasks, fork-join
-9. [Units](program-structure/units.md) — `uses`, namespaces
-10. [Projects](program-structure/projects.md) — `.fpasprj`, CLI, workspaces
-11. [Standard library](std/README.md) — `Std.*` built-in units
-12. [Formatter style](tools/fmt-style.md) — normative rules for `fpas fmt`
+9. [Units](program-structure/units.md) — `uses`, namespaces, visibility
+10. [Projects](program-structure/projects.md) — `.fpasprj`, workspaces
+11. [CLI](program-structure/cli.md) — `fpas`, `check`, `test`, `fmt`
+12. [Standard library](std/README.md) — `Std.*` built-in units
+13. [Formatter style](tools/fmt-style.md) — normative rules for `fpas fmt`
 
 ## Future Features
 

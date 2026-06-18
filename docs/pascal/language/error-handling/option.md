@@ -34,4 +34,4 @@ end;
 - [Types — Result and Option](../types/result-option-types.md)
 - [Pattern matching — Result and Option](../pattern-matching/result-option-patterns.md)
 - [Try operator](try.md)
-- [`Std.Option`](../../std/option.md)
+- [`Std.Option`](../../std/result/option.md)

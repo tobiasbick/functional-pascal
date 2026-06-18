@@ -1,6 +1,6 @@
 //! Lowers `Std.Graph` Phase 1 calls to VM intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/graph.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph/session.md` (from the repository root).
 
 use crate::error::CompileError;
 use fpas_bytecode::intrinsic::GraphIntrinsic;

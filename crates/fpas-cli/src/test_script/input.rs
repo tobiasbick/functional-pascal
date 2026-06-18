@@ -14,7 +14,7 @@ pub(super) fn parse_key_kind(name: &str) -> Result<usize, String> {
         }
     }
     Err(format!(
-        "unknown key kind `{name}`\n  help: use names from KeyKind in docs/pascal/std/console.md (e.g. Escape, Enter, Character)."
+        "unknown key kind `{name}`\n  help: use names from KeyKind in docs/pascal/std/console/README.md (e.g. Escape, Enter, Character)."
     ))
 }
 
@@ -26,7 +26,7 @@ pub(super) fn parse_mouse_action(name: &str) -> Result<usize, String> {
         }
     }
     Err(format!(
-        "unknown mouse action `{name}`\n  help: use Down, Up, Move, or other MouseAction variants from docs/pascal/std/console.md."
+        "unknown mouse action `{name}`\n  help: use Down, Up, Move, or other MouseAction variants from docs/pascal/std/console/README.md."
     ))
 }
 

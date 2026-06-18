@@ -1,7 +1,7 @@
 //! Panic paths: detached child after main halts, main panic with and without worker pool.
 //!
 //! **Documentation:** `docs/pascal/language/concurrency/README.md` (Phase 9), `docs/pascal/language/concurrency/README.md`,
-//! `docs/pascal/std/task.md`
+//! `docs/pascal/std/concurrency/task.md`
 
 use crate::Vm;
 use fpas_bytecode::{Chunk, Op, Value};

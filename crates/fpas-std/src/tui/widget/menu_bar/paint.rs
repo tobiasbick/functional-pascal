@@ -1,6 +1,6 @@
 //! Menu bar and label painting.
 //!
-//! Spec: `docs/pascal/std/tui-app.md`
+//! Spec: `docs/pascal/std/tui/app.md`
 
 use crate::{Console, DamageRegion, ViewRect};
 

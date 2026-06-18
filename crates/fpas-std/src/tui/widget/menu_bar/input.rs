@@ -1,6 +1,6 @@
 //! Menu bar mouse and keyboard routing.
 //!
-//! Spec: `docs/pascal/std/tui-app.md`
+//! Spec: `docs/pascal/std/tui/app.md`
 
 use crate::key_event::{ConsoleKeyEvent, key_kind_index};
 use crate::mouse_action_index;

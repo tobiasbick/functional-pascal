@@ -1,6 +1,6 @@
 //! Handler validation helpers for `Std.Tui` intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/tui-app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/tui/app.md` (from the repository root).
 
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError};
 use crate::vm::shared::TuiState;

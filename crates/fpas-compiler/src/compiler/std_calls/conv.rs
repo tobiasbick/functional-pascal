@@ -1,6 +1,6 @@
 //! Lowers `Std.Conv` calls to VM intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/conv.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/text/conv.md` (from the repository root).
 
 use crate::error::CompileError;
 use fpas_bytecode::{ConvIntrinsic, Intrinsic, SourceLocation};

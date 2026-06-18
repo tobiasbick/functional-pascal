@@ -5,7 +5,7 @@
 //! relative to their parent, and sibling order defines paint and hit-test z-order.
 //!
 //! Plan: `docs/future/tui-application-framework.md`
-//! Spec: `docs/pascal/std/tui-app.md`
+//! Spec: `docs/pascal/std/tui/app.md`
 
 mod focus;
 mod tree;

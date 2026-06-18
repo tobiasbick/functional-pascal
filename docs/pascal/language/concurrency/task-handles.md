@@ -25,11 +25,11 @@ For a **procedure** task, `Wait` completes when the procedure finishes; **`T`** 
 WaitAll([T1, T2, T3]);
 ```
 
-`WaitAll` is a barrier only: it does not consume return values. You may still `Wait` each handle afterward. See [`Std.Task`](../../std/task.md).
+`WaitAll` is a barrier only: it does not consume return values. You may still `Wait` each handle afterward. See [`Std.Task`](../../std/concurrency/task.md).
 
 ## `Std.Task`
 
-Per-symbol reference (parameters, edge cases, `Wait` vs `WaitAll`, runtime errors): [`Std.Task`](../../std/task.md).
+Per-symbol reference (parameters, edge cases, `Wait` vs `WaitAll`, runtime errors): [`Std.Task`](../../std/concurrency/task.md).
 
 | Function | Signature | Description |
 |----------|-----------|-------------|

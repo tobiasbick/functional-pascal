@@ -2,7 +2,7 @@
 //!
 //! Blocking host process execution safe to call from `go` tasks.
 //!
-//! **Documentation:** `docs/pascal/std/proc.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/host/proc.md` (from the repository root).
 
 use crate::error::StdError;
 use crate::intrinsic_args::{pop_array, pop_string, pop_value};

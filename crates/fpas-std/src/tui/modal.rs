@@ -1,6 +1,6 @@
 //! Rust-internal modal stack for the TUI application framework (Phase 7).
 //!
-//! The Pascal-facing host API is documented in `docs/pascal/std/tui-app.md`.
+//! The Pascal-facing host API is documented in `docs/pascal/std/tui/app.md`.
 
 use crate::{CommandId, CommandRegistry, ConsoleKeyEvent, ViewId};
 

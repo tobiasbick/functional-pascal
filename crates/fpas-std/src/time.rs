@@ -2,7 +2,7 @@
 //!
 //! Wall-clock and monotonic time helpers plus blocking sleep.
 //!
-//! **Documentation:** `docs/pascal/std/time.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/host/time.md` (from the repository root).
 
 use crate::error::{StdError, std_runtime_error};
 use crate::intrinsic_args::{pop_int, pop_value};

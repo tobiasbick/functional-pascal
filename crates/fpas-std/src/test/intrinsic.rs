@@ -1,6 +1,6 @@
 //! Intrinsic dispatch for `Std.Test`.
 //!
-//! **Documentation:** `docs/pascal/std/test.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/testing/test.md` (from the repository root).
 
 use super::assert::{
     assert_equals_boolean, assert_equals_integer, assert_equals_real, assert_equals_string,

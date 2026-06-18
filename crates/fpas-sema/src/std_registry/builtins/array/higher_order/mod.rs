@@ -1,6 +1,6 @@
 //! Higher-order `Std.Array` semantic checks.
 //!
-//! **Documentation:** `docs/pascal/std/array.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/collections/array.md` (from the repository root).
 //!
 //! - [`transform`]: `Map`, `Filter`, `Reduce`, `FlatMap`
 //! - [`search`]: `Find`, `FindIndex`, `Any`, `All`, `ForEach`

@@ -1,6 +1,6 @@
 //! Runtime implementations for `Std.Json.*` intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/json.md`
+//! **Documentation:** `docs/pascal/std/text/json.md`
 
 use crate::error::{StdError, std_runtime_error};
 use crate::intrinsic_args::{pop_string, pop_value};

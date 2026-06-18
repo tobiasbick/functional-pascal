@@ -1,6 +1,6 @@
 //! Busy multi-spawn `WaitAll` barrier and main `Yield` between spawns before `WaitAll`.
 //!
-//! **Documentation:** `docs/pascal/language/concurrency/README.md` (Phase 8), `docs/pascal/std/task.md`, `docs/pascal/language/concurrency/README.md`
+//! **Documentation:** `docs/pascal/language/concurrency/README.md` (Phase 8), `docs/pascal/std/concurrency/task.md`, `docs/pascal/language/concurrency/README.md`
 
 use crate::Vm;
 use fpas_bytecode::{Intrinsic, Op, TaskIntrinsic, Value};

@@ -1,6 +1,6 @@
 //! `Std.Graph` runtime scaffolding.
 //!
-//! **Documentation:** `docs/pascal/std/graph.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph/session.md` (from the repository root).
 
 mod backbuffer;
 mod backend;

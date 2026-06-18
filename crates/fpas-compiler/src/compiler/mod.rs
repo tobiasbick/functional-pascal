@@ -1,6 +1,6 @@
 //! Compiles FPAS AST to bytecode. Lowers `Std.Console` I/O, `Std.Math.Pi`, and `Std.Array` mutating calls, among others.
 //!
-//! **Documentation:** `docs/pascal/std/console.md`, `docs/pascal/std/math.md`, `docs/pascal/std/array.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/console/README.md`, `docs/pascal/std/numeric/math.md`, `docs/pascal/std/collections/array.md` (from the repository root).
 //! **Maintenance:** Keep those Markdown files in sync when changing how standard calls are emitted.
 
 use std::collections::{HashMap, HashSet};

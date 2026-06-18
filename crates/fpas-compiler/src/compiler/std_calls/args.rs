@@ -1,6 +1,6 @@
 //! Lowers `Std.Args` calls to VM intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/args.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/host/args.md` (from the repository root).
 
 use crate::error::CompileError;
 use fpas_bytecode::{ArgsIntrinsic, Intrinsic, SourceLocation};

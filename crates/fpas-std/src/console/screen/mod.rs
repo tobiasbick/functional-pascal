@@ -132,7 +132,7 @@ impl RenderColor {
     /// can emit `\e[m` when the writer is not a color-capable TTY (for example tests that capture
     /// to an in-memory buffer on Windows).
     ///
-    /// Spec: `docs/pascal/std/console.md` (from repository root).
+    /// Spec: `docs/pascal/std/console/README.md` (from repository root).
     pub(super) fn ansi_set_fg(self) -> Cow<'static, str> {
         match self {
             Self::Crt(i) => {
@@ -145,7 +145,7 @@ impl RenderColor {
 
     /// ANSI SGR sequence to set the background (truecolor / 256 / or CRT palette).
     ///
-    /// Spec: `docs/pascal/std/console.md` (from repository root).
+    /// Spec: `docs/pascal/std/console/README.md` (from repository root).
     pub(super) fn ansi_set_bg(self) -> Cow<'static, str> {
         match self {
             Self::Crt(i) => {

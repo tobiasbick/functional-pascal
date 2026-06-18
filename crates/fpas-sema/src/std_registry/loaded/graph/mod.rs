@@ -1,6 +1,6 @@
 //! `Std.Graph` semantic registration.
 //!
-//! **Documentation:** `docs/pascal/std/graph.md`, `docs/pascal/std/graph-app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph/session.md`, `docs/pascal/std/graph/app.md` (from the repository root).
 
 mod application_api;
 mod handlers;

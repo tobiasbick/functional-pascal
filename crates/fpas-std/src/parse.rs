@@ -1,6 +1,6 @@
 //! `Std.Parse.*` intrinsic implementations.
 //!
-//! **Documentation:** `docs/pascal/std/parse.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/text/parse.md` (from the repository root).
 
 use crate::error::StdError;
 use crate::intrinsic_args::{pop_string, pop_value};

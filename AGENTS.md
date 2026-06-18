@@ -36,7 +36,7 @@ When asked to implement or modify behavior:
 
 - **`examples/`** — runnable demos and tutorials. Do not add `*_test.fpas` here.
 - **`tests/`** — FPAS regression and integration tests (`*_test.fpas`, optional golden sidecars). Group by theme (`stdlib/`, `concurrency/`, `runner/`, `console/`, `tui/`, `graph/`). Bundle via [`tests/suite.fpasprj`](tests/suite.fpasprj).
-- After FPAS test changes, run `fpas test tests/` or `cargo test -p fpas-cli fpas_regression_suite_passes`. Spec: [`docs/pascal/std/test.md`](docs/pascal/std/test.md).
+- After FPAS test changes, run `fpas test tests/` or `cargo test -p fpas-cli fpas_regression_suite_passes`. Spec: [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md).
 
 ## CI and automation
 

@@ -1,4 +1,4 @@
-{ Spec: docs/pascal/std/graph-app.md (from repository root). }
+{ Spec: docs/pascal/std/graph/app.md (from repository root). }
 
 program MandelbrotGraph;
 

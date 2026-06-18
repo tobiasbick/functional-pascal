@@ -1,6 +1,6 @@
 //! Decode Pascal status bar models from VM values.
 //!
-//! **Documentation:** `docs/pascal/std/tui-app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/tui/app.md` (from the repository root).
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError};

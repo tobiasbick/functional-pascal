@@ -1,6 +1,6 @@
 //! Lowers `Std.Random` calls to VM intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/random.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/numeric/random.md` (from the repository root).
 
 use crate::error::CompileError;
 use fpas_bytecode::{Intrinsic, RandomIntrinsic, SourceLocation};

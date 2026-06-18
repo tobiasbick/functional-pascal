@@ -1,6 +1,6 @@
 //! Lowers `Std.Console` calls to VM intrinsics and print operations.
 //!
-//! **Documentation:** `docs/pascal/std/console.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/console/README.md` (from the repository root).
 
 mod io;
 mod screen;

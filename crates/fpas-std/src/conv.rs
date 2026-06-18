@@ -1,6 +1,6 @@
 //! `Std.Conv.*` intrinsic implementations.
 //!
-//! **Documentation:** `docs/pascal/std/conv.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/text/conv.md` (from the repository root).
 //! **Maintenance:** Keep that Markdown file aligned with this file, `intrinsics.rs`,
 //! `fpas-bytecode::Intrinsic`, `fpas-compiler`, and `fpas-sema` `std_registry.rs`.
 

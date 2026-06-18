@@ -1,4 +1,4 @@
-{ Spec: docs/pascal/std/fs.md — writes ./_fpas_fs_demo.txt in the working directory. }
+{ Spec: docs/pascal/std/host/fs.md — writes ./_fpas_fs_demo.txt in the working directory. }
 
 program FsBasics;
 

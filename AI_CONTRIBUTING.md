@@ -28,7 +28,7 @@ Or run `scripts/run-non-interactive-examples.*` for the run allowlist. Never bat
 - `fpas test tests/` or `fpas test tests/suite.fpasprj`
 - `cargo test -p fpas-cli fpas_regression_suite_passes`
 
-Spec: [`docs/pascal/std/test.md`](docs/pascal/std/test.md).
+Spec: [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md).
 
 ## Contribution Standard
 

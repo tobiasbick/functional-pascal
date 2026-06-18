@@ -1,6 +1,6 @@
 //! `Std.Math.*` intrinsic implementations (`Pi` is compile-time in `fpas-compiler`).
 //!
-//! **Documentation:** `docs/pascal/std/math.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/numeric/math.md` (from the repository root).
 //! **Maintenance:** Keep that Markdown file aligned with this file, `intrinsics.rs`,
 //! `fpas-bytecode::Intrinsic`, `fpas-compiler` (`Std.Math.Pi` and call lowering), and `fpas-sema` `std_registry.rs`.
 

@@ -39,7 +39,7 @@ pub(crate) enum TaskResultState {
 #[derive(Debug)]
 pub(crate) struct TuiState {
     pub session: TuiSession,
-    /// Resize coalescing and the hosted-loop event pump (`docs/pascal/std/tui-app.md`).
+    /// Resize coalescing and the hosted-loop event pump (`docs/pascal/std/tui/app.md`).
     pub host: UiHost,
     /// `OnKeyPressed`-style handler: `function (Application, KeyEvent): boolean`.
     pub on_key_pressed: Option<Value>,
@@ -128,7 +128,7 @@ impl Default for TuiState {
 pub(crate) struct GraphState {
     /// Current graph session and runtime-owned backbuffer state.
     pub session: GraphSession,
-    /// Resize coalescing and the hosted-loop event pump (`docs/pascal/std/graph-app.md`).
+    /// Resize coalescing and the hosted-loop event pump (`docs/pascal/std/graph/app.md`).
     pub host: GraphHost,
     /// `OnKeyPressed`-style handler: `function (Application, KeyEvent): boolean`.
     pub on_key_pressed: Option<Value>,

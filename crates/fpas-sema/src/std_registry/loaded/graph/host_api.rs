@@ -6,7 +6,7 @@ use fpas_std::std_symbols as s;
 
 /// Register the host-dispatch bridge for `Std.Graph.Application`.
 ///
-/// **Documentation:** `docs/pascal/std/graph-app.md` (from the repository root).
+/// **Documentation:** `docs/pascal/std/graph/app.md` (from the repository root).
 pub(super) fn register_host_api(
     checker: &mut Checker,
     types: &GraphTypes,

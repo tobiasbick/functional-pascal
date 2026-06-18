@@ -267,7 +267,7 @@ end.
 | `Std.Option` | Option helpers | `Unwrap`, `UnwrapOr`, `IsSome`, `IsNone`, `Map`, `AndThen`, `OrElse` |
 | `Std.Task` | Task synchronization (`go`) | `Wait`, `WaitAll` |
 
-Full TUI dispatch details: [`docs/pascal/std/tui-app.md`](../../docs/pascal/std/tui-app.md). Per-unit reference: [`docs/pascal/std/README.md`](../../docs/pascal/std/README.md).
+Full TUI dispatch details: [`docs/pascal/std/tui/app.md`](../../docs/pascal/std/tui/app.md). Per-unit reference: [`docs/pascal/std/README.md`](../../docs/pascal/std/README.md).
 
 **Ambiguous names** — always qualify these:
 - `Length`, `Contains`, `IndexOf` across `Std.Str`, `Std.Array`, `Std.Dict`
@@ -407,7 +407,7 @@ Examples: [`examples/pascal/library-deps/`](../../examples/pascal/library-deps/)
 
 - Test entry files are named `*_test.fpas` and live under [`tests/`](../../tests/) (not `examples/`).
 - Run a directory, project, or single file: `fpas test tests/`, `fpas test tests/suite.fpasprj`, `fpas test tests/tui/tui_escape_test.fpas`.
-- Assertions and runner behavior: [`docs/pascal/std/test.md`](../../docs/pascal/std/test.md).
+- Assertions and runner behavior: [`docs/pascal/std/testing/test.md`](../../docs/pascal/std/testing/test.md).
 
 ## Key Rules Summary
 

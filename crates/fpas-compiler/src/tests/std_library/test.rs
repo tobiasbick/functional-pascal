@@ -1,6 +1,6 @@
 //! Compiler integration tests for `Std.Test`.
 //!
-//! **Documentation:** `docs/pascal/std/test.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/testing/test.md` (from the repository root).
 
 use super::super::{compile_and_run, compile_ok, compile_run_error};
 use fpas_diagnostics::codes::RUNTIME_TEST_ASSERTION_FAILED;

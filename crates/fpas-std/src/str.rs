@@ -1,6 +1,6 @@
 //! `Std.Str.*` intrinsic implementations (`match` arms).
 //!
-//! **Documentation:** `docs/pascal/std/str.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/text/str.md` (from the repository root).
 //! **Maintenance:** Keep that Markdown file aligned with this file, `intrinsics.rs`,
 //! `fpas-bytecode::Intrinsic`, `fpas-compiler` std call lowering, and `fpas-sema` `std_registry.rs`.
 
@@ -340,7 +340,7 @@ fn checked_pad_width(
 
 /// Applies printf-style format specifiers (`%d`, `%f`, `%s`, `%%`) to `args`.
 ///
-/// **Documentation:** `docs/pascal/std/str.md`
+/// **Documentation:** `docs/pascal/std/text/str.md`
 fn apply_format(
     template: &str,
     args: &[Value],

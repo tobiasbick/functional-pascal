@@ -1,6 +1,6 @@
 //! VM callback implementations for `Std.Result.{Map,AndThen,OrElse}` and `Std.Option.{Map,AndThen,OrElse}`.
 //!
-//! **Documentation:** `docs/pascal/std/result.md` and `docs/pascal/std/option.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/result/result.md` and `docs/pascal/std/result/option.md` (from the repository root).
 
 use crate::vm::diagnostics::VmError;
 use crate::vm::{Worker, runtime_error};

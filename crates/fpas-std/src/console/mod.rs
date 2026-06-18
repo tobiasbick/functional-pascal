@@ -1,7 +1,7 @@
 //! `Std.Console` - output, line-buffered text input (`Read` / `ReadLn`), and CRT-style
 //! keyboard input (`ReadKey` / `KeyPressed`).
 //!
-//! **Documentation:** `docs/pascal/std/console.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/console/README.md` (from the repository root).
 //! **Maintenance:** Keep that Markdown file in sync with this module, `crates/fpas-vm/src/vm.rs`
 //! (console intrinsics), and `crates/fpas-compiler/src/compiler.rs` (`Write` / `WriteLn` / read intrinsics).
 
@@ -85,14 +85,14 @@ impl Console {
 
     /// Returns the character content of one screen row (`y` is one-based).
     ///
-    /// **Documentation:** `docs/pascal/std/tui-app.md` (`Application.QueryScreenLine`)
+    /// **Documentation:** `docs/pascal/std/tui/app.md` (`Application.QueryScreenLine`)
     pub fn query_screen_line(&self, y: u16) -> String {
         self.state.row_text(y)
     }
 
     /// Returns one CRT cell (`x`/`y` one-based) as `(ch, fg, bg)` with packed colors `0..=15`.
     ///
-    /// **Documentation:** `docs/pascal/std/tui-app.md` (`Application.QueryScreenCell`)
+    /// **Documentation:** `docs/pascal/std/tui/app.md` (`Application.QueryScreenCell`)
     pub fn query_screen_cell(&self, x: u16, y: u16) -> Option<(char, u8, u8)> {
         self.state.packed_cell_at(x, y)
     }

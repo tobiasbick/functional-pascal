@@ -1,6 +1,6 @@
 //! Console text output helpers for hosted TUI widgets.
 //!
-//! Spec: `docs/pascal/std/console.md` (from repository root).
+//! Spec: `docs/pascal/std/console/README.md` (from repository root).
 
 use super::super::Console;
 

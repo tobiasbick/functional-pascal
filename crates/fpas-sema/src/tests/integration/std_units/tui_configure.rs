@@ -1,6 +1,6 @@
 //! Semantic integration tests for `Std.Tui.Application.Configure`.
 //!
-//! **Documentation:** `docs/pascal/std/tui-app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/tui/app.md` (from the repository root).
 
 use super::{check_errors, check_ok};
 

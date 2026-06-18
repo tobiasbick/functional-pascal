@@ -1,4 +1,4 @@
-{ Spec: docs/pascal/std/env.md (from repository root). }
+{ Spec: docs/pascal/std/host/env.md (from repository root). }
 
 program EnvBasics;
 

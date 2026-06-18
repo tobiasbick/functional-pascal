@@ -1,6 +1,6 @@
 //! `Std.Random.*` intrinsic implementations.
 //!
-//! **Documentation:** `docs/pascal/std/random.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/numeric/random.md` (from the repository root).
 
 use crate::error::{StdError, std_runtime_error};
 use crate::intrinsic_args::{pop_int, pop_value};

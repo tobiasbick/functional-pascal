@@ -1,6 +1,6 @@
 //! Compiler integration tests for `Std.Tui.Application.Configure`.
 //!
-//! **Documentation:** `docs/pascal/std/tui-app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/tui/app.md` (from the repository root).
 
 use super::super::{compile_and_run, compile_err, compile_ok, compile_run_with_console_events};
 use fpas_bytecode::{Intrinsic, Op, TuiIntrinsic};

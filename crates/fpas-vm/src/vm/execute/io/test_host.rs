@@ -1,6 +1,6 @@
 //! VM execution for `Std.Test` intrinsics that read console or TUI state.
 //!
-//! **Documentation:** `docs/pascal/std/test.md`
+//! **Documentation:** `docs/pascal/std/testing/test.md`
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};

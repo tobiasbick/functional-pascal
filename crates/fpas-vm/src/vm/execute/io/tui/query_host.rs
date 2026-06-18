@@ -1,6 +1,6 @@
 //! Native TUI query intrinsics (Phase 3–4).
 //!
-//! **Documentation:** `docs/pascal/std/tui-app.md`
+//! **Documentation:** `docs/pascal/std/tui/app.md`
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};

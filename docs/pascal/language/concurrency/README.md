@@ -9,7 +9,7 @@ Go-inspired lightweight task concurrency. Tasks created with `go` may run on wor
 | [Fork-join](fork-join.md) | Parallel work and collecting results |
 | [Scheduling](scheduling.md) | Thread pool, cooperative preemption, shared runtime |
 
-Per-symbol API: [`Std.Task`](../../std/task.md).
+Per-symbol API: [`Std.Task`](../../std/concurrency/task.md).
 
 ## Bytecode mapping
 

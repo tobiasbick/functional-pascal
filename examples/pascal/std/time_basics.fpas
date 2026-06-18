@@ -1,4 +1,4 @@
-{ Spec: docs/pascal/std/time.md (from repository root). }
+{ Spec: docs/pascal/std/host/time.md (from repository root). }
 
 program TimeBasics;
 

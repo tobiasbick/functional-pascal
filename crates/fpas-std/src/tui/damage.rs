@@ -1,6 +1,6 @@
 //! Rust-internal redraw damage tracking for `Std.Tui`.
 //!
-//! **Documentation:** `docs/pascal/std/tui-app.md` (public contract),
+//! **Documentation:** `docs/pascal/std/tui/app.md` (public contract),
 //! `docs/future/tui-application-framework.md` (Phase 7 performance plan).
 
 use crate::ViewRect;

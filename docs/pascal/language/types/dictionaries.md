@@ -23,7 +23,7 @@ begin
 end.
 ```
 
-Use `Std.Dict` for helpers such as `Length`, `ContainsKey`, `Get`, `Keys`, `Values`, and `Remove` — see [`Std.Dict`](../../std/dict.md).
+Use `Std.Dict` for helpers such as `Length`, `ContainsKey`, `Get`, `Keys`, `Values`, and `Remove` — see [`Std.Dict`](../../std/collections/dict.md).
 
 ## See also
 

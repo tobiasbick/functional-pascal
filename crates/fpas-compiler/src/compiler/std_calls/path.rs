@@ -1,6 +1,6 @@
 //! Lowers `Std.Path` calls to runtime intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/path.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/host/path.md` (from the repository root).
 
 use crate::error::CompileError;
 use fpas_bytecode::{Intrinsic, PathIntrinsic, SourceLocation};

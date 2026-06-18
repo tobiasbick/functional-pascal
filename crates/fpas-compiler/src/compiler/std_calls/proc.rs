@@ -1,6 +1,6 @@
 //! Lowers `Std.Proc` calls to runtime intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/proc.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/host/proc.md` (from the repository root).
 
 use crate::error::CompileError;
 use fpas_bytecode::{Intrinsic, ProcIntrinsic, SourceLocation};

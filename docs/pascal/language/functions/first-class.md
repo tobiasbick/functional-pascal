@@ -25,4 +25,4 @@ Call sites pass a **named** function or procedure, or a **variable** whose type 
 ## See also
 
 - [Function types](function-types.md)
-- [`Std.Array`](../../std/array.md) — `Map`, `Filter`, and other higher-order helpers
+- [`Std.Array`](../../std/collections/array.md) — `Map`, `Filter`, and other higher-order helpers

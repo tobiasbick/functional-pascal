@@ -68,7 +68,7 @@ impl Console {
 
     /// `Std.Console.TextColorRGB(R, G, B)` — set fg to 24-bit truecolor.
     ///
-    /// Spec: `docs/pascal/std/console.md`.
+    /// Spec: `docs/pascal/std/console/README.md`.
     pub fn text_color_rgb(
         &mut self,
         r: i64,
@@ -90,7 +90,7 @@ impl Console {
 
     /// `Std.Console.TextBackgroundRGB(R, G, B)` — set bg to 24-bit truecolor.
     ///
-    /// Spec: `docs/pascal/std/console.md`.
+    /// Spec: `docs/pascal/std/console/README.md`.
     pub fn text_background_rgb(
         &mut self,
         r: i64,
@@ -112,7 +112,7 @@ impl Console {
 
     /// `Std.Console.TextColor256(Index)` — set fg to 256-color palette index (0–255).
     ///
-    /// Spec: `docs/pascal/std/console.md`.
+    /// Spec: `docs/pascal/std/console/README.md`.
     pub fn text_color_256(&mut self, index: i64, location: SourceLocation) -> Result<(), StdError> {
         let index = self.validate_color_256(index, "TextColor256", location)?;
         self.state.set_extended_fg_ansi(index);
@@ -128,7 +128,7 @@ impl Console {
 
     /// `Std.Console.TextBackground256(Index)` — set bg to 256-color palette index (0–255).
     ///
-    /// Spec: `docs/pascal/std/console.md`.
+    /// Spec: `docs/pascal/std/console/README.md`.
     pub fn text_background_256(
         &mut self,
         index: i64,

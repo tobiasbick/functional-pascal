@@ -1,6 +1,6 @@
 //! Menu bar model types and event results.
 //!
-//! Spec: `docs/pascal/std/tui-app.md`
+//! Spec: `docs/pascal/std/tui/app.md`
 
 use super::super::menu_popup::MenuPopupItem;
 
@@ -32,7 +32,7 @@ pub enum MenuBarMouseResult {
 
 /// Read-only menu bar widget snapshot for native TUI tests.
 ///
-/// **Documentation:** `docs/pascal/std/tui-app.md`
+/// **Documentation:** `docs/pascal/std/tui/app.md`
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MenuBarState {
     /// Whether keyboard menu navigation mode is active.

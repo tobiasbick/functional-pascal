@@ -1,6 +1,6 @@
 //! Lowers `Std.Json` calls to VM intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/json.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/text/json.md` (from the repository root).
 
 use crate::error::CompileError;
 use fpas_bytecode::{Intrinsic, JsonIntrinsic, SourceLocation};

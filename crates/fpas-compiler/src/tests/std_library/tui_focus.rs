@@ -1,6 +1,6 @@
 //! Integration tests for Phase 7 Step 2: host-managed focus chain and `OnActivate`/`OnDeactivate`.
 //!
-//! **Documentation:** `docs/pascal/std/tui-app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/tui/app.md` (from the repository root).
 
 use super::super::{compile_and_run, compile_ok, compile_run_with_console_events};
 use fpas_bytecode::{Intrinsic, Op, TuiIntrinsic};

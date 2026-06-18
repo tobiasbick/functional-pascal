@@ -1,6 +1,6 @@
 //! Lowers `Std.Str` calls to VM intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/str.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/text/str.md` (from the repository root).
 
 use crate::error::{CompileError, compile_error};
 use fpas_bytecode::{Intrinsic, Op, SourceLocation, StrIntrinsic, Value};

@@ -38,4 +38,4 @@ The binding variable (`V`, `E`) is scoped to its arm body.
 - [Types — Result and Option](../types/result-option-types.md)
 - [Pattern matching — Result and Option](../pattern-matching/result-option-patterns.md)
 - [Try operator](try.md)
-- [`Std.Result`](../../std/result.md)
+- [`Std.Result`](../../std/result/result.md)

@@ -1,6 +1,6 @@
 //! Semantic checking for polymorphic `Std.Test` builtins.
 //!
-//! **Documentation:** `docs/pascal/std/test.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/testing/test.md` (from the repository root).
 
 use crate::check::Checker;
 use crate::types::{ProcedureTy, Ty};

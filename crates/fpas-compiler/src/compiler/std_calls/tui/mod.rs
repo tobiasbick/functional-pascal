@@ -1,6 +1,6 @@
 //! Lowers `Std.Tui` calls to VM intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/tui.md`, `docs/pascal/std/tui-app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app.md` (from the repository root).
 
 mod application;
 mod host;

@@ -1,6 +1,6 @@
 //! `Std.Json` semantic registration.
 //!
-//! **Documentation:** `docs/pascal/std/json.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/text/json.md` (from the repository root).
 
 use super::super::{define_func, p};
 use crate::check::Checker;
@@ -10,7 +10,7 @@ use fpas_std::std_symbols as s;
 
 /// Register the user-facing `Std.Json` API.
 ///
-/// **Documentation:** `docs/pascal/std/json.md` (from the repository root).
+/// **Documentation:** `docs/pascal/std/text/json.md` (from the repository root).
 pub(super) fn register_std_json(checker: &mut Checker) {
     let json_ref = Ty::Named(s::STD_JSON_VALUE.into());
     let variants = vec![

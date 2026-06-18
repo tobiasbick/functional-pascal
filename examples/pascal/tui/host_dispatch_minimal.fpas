@@ -1,4 +1,4 @@
-{ Minimal host-dispatch API: one ProcessNext spin then exit. See docs/pascal/std/tui-app.md. }
+{ Minimal host-dispatch API: one ProcessNext spin then exit. See docs/pascal/std/tui/app.md. }
 
 program TuiHostDispatchMinimal;
 

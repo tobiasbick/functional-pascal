@@ -1,5 +1,5 @@
 //! CRT screen redraw: emit ANSI SGR for cell colors explicitly so capture buffers see truecolor
-//! and 256-color sequences. See `docs/pascal/std/console.md` (from repository root).
+//! and 256-color sequences. See `docs/pascal/std/console/README.md` (from repository root).
 
 use super::Console;
 use super::screen::{FrameDamage, WindowRect};

@@ -1,6 +1,6 @@
 //! `Std.Result.*` and `Std.Option.*` intrinsic implementations.
 //!
-//! **Documentation:** `docs/pascal/std/result.md` and `docs/pascal/std/option.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/result/result.md` and `docs/pascal/std/result/option.md` (from the repository root).
 
 use crate::error::{StdError, std_runtime_error};
 use crate::intrinsic_args::pop_value;

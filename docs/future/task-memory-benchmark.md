@@ -15,7 +15,7 @@ Scale targets used in that article: **1**, **10k**, **100k**, and **1M** tasks. 
 
 **Nothing useful happens today.** The language surface looks sufficient on paper (`go`, `Std.Task.WaitAll`, `Std.Time.Sleep`), but a naïve port does not produce a meaningful benchmark:
 
-- **`Std.Time.Sleep` blocks an OS worker thread** ([`docs/pascal/std/time.md`](../pascal/std/time.md)). The VM runs spawned tasks on a small pool (`max(1, available_parallelism − 1)` workers; see [`docs/pascal/language/concurrency/scheduling.md`](../pascal/language/concurrency/scheduling.md)). Most tasks sit in the ready queue while a handful of workers sleep on the host clock.
+- **`Std.Time.Sleep` blocks an OS worker thread** ([`docs/pascal/std/host/time.md`](../pascal/std/time.md)). The VM runs spawned tasks on a small pool (`max(1, available_parallelism − 1)` workers; see [`docs/pascal/language/concurrency/scheduling.md`](../pascal/language/concurrency/scheduling.md)). Most tasks sit in the ready queue while a handful of workers sleep on the host clock.
 - **No cooperative timer wait** — there is no async-style sleep that suspends a task without holding a worker (no timer wheel + `Yield` integration).
 - **No progress output** — a bench program that only spawns and waits appears hung for a long time during the spawn loop and again during `WaitAll`, with no stdout or metrics.
 - **Per-task memory is unbounded in user code** — retaining **N** `task` handles in an `array of task` plus **N** `TaskState` queue entries and result-map slots is required for `WaitAll` today; we have not validated or optimized footprint at 100k–1M scale.
@@ -35,7 +35,7 @@ So we **cannot** yet claim FPAS numbers comparable to the blog post, and we shou
 
 ## Related docs
 
-- Language: [`docs/pascal/language/concurrency/README.md`](../pascal/language/concurrency/README.md), [`docs/pascal/std/task.md`](../pascal/std/task.md), [`docs/pascal/std/time.md`](../pascal/std/time.md)
+- Language: [`docs/pascal/language/concurrency/README.md`](../pascal/language/concurrency/README.md), [`docs/pascal/std/concurrency/task.md`](../pascal/std/concurrency/task.md), [`docs/pascal/std/host/time.md`](../pascal/std/host/time.md)
 
 ## Sketch (not runnable yet)
 

@@ -1,7 +1,7 @@
 //! Tests for `Std.Result.{Map,AndThen,OrElse}` and `Std.Option.{Map,AndThen,OrElse}`.
 //!
-//! Spec: [`docs/pascal/std/result.md`](../../../../../../docs/pascal/std/result.md),
-//! [`docs/pascal/std/option.md`](../../../../../../docs/pascal/std/option.md).
+//! Spec: [`docs/pascal/std/result/result.md`](../../../../../../docs/pascal/std/result/result.md),
+//! [`docs/pascal/std/result/option.md`](../../../../../../docs/pascal/std/result/option.md).
 
 mod chaining;
 mod closures_capture_enclosing_variables;

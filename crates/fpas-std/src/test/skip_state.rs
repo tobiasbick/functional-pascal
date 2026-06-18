@@ -1,6 +1,6 @@
 //! Thread-local skip flag for `Std.Test.Skip` (read by the `fpas test` runner).
 //!
-//! **Documentation:** `docs/pascal/std/test.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/testing/test.md` (from the repository root).
 
 use std::cell::Cell;
 

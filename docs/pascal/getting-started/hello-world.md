@@ -16,5 +16,5 @@ Run with `fpas` from a project directory that includes this program, or pass the
 ## See also
 
 - [First program](first-program.md)
-- [`Std.Console`](../std/console.md)
+- [`Std.Console`](../std/console/README.md)
 - [Program structure](../program-structure/projects.md)

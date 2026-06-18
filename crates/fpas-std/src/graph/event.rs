@@ -1,12 +1,12 @@
 //! `Std.Graph` event model and canonical enum variants.
 //!
-//! **Documentation:** `docs/pascal/std/graph.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph/session.md` (from the repository root).
 
 use crate::{ConsoleKeyEvent, UiEvent, UiModifiers, UiMouse, UiResize, UiWheel};
 
 /// Canonical `Std.Graph.EventKind` variant names for semantic registration and short aliases.
 ///
-/// **Documentation:** `docs/pascal/std/graph.md` (from the repository root).
+/// **Documentation:** `docs/pascal/std/graph/session.md` (from the repository root).
 pub const GRAPH_EVENT_KIND_VARIANTS: &[&str] =
     &["CloseRequested", "Resize", "Key", "Mouse", "Wheel"];
 

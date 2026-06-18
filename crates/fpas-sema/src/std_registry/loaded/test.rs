@@ -1,6 +1,6 @@
 //! Registration of `Std.Test` procedures.
 //!
-//! **Documentation:** `docs/pascal/std/test.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/testing/test.md` (from the repository root).
 
 use super::super::builtins::register_assert_equals_builtin;
 use super::super::{define_proc, p};

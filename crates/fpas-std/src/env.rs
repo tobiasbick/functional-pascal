@@ -1,6 +1,6 @@
 //! `Std.Env` runtime implementation.
 //!
-//! **Documentation:** `docs/pascal/std/env.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/host/env.md` (from the repository root).
 
 use crate::error::StdError;
 use crate::intrinsic_args::{pop_string, pop_value};

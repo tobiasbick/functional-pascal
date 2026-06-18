@@ -1,6 +1,6 @@
 //! Lowers `Std.Time` calls to runtime intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/time.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/host/time.md` (from the repository root).
 
 use crate::error::CompileError;
 use fpas_bytecode::{Intrinsic, SourceLocation, TimeIntrinsic};

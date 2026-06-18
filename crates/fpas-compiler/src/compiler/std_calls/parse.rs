@@ -1,6 +1,6 @@
 //! Lowers `Std.Parse` calls to VM intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/parse.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/text/parse.md` (from the repository root).
 
 use crate::error::CompileError;
 use fpas_bytecode::{Intrinsic, ParseIntrinsic, SourceLocation};

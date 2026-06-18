@@ -1,6 +1,6 @@
 //! Console operations for `Std.Console`.
 //!
-//! Spec: `docs/pascal/std/console.md` (from repository root).
+//! Spec: `docs/pascal/std/console/README.md` (from repository root).
 
 mod colors;
 mod cursor;

@@ -1,6 +1,6 @@
 //! VM tests for native TUI input injection (Phase 2).
 //!
-//! **Documentation:** `docs/pascal/std/tui-app.md`
+//! **Documentation:** `docs/pascal/std/tui/app.md`
 
 use fpas_bytecode::{Chunk, Intrinsic, Op, TuiIntrinsic, Value};
 use fpas_std::{ConsoleEvent, ConsoleKeyEvent, key_event::key_kind_index};

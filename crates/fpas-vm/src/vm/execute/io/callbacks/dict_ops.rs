@@ -6,7 +6,7 @@ use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
 impl Worker {
     /// `Std.Dict.Map(D, F)` — transform every value; `F: function(V): V2`.
     ///
-    /// **Documentation:** `docs/pascal/std/dict.md`
+    /// **Documentation:** `docs/pascal/std/collections/dict.md`
     pub(super) fn exec_dict_map(&mut self, line: SourceLocation) -> Result<(), VmError> {
         let func = self.pop(line)?;
         let pairs = self.pop_dict_value(line, "Std.Dict.Map")?;
@@ -22,7 +22,7 @@ impl Worker {
 
     /// `Std.Dict.Filter(D, F)` — keep entries where `F(K, V)` is true.
     ///
-    /// **Documentation:** `docs/pascal/std/dict.md`
+    /// **Documentation:** `docs/pascal/std/collections/dict.md`
     pub(super) fn exec_dict_filter(&mut self, line: SourceLocation) -> Result<(), VmError> {
         let func = self.pop(line)?;
         let pairs = self.pop_dict_value(line, "Std.Dict.Filter")?;

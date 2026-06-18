@@ -1,6 +1,6 @@
 //! Host-managed status bar painted in Rust from a Pascal segment model.
 //!
-//! Spec: `docs/pascal/std/tui-app.md`
+//! Spec: `docs/pascal/std/tui/app.md`
 
 use crate::{Console, DamageRegion, ViewRect};
 

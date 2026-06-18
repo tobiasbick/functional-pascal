@@ -7,7 +7,7 @@ use fpas_std::std_symbols as s;
 
 /// Register callback signatures and the `Std.Tui.ApplicationHandlers` record.
 ///
-/// **Documentation:** `docs/pascal/std/tui-app.md` (from the repository root).
+/// **Documentation:** `docs/pascal/std/tui/app.md` (from the repository root).
 pub(super) fn register_application_handlers(
     checker: &mut Checker,
     application_ty: &Ty,

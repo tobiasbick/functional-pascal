@@ -23,13 +23,13 @@ impl Console {
     }
 
     /// `Std.Console.WindMin` as packed coordinate (low byte: X, high byte: Y).
-    /// Spec: `docs/pascal/std/console.md`.
+    /// Spec: `docs/pascal/std/console/README.md`.
     pub fn wind_min(&self) -> i64 {
         self.state.wind_min()
     }
 
     /// `Std.Console.WindMax` as packed coordinate (low byte: X, high byte: Y).
-    /// Spec: `docs/pascal/std/console.md`.
+    /// Spec: `docs/pascal/std/console/README.md`.
     pub fn wind_max(&self) -> i64 {
         self.state.wind_max()
     }

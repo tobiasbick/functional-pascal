@@ -1,6 +1,6 @@
 //! Lowers `Std.Test` calls to runtime intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/test.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/testing/test.md` (from the repository root).
 
 use crate::error::CompileError;
 use fpas_bytecode::{Intrinsic, SourceLocation, TestIntrinsic};

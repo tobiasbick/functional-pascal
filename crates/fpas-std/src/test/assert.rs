@@ -1,6 +1,6 @@
 //! Assertion failure helpers for `Std.Test`.
 //!
-//! **Documentation:** `docs/pascal/std/test.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/testing/test.md` (from the repository root).
 
 use crate::error::{StdError, std_runtime_error_opt};
 use fpas_bytecode::SourceLocation;

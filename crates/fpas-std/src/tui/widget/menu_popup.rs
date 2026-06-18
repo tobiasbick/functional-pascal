@@ -1,6 +1,6 @@
 //! Pull-down menu entries painted below a menu bar item.
 //!
-//! Spec: `docs/pascal/std/tui-app.md`
+//! Spec: `docs/pascal/std/tui/app.md`
 
 use crate::key_event::{ConsoleKeyEvent, key_kind_index};
 use crate::{Console, ViewRect};

@@ -1,6 +1,6 @@
 //! Lowers `Std.Math` calls to VM intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/math.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/numeric/math.md` (from the repository root).
 
 use crate::error::CompileError;
 use fpas_bytecode::{Intrinsic, MathIntrinsic, SourceLocation};

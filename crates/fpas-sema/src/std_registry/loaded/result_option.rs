@@ -1,6 +1,6 @@
 //! Registration of `Std.Result` and `Std.Option` units.
 //!
-//! **Documentation:** `docs/pascal/std/result.md` and `docs/pascal/std/option.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/result/result.md` and `docs/pascal/std/result/option.md` (from the repository root).
 
 use super::super::define_builtin_std;
 use crate::check::Checker;

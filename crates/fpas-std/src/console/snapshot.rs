@@ -1,6 +1,6 @@
 //! Logical CRT screen snapshots for test assertions.
 //!
-//! **Documentation:** [`docs/pascal/std/console.md`](../../../../docs/pascal/std/console.md),
+//! **Documentation:** [`docs/pascal/std/console/README.md`](../../../../docs/pascal/std/console/README.md),
 //! [`docs/future/test-framework/runner.md`](../../../../docs/future/test-framework/runner.md).
 
 use super::screen::ConsoleState;

@@ -171,7 +171,7 @@ More examples in the [`examples/`](examples/) directory.
 
 ### Tests
 
-Author-facing tests are `*_test.fpas` programs under [`tests/`](tests/) (`stdlib/`, `concurrency/`, `runner/`, `console/`, `tui/`, `graph/`). Run the full suite with `fpas test tests/` or `cargo test -p fpas-cli fpas_regression_suite_passes`. See [`docs/pascal/std/test.md`](docs/pascal/std/test.md) and [`examples/README.md`](examples/README.md).
+Author-facing tests are `*_test.fpas` programs under [`tests/`](tests/) (`stdlib/`, `concurrency/`, `runner/`, `console/`, `tui/`, `graph/`). Run the full suite with `fpas test tests/` or `cargo test -p fpas-cli fpas_regression_suite_passes`. See [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md) and [`examples/README.md`](examples/README.md).
 
 ### Multi-file projects and libraries
 
@@ -209,7 +209,7 @@ The full language documentation is in [`docs/pascal/`](docs/pascal/):
 - Language spec: [`docs/pascal/`](docs/pascal/) (source of truth)
 - AI agents: [`AI_CONTRIBUTING.md`](AI_CONTRIBUTING.md) and [`AGENTS.md`](AGENTS.md)
 - Examples: [`examples/README.md`](examples/README.md)
-- FPAS tests: [`tests/`](tests/) and [`docs/pascal/std/test.md`](docs/pascal/std/test.md)
+- FPAS tests: [`tests/`](tests/) and [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md)
 
 ## Project Structure
 

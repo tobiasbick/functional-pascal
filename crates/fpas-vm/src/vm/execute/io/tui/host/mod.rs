@@ -1,6 +1,6 @@
 //! `Std.Tui` host-control intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/tui-app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/tui/app.md` (from the repository root).
 
 mod lifecycle;
 mod process;

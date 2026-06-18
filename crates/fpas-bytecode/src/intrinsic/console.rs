@@ -1,12 +1,12 @@
 //! `Std.Console` intrinsic discriminants.
 //!
-//! **Documentation:** `docs/pascal/std/console.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/console/README.md` (from the repository root).
 
 use num_enum::TryFromPrimitive;
 
 /// Intrinsics for `Std.Console.*`.
 ///
-/// **Documentation:** `docs/pascal/std/console.md`
+/// **Documentation:** `docs/pascal/std/console/README.md`
 #[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u16)]
 pub enum ConsoleIntrinsic {
@@ -57,26 +57,26 @@ pub enum ConsoleIntrinsic {
     DisablePaste = 196,
     /// `Std.Console.ReadEventTimeout(Ms)` — wait up to `Ms` milliseconds; returns `option of Event`.
     ///
-    /// **Documentation:** `docs/pascal/std/console.md`
+    /// **Documentation:** `docs/pascal/std/console/README.md`
     ReadEventTimeout = 197,
     /// `Std.Console.PollEvent()` — non-blocking; returns `option of Event`.
     ///
-    /// **Documentation:** `docs/pascal/std/console.md`
+    /// **Documentation:** `docs/pascal/std/console/README.md`
     PollEvent = 198,
     /// `Std.Console.TextColorRGB(R, G, B)` — set fg to 24-bit truecolor.
     ///
-    /// **Documentation:** `docs/pascal/std/console.md`
+    /// **Documentation:** `docs/pascal/std/console/README.md`
     TextColorRGB = 243,
     /// `Std.Console.TextBackgroundRGB(R, G, B)` — set bg to 24-bit truecolor.
     ///
-    /// **Documentation:** `docs/pascal/std/console.md`
+    /// **Documentation:** `docs/pascal/std/console/README.md`
     TextBackgroundRGB = 244,
     /// `Std.Console.TextColor256(Index)` — set fg to 256-color palette index.
     ///
-    /// **Documentation:** `docs/pascal/std/console.md`
+    /// **Documentation:** `docs/pascal/std/console/README.md`
     TextColor256 = 245,
     /// `Std.Console.TextBackground256(Index)` — set bg to 256-color palette index.
     ///
-    /// **Documentation:** `docs/pascal/std/console.md`
+    /// **Documentation:** `docs/pascal/std/console/README.md`
     TextBackground256 = 246,
 }

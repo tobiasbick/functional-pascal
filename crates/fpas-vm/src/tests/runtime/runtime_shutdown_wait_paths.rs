@@ -1,7 +1,7 @@
 //! Task-wait validation and empty `WaitAll` after spawn under shutdown semantics.
 //!
 //! **Documentation:** `docs/pascal/language/concurrency/README.md` (Phase 9), `docs/pascal/language/concurrency/README.md`,
-//! `docs/pascal/std/task.md`
+//! `docs/pascal/std/concurrency/task.md`
 
 use crate::Vm;
 use fpas_bytecode::{Chunk, Intrinsic, Op, TaskIntrinsic, Value};

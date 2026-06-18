@@ -1,6 +1,6 @@
 # Combinators
 
-`Std.Result` and `Std.Option` provide `Map`, `AndThen`, and `OrElse` for transforming and chaining values without manual `case` destructuring. See [`Std.Result`](../../std/result.md) and [`Std.Option`](../../std/option.md) for full API details.
+`Std.Result` and `Std.Option` provide `Map`, `AndThen`, and `OrElse` for transforming and chaining values without manual `case` destructuring. See [`Std.Result`](../../std/result/result.md) and [`Std.Option`](../../std/result/option.md) for full API details.
 
 ```pascal
 uses Std.Result, Std.Conv;

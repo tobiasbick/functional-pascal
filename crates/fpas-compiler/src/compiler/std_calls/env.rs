@@ -1,6 +1,6 @@
 //! Lowers `Std.Env` calls to runtime intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/env.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/host/env.md` (from the repository root).
 
 use crate::error::CompileError;
 use fpas_bytecode::{EnvIntrinsic, Intrinsic, SourceLocation};

@@ -1,4 +1,4 @@
-/// TUI shell for the FPAS IDE. See docs/pascal/std/tui-app.md.
+/// TUI shell for the FPAS IDE. See docs/pascal/std/tui/app.md.
 
 unit Ide.Shell;
 

@@ -1,4 +1,4 @@
-{ Spec: docs/pascal/std/dict.md (from repository root). }
+{ Spec: docs/pascal/std/collections/dict.md (from repository root). }
 
 program DictBasics;
 

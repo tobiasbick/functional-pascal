@@ -1,12 +1,12 @@
 //! `Std.Test` intrinsic discriminants.
 //!
-//! **Documentation:** `docs/pascal/std/test.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/testing/test.md` (from the repository root).
 
 use num_enum::TryFromPrimitive;
 
 /// Intrinsics for `Std.Test.*`.
 ///
-/// **Documentation:** `docs/pascal/std/test.md`
+/// **Documentation:** `docs/pascal/std/testing/test.md`
 #[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u16)]
 pub enum TestIntrinsic {
@@ -31,25 +31,25 @@ pub enum TestIntrinsic {
     ///
     /// Stack: `Expected`, `Y` (`Y` on top). Reads the virtual screen directly.
     ///
-    /// **Documentation:** `docs/pascal/std/test.md`
+    /// **Documentation:** `docs/pascal/std/testing/test.md`
     AssertScreenLine = 375,
     /// `Std.Test.AssertScreenCell(X, Y, Ch, Fg, Bg)` — compare one CRT cell.
     ///
     /// Stack: `X`, `Y`, `Ch`, `Fg`, `Bg` (`Bg` on top). Colors are packed CRT `0..=15`.
     ///
-    /// **Documentation:** `docs/pascal/std/test.md`
+    /// **Documentation:** `docs/pascal/std/testing/test.md`
     AssertScreenCell = 376,
     /// `Std.Test.AssertViewRect(App, V, X, Y, W, H)` — compare a view rectangle.
     ///
     /// Stack: `App`, `V`, `X`, `Y`, `W`, `H` (`H` on top).
     ///
-    /// **Documentation:** `docs/pascal/std/test.md`
+    /// **Documentation:** `docs/pascal/std/testing/test.md`
     AssertViewRect = 377,
 
     /// `Std.Test.PushReadLn(Line)` — queue one line for the next `Std.Console.ReadLn`.
     ///
     /// Stack: `Line`. Replaces pre-run `*.script.toml` readln events in native tests.
     ///
-    /// **Documentation:** `docs/pascal/std/test.md`
+    /// **Documentation:** `docs/pascal/std/testing/test.md`
     PushReadLn = 378,
 }

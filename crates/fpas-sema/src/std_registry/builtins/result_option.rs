@@ -1,6 +1,6 @@
 //! Type-checking builtins for `Std.Result` and `Std.Option` calls.
 //!
-//! **Documentation:** `docs/pascal/std/result.md` and `docs/pascal/std/option.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/result/result.md` and `docs/pascal/std/result/option.md` (from the repository root).
 
 use crate::check::Checker;
 use crate::types::{FunctionTy, Ty};

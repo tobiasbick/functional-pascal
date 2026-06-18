@@ -1,6 +1,6 @@
 //! Lowers `Std.Fs` calls to runtime intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/fs.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/host/fs.md` (from the repository root).
 
 use crate::error::CompileError;
 use fpas_bytecode::{FsIntrinsic, Intrinsic, SourceLocation};

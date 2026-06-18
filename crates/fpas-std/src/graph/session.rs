@@ -1,6 +1,6 @@
 //! `Std.Graph` session state and validation-oriented Phase 1 helpers.
 //!
-//! **Documentation:** `docs/pascal/std/graph.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph/session.md` (from the repository root).
 
 use super::backbuffer::GraphBackbuffer;
 use super::backend;

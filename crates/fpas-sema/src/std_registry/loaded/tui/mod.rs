@@ -3,7 +3,7 @@
 //! `Std.Tui.TuiEvent.key` uses `Std.Console.KeyEvent` (registered by
 //! [`super::console::register_std_console_key_api`] when needed).
 //!
-//! **Documentation:** `docs/pascal/std/tui.md`, `docs/pascal/std/tui-app.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app.md` (from the repository root).
 
 mod application_api;
 mod handlers;
@@ -49,7 +49,7 @@ struct TuiCallbackTypes {
 
 /// Register the `Std.Tui` semantic surface, including the application API and host bridge.
 ///
-/// **Documentation:** `docs/pascal/std/tui.md`, `docs/pascal/std/tui-app.md` (from the repository root).
+/// **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app.md` (from the repository root).
 pub(super) fn register_std_tui(checker: &mut Checker) {
     let application =
         type_registration::register_record_type(checker, s::STD_TUI_APPLICATION, Vec::new());

@@ -1,6 +1,6 @@
 //! Lowers `Std.Result` and `Std.Option` helpers to VM intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/result.md`, `docs/pascal/std/option.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/result/result.md`, `docs/pascal/std/result/option.md` (from the repository root).
 
 use crate::error::CompileError;
 use fpas_bytecode::{Intrinsic, OptionIntrinsic, ResultIntrinsic, SourceLocation};

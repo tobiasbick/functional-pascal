@@ -2,7 +2,7 @@
 //!
 //! Pure path manipulation without filesystem access.
 //!
-//! **Documentation:** `docs/pascal/std/path.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/host/path.md` (from the repository root).
 
 use crate::error::StdError;
 use crate::intrinsic_args::{pop_array, pop_string, pop_value, value_as_string_for_join};

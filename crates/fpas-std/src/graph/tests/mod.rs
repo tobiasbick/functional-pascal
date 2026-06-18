@@ -1,6 +1,6 @@
 //! Graph session and event tests using the headless backend.
 //!
-//! **Documentation:** `docs/pascal/std/graph.md`
+//! **Documentation:** `docs/pascal/std/graph/session.md`
 
 #![allow(clippy::expect_used)]
 

@@ -1,6 +1,6 @@
 //! `Std.Console` event model for later TUI-style input handling.
 //!
-//! Spec: `docs/pascal/std/console.md` (from repository root).
+//! Spec: `docs/pascal/std/console/README.md` (from repository root).
 
 use crate::key_event::{ConsoleKeyEvent, key_kind_index};
 

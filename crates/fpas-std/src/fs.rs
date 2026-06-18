@@ -2,7 +2,7 @@
 //!
 //! Blocking filesystem operations safe to call from `go` tasks.
 //!
-//! **Documentation:** `docs/pascal/std/fs.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/host/fs.md` (from the repository root).
 
 use crate::error::StdError;
 use crate::intrinsic_args::{pop_string, pop_value};

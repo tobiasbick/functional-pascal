@@ -1,7 +1,7 @@
 //! Rust-internal command registry for the TUI application framework (Phase 7).
 //!
 //! Command shortcuts are resolved by the host before ordinary `OnKeyPressed`
-//! dispatch. The Pascal-facing contract is documented in `docs/pascal/std/tui-app.md`.
+//! dispatch. The Pascal-facing contract is documented in `docs/pascal/std/tui/app.md`.
 
 use crate::ConsoleKeyEvent;
 

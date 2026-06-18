@@ -1,6 +1,6 @@
 /// Tests for record default field values (`Field: Type := default_expr`).
 ///
-/// **Documentation:** [docs/pascal/05-types.md](docs/pascal/05-types.md)
+/// **Documentation:** [docs/pascal/language/types/records.md](docs/pascal/language/types/records.md)
 use super::*;
 
 // ═══════════════════════════════════════════════════════════════

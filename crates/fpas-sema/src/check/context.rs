@@ -16,7 +16,7 @@ pub type MethodCallMap = HashMap<usize, String>;
 /// Maps a named record type to its ordered field list, each entry carrying an optional
 /// cloned default expression. The order matches the type definition.
 ///
-/// **Documentation:** `docs/pascal/05-types.md` (Default Field Values)
+/// **Documentation:** `docs/pascal/language/types/records.md` (Default field values)
 pub type RecordDefaultsMap = HashMap<String, Vec<(String, Option<Expr>)>>;
 
 /// Marks `CaseLabel::Value.start` expressions that semantic analysis interpreted

@@ -144,7 +144,7 @@ impl Checker {
     /// that record and have a compatible value type. The result has the same type
     /// as the base expression.
     ///
-    /// **Documentation:** `docs/pascal/05-types.md` (Record Update Expression)
+    /// **Documentation:** `docs/pascal/language/types/record-update.md`
     fn check_record_update(
         &mut self,
         base: &Expr,

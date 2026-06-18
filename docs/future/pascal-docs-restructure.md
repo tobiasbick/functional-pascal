@@ -2,7 +2,7 @@
 
 Plan to replace the flat numbered chapters (`01-overview.md` … `11-stdlib.md`) with **topic areas** (directories) and **small, themed pages** — similar to [Microsoft Learn](https://learn.microsoft.com/) language reference layout.
 
-**Status:** planned — not started.
+**Status:** in progress — `language/types/` migrated (Phase 1 scaffold + types split done).
 
 **Normative spec today:** [`docs/pascal/`](../pascal/) (flat numbered files).
 

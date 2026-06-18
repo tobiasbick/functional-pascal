@@ -105,7 +105,7 @@ impl Parser {
     /// Parse optional generic type parameters: `<T>`, `<T: Comparable>`, `<A, B>`.
     /// Returns an empty vec if no `<` follows.
     ///
-    /// **Documentation:** `docs/pascal/05-types.md` (Generics — Constraints)
+    /// **Documentation:** `docs/pascal/language/types/generics.md` (Constraints)
     pub(crate) fn parse_type_params(&mut self) -> Vec<crate::TypeParam> {
         if !self.eat(&Token::Less) {
             return Vec::new();

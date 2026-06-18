@@ -89,7 +89,7 @@ begin
 end;
 ```
 
-`mutable` only affects the local binding — the caller's value is not changed. To observe changes in the caller, pass a reference type (array, record instance) and mutate its contents. See [Types — Mutability](05-types.md) for details.
+`mutable` only affects the local binding — the caller's value is not changed. To observe changes in the caller, pass a reference type (array, record instance) and mutate its contents. See [Records — immutability](language/types/records.md#immutability) for details.
 
 ## Function Types
 
@@ -198,7 +198,7 @@ begin
 end;
 ```
 
-See [Types — Generics](05-types.md#generics) for constraints and method-level generics on record methods.
+See [Generics](language/types/generics.md) for constraints and method-level generics on record methods.
 
 ## Early Return
 

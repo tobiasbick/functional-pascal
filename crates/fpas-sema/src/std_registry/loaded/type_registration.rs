@@ -1,6 +1,6 @@
 //! Shared std unit type registration helpers.
 //!
-//! **Documentation:** `docs/pascal/05-types.md`
+//! **Documentation:** `docs/pascal/language/types/README.md`
 
 use crate::check::Checker;
 use crate::check::spans::synthetic_span;

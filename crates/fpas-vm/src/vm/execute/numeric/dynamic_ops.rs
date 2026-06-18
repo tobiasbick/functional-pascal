@@ -4,7 +4,7 @@
 //! Used when the compiler emits code for generic function bodies where the
 //! concrete type is not known at compile time.
 //!
-//! **Documentation:** `docs/pascal/05-types.md` (Generics — Constraints)
+//! **Documentation:** `docs/pascal/language/types/generics.md` (Constraints)
 
 use crate::vm::diagnostics::VmError;
 use crate::vm::{Worker, runtime_error};

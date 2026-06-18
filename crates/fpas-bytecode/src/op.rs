@@ -160,7 +160,7 @@ pub enum Op {
     /// The operand is the number of (name, value) override pairs.
     /// All non-overridden fields are copied from the base record unchanged.
     ///
-    /// **Documentation:** `docs/pascal/05-types.md` (Record Update Expression)
+    /// **Documentation:** `docs/pascal/language/types/record-update.md`
     UpdateRecord(u16),
 
     // ── Special ─────────────────────────────────────────────

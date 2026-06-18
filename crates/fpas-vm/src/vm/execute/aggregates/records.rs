@@ -97,7 +97,7 @@ impl Worker {
     /// Stack before: `[base_record, name0, val0, …, nameN-1, valN-1]`  
     /// Stack after: `[new_record]`  
     ///
-    /// **Documentation:** `docs/pascal/05-types.md` (Record Update Expression)
+    /// **Documentation:** `docs/pascal/language/types/record-update.md`
     pub(super) fn exec_update_record(
         &mut self,
         n_overrides: u16,

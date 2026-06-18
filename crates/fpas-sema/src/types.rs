@@ -1,6 +1,6 @@
 /// Built-in type constraints for generic parameters.
 ///
-/// **Documentation:** `docs/pascal/05-types.md` (Generics — Constraints)
+/// **Documentation:** `docs/pascal/language/types/generics.md` (Generics — Constraints)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TypeConstraint {
     /// Supports comparison operators: `=`, `<>`, `<`, `>`, `<=`, `>=`.
@@ -49,7 +49,7 @@ impl TypeConstraint {
 
 /// A resolved generic type parameter with optional constraint.
 ///
-/// **Documentation:** `docs/pascal/05-types.md` (Generics — Constraints)
+/// **Documentation:** `docs/pascal/language/types/generics.md` (Generics — Constraints)
 #[derive(Debug, Clone, PartialEq)]
 pub struct GenericParamDef {
     pub name: String,
@@ -58,7 +58,7 @@ pub struct GenericParamDef {
 
 /// Resolved type representation used during semantic analysis.
 ///
-/// **Documentation:** `docs/pascal/05-types.md`
+/// **Documentation:** `docs/pascal/language/types/generics.md`
 #[derive(Debug, Clone, PartialEq)]
 pub enum Ty {
     Integer,
@@ -108,7 +108,7 @@ pub enum MethodKind {
     Procedure(ProcedureTy),
 }
 
-/// **Documentation:** `docs/pascal/05-types.md`
+/// **Documentation:** `docs/pascal/language/types/enums.md`
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumTy {
     pub name: String,
@@ -117,7 +117,7 @@ pub struct EnumTy {
 
 /// A single variant in an enum type. Simple variants have an empty `fields` vec.
 ///
-/// **Documentation:** `docs/pascal/05-types.md`
+/// **Documentation:** `docs/pascal/language/types/enums.md`
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumVariantTy {
     pub name: String,

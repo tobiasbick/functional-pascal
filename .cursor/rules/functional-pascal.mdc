@@ -191,7 +191,7 @@ Backing values (`Success = 200`) cannot be combined with associated data on the 
 
 ## Generics
 
-Type parameters apply to **functions and procedures** (including record methods). See [`docs/pascal/05-types.md`](../../docs/pascal/05-types.md#generics).
+Type parameters apply to **functions and procedures** (including record methods). See [`docs/pascal/language/types/generics.md`](../../docs/pascal/language/types/generics.md).
 
 ```pascal
 function Identity<T>(Value: T): T;
@@ -212,7 +212,7 @@ type
 var X: integer := Identity(42);  { T inferred }
 ```
 
-Constraints: `<T: Comparable>`, `<T: Numeric>`, `<T: Printable>`. Details: [`docs/pascal/05-types.md`](../../docs/pascal/05-types.md#generics).
+Constraints: `<T: Comparable>`, `<T: Numeric>`, `<T: Printable>`. Details: [`docs/pascal/language/types/generics.md`](../../docs/pascal/language/types/generics.md).
 
 ## Visibility
 

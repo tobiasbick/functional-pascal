@@ -1,6 +1,6 @@
 //! Runtime tests for generic record methods.
 //!
-//! **Documentation:** `docs/pascal/05-types.md` (Generic Methods on Records)
+//! **Documentation:** `docs/pascal/language/types/generics.md` (Generic record methods)
 
 use super::*;
 

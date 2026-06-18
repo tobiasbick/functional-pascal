@@ -82,7 +82,7 @@ pub enum Expr {
     /// Creates a new record by copying all fields from `base`, then overriding
     /// those listed in `fields`. The original value is unchanged.
     ///
-    /// **Documentation:** `docs/pascal/05-types.md` (Record Update Expression)
+    /// **Documentation:** `docs/pascal/language/types/record-update.md`
     RecordUpdate {
         base: Box<Expr>,
         fields: Vec<FieldInit>,

@@ -1,6 +1,6 @@
 /// Tests for type aliases (non-generic).
 ///
-/// **Documentation:** [docs/pascal/05-types.md](docs/pascal/05-types.md)
+/// **Documentation:** [docs/pascal/language/types/type-aliases.md](docs/pascal/language/types/type-aliases.md)
 use super::*;
 
 // ═══════════════════════════════════════════════════════════════

@@ -1,6 +1,6 @@
 /// Tests for the record `with` update expression (`base with Field := Value; … end`).
 ///
-/// **Documentation:** [docs/pascal/05-types.md](docs/pascal/05-types.md)
+/// **Documentation:** [docs/pascal/language/types/record-update.md](docs/pascal/language/types/record-update.md)
 use super::*;
 
 // ═══════════════════════════════════════════════════════════════

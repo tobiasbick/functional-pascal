@@ -1,0 +1,23 @@
+# Types
+
+Composite and built-in type forms: records, enums, arrays, dictionaries, aliases, and generic routines.
+
+Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_decl`, `type_expr`, `record_type`, `enum_type`).
+
+| Topic | Description |
+|-------|-------------|
+| [Records](records.md) | Declaration, literals, fields, immutability, default values |
+| [Record methods](record-methods.md) | Methods with implicit `Self` |
+| [Record update](record-update.md) | `with` copy-and-override expressions |
+| [Result and Option types](result-option-types.md) | `Result of T, E` and `Option of T` type forms |
+| [Enumerations](enums.md) | Plain, backed, and data-carrying enums |
+| [Arrays](arrays.md) | `array of T`, indexing, mutation |
+| [Dictionaries](dictionaries.md) | `dict of K to V` |
+| [Type aliases](type-aliases.md) | Semantic names for existing types |
+| [Generics](generics.md) | Type parameters on routines and record methods |
+
+## See also
+
+- [Error handling](../../07-error-handling.md) — `try`, `panic`, combinators for `Result` / `Option`
+- [Pattern matching](../../06-pattern-matching.md) — enum and `Result` / `Option` `case` arms
+- [Basics](../../02-basics.md) — primitive types and operators

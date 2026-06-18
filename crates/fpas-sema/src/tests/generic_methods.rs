@@ -1,6 +1,6 @@
 //! Semantic tests for generic methods on non-generic record types.
 //!
-//! **Documentation:** `docs/pascal/05-types.md` (Generic Methods on Records)
+//! **Documentation:** `docs/pascal/language/types/generics.md` (Generic record methods)
 
 use super::{check_errors, check_ok};
 use fpas_diagnostics::codes::{SEMA_CONSTRAINT_VIOLATION, SEMA_TYPE_MISMATCH};

@@ -175,7 +175,7 @@ impl Parser {
     /// The `with` token has already been peeked but **not consumed** when this is called.
     /// Consumes `with`, the field overrides, and `end`.
     ///
-    /// **Documentation:** `docs/pascal/05-types.md` (Record Update Expression)
+    /// **Documentation:** `docs/pascal/language/types/record-update.md`
     pub(super) fn parse_record_update(&mut self, base: Expr, start: fpas_lexer::Span) -> Expr {
         self.advance(); // consume `with`
         let fields = self.parse_field_init_list();

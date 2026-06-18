@@ -73,7 +73,7 @@ define_codes!(SEMA_ALLOCATED_CODES => {
 
     /// A required record field (without a default value) is missing from a record literal.
     ///
-    /// **Documentation:** `docs/pascal/05-types.md` (Default Field Values)
+    /// **Documentation:** `docs/pascal/language/types/records.md` (Default field values)
     SEMA_MISSING_RECORD_FIELD = 2015;
 });
 

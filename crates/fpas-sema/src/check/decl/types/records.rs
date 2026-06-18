@@ -1,6 +1,6 @@
 //! Record type checking.
 //!
-//! **Documentation:** `docs/pascal/05-types.md`
+//! **Documentation:** `docs/pascal/language/types/records.md`
 
 use super::Checker;
 use crate::scope::{FunctionCtx, Symbol, SymbolKind, canonical_symbol_name};

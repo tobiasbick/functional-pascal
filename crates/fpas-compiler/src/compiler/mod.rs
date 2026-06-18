@@ -69,7 +69,7 @@ pub struct Compiler {
     /// Named record type → ordered (field_name, optional_default_expr) pairs.
     /// Used to expand record literals when fields with defaults are omitted.
     ///
-    /// **Documentation:** `docs/pascal/05-types.md` (Default Field Values)
+    /// **Documentation:** `docs/pascal/language/types/records.md` (Default field values)
     record_defaults: RecordDefaultsMap,
     /// Scalar `case` labels that sema resolved as guard bindings.
     scalar_case_bindings: ScalarCaseBindingMap,

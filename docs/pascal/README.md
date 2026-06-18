@@ -15,13 +15,26 @@ Planned features: [`docs/future/`](../future/).
 - **Case-Insensitive** — Keywords and identifiers are case-insensitive, as in classical Pascal.
 - **Familiar Syntax** — Pascal's `begin`, `end`, `:=`, `downto`, and other well-known constructs.
 
-## Table of Contents
+## Documentation areas
+
+Topic-based layout (Microsoft Learn style). **Types** is migrated; other areas link to legacy chapters until moved.
+
+| Area | Hub |
+|------|-----|
+| [Getting started](getting-started/README.md) | Overview, hello world |
+| [Language](language/README.md) | Core reference |
+| [Types](language/types/README.md) | Records, enums, arrays, generics |
+| [Program structure](program-structure/README.md) | Units, projects |
+| [Standard library](std/README.md) | `Std.*` reference |
+| [Tools](tools/README.md) | `fpas fmt` |
+
+## Table of Contents (legacy numbered chapters)
 
 1. [Overview](01-overview.md) — Philosophy, hello world, first taste
 2. [Basics](02-basics.md) — Primitive types, variables, constants, operators
 3. [Control Flow](03-control-flow.md) — Conditionals, loops, branching
 4. [Functions](04-functions.md) — Functions, procedures, first-class functions, nested functions
-5. [Types](05-types.md) — Records, enumerations, arrays, type aliases
+5. [Types](language/types/README.md) — Records, enumerations, arrays, type aliases *(migrated)*
 6. [Case Of](06-pattern-matching.md) — Value, range, and enum matching
 7. [Error Handling](07-error-handling.md) — `Result`, `Option`, `try`, `panic`
 8. [Concurrency](08-concurrency.md) — Tasks, task handles, and fork-join patterns

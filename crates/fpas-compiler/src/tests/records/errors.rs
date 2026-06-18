@@ -1,6 +1,6 @@
 /// Negative tests for record types: field access errors, immutability, type mismatches.
 ///
-/// **Documentation:** [docs/pascal/05-types.md](docs/pascal/05-types.md)
+/// **Documentation:** [docs/pascal/language/types/records.md](docs/pascal/language/types/records.md)
 use super::*;
 
 // ═══════════════════════════════════════════════════════════════

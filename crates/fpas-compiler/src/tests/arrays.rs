@@ -1,6 +1,6 @@
 /// Tests for array types (creation, indexing, empty, string arrays).
 ///
-/// **Documentation:** [docs/pascal/05-types.md](docs/pascal/05-types.md)
+/// **Documentation:** [docs/pascal/language/types/arrays.md](docs/pascal/language/types/arrays.md)
 use super::*;
 
 // ═══════════════════════════════════════════════════════════════

@@ -91,7 +91,7 @@ pub enum RecordMethod {
 
 /// A field declaration inside a `record … end` block.
 ///
-/// **Documentation:** `docs/pascal/05-types.md` (Record Types — Default Field Values)
+/// **Documentation:** `docs/pascal/language/types/records.md` (Default field values)
 #[derive(Debug, Clone, PartialEq)]
 pub struct FieldDef {
     pub name: String,
@@ -114,14 +114,14 @@ pub struct EnumMember {
     pub value: Option<i64>,
     /// Associated-data fields. Empty for simple (valueless) variants.
     ///
-    /// **Documentation:** `docs/pascal/05-types.md`
+    /// **Documentation:** `docs/pascal/language/types/enums.md`
     pub fields: Vec<EnumMemberField>,
     pub span: Span,
 }
 
 /// A named, typed field inside an enum variant with associated data.
 ///
-/// **Documentation:** `docs/pascal/05-types.md`
+/// **Documentation:** `docs/pascal/language/types/enums.md`
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumMemberField {
     pub name: String,

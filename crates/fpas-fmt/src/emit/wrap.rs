@@ -1,6 +1,6 @@
 //! Line-width measurement and wrapping helpers.
 //!
-//! **Documentation:** `docs/pascal/fmt-style.md#line-width-v2`
+//! **Documentation:** `docs/pascal/tools/fmt-style.md#line-width-v2`
 
 use crate::style::{INDENT_WIDTH, MAX_LINE_WIDTH};
 

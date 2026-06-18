@@ -13,4 +13,4 @@ Units, projects, workspaces, and the `fpas` CLI.
 ## See also
 
 - [Standard library](../std/README.md)
-- [Formatter style](../fmt-style.md)
+- [Formatter style](../tools/fmt-style.md)

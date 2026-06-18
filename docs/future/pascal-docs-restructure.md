@@ -112,7 +112,7 @@ docs/pascal/
     …                                # existing per-unit pages
   tools/
     README.md
-    fmt-style.md                     # moved from docs/pascal/fmt-style.md
+    fmt-style.md                     # moved from docs/pascal/fmt-style.md (repo root of docs/pascal/)
 ```
 
 **Formal grammar** stays at [`docs/specs/grammar.ebnf`](../specs/grammar.ebnf); every `language/` area hub links to the relevant grammar rules.
@@ -193,7 +193,7 @@ Area `README.md` files list child pages in a table (title + one-line description
 3. **`program-structure/`** — split `10-projects.md`, move `09-units.md`. **Done.**
 4. **`language/functions/`** **done**, **`pattern-matching/`** **done**, **`control-flow/`** **done**.
 5. **`getting-started/`** **done**, **`error-handling/`** **done**, **`concurrency/`** **done**.
-6. **`tools/fmt-style.md`** — move file; update `fpas fmt` / `AGENTS.md` references.
+6. **`tools/fmt-style.md`** **done** — move file; update `fpas fmt` / `AGENTS.md` references.
 7. Merge `11-stdlib.md` overview into `std/README.md`; drop duplicate hub if redundant.
 
 ### Phase 3 — Update references

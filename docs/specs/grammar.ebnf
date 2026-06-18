@@ -74,7 +74,7 @@ doc_line_comment = '//' '/' { (* any char except newline *) } newline ;
 (* the lexer reports an error for that sequence. There are no       *)
 (* compiler directives or source-level include forms in the language. *)
 (* `///` is lexically a line comment; formatters treat it as a      *)
-(* preservable doc line (see docs/pascal/fmt-style.md).             *)
+(* preservable doc line (see docs/pascal/tools/fmt-style.md).             *)
 
 (* ---- Keywords (53, case-insensitive) --------------------------- *)
 

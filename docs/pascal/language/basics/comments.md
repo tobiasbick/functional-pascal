@@ -18,5 +18,5 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (Part 1 — comment
 
 ## See also
 
-- [Formatter style](../../fmt-style.md)
+- [Formatter style](../../tools/fmt-style.md)
 - [Units](../program-structure/units.md)

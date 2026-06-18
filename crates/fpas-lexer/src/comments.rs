@@ -1,6 +1,6 @@
 //! Comment tokens with source spans for formatters and tooling.
 //!
-//! **Documentation:** `docs/pascal/fmt-style.md#comments`
+//! **Documentation:** `docs/pascal/tools/fmt-style.md#comments`
 
 use crate::Span;
 

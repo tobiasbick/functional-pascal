@@ -22,7 +22,7 @@ FPAS programs today are tested mainly from Rust (`compile_and_run`, VM input que
 
 ## Source formatter
 
-[`fpas fmt`](../../crates/fpas-cli/src/cli_fmt/) is **implemented** ([`fpas-fmt`](../../crates/fpas-fmt/)). Manual CLI only — run when you want formatted output. Normative rules: [`docs/pascal/fmt-style.md`](../pascal/fmt-style.md).
+[`fpas fmt`](../../crates/fpas-cli/src/cli_fmt/) is **implemented** ([`fpas-fmt`](../../crates/fpas-fmt/)). Manual CLI only — run when you want formatted output. Normative rules: [`docs/pascal/tools/fmt-style.md`](../pascal/tools/fmt-style.md).
 
 ## Under Consideration
 

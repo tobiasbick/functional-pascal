@@ -1,5 +1,13 @@
 # Tools
 
-Formatter and other CLI tooling. [fmt-style.md](../fmt-style.md) remains at the repository root of `docs/pascal/` until migrated here.
+CLI tooling for Functional Pascal projects.
 
-See [restructure plan](../../future/pascal-docs-restructure.md).
+| Tool | Description |
+|------|-------------|
+| [Formatter style](fmt-style.md) | Normative output rules for `fpas fmt` |
+| [CLI](../program-structure/cli.md) | `fpas`, `check`, `test`, `fmt` discovery |
+
+## See also
+
+- [`fpas-fmt`](../../../crates/fpas-fmt/) — formatter implementation
+- [Projects](../program-structure/projects.md) — how the CLI discovers `.fpasprj` files

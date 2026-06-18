@@ -2,7 +2,7 @@
 
 Canonical output rules for the AST pretty-printer. These are **normative for `fpas fmt`** once implemented. The emitter encodes them; this file is the human-readable spec.
 
-**Status:** **complete** (2026-06). Normative for [`fpas fmt`](../../crates/fpas-cli/src/cli_fmt/); invoke manually — no watch/LSP. Edit golden examples when the style changes; the emitter must match them.
+**Status:** **complete** (2026-06). Normative for [`fpas fmt`](../../../crates/fpas-cli/src/cli_fmt/); invoke manually — no watch/LSP. Edit golden examples when the style changes; the emitter must match them.
 
 **How to read this file**
 
@@ -14,7 +14,7 @@ Canonical output rules for the AST pretty-printer. These are **normative for `fp
 
 There is **no** “messy input” column in this doc yet. Source before formatting may omit `begin` / `end`, use `WRITELN`, extra blank lines, or comments — all of that is normalized away in the golden blocks.
 
-Spec links: [`language/basics/README.md`](language/basics/README.md), [`language/control-flow/README.md`](language/control-flow/README.md), [`.cursor/rules/functional-pascal.mdc`](../../.cursor/rules/functional-pascal.mdc).
+Spec links: [`language/basics/README.md`](../language/basics/README.md), [`language/control-flow/README.md`](../language/control-flow/README.md), [`.cursor/rules/functional-pascal.mdc`](../../../.cursor/rules/functional-pascal.mdc).
 
 ---
 
@@ -116,7 +116,7 @@ end.
 
 ### Program — `type` + record methods + `begin` body
 
-Golden output for a file like [`examples/pascal/record-methods/point.fpas`](../../examples/pascal/record-methods/point.fpas) (comments, extra blank lines, and missing header blank lines from the repo copy are **not** in the output).
+Golden output for a file like [`examples/pascal/record-methods/point.fpas`](../../../examples/pascal/record-methods/point.fpas) (comments, extra blank lines, and missing header blank lines from the repo copy are **not** in the output).
 
 ```pascal
 program PointExample;
@@ -160,7 +160,7 @@ end.
 
 ### Unit — `Clamp` (`if` branches always get `begin` / `end`)
 
-The language allows the compact form (see [`program-structure/units.md`](program-structure/units.md)); **`fpas fmt` does not emit it.** Golden unit file:
+The language allows the compact form (see [`program-structure/units.md`](../program-structure/units.md)); **`fpas fmt` does not emit it.** Golden unit file:
 
 ```pascal
 unit MyApp.Utils;
@@ -222,7 +222,7 @@ end;
 
 - **Maximum line length: 100 columns** (`MAX_LINE_WIDTH` in `crates/fpas-fmt/src/style.rs`).
 - Count includes leading indentation on the line being measured.
-- Lines at or below [`MAX_LINE_WIDTH`](../../crates/fpas-fmt/src/style.rs) stay on one line; wrapping applies only when the rendered line would exceed the limit.
+- Lines at or below [`MAX_LINE_WIDTH`](../../../crates/fpas-fmt/src/style.rs) stay on one line; wrapping applies only when the rendered line would exceed the limit.
 
 ### Wrapping (v2, when over max width)
 
@@ -243,7 +243,7 @@ end;
 
 ## Blocks (`begin` / `end`)
 
-The language allows a **single statement** without `begin` / `end` after `then`, `else`, `do`, and `case` labels ([`language/control-flow/README.md`](language/control-flow/README.md)). The formatter **always** emits an explicit `begin` / `end` wrapper anyway. We are not changing the language — only canonical output.
+The language allows a **single statement** without `begin` / `end` after `then`, `else`, `do`, and `case` labels ([`language/control-flow/README.md`](../language/control-flow/README.md)). The formatter **always** emits an explicit `begin` / `end` wrapper anyway. We are not changing the language — only canonical output.
 
 | Construct | Formatter output |
 |-----------|------------------|
@@ -302,7 +302,7 @@ Semicolons are **separators**, not terminators:
 - Between statements in a block: `;` after each statement except the last before `end`.
 - No semicolon immediately before `end`, `else`, or `until`.
 - Declarations in `type` blocks and unit/program headers: `;` between siblings; no trailing `;` before closing `end` of a nested block.
-- `case` arm labels: `;` after each arm’s closing `end` (including the last arm before `else`); `else` branch follows [`language/control-flow/case-of-intro.md`](language/control-flow/case-of-intro.md).
+- `case` arm labels: `;` after each arm’s closing `end` (including the last arm before `else`); `else` branch follows [`language/control-flow/case-of-intro.md`](../language/control-flow/case-of-intro.md).
 - Fields inside a `record` type: `;` after **every** field, including the last field before `end`, a blank line, or methods (matches existing FPAS sources).
 
 ## Spacing
@@ -428,7 +428,7 @@ type
 
 ## Comments
 
-**Declaration comments:** When formatting with source text ([`format_source`](../../crates/fpas-fmt/src/lib.rs)), re-attach leading `///` and declaration `{ }` / `(* *)` blocks that immediately preceded a declaration in source. End-of-line and intra-statement comments remain removed. One blank line after a preserved comment block before the declaration. [`format_compilation_unit`](../../crates/fpas-fmt/src/lib.rs) without source strips all comments.
+**Declaration comments:** When formatting with source text ([`format_source`](../../../crates/fpas-fmt/src/lib.rs)), re-attach leading `///` and declaration `{ }` / `(* *)` blocks that immediately preceded a declaration in source. End-of-line and intra-statement comments remain removed. One blank line after a preserved comment block before the declaration. [`format_compilation_unit`](../../../crates/fpas-fmt/src/lib.rs) without source strips all comments.
 
 ## Intentional diffs from source
 

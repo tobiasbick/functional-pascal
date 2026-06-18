@@ -57,7 +57,7 @@ fpas hello.fpas
 
 ### Formatting
 
-`.fpas` sources under `examples/`, `tests/`, and `apps/` follow the official formatter style ([`docs/pascal/fmt-style.md`](docs/pascal/fmt-style.md)). Format in place:
+`.fpas` sources under `examples/`, `tests/`, and `apps/` follow the official formatter style ([`docs/pascal/tools/fmt-style.md`](docs/pascal/tools/fmt-style.md)). Format in place:
 
 ```sh
 scripts/format-fpas-sources.sh          # Unix
@@ -200,7 +200,7 @@ The full language documentation is in [`docs/pascal/`](docs/pascal/):
 9. [Units](docs/pascal/program-structure/units.md)
 10. [Projects](docs/pascal/program-structure/projects.md)
 11. [Standard Library](docs/pascal/11-stdlib.md)
-12. [Formatter style](docs/pascal/fmt-style.md)
+12. [Formatter style](docs/pascal/tools/fmt-style.md)
 
 ## Contributing
 

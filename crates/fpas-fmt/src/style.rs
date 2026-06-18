@@ -1,4 +1,4 @@
-//! Canonical formatting constants from [`fmt-style.md`](../../../docs/pascal/fmt-style.md).
+//! Canonical formatting constants from [`fmt-style.md`](../../../docs/pascal/tools/fmt-style.md).
 
 /// Maximum line width before wrapping (v2).
 pub const MAX_LINE_WIDTH: usize = 100;

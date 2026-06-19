@@ -26,13 +26,13 @@ pub struct MenuPopupItem {
 /// Returns whether a popup row can be highlighted or activated.
 #[must_use]
 pub fn popup_entry_is_selectable(entry: &MenuPopupItem) -> bool {
-    !entry.separator
+    !entry.separator && entry.enabled
 }
 
 /// Returns whether a popup row dispatches `OnCommand`.
 #[must_use]
 pub fn popup_entry_is_actionable(entry: &MenuPopupItem) -> bool {
-    popup_entry_is_selectable(entry) && entry.enabled && entry.command_id >= 0
+    popup_entry_is_selectable(entry) && entry.command_id >= 0
 }
 
 /// Absolute terminal rectangle for an open pull-down menu.
@@ -284,8 +284,8 @@ mod tests {
     }
 
     #[test]
-    fn popup_navigation_skips_separator_rows() {
-        let entries = vec![
+    fn popup_navigation_skips_disabled_and_separator_rows() {
+        let entries = [
             MenuPopupItem {
                 label: "Open".into(),
                 shortcut: String::new(),
@@ -308,6 +308,7 @@ mod tests {
                 separator: false,
             },
         ];
+        assert!(!popup_entry_is_selectable(&entries[0]));
         assert!(!popup_entry_is_selectable(&entries[1]));
         assert!(popup_entry_is_actionable(&entries[2]));
     }

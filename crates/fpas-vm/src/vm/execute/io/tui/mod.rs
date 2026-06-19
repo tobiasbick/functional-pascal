@@ -10,7 +10,9 @@ mod query_host;
 mod records;
 mod status_bar_model;
 mod test_host;
+mod view_geometry;
 mod views;
+mod widget_target;
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;

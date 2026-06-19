@@ -44,7 +44,7 @@ impl DamageTracker {
 
         self.pending = Some(match self.pending {
             Some(DamageRegion::FullFrame) => DamageRegion::FullFrame,
-            Some(DamageRegion::Rect(existing)) => DamageRegion::Rect(union_rects(existing, rect)),
+            Some(DamageRegion::Rect(existing)) => DamageRegion::Rect(existing.union(rect)),
             None => DamageRegion::Rect(rect),
         });
     }
@@ -64,26 +64,6 @@ impl DamageTracker {
     /// Consumes and returns the pending damage description.
     pub(crate) fn take(&mut self) -> Option<DamageRegion> {
         self.pending.take()
-    }
-}
-
-fn union_rects(left: ViewRect, right: ViewRect) -> ViewRect {
-    let min_x = left.x.min(right.x);
-    let min_y = left.y.min(right.y);
-    let max_x = left
-        .x
-        .saturating_add(left.width)
-        .max(right.x.saturating_add(right.width));
-    let max_y = left
-        .y
-        .saturating_add(left.height)
-        .max(right.y.saturating_add(right.height));
-
-    ViewRect {
-        x: min_x,
-        y: min_y,
-        width: max_x.saturating_sub(min_x),
-        height: max_y.saturating_sub(min_y),
     }
 }
 

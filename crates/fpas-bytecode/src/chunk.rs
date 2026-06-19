@@ -140,6 +140,12 @@ impl Chunk {
         self.code.len()
     }
 
+    /// Returns `true` when the chunk contains no instructions.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.code.is_empty()
+    }
+
     /// Returns `true` if this chunk may enqueue parallel tasks (`go` / detached spawn).
     ///
     /// The scan is purely static over [`Op::SpawnTask`] / [`Op::SpawnDetachedTask`] in `code`;

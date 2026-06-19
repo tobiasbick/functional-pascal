@@ -157,7 +157,8 @@ impl Worker {
                     "Application.OpenForTest({name}, …) requires {name} in 1..={}.",
                     u16::MAX
                 ),
-                format!("Pass positive screen dimensions, e.g. `Application.OpenForTest(80, 25)`."),
+                "Pass positive screen dimensions, e.g. `Application.OpenForTest(80, 25)`."
+                    .to_string(),
                 line,
             ));
         }
@@ -177,7 +178,7 @@ impl Worker {
 
     fn tui_test_pump_until_idle(&mut self, line: SourceLocation) -> Result<(), VmError> {
         for _ in 0..PUMP_UNTIL_IDLE_MAX {
-            let _ = self.tui_host_ingest_console_events(PER_EVENT_SPINS, line)?;
+            self.tui_host_ingest_console_events(PER_EVENT_SPINS, line)?;
             let flushed = {
                 let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
                 tui.host.flush_pending_resize()

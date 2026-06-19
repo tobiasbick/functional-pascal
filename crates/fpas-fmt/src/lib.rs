@@ -3,6 +3,8 @@
 //! Normative style: [`docs/pascal/tools/fmt-style.md`](../../../docs/pascal/tools/fmt-style.md).
 //! Language reference: [`docs/pascal/`](../../../docs/pascal/).
 
+#![cfg_attr(test, allow(clippy::panic))]
+
 mod comments;
 mod emit;
 mod span;

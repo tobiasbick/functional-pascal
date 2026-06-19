@@ -47,6 +47,53 @@ pub struct ViewRect {
 }
 
 impl ViewRect {
+    /// Return `true` when this rectangle covers no terminal cells.
+    #[must_use]
+    pub fn is_empty(self) -> bool {
+        self.width <= 0 || self.height <= 0
+    }
+
+    /// Return the bounding rectangle containing `self` and `other`.
+    ///
+    /// Both rectangles must be non-empty.
+    #[must_use]
+    pub fn union(self, other: Self) -> Self {
+        debug_assert!(!self.is_empty());
+        debug_assert!(!other.is_empty());
+
+        let x = self.x.min(other.x);
+        let y = self.y.min(other.y);
+        let right = self.right().max(other.right());
+        let bottom = self.bottom().max(other.bottom());
+        Self {
+            x,
+            y,
+            width: right.saturating_sub(x),
+            height: bottom.saturating_sub(y),
+        }
+    }
+
+    /// Return the overlapping terminal-cell rectangle, if any.
+    #[must_use]
+    pub fn intersection(self, other: Self) -> Option<Self> {
+        let x = self.x.max(other.x);
+        let y = self.y.max(other.y);
+        let right = self.right().min(other.right());
+        let bottom = self.bottom().min(other.bottom());
+        (right > x && bottom > y).then_some(Self {
+            x,
+            y,
+            width: right - x,
+            height: bottom - y,
+        })
+    }
+
+    /// Return whether this rectangle overlaps `other`.
+    #[must_use]
+    pub fn intersects(self, other: Self) -> bool {
+        self.intersection(other).is_some()
+    }
+
     /// Return `true` when terminal-cell position `(x, y)` is inside this rectangle.
     ///
     /// View rectangles use zero-based coordinates (`0` is the top-left cell).
@@ -61,6 +108,14 @@ impl ViewRect {
     #[must_use]
     pub fn contains_console_mouse(self, mouse_x: i64, mouse_y: i64) -> bool {
         self.contains_point(mouse_x.saturating_sub(1), mouse_y.saturating_sub(1))
+    }
+
+    fn right(self) -> i64 {
+        self.x.saturating_add(self.width.max(0))
+    }
+
+    fn bottom(self) -> i64 {
+        self.y.saturating_add(self.height.max(0))
     }
 }
 

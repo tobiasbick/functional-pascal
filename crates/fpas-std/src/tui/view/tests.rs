@@ -79,6 +79,20 @@ fn rect_contains_point_handles_overflow_and_negative_size() {
 }
 
 #[test]
+fn rect_intersection_returns_shared_cells() {
+    assert_eq!(
+        rect(2, 3, 5, 4).intersection(rect(5, 1, 4, 5)),
+        Some(rect(5, 3, 2, 3))
+    );
+    assert_eq!(rect(0, 0, 2, 2).intersection(rect(2, 0, 2, 2)), None);
+}
+
+#[test]
+fn rect_union_returns_bounding_rectangle() {
+    assert_eq!(rect(2, 3, 5, 4).union(rect(5, 1, 4, 5)), rect(2, 1, 7, 6));
+}
+
+#[test]
 fn reparent_preserves_absolute_rect() {
     let mut registry = ViewRegistry::default();
     let first_parent = registry.register(rect(10, 5, 20, 10));

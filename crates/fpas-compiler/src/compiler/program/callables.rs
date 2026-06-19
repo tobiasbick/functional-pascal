@@ -81,6 +81,7 @@ impl Compiler {
     /// Saves and restores the compiler's local-variable state, compiles the
     /// function body inside a fresh scope, and emits the trailing `Unit`+`Return`.
     /// Returns `(code_start, body_end)` byte offsets for the caller.
+    #[allow(clippy::expect_used)] // Every routine body pushes one locals frame before `begin_scope`.
     pub(in crate::compiler) fn compile_routine_body(
         &mut self,
         params: &[fpas_parser::FormalParam],

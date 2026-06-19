@@ -243,6 +243,28 @@ fn tab_with_no_focusable_views_dispatches_to_on_key_pressed() {
 }
 
 #[test]
+fn unconsumed_key_handler_returns_tag_twenty_two() {
+    let mut chunk = build_process_next_chunk_with_handlers(None, None, Some("OnKey"));
+    let start = chunk.len();
+    chunk.functions.insert("OnKey".into(), (start, 2));
+    emit_constant(&mut chunk, Value::Boolean(false));
+    chunk.emit(Op::Return, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    shared
+        .key_input
+        .lock()
+        .unwrap()
+        .push_console_event(tab_event(false));
+
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let lines = shared.console.lock().unwrap().output().lines.clone();
+    assert_eq!(lines, vec!["22"]);
+}
+
+#[test]
 fn tab_with_single_unfocused_view_establishes_focus_fires_on_activate() {
     let mut chunk = build_process_next_chunk_with_handlers(Some("OnActivate"), None, Some("OnKey"));
     add_handler(&mut chunk, "OnActivate", 1, "activate");

@@ -3,8 +3,9 @@
 //! **Documentation:** `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 use crate::vm::Worker;
-use crate::vm::diagnostics::VmError;
+use crate::vm::diagnostics::{VmError, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
+use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
 use fpas_std::{CommandId, DamageRegion, UiEvent, UiMouse, UiResize, ViewId};
 
 /// Discriminant of `Std.Console.KeyKind.Tab`; must match
@@ -24,7 +25,7 @@ impl Worker {
     /// `3` = key (no handler), `4` = resize (no handler), `5`/`7`/`8`/`9`/`10`/`11`/`12`/`13`
     /// for mouse/paste/focus events (dispatched or not), `18` = key blocked by active modal
     /// scope, `19` = mouse blocked by active modal scope, `20` = command blocked by active
-    /// modal scope.
+    /// modal scope, `22` = key handler returned `false` (not consumed).
     pub(in crate::vm::execute::io) fn tui_host_process_next_inner(
         &mut self,
         max_spins: usize,
@@ -113,7 +114,9 @@ impl Worker {
                         return Ok(if key_event.shift { 15 } else { 14 });
                     }
                 }
-                if let Some(tag) = self.try_dispatch_widget_key(key_event.clone(), line)? {
+                if let Some(tag) =
+                    self.try_dispatch_widget_key(key_event.clone(), modal_scope.as_deref(), line)?
+                {
                     return Ok(tag);
                 }
                 if let Some(command_id) = self.resolve_tui_command(&key_event) {
@@ -126,12 +129,24 @@ impl Worker {
                     return Ok(18);
                 }
                 if let Some(handler) = on_key {
-                    let _ = self.call_function_sync_allowing_shutdown(
+                    let consumed = self.call_function_sync_allowing_shutdown(
                         &handler,
                         &[app_rec, Self::key_event_record(key_event)],
                         line,
                     )?;
-                    Ok(1)
+                    match consumed {
+                        Value::Boolean(true) => Ok(1),
+                        Value::Boolean(false) => Ok(22),
+                        other => Err(runtime_error(
+                            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                            format!(
+                                "OnKeyPressed must return boolean, got {}",
+                                other.type_name()
+                            ),
+                            "Return `true` when the application consumed the key or `false` otherwise.",
+                            line,
+                        )),
+                    }
                 } else {
                     Ok(3)
                 }
@@ -153,7 +168,9 @@ impl Worker {
                 if self.modal_blocks_mouse_dispatch(modal_scope.as_deref(), mouse) {
                     return Ok(19);
                 }
-                if let Some(tag) = self.try_dispatch_widget_mouse(mouse, line)? {
+                if let Some(tag) =
+                    self.try_dispatch_widget_mouse(mouse, modal_scope.as_deref(), line)?
+                {
                     return Ok(tag);
                 }
                 let redraw_hint = self.mouse_redraw_hint(modal_scope.as_deref(), mouse);

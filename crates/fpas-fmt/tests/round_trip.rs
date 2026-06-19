@@ -31,7 +31,7 @@ fn apps_tree_round_trip() {
 fn round_trip_tree(label: &str, root: &Path) {
     walk_fpas_files(root, &mut |path, source| {
         let relative = path
-            .strip_prefix(&repo_root("."))
+            .strip_prefix(repo_root("."))
             .unwrap_or(path)
             .to_string_lossy();
         common::assert_round_trip(&format!("{label}/{relative}"), source);

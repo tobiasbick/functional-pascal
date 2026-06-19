@@ -1,5 +1,7 @@
 //! Recursive `.fpas` discovery for integration tests.
 
+#![allow(clippy::panic)]
+
 use std::path::{Path, PathBuf};
 
 /// Repository roots scanned by round-trip and fuzz-light tests (relative to workspace root).

@@ -123,31 +123,8 @@ fn paint_segment(
 fn clip_rect_to_damage(rect: ViewRect, damage: DamageRegion) -> Option<ViewRect> {
     match damage {
         DamageRegion::FullFrame => Some(rect),
-        DamageRegion::Rect(dirty) => intersect_view_rects(rect, dirty),
+        DamageRegion::Rect(dirty) => rect.intersection(dirty),
     }
-}
-
-fn intersect_view_rects(left: ViewRect, right: ViewRect) -> Option<ViewRect> {
-    let left_right = left.x.saturating_add(left.width.max(0));
-    let left_bottom = left.y.saturating_add(left.height.max(0));
-    let right_right = right.x.saturating_add(right.width.max(0));
-    let right_bottom = right.y.saturating_add(right.height.max(0));
-
-    let x = left.x.max(right.x);
-    let y = left.y.max(right.y);
-    let right = left_right.min(right_right);
-    let bottom = left_bottom.min(right_bottom);
-
-    if right <= x || bottom <= y {
-        return None;
-    }
-
-    Some(ViewRect {
-        x,
-        y,
-        width: right - x,
-        height: bottom - y,
-    })
 }
 
 #[cfg(test)]

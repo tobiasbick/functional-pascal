@@ -58,13 +58,13 @@ pub(super) fn run_single_test(
     let display = test_display_path(path);
     let has_teardown = link.is_some_and(|context| context.hooks.teardown.is_some());
 
-    if let Some(link) = link {
-        if let Some(hook) = link.hooks.setup.as_ref() {
-            let outcome = run_test_hook(hook, "Setup", path, link, timeout, stderr, &display);
-            if outcome.is_failure() {
-                let _ = run_optional_teardown(link, path, timeout, stderr, &display);
-                return outcome;
-            }
+    if let Some(link) = link
+        && let Some(hook) = link.hooks.setup.as_ref()
+    {
+        let outcome = run_test_hook(hook, "Setup", path, link, timeout, stderr, &display);
+        if outcome.is_failure() {
+            let _ = run_optional_teardown(link, path, timeout, stderr, &display);
+            return outcome;
         }
     }
 
@@ -85,13 +85,12 @@ pub(super) fn run_single_test(
         body_output,
     );
 
-    if let Some(link) = link {
-        if let Some(teardown_outcome) = run_optional_teardown(link, path, timeout, stderr, &display)
-        {
-            if outcome == TestOutcome::Pass && teardown_outcome.is_failure() {
-                return teardown_outcome;
-            }
-        }
+    if let Some(link) = link
+        && let Some(teardown_outcome) = run_optional_teardown(link, path, timeout, stderr, &display)
+        && outcome == TestOutcome::Pass
+        && teardown_outcome.is_failure()
+    {
+        return teardown_outcome;
     }
 
     if has_teardown && outcome == TestOutcome::Pass {
@@ -257,21 +256,21 @@ fn run_test_program(
             skipped,
         }) => {
             if matches!(output, RunOutput::Test | RunOutput::TestDeferredPass) {
-                if let Err(message) = expect_stdout::compare_stdout(path, &stdout_lines) {
+                if let Err(message) = expect_stdout::compare_stdout(path, stdout_lines) {
                     if output.emit_fail_banner() {
                         let _ = writeln!(stderr, "  FAIL  {display}");
                     }
                     let _ = writeln!(stderr, "        {message}");
                     return TestOutcome::AssertFailed;
                 }
-                if let Some(frame) = headless_frame.as_ref() {
-                    if let Err(message) = expect_pixels::compare_pixels(path, frame) {
-                        if output.emit_fail_banner() {
-                            let _ = writeln!(stderr, "  FAIL  {display}");
-                        }
-                        let _ = writeln!(stderr, "        {message}");
-                        return TestOutcome::AssertFailed;
+                if let Some(frame) = headless_frame.as_ref()
+                    && let Err(message) = expect_pixels::compare_pixels(path, frame)
+                {
+                    if output.emit_fail_banner() {
+                        let _ = writeln!(stderr, "  FAIL  {display}");
                     }
+                    let _ = writeln!(stderr, "        {message}");
+                    return TestOutcome::AssertFailed;
                 }
             }
             if skipped {
@@ -416,10 +415,10 @@ fn apply_test_script(
         ScriptConfig::default()
     };
 
-    if let Some(manifest) = manifest_override {
-        if let Some(headless_graph) = manifest.headless_graph {
-            config.headless_graph = headless_graph;
-        }
+    if let Some(manifest) = manifest_override
+        && let Some(headless_graph) = manifest.headless_graph
+    {
+        config.headless_graph = headless_graph;
     }
 
     Ok(config)

@@ -2,10 +2,16 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
+/// Creates a unique test directory below the platform temporary directory.
 pub(crate) fn create_temp_dir(prefix: &str) -> PathBuf {
+    create_temp_dir_under(&std::env::temp_dir(), prefix)
+}
+
+/// Creates a unique test directory below an explicit root directory.
+pub(crate) fn create_temp_dir_under(root: &Path, prefix: &str) -> PathBuf {
     static NEXT_ID: AtomicU64 = AtomicU64::new(1);
     let suffix = NEXT_ID.fetch_add(1, Ordering::Relaxed);
-    let dir = std::env::temp_dir().join(format!(
+    let dir = root.join(format!(
         "fpas-tests-{prefix}-{}-{suffix}",
         std::process::id()
     ));

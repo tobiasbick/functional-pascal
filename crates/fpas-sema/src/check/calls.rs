@@ -5,6 +5,15 @@ use fpas_lexer::Span;
 use fpas_parser::Expr;
 use std::collections::HashMap;
 
+/// Signature metadata shared by function and procedure call checking.
+struct RoutineCallSignature<'a> {
+    name: &'a str,
+    routine_label: &'a str,
+    type_params: &'a [GenericParamDef],
+    params: &'a [ParamTy],
+    variadic: bool,
+}
+
 impl Checker {
     pub(crate) fn check_function_call_args(
         &mut self,
@@ -14,11 +23,13 @@ impl Checker {
         span: Span,
     ) {
         self.check_routine_call_args(
-            name,
-            "Function",
-            &func_ty.type_params,
-            &func_ty.params,
-            func_ty.variadic,
+            RoutineCallSignature {
+                name,
+                routine_label: "Function",
+                type_params: &func_ty.type_params,
+                params: &func_ty.params,
+                variadic: func_ty.variadic,
+            },
             args,
             span,
         );
@@ -32,11 +43,13 @@ impl Checker {
         span: Span,
     ) {
         self.check_routine_call_args(
-            name,
-            "Procedure",
-            &proc_ty.type_params,
-            &proc_ty.params,
-            proc_ty.variadic,
+            RoutineCallSignature {
+                name,
+                routine_label: "Procedure",
+                type_params: &proc_ty.type_params,
+                params: &proc_ty.params,
+                variadic: proc_ty.variadic,
+            },
             args,
             span,
         );
@@ -44,14 +57,17 @@ impl Checker {
 
     fn check_routine_call_args(
         &mut self,
-        name: &str,
-        routine_label: &str,
-        type_params: &[GenericParamDef],
-        params: &[ParamTy],
-        variadic: bool,
+        signature: RoutineCallSignature<'_>,
         args: &[Expr],
         span: Span,
     ) {
+        let RoutineCallSignature {
+            name,
+            routine_label,
+            type_params,
+            params,
+            variadic,
+        } = signature;
         if variadic && args.len() < params.len() {
             self.error_with_code(
                 SEMA_WRONG_ARGUMENT_COUNT,

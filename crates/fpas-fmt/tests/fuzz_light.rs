@@ -1,5 +1,7 @@
 //! Lightweight format stability checks on a deterministic sample of repository sources.
 
+#![allow(clippy::panic)]
+
 mod common;
 
 use std::path::Path;

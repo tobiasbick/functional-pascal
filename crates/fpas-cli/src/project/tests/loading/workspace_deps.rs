@@ -1,5 +1,7 @@
 use super::*;
-use crate::test_support::{write_library_fpasprj, write_program_fpasprj_with_workspace_deps};
+use crate::test_support::{
+    create_temp_dir_under, write_library_fpasprj, write_program_fpasprj_with_workspace_deps,
+};
 
 #[test]
 fn program_resolves_workspace_dependency_by_project_name() {
@@ -48,7 +50,14 @@ include = ["src/**/*.fpas"]
 
 #[test]
 fn workspace_dependency_without_enclosing_workspace_is_rejected() {
-    let dir = create_temp_dir("workspace-dep-no-workspace");
+    let repository_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("fpas-cli crate must be inside the repository crates directory");
+    let dir = create_temp_dir_under(
+        &repository_root.join("target/test-temp"),
+        "workspace-dep-no-workspace",
+    );
     let app_project = dir.join("app.fpasprj");
 
     write_program_fpasprj_with_workspace_deps(

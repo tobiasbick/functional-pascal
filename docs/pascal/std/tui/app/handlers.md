@@ -78,7 +78,7 @@ end;
 
 - **When:** Fired once for each key or text-input event delivered by the host, in the order the host dequeues events from the terminal. Within a single dispatch turn, at most one key event is dispatched before control returns to the host loop (no batching of multiple keys in one handler call).
 - **Ordering relative to other handlers:** `OnResize` events that arrive before the key in the host queue are coalesced and dispatched first; `OnPaint` runs after input dispatch if a redraw is pending.
-- **Return value:** `true` means the key was **consumed**; the host performs no further default action for this event. `false` passes the event on to any future default routing (Phase 7+).
+- **Return value:** `true` means the key was **consumed**; `false` means it was not consumed. The low-level `HostProcessNext` reports these outcomes as tags `1` and `22` respectively. `OnKeyPressed` is the final application fallback in the current routing order, so no later current handler runs after either result.
 - **Threading:** Main VM thread only. Must not call blocking event APIs (`Application.ReadEvent`, `Application.Run`) from inside this handler.
 
 ---

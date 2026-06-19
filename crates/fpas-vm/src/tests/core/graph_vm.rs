@@ -441,9 +441,7 @@ fn graph_open_for_test_second_session_error_restores_headless_nesting() {
     let mut shared = Arc::new(minimal_shared_state(open_chunk));
     {
         let mut worker = Worker::new_main(Arc::clone(&shared));
-        worker
-            .run()
-            .expect("first open for test should succeed");
+        worker.run().expect("first open for test should succeed");
     }
     assert_eq!(fpas_std::headless_graph_test_depth_for_tests(), 1);
 

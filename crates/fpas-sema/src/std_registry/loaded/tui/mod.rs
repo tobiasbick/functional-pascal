@@ -192,13 +192,15 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
     );
     let (application_handlers, callbacks) = handlers::register_application_handlers(
         checker,
-        &application,
-        &view_id,
-        &rect,
-        &size,
-        &key_event,
-        &console_event,
-        &exit_reason,
+        &handlers::TuiRegistrationTypes {
+            application: &application,
+            view_id: &view_id,
+            rect: &rect,
+            size: &size,
+            key_event: &key_event,
+            console_event: &console_event,
+            exit_reason: &exit_reason,
+        },
     );
     type_registration::register_record_type(
         checker,

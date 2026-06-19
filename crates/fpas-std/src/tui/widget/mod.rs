@@ -76,16 +76,6 @@ impl ViewWidget {
 fn intersects_damage_region(rect: ViewRect, damage: DamageRegion) -> bool {
     match damage {
         DamageRegion::FullFrame => true,
-        DamageRegion::Rect(dirty) => {
-            let left_right = rect.x.saturating_add(rect.width);
-            let left_bottom = rect.y.saturating_add(rect.height);
-            let right_right = dirty.x.saturating_add(dirty.width);
-            let right_bottom = dirty.y.saturating_add(dirty.height);
-
-            rect.x < right_right
-                && dirty.x < left_right
-                && rect.y < right_bottom
-                && dirty.y < left_bottom
-        }
+        DamageRegion::Rect(dirty) => rect.intersects(dirty),
     }
 }

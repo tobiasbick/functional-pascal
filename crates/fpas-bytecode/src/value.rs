@@ -121,14 +121,13 @@ impl std::fmt::Display for Value {
                 write!(f, "]")
             }
             Value::Record { type_name, fields } => {
-                if type_name == "Std.Tui.ViewId" {
-                    if let Some(Value::Integer(raw)) = fields
+                if type_name == "Std.Tui.ViewId"
+                    && let Some(Value::Integer(raw)) = fields
                         .iter()
                         .find(|(name, _)| name == "__id")
                         .map(|(_, value)| value)
-                    {
-                        return write!(f, "{raw}");
-                    }
+                {
+                    return write!(f, "{raw}");
                 }
                 write!(f, "{type_name}{{")?;
                 for (i, (name, val)) in fields.iter().enumerate() {

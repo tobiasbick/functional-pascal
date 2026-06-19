@@ -10,6 +10,8 @@ use fpas_bytecode::{Intrinsic, SourceLocation, TuiIntrinsic, Value};
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 use fpas_std::{SolidFillWidget, ViewId, ViewRect, ViewWidget, validate_packed_crt_color};
 
+use super::view_geometry::validate_view_rect;
+
 impl Worker {
     /// Executes `Std.Tui` view, modal, and command binding intrinsics.
     pub(super) fn try_exec_tui_view_intrinsic(
@@ -39,12 +41,16 @@ impl Worker {
                 let x = self.pop_int(line)?;
                 let modal_id = self.pop_int(line)?;
                 self.pop_tui_application(line)?;
-                let view_rect = ViewRect {
-                    x,
-                    y,
-                    width,
-                    height,
-                };
+                let view_rect = validate_view_rect(
+                    "Application.ShowDialog",
+                    ViewRect {
+                        x,
+                        y,
+                        width,
+                        height,
+                    },
+                    line,
+                )?;
                 let dialog_root = self.with_tui(|tui| {
                     let previous_scope = Self::modal_scope_ids(tui);
                     let view_id = tui.views.register(view_rect);
@@ -113,12 +119,16 @@ impl Worker {
                 let y = self.pop_int(line)?;
                 let x = self.pop_int(line)?;
                 self.pop_tui_application(line)?;
-                let view_rect = ViewRect {
-                    x,
-                    y,
-                    width,
-                    height,
-                };
+                let view_rect = validate_view_rect(
+                    "Application.HostRegisterView",
+                    ViewRect {
+                        x,
+                        y,
+                        width,
+                        height,
+                    },
+                    line,
+                )?;
                 let view_id = self.with_tui(|tui| {
                     let view_id = tui.views.register(view_rect);
                     let _ = tui.session.request_redraw_rect(view_rect, line);
@@ -160,19 +170,25 @@ impl Worker {
                 let x = self.pop_int(line)?;
                 let view_id = self.pop_tui_view_id(line)?;
                 self.pop_tui_application(line)?;
-                self.with_tui(|tui| {
-                    let Some(previous_rect) = tui.views.rect(view_id) else {
-                        return;
-                    };
-                    let next_rect = ViewRect {
+                let next_rect = validate_view_rect(
+                    "Application.HostSetViewRect",
+                    ViewRect {
                         x,
                         y,
                         width,
                         height,
+                    },
+                    line,
+                )?;
+                self.with_tui(|tui| {
+                    let Some(previous_rect) = tui.views.rect(view_id) else {
+                        return;
                     };
                     tui.views.set_rect(view_id, next_rect);
                     let _ = tui.session.request_redraw_rect(previous_rect, line);
-                    let _ = tui.session.request_redraw_rect(next_rect, line);
+                    if let Some(resolved_rect) = tui.views.rect(view_id) {
+                        let _ = tui.session.request_redraw_rect(resolved_rect, line);
+                    }
                 });
             }
             Intrinsic::Tui(TuiIntrinsic::HostSetViewParent) => {
@@ -228,12 +244,16 @@ impl Worker {
                     Some(color) => Some(validate_packed_crt_color(color, "TextColor", line)?),
                 };
 
-                let view_rect = ViewRect {
-                    x,
-                    y,
-                    width,
-                    height,
-                };
+                let view_rect = validate_view_rect(
+                    "Application.HostCreateSolidFillView",
+                    ViewRect {
+                        x,
+                        y,
+                        width,
+                        height,
+                    },
+                    line,
+                )?;
                 let widget = ViewWidget::SolidFill(SolidFillWidget {
                     fill_color,
                     text_color,
@@ -256,12 +276,16 @@ impl Worker {
                 let x = self.pop_int(line)?;
                 self.pop_tui_application(line)?;
 
-                let view_rect = ViewRect {
-                    x,
-                    y,
-                    width,
-                    height,
-                };
+                let view_rect = validate_view_rect(
+                    "Application.HostCreateMenuBarView",
+                    ViewRect {
+                        x,
+                        y,
+                        width,
+                        height,
+                    },
+                    line,
+                )?;
                 let widget = ViewWidget::MenuBar(fpas_std::MenuBarWidget::new(items, style));
                 let view_id = self.with_tui(|tui| {
                     let view_id = tui.views.register(view_rect);
@@ -294,12 +318,16 @@ impl Worker {
                 let x = self.pop_int(line)?;
                 self.pop_tui_application(line)?;
 
-                let view_rect = ViewRect {
-                    x,
-                    y,
-                    width,
-                    height,
-                };
+                let view_rect = validate_view_rect(
+                    "Application.HostCreateStatusBarView",
+                    ViewRect {
+                        x,
+                        y,
+                        width,
+                        height,
+                    },
+                    line,
+                )?;
                 let widget = ViewWidget::StatusBar(fpas_std::StatusBarWidget::new(segments, style));
                 let view_id = self.with_tui(|tui| {
                     let view_id = tui.views.register(view_rect);

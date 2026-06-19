@@ -62,6 +62,7 @@ impl Lexer<'_> {
     /// # Panics
     ///
     /// Panics if called at end of input.
+    #[allow(clippy::expect_used)] // `src` is valid UTF-8 from `str::as_bytes()`; EOF is a caller bug.
     pub(super) fn advance_utf8_char(&mut self) -> char {
         let remaining =
             std::str::from_utf8(&self.src[self.pos..]).expect("lexer source is always valid UTF-8");

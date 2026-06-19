@@ -10,16 +10,15 @@ use crate::common::qualified_id_to_string;
 use fpas_parser::{QualifiedId, Visibility};
 use std::collections::{BTreeSet, HashMap, HashSet};
 
+type UnitSymbolMaps = (
+    HashMap<String, HashMap<String, String>>,
+    HashMap<String, HashMap<String, String>>,
+);
+
 pub(super) fn collect_unit_symbol_maps(
     reachable: &HashSet<String>,
     units: &HashMap<String, UnitFile>,
-) -> Result<
-    (
-        HashMap<String, HashMap<String, String>>,
-        HashMap<String, HashMap<String, String>>,
-    ),
-    String,
-> {
+) -> Result<UnitSymbolMaps, String> {
     let mut exports = HashMap::<String, HashMap<String, String>>::new();
     let mut all_symbols = HashMap::<String, HashMap<String, String>>::new();
 

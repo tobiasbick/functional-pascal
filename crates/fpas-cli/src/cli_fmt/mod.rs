@@ -28,14 +28,12 @@ pub(crate) fn format_cli(
         Err(exit_code) => return exit_code,
     };
 
-    if config.stdout {
-        if paths.len() != 1 {
-            let _ = writeln!(
-                stderr,
-                "`fpas fmt --stdout` requires exactly one `.fpas` file.\n  help: Pass a single source path."
-            );
-            return 1;
-        }
+    if config.stdout && paths.len() != 1 {
+        let _ = writeln!(
+            stderr,
+            "`fpas fmt --stdout` requires exactly one `.fpas` file.\n  help: Pass a single source path."
+        );
+        return 1;
     }
 
     let mut exit_code = 0;
@@ -104,11 +102,12 @@ fn format_source_file(
         return Ok(changed);
     }
 
-    if changed && !config.check_only {
-        if let Err(error) = fs::write(path, &formatted) {
-            let _ = writeln!(stderr, "Error writing `{}`: {error}", path.display());
-            return Err(1);
-        }
+    if changed
+        && !config.check_only
+        && let Err(error) = fs::write(path, &formatted)
+    {
+        let _ = writeln!(stderr, "Error writing `{}`: {error}", path.display());
+        return Err(1);
     }
 
     Ok(changed)

@@ -132,13 +132,13 @@ fn collect_decl_anchors(root_offset: usize, decls: &[Decl]) -> Vec<usize> {
 
 fn push_decl_anchors(out: &mut Vec<usize>, decl: &Decl) {
     out.push(crate::span::decl_span(decl));
-    if let Decl::TypeDef(type_def) = decl {
-        if let fpas_parser::TypeBody::Record(record) = &type_def.body {
-            for method in &record.methods {
-                match method {
-                    RecordMethod::Function(function) => out.push(function.span.offset),
-                    RecordMethod::Procedure(procedure) => out.push(procedure.span.offset),
-                }
+    if let Decl::TypeDef(type_def) = decl
+        && let fpas_parser::TypeBody::Record(record) = &type_def.body
+    {
+        for method in &record.methods {
+            match method {
+                RecordMethod::Function(function) => out.push(function.span.offset),
+                RecordMethod::Procedure(procedure) => out.push(procedure.span.offset),
             }
         }
     }

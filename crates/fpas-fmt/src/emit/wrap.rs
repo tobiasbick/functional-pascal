@@ -171,7 +171,7 @@ mod tests {
             &mut emitter,
             "uses ",
             INDENT_WIDTH,
-            &[String::from("A".repeat(50)), String::from("B".repeat(50))],
+            &["A".repeat(50), "B".repeat(50)],
             ";",
         );
         let out = emitter.finish();

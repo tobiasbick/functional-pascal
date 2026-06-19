@@ -138,3 +138,57 @@ fn tui_host_dispatch_redraw_when_not_pending_returns_zero() {
 
     assert_eq!(run_ok_output(chunk), vec!["0"]);
 }
+
+#[test]
+fn tui_host_dispatch_redraw_runs_handler_attached_to_widget_view() {
+    let mut chunk = Chunk::new();
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(&mut chunk, Value::Integer(2));
+    emit_constant(&mut chunk, Value::Integer(1));
+    emit_constant(&mut chunk, Value::OptionNone);
+    emit_constant(&mut chunk, Value::OptionNone);
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(
+            TuiIntrinsic::HostCreateSolidFillView,
+        ))),
+        loc(),
+    );
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnViewPaint".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(
+            TuiIntrinsic::HostRegisterOnViewPaint,
+        ))),
+        loc(),
+    );
+    emit_constant(&mut chunk, tui_application_value());
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostDispatchRedraw))),
+        loc(),
+    );
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::Halt, loc());
+
+    let on_view_paint_start = chunk.len();
+    chunk
+        .functions
+        .insert("OnViewPaint".into(), (on_view_paint_start, 3));
+    emit_constant(&mut chunk, Value::Str("view".into()));
+    chunk.emit(Op::PrintLn, loc());
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    assert_eq!(run_ok_output(chunk), vec!["view", "5"]);
+}

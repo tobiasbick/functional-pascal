@@ -5,24 +5,45 @@ use crate::std_registry::loaded::type_registration;
 use crate::types::{FunctionTy, ProcedureTy, Ty};
 use fpas_std::std_symbols as s;
 
+/// Registered `Std.Tui` types needed to build handler callback signatures.
+pub(super) struct TuiRegistrationTypes<'a> {
+    /// `Std.Tui.Application` type.
+    pub application: &'a Ty,
+    /// `Std.Tui.ViewId` type.
+    pub view_id: &'a Ty,
+    /// `Std.Tui.Rect` type.
+    pub rect: &'a Ty,
+    /// `Std.Tui.Size` type.
+    pub size: &'a Ty,
+    /// `Std.Console.KeyEvent` type.
+    pub key_event: &'a Ty,
+    /// `Std.Console.Event` type.
+    pub console_event: &'a Ty,
+    /// `Std.Tui.ExitReason` type.
+    pub exit_reason: &'a Ty,
+}
+
 /// Register callback signatures and the `Std.Tui.ApplicationHandlers` record.
 ///
 /// **Documentation:** `docs/pascal/std/tui/app/README.md` (from the repository root).
 pub(super) fn register_application_handlers(
     checker: &mut Checker,
-    application_ty: &Ty,
-    view_id_ty: &Ty,
-    rect_ty: &Ty,
-    size_ty: &Ty,
-    key_event_ty: &Ty,
-    console_event_ty: &Ty,
-    exit_reason_ty: &Ty,
+    types: &TuiRegistrationTypes<'_>,
 ) -> (Ty, TuiCallbackTypes) {
+    let &TuiRegistrationTypes {
+        application,
+        view_id,
+        rect,
+        size,
+        key_event,
+        console_event,
+        exit_reason,
+    } = types;
     let on_key_pressed = Ty::Function(FunctionTy {
         type_params: Vec::new(),
         params: vec![
-            p("App", application_ty.clone(), false),
-            p("Key", key_event_ty.clone(), false),
+            p("App", application.clone(), false),
+            p("Key", key_event.clone(), false),
         ],
         return_type: Box::new(Ty::Boolean),
         variadic: false,
@@ -30,8 +51,8 @@ pub(super) fn register_application_handlers(
     let on_mouse = Ty::Procedure(ProcedureTy {
         type_params: Vec::new(),
         params: vec![
-            p("App", application_ty.clone(), false),
-            p("Event", console_event_ty.clone(), false),
+            p("App", application.clone(), false),
+            p("Event", console_event.clone(), false),
         ],
         variadic: false,
     });
@@ -40,14 +61,14 @@ pub(super) fn register_application_handlers(
     let on_focus_lost = on_mouse.clone();
     let on_activate = Ty::Procedure(ProcedureTy {
         type_params: Vec::new(),
-        params: vec![p("App", application_ty.clone(), false)],
+        params: vec![p("App", application.clone(), false)],
         variadic: false,
     });
     let on_deactivate = on_activate.clone();
     let on_command = Ty::Procedure(ProcedureTy {
         type_params: Vec::new(),
         params: vec![
-            p("App", application_ty.clone(), false),
+            p("App", application.clone(), false),
             p("CommandId", Ty::Integer, false),
         ],
         variadic: false,
@@ -55,35 +76,35 @@ pub(super) fn register_application_handlers(
     let on_view_paint = Ty::Procedure(ProcedureTy {
         type_params: Vec::new(),
         params: vec![
-            p("App", application_ty.clone(), false),
-            p("ViewId", view_id_ty.clone(), false),
-            p("Rect", rect_ty.clone(), false),
+            p("App", application.clone(), false),
+            p("ViewId", view_id.clone(), false),
+            p("Rect", rect.clone(), false),
         ],
         variadic: false,
     });
     let on_resize = Ty::Procedure(ProcedureTy {
         type_params: Vec::new(),
         params: vec![
-            p("App", application_ty.clone(), false),
-            p("NewSize", size_ty.clone(), false),
+            p("App", application.clone(), false),
+            p("NewSize", size.clone(), false),
         ],
         variadic: false,
     });
     let on_paint = Ty::Procedure(ProcedureTy {
         type_params: Vec::new(),
-        params: vec![p("App", application_ty.clone(), false)],
+        params: vec![p("App", application.clone(), false)],
         variadic: false,
     });
     let on_idle = Ty::Procedure(ProcedureTy {
         type_params: Vec::new(),
-        params: vec![p("App", application_ty.clone(), false)],
+        params: vec![p("App", application.clone(), false)],
         variadic: false,
     });
     let on_exit = Ty::Procedure(ProcedureTy {
         type_params: Vec::new(),
         params: vec![
-            p("App", application_ty.clone(), false),
-            p("Reason", exit_reason_ty.clone(), false),
+            p("App", application.clone(), false),
+            p("Reason", exit_reason.clone(), false),
         ],
         variadic: false,
     });

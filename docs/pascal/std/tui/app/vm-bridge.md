@@ -10,7 +10,7 @@ These `[fpas_bytecode::Intrinsic](../../../../../crates/fpas-bytecode/src/intrin
 | `TuiHostRegisterOnKeyPressed` | `Application`, `function`                        | Registers `function (Application, Std.Console.KeyEvent): boolean` for invoke.                                                                                                                                                                                                       |
 | `TuiHostInvokeOnKeyPressed`   | `Application`, `Std.Console.KeyEvent`            | Calls the registered function; pushes `boolean` (`consumed`).                                                                                                                                                                                                                       |
 | `TuiHostRegisterOnResize`     | `Application`, `function`                        | Registers `procedure (Application, Std.Tui.Size)` (arity 2).                                                                                                                                                                                                                        |
-| `TuiHostProcessNext`          | `Application`, `max_spins` (`integer`, top)      | Spins up to `max_spins` (clamped to `4096`, minimum one iteration) through the hosted input pump, then dispatches **at most one** supported hosted event. Pushes `integer`: `0` no event, `1` key dispatched, `2` resize dispatched, `3` key without handler, `4` resize without handler, `5` mouse dispatched, `7` mouse without handler, `8` paste dispatched, `9` paste without handler, `10` focus-gained dispatched, `11` focus-gained without handler, `12` focus-lost dispatched, `13` focus-lost without handler, `14` Tab traversal advanced (focus moved forward), `15` Shift+Tab traversal retreated (focus moved backward), `16` command dispatched, `17` command bound without handler, `18` key blocked by the active modal scope, `19` mouse blocked by the active modal scope, `20` command blocked by the active modal scope, `21` menu-bar widget key consumed for hover/submenu redraw (no `OnKeyPressed` or command dispatch). Tag `5` is also returned when a menu-bar widget handles a mouse move for hover redraw. Tags `14`/`15` are only emitted when the focus chain has eligible views; with an active modal scope, traversal is limited to the attached modal views. |
+| `TuiHostProcessNext`          | `Application`, `max_spins` (`integer`, top)      | Spins up to `max_spins` (clamped to `4096`, minimum one iteration) through the hosted input pump, then dispatches **at most one** supported hosted event. Pushes `integer`: `0` no event, `1` key handler returned `true` (consumed), `2` resize dispatched, `3` key without handler, `4` resize without handler, `5` mouse dispatched, `7` mouse without handler, `8` paste dispatched, `9` paste without handler, `10` focus-gained dispatched, `11` focus-gained without handler, `12` focus-lost dispatched, `13` focus-lost without handler, `14` Tab traversal advanced (focus moved forward), `15` Shift+Tab traversal retreated (focus moved backward), `16` command dispatched, `17` command bound without handler, `18` key blocked by the active modal scope, `19` mouse blocked by the active modal scope, `20` command blocked by the active modal scope, `21` menu-bar widget key consumed for hover/submenu redraw (no `OnKeyPressed` or command dispatch), `22` key handler returned `false` (not consumed). Tag `5` is also returned when a menu-bar widget handles a mouse move for hover redraw. Tags `14`/`15` are only emitted when the focus chain has eligible views; with an active modal scope, traversal is limited to the attached modal views. |
 | `TuiHostRegisterOnPaint`      | `Application`, `function`                        | Registers `procedure (Application)` (arity 1).                                                                                                                                                                                                                                      |
 | `TuiHostRegisterOnIdle`       | `Application`, `integer`, `function`             | Registers `procedure (Application)` plus an idle interval in milliseconds. `Milliseconds <= 0` disables idle callbacks.                                                                                                                                                             |
 | `TuiHostDispatchRedraw`       | `Application`                                    | If redraw is pending: runs registered `OnPaint` after `take_redraw_pending`, or clears the flag with tag `6` when no handler. Pushes `integer`: `0` not pending, `5` paint ran, `6` cleared without handler.                                                                        |
@@ -109,7 +109,7 @@ Samples: [`examples/pascal/tui/host_dispatch_minimal.fpas`](../../../../../examp
 
 ### Host view handles
 
-`Application.HostRegisterView(App, X, Y, Width, Height)` returns an opaque **`ViewId`** owned by the host (see [ViewId type (decided)](#viewid-type-decided) under Native TUI testing API). Pass it to `Application.HostUnregisterView`, `Application.HostPushChildView`, `Application.HostSetViewRect`, `Application.HostSetViewParent`, `Application.HostRegisterOnViewPaint`, and `Application.HostBindCommandToView`.
+`Application.HostRegisterView(App, X, Y, Width, Height)` returns an opaque **`ViewId`** owned by the host (see [ViewId type (decided)](#viewid-type-decided) under Native TUI testing API). `Width` and `Height` must both be greater than zero; view and widget creation and `Application.HostSetViewRect` reject invalid dimensions before mutating host state. Pass the handle to `Application.HostUnregisterView`, `Application.HostPushChildView`, `Application.HostSetViewRect`, `Application.HostSetViewParent`, `Application.HostRegisterOnViewPaint`, and `Application.HostBindCommandToView`.
 
 `Application.HostPushChildView(App, ViewId)` appends the handle to the focus chain used by Tab / Shift+Tab traversal. `Application.QueryFocusedViewId(App)` returns `Option of ViewId` for the focused view (`None` when none).
 
@@ -127,7 +127,7 @@ Host widget views are painted entirely in Rust and satisfy the `Application.Run`
 - `FillChar := Some('.')` — tile the rectangle with one character. When `TextColor` is `None`, the host uses `LightGray` (`7`) on top of `FillColor`.
 - `TextColor := Some(C)` without a fill character has no effect beyond the space fill.
 
-Widget views participate in the same z-order and damage tracking as Pascal `OnViewPaint` handlers. When both are registered on one view, the Rust widget wins.
+Widget views participate in the same z-order and damage tracking as Pascal `OnViewPaint` handlers. When both are registered on one view, the host paints the native widget base first and then invokes that view's Pascal handler. Widget overlays such as an open menu popup paint after local handlers so content cannot cover the overlay.
 
 #### `MenuBarItem` and `MenuBarStyle`
 
@@ -160,14 +160,14 @@ Widget views participate in the same z-order and damage tracking as Pascal `OnVi
 During hosted keyboard dispatch (`TuiHostProcessNext` / `Application.Run`), the host evaluates keys in this order:
 
 1. **Tab / Shift+Tab** view focus traversal when the focus chain changes.
-2. **Menu bar widget** routing on the topmost menu bar in paint order (see **Navigation** below).
+2. **Menu bar widget** routing on the topmost eligible menu bar in paint order (see **Navigation** below). During a modal scope, only menu bars inside that scope are eligible.
 3. **Command bindings** resolved from view-local maps, modal maps, then `Application.HostBindCommand(App, Key, CommandId)`.
 4. **`OnKeyPressed`** when registered.
 
 During hosted mouse dispatch, the host evaluates events in this order:
 
 1. **Modal scope** suppression when the active modal blocks outside mouse input.
-2. **Menu bar widget** routing, including open popup rectangles. Menu bars take priority over other host widgets underneath the pointer.
+2. **Menu bar widget** routing, including open popup rectangles. Menu bars take priority over other host widgets underneath the pointer, but only widgets inside the active modal scope are eligible.
 3. **`OnMouse`** when registered.
 
 Menu-bar widget routing happens **before** global command bindings and `OnKeyPressed` / `OnMouse`. Keys consumed for hover or submenu redraw return process tag **`21`**; mouse hover redraws may return tag **`5`**. Activated menu commands still dispatch through **`OnCommand`** (tag **`16`** when a handler is registered).

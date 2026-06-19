@@ -8,10 +8,11 @@ use crate::vm::runtime_error;
 use crate::vm::shared::TuiState;
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_std::{
-    MenuBarItem, MenuBarMouseResult, MenuBarStyle, MenuPopupItem, ViewId, ViewRect, ViewRegistry,
-    ViewWidget, validate_packed_crt_color,
+    MenuBarItem, MenuBarMouseResult, MenuBarStyle, MenuPopupItem, ViewId, ViewRect, ViewWidget,
+    validate_packed_crt_color,
 };
-use std::collections::HashMap;
+
+use super::widget_target;
 
 const MENU_BAR_ITEM_TYPE: &str = "Std.Tui.MenuBarItem";
 const MENU_BAR_STYLE_TYPE: &str = "Std.Tui.MenuBarStyle";
@@ -294,11 +295,12 @@ impl Worker {
     pub(in crate::vm::execute::io::tui) fn try_dispatch_widget_mouse(
         &mut self,
         mouse: fpas_std::UiMouse,
+        modal_scope: Option<&[ViewId]>,
         line: SourceLocation,
     ) -> Result<Option<i64>, VmError> {
         let hit = {
             let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            Self::widget_mouse_hit(&tui.views, &tui.view_widgets, mouse)
+            widget_target::widget_mouse_hit(&tui.views, &tui.view_widgets, mouse, modal_scope)
         };
 
         let Some((view_id, rect, mut widget)) = hit else {
@@ -349,19 +351,12 @@ impl Worker {
     pub(in crate::vm::execute::io::tui) fn try_dispatch_widget_key(
         &mut self,
         key: fpas_std::ConsoleKeyEvent,
+        modal_scope: Option<&[ViewId]>,
         line: SourceLocation,
     ) -> Result<Option<i64>, VmError> {
         let hit = {
             let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            tui.views
-                .paint_order()
-                .into_iter()
-                .rev()
-                .find_map(|view_id| {
-                    let rect = tui.views.rect(view_id)?;
-                    let widget = tui.view_widgets.get(&view_id)?.clone();
-                    matches!(widget, ViewWidget::MenuBar(_)).then_some((view_id, rect, widget))
-                })
+            widget_target::topmost_menu_bar(&tui.views, &tui.view_widgets, modal_scope)
         };
 
         let Some((view_id, rect, mut widget)) = hit else {
@@ -404,33 +399,6 @@ impl Worker {
         };
 
         Ok(Some(dispatch_tag))
-    }
-
-    /// Prefer menu bars (including open popups) over views that paint underneath them.
-    fn widget_mouse_hit(
-        views: &ViewRegistry,
-        widgets: &HashMap<ViewId, ViewWidget>,
-        mouse: fpas_std::UiMouse,
-    ) -> Option<(ViewId, ViewRect, ViewWidget)> {
-        let order = views.paint_order();
-
-        for view_id in order.iter().rev() {
-            let rect = views.rect(*view_id)?;
-            let widget = widgets.get(view_id)?.clone();
-            if let ViewWidget::MenuBar(menu) = &widget
-                && menu.contains_point(rect, mouse.x, mouse.y)
-            {
-                return Some((*view_id, rect, widget));
-            }
-        }
-
-        order.into_iter().rev().find_map(|view_id| {
-            let rect = views.rect(view_id)?;
-            let widget = widgets.get(&view_id)?.clone();
-            widget
-                .contains_point(rect, mouse.x, mouse.y)
-                .then_some((view_id, rect, widget))
-        })
     }
 
     fn request_unique_redraws(tui: &mut TuiState, regions: &[ViewRect], line: SourceLocation) {

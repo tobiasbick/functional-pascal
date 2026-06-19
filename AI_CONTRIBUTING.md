@@ -32,7 +32,9 @@ Spec: [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md).
 
 ## Contribution Standard
 
-All AI contributions must follow `AGENTS.md`.
+All AI contributions must follow `AGENTS.md` (including [Definition of done](AGENTS.md#definition-of-done)).
+
+For behavior or API work, read [`.agents/skills/fpas-change-checklist/SKILL.md`](.agents/skills/fpas-change-checklist/SKILL.md) at the start and re-check before finishing.
 
 Core expectations:
 

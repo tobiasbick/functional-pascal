@@ -1,0 +1,58 @@
+program TuiShowDialogTest;
+
+uses Std.Console, Std.Str, Std.Tui, Std.Test;
+
+const
+  CmdDialogCancel: integer := 2;
+  DialogModalId: integer := 10;
+  ModalResultCancel: integer := 2;
+
+mutable var
+  mutable var ClosedWithCancel: boolean := false;
+
+procedure OnPaint(App: Application);
+begin
+  ClrScr();
+  GotoXY(1, 1);
+  WriteLn('Dialog test')
+end;
+
+procedure OnCommand(App: Application; CommandId: integer);
+begin
+  if CommandId = CmdDialogCancel then
+  begin
+    Application.HostSetActiveModalResult(App, ModalResultCancel);
+    Application.CloseModal(App);
+    ClosedWithCancel := true
+  end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; OnCommand := Some(OnCommand); end;
+  Application.Configure(App, Handlers);
+  Application.RequestRedraw(App);
+  Application.TestPump(App);
+  AssertEquals(0, Application.QueryModalDepth(App));
+  var Dialog: ViewId := Application.ShowDialog(App, DialogModalId, 20, 8, 30, 7);
+  var Body: ViewId := Application.HostCreateSolidFillView(App, 0, 0, 28, 5, LightGray, None, None);
+  Application.HostSetViewParent(App, Body, Some(Dialog));
+  Application.HostSetViewRect(App, Body, 1, 1, 28, 5);
+  var EscapeKey: Std.Console.KeyEvent := record
+    kind := KeyKind.Escape;
+    ch := Std.Str.Chr(27);
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end;
+  Application.HostBindCommandToActiveModal(App, EscapeKey, CmdDialogCancel);
+  AssertEquals(1, Application.QueryModalDepth(App));
+  Application.RequestRedraw(App);
+  Application.TestPump(App);
+  Application.TestSendKey(App, EscapeKey);
+  Application.TestPump(App);
+  AssertTrue(ClosedWithCancel);
+  AssertEquals(0, Application.QueryModalDepth(App));
+  Application.CloseForTest(App)
+end.

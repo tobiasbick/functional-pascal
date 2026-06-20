@@ -1,92 +1,153 @@
-{ ShowDialog demo — an owned dialog root is created on demand and modal-local commands close it. }
+{ ShowDialog demo - owned modal root, host widgets, and validated modal results. }
 
 program TuiShowDialog;
 
-uses Std.Console, Std.Tui;
+uses Std.Console, Std.Str, Std.Tui;
+
+const
+  CmdOpenDialog: integer := 1;
+  CmdDialogOk: integer := 2;
+  CmdDialogCancel: integer := 3;
+  CmdQuit: integer := 99;
+  DialogModalId: integer := 10;
+  ModalResultAccept: integer := 1;
+  ModalResultCancel: integer := 2;
+  DialogWidth: integer := 34;
+  DialogHeight: integer := 9;
 
 mutable var
-  mutable var DialogView: integer := -1;
-  mutable var Status: string := 'Ctrl+D opens an owned dialog. Ctrl+Q exits.';
+  mutable var DialogRoot: option of ViewId := None;
+  mutable var LastResult: string := 'none';
 
-procedure ClearBounds(Bounds: Std.Tui.Rect);
+procedure PaintDialogChrome(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
 begin
-  for Row: integer := 0 to Bounds.height - 1 do
-  begin
-    GotoXY(1, Row + 1);
-    for Col: integer := 0 to Bounds.width - 1 do
-    begin
-      Write(' ')
-    end
-  end
+  GotoXY(2, 1);
+  Write('Confirm action');
+  GotoXY(2, 3);
+  Write('Save changes before closing?')
 end;
 
-procedure OnDialogPaint(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
+procedure PaintDialogButton(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect; Caption: string);
 begin
-  ClearBounds(Bounds);
-  GotoXY(2, 2);
-  Write('Owned dialog root');
-  GotoXY(2, 3);
-  Write('Escape closes this dialog');
-  GotoXY(2, 4);
-  Write('CloseModal also unregisters its root')
+  GotoXY(1, 1);
+  Write(Caption)
+end;
+
+procedure PaintOkButton(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
+begin
+  PaintDialogButton(App, ViewId, Bounds, '[ OK ]')
+end;
+
+procedure PaintCancelButton(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
+begin
+  PaintDialogButton(App, ViewId, Bounds, '[ Cancel ]')
+end;
+
+procedure CloseDialog(App: Application; ResultCode: integer);
+begin
+  if DialogRoot = None then
+  begin
+    return
+  end;
+  Application.HostSetActiveModalResult(App, ResultCode);
+  Application.CloseModal(App);
+  if ResultCode = ModalResultAccept then
+  begin
+    LastResult := 'Accept'
+  end
+  else if ResultCode = ModalResultCancel then
+  begin
+    LastResult := 'Cancel'
+  end
+  else
+  begin
+    LastResult := 'Command'
+  end;
+  DialogRoot := None;
+  Application.RequestRedraw(App)
+end;
+
+procedure OpenDialog(App: Application);
+begin
+  if DialogRoot <> None then
+  begin
+    return
+  end;
+  var S: Size := Application.Size(App);
+  var RawX: integer := ((S.width - DialogWidth) / 2) + 1;
+  var RawY: integer := ((S.height - DialogHeight) / 2) + 1;
+  mutable var X: integer := RawX;
+  mutable var Y: integer := RawY;
+  if X < 1 then
+  begin
+    X := 1
+  end;
+  if Y < 1 then
+  begin
+    Y := 1
+  end;
+  var Root: ViewId := Application.ShowDialog(App, DialogModalId, X, Y, DialogWidth, DialogHeight);
+  DialogRoot := Some(Root);
+  var Body: ViewId := Application.HostCreateSolidFillView(App, 0, 0, DialogWidth - 2, DialogHeight -
+
+                                                                                      2, LightGray, Some(Black), None);
+  Application.HostSetViewParent(App, Body, Some(Root));
+  Application.HostSetViewRect(App, Body, 1, 1, DialogWidth - 2, DialogHeight - 2);
+  Application.HostRegisterOnViewPaint(App, Root, PaintDialogChrome);
+  var OkView: ViewId := Application.HostRegisterView(App, 0, 0, 8, 1);
+  var CancelView: ViewId := Application.HostRegisterView(App, 0, 0, 12, 1);
+  Application.HostSetViewParent(App, OkView, Some(Root));
+  Application.HostSetViewParent(App, CancelView, Some(Root));
+  Application.HostSetViewRect(App, OkView, 4, 6, 8, 1);
+  Application.HostSetViewRect(App, CancelView, 20, 6, 12, 1);
+  Application.HostPushChildView(App, OkView);
+  Application.HostPushChildView(App, CancelView);
+  Application.HostRegisterOnViewPaint(App, OkView, PaintOkButton);
+  Application.HostRegisterOnViewPaint(App, CancelView, PaintCancelButton);
+  var EscapeKey: Std.Console.KeyEvent := record
+    kind := Std.Console.KeyKind.Escape;
+    ch := Std.Str.Chr(27);
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end;
+  Application.HostBindCommandToActiveModal(App, EscapeKey, CmdDialogCancel);
+  Application.RequestRedraw(App)
 end;
 
 procedure OnPaint(App: Application);
 begin
   ClrScr();
   GotoXY(1, 1);
-  WriteLn('ShowDialog');
+  WriteLn('ShowDialog with modal results');
   GotoXY(1, 2);
   WriteLn('Modal depth: ', Application.QueryModalDepth(App));
   GotoXY(1, 3);
-  WriteLn(Status);
+  WriteLn('Last result: ', LastResult);
   GotoXY(1, 5);
-  WriteLn('Ctrl+D opens an owned dialog root.');
+  WriteLn('Ctrl+D opens the dialog.');
   GotoXY(1, 6);
-  WriteLn('Escape closes the active dialog. Ctrl+Q exits.');
-  if DialogView >= 0 then
-  begin
-    GotoXY(1, 8);
-    WriteLn('Current dialog root view: ', DialogView)
-  end
+  WriteLn('Tab to OK or Cancel, Enter accepts, Escape cancels.');
+  GotoXY(1, 7);
+  WriteLn('Ctrl+Q exits the application.')
 end;
 
 procedure OnCommand(App: Application; CommandId: integer);
 begin
-  if CommandId = 1 then
+  if CommandId = CmdOpenDialog then
   begin
-    if DialogView < 0 then
-    begin
-      var EscapeKey: Std.Console.KeyEvent := record
-        kind := Std.Console.KeyKind.Escape;
-        ch := '';
-        shift := false;
-        ctrl := false;
-        alt := false;
-        meta := false;
-      end;
-      DialogView := Application.ShowDialog(App, 10, 18, 6, 34, 8);
-      Application.HostRegisterOnViewPaint(App, DialogView, OnDialogPaint);
-      Application.HostBindCommandToActiveModal(App, EscapeKey, 2);
-      Status := 'Dialog open. Escape closes it.'
-    end
-    else
-    begin
-      Status := 'Dialog already open.'
-    end;
-    Application.RequestRedraw(App)
+    OpenDialog(App)
   end
-  else if CommandId = 2 then
+  else if CommandId = CmdDialogOk then
   begin
-    if DialogView >= 0 then
-    begin
-      Application.CloseModal(App);
-      DialogView := -1;
-      Status := 'Dialog closed. Ctrl+D opens a fresh owned root.';
-      Application.RequestRedraw(App)
-    end
+    CloseDialog(App, ModalResultAccept)
   end
-  else if CommandId = 99 then
+  else if CommandId = CmdDialogCancel then
+  begin
+    CloseDialog(App, ModalResultCancel)
+  end
+  else if CommandId = CmdQuit then
   begin
     Application.HostRequestQuit(App)
   end
@@ -115,10 +176,22 @@ begin
     alt := false;
     meta := false;
   end;
-  Application.HostRegisterOnPaint(App, OnPaint);
-  Application.HostRegisterOnCommand(App, OnCommand);
-  Application.HostRegisterOnResize(App, OnResize);
-  Application.HostBindCommand(App, OpenDialogKey, 1);
-  Application.HostBindCommand(App, QuitKey, 99);
+  var EnterKey: Std.Console.KeyEvent := record
+    kind := Std.Console.KeyKind.Enter;
+    ch := Std.Str.Chr(13);
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end;
+  Application.HostBindCommand(App, OpenDialogKey, CmdOpenDialog);
+  Application.HostBindCommand(App, QuitKey, CmdQuit);
+  Application.HostBindCommandToActiveModal(App, EnterKey, CmdDialogOk);
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+    OnResize := Some(OnResize);
+    OnCommand := Some(OnCommand);
+  end;
+  Application.Configure(App, Handlers);
   Application.Run(App)
 end.

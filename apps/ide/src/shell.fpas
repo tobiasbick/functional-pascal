@@ -2,7 +2,7 @@
 
 unit Ide.Shell;
 
-uses Ide.Menu, Ide.Status, Ide.Theme, Std.Console, Std.Tui;
+uses Ide.Dialog, Ide.Menu, Ide.Status, Ide.Theme, Std.Console, Std.Tui;
 
 {
   Host widget view ids; `None` means not created yet.
@@ -81,7 +81,14 @@ end;
 
 private procedure OnCommand(App: Application; CommandId: integer);
 begin
-  if CommandId = CmdFileExit then
+  if CommandId = CmdHelpAbout then
+  begin
+    OpenAbout(App)
+  end
+  else if HandleCommand(App, CommandId) then
+  begin
+  end
+  else if CommandId = CmdFileExit then
   begin
     Application.HostRequestQuit(App)
   end

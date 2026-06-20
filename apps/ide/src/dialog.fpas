@@ -1,0 +1,148 @@
+/// See docs/pascal/std/tui/app/vm-bridge.md.
+
+unit Ide.Dialog;
+
+uses Ide.Theme, Std.Console, Std.Str, Std.Tui;
+
+const
+  /// Application-defined modal id for the About dialog.
+
+  AboutModalId: integer := 1;
+  /// Modal-local command: accept the About dialog.
+
+  CmdAboutOk: integer := 11;
+  /// Modal-local command: dismiss the About dialog without accepting.
+
+  CmdAboutCancel: integer := 12;
+  /// Host-validated modal result code for Accept.
+
+  ModalResultAccept: integer := 1;
+  /// Host-validated modal result code for Cancel.
+
+  ModalResultCancel: integer := 2;
+
+private const AboutWidth: integer := 42;
+private const AboutHeight: integer := 11;
+
+private mutable var AboutRoot: option of ViewId := None;
+private mutable var AboutOkView: option of ViewId := None;
+
+/// True while the About dialog modal frame is open.
+
+function IsOpen(): boolean;
+begin
+  return AboutRoot <> None
+end;
+
+private procedure PaintAboutChrome(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
+begin
+  GotoXY(2, 1);
+  Write('About FPAS IDE');
+  GotoXY(2, 3);
+  Write('Functional Pascal IDE shell');
+  GotoXY(2, 4);
+  Write('Turbo Vision-style hosted TUI');
+  GotoXY(2, 6);
+  Write('Press Enter on OK or Escape to close.')
+end;
+
+private procedure PaintAboutOk(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
+begin
+  GotoXY(1, 1);
+  Write('[ OK ]')
+end;
+
+private procedure BindAboutModalShortcuts(App: Application);
+begin
+  var EscapeKey: Std.Console.KeyEvent := record
+    kind := Std.Console.KeyKind.Escape;
+    ch := Std.Str.Chr(27);
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end;
+  var EnterKey: Std.Console.KeyEvent := record
+    kind := Std.Console.KeyKind.Enter;
+    ch := Std.Str.Chr(13);
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end;
+  Application.HostBindCommandToActiveModal(App, EscapeKey, CmdAboutCancel);
+  Application.HostBindCommandToActiveModal(App, EnterKey, CmdAboutOk)
+end;
+
+private procedure CloseAbout(App: Application; ResultCode: integer);
+begin
+  if AboutRoot = None then
+  begin
+    return
+  end;
+  Application.HostSetActiveModalResult(App, ResultCode);
+  Application.CloseModal(App);
+  AboutRoot := None;
+  AboutOkView := None;
+  Application.RequestRedraw(App)
+end;
+
+/// Open a centered About dialog when none is active.
+
+procedure OpenAbout(App: Application);
+begin
+  if IsOpen() then
+  begin
+    return
+  end;
+  var S: Size := Application.Size(App);
+  var RawX: integer := ((S.width - AboutWidth) / 2) + 1;
+  var RawY: integer := ((S.height - AboutHeight) / 2) + 1;
+  mutable var X: integer := RawX;
+  mutable var Y: integer := RawY;
+  if X < 1 then
+  begin
+    X := 1
+  end;
+  if Y < 1 then
+  begin
+    Y := 1
+  end;
+  var Root: ViewId := Application.ShowDialog(App, AboutModalId, X, Y, AboutWidth, AboutHeight);
+  AboutRoot := Some(Root);
+  var Body: ViewId := Application.HostCreateSolidFillView(App, 0, 0, AboutWidth - 2, AboutHeight - 2, LightGray, Some(Black), None);
+  Application.HostSetViewParent(App, Body, Some(Root));
+  Application.HostSetViewRect(App, Body, 1, 1, AboutWidth - 2, AboutHeight - 2);
+  Application.HostRegisterOnViewPaint(App, Root, PaintAboutChrome);
+  var OkX: integer := ((AboutWidth - 8) / 2) + 1;
+  var OkY: integer := AboutHeight - 3;
+  var OkView: ViewId := Application.HostRegisterView(App, 0, 0, 8, 1);
+  AboutOkView := Some(OkView);
+  Application.HostSetViewParent(App, OkView, Some(Root));
+  Application.HostSetViewRect(App, OkView, OkX, OkY, 8, 1);
+  Application.HostPushChildView(App, OkView);
+  Application.HostRegisterOnViewPaint(App, OkView, PaintAboutOk);
+  BindAboutModalShortcuts(App);
+  Application.RequestRedraw(App)
+end;
+
+/// Handle modal-local About commands. Returns true when the command was consumed.
+
+function HandleCommand(App: Application; CommandId: integer): boolean;
+begin
+  if not IsOpen() then
+  begin
+    return false
+  end;
+  if CommandId = CmdAboutOk then
+  begin
+    CloseAbout(App, ModalResultAccept);
+    return true
+  end;
+  if CommandId = CmdAboutCancel then
+  begin
+    CloseAbout(App, ModalResultCancel);
+    return true
+  end;
+  return false
+end;

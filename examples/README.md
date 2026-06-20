@@ -150,7 +150,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/tui/local_view_paint.fpas` | `Std.Tui` — local view paint, parent-relative layout, `HostSetViewRect` |
 | `pascal/tui/view_scoped_commands.fpas` | `Std.Tui` — `HostBindCommandToView` and focus/ancestor command routing |
 | `pascal/tui/show_modal_existing_view.fpas` | `Std.Tui` — `ShowModal` for an existing view subtree |
-| `pascal/tui/show_dialog.fpas` | `Std.Tui` — `ShowDialog` plus modal-local command binding |
+| `pascal/tui/show_dialog.fpas` | `Std.Tui` — `ShowDialog`, host widgets, OK/Cancel, and `HostSetActiveModalResult` |
 | `math/julia/julia.fpas` | ASCII Julia set (**interactive** — see below) |
 | `math/julia/julia_graph.fpas` | Native-window Julia explorer with `Std.Graph` |
 
@@ -179,7 +179,7 @@ Run from the repository root:
 fpas apps/ide/ide.fpasprj
 ```
 
-The IDE is **interactive**: it opens the alternate screen and blocks in `Application.Run` until you quit. Use **Alt+X** or **File → Exit** from the menu bar. Host widgets paint the chrome (menu bar, blue desktop, status bar); `OnPaint` is intentionally empty — see `apps/ide/src/shell.fpas` and `docs/pascal/std/tui/app/README.md`.
+The IDE is **interactive**: it opens the alternate screen and blocks in `Application.Run` until you quit. Use **Alt+X** or **File → Exit** from the menu bar, or open **Help → About** for a modal About dialog. Host widgets paint the chrome (menu bar, blue desktop, status bar); `OnPaint` is intentionally empty — see `apps/ide/src/shell.fpas` and `docs/pascal/std/tui/app/README.md`.
 
 CI compiles it with `fpas check apps/ide/ide.fpasprj` (listed in `NON_INTERACTIVE_CHECK_EXAMPLES` in [`crates/fpas-cli/src/main_tests/examples.rs`](../crates/fpas-cli/src/main_tests/examples.rs)). For a smaller single-file menu bar sample, see `pascal/tui/menu_bar.fpas`.
 
@@ -201,6 +201,6 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 | `pascal/tui/local_view_paint.fpas` | Local view paint only; press **M** to move a child view and **Escape** to quit |
 | `pascal/tui/view_scoped_commands.fpas` | Focus-aware view commands; **Tab** changes focus, **Ctrl+S** resolves per panel, **Escape** quits |
 | `pascal/tui/show_modal_existing_view.fpas` | Existing view subtree becomes modal; **Tab** stays in the subtree, **Escape** closes the modal |
-| `pascal/tui/show_dialog.fpas` | Owned modal dialog; **Ctrl+D** opens it, **Escape** closes it, **Ctrl+Q** quits |
-| `apps/ide/ide.fpasprj` | Multi-unit IDE shell — menu bar, desktop fill, status bar; **Alt+X** or **File → Exit** quits |
+| `pascal/tui/show_dialog.fpas` | Owned modal dialog; **Ctrl+D** opens it, **Tab** to OK/Cancel, **Enter** accepts, **Escape** cancels, **Ctrl+Q** quits |
+| `apps/ide/ide.fpasprj` | Multi-unit IDE shell — menu bar, desktop fill, status bar; **Help → About** opens a modal About dialog; **Alt+X** or **File → Exit** quits |
 TUI and Graph apps use the same hosted dispatch model: `Application.Configure(App, Handlers)` registers `On*` handlers; `Application.Run(App)` starts the hosted loop. See `docs/pascal/std/tui/app/README.md` and `docs/pascal/std/graph/app/README.md`. The console's own event type remains **`Std.Console.Event`**.

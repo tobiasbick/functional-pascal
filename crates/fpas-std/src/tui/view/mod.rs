@@ -8,6 +8,7 @@
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
 mod activation;
+mod desktop;
 mod focus;
 mod geometry;
 mod routing;
@@ -18,6 +19,7 @@ mod tree;
 mod tests;
 
 pub use activation::RootActivation;
+pub use desktop::{DesktopMetrics, WindowPalette, WindowShadow};
 pub use routing::{EventOutcome, EventPhase, EventRoute, RoutedEvent};
 pub use state::{ResolvedView, ViewOptions, ViewState};
 
@@ -152,4 +154,5 @@ pub struct ViewRegistry {
     roots: Vec<ViewId>,
     focused: Option<ViewId>,
     pointer_capture: Option<ViewId>,
+    desktop: DesktopMetrics,
 }

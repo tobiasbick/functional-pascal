@@ -460,3 +460,110 @@ fn activate_root_rejects_unknown_view() {
     let mut registry = ViewRegistry::default();
     assert_eq!(registry.activate_root(ViewId::from_raw(7)), None);
 }
+
+#[test]
+fn desktop_work_area_rejects_empty_rectangles() {
+    let mut registry = ViewRegistry::default();
+
+    assert!(!registry.set_desktop_work_area(rect(0, 0, 0, 10)));
+    assert_eq!(registry.desktop_metrics().work_area, None);
+
+    assert!(registry.set_desktop_work_area(rect(1, 1, 20, 10)));
+    assert_eq!(
+        registry.desktop_metrics().work_area,
+        Some(rect(1, 1, 20, 10))
+    );
+    registry.clear_desktop_work_area();
+    assert_eq!(registry.desktop_metrics().work_area, None);
+}
+
+#[test]
+fn constrain_window_rect_applies_minimum_size_and_desktop_bounds() {
+    let mut registry = ViewRegistry::default();
+    assert!(registry.set_desktop_work_area(rect(2, 1, 30, 12)));
+    registry.set_min_window_size(8, 4);
+
+    assert_eq!(
+        registry.constrain_window_rect(rect(-10, -5, 3, 2)),
+        rect(2, 1, 8, 4)
+    );
+    assert_eq!(
+        registry.constrain_window_rect(rect(40, 20, 12, 6)),
+        rect(20, 7, 12, 6)
+    );
+    assert_eq!(
+        registry.constrain_window_rect(rect(4, 3, 100, 100)),
+        rect(2, 1, 30, 12)
+    );
+}
+
+#[test]
+fn set_root_rect_constrained_updates_containing_root_only() {
+    let mut registry = ViewRegistry::default();
+    assert!(registry.set_desktop_work_area(rect(0, 0, 20, 10)));
+    registry.set_min_window_size(6, 3);
+    let root = registry.register(rect(0, 0, 10, 5));
+    let child = registry.register(rect(1, 1, 4, 1));
+    assert!(registry.set_parent(child, Some(root)));
+
+    assert_eq!(
+        registry.set_root_rect_constrained(child, rect(18, 9, 2, 2)),
+        Some(rect(14, 7, 6, 3))
+    );
+    assert_eq!(registry.rect(root), Some(rect(14, 7, 6, 3)));
+    assert_eq!(registry.rect(child), Some(rect(15, 8, 4, 1)));
+    assert_eq!(
+        registry.set_root_rect_constrained(ViewId::from_raw(99), rect(0, 0, 1, 1)),
+        None
+    );
+}
+
+#[test]
+fn root_palette_reports_active_and_inactive_roots() {
+    let mut registry = ViewRegistry::default();
+    let first = registry.register(rect(0, 0, 20, 10));
+    let second = registry.register(rect(5, 5, 20, 10));
+    let first_leaf = registry.register(rect(1, 1, 4, 1));
+    assert!(registry.set_parent(first_leaf, Some(first)));
+    assert!(registry.push_child(first_leaf));
+
+    assert_eq!(registry.root_palette(first), Some(WindowPalette::Inactive));
+    assert_eq!(registry.root_palette(second), Some(WindowPalette::Inactive));
+
+    assert_eq!(registry.focus_view(first_leaf), (true, false));
+    assert_eq!(
+        registry.root_palette(first_leaf),
+        Some(WindowPalette::Active)
+    );
+    assert_eq!(registry.root_palette(second), Some(WindowPalette::Inactive));
+    assert_eq!(registry.root_palette(ViewId::from_raw(99)), None);
+}
+
+#[test]
+fn root_shadow_is_disabled_by_default_and_clips_to_work_area() {
+    let mut registry = ViewRegistry::default();
+    assert!(registry.set_desktop_work_area(rect(0, 0, 10, 5)));
+    let root = registry.register(rect(2, 1, 4, 3));
+
+    assert_eq!(registry.root_shadow(root), None);
+    registry.set_window_shadow_enabled(true);
+
+    assert_eq!(
+        registry.root_shadow(root),
+        Some(WindowShadow {
+            right: Some(rect(6, 2, 1, 3)),
+            bottom: Some(rect(3, 4, 4, 1)),
+        })
+    );
+}
+
+#[test]
+fn shadow_geometry_can_be_fully_clipped() {
+    let mut registry = ViewRegistry::default();
+    assert!(registry.set_desktop_work_area(rect(0, 0, 6, 4)));
+    registry.set_window_shadow_enabled(true);
+    let root = registry.register(rect(0, 0, 6, 4));
+
+    let shadow = registry.root_shadow(root).expect("shadow enabled");
+    assert!(shadow.is_empty());
+}

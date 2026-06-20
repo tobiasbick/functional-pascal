@@ -23,8 +23,9 @@ pub use modal::{ModalId, ModalStack};
 pub use process::{BlockedInput, FocusDirection, ProcessOutcome};
 pub use session::TuiSession;
 pub use view::{
-    EventOutcome, EventPhase, EventRoute, ResolvedView, RootActivation, RoutedEvent, ViewId,
-    ViewOptions, ViewRect, ViewRegistry, ViewState,
+    DesktopMetrics, EventOutcome, EventPhase, EventRoute, ResolvedView, RootActivation,
+    RoutedEvent, ViewId, ViewOptions, ViewRect, ViewRegistry, ViewState, WindowPalette,
+    WindowShadow,
 };
 pub use widget::{
     MenuBarItem, MenuBarMouseResult, MenuBarState, MenuBarStyle, MenuBarWidget, MenuPopupItem,

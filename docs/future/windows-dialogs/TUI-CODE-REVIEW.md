@@ -326,11 +326,13 @@ the retained Rust contracts; bridge tags are encoded only at the intrinsic bound
 **Implementation status (2026-06-20): in progress.** The retained engine now exposes active-window
 primitives in [`view/activation.rs`](../../../crates/fpas-std/src/tui/view/activation.rs):
 `root_of`, `active_root`, and `activate_root` (raise the containing root to the front of the root
-z-order, then move focus into its subtree, preserving focus already inside it). Desktop tiering,
-palette, constraints, shadow, and frame widgets remain open.
+z-order, then move focus into its subtree, preserving focus already inside it). The desktop
+foundation also now exposes work-area constraints, active/inactive root palette state, and clipped
+shadow geometry in [`view/desktop.rs`](../../../crates/fpas-std/src/tui/view/desktop.rs). Desktop
+tiering, concrete frame palettes, and frame widgets remain open.
 
 - [x] Add active-root tracking and raise/activate (click-to-front) in the retained registry.
-- [ ] Add desktop work area, inactive palette, constraints, and shadow.
+- [x] Add desktop work area, active/inactive palette state, constraints, and shadow geometry.
 - [ ] Add static frame geometry and atomic framed-window/dialog creation.
 - [ ] Verify overlap, occlusion repair, clipping, focus activation, and nested frames.
 

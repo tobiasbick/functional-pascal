@@ -180,3 +180,41 @@ end.",
     );
     assert_eq!(out.lines, vec!["nothing"]);
 }
+
+#[test]
+fn option_equality_with_none() {
+    let out = compile_and_run(
+        "program T;
+var O: Option of integer := None;
+begin
+  if O = None then
+    Std.Console.WriteLn('eq')
+  else
+    Std.Console.WriteLn('ne');
+  if O <> None then
+    Std.Console.WriteLn('ne2')
+  else
+    Std.Console.WriteLn('eq2')
+end.",
+    );
+    assert_eq!(out.lines, vec!["eq", "eq2"]);
+}
+
+#[test]
+fn option_inequality_with_some() {
+    let out = compile_and_run(
+        "program T;
+var O: Option of integer := Some(7);
+begin
+  if O <> None then
+    Std.Console.WriteLn('open')
+  else
+    Std.Console.WriteLn('closed');
+  if O = Some(7) then
+    Std.Console.WriteLn('same')
+  else
+    Std.Console.WriteLn('diff')
+end.",
+    );
+    assert_eq!(out.lines, vec!["open", "same"]);
+}

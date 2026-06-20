@@ -86,7 +86,7 @@ impl Checker {
                     // When both sides are GenericParam, return the left param type.
                     if matches!(left, Ty::GenericParam(..)) {
                         left.clone()
-                    } else if *left == Ty::Real || *right == Ty::Real {
+                    } else if *left == Ty::Real || *right == Ty::Real || op == BinaryOp::RealDiv {
                         Ty::Real
                     } else {
                         Ty::Integer

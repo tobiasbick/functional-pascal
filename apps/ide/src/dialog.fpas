@@ -96,8 +96,8 @@ begin
     return
   end;
   var S: Size := Application.Size(App);
-  var RawX: integer := ((S.width - AboutWidth) / 2) + 1;
-  var RawY: integer := ((S.height - AboutHeight) / 2) + 1;
+  var RawX: integer := ((S.width - AboutWidth) div 2) + 1;
+  var RawY: integer := ((S.height - AboutHeight) div 2) + 1;
   mutable var X: integer := RawX;
   mutable var Y: integer := RawY;
   if X < 1 then
@@ -114,7 +114,7 @@ begin
   Application.HostSetViewParent(App, Body, Some(Root));
   Application.HostSetViewRect(App, Body, 1, 1, AboutWidth - 2, AboutHeight - 2);
   Application.HostRegisterOnViewPaint(App, Root, PaintAboutChrome);
-  var OkX: integer := ((AboutWidth - 8) / 2) + 1;
+  var OkX: integer := ((AboutWidth - 8) div 2) + 1;
   var OkY: integer := AboutHeight - 3;
   var OkView: ViewId := Application.HostRegisterView(App, 0, 0, 8, 1);
   AboutOkView := Some(OkView);

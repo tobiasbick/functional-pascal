@@ -15,6 +15,14 @@ fn is_tui_view_id(ty: &Ty) -> bool {
     }
 }
 
+fn is_option(ty: &Ty) -> bool {
+    matches!(ty, Ty::Option(_))
+}
+
+fn is_result(ty: &Ty) -> bool {
+    matches!(ty, Ty::Result(..))
+}
+
 impl Compiler {
     pub(super) fn compile_equality(
         &mut self,
@@ -86,6 +94,19 @@ impl Compiler {
         }
 
         if is_tui_view_id(lt) && is_tui_view_id(rt) {
+            return self.compile_direct_binary(
+                if op == BinaryOp::Eq {
+                    Op::EqDyn
+                } else {
+                    Op::NeqDyn
+                },
+                left,
+                right,
+                location,
+            );
+        }
+
+        if (is_option(lt) && is_option(rt)) || (is_result(lt) && is_result(rt)) {
             return self.compile_direct_binary(
                 if op == BinaryOp::Eq {
                     Op::EqDyn

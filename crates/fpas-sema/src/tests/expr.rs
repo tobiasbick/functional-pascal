@@ -87,6 +87,12 @@ fn int_div_valid() {
 }
 
 #[test]
+fn real_div_is_real_even_for_integer_operands() {
+    check_ok("program T; var X: real := (80 - 42) / 2; begin end.");
+    check_errors("program T; var X: integer := (80 - 42) / 2; begin end.");
+}
+
+#[test]
 fn int_div_with_real_error() {
     check_errors("program T; var X: integer := 10 div 3.0; begin end.");
 }

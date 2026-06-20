@@ -179,7 +179,7 @@ impl Worker {
             runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 "Dynamic comparison requires comparable operands of compatible types",
-                "Ensure both operands are comparable types (integer, real, boolean, char, string, or ViewId).",
+                "Ensure both operands are comparable types (integer, real, boolean, char, string, ViewId, Option, or Result).",
                 line,
             )
         })?;
@@ -194,6 +194,14 @@ fn dyn_compare(left: &Value, right: &Value) -> Option<std::cmp::Ordering> {
         return Some(left_id.cmp(&right_id));
     }
 
+    if option_pair(left, right) || result_pair(left, right) {
+        return Some(if left == right {
+            std::cmp::Ordering::Equal
+        } else {
+            std::cmp::Ordering::Less
+        });
+    }
+
     match (left, right) {
         (Value::Integer(a), Value::Integer(b)) => Some(a.cmp(b)),
         (Value::Real(a), Value::Real(b)) => a.partial_cmp(b),
@@ -204,6 +212,16 @@ fn dyn_compare(left: &Value, right: &Value) -> Option<std::cmp::Ordering> {
         (Value::Str(a), Value::Str(b)) => Some(a.cmp(b)),
         _ => None,
     }
+}
+
+fn option_pair(left: &Value, right: &Value) -> bool {
+    matches!(left, Value::OptionSome(_) | Value::OptionNone)
+        && matches!(right, Value::OptionSome(_) | Value::OptionNone)
+}
+
+fn result_pair(left: &Value, right: &Value) -> bool {
+    matches!(left, Value::ResultOk(_) | Value::ResultError(_))
+        && matches!(right, Value::ResultOk(_) | Value::ResultError(_))
 }
 
 fn tui_view_id_raw(value: &Value) -> Option<u32> {

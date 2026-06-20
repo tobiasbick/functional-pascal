@@ -74,8 +74,8 @@ begin
     return
   end;
   var S: Size := Application.Size(App);
-  var RawX: integer := ((S.width - DialogWidth) / 2) + 1;
-  var RawY: integer := ((S.height - DialogHeight) / 2) + 1;
+  var RawX: integer := ((S.width - DialogWidth) div 2) + 1;
+  var RawY: integer := ((S.height - DialogHeight) div 2) + 1;
   mutable var X: integer := RawX;
   mutable var Y: integer := RawY;
   if X < 1 then

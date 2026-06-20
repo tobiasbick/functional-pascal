@@ -435,3 +435,33 @@ end.",
     );
     assert_eq!(out.lines, vec!["8", "15", "-1"]);
 }
+
+#[test]
+fn integer_var_from_int_div_centering() {
+    let out = compile_and_run(
+        "\
+program Center;
+uses Std.Console;
+begin
+  var RawX: integer := ((80 - 42) div 2) + 1;
+  WriteLn(RawX)
+end.",
+    );
+    assert_eq!(out.lines, vec!["20"]);
+}
+
+#[test]
+fn real_div_of_integers_is_real() {
+    let err = compile_err(
+        "\
+program RealDiv;
+begin
+  var RawX: integer := ((80 - 42) / 2) + 1
+end.",
+    );
+    assert!(
+        err.message.contains("Type mismatch"),
+        "expected real `/` result to reject integer variable initializer, got: {}",
+        err.message
+    );
+}

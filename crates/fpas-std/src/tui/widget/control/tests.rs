@@ -202,3 +202,119 @@ fn disabled_input_line_uses_disabled_color_and_hides_cursor() {
     assert_eq!(console.test_cell(1, 1), ('a', 8, 7));
     assert_eq!(console.test_cell(2, 1), ('b', 8, 7));
 }
+
+#[test]
+fn checkbox_toggles_and_paints_checked_mark() {
+    let mut console = console();
+    let mut checkbox = CheckBoxWidget::new(
+        "Remember",
+        Some('R'),
+        Some(CommandId(30)),
+        CheckBoxStyle::default(),
+    );
+
+    assert!(checkbox.toggle());
+    checkbox.paint(&mut console, rect(0, 0, 14, 1), DamageRegion::FullFrame);
+
+    console
+        .finish_tui_paint(loc())
+        .expect("paint should finish");
+    assert_eq!(checkbox.command_id, Some(CommandId(30)));
+    assert_eq!(console.test_cell(1, 1), ('[', 0, 7));
+    assert_eq!(console.test_cell(2, 1), ('x', 0, 7));
+    assert_eq!(console.test_cell(5, 1), ('R', 4, 7));
+}
+
+#[test]
+fn focused_checkbox_uses_active_style() {
+    let mut console = console();
+    let mut checkbox =
+        CheckBoxWidget::new("Save", None, Some(CommandId(31)), CheckBoxStyle::default());
+    checkbox.focused = true;
+
+    checkbox.paint(&mut console, rect(0, 0, 10, 1), DamageRegion::FullFrame);
+
+    console
+        .finish_tui_paint(loc())
+        .expect("paint should finish");
+    assert_eq!(console.test_cell(1, 1), ('[', 15, 0));
+    assert_eq!(console.test_cell(5, 1), ('S', 15, 0));
+}
+
+#[test]
+fn disabled_checkbox_does_not_toggle() {
+    let mut checkbox = CheckBoxWidget::new(
+        "Locked",
+        None,
+        Some(CommandId(32)),
+        CheckBoxStyle::default(),
+    );
+    checkbox.enabled = false;
+
+    assert!(!checkbox.toggle());
+    assert!(!checkbox.checked);
+}
+
+#[test]
+fn radio_group_selects_and_reports_selected_command() {
+    let mut group = RadioGroupWidget::new(
+        vec![
+            RadioOption::new("Small", Some('S'), Some(CommandId(40))),
+            RadioOption::new("Large", Some('L'), Some(CommandId(41))),
+        ],
+        RadioGroupStyle::default(),
+    );
+
+    assert_eq!(group.selected(), Some(0));
+    assert!(group.set_selected(1));
+    assert_eq!(group.selected(), Some(1));
+    assert_eq!(group.focused_option(), Some(1));
+    assert_eq!(group.selected_command(), Some(CommandId(41)));
+}
+
+#[test]
+fn radio_group_skips_disabled_options_during_focus_step() {
+    let mut disabled = RadioOption::new("Medium", Some('M'), Some(CommandId(42)));
+    disabled.enabled = false;
+    let mut group = RadioGroupWidget::new(
+        vec![
+            RadioOption::new("Small", Some('S'), Some(CommandId(40))),
+            disabled,
+            RadioOption::new("Large", Some('L'), Some(CommandId(41))),
+        ],
+        RadioGroupStyle::default(),
+    );
+
+    assert!(group.focus_next());
+    assert_eq!(group.focused_option(), Some(2));
+    assert!(group.focus_next());
+    assert_eq!(group.focused_option(), Some(0));
+}
+
+#[test]
+fn radio_group_paints_selected_focused_and_disabled_rows() {
+    let mut console = console();
+    let mut disabled = RadioOption::new("Medium", Some('M'), Some(CommandId(42)));
+    disabled.enabled = false;
+    let mut group = RadioGroupWidget::new(
+        vec![
+            RadioOption::new("Small", Some('S'), Some(CommandId(40))),
+            disabled,
+            RadioOption::new("Large", Some('L'), Some(CommandId(41))),
+        ],
+        RadioGroupStyle::default(),
+    );
+    assert!(group.set_selected(2));
+    assert_eq!(group.focused_option(), Some(2));
+
+    group.paint(&mut console, rect(0, 0, 12, 3), DamageRegion::FullFrame);
+
+    console
+        .finish_tui_paint(loc())
+        .expect("paint should finish");
+    assert_eq!(console.test_cell(2, 1), (' ', 0, 7));
+    assert_eq!(console.test_cell(5, 1), ('S', 4, 7));
+    assert_eq!(console.test_cell(5, 2), ('M', 8, 7));
+    assert_eq!(console.test_cell(2, 3), ('*', 15, 0));
+    assert_eq!(console.test_cell(5, 3), ('L', 15, 0));
+}

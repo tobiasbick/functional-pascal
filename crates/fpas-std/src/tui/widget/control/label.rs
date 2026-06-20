@@ -1,6 +1,6 @@
 use crate::{Console, DamageRegion, ViewRect};
 
-use super::{clip_rect_to_damage, paint_chars, truncated_chars};
+use super::{accelerator_index, clip_rect_to_damage, paint_chars, truncated_chars};
 
 /// CRT colors used while painting a static dialog label.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -89,12 +89,6 @@ impl LabelWidget {
     }
 
     fn accelerator_index(&self) -> Option<usize> {
-        let accelerator = self.accelerator?.to_ascii_lowercase();
-        if !accelerator.is_ascii_alphabetic() {
-            return None;
-        }
-        self.text
-            .chars()
-            .position(|ch| ch.to_ascii_lowercase() == accelerator)
+        accelerator_index(&self.text, self.accelerator)
     }
 }

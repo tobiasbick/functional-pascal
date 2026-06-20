@@ -13,7 +13,8 @@ mod solid_fill;
 mod status_bar;
 
 pub use control::{
-    ButtonStyle, ButtonWidget, InputLineStyle, InputLineWidget, LabelStyle, LabelWidget,
+    ButtonStyle, ButtonWidget, CheckBoxStyle, CheckBoxWidget, InputLineStyle, InputLineWidget,
+    LabelStyle, LabelWidget, RadioGroupStyle, RadioGroupWidget, RadioOption,
 };
 pub use frame::{
     FrameButtonSlots, FrameCapabilities, FrameContentSize, FrameGeometry, FrameGeometryError,
@@ -44,6 +45,10 @@ pub enum ViewWidget {
     Button(ButtonWidget),
     /// Single-line dialog text input rendered in Rust.
     InputLine(InputLineWidget),
+    /// Dialog checkbox rendered in Rust.
+    CheckBox(CheckBoxWidget),
+    /// Dialog radio group rendered in Rust.
+    RadioGroup(RadioGroupWidget),
 }
 
 impl ViewWidget {
@@ -56,6 +61,8 @@ impl ViewWidget {
             Self::Label(widget) => widget.paint(console, rect, damage),
             Self::Button(widget) => widget.paint(console, rect, damage),
             Self::InputLine(widget) => widget.paint(console, rect, damage),
+            Self::CheckBox(widget) => widget.paint(console, rect, damage),
+            Self::RadioGroup(widget) => widget.paint(console, rect, damage),
         }
     }
 
@@ -78,7 +85,9 @@ impl ViewWidget {
             | Self::StatusBar(_)
             | Self::Label(_)
             | Self::Button(_)
-            | Self::InputLine(_) => intersects_damage_region(rect, damage),
+            | Self::InputLine(_)
+            | Self::CheckBox(_)
+            | Self::RadioGroup(_) => intersects_damage_region(rect, damage),
         }
     }
 
@@ -93,7 +102,9 @@ impl ViewWidget {
             | Self::StatusBar(_)
             | Self::Label(_)
             | Self::Button(_)
-            | Self::InputLine(_) => rect.contains_console_mouse(mouse_x, mouse_y),
+            | Self::InputLine(_)
+            | Self::CheckBox(_)
+            | Self::RadioGroup(_) => rect.contains_console_mouse(mouse_x, mouse_y),
         }
     }
 }

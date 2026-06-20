@@ -6,15 +6,19 @@
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
 mod button;
+mod checkbox;
 mod input_line;
 mod label;
+mod radio;
 
 #[cfg(test)]
 mod tests;
 
 pub use button::{ButtonStyle, ButtonWidget};
+pub use checkbox::{CheckBoxStyle, CheckBoxWidget};
 pub use input_line::{InputLineStyle, InputLineWidget};
 pub use label::{LabelStyle, LabelWidget};
+pub use radio::{RadioGroupStyle, RadioGroupWidget, RadioOption};
 
 use crate::{Console, DamageRegion, ViewRect};
 
@@ -54,4 +58,13 @@ fn paint_chars(
 fn truncated_chars(text: &str, width: i64) -> impl Iterator<Item = (usize, char)> + '_ {
     let width = width.max(0) as usize;
     text.chars().take(width).enumerate()
+}
+
+fn accelerator_index(text: &str, accelerator: Option<char>) -> Option<usize> {
+    let accelerator = accelerator?.to_ascii_lowercase();
+    if !accelerator.is_ascii_alphabetic() {
+        return None;
+    }
+    text.chars()
+        .position(|ch| ch.to_ascii_lowercase() == accelerator)
 }

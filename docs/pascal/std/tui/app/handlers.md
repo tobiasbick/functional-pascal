@@ -138,9 +138,12 @@ Handlers that depend on terminal or OS capability (**key release**, **paste**, *
 
 ## Single entry point rule
 
-There must be **at most one** active `**Application.Run`** (or equivalent hosted loop) per process for a given session handle. Modal nesting is expressed through `**Application.ShowModal`** / `**Application.CloseModal`**; nested `**Run`** remains **forbidden**.
+There must be **at most one** active `**Application.Run`** (or equivalent hosted loop) per process for a given session handle. Modal nesting is expressed through `**Application.ShowModal**` / `**Application.ShowDialog**` / `**Application.CloseModal**`; nested `**Run**` remains **forbidden**. See [Modals and dialogs](modals.md).
 
 ## See also
+
+- [Modals and dialogs](modals.md)
+- [Views and focus](views.md)
 
 - [Types](types.md)
 - [Lifecycle](lifecycle.md)

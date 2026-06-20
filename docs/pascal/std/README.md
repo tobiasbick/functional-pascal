@@ -30,7 +30,7 @@ Each unit page is a **self-contained handbook**: importing and short vs qualifie
 | Numeric | [numeric/](numeric/README.md) | Math, Random |
 | Result / Option | [result/](result/README.md) | Result, Option helpers |
 | Concurrency | [concurrency/](concurrency/README.md) | Task (`Wait`, `WaitAll`) |
-| Terminal UI | [tui/](tui/README.md) | Session API, hosted dispatch |
+| Terminal UI | [tui/](tui/README.md) | Session API, hosted dispatch, views, modals |
 | Graphics | [graph/](graph/README.md) | Window, drawing, hosted dispatch |
 | Testing | [testing/](testing/README.md) | Std.Test assertions |
 

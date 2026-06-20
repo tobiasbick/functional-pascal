@@ -50,7 +50,7 @@ Session lifecycle:
 - `Application.Size` reads the current terminal dimensions.
 - `Application.Run` closes the session automatically when the hosted loop exits.
 
-See [Hosted dispatch](app/README.md) for the full dispatch API, `ApplicationHandlers`, modals, and view-local paint.
+See [Hosted dispatch](app/README.md) for the full dispatch API, `ApplicationHandlers`, [views and focus](app/views.md), and [modals and dialogs](app/modals.md).
 
 ---
 

@@ -3,7 +3,8 @@
 //! These widgets are Rust-internal building blocks for the dialog-controls phase tracked in
 //! `docs/future/windows-dialogs/TUI-CODE-REVIEW.md`.
 //!
-//! Spec: `docs/pascal/std/tui/app/README.md`
+//! Pascal `HostCreate*` bindings for these controls are not registered yet; see
+//! `docs/pascal/std/tui/app/modals.md` and `docs/pascal/std/tui/app/README.md`.
 
 mod button;
 mod checkbox;

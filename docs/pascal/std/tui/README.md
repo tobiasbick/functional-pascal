@@ -6,6 +6,8 @@ Hosted terminal applications and session APIs.
 |-------|-------------|
 | [Session API](session.md) | `Application.Open`, size, `RequestRedraw` |
 | [Hosted dispatch](app/README.md) | `Configure`, `Run`, `On*` handlers, host widgets |
+| [Views and focus](app/views.md) | Retained view tree, clipping, Tab focus, paint order |
+| [Modals and dialogs](app/modals.md) | `ShowModal`, `ShowDialog`, results, focus restore |
 | [Terminal checklist](terminal-checklist.md) | Manual smoke tests |
 
 ## See also

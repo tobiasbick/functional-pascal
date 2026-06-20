@@ -97,7 +97,7 @@ These `[fpas_bytecode::Intrinsic](../../../../../crates/fpas-bytecode/src/intrin
 | `Application.HostCreateStatusBarView(App, X, Y, Width, Height, Segments, Style)` | `TuiHostCreateStatusBarView` |
 | `Application.HostSetStatusBarSegments(App, ViewId, Segments)` | `TuiHostSetStatusBarSegments` |
 
-Samples: [`examples/pascal/tui/host_dispatch_minimal.fpas`](../../../../../examples/pascal/tui/host_dispatch_minimal.fpas) (one `HostProcessNext` step), [`examples/pascal/tui/host_dispatch_paint.fpas`](../../../../../examples/pascal/tui/host_dispatch_paint.fpas) (register `OnPaint` + `HostDispatchRedraw`), [`examples/pascal/tui/host_dispatch_quit.fpas`](../../../../../examples/pascal/tui/host_dispatch_quit.fpas) (`HostRequestQuit` from `OnPaint` + `HostRunLoop`).
+Samples: [`examples/pascal/tui/host_dispatch_minimal.fpas`](../../../../../examples/pascal/tui/host_dispatch_minimal.fpas) (one `HostProcessNext` step), [`examples/pascal/tui/host_dispatch_paint.fpas`](../../../../../examples/pascal/tui/host_dispatch_paint.fpas) (register `OnPaint` + `HostDispatchRedraw`), [`examples/pascal/tui/host_dispatch_quit.fpas`](../../../../../examples/pascal/tui/host_dispatch_quit.fpas) (`HostRequestQuit` from `OnPaint` + `HostRunLoop`), [`examples/pascal/tui/show_dialog.fpas`](../../../../../examples/pascal/tui/show_dialog.fpas) (owned modal dialog with `HostSetActiveModalResult`), [`apps/ide/ide.fpasprj`](../../../../../apps/ide/ide.fpasprj) (menu bar + About dialog).
 
 **Bytecode discriminants** (authoritative enum: [`TuiIntrinsic`](../../../../../crates/fpas-bytecode/src/intrinsic/tui.rs)): **256** `TuiHostRegisterOnKeyPressed`, **257** `TuiHostInvokeOnKeyPressed`, **258** `TuiHostRegisterOnResize`, **259** `TuiHostProcessNext`, **260** `TuiHostRegisterOnPaint`, **261** `TuiHostDispatchRedraw`, **262** `TuiHostRunLoop`, **263** `TuiHostRequestQuit`, **264** `TuiHostRegisterOnExit`, **265** `TuiApplicationRun`, **266** `TuiHostRegisterOnIdle`, **267** `TuiApplicationConfigure`, **268** `TuiHostRegisterOnMouse`, **269** `TuiHostRegisterOnPaste`, **270** `TuiHostRegisterOnFocusGained`, **271** `TuiHostRegisterOnFocusLost`, **272** `TuiHostRegisterOnActivate`, **273** `TuiHostRegisterOnDeactivate`, **274** `TuiHostRegisterOnCommand`, **275** `TuiHostBindCommand`, **276** `TuiHostEnterModal`, **277** `TuiHostLeaveModal`, **278** `TuiQueryModalDepth`, **279** `TuiHostRegisterView`, **280** `TuiHostUnregisterView`, **281** `TuiHostPushChildView`, **282** `TuiQueryFocusedViewId`, **283** `TuiHostAttachViewToActiveModal`, **284** `TuiHostSetViewRect`, **285** `TuiHostSetViewParent`, **286** `TuiHostRegisterOnViewPaint`, **287** `TuiApplicationShowModal`, **288** `TuiApplicationCloseModal`, **289** `TuiHostBindCommandToView`, **290** `TuiHostBindCommandToActiveModal`, **291** `TuiApplicationShowDialog`, **343** `TuiHostCreateSolidFillView`, **344** `TuiHostCreateMenuBarView`, **345** `TuiHostSetMenuBarItems`, **346** `TuiHostCreateStatusBarView`, **347** `TuiHostSetStatusBarSegments`, **381** `TuiHostSetActiveModalResult`. Native headless testing uses **356..=374** (see [Native TUI testing API](#native-tui-testing-api)). **348..=355** and **375..=377** are `Std.Test` intrinsics, not TUI.
 
@@ -105,11 +105,25 @@ Samples: [`examples/pascal/tui/host_dispatch_minimal.fpas`](../../../../../examp
 
 ### Modal host state
 
-`Application.ShowModal(App, ModalId, RootViewId)` is the Phase 7 high-level modal surface. It pushes an application-defined modal id together with a root host view, raises that root, and scopes focus, mouse, and command routing to the root subtree. `Application.ShowDialog(App, ModalId, X, Y, Width, Height)` builds on that surface by registering a fresh root host view and returning its `ViewId`; closing that modal automatically unregisters the owned root subtree. `Application.CloseModal(App)` pops the active modal frame and is a no-op when the stack is empty.
+See [Modals and dialogs](modals.md) for the full guide. Summary:
 
-`Application.HostEnterModal(App, ModalId)` / `Application.HostLeaveModal(App)` remain the low-level modal-stack primitives, and `Application.QueryModalDepth(App)` returns the current stack depth. `Application.HostSetActiveModalResult(App, ResultCode)` stores the active frame's result after validating `ResultCode`: `1` means Accept, `2` means Cancel, and values `>= 1000` are application-defined command results. Codes below `1000` other than `1` and `2`, and calls without an active modal frame, are runtime errors. `Application.HostAttachViewToActiveModal(App, ViewId)` can extend the active modal scope with extra host-managed views beyond the modal root subtree. `Application.HostBindCommandToActiveModal(App, Key, CommandId)` binds shortcuts that only exist while the current modal frame is active. When the active modal has one or more scoped views, Tab / Shift+Tab traversal is limited to those views, mouse events outside their rectangles are suppressed, and key / command dispatch is blocked while focus is on a non-modal view.
+`Application.ShowModal(App, ModalId, RootViewId)` pushes an application-defined modal id together with a root host view, raises that root, saves the previous active window root and focused leaf, and scopes focus, mouse, and command routing to the root subtree (plus any views attached with `HostAttachViewToActiveModal`).
+
+`Application.ShowDialog(App, ModalId, X, Y, Width, Height)` registers a fresh root host view, shows it as the active modal, saves the same return context, and returns its `ViewId`. Closing that modal automatically unregisters the owned root subtree.
+
+`Application.CloseModal(App)` pops the active modal frame (no-op on an empty stack). On close the host restores the saved focused leaf when it still exists, otherwise re-activates the saved window root, then requests redraw for affected views. Nested modals restore one frame at a time.
+
+`Application.HostEnterModal(App, ModalId)` / `Application.HostLeaveModal(App)` remain low-level stack primitives without automatic view ownership. `Application.QueryModalDepth(App)` returns the stack depth.
+
+`Application.HostSetActiveModalResult(App, ResultCode)` stores the active frame's result after validating `ResultCode`: `1` Accept, `2` Cancel, values `>= 1000` application-defined. Invalid codes or an empty stack are runtime errors. Call before `CloseModal` when the outcome matters.
+
+`Application.HostBindCommandToActiveModal` binds shortcuts for the top modal frame only. Enter/Escape dismissal is wired through modal-local command bindings and `OnCommand` until dedicated default/cancel host APIs ship.
+
+When a modal scope is active, Tab / Shift+Tab traversal is limited to scoped views, mouse events outside scoped rectangles are suppressed, and key / command dispatch is blocked while focus is outside the scope.
 
 ### Host view handles
+
+See [Views and focus](views.md) for tree layout, clipping, focus traversal, and paint order.
 
 `Application.HostRegisterView(App, X, Y, Width, Height)` returns an opaque **`ViewId`** owned by the host (see [ViewId type (decided)](#viewid-type-decided) under Native TUI testing API). `Width` and `Height` must both be greater than zero; view and widget creation and `Application.HostSetViewRect` reject invalid dimensions before mutating host state. Pass the handle to `Application.HostUnregisterView`, `Application.HostPushChildView`, `Application.HostSetViewRect`, `Application.HostSetViewParent`, `Application.HostRegisterOnViewPaint`, and `Application.HostBindCommandToView`.
 
@@ -224,6 +238,8 @@ Command resolution is ordered from most local to least local: when a focused hos
 
 ## See also
 
+- [Modals and dialogs](modals.md)
+- [Views and focus](views.md)
 - [Hosted dispatch overview](README.md)
 - [Handlers](handlers.md)
 - [Native testing](testing.md#viewid-type-decided)

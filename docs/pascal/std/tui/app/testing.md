@@ -186,6 +186,8 @@ end.
 | [`tui_view_query_test.fpas`](../../../../tests/tui/tui_view_query_test.fpas) | View rect + initial menu state |
 | [`tui_menu_bar_hover_test.fpas`](../../../../tests/tui/tui_menu_bar_hover_test.fpas) | Bar hover colors |
 | [`tui_menu_hover_test.fpas`](../../../../tests/tui/tui_menu_hover_test.fpas) | Capstone: bar hover + submenu selection |
+| [`tui_show_dialog_test.fpas`](../../../../tests/tui/tui_show_dialog_test.fpas) | `ShowDialog`, modal Escape, `HostSetActiveModalResult`, owned-root cleanup |
+| [`tui_view_clip_test.fpas`](../../../../tests/tui/tui_view_clip_test.fpas) | Effective clip during view-local paint |
 
 ### ScreenCell type (decided)
 

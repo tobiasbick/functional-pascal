@@ -1,4 +1,6 @@
 //! Modal view lifecycle and active-scope tracking.
+//!
+//! **Documentation:** `docs/pascal/std/tui/app/modals.md`
 
 use crate::vm::diagnostics::{VmError, runtime_error};
 use crate::vm::{TuiState, Worker};

@@ -4,6 +4,14 @@
 
 Reuse existing types from `**Std.Tui`** and `**Std.Console`** where possible: `**Application**`, `**Size**`, `**Std.Console.KeyEvent**`.
 
+### `ViewId`
+
+Logical name: `Std.Tui.ViewId`. Short: `ViewId` when `Std.Tui` is imported.
+
+Opaque host-owned handle for one entry in the retained view tree. Sema registers `ViewId` as an empty record; only host routines return values. User code cannot construct literals or pass bare integers where a `ViewId` is expected.
+
+Use `Option of ViewId` when a view may be absent. See [ViewId rules](testing.md#viewid-type-decided).
+
 ### `Rect`
 
 Rectangle in terminal cells. `QueryViewRect` returns absolute screen coordinates. During
@@ -44,7 +52,7 @@ function OnKeyPressed(App: Application; Key: Std.Console.KeyEvent): boolean;
 
 procedure OnResize(App: Application; NewSize: Size);
 
-procedure OnViewPaint(App: Application; ViewId: integer; Bounds: Rect);
+procedure OnViewPaint(App: Application; ViewId: ViewId; Bounds: Rect);
 
 procedure OnPaint(App: Application);
 
@@ -61,5 +69,7 @@ procedure OnExit(App: Application; Reason: ExitReason);
 
 ## See also
 
+- [Views and focus](views.md)
+- [Modals and dialogs](modals.md)
 - [Handlers](handlers.md)
 - [Hosted dispatch overview](README.md)

@@ -5,9 +5,11 @@
 | Topic | Description |
 |-------|-------------|
 | [VM bridge](vm-bridge.md) | Intrinsics, modals, views, host widgets |
+| [Views and focus](views.md) | Retained tree, clipping, Tab traversal, paint order |
+| [Modals and dialogs](modals.md) | `ShowModal`, `ShowDialog`, results, focus restore |
 | [Lifecycle](lifecycle.md) | `Open`, `Configure`, `Run`, `Close` |
 | [Handlers](handlers.md) | `On*` callbacks and registration |
-| [Types](types.md) | `ApplicationHandlers`, `ExitReason`, signatures |
+| [Types](types.md) | `ApplicationHandlers`, `ExitReason`, `ViewId`, signatures |
 | [Native testing](testing.md) | `OpenForTest`, `TestPump`, `Query*` |
 
 ## Implementation (contributors)
@@ -15,11 +17,19 @@
 | Concern | Location |
 |---------|----------|
 | Sema registry | [`loaded/tui/mod.rs`](../../../../../crates/fpas-sema/src/std_registry/loaded/tui/mod.rs) |
+| Retained view engine | [`fpas-std/src/tui/view/`](../../../../../crates/fpas-std/src/tui/view/) |
+| Modal stack | [`fpas-std/src/tui/modal/`](../../../../../crates/fpas-std/src/tui/modal/) |
+| Host widgets | [`fpas-std/src/tui/widget/`](../../../../../crates/fpas-std/src/tui/widget/) |
+| VM bridge | [`fpas-vm/.../tui/`](../../../../../crates/fpas-vm/src/vm/execute/io/tui/) |
 | Contributor guide | [AGENTS.md](../../../../../AGENTS.md) |
+
+Rust-internal dialog controls (`LabelWidget`, `ButtonWidget`, `InputLineWidget`, checkbox/radio) live under [`widget/control/`](../../../../../crates/fpas-std/src/tui/widget/control/) and are covered by Rust unit tests; Pascal `HostCreate*` bindings for them are not registered yet.
 
 ## See also
 
 - [Session API](../session.md)
+- [Views and focus](views.md)
+- [Modals and dialogs](modals.md)
 - [`Std.Console`](../../console/README.md)
 - [Terminal UI index](../README.md)
 - [TUI framework](../../../../future/tui-application-framework.md)

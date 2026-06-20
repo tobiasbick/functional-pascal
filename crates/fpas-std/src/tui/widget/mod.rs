@@ -13,7 +13,7 @@ mod status_bar;
 
 pub use frame::{
     FrameButtonSlots, FrameCapabilities, FrameContentSize, FrameGeometry, FrameGeometryError,
-    FrameScrollbars,
+    FrameKind, FrameRoot, FrameRootSpec, FrameScrollbars,
 };
 pub use menu_bar::{MenuBarItem, MenuBarMouseResult, MenuBarState, MenuBarStyle, MenuBarWidget};
 pub use menu_popup::MenuPopupItem;

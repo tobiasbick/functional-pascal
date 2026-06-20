@@ -78,12 +78,13 @@ pub use test::{
 pub use tui::{
     BlockedInput, CommandEvent, CommandId, CommandKind, CommandRegistry, DamageRegion,
     DesktopMetrics, EventOutcome, EventPhase, EventRoute, FocusDirection, FrameButtonSlots,
-    FrameCapabilities, FrameContentSize, FrameGeometry, FrameGeometryError, FrameScrollbars,
-    MenuBarItem, MenuBarMouseResult, MenuBarState, MenuBarStyle, MenuBarWidget, MenuPopupItem,
-    ModalId, ModalStack, ProcessOutcome, ResolvedView, RootActivation, RoutedEvent,
-    SolidFillWidget, StatusBarSegment, StatusBarStyle, StatusBarWidget, TUI_EVENT_KIND_VARIANTS,
-    TUI_EXIT_REASON_VARIANTS, TuiEvent, TuiHost, TuiSession, ViewId, ViewOptions, ViewRect,
-    ViewRegistry, ViewState, ViewWidget, WindowPalette, WindowShadow,
+    FrameCapabilities, FrameContentSize, FrameGeometry, FrameGeometryError, FrameKind, FrameRoot,
+    FrameRootSpec, FrameScrollbars, MenuBarItem, MenuBarMouseResult, MenuBarState, MenuBarStyle,
+    MenuBarWidget, MenuPopupItem, ModalId, ModalStack, ProcessOutcome, ResolvedView,
+    RootActivation, RoutedEvent, SolidFillWidget, StatusBarSegment, StatusBarStyle,
+    StatusBarWidget, TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent, TuiHost,
+    TuiSession, ViewId, ViewOptions, ViewRect, ViewRegistry, ViewState, ViewWidget, WindowPalette,
+    WindowShadow,
 };
 pub use ui::{UiEvent, UiHost, UiHostSurface, UiModifiers, UiMouse, UiResize, UiWheel};
 

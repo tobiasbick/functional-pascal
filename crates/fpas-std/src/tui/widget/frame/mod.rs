@@ -7,8 +7,12 @@
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
 mod geometry;
+mod kind;
+mod root;
 
 pub use geometry::{
     FrameButtonSlots, FrameCapabilities, FrameContentSize, FrameGeometry, FrameGeometryError,
     FrameScrollbars,
 };
+pub use kind::FrameKind;
+pub use root::{FrameRoot, FrameRootSpec};

@@ -28,6 +28,7 @@ pub use view::{
     WindowShadow,
 };
 pub use widget::{
-    MenuBarItem, MenuBarMouseResult, MenuBarState, MenuBarStyle, MenuBarWidget, MenuPopupItem,
-    SolidFillWidget, StatusBarSegment, StatusBarStyle, StatusBarWidget, ViewWidget,
+    FrameButtonSlots, FrameCapabilities, FrameContentSize, FrameGeometry, FrameGeometryError,
+    FrameScrollbars, MenuBarItem, MenuBarMouseResult, MenuBarState, MenuBarStyle, MenuBarWidget,
+    MenuPopupItem, SolidFillWidget, StatusBarSegment, StatusBarStyle, StatusBarWidget, ViewWidget,
 };

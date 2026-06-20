@@ -3,6 +3,7 @@
 //! Plan: `docs/future/tui-application-framework.md`
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
+mod frame;
 mod menu_bar;
 mod menu_label_paint;
 mod menu_popup;
@@ -10,6 +11,10 @@ mod menu_style;
 mod solid_fill;
 mod status_bar;
 
+pub use frame::{
+    FrameButtonSlots, FrameCapabilities, FrameContentSize, FrameGeometry, FrameGeometryError,
+    FrameScrollbars,
+};
 pub use menu_bar::{MenuBarItem, MenuBarMouseResult, MenuBarState, MenuBarStyle, MenuBarWidget};
 pub use menu_popup::MenuPopupItem;
 pub use solid_fill::SolidFillWidget;

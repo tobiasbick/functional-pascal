@@ -328,12 +328,17 @@ primitives in [`view/activation.rs`](../../../crates/fpas-std/src/tui/view/activ
 `root_of`, `active_root`, and `activate_root` (raise the containing root to the front of the root
 z-order, then move focus into its subtree, preserving focus already inside it). The desktop
 foundation also now exposes work-area constraints, active/inactive root palette state, and clipped
-shadow geometry in [`view/desktop.rs`](../../../crates/fpas-std/src/tui/view/desktop.rs). Desktop
-tiering, concrete frame palettes, and frame widgets remain open.
+shadow geometry in [`view/desktop.rs`](../../../crates/fpas-std/src/tui/view/desktop.rs). Static
+frame geometry is available in
+[`widget/frame/geometry.rs`](../../../crates/fpas-std/src/tui/widget/frame/geometry.rs), including
+minimum size validation, title-button slots, content viewport calculation, and fixed-point
+scroll-bar visibility. Desktop tiering, concrete frame palettes, frame painting, and atomic
+framed-window/dialog creation remain open.
 
 - [x] Add active-root tracking and raise/activate (click-to-front) in the retained registry.
 - [x] Add desktop work area, active/inactive palette state, constraints, and shadow geometry.
-- [ ] Add static frame geometry and atomic framed-window/dialog creation.
+- [x] Add static frame geometry.
+- [ ] Add atomic framed-window/dialog creation.
 - [ ] Verify overlap, occlusion repair, clipping, focus activation, and nested frames.
 
 ### Phase 3 - Dialog controls

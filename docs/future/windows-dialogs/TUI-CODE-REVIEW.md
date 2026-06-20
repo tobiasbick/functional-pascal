@@ -323,7 +323,7 @@ the retained Rust contracts; bridge tags are encoded only at the intrinsic bound
 
 ### Phase 2 - Desktop and frames
 
-**Implementation status (2026-06-20): in progress.** The retained engine now exposes active-window
+**Implementation status (2026-06-20): complete.** The retained engine now exposes active-window
 primitives in [`view/activation.rs`](../../../crates/fpas-std/src/tui/view/activation.rs):
 `root_of`, `active_root`, and `activate_root` (raise the containing root to the front of the root
 z-order, then move focus into its subtree, preserving focus already inside it). The desktop
@@ -337,14 +337,18 @@ framed-dialog modal bridge wiring remain open. Atomic frame-root creation is ava
 `FrameRootSpec` / `FrameRoot` and `ViewRegistry::register_frame_root`, which validates geometry
 before mutating the retained tree. Owned framed-dialog root creation is available through
 `register_framed_dialog_root`, which validates geometry before mutating either the retained tree or
-modal stack.
+modal stack. Headless acceptance scenarios in
+[`widget/frame/tests.rs`](../../../crates/fpas-std/src/tui/widget/frame/tests.rs) verify overlap
+z-order, occlusion repair when a covering frame is removed, child clipping, click-driven focus
+activation between windows, and nested frames. Concrete frame palettes and frame painting are the
+remaining Phase 3+ work.
 
 - [x] Add active-root tracking and raise/activate (click-to-front) in the retained registry.
 - [x] Add desktop work area, active/inactive palette state, constraints, and shadow geometry.
 - [x] Add static frame geometry.
 - [x] Add atomic framed-window root creation.
 - [x] Add atomic owned framed-dialog modal root creation.
-- [ ] Verify overlap, occlusion repair, clipping, focus activation, and nested frames.
+- [x] Verify overlap, occlusion repair, clipping, focus activation, and nested frames.
 
 ### Phase 3 - Dialog controls
 

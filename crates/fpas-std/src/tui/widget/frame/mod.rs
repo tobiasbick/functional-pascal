@@ -10,6 +10,9 @@ mod geometry;
 mod kind;
 mod root;
 
+#[cfg(test)]
+mod tests;
+
 pub use geometry::{
     FrameButtonSlots, FrameCapabilities, FrameContentSize, FrameGeometry, FrameGeometryError,
     FrameScrollbars,

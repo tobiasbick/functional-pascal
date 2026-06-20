@@ -23,6 +23,9 @@ impl ConsoleState {
         ) else {
             return;
         };
+        let Some(window) = self.clip_window(window) else {
+            return;
+        };
 
         let cell = ScreenCell {
             ch,

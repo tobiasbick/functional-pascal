@@ -76,13 +76,13 @@ impl Worker {
 
         loop {
             let redraw_tag = self.tui_host_dispatch_redraw_inner(line)?;
-            let process_tag = self.tui_host_process_next_inner(RUN_PROCESS_SPINS, line)?;
+            let process_outcome = self.tui_host_process_next_inner(RUN_PROCESS_SPINS, line)?;
 
             if let Some(exit_reason) = self.take_tui_application_run_stop_reason() {
                 return self.finish_tui_application_run(exit_reason, line);
             }
 
-            if redraw_tag != 0 || process_tag != 0 {
+            if redraw_tag != 0 || process_outcome.did_work() {
                 continue;
             }
 

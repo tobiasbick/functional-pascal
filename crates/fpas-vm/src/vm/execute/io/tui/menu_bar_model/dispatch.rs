@@ -4,7 +4,7 @@ use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
 use crate::vm::shared::TuiState;
 use fpas_bytecode::SourceLocation;
-use fpas_std::{MenuBarMouseResult, ViewId, ViewRect, ViewWidget};
+use fpas_std::{CommandEvent, MenuBarMouseResult, ProcessOutcome, ViewId, ViewRect, ViewWidget};
 
 use super::super::widget_target;
 
@@ -15,7 +15,7 @@ impl Worker {
         mouse: fpas_std::UiMouse,
         modal_scope: Option<&[ViewId]>,
         line: SourceLocation,
-    ) -> Result<Option<i64>, VmError> {
+    ) -> Result<Option<ProcessOutcome>, VmError> {
         let hit = {
             let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
             widget_target::widget_mouse_hit(&tui.views, &tui.view_widgets, mouse, modal_scope)
@@ -49,16 +49,25 @@ impl Worker {
                     regions.extend(after);
                     Self::request_unique_redraws(tui, &regions, line);
                 });
-                5
+                ProcessOutcome::Pointer { handled: true }
             }
             MenuBarMouseResult::Command(command_id) => {
-                self.with_tui(|tui| {
+                let enabled = self.with_tui(|tui| {
                     tui.view_widgets.insert(view_id, widget);
                     let mut regions = before;
                     regions.extend(after);
                     Self::request_unique_redraws(tui, &regions, line);
+                    tui.commands.is_enabled(command_id)
                 });
-                return self.dispatch_tui_command(command_id, line).map(Some);
+                if !enabled {
+                    return Ok(Some(ProcessOutcome::Pointer { handled: true }));
+                }
+                return self
+                    .dispatch_tui_command(
+                        CommandEvent::application(command_id, Some(view_id)),
+                        line,
+                    )
+                    .map(Some);
             }
         };
 
@@ -71,7 +80,7 @@ impl Worker {
         key: fpas_std::ConsoleKeyEvent,
         modal_scope: Option<&[ViewId]>,
         line: SourceLocation,
-    ) -> Result<Option<i64>, VmError> {
+    ) -> Result<Option<ProcessOutcome>, VmError> {
         let hit = {
             let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
             widget_target::topmost_menu_bar(&tui.views, &tui.view_widgets, modal_scope)
@@ -103,16 +112,25 @@ impl Worker {
                     regions.extend(after);
                     Self::request_unique_redraws(tui, &regions, line);
                 });
-                21
+                ProcessOutcome::WidgetConsumed
             }
             MenuBarMouseResult::Command(command_id) => {
-                self.with_tui(|tui| {
+                let enabled = self.with_tui(|tui| {
                     tui.view_widgets.insert(view_id, widget);
                     let mut regions = before;
                     regions.extend(after);
                     Self::request_unique_redraws(tui, &regions, line);
+                    tui.commands.is_enabled(command_id)
                 });
-                return self.dispatch_tui_command(command_id, line).map(Some);
+                if !enabled {
+                    return Ok(Some(ProcessOutcome::WidgetConsumed));
+                }
+                return self
+                    .dispatch_tui_command(
+                        CommandEvent::application(command_id, Some(view_id)),
+                        line,
+                    )
+                    .map(Some);
             }
         };
 

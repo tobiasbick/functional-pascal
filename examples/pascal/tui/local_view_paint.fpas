@@ -13,7 +13,7 @@ procedure ClearBounds(Bounds: Std.Tui.Rect);
 begin
   for Row: integer := 0 to Bounds.height - 1 do
   begin
-    GotoXY(Bounds.x + 1, (Bounds.y + Row) + 1);
+    GotoXY(1, Row + 1);
     for Col: integer := 0 to Bounds.width - 1 do
     begin
       Write(' ')
@@ -26,16 +26,16 @@ begin
   if ViewId = RootView then
   begin
     ClearBounds(Bounds);
-    GotoXY(Bounds.x + 1, Bounds.y + 1);
+    GotoXY(1, 1);
     Write('Local view paint');
-    GotoXY(Bounds.x + 1, Bounds.y + 2);
+    GotoXY(1, 2);
     Write('M moves the badge inside the parent view');
-    GotoXY(Bounds.x + 1, Bounds.y + 3);
+    GotoXY(1, 3);
     Write('Escape exits')
   end
   else if ViewId = BadgeView then
   begin
-    GotoXY(Bounds.x + 1, Bounds.y + 1);
+    GotoXY(1, 1);
     Write('[badge]')
   end
 end;

@@ -2,10 +2,12 @@ use super::{ConsoleState, ScreenCell};
 
 impl ConsoleState {
     pub(in super::super) fn clear_window(&mut self) {
-        let dirty = self.window;
+        let Some(dirty) = self.clip_window(self.window) else {
+            return;
+        };
         let blank = self.blank_cell();
-        for y in self.window.top..=self.window.bottom {
-            for x in self.window.left..=self.window.right {
+        for y in dirty.top..=dirty.bottom {
+            for x in dirty.left..=dirty.right {
                 let idx = self.index(x, y);
                 self.cells[idx] = blank;
             }
@@ -20,60 +22,69 @@ impl ConsoleState {
         let blank = self.blank_cell();
         let y = self.abs_y();
         let left = self.abs_x();
-        for x in self.abs_x()..=self.window.right {
-            let idx = self.index(x, y);
-            self.cells[idx] = blank;
-        }
-        self.mark_damage_rect(super::WindowRect {
+        let Some(dirty) = self.clip_window(super::WindowRect {
             left,
             top: y,
             right: self.window.right,
             bottom: y,
-        });
+        }) else {
+            return;
+        };
+        for x in dirty.left..=dirty.right {
+            let idx = self.index(x, y);
+            self.cells[idx] = blank;
+        }
+        self.mark_damage_rect(dirty);
     }
 
     pub(in super::super) fn del_line(&mut self) {
         let abs_y = self.abs_y();
-        for y in abs_y..self.window.bottom {
-            for x in self.window.left..=self.window.right {
+        let Some(dirty) = self.clip_window(super::WindowRect {
+            left: self.window.left,
+            top: abs_y,
+            right: self.window.right,
+            bottom: self.window.bottom,
+        }) else {
+            return;
+        };
+        for y in dirty.top..dirty.bottom {
+            for x in dirty.left..=dirty.right {
                 let dst = self.index(x, y);
                 let src = self.index(x, y + 1);
                 self.cells[dst] = self.cells[src];
             }
         }
         let blank = self.blank_cell();
-        for x in self.window.left..=self.window.right {
-            let idx = self.index(x, self.window.bottom);
+        for x in dirty.left..=dirty.right {
+            let idx = self.index(x, dirty.bottom);
             self.cells[idx] = blank;
         }
-        self.mark_damage_rect(super::WindowRect {
-            left: self.window.left,
-            top: abs_y,
-            right: self.window.right,
-            bottom: self.window.bottom,
-        });
+        self.mark_damage_rect(dirty);
     }
 
     pub(in super::super) fn ins_line(&mut self) {
         let abs_y = self.abs_y();
-        for y in (abs_y + 1..=self.window.bottom).rev() {
-            for x in self.window.left..=self.window.right {
+        let Some(dirty) = self.clip_window(super::WindowRect {
+            left: self.window.left,
+            top: abs_y,
+            right: self.window.right,
+            bottom: self.window.bottom,
+        }) else {
+            return;
+        };
+        for y in (dirty.top + 1..=dirty.bottom).rev() {
+            for x in dirty.left..=dirty.right {
                 let dst = self.index(x, y);
                 let src = self.index(x, y - 1);
                 self.cells[dst] = self.cells[src];
             }
         }
         let blank = self.blank_cell();
-        for x in self.window.left..=self.window.right {
-            let idx = self.index(x, abs_y);
+        for x in dirty.left..=dirty.right {
+            let idx = self.index(x, dirty.top);
             self.cells[idx] = blank;
         }
-        self.mark_damage_rect(super::WindowRect {
-            left: self.window.left,
-            top: abs_y,
-            right: self.window.right,
-            bottom: self.window.bottom,
-        });
+        self.mark_damage_rect(dirty);
     }
 
     pub(in super::super) fn write_text(&mut self, s: &str, newline: bool) {
@@ -102,18 +113,20 @@ impl ConsoleState {
                 }
                 let x = self.abs_x();
                 let y = self.abs_y();
-                let idx = self.index(x, y);
-                self.cells[idx] = ScreenCell {
-                    ch,
-                    fg: self.active_fg,
-                    bg: self.active_bg,
-                };
-                self.mark_damage_rect(super::WindowRect {
-                    left: x,
-                    top: y,
-                    right: x,
-                    bottom: y,
-                });
+                if self.can_paint_cell(x, y) {
+                    let idx = self.index(x, y);
+                    self.cells[idx] = ScreenCell {
+                        ch,
+                        fg: self.active_fg,
+                        bg: self.active_bg,
+                    };
+                    self.mark_damage_rect(super::WindowRect {
+                        left: x,
+                        top: y,
+                        right: x,
+                        bottom: y,
+                    });
+                }
                 if self.cursor_x == self.window_width() {
                     self.pending_wrap = true;
                 } else {
@@ -134,18 +147,21 @@ impl ConsoleState {
     }
 
     fn scroll_window_up(&mut self) {
-        for y in self.window.top..self.window.bottom {
-            for x in self.window.left..=self.window.right {
+        let Some(dirty) = self.clip_window(self.window) else {
+            return;
+        };
+        for y in dirty.top..dirty.bottom {
+            for x in dirty.left..=dirty.right {
                 let dst = self.index(x, y);
                 let src = self.index(x, y + 1);
                 self.cells[dst] = self.cells[src];
             }
         }
         let blank = self.blank_cell();
-        for x in self.window.left..=self.window.right {
-            let idx = self.index(x, self.window.bottom);
+        for x in dirty.left..=dirty.right {
+            let idx = self.index(x, dirty.bottom);
             self.cells[idx] = blank;
         }
-        self.mark_damage_rect(self.window);
+        self.mark_damage_rect(dirty);
     }
 }

@@ -3,9 +3,9 @@
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
 use fpas_bytecode::{SourceLocation, Value};
-use fpas_std::DamageRegion;
+use fpas_std::{DamageRegion, ProcessOutcome};
 
-use super::DispatchTags;
+use super::DispatchOutcomes;
 
 impl Worker {
     /// Dispatches a `Std.Console.Event`-bearing handler.
@@ -14,9 +14,9 @@ impl Worker {
         handler: Option<Value>,
         args: [Value; 2],
         redraw_hint: Option<DamageRegion>,
-        tags: DispatchTags,
+        outcomes: DispatchOutcomes,
         line: SourceLocation,
-    ) -> Result<i64, VmError> {
+    ) -> Result<ProcessOutcome, VmError> {
         if let Some(handler) = handler {
             let _ = self.call_function_sync_allowing_shutdown_with_redraw_hint(
                 &handler,
@@ -24,9 +24,9 @@ impl Worker {
                 redraw_hint,
                 line,
             )?;
-            Ok(tags.hit)
+            Ok(outcomes.hit)
         } else {
-            Ok(tags.miss)
+            Ok(outcomes.miss)
         }
     }
 

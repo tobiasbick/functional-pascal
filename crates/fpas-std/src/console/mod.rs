@@ -100,6 +100,18 @@ impl Console {
     pub(crate) fn has_terminal_writer(&self) -> bool {
         self.writer.is_some()
     }
+
+    /// Begin an enforced retained-view paint context.
+    #[doc(hidden)]
+    pub fn begin_tui_view_paint(&mut self, rect: crate::ViewRect, clip: crate::ViewRect) -> bool {
+        self.state.begin_view_paint(rect, clip)
+    }
+
+    /// Restore console window/cursor state after a retained-view paint callback.
+    #[doc(hidden)]
+    pub fn end_tui_view_paint(&mut self) {
+        self.state.end_view_paint();
+    }
 }
 
 #[cfg(test)]

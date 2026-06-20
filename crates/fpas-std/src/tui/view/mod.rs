@@ -8,10 +8,16 @@
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
 mod focus;
+mod geometry;
+mod routing;
+mod state;
 mod tree;
 
 #[cfg(test)]
 mod tests;
+
+pub use routing::{EventOutcome, EventPhase, EventRoute, RoutedEvent};
+pub use state::{ResolvedView, ViewOptions, ViewState};
 
 /// Opaque handle identifying a host-managed view.
 ///
@@ -125,6 +131,9 @@ struct ViewEntry {
     local_rect: ViewRect,
     parent: Option<ViewId>,
     children: Vec<ViewId>,
+    current_child: Option<ViewId>,
+    state: ViewState,
+    options: ViewOptions,
 }
 
 /// Host-side registry for all active views in a TUI session.
@@ -133,13 +142,12 @@ struct ViewEntry {
 /// parent. Sibling insertion order defines z-order: later siblings paint later and therefore sit
 /// on top during hit-testing.
 ///
-/// The focus chain remains a separate ordered list of [`ViewId`]s. Adding a view to that chain is
-/// still explicit via [`push_child`][Self::push_child].
+/// Focus traversal is derived from tree order and each view's [`ViewOptions`].
 #[derive(Debug, Default)]
 pub struct ViewRegistry {
     next_id: u32,
     views: Vec<ViewEntry>,
     roots: Vec<ViewId>,
-    children: Vec<ViewId>,
-    focused: Option<usize>,
+    focused: Option<ViewId>,
+    pointer_capture: Option<ViewId>,
 }

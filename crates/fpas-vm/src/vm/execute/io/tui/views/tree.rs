@@ -69,14 +69,13 @@ impl Worker {
                     line,
                 )?;
                 self.with_tui(|tui| {
-                    let Some(previous_rect) = tui.views.rect(view_id) else {
+                    if tui.views.rect(view_id).is_none() {
                         return;
-                    };
-                    tui.views.set_rect(view_id, next_rect);
-                    let _ = tui.session.request_redraw_rect(previous_rect, line);
-                    if let Some(resolved_rect) = tui.views.rect(view_id) {
-                        let _ = tui.session.request_redraw_rect(resolved_rect, line);
                     }
+                    let previous_rects = Self::subtree_screen_rects(tui, view_id);
+                    tui.views.set_rect(view_id, next_rect);
+                    let next_rects = Self::subtree_screen_rects(tui, view_id);
+                    Self::request_rect_redraws(tui, &previous_rects, &next_rects, line);
                 });
             }
             TuiIntrinsic::HostSetViewParent => {
@@ -84,19 +83,15 @@ impl Worker {
                 let view_id = self.pop_tui_view_id(line)?;
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| {
-                    let previous_rect = tui.views.rect(view_id);
                     if let Some(parent_id) = parent
                         && tui.views.rect(parent_id).is_none()
                     {
                         return;
                     }
+                    let previous_rects = Self::subtree_screen_rects(tui, view_id);
                     if tui.views.set_parent(view_id, parent) {
-                        if let Some(rect) = previous_rect {
-                            let _ = tui.session.request_redraw_rect(rect, line);
-                        }
-                        if let Some(rect) = tui.views.rect(view_id) {
-                            let _ = tui.session.request_redraw_rect(rect, line);
-                        }
+                        let next_rects = Self::subtree_screen_rects(tui, view_id);
+                        Self::request_rect_redraws(tui, &previous_rects, &next_rects, line);
                     }
                 });
             }
@@ -157,6 +152,25 @@ impl Worker {
             tui.view_paints.remove(view_id);
             tui.view_widgets.remove(view_id);
             tui.view_commands.remove(view_id);
+        }
+    }
+
+    fn subtree_screen_rects(tui: &TuiState, root: ViewId) -> Vec<ViewRect> {
+        tui.views
+            .subtree_ids(root)
+            .into_iter()
+            .filter_map(|id| tui.views.rect(id))
+            .collect()
+    }
+
+    fn request_rect_redraws(
+        tui: &mut TuiState,
+        previous: &[ViewRect],
+        next: &[ViewRect],
+        line: SourceLocation,
+    ) {
+        for rect in previous.iter().chain(next) {
+            let _ = tui.session.request_redraw_rect(*rect, line);
         }
     }
 }

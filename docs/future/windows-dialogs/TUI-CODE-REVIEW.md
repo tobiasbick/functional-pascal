@@ -313,10 +313,13 @@ order vectors.
 
 ### Phase 1 - Retained view engine
 
-- Add resolved transforms/clips and an enforced paint context.
-- Add view state/options, group current child, focus path, and click focus.
-- Add typed event routing, pointer capture, sourced commands, and command enabled state.
-- Replace integer `HostProcessNext` tags with an internal enum; expose only stable high-level APIs.
+**Implementation status (2026-06-20): complete.** Existing Pascal `Host*` calls are adapters over
+the retained Rust contracts; bridge tags are encoded only at the intrinsic boundary.
+
+- [x] Add resolved transforms/clips and an enforced paint context.
+- [x] Add view state/options, group current child, focus path, and click focus.
+- [x] Add typed event routing, pointer capture, sourced commands, and command enabled state.
+- [x] Replace integer `HostProcessNext` tags with an internal enum; expose only stable high-level APIs.
 
 ### Phase 2 - Desktop and frames
 

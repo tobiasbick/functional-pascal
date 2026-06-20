@@ -30,8 +30,8 @@ Shipped record fields:
 | `OnPaste`      | no       | `Option of procedure(App: Application; Event: Std.Console.Event)` — bracketed-paste content (`Event.text`). Best-effort; requires `Std.Console.EnablePaste` on the active session. |
 | `OnFocusGained` | no      | `Option of procedure(App: Application; Event: Std.Console.Event)` — terminal gained focus. Best-effort / optional on many terminals. |
 | `OnFocusLost`  | no       | `Option of procedure(App: Application; Event: Std.Console.Event)` — terminal lost focus. Best-effort / optional on many terminals. |
-| `OnActivate`   | no       | `Option of procedure(App: Application)` — a view in the host focus chain gained focus (Tab / Shift+Tab traversal). Fires after the previous view's `OnDeactivate` when there was a prior focused view. |
-| `OnDeactivate` | no       | `Option of procedure(App: Application)` — a view in the host focus chain lost focus. Fires before `OnActivate` for the new view. |
+| `OnActivate`   | no       | `Option of procedure(App: Application)` — an eligible retained view gained focus through traversal or pointer-down. Fires after `OnDeactivate` when there was a prior focused leaf. |
+| `OnDeactivate` | no       | `Option of procedure(App: Application)` — the previous focused retained view lost focus. Fires before `OnActivate` for the new leaf. |
 | `OnCommand`    | no       | `Option of procedure(App: Application; CommandId: integer)` — a host-resolved keyboard shortcut fired. Command ids are application-defined integers bound through global, view-local, or modal-local command maps. |
 
 Example:
@@ -62,7 +62,7 @@ end;
 
 - **Model:** **invalidation**, not “call `**OnPaint`** every host tick”. The host sets an internal **redraw pending** flag when `**Application.RequestRedraw`** is called, when `**OnResize`** fires, when `**Application.Run`** starts (the host auto-requests the first redraw), and when the backend signals damage the host maps to a redraw. Multiple requests **coalesce** to **one** hosted flush.
 - `**OnPaint`:** Performs a **full logical frame** draw (entire buffer for the app). The Rust host now batches each hosted paint into one deferred back-buffered present and may restrict terminal diff/flush work to tracked dirty regions plus the console mutations recorded during that frame.
-- `**OnViewPaint`:** Performs view-local paint for one host-managed view. The host runs view-local paint handlers after the global `**OnPaint`** (when present), in tree paint order, and only for views intersecting the current damage. `**Bounds`** is the view's absolute terminal rectangle after parent-relative layout has been resolved.
+- `**OnViewPaint`:** Performs view-local paint for one host-managed view. The host traverses each view depth-first as native underlay, local handler, child subtrees, then overlay. `**Bounds`** is local (`x = 0`, `y = 0`), and CRT operations such as `**GotoXY(1, 1)`** address the view's top-left cell. Writes are hard-clipped to the view's effective ancestor clip, and Console window/cursor state is restored after the callback.
 - **Relation to `RedrawPending`:** In dispatch mode, user code **typically does not poll** `**RedrawPending`**; the host invokes `**OnPaint`** when a frame is due. If both APIs coexist during transition, the spec for `**RedrawPending**` in hosted mode is: host consumes the pending flag when entering `**OnPaint**` (aligned with today’s “consume once” semantics).
 
 ---

@@ -314,7 +314,7 @@ begin
 end.",
     );
 
-    assert_eq!(out.lines, vec!["1", "12", "13", "4", "2"]);
+    assert_eq!(out.lines, vec!["1", "0", "0", "4", "2"]);
 }
 
 // --- Tab falls through to OnKeyPressed when no views in the focus chain ---

@@ -1,14 +1,22 @@
-use super::{ViewEntry, ViewId, ViewRect, ViewRegistry};
+use super::{ViewEntry, ViewId, ViewOptions, ViewRect, ViewRegistry, ViewState};
 
 impl ViewRegistry {
     /// Register a new root view covering `rect` and return its opaque [`ViewId`].
     pub fn register(&mut self, rect: ViewRect) -> ViewId {
+        self.register_with_options(rect, ViewOptions::default())
+    }
+
+    /// Register a root view with explicit behavior options.
+    pub fn register_with_options(&mut self, rect: ViewRect, options: ViewOptions) -> ViewId {
         let id = self.allocate_id();
         self.views.push(ViewEntry {
             id,
             local_rect: rect,
             parent: None,
             children: Vec::new(),
+            current_child: None,
+            state: ViewState::default(),
+            options,
         });
         self.roots.push(id);
         id
@@ -25,17 +33,25 @@ impl ViewRegistry {
         }
 
         let parent = self.entry(id).and_then(|entry| entry.parent);
-        self.detach_from_parent_or_roots(id, parent);
         for view_id in &subtree {
-            self.remove_from_focus_chain(*view_id);
+            self.remove_child(*view_id);
+            if self.pointer_capture == Some(*view_id) {
+                self.pointer_capture = None;
+            }
         }
+        self.detach_from_parent_or_roots(id, parent);
         self.views.retain(|entry| !subtree.contains(&entry.id));
+        for entry in &mut self.views {
+            if entry.current_child.is_some_and(|id| subtree.contains(&id)) {
+                entry.current_child = None;
+            }
+        }
     }
 
     /// Return the absolute terminal rectangle for `id`, or `None` when it is not registered.
     #[must_use]
     pub fn rect(&self, id: ViewId) -> Option<ViewRect> {
-        self.resolve_rect(id)
+        self.resolved(id).map(|view| view.rect)
     }
 
     /// Update the rectangle for a registered view.
@@ -136,6 +152,54 @@ impl ViewRegistry {
         self.entry(id).and_then(|entry| entry.parent)
     }
 
+    /// Return the group's current child on the active focus path.
+    #[must_use]
+    pub fn current_child(&self, id: ViewId) -> Option<ViewId> {
+        self.entry(id).and_then(|entry| entry.current_child)
+    }
+
+    /// Return behavior options for a retained view.
+    #[must_use]
+    pub fn options(&self, id: ViewId) -> Option<ViewOptions> {
+        self.entry(id).map(|entry| entry.options)
+    }
+
+    /// Replace behavior options for a retained view.
+    pub fn set_options(&mut self, id: ViewId, options: ViewOptions) -> bool {
+        let Some(entry) = self.entry_mut(id) else {
+            return false;
+        };
+        entry.options = options;
+        self.ensure_valid_focus();
+        true
+    }
+
+    /// Return resolved state for a retained view.
+    #[must_use]
+    pub fn state(&self, id: ViewId) -> Option<ViewState> {
+        self.resolved(id).map(|view| view.state)
+    }
+
+    /// Set whether a retained view and its descendants are visible.
+    pub fn set_visible(&mut self, id: ViewId, visible: bool) -> bool {
+        let Some(entry) = self.entry_mut(id) else {
+            return false;
+        };
+        entry.state.visible = visible;
+        self.ensure_valid_focus();
+        true
+    }
+
+    /// Set whether a retained view can receive input and focus.
+    pub fn set_enabled(&mut self, id: ViewId, enabled: bool) -> bool {
+        let Some(entry) = self.entry_mut(id) else {
+            return false;
+        };
+        entry.state.enabled = enabled;
+        self.ensure_valid_focus();
+        true
+    }
+
     /// Return the subtree rooted at `root` in paint order.
     #[must_use]
     pub fn subtree_ids(&self, root: ViewId) -> Vec<ViewId> {
@@ -178,12 +242,16 @@ impl ViewRegistry {
     /// When `scope` is present, hit-testing is restricted to that subset of view ids.
     #[must_use]
     pub fn topmost_view_at(&self, x: i64, y: i64, scope: Option<&[ViewId]>) -> Option<ViewId> {
-        self.paint_order().into_iter().rev().find(|view_id| {
-            scope.is_none_or(|scope_ids| scope_ids.contains(view_id))
-                && self
-                    .rect(*view_id)
-                    .is_some_and(|rect| rect.contains_point(x, y))
-        })
+        self.resolved_paint_order()
+            .into_iter()
+            .rev()
+            .find_map(|view| {
+                scope
+                    .is_none_or(|scope_ids| scope_ids.contains(&view.id))
+                    .then_some(view)
+                    .filter(|view| view.clip.is_some_and(|clip| clip.contains_point(x, y)))
+                    .map(|view| view.id)
+            })
     }
 
     /// Return the number of registered views.
@@ -202,8 +270,8 @@ impl ViewRegistry {
     pub fn clear(&mut self) {
         self.views.clear();
         self.roots.clear();
-        self.children.clear();
         self.focused = None;
+        self.pointer_capture = None;
     }
 
     fn allocate_id(&mut self) -> ViewId {
@@ -225,19 +293,8 @@ impl ViewRegistry {
         self.views.iter().find(|entry| entry.id == id)
     }
 
-    fn entry_mut(&mut self, id: ViewId) -> Option<&mut ViewEntry> {
+    pub(super) fn entry_mut(&mut self, id: ViewId) -> Option<&mut ViewEntry> {
         self.views.iter_mut().find(|entry| entry.id == id)
-    }
-
-    fn resolve_rect(&self, id: ViewId) -> Option<ViewRect> {
-        let entry = self.entry(id)?;
-        let mut rect = entry.local_rect;
-        if let Some(parent) = entry.parent {
-            let parent_rect = self.resolve_rect(parent)?;
-            rect.x = rect.x.saturating_add(parent_rect.x);
-            rect.y = rect.y.saturating_add(parent_rect.y);
-        }
-        Some(rect)
     }
 
     fn collect_subtree(&self, id: ViewId, ids: &mut Vec<ViewId>) {

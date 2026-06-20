@@ -3,9 +3,12 @@
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
 use fpas_bytecode::{SourceLocation, Value};
-use fpas_std::{DamageRegion, UiMouse, ViewId};
+use fpas_std::{
+    BlockedInput, DamageRegion, EventOutcome, ProcessOutcome, RoutedEvent, UiMouse, ViewId,
+    mouse_action_index,
+};
 
-use super::DispatchTags;
+use super::DispatchOutcomes;
 
 impl Worker {
     /// Routes one mouse event through modal filtering, widgets, and Pascal fallback.
@@ -16,9 +19,32 @@ impl Worker {
         app_rec: Value,
         modal_scope: Option<&[ViewId]>,
         line: SourceLocation,
-    ) -> Result<i64, VmError> {
-        if self.modal_blocks_mouse_dispatch(modal_scope, mouse) {
-            return Ok(19);
+    ) -> Result<ProcessOutcome, VmError> {
+        let route = {
+            let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+            tui.views
+                .route_event(RoutedEvent::Mouse(mouse), modal_scope)
+        };
+        if modal_scope.is_some() && route.target.is_none() {
+            return Ok(ProcessOutcome::Blocked(BlockedInput::Pointer));
+        }
+
+        if mouse.action == mouse_action_index("Down")
+            && let Some(target) = route.target
+        {
+            let (changed, had_previous, previous, current) = {
+                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                let previous = tui.views.focused_id();
+                let had_previous = previous.is_some();
+                let changed = tui
+                    .views
+                    .apply_event_outcome(&EventOutcome::RequestFocus(target));
+                (changed, had_previous, previous, tui.views.focused_id())
+            };
+            if changed {
+                self.request_focus_transition_redraw(previous, current, line)?;
+                self.invoke_focus_transition(had_previous, line)?;
+            }
         }
         if let Some(tag) = self.try_dispatch_widget_mouse(mouse, modal_scope, line)? {
             return Ok(tag);
@@ -28,22 +54,12 @@ impl Worker {
             on_mouse,
             [app_rec, Self::console_mouse_event_record(mouse)],
             Some(redraw_hint),
-            DispatchTags { hit: 5, miss: 7 },
+            DispatchOutcomes {
+                hit: ProcessOutcome::Pointer { handled: true },
+                miss: ProcessOutcome::Pointer { handled: false },
+            },
             line,
         )
-    }
-
-    fn modal_blocks_mouse_dispatch(&self, modal_scope: Option<&[ViewId]>, mouse: UiMouse) -> bool {
-        let Some(scope) = modal_scope else {
-            return false;
-        };
-
-        let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-        !scope.iter().any(|view_id| {
-            tui.views
-                .rect(*view_id)
-                .is_some_and(|rect| rect.contains_console_mouse(mouse.x, mouse.y))
-        })
     }
 
     fn mouse_redraw_hint(&self, modal_scope: Option<&[ViewId]>, mouse: UiMouse) -> DamageRegion {

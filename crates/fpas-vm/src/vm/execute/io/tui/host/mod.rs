@@ -41,8 +41,8 @@ impl Worker {
             Intrinsic::Tui(TuiIntrinsic::HostProcessNext) => {
                 let max_spins = self.pop_int(line)?.clamp(0, 4096) as usize;
                 self.pop_tui_application(line)?;
-                let tag = self.tui_host_process_next_inner(max_spins, line)?;
-                self.push(fpas_bytecode::Value::Integer(tag))?;
+                let outcome = self.tui_host_process_next_inner(max_spins, line)?;
+                self.push(fpas_bytecode::Value::Integer(outcome.bridge_tag()))?;
             }
             Intrinsic::Tui(TuiIntrinsic::HostRegisterOnPaint) => {
                 self.register_tui_handler(

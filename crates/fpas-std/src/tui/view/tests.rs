@@ -278,3 +278,98 @@ fn ancestors_inclusive_returns_leaf_to_root() {
 
     assert_eq!(registry.ancestors_inclusive(leaf), vec![leaf, child, root]);
 }
+
+#[test]
+fn resolved_view_clips_nested_child_to_parent() {
+    let mut registry = ViewRegistry::default();
+    let root = registry.register(rect(10, 5, 8, 4));
+    let child = registry.register(rect(6, 2, 6, 4));
+    assert!(registry.set_parent(child, Some(root)));
+    registry.set_rect(child, rect(6, 2, 6, 4));
+
+    let resolved = registry.resolved(child).expect("child should resolve");
+    assert_eq!(resolved.rect, rect(16, 7, 6, 4));
+    assert_eq!(resolved.clip, Some(rect(16, 7, 2, 2)));
+}
+
+#[test]
+fn hidden_parent_hides_descendants_from_paint_and_hit_test() {
+    let mut registry = ViewRegistry::default();
+    let root = registry.register(rect(0, 0, 10, 5));
+    let child = registry.register(rect(1, 1, 4, 2));
+    assert!(registry.set_parent(child, Some(root)));
+    assert!(registry.set_visible(root, false));
+
+    assert!(registry.resolved_paint_order().is_empty());
+    assert_eq!(registry.topmost_view_at(2, 2, None), None);
+    assert!(!registry.state(child).expect("child state").exposed);
+}
+
+#[test]
+fn focus_path_tracks_group_current_child() {
+    let mut registry = ViewRegistry::default();
+    let root = registry.register(rect(0, 0, 20, 10));
+    let group = registry.register(rect(1, 1, 10, 5));
+    let leaf = registry.register(rect(1, 1, 4, 1));
+    assert!(registry.set_parent(group, Some(root)));
+    assert!(registry.set_parent(leaf, Some(group)));
+    assert!(registry.push_child(leaf));
+
+    assert_eq!(registry.focus_view(leaf), (true, false));
+    assert_eq!(registry.current_child(root), Some(group));
+    assert_eq!(registry.current_child(group), Some(leaf));
+    assert!(registry.state(root).expect("root state").active);
+    assert!(registry.state(leaf).expect("leaf state").focused);
+}
+
+#[test]
+fn disabled_or_hidden_views_are_skipped_during_focus_traversal() {
+    let mut registry = ViewRegistry::default();
+    let disabled = registry.register(rect(0, 0, 2, 1));
+    let hidden = registry.register(rect(2, 0, 2, 1));
+    let enabled = registry.register(rect(4, 0, 2, 1));
+    for id in [disabled, hidden, enabled] {
+        assert!(registry.push_child(id));
+    }
+    assert!(registry.set_enabled(disabled, false));
+    assert!(registry.set_visible(hidden, false));
+
+    assert_eq!(registry.focus_next(), (true, false));
+    assert_eq!(registry.focused_id(), Some(enabled));
+}
+
+#[test]
+fn routed_pointer_event_builds_capture_and_bubble_paths() {
+    let mut registry = ViewRegistry::default();
+    let root = registry.register(rect(0, 0, 20, 10));
+    let child = registry.register(rect(1, 1, 10, 5));
+    let leaf = registry.register(rect(1, 1, 4, 1));
+    assert!(registry.set_parent(child, Some(root)));
+    assert!(registry.set_parent(leaf, Some(child)));
+    registry.set_rect(child, rect(1, 1, 10, 5));
+    registry.set_rect(leaf, rect(1, 1, 4, 1));
+    for id in [root, child] {
+        let mut options = registry.options(id).expect("view options");
+        options.pre_process = true;
+        options.post_process = true;
+        assert!(registry.set_options(id, options));
+    }
+
+    let event = RoutedEvent::Mouse(crate::UiMouse::new(1, 1, 3, 3, Default::default()));
+    let route = registry.route_event(event, None);
+    assert_eq!(route.target, Some(leaf));
+    assert_eq!(route.capture, vec![root, child]);
+    assert_eq!(route.bubble, vec![child, root]);
+}
+
+#[test]
+fn pointer_capture_routes_outside_bounds_and_clears_on_removal() {
+    let mut registry = ViewRegistry::default();
+    let view = registry.register(rect(1, 1, 4, 2));
+    assert!(registry.capture_pointer(view));
+
+    assert_eq!(registry.pointer_target(80, 25, None), Some(view));
+    registry.unregister(view);
+    assert_eq!(registry.captured_pointer(), None);
+    assert_eq!(registry.pointer_target(80, 25, None), None);
+}

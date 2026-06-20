@@ -34,11 +34,13 @@ impl Console {
     }
 
     pub(crate) fn finish_tui_paint(&mut self, location: SourceLocation) -> Result<(), StdError> {
+        self.state.end_view_paint();
         self.tui_paint_active = false;
         self.render_screen(location)
     }
 
     pub(crate) fn abort_tui_paint(&mut self) {
+        self.state.end_view_paint();
         self.tui_paint_active = false;
         self.state.clear_frame_damage();
     }

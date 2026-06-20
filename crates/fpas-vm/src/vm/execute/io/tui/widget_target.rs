@@ -12,14 +12,13 @@ pub(super) fn topmost_menu_bar(
     scope: Option<&[ViewId]>,
 ) -> Option<(ViewId, ViewRect, ViewWidget)> {
     views
-        .paint_order()
+        .resolved_paint_order()
         .into_iter()
         .rev()
-        .filter(|view_id| is_in_scope(*view_id, scope))
-        .find_map(|view_id| {
-            let rect = views.rect(view_id)?;
-            let widget = widgets.get(&view_id)?;
-            matches!(widget, ViewWidget::MenuBar(_)).then(|| (view_id, rect, widget.clone()))
+        .filter(|view| is_in_scope(view.id, scope))
+        .find_map(|view| {
+            let widget = widgets.get(&view.id)?;
+            matches!(widget, ViewWidget::MenuBar(_)).then(|| (view.id, view.rect, widget.clone()))
         })
 }
 
@@ -29,21 +28,28 @@ pub(super) fn widget_mouse_hit(
     mouse: UiMouse,
     scope: Option<&[ViewId]>,
 ) -> Option<(ViewId, ViewRect, ViewWidget)> {
-    let order = views.paint_order();
+    if let Some(captured) = views.captured_pointer()
+        && is_in_scope(captured, scope)
+        && let Some(view) = views.resolved(captured)
+        && view.state.enabled
+        && let Some(widget) = widgets.get(&captured)
+    {
+        return Some((captured, view.rect, widget.clone()));
+    }
+
+    let order = views.resolved_paint_order();
 
     let menu_hit = order
         .iter()
         .rev()
-        .copied()
-        .filter(|view_id| is_in_scope(*view_id, scope))
-        .find_map(|view_id| {
-            let rect = views.rect(view_id)?;
-            let widget = widgets.get(&view_id)?;
+        .filter(|view| is_in_scope(view.id, scope) && view.state.enabled)
+        .find_map(|view| {
+            let widget = widgets.get(&view.id)?;
             let ViewWidget::MenuBar(menu) = widget else {
                 return None;
             };
-            menu.contains_point(rect, mouse.x, mouse.y)
-                .then(|| (view_id, rect, widget.clone()))
+            menu.contains_point(view.rect, mouse.x, mouse.y)
+                .then(|| (view.id, view.rect, widget.clone()))
         });
     if menu_hit.is_some() {
         return menu_hit;
@@ -52,13 +58,12 @@ pub(super) fn widget_mouse_hit(
     order
         .into_iter()
         .rev()
-        .filter(|view_id| is_in_scope(*view_id, scope))
-        .find_map(|view_id| {
-            let rect = views.rect(view_id)?;
-            let widget = widgets.get(&view_id)?;
-            widget
-                .contains_point(rect, mouse.x, mouse.y)
-                .then(|| (view_id, rect, widget.clone()))
+        .filter(|view| is_in_scope(view.id, scope) && view.state.enabled)
+        .find_map(|view| {
+            let widget = widgets.get(&view.id)?;
+            view.clip
+                .is_some_and(|clip| clip.contains_console_mouse(mouse.x, mouse.y))
+                .then(|| (view.id, view.rect, widget.clone()))
         })
 }
 

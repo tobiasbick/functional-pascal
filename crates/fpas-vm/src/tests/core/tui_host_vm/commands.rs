@@ -258,8 +258,8 @@ fn tui_host_view_command_shortcut_uses_focused_ancestor_binding() {
         loc(),
     );
     chunk.emit(Op::GetLocal(0), loc());
-    emit_constant(&mut chunk, Value::Integer(1));
-    emit_constant(&mut chunk, Value::Integer(1));
+    emit_constant(&mut chunk, Value::Integer(11));
+    emit_constant(&mut chunk, Value::Integer(11));
     emit_constant(&mut chunk, Value::Integer(1));
     emit_constant(&mut chunk, Value::Integer(1));
     chunk.emit(

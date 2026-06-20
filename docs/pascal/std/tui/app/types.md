@@ -6,7 +6,9 @@ Reuse existing types from `**Std.Tui`** and `**Std.Console`** where possible: `*
 
 ### `Rect`
 
-Record describing the absolute terminal bounds for a host-managed view during local paint dispatch.
+Rectangle in terminal cells. `QueryViewRect` returns absolute screen coordinates. During
+`OnViewPaint`, `Bounds` is local to the view (`x = 0`, `y = 0`) and Console coordinates use the
+same local origin.
 
 | Field | Type | Meaning |
 | ----- | ---- | ------- |

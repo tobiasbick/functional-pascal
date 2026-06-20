@@ -20,11 +20,11 @@ impl Worker {
         const PER_EVENT_SPINS: usize = 64;
         for _ in 0..max_iterations {
             let redraw_tag = self.tui_host_dispatch_redraw_inner(line)?;
-            let process_tag = self.tui_host_process_next_inner(PER_EVENT_SPINS, line)?;
+            let process_outcome = self.tui_host_process_next_inner(PER_EVENT_SPINS, line)?;
             if self.take_tui_host_quit_requested() {
                 break;
             }
-            if redraw_tag == 0 && process_tag == 0 {
+            if redraw_tag == 0 && !process_outcome.did_work() {
                 break;
             }
         }

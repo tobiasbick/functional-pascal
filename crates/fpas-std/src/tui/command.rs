@@ -4,10 +4,52 @@
 //! dispatch. The Pascal-facing contract is documented in `docs/pascal/std/tui/app/README.md`.
 
 use crate::ConsoleKeyEvent;
+use crate::ViewId;
+use std::collections::HashSet;
 
 /// Application command identifier supplied by FPAS code.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CommandId(pub i64);
+
+/// Semantic category for a sourced TUI command.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CommandKind {
+    /// Application-defined command binding or widget action.
+    Application,
+    /// Close the source view or active modal.
+    Close,
+    /// Zoom the source window.
+    Zoom,
+    /// Restore the source window from zoom.
+    ZoomBack,
+    /// Accept the active dialog.
+    Accept,
+    /// Cancel the active dialog.
+    Cancel,
+}
+
+/// Command payload carrying both semantic kind and originating view.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CommandEvent {
+    /// Application command identifier.
+    pub id: CommandId,
+    /// View that produced or owned the command binding.
+    pub source: Option<ViewId>,
+    /// Built-in or application command category.
+    pub kind: CommandKind,
+}
+
+impl CommandEvent {
+    /// Construct an application-defined command event.
+    #[must_use]
+    pub const fn application(id: CommandId, source: Option<ViewId>) -> Self {
+        Self {
+            id,
+            source,
+            kind: CommandKind::Application,
+        }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct CommandBinding {
@@ -19,6 +61,7 @@ struct CommandBinding {
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct CommandRegistry {
     bindings: Vec<CommandBinding>,
+    disabled: HashSet<CommandId>,
 }
 
 impl CommandRegistry {
@@ -38,13 +81,29 @@ impl CommandRegistry {
     pub fn resolve(&self, key: &ConsoleKeyEvent) -> Option<CommandId> {
         self.bindings
             .iter()
-            .find(|binding| binding.key == *key)
+            .find(|binding| binding.key == *key && self.is_enabled(binding.command_id))
             .map(|binding| binding.command_id)
+    }
+
+    /// Enable or disable every binding for `command_id`.
+    pub fn set_enabled(&mut self, command_id: CommandId, enabled: bool) {
+        if enabled {
+            self.disabled.remove(&command_id);
+        } else {
+            self.disabled.insert(command_id);
+        }
+    }
+
+    /// Return whether a command may currently resolve and dispatch.
+    #[must_use]
+    pub fn is_enabled(&self, command_id: CommandId) -> bool {
+        !self.disabled.contains(&command_id)
     }
 
     /// Remove all command bindings.
     pub fn clear(&mut self) {
         self.bindings.clear();
+        self.disabled.clear();
     }
 
     /// Number of registered shortcuts.
@@ -103,5 +162,17 @@ mod tests {
         commands.clear();
 
         assert!(commands.is_empty());
+    }
+
+    #[test]
+    fn disabled_command_does_not_resolve_until_reenabled() {
+        let mut commands = CommandRegistry::default();
+        let key = key("Character", 's', true);
+        commands.bind(key.clone(), CommandId(10));
+        commands.set_enabled(CommandId(10), false);
+        assert_eq!(commands.resolve(&key), None);
+
+        commands.set_enabled(CommandId(10), true);
+        assert_eq!(commands.resolve(&key), Some(CommandId(10)));
     }
 }

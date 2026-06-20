@@ -11,12 +11,12 @@ mod pointer;
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
 use fpas_bytecode::SourceLocation;
-use fpas_std::{UiEvent, UiResize, ViewId};
+use fpas_std::{ProcessOutcome, UiEvent, UiResize, ViewId};
 
 #[derive(Clone, Copy)]
-struct DispatchTags {
-    hit: i64,
-    miss: i64,
+struct DispatchOutcomes {
+    hit: ProcessOutcome,
+    miss: ProcessOutcome,
 }
 
 impl Worker {
@@ -31,7 +31,7 @@ impl Worker {
         &mut self,
         max_spins: usize,
         line: SourceLocation,
-    ) -> Result<i64, VmError> {
+    ) -> Result<ProcessOutcome, VmError> {
         let mut ready: Option<UiEvent> = None;
         for _ in 0..max_spins.max(1) {
             let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
@@ -55,7 +55,7 @@ impl Worker {
         }
 
         let Some(event) = ready else {
-            return Ok(0);
+            return Ok(ProcessOutcome::Idle);
         };
 
         let (on_key, on_mouse, on_paste, on_focus_gained, on_focus_lost, on_resize) = {
@@ -92,23 +92,35 @@ impl Worker {
                 on_paste,
                 [app_rec, Self::console_paste_event_record(text)],
                 Some(self.focused_view_redraw_hint()),
-                DispatchTags { hit: 8, miss: 9 },
+                DispatchOutcomes {
+                    hit: ProcessOutcome::Paste { handled: true },
+                    miss: ProcessOutcome::Paste { handled: false },
+                },
                 line,
             ),
             UiEvent::FocusGained => self.dispatch_console_event_handler(
                 on_focus_gained,
                 [app_rec, Self::console_focus_gained_event_record()],
                 Some(self.focused_view_redraw_hint()),
-                DispatchTags { hit: 10, miss: 11 },
+                DispatchOutcomes {
+                    hit: ProcessOutcome::FocusGained { handled: true },
+                    miss: ProcessOutcome::FocusGained { handled: false },
+                },
                 line,
             ),
-            UiEvent::FocusLost => self.dispatch_console_event_handler(
-                on_focus_lost,
-                [app_rec, Self::console_focus_lost_event_record()],
-                Some(self.focused_view_redraw_hint()),
-                DispatchTags { hit: 12, miss: 13 },
-                line,
-            ),
+            UiEvent::FocusLost => {
+                self.with_tui(|tui| tui.views.release_pointer());
+                self.dispatch_console_event_handler(
+                    on_focus_lost,
+                    [app_rec, Self::console_focus_lost_event_record()],
+                    Some(self.focused_view_redraw_hint()),
+                    DispatchOutcomes {
+                        hit: ProcessOutcome::FocusLost { handled: true },
+                        miss: ProcessOutcome::FocusLost { handled: false },
+                    },
+                    line,
+                )
+            }
             UiEvent::Resize(UiResize {
                 old_width,
                 old_height,
@@ -127,12 +139,12 @@ impl Worker {
                         &[app_rec, Self::tui_size_record(width, height)],
                         line,
                     )?;
-                    Ok(2)
+                    Ok(ProcessOutcome::Resize { handled: true })
                 } else {
-                    Ok(4)
+                    Ok(ProcessOutcome::Resize { handled: false })
                 }
             }
-            UiEvent::CloseRequested | UiEvent::Wheel(_) => Ok(0),
+            UiEvent::CloseRequested | UiEvent::Wheel(_) => Ok(ProcessOutcome::Idle),
         }
     }
 

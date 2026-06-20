@@ -12,7 +12,7 @@ procedure ClearBounds(Bounds: Std.Tui.Rect);
 begin
   for Row: integer := 0 to Bounds.height - 1 do
   begin
-    GotoXY(Bounds.x + 1, (Bounds.y + Row) + 1);
+    GotoXY(1, Row + 1);
     for Col: integer := 0 to Bounds.width - 1 do
     begin
       Write(' ')
@@ -23,11 +23,11 @@ end;
 procedure OnDialogPaint(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
 begin
   ClearBounds(Bounds);
-  GotoXY(Bounds.x + 2, Bounds.y + 2);
+  GotoXY(2, 2);
   Write('Owned dialog root');
-  GotoXY(Bounds.x + 2, Bounds.y + 3);
+  GotoXY(2, 3);
   Write('Escape closes this dialog');
-  GotoXY(Bounds.x + 2, Bounds.y + 4);
+  GotoXY(2, 4);
   Write('CloseModal also unregisters its root')
 end;
 

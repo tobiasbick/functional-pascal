@@ -227,7 +227,7 @@ begin
     meta := false;
   end;
   var Dialog: ViewId := Application.HostRegisterView(App, 10, 10, 8, 4);
-  var Button: ViewId := Application.HostRegisterView(App, 1, 1, 1, 1);
+  var Button: ViewId := Application.HostRegisterView(App, 11, 11, 1, 1);
   Application.HostSetViewParent(App, Button, Some(Dialog));
   Application.HostPushChildView(App, Button);
   Application.HostRegisterOnPaint(App, OnPaint);

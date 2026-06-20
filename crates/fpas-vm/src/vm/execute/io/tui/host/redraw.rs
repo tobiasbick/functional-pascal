@@ -1,28 +1,28 @@
-//! Hosted `Std.Tui` redraw and paint dispatch.
+//! Depth-first retained `Std.Tui` redraw and paint dispatch.
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
-use fpas_bytecode::SourceLocation;
-use fpas_std::{DamageRegion, ViewRect};
+use fpas_bytecode::{SourceLocation, Value};
+use fpas_std::{DamageRegion, ResolvedView, ViewId, ViewRect, ViewWidget};
 
 impl Worker {
-    /// Consumes a pending redraw and invokes `OnPaint` if registered.
+    /// Consumes pending damage and paints the retained view tree.
     ///
-    /// Returns `0` = no redraw pending, `5` = `OnPaint` ran, `6` = pending but no handler (cleared).
+    /// Returns `0` when no damage exists, `5` after painting, and `6` when damage had no handler.
     pub(in crate::vm::execute::io) fn tui_host_dispatch_redraw_inner(
         &mut self,
         line: SourceLocation,
     ) -> Result<i64, VmError> {
-        let (damage, on_paint, has_view_paints, has_view_widgets) = {
+        let (damage, on_paint, has_view_paints, has_view_widgets, roots) = {
             let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            let damage = tui.session.peek_redraw_damage(line)?;
             (
-                damage,
+                tui.session.peek_redraw_damage(line)?,
                 tui.on_paint.clone(),
                 !tui.view_paints.is_empty(),
                 !tui.view_widgets.is_empty(),
+                tui.views.roots().to_vec(),
             )
         };
 
@@ -30,163 +30,203 @@ impl Worker {
             return Ok(0);
         };
 
-        let app_rec = Self::tui_application_record();
-
-        if on_paint.is_some() || has_view_paints || has_view_widgets {
-            {
-                let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                let consumed_damage = tui.session.take_redraw_damage(line)?;
-                debug_assert_eq!(consumed_damage, Some(expected_damage));
-                self.with_console(|console| {
-                    tui.session
-                        .begin_hosted_paint(console, expected_damage, line)
-                })?;
-            }
-            let paint_result = (|| -> Result<(), VmError> {
-                if let Some(handler) = on_paint {
-                    let _ =
-                        self.call_function_sync_allowing_shutdown(&handler, &[app_rec], line)?;
-                }
-                let _ = self.dispatch_view_widget_paints(expected_damage, line)?;
-                let _ = self.dispatch_view_paint_handlers(expected_damage, line)?;
-                let _ = self.dispatch_view_widget_overlays(expected_damage, line)?;
-                Ok(())
-            })();
-            {
-                let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                self.with_console(|console| {
-                    if paint_result.is_ok() {
-                        tui.session.finish_hosted_paint(console, line)
-                    } else {
-                        tui.session.abort_hosted_paint(console);
-                        Ok(())
-                    }
-                })?;
-            }
-            paint_result?;
-            Ok(5)
-        } else {
+        if on_paint.is_none() && !has_view_paints && !has_view_widgets {
             let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
             let consumed_damage = tui.session.take_redraw_damage(line)?;
             debug_assert_eq!(consumed_damage, Some(expected_damage));
-            Ok(6)
+            return Ok(6);
         }
+
+        {
+            let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+            let consumed_damage = tui.session.take_redraw_damage(line)?;
+            debug_assert_eq!(consumed_damage, Some(expected_damage));
+            self.with_console(|console| {
+                tui.session
+                    .begin_hosted_paint(console, expected_damage, line)
+            })?;
+        }
+
+        let paint_result = (|| -> Result<(), VmError> {
+            if let Some(handler) = on_paint {
+                self.dispatch_global_paint(handler, line)?;
+            }
+            for root in roots {
+                self.paint_view_subtree(root, expected_damage, line)?;
+            }
+            self.paint_menu_overlay_layer(expected_damage)?;
+            Ok(())
+        })();
+
+        {
+            let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+            self.with_console(|console| {
+                if paint_result.is_ok() {
+                    tui.session.finish_hosted_paint(console, line)
+                } else {
+                    tui.session.abort_hosted_paint(console);
+                    Ok(())
+                }
+            })?;
+        }
+        paint_result?;
+        Ok(5)
     }
 
-    fn dispatch_view_widget_paints(
+    fn dispatch_global_paint(
         &mut self,
-        damage: DamageRegion,
-        _line: SourceLocation,
-    ) -> Result<bool, VmError> {
-        let scheduled = {
-            let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            tui.views
-                .paint_order()
-                .into_iter()
-                .filter_map(|view_id| {
-                    let rect = tui.views.rect(view_id)?;
-                    let widget = tui.view_widgets.get(&view_id)?;
-                    widget
-                        .intersects_damage(rect, damage)
-                        .then_some((widget.clone(), rect))
-                })
-                .collect::<Vec<_>>()
-        };
-
-        if scheduled.is_empty() {
-            return Ok(false);
-        }
-
+        handler: Value,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        let screen = self.with_console(|console| {
+            let rect = ViewRect {
+                x: 0,
+                y: 0,
+                width: console.screen_width(),
+                height: console.screen_height(),
+            };
+            let _ = console.begin_tui_view_paint(rect, rect);
+            Ok(rect)
+        })?;
+        let result = self.call_function_sync_allowing_shutdown(
+            &handler,
+            &[Self::tui_application_record()],
+            line,
+        );
         self.with_console(|console| {
-            for (widget, rect) in &scheduled {
-                widget.paint(console, *rect, damage);
-            }
+            console.end_tui_view_paint();
             Ok(())
         })?;
-
-        Ok(true)
+        let _ = screen;
+        result.map(|_| ())
     }
 
-    fn dispatch_view_paint_handlers(
+    fn paint_view_subtree(
         &mut self,
+        view_id: ViewId,
         damage: DamageRegion,
         line: SourceLocation,
-    ) -> Result<bool, VmError> {
-        let scheduled = {
+    ) -> Result<(), VmError> {
+        let snapshot = {
             let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            tui.views
-                .paint_order()
-                .into_iter()
-                .filter_map(|view_id| {
-                    let handler = tui.view_paints.get(&view_id)?.clone();
-                    let rect = tui.views.rect(view_id)?;
-                    Self::damage_intersects_rect(damage, rect).then_some((view_id, rect, handler))
-                })
-                .collect::<Vec<_>>()
+            let resolved = tui.views.resolved(view_id);
+            let widget = tui.view_widgets.get(&view_id).cloned();
+            let handler = tui.view_paints.get(&view_id).cloned();
+            let children = tui.views.children(view_id).to_vec();
+            (resolved, widget, handler, children)
         };
+        let (resolved, widget, handler, children) = snapshot;
 
-        if scheduled.is_empty() {
-            return Ok(false);
+        if let Some(view) = resolved
+            && view.state.exposed
+            && Self::damage_intersects_view(damage, view)
+        {
+            if let Some(widget) = widget.as_ref() {
+                self.paint_widget_underlay(widget, view, damage)?;
+            }
+            if let Some(handler) = handler {
+                self.dispatch_local_paint(handler, view, line)?;
+            }
         }
 
-        let app_rec = Self::tui_application_record();
-        for (view_id, rect, handler) in scheduled {
-            let _ = self.call_function_sync_allowing_shutdown(
-                &handler,
-                &[
-                    app_rec.clone(),
-                    Self::tui_view_id_record(view_id),
-                    Self::tui_rect_record(rect),
-                ],
-                line,
-            )?;
+        for child in children {
+            self.paint_view_subtree(child, damage, line)?;
         }
-
-        Ok(true)
+        Ok(())
     }
 
-    fn dispatch_view_widget_overlays(
+    fn paint_widget_underlay(
         &mut self,
+        widget: &ViewWidget,
+        view: ResolvedView,
         damage: DamageRegion,
-        _line: SourceLocation,
-    ) -> Result<bool, VmError> {
-        let scheduled = {
-            let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            tui.views
-                .paint_order()
-                .into_iter()
-                .filter_map(|view_id| {
-                    let rect = tui.views.rect(view_id)?;
-                    let widget = tui.view_widgets.get(&view_id)?;
-                    widget
-                        .intersects_damage(rect, damage)
-                        .then_some((widget.clone(), rect))
-                })
-                .collect::<Vec<_>>()
+    ) -> Result<(), VmError> {
+        let Some(clip) = view.clip else {
+            return Ok(());
         };
-
-        if scheduled.is_empty() {
-            return Ok(false);
-        }
-
         self.with_console(|console| {
-            for (widget, rect) in &scheduled {
-                widget.paint_menu_overlays(console, *rect, damage);
+            if console.begin_tui_view_paint(view.rect, clip) {
+                widget.paint(console, view.rect, damage);
+                console.end_tui_view_paint();
             }
             Ok(())
-        })?;
-
-        Ok(true)
+        })
     }
 
-    fn damage_intersects_rect(damage: DamageRegion, rect: ViewRect) -> bool {
+    fn dispatch_local_paint(
+        &mut self,
+        handler: Value,
+        view: ResolvedView,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        let Some(clip) = view.clip else {
+            return Ok(());
+        };
+        let began =
+            self.with_console(|console| Ok(console.begin_tui_view_paint(view.rect, clip)))?;
+        if !began {
+            return Ok(());
+        }
+
+        let local_bounds = ViewRect {
+            x: 0,
+            y: 0,
+            width: view.rect.width,
+            height: view.rect.height,
+        };
+        let result = self.call_function_sync_allowing_shutdown(
+            &handler,
+            &[
+                Self::tui_application_record(),
+                Self::tui_view_id_record(view.id),
+                Self::tui_rect_record(local_bounds),
+            ],
+            line,
+        );
+        self.with_console(|console| {
+            console.end_tui_view_paint();
+            Ok(())
+        })?;
+        result.map(|_| ())
+    }
+
+    fn paint_menu_overlay_layer(&mut self, damage: DamageRegion) -> Result<(), VmError> {
+        let scheduled = {
+            let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+            tui.views
+                .resolved_paint_order()
+                .into_iter()
+                .filter_map(|view| {
+                    let widget = tui.view_widgets.get(&view.id)?;
+                    matches!(widget, ViewWidget::MenuBar(_)).then_some((widget.clone(), view.rect))
+                })
+                .collect::<Vec<_>>()
+        };
+
+        self.with_console(|console| {
+            let screen = ViewRect {
+                x: 0,
+                y: 0,
+                width: console.screen_width(),
+                height: console.screen_height(),
+            };
+            for (widget, rect) in &scheduled {
+                if console.begin_tui_view_paint(screen, screen) {
+                    widget.paint_menu_overlays(console, *rect, damage);
+                    console.end_tui_view_paint();
+                }
+            }
+            Ok(())
+        })
+    }
+
+    fn damage_intersects_view(damage: DamageRegion, view: ResolvedView) -> bool {
+        let Some(clip) = view.clip else {
+            return false;
+        };
         match damage {
             DamageRegion::FullFrame => true,
-            DamageRegion::Rect(dirty) => Self::rects_intersect(dirty, rect),
+            DamageRegion::Rect(dirty) => dirty.intersects(clip),
         }
-    }
-
-    fn rects_intersect(left: ViewRect, right: ViewRect) -> bool {
-        left.intersects(right)
     }
 }

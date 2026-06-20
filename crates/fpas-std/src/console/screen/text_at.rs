@@ -26,6 +26,10 @@ impl ConsoleState {
             if col > i64::from(self.width) || start_y > i64::from(self.height) {
                 break;
             }
+            if col < 1 || start_y < 1 || !self.can_paint_cell(col as u16, start_y as u16) {
+                col += 1;
+                continue;
+            }
             let idx = self.index(col as u16, start_y as u16);
             self.cells[idx] = ScreenCell {
                 ch,
@@ -55,6 +59,9 @@ impl ConsoleState {
         let start_x = x.saturating_add(1);
         let start_y = y.saturating_add(1);
         if start_x > i64::from(self.width) || start_y > i64::from(self.height) {
+            return;
+        }
+        if start_x < 1 || start_y < 1 || !self.can_paint_cell(start_x as u16, start_y as u16) {
             return;
         }
 

@@ -218,3 +218,33 @@ fn console_resize_clamps_screen_and_cursor_to_minimum_size() {
     assert_eq!(c.wind_min(), 0x0101);
     assert_eq!(c.wind_max(), 0x0101);
 }
+
+#[test]
+fn retained_view_paint_uses_local_origin_and_hard_clip() {
+    let mut c = Console::new();
+    c.assign_crt().unwrap();
+    c.begin_tui_paint(crate::DamageRegion::FullFrame);
+    let view = crate::ViewRect {
+        x: 2,
+        y: 2,
+        width: 4,
+        height: 2,
+    };
+    let clip = crate::ViewRect {
+        x: 3,
+        y: 2,
+        width: 2,
+        height: 2,
+    };
+    assert!(c.begin_tui_view_paint(view, clip));
+    c.goto_xy(1, 1, test_location()).unwrap();
+    c.write(&Value::Str("ABCD".into()), test_location())
+        .unwrap();
+    c.end_tui_view_paint();
+    c.finish_tui_paint(test_location()).unwrap();
+
+    assert_eq!(c.test_cell(3, 3).0, ' ');
+    assert_eq!(c.test_cell(4, 3).0, 'B');
+    assert_eq!(c.test_cell(5, 3).0, 'C');
+    assert_eq!(c.test_cell(6, 3).0, ' ');
+}

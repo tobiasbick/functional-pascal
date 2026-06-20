@@ -171,7 +171,7 @@ impl Worker {
             let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
             let _ = tui.host.flush_pending_resize();
         }
-        let _process_tag = self.tui_host_process_next_inner(1, line)?;
+        let _process_outcome = self.tui_host_process_next_inner(1, line)?;
         let _redraw_tag = self.tui_host_dispatch_redraw_inner(line)?;
         Ok(())
     }
@@ -183,11 +183,11 @@ impl Worker {
                 let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
                 tui.host.flush_pending_resize()
             };
-            let process_tag = self.tui_host_process_next_inner(1, line)?;
+            let process_outcome = self.tui_host_process_next_inner(1, line)?;
             let redraw_tag = self.tui_host_dispatch_redraw_inner(line)?;
             let input_pending = self
                 .with_console_and_key_input(|_console, key_input| key_input.event_pending(line))?;
-            if process_tag == 0 && redraw_tag == 0 && !flushed && !input_pending {
+            if !process_outcome.did_work() && redraw_tag == 0 && !flushed && !input_pending {
                 break;
             }
         }

@@ -12,6 +12,7 @@ pub(super) const TEXT_MODE_MONO: i64 = 7;
 
 mod cells;
 mod frames;
+mod paint_context;
 mod text_at;
 mod writing;
 
@@ -48,6 +49,23 @@ impl WindowRect {
             right: self.right.max(other.right),
             bottom: self.bottom.max(other.bottom),
         }
+    }
+
+    pub(super) fn intersection(self, other: Self) -> Option<Self> {
+        let left = self.left.max(other.left);
+        let top = self.top.max(other.top);
+        let right = self.right.min(other.right);
+        let bottom = self.bottom.min(other.bottom);
+        (left <= right && top <= bottom).then_some(Self {
+            left,
+            top,
+            right,
+            bottom,
+        })
+    }
+
+    pub(super) fn contains(self, x: u16, y: u16) -> bool {
+        x >= self.left && x <= self.right && y >= self.top && y <= self.bottom
     }
 
     pub(super) fn from_zero_based_rect(
@@ -204,6 +222,16 @@ pub(super) struct ConsoleState {
     prev_cells: Vec<ScreenCell>,
     /// Mutated screen region since the last committed present.
     pending_frame_damage: Option<FrameDamage>,
+    paint_context: Option<PaintContext>,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct PaintContext {
+    clip: WindowRect,
+    saved_window: WindowRect,
+    saved_cursor_x: u16,
+    saved_cursor_y: u16,
+    saved_pending_wrap: bool,
 }
 
 impl ConsoleState {
@@ -233,6 +261,7 @@ impl ConsoleState {
             cells: vec![blank; width as usize * height as usize],
             prev_cells: Vec::new(),
             pending_frame_damage: None,
+            paint_context: None,
         }
     }
 
@@ -322,7 +351,10 @@ impl ConsoleState {
     }
 
     pub(super) fn set_window(&mut self, window: WindowRect) {
-        self.window = window;
+        self.window = match self.paint_context {
+            Some(context) => window.intersection(context.clip).unwrap_or(context.clip),
+            None => window,
+        };
         self.cursor_x = 1;
         self.cursor_y = 1;
         self.pending_wrap = false;

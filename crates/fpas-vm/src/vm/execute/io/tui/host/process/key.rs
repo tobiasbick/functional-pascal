@@ -4,7 +4,7 @@ use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
-use fpas_std::{ConsoleKeyEvent, ViewId};
+use fpas_std::{BlockedInput, ConsoleKeyEvent, FocusDirection, ProcessOutcome, ViewId};
 
 /// Discriminant of `Std.Console.KeyKind.Tab`; must match
 /// [`fpas_std::key_event::KEY_KIND_VARIANTS`] (index 2).
@@ -19,7 +19,7 @@ impl Worker {
         app_rec: Value,
         modal_scope: Option<&[ViewId]>,
         line: SourceLocation,
-    ) -> Result<i64, VmError> {
+    ) -> Result<ProcessOutcome, VmError> {
         if key_event.kind == KEY_KIND_TAB {
             let (changed, had_previous, previous_focus, current_focus) = {
                 let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
@@ -57,7 +57,11 @@ impl Worker {
             if changed {
                 self.request_focus_transition_redraw(previous_focus, current_focus, line)?;
                 self.invoke_focus_transition(had_previous, line)?;
-                return Ok(if key_event.shift { 15 } else { 14 });
+                return Ok(ProcessOutcome::FocusMoved(if key_event.shift {
+                    FocusDirection::Backward
+                } else {
+                    FocusDirection::Forward
+                }));
             }
         }
         if let Some(tag) = self.try_dispatch_widget_key(key_event.clone(), modal_scope, line)? {
@@ -65,12 +69,12 @@ impl Worker {
         }
         if let Some(command_id) = self.resolve_tui_command(&key_event) {
             if self.modal_blocks_keyboard_dispatch(modal_scope) {
-                return Ok(20);
+                return Ok(ProcessOutcome::Blocked(BlockedInput::Command));
             }
             return self.dispatch_tui_command(command_id, line);
         }
         if self.modal_blocks_keyboard_dispatch(modal_scope) {
-            return Ok(18);
+            return Ok(ProcessOutcome::Blocked(BlockedInput::Key));
         }
         if let Some(handler) = on_key {
             let consumed = self.call_function_sync_allowing_shutdown(
@@ -79,8 +83,10 @@ impl Worker {
                 line,
             )?;
             match consumed {
-                Value::Boolean(true) => Ok(1),
-                Value::Boolean(false) => Ok(22),
+                Value::Boolean(consumed) => Ok(ProcessOutcome::Key {
+                    handled: true,
+                    consumed,
+                }),
                 other => Err(runtime_error(
                     RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                     format!(
@@ -92,7 +98,10 @@ impl Worker {
                 )),
             }
         } else {
-            Ok(3)
+            Ok(ProcessOutcome::Key {
+                handled: false,
+                consumed: false,
+            })
         }
     }
 

@@ -115,3 +115,90 @@ fn disabled_button_uses_disabled_color() {
     assert_eq!(console.test_cell(1, 1), ('[', 8, 7));
     assert_eq!(console.test_cell(3, 1), ('C', 8, 7));
 }
+
+#[test]
+fn input_line_insert_and_paste_update_text_and_cursor() {
+    let mut input = InputLineWidget::new("ac", InputLineStyle::default());
+    input.set_cursor(1);
+
+    input.insert_char('b');
+    input.insert_str("de");
+
+    assert_eq!(input.text(), "abdec");
+    assert_eq!(input.cursor(), 4);
+}
+
+#[test]
+fn input_line_backspace_and_delete_remove_adjacent_characters() {
+    let mut input = InputLineWidget::new("abcd", InputLineStyle::default());
+    input.set_cursor(2);
+
+    assert!(input.backspace());
+    assert_eq!(input.text(), "acd");
+    assert_eq!(input.cursor(), 1);
+    assert!(input.delete());
+    assert_eq!(input.text(), "ad");
+    assert_eq!(input.cursor(), 1);
+}
+
+#[test]
+fn input_line_clamps_cursor_after_text_replacement() {
+    let mut input = InputLineWidget::new("abcdef", InputLineStyle::default());
+    input.set_cursor(99);
+
+    input.set_text("xy");
+
+    assert_eq!(input.text(), "xy");
+    assert_eq!(input.cursor(), 2);
+}
+
+#[test]
+fn input_line_paints_text_and_focused_cursor() {
+    let mut console = console();
+    let mut input = InputLineWidget::new("abc", InputLineStyle::default());
+    input.set_cursor(1);
+    input.focused = true;
+
+    input.paint(&mut console, rect(0, 0, 5, 1), DamageRegion::FullFrame);
+
+    console
+        .finish_tui_paint(loc())
+        .expect("paint should finish");
+    assert_eq!(console.test_cell(1, 1), ('a', 0, 7));
+    assert_eq!(console.test_cell(2, 1), ('b', 15, 0));
+    assert_eq!(console.test_cell(4, 1), (' ', 0, 7));
+}
+
+#[test]
+fn input_line_scrolls_to_keep_cursor_visible() {
+    let mut console = console();
+    let mut input = InputLineWidget::new("abcdef", InputLineStyle::default());
+    input.set_cursor(6);
+    input.focused = true;
+
+    input.paint(&mut console, rect(0, 0, 4, 1), DamageRegion::FullFrame);
+
+    console
+        .finish_tui_paint(loc())
+        .expect("paint should finish");
+    assert_eq!(console.test_cell(1, 1), ('d', 0, 7));
+    assert_eq!(console.test_cell(3, 1), ('f', 0, 7));
+    assert_eq!(console.test_cell(4, 1), (' ', 15, 0));
+}
+
+#[test]
+fn disabled_input_line_uses_disabled_color_and_hides_cursor() {
+    let mut console = console();
+    let mut input = InputLineWidget::new("abc", InputLineStyle::default());
+    input.set_cursor(1);
+    input.enabled = false;
+    input.focused = true;
+
+    input.paint(&mut console, rect(0, 0, 5, 1), DamageRegion::FullFrame);
+
+    console
+        .finish_tui_paint(loc())
+        .expect("paint should finish");
+    assert_eq!(console.test_cell(1, 1), ('a', 8, 7));
+    assert_eq!(console.test_cell(2, 1), ('b', 8, 7));
+}

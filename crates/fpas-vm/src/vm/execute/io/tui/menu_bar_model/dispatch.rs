@@ -35,7 +35,8 @@ impl Worker {
             ViewWidget::SolidFill(_)
             | ViewWidget::StatusBar(_)
             | ViewWidget::Label(_)
-            | ViewWidget::Button(_) => MenuBarMouseResult::Ignored,
+            | ViewWidget::Button(_)
+            | ViewWidget::InputLine(_) => MenuBarMouseResult::Ignored,
         };
 
         let after = match &widget {

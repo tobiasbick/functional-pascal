@@ -6,12 +6,14 @@
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
 mod button;
+mod input_line;
 mod label;
 
 #[cfg(test)]
 mod tests;
 
 pub use button::{ButtonStyle, ButtonWidget};
+pub use input_line::{InputLineStyle, InputLineWidget};
 pub use label::{LabelStyle, LabelWidget};
 
 use crate::{Console, DamageRegion, ViewRect};

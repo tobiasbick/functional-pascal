@@ -30,7 +30,7 @@ pub use view::{
 pub use widget::{
     ButtonStyle, ButtonWidget, FrameButtonSlots, FrameCapabilities, FrameContentSize,
     FrameGeometry, FrameGeometryError, FrameKind, FrameRoot, FrameRootSpec, FrameScrollbars,
-    FramedDialogRoot, LabelStyle, LabelWidget, MenuBarItem, MenuBarMouseResult, MenuBarState,
-    MenuBarStyle, MenuBarWidget, MenuPopupItem, SolidFillWidget, StatusBarSegment, StatusBarStyle,
-    StatusBarWidget, ViewWidget, register_framed_dialog_root,
+    FramedDialogRoot, InputLineStyle, InputLineWidget, LabelStyle, LabelWidget, MenuBarItem,
+    MenuBarMouseResult, MenuBarState, MenuBarStyle, MenuBarWidget, MenuPopupItem, SolidFillWidget,
+    StatusBarSegment, StatusBarStyle, StatusBarWidget, ViewWidget, register_framed_dialog_root,
 };

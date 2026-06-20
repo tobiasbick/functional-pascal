@@ -361,12 +361,15 @@ application-defined `Command`). `leave_with_context` returns the full
 owned roots and restore the exact prior window/focus, including for nested modals. Retained
 [`LabelWidget`](../../../crates/fpas-std/src/tui/widget/control/label.rs) and
 [`ButtonWidget`](../../../crates/fpas-std/src/tui/widget/control/button.rs) controls now provide the
-first dialog-control building blocks with focused unit coverage. Input controls, result validation,
-VM bridge wiring of focus restore, and the example dialog remain open.
+first dialog-control building blocks with focused unit coverage. A retained
+[`InputLineWidget`](../../../crates/fpas-std/src/tui/widget/control/input_line.rs) now adds a
+single-line text model with cursor movement, insert/paste, delete/backspace, horizontal cursor
+scrolling, and focused cursor painting. Checkbox/radio controls, result validation, VM bridge
+wiring of focus restore, and the example dialog remain open.
 
 - [ ] Add labels, buttons, input line, checkbox/radio controls.
   - [x] Add retained label and button widgets.
-  - [ ] Add input line widget.
+  - [x] Add retained input line widget.
   - [ ] Add checkbox/radio controls.
 - [x] Add modal result, default/cancel actions, and saved return-focus context (retained side).
 - [ ] Validate modal results and restore focus on close through the VM bridge.

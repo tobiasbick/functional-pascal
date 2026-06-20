@@ -12,7 +12,9 @@ mod menu_style;
 mod solid_fill;
 mod status_bar;
 
-pub use control::{ButtonStyle, ButtonWidget, LabelStyle, LabelWidget};
+pub use control::{
+    ButtonStyle, ButtonWidget, InputLineStyle, InputLineWidget, LabelStyle, LabelWidget,
+};
 pub use frame::{
     FrameButtonSlots, FrameCapabilities, FrameContentSize, FrameGeometry, FrameGeometryError,
     FrameKind, FrameRoot, FrameRootSpec, FrameScrollbars, FramedDialogRoot,
@@ -40,6 +42,8 @@ pub enum ViewWidget {
     Label(LabelWidget),
     /// Dialog push button rendered in Rust.
     Button(ButtonWidget),
+    /// Single-line dialog text input rendered in Rust.
+    InputLine(InputLineWidget),
 }
 
 impl ViewWidget {
@@ -51,6 +55,7 @@ impl ViewWidget {
             Self::StatusBar(widget) => widget.clone().paint(console, rect, damage),
             Self::Label(widget) => widget.paint(console, rect, damage),
             Self::Button(widget) => widget.paint(console, rect, damage),
+            Self::InputLine(widget) => widget.paint(console, rect, damage),
         }
     }
 
@@ -69,9 +74,11 @@ impl ViewWidget {
                 .damage_rects(rect)
                 .into_iter()
                 .any(|region| intersects_damage_region(region, damage)),
-            Self::SolidFill(_) | Self::StatusBar(_) | Self::Label(_) | Self::Button(_) => {
-                intersects_damage_region(rect, damage)
-            }
+            Self::SolidFill(_)
+            | Self::StatusBar(_)
+            | Self::Label(_)
+            | Self::Button(_)
+            | Self::InputLine(_) => intersects_damage_region(rect, damage),
         }
     }
 
@@ -82,9 +89,11 @@ impl ViewWidget {
     pub fn contains_point(&self, rect: ViewRect, mouse_x: i64, mouse_y: i64) -> bool {
         match self {
             Self::MenuBar(widget) => widget.contains_point(rect, mouse_x, mouse_y),
-            Self::SolidFill(_) | Self::StatusBar(_) | Self::Label(_) | Self::Button(_) => {
-                rect.contains_console_mouse(mouse_x, mouse_y)
-            }
+            Self::SolidFill(_)
+            | Self::StatusBar(_)
+            | Self::Label(_)
+            | Self::Button(_)
+            | Self::InputLine(_) => rect.contains_console_mouse(mouse_x, mouse_y),
         }
     }
 }

@@ -367,15 +367,17 @@ single-line text model with cursor movement, insert/paste, delete/backspace, hor
 scrolling, and focused cursor painting. Retained
 [`CheckBoxWidget`](../../../crates/fpas-std/src/tui/widget/control/checkbox.rs) and
 [`RadioGroupWidget`](../../../crates/fpas-std/src/tui/widget/control/radio.rs) controls now complete
-the first Rust-internal dialog-control set. Result validation, VM bridge wiring of focus restore,
-and the example dialog remain open.
+the first Rust-internal dialog-control set. The VM modal bridge now stores each modal's return
+context on entry and restores the saved focus/window root on close, including nested modals and
+owned dialog-root removal. Modal-result validation and the example dialog remain open.
 
 - [x] Add labels, buttons, input line, checkbox/radio controls.
   - [x] Add retained label and button widgets.
   - [x] Add retained input line widget.
   - [x] Add retained checkbox/radio controls.
 - [x] Add modal result, default/cancel actions, and saved return-focus context (retained side).
-- [ ] Validate modal results and restore focus on close through the VM bridge.
+- [x] Restore saved focus/window root on close through the VM bridge.
+- [ ] Validate modal results through the VM bridge.
 - [ ] Convert the manual dialog example and add a realistic IDE dialog.
 
 ### Phase 4 - Scrolling controls

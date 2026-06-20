@@ -3,7 +3,7 @@
 use crate::vm::diagnostics::VmError;
 use crate::vm::{TuiState, Worker};
 use fpas_bytecode::{SourceLocation, TuiIntrinsic};
-use fpas_std::{ModalId, ViewId, ViewRect};
+use fpas_std::{ModalClose, ModalId, ViewId, ViewRect};
 
 use super::super::view_geometry::validate_view_rect;
 
@@ -22,8 +22,12 @@ impl Worker {
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| {
                     let previous_scope = Self::modal_scope_ids(tui);
+                    let previous_active_root = tui.views.active_root();
+                    let previous_focus = tui.views.focused_id();
                     tui.views.raise(root_view_id);
                     tui.modals.show(ModalId(modal_id), root_view_id);
+                    tui.modals
+                        .set_return_context(previous_active_root, previous_focus);
                     let next_scope = Self::modal_scope_ids(tui);
                     Self::request_scope_redraws(tui, &previous_scope, &next_scope, line);
                     let _ = tui.views.focus_first_in_scope(&next_scope);
@@ -48,9 +52,13 @@ impl Worker {
                 )?;
                 let dialog_root = self.with_tui(|tui| {
                     let previous_scope = Self::modal_scope_ids(tui);
+                    let previous_active_root = tui.views.active_root();
+                    let previous_focus = tui.views.focused_id();
                     let view_id = tui.views.register(view_rect);
                     let _ = tui.session.request_redraw_rect(view_rect, line);
                     tui.modals.show_dialog(ModalId(modal_id), view_id);
+                    tui.modals
+                        .set_return_context(previous_active_root, previous_focus);
                     let next_scope = Self::modal_scope_ids(tui);
                     Self::request_scope_redraws(tui, &previous_scope, &next_scope, line);
                     let _ = tui.views.focus_first_in_scope(&next_scope);
@@ -66,7 +74,11 @@ impl Worker {
                 let modal_id = self.pop_int(line)?;
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| {
+                    let previous_active_root = tui.views.active_root();
+                    let previous_focus = tui.views.focused_id();
                     tui.modals.enter(ModalId(modal_id));
+                    tui.modals
+                        .set_return_context(previous_active_root, previous_focus);
                 });
             }
             TuiIntrinsic::HostAttachViewToActiveModal => {
@@ -108,12 +120,64 @@ impl Worker {
 
     fn close_active_modal(tui: &mut TuiState, line: SourceLocation) {
         let previous_scope = Self::modal_scope_ids(tui);
-        let popped = tui.modals.leave_with_scope_info();
+        let close = tui.modals.leave_with_context();
         let next_scope = Self::modal_scope_ids(tui);
         Self::request_scope_redraws(tui, &previous_scope, &next_scope, line);
 
-        if let Some((_, Some(root_view), true, _)) = popped {
-            Self::unregister_tui_view_subtree(tui, root_view, line);
+        if let Some(close) = close {
+            if close.owns_root_view
+                && let Some(root_view) = close.root_view
+            {
+                Self::unregister_tui_view_subtree(tui, root_view, line);
+            }
+            Self::restore_modal_return_focus(tui, &close, &next_scope, line);
+        }
+    }
+
+    fn restore_modal_return_focus(
+        tui: &mut TuiState,
+        close: &ModalClose,
+        next_scope: &[ViewId],
+        line: SourceLocation,
+    ) {
+        let previous_focus = tui.views.focused_id();
+        let restored_focus = close
+            .previous_focus
+            .is_some_and(|view_id| tui.views.focus_view(view_id).0);
+
+        if !restored_focus {
+            let restored_root = close
+                .previous_active_root
+                .is_some_and(|root| Self::restore_modal_return_root(tui, root));
+            if !restored_root && !next_scope.is_empty() {
+                let _ = tui.views.focus_first_in_scope(next_scope);
+            } else if !restored_root {
+                let _ = tui.views.focus_next();
+            }
+        }
+
+        let current_focus = tui.views.focused_id();
+        Self::request_focus_redraws(tui, previous_focus, current_focus, line);
+    }
+
+    fn restore_modal_return_root(tui: &mut TuiState, root: ViewId) -> bool {
+        let previous_focus = tui.views.focused_id();
+        let Some(_) = tui.views.activate_root(root) else {
+            return false;
+        };
+        tui.views.focused_id() != previous_focus || tui.views.active_root() == Some(root)
+    }
+
+    fn request_focus_redraws(
+        tui: &mut TuiState,
+        previous_focus: Option<ViewId>,
+        current_focus: Option<ViewId>,
+        line: SourceLocation,
+    ) {
+        for view_id in [previous_focus, current_focus].into_iter().flatten() {
+            if let Some(rect) = tui.views.rect(view_id) {
+                let _ = tui.session.request_redraw_rect(rect, line);
+            }
         }
     }
 

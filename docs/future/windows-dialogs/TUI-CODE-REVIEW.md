@@ -333,15 +333,17 @@ frame geometry is available in
 [`widget/frame/geometry.rs`](../../../crates/fpas-std/src/tui/widget/frame/geometry.rs), including
 minimum size validation, title-button slots, content viewport calculation, and fixed-point
 scroll-bar visibility. Desktop tiering, concrete frame palettes, frame painting, and atomic
-framed-dialog modal creation remain open. Atomic frame-root creation is available through
+framed-dialog modal bridge wiring remain open. Atomic frame-root creation is available through
 `FrameRootSpec` / `FrameRoot` and `ViewRegistry::register_frame_root`, which validates geometry
-before mutating the retained tree.
+before mutating the retained tree. Owned framed-dialog root creation is available through
+`register_framed_dialog_root`, which validates geometry before mutating either the retained tree or
+modal stack.
 
 - [x] Add active-root tracking and raise/activate (click-to-front) in the retained registry.
 - [x] Add desktop work area, active/inactive palette state, constraints, and shadow geometry.
 - [x] Add static frame geometry.
 - [x] Add atomic framed-window root creation.
-- [ ] Add atomic owned framed-dialog modal creation.
+- [x] Add atomic owned framed-dialog modal root creation.
 - [ ] Verify overlap, occlusion repair, clipping, focus activation, and nested frames.
 
 ### Phase 3 - Dialog controls

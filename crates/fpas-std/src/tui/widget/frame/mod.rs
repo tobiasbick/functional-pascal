@@ -15,4 +15,4 @@ pub use geometry::{
     FrameScrollbars,
 };
 pub use kind::FrameKind;
-pub use root::{FrameRoot, FrameRootSpec};
+pub use root::{FrameRoot, FrameRootSpec, FramedDialogRoot, register_framed_dialog_root};

@@ -6,7 +6,7 @@
 //! Plan: `docs/future/windows-dialogs/README.md`
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
-use crate::{ViewId, ViewOptions, ViewRect, ViewRegistry};
+use crate::{ModalId, ModalStack, ViewId, ViewOptions, ViewRect, ViewRegistry};
 
 use super::{FrameCapabilities, FrameContentSize, FrameGeometry, FrameGeometryError, FrameKind};
 
@@ -48,6 +48,32 @@ pub struct FrameRoot {
     pub kind: FrameKind,
     /// Resolved frame geometry for the registered root rectangle.
     pub geometry: FrameGeometry,
+}
+
+/// Registered owned framed-dialog root and its modal id.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FramedDialogRoot {
+    /// Registered frame root.
+    pub frame: FrameRoot,
+    /// Application-defined modal id pushed for this dialog.
+    pub modal_id: ModalId,
+}
+
+/// Atomically register an owned framed-dialog root and push its modal frame.
+///
+/// The frame geometry is validated before either the view registry or modal stack is mutated.
+/// Once validation succeeds, registering the view and pushing the owned modal frame are infallible
+/// in-memory operations, so callers never observe a modal stack entry without its owned frame root.
+pub fn register_framed_dialog_root(
+    views: &mut ViewRegistry,
+    modals: &mut ModalStack,
+    modal_id: ModalId,
+    spec: FrameRootSpec,
+) -> Result<FramedDialogRoot, FrameGeometryError> {
+    let frame = views.register_frame_root(spec)?;
+    modals.show_dialog(modal_id, frame.view_id);
+
+    Ok(FramedDialogRoot { frame, modal_id })
 }
 
 impl ViewRegistry {
@@ -187,5 +213,62 @@ mod tests {
             })
         );
         assert_eq!(registry.len(), 0);
+    }
+
+    #[test]
+    fn register_framed_dialog_root_validates_before_mutating_views_or_modals() {
+        let mut views = ViewRegistry::default();
+        let mut modals = ModalStack::default();
+
+        assert_eq!(
+            register_framed_dialog_root(
+                &mut views,
+                &mut modals,
+                ModalId(10),
+                FrameRootSpec::new(
+                    FrameKind::Dialog,
+                    rect(0, 0, 5, 6),
+                    FrameContentSize::new(0, 0),
+                ),
+            ),
+            Err(FrameGeometryError {
+                min_width: 6,
+                min_height: 6,
+                got_width: 5,
+                got_height: 6,
+            })
+        );
+
+        assert!(views.is_empty());
+        assert!(modals.is_empty());
+    }
+
+    #[test]
+    fn register_framed_dialog_root_pushes_owned_modal_frame() {
+        let mut views = ViewRegistry::default();
+        let mut modals = ModalStack::default();
+
+        let dialog = register_framed_dialog_root(
+            &mut views,
+            &mut modals,
+            ModalId(42),
+            FrameRootSpec::new(
+                FrameKind::Dialog,
+                rect(2, 3, 12, 8),
+                FrameContentSize::new(20, 20),
+            ),
+        )
+        .expect("valid framed dialog");
+
+        assert_eq!(dialog.modal_id, ModalId(42));
+        assert_eq!(dialog.frame.kind, FrameKind::Dialog);
+        assert_eq!(dialog.frame.geometry.outer, rect(2, 3, 12, 8));
+        assert_eq!(views.roots(), &[dialog.frame.view_id]);
+        assert_eq!(modals.active_id(), Some(ModalId(42)));
+        assert_eq!(modals.active_root_view(), Some(dialog.frame.view_id));
+        assert_eq!(
+            modals.leave_with_scope_info(),
+            Some((ModalId(42), Some(dialog.frame.view_id), true, Vec::new()))
+        );
     }
 }

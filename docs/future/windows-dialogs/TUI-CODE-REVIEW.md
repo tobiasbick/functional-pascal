@@ -32,7 +32,7 @@ interaction. The plan needs a foundation phase before frame work and a broader t
 
 ## Reusable foundations
 
-1. [`TuiSession`](../../../crates/fpas-std/src/tui/session.rs#L13) correctly owns raw mode,
+1. [`TuiSession`](../../../crates/fpas-std/src/tui/session/mod.rs#L15) correctly owns raw mode,
    alternate-screen, mouse, and headless lifecycle state.
 2. [`Console::render_screen`](../../../crates/fpas-std/src/console/render.rs#L33) provides a retained
    cell buffer and differential terminal presentation. This is the right rendering substrate.
@@ -49,11 +49,11 @@ interaction. The plan needs a foundation phase before frame work and a broader t
 
 ### C1. Painting is not a safe retained-mode compositor
 
-The dispatcher runs global `OnPaint`, then all widgets, then all Pascal view handlers
-([`redraw.rs:45-51`](../../../crates/fpas-vm/src/vm/execute/io/tui/host/redraw.rs#L45-L51)). A view
-handler is skipped completely when the same view has a widget
-([`redraw.rs:123-128`](../../../crates/fpas-vm/src/vm/execute/io/tui/host/redraw.rs#L123-L128)).
-That directly conflicts with the frame plan's underlay, content, children, and overlay model.
+The dispatcher runs global `OnPaint`, then global passes for widget underlays, Pascal view handlers,
+and widget overlays
+([`redraw.rs:45-51`](../../../crates/fpas-vm/src/vm/execute/io/tui/host/redraw.rs#L45-L51)).
+Widgets and local handlers can now coexist, but the global-pass structure still conflicts with the
+frame plan's depth-first underlay, content, children, and overlay model.
 
 Pascal paint handlers receive a rectangle but no enforced clip. Direct `Std.Console` writes can
 modify any screen cell. Partial damage makes this unsafe: a global handler may clear or repaint the
@@ -74,9 +74,11 @@ whole buffer while only widgets intersecting the requested damage are repainted.
 ### C2. There is no general consumable event router
 
 Key routing is hard-coded as Tab traversal, global menu handling, command lookup, then global
-`OnKeyPressed` ([`process.rs:75-136`](../../../crates/fpas-vm/src/vm/execute/io/tui/host/process.rs#L75-L136)).
-The boolean returned by `OnKeyPressed` is ignored because all current default routing already ran.
-Mouse routing likewise has no target-view callback and does not focus a clicked view.
+`OnKeyPressed`
+([`key.rs:14`](../../../crates/fpas-vm/src/vm/execute/io/tui/host/process/key.rs#L14)). The boolean
+returned by `OnKeyPressed` is now preserved in the process tag, but all current default routing has
+already run before the callback. Mouse routing likewise has no target-view callback and does not
+focus a clicked view.
 
 The frame plan specifies child-first bubbling, but no reusable widget or view event protocol exists
 to implement it. Adding frame-specific branches to `process.rs` would repeat the menu-bar design
@@ -116,10 +118,10 @@ cannot reliably update focus visuals or state. Clicking a selectable view does n
 
 Modal frames store root, ownership, extra scope, and command bindings, but not previous focus,
 default/cancel actions, validation, or a result. `ShowModal` attempts to focus the first scoped
-entry ([`views.rs:21-33`](../../../crates/fpas-vm/src/vm/execute/io/tui/views.rs#L21-L33)); if the
+entry ([`modal.rs:11`](../../../crates/fpas-vm/src/vm/execute/io/tui/views/modal.rs#L11)); if the
 scope has no focusable entry, the old outside focus remains and modal command dispatch can be
 blocked. Closing simply pops and optionally unregisters the root
-([`views.rs:398-406`](../../../crates/fpas-vm/src/vm/execute/io/tui/views.rs#L398-L406)); it does not
+([`modal.rs:108`](../../../crates/fpas-vm/src/vm/execute/io/tui/views/modal.rs#L108)); it does not
 restore the exact previous focus.
 
 **Required change:**
@@ -157,7 +159,7 @@ Advanced MDI, tiling, cascading, and a window list may remain later work.
 ### H2. Commands need source, state, and one protocol
 
 Commands currently carry only an integer to one global callback
-([`process.rs:259-278`](../../../crates/fpas-vm/src/vm/execute/io/tui/host/process.rs#L259-L278)). The
+([`command.rs:28`](../../../crates/fpas-vm/src/vm/execute/io/tui/host/process/command.rs#L28)). The
 frame plan avoids id collisions by adding `FrameAction` and a separate per-frame callback
 ([`README.md:257-327`](README.md#L257-L327)). That solves source identity for frames but fragments
 the event model before buttons, scrollbars, and dialogs are added.
@@ -183,10 +185,9 @@ single resolved node record containing screen rectangle, content origin, effecti
 visibility. Painting, hit-testing, focus damage, modal checks, queries, and reparenting must consume
 that same result.
 
-There is already a concrete damage bug: `HostSetViewRect` computes the new child rectangle as local
-coordinates and submits it directly as screen damage
-([`views.rs:156-175`](../../../crates/fpas-vm/src/vm/execute/io/tui/views.rs#L156-L175)). Parent moves
-also fail to invalidate descendants extending outside the parent's rectangle.
+The Phase 0 correction makes `HostSetViewRect` invalidate the resolved child screen rectangle
+([`tree.rs:53`](../../../crates/fpas-vm/src/vm/execute/io/tui/views/tree.rs#L53)). Parent moves still
+fail to invalidate descendants extending outside the parent's rectangle.
 
 Add `intersection`, `union`, translation, and emptiness operations to `ViewRect`; duplicated private
 rectangle math in widgets and redraw code should be removed.
@@ -236,7 +237,7 @@ regression coverage; the broader retained-engine work remains in the later phase
 
 1. Widget mouse target selection now skips views without widgets instead of terminating the scan.
 2. Menu keyboard routing runs before modal keyboard suppression and is selected globally
-   ([`process.rs:116-124`](../../../crates/fpas-vm/src/vm/execute/io/tui/host/process.rs#L116-L124)).
+   ([`key.rs:62`](../../../crates/fpas-vm/src/vm/execute/io/tui/host/process/key.rs#L62)).
    Target selection now filters both keyboard and mouse widgets through the active modal scope.
 3. Popup navigation treats every non-separator row as selectable
    ([`menu_popup.rs:28-36`](../../../crates/fpas-std/src/tui/widget/menu_popup.rs#L28-L36)), while the
@@ -249,14 +250,15 @@ regression coverage; the broader retained-engine work remains in the later phase
 
 ## Structural findings
 
-The following files already exceed or approach the repository's preferred size:
+**Implementation status (2026-06-20): complete.** The oversized bridge files are split by
+ownership; the largest resulting file is `menu_bar_model/decode.rs` at 271 LOC.
 
-| File | LOC | Recommended ownership split |
-| --- | ---: | --- |
-| `fpas-std/src/tui/session.rs` | 606 | `session/lifecycle.rs`, `session/input.rs`, `session/redraw.rs` |
-| `fpas-vm/.../tui/views.rs` | 450 | `views/tree.rs`, `views/modal.rs`, `views/paint.rs`, widget constructors |
-| `fpas-vm/.../tui/menu_bar_model.rs` | 448 | VM record decoding vs generic widget dispatch |
-| `fpas-vm/.../tui/host/process.rs` | 419 | `dispatch/key.rs`, `dispatch/pointer.rs`, `dispatch/focus.rs`, `dispatch/command.rs` |
+| Previous file | Replacement modules |
+| --- | --- |
+| `fpas-std/src/tui/session.rs` | `session/{mod,lifecycle,input,redraw}.rs` |
+| `fpas-vm/.../tui/views.rs` | `views/{mod,handles,tree,modal,commands,widgets}.rs` |
+| `fpas-vm/.../tui/menu_bar_model.rs` | `menu_bar_model/{mod,decode,dispatch}.rs` |
+| `fpas-vm/.../tui/host/process.rs` | `host/process/{mod,callbacks,key,pointer,focus,command}.rs` |
 
 Widget input and rendering policy should move out of `fpas-vm` into `fpas-std`. The VM bridge
 should decode Pascal values, store Pascal callbacks, and translate outcomes only.
@@ -298,8 +300,8 @@ order vectors.
 7. Add anchor/grow layout before examples depend on manual resize handlers.
 8. Define Unicode cell-width policy before title truncation and scrollbar geometry are finalized.
 9. Remove unrestricted global `OnPaint` from the retained toolkit path.
-10. Do not add more branches to the current 419-line `process.rs` or 450-line `views.rs`; split the
-    bridge first according to ownership.
+10. Keep new bridge behavior in the focused `host/process/` and `views/` ownership modules; do not
+    rebuild monolithic dispatch files.
 
 ## Recommended implementation order
 
@@ -307,7 +309,7 @@ order vectors.
 
 - [x] Fix the six current defects above and add regression tests.
 - [x] Centralize rectangle operations and validate non-positive geometry.
-- [ ] Split oversized TUI modules without changing behavior.
+- [x] Split oversized TUI modules without changing behavior.
 
 ### Phase 1 - Retained view engine
 

@@ -1,4 +1,5 @@
 use super::*;
+use fpas_std::ModalResult;
 
 #[test]
 fn tui_host_modal_depth_tracks_enter_and_leave() {
@@ -38,6 +39,124 @@ fn tui_host_modal_depth_tracks_enter_and_leave() {
     chunk.emit(Op::Halt, loc());
 
     assert_eq!(run_ok_output(chunk), vec!["2", "1"]);
+}
+
+#[test]
+fn tui_host_set_active_modal_result_accepts_builtin_and_command_codes() {
+    let mut chunk = Chunk::new();
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, Value::Integer(10));
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostEnterModal))),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, Value::Integer(1));
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(
+            TuiIntrinsic::HostSetActiveModalResult,
+        ))),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, Value::Integer(2));
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(
+            TuiIntrinsic::HostSetActiveModalResult,
+        ))),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, Value::Integer(1007));
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(
+            TuiIntrinsic::HostSetActiveModalResult,
+        ))),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+    assert_eq!(tui.modals.active_result(), Some(ModalResult::Command(1007)));
+}
+
+#[test]
+fn tui_host_set_active_modal_result_rejects_invalid_code_without_mutation() {
+    let mut chunk = Chunk::new();
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, Value::Integer(10));
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostEnterModal))),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, Value::Integer(1));
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(
+            TuiIntrinsic::HostSetActiveModalResult,
+        ))),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, Value::Integer(999));
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(
+            TuiIntrinsic::HostSetActiveModalResult,
+        ))),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    let error = worker.run().expect_err("invalid modal result should fail");
+    assert!(
+        error.message.contains(
+            "expects 1 (Accept), 2 (Cancel), or an application-defined result code >= 1000"
+        ),
+        "unexpected runtime error: {}",
+        error.message
+    );
+
+    let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+    assert_eq!(tui.modals.active_result(), Some(ModalResult::Accept));
+}
+
+#[test]
+fn tui_host_set_active_modal_result_requires_active_modal() {
+    let mut chunk = Chunk::new();
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, Value::Integer(1));
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(
+            TuiIntrinsic::HostSetActiveModalResult,
+        ))),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let error = run_err(chunk);
+    assert!(
+        error.message.contains("requires an active modal frame"),
+        "unexpected runtime error: {}",
+        error.message
+    );
 }
 
 #[test]

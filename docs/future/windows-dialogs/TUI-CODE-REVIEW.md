@@ -369,7 +369,9 @@ scrolling, and focused cursor painting. Retained
 [`RadioGroupWidget`](../../../crates/fpas-std/src/tui/widget/control/radio.rs) controls now complete
 the first Rust-internal dialog-control set. The VM modal bridge now stores each modal's return
 context on entry and restores the saved focus/window root on close, including nested modals and
-owned dialog-root removal. Modal-result validation and the example dialog remain open.
+owned dialog-root removal. `Application.HostSetActiveModalResult` now validates modal result codes
+through the VM bridge (`1` Accept, `2` Cancel, or application-defined command results `>= 1000`).
+The example dialog remains open.
 
 - [x] Add labels, buttons, input line, checkbox/radio controls.
   - [x] Add retained label and button widgets.
@@ -377,7 +379,7 @@ owned dialog-root removal. Modal-result validation and the example dialog remain
   - [x] Add retained checkbox/radio controls.
 - [x] Add modal result, default/cancel actions, and saved return-focus context (retained side).
 - [x] Restore saved focus/window root on close through the VM bridge.
-- [ ] Validate modal results through the VM bridge.
+- [x] Validate modal results through the VM bridge.
 - [ ] Convert the manual dialog example and add a realistic IDE dialog.
 
 ### Phase 4 - Scrolling controls

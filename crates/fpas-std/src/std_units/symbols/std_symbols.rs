@@ -314,6 +314,9 @@ pub const STD_TUI_APPLICATION_HOST_BIND_COMMAND_TO_ACTIVE_MODAL: &str =
 pub const STD_TUI_APPLICATION_HOST_ENTER_MODAL: &str = std_tui!("Application.HostEnterModal");
 /// Pop the active hosted modal frame, if any.
 pub const STD_TUI_APPLICATION_HOST_LEAVE_MODAL: &str = std_tui!("Application.HostLeaveModal");
+/// Set and validate the active hosted modal result code.
+pub const STD_TUI_APPLICATION_HOST_SET_ACTIVE_MODAL_RESULT: &str =
+    std_tui!("Application.HostSetActiveModalResult");
 /// Register a host-managed view and return its opaque `ViewId`.
 pub const STD_TUI_APPLICATION_HOST_REGISTER_VIEW: &str = std_tui!("Application.HostRegisterView");
 /// Remove a host-managed view by handle.

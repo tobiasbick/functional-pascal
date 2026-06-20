@@ -1,9 +1,10 @@
 //! Modal view lifecycle and active-scope tracking.
 
-use crate::vm::diagnostics::VmError;
+use crate::vm::diagnostics::{VmError, runtime_error};
 use crate::vm::{TuiState, Worker};
 use fpas_bytecode::{SourceLocation, TuiIntrinsic};
-use fpas_std::{ModalClose, ModalId, ViewId, ViewRect};
+use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
+use fpas_std::{ModalClose, ModalId, ModalResult, ViewId, ViewRect};
 
 use super::super::view_geometry::validate_view_rect;
 
@@ -81,6 +82,20 @@ impl Worker {
                         .set_return_context(previous_active_root, previous_focus);
                 });
             }
+            TuiIntrinsic::HostSetActiveModalResult => {
+                let result_code = self.pop_int(line)?;
+                self.pop_tui_application(line)?;
+                let result = Self::validate_modal_result_code(result_code, line)?;
+                let set = self.with_tui(|tui| tui.modals.set_result(result));
+                if !set {
+                    return Err(runtime_error(
+                        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                        "Application.HostSetActiveModalResult requires an active modal frame",
+                        "Open a modal with `Application.ShowModal`, `Application.ShowDialog`, or `Application.HostEnterModal` before setting its result.",
+                        line,
+                    ));
+                }
+            }
             TuiIntrinsic::HostAttachViewToActiveModal => {
                 let view_id = self.pop_tui_view_id(line)?;
                 self.pop_tui_application(line)?;
@@ -97,6 +112,25 @@ impl Worker {
         }
 
         Ok(true)
+    }
+
+    fn validate_modal_result_code(
+        result_code: i64,
+        line: SourceLocation,
+    ) -> Result<ModalResult, VmError> {
+        match result_code {
+            1 => Ok(ModalResult::Accept),
+            2 => Ok(ModalResult::Cancel),
+            code if code >= 1000 => Ok(ModalResult::Command(code)),
+            _ => Err(runtime_error(
+                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                format!(
+                    "Application.HostSetActiveModalResult expects 1 (Accept), 2 (Cancel), or an application-defined result code >= 1000, got {result_code}"
+                ),
+                "Use 1 for Accept, 2 for Cancel, or reserve command-like dialog results at 1000 and above.",
+                line,
+            )),
+        }
     }
 
     /// Returns the view ids that belong to the currently active modal scope.

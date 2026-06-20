@@ -187,6 +187,14 @@ pub(super) fn register_host_api(
         s::STD_TUI_APPLICATION_HOST_LEAVE_MODAL,
         vec![p("App", types.application.clone(), false)],
     );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_SET_ACTIVE_MODAL_RESULT,
+        vec![
+            p("App", types.application.clone(), false),
+            p("ResultCode", Ty::Integer, false),
+        ],
+    );
     define_func(
         checker,
         s::STD_TUI_APPLICATION_HOST_REGISTER_VIEW,

@@ -228,6 +228,13 @@ pub enum TuiIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui/app/README.md`
     ApplicationShowDialog = 291,
+    /// Set and validate the active modal result code.
+    ///
+    /// Stack: `Application`, `ResultCode` (`integer`, top). Does not push a value. Codes are
+    /// `1` Accept, `2` Cancel, or application-defined command results `>= 1000`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui/app/README.md`
+    HostSetActiveModalResult = 381,
     /// Register a host-managed solid-fill widget view and return its opaque handle.
     ///
     /// Stack: `Application`, `X`, `Y`, `Width`, `Height`, `FillColor`, `TextColor`, `FillChar`

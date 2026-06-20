@@ -19,7 +19,7 @@ pub use command::{CommandEvent, CommandId, CommandKind, CommandRegistry};
 pub use damage::DamageRegion;
 pub use event::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent};
 pub use host::TuiHost;
-pub use modal::{ModalId, ModalStack};
+pub use modal::{ModalClose, ModalId, ModalResult, ModalStack};
 pub use process::{BlockedInput, FocusDirection, ProcessOutcome};
 pub use session::TuiSession;
 pub use view::{

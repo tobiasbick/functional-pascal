@@ -352,9 +352,19 @@ remaining Phase 3+ work.
 
 ### Phase 3 - Dialog controls
 
-- Add labels, buttons, input line, checkbox/radio controls.
-- Add modal result, validation, default/cancel, nested modal focus restoration.
-- Convert the manual dialog example and add a realistic IDE dialog.
+**Implementation status (2026-06-20): in progress.** The retained modal stack now carries the
+interaction context that closing dialogs need: each frame stores the previously active window root
+and focused leaf, default (Enter) and cancel (Escape) action commands, and a resolved
+[`ModalResult`](../../../crates/fpas-std/src/tui/modal/context.rs) (`Accept`, `Cancel`, or an
+application-defined `Command`). `leave_with_context` returns the full
+[`ModalClose`](../../../crates/fpas-std/src/tui/modal/context.rs) record so the host can unregister
+owned roots and restore the exact prior window/focus, including for nested modals. Dialog controls,
+result validation, VM bridge wiring of focus restore, and the example dialog remain open.
+
+- [ ] Add labels, buttons, input line, checkbox/radio controls.
+- [x] Add modal result, default/cancel actions, and saved return-focus context (retained side).
+- [ ] Validate modal results and restore focus on close through the VM bridge.
+- [ ] Convert the manual dialog example and add a realistic IDE dialog.
 
 ### Phase 4 - Scrolling controls
 

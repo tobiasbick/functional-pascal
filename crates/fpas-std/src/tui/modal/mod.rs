@@ -2,6 +2,10 @@
 //!
 //! The Pascal-facing host API is documented in `docs/pascal/std/tui/app/README.md`.
 
+mod context;
+
+pub use context::{ModalClose, ModalResult};
+
 use crate::{CommandId, CommandRegistry, ConsoleKeyEvent, ViewId};
 
 /// Application-defined modal identifier supplied by FPAS code.
@@ -15,6 +19,33 @@ struct ModalFrame {
     owns_root_view: bool,
     scoped_views: Vec<ViewId>,
     commands: CommandRegistry,
+    /// Active window root before this modal was entered, restored when it closes.
+    previous_active_root: Option<ViewId>,
+    /// Focused leaf before this modal was entered, restored when it closes.
+    previous_focus: Option<ViewId>,
+    /// Command resolved when the modal's default control is confirmed (Enter).
+    default_action: Option<CommandId>,
+    /// Command resolved when the modal's cancel control is triggered (Escape).
+    cancel_action: Option<CommandId>,
+    /// Resolved modal result, set before the frame closes.
+    result: Option<ModalResult>,
+}
+
+impl ModalFrame {
+    fn new(id: ModalId, root_view: Option<ViewId>, owns_root_view: bool) -> Self {
+        Self {
+            id,
+            root_view,
+            owns_root_view,
+            scoped_views: Vec::new(),
+            commands: CommandRegistry::default(),
+            previous_active_root: None,
+            previous_focus: None,
+            default_action: None,
+            cancel_action: None,
+            result: None,
+        }
+    }
 }
 
 /// Host-side modal stack for an active TUI session.
@@ -26,13 +57,7 @@ pub struct ModalStack {
 impl ModalStack {
     /// Push `modal_id` as the active modal.
     pub fn enter(&mut self, modal_id: ModalId) {
-        self.frames.push(ModalFrame {
-            id: modal_id,
-            root_view: None,
-            owns_root_view: false,
-            scoped_views: Vec::new(),
-            commands: CommandRegistry::default(),
-        });
+        self.frames.push(ModalFrame::new(modal_id, None, false));
     }
 
     /// Push `modal_id` as the active modal and bind it to `root_view`.
@@ -40,13 +65,8 @@ impl ModalStack {
     /// The host uses the root view's full subtree as the modal scope for focus, mouse routing,
     /// and local paint ordering.
     pub fn show(&mut self, modal_id: ModalId, root_view: ViewId) {
-        self.frames.push(ModalFrame {
-            id: modal_id,
-            root_view: Some(root_view),
-            owns_root_view: false,
-            scoped_views: Vec::new(),
-            commands: CommandRegistry::default(),
-        });
+        self.frames
+            .push(ModalFrame::new(modal_id, Some(root_view), false));
     }
 
     /// Push `modal_id` as the active modal and bind it to an owned dialog root view.
@@ -54,13 +74,8 @@ impl ModalStack {
     /// When this frame is later closed, the host may unregister the owned root subtree
     /// automatically.
     pub fn show_dialog(&mut self, modal_id: ModalId, root_view: ViewId) {
-        self.frames.push(ModalFrame {
-            id: modal_id,
-            root_view: Some(root_view),
-            owns_root_view: true,
-            scoped_views: Vec::new(),
-            commands: CommandRegistry::default(),
-        });
+        self.frames
+            .push(ModalFrame::new(modal_id, Some(root_view), true));
     }
 
     /// Pop the active modal, if any.
@@ -152,6 +167,18 @@ impl ModalStack {
             if frame.root_view.is_some_and(|root| view_ids.contains(&root)) {
                 frame.root_view = None;
                 frame.owns_root_view = false;
+            }
+            if frame
+                .previous_active_root
+                .is_some_and(|root| view_ids.contains(&root))
+            {
+                frame.previous_active_root = None;
+            }
+            if frame
+                .previous_focus
+                .is_some_and(|focus| view_ids.contains(&focus))
+            {
+                frame.previous_focus = None;
             }
             frame
                 .scoped_views

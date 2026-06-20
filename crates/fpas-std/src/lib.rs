@@ -80,11 +80,11 @@ pub use tui::{
     DesktopMetrics, EventOutcome, EventPhase, EventRoute, FocusDirection, FrameButtonSlots,
     FrameCapabilities, FrameContentSize, FrameGeometry, FrameGeometryError, FrameKind, FrameRoot,
     FrameRootSpec, FrameScrollbars, FramedDialogRoot, MenuBarItem, MenuBarMouseResult,
-    MenuBarState, MenuBarStyle, MenuBarWidget, MenuPopupItem, ModalId, ModalStack, ProcessOutcome,
-    ResolvedView, RootActivation, RoutedEvent, SolidFillWidget, StatusBarSegment, StatusBarStyle,
-    StatusBarWidget, TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent, TuiHost,
-    TuiSession, ViewId, ViewOptions, ViewRect, ViewRegistry, ViewState, ViewWidget, WindowPalette,
-    WindowShadow, register_framed_dialog_root,
+    MenuBarState, MenuBarStyle, MenuBarWidget, MenuPopupItem, ModalClose, ModalId, ModalResult,
+    ModalStack, ProcessOutcome, ResolvedView, RootActivation, RoutedEvent, SolidFillWidget,
+    StatusBarSegment, StatusBarStyle, StatusBarWidget, TUI_EVENT_KIND_VARIANTS,
+    TUI_EXIT_REASON_VARIANTS, TuiEvent, TuiHost, TuiSession, ViewId, ViewOptions, ViewRect,
+    ViewRegistry, ViewState, ViewWidget, WindowPalette, WindowShadow, register_framed_dialog_root,
 };
 pub use ui::{UiEvent, UiHost, UiHostSurface, UiModifiers, UiMouse, UiResize, UiWheel};
 

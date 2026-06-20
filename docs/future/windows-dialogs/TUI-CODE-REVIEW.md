@@ -358,10 +358,16 @@ and focused leaf, default (Enter) and cancel (Escape) action commands, and a res
 [`ModalResult`](../../../crates/fpas-std/src/tui/modal/context.rs) (`Accept`, `Cancel`, or an
 application-defined `Command`). `leave_with_context` returns the full
 [`ModalClose`](../../../crates/fpas-std/src/tui/modal/context.rs) record so the host can unregister
-owned roots and restore the exact prior window/focus, including for nested modals. Dialog controls,
-result validation, VM bridge wiring of focus restore, and the example dialog remain open.
+owned roots and restore the exact prior window/focus, including for nested modals. Retained
+[`LabelWidget`](../../../crates/fpas-std/src/tui/widget/control/label.rs) and
+[`ButtonWidget`](../../../crates/fpas-std/src/tui/widget/control/button.rs) controls now provide the
+first dialog-control building blocks with focused unit coverage. Input controls, result validation,
+VM bridge wiring of focus restore, and the example dialog remain open.
 
 - [ ] Add labels, buttons, input line, checkbox/radio controls.
+  - [x] Add retained label and button widgets.
+  - [ ] Add input line widget.
+  - [ ] Add checkbox/radio controls.
 - [x] Add modal result, default/cancel actions, and saved return-focus context (retained side).
 - [ ] Validate modal results and restore focus on close through the VM bridge.
 - [ ] Convert the manual dialog example and add a realistic IDE dialog.

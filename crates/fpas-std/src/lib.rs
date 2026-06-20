@@ -76,15 +76,16 @@ pub use test::{
     test_was_skipped,
 };
 pub use tui::{
-    BlockedInput, CommandEvent, CommandId, CommandKind, CommandRegistry, DamageRegion,
-    DesktopMetrics, EventOutcome, EventPhase, EventRoute, FocusDirection, FrameButtonSlots,
-    FrameCapabilities, FrameContentSize, FrameGeometry, FrameGeometryError, FrameKind, FrameRoot,
-    FrameRootSpec, FrameScrollbars, FramedDialogRoot, MenuBarItem, MenuBarMouseResult,
-    MenuBarState, MenuBarStyle, MenuBarWidget, MenuPopupItem, ModalClose, ModalId, ModalResult,
-    ModalStack, ProcessOutcome, ResolvedView, RootActivation, RoutedEvent, SolidFillWidget,
-    StatusBarSegment, StatusBarStyle, StatusBarWidget, TUI_EVENT_KIND_VARIANTS,
-    TUI_EXIT_REASON_VARIANTS, TuiEvent, TuiHost, TuiSession, ViewId, ViewOptions, ViewRect,
-    ViewRegistry, ViewState, ViewWidget, WindowPalette, WindowShadow, register_framed_dialog_root,
+    BlockedInput, ButtonStyle, ButtonWidget, CommandEvent, CommandId, CommandKind, CommandRegistry,
+    DamageRegion, DesktopMetrics, EventOutcome, EventPhase, EventRoute, FocusDirection,
+    FrameButtonSlots, FrameCapabilities, FrameContentSize, FrameGeometry, FrameGeometryError,
+    FrameKind, FrameRoot, FrameRootSpec, FrameScrollbars, FramedDialogRoot, LabelStyle,
+    LabelWidget, MenuBarItem, MenuBarMouseResult, MenuBarState, MenuBarStyle, MenuBarWidget,
+    MenuPopupItem, ModalClose, ModalId, ModalResult, ModalStack, ProcessOutcome, ResolvedView,
+    RootActivation, RoutedEvent, SolidFillWidget, StatusBarSegment, StatusBarStyle,
+    StatusBarWidget, TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent, TuiHost,
+    TuiSession, ViewId, ViewOptions, ViewRect, ViewRegistry, ViewState, ViewWidget, WindowPalette,
+    WindowShadow, register_framed_dialog_root,
 };
 pub use ui::{UiEvent, UiHost, UiHostSurface, UiModifiers, UiMouse, UiResize, UiWheel};
 

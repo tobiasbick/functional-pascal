@@ -3,6 +3,7 @@
 //! Plan: `docs/future/tui-application-framework.md`
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
+mod control;
 mod frame;
 mod menu_bar;
 mod menu_label_paint;
@@ -11,6 +12,7 @@ mod menu_style;
 mod solid_fill;
 mod status_bar;
 
+pub use control::{ButtonStyle, ButtonWidget, LabelStyle, LabelWidget};
 pub use frame::{
     FrameButtonSlots, FrameCapabilities, FrameContentSize, FrameGeometry, FrameGeometryError,
     FrameKind, FrameRoot, FrameRootSpec, FrameScrollbars, FramedDialogRoot,
@@ -34,6 +36,10 @@ pub enum ViewWidget {
     MenuBar(MenuBarWidget),
     /// Declarative status bar rendered in Rust (display-only).
     StatusBar(StatusBarWidget),
+    /// Static dialog label rendered in Rust.
+    Label(LabelWidget),
+    /// Dialog push button rendered in Rust.
+    Button(ButtonWidget),
 }
 
 impl ViewWidget {
@@ -43,6 +49,8 @@ impl ViewWidget {
             Self::SolidFill(widget) => widget.paint(console, rect, damage),
             Self::MenuBar(widget) => widget.paint(console, rect, damage),
             Self::StatusBar(widget) => widget.clone().paint(console, rect, damage),
+            Self::Label(widget) => widget.paint(console, rect, damage),
+            Self::Button(widget) => widget.paint(console, rect, damage),
         }
     }
 
@@ -61,7 +69,9 @@ impl ViewWidget {
                 .damage_rects(rect)
                 .into_iter()
                 .any(|region| intersects_damage_region(region, damage)),
-            Self::SolidFill(_) | Self::StatusBar(_) => intersects_damage_region(rect, damage),
+            Self::SolidFill(_) | Self::StatusBar(_) | Self::Label(_) | Self::Button(_) => {
+                intersects_damage_region(rect, damage)
+            }
         }
     }
 
@@ -72,7 +82,7 @@ impl ViewWidget {
     pub fn contains_point(&self, rect: ViewRect, mouse_x: i64, mouse_y: i64) -> bool {
         match self {
             Self::MenuBar(widget) => widget.contains_point(rect, mouse_x, mouse_y),
-            Self::SolidFill(_) | Self::StatusBar(_) => {
+            Self::SolidFill(_) | Self::StatusBar(_) | Self::Label(_) | Self::Button(_) => {
                 rect.contains_console_mouse(mouse_x, mouse_y)
             }
         }

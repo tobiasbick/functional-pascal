@@ -32,7 +32,10 @@ impl Worker {
 
         let result = match &mut widget {
             ViewWidget::MenuBar(menu) => menu.handle_mouse(rect, mouse),
-            ViewWidget::SolidFill(_) | ViewWidget::StatusBar(_) => MenuBarMouseResult::Ignored,
+            ViewWidget::SolidFill(_)
+            | ViewWidget::StatusBar(_)
+            | ViewWidget::Label(_)
+            | ViewWidget::Button(_) => MenuBarMouseResult::Ignored,
         };
 
         let after = match &widget {

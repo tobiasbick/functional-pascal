@@ -79,9 +79,9 @@ pub use tui::{
     BlockedInput, CommandEvent, CommandId, CommandKind, CommandRegistry, DamageRegion,
     EventOutcome, EventPhase, EventRoute, FocusDirection, MenuBarItem, MenuBarMouseResult,
     MenuBarState, MenuBarStyle, MenuBarWidget, MenuPopupItem, ModalId, ModalStack, ProcessOutcome,
-    ResolvedView, RoutedEvent, SolidFillWidget, StatusBarSegment, StatusBarStyle, StatusBarWidget,
-    TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent, TuiHost, TuiSession, ViewId,
-    ViewOptions, ViewRect, ViewRegistry, ViewState, ViewWidget,
+    ResolvedView, RootActivation, RoutedEvent, SolidFillWidget, StatusBarSegment, StatusBarStyle,
+    StatusBarWidget, TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent, TuiHost,
+    TuiSession, ViewId, ViewOptions, ViewRect, ViewRegistry, ViewState, ViewWidget,
 };
 pub use ui::{UiEvent, UiHost, UiHostSurface, UiModifiers, UiMouse, UiResize, UiWheel};
 

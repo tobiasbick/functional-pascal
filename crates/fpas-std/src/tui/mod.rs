@@ -23,8 +23,8 @@ pub use modal::{ModalId, ModalStack};
 pub use process::{BlockedInput, FocusDirection, ProcessOutcome};
 pub use session::TuiSession;
 pub use view::{
-    EventOutcome, EventPhase, EventRoute, ResolvedView, RoutedEvent, ViewId, ViewOptions, ViewRect,
-    ViewRegistry, ViewState,
+    EventOutcome, EventPhase, EventRoute, ResolvedView, RootActivation, RoutedEvent, ViewId,
+    ViewOptions, ViewRect, ViewRegistry, ViewState,
 };
 pub use widget::{
     MenuBarItem, MenuBarMouseResult, MenuBarState, MenuBarStyle, MenuBarWidget, MenuPopupItem,

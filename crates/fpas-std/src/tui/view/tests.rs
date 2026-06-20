@@ -373,3 +373,90 @@ fn pointer_capture_routes_outside_bounds_and_clears_on_removal() {
     assert_eq!(registry.captured_pointer(), None);
     assert_eq!(registry.pointer_target(80, 25, None), None);
 }
+
+#[test]
+fn root_of_returns_root_ancestor_and_self_for_root() {
+    let mut registry = ViewRegistry::default();
+    let root = registry.register(rect(0, 0, 20, 10));
+    let group = registry.register(rect(1, 1, 10, 5));
+    let leaf = registry.register(rect(1, 1, 4, 1));
+    assert!(registry.set_parent(group, Some(root)));
+    assert!(registry.set_parent(leaf, Some(group)));
+
+    assert_eq!(registry.root_of(leaf), Some(root));
+    assert_eq!(registry.root_of(root), Some(root));
+    assert_eq!(registry.root_of(ViewId::from_raw(99)), None);
+}
+
+#[test]
+fn active_root_follows_focused_leaf() {
+    let mut registry = ViewRegistry::default();
+    let window = registry.register(rect(0, 0, 20, 10));
+    let leaf = registry.register(rect(1, 1, 4, 1));
+    assert!(registry.set_parent(leaf, Some(window)));
+    assert!(registry.push_child(leaf));
+
+    assert_eq!(registry.active_root(), None);
+    assert_eq!(registry.focus_view(leaf), (true, false));
+    assert_eq!(registry.active_root(), Some(window));
+}
+
+#[test]
+fn activate_root_raises_window_to_front_and_focuses_first_child() {
+    let mut registry = ViewRegistry::default();
+    let back = registry.register(rect(0, 0, 40, 20));
+    let front = registry.register(rect(5, 5, 20, 10));
+    let back_button = registry.register(rect(1, 1, 6, 1));
+    assert!(registry.set_parent(back_button, Some(back)));
+    assert!(registry.push_child(back_button));
+
+    assert_eq!(registry.roots(), &[back, front]);
+
+    let activation = registry.activate_root(back_button).expect("known view");
+    assert_eq!(activation.root, back);
+    assert!(activation.raised);
+    assert!(activation.focus_changed);
+    assert!(!activation.had_previous_focus);
+
+    assert_eq!(registry.roots(), &[front, back]);
+    assert_eq!(registry.focused_id(), Some(back_button));
+    assert_eq!(registry.active_root(), Some(back));
+}
+
+#[test]
+fn activate_root_keeps_focus_already_inside_target() {
+    let mut registry = ViewRegistry::default();
+    let window = registry.register(rect(0, 0, 20, 10));
+    let first = registry.register(rect(1, 1, 4, 1));
+    let second = registry.register(rect(1, 3, 4, 1));
+    assert!(registry.set_parent(first, Some(window)));
+    assert!(registry.set_parent(second, Some(window)));
+    assert!(registry.push_child(first));
+    assert!(registry.push_child(second));
+    assert_eq!(registry.focus_view(second), (true, false));
+
+    let activation = registry.activate_root(window).expect("known view");
+    assert!(!activation.raised);
+    assert!(!activation.focus_changed);
+    assert!(activation.had_previous_focus);
+    assert_eq!(registry.focused_id(), Some(second));
+}
+
+#[test]
+fn activate_root_without_focusable_children_still_raises() {
+    let mut registry = ViewRegistry::default();
+    let back = registry.register(rect(0, 0, 40, 20));
+    let front = registry.register(rect(5, 5, 20, 10));
+
+    let activation = registry.activate_root(back).expect("known view");
+    assert!(activation.raised);
+    assert!(!activation.focus_changed);
+    assert_eq!(registry.roots(), &[front, back]);
+    assert_eq!(registry.focused_id(), None);
+}
+
+#[test]
+fn activate_root_rejects_unknown_view() {
+    let mut registry = ViewRegistry::default();
+    assert_eq!(registry.activate_root(ViewId::from_raw(7)), None);
+}

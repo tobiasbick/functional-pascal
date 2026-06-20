@@ -7,6 +7,7 @@
 //! Plan: `docs/future/tui-application-framework.md`
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
+mod activation;
 mod focus;
 mod geometry;
 mod routing;
@@ -16,6 +17,7 @@ mod tree;
 #[cfg(test)]
 mod tests;
 
+pub use activation::RootActivation;
 pub use routing::{EventOutcome, EventPhase, EventRoute, RoutedEvent};
 pub use state::{ResolvedView, ViewOptions, ViewState};
 

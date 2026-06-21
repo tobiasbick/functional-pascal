@@ -46,6 +46,9 @@ impl Worker {
                 self.invoke_focus_transition(had_previous, line)?;
             }
         }
+        if let Some(tag) = self.try_dispatch_control_mouse(mouse, modal_scope, line)? {
+            return Ok(tag);
+        }
         if let Some(tag) = self.try_dispatch_widget_mouse(mouse, modal_scope, line)? {
             return Ok(tag);
         }

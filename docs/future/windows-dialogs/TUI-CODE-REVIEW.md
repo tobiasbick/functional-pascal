@@ -352,8 +352,8 @@ remaining Phase 3+ work.
 
 ### Phase 3 - Dialog controls
 
-**Implementation status (2026-06-20): complete** for dialog-control foundations and example
-integration. The retained modal stack now carries the interaction context that closing dialogs
+**Implementation status (2026-06-21): complete** for dialog-control foundations, public FPAS
+bindings, input dispatch, state queries, and example integration. The retained modal stack now carries the interaction context that closing dialogs
 need: each frame stores the previously active window root
 and focused leaf, default (Enter) and cancel (Escape) action commands, and a resolved
 [`ModalResult`](../../../crates/fpas-std/src/tui/modal/context.rs) (`Accept`, `Cancel`, or an

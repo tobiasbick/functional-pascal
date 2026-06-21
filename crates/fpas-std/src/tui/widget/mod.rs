@@ -26,7 +26,7 @@ pub use menu_popup::MenuPopupItem;
 pub use solid_fill::SolidFillWidget;
 pub use status_bar::{StatusBarSegment, StatusBarStyle, StatusBarWidget};
 
-use crate::{Console, DamageRegion, ViewKind, ViewRect};
+use crate::{Console, DamageRegion, ViewKind, ViewRect, ViewState};
 
 /// Native widget attached to a host-managed view.
 ///
@@ -52,6 +52,29 @@ pub enum ViewWidget {
 }
 
 impl ViewWidget {
+    /// Synchronize control paint flags with resolved retained view state.
+    pub fn sync_view_state(&mut self, state: ViewState) {
+        match self {
+            Self::Label(widget) => widget.enabled = state.enabled,
+            Self::Button(widget) => {
+                widget.enabled = state.enabled;
+                widget.focused = state.focused;
+            }
+            Self::InputLine(widget) => {
+                widget.enabled = state.enabled;
+                widget.focused = state.focused;
+            }
+            Self::CheckBox(widget) => {
+                widget.enabled = state.enabled;
+                widget.focused = state.focused;
+            }
+            Self::RadioGroup(widget) => {
+                widget.enabled = state.enabled;
+                widget.focused = state.focused;
+            }
+            Self::SolidFill(_) | Self::MenuBar(_) | Self::StatusBar(_) => {}
+        }
+    }
     /// Return the stable introspection kind for this native widget.
     #[must_use]
     pub fn kind(&self) -> ViewKind {

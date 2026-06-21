@@ -114,6 +114,9 @@ View and widget reads:
 | `Application.QueryViewKind(App, ViewId)` | `ViewKind` |
 | `Application.QuerySceneGraph(App)` | `array of ViewSnapshot` |
 | `Application.QueryMenuBarState(App, ViewId)` | `MenuBarState` |
+| `Application.QueryInputLineState(App, ViewId)` | `InputLineState` |
+| `Application.QueryCheckBoxState(App, ViewId)` | `CheckBoxState` |
+| `Application.QueryRadioGroupState(App, ViewId)` | `RadioGroupState` |
 
 Retained state controls used by headless tests:
 
@@ -128,7 +131,7 @@ See [ScreenCell type](#screencell-type-decided) and [MenuBarState type](#menubar
 
 Native test lifecycle and basic queries use **356..=374** in
 [`TuiIntrinsic`](../../../../../crates/fpas-bytecode/src/intrinsic/tui.rs). Scene-graph state APIs
-use **382..=388**. **348..=355**, **375..=378** belong to `Std.Test` (see
+use **382..=399**. **348..=355**, **375..=378** belong to `Std.Test` (see
 [`test.md`](../../testing/test.md)).
 
 | Discriminant | Pascal surface | Notes |
@@ -159,6 +162,9 @@ use **382..=388**. **348..=355**, **375..=378** belong to `Std.Test` (see
 | **386** | `QuerySceneGraph` | Consistent full-tree snapshot |
 | **387** | `HostSetViewVisible` | Retained visibility flag |
 | **388** | `HostSetViewEnabled` | Retained input/focus flag |
+| **389..=393** | `HostCreate*` controls | Label, button, input, checkbox, radio |
+| **394..=396** | `HostSet*` control state | Input text, checked, selection |
+| **397..=399** | `Query*State` controls | Input, checkbox, radio state |
 
 ### Headless test flow (example)
 

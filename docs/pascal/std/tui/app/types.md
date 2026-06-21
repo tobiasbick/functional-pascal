@@ -50,6 +50,13 @@ widget is attached; a Pascal paint handler may still exist.
 `ViewSnapshot` contains `id`, `parent`, direct `children`, `resolved`, and `kind`. Arrays returned by
 `QuerySceneGraph` contain these records in back-to-front depth-first paint order.
 
+### Control types
+
+`RadioOption` contains `label: string`, `accelerator: Option of char`, `commandId: Option of integer`,
+and `enabled: boolean`. `InputLineState` reports `text`, zero-based `cursor`, and `scrollOffset`.
+`CheckBoxState` reports `checked`. `RadioGroupState` reports zero-based `selectedIndex` and
+`focusedIndex`, using `-1` when no enabled option exists. See [Retained controls](controls.md).
+
 ### `ExitReason`
 
 Enum describing why the hosted loop stopped (`**Std.Tui.ExitReason`**). **Registry:** the type and variants `**UserQuit**`, `**HostStop`**, `**HostAndUserStop**`, `**HostShutdown**` are registered in [`loaded/tui/`](../../../../../crates/fpas-sema/src/std_registry/loaded/tui/mod.rs) and known to the compiler enum tables. **VM:** [`Application.Run`](../../../../../crates/fpas-vm/src/vm/execute/io/tui_run.rs) records `**last_exit_reason**`, invokes the registered `**OnExit**`, and then performs close semantics. The current hosted loop reports `**UserQuit`** when `**Application.HostRequestQuit(App)`** ends the run, `**HostStop`** when low-level code stops the active hosted session during `**Run`**, `**HostAndUserStop`** when both stop signals are present in the same turn, and `**HostShutdown`** when VM global shutdown is requested while the hosted run is active.

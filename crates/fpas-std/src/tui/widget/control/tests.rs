@@ -304,6 +304,7 @@ fn radio_group_paints_selected_focused_and_disabled_rows() {
         ],
         RadioGroupStyle::default(),
     );
+    group.focused = true;
     assert!(group.set_selected(2));
     assert_eq!(group.focused_option(), Some(2));
 

@@ -62,7 +62,7 @@ pub use graph::{
     push_headless_graph_test_mode, with_headless_graph_backend_for_tests,
 };
 pub use intrinsics::run_intrinsic;
-pub use key_event::{ConsoleKeyEvent, KEY_KIND_VARIANTS};
+pub use key_event::{ConsoleKeyEvent, KEY_KIND_VARIANTS, key_kind_index};
 pub use std_units::{
     STD_UNIT_ARGS, STD_UNIT_ARRAY, STD_UNIT_CONSOLE, STD_UNIT_CONV, STD_UNIT_DICT, STD_UNIT_ENV,
     STD_UNIT_FS, STD_UNIT_GRAPH, STD_UNIT_JSON, STD_UNIT_MATH, STD_UNIT_OPTION, STD_UNIT_PARSE,

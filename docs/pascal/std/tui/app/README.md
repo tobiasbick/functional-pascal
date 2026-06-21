@@ -7,6 +7,7 @@
 | [VM bridge](vm-bridge.md) | Intrinsics, modals, views, host widgets |
 | [Views and focus](views.md) | Retained tree, clipping, Tab traversal, paint order |
 | [Modals and dialogs](modals.md) | `ShowModal`, `ShowDialog`, results, focus restore |
+| [Retained controls](controls.md) | Labels, buttons, input lines, checkboxes, radio groups |
 | [Lifecycle](lifecycle.md) | `Open`, `Configure`, `Run`, `Close` |
 | [Handlers](handlers.md) | `On*` callbacks and registration |
 | [Types](types.md) | `ApplicationHandlers`, `ExitReason`, `ViewId`, signatures |
@@ -23,7 +24,7 @@
 | VM bridge | [`fpas-vm/.../tui/`](../../../../../crates/fpas-vm/src/vm/execute/io/tui/) |
 | Contributor guide | [AGENTS.md](../../../../../AGENTS.md) |
 
-Rust-internal dialog controls (`LabelWidget`, `ButtonWidget`, `InputLineWidget`, checkbox/radio) live under [`widget/control/`](../../../../../crates/fpas-std/src/tui/widget/control/) and are covered by Rust unit tests; Pascal `HostCreate*` bindings for them are not registered yet.
+Dialog controls (`LabelWidget`, `ButtonWidget`, `InputLineWidget`, checkbox/radio) live under [`widget/control/`](../../../../../crates/fpas-std/src/tui/widget/control/); their public Pascal bridge is documented in [Retained controls](controls.md).
 
 ## See also
 

@@ -428,6 +428,28 @@ pub enum TuiIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui/app/views.md`
     HostSetViewEnabled = 388,
+    /// Create a retained label control. See `docs/pascal/std/tui/app/controls.md`.
+    HostCreateLabelView = 389,
+    /// Create a retained button control. See `docs/pascal/std/tui/app/controls.md`.
+    HostCreateButtonView = 390,
+    /// Create a retained input-line control. See `docs/pascal/std/tui/app/controls.md`.
+    HostCreateInputLineView = 391,
+    /// Create a retained checkbox control. See `docs/pascal/std/tui/app/controls.md`.
+    HostCreateCheckBoxView = 392,
+    /// Create a retained radio-group control. See `docs/pascal/std/tui/app/controls.md`.
+    HostCreateRadioGroupView = 393,
+    /// Replace input-line text.
+    HostSetInputLineText = 394,
+    /// Set checkbox checked state.
+    HostSetCheckBoxChecked = 395,
+    /// Select a radio-group option by zero-based index.
+    HostSetRadioGroupSelected = 396,
+    /// Query input-line text and cursor state.
+    QueryInputLineState = 397,
+    /// Query checkbox checked state.
+    QueryCheckBoxState = 398,
+    /// Query radio-group selection and focused-option state.
+    QueryRadioGroupState = 399,
     // **375..=377** are `Std.Test` screen/view assertions; **378** is `Std.Test.PushReadLn` (see `TestIntrinsic`).
     // Note: **348..=355** are owned by `Std.Test` (`TestIntrinsic`).
 }

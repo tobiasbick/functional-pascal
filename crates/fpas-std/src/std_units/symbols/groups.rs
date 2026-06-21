@@ -133,6 +133,10 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_RESOLVED_VIEW,
     std_symbols::STD_TUI_VIEW_KIND,
     std_symbols::STD_TUI_VIEW_SNAPSHOT,
+    std_symbols::STD_TUI_RADIO_OPTION,
+    std_symbols::STD_TUI_INPUT_LINE_STATE,
+    std_symbols::STD_TUI_CHECK_BOX_STATE,
+    std_symbols::STD_TUI_RADIO_GROUP_STATE,
     std_symbols::STD_TUI_MENU_BAR_STATE,
     std_symbols::STD_TUI_EVENT,
     std_symbols::STD_TUI_EVENT_KIND,
@@ -214,6 +218,17 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_APPLICATION_HOST_SET_STATUS_BAR_SEGMENTS,
     std_symbols::STD_TUI_STATUS_BAR_SEGMENT,
     std_symbols::STD_TUI_STATUS_BAR_STYLE,
+    std_symbols::STD_TUI_APPLICATION_HOST_CREATE_LABEL_VIEW,
+    std_symbols::STD_TUI_APPLICATION_HOST_CREATE_BUTTON_VIEW,
+    std_symbols::STD_TUI_APPLICATION_HOST_CREATE_INPUT_LINE_VIEW,
+    std_symbols::STD_TUI_APPLICATION_HOST_CREATE_CHECK_BOX_VIEW,
+    std_symbols::STD_TUI_APPLICATION_HOST_CREATE_RADIO_GROUP_VIEW,
+    std_symbols::STD_TUI_APPLICATION_HOST_SET_INPUT_LINE_TEXT,
+    std_symbols::STD_TUI_APPLICATION_HOST_SET_CHECK_BOX_CHECKED,
+    std_symbols::STD_TUI_APPLICATION_HOST_SET_RADIO_GROUP_SELECTED,
+    std_symbols::STD_TUI_APPLICATION_QUERY_INPUT_LINE_STATE,
+    std_symbols::STD_TUI_APPLICATION_QUERY_CHECK_BOX_STATE,
+    std_symbols::STD_TUI_APPLICATION_QUERY_RADIO_GROUP_STATE,
 ];
 
 pub(in super::super) const STD_GRAPH_SYMBOLS: &[&str] = &[

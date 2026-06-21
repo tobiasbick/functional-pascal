@@ -1,0 +1,58 @@
+//! `Std.Tui` control model and query-state registration.
+//!
+//! **Documentation:** `docs/pascal/std/tui/app/controls.md`
+
+use crate::check::Checker;
+use crate::std_registry::loaded::type_registration;
+use crate::types::Ty;
+use fpas_std::std_symbols as s;
+
+/// Registered types used by retained control APIs.
+pub(super) struct TuiControlTypes {
+    pub(super) radio_option: Ty,
+    pub(super) input_line_state: Ty,
+    pub(super) check_box_state: Ty,
+    pub(super) radio_group_state: Ty,
+}
+
+/// Register retained control input and state records.
+pub(super) fn register(checker: &mut Checker) -> TuiControlTypes {
+    let radio_option = type_registration::register_record_type(
+        checker,
+        s::STD_TUI_RADIO_OPTION,
+        vec![
+            ("label".into(), Ty::String),
+            ("accelerator".into(), Ty::Option(Box::new(Ty::Char))),
+            ("commandId".into(), Ty::Option(Box::new(Ty::Integer))),
+            ("enabled".into(), Ty::Boolean),
+        ],
+    );
+    let input_line_state = type_registration::register_record_type(
+        checker,
+        s::STD_TUI_INPUT_LINE_STATE,
+        vec![
+            ("text".into(), Ty::String),
+            ("cursor".into(), Ty::Integer),
+            ("scrollOffset".into(), Ty::Integer),
+        ],
+    );
+    let check_box_state = type_registration::register_record_type(
+        checker,
+        s::STD_TUI_CHECK_BOX_STATE,
+        vec![("checked".into(), Ty::Boolean)],
+    );
+    let radio_group_state = type_registration::register_record_type(
+        checker,
+        s::STD_TUI_RADIO_GROUP_STATE,
+        vec![
+            ("selectedIndex".into(), Ty::Integer),
+            ("focusedIndex".into(), Ty::Integer),
+        ],
+    );
+    TuiControlTypes {
+        radio_option,
+        input_line_state,
+        check_box_state,
+        radio_group_state,
+    }
+}

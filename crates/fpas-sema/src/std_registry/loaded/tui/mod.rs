@@ -6,6 +6,8 @@
 //! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 mod application_api;
+mod control_api;
+mod control_types;
 mod handlers;
 mod host_api;
 mod introspection_types;
@@ -31,6 +33,7 @@ struct TuiTypes {
     status_bar_segment: Ty,
     status_bar_style: Ty,
     introspection: introspection_types::TuiIntrospectionTypes,
+    controls: control_types::TuiControlTypes,
 }
 
 struct TuiCallbackTypes {
@@ -84,6 +87,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         ],
     );
     let introspection = introspection_types::register(checker, &view_id, &rect);
+    let controls = control_types::register(checker);
     let menu_bar_state = type_registration::register_record_type(
         checker,
         s::STD_TUI_MENU_BAR_STATE,
@@ -230,7 +234,9 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         status_bar_segment,
         status_bar_style,
         introspection,
+        controls,
     };
     application_api::register_application_api(checker, &types);
+    control_api::register(checker, &types);
     host_api::register_host_api(checker, &types, &callbacks);
 }

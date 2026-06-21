@@ -115,12 +115,15 @@ impl Worker {
             let children = tui.views.children(view_id).to_vec();
             (resolved, widget, handler, children)
         };
-        let (resolved, widget, handler, children) = snapshot;
+        let (resolved, mut widget, handler, children) = snapshot;
 
         if let Some(view) = resolved
             && view.state.exposed
             && Self::damage_intersects_view(damage, view)
         {
+            if let Some(widget) = widget.as_mut() {
+                widget.sync_view_state(view.state);
+            }
             if let Some(widget) = widget.as_ref() {
                 self.paint_widget_underlay(widget, view, damage)?;
             }

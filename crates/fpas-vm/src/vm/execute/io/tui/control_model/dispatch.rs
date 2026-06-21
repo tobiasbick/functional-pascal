@@ -1,0 +1,219 @@
+//! Route pointer, keyboard, and paste input to retained controls.
+//!
+//! **Documentation:** `docs/pascal/std/tui/app/controls.md`
+
+use crate::vm::Worker;
+use crate::vm::diagnostics::VmError;
+use fpas_bytecode::SourceLocation;
+use fpas_std::{
+    CommandEvent, CommandId, ConsoleKeyEvent, ProcessOutcome, UiMouse, ViewId, ViewWidget,
+    key_kind_index, mouse_action_index, mouse_button_index,
+};
+
+use super::super::widget_target;
+
+enum ControlAction {
+    Consumed,
+    Command(CommandId),
+}
+
+impl Worker {
+    pub(in crate::vm::execute::io::tui) fn try_dispatch_control_mouse(
+        &mut self,
+        mouse: UiMouse,
+        scope: Option<&[ViewId]>,
+        line: SourceLocation,
+    ) -> Result<Option<ProcessOutcome>, VmError> {
+        if mouse.action != mouse_action_index("Down") || mouse.button != mouse_button_index("Left")
+        {
+            return Ok(None);
+        }
+        let hit = {
+            let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+            widget_target::widget_mouse_hit(&tui.views, &tui.view_widgets, mouse, scope)
+        };
+        let Some((id, rect, mut widget)) = hit else {
+            return Ok(None);
+        };
+        let state = self.with_tui(|tui| tui.views.state(id));
+        if let Some(state) = state {
+            widget.sync_view_state(state);
+        }
+        let action = match &mut widget {
+            ViewWidget::Button(v) if v.enabled => {
+                v.command_id.map_or(Some(ControlAction::Consumed), |c| {
+                    Some(ControlAction::Command(c))
+                })
+            }
+            ViewWidget::InputLine(v) if v.enabled => {
+                let index = mouse.x.saturating_sub(1).saturating_sub(rect.x).max(0) as usize
+                    + v.scroll_offset();
+                v.set_cursor(index);
+                Some(ControlAction::Consumed)
+            }
+            ViewWidget::CheckBox(v) => v.toggle().then(|| {
+                v.command_id
+                    .map_or(ControlAction::Consumed, ControlAction::Command)
+            }),
+            ViewWidget::RadioGroup(v) if v.enabled => {
+                let row = mouse.y.saturating_sub(1).saturating_sub(rect.y);
+                if usize::try_from(row).is_ok_and(|i| v.set_selected(i)) {
+                    v.selected_command()
+                        .map_or(Some(ControlAction::Consumed), |c| {
+                            Some(ControlAction::Command(c))
+                        })
+                } else {
+                    Some(ControlAction::Consumed)
+                }
+            }
+            _ => None,
+        };
+        self.finish_control_action(id, rect, widget, action, line)
+    }
+
+    pub(in crate::vm::execute::io::tui) fn try_dispatch_control_key(
+        &mut self,
+        key: &ConsoleKeyEvent,
+        line: SourceLocation,
+    ) -> Result<Option<ProcessOutcome>, VmError> {
+        let snapshot = self.with_tui(|tui| {
+            let id = tui.views.focused_id()?;
+            let view = tui.views.resolved(id)?;
+            let widget = tui.view_widgets.get(&id)?.clone();
+            Some((id, view.rect, view.state, widget))
+        });
+        let Some((id, rect, state, mut widget)) = snapshot else {
+            return Ok(None);
+        };
+        widget.sync_view_state(state);
+        let enter = key.kind == key_kind_index("Enter");
+        let space = key.kind == key_kind_index("Space");
+        let action = match &mut widget {
+            ViewWidget::Button(v) if v.enabled && (enter || space) => {
+                v.command_id.map_or(Some(ControlAction::Consumed), |c| {
+                    Some(ControlAction::Command(c))
+                })
+            }
+            ViewWidget::CheckBox(v) if enter || space => v.toggle().then(|| {
+                v.command_id
+                    .map_or(ControlAction::Consumed, ControlAction::Command)
+            }),
+            ViewWidget::InputLine(v) if v.enabled => {
+                input_key(v, key).then_some(ControlAction::Consumed)
+            }
+            ViewWidget::RadioGroup(v) if v.enabled => radio_key(v, key),
+            _ => None,
+        };
+        self.finish_control_action(id, rect, widget, action, line)
+    }
+
+    pub(in crate::vm::execute::io::tui) fn try_dispatch_control_paste(
+        &mut self,
+        text: &str,
+        line: SourceLocation,
+    ) -> bool {
+        self.with_tui(|tui| {
+            let Some(id) = tui.views.focused_id() else {
+                return false;
+            };
+            if !tui.views.state(id).is_some_and(|s| s.enabled) {
+                return false;
+            }
+            let Some(ViewWidget::InputLine(input)) = tui.view_widgets.get_mut(&id) else {
+                return false;
+            };
+            input.insert_str(text);
+            if let Some(rect) = tui.views.rect(id) {
+                let _ = tui.session.request_redraw_rect(rect, line);
+            }
+            true
+        })
+    }
+
+    fn finish_control_action(
+        &mut self,
+        id: ViewId,
+        rect: fpas_std::ViewRect,
+        widget: ViewWidget,
+        action: Option<ControlAction>,
+        line: SourceLocation,
+    ) -> Result<Option<ProcessOutcome>, VmError> {
+        let Some(action) = action else {
+            return Ok(None);
+        };
+        self.with_tui(|tui| {
+            tui.view_widgets.insert(id, widget);
+            let _ = tui.session.request_redraw_rect(rect, line);
+        });
+        match action {
+            ControlAction::Consumed => Ok(Some(ProcessOutcome::WidgetConsumed)),
+            ControlAction::Command(command) => {
+                if !self.with_tui(|tui| tui.commands.is_enabled(command)) {
+                    return Ok(Some(ProcessOutcome::WidgetConsumed));
+                }
+                self.dispatch_tui_command(CommandEvent::application(command, Some(id)), line)
+                    .map(Some)
+            }
+        }
+    }
+}
+
+fn input_key(input: &mut fpas_std::InputLineWidget, key: &ConsoleKeyEvent) -> bool {
+    if key.ctrl || key.alt || key.meta {
+        return false;
+    }
+    match key.kind {
+        k if k == key_kind_index("Character") => {
+            input.insert_char(key.ch);
+            true
+        }
+        k if k == key_kind_index("Backspace") => {
+            input.backspace();
+            true
+        }
+        k if k == key_kind_index("Delete") => {
+            input.delete();
+            true
+        }
+        k if k == key_kind_index("Left") => {
+            input.move_cursor_left();
+            true
+        }
+        k if k == key_kind_index("Right") => {
+            input.move_cursor_right();
+            true
+        }
+        k if k == key_kind_index("Home") => {
+            input.set_cursor(0);
+            true
+        }
+        k if k == key_kind_index("End") => {
+            input.set_cursor(usize::MAX);
+            true
+        }
+        _ => false,
+    }
+}
+
+fn radio_key(
+    group: &mut fpas_std::RadioGroupWidget,
+    key: &ConsoleKeyEvent,
+) -> Option<ControlAction> {
+    if key.kind == key_kind_index("Up") || key.kind == key_kind_index("Left") {
+        group.focus_prev();
+        return Some(ControlAction::Consumed);
+    }
+    if key.kind == key_kind_index("Down") || key.kind == key_kind_index("Right") {
+        group.focus_next();
+        return Some(ControlAction::Consumed);
+    }
+    if key.kind == key_kind_index("Enter") || key.kind == key_kind_index("Space") {
+        group.select_focused();
+        return group
+            .selected_command()
+            .map_or(Some(ControlAction::Consumed), |c| {
+                Some(ControlAction::Command(c))
+            });
+    }
+    None
+}

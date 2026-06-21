@@ -71,6 +71,8 @@ pub struct RadioGroupWidget {
     focused_option: Option<usize>,
     /// Whether the group accepts activation.
     pub enabled: bool,
+    /// Whether the group view currently has retained focus.
+    pub focused: bool,
     /// CRT style used for painting.
     pub style: RadioGroupStyle,
 }
@@ -85,6 +87,7 @@ impl RadioGroupWidget {
             selected: first_enabled,
             focused_option: first_enabled,
             enabled: true,
+            focused: false,
             style,
         }
     }
@@ -167,7 +170,10 @@ impl RadioGroupWidget {
                 height: 1,
             };
             let selected = self.selected == Some(index);
-            let focused = self.focused_option == Some(index) && self.enabled && option.enabled;
+            let focused = self.focused
+                && self.focused_option == Some(index)
+                && self.enabled
+                && option.enabled;
             let enabled = self.enabled && option.enabled;
             let (fg, bg) = self.option_colors(enabled, focused);
             let text = radio_text(option, selected);

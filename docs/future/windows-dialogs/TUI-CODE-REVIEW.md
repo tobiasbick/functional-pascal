@@ -387,8 +387,14 @@ with host widgets and modal results, and the IDE shell exposes a Help / About di
 
 ### Phase 4 - Scrolling controls
 
-- Add shared scroll model, integrated and standalone scrollbars, list box, and scroll view.
-- Add wheel, key, track, and captured thumb interaction.
+**Implementation status (2026-06-21): in progress.** A shared one-dimensional `ScrollModel` and
+public retained `ListBox` now provide clamped offsets, visibility tracking, key navigation, direct
+row selection, mouse-wheel scrolling, commands, and FPAS state queries. Generic `ScrollView`,
+standalone/integrated scrollbar geometry, track clicks, and captured thumb dragging remain open.
+
+- [x] Add shared scroll model and list box.
+- [ ] Add integrated and standalone scrollbars and scroll view.
+- [ ] Complete wheel, key, track, and captured thumb interaction.
 
 ### Phase 5 - Window interaction and editor path
 

@@ -14,7 +14,8 @@ mod status_bar;
 
 pub use control::{
     ButtonStyle, ButtonWidget, CheckBoxStyle, CheckBoxWidget, InputLineStyle, InputLineWidget,
-    LabelStyle, LabelWidget, RadioGroupStyle, RadioGroupWidget, RadioOption,
+    LabelStyle, LabelWidget, ListBoxItem, ListBoxStyle, ListBoxWidget, RadioGroupStyle,
+    RadioGroupWidget, RadioOption,
 };
 pub use frame::{
     FrameButtonSlots, FrameCapabilities, FrameContentSize, FrameGeometry, FrameGeometryError,
@@ -49,6 +50,8 @@ pub enum ViewWidget {
     CheckBox(CheckBoxWidget),
     /// Dialog radio group rendered in Rust.
     RadioGroup(RadioGroupWidget),
+    /// Scrolling list box.
+    ListBox(ListBoxWidget),
 }
 
 impl ViewWidget {
@@ -72,6 +75,10 @@ impl ViewWidget {
                 widget.enabled = state.enabled;
                 widget.focused = state.focused;
             }
+            Self::ListBox(widget) => {
+                widget.enabled = state.enabled;
+                widget.focused = state.focused;
+            }
             Self::SolidFill(_) | Self::MenuBar(_) | Self::StatusBar(_) => {}
         }
     }
@@ -87,6 +94,7 @@ impl ViewWidget {
             Self::InputLine(_) => ViewKind::InputLine,
             Self::CheckBox(_) => ViewKind::CheckBox,
             Self::RadioGroup(_) => ViewKind::RadioGroup,
+            Self::ListBox(_) => ViewKind::ListBox,
         }
     }
 
@@ -101,6 +109,7 @@ impl ViewWidget {
             Self::InputLine(widget) => widget.paint(console, rect, damage),
             Self::CheckBox(widget) => widget.paint(console, rect, damage),
             Self::RadioGroup(widget) => widget.paint(console, rect, damage),
+            Self::ListBox(widget) => widget.paint(console, rect, damage),
         }
     }
 
@@ -125,7 +134,8 @@ impl ViewWidget {
             | Self::Button(_)
             | Self::InputLine(_)
             | Self::CheckBox(_)
-            | Self::RadioGroup(_) => intersects_damage_region(rect, damage),
+            | Self::RadioGroup(_)
+            | Self::ListBox(_) => intersects_damage_region(rect, damage),
         }
     }
 
@@ -142,7 +152,8 @@ impl ViewWidget {
             | Self::Button(_)
             | Self::InputLine(_)
             | Self::CheckBox(_)
-            | Self::RadioGroup(_) => rect.contains_console_mouse(mouse_x, mouse_y),
+            | Self::RadioGroup(_)
+            | Self::ListBox(_) => rect.contains_console_mouse(mouse_x, mouse_y),
         }
     }
 }

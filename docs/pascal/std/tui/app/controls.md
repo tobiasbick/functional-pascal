@@ -1,6 +1,6 @@
 # Retained controls
 
-`Std.Tui` exposes native label, button, input-line, checkbox, and radio-group views. The host paints
+`Std.Tui` exposes native label, button, input-line, checkbox, radio-group, and list-box views. The host paints
 them with the built-in dialog palette and integrates them with retained focus, clipping, commands,
 mouse input, keyboard input, and paste.
 
@@ -15,9 +15,10 @@ All constructors start with `(App, X, Y, Width, Height)` and return `ViewId`:
 | `HostCreateInputLineView` | `Text` |
 | `HostCreateCheckBoxView` | `Label`, `Accelerator`, `CommandId`, `Checked` |
 | `HostCreateRadioGroupView` | `Options: array of RadioOption` |
+| `HostCreateListBoxView` | `Items: array of ListBoxItem` |
 
 `RadioOption` contains `label`, `accelerator`, `commandId`, and `enabled`. Labels are not selectable;
-the other four controls are selectable Tab stops. Parent them with `HostSetViewParent` when used in
+the other controls are selectable Tab stops. Parent them with `HostSetViewParent` when used in
 a dialog subtree.
 
 ## Input and commands
@@ -28,6 +29,7 @@ a dialog subtree.
 - Radio groups move the focused option with arrow keys and select with Enter/Space; clicking a row
   selects it directly.
 - Optional command ids invoke `ApplicationHandlers.OnCommand` after activation.
+- List boxes use Up/Down/Home/End, Enter/Space, direct row clicks, and mouse-wheel scrolling.
 
 ## State
 
@@ -39,6 +41,9 @@ a dialog subtree.
 | `HostSetInputLineText` | Replaces text and clamps cursor |
 | `HostSetCheckBoxChecked` | Sets checked state |
 | `HostSetRadioGroupSelected` | Selects an enabled zero-based option |
+| `QueryListBoxState` | `ListBoxState(selectedIndex, scrollOffset)`; `-1` means no enabled row |
+| `HostSetListBoxItems` | Replaces rows and resets selection/scroll |
+| `HostSetListBoxSelected` | Selects and reveals an enabled row |
 
 ## Implementation (contributors)
 
@@ -46,7 +51,7 @@ a dialog subtree.
 | ------- | -------- |
 | Models/paint | `crates/fpas-std/src/tui/widget/control/` |
 | VM bridge/input | `crates/fpas-vm/src/vm/execute/io/tui/control_model/` |
-| FPAS regression | `tests/tui/tui_controls_test.fpas` |
+| FPAS regression | `tests/tui/tui_controls_test.fpas`, `tests/tui/tui_list_box_test.fpas` |
 
 ## See also
 

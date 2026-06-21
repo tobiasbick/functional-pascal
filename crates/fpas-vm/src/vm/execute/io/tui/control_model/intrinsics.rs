@@ -8,8 +8,8 @@ use fpas_bytecode::{SourceLocation, TuiIntrinsic, Value};
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 use fpas_std::{
     ButtonStyle, ButtonWidget, CheckBoxStyle, CheckBoxWidget, CommandId, InputLineStyle,
-    InputLineWidget, LabelStyle, LabelWidget, RadioGroupStyle, RadioGroupWidget, ViewOptions,
-    ViewRect, ViewWidget,
+    InputLineWidget, LabelStyle, LabelWidget, ListBoxWidget, RadioGroupStyle, RadioGroupWidget,
+    ViewOptions, ViewRect, ViewWidget,
 };
 
 use super::super::view_geometry::validate_view_rect;
@@ -75,6 +75,16 @@ impl Worker {
                     line,
                 )?;
             }
+            TuiIntrinsic::HostCreateListBoxView => {
+                let items = self.pop_list_box_items(line)?;
+                let rect = self.pop_control_rect("HostCreateListBoxView", line)?;
+                self.create_control_view(
+                    rect,
+                    ViewWidget::ListBox(ListBoxWidget::new(items, rect.height.max(0) as usize)),
+                    true,
+                    line,
+                )?;
+            }
             TuiIntrinsic::HostSetInputLineText => {
                 let text = self.pop_control_string("Text", line)?;
                 let id = self.pop_tui_view_id(line)?;
@@ -113,9 +123,37 @@ impl Worker {
                     }
                 });
             }
+            TuiIntrinsic::HostSetListBoxItems => {
+                let items = self.pop_list_box_items(line)?;
+                let id = self.pop_tui_view_id(line)?;
+                self.pop_tui_application(line)?;
+                let height =
+                    self.with_tui(|tui| tui.views.rect(id).map_or(1, |r| r.height.max(1) as usize));
+                self.update_control(id, line, |w| {
+                    if let ViewWidget::ListBox(v) = w {
+                        v.set_items(items, height);
+                        true
+                    } else {
+                        false
+                    }
+                });
+            }
+            TuiIntrinsic::HostSetListBoxSelected => {
+                let index = self.pop_int(line)?;
+                let id = self.pop_tui_view_id(line)?;
+                self.pop_tui_application(line)?;
+                self.update_control(id, line, |w| {
+                    if let ViewWidget::ListBox(v) = w {
+                        usize::try_from(index).is_ok_and(|i| v.set_selected(i))
+                    } else {
+                        false
+                    }
+                });
+            }
             TuiIntrinsic::QueryInputLineState
             | TuiIntrinsic::QueryCheckBoxState
-            | TuiIntrinsic::QueryRadioGroupState => {
+            | TuiIntrinsic::QueryRadioGroupState
+            | TuiIntrinsic::QueryListBoxState => {
                 let id = self.pop_query_view_id(line)?;
                 self.pop_tui_application(line)?;
                 let value = self.with_tui(|tui| match (intrinsic, tui.view_widgets.get(&id)) {
@@ -147,6 +185,18 @@ impl Worker {
                                     "focusedIndex",
                                     Value::Integer(v.focused_option().map_or(-1, |i| i as i64)),
                                 ),
+                            ],
+                        ))
+                    }
+                    (TuiIntrinsic::QueryListBoxState, Some(ViewWidget::ListBox(v))) => {
+                        Some(control_record(
+                            "Std.Tui.ListBoxState",
+                            vec![
+                                (
+                                    "selectedIndex",
+                                    Value::Integer(v.selected().map_or(-1, |i| i as i64)),
+                                ),
+                                ("scrollOffset", Value::Integer(v.scroll_offset() as i64)),
                             ],
                         ))
                     }

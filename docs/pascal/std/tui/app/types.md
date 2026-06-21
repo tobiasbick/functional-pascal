@@ -44,7 +44,7 @@ same local origin.
 `options: ViewOptions`. `rect` is absolute and unclipped; `clip` is the effective visible rectangle.
 
 `ViewKind` identifies native content attached to a retained node: `Generic`, `SolidFill`, `MenuBar`,
-`StatusBar`, `Label`, `Button`, `InputLine`, `CheckBox`, or `RadioGroup`. `Generic` means no native
+`StatusBar`, `Label`, `Button`, `InputLine`, `CheckBox`, `RadioGroup`, or `ListBox`. `Generic` means no native
 widget is attached; a Pascal paint handler may still exist.
 
 `ViewSnapshot` contains `id`, `parent`, direct `children`, `resolved`, and `kind`. Arrays returned by
@@ -56,6 +56,8 @@ widget is attached; a Pascal paint handler may still exist.
 and `enabled: boolean`. `InputLineState` reports `text`, zero-based `cursor`, and `scrollOffset`.
 `CheckBoxState` reports `checked`. `RadioGroupState` reports zero-based `selectedIndex` and
 `focusedIndex`, using `-1` when no enabled option exists. See [Retained controls](controls.md).
+`ListBoxItem` contains `text`, optional `commandId`, and `enabled`; `ListBoxState` reports
+`selectedIndex` (`-1` when no enabled row exists) and the first visible `scrollOffset`.
 
 ### `ExitReason`
 

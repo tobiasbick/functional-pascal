@@ -200,7 +200,7 @@ fn string_index_empty_string_runtime_error() {
 program StrIdxEmpty;
 begin
   var S: string := '';
-  var C: char := S[0]
+  var C: string := S[0]
 end.",
     );
     assert!(

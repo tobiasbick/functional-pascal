@@ -51,6 +51,18 @@ impl Compiler {
             s::STD_TUI_APPLICATION_QUERY_RADIO_GROUP_STATE => {
                 (2, TuiIntrinsic::QueryRadioGroupState, true)
             }
+            s::STD_TUI_APPLICATION_HOST_CREATE_LIST_BOX_VIEW => {
+                (6, TuiIntrinsic::HostCreateListBoxView, true)
+            }
+            s::STD_TUI_APPLICATION_HOST_SET_LIST_BOX_ITEMS => {
+                (3, TuiIntrinsic::HostSetListBoxItems, false)
+            }
+            s::STD_TUI_APPLICATION_HOST_SET_LIST_BOX_SELECTED => {
+                (3, TuiIntrinsic::HostSetListBoxSelected, false)
+            }
+            s::STD_TUI_APPLICATION_QUERY_LIST_BOX_STATE => {
+                (2, TuiIntrinsic::QueryListBoxState, true)
+            }
             _ => return Ok(false),
         };
         self.expect_exact_args(name, arity, args, location)?;

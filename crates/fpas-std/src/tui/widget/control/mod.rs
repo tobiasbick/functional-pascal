@@ -6,6 +6,7 @@ mod button;
 mod checkbox;
 mod input_line;
 mod label;
+mod list_box;
 mod radio;
 
 #[cfg(test)]
@@ -15,6 +16,7 @@ pub use button::{ButtonStyle, ButtonWidget};
 pub use checkbox::{CheckBoxStyle, CheckBoxWidget};
 pub use input_line::{InputLineStyle, InputLineWidget};
 pub use label::{LabelStyle, LabelWidget};
+pub use list_box::{ListBoxItem, ListBoxStyle, ListBoxWidget};
 pub use radio::{RadioGroupStyle, RadioGroupWidget, RadioOption};
 
 use crate::{Console, DamageRegion, ViewRect};

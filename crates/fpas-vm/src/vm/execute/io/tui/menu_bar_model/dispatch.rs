@@ -39,6 +39,7 @@ impl Worker {
             | ViewWidget::InputLine(_)
             | ViewWidget::CheckBox(_)
             | ViewWidget::RadioGroup(_) => MenuBarMouseResult::Ignored,
+            ViewWidget::ListBox(_) => MenuBarMouseResult::Ignored,
         };
 
         let after = match &widget {

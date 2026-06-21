@@ -24,8 +24,11 @@ impl Worker {
         scope: Option<&[ViewId]>,
         line: SourceLocation,
     ) -> Result<Option<ProcessOutcome>, VmError> {
-        if mouse.action != mouse_action_index("Down") || mouse.button != mouse_button_index("Left")
-        {
+        let down = mouse.action == mouse_action_index("Down")
+            && mouse.button == mouse_button_index("Left");
+        let scroll_up = mouse.action == mouse_action_index("ScrollUp");
+        let scroll_down = mouse.action == mouse_action_index("ScrollDown");
+        if !down && !scroll_up && !scroll_down {
             return Ok(None);
         }
         let hit = {
@@ -66,6 +69,25 @@ impl Worker {
                     Some(ControlAction::Consumed)
                 }
             }
+            ViewWidget::ListBox(v) if v.enabled => {
+                if scroll_up {
+                    v.scroll_by(-1);
+                    Some(ControlAction::Consumed)
+                } else if scroll_down {
+                    v.scroll_by(1);
+                    Some(ControlAction::Consumed)
+                } else {
+                    let row = mouse.y.saturating_sub(1).saturating_sub(rect.y);
+                    if usize::try_from(row).is_ok_and(|i| v.select_visible_row(i)) {
+                        v.selected_command()
+                            .map_or(Some(ControlAction::Consumed), |c| {
+                                Some(ControlAction::Command(c))
+                            })
+                    } else {
+                        Some(ControlAction::Consumed)
+                    }
+                }
+            }
             _ => None,
         };
         self.finish_control_action(id, rect, widget, action, line)
@@ -102,6 +124,7 @@ impl Worker {
                 input_key(v, key).then_some(ControlAction::Consumed)
             }
             ViewWidget::RadioGroup(v) if v.enabled => radio_key(v, key),
+            ViewWidget::ListBox(v) if v.enabled => list_box_key(v, key),
             _ => None,
         };
         self.finish_control_action(id, rect, widget, action, line)
@@ -210,6 +233,34 @@ fn radio_key(
     if key.kind == key_kind_index("Enter") || key.kind == key_kind_index("Space") {
         group.select_focused();
         return group
+            .selected_command()
+            .map_or(Some(ControlAction::Consumed), |c| {
+                Some(ControlAction::Command(c))
+            });
+    }
+    None
+}
+
+fn list_box_key(
+    list: &mut fpas_std::ListBoxWidget,
+    key: &ConsoleKeyEvent,
+) -> Option<ControlAction> {
+    let changed = if key.kind == key_kind_index("Up") {
+        list.move_selection(false)
+    } else if key.kind == key_kind_index("Down") {
+        list.move_selection(true)
+    } else if key.kind == key_kind_index("Home") {
+        list.select_edge(false)
+    } else if key.kind == key_kind_index("End") {
+        list.select_edge(true)
+    } else {
+        false
+    };
+    if changed {
+        return Some(ControlAction::Consumed);
+    }
+    if key.kind == key_kind_index("Enter") || key.kind == key_kind_index("Space") {
+        return list
             .selected_command()
             .map_or(Some(ControlAction::Consumed), |c| {
                 Some(ControlAction::Command(c))

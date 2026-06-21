@@ -6,6 +6,8 @@ pub const STD_TUI_RADIO_OPTION: &str = std_tui!("RadioOption");
 pub const STD_TUI_INPUT_LINE_STATE: &str = std_tui!("InputLineState");
 pub const STD_TUI_CHECK_BOX_STATE: &str = std_tui!("CheckBoxState");
 pub const STD_TUI_RADIO_GROUP_STATE: &str = std_tui!("RadioGroupState");
+pub const STD_TUI_LIST_BOX_ITEM: &str = std_tui!("ListBoxItem");
+pub const STD_TUI_LIST_BOX_STATE: &str = std_tui!("ListBoxState");
 pub const STD_TUI_APPLICATION_HOST_CREATE_LABEL_VIEW: &str =
     std_tui!("Application.HostCreateLabelView");
 pub const STD_TUI_APPLICATION_HOST_CREATE_BUTTON_VIEW: &str =
@@ -28,3 +30,11 @@ pub const STD_TUI_APPLICATION_QUERY_CHECK_BOX_STATE: &str =
     std_tui!("Application.QueryCheckBoxState");
 pub const STD_TUI_APPLICATION_QUERY_RADIO_GROUP_STATE: &str =
     std_tui!("Application.QueryRadioGroupState");
+pub const STD_TUI_APPLICATION_HOST_CREATE_LIST_BOX_VIEW: &str =
+    std_tui!("Application.HostCreateListBoxView");
+pub const STD_TUI_APPLICATION_HOST_SET_LIST_BOX_ITEMS: &str =
+    std_tui!("Application.HostSetListBoxItems");
+pub const STD_TUI_APPLICATION_HOST_SET_LIST_BOX_SELECTED: &str =
+    std_tui!("Application.HostSetListBoxSelected");
+pub const STD_TUI_APPLICATION_QUERY_LIST_BOX_STATE: &str =
+    std_tui!("Application.QueryListBoxState");

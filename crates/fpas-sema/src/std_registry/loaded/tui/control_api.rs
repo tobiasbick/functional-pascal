@@ -75,6 +75,18 @@ pub(super) fn register(checker: &mut Checker, types: &TuiTypes) {
         radio,
         types.view_id.clone(),
     );
+    let mut list = geometry();
+    list.push(p(
+        "Items",
+        Ty::Array(Box::new(types.controls.list_box_item.clone())),
+        false,
+    ));
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_CREATE_LIST_BOX_VIEW,
+        list,
+        types.view_id.clone(),
+    );
 
     define_proc(
         checker,
@@ -83,6 +95,28 @@ pub(super) fn register(checker: &mut Checker, types: &TuiTypes) {
             p("App", types.application.clone(), false),
             p("ViewId", types.view_id.clone(), false),
             p("Text", Ty::String, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_SET_LIST_BOX_ITEMS,
+        vec![
+            p("App", types.application.clone(), false),
+            p("ViewId", types.view_id.clone(), false),
+            p(
+                "Items",
+                Ty::Array(Box::new(types.controls.list_box_item.clone())),
+                false,
+            ),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_SET_LIST_BOX_SELECTED,
+        vec![
+            p("App", types.application.clone(), false),
+            p("ViewId", types.view_id.clone(), false),
+            p("SelectedIndex", Ty::Integer, false),
         ],
     );
     define_proc(
@@ -115,6 +149,10 @@ pub(super) fn register(checker: &mut Checker, types: &TuiTypes) {
         (
             s::STD_TUI_APPLICATION_QUERY_RADIO_GROUP_STATE,
             types.controls.radio_group_state.clone(),
+        ),
+        (
+            s::STD_TUI_APPLICATION_QUERY_LIST_BOX_STATE,
+            types.controls.list_box_state.clone(),
         ),
     ] {
         define_func(

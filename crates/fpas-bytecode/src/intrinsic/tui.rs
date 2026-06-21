@@ -450,6 +450,14 @@ pub enum TuiIntrinsic {
     QueryCheckBoxState = 398,
     /// Query radio-group selection and focused-option state.
     QueryRadioGroupState = 399,
+    /// Create a scrolling list box.
+    HostCreateListBoxView = 400,
+    /// Replace list-box rows.
+    HostSetListBoxItems = 401,
+    /// Select one list-box row.
+    HostSetListBoxSelected = 402,
+    /// Query list-box selection and scroll offset.
+    QueryListBoxState = 403,
     // **375..=377** are `Std.Test` screen/view assertions; **378** is `Std.Test.PushReadLn` (see `TestIntrinsic`).
     // Note: **348..=355** are owned by `Std.Test` (`TestIntrinsic`).
 }

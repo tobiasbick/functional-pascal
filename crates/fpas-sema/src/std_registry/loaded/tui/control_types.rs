@@ -13,6 +13,8 @@ pub(super) struct TuiControlTypes {
     pub(super) input_line_state: Ty,
     pub(super) check_box_state: Ty,
     pub(super) radio_group_state: Ty,
+    pub(super) list_box_item: Ty,
+    pub(super) list_box_state: Ty,
 }
 
 /// Register retained control input and state records.
@@ -49,10 +51,29 @@ pub(super) fn register(checker: &mut Checker) -> TuiControlTypes {
             ("focusedIndex".into(), Ty::Integer),
         ],
     );
+    let list_box_item = type_registration::register_record_type(
+        checker,
+        s::STD_TUI_LIST_BOX_ITEM,
+        vec![
+            ("text".into(), Ty::String),
+            ("commandId".into(), Ty::Option(Box::new(Ty::Integer))),
+            ("enabled".into(), Ty::Boolean),
+        ],
+    );
+    let list_box_state = type_registration::register_record_type(
+        checker,
+        s::STD_TUI_LIST_BOX_STATE,
+        vec![
+            ("selectedIndex".into(), Ty::Integer),
+            ("scrollOffset".into(), Ty::Integer),
+        ],
+    );
     TuiControlTypes {
         radio_option,
         input_line_state,
         check_box_state,
         radio_group_state,
+        list_box_item,
+        list_box_state,
     }
 }

@@ -117,6 +117,7 @@ View and widget reads:
 | `Application.QueryInputLineState(App, ViewId)` | `InputLineState` |
 | `Application.QueryCheckBoxState(App, ViewId)` | `CheckBoxState` |
 | `Application.QueryRadioGroupState(App, ViewId)` | `RadioGroupState` |
+| `Application.QueryListBoxState(App, ViewId)` | `ListBoxState` |
 
 Retained state controls used by headless tests:
 
@@ -131,7 +132,7 @@ See [ScreenCell type](#screencell-type-decided) and [MenuBarState type](#menubar
 
 Native test lifecycle and basic queries use **356..=374** in
 [`TuiIntrinsic`](../../../../../crates/fpas-bytecode/src/intrinsic/tui.rs). Scene-graph state APIs
-use **382..=399**. **348..=355**, **375..=378** belong to `Std.Test` (see
+use **382..=403**. **348..=355**, **375..=378** belong to `Std.Test` (see
 [`test.md`](../../testing/test.md)).
 
 | Discriminant | Pascal surface | Notes |
@@ -165,6 +166,7 @@ use **382..=399**. **348..=355**, **375..=378** belong to `Std.Test` (see
 | **389..=393** | `HostCreate*` controls | Label, button, input, checkbox, radio |
 | **394..=396** | `HostSet*` control state | Input text, checked, selection |
 | **397..=399** | `Query*State` controls | Input, checkbox, radio state |
+| **400..=403** | List-box API | Create, replace, select, query |
 
 ### Headless test flow (example)
 

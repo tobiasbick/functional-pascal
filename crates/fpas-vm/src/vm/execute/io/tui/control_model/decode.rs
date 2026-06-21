@@ -5,9 +5,78 @@
 use crate::vm::Worker;
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
-use fpas_std::{CommandId, RadioOption};
+use fpas_std::{CommandId, ListBoxItem, RadioOption};
 
 impl Worker {
+    pub(super) fn pop_list_box_items(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<Vec<ListBoxItem>, VmError> {
+        let Value::Array(values) = self.pop(line)? else {
+            return Err(runtime_error(
+                TYPE_MISMATCH_CODE,
+                "Items must be array of ListBoxItem",
+                "Pass ListBoxItem records.",
+                line,
+            ));
+        };
+        values
+            .iter()
+            .map(|value| {
+                let Value::Record { type_name, fields } = value else {
+                    return Err(runtime_error(
+                        TYPE_MISMATCH_CODE,
+                        "Expected ListBoxItem record",
+                        "Pass ListBoxItem records.",
+                        line,
+                    ));
+                };
+                if type_name != "Std.Tui.ListBoxItem" {
+                    return Err(runtime_error(
+                        TYPE_MISMATCH_CODE,
+                        format!("Expected Std.Tui.ListBoxItem, got {type_name}"),
+                        "Pass ListBoxItem records.",
+                        line,
+                    ));
+                }
+                let text = match Self::required_record_field(fields, "text", line)? {
+                    Value::Str(v) => v.clone(),
+                    other => {
+                        return Err(runtime_error(
+                            TYPE_MISMATCH_CODE,
+                            format!("ListBoxItem.text must be string, got {}", other.type_name()),
+                            "Set text to string.",
+                            line,
+                        ));
+                    }
+                };
+                let command_id = optional_integer(
+                    Self::required_record_field(fields, "commandId", line)?,
+                    line,
+                )?
+                .map(CommandId);
+                let enabled = match Self::required_record_field(fields, "enabled", line)? {
+                    Value::Boolean(value) => *value,
+                    other => {
+                        return Err(runtime_error(
+                            TYPE_MISMATCH_CODE,
+                            format!(
+                                "ListBoxItem.enabled must be boolean, got {}",
+                                other.type_name()
+                            ),
+                            "Set enabled to true or false.",
+                            line,
+                        ));
+                    }
+                };
+                Ok(ListBoxItem {
+                    text,
+                    command_id,
+                    enabled,
+                })
+            })
+            .collect()
+    }
     pub(super) fn pop_control_string(
         &mut self,
         label: &str,

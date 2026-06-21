@@ -137,6 +137,8 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_INPUT_LINE_STATE,
     std_symbols::STD_TUI_CHECK_BOX_STATE,
     std_symbols::STD_TUI_RADIO_GROUP_STATE,
+    std_symbols::STD_TUI_LIST_BOX_ITEM,
+    std_symbols::STD_TUI_LIST_BOX_STATE,
     std_symbols::STD_TUI_MENU_BAR_STATE,
     std_symbols::STD_TUI_EVENT,
     std_symbols::STD_TUI_EVENT_KIND,
@@ -229,6 +231,10 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_APPLICATION_QUERY_INPUT_LINE_STATE,
     std_symbols::STD_TUI_APPLICATION_QUERY_CHECK_BOX_STATE,
     std_symbols::STD_TUI_APPLICATION_QUERY_RADIO_GROUP_STATE,
+    std_symbols::STD_TUI_APPLICATION_HOST_CREATE_LIST_BOX_VIEW,
+    std_symbols::STD_TUI_APPLICATION_HOST_SET_LIST_BOX_ITEMS,
+    std_symbols::STD_TUI_APPLICATION_HOST_SET_LIST_BOX_SELECTED,
+    std_symbols::STD_TUI_APPLICATION_QUERY_LIST_BOX_STATE,
 ];
 
 pub(in super::super) const STD_GRAPH_SYMBOLS: &[&str] = &[

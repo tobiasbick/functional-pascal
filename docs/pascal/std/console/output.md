@@ -4,7 +4,7 @@
 
 ### `procedure Write(...)`
 
-- **Parameters:** zero or more values (variadic). Typical types: `string`, `char`, `integer`, `real`, `boolean`, and other printable runtime values supported by the implementation.
+- **Parameters:** zero or more values (variadic). Typical types: `string`, `string`, `integer`, `real`, `boolean`, and other printable runtime values supported by the implementation.
 - **Result:** none.
 - **Effect:** prints each argument in order **without** appending a newline and **without** inserting separators automatically.
 

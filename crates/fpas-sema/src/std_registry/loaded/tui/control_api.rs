@@ -22,7 +22,7 @@ pub(super) fn register(checker: &mut Checker, types: &TuiTypes) {
     let mut label = geometry();
     label.extend([
         p("Text", Ty::String, false),
-        p("Accelerator", Ty::Option(Box::new(Ty::Char)), false),
+        p("Accelerator", Ty::Option(Box::new(Ty::String)), false),
     ]);
     define_func(
         checker,
@@ -53,7 +53,7 @@ pub(super) fn register(checker: &mut Checker, types: &TuiTypes) {
     let mut check = geometry();
     check.extend([
         p("Label", Ty::String, false),
-        p("Accelerator", Ty::Option(Box::new(Ty::Char)), false),
+        p("Accelerator", Ty::Option(Box::new(Ty::String)), false),
         p("CommandId", Ty::Option(Box::new(Ty::Integer)), false),
         p("Checked", Ty::Boolean, false),
     ]);

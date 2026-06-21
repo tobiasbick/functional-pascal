@@ -79,7 +79,7 @@ impl Compiler {
             );
         }
 
-        if matches!((lt, rt), (Ty::String | Ty::Char, Ty::String | Ty::Char)) {
+        if matches!((lt, rt), (Ty::String, Ty::String)) {
             return self.emit_string_binary(
                 left,
                 right,
@@ -145,7 +145,7 @@ impl Compiler {
             return self.compile_direct_binary(ordering_dyn_op(op), left, right, location);
         }
 
-        if matches!((lt, rt), (Ty::String | Ty::Char, Ty::String | Ty::Char)) {
+        if matches!((lt, rt), (Ty::String, Ty::String)) {
             return self.emit_string_binary(
                 left,
                 right,

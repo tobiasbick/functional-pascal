@@ -179,7 +179,7 @@ impl Worker {
             runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 "Dynamic comparison requires comparable operands of compatible types",
-                "Ensure both operands are comparable types (integer, real, boolean, char, string, ViewId, Option, or Result).",
+                "Ensure both operands are comparable types (integer, real, boolean, string, ViewId, Option, or Result).",
                 line,
             )
         })?;
@@ -208,7 +208,6 @@ fn dyn_compare(left: &Value, right: &Value) -> Option<std::cmp::Ordering> {
         (Value::Integer(a), Value::Real(b)) => (*a as f64).partial_cmp(b),
         (Value::Real(a), Value::Integer(b)) => a.partial_cmp(&(*b as f64)),
         (Value::Boolean(a), Value::Boolean(b)) => Some(a.cmp(b)),
-        (Value::Char(a), Value::Char(b)) => Some(a.cmp(b)),
         (Value::Str(a), Value::Str(b)) => Some(a.cmp(b)),
         _ => None,
     }

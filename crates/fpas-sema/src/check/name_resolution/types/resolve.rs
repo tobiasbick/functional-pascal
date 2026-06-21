@@ -74,7 +74,6 @@ impl Checker {
             "integer" => Ty::Integer,
             "real" => Ty::Real,
             "boolean" => Ty::Boolean,
-            "char" => Ty::Char,
             "string" => Ty::String,
             "task" => Ty::Task(Box::new(Ty::Error)),
             _ => {

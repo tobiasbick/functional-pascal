@@ -69,7 +69,7 @@ fn console_extended_colors_are_stored_in_screen_cells() {
 
     c.text_color_rgb(255, 128, 0, test_location()).unwrap();
     c.text_background_256(196, test_location()).unwrap();
-    c.write(&Value::Char('X'), test_location()).unwrap();
+    c.write(&Value::Str("X".into()), test_location()).unwrap();
 
     assert_eq!(c.text_attr(), 0x07);
     assert_eq!(
@@ -85,7 +85,7 @@ fn console_packed_color_calls_reset_extended_color_path() {
     c.text_color_rgb(255, 128, 0, test_location()).unwrap();
     c.text_background_rgb(0, 0, 64, test_location()).unwrap();
     c.set_text_attr(0x1E, test_location()).unwrap();
-    c.write(&Value::Char('Y'), test_location()).unwrap();
+    c.write(&Value::Str("Y".into()), test_location()).unwrap();
 
     assert_eq!(c.test_cell(1, 1), ('Y', 14, 1));
 }
@@ -96,7 +96,7 @@ fn console_redraw_emits_extended_colors_from_screen_buffer() {
 
     c.text_color_rgb(255, 128, 0, test_location()).unwrap();
     c.text_background_256(196, test_location()).unwrap();
-    c.write(&Value::Char('X'), test_location()).unwrap();
+    c.write(&Value::Str("X".into()), test_location()).unwrap();
     bytes.lock().unwrap().clear();
 
     c.clr_eol(test_location()).unwrap();
@@ -112,7 +112,7 @@ fn console_resize_preserves_extended_color_cells() {
 
     c.text_color_rgb(10, 20, 30, test_location()).unwrap();
     c.text_background_rgb(40, 50, 60, test_location()).unwrap();
-    c.write(&Value::Char('R'), test_location()).unwrap();
+    c.write(&Value::Str("R".into()), test_location()).unwrap();
     c.resize(120, 40);
 
     assert_eq!(
@@ -128,7 +128,7 @@ fn console_text_mode_resets_extended_color_path_to_packed_defaults() {
     c.text_color_rgb(255, 128, 0, test_location()).unwrap();
     c.text_background_256(196, test_location()).unwrap();
     c.text_mode(3, test_location()).unwrap();
-    c.write(&Value::Char('Z'), test_location()).unwrap();
+    c.write(&Value::Str("Z".into()), test_location()).unwrap();
 
     assert_eq!(c.test_cell(1, 1), ('Z', 7, 0));
 }

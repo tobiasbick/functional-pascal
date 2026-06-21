@@ -52,7 +52,7 @@ widget is attached; a Pascal paint handler may still exist.
 
 ### Control types
 
-`RadioOption` contains `label: string`, `accelerator: Option of char`, `commandId: Option of integer`,
+`RadioOption` contains `label: string`, `accelerator: Option of string`, `commandId: Option of integer`,
 and `enabled: boolean`. `InputLineState` reports `text`, zero-based `cursor`, and `scrollOffset`.
 `CheckBoxState` reports `checked`. `RadioGroupState` reports zero-based `selectedIndex` and
 `focusedIndex`, using `-1` when no enabled option exists. See [Retained controls](controls.md).

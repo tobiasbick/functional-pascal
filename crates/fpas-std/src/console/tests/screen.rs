@@ -9,7 +9,7 @@ fn console_window_coordinates_are_relative() {
     c.goto_xy(2, 2, test_location()).unwrap();
     assert_eq!(c.where_x(), 2);
     assert_eq!(c.where_y(), 2);
-    c.write(&Value::Char('X'), test_location()).unwrap();
+    c.write(&Value::Str("X".into()), test_location()).unwrap();
     assert_eq!(c.test_line_text(6).chars().nth(10), Some('X'));
 }
 

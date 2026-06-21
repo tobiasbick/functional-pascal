@@ -4,7 +4,6 @@ pub enum Value {
     Integer(i64),
     Real(f64),
     Boolean(bool),
-    Char(char),
     Str(String),
     /// Enum variant with optional associated data.
     ///
@@ -57,7 +56,6 @@ impl Value {
             Value::Integer(_) => "integer",
             Value::Real(_) => "real",
             Value::Boolean(_) => "boolean",
-            Value::Char(_) => "char",
             Value::Str(_) => "string",
             Value::Enum { .. } => "enum",
             Value::Array(_) => "array",
@@ -80,7 +78,6 @@ impl std::fmt::Display for Value {
             Value::Integer(n) => write!(f, "{n}"),
             Value::Real(n) => write!(f, "{n}"),
             Value::Boolean(b) => write!(f, "{b}"),
-            Value::Char(c) => write!(f, "{c}"),
             Value::Str(s) => write!(f, "{s}"),
             Value::Enum {
                 type_name,
@@ -155,7 +152,6 @@ impl PartialEq for Value {
             (Self::Integer(a), Self::Integer(b)) => a == b,
             (Self::Real(a), Self::Real(b)) => a == b,
             (Self::Boolean(a), Self::Boolean(b)) => a == b,
-            (Self::Char(a), Self::Char(b)) => a == b,
             (Self::Str(a), Self::Str(b)) => a == b,
             (
                 Self::Enum {

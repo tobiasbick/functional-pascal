@@ -293,7 +293,7 @@ Boolean and enum variant constructors in expressions: `Ok`, `Error`, `Some`, `No
 | `integer` | Decimal only. No `$` hex, no `_` separators. |
 | `real` | Shortest decimal that re-parses to the same `f64` (implementation picks one stable rule, e.g. no unnecessary trailing zeros). |
 | `string` | Single-quoted Pascal strings. Escape `'` as `''`. Prefer `#` char codes only when required for unprintable content. |
-| `char` | As the parser represents it (explicit `char` typing in source). |
+| `string` | As the parser represents it (explicit `string` typing in source). |
 
 ## Semicolons
 

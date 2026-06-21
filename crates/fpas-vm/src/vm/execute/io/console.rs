@@ -84,11 +84,11 @@ impl Worker {
             }
             Intrinsic::Console(ConsoleIntrinsic::Read) => {
                 let ch = self.with_text_input(|t| t.read_char(line))?;
-                self.push(Value::Char(ch))?;
+                self.push(Value::Str(ch.to_string()))?;
             }
             Intrinsic::Console(ConsoleIntrinsic::ReadKey) => {
                 let ch = self.with_key_input(|k| k.read_key(line))?;
-                self.push(Value::Char(ch))?;
+                self.push(Value::Str(ch.to_string()))?;
             }
             Intrinsic::Console(ConsoleIntrinsic::KeyPressed) => {
                 let pressed = self.with_key_input(|k| k.key_pressed(line))?;
@@ -279,7 +279,7 @@ impl Worker {
             type_name: "Std.Console.KeyEvent".into(),
             fields: vec![
                 ("kind".into(), Value::Integer(event.kind as i64)),
-                ("ch".into(), Value::Char(event.ch)),
+                ("ch".into(), key_event_char_value(event.ch)),
                 ("shift".into(), Value::Boolean(event.shift)),
                 ("ctrl".into(), Value::Boolean(event.ctrl)),
                 ("alt".into(), Value::Boolean(event.alt)),
@@ -499,10 +499,10 @@ impl Worker {
             }
         };
         let ch = match field("ch")? {
-            Value::Char(c) => *c,
+            Value::Str(s) => key_event_char_from_string(s),
             _ => {
                 return Err(internal_error(
-                    "Std.Console.KeyEvent.ch must be a character",
+                    "Std.Console.KeyEvent.ch must be a string",
                     "This indicates a compiler/runtime mismatch.",
                     line,
                 ));
@@ -625,5 +625,24 @@ impl Worker {
             alt: read_bool("alt")?,
             meta: read_bool("meta")?,
         })
+    }
+}
+
+/// Maps a host key character to the FPAS `KeyEvent.ch` string field.
+fn key_event_char_value(ch: char) -> Value {
+    if ch == '\0' {
+        Value::Str(String::new())
+    } else {
+        Value::Str(ch.to_string())
+    }
+}
+
+/// Reads the host key character from a FPAS `KeyEvent.ch` string field.
+fn key_event_char_from_string(s: &str) -> char {
+    let mut chars = s.chars();
+    match (chars.next(), chars.next()) {
+        (None, _) => '\0',
+        (Some(c), None) => c,
+        (Some(c), _) => c,
     }
 }

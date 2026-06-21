@@ -41,12 +41,12 @@ end.",
 }
 
 #[test]
-fn exhaustiveness_not_required_on_char() {
+fn exhaustiveness_not_required_on_single_char_string() {
     let out = compile_and_run(
         "\
 program T;
 begin
-  var C: char := 'Z';
+  var C: string := 'Z';
   case C of
     'A': Std.Console.WriteLn('first')
   end;

@@ -39,7 +39,7 @@ pub enum StrIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/text/str/README.md`
     PadCenter = 203,
-    /// `Std.Str.FromChar(C, N)` — create string of N copies of char C.
+    /// `Std.Str.FromChar(C, N)` — create string of N copies of a single-character string `C`.
     ///
     /// **Documentation:** `docs/pascal/std/text/str/README.md`
     FromChar = 204,
@@ -47,15 +47,15 @@ pub enum StrIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/text/str/README.md`
     CharAt = 205,
-    /// `Std.Str.SetCharAt(S, Index, C)` — return new string with char replaced.
+    /// `Std.Str.SetCharAt(S, Index, C)` — return new string with one character replaced.
     ///
     /// **Documentation:** `docs/pascal/std/text/str/README.md`
     SetCharAt = 206,
-    /// `Std.Str.Ord(C)` — Unicode code point of a char.
+    /// `Std.Str.Ord(S)` — Unicode code point of a single-character string.
     ///
     /// **Documentation:** `docs/pascal/std/text/str/README.md`
     Ord = 207,
-    /// `Std.Str.Chr(N)` — char from Unicode code point.
+    /// `Std.Str.Chr(N)` — single-character string from Unicode code point.
     ///
     /// **Documentation:** `docs/pascal/std/text/str/README.md`
     Chr = 208,

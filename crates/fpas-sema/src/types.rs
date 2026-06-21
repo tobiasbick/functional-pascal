@@ -37,10 +37,7 @@ impl TypeConstraint {
     /// Check whether a concrete type satisfies this constraint.
     pub fn satisfied_by(self, ty: &Ty) -> bool {
         match self {
-            Self::Comparable => matches!(
-                ty,
-                Ty::Integer | Ty::Real | Ty::Boolean | Ty::Char | Ty::String
-            ),
+            Self::Comparable => matches!(ty, Ty::Integer | Ty::Real | Ty::Boolean | Ty::String),
             Self::Numeric => matches!(ty, Ty::Integer | Ty::Real),
             Self::Printable => !matches!(ty, Ty::Function(_) | Ty::Procedure(_)),
         }
@@ -64,7 +61,6 @@ pub enum Ty {
     Integer,
     Real,
     Boolean,
-    Char,
     String,
     /// Procedure / void result (e.g. `Std.Array.Push`).
     Unit,
@@ -161,7 +157,6 @@ impl std::fmt::Display for Ty {
             Ty::Integer => write!(f, "integer"),
             Ty::Real => write!(f, "real"),
             Ty::Boolean => write!(f, "boolean"),
-            Ty::Char => write!(f, "char"),
             Ty::String => write!(f, "string"),
             Ty::Unit => write!(f, "unit"),
             Ty::Array(inner) => write!(f, "array of {inner}"),
@@ -217,8 +212,6 @@ impl Ty {
                 n.eq_ignore_ascii_case(&e.name)
             }
             (Ty::Named(a), Ty::Named(b)) => a.eq_ignore_ascii_case(b),
-            // Char widens to String and vice versa.
-            (Ty::Char, Ty::String) | (Ty::String, Ty::Char) => true,
             // Array with Error element type is compatible with any array
             (Ty::Array(a), Ty::Array(b)) => a.compatible_with(b),
             // Named type matches the concrete record with the same name (recursive records).
@@ -281,7 +274,6 @@ impl Ty {
             Ty::Integer
                 | Ty::Real
                 | Ty::Boolean
-                | Ty::Char
                 | Ty::String
                 | Ty::GenericParam(
                     _,
@@ -290,10 +282,9 @@ impl Ty {
         )
     }
 
-    /// True for ordinal types (integer, boolean, char, simple enum without data).
+    /// True for ordinal types (integer, boolean, simple enum without data).
     pub fn is_ordinal(&self) -> bool {
-        matches!(self, Ty::Integer | Ty::Boolean | Ty::Char)
-            || matches!(self, Ty::Enum(e) if !e.has_data())
+        matches!(self, Ty::Integer | Ty::Boolean) || matches!(self, Ty::Enum(e) if !e.has_data())
     }
 
     fn record_fields_compatible(fields: &[(String, Ty)], other_fields: &[(String, Ty)]) -> bool {

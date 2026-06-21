@@ -17,14 +17,14 @@ WriteLn(Line)
 
 ---
 
-### `function Read(): char`
+### `function Read(): string`
 
 - **Parameters:** none.
 - **Returns:** the next single character from the **current** line buffer (or the next line’s data as exposed by the runtime).
 - **Buffer:** same as `ReadLn()`.
 
 ```pascal
-var C: char := Read();
+var C: string := Read();
 WriteLn(C)
 ```
 

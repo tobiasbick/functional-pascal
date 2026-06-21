@@ -94,7 +94,6 @@ mod arrays;
 mod basics;
 mod case_of;
 mod case_ranges;
-mod char_type;
 mod closures;
 mod control_flow;
 mod diagnostics;

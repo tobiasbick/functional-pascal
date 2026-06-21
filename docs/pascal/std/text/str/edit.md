@@ -23,7 +23,7 @@ WriteLn(RepeatStr('─', 40)) { ────────────────
 
 ---
 
-## `function PadLeft(S: string; Width: integer; Fill: char): string`
+## `function PadLeft(S: string; Width: integer; Fill: string): string`
 
 If `Length(S) < Width`, prepends `Fill` characters until length equals `Width`. Otherwise returns `S` unchanged.
 
@@ -33,7 +33,7 @@ WriteLn(PadLeft('42', 5, '0'))  { 00042 }
 
 ---
 
-## `function PadRight(S: string; Width: integer; Fill: char): string`
+## `function PadRight(S: string; Width: integer; Fill: string): string`
 
 Like `PadLeft` but appends `Fill` on the right.
 
@@ -43,7 +43,7 @@ WriteLn(PadRight('Hi', 6, '.'))  { Hi.... }
 
 ---
 
-## `function PadCenter(S: string; Width: integer; Fill: char): string`
+## `function PadCenter(S: string; Width: integer; Fill: string): string`
 
 Centers `S` within `Width` characters of `Fill`. When the remaining space is odd, the extra character goes on the right.
 
@@ -53,7 +53,7 @@ WriteLn(PadCenter('Hi', 6, '-'))  { --Hi-- }
 
 ---
 
-## `function FromChar(C: char; Count: integer): string`
+## `function FromChar(C: string; Count: integer): string`
 
 Builds a string of `Count` copies of `C`. `Count` ≤ 0 yields an empty string.
 
@@ -63,18 +63,18 @@ WriteLn(FromChar('─', 40))
 
 ---
 
-## `function CharAt(S: string; Index: integer): char`
+## `function CharAt(S: string; Index: integer): string`
 
 Returns the character at the 0-based `Index`. **Runtime error** if out of bounds.
 
 ```pascal
-var C: char := CharAt('Hello', 0);
+var C: string := CharAt('Hello', 0);
 WriteLn(C)  { H }
 ```
 
 ---
 
-## `function SetCharAt(S: string; Index: integer; C: char): string`
+## `function SetCharAt(S: string; Index: integer; C: string): string`
 
 Returns a **new** string that is identical to `S` except the character at `Index` is replaced with `C`. **Runtime error** if out of bounds.
 
@@ -84,7 +84,7 @@ WriteLn(SetCharAt('Hello', 0, 'J'))  { Jello }
 
 ---
 
-## `function Ord(C: char): integer`
+## `function Ord(C: string): integer`
 
 Returns the Unicode codepoint (integer value) of `C`.
 
@@ -94,7 +94,7 @@ WriteLn(Ord('A'))  { 65 }
 
 ---
 
-## `function Chr(N: integer): char`
+## `function Chr(N: integer): string`
 
 Returns the character with Unicode codepoint `N`. **Runtime error** if `N` is not a valid Unicode scalar value.
 

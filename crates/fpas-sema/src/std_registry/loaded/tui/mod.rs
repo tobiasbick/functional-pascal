@@ -81,7 +81,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         checker,
         s::STD_TUI_SCREEN_CELL,
         vec![
-            ("ch".into(), Ty::Char),
+            ("ch".into(), Ty::String),
             ("fg".into(), Ty::Integer),
             ("bg".into(), Ty::Integer),
         ],
@@ -124,7 +124,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         s::STD_TUI_MENU_POPUP_ITEM,
         vec![
             ("Label".into(), Ty::String),
-            ("Shortcut".into(), Ty::Char),
+            ("Shortcut".into(), Ty::String),
             ("Enabled".into(), Ty::Boolean),
             ("CommandId".into(), Ty::Integer),
             ("Separator".into(), Ty::Boolean),
@@ -145,7 +145,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         s::STD_TUI_MENU_BAR_ITEM,
         vec![
             ("Label".into(), Ty::String),
-            ("Shortcut".into(), Ty::Char),
+            ("Shortcut".into(), Ty::String),
             ("Enabled".into(), Ty::Boolean),
             ("CommandId".into(), Ty::Integer),
             (

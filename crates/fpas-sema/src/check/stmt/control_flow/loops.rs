@@ -20,7 +20,7 @@ impl Checker {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 "For loop variable must be an ordinal type",
-                "Use integer, boolean, char, or enum.",
+                "Use integer, boolean, or enum.",
                 span,
             );
         }

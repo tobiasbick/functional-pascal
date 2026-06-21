@@ -105,7 +105,7 @@ pub(super) fn register_std_str(checker: &mut Checker) {
         vec![
             p("S", Ty::String, false),
             p("Width", Ty::Integer, false),
-            p("PadChar", Ty::Char, false),
+            p("PadChar", Ty::String, false),
         ],
         Ty::String,
     );
@@ -115,7 +115,7 @@ pub(super) fn register_std_str(checker: &mut Checker) {
         vec![
             p("S", Ty::String, false),
             p("Width", Ty::Integer, false),
-            p("PadChar", Ty::Char, false),
+            p("PadChar", Ty::String, false),
         ],
         Ty::String,
     );
@@ -125,21 +125,21 @@ pub(super) fn register_std_str(checker: &mut Checker) {
         vec![
             p("S", Ty::String, false),
             p("Width", Ty::Integer, false),
-            p("PadChar", Ty::Char, false),
+            p("PadChar", Ty::String, false),
         ],
         Ty::String,
     );
     define_func(
         checker,
         s::STD_STR_FROM_CHAR,
-        vec![p("C", Ty::Char, false), p("N", Ty::Integer, false)],
+        vec![p("C", Ty::String, false), p("N", Ty::Integer, false)],
         Ty::String,
     );
     define_func(
         checker,
         s::STD_STR_CHAR_AT,
         vec![p("S", Ty::String, false), p("Index", Ty::Integer, false)],
-        Ty::Char,
+        Ty::String,
     );
     define_func(
         checker,
@@ -147,21 +147,21 @@ pub(super) fn register_std_str(checker: &mut Checker) {
         vec![
             p("S", Ty::String, false),
             p("Index", Ty::Integer, false),
-            p("C", Ty::Char, false),
+            p("C", Ty::String, false),
         ],
         Ty::String,
     );
     define_func(
         checker,
         s::STD_STR_ORD,
-        vec![p("C", Ty::Char, false)],
+        vec![p("C", Ty::String, false)],
         Ty::Integer,
     );
     define_func(
         checker,
         s::STD_STR_CHR,
         vec![p("N", Ty::Integer, false)],
-        Ty::Char,
+        Ty::String,
     );
     define_func(
         checker,

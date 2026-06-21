@@ -28,7 +28,6 @@ Requires `uses Std.Conv;`.
 | function | `IntToReal(N: integer): real` | widen |
 | function | `RealToStr(R: real): string` | text form |
 | function | `StrToReal(S: string): real` | parse; error if invalid |
-| function | `CharToStr(C: char): string` | length-1 string |
 | function | `BoolToStr(B: boolean): string` | `'true'` or `'false'` |
 | function | `StrToBool(S: string): boolean` | parse; case-insensitive; error if invalid |
 | function | `IntToHex(N: integer; Digits: integer): string` | uppercase hex, zero-padded |
@@ -83,16 +82,6 @@ Parses a floating-point value. Surrounding **whitespace is ignored**. **Runtime 
 
 ```pascal
 WriteLn(StrToReal('2.25'))
-```
-
----
-
-## `function CharToStr(C: char): string`
-
-Single-character string.
-
-```pascal
-WriteLn(CharToStr('Z'))
 ```
 
 ---

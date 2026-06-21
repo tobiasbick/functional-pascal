@@ -12,7 +12,7 @@ begin
   WriteLn(IntToReal(3));
   WriteLn(RealToStr(1.5));
   WriteLn(StrToReal('2.25'));
-  WriteLn(CharToStr('Z'))
+  WriteLn('Z')
 end.",
     );
     assert_eq!(out.lines, vec!["42", "7", "3", "1.5", "2.25", "Z"]);

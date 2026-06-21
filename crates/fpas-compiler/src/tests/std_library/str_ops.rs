@@ -137,7 +137,7 @@ fn string_index_first_char() {
 program StrIdx;
 begin
   var S: string := 'Hello';
-  var C: char := S[0];
+  var C: string := S[0];
   Std.Console.WriteLn(C)
 end.",
     );
@@ -151,7 +151,7 @@ fn string_index_last_char() {
 program StrIdxLast;
 begin
   var S: string := 'Hello';
-  var C: char := S[4];
+  var C: string := S[4];
   Std.Console.WriteLn(C)
 end.",
     );
@@ -184,7 +184,7 @@ fn string_index_out_of_bounds_runtime_error() {
 program StrIdxOob;
 begin
   var S: string := 'Hi';
-  var C: char := S[5]
+  var C: string := S[5]
 end.",
     );
     assert!(
@@ -216,7 +216,7 @@ fn string_index_non_integer_is_sema_error() {
 program StrIdxBadType;
 begin
   var S: string := 'hello';
-  var C: char := S['x']
+  var C: string := S['x']
 end.",
     );
     let msg = format!("{err:?}");

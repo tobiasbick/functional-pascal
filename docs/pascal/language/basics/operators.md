@@ -25,7 +25,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (expression precede
 | `>=`     | Greater or equal  | `A >= B`   |
 | `in`     | Membership        | `A in B`   |
 
-`in` returns `boolean`. It tests whether an array contains a value, whether a dictionary contains a key, or whether a string contains a `char` or substring:
+`in` returns `boolean`. It tests whether an array contains a value, whether a dictionary contains a key, or whether a string contains a substring (or a single-character string):
 
 ```pascal
 WriteLn(2 in [1, 2, 3]);
@@ -60,13 +60,13 @@ Record update (`expr with Field := Value; … end`) binds tighter than binary op
 
 ## String indexing
 
-Individual characters can be read by 0-based integer index using bracket notation. The result type is `char`.
+Individual characters can be read by 0-based integer index using bracket notation. The result type is `string` (a single-character string).
 
 ```pascal
 var
   S: string := 'Hello';
-  C: char := S[0];   { 'H' }
-  L: char := S[4];   { 'o' }
+  C: string := S[0];   { 'H' }
+  L: string := S[4];   { 'o' }
 ```
 
 Accessing an out-of-bounds index is a **runtime error**. The index must be an `integer`; non-integer indices are a compile-time error.

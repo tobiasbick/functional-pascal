@@ -76,16 +76,15 @@ impl Worker {
             }
         };
         let shortcut = match Self::required_record_field(fields, "Shortcut", line)? {
-            Value::Char(ch) if *ch == '\0' => String::new(),
-            Value::Char(ch) => ch.to_string(),
+            Value::Str(shortcut) => shortcut.clone(),
             other => {
                 return Err(runtime_error(
                     TYPE_MISMATCH_CODE,
                     format!(
-                        "MenuBarItem.Shortcut must be char, got {}",
+                        "MenuBarItem.Shortcut must be string, got {}",
                         other.type_name()
                     ),
-                    "Set `Shortcut := 'F'` for Alt+F, or `Shortcut := #0` when none.",
+                    "Set `Shortcut := 'F'` for Alt+F, or `Shortcut := ''` when none.",
                     line,
                 ));
             }
@@ -177,16 +176,15 @@ impl Worker {
             }
         };
         let shortcut = match Self::required_record_field(fields, "Shortcut", line)? {
-            Value::Char(ch) if *ch == '\0' => String::new(),
-            Value::Char(ch) => ch.to_string(),
+            Value::Str(shortcut) => shortcut.clone(),
             other => {
                 return Err(runtime_error(
                     TYPE_MISMATCH_CODE,
                     format!(
-                        "MenuPopupItem.Shortcut must be char, got {}",
+                        "MenuPopupItem.Shortcut must be string, got {}",
                         other.type_name()
                     ),
-                    "Set `Shortcut := 'X'` for a popup shortcut, or `Shortcut := #0` when none.",
+                    "Set `Shortcut := 'X'` for a popup shortcut, or `Shortcut := ''` when none.",
                     line,
                 ));
             }

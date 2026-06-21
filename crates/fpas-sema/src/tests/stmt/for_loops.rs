@@ -113,7 +113,7 @@ fn for_in_on_string_error() {
     check_errors(
         "program T; begin \
          var S: string := 'hello'; \
-         for C: char in S do return \
+         for C: string in S do return \
          end.",
     );
 }

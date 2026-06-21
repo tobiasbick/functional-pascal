@@ -6,7 +6,7 @@ mod arithmetic;
 mod comparisons;
 
 use crate::error::CompileError;
-use fpas_bytecode::{ConvIntrinsic, Intrinsic, Op, SourceLocation};
+use fpas_bytecode::{Op, SourceLocation};
 use fpas_parser::{BinaryOp, Expr};
 use fpas_sema::Ty;
 
@@ -80,25 +80,12 @@ impl Compiler {
         &mut self,
         left: &Expr,
         right: &Expr,
-        operand_types: (&Ty, &Ty),
+        _operand_types: (&Ty, &Ty),
         op: Op,
         location: SourceLocation,
     ) -> Result<(), CompileError> {
-        let (lt, rt) = operand_types;
         self.compile_expr(left)?;
-        if matches!(lt, Ty::Char) {
-            self.emit(
-                Op::Intrinsic(u16::from(Intrinsic::Conv(ConvIntrinsic::CharToStr))),
-                location,
-            );
-        }
         self.compile_expr(right)?;
-        if matches!(rt, Ty::Char) {
-            self.emit(
-                Op::Intrinsic(u16::from(Intrinsic::Conv(ConvIntrinsic::CharToStr))),
-                location,
-            );
-        }
         self.emit(op, location);
         Ok(())
     }

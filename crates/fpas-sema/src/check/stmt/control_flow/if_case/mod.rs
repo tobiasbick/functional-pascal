@@ -162,7 +162,7 @@ impl Checker {
         self.error_with_code(
             SEMA_TYPE_MISMATCH,
             "Case expression must be an ordinal, string, Result, or Option type",
-            "Use integer, boolean, char, enum, string, Result, or Option.",
+            "Use integer, boolean, enum, string, Result, or Option.",
             span,
         );
     }

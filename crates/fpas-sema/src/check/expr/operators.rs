@@ -92,8 +92,8 @@ impl Checker {
                         Ty::Integer
                     }
                 } else if op == BinaryOp::Add
-                    && matches!(left, Ty::String | Ty::Char)
-                    && matches!(right, Ty::String | Ty::Char)
+                    && matches!(left, Ty::String)
+                    && matches!(right, Ty::String)
                 {
                     Ty::String
                 } else {
@@ -174,12 +174,12 @@ impl Checker {
             BinaryOp::In => match right {
                 Ty::Array(element_ty) if left.compatible_with(element_ty) => Ty::Boolean,
                 Ty::Dict(key_ty, _) if left.compatible_with(key_ty) => Ty::Boolean,
-                Ty::String if matches!(left, Ty::Char | Ty::String) => Ty::Boolean,
+                Ty::String if matches!(left, Ty::String) => Ty::Boolean,
                 _ => {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
                         "Operator `in` requires a value and a compatible array, dict, or string",
-                        "Use `Item in Array`, `Key in Dict`, or `Char in String`.",
+                        "Use `Item in Array`, `Key in Dict`, or `Substring in String`.",
                         span,
                     );
                     Ty::Error

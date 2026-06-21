@@ -305,7 +305,6 @@ pub(in super::super) const STD_CONV_SYMBOLS: &[&str] = &[
     std_symbols::STD_CONV_STR_TO_INT,
     std_symbols::STD_CONV_REAL_TO_STR,
     std_symbols::STD_CONV_STR_TO_REAL,
-    std_symbols::STD_CONV_CHAR_TO_STR,
     std_symbols::STD_CONV_INT_TO_REAL,
     std_symbols::STD_CONV_BOOL_TO_STR,
     std_symbols::STD_CONV_STR_TO_BOOL,

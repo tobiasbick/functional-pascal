@@ -42,7 +42,7 @@ impl Worker {
             Value::Str(s) => {
                 let idx = array_index_from_key(&key, line)?;
                 match s.chars().nth(idx) {
-                    Some(ch) => self.push(Value::Char(ch))?,
+                    Some(ch) => self.push(Value::Str(ch.to_string()))?,
                     None => {
                         return Err(runtime_error(
                             RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
@@ -109,12 +109,17 @@ fn string_contains_value(
     line: SourceLocation,
 ) -> Result<bool, VmError> {
     match needle {
-        Value::Char(ch) => Ok(text.chars().any(|candidate| candidate == *ch)),
-        Value::Str(value) => Ok(text.contains(value)),
+        Value::Str(value) => {
+            let mut chars = value.chars();
+            match (chars.next(), chars.next()) {
+                (Some(c), None) => Ok(text.chars().any(|candidate| candidate == c)),
+                _ => Ok(text.contains(value)),
+            }
+        }
         _ => Err(runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-            "String membership requires a char or string value",
-            "Use `Ch in Text` or `Substring in Text` for string membership.",
+            "String membership requires a string value",
+            "Use `Substring in Text` for string membership.",
             line,
         )),
     }

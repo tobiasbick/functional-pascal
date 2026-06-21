@@ -15,13 +15,7 @@ impl Compiler {
                 self.emit_constant(Value::Real(*n), Self::location_of(span))?;
             }
             Expr::Str(s, span) => {
-                let location = Self::location_of(span);
-                let mut chars = s.chars();
-                if let (Some(c), None) = (chars.next(), chars.next()) {
-                    self.emit_constant(Value::Char(c), location)?;
-                } else {
-                    self.emit_constant(Value::Str(s.clone()), location)?;
-                }
+                self.emit_constant(Value::Str(s.clone()), Self::location_of(span))?;
             }
             Expr::Bool(b, span) => {
                 self.emit_constant(Value::Boolean(*b), Self::location_of(span))?;

@@ -1,8 +1,8 @@
 use crate::vm::diagnostics::TYPE_MISMATCH_CODE;
-use crate::vm::{VmError, Worker, runtime_error};
+use crate::vm::{VmError, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 
-impl Worker {
+impl crate::vm::Worker {
     pub(in crate::vm) fn binary_int(
         &mut self,
         location: SourceLocation,
@@ -14,7 +14,6 @@ impl Worker {
         let to_i64 = |value: &Value| -> Option<i64> {
             match value {
                 Value::Integer(number) => Some(*number),
-                Value::Char(ch) => Some(*ch as i64),
                 Value::Boolean(flag) => Some(if *flag { 1 } else { 0 }),
                 _ => None,
             }
@@ -28,7 +27,7 @@ impl Worker {
             _ => Err(runtime_error(
                 TYPE_MISMATCH_CODE,
                 "Integer operation requires integer operands",
-                "Use integer-compatible operands (integer, char, boolean) for this operation.",
+                "Use integer-compatible operands (integer, boolean) for this operation.",
                 location,
             )),
         }
@@ -64,19 +63,6 @@ impl Worker {
         let left = self.pop(location)?;
         match (&left, &right) {
             (Value::Str(left), Value::Str(right)) => self.push(f(left, right)),
-            (Value::Char(ch), Value::Str(right)) => {
-                let left = ch.to_string();
-                self.push(f(&left, right))
-            }
-            (Value::Str(left), Value::Char(ch)) => {
-                let right = ch.to_string();
-                self.push(f(left, &right))
-            }
-            (Value::Char(left), Value::Char(right)) => {
-                let left = left.to_string();
-                let right = right.to_string();
-                self.push(f(&left, &right))
-            }
             _ => Err(runtime_error(
                 TYPE_MISMATCH_CODE,
                 "String operation requires string operands",

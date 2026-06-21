@@ -133,7 +133,6 @@ fn fpas_to_json(value: Value, location: SourceLocation) -> Result<JsonValue, Std
         },
         "String" => match expect_one_field("String", fields, location)? {
             Value::Str(value) => Ok(JsonValue::String(value)),
-            Value::Char(value) => Ok(JsonValue::String(value.to_string())),
             other => Err(std_runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 format!(
@@ -166,7 +165,6 @@ fn fpas_to_json(value: Value, location: SourceLocation) -> Result<JsonValue, Std
                 for (key, value) in fields {
                     let key = match key {
                         Value::Str(key) => key,
-                        Value::Char(key) => key.to_string(),
                         other => {
                             return Err(std_runtime_error(
                                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,

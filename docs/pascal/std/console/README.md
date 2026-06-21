@@ -64,8 +64,8 @@ Everything below requires `uses Std.Console;`.
 | procedure | `NoSound()` | stop active tone state (no-op) |
 | procedure | `AssignCrt()` | enable CRT mode |
 | function | `ReadLn(): string` | line input |
-| function | `Read(): char` | same buffer as `ReadLn` |
-| function | `ReadKey(): char` | key-by-key, separate from `ReadKeyEvent` |
+| function | `Read(): string` | same buffer as `ReadLn` |
+| function | `ReadKey(): string` | key-by-key, separate from `ReadKeyEvent` |
 | function | `KeyPressed(): boolean` | true if `ReadKey` or `ReadKeyEvent` has data waiting |
 | function | `ReadKeyEvent(): KeyEvent` | structured key + modifiers |
 | function | `EventPending(): boolean` | true if `ReadEvent()` has data waiting |

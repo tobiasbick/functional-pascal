@@ -34,7 +34,7 @@ Requires `uses Std.Test;`.
 | procedure | `Skip(Msg: string)` | print skip reason; runner reports `SKIP` (exit `0` unless `fpas test --strict`) |
 | procedure | `PushReadLn(Line: string)` | queue one line for the next `Std.Console.ReadLn` (native tests) |
 | procedure | `AssertScreenLine(Expected: string; Y: integer)` | fail when CRT row `Y` text differs (headless/TUI back buffer) |
-| procedure | `AssertScreenCell(X, Y: integer; Ch: char; Fg, Bg: integer)` | fail when one CRT cell differs (`Fg`/`Bg` are packed colors `0..=15`) |
+| procedure | `AssertScreenCell(X, Y: integer; Ch: string; Fg, Bg: integer)` | fail when one CRT cell differs (`Fg`/`Bg` are packed colors `0..=15`) |
 | procedure | `AssertViewRect(App: Application; V: ViewId; X, Y, W, H: integer)` | fail when view bounds differ (`uses Std.Tui` required) |
 
 ---
@@ -69,7 +69,7 @@ Queue one input line for the next blocking `Std.Console.ReadLn` (or line-buffere
 
 Fail with **F4023** when row `Y` (one-based) of the virtual CRT back buffer does not equal `Expected`. Use after `Application.TestPump` in headless TUI tests. Requires `uses Std.Console` (or `Std.Tui`, which pulls console symbols).
 
-### `procedure AssertScreenCell(X, Y: integer; Ch: char; Fg, Bg: integer)`
+### `procedure AssertScreenCell(X, Y: integer; Ch: string; Fg, Bg: integer)`
 
 Fail with **F4023** when cell `(X, Y)` (one-based) does not match the expected character and packed CRT colors. Use `Std.Console` color constants (for example `Red`, `Black`) for `Fg` and `Bg`.
 

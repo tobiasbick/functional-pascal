@@ -145,7 +145,7 @@ impl Checker {
                                             index_expr.span(),
                                         );
                                     }
-                                    Ty::Char
+                                    Ty::String
                                 }
                                 _ => {
                                     self.error_with_code(

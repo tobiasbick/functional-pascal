@@ -41,12 +41,6 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Conv(ConvIntrinsic::StrToReal), location);
                 Ok(true)
             }
-            s::STD_CONV_CHAR_TO_STR => {
-                self.expect_exact_args(s::STD_CONV_CHAR_TO_STR, 1, args, location)?;
-                self.compile_expr(&args[0])?;
-                self.emit_intrinsic(Intrinsic::Conv(ConvIntrinsic::CharToStr), location);
-                Ok(true)
-            }
             s::STD_CONV_INT_TO_REAL => {
                 self.expect_exact_args(s::STD_CONV_INT_TO_REAL, 1, args, location)?;
                 self.compile_expr(&args[0])?;

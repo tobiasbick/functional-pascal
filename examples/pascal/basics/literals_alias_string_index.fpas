@@ -13,10 +13,10 @@ const
 
 begin
   var Name: string := 'FPAS';
-  var First: char := Name[0];
-  var Last: char := Name[Length(Name) - 1];
+  var First: string := Name[0];
+  var Last: string := Name[Length(Name) - 1];
   var Total: Score := BigScore + HexMask;
   WriteLn('total: ', IntToStr(Total));
-  WriteLn('first: ', CharToStr(First));
-  WriteLn('last: ', CharToStr(Last))
+  WriteLn('first: ', First);
+  WriteLn('last: ', Last)
 end.

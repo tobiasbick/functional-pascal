@@ -6,7 +6,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (Part 1 — lexical
 
 | Topic | Description |
 |-------|-------------|
-| [Primitive types](primitive-types.md) | `integer`, `real`, `boolean`, `char`, `string`, `#` codes |
+| [Primitive types](primitive-types.md) | `integer`, `real`, `boolean`, `string`, `string`, `#` codes |
 | [Variables](variables.md) | `var`, `mutable var`, immutability |
 | [Constants](constants.md) | `const` declarations |
 | [Number literals](number-literals.md) | Decimal, hex, reals, underscores |

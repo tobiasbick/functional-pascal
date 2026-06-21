@@ -93,14 +93,33 @@ impl Worker {
 
     fn pop_char(&mut self, line: SourceLocation) -> Result<char, VmError> {
         match self.pop(line)? {
-            Value::Char(ch) => Ok(ch),
+            Value::Str(text) => {
+                let mut chars = text.chars();
+                match (chars.next(), chars.next()) {
+                    (Some(ch), None) => Ok(ch),
+                    (None, _) => Err(runtime_error(
+                        RUNTIME_CONSOLE_STATE_ERROR,
+                        "Std.Test.AssertScreenCell expected a single-character string",
+                        "Pass a single-character string for the expected cell character.",
+                        line,
+                    )),
+                    _ => Err(runtime_error(
+                        RUNTIME_CONSOLE_STATE_ERROR,
+                        format!(
+                            "Std.Test.AssertScreenCell expected a single-character string, got `{text}`"
+                        ),
+                        "Pass a single-character string for the expected cell character.",
+                        line,
+                    )),
+                }
+            }
             other => Err(runtime_error(
                 RUNTIME_CONSOLE_STATE_ERROR,
                 format!(
-                    "Std.Test.AssertScreenCell expected char, got {}",
+                    "Std.Test.AssertScreenCell expected string, got {}",
                     other.type_name()
                 ),
-                "Pass a character literal for the expected cell character.",
+                "Pass a single-character string for the expected cell character.",
                 line,
             )),
         }

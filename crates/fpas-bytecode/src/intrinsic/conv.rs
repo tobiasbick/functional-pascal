@@ -14,7 +14,6 @@ pub enum ConvIntrinsic {
     StrToInt = 41,
     RealToStr = 42,
     StrToReal = 43,
-    CharToStr = 44,
     IntToReal = 45,
     /// `Std.Conv.BoolToStr(B)` — boolean to `'true'`/`'false'`.
     ///

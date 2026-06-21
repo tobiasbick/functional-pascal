@@ -11,7 +11,7 @@ begin
   Std.Console.WriteLn(Std.Conv.IntToReal(3));
   Std.Console.WriteLn(Std.Conv.RealToStr(1.5));
   Std.Console.WriteLn(Std.Conv.StrToReal('2.25'));
-  Std.Console.WriteLn(Std.Conv.CharToStr('Z'))
+  Std.Console.WriteLn('Z')
 end.",
     );
     assert_eq!(out.lines, vec!["42", "7", "3", "1.5", "2.25", "Z"]);

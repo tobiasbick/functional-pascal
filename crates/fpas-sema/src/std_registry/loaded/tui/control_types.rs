@@ -22,7 +22,7 @@ pub(super) fn register(checker: &mut Checker) -> TuiControlTypes {
         s::STD_TUI_RADIO_OPTION,
         vec![
             ("label".into(), Ty::String),
-            ("accelerator".into(), Ty::Option(Box::new(Ty::Char))),
+            ("accelerator".into(), Ty::Option(Box::new(Ty::String))),
             ("commandId".into(), Ty::Option(Box::new(Ty::Integer))),
             ("enabled".into(), Ty::Boolean),
         ],

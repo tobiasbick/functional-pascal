@@ -23,11 +23,10 @@ pub(crate) fn pop_value(
 pub(crate) fn pop_string(v: Value, location: SourceLocation) -> Result<String, StdError> {
     match v {
         Value::Str(s) => Ok(s),
-        Value::Char(c) => Ok(c.to_string()),
         other => Err(std_runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!("Expected string argument, got {}", other.type_name()),
-            "Pass a string-compatible value (string or char) to this Std.* call.",
+            "Pass a string value to this Std.* call.",
             location,
         )),
     }
@@ -57,16 +56,42 @@ pub(crate) fn pop_real(v: Value, location: SourceLocation) -> Result<f64, StdErr
     }
 }
 
-pub(crate) fn pop_char(v: Value, location: SourceLocation) -> Result<char, StdError> {
-    match v {
-        Value::Char(c) => Ok(c),
-        other => Err(std_runtime_error(
+/// Returns the single Unicode scalar in `s`, or an error when `s` is empty or longer than one character.
+pub(crate) fn single_char_from_string(s: &str, location: SourceLocation) -> Result<char, StdError> {
+    let mut chars = s.chars();
+    match (chars.next(), chars.next()) {
+        (Some(c), None) => Ok(c),
+        (None, _) => Err(std_runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-            format!("Expected char argument, got {}", other.type_name()),
-            "Pass a char value to this Std.* call.",
+            "Expected a single-character string",
+            "Pass a string with exactly one character, for example `'A'`.",
+            location,
+        )),
+        _ => Err(std_runtime_error(
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+            format!("Expected a single-character string, got `{s}`"),
+            "Pass a string with exactly one character, for example `'A'`.",
             location,
         )),
     }
+}
+
+/// Pops a string argument and returns its sole character for APIs that accept one code point.
+pub(crate) fn pop_single_char(v: Value, location: SourceLocation) -> Result<char, StdError> {
+    let s = pop_string(v, location)?;
+    single_char_from_string(&s, location)
+}
+
+/// Returns the first character of a non-empty fill string for padding helpers.
+pub(crate) fn pad_fill_char(s: &str, location: SourceLocation) -> Result<char, StdError> {
+    s.chars().next().ok_or_else(|| {
+        std_runtime_error(
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+            "Pad fill string must not be empty",
+            "Pass a non-empty fill string, for example `' '`.",
+            location,
+        )
+    })
 }
 
 pub(crate) fn pop_bool(v: Value, location: SourceLocation) -> Result<bool, StdError> {
@@ -114,7 +139,6 @@ pub(crate) fn value_as_string_for_join(
 ) -> Result<String, StdError> {
     match v {
         Value::Str(s) => Ok(s.clone()),
-        Value::Char(c) => Ok(c.to_string()),
         other => Err(std_runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!(

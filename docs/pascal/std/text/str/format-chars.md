@@ -11,7 +11,7 @@ WriteLn(IsNumeric('nope'))
 
 ---
 
-## `function FromChar(C: char; Count: integer): string`
+## `function FromChar(C: string; Count: integer): string`
 
 Builds a string of `Count` copies of `C`. `Count` ≤ 0 yields an empty string.
 
@@ -21,18 +21,18 @@ WriteLn(FromChar('─', 40))
 
 ---
 
-## `function CharAt(S: string; Index: integer): char`
+## `function CharAt(S: string; Index: integer): string`
 
 Returns the character at the 0-based `Index`. **Runtime error** if out of bounds.
 
 ```pascal
-var C: char := CharAt('Hello', 0);
+var C: string := CharAt('Hello', 0);
 WriteLn(C)  { H }
 ```
 
 ---
 
-## `function SetCharAt(S: string; Index: integer; C: char): string`
+## `function SetCharAt(S: string; Index: integer; C: string): string`
 
 Returns a **new** string that is identical to `S` except the character at `Index` is replaced with `C`. **Runtime error** if out of bounds.
 
@@ -42,7 +42,7 @@ WriteLn(SetCharAt('Hello', 0, 'J'))  { Jello }
 
 ---
 
-## `function Ord(C: char): integer`
+## `function Ord(C: string): integer`
 
 Returns the Unicode codepoint (integer value) of `C`.
 
@@ -52,7 +52,7 @@ WriteLn(Ord('A'))  { 65 }
 
 ---
 
-## `function Chr(N: integer): char`
+## `function Chr(N: integer): string`
 
 Returns the character with Unicode codepoint `N`. **Runtime error** if `N` is not a valid Unicode scalar value.
 
@@ -80,7 +80,7 @@ var Pct: string    := Format('100%%');  { '100%' }
 |-----------|--------------|---------|
 | `%d` | `integer` | `Format('%d', 42)` → `'42'` |
 | `%f` | `real` or `integer` | `Format('%f', 3.14)` → `'3.14'` |
-| `%s` | `string` or `char` | `Format('%s', 'hi')` → `'hi'` |
+| `%s` | `string` or `string` | `Format('%s', 'hi')` → `'hi'` |
 | `%%` | *(no argument)* | `Format('100%%')` → `'100%'` |
 
 `%f` accepts both `real` and `integer`. Integer arguments are rendered with at least one fractional digit: `Format('%f', 42)` produces `'42.0'`.

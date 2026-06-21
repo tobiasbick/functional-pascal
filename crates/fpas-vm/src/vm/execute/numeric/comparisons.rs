@@ -15,7 +15,6 @@ impl Worker {
                 let a = self.pop(line)?;
                 let sa = match a {
                     Value::Str(s) => s,
-                    Value::Char(c) => c.to_string(),
                     _ => {
                         return Err(runtime_error(
                             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
@@ -27,7 +26,6 @@ impl Worker {
                 };
                 let sb = match b {
                     Value::Str(s) => s,
-                    Value::Char(c) => c.to_string(),
                     _ => {
                         return Err(runtime_error(
                             RUNTIME_VM_OPERAND_TYPE_MISMATCH,

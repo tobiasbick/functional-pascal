@@ -5,17 +5,16 @@
 | `integer` | 64-bit signed integer        | `42`, `-7`, `0`      |
 | `real`    | 64-bit floating point        | `3.14`, `-0.5`       |
 | `boolean` | Boolean                      | `true`, `false`      |
-| `char`    | Single ASCII character       | `'A'`               |
-| `string`  | Immutable text sequence      | `'Hello'`            |
+| `string`  | Immutable text sequence      | `'Hello'`, `'A'`     |
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (literals, `type_expr` built-ins).
 
-`char` must be explicitly declared — a single-character string literal like `'A'` is `string` unless the variable is typed as `char`:
+Single-character text uses the same `string` type as longer text:
 
 ```pascal
 var
-  C: char := 'A';       { char }
-  S: string := 'A';     { string }
+  Letter: string := 'A';
+  Word: string := 'Hello';
 ```
 
 Strings use single quotes with doubled apostrophes for escaping: `'It''s Pascal'`.
@@ -36,8 +35,8 @@ The `#` prefix denotes a character by its ASCII code (decimal, range **0..255**)
 var
   LineBreak: string := #13#10;                  { CR+LF }
   Greeting: string := 'Hello'#13#10'World';     { Hello\r\nWorld }
-  Tab: char := #9;                               { tab character }
-  Letter: char := #65;                           { 'A' }
+  Tab: string := #9;                            { tab character }
+  Letter: string := #65;                        { 'A' }
 ```
 
 ## See also

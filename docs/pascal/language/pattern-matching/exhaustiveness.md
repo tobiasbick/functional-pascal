@@ -61,7 +61,7 @@ end;
 - Enum types: every variant name must appear on an **unguarded** arm, or `else` must be present. Data-carrying variants count by name (`Shape.Circle`, not by field values).
 - `Result`: both `Ok` and `Error` must appear on unguarded arms, or `else` must be present.
 - `Option`: both `Some` and `None` must appear on unguarded arms, or `else` must be present.
-- Scalar types (`integer`, `string`, `char`, `boolean`): `else` is recommended but not required.
+- Scalar types (`integer`, `string`, `string`, `boolean`): `else` is recommended but not required.
 - Guard clauses do not count toward exhaustiveness — `Shape.Circle(R) if R > 0` does not cover variant `Circle`; add an unguarded `Shape.Circle(R)` arm or `else`.
 
 ## See also

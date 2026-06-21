@@ -50,7 +50,7 @@ impl Checker {
     }
 
     fn register_primitive_types(&mut self) {
-        for name in &["integer", "real", "boolean", "char", "string"] {
+        for name in &["integer", "real", "boolean", "string"] {
             self.scopes.define(
                 name,
                 Symbol {

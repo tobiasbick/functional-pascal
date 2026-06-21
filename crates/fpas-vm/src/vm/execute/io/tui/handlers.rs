@@ -185,24 +185,24 @@ impl Worker {
         match self.pop(line)? {
             Value::OptionNone => Ok(None),
             Value::OptionSome(inner) => match *inner {
-                Value::Char(value) => Ok(Some(value)),
+                Value::Str(value) => single_char_from_optional_string(&value, label, line),
                 other => Err(runtime_error(
                     RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                     format!(
-                        "{label} expects `Option of char`, got Some({})",
+                        "{label} expects `Option of string`, got Some({})",
                         other.type_name()
                     ),
-                    "Pass `None` or `Some('.')` with a single character literal.",
+                    "Pass `None` or `Some('.')` with a single-character string.",
                     line,
                 )),
             },
             other => Err(runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 format!(
-                    "{label} expects `Option of char`, got {}",
+                    "{label} expects `Option of string`, got {}",
                     other.type_name()
                 ),
-                "Pass `None` or `Some('.')` with a single character literal.",
+                "Pass `None` or `Some('.')` with a single-character string.",
                 line,
             )),
         }
@@ -231,5 +231,25 @@ impl Worker {
         self.validate_host_handler_function(&func, arity, label, hint, line)?;
         self.with_tui(|tui| setter(tui, func));
         Ok(())
+    }
+}
+
+fn single_char_from_optional_string(
+    value: &str,
+    label: &str,
+    line: SourceLocation,
+) -> Result<Option<char>, VmError> {
+    if value.is_empty() {
+        return Ok(None);
+    }
+    let mut chars = value.chars();
+    match (chars.next(), chars.next()) {
+        (Some(c), None) => Ok(Some(c)),
+        _ => Err(runtime_error(
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+            format!("{label} expects a single-character string, got `{value}`"),
+            "Pass `None` or `Some('.')` with a single-character string.",
+            line,
+        )),
     }
 }

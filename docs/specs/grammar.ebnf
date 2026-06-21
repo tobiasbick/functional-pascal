@@ -194,7 +194,7 @@ constraint_name     = 'Comparable' | 'Numeric' | 'Printable' ;
 (* ---- 2.3 Type Expressions ------------------------------------- *)
 
 (* Built-in named types (via qualified_id): integer, real, boolean, *)
-(* char, string, task. See docs/pascal/language/basics/ and            *)
+(* string, task. See docs/pascal/language/basics/ and            *)
 (* docs/pascal/language/concurrency/README.md.                                  *)
 
 type_expr           = 'array' 'of' type_expr            (* array type     *)
@@ -332,7 +332,7 @@ pattern_arg         = identifier ;                       (* binding only   *)
 (* Use a guard clause for additional constraints:                       *)
 (*   Shape.Circle(R) if R > 10.0: ...                                *)
 (*                                                                  *)
-(* Value labels must be compile-time constants: integer, char,      *)
+(* Value labels must be compile-time constants: integer,      *)
 (* string, boolean, or enum literals. Ranges use '..'.              *)
 (*                                                                  *)
 (* Semantic disambiguation for guarded scalar bindings: in a scalar  *)
@@ -408,7 +408,7 @@ expression          = comparison_expr ;
 comparison_expr     = additive_expr [ comparison_op additive_expr ] ;
 comparison_op       = '=' | '<>' | '<' | '>' | '<=' | '>=' | 'in' ;
 
-(* `in` tests membership: value in array, key in dict, or char/string in string. *)
+(* `in` tests membership: value in array, key in dict, or substring in string. *)
 
 additive_expr       = mult_expr { additive_op mult_expr } ;
 additive_op         = '+' | '-' | 'or' | 'xor' ;
@@ -467,7 +467,7 @@ dict_literal        = '[' ( ':' ']'                                      (* empt
 
 (* -- Designator (variable, field, or indexed access) -- *)
 (* Index expression '[' expression ']' applies to: array (integer index),
-   dict (key of matching type), and string (integer index → char).        *)
+   dict (key of matching type), and string (integer index → string).        *)
 (* path_segment allows keyword roots array/result/option/dict when       *)
 (* followed by '.' (parser extension for qualified type-like paths).       *)
 path_segment        = identifier

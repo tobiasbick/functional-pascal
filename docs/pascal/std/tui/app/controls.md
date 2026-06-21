@@ -10,7 +10,7 @@ All constructors start with `(App, X, Y, Width, Height)` and return `ViewId`:
 
 | Call suffix | Model arguments |
 | ----------- | --------------- |
-| `HostCreateLabelView` | `Text`, `Accelerator: Option of char` |
+| `HostCreateLabelView` | `Text`, `Accelerator: Option of string` |
 | `HostCreateButtonView` | `Caption`, `CommandId: Option of integer`, `IsDefault` |
 | `HostCreateInputLineView` | `Text` |
 | `HostCreateCheckBoxView` | `Label`, `Accelerator`, `CommandId`, `Checked` |

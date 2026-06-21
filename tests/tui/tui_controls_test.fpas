@@ -14,7 +14,7 @@ begin
   LastCommand := CommandId
 end;
 
-function CharacterKey(Ch: char): KeyEvent;
+function CharacterKey(Ch: string): KeyEvent;
 begin
   return record
     kind := KeyKind.Character;

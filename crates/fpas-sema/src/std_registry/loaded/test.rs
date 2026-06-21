@@ -35,7 +35,7 @@ pub(super) fn register_std_test(checker: &mut Checker) {
         vec![
             p("X", Ty::Integer, false),
             p("Y", Ty::Integer, false),
-            p("Ch", Ty::Char, false),
+            p("Ch", Ty::String, false),
             p("Fg", Ty::Integer, false),
             p("Bg", Ty::Integer, false),
         ],

@@ -94,7 +94,7 @@ impl Worker {
         Value::Record {
             type_name: TUI_SCREEN_CELL_TYPE.into(),
             fields: vec![
-                ("ch".into(), Value::Char(ch)),
+                ("ch".into(), Value::Str(ch.to_string())),
                 ("fg".into(), Value::Integer(i64::from(fg))),
                 ("bg".into(), Value::Integer(i64::from(bg))),
             ],

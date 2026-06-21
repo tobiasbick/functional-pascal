@@ -4,14 +4,14 @@
 
 Keyboard input is **separate** from the `Read` / `ReadLn` buffer. Enabling raw or low-level keyboard mode is handled by the runtime when you call these.
 
-### `function ReadKey(): char`
+### `function ReadKey(): string`
 
 - **Parameters:** none.
 - **Returns:** one character from the keyboard queue.
-- **Notes:** does not wait for Enter. **Extended keys** (arrows, function keys, etc.) may appear as a **two-step** sequence: first `#0`, then a second `char` encoding the physical key (Turbo Pascal–style).
+- **Notes:** does not wait for Enter. **Extended keys** (arrows, function keys, etc.) may appear as a **two-step** sequence: first `''`, then a second `string` encoding the physical key (Turbo Pascal–style).
 
 ```pascal
-var C: char := ReadKey();
+var C: string := ReadKey();
 WriteLn(C)
 ```
 
@@ -27,7 +27,7 @@ Use it to avoid blocking when you want a polling loop.
 ```pascal
 if KeyPressed() then
 begin
-  var C: char := ReadKey();
+  var C: string := ReadKey();
   WriteLn(C)
 end
 ```
@@ -45,7 +45,7 @@ end
 
 - **Space bar:** `kind = KeyKind.Space`, `ch` is often `' '`.
 - **Printable keys:** `kind = KeyKind.Character`, `ch` is the character.
-- **Special keys:** dedicated `KeyKind` values (`Enter`, arrows, `F1`…`F12`, etc.); `ch` is often `#0`.
+- **Special keys:** dedicated `KeyKind` values (`Enter`, arrows, `F1`…`F12`, etc.); `ch` is often `''`.
 - **Unknown / unmapped:** `kind = KeyKind.Unknown`.
 
 ```pascal

@@ -30,12 +30,6 @@ pub(super) fn register_std_conv(checker: &mut Checker) {
     );
     define_func(
         checker,
-        s::STD_CONV_CHAR_TO_STR,
-        vec![p("C", Ty::Char, false)],
-        Ty::String,
-    );
-    define_func(
-        checker,
         s::STD_CONV_INT_TO_REAL,
         vec![p("N", Ty::Integer, false)],
         Ty::Real,

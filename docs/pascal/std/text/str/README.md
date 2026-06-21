@@ -36,14 +36,14 @@ Requires `uses Std.Str;`.
 | function | `Join(Parts: array of string; Delim: string): string` | join with delimiter |
 | function | `IsNumeric(S: string): boolean` | parses as number? |
 | function | `RepeatStr(S: string; Count: integer): string` | repeat `S`; `Count <= 0` returns empty string |
-| function | `PadLeft(S: string; Width: integer; Fill: char): string` | left-pad to `Width` |
-| function | `PadRight(S: string; Width: integer; Fill: char): string` | right-pad to `Width` |
-| function | `PadCenter(S: string; Width: integer; Fill: char): string` | center-pad to `Width` |
-| function | `FromChar(C: char; Count: integer): string` | string of repeated char |
-| function | `CharAt(S: string; Index: integer): char` | character at 0-based index |
-| function | `SetCharAt(S: string; Index: integer; C: char): string` | new string with one char replaced |
-| function | `Ord(C: char): integer` | Unicode codepoint |
-| function | `Chr(N: integer): char` | character from codepoint |
+| function | `PadLeft(S: string; Width: integer; Fill: string): string` | left-pad to `Width` |
+| function | `PadRight(S: string; Width: integer; Fill: string): string` | right-pad to `Width` |
+| function | `PadCenter(S: string; Width: integer; Fill: string): string` | center-pad to `Width` |
+| function | `FromChar(C: string; Count: integer): string` | string of repeated char |
+| function | `CharAt(S: string; Index: integer): string` | character at 0-based index |
+| function | `SetCharAt(S: string; Index: integer; C: string): string` | new string with one char replaced |
+| function | `Ord(C: string): integer` | Unicode codepoint |
+| function | `Chr(N: integer): string` | character from codepoint |
 | function | `Insert(S: string; Index: integer; Sub: string): string` | insert `Sub` at index |
 | function | `Delete(S: string; Start: integer; Len: integer): string` | remove `Len` chars |
 | function | `Reverse(S: string): string` | reversed copy |

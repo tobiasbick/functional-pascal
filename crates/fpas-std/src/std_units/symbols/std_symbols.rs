@@ -444,7 +444,6 @@ pub const STD_CONV_INT_TO_STR: &str = std_conv!("IntToStr");
 pub const STD_CONV_STR_TO_INT: &str = std_conv!("StrToInt");
 pub const STD_CONV_REAL_TO_STR: &str = std_conv!("RealToStr");
 pub const STD_CONV_STR_TO_REAL: &str = std_conv!("StrToReal");
-pub const STD_CONV_CHAR_TO_STR: &str = std_conv!("CharToStr");
 pub const STD_CONV_INT_TO_REAL: &str = std_conv!("IntToReal");
 pub const STD_CONV_BOOL_TO_STR: &str = std_conv!("BoolToStr");
 pub const STD_CONV_STR_TO_BOOL: &str = std_conv!("StrToBool");

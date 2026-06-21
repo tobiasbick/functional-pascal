@@ -19,8 +19,8 @@ fn std_console_read_readkey_keypressed() {
 program T;
 uses Std.Console;
 begin
-  var C: char := Std.Console.Read();
-  var K: char := Std.Console.ReadKey();
+  var C: string := Std.Console.Read();
+  var K: string := Std.Console.ReadKey();
   var P: boolean := Std.Console.KeyPressed();
   var S: string := Std.Console.ReadLn();
   Std.Console.WriteLn(C);

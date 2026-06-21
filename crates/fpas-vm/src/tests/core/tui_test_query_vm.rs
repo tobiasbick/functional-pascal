@@ -27,7 +27,7 @@ fn menu_popup_exit_item() -> Value {
         type_name: "Std.Tui.MenuPopupItem".into(),
         fields: vec![
             ("Label".into(), Value::Str("Exit".into())),
-            ("Shortcut".into(), Value::Char('X')),
+            ("Shortcut".into(), Value::Str("X".into())),
             ("Enabled".into(), Value::Boolean(true)),
             ("CommandId".into(), Value::Integer(1)),
             ("Separator".into(), Value::Boolean(false)),
@@ -40,7 +40,7 @@ fn menu_bar_file_item() -> Value {
         type_name: "Std.Tui.MenuBarItem".into(),
         fields: vec![
             ("Label".into(), Value::Str("File".into())),
-            ("Shortcut".into(), Value::Char('F')),
+            ("Shortcut".into(), Value::Str("F".into())),
             ("Enabled".into(), Value::Boolean(true)),
             ("CommandId".into(), Value::Integer(-1)),
             ("Submenu".into(), Value::Array(vec![menu_popup_exit_item()])),

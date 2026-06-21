@@ -2,7 +2,7 @@
 
 The `case` expression may have any of the following types:
 
-- an ordinal type: `integer`, `boolean`, `char`, or an `enum`
+- an ordinal type: `integer`, `boolean`, `string`, or an `enum`
 - `string`
 - `Result of T, E` or `Option of T`
 

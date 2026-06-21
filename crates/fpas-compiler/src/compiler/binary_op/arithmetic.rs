@@ -15,7 +15,7 @@ impl Compiler {
         location: SourceLocation,
     ) -> Result<(), CompileError> {
         let (lt, rt) = operand_types;
-        if matches!((lt, rt), (Ty::String | Ty::Char, Ty::String | Ty::Char)) {
+        if matches!((lt, rt), (Ty::String, Ty::String)) {
             self.emit_string_binary(left, right, operand_types, Op::ConcatStr, location)
         } else if is_generic_param(lt) || is_generic_param(rt) {
             self.compile_direct_binary(Op::AddDyn, left, right, location)

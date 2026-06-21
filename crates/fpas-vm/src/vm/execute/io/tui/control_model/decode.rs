@@ -110,10 +110,10 @@ fn optional_char(value: &Value, line: SourceLocation) -> Result<Option<char>, Vm
     match value {
         Value::OptionNone => Ok(None),
         Value::OptionSome(v) => match &**v {
-            Value::Char(ch) => Ok(Some(*ch)),
+            Value::Str(s) => optional_char_from_string(s, line),
             other => Err(runtime_error(
                 TYPE_MISMATCH_CODE,
-                format!("accelerator must contain char, got {}", other.type_name()),
+                format!("accelerator must contain string, got {}", other.type_name()),
                 "Pass None or Some('X').",
                 line,
             )),
@@ -121,9 +121,25 @@ fn optional_char(value: &Value, line: SourceLocation) -> Result<Option<char>, Vm
         other => Err(runtime_error(
             TYPE_MISMATCH_CODE,
             format!(
-                "accelerator must be Option of char, got {}",
+                "accelerator must be Option of string, got {}",
                 other.type_name()
             ),
+            "Pass None or Some('X').",
+            line,
+        )),
+    }
+}
+
+fn optional_char_from_string(s: &str, line: SourceLocation) -> Result<Option<char>, VmError> {
+    if s.is_empty() {
+        return Ok(None);
+    }
+    let mut chars = s.chars();
+    match (chars.next(), chars.next()) {
+        (Some(c), None) => Ok(Some(c)),
+        _ => Err(runtime_error(
+            TYPE_MISMATCH_CODE,
+            format!("accelerator must be a single-character string, got `{s}`"),
             "Pass None or Some('X').",
             line,
         )),

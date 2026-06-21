@@ -223,13 +223,13 @@ end.",
 }
 
 #[test]
-fn case_char_partial_no_else() {
-    // Spec: char is a scalar type — exhaustiveness not required
+fn case_string_single_char_partial_no_else() {
+    // Spec: string is a scalar type — exhaustiveness not required
     let out = compile_and_run(
         "\
 program T;
 begin
-  var C: char := 'Z';
+  var C: string := 'Z';
   case C of
     'A': Std.Console.WriteLn('matched')
   end;

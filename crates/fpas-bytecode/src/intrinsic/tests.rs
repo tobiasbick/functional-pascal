@@ -106,7 +106,6 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Conv(ConvIntrinsic::StrToInt),
     Intrinsic::Conv(ConvIntrinsic::RealToStr),
     Intrinsic::Conv(ConvIntrinsic::StrToReal),
-    Intrinsic::Conv(ConvIntrinsic::CharToStr),
     Intrinsic::Conv(ConvIntrinsic::IntToReal),
     Intrinsic::Conv(ConvIntrinsic::BoolToStr),
     Intrinsic::Conv(ConvIntrinsic::StrToBool),

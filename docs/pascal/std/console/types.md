@@ -11,7 +11,7 @@ Equivalent conceptual declaration:
 ```pascal
 type KeyEvent = record
   kind: KeyKind;
-  ch: char;
+  ch: string;
   shift: boolean;
   ctrl: boolean;
   alt: boolean;
@@ -22,7 +22,7 @@ end;
 | Field | Type | Meaning |
 |-------|------|--------|
 | `kind` | `KeyKind` | Which key (or `Character` / `Unknown`); see below. |
-| `ch` | `char` | For `KeyKind.Character`, the Unicode character; for `KeyKind.Space`, usually `' '`; for most other kinds, often `#0`. |
+| `ch` | `string` | For `KeyKind.Character`, the Unicode character; for `KeyKind.Space`, usually `' '`; for most other kinds, often `''`. |
 | `shift` | `boolean` | Shift held when the event was produced. |
 | `ctrl` | `boolean` | Control held. |
 | `alt` | `boolean` | Alt held. |

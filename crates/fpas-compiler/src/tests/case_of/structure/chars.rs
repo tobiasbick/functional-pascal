@@ -1,12 +1,12 @@
 use super::*;
 
 #[test]
-fn case_char_multiple_arms() {
+fn case_string_multiple_arms() {
     let out = compile_and_run(
         "\
 program T;
 var
-  C: char := 'C';
+  C: string := 'C';
 begin
   case C of
     'A': Std.Console.WriteLn('first');
@@ -21,12 +21,12 @@ end.",
 }
 
 #[test]
-fn case_char_else_fallback() {
+fn case_string_else_fallback() {
     let out = compile_and_run(
         "\
 program T;
 var
-  C: char := 'Z';
+  C: string := 'Z';
 begin
   case C of
     'A': Std.Console.WriteLn('first')
@@ -39,12 +39,12 @@ end.",
 }
 
 #[test]
-fn case_char_no_match_no_else() {
+fn case_string_no_match_no_else() {
     let out = compile_and_run(
         "\
 program T;
 var
-  C: char := 'Z';
+  C: string := 'Z';
 begin
   case C of
     'A': Std.Console.WriteLn('found A')

@@ -290,7 +290,7 @@ pub(super) fn register_host_api(
             p("Height", Ty::Integer, false),
             p("FillColor", Ty::Integer, false),
             p("TextColor", Ty::Option(Box::new(Ty::Integer)), false),
-            p("FillChar", Ty::Option(Box::new(Ty::Char)), false),
+            p("FillChar", Ty::Option(Box::new(Ty::String)), false),
         ],
         types.view_id.clone(),
     );

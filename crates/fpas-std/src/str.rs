@@ -6,7 +6,8 @@
 
 use crate::error::{StdError, std_internal_error, std_runtime_error};
 use crate::intrinsic_args::{
-    pop_array, pop_char, pop_int, pop_string, pop_value, value_as_string_for_join,
+    pad_fill_char, pop_array, pop_int, pop_single_char, pop_string, pop_value,
+    value_as_string_for_join,
 };
 use crate::numeric_text::is_pascal_numeric;
 use fpas_bytecode::{Intrinsic, SourceLocation, StrIntrinsic, Value};
@@ -132,7 +133,8 @@ pub(crate) fn run(
             stack.push(Value::Str(out));
         }
         Intrinsic::Str(StrIntrinsic::PadLeft) => {
-            let pad_char = pop_char(pop_value(stack, location)?, location)?;
+            let pad_fill = pop_string(pop_value(stack, location)?, location)?;
+            let pad_char = pad_fill_char(&pad_fill, location)?;
             let width = pop_int(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
             let width = checked_pad_width(width, "PadLeft", location)?;
@@ -145,7 +147,8 @@ pub(crate) fn run(
             }
         }
         Intrinsic::Str(StrIntrinsic::PadRight) => {
-            let pad_char = pop_char(pop_value(stack, location)?, location)?;
+            let pad_fill = pop_string(pop_value(stack, location)?, location)?;
+            let pad_char = pad_fill_char(&pad_fill, location)?;
             let width = pop_int(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
             let width = checked_pad_width(width, "PadRight", location)?;
@@ -158,7 +161,8 @@ pub(crate) fn run(
             }
         }
         Intrinsic::Str(StrIntrinsic::PadCenter) => {
-            let pad_char = pop_char(pop_value(stack, location)?, location)?;
+            let pad_fill = pop_string(pop_value(stack, location)?, location)?;
+            let pad_char = pad_fill_char(&pad_fill, location)?;
             let width = pop_int(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
             let width = checked_pad_width(width, "PadCenter", location)?;
@@ -176,7 +180,7 @@ pub(crate) fn run(
         }
         Intrinsic::Str(StrIntrinsic::FromChar) => {
             let n = pop_int(pop_value(stack, location)?, location)?;
-            let c = pop_char(pop_value(stack, location)?, location)?;
+            let c = pop_single_char(pop_value(stack, location)?, location)?;
             if n < 0 {
                 return Err(std_runtime_error(
                     RUNTIME_NUMERIC_DOMAIN_ERROR,
@@ -200,10 +204,10 @@ pub(crate) fn run(
                     location,
                 ));
             }
-            stack.push(Value::Char(chars[idx as usize]));
+            stack.push(Value::Str(chars[idx as usize].to_string()));
         }
         Intrinsic::Str(StrIntrinsic::SetCharAt) => {
-            let c = pop_char(pop_value(stack, location)?, location)?;
+            let c = pop_single_char(pop_value(stack, location)?, location)?;
             let idx = pop_int(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
             let mut chars: Vec<char> = s.chars().collect();
@@ -222,7 +226,7 @@ pub(crate) fn run(
             stack.push(Value::Str(chars.into_iter().collect()));
         }
         Intrinsic::Str(StrIntrinsic::Ord) => {
-            let c = pop_char(pop_value(stack, location)?, location)?;
+            let c = pop_single_char(pop_value(stack, location)?, location)?;
             stack.push(Value::Integer(c as i64));
         }
         Intrinsic::Str(StrIntrinsic::Chr) => {
@@ -238,7 +242,7 @@ pub(crate) fn run(
                         location,
                     )
                 })?;
-            stack.push(Value::Char(c));
+            stack.push(Value::Str(c.to_string()));
         }
         Intrinsic::Str(StrIntrinsic::Insert) => {
             let sub = pop_string(pop_value(stack, location)?, location)?;
@@ -429,12 +433,11 @@ fn apply_format(
                 })?;
                 match arg {
                     Value::Str(s) => out.push_str(s),
-                    Value::Char(c) => out.push(*c),
                     _ => {
                         return Err(std_runtime_error(
                             RUNTIME_FORMAT_MISMATCH,
                             format!(
-                                "Format: `%s` expects a string or char, got {}",
+                                "Format: `%s` expects a string, got {}",
                                 value_type_name(arg)
                             ),
                             "Pass a string value for the `%s` specifier.",
@@ -481,7 +484,6 @@ fn value_type_name(v: &Value) -> &'static str {
         Value::Real(_) => "real",
         Value::Boolean(_) => "boolean",
         Value::Str(_) => "string",
-        Value::Char(_) => "char",
         Value::Array(_) => "array",
         Value::Dict(_) => "dict",
         Value::Record { .. } => "record",

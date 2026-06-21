@@ -71,7 +71,14 @@ pub(super) fn key_event_value(ev: ConsoleKeyEvent) -> Value {
         type_name: "Std.Console.KeyEvent".into(),
         fields: vec![
             ("kind".into(), Value::Integer(ev.kind as i64)),
-            ("ch".into(), Value::Char(ev.ch)),
+            (
+                "ch".into(),
+                Value::Str(if ev.ch == '\0' {
+                    String::new()
+                } else {
+                    ev.ch.to_string()
+                }),
+            ),
             ("shift".into(), Value::Boolean(ev.shift)),
             ("ctrl".into(), Value::Boolean(ev.ctrl)),
             ("alt".into(), Value::Boolean(ev.alt)),
@@ -94,7 +101,7 @@ pub(super) fn tui_screen_cell_value(ch: char, fg: i64, bg: i64) -> Value {
     Value::Record {
         type_name: "Std.Tui.ScreenCell".into(),
         fields: vec![
-            ("ch".into(), Value::Char(ch)),
+            ("ch".into(), Value::Str(ch.to_string())),
             ("fg".into(), Value::Integer(fg)),
             ("bg".into(), Value::Integer(bg)),
         ],

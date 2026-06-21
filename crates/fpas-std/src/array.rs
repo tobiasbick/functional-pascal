@@ -28,7 +28,6 @@ fn value_to_sort_key(v: &Value) -> Result<String, String> {
             format!("r:{sortable:020}")
         }
         Value::Str(s) => format!("s:{s}"),
-        Value::Char(c) => format!("c:{c}"),
         Value::Boolean(b) => format!("b:{b}"),
         _ => return Err(format!("cannot sort arrays of {}", v.type_name())),
     })
@@ -56,7 +55,7 @@ pub(crate) fn run(
                     std_runtime_error(
                         RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                         m,
-                        "Use arrays of comparable primitive values (integer, real, string, char, boolean) with Std.Array.Sort.",
+                        "Use arrays of comparable primitive values (integer, real, string, boolean) with Std.Array.Sort.",
                         location,
                     )
                 })?);

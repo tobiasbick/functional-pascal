@@ -75,7 +75,7 @@ Type parameters can be constrained to require specific capabilities from the con
 
 | Constraint | Satisfied by | Description |
 |------------|-------------|-------------|
-| `Comparable` | `integer`, `real`, `boolean`, `char`, `string` | Supports comparison operators: `=`, `<>`, `<`, `>`, `<=`, `>=` |
+| `Comparable` | `integer`, `real`, `boolean`, `string`, `string` | Supports comparison operators: `=`, `<>`, `<`, `>`, `<=`, `>=` |
 | `Numeric` | `integer`, `real` | Supports arithmetic operators: `+`, `-`, `*`, `/`, `div`, `mod` |
 | `Printable` | All types except `function` and `procedure` | Can be converted to a string representation |
 

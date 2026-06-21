@@ -83,12 +83,12 @@ end.",
 }
 
 #[test]
-fn guard_on_char_case() {
+fn guard_on_single_char_string_case() {
     let out = compile_and_run(
         "\
 program T;
 begin
-  var C: char := 'A';
+  var C: string := 'A';
   case C of
     'A' if false:
       Std.Console.WriteLn('guarded');

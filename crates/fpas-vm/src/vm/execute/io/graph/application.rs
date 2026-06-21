@@ -264,11 +264,10 @@ impl Worker {
     fn pop_graph_text(&mut self, line: SourceLocation) -> Result<String, VmError> {
         match self.pop(line)? {
             Value::Str(text) => Ok(text),
-            Value::Char(ch) => Ok(ch.to_string()),
             other => Err(runtime_error(
                 TYPE_MISMATCH_CODE,
-                format!("Expected string or char, got {}", other.type_name()),
-                "Pass a string or single character as `Text` to `Std.Graph.Application.DrawText(App, X, Y, Text, Color)`.",
+                format!("Expected string, got {}", other.type_name()),
+                "Pass a string as `Text` to `Std.Graph.Application.DrawText(App, X, Y, Text, Color)`.",
                 line,
             )),
         }

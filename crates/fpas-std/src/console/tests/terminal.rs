@@ -72,7 +72,7 @@ fn console_tui_paint_defers_terminal_output_until_finish() {
     let (mut c, bytes) = console_with_shared_writer();
 
     c.assign_crt().unwrap();
-    c.write(&Value::Char('A'), test_location()).unwrap();
+    c.write(&Value::Str("A".into()), test_location()).unwrap();
     bytes.lock().unwrap().clear();
 
     c.begin_tui_paint(crate::DamageRegion::Rect(crate::ViewRect {
@@ -82,7 +82,7 @@ fn console_tui_paint_defers_terminal_output_until_finish() {
         height: 1,
     }));
     c.text_color_rgb(255, 64, 0, test_location()).unwrap();
-    c.write(&Value::Char('B'), test_location()).unwrap();
+    c.write(&Value::Str("B".into()), test_location()).unwrap();
 
     assert!(
         bytes.lock().unwrap().is_empty(),
@@ -101,7 +101,7 @@ fn console_tui_paint_unions_host_damage_with_actual_console_mutations() {
     let (mut c, bytes) = console_with_shared_writer();
 
     c.assign_crt().unwrap();
-    c.write(&Value::Char('A'), test_location()).unwrap();
+    c.write(&Value::Str("A".into()), test_location()).unwrap();
     bytes.lock().unwrap().clear();
 
     c.begin_tui_paint(crate::DamageRegion::Rect(crate::ViewRect {
@@ -111,7 +111,7 @@ fn console_tui_paint_unions_host_damage_with_actual_console_mutations() {
         height: 1,
     }));
     c.goto_xy(1, 1, test_location()).unwrap();
-    c.write(&Value::Char('Z'), test_location()).unwrap();
+    c.write(&Value::Str("Z".into()), test_location()).unwrap();
     c.finish_tui_paint(test_location()).unwrap();
 
     let output = String::from_utf8(bytes.lock().unwrap().clone()).unwrap();

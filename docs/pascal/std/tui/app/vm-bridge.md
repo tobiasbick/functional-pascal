@@ -51,7 +51,7 @@ These `[fpas_bytecode::Intrinsic](../../../../../crates/fpas-bytecode/src/intrin
 | `TuiApplicationShowModal`     | `Application`, `integer`, `ViewId`             | Pushes a modal frame anchored to the given root view. The root view is raised, the modal scope becomes that view subtree (plus any explicitly attached extra views), and focus is moved into that scope when possible. Does not push a value.                               |
 | `TuiApplicationShowDialog`    | `Application`, `integer`, `integer`, `integer`, `integer`, `integer` | Registers a new root host view for `x`, `y`, `width`, `height`, shows it as the active modal dialog, and pushes the new root `ViewId`. Closing that modal automatically unregisters the owned root subtree.                                                     |
 | `TuiApplicationCloseModal`    | `Application`                                    | Pops the active modal frame created by `Application.ShowModal`, `Application.ShowDialog`, or `Application.HostEnterModal`. Leaving an empty modal stack is a no-op. Does not push a value.                                                                                     |
-| `TuiHostCreateSolidFillView`  | `Application`, `integer`, `integer`, `integer`, `integer`, `integer`, `Option of integer`, `Option of char` | Registers a host-managed solid-fill widget view from `x`, `y`, `width`, `height`, `FillColor`, optional `TextColor`, and optional `FillChar`. Pushes `ViewId`. |
+| `TuiHostCreateSolidFillView`  | `Application`, `integer`, `integer`, `integer`, `integer`, `integer`, `Option of integer`, `Option of string` | Registers a host-managed solid-fill widget view from `x`, `y`, `width`, `height`, `FillColor`, optional `TextColor`, and optional `FillChar`. Pushes `ViewId`. |
 | `TuiHostCreateMenuBarView`    | `Application`, `integer`, `integer`, `integer`, `integer`, `array of MenuBarItem`, `MenuBarStyle` | Registers a host-managed menu bar widget from geometry and a declarative item model. Pushes `ViewId`. |
 | `TuiHostSetMenuBarItems`      | `Application`, `ViewId`, `array of MenuBarItem` | Replaces the menu bar item model for an existing menu bar widget `ViewId`. Does not push a value. |
 | `TuiHostCreateStatusBarView`  | `Application`, `integer`, `integer`, `integer`, `integer`, `array of StatusBarSegment`, `StatusBarStyle` | Registers a host-managed status bar widget from geometry and a declarative segment model. Pushes `ViewId`. |
@@ -172,7 +172,7 @@ Widget views participate in the same z-order and damage tracking as Pascal `OnVi
 | Field | Type | Meaning |
 | ----- | ---- | ------- |
 | `Label` | `string` | Visible menu text |
-| `Shortcut` | `char` | Alt+letter shortcut (case-insensitive). Use `#0` when none. The matching letter in `Label` is drawn in `MenuBarStyle.AccelFg`. |
+| `Shortcut` | `string` | Alt+letter shortcut (case-insensitive). Use `''` when none. The matching letter in `Label` is drawn in `MenuBarStyle.AccelFg`. |
 | `Enabled` | `boolean` | When `false`, drawn disabled and ignores clicks |
 | `CommandId` | `integer` | Dispatched through `OnCommand` on click; use `-1` for non-clickable labels |
 | `Submenu` | `array of MenuPopupItem` | Pull-down entries. Use `[]` for top-level commands without a submenu. |
@@ -182,7 +182,7 @@ Widget views participate in the same z-order and damage tracking as Pascal `OnVi
 | Field | Type | Meaning |
 | ----- | ---- | ------- |
 | `Label` | `string` | Visible menu text |
-| `Shortcut` | `char` | Letter shortcut while the popup is open. Use `#0` when none. |
+| `Shortcut` | `string` | Letter shortcut while the popup is open. Use `''` when none. |
 | `Enabled` | `boolean` | When `false`, drawn disabled and ignores activation |
 | `CommandId` | `integer` | Dispatched through `OnCommand` on activation |
 | `Separator` | `boolean` | When `true`, draws a horizontal rule and ignores activation. Defaults to `false`. |

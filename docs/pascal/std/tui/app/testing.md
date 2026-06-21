@@ -223,7 +223,7 @@ end.
 
 ```pascal
 type ScreenCell = record
-  ch: char;
+  ch: string;
   fg: integer;   { CRT foreground 0..15 — use Std.Console color constants }
   bg: integer;    { CRT background 0..15 }
 end;

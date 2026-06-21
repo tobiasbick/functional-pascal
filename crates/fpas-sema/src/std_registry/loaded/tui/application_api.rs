@@ -213,6 +213,48 @@ pub(super) fn register_application_api(checker: &mut Checker, types: &TuiTypes) 
     );
     define_func(
         checker,
+        s::STD_TUI_APPLICATION_QUERY_VIEW_STATE,
+        vec![
+            p("App", types.application.clone(), false),
+            p("ViewId", types.view_id.clone(), false),
+        ],
+        types.introspection.view_state.clone(),
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_QUERY_VIEW_OPTIONS,
+        vec![
+            p("App", types.application.clone(), false),
+            p("ViewId", types.view_id.clone(), false),
+        ],
+        types.introspection.view_options.clone(),
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_QUERY_RESOLVED_VIEW,
+        vec![
+            p("App", types.application.clone(), false),
+            p("ViewId", types.view_id.clone(), false),
+        ],
+        types.introspection.resolved_view.clone(),
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_QUERY_VIEW_KIND,
+        vec![
+            p("App", types.application.clone(), false),
+            p("ViewId", types.view_id.clone(), false),
+        ],
+        types.introspection.view_kind.clone(),
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_QUERY_SCENE_GRAPH,
+        vec![p("App", types.application.clone(), false)],
+        Ty::Array(Box::new(types.introspection.view_snapshot.clone())),
+    );
+    define_func(
+        checker,
         s::STD_TUI_APPLICATION_QUERY_MENU_BAR_STATE,
         vec![
             p("App", types.application.clone(), false),

@@ -24,8 +24,8 @@ pub use process::{BlockedInput, FocusDirection, ProcessOutcome};
 pub use session::TuiSession;
 pub use view::{
     DesktopMetrics, EventOutcome, EventPhase, EventRoute, ResolvedView, RootActivation,
-    RoutedEvent, ViewId, ViewOptions, ViewRect, ViewRegistry, ViewState, WindowPalette,
-    WindowShadow,
+    RoutedEvent, TUI_VIEW_KIND_VARIANTS, ViewId, ViewKind, ViewOptions, ViewRect, ViewRegistry,
+    ViewState, WindowPalette, WindowShadow,
 };
 pub use widget::{
     ButtonStyle, ButtonWidget, CheckBoxStyle, CheckBoxWidget, FrameButtonSlots, FrameCapabilities,

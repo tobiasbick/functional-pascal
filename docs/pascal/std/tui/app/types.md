@@ -25,6 +25,31 @@ same local origin.
 | `width` | `integer` | Width in terminal cells. |
 | `height` | `integer` | Height in terminal cells. |
 
+### Scene-graph introspection types
+
+`ViewState` reports the resolved state used by paint, focus, and hit-testing:
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `visible` | `boolean` | The view and all ancestors are visible. |
+| `enabled` | `boolean` | The view accepts input and may hold focus. |
+| `focused` | `boolean` | This view is the focused leaf. |
+| `active` | `boolean` | This view lies on the active focus path. |
+| `exposed` | `boolean` | The view has at least one visible cell after clipping. |
+
+`ViewOptions` reports retained behavior flags: `selectable`, `tabStop`, `preProcess`,
+`postProcess`, and `clipChildren`.
+
+`ResolvedView` contains `rect: Rect`, `clip: Option of Rect`, `state: ViewState`, and
+`options: ViewOptions`. `rect` is absolute and unclipped; `clip` is the effective visible rectangle.
+
+`ViewKind` identifies native content attached to a retained node: `Generic`, `SolidFill`, `MenuBar`,
+`StatusBar`, `Label`, `Button`, `InputLine`, `CheckBox`, or `RadioGroup`. `Generic` means no native
+widget is attached; a Pascal paint handler may still exist.
+
+`ViewSnapshot` contains `id`, `parent`, direct `children`, `resolved`, and `kind`. Arrays returned by
+`QuerySceneGraph` contain these records in back-to-front depth-first paint order.
+
 ### `ExitReason`
 
 Enum describing why the hosted loop stopped (`**Std.Tui.ExitReason`**). **Registry:** the type and variants `**UserQuit**`, `**HostStop`**, `**HostAndUserStop**`, `**HostShutdown**` are registered in [`loaded/tui/`](../../../../../crates/fpas-sema/src/std_registry/loaded/tui/mod.rs) and known to the compiler enum tables. **VM:** [`Application.Run`](../../../../../crates/fpas-vm/src/vm/execute/io/tui_run.rs) records `**last_exit_reason**`, invokes the registered `**OnExit**`, and then performs close semantics. The current hosted loop reports `**UserQuit`** when `**Application.HostRequestQuit(App)`** ends the run, `**HostStop`** when low-level code stops the active hosted session during `**Run`**, `**HostAndUserStop`** when both stop signals are present in the same turn, and `**HostShutdown`** when VM global shutdown is requested while the hosted run is active.

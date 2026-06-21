@@ -108,13 +108,21 @@ View and widget reads:
 | `Application.QueryViewRect(App, ViewId)` | `Rect` |
 | `Application.QueryViewParent(App, ViewId)` | `Option of ViewId` |
 | `Application.QueryViewChildren(App, ViewId)` | `array of ViewId` |
+| `Application.QueryViewState(App, ViewId)` | `ViewState` |
+| `Application.QueryViewOptions(App, ViewId)` | `ViewOptions` |
+| `Application.QueryResolvedView(App, ViewId)` | `ResolvedView` |
+| `Application.QueryViewKind(App, ViewId)` | `ViewKind` |
+| `Application.QuerySceneGraph(App)` | `array of ViewSnapshot` |
 | `Application.QueryMenuBarState(App, ViewId)` | `MenuBarState` |
 
 See [ScreenCell type](#screencell-type-decided) and [MenuBarState type](#menubarstate-type) below.
 
 ### Native testing bytecode discriminants
 
-Reserved range **356..=378** in [`TuiIntrinsic`](../../../../../crates/fpas-bytecode/src/intrinsic/tui.rs). **348..=355** are `Std.Test`; **375..=377** are `Std.Test` screen/view assertions (see [`test.md`](../../testing/test.md)).
+Native test lifecycle and basic queries use **356..=374** in
+[`TuiIntrinsic`](../../../../../crates/fpas-bytecode/src/intrinsic/tui.rs). Scene-graph introspection
+uses **382..=386**. **348..=355**, **375..=378** belong to `Std.Test` (see
+[`test.md`](../../testing/test.md)).
 
 | Discriminant | Pascal surface | Notes |
 | ------------ | -------------- | ----- |
@@ -137,7 +145,11 @@ Reserved range **356..=378** in [`TuiIntrinsic`](../../../../../crates/fpas-byte
 | **372** | `QueryViewParent` | |
 | **373** | `QueryViewChildren` | |
 | **374** | `QueryMenuBarState` | Menu bar widget only |
-| **378** | *(spare)* | |
+| **382** | `QueryViewState` | Resolved retained state |
+| **383** | `QueryViewOptions` | Retained behavior options |
+| **384** | `QueryResolvedView` | Geometry, clip, state, options |
+| **385** | `QueryViewKind` | Native widget kind |
+| **386** | `QuerySceneGraph` | Consistent full-tree snapshot |
 
 ### Headless test flow (example)
 
@@ -188,6 +200,7 @@ end.
 | [`tui_menu_hover_test.fpas`](../../../../tests/tui/tui_menu_hover_test.fpas) | Capstone: bar hover + submenu selection |
 | [`tui_show_dialog_test.fpas`](../../../../tests/tui/tui_show_dialog_test.fpas) | `ShowDialog`, modal Escape, `HostSetActiveModalResult`, owned-root cleanup |
 | [`tui_view_clip_test.fpas`](../../../../tests/tui/tui_view_clip_test.fpas) | Effective clip during view-local paint |
+| [`tui_scene_graph_query_test.fpas`](../../../../tests/tui/tui_scene_graph_query_test.fpas) | Scene structure, state, options, clip, kind, and paint order |
 
 ### ScreenCell type (decided)
 

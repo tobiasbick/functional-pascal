@@ -26,7 +26,7 @@ pub use menu_popup::MenuPopupItem;
 pub use solid_fill::SolidFillWidget;
 pub use status_bar::{StatusBarSegment, StatusBarStyle, StatusBarWidget};
 
-use crate::{Console, DamageRegion, ViewRect};
+use crate::{Console, DamageRegion, ViewKind, ViewRect};
 
 /// Native widget attached to a host-managed view.
 ///
@@ -52,6 +52,21 @@ pub enum ViewWidget {
 }
 
 impl ViewWidget {
+    /// Return the stable introspection kind for this native widget.
+    #[must_use]
+    pub fn kind(&self) -> ViewKind {
+        match self {
+            Self::SolidFill(_) => ViewKind::SolidFill,
+            Self::MenuBar(_) => ViewKind::MenuBar,
+            Self::StatusBar(_) => ViewKind::StatusBar,
+            Self::Label(_) => ViewKind::Label,
+            Self::Button(_) => ViewKind::Button,
+            Self::InputLine(_) => ViewKind::InputLine,
+            Self::CheckBox(_) => ViewKind::CheckBox,
+            Self::RadioGroup(_) => ViewKind::RadioGroup,
+        }
+    }
+
     /// Paint the widget into `rect`, clipped to `damage`.
     pub fn paint(&self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
         match self {

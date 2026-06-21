@@ -84,9 +84,9 @@ pub use tui::{
     MenuBarMouseResult, MenuBarState, MenuBarStyle, MenuBarWidget, MenuPopupItem, ModalClose,
     ModalId, ModalResult, ModalStack, ProcessOutcome, RadioGroupStyle, RadioGroupWidget,
     RadioOption, ResolvedView, RootActivation, RoutedEvent, SolidFillWidget, StatusBarSegment,
-    StatusBarStyle, StatusBarWidget, TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent,
-    TuiHost, TuiSession, ViewId, ViewOptions, ViewRect, ViewRegistry, ViewState, ViewWidget,
-    WindowPalette, WindowShadow, register_framed_dialog_root,
+    StatusBarStyle, StatusBarWidget, TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS,
+    TUI_VIEW_KIND_VARIANTS, TuiEvent, TuiHost, TuiSession, ViewId, ViewKind, ViewOptions, ViewRect,
+    ViewRegistry, ViewState, ViewWidget, WindowPalette, WindowShadow, register_framed_dialog_root,
 };
 pub use ui::{UiEvent, UiHost, UiHostSurface, UiModifiers, UiMouse, UiResize, UiWheel};
 

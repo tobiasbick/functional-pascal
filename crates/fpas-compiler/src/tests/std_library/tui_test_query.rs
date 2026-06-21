@@ -20,6 +20,11 @@ begin
   var ViewRect: Rect := Application.QueryViewRect(App, V);
   var Parent: Option of ViewId := Application.QueryViewParent(App, V);
   var Children: array of ViewId := Application.QueryViewChildren(App, V);
+  var ViewStateSnapshot: ViewState := Application.QueryViewState(App, V);
+  var ViewOptionsSnapshot: ViewOptions := Application.QueryViewOptions(App, V);
+  var Resolved: ResolvedView := Application.QueryResolvedView(App, V);
+  var Kind: ViewKind := Application.QueryViewKind(App, V);
+  var Scene: array of ViewSnapshot := Application.QuerySceneGraph(App);
   var MenuState: MenuBarState := Application.QueryMenuBarState(App, V);
   Application.CloseForTest(App)
 end.",

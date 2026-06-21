@@ -386,6 +386,36 @@ pub enum TuiIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui/app/README.md`
     QueryMenuBarState = 374,
+    /// Read resolved state flags for a registered view.
+    ///
+    /// Stack: `Application`, `ViewId` (`ViewId` on top). Pushes `ViewState`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui/app/views.md`
+    QueryViewState = 382,
+    /// Read behavior options for a registered view.
+    ///
+    /// Stack: `Application`, `ViewId` (`ViewId` on top). Pushes `ViewOptions`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui/app/views.md`
+    QueryViewOptions = 383,
+    /// Read resolved geometry, clip, state, and options for a registered view.
+    ///
+    /// Stack: `Application`, `ViewId` (`ViewId` on top). Pushes `ResolvedView`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui/app/views.md`
+    QueryResolvedView = 384,
+    /// Read the native widget kind attached to a registered view.
+    ///
+    /// Stack: `Application`, `ViewId` (`ViewId` on top). Pushes `ViewKind`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui/app/views.md`
+    QueryViewKind = 385,
+    /// Snapshot the full retained scene graph in paint order.
+    ///
+    /// Stack: `Application`. Pushes `array of ViewSnapshot`.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui/app/views.md`
+    QuerySceneGraph = 386,
     // **375..=377** are `Std.Test` screen/view assertions; **378** is `Std.Test.PushReadLn` (see `TestIntrinsic`).
     // Note: **348..=355** are owned by `Std.Test` (`TestIntrinsic`).
 }

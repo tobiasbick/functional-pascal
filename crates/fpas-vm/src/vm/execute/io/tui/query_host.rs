@@ -6,7 +6,7 @@ use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use fpas_bytecode::{Intrinsic, SourceLocation, TuiIntrinsic, Value};
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
-use fpas_std::ViewId;
+use fpas_std::{ViewId, ViewKind};
 
 impl Worker {
     /// Executes read-only native TUI query intrinsics.
@@ -81,6 +81,66 @@ impl Worker {
                         .collect::<Vec<_>>()
                 });
                 self.push(Value::Array(children))?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::QueryViewState) => {
+                let view_id = self.pop_query_view_id(line)?;
+                self.pop_tui_application(line)?;
+                let view = self
+                    .with_tui(|tui| tui.views.resolved(view_id))
+                    .ok_or_else(|| {
+                        query_view_introspection_error("QueryViewState", view_id, line)
+                    })?;
+                self.push(Self::tui_view_state_record(view.state))?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::QueryViewOptions) => {
+                let view_id = self.pop_query_view_id(line)?;
+                self.pop_tui_application(line)?;
+                let options = self
+                    .with_tui(|tui| tui.views.options(view_id))
+                    .ok_or_else(|| {
+                        query_view_introspection_error("QueryViewOptions", view_id, line)
+                    })?;
+                self.push(Self::tui_view_options_record(options))?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::QueryResolvedView) => {
+                let view_id = self.pop_query_view_id(line)?;
+                self.pop_tui_application(line)?;
+                let view = self
+                    .with_tui(|tui| tui.views.resolved(view_id))
+                    .ok_or_else(|| {
+                        query_view_introspection_error("QueryResolvedView", view_id, line)
+                    })?;
+                self.push(Self::tui_resolved_view_record(view))?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::QueryViewKind) => {
+                let view_id = self.pop_query_view_id(line)?;
+                self.pop_tui_application(line)?;
+                let kind = self.with_tui(|tui| {
+                    tui.view_widgets
+                        .get(&view_id)
+                        .map_or(ViewKind::Generic, fpas_std::ViewWidget::kind)
+                });
+                self.push(Self::tui_view_kind_value(kind))?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::QuerySceneGraph) => {
+                self.pop_tui_application(line)?;
+                let snapshots = self.with_tui(|tui| {
+                    tui.views
+                        .paint_order()
+                        .into_iter()
+                        .filter_map(|view_id| {
+                            let view = tui.views.resolved(view_id)?;
+                            let parent = tui.views.parent(view_id);
+                            let children = tui.views.children(view_id);
+                            let kind = tui
+                                .view_widgets
+                                .get(&view_id)
+                                .map_or(ViewKind::Generic, fpas_std::ViewWidget::kind);
+                            Some(Self::tui_view_snapshot_record(view, parent, children, kind))
+                        })
+                        .collect::<Vec<_>>()
+                });
+                self.push(Value::Array(snapshots))?;
             }
             Intrinsic::Tui(TuiIntrinsic::QueryMenuBarState) => {
                 let view_id = self.pop_query_view_id(line)?;
@@ -190,6 +250,22 @@ fn query_menu_bar_state_error(view_id: ViewId, line: SourceLocation) -> VmError 
             view_id.raw()
         ),
         "Pass the view id returned by `Application.HostCreateMenuBarView`.",
+        line,
+    )
+}
+
+fn query_view_introspection_error(
+    operation: &str,
+    view_id: ViewId,
+    line: SourceLocation,
+) -> VmError {
+    runtime_error(
+        RUNTIME_CONSOLE_STATE_ERROR,
+        format!(
+            "Application.{operation}(App, {}) could not resolve the registered view.",
+            view_id.raw()
+        ),
+        "Pass a live view handle returned by `Application.HostRegisterView`, `Application.ShowDialog`, or a host widget constructor.",
         line,
     )
 }

@@ -87,6 +87,55 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::QueryViewChildren), location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_QUERY_VIEW_STATE => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_QUERY_VIEW_STATE, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::QueryViewState), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_QUERY_VIEW_OPTIONS => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_QUERY_VIEW_OPTIONS,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::QueryViewOptions), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_QUERY_RESOLVED_VIEW => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_QUERY_RESOLVED_VIEW,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::QueryResolvedView), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_QUERY_VIEW_KIND => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_QUERY_VIEW_KIND, 2, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::QueryViewKind), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_QUERY_SCENE_GRAPH => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_QUERY_SCENE_GRAPH,
+                    1,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::QuerySceneGraph), location);
+                Ok(true)
+            }
             s::STD_TUI_APPLICATION_QUERY_MENU_BAR_STATE => {
                 self.expect_exact_args(
                     s::STD_TUI_APPLICATION_QUERY_MENU_BAR_STATE,

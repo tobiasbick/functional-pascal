@@ -38,6 +38,9 @@ macro_rules! std_tui {
         concat!("Std.Tui.", $suffix)
     };
 }
+
+mod tui_introspection;
+pub use tui_introspection::*;
 macro_rules! std_graph {
     ($suffix:literal) => {
         concat!("Std.Graph.", $suffix)

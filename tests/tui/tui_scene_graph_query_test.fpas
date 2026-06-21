@@ -1,0 +1,72 @@
+program TuiSceneGraphQueryTest;
+
+uses Std.Console, Std.Tui, Std.Test, Std.Array;
+
+begin
+  var App: Application := Application.OpenForTest(20, 10);
+  var Root: ViewId := Application.HostRegisterView(App, 1, 1, 10, 6);
+  var FillView: ViewId := Application.HostCreateSolidFillView(App, 0, 0, 8, 4, Blue, None, None);
+  Application.HostSetViewParent(App, FillView, Some(Root));
+  Application.HostSetViewRect(App, FillView, 1, 1, 8, 4);
+  var Control: ViewId := Application.HostRegisterView(App, 0, 0, 3, 1);
+  Application.HostSetViewParent(App, Control, Some(Root));
+  Application.HostSetViewRect(App, Control, 2, 2, 3, 1);
+  Application.HostPushChildView(App, Control);
+  var Options: ViewOptions := Application.QueryViewOptions(App, Control);
+  AssertTrue(Options.selectable);
+  AssertTrue(Options.tabStop);
+  AssertFalse(Options.preProcess);
+  AssertFalse(Options.postProcess);
+  AssertTrue(Options.clipChildren);
+  var Resolved: ResolvedView := Application.QueryResolvedView(App, Control);
+  AssertEquals(3, Resolved.rect.x);
+  AssertEquals(3, Resolved.rect.y);
+  AssertEquals(3, Resolved.rect.width);
+  case Resolved.clip of
+    Some(Clip):
+    begin
+      AssertEquals(3, Clip.x);
+      AssertEquals(3, Clip.y);
+      AssertEquals(3, Clip.width);
+      AssertEquals(1, Clip.height)
+    end;
+    None:
+    begin
+      Fail('expected exposed control clip')
+    end
+  end;
+  AssertTrue(Application.QueryViewKind(App, Root) = ViewKind.Generic);
+  AssertTrue(Application.QueryViewKind(App, FillView) = ViewKind.SolidFill);
+  Application.TestClickMouse(App, 4, 4);
+  Application.TestPumpUntilIdle(App);
+  var ControlState: ViewState := Application.QueryViewState(App, Control);
+  AssertTrue(ControlState.visible);
+  AssertTrue(ControlState.enabled);
+  AssertTrue(ControlState.focused);
+  AssertTrue(ControlState.active);
+  AssertTrue(ControlState.exposed);
+  var RootState: ViewState := Application.QueryViewState(App, Root);
+  AssertFalse(RootState.focused);
+  AssertTrue(RootState.active);
+  var Scene: array of ViewSnapshot := Application.QuerySceneGraph(App);
+  AssertEquals(3, Length(Scene));
+  AssertTrue(Scene[0].id = Root);
+  AssertTrue(Scene[1].id = FillView);
+  AssertTrue(Scene[2].id = Control);
+  AssertTrue(Scene[1].kind = ViewKind.SolidFill);
+  AssertTrue(Scene[2].resolved.state.focused);
+  AssertEquals(2, Length(Scene[0].children));
+  AssertTrue(Scene[0].children[0] = FillView);
+  AssertTrue(Scene[0].children[1] = Control);
+  case Scene[2].parent of
+    Some(Parent):
+    begin
+      AssertTrue(Parent = Root)
+    end;
+    None:
+    begin
+      Fail('expected control parent')
+    end
+  end;
+  Application.CloseForTest(App)
+end.

@@ -99,9 +99,17 @@ Read-only introspection (headless tests and debugging):
 | `QueryViewRect` | Absolute `Rect` |
 | `QueryViewParent` | `Option of ViewId` |
 | `QueryViewChildren` | Direct children in sibling order |
+| `QueryViewState` | Resolved visibility, enabled, focus, active, and exposure flags |
+| `QueryViewOptions` | Selectability, Tab, routing, and child-clipping options |
+| `QueryResolvedView` | Absolute rect, effective clip, state, and options |
+| `QueryViewKind` | Native widget kind or `Generic` |
+| `QuerySceneGraph` | Full `array of ViewSnapshot` in paint order |
 | `QueryFocusedViewId` | Focused leaf or `None` |
 
-See [Native testing](testing.md#screen-and-view-introspection-query--implemented).
+The single-view queries require a live registered `ViewId`. `QuerySceneGraph` takes one consistent
+read-only snapshot while holding the TUI state lock and includes hidden and fully clipped nodes.
+See [Types](types.md#scene-graph-introspection-types) and
+[Native testing](testing.md#screen-and-view-introspection-query--implemented).
 
 ## Active windows (retained engine)
 

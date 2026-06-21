@@ -147,7 +147,7 @@ pub(crate) fn emit_designator(emitter: &mut Emitter, designator: &Designator) {
                 if index > 0 {
                     match &designator.parts[index - 1] {
                         DesignatorPart::Ident(..) => emitter.write("."),
-                        DesignatorPart::Index(..) => {}
+                        DesignatorPart::Index(..) => emitter.write("."),
                     }
                 }
                 emitter.write(name);
@@ -408,6 +408,10 @@ mod tests {
         assert_eq!(
             expr_from_body("program T; begin var X: boolean := not true; end."),
             "not true"
+        );
+        assert_eq!(
+            expr_from_body("program T; begin var X: integer := Scene[0].resolved.rect.x; end."),
+            "Scene[0].resolved.rect.x"
         );
     }
 

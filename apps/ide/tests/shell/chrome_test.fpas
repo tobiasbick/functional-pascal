@@ -1,0 +1,32 @@
+program IdeShellChromeTest;
+
+uses Ide.Dialog, Ide.Shell, Ide.Theme, Std.Array, Std.Console, Std.Str, Std.Tui, Std.Test;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  AttachChrome(App);
+  Application.RequestRedraw(App);
+  Application.TestPump(App);
+  var MenuLine: string := Application.QueryScreenLine(App, 1);
+  AssertTrue(Std.Str.Contains(MenuLine, 'File'));
+  AssertTrue(Std.Str.Contains(MenuLine, 'Help'));
+  var DesktopCell: ScreenCell := Application.QueryScreenCell(App, 40, 13);
+  AssertEquals(DesktopBg, DesktopCell.bg);
+  var StatusLine: string := Application.QueryScreenLine(App, 25);
+  AssertTrue(Std.Str.Contains(StatusLine, 'F10 Menu'));
+  AssertTrue(Std.Str.Contains(StatusLine, 'Ln 1, Col 1'));
+  var Roots: array of ViewId := Application.QueryRootViews(App);
+  AssertEquals(3, Std.Array.Length(Roots));
+  Application.TestResize(App, 100, 30);
+  Application.TestPumpUntilIdle(App);
+  var ResizedSize: Size := Application.QueryScreenSize(App);
+  AssertEquals(100, ResizedSize.width);
+  AssertEquals(30, ResizedSize.height);
+  var ResizedStatusLine: string := Application.QueryScreenLine(App, 30);
+  AssertTrue(Std.Str.Contains(ResizedStatusLine, 'F10 Menu'));
+  OpenAbout(App);
+  Application.TestPump(App);
+  AssertTrue(IsOpen());
+  AssertEquals(1, Application.QueryModalDepth(App));
+  Application.CloseForTest(App)
+end.

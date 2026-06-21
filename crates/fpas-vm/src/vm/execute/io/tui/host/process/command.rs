@@ -6,8 +6,19 @@ use fpas_bytecode::{SourceLocation, Value};
 use fpas_std::{CommandEvent, ProcessOutcome};
 
 impl Worker {
-    /// Resolves a key through focused-view ancestors, the active modal, and global bindings.
-    pub(super) fn resolve_tui_command(
+    /// Resolves a key against `HostBindCommandToActiveModal` for the top modal frame.
+    pub(super) fn resolve_tui_modal_command(
+        &self,
+        key: &fpas_std::ConsoleKeyEvent,
+    ) -> Option<CommandEvent> {
+        let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+        tui.modals
+            .resolve_active_command(key)
+            .map(|command_id| CommandEvent::application(command_id, tui.modals.active_root_view()))
+    }
+
+    /// Resolves view-local and global command bindings (not modal-local).
+    pub(super) fn resolve_tui_scoped_command(
         &self,
         key: &fpas_std::ConsoleKeyEvent,
     ) -> Option<CommandEvent> {
@@ -20,13 +31,6 @@ impl Worker {
                     return Some(CommandEvent::application(command_id, Some(view_id)));
                 }
             }
-        }
-
-        if let Some(command_id) = tui.modals.resolve_active_command(key) {
-            return Some(CommandEvent::application(
-                command_id,
-                tui.modals.active_root_view(),
-            ));
         }
 
         tui.commands

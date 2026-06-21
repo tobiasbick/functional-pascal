@@ -1,0 +1,26 @@
+program IdeMenuTest;
+
+uses Ide.Menu, Ide.Theme, Std.Array, Std.Test;
+
+begin
+  var Items: array of MenuBarItem := DefaultItems();
+  AssertEquals(9, Std.Array.Length(Items));
+  AssertTrue(Items[0].Label = 'File');
+  AssertTrue(Items[0].Shortcut = 'F');
+  AssertTrue(Items[8].Label = 'Help');
+  AssertTrue(Items[8].Shortcut = 'H');
+  var FileItems: array of MenuPopupItem := FileSubmenu();
+  AssertEquals(4, Std.Array.Length(FileItems));
+  AssertTrue(FileItems[0].Separator = false);
+  AssertTrue(FileItems[2].Separator = true);
+  AssertTrue(FileItems[3].Label = 'Exit');
+  AssertEquals(CmdFileExit, FileItems[3].CommandId);
+  var HelpItems: array of MenuPopupItem := HelpSubmenu();
+  AssertEquals(1, Std.Array.Length(HelpItems));
+  AssertTrue(HelpItems[0].Label = 'About...');
+  AssertEquals(CmdHelpAbout, HelpItems[0].CommandId);
+  var Style: MenuBarStyle := DefaultStyle();
+  AssertEquals(MenuBarBg, Style.BarBg);
+  AssertEquals(MenuBarFg, Style.BarFg);
+  AssertEquals(MenuBarAccelFg, Style.AccelFg)
+end.

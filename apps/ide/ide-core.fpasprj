@@ -1,0 +1,10 @@
+[project]
+name = "ide-core"
+kind = "library"
+
+[exports]
+units = ["Ide.Shell", "Ide.Menu", "Ide.Status", "Ide.Theme", "Ide.Dialog"]
+
+[sources]
+include = ["src/**/*.fpas"]
+exclude = ["src/main.fpas"]

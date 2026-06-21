@@ -67,11 +67,14 @@ impl Worker {
         if let Some(tag) = self.try_dispatch_widget_key(key_event.clone(), modal_scope, line)? {
             return Ok(tag);
         }
-        if let Some(command_id) = self.resolve_tui_command(&key_event) {
+        if let Some(command) = self.resolve_tui_modal_command(&key_event) {
+            return self.dispatch_tui_command(command, line);
+        }
+        if let Some(command) = self.resolve_tui_scoped_command(&key_event) {
             if self.modal_blocks_keyboard_dispatch(modal_scope) {
                 return Ok(ProcessOutcome::Blocked(BlockedInput::Command));
             }
-            return self.dispatch_tui_command(command_id, line);
+            return self.dispatch_tui_command(command, line);
         }
         if self.modal_blocks_keyboard_dispatch(modal_scope) {
             return Ok(ProcessOutcome::Blocked(BlockedInput::Key));

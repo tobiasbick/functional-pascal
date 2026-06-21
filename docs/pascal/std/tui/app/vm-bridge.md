@@ -129,7 +129,7 @@ See [Modals and dialogs](modals.md) for the full guide. Summary:
 
 `Application.HostBindCommandToActiveModal` binds shortcuts for the top modal frame only. Enter/Escape dismissal is wired through modal-local command bindings and `OnCommand` until dedicated default/cancel host APIs ship.
 
-When a modal scope is active, Tab / Shift+Tab traversal is limited to scoped views, mouse events outside scoped rectangles are suppressed, and key / command dispatch is blocked while focus is outside the scope.
+When a modal scope is active, Tab / Shift+Tab traversal is limited to scoped views, mouse events outside scoped rectangles are suppressed, and view-local or global key / command dispatch is blocked while focus is outside the scope. `HostBindCommandToActiveModal` bindings always dispatch.
 
 ### Host view handles
 

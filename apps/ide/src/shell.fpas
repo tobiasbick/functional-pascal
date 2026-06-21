@@ -135,11 +135,10 @@ begin
   Application.RequestRedraw(App)
 end;
 
-/// Open the terminal session, run the hosted TUI loop, and restore the terminal on exit.
+/// Wire IDE chrome and handlers onto an existing session (headless tests via `OpenForTest`).
 
-procedure Run();
+procedure AttachChrome(App: Application);
 begin
-  var App: Application := Application.Open();
   BindShortcuts(App);
   EnsureChrome(App);
   var Handlers: ApplicationHandlers := record
@@ -148,6 +147,14 @@ begin
     OnResize := Some(OnResize);
     OnCommand := Some(OnCommand);
   end;
-  Application.Configure(App, Handlers);
+  Application.Configure(App, Handlers)
+end;
+
+/// Open the terminal session, run the hosted TUI loop, and restore the terminal on exit.
+
+procedure Run();
+begin
+  var App: Application := Application.Open();
+  AttachChrome(App);
   Application.Run(App)
 end;

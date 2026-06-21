@@ -1,0 +1,62 @@
+program IdeDialogTest;
+
+uses Ide.Dialog, Std.Console, Std.Str, Std.Tui, Std.Test;
+
+procedure OnPaint(App: Application);
+begin
+end;
+
+procedure OnCommand(App: Application; CommandId: integer);
+begin
+  HandleCommand(App, CommandId)
+end;
+
+procedure OnMouse(App: Application; Event: Std.Console.Event);
+begin
+  HandleMouse(App, Event)
+end;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+    OnMouse := Some(OnMouse);
+    OnCommand := Some(OnCommand);
+  end;
+  Application.Configure(App, Handlers);
+  AssertFalse(IsOpen());
+  AssertEquals(0, Application.QueryModalDepth(App));
+  OpenAbout(App);
+  Application.TestPump(App);
+  AssertTrue(IsOpen());
+  AssertEquals(1, Application.QueryModalDepth(App));
+  var FrameCorner: ScreenCell := Application.QueryScreenCell(App, 21, 9);
+  AssertTrue(FrameCorner.ch = '┌');
+  var EscapeKey: Std.Console.KeyEvent := record
+    kind := Std.Console.KeyKind.Escape;
+    ch := Std.Str.Chr(27);
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end;
+  Application.TestSendKey(App, EscapeKey);
+  Application.TestPump(App);
+  AssertFalse(IsOpen());
+  AssertEquals(0, Application.QueryModalDepth(App));
+  OpenAbout(App);
+  Application.TestPump(App);
+  var EnterKey: Std.Console.KeyEvent := record
+    kind := Std.Console.KeyKind.Enter;
+    ch := Std.Str.Chr(13);
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end;
+  Application.TestSendKey(App, EnterKey);
+  Application.TestPump(App);
+  AssertFalse(IsOpen());
+  AssertEquals(0, Application.QueryModalDepth(App));
+  Application.CloseForTest(App)
+end.

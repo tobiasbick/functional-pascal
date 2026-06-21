@@ -3,5 +3,8 @@ name = "ide"
 kind = "program"
 main = "src/main.fpas"
 
+[dependencies]
+workspace = ["ide-core"]
+
 [sources]
-include = ["src/**/*.fpas"]
+include = ["src/main.fpas"]

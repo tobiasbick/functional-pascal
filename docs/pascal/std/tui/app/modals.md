@@ -144,7 +144,7 @@ While a modal frame is active and has one or more scoped views:
 | --- | --- |
 | Tab / Shift+Tab | Traversal limited to views inside the modal scope |
 | Mouse | Events outside scoped rectangles are suppressed |
-| Keys / commands | Blocked when focus is outside the modal scope |
+| Keys / commands | View-local and global bindings are blocked when focus is outside the modal scope; `HostBindCommandToActiveModal` bindings always dispatch |
 | Menu bar | Only menu bars inside the active modal scope receive keyboard/mouse routing |
 
 `Application.HostAttachViewToActiveModal(App, ViewId)` adds views outside the root subtree to the scope (for example a shared menu bar that must stay reachable).

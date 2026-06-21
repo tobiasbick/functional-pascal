@@ -1,0 +1,27 @@
+program IdeShellAboutEscapeTest;
+
+uses Ide.Dialog, Ide.Shell, Std.Console, Std.Str, Std.Tui, Std.Test;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  AttachChrome(App);
+  Application.RequestRedraw(App);
+  Application.TestPump(App);
+  OpenAbout(App);
+  Application.TestPump(App);
+  AssertTrue(IsOpen());
+  AssertEquals(1, Application.QueryModalDepth(App));
+  var EscapeKey: Std.Console.KeyEvent := record
+    kind := Std.Console.KeyKind.Escape;
+    ch := Std.Str.Chr(27);
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end;
+  Application.TestSendKey(App, EscapeKey);
+  Application.TestPump(App);
+  AssertFalse(IsOpen());
+  AssertEquals(0, Application.QueryModalDepth(App));
+  Application.CloseForTest(App)
+end.

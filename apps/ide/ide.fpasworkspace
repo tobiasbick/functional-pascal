@@ -1,0 +1,7 @@
+[workspace]
+name = "ide"
+members = [
+  "ide-core.fpasprj",
+  "ide.fpasprj",
+  "tests/ide-tests.fpasprj",
+]

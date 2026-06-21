@@ -123,6 +123,33 @@ impl Worker {
                 };
                 self.stack.push(record);
             }
+            TuiIntrinsic::HostCascadeFrameRoots => {
+                let step_y = self.pop_int(line)?;
+                let step_x = self.pop_int(line)?;
+                self.pop_tui_application(line)?;
+                let count = self.with_tui(|tui| {
+                    let exclude = tui
+                        .modals
+                        .active_root_view()
+                        .into_iter()
+                        .collect::<Vec<_>>();
+                    tui.views
+                        .cascade_frame_roots_excluding(&exclude, step_x, step_y)
+                });
+                self.stack.push(Value::Integer(count as i64));
+            }
+            TuiIntrinsic::HostTileFrameRoots => {
+                self.pop_tui_application(line)?;
+                let count = self.with_tui(|tui| {
+                    let exclude = tui
+                        .modals
+                        .active_root_view()
+                        .into_iter()
+                        .collect::<Vec<_>>();
+                    tui.views.tile_frame_roots_excluding(&exclude)
+                });
+                self.stack.push(Value::Integer(count as i64));
+            }
             _ => return Ok(false),
         }
         Ok(true)

@@ -36,6 +36,12 @@ impl Compiler {
             s::STD_TUI_APPLICATION_QUERY_FRAME_ROOT_STATE => {
                 (2, TuiIntrinsic::QueryFrameRootState, true)
             }
+            s::STD_TUI_APPLICATION_HOST_CASCADE_FRAME_ROOTS => {
+                (3, TuiIntrinsic::HostCascadeFrameRoots, true)
+            }
+            s::STD_TUI_APPLICATION_HOST_TILE_FRAME_ROOTS => {
+                (1, TuiIntrinsic::HostTileFrameRoots, true)
+            }
             _ => return Ok(false),
         };
         self.expect_exact_args(name, arity, args, location)?;

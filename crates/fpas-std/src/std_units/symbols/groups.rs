@@ -250,6 +250,8 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_APPLICATION_HOST_ZOOM_FRAME_ROOT,
     std_symbols::STD_TUI_APPLICATION_HOST_RESTORE_FRAME_ROOT,
     std_symbols::STD_TUI_APPLICATION_QUERY_FRAME_ROOT_STATE,
+    std_symbols::STD_TUI_APPLICATION_HOST_CASCADE_FRAME_ROOTS,
+    std_symbols::STD_TUI_APPLICATION_HOST_TILE_FRAME_ROOTS,
 ];
 
 pub(in super::super) const STD_GRAPH_SYMBOLS: &[&str] = &[

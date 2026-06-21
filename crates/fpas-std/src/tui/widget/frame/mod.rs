@@ -10,6 +10,7 @@ mod geometry;
 mod hit;
 mod interaction;
 mod kind;
+mod layout;
 mod root;
 mod state;
 

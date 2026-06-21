@@ -72,4 +72,20 @@ pub(super) fn register(checker: &mut Checker, types: &TuiTypes) {
         ],
         types.controls.frame_root_state.clone(),
     );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_CASCADE_FRAME_ROOTS,
+        vec![
+            p("App", types.application.clone(), false),
+            p("StepX", Ty::Integer, false),
+            p("StepY", Ty::Integer, false),
+        ],
+        Ty::Integer,
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_TILE_FRAME_ROOTS,
+        vec![p("App", types.application.clone(), false)],
+        Ty::Integer,
+    );
 }

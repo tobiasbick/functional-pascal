@@ -15,3 +15,7 @@ pub const STD_TUI_APPLICATION_HOST_RESTORE_FRAME_ROOT: &str =
     std_tui!("Application.HostRestoreFrameRoot");
 pub const STD_TUI_APPLICATION_QUERY_FRAME_ROOT_STATE: &str =
     std_tui!("Application.QueryFrameRootState");
+pub const STD_TUI_APPLICATION_HOST_CASCADE_FRAME_ROOTS: &str =
+    std_tui!("Application.HostCascadeFrameRoots");
+pub const STD_TUI_APPLICATION_HOST_TILE_FRAME_ROOTS: &str =
+    std_tui!("Application.HostTileFrameRoots");

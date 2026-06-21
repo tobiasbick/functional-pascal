@@ -482,6 +482,10 @@ pub enum TuiIntrinsic {
     HostRestoreFrameRoot = 414,
     /// Query frame-root geometry and capability state.
     QueryFrameRootState = 415,
+    /// Cascade window-kind frame roots inside the desktop work area.
+    HostCascadeFrameRoots = 416,
+    /// Tile window-kind frame roots across the desktop work area.
+    HostTileFrameRoots = 417,
     // **375..=377** are `Std.Test` screen/view assertions; **378** is `Std.Test.PushReadLn` (see `TestIntrinsic`).
     // Note: **348..=355** are owned by `Std.Test` (`TestIntrinsic`).
 }

@@ -1,0 +1,61 @@
+program TuiSceneGraphEdgeCasesTest;
+
+uses Std.Console, Std.Tui, Std.Test, Std.Array;
+
+begin
+  var App: Application := Application.OpenForTest(20, 10);
+  var EmptyScene: array of ViewSnapshot := Application.QuerySceneGraph(App);
+  AssertEquals(0, Length(EmptyScene));
+  var FirstRoot: ViewId := Application.HostRegisterView(App, 1, 1, 8, 6);
+  var SecondRoot: ViewId := Application.HostRegisterView(App, 12, 1, 5, 5);
+  var Child: ViewId := Application.HostRegisterView(App, 0, 0, 5, 4);
+  Application.HostSetViewParent(App, Child, Some(FirstRoot));
+  Application.HostSetViewRect(App, Child, 1, 1, 5, 4);
+  var Grandchild: ViewId := Application.HostRegisterView(App, 0, 0, 2, 2);
+  Application.HostSetViewParent(App, Grandchild, Some(Child));
+  Application.HostSetViewRect(App, Grandchild, 1, 1, 2, 2);
+  var ClippedChild: ViewId := Application.HostRegisterView(App, 0, 0, 2, 2);
+  Application.HostSetViewParent(App, ClippedChild, Some(FirstRoot));
+  Application.HostSetViewRect(App, ClippedChild, 20, 20, 2, 2);
+  var Scene: array of ViewSnapshot := Application.QuerySceneGraph(App);
+  AssertEquals(5, Length(Scene));
+  AssertTrue(Scene[0].id = FirstRoot);
+  AssertTrue(Scene[1].id = Child);
+  AssertTrue(Scene[2].id = Grandchild);
+  AssertTrue(Scene[3].id = ClippedChild);
+  AssertTrue(Scene[4].id = SecondRoot);
+  AssertEquals(2, Length(Scene[0].children));
+  AssertTrue(Scene[0].children[0] = Child);
+  AssertTrue(Scene[0].children[1] = ClippedChild);
+  AssertEquals(1, Length(Scene[1].children));
+  AssertTrue(Scene[1].children[0] = Grandchild);
+  case Scene[0].parent of
+    Some(UnexpectedParent):
+    begin
+      Fail('root must not have a parent')
+    end;
+    None:
+    begin
+    end
+  end;
+  AssertEquals(3, Scene[2].resolved.rect.x);
+  AssertEquals(3, Scene[2].resolved.rect.y);
+  AssertTrue(Scene[3].resolved.state.visible);
+  AssertTrue(Scene[3].resolved.state.enabled);
+  AssertFalse(Scene[3].resolved.state.exposed);
+  case Scene[3].resolved.clip of
+    Some(UnexpectedClip):
+    begin
+      Fail('fully clipped child must not have an effective clip')
+    end;
+    None:
+    begin
+    end
+  end;
+  var ThirdRoot: ViewId := Application.HostRegisterView(App, 0, 9, 1, 1);
+  AssertEquals(5, Length(Scene));
+  AssertEquals(6, Length(Application.QuerySceneGraph(App)));
+  AssertTrue(Scene[4].id = SecondRoot);
+  AssertTrue(Application.QueryViewKind(App, ThirdRoot) = ViewKind.Generic);
+  Application.CloseForTest(App)
+end.

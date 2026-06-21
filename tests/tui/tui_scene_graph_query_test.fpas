@@ -2,6 +2,33 @@ program TuiSceneGraphQueryTest;
 
 uses Std.Console, Std.Tui, Std.Test, Std.Array;
 
+function EmptyMenuItems(): array of MenuBarItem;
+begin
+  return []
+end;
+
+function TestMenuStyle(): MenuBarStyle;
+begin
+  return record
+    BarBg := LightGray;
+    BarFg := Black;
+    AccelFg := Red;
+    HighlightBg := Black;
+    HighlightFg := LightGray;
+    DisabledFg := DarkGray;
+  end
+end;
+
+function EmptyStatusSegments(): array of StatusBarSegment;
+begin
+  return []
+end;
+
+function TestStatusStyle(): StatusBarStyle;
+begin
+  return record BarBg := LightGray; BarFg := Black; end
+end;
+
 begin
   var App: Application := Application.OpenForTest(20, 10);
   var Root: ViewId := Application.HostRegisterView(App, 1, 1, 10, 6);
@@ -22,6 +49,14 @@ begin
   AssertEquals(3, Resolved.rect.x);
   AssertEquals(3, Resolved.rect.y);
   AssertEquals(3, Resolved.rect.width);
+  AssertEquals(1, Resolved.rect.height);
+  AssertTrue(Resolved.state.visible);
+  AssertTrue(Resolved.state.enabled);
+  AssertFalse(Resolved.state.focused);
+  AssertFalse(Resolved.state.active);
+  AssertTrue(Resolved.state.exposed);
+  AssertTrue(Resolved.options.selectable);
+  AssertTrue(Resolved.options.tabStop);
   case Resolved.clip of
     Some(Clip):
     begin
@@ -37,6 +72,12 @@ begin
   end;
   AssertTrue(Application.QueryViewKind(App, Root) = ViewKind.Generic);
   AssertTrue(Application.QueryViewKind(App, FillView) = ViewKind.SolidFill);
+  var MenuBar: ViewId := Application.HostCreateMenuBarView(App, 0, 0, 20, 1, EmptyMenuItems(), TestMenuStyle());
+  var StatusBar: ViewId := Application.HostCreateStatusBarView(App, 0, 9, 20, 1, EmptyStatusSegments(), TestStatusStyle());
+  AssertTrue(Application.QueryViewKind(App, MenuBar) = ViewKind.MenuBar);
+  AssertTrue(Application.QueryViewKind(App, StatusBar) = ViewKind.StatusBar);
+  Application.HostUnregisterView(App, MenuBar);
+  Application.HostUnregisterView(App, StatusBar);
   Application.TestClickMouse(App, 4, 4);
   Application.TestPumpUntilIdle(App);
   var ControlState: ViewState := Application.QueryViewState(App, Control);

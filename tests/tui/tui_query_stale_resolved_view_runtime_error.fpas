@@ -1,0 +1,10 @@
+program TuiQueryStaleResolvedViewRuntimeError;
+
+uses Std.Tui;
+
+begin
+  var App: Application := Application.OpenForTest(10, 5);
+  var View: ViewId := Application.HostRegisterView(App, 0, 0, 1, 1);
+  Application.HostUnregisterView(App, View);
+  var Resolved: ResolvedView := Application.QueryResolvedView(App, View)
+end.

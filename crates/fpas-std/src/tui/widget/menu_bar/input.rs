@@ -302,6 +302,49 @@ impl MenuBarWidget {
         }
     }
 
+    /// Open the pull-down for the currently hovered top-level item, when one exists.
+    pub fn open_hovered_submenu(&mut self) -> MenuBarMouseResult {
+        let Some(index) = self.hovered else {
+            return MenuBarMouseResult::Ignored;
+        };
+        let Some(item) = self.items.get(index).filter(|item| item.enabled) else {
+            return MenuBarMouseResult::Ignored;
+        };
+        if !has_submenu(item) {
+            return MenuBarMouseResult::Ignored;
+        }
+        if self
+            .open_submenu
+            .is_some_and(|open| open.bar_index == index)
+        {
+            return MenuBarMouseResult::Ignored;
+        }
+        self.open_submenu_at(index)
+    }
+
+    /// Clear hover, open submenu, and menu-mode flags after terminal focus loss.
+    pub fn clear_transient_pointer_state(&mut self) -> bool {
+        let changed = self.hovered.is_some() || self.open_submenu.is_some() || self.menu_active;
+        self.hovered = None;
+        self.open_submenu = None;
+        self.menu_active = false;
+        changed
+    }
+
+    /// Clear hover and any open pull-down when the pointer leaves the bar and popups.
+    pub fn clear_pointer_hover_outside(&mut self, bar_rect: ViewRect, mouse: UiMouse) -> bool {
+        if self.contains_point(bar_rect, mouse.x, mouse.y) {
+            return false;
+        }
+        let changed = self.hovered.is_some() || self.open_submenu.is_some();
+        self.hovered = None;
+        self.open_submenu = None;
+        if changed {
+            self.menu_active = false;
+        }
+        changed
+    }
+
     fn hover_submenu_entry(
         &mut self,
         bar_index: usize,

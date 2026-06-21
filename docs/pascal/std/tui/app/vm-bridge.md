@@ -205,9 +205,12 @@ During hosted mouse dispatch, the host evaluates events in this order:
 
 1. Resolve a typed retained route from pointer capture or the topmost enabled clipped view.
 2. **Modal scope** suppression when no routed target belongs to the active modal.
-3. Move focus on pointer-down when the target is selectable.
-4. **Menu bar widget** routing, including open popup rectangles. Menu bars take priority over other host widgets underneath the pointer, but only widgets inside the active modal scope are eligible.
-5. **`OnMouse`** when registered.
+3. **Menu bar widget** routing, including open popup rectangles. Menu bars take priority over other host widgets underneath the pointer, but only widgets inside the active modal scope are eligible.
+4. Move focus on pointer-down when the target is selectable.
+5. Retained **control** widgets (buttons, inputs, list boxes, …) on pointer-down or wheel.
+6. **`OnMouse`** when registered.
+
+When the terminal gains focus while a menu-bar item is already hovered, the host opens that item's pull-down on the same activation path used for a bar click (integrated terminals often deliver focus before the first mouse-down). Terminal focus loss clears menu-bar hover and open pull-down state.
 
 Terminal focus loss and view removal release pointer capture. Capture continues routing pointer
 events to its owner outside the original hit rectangle until released.

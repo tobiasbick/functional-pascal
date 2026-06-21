@@ -1,0 +1,71 @@
+program TuiMenuFocusClickTest;
+
+uses Std.Console, Std.Tui, Std.Test;
+
+function FileSubmenu(): array of MenuPopupItem;
+begin
+  return [
+           record Label := 'Exit'; Shortcut := 'X'; Enabled := true; CommandId := 1; Separator := false; end
+
+         ]
+end;
+
+function MenuItems(): array of MenuBarItem;
+begin
+  return [
+           record
+
+             Label := 'File';
+
+             Shortcut := 'F';
+
+             Enabled := true;
+
+             CommandId := -1;
+
+             Submenu := FileSubmenu();
+
+           end
+
+         ]
+end;
+
+function MenuStyle(): MenuBarStyle;
+begin
+  return record
+    BarBg := LightGray;
+    BarFg := Black;
+    AccelFg := Red;
+    HighlightBg := Black;
+    HighlightFg := LightGray;
+    DisabledFg := DarkGray;
+  end
+end;
+
+procedure OnPaint(App: Application);
+begin
+end;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  var MenuBar: ViewId := Application.HostCreateMenuBarView(App, 0, 0, 80, 1, MenuItems(), MenuStyle());
+  var Desktop: ViewId := Application.HostCreateSolidFillView(App, 0, 1, 80, 24, Blue, None, None);
+  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
+  Application.Configure(App, Handlers);
+  Application.TestPump(App);
+  Application.TestMoveMouse(App, 2, 1);
+  Application.TestPump(App);
+  var Hover: MenuBarState := Application.QueryMenuBarState(App, MenuBar);
+  AssertEquals(0, Hover.hoveredIndex);
+  Application.TestFocus(App, true);
+  Application.TestPumpUntilIdle(App);
+  var Open: MenuBarState := Application.QueryMenuBarState(App, MenuBar);
+  AssertTrue(Open.submenuOpen);
+  AssertEquals(0, Open.selectedEntry);
+  Application.TestMoveMouse(App, 40, 13);
+  Application.TestPump(App);
+  var Cleared: MenuBarState := Application.QueryMenuBarState(App, MenuBar);
+  AssertEquals(-1, Cleared.hoveredIndex);
+  AssertFalse(Cleared.submenuOpen);
+  Application.CloseForTest(App)
+end.

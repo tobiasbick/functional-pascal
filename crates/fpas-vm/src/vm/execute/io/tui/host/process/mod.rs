@@ -104,18 +104,28 @@ impl Worker {
                     )
                 }
             }
-            UiEvent::FocusGained => self.dispatch_console_event_handler(
-                on_focus_gained,
-                [app_rec, Self::console_focus_gained_event_record()],
-                Some(self.focused_view_redraw_hint()),
-                DispatchOutcomes {
-                    hit: ProcessOutcome::FocusGained { handled: true },
-                    miss: ProcessOutcome::FocusGained { handled: false },
-                },
-                line,
-            ),
+            UiEvent::FocusGained => {
+                let outcome = self.dispatch_console_event_handler(
+                    on_focus_gained,
+                    [app_rec, Self::console_focus_gained_event_record()],
+                    Some(self.focused_view_redraw_hint()),
+                    DispatchOutcomes {
+                        hit: ProcessOutcome::FocusGained { handled: true },
+                        miss: ProcessOutcome::FocusGained { handled: false },
+                    },
+                    line,
+                )?;
+                if self
+                    .try_activate_menu_bar_on_focus_gained(modal_scope.as_deref(), line)?
+                    .is_some()
+                {
+                    return Ok(ProcessOutcome::Pointer { handled: true });
+                }
+                Ok(outcome)
+            }
             UiEvent::FocusLost => {
                 self.with_tui(|tui| tui.views.release_pointer());
+                self.clear_menu_bar_pointer_state(modal_scope.as_deref(), line)?;
                 self.dispatch_console_event_handler(
                     on_focus_lost,
                     [app_rec, Self::console_focus_lost_event_record()],

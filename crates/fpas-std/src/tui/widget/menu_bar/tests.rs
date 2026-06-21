@@ -174,6 +174,34 @@ fn menu_bar_submenu_mouse_move_changes_selection() {
 }
 
 #[test]
+fn menu_bar_open_hovered_submenu_opens_pull_down() {
+    let mut widget = MenuBarWidget::new(vec![file_item()], MenuBarStyle::default());
+    let _ = widget.handle_mouse(
+        bar_rect(),
+        UiMouse::new(mouse_action_index("Move"), 1, 2, 1, Default::default()),
+    );
+    assert_eq!(
+        widget.open_hovered_submenu(),
+        MenuBarMouseResult::HoverChanged
+    );
+    assert!(widget.query_state().submenu_open);
+}
+
+#[test]
+fn menu_bar_clear_pointer_hover_outside_clears_bar_highlight() {
+    let mut widget = MenuBarWidget::new(vec![file_item()], MenuBarStyle::default());
+    let _ = widget.handle_mouse(
+        bar_rect(),
+        UiMouse::new(mouse_action_index("Move"), 1, 2, 1, Default::default()),
+    );
+    assert!(widget.clear_pointer_hover_outside(
+        bar_rect(),
+        UiMouse::new(mouse_action_index("Move"), 1, 2, 5, Default::default()),
+    ));
+    assert_eq!(widget.query_state().hovered_index, -1);
+}
+
+#[test]
 fn menu_bar_click_dispatches_command() {
     let mut widget = MenuBarWidget::new(
         vec![MenuBarItem {

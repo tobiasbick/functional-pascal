@@ -46,3 +46,12 @@ fn wrapped_record_literal() {
         include_str!("golden/wrapped_record.expected.fpas"),
     );
 }
+
+#[test]
+fn wrapped_parenthesized_comparisons_preserve_full_expression() {
+    common::assert_golden(
+        "wrapped_parenthesized_comparisons",
+        "program T; begin var InsideHorizontalBounds: boolean := (MouseEvent.mouse_x > ButtonBounds.x) and (MouseEvent.mouse_x <= ButtonBounds.x + ButtonBounds.width); end.",
+        "program T;\n\nbegin\n  var InsideHorizontalBounds: boolean := (MouseEvent.mouse_x > ButtonBounds.x) and\n                                         (MouseEvent.mouse_x <= ButtonBounds.x + ButtonBounds.width)\nend.\n",
+    );
+}

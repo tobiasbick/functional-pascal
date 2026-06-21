@@ -22,10 +22,12 @@ pub(crate) fn emit_expr(emitter: &mut Emitter, expr: &Expr, min_prec: u8) {
 fn emit_expr_impl(emitter: &mut Emitter, expr: &Expr, min_prec: u8, allow_wrap: bool) {
     if allow_wrap {
         let base_column = emitter.column();
-        if let Some(break_expr) = find_binary_break(expr) {
+        if matches!(expr, Expr::BinaryOp { .. }) {
             let rendered = measure_emit(|inner| emit_expr_impl(inner, expr, 0, false));
             if exceeds_width(base_column, text_width(&rendered)) {
-                emit_binary_with_break(emitter, break_expr, base_column);
+                // The break emitter must receive the complete expression so no surrounding
+                // operators or parentheses are discarded when a nested operator has lower precedence.
+                emit_binary_with_break(emitter, expr, base_column);
                 return;
             }
         }
@@ -247,31 +249,6 @@ fn write_block_at_column(emitter: &mut Emitter, column: usize, text: &str) {
     }
 }
 
-fn find_binary_break<'a>(expr: &'a Expr) -> Option<&'a Expr> {
-    let mut best: Option<(&'a Expr, u8)> = None;
-    scan_binary_break(expr, &mut best);
-    best.map(|(node, _)| node)
-}
-
-fn scan_binary_break<'a>(expr: &'a Expr, best: &mut Option<(&'a Expr, u8)>) {
-    match expr {
-        Expr::BinaryOp {
-            op, left, right, ..
-        } => {
-            let prec = binary_prec(*op);
-            match best {
-                None => *best = Some((expr, prec)),
-                Some((_, best_prec)) if prec < *best_prec => *best = Some((expr, prec)),
-                _ => {}
-            }
-            scan_binary_break(left, best);
-            scan_binary_break(right, best);
-        }
-        Expr::Paren(inner, ..) => scan_binary_break(inner, best),
-        _ => {}
-    }
-}
-
 fn emit_binary_with_break(emitter: &mut Emitter, expr: &Expr, base_column: usize) {
     let Expr::BinaryOp {
         op, left, right, ..
@@ -285,7 +262,6 @@ fn emit_binary_with_break(emitter: &mut Emitter, expr: &Expr, base_column: usize
     let op_token = binary_op_spaced(*op).trim();
     emitter.write(" ");
     emitter.write(op_token);
-    emitter.write("\n");
     emitter.newline_to_column(base_column);
     emit_expr_impl(emitter, right, prec, false);
 }

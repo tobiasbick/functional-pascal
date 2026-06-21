@@ -45,7 +45,7 @@ begin
   AssertFalse(Options.preProcess);
   AssertFalse(Options.postProcess);
   AssertTrue(Options.clipChildren);
-  var Resolved: ResolvedView := Application.QueryResolvedView(App, Control);
+  mutable var Resolved: ResolvedView := Application.QueryResolvedView(App, Control);
   AssertEquals(3, Resolved.rect.x);
   AssertEquals(3, Resolved.rect.y);
   AssertEquals(3, Resolved.rect.width);
@@ -80,16 +80,16 @@ begin
   Application.HostUnregisterView(App, StatusBar);
   Application.TestClickMouse(App, 4, 4);
   Application.TestPumpUntilIdle(App);
-  var ControlState: ViewState := Application.QueryViewState(App, Control);
+  mutable var ControlState: ViewState := Application.QueryViewState(App, Control);
   AssertTrue(ControlState.visible);
   AssertTrue(ControlState.enabled);
   AssertTrue(ControlState.focused);
   AssertTrue(ControlState.active);
   AssertTrue(ControlState.exposed);
-  var RootState: ViewState := Application.QueryViewState(App, Root);
+  mutable var RootState: ViewState := Application.QueryViewState(App, Root);
   AssertFalse(RootState.focused);
   AssertTrue(RootState.active);
-  var Scene: array of ViewSnapshot := Application.QuerySceneGraph(App);
+  mutable var Scene: array of ViewSnapshot := Application.QuerySceneGraph(App);
   AssertEquals(3, Length(Scene));
   AssertTrue(Scene[0].id = Root);
   AssertTrue(Scene[1].id = FillView);
@@ -109,5 +109,64 @@ begin
       Fail('expected control parent')
     end
   end;
+  Application.HostSetViewEnabled(App, Control, false);
+  ControlState := Application.QueryViewState(App, Control);
+  AssertFalse(ControlState.enabled);
+  AssertFalse(ControlState.focused);
+  AssertFalse(ControlState.active);
+  case Application.QueryFocusedViewId(App) of
+    Some(UnexpectedFocus):
+    begin
+      Fail('disabled focused view must release focus')
+    end;
+    None:
+    begin
+    end
+  end;
+  Scene := Application.QuerySceneGraph(App);
+  AssertFalse(Scene[2].resolved.state.enabled);
+  AssertFalse(Scene[2].resolved.state.focused);
+  Application.TestClickMouse(App, 4, 4);
+  Application.TestPumpUntilIdle(App);
+  ControlState := Application.QueryViewState(App, Control);
+  AssertFalse(ControlState.focused);
+  Application.HostSetViewEnabled(App, Control, true);
+  Application.TestClickMouse(App, 4, 4);
+  Application.TestPumpUntilIdle(App);
+  ControlState := Application.QueryViewState(App, Control);
+  AssertTrue(ControlState.enabled);
+  AssertTrue(ControlState.focused);
+  Application.HostSetViewVisible(App, Root, false);
+  RootState := Application.QueryViewState(App, Root);
+  ControlState := Application.QueryViewState(App, Control);
+  AssertFalse(RootState.visible);
+  AssertFalse(RootState.exposed);
+  AssertFalse(ControlState.visible);
+  AssertFalse(ControlState.focused);
+  AssertFalse(ControlState.exposed);
+  Resolved := Application.QueryResolvedView(App, Control);
+  case Resolved.clip of
+    Some(UnexpectedClip):
+    begin
+      Fail('hidden child must not have an effective clip')
+    end;
+    None:
+    begin
+    end
+  end;
+  Scene := Application.QuerySceneGraph(App);
+  AssertEquals(3, Length(Scene));
+  AssertFalse(Scene[0].resolved.state.visible);
+  AssertFalse(Scene[2].resolved.state.visible);
+  Application.HostSetViewVisible(App, Root, true);
+  RootState := Application.QueryViewState(App, Root);
+  ControlState := Application.QueryViewState(App, Control);
+  AssertTrue(RootState.visible);
+  AssertTrue(ControlState.visible);
+  AssertTrue(ControlState.exposed);
+  var Stale: ViewId := Application.HostRegisterView(App, 0, 0, 1, 1);
+  Application.HostUnregisterView(App, Stale);
+  Application.HostSetViewVisible(App, Stale, false);
+  Application.HostSetViewEnabled(App, Stale, false);
   Application.CloseForTest(App)
 end.

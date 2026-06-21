@@ -247,6 +247,8 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Tui(TuiIntrinsic::HostAttachViewToActiveModal),
     Intrinsic::Tui(TuiIntrinsic::HostSetViewRect),
     Intrinsic::Tui(TuiIntrinsic::HostSetViewParent),
+    Intrinsic::Tui(TuiIntrinsic::HostSetViewVisible),
+    Intrinsic::Tui(TuiIntrinsic::HostSetViewEnabled),
     Intrinsic::Tui(TuiIntrinsic::HostRegisterOnViewPaint),
     Intrinsic::Tui(TuiIntrinsic::ApplicationShowModal),
     Intrinsic::Tui(TuiIntrinsic::ApplicationCloseModal),

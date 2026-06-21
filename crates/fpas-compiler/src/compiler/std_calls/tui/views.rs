@@ -96,6 +96,38 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostSetViewParent), location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_HOST_SET_VIEW_VISIBLE => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_SET_VIEW_VISIBLE,
+                    3,
+                    args,
+                    location,
+                )?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(
+                    Intrinsic::Tui(TuiIntrinsic::HostSetViewVisible),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_HOST_SET_VIEW_ENABLED => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_SET_VIEW_ENABLED,
+                    3,
+                    args,
+                    location,
+                )?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(
+                    Intrinsic::Tui(TuiIntrinsic::HostSetViewEnabled),
+                    location,
+                );
+                Ok(true)
+            }
             s::STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT => {
                 self.expect_exact_args(
                     s::STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT,

@@ -25,6 +25,8 @@ begin
   var Resolved: ResolvedView := Application.QueryResolvedView(App, V);
   var Kind: ViewKind := Application.QueryViewKind(App, V);
   var Scene: array of ViewSnapshot := Application.QuerySceneGraph(App);
+  Application.HostSetViewVisible(App, V, false);
+  Application.HostSetViewEnabled(App, V, false);
   var MenuState: MenuBarState := Application.QueryMenuBarState(App, V);
   Application.CloseForTest(App)
 end.",

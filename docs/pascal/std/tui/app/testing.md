@@ -115,13 +115,20 @@ View and widget reads:
 | `Application.QuerySceneGraph(App)` | `array of ViewSnapshot` |
 | `Application.QueryMenuBarState(App, ViewId)` | `MenuBarState` |
 
+Retained state controls used by headless tests:
+
+| Pascal call | Effect |
+| ----------- | ------ |
+| `Application.HostSetViewVisible(App, ViewId, Visible)` | Controls resolved visibility, clipping, painting, and focus eligibility |
+| `Application.HostSetViewEnabled(App, ViewId, Enabled)` | Controls input and focus eligibility for one view |
+
 See [ScreenCell type](#screencell-type-decided) and [MenuBarState type](#menubarstate-type) below.
 
 ### Native testing bytecode discriminants
 
 Native test lifecycle and basic queries use **356..=374** in
-[`TuiIntrinsic`](../../../../../crates/fpas-bytecode/src/intrinsic/tui.rs). Scene-graph introspection
-uses **382..=386**. **348..=355**, **375..=378** belong to `Std.Test` (see
+[`TuiIntrinsic`](../../../../../crates/fpas-bytecode/src/intrinsic/tui.rs). Scene-graph state APIs
+use **382..=388**. **348..=355**, **375..=378** belong to `Std.Test` (see
 [`test.md`](../../testing/test.md)).
 
 | Discriminant | Pascal surface | Notes |
@@ -150,6 +157,8 @@ uses **382..=386**. **348..=355**, **375..=378** belong to `Std.Test` (see
 | **384** | `QueryResolvedView` | Geometry, clip, state, options |
 | **385** | `QueryViewKind` | Native widget kind |
 | **386** | `QuerySceneGraph` | Consistent full-tree snapshot |
+| **387** | `HostSetViewVisible` | Retained visibility flag |
+| **388** | `HostSetViewEnabled` | Retained input/focus flag |
 
 ### Headless test flow (example)
 

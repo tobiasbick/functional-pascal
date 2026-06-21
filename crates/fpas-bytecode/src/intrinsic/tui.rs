@@ -416,6 +416,18 @@ pub enum TuiIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/tui/app/views.md`
     QuerySceneGraph = 386,
+    /// Set whether a retained view and its descendants are visible.
+    ///
+    /// Stack: `Application`, `ViewId`, `Visible` (`boolean`, top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui/app/views.md`
+    HostSetViewVisible = 387,
+    /// Set whether a retained view accepts input and focus.
+    ///
+    /// Stack: `Application`, `ViewId`, `Enabled` (`boolean`, top). Does not push a value.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui/app/views.md`
+    HostSetViewEnabled = 388,
     // **375..=377** are `Std.Test` screen/view assertions; **378** is `Std.Test.PushReadLn` (see `TestIntrinsic`).
     // Note: **348..=355** are owned by `Std.Test` (`TestIntrinsic`).
 }

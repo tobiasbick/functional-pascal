@@ -254,6 +254,24 @@ pub(super) fn register_host_api(
     );
     define_proc(
         checker,
+        s::STD_TUI_APPLICATION_HOST_SET_VIEW_VISIBLE,
+        vec![
+            p("App", types.application.clone(), false),
+            p("ViewId", types.view_id.clone(), false),
+            p("Visible", Ty::Boolean, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_SET_VIEW_ENABLED,
+        vec![
+            p("App", types.application.clone(), false),
+            p("ViewId", types.view_id.clone(), false),
+            p("Enabled", Ty::Boolean, false),
+        ],
+    );
+    define_proc(
+        checker,
         s::STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT,
         vec![
             p("App", types.application.clone(), false),

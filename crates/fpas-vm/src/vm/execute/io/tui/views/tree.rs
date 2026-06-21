@@ -95,6 +95,30 @@ impl Worker {
                     }
                 });
             }
+            TuiIntrinsic::HostSetViewVisible => {
+                let visible = self.pop_bool(line)?;
+                let view_id = self.pop_tui_view_id(line)?;
+                self.pop_tui_application(line)?;
+                self.with_tui(|tui| {
+                    let previous_rects = Self::subtree_screen_rects(tui, view_id);
+                    if tui.views.set_visible(view_id, visible) {
+                        let next_rects = Self::subtree_screen_rects(tui, view_id);
+                        Self::request_rect_redraws(tui, &previous_rects, &next_rects, line);
+                    }
+                });
+            }
+            TuiIntrinsic::HostSetViewEnabled => {
+                let enabled = self.pop_bool(line)?;
+                let view_id = self.pop_tui_view_id(line)?;
+                self.pop_tui_application(line)?;
+                self.with_tui(|tui| {
+                    let previous_rects = Self::subtree_screen_rects(tui, view_id);
+                    if tui.views.set_enabled(view_id, enabled) {
+                        let next_rects = Self::subtree_screen_rects(tui, view_id);
+                        Self::request_rect_redraws(tui, &previous_rects, &next_rects, line);
+                    }
+                });
+            }
             TuiIntrinsic::HostRegisterOnViewPaint => {
                 let func = self.pop(line)?;
                 let view_id = self.pop_tui_view_id(line)?;

@@ -2,7 +2,7 @@
 
 Retained view tree, coordinates, clipping, focus traversal, and paint order for hosted `Std.Tui` applications.
 
-Intrinsic reference: [VM bridge](vm-bridge.md) — `HostRegisterView`, `HostSetViewParent`, `HostSetViewRect`, `HostPushChildView`, `HostRegisterOnViewPaint`, and host widget constructors.
+Intrinsic reference: [VM bridge](vm-bridge.md) — `HostRegisterView`, `HostSetViewParent`, `HostSetViewRect`, `HostSetViewVisible`, `HostSetViewEnabled`, `HostPushChildView`, `HostRegisterOnViewPaint`, and host widget constructors.
 
 ## View handles
 
@@ -24,6 +24,20 @@ Each view has:
 Root views use **absolute terminal coordinates**. After reparenting, `HostSetViewRect` interprets `X` and `Y` **relative to the parent**. Reparenting preserves the current absolute rectangle; only subsequent rect updates use parent-relative coords.
 
 `Width` and `Height` must be greater than zero for registration, widget creation, and `HostSetViewRect`.
+
+## View state mutation
+
+`Application.HostSetViewVisible(App, ViewId, Visible)` changes the retained visibility flag. A hidden
+view and all its descendants resolve as `visible = false`, have no effective clip, cannot receive
+focus or pointer input, and remain present in `QuerySceneGraph`. Restoring visibility is still
+subject to ancestor visibility and clipping.
+
+`Application.HostSetViewEnabled(App, ViewId, Enabled)` changes whether that view accepts input and
+focus. Disabling the focused view immediately clears focus. The flag applies to the specified node;
+it does not rewrite descendant flags.
+
+Both calls update retained state immediately and request redraws for the affected subtree. As with
+the other `HostSetView*` mutators, an unknown or unregistered `ViewId` is ignored.
 
 ## Resolved geometry and clipping
 

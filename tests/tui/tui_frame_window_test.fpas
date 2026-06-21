@@ -1,0 +1,103 @@
+program TuiFrameWindowTest;
+
+uses Std.Console, Std.Tui, Std.Test, Std.Str;
+
+const
+  FrameKindWindow: integer := 0;
+  CmdNextWindow: integer := -1;
+
+procedure OnPaint(App: Application);
+begin
+end;
+
+function PlainKey(Kind: KeyKind): KeyEvent;
+begin
+  return record
+    kind := Kind;
+    ch := Std.Str.Chr(0);
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+function MouseDown(X: integer; Y: integer): Event;
+begin
+  return record
+    kind := Std.Console.EventKind.Mouse;
+    key := PlainKey(KeyKind.Unknown);
+    mouse_action := MouseAction.Down;
+    mouse_button := MouseButton.Left;
+    mouse_x := X;
+    mouse_y := Y;
+    width := 0;
+    height := 0;
+    text := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+function MouseUp(X: integer; Y: integer): Event;
+begin
+  return record
+    kind := Std.Console.EventKind.Mouse;
+    key := PlainKey(KeyKind.Unknown);
+    mouse_action := MouseAction.Up;
+    mouse_button := MouseButton.Left;
+    mouse_x := X;
+    mouse_y := Y;
+    width := 0;
+    height := 0;
+    text := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
+  Application.Configure(App, Handlers);
+  AssertTrue(Application.HostSetDesktopWorkArea(App, 0, 0, 80, 25));
+  var Back: ViewId := Application.HostCreateFrameRootView(App, 2, 2, 20, 8, FrameKindWindow, true, false, false, false);
+  var Front: ViewId := Application.HostCreateFrameRootView(App, 30, 4, 20, 8, FrameKindWindow, true, false, true, false);
+  Application.RequestRedraw(App);
+  Application.TestPumpUntilIdle(App);
+  mutable var State: FrameRootState := Application.QueryFrameRootState(App, Front);
+  AssertEquals(30, State.x);
+  AssertEquals(4, State.y);
+  AssertFalse(State.zoomed);
+  Application.TestSendMouse(App, MouseDown(35, 5));
+  Application.TestMoveMouse(App, 39, 8);
+  Application.TestSendMouse(App, MouseUp(39, 8));
+  Application.TestPumpUntilIdle(App);
+  State := Application.QueryFrameRootState(App, Front);
+  AssertEquals(34, State.x);
+  AssertEquals(7, State.y);
+  AssertTrue(Application.HostZoomFrameRoot(App, Front));
+  Application.TestPumpUntilIdle(App);
+  State := Application.QueryFrameRootState(App, Front);
+  AssertTrue(State.zoomed);
+  AssertEquals(0, State.x);
+  AssertEquals(80, State.width);
+  AssertTrue(Application.HostRestoreFrameRoot(App, Front));
+  Application.TestPumpUntilIdle(App);
+  State := Application.QueryFrameRootState(App, Front);
+  AssertFalse(State.zoomed);
+  AssertEquals(34, State.x);
+  Application.HostBindCommand(App, PlainKey(KeyKind.F6), CmdNextWindow);
+  Application.TestSendKey(App, PlainKey(KeyKind.F6));
+  Application.TestPumpUntilIdle(App);
+  State := Application.QueryFrameRootState(App, Back);
+  AssertEquals(2, State.x);
+  AssertTrue(Application.HostActivateNextWindow(App));
+  State := Application.QueryFrameRootState(App, Front);
+  AssertEquals(34, State.x);
+  Application.CloseForTest(App)
+end.

@@ -141,6 +141,7 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_LIST_BOX_STATE,
     std_symbols::STD_TUI_SCROLL_BAR_STATE,
     std_symbols::STD_TUI_SCROLL_VIEW_STATE,
+    std_symbols::STD_TUI_FRAME_ROOT_STATE,
     std_symbols::STD_TUI_MENU_BAR_STATE,
     std_symbols::STD_TUI_EVENT,
     std_symbols::STD_TUI_EVENT_KIND,
@@ -243,6 +244,12 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_APPLICATION_HOST_CREATE_SCROLL_VIEW,
     std_symbols::STD_TUI_APPLICATION_HOST_SET_SCROLL_VIEW_LINES,
     std_symbols::STD_TUI_APPLICATION_QUERY_SCROLL_VIEW_STATE,
+    std_symbols::STD_TUI_APPLICATION_HOST_SET_DESKTOP_WORK_AREA,
+    std_symbols::STD_TUI_APPLICATION_HOST_CREATE_FRAME_ROOT_VIEW,
+    std_symbols::STD_TUI_APPLICATION_HOST_ACTIVATE_NEXT_WINDOW,
+    std_symbols::STD_TUI_APPLICATION_HOST_ZOOM_FRAME_ROOT,
+    std_symbols::STD_TUI_APPLICATION_HOST_RESTORE_FRAME_ROOT,
+    std_symbols::STD_TUI_APPLICATION_QUERY_FRAME_ROOT_STATE,
 ];
 
 pub(in super::super) const STD_GRAPH_SYMBOLS: &[&str] = &[

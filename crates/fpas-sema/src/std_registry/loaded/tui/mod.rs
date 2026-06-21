@@ -8,6 +8,7 @@
 mod application_api;
 mod control_api;
 mod control_types;
+mod frame_api;
 mod handlers;
 mod host_api;
 mod introspection_types;
@@ -238,5 +239,6 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
     };
     application_api::register_application_api(checker, &types);
     control_api::register(checker, &types);
+    frame_api::register(checker, &types);
     host_api::register_host_api(checker, &types, &callbacks);
 }

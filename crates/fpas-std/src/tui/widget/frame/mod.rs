@@ -20,6 +20,7 @@ pub use geometry::{
     FrameButtonSlots, FrameCapabilities, FrameContentSize, FrameGeometry, FrameGeometryError,
     FrameScrollbars,
 };
+pub use hit::FrameChromeHit;
 pub use kind::FrameKind;
 pub use root::{FrameRoot, FrameRootSpec, FramedDialogRoot, register_framed_dialog_root};
 pub use state::{FrameResizeEdge, FrameRootState, WindowInteraction};

@@ -30,6 +30,13 @@ pub enum CommandKind {
     Cancel,
 }
 
+/// Reserved host command id that activates the next window root.
+pub const COMMAND_ID_NEXT_WINDOW: i64 = -1;
+/// Reserved host command id that zooms the source or active frame root.
+pub const COMMAND_ID_ZOOM: i64 = -2;
+/// Reserved host command id that restores a zoomed frame root.
+pub const COMMAND_ID_ZOOM_BACK: i64 = -3;
+
 /// Command payload carrying both semantic kind and originating view.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CommandEvent {
@@ -45,11 +52,19 @@ impl CommandEvent {
     /// Construct an application-defined command event.
     #[must_use]
     pub const fn application(id: CommandId, source: Option<ViewId>) -> Self {
-        Self {
-            id,
-            source,
-            kind: CommandKind::Application,
-        }
+        Self::resolve(id, source)
+    }
+
+    /// Resolve a command id to a sourced event, mapping reserved host ids to built-in kinds.
+    #[must_use]
+    pub const fn resolve(id: CommandId, source: Option<ViewId>) -> Self {
+        let kind = match id.0 {
+            COMMAND_ID_NEXT_WINDOW => CommandKind::NextWindow,
+            COMMAND_ID_ZOOM => CommandKind::Zoom,
+            COMMAND_ID_ZOOM_BACK => CommandKind::ZoomBack,
+            _ => CommandKind::Application,
+        };
+        Self { id, source, kind }
     }
 }
 

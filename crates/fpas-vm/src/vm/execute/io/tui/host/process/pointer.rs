@@ -20,6 +20,10 @@ impl Worker {
         modal_scope: Option<&[ViewId]>,
         line: SourceLocation,
     ) -> Result<ProcessOutcome, VmError> {
+        if let Some(tag) = self.try_dispatch_frame_mouse(mouse, modal_scope, line)? {
+            return Ok(tag);
+        }
+
         let route = {
             let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
             tui.views

@@ -43,6 +43,8 @@ mod tui_introspection;
 pub use tui_introspection::*;
 mod tui_controls;
 pub use tui_controls::*;
+mod tui_frames;
+pub use tui_frames::*;
 mod tui_view_state;
 pub use tui_view_state::*;
 macro_rules! std_graph {

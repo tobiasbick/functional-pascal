@@ -470,6 +470,18 @@ pub enum TuiIntrinsic {
     HostSetScrollViewLines = 408,
     /// Query scroll-view offset and line count.
     QueryScrollViewState = 409,
+    /// Configure the desktop work area that constrains frame roots.
+    HostSetDesktopWorkArea = 410,
+    /// Register a validated frame root view.
+    HostCreateFrameRootView = 411,
+    /// Activate the next eligible window root.
+    HostActivateNextWindow = 412,
+    /// Zoom a frame root to the desktop work area.
+    HostZoomFrameRoot = 413,
+    /// Restore a zoomed frame root.
+    HostRestoreFrameRoot = 414,
+    /// Query frame-root geometry and capability state.
+    QueryFrameRootState = 415,
     // **375..=377** are `Std.Test` screen/view assertions; **378** is `Std.Test.PushReadLn` (see `TestIntrinsic`).
     // Note: **348..=355** are owned by `Std.Test` (`TestIntrinsic`).
 }

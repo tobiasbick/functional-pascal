@@ -4,6 +4,7 @@
 
 mod application;
 mod controls;
+mod frames;
 mod host;
 mod modal;
 mod query_host;
@@ -28,6 +29,9 @@ impl Compiler {
             return Ok(true);
         }
         if self.compile_tui_control_call(name, args, location)? {
+            return Ok(true);
+        }
+        if self.compile_tui_frame_call(name, args, location)? {
             return Ok(true);
         }
         if self.compile_tui_test_host_call(name, args, location)? {

@@ -1,8 +1,8 @@
 # Retained controls
 
-`Std.Tui` exposes native label, button, input-line, checkbox, radio-group, and list-box views. The host paints
-them with the built-in dialog palette and integrates them with retained focus, clipping, commands,
-mouse input, keyboard input, and paste.
+`Std.Tui` exposes native label, button, input-line, checkbox, radio-group, list-box, scroll-bar, and
+scroll-view controls. The host paints them with the built-in dialog palette and integrates them with
+retained focus, clipping, commands, mouse input, keyboard input, and paste.
 
 ## Construction
 
@@ -16,6 +16,8 @@ All constructors start with `(App, X, Y, Width, Height)` and return `ViewId`:
 | `HostCreateCheckBoxView` | `Label`, `Accelerator`, `CommandId`, `Checked` |
 | `HostCreateRadioGroupView` | `Options: array of RadioOption` |
 | `HostCreateListBoxView` | `Items: array of ListBoxItem` |
+| `HostCreateScrollBarView` | `ContentLength`, `ViewportLength`, `Vertical` |
+| `HostCreateScrollView` | `Lines: array of string` |
 
 `RadioOption` contains `label`, `accelerator`, `commandId`, and `enabled`. Labels are not selectable;
 the other controls are selectable Tab stops. Parent them with `HostSetViewParent` when used in
@@ -30,6 +32,9 @@ a dialog subtree.
   selects it directly.
 - Optional command ids invoke `ApplicationHandlers.OnCommand` after activation.
 - List boxes use Up/Down/Home/End, Enter/Space, direct row clicks, and mouse-wheel scrolling.
+- Scroll bars and scroll views use Up/Down/Home/End, PageUp/PageDown, mouse-wheel scrolling, and
+  scroll-bar arrow/track clicks. Scroll views reserve one column for an integrated vertical bar when
+  content overflows.
 
 ## State
 
@@ -44,6 +49,10 @@ a dialog subtree.
 | `QueryListBoxState` | `ListBoxState(selectedIndex, scrollOffset)`; `-1` means no enabled row |
 | `HostSetListBoxItems` | Replaces rows and resets selection/scroll |
 | `HostSetListBoxSelected` | Selects and reveals an enabled row |
+| `QueryScrollBarState` | `ScrollBarState(scrollOffset, contentLength, viewportLength)` |
+| `HostSetScrollBarExtents` | Replaces logical scroll extents and clamps offset |
+| `QueryScrollViewState` | `ScrollViewState(scrollOffset, lineCount)` |
+| `HostSetScrollViewLines` | Replaces lines and resets scroll |
 
 ## Implementation (contributors)
 
@@ -51,7 +60,7 @@ a dialog subtree.
 | ------- | -------- |
 | Models/paint | `crates/fpas-std/src/tui/widget/control/` |
 | VM bridge/input | `crates/fpas-vm/src/vm/execute/io/tui/control_model/` |
-| FPAS regression | `tests/tui/tui_controls_test.fpas`, `tests/tui/tui_list_box_test.fpas` |
+| FPAS regression | `tests/tui/tui_controls_test.fpas`, `tests/tui/tui_list_box_test.fpas`, `tests/tui/tui_scroll_bar_test.fpas`, `tests/tui/tui_scroll_view_test.fpas` |
 
 ## See also
 

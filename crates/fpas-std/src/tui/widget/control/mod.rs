@@ -8,6 +8,8 @@ mod input_line;
 mod label;
 mod list_box;
 mod radio;
+mod scroll_bar;
+mod scroll_view;
 
 #[cfg(test)]
 mod tests;
@@ -18,6 +20,8 @@ pub use input_line::{InputLineStyle, InputLineWidget};
 pub use label::{LabelStyle, LabelWidget};
 pub use list_box::{ListBoxItem, ListBoxStyle, ListBoxWidget};
 pub use radio::{RadioGroupStyle, RadioGroupWidget, RadioOption};
+pub use scroll_bar::{ScrollBarStyle, ScrollBarWidget};
+pub use scroll_view::{ScrollViewStyle, ScrollViewWidget};
 
 use crate::{Console, DamageRegion, ViewRect};
 

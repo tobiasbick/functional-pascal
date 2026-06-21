@@ -14,6 +14,8 @@ pub const TUI_VIEW_KIND_VARIANTS: &[&str] = &[
     "CheckBox",
     "RadioGroup",
     "ListBox",
+    "ScrollBar",
+    "ScrollView",
 ];
 
 /// Kind of retained view content attached to a scene-graph node.
@@ -40,4 +42,8 @@ pub enum ViewKind {
     RadioGroup,
     /// Native scrolling list box.
     ListBox,
+    /// Standalone scroll bar.
+    ScrollBar,
+    /// Scrolling multi-line text view.
+    ScrollView,
 }

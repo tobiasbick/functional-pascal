@@ -60,6 +60,8 @@ These `[fpas_bytecode::Intrinsic](../../../../../crates/fpas-bytecode/src/intrin
 | `TuiHostSetInputLineText`, `TuiHostSetCheckBoxChecked`, `TuiHostSetRadioGroupSelected` | `Application`, `ViewId`, value | Updates retained control model state and requests redraw. |
 | `TuiQueryInputLineState`, `TuiQueryCheckBoxState`, `TuiQueryRadioGroupState` | `Application`, `ViewId` | Pushes the matching typed control-state record. |
 | `TuiHostCreateListBoxView`, `TuiHostSetListBoxItems`, `TuiHostSetListBoxSelected`, `TuiQueryListBoxState` | `Application`, geometry/`ViewId`, list model | Creates and controls a wheel/key-scrolling retained list box. |
+| `TuiHostCreateScrollBarView`, `TuiHostSetScrollBarExtents`, `TuiQueryScrollBarState` | `Application`, geometry/`ViewId`, scroll extents | Creates and controls a standalone vertical or horizontal scroll bar. |
+| `TuiHostCreateScrollView`, `TuiHostSetScrollViewLines`, `TuiQueryScrollViewState` | `Application`, geometry/`ViewId`, line model | Creates and controls a multi-line scroll view with integrated vertical bar. |
 
 ### Pascal names (registry + compiler)
 
@@ -116,11 +118,11 @@ These `[fpas_bytecode::Intrinsic](../../../../../crates/fpas-bytecode/src/intrin
 | `Application.HostSetStatusBarSegments(App, ViewId, Segments)` | `TuiHostSetStatusBarSegments` |
 | `Application.HostCreateLabelView` through `Application.HostCreateRadioGroupView` | `TuiHostCreateLabelView` through `TuiHostCreateRadioGroupView` |
 | `Application.HostSetInputLineText`, `HostSetCheckBoxChecked`, `HostSetRadioGroupSelected` | Matching `TuiHostSet*` intrinsic |
-| `Application.QueryInputLineState`, `QueryCheckBoxState`, `QueryRadioGroupState`, `QueryListBoxState` | Matching `TuiQuery*State` intrinsic |
+| `Application.QueryInputLineState`, `QueryCheckBoxState`, `QueryRadioGroupState`, `QueryListBoxState`, `QueryScrollBarState`, `QueryScrollViewState` | Matching `TuiQuery*State` intrinsic |
 
 Samples: [`examples/pascal/tui/host_dispatch_minimal.fpas`](../../../../../examples/pascal/tui/host_dispatch_minimal.fpas) (one `HostProcessNext` step), [`examples/pascal/tui/host_dispatch_paint.fpas`](../../../../../examples/pascal/tui/host_dispatch_paint.fpas) (register `OnPaint` + `HostDispatchRedraw`), [`examples/pascal/tui/host_dispatch_quit.fpas`](../../../../../examples/pascal/tui/host_dispatch_quit.fpas) (`HostRequestQuit` from `OnPaint` + `HostRunLoop`), [`examples/pascal/tui/show_dialog.fpas`](../../../../../examples/pascal/tui/show_dialog.fpas) (owned modal dialog with `HostSetActiveModalResult`), [`apps/ide/ide.fpasprj`](../../../../../apps/ide/ide.fpasprj) (menu bar + About dialog).
 
-**Bytecode discriminants** (authoritative enum: [`TuiIntrinsic`](../../../../../crates/fpas-bytecode/src/intrinsic/tui.rs)): existing host and test APIs use **256..=388** as listed above; retained controls use **389..=399**, and list-box operations use **400..=403**. Native headless testing uses **356..=374** (see [Native TUI testing API](testing.md)). **348..=355** and **375..=378** are `Std.Test` intrinsics, not TUI.
+**Bytecode discriminants** (authoritative enum: [`TuiIntrinsic`](../../../../../crates/fpas-bytecode/src/intrinsic/tui.rs)): existing host and test APIs use **256..=388** as listed above; retained controls use **389..=399**, list-box operations use **400..=403**, and scroll-bar/scroll-view operations use **404..=409**. Native headless testing uses **356..=374** (see [Native TUI testing API](testing.md)). **348..=355** and **375..=378** are `Std.Test` intrinsics, not TUI.
 
 `Application.Close` clears registered host handlers (`OnKeyPressed`, `OnResize`, `OnPaint`, `OnIdle`, `OnExit`, `OnMouse`, `OnPaste`, `OnFocusGained`, `OnFocusLost`, `OnActivate`, `OnDeactivate`, `OnCommand`), clears local view paint handlers and command maps, resets the host pump, clears the view registry (focus path and pointer capture included), clears global command bindings, clears the modal stack, and closes the session.
 

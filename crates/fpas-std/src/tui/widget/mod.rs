@@ -15,7 +15,8 @@ mod status_bar;
 pub use control::{
     ButtonStyle, ButtonWidget, CheckBoxStyle, CheckBoxWidget, InputLineStyle, InputLineWidget,
     LabelStyle, LabelWidget, ListBoxItem, ListBoxStyle, ListBoxWidget, RadioGroupStyle,
-    RadioGroupWidget, RadioOption,
+    RadioGroupWidget, RadioOption, ScrollBarStyle, ScrollBarWidget, ScrollViewStyle,
+    ScrollViewWidget,
 };
 pub use frame::{
     FrameButtonSlots, FrameCapabilities, FrameContentSize, FrameGeometry, FrameGeometryError,
@@ -52,6 +53,10 @@ pub enum ViewWidget {
     RadioGroup(RadioGroupWidget),
     /// Scrolling list box.
     ListBox(ListBoxWidget),
+    /// Standalone scroll bar.
+    ScrollBar(ScrollBarWidget),
+    /// Scrolling multi-line text view.
+    ScrollView(ScrollViewWidget),
 }
 
 impl ViewWidget {
@@ -79,6 +84,14 @@ impl ViewWidget {
                 widget.enabled = state.enabled;
                 widget.focused = state.focused;
             }
+            Self::ScrollBar(widget) => {
+                widget.enabled = state.enabled;
+                widget.focused = state.focused;
+            }
+            Self::ScrollView(widget) => {
+                widget.enabled = state.enabled;
+                widget.focused = state.focused;
+            }
             Self::SolidFill(_) | Self::MenuBar(_) | Self::StatusBar(_) => {}
         }
     }
@@ -95,6 +108,8 @@ impl ViewWidget {
             Self::CheckBox(_) => ViewKind::CheckBox,
             Self::RadioGroup(_) => ViewKind::RadioGroup,
             Self::ListBox(_) => ViewKind::ListBox,
+            Self::ScrollBar(_) => ViewKind::ScrollBar,
+            Self::ScrollView(_) => ViewKind::ScrollView,
         }
     }
 
@@ -110,6 +125,8 @@ impl ViewWidget {
             Self::CheckBox(widget) => widget.paint(console, rect, damage),
             Self::RadioGroup(widget) => widget.paint(console, rect, damage),
             Self::ListBox(widget) => widget.paint(console, rect, damage),
+            Self::ScrollBar(widget) => widget.paint(console, rect, damage),
+            Self::ScrollView(widget) => widget.paint(console, rect, damage),
         }
     }
 
@@ -135,7 +152,9 @@ impl ViewWidget {
             | Self::InputLine(_)
             | Self::CheckBox(_)
             | Self::RadioGroup(_)
-            | Self::ListBox(_) => intersects_damage_region(rect, damage),
+            | Self::ListBox(_)
+            | Self::ScrollBar(_)
+            | Self::ScrollView(_) => intersects_damage_region(rect, damage),
         }
     }
 
@@ -153,7 +172,9 @@ impl ViewWidget {
             | Self::InputLine(_)
             | Self::CheckBox(_)
             | Self::RadioGroup(_)
-            | Self::ListBox(_) => rect.contains_console_mouse(mouse_x, mouse_y),
+            | Self::ListBox(_)
+            | Self::ScrollBar(_)
+            | Self::ScrollView(_) => rect.contains_console_mouse(mouse_x, mouse_y),
         }
     }
 }

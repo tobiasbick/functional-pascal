@@ -458,6 +458,18 @@ pub enum TuiIntrinsic {
     HostSetListBoxSelected = 402,
     /// Query list-box selection and scroll offset.
     QueryListBoxState = 403,
+    /// Create a standalone scroll bar.
+    HostCreateScrollBarView = 404,
+    /// Replace scroll-bar logical extents.
+    HostSetScrollBarExtents = 405,
+    /// Query scroll-bar offset and extents.
+    QueryScrollBarState = 406,
+    /// Create a scrolling multi-line view.
+    HostCreateScrollView = 407,
+    /// Replace scroll-view lines.
+    HostSetScrollViewLines = 408,
+    /// Query scroll-view offset and line count.
+    QueryScrollViewState = 409,
     // **375..=377** are `Std.Test` screen/view assertions; **378** is `Std.Test.PushReadLn` (see `TestIntrinsic`).
     // Note: **348..=355** are owned by `Std.Test` (`TestIntrinsic`).
 }

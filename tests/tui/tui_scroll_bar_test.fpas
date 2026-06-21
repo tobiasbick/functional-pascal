@@ -1,0 +1,81 @@
+program TuiScrollBarTest;
+
+uses Std.Console, Std.Tui, Std.Test, Std.Str;
+
+procedure OnPaint(App: Application);
+begin
+end;
+
+function PlainKey(Kind: KeyKind): KeyEvent;
+begin
+  return record
+    kind := Kind;
+    ch := Std.Str.Chr(0);
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+function Wheel(Action: MouseAction): Event;
+begin
+  return record
+    kind := Std.Console.EventKind.Mouse;
+    key := PlainKey(KeyKind.Unknown);
+    mouse_action := Action;
+    mouse_button := MouseButton.Left;
+    mouse_x := 1;
+    mouse_y := 2;
+    width := 0;
+    height := 0;
+    text := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(8, 8);
+  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
+  Application.Configure(App, Handlers);
+  var Bar: ViewId := Application.HostCreateScrollBarView(App, 0, 0, 1, 6, 20, 4, true);
+  AssertTrue(Application.QueryViewKind(App, Bar) = ViewKind.ScrollBar);
+  Application.RequestRedraw(App);
+  Application.TestPumpUntilIdle(App);
+  mutable var State: ScrollBarState := Application.QueryScrollBarState(App, Bar);
+  AssertEquals(0, State.scrollOffset);
+  AssertEquals(20, State.contentLength);
+  AssertEquals(4, State.viewportLength);
+  Application.TestClickMouse(App, 1, 1);
+  Application.TestPumpUntilIdle(App);
+  Application.TestSendKey(App, PlainKey(KeyKind.Down));
+  Application.TestSendKey(App, PlainKey(KeyKind.Down));
+  Application.TestPumpUntilIdle(App);
+  State := Application.QueryScrollBarState(App, Bar);
+  AssertEquals(2, State.scrollOffset);
+  Application.TestSendKey(App, PlainKey(KeyKind.PageDown));
+  Application.TestPumpUntilIdle(App);
+  State := Application.QueryScrollBarState(App, Bar);
+  AssertEquals(6, State.scrollOffset);
+  Application.TestSendMouse(App, Wheel(MouseAction.ScrollUp));
+  Application.TestPumpUntilIdle(App);
+  State := Application.QueryScrollBarState(App, Bar);
+  AssertEquals(5, State.scrollOffset);
+  Application.TestClickMouse(App, 1, 1);
+  Application.TestPumpUntilIdle(App);
+  State := Application.QueryScrollBarState(App, Bar);
+  AssertEquals(4, State.scrollOffset);
+  Application.TestClickMouse(App, 1, 6);
+  Application.TestPumpUntilIdle(App);
+  State := Application.QueryScrollBarState(App, Bar);
+  AssertEquals(5, State.scrollOffset);
+  Application.HostSetScrollBarExtents(App, Bar, 8, 3);
+  State := Application.QueryScrollBarState(App, Bar);
+  AssertEquals(8, State.contentLength);
+  AssertEquals(3, State.viewportLength);
+  AssertEquals(5, State.scrollOffset);
+  Application.CloseForTest(App)
+end.

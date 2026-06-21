@@ -8,6 +8,8 @@ pub const STD_TUI_CHECK_BOX_STATE: &str = std_tui!("CheckBoxState");
 pub const STD_TUI_RADIO_GROUP_STATE: &str = std_tui!("RadioGroupState");
 pub const STD_TUI_LIST_BOX_ITEM: &str = std_tui!("ListBoxItem");
 pub const STD_TUI_LIST_BOX_STATE: &str = std_tui!("ListBoxState");
+pub const STD_TUI_SCROLL_BAR_STATE: &str = std_tui!("ScrollBarState");
+pub const STD_TUI_SCROLL_VIEW_STATE: &str = std_tui!("ScrollViewState");
 pub const STD_TUI_APPLICATION_HOST_CREATE_LABEL_VIEW: &str =
     std_tui!("Application.HostCreateLabelView");
 pub const STD_TUI_APPLICATION_HOST_CREATE_BUTTON_VIEW: &str =
@@ -38,3 +40,15 @@ pub const STD_TUI_APPLICATION_HOST_SET_LIST_BOX_SELECTED: &str =
     std_tui!("Application.HostSetListBoxSelected");
 pub const STD_TUI_APPLICATION_QUERY_LIST_BOX_STATE: &str =
     std_tui!("Application.QueryListBoxState");
+pub const STD_TUI_APPLICATION_HOST_CREATE_SCROLL_BAR_VIEW: &str =
+    std_tui!("Application.HostCreateScrollBarView");
+pub const STD_TUI_APPLICATION_HOST_SET_SCROLL_BAR_EXTENTS: &str =
+    std_tui!("Application.HostSetScrollBarExtents");
+pub const STD_TUI_APPLICATION_QUERY_SCROLL_BAR_STATE: &str =
+    std_tui!("Application.QueryScrollBarState");
+pub const STD_TUI_APPLICATION_HOST_CREATE_SCROLL_VIEW: &str =
+    std_tui!("Application.HostCreateScrollView");
+pub const STD_TUI_APPLICATION_HOST_SET_SCROLL_VIEW_LINES: &str =
+    std_tui!("Application.HostSetScrollViewLines");
+pub const STD_TUI_APPLICATION_QUERY_SCROLL_VIEW_STATE: &str =
+    std_tui!("Application.QueryScrollViewState");

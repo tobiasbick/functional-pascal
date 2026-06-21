@@ -9,7 +9,7 @@ use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 use fpas_std::{
     ButtonStyle, ButtonWidget, CheckBoxStyle, CheckBoxWidget, CommandId, InputLineStyle,
     InputLineWidget, LabelStyle, LabelWidget, ListBoxWidget, RadioGroupStyle, RadioGroupWidget,
-    ViewOptions, ViewRect, ViewWidget,
+    ScrollBarOrientation, ScrollBarWidget, ScrollViewWidget, ViewOptions, ViewRect, ViewWidget,
 };
 
 use super::super::view_geometry::validate_view_rect;
@@ -85,6 +85,40 @@ impl Worker {
                     line,
                 )?;
             }
+            TuiIntrinsic::HostCreateScrollBarView => {
+                let vertical = self.pop_bool(line)?;
+                let viewport_len = self.pop_usize("ViewportLength", line)?;
+                let content_len = self.pop_usize("ContentLength", line)?;
+                let rect = self.pop_control_rect("HostCreateScrollBarView", line)?;
+                let orientation = if vertical {
+                    ScrollBarOrientation::Vertical
+                } else {
+                    ScrollBarOrientation::Horizontal
+                };
+                self.create_control_view(
+                    rect,
+                    ViewWidget::ScrollBar(ScrollBarWidget::new(
+                        orientation,
+                        content_len,
+                        viewport_len,
+                    )),
+                    true,
+                    line,
+                )?;
+            }
+            TuiIntrinsic::HostCreateScrollView => {
+                let lines = self.pop_string_lines(line)?;
+                let rect = self.pop_control_rect("HostCreateScrollView", line)?;
+                self.create_control_view(
+                    rect,
+                    ViewWidget::ScrollView(ScrollViewWidget::new(
+                        lines,
+                        rect.height.max(0) as usize,
+                    )),
+                    true,
+                    line,
+                )?;
+            }
             TuiIntrinsic::HostSetInputLineText => {
                 let text = self.pop_control_string("Text", line)?;
                 let id = self.pop_tui_view_id(line)?;
@@ -150,10 +184,41 @@ impl Worker {
                     }
                 });
             }
+            TuiIntrinsic::HostSetScrollBarExtents => {
+                let viewport_len = self.pop_usize("ViewportLength", line)?;
+                let content_len = self.pop_usize("ContentLength", line)?;
+                let id = self.pop_tui_view_id(line)?;
+                self.pop_tui_application(line)?;
+                self.update_control(id, line, |w| {
+                    if let ViewWidget::ScrollBar(v) = w {
+                        v.set_extents(content_len, viewport_len);
+                        true
+                    } else {
+                        false
+                    }
+                });
+            }
+            TuiIntrinsic::HostSetScrollViewLines => {
+                let lines = self.pop_string_lines(line)?;
+                let id = self.pop_tui_view_id(line)?;
+                self.pop_tui_application(line)?;
+                let height =
+                    self.with_tui(|tui| tui.views.rect(id).map_or(1, |r| r.height.max(1) as usize));
+                self.update_control(id, line, |w| {
+                    if let ViewWidget::ScrollView(v) = w {
+                        v.set_lines(lines, height);
+                        true
+                    } else {
+                        false
+                    }
+                });
+            }
             TuiIntrinsic::QueryInputLineState
             | TuiIntrinsic::QueryCheckBoxState
             | TuiIntrinsic::QueryRadioGroupState
-            | TuiIntrinsic::QueryListBoxState => {
+            | TuiIntrinsic::QueryListBoxState
+            | TuiIntrinsic::QueryScrollBarState
+            | TuiIntrinsic::QueryScrollViewState => {
                 let id = self.pop_query_view_id(line)?;
                 self.pop_tui_application(line)?;
                 let value = self.with_tui(|tui| match (intrinsic, tui.view_widgets.get(&id)) {
@@ -200,6 +265,31 @@ impl Worker {
                             ],
                         ))
                     }
+                    (TuiIntrinsic::QueryScrollBarState, Some(ViewWidget::ScrollBar(v))) => {
+                        Some(control_record(
+                            "Std.Tui.ScrollBarState",
+                            vec![
+                                ("scrollOffset", Value::Integer(v.scroll_offset() as i64)),
+                                (
+                                    "contentLength",
+                                    Value::Integer(v.scroll().content_len() as i64),
+                                ),
+                                (
+                                    "viewportLength",
+                                    Value::Integer(v.scroll().viewport_len() as i64),
+                                ),
+                            ],
+                        ))
+                    }
+                    (TuiIntrinsic::QueryScrollViewState, Some(ViewWidget::ScrollView(v))) => {
+                        Some(control_record(
+                            "Std.Tui.ScrollViewState",
+                            vec![
+                                ("scrollOffset", Value::Integer(v.scroll_offset() as i64)),
+                                ("lineCount", Value::Integer(v.line_count() as i64)),
+                            ],
+                        ))
+                    }
                     _ => None,
                 });
                 let Some(value) = value else {
@@ -237,6 +327,18 @@ impl Worker {
             },
             line,
         )
+    }
+    fn pop_usize(&mut self, label: &str, line: SourceLocation) -> Result<usize, VmError> {
+        let value = self.pop_int(line)?;
+        if value < 0 {
+            return Err(runtime_error(
+                RUNTIME_CONSOLE_STATE_ERROR,
+                format!("{label} must be non-negative, got {value}"),
+                "Pass a zero-based length.",
+                line,
+            ));
+        }
+        Ok(value as usize)
     }
     fn create_control_view(
         &mut self,

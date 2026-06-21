@@ -77,6 +77,33 @@ impl Worker {
             })
             .collect()
     }
+
+    pub(super) fn pop_string_lines(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<Vec<String>, VmError> {
+        let Value::Array(values) = self.pop(line)? else {
+            return Err(runtime_error(
+                TYPE_MISMATCH_CODE,
+                "Lines must be array of string",
+                "Pass an array of strings.",
+                line,
+            ));
+        };
+        values
+            .iter()
+            .map(|value| match value {
+                Value::Str(text) => Ok(text.clone()),
+                other => Err(runtime_error(
+                    TYPE_MISMATCH_CODE,
+                    format!("Lines must contain strings, got {}", other.type_name()),
+                    "Pass an array of strings.",
+                    line,
+                )),
+            })
+            .collect()
+    }
+
     pub(super) fn pop_control_string(
         &mut self,
         label: &str,

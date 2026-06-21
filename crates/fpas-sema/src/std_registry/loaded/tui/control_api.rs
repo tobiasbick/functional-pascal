@@ -87,7 +87,46 @@ pub(super) fn register(checker: &mut Checker, types: &TuiTypes) {
         list,
         types.view_id.clone(),
     );
+    let mut scroll_bar = geometry();
+    scroll_bar.extend([
+        p("ContentLength", Ty::Integer, false),
+        p("ViewportLength", Ty::Integer, false),
+        p("Vertical", Ty::Boolean, false),
+    ]);
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_CREATE_SCROLL_BAR_VIEW,
+        scroll_bar,
+        types.view_id.clone(),
+    );
+    let mut scroll_view = geometry();
+    scroll_view.push(p("Lines", Ty::Array(Box::new(Ty::String)), false));
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_CREATE_SCROLL_VIEW,
+        scroll_view,
+        types.view_id.clone(),
+    );
 
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_SET_SCROLL_BAR_EXTENTS,
+        vec![
+            p("App", types.application.clone(), false),
+            p("ViewId", types.view_id.clone(), false),
+            p("ContentLength", Ty::Integer, false),
+            p("ViewportLength", Ty::Integer, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_SET_SCROLL_VIEW_LINES,
+        vec![
+            p("App", types.application.clone(), false),
+            p("ViewId", types.view_id.clone(), false),
+            p("Lines", Ty::Array(Box::new(Ty::String)), false),
+        ],
+    );
     define_proc(
         checker,
         s::STD_TUI_APPLICATION_HOST_SET_INPUT_LINE_TEXT,
@@ -153,6 +192,14 @@ pub(super) fn register(checker: &mut Checker, types: &TuiTypes) {
         (
             s::STD_TUI_APPLICATION_QUERY_LIST_BOX_STATE,
             types.controls.list_box_state.clone(),
+        ),
+        (
+            s::STD_TUI_APPLICATION_QUERY_SCROLL_BAR_STATE,
+            types.controls.scroll_bar_state.clone(),
+        ),
+        (
+            s::STD_TUI_APPLICATION_QUERY_SCROLL_VIEW_STATE,
+            types.controls.scroll_view_state.clone(),
         ),
     ] {
         define_func(

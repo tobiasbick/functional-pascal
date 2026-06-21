@@ -6,8 +6,8 @@ use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
 use fpas_bytecode::SourceLocation;
 use fpas_std::{
-    CommandEvent, CommandId, ConsoleKeyEvent, ProcessOutcome, UiMouse, ViewId, ViewWidget,
-    key_kind_index, mouse_action_index, mouse_button_index,
+    CommandEvent, CommandId, ConsoleKeyEvent, ProcessOutcome, ScrollBarWidget, ScrollViewWidget,
+    UiMouse, ViewId, ViewWidget, key_kind_index, mouse_action_index, mouse_button_index,
 };
 
 use super::super::widget_target;
@@ -88,6 +88,23 @@ impl Worker {
                     }
                 }
             }
+            ViewWidget::ScrollBar(v) if v.enabled => {
+                scroll_bar_mouse(v, rect, mouse, scroll_up, scroll_down)
+            }
+            ViewWidget::ScrollView(v) if v.enabled => {
+                if scroll_up {
+                    v.scroll_by(-1);
+                    Some(ControlAction::Consumed)
+                } else if scroll_down {
+                    v.scroll_by(1);
+                    Some(ControlAction::Consumed)
+                } else if let Some(hit) = v.scrollbar_hit(rect, mouse.x, mouse.y) {
+                    v.apply_scrollbar_hit(rect, hit);
+                    Some(ControlAction::Consumed)
+                } else {
+                    Some(ControlAction::Consumed)
+                }
+            }
             _ => None,
         };
         self.finish_control_action(id, rect, widget, action, line)
@@ -125,6 +142,8 @@ impl Worker {
             }
             ViewWidget::RadioGroup(v) if v.enabled => radio_key(v, key),
             ViewWidget::ListBox(v) if v.enabled => list_box_key(v, key),
+            ViewWidget::ScrollBar(v) if v.enabled => scroll_control_key(v, key),
+            ViewWidget::ScrollView(v) if v.enabled => scroll_control_key(v, key),
             _ => None,
         };
         self.finish_control_action(id, rect, widget, action, line)
@@ -267,4 +286,77 @@ fn list_box_key(
             });
     }
     None
+}
+
+fn scroll_bar_mouse(
+    bar: &mut fpas_std::ScrollBarWidget,
+    rect: fpas_std::ViewRect,
+    mouse: UiMouse,
+    scroll_up: bool,
+    scroll_down: bool,
+) -> Option<ControlAction> {
+    if scroll_up {
+        bar.scroll_by(-1);
+        return Some(ControlAction::Consumed);
+    }
+    if scroll_down {
+        bar.scroll_by(1);
+        return Some(ControlAction::Consumed);
+    }
+    if let Some(hit) = bar.hit_test(rect, mouse.x, mouse.y) {
+        bar.apply_hit(hit);
+    }
+    Some(ControlAction::Consumed)
+}
+
+fn scroll_control_key(
+    scroll: &mut impl ScrollControl,
+    key: &ConsoleKeyEvent,
+) -> Option<ControlAction> {
+    let changed = if key.kind == key_kind_index("Up") {
+        scroll.scroll_by(-1)
+    } else if key.kind == key_kind_index("Down") {
+        scroll.scroll_by(1)
+    } else if key.kind == key_kind_index("PageUp") {
+        scroll.scroll_page(false)
+    } else if key.kind == key_kind_index("PageDown") {
+        scroll.scroll_page(true)
+    } else if key.kind == key_kind_index("Home") {
+        scroll.set_offset(0)
+    } else if key.kind == key_kind_index("End") {
+        scroll.set_offset(usize::MAX)
+    } else {
+        false
+    };
+    changed.then_some(ControlAction::Consumed)
+}
+
+trait ScrollControl {
+    fn scroll_by(&mut self, delta: i64) -> bool;
+    fn scroll_page(&mut self, forward: bool) -> bool;
+    fn set_offset(&mut self, offset: usize) -> bool;
+}
+
+impl ScrollControl for fpas_std::ScrollBarWidget {
+    fn scroll_by(&mut self, delta: i64) -> bool {
+        ScrollBarWidget::scroll_by(self, delta)
+    }
+    fn scroll_page(&mut self, forward: bool) -> bool {
+        ScrollBarWidget::scroll_page(self, forward)
+    }
+    fn set_offset(&mut self, offset: usize) -> bool {
+        ScrollBarWidget::set_offset(self, offset)
+    }
+}
+
+impl ScrollControl for fpas_std::ScrollViewWidget {
+    fn scroll_by(&mut self, delta: i64) -> bool {
+        ScrollViewWidget::scroll_by(self, delta)
+    }
+    fn scroll_page(&mut self, forward: bool) -> bool {
+        ScrollViewWidget::scroll_page(self, forward)
+    }
+    fn set_offset(&mut self, offset: usize) -> bool {
+        ScrollViewWidget::set_offset(self, offset)
+    }
 }

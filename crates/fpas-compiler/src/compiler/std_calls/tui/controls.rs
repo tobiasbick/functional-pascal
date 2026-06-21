@@ -63,6 +63,24 @@ impl Compiler {
             s::STD_TUI_APPLICATION_QUERY_LIST_BOX_STATE => {
                 (2, TuiIntrinsic::QueryListBoxState, true)
             }
+            s::STD_TUI_APPLICATION_HOST_CREATE_SCROLL_BAR_VIEW => {
+                (8, TuiIntrinsic::HostCreateScrollBarView, true)
+            }
+            s::STD_TUI_APPLICATION_HOST_SET_SCROLL_BAR_EXTENTS => {
+                (4, TuiIntrinsic::HostSetScrollBarExtents, false)
+            }
+            s::STD_TUI_APPLICATION_QUERY_SCROLL_BAR_STATE => {
+                (2, TuiIntrinsic::QueryScrollBarState, true)
+            }
+            s::STD_TUI_APPLICATION_HOST_CREATE_SCROLL_VIEW => {
+                (6, TuiIntrinsic::HostCreateScrollView, true)
+            }
+            s::STD_TUI_APPLICATION_HOST_SET_SCROLL_VIEW_LINES => {
+                (3, TuiIntrinsic::HostSetScrollViewLines, false)
+            }
+            s::STD_TUI_APPLICATION_QUERY_SCROLL_VIEW_STATE => {
+                (2, TuiIntrinsic::QueryScrollViewState, true)
+            }
             _ => return Ok(false),
         };
         self.expect_exact_args(name, arity, args, location)?;

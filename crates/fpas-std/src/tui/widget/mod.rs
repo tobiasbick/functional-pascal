@@ -4,7 +4,7 @@
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
 mod control;
-mod frame;
+pub(crate) mod frame;
 mod menu_bar;
 mod menu_label_paint;
 mod menu_popup;

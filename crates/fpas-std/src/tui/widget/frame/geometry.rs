@@ -8,6 +8,10 @@ use crate::ViewRect;
 /// Implemented frame capabilities that affect static geometry.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FrameCapabilities {
+    /// Whether the title bar supports drag-to-move.
+    pub movable: bool,
+    /// Whether the outer border supports drag-to-resize.
+    pub resizable: bool,
     /// Whether the title bar reserves a close-button cell on the left.
     pub closable: bool,
     /// Whether the title bar reserves zoom/restore cells on the right.
@@ -21,6 +25,8 @@ impl FrameCapabilities {
     #[must_use]
     pub const fn plain() -> Self {
         Self {
+            movable: false,
+            resizable: false,
             closable: false,
             zoomable: false,
             scrollable: false,
@@ -31,6 +37,8 @@ impl FrameCapabilities {
     #[must_use]
     pub const fn scrollable() -> Self {
         Self {
+            movable: false,
+            resizable: false,
             closable: false,
             zoomable: false,
             scrollable: true,
@@ -327,6 +335,8 @@ mod tests {
             rect(0, 0, 20, 6),
             FrameContentSize::new(0, 0),
             FrameCapabilities {
+                movable: false,
+                resizable: false,
                 closable: true,
                 zoomable: true,
                 scrollable: false,

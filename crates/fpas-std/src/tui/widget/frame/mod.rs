@@ -7,8 +7,11 @@
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
 mod geometry;
+mod hit;
+mod interaction;
 mod kind;
 mod root;
+mod state;
 
 #[cfg(test)]
 mod tests;
@@ -19,3 +22,4 @@ pub use geometry::{
 };
 pub use kind::FrameKind;
 pub use root::{FrameRoot, FrameRootSpec, FramedDialogRoot, register_framed_dialog_root};
+pub use state::{FrameResizeEdge, FrameRootState, WindowInteraction};

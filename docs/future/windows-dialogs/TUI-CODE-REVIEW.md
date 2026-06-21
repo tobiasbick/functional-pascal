@@ -398,7 +398,16 @@ dragging, and FPAS state queries.
 
 ### Phase 5 - Window interaction and editor path
 
-- Add captured move/resize, zoom/restore, next-window command, and optional cascade/tile.
+**Implementation status (2026-06-21): in progress.** Frame roots now retain metadata and geometry on
+the view registry. Next-window activation, captured title-bar move, border resize, and zoom/restore
+state are available as Rust-internal primitives pending VM dispatch and `HostCreateFrameView`.
+
+- [x] Store frame root metadata and refresh geometry after move or resize.
+- [x] Add next-window root activation cycling.
+- [x] Add captured title-bar move and border resize interaction.
+- [x] Add zoom/restore state for zoomable frame roots.
+- [ ] Wire frame chrome dispatch through the VM bridge and public FPAS APIs.
+- [ ] Add optional cascade/tile layout helpers.
 - Add memo/editor primitives only after cursor, selection, Unicode width, and scrolling contracts
   are stable.
 

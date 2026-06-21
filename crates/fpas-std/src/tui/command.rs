@@ -22,6 +22,8 @@ pub enum CommandKind {
     Zoom,
     /// Restore the source window from zoom.
     ZoomBack,
+    /// Activate the next window root in z-order.
+    NextWindow,
     /// Accept the active dialog.
     Accept,
     /// Cancel the active dialog.

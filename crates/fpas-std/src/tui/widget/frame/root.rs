@@ -89,6 +89,13 @@ impl ViewRegistry {
         let outer = self.constrain_window_rect(spec.outer);
         let geometry = FrameGeometry::resolve(outer, spec.content_size, spec.capabilities)?;
         let view_id = self.register_with_options(outer, spec.options);
+        self.store_frame_root(
+            view_id,
+            spec.kind,
+            spec.capabilities,
+            spec.content_size,
+            geometry,
+        );
 
         Ok(FrameRoot {
             view_id,

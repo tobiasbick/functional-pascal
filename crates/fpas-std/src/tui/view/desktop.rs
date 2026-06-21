@@ -138,6 +138,7 @@ impl ViewRegistry {
         let root = self.root_of(id)?;
         let constrained = self.constrain_window_rect(rect);
         self.set_rect(root, constrained);
+        self.refresh_frame_geometry(root);
         Some(constrained)
     }
 

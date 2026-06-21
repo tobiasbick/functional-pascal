@@ -16,6 +16,10 @@ mod routing;
 mod state;
 mod tree;
 
+use std::collections::HashMap;
+
+use super::widget::frame::{FrameRootState, WindowInteraction};
+
 #[cfg(test)]
 mod tests;
 
@@ -157,4 +161,6 @@ pub struct ViewRegistry {
     focused: Option<ViewId>,
     pointer_capture: Option<ViewId>,
     desktop: DesktopMetrics,
+    pub(crate) frame_roots: HashMap<ViewId, FrameRootState>,
+    pub(crate) window_interaction: Option<WindowInteraction>,
 }

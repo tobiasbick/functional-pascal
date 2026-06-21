@@ -39,6 +39,7 @@ impl ViewRegistry {
                 self.pointer_capture = None;
             }
         }
+        self.clear_frame_roots_in_subtree(&subtree);
         self.detach_from_parent_or_roots(id, parent);
         self.views.retain(|entry| !subtree.contains(&entry.id));
         for entry in &mut self.views {

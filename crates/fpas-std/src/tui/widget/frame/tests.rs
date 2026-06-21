@@ -9,7 +9,8 @@
 //! Review: `docs/future/windows-dialogs/TUI-CODE-REVIEW.md`
 
 use crate::{
-    FrameContentSize, FrameKind, FrameRootSpec, ViewId, ViewRect, ViewRegistry, WindowPalette,
+    FrameCapabilities, FrameContentSize, FrameKind, FrameRootSpec, ViewId, ViewRect, ViewRegistry,
+    WindowPalette,
 };
 
 fn rect(x: i64, y: i64, width: i64, height: i64) -> ViewRect {
@@ -133,6 +134,34 @@ fn clicking_occluded_window_raises_and_moves_focus() {
         registry.root_palette(front.view_id),
         Some(WindowPalette::Inactive)
     );
+}
+
+#[test]
+fn captured_resize_and_pointer_capture_persist_outside_frame() {
+    let mut registry = registry_with_desktop();
+    let spec = FrameRootSpec {
+        kind: FrameKind::Window,
+        outer: rect(10, 4, 20, 8),
+        content_size: FrameContentSize::new(0, 0),
+        capabilities: FrameCapabilities {
+            movable: false,
+            resizable: true,
+            zoomable: false,
+            closable: false,
+            scrollable: false,
+        },
+        options: Default::default(),
+    };
+    let frame = registry.register_frame_root(spec).expect("valid frame");
+    let bottom_right_x = frame.geometry.outer.x + frame.geometry.outer.width - 1;
+    let bottom_right_y = frame.geometry.outer.y + frame.geometry.outer.height - 1;
+
+    assert!(registry.begin_frame_resize(frame.view_id, bottom_right_x, bottom_right_y));
+    assert_eq!(registry.captured_pointer(), Some(frame.view_id));
+    assert!(registry.drag_frame_interaction(bottom_right_x + 5, bottom_right_y + 2));
+    assert!(registry.end_frame_interaction());
+    assert_eq!(registry.captured_pointer(), None);
+    assert_eq!(registry.rect(frame.view_id), Some(rect(10, 4, 25, 10)));
 }
 
 #[test]

@@ -39,20 +39,61 @@ end;
 
 function Lines(): array of string;
 begin
-  return ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta']
+  return [
+           '00', '01', '02', '03', '04', '05', '06', '07', '08', '09',
+           '10', '11', '12', '13', '14', '15', '16', '17', '18', '19'
+         ]
+end;
+
+function MouseDown(X: integer; Y: integer): Event;
+begin
+  return record
+    kind := Std.Console.EventKind.Mouse;
+    key := PlainKey(KeyKind.Unknown);
+    mouse_action := MouseAction.Down;
+    mouse_button := MouseButton.Left;
+    mouse_x := X;
+    mouse_y := Y;
+    width := 0;
+    height := 0;
+    text := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+function MouseUp(X: integer; Y: integer): Event;
+begin
+  return record
+    kind := Std.Console.EventKind.Mouse;
+    key := PlainKey(KeyKind.Unknown);
+    mouse_action := MouseAction.Up;
+    mouse_button := MouseButton.Left;
+    mouse_x := X;
+    mouse_y := Y;
+    width := 0;
+    height := 0;
+    text := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
 end;
 
 begin
-  var App: Application := Application.OpenForTest(12, 4);
+  var App: Application := Application.OpenForTest(12, 10);
   var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
   Application.Configure(App, Handlers);
-  var View: ViewId := Application.HostCreateScrollView(App, 0, 0, 8, 3, Lines());
+  var View: ViewId := Application.HostCreateScrollView(App, 0, 0, 8, 4, Lines());
   AssertTrue(Application.QueryViewKind(App, View) = ViewKind.ScrollView);
   Application.RequestRedraw(App);
   Application.TestPumpUntilIdle(App);
   mutable var State: ScrollViewState := Application.QueryScrollViewState(App, View);
   AssertEquals(0, State.scrollOffset);
-  AssertEquals(6, State.lineCount);
+  AssertEquals(20, State.lineCount);
   Application.TestClickMouse(App, 2, 2);
   Application.TestPumpUntilIdle(App);
   Application.TestSendKey(App, PlainKey(KeyKind.Down));
@@ -71,7 +112,16 @@ begin
   Application.TestSendKey(App, PlainKey(KeyKind.PageDown));
   Application.TestPumpUntilIdle(App);
   State := Application.QueryScrollViewState(App, View);
-  AssertEquals(3, State.scrollOffset);
+  AssertEquals(6, State.scrollOffset);
+  var TallView: ViewId := Application.HostCreateScrollView(App, 0, 5, 8, 4, Lines());
+  Application.TestSendMouse(App, MouseDown(8, 7));
+  Application.TestPumpUntilIdle(App);
+  Application.TestMoveMouse(App, 8, 8);
+  Application.TestPumpUntilIdle(App);
+  Application.TestSendMouse(App, MouseUp(8, 8));
+  Application.TestPumpUntilIdle(App);
+  State := Application.QueryScrollViewState(App, TallView);
+  AssertTrue(State.scrollOffset > 0);
   Application.HostSetScrollViewLines(App, View, ['Only']);
   State := Application.QueryScrollViewState(App, View);
   AssertEquals(0, State.scrollOffset);

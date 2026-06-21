@@ -56,10 +56,52 @@ pub fn thumb_geometry(scroll: ScrollModel, track: usize) -> ScrollBarThumb {
         };
     }
     let max_offset = scroll.max_offset().max(1);
-    let size = (scroll.viewport_len().saturating_mul(track) / scroll.content_len().max(1)).max(1);
+    let size = thumb_size(scroll, track);
     let travel = track.saturating_sub(size);
     let start = scroll.offset().saturating_mul(travel) / max_offset;
     ScrollBarThumb { start, size }
+}
+
+/// Return the thumb length for one track.
+#[must_use]
+pub fn thumb_size(scroll: ScrollModel, track: usize) -> usize {
+    if track == 0 {
+        return 0;
+    }
+    if !scroll.needs_scroll() {
+        return track;
+    }
+    (scroll.viewport_len().saturating_mul(track) / scroll.content_len().max(1)).max(1)
+}
+
+/// Map a thumb start track cell to a scroll offset.
+#[must_use]
+pub fn offset_from_thumb_start(scroll: ScrollModel, track: usize, thumb_start: usize) -> usize {
+    if track == 0 || !scroll.needs_scroll() {
+        return 0;
+    }
+    let size = thumb_size(scroll, track);
+    let travel = track.saturating_sub(size);
+    if travel == 0 {
+        return 0;
+    }
+    let thumb_start = thumb_start.min(travel);
+    thumb_start.saturating_mul(scroll.max_offset()) / travel
+}
+
+/// Resolve scroll offset while dragging with a fixed grab point inside the thumb.
+#[must_use]
+pub fn drag_offset(scroll: ScrollModel, track: usize, track_cell: usize, grab: usize) -> usize {
+    if track == 0 || !scroll.needs_scroll() {
+        return 0;
+    }
+    let size = thumb_size(scroll, track);
+    let travel = track.saturating_sub(size);
+    if travel == 0 {
+        return 0;
+    }
+    let thumb_start = track_cell.saturating_sub(grab).min(travel);
+    offset_from_thumb_start(scroll, track, thumb_start)
 }
 
 /// Map a zero-based cell inside the bar to a hit zone.

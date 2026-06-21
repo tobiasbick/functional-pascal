@@ -14,6 +14,7 @@ use super::super::widget_target;
 
 enum ControlAction {
     Consumed,
+    CaptureThumb,
     Command(CommandId),
 }
 
@@ -26,8 +27,17 @@ impl Worker {
     ) -> Result<Option<ProcessOutcome>, VmError> {
         let down = mouse.action == mouse_action_index("Down")
             && mouse.button == mouse_button_index("Left");
+        let up =
+            mouse.action == mouse_action_index("Up") && mouse.button == mouse_button_index("Left");
+        let move_ = mouse.action == mouse_action_index("Move");
         let scroll_up = mouse.action == mouse_action_index("ScrollUp");
         let scroll_down = mouse.action == mouse_action_index("ScrollDown");
+        if (up || move_)
+            && let Some(outcome) =
+                self.try_dispatch_scroll_thumb_drag(mouse, scope, up, move_, line)?
+        {
+            return Ok(Some(outcome));
+        }
         if !down && !scroll_up && !scroll_down {
             return Ok(None);
         }
@@ -89,25 +99,75 @@ impl Worker {
                 }
             }
             ViewWidget::ScrollBar(v) if v.enabled => {
-                scroll_bar_mouse(v, rect, mouse, scroll_up, scroll_down)
+                scroll_bar_mouse(v, rect, mouse, scroll_up, scroll_down, down)
             }
             ViewWidget::ScrollView(v) if v.enabled => {
-                if scroll_up {
-                    v.scroll_by(-1);
-                    Some(ControlAction::Consumed)
-                } else if scroll_down {
-                    v.scroll_by(1);
-                    Some(ControlAction::Consumed)
-                } else if let Some(hit) = v.scrollbar_hit(rect, mouse.x, mouse.y) {
-                    v.apply_scrollbar_hit(rect, hit);
-                    Some(ControlAction::Consumed)
-                } else {
-                    Some(ControlAction::Consumed)
-                }
+                scroll_view_mouse(v, rect, mouse, scroll_up, scroll_down, down)
             }
             _ => None,
         };
-        self.finish_control_action(id, rect, widget, action, line)
+        let capture_thumb = matches!(
+            (&widget, &action),
+            (ViewWidget::ScrollBar(v), Some(ControlAction::CaptureThumb))
+                if v.thumb_drag_active(),
+        ) || matches!(
+            (&widget, &action),
+            (ViewWidget::ScrollView(v), Some(ControlAction::CaptureThumb))
+                if v.thumb_drag_active(),
+        );
+        self.finish_control_action(id, rect, widget, action, capture_thumb, line)
+    }
+
+    fn try_dispatch_scroll_thumb_drag(
+        &mut self,
+        mouse: UiMouse,
+        scope: Option<&[ViewId]>,
+        up: bool,
+        move_: bool,
+        line: SourceLocation,
+    ) -> Result<Option<ProcessOutcome>, VmError> {
+        let hit = {
+            let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+            widget_target::widget_mouse_hit(&tui.views, &tui.view_widgets, mouse, scope)
+        };
+        let Some((id, rect, mut widget)) = hit else {
+            return Ok(None);
+        };
+        let state = self.with_tui(|tui| tui.views.state(id));
+        if let Some(state) = state {
+            widget.sync_view_state(state);
+        }
+        let active = match &widget {
+            ViewWidget::ScrollBar(v) => v.thumb_drag_active(),
+            ViewWidget::ScrollView(v) => v.thumb_drag_active(),
+            _ => false,
+        };
+        if !active {
+            return Ok(None);
+        }
+        let changed = match &mut widget {
+            ViewWidget::ScrollBar(v) if move_ => v.drag_thumb(rect, mouse.x, mouse.y),
+            ViewWidget::ScrollView(v) if move_ => v.drag_thumb(rect, mouse.x, mouse.y),
+            ViewWidget::ScrollBar(v) if up => {
+                v.end_thumb_drag();
+                true
+            }
+            ViewWidget::ScrollView(v) if up => {
+                v.end_thumb_drag();
+                true
+            }
+            _ => false,
+        };
+        self.with_tui(|tui| {
+            tui.view_widgets.insert(id, widget);
+            if up {
+                tui.views.release_pointer();
+            }
+            if changed {
+                let _ = tui.session.request_redraw_rect(rect, line);
+            }
+        });
+        Ok(Some(ProcessOutcome::WidgetConsumed))
     }
 
     pub(in crate::vm::execute::io::tui) fn try_dispatch_control_key(
@@ -146,7 +206,7 @@ impl Worker {
             ViewWidget::ScrollView(v) if v.enabled => scroll_control_key(v, key),
             _ => None,
         };
-        self.finish_control_action(id, rect, widget, action, line)
+        self.finish_control_action(id, rect, widget, action, false, line)
     }
 
     pub(in crate::vm::execute::io::tui) fn try_dispatch_control_paste(
@@ -178,6 +238,7 @@ impl Worker {
         rect: fpas_std::ViewRect,
         widget: ViewWidget,
         action: Option<ControlAction>,
+        capture_thumb: bool,
         line: SourceLocation,
     ) -> Result<Option<ProcessOutcome>, VmError> {
         let Some(action) = action else {
@@ -185,10 +246,15 @@ impl Worker {
         };
         self.with_tui(|tui| {
             tui.view_widgets.insert(id, widget);
+            if capture_thumb {
+                tui.views.capture_pointer(id);
+            }
             let _ = tui.session.request_redraw_rect(rect, line);
         });
         match action {
-            ControlAction::Consumed => Ok(Some(ProcessOutcome::WidgetConsumed)),
+            ControlAction::Consumed | ControlAction::CaptureThumb => {
+                Ok(Some(ProcessOutcome::WidgetConsumed))
+            }
             ControlAction::Command(command) => {
                 if !self.with_tui(|tui| tui.commands.is_enabled(command)) {
                     return Ok(Some(ProcessOutcome::WidgetConsumed));
@@ -294,6 +360,7 @@ fn scroll_bar_mouse(
     mouse: UiMouse,
     scroll_up: bool,
     scroll_down: bool,
+    down: bool,
 ) -> Option<ControlAction> {
     if scroll_up {
         bar.scroll_by(-1);
@@ -303,8 +370,40 @@ fn scroll_bar_mouse(
         bar.scroll_by(1);
         return Some(ControlAction::Consumed);
     }
-    if let Some(hit) = bar.hit_test(rect, mouse.x, mouse.y) {
-        bar.apply_hit(hit);
+    if down {
+        if bar.begin_thumb_drag(rect, mouse.x, mouse.y) {
+            return Some(ControlAction::CaptureThumb);
+        }
+        if let Some(hit) = bar.hit_test(rect, mouse.x, mouse.y) {
+            bar.apply_hit(hit);
+        }
+    }
+    Some(ControlAction::Consumed)
+}
+
+fn scroll_view_mouse(
+    view: &mut fpas_std::ScrollViewWidget,
+    rect: fpas_std::ViewRect,
+    mouse: UiMouse,
+    scroll_up: bool,
+    scroll_down: bool,
+    down: bool,
+) -> Option<ControlAction> {
+    if scroll_up {
+        view.scroll_by(-1);
+        return Some(ControlAction::Consumed);
+    }
+    if scroll_down {
+        view.scroll_by(1);
+        return Some(ControlAction::Consumed);
+    }
+    if down {
+        if view.begin_thumb_drag(rect, mouse.x, mouse.y) {
+            return Some(ControlAction::CaptureThumb);
+        }
+        if let Some(hit) = view.scrollbar_hit(rect, mouse.x, mouse.y) {
+            view.apply_scrollbar_hit(rect, hit);
+        }
     }
     Some(ControlAction::Consumed)
 }

@@ -23,8 +23,8 @@ pub use host::TuiHost;
 pub use modal::{ModalClose, ModalId, ModalResult, ModalStack};
 pub use process::{BlockedInput, FocusDirection, ProcessOutcome};
 pub use scroll::{
-    ScrollBarHit, ScrollBarOrientation, ScrollBarThumb, ScrollModel, hit_zone, thumb_geometry,
-    track_cells,
+    ScrollBarHit, ScrollBarOrientation, ScrollBarThumb, ScrollModel, drag_offset, hit_zone,
+    thumb_geometry, track_cells,
 };
 pub use session::TuiSession;
 pub use view::{

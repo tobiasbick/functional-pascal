@@ -37,6 +37,44 @@ begin
   end
 end;
 
+function MouseDown(X: integer; Y: integer): Event;
+begin
+  return record
+    kind := Std.Console.EventKind.Mouse;
+    key := PlainKey(KeyKind.Unknown);
+    mouse_action := MouseAction.Down;
+    mouse_button := MouseButton.Left;
+    mouse_x := X;
+    mouse_y := Y;
+    width := 0;
+    height := 0;
+    text := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+function MouseUp(X: integer; Y: integer): Event;
+begin
+  return record
+    kind := Std.Console.EventKind.Mouse;
+    key := PlainKey(KeyKind.Unknown);
+    mouse_action := MouseAction.Up;
+    mouse_button := MouseButton.Left;
+    mouse_x := X;
+    mouse_y := Y;
+    width := 0;
+    height := 0;
+    text := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
 begin
   var App: Application := Application.OpenForTest(8, 8);
   var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
@@ -72,6 +110,15 @@ begin
   Application.TestPumpUntilIdle(App);
   State := Application.QueryScrollBarState(App, Bar);
   AssertEquals(5, State.scrollOffset);
+  var DragBar: ViewId := Application.HostCreateScrollBarView(App, 2, 0, 1, 8, 20, 4, true);
+  Application.TestSendMouse(App, MouseDown(3, 2));
+  Application.TestPumpUntilIdle(App);
+  Application.TestMoveMouse(App, 3, 6);
+  Application.TestPumpUntilIdle(App);
+  Application.TestSendMouse(App, MouseUp(3, 6));
+  Application.TestPumpUntilIdle(App);
+  State := Application.QueryScrollBarState(App, DragBar);
+  AssertEquals(12, State.scrollOffset);
   Application.HostSetScrollBarExtents(App, Bar, 8, 3);
   State := Application.QueryScrollBarState(App, Bar);
   AssertEquals(8, State.contentLength);

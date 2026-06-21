@@ -5,7 +5,7 @@
 use super::{clip_rect_to_damage, paint_chars};
 use crate::{
     Console, DamageRegion, ScrollBarHit, ScrollBarOrientation, ScrollBarThumb, ScrollModel,
-    ViewRect, hit_zone, thumb_geometry, track_cells,
+    ViewRect, drag_offset, hit_zone, thumb_geometry, track_cells,
 };
 
 /// CRT colors for scroll bars.
@@ -42,6 +42,8 @@ pub struct ScrollBarWidget {
     pub focused: bool,
     /// Current paint style.
     pub style: ScrollBarStyle,
+    /// Active thumb drag grab offset inside the thumb, if any.
+    pub(crate) thumb_drag_grab: Option<usize>,
 }
 
 impl ScrollBarWidget {
@@ -54,6 +56,7 @@ impl ScrollBarWidget {
             enabled: true,
             focused: false,
             style: ScrollBarStyle::default(),
+            thumb_drag_grab: None,
         }
     }
 
@@ -66,7 +69,14 @@ impl ScrollBarWidget {
             enabled: true,
             focused: false,
             style: ScrollBarStyle::default(),
+            thumb_drag_grab: None,
         }
+    }
+
+    /// Return whether a thumb drag is active.
+    #[must_use]
+    pub fn thumb_drag_active(&self) -> bool {
+        self.thumb_drag_grab.is_some()
     }
 
     /// Return the scroll model.
@@ -112,6 +122,35 @@ impl ScrollBarWidget {
         }
     }
 
+    /// Begin a thumb drag when `mouse` hits the thumb. Returns the grab offset.
+    pub fn begin_thumb_drag(&mut self, rect: ViewRect, mouse_x: i64, mouse_y: i64) -> bool {
+        if self.hit_test(rect, mouse_x, mouse_y) != Some(ScrollBarHit::Thumb) {
+            return false;
+        }
+        let Some((track, track_cell)) = self.track_cell_at(rect, mouse_x, mouse_y) else {
+            return false;
+        };
+        let thumb = thumb_geometry(self.scroll, track);
+        self.thumb_drag_grab = Some(track_cell.saturating_sub(thumb.start));
+        true
+    }
+
+    /// Update scroll offset while dragging the thumb.
+    pub fn drag_thumb(&mut self, rect: ViewRect, mouse_x: i64, mouse_y: i64) -> bool {
+        let Some(grab) = self.thumb_drag_grab else {
+            return false;
+        };
+        let Some((track, track_cell)) = self.track_cell_at_clamped(rect, mouse_x, mouse_y) else {
+            return false;
+        };
+        self.set_offset(drag_offset(self.scroll, track, track_cell, grab))
+    }
+
+    /// End an active thumb drag.
+    pub fn end_thumb_drag(&mut self) {
+        self.thumb_drag_grab = None;
+    }
+
     /// Resolve a mouse hit inside `rect`.
     #[must_use]
     pub fn hit_test(&self, rect: ViewRect, mouse_x: i64, mouse_y: i64) -> Option<ScrollBarHit> {
@@ -131,6 +170,54 @@ impl ScrollBarWidget {
             }
         };
         hit_zone(self.scroll, bar_cells, cell)
+    }
+
+    fn track_cell_at(&self, rect: ViewRect, mouse_x: i64, mouse_y: i64) -> Option<(usize, usize)> {
+        let (bar_cells, cell) = self.bar_cell(rect, mouse_x, mouse_y)?;
+        if cell == 0 || cell + 1 == bar_cells {
+            return None;
+        }
+        Some((track_cells(bar_cells), cell - 1))
+    }
+
+    fn track_cell_at_clamped(
+        &self,
+        rect: ViewRect,
+        mouse_x: i64,
+        mouse_y: i64,
+    ) -> Option<(usize, usize)> {
+        let (bar_cells, cell) = self.bar_cell(rect, mouse_x, mouse_y)?;
+        let track = track_cells(bar_cells);
+        if track == 0 {
+            return None;
+        }
+        let track_cell = if cell == 0 {
+            0
+        } else if cell + 1 == bar_cells {
+            track - 1
+        } else {
+            cell - 1
+        };
+        Some((track, track_cell))
+    }
+
+    fn bar_cell(&self, rect: ViewRect, mouse_x: i64, mouse_y: i64) -> Option<(usize, usize)> {
+        let bar_cells = match self.orientation {
+            ScrollBarOrientation::Vertical => rect.height.max(0) as usize,
+            ScrollBarOrientation::Horizontal => rect.width.max(0) as usize,
+        };
+        if bar_cells < 3 {
+            return None;
+        }
+        let cell = match self.orientation {
+            ScrollBarOrientation::Vertical => {
+                mouse_y.saturating_sub(1).saturating_sub(rect.y) as usize
+            }
+            ScrollBarOrientation::Horizontal => {
+                mouse_x.saturating_sub(1).saturating_sub(rect.x) as usize
+            }
+        };
+        (cell < bar_cells).then_some((bar_cells, cell))
     }
 
     /// Paint the scroll bar.

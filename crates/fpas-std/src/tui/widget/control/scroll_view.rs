@@ -38,6 +38,8 @@ pub struct ScrollViewWidget {
     pub focused: bool,
     /// Current paint style.
     pub style: ScrollViewStyle,
+    /// Active integrated scroll-bar thumb drag grab offset, if any.
+    thumb_drag_grab: Option<usize>,
 }
 
 impl ScrollViewWidget {
@@ -50,7 +52,14 @@ impl ScrollViewWidget {
             enabled: true,
             focused: false,
             style: ScrollViewStyle::default(),
+            thumb_drag_grab: None,
         }
+    }
+
+    /// Return whether a thumb drag is active on the integrated scroll bar.
+    #[must_use]
+    pub fn thumb_drag_active(&self) -> bool {
+        self.thumb_drag_grab.is_some()
     }
 
     /// Return the scroll offset.
@@ -138,6 +147,45 @@ impl ScrollViewWidget {
         }
     }
 
+    /// Begin a thumb drag on the integrated scroll bar.
+    pub fn begin_thumb_drag(&mut self, rect: ViewRect, mouse_x: i64, mouse_y: i64) -> bool {
+        let Some(bar_rect) = self.scrollbar_rect(rect) else {
+            return false;
+        };
+        let bar = ScrollBarWidget::with_scroll(ScrollBarOrientation::Vertical, self.scroll);
+        if bar.hit_test(bar_rect, mouse_x, mouse_y) != Some(ScrollBarHit::Thumb) {
+            return false;
+        }
+        let mut drag_bar = bar;
+        if !drag_bar.begin_thumb_drag(bar_rect, mouse_x, mouse_y) {
+            return false;
+        }
+        self.thumb_drag_grab = drag_bar.thumb_drag_grab;
+        true
+    }
+
+    /// Update scroll offset while dragging the integrated scroll-bar thumb.
+    pub fn drag_thumb(&mut self, rect: ViewRect, mouse_x: i64, mouse_y: i64) -> bool {
+        let Some(grab) = self.thumb_drag_grab else {
+            return false;
+        };
+        let Some(bar_rect) = self.scrollbar_rect(rect) else {
+            return false;
+        };
+        let mut bar = ScrollBarWidget::with_scroll(ScrollBarOrientation::Vertical, self.scroll);
+        bar.thumb_drag_grab = Some(grab);
+        if !bar.drag_thumb(bar_rect, mouse_x, mouse_y) {
+            return false;
+        }
+        self.scroll = bar.scroll();
+        true
+    }
+
+    /// End an active integrated scroll-bar thumb drag.
+    pub fn end_thumb_drag(&mut self) {
+        self.thumb_drag_grab = None;
+    }
+
     /// Paint content and integrated scroll bar.
     pub fn paint(&self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
         let Some(clip) = clip_rect_to_damage(rect, damage) else {
@@ -168,8 +216,7 @@ impl ScrollViewWidget {
             );
         }
         if let Some(bar_rect) = self.scrollbar_rect(rect) {
-            let mut bar =
-                ScrollBarWidget::with_scroll(ScrollBarOrientation::Vertical, self.scroll);
+            let mut bar = ScrollBarWidget::with_scroll(ScrollBarOrientation::Vertical, self.scroll);
             bar.enabled = self.enabled;
             bar.focused = self.focused;
             bar.style = self.style.scrollbar;

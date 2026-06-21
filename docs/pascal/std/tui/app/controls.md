@@ -33,8 +33,8 @@ a dialog subtree.
 - Optional command ids invoke `ApplicationHandlers.OnCommand` after activation.
 - List boxes use Up/Down/Home/End, Enter/Space, direct row clicks, and mouse-wheel scrolling.
 - Scroll bars and scroll views use Up/Down/Home/End, PageUp/PageDown, mouse-wheel scrolling, and
-  scroll-bar arrow/track clicks. Scroll views reserve one column for an integrated vertical bar when
-  content overflows.
+  scroll-bar arrow/track clicks. Dragging the thumb captures the pointer until button release.
+  Scroll views reserve one column for an integrated vertical bar when content overflows.
 
 ## State
 

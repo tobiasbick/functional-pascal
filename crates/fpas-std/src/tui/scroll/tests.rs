@@ -1,6 +1,7 @@
 //! Unit tests for scroll model and geometry.
 
-use super::{ScrollBarHit, ScrollModel, hit_zone, thumb_geometry, track_cells};
+use super::{ScrollBarHit, ScrollModel, drag_offset, hit_zone, thumb_geometry, track_cells};
+use crate::{ScrollBarOrientation, ScrollBarWidget, ViewRect};
 
 #[test]
 fn scroll_model_clamps_offset() {
@@ -37,4 +38,26 @@ fn hit_zone_maps_track_cells() {
         hit_zone(model, bar, 1),
         Some(ScrollBarHit::TrackBefore | ScrollBarHit::Thumb)
     ));
+}
+
+#[test]
+fn drag_offset_maps_track_cell_to_offset() {
+    let scroll = ScrollModel::new(20, 4);
+    assert_eq!(drag_offset(scroll, 6, 4, 0), 12);
+}
+
+#[test]
+fn scroll_bar_thumb_drag_updates_offset() {
+    let mut bar = ScrollBarWidget::new(ScrollBarOrientation::Vertical, 20, 4);
+    let rect = ViewRect {
+        x: 0,
+        y: 0,
+        width: 1,
+        height: 8,
+    };
+    assert!(bar.begin_thumb_drag(rect, 1, 2));
+    assert!(bar.drag_thumb(rect, 1, 6));
+    assert_eq!(bar.scroll_offset(), 12);
+    bar.end_thumb_drag();
+    assert!(!bar.thumb_drag_active());
 }

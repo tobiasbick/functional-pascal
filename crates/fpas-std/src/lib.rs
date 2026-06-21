@@ -87,8 +87,8 @@ pub use tui::{
     ScrollBarHit, ScrollBarOrientation, ScrollBarStyle, ScrollBarThumb, ScrollBarWidget,
     ScrollModel, ScrollViewStyle, ScrollViewWidget, SolidFillWidget, StatusBarSegment,
     StatusBarStyle, StatusBarWidget, TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS,
-    TUI_VIEW_KIND_VARIANTS, TuiEvent, TuiHost, TuiSession, ViewId, ViewKind, ViewOptions,
-    ViewRect, ViewRegistry, ViewState, ViewWidget, WindowPalette, WindowShadow, hit_zone,
+    TUI_VIEW_KIND_VARIANTS, TuiEvent, TuiHost, TuiSession, ViewId, ViewKind, ViewOptions, ViewRect,
+    ViewRegistry, ViewState, ViewWidget, WindowPalette, WindowShadow, drag_offset, hit_zone,
     register_framed_dialog_root, thumb_geometry, track_cells,
 };
 pub use ui::{UiEvent, UiHost, UiHostSurface, UiModifiers, UiMouse, UiResize, UiWheel};

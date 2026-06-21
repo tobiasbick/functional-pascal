@@ -21,7 +21,7 @@ Use this checklist after changes to terminal behavior, hosted dispatch, focus, m
 | View-scoped commands | `fpas examples/pascal/tui/view_scoped_commands.fpas` | Tab traversal changes focus, focused-view shortcuts win over less-local command maps, and global shortcuts still work when no local binding matches. |
 | Existing-view modal | `fpas examples/pascal/tui/show_modal_existing_view.fpas` | While the modal is active, focus, key commands, and mouse events are scoped to the modal view subtree. Closing the modal restores background interaction. |
 | Owned dialog modal | `fpas examples/pascal/tui/show_dialog.fpas` | Opens an owned modal root with OK/Cancel focus targets. Escape sets Cancel via modal-local command binding, closes the dialog, unregisters the owned root, and restores background focus. |
-| IDE About dialog | `fpas apps/ide/ide.fpasprj` | Help → About opens a modal dialog; Enter on OK or Escape closes it and restores the shell. |
+| IDE About dialog | `fpas apps/ide/ide.fpasprj` | Help → About immediately shows a framed dialog and its contents; Enter, Escape, and a left click on OK close it and restore the shell. |
 
 ## Real-terminal observations
 

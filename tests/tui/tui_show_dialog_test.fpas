@@ -8,7 +8,8 @@ const
   ModalResultCancel: integer := 2;
 
 mutable var
-  mutable var ClosedWithCancel: boolean := false;
+  mutable var CloseCount: integer := 0;
+  mutable var OkView: option of ViewId := None;
 
 procedure OnPaint(App: Application);
 begin
@@ -23,21 +24,85 @@ begin
   begin
     Application.HostSetActiveModalResult(App, ModalResultCancel);
     Application.CloseModal(App);
-    ClosedWithCancel := true
+    OkView := None;
+    CloseCount := CloseCount + 1
   end
 end;
 
+procedure OnDialogPaint(App: Application; View: ViewId; Bounds: Rect);
 begin
-  var App: Application := Application.OpenForTest(80, 25);
-  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; OnCommand := Some(OnCommand); end;
-  Application.Configure(App, Handlers);
-  Application.RequestRedraw(App);
-  Application.TestPump(App);
-  AssertEquals(0, Application.QueryModalDepth(App));
+  TextColor(Black);
+  TextBackground(LightGray);
+  GotoXY(1, 1);
+  Write('┌────────────────────────────┐');
+  GotoXY(1, 7);
+  Write('└────────────────────────────┘')
+end;
+
+procedure OnBodyPaint(App: Application; View: ViewId; Bounds: Rect);
+begin
+  TextColor(Black);
+  TextBackground(LightGray);
+  GotoXY(1, 1);
+  Write('Visible immediately')
+end;
+
+procedure OnOkPaint(App: Application; View: ViewId; Bounds: Rect);
+begin
+  TextColor(LightGray);
+  TextBackground(Black);
+  GotoXY(1, 1);
+  Write('[ OK ]')
+end;
+
+procedure OnMouse(App: Application; Event: Std.Console.Event);
+begin
+  if (Event.mouse_action <> MouseAction.Down) or (Event.mouse_button <> MouseButton.Left) then
+  begin
+    return
+  end;
+  case OkView of
+    Some(Button):
+    begin
+      var Bounds: Rect := Application.QueryViewRect(App, Button);
+      if Event.mouse_x <= Bounds.x then
+      begin
+        return
+      end;
+      if Event.mouse_x > Bounds.x + Bounds.width then
+      begin
+        return
+      end;
+      if Event.mouse_y <= Bounds.y then
+      begin
+        return
+      end;
+      if Event.mouse_y > Bounds.y + Bounds.height then
+      begin
+        return
+      end;
+      OnCommand(App, CmdDialogCancel)
+    end;
+    None:
+    begin
+    end
+  end
+end;
+
+procedure OpenDialog(App: Application);
+begin
   var Dialog: ViewId := Application.ShowDialog(App, DialogModalId, 20, 8, 30, 7);
-  var Body: ViewId := Application.HostCreateSolidFillView(App, 0, 0, 28, 5, LightGray, None, None);
+  var Body: ViewId := Application.HostCreateSolidFillView(App, 0, 0, 28, 5, LightGray, Some(Black), None);
   Application.HostSetViewParent(App, Body, Some(Dialog));
   Application.HostSetViewRect(App, Body, 1, 1, 28, 5);
+  Application.HostRegisterOnViewPaint(App, Dialog, OnDialogPaint);
+  Application.HostRegisterOnViewPaint(App, Body, OnBodyPaint);
+  var Button: ViewId := Application.HostRegisterView(App, 0, 0, 8, 1);
+  OkView := Some(Button);
+  Application.HostSetViewParent(App, Button, Some(Dialog));
+  Application.HostSetViewRect(App, Button, 11, 4, 8, 1);
+  Application.HostPushChildView(App, Button);
+  Application.HostRegisterOnViewPaint(App, Button, OnOkPaint);
   var EscapeKey: Std.Console.KeyEvent := record
     kind := KeyKind.Escape;
     ch := Std.Str.Chr(27);
@@ -47,12 +112,58 @@ begin
     meta := false;
   end;
   Application.HostBindCommandToActiveModal(App, EscapeKey, CmdDialogCancel);
-  AssertEquals(1, Application.QueryModalDepth(App));
+  Application.RequestRedraw(App)
+end;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+    OnMouse := Some(OnMouse);
+    OnCommand := Some(OnCommand);
+  end;
+  Application.Configure(App, Handlers);
   Application.RequestRedraw(App);
   Application.TestPump(App);
+  AssertEquals(0, Application.QueryModalDepth(App));
+  OpenDialog(App);
+  Application.TestPump(App);
+  AssertEquals(1, Application.QueryModalDepth(App));
+  var FrameCorner: ScreenCell := Application.QueryScreenCell(App, 21, 9);
+  var FirstBodyCell: ScreenCell := Application.QueryScreenCell(App, 22, 10);
+  AssertTrue(FrameCorner.ch = '┌');
+  AssertTrue(FirstBodyCell.ch = 'V');
+  case OkView of
+    Some(Button):
+    begin
+      var ButtonBounds: Rect := Application.QueryViewRect(App, Button);
+      Application.TestClickMouse(App, (ButtonBounds.x + ButtonBounds.width) + 2, ButtonBounds.y + 1);
+      Application.TestPumpUntilIdle(App);
+      AssertEquals(1, Application.QueryModalDepth(App));
+      Application.TestClickMouse(App, ButtonBounds.x + 1, ButtonBounds.y + 1)
+    end;
+    None:
+    begin
+      AssertTrue(false)
+    end
+  end;
+  Application.TestPumpUntilIdle(App);
+  AssertEquals(1, CloseCount);
+  AssertEquals(0, Application.QueryModalDepth(App));
+  OpenDialog(App);
+  Application.TestPump(App);
+  var EscapeKey: Std.Console.KeyEvent := record
+    kind := KeyKind.Escape;
+    ch := Std.Str.Chr(27);
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end;
+  AssertEquals(1, Application.QueryModalDepth(App));
   Application.TestSendKey(App, EscapeKey);
   Application.TestPump(App);
-  AssertTrue(ClosedWithCancel);
+  AssertEquals(2, CloseCount);
   AssertEquals(0, Application.QueryModalDepth(App));
   Application.CloseForTest(App)
 end.

@@ -34,20 +34,57 @@ begin
   return AboutRoot <> None
 end;
 
-private procedure PaintAboutChrome(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
+private procedure PaintAboutFrame(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
 begin
+  TextColor(Black);
+  TextBackground(LightGray);
+  GotoXY(1, 1);
+  Write('┌');
+  mutable var X: integer := 2;
+  while X < AboutWidth do
+  begin
+    Write('─');
+    X := X + 1
+  end;
+  Write('┐');
+  mutable var Y: integer := 2;
+  while Y < AboutHeight do
+  begin
+    GotoXY(1, Y);
+    Write('│');
+    GotoXY(AboutWidth, Y);
+    Write('│');
+    Y := Y + 1
+  end;
+  GotoXY(1, AboutHeight);
+  Write('└');
+  X := 2;
+  while X < AboutWidth do
+  begin
+    Write('─');
+    X := X + 1
+  end;
+  Write('┘');
   GotoXY(2, 1);
-  Write('About FPAS IDE');
-  GotoXY(2, 3);
+  Write(' About FPAS IDE ')
+end;
+
+private procedure PaintAboutBody(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
+begin
+  TextColor(Black);
+  TextBackground(LightGray);
+  GotoXY(1, 2);
   Write('Functional Pascal IDE shell');
-  GotoXY(2, 4);
+  GotoXY(1, 3);
   Write('Turbo Vision-style hosted TUI');
-  GotoXY(2, 6);
+  GotoXY(1, 5);
   Write('Press Enter on OK or Escape to close.')
 end;
 
 private procedure PaintAboutOk(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
 begin
+  TextColor(LightGray);
+  TextBackground(Black);
   GotoXY(1, 1);
   Write('[ OK ]')
 end;
@@ -113,7 +150,8 @@ begin
   var Body: ViewId := Application.HostCreateSolidFillView(App, 0, 0, AboutWidth - 2, AboutHeight - 2, LightGray, Some(Black), None);
   Application.HostSetViewParent(App, Body, Some(Root));
   Application.HostSetViewRect(App, Body, 1, 1, AboutWidth - 2, AboutHeight - 2);
-  Application.HostRegisterOnViewPaint(App, Root, PaintAboutChrome);
+  Application.HostRegisterOnViewPaint(App, Root, PaintAboutFrame);
+  Application.HostRegisterOnViewPaint(App, Body, PaintAboutBody);
   var OkX: integer := ((AboutWidth - 8) div 2) + 1;
   var OkY: integer := AboutHeight - 3;
   var OkView: ViewId := Application.HostRegisterView(App, 0, 0, 8, 1);
@@ -124,6 +162,46 @@ begin
   Application.HostRegisterOnViewPaint(App, OkView, PaintAboutOk);
   BindAboutModalShortcuts(App);
   Application.RequestRedraw(App)
+end;
+
+/// Close the About dialog when its OK control is clicked.
+
+procedure HandleMouse(App: Application; Event: Std.Console.Event);
+begin
+  if Event.mouse_action <> MouseAction.Down then
+  begin
+    return
+  end;
+  if Event.mouse_button <> MouseButton.Left then
+  begin
+    return
+  end;
+  case AboutOkView of
+    Some(OkView):
+    begin
+      var Bounds: Std.Tui.Rect := Application.QueryViewRect(App, OkView);
+      if Event.mouse_x <= Bounds.x then
+      begin
+        return
+      end;
+      if Event.mouse_x > Bounds.x + Bounds.width then
+      begin
+        return
+      end;
+      if Event.mouse_y <= Bounds.y then
+      begin
+        return
+      end;
+      if Event.mouse_y > Bounds.y + Bounds.height then
+      begin
+        return
+      end;
+      CloseAbout(App, ModalResultAccept)
+    end;
+    None:
+    begin
+    end
+  end
 end;
 
 /// Handle modal-local About commands. Returns true when the command was consumed.

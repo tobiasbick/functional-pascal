@@ -94,6 +94,11 @@ begin
   end
 end;
 
+private procedure OnMouse(App: Application; Event: Std.Console.Event);
+begin
+  HandleMouse(App, Event)
+end;
+
 /// Keep host widgets aligned with the terminal size.
 
 private procedure OnResize(App: Application; NewSize: Size);
@@ -139,6 +144,7 @@ begin
   EnsureChrome(App);
   var Handlers: ApplicationHandlers := record
     OnPaint := OnPaint;
+    OnMouse := Some(OnMouse);
     OnResize := Some(OnResize);
     OnCommand := Some(OnCommand);
   end;

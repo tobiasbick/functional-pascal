@@ -18,7 +18,7 @@ mod tree;
 
 use std::collections::HashMap;
 
-use super::widget::frame::{FrameRootState, WindowInteraction};
+use super::widget::frame::{FrameRootState, FrameScrollInteraction, WindowInteraction};
 
 #[cfg(test)]
 mod tests;
@@ -163,4 +163,5 @@ pub struct ViewRegistry {
     desktop: DesktopMetrics,
     pub(crate) frame_roots: HashMap<ViewId, FrameRootState>,
     pub(crate) window_interaction: Option<WindowInteraction>,
+    pub(crate) frame_scroll_interaction: Option<FrameScrollInteraction>,
 }

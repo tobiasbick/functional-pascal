@@ -488,6 +488,14 @@ pub enum TuiIntrinsic {
     HostTileFrameRoots = 417,
     /// Create an owned painted dialog frame and enter it modally.
     ApplicationShowFramedDialog = 418,
+    /// Replace logical content size for a scrollable frame root.
+    HostSetFrameContentSize = 419,
+    /// Scroll a frame root by signed cell deltas.
+    HostScrollFrame = 420,
+    /// Set absolute scroll offsets for a frame root.
+    HostSetFrameScrollOffset = 421,
+    /// Query frame scroll offsets and logical content size.
+    QueryFrameScrollState = 422,
     // **375..=377** are `Std.Test` screen/view assertions; **378** is `Std.Test.PushReadLn` (see `TestIntrinsic`).
     // Note: **348..=355** are owned by `Std.Test` (`TestIntrinsic`).
 }

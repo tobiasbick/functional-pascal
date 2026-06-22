@@ -142,6 +142,7 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_SCROLL_BAR_STATE,
     std_symbols::STD_TUI_SCROLL_VIEW_STATE,
     std_symbols::STD_TUI_FRAME_ROOT_STATE,
+    std_symbols::STD_TUI_FRAME_SCROLL_STATE,
     std_symbols::STD_TUI_MENU_BAR_STATE,
     std_symbols::STD_TUI_EVENT,
     std_symbols::STD_TUI_EVENT_KIND,
@@ -253,6 +254,10 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_APPLICATION_QUERY_FRAME_ROOT_STATE,
     std_symbols::STD_TUI_APPLICATION_HOST_CASCADE_FRAME_ROOTS,
     std_symbols::STD_TUI_APPLICATION_HOST_TILE_FRAME_ROOTS,
+    std_symbols::STD_TUI_APPLICATION_HOST_SET_FRAME_CONTENT_SIZE,
+    std_symbols::STD_TUI_APPLICATION_HOST_SCROLL_FRAME,
+    std_symbols::STD_TUI_APPLICATION_HOST_SET_FRAME_SCROLL_OFFSET,
+    std_symbols::STD_TUI_APPLICATION_QUERY_FRAME_SCROLL_STATE,
 ];
 
 pub(in super::super) const STD_GRAPH_SYMBOLS: &[&str] = &[

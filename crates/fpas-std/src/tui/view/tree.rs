@@ -139,6 +139,12 @@ impl ViewRegistry {
         &self.roots
     }
 
+    /// Return the local rectangle stored for one view.
+    #[must_use]
+    pub(crate) fn local_rect(&self, id: ViewId) -> Option<ViewRect> {
+        self.entry(id).map(|entry| entry.local_rect)
+    }
+
     /// Return direct child ids in sibling order (back-to-front within the tier).
     #[must_use]
     pub fn children(&self, id: ViewId) -> &[ViewId] {

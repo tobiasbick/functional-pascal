@@ -122,6 +122,16 @@ impl Worker {
         if let Some(view) = paint_view {
             if let Some(widget) = widget.as_mut() {
                 widget.sync_view_state(view.state);
+                if let ViewWidget::Frame(frame) = widget {
+                    if let Some(state) = {
+                        let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+                        tui.views.frame_root_state(view.id).copied()
+                    } {
+                        frame.content_size = state.content_size;
+                        frame.scroll_x = state.scroll_x;
+                        frame.scroll_y = state.scroll_y;
+                    }
+                }
             }
             if let Some(widget) = widget.as_ref() {
                 self.paint_widget_underlay(widget, view, damage)?;

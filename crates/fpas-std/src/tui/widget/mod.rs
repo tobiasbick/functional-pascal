@@ -20,8 +20,9 @@ pub use control::{
 };
 pub use frame::{
     FrameButtonSlots, FrameCapabilities, FrameChromeHit, FrameContentSize, FrameGeometry,
-    FrameGeometryError, FrameKind, FrameRoot, FrameRootSpec, FrameRootState, FrameScrollbars,
-    FrameStyle, FrameWidget, FramedDialogRoot, register_framed_dialog_root,
+    FrameGeometryError, FrameKind, FrameRoot, FrameRootSpec, FrameRootState, FrameScrollHit,
+    FrameScrollState, FrameScrollbars, FrameStyle, FrameWidget, FramedDialogRoot,
+    register_framed_dialog_root,
 };
 pub use menu_bar::{MenuBarItem, MenuBarMouseResult, MenuBarState, MenuBarStyle, MenuBarWidget};
 pub use menu_popup::MenuPopupItem;

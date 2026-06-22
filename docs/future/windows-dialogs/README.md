@@ -373,11 +373,11 @@ VM bridge: new intrinsics in `fpas-bytecode`, sema in `loaded/tui/`, compiler lo
 
 ### Phase 2 — Scrolling
 
-- [ ] `scroll.rs` — state, vertical/horizontal bar paint (`▲█▼`, `◄█►`), auto-show when content exceeds view.
-- [ ] Apply scroll offset through the Phase 1 registry transform for paint, query, hit-test, damage, and nested descendants.
-- [ ] Mouse wheel bubbles child-first; direct scroll bar clicks target frame chrome.
-- [ ] Keyboard scrolling runs after focused descendant handling and before modal/global fallback handling.
-- [ ] `HostSetFrameContentSize`, `HostScrollFrame`, `HostSetFrameScrollOffset`, `QueryFrameScrollState`.
+- [x] `scroll.rs` — state, vertical/horizontal bar paint (`▲█▼`, `◄█►`), auto-show when content exceeds view.
+- [x] Apply scroll offset through the Phase 1 registry transform for paint, query, hit-test, damage, and nested descendants.
+- [x] Mouse wheel bubbles child-first; direct scroll bar clicks target frame chrome.
+- [x] Keyboard scrolling runs after focused descendant handling and before modal/global fallback handling.
+- [x] `HostSetFrameContentSize`, `HostScrollFrame`, `HostSetFrameScrollOffset`, `QueryFrameScrollState`.
 - [ ] Enable `Scrollable` in both default capability presets only after the complete input and rendering path is available.
 - [ ] Examples: long text in window; list taller than dialog viewport.
 - [ ] FPAS tests under `tests/tui/` (headless scroll offset + bar visibility queries if exposed).

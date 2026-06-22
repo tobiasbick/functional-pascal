@@ -326,7 +326,7 @@ the retained Rust contracts; bridge tags are encoded only at the intrinsic bound
 **Implementation status (2026-06-22): partial.** Geometry, desktop constraints, active-root
 primitives, atomic frame-root creation, owned framed-dialog registration, public painted
 `HostCreateFrameView`, `ShowFramedDialog`, palette presets, inner viewport clipping, and overlay
-chrome are complete. Frame-integrated scroll chrome and close handling remain open — see
+chrome are complete. Frame-integrated scroll chrome is implemented; examples remain open — see
 [Remaining work](#remaining-work-2026-06-22).
 
 - [x] Add active-root tracking and raise/activate (click-to-front) in the retained registry.
@@ -416,15 +416,15 @@ dialogs. Current spec for implemented behavior: [`docs/pascal/std/tui/app/frames
 - [x] Public `Application.HostCreateFrameView`, consolidated from `HostCreateFrameRootView`.
 - [x] Public `Application.ShowFramedDialog` VM bridge over existing `register_framed_dialog_root`.
 - [x] Enable `Closable` capability — title-bar close hit-test and sourced close command (`CommandId` `-4`).
-- [ ] Frame-integrated scroll chrome (`scroll.rs`) — offset state, `▲█▼` / `◄█►` paint, wheel and
+- [x] Frame-integrated scroll chrome (`scroll.rs`) — offset state, `▲█▼` / `◄█►` paint, wheel and
   track/thumb input on frame borders (distinct from standalone `ScrollView` / `ScrollBar` controls).
-- [ ] `HostSetFrameContentSize`, `HostScrollFrame`, `HostSetFrameScrollOffset`, `QueryFrameScrollState`.
-- [ ] Auto `content_size` from child bounds for scroll-bar visibility.
+- [x] `HostSetFrameContentSize`, `HostScrollFrame`, `HostSetFrameScrollOffset`, `QueryFrameScrollState`.
+- [x] Auto `content_size` from child bounds for scroll-bar visibility.
 - [ ] Examples: `examples/pascal/tui/framed_window.fpas`, `framed_dialog.fpas`.
 - [x] FPAS test: painted frame chrome, palettes, title truncation, overlay ordering, and view kind.
 - [x] FPAS + VM tests: owned framed-dialog cleanup and atomic invalid-geometry rejection.
 - [x] FPAS tests: close and zoom chrome clicks.
-- [ ] FPAS tests: frame scroll offset queries.
+- [x] FPAS tests: frame scroll offset queries.
 
 ### Phase 7 — Editor, layout, and polish
 

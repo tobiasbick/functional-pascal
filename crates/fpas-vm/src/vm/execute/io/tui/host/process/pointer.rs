@@ -58,6 +58,9 @@ impl Worker {
         if let Some(tag) = self.try_dispatch_control_mouse(mouse, modal_scope, line)? {
             return Ok(tag);
         }
+        if let Some(tag) = self.try_dispatch_frame_wheel(mouse, modal_scope, line)? {
+            return Ok(tag);
+        }
         let redraw_hint = self.mouse_redraw_hint(modal_scope, mouse);
         self.dispatch_console_event_handler(
             on_mouse,

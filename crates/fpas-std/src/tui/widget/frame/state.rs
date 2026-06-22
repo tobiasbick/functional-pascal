@@ -2,9 +2,21 @@
 //!
 //! Plan: `docs/future/windows-dialogs/README.md`
 
-use crate::{ViewId, ViewRect, ViewRegistry};
+use crate::{ScrollModel, ViewId, ViewRect, ViewRegistry};
 
+use super::scroll::sync_frame_scroll_extents;
 use super::{FrameCapabilities, FrameContentSize, FrameGeometry, FrameGeometryError, FrameKind};
+
+/// Captured frame scroll-bar thumb drag.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FrameScrollInteraction {
+    /// Frame root owning the scroll bar.
+    pub root: ViewId,
+    /// Dragged scroll-bar axis.
+    pub orientation: crate::ScrollBarOrientation,
+    /// Grab offset inside the thumb track.
+    pub grab: usize,
+}
 
 /// Resize edge selected by a border hit-test.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -34,6 +46,10 @@ pub struct FrameRootState {
     pub geometry: FrameGeometry,
     /// Rectangle saved before zoom; `None` when the frame is not zoomed.
     pub pre_zoom_rect: Option<ViewRect>,
+    /// Horizontal scroll offset model.
+    pub scroll_x: ScrollModel,
+    /// Vertical scroll offset model.
+    pub scroll_y: ScrollModel,
 }
 
 /// In-flight pointer interaction on a frame root.
@@ -100,8 +116,13 @@ impl ViewRegistry {
                 content_size,
                 geometry,
                 pre_zoom_rect: None,
+                scroll_x: ScrollModel::default(),
+                scroll_y: ScrollModel::default(),
             },
         );
+        if let Some(state) = self.frame_roots.get_mut(&view_id) {
+            sync_frame_scroll_extents(state);
+        }
     }
 
     /// Remove frame metadata and any in-flight interaction for views in `subtree`.
@@ -114,6 +135,12 @@ impl ViewRegistry {
             .is_some_and(|interaction| subtree.contains(&interaction.root))
         {
             self.window_interaction = None;
+        }
+        if self
+            .frame_scroll_interaction
+            .is_some_and(|interaction| subtree.contains(&interaction.root))
+        {
+            self.frame_scroll_interaction = None;
         }
     }
 
@@ -129,6 +156,7 @@ impl ViewRegistry {
             Some(rect) => rect,
             None => return false,
         };
+        self.maybe_measure_frame_content_size(root);
         let (content_size, capabilities) = {
             let Some(state) = self.frame_roots.get(&root) else {
                 return false;
@@ -141,6 +169,7 @@ impl ViewRegistry {
         };
         if let Some(state) = self.frame_roots.get_mut(&root) {
             state.geometry = geometry;
+            sync_frame_scroll_extents(state);
         }
         true
     }

@@ -38,16 +38,26 @@ impl ViewRegistry {
         let (rect, inherited_visible, inherited_limit) = match entry.parent {
             Some(parent_id) => {
                 let (parent, child_limit) = self.resolve_with_limit(parent_id)?;
-                (
+                let rect = if self.frame_roots.contains_key(&parent_id) {
+                    let frame = self.frame_roots.get(&parent_id)?;
+                    let view = frame.geometry.view;
+                    let ox = frame.scroll_x.offset() as i64;
+                    let oy = frame.scroll_y.offset() as i64;
+                    ViewRect {
+                        x: view.x + entry.local_rect.x - ox,
+                        y: view.y + entry.local_rect.y - oy,
+                        width: entry.local_rect.width,
+                        height: entry.local_rect.height,
+                    }
+                } else {
                     ViewRect {
                         x: parent.rect.x.saturating_add(entry.local_rect.x),
                         y: parent.rect.y.saturating_add(entry.local_rect.y),
                         width: entry.local_rect.width,
                         height: entry.local_rect.height,
-                    },
-                    parent.state.visible,
-                    child_limit,
-                )
+                    }
+                };
+                (rect, parent.state.visible, child_limit)
             }
             None => (entry.local_rect, true, ClipLimit::Unbounded),
         };

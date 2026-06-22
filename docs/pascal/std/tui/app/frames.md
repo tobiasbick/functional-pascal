@@ -19,6 +19,17 @@ activation.
 | `Application.QueryFrameRootState(App, ViewId)` | Query outer geometry, capability flags, and zoom state. |
 | `Application.HostCascadeFrameRoots(App, StepX, StepY)` | Cascade window roots diagonally from the work-area origin; each root keeps its size. Returns the number of roots repositioned. Typical steps are `2` and `1`. |
 | `Application.HostTileFrameRoots(App)` | Resize and arrange window roots in a grid that fills the desktop work area. Returns the number of roots repositioned. |
+| `Application.HostSetFrameContentSize(App, FrameView, ContentWidth, ContentHeight)` | Replace logical content size for a scrollable frame root and refresh scroll-bar geometry. |
+| `Application.HostScrollFrame(App, FrameView, DeltaX, DeltaY)` | Scroll a scrollable frame root by signed cell deltas. |
+| `Application.HostSetFrameScrollOffset(App, FrameView, OffsetX, OffsetY)` | Set absolute scroll offsets for a scrollable frame root. |
+| `Application.QueryFrameScrollState(App, FrameView)` | Query scroll offsets and logical content size. |
+
+## `FrameScrollState`
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `offsetX`, `offsetY` | `integer` | Current scroll offsets in terminal cells. |
+| `contentWidth`, `contentHeight` | `integer` | Logical content size used for scroll-bar visibility. |
 
 ## `FrameRootState`
 
@@ -43,12 +54,16 @@ graph. When `Zoomable` is `true`, clicking `▲` zooms the frame to the desktop 
 restores the saved rectangle.
 
 Children are clipped for paint, hit-testing, focus eligibility, and scene queries to the resolved
-inner frame viewport. This invariant applies even if generic `ViewOptions.clipChildren` is false.
-Reparenting still preserves a child's absolute rectangle; scroll-relative content origins are not
-introduced until frame-integrated scrolling is implemented.
+inner frame viewport. Direct children use **view coordinates** (origin at the top-left of the
+viewport). The host applies scroll offsets when resolving descendant geometry.
 
-Frame-integrated scrolling is not implemented yet. `Scrollable` currently participates in validated
-geometry only; use standalone `ScrollView` or `ScrollBar` controls for interactive scrolling.
+When `Scrollable` is `true`, the frame paints integrated `▲█▼` / `◄█►` scroll chrome on its border
+columns and rows. Scroll bars appear when logical content exceeds the viewport. Use
+`HostSetFrameContentSize` to set content size explicitly; when content size remains `(0, 0)`, the
+host measures direct-child bounds before resolving geometry. Mouse wheel over the viewport scrolls
+vertically after child controls decline the event; arrow, page, home, and end keys scroll the
+containing frame after focused descendant handling. Scroll-bar arrows, track clicks, and thumb drags
+target frame chrome directly.
 
 ## Pointer interaction
 
@@ -85,5 +100,5 @@ Application-defined command ids remain non-negative and still flow through `OnCo
 | ----- | -------- |
 | Geometry + painting + interaction | `crates/fpas-std/src/tui/widget/frame/` |
 | VM bridge | `crates/fpas-vm/src/vm/execute/io/tui/frame_model/`, `views/modal.rs` |
-| Intrinsics **410..=418** | `crates/fpas-bytecode/src/intrinsic/tui.rs` |
-| FPAS tests | `tests/tui/tui_frame_chrome_test.fpas`, `tests/tui/tui_frame_chrome_actions_test.fpas`, `tests/tui/tui_framed_dialog_test.fpas`, `tests/tui/tui_frame_window_test.fpas`, `tests/tui/tui_frame_layout_test.fpas` |
+| Intrinsics **410..=422** | `crates/fpas-bytecode/src/intrinsic/tui.rs` |
+| FPAS tests | `tests/tui/tui_frame_chrome_test.fpas`, `tests/tui/tui_frame_chrome_actions_test.fpas`, `tests/tui/tui_framed_dialog_test.fpas`, `tests/tui/tui_frame_window_test.fpas`, `tests/tui/tui_frame_layout_test.fpas`, `tests/tui/tui_frame_scroll_test.fpas` |

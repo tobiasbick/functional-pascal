@@ -1,0 +1,67 @@
+program TuiFrameScrollTest;
+
+uses Std.Console, Std.Tui, Std.Test, Std.Str;
+
+const
+  FrameKindWindow: integer := 0;
+
+function Wheel(Action: MouseAction; X: integer; Y: integer): Event;
+begin
+  return record
+    kind := Std.Console.EventKind.Mouse;
+    key := record
+      kind := KeyKind.Unknown;
+      ch := Std.Str.Chr(0);
+      shift := false;
+      ctrl := false;
+      alt := false;
+      meta := false;
+    end;
+    mouse_action := Action;
+    mouse_button := MouseButton.Left;
+    mouse_x := X;
+    mouse_y := Y;
+    width := 0;
+    height := 0;
+    text := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+procedure OnPaint(App: Application);
+begin
+end;
+
+begin
+  var App: Application := Application.OpenForTest(40, 14);
+  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
+  Application.Configure(App, Handlers);
+  var FrameView: ViewId := Application.HostCreateFrameView(
+    App, 2, 1, 14, 10, 'Scroll', FrameKindWindow, false, false, false, true, false);
+  var Child: ViewId := Application.HostCreateSolidFillView(App, 0, 0, 12, 20, Red, Some(White), Some('s'));
+  Application.HostSetViewParent(App, Child, Some(FrameView));
+  Application.HostSetFrameContentSize(App, FrameView, 12, 20);
+  mutable var State: FrameScrollState := Application.QueryFrameScrollState(App, FrameView);
+  AssertEquals(0, State.offsetX);
+  AssertEquals(0, State.offsetY);
+  AssertEquals(12, State.contentWidth);
+  AssertEquals(20, State.contentHeight);
+  Application.HostScrollFrame(App, FrameView, 0, 4);
+  State := Application.QueryFrameScrollState(App, FrameView);
+  AssertEquals(4, State.offsetY);
+  Application.HostSetFrameScrollOffset(App, FrameView, 2, 0);
+  State := Application.QueryFrameScrollState(App, FrameView);
+  AssertEquals(1, State.offsetX);
+  AssertEquals(0, State.offsetY);
+  Application.RequestRedraw(App);
+  Application.TestPumpUntilIdle(App);
+  AssertScreenCell(4, 3, 's', White, Red);
+  Application.TestSendMouse(App, Wheel(MouseAction.ScrollDown, 5, 4));
+  Application.TestPumpUntilIdle(App);
+  State := Application.QueryFrameScrollState(App, FrameView);
+  AssertEquals(1, State.offsetY);
+  Application.CloseForTest(App)
+end.

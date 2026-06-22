@@ -38,10 +38,10 @@ pub use view::{
 pub use widget::{
     ButtonStyle, ButtonWidget, CheckBoxStyle, CheckBoxWidget, FrameButtonSlots, FrameCapabilities,
     FrameChromeHit, FrameContentSize, FrameGeometry, FrameGeometryError, FrameKind, FrameRoot,
-    FrameRootSpec, FrameRootState, FrameScrollbars, FrameStyle, FrameWidget, FramedDialogRoot,
-    InputLineStyle, InputLineWidget, LabelStyle, LabelWidget, ListBoxItem, ListBoxStyle,
-    ListBoxWidget, MenuBarItem, MenuBarMouseResult, MenuBarState, MenuBarStyle, MenuBarWidget,
-    MenuPopupItem, RadioGroupStyle, RadioGroupWidget, RadioOption, ScrollBarStyle, ScrollBarWidget,
-    ScrollViewStyle, ScrollViewWidget, SolidFillWidget, StatusBarSegment, StatusBarStyle,
-    StatusBarWidget, ViewWidget, register_framed_dialog_root,
+    FrameRootSpec, FrameRootState, FrameScrollHit, FrameScrollState, FrameScrollbars, FrameStyle,
+    FrameWidget, FramedDialogRoot, InputLineStyle, InputLineWidget, LabelStyle, LabelWidget,
+    ListBoxItem, ListBoxStyle, ListBoxWidget, MenuBarItem, MenuBarMouseResult, MenuBarState,
+    MenuBarStyle, MenuBarWidget, MenuPopupItem, RadioGroupStyle, RadioGroupWidget, RadioOption,
+    ScrollBarStyle, ScrollBarWidget, ScrollViewStyle, ScrollViewWidget, SolidFillWidget,
+    StatusBarSegment, StatusBarStyle, StatusBarWidget, ViewWidget, register_framed_dialog_root,
 };

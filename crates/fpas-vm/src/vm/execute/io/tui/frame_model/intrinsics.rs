@@ -7,8 +7,8 @@ use crate::vm::diagnostics::{VmError, runtime_error};
 use fpas_bytecode::{SourceLocation, TuiIntrinsic, Value};
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 use fpas_std::{
-    FrameCapabilities, FrameContentSize, FrameKind, FrameRootSpec, FrameRootState, FrameWidget,
-    ViewRect, ViewWidget,
+    FrameCapabilities, FrameContentSize, FrameKind, FrameRootSpec, FrameRootState,
+    FrameScrollState, FrameWidget, ViewRect, ViewWidget,
 };
 
 use super::super::view_geometry::validate_view_rect;
@@ -164,6 +164,72 @@ impl Worker {
                 });
                 self.stack.push(Value::Integer(count as i64));
             }
+            TuiIntrinsic::HostSetFrameContentSize => {
+                let content_height = self.pop_int(line)?;
+                let content_width = self.pop_int(line)?;
+                let id = self.pop_tui_view_id(line)?;
+                self.pop_tui_application(line)?;
+                let ok = self.with_tui(|tui| {
+                    tui.views
+                        .set_frame_content_size(id, content_width, content_height)
+                });
+                if ok {
+                    self.sync_frame_widget_scroll(id);
+                    let _ = self.with_tui(|tui| {
+                        tui.views
+                            .rect(id)
+                            .and_then(|rect| tui.session.request_redraw_rect(rect, line).ok())
+                    });
+                }
+            }
+            TuiIntrinsic::HostScrollFrame => {
+                let delta_y = self.pop_int(line)?;
+                let delta_x = self.pop_int(line)?;
+                let id = self.pop_tui_view_id(line)?;
+                self.pop_tui_application(line)?;
+                let changed = self.with_tui(|tui| tui.views.scroll_frame(id, delta_x, delta_y));
+                if changed {
+                    self.sync_frame_widget_scroll(id);
+                    let _ = self.with_tui(|tui| {
+                        tui.views
+                            .rect(id)
+                            .and_then(|rect| tui.session.request_redraw_rect(rect, line).ok())
+                    });
+                }
+            }
+            TuiIntrinsic::HostSetFrameScrollOffset => {
+                let offset_y = self.pop_int(line)?;
+                let offset_x = self.pop_int(line)?;
+                let id = self.pop_tui_view_id(line)?;
+                self.pop_tui_application(line)?;
+                let changed =
+                    self.with_tui(|tui| tui.views.set_frame_scroll_offset(id, offset_x, offset_y));
+                if changed {
+                    self.sync_frame_widget_scroll(id);
+                    let _ = self.with_tui(|tui| {
+                        tui.views
+                            .rect(id)
+                            .and_then(|rect| tui.session.request_redraw_rect(rect, line).ok())
+                    });
+                }
+            }
+            TuiIntrinsic::QueryFrameScrollState => {
+                let id = self.pop_query_view_id(line)?;
+                self.pop_tui_application(line)?;
+                let value = self.with_tui(|tui| {
+                    let state = tui.views.frame_scroll_state(id)?;
+                    Some(frame_scroll_record(state))
+                });
+                let Some(record) = value else {
+                    return Err(runtime_error(
+                        RUNTIME_CONSOLE_STATE_ERROR,
+                        "ViewId is not a registered frame root",
+                        "Pass a handle returned by Application.HostCreateFrameView.",
+                        line,
+                    ));
+                };
+                self.stack.push(record);
+            }
             _ => return Ok(false),
         }
         Ok(true)
@@ -181,6 +247,18 @@ impl Worker {
                 line,
             )),
         }
+    }
+}
+
+fn frame_scroll_record(state: FrameScrollState) -> Value {
+    Value::Record {
+        type_name: "Std.Tui.FrameScrollState".into(),
+        fields: vec![
+            ("offsetX".into(), Value::Integer(state.offset_x)),
+            ("offsetY".into(), Value::Integer(state.offset_y)),
+            ("contentWidth".into(), Value::Integer(state.content_width)),
+            ("contentHeight".into(), Value::Integer(state.content_height)),
+        ],
     }
 }
 

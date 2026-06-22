@@ -109,4 +109,46 @@ pub(super) fn register(checker: &mut Checker, types: &TuiTypes) {
         vec![p("App", types.application.clone(), false)],
         Ty::Integer,
     );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_SET_FRAME_CONTENT_SIZE,
+        vec![
+            p("App", types.application.clone(), false),
+            p("FrameView", types.view_id.clone(), false),
+            p("ContentWidth", Ty::Integer, false),
+            p("ContentHeight", Ty::Integer, false),
+        ],
+        Ty::Unit,
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_SCROLL_FRAME,
+        vec![
+            p("App", types.application.clone(), false),
+            p("FrameView", types.view_id.clone(), false),
+            p("DeltaX", Ty::Integer, false),
+            p("DeltaY", Ty::Integer, false),
+        ],
+        Ty::Unit,
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_SET_FRAME_SCROLL_OFFSET,
+        vec![
+            p("App", types.application.clone(), false),
+            p("FrameView", types.view_id.clone(), false),
+            p("OffsetX", Ty::Integer, false),
+            p("OffsetY", Ty::Integer, false),
+        ],
+        Ty::Unit,
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_QUERY_FRAME_SCROLL_STATE,
+        vec![
+            p("App", types.application.clone(), false),
+            p("FrameView", types.view_id.clone(), false),
+        ],
+        types.controls.frame_scroll_state.clone(),
+    );
 }

@@ -45,6 +45,16 @@ impl Compiler {
             s::STD_TUI_APPLICATION_HOST_TILE_FRAME_ROOTS => {
                 (1, TuiIntrinsic::HostTileFrameRoots, true)
             }
+            s::STD_TUI_APPLICATION_HOST_SET_FRAME_CONTENT_SIZE => {
+                (4, TuiIntrinsic::HostSetFrameContentSize, false)
+            }
+            s::STD_TUI_APPLICATION_HOST_SCROLL_FRAME => (4, TuiIntrinsic::HostScrollFrame, false),
+            s::STD_TUI_APPLICATION_HOST_SET_FRAME_SCROLL_OFFSET => {
+                (4, TuiIntrinsic::HostSetFrameScrollOffset, false)
+            }
+            s::STD_TUI_APPLICATION_QUERY_FRAME_SCROLL_STATE => {
+                (2, TuiIntrinsic::QueryFrameScrollState, true)
+            }
             _ => return Ok(false),
         };
         self.expect_exact_args(name, arity, args, location)?;

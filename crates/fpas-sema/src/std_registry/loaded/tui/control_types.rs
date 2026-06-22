@@ -18,6 +18,7 @@ pub(super) struct TuiControlTypes {
     pub(super) scroll_bar_state: Ty,
     pub(super) scroll_view_state: Ty,
     pub(super) frame_root_state: Ty,
+    pub(super) frame_scroll_state: Ty,
 }
 
 /// Register retained control input and state records.
@@ -105,6 +106,16 @@ pub(super) fn register(checker: &mut Checker) -> TuiControlTypes {
             ("zoomed".into(), Ty::Boolean),
         ],
     );
+    let frame_scroll_state = type_registration::register_record_type(
+        checker,
+        s::STD_TUI_FRAME_SCROLL_STATE,
+        vec![
+            ("offsetX".into(), Ty::Integer),
+            ("offsetY".into(), Ty::Integer),
+            ("contentWidth".into(), Ty::Integer),
+            ("contentHeight".into(), Ty::Integer),
+        ],
+    );
     TuiControlTypes {
         radio_option,
         input_line_state,
@@ -115,5 +126,6 @@ pub(super) fn register(checker: &mut Checker) -> TuiControlTypes {
         scroll_bar_state,
         scroll_view_state,
         frame_root_state,
+        frame_scroll_state,
     }
 }

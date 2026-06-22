@@ -74,6 +74,7 @@ impl Worker {
                 self.push(Self::tui_view_id_record(dialog_root))?;
             }
             TuiIntrinsic::ApplicationShowFramedDialog => {
+                let closable = self.pop_bool(line)?;
                 let scrollable = self.pop_bool(line)?;
                 let zoomable = self.pop_bool(line)?;
                 let resizable = self.pop_bool(line)?;
@@ -98,7 +99,7 @@ impl Worker {
                 let capabilities = FrameCapabilities {
                     movable,
                     resizable,
-                    closable: false,
+                    closable,
                     zoomable,
                     scrollable,
                 };
@@ -224,7 +225,10 @@ impl Worker {
         scope
     }
 
-    fn close_active_modal(tui: &mut TuiState, line: SourceLocation) {
+    pub(in crate::vm::execute::io::tui) fn close_active_modal(
+        tui: &mut TuiState,
+        line: SourceLocation,
+    ) {
         let previous_scope = Self::modal_scope_ids(tui);
         let close = tui.modals.leave_with_context();
         let next_scope = Self::modal_scope_ids(tui);

@@ -16,7 +16,10 @@ mod widget;
 #[cfg(test)]
 mod tests;
 
-pub use command::{CommandEvent, CommandId, CommandKind, CommandRegistry};
+pub use command::{
+    COMMAND_ID_CLOSE, COMMAND_ID_NEXT_WINDOW, COMMAND_ID_ZOOM, COMMAND_ID_ZOOM_BACK, CommandEvent,
+    CommandId, CommandKind, CommandRegistry,
+};
 pub use damage::DamageRegion;
 pub use event::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent};
 pub use host::TuiHost;

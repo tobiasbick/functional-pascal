@@ -11,8 +11,8 @@ activation.
 | Call | Role |
 | ---- | ---- |
 | `Application.HostSetDesktopWorkArea(App, X, Y, Width, Height)` | Configure the desktop rectangle that constrains frame roots. Returns `false` when the rectangle is empty. |
-| `Application.HostCreateFrameView(App, X, Y, Width, Height, Title, Kind, Movable, Resizable, Zoomable, Scrollable)` | Create and paint one frame root (`Kind`: `0` = Window, `1` = Dialog). Returns `ViewId`. |
-| `Application.ShowFramedDialog(App, ModalId, X, Y, Width, Height, Title, Movable, Resizable, Zoomable, Scrollable)` | Atomically create an owned painted dialog frame and enter it modally. Returns `ViewId`. |
+| `Application.HostCreateFrameView(App, X, Y, Width, Height, Title, Kind, Movable, Resizable, Zoomable, Scrollable, Closable)` | Create and paint one frame root (`Kind`: `0` = Window, `1` = Dialog). Returns `ViewId`. |
+| `Application.ShowFramedDialog(App, ModalId, X, Y, Width, Height, Title, Movable, Resizable, Zoomable, Scrollable, Closable)` | Atomically create an owned painted dialog frame and enter it modally. Returns `ViewId`. |
 | `Application.HostActivateNextWindow(App)` | Raise and focus the next eligible root in z-order. Returns whether a root was activated. |
 | `Application.HostZoomFrameRoot(App, ViewId)` | Zoom a zoomable root to the desktop work area. |
 | `Application.HostRestoreFrameRoot(App, ViewId)` | Restore a zoomed root to its saved rectangle. |
@@ -26,7 +26,7 @@ activation.
 | ----- | ---- | ------- |
 | `x`, `y`, `width`, `height` | `integer` | Current outer frame rectangle in terminal cells. |
 | `kind` | `integer` | `0` = Window, `1` = Dialog. |
-| `movable`, `resizable`, `zoomable`, `scrollable` | `boolean` | Implemented capability flags. |
+| `movable`, `resizable`, `zoomable`, `scrollable`, `closable` | `boolean` | Implemented capability flags. |
 | `zoomed` | `boolean` | `true` when a pre-zoom rectangle is stored. |
 
 ## Rendering
@@ -34,17 +34,21 @@ activation.
 `HostCreateFrameView` attaches a native `FrameWidget` (`ViewKind.Frame`). Window frames use an
 active light-blue title/border and inactive blue title/border; dialog frames use a gray palette.
 The client area is painted before the frame's local handler and descendants. The double-line
-border, title, and enabled `▲` / `▼` zoom cells are painted afterward, so child views cannot
+border, title, and enabled `■` / `▲` / `▼` chrome cells are painted afterward, so child views cannot
 overwrite frame chrome. Titles that exceed their slot end with `…`.
+
+When `Closable` is `true`, clicking the title-bar `■` dispatches the built-in close command for that
+frame root. Owned modal frames unregister on close; non-modal frames are removed from the scene
+graph. When `Zoomable` is `true`, clicking `▲` zooms the frame to the desktop work area and `▼`
+restores the saved rectangle.
 
 Children are clipped for paint, hit-testing, focus eligibility, and scene queries to the resolved
 inner frame viewport. This invariant applies even if generic `ViewOptions.clipChildren` is false.
 Reparenting still preserves a child's absolute rectangle; scroll-relative content origins are not
 introduced until frame-integrated scrolling is implemented.
 
-Frame-integrated scrolling and close chrome are not implemented yet. `Scrollable` currently
-participates in validated geometry only; use standalone `ScrollView` or `ScrollBar` controls for
-interactive scrolling.
+Frame-integrated scrolling is not implemented yet. `Scrollable` currently participates in validated
+geometry only; use standalone `ScrollView` or `ScrollBar` controls for interactive scrolling.
 
 ## Pointer interaction
 
@@ -53,6 +57,8 @@ When a frame root is movable or resizable, the host routes title-bar and border 
 - **Title-bar drag** moves the root with pointer capture until mouse up.
 - **Border/corner drag** resizes the root with pointer capture until mouse up.
 - **Title-bar click** on a non-draggable frame still activates (raises) the root.
+- **Close (`■`)** removes a non-modal frame or closes an owned modal frame when `Closable` is `true`.
+- **Zoom (`▲`) / restore (`▼`)** toggle zoom state when `Zoomable` is `true`.
 
 Use `Application.TestSendMouse`, `Application.TestMoveMouse`, and `Application.TestPumpUntilIdle` in headless tests.
 
@@ -69,6 +75,7 @@ Bind these through `Application.HostBindCommand` to dispatch built-in window act
 | `-1` | Activate the next window root (`NextWindow`). |
 | `-2` | Zoom the source or active frame root (`Zoom`). |
 | `-3` | Restore the source or active zoomed frame root (`ZoomBack`). |
+| `-4` | Close the source frame root or owned modal frame (`Close`). |
 
 Application-defined command ids remain non-negative and still flow through `OnCommand`.
 
@@ -79,4 +86,4 @@ Application-defined command ids remain non-negative and still flow through `OnCo
 | Geometry + painting + interaction | `crates/fpas-std/src/tui/widget/frame/` |
 | VM bridge | `crates/fpas-vm/src/vm/execute/io/tui/frame_model/`, `views/modal.rs` |
 | Intrinsics **410..=418** | `crates/fpas-bytecode/src/intrinsic/tui.rs` |
-| FPAS tests | `tests/tui/tui_frame_chrome_test.fpas`, `tests/tui/tui_framed_dialog_test.fpas`, `tests/tui/tui_frame_window_test.fpas`, `tests/tui/tui_frame_layout_test.fpas` |
+| FPAS tests | `tests/tui/tui_frame_chrome_test.fpas`, `tests/tui/tui_frame_chrome_actions_test.fpas`, `tests/tui/tui_framed_dialog_test.fpas`, `tests/tui/tui_frame_window_test.fpas`, `tests/tui/tui_frame_layout_test.fpas` |

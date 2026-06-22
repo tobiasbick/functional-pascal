@@ -46,6 +46,7 @@ impl Worker {
 
         let hit = self.with_tui(|tui| tui.views.frame_chrome_hit_at(root, x, y));
         let began = self.with_tui(|tui| match hit {
+            FrameChromeHit::Close | FrameChromeHit::Zoom | FrameChromeHit::ZoomBack => false,
             FrameChromeHit::Move => tui.views.begin_frame_move(root, x, y),
             FrameChromeHit::Resize(_) => tui.views.begin_frame_resize(root, x, y),
             FrameChromeHit::None => false,
@@ -54,6 +55,29 @@ impl Worker {
             let _ = self.with_tui(|tui| tui.views.activate_root(root));
             self.request_frame_root_damage(None, root, line)?;
             return Ok(Some(ProcessOutcome::WidgetConsumed));
+        }
+
+        if matches!(
+            hit,
+            FrameChromeHit::Close | FrameChromeHit::Zoom | FrameChromeHit::ZoomBack
+        ) {
+            let _ = self.with_tui(|tui| tui.views.activate_root(root));
+            let command = match hit {
+                FrameChromeHit::Close => fpas_std::CommandEvent::resolve(
+                    fpas_std::CommandId(fpas_std::COMMAND_ID_CLOSE),
+                    Some(root),
+                ),
+                FrameChromeHit::Zoom => fpas_std::CommandEvent::resolve(
+                    fpas_std::CommandId(fpas_std::COMMAND_ID_ZOOM),
+                    Some(root),
+                ),
+                FrameChromeHit::ZoomBack => fpas_std::CommandEvent::resolve(
+                    fpas_std::CommandId(fpas_std::COMMAND_ID_ZOOM_BACK),
+                    Some(root),
+                ),
+                _ => unreachable!("handled above"),
+            };
+            return self.dispatch_tui_command(command, line).map(Some);
         }
 
         if hit == FrameChromeHit::None

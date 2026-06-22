@@ -415,8 +415,7 @@ dialogs. Current spec for implemented behavior: [`docs/pascal/std/tui/app/frames
   the overlay pass.
 - [x] Public `Application.HostCreateFrameView`, consolidated from `HostCreateFrameRootView`.
 - [x] Public `Application.ShowFramedDialog` VM bridge over existing `register_framed_dialog_root`.
-- [ ] Enable `Closable` capability — title-bar close hit-test and sourced close command (reserved id
-  or `CommandKind::Close`).
+- [x] Enable `Closable` capability — title-bar close hit-test and sourced close command (`CommandId` `-4`).
 - [ ] Frame-integrated scroll chrome (`scroll.rs`) — offset state, `▲█▼` / `◄█►` paint, wheel and
   track/thumb input on frame borders (distinct from standalone `ScrollView` / `ScrollBar` controls).
 - [ ] `HostSetFrameContentSize`, `HostScrollFrame`, `HostSetFrameScrollOffset`, `QueryFrameScrollState`.
@@ -424,7 +423,8 @@ dialogs. Current spec for implemented behavior: [`docs/pascal/std/tui/app/frames
 - [ ] Examples: `examples/pascal/tui/framed_window.fpas`, `framed_dialog.fpas`.
 - [x] FPAS test: painted frame chrome, palettes, title truncation, overlay ordering, and view kind.
 - [x] FPAS + VM tests: owned framed-dialog cleanup and atomic invalid-geometry rejection.
-- [ ] FPAS tests: frame scroll offset queries and close/zoom chrome clicks.
+- [x] FPAS tests: close and zoom chrome clicks.
+- [ ] FPAS tests: frame scroll offset queries.
 
 ### Phase 7 — Editor, layout, and polish
 
@@ -453,10 +453,10 @@ These original findings are reduced but not closed:
 
 | # | Scenario | Status |
 | --- | --- | --- |
-| 1 | Overlapping windows: raise, move, resize, zoom, restore, **close** without stale cells | **Partial** — interaction works; **close** and occlusion repair need frame paint |
+| 1 | Overlapping windows: raise, move, resize, zoom, restore, **close** without stale cells | **Partial** — close and zoom chrome work; broader occlusion repair still open |
 | 2 | Click and Tab focus within active group | **Mostly met** — existing control + focus tests |
 | 3 | Nested modal focus restore and results | **Met** — Phase 3 + modal VM tests |
-| 4 | Sourced commands from menu, button, shortcut, frame chrome | **Partial** — frame chrome not painted; reserved ids wired for zoom/next |
+| 4 | Sourced commands from menu, button, shortcut, frame chrome | **Partial** — close/zoom chrome wired; keyboard shortcuts use reserved ids |
 | 5 | Clipped paint/input through nested groups and scroll transforms | **Partial** — groups/scroll views yes; frame-integrated scroll chrome no |
 | 6 | Pointer capture for drag, resize, scrollbar thumb | **Met** — frame move/resize + scroll thumb tests |
 | 7 | Resize layout for menu, desktop, status, frames, anchored controls | **Open** — anchor/grow not implemented |

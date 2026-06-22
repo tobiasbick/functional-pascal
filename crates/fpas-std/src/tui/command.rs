@@ -36,6 +36,8 @@ pub const COMMAND_ID_NEXT_WINDOW: i64 = -1;
 pub const COMMAND_ID_ZOOM: i64 = -2;
 /// Reserved host command id that restores a zoomed frame root.
 pub const COMMAND_ID_ZOOM_BACK: i64 = -3;
+/// Reserved host command id that closes the source frame root or active modal.
+pub const COMMAND_ID_CLOSE: i64 = -4;
 
 /// Command payload carrying both semantic kind and originating view.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -62,6 +64,7 @@ impl CommandEvent {
             COMMAND_ID_NEXT_WINDOW => CommandKind::NextWindow,
             COMMAND_ID_ZOOM => CommandKind::Zoom,
             COMMAND_ID_ZOOM_BACK => CommandKind::ZoomBack,
+            COMMAND_ID_CLOSE => CommandKind::Close,
             _ => CommandKind::Application,
         };
         Self { id, source, kind }

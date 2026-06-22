@@ -76,9 +76,10 @@ pub use test::{
     test_was_skipped,
 };
 pub use tui::{
-    BlockedInput, ButtonStyle, ButtonWidget, CheckBoxStyle, CheckBoxWidget, CommandEvent,
-    CommandId, CommandKind, CommandRegistry, DamageRegion, DesktopMetrics, EventOutcome,
-    EventPhase, EventRoute, FocusDirection, FrameButtonSlots, FrameCapabilities, FrameChromeHit,
+    BlockedInput, ButtonStyle, ButtonWidget, COMMAND_ID_CLOSE, COMMAND_ID_NEXT_WINDOW,
+    COMMAND_ID_ZOOM, COMMAND_ID_ZOOM_BACK, CheckBoxStyle, CheckBoxWidget, CommandEvent, CommandId,
+    CommandKind, CommandRegistry, DamageRegion, DesktopMetrics, EventOutcome, EventPhase,
+    EventRoute, FocusDirection, FrameButtonSlots, FrameCapabilities, FrameChromeHit,
     FrameContentSize, FrameGeometry, FrameGeometryError, FrameKind, FrameRoot, FrameRootSpec,
     FrameRootState, FrameScrollbars, FrameStyle, FrameWidget, FramedDialogRoot, InputLineStyle,
     InputLineWidget, LabelStyle, LabelWidget, ListBoxItem, ListBoxStyle, ListBoxWidget,

@@ -101,6 +101,7 @@ pub(super) fn register(checker: &mut Checker) -> TuiControlTypes {
             ("resizable".into(), Ty::Boolean),
             ("zoomable".into(), Ty::Boolean),
             ("scrollable".into(), Ty::Boolean),
+            ("closable".into(), Ty::Boolean),
             ("zoomed".into(), Ty::Boolean),
         ],
     );

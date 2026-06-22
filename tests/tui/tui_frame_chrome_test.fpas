@@ -14,7 +14,7 @@ begin
   var App: Application := Application.OpenForTest(40, 12);
   var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
   Application.Configure(App, Handlers);
-  var WindowView: ViewId := Application.HostCreateFrameView(App, 2, 1, 16, 6, 'Editor', FrameKindWindow, true, false, true, false);
+  var WindowView: ViewId := Application.HostCreateFrameView(App, 2, 1, 16, 6, 'Editor', FrameKindWindow, true, false, true, false, false);
   var Child: ViewId := Application.HostCreateSolidFillView(App, 2, 1, 16, 6, Red, Some(White), Some('x'));
   Application.HostSetViewParent(App, Child, Some(WindowView));
   var FocusButton: ViewId := Application.HostCreateButtonView(App, 4, 3, 6, 1, 'Focus', None, false);
@@ -32,7 +32,7 @@ begin
     begin
     end
   end;
-  var DialogView: ViewId := Application.HostCreateFrameView(App, 22, 1, 12, 5, 'About dialog', FrameKindDialog, false, false, false, false);
+  var DialogView: ViewId := Application.HostCreateFrameView(App, 22, 1, 12, 5, 'About dialog', FrameKindDialog, false, false, false, false, false);
   AssertTrue(Application.QueryViewKind(App, WindowView) = ViewKind.Frame);
   AssertTrue(Application.QueryViewKind(App, DialogView) = ViewKind.Frame);
   Application.RequestRedraw(App);

@@ -23,6 +23,7 @@ fn tui_host_create_frame_view_and_query_state() {
     emit_constant(&mut chunk, Value::Boolean(false));
     emit_constant(&mut chunk, Value::Boolean(true));
     emit_constant(&mut chunk, Value::Boolean(false));
+    emit_constant(&mut chunk, Value::Boolean(false));
     chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostCreateFrameView))),
         loc(),
@@ -62,6 +63,7 @@ fn tui_host_frame_title_drag_updates_rect() {
     emit_constant(&mut chunk, Value::Str("Window".into()));
     emit_constant(&mut chunk, Value::Integer(0));
     emit_constant(&mut chunk, Value::Boolean(true));
+    emit_constant(&mut chunk, Value::Boolean(false));
     emit_constant(&mut chunk, Value::Boolean(false));
     emit_constant(&mut chunk, Value::Boolean(false));
     emit_constant(&mut chunk, Value::Boolean(false));

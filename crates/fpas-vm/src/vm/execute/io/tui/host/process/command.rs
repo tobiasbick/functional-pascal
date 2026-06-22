@@ -71,7 +71,10 @@ impl Worker {
     ) -> Result<Option<ProcessOutcome>, VmError> {
         match command.kind {
             CommandKind::Application | CommandKind::Accept | CommandKind::Cancel => Ok(None),
-            CommandKind::Close => Ok(Some(ProcessOutcome::Command { handled: false })),
+            CommandKind::Close => {
+                let handled = self.dispatch_close_command(command, line)?;
+                Ok(Some(ProcessOutcome::Command { handled }))
+            }
             CommandKind::NextWindow => {
                 let (changed, previous, current) = self.with_tui(|tui| {
                     let exclude = tui
@@ -120,5 +123,39 @@ impl Worker {
                 Ok(Some(ProcessOutcome::Command { handled: ok }))
             }
         }
+    }
+
+    fn dispatch_close_command(
+        &mut self,
+        command: CommandEvent,
+        line: SourceLocation,
+    ) -> Result<bool, VmError> {
+        let root = command.source.and_then(|id| {
+            self.with_tui(|tui| {
+                tui.views
+                    .frame_root_of(id)
+                    .or_else(|| tui.views.frame_root_state(id).map(|_| id))
+            })
+        });
+        let Some(root) = root else {
+            return Ok(false);
+        };
+        let closable = self.with_tui(|tui| {
+            tui.views
+                .frame_root_state(root)
+                .is_some_and(|state| state.capabilities.closable)
+        });
+        if !closable {
+            return Ok(false);
+        }
+
+        let is_active_modal = self.with_tui(|tui| tui.modals.active_root_view() == Some(root));
+        if is_active_modal {
+            self.with_tui(|tui| Self::close_active_modal(tui, line));
+            return Ok(true);
+        }
+
+        self.with_tui(|tui| Self::unregister_tui_view_subtree(tui, root, line));
+        Ok(true)
     }
 }

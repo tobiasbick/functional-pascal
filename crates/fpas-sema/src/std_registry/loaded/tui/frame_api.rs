@@ -37,6 +37,7 @@ pub(super) fn register(checker: &mut Checker, types: &TuiTypes) {
             p("Resizable", Ty::Boolean, false),
             p("Zoomable", Ty::Boolean, false),
             p("Scrollable", Ty::Boolean, false),
+            p("Closable", Ty::Boolean, false),
         ],
         types.view_id.clone(),
     );
@@ -55,6 +56,7 @@ pub(super) fn register(checker: &mut Checker, types: &TuiTypes) {
             p("Resizable", Ty::Boolean, false),
             p("Zoomable", Ty::Boolean, false),
             p("Scrollable", Ty::Boolean, false),
+            p("Closable", Ty::Boolean, false),
         ],
         types.view_id.clone(),
     );

@@ -41,6 +41,7 @@ impl Worker {
                 self.stack.push(Value::Boolean(ok));
             }
             TuiIntrinsic::HostCreateFrameView => {
+                let closable = self.pop_bool(line)?;
                 let scrollable = self.pop_bool(line)?;
                 let zoomable = self.pop_bool(line)?;
                 let resizable = self.pop_bool(line)?;
@@ -70,7 +71,7 @@ impl Worker {
                         movable,
                         resizable,
                         zoomable,
-                        closable: false,
+                        closable,
                         scrollable,
                     },
                     options: Default::default(),
@@ -210,6 +211,10 @@ fn frame_root_record(state: FrameRootState, rect: ViewRect) -> Value {
             (
                 "scrollable".into(),
                 Value::Boolean(state.capabilities.scrollable),
+            ),
+            (
+                "closable".into(),
+                Value::Boolean(state.capabilities.closable),
             ),
             (
                 "zoomed".into(),

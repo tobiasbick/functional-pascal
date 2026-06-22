@@ -142,7 +142,7 @@ impl Worker {
     }
 
     /// Removes a view subtree and all VM-owned state associated with its handles.
-    pub(super) fn unregister_tui_view_subtree(
+    pub(in crate::vm::execute::io::tui) fn unregister_tui_view_subtree(
         tui: &mut TuiState,
         root_view: ViewId,
         line: SourceLocation,

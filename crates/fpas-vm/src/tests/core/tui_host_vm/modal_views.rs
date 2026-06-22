@@ -465,6 +465,7 @@ fn tui_application_show_framed_dialog_geometry_error_is_atomic() {
     emit_constant(&mut chunk, Value::Boolean(false));
     emit_constant(&mut chunk, Value::Boolean(false));
     emit_constant(&mut chunk, Value::Boolean(false));
+    emit_constant(&mut chunk, Value::Boolean(false));
     chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(
             TuiIntrinsic::ApplicationShowFramedDialog,

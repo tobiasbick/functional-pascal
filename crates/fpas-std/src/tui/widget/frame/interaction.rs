@@ -47,8 +47,8 @@ impl ViewRegistry {
         };
         frame_chrome_hit(
             &state.geometry,
-            state.capabilities.movable,
-            state.capabilities.resizable,
+            state.capabilities,
+            state.pre_zoom_rect.is_some(),
             x,
             y,
         )

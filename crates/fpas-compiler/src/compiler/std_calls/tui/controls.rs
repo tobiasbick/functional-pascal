@@ -81,6 +81,11 @@ impl Compiler {
             s::STD_TUI_APPLICATION_QUERY_SCROLL_VIEW_STATE => {
                 (2, TuiIntrinsic::QueryScrollViewState, true)
             }
+            s::STD_TUI_APPLICATION_HOST_CREATE_MEMO_VIEW => {
+                (6, TuiIntrinsic::HostCreateMemoView, true)
+            }
+            s::STD_TUI_APPLICATION_HOST_SET_MEMO_TEXT => (3, TuiIntrinsic::HostSetMemoText, false),
+            s::STD_TUI_APPLICATION_QUERY_MEMO_STATE => (2, TuiIntrinsic::QueryMemoState, true),
             _ => return Ok(false),
         };
         self.expect_exact_args(name, arity, args, location)?;

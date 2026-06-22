@@ -40,8 +40,9 @@ pub use widget::{
     FrameChromeHit, FrameContentSize, FrameGeometry, FrameGeometryError, FrameKind, FrameRoot,
     FrameRootSpec, FrameRootState, FrameScrollHit, FrameScrollState, FrameScrollbars, FrameStyle,
     FrameWidget, FramedDialogRoot, InputLineStyle, InputLineWidget, LabelStyle, LabelWidget,
-    ListBoxItem, ListBoxStyle, ListBoxWidget, MenuBarItem, MenuBarMouseResult, MenuBarState,
-    MenuBarStyle, MenuBarWidget, MenuPopupItem, RadioGroupStyle, RadioGroupWidget, RadioOption,
-    ScrollBarStyle, ScrollBarWidget, ScrollViewStyle, ScrollViewWidget, SolidFillWidget,
-    StatusBarSegment, StatusBarStyle, StatusBarWidget, ViewWidget, register_framed_dialog_root,
+    ListBoxItem, ListBoxStyle, ListBoxWidget, MemoStyle, MemoWidget, MenuBarItem,
+    MenuBarMouseResult, MenuBarState, MenuBarStyle, MenuBarWidget, MenuPopupItem, RadioGroupStyle,
+    RadioGroupWidget, RadioOption, ScrollBarStyle, ScrollBarWidget, ScrollViewStyle,
+    ScrollViewWidget, SolidFillWidget, StatusBarSegment, StatusBarStyle, StatusBarWidget,
+    ViewWidget, register_framed_dialog_root,
 };

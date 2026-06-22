@@ -42,6 +42,7 @@ impl Worker {
             | ViewWidget::ListBox(_)
             | ViewWidget::ScrollBar(_)
             | ViewWidget::ScrollView(_)
+            | ViewWidget::Memo(_)
             | ViewWidget::Frame(_) => MenuBarMouseResult::Ignored,
         };
 

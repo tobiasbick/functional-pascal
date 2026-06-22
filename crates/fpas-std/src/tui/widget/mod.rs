@@ -14,9 +14,9 @@ mod status_bar;
 
 pub use control::{
     ButtonStyle, ButtonWidget, CheckBoxStyle, CheckBoxWidget, InputLineStyle, InputLineWidget,
-    LabelStyle, LabelWidget, ListBoxItem, ListBoxStyle, ListBoxWidget, RadioGroupStyle,
-    RadioGroupWidget, RadioOption, ScrollBarStyle, ScrollBarWidget, ScrollViewStyle,
-    ScrollViewWidget,
+    LabelStyle, LabelWidget, ListBoxItem, ListBoxStyle, ListBoxWidget, MemoStyle, MemoWidget,
+    RadioGroupStyle, RadioGroupWidget, RadioOption, ScrollBarStyle, ScrollBarWidget,
+    ScrollViewStyle, ScrollViewWidget,
 };
 pub use frame::{
     FrameButtonSlots, FrameCapabilities, FrameChromeHit, FrameContentSize, FrameGeometry,
@@ -58,6 +58,8 @@ pub enum ViewWidget {
     ScrollBar(ScrollBarWidget),
     /// Scrolling multi-line text view.
     ScrollView(ScrollViewWidget),
+    /// Multi-line editable memo control.
+    Memo(MemoWidget),
     /// Window or dialog frame with host-painted chrome.
     Frame(FrameWidget),
 }
@@ -95,6 +97,10 @@ impl ViewWidget {
                 widget.enabled = state.enabled;
                 widget.focused = state.focused;
             }
+            Self::Memo(widget) => {
+                widget.enabled = state.enabled;
+                widget.focused = state.focused;
+            }
             Self::Frame(widget) => widget.active = state.active,
             Self::SolidFill(_) | Self::MenuBar(_) | Self::StatusBar(_) => {}
         }
@@ -114,6 +120,7 @@ impl ViewWidget {
             Self::ListBox(_) => ViewKind::ListBox,
             Self::ScrollBar(_) => ViewKind::ScrollBar,
             Self::ScrollView(_) => ViewKind::ScrollView,
+            Self::Memo(_) => ViewKind::Memo,
             Self::Frame(_) => ViewKind::Frame,
         }
     }
@@ -132,6 +139,7 @@ impl ViewWidget {
             Self::ListBox(widget) => widget.paint(console, rect, damage),
             Self::ScrollBar(widget) => widget.paint(console, rect, damage),
             Self::ScrollView(widget) => widget.paint(console, rect, damage),
+            Self::Memo(widget) => widget.paint(console, rect, damage),
             Self::Frame(widget) => {
                 widget.paint_underlay(console, rect, damage);
                 widget.paint_overlay(console, rect, damage);
@@ -179,6 +187,7 @@ impl ViewWidget {
             | Self::ListBox(_)
             | Self::ScrollBar(_)
             | Self::ScrollView(_)
+            | Self::Memo(_)
             | Self::Frame(_) => intersects_damage_region(rect, damage),
         }
     }
@@ -200,6 +209,7 @@ impl ViewWidget {
             | Self::ListBox(_)
             | Self::ScrollBar(_)
             | Self::ScrollView(_)
+            | Self::Memo(_)
             | Self::Frame(_) => rect.contains_console_mouse(mouse_x, mouse_y),
         }
     }

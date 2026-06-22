@@ -1,0 +1,59 @@
+program TuiMemoTest;
+
+uses Std.Console, Std.Tui, Std.Test, Std.Str;
+
+procedure OnPaint(App: Application);
+begin
+end;
+
+function CharacterKey(Ch: string): KeyEvent;
+begin
+  return record
+    kind := KeyKind.Character;
+    ch := Ch;
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+function EnterKey(): KeyEvent;
+begin
+  return record
+    kind := KeyKind.Enter;
+    ch := Std.Str.Chr(0);
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(40, 12);
+  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
+  Application.Configure(App, Handlers);
+  var MemoView: ViewId := Application.HostCreateMemoView(App, 0, 0, 20, 6, '');
+  AssertTrue(Application.QueryViewKind(App, MemoView) = ViewKind.Memo);
+  Application.RequestRedraw(App);
+  Application.TestPumpUntilIdle(App);
+  Application.TestClickMouse(App, 1, 1);
+  Application.TestPumpUntilIdle(App);
+  Application.TestSendKey(App, CharacterKey('a'));
+  Application.TestSendKey(App, CharacterKey('b'));
+  Application.TestSendKey(App, EnterKey());
+  Application.TestSendKey(App, CharacterKey('c'));
+  Application.TestPaste(App, 'd');
+  Application.TestPumpUntilIdle(App);
+  mutable var MemoStateValue: MemoState := Application.QueryMemoState(App, MemoView);
+  AssertTrue(MemoStateValue.text = 'ab' + Std.Str.Chr(10) + 'cd');
+  AssertEquals(1, MemoStateValue.cursorLine);
+  AssertEquals(2, MemoStateValue.cursorColumn);
+  Application.HostSetMemoText(App, MemoView, 'reset');
+  MemoStateValue := Application.QueryMemoState(App, MemoView);
+  AssertTrue(MemoStateValue.text = 'reset');
+  AssertEquals(0, MemoStateValue.cursorLine);
+  AssertEquals(0, MemoStateValue.cursorColumn);
+  AssertEquals(-1, MemoStateValue.selectionAnchorLine);
+end.

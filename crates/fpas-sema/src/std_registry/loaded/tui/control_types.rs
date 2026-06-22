@@ -17,6 +17,7 @@ pub(super) struct TuiControlTypes {
     pub(super) list_box_state: Ty,
     pub(super) scroll_bar_state: Ty,
     pub(super) scroll_view_state: Ty,
+    pub(super) memo_state: Ty,
     pub(super) frame_root_state: Ty,
     pub(super) frame_scroll_state: Ty,
 }
@@ -89,6 +90,18 @@ pub(super) fn register(checker: &mut Checker) -> TuiControlTypes {
             ("lineCount".into(), Ty::Integer),
         ],
     );
+    let memo_state = type_registration::register_record_type(
+        checker,
+        s::STD_TUI_MEMO_STATE,
+        vec![
+            ("text".into(), Ty::String),
+            ("cursorLine".into(), Ty::Integer),
+            ("cursorColumn".into(), Ty::Integer),
+            ("scrollOffset".into(), Ty::Integer),
+            ("selectionAnchorLine".into(), Ty::Integer),
+            ("selectionAnchorColumn".into(), Ty::Integer),
+        ],
+    );
     let frame_root_state = type_registration::register_record_type(
         checker,
         s::STD_TUI_FRAME_ROOT_STATE,
@@ -125,6 +138,7 @@ pub(super) fn register(checker: &mut Checker) -> TuiControlTypes {
         list_box_state,
         scroll_bar_state,
         scroll_view_state,
+        memo_state,
         frame_root_state,
         frame_scroll_state,
     }

@@ -27,7 +27,7 @@ interaction. The plan needs a foundation phase before frame work and a broader t
 | Focused controls and tab order | Retained focus path + tab traversal | Assumes child-first input | **Mostly done** |
 | Modal dialogs | Scope, owned root, focus restore, results | Adds atomic framed root | **Mostly done** — framed-dialog FPAS API still open |
 | Commands and broadcasts | Sourced `CommandEvent` + reserved frame ids | Separate frame callback | **Mostly done** — close/zoom chrome not painted yet |
-| Standard controls | Label/button/input/checkbox/radio/list/scroll | Explicitly out of scope in original plan | **Partial** — memo/editor still missing |
+| Standard controls | Label/button/input/checkbox/radio/list/scroll | Explicitly out of scope in original plan | **Partial** — memo added; anchor/grow layout still open |
 | Deterministic testing | Good headless APIs | Adds frame tests | Strong reusable base |
 
 ## Reusable foundations
@@ -428,7 +428,7 @@ dialogs. Current spec for implemented behavior: [`docs/pascal/std/tui/app/frames
 
 ### Phase 7 — Editor, layout, and polish
 
-- [ ] Memo/text editor control (multi-line cursor, selection, paste, vertical scroll).
+- [x] Memo/text editor control (multi-line cursor, selection, paste, vertical scroll).
 - [x] Unicode terminal cell-width policy ([H5](#h5-terminal-cell-width-is-incorrect-for-general-unicode))
   — display width for titles, labels, input, and editor.
 - [ ] Anchor/grow layout flags on views ([H6](#h6-standard-controls-and-layout-are-part-of-the-goal))

@@ -1,6 +1,6 @@
 # Retained controls
 
-`Std.Tui` exposes native label, button, input-line, checkbox, radio-group, list-box, scroll-bar, and
+`Std.Tui` exposes native label, button, input-line, memo, checkbox, radio-group, list-box, scroll-bar, and
 scroll-view controls. The host paints them with the built-in dialog palette and integrates them with
 retained focus, clipping, commands, mouse input, keyboard input, and paste.
 
@@ -13,6 +13,7 @@ All constructors start with `(App, X, Y, Width, Height)` and return `ViewId`:
 | `HostCreateLabelView` | `Text`, `Accelerator: Option of string` |
 | `HostCreateButtonView` | `Caption`, `CommandId: Option of integer`, `IsDefault` |
 | `HostCreateInputLineView` | `Text` |
+| `HostCreateMemoView` | `Text` (multiline, `\n` separated) |
 | `HostCreateCheckBoxView` | `Label`, `Accelerator`, `CommandId`, `Checked` |
 | `HostCreateRadioGroupView` | `Options: array of RadioOption` |
 | `HostCreateListBoxView` | `Items: array of ListBoxItem` |
@@ -27,6 +28,9 @@ a dialog subtree.
 
 - Buttons activate with left click, Enter, or Space.
 - Input lines accept character keys, Left/Right/Home/End, Backspace/Delete, and bracketed paste.
+- Memos accept character keys, Enter for new lines, arrow keys with Shift for selection, PageUp/PageDown
+  for vertical scroll, Backspace/Delete, and bracketed paste. An integrated vertical scroll bar appears
+  when line count exceeds the view height.
 - Checkboxes toggle with left click, Enter, or Space.
 - Radio groups move the focused option with arrow keys and select with Enter/Space; clicking a row
   selects it directly.
@@ -41,9 +45,11 @@ a dialog subtree.
 | Call | Result/effect |
 | ---- | ------------- |
 | `QueryInputLineState` | `InputLineState(text, cursor, scrollOffset)` |
+| `QueryMemoState` | `MemoState(text, cursorLine, cursorColumn, scrollOffset, selectionAnchorLine, selectionAnchorColumn)`; anchor fields are `-1` when no range is active |
 | `QueryCheckBoxState` | `CheckBoxState(checked)` |
 | `QueryRadioGroupState` | `RadioGroupState(selectedIndex, focusedIndex)`; `-1` means none |
 | `HostSetInputLineText` | Replaces text and clamps cursor |
+| `HostSetMemoText` | Replaces memo text and resets cursor, selection, and scroll |
 | `HostSetCheckBoxChecked` | Sets checked state |
 | `HostSetRadioGroupSelected` | Selects an enabled zero-based option |
 | `QueryListBoxState` | `ListBoxState(selectedIndex, scrollOffset)`; `-1` means no enabled row |
@@ -60,7 +66,7 @@ a dialog subtree.
 | ------- | -------- |
 | Models/paint | `crates/fpas-std/src/tui/widget/control/` |
 | VM bridge/input | `crates/fpas-vm/src/vm/execute/io/tui/control_model/` |
-| FPAS regression | `tests/tui/tui_controls_test.fpas`, `tests/tui/tui_list_box_test.fpas`, `tests/tui/tui_scroll_bar_test.fpas`, `tests/tui/tui_scroll_view_test.fpas` |
+| FPAS regression | `tests/tui/tui_controls_test.fpas`, `tests/tui/tui_memo_test.fpas`, `tests/tui/tui_list_box_test.fpas`, `tests/tui/tui_scroll_bar_test.fpas`, `tests/tui/tui_scroll_view_test.fpas` |
 
 ## See also
 

@@ -6,8 +6,9 @@ use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
 use fpas_bytecode::SourceLocation;
 use fpas_std::{
-    CommandEvent, CommandId, ConsoleKeyEvent, ProcessOutcome, ScrollBarWidget, ScrollViewWidget,
-    UiMouse, ViewId, ViewWidget, key_kind_index, mouse_action_index, mouse_button_index,
+    CommandEvent, CommandId, ConsoleKeyEvent, MemoWidget, ProcessOutcome, ScrollBarWidget,
+    ScrollViewWidget, UiMouse, ViewId, ViewWidget, key_kind_index, mouse_action_index,
+    mouse_button_index,
 };
 
 use super::super::widget_target;
@@ -104,6 +105,9 @@ impl Worker {
             ViewWidget::ScrollView(v) if v.enabled => {
                 scroll_view_mouse(v, rect, mouse, scroll_up, scroll_down, down)
             }
+            ViewWidget::Memo(v) if v.enabled => {
+                memo_mouse(v, rect, mouse, scroll_up, scroll_down, down)
+            }
             _ => None,
         };
         let capture_thumb = matches!(
@@ -114,6 +118,9 @@ impl Worker {
             (&widget, &action),
             (ViewWidget::ScrollView(v), Some(ControlAction::CaptureThumb))
                 if v.thumb_drag_active(),
+        ) || matches!(
+            (&widget, &action),
+            (ViewWidget::Memo(v), Some(ControlAction::CaptureThumb)) if v.thumb_drag_active(),
         );
         self.finish_control_action(id, rect, widget, action, capture_thumb, line)
     }
@@ -140,6 +147,7 @@ impl Worker {
         let active = match &widget {
             ViewWidget::ScrollBar(v) => v.thumb_drag_active(),
             ViewWidget::ScrollView(v) => v.thumb_drag_active(),
+            ViewWidget::Memo(v) => v.thumb_drag_active(),
             _ => false,
         };
         if !active {
@@ -148,11 +156,16 @@ impl Worker {
         let changed = match &mut widget {
             ViewWidget::ScrollBar(v) if move_ => v.drag_thumb(rect, mouse.x, mouse.y),
             ViewWidget::ScrollView(v) if move_ => v.drag_thumb(rect, mouse.x, mouse.y),
+            ViewWidget::Memo(v) if move_ => v.drag_thumb(rect, mouse.x, mouse.y),
             ViewWidget::ScrollBar(v) if up => {
                 v.end_thumb_drag();
                 true
             }
             ViewWidget::ScrollView(v) if up => {
+                v.end_thumb_drag();
+                true
+            }
+            ViewWidget::Memo(v) if up => {
                 v.end_thumb_drag();
                 true
             }
@@ -200,6 +213,7 @@ impl Worker {
             ViewWidget::InputLine(v) if v.enabled => {
                 input_key(v, key).then_some(ControlAction::Consumed)
             }
+            ViewWidget::Memo(v) if v.enabled => memo_key(v, key).then_some(ControlAction::Consumed),
             ViewWidget::RadioGroup(v) if v.enabled => radio_key(v, key),
             ViewWidget::ListBox(v) if v.enabled => list_box_key(v, key),
             ViewWidget::ScrollBar(v) if v.enabled => scroll_control_key(v, key),
@@ -222,7 +236,14 @@ impl Worker {
                 return false;
             }
             let Some(ViewWidget::InputLine(input)) = tui.view_widgets.get_mut(&id) else {
-                return false;
+                let Some(ViewWidget::Memo(memo)) = tui.view_widgets.get_mut(&id) else {
+                    return false;
+                };
+                memo.insert_str(text);
+                if let Some(rect) = tui.views.rect(id) {
+                    let _ = tui.session.request_redraw_rect(rect, line);
+                }
+                return true;
             };
             input.insert_str(text);
             if let Some(rect) = tui.views.rect(id) {
@@ -379,6 +400,93 @@ fn scroll_bar_mouse(
         }
     }
     Some(ControlAction::Consumed)
+}
+
+fn memo_mouse(
+    memo: &mut MemoWidget,
+    rect: fpas_std::ViewRect,
+    mouse: UiMouse,
+    scroll_up: bool,
+    scroll_down: bool,
+    down: bool,
+) -> Option<ControlAction> {
+    if scroll_up {
+        memo.scroll_by(-1);
+        return Some(ControlAction::Consumed);
+    }
+    if scroll_down {
+        memo.scroll_by(1);
+        return Some(ControlAction::Consumed);
+    }
+    if down {
+        if memo.begin_thumb_drag(rect, mouse.x, mouse.y) {
+            return Some(ControlAction::CaptureThumb);
+        }
+        if let Some(hit) = memo.scrollbar_hit(rect, mouse.x, mouse.y) {
+            memo.apply_scrollbar_hit(rect, hit);
+            return Some(ControlAction::Consumed);
+        }
+        let content = memo.content_rect(rect);
+        memo.set_cursor_from_click(
+            content,
+            mouse.x.saturating_sub(1),
+            mouse.y.saturating_sub(1),
+        );
+        return Some(ControlAction::Consumed);
+    }
+    None
+}
+
+fn memo_key(memo: &mut MemoWidget, key: &ConsoleKeyEvent) -> bool {
+    if key.ctrl || key.alt || key.meta {
+        return false;
+    }
+    let extend = key.shift;
+    match key.kind {
+        k if k == key_kind_index("Character") => {
+            memo.insert_char(key.ch);
+            true
+        }
+        k if k == key_kind_index("Backspace") => {
+            memo.backspace();
+            true
+        }
+        k if k == key_kind_index("Delete") => {
+            memo.delete();
+            true
+        }
+        k if k == key_kind_index("Enter") => {
+            memo.insert_char('\n');
+            true
+        }
+        k if k == key_kind_index("Left") => {
+            memo.move_cursor(0, -1, extend);
+            true
+        }
+        k if k == key_kind_index("Right") => {
+            memo.move_cursor(0, 1, extend);
+            true
+        }
+        k if k == key_kind_index("Up") => {
+            memo.move_cursor(-1, 0, extend);
+            true
+        }
+        k if k == key_kind_index("Down") => {
+            memo.move_cursor(1, 0, extend);
+            true
+        }
+        k if k == key_kind_index("Home") => {
+            memo.move_cursor_line_edge(false, extend);
+            true
+        }
+        k if k == key_kind_index("End") => {
+            memo.move_cursor_line_edge(true, extend);
+            true
+        }
+        k if k == key_kind_index("PageUp") => memo.scroll_page(false),
+        k if k == key_kind_index("PageDown") => memo.scroll_page(true),
+        _ => false,
+    }
 }
 
 fn scroll_view_mouse(

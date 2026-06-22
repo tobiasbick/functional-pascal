@@ -496,6 +496,12 @@ pub enum TuiIntrinsic {
     HostSetFrameScrollOffset = 421,
     /// Query frame scroll offsets and logical content size.
     QueryFrameScrollState = 422,
+    /// Create a multi-line editable memo control. See `docs/pascal/std/tui/app/controls.md`.
+    HostCreateMemoView = 423,
+    /// Replace memo text.
+    HostSetMemoText = 424,
+    /// Query memo text, cursor, scroll, and selection state.
+    QueryMemoState = 425,
     // **375..=377** are `Std.Test` screen/view assertions; **378** is `Std.Test.PushReadLn` (see `TestIntrinsic`).
     // Note: **348..=355** are owned by `Std.Test` (`TestIntrinsic`).
 }

@@ -10,6 +10,7 @@ pub const STD_TUI_LIST_BOX_ITEM: &str = std_tui!("ListBoxItem");
 pub const STD_TUI_LIST_BOX_STATE: &str = std_tui!("ListBoxState");
 pub const STD_TUI_SCROLL_BAR_STATE: &str = std_tui!("ScrollBarState");
 pub const STD_TUI_SCROLL_VIEW_STATE: &str = std_tui!("ScrollViewState");
+pub const STD_TUI_MEMO_STATE: &str = std_tui!("MemoState");
 pub const STD_TUI_APPLICATION_HOST_CREATE_LABEL_VIEW: &str =
     std_tui!("Application.HostCreateLabelView");
 pub const STD_TUI_APPLICATION_HOST_CREATE_BUTTON_VIEW: &str =
@@ -52,3 +53,7 @@ pub const STD_TUI_APPLICATION_HOST_SET_SCROLL_VIEW_LINES: &str =
     std_tui!("Application.HostSetScrollViewLines");
 pub const STD_TUI_APPLICATION_QUERY_SCROLL_VIEW_STATE: &str =
     std_tui!("Application.QueryScrollViewState");
+pub const STD_TUI_APPLICATION_HOST_CREATE_MEMO_VIEW: &str =
+    std_tui!("Application.HostCreateMemoView");
+pub const STD_TUI_APPLICATION_HOST_SET_MEMO_TEXT: &str = std_tui!("Application.HostSetMemoText");
+pub const STD_TUI_APPLICATION_QUERY_MEMO_STATE: &str = std_tui!("Application.QueryMemoState");

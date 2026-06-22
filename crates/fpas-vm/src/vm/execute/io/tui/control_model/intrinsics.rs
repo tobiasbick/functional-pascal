@@ -8,8 +8,9 @@ use fpas_bytecode::{SourceLocation, TuiIntrinsic, Value};
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 use fpas_std::{
     ButtonStyle, ButtonWidget, CheckBoxStyle, CheckBoxWidget, CommandId, InputLineStyle,
-    InputLineWidget, LabelStyle, LabelWidget, ListBoxWidget, RadioGroupStyle, RadioGroupWidget,
-    ScrollBarOrientation, ScrollBarWidget, ScrollViewWidget, ViewOptions, ViewRect, ViewWidget,
+    InputLineWidget, LabelStyle, LabelWidget, ListBoxWidget, MemoWidget, RadioGroupStyle,
+    RadioGroupWidget, ScrollBarOrientation, ScrollBarWidget, ScrollViewWidget, ViewOptions,
+    ViewRect, ViewWidget,
 };
 
 use super::super::view_geometry::validate_view_rect;
@@ -119,6 +120,16 @@ impl Worker {
                     line,
                 )?;
             }
+            TuiIntrinsic::HostCreateMemoView => {
+                let text = self.pop_control_string("Text", line)?;
+                let rect = self.pop_control_rect("HostCreateMemoView", line)?;
+                self.create_control_view(
+                    rect,
+                    ViewWidget::Memo(MemoWidget::new(text, rect.height.max(0) as usize)),
+                    true,
+                    line,
+                )?;
+            }
             TuiIntrinsic::HostSetInputLineText => {
                 let text = self.pop_control_string("Text", line)?;
                 let id = self.pop_tui_view_id(line)?;
@@ -213,12 +224,28 @@ impl Worker {
                     }
                 });
             }
+            TuiIntrinsic::HostSetMemoText => {
+                let text = self.pop_control_string("Text", line)?;
+                let id = self.pop_tui_view_id(line)?;
+                self.pop_tui_application(line)?;
+                let height =
+                    self.with_tui(|tui| tui.views.rect(id).map_or(1, |r| r.height.max(1) as usize));
+                self.update_control(id, line, |w| {
+                    if let ViewWidget::Memo(v) = w {
+                        v.set_text(text, height);
+                        true
+                    } else {
+                        false
+                    }
+                });
+            }
             TuiIntrinsic::QueryInputLineState
             | TuiIntrinsic::QueryCheckBoxState
             | TuiIntrinsic::QueryRadioGroupState
             | TuiIntrinsic::QueryListBoxState
             | TuiIntrinsic::QueryScrollBarState
-            | TuiIntrinsic::QueryScrollViewState => {
+            | TuiIntrinsic::QueryScrollViewState
+            | TuiIntrinsic::QueryMemoState => {
                 let id = self.pop_query_view_id(line)?;
                 self.pop_tui_application(line)?;
                 let value = self.with_tui(|tui| match (intrinsic, tui.view_widgets.get(&id)) {
@@ -287,6 +314,30 @@ impl Worker {
                             vec![
                                 ("scrollOffset", Value::Integer(v.scroll_offset() as i64)),
                                 ("lineCount", Value::Integer(v.line_count() as i64)),
+                            ],
+                        ))
+                    }
+                    (TuiIntrinsic::QueryMemoState, Some(ViewWidget::Memo(v))) => {
+                        Some(control_record(
+                            "Std.Tui.MemoState",
+                            vec![
+                                ("text", Value::Str(v.text().into())),
+                                ("cursorLine", Value::Integer(v.cursor_line() as i64)),
+                                ("cursorColumn", Value::Integer(v.cursor_column() as i64)),
+                                ("scrollOffset", Value::Integer(v.scroll_offset() as i64)),
+                                (
+                                    "selectionAnchorLine",
+                                    Value::Integer(
+                                        v.selection_anchor_line().map_or(-1, |line| line as i64),
+                                    ),
+                                ),
+                                (
+                                    "selectionAnchorColumn",
+                                    Value::Integer(
+                                        v.selection_anchor_column()
+                                            .map_or(-1, |column| column as i64),
+                                    ),
+                                ),
                             ],
                         ))
                     }

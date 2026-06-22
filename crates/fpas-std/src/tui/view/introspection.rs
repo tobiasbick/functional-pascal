@@ -16,6 +16,7 @@ pub const TUI_VIEW_KIND_VARIANTS: &[&str] = &[
     "ListBox",
     "ScrollBar",
     "ScrollView",
+    "Memo",
     "Frame",
 ];
 
@@ -47,6 +48,8 @@ pub enum ViewKind {
     ScrollBar,
     /// Scrolling multi-line text view.
     ScrollView,
+    /// Multi-line editable memo control.
+    Memo,
     /// Host-painted window or dialog frame.
     Frame,
 }

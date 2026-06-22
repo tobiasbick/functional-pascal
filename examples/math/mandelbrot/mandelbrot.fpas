@@ -72,7 +72,6 @@ function ViewportCX(State: ExplorerState; W: integer; H: integer; CellX: integer
 begin
   var Wr: integer := Max(W - 1, 1);
   return State.XMin(W, H) +
-
          (IntToReal(CellX - 1) / IntToReal(Wr)) * (State.XMax(W, H) - State.XMin(W, H))
 end;
 

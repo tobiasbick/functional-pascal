@@ -102,3 +102,4 @@ Application-defined command ids remain non-negative and still flow through `OnCo
 | VM bridge | `crates/fpas-vm/src/vm/execute/io/tui/frame_model/`, `views/modal.rs` |
 | Intrinsics **410..=422** | `crates/fpas-bytecode/src/intrinsic/tui.rs` |
 | FPAS tests | `tests/tui/tui_frame_chrome_test.fpas`, `tests/tui/tui_frame_chrome_actions_test.fpas`, `tests/tui/tui_framed_dialog_test.fpas`, `tests/tui/tui_frame_window_test.fpas`, `tests/tui/tui_frame_layout_test.fpas`, `tests/tui/tui_frame_scroll_test.fpas` |
+| Examples | [`examples/pascal/tui/framed_window.fpas`](../../../../examples/pascal/tui/framed_window.fpas), [`framed_dialog.fpas`](../../../../examples/pascal/tui/framed_dialog.fpas) |

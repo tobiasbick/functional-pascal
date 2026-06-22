@@ -30,7 +30,6 @@ type
         Kind := 'Square'
       end;
       WriteLn((((((((Kind + ' ') + IntToStr(Self.W)) + 'x') + IntToStr(Self.H)) + ' area=') + IntToStr(Self.Area())) + ' perimeter=') +
-
               IntToStr(Self.Perimeter()))
     end;
   end;

@@ -369,7 +369,7 @@ VM bridge: new intrinsics in `fpas-bytecode`, sema in `loaded/tui/`, compiler lo
 - [x] `kind.rs` + `style.rs` — Window (blue) and Dialog (gray) defaults.
 - [x] `FrameWidget::paint` — view background + chrome; no scrolling yet.
 - [x] `HostCreateFrameView` intrinsic + sema + compiler.
-- [ ] Example: `examples/pascal/tui/framed_window.fpas` (static content, no scroll).
+- [x] Example: `examples/pascal/tui/framed_window.fpas` (static content, no scroll).
 
 ### Phase 2 — Scrolling
 
@@ -390,7 +390,7 @@ VM bridge: new intrinsics in `fpas-bytecode`, sema in `loaded/tui/`, compiler lo
 - [ ] Remove per-frame action handlers when a frame is unregistered or its owned modal closes.
 - [ ] Close-button hit-test emits `FrameAction.Close`; the example handler calls `CloseModal`.
 - [ ] Enable `Closable` in both default capability presets.
-- [ ] Example: `examples/pascal/tui/framed_dialog.fpas` (modal gray dialog, Escape closes).
+- [x] Example: `examples/pascal/tui/framed_dialog.fpas` (modal gray dialog, Escape closes).
 - [ ] Update IDE shell when ready to replace ad-hoc panels.
 
 ### Phase 4 — Interaction polish (deferred)

@@ -73,6 +73,8 @@ fpas examples/pascal/tui/local_view_paint.fpas
 fpas examples/pascal/tui/view_scoped_commands.fpas
 fpas examples/pascal/tui/show_modal_existing_view.fpas
 fpas examples/pascal/tui/show_dialog.fpas
+fpas examples/pascal/tui/framed_window.fpas
+fpas examples/pascal/tui/framed_dialog.fpas
 ```
 
 ### Projects (`.fpasprj`)
@@ -151,6 +153,8 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/tui/view_scoped_commands.fpas` | `Std.Tui` — `HostBindCommandToView` and focus/ancestor command routing |
 | `pascal/tui/show_modal_existing_view.fpas` | `Std.Tui` — `ShowModal` for an existing view subtree |
 | `pascal/tui/show_dialog.fpas` | `Std.Tui` — `ShowDialog`, host widgets, OK/Cancel, and `HostSetActiveModalResult` |
+| `pascal/tui/framed_window.fpas` | `Std.Tui` — painted movable frame windows on a desktop work area |
+| `pascal/tui/framed_dialog.fpas` | `Std.Tui` — `ShowFramedDialog`, gray modal chrome, OK/Escape/close dismissal |
 | `math/julia/julia.fpas` | ASCII Julia set (**interactive** — see below) |
 | `math/julia/julia_graph.fpas` | Native-window Julia explorer with `Std.Graph` |
 
@@ -202,5 +206,7 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 | `pascal/tui/view_scoped_commands.fpas` | Focus-aware view commands; **Tab** changes focus, **Ctrl+S** resolves per panel, **Escape** quits |
 | `pascal/tui/show_modal_existing_view.fpas` | Existing view subtree becomes modal; **Tab** stays in the subtree, **Escape** closes the modal |
 | `pascal/tui/show_dialog.fpas` | Owned modal dialog; **Ctrl+D** opens it, **Tab** to OK/Cancel, **Enter** accepts, **Escape** cancels, **Ctrl+Q** quits |
+| `pascal/tui/framed_window.fpas` | Two painted frame windows; drag title bars, **F6** next window, **■** closes, **Escape** quits |
+| `pascal/tui/framed_dialog.fpas` | Painted modal dialog; **Ctrl+D** opens, **OK** / **Escape** / **■** closes, **Ctrl+Q** quits |
 | `apps/ide/ide.fpasprj` | Multi-unit IDE shell — menu bar, desktop fill, status bar; **Help → About** opens a modal About dialog; **Alt+X** or **File → Exit** quits |
 TUI and Graph apps use the same hosted dispatch model: `Application.Configure(App, Handlers)` registers `On*` handlers; `Application.Run(App)` starts the hosted loop. See `docs/pascal/std/tui/app/README.md` and `docs/pascal/std/graph/app/README.md`. The console's own event type remains **`Std.Console.Event`**.

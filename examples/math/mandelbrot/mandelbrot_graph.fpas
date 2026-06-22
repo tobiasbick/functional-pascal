@@ -320,7 +320,6 @@ function ComputeDisplayScale(
 ): integer;
 begin
   return Max(1, Min(Max(TargetWidth, 1) div Max(SourceWidth, 1), Max(TargetHeight, 1) div
-
                                                                  Max(SourceHeight, 1)))
 end;
 
@@ -340,7 +339,6 @@ begin
     for X: integer := 0 to SourceWidth - 1 do
     begin
       Application.FillRect(App, OffsetX + X * Scale, OffsetY + Y * Scale, Scale, Scale, Source[Y * SourceWidth +
-
                                                                                                X])
     end
   end
@@ -471,10 +469,8 @@ begin
       if E.mouse_x >= DisplayOffsetX then
       begin
         var LogicalMouseX: integer := Clamp((E.mouse_x - DisplayOffsetX) div DisplayScaleFactor, 0, RenderWidth -
-
                                                                                                     1);
         var LogicalMouseY: integer := Clamp((E.mouse_y - DisplayOffsetY) div DisplayScaleFactor, 0, RenderHeight -
-
                                                                                                     1);
         State.CenterX := ViewportCX(State, RenderWidth, RenderHeight, LogicalMouseX);
         State.CenterY := ViewportCY(State, RenderHeight, LogicalMouseY);

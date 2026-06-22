@@ -420,7 +420,7 @@ dialogs. Current spec for implemented behavior: [`docs/pascal/std/tui/app/frames
   track/thumb input on frame borders (distinct from standalone `ScrollView` / `ScrollBar` controls).
 - [x] `HostSetFrameContentSize`, `HostScrollFrame`, `HostSetFrameScrollOffset`, `QueryFrameScrollState`.
 - [x] Auto `content_size` from child bounds for scroll-bar visibility.
-- [ ] Examples: `examples/pascal/tui/framed_window.fpas`, `framed_dialog.fpas`.
+- [x] Examples: `examples/pascal/tui/framed_window.fpas`, `framed_dialog.fpas`.
 - [x] FPAS test: painted frame chrome, palettes, title truncation, overlay ordering, and view kind.
 - [x] FPAS + VM tests: owned framed-dialog cleanup and atomic invalid-geometry rejection.
 - [x] FPAS tests: close and zoom chrome clicks.

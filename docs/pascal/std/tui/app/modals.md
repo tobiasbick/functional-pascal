@@ -76,11 +76,13 @@ Examples:
 ### `Application.ShowFramedDialog(...)`
 
 `ShowFramedDialog(App, ModalId, X, Y, Width, Height, Title, Movable, Resizable, Zoomable,
-Scrollable)` performs the same owned-modal lifecycle as `ShowDialog`, but the owned root is a
+Scrollable, Closable)` performs the same owned-modal lifecycle as `ShowDialog`, but the owned root is a
 native gray `FrameWidget`. Geometry is validated before either the view tree or modal stack is
 changed. Invalid geometry therefore leaves both unchanged. Children attach to the returned
 `ViewId` and are clipped to its inner viewport. Closing the modal unregisters the complete frame
 subtree.
+
+Example: [`examples/pascal/tui/framed_dialog.fpas`](../../../../examples/pascal/tui/framed_dialog.fpas)
 
 ### `Application.CloseModal(App)`
 

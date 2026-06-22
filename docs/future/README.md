@@ -26,7 +26,7 @@ FPAS programs today are tested mainly from Rust (`compile_and_run`, VM input que
 
 ## Documentation layout
 
-Topic directories under [`docs/pascal/`](../pascal/) replaced the flat numbered chapters (`01-overview.md` … `11-stdlib.md`). Migration record: [`pascal-docs-restructure.md`](pascal-docs-restructure.md).
+Topic directories under [`docs/pascal/`](../pascal/) replaced the flat numbered chapters (`01-overview.md` … `11-stdlib.md`).
 
 ## Under Consideration
 

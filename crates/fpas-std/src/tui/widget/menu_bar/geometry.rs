@@ -2,6 +2,7 @@
 //!
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
+use crate::text::str_display_width;
 use crate::{DamageRegion, UiMouse, ViewRect};
 
 use super::super::menu_popup::{MenuPopupItem, MenuPopupRect, popup_rect};
@@ -100,7 +101,7 @@ pub(super) fn item_x_at(items: &[MenuBarItem], rect: ViewRect, index: usize) -> 
 }
 
 pub(super) fn item_display_width(item: &MenuBarItem) -> i64 {
-    (item.label.chars().count() as i64).saturating_add(2)
+    str_display_width(&item.label).saturating_add(2)
 }
 
 pub(super) fn intersects_damage(rect: ViewRect, damage: DamageRegion) -> bool {

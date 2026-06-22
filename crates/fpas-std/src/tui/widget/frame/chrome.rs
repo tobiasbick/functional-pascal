@@ -5,6 +5,7 @@
 use crate::{Console, DamageRegion, ViewRect};
 
 use super::{FrameGeometry, FrameStyle};
+use crate::text::truncate_for_title_slot;
 
 pub(super) fn paint_underlay(
     console: &mut Console,
@@ -70,15 +71,8 @@ fn paint_title(console: &mut Console, clip: ViewRect, slot: ViewRect, title: &st
     if width == 0 {
         return;
     }
-    let mut chars = title.chars();
-    for index in 0..width {
-        let Some(mut ch) = chars.next() else {
-            break;
-        };
-        if index + 1 == width && chars.next().is_some() {
-            ch = '…';
-        }
-        paint_cell(console, clip, slot.x + index as i64, slot.y, ch, fg, bg);
+    for (offset, ch) in truncate_for_title_slot(title, width) {
+        paint_cell(console, clip, slot.x + offset as i64, slot.y, ch, fg, bg);
     }
 }
 

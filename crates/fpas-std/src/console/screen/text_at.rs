@@ -1,4 +1,5 @@
 use super::{ConsoleState, RenderColor, ScreenCell, WindowRect};
+use crate::text::{WIDE_CONTINUATION, display_width};
 
 impl ConsoleState {
     /// Write `text` at zero-based terminal coordinates using CRT color indices.
@@ -23,30 +24,15 @@ impl ConsoleState {
         let mut damage: Option<WindowRect> = None;
         let mut col = start_x;
         for ch in text.chars() {
+            let width = i64::from(display_width(ch));
+            if width == 0 {
+                continue;
+            }
             if col > i64::from(self.width) || start_y > i64::from(self.height) {
                 break;
             }
-            if col < 1 || start_y < 1 || !self.can_paint_cell(col as u16, start_y as u16) {
-                col += 1;
-                continue;
-            }
-            let idx = self.index(col as u16, start_y as u16);
-            self.cells[idx] = ScreenCell {
-                ch,
-                fg: RenderColor::Crt(fg),
-                bg: RenderColor::Crt(bg),
-            };
-            let cell = WindowRect {
-                left: col as u16,
-                top: start_y as u16,
-                right: col as u16,
-                bottom: start_y as u16,
-            };
-            damage = Some(match damage {
-                Some(existing) => existing.union(cell),
-                None => cell,
-            });
-            col += 1;
+            damage = Self::paint_display_char(self, col, start_y, ch, fg, bg, damage);
+            col += width;
         }
 
         if let Some(window) = damage {
@@ -61,21 +47,57 @@ impl ConsoleState {
         if start_x > i64::from(self.width) || start_y > i64::from(self.height) {
             return;
         }
-        if start_x < 1 || start_y < 1 || !self.can_paint_cell(start_x as u16, start_y as u16) {
-            return;
+
+        if let Some(window) = Self::paint_display_char(self, start_x, start_y, ch, fg, bg, None) {
+            self.mark_damage_rect(window);
+        }
+    }
+
+    fn paint_display_char(
+        state: &mut ConsoleState,
+        col: i64,
+        row: i64,
+        ch: char,
+        fg: u8,
+        bg: u8,
+        mut damage: Option<WindowRect>,
+    ) -> Option<WindowRect> {
+        let width = i64::from(display_width(ch));
+        if width == 0 {
+            return damage;
         }
 
-        let idx = self.index(start_x as u16, start_y as u16);
-        self.cells[idx] = ScreenCell {
-            ch,
-            fg: RenderColor::Crt(fg),
-            bg: RenderColor::Crt(bg),
-        };
-        self.mark_damage_rect(WindowRect {
-            left: start_x as u16,
-            top: start_y as u16,
-            right: start_x as u16,
-            bottom: start_y as u16,
-        });
+        for offset in 0..width {
+            let paint_col = col + offset;
+            if paint_col < 1
+                || row < 1
+                || paint_col > i64::from(state.width)
+                || row > i64::from(state.height)
+            {
+                continue;
+            }
+            if !state.can_paint_cell(paint_col as u16, row as u16) {
+                continue;
+            }
+            let paint_ch = if offset == 0 { ch } else { WIDE_CONTINUATION };
+            let idx = state.index(paint_col as u16, row as u16);
+            state.cells[idx] = ScreenCell {
+                ch: paint_ch,
+                fg: RenderColor::Crt(fg),
+                bg: RenderColor::Crt(bg),
+            };
+            let cell = WindowRect {
+                left: paint_col as u16,
+                top: row as u16,
+                right: paint_col as u16,
+                bottom: row as u16,
+            };
+            damage = Some(match damage {
+                Some(existing) => existing.union(cell),
+                None => cell,
+            });
+        }
+
+        damage
     }
 }

@@ -23,6 +23,7 @@ pub use radio::{RadioGroupStyle, RadioGroupWidget, RadioOption};
 pub use scroll_bar::{ScrollBarStyle, ScrollBarWidget};
 pub use scroll_view::{ScrollViewStyle, ScrollViewWidget};
 
+use crate::text::text_cells_for_paint;
 use crate::{Console, DamageRegion, ViewRect};
 
 fn clip_rect_to_damage(rect: ViewRect, damage: DamageRegion) -> Option<ViewRect> {
@@ -58,9 +59,8 @@ fn paint_chars(
     }
 }
 
-fn truncated_chars(text: &str, width: i64) -> impl Iterator<Item = (usize, char)> + '_ {
-    let width = width.max(0) as usize;
-    text.chars().take(width).enumerate()
+fn truncated_chars(text: &str, width: i64) -> impl Iterator<Item = (usize, char)> + Clone + '_ {
+    text_cells_for_paint(text, width)
 }
 
 fn accelerator_index(text: &str, accelerator: Option<char>) -> Option<usize> {

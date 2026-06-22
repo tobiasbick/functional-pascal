@@ -1,6 +1,7 @@
 use crate::{Console, DamageRegion, ViewRect};
 
 use super::{clip_rect_to_damage, paint_chars};
+use crate::text::{char_display_offset, layout_display_cells};
 
 /// CRT colors used while painting a single-line text input control.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -153,11 +154,12 @@ impl InputLineWidget {
             width: rect.width,
             height: 1,
         };
+        let visible = &self.text[self.byte_index(scroll)..];
         paint_chars(
             console,
             text_rect,
             clip,
-            self.text.chars().skip(scroll).take(view_width).enumerate(),
+            layout_display_cells(visible, view_width).into_iter(),
             |_| fg,
             self.style.bg,
         );
@@ -186,7 +188,8 @@ impl InputLineWidget {
     }
 
     fn paint_cursor(&self, console: &mut Console, rect: ViewRect, clip: ViewRect, scroll: usize) {
-        let cursor_col = self.cursor.saturating_sub(scroll);
+        let cursor_col = char_display_offset(&self.text, self.cursor)
+            .saturating_sub(char_display_offset(&self.text, scroll));
         if cursor_col >= rect.width.max(0) as usize {
             return;
         }

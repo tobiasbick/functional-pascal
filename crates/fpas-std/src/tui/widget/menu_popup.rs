@@ -3,6 +3,7 @@
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
 use crate::key_event::{ConsoleKeyEvent, key_kind_index};
+use crate::text::str_display_width;
 use crate::{Console, ViewRect};
 
 use super::menu_label_paint::paint_labeled_text;
@@ -231,11 +232,11 @@ pub fn popup_alt_shortcut_index(entries: &[MenuPopupItem], key: &ConsoleKeyEvent
 }
 
 fn entry_display_width(entry: &MenuPopupItem) -> i64 {
-    (entry.label.chars().count() as i64).saturating_add(2)
+    str_display_width(&entry.label).saturating_add(2)
 }
 
 fn pad_to_width(text: &str, width: i64) -> String {
-    let current = text.chars().count() as i64;
+    let current = str_display_width(text);
     if current >= width {
         return text.to_string();
     }

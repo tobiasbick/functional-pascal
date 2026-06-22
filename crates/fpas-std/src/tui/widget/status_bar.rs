@@ -2,6 +2,7 @@
 //!
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
+use crate::text::{layout_display_cells, str_display_width};
 use crate::{Console, DamageRegion, ViewRect};
 
 /// One declarative status segment supplied from Pascal.
@@ -77,7 +78,7 @@ impl StatusBarWidget {
             .rev()
             .filter(|segment| segment.align_right)
         {
-            let width = segment.text.chars().count() as i64;
+            let width = str_display_width(&segment.text);
             if width <= 0 {
                 continue;
             }
@@ -106,7 +107,7 @@ fn paint_segment(
     segment: &StatusBarSegment,
     style: StatusBarStyle,
 ) -> i64 {
-    let width = segment.text.chars().count() as i64;
+    let width = str_display_width(&segment.text);
     if width <= 0 || x >= max_x {
         return x;
     }
@@ -115,8 +116,9 @@ fn paint_segment(
     if visible <= 0 {
         return x;
     }
-    let text: String = segment.text.chars().take(visible as usize).collect();
-    console.write_text_at_crt(x, y, &text, style.bar_fg, style.bar_bg);
+    for (offset, ch) in layout_display_cells(&segment.text, visible as usize) {
+        console.write_char_at_crt(x + offset as i64, y, ch, style.bar_fg, style.bar_bg);
+    }
     x + visible
 }
 

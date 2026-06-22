@@ -1,3 +1,4 @@
+use crate::text::str_display_width;
 use crate::{CommandId, Console, DamageRegion, ViewRect};
 
 use super::{clip_rect_to_damage, paint_chars, truncated_chars};
@@ -67,7 +68,7 @@ impl ButtonWidget {
     /// Minimum view width needed to display the button caption and chrome.
     #[must_use]
     pub fn minimum_width(&self) -> i64 {
-        self.display_text().chars().count() as i64
+        str_display_width(&self.display_text())
     }
 
     /// Paint the button into `rect`, clipped to `damage`.
@@ -79,7 +80,7 @@ impl ButtonWidget {
         console.fill_rect_crt(clip, fg, bg, ' ');
 
         let text = self.display_text();
-        let text_width = text.chars().count() as i64;
+        let text_width = str_display_width(&text);
         let x = rect.x + (rect.width.saturating_sub(text_width) / 2).max(0);
         let y = rect.y + (rect.height.saturating_sub(1) / 2).max(0);
         let text_rect = ViewRect {

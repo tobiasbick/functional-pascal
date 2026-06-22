@@ -2,6 +2,7 @@
 //!
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
+use crate::text::str_display_width;
 use crate::{Console, DamageRegion, ViewRect};
 
 use super::super::menu_label_paint::paint_labeled_text;
@@ -26,7 +27,7 @@ impl MenuBarWidget {
                     break;
                 }
                 let label = format!(" {} ", item.label);
-                let width = label.chars().count() as i64;
+                let width = str_display_width(&label);
                 if width <= 0 || x + width > rect.x + rect.width {
                     break;
                 }

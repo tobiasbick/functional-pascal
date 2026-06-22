@@ -42,6 +42,7 @@ mod result_option;
 mod std_units;
 mod str;
 mod test;
+mod text;
 mod time;
 mod tui;
 mod ui;

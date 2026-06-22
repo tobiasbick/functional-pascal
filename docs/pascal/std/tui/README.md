@@ -9,6 +9,7 @@ Hosted terminal applications and session APIs.
 | [Views and focus](app/views.md) | Retained view tree, clipping, Tab focus, paint order |
 | [Modals and dialogs](app/modals.md) | `ShowModal`, `ShowDialog`, results, focus restore |
 | [Terminal checklist](terminal-checklist.md) | Manual smoke tests |
+| [Cell width](cell-width.md) | Unicode display-width policy for painting and layout |
 
 ## See also
 

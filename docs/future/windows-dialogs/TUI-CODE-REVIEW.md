@@ -325,8 +325,9 @@ the retained Rust contracts; bridge tags are encoded only at the intrinsic bound
 
 **Implementation status (2026-06-22): partial.** Geometry, desktop constraints, active-root
 primitives, atomic frame-root creation, owned framed-dialog registration, public painted
-`HostCreateFrameView`, palette presets, and overlay chrome are complete. Frame-integrated scroll
-chrome, close handling, and public `ShowFramedDialog` remain open — see [Remaining work](#remaining-work-2026-06-22).
+`HostCreateFrameView`, `ShowFramedDialog`, palette presets, inner viewport clipping, and overlay
+chrome are complete. Frame-integrated scroll chrome and close handling remain open — see
+[Remaining work](#remaining-work-2026-06-22).
 
 - [x] Add active-root tracking and raise/activate (click-to-front) in the retained registry.
 - [x] Add desktop work area, active/inactive palette state, constraints, and shadow geometry.
@@ -401,8 +402,8 @@ host calls and VM chrome dispatch. Memo/editor primitives remain deferred.
 
 Phases 0–5 of the [recommended order](#recommended-implementation-order) are complete except the
 deferred memo/editor item. The original [window/dialog plan](README.md) is only partially realized:
-frame roots expose geometry and interaction, but not yet the painted `FrameWidget` chrome described
-there. Current spec for implemented behavior: [`docs/pascal/std/tui/app/frames.md`](../../pascal/std/tui/app/frames.md).
+frame roots now expose painted chrome, inner viewport clipping, interaction, and owned framed
+dialogs. Current spec for implemented behavior: [`docs/pascal/std/tui/app/frames.md`](../../pascal/std/tui/app/frames.md).
 
 ### Phase 6 — Frame rendering and chrome widget
 
@@ -410,10 +411,10 @@ there. Current spec for implemented behavior: [`docs/pascal/std/tui/app/frames.m
 - [x] `chrome.rs` — double-line border, title text, and `▲` / `▼` cells from geometry slots.
 - [x] `style.rs` + `kind.rs` palettes — active/inactive Window (blue) and Dialog (gray) at paint time.
 - [x] `FrameWidget::paint` — client fill and chrome wired into depth-first underlay/overlay dispatch.
-- [ ] Clip child geometry/input to the inner frame viewport rather than only protecting chrome with
+- [x] Clip child geometry/input to the inner frame viewport rather than only protecting chrome with
   the overlay pass.
 - [x] Public `Application.HostCreateFrameView`, consolidated from `HostCreateFrameRootView`.
-- [ ] Public `Application.ShowFramedDialog` VM bridge over existing `register_framed_dialog_root`.
+- [x] Public `Application.ShowFramedDialog` VM bridge over existing `register_framed_dialog_root`.
 - [ ] Enable `Closable` capability — title-bar close hit-test and sourced close command (reserved id
   or `CommandKind::Close`).
 - [ ] Frame-integrated scroll chrome (`scroll.rs`) — offset state, `▲█▼` / `◄█►` paint, wheel and
@@ -422,6 +423,7 @@ there. Current spec for implemented behavior: [`docs/pascal/std/tui/app/frames.m
 - [ ] Auto `content_size` from child bounds for scroll-bar visibility.
 - [ ] Examples: `examples/pascal/tui/framed_window.fpas`, `framed_dialog.fpas`.
 - [x] FPAS test: painted frame chrome, palettes, title truncation, overlay ordering, and view kind.
+- [x] FPAS + VM tests: owned framed-dialog cleanup and atomic invalid-geometry rejection.
 - [ ] FPAS tests: frame scroll offset queries and close/zoom chrome clicks.
 
 ### Phase 7 — Editor, layout, and polish

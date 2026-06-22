@@ -216,6 +216,7 @@ end.
 | [`tui_menu_bar_hover_test.fpas`](../../../../tests/tui/tui_menu_bar_hover_test.fpas) | Bar hover colors |
 | [`tui_menu_hover_test.fpas`](../../../../tests/tui/tui_menu_hover_test.fpas) | Capstone: bar hover + submenu selection |
 | [`tui_show_dialog_test.fpas`](../../../../tests/tui/tui_show_dialog_test.fpas) | `ShowDialog`, modal Escape, `HostSetActiveModalResult`, owned-root cleanup |
+| [`tui_framed_dialog_test.fpas`](../../../../tests/tui/tui_framed_dialog_test.fpas) | Painted owned frame, modal depth, and automatic subtree cleanup |
 | [`tui_view_clip_test.fpas`](../../../../tests/tui/tui_view_clip_test.fpas) | Effective clip during view-local paint |
 | [`tui_scene_graph_query_test.fpas`](../../../../tests/tui/tui_scene_graph_query_test.fpas) | Scene structure, state, options, clip, kind, and paint order |
 

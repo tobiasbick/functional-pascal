@@ -486,6 +486,8 @@ pub enum TuiIntrinsic {
     HostCascadeFrameRoots = 416,
     /// Tile window-kind frame roots across the desktop work area.
     HostTileFrameRoots = 417,
+    /// Create an owned painted dialog frame and enter it modally.
+    ApplicationShowFramedDialog = 418,
     // **375..=377** are `Std.Test` screen/view assertions; **378** is `Std.Test.PushReadLn` (see `TestIntrinsic`).
     // Note: **348..=355** are owned by `Std.Test` (`TestIntrinsic`).
 }

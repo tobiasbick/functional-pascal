@@ -19,6 +19,19 @@ begin
   Application.HostSetViewParent(App, Child, Some(WindowView));
   var FocusButton: ViewId := Application.HostCreateButtonView(App, 4, 3, 6, 1, 'Focus', None, false);
   Application.HostSetViewParent(App, FocusButton, Some(WindowView));
+  var ChromeButton: ViewId := Application.HostCreateButtonView(App, 4, 1, 6, 1, 'Hidden', None, false);
+  Application.HostSetViewParent(App, ChromeButton, Some(WindowView));
+  var ChromeResolved: ResolvedView := Application.QueryResolvedView(App, ChromeButton);
+  AssertFalse(ChromeResolved.state.exposed);
+  case ChromeResolved.clip of
+    Some(UnexpectedClip):
+    begin
+      Fail('frame chrome child must not have an effective clip')
+    end;
+    None:
+    begin
+    end
+  end;
   var DialogView: ViewId := Application.HostCreateFrameView(App, 22, 1, 12, 5, 'About dialog', FrameKindDialog, false, false, false, false);
   AssertTrue(Application.QueryViewKind(App, WindowView) = ViewKind.Frame);
   AssertTrue(Application.QueryViewKind(App, DialogView) = ViewKind.Frame);

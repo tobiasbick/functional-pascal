@@ -8,6 +8,8 @@ pub const STD_TUI_APPLICATION_HOST_SET_DESKTOP_WORK_AREA: &str =
 /// Create a retained frame with host-painted chrome.
 pub const STD_TUI_APPLICATION_HOST_CREATE_FRAME_VIEW: &str =
     std_tui!("Application.HostCreateFrameView");
+/// Create an owned painted frame and enter it as the active modal dialog.
+pub const STD_TUI_APPLICATION_SHOW_FRAMED_DIALOG: &str = std_tui!("Application.ShowFramedDialog");
 pub const STD_TUI_APPLICATION_HOST_ACTIVATE_NEXT_WINDOW: &str =
     std_tui!("Application.HostActivateNextWindow");
 pub const STD_TUI_APPLICATION_HOST_ZOOM_FRAME_ROOT: &str =

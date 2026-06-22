@@ -3,8 +3,8 @@
 Implementation plan for host-managed **frame widgets** — Turbo Vision–style windows and dialogs with integrated chrome (title bar, close/zoom buttons, scroll bars) and a separate content **view** area for child views.
 
 **Status:** **partial** — frame-root geometry, window-manager interaction, and painted
-`FrameWidget` chrome are implemented; frame-integrated scrolling, close handling, and public
-`ShowFramedDialog` are not. **Live
+`FrameWidget` chrome, inner viewport clipping, and public `ShowFramedDialog` are implemented;
+frame-integrated scrolling and close handling are not. **Live
 tracker:** [TUI-CODE-REVIEW.md](TUI-CODE-REVIEW.md#remaining-work-2026-06-22) (phases 0–5 done;
 phase 6+ open). **Current spec:** [`docs/pascal/std/tui/app/frames.md`](../../pascal/std/tui/app/frames.md).
 
@@ -385,7 +385,7 @@ VM bridge: new intrinsics in `fpas-bytecode`, sema in `loaded/tui/`, compiler lo
 ### Phase 3 — Dialog integration and actions
 
 - [ ] Add an internal modal-stack operation that marks an existing root as owned.
-- [ ] `ShowFramedDialog` atomically creates the frame and pushes that same root as owned; roll back frame creation if modal setup fails.
+- [x] `ShowFramedDialog` atomically creates the frame and pushes that same root as owned; invalid geometry leaves both registries unchanged.
 - [ ] `FrameAction` + `HostRegisterOnFrameAction`; chrome actions include the source `ViewId` and do not use `OnCommand` ids.
 - [ ] Remove per-frame action handlers when a frame is unregistered or its owned modal closes.
 - [ ] Close-button hit-test emits `FrameAction.Close`; the example handler calls `CloseModal`.

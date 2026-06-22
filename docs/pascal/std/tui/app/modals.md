@@ -6,6 +6,7 @@ Hosted modal scopes, owned dialog roots, validated results, and focus restore on
 | --- | ---- |
 | `Application.ShowModal` | Scope an existing root view subtree |
 | `Application.ShowDialog` | Register a new owned root view and show it modally |
+| `Application.ShowFramedDialog` | Atomically create an owned painted dialog frame and show it modally |
 | `Application.CloseModal` | Pop the active modal frame |
 | `Application.HostEnterModal` / `HostLeaveModal` | Low-level stack push/pop without view ownership |
 | `Application.HostSetActiveModalResult` | Store Accept, Cancel, or an application-defined result |
@@ -20,7 +21,7 @@ Full intrinsic mapping: [VM bridge](vm-bridge.md). View tree and focus rules: [V
 The host keeps a stack of modal frames. Each frame stores:
 
 - an application-defined **`ModalId`** (`integer`, chosen by the app);
-- the **root view** whose subtree defines the default modal scope (`ShowModal` / `ShowDialog`);
+- the **root view** whose subtree defines the default modal scope (`ShowModal`, `ShowDialog`, or `ShowFramedDialog`);
 - optional **extra scoped views** attached with `HostAttachViewToActiveModal`;
 - modal-local **command bindings** from `HostBindCommandToActiveModal`;
 - the **previous active window root** and **previous focused leaf** captured on entry;
@@ -72,6 +73,15 @@ Examples:
 - [`examples/pascal/tui/show_dialog.fpas`](../../../../examples/pascal/tui/show_dialog.fpas) — owned dialog with OK/Cancel and modal results
 - [`apps/ide/src/dialog.fpas`](../../../../apps/ide/src/dialog.fpas) — IDE Help → About dialog
 
+### `Application.ShowFramedDialog(...)`
+
+`ShowFramedDialog(App, ModalId, X, Y, Width, Height, Title, Movable, Resizable, Zoomable,
+Scrollable)` performs the same owned-modal lifecycle as `ShowDialog`, but the owned root is a
+native gray `FrameWidget`. Geometry is validated before either the view tree or modal stack is
+changed. Invalid geometry therefore leaves both unchanged. Children attach to the returned
+`ViewId` and are clipped to its inner viewport. Closing the modal unregisters the complete frame
+subtree.
+
 ### `Application.CloseModal(App)`
 
 Pops the **topmost** modal frame. Empty stack: no-op.
@@ -79,7 +89,7 @@ Pops the **topmost** modal frame. Empty stack: no-op.
 On close the host:
 
 1. reads the stored modal result, if any;
-2. unregisters an **owned** dialog root subtree when the frame was created by `ShowDialog`;
+2. unregisters an **owned** dialog root subtree when the frame was created by `ShowDialog` or `ShowFramedDialog`;
 3. restores the saved focused leaf when that view still exists;
 4. otherwise re-activates the saved window root and moves focus into its subtree;
 5. otherwise focuses the first eligible view in the remaining modal scope, or the next global focus candidate;
@@ -171,9 +181,10 @@ See [Native testing](testing.md) for pump and assertion patterns.
 | --- | ---- |
 | Modal stack and return context | [`fpas-std/src/tui/modal/`](../../../../../crates/fpas-std/src/tui/modal/) |
 | VM show/close bridge | [`fpas-vm/.../views/modal.rs`](../../../../../crates/fpas-vm/src/vm/execute/io/tui/views/modal.rs) |
-| Rust dialog controls (not yet Pascal `Host*`) | [`fpas-std/src/tui/widget/control/`](../../../../../crates/fpas-std/src/tui/widget/control/) |
+| Native dialog controls | [`fpas-std/src/tui/widget/control/`](../../../../../crates/fpas-std/src/tui/widget/control/) |
 
-Frame geometry, desktop work area, and active-window activation live in the retained Rust engine (`view/desktop.rs`, `view/activation.rs`, `widget/frame/`) and are not yet exposed as Pascal APIs.
+Frame geometry, painted chrome, desktop work area, active-window activation, and owned framed
+dialogs are exposed through the APIs documented in [Frame roots](frames.md).
 
 ## See also
 

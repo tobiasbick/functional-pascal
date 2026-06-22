@@ -45,7 +45,8 @@ The host resolves each node to:
 
 - one absolute screen rectangle;
 - a **content origin** for local painting;
-- an **effective clip** from ancestor bounds.
+- an **effective clip** from ancestor bounds; frame roots further restrict descendants to their
+  inner content viewport.
 
 Paint, hit-testing, focus eligibility, damage, and `QueryViewRect` consume the same resolved record. `QueryViewRect` returns the absolute rectangle **before** clipping.
 

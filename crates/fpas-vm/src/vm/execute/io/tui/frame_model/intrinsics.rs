@@ -7,11 +7,12 @@ use crate::vm::diagnostics::{VmError, runtime_error};
 use fpas_bytecode::{SourceLocation, TuiIntrinsic, Value};
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 use fpas_std::{
-    FrameCapabilities, FrameContentSize, FrameGeometryError, FrameKind, FrameRootSpec,
-    FrameRootState, FrameWidget, ViewRect, ViewWidget,
+    FrameCapabilities, FrameContentSize, FrameKind, FrameRootSpec, FrameRootState, FrameWidget,
+    ViewRect, ViewWidget,
 };
 
 use super::super::view_geometry::validate_view_rect;
+use super::frame_geometry_error;
 
 impl Worker {
     pub(in crate::vm::execute::io::tui) fn try_exec_tui_frame_tui_intrinsic(
@@ -180,18 +181,6 @@ impl Worker {
             )),
         }
     }
-}
-
-fn frame_geometry_error(error: FrameGeometryError, line: SourceLocation) -> VmError {
-    runtime_error(
-        RUNTIME_CONSOLE_STATE_ERROR,
-        format!(
-            "frame geometry requires at least {}x{} cells, got {}x{}",
-            error.min_width, error.min_height, error.got_width, error.got_height
-        ),
-        "Increase the requested width and height or disable scrollable frame chrome.",
-        line,
-    )
 }
 
 fn frame_root_record(state: FrameRootState, rect: ViewRect) -> Value {

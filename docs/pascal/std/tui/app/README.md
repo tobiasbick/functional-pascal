@@ -8,7 +8,7 @@
 | [Views and focus](views.md) | Retained tree, clipping, Tab traversal, paint order |
 | [Modals and dialogs](modals.md) | `ShowModal`, `ShowDialog`, results, focus restore |
 | [Retained controls](controls.md) | Labels, buttons, input lines, checkboxes, radio groups |
-| [Frame roots](frames.md) | Frame-root geometry, window-manager host calls, chrome interaction |
+| [Frame roots](frames.md) | Painted frames, inner viewport clipping, window management, owned framed dialogs |
 | [Lifecycle](lifecycle.md) | `Open`, `Configure`, `Run`, `Close` |
 | [Handlers](handlers.md) | `On*` callbacks and registration |
 | [Types](types.md) | `ApplicationHandlers`, `ExitReason`, `ViewId`, signatures |

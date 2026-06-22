@@ -448,6 +448,43 @@ fn tui_application_show_dialog_registers_owned_root_and_close_modal_removes_it()
 }
 
 #[test]
+fn tui_application_show_framed_dialog_geometry_error_is_atomic() {
+    let mut chunk = Chunk::new();
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(3));
+    emit_constant(&mut chunk, Value::Integer(2));
+    emit_constant(&mut chunk, Value::Str("Too small".into()));
+    emit_constant(&mut chunk, Value::Boolean(false));
+    emit_constant(&mut chunk, Value::Boolean(false));
+    emit_constant(&mut chunk, Value::Boolean(false));
+    emit_constant(&mut chunk, Value::Boolean(false));
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(
+            TuiIntrinsic::ApplicationShowFramedDialog,
+        ))),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    let error = worker.run().expect_err("invalid frame geometry must fail");
+    assert!(error.message.contains("requires at least 4x3"));
+
+    let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+    assert_eq!(tui.modals.depth(), 0);
+    assert!(tui.views.is_empty());
+    assert!(tui.view_widgets.is_empty());
+}
+
+#[test]
 fn tui_application_show_modal_restores_previous_focus_on_close() {
     let mut chunk = Chunk::new();
     chunk.emit(

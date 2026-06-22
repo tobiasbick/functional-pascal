@@ -277,6 +277,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Tui(TuiIntrinsic::QueryFrameRootState),
     Intrinsic::Tui(TuiIntrinsic::HostCascadeFrameRoots),
     Intrinsic::Tui(TuiIntrinsic::HostTileFrameRoots),
+    Intrinsic::Tui(TuiIntrinsic::ApplicationShowFramedDialog),
     Intrinsic::Tui(TuiIntrinsic::HostRegisterOnViewPaint),
     Intrinsic::Tui(TuiIntrinsic::ApplicationShowModal),
     Intrinsic::Tui(TuiIntrinsic::ApplicationCloseModal),

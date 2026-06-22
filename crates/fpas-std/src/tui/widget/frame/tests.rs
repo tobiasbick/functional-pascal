@@ -136,10 +136,30 @@ fn frame_child_is_clipped_to_frame_bounds() {
     let child = registry.register(rect(view.x, view.y, view.width + 30, view.height + 30));
     assert!(registry.set_parent(child, Some(frame.view_id)));
 
-    // The frame outer rectangle is x:10..20, y:2..10; the oversized child clips to it.
+    // The child clips to the inner frame viewport, excluding every chrome cell.
     let resolved = registry.resolved(child).expect("child resolves");
-    assert_eq!(resolved.clip, Some(rect(11, 3, 9, 7)));
+    assert_eq!(resolved.clip, Some(rect(11, 3, 8, 6)));
     assert!(resolved.state.exposed);
+    assert_eq!(registry.topmost_view_at(19, 4, None), Some(frame.view_id));
+}
+
+#[test]
+fn frame_chrome_excludes_children_even_when_generic_child_clipping_is_disabled() {
+    let mut registry = registry_with_desktop();
+    let frame = registry
+        .register_frame_root(window_spec(rect(10, 2, 10, 8)))
+        .expect("valid frame");
+    let mut options = registry.options(frame.view_id).expect("frame options");
+    options.clip_children = false;
+    assert!(registry.set_options(frame.view_id, options));
+
+    let child = registry.register(rect(10, 2, 1, 1));
+    assert!(registry.set_parent(child, Some(frame.view_id)));
+
+    let resolved = registry.resolved(child).expect("child resolves");
+    assert_eq!(resolved.clip, None);
+    assert!(!resolved.state.exposed);
+    assert_eq!(registry.topmost_view_at(10, 2, None), Some(frame.view_id));
 }
 
 #[test]
@@ -230,12 +250,12 @@ fn nested_frame_clips_to_parent_and_activates_through_root() {
     assert_eq!(registry.root_of(dialog.view_id), Some(window.view_id));
     assert_eq!(registry.root_of(leaf), Some(window.view_id));
 
-    // The dialog overflows the window on the right and is clipped to the window bounds.
+    // The dialog overflows the window and is clipped to the window's inner viewport.
     let dialog_clip = registry
         .resolved(dialog.view_id)
         .expect("dialog resolves")
         .clip;
-    assert_eq!(dialog_clip, Some(rect(18, 4, 7, 8)));
+    assert_eq!(dialog_clip, Some(rect(18, 4, 6, 7)));
 
     // Focusing a deeply nested leaf activates the outer window root.
     assert_eq!(registry.focus_view(leaf), (true, false));

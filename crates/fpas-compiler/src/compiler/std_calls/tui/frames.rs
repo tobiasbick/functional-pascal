@@ -24,6 +24,9 @@ impl Compiler {
             s::STD_TUI_APPLICATION_HOST_CREATE_FRAME_VIEW => {
                 (11, TuiIntrinsic::HostCreateFrameView, true)
             }
+            s::STD_TUI_APPLICATION_SHOW_FRAMED_DIALOG => {
+                (11, TuiIntrinsic::ApplicationShowFramedDialog, true)
+            }
             s::STD_TUI_APPLICATION_HOST_ACTIVATE_NEXT_WINDOW => {
                 (1, TuiIntrinsic::HostActivateNextWindow, true)
             }

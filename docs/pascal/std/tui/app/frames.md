@@ -12,6 +12,7 @@ activation.
 | ---- | ---- |
 | `Application.HostSetDesktopWorkArea(App, X, Y, Width, Height)` | Configure the desktop rectangle that constrains frame roots. Returns `false` when the rectangle is empty. |
 | `Application.HostCreateFrameView(App, X, Y, Width, Height, Title, Kind, Movable, Resizable, Zoomable, Scrollable)` | Create and paint one frame root (`Kind`: `0` = Window, `1` = Dialog). Returns `ViewId`. |
+| `Application.ShowFramedDialog(App, ModalId, X, Y, Width, Height, Title, Movable, Resizable, Zoomable, Scrollable)` | Atomically create an owned painted dialog frame and enter it modally. Returns `ViewId`. |
 | `Application.HostActivateNextWindow(App)` | Raise and focus the next eligible root in z-order. Returns whether a root was activated. |
 | `Application.HostZoomFrameRoot(App, ViewId)` | Zoom a zoomable root to the desktop work area. |
 | `Application.HostRestoreFrameRoot(App, ViewId)` | Restore a zoomed root to its saved rectangle. |
@@ -35,6 +36,11 @@ active light-blue title/border and inactive blue title/border; dialog frames use
 The client area is painted before the frame's local handler and descendants. The double-line
 border, title, and enabled `▲` / `▼` zoom cells are painted afterward, so child views cannot
 overwrite frame chrome. Titles that exceed their slot end with `…`.
+
+Children are clipped for paint, hit-testing, focus eligibility, and scene queries to the resolved
+inner frame viewport. This invariant applies even if generic `ViewOptions.clipChildren` is false.
+Reparenting still preserves a child's absolute rectangle; scroll-relative content origins are not
+introduced until frame-integrated scrolling is implemented.
 
 Frame-integrated scrolling and close chrome are not implemented yet. `Scrollable` currently
 participates in validated geometry only; use standalone `ScrollView` or `ScrollBar` controls for
@@ -71,6 +77,6 @@ Application-defined command ids remain non-negative and still flow through `OnCo
 | Layer | Location |
 | ----- | -------- |
 | Geometry + painting + interaction | `crates/fpas-std/src/tui/widget/frame/` |
-| VM bridge | `crates/fpas-vm/src/vm/execute/io/tui/frame_model/` |
-| Intrinsics **410..=415** | `crates/fpas-bytecode/src/intrinsic/tui.rs` |
-| FPAS tests | `tests/tui/tui_frame_chrome_test.fpas`, `tests/tui/tui_frame_window_test.fpas`, `tests/tui/tui_frame_layout_test.fpas` |
+| VM bridge | `crates/fpas-vm/src/vm/execute/io/tui/frame_model/`, `views/modal.rs` |
+| Intrinsics **410..=418** | `crates/fpas-bytecode/src/intrinsic/tui.rs` |
+| FPAS tests | `tests/tui/tui_frame_chrome_test.fpas`, `tests/tui/tui_framed_dialog_test.fpas`, `tests/tui/tui_frame_window_test.fpas`, `tests/tui/tui_frame_layout_test.fpas` |

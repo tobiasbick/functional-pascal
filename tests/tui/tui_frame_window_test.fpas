@@ -65,8 +65,8 @@ begin
   var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
   Application.Configure(App, Handlers);
   AssertTrue(Application.HostSetDesktopWorkArea(App, 0, 0, 80, 25));
-  var Back: ViewId := Application.HostCreateFrameRootView(App, 2, 2, 20, 8, FrameKindWindow, true, false, false, false);
-  var Front: ViewId := Application.HostCreateFrameRootView(App, 30, 4, 20, 8, FrameKindWindow, true, false, true, false);
+  var Back: ViewId := Application.HostCreateFrameView(App, 2, 2, 20, 8, 'Back', FrameKindWindow, true, false, false, false);
+  var Front: ViewId := Application.HostCreateFrameView(App, 30, 4, 20, 8, 'Front', FrameKindWindow, true, false, true, false);
   Application.RequestRedraw(App);
   Application.TestPumpUntilIdle(App);
   mutable var State: FrameRootState := Application.QueryFrameRootState(App, Front);

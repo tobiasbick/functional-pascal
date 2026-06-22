@@ -21,7 +21,7 @@ pub use control::{
 pub use frame::{
     FrameButtonSlots, FrameCapabilities, FrameChromeHit, FrameContentSize, FrameGeometry,
     FrameGeometryError, FrameKind, FrameRoot, FrameRootSpec, FrameRootState, FrameScrollbars,
-    FramedDialogRoot, register_framed_dialog_root,
+    FrameStyle, FrameWidget, FramedDialogRoot, register_framed_dialog_root,
 };
 pub use menu_bar::{MenuBarItem, MenuBarMouseResult, MenuBarState, MenuBarStyle, MenuBarWidget};
 pub use menu_popup::MenuPopupItem;
@@ -57,6 +57,8 @@ pub enum ViewWidget {
     ScrollBar(ScrollBarWidget),
     /// Scrolling multi-line text view.
     ScrollView(ScrollViewWidget),
+    /// Window or dialog frame with host-painted chrome.
+    Frame(FrameWidget),
 }
 
 impl ViewWidget {
@@ -92,6 +94,7 @@ impl ViewWidget {
                 widget.enabled = state.enabled;
                 widget.focused = state.focused;
             }
+            Self::Frame(widget) => widget.active = state.active,
             Self::SolidFill(_) | Self::MenuBar(_) | Self::StatusBar(_) => {}
         }
     }
@@ -110,6 +113,7 @@ impl ViewWidget {
             Self::ListBox(_) => ViewKind::ListBox,
             Self::ScrollBar(_) => ViewKind::ScrollBar,
             Self::ScrollView(_) => ViewKind::ScrollView,
+            Self::Frame(_) => ViewKind::Frame,
         }
     }
 
@@ -127,6 +131,25 @@ impl ViewWidget {
             Self::ListBox(widget) => widget.paint(console, rect, damage),
             Self::ScrollBar(widget) => widget.paint(console, rect, damage),
             Self::ScrollView(widget) => widget.paint(console, rect, damage),
+            Self::Frame(widget) => {
+                widget.paint_underlay(console, rect, damage);
+                widget.paint_overlay(console, rect, damage);
+            }
+        }
+    }
+
+    /// Paint the widget phase that precedes local handlers and descendants.
+    pub fn paint_underlay(&self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
+        match self {
+            Self::Frame(widget) => widget.paint_underlay(console, rect, damage),
+            _ => self.paint(console, rect, damage),
+        }
+    }
+
+    /// Paint chrome that must remain above local handlers and descendants.
+    pub fn paint_overlay(&self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
+        if let Self::Frame(widget) = self {
+            widget.paint_overlay(console, rect, damage);
         }
     }
 
@@ -154,7 +177,8 @@ impl ViewWidget {
             | Self::RadioGroup(_)
             | Self::ListBox(_)
             | Self::ScrollBar(_)
-            | Self::ScrollView(_) => intersects_damage_region(rect, damage),
+            | Self::ScrollView(_)
+            | Self::Frame(_) => intersects_damage_region(rect, damage),
         }
     }
 
@@ -174,7 +198,8 @@ impl ViewWidget {
             | Self::RadioGroup(_)
             | Self::ListBox(_)
             | Self::ScrollBar(_)
-            | Self::ScrollView(_) => rect.contains_console_mouse(mouse_x, mouse_y),
+            | Self::ScrollView(_)
+            | Self::Frame(_) => rect.contains_console_mouse(mouse_x, mouse_y),
         }
     }
 }

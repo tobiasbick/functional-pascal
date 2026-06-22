@@ -24,13 +24,14 @@ pub(super) fn register(checker: &mut Checker, types: &TuiTypes) {
     );
     define_func(
         checker,
-        s::STD_TUI_APPLICATION_HOST_CREATE_FRAME_ROOT_VIEW,
+        s::STD_TUI_APPLICATION_HOST_CREATE_FRAME_VIEW,
         vec![
             p("App", types.application.clone(), false),
             p("X", Ty::Integer, false),
             p("Y", Ty::Integer, false),
             p("Width", Ty::Integer, false),
             p("Height", Ty::Integer, false),
+            p("Title", Ty::String, false),
             p("Kind", Ty::Integer, false),
             p("Movable", Ty::Boolean, false),
             p("Resizable", Ty::Boolean, false),

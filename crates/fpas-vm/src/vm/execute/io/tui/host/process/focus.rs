@@ -16,13 +16,23 @@ impl Worker {
         let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
         let previous_rect = previous_focus.and_then(|view_id| tui.views.rect(view_id));
         let current_rect = current_focus.and_then(|view_id| tui.views.rect(view_id));
+        let previous_root_rect = previous_focus
+            .and_then(|view_id| tui.views.root_of(view_id))
+            .and_then(|root| tui.views.rect(root));
+        let current_root_rect = current_focus
+            .and_then(|view_id| tui.views.root_of(view_id))
+            .and_then(|root| tui.views.rect(root));
 
         let mut marked_any = false;
-        if let Some(rect) = previous_rect {
-            tui.session.request_redraw_rect(rect, line)?;
-            marked_any = true;
-        }
-        if let Some(rect) = current_rect {
+        for rect in [
+            previous_rect,
+            current_rect,
+            previous_root_rect,
+            current_root_rect,
+        ]
+        .into_iter()
+        .flatten()
+        {
             tui.session.request_redraw_rect(rect, line)?;
             marked_any = true;
         }

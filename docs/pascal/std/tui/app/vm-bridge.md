@@ -62,7 +62,7 @@ These `[fpas_bytecode::Intrinsic](../../../../../crates/fpas-bytecode/src/intrin
 | `TuiHostCreateListBoxView`, `TuiHostSetListBoxItems`, `TuiHostSetListBoxSelected`, `TuiQueryListBoxState` | `Application`, geometry/`ViewId`, list model | Creates and controls a wheel/key-scrolling retained list box. |
 | `TuiHostCreateScrollBarView`, `TuiHostSetScrollBarExtents`, `TuiQueryScrollBarState` | `Application`, geometry/`ViewId`, scroll extents | Creates and controls a standalone vertical or horizontal scroll bar. |
 | `TuiHostCreateScrollView`, `TuiHostSetScrollViewLines`, `TuiQueryScrollViewState` | `Application`, geometry/`ViewId`, line model | Creates and controls a multi-line scroll view with integrated vertical bar. |
-| `TuiHostSetDesktopWorkArea`, `TuiHostCreateFrameRootView`, `TuiHostActivateNextWindow`, `TuiHostZoomFrameRoot`, `TuiHostRestoreFrameRoot`, `TuiQueryFrameRootState` | `Application`, geometry/`ViewId`, frame flags | Frame-root desktop policy, creation, window-manager actions, and state queries. See [frames.md](frames.md). |
+| `TuiHostSetDesktopWorkArea`, `TuiHostCreateFrameView`, `TuiHostActivateNextWindow`, `TuiHostZoomFrameRoot`, `TuiHostRestoreFrameRoot`, `TuiQueryFrameRootState` | `Application`, geometry/title/`ViewId`, frame flags | Painted frame creation, desktop policy, window-manager actions, and state queries. See [frames.md](frames.md). |
 
 ### Pascal names (registry + compiler)
 
@@ -120,7 +120,7 @@ These `[fpas_bytecode::Intrinsic](../../../../../crates/fpas-bytecode/src/intrin
 | `Application.HostCreateLabelView` through `Application.HostCreateRadioGroupView` | `TuiHostCreateLabelView` through `TuiHostCreateRadioGroupView` |
 | `Application.HostSetInputLineText`, `HostSetCheckBoxChecked`, `HostSetRadioGroupSelected` | Matching `TuiHostSet*` intrinsic |
 | `Application.QueryInputLineState`, `QueryCheckBoxState`, `QueryRadioGroupState`, `QueryListBoxState`, `QueryScrollBarState`, `QueryScrollViewState` | Matching `TuiQuery*State` intrinsic |
-| `Application.HostSetDesktopWorkArea`, `HostCreateFrameRootView`, `HostActivateNextWindow`, `HostZoomFrameRoot`, `HostRestoreFrameRoot`, `QueryFrameRootState`, `HostCascadeFrameRoots`, `HostTileFrameRoots` | Matching frame-root `TuiHost*` / `TuiQuery*` intrinsic (**410..=417**) |
+| `Application.HostSetDesktopWorkArea`, `HostCreateFrameView`, `HostActivateNextWindow`, `HostZoomFrameRoot`, `HostRestoreFrameRoot`, `QueryFrameRootState`, `HostCascadeFrameRoots`, `HostTileFrameRoots` | Matching frame-root `TuiHost*` / `TuiQuery*` intrinsic (**410..=417**) |
 
 Samples: [`examples/pascal/tui/host_dispatch_minimal.fpas`](../../../../../examples/pascal/tui/host_dispatch_minimal.fpas) (one `HostProcessNext` step), [`examples/pascal/tui/host_dispatch_paint.fpas`](../../../../../examples/pascal/tui/host_dispatch_paint.fpas) (register `OnPaint` + `HostDispatchRedraw`), [`examples/pascal/tui/host_dispatch_quit.fpas`](../../../../../examples/pascal/tui/host_dispatch_quit.fpas) (`HostRequestQuit` from `OnPaint` + `HostRunLoop`), [`examples/pascal/tui/show_dialog.fpas`](../../../../../examples/pascal/tui/show_dialog.fpas) (owned modal dialog with `HostSetActiveModalResult`), [`apps/ide/ide.fpasprj`](../../../../../apps/ide/ide.fpasprj) (menu bar + About dialog).
 

@@ -6,7 +6,7 @@ use super::*;
 use fpas_std::{ConsoleEvent, mouse_action_index, mouse_button_index};
 
 #[test]
-fn tui_host_create_frame_root_and_query_state() {
+fn tui_host_create_frame_view_and_query_state() {
     let mut chunk = Chunk::new();
     chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))),
@@ -17,15 +17,14 @@ fn tui_host_create_frame_root_and_query_state() {
     emit_constant(&mut chunk, Value::Integer(4));
     emit_constant(&mut chunk, Value::Integer(20));
     emit_constant(&mut chunk, Value::Integer(8));
+    emit_constant(&mut chunk, Value::Str("Window".into()));
     emit_constant(&mut chunk, Value::Integer(0));
     emit_constant(&mut chunk, Value::Boolean(false));
     emit_constant(&mut chunk, Value::Boolean(false));
     emit_constant(&mut chunk, Value::Boolean(true));
     emit_constant(&mut chunk, Value::Boolean(false));
     chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(
-            TuiIntrinsic::HostCreateFrameRootView,
-        ))),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostCreateFrameView))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -60,15 +59,14 @@ fn tui_host_frame_title_drag_updates_rect() {
     emit_constant(&mut chunk, Value::Integer(4));
     emit_constant(&mut chunk, Value::Integer(20));
     emit_constant(&mut chunk, Value::Integer(8));
+    emit_constant(&mut chunk, Value::Str("Window".into()));
     emit_constant(&mut chunk, Value::Integer(0));
     emit_constant(&mut chunk, Value::Boolean(true));
     emit_constant(&mut chunk, Value::Boolean(false));
     emit_constant(&mut chunk, Value::Boolean(false));
     emit_constant(&mut chunk, Value::Boolean(false));
     chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(
-            TuiIntrinsic::HostCreateFrameRootView,
-        ))),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostCreateFrameView))),
         loc(),
     );
     emit_constant(&mut chunk, tui_application_value());

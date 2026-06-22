@@ -203,7 +203,12 @@ mod tests {
             })
             .expect("dialog")
             .view_id;
-        registry.frame_roots.get_mut(&window).unwrap().capabilities.zoomable = true;
+        registry
+            .frame_roots
+            .get_mut(&window)
+            .unwrap()
+            .capabilities
+            .zoomable = true;
         assert!(registry.zoom_frame_root(window));
 
         assert_eq!(registry.cascade_frame_roots_excluding(&[], 2, 1), 0);

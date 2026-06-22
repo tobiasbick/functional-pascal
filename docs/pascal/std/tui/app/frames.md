@@ -1,6 +1,8 @@
 # Frame roots (`Std.Tui`)
 
-Host-managed frame roots provide validated window/dialog geometry, desktop constraints, and chrome interaction (title-bar move, border resize, zoom/restore, next-window activation) before the full `FrameWidget` painter lands.
+Host-managed frame views provide validated window/dialog geometry, painted Turbo Vision-style
+chrome, desktop constraints, and title-bar move, border resize, zoom/restore, and next-window
+activation.
 
 **See also:** [TUI application hub](README.md), [VM bridge](vm-bridge.md), [Controls](controls.md).
 
@@ -9,7 +11,7 @@ Host-managed frame roots provide validated window/dialog geometry, desktop const
 | Call | Role |
 | ---- | ---- |
 | `Application.HostSetDesktopWorkArea(App, X, Y, Width, Height)` | Configure the desktop rectangle that constrains frame roots. Returns `false` when the rectangle is empty. |
-| `Application.HostCreateFrameRootView(App, X, Y, Width, Height, Kind, Movable, Resizable, Zoomable, Scrollable)` | Register one frame root (`Kind`: `0` = Window, `1` = Dialog). Returns `ViewId`. |
+| `Application.HostCreateFrameView(App, X, Y, Width, Height, Title, Kind, Movable, Resizable, Zoomable, Scrollable)` | Create and paint one frame root (`Kind`: `0` = Window, `1` = Dialog). Returns `ViewId`. |
 | `Application.HostActivateNextWindow(App)` | Raise and focus the next eligible root in z-order. Returns whether a root was activated. |
 | `Application.HostZoomFrameRoot(App, ViewId)` | Zoom a zoomable root to the desktop work area. |
 | `Application.HostRestoreFrameRoot(App, ViewId)` | Restore a zoomed root to its saved rectangle. |
@@ -25,6 +27,18 @@ Host-managed frame roots provide validated window/dialog geometry, desktop const
 | `kind` | `integer` | `0` = Window, `1` = Dialog. |
 | `movable`, `resizable`, `zoomable`, `scrollable` | `boolean` | Implemented capability flags. |
 | `zoomed` | `boolean` | `true` when a pre-zoom rectangle is stored. |
+
+## Rendering
+
+`HostCreateFrameView` attaches a native `FrameWidget` (`ViewKind.Frame`). Window frames use an
+active light-blue title/border and inactive blue title/border; dialog frames use a gray palette.
+The client area is painted before the frame's local handler and descendants. The double-line
+border, title, and enabled `▲` / `▼` zoom cells are painted afterward, so child views cannot
+overwrite frame chrome. Titles that exceed their slot end with `…`.
+
+Frame-integrated scrolling and close chrome are not implemented yet. `Scrollable` currently
+participates in validated geometry only; use standalone `ScrollView` or `ScrollBar` controls for
+interactive scrolling.
 
 ## Pointer interaction
 
@@ -56,7 +70,7 @@ Application-defined command ids remain non-negative and still flow through `OnCo
 
 | Layer | Location |
 | ----- | -------- |
-| Geometry + interaction | `crates/fpas-std/src/tui/widget/frame/` |
+| Geometry + painting + interaction | `crates/fpas-std/src/tui/widget/frame/` |
 | VM bridge | `crates/fpas-vm/src/vm/execute/io/tui/frame_model/` |
 | Intrinsics **410..=415** | `crates/fpas-bytecode/src/intrinsic/tui.rs` |
-| FPAS tests | `tests/tui/tui_frame_window_test.fpas`, `tests/tui/tui_frame_layout_test.fpas` |
+| FPAS tests | `tests/tui/tui_frame_chrome_test.fpas`, `tests/tui/tui_frame_window_test.fpas`, `tests/tui/tui_frame_layout_test.fpas` |

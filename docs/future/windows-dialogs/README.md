@@ -2,7 +2,11 @@
 
 Implementation plan for host-managed **frame widgets** — Turbo Vision–style windows and dialogs with integrated chrome (title bar, close/zoom buttons, scroll bars) and a separate content **view** area for child views.
 
-**Status:** planned (not implemented).
+**Status:** **partial** — frame-root geometry, window-manager interaction, and painted
+`FrameWidget` chrome are implemented; frame-integrated scrolling, close handling, and public
+`ShowFramedDialog` are not. **Live
+tracker:** [TUI-CODE-REVIEW.md](TUI-CODE-REVIEW.md#remaining-work-2026-06-22) (phases 0–5 done;
+phase 6+ open). **Current spec:** [`docs/pascal/std/tui/app/frames.md`](../../pascal/std/tui/app/frames.md).
 
 **Prerequisites:** Phase 7 TUI host (view tree, modal stack, host widgets, damage tracking). See [`tui-application-framework.md`](../tui-application-framework.md).
 
@@ -351,16 +355,20 @@ VM bridge: new intrinsics in `fpas-bytecode`, sema in `loaded/tui/`, compiler lo
 
 ## Implementation phases
 
+> **Note (2026-06-21):** The checklist below is the original design breakdown. Progress is tracked in
+> [TUI-CODE-REVIEW.md](TUI-CODE-REVIEW.md). Phases 0–5 there are complete; frame **painting** and
+> items in [Remaining work](TUI-CODE-REVIEW.md#remaining-work-2026-06-22) are still open.
+
 ### Phase 1 — Geometry and chrome
 
 - [ ] Add composable view-registry transforms/clips and use them consistently for resolved rectangles, `QueryViewRect`, hit-testing, damage, and reparenting.
-- [ ] Replace the two global paint passes with depth-first underlay → handler → children → overlay traversal.
-- [ ] `geometry.rs` — compute `view_rect` from `outer_rect`, title bar height, border, scroll bar slots.
-- [ ] Define and test fixed-point scroll-bar visibility and minimum frame dimensions.
-- [ ] `chrome.rs` — double-line border, title layout, and reserved capability slots; unavailable controls remain hidden.
-- [ ] `kind.rs` + `style.rs` — Window (blue) and Dialog (gray) defaults.
-- [ ] `FrameWidget::paint` — view background + chrome; no scrolling yet.
-- [ ] `HostCreateFrameView` intrinsic + sema + compiler.
+- [x] Replace the two global paint passes with depth-first underlay → handler → children → overlay traversal.
+- [x] `geometry.rs` — compute `view_rect` from `outer_rect`, title bar height, border, scroll bar slots.
+- [x] Define and test fixed-point scroll-bar visibility and minimum frame dimensions.
+- [x] `chrome.rs` — double-line border, title layout, and reserved capability slots; unavailable controls remain hidden.
+- [x] `kind.rs` + `style.rs` — Window (blue) and Dialog (gray) defaults.
+- [x] `FrameWidget::paint` — view background + chrome; no scrolling yet.
+- [x] `HostCreateFrameView` intrinsic + sema + compiler.
 - [ ] Example: `examples/pascal/tui/framed_window.fpas` (static content, no scroll).
 
 ### Phase 2 — Scrolling
@@ -409,11 +417,11 @@ When implemented, follow [`.agents/skills/fpas-change-checklist/SKILL.md`](../..
 
 ## Out of scope (this plan)
 
-- Separate scroll bar views or a generic `TScroller` view type exposed to Pascal.
-- Full Turbo Vision desktop, drag-drop between windows, MDI.
-- Automatic layout manager inside frames.
-- Text editor / list controls (later controls report `content_size` to the frame).
-- Move, resize, zoom state machine (phase 4).
+- Separate scroll bar **views** or a generic `TScroller` view type exposed to Pascal (frame-owned
+  scroll **chrome** is in scope for Phase 6).
+- Full Turbo Vision desktop, drag-drop between windows, MDI window list.
+- Automatic layout manager inside frames (anchor/grow on the view tree is tracked separately).
+- Memo/text editor (Phase 7 in [TUI-CODE-REVIEW.md](TUI-CODE-REVIEW.md)).
 
 ---
 

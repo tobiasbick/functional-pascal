@@ -472,8 +472,8 @@ pub enum TuiIntrinsic {
     QueryScrollViewState = 409,
     /// Configure the desktop work area that constrains frame roots.
     HostSetDesktopWorkArea = 410,
-    /// Register a validated frame root view.
-    HostCreateFrameRootView = 411,
+    /// Create a validated frame root with painted chrome.
+    HostCreateFrameView = 411,
     /// Activate the next eligible window root.
     HostActivateNextWindow = 412,
     /// Zoom a frame root to the desktop work area.

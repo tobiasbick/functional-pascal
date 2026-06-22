@@ -44,8 +44,9 @@ same local origin.
 `options: ViewOptions`. `rect` is absolute and unclipped; `clip` is the effective visible rectangle.
 
 `ViewKind` identifies native content attached to a retained node: `Generic`, `SolidFill`, `MenuBar`,
-`StatusBar`, `Label`, `Button`, `InputLine`, `CheckBox`, `RadioGroup`, or `ListBox`. `Generic` means no native
-widget is attached; a Pascal paint handler may still exist.
+`StatusBar`, `Label`, `Button`, `InputLine`, `CheckBox`, `RadioGroup`, `ListBox`, `ScrollBar`,
+`ScrollView`, or `Frame`. `Generic` means no native widget is attached; a Pascal paint handler may
+still exist.
 
 `ViewSnapshot` contains `id`, `parent`, direct `children`, `resolved`, and `kind`. Arrays returned by
 `QuerySceneGraph` contain these records in back-to-front depth-first paint order.

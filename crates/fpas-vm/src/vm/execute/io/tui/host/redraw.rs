@@ -117,10 +117,9 @@ impl Worker {
         };
         let (resolved, mut widget, handler, children) = snapshot;
 
-        if let Some(view) = resolved
-            && view.state.exposed
-            && Self::damage_intersects_view(damage, view)
-        {
+        let paint_view = resolved
+            .filter(|view| view.state.exposed && Self::damage_intersects_view(damage, *view));
+        if let Some(view) = paint_view {
             if let Some(widget) = widget.as_mut() {
                 widget.sync_view_state(view.state);
             }
@@ -134,6 +133,9 @@ impl Worker {
 
         for child in children {
             self.paint_view_subtree(child, damage, line)?;
+        }
+        if let (Some(view), Some(widget)) = (paint_view, widget.as_ref()) {
+            self.paint_widget_overlay(widget, view, damage)?;
         }
         Ok(())
     }
@@ -149,7 +151,25 @@ impl Worker {
         };
         self.with_console(|console| {
             if console.begin_tui_view_paint(view.rect, clip) {
-                widget.paint(console, view.rect, damage);
+                widget.paint_underlay(console, view.rect, damage);
+                console.end_tui_view_paint();
+            }
+            Ok(())
+        })
+    }
+
+    fn paint_widget_overlay(
+        &mut self,
+        widget: &ViewWidget,
+        view: ResolvedView,
+        damage: DamageRegion,
+    ) -> Result<(), VmError> {
+        let Some(clip) = view.clip else {
+            return Ok(());
+        };
+        self.with_console(|console| {
+            if console.begin_tui_view_paint(view.rect, clip) {
+                widget.paint_overlay(console, view.rect, damage);
                 console.end_tui_view_paint();
             }
             Ok(())

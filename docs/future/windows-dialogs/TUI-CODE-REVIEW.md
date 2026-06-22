@@ -22,12 +22,12 @@ interaction. The plan needs a foundation phase before frame work and a broader t
 | Goal | Current system | Window/dialog plan | Verdict |
 | --- | --- | --- | --- |
 | Classic visual chrome | Menu/status palette only | Strong frame presets | Achievable |
-| Overlapping movable windows | Root z-order exists, no manager | Move/resize deferred | Foundation missing |
-| Nested clipped view groups | Parent-relative rectangles only | Adds transforms/clips | Direction is correct, enforcement missing |
-| Focused controls and tab order | One global explicit list | Assumes child-first input | Redesign required |
-| Modal dialogs | Scope and owned root exist | Adds atomic framed root | Lifecycle is incomplete |
-| Commands and broadcasts | Global integer callback | Adds separate frame callback | Unify instead |
-| Standard controls | Menu/status/fill only | Explicitly out of scope | Not Turbo Vision-like yet |
+| Overlapping movable windows | Root z-order + window manager helpers | Move/resize/zoom/cascade/tile via frame roots | **Partial** — interaction without frame paint |
+| Nested clipped view groups | Parent-relative rectangles + resolved clips | Adds transforms/clips | **Partial** — parent moves still miss some descendant damage |
+| Focused controls and tab order | Retained focus path + tab traversal | Assumes child-first input | **Mostly done** |
+| Modal dialogs | Scope, owned root, focus restore, results | Adds atomic framed root | **Mostly done** — framed-dialog FPAS API still open |
+| Commands and broadcasts | Sourced `CommandEvent` + reserved frame ids | Separate frame callback | **Mostly done** — close/zoom chrome not painted yet |
+| Standard controls | Label/button/input/checkbox/radio/list/scroll | Explicitly out of scope in original plan | **Partial** — memo/editor still missing |
 | Deterministic testing | Good headless APIs | Adds frame tests | Strong reusable base |
 
 ## Reusable foundations
@@ -323,25 +323,10 @@ the retained Rust contracts; bridge tags are encoded only at the intrinsic bound
 
 ### Phase 2 - Desktop and frames
 
-**Implementation status (2026-06-20): complete.** The retained engine now exposes active-window
-primitives in [`view/activation.rs`](../../../crates/fpas-std/src/tui/view/activation.rs):
-`root_of`, `active_root`, and `activate_root` (raise the containing root to the front of the root
-z-order, then move focus into its subtree, preserving focus already inside it). The desktop
-foundation also now exposes work-area constraints, active/inactive root palette state, and clipped
-shadow geometry in [`view/desktop.rs`](../../../crates/fpas-std/src/tui/view/desktop.rs). Static
-frame geometry is available in
-[`widget/frame/geometry.rs`](../../../crates/fpas-std/src/tui/widget/frame/geometry.rs), including
-minimum size validation, title-button slots, content viewport calculation, and fixed-point
-scroll-bar visibility. Desktop tiering, concrete frame palettes, frame painting, and atomic
-framed-dialog modal bridge wiring remain open. Atomic frame-root creation is available through
-`FrameRootSpec` / `FrameRoot` and `ViewRegistry::register_frame_root`, which validates geometry
-before mutating the retained tree. Owned framed-dialog root creation is available through
-`register_framed_dialog_root`, which validates geometry before mutating either the retained tree or
-modal stack. Headless acceptance scenarios in
-[`widget/frame/tests.rs`](../../../crates/fpas-std/src/tui/widget/frame/tests.rs) verify overlap
-z-order, occlusion repair when a covering frame is removed, child clipping, click-driven focus
-activation between windows, and nested frames. Concrete frame palettes and frame painting are the
-remaining Phase 3+ work.
+**Implementation status (2026-06-22): partial.** Geometry, desktop constraints, active-root
+primitives, atomic frame-root creation, owned framed-dialog registration, public painted
+`HostCreateFrameView`, palette presets, and overlay chrome are complete. Frame-integrated scroll
+chrome, close handling, and public `ShowFramedDialog` remain open — see [Remaining work](#remaining-work-2026-06-22).
 
 - [x] Add active-root tracking and raise/activate (click-to-front) in the retained registry.
 - [x] Add desktop work area, active/inactive palette state, constraints, and shadow geometry.
@@ -412,7 +397,76 @@ host calls and VM chrome dispatch. Memo/editor primitives remain deferred.
 - Add memo/editor primitives only after cursor, selection, Unicode width, and scrolling contracts
   are stable.
 
-## Acceptance criteria for "Turbo Vision-like"
+## Remaining work (2026-06-22)
+
+Phases 0–5 of the [recommended order](#recommended-implementation-order) are complete except the
+deferred memo/editor item. The original [window/dialog plan](README.md) is only partially realized:
+frame roots expose geometry and interaction, but not yet the painted `FrameWidget` chrome described
+there. Current spec for implemented behavior: [`docs/pascal/std/tui/app/frames.md`](../../pascal/std/tui/app/frames.md).
+
+### Phase 6 — Frame rendering and chrome widget
+
+- [x] `FrameWidget` retained widget + `ViewWidget::Frame` registration.
+- [x] `chrome.rs` — double-line border, title text, and `▲` / `▼` cells from geometry slots.
+- [x] `style.rs` + `kind.rs` palettes — active/inactive Window (blue) and Dialog (gray) at paint time.
+- [x] `FrameWidget::paint` — client fill and chrome wired into depth-first underlay/overlay dispatch.
+- [ ] Clip child geometry/input to the inner frame viewport rather than only protecting chrome with
+  the overlay pass.
+- [x] Public `Application.HostCreateFrameView`, consolidated from `HostCreateFrameRootView`.
+- [ ] Public `Application.ShowFramedDialog` VM bridge over existing `register_framed_dialog_root`.
+- [ ] Enable `Closable` capability — title-bar close hit-test and sourced close command (reserved id
+  or `CommandKind::Close`).
+- [ ] Frame-integrated scroll chrome (`scroll.rs`) — offset state, `▲█▼` / `◄█►` paint, wheel and
+  track/thumb input on frame borders (distinct from standalone `ScrollView` / `ScrollBar` controls).
+- [ ] `HostSetFrameContentSize`, `HostScrollFrame`, `HostSetFrameScrollOffset`, `QueryFrameScrollState`.
+- [ ] Auto `content_size` from child bounds for scroll-bar visibility.
+- [ ] Examples: `examples/pascal/tui/framed_window.fpas`, `framed_dialog.fpas`.
+- [x] FPAS test: painted frame chrome, palettes, title truncation, overlay ordering, and view kind.
+- [ ] FPAS tests: frame scroll offset queries and close/zoom chrome clicks.
+
+### Phase 7 — Editor, layout, and polish
+
+- [ ] Memo/text editor control (multi-line cursor, selection, paste, vertical scroll).
+- [ ] Unicode terminal cell-width policy ([H5](#h5-terminal-cell-width-is-incorrect-for-general-unicode))
+  — display width for titles, labels, input, and editor.
+- [ ] Anchor/grow layout flags on views ([H6](#h6-standard-controls-and-layout-are-part-of-the-goal))
+  so menu, desktop, status, and frame children survive terminal resize without manual handlers.
+- [ ] Parent move invalidates descendant damage outside the parent rectangle ([H3](#h3-geometry-clipping-and-damage-must-be-one-registry-contract)).
+- [ ] Window list / MDI conveniences (optional; cascade/tile helpers are done).
+
+### Architecture and performance debt
+
+These original findings are reduced but not closed:
+
+| Finding | Status | Remaining |
+| --- | --- | --- |
+| [C1](#c1-painting-is-not-a-safe-retained-mode-compositor) Paint compositor | Partial | Full depth-first scene traversal; enforced clip at buffer boundary; retire unrestricted global `OnPaint` in retained apps |
+| [C2](#c2-there-is-no-general-consumable-event-router) Event router | Mostly done | Keep new controls on `EventOutcome` in `fpas-std`; avoid frame-specific VM branches |
+| [C3](#c3-the-view-model-cannot-represent-control-or-group-state) View state | Done | — |
+| [C4](#c4-modal-state-does-not-preserve-interaction-context) Modal context | Done | — |
+| [H3](#h3-geometry-clipping-and-damage-must-be-one-registry-contract) Geometry contract | Partial | Descendant damage on parent moves; deduplicate rectangle math |
+| Structural ([§](#structural-findings)) | Open | Stop cloning widgets per paint/input; consider indexed/generational view storage |
+
+### Acceptance criteria status
+
+| # | Scenario | Status |
+| --- | --- | --- |
+| 1 | Overlapping windows: raise, move, resize, zoom, restore, **close** without stale cells | **Partial** — interaction works; **close** and occlusion repair need frame paint |
+| 2 | Click and Tab focus within active group | **Mostly met** — existing control + focus tests |
+| 3 | Nested modal focus restore and results | **Met** — Phase 3 + modal VM tests |
+| 4 | Sourced commands from menu, button, shortcut, frame chrome | **Partial** — frame chrome not painted; reserved ids wired for zoom/next |
+| 5 | Clipped paint/input through nested groups and scroll transforms | **Partial** — groups/scroll views yes; frame-integrated scroll chrome no |
+| 6 | Pointer capture for drag, resize, scrollbar thumb | **Met** — frame move/resize + scroll thumb tests |
+| 7 | Resize layout for menu, desktop, status, frames, anchored controls | **Open** — anchor/grow not implemented |
+| 8 | Cell-width tests (ASCII, box, wide, combining, truncation, cursor) | **Open** — policy not chosen |
+| 9 | Unit + VM + FPAS workflow coverage | **Partial** — frame geometry/interaction yes; painted frame workflows no |
+
+### Integration still using pre-frame patterns
+
+- [`show_dialog.fpas`](../../../examples/pascal/tui/show_dialog.fpas) — host widgets in a plain root, not a painted framed dialog.
+- IDE shell — About dialog uses retained controls; framed chrome and `ShowFramedDialog` not wired.
+- [`README.md`](README.md) implementation-phase checklists — superseded by this file; kept as design reference only.
+
 
 The project should not claim this goal based on frame appearance alone. A minimum credible result
 must pass these headless scenarios:
@@ -440,7 +494,9 @@ must pass these headless scenarios:
 **Can the existing implementation reach the goal?** Yes, if treated as a reusable terminal,
 buffer, damage, and test substrate rather than as the final widget architecture.
 
-**Does the current window/dialog plan help?** Yes, but it should not be implemented first in its
-current order. Its transform and paint work belongs in the retained-engine foundation; its action,
-desktop, modal, capture, layout, and control scope must be expanded as described above. Without
-those changes, the result will resemble Turbo Vision visually but will not behave like it.
+**Does the current window/dialog plan help?** Yes. Phases 0–5 delivered the retained engine,
+controls, scrolling, modal lifecycle, and frame-root interaction. The remaining gap is primarily
+**visual frame chrome** (paint, palettes, close/scroll on the frame widget), editor/layout polish,
+and closing the acceptance-criteria gaps listed in [Remaining work](#remaining-work-2026-06-22).
+Without frame painting and cell-width policy, the result can behave like a toolkit in tests but
+will not yet look or read like Turbo Vision in a real terminal.

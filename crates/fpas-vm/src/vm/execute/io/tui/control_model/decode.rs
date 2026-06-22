@@ -104,7 +104,7 @@ impl Worker {
             .collect()
     }
 
-    pub(super) fn pop_control_string(
+    pub(in crate::vm::execute::io::tui) fn pop_control_string(
         &mut self,
         label: &str,
         line: SourceLocation,

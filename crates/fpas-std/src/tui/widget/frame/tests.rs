@@ -9,9 +9,10 @@
 //! Review: `docs/future/windows-dialogs/TUI-CODE-REVIEW.md`
 
 use crate::{
-    FrameCapabilities, FrameContentSize, FrameKind, FrameRootSpec, ViewId, ViewRect, ViewRegistry,
-    WindowPalette,
+    Console, DamageRegion, FrameCapabilities, FrameContentSize, FrameKind, FrameRootSpec,
+    FrameWidget, ViewId, ViewRect, ViewRegistry, WindowPalette,
 };
+use fpas_bytecode::SourceLocation;
 
 fn rect(x: i64, y: i64, width: i64, height: i64) -> ViewRect {
     ViewRect {
@@ -26,6 +27,50 @@ fn registry_with_desktop() -> ViewRegistry {
     let mut registry = ViewRegistry::default();
     assert!(registry.set_desktop_work_area(rect(0, 0, 80, 25)));
     registry
+}
+
+fn painted_console(widget: &FrameWidget, outer: ViewRect) -> Console {
+    let mut console = Console::new();
+    console.assign_crt().expect("test console");
+    console.begin_tui_paint(DamageRegion::FullFrame);
+    widget.paint_underlay(&mut console, outer, DamageRegion::FullFrame);
+    widget.paint_overlay(&mut console, outer, DamageRegion::FullFrame);
+    console
+        .finish_tui_paint(SourceLocation::new(1, 1))
+        .expect("finish paint");
+    console
+}
+
+#[test]
+fn active_window_frame_paints_double_border_title_and_client() {
+    let mut widget = FrameWidget::new(
+        "Editor".into(),
+        FrameKind::Window,
+        FrameCapabilities::plain(),
+        FrameContentSize::new(0, 0),
+    );
+    widget.active = true;
+    let console = painted_console(&widget, rect(1, 1, 12, 5));
+
+    assert_eq!(console.test_cell(2, 2), ('╔', 15, 9));
+    assert_eq!(console.test_cell(4, 2), ('E', 15, 9));
+    assert_eq!(console.test_cell(13, 6), ('╝', 15, 9));
+    assert_eq!(console.test_cell(3, 3), (' ', 0, 7));
+}
+
+#[test]
+fn dialog_frame_uses_gray_palette_and_truncates_title() {
+    let widget = FrameWidget::new(
+        "Long dialog title".into(),
+        FrameKind::Dialog,
+        FrameCapabilities::plain(),
+        FrameContentSize::new(0, 0),
+    );
+    let console = painted_console(&widget, rect(0, 0, 8, 4));
+
+    assert_eq!(console.test_cell(1, 1), ('╔', 0, 7));
+    assert_eq!(console.test_cell(3, 1), ('L', 0, 7));
+    assert_eq!(console.test_cell(6, 1), ('…', 0, 7));
 }
 
 fn window_spec(outer: ViewRect) -> FrameRootSpec {

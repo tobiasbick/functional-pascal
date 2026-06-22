@@ -270,7 +270,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Tui(TuiIntrinsic::HostSetScrollViewLines),
     Intrinsic::Tui(TuiIntrinsic::QueryScrollViewState),
     Intrinsic::Tui(TuiIntrinsic::HostSetDesktopWorkArea),
-    Intrinsic::Tui(TuiIntrinsic::HostCreateFrameRootView),
+    Intrinsic::Tui(TuiIntrinsic::HostCreateFrameView),
     Intrinsic::Tui(TuiIntrinsic::HostActivateNextWindow),
     Intrinsic::Tui(TuiIntrinsic::HostZoomFrameRoot),
     Intrinsic::Tui(TuiIntrinsic::HostRestoreFrameRoot),

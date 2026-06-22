@@ -14,9 +14,9 @@ begin
   var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
   Application.Configure(App, Handlers);
   AssertTrue(Application.HostSetDesktopWorkArea(App, 0, 0, 80, 24));
-  var First: ViewId := Application.HostCreateFrameRootView(App, 30, 10, 20, 8, FrameKindWindow, true, false, false, false);
-  var Second: ViewId := Application.HostCreateFrameRootView(App, 40, 12, 18, 6, FrameKindWindow, true, false, false, false);
-  var Third: ViewId := Application.HostCreateFrameRootView(App, 50, 14, 16, 6, FrameKindWindow, true, false, false, false);
+  var First: ViewId := Application.HostCreateFrameView(App, 30, 10, 20, 8, 'First', FrameKindWindow, true, false, false, false);
+  var Second: ViewId := Application.HostCreateFrameView(App, 40, 12, 18, 6, 'Second', FrameKindWindow, true, false, false, false);
+  var Third: ViewId := Application.HostCreateFrameView(App, 50, 14, 16, 6, 'Third', FrameKindWindow, true, false, false, false);
   Application.TestPumpUntilIdle(App);
   AssertEquals(3, Application.HostCascadeFrameRoots(App, 2, 1));
   mutable var State: FrameRootState := Application.QueryFrameRootState(App, First);

@@ -16,6 +16,7 @@ pub const TUI_VIEW_KIND_VARIANTS: &[&str] = &[
     "ListBox",
     "ScrollBar",
     "ScrollView",
+    "Frame",
 ];
 
 /// Kind of retained view content attached to a scene-graph node.
@@ -46,4 +47,6 @@ pub enum ViewKind {
     ScrollBar,
     /// Scrolling multi-line text view.
     ScrollView,
+    /// Host-painted window or dialog frame.
+    Frame,
 }

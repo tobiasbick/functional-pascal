@@ -5,8 +5,9 @@
 pub const STD_TUI_FRAME_ROOT_STATE: &str = std_tui!("FrameRootState");
 pub const STD_TUI_APPLICATION_HOST_SET_DESKTOP_WORK_AREA: &str =
     std_tui!("Application.HostSetDesktopWorkArea");
-pub const STD_TUI_APPLICATION_HOST_CREATE_FRAME_ROOT_VIEW: &str =
-    std_tui!("Application.HostCreateFrameRootView");
+/// Create a retained frame with host-painted chrome.
+pub const STD_TUI_APPLICATION_HOST_CREATE_FRAME_VIEW: &str =
+    std_tui!("Application.HostCreateFrameView");
 pub const STD_TUI_APPLICATION_HOST_ACTIVATE_NEXT_WINDOW: &str =
     std_tui!("Application.HostActivateNextWindow");
 pub const STD_TUI_APPLICATION_HOST_ZOOM_FRAME_ROOT: &str =

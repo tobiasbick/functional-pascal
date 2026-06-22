@@ -8,7 +8,7 @@ use fpas_bytecode::{SourceLocation, TuiIntrinsic, Value};
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 use fpas_std::{
     FrameCapabilities, FrameContentSize, FrameGeometryError, FrameKind, FrameRootSpec,
-    FrameRootState, ViewRect,
+    FrameRootState, FrameWidget, ViewRect, ViewWidget,
 };
 
 use super::super::view_geometry::validate_view_rect;
@@ -39,19 +39,20 @@ impl Worker {
                 let ok = self.with_tui(|tui| tui.views.set_desktop_work_area(rect));
                 self.stack.push(Value::Boolean(ok));
             }
-            TuiIntrinsic::HostCreateFrameRootView => {
+            TuiIntrinsic::HostCreateFrameView => {
                 let scrollable = self.pop_bool(line)?;
                 let zoomable = self.pop_bool(line)?;
                 let resizable = self.pop_bool(line)?;
                 let movable = self.pop_bool(line)?;
                 let kind = self.pop_frame_kind(line)?;
+                let title = self.pop_control_string("Title", line)?;
                 let height = self.pop_int(line)?;
                 let width = self.pop_int(line)?;
                 let y = self.pop_int(line)?;
                 let x = self.pop_int(line)?;
                 self.pop_tui_application(line)?;
                 let outer = validate_view_rect(
-                    "Application.HostCreateFrameRootView",
+                    "Application.HostCreateFrameView",
                     ViewRect {
                         x,
                         y,
@@ -74,10 +75,21 @@ impl Worker {
                     options: Default::default(),
                 };
                 let view_id = self.with_tui(|tui| {
-                    tui.views
+                    let frame = tui
+                        .views
                         .register_frame_root(spec)
-                        .map(|frame| frame.view_id)
-                        .map_err(|error| frame_geometry_error(error, line))
+                        .map_err(|error| frame_geometry_error(error, line))?;
+                    tui.view_widgets.insert(
+                        frame.view_id,
+                        ViewWidget::Frame(FrameWidget::new(
+                            title,
+                            kind,
+                            spec.capabilities,
+                            spec.content_size,
+                        )),
+                    );
+                    let _ = tui.session.request_redraw_rect(frame.geometry.outer, line);
+                    Ok(frame.view_id)
                 })?;
                 self.push(Self::tui_view_id_record(view_id))?;
             }
@@ -117,7 +129,7 @@ impl Worker {
                     return Err(runtime_error(
                         RUNTIME_CONSOLE_STATE_ERROR,
                         "ViewId is not a registered frame root",
-                        "Pass a handle returned by Application.HostCreateFrameRootView.",
+                        "Pass a handle returned by Application.HostCreateFrameView.",
                         line,
                     ));
                 };

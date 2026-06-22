@@ -214,6 +214,13 @@ impl Worker {
             if let Some(rect) = tui.views.rect(view_id) {
                 let _ = tui.session.request_redraw_rect(rect, line);
             }
+            if let Some(rect) = tui
+                .views
+                .root_of(view_id)
+                .and_then(|root| tui.views.rect(root))
+            {
+                let _ = tui.session.request_redraw_rect(rect, line);
+            }
         }
     }
 

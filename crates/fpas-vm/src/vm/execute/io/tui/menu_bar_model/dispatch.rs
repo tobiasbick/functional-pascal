@@ -41,7 +41,8 @@ impl Worker {
             | ViewWidget::RadioGroup(_)
             | ViewWidget::ListBox(_)
             | ViewWidget::ScrollBar(_)
-            | ViewWidget::ScrollView(_) => MenuBarMouseResult::Ignored,
+            | ViewWidget::ScrollView(_)
+            | ViewWidget::Frame(_) => MenuBarMouseResult::Ignored,
         };
 
         let after = match &widget {

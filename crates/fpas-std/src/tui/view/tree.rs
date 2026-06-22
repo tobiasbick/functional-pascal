@@ -58,7 +58,7 @@ impl ViewRegistry {
     /// Update the rectangle for a registered view.
     ///
     /// Root views interpret `rect` as absolute screen coordinates. Child views interpret `rect` as
-    /// coordinates relative to their parent.
+    /// coordinates relative to their parent (frame-root children use the inner viewport origin).
     pub fn set_rect(&mut self, id: ViewId, rect: ViewRect) {
         if let Some(entry) = self.entry_mut(id) {
             entry.local_rect = rect;
@@ -91,8 +91,7 @@ impl ViewRegistry {
             None => return false,
         };
         let (parent_x, parent_y) = parent
-            .and_then(|parent_id| self.rect(parent_id))
-            .map(|rect| (rect.x, rect.y))
+            .and_then(|parent_id| self.parent_local_origin(parent_id))
             .unwrap_or((0, 0));
 
         self.detach_from_parent_or_roots(id, current_parent);
@@ -351,5 +350,20 @@ impl ViewRegistry {
         let view_id = entries.remove(position);
         entries.push(view_id);
         true
+    }
+
+    /// Return the local-coordinate origin for children of `parent_id`.
+    ///
+    /// Frame-root children use view-space coordinates (matching [`super::geometry`] resolution).
+    /// All other parents use the parent's resolved top-left corner.
+    fn parent_local_origin(&self, parent_id: ViewId) -> Option<(i64, i64)> {
+        if let Some(frame) = self.frame_roots.get(&parent_id) {
+            let view = frame.geometry.view;
+            let ox = frame.scroll_x.offset() as i64;
+            let oy = frame.scroll_y.offset() as i64;
+            Some((view.x - ox, view.y - oy))
+        } else {
+            self.rect(parent_id).map(|rect| (rect.x, rect.y))
+        }
     }
 }

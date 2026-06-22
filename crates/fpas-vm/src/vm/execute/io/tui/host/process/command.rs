@@ -106,6 +106,7 @@ impl Worker {
                 let Some(root) = root else {
                     return Ok(Some(ProcessOutcome::Command { handled: false }));
                 };
+                let previous = self.with_tui(|tui| Worker::frame_damage_rects(tui, root));
                 let ok = self.with_tui(|tui| match command.kind {
                     CommandKind::Zoom => tui.views.zoom_frame_root(root),
                     CommandKind::ZoomBack => tui.views.restore_frame_root(root),
@@ -113,11 +114,7 @@ impl Worker {
                 });
                 if ok {
                     self.with_tui(|tui| {
-                        if let Some(rect) = tui.views.rect(root) {
-                            let _ = tui.session.request_redraw_rect(rect, line);
-                        } else {
-                            let _ = tui.session.request_redraw(line);
-                        }
+                        Worker::request_frame_subtree_damage(tui, Some(&previous), root, line);
                     });
                 }
                 Ok(Some(ProcessOutcome::Command { handled: ok }))

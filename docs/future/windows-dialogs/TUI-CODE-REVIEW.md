@@ -23,7 +23,7 @@ interaction. The plan needs a foundation phase before frame work and a broader t
 | --- | --- | --- | --- |
 | Classic visual chrome | Menu/status palette only | Strong frame presets | Achievable |
 | Overlapping movable windows | Root z-order + window manager helpers | Move/resize/zoom/cascade/tile via frame roots | **Partial** — interaction without frame paint |
-| Nested clipped view groups | Parent-relative rectangles + resolved clips | Adds transforms/clips | **Partial** — parent moves still miss some descendant damage |
+| Nested clipped view groups | Parent-relative rectangles + resolved clips | Adds transforms/clips | **Partial** — frame parent moves now mark subtree damage; deduplicate rectangle math still open |
 | Focused controls and tab order | Retained focus path + tab traversal | Assumes child-first input | **Mostly done** |
 | Modal dialogs | Scope, owned root, focus restore, results | Adds atomic framed root | **Mostly done** — framed-dialog FPAS API still open |
 | Commands and broadcasts | Sourced `CommandEvent` + reserved frame ids | Separate frame callback | **Mostly done** — close/zoom chrome not painted yet |
@@ -433,7 +433,7 @@ dialogs. Current spec for implemented behavior: [`docs/pascal/std/tui/app/frames
   — display width for titles, labels, input, and editor.
 - [ ] Anchor/grow layout flags on views ([H6](#h6-standard-controls-and-layout-are-part-of-the-goal))
   so menu, desktop, status, and frame children survive terminal resize without manual handlers.
-- [ ] Parent move invalidates descendant damage outside the parent rectangle ([H3](#h3-geometry-clipping-and-damage-must-be-one-registry-contract)).
+- [x] Parent move invalidates descendant damage outside the parent rectangle ([H3](#h3-geometry-clipping-and-damage-must-be-one-registry-contract)).
 - [ ] Window list / MDI conveniences (optional; cascade/tile helpers are done).
 
 ### Architecture and performance debt
@@ -446,7 +446,7 @@ These original findings are reduced but not closed:
 | [C2](#c2-there-is-no-general-consumable-event-router) Event router | Mostly done | Keep new controls on `EventOutcome` in `fpas-std`; avoid frame-specific VM branches |
 | [C3](#c3-the-view-model-cannot-represent-control-or-group-state) View state | Done | — |
 | [C4](#c4-modal-state-does-not-preserve-interaction-context) Modal context | Done | — |
-| [H3](#h3-geometry-clipping-and-damage-must-be-one-registry-contract) Geometry contract | Partial | Descendant damage on parent moves; deduplicate rectangle math |
+| [H3](#h3-geometry-clipping-and-damage-must-be-one-registry-contract) Geometry contract | Partial | Descendant damage on parent moves done; deduplicate rectangle math |
 | Structural ([§](#structural-findings)) | Open | Stop cloning widgets per paint/input; consider indexed/generational view storage |
 
 ### Acceptance criteria status

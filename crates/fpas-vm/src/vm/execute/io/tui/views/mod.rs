@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 mod commands;
+mod damage;
 mod handles;
 mod modal;
 mod tree;

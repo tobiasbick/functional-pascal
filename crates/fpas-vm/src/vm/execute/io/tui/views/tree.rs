@@ -178,23 +178,4 @@ impl Worker {
             tui.view_commands.remove(view_id);
         }
     }
-
-    fn subtree_screen_rects(tui: &TuiState, root: ViewId) -> Vec<ViewRect> {
-        tui.views
-            .subtree_ids(root)
-            .into_iter()
-            .filter_map(|id| tui.views.rect(id))
-            .collect()
-    }
-
-    fn request_rect_redraws(
-        tui: &mut TuiState,
-        previous: &[ViewRect],
-        next: &[ViewRect],
-        line: SourceLocation,
-    ) {
-        for rect in previous.iter().chain(next) {
-            let _ = tui.session.request_redraw_rect(*rect, line);
-        }
-    }
 }

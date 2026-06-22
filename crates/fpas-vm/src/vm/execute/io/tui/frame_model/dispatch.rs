@@ -230,17 +230,17 @@ impl Worker {
         let x = mouse.x.saturating_sub(1);
         let y = mouse.y.saturating_sub(1);
         if move_ {
-            let before = self.with_tui(|tui| tui.views.rect(root));
+            let previous = self.with_tui(|tui| Worker::frame_damage_rects(tui, root));
             let changed = self.with_tui(|tui| tui.views.drag_frame_interaction(x, y));
             if changed {
-                self.request_frame_root_damage(before, root, line)?;
+                self.request_frame_root_damage(Some(previous), root, line)?;
             }
             return Ok(Some(ProcessOutcome::WidgetConsumed));
         }
         if up {
-            let before = self.with_tui(|tui| tui.views.rect(root));
+            let previous = self.with_tui(|tui| Worker::frame_damage_rects(tui, root));
             let _ = self.with_tui(|tui| tui.views.end_frame_interaction());
-            self.request_frame_root_damage(before, root, line)?;
+            self.request_frame_root_damage(Some(previous), root, line)?;
             return Ok(Some(ProcessOutcome::WidgetConsumed));
         }
         Ok(None)
@@ -267,23 +267,12 @@ impl Worker {
 
     fn request_frame_root_damage(
         &mut self,
-        before: Option<ViewRect>,
+        previous: Option<Vec<ViewRect>>,
         root: ViewId,
         line: SourceLocation,
     ) -> Result<(), VmError> {
         self.with_tui(|tui| {
-            let after = tui.views.rect(root);
-            match (before, after) {
-                (Some(b), Some(a)) => {
-                    let _ = tui.session.request_redraw_rect(b.union(a), line);
-                }
-                (_, Some(a)) => {
-                    let _ = tui.session.request_redraw_rect(a, line);
-                }
-                _ => {
-                    let _ = tui.session.request_redraw(line);
-                }
-            }
+            Worker::request_frame_subtree_damage(tui, previous.as_deref(), root, line);
         });
         Ok(())
     }

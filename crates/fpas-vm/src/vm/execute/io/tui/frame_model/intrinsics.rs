@@ -110,13 +110,25 @@ impl Worker {
             TuiIntrinsic::HostZoomFrameRoot => {
                 let id = self.pop_tui_view_id(line)?;
                 self.pop_tui_application(line)?;
+                let previous = self.with_tui(|tui| Worker::frame_damage_rects(tui, id));
                 let ok = self.with_tui(|tui| tui.views.zoom_frame_root(id));
+                if ok {
+                    self.with_tui(|tui| {
+                        Worker::request_frame_subtree_damage(tui, Some(&previous), id, line);
+                    });
+                }
                 self.stack.push(Value::Boolean(ok));
             }
             TuiIntrinsic::HostRestoreFrameRoot => {
                 let id = self.pop_tui_view_id(line)?;
                 self.pop_tui_application(line)?;
+                let previous = self.with_tui(|tui| Worker::frame_damage_rects(tui, id));
                 let ok = self.with_tui(|tui| tui.views.restore_frame_root(id));
+                if ok {
+                    self.with_tui(|tui| {
+                        Worker::request_frame_subtree_damage(tui, Some(&previous), id, line);
+                    });
+                }
                 self.stack.push(Value::Boolean(ok));
             }
             TuiIntrinsic::QueryFrameRootState => {
@@ -141,6 +153,7 @@ impl Worker {
                 let step_y = self.pop_int(line)?;
                 let step_x = self.pop_int(line)?;
                 self.pop_tui_application(line)?;
+                let previous = self.with_tui(|tui| Worker::all_roots_damage_rects(tui));
                 let count = self.with_tui(|tui| {
                     let exclude = tui
                         .modals
@@ -150,10 +163,16 @@ impl Worker {
                     tui.views
                         .cascade_frame_roots_excluding(&exclude, step_x, step_y)
                 });
+                if count > 0 {
+                    self.with_tui(|tui| {
+                        Worker::request_all_roots_subtree_damage(tui, &previous, line);
+                    });
+                }
                 self.stack.push(Value::Integer(count as i64));
             }
             TuiIntrinsic::HostTileFrameRoots => {
                 self.pop_tui_application(line)?;
+                let previous = self.with_tui(|tui| Worker::all_roots_damage_rects(tui));
                 let count = self.with_tui(|tui| {
                     let exclude = tui
                         .modals
@@ -162,6 +181,11 @@ impl Worker {
                         .collect::<Vec<_>>();
                     tui.views.tile_frame_roots_excluding(&exclude)
                 });
+                if count > 0 {
+                    self.with_tui(|tui| {
+                        Worker::request_all_roots_subtree_damage(tui, &previous, line);
+                    });
+                }
                 self.stack.push(Value::Integer(count as i64));
             }
             TuiIntrinsic::HostSetFrameContentSize => {

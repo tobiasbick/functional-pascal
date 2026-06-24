@@ -25,9 +25,9 @@ interaction. The plan needs a foundation phase before frame work and a broader t
 | Overlapping movable windows | Root z-order + window manager helpers | Move/resize/zoom/cascade/tile via frame roots | **Partial** — interaction without frame paint |
 | Nested clipped view groups | Parent-relative rectangles + resolved clips | Adds transforms/clips | **Partial** — frame parent moves now mark subtree damage; deduplicate rectangle math still open |
 | Focused controls and tab order | Retained focus path + tab traversal | Assumes child-first input | **Mostly done** |
-| Modal dialogs | Scope, owned root, focus restore, results | Adds atomic framed root | **Mostly done** — framed-dialog FPAS API still open |
+| Modal dialogs | Scope, owned root, focus restore, results | Adds atomic framed root | **Mostly done** — `ShowFramedDialog` + IDE/example integration |
 | Commands and broadcasts | Sourced `CommandEvent` + reserved frame ids | Separate frame callback | **Mostly done** — close/zoom chrome not painted yet |
-| Standard controls | Label/button/input/checkbox/radio/list/scroll | Explicitly out of scope in original plan | **Partial** — memo added; anchor/grow layout still open |
+| Standard controls | Label/button/input/checkbox/radio/list/scroll | Explicitly out of scope in original plan | **Partial** — memo + anchor/grow layout done |
 | Deterministic testing | Good headless APIs | Adds frame tests | Strong reusable base |
 
 ## Reusable foundations

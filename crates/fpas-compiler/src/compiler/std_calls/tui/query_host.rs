@@ -106,6 +106,18 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::QueryViewOptions), location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_QUERY_VIEW_LAYOUT => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_QUERY_VIEW_LAYOUT,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::QueryViewLayout), location);
+                Ok(true)
+            }
             s::STD_TUI_APPLICATION_QUERY_RESOLVED_VIEW => {
                 self.expect_exact_args(
                     s::STD_TUI_APPLICATION_QUERY_RESOLVED_VIEW,

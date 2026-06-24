@@ -171,6 +171,7 @@ impl ViewRegistry {
             state.geometry = geometry;
             sync_frame_scroll_extents(state);
         }
+        self.relayout_children(root);
         true
     }
 

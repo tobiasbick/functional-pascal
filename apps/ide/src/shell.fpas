@@ -16,6 +16,48 @@ private mutable var StatusBarView: option of ViewId := None;
 private const MenuBarHeight: integer := 1;
 private const StatusBarHeight: integer := 1;
 
+private function MenuBarLayout(): ViewLayout;
+begin
+  return record
+    anchorLeft := true;
+    anchorTop := true;
+    anchorRight := true;
+    anchorBottom := false;
+    marginLeft := 0;
+    marginTop := 0;
+    marginRight := 0;
+    marginBottom := 0;
+  end
+end;
+
+private function DesktopLayout(): ViewLayout;
+begin
+  return record
+    anchorLeft := true;
+    anchorTop := true;
+    anchorRight := true;
+    anchorBottom := true;
+    marginLeft := 0;
+    marginTop := MenuBarHeight;
+    marginRight := 0;
+    marginBottom := StatusBarHeight;
+  end
+end;
+
+private function StatusBarLayout(): ViewLayout;
+begin
+  return record
+    anchorLeft := true;
+    anchorTop := false;
+    anchorRight := true;
+    anchorBottom := true;
+    marginLeft := 0;
+    marginTop := 0;
+    marginRight := 0;
+    marginBottom := 0;
+  end
+end;
+
 /// Bind global keyboard shortcuts for the IDE shell.
 
 private procedure BindShortcuts(App: Application);
@@ -41,31 +83,40 @@ begin
   case MenuBarView of
     None:
     begin
-      MenuBarView := Some(Application.HostCreateMenuBarView(App, 0, 0, S.width, MenuBarHeight, DefaultItems(), DefaultStyle()))
+      var Bar: ViewId := Application.HostCreateMenuBarView(App, 0, 0, S.width, MenuBarHeight, DefaultItems(), DefaultStyle());
+      MenuBarView := Some(Bar);
+      Application.HostSetViewLayout(App, Bar, MenuBarLayout())
     end;
     Some(Bar):
     begin
-      Application.HostSetViewRect(App, Bar, 0, 0, S.width, MenuBarHeight)
+      Application.HostSetViewRect(App, Bar, 0, 0, S.width, MenuBarHeight);
+      Application.HostSetViewLayout(App, Bar, MenuBarLayout())
     end
   end;
   case DesktopView of
     None:
     begin
-      DesktopView := Some(Application.HostCreateSolidFillView(App, 0, MenuBarHeight, S.width, DesktopHeight, DesktopBg, None, None))
+      var Desktop: ViewId := Application.HostCreateSolidFillView(App, 0, MenuBarHeight, S.width, DesktopHeight, DesktopBg, None, None);
+      DesktopView := Some(Desktop);
+      Application.HostSetViewLayout(App, Desktop, DesktopLayout())
     end;
     Some(Desktop):
     begin
-      Application.HostSetViewRect(App, Desktop, 0, MenuBarHeight, S.width, DesktopHeight)
+      Application.HostSetViewRect(App, Desktop, 0, MenuBarHeight, S.width, DesktopHeight);
+      Application.HostSetViewLayout(App, Desktop, DesktopLayout())
     end
   end;
   case StatusBarView of
     None:
     begin
-      StatusBarView := Some(Application.HostCreateStatusBarView(App, 0, StatusY, S.width, StatusBarHeight, DefaultStatusSegments(), DefaultStatusStyle()))
+      var Status: ViewId := Application.HostCreateStatusBarView(App, 0, StatusY, S.width, StatusBarHeight, DefaultStatusSegments(), DefaultStatusStyle());
+      StatusBarView := Some(Status);
+      Application.HostSetViewLayout(App, Status, StatusBarLayout())
     end;
     Some(Status):
     begin
-      Application.HostSetViewRect(App, Status, 0, StatusY, S.width, StatusBarHeight)
+      Application.HostSetViewRect(App, Status, 0, StatusY, S.width, StatusBarHeight);
+      Application.HostSetViewLayout(App, Status, StatusBarLayout())
     end
   end
 end;
@@ -99,39 +150,10 @@ begin
   HandleMouse(App, Event)
 end;
 
-/// Keep host widgets aligned with the terminal size.
+/// Keep host widgets aligned with the terminal size via anchor/grow layout flags.
 
 private procedure OnResize(App: Application; NewSize: Size);
 begin
-  var DesktopHeight: integer := (NewSize.height - MenuBarHeight) - StatusBarHeight;
-  var StatusY: integer := NewSize.height - StatusBarHeight;
-  case MenuBarView of
-    Some(Bar):
-    begin
-      Application.HostSetViewRect(App, Bar, 0, 0, NewSize.width, MenuBarHeight)
-    end;
-    None:
-    begin
-    end
-  end;
-  case DesktopView of
-    Some(Desktop):
-    begin
-      Application.HostSetViewRect(App, Desktop, 0, MenuBarHeight, NewSize.width, DesktopHeight)
-    end;
-    None:
-    begin
-    end
-  end;
-  case StatusBarView of
-    Some(Status):
-    begin
-      Application.HostSetViewRect(App, Status, 0, StatusY, NewSize.width, StatusBarHeight)
-    end;
-    None:
-    begin
-    end
-  end;
   Application.RequestRedraw(App)
 end;
 

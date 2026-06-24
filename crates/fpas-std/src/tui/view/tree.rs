@@ -1,4 +1,4 @@
-use super::{ViewEntry, ViewId, ViewOptions, ViewRect, ViewRegistry, ViewState};
+use super::{ViewEntry, ViewId, ViewLayout, ViewOptions, ViewRect, ViewRegistry, ViewState};
 
 impl ViewRegistry {
     /// Register a new root view covering `rect` and return its opaque [`ViewId`].
@@ -17,6 +17,7 @@ impl ViewRegistry {
             current_child: None,
             state: ViewState::default(),
             options,
+            layout: ViewLayout::default(),
         });
         self.roots.push(id);
         id

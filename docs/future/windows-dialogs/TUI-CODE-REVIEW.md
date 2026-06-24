@@ -431,7 +431,7 @@ dialogs. Current spec for implemented behavior: [`docs/pascal/std/tui/app/frames
 - [x] Memo/text editor control (multi-line cursor, selection, paste, vertical scroll).
 - [x] Unicode terminal cell-width policy ([H5](#h5-terminal-cell-width-is-incorrect-for-general-unicode))
   — display width for titles, labels, input, and editor.
-- [ ] Anchor/grow layout flags on views ([H6](#h6-standard-controls-and-layout-are-part-of-the-goal))
+- [x] Anchor/grow layout flags on views ([H6](#h6-standard-controls-and-layout-are-part-of-the-goal))
   so menu, desktop, status, and frame children survive terminal resize without manual handlers.
 - [x] Parent move invalidates descendant damage outside the parent rectangle ([H3](#h3-geometry-clipping-and-damage-must-be-one-registry-contract)).
 - [ ] Window list / MDI conveniences (optional; cascade/tile helpers are done).
@@ -459,7 +459,7 @@ These original findings are reduced but not closed:
 | 4 | Sourced commands from menu, button, shortcut, frame chrome | **Partial** — close/zoom chrome wired; keyboard shortcuts use reserved ids |
 | 5 | Clipped paint/input through nested groups and scroll transforms | **Partial** — groups/scroll views yes; frame-integrated scroll chrome no |
 | 6 | Pointer capture for drag, resize, scrollbar thumb | **Met** — frame move/resize + scroll thumb tests |
-| 7 | Resize layout for menu, desktop, status, frames, anchored controls | **Open** — anchor/grow not implemented |
+| 7 | Resize layout for menu, desktop, status, frames, anchored controls | **Met** — `ViewLayout` + auto relayout on resize |
 | 8 | Cell-width tests (ASCII, box, wide, combining, truncation, cursor) | **Partial** — Rust policy tests + input-line cursor; FPAS workflow tests open |
 | 9 | Unit + VM + FPAS workflow coverage | **Partial** — frame geometry/interaction yes; painted frame workflows no |
 

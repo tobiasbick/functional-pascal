@@ -272,6 +272,15 @@ pub(super) fn register_host_api(
     );
     define_proc(
         checker,
+        s::STD_TUI_APPLICATION_HOST_SET_VIEW_LAYOUT,
+        vec![
+            p("App", types.application.clone(), false),
+            p("ViewId", types.view_id.clone(), false),
+            p("Layout", types.introspection.view_layout.clone(), false),
+        ],
+    );
+    define_proc(
+        checker,
         s::STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT,
         vec![
             p("App", types.application.clone(), false),

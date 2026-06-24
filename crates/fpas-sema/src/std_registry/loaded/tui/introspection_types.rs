@@ -10,6 +10,7 @@ use fpas_std::std_symbols as s;
 pub(super) struct TuiIntrospectionTypes {
     pub(super) view_state: Ty,
     pub(super) view_options: Ty,
+    pub(super) view_layout: Ty,
     pub(super) resolved_view: Ty,
     pub(super) view_kind: Ty,
     pub(super) view_snapshot: Ty,
@@ -37,6 +38,20 @@ pub(super) fn register(checker: &mut Checker, view_id: &Ty, rect: &Ty) -> TuiInt
             ("preProcess".into(), Ty::Boolean),
             ("postProcess".into(), Ty::Boolean),
             ("clipChildren".into(), Ty::Boolean),
+        ],
+    );
+    let view_layout = type_registration::register_record_type(
+        checker,
+        s::STD_TUI_VIEW_LAYOUT,
+        vec![
+            ("anchorLeft".into(), Ty::Boolean),
+            ("anchorTop".into(), Ty::Boolean),
+            ("anchorRight".into(), Ty::Boolean),
+            ("anchorBottom".into(), Ty::Boolean),
+            ("marginLeft".into(), Ty::Integer),
+            ("marginTop".into(), Ty::Integer),
+            ("marginRight".into(), Ty::Integer),
+            ("marginBottom".into(), Ty::Integer),
         ],
     );
     let resolved_view = type_registration::register_record_type(
@@ -69,6 +84,7 @@ pub(super) fn register(checker: &mut Checker, view_id: &Ty, rect: &Ty) -> TuiInt
     TuiIntrospectionTypes {
         view_state,
         view_options,
+        view_layout,
         resolved_view,
         view_kind,
         view_snapshot,

@@ -74,8 +74,26 @@ impl Worker {
                     }
                     let previous_rects = Self::subtree_screen_rects(tui, view_id);
                     tui.views.set_rect(view_id, next_rect);
+                    let _ = tui.views.relayout_children(view_id);
                     let next_rects = Self::subtree_screen_rects(tui, view_id);
                     Self::request_rect_redraws(tui, &previous_rects, &next_rects, line);
+                });
+            }
+            TuiIntrinsic::HostSetViewLayout => {
+                let layout = self.pop_tui_view_layout(line)?;
+                let view_id = self.pop_tui_view_id(line)?;
+                self.pop_tui_application(line)?;
+                let terminal = Self::terminal_bounds(self);
+                self.with_tui(|tui| {
+                    if tui.views.rect(view_id).is_none() {
+                        return;
+                    }
+                    let previous = Self::all_roots_damage_rects(tui);
+                    if !tui.views.set_layout(view_id, layout) {
+                        return;
+                    }
+                    let _ = tui.views.relayout_from_view(view_id, terminal);
+                    Self::request_all_roots_subtree_damage(tui, &previous, line);
                 });
             }
             TuiIntrinsic::HostSetViewParent => {

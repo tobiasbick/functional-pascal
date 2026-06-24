@@ -102,6 +102,16 @@ impl Worker {
                     })?;
                 self.push(Self::tui_view_options_record(options))?;
             }
+            Intrinsic::Tui(TuiIntrinsic::QueryViewLayout) => {
+                let view_id = self.pop_query_view_id(line)?;
+                self.pop_tui_application(line)?;
+                let layout = self
+                    .with_tui(|tui| tui.views.layout(view_id))
+                    .ok_or_else(|| {
+                        query_view_introspection_error("QueryViewLayout", view_id, line)
+                    })?;
+                self.push(Self::tui_view_layout_record(layout))?;
+            }
             Intrinsic::Tui(TuiIntrinsic::QueryResolvedView) => {
                 let view_id = self.pop_query_view_id(line)?;
                 self.pop_tui_application(line)?;

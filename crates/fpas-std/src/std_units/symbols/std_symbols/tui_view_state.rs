@@ -9,3 +9,7 @@ pub const STD_TUI_APPLICATION_HOST_SET_VIEW_VISIBLE: &str =
 /// Set whether a retained view accepts input and focus.
 pub const STD_TUI_APPLICATION_HOST_SET_VIEW_ENABLED: &str =
     std_tui!("Application.HostSetViewEnabled");
+
+/// Replace anchor/grow layout flags for a retained view.
+pub const STD_TUI_APPLICATION_HOST_SET_VIEW_LAYOUT: &str =
+    std_tui!("Application.HostSetViewLayout");

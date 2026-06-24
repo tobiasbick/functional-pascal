@@ -11,7 +11,7 @@ mod pointer;
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
 use fpas_bytecode::SourceLocation;
-use fpas_std::{ProcessOutcome, UiEvent, UiResize, ViewId};
+use fpas_std::{ProcessOutcome, UiEvent, UiResize, ViewId, ViewRect};
 
 #[derive(Clone, Copy)]
 struct DispatchOutcomes {
@@ -145,10 +145,24 @@ impl Worker {
             }) => {
                 let old_width = old_width.unwrap_or(width);
                 let old_height = old_height.unwrap_or(height);
+                let terminal = ViewRect {
+                    x: 0,
+                    y: 0,
+                    width: width as i64,
+                    height: height as i64,
+                };
                 self.with_tui(|tui| {
-                    tui.session
-                        .request_resize_redraw(old_width, old_height, width, height, line)
-                })?;
+                    let _ = tui.session.request_resize_redraw(
+                        old_width,
+                        old_height,
+                        width,
+                        height,
+                        line,
+                    );
+                    let previous = Self::all_roots_damage_rects(tui);
+                    let _ = tui.views.relayout_all_roots(terminal);
+                    Self::request_all_roots_subtree_damage(tui, &previous, line);
+                });
                 if let Some(handler) = on_resize {
                     let _ = self.call_function_sync_allowing_shutdown(
                         &handler,

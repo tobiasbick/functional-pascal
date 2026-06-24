@@ -84,4 +84,16 @@ impl Worker {
             .flat_map(|root| Self::frame_damage_rects(tui, *root))
             .collect()
     }
+
+    /// Terminal bounds used as the parent rectangle for anchored root views.
+    pub(in crate::vm::execute::io::tui) fn terminal_bounds(worker: &Worker) -> ViewRect {
+        let (width, height) =
+            worker.with_console(|console| (console.screen_width(), console.screen_height()));
+        ViewRect {
+            x: 0,
+            y: 0,
+            width: width as i64,
+            height: height as i64,
+        }
+    }
 }

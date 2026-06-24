@@ -128,6 +128,19 @@ impl Compiler {
                 );
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_HOST_SET_VIEW_LAYOUT => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_HOST_SET_VIEW_LAYOUT,
+                    3,
+                    args,
+                    location,
+                )?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostSetViewLayout), location);
+                Ok(true)
+            }
             s::STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT => {
                 self.expect_exact_args(
                     s::STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT,

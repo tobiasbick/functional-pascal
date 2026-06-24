@@ -119,6 +119,26 @@ impl Worker {
         }
     }
 
+    /// Reads a boolean field from a record field list.
+    pub(in crate::vm::execute::io) fn bool_record_field(
+        fields: &[(String, Value)],
+        field_name: &str,
+        line: SourceLocation,
+    ) -> Result<bool, VmError> {
+        match Self::required_record_field(fields, field_name, line)? {
+            Value::Boolean(value) => Ok(*value),
+            other => Err(runtime_error(
+                TYPE_MISMATCH_CODE,
+                format!(
+                    "Record field `{field_name}` must be boolean, got {}",
+                    other.type_name()
+                ),
+                format!("Set `{field_name} := true` or `false`."),
+                line,
+            )),
+        }
+    }
+
     /// Reads an optional handler field (`Some(fn)` or `None`) and validates its arity.
     pub(in crate::vm::execute::io) fn optional_host_handler_field(
         &self,

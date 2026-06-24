@@ -40,6 +40,10 @@ same local origin.
 `ViewOptions` reports retained behavior flags: `selectable`, `tabStop`, `preProcess`,
 `postProcess`, and `clipChildren`.
 
+`ViewLayout` reports anchor/grow flags: `anchorLeft`, `anchorTop`, `anchorRight`, `anchorBottom`,
+and integer margins `marginLeft`, `marginTop`, `marginRight`, `marginBottom`. See
+[Views and focus](views.md#anchorgrow-layout).
+
 `ResolvedView` contains `rect: Rect`, `clip: Option of Rect`, `state: ViewState`, and
 `options: ViewOptions`. `rect` is absolute and unclipped; `clip` is the effective visible rectangle.
 

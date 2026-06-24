@@ -285,6 +285,8 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Tui(TuiIntrinsic::HostCreateMemoView),
     Intrinsic::Tui(TuiIntrinsic::HostSetMemoText),
     Intrinsic::Tui(TuiIntrinsic::QueryMemoState),
+    Intrinsic::Tui(TuiIntrinsic::HostSetViewLayout),
+    Intrinsic::Tui(TuiIntrinsic::QueryViewLayout),
     Intrinsic::Tui(TuiIntrinsic::HostRegisterOnViewPaint),
     Intrinsic::Tui(TuiIntrinsic::ApplicationShowModal),
     Intrinsic::Tui(TuiIntrinsic::ApplicationCloseModal),

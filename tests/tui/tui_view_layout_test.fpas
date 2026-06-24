@@ -1,0 +1,78 @@
+program TuiViewLayoutTest;
+
+uses Std.Tui, Std.Test;
+
+const
+  MenuBarHeight: integer := 1;
+  StatusBarHeight: integer := 1;
+
+procedure OnPaint(App: Application);
+begin
+end;
+
+function MenuBarLayout(): ViewLayout;
+begin
+  return record
+    anchorLeft := true;
+    anchorTop := true;
+    anchorRight := true;
+    anchorBottom := false;
+    marginLeft := 0;
+    marginTop := 0;
+    marginRight := 0;
+    marginBottom := 0;
+  end
+end;
+
+function DesktopLayout(): ViewLayout;
+begin
+  return record
+    anchorLeft := true;
+    anchorTop := true;
+    anchorRight := true;
+    anchorBottom := true;
+    marginLeft := 0;
+    marginTop := MenuBarHeight;
+    marginRight := 0;
+    marginBottom := StatusBarHeight;
+  end
+end;
+
+function StatusBarLayout(): ViewLayout;
+begin
+  return record
+    anchorLeft := true;
+    anchorTop := false;
+    anchorRight := true;
+    anchorBottom := true;
+    marginLeft := 0;
+    marginTop := 0;
+    marginRight := 0;
+    marginBottom := 0;
+  end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(80, 24);
+  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
+  Application.Configure(App, Handlers);
+  var DesktopHeight: integer := (24 - MenuBarHeight) - StatusBarHeight;
+  var StatusY: integer := 24 - StatusBarHeight;
+  var Menu: ViewId := Application.HostCreateSolidFillView(App, 0, 0, 80, MenuBarHeight, 1, None, None);
+  var Desktop: ViewId := Application.HostCreateSolidFillView(App, 0, MenuBarHeight, 80, DesktopHeight, 2, None, None);
+  var Status: ViewId := Application.HostCreateSolidFillView(App, 0, StatusY, 80, StatusBarHeight, 3, None, None);
+  Application.HostSetViewLayout(App, Menu, MenuBarLayout());
+  Application.HostSetViewLayout(App, Desktop, DesktopLayout());
+  Application.HostSetViewLayout(App, Status, StatusBarLayout());
+  Application.TestResize(App, 100, 30);
+  Application.TestPumpUntilIdle(App);
+  AssertViewRect(App, Menu, 0, 0, 100, MenuBarHeight);
+  AssertViewRect(App, Desktop, 0, MenuBarHeight, 100, (30 - MenuBarHeight) - StatusBarHeight);
+  AssertViewRect(App, Status, 0, 29, 100, StatusBarHeight);
+  var Layout: ViewLayout := Application.QueryViewLayout(App, Menu);
+  AssertTrue(Layout.anchorLeft);
+  AssertTrue(Layout.anchorTop);
+  AssertTrue(Layout.anchorRight);
+  AssertFalse(Layout.anchorBottom);
+  Application.CloseForTest(App)
+end.

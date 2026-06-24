@@ -231,6 +231,15 @@ pub(super) fn register_application_api(checker: &mut Checker, types: &TuiTypes) 
     );
     define_func(
         checker,
+        s::STD_TUI_APPLICATION_QUERY_VIEW_LAYOUT,
+        vec![
+            p("App", types.application.clone(), false),
+            p("ViewId", types.view_id.clone(), false),
+        ],
+        types.introspection.view_layout.clone(),
+    );
+    define_func(
+        checker,
         s::STD_TUI_APPLICATION_QUERY_RESOLVED_VIEW,
         vec![
             p("App", types.application.clone(), false),

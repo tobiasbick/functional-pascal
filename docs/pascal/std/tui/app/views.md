@@ -39,6 +39,29 @@ it does not rewrite descendant flags.
 Both calls update retained state immediately and request redraws for the affected subtree. As with
 the other `HostSetView*` mutators, an unknown or unregistered `ViewId` is ignored.
 
+## Anchor/grow layout
+
+`ViewLayout` stores anchor edges and margins relative to the parent layout bounds:
+
+| Field | Meaning |
+| ----- | ------- |
+| `anchorLeft` / `anchorTop` / `anchorRight` / `anchorBottom` | Pin the matching edge to the parent |
+| `marginLeft` / `marginTop` / `marginRight` / `marginBottom` | Offset from the anchored edge |
+
+When any anchor is set, the host recomputes the view rectangle automatically on **terminal resize**,
+after **`HostSetViewLayout`**, when a **parent rectangle changes**, and when a **frame root** is
+moved or resized (children use the frame inner viewport as parent bounds).
+
+- Left + right without top + bottom: stretch width, keep height.
+- Top + bottom without left + right: stretch height, keep width.
+- Opposing pairs with margins: fill the remaining area (for example menu bar, desktop, status bar).
+
+`Application.HostSetViewLayout(App, ViewId, Layout)` replaces the retained flags and relayouts that
+subtree immediately. `Application.QueryViewLayout(App, ViewId)` returns the current record.
+
+Views with no anchors keep manual `HostSetViewRect` behavior only. See `apps/ide/src/shell.fpas` for
+a shell that survives resize without a manual `OnResize` rect loop.
+
 ## Resolved geometry and clipping
 
 The host resolves each node to:
@@ -116,6 +139,7 @@ Read-only introspection (headless tests and debugging):
 | `QueryViewChildren` | Direct children in sibling order |
 | `QueryViewState` | Resolved visibility, enabled, focus, active, and exposure flags |
 | `QueryViewOptions` | Selectability, Tab, routing, and child-clipping options |
+| `QueryViewLayout` | Anchor/grow layout flags and margins |
 | `QueryResolvedView` | Absolute rect, effective clip, state, and options |
 | `QueryViewKind` | Native widget kind or `Generic` |
 | `QuerySceneGraph` | Full `array of ViewSnapshot` in paint order |

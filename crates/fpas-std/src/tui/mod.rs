@@ -32,8 +32,8 @@ pub use scroll::{
 pub use session::TuiSession;
 pub use view::{
     DesktopMetrics, EventOutcome, EventPhase, EventRoute, ResolvedView, RootActivation,
-    RoutedEvent, TUI_VIEW_KIND_VARIANTS, ViewId, ViewKind, ViewOptions, ViewRect, ViewRegistry,
-    ViewState, WindowPalette, WindowShadow,
+    RoutedEvent, TUI_VIEW_KIND_VARIANTS, ViewId, ViewKind, ViewLayout, ViewOptions, ViewRect,
+    ViewRegistry, ViewState, WindowPalette, WindowShadow,
 };
 pub use widget::{
     ButtonStyle, ButtonWidget, CheckBoxStyle, CheckBoxWidget, FrameButtonSlots, FrameCapabilities,

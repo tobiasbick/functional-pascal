@@ -12,6 +12,7 @@ mod desktop;
 mod focus;
 mod geometry;
 mod introspection;
+mod layout;
 mod routing;
 mod state;
 mod tree;
@@ -26,6 +27,7 @@ mod tests;
 pub use activation::RootActivation;
 pub use desktop::{DesktopMetrics, WindowPalette, WindowShadow};
 pub use introspection::{TUI_VIEW_KIND_VARIANTS, ViewKind};
+pub use layout::ViewLayout;
 pub use routing::{EventOutcome, EventPhase, EventRoute, RoutedEvent};
 pub use state::{ResolvedView, ViewOptions, ViewState};
 
@@ -144,6 +146,7 @@ struct ViewEntry {
     current_child: Option<ViewId>,
     state: ViewState,
     options: ViewOptions,
+    layout: ViewLayout,
 }
 
 /// Host-side registry for all active views in a TUI session.

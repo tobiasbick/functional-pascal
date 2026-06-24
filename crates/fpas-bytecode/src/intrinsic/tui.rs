@@ -502,6 +502,10 @@ pub enum TuiIntrinsic {
     HostSetMemoText = 424,
     /// Query memo text, cursor, scroll, and selection state.
     QueryMemoState = 425,
+    /// Replace anchor/grow layout flags for a retained view. See `docs/pascal/std/tui/app/views.md`.
+    HostSetViewLayout = 426,
+    /// Read anchor/grow layout flags for a retained view.
+    QueryViewLayout = 427,
     // **375..=377** are `Std.Test` screen/view assertions; **378** is `Std.Test.PushReadLn` (see `TestIntrinsic`).
     // Note: **348..=355** are owned by `Std.Test` (`TestIntrinsic`).
 }

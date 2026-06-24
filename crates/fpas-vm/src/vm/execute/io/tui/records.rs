@@ -6,7 +6,9 @@ use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
-use fpas_std::{MenuBarState, ResolvedView, ViewId, ViewKind, ViewOptions, ViewRect, ViewState};
+use fpas_std::{
+    MenuBarState, ResolvedView, ViewId, ViewKind, ViewLayout, ViewOptions, ViewRect, ViewState,
+};
 
 const TUI_APPLICATION_TYPE: &str = "Std.Tui.Application";
 const TUI_VIEW_ID_TYPE: &str = "Std.Tui.ViewId";
@@ -17,6 +19,7 @@ const TUI_SCREEN_CELL_TYPE: &str = "Std.Tui.ScreenCell";
 const TUI_MENU_BAR_STATE_TYPE: &str = "Std.Tui.MenuBarState";
 const TUI_VIEW_STATE_TYPE: &str = "Std.Tui.ViewState";
 const TUI_VIEW_OPTIONS_TYPE: &str = "Std.Tui.ViewOptions";
+const TUI_VIEW_LAYOUT_TYPE: &str = "Std.Tui.ViewLayout";
 const TUI_RESOLVED_VIEW_TYPE: &str = "Std.Tui.ResolvedView";
 const TUI_VIEW_SNAPSHOT_TYPE: &str = "Std.Tui.ViewSnapshot";
 
@@ -157,6 +160,49 @@ impl Worker {
                 ("clipChildren".into(), Value::Boolean(options.clip_children)),
             ],
         }
+    }
+
+    /// Constructs a `Std.Tui.ViewLayout` record from retained layout flags.
+    pub(in crate::vm::execute::io) fn tui_view_layout_record(layout: ViewLayout) -> Value {
+        Value::Record {
+            type_name: TUI_VIEW_LAYOUT_TYPE.into(),
+            fields: vec![
+                ("anchorLeft".into(), Value::Boolean(layout.anchor_left)),
+                ("anchorTop".into(), Value::Boolean(layout.anchor_top)),
+                ("anchorRight".into(), Value::Boolean(layout.anchor_right)),
+                ("anchorBottom".into(), Value::Boolean(layout.anchor_bottom)),
+                ("marginLeft".into(), Value::Integer(layout.margin_left)),
+                ("marginTop".into(), Value::Integer(layout.margin_top)),
+                ("marginRight".into(), Value::Integer(layout.margin_right)),
+                ("marginBottom".into(), Value::Integer(layout.margin_bottom)),
+            ],
+        }
+    }
+
+    /// Decode a `Std.Tui.ViewLayout` record from the VM stack.
+    pub(in crate::vm::execute::io) fn pop_tui_view_layout(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<ViewLayout, VmError> {
+        let value = self.pop(line)?;
+        let Value::Record { fields, .. } = value else {
+            return Err(runtime_error(
+                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                "Expected a `Std.Tui.ViewLayout` record.",
+                "Pass a `ViewLayout` record with anchor and margin fields.",
+                line,
+            ));
+        };
+        Ok(ViewLayout {
+            anchor_left: Self::bool_record_field(&fields, "anchorLeft", line)?,
+            anchor_top: Self::bool_record_field(&fields, "anchorTop", line)?,
+            anchor_right: Self::bool_record_field(&fields, "anchorRight", line)?,
+            anchor_bottom: Self::bool_record_field(&fields, "anchorBottom", line)?,
+            margin_left: self.integer_record_field(&fields, "marginLeft", line)?,
+            margin_top: self.integer_record_field(&fields, "marginTop", line)?,
+            margin_right: self.integer_record_field(&fields, "marginRight", line)?,
+            margin_bottom: self.integer_record_field(&fields, "marginBottom", line)?,
+        })
     }
 
     /// Constructs a `Std.Tui.ResolvedView` record.

@@ -45,6 +45,8 @@ These `[fpas_bytecode::Intrinsic](../../../../../crates/fpas-bytecode/src/intrin
 | `TuiHostSetViewParent`        | `Application`, `ViewId`, `Option of ViewId`           | Reparents a host-managed view under `Parent`. Pass `None` to detach the view back to the root list. The view keeps its current absolute terminal rectangle during the reparenting step. Unknown handles are ignored. Does not push a value.                          |
 | `TuiHostSetViewVisible`       | `Application`, `ViewId`, `boolean`                    | Updates retained visibility. Descendants resolve as hidden when an ancestor is hidden. Unknown handles are ignored. Does not push a value. |
 | `TuiHostSetViewEnabled`       | `Application`, `ViewId`, `boolean`                    | Updates input/focus eligibility for one view and clears focus when disabling the focused view. Unknown handles are ignored. Does not push a value. |
+| `TuiHostSetViewLayout`        | `Application`, `ViewId`, `ViewLayout`                 | Replaces anchor/grow layout flags and relayouts the affected subtree. Unknown handles are ignored. Does not push a value. |
+| `TuiQueryViewLayout`          | `Application`, `ViewId`                          | Pushes retained `ViewLayout` for one live view. |
 | `TuiHostRegisterOnViewPaint`  | `Application`, `ViewId`, `function`          | Registers `procedure (Application, ViewId, Std.Tui.Rect)` (arity 3) as a view-local paint handler for one host-managed view. During hosted redraw, the host invokes it in tree paint order when that view intersects the current damage region.                              |
 | `TuiApplicationConfigure`     | `Application`, `ApplicationHandlers`             | Applies a bundled hosted-dispatch configuration. Replaces the current hosted handlers with the record fields from `ApplicationHandlers`; `OnPaint` is required, optional handlers use `Some(Handler)` or `None`, and `OnIdleMilliseconds <= 0` disables idle callbacks.        |
 | `TuiApplicationRun`           | `Application`                                    | Hosted loop entrypoint. Requires a previously registered global `OnPaint` handler, at least one local view paint handler, **or** at least one host widget view (`HostCreateSolidFillView`, `HostCreateMenuBarView`, or `HostCreateStatusBarView`), auto-requests the first redraw, blocks until `Application.HostRequestQuit(App)` is observed **or** the host stops the active run, records `ExitReason.UserQuit`, `ExitReason.HostStop`, `ExitReason.HostAndUserStop`, or `ExitReason.HostShutdown`, invokes `OnExit` when registered, and performs `Application.Close` semantics before returning. Pushes `()`. |
@@ -107,6 +109,8 @@ These `[fpas_bytecode::Intrinsic](../../../../../crates/fpas-bytecode/src/intrin
 | `Application.HostSetViewParent(App, ViewId, Parent)` | `TuiHostSetViewParent` |
 | `Application.HostSetViewVisible(App, ViewId, Visible)` | `TuiHostSetViewVisible` |
 | `Application.HostSetViewEnabled(App, ViewId, Enabled)` | `TuiHostSetViewEnabled` |
+| `Application.HostSetViewLayout(App, ViewId, Layout)` | `TuiHostSetViewLayout` |
+| `Application.QueryViewLayout(App, ViewId)` | `TuiQueryViewLayout` |
 | `Application.HostRegisterOnViewPaint(App, ViewId, OnViewPaint)` | `TuiHostRegisterOnViewPaint` |
 | `Application.Configure(App, Handlers)` | `TuiApplicationConfigure` |
 | `Application.Run(App)` | `TuiApplicationRun` |

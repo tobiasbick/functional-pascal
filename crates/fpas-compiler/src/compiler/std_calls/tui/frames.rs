@@ -55,6 +55,12 @@ impl Compiler {
             s::STD_TUI_APPLICATION_QUERY_FRAME_SCROLL_STATE => {
                 (2, TuiIntrinsic::QueryFrameScrollState, true)
             }
+            s::STD_TUI_APPLICATION_QUERY_FRAME_WINDOW_LIST => {
+                (1, TuiIntrinsic::QueryFrameWindowList, true)
+            }
+            s::STD_TUI_APPLICATION_HOST_ACTIVATE_FRAME_WINDOW => {
+                (2, TuiIntrinsic::HostActivateFrameWindow, true)
+            }
             _ => return Ok(false),
         };
         self.expect_exact_args(name, arity, args, location)?;

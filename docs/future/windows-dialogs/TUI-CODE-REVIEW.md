@@ -434,7 +434,7 @@ dialogs. Current spec for implemented behavior: [`docs/pascal/std/tui/app/frames
 - [x] Anchor/grow layout flags on views ([H6](#h6-standard-controls-and-layout-are-part-of-the-goal))
   so menu, desktop, status, and frame children survive terminal resize without manual handlers.
 - [x] Parent move invalidates descendant damage outside the parent rectangle ([H3](#h3-geometry-clipping-and-damage-must-be-one-registry-contract)).
-- [ ] Window list / MDI conveniences (optional; cascade/tile helpers are done).
+- [x] Window list / MDI conveniences (optional; cascade/tile helpers are done).
 
 ### Architecture and performance debt
 

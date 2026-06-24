@@ -14,6 +14,7 @@ mod scroll;
 mod state;
 mod style;
 mod widget;
+mod window_list;
 
 #[cfg(test)]
 mod tests;
@@ -29,3 +30,4 @@ pub use scroll::{FrameScrollHit, FrameScrollState};
 pub use state::{FrameResizeEdge, FrameRootState, FrameScrollInteraction, WindowInteraction};
 pub use style::FrameStyle;
 pub use widget::FrameWidget;
+pub use window_list::FrameWindowDescriptor;

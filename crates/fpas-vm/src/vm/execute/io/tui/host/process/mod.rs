@@ -152,13 +152,9 @@ impl Worker {
                     height: height as i64,
                 };
                 self.with_tui(|tui| {
-                    let _ = tui.session.request_resize_redraw(
-                        old_width,
-                        old_height,
-                        width,
-                        height,
-                        line,
-                    );
+                    let _ = tui
+                        .session
+                        .request_resize_redraw(old_width, old_height, width, height, line);
                     let previous = Self::all_roots_damage_rects(tui);
                     let _ = tui.views.relayout_all_roots(terminal);
                     Self::request_all_roots_subtree_damage(tui, &previous, line);

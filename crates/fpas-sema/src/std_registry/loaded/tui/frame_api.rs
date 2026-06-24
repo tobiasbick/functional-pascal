@@ -151,4 +151,19 @@ pub(super) fn register(checker: &mut Checker, types: &TuiTypes) {
         ],
         types.controls.frame_scroll_state.clone(),
     );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_QUERY_FRAME_WINDOW_LIST,
+        vec![p("App", types.application.clone(), false)],
+        Ty::Array(Box::new(types.controls.frame_window_entry.clone())),
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_HOST_ACTIVATE_FRAME_WINDOW,
+        vec![
+            p("App", types.application.clone(), false),
+            p("ViewId", types.view_id.clone(), false),
+        ],
+        Ty::Boolean,
+    );
 }

@@ -506,6 +506,10 @@ pub enum TuiIntrinsic {
     HostSetViewLayout = 426,
     /// Read anchor/grow layout flags for a retained view.
     QueryViewLayout = 427,
+    /// List open window-kind frame roots for MDI window switching.
+    QueryFrameWindowList = 428,
+    /// Raise and focus one frame root by handle.
+    HostActivateFrameWindow = 429,
     // **375..=377** are `Std.Test` screen/view assertions; **378** is `Std.Test.PushReadLn` (see `TestIntrinsic`).
     // Note: **348..=355** are owned by `Std.Test` (`TestIntrinsic`).
 }

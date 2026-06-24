@@ -1,0 +1,32 @@
+program TuiFrameWindowListTest;
+
+uses Std.Tui, Std.Test, Std.Array;
+
+const
+  FrameKindWindow: integer := 0;
+
+procedure OnPaint(App: Application);
+begin
+end;
+
+begin
+  var App: Application := Application.OpenForTest(80, 24);
+  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
+  Application.Configure(App, Handlers);
+  AssertTrue(Application.HostSetDesktopWorkArea(App, 0, 0, 80, 24));
+  var Notes: ViewId := Application.HostCreateFrameView(App, 4, 3, 30, 11, 'Notes', FrameKindWindow, true, false, false, false, false);
+  var Tools: ViewId := Application.HostCreateFrameView(App, 36, 5, 24, 9, 'Tools', FrameKindWindow, true, false, false, false, false);
+  Application.TestPumpUntilIdle(App);
+  mutable var Windows: array of FrameWindowEntry := Application.QueryFrameWindowList(App);
+  AssertEquals(2, Length(Windows));
+  AssertEquals('Notes', Windows[0].title);
+  AssertEquals(0, Windows[0].zIndex);
+  AssertEquals('Tools', Windows[1].title);
+  AssertEquals(1, Windows[1].zIndex);
+  AssertTrue(Application.HostActivateFrameWindow(App, Notes));
+  Application.TestPumpUntilIdle(App);
+  Windows := Application.QueryFrameWindowList(App);
+  AssertTrue(Windows[1].active);
+  AssertFalse(Windows[0].active);
+  Application.CloseForTest(App)
+end.

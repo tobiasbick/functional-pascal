@@ -23,6 +23,11 @@ pub const STD_TUI_APPLICATION_HOST_CASCADE_FRAME_ROOTS: &str =
 pub const STD_TUI_APPLICATION_HOST_TILE_FRAME_ROOTS: &str =
     std_tui!("Application.HostTileFrameRoots");
 pub const STD_TUI_FRAME_SCROLL_STATE: &str = std_tui!("FrameScrollState");
+pub const STD_TUI_FRAME_WINDOW_ENTRY: &str = std_tui!("FrameWindowEntry");
+pub const STD_TUI_APPLICATION_QUERY_FRAME_WINDOW_LIST: &str =
+    std_tui!("Application.QueryFrameWindowList");
+pub const STD_TUI_APPLICATION_HOST_ACTIVATE_FRAME_WINDOW: &str =
+    std_tui!("Application.HostActivateFrameWindow");
 pub const STD_TUI_APPLICATION_HOST_SET_FRAME_CONTENT_SIZE: &str =
     std_tui!("Application.HostSetFrameContentSize");
 pub const STD_TUI_APPLICATION_HOST_SCROLL_FRAME: &str = std_tui!("Application.HostScrollFrame");

@@ -19,6 +19,8 @@ activation.
 | `Application.QueryFrameRootState(App, ViewId)` | Query outer geometry, capability flags, and zoom state. |
 | `Application.HostCascadeFrameRoots(App, StepX, StepY)` | Cascade window roots diagonally from the work-area origin; each root keeps its size. Returns the number of roots repositioned. Typical steps are `2` and `1`. |
 | `Application.HostTileFrameRoots(App)` | Resize and arrange window roots in a grid that fills the desktop work area. Returns the number of roots repositioned. |
+| `Application.QueryFrameWindowList(App)` | List open window-kind frame roots in back-to-front z-order with titles and active flags. |
+| `Application.HostActivateFrameWindow(App, ViewId)` | Raise and focus one frame root. Returns whether activation succeeded. |
 | `Application.HostSetFrameContentSize(App, FrameView, ContentWidth, ContentHeight)` | Replace logical content size for a scrollable frame root and refresh scroll-bar geometry. |
 | `Application.HostScrollFrame(App, FrameView, DeltaX, DeltaY)` | Scroll a scrollable frame root by signed cell deltas. |
 | `Application.HostSetFrameScrollOffset(App, FrameView, OffsetX, OffsetY)` | Set absolute scroll offsets for a scrollable frame root. |
@@ -81,6 +83,20 @@ Use `Application.TestSendMouse`, `Application.TestMoveMouse`, and `Application.T
 
 `HostCascadeFrameRoots` and `HostTileFrameRoots` operate on registered **window-kind** frame roots only. Dialog roots, zoomed roots, and the active modal root (when present) are skipped. Both calls require a configured desktop work area and return `0` when nothing was repositioned.
 
+## MDI window list
+
+`QueryFrameWindowList` returns `array of FrameWindowEntry` for every **window-kind** frame root in back-to-front z-order. The active modal root is excluded when present. Use `HostActivateFrameWindow` to raise and focus a listed root (for example after the user picks one from a popup menu).
+
+### `FrameWindowEntry`
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `id` | `ViewId` | Frame root handle |
+| `title` | `string` | Title-bar text |
+| `kind` | `integer` | `0` = Window, `1` = Dialog (always `0` in this query today) |
+| `active` | `boolean` | Whether this root is the active window root, or the frontmost root when no view is focused |
+| `zIndex` | `integer` | Back-to-front position among roots (`0` = back) |
+
 ## Reserved command ids
 
 Bind these through `Application.HostBindCommand` to dispatch built-in window actions before `OnCommand`:
@@ -100,6 +116,6 @@ Application-defined command ids remain non-negative and still flow through `OnCo
 | ----- | -------- |
 | Geometry + painting + interaction | `crates/fpas-std/src/tui/widget/frame/` |
 | VM bridge | `crates/fpas-vm/src/vm/execute/io/tui/frame_model/`, `views/modal.rs` |
-| Intrinsics **410..=422** | `crates/fpas-bytecode/src/intrinsic/tui.rs` |
-| FPAS tests | `tests/tui/tui_frame_chrome_test.fpas`, `tests/tui/tui_frame_chrome_actions_test.fpas`, `tests/tui/tui_framed_dialog_test.fpas`, `tests/tui/tui_frame_window_test.fpas`, `tests/tui/tui_frame_layout_test.fpas`, `tests/tui/tui_frame_scroll_test.fpas` |
+| Intrinsics **410..=422**, **428..=429** | `crates/fpas-bytecode/src/intrinsic/tui.rs` |
+| FPAS tests | `tests/tui/tui_frame_chrome_test.fpas`, `tests/tui/tui_frame_chrome_actions_test.fpas`, `tests/tui/tui_framed_dialog_test.fpas`, `tests/tui/tui_frame_window_test.fpas`, `tests/tui/tui_frame_layout_test.fpas`, `tests/tui/tui_frame_scroll_test.fpas`, `tests/tui/tui_frame_window_list_test.fpas` |
 | Examples | [`examples/pascal/tui/framed_window.fpas`](../../../../examples/pascal/tui/framed_window.fpas), [`framed_dialog.fpas`](../../../../examples/pascal/tui/framed_dialog.fpas) |

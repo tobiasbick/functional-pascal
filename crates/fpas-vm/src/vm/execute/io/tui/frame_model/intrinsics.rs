@@ -2,13 +2,13 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/frames.md`
 
-use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
+use crate::vm::{TuiState, Worker};
 use fpas_bytecode::{SourceLocation, TuiIntrinsic, Value};
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 use fpas_std::{
     FrameCapabilities, FrameContentSize, FrameKind, FrameRootSpec, FrameRootState,
-    FrameScrollState, FrameWidget, ViewRect, ViewWidget,
+    FrameScrollState, FrameWidget, FrameWindowDescriptor, ViewRect, ViewWidget,
 };
 
 use super::super::view_geometry::validate_view_rect;
@@ -254,6 +254,30 @@ impl Worker {
                 };
                 self.stack.push(record);
             }
+            TuiIntrinsic::QueryFrameWindowList => {
+                self.pop_tui_application(line)?;
+                let entries = self.with_tui(|tui| {
+                    let exclude = tui
+                        .modals
+                        .active_root_view()
+                        .into_iter()
+                        .collect::<Vec<_>>();
+                    tui.views
+                        .frame_window_descriptors_excluding(&exclude)
+                        .into_iter()
+                        .map(|entry| {
+                            frame_window_entry_record(entry, frame_widget_title(tui, entry.id))
+                        })
+                        .collect::<Vec<_>>()
+                });
+                self.stack.push(Value::Array(entries));
+            }
+            TuiIntrinsic::HostActivateFrameWindow => {
+                let id = self.pop_tui_view_id(line)?;
+                self.pop_tui_application(line)?;
+                let changed = self.with_tui(|tui| tui.views.activate_frame_window(id).is_some());
+                self.stack.push(Value::Boolean(changed));
+            }
             _ => return Ok(false),
         }
         Ok(true)
@@ -322,6 +346,32 @@ fn frame_root_record(state: FrameRootState, rect: ViewRect) -> Value {
                 "zoomed".into(),
                 Value::Boolean(state.pre_zoom_rect.is_some()),
             ),
+        ],
+    }
+}
+
+fn frame_widget_title(tui: &TuiState, id: fpas_std::ViewId) -> String {
+    match tui.view_widgets.get(&id) {
+        Some(ViewWidget::Frame(widget)) => widget.title.clone(),
+        _ => String::new(),
+    }
+}
+
+fn frame_window_entry_record(descriptor: FrameWindowDescriptor, title: String) -> Value {
+    Value::Record {
+        type_name: "Std.Tui.FrameWindowEntry".into(),
+        fields: vec![
+            ("id".into(), Worker::tui_view_id_record(descriptor.id)),
+            ("title".into(), Value::Str(title)),
+            (
+                "kind".into(),
+                Value::Integer(match descriptor.kind {
+                    FrameKind::Window => 0,
+                    FrameKind::Dialog => 1,
+                }),
+            ),
+            ("active".into(), Value::Boolean(descriptor.active)),
+            ("zIndex".into(), Value::Integer(descriptor.z_index as i64)),
         ],
     }
 }

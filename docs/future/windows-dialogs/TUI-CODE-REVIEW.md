@@ -453,7 +453,7 @@ These original findings are reduced but not closed:
 
 | # | Scenario | Status |
 | --- | --- | --- |
-| 1 | Overlapping windows: raise, move, resize, zoom, restore, **close** without stale cells | **Partial** — close and zoom chrome work; broader occlusion repair still open |
+| 1 | Overlapping windows: raise, move, resize, zoom, restore, **close** without stale cells | **Partial** — close/zoom chrome + [`tui_frame_occlusion_test.fpas`](../../../tests/tui/tui_frame_occlusion_test.fpas); broader scenarios still open |
 | 2 | Click and Tab focus within active group | **Mostly met** — existing control + focus tests |
 | 3 | Nested modal focus restore and results | **Met** — Phase 3 + modal VM tests |
 | 4 | Sourced commands from menu, button, shortcut, frame chrome | **Partial** — close/zoom chrome wired; keyboard shortcuts use reserved ids |
@@ -461,7 +461,7 @@ These original findings are reduced but not closed:
 | 6 | Pointer capture for drag, resize, scrollbar thumb | **Met** — frame move/resize + scroll thumb tests |
 | 7 | Resize layout for menu, desktop, status, frames, anchored controls | **Met** — `ViewLayout` + auto relayout on resize |
 | 8 | Cell-width tests (ASCII, box, wide, combining, truncation, cursor) | **Met** — Rust policy tests + [`tui_cell_width_test.fpas`](../../../tests/tui/tui_cell_width_test.fpas) |
-| 9 | Unit + VM + FPAS workflow coverage | **Partial** — frame geometry/interaction yes; painted frame workflows no |
+| 9 | Unit + VM + FPAS workflow coverage | **Met** — frame geometry/interaction VM tests + painted-frame FPAS workflows ([`tui_framed_dialog_controls_test.fpas`](../../../tests/tui/tui_framed_dialog_controls_test.fpas), [`tui_frame_occlusion_test.fpas`](../../../tests/tui/tui_frame_occlusion_test.fpas), existing chrome/scroll/window tests) |
 
 ### Integration still using pre-frame patterns
 

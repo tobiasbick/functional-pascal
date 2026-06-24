@@ -1,4 +1,4 @@
-{ ShowDialog demo - owned modal root, host widgets, and validated modal results. }
+{ ShowDialog demo — owned framed modal with host controls and validated results. }
 
 program TuiShowDialog;
 
@@ -16,36 +16,11 @@ const
   DialogHeight: integer := 9;
 
 mutable var
-  mutable var DialogRoot: option of ViewId := None;
   mutable var LastResult: string := 'none';
-
-procedure PaintDialogChrome(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
-begin
-  GotoXY(2, 1);
-  Write('Confirm action');
-  GotoXY(2, 3);
-  Write('Save changes before closing?')
-end;
-
-procedure PaintDialogButton(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect; Caption: string);
-begin
-  GotoXY(1, 1);
-  Write(Caption)
-end;
-
-procedure PaintOkButton(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
-begin
-  PaintDialogButton(App, ViewId, Bounds, '[ OK ]')
-end;
-
-procedure PaintCancelButton(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
-begin
-  PaintDialogButton(App, ViewId, Bounds, '[ Cancel ]')
-end;
 
 procedure CloseDialog(App: Application; ResultCode: integer);
 begin
-  if DialogRoot = None then
+  if Application.QueryModalDepth(App) = 0 then
   begin
     return
   end;
@@ -63,13 +38,12 @@ begin
   begin
     LastResult := 'Command'
   end;
-  DialogRoot := None;
   Application.RequestRedraw(App)
 end;
 
 procedure OpenDialog(App: Application);
 begin
-  if DialogRoot <> None then
+  if Application.QueryModalDepth(App) > 0 then
   begin
     return
   end;
@@ -86,23 +60,13 @@ begin
   begin
     Y := 1
   end;
-  var Root: ViewId := Application.ShowDialog(App, DialogModalId, X, Y, DialogWidth, DialogHeight);
-  DialogRoot := Some(Root);
-  var Body: ViewId := Application.HostCreateSolidFillView(App, 0, 0, DialogWidth - 2, DialogHeight -
-                                                                                      2, LightGray, Some(Black), None);
-  Application.HostSetViewParent(App, Body, Some(Root));
-  Application.HostSetViewRect(App, Body, 1, 1, DialogWidth - 2, DialogHeight - 2);
-  Application.HostRegisterOnViewPaint(App, Root, PaintDialogChrome);
-  var OkView: ViewId := Application.HostRegisterView(App, 0, 0, 8, 1);
-  var CancelView: ViewId := Application.HostRegisterView(App, 0, 0, 12, 1);
-  Application.HostSetViewParent(App, OkView, Some(Root));
-  Application.HostSetViewParent(App, CancelView, Some(Root));
-  Application.HostSetViewRect(App, OkView, 4, 6, 8, 1);
-  Application.HostSetViewRect(App, CancelView, 20, 6, 12, 1);
-  Application.HostPushChildView(App, OkView);
-  Application.HostPushChildView(App, CancelView);
-  Application.HostRegisterOnViewPaint(App, OkView, PaintOkButton);
-  Application.HostRegisterOnViewPaint(App, CancelView, PaintCancelButton);
+  var Dialog: ViewId := Application.ShowFramedDialog(App, DialogModalId, X, Y, DialogWidth, DialogHeight, 'Confirm action', false, false, false, false, true);
+  var Message: ViewId := Application.HostCreateLabelView(App, 2, 1, 28, 1, 'Save changes before closing?', None);
+  Application.HostSetViewParent(App, Message, Some(Dialog));
+  var OkView: ViewId := Application.HostCreateButtonView(App, 4, 4, 8, 1, 'OK', Some(CmdDialogOk), true);
+  Application.HostSetViewParent(App, OkView, Some(Dialog));
+  var CancelView: ViewId := Application.HostCreateButtonView(App, 16, 4, 12, 1, 'Cancel', Some(CmdDialogCancel), false);
+  Application.HostSetViewParent(App, CancelView, Some(Dialog));
   var EscapeKey: Std.Console.KeyEvent := record
     kind := Std.Console.KeyKind.Escape;
     ch := Std.Str.Chr(27);
@@ -119,7 +83,7 @@ procedure OnPaint(App: Application);
 begin
   ClrScr();
   GotoXY(1, 1);
-  WriteLn('ShowDialog with modal results');
+  WriteLn('ShowDialog with framed modal results');
   GotoXY(1, 2);
   WriteLn('Modal depth: ', Application.QueryModalDepth(App));
   GotoXY(1, 3);
@@ -129,6 +93,8 @@ begin
   GotoXY(1, 6);
   WriteLn('Tab to OK or Cancel, Enter accepts, Escape cancels.');
   GotoXY(1, 7);
+  WriteLn('Title-bar close (■) dismisses without a result code.');
+  GotoXY(1, 8);
   WriteLn('Ctrl+Q exits the application.')
 end;
 

@@ -465,9 +465,9 @@ These original findings are reduced but not closed:
 
 ### Integration still using pre-frame patterns
 
-- [`show_dialog.fpas`](../../../examples/pascal/tui/show_dialog.fpas) — host widgets in a plain root, not a painted framed dialog.
-- IDE shell — About dialog uses retained controls; framed chrome and `ShowFramedDialog` not wired.
 - [`README.md`](README.md) implementation-phase checklists — superseded by this file; kept as design reference only.
+
+`show_dialog.fpas` and the IDE About dialog now use `ShowFramedDialog` with host labels and buttons. `ShowDialog` remains available for plain owned modal roots (`tests/tui/tui_show_dialog_test.fpas`).
 
 
 The project should not claim this goal based on frame appearance alone. A minimum credible result

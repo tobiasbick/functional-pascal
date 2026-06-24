@@ -1,4 +1,4 @@
-/// See docs/pascal/std/tui/app/vm-bridge.md.
+/// See docs/pascal/std/tui/app/frames.md.
 
 unit Ide.Dialog;
 
@@ -24,69 +24,11 @@ const
 private const AboutWidth: integer := 42;
 private const AboutHeight: integer := 11;
 
-private mutable var AboutRoot: option of ViewId := None;
-private mutable var AboutOkView: option of ViewId := None;
+/// True while the About framed dialog is the active modal.
 
-/// True while the About dialog modal frame is open.
-
-function IsOpen(): boolean;
+function IsOpen(App: Application): boolean;
 begin
-  return AboutRoot <> None
-end;
-
-private procedure PaintAboutFrame(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
-begin
-  TextColor(Black);
-  TextBackground(LightGray);
-  GotoXY(1, 1);
-  Write('┌');
-  mutable var X: integer := 2;
-  while X < AboutWidth do
-  begin
-    Write('─');
-    X := X + 1
-  end;
-  Write('┐');
-  mutable var Y: integer := 2;
-  while Y < AboutHeight do
-  begin
-    GotoXY(1, Y);
-    Write('│');
-    GotoXY(AboutWidth, Y);
-    Write('│');
-    Y := Y + 1
-  end;
-  GotoXY(1, AboutHeight);
-  Write('└');
-  X := 2;
-  while X < AboutWidth do
-  begin
-    Write('─');
-    X := X + 1
-  end;
-  Write('┘');
-  GotoXY(2, 1);
-  Write(' About FPAS IDE ')
-end;
-
-private procedure PaintAboutBody(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
-begin
-  TextColor(Black);
-  TextBackground(LightGray);
-  GotoXY(1, 2);
-  Write('Functional Pascal IDE shell');
-  GotoXY(1, 3);
-  Write('Turbo Vision-style hosted TUI');
-  GotoXY(1, 5);
-  Write('Press Enter on OK or Escape to close.')
-end;
-
-private procedure PaintAboutOk(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
-begin
-  TextColor(LightGray);
-  TextBackground(Black);
-  GotoXY(1, 1);
-  Write('[ OK ]')
+  return Application.QueryModalDepth(App) > 0
 end;
 
 private procedure BindAboutModalShortcuts(App: Application);
@@ -113,14 +55,12 @@ end;
 
 private procedure CloseAbout(App: Application; ResultCode: integer);
 begin
-  if AboutRoot = None then
+  if not IsOpen(App) then
   begin
     return
   end;
   Application.HostSetActiveModalResult(App, ResultCode);
   Application.CloseModal(App);
-  AboutRoot := None;
-  AboutOkView := None;
   Application.RequestRedraw(App)
 end;
 
@@ -128,7 +68,7 @@ end;
 
 procedure OpenAbout(App: Application);
 begin
-  if IsOpen() then
+  if IsOpen(App) then
   begin
     return
   end;
@@ -145,70 +85,30 @@ begin
   begin
     Y := 1
   end;
-  var Root: ViewId := Application.ShowDialog(App, AboutModalId, X, Y, AboutWidth, AboutHeight);
-  AboutRoot := Some(Root);
-  var Body: ViewId := Application.HostCreateSolidFillView(App, 0, 0, AboutWidth - 2, AboutHeight - 2, LightGray, Some(Black), None);
-  Application.HostSetViewParent(App, Body, Some(Root));
-  Application.HostSetViewRect(App, Body, 1, 1, AboutWidth - 2, AboutHeight - 2);
-  Application.HostRegisterOnViewPaint(App, Root, PaintAboutFrame);
-  Application.HostRegisterOnViewPaint(App, Body, PaintAboutBody);
-  var OkX: integer := ((AboutWidth - 8) div 2) + 1;
-  var OkY: integer := AboutHeight - 3;
-  var OkView: ViewId := Application.HostRegisterView(App, 0, 0, 8, 1);
-  AboutOkView := Some(OkView);
-  Application.HostSetViewParent(App, OkView, Some(Root));
-  Application.HostSetViewRect(App, OkView, OkX, OkY, 8, 1);
-  Application.HostPushChildView(App, OkView);
-  Application.HostRegisterOnViewPaint(App, OkView, PaintAboutOk);
+  var Dialog: ViewId := Application.ShowFramedDialog(App, AboutModalId, X, Y, AboutWidth, AboutHeight, 'About FPAS IDE', false, false, false, false, true);
+  var Line1: ViewId := Application.HostCreateLabelView(App, 2, 1, 36, 1, 'Functional Pascal IDE shell', None);
+  Application.HostSetViewParent(App, Line1, Some(Dialog));
+  var Line2: ViewId := Application.HostCreateLabelView(App, 2, 2, 36, 1, 'Turbo Vision-style hosted TUI', None);
+  Application.HostSetViewParent(App, Line2, Some(Dialog));
+  var Line3: ViewId := Application.HostCreateLabelView(App, 2, 4, 36, 1, 'Press Enter on OK or Escape to close.', None);
+  Application.HostSetViewParent(App, Line3, Some(Dialog));
+  var OkView: ViewId := Application.HostCreateButtonView(App, 17, 6, 8, 1, 'OK', Some(CmdAboutOk), true);
+  Application.HostSetViewParent(App, OkView, Some(Dialog));
   BindAboutModalShortcuts(App);
   Application.RequestRedraw(App)
 end;
 
-/// Close the About dialog when its OK control is clicked.
+/// Reserved for shell mouse dispatch; About controls use native widget routing.
 
 procedure HandleMouse(App: Application; Event: Std.Console.Event);
 begin
-  if Event.mouse_action <> MouseAction.Down then
-  begin
-    return
-  end;
-  if Event.mouse_button <> MouseButton.Left then
-  begin
-    return
-  end;
-  case AboutOkView of
-    Some(OkView):
-    begin
-      var Bounds: Std.Tui.Rect := Application.QueryViewRect(App, OkView);
-      if Event.mouse_x <= Bounds.x then
-      begin
-        return
-      end;
-      if Event.mouse_x > Bounds.x + Bounds.width then
-      begin
-        return
-      end;
-      if Event.mouse_y <= Bounds.y then
-      begin
-        return
-      end;
-      if Event.mouse_y > Bounds.y + Bounds.height then
-      begin
-        return
-      end;
-      CloseAbout(App, ModalResultAccept)
-    end;
-    None:
-    begin
-    end
-  end
 end;
 
 /// Handle modal-local About commands. Returns true when the command was consumed.
 
 function HandleCommand(App: Application; CommandId: integer): boolean;
 begin
-  if not IsOpen() then
+  if not IsOpen(App) then
   begin
     return false
   end;

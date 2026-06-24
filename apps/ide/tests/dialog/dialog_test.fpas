@@ -24,14 +24,14 @@ begin
     OnCommand := Some(OnCommand);
   end;
   Application.Configure(App, Handlers);
-  AssertFalse(IsOpen());
+  AssertFalse(IsOpen(App));
   AssertEquals(0, Application.QueryModalDepth(App));
   OpenAbout(App);
   Application.TestPump(App);
-  AssertTrue(IsOpen());
+  AssertTrue(IsOpen(App));
   AssertEquals(1, Application.QueryModalDepth(App));
   var FrameCorner: ScreenCell := Application.QueryScreenCell(App, 21, 9);
-  AssertTrue(FrameCorner.ch = '┌');
+  AssertTrue(FrameCorner.ch = '╔');
   var EscapeKey: Std.Console.KeyEvent := record
     kind := Std.Console.KeyKind.Escape;
     ch := Std.Str.Chr(27);
@@ -42,7 +42,7 @@ begin
   end;
   Application.TestSendKey(App, EscapeKey);
   Application.TestPump(App);
-  AssertFalse(IsOpen());
+  AssertFalse(IsOpen(App));
   AssertEquals(0, Application.QueryModalDepth(App));
   OpenAbout(App);
   Application.TestPump(App);
@@ -56,7 +56,7 @@ begin
   end;
   Application.TestSendKey(App, EnterKey);
   Application.TestPump(App);
-  AssertFalse(IsOpen());
+  AssertFalse(IsOpen(App));
   AssertEquals(0, Application.QueryModalDepth(App));
   Application.CloseForTest(App)
 end.

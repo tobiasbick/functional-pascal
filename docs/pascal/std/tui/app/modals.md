@@ -70,7 +70,7 @@ Typical setup after `ShowDialog`:
 
 Examples:
 
-- [`examples/pascal/tui/show_dialog.fpas`](../../../../examples/pascal/tui/show_dialog.fpas) — owned dialog with OK/Cancel and modal results
+- [`examples/pascal/tui/show_dialog.fpas`](../../../../examples/pascal/tui/show_dialog.fpas) — owned framed dialog with OK/Cancel and modal results
 - [`apps/ide/src/dialog.fpas`](../../../../apps/ide/src/dialog.fpas) — IDE Help → About dialog
 
 ### `Application.ShowFramedDialog(...)`

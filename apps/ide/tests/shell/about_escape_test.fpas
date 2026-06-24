@@ -9,7 +9,7 @@ begin
   Application.TestPump(App);
   OpenAbout(App);
   Application.TestPump(App);
-  AssertTrue(IsOpen());
+  AssertTrue(IsOpen(App));
   AssertEquals(1, Application.QueryModalDepth(App));
   var EscapeKey: Std.Console.KeyEvent := record
     kind := Std.Console.KeyKind.Escape;
@@ -21,7 +21,7 @@ begin
   end;
   Application.TestSendKey(App, EscapeKey);
   Application.TestPump(App);
-  AssertFalse(IsOpen());
+  AssertFalse(IsOpen(App));
   AssertEquals(0, Application.QueryModalDepth(App));
   Application.CloseForTest(App)
 end.

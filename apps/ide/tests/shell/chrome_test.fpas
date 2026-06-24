@@ -26,7 +26,7 @@ begin
   AssertTrue(Std.Str.Contains(ResizedStatusLine, 'F10 Menu'));
   OpenAbout(App);
   Application.TestPump(App);
-  AssertTrue(IsOpen());
+  AssertTrue(IsOpen(App));
   AssertEquals(1, Application.QueryModalDepth(App));
   Application.CloseForTest(App)
 end.

@@ -460,7 +460,7 @@ These original findings are reduced but not closed:
 | 5 | Clipped paint/input through nested groups and scroll transforms | **Partial** — groups/scroll views yes; frame-integrated scroll chrome no |
 | 6 | Pointer capture for drag, resize, scrollbar thumb | **Met** — frame move/resize + scroll thumb tests |
 | 7 | Resize layout for menu, desktop, status, frames, anchored controls | **Met** — `ViewLayout` + auto relayout on resize |
-| 8 | Cell-width tests (ASCII, box, wide, combining, truncation, cursor) | **Partial** — Rust policy tests + input-line cursor; FPAS workflow tests open |
+| 8 | Cell-width tests (ASCII, box, wide, combining, truncation, cursor) | **Met** — Rust policy tests + [`tui_cell_width_test.fpas`](../../../tests/tui/tui_cell_width_test.fpas) |
 | 9 | Unit + VM + FPAS workflow coverage | **Partial** — frame geometry/interaction yes; painted frame workflows no |
 
 ### Integration still using pre-frame patterns

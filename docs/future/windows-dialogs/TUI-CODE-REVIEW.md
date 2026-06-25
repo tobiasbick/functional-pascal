@@ -453,10 +453,10 @@ These original findings are reduced but not closed:
 
 | # | Scenario | Status |
 | --- | --- | --- |
-| 1 | Overlapping windows: raise, move, resize, zoom, restore, **close** without stale cells | **Partial** — close/zoom chrome + [`tui_frame_occlusion_test.fpas`](../../../tests/tui/tui_frame_occlusion_test.fpas); broader scenarios still open |
+| 1 | Overlapping windows: raise, move, resize, zoom, restore, **close** without stale cells | **Partial** — close + move occlusion tests; resize/zoom restore scenarios still open |
 | 2 | Click and Tab focus within active group | **Mostly met** — existing control + focus tests |
 | 3 | Nested modal focus restore and results | **Met** — Phase 3 + modal VM tests |
-| 4 | Sourced commands from menu, button, shortcut, frame chrome | **Partial** — close/zoom chrome wired; keyboard shortcuts use reserved ids |
+| 4 | Sourced commands from menu, button, shortcut, frame chrome | **Met** — chrome clicks + [`tui_frame_reserved_commands_test.fpas`](../../../tests/tui/tui_frame_reserved_commands_test.fpas) |
 | 5 | Clipped paint/input through nested groups and scroll transforms | **Mostly met** — scroll views + [`tui_frame_scroll_clip_test.fpas`](../../../tests/tui/tui_frame_scroll_clip_test.fpas) |
 | 6 | Pointer capture for drag, resize, scrollbar thumb | **Met** — frame move/resize + scroll thumb tests |
 | 7 | Resize layout for menu, desktop, status, frames, anchored controls | **Met** — `ViewLayout` + auto relayout on resize |

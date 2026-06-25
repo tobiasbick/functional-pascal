@@ -220,7 +220,8 @@ end.
 | [`tui_framed_dialog_controls_test.fpas`](../../../../tests/tui/tui_framed_dialog_controls_test.fpas) | Painted dialog frame with host label/button children and command routing |
 | [`tui_frame_occlusion_test.fpas`](../../../../tests/tui/tui_frame_occlusion_test.fpas) | Overlapping painted windows: close front frame repairs occluded back cells |
 | [`tui_frame_scroll_clip_test.fpas`](../../../../tests/tui/tui_frame_scroll_clip_test.fpas) | Frame scroll offset clips child paint to the inner viewport |
-| [`tui_show_framed_dialog_controls_test.fpas`](../../../../tests/tui/tui_show_framed_dialog_controls_test.fpas) | `ShowFramedDialog` modal with host controls and owned-root cleanup |
+| [`tui_frame_occlusion_move_test.fpas`](../../../../tests/tui/tui_frame_occlusion_move_test.fpas) | Overlapping windows: moving the front frame repairs previously occluded cells |
+| [`tui_frame_reserved_commands_test.fpas`](../../../../tests/tui/tui_frame_reserved_commands_test.fpas) | Reserved command ids `-1`..=`-4` via keyboard shortcuts |
 | [`tui_view_clip_test.fpas`](../../../../tests/tui/tui_view_clip_test.fpas) | Effective clip during view-local paint |
 | [`tui_scene_graph_query_test.fpas`](../../../../tests/tui/tui_scene_graph_query_test.fpas) | Scene structure, state, options, clip, kind, and paint order |
 

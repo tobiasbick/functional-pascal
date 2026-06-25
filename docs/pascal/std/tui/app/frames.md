@@ -108,6 +108,10 @@ Bind these through `Application.HostBindCommand` to dispatch built-in window act
 | `-3` | Restore the source or active zoomed frame root (`ZoomBack`). |
 | `-4` | Close the source frame root or owned modal frame (`Close`). |
 
+Global `HostBindCommand` resolves `-1` (`NextWindow`) without a source view. Bind `-2`..=`-4` on the
+frame root with `HostBindCommandToView` (or ensure keyboard focus is inside the frame) so the host
+can determine the source root.
+
 Application-defined command ids remain non-negative and still flow through `OnCommand`.
 
 ## Implementation (contributors)
@@ -117,5 +121,5 @@ Application-defined command ids remain non-negative and still flow through `OnCo
 | Geometry + painting + interaction | `crates/fpas-std/src/tui/widget/frame/` |
 | VM bridge | `crates/fpas-vm/src/vm/execute/io/tui/frame_model/`, `views/modal.rs` |
 | Intrinsics **410..=422**, **428..=429** | `crates/fpas-bytecode/src/intrinsic/tui.rs` |
-| FPAS tests | `tests/tui/tui_frame_chrome_test.fpas`, `tests/tui/tui_frame_chrome_actions_test.fpas`, `tests/tui/tui_framed_dialog_test.fpas`, `tests/tui/tui_frame_window_test.fpas`, `tests/tui/tui_frame_layout_test.fpas`, `tests/tui/tui_frame_scroll_test.fpas`, `tests/tui/tui_frame_window_list_test.fpas` |
+| FPAS tests | `tests/tui/tui_frame_chrome_test.fpas`, `tests/tui/tui_frame_chrome_actions_test.fpas`, `tests/tui/tui_framed_dialog_test.fpas`, `tests/tui/tui_frame_window_test.fpas`, `tests/tui/tui_frame_layout_test.fpas`, `tests/tui/tui_frame_scroll_test.fpas`, `tests/tui/tui_frame_window_list_test.fpas`, `tests/tui/tui_frame_reserved_commands_test.fpas`, `tests/tui/tui_frame_occlusion_move_test.fpas` |
 | Examples | [`examples/pascal/tui/framed_window.fpas`](../../../../examples/pascal/tui/framed_window.fpas), [`framed_dialog.fpas`](../../../../examples/pascal/tui/framed_dialog.fpas) |

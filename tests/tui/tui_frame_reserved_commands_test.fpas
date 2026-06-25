@@ -1,0 +1,84 @@
+{ Reserved frame command ids bound to keyboard shortcuts. }
+
+program TuiFrameReservedCommandsTest;
+
+uses Std.Console, Std.Tui, Std.Test, Std.Array, Std.Str;
+
+const
+  FrameKindWindow: integer := 0;
+  CmdNextWindow: integer := -1;
+  CmdZoom: integer := -2;
+  CmdRestore: integer := -3;
+  CmdClose: integer := -4;
+
+mutable var
+  mutable var OnCommandCalls: integer := 0;
+
+procedure OnPaint(App: Application);
+begin
+end;
+
+procedure OnCommand(App: Application; CommandId: integer);
+begin
+  OnCommandCalls := OnCommandCalls + 1
+end;
+
+function PlainKey(Kind: KeyKind): KeyEvent;
+begin
+  return record
+    kind := Kind;
+    ch := Std.Str.Chr(0);
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(60, 20);
+  var Handlers: ApplicationHandlers := record
+    OnPaint := OnPaint;
+    OnCommand := Some(OnCommand);
+  end;
+  Application.Configure(App, Handlers);
+  AssertTrue(Application.HostSetDesktopWorkArea(App, 0, 0, 60, 20));
+  var Back: ViewId := Application.HostCreateFrameView(App, 2, 2, 18, 7, 'Back', FrameKindWindow, true, false, false, false, false);
+  var Front: ViewId := Application.HostCreateFrameView(App, 22, 2, 18, 7, 'Front', FrameKindWindow, true, false, true, false, true);
+  var FocusHook: ViewId := Application.HostCreateButtonView(App, 0, 0, 6, 1, 'Hi', None, false);
+  Application.HostSetViewParent(App, FocusHook, Some(Front));
+  Application.HostSetViewRect(App, FocusHook, 1, 1, 6, 1);
+  Application.HostBindCommandToView(App, Front, PlainKey(KeyKind.F10), CmdZoom);
+  Application.HostBindCommandToView(App, Front, PlainKey(KeyKind.F9), CmdRestore);
+  Application.HostBindCommandToView(App, Front, PlainKey(KeyKind.F4), CmdClose);
+  Application.HostBindCommand(App, PlainKey(KeyKind.F6), CmdNextWindow);
+  Application.RequestRedraw(App);
+  Application.TestPumpUntilIdle(App);
+  Application.HostActivateFrameWindow(App, Front);
+  var FocusResolved: ResolvedView := Application.QueryResolvedView(App, FocusHook);
+  Application.TestClickMouse(App, FocusResolved.rect.x + 2, FocusResolved.rect.y + 1);
+  Application.TestPumpUntilIdle(App);
+  Application.TestSendKey(App, PlainKey(KeyKind.F10));
+  Application.TestPumpUntilIdle(App);
+  mutable var FrontState: FrameRootState := Application.QueryFrameRootState(App, Front);
+  AssertTrue(FrontState.zoomed);
+  AssertEquals(0, FrontState.x);
+  AssertEquals(60, FrontState.width);
+  Application.TestSendKey(App, PlainKey(KeyKind.F9));
+  Application.TestPumpUntilIdle(App);
+  FrontState := Application.QueryFrameRootState(App, Front);
+  AssertFalse(FrontState.zoomed);
+  AssertEquals(22, FrontState.x);
+  Application.TestSendKey(App, PlainKey(KeyKind.F6));
+  Application.TestPumpUntilIdle(App);
+  var BackState: FrameRootState := Application.QueryFrameRootState(App, Back);
+  AssertEquals(2, BackState.x);
+  Application.HostActivateFrameWindow(App, Front);
+  Application.TestClickMouse(App, FocusResolved.rect.x + 2, FocusResolved.rect.y + 1);
+  Application.TestPumpUntilIdle(App);
+  Application.TestSendKey(App, PlainKey(KeyKind.F4));
+  Application.TestPumpUntilIdle(App);
+  AssertEquals(1, Std.Array.Length(Application.QuerySceneGraph(App)));
+  AssertEquals(0, OnCommandCalls);
+  Application.CloseForTest(App)
+end.

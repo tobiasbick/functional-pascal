@@ -455,8 +455,8 @@ These original findings are reduced but not closed:
 
 | # | Scenario | Status |
 | --- | --- | --- |
-| 1 | Overlapping windows: raise, move, resize, zoom, restore, **close** without stale cells | **Met** — [`tui_frame_occlusion_test.fpas`](../../../tests/tui/tui_frame_occlusion_test.fpas), [`tui_frame_occlusion_move_test.fpas`](../../../tests/tui/tui_frame_occlusion_move_test.fpas), [`tui_frame_occlusion_zoom_test.fpas`](../../../tests/tui/tui_frame_occlusion_zoom_test.fpas), [`tui_frame_occlusion_resize_test.fpas`](../../../tests/tui/tui_frame_occlusion_resize_test.fpas) |
-| 2 | Click and Tab focus within active group | **Mostly met** — existing control + focus tests |
+| 1 | Overlapping windows: raise, move, resize, zoom, restore, **close** without stale cells | **Met** — [`tui_frame_occlusion_test.fpas`](../../../tests/tui/tui_frame_occlusion_test.fpas), [`tui_frame_occlusion_move_test.fpas`](../../../tests/tui/tui_frame_occlusion_move_test.fpas), [`tui_frame_occlusion_zoom_test.fpas`](../../../tests/tui/tui_frame_occlusion_zoom_test.fpas), [`tui_frame_occlusion_resize_test.fpas`](../../../tests/tui/tui_frame_occlusion_resize_test.fpas), [`tui_frame_occlusion_raise_test.fpas`](../../../tests/tui/tui_frame_occlusion_raise_test.fpas) |
+| 2 | Click and Tab focus within active group | **Met** — [`tui_controls_test.fpas`](../../../tests/tui/tui_controls_test.fpas), [`tui_tab_focus_test.fpas`](../../../tests/tui/tui_tab_focus_test.fpas) |
 | 3 | Nested modal focus restore and results | **Met** — Phase 3 + modal VM tests |
 | 4 | Sourced commands from menu, button, shortcut, frame chrome | **Met** — chrome clicks + [`tui_frame_reserved_commands_test.fpas`](../../../tests/tui/tui_frame_reserved_commands_test.fpas) |
 | 5 | Clipped paint/input through nested groups and scroll transforms | **Mostly met** — scroll views + [`tui_frame_scroll_clip_test.fpas`](../../../tests/tui/tui_frame_scroll_clip_test.fpas) |
@@ -501,5 +501,4 @@ the terminal buffer and damage substrate.
 
 **Does the current window/dialog plan help?** Yes — it is now largely implemented. Remaining gaps are
 primarily [C1](#c1-painting-is-not-a-safe-retained-mode-compositor) (full compositor + retiring
-unrestricted global `OnPaint`), structural performance debt (widget clone per paint/input), and minor
-acceptance polish (#2 Tab focus, optional raise/activate occlusion scenario).
+unrestricted global `OnPaint`) and structural performance debt (widget clone per paint/input).

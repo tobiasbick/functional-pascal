@@ -82,6 +82,9 @@ changed. Invalid geometry therefore leaves both unchanged. Children attach to th
 `ViewId` and are clipped to its inner viewport. Closing the modal unregisters the complete frame
 subtree.
 
+Create child views at placeholder `(0, 0)`, call `HostSetViewParent`, then set frame-local layout
+with `HostSetViewRect` (see [`tui_show_framed_dialog_controls_test.fpas`](../../../../tests/tui/tui_show_framed_dialog_controls_test.fpas)).
+
 Example: [`examples/pascal/tui/framed_dialog.fpas`](../../../../examples/pascal/tui/framed_dialog.fpas)
 
 ### `Application.CloseModal(App)`

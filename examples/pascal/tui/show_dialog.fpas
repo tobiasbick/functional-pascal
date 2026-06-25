@@ -61,12 +61,15 @@ begin
     Y := 1
   end;
   var Dialog: ViewId := Application.ShowFramedDialog(App, DialogModalId, X, Y, DialogWidth, DialogHeight, 'Confirm action', false, false, false, false, true);
-  var Message: ViewId := Application.HostCreateLabelView(App, 2, 1, 28, 1, 'Save changes before closing?', None);
+  var Message: ViewId := Application.HostCreateLabelView(App, 0, 0, 28, 1, 'Save changes before closing?', None);
   Application.HostSetViewParent(App, Message, Some(Dialog));
-  var OkView: ViewId := Application.HostCreateButtonView(App, 4, 4, 8, 1, 'OK', Some(CmdDialogOk), true);
+  Application.HostSetViewRect(App, Message, 2, 1, 28, 1);
+  var OkView: ViewId := Application.HostCreateButtonView(App, 0, 0, 8, 1, 'OK', Some(CmdDialogOk), true);
   Application.HostSetViewParent(App, OkView, Some(Dialog));
-  var CancelView: ViewId := Application.HostCreateButtonView(App, 16, 4, 12, 1, 'Cancel', Some(CmdDialogCancel), false);
+  Application.HostSetViewRect(App, OkView, 4, 4, 8, 1);
+  var CancelView: ViewId := Application.HostCreateButtonView(App, 0, 0, 12, 1, 'Cancel', Some(CmdDialogCancel), false);
   Application.HostSetViewParent(App, CancelView, Some(Dialog));
+  Application.HostSetViewRect(App, CancelView, 16, 4, 12, 1);
   var EscapeKey: Std.Console.KeyEvent := record
     kind := Std.Console.KeyKind.Escape;
     ch := Std.Str.Chr(27);

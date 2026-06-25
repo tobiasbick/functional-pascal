@@ -457,7 +457,7 @@ These original findings are reduced but not closed:
 | 2 | Click and Tab focus within active group | **Mostly met** — existing control + focus tests |
 | 3 | Nested modal focus restore and results | **Met** — Phase 3 + modal VM tests |
 | 4 | Sourced commands from menu, button, shortcut, frame chrome | **Partial** — close/zoom chrome wired; keyboard shortcuts use reserved ids |
-| 5 | Clipped paint/input through nested groups and scroll transforms | **Partial** — groups/scroll views yes; frame-integrated scroll chrome no |
+| 5 | Clipped paint/input through nested groups and scroll transforms | **Mostly met** — scroll views + [`tui_frame_scroll_clip_test.fpas`](../../../tests/tui/tui_frame_scroll_clip_test.fpas) |
 | 6 | Pointer capture for drag, resize, scrollbar thumb | **Met** — frame move/resize + scroll thumb tests |
 | 7 | Resize layout for menu, desktop, status, frames, anchored controls | **Met** — `ViewLayout` + auto relayout on resize |
 | 8 | Cell-width tests (ASCII, box, wide, combining, truncation, cursor) | **Met** — Rust policy tests + [`tui_cell_width_test.fpas`](../../../tests/tui/tui_cell_width_test.fpas) |

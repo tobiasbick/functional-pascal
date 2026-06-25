@@ -64,10 +64,12 @@ begin
     Y := 1
   end;
   var Dialog: ViewId := Application.ShowFramedDialog(App, DialogModalId, X, Y, DialogWidth, DialogHeight, 'About', false, false, false, false, true);
-  var Message: ViewId := Application.HostCreateLabelView(App, 2, 1, 28, 1, 'Painted dialog frame with host chrome.', None);
+  var Message: ViewId := Application.HostCreateLabelView(App, 0, 0, 28, 1, 'Painted dialog frame with host chrome.', None);
   Application.HostSetViewParent(App, Message, Some(Dialog));
-  var OkView: ViewId := Application.HostCreateButtonView(App, 12, 4, 8, 1, 'OK', Some(CmdDialogOk), true);
+  Application.HostSetViewRect(App, Message, 2, 1, 28, 1);
+  var OkView: ViewId := Application.HostCreateButtonView(App, 0, 0, 8, 1, 'OK', Some(CmdDialogOk), true);
   Application.HostSetViewParent(App, OkView, Some(Dialog));
+  Application.HostSetViewRect(App, OkView, 12, 4, 8, 1);
   var EscapeKey: Std.Console.KeyEvent := record
     kind := Std.Console.KeyKind.Escape;
     ch := Std.Str.Chr(27);

@@ -86,14 +86,18 @@ begin
     Y := 1
   end;
   var Dialog: ViewId := Application.ShowFramedDialog(App, AboutModalId, X, Y, AboutWidth, AboutHeight, 'About FPAS IDE', false, false, false, false, true);
-  var Line1: ViewId := Application.HostCreateLabelView(App, 2, 1, 36, 1, 'Functional Pascal IDE shell', None);
+  var Line1: ViewId := Application.HostCreateLabelView(App, 0, 0, 36, 1, 'Functional Pascal IDE shell', None);
   Application.HostSetViewParent(App, Line1, Some(Dialog));
-  var Line2: ViewId := Application.HostCreateLabelView(App, 2, 2, 36, 1, 'Turbo Vision-style hosted TUI', None);
+  Application.HostSetViewRect(App, Line1, 2, 1, 36, 1);
+  var Line2: ViewId := Application.HostCreateLabelView(App, 0, 0, 36, 1, 'Turbo Vision-style hosted TUI', None);
   Application.HostSetViewParent(App, Line2, Some(Dialog));
-  var Line3: ViewId := Application.HostCreateLabelView(App, 2, 4, 36, 1, 'Press Enter on OK or Escape to close.', None);
+  Application.HostSetViewRect(App, Line2, 2, 2, 36, 1);
+  var Line3: ViewId := Application.HostCreateLabelView(App, 0, 0, 36, 1, 'Press Enter on OK or Escape to close.', None);
   Application.HostSetViewParent(App, Line3, Some(Dialog));
-  var OkView: ViewId := Application.HostCreateButtonView(App, 17, 6, 8, 1, 'OK', Some(CmdAboutOk), true);
+  Application.HostSetViewRect(App, Line3, 2, 4, 36, 1);
+  var OkView: ViewId := Application.HostCreateButtonView(App, 0, 0, 8, 1, 'OK', Some(CmdAboutOk), true);
   Application.HostSetViewParent(App, OkView, Some(Dialog));
+  Application.HostSetViewRect(App, OkView, 17, 6, 8, 1);
   BindAboutModalShortcuts(App);
   Application.RequestRedraw(App)
 end;

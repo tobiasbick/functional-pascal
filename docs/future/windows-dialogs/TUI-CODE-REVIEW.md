@@ -459,7 +459,7 @@ These original findings are reduced but not closed:
 | 2 | Click and Tab focus within active group | **Met** — [`tui_controls_test.fpas`](../../../tests/tui/tui_controls_test.fpas), [`tui_tab_focus_test.fpas`](../../../tests/tui/tui_tab_focus_test.fpas) |
 | 3 | Nested modal focus restore and results | **Met** — Phase 3 + modal VM tests |
 | 4 | Sourced commands from menu, button, shortcut, frame chrome | **Met** — chrome clicks + [`tui_frame_reserved_commands_test.fpas`](../../../tests/tui/tui_frame_reserved_commands_test.fpas) |
-| 5 | Clipped paint/input through nested groups and scroll transforms | **Mostly met** — scroll views + [`tui_frame_scroll_clip_test.fpas`](../../../tests/tui/tui_frame_scroll_clip_test.fpas) |
+| 5 | Clipped paint/input through nested groups and scroll transforms | **Met** — [`tui_view_clip_test.fpas`](../../../tests/tui/tui_view_clip_test.fpas), [`tui_frame_scroll_clip_test.fpas`](../../../tests/tui/tui_frame_scroll_clip_test.fpas), [`tui_nested_frame_clip_test.fpas`](../../../tests/tui/tui_nested_frame_clip_test.fpas), [`tui_frame_scroll_input_clip_test.fpas`](../../../tests/tui/tui_frame_scroll_input_clip_test.fpas) |
 | 6 | Pointer capture for drag, resize, scrollbar thumb | **Met** — frame move/resize + scroll thumb tests |
 | 7 | Resize layout for menu, desktop, status, frames, anchored controls | **Met** — `ViewLayout` + auto relayout on resize |
 | 8 | Cell-width tests (ASCII, box, wide, combining, truncation, cursor) | **Met** — Rust policy tests + [`tui_cell_width_test.fpas`](../../../tests/tui/tui_cell_width_test.fpas) |

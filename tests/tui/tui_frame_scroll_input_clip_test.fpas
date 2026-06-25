@@ -1,0 +1,74 @@
+{ Scrolled-out frame children stay non-interactive until scroll exposes them. }
+
+program TuiFrameScrollInputClipTest;
+
+uses Std.Console, Std.Tui, Std.Test;
+
+const
+  FrameKindWindow: integer := 0;
+
+procedure OnPaint(App: Application);
+begin
+end;
+
+begin
+  var App: Application := Application.OpenForTest(40, 16);
+  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
+  Application.Configure(App, Handlers);
+  var FrameView: ViewId := Application.HostCreateFrameView(App, 2, 1, 14, 10, 'Scroll', FrameKindWindow, false, false, false, true, false);
+  var HiddenButton: ViewId := Application.HostCreateButtonView(App, 0, 0, 8, 1, 'Hidden', None, false);
+  Application.HostSetViewParent(App, HiddenButton, Some(FrameView));
+  Application.HostSetViewRect(App, HiddenButton, 0, 0, 8, 1);
+  var VisibleButton: ViewId := Application.HostCreateButtonView(App, 0, 0, 8, 1, 'Visible', None, false);
+  Application.HostSetViewParent(App, VisibleButton, Some(FrameView));
+  Application.HostSetViewRect(App, VisibleButton, 0, 8, 8, 1);
+  Application.HostSetFrameContentSize(App, FrameView, 10, 9);
+  Application.HostScrollFrame(App, FrameView, 0, 6);
+  Application.RequestRedraw(App);
+  Application.TestPumpUntilIdle(App);
+  mutable var HiddenResolved: ResolvedView := Application.QueryResolvedView(App, HiddenButton);
+  var VisibleResolved: ResolvedView := Application.QueryResolvedView(App, VisibleButton);
+  AssertFalse(HiddenResolved.state.exposed);
+  AssertTrue(VisibleResolved.state.exposed);
+  Application.TestClickMouse(App, HiddenResolved.rect.x + 2, HiddenResolved.rect.y + 1);
+  Application.TestPumpUntilIdle(App);
+  case Application.QueryFocusedViewId(App) of
+    Some(Focused):
+    begin
+      AssertTrue(Focused <> HiddenButton)
+    end;
+    None:
+    begin
+    end
+  end;
+  Application.TestClickMouse(App, VisibleResolved.rect.x + 2, VisibleResolved.rect.y + 1);
+  Application.TestPumpUntilIdle(App);
+  case Application.QueryFocusedViewId(App) of
+    Some(Focused):
+    begin
+      AssertTrue(Focused = VisibleButton)
+    end;
+    None:
+    begin
+      Fail('click must focus the visible scrolled child')
+    end
+  end;
+  Application.HostSetFrameScrollOffset(App, FrameView, 0, 0);
+  Application.RequestRedraw(App);
+  Application.TestPumpUntilIdle(App);
+  HiddenResolved := Application.QueryResolvedView(App, HiddenButton);
+  AssertTrue(HiddenResolved.state.exposed);
+  Application.TestClickMouse(App, HiddenResolved.rect.x + 2, HiddenResolved.rect.y + 1);
+  Application.TestPumpUntilIdle(App);
+  case Application.QueryFocusedViewId(App) of
+    Some(Focused):
+    begin
+      AssertTrue(Focused = HiddenButton)
+    end;
+    None:
+    begin
+      Fail('scroll restore must allow focusing the previously hidden child')
+    end
+  end;
+  Application.CloseForTest(App)
+end.

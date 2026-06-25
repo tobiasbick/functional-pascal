@@ -1,0 +1,68 @@
+{ Nested frame roots clip child paint and block input outside the parent viewport. }
+
+program TuiNestedFrameClipTest;
+
+uses Std.Console, Std.Tui, Std.Test;
+
+const
+  FrameKindWindow: integer := 0;
+  FrameKindDialog: integer := 1;
+
+procedure OnPaint(App: Application);
+begin
+end;
+
+begin
+  var App: Application := Application.OpenForTest(40, 16);
+  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
+  Application.Configure(App, Handlers);
+  AssertTrue(Application.HostSetDesktopWorkArea(App, 0, 0, 40, 16));
+  var WindowView: ViewId := Application.HostCreateFrameView(App, 5, 2, 20, 10, 'Window', FrameKindWindow, false, false, false, false, false);
+  var DialogView: ViewId := Application.HostCreateFrameView(App, 18, 4, 12, 8, 'Dialog', FrameKindDialog, false, false, false, false, false);
+  Application.HostSetViewParent(App, DialogView, Some(WindowView));
+  var ExposedButton: ViewId := Application.HostCreateButtonView(App, 0, 0, 4, 1, 'Ok', None, false);
+  Application.HostSetViewParent(App, ExposedButton, Some(DialogView));
+  Application.HostSetViewRect(App, ExposedButton, 1, 2, 4, 1);
+  var ClippedButton: ViewId := Application.HostCreateButtonView(App, 0, 0, 4, 1, 'No', None, false);
+  Application.HostSetViewParent(App, ClippedButton, Some(DialogView));
+  Application.HostSetViewRect(App, ClippedButton, 8, 2, 4, 1);
+  Application.RequestRedraw(App);
+  Application.TestPumpUntilIdle(App);
+  var ExposedResolved: ResolvedView := Application.QueryResolvedView(App, ExposedButton);
+  var ClippedResolved: ResolvedView := Application.QueryResolvedView(App, ClippedButton);
+  AssertTrue(ExposedResolved.state.exposed);
+  AssertFalse(ClippedResolved.state.exposed);
+  case ClippedResolved.clip of
+    Some(_):
+    begin
+      Fail('fully clipped control must not have an effective clip')
+    end;
+    None:
+    begin
+    end
+  end;
+  Application.TestClickMouse(App, ClippedResolved.rect.x + 2, ClippedResolved.rect.y + 1);
+  Application.TestPumpUntilIdle(App);
+  case Application.QueryFocusedViewId(App) of
+    Some(Focused):
+    begin
+      AssertTrue(Focused <> ClippedButton)
+    end;
+    None:
+    begin
+    end
+  end;
+  Application.TestClickMouse(App, ExposedResolved.rect.x + 2, ExposedResolved.rect.y + 1);
+  Application.TestPumpUntilIdle(App);
+  case Application.QueryFocusedViewId(App) of
+    Some(Focused):
+    begin
+      AssertTrue(Focused = ExposedButton)
+    end;
+    None:
+    begin
+      Fail('click must focus the exposed nested control')
+    end
+  end;
+  Application.CloseForTest(App)
+end.

@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/pascal/std/tui/app/controls.md`
 
 use super::scroll_bar::{ScrollBarStyle, ScrollBarWidget};
-use super::{clip_rect_to_damage, paint_chars, truncated_chars};
+use super::{paint_chars, truncated_chars};
 use crate::{Console, DamageRegion, ScrollBarHit, ScrollBarOrientation, ScrollModel, ViewRect};
 
 /// CRT colors for scroll views.
@@ -188,7 +188,7 @@ impl ScrollViewWidget {
 
     /// Paint content and integrated scroll bar.
     pub fn paint(&self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
-        let Some(clip) = clip_rect_to_damage(rect, damage) else {
+        let Some(clip) = damage.clip_rect(rect) else {
             return;
         };
         let content = self.content_rect(rect);

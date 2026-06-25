@@ -17,6 +17,26 @@ pub enum DamageRegion {
     Rect(ViewRect),
 }
 
+impl DamageRegion {
+    /// Clips `rect` to the dirty region; returns `None` when there is no overlap.
+    #[must_use]
+    pub(crate) fn clip_rect(self, rect: ViewRect) -> Option<ViewRect> {
+        match self {
+            Self::FullFrame => Some(rect),
+            Self::Rect(dirty) => rect.intersection(dirty),
+        }
+    }
+
+    /// Returns whether `rect` overlaps the dirty region.
+    #[must_use]
+    pub(crate) fn intersects_rect(self, rect: ViewRect) -> bool {
+        match self {
+            Self::FullFrame => true,
+            Self::Rect(dirty) => rect.intersects(dirty),
+        }
+    }
+}
+
 /// Accumulates dirty regions until the host consumes them before `OnPaint`.
 #[derive(Debug, Default)]
 pub(crate) struct DamageTracker {
@@ -117,6 +137,44 @@ mod tests {
         });
 
         assert_eq!(tracker.take(), Some(DamageRegion::FullFrame));
+    }
+
+    #[test]
+    fn damage_region_clip_and_intersect() {
+        let rect = ViewRect {
+            x: 5,
+            y: 5,
+            width: 10,
+            height: 4,
+        };
+        let dirty = ViewRect {
+            x: 8,
+            y: 3,
+            width: 4,
+            height: 6,
+        };
+
+        assert_eq!(
+            DamageRegion::Rect(dirty).clip_rect(rect),
+            Some(ViewRect {
+                x: 8,
+                y: 5,
+                width: 4,
+                height: 4,
+            })
+        );
+        assert!(DamageRegion::Rect(dirty).intersects_rect(rect));
+        assert!(
+            !DamageRegion::Rect(ViewRect {
+                x: 20,
+                y: 20,
+                width: 1,
+                height: 1,
+            })
+            .intersects_rect(rect)
+        );
+        assert_eq!(DamageRegion::FullFrame.clip_rect(rect), Some(rect));
+        assert!(DamageRegion::FullFrame.intersects_rect(rect));
     }
 
     #[test]

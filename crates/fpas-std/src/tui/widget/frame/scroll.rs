@@ -416,7 +416,7 @@ fn paint_bar(
     style: ScrollBarStyle,
     damage: DamageRegion,
 ) {
-    let Some(clip) = clip_to_damage(rect, damage) else {
+    let Some(clip) = damage.clip_rect(rect) else {
         return;
     };
     console.fill_rect_crt(clip, style.fg, style.bg, ' ');
@@ -616,13 +616,6 @@ fn paint_cell_at(
     let x = rect.x + col as i64;
     if clip.contains_point(x, y) {
         console.write_char_at_crt(x, y, ch, fg, bg);
-    }
-}
-
-fn clip_to_damage(rect: ViewRect, damage: DamageRegion) -> Option<ViewRect> {
-    match damage {
-        DamageRegion::FullFrame => Some(rect),
-        DamageRegion::Rect(dirty) => rect.intersection(dirty),
     }
 }
 

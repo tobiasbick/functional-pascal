@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/controls.md`
 
-use super::{clip_rect_to_damage, paint_chars};
+use super::paint_chars;
 use crate::{
     Console, DamageRegion, ScrollBarHit, ScrollBarOrientation, ScrollBarThumb, ScrollModel,
     ViewRect, drag_offset, hit_zone, thumb_geometry, track_cells,
@@ -222,7 +222,7 @@ impl ScrollBarWidget {
 
     /// Paint the scroll bar.
     pub fn paint(&self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
-        let Some(clip) = clip_rect_to_damage(rect, damage) else {
+        let Some(clip) = damage.clip_rect(rect) else {
             return;
         };
         console.fill_rect_crt(clip, self.style.fg, self.style.bg, ' ');

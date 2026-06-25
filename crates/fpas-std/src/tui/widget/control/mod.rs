@@ -26,14 +26,7 @@ pub use scroll_bar::{ScrollBarStyle, ScrollBarWidget};
 pub use scroll_view::{ScrollViewStyle, ScrollViewWidget};
 
 use crate::text::text_cells_for_paint;
-use crate::{Console, DamageRegion, ViewRect};
-
-fn clip_rect_to_damage(rect: ViewRect, damage: DamageRegion) -> Option<ViewRect> {
-    match damage {
-        DamageRegion::FullFrame => Some(rect),
-        DamageRegion::Rect(dirty) => rect.intersection(dirty),
-    }
-}
+use crate::{Console, ViewRect};
 
 fn paint_chars(
     console: &mut Console,

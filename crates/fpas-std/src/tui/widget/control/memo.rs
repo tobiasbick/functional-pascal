@@ -2,8 +2,8 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/controls.md`
 
+use super::paint_chars;
 use super::scroll_bar::{ScrollBarStyle, ScrollBarWidget};
-use super::{clip_rect_to_damage, paint_chars};
 use crate::text::{char_display_offset, display_width, layout_display_cells};
 use crate::{Console, DamageRegion, ScrollBarHit, ScrollBarOrientation, ScrollModel, ViewRect};
 
@@ -347,7 +347,7 @@ impl MemoWidget {
 
     /// Paint memo content, selection, cursor, and integrated scroll bar.
     pub fn paint(&self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
-        let Some(clip) = clip_rect_to_damage(rect, damage) else {
+        let Some(clip) = damage.clip_rect(rect) else {
             return;
         };
         let fg = if self.enabled {

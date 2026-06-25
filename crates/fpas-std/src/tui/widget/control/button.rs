@@ -1,7 +1,7 @@
 use crate::text::str_display_width;
 use crate::{CommandId, Console, DamageRegion, ViewRect};
 
-use super::{clip_rect_to_damage, paint_chars, truncated_chars};
+use super::{paint_chars, truncated_chars};
 
 /// CRT colors used while painting a dialog button.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -73,7 +73,7 @@ impl ButtonWidget {
 
     /// Paint the button into `rect`, clipped to `damage`.
     pub fn paint(&self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
-        let Some(clip) = clip_rect_to_damage(rect, damage) else {
+        let Some(clip) = damage.clip_rect(rect) else {
             return;
         };
         let (fg, bg) = self.colors();

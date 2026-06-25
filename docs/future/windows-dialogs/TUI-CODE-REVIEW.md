@@ -22,11 +22,11 @@ interaction. The plan needs a foundation phase before frame work and a broader t
 | Goal | Current system | Window/dialog plan | Verdict |
 | --- | --- | --- | --- |
 | Classic visual chrome | Menu/status palette only | Strong frame presets | Achievable |
-| Overlapping movable windows | Root z-order + window manager helpers | Move/resize/zoom/cascade/tile via frame roots | **Partial** — interaction without frame paint |
-| Nested clipped view groups | Parent-relative rectangles + resolved clips | Adds transforms/clips | **Partial** — frame parent moves now mark subtree damage; deduplicate rectangle math still open |
+| Overlapping movable windows | Root z-order + window manager helpers | Move/resize/zoom/cascade/tile via frame roots | **Met** — painted chrome, subtree damage, occlusion FPAS tests |
+| Nested clipped view groups | Parent-relative rectangles + resolved clips | Adds transforms/clips | **Mostly done** — resolved clips + subtree damage; `DamageRegion::clip_rect` replaces widget duplicates |
 | Focused controls and tab order | Retained focus path + tab traversal | Assumes child-first input | **Mostly done** |
-| Modal dialogs | Scope, owned root, focus restore, results | Adds atomic framed root | **Mostly done** — `ShowFramedDialog` + IDE/example integration |
-| Commands and broadcasts | Sourced `CommandEvent` + reserved frame ids | Separate frame callback | **Mostly done** — close/zoom chrome not painted yet |
+| Modal dialogs | Scope, owned root, focus restore, results | Adds atomic framed root | **Met** — `ShowFramedDialog` + IDE/example integration |
+| Commands and broadcasts | Sourced `CommandEvent` + reserved frame ids | Separate frame callback | **Met** — frame chrome paint + reserved-command tests |
 | Standard controls | Label/button/input/checkbox/radio/list/scroll | Explicitly out of scope in original plan | **Partial** — memo + anchor/grow layout done |
 | Deterministic testing | Good headless APIs | Adds frame tests | Strong reusable base |
 
@@ -186,11 +186,13 @@ visibility. Painting, hit-testing, focus damage, modal checks, queries, and repa
 that same result.
 
 The Phase 0 correction makes `HostSetViewRect` invalidate the resolved child screen rectangle
-([`tree.rs:53`](../../../crates/fpas-vm/src/vm/execute/io/tui/views/tree.rs#L53)). Parent moves still
-fail to invalidate descendants extending outside the parent's rectangle.
+([`tree.rs:53`](../../../crates/fpas-vm/src/vm/execute/io/tui/views/tree.rs#L53)). Frame moves and
+resizes call `request_frame_subtree_damage` so descendants extending outside the parent rectangle
+are repainted.
 
-Add `intersection`, `union`, translation, and emptiness operations to `ViewRect`; duplicated private
-rectangle math in widgets and redraw code should be removed.
+`ViewRect` exposes `intersection`, `union`, translation, and emptiness checks; widget paint paths
+now clip through [`DamageRegion::clip_rect`](../../../crates/fpas-std/src/tui/damage.rs) instead of
+private duplicates.
 
 ### H4. Pointer capture is a prerequisite, not interaction polish
 
@@ -400,10 +402,10 @@ host calls and VM chrome dispatch. Memo/editor primitives remain deferred.
 
 ## Remaining work (2026-06-22)
 
-Phases 0–5 of the [recommended order](#recommended-implementation-order) are complete except the
-deferred memo/editor item. The original [window/dialog plan](README.md) is only partially realized:
-frame roots now expose painted chrome, inner viewport clipping, interaction, and owned framed
-dialogs. Current spec for implemented behavior: [`docs/pascal/std/tui/app/frames.md`](../../pascal/std/tui/app/frames.md).
+Phases 0–7 of the [recommended order](#recommended-implementation-order) are complete. The original
+[window/dialog plan](README.md) is largely realized: frame roots expose painted chrome, inner viewport
+clipping, interaction, scroll chrome, and owned framed dialogs. Current spec for implemented behavior:
+[`docs/pascal/std/tui/app/frames.md`](../../pascal/std/tui/app/frames.md).
 
 ### Phase 6 — Frame rendering and chrome widget
 
@@ -446,7 +448,7 @@ These original findings are reduced but not closed:
 | [C2](#c2-there-is-no-general-consumable-event-router) Event router | Mostly done | Keep new controls on `EventOutcome` in `fpas-std`; avoid frame-specific VM branches |
 | [C3](#c3-the-view-model-cannot-represent-control-or-group-state) View state | Done | — |
 | [C4](#c4-modal-state-does-not-preserve-interaction-context) Modal context | Done | — |
-| [H3](#h3-geometry-clipping-and-damage-must-be-one-registry-contract) Geometry contract | Partial | Descendant damage on parent moves done; deduplicate rectangle math |
+| [H3](#h3-geometry-clipping-and-damage-must-be-one-registry-contract) Geometry contract | Mostly done | Single resolved-node record still split across registry helpers; C1 compositor remains |
 | Structural ([§](#structural-findings)) | Open | Stop cloning widgets per paint/input; consider indexed/generational view storage |
 
 ### Acceptance criteria status
@@ -493,12 +495,11 @@ must pass these headless scenarios:
 
 ## Final assessment
 
-**Can the existing implementation reach the goal?** Yes, if treated as a reusable terminal,
-buffer, damage, and test substrate rather than as the final widget architecture.
+**Can the existing implementation reach the goal?** Yes. Phases 0–7 delivered the retained engine,
+controls, scrolling, modal lifecycle, frame chrome, cell-width policy, and workflow tests on top of
+the terminal buffer and damage substrate.
 
-**Does the current window/dialog plan help?** Yes. Phases 0–5 delivered the retained engine,
-controls, scrolling, modal lifecycle, and frame-root interaction. The remaining gap is primarily
-**visual frame chrome** (paint, palettes, close/scroll on the frame widget), editor/layout polish,
-and closing the acceptance-criteria gaps listed in [Remaining work](#remaining-work-2026-06-22).
-Without frame painting and cell-width policy, the result can behave like a toolkit in tests but
-will not yet look or read like Turbo Vision in a real terminal.
+**Does the current window/dialog plan help?** Yes — it is now largely implemented. Remaining gaps are
+primarily [C1](#c1-painting-is-not-a-safe-retained-mode-compositor) (full compositor + retiring
+unrestricted global `OnPaint`), structural performance debt (widget clone per paint/input), and minor
+acceptance polish (#2 Tab focus, optional raise/activate occlusion scenario).

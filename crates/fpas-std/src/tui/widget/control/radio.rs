@@ -1,6 +1,6 @@
 use crate::{CommandId, Console, DamageRegion, ViewRect};
 
-use super::{accelerator_index, clip_rect_to_damage, paint_chars, truncated_chars};
+use super::{accelerator_index, paint_chars, truncated_chars};
 
 /// One option in a retained radio group.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -155,7 +155,7 @@ impl RadioGroupWidget {
 
     /// Paint the radio group into `rect`, clipped to `damage`.
     pub fn paint(&self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
-        let Some(clip) = clip_rect_to_damage(rect, damage) else {
+        let Some(clip) = damage.clip_rect(rect) else {
             return;
         };
         console.fill_rect_crt(clip, self.style.fg, self.style.bg, ' ');

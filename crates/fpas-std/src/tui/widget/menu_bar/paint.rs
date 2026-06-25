@@ -9,14 +9,13 @@ use super::super::menu_label_paint::paint_labeled_text;
 use super::super::menu_popup::paint_popup;
 use super::super::menu_style::{MenuBarStyle, MenuLabelPaint};
 use super::MenuBarWidget;
-use super::geometry::{clip_rect_to_damage, intersects_damage};
 use super::types::MenuBarItem;
 
 impl MenuBarWidget {
     /// Paint the menu bar and any open pull-down clipped to `damage`.
     pub fn paint(&self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
-        if intersects_damage(rect, damage) {
-            let Some(clip) = clip_rect_to_damage(rect, damage) else {
+        if damage.intersects_rect(rect) {
+            let Some(clip) = damage.clip_rect(rect) else {
                 return;
             };
             console.fill_rect_crt(clip, self.style.bar_fg, self.style.bar_bg, ' ');
@@ -56,7 +55,7 @@ impl MenuBarWidget {
     pub fn paint_popup_overlay(&self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
         if let Some((popup, entries, selected)) = self.open_popup(rect) {
             let popup_rect = popup.as_view_rect();
-            if intersects_damage(popup_rect, damage) {
+            if damage.intersects_rect(popup_rect) {
                 paint_popup(console, popup, entries, self.style, selected);
             }
         }

@@ -31,7 +31,7 @@ impl SolidFillWidget {
 
     /// Paint the widget into `rect`, clipped to `damage`.
     pub fn paint(self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
-        let Some(clip) = clip_rect_to_damage(rect, damage) else {
+        let Some(clip) = damage.clip_rect(rect) else {
             return;
         };
 
@@ -41,13 +41,6 @@ impl SolidFillWidget {
             self.fill_color,
             self.character(),
         );
-    }
-}
-
-fn clip_rect_to_damage(rect: ViewRect, damage: DamageRegion) -> Option<ViewRect> {
-    match damage {
-        DamageRegion::FullFrame => Some(rect),
-        DamageRegion::Rect(dirty) => rect.intersection(dirty),
     }
 }
 

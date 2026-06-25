@@ -13,7 +13,7 @@ pub(super) fn paint_underlay(
     damage: DamageRegion,
     style: FrameStyle,
 ) {
-    let Some(clip) = clip_to_damage(geometry.client, damage) else {
+    let Some(clip) = damage.clip_rect(geometry.client) else {
         return;
     };
     console.fill_rect_crt(clip, style.client_fg, style.client_bg, ' ');
@@ -27,7 +27,7 @@ pub(super) fn paint_overlay(
     style: FrameStyle,
     active: bool,
 ) {
-    let Some(clip) = clip_to_damage(geometry.outer, damage) else {
+    let Some(clip) = damage.clip_rect(geometry.outer) else {
         return;
     };
     let (fg, bg) = if active {
@@ -79,12 +79,5 @@ fn paint_title(console: &mut Console, clip: ViewRect, slot: ViewRect, title: &st
 fn paint_cell(console: &mut Console, clip: ViewRect, x: i64, y: i64, ch: char, fg: u8, bg: u8) {
     if clip.contains_point(x, y) {
         console.write_char_at_crt(x, y, ch, fg, bg);
-    }
-}
-
-fn clip_to_damage(rect: ViewRect, damage: DamageRegion) -> Option<ViewRect> {
-    match damage {
-        DamageRegion::FullFrame => Some(rect),
-        DamageRegion::Rect(dirty) => rect.intersection(dirty),
     }
 }

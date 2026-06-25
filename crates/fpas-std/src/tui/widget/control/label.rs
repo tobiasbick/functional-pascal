@@ -1,6 +1,6 @@
 use crate::{Console, DamageRegion, ViewRect};
 
-use super::{accelerator_index, clip_rect_to_damage, paint_chars, truncated_chars};
+use super::{accelerator_index, paint_chars, truncated_chars};
 
 /// CRT colors used while painting a static dialog label.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -56,7 +56,7 @@ impl LabelWidget {
 
     /// Paint the label into `rect`, clipped to `damage`.
     pub fn paint(&self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
-        let Some(clip) = clip_rect_to_damage(rect, damage) else {
+        let Some(clip) = damage.clip_rect(rect) else {
             return;
         };
         console.fill_rect_crt(clip, self.foreground_color(), self.style.bg, ' ');

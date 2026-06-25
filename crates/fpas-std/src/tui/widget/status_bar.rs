@@ -53,7 +53,7 @@ impl StatusBarWidget {
 
     /// Paint the status bar clipped to `damage`.
     pub fn paint(self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
-        let Some(clip) = clip_rect_to_damage(rect, damage) else {
+        let Some(clip) = damage.clip_rect(rect) else {
             return;
         };
 
@@ -120,13 +120,6 @@ fn paint_segment(
         console.write_char_at_crt(x + offset as i64, y, ch, style.bar_fg, style.bar_bg);
     }
     x + visible
-}
-
-fn clip_rect_to_damage(rect: ViewRect, damage: DamageRegion) -> Option<ViewRect> {
-    match damage {
-        DamageRegion::FullFrame => Some(rect),
-        DamageRegion::Rect(dirty) => rect.intersection(dirty),
-    }
 }
 
 #[cfg(test)]

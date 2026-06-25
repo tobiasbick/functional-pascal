@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/controls.md`
 
-use super::{clip_rect_to_damage, paint_chars, truncated_chars};
+use super::{paint_chars, truncated_chars};
 use crate::{CommandId, Console, DamageRegion, ScrollModel, ViewRect};
 
 /// One selectable list-box row.
@@ -134,7 +134,7 @@ impl ListBoxWidget {
     }
     /// Paint visible rows.
     pub fn paint(&self, c: &mut Console, r: ViewRect, d: DamageRegion) {
-        let Some(clip) = clip_rect_to_damage(r, d) else {
+        let Some(clip) = d.clip_rect(r) else {
             return;
         };
         c.fill_rect_crt(clip, self.style.fg, self.style.bg, ' ');

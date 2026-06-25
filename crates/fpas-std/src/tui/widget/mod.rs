@@ -176,7 +176,7 @@ impl ViewWidget {
             Self::MenuBar(widget) => widget
                 .damage_rects(rect)
                 .into_iter()
-                .any(|region| intersects_damage_region(region, damage)),
+                .any(|region| damage.intersects_rect(region)),
             Self::SolidFill(_)
             | Self::StatusBar(_)
             | Self::Label(_)
@@ -188,7 +188,7 @@ impl ViewWidget {
             | Self::ScrollBar(_)
             | Self::ScrollView(_)
             | Self::Memo(_)
-            | Self::Frame(_) => intersects_damage_region(rect, damage),
+            | Self::Frame(_) => damage.intersects_rect(rect),
         }
     }
 
@@ -212,12 +212,5 @@ impl ViewWidget {
             | Self::Memo(_)
             | Self::Frame(_) => rect.contains_console_mouse(mouse_x, mouse_y),
         }
-    }
-}
-
-fn intersects_damage_region(rect: ViewRect, damage: DamageRegion) -> bool {
-    match damage {
-        DamageRegion::FullFrame => true,
-        DamageRegion::Rect(dirty) => rect.intersects(dirty),
     }
 }

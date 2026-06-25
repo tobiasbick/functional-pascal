@@ -19,9 +19,11 @@ begin
   var Back: ViewId := Application.HostCreateFrameView(App, 2, 2, 20, 8, 'Back', FrameKindWindow, false, false, false, false, false);
   var BackChild: ViewId := Application.HostCreateSolidFillView(App, 0, 0, 16, 6, Red, Some(White), Some('B'));
   Application.HostSetViewParent(App, BackChild, Some(Back));
+  Application.HostSetViewRect(App, BackChild, 0, 0, 16, 6);
   var Front: ViewId := Application.HostCreateFrameView(App, 10, 3, 20, 8, 'Front', FrameKindWindow, false, false, false, false, true);
   var FrontChild: ViewId := Application.HostCreateSolidFillView(App, 0, 0, 16, 6, Green, Some(White), Some('F'));
   Application.HostSetViewParent(App, FrontChild, Some(Front));
+  Application.HostSetViewRect(App, FrontChild, 0, 0, 16, 6);
   Application.RequestRedraw(App);
   Application.TestPumpUntilIdle(App);
   var OverlapX: integer := 12;

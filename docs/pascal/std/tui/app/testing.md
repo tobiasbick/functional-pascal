@@ -221,6 +221,8 @@ end.
 | [`tui_frame_occlusion_test.fpas`](../../../../tests/tui/tui_frame_occlusion_test.fpas) | Overlapping painted windows: close front frame repairs occluded back cells |
 | [`tui_frame_scroll_clip_test.fpas`](../../../../tests/tui/tui_frame_scroll_clip_test.fpas) | Frame scroll offset clips child paint to the inner viewport |
 | [`tui_frame_occlusion_move_test.fpas`](../../../../tests/tui/tui_frame_occlusion_move_test.fpas) | Overlapping windows: moving the front frame repairs previously occluded cells |
+| [`tui_frame_occlusion_zoom_test.fpas`](../../../../tests/tui/tui_frame_occlusion_zoom_test.fpas) | Overlapping windows: zoom/restore repairs cells outside the normal frame bounds |
+| [`tui_frame_occlusion_resize_test.fpas`](../../../../tests/tui/tui_frame_occlusion_resize_test.fpas) | Overlapping windows: shrinking a frame repairs newly exposed back cells |
 | [`tui_frame_reserved_commands_test.fpas`](../../../../tests/tui/tui_frame_reserved_commands_test.fpas) | Reserved command ids `-1`..=`-4` via keyboard shortcuts |
 | [`tui_view_clip_test.fpas`](../../../../tests/tui/tui_view_clip_test.fpas) | Effective clip during view-local paint |
 | [`tui_scene_graph_query_test.fpas`](../../../../tests/tui/tui_scene_graph_query_test.fpas) | Scene structure, state, options, clip, kind, and paint order |

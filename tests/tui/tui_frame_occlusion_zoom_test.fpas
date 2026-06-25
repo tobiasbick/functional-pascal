@@ -1,0 +1,42 @@
+{ Restoring a zoomed overlapping frame repairs cells outside its normal bounds. }
+
+program TuiFrameOcclusionZoomTest;
+
+uses Std.Console, Std.Tui, Std.Test;
+
+const
+  FrameKindWindow: integer := 0;
+
+procedure OnPaint(App: Application);
+begin
+end;
+
+begin
+  var App: Application := Application.OpenForTest(50, 16);
+  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
+  Application.Configure(App, Handlers);
+  AssertTrue(Application.HostSetDesktopWorkArea(App, 0, 0, 50, 16));
+  var Back: ViewId := Application.HostCreateFrameView(App, 2, 2, 24, 10, 'Back', FrameKindWindow, false, false, false, false, false);
+  var BackChild: ViewId := Application.HostCreateSolidFillView(App, 0, 0, 20, 8, Red, Some(White), Some('B'));
+  Application.HostSetViewParent(App, BackChild, Some(Back));
+  Application.HostSetViewRect(App, BackChild, 0, 0, 20, 8);
+  var Front: ViewId := Application.HostCreateFrameView(App, 10, 3, 20, 8, 'Front', FrameKindWindow, false, false, true, false, false);
+  var FrontChild: ViewId := Application.HostCreateSolidFillView(App, 0, 0, 16, 6, Green, Some(White), Some('F'));
+  Application.HostSetViewParent(App, FrontChild, Some(Front));
+  Application.HostSetViewRect(App, FrontChild, 0, 0, 16, 6);
+  Application.RequestRedraw(App);
+  Application.TestPumpUntilIdle(App);
+  var BackOnlyX: integer := 8;
+  var ProbeY: integer := 6;
+  var OverlapX: integer := 14;
+  AssertScreenCell(BackOnlyX, ProbeY, 'B', White, Red);
+  AssertScreenCell(OverlapX, ProbeY, 'F', White, Green);
+  AssertTrue(Application.HostZoomFrameRoot(App, Front));
+  Application.TestPumpUntilIdle(App);
+  AssertScreenCell(BackOnlyX, ProbeY, 'F', White, Green);
+  AssertTrue(Application.HostRestoreFrameRoot(App, Front));
+  Application.TestPumpUntilIdle(App);
+  AssertScreenCell(BackOnlyX, ProbeY, 'B', White, Red);
+  AssertScreenCell(OverlapX, ProbeY, 'F', White, Green);
+  Application.CloseForTest(App)
+end.

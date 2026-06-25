@@ -453,7 +453,7 @@ These original findings are reduced but not closed:
 
 | # | Scenario | Status |
 | --- | --- | --- |
-| 1 | Overlapping windows: raise, move, resize, zoom, restore, **close** without stale cells | **Partial** — close + move occlusion tests; resize/zoom restore scenarios still open |
+| 1 | Overlapping windows: raise, move, resize, zoom, restore, **close** without stale cells | **Met** — [`tui_frame_occlusion_test.fpas`](../../../tests/tui/tui_frame_occlusion_test.fpas), [`tui_frame_occlusion_move_test.fpas`](../../../tests/tui/tui_frame_occlusion_move_test.fpas), [`tui_frame_occlusion_zoom_test.fpas`](../../../tests/tui/tui_frame_occlusion_zoom_test.fpas), [`tui_frame_occlusion_resize_test.fpas`](../../../tests/tui/tui_frame_occlusion_resize_test.fpas) |
 | 2 | Click and Tab focus within active group | **Mostly met** — existing control + focus tests |
 | 3 | Nested modal focus restore and results | **Met** — Phase 3 + modal VM tests |
 | 4 | Sourced commands from menu, button, shortcut, frame chrome | **Met** — chrome clicks + [`tui_frame_reserved_commands_test.fpas`](../../../tests/tui/tui_frame_reserved_commands_test.fpas) |

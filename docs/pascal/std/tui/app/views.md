@@ -93,7 +93,7 @@ Groups track a **current child** along the active focus path internally.
 
 During hosted redraw:
 
-1. **Global `OnPaint`** runs first when registered (full-screen logical frame; still used for backgrounds and status text in many apps).
+1. **Global `OnPaint`** runs first when registered. It keeps absolute `GotoXY` / `Write` coordinates, but `Std.Console` writes are hard-clipped to the pending damage region (full screen when damage is `FullFrame`).
 2. Each **root view** is painted **depth-first**:
    - native widget **underlay**;
    - view-local **Pascal handler**;

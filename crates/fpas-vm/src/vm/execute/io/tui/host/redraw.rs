@@ -11,7 +11,7 @@ impl Worker {
     /// Consumes pending damage and paints the retained view tree.
     ///
     /// Returns `0` when no damage exists, `5` after painting, and `6` when damage had no handler.
-    pub(in crate::vm::execute::io) fn tui_host_dispatch_redraw_inner(
+    pub(crate) fn tui_host_dispatch_redraw_inner(
         &mut self,
         line: SourceLocation,
     ) -> Result<i64, VmError> {
@@ -49,7 +49,7 @@ impl Worker {
 
         let paint_result = (|| -> Result<(), VmError> {
             if let Some(handler) = on_paint {
-                self.dispatch_global_paint(handler, line)?;
+                self.dispatch_global_paint(handler, expected_damage, line)?;
             }
             for root in roots {
                 self.paint_view_subtree(root, expected_damage, line)?;
@@ -73,21 +73,29 @@ impl Worker {
         Ok(5)
     }
 
+    /// Runs global `OnPaint` with absolute screen coordinates and a hard clip at `damage`.
     fn dispatch_global_paint(
         &mut self,
         handler: Value,
+        damage: DamageRegion,
         line: SourceLocation,
     ) -> Result<(), VmError> {
-        let screen = self.with_console(|console| {
-            let rect = ViewRect {
+        let began = self.with_console(|console| {
+            let screen = ViewRect {
                 x: 0,
                 y: 0,
                 width: console.screen_width(),
                 height: console.screen_height(),
             };
-            let _ = console.begin_tui_view_paint(rect, rect);
-            Ok(rect)
+            let clip = match damage {
+                DamageRegion::FullFrame => screen,
+                DamageRegion::Rect(dirty) => dirty,
+            };
+            Ok(console.begin_tui_view_paint(screen, clip))
         })?;
+        if !began {
+            return Ok(());
+        }
         let result = self.call_function_sync_allowing_shutdown(
             &handler,
             &[Self::tui_application_record()],
@@ -97,7 +105,6 @@ impl Worker {
             console.end_tui_view_paint();
             Ok(())
         })?;
-        let _ = screen;
         result.map(|_| ())
     }
 

@@ -192,3 +192,113 @@ fn tui_host_dispatch_redraw_runs_handler_attached_to_widget_view() {
 
     assert_eq!(run_ok_output(chunk), vec!["view", "5"]);
 }
+
+#[test]
+fn tui_host_global_on_paint_clips_partial_damage() {
+    let chunk = build_function_chunk(
+        "OnPaint",
+        1,
+        |main| {
+            emit_constant(main, Value::Integer(20));
+            emit_constant(main, Value::Integer(10));
+            main.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::OpenForTest))),
+                loc(),
+            );
+            main.emit(Op::Dup, loc());
+            emit_constant(main, Value::Integer(0));
+            emit_constant(main, Value::Integer(0));
+            emit_constant(main, Value::Integer(20));
+            emit_constant(main, Value::Integer(10));
+            emit_constant(main, Value::Integer(1));
+            emit_constant(main, Value::OptionNone);
+            emit_constant(main, Value::OptionSome(Box::new(Value::Str("M".into()))));
+            main.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Tui(
+                    TuiIntrinsic::HostCreateSolidFillView,
+                ))),
+                loc(),
+            );
+            main.emit(Op::Pop, loc());
+            main.emit(Op::Dup, loc());
+            main.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Tui(
+                    TuiIntrinsic::ApplicationRequestRedraw,
+                ))),
+                loc(),
+            );
+            main.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostDispatchRedraw))),
+                loc(),
+            );
+            main.emit(Op::Pop, loc());
+            emit_constant(main, tui_application_value());
+            emit_constant(
+                main,
+                Value::Function {
+                    name: "OnPaint".into(),
+                    captures: vec![],
+                },
+            );
+            main.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnPaint))),
+                loc(),
+            );
+        },
+        |body| {
+            body.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Console(
+                    fpas_bytecode::ConsoleIntrinsic::ClrScr,
+                ))),
+                loc(),
+            );
+            emit_constant(body, Value::Unit);
+            body.emit(Op::Return, loc());
+        },
+    );
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("setup should succeed");
+
+    let marker = shared
+        .console
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .query_screen_cell(15, 5);
+    assert_eq!(marker.map(|(ch, _, _)| ch), Some('M'));
+
+    {
+        let mut tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+        tui.view_widgets.clear();
+        tui.views.clear();
+        tui.session
+            .request_redraw_rect(
+                ViewRect {
+                    x: 1,
+                    y: 1,
+                    width: 4,
+                    height: 3,
+                },
+                loc(),
+            )
+            .expect("partial damage should be accepted");
+    }
+
+    assert_eq!(
+        worker
+            .tui_host_dispatch_redraw_inner(loc())
+            .expect("redraw should succeed"),
+        5
+    );
+
+    let console = shared.console.lock().unwrap_or_else(|e| e.into_inner());
+    assert_eq!(
+        console.query_screen_cell(15, 5).map(|(ch, _, _)| ch),
+        Some('M')
+    );
+    assert_eq!(
+        console.query_screen_cell(2, 2).map(|(ch, _, _)| ch),
+        Some(' ')
+    );
+}

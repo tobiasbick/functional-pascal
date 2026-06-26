@@ -59,6 +59,10 @@ Pascal paint handlers receive a rectangle but no enforced clip. Direct `Std.Cons
 modify any screen cell. Partial damage makes this unsafe: a global handler may clear or repaint the
 whole buffer while only widgets intersecting the requested damage are repainted.
 
+Global `OnPaint` now hard-clips `Std.Console` mutations to the pending damage rectangle while
+keeping absolute screen coordinates. Local view handlers and widgets already clip through
+`begin_tui_view_paint`.
+
 **Required change:**
 
 - Replace global/widget/handler passes with one depth-first scene traversal.
@@ -444,7 +448,7 @@ These original findings are reduced but not closed:
 
 | Finding | Status | Remaining |
 | --- | --- | --- |
-| [C1](#c1-painting-is-not-a-safe-retained-mode-compositor) Paint compositor | Partial | Full depth-first scene traversal; enforced clip at buffer boundary; retire unrestricted global `OnPaint` in retained apps |
+| [C1](#c1-painting-is-not-a-safe-retained-mode-compositor) Paint compositor | Partial | Global `OnPaint` damage clip done; merge menu overlay into depth-first pass; retire global `OnPaint` for widget-only apps |
 | [C2](#c2-there-is-no-general-consumable-event-router) Event router | Mostly done | Keep new controls on `EventOutcome` in `fpas-std`; avoid frame-specific VM branches |
 | [C3](#c3-the-view-model-cannot-represent-control-or-group-state) View state | Done | — |
 | [C4](#c4-modal-state-does-not-preserve-interaction-context) Modal context | Done | — |

@@ -183,7 +183,7 @@ Run from the repository root:
 fpas apps/ide/ide.fpasprj
 ```
 
-The IDE is **interactive**: it opens the alternate screen and blocks in `Application.Run` until you quit. Use **Alt+X** or **File → Exit** from the menu bar, or open **Help → About** for a modal About dialog. Host widgets paint the chrome (menu bar, blue desktop, status bar); `OnPaint` is intentionally empty — see `apps/ide/src/shell.fpas` and `docs/pascal/std/tui/app/README.md`.
+The IDE is **interactive**: it opens the alternate screen and blocks in `Application.Run` until you quit. Use **Alt+X** or **File → Exit** from the menu bar, or open **Help → About** for a modal About dialog. Host widgets paint the chrome (menu bar, blue desktop, status bar), so the shell omits global `OnPaint` — see `apps/ide/src/shell.fpas` and `docs/pascal/std/tui/app/README.md`.
 
 CI compiles it with `fpas check apps/ide/ide.fpasprj` (listed in `NON_INTERACTIVE_CHECK_EXAMPLES` in [`crates/fpas-cli/src/main_tests/examples.rs`](../crates/fpas-cli/src/main_tests/examples.rs)). For a smaller single-file menu bar sample, see `pascal/tui/menu_bar.fpas`.
 

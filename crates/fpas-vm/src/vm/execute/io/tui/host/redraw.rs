@@ -35,7 +35,11 @@ impl Worker {
             return Ok(0);
         };
 
-        if on_paint.is_none() && !has_view_paints && !has_view_widgets {
+        let can_run_global_paint = roots.is_empty() && !has_view_paints && !has_view_widgets;
+        let has_paint =
+            (on_paint.is_some() && can_run_global_paint) || has_view_paints || has_view_widgets;
+
+        if !has_paint {
             let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
             let consumed_damage = tui.session.take_redraw_damage(line)?;
             debug_assert_eq!(consumed_damage, Some(expected_damage));
@@ -53,7 +57,7 @@ impl Worker {
         }
 
         let paint_result = (|| -> Result<(), VmError> {
-            if let Some(handler) = on_paint {
+            if can_run_global_paint && let Some(handler) = on_paint {
                 self.dispatch_global_paint(handler, expected_damage, line)?;
             }
             let mut overlays = Vec::new();

@@ -57,7 +57,18 @@ impl Worker {
                 line,
             ));
         }
-        if tui.on_paint.is_none() && tui.view_paints.is_empty() && tui.view_widgets.is_empty() {
+        let has_global_paint = tui.on_paint.is_some();
+        let has_retained_views = !tui.views.roots().is_empty();
+        let has_retained_paint = !tui.view_paints.is_empty() || !tui.view_widgets.is_empty();
+        if has_global_paint && has_retained_views {
+            return Err(runtime_error(
+                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                "Application.Run(App) cannot use global OnPaint as retained scene paint",
+                "Register a root view paint handler with `Application.HostRegisterOnViewPaint(...)` or create host widget views before `Application.Run(App)`.",
+                line,
+            ));
+        }
+        if !has_global_paint && !has_retained_paint {
             return Err(runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,
                 "Application.Run(App) requires a registered OnPaint handler, local view paint handler, or host widget view",

@@ -16,6 +16,7 @@ const
   DialogHeight: integer := 9;
 
 mutable var
+  mutable var RootView: option of ViewId := None;
   mutable var LastResult: string := 'none';
 
 procedure CloseDialog(App: Application; ResultCode: integer);
@@ -82,9 +83,21 @@ begin
   Application.RequestRedraw(App)
 end;
 
-procedure OnPaint(App: Application);
+procedure ClearBounds(Bounds: Std.Tui.Rect);
 begin
-  ClrScr();
+  for Row: integer := 0 to Bounds.height - 1 do
+  begin
+    GotoXY(1, Row + 1);
+    for Col: integer := 0 to Bounds.width - 1 do
+    begin
+      Write(' ')
+    end
+  end
+end;
+
+procedure OnViewPaint(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
+begin
+  ClearBounds(Bounds);
   GotoXY(1, 1);
   WriteLn('ShowDialog with framed modal results');
   GotoXY(1, 2);
@@ -123,11 +136,21 @@ end;
 
 procedure OnResize(App: Application; NewSize: Size);
 begin
+  case RootView of
+    Some(Root):
+    begin
+      Application.HostSetViewRect(App, Root, 0, 0, NewSize.width, NewSize.height)
+    end;
+    None:
+    begin
+    end
+  end;
   Application.RequestRedraw(App)
 end;
 
 begin
   var App: Application := Application.Open();
+  var S: Size := Application.Size(App);
   var OpenDialogKey: Std.Console.KeyEvent := record
     kind := Std.Console.KeyKind.Character;
     ch := 'd';
@@ -152,11 +175,13 @@ begin
     alt := false;
     meta := false;
   end;
+  var Root: ViewId := Application.HostRegisterView(App, 0, 0, S.width, S.height);
+  RootView := Some(Root);
+  Application.HostRegisterOnViewPaint(App, Root, OnViewPaint);
   Application.HostBindCommand(App, OpenDialogKey, CmdOpenDialog);
   Application.HostBindCommand(App, QuitKey, CmdQuit);
   Application.HostBindCommandToActiveModal(App, EnterKey, CmdDialogOk);
   var Handlers: ApplicationHandlers := record
-    OnPaint := Some(OnPaint);
     OnResize := Some(OnResize);
     OnCommand := Some(OnCommand);
   end;

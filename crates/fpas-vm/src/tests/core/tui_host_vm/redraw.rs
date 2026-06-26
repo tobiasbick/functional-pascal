@@ -122,6 +122,62 @@ fn tui_host_dispatch_redraw_without_handler_clears_and_returns_six() {
 }
 
 #[test]
+fn tui_host_dispatch_redraw_rejects_global_on_paint_for_retained_root() {
+    let mut chunk = Chunk::new();
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(&mut chunk, Value::Integer(4));
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterView))),
+        loc(),
+    );
+    chunk.emit(Op::Pop, loc());
+    chunk.emit(Op::Dup, loc());
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(
+            TuiIntrinsic::ApplicationRequestRedraw,
+        ))),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnPaint".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnPaint))),
+        loc(),
+    );
+    emit_constant(&mut chunk, tui_application_value());
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostDispatchRedraw))),
+        loc(),
+    );
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::Halt, loc());
+
+    let on_paint_start = chunk.len();
+    chunk
+        .functions
+        .insert("OnPaint".into(), (on_paint_start, 1));
+    emit_constant(&mut chunk, Value::Str("paint".into()));
+    chunk.emit(Op::PrintLn, loc());
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    assert_eq!(run_ok_output(chunk), vec!["6"]);
+}
+
+#[test]
 fn tui_host_dispatch_redraw_when_not_pending_returns_zero() {
     let mut chunk = Chunk::new();
     chunk.emit(

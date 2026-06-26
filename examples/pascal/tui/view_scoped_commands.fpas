@@ -6,14 +6,23 @@ uses Std.Console, Std.Tui;
 
 mutable var
   mutable var Status: string := 'Press Tab to focus a button. Ctrl+S uses the focused panel command.';
-  mutable var LeftPanel: integer := -1;
-  mutable var RightPanel: integer := -1;
-  mutable var LeftButton: integer := -1;
-  mutable var RightButton: integer := -1;
+  mutable var RootView: option of ViewId := None;
 
-procedure OnPaint(App: Application);
+procedure ClearBounds(Bounds: Std.Tui.Rect);
 begin
-  ClrScr();
+  for Row: integer := 0 to Bounds.height - 1 do
+  begin
+    GotoXY(1, Row + 1);
+    for Col: integer := 0 to Bounds.width - 1 do
+    begin
+      Write(' ')
+    end
+  end
+end;
+
+procedure OnViewPaint(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
+begin
+  ClearBounds(Bounds);
   GotoXY(1, 1);
   WriteLn('View-scoped commands');
   GotoXY(1, 2);
@@ -74,11 +83,21 @@ end;
 
 procedure OnResize(App: Application; NewSize: Size);
 begin
+  case RootView of
+    Some(Root):
+    begin
+      Application.HostSetViewRect(App, Root, 0, 0, NewSize.width, NewSize.height)
+    end;
+    None:
+    begin
+    end
+  end;
   Application.RequestRedraw(App)
 end;
 
 begin
   var App: Application := Application.Open();
+  var S: Size := Application.Size(App);
   var SaveKey: Std.Console.KeyEvent := record
     kind := Std.Console.KeyKind.Character;
     ch := 's';
@@ -95,15 +114,17 @@ begin
     alt := false;
     meta := false;
   end;
-  LeftPanel := Application.HostRegisterView(App, 4, 9, 28, 4);
-  RightPanel := Application.HostRegisterView(App, 36, 9, 28, 4);
-  LeftButton := Application.HostRegisterView(App, 2, 1, 20, 1);
-  RightButton := Application.HostRegisterView(App, 2, 1, 20, 1);
+  var Root: ViewId := Application.HostRegisterView(App, 0, 0, S.width, S.height);
+  RootView := Some(Root);
+  var LeftPanel: ViewId := Application.HostRegisterView(App, 4, 9, 28, 4);
+  var RightPanel: ViewId := Application.HostRegisterView(App, 36, 9, 28, 4);
+  var LeftButton: ViewId := Application.HostRegisterView(App, 2, 1, 20, 1);
+  var RightButton: ViewId := Application.HostRegisterView(App, 2, 1, 20, 1);
   Application.HostSetViewParent(App, LeftButton, Some(LeftPanel));
   Application.HostSetViewParent(App, RightButton, Some(RightPanel));
   Application.HostPushChildView(App, LeftButton);
   Application.HostPushChildView(App, RightButton);
-  Application.HostRegisterOnPaint(App, OnPaint);
+  Application.HostRegisterOnViewPaint(App, Root, OnViewPaint);
   Application.HostRegisterOnCommand(App, OnCommand);
   Application.HostRegisterOnKeyPressed(App, OnKeyPressed);
   Application.HostRegisterOnResize(App, OnResize);

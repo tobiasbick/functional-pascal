@@ -49,19 +49,19 @@ interaction. The plan needs a foundation phase before frame work and a broader t
 
 ### C1. Painting is not a safe retained-mode compositor
 
-The dispatcher runs global `OnPaint`, then global passes for widget underlays, Pascal view handlers,
-and widget overlays
-([`redraw.rs:45-51`](../../../crates/fpas-vm/src/vm/execute/io/tui/host/redraw.rs#L45-L51)).
-Widgets and local handlers can now coexist, but the global-pass structure still conflicts with the
-frame plan's depth-first underlay, content, children, and overlay model.
+The dispatcher previously ran global `OnPaint`, then global passes for widget underlays, Pascal
+view handlers, and widget overlays. Retained redraw now traverses root views depth-first, paints
+native widget underlays, Pascal local handlers, children, and overlays in node order, and collects
+scene overlays such as menu pull-downs above the retained scene.
 
 Pascal paint handlers receive a rectangle but no enforced clip. Direct `Std.Console` writes can
 modify any screen cell. Partial damage makes this unsafe: a global handler may clear or repaint the
 whole buffer while only widgets intersecting the requested damage are repainted.
 
-Global `OnPaint` now hard-clips `Std.Console` mutations to the pending damage rectangle while
-keeping absolute screen coordinates. Local view handlers and widgets already clip through
-`begin_tui_view_paint`.
+Global `OnPaint` now remains a separate global-paint path for applications without retained roots.
+`Application.Run` rejects global `OnPaint` when retained roots already exist, and retained
+applications paint through root-local `OnViewPaint` handlers or native host widgets. Local view
+handlers and widgets clip through `begin_tui_view_paint`.
 
 **Required change:**
 
@@ -456,7 +456,7 @@ These original findings are reduced but not closed:
 
 | Finding | Status | Remaining |
 | --- | --- | --- |
-| [C1](#c1-painting-is-not-a-safe-retained-mode-compositor) Paint compositor | Partial | Global `OnPaint` damage clip remains for explicit global-paint apps; widget-only apps no longer need no-op `OnPaint`; menu pull-downs use retained scene-overlay collection |
+| [C1](#c1-painting-is-not-a-safe-retained-mode-compositor) Paint compositor | Done | Retained `Application.Run` rejects global `OnPaint`; retained apps use root-local paint or widgets; global `OnPaint` remains only for explicit non-retained paint apps and low-level dispatch samples |
 | [C2](#c2-there-is-no-general-consumable-event-router) Event router | Mostly done | Keep new controls on `EventOutcome` in `fpas-std`; avoid frame-specific VM branches |
 | [C3](#c3-the-view-model-cannot-represent-control-or-group-state) View state | Done | — |
 | [C4](#c4-modal-state-does-not-preserve-interaction-context) Modal context | Done | — |
@@ -490,6 +490,12 @@ pull-downs during retained subtree traversal and paints them as scene overlays, 
 post-pass registry scan. `ApplicationHandlers.OnPaint` is now optional, so widget-only apps can
 omit the previous no-op global paint handler; explicit global-paint apps continue to use
 `OnPaint := Some(OnPaint)`.
+
+**C1 progress (2026-06-27):** retained `Application.Run` now rejects global `OnPaint` when retained
+roots already exist, and `HostDispatchRedraw` runs global `OnPaint` only for non-retained
+global-paint applications. Interactive retained examples now register a full-screen root view with a
+local `OnViewPaint` handler or rely on host widgets, and the public `Std.Tui` docs describe global
+`OnPaint` as outside the retained scene.
 
 **Structural progress (2026-06-26):** retained widget paint now paints by reference instead of
 cloning widgets into redraw snapshots. Widget input target selection now returns IDs and rectangles
@@ -525,6 +531,6 @@ must pass these headless scenarios:
 controls, scrolling, modal lifecycle, frame chrome, cell-width policy, and workflow tests on top of
 the terminal buffer and damage substrate.
 
-**Does the current window/dialog plan help?** Yes — it is now largely implemented. Remaining gaps are
-primarily [C1](#c1-painting-is-not-a-safe-retained-mode-compositor) (full compositor + retiring
-unrestricted global `OnPaint`) and structural performance debt (widget clone per paint/input).
+**Does the current window/dialog plan help?** Yes — it is now largely implemented. The prior C1
+global-paint conflict and structural widget-clone debt are closed; remaining work is incremental
+toolkit breadth and continued consolidation around the retained event/router contracts.

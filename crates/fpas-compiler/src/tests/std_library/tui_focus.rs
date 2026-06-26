@@ -252,7 +252,7 @@ fn std_tui_view_focus_can_be_seeded_via_host_calls() {
     program T;
     uses Std.Console, Std.Tui;
 
-    procedure OnPaint(App: Application);
+    procedure OnViewPaint(App: Application; View: ViewId; Bounds: Rect);
     begin
       Std.Console.WriteLn('paint')
     end;
@@ -269,7 +269,7 @@ fn std_tui_view_focus_can_be_seeded_via_host_calls() {
       var Second: ViewId := Application.HostRegisterView(App, 10, 0, 10, 5);
       Application.HostPushChildView(App, First);
       Application.HostPushChildView(App, Second);
-      Application.HostRegisterOnPaint(App, OnPaint);
+      Application.HostRegisterOnViewPaint(App, First, OnViewPaint);
       Application.HostRegisterOnActivate(App, OnActivate);
       Application.Run(App)
     end.",

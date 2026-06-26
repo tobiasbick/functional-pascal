@@ -205,7 +205,7 @@ fn std_tui_view_command_binding_overrides_global_binding() {
 program T;
 uses Std.Console, Std.Tui;
 
-procedure OnPaint(App: Application);
+procedure OnViewPaint(App: Application; View: ViewId; Bounds: Rect);
 begin
   Std.Console.WriteLn('paint')
 end;
@@ -230,7 +230,7 @@ begin
   var Button: ViewId := Application.HostRegisterView(App, 11, 11, 1, 1);
   Application.HostSetViewParent(App, Button, Some(Dialog));
   Application.HostPushChildView(App, Button);
-  Application.HostRegisterOnPaint(App, OnPaint);
+  Application.HostRegisterOnViewPaint(App, Dialog, OnViewPaint);
   Application.HostRegisterOnCommand(App, OnCommand);
   Application.HostBindCommand(App, SaveKey, 10);
   Application.HostBindCommandToView(App, Dialog, SaveKey, 20);
@@ -266,7 +266,7 @@ fn std_tui_modal_command_binding_overrides_global_binding() {
 program T;
 uses Std.Console, Std.Tui;
 
-procedure OnPaint(App: Application);
+procedure OnViewPaint(App: Application; View: ViewId; Bounds: Rect);
 begin
   Std.Console.WriteLn('paint')
 end;
@@ -289,7 +289,7 @@ begin
   end;
   var Dialog: ViewId := Application.HostRegisterView(App, 10, 10, 8, 4);
   Application.HostPushChildView(App, Dialog);
-  Application.HostRegisterOnPaint(App, OnPaint);
+  Application.HostRegisterOnViewPaint(App, Dialog, OnViewPaint);
   Application.HostRegisterOnCommand(App, OnCommand);
   Application.HostBindCommand(App, SaveKey, 10);
   Application.ShowModal(App, 10, Dialog);

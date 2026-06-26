@@ -93,17 +93,16 @@ Groups track a **current child** along the active focus path internally.
 
 During hosted redraw:
 
-1. **Global `OnPaint`** runs first when registered. It keeps absolute `GotoXY` / `Write` coordinates, but `Std.Console` writes are hard-clipped to the pending damage region (full screen when damage is `FullFrame`).
-2. Each **root view** is painted **depth-first**:
+1. Each **root view** is painted **depth-first**:
    - native widget **underlay**;
    - view-local **Pascal handler**;
    - **child subtrees**;
    - widget **overlays** (for example an open menu popup).
-3. Scene overlays collected during traversal (for example open menu popups) paint above the retained scene.
+2. Scene overlays collected during traversal (for example open menu popups) paint above the retained scene.
 
 When a view has both a native widget and `OnViewPaint`, the widget base paints first, then the Pascal handler. Widget overlays paint after local handlers so chrome is not covered; scene overlays paint after root traversal so popups are not covered by sibling roots.
 
-Omit `ApplicationHandlers.OnPaint` when host widgets paint the entire chrome (see `apps/ide/src/shell.fpas`).
+Global `ApplicationHandlers.OnPaint` is not part of the retained scene. It remains available for applications without retained roots and for low-level `HostDispatchRedraw` experiments; retained applications should paint through a root `OnViewPaint` handler or native host widgets. Omit `ApplicationHandlers.OnPaint` when retained views or host widgets paint the frame (see `apps/ide/src/shell.fpas`).
 
 ## Pointer routing and capture
 

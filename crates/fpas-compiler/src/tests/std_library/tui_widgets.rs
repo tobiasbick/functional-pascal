@@ -37,10 +37,6 @@ fn std_tui_solid_fill_view_can_drive_application_run() {
 program T;
 uses Std.Console, Std.Tui;
 
-procedure OnPaint(App: Application);
-begin
-end;
-
 function OnKeyPressed(App: Application; Key: Std.Console.KeyEvent): boolean;
 begin
   Application.HostRequestQuit(App);
@@ -52,7 +48,6 @@ begin
   var Desktop: ViewId := Application.HostCreateSolidFillView(
     App, 0, 0, 80, 25, Blue, None, None);
   var Handlers: ApplicationHandlers := record
-    OnPaint := Some(OnPaint);
     OnKeyPressed := Some(OnKeyPressed);
   end;
   Application.Configure(App, Handlers);
@@ -193,10 +188,6 @@ begin
   end
 end;
 
-procedure OnPaint(App: Application);
-begin
-end;
-
 procedure OnCommand(App: Application; CommandId: integer);
 begin
   Application.HostRequestQuit(App)
@@ -207,7 +198,6 @@ begin
   var MenuBar: ViewId := Application.HostCreateMenuBarView(
     App, 0, 0, 80, 1, MenuItems(), MenuStyle());
   var Handlers: ApplicationHandlers := record
-    OnPaint := Some(OnPaint);
     OnCommand := Some(OnCommand);
   end;
   Application.Configure(App, Handlers);
@@ -276,10 +266,6 @@ begin
   end
 end;
 
-procedure OnPaint(App: Application);
-begin
-end;
-
 procedure OnCommand(App: Application; CommandId: integer);
 begin
   Application.HostRequestQuit(App)
@@ -292,7 +278,6 @@ begin
   var Desktop: ViewId := Application.HostCreateSolidFillView(
     App, 0, 1, 80, 24, Blue, None, None);
   var Handlers: ApplicationHandlers := record
-    OnPaint := Some(OnPaint);
     OnCommand := Some(OnCommand);
   end;
   Application.Configure(App, Handlers);

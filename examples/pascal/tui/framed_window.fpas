@@ -10,12 +10,25 @@ const
   CmdQuit: integer := 99;
 
 mutable var
+  mutable var RootView: option of ViewId := None;
   mutable var Status: string := 'Drag a title bar to move. F6 activates the next window.';
 
-procedure OnPaint(App: Application);
+procedure ClearBounds(Bounds: Std.Tui.Rect);
+begin
+  for Row: integer := 0 to Bounds.height - 1 do
+  begin
+    GotoXY(1, Row + 1);
+    for Col: integer := 0 to Bounds.width - 1 do
+    begin
+      Write(' ')
+    end
+  end
+end;
+
+procedure OnViewPaint(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
 begin
   var S: Size := Application.Size(App);
-  ClrScr();
+  ClearBounds(Bounds);
   GotoXY(1, 1);
   WriteLn('Framed window demo');
   GotoXY(1, 2);
@@ -68,6 +81,15 @@ end;
 procedure OnResize(App: Application; NewSize: Size);
 begin
   Application.HostSetDesktopWorkArea(App, 0, 0, NewSize.width, NewSize.height);
+  case RootView of
+    Some(Root):
+    begin
+      Application.HostSetViewRect(App, Root, 0, 0, NewSize.width, NewSize.height)
+    end;
+    None:
+    begin
+    end
+  end;
   Application.RequestRedraw(App)
 end;
 
@@ -75,6 +97,9 @@ begin
   var App: Application := Application.Open();
   var S: Size := Application.Size(App);
   Application.HostSetDesktopWorkArea(App, 0, 0, S.width, S.height);
+  var Root: ViewId := Application.HostRegisterView(App, 0, 0, S.width, S.height);
+  RootView := Some(Root);
+  Application.HostRegisterOnViewPaint(App, Root, OnViewPaint);
   var Notes: ViewId := Application.HostCreateFrameView(App, 4, 3, 30, 11, 'Notes', FrameKindWindow, true, false, true, false, true);
   var NotesText: ViewId := Application.HostCreateLabelView(App, 1, 1, 24, 1, 'Static content in view coordinates.', None);
   Application.HostSetViewParent(App, NotesText, Some(Notes));
@@ -95,7 +120,6 @@ begin
   end;
   Application.HostBindCommand(App, NextWindowKey, CmdNextWindow);
   var Handlers: ApplicationHandlers := record
-    OnPaint := Some(OnPaint);
     OnCommand := Some(OnCommand);
     OnKeyPressed := Some(OnKeyPressed);
     OnResize := Some(OnResize);

@@ -388,6 +388,58 @@ fn tui_application_run_rejects_missing_on_paint_handler() {
 }
 
 #[test]
+fn tui_application_run_rejects_global_on_paint_as_retained_scene_paint() {
+    let mut chunk = Chunk::new();
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(0));
+    emit_constant(&mut chunk, Value::Integer(10));
+    emit_constant(&mut chunk, Value::Integer(4));
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterView))),
+        loc(),
+    );
+    chunk.emit(Op::Pop, loc());
+    chunk.emit(Op::Dup, loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnPaint".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostRegisterOnPaint))),
+        loc(),
+    );
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationRun))),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let on_paint_start = chunk.len();
+    chunk
+        .functions
+        .insert("OnPaint".into(), (on_paint_start, 1));
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    let error = run_err(chunk);
+    assert!(
+        error
+            .message
+            .contains("Application.Run(App) cannot use global OnPaint as retained scene paint"),
+        "unexpected runtime error: {}",
+        error.message
+    );
+}
+
+#[test]
 fn tui_application_run_accepts_local_view_paint_without_global_on_paint() {
     let mut chunk = Chunk::new();
     chunk.emit(

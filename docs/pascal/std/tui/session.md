@@ -172,7 +172,7 @@ Return the current terminal size for the application.
 
 ### `procedure Application.RequestRedraw(App: Application)`
 
-Mark the application as needing a redraw. The hosted loop consumes this flag before invoking `OnPaint`.
+Mark the application as needing a redraw. The hosted loop consumes this flag before the next hosted paint pass.
 
 **Runtime (Rust only):** `TuiSession::is_redraw_pending` in `crates/fpas-std` peeks the same flag without consuming it; used by the VM host when servicing `TuiHostDispatchRedraw` and the bounded `TuiHostRunLoop` path (see `docs/pascal/std/tui/app/README.md`).
 

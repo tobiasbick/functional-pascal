@@ -5,11 +5,24 @@ program TuiShowModalExistingView;
 uses Std.Console, Std.Tui;
 
 mutable var
+  mutable var RootView: option of ViewId := None;
   mutable var Status: string := 'The existing dialog subtree is modal. Tab stays inside it. Escape closes the modal.';
 
-procedure OnPaint(App: Application);
+procedure ClearBounds(Bounds: Std.Tui.Rect);
 begin
-  ClrScr();
+  for Row: integer := 0 to Bounds.height - 1 do
+  begin
+    GotoXY(1, Row + 1);
+    for Col: integer := 0 to Bounds.width - 1 do
+    begin
+      Write(' ')
+    end
+  end
+end;
+
+procedure OnViewPaint(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
+begin
+  ClearBounds(Bounds);
   GotoXY(1, 1);
   WriteLn('ShowModal on an existing view subtree');
   GotoXY(1, 2);
@@ -58,11 +71,21 @@ end;
 
 procedure OnResize(App: Application; NewSize: Size);
 begin
+  case RootView of
+    Some(Root):
+    begin
+      Application.HostSetViewRect(App, Root, 0, 0, NewSize.width, NewSize.height)
+    end;
+    None:
+    begin
+    end
+  end;
   Application.RequestRedraw(App)
 end;
 
 begin
   var App: Application := Application.Open();
+  var S: Size := Application.Size(App);
   var QuitKey: Std.Console.KeyEvent := record
     kind := Std.Console.KeyKind.Character;
     ch := 'q';
@@ -79,6 +102,8 @@ begin
     alt := false;
     meta := false;
   end;
+  var Root: ViewId := Application.HostRegisterView(App, 0, 0, S.width, S.height);
+  RootView := Some(Root);
   var BackgroundView: ViewId := Application.HostRegisterView(App, 4, 10, 14, 4);
   var DialogView: ViewId := Application.HostRegisterView(App, 22, 10, 24, 5);
   var OkButton: ViewId := Application.HostRegisterView(App, 2, 2, 6, 1);
@@ -88,7 +113,7 @@ begin
   Application.HostPushChildView(App, BackgroundView);
   Application.HostPushChildView(App, OkButton);
   Application.HostPushChildView(App, CancelButton);
-  Application.HostRegisterOnPaint(App, OnPaint);
+  Application.HostRegisterOnViewPaint(App, Root, OnViewPaint);
   Application.HostRegisterOnCommand(App, OnCommand);
   Application.HostRegisterOnKeyPressed(App, OnKeyPressed);
   Application.HostRegisterOnResize(App, OnResize);

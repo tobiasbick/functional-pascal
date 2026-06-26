@@ -30,7 +30,7 @@ Ambiguous-width characters use neutral width. Truncation reserves the last visib
 | Cell-width helpers | `crates/fpas-std/src/text/cell_width.rs` |
 | Console paint | `crates/fpas-std/src/console/screen/text_at.rs` |
 | Control truncation | `crates/fpas-std/src/tui/widget/control/mod.rs` |
-| FPAS workflow regression | [`tests/tui/tui_cell_width_test.fpas`](../../../../tests/tui/tui_cell_width_test.fpas) |
+| FPAS workflow regression | [`tests/tui/controls/tui_cell_width_test.fpas`](../../../../tests/tui/controls/tui_cell_width_test.fpas) |
 
 ## See also
 

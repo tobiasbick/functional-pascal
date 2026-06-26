@@ -459,23 +459,23 @@ These original findings are reduced but not closed:
 
 | # | Scenario | Status |
 | --- | --- | --- |
-| 1 | Overlapping windows: raise, move, resize, zoom, restore, **close** without stale cells | **Met** — [`tui_frame_occlusion_test.fpas`](../../../tests/tui/tui_frame_occlusion_test.fpas), [`tui_frame_occlusion_move_test.fpas`](../../../tests/tui/tui_frame_occlusion_move_test.fpas), [`tui_frame_occlusion_zoom_test.fpas`](../../../tests/tui/tui_frame_occlusion_zoom_test.fpas), [`tui_frame_occlusion_resize_test.fpas`](../../../tests/tui/tui_frame_occlusion_resize_test.fpas), [`tui_frame_occlusion_raise_test.fpas`](../../../tests/tui/tui_frame_occlusion_raise_test.fpas) |
-| 2 | Click and Tab focus within active group | **Met** — [`tui_controls_test.fpas`](../../../tests/tui/tui_controls_test.fpas), [`tui_tab_focus_test.fpas`](../../../tests/tui/tui_tab_focus_test.fpas) |
+| 1 | Overlapping windows: raise, move, resize, zoom, restore, **close** without stale cells | **Met** — [`tui_frame_occlusion_test.fpas`](../../../tests/tui/frames/tui_frame_occlusion_test.fpas), [`tui_frame_occlusion_move_test.fpas`](../../../tests/tui/frames/tui_frame_occlusion_move_test.fpas), [`tui_frame_occlusion_zoom_test.fpas`](../../../tests/tui/frames/tui_frame_occlusion_zoom_test.fpas), [`tui_frame_occlusion_resize_test.fpas`](../../../tests/tui/frames/tui_frame_occlusion_resize_test.fpas), [`tui_frame_occlusion_raise_test.fpas`](../../../tests/tui/frames/tui_frame_occlusion_raise_test.fpas) |
+| 2 | Click and Tab focus within active group | **Met** — [`tui_controls_test.fpas`](../../../tests/tui/controls/tui_controls_test.fpas), [`tui_tab_focus_test.fpas`](../../../tests/tui/controls/tui_tab_focus_test.fpas) |
 | 3 | Nested modal focus restore and results | **Met** — Phase 3 + modal VM tests |
-| 4 | Sourced commands from menu, button, shortcut, frame chrome | **Met** — chrome clicks + [`tui_frame_reserved_commands_test.fpas`](../../../tests/tui/tui_frame_reserved_commands_test.fpas) |
-| 5 | Clipped paint/input through nested groups and scroll transforms | **Met** — [`tui_view_clip_test.fpas`](../../../tests/tui/tui_view_clip_test.fpas), [`tui_frame_scroll_clip_test.fpas`](../../../tests/tui/tui_frame_scroll_clip_test.fpas), [`tui_nested_frame_clip_test.fpas`](../../../tests/tui/tui_nested_frame_clip_test.fpas), [`tui_frame_scroll_input_clip_test.fpas`](../../../tests/tui/tui_frame_scroll_input_clip_test.fpas) |
+| 4 | Sourced commands from menu, button, shortcut, frame chrome | **Met** — chrome clicks + [`tui_frame_reserved_commands_test.fpas`](../../../tests/tui/frames/tui_frame_reserved_commands_test.fpas) |
+| 5 | Clipped paint/input through nested groups and scroll transforms | **Met** — [`tui_view_clip_test.fpas`](../../../tests/tui/scene/tui_view_clip_test.fpas), [`tui_frame_scroll_clip_test.fpas`](../../../tests/tui/frames/tui_frame_scroll_clip_test.fpas), [`tui_nested_frame_clip_test.fpas`](../../../tests/tui/frames/tui_nested_frame_clip_test.fpas), [`tui_frame_scroll_input_clip_test.fpas`](../../../tests/tui/frames/tui_frame_scroll_input_clip_test.fpas) |
 | 6 | Pointer capture for drag, resize, scrollbar thumb | **Met** — frame move/resize + scroll thumb tests |
 | 7 | Resize layout for menu, desktop, status, frames, anchored controls | **Met** — `ViewLayout` + auto relayout on resize |
-| 8 | Cell-width tests (ASCII, box, wide, combining, truncation, cursor) | **Met** — Rust policy tests + [`tui_cell_width_test.fpas`](../../../tests/tui/tui_cell_width_test.fpas) |
-| 9 | Unit + VM + FPAS workflow coverage | **Met** — frame geometry/interaction VM tests + painted-frame FPAS workflows ([`tui_framed_dialog_controls_test.fpas`](../../../tests/tui/tui_framed_dialog_controls_test.fpas), [`tui_frame_occlusion_test.fpas`](../../../tests/tui/tui_frame_occlusion_test.fpas), existing chrome/scroll/window tests) |
+| 8 | Cell-width tests (ASCII, box, wide, combining, truncation, cursor) | **Met** — Rust policy tests + [`tui_cell_width_test.fpas`](../../../tests/tui/controls/tui_cell_width_test.fpas) |
+| 9 | Unit + VM + FPAS workflow coverage | **Met** — frame geometry/interaction VM tests + painted-frame FPAS workflows ([`tui_framed_dialog_controls_test.fpas`](../../../tests/tui/modals/tui_framed_dialog_controls_test.fpas), [`tui_frame_occlusion_test.fpas`](../../../tests/tui/frames/tui_frame_occlusion_test.fpas), existing chrome/scroll/window tests) |
 
 ### Integration still using pre-frame patterns
 
 - [`README.md`](README.md) implementation-phase checklists — superseded by this file; kept as design reference only.
 
-`show_dialog.fpas` and the IDE About dialog now use `ShowFramedDialog` with host labels and buttons. `ShowDialog` remains available for plain owned modal roots (`tests/tui/tui_show_dialog_test.fpas`).
+`show_dialog.fpas` and the IDE About dialog now use `ShowFramedDialog` with host labels and buttons. `ShowDialog` remains available for plain owned modal roots (`tests/tui/modals/tui_show_dialog_test.fpas`).
 
-**C1 progress (2026-06-26):** [`tui_menu_overlay_frame_test.fpas`](../../../tests/tui/tui_menu_overlay_frame_test.fpas)
+**C1 progress (2026-06-26):** [`tui_menu_overlay_frame_test.fpas`](../../../tests/tui/menu/tui_menu_overlay_frame_test.fpas)
 protects the compositor step by asserting that an open menu pull-down paints above frame chrome and
 that closing the pull-down repaints the obscured frame/client cells. The VM host now collects menu
 pull-downs during retained subtree traversal and paints them as scene overlays, removing the old

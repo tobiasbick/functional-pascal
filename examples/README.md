@@ -31,7 +31,7 @@ The **FPAS regression suite** lives in [`tests/`](../tests/) as `*_test.fpas` fi
 | `tests/concurrency/` | `go` / task concurrency |
 | `tests/runner/` | `Std.Test` basics, `Skip`, stdout golden |
 | `tests/console/` | `PushReadLn` + `ReadLn` |
-| `tests/tui/` | Native headless TUI (`OpenForTest`, `TestPump`, …) |
+| `tests/tui/` | Native headless TUI (`OpenForTest`, `TestPump`, …); subdirs: `host/`, `scene/`, `controls/`, `menu/`, `modals/`, `frames/` — see [TUI testing layout](../docs/pascal/std/tui/app/testing.md#regression-layout-teststui) |
 | `tests/graph/` | Headless graph smoke + pixel golden |
 | `tests/manual/` | Manual demos (not auto-discovered) |
 

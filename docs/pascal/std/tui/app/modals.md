@@ -83,7 +83,7 @@ changed. Invalid geometry therefore leaves both unchanged. Children attach to th
 subtree.
 
 Create child views at placeholder `(0, 0)`, call `HostSetViewParent`, then set frame-local layout
-with `HostSetViewRect` (see [`tui_show_framed_dialog_controls_test.fpas`](../../../../tests/tui/tui_show_framed_dialog_controls_test.fpas)).
+with `HostSetViewRect` (see [`tui_show_framed_dialog_controls_test.fpas`](../../../../tests/tui/modals/tui_show_framed_dialog_controls_test.fpas)).
 
 Example: [`examples/pascal/tui/framed_dialog.fpas`](../../../../examples/pascal/tui/framed_dialog.fpas)
 
@@ -176,7 +176,7 @@ Headless coverage:
 
 | Path | Topic |
 | ---- | ----- |
-| [`tui_show_dialog_test.fpas`](../../../../tests/tui/tui_show_dialog_test.fpas) | `ShowDialog`, modal Escape via `HostBindCommandToActiveModal`, `HostSetActiveModalResult`, owned-root cleanup |
+| [`tui_show_dialog_test.fpas`](../../../../tests/tui/modals/tui_show_dialog_test.fpas) | `ShowDialog`, modal Escape via `HostBindCommandToActiveModal`, `HostSetActiveModalResult`, owned-root cleanup |
 
 See [Native testing](testing.md) for pump and assertion patterns.
 

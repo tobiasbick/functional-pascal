@@ -155,8 +155,8 @@ Details: [`runner.md`](../../../future/test-framework/runner.md) (golden stdout 
 | [`console/readln_order_test.fpas`](../../../tests/console/readln_order_test.fpas) | Multiple `PushReadLn` lines in order |
 | [`runner/skip_test.fpas`](../../../tests/runner/skip_test.fpas) | `Skip` + runner `SKIP` reporting |
 | [`runner/stdout_echo_test.fpas`](../../../tests/runner/stdout_echo_test.fpas) | `*.expect.stdout` |
-| [`tui/tui_escape_test.fpas`](../../../tests/tui/tui_escape_test.fpas) | Escape + `AssertScreenLine` (native headless API) |
-| [`tui/tui_mouse_test.fpas`](../../../tests/tui/tui_mouse_test.fpas) | `TestSendMouse` + `OnMouse` (native headless API) |
+| [`tui/host/tui_escape_test.fpas`](../../../tests/tui/host/tui_escape_test.fpas) | Escape + `AssertScreenLine` (native headless API) |
+| [`tui/host/tui_mouse_test.fpas`](../../../tests/tui/host/tui_mouse_test.fpas) | `TestSendMouse` + `OnMouse` (native headless API) |
 | [`graph/graph_smoke_test.fpas`](../../../tests/graph/graph_smoke_test.fpas) | Headless graph (`OpenForTest` + `TestSendKey`) + `*.expect.pixels` |
 | [`suite.fpasprj`](../../../tests/suite.fpasprj) | `kind = "test"` project bundle |
 

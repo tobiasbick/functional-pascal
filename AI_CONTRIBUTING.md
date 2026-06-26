@@ -23,7 +23,7 @@ When validating examples, use the curated allowlists in [`crates/fpas-cli/src/ma
 
 Or run `scripts/run-non-interactive-examples.*` for the run allowlist. Never batch-run every file under `examples/` — interactive TUI and graph demos block until the user quits.
 
-**FPAS tests** (`*_test.fpas`, `uses Std.Test`) belong under [`tests/`](tests/), not `examples/`. Layout: `tests/stdlib/`, `tests/concurrency/`, `tests/runner/`, `tests/console/`, `tests/tui/`, `tests/graph/` (see [`examples/README.md`](examples/README.md) § Stdlib regression suite). Run and verify with:
+**FPAS tests** (`*_test.fpas`, `uses Std.Test`) belong under [`tests/`](tests/), not `examples/`. Layout: `tests/stdlib/`, `tests/concurrency/`, `tests/runner/`, `tests/console/`, `tests/tui/` (subdirs `host/`, `scene/`, `controls/`, `menu/`, `modals/`, `frames/`), `tests/graph/` (see [`examples/README.md`](examples/README.md) § Stdlib regression suite). Run and verify with:
 
 - `fpas test tests/` or `fpas test tests/suite.fpasprj`
 - `cargo test -p fpas-cli fpas_regression_suite_passes`

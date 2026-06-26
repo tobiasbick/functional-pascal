@@ -409,7 +409,7 @@ When implemented, follow [`.agents/skills/fpas-change-checklist/SKILL.md`](../..
 
 1. **Docs** — move API descriptions from this plan into `docs/pascal/std/tui/app/` (`README.md`, `vm-bridge.md`, new `frames.md` if needed).
 2. **Rust tests** — unit tests for geometry, fixed-point bar visibility, minimum sizes, scroll clamp, transformed descendant rectangles/clips, damage, paint phase order, child-first input bubbling, action source ids, and owned-modal rollback/cleanup.
-3. **FPAS tests** — `tests/tui/tui_frame_*_test.fpas` using `OpenForTest` / `TestPump` / screen queries, including two-frame action-source dispatch and a child control that consumes a scrolling key.
+3. **FPAS tests** — `tests/tui/frames/tui_frame_*_test.fpas` using `OpenForTest` / `TestPump` / screen queries, including two-frame action-source dispatch and a child control that consumes a scrolling key.
 4. **Examples** — `framed_window.fpas`, `framed_dialog.fpas`; run `scripts/format-fpas-sources.sh` on touched `.fpas`.
 5. **Verify** — `cargo fmt`, `cargo build`, `cargo test --workspace`, `fpas test tests/tui/`.
 

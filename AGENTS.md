@@ -51,7 +51,7 @@ Do not describe unimplemented behavior in `docs/pascal/`. Plans belong in `docs/
 ## FPAS sources (`examples/` vs `tests/`)
 
 - **`examples/`** — runnable demos and tutorials. Do not add `*_test.fpas` here.
-- **`tests/`** — FPAS regression and integration tests (`*_test.fpas`, optional golden sidecars). Group by theme (`stdlib/`, `concurrency/`, `runner/`, `console/`, `tui/`, `graph/`). Bundle via [`tests/suite.fpasprj`](tests/suite.fpasprj).
+- **`tests/`** — FPAS regression and integration tests (`*_test.fpas`, optional golden sidecars). Group by theme (`stdlib/`, `concurrency/`, `runner/`, `console/`, `tui/`, `graph/`). TUI tests use themed subdirs under `tests/tui/` (`host/`, `scene/`, `controls/`, `menu/`, `modals/`, `frames/`). Bundle via [`tests/suite.fpasprj`](tests/suite.fpasprj).
 - After FPAS test changes, run `fpas test tests/` or `cargo test -p fpas-cli fpas_regression_suite_passes`. Spec: [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md).
 
 ## CI and automation

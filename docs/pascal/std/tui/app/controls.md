@@ -66,7 +66,7 @@ a dialog subtree.
 | ------- | -------- |
 | Models/paint | `crates/fpas-std/src/tui/widget/control/` |
 | VM bridge/input | `crates/fpas-vm/src/vm/execute/io/tui/control_model/` |
-| FPAS regression | `tests/tui/tui_controls_test.fpas`, `tests/tui/tui_memo_test.fpas`, `tests/tui/tui_list_box_test.fpas`, `tests/tui/tui_scroll_bar_test.fpas`, `tests/tui/tui_scroll_view_test.fpas` |
+| FPAS regression | `tests/tui/controls/tui_controls_test.fpas`, `tests/tui/controls/tui_memo_test.fpas`, `tests/tui/controls/tui_list_box_test.fpas`, `tests/tui/controls/tui_scroll_bar_test.fpas`, `tests/tui/controls/tui_scroll_view_test.fpas` |
 
 ## See also
 

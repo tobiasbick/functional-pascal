@@ -2,9 +2,24 @@
 
 ## Native TUI testing API
 
-**Status:** implemented. Run under `fpas test` with programs in [`tests/tui/`](../../../../tests/tui/) (`tui_*_test.fpas`).
+**Status:** implemented. Run under `fpas test` with programs in [`tests/tui/`](../../../../tests/tui/) (`tui_*_test.fpas`, grouped by theme in subdirectories below).
 
 Goal: test hosted `Std.Tui` entirely from FPAS under `fpas test` — headless session, stepwise event pump, input injection, and read-only introspection of screen, views, and widget state. No real terminal, Rust integration test, or TUI sidecar file is required.
+
+### Regression layout (`tests/tui/`)
+
+Programs are grouped by concern. [`tests/suite.fpasprj`](../../../../tests/suite.fpasprj) discovers all of them via `tui/**/*_test.fpas`.
+
+| Subdirectory | Focus | Representative tests |
+| ------------ | ----- | -------------------- |
+| [`host/`](../../../../tests/tui/host/) | Headless lifecycle, pump, input injection, screen queries | [`tui_pump_test.fpas`](../../../../tests/tui/host/tui_pump_test.fpas), [`tui_escape_test.fpas`](../../../../tests/tui/host/tui_escape_test.fpas), [`tui_screen_query_test.fpas`](../../../../tests/tui/host/tui_screen_query_test.fpas) |
+| [`scene/`](../../../../tests/tui/scene/) | View tree, layout, clip, scene graph, stale-query runtime errors | [`tui_view_query_test.fpas`](../../../../tests/tui/scene/tui_view_query_test.fpas), [`tui_view_clip_test.fpas`](../../../../tests/tui/scene/tui_view_clip_test.fpas), [`tui_scene_graph_query_test.fpas`](../../../../tests/tui/scene/tui_scene_graph_query_test.fpas) |
+| [`controls/`](../../../../tests/tui/controls/) | Host widgets, scroll bars/views, Tab focus, cell width | [`tui_controls_test.fpas`](../../../../tests/tui/controls/tui_controls_test.fpas), [`tui_tab_focus_test.fpas`](../../../../tests/tui/controls/tui_tab_focus_test.fpas), [`tui_cell_width_test.fpas`](../../../../tests/tui/controls/tui_cell_width_test.fpas) |
+| [`menu/`](../../../../tests/tui/menu/) | Menu bar hover, keyboard focus, pull-down overlay compositor | [`tui_menu_hover_test.fpas`](../../../../tests/tui/menu/tui_menu_hover_test.fpas), [`tui_menu_overlay_frame_test.fpas`](../../../../tests/tui/menu/tui_menu_overlay_frame_test.fpas) |
+| [`modals/`](../../../../tests/tui/modals/) | `ShowDialog`, `ShowFramedDialog`, modal commands and cleanup | [`tui_show_dialog_test.fpas`](../../../../tests/tui/modals/tui_show_dialog_test.fpas), [`tui_framed_dialog_controls_test.fpas`](../../../../tests/tui/modals/tui_framed_dialog_controls_test.fpas) |
+| [`frames/`](../../../../tests/tui/frames/) | Frame chrome, windows, scroll, occlusion repair, reserved commands | [`tui_frame_occlusion_test.fpas`](../../../../tests/tui/frames/tui_frame_occlusion_test.fpas), [`tui_frame_scroll_clip_test.fpas`](../../../../tests/tui/frames/tui_frame_scroll_clip_test.fpas), [`tui_nested_frame_clip_test.fpas`](../../../../tests/tui/frames/tui_nested_frame_clip_test.fpas) |
+
+Run one theme: `fpas test tests/tui/frames/`. Run a single file: `fpas test tests/tui/host/tui_escape_test.fpas`. Filter by path substring: `fpas test --filter tui_escape`.
 
 For real-terminal behavior (alternate screen, cursor restore, resize flicker), use the manual checklist in [Terminal checklist](../terminal-checklist.md)(../terminal-checklist.md).
 
@@ -207,25 +222,25 @@ end.
 
 | Path | Topic |
 | ---- | ----- |
-| [`tui_pump_test.fpas`](../../../../tests/tui/tui_pump_test.fpas) | Open/pump/close smoke |
-| [`tui_inject_key_test.fpas`](../../../../tests/tui/tui_inject_key_test.fpas) | `TestSendKey` + `OnKeyPressed` |
-| [`tui_escape_test.fpas`](../../../../tests/tui/tui_escape_test.fpas) | Escape + `AssertScreenLine` |
-| [`tui_mouse_test.fpas`](../../../../tests/tui/tui_mouse_test.fpas) | `TestSendMouse` + `OnMouse` |
-| [`tui_screen_query_test.fpas`](../../../../tests/tui/tui_screen_query_test.fpas) | Screen queries after paint |
-| [`tui_view_query_test.fpas`](../../../../tests/tui/tui_view_query_test.fpas) | View rect + initial menu state |
-| [`tui_menu_bar_hover_test.fpas`](../../../../tests/tui/tui_menu_bar_hover_test.fpas) | Bar hover colors |
-| [`tui_menu_hover_test.fpas`](../../../../tests/tui/tui_menu_hover_test.fpas) | Capstone: bar hover + submenu selection |
-| [`tui_show_dialog_test.fpas`](../../../../tests/tui/tui_show_dialog_test.fpas) | `ShowDialog`, modal Escape, `HostSetActiveModalResult`, owned-root cleanup |
-| [`tui_framed_dialog_test.fpas`](../../../../tests/tui/tui_framed_dialog_test.fpas) | Painted owned frame, modal depth, and automatic subtree cleanup |
-| [`tui_framed_dialog_controls_test.fpas`](../../../../tests/tui/tui_framed_dialog_controls_test.fpas) | Painted dialog frame with host label/button children and command routing |
-| [`tui_frame_occlusion_test.fpas`](../../../../tests/tui/tui_frame_occlusion_test.fpas) | Overlapping painted windows: close front frame repairs occluded back cells |
-| [`tui_frame_scroll_clip_test.fpas`](../../../../tests/tui/tui_frame_scroll_clip_test.fpas) | Frame scroll offset clips child paint to the inner viewport |
-| [`tui_frame_occlusion_move_test.fpas`](../../../../tests/tui/tui_frame_occlusion_move_test.fpas) | Overlapping windows: moving the front frame repairs previously occluded cells |
-| [`tui_frame_occlusion_zoom_test.fpas`](../../../../tests/tui/tui_frame_occlusion_zoom_test.fpas) | Overlapping windows: zoom/restore repairs cells outside the normal frame bounds |
-| [`tui_frame_occlusion_resize_test.fpas`](../../../../tests/tui/tui_frame_occlusion_resize_test.fpas) | Overlapping windows: shrinking a frame repairs newly exposed back cells |
-| [`tui_frame_reserved_commands_test.fpas`](../../../../tests/tui/tui_frame_reserved_commands_test.fpas) | Reserved command ids `-1`..=`-4` via keyboard shortcuts |
-| [`tui_view_clip_test.fpas`](../../../../tests/tui/tui_view_clip_test.fpas) | Effective clip during view-local paint |
-| [`tui_scene_graph_query_test.fpas`](../../../../tests/tui/tui_scene_graph_query_test.fpas) | Scene structure, state, options, clip, kind, and paint order |
+| [`tui_pump_test.fpas`](../../../../tests/tui/host/tui_pump_test.fpas) | Open/pump/close smoke |
+| [`tui_inject_key_test.fpas`](../../../../tests/tui/host/tui_inject_key_test.fpas) | `TestSendKey` + `OnKeyPressed` |
+| [`tui_escape_test.fpas`](../../../../tests/tui/host/tui_escape_test.fpas) | Escape + `AssertScreenLine` |
+| [`tui_mouse_test.fpas`](../../../../tests/tui/host/tui_mouse_test.fpas) | `TestSendMouse` + `OnMouse` |
+| [`tui_screen_query_test.fpas`](../../../../tests/tui/host/tui_screen_query_test.fpas) | Screen queries after paint |
+| [`tui_view_query_test.fpas`](../../../../tests/tui/scene/tui_view_query_test.fpas) | View rect + initial menu state |
+| [`tui_menu_bar_hover_test.fpas`](../../../../tests/tui/menu/tui_menu_bar_hover_test.fpas) | Bar hover colors |
+| [`tui_menu_hover_test.fpas`](../../../../tests/tui/menu/tui_menu_hover_test.fpas) | Capstone: bar hover + submenu selection |
+| [`tui_show_dialog_test.fpas`](../../../../tests/tui/modals/tui_show_dialog_test.fpas) | `ShowDialog`, modal Escape, `HostSetActiveModalResult`, owned-root cleanup |
+| [`tui_framed_dialog_test.fpas`](../../../../tests/tui/modals/tui_framed_dialog_test.fpas) | Painted owned frame, modal depth, and automatic subtree cleanup |
+| [`tui_framed_dialog_controls_test.fpas`](../../../../tests/tui/modals/tui_framed_dialog_controls_test.fpas) | Painted dialog frame with host label/button children and command routing |
+| [`tui_frame_occlusion_test.fpas`](../../../../tests/tui/frames/tui_frame_occlusion_test.fpas) | Overlapping painted windows: close front frame repairs occluded back cells |
+| [`tui_frame_scroll_clip_test.fpas`](../../../../tests/tui/frames/tui_frame_scroll_clip_test.fpas) | Frame scroll offset clips child paint to the inner viewport |
+| [`tui_frame_occlusion_move_test.fpas`](../../../../tests/tui/frames/tui_frame_occlusion_move_test.fpas) | Overlapping windows: moving the front frame repairs previously occluded cells |
+| [`tui_frame_occlusion_zoom_test.fpas`](../../../../tests/tui/frames/tui_frame_occlusion_zoom_test.fpas) | Overlapping windows: zoom/restore repairs cells outside the normal frame bounds |
+| [`tui_frame_occlusion_resize_test.fpas`](../../../../tests/tui/frames/tui_frame_occlusion_resize_test.fpas) | Overlapping windows: shrinking a frame repairs newly exposed back cells |
+| [`tui_frame_reserved_commands_test.fpas`](../../../../tests/tui/frames/tui_frame_reserved_commands_test.fpas) | Reserved command ids `-1`..=`-4` via keyboard shortcuts |
+| [`tui_view_clip_test.fpas`](../../../../tests/tui/scene/tui_view_clip_test.fpas) | Effective clip during view-local paint |
+| [`tui_scene_graph_query_test.fpas`](../../../../tests/tui/scene/tui_scene_graph_query_test.fpas) | Scene structure, state, options, clip, kind, and paint order |
 
 ### ScreenCell type (decided)
 

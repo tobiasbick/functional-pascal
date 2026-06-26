@@ -88,7 +88,7 @@ begin
     meta := false;
   end;
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnCommand := Some(OnCommand);
   end;
   Application.Configure(App, Handlers);

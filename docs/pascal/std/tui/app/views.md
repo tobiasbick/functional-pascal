@@ -99,11 +99,11 @@ During hosted redraw:
    - view-local **Pascal handler**;
    - **child subtrees**;
    - widget **overlays** (for example an open menu popup).
-3. A final **menu overlay layer** paints topmost menu popups that must sit above sibling content.
+3. Scene overlays collected during traversal (for example open menu popups) paint above the retained scene.
 
-When a view has both a native widget and `OnViewPaint`, the widget base paints first, then the Pascal handler. Widget overlays paint after local handlers so popups are not covered.
+When a view has both a native widget and `OnViewPaint`, the widget base paints first, then the Pascal handler. Widget overlays paint after local handlers so chrome is not covered; scene overlays paint after root traversal so popups are not covered by sibling roots.
 
-`OnPaint` may be an empty no-op when host widgets paint the entire chrome (see `apps/ide/src/shell.fpas`).
+Omit `ApplicationHandlers.OnPaint` when host widgets paint the entire chrome (see `apps/ide/src/shell.fpas`).
 
 ## Pointer routing and capture
 

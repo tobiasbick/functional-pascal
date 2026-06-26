@@ -138,7 +138,7 @@ begin
   Application.HostBindCommand(App, OpenDialogKey, CmdOpenDialog);
   Application.HostBindCommand(App, QuitKey, CmdQuit);
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnCommand := Some(OnCommand);
     OnResize := Some(OnResize);
   end;

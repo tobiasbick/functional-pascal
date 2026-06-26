@@ -104,7 +104,7 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(12, 10);
-  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
+  var Handlers: ApplicationHandlers := record OnPaint := Some(OnPaint); end;
   Application.Configure(App, Handlers);
   var View: ViewId := Application.HostCreateScrollView(App, 0, 0, 8, 4, Lines());
   AssertTrue(Application.QueryViewKind(App, View) = ViewKind.ScrollView);

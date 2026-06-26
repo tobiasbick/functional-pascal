@@ -13,7 +13,7 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(40, 14);
-  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
+  var Handlers: ApplicationHandlers := record OnPaint := Some(OnPaint); end;
   Application.Configure(App, Handlers);
   AssertTrue(Application.HostSetDesktopWorkArea(App, 0, 0, 40, 14));
   var Back: ViewId := Application.HostCreateFrameView(App, 2, 2, 20, 8, 'Back', FrameKindWindow, false, false, false, false, false);

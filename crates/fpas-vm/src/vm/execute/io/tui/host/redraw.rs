@@ -7,6 +7,11 @@ use crate::vm::diagnostics::VmError;
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_std::{DamageRegion, ResolvedView, ViewId, ViewRect, ViewWidget};
 
+struct DeferredOverlay {
+    widget: ViewWidget,
+    rect: ViewRect,
+}
+
 impl Worker {
     /// Consumes pending damage and paints the retained view tree.
     ///
@@ -51,10 +56,13 @@ impl Worker {
             if let Some(handler) = on_paint {
                 self.dispatch_global_paint(handler, expected_damage, line)?;
             }
+            let mut overlays = Vec::new();
             for root in roots {
-                self.paint_view_subtree(root, expected_damage, line)?;
+                self.paint_view_subtree(root, expected_damage, line, &mut overlays)?;
             }
-            self.paint_menu_overlay_layer(expected_damage)?;
+            for overlay in overlays {
+                self.paint_scene_overlay(&overlay, expected_damage)?;
+            }
             Ok(())
         })();
 
@@ -113,6 +121,7 @@ impl Worker {
         view_id: ViewId,
         damage: DamageRegion,
         line: SourceLocation,
+        overlays: &mut Vec<DeferredOverlay>,
     ) -> Result<(), VmError> {
         let snapshot = {
             let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
@@ -149,10 +158,16 @@ impl Worker {
         }
 
         for child in children {
-            self.paint_view_subtree(child, damage, line)?;
+            self.paint_view_subtree(child, damage, line, overlays)?;
         }
         if let (Some(view), Some(widget)) = (paint_view, widget.as_ref()) {
             self.paint_widget_overlay(widget, view, damage)?;
+            if widget.has_scene_overlay() {
+                overlays.push(DeferredOverlay {
+                    widget: widget.clone(),
+                    rect: view.rect,
+                });
+            }
         }
         Ok(())
     }
@@ -230,19 +245,11 @@ impl Worker {
         result.map(|_| ())
     }
 
-    fn paint_menu_overlay_layer(&mut self, damage: DamageRegion) -> Result<(), VmError> {
-        let scheduled = {
-            let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            tui.views
-                .resolved_paint_order()
-                .into_iter()
-                .filter_map(|view| {
-                    let widget = tui.view_widgets.get(&view.id)?;
-                    matches!(widget, ViewWidget::MenuBar(_)).then_some((widget.clone(), view.rect))
-                })
-                .collect::<Vec<_>>()
-        };
-
+    fn paint_scene_overlay(
+        &mut self,
+        overlay: &DeferredOverlay,
+        damage: DamageRegion,
+    ) -> Result<(), VmError> {
         self.with_console(|console| {
             let screen = ViewRect {
                 x: 0,
@@ -250,11 +257,11 @@ impl Worker {
                 width: console.screen_width(),
                 height: console.screen_height(),
             };
-            for (widget, rect) in &scheduled {
-                if console.begin_tui_view_paint(screen, screen) {
-                    widget.paint_menu_overlays(console, *rect, damage);
-                    console.end_tui_view_paint();
-                }
+            if console.begin_tui_view_paint(screen, screen) {
+                overlay
+                    .widget
+                    .paint_scene_overlay(console, overlay.rect, damage);
+                console.end_tui_view_paint();
             }
             Ok(())
         })

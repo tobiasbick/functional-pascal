@@ -12,7 +12,7 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(40, 12);
-  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
+  var Handlers: ApplicationHandlers := record OnPaint := Some(OnPaint); end;
   Application.Configure(App, Handlers);
   var WindowView: ViewId := Application.HostCreateFrameView(App, 2, 1, 16, 6, 'Editor', FrameKindWindow, true, false, true, false, false);
   var Child: ViewId := Application.HostCreateSolidFillView(App, 0, 0, 12, 4, Red, Some(White), Some('x'));

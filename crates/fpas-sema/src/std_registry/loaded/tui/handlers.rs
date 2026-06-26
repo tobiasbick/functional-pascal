@@ -112,7 +112,7 @@ pub(super) fn register_application_handlers(
         checker,
         s::STD_TUI_APPLICATION_HANDLERS,
         vec![
-            ("OnPaint".into(), on_paint.clone()),
+            ("OnPaint".into(), Ty::Option(Box::new(on_paint.clone()))),
             (
                 "OnKeyPressed".into(),
                 Ty::Option(Box::new(on_key_pressed.clone())),
@@ -142,7 +142,10 @@ pub(super) fn register_application_handlers(
             ("OnExit".into(), Ty::Option(Box::new(on_exit.clone()))),
         ],
         vec![
-            ("OnPaint".into(), None),
+            (
+                "OnPaint".into(),
+                Some(type_registration::default_none_expr()),
+            ),
             (
                 "OnKeyPressed".into(),
                 Some(type_registration::default_none_expr()),

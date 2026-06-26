@@ -11,7 +11,7 @@ Pascal can register hosted handlers in four equivalent ways before `**Applicatio
 
 The most recent configuration wins per slot. `**Application.Configure`** replaces the current hosted handler set with the record fields from `**ApplicationHandlers`**. View-local paint handlers are tracked separately per host view. Host widget views are tracked separately in the view registry.
 
-**Required** for a minimal hosted run: at least one global `**OnPaint`**, at least one local view paint handler, or at least one host widget view. In bundle form, `**ApplicationHandlers.OnPaint`** remains required as a record field (it may be an empty no-op when widgets paint the frame). Other slots are optional.
+**Required** for a minimal hosted run: at least one global `**OnPaint`**, at least one local view paint handler, or at least one host widget view. In bundle form, `**ApplicationHandlers.OnPaint`** is optional; leave it unset for widget-only applications.
 
 ### `ApplicationHandlers`
 
@@ -20,7 +20,7 @@ Shipped record fields:
 
 | Slot           | Required | Role                                                                                                                            |
 | -------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `OnPaint`      | **yes**  | Full logical **frame**: draw the entire TUI for this pass.                                                                      |
+| `OnPaint`      | no       | `Option of procedure(App: Application)` — full logical **frame** paint. Use `None` or omit it when retained views/widgets paint the frame. |
 | `OnKeyPressed` | no       | `Option of function(App: Application; Key: Std.Console.KeyEvent): boolean` — key / text input.                                 |
 | `OnResize`     | no       | `Option of procedure(App: Application; NewSize: Size)` — terminal size changed (coalesced by the host).                        |
 | `OnIdleMilliseconds` | no | Idle interval in milliseconds. `<= 0` disables idle callbacks.                                                                  |
@@ -38,7 +38,7 @@ Example:
 
 ```pascal
 var Handlers: ApplicationHandlers := record
-  OnPaint := OnPaint;
+  OnPaint := Some(OnPaint);
   OnKeyPressed := Some(OnKeyPressed);
   OnIdleMilliseconds := 16;
   OnIdle := Some(OnIdle);

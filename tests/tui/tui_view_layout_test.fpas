@@ -54,7 +54,7 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(80, 24);
-  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
+  var Handlers: ApplicationHandlers := record OnPaint := Some(OnPaint); end;
   Application.Configure(App, Handlers);
   var DesktopHeight: integer := (24 - MenuBarHeight) - StatusBarHeight;
   var StatusY: integer := 24 - StatusBarHeight;

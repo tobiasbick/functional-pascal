@@ -49,7 +49,7 @@ end;
 begin
   var App: Application := Application.OpenForTest(80, 25);
   var MenuBar: ViewId := Application.HostCreateMenuBarView(App, 0, 0, 80, 1, MenuItems(), MenuStyle());
-  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
+  var Handlers: ApplicationHandlers := record OnPaint := Some(OnPaint); end;
   Application.Configure(App, Handlers);
   Application.TestPump(App);
   var Before: ScreenCell := Application.QueryScreenCell(App, 2, 1);

@@ -52,7 +52,7 @@ end;
 begin
   var App: Application := Application.OpenForTest(80, 25);
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
   end;
   Application.Configure(App, Handlers);
   Application.RequestRedraw(App);
@@ -221,7 +221,7 @@ begin
   var MenuBar: ViewId := Application.HostCreateMenuBarView(
     App, 0, 0, 80, 1, MenuItems(), MenuStyle());
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
   end;
   Application.Configure(App, Handlers);
   Application.TestPump(App);

@@ -448,7 +448,7 @@ These original findings are reduced but not closed:
 
 | Finding | Status | Remaining |
 | --- | --- | --- |
-| [C1](#c1-painting-is-not-a-safe-retained-mode-compositor) Paint compositor | Partial | Global `OnPaint` damage clip done; merge menu overlay into depth-first pass; retire global `OnPaint` for widget-only apps |
+| [C1](#c1-painting-is-not-a-safe-retained-mode-compositor) Paint compositor | Partial | Global `OnPaint` damage clip remains for explicit global-paint apps; widget-only apps no longer need no-op `OnPaint`; menu pull-downs use retained scene-overlay collection |
 | [C2](#c2-there-is-no-general-consumable-event-router) Event router | Mostly done | Keep new controls on `EventOutcome` in `fpas-std`; avoid frame-specific VM branches |
 | [C3](#c3-the-view-model-cannot-represent-control-or-group-state) View state | Done | — |
 | [C4](#c4-modal-state-does-not-preserve-interaction-context) Modal context | Done | — |
@@ -474,6 +474,14 @@ These original findings are reduced but not closed:
 - [`README.md`](README.md) implementation-phase checklists — superseded by this file; kept as design reference only.
 
 `show_dialog.fpas` and the IDE About dialog now use `ShowFramedDialog` with host labels and buttons. `ShowDialog` remains available for plain owned modal roots (`tests/tui/tui_show_dialog_test.fpas`).
+
+**C1 progress (2026-06-26):** [`tui_menu_overlay_frame_test.fpas`](../../../tests/tui/tui_menu_overlay_frame_test.fpas)
+protects the compositor step by asserting that an open menu pull-down paints above frame chrome and
+that closing the pull-down repaints the obscured frame/client cells. The VM host now collects menu
+pull-downs during retained subtree traversal and paints them as scene overlays, removing the old
+post-pass registry scan. `ApplicationHandlers.OnPaint` is now optional, so widget-only apps can
+omit the previous no-op global paint handler; explicit global-paint apps continue to use
+`OnPaint := Some(OnPaint)`.
 
 
 The project should not claim this goal based on frame appearance alone. A minimum credible result

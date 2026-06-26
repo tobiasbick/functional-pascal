@@ -95,7 +95,7 @@ begin
   end;
   Application.HostBindCommand(App, NextWindowKey, CmdNextWindow);
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnCommand := Some(OnCommand);
     OnKeyPressed := Some(OnKeyPressed);
     OnResize := Some(OnResize);

@@ -156,7 +156,7 @@ begin
   Application.HostBindCommand(App, QuitKey, CmdQuit);
   Application.HostBindCommandToActiveModal(App, EnterKey, CmdDialogOk);
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnResize := Some(OnResize);
     OnCommand := Some(OnCommand);
   end;

@@ -50,7 +50,7 @@ begin
   var App: Application := Application.OpenForTest(80, 25);
   var MenuBar: ViewId := Application.HostCreateMenuBarView(App, 0, 0, 80, 1, MenuItems(), MenuStyle());
   var Desktop: ViewId := Application.HostCreateSolidFillView(App, 0, 1, 80, 24, Blue, None, None);
-  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
+  var Handlers: ApplicationHandlers := record OnPaint := Some(OnPaint); end;
   Application.Configure(App, Handlers);
   Application.TestPump(App);
   Application.TestMoveMouse(App, 2, 1);

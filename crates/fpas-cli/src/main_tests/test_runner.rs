@@ -56,7 +56,7 @@ fn test_cli_runs_native_tui_headless_test() {
          begin\n\
            var App: Application := Application.OpenForTest(80, 25);\n\
            var Handlers: ApplicationHandlers := record\n\
-             OnPaint := OnPaint;\n\
+             OnPaint := Some(OnPaint);\n\
              OnKeyPressed := Some(OnKeyPressed);\n\
            end;\n\
            Application.Configure(App, Handlers);\n\

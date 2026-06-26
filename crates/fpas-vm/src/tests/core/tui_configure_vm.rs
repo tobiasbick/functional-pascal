@@ -32,7 +32,10 @@ fn tui_application_configure_stores_bundle_handlers_and_interval() {
     emit_constant(
         &mut chunk,
         handlers_record(vec![
-            ("OnPaint".into(), function_value("OnPaint")),
+            (
+                "OnPaint".into(),
+                Value::OptionSome(Box::new(function_value("OnPaint"))),
+            ),
             (
                 "OnKeyPressed".into(),
                 Value::OptionSome(Box::new(function_value("OnKeyPressed"))),
@@ -129,7 +132,10 @@ fn tui_application_configure_clears_previous_optional_handlers_with_none_default
     emit_constant(
         &mut chunk,
         handlers_record(vec![
-            ("OnPaint".into(), function_value("OnPaint")),
+            (
+                "OnPaint".into(),
+                Value::OptionSome(Box::new(function_value("OnPaint"))),
+            ),
             ("OnKeyPressed".into(), Value::OptionNone),
             ("OnResize".into(), Value::OptionNone),
             ("OnIdleMilliseconds".into(), Value::Integer(0)),
@@ -183,7 +189,7 @@ fn tui_application_configure_clears_previous_optional_handlers_with_none_default
 }
 
 #[test]
-fn tui_application_configure_rejects_missing_required_on_paint_field() {
+fn tui_application_configure_accepts_absent_on_paint_handler() {
     let mut chunk = Chunk::new();
     chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))),
@@ -192,11 +198,19 @@ fn tui_application_configure_rejects_missing_required_on_paint_field() {
     emit_constant(
         &mut chunk,
         handlers_record(vec![
+            ("OnPaint".into(), Value::OptionNone),
             ("OnKeyPressed".into(), Value::OptionNone),
             ("OnResize".into(), Value::OptionNone),
             ("OnIdleMilliseconds".into(), Value::Integer(0)),
             ("OnIdle".into(), Value::OptionNone),
             ("OnExit".into(), Value::OptionNone),
+            ("OnMouse".into(), Value::OptionNone),
+            ("OnPaste".into(), Value::OptionNone),
+            ("OnFocusGained".into(), Value::OptionNone),
+            ("OnFocusLost".into(), Value::OptionNone),
+            ("OnActivate".into(), Value::OptionNone),
+            ("OnDeactivate".into(), Value::OptionNone),
+            ("OnCommand".into(), Value::OptionNone),
         ]),
     );
     chunk.emit(
@@ -207,12 +221,12 @@ fn tui_application_configure_rejects_missing_required_on_paint_field() {
     );
     chunk.emit(Op::Halt, loc());
 
-    let error = run_err(chunk);
-    assert!(
-        error.message.contains("missing field `OnPaint`"),
-        "unexpected runtime error: {}",
-        error.message
-    );
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("VM should succeed");
+
+    let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+    assert!(tui.on_paint.is_none());
 }
 
 #[test]
@@ -225,7 +239,10 @@ fn tui_application_configure_rejects_non_option_optional_handler_value() {
     emit_constant(
         &mut chunk,
         handlers_record(vec![
-            ("OnPaint".into(), function_value("OnPaint")),
+            (
+                "OnPaint".into(),
+                Value::OptionSome(Box::new(function_value("OnPaint"))),
+            ),
             ("OnKeyPressed".into(), Value::Integer(7)),
             ("OnResize".into(), Value::OptionNone),
             ("OnIdleMilliseconds".into(), Value::Integer(0)),
@@ -268,7 +285,10 @@ fn tui_application_configure_clamps_negative_idle_interval_to_zero() {
     emit_constant(
         &mut chunk,
         handlers_record(vec![
-            ("OnPaint".into(), function_value("OnPaint")),
+            (
+                "OnPaint".into(),
+                Value::OptionSome(Box::new(function_value("OnPaint"))),
+            ),
             ("OnKeyPressed".into(), Value::OptionNone),
             ("OnResize".into(), Value::OptionNone),
             ("OnIdleMilliseconds".into(), Value::Integer(-25)),

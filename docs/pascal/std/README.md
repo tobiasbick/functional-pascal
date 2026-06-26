@@ -60,7 +60,7 @@ end;
 
 begin
   var App: Application := Application.Open();
-  Application.Configure(App, record OnPaint := OnPaint end);
+  Application.Configure(App, record OnPaint := Some(OnPaint) end);
   Application.Run(App)
 end.
 ```

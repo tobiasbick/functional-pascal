@@ -67,7 +67,7 @@ end;
 begin
   var App: Application := Application.Open();
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnActivate := Some(OnActivate);
     OnDeactivate := Some(OnDeactivate);
   end;
@@ -341,7 +341,7 @@ end;
 begin
   var App: Application := Application.Open();
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnKeyPressed := Some(OnKeyPressed);
   end;
   Application.Configure(App, Handlers);
@@ -383,7 +383,7 @@ end;
 begin
   var App: Application := Application.Open();
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnKeyPressed := Some(OnKeyPressed);
   end;
   Application.Configure(App, Handlers);

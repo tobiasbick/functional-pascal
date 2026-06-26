@@ -121,15 +121,6 @@ begin
   end
 end;
 
-{
-  Intentionally empty — chrome is painted by host widgets in Rust
-  (menu bar, desktop fill, status bar).
-}
-
-private procedure OnPaint(App: Application);
-begin
-end;
-
 private procedure OnCommand(App: Application; CommandId: integer);
 begin
   if CommandId = CmdHelpAbout then
@@ -164,7 +155,6 @@ begin
   BindShortcuts(App);
   EnsureChrome(App);
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
     OnMouse := Some(OnMouse);
     OnResize := Some(OnResize);
     OnCommand := Some(OnCommand);

@@ -32,7 +32,7 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(40, 12);
-  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
+  var Handlers: ApplicationHandlers := record OnPaint := Some(OnPaint); end;
   Application.Configure(App, Handlers);
   var MemoView: ViewId := Application.HostCreateMemoView(App, 0, 0, 20, 6, '');
   AssertTrue(Application.QueryViewKind(App, MemoView) = ViewKind.Memo);
@@ -47,7 +47,7 @@ begin
   Application.TestPaste(App, 'd');
   Application.TestPumpUntilIdle(App);
   mutable var MemoStateValue: MemoState := Application.QueryMemoState(App, MemoView);
-  AssertTrue(MemoStateValue.text = 'ab' + Std.Str.Chr(10) + 'cd');
+  AssertTrue(MemoStateValue.text = ('ab' + Std.Str.Chr(10)) + 'cd');
   AssertEquals(1, MemoStateValue.cursorLine);
   AssertEquals(2, MemoStateValue.cursorColumn);
   Application.HostSetMemoText(App, MemoView, 'reset');
@@ -55,5 +55,5 @@ begin
   AssertTrue(MemoStateValue.text = 'reset');
   AssertEquals(0, MemoStateValue.cursorLine);
   AssertEquals(0, MemoStateValue.cursorColumn);
-  AssertEquals(-1, MemoStateValue.selectionAnchorLine);
+  AssertEquals(-1, MemoStateValue.selectionAnchorLine)
 end.

@@ -77,7 +77,7 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(8, 8);
-  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
+  var Handlers: ApplicationHandlers := record OnPaint := Some(OnPaint); end;
   Application.Configure(App, Handlers);
   var Bar: ViewId := Application.HostCreateScrollBarView(App, 0, 0, 1, 6, 20, 4, true);
   AssertTrue(Application.QueryViewKind(App, Bar) = ViewKind.ScrollBar);

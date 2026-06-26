@@ -52,7 +52,7 @@ begin
   var Desktop: ViewId := Application.HostCreateSolidFillView(
     App, 0, 0, 80, 25, Blue, None, None);
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnKeyPressed := Some(OnKeyPressed);
   end;
   Application.Configure(App, Handlers);
@@ -207,7 +207,7 @@ begin
   var MenuBar: ViewId := Application.HostCreateMenuBarView(
     App, 0, 0, 80, 1, MenuItems(), MenuStyle());
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnCommand := Some(OnCommand);
   end;
   Application.Configure(App, Handlers);
@@ -292,7 +292,7 @@ begin
   var Desktop: ViewId := Application.HostCreateSolidFillView(
     App, 0, 1, 80, 24, Blue, None, None);
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnCommand := Some(OnCommand);
   end;
   Application.Configure(App, Handlers);

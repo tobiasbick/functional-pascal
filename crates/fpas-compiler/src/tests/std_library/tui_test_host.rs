@@ -19,7 +19,7 @@ end;
 begin
   var App: Application := Application.OpenForTest(80, 25);
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
   end;
   Application.Configure(App, Handlers);
   Application.TestPump(App);
@@ -74,7 +74,7 @@ end;
 begin
   var App: Application := Application.OpenForTest(80, 25);
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnKeyPressed := Some(OnKeyPressed);
   end;
   Application.Configure(App, Handlers);
@@ -155,7 +155,7 @@ begin
   var Desktop: ViewId := Application.HostCreateSolidFillView(
     App, 0, 1, 80, 24, Blue, None, None);
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnCommand := Some(OnCommand);
   end;
   Application.Configure(App, Handlers);

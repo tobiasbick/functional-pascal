@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/README.md` (from the repository root).
 
-use super::super::{compile_and_run, compile_err, compile_ok, compile_run_with_console_events};
+use super::super::{compile_and_run, compile_ok, compile_run_with_console_events};
 use fpas_bytecode::{Intrinsic, Op, TuiIntrinsic};
 use fpas_std::{ConsoleEvent, ConsoleKeyEvent, key_event::key_kind_index};
 
@@ -27,7 +27,7 @@ end;
 begin
   var App: Application := Application.Open();
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnExit := Some(OnExit);
   end;
   Application.Configure(App, Handlers);
@@ -60,7 +60,7 @@ begin
   var App: Application := Application.Open();
   Application.HostRegisterOnExit(App, OldOnExit);
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
   end;
   Application.Configure(App, Handlers);
   Application.Run(App)
@@ -91,7 +91,7 @@ end;
 begin
   var App: Application := Application.Open();
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnIdleMilliseconds := -5;
     OnIdle := Some(OnIdle);
   end;
@@ -104,8 +104,8 @@ end.",
 }
 
 #[test]
-fn std_tui_configure_requires_on_paint_field() {
-    let err = compile_err(
+fn std_tui_configure_allows_empty_handler_bundle() {
+    compile_ok(
         "\
 program T;
 uses Std.Tui;
@@ -113,8 +113,6 @@ begin
   var Handlers: ApplicationHandlers := record end
 end.",
     );
-
-    assert_eq!(err.code, fpas_diagnostics::codes::SEMA_MISSING_RECORD_FIELD);
 }
 
 #[test]
@@ -131,7 +129,7 @@ end;
 begin
   var App: Application := Application.Open();
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
   end;
   Application.Configure(App, Handlers);
   Application.Close(App)
@@ -171,7 +169,7 @@ end;
 begin
   var App: Application := Application.Open();
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnKeyPressed := Some(OnKeyPressed);
   end;
   Application.Configure(App, Handlers);
@@ -218,7 +216,7 @@ end;
 begin
   var App: Application := Application.Open();
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnResize := Some(OnResize);
     OnKeyPressed := Some(OnKeyPressed);
   end;
@@ -266,7 +264,7 @@ end;
 begin
   var App: Application := Application.Open();
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnMouse := Some(OnMouse);
   end;
   Application.Configure(App, Handlers);
@@ -351,7 +349,7 @@ end;
 begin
   var App: Application := Application.Open();
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnPaste := Some(OnPaste);
   end;
   Application.Configure(App, Handlers);
@@ -415,7 +413,7 @@ end;
 begin
   var App: Application := Application.Open();
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnFocusGained := Some(OnFocusGained);
   end;
   Application.Configure(App, Handlers);

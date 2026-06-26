@@ -33,7 +33,7 @@ end;
 begin
   var App: Application := Application.Open();
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnKeyPressed := Some(OnKeyPressed);
     OnResize := Some(OnResize);
   end;

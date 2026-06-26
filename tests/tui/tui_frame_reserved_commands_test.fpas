@@ -38,7 +38,7 @@ end;
 begin
   var App: Application := Application.OpenForTest(60, 20);
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnCommand := Some(OnCommand);
   end;
   Application.Configure(App, Handlers);

@@ -37,7 +37,10 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(40, 15);
-  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; OnCommand := Some(OnCommand); end;
+  var Handlers: ApplicationHandlers := record
+    OnPaint := Some(OnPaint);
+    OnCommand := Some(OnCommand);
+  end;
   Application.Configure(App, Handlers);
   var LabelView: ViewId := Application.HostCreateLabelView(App, 0, 0, 10, 1, 'Name', Some('N'));
   var ButtonView: ViewId := Application.HostCreateButtonView(App, 0, 2, 10, 1, 'OK', Some(10), false);

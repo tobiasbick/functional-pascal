@@ -13,7 +13,7 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(40, 16);
-  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
+  var Handlers: ApplicationHandlers := record OnPaint := Some(OnPaint); end;
   Application.Configure(App, Handlers);
   var AsciiLabel: ViewId := Application.HostCreateLabelView(App, 1, 1, 5, 1, 'Hello', None);
   var BoxLabel: ViewId := Application.HostCreateLabelView(App, 1, 2, 2, 1, '╔═', None);

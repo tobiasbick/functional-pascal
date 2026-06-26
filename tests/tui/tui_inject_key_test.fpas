@@ -23,7 +23,7 @@ end;
 begin
   var App: Application := Application.OpenForTest(80, 25);
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnKeyPressed := Some(OnKeyPressed);
   end;
   Application.Configure(App, Handlers);

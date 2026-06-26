@@ -63,7 +63,7 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(50, 16);
-  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
+  var Handlers: ApplicationHandlers := record OnPaint := Some(OnPaint); end;
   Application.Configure(App, Handlers);
   AssertTrue(Application.HostSetDesktopWorkArea(App, 0, 0, 50, 16));
   var Back: ViewId := Application.HostCreateFrameView(App, 2, 2, 28, 10, 'Back', FrameKindWindow, false, false, false, false, false);
@@ -86,7 +86,7 @@ begin
   Application.TestPumpUntilIdle(App);
   mutable var FrontState: FrameRootState := Application.QueryFrameRootState(App, Front);
   AssertTrue(FrontState.width < 22);
-  AssertTrue((FrontState.x + FrontState.width - 1) < ProbeX);
+  AssertTrue(((FrontState.x + FrontState.width) - 1) < ProbeX);
   AssertScreenCell(ProbeX + 1, ProbeY + 1, 'B', White, Red);
   Application.CloseForTest(App)
 end.

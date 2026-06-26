@@ -163,10 +163,16 @@ impl ViewWidget {
     }
 
     /// Paint menu popups after other widgets so pull-downs stay visible.
-    pub fn paint_menu_overlays(&self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
+    pub fn paint_scene_overlay(&self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
         if let Self::MenuBar(widget) = self {
             widget.paint_popup_overlay(console, rect, damage);
         }
+    }
+
+    /// Return whether this widget contributes a paint layer above the retained scene.
+    #[must_use]
+    pub fn has_scene_overlay(&self) -> bool {
+        matches!(self, Self::MenuBar(_))
     }
 
     /// Returns whether `damage` intersects any paintable region for this widget.

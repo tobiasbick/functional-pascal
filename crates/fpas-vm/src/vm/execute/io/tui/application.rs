@@ -34,12 +34,12 @@ impl Worker {
                 let handlers = self.pop_tui_application_handlers(line)?;
                 self.pop_tui_application(line)?;
 
-                let on_paint = Self::required_record_field(&handlers, "OnPaint", line)?.clone();
-                self.validate_host_handler_function(
-                    &on_paint,
+                let on_paint = self.optional_host_handler_field(
+                    &handlers,
+                    "OnPaint",
                     1,
                     "OnPaint",
-                    "Set `OnPaint := Handler` where `Handler` is `procedure (Application)`.",
+                    "Set `OnPaint := Some(Handler)` or `None`; the handler must be `procedure (Application)`.",
                     line,
                 )?;
                 let on_key_pressed = self.optional_host_handler_field(
@@ -135,7 +135,7 @@ impl Worker {
                 )?;
 
                 let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                tui.on_paint = Some(on_paint);
+                tui.on_paint = on_paint;
                 tui.on_key_pressed = on_key_pressed;
                 tui.on_mouse = on_mouse;
                 tui.on_paste = on_paste;

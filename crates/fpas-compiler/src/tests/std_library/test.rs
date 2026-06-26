@@ -152,7 +152,7 @@ end;
 begin
   var App: Application := Application.OpenForTest(80, 25);
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
   end;
   Application.Configure(App, Handlers);
   Application.RequestRedraw(App);
@@ -177,7 +177,7 @@ end;
 begin
   var App: Application := Application.OpenForTest(80, 25);
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
   end;
   Application.Configure(App, Handlers);
   Application.RequestRedraw(App);
@@ -211,7 +211,7 @@ end;
 begin
   var App: Application := Application.OpenForTest(80, 25);
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
   end;
   Application.Configure(App, Handlers);
   Application.RequestRedraw(App);
@@ -240,7 +240,7 @@ end;
 begin
   var App: Application := Application.OpenForTest(80, 25);
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
   end;
   Application.Configure(App, Handlers);
   Application.RequestRedraw(App);
@@ -266,7 +266,7 @@ end;
 begin
   var App: Application := Application.OpenForTest(80, 25);
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
   end;
   Application.Configure(App, Handlers);
   Application.RequestRedraw(App);

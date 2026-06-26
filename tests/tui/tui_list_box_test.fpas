@@ -59,7 +59,10 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(20, 6);
-  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; OnCommand := Some(OnCommand); end;
+  var Handlers: ApplicationHandlers := record
+    OnPaint := Some(OnPaint);
+    OnCommand := Some(OnCommand);
+  end;
   Application.Configure(App, Handlers);
   var List: ViewId := Application.HostCreateListBoxView(App, 0, 0, 12, 2, Items());
   AssertTrue(Application.QueryViewKind(App, List) = ViewKind.ListBox);

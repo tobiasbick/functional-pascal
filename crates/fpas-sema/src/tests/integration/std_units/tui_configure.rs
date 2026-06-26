@@ -31,7 +31,7 @@ end;
 begin
   var App: Application := Application.Open();
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnKeyPressed := Some(OnKeyPressed);
     OnIdleMilliseconds := 16;
     OnIdle := Some(OnIdle);
@@ -62,19 +62,14 @@ end.",
 }
 
 #[test]
-fn std_tui_application_handlers_require_on_paint() {
-    let errs = check_errors(
+fn std_tui_application_handlers_allow_empty_bundle() {
+    check_ok(
         "\
 program T;
 uses Std.Tui;
 begin
   var Handlers: ApplicationHandlers := record end
 end.",
-    );
-    assert!(
-        errs.iter()
-            .any(|e| e.message.contains("Required field `OnPaint`")),
-        "{errs:#?}"
     );
 }
 
@@ -96,7 +91,7 @@ end;
 
 begin
   var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
+    OnPaint := Some(OnPaint);
     OnExit := Some(WrongOnExit);
   end
 end.",

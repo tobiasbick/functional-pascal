@@ -37,7 +37,7 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(40, 14);
-  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
+  var Handlers: ApplicationHandlers := record OnPaint := Some(OnPaint); end;
   Application.Configure(App, Handlers);
   var FrameView: ViewId := Application.HostCreateFrameView(App, 2, 1, 14, 10, 'Scroll', FrameKindWindow, false, false, false, true, false);
   var Child: ViewId := Application.HostCreateSolidFillView(App, 0, 0, 12, 20, Red, Some(White), Some('s'));

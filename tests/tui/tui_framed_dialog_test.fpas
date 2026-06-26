@@ -8,7 +8,7 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(40, 12);
-  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; end;
+  var Handlers: ApplicationHandlers := record OnPaint := Some(OnPaint); end;
   Application.Configure(App, Handlers);
   var DialogView: ViewId := Application.ShowFramedDialog(App, 77, 5, 2, 20, 7, 'Settings', false, false, false, false, true);
   AssertEquals(1, Application.QueryModalDepth(App));

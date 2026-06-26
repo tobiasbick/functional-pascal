@@ -25,7 +25,10 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(40, 14);
-  var Handlers: ApplicationHandlers := record OnPaint := OnPaint; OnCommand := Some(OnCommand); end;
+  var Handlers: ApplicationHandlers := record
+    OnPaint := Some(OnPaint);
+    OnCommand := Some(OnCommand);
+  end;
   Application.Configure(App, Handlers);
   var Dialog: ViewId := Application.HostCreateFrameView(App, 8, 3, 24, 8, 'Confirm', FrameKindDialog, false, false, false, false, true);
   var Message: ViewId := Application.HostCreateLabelView(App, 0, 0, 18, 1, 'Save changes?', None);

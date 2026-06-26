@@ -8,7 +8,7 @@ use fpas_bytecode::{SourceLocation, Value};
 use fpas_std::{DamageRegion, ResolvedView, ViewId, ViewRect, ViewWidget};
 
 struct DeferredOverlay {
-    widget: ViewWidget,
+    view_id: ViewId,
     rect: ViewRect,
 }
 
@@ -126,32 +126,31 @@ impl Worker {
         let snapshot = {
             let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
             let resolved = tui.views.resolved(view_id);
-            let widget = tui.view_widgets.get(&view_id).cloned();
             let handler = tui.view_paints.get(&view_id).cloned();
             let children = tui.views.children(view_id).to_vec();
-            (resolved, widget, handler, children)
+            let widget_damaged = resolved.is_some_and(|view| {
+                view.state.exposed
+                    && tui
+                        .view_widgets
+                        .get(&view_id)
+                        .is_some_and(|widget| widget.intersects_damage(view.rect, damage))
+            });
+            (resolved, handler, children, widget_damaged)
         };
-        let (resolved, mut widget, handler, children) = snapshot;
+        let (resolved, handler, children, widget_damaged) = snapshot;
 
         let paint_view = resolved
             .filter(|view| view.state.exposed && Self::damage_intersects_view(damage, *view));
+
+        if let Some(view) = resolved.filter(|view| view.state.exposed && widget_damaged)
+            && let Some(widget) = self.take_paint_widget(view)
+        {
+            let result = self.paint_widget_underlay(&widget, view, damage);
+            self.restore_paint_widget(view.id, widget);
+            result?;
+        }
+
         if let Some(view) = paint_view {
-            if let Some(widget) = widget.as_mut() {
-                widget.sync_view_state(view.state);
-                if let ViewWidget::Frame(frame) = widget {
-                    if let Some(state) = {
-                        let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                        tui.views.frame_root_state(view.id).copied()
-                    } {
-                        frame.content_size = state.content_size;
-                        frame.scroll_x = state.scroll_x;
-                        frame.scroll_y = state.scroll_y;
-                    }
-                }
-            }
-            if let Some(widget) = widget.as_ref() {
-                self.paint_widget_underlay(widget, view, damage)?;
-            }
             if let Some(handler) = handler {
                 self.dispatch_local_paint(handler, view, line)?;
             }
@@ -160,16 +159,42 @@ impl Worker {
         for child in children {
             self.paint_view_subtree(child, damage, line, overlays)?;
         }
-        if let (Some(view), Some(widget)) = (paint_view, widget.as_ref()) {
-            self.paint_widget_overlay(widget, view, damage)?;
+
+        if let Some(view) = resolved.filter(|view| view.state.exposed && widget_damaged)
+            && let Some(widget) = self.take_paint_widget(view)
+        {
+            let result = self.paint_widget_overlay(&widget, view, damage);
             if widget.has_scene_overlay() {
                 overlays.push(DeferredOverlay {
-                    widget: widget.clone(),
+                    view_id: view.id,
                     rect: view.rect,
                 });
             }
+            self.restore_paint_widget(view.id, widget);
+            result?;
         }
         Ok(())
+    }
+
+    fn take_paint_widget(&self, view: ResolvedView) -> Option<ViewWidget> {
+        self.with_tui(|tui| {
+            let mut widget = tui.view_widgets.remove(&view.id)?;
+            widget.sync_view_state(view.state);
+            if let ViewWidget::Frame(frame) = &mut widget
+                && let Some(state) = tui.views.frame_root_state(view.id).copied()
+            {
+                frame.content_size = state.content_size;
+                frame.scroll_x = state.scroll_x;
+                frame.scroll_y = state.scroll_y;
+            }
+            Some(widget)
+        })
+    }
+
+    fn restore_paint_widget(&self, view_id: ViewId, widget: ViewWidget) {
+        self.with_tui(|tui| {
+            tui.view_widgets.insert(view_id, widget);
+        });
     }
 
     fn paint_widget_underlay(
@@ -250,7 +275,10 @@ impl Worker {
         overlay: &DeferredOverlay,
         damage: DamageRegion,
     ) -> Result<(), VmError> {
-        self.with_console(|console| {
+        let Some(widget) = self.take_scene_overlay_widget(overlay.view_id) else {
+            return Ok(());
+        };
+        let result = self.with_console(|console| {
             let screen = ViewRect {
                 x: 0,
                 y: 0,
@@ -258,13 +286,17 @@ impl Worker {
                 height: console.screen_height(),
             };
             if console.begin_tui_view_paint(screen, screen) {
-                overlay
-                    .widget
-                    .paint_scene_overlay(console, overlay.rect, damage);
+                widget.paint_scene_overlay(console, overlay.rect, damage);
                 console.end_tui_view_paint();
             }
             Ok(())
-        })
+        });
+        self.restore_paint_widget(overlay.view_id, widget);
+        result
+    }
+
+    fn take_scene_overlay_widget(&self, view_id: ViewId) -> Option<ViewWidget> {
+        self.with_tui(|tui| tui.view_widgets.remove(&view_id))
     }
 
     fn damage_intersects_view(damage: DamageRegion, view: ResolvedView) -> bool {

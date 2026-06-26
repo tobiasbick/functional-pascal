@@ -46,50 +46,33 @@ impl Worker {
             let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
             widget_target::widget_mouse_hit(&tui.views, &tui.view_widgets, mouse, scope)
         };
-        let Some((id, rect, mut widget)) = hit else {
+        let Some((id, rect)) = hit else {
             return Ok(None);
         };
-        let state = self.with_tui(|tui| tui.views.state(id));
-        if let Some(state) = state {
-            widget.sync_view_state(state);
-        }
-        let action = match &mut widget {
-            ViewWidget::Button(v) if v.enabled => {
-                v.command_id.map_or(Some(ControlAction::Consumed), |c| {
-                    Some(ControlAction::Command(c))
-                })
+        let action = self.with_tui(|tui| {
+            let mut widget = tui.view_widgets.remove(&id)?;
+            if let Some(state) = tui.views.state(id) {
+                widget.sync_view_state(state);
             }
-            ViewWidget::InputLine(v) if v.enabled => {
-                let index = mouse.x.saturating_sub(1).saturating_sub(rect.x).max(0) as usize
-                    + v.scroll_offset();
-                v.set_cursor(index);
-                Some(ControlAction::Consumed)
-            }
-            ViewWidget::CheckBox(v) => v.toggle().then(|| {
-                v.command_id
-                    .map_or(ControlAction::Consumed, ControlAction::Command)
-            }),
-            ViewWidget::RadioGroup(v) if v.enabled => {
-                let row = mouse.y.saturating_sub(1).saturating_sub(rect.y);
-                if usize::try_from(row).is_ok_and(|i| v.set_selected(i)) {
-                    v.selected_command()
-                        .map_or(Some(ControlAction::Consumed), |c| {
-                            Some(ControlAction::Command(c))
-                        })
-                } else {
+            let action = match &mut widget {
+                ViewWidget::Button(v) if v.enabled => {
+                    v.command_id.map_or(Some(ControlAction::Consumed), |c| {
+                        Some(ControlAction::Command(c))
+                    })
+                }
+                ViewWidget::InputLine(v) if v.enabled => {
+                    let index = mouse.x.saturating_sub(1).saturating_sub(rect.x).max(0) as usize
+                        + v.scroll_offset();
+                    v.set_cursor(index);
                     Some(ControlAction::Consumed)
                 }
-            }
-            ViewWidget::ListBox(v) if v.enabled => {
-                if scroll_up {
-                    v.scroll_by(-1);
-                    Some(ControlAction::Consumed)
-                } else if scroll_down {
-                    v.scroll_by(1);
-                    Some(ControlAction::Consumed)
-                } else {
+                ViewWidget::CheckBox(v) => v.toggle().then(|| {
+                    v.command_id
+                        .map_or(ControlAction::Consumed, ControlAction::Command)
+                }),
+                ViewWidget::RadioGroup(v) if v.enabled => {
                     let row = mouse.y.saturating_sub(1).saturating_sub(rect.y);
-                    if usize::try_from(row).is_ok_and(|i| v.select_visible_row(i)) {
+                    if usize::try_from(row).is_ok_and(|i| v.set_selected(i)) {
                         v.selected_command()
                             .map_or(Some(ControlAction::Consumed), |c| {
                                 Some(ControlAction::Command(c))
@@ -98,31 +81,55 @@ impl Worker {
                         Some(ControlAction::Consumed)
                     }
                 }
-            }
-            ViewWidget::ScrollBar(v) if v.enabled => {
-                scroll_bar_mouse(v, rect, mouse, scroll_up, scroll_down, down)
-            }
-            ViewWidget::ScrollView(v) if v.enabled => {
-                scroll_view_mouse(v, rect, mouse, scroll_up, scroll_down, down)
-            }
-            ViewWidget::Memo(v) if v.enabled => {
-                memo_mouse(v, rect, mouse, scroll_up, scroll_down, down)
-            }
-            _ => None,
+                ViewWidget::ListBox(v) if v.enabled => {
+                    if scroll_up {
+                        v.scroll_by(-1);
+                        Some(ControlAction::Consumed)
+                    } else if scroll_down {
+                        v.scroll_by(1);
+                        Some(ControlAction::Consumed)
+                    } else {
+                        let row = mouse.y.saturating_sub(1).saturating_sub(rect.y);
+                        if usize::try_from(row).is_ok_and(|i| v.select_visible_row(i)) {
+                            v.selected_command()
+                                .map_or(Some(ControlAction::Consumed), |c| {
+                                    Some(ControlAction::Command(c))
+                                })
+                        } else {
+                            Some(ControlAction::Consumed)
+                        }
+                    }
+                }
+                ViewWidget::ScrollBar(v) if v.enabled => {
+                    scroll_bar_mouse(v, rect, mouse, scroll_up, scroll_down, down)
+                }
+                ViewWidget::ScrollView(v) if v.enabled => {
+                    scroll_view_mouse(v, rect, mouse, scroll_up, scroll_down, down)
+                }
+                ViewWidget::Memo(v) if v.enabled => {
+                    memo_mouse(v, rect, mouse, scroll_up, scroll_down, down)
+                }
+                _ => None,
+            };
+            let capture_thumb = matches!(
+                (&widget, &action),
+                (ViewWidget::ScrollBar(v), Some(ControlAction::CaptureThumb))
+                    if v.thumb_drag_active(),
+            ) || matches!(
+                (&widget, &action),
+                (ViewWidget::ScrollView(v), Some(ControlAction::CaptureThumb))
+                    if v.thumb_drag_active(),
+            ) || matches!(
+                (&widget, &action),
+                (ViewWidget::Memo(v), Some(ControlAction::CaptureThumb)) if v.thumb_drag_active(),
+            );
+            tui.view_widgets.insert(id, widget);
+            Some((action, capture_thumb))
+        });
+        let Some((action, capture_thumb)) = action else {
+            return Ok(None);
         };
-        let capture_thumb = matches!(
-            (&widget, &action),
-            (ViewWidget::ScrollBar(v), Some(ControlAction::CaptureThumb))
-                if v.thumb_drag_active(),
-        ) || matches!(
-            (&widget, &action),
-            (ViewWidget::ScrollView(v), Some(ControlAction::CaptureThumb))
-                if v.thumb_drag_active(),
-        ) || matches!(
-            (&widget, &action),
-            (ViewWidget::Memo(v), Some(ControlAction::CaptureThumb)) if v.thumb_drag_active(),
-        );
-        self.finish_control_action(id, rect, widget, action, capture_thumb, line)
+        self.finish_control_action(id, rect, action, capture_thumb, line)
     }
 
     fn try_dispatch_scroll_thumb_drag(
@@ -137,41 +144,42 @@ impl Worker {
             let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
             widget_target::widget_mouse_hit(&tui.views, &tui.view_widgets, mouse, scope)
         };
-        let Some((id, rect, mut widget)) = hit else {
+        let Some((id, rect)) = hit else {
             return Ok(None);
         };
-        let state = self.with_tui(|tui| tui.views.state(id));
-        if let Some(state) = state {
-            widget.sync_view_state(state);
-        }
-        let active = match &widget {
-            ViewWidget::ScrollBar(v) => v.thumb_drag_active(),
-            ViewWidget::ScrollView(v) => v.thumb_drag_active(),
-            ViewWidget::Memo(v) => v.thumb_drag_active(),
-            _ => false,
-        };
-        if !active {
-            return Ok(None);
-        }
-        let changed = match &mut widget {
-            ViewWidget::ScrollBar(v) if move_ => v.drag_thumb(rect, mouse.x, mouse.y),
-            ViewWidget::ScrollView(v) if move_ => v.drag_thumb(rect, mouse.x, mouse.y),
-            ViewWidget::Memo(v) if move_ => v.drag_thumb(rect, mouse.x, mouse.y),
-            ViewWidget::ScrollBar(v) if up => {
-                v.end_thumb_drag();
-                true
+        let handled = self.with_tui(|tui| {
+            let mut widget = tui.view_widgets.remove(&id)?;
+            if let Some(state) = tui.views.state(id) {
+                widget.sync_view_state(state);
             }
-            ViewWidget::ScrollView(v) if up => {
-                v.end_thumb_drag();
-                true
+            let active = match &widget {
+                ViewWidget::ScrollBar(v) => v.thumb_drag_active(),
+                ViewWidget::ScrollView(v) => v.thumb_drag_active(),
+                ViewWidget::Memo(v) => v.thumb_drag_active(),
+                _ => false,
+            };
+            if !active {
+                tui.view_widgets.insert(id, widget);
+                return Some(false);
             }
-            ViewWidget::Memo(v) if up => {
-                v.end_thumb_drag();
-                true
-            }
-            _ => false,
-        };
-        self.with_tui(|tui| {
+            let changed = match &mut widget {
+                ViewWidget::ScrollBar(v) if move_ => v.drag_thumb(rect, mouse.x, mouse.y),
+                ViewWidget::ScrollView(v) if move_ => v.drag_thumb(rect, mouse.x, mouse.y),
+                ViewWidget::Memo(v) if move_ => v.drag_thumb(rect, mouse.x, mouse.y),
+                ViewWidget::ScrollBar(v) if up => {
+                    v.end_thumb_drag();
+                    true
+                }
+                ViewWidget::ScrollView(v) if up => {
+                    v.end_thumb_drag();
+                    true
+                }
+                ViewWidget::Memo(v) if up => {
+                    v.end_thumb_drag();
+                    true
+                }
+                _ => false,
+            };
             tui.view_widgets.insert(id, widget);
             if up {
                 tui.views.release_pointer();
@@ -179,7 +187,11 @@ impl Worker {
             if changed {
                 let _ = tui.session.request_redraw_rect(rect, line);
             }
+            Some(true)
         });
+        if !handled.unwrap_or(false) {
+            return Ok(None);
+        }
         Ok(Some(ProcessOutcome::WidgetConsumed))
     }
 
@@ -191,36 +203,42 @@ impl Worker {
         let snapshot = self.with_tui(|tui| {
             let id = tui.views.focused_id()?;
             let view = tui.views.resolved(id)?;
-            let widget = tui.view_widgets.get(&id)?.clone();
-            Some((id, view.rect, view.state, widget))
+            Some((id, view.rect, view.state))
         });
-        let Some((id, rect, state, mut widget)) = snapshot else {
+        let Some((id, rect, state)) = snapshot else {
             return Ok(None);
         };
-        widget.sync_view_state(state);
-        let enter = key.kind == key_kind_index("Enter");
-        let space = key.kind == key_kind_index("Space");
-        let action = match &mut widget {
-            ViewWidget::Button(v) if v.enabled && (enter || space) => {
-                v.command_id.map_or(Some(ControlAction::Consumed), |c| {
-                    Some(ControlAction::Command(c))
-                })
-            }
-            ViewWidget::CheckBox(v) if enter || space => v.toggle().then(|| {
-                v.command_id
-                    .map_or(ControlAction::Consumed, ControlAction::Command)
-            }),
-            ViewWidget::InputLine(v) if v.enabled => {
-                input_key(v, key).then_some(ControlAction::Consumed)
-            }
-            ViewWidget::Memo(v) if v.enabled => memo_key(v, key).then_some(ControlAction::Consumed),
-            ViewWidget::RadioGroup(v) if v.enabled => radio_key(v, key),
-            ViewWidget::ListBox(v) if v.enabled => list_box_key(v, key),
-            ViewWidget::ScrollBar(v) if v.enabled => scroll_control_key(v, key),
-            ViewWidget::ScrollView(v) if v.enabled => scroll_control_key(v, key),
-            _ => None,
-        };
-        self.finish_control_action(id, rect, widget, action, false, line)
+        let action = self.with_tui(|tui| {
+            let mut widget = tui.view_widgets.remove(&id)?;
+            widget.sync_view_state(state);
+            let enter = key.kind == key_kind_index("Enter");
+            let space = key.kind == key_kind_index("Space");
+            let action = match &mut widget {
+                ViewWidget::Button(v) if v.enabled && (enter || space) => {
+                    v.command_id.map_or(Some(ControlAction::Consumed), |c| {
+                        Some(ControlAction::Command(c))
+                    })
+                }
+                ViewWidget::CheckBox(v) if enter || space => v.toggle().then(|| {
+                    v.command_id
+                        .map_or(ControlAction::Consumed, ControlAction::Command)
+                }),
+                ViewWidget::InputLine(v) if v.enabled => {
+                    input_key(v, key).then_some(ControlAction::Consumed)
+                }
+                ViewWidget::Memo(v) if v.enabled => {
+                    memo_key(v, key).then_some(ControlAction::Consumed)
+                }
+                ViewWidget::RadioGroup(v) if v.enabled => radio_key(v, key),
+                ViewWidget::ListBox(v) if v.enabled => list_box_key(v, key),
+                ViewWidget::ScrollBar(v) if v.enabled => scroll_control_key(v, key),
+                ViewWidget::ScrollView(v) if v.enabled => scroll_control_key(v, key),
+                _ => None,
+            };
+            tui.view_widgets.insert(id, widget);
+            action
+        });
+        self.finish_control_action(id, rect, action, false, line)
     }
 
     pub(in crate::vm::execute::io::tui) fn try_dispatch_control_paste(
@@ -257,7 +275,6 @@ impl Worker {
         &mut self,
         id: ViewId,
         rect: fpas_std::ViewRect,
-        widget: ViewWidget,
         action: Option<ControlAction>,
         capture_thumb: bool,
         line: SourceLocation,
@@ -266,7 +283,6 @@ impl Worker {
             return Ok(None);
         };
         self.with_tui(|tui| {
-            tui.view_widgets.insert(id, widget);
             if capture_thumb {
                 tui.views.capture_pointer(id);
             }

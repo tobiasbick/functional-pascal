@@ -52,7 +52,7 @@ impl StatusBarWidget {
     }
 
     /// Paint the status bar clipped to `damage`.
-    pub fn paint(self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
+    pub fn paint(&self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
         let Some(clip) = damage.clip_rect(rect) else {
             return;
         };

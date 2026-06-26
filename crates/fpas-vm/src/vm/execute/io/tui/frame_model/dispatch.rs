@@ -247,21 +247,16 @@ impl Worker {
     }
 
     pub(in crate::vm::execute::io::tui) fn sync_frame_widget_scroll(&mut self, root: ViewId) {
-        let snapshot = self.with_tui(|tui| {
-            let state = tui.views.frame_root_state(root)?;
-            let widget = tui.view_widgets.get(&root).cloned()?;
-            Some((state.scroll_x, state.scroll_y, state.content_size, widget))
-        });
-        let Some((scroll_x, scroll_y, content_size, mut widget)) = snapshot else {
-            return;
-        };
-        if let fpas_std::ViewWidget::Frame(frame) = &mut widget {
-            frame.scroll_x = scroll_x;
-            frame.scroll_y = scroll_y;
-            frame.content_size = content_size;
-        }
-        let _ = self.with_tui(|tui| {
-            tui.view_widgets.insert(root, widget);
+        self.with_tui(|tui| {
+            let Some(state) = tui.views.frame_root_state(root).copied() else {
+                return;
+            };
+            let Some(fpas_std::ViewWidget::Frame(frame)) = tui.view_widgets.get_mut(&root) else {
+                return;
+            };
+            frame.scroll_x = state.scroll_x;
+            frame.scroll_y = state.scroll_y;
+            frame.content_size = state.content_size;
         });
     }
 

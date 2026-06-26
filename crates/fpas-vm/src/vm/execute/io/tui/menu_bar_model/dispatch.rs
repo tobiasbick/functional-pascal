@@ -21,55 +21,33 @@ impl Worker {
             widget_target::widget_mouse_hit(&tui.views, &tui.view_widgets, mouse, modal_scope)
         };
 
-        let Some((view_id, rect, mut widget)) = hit else {
+        let Some((view_id, rect)) = hit else {
             return Ok(None);
         };
 
-        let before = match &widget {
-            ViewWidget::MenuBar(menu) => menu.damage_rects(rect),
-            _ => vec![rect],
-        };
-
-        let result = match &mut widget {
-            ViewWidget::MenuBar(menu) => menu.handle_mouse(rect, mouse),
-            ViewWidget::SolidFill(_)
-            | ViewWidget::StatusBar(_)
-            | ViewWidget::Label(_)
-            | ViewWidget::Button(_)
-            | ViewWidget::InputLine(_)
-            | ViewWidget::CheckBox(_)
-            | ViewWidget::RadioGroup(_)
-            | ViewWidget::ListBox(_)
-            | ViewWidget::ScrollBar(_)
-            | ViewWidget::ScrollView(_)
-            | ViewWidget::Memo(_)
-            | ViewWidget::Frame(_) => MenuBarMouseResult::Ignored,
-        };
-
-        let after = match &widget {
-            ViewWidget::MenuBar(menu) => menu.damage_rects(rect),
-            _ => vec![rect],
-        };
-
-        let dispatch_tag = match result {
-            MenuBarMouseResult::Ignored => return Ok(None),
-            MenuBarMouseResult::HoverChanged => {
-                self.with_tui(|tui| {
-                    tui.view_widgets.insert(view_id, widget);
-                    let mut regions = before;
-                    regions.extend(after);
-                    Self::request_unique_redraws(tui, &regions, line);
-                });
-                ProcessOutcome::Pointer { handled: true }
+        let result = self.with_tui(|tui| {
+            let mut widget = tui.view_widgets.remove(&view_id)?;
+            let ViewWidget::MenuBar(menu) = &mut widget else {
+                tui.view_widgets.insert(view_id, widget);
+                return Some(MenuBarMouseResult::Ignored);
+            };
+            let before = menu.damage_rects(rect);
+            let result = menu.handle_mouse(rect, mouse);
+            let after = menu.damage_rects(rect);
+            tui.view_widgets.insert(view_id, widget);
+            if result != MenuBarMouseResult::Ignored {
+                let mut regions = before;
+                regions.extend(after);
+                Self::request_unique_redraws(tui, &regions, line);
             }
+            Some(result)
+        });
+
+        let dispatch_tag = match result.unwrap_or(MenuBarMouseResult::Ignored) {
+            MenuBarMouseResult::Ignored => return Ok(None),
+            MenuBarMouseResult::HoverChanged => ProcessOutcome::Pointer { handled: true },
             MenuBarMouseResult::Command(command_id) => {
-                let enabled = self.with_tui(|tui| {
-                    tui.view_widgets.insert(view_id, widget);
-                    let mut regions = before;
-                    regions.extend(after);
-                    Self::request_unique_redraws(tui, &regions, line);
-                    tui.commands.is_enabled(command_id)
-                });
+                let enabled = self.with_tui(|tui| tui.commands.is_enabled(command_id));
                 if !enabled {
                     return Ok(Some(ProcessOutcome::Pointer { handled: true }));
                 }
@@ -97,42 +75,31 @@ impl Worker {
             widget_target::topmost_menu_bar(&tui.views, &tui.view_widgets, modal_scope)
         };
 
-        let Some((view_id, rect, mut widget)) = hit else {
+        let Some((view_id, rect)) = hit else {
             return Ok(None);
         };
-
-        let ViewWidget::MenuBar(menu) = &widget else {
-            return Ok(None);
-        };
-        let before = menu.damage_rects(rect);
-
-        let result = match &mut widget {
-            ViewWidget::MenuBar(menu) => menu.handle_key(&key),
-            _ => unreachable!(),
-        };
-        let after = match &widget {
-            ViewWidget::MenuBar(menu) => menu.damage_rects(rect),
-            _ => vec![rect],
-        };
-        let dispatch_tag = match result {
-            MenuBarMouseResult::Ignored => return Ok(None),
-            MenuBarMouseResult::HoverChanged => {
-                self.with_tui(|tui| {
-                    tui.view_widgets.insert(view_id, widget);
-                    let mut regions = before;
-                    regions.extend(after);
-                    Self::request_unique_redraws(tui, &regions, line);
-                });
-                ProcessOutcome::WidgetConsumed
+        let result = self.with_tui(|tui| {
+            let mut widget = tui.view_widgets.remove(&view_id)?;
+            let ViewWidget::MenuBar(menu) = &mut widget else {
+                tui.view_widgets.insert(view_id, widget);
+                return Some(MenuBarMouseResult::Ignored);
+            };
+            let before = menu.damage_rects(rect);
+            let result = menu.handle_key(&key);
+            let after = menu.damage_rects(rect);
+            tui.view_widgets.insert(view_id, widget);
+            if result != MenuBarMouseResult::Ignored {
+                let mut regions = before;
+                regions.extend(after);
+                Self::request_unique_redraws(tui, &regions, line);
             }
+            Some(result)
+        });
+        let dispatch_tag = match result.unwrap_or(MenuBarMouseResult::Ignored) {
+            MenuBarMouseResult::Ignored => return Ok(None),
+            MenuBarMouseResult::HoverChanged => ProcessOutcome::WidgetConsumed,
             MenuBarMouseResult::Command(command_id) => {
-                let enabled = self.with_tui(|tui| {
-                    tui.view_widgets.insert(view_id, widget);
-                    let mut regions = before;
-                    regions.extend(after);
-                    Self::request_unique_redraws(tui, &regions, line);
-                    tui.commands.is_enabled(command_id)
-                });
+                let enabled = self.with_tui(|tui| tui.commands.is_enabled(command_id));
                 if !enabled {
                     return Ok(Some(ProcessOutcome::WidgetConsumed));
                 }
@@ -159,36 +126,31 @@ impl Worker {
             return Ok(());
         }
 
-        let updates = {
-            let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            tui.view_widgets
-                .iter()
-                .filter_map(|(view_id, widget)| {
-                    let ViewWidget::MenuBar(menu) = widget else {
-                        return None;
-                    };
-                    if modal_scope.is_some_and(|scope| !scope.contains(view_id)) {
-                        return None;
-                    }
-                    let rect = tui.views.rect(*view_id)?;
-                    let mut menu = menu.clone();
-                    menu.clear_pointer_hover_outside(rect, mouse)
-                        .then_some((*view_id, rect, menu))
-                })
-                .collect::<Vec<_>>()
-        };
+        let redraws = self.with_tui(|tui| {
+            let mut redraws = Vec::new();
+            for (view_id, widget) in &mut tui.view_widgets {
+                let ViewWidget::MenuBar(menu) = widget else {
+                    continue;
+                };
+                if modal_scope.is_some_and(|scope| !scope.contains(view_id)) {
+                    continue;
+                }
+                let Some(rect) = tui.views.rect(*view_id) else {
+                    continue;
+                };
+                if menu.clear_pointer_hover_outside(rect, mouse) {
+                    redraws.push(rect);
+                }
+            }
+            for rect in &redraws {
+                let _ = tui.session.request_redraw_rect(*rect, line);
+            }
+            redraws
+        });
 
-        if updates.is_empty() {
+        if redraws.is_empty() {
             return Ok(());
         }
-
-        self.with_tui(|tui| {
-            for (view_id, rect, widget) in updates {
-                tui.view_widgets
-                    .insert(view_id, ViewWidget::MenuBar(widget));
-                let _ = tui.session.request_redraw_rect(rect, line);
-            }
-        });
         Ok(())
     }
 
@@ -198,36 +160,31 @@ impl Worker {
         modal_scope: Option<&[ViewId]>,
         line: SourceLocation,
     ) -> Result<(), VmError> {
-        let updates = {
-            let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            tui.view_widgets
-                .iter()
-                .filter_map(|(view_id, widget)| {
-                    let ViewWidget::MenuBar(menu) = widget else {
-                        return None;
-                    };
-                    if modal_scope.is_some_and(|scope| !scope.contains(view_id)) {
-                        return None;
-                    }
-                    let rect = tui.views.rect(*view_id)?;
-                    let mut menu = menu.clone();
-                    menu.clear_transient_pointer_state()
-                        .then_some((*view_id, rect, menu))
-                })
-                .collect::<Vec<_>>()
-        };
+        let redraws = self.with_tui(|tui| {
+            let mut redraws = Vec::new();
+            for (view_id, widget) in &mut tui.view_widgets {
+                let ViewWidget::MenuBar(menu) = widget else {
+                    continue;
+                };
+                if modal_scope.is_some_and(|scope| !scope.contains(view_id)) {
+                    continue;
+                }
+                let Some(rect) = tui.views.rect(*view_id) else {
+                    continue;
+                };
+                if menu.clear_transient_pointer_state() {
+                    redraws.push(rect);
+                }
+            }
+            for rect in &redraws {
+                let _ = tui.session.request_redraw_rect(*rect, line);
+            }
+            redraws
+        });
 
-        if updates.is_empty() {
+        if redraws.is_empty() {
             return Ok(());
         }
-
-        self.with_tui(|tui| {
-            for (view_id, rect, widget) in updates {
-                tui.view_widgets
-                    .insert(view_id, ViewWidget::MenuBar(widget));
-                let _ = tui.session.request_redraw_rect(rect, line);
-            }
-        });
         Ok(())
     }
 
@@ -241,30 +198,29 @@ impl Worker {
             let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
             widget_target::topmost_menu_bar(&tui.views, &tui.view_widgets, modal_scope)
         };
-        let Some((view_id, rect, mut widget)) = hit else {
+        let Some((view_id, rect)) = hit else {
             return Ok(None);
         };
-        let ViewWidget::MenuBar(menu) = &widget else {
-            return Ok(None);
-        };
-        let before = menu.damage_rects(rect);
-        let result = match &mut widget {
-            ViewWidget::MenuBar(menu) => menu.open_hovered_submenu(),
-            _ => unreachable!(),
-        };
-        let after = match &widget {
-            ViewWidget::MenuBar(menu) => menu.damage_rects(rect),
-            _ => vec![rect],
-        };
-        if result == MenuBarMouseResult::Ignored {
+        let result = self.with_tui(|tui| {
+            let mut widget = tui.view_widgets.remove(&view_id)?;
+            let ViewWidget::MenuBar(menu) = &mut widget else {
+                tui.view_widgets.insert(view_id, widget);
+                return Some(MenuBarMouseResult::Ignored);
+            };
+            let before = menu.damage_rects(rect);
+            let result = menu.open_hovered_submenu();
+            let after = menu.damage_rects(rect);
+            tui.view_widgets.insert(view_id, widget);
+            if result != MenuBarMouseResult::Ignored {
+                let mut regions = before;
+                regions.extend(after);
+                Self::request_unique_redraws(tui, &regions, line);
+            }
+            Some(result)
+        });
+        if result.unwrap_or(MenuBarMouseResult::Ignored) == MenuBarMouseResult::Ignored {
             return Ok(None);
         }
-        self.with_tui(|tui| {
-            tui.view_widgets.insert(view_id, widget);
-            let mut regions = before;
-            regions.extend(after);
-            Self::request_unique_redraws(tui, &regions, line);
-        });
         Ok(Some(ProcessOutcome::Pointer { handled: true }))
     }
 

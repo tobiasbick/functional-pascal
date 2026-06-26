@@ -130,7 +130,7 @@ impl ViewWidget {
         match self {
             Self::SolidFill(widget) => widget.paint(console, rect, damage),
             Self::MenuBar(widget) => widget.paint(console, rect, damage),
-            Self::StatusBar(widget) => widget.clone().paint(console, rect, damage),
+            Self::StatusBar(widget) => widget.paint(console, rect, damage),
             Self::Label(widget) => widget.paint(console, rect, damage),
             Self::Button(widget) => widget.paint(console, rect, damage),
             Self::InputLine(widget) => widget.paint(console, rect, damage),

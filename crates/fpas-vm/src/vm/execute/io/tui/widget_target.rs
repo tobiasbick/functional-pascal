@@ -10,7 +10,7 @@ pub(super) fn topmost_menu_bar(
     views: &ViewRegistry,
     widgets: &HashMap<ViewId, ViewWidget>,
     scope: Option<&[ViewId]>,
-) -> Option<(ViewId, ViewRect, ViewWidget)> {
+) -> Option<(ViewId, ViewRect)> {
     views
         .resolved_paint_order()
         .into_iter()
@@ -18,7 +18,7 @@ pub(super) fn topmost_menu_bar(
         .filter(|view| is_in_scope(view.id, scope))
         .find_map(|view| {
             let widget = widgets.get(&view.id)?;
-            matches!(widget, ViewWidget::MenuBar(_)).then(|| (view.id, view.rect, widget.clone()))
+            matches!(widget, ViewWidget::MenuBar(_)).then_some((view.id, view.rect))
         })
 }
 
@@ -27,14 +27,14 @@ pub(super) fn widget_mouse_hit(
     widgets: &HashMap<ViewId, ViewWidget>,
     mouse: UiMouse,
     scope: Option<&[ViewId]>,
-) -> Option<(ViewId, ViewRect, ViewWidget)> {
+) -> Option<(ViewId, ViewRect)> {
     if let Some(captured) = views.captured_pointer()
         && is_in_scope(captured, scope)
         && let Some(view) = views.resolved(captured)
         && view.state.enabled
-        && let Some(widget) = widgets.get(&captured)
+        && widgets.contains_key(&captured)
     {
-        return Some((captured, view.rect, widget.clone()));
+        return Some((captured, view.rect));
     }
 
     let order = views.resolved_paint_order();
@@ -49,7 +49,7 @@ pub(super) fn widget_mouse_hit(
                 return None;
             };
             menu.contains_point(view.rect, mouse.x, mouse.y)
-                .then(|| (view.id, view.rect, widget.clone()))
+                .then_some((view.id, view.rect))
         });
     if menu_hit.is_some() {
         return menu_hit;
@@ -60,10 +60,10 @@ pub(super) fn widget_mouse_hit(
         .rev()
         .filter(|view| is_in_scope(view.id, scope) && view.state.enabled)
         .find_map(|view| {
-            let widget = widgets.get(&view.id)?;
+            widgets.contains_key(&view.id).then_some(())?;
             view.clip
                 .is_some_and(|clip| clip.contains_console_mouse(mouse.x, mouse.y))
-                .then(|| (view.id, view.rect, widget.clone()))
+                .then_some((view.id, view.rect))
         })
 }
 
@@ -102,7 +102,7 @@ mod tests {
 
         let hit = widget_mouse_hit(&views, &widgets, mouse(), None);
 
-        assert_eq!(hit.map(|(view_id, _, _)| view_id), Some(menu));
+        assert_eq!(hit.map(|(view_id, _)| view_id), Some(menu));
     }
 
     #[test]

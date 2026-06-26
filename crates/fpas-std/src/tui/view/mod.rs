@@ -160,6 +160,7 @@ struct ViewEntry {
 pub struct ViewRegistry {
     next_id: u32,
     views: Vec<ViewEntry>,
+    view_index: HashMap<ViewId, usize>,
     roots: Vec<ViewId>,
     focused: Option<ViewId>,
     pointer_capture: Option<ViewId>,

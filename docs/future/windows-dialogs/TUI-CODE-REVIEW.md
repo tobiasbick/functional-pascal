@@ -282,8 +282,12 @@ outcomes across the Pascal boundary.
 
 `ViewRegistry::entry` is a linear scan, while recursive paint order and rectangle resolution are
 rebuilt repeatedly. This is acceptable for the current demo but scales poorly with windows and
-controls. Use an indexed/generational arena or a map for entries while preserving explicit sibling
-order vectors.
+controls.
+
+**View lookup progress (2026-06-26):** `ViewRegistry` now keeps a `HashMap<ViewId, usize>` index
+beside the registration-order `Vec<ViewEntry>`. The root and child sibling vectors still define
+explicit paint and hit-test order, while `entry()` and `entry_mut()` use indexed lookup. Unregister
+rebuilds the index after compacting the entry vector.
 
 ## Required changes to the window/dialog plan
 
@@ -457,7 +461,7 @@ These original findings are reduced but not closed:
 | [C3](#c3-the-view-model-cannot-represent-control-or-group-state) View state | Done | — |
 | [C4](#c4-modal-state-does-not-preserve-interaction-context) Modal context | Done | — |
 | [H3](#h3-geometry-clipping-and-damage-must-be-one-registry-contract) Geometry contract | Mostly done | Single resolved-node record still split across registry helpers; C1 compositor remains |
-| Structural ([§](#structural-findings)) | Partial | Widget paint/input no longer clone widgets; consider indexed/generational view storage |
+| Structural ([§](#structural-findings)) | Done | Widget paint/input no longer clone widgets; retained view entries have indexed lookup while preserving sibling order vectors |
 
 ### Acceptance criteria status
 
@@ -489,8 +493,9 @@ omit the previous no-op global paint handler; explicit global-paint apps continu
 
 **Structural progress (2026-06-26):** retained widget paint now paints by reference instead of
 cloning widgets into redraw snapshots. Widget input target selection now returns IDs and rectangles
-only, while menu/control/frame dispatch mutate the retained widget in place. The remaining
-structural debt is a more scalable view-entry lookup structure.
+only, while menu/control/frame dispatch mutate the retained widget in place. `ViewRegistry` keeps an
+indexed entry lookup map while preserving the existing registration vector plus explicit root/child
+sibling order vectors. This closes the structural finding from this review.
 
 
 The project should not claim this goal based on frame appearance alone. A minimum credible result

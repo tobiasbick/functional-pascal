@@ -135,6 +135,27 @@ fn unregister_removes_subtree() {
 }
 
 #[test]
+fn unregister_rebuilds_view_lookup_index() {
+    let mut registry = ViewRegistry::default();
+    let first = registry.register(rect(0, 0, 10, 5));
+    let removed = registry.register(rect(10, 0, 10, 5));
+    let remaining = registry.register(rect(20, 0, 10, 5));
+
+    registry.unregister(removed);
+    let added = registry.register(rect(30, 0, 10, 5));
+    registry.set_rect(remaining, rect(22, 2, 8, 4));
+
+    assert_eq!(registry.rect(first), Some(rect(0, 0, 10, 5)));
+    assert_eq!(registry.rect(removed), None);
+    assert_eq!(registry.rect(remaining), Some(rect(22, 2, 8, 4)));
+    assert_eq!(registry.rect(added), Some(rect(30, 0, 10, 5)));
+    assert_eq!(
+        registry.ids().collect::<Vec<_>>(),
+        vec![first, remaining, added]
+    );
+}
+
+#[test]
 fn paint_order_follows_tree_and_raise() {
     let mut registry = ViewRegistry::default();
     let background = registry.register(rect(0, 0, 80, 25));

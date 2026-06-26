@@ -9,6 +9,7 @@ impl ViewRegistry {
     /// Register a root view with explicit behavior options.
     pub fn register_with_options(&mut self, rect: ViewRect, options: ViewOptions) -> ViewId {
         let id = self.allocate_id();
+        self.view_index.insert(id, self.views.len());
         self.views.push(ViewEntry {
             id,
             local_rect: rect,
@@ -43,6 +44,7 @@ impl ViewRegistry {
         self.clear_frame_roots_in_subtree(&subtree);
         self.detach_from_parent_or_roots(id, parent);
         self.views.retain(|entry| !subtree.contains(&entry.id));
+        self.rebuild_view_index();
         for entry in &mut self.views {
             if entry.current_child.is_some_and(|id| subtree.contains(&id)) {
                 entry.current_child = None;
@@ -276,6 +278,7 @@ impl ViewRegistry {
     /// Remove all registered views and all focus-chain state.
     pub fn clear(&mut self) {
         self.views.clear();
+        self.view_index.clear();
         self.roots.clear();
         self.focused = None;
         self.pointer_capture = None;
@@ -297,11 +300,22 @@ impl ViewRegistry {
     }
 
     pub(super) fn entry(&self, id: ViewId) -> Option<&ViewEntry> {
-        self.views.iter().find(|entry| entry.id == id)
+        self.view_index
+            .get(&id)
+            .and_then(|index| self.views.get(*index))
+            .filter(|entry| entry.id == id)
     }
 
     pub(super) fn entry_mut(&mut self, id: ViewId) -> Option<&mut ViewEntry> {
-        self.views.iter_mut().find(|entry| entry.id == id)
+        let index = *self.view_index.get(&id)?;
+        self.views.get_mut(index).filter(|entry| entry.id == id)
+    }
+
+    fn rebuild_view_index(&mut self) {
+        self.view_index.clear();
+        for (index, entry) in self.views.iter().enumerate() {
+            self.view_index.insert(entry.id, index);
+        }
     }
 
     fn collect_subtree(&self, id: ViewId, ids: &mut Vec<ViewId>) {

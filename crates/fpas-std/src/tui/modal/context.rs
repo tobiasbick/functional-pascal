@@ -4,7 +4,7 @@
 //! window/focus state that was active before it opened. This is the retained-side foundation for
 //! the dialog Accept/Cancel and focus-restoration behavior described in the TUI review (C4).
 //!
-//! Review: `docs/future/windows-dialogs/TUI-CODE-REVIEW.md`
+//! Review: `docs/future/tui/completed.md`
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
 use crate::{CommandId, ViewId};

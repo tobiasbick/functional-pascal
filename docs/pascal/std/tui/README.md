@@ -15,5 +15,5 @@ Hosted terminal applications and session APIs.
 
 - [`Std.Console`](../console/README.md) — low-level I/O and events
 - [Concurrency — scheduling](../../language/concurrency/scheduling.md) — main-thread `On*` handlers
-- [TUI framework](../../../future/tui-application-framework.md)
+- [TUI roadmap](../../../future/tui/README.md)
 - [Standard library index](../README.md)

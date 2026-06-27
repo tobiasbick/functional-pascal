@@ -1,6 +1,6 @@
 //! Static geometry for Turbo Vision-style frame chrome and content viewport.
 //!
-//! Plan: `docs/future/windows-dialogs/README.md`
+//! Plan: `docs/future/tui/completed.md`
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
 use crate::ViewRect;

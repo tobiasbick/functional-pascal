@@ -1,6 +1,6 @@
 //! Frame kind presets for Turbo Vision-style windows and dialogs.
 //!
-//! Plan: `docs/future/windows-dialogs/README.md`
+//! Plan: `docs/future/tui/completed.md`
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
 use super::FrameCapabilities;

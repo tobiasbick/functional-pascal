@@ -1,7 +1,6 @@
 //! Captured frame move, resize, zoom, and next-window activation.
 //!
-//! Plan: `docs/future/windows-dialogs/README.md`
-//! Review: `docs/future/windows-dialogs/TUI-CODE-REVIEW.md`
+//! Plan: `docs/future/tui/completed.md`
 
 use super::hit::{FrameChromeHit, frame_chrome_hit};
 use super::state::{FrameResizeEdge, WindowInteractionKind};

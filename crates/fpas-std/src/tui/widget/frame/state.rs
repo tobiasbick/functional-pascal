@@ -1,6 +1,6 @@
 //! Frame-root metadata and in-flight window interaction state.
 //!
-//! Plan: `docs/future/windows-dialogs/README.md`
+//! Plan: `docs/future/tui/completed.md`
 
 use crate::{ScrollModel, ViewId, ViewRect, ViewRegistry};
 

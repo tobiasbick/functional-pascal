@@ -1,6 +1,6 @@
 //! Frame chrome hit-testing for move and resize interaction.
 //!
-//! Plan: `docs/future/windows-dialogs/README.md`
+//! Plan: `docs/future/tui/completed.md`
 
 use crate::ViewRect;
 

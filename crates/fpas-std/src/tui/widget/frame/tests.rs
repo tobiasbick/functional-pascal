@@ -5,8 +5,7 @@
 //! z-order, occlusion repair when a covering frame is removed, child clipping, click-driven focus
 //! activation between windows, and nested frames.
 //!
-//! Plan: `docs/future/windows-dialogs/README.md`
-//! Review: `docs/future/windows-dialogs/TUI-CODE-REVIEW.md`
+//! Plan: `docs/future/tui/completed.md`
 
 use crate::{
     Console, DamageRegion, FrameCapabilities, FrameContentSize, FrameKind, FrameRootSpec,

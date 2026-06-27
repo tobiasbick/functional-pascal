@@ -63,6 +63,10 @@ pub struct ResolvedView {
     pub id: ViewId,
     /// Absolute screen rectangle before clipping.
     pub rect: ViewRect,
+    /// Absolute screen origin used for this node's direct children.
+    ///
+    /// Plain views use their top-left cell. Frame roots use the scrolled inner viewport origin.
+    pub content_origin: (i64, i64),
     /// Effective visible screen clip, or `None` when fully clipped/hidden.
     pub clip: Option<ViewRect>,
     /// Resolved view state including focus-path and exposure flags.

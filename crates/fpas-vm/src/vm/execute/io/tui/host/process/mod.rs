@@ -124,7 +124,9 @@ impl Worker {
                 Ok(outcome)
             }
             UiEvent::FocusLost => {
-                self.with_tui(|tui| tui.views.release_pointer());
+                self.with_tui(|tui| {
+                    tui.views.cancel_pointer_interactions();
+                });
                 self.clear_menu_bar_pointer_state(modal_scope.as_deref(), line)?;
                 self.dispatch_console_event_handler(
                     on_focus_lost,

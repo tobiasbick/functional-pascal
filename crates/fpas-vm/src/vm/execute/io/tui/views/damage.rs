@@ -13,9 +13,9 @@ impl Worker {
         root: ViewId,
     ) -> Vec<ViewRect> {
         tui.views
-            .subtree_ids(root)
+            .resolved_subtree(root)
             .into_iter()
-            .filter_map(|id| tui.views.rect(id))
+            .map(|view| view.rect)
             .collect()
     }
 

@@ -10,7 +10,7 @@
 
 use crate::{
     Console, DamageRegion, FrameCapabilities, FrameContentSize, FrameKind, FrameRootSpec,
-    FrameWidget, ViewId, ViewRect, ViewRegistry, WindowPalette,
+    FrameScrollHit, FrameWidget, ViewId, ViewRect, ViewRegistry, WindowPalette,
 };
 use fpas_bytecode::SourceLocation;
 
@@ -144,6 +144,42 @@ fn frame_child_is_clipped_to_frame_bounds() {
 }
 
 #[test]
+fn reparenting_into_scrolled_frame_uses_resolved_content_origin() {
+    let mut registry = registry_with_desktop();
+    let frame = registry
+        .register_frame_root(FrameRootSpec::new(
+            FrameKind::Window,
+            rect(10, 2, 10, 8),
+            FrameContentSize::new(30, 30),
+        ))
+        .expect("valid frame");
+    assert!(registry.set_frame_scroll_offset(frame.view_id, 2, 3));
+
+    let child = registry.register(rect(40, 20, 4, 2));
+    assert!(registry.set_parent(child, Some(frame.view_id)));
+
+    let frame_view = frame.geometry.view;
+    let expected_origin = (frame_view.x - 2, frame_view.y - 3);
+    assert_eq!(
+        registry
+            .resolved(frame.view_id)
+            .map(|view| view.content_origin),
+        Some(expected_origin)
+    );
+    assert_eq!(registry.rect(child), Some(rect(40, 20, 4, 2)));
+    assert_eq!(
+        registry.local_rect(child),
+        Some(rect(40 - expected_origin.0, 20 - expected_origin.1, 4, 2))
+    );
+
+    registry.set_rect(child, rect(1, 1, 4, 2));
+    assert_eq!(
+        registry.rect(child),
+        Some(rect(expected_origin.0 + 1, expected_origin.1 + 1, 4, 2))
+    );
+}
+
+#[test]
 fn frame_chrome_excludes_children_even_when_generic_child_clipping_is_disabled() {
     let mut registry = registry_with_desktop();
     let frame = registry
@@ -227,6 +263,59 @@ fn captured_resize_and_pointer_capture_persist_outside_frame() {
     assert!(registry.end_frame_interaction());
     assert_eq!(registry.captured_pointer(), None);
     assert_eq!(registry.rect(frame.view_id), Some(rect(10, 4, 25, 10)));
+}
+
+#[test]
+fn cancel_pointer_interactions_clears_frame_drag_state() {
+    let mut registry = registry_with_desktop();
+    let spec = FrameRootSpec {
+        kind: FrameKind::Window,
+        outer: rect(10, 4, 20, 8),
+        content_size: FrameContentSize::new(40, 40),
+        capabilities: FrameCapabilities {
+            movable: true,
+            resizable: true,
+            zoomable: false,
+            closable: false,
+            scrollable: true,
+        },
+        options: Default::default(),
+    };
+    let frame = registry.register_frame_root(spec).expect("valid frame");
+    let title_x = frame.geometry.title_bar.x + 3;
+    let title_y = frame.geometry.title_bar.y;
+
+    assert!(registry.begin_frame_move(frame.view_id, title_x, title_y));
+    assert_eq!(registry.captured_pointer(), Some(frame.view_id));
+    assert!(registry.window_interaction().is_some());
+    assert!(registry.cancel_pointer_interactions());
+    assert_eq!(registry.captured_pointer(), None);
+    assert_eq!(registry.window_interaction(), None);
+
+    let vertical_thumb_x = frame
+        .geometry
+        .scrollbars
+        .vertical
+        .expect("vertical scroll")
+        .x;
+    let vertical_thumb_y = frame
+        .geometry
+        .scrollbars
+        .vertical
+        .expect("vertical scroll")
+        .y
+        + 1;
+    assert!(registry.begin_frame_scroll_thumb_drag(
+        frame.view_id,
+        FrameScrollHit::Vertical(crate::ScrollBarHit::Thumb),
+        vertical_thumb_x,
+        vertical_thumb_y,
+    ));
+    assert_eq!(registry.captured_pointer(), Some(frame.view_id));
+    assert!(registry.frame_scroll_interaction().is_some());
+    assert!(registry.cancel_pointer_interactions());
+    assert_eq!(registry.captured_pointer(), None);
+    assert_eq!(registry.frame_scroll_interaction(), None);
 }
 
 #[test]

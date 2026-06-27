@@ -82,6 +82,20 @@ impl ViewRegistry {
         self.pointer_capture = None;
     }
 
+    /// Cancel all in-flight pointer-owned state.
+    ///
+    /// This is stronger than [`Self::release_pointer`]: it also drops frame move/resize and frame
+    /// scroll-thumb drags that depend on capture continuing.
+    pub fn cancel_pointer_interactions(&mut self) -> bool {
+        let changed = self.pointer_capture.is_some()
+            || self.window_interaction.is_some()
+            || self.frame_scroll_interaction.is_some();
+        self.pointer_capture = None;
+        self.window_interaction = None;
+        self.frame_scroll_interaction = None;
+        changed
+    }
+
     /// Return the view that currently owns pointer capture.
     #[must_use]
     pub fn captured_pointer(&self) -> Option<ViewId> {

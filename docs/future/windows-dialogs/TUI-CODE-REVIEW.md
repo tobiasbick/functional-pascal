@@ -77,12 +77,11 @@ handlers and widgets clip through `begin_tui_view_paint`.
 
 ### C2. There is no general consumable event router
 
-Key routing is hard-coded as Tab traversal, global menu handling, command lookup, then global
-`OnKeyPressed`
-([`key.rs:14`](../../../crates/fpas-vm/src/vm/execute/io/tui/host/process/key.rs#L14)). The boolean
-returned by `OnKeyPressed` is now preserved in the process tag, but all current default routing has
-already run before the callback. Mouse routing likewise has no target-view callback and does not
-focus a clicked view.
+Key routing now runs Tab traversal, retained controls, native widget keys, scoped commands, and then
+global `OnKeyPressed`. The boolean returned by `OnKeyPressed` is preserved in the process tag, but
+default routing still runs before the callback. Pointer routing resolves retained targets, routes
+native widget pointer/wheel behavior through the widget-dispatch layer, and focuses selectable
+views.
 
 The frame plan specifies child-first bubbling, but no reusable widget or view event protocol exists
 to implement it. Adding frame-specific branches to `process.rs` would repeat the menu-bar design
@@ -194,9 +193,17 @@ The Phase 0 correction makes `HostSetViewRect` invalidate the resolved child scr
 resizes call `request_frame_subtree_damage` so descendants extending outside the parent rectangle
 are repainted.
 
-`ViewRect` exposes `intersection`, `union`, translation, and emptiness checks; widget paint paths
+`ViewRect` exposes `intersection`, `union`, and emptiness checks; widget paint paths
 now clip through [`DamageRegion::clip_rect`](../../../crates/fpas-std/src/tui/damage.rs) instead of
 private duplicates.
+
+Progress 2026-06-27: subtree damage snapshots now consume
+[`ViewRegistry::resolved_subtree`](../../../crates/fpas-std/src/tui/view/geometry.rs), so damage
+uses the same resolved node data as paint, hit-testing, and queries. The snapshot intentionally
+keeps hidden or fully clipped nodes with their absolute rectangles for visibility and clipping
+transitions. `ResolvedView` now also carries the parent content origin used for direct children,
+including scrolled frame viewports, and reparenting consumes that resolved value instead of
+parallel frame-specific origin logic.
 
 ### H4. Pointer capture is a prerequisite, not interaction polish
 
@@ -204,6 +211,13 @@ Move, resize, scrollbar arrows, and thumb dragging need to keep receiving move/u
 pointer leaves the initial hit rectangle. Current routing performs a fresh hit-test for every mouse
 event and stores no pressed/captured view. Implement capture, pressed-button tracking, cancel on
 terminal focus loss, and release on view removal before frame Phase 2/4 input work.
+
+Progress 2026-06-27: retained routing now has pointer capture, frame move/resize and frame
+scroll-thumb drags use it, captured routes survive outside the initial hit rectangle, and
+`ViewRegistry::cancel_pointer_interactions` clears capture plus host-owned frame drag state on
+terminal focus loss. View removal already releases capture and frame-root interaction state. The
+remaining H4 work is general pressed-state semantics for controls that need press/release matching
+beyond existing drag widgets.
 
 ### H5. Terminal cell width is incorrect for general Unicode
 
@@ -457,10 +471,11 @@ These original findings are reduced but not closed:
 | Finding | Status | Remaining |
 | --- | --- | --- |
 | [C1](#c1-painting-is-not-a-safe-retained-mode-compositor) Paint compositor | Done | Retained `Application.Run` rejects global `OnPaint`; retained apps use root-local paint or widgets; global `OnPaint` remains only for explicit non-retained paint apps and low-level dispatch samples |
-| [C2](#c2-there-is-no-general-consumable-event-router) Event router | Mostly done | Keep new controls on `EventOutcome` in `fpas-std`; avoid frame-specific VM branches |
+| [C2](#c2-there-is-no-general-consumable-event-router) Event router | Done | Native control, menu, and frame key/pointer outcomes are reached through retained route/widget dispatch; VM process files no longer carry frame-specific key/pointer stages |
 | [C3](#c3-the-view-model-cannot-represent-control-or-group-state) View state | Done | — |
 | [C4](#c4-modal-state-does-not-preserve-interaction-context) Modal context | Done | — |
-| [H3](#h3-geometry-clipping-and-damage-must-be-one-registry-contract) Geometry contract | Mostly done | Single resolved-node record still split across registry helpers; C1 compositor remains |
+| [H3](#h3-geometry-clipping-and-damage-must-be-one-registry-contract) Geometry contract | Done | Damage, child origins, and reparenting now consume resolved-node data |
+| [H4](#h4-pointer-capture-is-a-prerequisite-not-interaction-polish) Pointer capture | Mostly done | Capture, frame drag, scroll-thumb drag, focus-loss cancel, and removal cleanup are done; remaining work is general pressed-state semantics for controls |
 | Structural ([§](#structural-findings)) | Done | Widget paint/input no longer clone widgets; retained view entries have indexed lookup while preserving sibling order vectors |
 
 ### Acceptance criteria status
@@ -496,6 +511,13 @@ roots already exist, and `HostDispatchRedraw` runs global `OnPaint` only for non
 global-paint applications. Interactive retained examples now register a full-screen root view with a
 local `OnViewPaint` handler or rely on host widgets, and the public `Std.Tui` docs describe global
 `OnPaint` as outside the retained scene.
+
+**C2 progress (2026-06-27):** native key routing now treats frame key scrolling as part of the
+general widget-key dispatch layer instead of as a separate `host/process/key.rs` branch. Pointer
+routing likewise reaches frame move, resize, scrollbar, and wheel behavior through native
+widget-mouse/wheel dispatch rather than frame-specific `host/process/pointer.rs` stages. The
+`tui_frame_scroll_test.fpas`, `tui_frame_occlusion_move_test.fpas`, and
+`tui_frame_occlusion_resize_test.fpas` regressions cover those paths.
 
 **Structural progress (2026-06-26):** retained widget paint now paints by reference instead of
 cloning widgets into redraw snapshots. Widget input target selection now returns IDs and rectangles

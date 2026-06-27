@@ -114,7 +114,7 @@ Mouse dispatch:
 4. route to **menu bar widgets** before other widgets under the pointer;
 5. fall back to **`OnMouse`** when registered.
 
-**Pointer capture** keeps delivering move/up events to the capturing view after the pointer leaves the original hit rectangle (used internally for drag-like interactions). Terminal focus loss and view removal release capture.
+**Pointer capture** keeps delivering move/up events to the capturing view after the pointer leaves the original hit rectangle (used internally for drag-like interactions). Terminal focus loss and view removal release capture; terminal focus loss also cancels host-owned drag state such as frame move/resize and frame scroll-thumb drags.
 
 ## Commands
 

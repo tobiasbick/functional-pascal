@@ -372,13 +372,6 @@ impl ViewRegistry {
     /// Frame-root children use view-space coordinates (matching [`super::geometry`] resolution).
     /// All other parents use the parent's resolved top-left corner.
     fn parent_local_origin(&self, parent_id: ViewId) -> Option<(i64, i64)> {
-        if let Some(frame) = self.frame_roots.get(&parent_id) {
-            let view = frame.geometry.view;
-            let ox = frame.scroll_x.offset() as i64;
-            let oy = frame.scroll_y.offset() as i64;
-            Some((view.x - ox, view.y - oy))
-        } else {
-            self.rect(parent_id).map(|rect| (rect.x, rect.y))
-        }
+        self.resolved(parent_id).map(|view| view.content_origin)
     }
 }

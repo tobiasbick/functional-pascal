@@ -31,6 +31,18 @@ begin
   end
 end;
 
+function PlainKey(Kind: KeyKind): KeyEvent;
+begin
+  return record
+    kind := Kind;
+    ch := Std.Str.Chr(0);
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
 procedure OnPaint(App: Application);
 begin
 end;
@@ -42,6 +54,7 @@ begin
   var FrameView: ViewId := Application.HostCreateFrameView(App, 2, 1, 14, 10, 'Scroll', FrameKindWindow, false, false, false, true, false);
   var Child: ViewId := Application.HostCreateSolidFillView(App, 0, 0, 12, 20, Red, Some(White), Some('s'));
   Application.HostSetViewParent(App, Child, Some(FrameView));
+  Application.HostPushChildView(App, Child);
   Application.HostSetFrameContentSize(App, FrameView, 12, 20);
   mutable var State: FrameScrollState := Application.QueryFrameScrollState(App, FrameView);
   AssertEquals(0, State.offsetX);
@@ -62,5 +75,11 @@ begin
   Application.TestPumpUntilIdle(App);
   State := Application.QueryFrameScrollState(App, FrameView);
   AssertEquals(1, State.offsetY);
+  Application.TestClickMouse(App, 4, 3);
+  Application.TestPumpUntilIdle(App);
+  Application.TestSendKey(App, PlainKey(KeyKind.PageDown));
+  Application.TestPumpUntilIdle(App);
+  State := Application.QueryFrameScrollState(App, FrameView);
+  AssertTrue(State.offsetY > 1);
   Application.CloseForTest(App)
 end.

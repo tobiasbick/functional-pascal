@@ -16,6 +16,10 @@ impl Worker {
         modal_scope: Option<&[ViewId]>,
         line: SourceLocation,
     ) -> Result<Option<ProcessOutcome>, VmError> {
+        if let Some(tag) = self.try_dispatch_frame_mouse(mouse, modal_scope, line)? {
+            return Ok(Some(tag));
+        }
+
         let hit = {
             let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
             widget_target::widget_mouse_hit(&tui.views, &tui.view_widgets, mouse, modal_scope)
@@ -63,10 +67,32 @@ impl Worker {
         Ok(Some(dispatch_tag))
     }
 
-    /// Routes keyboard shortcuts to host menu bar widgets before global command bindings.
+    /// Routes wheel events to native widgets that own viewport-level scrolling.
+    pub(in crate::vm::execute::io::tui) fn try_dispatch_widget_wheel(
+        &mut self,
+        mouse: fpas_std::UiMouse,
+        modal_scope: Option<&[ViewId]>,
+        line: SourceLocation,
+    ) -> Result<Option<ProcessOutcome>, VmError> {
+        self.try_dispatch_frame_wheel(mouse, modal_scope, line)
+    }
+
+    /// Routes key events to native widget behavior before global command bindings.
     pub(in crate::vm::execute::io::tui) fn try_dispatch_widget_key(
         &mut self,
         key: fpas_std::ConsoleKeyEvent,
+        modal_scope: Option<&[ViewId]>,
+        line: SourceLocation,
+    ) -> Result<Option<ProcessOutcome>, VmError> {
+        if let Some(tag) = self.try_dispatch_menu_bar_key(&key, modal_scope, line)? {
+            return Ok(Some(tag));
+        }
+        self.try_dispatch_frame_key(&key, line)
+    }
+
+    fn try_dispatch_menu_bar_key(
+        &mut self,
+        key: &fpas_std::ConsoleKeyEvent,
         modal_scope: Option<&[ViewId]>,
         line: SourceLocation,
     ) -> Result<Option<ProcessOutcome>, VmError> {
@@ -85,7 +111,7 @@ impl Worker {
                 return Some(MenuBarMouseResult::Ignored);
             };
             let before = menu.damage_rects(rect);
-            let result = menu.handle_key(&key);
+            let result = menu.handle_key(key);
             let after = menu.damage_rects(rect);
             tui.view_widgets.insert(view_id, widget);
             if result != MenuBarMouseResult::Ignored {

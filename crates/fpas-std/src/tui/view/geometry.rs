@@ -27,6 +27,18 @@ impl ViewRegistry {
             .collect()
     }
 
+    /// Resolve every view in `root`'s subtree in paint order.
+    ///
+    /// The snapshot preserves hidden and fully clipped nodes so callers that track damage across
+    /// state transitions can still dirty their absolute rectangles.
+    #[must_use]
+    pub fn resolved_subtree(&self, root: ViewId) -> Vec<ResolvedView> {
+        self.subtree_ids(root)
+            .into_iter()
+            .filter_map(|id| self.resolved(id))
+            .collect()
+    }
+
     /// Return the effective visible clip for one view.
     #[must_use]
     pub fn clip(&self, id: ViewId) -> Option<ViewRect> {
@@ -38,24 +50,11 @@ impl ViewRegistry {
         let (rect, inherited_visible, inherited_limit) = match entry.parent {
             Some(parent_id) => {
                 let (parent, child_limit) = self.resolve_with_limit(parent_id)?;
-                let rect = if self.frame_roots.contains_key(&parent_id) {
-                    let frame = self.frame_roots.get(&parent_id)?;
-                    let view = frame.geometry.view;
-                    let ox = frame.scroll_x.offset() as i64;
-                    let oy = frame.scroll_y.offset() as i64;
-                    ViewRect {
-                        x: view.x + entry.local_rect.x - ox,
-                        y: view.y + entry.local_rect.y - oy,
-                        width: entry.local_rect.width,
-                        height: entry.local_rect.height,
-                    }
-                } else {
-                    ViewRect {
-                        x: parent.rect.x.saturating_add(entry.local_rect.x),
-                        y: parent.rect.y.saturating_add(entry.local_rect.y),
-                        width: entry.local_rect.width,
-                        height: entry.local_rect.height,
-                    }
+                let rect = ViewRect {
+                    x: parent.content_origin.0.saturating_add(entry.local_rect.x),
+                    y: parent.content_origin.1.saturating_add(entry.local_rect.y),
+                    width: entry.local_rect.width,
+                    height: entry.local_rect.height,
                 };
                 (rect, parent.state.visible, child_limit)
             }
@@ -72,12 +71,22 @@ impl ViewRegistry {
         } else {
             None
         };
+
+        let frame = self.frame_roots.get(&id);
+        let frame_geometry = frame.and_then(|frame| {
+            FrameGeometry::resolve(rect, frame.content_size, frame.capabilities).ok()
+        });
+        let content_origin = match (frame, frame_geometry) {
+            (Some(frame), Some(geometry)) => (
+                geometry.view.x - frame.scroll_x.offset() as i64,
+                geometry.view.y - frame.scroll_y.offset() as i64,
+            ),
+            _ => (rect.x, rect.y),
+        };
         let child_limit = if !visible {
             ClipLimit::Hidden
-        } else if let Some(frame) = self.frame_roots.get(&id) {
-            FrameGeometry::resolve(rect, frame.content_size, frame.capabilities)
-                .ok()
-                .and_then(|geometry| clip.and_then(|limit| geometry.view.intersection(limit)))
+        } else if let Some(geometry) = frame_geometry {
+            clip.and_then(|limit| geometry.view.intersection(limit))
                 .map_or(ClipLimit::Hidden, ClipLimit::Rect)
         } else if entry.options.clip_children {
             clip.map_or(ClipLimit::Hidden, ClipLimit::Rect)
@@ -100,6 +109,7 @@ impl ViewRegistry {
             ResolvedView {
                 id,
                 rect,
+                content_origin,
                 clip,
                 state,
                 options: entry.options,

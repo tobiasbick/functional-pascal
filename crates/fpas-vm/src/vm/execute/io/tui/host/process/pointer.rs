@@ -20,22 +20,18 @@ impl Worker {
         modal_scope: Option<&[ViewId]>,
         line: SourceLocation,
     ) -> Result<ProcessOutcome, VmError> {
-        if let Some(tag) = self.try_dispatch_frame_mouse(mouse, modal_scope, line)? {
-            return Ok(tag);
-        }
-
         let route = {
             let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
             tui.views
                 .route_event(RoutedEvent::Mouse(mouse), modal_scope)
         };
-        if modal_scope.is_some() && route.target.is_none() {
-            return Ok(ProcessOutcome::Blocked(BlockedInput::Pointer));
-        }
 
         self.sync_menu_bar_hover_outside_pointer(mouse, modal_scope, line)?;
         if let Some(tag) = self.try_dispatch_widget_mouse(mouse, modal_scope, line)? {
             return Ok(tag);
+        }
+        if modal_scope.is_some() && route.target.is_none() {
+            return Ok(ProcessOutcome::Blocked(BlockedInput::Pointer));
         }
 
         if mouse.action == mouse_action_index("Down")
@@ -58,7 +54,7 @@ impl Worker {
         if let Some(tag) = self.try_dispatch_control_mouse(mouse, modal_scope, line)? {
             return Ok(tag);
         }
-        if let Some(tag) = self.try_dispatch_frame_wheel(mouse, modal_scope, line)? {
+        if let Some(tag) = self.try_dispatch_widget_wheel(mouse, modal_scope, line)? {
             return Ok(tag);
         }
         let redraw_hint = self.mouse_redraw_hint(modal_scope, mouse);

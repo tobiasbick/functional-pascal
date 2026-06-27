@@ -314,6 +314,33 @@ fn resolved_view_clips_nested_child_to_parent() {
 }
 
 #[test]
+fn resolved_subtree_keeps_snapshot_order_and_hidden_rects() {
+    let mut registry = ViewRegistry::default();
+    let root = registry.register(rect(10, 5, 8, 4));
+    let child = registry.register(rect(6, 2, 6, 4));
+    let leaf = registry.register(rect(1, 1, 2, 1));
+    assert!(registry.set_parent(child, Some(root)));
+    assert!(registry.set_parent(leaf, Some(child)));
+    registry.set_rect(child, rect(6, 2, 6, 4));
+    registry.set_rect(leaf, rect(1, 1, 2, 1));
+    assert!(registry.set_visible(child, false));
+
+    let snapshot = registry.resolved_subtree(root);
+    assert_eq!(
+        snapshot.iter().map(|view| view.id).collect::<Vec<_>>(),
+        vec![root, child, leaf]
+    );
+    assert_eq!(snapshot[0].rect, rect(10, 5, 8, 4));
+    assert_eq!(snapshot[1].rect, rect(16, 7, 6, 4));
+    assert_eq!(snapshot[2].rect, rect(17, 8, 2, 1));
+    assert_eq!(snapshot[0].content_origin, (10, 5));
+    assert_eq!(snapshot[1].content_origin, (16, 7));
+    assert_eq!(snapshot[2].content_origin, (17, 8));
+    assert_eq!(snapshot[1].clip, None);
+    assert!(!snapshot[1].state.exposed);
+}
+
+#[test]
 fn hidden_parent_hides_descendants_from_paint_and_hit_test() {
     let mut registry = ViewRegistry::default();
     let root = registry.register(rect(0, 0, 10, 5));

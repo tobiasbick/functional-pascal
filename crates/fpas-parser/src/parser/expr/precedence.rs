@@ -1,5 +1,6 @@
 use super::super::Parser;
 use crate::ast::*;
+use fpas_diagnostics::codes::PARSE_EXPECTED_EXPRESSION;
 use fpas_lexer::Token;
 
 impl Parser {
@@ -21,15 +22,33 @@ impl Parser {
         if let Some(op) = op {
             self.advance();
             let right = self.parse_additive();
-            Expr::BinaryOp {
+            let expr = Expr::BinaryOp {
                 op,
                 left: Box::new(left),
                 right: Box::new(right),
                 span: self.span_from(start),
-            }
+            };
+            self.recover_from_chained_comparison();
+            expr
         } else {
             left
         }
+    }
+
+    /// Rejects `A op B op C` and skips the erroneous tail so statement parsing can continue.
+    fn recover_from_chained_comparison(&mut self) {
+        if !self.is_comparison_token() {
+            return;
+        }
+        let span = self.current_span();
+        self.error_with_code(
+            PARSE_EXPECTED_EXPRESSION,
+            "Chained comparison operators are not allowed",
+            "Use at most one comparison operator per expression (for example `(A = B) and (C = D)`).",
+            span,
+        );
+        self.advance();
+        let _ = self.parse_additive();
     }
 
     pub(super) fn parse_additive(&mut self) -> Expr {

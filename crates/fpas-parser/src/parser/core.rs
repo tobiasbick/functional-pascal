@@ -8,7 +8,26 @@ use fpas_diagnostics::codes::{PARSE_EXPECTED_IDENTIFIER, PARSE_EXPECTED_TOKEN};
 use fpas_lexer::{Span, SpannedToken, Token};
 
 impl Parser {
+    /// Builds a parser from a pre-lexed token stream.
+    ///
+    /// When `tokens` is empty, a synthetic [`Token::Eof`] entry is inserted so indexing never
+    /// underflows. Callers should still supply a stream ending in `Eof` (as [`fpas_lexer::lex`]
+    /// does) for correct parse boundaries.
     pub fn new(tokens: Vec<SpannedToken>) -> Self {
+        let tokens = if tokens.is_empty() {
+            vec![SpannedToken {
+                token: Token::Eof,
+                span: Span {
+                    offset: 0,
+                    length: 0,
+                    line: 1,
+                    column: 1,
+                    source_id: 0,
+                },
+            }]
+        } else {
+            tokens
+        };
         Self {
             tokens,
             pos: 0,
@@ -64,8 +83,25 @@ impl Parser {
         }
     }
 
+    /// Returns true when the current token has the same **kind** as `expected`.
+    ///
+    /// Only pass unit-variant tokens (no payload), e.g. [`Token::Semicolon`]. Payload-bearing
+    /// variants such as [`Token::Ident`] or [`Token::Integer`] must use explicit matching.
     pub(crate) fn check(&self, expected: &Token) -> bool {
         std::mem::discriminant(self.current_token()) == std::mem::discriminant(expected)
+    }
+
+    pub(crate) fn is_comparison_token(&self) -> bool {
+        matches!(
+            self.current_token(),
+            Token::Equal
+                | Token::NotEqual
+                | Token::Less
+                | Token::Greater
+                | Token::LessEqual
+                | Token::GreaterEqual
+                | Token::In
+        )
     }
 
     pub(crate) fn eat(&mut self, expected: &Token) -> bool {

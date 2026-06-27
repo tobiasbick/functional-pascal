@@ -95,6 +95,11 @@ pub fn parse_compilation_unit(source: &str) -> (CompilationUnit, Vec<ParseDiagno
     (unit, append_parser_errors(errors, parse_errors))
 }
 
+/// Parses a compilation unit from a pre-lexed token stream.
+///
+/// The stream must end with [`fpas_lexer::Token::Eof`] (as produced by [`fpas_lexer::lex`] or
+/// [`fpas_lexer::lex_with_source_id`]). An empty stream is accepted and yields a single header
+/// diagnostic rather than panicking. Lexer diagnostics are not included; merge them separately.
 pub fn parse_tokens_compilation_unit(
     tokens: Vec<SpannedToken>,
 ) -> (CompilationUnit, Vec<ParseDiagnostic>) {

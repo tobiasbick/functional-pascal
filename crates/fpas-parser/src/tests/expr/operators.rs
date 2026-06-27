@@ -136,3 +136,11 @@ fn greater_equal() {
         _ => panic!("expected BinaryOp"),
     }
 }
+
+#[test]
+fn in_op() {
+    match parse_expr("1 in Items") {
+        Expr::BinaryOp { op, .. } => assert_eq!(op, BinaryOp::In),
+        _ => panic!("expected BinaryOp"),
+    }
+}

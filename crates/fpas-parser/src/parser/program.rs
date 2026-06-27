@@ -1,8 +1,8 @@
-use super::Parser;
+use super::{ERROR_IDENT, Parser};
 use crate::ast::*;
 use crate::error::ParseError;
 use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
-use fpas_lexer::Token;
+use fpas_lexer::{Span, Token};
 
 impl Parser {
     pub fn parse_compilation_unit(mut self) -> (CompilationUnit, Vec<ParseError>) {
@@ -20,15 +20,29 @@ impl Parser {
                     "Start the file with `program <name>;` or `unit <name>;`.",
                     span,
                 );
-                CompilationUnit::Program(self.parse_program_ast())
+                self.skip_to_eof();
+                CompilationUnit::Program(self.error_placeholder_program(span))
             }
         };
         (unit, self.errors)
     }
 
     pub fn parse_program(mut self) -> (Program, Vec<ParseError>) {
-        let program = self.parse_program_ast();
-        (program, self.errors)
+        if !self.check(&Token::Program) {
+            let span = self.current_span();
+            self.error_with_code(
+                PARSE_EXPECTED_TOKEN,
+                &format!(
+                    "Expected `program`, found `{}`",
+                    super::token_display(self.current_token())
+                ),
+                "Start the file with `program <name>;`.",
+                span,
+            );
+            self.skip_to_eof();
+            return (self.error_placeholder_program(span), self.errors);
+        }
+        (self.parse_program_ast(), self.errors)
     }
 
     fn parse_program_ast(&mut self) -> Program {
@@ -147,6 +161,23 @@ impl Parser {
         QualifiedId {
             parts,
             span: self.span_from(start),
+        }
+    }
+
+    fn error_placeholder_program(&self, span: Span) -> Program {
+        Program {
+            name: ERROR_IDENT.to_owned(),
+            name_span: span,
+            uses: Vec::new(),
+            declarations: Vec::new(),
+            body: Vec::new(),
+            span,
+        }
+    }
+
+    fn skip_to_eof(&mut self) {
+        while !self.at_end() {
+            self.advance();
         }
     }
 

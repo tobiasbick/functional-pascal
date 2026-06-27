@@ -248,11 +248,13 @@ impl Ty {
                         .all(|(pa, pb)| pa.ty.compatible_with(&pb.ty))
             }
             (Ty::Procedure(a), Ty::Procedure(b)) => {
-                (a.variadic || b.variadic || a.params.len() == b.params.len())
-                    && a.params
-                        .iter()
-                        .zip(b.params.iter())
-                        .all(|(pa, pb)| pa.ty.compatible_with(&pb.ty))
+                if a.variadic != b.variadic || a.params.len() != b.params.len() {
+                    return false;
+                }
+                a.params
+                    .iter()
+                    .zip(b.params.iter())
+                    .all(|(pa, pb)| pa.ty.compatible_with(&pb.ty))
             }
             _ => self == other,
         }
@@ -303,5 +305,35 @@ impl Ty {
                 .find(|(other_name, _)| other_name.eq_ignore_ascii_case(name))
                 .is_some_and(|(_, other_ty)| ty.compatible_with(other_ty))
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ParamTy, ProcedureTy, Ty};
+
+    #[test]
+    fn procedure_types_require_matching_variadic_flag_and_param_count() {
+        let fixed = Ty::Procedure(ProcedureTy {
+            type_params: Vec::new(),
+            params: vec![ParamTy {
+                mutable: false,
+                name: "x".to_string(),
+                ty: Ty::Integer,
+            }],
+            variadic: false,
+        });
+        let variadic = Ty::Procedure(ProcedureTy {
+            type_params: Vec::new(),
+            params: vec![ParamTy {
+                mutable: false,
+                name: "x".to_string(),
+                ty: Ty::Integer,
+            }],
+            variadic: true,
+        });
+
+        assert!(!fixed.compatible_with(&variadic));
+        assert!(!variadic.compatible_with(&fixed));
     }
 }

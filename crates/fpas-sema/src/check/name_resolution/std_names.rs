@@ -3,16 +3,22 @@ use crate::scope::canonical_symbol_name;
 use fpas_diagnostics::codes::SEMA_AMBIGUOUS_IMPORTED_NAME;
 
 impl Checker {
-    /// If `name` is an ambiguous short import, return a hint listing the candidates.
+    /// If `name` is an ambiguous short import or enum variant, return a hint listing the candidates.
     pub(crate) fn ambiguous_hint(&self, name: &str) -> Option<String> {
-        self.ambiguous_imports
-            .get(&canonical_symbol_name(name))
-            .map(|candidates| {
-                format!(
-                    "`{name}` exists in multiple imported units: {}. Use the fully qualified name to disambiguate.",
-                    candidates.join(", ")
-                )
-            })
+        let canonical_name = canonical_symbol_name(name);
+        if let Some(candidates) = self.ambiguous_enum_variants.get(&canonical_name) {
+            return Some(format!(
+                "`{name}` exists in multiple enums: {}. Use the fully qualified variant name to disambiguate.",
+                candidates.join(", ")
+            ));
+        }
+
+        self.ambiguous_imports.get(&canonical_name).map(|candidates| {
+            format!(
+                "`{name}` exists in multiple imported units: {}. Use the fully qualified name to disambiguate.",
+                candidates.join(", ")
+            )
+        })
     }
 
     /// Loads a `Std.*` unit on demand when code uses a fully qualified name without `uses`.

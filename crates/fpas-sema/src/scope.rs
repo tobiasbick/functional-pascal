@@ -86,7 +86,11 @@ impl ScopeStack {
         self.scopes.push(Scope::new());
     }
 
+    /// Pop the innermost scope. The program root scope (index 0) is never removed.
     pub fn pop_scope(&mut self) {
+        if self.scopes.len() <= 1 {
+            return;
+        }
         self.scopes.pop();
     }
 
@@ -186,5 +190,31 @@ impl ScopeStack {
 impl Default for ScopeStack {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ScopeStack, Symbol, SymbolKind};
+    use crate::types::Ty;
+
+    #[test]
+    fn pop_scope_never_removes_root_scope() {
+        let mut stack = ScopeStack::new();
+        stack.push_scope();
+        stack.pop_scope();
+        stack.pop_scope();
+
+        assert!(
+            stack.define(
+                "x",
+                Symbol {
+                    ty: Ty::Integer,
+                    mutable: false,
+                    kind: SymbolKind::Var,
+                }
+            ),
+            "root scope must remain usable after extra pop_scope"
+        );
     }
 }

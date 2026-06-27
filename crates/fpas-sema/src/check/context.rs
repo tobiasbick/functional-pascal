@@ -32,6 +32,10 @@ pub struct Checker {
     pub(crate) loaded_std_units: HashSet<String>,
     /// Short names that map to multiple fully-qualified std symbols (ambiguous).
     pub(crate) ambiguous_imports: HashMap<String, Vec<String>>,
+    /// Unqualified enum variant names that map to multiple `Type.Variant` symbols (ambiguous).
+    pub(crate) ambiguous_enum_variants: HashMap<String, Vec<String>>,
+    /// Canonical short enum variant names registered at the program root without ambiguity.
+    pub(crate) enum_short_variant_keys: HashMap<String, String>,
     /// Unqualified `BuiltinStd` call -> fully qualified name for the polymorphic checker.
     pub(crate) short_builtin_redirect: HashMap<String, String>,
     /// Canonical short names inserted at the program root by [`crate::std_registry::register_short_aliases`].
@@ -51,6 +55,8 @@ impl Checker {
             method_calls: MethodCallMap::new(),
             loaded_std_units: HashSet::new(),
             ambiguous_imports: HashMap::new(),
+            ambiguous_enum_variants: HashMap::new(),
+            enum_short_variant_keys: HashMap::new(),
             short_builtin_redirect: HashMap::new(),
             std_short_alias_keys: HashSet::new(),
             record_defaults: RecordDefaultsMap::new(),

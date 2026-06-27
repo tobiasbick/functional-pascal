@@ -22,6 +22,8 @@ var
   C: Color := Color.Red;
 ```
 
+When a program defines only one enum, unqualified variant names such as `Red` may also resolve if the short name is unique. If two enums export the same variant name (for example both define `Red`), the short name becomes ambiguous: the compiler reports an error and you must use fully qualified names such as `Color.Red` and `Status.Red`.
+
 ## Enum with backing values
 
 Each member can have an explicit integer value:

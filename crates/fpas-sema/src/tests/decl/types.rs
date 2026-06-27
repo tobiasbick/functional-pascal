@@ -32,6 +32,48 @@ fn enum_members_in_scope() {
 }
 
 #[test]
+fn enum_shared_variant_name_becomes_ambiguous_at_use_site() {
+    let errors = check_errors(
+        "program T; \
+         type Color = enum Red; Green; end; \
+         type Status = enum Red; Ready; end; \
+         begin \
+           var C: Color := Red \
+         end.",
+    );
+    assert!(
+        errors.iter().any(|error| {
+            error.code == fpas_diagnostics::codes::SEMA_AMBIGUOUS_IMPORTED_NAME
+                && error.message.contains("Ambiguous name `Red`")
+        }),
+        "expected ambiguous short enum variant at use site, got: {errors:#?}"
+    );
+}
+
+#[test]
+fn enum_shared_variant_name_does_not_error_when_qualified() {
+    check_ok(
+        "program T; \
+         type Color = enum Red; Green; end; \
+         type Status = enum Red; Ready; end; \
+         begin end.",
+    );
+}
+
+#[test]
+fn enum_qualified_variant_names_remain_unambiguous() {
+    check_ok(
+        "program T; \
+         type Color = enum Red; Green; end; \
+         type Status = enum Red; Ready; end; \
+         begin \
+           var C: Color := Color.Red; \
+           var S: Status := Status.Red \
+         end.",
+    );
+}
+
+#[test]
 fn enum_data_type_valid() {
     check_ok(
         "program T; \

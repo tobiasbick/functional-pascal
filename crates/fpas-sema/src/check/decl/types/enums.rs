@@ -3,6 +3,7 @@ use crate::scope::canonical_symbol_name;
 use crate::scope::{Symbol, SymbolKind};
 use crate::types::{EnumTy, EnumVariantTy, Ty};
 use fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION;
+use fpas_lexer::Span;
 use fpas_parser::{EnumType, TypeDef};
 use std::collections::HashSet;
 
@@ -59,7 +60,7 @@ impl Checker {
             variants: variants.clone(),
         });
 
-        for variant in &variants {
+        for (member, variant) in enum_ty.members.iter().zip(variants.iter()) {
             let kind = if variant.fields.is_empty() {
                 SymbolKind::EnumMember
             } else {
@@ -70,9 +71,7 @@ impl Checker {
                 mutable: false,
                 kind,
             };
-            self.scopes.define(&variant.name, symbol.clone());
-            let qualified = format!("{}.{}", td.name, variant.name);
-            self.scopes.define(&qualified, symbol);
+            self.register_enum_variant_symbols(&td.name, &variant.name, symbol, member.span);
         }
 
         if let Some(existing) = self.scopes.lookup_mut(&td.name) {
@@ -81,6 +80,63 @@ impl Checker {
                 mutable: false,
                 kind: SymbolKind::Type,
             };
+        }
+    }
+
+    /// Register `Type.Variant` and, when unambiguous, a short `Variant` alias at program scope.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/enums.md`
+    fn register_enum_variant_symbols(
+        &mut self,
+        enum_name: &str,
+        variant_name: &str,
+        symbol: Symbol,
+        span: Span,
+    ) {
+        let qualified = format!("{enum_name}.{variant_name}");
+        if !self.scopes.define_in_root(&qualified, symbol.clone()) {
+            self.error_with_code(
+                SEMA_DUPLICATE_DECLARATION,
+                format!("Duplicate enum member `{qualified}`"),
+                "Each enum member name must be unique in the program.",
+                span,
+            );
+            return;
+        }
+
+        let short_key = canonical_symbol_name(variant_name);
+
+        if let Some(candidates) = self.ambiguous_enum_variants.get(&short_key) {
+            let mut updated = candidates.clone();
+            if !updated
+                .iter()
+                .any(|candidate| candidate.eq_ignore_ascii_case(&qualified))
+            {
+                updated.push(qualified.clone());
+                self.ambiguous_enum_variants
+                    .insert(short_key.clone(), updated);
+            }
+            return;
+        }
+
+        if let Some(existing_qualified) = self.enum_short_variant_keys.get(&short_key).cloned() {
+            if existing_qualified.eq_ignore_ascii_case(&qualified) {
+                return;
+            }
+
+            self.scopes.remove_from_root(variant_name);
+            self.enum_short_variant_keys.remove(&short_key);
+            self.ambiguous_enum_variants
+                .insert(short_key, vec![existing_qualified, qualified.clone()]);
+            return;
+        }
+
+        if self.scopes.lookup(variant_name).is_some() {
+            return;
+        }
+
+        if self.scopes.define_in_root(variant_name, symbol) {
+            self.enum_short_variant_keys.insert(short_key, qualified);
         }
     }
 }

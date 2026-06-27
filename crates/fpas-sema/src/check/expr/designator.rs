@@ -1,8 +1,9 @@
 use super::super::Checker;
 use crate::scope::SymbolKind;
-use crate::scope::canonical_symbol_name;
 use crate::types::Ty;
-use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
+use fpas_diagnostics::codes::{
+    SEMA_AMBIGUOUS_IMPORTED_NAME, SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME,
+};
 use fpas_parser::{Designator, DesignatorPart};
 
 impl Checker {
@@ -46,9 +47,17 @@ impl Checker {
                             .iter()
                             .all(|part| matches!(part, DesignatorPart::Ident(_, _)));
 
-                    let hint = if let Some(ambiguous_hint) = self.ambiguous_hint(first) {
-                        ambiguous_hint
-                    } else if is_qualified_ident_chain {
+                    if let Some(ambiguous_hint) = self.ambiguous_hint(first) {
+                        self.error_with_code(
+                            SEMA_AMBIGUOUS_IMPORTED_NAME,
+                            format!("Ambiguous name `{first}`"),
+                            ambiguous_hint,
+                            designator.span,
+                        );
+                        return Ty::Error;
+                    }
+
+                    let hint = if is_qualified_ident_chain {
                         if crate::std_units::looks_like_std_qualified_name(&full_name) {
                             self.hint_unknown_callable(&full_name)
                         } else {
@@ -60,12 +69,7 @@ impl Checker {
                         "Check spelling or declare the variable or constant.".to_string()
                     };
 
-                    let message = if self
-                        .ambiguous_imports
-                        .contains_key(&canonical_symbol_name(first))
-                    {
-                        format!("Ambiguous name `{first}`")
-                    } else if is_qualified_ident_chain {
+                    let message = if is_qualified_ident_chain {
                         format!("Undefined identifier `{full_name}`")
                     } else {
                         format!("Undefined identifier `{first}`")

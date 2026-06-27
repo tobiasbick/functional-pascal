@@ -4,6 +4,7 @@
 
 use crate::error::{StdError, std_runtime_error};
 use crate::intrinsic_args::{pop_string, pop_value};
+use crate::limits::MAX_JSON_DEPTH;
 use crate::std_units::std_symbols as s;
 use fpas_bytecode::{Intrinsic, JsonIntrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
@@ -17,7 +18,14 @@ fn json_variant(variant: &str, fields: Vec<Value>) -> Value {
     }
 }
 
-fn json_to_fpas(value: JsonValue) -> Result<Value, String> {
+fn json_depth_exceeded_message() -> String {
+    format!("JSON nesting exceeds maximum depth of {MAX_JSON_DEPTH}")
+}
+
+fn json_to_fpas_at_depth(value: JsonValue, depth: usize) -> Result<Value, String> {
+    if depth > MAX_JSON_DEPTH {
+        return Err(json_depth_exceeded_message());
+    }
     match value {
         JsonValue::Null => Ok(json_variant("Null", Vec::new())),
         JsonValue::Bool(value) => Ok(json_variant("Bool", vec![Value::Boolean(value)])),
@@ -30,15 +38,21 @@ fn json_to_fpas(value: JsonValue) -> Result<Value, String> {
         JsonValue::String(value) => Ok(json_variant("String", vec![Value::Str(value)])),
         JsonValue::Array(items) => items
             .into_iter()
-            .map(json_to_fpas)
+            .map(|item| json_to_fpas_at_depth(item, depth + 1))
             .collect::<Result<Vec<_>, _>>()
             .map(|items| json_variant("Array", vec![Value::Array(items)])),
         JsonValue::Object(fields) => fields
             .into_iter()
-            .map(|(key, value)| json_to_fpas(value).map(|value| (Value::Str(key), value)))
+            .map(|(key, value)| {
+                json_to_fpas_at_depth(value, depth + 1).map(|value| (Value::Str(key), value))
+            })
             .collect::<Result<Vec<_>, _>>()
             .map(|fields| json_variant("Object", vec![Value::Dict(fields)])),
     }
+}
+
+fn json_to_fpas(value: JsonValue) -> Result<Value, String> {
+    json_to_fpas_at_depth(value, 1)
 }
 
 fn expected_json_value_error(value: &Value, location: SourceLocation) -> StdError {
@@ -66,7 +80,20 @@ fn expect_one_field(
     ))
 }
 
-fn fpas_to_json(value: Value, location: SourceLocation) -> Result<JsonValue, StdError> {
+fn fpas_to_json_at_depth(
+    value: Value,
+    location: SourceLocation,
+    depth: usize,
+) -> Result<JsonValue, StdError> {
+    if depth > MAX_JSON_DEPTH {
+        return Err(std_runtime_error(
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+            json_depth_exceeded_message(),
+            format!("Keep JSON trees at most {MAX_JSON_DEPTH} levels deep."),
+            location,
+        ));
+    }
+
     let Value::Enum {
         type_name,
         variant,
@@ -146,7 +173,7 @@ fn fpas_to_json(value: Value, location: SourceLocation) -> Result<JsonValue, Std
         "Array" => match expect_one_field("Array", fields, location)? {
             Value::Array(items) => items
                 .into_iter()
-                .map(|item| fpas_to_json(item, location))
+                .map(|item| fpas_to_json_at_depth(item, location, depth + 1))
                 .collect::<Result<Vec<_>, _>>()
                 .map(JsonValue::Array),
             other => Err(std_runtime_error(
@@ -177,7 +204,7 @@ fn fpas_to_json(value: Value, location: SourceLocation) -> Result<JsonValue, Std
                             ));
                         }
                     };
-                    object.insert(key, fpas_to_json(value, location)?);
+                    object.insert(key, fpas_to_json_at_depth(value, location, depth + 1)?);
                 }
                 Ok(JsonValue::Object(object))
             }
@@ -198,6 +225,10 @@ fn fpas_to_json(value: Value, location: SourceLocation) -> Result<JsonValue, Std
             location,
         )),
     }
+}
+
+fn fpas_to_json(value: Value, location: SourceLocation) -> Result<JsonValue, StdError> {
+    fpas_to_json_at_depth(value, location, 1)
 }
 
 pub(crate) fn run(
@@ -224,4 +255,67 @@ pub(crate) fn run(
         _ => return Ok(None),
     }
     Ok(Some(()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::limits::MAX_JSON_DEPTH;
+
+    fn loc() -> SourceLocation {
+        SourceLocation::new(1, 1)
+    }
+
+    fn nested_array_json(levels: usize) -> String {
+        let mut text = String::from("null");
+        for _ in 0..levels {
+            text = format!("[{text}]");
+        }
+        text
+    }
+
+    #[test]
+    fn parse_accepts_shallow_json() {
+        let mut stack = vec![Value::Str("null".into())];
+        run(Intrinsic::Json(JsonIntrinsic::Parse), &mut stack, loc()).unwrap();
+        assert!(matches!(stack.as_slice(), [Value::ResultOk(_)]));
+    }
+
+    #[test]
+    fn json_to_fpas_accepts_container_at_depth_limit() {
+        let json = JsonValue::Array(vec![JsonValue::Null]);
+        assert!(json_to_fpas_at_depth(json, MAX_JSON_DEPTH - 1).is_ok());
+    }
+
+    #[test]
+    fn json_to_fpas_rejects_container_child_beyond_depth_limit() {
+        let json = JsonValue::Array(vec![JsonValue::Null]);
+        assert!(json_to_fpas_at_depth(json, MAX_JSON_DEPTH).is_err());
+    }
+
+    #[test]
+    fn parse_rejects_json_above_max_depth() {
+        let mut stack = vec![Value::Str(nested_array_json(MAX_JSON_DEPTH))];
+        run(Intrinsic::Json(JsonIntrinsic::Parse), &mut stack, loc()).unwrap();
+        assert!(matches!(stack.as_slice(), [Value::ResultError(_)]));
+    }
+
+    #[test]
+    fn fpas_to_json_accepts_container_at_depth_limit() {
+        let value = json_variant(
+            "Array",
+            vec![Value::Array(vec![json_variant("Null", vec![])])],
+        );
+        assert!(fpas_to_json_at_depth(value, loc(), MAX_JSON_DEPTH - 1).is_ok());
+    }
+
+    #[test]
+    fn fpas_to_json_rejects_container_child_beyond_depth_limit() {
+        let value = json_variant(
+            "Array",
+            vec![Value::Array(vec![json_variant("Null", vec![])])],
+        );
+        let err = fpas_to_json_at_depth(value, loc(), MAX_JSON_DEPTH).unwrap_err();
+        assert_eq!(err.code, RUNTIME_VM_OPERAND_TYPE_MISMATCH);
+    }
 }

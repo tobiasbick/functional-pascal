@@ -225,10 +225,43 @@ fn resize_rect(anchor: ViewRect, edge: FrameResizeEdge, delta_x: i64, delta_y: i
                 ..anchor
             }
         }
+        FrameResizeEdge::North => {
+            let height = anchor.height.saturating_sub(delta_y).max(1);
+            ViewRect {
+                y: anchor
+                    .y
+                    .saturating_add(anchor.height.saturating_sub(height)),
+                height,
+                ..anchor
+            }
+        }
         FrameResizeEdge::South => ViewRect {
             height: anchor.height.saturating_add(delta_y).max(1),
             ..anchor
         },
+        FrameResizeEdge::NorthEast => {
+            let height = anchor.height.saturating_sub(delta_y).max(1);
+            ViewRect {
+                width: anchor.width.saturating_add(delta_x).max(1),
+                height,
+                y: anchor
+                    .y
+                    .saturating_add(anchor.height.saturating_sub(height)),
+                x: anchor.x,
+            }
+        }
+        FrameResizeEdge::NorthWest => {
+            let width = anchor.width.saturating_sub(delta_x).max(1);
+            let height = anchor.height.saturating_sub(delta_y).max(1);
+            ViewRect {
+                x: anchor.x.saturating_add(anchor.width.saturating_sub(width)),
+                width,
+                y: anchor
+                    .y
+                    .saturating_add(anchor.height.saturating_sub(height)),
+                height,
+            }
+        }
         FrameResizeEdge::SouthEast => ViewRect {
             width: anchor.width.saturating_add(delta_x).max(1),
             height: anchor.height.saturating_add(delta_y).max(1),
@@ -361,5 +394,12 @@ mod tests {
         assert!(registry.restore_frame_root(frame.view_id));
         assert!(!registry.frame_is_zoomed(frame.view_id));
         assert_eq!(registry.rect(frame.view_id), Some(original));
+    }
+
+    #[test]
+    fn north_resize_drag_updates_top_edge() {
+        let anchor = rect(10, 4, 20, 8);
+        let resized = resize_rect(anchor, FrameResizeEdge::North, 0, 3);
+        assert_eq!(resized, rect(10, 7, 20, 5));
     }
 }

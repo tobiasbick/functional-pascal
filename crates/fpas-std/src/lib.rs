@@ -32,6 +32,7 @@ mod intrinsic_args;
 mod intrinsics;
 mod json;
 pub mod key_event;
+mod limits;
 mod math;
 mod numeric_text;
 mod parse;

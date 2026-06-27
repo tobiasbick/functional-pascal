@@ -115,3 +115,31 @@ pub(crate) fn run(
     }
     Ok(Some(()))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use fpas_diagnostics::codes::RUNTIME_CONVERSION_FAILURE;
+
+    fn loc() -> SourceLocation {
+        SourceLocation::new(1, 1)
+    }
+
+    fn run_conv(intrinsic: ConvIntrinsic, stack: &mut Vec<Value>) -> Result<(), StdError> {
+        run(Intrinsic::Conv(intrinsic), stack, loc()).map(|_| ())
+    }
+
+    #[test]
+    fn int_to_str_formats_integer() {
+        let mut stack = vec![Value::Integer(-42)];
+        run_conv(ConvIntrinsic::IntToStr, &mut stack).unwrap();
+        assert_eq!(stack, vec![Value::Str("-42".into())]);
+    }
+
+    #[test]
+    fn str_to_int_rejects_invalid_text() {
+        let mut stack = vec![Value::Str("not-a-number".into())];
+        let err = run_conv(ConvIntrinsic::StrToInt, &mut stack).unwrap_err();
+        assert_eq!(err.code, RUNTIME_CONVERSION_FAILURE);
+    }
+}

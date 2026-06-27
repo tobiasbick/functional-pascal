@@ -6,6 +6,7 @@
 
 use crate::error::{StdError, std_runtime_error};
 use crate::intrinsic_args::{pop_array, pop_int, pop_value};
+use crate::limits::checked_collection_len;
 use fpas_bytecode::{ArrayIntrinsic, Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
@@ -111,18 +112,57 @@ pub(crate) fn run(
         Intrinsic::Array(ArrayIntrinsic::Fill) => {
             let count = pop_int(pop_value(stack, location)?, location)?;
             let value = pop_value(stack, location)?;
-            if count < 0 {
-                return Err(std_runtime_error(
-                    RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
-                    format!("Fill count must be >= 0, got {count}"),
-                    "Pass a non-negative integer to Std.Array.Fill.",
-                    location,
-                ));
-            }
-            let arr: Vec<Value> = vec![value; count as usize];
+            let len = checked_collection_len(count, location, "Std.Array.Fill")?;
+            let arr: Vec<Value> = vec![value; len];
             stack.push(Value::Array(arr));
         }
         _ => return Ok(None),
     }
     Ok(Some(()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::limits::MAX_COLLECTION_LEN;
+
+    fn loc() -> SourceLocation {
+        SourceLocation::new(1, 1)
+    }
+
+    fn run_array(intrinsic: ArrayIntrinsic, stack: &mut Vec<Value>) -> Result<(), StdError> {
+        run(Intrinsic::Array(intrinsic), stack, loc()).map(|_| ())
+    }
+
+    #[test]
+    fn fill_creates_requested_length() {
+        let mut stack = vec![Value::Integer(7), Value::Integer(3)];
+        run_array(ArrayIntrinsic::Fill, &mut stack).unwrap();
+        assert_eq!(
+            stack,
+            vec![Value::Array(vec![
+                Value::Integer(7),
+                Value::Integer(7),
+                Value::Integer(7),
+            ])]
+        );
+    }
+
+    #[test]
+    fn fill_rejects_count_above_limit() {
+        let mut stack = vec![Value::Integer(1), Value::Integer(MAX_COLLECTION_LEN + 1)];
+        let err = run_array(ArrayIntrinsic::Fill, &mut stack).unwrap_err();
+        assert_eq!(err.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
+    }
+
+    #[test]
+    fn slice_rejects_out_of_range() {
+        let mut stack = vec![
+            Value::Array(vec![Value::Integer(1), Value::Integer(2)]),
+            Value::Integer(0),
+            Value::Integer(3),
+        ];
+        let err = run_array(ArrayIntrinsic::Slice, &mut stack).unwrap_err();
+        assert_eq!(err.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
+    }
 }

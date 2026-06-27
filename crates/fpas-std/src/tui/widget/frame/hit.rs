@@ -50,14 +50,18 @@ pub fn frame_resize_edge_at(outer: ViewRect, x: i64, y: i64) -> Option<FrameResi
 
     let on_left = x == outer.x;
     let on_right = x == outer.x.saturating_add(outer.width.saturating_sub(1));
+    let on_top = y == outer.y;
     let on_bottom = y == outer.y.saturating_add(outer.height.saturating_sub(1));
 
-    match (on_left, on_right, on_bottom) {
-        (true, _, true) => Some(FrameResizeEdge::SouthWest),
-        (_, true, true) => Some(FrameResizeEdge::SouthEast),
-        (_, true, _) => Some(FrameResizeEdge::East),
-        (true, _, _) => Some(FrameResizeEdge::West),
-        (_, _, true) => Some(FrameResizeEdge::South),
+    match (on_left, on_right, on_top, on_bottom) {
+        (true, _, true, _) => Some(FrameResizeEdge::NorthWest),
+        (_, true, true, _) => Some(FrameResizeEdge::NorthEast),
+        (true, _, _, true) => Some(FrameResizeEdge::SouthWest),
+        (_, true, _, true) => Some(FrameResizeEdge::SouthEast),
+        (_, true, _, _) => Some(FrameResizeEdge::East),
+        (true, _, _, _) => Some(FrameResizeEdge::West),
+        (_, _, true, _) => Some(FrameResizeEdge::North),
+        (_, _, _, true) => Some(FrameResizeEdge::South),
         _ => None,
     }
 }
@@ -188,6 +192,23 @@ mod tests {
                 1
             ),
             FrameChromeHit::ZoomBack
+        );
+    }
+
+    #[test]
+    fn frame_resize_edge_at_detects_north_border_and_corners() {
+        let outer = rect(2, 1, 16, 6);
+        assert_eq!(
+            frame_resize_edge_at(outer, 10, 1),
+            Some(FrameResizeEdge::North)
+        );
+        assert_eq!(
+            frame_resize_edge_at(outer, 2, 1),
+            Some(FrameResizeEdge::NorthWest)
+        );
+        assert_eq!(
+            frame_resize_edge_at(outer, 17, 1),
+            Some(FrameResizeEdge::NorthEast)
         );
     }
 }

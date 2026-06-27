@@ -63,3 +63,62 @@ pub(crate) fn run(
     }
     Ok(Some(()))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn loc() -> SourceLocation {
+        SourceLocation::new(1, 1)
+    }
+
+    fn run_dict(intrinsic: DictIntrinsic, stack: &mut Vec<Value>) -> Result<(), StdError> {
+        run(Intrinsic::Dict(intrinsic), stack, loc()).map(|_| ())
+    }
+
+    #[test]
+    fn get_returns_some_for_existing_key() {
+        let mut stack = vec![
+            Value::Dict(vec![
+                (Value::Str("a".into()), Value::Integer(1)),
+                (Value::Str("b".into()), Value::Integer(2)),
+            ]),
+            Value::Str("b".into()),
+        ];
+        run_dict(DictIntrinsic::Get, &mut stack).unwrap();
+        assert_eq!(stack, vec![Value::OptionSome(Box::new(Value::Integer(2)))]);
+    }
+
+    #[test]
+    fn contains_key_reports_presence() {
+        let mut stack = vec![
+            Value::Dict(vec![(Value::Str("a".into()), Value::Integer(1))]),
+            Value::Str("missing".into()),
+        ];
+        run_dict(DictIntrinsic::ContainsKey, &mut stack).unwrap();
+        assert_eq!(stack, vec![Value::Boolean(false)]);
+    }
+
+    #[test]
+    fn merge_overwrites_and_appends_keys() {
+        let mut stack = vec![
+            Value::Dict(vec![
+                (Value::Str("a".into()), Value::Integer(1)),
+                (Value::Str("b".into()), Value::Integer(2)),
+            ]),
+            Value::Dict(vec![
+                (Value::Str("b".into()), Value::Integer(20)),
+                (Value::Str("c".into()), Value::Integer(30)),
+            ]),
+        ];
+        run_dict(DictIntrinsic::Merge, &mut stack).unwrap();
+        assert_eq!(
+            stack,
+            vec![Value::Dict(vec![
+                (Value::Str("a".into()), Value::Integer(1)),
+                (Value::Str("b".into()), Value::Integer(20)),
+                (Value::Str("c".into()), Value::Integer(30)),
+            ])]
+        );
+    }
+}

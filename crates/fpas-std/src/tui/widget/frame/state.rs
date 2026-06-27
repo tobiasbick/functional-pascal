@@ -21,12 +21,18 @@ pub struct FrameScrollInteraction {
 /// Resize edge selected by a border hit-test.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FrameResizeEdge {
+    /// Top border.
+    North,
     /// Left border.
     West,
     /// Right border.
     East,
     /// Bottom border.
     South,
+    /// Top-right corner.
+    NorthEast,
+    /// Top-left corner.
+    NorthWest,
     /// Bottom-right corner.
     SouthEast,
     /// Bottom-left corner.

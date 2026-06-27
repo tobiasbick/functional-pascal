@@ -36,6 +36,8 @@ var Zeros: array of integer := Fill(0, 5);
 WriteLn(Length(Zeros))  { 5 }
 ```
 
+`Count` must be non-negative and at most **1_000_000**. Larger counts raise a runtime error instead of allocating unbounded memory.
+
 ---
 
 ## `procedure ForEach(A: array of T; F: procedure(X: T))`

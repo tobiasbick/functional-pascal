@@ -21,6 +21,8 @@ WriteLn(RepeatStr('ab', 3))  { ababab }
 WriteLn(RepeatStr('─', 40)) { ────────────────────────────────────────}
 ```
 
+`Count` must be at most **1_000_000** when positive. Larger counts raise a runtime error instead of allocating unbounded memory.
+
 ---
 
 ## `function PadLeft(S: string; Width: integer; Fill: string): string`

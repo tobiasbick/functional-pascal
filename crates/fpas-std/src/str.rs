@@ -9,6 +9,7 @@ use crate::intrinsic_args::{
     pad_fill_char, pop_array, pop_int, pop_single_char, pop_string, pop_value,
     value_as_string_for_join,
 };
+use crate::limits::checked_collection_len;
 use crate::numeric_text::is_pascal_numeric;
 use fpas_bytecode::{Intrinsic, SourceLocation, StrIntrinsic, Value};
 use fpas_diagnostics::codes::{
@@ -128,7 +129,8 @@ pub(crate) fn run(
             let out = if n <= 0 {
                 String::new()
             } else {
-                s.repeat(n as usize)
+                let len = checked_collection_len(n, location, "Std.Str.RepeatStr")?;
+                s.repeat(len)
             };
             stack.push(Value::Str(out));
         }
@@ -493,5 +495,37 @@ fn value_type_name(v: &Value) -> &'static str {
         Value::OptionSome(_) | Value::OptionNone => "option",
         Value::Function { .. } => "function",
         Value::Task(_) => "task",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::limits::MAX_COLLECTION_LEN;
+    use fpas_diagnostics::codes::RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS;
+
+    fn loc() -> SourceLocation {
+        SourceLocation::new(1, 1)
+    }
+
+    fn run_str(intrinsic: StrIntrinsic, stack: &mut Vec<Value>) -> Result<(), StdError> {
+        run(Intrinsic::Str(intrinsic), stack, loc()).map(|_| ())
+    }
+
+    #[test]
+    fn repeat_str_builds_requested_length() {
+        let mut stack = vec![Value::Str("ab".into()), Value::Integer(3)];
+        run_str(StrIntrinsic::Repeat, &mut stack).unwrap();
+        assert_eq!(stack, vec![Value::Str("ababab".into())]);
+    }
+
+    #[test]
+    fn repeat_str_rejects_count_above_limit() {
+        let mut stack = vec![
+            Value::Str("x".into()),
+            Value::Integer(MAX_COLLECTION_LEN + 1),
+        ];
+        let err = run_str(StrIntrinsic::Repeat, &mut stack).unwrap_err();
+        assert_eq!(err.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
     }
 }

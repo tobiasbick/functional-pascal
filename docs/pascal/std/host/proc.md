@@ -15,6 +15,8 @@ end.
 
 `Std.Proc` starts a host process, waits for it to finish, and returns the process exit status. The initial API is intentionally small: it does not expose process handles, stdin/stdout/stderr pipes, environment overrides, or working-directory controls.
 
+**Trust boundary:** `Run` executes arbitrary host commands with the same privileges as the FPAS process. The runtime does not sandbox or validate commands beyond starting the requested executable with the supplied arguments.
+
 
 ## Importing and names
 

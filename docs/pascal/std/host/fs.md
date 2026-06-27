@@ -14,6 +14,8 @@ end.
 
 `Std.Fs` reads and writes host files. Calls are blocking and may run on worker threads when invoked from `go`, but the runtime uses thread-safe Rust filesystem APIs.
 
+**Trust boundary:** FPAS programs run with the same filesystem privileges as the host process. `ReadText`, `WriteText`, and related calls can access any path the OS allows for that process; the runtime does not sandbox paths.
+
 Text reads and writes use UTF-8.
 
 

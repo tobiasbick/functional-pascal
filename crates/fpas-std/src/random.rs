@@ -43,3 +43,31 @@ pub(crate) fn run(
     }
     Ok(Some(()))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use fpas_diagnostics::codes::RUNTIME_NUMERIC_DOMAIN_ERROR;
+
+    fn loc() -> SourceLocation {
+        SourceLocation::new(1, 1)
+    }
+
+    fn run_random(intrinsic: RandomIntrinsic, stack: &mut Vec<Value>) -> Result<(), StdError> {
+        run(Intrinsic::Random(intrinsic), stack, loc()).map(|_| ())
+    }
+
+    #[test]
+    fn random_int_rejects_inverted_bounds() {
+        let mut stack = vec![Value::Integer(5), Value::Integer(1)];
+        let err = run_random(RandomIntrinsic::RandomInt, &mut stack).unwrap_err();
+        assert_eq!(err.code, RUNTIME_NUMERIC_DOMAIN_ERROR);
+    }
+
+    #[test]
+    fn random_int_accepts_equal_bounds() {
+        let mut stack = vec![Value::Integer(7), Value::Integer(7)];
+        run_random(RandomIntrinsic::RandomInt, &mut stack).unwrap();
+        assert_eq!(stack, vec![Value::Integer(7)]);
+    }
+}

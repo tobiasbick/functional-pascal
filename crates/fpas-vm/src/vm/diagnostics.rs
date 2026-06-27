@@ -24,7 +24,6 @@ pub(crate) fn runtime_error(
 ) -> VmError {
     Diagnostic::error(
         code,
-        code.stage(),
         message.into(),
         Some(help.into()),
         synthetic_span(location),
@@ -38,7 +37,6 @@ pub(crate) fn internal_error(
 ) -> VmError {
     Diagnostic::error(
         INTERNAL_VM_INVARIANT_FAILURE,
-        INTERNAL_VM_INVARIANT_FAILURE.stage(),
         message.into(),
         Some(help.into()),
         synthetic_span(location),

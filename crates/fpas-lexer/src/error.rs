@@ -10,5 +10,5 @@ pub fn lex_error(
     hint: impl Into<String>,
     span: Span,
 ) -> LexError {
-    Diagnostic::error(code, code.stage(), message, Some(hint.into()), span.into())
+    Diagnostic::error(code, message, Some(hint.into()), span.into())
 }

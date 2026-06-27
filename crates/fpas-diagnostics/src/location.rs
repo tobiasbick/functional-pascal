@@ -1,8 +1,8 @@
 //! Source locations and spans shared across diagnostics.
 
 fn validate_one_based_location(line: u32, column: u32) {
-    debug_assert!(line > 0, "source line must be 1-based");
-    debug_assert!(column > 0, "source column must be 1-based");
+    assert!(line > 0, "source line must be 1-based");
+    assert!(column > 0, "source column must be 1-based");
 }
 
 /// A 1-based location within a source input.
@@ -116,5 +116,11 @@ mod tests {
         assert_eq!(span.offset, 0);
         assert_eq!(span.length, 1);
         assert_eq!(span.location(), location);
+    }
+
+    #[test]
+    #[should_panic(expected = "source line must be 1-based")]
+    fn source_location_rejects_zero_line() {
+        let _ = SourceLocation::new(0, 1);
     }
 }

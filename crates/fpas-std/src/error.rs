@@ -22,13 +22,7 @@ pub fn std_runtime_error_opt(
     help: Option<String>,
     location: SourceLocation,
 ) -> StdError {
-    Diagnostic::error(
-        code,
-        code.stage(),
-        message.into(),
-        help,
-        synthetic_span(location),
-    )
+    Diagnostic::error(code, message, help, synthetic_span(location))
 }
 
 /// Runtime error including a `help:` line; see [`std_runtime_error_opt`] to omit help.
@@ -50,8 +44,7 @@ pub fn std_internal_error(
 ) -> StdError {
     Diagnostic::error(
         INTERNAL_VM_INVARIANT_FAILURE,
-        INTERNAL_VM_INVARIANT_FAILURE.stage(),
-        message.into(),
+        message,
         Some(help.into()),
         synthetic_span(location),
     )

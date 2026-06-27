@@ -40,7 +40,6 @@ fn cli_renders_sema_stage_output() {
 fn cli_renders_compile_stage_output() {
     let diagnostic = Diagnostic::error(
         COMPILE_INTRINSIC_ARITY_MISMATCH,
-        DiagnosticStage::Compile,
         "Std.Console.ReadLn takes no arguments",
         Some("Remove all arguments from this call.".to_string()),
         SourceSpan::new(0, 1, 4, 9),

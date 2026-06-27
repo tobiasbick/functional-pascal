@@ -1,12 +1,18 @@
 //! Stable diagnostic code catalog.
 //!
+//! Numeric ranges (see also [`DiagnosticCode::stage`]):
+//! - **Lex:** `F0001`–`F0010`
+//! - **Parse:** `F1001`–`F1999`
+//! - **Sema:** `F2001`–`F2999`
+//! - **Compile:** `F3001`–`F3999`
+//! - **Runtime:** `F4001`–`F4999` (reserved gap: `F4016`–`F4017`)
+//! - **Internal:** `F9001`–`F9999` and any other unassigned value
+//!
 //! Extension workflow:
-//! 1. Add a new named `pub const` in the correct stage range.
-//! 2. Keep constants grouped by stage and use the next free numeric value
-//!    inside that range.
-//! 3. Add the new constant to `allocated_codes_are_unique` below.
-//!    The test rejects accidental code reuse across the full catalog.
-//! 4. Re-run `cargo test --workspace` and update any diagnostic catalog docs under `docs/` if they exist.
+//! 1. Add a new named `pub const` in the correct stage block below.
+//! 2. Use the next free numeric value inside that stage range.
+//! 3. Re-run `cargo test -p fpas-diagnostics` (uniqueness and stage-range tests).
+//! 4. Update any diagnostic catalog docs under `docs/` if they exist.
 
 use crate::DiagnosticCode;
 
@@ -138,6 +144,7 @@ const ALL_CODE_INVENTORIES: &[&[DiagnosticCode]] = &[
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::DiagnosticStage;
     use std::collections::HashSet;
 
     #[test]
@@ -150,6 +157,52 @@ mod tests {
                     "duplicate diagnostic code allocation detected: {code}",
                 );
             }
+        }
+    }
+
+    #[test]
+    fn allocated_codes_match_stage_ranges() {
+        for code in LEX_ALLOCATED_CODES {
+            assert_eq!(
+                code.stage(),
+                DiagnosticStage::Lex,
+                "lex catalog code {code} is outside the lex range"
+            );
+        }
+        for code in PARSE_ALLOCATED_CODES {
+            assert_eq!(
+                code.stage(),
+                DiagnosticStage::Parse,
+                "parse catalog code {code} is outside the parse range"
+            );
+        }
+        for code in SEMA_ALLOCATED_CODES {
+            assert_eq!(
+                code.stage(),
+                DiagnosticStage::Sema,
+                "sema catalog code {code} is outside the sema range"
+            );
+        }
+        for code in COMPILE_ALLOCATED_CODES {
+            assert_eq!(
+                code.stage(),
+                DiagnosticStage::Compile,
+                "compile catalog code {code} is outside the compile range"
+            );
+        }
+        for code in RUNTIME_ALLOCATED_CODES {
+            assert_eq!(
+                code.stage(),
+                DiagnosticStage::Runtime,
+                "runtime catalog code {code} is outside the runtime range"
+            );
+        }
+        for code in INTERNAL_ALLOCATED_CODES {
+            assert_eq!(
+                code.stage(),
+                DiagnosticStage::Internal,
+                "internal catalog code {code} is outside the internal range"
+            );
         }
     }
 }

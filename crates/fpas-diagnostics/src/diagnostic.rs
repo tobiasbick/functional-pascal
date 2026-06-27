@@ -65,44 +65,34 @@ impl Diagnostic {
     #[must_use]
     pub fn warning(
         code: DiagnosticCode,
-        stage: DiagnosticStage,
         message: impl Into<String>,
         help: Option<String>,
         span: SourceSpan,
     ) -> Self {
-        Self::new(
-            DiagnosticSeverity::Warning,
-            code,
-            stage,
-            message,
-            help,
-            span,
-        )
+        Self::new(DiagnosticSeverity::Warning, code, message, help, span)
     }
 
     /// Creates an error diagnostic.
     #[must_use]
     pub fn error(
         code: DiagnosticCode,
-        stage: DiagnosticStage,
         message: impl Into<String>,
         help: Option<String>,
         span: SourceSpan,
     ) -> Self {
-        Self::new(DiagnosticSeverity::Error, code, stage, message, help, span)
+        Self::new(DiagnosticSeverity::Error, code, message, help, span)
     }
 
     fn new(
         severity: DiagnosticSeverity,
         code: DiagnosticCode,
-        stage: DiagnosticStage,
         message: impl Into<String>,
         help: Option<String>,
         span: SourceSpan,
     ) -> Self {
         Self {
+            stage: code.stage(),
             code,
-            stage,
             severity,
             message: message.into(),
             help,
@@ -146,7 +136,6 @@ mod tests {
     fn render_without_help_line() {
         let diagnostic = Diagnostic::error(
             DiagnosticCode::new(1003),
-            DiagnosticStage::Parse,
             "Expected `then`, found `do`",
             None,
             SourceSpan::new(0, 2, 12, 8),
@@ -163,7 +152,6 @@ mod tests {
     fn render_with_help_line() {
         let diagnostic = Diagnostic::error(
             DiagnosticCode::new(1003),
-            DiagnosticStage::Parse,
             "Expected `then`, found `do`",
             Some("Insert `then` after the condition.".to_string()),
             SourceSpan::new(0, 2, 12, 8),
@@ -177,19 +165,44 @@ mod tests {
     }
 
     #[test]
-    fn diagnostic_code_stage_matches_numeric_range() {
-        use super::DiagnosticStage;
+    fn render_omits_whitespace_only_help() {
+        let diagnostic = Diagnostic::error(
+            DiagnosticCode::new(1003),
+            "Expected `then`, found `do`",
+            Some("   \n\t  ".to_string()),
+            SourceSpan::new(0, 2, 12, 8),
+        );
 
+        let rendered = render("path/to/file.fpas", &diagnostic);
+        assert_eq!(
+            rendered,
+            "path/to/file.fpas:12:8: error[F1003]: Expected `then`, found `do`"
+        );
+    }
+
+    #[test]
+    fn diagnostic_code_stage_matches_numeric_range() {
         assert_eq!(DiagnosticCode::new(5).stage(), DiagnosticStage::Lex);
         assert_eq!(DiagnosticCode::new(1003).stage(), DiagnosticStage::Parse);
         assert_eq!(DiagnosticCode::new(9002).stage(), DiagnosticStage::Internal);
     }
 
     #[test]
+    fn diagnostic_stage_is_derived_from_code() {
+        let diagnostic = Diagnostic::error(
+            DiagnosticCode::new(3003),
+            "arity mismatch",
+            None,
+            SourceSpan::new(0, 1, 4, 9),
+        );
+        assert_eq!(diagnostic.stage, DiagnosticStage::Compile);
+        assert_eq!(diagnostic.code, DiagnosticCode::new(3003));
+    }
+
+    #[test]
     fn render_warning_uses_warning_label() {
         let diagnostic = Diagnostic::warning(
             DiagnosticCode::new(5),
-            DiagnosticStage::Lex,
             "Invalid character code in string literal",
             Some("Use decimal digits after `#`, for example `#65` for 'A'.".to_string()),
             SourceSpan::new(0, 4, 3, 5),

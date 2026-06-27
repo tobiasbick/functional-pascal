@@ -2,8 +2,10 @@
 
 pub(super) mod exports;
 pub(super) mod own;
+pub(super) mod parse_cache;
 
 use crate::dependencies::load_project_with_dependencies;
+use crate::loading::parse_cache::ParsedSourceCache;
 use crate::model::LoadedProject;
 use std::collections::HashMap;
 use std::path::Path;
@@ -14,6 +16,7 @@ use std::path::Path;
 /// and validates user-unit naming rules from `docs/pascal/program-structure/units.md`.
 pub fn load_project(path: &Path) -> Result<LoadedProject, String> {
     let mut visiting = Vec::new();
-    let mut cache = HashMap::new();
-    load_project_with_dependencies(path, &mut visiting, &mut cache)
+    let mut project_cache = HashMap::new();
+    let mut parse_cache = ParsedSourceCache::new();
+    load_project_with_dependencies(path, &mut visiting, &mut project_cache, &mut parse_cache)
 }

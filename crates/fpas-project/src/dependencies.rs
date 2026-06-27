@@ -3,6 +3,7 @@
 //! Documentation: `docs/pascal/program-structure/projects.md`
 
 use super::loading::own::{load_own_project, validate_project_source_units};
+use super::loading::parse_cache::ParsedSourceCache;
 use super::model::{
     LibraryExportPolicy, LoadedProject, ProjectKind, ProjectLinkMeta, SourceOrigin,
 };
@@ -22,6 +23,7 @@ pub(super) fn load_project_with_dependencies(
     path: &Path,
     visiting: &mut Vec<PathBuf>,
     cache: &mut HashMap<PathBuf, LoadedProject>,
+    parse_cache: &mut ParsedSourceCache,
 ) -> Result<LoadedProject, String> {
     let canonical = canonical_project_path(path);
     if let Some(cached) = cache.get(&canonical) {
@@ -36,7 +38,7 @@ pub(super) fn load_project_with_dependencies(
     }
 
     visiting.push(canonical.clone());
-    let own = load_own_project(path)?;
+    let own = load_own_project(path, parse_cache)?;
     let mut source_files = Vec::new();
     let mut warnings = own.warnings;
     let mut link_meta = ProjectLinkMeta::default();
@@ -44,7 +46,8 @@ pub(super) fn load_project_with_dependencies(
     let dependency_paths =
         resolve_all_dependency_paths(path, &own.dependency_projects, &own.workspace_dependencies)?;
     for dependency_path in dependency_paths {
-        let dependency_loaded = load_project_with_dependencies(&dependency_path, visiting, cache)?;
+        let dependency_loaded =
+            load_project_with_dependencies(&dependency_path, visiting, cache, parse_cache)?;
         ensure_library_dependency(&dependency_path, &dependency_loaded)?;
         merge_dependency_link_meta(&mut link_meta, &dependency_path, &dependency_loaded);
         merge_source_files(
@@ -56,17 +59,16 @@ pub(super) fn load_project_with_dependencies(
 
     let own_source_paths = own.source_files.clone();
     merge_source_files(&mut source_files, own.source_files, &mut warnings);
-    for source_path in &own_source_paths {
-        link_meta
-            .source_origins
-            .insert(source_path.clone(), SourceOrigin::Own);
-    }
     source_files = match own.kind {
-        ProjectKind::Test => validate_project_test_sources(source_files, &mut warnings)?,
+        ProjectKind::Test => {
+            validate_project_test_sources(source_files, &mut warnings, parse_cache)?
+        }
         ProjectKind::Program | ProjectKind::Library => {
-            validate_project_source_units(source_files, &mut warnings)?
+            validate_project_source_units(source_files, &mut warnings, parse_cache)?
         }
     };
+    prune_link_meta_origins(&mut link_meta, &source_files);
+    mark_own_source_origins(&mut link_meta, &source_files, &own_source_paths);
 
     let export_policy_for_dependents = match own.kind {
         ProjectKind::Library => own.export_policy.clone(),
@@ -167,6 +169,29 @@ fn ensure_library_dependency(path: &Path, loaded: &LoadedProject) -> Result<(), 
         "Project dependency `{}` must be a library project (`kind = \"library\"`).\n  help: Point `dependencies.projects` at a `.fpasprj` with `kind = \"library\"`, or change the dependency to a program-only local include.",
         path.to_string_lossy()
     ))
+}
+
+fn prune_link_meta_origins(link_meta: &mut ProjectLinkMeta, source_files: &[PathBuf]) {
+    link_meta
+        .source_origins
+        .retain(|path, _| source_files.iter().any(|source| same_file(source, path)));
+}
+
+fn mark_own_source_origins(
+    link_meta: &mut ProjectLinkMeta,
+    source_files: &[PathBuf],
+    own_source_paths: &[PathBuf],
+) {
+    for source_path in source_files {
+        if own_source_paths
+            .iter()
+            .any(|own_path| same_file(own_path, source_path))
+        {
+            link_meta
+                .source_origins
+                .insert(source_path.clone(), SourceOrigin::Own);
+        }
+    }
 }
 
 fn cyclic_project_dependency_error(visiting: &[PathBuf], path: &Path) -> String {

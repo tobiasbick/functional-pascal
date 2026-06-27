@@ -3,10 +3,8 @@
 //! Spec: `docs/pascal/program-structure/projects.md`
 
 use super::exports::validate_library_exports;
-use crate::common::{
-    parse_compilation_unit_file, qualified_id_to_string, validate_non_empty,
-    validate_user_unit_name,
-};
+use crate::common::{qualified_id_to_string, validate_non_empty, validate_user_unit_name};
+use crate::loading::parse_cache::ParsedSourceCache;
 use crate::model::{LibraryExportPolicy, ProjectKind};
 use crate::paths::{
     resolve_explicit_file_path, resolve_source_files, same_file, validate_source_extension,
@@ -76,7 +74,10 @@ struct DependenciesSection {
 }
 
 /// Parse and validate one project file's own sources and metadata.
-pub(crate) fn load_own_project(path: &Path) -> Result<OwnProject, String> {
+pub(crate) fn load_own_project(
+    path: &Path,
+    parse_cache: &mut ParsedSourceCache,
+) -> Result<OwnProject, String> {
     let project_text = std::fs::read_to_string(path).map_err(|e| {
         format!(
             "Error reading project file `{}`: {e}",
@@ -160,10 +161,10 @@ pub(crate) fn load_own_project(path: &Path) -> Result<OwnProject, String> {
     };
 
     if let Some(main_path) = main.as_deref() {
-        validate_program_main_file(main_path, &mut warnings)?;
+        validate_program_main_file(main_path, &mut warnings, parse_cache)?;
     }
 
-    let export_policy = resolve_export_policy(kind, parsed_exports, &source_files)?;
+    let export_policy = resolve_export_policy(kind, parsed_exports, &source_files, parse_cache)?;
     let test_manifest = parse_test_section(kind, project_file.test, &source_files, root_dir, path)?;
 
     Ok(OwnProject {
@@ -207,11 +208,12 @@ fn resolve_export_policy(
     kind: ProjectKind,
     parsed: ParsedExports,
     source_files: &[PathBuf],
+    parse_cache: &mut ParsedSourceCache,
 ) -> Result<LibraryExportPolicy, String> {
     match (kind, parsed) {
         (_, ParsedExports::None) => Ok(LibraryExportPolicy::AllUnits),
         (ProjectKind::Library, ParsedExports::UnitNames(names)) => {
-            let listed_units = validate_library_exports(&names, source_files)?;
+            let listed_units = validate_library_exports(&names, source_files, parse_cache)?;
             Ok(LibraryExportPolicy::ListedUnits(listed_units))
         }
         (_, ParsedExports::UnitNames(_)) => Ok(LibraryExportPolicy::AllUnits),
@@ -238,8 +240,12 @@ fn validate_optional_non_empty(field_name: &str, value: Option<&str>) -> Result<
     Ok(())
 }
 
-fn validate_program_main_file(main_path: &Path, warnings: &mut Vec<String>) -> Result<(), String> {
-    let (unit, parse_warnings) = parse_compilation_unit_file(main_path, 0)?;
+fn validate_program_main_file(
+    main_path: &Path,
+    warnings: &mut Vec<String>,
+    parse_cache: &mut ParsedSourceCache,
+) -> Result<(), String> {
+    let (unit, parse_warnings) = parse_cache.parse(main_path, 0)?;
     warnings.extend(parse_warnings);
 
     match unit {
@@ -256,12 +262,13 @@ fn validate_program_main_file(main_path: &Path, warnings: &mut Vec<String>) -> R
 pub(crate) fn validate_project_source_units(
     source_files: Vec<PathBuf>,
     warnings: &mut Vec<String>,
+    parse_cache: &mut ParsedSourceCache,
 ) -> Result<Vec<PathBuf>, String> {
     let mut validated = Vec::new();
     let mut seen_unit_names = HashMap::<String, PathBuf>::new();
 
     for source_path in source_files {
-        let (unit, parse_warnings) = parse_compilation_unit_file(&source_path, 0)?;
+        let (unit, parse_warnings) = parse_cache.parse(&source_path, 0)?;
         warnings.extend(parse_warnings);
 
         match unit {

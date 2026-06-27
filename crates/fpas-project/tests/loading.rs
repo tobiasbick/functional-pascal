@@ -364,3 +364,49 @@ include = ["src/**/*.fpas"]
 
     fs::remove_dir_all(&dir).ok();
 }
+
+#[test]
+fn load_project_prunes_link_meta_for_skipped_program_sources() {
+    let dir = temp_dir("link-meta-prune");
+    let project = dir.join("app.fpasprj");
+
+    write(
+        &project,
+        r#"[project]
+name = "app"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    write(&dir.join("src/main.fpas"), "program App;\nbegin\nend.\n");
+    write(
+        &dir.join("src/helper.fpas"),
+        "program Helper;\nbegin\nend.\n",
+    );
+    write(&dir.join("src/core.fpas"), "unit App.Core;\n");
+
+    let loaded = load_project(&project).expect("project should load");
+    fs::remove_dir_all(&dir).ok();
+
+    assert_eq!(loaded.source_files.len(), 1);
+    assert!(
+        loaded
+            .source_files
+            .iter()
+            .any(|path| path.file_name().is_some_and(|name| name == "core.fpas"))
+    );
+    for origin_path in loaded.link_meta.source_origins.keys() {
+        let retained = loaded.source_files.iter().any(|source| {
+            std::fs::canonicalize(source).ok() == std::fs::canonicalize(origin_path).ok()
+                || source == origin_path
+        });
+        assert!(
+            retained,
+            "stale origin for `{}`",
+            origin_path.to_string_lossy()
+        );
+    }
+}

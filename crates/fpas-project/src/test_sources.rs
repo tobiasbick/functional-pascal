@@ -6,7 +6,8 @@ use std::path::Path;
 
 use fpas_parser::CompilationUnit;
 
-use crate::common::{parse_compilation_unit_file, qualified_id_to_string, validate_user_unit_name};
+use crate::common::{qualified_id_to_string, validate_user_unit_name};
+use crate::loading::parse_cache::ParsedSourceCache;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -23,12 +24,13 @@ pub fn is_test_source_file(path: &Path) -> bool {
 pub(crate) fn validate_project_test_sources(
     source_files: Vec<PathBuf>,
     warnings: &mut Vec<String>,
+    parse_cache: &mut ParsedSourceCache,
 ) -> Result<Vec<PathBuf>, String> {
     let mut validated = Vec::new();
     let mut seen_unit_names = HashMap::<String, PathBuf>::new();
 
     for source_path in source_files {
-        let (unit, parse_warnings) = parse_compilation_unit_file(&source_path, 0)?;
+        let (unit, parse_warnings) = parse_cache.parse(&source_path, 0)?;
         warnings.extend(parse_warnings);
 
         match unit {

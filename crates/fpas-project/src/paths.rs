@@ -174,7 +174,7 @@ fn insert_unique_source_file(
     }
 
     warnings.push(format!(
-        "Duplicate source file `{}` was ignored.",
+        "Duplicate source file `{}` was ignored; the first occurrence was retained.",
         path.to_string_lossy()
     ));
 }
@@ -230,6 +230,10 @@ pub(super) fn validate_source_extension(path: &Path, field_name: &str) -> Result
         "`{field_name}` must reference a `.fpas` file: `{}`.\n  help: Use a `.fpas` source file path.",
         path.to_string_lossy()
     ))
+}
+
+pub(super) fn canonical_source_path(path: &Path) -> PathBuf {
+    canonical_or_original(path)
 }
 
 pub(super) fn same_file(left: &Path, right: &Path) -> bool {

@@ -2,9 +2,8 @@
 //!
 //! Documentation: `docs/pascal/program-structure/projects.md`
 
-use crate::common::{
-    display_unit_key, parse_compilation_unit_file, qualified_id_to_string, validate_non_empty_entry,
-};
+use crate::common::{display_unit_key, qualified_id_to_string, validate_non_empty_entry};
+use crate::loading::parse_cache::ParsedSourceCache;
 use fpas_parser::CompilationUnit;
 use std::collections::HashSet;
 use std::path::PathBuf;
@@ -13,6 +12,7 @@ use std::path::PathBuf;
 pub(crate) fn validate_library_exports(
     export_units: &[String],
     source_files: &[PathBuf],
+    parse_cache: &mut ParsedSourceCache,
 ) -> Result<HashSet<String>, String> {
     if export_units.is_empty() {
         return Err(
@@ -34,7 +34,7 @@ pub(crate) fn validate_library_exports(
 
     let mut defined_units = HashSet::<String>::new();
     for source_path in source_files {
-        let (unit, _) = parse_compilation_unit_file(source_path, 0)?;
+        let (unit, _) = parse_cache.parse(source_path, 0)?;
         let CompilationUnit::Unit(unit) = unit else {
             continue;
         };

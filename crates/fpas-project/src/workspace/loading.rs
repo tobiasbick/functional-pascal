@@ -130,7 +130,10 @@ pub fn load_workspace(path: &Path) -> Result<LoadedWorkspace, String> {
             .iter()
             .any(|existing| crate::paths::same_file(existing, &key))
         {
-            continue;
+            return Err(format!(
+                "Duplicate workspace member `{}` resolves to the same project as an earlier entry.\n  help: List each `.fpasprj` path at most once in `workspace.members`.",
+                member_path.to_string_lossy()
+            ));
         }
         seen.push(key);
         member_projects.push(member_path);

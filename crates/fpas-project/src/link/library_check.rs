@@ -7,6 +7,7 @@ use super::graph::{collect_library_reachable_units, topo_sort_units};
 use super::imports::{build_imports, collect_unit_symbol_maps};
 use super::parse::parse_unit_files;
 use super::rewrite::{NameRewriter, rename_top_level_decls};
+use super::source_map::apply_program_source_id;
 use super::support::{
     collect_std_uses, internal_link_error, internal_symbol_error, merge_std_uses,
 };
@@ -18,6 +19,9 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 const LIBRARY_CHECK_SOURCE: &str = "program __FpasLibraryCheck;\nbegin\nend.\n";
+
+/// Sentinel path for the internal library-check stub program at `source_paths[0]`.
+pub(crate) const LIBRARY_CHECK_STUB_PATH: &str = "<fpas-library-check>";
 
 /// Build a linked stub `Program` that contains every project unit for semantic checking.
 ///
@@ -34,7 +38,8 @@ pub fn build_library_check_with_source_map(
         return Err("Internal error: failed to parse the library check stub program.".to_string());
     }
 
-    let mut source_paths = Vec::new();
+    apply_program_source_id(&mut main_program, 0);
+    let mut source_paths = vec![PathBuf::from(LIBRARY_CHECK_STUB_PATH)];
     let units = parse_unit_files(source_files, &mut source_paths)?;
     let import_policy = super::import_policy::ImportPolicy::new(link_meta, &units);
 

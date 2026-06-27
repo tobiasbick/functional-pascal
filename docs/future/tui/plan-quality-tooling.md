@@ -1,6 +1,6 @@
 # TUI Plan: Quality, Tooling, and Maintenance
 
-**Status:** next active plan.
+**Status:** complete.
 
 Goal: make retained TUI regressions easier to catch before implementation work reaches user-facing
 docs or examples.
@@ -19,11 +19,11 @@ docs or examples.
   frame move, close, and menu overlay repaint.
 - [x] Add property-style tests for scroll/thumb geometry edge cases: empty content, viewport equal
   content, huge content, and repeated drag deltas.
-- [ ] Add a doc-link audit for TUI Rust comments that reference `docs/future/tui/` or
+- [x] Add a doc-link audit for TUI Rust comments that reference `docs/future/tui/` or
   `docs/pascal/std/tui/`.
-- [ ] Update [`docs/pascal/std/tui/terminal-checklist.md`](../../pascal/std/tui/terminal-checklist.md)
+- [x] Update [`docs/pascal/std/tui/terminal-checklist.md`](../../pascal/std/tui/terminal-checklist.md)
   if real-terminal smoke expectations drift from headless behavior.
-- [ ] Add a short contributor note to [`docs/pascal/std/tui/app/testing.md`](../../pascal/std/tui/app/testing.md)
+- [x] Add a short contributor note to [`docs/pascal/std/tui/app/testing.md`](../../pascal/std/tui/app/testing.md)
   explaining which TUI test directory to use for host, scene, controls, menu, modals, and frames.
 
 ## Acceptance Criteria

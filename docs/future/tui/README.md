@@ -24,8 +24,8 @@ Work these in order unless a bug requires a narrower fix first.
 
 | Order | Plan | Status | Purpose |
 | --- | --- | --- | --- |
-| 1 | [`plan-quality-tooling.md`](plan-quality-tooling.md) | Next | Strengthen verification, property tests, real-terminal smoke coverage, and doc-link checks. |
-| 2 | [`plan-widget-polish.md`](plan-widget-polish.md) | Planned | Improve retained widget ergonomics without changing the core architecture. |
+| 1 | [`plan-quality-tooling.md`](plan-quality-tooling.md) | Complete | Strengthen verification, property tests, real-terminal smoke coverage, and doc-link checks. |
+| 2 | [`plan-widget-polish.md`](plan-widget-polish.md) | Next | Improve retained widget ergonomics without changing the core architecture. |
 
 ## Rules for New TUI Plans
 

@@ -19,9 +19,15 @@ Programs are grouped by concern. [`tests/suite.fpasprj`](../../../../tests/suite
 | [`modals/`](../../../../tests/tui/modals/) | `ShowDialog`, `ShowFramedDialog`, modal commands and cleanup | [`tui_show_dialog_test.fpas`](../../../../tests/tui/modals/tui_show_dialog_test.fpas), [`tui_framed_dialog_controls_test.fpas`](../../../../tests/tui/modals/tui_framed_dialog_controls_test.fpas) |
 | [`frames/`](../../../../tests/tui/frames/) | Frame chrome, windows, scroll, occlusion repair, reserved commands | [`tui_frame_occlusion_test.fpas`](../../../../tests/tui/frames/tui_frame_occlusion_test.fpas), [`tui_frame_scroll_clip_test.fpas`](../../../../tests/tui/frames/tui_frame_scroll_clip_test.fpas), [`tui_nested_frame_clip_test.fpas`](../../../../tests/tui/frames/tui_nested_frame_clip_test.fpas) |
 
+Contributor placement rule: put new FPAS TUI regressions in the narrowest matching subdirectory.
+Use `host/` for lifecycle, pump, injected input, and screen-query behavior; `scene/` for retained
+view-tree, layout, clip, focus, and scene-graph behavior; `controls/` for standalone widgets and
+cell-width behavior; `menu/` for menu bars and pull-down overlays; `modals/` for dialog/modal scope
+and cleanup; and `frames/` for frame chrome, windows, scrolling, occlusion, and frame commands.
+
 Run one theme: `fpas test tests/tui/frames/`. Run a single file: `fpas test tests/tui/host/tui_escape_test.fpas`. Filter by path substring: `fpas test --filter tui_escape`.
 
-For real-terminal behavior (alternate screen, cursor restore, resize flicker), use the manual checklist in [Terminal checklist](../terminal-checklist.md)(../terminal-checklist.md).
+For real-terminal behavior (alternate screen, cursor restore, resize flicker), use the manual checklist in [Terminal checklist](../terminal-checklist.md).
 
 ### Naming convention (decided)
 
@@ -216,7 +222,7 @@ end.
 | ----- | ---------- | --- |
 | Pure widget routing (hit-testing, geometry) | Rust unit tests in `fpas-std` | Fast, no VM |
 | App flows, dispatch, hover-to-screen, modal scope | FPAS `*_test.fpas` | Integrated host + dispatch path |
-| Real terminal during `Run` | [Terminal checklist](../terminal-checklist.md)(../terminal-checklist.md) | Alternate screen, cursor, flicker, live resize |
+| Real terminal during `Run` | [Terminal checklist](../terminal-checklist.md) | Alternate screen, cursor, flicker, live resize |
 
 ### Example tests
 

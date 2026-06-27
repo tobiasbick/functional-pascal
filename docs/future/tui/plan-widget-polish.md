@@ -1,6 +1,6 @@
 # TUI Plan: Widget Polish
 
-**Status:** planned after [`plan-quality-tooling.md`](plan-quality-tooling.md).
+**Status:** next active plan.
 
 Goal: improve retained widget ergonomics without changing the retained engine contract.
 

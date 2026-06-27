@@ -67,6 +67,27 @@ Evidence:
 - Cell width: [`docs/pascal/std/tui/cell-width.md`](../../pascal/std/tui/cell-width.md)
 - Tests: `tests/tui/controls/`
 
+## Quality, Tooling, and Maintenance
+
+Implemented:
+
+- Host-event ordering coverage for resize bursts followed by key and mouse input.
+- Retained redraw regression coverage for frame move, frame close, and menu overlay repaint.
+- Property-style scroll/thumb geometry tests for empty content, equal viewport/content, huge
+  content, and repeated drag deltas.
+- Rust doc-link audit for TUI references to `docs/future/tui/` and `docs/pascal/std/tui/`.
+- Real-terminal smoke checklist alignment with headless TUI canaries.
+- Contributor placement note for `tests/tui/{host,scene,controls,menu,modals,frames}/`.
+
+Evidence:
+
+- Plan: [`plan-quality-tooling.md`](plan-quality-tooling.md)
+- Terminal checklist: [`docs/pascal/std/tui/terminal-checklist.md`](../../pascal/std/tui/terminal-checklist.md)
+- Testing guide: [`docs/pascal/std/tui/app/testing.md`](../../pascal/std/tui/app/testing.md)
+- Tests: `crates/fpas-vm/src/tests/core/tui_event_ordering_vm.rs`,
+  `crates/fpas-vm/src/tests/core/tui_spec_links.rs`, `crates/fpas-std/src/tui/scroll/tests.rs`,
+  `tests/tui/menu/tui_menu_frame_dirty_repaint_test.fpas`
+
 ## Representative Regression Tests
 
 - `tests/tui/frames/tui_frame_chrome_test.fpas`

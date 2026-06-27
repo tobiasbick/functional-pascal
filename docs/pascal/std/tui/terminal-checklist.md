@@ -7,9 +7,23 @@ Use this checklist after changes to terminal behavior, hosted dispatch, focus, m
 ## Prerequisites
 
 - Build or install `fpas` first (`cargo build --release -p fpas-cli`).
+- Run the headless TUI suite first when the change touches hosted dispatch, retained views, menus,
+  modals, frames, or redraw damage: `cargo run -q -p fpas-cli -- test tests/tui/`.
 - Run checks in a real terminal, not only through editor task output.
 - Start each example from the repository root with `fpas <path>`.
 - Record the terminal, OS, shell, and terminal size for any failed or suspicious result.
+
+## Headless canaries before manual smoke
+
+These tests cover deterministic behavior that is hard to inspect reliably by eye in a real terminal.
+Run the focused path when the matching manual check fails.
+
+| Area | Focused command | Regression class |
+| ---- | --------------- | ---------------- |
+| Resize/input ordering | `cargo test -p fpas-vm tui_host_process_next_dispatches_resize_burst_before_key_and_mouse` | Coalesced resize bursts must dispatch before later key and mouse input. |
+| Full TUI integration | `cargo run -q -p fpas-cli -- test tests/tui/` | Hosted headless lifecycle, view tree, controls, menu, modal, and frame flows. |
+| Frame occlusion repair | `cargo run -q -p fpas-cli -- test tests/tui/frames/` | Move, close, resize, zoom, and scroll must repaint newly exposed frame cells. |
+| Menu overlay repair | `cargo run -q -p fpas-cli -- test tests/tui/menu/` | Pull-down overlays must open and close without leaving stale cells over frames. |
 
 ## Smoke checks
 
@@ -19,6 +33,7 @@ Use this checklist after changes to terminal behavior, hosted dispatch, focus, m
 | Redraw and resize | `fpas examples/pascal/tui/minimal_application.fpas` | Resizing the terminal updates the displayed size and does not leave stale rows or columns behind. |
 | Local view paint | `fpas examples/pascal/tui/local_view_paint.fpas` | View-local paint runs in the documented order and only redraws the visible host-managed regions. |
 | View-scoped commands | `fpas examples/pascal/tui/view_scoped_commands.fpas` | Tab traversal changes focus, focused-view shortcuts win over less-local command maps, and global shortcuts still work when no local binding matches. |
+| Menu overlay | `fpas examples/pascal/tui/menu_bar.fpas` | Keyboard and mouse navigation open pull-down menus, highlight the selected row, dispatch enabled commands, and repaint the application surface after the menu closes. |
 | Existing-view modal | `fpas examples/pascal/tui/show_modal_existing_view.fpas` | While the modal is active, focus, key commands, and mouse events are scoped to the modal view subtree. Closing the modal restores background interaction. |
 | Owned dialog modal | `fpas examples/pascal/tui/show_dialog.fpas` | Opens an owned modal root with OK/Cancel focus targets. Escape sets Cancel via modal-local command binding, closes the dialog, unregisters the owned root, and restores background focus. |
 | Painted frame windows | `fpas examples/pascal/tui/framed_window.fpas` | Two movable painted frame roots on a desktop work area; title-bar drag, F6 activation, and close chrome. |
@@ -36,7 +51,10 @@ For each smoke check, verify these points before marking the run clean:
 5. Rapid resize bursts settle on the final terminal size.
 6. Escape or the documented quit shortcut exits exactly once and does not require a second key press.
 7. Mouse-enabled examples do not leak clicks from an active modal to background views.
-8. Paste/focus events, where supported by the terminal, do not panic and do not starve paint or quit handling.
+8. Menu pull-downs and framed windows do not leave stale cells after open, close, move, resize, or
+   zoom.
+9. Paste/focus events, where supported by the terminal, do not panic and do not starve paint or quit
+   handling.
 
 ## See also
 

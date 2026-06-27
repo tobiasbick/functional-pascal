@@ -2,7 +2,7 @@ use crate::{Token, lex_with_source_id};
 
 #[test]
 fn lex_with_source_id_on_token_spans() {
-    let (tokens, errs) = lex_with_source_id("x", 7);
+    let (tokens, _comments, errs) = lex_with_source_id("x", 7);
     assert!(errs.is_empty());
     let idents: Vec<_> = tokens
         .iter()
@@ -15,7 +15,7 @@ fn lex_with_source_id_on_token_spans() {
 
 #[test]
 fn lex_with_source_id_on_lexer_errors() {
-    let (_, errs) = lex_with_source_id("$", 99);
+    let (_, _comments, errs) = lex_with_source_id("$", 99);
     assert_eq!(errs.len(), 1);
     assert_eq!(errs[0].span.source_id, 99);
 }

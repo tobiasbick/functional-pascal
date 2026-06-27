@@ -20,9 +20,23 @@ impl Lexer<'_> {
     }
 
     pub(super) fn skip_whitespace(&mut self) {
-        while !self.at_end() && self.current().is_ascii_whitespace() {
-            self.advance();
+        while !self.at_end() {
+            let Some(ch) = self.peek_char() else {
+                break;
+            };
+            if !ch.is_whitespace() {
+                break;
+            }
+            self.advance_utf8_char();
         }
+    }
+
+    /// Decodes the Unicode scalar at `pos` without advancing.
+    fn peek_char(&self) -> Option<char> {
+        std::str::from_utf8(&self.src[self.pos..])
+            .ok()?
+            .chars()
+            .next()
     }
 
     fn record_comment(

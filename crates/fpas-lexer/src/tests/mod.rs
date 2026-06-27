@@ -20,6 +20,7 @@ pub fn lex_with_errors(input: &str) -> (Vec<Token>, Vec<LexError>) {
     (toks, errors)
 }
 
+mod comment_spans;
 mod comments;
 mod directives;
 mod errors;

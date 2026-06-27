@@ -87,7 +87,7 @@ fn adjacent_comments() {
 #[test]
 fn all_comment_types() {
     assert_eq!(
-        toks("{ brace } (* paren *) // line\n42"),
+        toks("{ brace } (* paren *) /// doc\n// line\n42"),
         vec![Token::Integer(42)]
     );
 }
@@ -107,6 +107,11 @@ fn paren_comment_does_not_eat_lparen() {
         toks("(42)"),
         vec![Token::LParen, Token::Integer(42), Token::RParen]
     );
+}
+
+#[test]
+fn unicode_whitespace_is_skipped() {
+    assert_eq!(super::toks("\u{00A0}42"), vec![crate::Token::Integer(42)]);
 }
 
 #[test]

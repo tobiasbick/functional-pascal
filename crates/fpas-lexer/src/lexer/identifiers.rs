@@ -1,3 +1,7 @@
+//! Scans identifiers and maps them to keywords.
+//!
+//! Identifiers are ASCII letters, digits, and `_` only (Pascal case-insensitive keywords).
+
 use super::Lexer;
 use crate::Token;
 

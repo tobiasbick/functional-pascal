@@ -37,15 +37,6 @@ impl SourceComment {
         self.span.offset + self.span.length
     }
 
-    /// Whether this comment uses a block or doc-line lexical form.
-    #[must_use]
-    pub fn is_preservable(&self) -> bool {
-        matches!(
-            self.style,
-            CommentStyle::DocLine | CommentStyle::Brace | CommentStyle::Paren
-        )
-    }
-
     /// Returns `true` when non-whitespace code appears on the same line before this comment.
     #[must_use]
     pub fn is_end_of_line(&self, source: &str) -> bool {

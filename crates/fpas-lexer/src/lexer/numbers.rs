@@ -22,8 +22,8 @@ impl Lexer<'_> {
 
             let text = format!("{int_part}.{frac_part}{exp_part}");
             match text.parse::<f64>() {
-                Ok(v) => self.push_tok(Token::Real(v), so, sl, sc),
-                Err(_) => self.push_err(
+                Ok(value) if value.is_finite() => self.push_tok(Token::Real(value), so, sl, sc),
+                Ok(_) | Err(_) => self.push_err(
                     LEX_REAL_LITERAL_OVERFLOW,
                     "Real literal is out of range",
                     "Use a smaller value or exponent so it fits in a 64-bit floating-point number.",

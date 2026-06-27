@@ -44,3 +44,13 @@ fn invalid_numeric_exponent_reports_explicit_help() {
             .is_some_and(|hint| hint.contains("1.0e3"))
     );
 }
+
+#[test]
+fn real_literal_overflow_reports_error_and_no_token() {
+    use fpas_diagnostics::codes::LEX_REAL_LITERAL_OVERFLOW;
+
+    let (toks, errs) = lex_with_errors("1.0e9999");
+    assert!(toks.is_empty(), "non-finite reals must not produce a token");
+    assert_eq!(errs.len(), 1);
+    assert_eq!(errs[0].code, LEX_REAL_LITERAL_OVERFLOW);
+}

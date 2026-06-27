@@ -94,9 +94,8 @@ impl Lexer<'_> {
                 sl,
                 sc,
             );
-            buf.push('\u{FFFD}');
-        } else {
-            buf.push(code as u8 as char);
+            return;
         }
+        buf.push(code as u8 as char);
     }
 }

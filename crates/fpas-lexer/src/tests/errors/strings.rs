@@ -38,7 +38,7 @@ fn char_code_out_of_range() {
     let (toks, errs) = lex_with_errors("#256");
     assert_eq!(errs.len(), 1);
     assert!(errs[0].message.contains("out of range"));
-    assert_eq!(toks.len(), 1);
+    assert_eq!(toks, vec![Token::Str("".into())]);
 }
 
 #[test]

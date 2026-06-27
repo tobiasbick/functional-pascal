@@ -5,8 +5,8 @@ use std::path::{Path, PathBuf};
 
 use crate::cli_input::CliInput;
 use crate::cli_paths::{
-    PROJECT_FILE_EXTENSION, SOURCE_FILE_EXTENSION, WORKSPACE_FILE_EXTENSION, has_extension,
-    normalize_input_path,
+    PROJECT_FILE_EXTENSION, SOURCE_FILE_EXTENSION, WORKSPACE_FILE_EXTENSION,
+    collect_fpas_files_in_dir, has_extension, normalize_input_path,
 };
 use fpas_project as project;
 use glob::glob;
@@ -138,35 +138,6 @@ fn expand_glob(pattern: &str, cwd: &Path) -> Result<Vec<PathBuf>, String> {
     }
 
     Ok(dedupe_paths(matches))
-}
-
-fn collect_fpas_files_in_dir(dir: &Path) -> Vec<PathBuf> {
-    let mut files = Vec::new();
-    walk_fpas_files(dir, &mut files);
-    files.sort();
-    files
-}
-
-fn walk_fpas_files(dir: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = std::fs::read_dir(dir) else {
-        return;
-    };
-    for entry in entries.flatten() {
-        let path = entry.path();
-        if path.is_dir() {
-            if path
-                .file_name()
-                .is_some_and(|name| name.eq_ignore_ascii_case("target"))
-            {
-                continue;
-            }
-            walk_fpas_files(&path, out);
-            continue;
-        }
-        if has_extension(&path, SOURCE_FILE_EXTENSION) {
-            out.push(path);
-        }
-    }
 }
 
 fn contains_glob_metacharacters(value: &str) -> bool {

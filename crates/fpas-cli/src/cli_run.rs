@@ -38,6 +38,14 @@ pub(crate) fn run_cli(
         ResolvedCli::Fmt(config) => crate::cli_fmt::format_cli(config, stdout.as_mut(), stderr),
         ResolvedCli::Test(config) => crate::cli_test::test_cli(config, stdout.as_mut(), stderr),
         ResolvedCli::Run(config) => match config.input {
+            CliInput::SourceFile(path) if path.is_dir() => {
+                let _ = writeln!(
+                    stderr,
+                    "Cannot run directory `{}`.\n  help: Pass a `.fpas` program file or a `.fpasprj` project path.",
+                    path.display()
+                );
+                1
+            }
             CliInput::SourceFile(path) => {
                 run_source_file(&path, config.program_args, stdout, stderr)
             }
@@ -154,9 +162,7 @@ fn run_source_impl(
         .any(|diagnostic| diagnostic.as_diagnostic().severity == DiagnosticSeverity::Error);
 
     for diagnostic in &parse_errors {
-        if !emit_diagnostic(path, None, diagnostic.as_diagnostic(), stderr) {
-            return 1;
-        }
+        let _ = emit_diagnostic(path, None, diagnostic.as_diagnostic(), stderr);
     }
 
     if has_errors {
@@ -188,9 +194,7 @@ fn run_compiled_program(
         Ok(chunk) => chunk,
         Err(diagnostics) => {
             for diagnostic in &diagnostics {
-                if !emit_diagnostic(path, source_paths, diagnostic, stderr) {
-                    return 1;
-                }
+                let _ = emit_diagnostic(path, source_paths, diagnostic, stderr);
             }
             return 1;
         }
@@ -198,9 +202,7 @@ fn run_compiled_program(
 
     let mut vm = fpas_vm::Vm::with_writer_and_args(chunk, stdout, program_args);
     if let Err(diagnostic) = vm.run() {
-        if !emit_diagnostic(path, source_paths, &diagnostic, stderr) {
-            return 2;
-        }
+        let _ = emit_diagnostic(path, source_paths, &diagnostic, stderr);
         return 2;
     }
 
@@ -212,13 +214,12 @@ fn emit_diagnostic(
     source_paths: Option<&[PathBuf]>,
     diagnostic: &fpas_diagnostics::Diagnostic,
     stderr: &mut dyn Write,
-) -> bool {
-    writeln!(
+) {
+    let _ = writeln!(
         stderr,
         "{}",
         render_cli_diagnostic_with_sources(path, source_paths, diagnostic)
-    )
-    .is_ok()
+    );
 }
 
 pub(crate) fn render_cli_diagnostic(

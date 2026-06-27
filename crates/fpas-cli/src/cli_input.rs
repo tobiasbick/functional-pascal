@@ -18,7 +18,7 @@ fpas — Functional Pascal compiler
 Usage:
     fpas [<file.fpas | file.fpasprj>] [-- <args>...]       Run a source file or project
     fpas [-- <args>...]                                   Discover a workspace program or `.fpasprj` in cwd
-    fpas check [<file.fpas | file.fpasprj | file.fpasworkspace>]
+    fpas check [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
                                                           Type-check without running
     fpas check                                            Discover `.fpasworkspace` or `.fpasprj` in cwd
     fpas test [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
@@ -365,7 +365,7 @@ fn usage_error(mode: CliMode) -> String {
                 .to_string()
         }
         CliMode::Check => {
-            "Usage: fpas check [<file.fpas | file.fpasprj | file.fpasworkspace>]\n  help: `fpas --help` shows options."
+            "Usage: fpas check [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]\n  help: `fpas --help` shows options."
                 .to_string()
         }
         CliMode::Fmt => {
@@ -409,7 +409,8 @@ fn resolve_explicit_input(input: &str, cwd: &Path, mode: CliMode) -> Result<CliI
 
     let expected = match mode {
         CliMode::Run => "a `.fpas` or `.fpasprj` file",
-        CliMode::Check | CliMode::Fmt => "a `.fpas`, `.fpasprj`, or `.fpasworkspace` file",
+        CliMode::Check => "a `.fpas` file, directory, `.fpasprj`, or `.fpasworkspace` file",
+        CliMode::Fmt => "a `.fpas`, `.fpasprj`, or `.fpasworkspace` file",
         CliMode::Test => "a `.fpas` file, directory, `.fpasprj`, or `.fpasworkspace` file",
     };
     Err(format!(

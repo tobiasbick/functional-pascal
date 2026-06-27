@@ -212,3 +212,25 @@ fn check_cli_validates_transitive_library_dependencies() {
     assert_eq!(exit_code, 0, "stderr: {stderr_output}");
     assert!(stderr_output.is_empty());
 }
+
+#[test]
+fn check_cli_validates_directory_of_sources() {
+    let cwd = create_temp_dir("check-source-directory");
+    write_text(&cwd.join("ok.fpas"), "program Ok;\nbegin\nend.\n");
+    write_text(
+        &cwd.join("bad.fpas"),
+        "program Bad;\nuses Std.Console;\nbegin\n  WriteLn(1 + 'nope')\nend.\n",
+    );
+
+    let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
+        &[String::from("check"), cwd.to_string_lossy().to_string()],
+        &cwd,
+    );
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 1);
+    assert!(
+        stderr_output.contains("error"),
+        "stderr should contain compile diagnostic: {stderr_output}"
+    );
+}

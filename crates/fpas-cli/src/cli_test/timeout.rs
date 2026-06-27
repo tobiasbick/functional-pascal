@@ -23,6 +23,7 @@ pub(super) struct VmExecution {
 pub(super) enum VmRunResult {
     Completed(VmExecution),
     TimedOut,
+    WorkerFailed,
 }
 
 /// Runs `run` on a worker thread and aborts cooperatively when `timeout` elapses.
@@ -49,7 +50,26 @@ pub(super) fn run_with_timeout(
         }
         Err(mpsc::RecvTimeoutError::Disconnected) => {
             let _ = handle.join();
-            VmRunResult::TimedOut
+            VmRunResult::WorkerFailed
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use fpas_compiler::compile_all;
+    use fpas_parser::parse;
+
+    #[test]
+    fn disconnected_worker_is_not_reported_as_timeout() {
+        let (program, _) = parse("program P; begin end.");
+        let chunk = compile_all(&program).expect("empty program must compile");
+        let vm = fpas_vm::Vm::new(chunk);
+        let shutdown = vm.shutdown_handle();
+        let result = run_with_timeout(shutdown, Duration::from_secs(60), move || {
+            panic!("worker panic");
+        });
+        assert!(matches!(result, VmRunResult::WorkerFailed));
     }
 }

@@ -54,10 +54,7 @@ pub(super) fn run_tests_parallel(
 
     let worker_count = effective_job_count(jobs, prepared.len());
     if worker_count <= 1 {
-        return prepared
-            .into_iter()
-            .map(|test| run_prepared_test(test, script_override, timeout))
-            .collect();
+        return run_tests_sequential(prepared, script_override, timeout, fail_fast);
     }
 
     let script_path = script_override.map(Path::to_path_buf);
@@ -67,6 +64,7 @@ pub(super) fn run_tests_parallel(
 
     while batch_start < prepared.len() {
         if fail_fast && stop.load(Ordering::Relaxed) {
+            results.extend(prepared[batch_start..].iter().cloned().map(not_run_result));
             break;
         }
 
@@ -77,18 +75,18 @@ pub(super) fn run_tests_parallel(
             let stop = Arc::clone(&stop);
             handles.push(thread::spawn(move || {
                 if fail_fast && stop.load(Ordering::Relaxed) {
-                    return None;
+                    return not_run_result(test);
                 }
                 let result = run_prepared_test(test, script_path.as_deref(), timeout);
-                if result.outcome.is_failure() {
+                if fail_fast && result.outcome.is_failure() {
                     stop.store(true, Ordering::Relaxed);
                 }
-                Some(result)
+                result
             }));
         }
 
         for handle in handles {
-            if let Ok(Some(result)) = handle.join() {
+            if let Ok(result) = handle.join() {
                 results.push(result);
             }
         }
@@ -98,6 +96,37 @@ pub(super) fn run_tests_parallel(
 
     results.sort_by_key(|result| result.index);
     results
+}
+
+fn run_tests_sequential(
+    prepared: Vec<PreparedTest>,
+    script_override: Option<&Path>,
+    timeout: Option<Duration>,
+    fail_fast: bool,
+) -> Vec<IndexedTestResult> {
+    let mut results = Vec::<IndexedTestResult>::with_capacity(prepared.len());
+    let mut stop = false;
+    for test in prepared {
+        if fail_fast && stop {
+            results.push(not_run_result(test));
+            continue;
+        }
+        let result = run_prepared_test(test, script_override, timeout);
+        if fail_fast && result.outcome.is_failure() {
+            stop = true;
+        }
+        results.push(result);
+    }
+    results
+}
+
+fn not_run_result(test: PreparedTest) -> IndexedTestResult {
+    IndexedTestResult {
+        index: test.index,
+        display: test.display.clone(),
+        outcome: TestOutcome::NotRun,
+        output: format!("  ---  {} (not run, --fail-fast)\n", test.display),
+    }
 }
 
 fn run_prepared_test(
@@ -190,5 +219,53 @@ mod tests {
                 .iter()
                 .all(|result| result.outcome == TestOutcome::Pass)
         );
+    }
+
+    #[test]
+    fn run_tests_parallel_fail_fast_records_not_run_tests() {
+        let dir = create_temp_dir("fpas-parallel-fail-fast");
+        let pass = dir.join("pass_test.fpas");
+        let fail = dir.join("fail_test.fpas");
+        let later = dir.join("later_test.fpas");
+        write_text(
+            &pass,
+            "program P;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        );
+        write_text(
+            &fail,
+            "program F;\nuses Std.Test;\nbegin AssertTrue(false) end.",
+        );
+        write_text(
+            &later,
+            "program L;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        );
+
+        let prepared = vec![
+            PreparedTest {
+                index: 0,
+                path: pass,
+                display: "pass_test.fpas".to_string(),
+                link: None,
+            },
+            PreparedTest {
+                index: 1,
+                path: fail,
+                display: "fail_test.fpas".to_string(),
+                link: None,
+            },
+            PreparedTest {
+                index: 2,
+                path: later,
+                display: "later_test.fpas".to_string(),
+                link: None,
+            },
+        ];
+
+        let results = run_tests_parallel(prepared, 1, None, None, true);
+        assert_eq!(results.len(), 3);
+        assert_eq!(results[0].outcome, TestOutcome::Pass);
+        assert_eq!(results[1].outcome, TestOutcome::AssertFailed);
+        assert_eq!(results[2].outcome, TestOutcome::NotRun);
+        assert!(results[2].output.contains("not run, --fail-fast"));
     }
 }

@@ -65,3 +65,16 @@ fn run_cli_shares_constants_via_unit_instead_of_include() {
     assert_eq!(stdout_output, "Hello from unit\n");
     assert!(stderr_output.is_empty());
 }
+
+#[test]
+fn run_cli_rejects_directory_path() {
+    let cwd = create_temp_dir("run-source-directory");
+    write_text(&cwd.join("main.fpas"), "program Main;\nbegin\nend.\n");
+
+    let (exit_code, _, stderr_output) =
+        support::run_cli_args_and_capture_output(&[cwd.to_string_lossy().to_string()], &cwd);
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 1);
+    assert!(stderr_output.contains("Cannot run directory"));
+}

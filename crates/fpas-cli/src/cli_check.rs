@@ -7,6 +7,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use crate::cli_input::{CliConfig, CliInput};
+use crate::cli_paths::collect_fpas_files_in_dir;
 use crate::cli_run::render_cli_diagnostic_with_sources;
 use fpas_diagnostics::DiagnosticSeverity;
 use fpas_project as project;
@@ -14,10 +15,31 @@ use fpas_project as project;
 /// Checks sources from CLI-resolved input without execution.
 pub(crate) fn check_cli(config: CliConfig, stderr: &mut dyn Write) -> i32 {
     match config.input {
+        CliInput::SourceFile(path) if path.is_dir() => check_source_directory(&path, stderr),
         CliInput::SourceFile(path) => check_source_file(&path, stderr),
         CliInput::ProjectFile(path) => check_project_file(&path, stderr),
         CliInput::WorkspaceFile(path) => check_workspace_file(&path, stderr),
     }
+}
+
+fn check_source_directory(dir: &Path, stderr: &mut dyn Write) -> i32 {
+    let files = collect_fpas_files_in_dir(dir);
+    if files.is_empty() {
+        let _ = writeln!(
+            stderr,
+            "No `.fpas` files found under `{}`.\n  help: Pass a source file, project, or workspace path.",
+            dir.display()
+        );
+        return 1;
+    }
+
+    let mut exit_code = 0;
+    for path in files {
+        if check_source_file(&path, stderr) != 0 {
+            exit_code = 1;
+        }
+    }
+    exit_code
 }
 
 fn check_source_file(path: &Path, stderr: &mut dyn Write) -> i32 {
@@ -189,9 +211,7 @@ fn check_parsed_source(
         .any(|diagnostic| diagnostic.as_diagnostic().severity == DiagnosticSeverity::Error);
 
     for diagnostic in &parse_errors {
-        if !emit_check_diagnostic(path, source_paths, diagnostic.as_diagnostic(), stderr) {
-            return 1;
-        }
+        let _ = emit_check_diagnostic(path, source_paths, diagnostic.as_diagnostic(), stderr);
     }
 
     if has_errors {
@@ -211,9 +231,7 @@ fn check_parsed_program(
         Ok(_chunk) => 0,
         Err(diagnostics) => {
             for diagnostic in &diagnostics {
-                if !emit_check_diagnostic(path, source_paths, diagnostic, stderr) {
-                    return 1;
-                }
+                let _ = emit_check_diagnostic(path, source_paths, diagnostic, stderr);
             }
             1
         }
@@ -225,11 +243,10 @@ fn emit_check_diagnostic(
     source_paths: Option<&[PathBuf]>,
     diagnostic: &fpas_diagnostics::Diagnostic,
     stderr: &mut dyn Write,
-) -> bool {
-    writeln!(
+) {
+    let _ = writeln!(
         stderr,
         "{}",
         render_cli_diagnostic_with_sources(path, source_paths, diagnostic)
-    )
-    .is_ok()
+    );
 }

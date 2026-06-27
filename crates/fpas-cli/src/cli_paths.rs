@@ -1,5 +1,6 @@
 //! Shared path and file-extension helpers for CLI argument resolution.
 
+use std::fs;
 use std::path::{Path, PathBuf};
 
 /// Source file extension (without dot).
@@ -32,5 +33,35 @@ pub(crate) fn normalize_path(path: &Path, cwd: &Path) -> PathBuf {
         path.to_path_buf()
     } else {
         cwd.join(path)
+    }
+}
+
+/// Returns sorted `.fpas` source paths under `dir`, skipping `target` directories.
+pub(crate) fn collect_fpas_files_in_dir(dir: &Path) -> Vec<PathBuf> {
+    let mut files = Vec::new();
+    walk_fpas_files(dir, &mut files);
+    files.sort();
+    files
+}
+
+fn walk_fpas_files(dir: &Path, out: &mut Vec<PathBuf>) {
+    let Ok(entries) = fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            if path
+                .file_name()
+                .is_some_and(|name| name.eq_ignore_ascii_case("target"))
+            {
+                continue;
+            }
+            walk_fpas_files(&path, out);
+            continue;
+        }
+        if has_extension(&path, SOURCE_FILE_EXTENSION) {
+            out.push(path);
+        }
     }
 }

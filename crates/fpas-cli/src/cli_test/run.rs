@@ -249,6 +249,16 @@ fn run_test_program(
             );
             TestOutcome::TimedOut
         }
+        VmRunResult::WorkerFailed => {
+            if output.emit_fail_banner() {
+                let _ = writeln!(stderr, "  FAIL  {display}");
+            }
+            let _ = writeln!(
+                stderr,
+                "        test worker failed unexpectedly.\n  help: Re-run under a debugger or report a compiler/runtime bug."
+            );
+            TestOutcome::RuntimeError
+        }
         VmRunResult::Completed(VmExecution {
             result: Ok(()),
             ref stdout_lines,

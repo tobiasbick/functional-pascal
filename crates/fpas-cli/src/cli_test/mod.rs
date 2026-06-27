@@ -93,30 +93,34 @@ fn run_tests_sequential(
     stderr: &mut dyn Write,
 ) -> i32 {
     let mut summary = Summary::default();
-    for path in paths {
-        let display = test_display_path(&path).into_owned();
-        let link = match link_context_for_test(&path) {
+    for (index, path) in paths.iter().enumerate() {
+        let display = test_display_path(path).into_owned();
+        let link = match link_context_for_test(path) {
             Ok(Some(context)) => Some(context),
             Ok(None) => None,
             Err(message) => {
                 let _ = writeln!(stderr, "  FAIL  {display}");
                 let _ = writeln!(stderr, "        {message}");
                 summary.record(&display, TestOutcome::CompileError);
+                if config.fail_fast {
+                    record_not_run_tests(&mut summary, stderr, &paths[index + 1..]);
+                    return finish_test_run(&config, &summary, stdout, stderr);
+                }
                 continue;
             }
         };
         let outcome = run_single_test(
-            &path,
+            path,
             link.as_ref(),
             config.script_path.as_deref(),
             config.timeout,
             stderr,
         );
+        summary.record(&display, outcome);
         if config.fail_fast && outcome.is_failure() {
-            summary.record(&display, outcome);
+            record_not_run_tests(&mut summary, stderr, &paths[index + 1..]);
             return finish_test_run(&config, &summary, stdout, stderr);
         }
-        summary.record(&display, outcome);
     }
 
     finish_test_run(&config, &summary, stdout, stderr)
@@ -165,14 +169,18 @@ fn run_tests_parallel(
 
     for result in results {
         let _ = write!(stderr, "{}", result.output);
-        if config.fail_fast && result.outcome.is_failure() {
-            summary.record(&result.display, result.outcome);
-            return finish_test_run(&config, &summary, stdout, stderr);
-        }
         summary.record(&result.display, result.outcome);
     }
 
     finish_test_run(&config, &summary, stdout, stderr)
+}
+
+fn record_not_run_tests(summary: &mut Summary, stderr: &mut dyn Write, paths: &[PathBuf]) {
+    for path in paths {
+        let display = test_display_path(path).into_owned();
+        let _ = writeln!(stderr, "  ---  {display} (not run, --fail-fast)");
+        summary.record(&display, TestOutcome::NotRun);
+    }
 }
 
 fn link_context_for_test(path: &Path) -> Result<Option<LinkContext>, String> {
@@ -699,5 +707,49 @@ mod tests {
         assert_eq!(exit, 1);
         let text = String::from_utf8(stderr).expect("utf-8");
         assert!(text.contains("SKIP  skip_test.fpas"));
+    }
+
+    #[test]
+    fn test_cli_fail_fast_records_not_run_tests() {
+        let cwd = create_temp_dir("fpas-test-fail-fast");
+        write_text(
+            &cwd.join("aaa_pass_test.fpas"),
+            "program P;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        );
+        write_text(
+            &cwd.join("bbb_fail_test.fpas"),
+            "program F;\nuses Std.Test;\nbegin AssertTrue(false) end.",
+        );
+        write_text(
+            &cwd.join("ccc_later_test.fpas"),
+            "program L;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        );
+
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+        let exit = test_cli(
+            TestCliConfig {
+                input: crate::CliInput::SourceFile(cwd.clone()),
+                cwd: cwd.clone(),
+                fail_fast: true,
+                list_only: false,
+                script_path: None,
+                filter: None,
+                report: None,
+                timeout: None,
+                jobs: 1,
+                strict: false,
+            },
+            &mut stdout,
+            &mut stderr,
+        );
+
+        assert_eq!(exit, 1);
+        let text = String::from_utf8(stderr).expect("utf-8");
+        assert!(text.contains("PASS  aaa_pass_test.fpas"));
+        assert!(text.contains("FAIL  bbb_fail_test.fpas"));
+        assert!(text.contains("not run, --fail-fast"));
+        assert!(text.contains("1 not run"));
+        assert!(!text.contains("PASS  ccc_later_test.fpas"));
     }
 }

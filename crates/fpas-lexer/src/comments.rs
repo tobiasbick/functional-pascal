@@ -37,7 +37,7 @@ impl SourceComment {
         self.span.offset + self.span.length
     }
 
-    /// Whether v2 formatting may re-attach this comment before a declaration.
+    /// Whether this comment uses a block or doc-line lexical form.
     #[must_use]
     pub fn is_preservable(&self) -> bool {
         matches!(

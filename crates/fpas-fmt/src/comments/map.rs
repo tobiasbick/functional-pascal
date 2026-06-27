@@ -1,14 +1,26 @@
-//! Attaches leading doc and block comments to declaration anchors.
+//! Attaches every source comment to emission anchors (leading or same-line trailing).
+//!
+//! **Documentation:** [`docs/pascal/tools/fmt-style.md#comments`](../../../../docs/pascal/tools/fmt-style.md#comments)
 
 use std::collections::BTreeMap;
 
 use fpas_lexer::SourceComment;
-use fpas_parser::{CompilationUnit, Decl, RecordMethod};
+use fpas_parser::CompilationUnit;
 
-/// Comments to emit immediately before an anchor offset in source.
+use super::anchors::{
+    begin_keyword_offset, collect_emission_anchors, collect_leading_anchor_offsets,
+    trailing_gap_allows, uses_keyword_offset,
+};
+
+/// Comments grouped by where they are emitted during formatting.
 #[derive(Debug, Default, Clone)]
 pub struct CommentMap {
-    by_anchor: BTreeMap<usize, Vec<String>>,
+    leading: BTreeMap<usize, Vec<String>>,
+    trailing: BTreeMap<usize, Vec<String>>,
+    /// Leading comments with no following anchor (e.g. after `end.`).
+    trailing_end: Vec<String>,
+    uses_anchor: Option<usize>,
+    begin_anchor: Option<usize>,
 }
 
 impl CommentMap {
@@ -16,132 +28,121 @@ impl CommentMap {
     #[must_use]
     pub fn build(source: &str, unit: &CompilationUnit) -> Self {
         let comments = fpas_lexer::collect_comments(source);
-        let anchors = collect_anchors(unit);
-        Self::attach(source, &comments, &anchors)
+        let leading_anchors = collect_leading_anchor_offsets(unit, source);
+        let emission_anchors = collect_emission_anchors(unit);
+        let mut map = Self::attach(source, &comments, &leading_anchors, &emission_anchors);
+        map.uses_anchor = uses_keyword_offset(source);
+        map.begin_anchor = begin_keyword_offset(source);
+        map
     }
 
-    /// Returns comment texts attached to `anchor_offset`, in source order.
+    /// Returns leading comment texts for `anchor_offset`, in source order.
     #[must_use]
-    pub fn comments_at(&self, anchor_offset: usize) -> &[String] {
-        self.by_anchor
-            .get(&anchor_offset)
-            .map_or(&[], Vec::as_slice)
+    pub fn leading_at(&self, anchor_offset: usize) -> &[String] {
+        self.leading.get(&anchor_offset).map_or(&[], Vec::as_slice)
     }
 
-    fn attach(source: &str, comments: &[SourceComment], anchors: &[usize]) -> Self {
-        let mut grouped: BTreeMap<usize, Vec<(usize, String)>> = BTreeMap::new();
+    /// Returns same-line trailing comment texts keyed by construct start offset.
+    #[must_use]
+    pub fn trailing_at(&self, anchor_start: usize) -> &[String] {
+        self.trailing.get(&anchor_start).map_or(&[], Vec::as_slice)
+    }
+
+    /// Byte offset of the `uses` keyword when the unit had a uses clause in source.
+    #[must_use]
+    pub fn uses_anchor(&self) -> Option<usize> {
+        self.uses_anchor
+    }
+
+    /// Byte offset of the program `begin` keyword when present in source.
+    #[must_use]
+    pub fn begin_anchor(&self) -> Option<usize> {
+        self.begin_anchor
+    }
+
+    /// Returns comments that trailed the compilation unit with no following anchor.
+    #[must_use]
+    pub fn trailing_end(&self) -> &[String] {
+        &self.trailing_end
+    }
+
+    fn attach(
+        source: &str,
+        comments: &[SourceComment],
+        leading_anchors: &[usize],
+        emission_anchors: &[super::anchors::EmissionAnchor],
+    ) -> Self {
+        let mut leading: BTreeMap<usize, Vec<(usize, String)>> = BTreeMap::new();
+        let mut trailing: BTreeMap<usize, Vec<(usize, String)>> = BTreeMap::new();
+        let mut trailing_end: Vec<(usize, String)> = Vec::new();
 
         for comment in comments {
-            if !comment.is_preservable() || comment.is_end_of_line(source) {
+            let text = format_comment_text(comment.text(source));
+            if comment.is_end_of_line(source) {
+                if let Some(start) =
+                    find_trailing_anchor(source, emission_anchors, comment.span.offset)
+                {
+                    trailing
+                        .entry(start)
+                        .or_default()
+                        .push((comment.span.offset, text));
+                } else {
+                    trailing_end.push((comment.span.offset, text));
+                }
                 continue;
             }
-            let Some(anchor) = nearest_following_anchor(comment.end_offset(), anchors, source)
-            else {
-                continue;
-            };
-            grouped.entry(anchor).or_default().push((
-                comment.span.offset,
-                normalize_comment_text(comment.text(source)),
-            ));
+
+            if let Some(anchor) = leading_anchors
+                .iter()
+                .copied()
+                .filter(|anchor| *anchor > comment.end_offset())
+                .min()
+            {
+                leading
+                    .entry(anchor)
+                    .or_default()
+                    .push((comment.span.offset, text));
+            } else {
+                trailing_end.push((comment.span.offset, text));
+            }
         }
 
-        let by_anchor = grouped
-            .into_iter()
-            .map(|(anchor, mut entries)| {
-                entries.sort_by_key(|(offset, _)| *offset);
-                (anchor, entries.into_iter().map(|(_, text)| text).collect())
-            })
-            .collect();
-
-        Self { by_anchor }
+        Self {
+            leading: sort_grouped(leading),
+            trailing: sort_grouped(trailing),
+            trailing_end: sort_entries(trailing_end),
+            uses_anchor: None,
+            begin_anchor: None,
+        }
     }
 }
 
-fn nearest_following_anchor(comment_end: usize, anchors: &[usize], source: &str) -> Option<usize> {
+fn find_trailing_anchor(
+    source: &str,
+    anchors: &[super::anchors::EmissionAnchor],
+    comment_start: usize,
+) -> Option<usize> {
     anchors
         .iter()
-        .copied()
-        .filter(|anchor| *anchor > comment_end && gap_leads_to_anchor(source, comment_end, *anchor))
-        .min()
+        .filter(|anchor| trailing_gap_allows(source, anchor.end, comment_start))
+        .max_by_key(|anchor| anchor.end)
+        .map(|anchor| anchor.start)
 }
 
-/// True when `source[comment_end..anchor]` is only whitespace or declaration keywords
-/// (`private`, `public`, `mutable var`, `var`, `const`, `type`, …) before the parser anchor.
-fn gap_leads_to_anchor(source: &str, comment_end: usize, anchor: usize) -> bool {
-    let gap = source.get(comment_end..anchor).unwrap_or("");
-    if gap.chars().all(char::is_whitespace) {
-        return true;
-    }
-    is_declaration_preamble(gap.trim())
+fn sort_grouped(grouped: BTreeMap<usize, Vec<(usize, String)>>) -> BTreeMap<usize, Vec<String>> {
+    grouped
+        .into_iter()
+        .map(|(anchor, entries)| (anchor, sort_entries(entries)))
+        .collect()
 }
 
-fn is_declaration_preamble(gap: &str) -> bool {
-    let mut rest = gap;
-    loop {
-        rest = rest.trim_start();
-        if rest.is_empty() {
-            return true;
-        }
-        if let Some(next) = rest.strip_prefix("public") {
-            rest = next;
-            continue;
-        }
-        if let Some(next) = rest.strip_prefix("private") {
-            rest = next;
-            continue;
-        }
-        if let Some(next) = rest.strip_prefix("mutable") {
-            rest = next.trim_start();
-            if !rest.starts_with("var") {
-                return false;
-            }
-            rest = rest.strip_prefix("var").unwrap_or("");
-            return rest.trim().is_empty();
-        }
-        for keyword in ["var", "const", "type", "function", "procedure"] {
-            if let Some(next) = rest.strip_prefix(keyword) {
-                return next.trim().is_empty();
-            }
-        }
-        return false;
-    }
+fn sort_entries(mut entries: Vec<(usize, String)>) -> Vec<String> {
+    entries.sort_by_key(|(offset, _)| *offset);
+    entries.into_iter().map(|(_, text)| text).collect()
 }
 
-fn normalize_comment_text(text: &str) -> String {
-    text.replace("\r\n", "\n")
-}
-
-fn collect_anchors(unit: &CompilationUnit) -> Vec<usize> {
-    match unit {
-        CompilationUnit::Program(program) => {
-            collect_decl_anchors(program.span.offset, &program.declarations)
-        }
-        CompilationUnit::Unit(unit) => collect_decl_anchors(unit.span.offset, &unit.declarations),
-    }
-}
-
-fn collect_decl_anchors(root_offset: usize, decls: &[Decl]) -> Vec<usize> {
-    let mut anchors = vec![root_offset];
-    for decl in decls {
-        push_decl_anchors(&mut anchors, decl);
-    }
-    anchors.sort_unstable();
-    anchors.dedup();
-    anchors
-}
-
-fn push_decl_anchors(out: &mut Vec<usize>, decl: &Decl) {
-    out.push(crate::span::decl_span(decl));
-    if let Decl::TypeDef(type_def) = decl
-        && let fpas_parser::TypeBody::Record(record) = &type_def.body
-    {
-        for method in &record.methods {
-            match method {
-                RecordMethod::Function(function) => out.push(function.span.offset),
-                RecordMethod::Procedure(procedure) => out.push(procedure.span.offset),
-            }
-        }
-    }
+fn format_comment_text(text: &str) -> String {
+    text.replace("\r\n", "\n").trim_end().to_string()
 }
 
 #[cfg(test)]
@@ -159,11 +160,37 @@ mod tests {
             fpas_parser::CompilationUnit::Unit(unit) => unit.span.offset,
             _ => panic!("expected unit"),
         };
-        assert_eq!(map.comments_at(unit_anchor), ["/// Unit doc."]);
+        assert_eq!(map.leading_at(unit_anchor), ["/// Unit doc."]);
         let decl_anchor = crate::span::decl_span(match &unit {
             fpas_parser::CompilationUnit::Unit(unit) => &unit.declarations[0],
             _ => panic!("expected unit"),
         });
-        assert_eq!(map.comments_at(decl_anchor), ["{ field doc }"]);
+        assert_eq!(map.leading_at(decl_anchor), ["{ field doc }"]);
+    }
+
+    #[test]
+    fn preserves_comments_before_uses_begin_and_end_of_line() {
+        let source = "program T;\n{ before uses }\nuses Std.Console;\n\n{ before begin }\nbegin\n  WriteLn('ok') // trail\nend. // tail";
+        let (unit, errors) = parse_compilation_unit(source);
+        assert!(errors.is_empty(), "{errors:?}");
+        let map = CommentMap::build(source, &unit);
+        let uses_anchor = map.uses_anchor().expect("uses");
+        assert_eq!(map.leading_at(uses_anchor), ["{ before uses }"]);
+        let begin_anchor = map.begin_anchor().expect("begin");
+        assert_eq!(map.leading_at(begin_anchor), ["{ before begin }"]);
+
+        let formatted = crate::format_source(source, &unit);
+        assert!(formatted.contains("{ before uses }"));
+        assert!(formatted.contains("{ before begin }"));
+        assert!(formatted.contains("// trail"));
+    }
+
+    #[test]
+    fn preserves_line_comments_before_statements() {
+        let source = "program T; begin\n  // setup\n  WriteLn('ok')\nend.";
+        let (unit, errors) = parse_compilation_unit(source);
+        assert!(errors.is_empty(), "{errors:?}");
+        let formatted = crate::format_source(source, &unit);
+        assert!(formatted.contains("// setup"));
     }
 }

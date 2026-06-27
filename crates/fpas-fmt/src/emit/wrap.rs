@@ -6,7 +6,7 @@ use crate::style::{INDENT_WIDTH, MAX_LINE_WIDTH};
 
 use super::Emitter;
 
-/// Visible width of `text` in columns (Unicode scalar count).
+/// Visible width of `text` in columns (Unicode scalar count, not terminal display width).
 pub(crate) fn text_width(text: &str) -> usize {
     text.chars().count()
 }

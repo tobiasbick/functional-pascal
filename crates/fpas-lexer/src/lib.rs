@@ -34,7 +34,7 @@ pub fn lex_with_comments(source: &str) -> (Vec<SpannedToken>, Vec<SourceComment>
     lexer::Lexer::new(source).tokenize_with_comments()
 }
 
-/// Returns preservable comment spans from `source` (same rules as [`lex_with_comments`]).
+/// Returns every comment span from `source` (same order as [`lex_with_comments`]).
 #[must_use]
 pub fn collect_comments(source: &str) -> Vec<SourceComment> {
     lex_with_comments(source).1

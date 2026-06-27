@@ -21,6 +21,13 @@ pub fn assert_round_trip(name: &str, source: &str) {
         errors.is_empty(),
         "{name}: formatted output must re-parse: {errors:?}\n--- formatted ---\n{formatted}"
     );
+
+    let (unit_again, _) = parse_compilation_unit(&formatted);
+    let formatted_again = format_source(&formatted, &unit_again);
+    assert_eq!(
+        formatted, formatted_again,
+        "{name}: format must be idempotent\n--- first ---\n{formatted}\n--- second ---\n{formatted_again}"
+    );
 }
 
 /// Parses `source`, formats it, and compares to `expected`.

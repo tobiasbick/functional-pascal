@@ -1,0 +1,7 @@
+program T;
+
+(* before begin *)
+begin
+  { in body }
+  WriteLn('ok')
+end.

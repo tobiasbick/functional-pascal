@@ -1,7 +1,9 @@
-//! Maps preservable leading comments to declaration anchor offsets.
+//! Maps every source comment to formatter emission anchors.
 
+mod anchors;
 mod emit;
 mod map;
 
-pub(crate) use emit::emit_leading_comments;
+pub(crate) use anchors::stmt_start;
+pub(crate) use emit::{emit_leading_comments, emit_trailing_comments, emit_trailing_end_comments};
 pub use map::CommentMap;

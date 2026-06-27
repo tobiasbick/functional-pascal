@@ -123,18 +123,39 @@ impl Emitter {
         self.write_current_indent();
     }
 
-    /// Ends a statement line: `;` between statements, no extra blank line when already newline-terminated.
-    pub(crate) fn finish_statement(&mut self, is_last: bool) {
+    /// Returns `true` when the buffer ends with a newline.
+    pub(crate) fn ends_with_newline(&self) -> bool {
+        self.out.ends_with('\n')
+    }
+
+    /// Appends a newline and resets the active column.
+    pub(crate) fn write_line_end(&mut self) {
+        self.out.push('\n');
+        self.column = 0;
+    }
+
+    /// Ends a single-line statement: appends `;` and a newline when not last in the block.
+    pub(crate) fn finish_line_statement(&mut self, is_last: bool) {
         if !is_last {
-            if self.out.ends_with('\n') {
-                self.out.insert(self.out.len() - 1, ';');
-            } else {
-                self.out.push(';');
-                self.out.push('\n');
-            }
+            self.out.push(';');
+            self.out.push('\n');
             self.column = 0;
         } else if !self.out.ends_with('\n') {
             self.out.push('\n');
+            self.column = 0;
+        }
+    }
+
+    /// Ends a multi-line statement that already ends with a newline (e.g. `end` on its own line).
+    ///
+    /// When not last in the block, inserts `;` immediately before that trailing newline.
+    pub(crate) fn finish_statement_after_newline(&mut self, is_last: bool) {
+        debug_assert!(
+            self.out.ends_with('\n'),
+            "finish_statement_after_newline requires output to end with a newline"
+        );
+        if !is_last {
+            self.out.insert(self.out.len() - 1, ';');
             self.column = 0;
         }
     }
@@ -151,5 +172,37 @@ mod tests {
         emitter.blank_line();
         emitter.with_indent(|e| e.writeln("WriteLn('hi')"));
         assert_eq!(emitter.finish(), "program Hello;\n\n  WriteLn('hi')\n");
+    }
+
+    #[test]
+    fn finish_line_statement_adds_semicolon_and_newline() {
+        let mut emitter = Emitter::new();
+        emitter.write("WriteLn('ok')");
+        emitter.finish_line_statement(false);
+        assert_eq!(emitter.finish(), "WriteLn('ok');\n");
+    }
+
+    #[test]
+    fn finish_line_statement_last_omits_semicolon() {
+        let mut emitter = Emitter::new();
+        emitter.write("WriteLn('ok')");
+        emitter.finish_line_statement(true);
+        assert_eq!(emitter.finish(), "WriteLn('ok')\n");
+    }
+
+    #[test]
+    fn finish_statement_after_newline_inserts_before_trailing_newline() {
+        let mut emitter = Emitter::new();
+        emitter.writeln("end");
+        emitter.finish_statement_after_newline(false);
+        assert_eq!(emitter.finish(), "end;\n");
+    }
+
+    #[test]
+    fn finish_statement_after_newline_last_keeps_trailing_newline_only() {
+        let mut emitter = Emitter::new();
+        emitter.writeln("end");
+        emitter.finish_statement_after_newline(true);
+        assert_eq!(emitter.finish(), "end\n");
     }
 }

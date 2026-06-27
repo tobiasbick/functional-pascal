@@ -2,6 +2,8 @@
 
 use fpas_parser::{CaseArm, CaseLabel, DestructureVariant, ForDirection, Stmt, VarDef};
 
+use crate::comments::{CommentMap, emit_leading_comments, emit_trailing_comments, stmt_start};
+
 use super::Emitter;
 use super::expr::{emit_arg_list, emit_designator, emit_expr};
 use super::types::emit_type_expr;
@@ -10,33 +12,34 @@ use super::types::emit_type_expr;
 #[must_use]
 pub(crate) fn format_block_stmts(stmts: &[Stmt]) -> String {
     let mut emitter = Emitter::new();
-    emit_stmts_in_block(&mut emitter, stmts);
+    emit_stmts_in_block(&mut emitter, stmts, &CommentMap::default());
     emitter.finish()
 }
 
-pub(crate) fn emit_stmts_in_block(emitter: &mut Emitter, stmts: &[Stmt]) {
+pub(crate) fn emit_stmts_in_block(emitter: &mut Emitter, stmts: &[Stmt], comments: &CommentMap) {
     for (index, stmt) in stmts.iter().enumerate() {
+        emit_leading_comments(emitter, comments, stmt_start(stmt), false);
         let is_last = index + 1 == stmts.len();
-        emit_stmt_in_block(emitter, stmt, is_last);
+        emit_stmt_in_block(emitter, stmt, is_last, comments);
     }
 }
 
-fn emit_stmt_in_block(emitter: &mut Emitter, stmt: &Stmt, is_last: bool) {
+fn emit_stmt_in_block(emitter: &mut Emitter, stmt: &Stmt, is_last: bool, comments: &CommentMap) {
     match stmt {
         Stmt::Block(stmts, ..) => {
             emitter.writeln("begin");
-            emitter.with_indent(|inner| emit_stmts_in_block(inner, stmts));
+            emitter.with_indent(|inner| emit_stmts_in_block(inner, stmts, comments));
             emitter.writeln("end");
-            emit_trailing_semicolon(emitter, is_last);
+            finish_stmt_after_newline(emitter, comments, stmt, is_last);
         }
-        Stmt::Var(var) => emit_var_stmt(emitter, "var", var, is_last),
-        Stmt::MutableVar(var) => emit_var_stmt(emitter, "mutable var", var, is_last),
+        Stmt::Var(var) => emit_var_stmt(emitter, "var", var, is_last, comments),
+        Stmt::MutableVar(var) => emit_var_stmt(emitter, "mutable var", var, is_last, comments),
         Stmt::Assign { target, value, .. } => {
             write_indented(emitter);
             emit_designator(emitter, target);
             emitter.write(" := ");
             emit_expr(emitter, value, 0);
-            emit_trailing_semicolon(emitter, is_last);
+            finish_stmt_line(emitter, comments, stmt, is_last);
         }
         Stmt::Return(expr, ..) => {
             write_indented(emitter);
@@ -45,44 +48,44 @@ fn emit_stmt_in_block(emitter: &mut Emitter, stmt: &Stmt, is_last: bool) {
                 emitter.write(" ");
                 emit_expr(emitter, value, 0);
             }
-            emit_trailing_semicolon(emitter, is_last);
+            finish_stmt_line(emitter, comments, stmt, is_last);
         }
         Stmt::Panic(expr, ..) => {
             write_indented(emitter);
             emitter.write("panic(");
             emit_expr(emitter, expr, 0);
             emitter.write(")");
-            emit_trailing_semicolon(emitter, is_last);
+            finish_stmt_line(emitter, comments, stmt, is_last);
         }
         Stmt::If { .. } => {
-            emit_if(emitter, stmt, "");
-            emit_trailing_semicolon(emitter, is_last);
+            emit_if(emitter, stmt, "", comments);
+            finish_stmt_after_newline(emitter, comments, stmt, is_last);
         }
         Stmt::Case { .. } => {
-            emit_case(emitter, stmt);
-            emit_trailing_semicolon(emitter, is_last);
+            emit_case(emitter, stmt, comments);
+            finish_stmt_line(emitter, comments, stmt, is_last);
         }
         Stmt::For { .. } | Stmt::ForIn { .. } => {
-            emit_for(emitter, stmt);
-            emit_trailing_semicolon(emitter, is_last);
+            emit_for(emitter, stmt, comments);
+            finish_stmt_after_newline(emitter, comments, stmt, is_last);
         }
         Stmt::While { .. } => {
-            emit_while(emitter, stmt);
-            emit_trailing_semicolon(emitter, is_last);
+            emit_while(emitter, stmt, comments);
+            finish_stmt_after_newline(emitter, comments, stmt, is_last);
         }
         Stmt::Repeat { .. } => {
-            emit_repeat(emitter, stmt);
-            emit_trailing_semicolon(emitter, is_last);
+            emit_repeat(emitter, stmt, comments);
+            finish_stmt_line(emitter, comments, stmt, is_last);
         }
         Stmt::Break(..) => {
             write_indented(emitter);
             emitter.write("break");
-            emit_trailing_semicolon(emitter, is_last);
+            finish_stmt_line(emitter, comments, stmt, is_last);
         }
         Stmt::Continue(..) => {
             write_indented(emitter);
             emitter.write("continue");
-            emit_trailing_semicolon(emitter, is_last);
+            finish_stmt_line(emitter, comments, stmt, is_last);
         }
         Stmt::Call {
             designator, args, ..
@@ -92,18 +95,24 @@ fn emit_stmt_in_block(emitter: &mut Emitter, stmt: &Stmt, is_last: bool) {
             emitter.write("(");
             emit_arg_list(emitter, args);
             emitter.write(")");
-            emit_trailing_semicolon(emitter, is_last);
+            finish_stmt_line(emitter, comments, stmt, is_last);
         }
         Stmt::Go { expr, .. } => {
             write_indented(emitter);
             emitter.write("go ");
             emit_expr(emitter, expr, 0);
-            emit_trailing_semicolon(emitter, is_last);
+            finish_stmt_line(emitter, comments, stmt, is_last);
         }
     }
 }
 
-fn emit_var_stmt(emitter: &mut Emitter, keyword: &str, var: &VarDef, is_last: bool) {
+fn emit_var_stmt(
+    emitter: &mut Emitter,
+    keyword: &str,
+    var: &VarDef,
+    is_last: bool,
+    comments: &CommentMap,
+) {
     write_indented(emitter);
     emitter.write(keyword);
     emitter.write(" ");
@@ -112,10 +121,15 @@ fn emit_var_stmt(emitter: &mut Emitter, keyword: &str, var: &VarDef, is_last: bo
     emit_type_expr(emitter, &var.type_expr);
     emitter.write(" := ");
     emit_expr(emitter, &var.value, 0);
-    emit_trailing_semicolon(emitter, is_last);
+    let stmt = if keyword == "mutable var" {
+        Stmt::MutableVar(var.clone())
+    } else {
+        Stmt::Var(var.clone())
+    };
+    finish_stmt_line(emitter, comments, &stmt, is_last);
 }
 
-fn emit_if(emitter: &mut Emitter, stmt: &Stmt, prefix: &str) {
+fn emit_if(emitter: &mut Emitter, stmt: &Stmt, prefix: &str, comments: &CommentMap) {
     let Stmt::If {
         condition,
         then_branch,
@@ -131,33 +145,37 @@ fn emit_if(emitter: &mut Emitter, stmt: &Stmt, prefix: &str) {
     emitter.write("if ");
     emit_expr(emitter, condition, 0);
     emitter.write(" then\n");
-    emit_wrapped_branch(emitter, then_branch);
+    emit_wrapped_branch(emitter, then_branch, comments);
 
     match else_branch {
         Some(else_branch) if matches!(else_branch.as_ref(), Stmt::If { .. }) => {
-            emit_if(emitter, else_branch, "else ");
+            emit_if(emitter, else_branch, "else ", comments);
         }
         Some(else_branch) => {
             emitter.writeln("else");
-            emit_wrapped_branch(emitter, else_branch);
+            emit_wrapped_branch(emitter, else_branch, comments);
         }
         None => {}
     }
 }
 
-fn emit_wrapped_branch(emitter: &mut Emitter, branch: &Stmt) {
-    emit_wrapped_branch_with_semicolon(emitter, branch, false);
+fn emit_wrapped_branch(emitter: &mut Emitter, branch: &Stmt, comments: &CommentMap) {
+    emit_wrapped_branch_with_semicolon(emitter, branch, false, comments);
 }
 
 fn emit_wrapped_branch_with_semicolon(
     emitter: &mut Emitter,
     branch: &Stmt,
     semicolon_after_end: bool,
+    comments: &CommentMap,
 ) {
     emitter.writeln("begin");
     emitter.with_indent(|inner| match branch {
-        Stmt::Block(stmts, ..) => emit_stmts_in_block(inner, stmts),
-        other => emit_stmt_in_block(inner, other, true),
+        Stmt::Block(stmts, ..) => emit_stmts_in_block(inner, stmts, comments),
+        other => {
+            emit_leading_comments(inner, comments, stmt_start(other), false);
+            emit_stmt_in_block(inner, other, true, comments);
+        }
     });
     write_indented(emitter);
     emitter.write("end");
@@ -167,7 +185,7 @@ fn emit_wrapped_branch_with_semicolon(
     emitter.write("\n");
 }
 
-fn emit_case(emitter: &mut Emitter, stmt: &Stmt) {
+fn emit_case(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap) {
     let Stmt::Case {
         expr,
         arms,
@@ -186,16 +204,16 @@ fn emit_case(emitter: &mut Emitter, stmt: &Stmt) {
     emitter.with_indent(|inner| {
         for (index, arm) in arms.iter().enumerate() {
             let is_last_arm = index + 1 == arms.len();
-            emit_case_arm(inner, arm, is_last_arm);
+            emit_case_arm(inner, arm, is_last_arm, comments);
         }
 
         if let Some(else_stmts) = else_body {
             inner.writeln("else");
             if else_stmts.len() == 1 {
-                emit_wrapped_branch_with_semicolon(inner, &else_stmts[0], false);
+                emit_wrapped_branch_with_semicolon(inner, &else_stmts[0], false, comments);
             } else {
                 inner.writeln("begin");
-                inner.with_indent(|body| emit_stmts_in_block(body, else_stmts));
+                inner.with_indent(|body| emit_stmts_in_block(body, else_stmts, comments));
                 inner.writeln("end");
             }
         }
@@ -205,7 +223,7 @@ fn emit_case(emitter: &mut Emitter, stmt: &Stmt) {
     emitter.write("end");
 }
 
-fn emit_case_arm(emitter: &mut Emitter, arm: &CaseArm, is_last_arm: bool) {
+fn emit_case_arm(emitter: &mut Emitter, arm: &CaseArm, is_last_arm: bool, comments: &CommentMap) {
     write_indented(emitter);
     emit_case_labels(emitter, &arm.labels);
     if let Some(guard) = &arm.guard {
@@ -213,7 +231,7 @@ fn emit_case_arm(emitter: &mut Emitter, arm: &CaseArm, is_last_arm: bool) {
         emit_expr(emitter, guard, 0);
     }
     emitter.write(":\n");
-    emit_wrapped_branch_with_semicolon(emitter, &arm.body, !is_last_arm);
+    emit_wrapped_branch_with_semicolon(emitter, &arm.body, !is_last_arm, comments);
 }
 
 fn emit_case_labels(emitter: &mut Emitter, labels: &[CaseLabel]) {
@@ -254,7 +272,7 @@ fn emit_case_label(emitter: &mut Emitter, label: &CaseLabel) {
     }
 }
 
-fn emit_for(emitter: &mut Emitter, stmt: &Stmt) {
+fn emit_for(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap) {
     match stmt {
         Stmt::For {
             var_name,
@@ -280,7 +298,7 @@ fn emit_for(emitter: &mut Emitter, stmt: &Stmt) {
             emitter.write(" ");
             emit_expr(emitter, end, 0);
             emitter.write(" do\n");
-            emit_wrapped_branch(emitter, body);
+            emit_wrapped_branch(emitter, body, comments);
         }
         Stmt::ForIn {
             var_name,
@@ -297,13 +315,13 @@ fn emit_for(emitter: &mut Emitter, stmt: &Stmt) {
             emitter.write(" in ");
             emit_expr(emitter, iterable, 0);
             emitter.write(" do\n");
-            emit_wrapped_branch(emitter, body);
+            emit_wrapped_branch(emitter, body, comments);
         }
         _ => {}
     }
 }
 
-fn emit_while(emitter: &mut Emitter, stmt: &Stmt) {
+fn emit_while(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap) {
     let Stmt::While {
         condition, body, ..
     } = stmt
@@ -315,10 +333,10 @@ fn emit_while(emitter: &mut Emitter, stmt: &Stmt) {
     emitter.write("while ");
     emit_expr(emitter, condition, 0);
     emitter.write(" do\n");
-    emit_wrapped_branch(emitter, body);
+    emit_wrapped_branch(emitter, body, comments);
 }
 
-fn emit_repeat(emitter: &mut Emitter, stmt: &Stmt) {
+fn emit_repeat(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap) {
     let Stmt::Repeat {
         body, condition, ..
     } = stmt
@@ -327,7 +345,7 @@ fn emit_repeat(emitter: &mut Emitter, stmt: &Stmt) {
     };
 
     emitter.writeln("repeat");
-    emitter.with_indent(|inner| emit_stmts_in_block(inner, body));
+    emitter.with_indent(|inner| emit_stmts_in_block(inner, body, comments));
     write_indented(emitter);
     emitter.write("until ");
     emit_expr(emitter, condition, 0);
@@ -337,8 +355,26 @@ fn write_indented(emitter: &mut Emitter) {
     emitter.write_current_indent();
 }
 
-fn emit_trailing_semicolon(emitter: &mut Emitter, is_last: bool) {
-    emitter.finish_statement(is_last);
+fn finish_stmt_line(emitter: &mut Emitter, comments: &CommentMap, stmt: &Stmt, is_last: bool) {
+    if !is_last {
+        emitter.write(";");
+    }
+    emit_trailing_comments(emitter, comments, stmt_start(stmt));
+    if !is_last {
+        emitter.write_line_end();
+    } else if !emitter.ends_with_newline() {
+        emitter.write_line_end();
+    }
+}
+
+fn finish_stmt_after_newline(
+    emitter: &mut Emitter,
+    comments: &CommentMap,
+    stmt: &Stmt,
+    is_last: bool,
+) {
+    emit_trailing_comments(emitter, comments, stmt_start(stmt));
+    emitter.finish_statement_after_newline(is_last);
 }
 
 #[cfg(test)]
@@ -409,6 +445,25 @@ end.",
         assert!(
             !formatted_once.contains("begin\n    begin\n    begin"),
             "formatted:\n{formatted_once}"
+        );
+    }
+
+    #[test]
+    fn multiline_string_literal_places_semicolon_after_closing_paren() {
+        let formatted = format_body(
+            "program T; begin
+  WriteLn('line1
+line2');
+  WriteLn('after')
+end.",
+        );
+        assert!(
+            formatted.contains("line2');"),
+            "semicolon must follow the closing paren, not an interior newline; formatted:\n{formatted}"
+        );
+        assert!(
+            formatted.contains("WriteLn('after')"),
+            "formatted:\n{formatted}"
         );
     }
 

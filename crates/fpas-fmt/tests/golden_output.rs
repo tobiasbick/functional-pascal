@@ -55,3 +55,30 @@ fn wrapped_parenthesized_comparisons_preserve_full_expression() {
         "program T;\n\nbegin\n  var InsideHorizontalBounds: boolean := (MouseEvent.mouse_x > ButtonBounds.x) and\n                                         (MouseEvent.mouse_x <= ButtonBounds.x + ButtonBounds.width)\nend.\n",
     );
 }
+
+#[test]
+fn comments_unit_declaration_docs() {
+    common::assert_golden(
+        "comments_unit",
+        "/// Unit doc.\nunit Demo;\n\n{ field doc }\nprivate mutable var Count: integer := 0;\n",
+        include_str!("golden/comments_unit.expected.fpas"),
+    );
+}
+
+#[test]
+fn comments_program_uses_begin_body_and_trailing() {
+    common::assert_golden(
+        "comments_program",
+        "program T;\n{ before uses }\nuses Std.Console;\n\n{ before begin }\nbegin\n  // setup\n  WriteLn('ok') // trail\nend. // tail",
+        include_str!("golden/comments_program.expected.fpas"),
+    );
+}
+
+#[test]
+fn comments_brace_and_paren_star_blocks() {
+    common::assert_golden(
+        "comments_block_styles",
+        "program T;\n(* before begin *)\nbegin\n  { in body }\n  WriteLn('ok')\nend.",
+        include_str!("golden/comments_block_styles.expected.fpas"),
+    );
+}

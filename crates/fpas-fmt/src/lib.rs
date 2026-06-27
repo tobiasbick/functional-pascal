@@ -14,9 +14,10 @@ use comments::CommentMap;
 use emit::{format_program as emit_program, format_unit as emit_unit};
 use fpas_parser::{CompilationUnit, Program, Unit};
 
-/// Formats a parsed compilation unit without access to original source (comments stripped).
+/// Formats a parsed compilation unit without access to original source.
 ///
-/// Prefer [`format_source`] when the original text is available.
+/// Comments cannot be preserved without source text. Prefer [`format_source`] for `fpas fmt`
+/// and any workflow where comments must be kept.
 ///
 /// **Documentation:** `docs/pascal/tools/fmt-style.md`
 #[must_use]
@@ -24,7 +25,7 @@ pub fn format_compilation_unit(unit: &CompilationUnit) -> String {
     format_with_comments(unit, &CommentMap::default())
 }
 
-/// Formats `unit` using `source` to preserve leading doc and declaration comments.
+/// Formats `unit` using `source` to preserve every comment (`///`, `//`, `{ }`, `(* *)`).
 ///
 /// **Documentation:** `docs/pascal/tools/fmt-style.md#comments`
 #[must_use]
@@ -52,5 +53,37 @@ fn format_with_comments(unit: &CompilationUnit, comments: &CommentMap) -> String
     match unit {
         CompilationUnit::Program(program) => emit_program(program, comments),
         CompilationUnit::Unit(unit) => emit_unit(unit, comments),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use fpas_parser::parse_compilation_unit;
+
+    #[test]
+    fn format_source_preserves_all_comments() {
+        let source = "/// Unit doc.\nunit Demo;\n\n{ field doc }\nprivate mutable var Count: integer := 0;\n";
+        let (unit, errors) = parse_compilation_unit(source);
+        assert!(errors.is_empty(), "{errors:?}");
+
+        let without_source = format_compilation_unit(&unit);
+        assert!(
+            !without_source.contains("Unit doc"),
+            "AST-only formatting cannot recover comments without source"
+        );
+
+        let with_source = format_source(source, &unit);
+        assert!(with_source.contains("/// Unit doc."));
+        assert!(with_source.contains("{ field doc }"));
+    }
+
+    #[test]
+    fn format_source_preserves_end_of_line_comments() {
+        let source = "program T; begin\n  WriteLn('ok') // trail\nend.";
+        let (unit, errors) = parse_compilation_unit(source);
+        assert!(errors.is_empty(), "{errors:?}");
+        let formatted = format_source(source, &unit);
+        assert!(formatted.contains("// trail"));
     }
 }

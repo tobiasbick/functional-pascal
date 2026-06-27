@@ -1,0 +1,7 @@
+/// Unit doc.
+
+unit Demo;
+
+{ field doc }
+
+private mutable var Count: integer := 0;

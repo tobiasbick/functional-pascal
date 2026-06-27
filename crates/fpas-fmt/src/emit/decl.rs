@@ -5,7 +5,7 @@ use fpas_parser::{
     RecordMethod, RecordType, TypeBody, TypeDef, VarDef, Visibility,
 };
 
-use crate::comments::{CommentMap, emit_leading_comments};
+use crate::comments::{CommentMap, emit_leading_comments, emit_trailing_comments};
 
 use super::Emitter;
 use super::expr::emit_expr;
@@ -98,8 +98,8 @@ fn emit_decl_run(emitter: &mut Emitter, decls: &[Decl], comments: &CommentMap) {
                     let Decl::Const(def) = decl else {
                         continue;
                     };
-                    emit_leading_comments(inner, comments, def.span.offset);
-                    emit_const_def(inner, def, true);
+                    emit_leading_comments(inner, comments, def.span.offset, false);
+                    emit_const_def(inner, def, true, comments);
                 }
             });
         }
@@ -110,8 +110,8 @@ fn emit_decl_run(emitter: &mut Emitter, decls: &[Decl], comments: &CommentMap) {
                     let Decl::Var(def) = decl else {
                         continue;
                     };
-                    emit_leading_comments(inner, comments, def.span.offset);
-                    emit_var_def(inner, "var", def);
+                    emit_leading_comments(inner, comments, def.span.offset, false);
+                    emit_var_def(inner, "var", def, comments);
                 }
             });
         }
@@ -122,8 +122,8 @@ fn emit_decl_run(emitter: &mut Emitter, decls: &[Decl], comments: &CommentMap) {
                     let Decl::MutableVar(def) = decl else {
                         continue;
                     };
-                    emit_leading_comments(inner, comments, def.span.offset);
-                    emit_var_def(inner, "mutable var", def);
+                    emit_leading_comments(inner, comments, def.span.offset, false);
+                    emit_var_def(inner, "mutable var", def, comments);
                 }
             });
         }
@@ -134,7 +134,7 @@ fn emit_decl_run(emitter: &mut Emitter, decls: &[Decl], comments: &CommentMap) {
                     let Decl::TypeDef(def) = decl else {
                         continue;
                     };
-                    emit_leading_comments(inner, comments, def.span.offset);
+                    emit_leading_comments(inner, comments, def.span.offset, false);
                     emit_type_def(inner, def, comments, true);
                 }
             });
@@ -144,11 +144,11 @@ fn emit_decl_run(emitter: &mut Emitter, decls: &[Decl], comments: &CommentMap) {
 }
 
 fn emit_decl(emitter: &mut Emitter, decl: &Decl, comments: &CommentMap) {
-    emit_leading_comments(emitter, comments, crate::span::decl_span(decl));
+    emit_leading_comments(emitter, comments, crate::span::decl_span(decl), true);
     match decl {
-        Decl::Const(def) => emit_const_def(emitter, def, false),
-        Decl::Var(def) => emit_var_def(emitter, "var", def),
-        Decl::MutableVar(def) => emit_var_def(emitter, "mutable var", def),
+        Decl::Const(def) => emit_const_def(emitter, def, false, comments),
+        Decl::Var(def) => emit_var_def(emitter, "var", def, comments),
+        Decl::MutableVar(def) => emit_var_def(emitter, "mutable var", def, comments),
         Decl::TypeDef(def) => emit_type_def(emitter, def, comments, false),
         Decl::Function(function) => emit_function_decl(emitter, function, comments),
         Decl::Procedure(procedure) => emit_procedure_decl(emitter, procedure, comments),
@@ -161,7 +161,12 @@ fn emit_visibility(emitter: &mut Emitter, visibility: Visibility) {
     }
 }
 
-fn emit_const_def(emitter: &mut Emitter, def: &ConstDef, in_const_block: bool) {
+fn emit_const_def(
+    emitter: &mut Emitter,
+    def: &ConstDef,
+    in_const_block: bool,
+    comments: &CommentMap,
+) {
     emitter.write_current_indent();
     emit_visibility(emitter, def.visibility);
     if !in_const_block {
@@ -172,10 +177,10 @@ fn emit_const_def(emitter: &mut Emitter, def: &ConstDef, in_const_block: bool) {
     emit_type_expr(emitter, &def.type_expr);
     emitter.write(" := ");
     emit_expr(emitter, &def.value, 0);
-    finish_decl_line(emitter);
+    finish_decl_line(emitter, comments, def.span.offset);
 }
 
-fn emit_var_def(emitter: &mut Emitter, keyword: &str, def: &VarDef) {
+fn emit_var_def(emitter: &mut Emitter, keyword: &str, def: &VarDef, comments: &CommentMap) {
     emitter.write_current_indent();
     emit_visibility(emitter, def.visibility);
     emitter.write(keyword);
@@ -185,7 +190,7 @@ fn emit_var_def(emitter: &mut Emitter, keyword: &str, def: &VarDef) {
     emit_type_expr(emitter, &def.type_expr);
     emitter.write(" := ");
     emit_expr(emitter, &def.value, 0);
-    finish_decl_line(emitter);
+    finish_decl_line(emitter, comments, def.span.offset);
 }
 
 fn emit_type_def(emitter: &mut Emitter, def: &TypeDef, comments: &CommentMap, in_type_block: bool) {
@@ -197,7 +202,9 @@ fn emit_type_def(emitter: &mut Emitter, def: &TypeDef, comments: &CommentMap, in
     emitter.write(&def.name);
     emitter.write(" = ");
     emit_type_body(emitter, &def.body, comments);
-    emitter.write(";\n");
+    emitter.write(";");
+    emit_trailing_comments(emitter, comments, def.span.offset);
+    emitter.write("\n");
 }
 
 fn emit_type_body(emitter: &mut Emitter, body: &TypeBody, comments: &CommentMap) {
@@ -212,7 +219,7 @@ fn emit_record_type(emitter: &mut Emitter, record: &RecordType, comments: &Comme
     emitter.write("record\n");
     emitter.with_indent(|inner| {
         for field in &record.fields {
-            emit_field_def(inner, field);
+            emit_field_def(inner, field, comments);
         }
         if !record.fields.is_empty() && !record.methods.is_empty() {
             inner.write("\n");
@@ -228,7 +235,8 @@ fn emit_record_type(emitter: &mut Emitter, record: &RecordType, comments: &Comme
     emitter.write("end");
 }
 
-fn emit_field_def(emitter: &mut Emitter, field: &FieldDef) {
+fn emit_field_def(emitter: &mut Emitter, field: &FieldDef, comments: &CommentMap) {
+    emit_leading_comments(emitter, comments, field.span.offset, false);
     emitter.write_current_indent();
     emitter.write(&field.name);
     emitter.write(": ");
@@ -243,7 +251,7 @@ fn emit_field_def(emitter: &mut Emitter, field: &FieldDef) {
 fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &CommentMap) {
     match method {
         RecordMethod::Function(function) => {
-            emit_leading_comments(emitter, comments, function.span.offset);
+            emit_leading_comments(emitter, comments, function.span.offset, true);
             emitter.write_current_indent();
             emit_function_header(
                 emitter,
@@ -257,7 +265,7 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
             emit_func_body(emitter, &function.body, comments);
         }
         RecordMethod::Procedure(procedure) => {
-            emit_leading_comments(emitter, comments, procedure.span.offset);
+            emit_leading_comments(emitter, comments, procedure.span.offset, true);
             emitter.write_current_indent();
             emit_procedure_header(
                 emitter,
@@ -357,13 +365,15 @@ fn emit_func_body(emitter: &mut Emitter, body: &FuncBody, comments: &CommentMap)
         emit_decl(emitter, decl, comments);
     }
     emitter.writeln("begin");
-    emitter.with_indent(|inner| emit_stmts_in_block(inner, stmts));
+    emitter.with_indent(|inner| emit_stmts_in_block(inner, stmts, comments));
     emitter.write_current_indent();
     emitter.write("end;\n");
 }
 
-fn finish_decl_line(emitter: &mut Emitter) {
-    emitter.write(";\n");
+fn finish_decl_line(emitter: &mut Emitter, comments: &CommentMap, anchor_start: usize) {
+    emitter.write(";");
+    emit_trailing_comments(emitter, comments, anchor_start);
+    emitter.write_line_end();
 }
 
 #[cfg(test)]

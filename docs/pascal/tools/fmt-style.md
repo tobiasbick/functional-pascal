@@ -12,7 +12,7 @@ Canonical output rules for the AST pretty-printer. These are **normative for `fp
 | [More examples — snippets](#more-examples--record-types-snippet) | **After `fpas fmt`** — same rules, but only a `type` slice (not a full file). |
 | Rules below (indent, semicolons, …) | Textual spec; if a rule disagrees with a golden example, **fix the example or the rule**, then implement. |
 
-There is **no** “messy input” column in this doc yet. Source before formatting may omit `begin` / `end`, use `WRITELN`, extra blank lines, or comments — all of that is normalized away in the golden blocks.
+There is **no** “messy input” column in this doc yet. Source before formatting may omit `begin` / `end`, use `WRITELN`, or extra blank lines — those are normalized in the golden blocks. Comments are preserved (see [Comments](#comments)).
 
 Spec links: [`language/basics/README.md`](../language/basics/README.md), [`language/control-flow/README.md`](../language/control-flow/README.md), [`.cursor/rules/functional-pascal.mdc`](../../../.cursor/rules/functional-pascal.mdc).
 
@@ -428,7 +428,15 @@ type
 
 ## Comments
 
-**Declaration comments:** When formatting with source text ([`format_source`](../../../crates/fpas-fmt/src/lib.rs)), re-attach leading `///` and declaration `{ }` / `(* *)` blocks that immediately preceded a declaration in source. End-of-line and intra-statement comments remain removed. One blank line after a preserved comment block before the declaration. [`format_compilation_unit`](../../../crates/fpas-fmt/src/lib.rs) without source strips all comments.
+**All comments are preserved** when formatting with source text ([`format_source`](../../../crates/fpas-fmt/src/lib.rs) / `fpas fmt`). That includes `///` doc lines, `//` line comments, and `{ }` / `(* *)` block comments — whether they appear before declarations, before `uses` / `begin`, between statements, or at end of line after code.
+
+The formatter may **normalize** comment text (for example `CRLF` → `LF`, trim trailing spaces on a comment line) but must not delete any comment.
+
+Placement after formatting follows emission anchors: leading comments stay on their own lines before the nearest following construct; end-of-line comments stay on the same line after the statement or declaration they trailed in source. One blank line after a leading doc/block group before a top-level declaration or unit/program header (see [Blank lines](#blank-lines)).
+
+[`format_compilation_unit`](../../../crates/fpas-fmt/src/lib.rs) without source cannot recover comments from the AST alone — use [`format_source`](../../../crates/fpas-fmt/src/lib.rs) when comments must be kept.
+
+**Golden tests:** [`comments_unit.expected.fpas`](../../../crates/fpas-fmt/tests/golden/comments_unit.expected.fpas), [`comments_program.expected.fpas`](../../../crates/fpas-fmt/tests/golden/comments_program.expected.fpas), [`comments_block_styles.expected.fpas`](../../../crates/fpas-fmt/tests/golden/comments_block_styles.expected.fpas) (see [`golden_output.rs`](../../../crates/fpas-fmt/tests/golden_output.rs)).
 
 ## Intentional diffs from source
 
@@ -436,8 +444,7 @@ The formatter **normalizes** valid input. These changes are deliberate (not bugs
 
 | Source may have | Formatted output |
 |-----------------|------------------|
-| Leading `///` / `{ }` / `(* *)` before a declaration (with source) | Preserved before that declaration |
-| End-of-line or intra-statement comments (`{ }`, `(* *)`, `//`) | Removed |
+| Any comment (`///`, `//`, `{ }`, `(* *)`) with [`format_source`](../../../crates/fpas-fmt/src/lib.rs) | Preserved (text may be normalized; placement follows anchor rules in [Comments](#comments)) |
 | Keyword casing (`PROGRAM`, `Begin`, `WRITELN`) | Lowercase keywords; identifiers keep source spelling |
 | Hex integers (`$FF`) or digit separators (`1_000`) | Decimal literals only |
 | Optional single-statement branches (`if x then return y`) | Always `begin` … `end` around branch bodies |

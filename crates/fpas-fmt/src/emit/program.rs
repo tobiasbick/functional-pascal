@@ -2,7 +2,7 @@
 
 use fpas_parser::{Program, QualifiedId, Unit};
 
-use crate::comments::{CommentMap, emit_leading_comments};
+use crate::comments::{CommentMap, emit_leading_comments, emit_trailing_end_comments};
 
 use super::Emitter;
 use super::decl::emit_decls;
@@ -27,29 +27,40 @@ pub(crate) fn format_unit(unit: &Unit, comments: &CommentMap) -> String {
 }
 
 fn emit_program(emitter: &mut Emitter, program: &Program, comments: &CommentMap) {
-    emit_leading_comments(emitter, comments, program.span.offset);
+    emit_leading_comments(emitter, comments, program.span.offset, true);
     emitter.writeln(&format!("program {};", program.name));
     emitter.blank_line();
+    if let Some(anchor) = comments.uses_anchor() {
+        emit_leading_comments(emitter, comments, anchor, false);
+    }
     emit_optional_uses(emitter, &program.uses);
     if !program.declarations.is_empty() {
         emit_decls(emitter, &program.declarations, comments);
         emitter.blank_line();
     }
+    if let Some(anchor) = comments.begin_anchor() {
+        emit_leading_comments(emitter, comments, anchor, false);
+    }
     emitter.writeln("begin");
-    emitter.with_indent(|inner| emit_stmts_in_block(inner, &program.body));
+    emitter.with_indent(|inner| emit_stmts_in_block(inner, &program.body, comments));
     emitter.writeln("end.");
+    emit_trailing_end_comments(emitter, comments);
 }
 
 fn emit_unit(emitter: &mut Emitter, unit: &Unit, comments: &CommentMap) {
-    emit_leading_comments(emitter, comments, unit.span.offset);
+    emit_leading_comments(emitter, comments, unit.span.offset, true);
     emitter.write("unit ");
     emit_qualified_id(emitter, &unit.name);
     emitter.write(";\n");
     emitter.blank_line();
+    if let Some(anchor) = comments.uses_anchor() {
+        emit_leading_comments(emitter, comments, anchor, false);
+    }
     emit_optional_uses(emitter, &unit.uses);
     if !unit.declarations.is_empty() {
         emit_decls(emitter, &unit.declarations, comments);
     }
+    emit_trailing_end_comments(emitter, comments);
 }
 
 fn emit_optional_uses(emitter: &mut Emitter, uses: &[QualifiedId]) {

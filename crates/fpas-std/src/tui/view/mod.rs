@@ -164,6 +164,7 @@ pub struct ViewRegistry {
     roots: Vec<ViewId>,
     focused: Option<ViewId>,
     pointer_capture: Option<ViewId>,
+    pointer_press: Option<ViewId>,
     desktop: DesktopMetrics,
     pub(crate) frame_roots: HashMap<ViewId, FrameRootState>,
     pub(crate) window_interaction: Option<WindowInteraction>,

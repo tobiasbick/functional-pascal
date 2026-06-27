@@ -40,6 +40,9 @@ impl ViewRegistry {
             if self.pointer_capture == Some(*view_id) {
                 self.pointer_capture = None;
             }
+            if self.pointer_press == Some(*view_id) {
+                self.pointer_press = None;
+            }
         }
         self.clear_frame_roots_in_subtree(&subtree);
         self.detach_from_parent_or_roots(id, parent);
@@ -282,6 +285,7 @@ impl ViewRegistry {
         self.roots.clear();
         self.focused = None;
         self.pointer_capture = None;
+        self.pointer_press = None;
     }
 
     fn allocate_id(&mut self) -> ViewId {

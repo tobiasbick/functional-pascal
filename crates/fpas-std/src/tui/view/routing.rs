@@ -82,15 +82,40 @@ impl ViewRegistry {
         self.pointer_capture = None;
     }
 
+    /// Begin a pointer press owned by `id` and capture subsequent pointer events.
+    pub fn begin_pointer_press(&mut self, id: ViewId) -> bool {
+        if self.capture_pointer(id) {
+            self.pointer_press = Some(id);
+            true
+        } else {
+            false
+        }
+    }
+
+    /// End the active pointer press and release pointer capture.
+    pub fn end_pointer_press(&mut self) -> Option<ViewId> {
+        let pressed = self.pointer_press.take();
+        self.release_pointer();
+        pressed
+    }
+
+    /// Return the view that owns the active pointer press.
+    #[must_use]
+    pub fn pressed_pointer(&self) -> Option<ViewId> {
+        self.pointer_press
+    }
+
     /// Cancel all in-flight pointer-owned state.
     ///
     /// This is stronger than [`Self::release_pointer`]: it also drops frame move/resize and frame
     /// scroll-thumb drags that depend on capture continuing.
     pub fn cancel_pointer_interactions(&mut self) -> bool {
         let changed = self.pointer_capture.is_some()
+            || self.pointer_press.is_some()
             || self.window_interaction.is_some()
             || self.frame_scroll_interaction.is_some();
         self.pointer_capture = None;
+        self.pointer_press = None;
         self.window_interaction = None;
         self.frame_scroll_interaction = None;
         changed

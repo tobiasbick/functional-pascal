@@ -215,9 +215,11 @@ terminal focus loss, and release on view removal before frame Phase 2/4 input wo
 Progress 2026-06-27: retained routing now has pointer capture, frame move/resize and frame
 scroll-thumb drags use it, captured routes survive outside the initial hit rectangle, and
 `ViewRegistry::cancel_pointer_interactions` clears capture plus host-owned frame drag state on
-terminal focus loss. View removal already releases capture and frame-root interaction state. The
-remaining H4 work is general pressed-state semantics for controls that need press/release matching
-beyond existing drag widgets.
+terminal focus loss. View removal already releases capture and frame-root interaction state.
+
+Progress 2026-06-27: buttons now use retained press/release matching. Left-button down captures the
+pressed button, left-button up releases capture, and the command fires only when the release remains
+inside that same button. Releasing outside cancels activation.
 
 ### H5. Terminal cell width is incorrect for general Unicode
 
@@ -475,7 +477,7 @@ These original findings are reduced but not closed:
 | [C3](#c3-the-view-model-cannot-represent-control-or-group-state) View state | Done | — |
 | [C4](#c4-modal-state-does-not-preserve-interaction-context) Modal context | Done | — |
 | [H3](#h3-geometry-clipping-and-damage-must-be-one-registry-contract) Geometry contract | Done | Damage, child origins, and reparenting now consume resolved-node data |
-| [H4](#h4-pointer-capture-is-a-prerequisite-not-interaction-polish) Pointer capture | Mostly done | Capture, frame drag, scroll-thumb drag, focus-loss cancel, and removal cleanup are done; remaining work is general pressed-state semantics for controls |
+| [H4](#h4-pointer-capture-is-a-prerequisite-not-interaction-polish) Pointer capture | Done | Capture, frame drag, scroll-thumb drag, focus-loss cancel, removal cleanup, and button press/release tracking are done |
 | Structural ([§](#structural-findings)) | Done | Widget paint/input no longer clone widgets; retained view entries have indexed lookup while preserving sibling order vectors |
 
 ### Acceptance criteria status

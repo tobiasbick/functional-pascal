@@ -16,6 +16,7 @@ use super::super::widget_target;
 enum ControlAction {
     Consumed,
     CaptureThumb,
+    CapturePress,
     Command(CommandId),
 }
 
@@ -39,6 +40,9 @@ impl Worker {
         {
             return Ok(Some(outcome));
         }
+        if up && let Some(outcome) = self.try_dispatch_pressed_button_release(mouse, line)? {
+            return Ok(Some(outcome));
+        }
         if !down && !scroll_up && !scroll_down {
             return Ok(None);
         }
@@ -55,11 +59,7 @@ impl Worker {
                 widget.sync_view_state(state);
             }
             let action = match &mut widget {
-                ViewWidget::Button(v) if v.enabled => {
-                    v.command_id.map_or(Some(ControlAction::Consumed), |c| {
-                        Some(ControlAction::Command(c))
-                    })
-                }
+                ViewWidget::Button(v) if v.enabled => down.then_some(ControlAction::CapturePress),
                 ViewWidget::InputLine(v) if v.enabled => {
                     let index = mouse.x.saturating_sub(1).saturating_sub(rect.x).max(0) as usize
                         + v.scroll_offset();
@@ -130,6 +130,35 @@ impl Worker {
             return Ok(None);
         };
         self.finish_control_action(id, rect, action, capture_thumb, line)
+    }
+
+    fn try_dispatch_pressed_button_release(
+        &mut self,
+        mouse: UiMouse,
+        line: SourceLocation,
+    ) -> Result<Option<ProcessOutcome>, VmError> {
+        let snapshot = self.with_tui(|tui| {
+            let id = tui.views.pressed_pointer()?;
+            let view = tui.views.resolved(id)?;
+            let mut widget = tui.view_widgets.remove(&id)?;
+            let command = match &mut widget {
+                ViewWidget::Button(button) if button.enabled => view
+                    .rect
+                    .contains_console_mouse(mouse.x, mouse.y)
+                    .then_some(button.command_id),
+                _ => None,
+            };
+            tui.view_widgets.insert(id, widget);
+            tui.views.end_pointer_press();
+            Some((id, view.rect, command.flatten()))
+        });
+        let Some((id, rect, command)) = snapshot else {
+            return Ok(None);
+        };
+        let action = command.map_or(Some(ControlAction::Consumed), |c| {
+            Some(ControlAction::Command(c))
+        });
+        self.finish_control_action(id, rect, action, false, line)
     }
 
     fn try_dispatch_scroll_thumb_drag(
@@ -286,10 +315,13 @@ impl Worker {
             if capture_thumb {
                 tui.views.capture_pointer(id);
             }
+            if matches!(action, ControlAction::CapturePress) {
+                tui.views.begin_pointer_press(id);
+            }
             let _ = tui.session.request_redraw_rect(rect, line);
         });
         match action {
-            ControlAction::Consumed | ControlAction::CaptureThumb => {
+            ControlAction::Consumed | ControlAction::CaptureThumb | ControlAction::CapturePress => {
                 Ok(Some(ProcessOutcome::WidgetConsumed))
             }
             ControlAction::Command(command) => {

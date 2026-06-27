@@ -26,7 +26,8 @@ a dialog subtree.
 
 ## Input and commands
 
-- Buttons activate with left click, Enter, or Space.
+- Buttons activate on left-button release after a left-button press on the same button, or with
+  Enter/Space. Releasing outside the pressed button cancels the mouse activation.
 - Input lines accept character keys, Left/Right/Home/End, Backspace/Delete, and bracketed paste.
 - Memos accept character keys, Enter for new lines, arrow keys with Shift for selection, PageUp/PageDown
   for vertical scroll, Backspace/Delete, and bracketed paste. An integrated vertical scroll bar appears

@@ -26,6 +26,25 @@ begin
   end
 end;
 
+function Mouse(Action: MouseAction; X: integer; Y: integer): Event;
+begin
+  return record
+    kind := Std.Console.EventKind.Mouse;
+    key := CharacterKey(Std.Str.Chr(0));
+    mouse_action := Action;
+    mouse_button := MouseButton.Left;
+    mouse_x := X;
+    mouse_y := Y;
+    width := 0;
+    height := 0;
+    text := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
 function RadioOptions(): array of RadioOption;
 begin
   return [
@@ -62,6 +81,13 @@ begin
   Application.TestPumpUntilIdle(App);
   var LabelCell: ScreenCell := Application.QueryScreenCell(App, 1, 1);
   AssertTrue(LabelCell.ch = 'N');
+  LastCommand := -1;
+  Application.TestSendMouse(App, Mouse(MouseAction.Down, 2, 3));
+  Application.TestPumpUntilIdle(App);
+  AssertEquals(-1, LastCommand);
+  Application.TestSendMouse(App, Mouse(MouseAction.Up, 20, 3));
+  Application.TestPumpUntilIdle(App);
+  AssertEquals(-1, LastCommand);
   Application.TestClickMouse(App, 2, 3);
   Application.TestPumpUntilIdle(App);
   AssertEquals(10, LastCommand);

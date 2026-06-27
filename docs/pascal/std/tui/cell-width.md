@@ -21,7 +21,7 @@ Ambiguous-width characters use neutral width. Truncation reserves the last visib
 - Console `write_text_at` / `write_char_at` (`crates/fpas-std/src/console/screen/text_at.rs`)
 - Shared helpers in `crates/fpas-std/src/text/cell_width.rs`
 - Frame title slots, menu bar/popup geometry, status bar segments, and basic controls (labels,
-  buttons, list box, input line cursor placement)
+  buttons, list box, input line cursor/scroll placement, memo cursor placement)
 
 ## Implementation (contributors)
 

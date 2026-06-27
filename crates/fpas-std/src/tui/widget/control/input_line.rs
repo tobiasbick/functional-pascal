@@ -180,10 +180,15 @@ impl InputLineWidget {
     fn effective_scroll(&self, view_width: usize) -> usize {
         if self.cursor < self.scroll_offset {
             self.cursor
-        } else if self.cursor >= self.scroll_offset.saturating_add(view_width) {
-            self.cursor.saturating_sub(view_width.saturating_sub(1))
         } else {
-            self.scroll_offset
+            let cursor_col = char_display_offset(&self.text, self.cursor);
+            let mut scroll = self.scroll_offset.min(self.cursor);
+            while scroll < self.cursor
+                && cursor_col.saturating_sub(char_display_offset(&self.text, scroll)) >= view_width
+            {
+                scroll += 1;
+            }
+            scroll
         }
     }
 

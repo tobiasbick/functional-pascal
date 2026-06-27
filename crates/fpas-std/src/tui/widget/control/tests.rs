@@ -187,6 +187,23 @@ fn input_line_scrolls_to_keep_cursor_visible() {
 }
 
 #[test]
+fn input_line_scrolls_by_display_width_for_wide_characters() {
+    let mut console = console();
+    let mut input = InputLineWidget::new("日本ab", InputLineStyle::default());
+    input.set_cursor(4);
+    input.focused = true;
+
+    input.paint(&mut console, rect(0, 0, 4, 1), DamageRegion::FullFrame);
+
+    console
+        .finish_tui_paint(loc())
+        .expect("paint should finish");
+    assert_eq!(console.test_cell(1, 1), ('a', 0, 7));
+    assert_eq!(console.test_cell(2, 1), ('b', 0, 7));
+    assert_eq!(console.test_cell(3, 1), (' ', 15, 0));
+}
+
+#[test]
 fn input_line_cursor_uses_display_width_for_wide_characters() {
     let mut console = console();
     let mut input = InputLineWidget::new("A日本", InputLineStyle::default());
@@ -198,6 +215,22 @@ fn input_line_cursor_uses_display_width_for_wide_characters() {
     console
         .finish_tui_paint(loc())
         .expect("paint should finish");
+    assert_eq!(console.test_cell(2, 1), ('日', 15, 0));
+}
+
+#[test]
+fn memo_cursor_uses_display_width_for_wide_characters() {
+    let mut console = console();
+    let mut memo = MemoWidget::new("A日本", 1);
+    memo.move_cursor(0, -2, false);
+    memo.focused = true;
+
+    memo.paint(&mut console, rect(0, 0, 6, 1), DamageRegion::FullFrame);
+
+    console
+        .finish_tui_paint(loc())
+        .expect("paint should finish");
+    assert_eq!(memo.cursor_column(), 1);
     assert_eq!(console.test_cell(2, 1), ('日', 15, 0));
 }
 

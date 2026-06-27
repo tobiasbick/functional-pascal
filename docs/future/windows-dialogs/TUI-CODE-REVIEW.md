@@ -9,15 +9,16 @@ API, IDE usage, tests, and the adjacent [window/dialog plan](README.md).
 
 ## Executive verdict
 
-The current TUI is a useful **host foundation**, but it is not yet a Turbo Vision-style toolkit.
-It already provides terminal ownership, a buffered CRT screen, differential presentation, damage
-tracking, a basic view tree, modal scopes, commands, menu/status widgets, and strong headless test
-hooks. These parts should be retained.
+At the 2026-06-19 review date, the TUI was a useful **host foundation**, but not yet a Turbo
+Vision-style toolkit. It already provided terminal ownership, a buffered CRT screen, differential
+presentation, damage tracking, a basic view tree, modal scopes, commands, menu/status widgets, and
+strong headless test hooks. Those parts were retained.
 
-The window/dialog plan helps materially with frame geometry, scrolling, transforms, paint order,
-and owned modal roots. Implemented unchanged, however, it would produce Turbo Vision-looking
-frames on top of an event, focus, and painting model that cannot yet support Turbo Vision-like
-interaction. The plan needs a foundation phase before frame work and a broader toolkit roadmap.
+The window/dialog plan helped materially with frame geometry, scrolling, transforms, paint order,
+and owned modal roots. Implemented unchanged, however, it would have produced Turbo Vision-looking
+frames on top of an event, focus, and painting model that could not yet support Turbo Vision-like
+interaction. The implementation therefore added the foundation phase, retained scene routing, and
+broader toolkit coverage tracked below.
 
 | Goal | Current system | Window/dialog plan | Verdict |
 | --- | --- | --- | --- |
@@ -27,7 +28,7 @@ interaction. The plan needs a foundation phase before frame work and a broader t
 | Focused controls and tab order | Retained focus path + tab traversal | Assumes child-first input | **Mostly done** |
 | Modal dialogs | Scope, owned root, focus restore, results | Adds atomic framed root | **Met** — `ShowFramedDialog` + IDE/example integration |
 | Commands and broadcasts | Sourced `CommandEvent` + reserved frame ids | Separate frame callback | **Met** — frame chrome paint + reserved-command tests |
-| Standard controls | Label/button/input/checkbox/radio/list/scroll | Explicitly out of scope in original plan | **Partial** — memo + anchor/grow layout done |
+| Standard controls | Label/button/input/checkbox/radio/list/scroll/memo + anchor/grow layout | Controls and layout are implemented in retained views | **Met** — retained controls, memo, scroll widgets, and resize layout have FPAS/Rust coverage |
 | Deterministic testing | Good headless APIs | Adds frame tests | Strong reusable base |
 
 ## Reusable foundations
@@ -223,34 +224,24 @@ inside that same button. Releasing outside cancels activation.
 
 ### H5. Terminal cell width is incorrect for general Unicode
 
-The screen model advances one cell per Rust `char`
-([`text_at.rs:25-45`](../../../crates/fpas-std/src/console/screen/text_at.rs#L25-L45)), and menu/status
-geometry uses `chars().count()`. Wide and combining characters therefore desynchronize logical
-cells from terminal columns; clipping, titles, shortcuts, and hit-testing become incorrect.
-
-Choose and enforce one policy:
-
-1. Use Unicode display width, represent wide-cell continuations, and define combining behavior; or
-2. Explicitly restrict TUI labels and drawing to single-column characters and reject invalid text.
-
-The first option is preferable for a general toolkit. Add `unicode-width` or an equivalent shared
-cell-width implementation; all widgets must use it.
+Implemented. The TUI now uses Unicode display width through
+[`cell_width.rs`](../../../crates/fpas-std/src/text/cell_width.rs) and documents the policy in
+[`cell-width.md`](../../pascal/std/tui/cell-width.md). Console painting, frame titles, menu and
+status geometry, labels, buttons, list box rows, input-line cursor/scroll placement, and memo
+cursor placement consume the shared helpers. Wide characters reserve a continuation cell and
+combining marks do not advance layout on their own.
 
 ### H6. Standard controls and layout are part of the goal
 
-Frames alone provide appearance, not a Turbo Vision-like application model. The current plan puts
-layout, list controls, and editors out of scope. At minimum, the roadmap needs:
+Implemented. The retained toolkit now includes static labels with accelerators, buttons with
+default styling and command IDs, input lines with cursor/paste/horizontal scroll behavior,
+checkboxes, radio groups, list boxes, standalone scroll bars, scroll views, memo editing, and
+anchor/grow `ViewLayout` relayout.
 
-- static text and labels with accelerators;
-- buttons with default/cancel behavior;
-- input line with cursor, selection, paste, and horizontal scroll;
-- checkbox and radio group;
-- list box linked to a reusable scrollbar model;
-- generic scroll view and text/memo editor later;
-- anchor/grow layout flags for terminal resize and frame resize.
-
-Frame-integrated scrollbars may remain chrome, but their geometry and `ScrollModel` must be shared
-with standalone scrollbars used by lists and editors.
+List boxes, standalone scroll bars, scroll views, and frame chrome share the same scroll model
+policy. Public contracts live in [`controls.md`](../../pascal/std/tui/app/controls.md) and
+[`views.md`](../../pascal/std/tui/app/views.md); coverage lives in `tests/tui/controls/`,
+`tests/tui/scene/tui_view_layout_test.fpas`, and Rust `ViewRegistry` layout tests.
 
 ## Current correctness defects to fix first
 
@@ -468,7 +459,7 @@ clipping, interaction, scroll chrome, and owned framed dialogs. Current spec for
 
 ### Architecture and performance debt
 
-These original findings are reduced but not closed:
+These original findings are closed for the retained TUI implementation:
 
 | Finding | Status | Remaining |
 | --- | --- | --- |
@@ -478,6 +469,8 @@ These original findings are reduced but not closed:
 | [C4](#c4-modal-state-does-not-preserve-interaction-context) Modal context | Done | — |
 | [H3](#h3-geometry-clipping-and-damage-must-be-one-registry-contract) Geometry contract | Done | Damage, child origins, and reparenting now consume resolved-node data |
 | [H4](#h4-pointer-capture-is-a-prerequisite-not-interaction-polish) Pointer capture | Done | Capture, frame drag, scroll-thumb drag, focus-loss cancel, removal cleanup, and button press/release tracking are done |
+| [H5](#h5-terminal-cell-width-is-incorrect-for-general-unicode) Cell width | Done | Shared Unicode display-width helpers drive console paint and TUI widget geometry/cursors |
+| [H6](#h6-standard-controls-and-layout-are-part-of-the-goal) Controls and layout | Done | Retained controls, memo editing, shared scroll behavior, and anchor/grow layout are implemented and covered |
 | Structural ([§](#structural-findings)) | Done | Widget paint/input no longer clone widgets; retained view entries have indexed lookup while preserving sibling order vectors |
 
 ### Acceptance criteria status

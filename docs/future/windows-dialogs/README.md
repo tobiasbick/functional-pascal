@@ -2,11 +2,11 @@
 
 Implementation plan for host-managed **frame widgets** — Turbo Vision–style windows and dialogs with integrated chrome (title bar, close/zoom buttons, scroll bars) and a separate content **view** area for child views.
 
-**Status:** **partial** — frame-root geometry, window-manager interaction, and painted
-`FrameWidget` chrome, inner viewport clipping, and public `ShowFramedDialog` are implemented;
-frame-integrated scrolling and close handling are not. **Live
-tracker:** [TUI-CODE-REVIEW.md](TUI-CODE-REVIEW.md#remaining-work-2026-06-22) (phases 0–5 done;
-phase 6+ open). **Current spec:** [`docs/pascal/std/tui/app/frames.md`](../../pascal/std/tui/app/frames.md).
+**Status:** **implemented** — frame-root geometry, painted `FrameWidget` chrome, inner viewport
+clipping, public `ShowFramedDialog`, frame scrolling, built-in close/zoom commands, move/resize,
+window-manager helpers, controls, and layout are implemented. **Live tracker:**
+[TUI-CODE-REVIEW.md](TUI-CODE-REVIEW.md#acceptance-criteria-status). **Current spec:**
+[`docs/pascal/std/tui/app/frames.md`](../../pascal/std/tui/app/frames.md).
 
 **Prerequisites:** Phase 7 TUI host (view tree, modal stack, host widgets, damage tracking). See [`tui-application-framework.md`](../tui-application-framework.md).
 
@@ -355,13 +355,15 @@ VM bridge: new intrinsics in `fpas-bytecode`, sema in `loaded/tui/`, compiler lo
 
 ## Implementation phases
 
-> **Note (2026-06-21):** The checklist below is the original design breakdown. Progress is tracked in
-> [TUI-CODE-REVIEW.md](TUI-CODE-REVIEW.md). Phases 0–5 there are complete; frame **painting** and
-> items in [Remaining work](TUI-CODE-REVIEW.md#remaining-work-2026-06-22) are still open.
+> **Note (2026-06-27):** The checklist below is the original design breakdown. The implementation
+> is complete for the current retained TUI target and the authoritative status is tracked in
+> [TUI-CODE-REVIEW.md](TUI-CODE-REVIEW.md#acceptance-criteria-status). Some naming differs from
+> this early plan: frame chrome actions are implemented as reserved built-in commands instead of a
+> separate `FrameAction` callback API.
 
 ### Phase 1 — Geometry and chrome
 
-- [ ] Add composable view-registry transforms/clips and use them consistently for resolved rectangles, `QueryViewRect`, hit-testing, damage, and reparenting.
+- [x] Add composable view-registry transforms/clips and use them consistently for resolved rectangles, `QueryViewRect`, hit-testing, damage, and reparenting.
 - [x] Replace the two global paint passes with depth-first underlay → handler → children → overlay traversal.
 - [x] `geometry.rs` — compute `view_rect` from `outer_rect`, title bar height, border, scroll bar slots.
 - [x] Define and test fixed-point scroll-bar visibility and minimum frame dimensions.
@@ -378,28 +380,28 @@ VM bridge: new intrinsics in `fpas-bytecode`, sema in `loaded/tui/`, compiler lo
 - [x] Mouse wheel bubbles child-first; direct scroll bar clicks target frame chrome.
 - [x] Keyboard scrolling runs after focused descendant handling and before modal/global fallback handling.
 - [x] `HostSetFrameContentSize`, `HostScrollFrame`, `HostSetFrameScrollOffset`, `QueryFrameScrollState`.
-- [ ] Enable `Scrollable` in both default capability presets only after the complete input and rendering path is available.
-- [ ] Examples: long text in window; list taller than dialog viewport.
-- [ ] FPAS tests under `tests/tui/` (headless scroll offset + bar visibility queries if exposed).
+- [x] Enable `Scrollable` in both default capability presets only after the complete input and rendering path is available.
+- [x] Examples and FPAS workflows: framed windows/dialogs, scroll state, scroll clipping, scroll input, and control-in-dialog coverage.
+- [x] FPAS tests under `tests/tui/` for frame scroll offset, clipping, input, and chrome workflows.
 
 ### Phase 3 — Dialog integration and actions
 
-- [ ] Add an internal modal-stack operation that marks an existing root as owned.
+- [x] Add an internal modal-stack operation that marks an existing root as owned.
 - [x] `ShowFramedDialog` atomically creates the frame and pushes that same root as owned; invalid geometry leaves both registries unchanged.
-- [ ] `FrameAction` + `HostRegisterOnFrameAction`; chrome actions include the source `ViewId` and do not use `OnCommand` ids.
-- [ ] Remove per-frame action handlers when a frame is unregistered or its owned modal closes.
-- [ ] Close-button hit-test emits `FrameAction.Close`; the example handler calls `CloseModal`.
-- [ ] Enable `Closable` in both default capability presets.
+- [x] Superseded by reserved frame commands: chrome actions keep a source frame and do not collide with application-defined command ids.
+- [x] Per-frame command bindings are removed when a frame is unregistered or its owned modal closes.
+- [x] Close-button hit-test dispatches the built-in close command for the source frame.
+- [x] Enable `Closable` in both default capability presets only after close handling is available.
 - [x] Example: `examples/pascal/tui/framed_dialog.fpas` (modal gray dialog, Escape closes).
-- [ ] Update IDE shell when ready to replace ad-hoc panels.
+- [x] Update IDE shell integration to use retained framed dialogs.
 
 ### Phase 4 — Interaction polish (deferred)
 
-- [ ] Movable frames (drag title bar), then enable the Window default.
-- [ ] Resizable frames (drag border / zoom state), then enable Window `Resizable` and `Zoomable` defaults.
-- [ ] Inactive window color preset.
-- [ ] Thumb drag on scroll track.
-- [ ] Auto `content_size` from child bounds.
+- [x] Movable frames (drag title bar), then enable the Window default.
+- [x] Resizable frames (drag border / zoom state), then enable Window `Resizable` and `Zoomable` defaults.
+- [x] Inactive window color preset.
+- [x] Thumb drag on scroll track.
+- [x] Auto `content_size` from child bounds.
 
 ---
 

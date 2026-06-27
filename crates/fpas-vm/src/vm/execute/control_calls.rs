@@ -13,20 +13,53 @@ impl Worker {
     ) -> Result<bool, VmError> {
         match op {
             Op::Jump(addr) => {
-                self.ip = addr as usize;
+                let target = addr as usize;
+                if target >= self.shared.chunk.code().len() {
+                    return Err(internal_error(
+                        format!(
+                            "Jump target {target} is out of bounds (code len {})",
+                            self.shared.chunk.code().len()
+                        ),
+                        "This indicates malformed bytecode or a compiler control-flow bug. Please report it.",
+                        line,
+                    ));
+                }
+                self.ip = target;
                 Ok(true)
             }
             Op::JumpIfFalse(addr) => {
                 let val = self.pop(line)?;
                 if !self.is_truthy(&val) {
-                    self.ip = addr as usize;
+                    let target = addr as usize;
+                    if target >= self.shared.chunk.code().len() {
+                        return Err(internal_error(
+                            format!(
+                                "JumpIfFalse target {target} is out of bounds (code len {})",
+                                self.shared.chunk.code().len()
+                            ),
+                            "This indicates malformed bytecode or a compiler control-flow bug. Please report it.",
+                            line,
+                        ));
+                    }
+                    self.ip = target;
                 }
                 Ok(true)
             }
             Op::JumpIfTrue(addr) => {
                 let val = self.pop(line)?;
                 if self.is_truthy(&val) {
-                    self.ip = addr as usize;
+                    let target = addr as usize;
+                    if target >= self.shared.chunk.code().len() {
+                        return Err(internal_error(
+                            format!(
+                                "JumpIfTrue target {target} is out of bounds (code len {})",
+                                self.shared.chunk.code().len()
+                            ),
+                            "This indicates malformed bytecode or a compiler control-flow bug. Please report it.",
+                            line,
+                        ));
+                    }
+                    self.ip = target;
                 }
                 Ok(true)
             }

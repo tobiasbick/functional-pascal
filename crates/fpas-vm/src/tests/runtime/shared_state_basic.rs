@@ -39,12 +39,12 @@ fn enqueue_then_try_dequeue_returns_same_task() {
 }
 
 #[test]
-fn ready_queue_is_lifo_under_single_threaded_push_pop() {
+fn ready_queue_is_fifo_under_single_threaded_push_pop() {
     let shared = minimal_shared_state(minimal_halt_chunk());
     shared.enqueue_task(dummy_task(1, 0));
     shared.enqueue_task(dummy_task(2, 0));
-    assert_eq!(shared.try_dequeue_task().unwrap().id, 2);
     assert_eq!(shared.try_dequeue_task().unwrap().id, 1);
+    assert_eq!(shared.try_dequeue_task().unwrap().id, 2);
     assert!(shared.try_dequeue_task().is_none());
 }
 
@@ -79,8 +79,20 @@ fn store_poll_available_then_consumed() {
 
     assert!(
         shared.all_tasks_recorded(&[5]),
-        "completion remains recorded after consume so Wait semantics can detect finished tasks"
+        "completion remains observable after consume so WaitAll can observe finished tasks"
     );
+
+    shared.remove_task_results(&[5]);
+    assert!(!shared.all_tasks_recorded(&[5]));
+}
+
+#[test]
+fn remove_task_results_clears_completion_records() {
+    let shared = minimal_shared_state(minimal_halt_chunk());
+    shared.store_task_result(9, Value::Integer(1));
+    assert!(shared.all_tasks_recorded(&[9]));
+    shared.remove_task_results(&[9]);
+    assert!(!shared.all_tasks_recorded(&[9]));
 }
 
 #[test]

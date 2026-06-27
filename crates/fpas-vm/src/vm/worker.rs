@@ -158,7 +158,7 @@ impl Worker {
                     .lock()
                     .unwrap_or_else(|e| e.into_inner());
                 // Re-check after acquiring lock.
-                if let Some(task) = queue.pop() {
+                if let Some(task) = queue.pop_front() {
                     drop(queue);
                     self.load_task(task);
                     self.run_current_task()?;

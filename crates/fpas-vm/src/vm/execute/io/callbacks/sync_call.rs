@@ -119,7 +119,13 @@ impl Worker {
 
             match self.exec_one(caller_line)? {
                 StepResult::Continue => {}
-                StepResult::Halt => break,
+                StepResult::Halt => {
+                    return Err(internal_error(
+                        "Halt during synchronous function call",
+                        "Synchronous callbacks must return with `Return`, not `Halt`. This indicates malformed bytecode.",
+                        caller_line,
+                    ));
+                }
                 StepResult::Return => {
                     let location = self.current_location;
                     let return_value = self.pop(location)?;

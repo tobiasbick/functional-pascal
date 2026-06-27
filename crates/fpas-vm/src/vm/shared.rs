@@ -19,7 +19,7 @@ use fpas_std::{
     CommandRegistry, Console, GraphHost, GraphSession, KeyInput, ModalStack, TextInput, TuiSession,
     UiHost, ViewId, ViewRegistry, ViewWidget,
 };
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Condvar, Mutex, RwLock};
 #[cfg(test)]
@@ -33,7 +33,6 @@ pub(crate) enum TaskResultPoll {
 
 pub(crate) enum TaskResultState {
     Available(Value),
-    Consumed,
 }
 
 #[derive(Debug)]
@@ -203,13 +202,15 @@ pub(crate) struct SharedState {
     /// Global variables.
     pub globals: RwLock<HashMap<String, Value>>,
 
-    /// Ready queue of suspended tasks.
-    pub task_queue: Mutex<Vec<TaskState>>,
+    /// Ready queue of suspended tasks (FIFO).
+    pub task_queue: Mutex<VecDeque<TaskState>>,
     /// Signalled when new tasks are pushed or existing tasks become ready.
     pub task_available: Condvar,
 
     /// Completed task states for tasks whose results can still be observed.
     pub task_results: Mutex<HashMap<u64, TaskResultState>>,
+    /// Task ids whose results were consumed by `Wait` but may still be observed by `WaitAll`.
+    pub task_completions: Mutex<HashSet<u64>>,
     /// Woken when [`Self::task_results`] gains or updates an entry (for example after
     /// [`Self::store_task_result`]). Always wait while holding the [`Self::task_results`] mutex.
     pub task_results_available: Condvar,
@@ -260,16 +261,16 @@ impl SharedState {
         self.task_queue
             .lock()
             .unwrap_or_else(|e| e.into_inner())
-            .push(task);
+            .push_back(task);
         self.task_available.notify_one();
     }
 
-    /// Pop a ready task from the queue (returns `None` if empty).
+    /// Pop the oldest ready task from the queue (returns `None` if empty).
     pub(crate) fn try_dequeue_task(&self) -> Option<TaskState> {
         self.task_queue
             .lock()
             .unwrap_or_else(|e| e.into_inner())
-            .pop()
+            .pop_front()
     }
 
     /// Store a completed task's return value and notify waiters.
@@ -285,30 +286,68 @@ impl SharedState {
 
     /// Returns `true` when every task id in `task_ids` has a recorded result.
     pub(crate) fn all_tasks_recorded(&self, task_ids: &[u64]) -> bool {
-        let guard = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
-        task_ids.iter().all(|id| guard.contains_key(id))
+        let results = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
+        let completions = self
+            .task_completions
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        task_ids
+            .iter()
+            .all(|id| results.contains_key(id) || completions.contains(id))
     }
 
     /// Consume a completed task result if it is still available.
     pub(crate) fn poll_task_result(&self, id: u64) -> TaskResultPoll {
         let mut task_results = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
         let Some(state) = task_results.get_mut(&id) else {
+            if self
+                .task_completions
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .contains(&id)
+            {
+                return TaskResultPoll::Consumed;
+            }
             return TaskResultPoll::Pending;
         };
 
         match state {
             TaskResultState::Available(value) => {
                 let result = value.clone();
-                *state = TaskResultState::Consumed;
+                task_results.remove(&id);
+                self.task_completions
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .insert(id);
                 TaskResultPoll::Available(result)
             }
-            TaskResultState::Consumed => TaskResultPoll::Consumed,
+        }
+    }
+
+    /// Drop completion records for the given task ids after `WaitAll` observes them.
+    pub(crate) fn remove_task_results(&self, task_ids: &[u64]) {
+        let mut task_results = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
+        let mut completions = self
+            .task_completions
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        for id in task_ids {
+            task_results.remove(id);
+            completions.remove(id);
         }
     }
 
     /// Signal all workers to shut down.
     pub(crate) fn request_shutdown(&self) {
         self.shutdown.store(true, Ordering::Release);
+        self.task_results
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clear();
+        self.task_completions
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clear();
         self.task_available.notify_all();
         self.task_results_available.notify_all();
     }
@@ -355,7 +394,15 @@ impl SharedState {
         let mut guard = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
         loop {
             match guard.get(&task_id) {
-                Some(TaskResultState::Available(_)) | Some(TaskResultState::Consumed) => return,
+                Some(TaskResultState::Available(_)) => return,
+                None if self
+                    .task_completions
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .contains(&task_id) =>
+                {
+                    return;
+                }
                 None => {}
             }
             if self.is_shutdown() {
@@ -372,7 +419,14 @@ impl SharedState {
     pub(crate) fn wait_until_all_tasks_recorded(&self, task_ids: &[u64]) {
         let mut guard = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
         loop {
-            let all = task_ids.iter().all(|id| guard.contains_key(id));
+            let completions = self
+                .task_completions
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
+            let all = task_ids
+                .iter()
+                .all(|id| guard.contains_key(id) || completions.contains(id));
+            drop(completions);
             if all || self.is_shutdown() {
                 return;
             }

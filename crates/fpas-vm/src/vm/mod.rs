@@ -9,7 +9,7 @@ use fpas_bytecode::{Chunk, SourceLocation};
 use fpas_std::{
     Console, ConsoleEvent, ConsoleKeyEvent, GraphEvent, KeyInput, ScreenSnapshot, TextInput,
 };
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::io::Write;
 use std::sync::atomic::{AtomicBool, AtomicU64};
 use std::sync::{Arc, Condvar, Mutex, RwLock};
@@ -114,9 +114,10 @@ impl Vm {
             chunk,
             program_args,
             globals: RwLock::new(HashMap::new()),
-            task_queue: Mutex::new(Vec::new()),
+            task_queue: Mutex::new(VecDeque::new()),
             task_available: Condvar::new(),
             task_results: Mutex::new(HashMap::new()),
+            task_completions: Mutex::new(HashSet::new()),
             task_results_available: Condvar::new(),
             next_task_id: AtomicU64::new(1),
             console: Mutex::new(console),

@@ -41,6 +41,14 @@ impl Worker {
             }
             Value::Str(s) => {
                 let idx = array_index_from_key(&key, line)?;
+                if idx >= s.len() {
+                    return Err(runtime_error(
+                        RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
+                        format!("String index {idx} out of bounds"),
+                        "Check the index is in the range 0 .. Length(S) - 1.",
+                        line,
+                    ));
+                }
                 match s.chars().nth(idx) {
                     Some(ch) => self.push(Value::Str(ch.to_string()))?,
                     None => {

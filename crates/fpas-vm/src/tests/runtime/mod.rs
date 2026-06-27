@@ -5,4 +5,5 @@ mod shared_fixtures;
 mod shared_state_basic;
 mod shared_state_stress;
 mod shared_state_sync;
+mod shutdown_handle;
 mod uses_spawn_tasks;

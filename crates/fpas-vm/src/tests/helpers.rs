@@ -2,7 +2,7 @@ use crate::Vm;
 use crate::vm::{GraphState, SharedState};
 use fpas_bytecode::{Chunk, Op, SourceLocation, Value};
 use fpas_std::{Console, ConsoleEvent, ConsoleKeyEvent, KeyInput, TextInput};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::atomic::{AtomicBool, AtomicU64};
 use std::sync::{Condvar, Mutex, RwLock};
 
@@ -12,9 +12,10 @@ pub(super) fn minimal_shared_state(chunk: Chunk) -> SharedState {
         chunk,
         program_args: Vec::new(),
         globals: RwLock::new(HashMap::new()),
-        task_queue: Mutex::new(Vec::new()),
+        task_queue: Mutex::new(VecDeque::new()),
         task_available: Condvar::new(),
         task_results: Mutex::new(HashMap::new()),
+        task_completions: Mutex::new(HashSet::new()),
         task_results_available: Condvar::new(),
         next_task_id: AtomicU64::new(1),
         console: Mutex::new(Console::new()),

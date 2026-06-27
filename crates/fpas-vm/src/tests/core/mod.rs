@@ -1,10 +1,13 @@
 mod call_value;
+mod concurrent_globals;
 mod globals;
 mod graph_vm;
 mod illformed;
 mod index_and_records;
 mod numeric;
 mod stack;
+mod string_index;
+mod sync_call_halt;
 mod tui_configure_vm;
 mod tui_event_ordering_vm;
 mod tui_focus_vm;

@@ -99,7 +99,7 @@ impl Compiler {
         self.begin_scope();
 
         for param in params {
-            self.add_local(&param.name);
+            self.add_local(&param.name, location)?;
         }
 
         let FuncBody::Block { nested, stmts } = body;

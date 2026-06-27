@@ -5,7 +5,11 @@ use fpas_std::{ConsoleEvent, ConsoleKeyEvent, key_event::key_kind_index};
 fn compile_ok(source: &str) -> fpas_bytecode::Chunk {
     let (program, errors) = parse(source);
     assert!(errors.is_empty(), "Parse errors: {errors:?}");
-    crate::compile(&program).expect("Compilation should succeed")
+    let chunk = crate::compile(&program).expect("Compilation should succeed");
+    chunk
+        .validate_invariants()
+        .expect("compiled chunk must satisfy bytecode invariants");
+    chunk
 }
 
 fn compile_and_run(source: &str) -> fpas_vm::VmOutput {

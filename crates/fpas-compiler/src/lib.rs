@@ -19,8 +19,10 @@ mod error;
 pub use error::CompileError;
 
 use compiler::Compiler;
-use fpas_bytecode::Chunk;
+use fpas_bytecode::{Chunk, ChunkError};
 use fpas_parser::Program;
+
+use error::internal_compiler_error;
 
 /// Compile a parsed program into bytecode.
 ///
@@ -49,9 +51,33 @@ pub fn compile_all(program: &Program) -> Result<Chunk, Vec<CompileError>> {
         scalar_case_bindings,
     );
     match compiler.compile_program(program) {
-        Ok(()) => Ok(compiler.finish()),
+        Ok(()) => validated_chunk(compiler).map_err(|error| vec![error]),
         Err(e) => Err(vec![e]),
     }
+}
+
+fn validated_chunk(compiler: Compiler) -> Result<Chunk, CompileError> {
+    let chunk = compiler.finish();
+    chunk.validate_invariants().map_err(|error| match error {
+        ChunkError::CodeLocationLengthMismatch {
+            code_len,
+            locations_len,
+        } => internal_compiler_error(
+            format!(
+                "Compiled chunk has {code_len} instructions but {locations_len} source locations."
+            ),
+            "This is an internal compiler error. Re-run compilation and report the source program.",
+            1,
+            1,
+        ),
+        other => internal_compiler_error(
+            format!("Compiled chunk failed invariant check: {other}"),
+            "This is an internal compiler error. Re-run compilation and report the source program.",
+            1,
+            1,
+        ),
+    })?;
+    Ok(chunk)
 }
 
 #[cfg(test)]

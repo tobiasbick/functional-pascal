@@ -71,3 +71,32 @@ fn runtime_std_conversion_failure_has_code_column_and_help() {
         "std runtime help text must be present"
     );
 }
+
+fn compile_all_errs(source: &str) -> Vec<crate::CompileError> {
+    let (program, errors) = parse(source);
+    assert!(errors.is_empty(), "Parse errors: {errors:?}");
+    crate::compile_all(&program).expect_err("compilation should fail")
+}
+
+#[test]
+fn compile_all_returns_multiple_sema_errors() {
+    let errors = compile_all_errs(
+        "\
+program Multi;
+
+begin
+  var X: integer := 'nope';
+  var Y: string := 42
+end.",
+    );
+    assert!(
+        errors.len() >= 2,
+        "expected multiple semantic errors, got: {errors:?}"
+    );
+    assert!(
+        errors
+            .iter()
+            .all(|error| error.code == fpas_diagnostics::codes::SEMA_TYPE_MISMATCH),
+        "unexpected diagnostics: {errors:?}"
+    );
+}

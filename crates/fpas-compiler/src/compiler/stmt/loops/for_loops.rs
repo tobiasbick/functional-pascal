@@ -15,10 +15,10 @@ impl Compiler {
     ) -> Result<(), CompileError> {
         self.compile_expr(start)?;
         self.begin_scope();
-        let var_slot = self.add_local(var_name);
+        let var_slot = self.add_local(var_name, location)?;
 
         self.compile_expr(end)?;
-        let end_slot = self.add_local("__for_end");
+        let end_slot = self.add_local("__for_end", location)?;
 
         let loop_start = self.chunk.len();
         self.push_loop_context();
@@ -72,20 +72,20 @@ impl Compiler {
             );
         }
         self.begin_scope();
-        let arr_slot = self.add_local("__for_arr");
+        let arr_slot = self.add_local("__for_arr", location)?;
 
         self.emit_constant(Value::Integer(0), location)?;
-        let idx_slot = self.add_local("__for_idx");
+        let idx_slot = self.add_local("__for_idx", location)?;
 
         self.emit(Op::GetLocal(arr_slot), location);
         self.emit(
             Op::Intrinsic(u16::from(Intrinsic::Array(ArrayIntrinsic::Length))),
             location,
         );
-        let len_slot = self.add_local("__for_len");
+        let len_slot = self.add_local("__for_len", location)?;
 
         self.emit(Op::Unit, location);
-        let var_slot = self.add_local(var_name);
+        let var_slot = self.add_local(var_name, location)?;
 
         let loop_start = self.chunk.len();
         self.push_loop_context();

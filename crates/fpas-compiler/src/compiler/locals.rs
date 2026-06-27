@@ -10,6 +10,9 @@ use fpas_std::{
     is_std_root_segment, std_symbols as s,
 };
 
+use crate::error::{CompileError, compile_error};
+use fpas_diagnostics::codes::COMPILE_BYTECODE_OPERAND_OVERFLOW;
+
 use super::{Compiler, EnumInfo, EnumVariantInfo, Local, LocalRef, canonical_name};
 
 impl Compiler {
@@ -29,15 +32,33 @@ impl Compiler {
         }
     }
 
-    pub(super) fn add_local(&mut self, name: &str) -> u16 {
+    pub(super) fn add_local(
+        &mut self,
+        name: &str,
+        location: impl Copy + super::emit::IntoEmitLocation,
+    ) -> Result<u16, CompileError> {
+        let location = location.into_emit_location();
         let slot = self.next_slot;
+        self.next_slot = slot.checked_add(1).ok_or_else(|| {
+            compile_error(
+                COMPILE_BYTECODE_OPERAND_OVERFLOW,
+                format!(
+                    "Too many locals in this routine (maximum is {}).",
+                    u16::MAX
+                ),
+                format!(
+                    "Reduce the number of local variables, parameters, and temporaries in this routine to at most {}.",
+                    u16::MAX
+                ),
+                Compiler::call_site_span(location),
+            )
+        })?;
         self.locals.push(Local {
             name: canonical_name(name),
             depth: self.scope_depth,
             slot,
         });
-        self.next_slot += 1;
-        slot
+        Ok(slot)
     }
 
     pub(super) fn resolve_local(&self, name: &str) -> Option<LocalRef> {
@@ -145,5 +166,38 @@ impl Compiler {
                 ("Object", &["Fields"]),
             ],
         );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use fpas_bytecode::SourceLocation;
+    use fpas_diagnostics::codes::COMPILE_BYTECODE_OPERAND_OVERFLOW;
+    use fpas_sema::{ExprTypeMap, MethodCallMap, RecordDefaultsMap, ScalarCaseBindingMap};
+
+    fn empty_compiler() -> Compiler {
+        Compiler::new(
+            ExprTypeMap::default(),
+            MethodCallMap::default(),
+            RecordDefaultsMap::default(),
+            ScalarCaseBindingMap::default(),
+        )
+    }
+
+    #[test]
+    fn add_local_overflow_reports_bytecode_operand_error() {
+        let mut compiler = empty_compiler();
+        let location = SourceLocation::new(1, 1);
+        compiler.begin_scope();
+        for index in 0..u16::MAX {
+            compiler
+                .add_local(&format!("v{index}"), location)
+                .expect("locals within limit must succeed");
+        }
+        let err = compiler
+            .add_local("overflow", location)
+            .expect_err("local slot overflow must fail");
+        assert_eq!(err.code, COMPILE_BYTECODE_OPERAND_OVERFLOW);
     }
 }

@@ -47,7 +47,7 @@ impl Compiler {
                     for (field_idx, binding_name) in &pattern.bindings {
                         self.emit(Op::GetLocal(case_slot), location);
                         self.emit(Op::EnumField(*field_idx), location);
-                        self.add_local(binding_name);
+                        self.add_local(binding_name, location)?;
                     }
                 }
 

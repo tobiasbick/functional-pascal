@@ -57,28 +57,28 @@ impl Compiler {
     pub(super) fn compile_decl(&mut self, decl: &Decl) -> Result<(), CompileError> {
         match decl {
             Decl::Const(const_def) => {
+                let location = Self::location_of(&const_def.span);
                 self.compile_expr(&const_def.value)?;
                 if self.is_module_level() {
-                    let location = Self::location_of(&const_def.span);
                     let idx =
                         self.add_constant(Value::Str(canonical_name(&const_def.name)), location)?;
                     self.emit(Op::SetGlobal(idx), location);
                     self.emit(Op::Pop, location);
                 } else {
-                    let _slot = self.add_local(&const_def.name);
+                    let _slot = self.add_local(&const_def.name, location)?;
                 }
                 Ok(())
             }
             Decl::Var(var_def) | Decl::MutableVar(var_def) => {
+                let location = Self::location_of(&var_def.span);
                 self.compile_expr(&var_def.value)?;
                 if self.is_module_level() {
-                    let location = Self::location_of(&var_def.span);
                     let idx =
                         self.add_constant(Value::Str(canonical_name(&var_def.name)), location)?;
                     self.emit(Op::SetGlobal(idx), location);
                     self.emit(Op::Pop, location);
                 } else {
-                    let _slot = self.add_local(&var_def.name);
+                    let _slot = self.add_local(&var_def.name, location)?;
                 }
                 Ok(())
             }

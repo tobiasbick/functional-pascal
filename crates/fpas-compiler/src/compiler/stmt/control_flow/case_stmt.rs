@@ -18,7 +18,7 @@ impl Compiler {
         self.compile_expr(expr)?;
         let case_slot = self.next_slot;
         self.begin_scope();
-        self.add_local("__case_val");
+        self.add_local("__case_val", location)?;
 
         if is_data_enum {
             let enum_type_name = match &case_ty {

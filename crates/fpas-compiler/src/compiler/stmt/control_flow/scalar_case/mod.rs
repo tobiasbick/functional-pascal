@@ -36,7 +36,7 @@ impl Compiler {
                 if let Some(name) = &scalar_binding {
                     self.begin_scope();
                     self.emit(Op::GetLocal(case_slot), location);
-                    self.add_local(name);
+                    self.add_local(name, location)?;
                 } else if let Some((variant, name)) = &binding {
                     self.begin_scope();
                     self.emit(Op::GetLocal(case_slot), location);
@@ -50,7 +50,7 @@ impl Compiler {
                         }
                         fpas_parser::DestructureVariant::None => {}
                     }
-                    self.add_local(name);
+                    self.add_local(name, location)?;
                 }
 
                 let guard_fail = if let Some(guard_expr) = &arm.guard {

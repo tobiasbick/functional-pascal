@@ -23,7 +23,7 @@ impl Compiler {
 
     pub(super) fn compile_var_stmt(&mut self, var: &VarDef) -> Result<(), CompileError> {
         self.compile_expr(&var.value)?;
-        self.add_local(&var.name);
+        self.add_local(&var.name, Self::location_of(&var.span))?;
         Ok(())
     }
 

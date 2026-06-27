@@ -1,5 +1,6 @@
 //! Unit tests for scroll model and geometry.
 
+use super::geometry::offset_from_thumb_start;
 use super::{ScrollBarHit, ScrollModel, drag_offset, hit_zone, thumb_geometry, track_cells};
 use crate::{ScrollBarOrientation, ScrollBarWidget, ViewRect};
 
@@ -44,6 +45,80 @@ fn hit_zone_maps_track_cells() {
 fn drag_offset_maps_track_cell_to_offset() {
     let scroll = ScrollModel::new(20, 4);
     assert_eq!(drag_offset(scroll, 6, 4, 0), 12);
+}
+
+#[test]
+fn thumb_geometry_preserves_bounds_for_edge_extents() {
+    let extent_cases = [
+        (0, 0),
+        (0, 4),
+        (4, 4),
+        (4, 8),
+        (20, 4),
+        (1_000_000, 1),
+        (1_000_000, 999_999),
+    ];
+    let track_cases = [0, 1, 2, 6, 80];
+
+    for (content_len, viewport_len) in extent_cases {
+        let base = ScrollModel::new(content_len, viewport_len);
+        let max_offset = base.max_offset();
+        let offset_cases = [
+            0,
+            max_offset / 2,
+            max_offset,
+            max_offset.saturating_add(100),
+        ];
+
+        for requested_offset in offset_cases {
+            let mut scroll = base;
+            scroll.set_offset(requested_offset);
+
+            for track in track_cases {
+                let thumb = thumb_geometry(scroll, track);
+                let end = thumb.start.checked_add(thumb.size).expect("thumb end");
+                assert!(end <= track, "thumb {thumb:?} must fit track {track}");
+
+                if track == 0 {
+                    assert_eq!(thumb.start, 0);
+                    assert_eq!(thumb.size, 0);
+                } else if scroll.needs_scroll() {
+                    assert!(thumb.size >= 1, "scrolling thumb must remain visible");
+                } else {
+                    assert_eq!(thumb.start, 0);
+                    assert_eq!(thumb.size, track);
+                }
+
+                for thumb_start in [0, track / 2, track, track.saturating_add(100)] {
+                    let offset = offset_from_thumb_start(scroll, track, thumb_start);
+                    assert!(offset <= scroll.max_offset(), "offset {offset} exceeds max");
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn repeated_thumb_drags_clamp_without_overshoot() {
+    let mut bar = ScrollBarWidget::new(ScrollBarOrientation::Vertical, 1_000_000, 10);
+    let rect = ViewRect {
+        x: 0,
+        y: 0,
+        width: 1,
+        height: 10,
+    };
+    let max_offset = 999_990;
+
+    assert!(bar.begin_thumb_drag(rect, 1, 2));
+    assert!(bar.drag_thumb(rect, 1, 10));
+    assert_eq!(bar.scroll_offset(), max_offset);
+    assert!(!bar.drag_thumb(rect, 1, 10));
+    assert_eq!(bar.scroll_offset(), max_offset);
+    assert!(bar.drag_thumb(rect, 1, 1));
+    assert_eq!(bar.scroll_offset(), 0);
+    assert!(!bar.drag_thumb(rect, 1, 1));
+    assert_eq!(bar.scroll_offset(), 0);
+    bar.end_thumb_drag();
 }
 
 #[test]

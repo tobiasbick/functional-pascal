@@ -1,0 +1,144 @@
+{ Combined dirty repaint: frame move, frame close, then menu overlay repair. }
+
+program TuiMenuFrameDirtyRepaintTest;
+
+uses Std.Console, Std.Tui, Std.Test, Std.Array, Std.Str;
+
+const
+  FrameKindWindow: integer := 0;
+
+function FileSubmenu(): array of MenuPopupItem;
+begin
+  return [
+           record Label := 'Open'; Shortcut := 'O'; Enabled := true; CommandId := 10; Separator := false; end,
+           record Label := 'Close'; Shortcut := 'C'; Enabled := true; CommandId := 11; Separator := false; end
+
+         ]
+end;
+
+function MenuItems(): array of MenuBarItem;
+begin
+  return [
+           record
+
+             Label := 'File';
+
+             Shortcut := 'F';
+
+             Enabled := true;
+
+             CommandId := -1;
+
+             Submenu := FileSubmenu();
+
+           end
+
+         ]
+end;
+
+function MenuStyle(): MenuBarStyle;
+begin
+  return record
+    BarBg := LightGray;
+    BarFg := Black;
+    AccelFg := Red;
+    HighlightBg := Black;
+    HighlightFg := LightGray;
+    DisabledFg := DarkGray;
+  end
+end;
+
+function PlainKey(Kind: KeyKind): KeyEvent;
+begin
+  return record
+    kind := Kind;
+    ch := Std.Str.Chr(0);
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+function MouseDown(X: integer; Y: integer): Event;
+begin
+  return record
+    kind := Std.Console.EventKind.Mouse;
+    key := PlainKey(KeyKind.Unknown);
+    mouse_action := MouseAction.Down;
+    mouse_button := MouseButton.Left;
+    mouse_x := X;
+    mouse_y := Y;
+    width := 0;
+    height := 0;
+    text := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+function MouseUp(X: integer; Y: integer): Event;
+begin
+  return record
+    kind := Std.Console.EventKind.Mouse;
+    key := PlainKey(KeyKind.Unknown);
+    mouse_action := MouseAction.Up;
+    mouse_button := MouseButton.Left;
+    mouse_x := X;
+    mouse_y := Y;
+    width := 0;
+    height := 0;
+    text := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(50, 16);
+  var MenuBar: ViewId := Application.HostCreateMenuBarView(App, 0, 0, 50, 1, MenuItems(), MenuStyle());
+  AssertTrue(Application.HostSetDesktopWorkArea(App, 0, 1, 50, 15));
+  var Back: ViewId := Application.HostCreateFrameView(App, 0, 1, 42, 12, 'Back', FrameKindWindow, false, false, false, false, false);
+  var BackChild: ViewId := Application.HostCreateSolidFillView(App, 0, 0, 38, 10, Red, Some(White), Some('B'));
+  Application.HostSetViewParent(App, BackChild, Some(Back));
+  Application.HostSetViewRect(App, BackChild, 0, 0, 38, 10);
+  var Front: ViewId := Application.HostCreateFrameView(App, 10, 4, 22, 8, 'Front', FrameKindWindow, true, false, false, false, true);
+  var FrontChild: ViewId := Application.HostCreateSolidFillView(App, 0, 0, 18, 6, Green, Some(White), Some('F'));
+  Application.HostSetViewParent(App, FrontChild, Some(Front));
+  Application.HostSetViewRect(App, FrontChild, 0, 0, 18, 6);
+  Application.RequestRedraw(App);
+  Application.TestPumpUntilIdle(App);
+  var MoveRepairX: integer := 14;
+  var MoveRepairY: integer := 7;
+  AssertScreenCell(MoveRepairX, MoveRepairY, 'F', White, Green);
+  Application.TestSendMouse(App, MouseDown(16, 5));
+  Application.TestMoveMouse(App, 28, 5);
+  Application.TestSendMouse(App, MouseUp(28, 5));
+  Application.TestPumpUntilIdle(App);
+  mutable var FrontState: FrameRootState := Application.QueryFrameRootState(App, Front);
+  AssertTrue(FrontState.x > 10);
+  AssertScreenCell(MoveRepairX, MoveRepairY, 'B', White, Red);
+  var CloseRepairX: integer := FrontState.x + 4;
+  var CloseRepairY: integer := FrontState.y + 4;
+  AssertScreenCell(CloseRepairX + 1, CloseRepairY + 1, 'F', White, Green);
+  Application.TestClickMouse(App, FrontState.x + 3, FrontState.y + 1);
+  Application.TestPumpUntilIdle(App);
+  AssertEquals(3, Std.Array.Length(Application.QuerySceneGraph(App)));
+  AssertScreenCell(CloseRepairX + 1, CloseRepairY + 1, 'B', White, Red);
+  Application.TestClickMouse(App, 2, 1);
+  Application.TestPumpUntilIdle(App);
+  mutable var MenuState: MenuBarState := Application.QueryMenuBarState(App, MenuBar);
+  AssertTrue(MenuState.submenuOpen);
+  AssertScreenCell(1, 2, '┌', Black, LightGray);
+  Application.TestClickMouse(App, 2, 1);
+  Application.TestPumpUntilIdle(App);
+  MenuState := Application.QueryMenuBarState(App, MenuBar);
+  AssertFalse(MenuState.submenuOpen);
+  AssertScreenCell(1, 2, '╔', LightGray, Blue);
+  AssertScreenCell(3, 4, 'B', White, Red);
+  Application.CloseForTest(App)
+end.

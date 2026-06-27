@@ -14,10 +14,10 @@ docs or examples.
 
 ## Work Items
 
-- [ ] Add a focused host-event ordering test for resize bursts followed by key and mouse input.
-- [ ] Add a retained redraw regression that verifies dirty-region coalescing after overlapping
+- [x] Add a focused host-event ordering test for resize bursts followed by key and mouse input.
+- [x] Add a retained redraw regression that verifies dirty-region coalescing after overlapping
   frame move, close, and menu overlay repaint.
-- [ ] Add property-style tests for scroll/thumb geometry edge cases: empty content, viewport equal
+- [x] Add property-style tests for scroll/thumb geometry edge cases: empty content, viewport equal
   content, huge content, and repeated drag deltas.
 - [ ] Add a doc-link audit for TUI Rust comments that reference `docs/future/tui/` or
   `docs/pascal/std/tui/`.

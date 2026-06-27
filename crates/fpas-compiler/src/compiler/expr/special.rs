@@ -14,11 +14,11 @@ impl Compiler {
         self.compile_expr(inner)?;
         self.emit(Op::Dup, location);
         self.emit(Op::IsResultOk, location);
-        let jump_ok = self.chunk.code.len();
+        let jump_ok = self.chunk.len();
         self.emit(Op::JumpIfTrue(0), location);
         self.emit(Op::Return, location);
 
-        let ok_addr = self.chunk.code.len() as u32;
+        let ok_addr = self.chunk.len() as u32;
         self.patch_jump(jump_ok, ok_addr, location)?;
         self.emit(Op::UnwrapOk, location);
         Ok(())
@@ -38,14 +38,13 @@ impl Compiler {
         span: Span,
     ) -> Result<(), CompileError> {
         let location = Self::location_of(&span);
-        let wrapper_name = format!("$wrapper_{}", self.chunk.code.len());
+        let wrapper_name = format!("$wrapper_{}", self.chunk.len());
         let arity = Self::checked_u8(params.len(), "wrapper parameters", span)?;
 
         let jump_over = self.emit(Op::Jump(0), location);
         let (code_start, _) = self.compile_routine_body(params, body, location)?;
         self.chunk
-            .functions
-            .insert(wrapper_name.clone(), (code_start, arity));
+            .insert_function(wrapper_name.clone(), code_start, arity);
 
         let after = self.chunk.len() as u32;
         self.patch_jump(jump_over, after, location)?;

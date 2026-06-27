@@ -65,16 +65,14 @@ fn tui_application_run_dispatches_ready_key_before_idle_wait() {
     chunk.emit(Op::Halt, loc());
 
     let on_paint_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaint".into(), (on_paint_start, 1));
+    chunk.insert_function("OnPaint", on_paint_start, 1);
     emit_constant(&mut chunk, Value::Str("paint".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
     let on_key_start = chunk.len();
-    chunk.functions.insert("OnKey".into(), (on_key_start, 2));
+    chunk.insert_function("OnKey", on_key_start, 2);
     emit_constant(&mut chunk, Value::Str("key".into()));
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::GetLocal(0), loc());
@@ -86,7 +84,7 @@ fn tui_application_run_dispatches_ready_key_before_idle_wait() {
     chunk.emit(Op::Return, loc());
 
     let on_idle_start = chunk.len();
-    chunk.functions.insert("OnIdle".into(), (on_idle_start, 1));
+    chunk.insert_function("OnIdle", on_idle_start, 1);
     emit_constant(&mut chunk, Value::Str("idle".into()));
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::GetLocal(0), loc());

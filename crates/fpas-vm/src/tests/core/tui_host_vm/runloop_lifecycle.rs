@@ -48,14 +48,12 @@ fn tui_host_run_loop_dispatches_paint_then_key_until_idle() {
     chunk.emit(Op::Halt, loc());
 
     let on_key_start = chunk.len();
-    chunk.functions.insert("OnKey".into(), (on_key_start, 2));
+    chunk.insert_function("OnKey", on_key_start, 2);
     emit_constant(&mut chunk, Value::Boolean(true));
     chunk.emit(Op::Return, loc());
 
     let on_paint_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaint".into(), (on_paint_start, 1));
+    chunk.insert_function("OnPaint", on_paint_start, 1);
     emit_constant(&mut chunk, Value::Str("p".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
@@ -135,9 +133,7 @@ fn tui_host_run_loop_max_iterations_zero_skips_body() {
     chunk.emit(Op::Halt, loc());
 
     let on_paint_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaint".into(), (on_paint_start, 1));
+    chunk.insert_function("OnPaint", on_paint_start, 1);
     emit_constant(&mut chunk, Value::Str("p".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
@@ -167,7 +163,7 @@ fn tui_host_register_on_exit_stores_handler_in_shared_tui_state() {
     chunk.emit(Op::Halt, loc());
 
     let on_exit_start = chunk.len();
-    chunk.functions.insert("OnExit".into(), (on_exit_start, 2));
+    chunk.insert_function("OnExit", on_exit_start, 2);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
@@ -209,7 +205,7 @@ fn tui_host_register_on_idle_is_cleared_by_application_close() {
     chunk.emit(Op::Halt, loc());
 
     let on_idle_start = chunk.len();
-    chunk.functions.insert("OnIdle".into(), (on_idle_start, 1));
+    chunk.insert_function("OnIdle", on_idle_start, 1);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
@@ -272,9 +268,7 @@ fn tui_host_register_on_idle_rejects_wrong_arity() {
     chunk.emit(Op::Halt, loc());
 
     let on_idle_start = chunk.len();
-    chunk
-        .functions
-        .insert("WrongOnIdle".into(), (on_idle_start, 2));
+    chunk.insert_function("WrongOnIdle", on_idle_start, 2);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
@@ -312,7 +306,7 @@ fn tui_host_register_on_exit_is_cleared_by_application_close() {
     chunk.emit(Op::Halt, loc());
 
     let on_exit_start = chunk.len();
-    chunk.functions.insert("OnExit".into(), (on_exit_start, 2));
+    chunk.insert_function("OnExit", on_exit_start, 2);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
@@ -370,9 +364,7 @@ fn tui_host_register_on_exit_rejects_wrong_arity() {
     chunk.emit(Op::Halt, loc());
 
     let on_exit_start = chunk.len();
-    chunk
-        .functions
-        .insert("WrongOnExit".into(), (on_exit_start, 1));
+    chunk.insert_function("WrongOnExit", on_exit_start, 1);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 

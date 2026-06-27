@@ -185,6 +185,17 @@ impl Compiler {
                     location.line,
                     location.column,
                 ),
+                ChunkError::CodeLocationLengthMismatch {
+                    code_len,
+                    locations_len,
+                } => internal_compiler_error(
+                    format!(
+                        "Compiler produced a chunk with mismatched code ({code_len}) and location ({locations_len}) lengths."
+                    ),
+                    "This is an internal compiler error. Re-run compilation and report the source program.",
+                    location.line,
+                    location.column,
+                ),
             })
     }
 }

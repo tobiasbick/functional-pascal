@@ -7,7 +7,7 @@ use fpas_bytecode::Op;
 
 fn spawn_task_ops(chunk: &fpas_bytecode::Chunk) -> usize {
     chunk
-        .code
+        .code()
         .iter()
         .filter(|op| matches!(op, Op::SpawnTask(_)))
         .count()
@@ -15,7 +15,7 @@ fn spawn_task_ops(chunk: &fpas_bytecode::Chunk) -> usize {
 
 fn spawn_detached_ops(chunk: &fpas_bytecode::Chunk) -> usize {
     chunk
-        .code
+        .code()
         .iter()
         .filter(|op| matches!(op, Op::SpawnDetachedTask(_)))
         .count()
@@ -45,9 +45,9 @@ end.",
     assert!(spawn_task_ops(&chunk) >= 1);
     assert_eq!(spawn_detached_ops(&chunk), 0);
     assert!(
-        chunk.code.iter().any(|op| matches!(op, Op::SpawnTask(0))),
+        chunk.code().iter().any(|op| matches!(op, Op::SpawnTask(0))),
         "expected zero-arg spawn, got: {:?}",
-        chunk.code
+        chunk.code()
     );
 }
 
@@ -73,7 +73,7 @@ end.",
     assert_eq!(spawn_task_ops(&chunk), 0);
     assert!(
         chunk
-            .code
+            .code()
             .iter()
             .any(|op| matches!(op, Op::SpawnDetachedTask(0))),
         "expected zero-arg detached spawn"
@@ -100,9 +100,9 @@ end.",
 
     assert!(chunk.uses_spawn_tasks());
     assert!(
-        chunk.code.iter().any(|op| matches!(op, Op::SpawnTask(2))),
+        chunk.code().iter().any(|op| matches!(op, Op::SpawnTask(2))),
         "expected SpawnTask(2), got: {:?}",
-        chunk.code
+        chunk.code()
     );
 }
 

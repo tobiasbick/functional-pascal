@@ -119,7 +119,7 @@ fn build_process_next_chunk_with_handlers(
 
 fn add_handler(chunk: &mut Chunk, name: &str, arity: u8, body_output: &str) {
     let start = chunk.len();
-    chunk.functions.insert(name.to_string(), (start, arity));
+    chunk.insert_function(name.to_string(), start, arity);
     emit_constant(chunk, Value::Str(body_output.into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(chunk, Value::Unit);
@@ -128,7 +128,7 @@ fn add_handler(chunk: &mut Chunk, name: &str, arity: u8, body_output: &str) {
 
 fn add_key_handler(chunk: &mut Chunk, name: &str, output: &str) {
     let start = chunk.len();
-    chunk.functions.insert(name.to_string(), (start, 2));
+    chunk.insert_function(name.to_string(), start, 2);
     emit_constant(chunk, Value::Str(output.into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(chunk, Value::Boolean(true));

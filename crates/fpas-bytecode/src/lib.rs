@@ -3,7 +3,7 @@ pub mod intrinsic;
 mod op;
 mod value;
 
-pub use chunk::{Chunk, ChunkError};
+pub use chunk::{Chunk, ChunkError, MAX_CONSTANT_INDEX};
 pub use fpas_diagnostics::SourceLocation;
 pub use intrinsic::{
     ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, ConvIntrinsic, DictIntrinsic, EnvIntrinsic,

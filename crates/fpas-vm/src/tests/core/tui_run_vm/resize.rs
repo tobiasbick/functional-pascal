@@ -53,25 +53,21 @@ fn tui_application_run_dispatches_initial_resize_before_first_paint() {
     chunk.emit(Op::Halt, loc());
 
     let on_paint_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaint".into(), (on_paint_start, 1));
+    chunk.insert_function("OnPaint", on_paint_start, 1);
     emit_constant(&mut chunk, Value::Str("paint".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
     let on_resize_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnResize".into(), (on_resize_start, 2));
+    chunk.insert_function("OnResize", on_resize_start, 2);
     emit_constant(&mut chunk, Value::Str("resize".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
     let on_idle_start = chunk.len();
-    chunk.functions.insert("OnIdle".into(), (on_idle_start, 1));
+    chunk.insert_function("OnIdle", on_idle_start, 1);
     emit_constant(&mut chunk, Value::Str("idle".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, tui_application_value());

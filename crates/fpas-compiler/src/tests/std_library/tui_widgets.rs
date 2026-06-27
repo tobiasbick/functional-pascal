@@ -22,7 +22,7 @@ end.",
     );
 
     assert!(
-        chunk.code.iter().any(|op| matches!(
+        chunk.code().iter().any(|op| matches!(
           op,
           Op::Intrinsic(code) if *code == u16::from(Intrinsic::Tui(TuiIntrinsic::HostCreateSolidFillView))
         )),
@@ -113,7 +113,7 @@ end.",
     );
 
     assert!(
-        chunk.code.iter().any(|op| matches!(
+        chunk.code().iter().any(|op| matches!(
           op,
           Op::Intrinsic(code) if *code == u16::from(Intrinsic::Tui(TuiIntrinsic::HostCreateMenuBarView))
         )),
@@ -144,7 +144,7 @@ end.",
     );
 
     assert!(
-        chunk.code.iter().any(|op| matches!(
+        chunk.code().iter().any(|op| matches!(
           op,
           Op::Intrinsic(code) if *code == u16::from(Intrinsic::Tui(TuiIntrinsic::HostCreateStatusBarView))
         )),

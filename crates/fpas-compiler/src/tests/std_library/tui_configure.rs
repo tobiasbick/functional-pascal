@@ -137,7 +137,7 @@ end.",
     );
 
     assert!(
-        chunk.code.iter().any(|op| matches!(
+        chunk.code().iter().any(|op| matches!(
             op,
             Op::Intrinsic(code) if *code == u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationConfigure))
         )),

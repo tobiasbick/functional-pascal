@@ -61,9 +61,7 @@ fn main_emits_many_yields_before_wait_child_still_completes() {
     chunk.emit(Op::Halt, loc());
 
     let code_start = chunk.len();
-    chunk
-        .functions
-        .insert(callee.to_ascii_lowercase(), (code_start, 0));
+    chunk.insert_function(callee.to_ascii_lowercase(), code_start, 0);
     emit_constant(&mut chunk, Value::Integer(9));
     chunk.emit(Op::Return, loc());
 

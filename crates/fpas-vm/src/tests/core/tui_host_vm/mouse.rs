@@ -21,9 +21,7 @@ fn tui_host_register_on_mouse_stores_handler_in_shared_tui_state() {
     chunk.emit(Op::Halt, loc());
 
     let on_mouse_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnMouse".into(), (on_mouse_start, 2));
+    chunk.insert_function("OnMouse", on_mouse_start, 2);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
@@ -69,9 +67,7 @@ fn tui_host_process_next_dispatches_on_mouse_handler() {
     chunk.emit(Op::Halt, loc());
 
     let on_mouse_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnMouse".into(), (on_mouse_start, 2));
+    chunk.insert_function("OnMouse", on_mouse_start, 2);
     emit_constant(&mut chunk, Value::Str("m".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
@@ -121,9 +117,7 @@ fn tui_host_mouse_redraw_hint_uses_view_rect_when_handler_requests_redraw() {
     chunk.emit(Op::Halt, loc());
 
     let on_mouse_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnMouseRedraw".into(), (on_mouse_start, 2));
+    chunk.insert_function("OnMouseRedraw", on_mouse_start, 2);
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(
@@ -238,9 +232,7 @@ fn tui_host_register_on_mouse_is_cleared_by_application_close() {
     chunk.emit(Op::Halt, loc());
 
     let on_mouse_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnMouse".into(), (on_mouse_start, 2));
+    chunk.insert_function("OnMouse", on_mouse_start, 2);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
@@ -298,9 +290,7 @@ fn tui_host_register_on_mouse_rejects_wrong_arity() {
     chunk.emit(Op::Halt, loc());
 
     let on_mouse_start = chunk.len();
-    chunk
-        .functions
-        .insert("WrongOnMouse".into(), (on_mouse_start, 1));
+    chunk.insert_function("WrongOnMouse", on_mouse_start, 1);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 

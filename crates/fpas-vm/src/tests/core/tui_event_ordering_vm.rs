@@ -64,16 +64,14 @@ fn tui_host_process_next_dispatches_resize_burst_before_key() {
     chunk.emit(Op::Halt, loc());
 
     let on_resize_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnResize".into(), (on_resize_start, 2));
+    chunk.insert_function("OnResize", on_resize_start, 2);
     emit_constant(&mut chunk, Value::Str("resize".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
     let on_key_start = chunk.len();
-    chunk.functions.insert("OnKey".into(), (on_key_start, 2));
+    chunk.insert_function("OnKey", on_key_start, 2);
     emit_constant(&mut chunk, Value::Str("key".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Boolean(true));

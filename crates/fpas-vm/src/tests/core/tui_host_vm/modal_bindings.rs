@@ -86,9 +86,7 @@ fn tui_host_modal_command_shortcut_uses_active_modal_binding() {
     chunk.emit(Op::Halt, loc());
 
     let on_command_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnCommand".into(), (on_command_start, 2));
+    chunk.insert_function("OnCommand", on_command_start, 2);
     chunk.emit(Op::GetLocal(1), loc());
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
@@ -201,9 +199,7 @@ fn tui_host_modal_scope_blocks_command_when_focus_is_outside_scope() {
     chunk.emit(Op::Halt, loc());
 
     let on_command_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnCommand".into(), (on_command_start, 2));
+    chunk.insert_function("OnCommand", on_command_start, 2);
     chunk.emit(Op::GetLocal(1), loc());
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);

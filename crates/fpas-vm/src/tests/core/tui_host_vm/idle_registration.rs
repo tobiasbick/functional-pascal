@@ -23,7 +23,7 @@ fn tui_host_register_on_idle_stores_handler_and_interval() {
     chunk.emit(Op::Halt, loc());
 
     let on_idle_start = chunk.len();
-    chunk.functions.insert("OnIdle".into(), (on_idle_start, 1));
+    chunk.insert_function("OnIdle", on_idle_start, 1);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
@@ -62,7 +62,7 @@ fn tui_host_register_on_idle_clamps_negative_interval_to_zero() {
     chunk.emit(Op::Halt, loc());
 
     let on_idle_start = chunk.len();
-    chunk.functions.insert("OnIdle".into(), (on_idle_start, 1));
+    chunk.insert_function("OnIdle", on_idle_start, 1);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 

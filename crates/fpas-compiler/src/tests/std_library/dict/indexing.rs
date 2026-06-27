@@ -55,7 +55,7 @@ begin
   Std.Console.WriteLn(D)
 end.",
     );
-    assert_eq!(out.lines, vec!["[Alice: 30, Bob: 25]"]);
+    assert_eq!(out.lines, vec!["{Alice: 30, Bob: 25}"]);
 }
 
 #[test]

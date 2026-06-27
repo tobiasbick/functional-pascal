@@ -34,9 +34,7 @@ fn tui_host_dispatch_redraw_invokes_on_paint() {
     chunk.emit(Op::Halt, loc());
 
     let on_paint_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaint".into(), (on_paint_start, 1));
+    chunk.insert_function("OnPaint", on_paint_start, 1);
     emit_constant(&mut chunk, Value::Str("p".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
@@ -85,9 +83,7 @@ fn tui_host_dispatch_redraw_consumes_damage_only_once() {
     chunk.emit(Op::Halt, loc());
 
     let on_paint_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaint".into(), (on_paint_start, 1));
+    chunk.insert_function("OnPaint", on_paint_start, 1);
     emit_constant(&mut chunk, Value::Str("p".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
@@ -166,9 +162,7 @@ fn tui_host_dispatch_redraw_rejects_global_on_paint_for_retained_root() {
     chunk.emit(Op::Halt, loc());
 
     let on_paint_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaint".into(), (on_paint_start, 1));
+    chunk.insert_function("OnPaint", on_paint_start, 1);
     emit_constant(&mut chunk, Value::Str("paint".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
@@ -238,9 +232,7 @@ fn tui_host_dispatch_redraw_runs_handler_attached_to_widget_view() {
     chunk.emit(Op::Halt, loc());
 
     let on_view_paint_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnViewPaint".into(), (on_view_paint_start, 3));
+    chunk.insert_function("OnViewPaint", on_view_paint_start, 3);
     emit_constant(&mut chunk, Value::Str("view".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);

@@ -45,9 +45,7 @@ fn vm_run_with_spawn_chunk_returns_after_pool_workers_join() {
     chunk.emit(Op::Halt, loc());
 
     let body_start = chunk.len();
-    chunk
-        .functions
-        .insert(function_name.to_string(), (body_start, 0));
+    chunk.insert_function(function_name.to_string(), body_start, 0);
     emit_constant(&mut chunk, Value::Integer(1));
     chunk.emit(Op::Return, loc());
 

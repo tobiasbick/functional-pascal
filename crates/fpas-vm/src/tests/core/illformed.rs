@@ -10,7 +10,7 @@ fn malformed_call_reports_error_instead_of_panicking() {
     let name_idx = chunk
         .add_constant(Value::Str("NeedArg".to_string()))
         .expect("constant should fit in test chunk");
-    chunk.functions.insert("NeedArg".to_string(), (1, 1));
+    chunk.insert_function("NeedArg".to_string(), 1, 1);
     chunk.emit(Op::Call(name_idx, 1), loc());
     chunk.emit(Op::Halt, loc());
 

@@ -60,7 +60,7 @@ fn tui_test_send_key_dispatches_on_key_pressed() {
     chunk.emit(Op::Halt, loc());
 
     let on_key_start = chunk.len();
-    chunk.functions.insert("OnKey".into(), (on_key_start, 2));
+    chunk.insert_function("OnKey", on_key_start, 2);
     emit_constant(&mut chunk, Value::Str("k".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Boolean(true));
@@ -114,9 +114,7 @@ fn tui_test_send_mouse_dispatches_on_mouse_handler() {
     chunk.emit(Op::Halt, loc());
 
     let on_mouse_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnMouse".into(), (on_mouse_start, 2));
+    chunk.insert_function("OnMouse", on_mouse_start, 2);
     emit_constant(&mut chunk, Value::Str("m".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
@@ -157,9 +155,7 @@ fn tui_test_move_mouse_dispatches_on_mouse_handler() {
     chunk.emit(Op::Halt, loc());
 
     let on_mouse_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnMouse".into(), (on_mouse_start, 2));
+    chunk.insert_function("OnMouse", on_mouse_start, 2);
     emit_constant(&mut chunk, Value::Str("move".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
@@ -200,9 +196,7 @@ fn tui_test_click_mouse_dispatches_two_mouse_events() {
     chunk.emit(Op::Halt, loc());
 
     let on_mouse_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnMouse".into(), (on_mouse_start, 2));
+    chunk.insert_function("OnMouse", on_mouse_start, 2);
     emit_constant(&mut chunk, Value::Integer(1));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
@@ -245,9 +239,7 @@ fn tui_test_resize_dispatches_on_resize_handler() {
     chunk.emit(Op::Halt, loc());
 
     let on_resize_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnResize".into(), (on_resize_start, 2));
+    chunk.insert_function("OnResize", on_resize_start, 2);
     emit_constant(&mut chunk, Value::Str("r".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
@@ -287,9 +279,7 @@ fn tui_test_paste_dispatches_on_paste_handler() {
     chunk.emit(Op::Halt, loc());
 
     let on_paste_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaste".into(), (on_paste_start, 2));
+    chunk.insert_function("OnPaste", on_paste_start, 2);
     emit_constant(&mut chunk, Value::Str("p".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
@@ -331,9 +321,7 @@ fn tui_test_focus_dispatches_on_focus_gained_handler() {
     chunk.emit(Op::Halt, loc());
 
     let on_focus_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnFocusGained".into(), (on_focus_start, 2));
+    chunk.insert_function("OnFocusGained", on_focus_start, 2);
     emit_constant(&mut chunk, Value::Str("f".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);

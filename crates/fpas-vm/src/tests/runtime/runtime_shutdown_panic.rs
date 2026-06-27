@@ -72,9 +72,7 @@ fn spawn_chunk_main_panic_still_sets_shutdown_with_worker_pool() {
     chunk.emit(Op::Panic, loc());
 
     let code_start = chunk.len();
-    chunk
-        .functions
-        .insert(callee.to_ascii_lowercase(), (code_start, 0));
+    chunk.insert_function(callee.to_ascii_lowercase(), code_start, 0);
     chunk.emit(Op::Unit, loc());
     chunk.emit(Op::Return, loc());
 

@@ -10,13 +10,13 @@ impl Worker {
     ) -> Result<&Value, VmError> {
         self.shared
             .chunk
-            .constants
+            .constants()
             .get(idx as usize)
             .ok_or_else(|| {
                 internal_error(
                     format!(
                         "constant index {idx} out of bounds (len {})",
-                        self.shared.chunk.constants.len()
+                        self.shared.chunk.constants().len()
                     ),
                     "This indicates invalid bytecode or a compiler constant-pool bug. Please report it.",
                     location,
@@ -42,10 +42,15 @@ impl Worker {
 
     /// Looks up a function entry by name, falling back to the canonical lowercase name.
     pub(in crate::vm) fn lookup_function_entry(&self, name: &str) -> Option<(usize, u8)> {
-        self.shared.chunk.functions.get(name).copied().or_else(|| {
-            let canonical = canonical_name(name);
-            self.shared.chunk.functions.get(&canonical).copied()
-        })
+        self.shared
+            .chunk
+            .functions()
+            .get(name)
+            .copied()
+            .or_else(|| {
+                let canonical = canonical_name(name);
+                self.shared.chunk.functions().get(&canonical).copied()
+            })
     }
 
     pub(in crate::vm) fn pop_int(&mut self, location: SourceLocation) -> Result<i64, VmError> {

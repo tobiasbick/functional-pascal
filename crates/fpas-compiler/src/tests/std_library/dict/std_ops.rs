@@ -124,7 +124,7 @@ fn std_dict_merge_handles_empty_inputs_and_overrides_existing_keys() {
     );
     assert_eq!(
         out.lines,
-        vec!["[A: 1, B: 20, C: 30]", "[A: 1, B: 2]", "[A: 1, B: 2]"]
+        vec!["{A: 1, B: 20, C: 30}", "{A: 1, B: 2}", "{A: 1, B: 2}"]
     );
 }
 
@@ -145,7 +145,7 @@ begin
   Std.Console.WriteLn(D2)
 end.",
     );
-    assert_eq!(out.lines, vec!["[A: 2, B: 4, C: 6]"]);
+    assert_eq!(out.lines, vec!["{A: 2, B: 4, C: 6}"]);
 }
 
 #[test]
@@ -215,7 +215,7 @@ begin
   Std.Console.WriteLn(Big)
 end.",
     );
-    assert_eq!(out.lines, vec!["[C: 3, D: 4]"]);
+    assert_eq!(out.lines, vec!["{C: 3, D: 4}"]);
 }
 
 #[test]

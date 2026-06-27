@@ -47,17 +47,13 @@ fn two_wasteful_spawned_tasks_interleave_and_wait_all_completes() {
     chunk.emit(Op::Halt, loc());
 
     let fn_a_start = chunk.len();
-    chunk
-        .functions
-        .insert(slow_a.to_ascii_lowercase(), (fn_a_start, 0));
+    chunk.insert_function(slow_a.to_ascii_lowercase(), fn_a_start, 0);
     emit_instruction_waste(&mut chunk, 400);
     emit_constant(&mut chunk, Value::Integer(10));
     chunk.emit(Op::Return, loc());
 
     let fn_b_start = chunk.len();
-    chunk
-        .functions
-        .insert(slow_b.to_ascii_lowercase(), (fn_b_start, 0));
+    chunk.insert_function(slow_b.to_ascii_lowercase(), fn_b_start, 0);
     emit_instruction_waste(&mut chunk, 400);
     emit_constant(&mut chunk, Value::Integer(32));
     chunk.emit(Op::Return, loc());

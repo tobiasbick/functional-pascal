@@ -2,6 +2,9 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Op {
     /// Push constant from the chunk's constant pool.
+    ///
+    /// Valid indices are `0..chunk.constants().len()` and never exceed
+    /// [`crate::MAX_CONSTANT_INDEX`].
     Constant(u16),
 
     /// Push Unit value.

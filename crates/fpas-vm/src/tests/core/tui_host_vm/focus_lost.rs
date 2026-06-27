@@ -23,9 +23,7 @@ fn tui_host_register_on_focus_lost_stores_handler_in_shared_tui_state() {
     chunk.emit(Op::Halt, loc());
 
     let on_fl_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnFocusLost".into(), (on_fl_start, 2));
+    chunk.insert_function("OnFocusLost", on_fl_start, 2);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
@@ -73,9 +71,7 @@ fn tui_host_process_next_dispatches_on_focus_lost_handler_returns_tag_twelve() {
     chunk.emit(Op::Halt, loc());
 
     let on_fl_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnFocusLost".into(), (on_fl_start, 2));
+    chunk.insert_function("OnFocusLost", on_fl_start, 2);
     emit_constant(&mut chunk, Value::Str("fl".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
@@ -117,9 +113,7 @@ fn tui_host_focus_lost_redraw_hint_uses_focused_view_rect_when_handler_requests_
     chunk.emit(Op::Halt, loc());
 
     let on_fl_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnFocusLostRedraw".into(), (on_fl_start, 2));
+    chunk.insert_function("OnFocusLostRedraw", on_fl_start, 2);
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(
@@ -219,9 +213,7 @@ fn tui_host_register_on_focus_lost_is_cleared_by_application_close() {
     chunk.emit(Op::Halt, loc());
 
     let on_fl_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnFocusLost".into(), (on_fl_start, 2));
+    chunk.insert_function("OnFocusLost", on_fl_start, 2);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
@@ -259,7 +251,7 @@ fn tui_host_register_on_focus_lost_rejects_wrong_arity() {
     chunk.emit(Op::Halt, loc());
 
     let on_fl_start = chunk.len();
-    chunk.functions.insert("WrongFL".into(), (on_fl_start, 1));
+    chunk.insert_function("WrongFL", on_fl_start, 1);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 

@@ -66,8 +66,7 @@ impl Compiler {
 
         let code_start = self.chunk.len();
         self.chunk
-            .functions
-            .insert(canonical_name(name), (code_start, arity));
+            .insert_function(canonical_name(name), code_start, arity);
 
         self.compile_routine_body(params, body, location)?;
 

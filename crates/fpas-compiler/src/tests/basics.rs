@@ -8,7 +8,7 @@ program Empty;
 begin
 end.",
     );
-    assert!(chunk.code.last() == Some(&Op::Halt));
+    assert!(chunk.code().last() == Some(&Op::Halt));
 }
 
 #[test]

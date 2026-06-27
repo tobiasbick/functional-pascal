@@ -166,9 +166,7 @@ pub(super) fn build_function_chunk(
     chunk.emit(Op::Halt, loc());
 
     let code_start = chunk.len();
-    chunk
-        .functions
-        .insert(function_name.to_string(), (code_start, arity));
+    chunk.insert_function(function_name.to_string(), code_start, arity);
     body(&mut chunk);
     chunk
 }

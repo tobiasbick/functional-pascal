@@ -1,3 +1,7 @@
+mod equal;
+
+use equal::values_equal;
+
 /// Runtime value in the VM.
 #[derive(Debug, Clone)]
 pub enum Value {
@@ -108,14 +112,14 @@ impl std::fmt::Display for Value {
                 write!(f, "]")
             }
             Value::Dict(pairs) => {
-                write!(f, "[")?;
+                write!(f, "{{")?;
                 for (i, (k, v)) in pairs.iter().enumerate() {
                     if i > 0 {
                         write!(f, ", ")?;
                     }
                     write!(f, "{k}: {v}")?;
                 }
-                write!(f, "]")
+                write!(f, "}}")
             }
             Value::Record { type_name, fields } => {
                 if type_name == "Std.Tui.ViewId"
@@ -148,52 +152,56 @@ impl std::fmt::Display for Value {
 
 impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (Self::Integer(a), Self::Integer(b)) => a == b,
-            (Self::Real(a), Self::Real(b)) => a == b,
-            (Self::Boolean(a), Self::Boolean(b)) => a == b,
-            (Self::Str(a), Self::Str(b)) => a == b,
-            (
-                Self::Enum {
-                    type_name: a_type,
-                    variant: a_variant,
-                    fields: a_fields,
-                },
-                Self::Enum {
-                    type_name: b_type,
-                    variant: b_variant,
-                    fields: b_fields,
-                },
-            ) => a_type == b_type && a_variant == b_variant && a_fields == b_fields,
-            (Self::Array(a), Self::Array(b)) => a == b,
-            (Self::Dict(a), Self::Dict(b)) => a == b,
-            (
-                Self::Record {
-                    type_name: a_type,
-                    fields: a_fields,
-                },
-                Self::Record {
-                    type_name: b_type,
-                    fields: b_fields,
-                },
-            ) => a_type == b_type && a_fields == b_fields,
-            (Self::Unit, Self::Unit) => true,
-            (Self::ResultOk(a), Self::ResultOk(b)) => a == b,
-            (Self::ResultError(a), Self::ResultError(b)) => a == b,
-            (Self::OptionSome(a), Self::OptionSome(b)) => a == b,
-            (Self::OptionNone, Self::OptionNone) => true,
-            (
-                Self::Function {
-                    name: a_name,
-                    captures: a_captures,
-                },
-                Self::Function {
-                    name: b_name,
-                    captures: b_captures,
-                },
-            ) => a_name == b_name && a_captures == b_captures,
-            (Self::Task(a), Self::Task(b)) => a == b,
-            _ => false,
-        }
+        values_equal(self, other)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn type_name_reports_runtime_categories() {
+        assert_eq!(Value::Integer(1).type_name(), "integer");
+        assert_eq!(Value::Dict(Vec::new()).type_name(), "dict");
+        assert_eq!(Value::Task(9).type_name(), "task");
+    }
+
+    #[test]
+    fn display_formats_dict_with_braces() {
+        let value = Value::Dict(vec![
+            (Value::Str("k".into()), Value::Integer(1)),
+            (Value::Str("x".into()), Value::Boolean(true)),
+        ]);
+        assert_eq!(value.to_string(), "{k: 1, x: true}");
+    }
+
+    #[test]
+    fn display_formats_view_id_record_as_raw_integer() {
+        let value = Value::Record {
+            type_name: "Std.Tui.ViewId".into(),
+            fields: vec![("__id".into(), Value::Integer(42))],
+        };
+        assert_eq!(value.to_string(), "42");
+    }
+
+    #[test]
+    fn partial_eq_treats_nan_with_same_bits_as_equal() {
+        let nan = Value::Real(f64::from_bits(0x7FF8_0000_0000_0001));
+        assert_eq!(nan, nan.clone());
+    }
+
+    #[test]
+    fn partial_eq_distinguishes_nan_payloads() {
+        let a = Value::Real(f64::from_bits(0x7FF8_0000_0000_0001));
+        let b = Value::Real(f64::from_bits(0x7FF8_0000_0000_0002));
+        assert_ne!(a, b);
+    }
+
+    #[test]
+    fn partial_eq_compares_nested_arrays() {
+        let left = Value::Array(vec![Value::Array(vec![Value::Integer(1)])]);
+        let right = Value::Array(vec![Value::Array(vec![Value::Integer(1)])]);
+        assert_eq!(left, right);
     }
 }

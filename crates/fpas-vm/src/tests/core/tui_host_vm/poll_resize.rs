@@ -30,9 +30,7 @@ fn tui_host_process_next_dispatches_on_resize_handler() {
     chunk.emit(Op::Halt, loc());
 
     let on_resize_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnResize".into(), (on_resize_start, 2));
+    chunk.insert_function("OnResize", on_resize_start, 2);
     emit_constant(&mut chunk, Value::Str("r".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
@@ -83,9 +81,7 @@ fn tui_host_process_next_resize_marks_union_of_surface_bounds() {
     chunk.emit(Op::Halt, loc());
 
     let on_resize_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnResize".into(), (on_resize_start, 2));
+    chunk.insert_function("OnResize", on_resize_start, 2);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 

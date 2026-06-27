@@ -109,7 +109,7 @@ impl Worker {
                 }
             }
 
-            if self.ip >= self.shared.chunk.code.len() {
+            if self.ip >= self.shared.chunk.code().len() {
                 return Err(internal_error(
                     "IP ran past end of code during synchronous function call",
                     "This indicates a compiler/runtime bug.",

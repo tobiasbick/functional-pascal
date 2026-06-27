@@ -39,16 +39,14 @@ fn tui_application_run_invokes_on_idle_after_timeout() {
     chunk.emit(Op::Halt, loc());
 
     let on_paint_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaint".into(), (on_paint_start, 1));
+    chunk.insert_function("OnPaint", on_paint_start, 1);
     emit_constant(&mut chunk, Value::Str("paint".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
     let on_idle_start = chunk.len();
-    chunk.functions.insert("OnIdle".into(), (on_idle_start, 1));
+    chunk.insert_function("OnIdle", on_idle_start, 1);
     emit_constant(&mut chunk, Value::Str("idle".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, tui_application_value());
@@ -115,9 +113,7 @@ fn tui_application_run_does_not_invoke_on_idle_when_interval_is_zero() {
     chunk.emit(Op::Halt, loc());
 
     let on_paint_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaint".into(), (on_paint_start, 1));
+    chunk.insert_function("OnPaint", on_paint_start, 1);
     emit_constant(&mut chunk, Value::Str("paint".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, tui_application_value());
@@ -129,7 +125,7 @@ fn tui_application_run_does_not_invoke_on_idle_when_interval_is_zero() {
     chunk.emit(Op::Return, loc());
 
     let on_idle_start = chunk.len();
-    chunk.functions.insert("OnIdle".into(), (on_idle_start, 1));
+    chunk.insert_function("OnIdle", on_idle_start, 1);
     emit_constant(&mut chunk, Value::Str("idle".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);

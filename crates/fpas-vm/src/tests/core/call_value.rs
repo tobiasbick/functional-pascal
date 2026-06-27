@@ -45,9 +45,7 @@ fn call_value_resolves_function_name_case_insensitively() {
     chunk.emit(Op::Halt, loc());
 
     let code_start = chunk.len();
-    chunk
-        .functions
-        .insert("returnnine".to_string(), (code_start, 0));
+    chunk.insert_function("returnnine".to_string(), code_start, 0);
     emit_constant(&mut chunk, Value::Integer(9));
     chunk.emit(Op::Return, loc());
 

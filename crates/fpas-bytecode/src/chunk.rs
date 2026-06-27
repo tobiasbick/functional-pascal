@@ -4,6 +4,9 @@ use fpas_diagnostics::SourceLocation;
 use std::collections::HashMap;
 use std::fmt;
 
+/// Largest valid constant-pool index when the pool holds the maximum number of entries.
+pub const MAX_CONSTANT_INDEX: u16 = u16::MAX - 1;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ChunkError {
     InvalidInstructionOffset {
@@ -21,6 +24,10 @@ pub enum ChunkError {
     },
     ConstantPoolOverflow {
         max_constants: usize,
+    },
+    CodeLocationLengthMismatch {
+        code_len: usize,
+        locations_len: usize,
     },
 }
 
@@ -52,6 +59,15 @@ impl fmt::Display for ChunkError {
             Self::ConstantPoolOverflow { max_constants } => {
                 write!(f, "constant pool overflow: exceeds {max_constants} entries")
             }
+            Self::CodeLocationLengthMismatch {
+                code_len,
+                locations_len,
+            } => {
+                write!(
+                    f,
+                    "chunk invariant violated: code has {code_len} instructions but locations has {locations_len} entries"
+                )
+            }
         }
     }
 }
@@ -61,12 +77,12 @@ impl std::error::Error for ChunkError {}
 /// A compiled chunk of bytecode with its constant pool.
 #[derive(Debug, Clone)]
 pub struct Chunk {
-    pub code: Vec<Op>,
-    pub constants: Vec<Value>,
+    code: Vec<Op>,
+    constants: Vec<Value>,
     /// Parallel to `code`: maps each instruction to a source location (1-based line and column).
-    pub locations: Vec<SourceLocation>,
+    locations: Vec<SourceLocation>,
     /// Function table: name → (code_start, arity).
-    pub functions: HashMap<String, (usize, u8)>,
+    functions: HashMap<String, (usize, u8)>,
 }
 
 impl Chunk {
@@ -79,11 +95,58 @@ impl Chunk {
         }
     }
 
+    /// Instruction stream.
+    #[must_use]
+    pub fn code(&self) -> &[Op] {
+        &self.code
+    }
+
+    /// Constant pool.
+    #[must_use]
+    pub fn constants(&self) -> &[Value] {
+        &self.constants
+    }
+
+    /// Source location per instruction (parallel to [`Self::code`]).
+    #[must_use]
+    pub fn locations(&self) -> &[SourceLocation] {
+        &self.locations
+    }
+
+    /// Function entry points keyed by canonical name.
+    #[must_use]
+    pub fn functions(&self) -> &HashMap<String, (usize, u8)> {
+        &self.functions
+    }
+
+    /// Register a callable entry point in the function table.
+    pub fn insert_function(&mut self, name: impl Into<String>, code_start: usize, arity: u8) {
+        self.functions.insert(name.into(), (code_start, arity));
+    }
+
+    /// Returns `true` when `idx` refers to an existing constant-pool entry.
+    #[must_use]
+    pub fn is_valid_constant_index(&self, idx: u16) -> bool {
+        (idx as usize) < self.constants.len()
+    }
+
+    /// Verify structural invariants (`code`/`locations` length parity).
+    pub fn validate_invariants(&self) -> Result<(), ChunkError> {
+        if self.code.len() != self.locations.len() {
+            return Err(ChunkError::CodeLocationLengthMismatch {
+                code_len: self.code.len(),
+                locations_len: self.locations.len(),
+            });
+        }
+        Ok(())
+    }
+
     /// Emit an instruction, recording the source location.
     pub fn emit(&mut self, op: Op, location: SourceLocation) -> usize {
         let idx = self.code.len();
         self.code.push(op);
         self.locations.push(location);
+        debug_assert_eq!(self.code.len(), self.locations.len());
         idx
     }
 
@@ -99,9 +162,9 @@ impl Chunk {
                 return Ok(i as u16);
             }
         }
-        if self.constants.len() >= u16::MAX as usize {
+        if self.constants.len() > MAX_CONSTANT_INDEX as usize {
             return Err(ChunkError::ConstantPoolOverflow {
-                max_constants: u16::MAX as usize,
+                max_constants: MAX_CONSTANT_INDEX as usize + 1,
             });
         }
         let idx = self.constants.len() as u16;
@@ -158,6 +221,18 @@ impl Chunk {
             .iter()
             .any(|op| matches!(op, Op::SpawnTask(_) | Op::SpawnDetachedTask(_)))
     }
+
+    /// Pre-seed the constant pool in unit tests.
+    #[cfg(test)]
+    pub(crate) fn set_constants_for_test(&mut self, constants: Vec<Value>) {
+        self.constants = constants;
+    }
+
+    /// Push an instruction without a location entry (corrupts invariants).
+    #[cfg(test)]
+    pub(crate) fn push_code_without_location_for_test(&mut self, op: Op) {
+        self.code.push(op);
+    }
 }
 
 impl Default for Chunk {
@@ -183,21 +258,61 @@ mod tests {
 
         assert_eq!(first, Ok(0));
         assert_eq!(second, Ok(0));
-        assert_eq!(chunk.constants.len(), 1);
+        assert_eq!(chunk.constants().len(), 1);
+    }
+
+    #[test]
+    fn add_constant_reuses_nan_with_same_payload() {
+        let mut chunk = Chunk::new();
+        let nan = Value::Real(f64::from_bits(0x7FF8_0000_0000_0001));
+
+        let first = chunk.add_constant(nan.clone());
+        let second = chunk.add_constant(nan);
+
+        assert_eq!(first, Ok(0));
+        assert_eq!(second, Ok(0));
+        assert_eq!(chunk.constants().len(), 1);
     }
 
     #[test]
     fn add_constant_returns_error_when_pool_limit_is_exceeded() {
         let mut chunk = Chunk::new();
-        chunk.constants = (0..u16::MAX)
-            .map(|value| Value::Integer(i64::from(value)))
-            .collect();
+        chunk.set_constants_for_test(
+            (0..=MAX_CONSTANT_INDEX)
+                .map(|value| Value::Integer(i64::from(value)))
+                .collect(),
+        );
 
         assert_eq!(
             chunk.add_constant(Value::Integer(i64::from(u16::MAX))),
             Err(ChunkError::ConstantPoolOverflow {
-                max_constants: u16::MAX as usize,
+                max_constants: MAX_CONSTANT_INDEX as usize + 1,
             })
+        );
+    }
+
+    #[test]
+    fn patch_jump_updates_jump_target() {
+        let mut chunk = Chunk::new();
+        chunk.emit(Op::Jump(0), loc());
+        chunk.emit(Op::Halt, loc());
+
+        assert_eq!(chunk.patch_jump(0, 1), Ok(()));
+        assert_eq!(chunk.code(), &[Op::Jump(1), Op::Halt]);
+    }
+
+    #[test]
+    fn patch_jump_updates_conditional_targets() {
+        let mut chunk = Chunk::new();
+        chunk.emit(Op::JumpIfFalse(0), loc());
+        chunk.emit(Op::JumpIfTrue(0), loc());
+        chunk.emit(Op::Halt, loc());
+
+        assert_eq!(chunk.patch_jump(0, 2), Ok(()));
+        assert_eq!(chunk.patch_jump(1, 3), Ok(()));
+        assert_eq!(
+            chunk.code(),
+            &[Op::JumpIfFalse(2), Op::JumpIfTrue(3), Op::Halt]
         );
     }
 
@@ -214,5 +329,58 @@ mod tests {
                 code_len: 1,
             })
         );
+    }
+
+    #[test]
+    fn patch_jump_rejects_non_jump_instruction() {
+        let mut chunk = Chunk::new();
+        chunk.emit(Op::Pop, loc());
+
+        assert_eq!(
+            chunk.patch_jump(0, 0),
+            Err(ChunkError::NonJumpInstruction {
+                offset: 0,
+                opcode: Op::Pop,
+            })
+        );
+    }
+
+    #[test]
+    fn emit_keeps_code_and_locations_aligned() {
+        let mut chunk = Chunk::new();
+        let first = loc();
+        let second = SourceLocation::new(2, 3);
+
+        chunk.emit(Op::Unit, first);
+        chunk.emit(Op::Halt, second);
+
+        assert_eq!(chunk.location_at(0), Some(first));
+        assert_eq!(chunk.location_at(1), Some(second));
+        assert!(chunk.validate_invariants().is_ok());
+    }
+
+    #[test]
+    fn validate_invariants_detects_length_mismatch() {
+        let mut chunk = Chunk::new();
+        chunk.push_code_without_location_for_test(Op::Halt);
+
+        assert_eq!(
+            chunk.validate_invariants(),
+            Err(ChunkError::CodeLocationLengthMismatch {
+                code_len: 1,
+                locations_len: 0,
+            })
+        );
+    }
+
+    #[test]
+    fn is_valid_constant_index_tracks_pool_size() {
+        let mut chunk = Chunk::new();
+        assert!(!chunk.is_valid_constant_index(0));
+
+        let idx = chunk.add_constant(Value::Integer(1)).expect("constant");
+        assert_eq!(idx, 0);
+        assert!(chunk.is_valid_constant_index(0));
+        assert!(!chunk.is_valid_constant_index(1));
     }
 }

@@ -65,7 +65,7 @@ fn spawn_detection_is_independent_of_functions_table() {
     let mut chunk = Chunk::new();
     chunk.emit(Op::Constant(0), loc());
     chunk.emit(Op::Halt, loc());
-    chunk.functions.insert("unused".to_string(), (999, 0));
+    chunk.insert_function("unused".to_string(), 999, 0);
     assert!(
         !chunk.uses_spawn_tasks(),
         "scan must inspect `code` only, not `functions` keys"
@@ -136,7 +136,7 @@ fn constant_pool_and_locations_do_not_affect_scan() {
     assert!(chunk.add_constant(Value::Integer(1)).is_ok());
     chunk.emit(Op::Constant(0), loc());
     chunk.emit(Op::SpawnDetachedTask(0), loc());
-    assert_eq!(chunk.code.len(), chunk.locations.len());
+    assert!(chunk.validate_invariants().is_ok());
     assert!(chunk.uses_spawn_tasks());
 }
 

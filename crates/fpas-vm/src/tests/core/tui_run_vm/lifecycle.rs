@@ -44,16 +44,14 @@ fn tui_application_run_invokes_on_exit_and_clears_shared_state() {
     chunk.emit(Op::Halt, loc());
 
     let on_paint_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaint".into(), (on_paint_start, 1));
+    chunk.insert_function("OnPaint", on_paint_start, 1);
     emit_constant(&mut chunk, Value::Str("p".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
     let on_exit_start = chunk.len();
-    chunk.functions.insert("OnExit".into(), (on_exit_start, 2));
+    chunk.insert_function("OnExit", on_exit_start, 2);
     emit_constant(&mut chunk, Value::Str("x".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
@@ -129,9 +127,7 @@ fn tui_application_run_reports_host_stop_when_close_happens_during_run() {
     chunk.emit(Op::Halt, loc());
 
     let on_paint_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaint".into(), (on_paint_start, 1));
+    chunk.insert_function("OnPaint", on_paint_start, 1);
     emit_constant(&mut chunk, tui_application_value());
     chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationClose))),
@@ -141,7 +137,7 @@ fn tui_application_run_reports_host_stop_when_close_happens_during_run() {
     chunk.emit(Op::Return, loc());
 
     let on_exit_start = chunk.len();
-    chunk.functions.insert("OnExit".into(), (on_exit_start, 2));
+    chunk.insert_function("OnExit", on_exit_start, 2);
     chunk.emit(Op::GetLocal(1), loc());
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
@@ -224,9 +220,7 @@ fn tui_application_run_reports_host_and_user_stop_when_both_are_requested() {
     chunk.emit(Op::Halt, loc());
 
     let on_paint_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaint".into(), (on_paint_start, 1));
+    chunk.insert_function("OnPaint", on_paint_start, 1);
     emit_constant(&mut chunk, tui_application_value());
     chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationClose))),
@@ -241,7 +235,7 @@ fn tui_application_run_reports_host_and_user_stop_when_both_are_requested() {
     chunk.emit(Op::Return, loc());
 
     let on_exit_start = chunk.len();
-    chunk.functions.insert("OnExit".into(), (on_exit_start, 2));
+    chunk.insert_function("OnExit", on_exit_start, 2);
     chunk.emit(Op::GetLocal(1), loc());
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
@@ -302,16 +296,14 @@ fn tui_application_run_reports_host_shutdown_when_vm_shutdown_is_requested() {
     chunk.emit(Op::Halt, loc());
 
     let on_paint_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaint".into(), (on_paint_start, 1));
+    chunk.insert_function("OnPaint", on_paint_start, 1);
     emit_constant(&mut chunk, Value::Str("paint".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
     let on_exit_start = chunk.len();
-    chunk.functions.insert("OnExit".into(), (on_exit_start, 2));
+    chunk.insert_function("OnExit", on_exit_start, 2);
     chunk.emit(Op::GetLocal(1), loc());
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
@@ -423,9 +415,7 @@ fn tui_application_run_rejects_global_on_paint_as_retained_scene_paint() {
     chunk.emit(Op::Halt, loc());
 
     let on_paint_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaint".into(), (on_paint_start, 1));
+    chunk.insert_function("OnPaint", on_paint_start, 1);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
@@ -476,9 +466,7 @@ fn tui_application_run_accepts_local_view_paint_without_global_on_paint() {
     chunk.emit(Op::Halt, loc());
 
     let on_view_paint_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnViewPaint".into(), (on_view_paint_start, 3));
+    chunk.insert_function("OnViewPaint", on_view_paint_start, 3);
     chunk.emit(Op::GetLocal(1), loc());
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, tui_application_value());

@@ -68,26 +68,22 @@ fn tui_application_configure_stores_bundle_handlers_and_interval() {
     chunk.emit(Op::Halt, loc());
 
     let on_paint_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaint".into(), (on_paint_start, 1));
+    chunk.insert_function("OnPaint", on_paint_start, 1);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
     let on_key_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnKeyPressed".into(), (on_key_start, 2));
+    chunk.insert_function("OnKeyPressed", on_key_start, 2);
     emit_constant(&mut chunk, Value::Boolean(true));
     chunk.emit(Op::Return, loc());
 
     let on_idle_start = chunk.len();
-    chunk.functions.insert("OnIdle".into(), (on_idle_start, 1));
+    chunk.insert_function("OnIdle", on_idle_start, 1);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
     let on_exit_start = chunk.len();
-    chunk.functions.insert("OnExit".into(), (on_exit_start, 2));
+    chunk.insert_function("OnExit", on_exit_start, 2);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
@@ -159,16 +155,12 @@ fn tui_application_configure_clears_previous_optional_handlers_with_none_default
     chunk.emit(Op::Halt, loc());
 
     let on_exit_start = chunk.len();
-    chunk
-        .functions
-        .insert("OldOnExit".into(), (on_exit_start, 2));
+    chunk.insert_function("OldOnExit", on_exit_start, 2);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
     let on_paint_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaint".into(), (on_paint_start, 1));
+    chunk.insert_function("OnPaint", on_paint_start, 1);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
@@ -259,9 +251,7 @@ fn tui_application_configure_rejects_non_option_optional_handler_value() {
     chunk.emit(Op::Halt, loc());
 
     let on_paint_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaint".into(), (on_paint_start, 1));
+    chunk.insert_function("OnPaint", on_paint_start, 1);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
@@ -315,14 +305,12 @@ fn tui_application_configure_clamps_negative_idle_interval_to_zero() {
     chunk.emit(Op::Halt, loc());
 
     let on_paint_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaint".into(), (on_paint_start, 1));
+    chunk.insert_function("OnPaint", on_paint_start, 1);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
     let on_idle_start = chunk.len();
-    chunk.functions.insert("OnIdle".into(), (on_idle_start, 1));
+    chunk.insert_function("OnIdle", on_idle_start, 1);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 

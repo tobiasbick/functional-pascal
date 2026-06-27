@@ -21,9 +21,7 @@ fn tui_host_register_on_paste_stores_handler_in_shared_tui_state() {
     chunk.emit(Op::Halt, loc());
 
     let on_paste_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaste".into(), (on_paste_start, 2));
+    chunk.insert_function("OnPaste", on_paste_start, 2);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
@@ -69,9 +67,7 @@ fn tui_host_process_next_dispatches_on_paste_handler_returns_tag_eight() {
     chunk.emit(Op::Halt, loc());
 
     let on_paste_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaste".into(), (on_paste_start, 2));
+    chunk.insert_function("OnPaste", on_paste_start, 2);
     emit_constant(&mut chunk, Value::Str("paste".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
@@ -111,9 +107,7 @@ fn tui_host_paste_redraw_hint_uses_focused_view_rect_when_handler_requests_redra
     chunk.emit(Op::Halt, loc());
 
     let on_paste_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPasteRedraw".into(), (on_paste_start, 2));
+    chunk.insert_function("OnPasteRedraw", on_paste_start, 2);
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(
@@ -211,9 +205,7 @@ fn tui_host_register_on_paste_is_cleared_by_application_close() {
     chunk.emit(Op::Halt, loc());
 
     let on_paste_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaste".into(), (on_paste_start, 2));
+    chunk.insert_function("OnPaste", on_paste_start, 2);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
@@ -271,9 +263,7 @@ fn tui_host_register_on_paste_rejects_wrong_arity() {
     chunk.emit(Op::Halt, loc());
 
     let on_paste_start = chunk.len();
-    chunk
-        .functions
-        .insert("WrongOnPaste".into(), (on_paste_start, 1));
+    chunk.insert_function("WrongOnPaste", on_paste_start, 1);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 

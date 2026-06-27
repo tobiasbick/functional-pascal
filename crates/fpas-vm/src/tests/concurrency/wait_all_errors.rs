@@ -59,16 +59,12 @@ fn wait_all_on_array_when_child_panicked_reports_shutdown() {
     chunk.emit(Op::Halt, loc());
 
     let code_start = chunk.len();
-    chunk
-        .functions
-        .insert(ok.to_ascii_lowercase(), (code_start, 0));
+    chunk.insert_function(ok.to_ascii_lowercase(), code_start, 0);
     emit_constant(&mut chunk, Value::Integer(1));
     chunk.emit(Op::Return, loc());
 
     let code_start_bad = chunk.len();
-    chunk
-        .functions
-        .insert(bad.to_ascii_lowercase(), (code_start_bad, 0));
+    chunk.insert_function(bad.to_ascii_lowercase(), code_start_bad, 0);
     emit_constant(&mut chunk, Value::Str("e".into()));
     chunk.emit(Op::Panic, loc());
 

@@ -42,7 +42,7 @@ fn tui_host_invoke_on_key_pressed_runs_registered_fp_function() {
     chunk.emit(Op::Halt, loc());
 
     let on_key_start = chunk.len();
-    chunk.functions.insert("OnKey".into(), (on_key_start, 2));
+    chunk.insert_function("OnKey", on_key_start, 2);
     emit_constant(&mut chunk, Value::Boolean(true));
     chunk.emit(Op::Return, loc());
 
@@ -89,9 +89,7 @@ fn tui_host_command_shortcut_dispatches_on_command_and_returns_tag_sixteen() {
     chunk.emit(Op::Halt, loc());
 
     let on_command_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnCommand".into(), (on_command_start, 2));
+    chunk.insert_function("OnCommand", on_command_start, 2);
     chunk.emit(Op::GetLocal(1), loc());
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
@@ -307,9 +305,7 @@ fn tui_host_view_command_shortcut_uses_focused_ancestor_binding() {
     chunk.emit(Op::Halt, loc());
 
     let on_command_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnCommand".into(), (on_command_start, 2));
+    chunk.insert_function("OnCommand", on_command_start, 2);
     chunk.emit(Op::GetLocal(1), loc());
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);

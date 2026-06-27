@@ -367,3 +367,73 @@ fn all_intrinsics_list_is_complete() {
          a variant was added without updating ALL_INTRINSICS"
     );
 }
+
+#[test]
+fn intrinsic_wire_values_are_globally_unique() {
+    use std::collections::HashMap;
+    use std::fs;
+    use std::path::PathBuf;
+
+    let intrinsic_root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/intrinsic");
+    let mut by_value: HashMap<u16, Vec<String>> = HashMap::new();
+
+    fn scan_dir(dir: &std::path::Path, by_value: &mut HashMap<u16, Vec<String>>) {
+        for entry in fs::read_dir(dir).expect("intrinsic dir") {
+            let entry = entry.expect("dir entry");
+            let path = entry.path();
+            if path.is_dir() {
+                scan_dir(&path, by_value);
+                continue;
+            }
+            if path.extension().and_then(|ext| ext.to_str()) != Some("rs") {
+                continue;
+            }
+            let file_name = path
+                .file_name()
+                .and_then(|name| name.to_str())
+                .unwrap_or("");
+            if matches!(file_name, "mod.rs" | "tests.rs") {
+                continue;
+            }
+            let source = fs::read_to_string(&path).expect("read intrinsic source");
+            let label = path
+                .strip_prefix(dir.parent().expect("parent"))
+                .expect("strip")
+                .display()
+                .to_string();
+            for line in source.lines() {
+                let Some((lhs, rhs)) = line.split_once('=') else {
+                    continue;
+                };
+                if !rhs.trim_end().ends_with(',') {
+                    continue;
+                }
+                let Some(value_text) = rhs.trim().strip_suffix(',') else {
+                    continue;
+                };
+                let Ok(value) = value_text.trim().parse::<u16>() else {
+                    continue;
+                };
+                let variant = lhs.rsplit("::").next().unwrap_or(lhs).trim();
+                if variant.is_empty() || variant.starts_with("//") {
+                    continue;
+                }
+                by_value
+                    .entry(value)
+                    .or_default()
+                    .push(format!("{label}:{variant}"));
+            }
+        }
+    }
+
+    scan_dir(&intrinsic_root, &mut by_value);
+
+    let duplicates: Vec<_> = by_value
+        .iter()
+        .filter(|(_, owners)| owners.len() > 1)
+        .collect();
+    assert!(
+        duplicates.is_empty(),
+        "duplicate intrinsic wire values: {duplicates:?}"
+    );
+}

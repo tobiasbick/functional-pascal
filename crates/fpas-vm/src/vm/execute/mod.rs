@@ -51,7 +51,7 @@ impl Worker {
         &mut self,
         fallback_line: SourceLocation,
     ) -> Result<StepResult, VmError> {
-        let op = self.shared.chunk.code[self.ip];
+        let op = self.shared.chunk.code()[self.ip];
         let line = self
             .shared
             .chunk
@@ -105,7 +105,7 @@ impl Worker {
                 self.check_shutdown()?;
             }
 
-            let code_len = self.shared.chunk.code.len();
+            let code_len = self.shared.chunk.code().len();
             if self.ip == code_len {
                 if self.current_task_id != 0 {
                     let result = self.stack.pop().unwrap_or(Value::Unit);

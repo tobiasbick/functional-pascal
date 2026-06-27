@@ -23,9 +23,7 @@ fn tui_host_register_on_focus_gained_stores_handler_in_shared_tui_state() {
     chunk.emit(Op::Halt, loc());
 
     let on_fg_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnFocusGained".into(), (on_fg_start, 2));
+    chunk.insert_function("OnFocusGained", on_fg_start, 2);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
@@ -73,9 +71,7 @@ fn tui_host_process_next_dispatches_on_focus_gained_handler_returns_tag_ten() {
     chunk.emit(Op::Halt, loc());
 
     let on_fg_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnFocusGained".into(), (on_fg_start, 2));
+    chunk.insert_function("OnFocusGained", on_fg_start, 2);
     emit_constant(&mut chunk, Value::Str("fg".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
@@ -117,9 +113,7 @@ fn tui_host_focus_gained_redraw_hint_uses_focused_view_rect_when_handler_request
     chunk.emit(Op::Halt, loc());
 
     let on_fg_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnFocusGainedRedraw".into(), (on_fg_start, 2));
+    chunk.insert_function("OnFocusGainedRedraw", on_fg_start, 2);
     chunk.emit(Op::GetLocal(0), loc());
     chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(
@@ -219,9 +213,7 @@ fn tui_host_register_on_focus_gained_is_cleared_by_application_close() {
     chunk.emit(Op::Halt, loc());
 
     let on_fg_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnFocusGained".into(), (on_fg_start, 2));
+    chunk.insert_function("OnFocusGained", on_fg_start, 2);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
@@ -259,7 +251,7 @@ fn tui_host_register_on_focus_gained_rejects_wrong_arity() {
     chunk.emit(Op::Halt, loc());
 
     let on_fg_start = chunk.len();
-    chunk.functions.insert("WrongFG".into(), (on_fg_start, 1));
+    chunk.insert_function("WrongFG", on_fg_start, 1);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 

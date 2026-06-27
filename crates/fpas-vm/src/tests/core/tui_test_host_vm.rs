@@ -72,9 +72,7 @@ fn tui_test_pump_dispatches_one_resize_event() {
     chunk.emit(Op::Halt, loc());
 
     let on_resize_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnResize".into(), (on_resize_start, 2));
+    chunk.insert_function("OnResize", on_resize_start, 2);
     emit_constant(&mut chunk, Value::Str("r".into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
@@ -117,9 +115,7 @@ fn tui_test_pump_until_idle_drains_multiple_events() {
     chunk.emit(Op::Halt, loc());
 
     let on_resize_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnResize".into(), (on_resize_start, 2));
+    chunk.insert_function("OnResize", on_resize_start, 2);
     emit_constant(&mut chunk, Value::Integer(1));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);

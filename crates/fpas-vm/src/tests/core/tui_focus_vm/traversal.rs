@@ -246,7 +246,7 @@ fn tab_with_no_focusable_views_dispatches_to_on_key_pressed() {
 fn unconsumed_key_handler_returns_tag_twenty_two() {
     let mut chunk = build_process_next_chunk_with_handlers(None, None, Some("OnKey"));
     let start = chunk.len();
-    chunk.functions.insert("OnKey".into(), (start, 2));
+    chunk.insert_function("OnKey", start, 2);
     emit_constant(&mut chunk, Value::Boolean(false));
     chunk.emit(Op::Return, loc());
 
@@ -376,23 +376,17 @@ fn close_after_run_clears_on_activate_and_on_deactivate() {
     chunk.emit(Op::Halt, loc());
 
     let on_paint_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnPaint".into(), (on_paint_start, 1));
+    chunk.insert_function("OnPaint", on_paint_start, 1);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
     let on_activate_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnActivate".into(), (on_activate_start, 1));
+    chunk.insert_function("OnActivate", on_activate_start, 1);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 
     let on_deactivate_start = chunk.len();
-    chunk
-        .functions
-        .insert("OnDeactivate".into(), (on_deactivate_start, 1));
+    chunk.insert_function("OnDeactivate", on_deactivate_start, 1);
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());
 

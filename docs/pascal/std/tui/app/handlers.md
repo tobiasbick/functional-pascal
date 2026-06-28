@@ -69,7 +69,8 @@ end;
 ## `OnIdle`
 
 - Optional. If the idle interval is **greater than zero**, the host may call `**OnIdle(App)`** when no input was available for that interval and no higher-priority work ran. Used for caret blink, status clocks, etc.
-- `**OnIdle`** must not block on input (same **reentrancy** rules as the completed hosted-loop work in [`docs/future/tui/completed.md`](../../../../future/tui/completed.md)).
+- `**OnIdle`** must not block on input. It runs on the main VM thread under the same reentrancy rules
+  as the other hosted-loop callbacks.
 
 ---
 

@@ -104,7 +104,7 @@ fn is_tui_rust_source(path: &Path) -> bool {
 }
 
 fn tui_doc_paths(line: &str) -> Vec<&str> {
-    const PREFIXES: [&str; 2] = ["docs/future/tui/", "docs/pascal/std/tui/"];
+    const PREFIXES: [&str; 1] = ["docs/pascal/std/tui/"];
 
     let mut paths = Vec::new();
     for prefix in PREFIXES {

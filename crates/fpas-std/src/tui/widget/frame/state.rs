@@ -1,6 +1,6 @@
 //! Frame-root metadata and in-flight window interaction state.
 //!
-//! Plan: `docs/future/tui/completed.md`
+//! Spec: `docs/pascal/std/tui/app/frames.md`
 
 use crate::{ScrollModel, ViewId, ViewRect, ViewRegistry};
 

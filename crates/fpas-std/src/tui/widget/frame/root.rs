@@ -3,7 +3,6 @@
 //! This validates frame geometry before mutating the view tree so callers never observe a partial
 //! frame root when geometry is invalid.
 //!
-//! Plan: `docs/future/tui/completed.md`
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
 use crate::{ModalId, ModalStack, ViewId, ViewOptions, ViewRect, ViewRegistry};

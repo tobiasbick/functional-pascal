@@ -4,7 +4,6 @@
 //! small view tree: root views use absolute terminal coordinates, child views use coordinates
 //! relative to their parent, and sibling order defines paint and hit-test z-order.
 //!
-//! Plan: `docs/future/tui/completed.md`
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
 mod activation;

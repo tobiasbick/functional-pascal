@@ -1,7 +1,7 @@
 //! Active-window management: root activation and click-to-front z-order.
 //!
 //! These primitives are the desktop/window-manager foundation for the framed window and dialog
-//! work tracked in [`docs/future/tui/completed.md`].
+//! behavior documented in `docs/pascal/std/tui/app/frames.md`.
 //!
 //! Spec: `docs/pascal/std/tui/app/README.md`
 

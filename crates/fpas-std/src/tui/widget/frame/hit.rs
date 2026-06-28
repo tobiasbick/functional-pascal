@@ -1,6 +1,6 @@
 //! Frame chrome hit-testing for move and resize interaction.
 //!
-//! Plan: `docs/future/tui/completed.md`
+//! Spec: `docs/pascal/std/tui/app/frames.md`
 
 use crate::ViewRect;
 

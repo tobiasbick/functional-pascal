@@ -1,6 +1,5 @@
 //! Turbo Vision-style frame widget primitives.
 //!
-//! Plan: `docs/future/tui/completed.md`
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
 mod chrome;

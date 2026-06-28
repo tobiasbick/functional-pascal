@@ -1,6 +1,6 @@
 //! Captured frame move, resize, zoom, and next-window activation.
 //!
-//! Plan: `docs/future/tui/completed.md`
+//! Spec: `docs/pascal/std/tui/app/frames.md`
 
 use super::hit::{FrameChromeHit, frame_chrome_hit};
 use super::state::{FrameResizeEdge, WindowInteractionKind};

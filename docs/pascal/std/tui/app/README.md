@@ -1,6 +1,6 @@
 # `Std.Tui` — dispatch-mode application
 
-**Status:** current specification for the Rust-hosted event loop and `On*` handlers described in the [TUI roadmap](../../../../future/tui/README.md). The host now uses a retained view engine with composable absolute transforms, effective ancestor clips, depth-first painting, state-derived focus paths, typed event routes, pointer capture, sourced internal commands, and typed process outcomes. **`Application.Host*`** dispatch helpers remain the registered Pascal bridge, **`ApplicationHandlers`** / **`Application.Configure(App, Handlers)`** provide bundled registration, and **`Application.Run(App)`** is the hosted loop entrypoint. Session handle APIs: [Session API](../session.md).
+**Status:** current specification for the Rust-hosted event loop and `On*` handlers. The host uses a retained view engine with composable absolute transforms, effective ancestor clips, depth-first painting, state-derived focus paths, typed event routes, pointer capture, sourced internal commands, and typed process outcomes. **`Application.Host*`** dispatch helpers remain the registered Pascal bridge, **`ApplicationHandlers`** / **`Application.Configure(App, Handlers)`** provide bundled registration, and **`Application.Run(App)`** is the hosted loop entrypoint. Session handle APIs: [Session API](../session.md).
 
 | Topic | Description |
 |-------|-------------|
@@ -34,5 +34,4 @@ Dialog controls (`LabelWidget`, `ButtonWidget`, `InputLineWidget`, checkbox/radi
 - [Modals and dialogs](modals.md)
 - [`Std.Console`](../../console/README.md)
 - [Terminal UI index](../README.md)
-- [TUI roadmap](../../../../future/tui/README.md)
 - [Standard library index](../../README.md)

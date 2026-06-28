@@ -2,9 +2,9 @@
 //!
 //! These extend the modal stack so a closing modal can resolve a result and restore the exact
 //! window/focus state that was active before it opened. This is the retained-side foundation for
-//! the dialog Accept/Cancel and focus-restoration behavior described in the TUI review (C4).
+//! the dialog Accept/Cancel and focus-restoration behavior documented in
+//! `docs/pascal/std/tui/app/modals.md`.
 //!
-//! Review: `docs/future/tui/completed.md`
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
 use crate::{CommandId, ViewId};

@@ -1,6 +1,5 @@
 //! Rust-hosted TUI widgets painted directly by the VM host.
 //!
-//! Plan: `docs/future/tui/completed.md`
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
 mod control;

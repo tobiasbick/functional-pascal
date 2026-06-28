@@ -16,6 +16,11 @@
 
 Register once with `Application.Configure(App, Handlers)` or the explicit `Application.HostRegisterOn*` helpers.
 
+## Example
+
+See [`examples/pascal/std/graph_basics.fpas`](../../../../../examples/pascal/std/graph_basics.fpas)
+for a minimal `OnPaint` handler wired through `Application.Configure`.
+
 ## See also
 
 - [Hosted dispatch overview](README.md)

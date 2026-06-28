@@ -1,6 +1,6 @@
 # `Std.Test`
 
-Assertion procedures for FPAS test programs. Run single tests with `fpas` or batch-discover them with `fpas test` (see [CLI](../../program-structure/cli.md) and [`docs/future/test-framework/README.md`](../../../future/test-framework/README.md)).
+Assertion procedures for FPAS test programs. Run single tests with `fpas` or batch-discover them with `fpas test` (see [CLI](../../program-structure/cli.md)).
 
 ```pascal
 program Example;
@@ -90,7 +90,7 @@ When tests run via `fpas test` inside a `kind = "test"` project, the runner may 
 
 Hooks must be parameterless procedures. Names are matched case-insensitively. Use `uses Std.Test` in the helper unit if hooks need assertions.
 
-See [`docs/future/test-framework/runner.md`](../../../future/test-framework/runner.md#setup--teardown-hooks-test-projects).
+See [Projects](../../program-structure/projects.md) for `kind = "test"` manifests.
 
 ---
 
@@ -112,7 +112,7 @@ fpas test --report json
 fpas test --strict
 ```
 
-Flags and discovery rules: [CLI](../../program-structure/cli.md), [`runner.md`](../../../future/test-framework/runner.md).
+Flags and discovery rules: [CLI](../../program-structure/cli.md).
 
 ---
 
@@ -126,7 +126,8 @@ Flags and discovery rules: [CLI](../../program-structure/cli.md), [`runner.md`](
 | Hosted TUI input | `Application.TestSendKey`, `TestPump`, … (`docs/pascal/std/tui/app/README.md`) |
 | Headless graph input | `Application.OpenForTest`, `Application.TestSendKey` |
 
-Format and remaining script event types: [`scripted-input.md`](../../../future/test-framework/scripted-input.md).
+`*.script.toml` currently contains only project runner configuration such as `[test.overrides]`;
+event input belongs in native FPAS APIs (`PushReadLn`, `TestSendKey`, graph test injectors).
 
 Graph golden pixel checks (`*.expect.pixels`) still run runner-side after `Application.OpenForTest` + `Present`.
 
@@ -142,7 +143,8 @@ After a successful test run, `fpas test` may compare optional golden files besid
 | `<test>.expect.screen` | Compact CRT screen rows | Hosted `Std.Tui` paint (`GotoXY`, `ClrScr`, …) |
 | `<test>.expect.pixels` | Headless graph frame spot checks (`x y 0xRRGGBB`) | `Std.Graph` after `Present` |
 
-Details: [`runner.md`](../../../future/test-framework/runner.md) (golden stdout / screen / pixels sections).
+Golden sidecars are documented here because they are runner-side checks, not `Std.Test`
+procedures.
 
 ---
 
@@ -150,17 +152,17 @@ Details: [`runner.md`](../../../future/test-framework/runner.md) (golden stdout 
 
 | Path | Topic |
 |------|--------|
-| [`runner/assert_basics_test.fpas`](../../../tests/runner/assert_basics_test.fpas) | `AssertEquals` / `AssertTrue` / `AssertFalse` |
-| [`console/readln_test.fpas`](../../../tests/console/readln_test.fpas) | `PushReadLn` + `ReadLn` |
-| [`console/readln_order_test.fpas`](../../../tests/console/readln_order_test.fpas) | Multiple `PushReadLn` lines in order |
-| [`runner/skip_test.fpas`](../../../tests/runner/skip_test.fpas) | `Skip` + runner `SKIP` reporting |
-| [`runner/stdout_echo_test.fpas`](../../../tests/runner/stdout_echo_test.fpas) | `*.expect.stdout` |
-| [`tui/host/tui_escape_test.fpas`](../../../tests/tui/host/tui_escape_test.fpas) | Escape + `AssertScreenLine` (native headless API) |
-| [`tui/host/tui_mouse_test.fpas`](../../../tests/tui/host/tui_mouse_test.fpas) | `TestSendMouse` + `OnMouse` (native headless API) |
-| [`graph/graph_smoke_test.fpas`](../../../tests/graph/graph_smoke_test.fpas) | Headless graph (`OpenForTest` + `TestSendKey`) + `*.expect.pixels` |
-| [`suite.fpasprj`](../../../tests/suite.fpasprj) | `kind = "test"` project bundle |
+| [`runner/assert_basics_test.fpas`](../../../../tests/runner/assert_basics_test.fpas) | `AssertEquals` / `AssertTrue` / `AssertFalse` |
+| [`console/readln_test.fpas`](../../../../tests/console/readln_test.fpas) | `PushReadLn` + `ReadLn` |
+| [`console/readln_order_test.fpas`](../../../../tests/console/readln_order_test.fpas) | Multiple `PushReadLn` lines in order |
+| [`runner/skip_test.fpas`](../../../../tests/runner/skip_test.fpas) | `Skip` + runner `SKIP` reporting |
+| [`runner/stdout_echo_test.fpas`](../../../../tests/runner/stdout_echo_test.fpas) | `*.expect.stdout` |
+| [`tui/host/tui_escape_test.fpas`](../../../../tests/tui/host/tui_escape_test.fpas) | Escape + `AssertScreenLine` (native headless API) |
+| [`tui/host/tui_mouse_test.fpas`](../../../../tests/tui/host/tui_mouse_test.fpas) | `TestSendMouse` + `OnMouse` (native headless API) |
+| [`graph/graph_smoke_test.fpas`](../../../../tests/graph/graph_smoke_test.fpas) | Headless graph (`OpenForTest` + `TestSendKey`) + `*.expect.pixels` |
+| [`suite.fpasprj`](../../../../tests/suite.fpasprj) | `kind = "test"` project bundle |
 
-Manual failure demo (not auto-discovered): [`manual/assert_fail_demo.fpas`](../../../tests/manual/assert_fail_demo.fpas).
+Manual failure demo (not auto-discovered): [`manual/assert_fail_demo.fpas`](../../../../tests/manual/assert_fail_demo.fpas).
 
 ## Implementation (contributors)
 

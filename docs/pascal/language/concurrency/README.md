@@ -23,3 +23,8 @@ At startup, the runtime scans the compiled instruction stream: if the program co
 ## Keywords
 
 `go` — case-insensitive.
+
+## See also
+
+- [Language overview](../README.md)
+- [Std.Task API](../../std/concurrency/task.md)

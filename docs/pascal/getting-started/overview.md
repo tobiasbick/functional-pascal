@@ -11,6 +11,16 @@ Functional Pascal is a modern, function-first programming language built on Pasc
 - **Familiar syntax** — Pascal's `begin`, `end`, `:=`, `downto` and other well-known keywords.
 - **Case-insensitive** — Keywords and identifiers are case-insensitive, following Pascal tradition.
 
+## Example
+
+```pascal
+program Greeting;
+
+begin
+  WriteLn('Hello, Functional Pascal')
+end.
+```
+
 ## See also
 
 - [Hello world](hello-world.md)

@@ -57,6 +57,20 @@
 - **Result:** none.
 - **Effect:** enables CRT-mode rendering.
 
+## Example
+
+```pascal
+uses Std.Console;
+
+begin
+  AssignCrt();
+  TextMode(C80);
+  CursorOff();
+  Delay(100);
+  CursorOn()
+end.
+```
+
 ## See also
 
 - [Console overview](README.md)

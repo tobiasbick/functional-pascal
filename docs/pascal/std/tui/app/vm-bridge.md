@@ -1,6 +1,6 @@
 # VM bridge
 
-## VM bridge (Phase 3–4)
+## VM bridge
 
 These `[fpas_bytecode::Intrinsic](../../../../../crates/fpas-bytecode/src/intrinsic/mod.rs)` variants drive `fpas_std::TuiHost` from the VM. In Pascal they appear as **`Std.Tui.Application.Host*`** (see table below); stack order matches other TUI intrinsics: pass `Application`, duplicate with the bytecode `Dup` opcode when the handle is needed again.
 
@@ -129,7 +129,7 @@ These `[fpas_bytecode::Intrinsic](../../../../../crates/fpas-bytecode/src/intrin
 
 Samples: [`examples/pascal/tui/host_dispatch_minimal.fpas`](../../../../../examples/pascal/tui/host_dispatch_minimal.fpas) (one `HostProcessNext` step), [`examples/pascal/tui/host_dispatch_paint.fpas`](../../../../../examples/pascal/tui/host_dispatch_paint.fpas) (register `OnPaint` + `HostDispatchRedraw`), [`examples/pascal/tui/host_dispatch_quit.fpas`](../../../../../examples/pascal/tui/host_dispatch_quit.fpas) (`HostRequestQuit` from `OnPaint` + `HostRunLoop`), [`examples/pascal/tui/show_dialog.fpas`](../../../../../examples/pascal/tui/show_dialog.fpas) (`ShowFramedDialog` with label/button views and `HostSetActiveModalResult`), [`examples/pascal/tui/framed_dialog.fpas`](../../../../../examples/pascal/tui/framed_dialog.fpas) (frame-root modal walkthrough), [`apps/ide/ide.fpasprj`](../../../../../apps/ide/ide.fpasprj) (menu bar + framed About dialog).
 
-**Bytecode discriminants** (authoritative enum: [`TuiIntrinsic`](../../../../../crates/fpas-bytecode/src/intrinsic/tui.rs)): existing host and test APIs use **256..=388** as listed above; retained controls use **389..=399**, list-box operations use **400..=403**, scroll-bar/scroll-view operations use **404..=409**, and frame-root operations use **410..=422** (see [Frame roots](frames.md)). Native headless testing uses **356..=374** (see [Native TUI testing API](testing.md)). **348..=355** and **375..=378** are `Std.Test` intrinsics, not TUI.
+**Bytecode discriminants** (authoritative enum: [`TuiIntrinsic`](../../../../../crates/fpas-bytecode/src/intrinsic/tui/mod.rs)): existing host and test APIs use **256..=388** as listed above; retained controls use **389..=399**, list-box operations use **400..=403**, scroll-bar/scroll-view operations use **404..=409**, and frame-root operations use **410..=422** (see [Frame roots](frames.md)). Native headless testing uses **356..=374** (see [Native TUI testing API](testing.md)). **348..=355** and **375..=378** are `Std.Test` intrinsics, not TUI.
 
 `Application.Close` clears registered host handlers (`OnKeyPressed`, `OnResize`, `OnPaint`, `OnIdle`, `OnExit`, `OnMouse`, `OnPaste`, `OnFocusGained`, `OnFocusLost`, `OnActivate`, `OnDeactivate`, `OnCommand`), clears local view paint handlers and command maps, resets the host pump, clears the view registry (focus path and pointer capture included), clears global command bindings, clears the modal stack, and closes the session.
 

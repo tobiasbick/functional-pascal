@@ -1,6 +1,6 @@
 # Workspaces
 
-A workspace groups multiple projects, similar to a Visual Studio solution. The `acme-suite` / `apps/portal` member paths in the sample below reuse the same **illustrative** monorepo from [Projects — library dependency example](projects.md#example-program-with-a-library-dependency); see [`examples/pascal/monorepo/`](../../examples/pascal/monorepo/) for a checked-in workspace.
+A workspace groups multiple projects, similar to a Visual Studio solution. The `acme-suite` / `apps/portal` member paths in the sample below reuse the same **illustrative** monorepo from [Projects — library dependency example](projects.md#example-program-with-a-library-dependency); see [`examples/pascal/monorepo/`](../../../examples/pascal/monorepo/) for a checked-in workspace.
 
 Define a `.fpasworkspace` file in TOML format:
 

@@ -65,6 +65,16 @@ a dialog subtree.
 | `QueryScrollViewState` | `ScrollViewState(scrollOffset, lineCount)` |
 | `HostSetScrollViewLines` | Replaces lines and resets scroll |
 
+## Examples
+
+| Path | Demonstrates |
+| ---- | ------------ |
+| [`examples/pascal/tui/settings_dialog.fpas`](../../../../../examples/pascal/tui/settings_dialog.fpas) | Label, input line, checkbox, radio group, list box, memo, and OK/Cancel buttons in one framed modal |
+| [`tests/tui/modals/tui_settings_dialog_workflow_test.fpas`](../../../../../tests/tui/modals/tui_settings_dialog_workflow_test.fpas) | Headless workflow coverage for the same mixed-control dialog shape |
+| [`tests/tui/controls/tui_controls_test.fpas`](../../../../../tests/tui/controls/tui_controls_test.fpas) | Standalone label, button, input, checkbox, and radio interactions |
+| [`tests/tui/controls/tui_list_box_test.fpas`](../../../../../tests/tui/controls/tui_list_box_test.fpas) | List selection, command dispatch, scrolling, and empty-state behavior |
+| [`tests/tui/controls/tui_memo_test.fpas`](../../../../../tests/tui/controls/tui_memo_test.fpas) | Memo editing, newline insertion, paste, state query, and reset |
+
 ## Implementation (contributors)
 
 | Concern | Location |

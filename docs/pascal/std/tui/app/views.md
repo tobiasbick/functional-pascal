@@ -157,9 +157,9 @@ The Rust retained registry tracks an **active window root** (raise on click-to-f
 
 | Path | Topic |
 | ---- | ----- |
-| [`local_view_paint.fpas`](../../../../examples/pascal/tui/local_view_paint.fpas) | Parent-relative layout and `OnViewPaint` |
-| [`view_scoped_commands.fpas`](../../../../examples/pascal/tui/view_scoped_commands.fpas) | Focus-aware command maps |
-| [`show_dialog.fpas`](../../../../examples/pascal/tui/show_dialog.fpas) | Owned framed dialog with host controls and modal results |
+| [`local_view_paint.fpas`](../../../../../examples/pascal/tui/local_view_paint.fpas) | Parent-relative layout and `OnViewPaint` |
+| [`view_scoped_commands.fpas`](../../../../../examples/pascal/tui/view_scoped_commands.fpas) | Focus-aware command maps |
+| [`show_dialog.fpas`](../../../../../examples/pascal/tui/show_dialog.fpas) | Owned framed dialog with host controls and modal results |
 
 ## Implementation (contributors)
 

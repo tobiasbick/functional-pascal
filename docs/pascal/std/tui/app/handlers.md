@@ -126,13 +126,16 @@ end;
 
 ## Threading and reentrancy
 
-Same as Phase 0 of the framework plan: `**On*`** only on the **main VM thread**; no `**ReadEvent`** / `**Run`** from inside handlers; `**RequestRedraw`** and non-blocking queries are allowed. Spawned tasks must not touch TUI/console state without a future synchronized API.
+`**On*`** handlers run only on the **main VM thread**. Do not call blocking event APIs such as
+`**ReadEvent`** or re-enter `**Run`** from inside handlers. `**RequestRedraw`** and non-blocking
+queries are allowed. Spawned tasks must not touch TUI or console state directly.
 
 ---
 
 ## Optional and best-effort events
 
-Handlers that depend on terminal or OS capability (**key release**, **paste**, **focus**) are specified per terminal-event mapping in the implementation docs; if a backend cannot emit an event, the corresponding `**On`*** (when added in later phases) is **not called** or is documented as a no-op. Phase 6 of the framework plan tracks `**OnKeyReleased`** / `**OnKeyDown`** honesty.
+Handlers that depend on terminal or OS capability (**paste**, **focus**) are best-effort. If a
+backend cannot emit the event, the corresponding handler is not called.
 
 ---
 

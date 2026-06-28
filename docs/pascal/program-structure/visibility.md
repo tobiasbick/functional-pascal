@@ -2,7 +2,7 @@
 
 All declarations in a unit are **public by default**. Use the `private` keyword to restrict a declaration to the unit that defines it.
 
-Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`visibility` on declarations).
+Formal syntax: [`grammar.ebnf`](../../specs/grammar.ebnf) (`visibility` on declarations).
 
 | Annotation | Meaning |
 |---|---|

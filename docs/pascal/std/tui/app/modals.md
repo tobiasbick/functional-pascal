@@ -44,7 +44,7 @@ On entry the host:
 
 Background views remain registered but lose focus, mouse, and command routing until the modal closes.
 
-Example: [`examples/pascal/tui/show_modal_existing_view.fpas`](../../../../examples/pascal/tui/show_modal_existing_view.fpas)
+Example: [`examples/pascal/tui/show_modal_existing_view.fpas`](../../../../../examples/pascal/tui/show_modal_existing_view.fpas)
 
 ### `Application.ShowDialog(App, ModalId, X, Y, Width, Height): ViewId`
 
@@ -70,8 +70,8 @@ Typical setup after `ShowDialog`:
 
 Examples:
 
-- [`examples/pascal/tui/show_dialog.fpas`](../../../../examples/pascal/tui/show_dialog.fpas) — owned framed dialog with OK/Cancel and modal results
-- [`apps/ide/src/dialog.fpas`](../../../../apps/ide/src/dialog.fpas) — IDE Help → About dialog
+- [`examples/pascal/tui/show_dialog.fpas`](../../../../../examples/pascal/tui/show_dialog.fpas) — owned framed dialog with OK/Cancel and modal results
+- [`apps/ide/src/dialog.fpas`](../../../../../apps/ide/src/dialog.fpas) — IDE Help → About dialog
 
 ### `Application.ShowFramedDialog(...)`
 
@@ -83,9 +83,9 @@ changed. Invalid geometry therefore leaves both unchanged. Children attach to th
 subtree.
 
 Create child views at placeholder `(0, 0)`, call `HostSetViewParent`, then set frame-local layout
-with `HostSetViewRect` (see [`tui_show_framed_dialog_controls_test.fpas`](../../../../tests/tui/modals/tui_show_framed_dialog_controls_test.fpas)).
+with `HostSetViewRect` (see [`tui_show_framed_dialog_controls_test.fpas`](../../../../../tests/tui/modals/tui_show_framed_dialog_controls_test.fpas)).
 
-Example: [`examples/pascal/tui/framed_dialog.fpas`](../../../../examples/pascal/tui/framed_dialog.fpas)
+Example: [`examples/pascal/tui/framed_dialog.fpas`](../../../../../examples/pascal/tui/framed_dialog.fpas)
 
 ### `Application.CloseModal(App)`
 
@@ -179,8 +179,8 @@ Headless coverage:
 
 | Path | Topic |
 | ---- | ----- |
-| [`tui_show_dialog_test.fpas`](../../../../tests/tui/modals/tui_show_dialog_test.fpas) | `ShowDialog`, modal Escape via `HostBindCommandToActiveModal`, `HostSetActiveModalResult`, owned-root cleanup |
-| [`tui_framed_dialog_default_cancel_test.fpas`](../../../../tests/tui/modals/tui_framed_dialog_default_cancel_test.fpas) | `ShowFramedDialog`, Enter as Accept, Escape as Cancel, and owned-root cleanup |
+| [`tui_show_dialog_test.fpas`](../../../../../tests/tui/modals/tui_show_dialog_test.fpas) | `ShowDialog`, modal Escape via `HostBindCommandToActiveModal`, `HostSetActiveModalResult`, owned-root cleanup |
+| [`tui_framed_dialog_default_cancel_test.fpas`](../../../../../tests/tui/modals/tui_framed_dialog_default_cancel_test.fpas) | `ShowFramedDialog`, Enter as Accept, Escape as Cancel, and owned-root cleanup |
 
 See [Native testing](testing.md) for pump and assertion patterns.
 

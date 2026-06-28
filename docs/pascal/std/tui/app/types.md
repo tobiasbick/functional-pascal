@@ -71,7 +71,7 @@ Enum describing why the hosted loop stopped (`**Std.Tui.ExitReason`**). **Regist
 
 | Variant    | Meaning                                                                                                                                                    |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `UserQuit` | Normal exit requested by the application (for example Escape handled in `**OnKeyPressed**` calling a host **quit** primitive—Phase 3 names the intrinsic). |
+| `UserQuit` | Normal exit requested by the application, for example Escape handled in `**OnKeyPressed**` calling `**Application.HostRequestQuit(App)`**. |
 | `HostStop` | Host ended the loop for an internal reason (documented per implementation).                                                                                |
 | `HostAndUserStop` | Host stop and user quit were both requested in the same dispatch turn; host stop takes precedence but the combined reason is preserved. |
 | `HostShutdown` | The VM entered global shutdown while `Application.Run` was active (for example due to a concurrent task failure). |

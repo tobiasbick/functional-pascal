@@ -21,6 +21,18 @@ with
 
 Formal token definitions: [`grammar.ebnf`](../../specs/grammar.ebnf).
 
+## Example
+
+Keywords and identifiers are case-insensitive:
+
+```pascal
+PROGRAM KeywordDemo;
+
+BEGIN
+  writeln('same keywords, different casing')
+END.
+```
+
 ## See also
 
 - [Overview](overview.md)

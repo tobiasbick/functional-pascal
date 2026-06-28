@@ -2,7 +2,7 @@
 
 The unit system enables multi-file projects. Each source file declares its namespace via a `unit` declaration. All project files are listed in the project `.fpasprj` file (see [Projects](projects.md)).
 
-Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`unit_decl`, `program_decl`, `uses_clause`).
+Formal syntax: [`grammar.ebnf`](../../specs/grammar.ebnf) (`unit_decl`, `program_decl`, `uses_clause`).
 
 ## Unit declaration
 

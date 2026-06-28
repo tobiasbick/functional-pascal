@@ -29,7 +29,7 @@ After `uses Std.Tui;` you can refer to the unit in either form:
 
 For the **Rust-hosted dispatch bridge** (`Application.HostProcessNext`, `Application.HostDispatchRedraw`, …), see [Hosted dispatch](app/README.md).
 
-`Std.Tui` builds on `[Std.Console](console/README.md)`: the `key` field of `Std.Tui.TuiEvent` has type `**Std.Console.KeyEvent`** (and its `kind` field is `**Std.Console.KeyKind`**). The `**Tui**` prefix avoids clashing with `**Std.Console.Event**`. Import `**Std.Console**` alongside `**Std.Tui**` when you need short names such as `KeyKind` or `WriteLn`, or use fully qualified `Std.Console.*` names.
+`Std.Tui` builds on [`Std.Console`](../console/README.md): the `key` field of `Std.Tui.TuiEvent` has type **`Std.Console.KeyEvent`** (and its `kind` field is **`Std.Console.KeyKind`**). The **`Tui`** prefix avoids clashing with **`Std.Console.Event`**. Import **`Std.Console`** alongside **`Std.Tui`** when you need short names such as `KeyKind` or `WriteLn`, or use fully qualified `Std.Console.*` names.
 
 ---
 
@@ -73,7 +73,7 @@ Everything below requires `uses Std.Tui;`. Key types for `TuiEvent.key` come fro
 | procedure    | `Application.Configure(App: Application; Handlers: ApplicationHandlers)`                    | register hosted `On*` handlers                                     |
 | procedure    | `Application.Run(App: Application)`                                                         | run the hosted event loop (closes the session on exit)             |
 | procedure    | `Application.RequestRedraw(App: Application)`                                               | mark the application as needing redraw                             |
-| enum members | `Std.Console.KeyKind.`* (short `KeyKind.*` with `uses Std.Console`)                         | same as `[Std.Console](console/README.md)`                                |
+| enum members | `Std.Console.KeyKind.`* (short `KeyKind.*` with `uses Std.Console`)                         | same as [`Std.Console`](../console/README.md)                             |
 | enum members | `EventKind.Key`, `EventKind.Resize`                                                         | TUI event kinds                                                    |
 
 
@@ -113,7 +113,7 @@ end;
 
 ### Key input types (`Std.Console.KeyKind`, `Std.Console.KeyEvent`)
 
-`Std.Tui` does not define its own key types. Use `**Std.Console.KeyKind**` and `**Std.Console.KeyEvent**` for `TuiEvent.key` (see `[console.md](console/README.md)` — `ReadKeyEvent`, `KeyEvent`, `KeyKind`). With `uses Std.Console`, the short names `**KeyKind**` and `**KeyEvent**` refer to those console types.
+`Std.Tui` does not define its own key types. Use **`Std.Console.KeyKind`** and **`Std.Console.KeyEvent`** for `TuiEvent.key` (see [`Std.Console`](../console/README.md) — `ReadKeyEvent`, `KeyEvent`, `KeyKind`). With `uses Std.Console`, the short names **`KeyKind`** and **`KeyEvent`** refer to those console types.
 
 ---
 

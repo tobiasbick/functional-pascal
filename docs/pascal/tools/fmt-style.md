@@ -460,3 +460,8 @@ The formatter **normalizes** valid input. These changes are deliberate (not bugs
 - Preserving blank lines between user-chosen sections (except the fixed rules above).
 - Sorting `uses` clauses or declaration order.
 - Formatting invalid or partial syntax (recovery).
+
+## See also
+
+- [Tools index](README.md)
+- [CLI reference](../program-structure/cli.md)

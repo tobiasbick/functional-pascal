@@ -32,6 +32,11 @@ Ambiguous-width characters use neutral width. Truncation reserves the last visib
 | Control truncation | `crates/fpas-std/src/tui/widget/control/mod.rs` |
 | FPAS workflow regression | [`tests/tui/controls/tui_cell_width_test.fpas`](../../../../tests/tui/controls/tui_cell_width_test.fpas) |
 
+## Example
+
+See [`tests/tui/controls/tui_cell_width_test.fpas`](../../../../tests/tui/controls/tui_cell_width_test.fpas)
+for wide-character frame titles, labels, buttons, inputs, and truncation.
+
 ## See also
 
 - [TUI index](README.md)

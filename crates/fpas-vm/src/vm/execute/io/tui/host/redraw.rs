@@ -154,10 +154,10 @@ impl Worker {
             result?;
         }
 
-        if let Some(view) = paint_view {
-            if let Some(handler) = handler {
-                self.dispatch_local_paint(handler, view, line)?;
-            }
+        if let Some(view) = paint_view
+            && let Some(handler) = handler
+        {
+            self.dispatch_local_paint(handler, view, line)?;
         }
 
         for child in children {

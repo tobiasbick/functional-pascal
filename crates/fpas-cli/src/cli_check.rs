@@ -211,7 +211,7 @@ fn check_parsed_source(
         .any(|diagnostic| diagnostic.as_diagnostic().severity == DiagnosticSeverity::Error);
 
     for diagnostic in &parse_errors {
-        let _ = emit_check_diagnostic(path, source_paths, diagnostic.as_diagnostic(), stderr);
+        emit_check_diagnostic(path, source_paths, diagnostic.as_diagnostic(), stderr);
     }
 
     if has_errors {
@@ -231,7 +231,7 @@ fn check_parsed_program(
         Ok(_chunk) => 0,
         Err(diagnostics) => {
             for diagnostic in &diagnostics {
-                let _ = emit_check_diagnostic(path, source_paths, diagnostic, stderr);
+                emit_check_diagnostic(path, source_paths, diagnostic, stderr);
             }
             1
         }

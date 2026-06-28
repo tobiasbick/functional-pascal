@@ -45,3 +45,25 @@ impl FrameStyle {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn frame_style_palettes_keep_window_and_dialog_focus_contract() {
+        let window = FrameStyle::for_kind(FrameKind::Window);
+        assert_eq!((window.active_fg, window.active_bg), (15, 9));
+        assert_eq!((window.inactive_fg, window.inactive_bg), (7, 1));
+        assert_eq!((window.client_fg, window.client_bg), (0, 7));
+        assert_ne!(
+            (window.active_fg, window.active_bg),
+            (window.inactive_fg, window.inactive_bg)
+        );
+
+        let dialog = FrameStyle::for_kind(FrameKind::Dialog);
+        assert_eq!((dialog.active_fg, dialog.active_bg), (0, 7));
+        assert_eq!((dialog.inactive_fg, dialog.inactive_bg), (0, 7));
+        assert_eq!((dialog.client_fg, dialog.client_bg), (0, 7));
+    }
+}

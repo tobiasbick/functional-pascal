@@ -151,38 +151,44 @@ mod tests {
     use fpas_parser::parse_compilation_unit;
 
     #[test]
-    fn attaches_doc_and_block_comments_to_following_decl() {
+    fn attaches_doc_and_block_comments_to_following_decl() -> Result<(), String> {
         let source = "/// Unit doc.\nunit Demo;\n\n{ field doc }\nprivate mutable var Count: integer := 0;\n";
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
         let map = CommentMap::build(source, &unit);
         let unit_anchor = match &unit {
             fpas_parser::CompilationUnit::Unit(unit) => unit.span.offset,
-            _ => panic!("expected unit"),
+            _ => return Err("expected unit".to_string()),
         };
         assert_eq!(map.leading_at(unit_anchor), ["/// Unit doc."]);
         let decl_anchor = crate::span::decl_span(match &unit {
             fpas_parser::CompilationUnit::Unit(unit) => &unit.declarations[0],
-            _ => panic!("expected unit"),
+            _ => return Err("expected unit".to_string()),
         });
         assert_eq!(map.leading_at(decl_anchor), ["{ field doc }"]);
+        Ok(())
     }
 
     #[test]
-    fn preserves_comments_before_uses_begin_and_end_of_line() {
+    fn preserves_comments_before_uses_begin_and_end_of_line() -> Result<(), String> {
         let source = "program T;\n{ before uses }\nuses Std.Console;\n\n{ before begin }\nbegin\n  WriteLn('ok') // trail\nend. // tail";
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
         let map = CommentMap::build(source, &unit);
-        let uses_anchor = map.uses_anchor().expect("uses");
+        let Some(uses_anchor) = map.uses_anchor() else {
+            return Err("expected uses anchor".to_string());
+        };
         assert_eq!(map.leading_at(uses_anchor), ["{ before uses }"]);
-        let begin_anchor = map.begin_anchor().expect("begin");
+        let Some(begin_anchor) = map.begin_anchor() else {
+            return Err("expected begin anchor".to_string());
+        };
         assert_eq!(map.leading_at(begin_anchor), ["{ before begin }"]);
 
         let formatted = crate::format_source(source, &unit);
         assert!(formatted.contains("{ before uses }"));
         assert!(formatted.contains("{ before begin }"));
         assert!(formatted.contains("// trail"));
+        Ok(())
     }
 
     #[test]

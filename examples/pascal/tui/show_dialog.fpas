@@ -79,6 +79,15 @@ begin
     alt := false;
     meta := false;
   end;
+  var EnterKey: Std.Console.KeyEvent := record
+    kind := Std.Console.KeyKind.Enter;
+    ch := Std.Str.Chr(13);
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end;
+  Application.HostBindCommandToActiveModal(App, EnterKey, CmdDialogOk);
   Application.HostBindCommandToActiveModal(App, EscapeKey, CmdDialogCancel);
   Application.RequestRedraw(App)
 end;
@@ -167,20 +176,11 @@ begin
     alt := false;
     meta := false;
   end;
-  var EnterKey: Std.Console.KeyEvent := record
-    kind := Std.Console.KeyKind.Enter;
-    ch := Std.Str.Chr(13);
-    shift := false;
-    ctrl := false;
-    alt := false;
-    meta := false;
-  end;
   var Root: ViewId := Application.HostRegisterView(App, 0, 0, S.width, S.height);
   RootView := Some(Root);
   Application.HostRegisterOnViewPaint(App, Root, OnViewPaint);
   Application.HostBindCommand(App, OpenDialogKey, CmdOpenDialog);
   Application.HostBindCommand(App, QuitKey, CmdQuit);
-  Application.HostBindCommandToActiveModal(App, EnterKey, CmdDialogOk);
   var Handlers: ApplicationHandlers := record
     OnResize := Some(OnResize);
     OnCommand := Some(OnCommand);

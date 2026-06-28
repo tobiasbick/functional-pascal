@@ -53,49 +53,49 @@ mod tests {
     use std::path::Path;
     use std::sync::atomic::{AtomicU64, Ordering};
 
-    fn temp_file(name: &str, contents: &str) -> std::path::PathBuf {
+    fn temp_file(name: &str, contents: &str) -> Result<std::path::PathBuf, std::io::Error> {
         static NEXT: AtomicU64 = AtomicU64::new(1);
         let id = NEXT.fetch_add(1, Ordering::Relaxed);
         let path = std::env::temp_dir().join(format!(
             "fpas-parse-cache-{name}-{}-{id}.fpas",
             std::process::id()
         ));
-        fs::write(&path, contents).expect("temp source must be written");
-        path
+        fs::write(&path, contents)?;
+        Ok(path)
     }
 
     #[test]
-    fn parse_is_cached_by_canonical_path() {
-        let path = temp_file("unit", "unit Demo.Core;\n");
+    fn parse_is_cached_by_canonical_path() -> Result<(), Box<dyn std::error::Error>> {
+        let path = temp_file("unit", "unit Demo.Core;\n")?;
         let mut cache = ParsedSourceCache::new();
 
-        cache.parse(&path, 0).expect("first parse");
-        cache.parse(&path, 0).expect("cached parse");
+        cache.parse(&path, 0)?;
+        cache.parse(&path, 0)?;
 
         assert_eq!(cache.parse_miss_count(), 1);
         fs::remove_file(path).ok();
+        Ok(())
     }
 
     #[test]
-    fn parse_cache_hits_across_equivalent_paths() {
+    fn parse_cache_hits_across_equivalent_paths() -> Result<(), Box<dyn std::error::Error>> {
         let dir = std::env::temp_dir().join(format!(
             "fpas-parse-cache-dir-{}-{}",
             std::process::id(),
             AtomicU64::new(1).fetch_add(1, Ordering::Relaxed)
         ));
-        fs::create_dir_all(&dir).expect("temp dir");
+        fs::create_dir_all(&dir)?;
         let file_name = "core.fpas";
         let relative = dir.join(file_name);
-        fs::write(&relative, "unit Demo.Core;\n").expect("temp source");
+        fs::write(&relative, "unit Demo.Core;\n")?;
 
-        let absolute = fs::canonicalize(&relative).expect("canonical path");
+        let absolute = fs::canonicalize(&relative)?;
         let mut cache = ParsedSourceCache::new();
-        cache
-            .parse(Path::new(&relative), 0)
-            .expect("relative parse");
-        cache.parse(&absolute, 0).expect("absolute parse");
+        cache.parse(Path::new(&relative), 0)?;
+        cache.parse(&absolute, 0)?;
 
         assert_eq!(cache.parse_miss_count(), 1);
         fs::remove_dir_all(dir).ok();
+        Ok(())
     }
 }

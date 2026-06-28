@@ -253,7 +253,7 @@ impl Worker {
                         Some(control_record(
                             "Std.Tui.InputLineState",
                             vec![
-                                ("text", Value::Str(v.text().into())),
+                                ("text", Value::Str(v.text().to_string())),
                                 ("cursor", Value::Integer(v.cursor() as i64)),
                                 ("scrollOffset", Value::Integer(v.scroll_offset() as i64)),
                             ],
@@ -321,7 +321,7 @@ impl Worker {
                         Some(control_record(
                             "Std.Tui.MemoState",
                             vec![
-                                ("text", Value::Str(v.text().into())),
+                                ("text", Value::Str(v.text())),
                                 ("cursorLine", Value::Integer(v.cursor_line() as i64)),
                                 ("cursorColumn", Value::Integer(v.cursor_column() as i64)),
                                 ("scrollOffset", Value::Integer(v.scroll_offset() as i64)),

@@ -1,6 +1,6 @@
 # TUI Plan: Widget Polish
 
-**Status:** next active plan.
+**Status:** complete.
 
 Goal: improve retained widget ergonomics without changing the retained engine contract.
 
@@ -13,15 +13,28 @@ Goal: improve retained widget ergonomics without changing the retained engine co
 
 ## Work Items
 
-- [ ] Review button default/cancel behavior in framed dialogs and decide whether a public helper is
+- [x] Review button default/cancel behavior in framed dialogs and decide whether a public helper is
   warranted or existing command binding is enough.
-- [ ] Add an example that combines frame layout, labels, input line, checkbox/radio, list box, and
+
+  Decision: no new public helper for now. OK/Cancel buttons use command ids, and Enter/Escape use
+  `HostBindCommandToActiveModal` after the dialog opens so button clicks and keyboard defaults share
+  the same `OnCommand` path.
+- [x] Add an example that combines frame layout, labels, input line, checkbox/radio, list box, and
   memo in one small settings dialog.
-- [ ] Improve list box and memo empty-state rendering if current behavior is hard to inspect in
+
+  Added `examples/pascal/tui/settings_dialog.fpas`.
+- [x] Improve list box and memo empty-state rendering if current behavior is hard to inspect in
   headless screenshots.
-- [ ] Audit control focus visuals for consistency across active frame, inactive frame, and modal
+
+  Empty list boxes and unfocused empty memos now paint a disabled `(empty)` placeholder.
+- [x] Audit control focus visuals for consistency across active frame, inactive frame, and modal
   dialog palettes.
-- [ ] Add any missing FPAS workflow tests for the example-level control combinations above.
+  Audit result: focused controls share the dialog active palette; input-line and memo focus is shown
+  by the cursor cell using that same palette. Window frames intentionally distinguish active and
+  inactive chrome, while dialog frames keep gray chrome in both states.
+- [x] Add any missing FPAS workflow tests for the example-level control combinations above.
+  Added `tests/tui/modals/tui_settings_dialog_workflow_test.fpas` for the settings-dialog control
+  mix and modal close flow.
 
 ## Acceptance Criteria
 

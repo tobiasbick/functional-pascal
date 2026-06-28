@@ -7,6 +7,7 @@ mod discover;
 mod expect_pixels;
 mod expect_stdout;
 mod hooks;
+mod link;
 mod parallel;
 mod report;
 mod run;
@@ -18,8 +19,9 @@ use std::path::{Path, PathBuf};
 use crate::cli_input::{TestCliConfig, TestReportFormat};
 use discover::{discover_test_files, filter_test_paths};
 use fpas_project as project;
+use link::LinkContextCache;
 use report::{Summary, TestOutcome, print_json_report, print_summary};
-use run::{LinkContext, run_single_test, test_display_path};
+use run::{run_single_test, test_display_path};
 
 fn finish_test_run(
     config: &TestCliConfig,
@@ -93,9 +95,10 @@ fn run_tests_sequential(
     stderr: &mut dyn Write,
 ) -> i32 {
     let mut summary = Summary::default();
+    let mut links = LinkContextCache::new();
     for (index, path) in paths.iter().enumerate() {
         let display = test_display_path(path).into_owned();
-        let link = match link_context_for_test(path) {
+        let link = match links.context_for_test(path) {
             Ok(Some(context)) => Some(context),
             Ok(None) => None,
             Err(message) => {
@@ -135,10 +138,11 @@ fn run_tests_parallel(
     let mut summary = Summary::default();
     let mut prepared = Vec::new();
     let mut preload_results = Vec::new();
+    let mut links = LinkContextCache::new();
 
     for (index, path) in paths.into_iter().enumerate() {
         let display = test_display_path(&path).into_owned();
-        match link_context_for_test(&path) {
+        match links.context_for_test(&path) {
             Ok(link) => prepared.push(parallel::PreparedTest {
                 index,
                 path,
@@ -180,64 +184,6 @@ fn record_not_run_tests(summary: &mut Summary, stderr: &mut dyn Write, paths: &[
         let display = test_display_path(path).into_owned();
         let _ = writeln!(stderr, "  ---  {display} (not run, --fail-fast)");
         summary.record(&display, TestOutcome::NotRun);
-    }
-}
-
-fn link_context_for_test(path: &Path) -> Result<Option<LinkContext>, String> {
-    let Some(project_file) = find_enclosing_project(path)? else {
-        return Ok(None);
-    };
-    let loaded = project::load_project(&project_file)?;
-    let hooks = hooks::discover_test_hooks(&loaded.source_files)?;
-    Ok(Some(LinkContext {
-        source_files: loaded.source_files,
-        link_meta: loaded.link_meta,
-        test_manifest: loaded.test_manifest,
-        hooks,
-    }))
-}
-
-fn find_enclosing_project(start: &Path) -> Result<Option<PathBuf>, String> {
-    use crate::cli_paths::{PROJECT_FILE_EXTENSION, has_extension};
-
-    let mut dir = start
-        .parent()
-        .ok_or_else(|| {
-            format!(
-                "Cannot resolve enclosing project for `{}`.",
-                start.display()
-            )
-        })?
-        .to_path_buf();
-    loop {
-        let mut candidates = Vec::new();
-        if let Ok(read_dir) = std::fs::read_dir(&dir) {
-            for entry in read_dir.flatten() {
-                let path = entry.path();
-                if path.is_file() && has_extension(&path, PROJECT_FILE_EXTENSION) {
-                    candidates.push(path);
-                }
-            }
-        }
-        candidates.sort();
-        match candidates.len() {
-            0 => {}
-            1 => return Ok(Some(candidates.remove(0))),
-            _ => {
-                let entries = candidates
-                    .iter()
-                    .map(|path| path.display().to_string())
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                return Err(format!(
-                    "Found multiple `.fpasprj` files in `{}`: {entries}.\n  help: Keep one project manifest per directory or pass an explicit `.fpasprj` path.",
-                    dir.display()
-                ));
-            }
-        }
-        if !dir.pop() {
-            return Ok(None);
-        }
     }
 }
 
@@ -664,6 +610,39 @@ mod tests {
                 filter: None,
                 report: None,
                 timeout: None,
+                jobs: 1,
+                strict: false,
+            },
+            &mut stdout,
+            &mut stderr,
+        );
+
+        assert_eq!(exit, 0);
+        let text = String::from_utf8(stderr).expect("utf-8");
+        assert!(text.contains("SKIP  skip_test.fpas"));
+        assert!(text.contains("1 skipped"));
+    }
+
+    #[test]
+    fn test_cli_reports_skipped_tests_with_timeout() {
+        let cwd = create_temp_dir("fpas-test-skip-timeout");
+        write_text(
+            &cwd.join("skip_test.fpas"),
+            "program S;\nuses Std.Test;\nbegin Skip('later') end.",
+        );
+
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+        let exit = test_cli(
+            TestCliConfig {
+                input: crate::CliInput::SourceFile(cwd.clone()),
+                cwd,
+                fail_fast: false,
+                list_only: false,
+                script_path: None,
+                filter: None,
+                report: None,
+                timeout: Some(Duration::from_secs(1)),
                 jobs: 1,
                 strict: false,
             },

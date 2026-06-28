@@ -31,7 +31,7 @@ Requires `uses Std.Test;`.
 | procedure | `AssertFalse(Cond: boolean)` | fail when `Cond` is true |
 | procedure | `AssertEquals(Expected; Actual)` | equality for `integer`, `boolean`, `string`, or `real` (both operands same type) |
 | procedure | `Fail(Msg: string)` | unconditional failure |
-| procedure | `Skip(Msg: string)` | print skip reason; runner reports `SKIP` (exit `0` unless `fpas test --strict`) |
+| procedure | `Skip(Msg: string)` | mark the current test skipped; runner reports `SKIP` (exit `0` unless `fpas test --strict`) |
 | procedure | `PushReadLn(Line: string)` | queue one line for the next `Std.Console.ReadLn` (native tests) |
 | procedure | `AssertScreenLine(Expected: string; Y: integer)` | fail when CRT row `Y` text differs (headless/TUI back buffer) |
 | procedure | `AssertScreenCell(X, Y: integer; Ch: string; Fg, Bg: integer)` | fail when one CRT cell differs (`Fg`/`Bg` are packed colors `0..=15`) |
@@ -59,7 +59,7 @@ Unconditional failure with **F4023** and user message.
 
 ### `procedure Skip(Msg: string)`
 
-Print `test skipped: …` to stderr and continue. Does not raise **F4023**. The `fpas test` runner records the test as **skipped** (`SKIP` line, included in summary). Skipped tests do not fail the run unless you pass `--strict` (exit code `1` when any test was skipped).
+Mark the current test as skipped and continue. Does not raise **F4023**. The `fpas test` runner records the test as **skipped** (`SKIP` line, included in summary). Skipped tests do not fail the run unless you pass `--strict` (exit code `1` when any test was skipped).
 
 ### `procedure PushReadLn(Line: string)`
 

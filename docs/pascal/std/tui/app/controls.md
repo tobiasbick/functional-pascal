@@ -37,6 +37,10 @@ a dialog subtree.
   selects it directly.
 - Optional command ids invoke `ApplicationHandlers.OnCommand` after activation.
 - List boxes use Up/Down/Home/End, Enter/Space, direct row clicks, and mouse-wheel scrolling.
+  Empty list boxes paint a disabled `(empty)` placeholder in the first row.
+- Empty memos paint a disabled `(empty)` placeholder until they receive focus or contain text.
+- Focused buttons, checkboxes, selected list-box rows, and focused radio options use the shared
+  active dialog palette. Input lines and memos use the same active palette for the cursor cell.
 - Scroll bars and scroll views use Up/Down/Home/End, PageUp/PageDown, mouse-wheel scrolling, and
   scroll-bar arrow/track clicks. Dragging the thumb captures the pointer until button release.
   Scroll views reserve one column for an integrated vertical bar when content overflows.

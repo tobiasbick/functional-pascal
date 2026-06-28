@@ -11,6 +11,8 @@ use crate::{
 use super::state::FrameScrollInteraction;
 use super::{FrameContentSize, FrameGeometry, FrameRootState, FrameStyle};
 
+type CellStyle = (u8, u8);
+
 /// Query state for one scrollable frame root.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FrameScrollState {
@@ -484,8 +486,7 @@ fn paint_horizontal(
         0,
         rect.y,
         '◄',
-        style.arrow_fg,
-        style.bg,
+        (style.arrow_fg, style.bg),
     );
     paint_cell_at(
         console,
@@ -494,8 +495,7 @@ fn paint_horizontal(
         width.saturating_sub(1),
         rect.y,
         '►',
-        style.arrow_fg,
-        style.bg,
+        (style.arrow_fg, style.bg),
     );
     for col in 1..width.saturating_sub(1) {
         let track_col = col - 1;
@@ -509,7 +509,7 @@ fn paint_horizontal(
         } else {
             style.fg
         };
-        paint_cell_at(console, rect, clip, col, rect.y, ch, fg, style.bg);
+        paint_cell_at(console, rect, clip, col, rect.y, ch, (fg, style.bg));
     }
 }
 
@@ -600,7 +600,7 @@ fn paint_cell(
     fg: u8,
     bg: u8,
 ) {
-    paint_cell_at(console, rect, clip, 0, rect.y + row as i64, ch, fg, bg);
+    paint_cell_at(console, rect, clip, 0, rect.y + row as i64, ch, (fg, bg));
 }
 
 fn paint_cell_at(
@@ -610,11 +610,11 @@ fn paint_cell_at(
     col: usize,
     y: i64,
     ch: char,
-    fg: u8,
-    bg: u8,
+    style: CellStyle,
 ) {
     let x = rect.x + col as i64;
     if clip.contains_point(x, y) {
+        let (fg, bg) = style;
         console.write_char_at_crt(x, y, ch, fg, bg);
     }
 }

@@ -5,7 +5,7 @@
 use super::{ViewId, ViewRect, ViewRegistry};
 
 /// Layout flags controlling how a view tracks parent size changes.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct ViewLayout {
     /// Pin the left edge to the parent's left edge plus [`margin_left`](Self::margin_left).
     pub anchor_left: bool,
@@ -23,21 +23,6 @@ pub struct ViewLayout {
     pub margin_right: i64,
     /// Offset from the parent's bottom edge when [`anchor_bottom`](Self::anchor_bottom) is set.
     pub margin_bottom: i64,
-}
-
-impl Default for ViewLayout {
-    fn default() -> Self {
-        Self {
-            anchor_left: false,
-            anchor_top: false,
-            anchor_right: false,
-            anchor_bottom: false,
-            margin_left: 0,
-            margin_top: 0,
-            margin_right: 0,
-            margin_bottom: 0,
-        }
-    }
 }
 
 impl ViewLayout {

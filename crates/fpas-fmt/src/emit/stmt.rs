@@ -360,9 +360,7 @@ fn finish_stmt_line(emitter: &mut Emitter, comments: &CommentMap, stmt: &Stmt, i
         emitter.write(";");
     }
     emit_trailing_comments(emitter, comments, stmt_start(stmt));
-    if !is_last {
-        emitter.write_line_end();
-    } else if !emitter.ends_with_newline() {
+    if !is_last || !emitter.ends_with_newline() {
         emitter.write_line_end();
     }
 }

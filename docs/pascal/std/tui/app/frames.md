@@ -45,7 +45,8 @@ activation.
 ## Rendering
 
 `HostCreateFrameView` attaches a native `FrameWidget` (`ViewKind.Frame`). Window frames use an
-active light-blue title/border and inactive blue title/border; dialog frames use a gray palette.
+active light-blue title/border and inactive blue title/border; dialog frames use the gray dialog
+palette for both active and inactive chrome.
 The client area is painted before the frame's local handler and descendants. The double-line
 border, title, and enabled `■` / `▲` / `▼` chrome cells are painted afterward, so child views cannot
 overwrite frame chrome. Titles that exceed their slot end with `…`.

@@ -7,6 +7,8 @@ use super::scroll_bar::{ScrollBarStyle, ScrollBarWidget};
 use crate::text::{char_display_offset, display_width, layout_display_cells};
 use crate::{Console, DamageRegion, ScrollBarHit, ScrollBarOrientation, ScrollModel, ViewRect};
 
+const EMPTY_PLACEHOLDER: &str = "(empty)";
+
 /// Cursor position as a zero-based line and character index within that line.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct TextPos {
@@ -358,6 +360,24 @@ impl MemoWidget {
         let content = self.content_rect(rect);
         console.fill_rect_crt(content, fg, self.style.bg, ' ');
 
+        if self.is_empty() && !self.focused && content.height > 0 {
+            let line_rect = ViewRect {
+                x: content.x,
+                y: content.y,
+                width: content.width,
+                height: 1,
+            };
+            paint_chars(
+                console,
+                line_rect,
+                clip,
+                layout_display_cells(EMPTY_PLACEHOLDER, line_rect.width.max(0) as usize)
+                    .into_iter(),
+                |_| self.style.disabled_fg,
+                self.style.bg,
+            );
+        }
+
         let (sel_start, sel_end) = self.normalized_selection();
         for (row, line) in self
             .lines
@@ -424,6 +444,10 @@ impl MemoWidget {
             bar.style = self.style.scrollbar;
             bar.paint(console, bar_rect, damage);
         }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.lines.len() == 1 && self.lines[0].is_empty()
     }
 
     fn normalized_selection(&self) -> (Option<TextPos>, Option<TextPos>) {

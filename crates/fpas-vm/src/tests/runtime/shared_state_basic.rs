@@ -81,18 +81,6 @@ fn store_poll_available_then_consumed() {
         shared.all_tasks_recorded(&[5]),
         "completion remains observable after consume so WaitAll can observe finished tasks"
     );
-
-    shared.remove_task_results(&[5]);
-    assert!(!shared.all_tasks_recorded(&[5]));
-}
-
-#[test]
-fn remove_task_results_clears_completion_records() {
-    let shared = minimal_shared_state(minimal_halt_chunk());
-    shared.store_task_result(9, Value::Integer(1));
-    assert!(shared.all_tasks_recorded(&[9]));
-    shared.remove_task_results(&[9]);
-    assert!(!shared.all_tasks_recorded(&[9]));
 }
 
 #[test]

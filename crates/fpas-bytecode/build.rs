@@ -1,10 +1,11 @@
 //! Concatenates `src/intrinsic/tui/variants/*.inc` into a generated `TuiIntrinsic` enum.
 
 use std::env;
+use std::error::Error;
 use std::fs;
 use std::path::Path;
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
     let variants_dir = manifest_dir.join("src/intrinsic/tui/variants");
     println!("cargo:rerun-if-changed={}", variants_dir.display());
@@ -23,7 +24,7 @@ fn main() {
         let path = variants_dir.join(fragment);
         println!("cargo:rerun-if-changed={}", path.display());
         let body = fs::read_to_string(&path)
-            .unwrap_or_else(|error| panic!("failed to read {}: {error}", path.display()));
+            .map_err(|error| format!("failed to read {}: {error}", path.display()))?;
         if !variants.is_empty() && !variants.ends_with('\n') {
             variants.push('\n');
         }
@@ -47,7 +48,7 @@ pub enum TuiIntrinsic {{
 "#
     );
 
-    let out_dir = env::var("OUT_DIR").expect("OUT_DIR");
-    fs::write(Path::new(&out_dir).join("tui_intrinsic.rs"), generated)
-        .expect("write generated tui intrinsic");
+    let out_dir = env::var("OUT_DIR")?;
+    fs::write(Path::new(&out_dir).join("tui_intrinsic.rs"), generated)?;
+    Ok(())
 }

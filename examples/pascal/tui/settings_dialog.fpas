@@ -1,0 +1,245 @@
+{ Settings dialog demo — framed modal with retained controls. }
+
+program TuiSettingsDialog;
+
+uses Std.Console, Std.Str, Std.Tui;
+
+const
+  CmdOpenDialog: integer := 1;
+  CmdDialogOk: integer := 2;
+  CmdDialogCancel: integer := 3;
+  CmdProfileBasic: integer := 10;
+  CmdProfilePro: integer := 11;
+  CmdQuit: integer := 99;
+  DialogModalId: integer := 30;
+  ModalResultAccept: integer := 1;
+  ModalResultCancel: integer := 2;
+  DialogWidth: integer := 58;
+  DialogHeight: integer := 18;
+
+mutable var
+  mutable var RootView: option of ViewId := None;
+  mutable var LastResult: string := 'none';
+  mutable var LastProfile: string := 'Basic';
+
+function PlainKey(Kind: Std.Console.KeyKind; Ch: string): Std.Console.KeyEvent;
+begin
+  return record
+    kind := Kind;
+    ch := Ch;
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+function CtrlKey(Ch: string): Std.Console.KeyEvent;
+begin
+  return record
+    kind := Std.Console.KeyKind.Character;
+    ch := Ch;
+    shift := false;
+    ctrl := true;
+    alt := false;
+    meta := false;
+  end
+end;
+
+function ProfileOptions(): array of RadioOption;
+begin
+  return [
+           record
+
+             label := 'Basic';
+
+             accelerator := Some('B');
+
+             commandId := Some(CmdProfileBasic);
+
+             enabled := true;
+
+           end,
+           record
+
+             label := 'Pro';
+
+             accelerator := Some('P');
+
+             commandId := Some(CmdProfilePro);
+
+             enabled := true;
+
+           end
+
+         ]
+end;
+
+function ThemeItems(): array of ListBoxItem;
+begin
+  return [
+           record text := 'Classic'; commandId := None; enabled := true; end,
+           record text := 'Night'; commandId := None; enabled := true; end,
+           record text := 'High contrast'; commandId := None; enabled := true; end
+
+         ]
+end;
+
+procedure CloseDialog(App: Application; ResultCode: integer);
+begin
+  if Application.QueryModalDepth(App) = 0 then
+  begin
+    return
+  end;
+  Application.HostSetActiveModalResult(App, ResultCode);
+  Application.CloseModal(App);
+  if ResultCode = ModalResultAccept then
+  begin
+    LastResult := 'saved'
+  end
+  else if ResultCode = ModalResultCancel then
+  begin
+    LastResult := 'cancelled'
+  end;
+  Application.RequestRedraw(App)
+end;
+
+procedure OpenSettings(App: Application);
+begin
+  if Application.QueryModalDepth(App) > 0 then
+  begin
+    return
+  end;
+  var S: Size := Application.Size(App);
+  mutable var X: integer := ((S.width - DialogWidth) div 2) + 1;
+  mutable var Y: integer := ((S.height - DialogHeight) div 2) + 1;
+  if X < 1 then
+  begin
+    X := 1
+  end;
+  if Y < 1 then
+  begin
+    Y := 1
+  end;
+  var Dialog: ViewId := Application.ShowFramedDialog(App, DialogModalId, X, Y, DialogWidth, DialogHeight, 'Project settings', true, false, false, false, true);
+  var NameLabel: ViewId := Application.HostCreateLabelView(App, 0, 0, 14, 1, 'Project name', Some('P'));
+  Application.HostSetViewParent(App, NameLabel, Some(Dialog));
+  Application.HostSetViewRect(App, NameLabel, 2, 1, 14, 1);
+  var NameInput: ViewId := Application.HostCreateInputLineView(App, 0, 0, 26, 1, 'Functional Pascal');
+  Application.HostSetViewParent(App, NameInput, Some(Dialog));
+  Application.HostSetViewRect(App, NameInput, 17, 1, 26, 1);
+  var AutoSave: ViewId := Application.HostCreateCheckBoxView(App, 0, 0, 22, 1, 'Enable autosave', Some('A'), None, true);
+  Application.HostSetViewParent(App, AutoSave, Some(Dialog));
+  Application.HostSetViewRect(App, AutoSave, 2, 3, 22, 1);
+  var Profile: ViewId := Application.HostCreateRadioGroupView(App, 0, 0, 18, 2, ProfileOptions());
+  Application.HostSetViewParent(App, Profile, Some(Dialog));
+  Application.HostSetViewRect(App, Profile, 2, 5, 18, 2);
+  var ThemeLabel: ViewId := Application.HostCreateLabelView(App, 0, 0, 12, 1, 'Theme', Some('T'));
+  Application.HostSetViewParent(App, ThemeLabel, Some(Dialog));
+  Application.HostSetViewRect(App, ThemeLabel, 30, 3, 12, 1);
+  var ThemeList: ViewId := Application.HostCreateListBoxView(App, 0, 0, 20, 4, ThemeItems());
+  Application.HostSetViewParent(App, ThemeList, Some(Dialog));
+  Application.HostSetViewRect(App, ThemeList, 30, 4, 20, 4);
+  var NotesLabel: ViewId := Application.HostCreateLabelView(App, 0, 0, 12, 1, 'Notes', Some('N'));
+  Application.HostSetViewParent(App, NotesLabel, Some(Dialog));
+  Application.HostSetViewRect(App, NotesLabel, 2, 8, 12, 1);
+  var Notes: ViewId := Application.HostCreateMemoView(App, 0, 0, 48, 4, ('One setting per line.' + Std.Str.Chr(10)) +
+                                                                        'Tab moves focus.');
+  Application.HostSetViewParent(App, Notes, Some(Dialog));
+  Application.HostSetViewRect(App, Notes, 2, 9, 48, 4);
+  var OkButton: ViewId := Application.HostCreateButtonView(App, 0, 0, 8, 1, 'OK', Some(CmdDialogOk), true);
+  Application.HostSetViewParent(App, OkButton, Some(Dialog));
+  Application.HostSetViewRect(App, OkButton, 30, 14, 8, 1);
+  var CancelButton: ViewId := Application.HostCreateButtonView(App, 0, 0, 12, 1, 'Cancel', Some(CmdDialogCancel), false);
+  Application.HostSetViewParent(App, CancelButton, Some(Dialog));
+  Application.HostSetViewRect(App, CancelButton, 40, 14, 12, 1);
+  Application.HostBindCommandToActiveModal(App, PlainKey(Std.Console.KeyKind.Enter, Std.Str.Chr(13)), CmdDialogOk);
+  Application.HostBindCommandToActiveModal(App, PlainKey(Std.Console.KeyKind.Escape, Std.Str.Chr(27)), CmdDialogCancel);
+  Application.RequestRedraw(App)
+end;
+
+procedure ClearBounds(Bounds: Std.Tui.Rect);
+begin
+  for Row: integer := 0 to Bounds.height - 1 do
+  begin
+    GotoXY(1, Row + 1);
+    for Col: integer := 0 to Bounds.width - 1 do
+    begin
+      Write(' ')
+    end
+  end
+end;
+
+procedure OnRootPaint(App: Application; ViewId: ViewId; Bounds: Std.Tui.Rect);
+begin
+  ClearBounds(Bounds);
+  GotoXY(1, 1);
+  WriteLn('Settings dialog demo');
+  GotoXY(1, 3);
+  WriteLn('Ctrl+D opens the dialog. Ctrl+Q exits.');
+  GotoXY(1, 5);
+  WriteLn('Last result: ', LastResult);
+  GotoXY(1, 6);
+  WriteLn('Last profile command: ', LastProfile)
+end;
+
+procedure OnCommand(App: Application; CommandId: integer);
+begin
+  if CommandId = CmdOpenDialog then
+  begin
+    OpenSettings(App)
+  end
+  else if CommandId = CmdDialogOk then
+  begin
+    CloseDialog(App, ModalResultAccept)
+  end
+  else if CommandId = CmdDialogCancel then
+  begin
+    CloseDialog(App, ModalResultCancel)
+  end
+  else if CommandId = CmdProfileBasic then
+  begin
+    LastProfile := 'Basic';
+    Application.RequestRedraw(App)
+  end
+  else if CommandId = CmdProfilePro then
+  begin
+    LastProfile := 'Pro';
+    Application.RequestRedraw(App)
+  end
+  else if CommandId = CmdQuit then
+  begin
+    Application.HostRequestQuit(App)
+  end
+end;
+
+procedure OnResize(App: Application; NewSize: Size);
+begin
+  case RootView of
+    Some(Root):
+    begin
+      Application.HostSetViewRect(App, Root, 0, 0, NewSize.width, NewSize.height)
+    end;
+    None:
+    begin
+    end
+  end;
+  Application.RequestRedraw(App)
+end;
+
+begin
+  var App: Application := Application.Open();
+  var S: Size := Application.Size(App);
+  var Root: ViewId := Application.HostRegisterView(App, 0, 0, S.width, S.height);
+  RootView := Some(Root);
+  Application.HostRegisterOnViewPaint(App, Root, OnRootPaint);
+  Application.HostBindCommand(App, CtrlKey('d'), CmdOpenDialog);
+  Application.HostBindCommand(App, CtrlKey('q'), CmdQuit);
+  var Handlers: ApplicationHandlers := record
+    OnResize := Some(OnResize);
+    OnCommand := Some(OnCommand);
+  end;
+  Application.Configure(App, Handlers);
+  Application.RequestRedraw(App);
+  Application.Run(App)
+end.

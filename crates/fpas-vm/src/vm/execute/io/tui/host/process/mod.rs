@@ -150,8 +150,8 @@ impl Worker {
                 let terminal = ViewRect {
                     x: 0,
                     y: 0,
-                    width: width as i64,
-                    height: height as i64,
+                    width,
+                    height,
                 };
                 self.with_tui(|tui| {
                     let _ = tui

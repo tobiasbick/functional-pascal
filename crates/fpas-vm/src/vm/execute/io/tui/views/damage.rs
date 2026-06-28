@@ -92,8 +92,8 @@ impl Worker {
         ViewRect {
             x: 0,
             y: 0,
-            width: width as i64,
-            height: height as i64,
+            width,
+            height,
         }
     }
 }

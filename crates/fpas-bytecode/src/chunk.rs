@@ -374,13 +374,14 @@ mod tests {
     }
 
     #[test]
-    fn is_valid_constant_index_tracks_pool_size() {
+    fn is_valid_constant_index_tracks_pool_size() -> Result<(), ChunkError> {
         let mut chunk = Chunk::new();
         assert!(!chunk.is_valid_constant_index(0));
 
-        let idx = chunk.add_constant(Value::Integer(1)).expect("constant");
+        let idx = chunk.add_constant(Value::Integer(1))?;
         assert_eq!(idx, 0);
         assert!(chunk.is_valid_constant_index(0));
         assert!(!chunk.is_valid_constant_index(1));
+        Ok(())
     }
 }

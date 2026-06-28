@@ -324,19 +324,6 @@ impl SharedState {
         }
     }
 
-    /// Drop completion records for the given task ids after `WaitAll` observes them.
-    pub(crate) fn remove_task_results(&self, task_ids: &[u64]) {
-        let mut task_results = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
-        let mut completions = self
-            .task_completions
-            .lock()
-            .unwrap_or_else(|e| e.into_inner());
-        for id in task_ids {
-            task_results.remove(id);
-            completions.remove(id);
-        }
-    }
-
     /// Signal all workers to shut down.
     pub(crate) fn request_shutdown(&self) {
         self.shutdown.store(true, Ordering::Release);

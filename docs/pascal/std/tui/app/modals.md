@@ -128,7 +128,10 @@ Reserve custom dialog outcomes at **`1000` and above** so they do not collide wi
 
 ## Enter, Escape, and modal-local commands
 
-The retained modal stack can store default (Enter) and cancel (Escape) action commands internally, but those bindings are **not** yet exposed as Pascal `Host*` calls. Applications wire dialog dismissal through **`HostBindCommandToActiveModal`** and **`OnCommand`**, as in `show_dialog.fpas` and `Ide.Dialog`:
+Default (Enter) and cancel (Escape) actions are regular modal-local command bindings. No separate
+public helper is needed for the current API: applications give OK/Cancel buttons command ids, bind
+Enter/Escape with **`HostBindCommandToActiveModal`**, and handle both button clicks and shortcuts in
+the same **`OnCommand`** routine, as in `show_dialog.fpas` and `Ide.Dialog`:
 
 ```pascal
 Application.HostBindCommandToActiveModal(App, EnterKey, CmdDialogOk);
@@ -177,6 +180,7 @@ Headless coverage:
 | Path | Topic |
 | ---- | ----- |
 | [`tui_show_dialog_test.fpas`](../../../../tests/tui/modals/tui_show_dialog_test.fpas) | `ShowDialog`, modal Escape via `HostBindCommandToActiveModal`, `HostSetActiveModalResult`, owned-root cleanup |
+| [`tui_framed_dialog_default_cancel_test.fpas`](../../../../tests/tui/modals/tui_framed_dialog_default_cancel_test.fpas) | `ShowFramedDialog`, Enter as Accept, Escape as Cancel, and owned-root cleanup |
 
 See [Native testing](testing.md) for pump and assertion patterns.
 

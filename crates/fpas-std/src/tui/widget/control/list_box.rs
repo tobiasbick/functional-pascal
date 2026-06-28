@@ -5,6 +5,8 @@
 use super::{paint_chars, truncated_chars};
 use crate::{CommandId, Console, DamageRegion, ScrollModel, ViewRect};
 
+const EMPTY_PLACEHOLDER: &str = "(empty)";
+
 /// One selectable list-box row.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ListBoxItem {
@@ -138,6 +140,23 @@ impl ListBoxWidget {
             return;
         };
         c.fill_rect_crt(clip, self.style.fg, self.style.bg, ' ');
+        if self.items.is_empty() && r.height > 0 {
+            let rr = ViewRect {
+                x: r.x,
+                y: r.y,
+                width: r.width,
+                height: 1,
+            };
+            paint_chars(
+                c,
+                rr,
+                clip,
+                truncated_chars(EMPTY_PLACEHOLDER, rr.width),
+                |_| self.style.disabled_fg,
+                self.style.bg,
+            );
+            return;
+        }
         for (row, item) in self
             .items
             .iter()

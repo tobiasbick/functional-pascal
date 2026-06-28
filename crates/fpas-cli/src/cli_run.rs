@@ -162,7 +162,7 @@ fn run_source_impl(
         .any(|diagnostic| diagnostic.as_diagnostic().severity == DiagnosticSeverity::Error);
 
     for diagnostic in &parse_errors {
-        let _ = emit_diagnostic(path, None, diagnostic.as_diagnostic(), stderr);
+        emit_diagnostic(path, None, diagnostic.as_diagnostic(), stderr);
     }
 
     if has_errors {
@@ -194,7 +194,7 @@ fn run_compiled_program(
         Ok(chunk) => chunk,
         Err(diagnostics) => {
             for diagnostic in &diagnostics {
-                let _ = emit_diagnostic(path, source_paths, diagnostic, stderr);
+                emit_diagnostic(path, source_paths, diagnostic, stderr);
             }
             return 1;
         }
@@ -202,7 +202,7 @@ fn run_compiled_program(
 
     let mut vm = fpas_vm::Vm::with_writer_and_args(chunk, stdout, program_args);
     if let Err(diagnostic) = vm.run() {
-        let _ = emit_diagnostic(path, source_paths, &diagnostic, stderr);
+        emit_diagnostic(path, source_paths, &diagnostic, stderr);
         return 2;
     }
 

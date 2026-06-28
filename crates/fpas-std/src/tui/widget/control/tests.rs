@@ -235,6 +235,40 @@ fn memo_cursor_uses_display_width_for_wide_characters() {
 }
 
 #[test]
+fn empty_memo_paints_placeholder_until_focused() {
+    let mut placeholder_console = console();
+    let memo = MemoWidget::new("", 2);
+
+    memo.paint(
+        &mut placeholder_console,
+        rect(0, 0, 10, 2),
+        DamageRegion::FullFrame,
+    );
+
+    placeholder_console
+        .finish_tui_paint(loc())
+        .expect("paint should finish");
+    assert_eq!(placeholder_console.test_cell(1, 1), ('(', 8, 7));
+    assert_eq!(placeholder_console.test_cell(2, 1), ('e', 8, 7));
+
+    let mut focused_console = console();
+    let mut focused = MemoWidget::new("", 2);
+    focused.focused = true;
+
+    focused.paint(
+        &mut focused_console,
+        rect(0, 0, 10, 2),
+        DamageRegion::FullFrame,
+    );
+
+    focused_console
+        .finish_tui_paint(loc())
+        .expect("paint should finish");
+    assert_eq!(focused_console.test_cell(1, 1), (' ', 15, 0));
+    assert_eq!(focused_console.test_cell(2, 1), (' ', 0, 7));
+}
+
+#[test]
 fn disabled_input_line_uses_disabled_color_and_hides_cursor() {
     let mut console = console();
     let mut input = InputLineWidget::new("abc", InputLineStyle::default());
@@ -366,4 +400,20 @@ fn radio_group_paints_selected_focused_and_disabled_rows() {
     assert_eq!(console.test_cell(5, 2), ('M', 8, 7));
     assert_eq!(console.test_cell(2, 3), ('*', 15, 0));
     assert_eq!(console.test_cell(5, 3), ('L', 15, 0));
+}
+
+#[test]
+fn empty_list_box_paints_placeholder() {
+    let mut console = console();
+    let list = ListBoxWidget::new(Vec::new(), 3);
+
+    list.paint(&mut console, rect(0, 0, 10, 3), DamageRegion::FullFrame);
+
+    console
+        .finish_tui_paint(loc())
+        .expect("paint should finish");
+    assert_eq!(console.test_cell(1, 1), ('(', 8, 7));
+    assert_eq!(console.test_cell(2, 1), ('e', 8, 7));
+    assert_eq!(console.test_cell(7, 1), (')', 8, 7));
+    assert_eq!(console.test_cell(1, 2), (' ', 0, 7));
 }

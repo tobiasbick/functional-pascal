@@ -369,7 +369,7 @@ fn all_intrinsics_list_is_complete() {
 }
 
 #[test]
-fn intrinsic_wire_values_are_globally_unique() {
+fn intrinsic_wire_values_are_globally_unique() -> Result<(), Box<dyn std::error::Error>> {
     use std::collections::HashMap;
     use std::fs;
     use std::path::PathBuf;
@@ -377,12 +377,15 @@ fn intrinsic_wire_values_are_globally_unique() {
     let intrinsic_root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/intrinsic");
     let mut by_value: HashMap<u16, Vec<String>> = HashMap::new();
 
-    fn scan_dir(dir: &std::path::Path, by_value: &mut HashMap<u16, Vec<String>>) {
-        for entry in fs::read_dir(dir).expect("intrinsic dir") {
-            let entry = entry.expect("dir entry");
+    fn scan_dir(
+        dir: &std::path::Path,
+        by_value: &mut HashMap<u16, Vec<String>>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        for entry in fs::read_dir(dir)? {
+            let entry = entry?;
             let path = entry.path();
             if path.is_dir() {
-                scan_dir(&path, by_value);
+                scan_dir(&path, by_value)?;
                 continue;
             }
             if path.extension().and_then(|ext| ext.to_str()) != Some("rs") {
@@ -395,12 +398,11 @@ fn intrinsic_wire_values_are_globally_unique() {
             if matches!(file_name, "mod.rs" | "tests.rs") {
                 continue;
             }
-            let source = fs::read_to_string(&path).expect("read intrinsic source");
-            let label = path
-                .strip_prefix(dir.parent().expect("parent"))
-                .expect("strip")
-                .display()
-                .to_string();
+            let source = fs::read_to_string(&path)?;
+            let parent = dir
+                .parent()
+                .ok_or_else(|| format!("{} has no parent", dir.display()))?;
+            let label = path.strip_prefix(parent)?.display().to_string();
             for line in source.lines() {
                 let Some((lhs, rhs)) = line.split_once('=') else {
                     continue;
@@ -424,9 +426,10 @@ fn intrinsic_wire_values_are_globally_unique() {
                     .push(format!("{label}:{variant}"));
             }
         }
+        Ok(())
     }
 
-    scan_dir(&intrinsic_root, &mut by_value);
+    scan_dir(&intrinsic_root, &mut by_value)?;
 
     let duplicates: Vec<_> = by_value
         .iter()
@@ -436,4 +439,5 @@ fn intrinsic_wire_values_are_globally_unique() {
         duplicates.is_empty(),
         "duplicate intrinsic wire values: {duplicates:?}"
     );
+    Ok(())
 }

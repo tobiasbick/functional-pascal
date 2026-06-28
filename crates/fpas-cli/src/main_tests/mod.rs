@@ -5,7 +5,7 @@ use super::{
 use crate::cli_input::resolve_cli_input;
 use crate::test_support::{create_temp_dir, write_file, write_text};
 use fpas_diagnostics::codes::COMPILE_INTRINSIC_ARITY_MISMATCH;
-use fpas_diagnostics::{Diagnostic, DiagnosticStage, SourceSpan};
+use fpas_diagnostics::{Diagnostic, SourceSpan};
 use std::fs;
 use std::path::Path;
 

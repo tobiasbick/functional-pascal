@@ -13,6 +13,8 @@ mod scroll_bar;
 mod scroll_view;
 
 #[cfg(test)]
+mod focus_tests;
+#[cfg(test)]
 mod tests;
 
 pub use button::{ButtonStyle, ButtonWidget};

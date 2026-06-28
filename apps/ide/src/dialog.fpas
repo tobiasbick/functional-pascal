@@ -6,19 +6,14 @@ uses Ide.Theme, Std.Console, Std.Str, Std.Tui;
 
 const
   /// Application-defined modal id for the About dialog.
-
   AboutModalId: integer := 1;
   /// Modal-local command: accept the About dialog.
-
   CmdAboutOk: integer := 11;
   /// Modal-local command: dismiss the About dialog without accepting.
-
   CmdAboutCancel: integer := 12;
   /// Host-validated modal result code for Accept.
-
   ModalResultAccept: integer := 1;
   /// Host-validated modal result code for Cancel.
-
   ModalResultCancel: integer := 2;
 
 private const AboutWidth: integer := 42;
@@ -35,7 +30,7 @@ private procedure BindAboutModalShortcuts(App: Application);
 begin
   var EscapeKey: Std.Console.KeyEvent := record
     kind := Std.Console.KeyKind.Escape;
-    ch := Std.Str.Chr(27);
+    ch := Std.Str.Chr(0);
     shift := false;
     ctrl := false;
     alt := false;
@@ -43,7 +38,7 @@ begin
   end;
   var EnterKey: Std.Console.KeyEvent := record
     kind := Std.Console.KeyKind.Enter;
-    ch := Std.Str.Chr(13);
+    ch := Std.Str.Chr(0);
     shift := false;
     ctrl := false;
     alt := false;

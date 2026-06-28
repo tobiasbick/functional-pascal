@@ -11,9 +11,19 @@ begin
   Application.TestPump(App);
   AssertTrue(IsOpen(App));
   AssertEquals(1, Application.QueryModalDepth(App));
+  case Application.QueryFocusedViewId(App) of
+    Some(Focused):
+    begin
+      AssertTrue(Application.QueryViewKind(App, Focused) = ViewKind.Button)
+    end;
+    None:
+    begin
+      Fail('About dialog must focus the OK button when it opens')
+    end
+  end;
   var EscapeKey: Std.Console.KeyEvent := record
     kind := Std.Console.KeyKind.Escape;
-    ch := Std.Str.Chr(27);
+    ch := Std.Str.Chr(0);
     shift := false;
     ctrl := false;
     alt := false;

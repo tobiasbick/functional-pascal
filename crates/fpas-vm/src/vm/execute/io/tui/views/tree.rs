@@ -77,6 +77,7 @@ impl Worker {
                     let _ = tui.views.relayout_children(view_id);
                     let next_rects = Self::subtree_screen_rects(tui, view_id);
                     Self::request_rect_redraws(tui, &previous_rects, &next_rects, line);
+                    Self::focus_modal_child_when_scope_is_empty(tui, view_id, line);
                 });
             }
             TuiIntrinsic::HostSetViewLayout => {
@@ -110,6 +111,7 @@ impl Worker {
                     if tui.views.set_parent(view_id, parent) {
                         let next_rects = Self::subtree_screen_rects(tui, view_id);
                         Self::request_rect_redraws(tui, &previous_rects, &next_rects, line);
+                        Self::focus_modal_child_when_scope_is_empty(tui, view_id, line);
                     }
                 });
             }
@@ -194,6 +196,44 @@ impl Worker {
             tui.view_paints.remove(view_id);
             tui.view_widgets.remove(view_id);
             tui.view_commands.remove(view_id);
+        }
+    }
+
+    fn focus_modal_child_when_scope_is_empty(
+        tui: &mut TuiState,
+        view_id: ViewId,
+        line: SourceLocation,
+    ) {
+        let scope = Self::modal_scope_ids(tui);
+        if scope.is_empty() || !scope.contains(&view_id) {
+            return;
+        }
+        if tui
+            .views
+            .focused_id()
+            .is_some_and(|focused| scope.contains(&focused))
+        {
+            return;
+        }
+
+        let previous_focus = tui.views.focused_id();
+        let _ = tui.views.focus_first_in_scope(&scope);
+        let current_focus = tui.views.focused_id();
+        if current_focus == previous_focus {
+            return;
+        }
+
+        for focused in [previous_focus, current_focus].into_iter().flatten() {
+            if let Some(rect) = tui.views.rect(focused) {
+                let _ = tui.session.request_redraw_rect(rect, line);
+            }
+            if let Some(root_rect) = tui
+                .views
+                .root_of(focused)
+                .and_then(|root| tui.views.rect(root))
+            {
+                let _ = tui.session.request_redraw_rect(root_rect, line);
+            }
         }
     }
 }

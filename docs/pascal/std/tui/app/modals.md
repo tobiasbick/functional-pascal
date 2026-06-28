@@ -63,7 +63,7 @@ Typical setup after `ShowDialog`:
 
 1. create child views or `HostCreateSolidFillView` for chrome;
 2. `HostSetViewParent` / `HostSetViewRect` for layout;
-3. `HostPushChildView` on focusable controls;
+3. `HostPushChildView` on custom generic views that should be focusable;
 4. `HostRegisterOnViewPaint` for titles and button captions;
 5. `HostBindCommandToActiveModal` for Enter, Escape, and button shortcuts;
 6. `RequestRedraw`.
@@ -84,6 +84,10 @@ subtree.
 
 Create child views at placeholder `(0, 0)`, call `HostSetViewParent`, then set frame-local layout
 with `HostSetViewRect` (see [`tui_show_framed_dialog_controls_test.fpas`](../../../../../tests/tui/modals/tui_show_framed_dialog_controls_test.fpas)).
+When the active modal has no focused child yet, the first focusable child that is parented into the
+modal and positioned inside the visible dialog viewport becomes the focused leaf. Native controls
+such as buttons and inputs are focusable when created; custom generic views still need
+`HostPushChildView`.
 
 Example: [`examples/pascal/tui/framed_dialog.fpas`](../../../../../examples/pascal/tui/framed_dialog.fpas)
 

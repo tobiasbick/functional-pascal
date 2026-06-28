@@ -32,9 +32,19 @@ begin
   AssertEquals(1, Application.QueryModalDepth(App));
   var FrameCorner: ScreenCell := Application.QueryScreenCell(App, 21, 9);
   AssertTrue(FrameCorner.ch = '╔');
+  case Application.QueryFocusedViewId(App) of
+    Some(Focused):
+    begin
+      AssertTrue(Application.QueryViewKind(App, Focused) = ViewKind.Button)
+    end;
+    None:
+    begin
+      Fail('About dialog must focus the OK button when it opens')
+    end
+  end;
   var EscapeKey: Std.Console.KeyEvent := record
     kind := Std.Console.KeyKind.Escape;
-    ch := Std.Str.Chr(27);
+    ch := Std.Str.Chr(0);
     shift := false;
     ctrl := false;
     alt := false;
@@ -48,7 +58,7 @@ begin
   Application.TestPump(App);
   var EnterKey: Std.Console.KeyEvent := record
     kind := Std.Console.KeyKind.Enter;
-    ch := Std.Str.Chr(13);
+    ch := Std.Str.Chr(0);
     shift := false;
     ctrl := false;
     alt := false;

@@ -1,33 +1,22 @@
 # Future Features
 
-Open planning items for Functional Pascal.
+Open planning items for Functional Pascal. This directory is for ideas, rewrites, deferred work, and design notes that are not the current user-facing specification.
 
-## Standard library roadmap
+Current implemented behavior belongs under `docs/pascal/`, not here.
 
-Implemented today: `Std.Console`, `Std.Args`, `Std.Env`, `Std.Proc`, `Std.Path`, `Std.Fs`, `Std.Time`, `Std.Graph`, `Std.Tui`, `Std.Str`, `Std.Conv`, `Std.Parse`, `Std.Json`, `Std.Math`, `Std.Random`, `Std.Array`, `Std.Dict`, `Std.Result`, `Std.Option`, `Std.Task`. Later candidates: [`std-roadmap.md`](std-roadmap.md).
+## Planned Work
 
-## Projects and libraries
+| Area | Plan | Scope |
+|------|------|-------|
+| Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
+| Dictionaries | [Dictionary decision](09-remove-dict.md) | Decide whether `Std.Dict` stays, changes, or is removed |
+| Libraries | [Library export model](libraries.md) | Finer per-symbol exports and re-export rules beyond current unit exports |
+| Task runtime | [Task memory benchmark](task-memory-benchmark.md) | Reproduce async memory benchmark and validate future task-runtime behavior |
+| TUI | [`Std.Tui` Turbo Vision rewrite](turbo-vision-4-rust/README.md) | Replace the custom retained TUI engine with an FPAS-native facade over `turbo-vision` |
 
-Source-level `library` projects and `[dependencies]` are **implemented** — the loader merges `.fpas` from dependency manifests. See [`libraries.md`](libraries.md) for export-API ideas and scope notes.
+## Rules
 
-## Test framework
-
-FPAS programs today are tested mainly from Rust (`compile_and_run`, VM input queues). Author-facing tests use `Std.Test`, `fpas test`, and optional sidecars — see [`docs/pascal/std/testing/test.md`](../pascal/std/testing/test.md). Planned runner docs: [`test-framework/README.md`](test-framework/README.md) (when present).
-
-## Source formatter
-
-[`fpas fmt`](../../crates/fpas-cli/src/cli_fmt/) is **implemented** ([`fpas-fmt`](../../crates/fpas-fmt/)). Manual CLI only — run when you want formatted output. Normative rules: [`docs/pascal/tools/fmt-style.md`](../pascal/tools/fmt-style.md).
-
-## Documentation layout
-
-Topic directories under [`docs/pascal/`](../pascal/) replaced the flat numbered chapters (`01-overview.md` … `11-stdlib.md`).
-
-## Under Consideration
-
-| # | Feature | Description |
-|---|---------|-------------|
-| 9 | [`dict`](09-remove-dict.md) | Pending — may be kept |
-| — | [Task memory benchmark](task-memory-benchmark.md) | Reproduce pkolaczk async memory bench with `go` + `WaitAll`; blocked on cooperative sleep and scale validation |
-| — | [Libraries — finer exports](libraries.md) | Per-symbol / re-export rules beyond `[exports].units` |
-
-## Not Yet Planned
+- Keep planned or speculative behavior in `docs/future/`.
+- Move behavior to `docs/pascal/` only after it is implemented.
+- Keep each future plan updated with status, next steps, and verification notes when work starts.
+- Remove completed planning notes once the implemented docs and tests make the plan obsolete.

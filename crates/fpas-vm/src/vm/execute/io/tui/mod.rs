@@ -12,6 +12,7 @@ mod query_host;
 mod records;
 mod status_bar_model;
 mod test_host;
+mod turbo_vision;
 mod view_geometry;
 mod views;
 mod widget_target;
@@ -28,6 +29,7 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<bool, VmError> {
         if self.try_exec_tui_application_intrinsic(intrinsic, line)?
+            || self.try_exec_turbo_vision_intrinsic(intrinsic, line)?
             || self.try_exec_tui_test_host_intrinsic(intrinsic, line)?
             || self.try_exec_tui_query_host_intrinsic(intrinsic, line)?
             || self.try_exec_tui_view_intrinsic(intrinsic, line)?

@@ -106,6 +106,7 @@ impl Worker {
         tui.views.clear();
         tui.commands.clear();
         tui.modals.clear();
+        tui.turbo_vision = Default::default();
         close_result?;
         Ok(())
     }
@@ -136,5 +137,6 @@ impl Worker {
         tui.view_commands.clear();
         tui.commands.clear();
         tui.modals.clear();
+        tui.turbo_vision = Default::default();
     }
 }

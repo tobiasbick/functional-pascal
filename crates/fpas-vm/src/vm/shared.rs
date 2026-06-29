@@ -20,6 +20,7 @@ use fpas_std::{
     UiHost, ViewId, ViewRegistry, ViewWidget,
 };
 use std::collections::{HashMap, HashSet, VecDeque};
+use std::fmt;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Condvar, Mutex, RwLock};
 #[cfg(test)]
@@ -88,6 +89,8 @@ pub(crate) struct TuiState {
     pub commands: CommandRegistry,
     /// Host-managed modal stack for the active session (Phase 7).
     pub modals: ModalStack,
+    /// Turbo Vision backed handles for the `Std.Tui` rewrite spike.
+    pub turbo_vision: TurboVisionState,
 }
 
 impl Default for TuiState {
@@ -118,8 +121,64 @@ impl Default for TuiState {
             views: ViewRegistry::default(),
             commands: CommandRegistry::default(),
             modals: ModalStack::default(),
+            turbo_vision: TurboVisionState::default(),
         }
     }
+}
+
+pub(crate) struct TurboVisionState {
+    pub next_handle: u32,
+    pub objects: HashMap<u32, TurboVisionObject>,
+    pub pending_commands: VecDeque<u16>,
+    pub quit_requested: bool,
+}
+
+impl Default for TurboVisionState {
+    fn default() -> Self {
+        Self {
+            next_handle: 1,
+            objects: HashMap::new(),
+            pending_commands: VecDeque::new(),
+            quit_requested: false,
+        }
+    }
+}
+
+impl fmt::Debug for TurboVisionState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("TurboVisionState")
+            .field("next_handle", &self.next_handle)
+            .field("object_count", &self.objects.len())
+            .field("pending_commands", &self.pending_commands)
+            .field("quit_requested", &self.quit_requested)
+            .finish()
+    }
+}
+
+pub(crate) enum TurboVisionObject {
+    Dialog(TurboVisionDialog),
+    Button(TurboVisionButton),
+}
+
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct TurboVisionRect {
+    pub x: i16,
+    pub y: i16,
+    pub width: i16,
+    pub height: i16,
+}
+
+pub(crate) struct TurboVisionDialog {
+    pub bounds: TurboVisionRect,
+    pub title: String,
+    pub children: Vec<u32>,
+}
+
+pub(crate) struct TurboVisionButton {
+    pub bounds: TurboVisionRect,
+    pub text: String,
+    pub command_id: u16,
+    pub attached: bool,
 }
 
 /// Shared `Std.Graph` lifecycle and hosted-dispatch state for the active VM.

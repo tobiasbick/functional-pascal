@@ -17,39 +17,58 @@ Update this file as work progresses. Every phase should leave the repository bui
 
 Goal: prove the crate can be added and built without changing public FPAS behavior.
 
-- [ ] Add `turbo-vision = "1.3.1"` to workspace dependencies or the owning crate.
-- [ ] Build the workspace.
-- [ ] Add a tiny Rust-only smoke test or example behind test-only code if useful.
-- [ ] Confirm no duplicate `crossterm` version is pulled.
-- [ ] Record dependency changes in this file.
+- [x] Add `turbo-vision = "1.3.1"` to workspace dependencies or the owning crate.
+- [x] Build the workspace.
+- [x] Add a tiny Rust-only smoke test or example behind test-only code if useful. Not added in Phase 1 because this phase only proves dependency resolution; callback behavior is covered by Phase 2.
+- [x] Confirm no duplicate `crossterm` version is pulled.
+- [x] Record dependency changes in this file.
+
+Notes:
+
+- Verified on 2026-06-29: crates.io reports `turbo-vision` 1.3.1 as the latest/default version and not yanked.
+- Upstream `Cargo.toml` for 1.3.1 uses Rust 2024, MIT, library name `turbo_vision`, and `crossterm = "0.29"`.
+- Added `turbo-vision = "1.3.1"` to workspace dependencies and `turbo-vision = { workspace = true }` to `fpas-vm`.
+- `cargo build` passed after resolving the new dependency.
+- `cargo tree -i crossterm` shows a single `crossterm v0.29.0`, shared by `fpas-std` and `turbo-vision`.
+- `cargo fmt` and `cargo test --workspace` passed.
 
 Go/no-go:
 
-- [ ] `cargo build` passes.
-- [ ] `cargo tree -i crossterm` shows compatible dependency use.
+- [x] `cargo build` passes.
+- [x] `cargo tree -i crossterm` shows compatible dependency use.
 
 ## Phase 2: FPAS Callback Spike
 
 Goal: prove Turbo Vision commands can call into FPAS.
 
-- [ ] Add the smallest new TUI intrinsic bridge needed for:
-  - [ ] create/open application
-  - [ ] create window or dialog
-  - [ ] create button
-  - [ ] register command callback
-  - [ ] run or pump application
-  - [ ] quit application
-- [ ] Add sema registration for only the spike API.
-- [ ] Add compiler lowering for only the spike API.
-- [ ] Add VM runtime bridge for only the spike API.
-- [ ] Add one Rust VM test for command callback behavior.
-- [ ] Add one FPAS test if headless execution is available.
+- [x] Add an internal Turbo Vision command-event bridge that routes `EventType::Command` through the existing FPAS `OnCommand` callback path.
+- [x] Add the smallest new TUI intrinsic bridge needed for:
+  - [x] create/open application. Uses existing `Application.OpenForTest` for the headless spike.
+  - [x] create window or dialog. Implemented `Application.CreateDialog`.
+  - [x] create button. Implemented `Application.CreateButton`.
+  - [x] register command callback. Implemented `Application.OnCommand`.
+  - [x] run or pump application. Implemented one-step `Application.Pump`.
+  - [x] quit application. Implemented `Application.Quit`.
+- [x] Add sema registration for only the spike API.
+- [x] Add compiler lowering for only the spike API.
+- [x] Add VM runtime bridge for only the spike API.
+- [x] Add one Rust VM test for command callback behavior.
+- [x] Add one FPAS test if headless execution is available.
+
+Notes:
+
+- Added `crates/fpas-vm/src/vm/execute/io/tui/turbo_vision/commands.rs` as the first internal bridge module.
+- The Rust VM test constructs `turbo_vision::core::event::Event::command(42)` and verifies that the registered FPAS `OnCommand` handler receives `42`.
+- Added the public headless spike API: `TuiDialog`, `TuiButton`, `Application.CreateDialog`, `Application.CreateButton`, `Application.AddChild`, `Application.OnCommand`, `Application.TestClickButton`, `Application.Pump`, and `Application.Quit`.
+- Added `tests/tui/controls/tui_turbo_vision_spike_test.fpas`, which creates a dialog/button, queues a button command, dispatches it through `Application.Pump`, and requests quit from the FPAS command handler.
+- Updated `docs/pascal/std/tui/app/README.md` for the implemented spike API only.
 
 Go/no-go:
 
-- [ ] Button command reaches FPAS callback.
-- [ ] Callback can request quit.
-- [ ] Test can run without manual terminal interaction.
+- [x] Button command reaches FPAS callback.
+- [x] Callback can request quit.
+- [x] Test can run without manual terminal interaction.
+- [ ] Production `Application.Open` / `Application.Run` use Turbo Vision's terminal application loop.
 
 ## Phase 3: Remove Old Public Host API
 

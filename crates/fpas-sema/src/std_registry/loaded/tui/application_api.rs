@@ -1,5 +1,5 @@
 use super::super::super::{define_func, define_proc, p};
-use super::TuiTypes;
+use super::{TuiCallbackTypes, TuiTypes};
 use crate::check::Checker;
 use crate::types::Ty;
 use fpas_std::std_symbols as s;
@@ -7,7 +7,11 @@ use fpas_std::std_symbols as s;
 /// Register the user-facing `Std.Tui.Application` calls.
 ///
 /// **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
-pub(super) fn register_application_api(checker: &mut Checker, types: &TuiTypes) {
+pub(super) fn register_application_api(
+    checker: &mut Checker,
+    types: &TuiTypes,
+    callbacks: &TuiCallbackTypes,
+) {
     define_func(
         checker,
         s::STD_TUI_APPLICATION_OPEN,
@@ -69,6 +73,63 @@ pub(super) fn register_application_api(checker: &mut Checker, types: &TuiTypes) 
         checker,
         s::STD_TUI_APPLICATION_REQUEST_REDRAW,
         vec![p("App", types.application.clone(), false)],
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_CREATE_DIALOG,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Bounds", types.rect.clone(), false),
+            p("Title", Ty::String, false),
+        ],
+        types.dialog.clone(),
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_CREATE_BUTTON,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Bounds", types.rect.clone(), false),
+            p("Text", Ty::String, false),
+            p("CommandId", Ty::Integer, false),
+        ],
+        types.button.clone(),
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_ADD_CHILD,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Dialog", types.dialog.clone(), false),
+            p("Child", types.button.clone(), false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_ON_COMMAND,
+        vec![
+            p("App", types.application.clone(), false),
+            p("OnCommand", callbacks.on_command.clone(), false),
+        ],
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_PUMP,
+        vec![p("App", types.application.clone(), false)],
+        Ty::Integer,
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_QUIT,
+        vec![p("App", types.application.clone(), false)],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_TEST_CLICK_BUTTON,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Button", types.button.clone(), false),
+        ],
     );
     define_func(
         checker,

@@ -56,6 +56,63 @@ impl Compiler {
                 );
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_CREATE_DIALOG => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_CREATE_DIALOG, 3, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::CreateDialog), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_CREATE_BUTTON => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_CREATE_BUTTON, 4, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::CreateButton), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_ADD_CHILD => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_ADD_CHILD, 3, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::AddChild), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_ON_COMMAND => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_ON_COMMAND, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::RegisterOnCommand), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_PUMP => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_PUMP, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::Pump), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_QUIT => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_QUIT, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::Quit), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_TEST_CLICK_BUTTON => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_TEST_CLICK_BUTTON,
+                    2,
+                    args,
+                    location,
+                )?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::TestClickButton), location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

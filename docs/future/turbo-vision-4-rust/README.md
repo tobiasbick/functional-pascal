@@ -19,24 +19,14 @@ The rewrite may break every current `Std.Tui` API. The project has no backward-c
 5. [Testing plan](05-testing-plan.md) - headless tests, event injection, and verification.
 6. [Agent handoff](06-agent-handoff.md) - rules for continuing after context loss.
 
-## Current Status
+## Active Plan
 
-- [x] Branch created: `turbo-vision-4-rust`.
-- [x] Upstream checked: `turbo-vision` 1.3.1, Rust 2024, MIT license, `crossterm` 0.29.
-- [x] Local compatibility checked: this workspace already uses `crossterm` 0.29.
-- [ ] Phase 1 API design accepted in code.
-- [ ] Minimal spike implemented.
-- [ ] Old retained TUI engine removed.
-- [ ] New `docs/pascal/std/tui/` spec written after implementation.
+Use [implementation phases](04-implementation-phases.md) as the tracked checklist and handoff point.
 
-## Go/No-Go Gate
+Planned next work:
 
-Do not start broad deletion until the minimal spike proves all of these:
-
-- FPAS can create a Turbo Vision application.
-- FPAS can create at least one window/dialog and one button.
-- A Turbo Vision command can call back into FPAS.
-- FPAS can request application shutdown from a command handler.
-- The flow can be tested without manual terminal interaction.
-
-If the callback or testability gate fails, stop and update [implementation phases](04-implementation-phases.md) with the blocker before deleting old code.
+- Replace production `Application.Open` / `Application.Run` with Turbo Vision's terminal application loop.
+- Remove the old retained public `Application.Host*` API after the production loop works.
+- Replace retained-engine internals with Turbo Vision-backed application, dialog, command, event, and widget modules.
+- Rewrite `docs/pascal/std/tui/` to describe only implemented Turbo Vision-backed behavior.
+- Migrate TUI examples and `apps/ide` to the new API.

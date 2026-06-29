@@ -226,6 +226,8 @@ pub const STD_TIME_SLEEP: &str = std_time!("Sleep");
 
 pub const STD_TUI_APPLICATION: &str = std_tui!("Application");
 pub const STD_TUI_VIEW_ID: &str = std_tui!("ViewId");
+pub const STD_TUI_DIALOG: &str = std_tui!("TuiDialog");
+pub const STD_TUI_BUTTON: &str = std_tui!("TuiButton");
 /// Hosted-dispatch handler bundle for `Std.Tui.Application.Configure`; see `docs/pascal/std/tui/app/README.md`.
 pub const STD_TUI_APPLICATION_HANDLERS: &str = std_tui!("ApplicationHandlers");
 pub const STD_TUI_RECT: &str = std_tui!("Rect");
@@ -248,6 +250,13 @@ pub const STD_TUI_APPLICATION_SHOW_DIALOG: &str = std_tui!("Application.ShowDial
 pub const STD_TUI_APPLICATION_CLOSE_MODAL: &str = std_tui!("Application.CloseModal");
 pub const STD_TUI_APPLICATION_SIZE: &str = std_tui!("Application.Size");
 pub const STD_TUI_APPLICATION_REQUEST_REDRAW: &str = std_tui!("Application.RequestRedraw");
+pub const STD_TUI_APPLICATION_CREATE_DIALOG: &str = std_tui!("Application.CreateDialog");
+pub const STD_TUI_APPLICATION_CREATE_BUTTON: &str = std_tui!("Application.CreateButton");
+pub const STD_TUI_APPLICATION_ADD_CHILD: &str = std_tui!("Application.AddChild");
+pub const STD_TUI_APPLICATION_ON_COMMAND: &str = std_tui!("Application.OnCommand");
+pub const STD_TUI_APPLICATION_PUMP: &str = std_tui!("Application.Pump");
+pub const STD_TUI_APPLICATION_QUIT: &str = std_tui!("Application.Quit");
+pub const STD_TUI_APPLICATION_TEST_CLICK_BUTTON: &str = std_tui!("Application.TestClickButton");
 pub const STD_TUI_APPLICATION_OPEN_FOR_TEST: &str = std_tui!("Application.OpenForTest");
 pub const STD_TUI_APPLICATION_TEST_PUMP: &str = std_tui!("Application.TestPump");
 pub const STD_TUI_APPLICATION_TEST_PUMP_UNTIL_IDLE: &str =

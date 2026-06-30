@@ -1,44 +1,17 @@
-# Terminal cell width
+# Std.Tui cell width
 
-Unicode display-width policy for hosted TUI painting and layout.
+TUI rendering uses terminal cell widths when text is painted into screen buffers.
 
-## Policy
+The current public API exposes cell contents through:
 
-Functional Pascal TUI uses **Unicode display width** (via the `unicode-width` crate) to map
-scalars to terminal columns:
-
-| Width | Behavior |
+| Symbol | Description |
 | --- | --- |
-| `0` | Combining marks and other zero-width characters do not advance layout on their own. |
-| `1` | ASCII, box-drawing, and most symbols occupy one column. |
-| `2` | East Asian wide characters occupy two columns; the second column is filled with a space continuation cell when painting. |
+| `Application.QueryScreenLine(App, Y): string` | Return one rendered line. |
+| `Application.QueryScreenCell(App, X, Y): ScreenCell` | Return one rendered cell. |
 
-Ambiguous-width characters use neutral width. Truncation reserves the last visible column for
-`…` when more text remains.
+`ScreenCell.ch` stores the rendered cell text, and `ScreenCell.fg` / `ScreenCell.bg` store color indexes.
 
-## Where it applies
+## See Also
 
-- Console `write_text_at` / `write_char_at` (`crates/fpas-std/src/console/screen/text_at.rs`)
-- Shared helpers in `crates/fpas-std/src/text/cell_width.rs`
-- Frame title slots, menu bar/popup geometry, status bar segments, and basic controls (labels,
-  buttons, list box, input line cursor/scroll placement, memo cursor placement)
-
-## Implementation (contributors)
-
-| Layer | Location |
-| --- | --- |
-| Cell-width helpers | `crates/fpas-std/src/text/cell_width.rs` |
-| Console paint | `crates/fpas-std/src/console/screen/text_at.rs` |
-| Control truncation | `crates/fpas-std/src/tui/widget/control/mod.rs` |
-| FPAS workflow regression | [`tests/tui/controls/tui_cell_width_test.fpas`](../../../../tests/tui/controls/tui_cell_width_test.fpas) |
-
-## Example
-
-See [`tests/tui/controls/tui_cell_width_test.fpas`](../../../../tests/tui/controls/tui_cell_width_test.fpas)
-for wide-character frame titles, labels, buttons, inputs, and truncation.
-
-## See also
-
-- [TUI index](README.md)
-- [Hosted dispatch](app/README.md)
-- [Frames](app/frames.md)
+- [Application](app/README.md)
+- [Types](app/types.md)

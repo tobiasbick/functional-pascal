@@ -18,9 +18,7 @@ impl Worker {
                 self.reset_tui_host_state();
                 {
                     let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-                    self.with_console_and_key_input(|console, key_input| {
-                        tui.session.open(console, key_input, line)
-                    })?;
+                    self.with_console(|console| tui.session.open_deferred(console, line))?;
                 }
                 self.push(Self::tui_application_record())?;
             }

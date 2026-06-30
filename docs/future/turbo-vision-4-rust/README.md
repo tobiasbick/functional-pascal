@@ -25,8 +25,8 @@ Use [implementation phases](04-implementation-phases.md) as the tracked checklis
 
 Planned next work:
 
-- Replace production `Application.Open` / `Application.Run` with Turbo Vision's terminal application loop.
-- Remove the old retained public `Application.Host*` API after the production loop works.
+- Remove old retained query calls that expose engine internals.
+- Remove old `TuiIntrinsic` variants that are no longer reachable after public Host de-registration.
+- Add old-symbol diagnostics that point users at the current Turbo Vision facade.
 - Replace retained-engine internals with Turbo Vision-backed application, dialog, command, event, and widget modules.
-- Rewrite `docs/pascal/std/tui/` to describe only implemented Turbo Vision-backed behavior.
 - Migrate TUI examples and `apps/ide` to the new API.

@@ -31,7 +31,7 @@ The **FPAS regression suite** lives in [`tests/`](../tests/) as `*_test.fpas` fi
 | `tests/concurrency/` | `go` / task concurrency |
 | `tests/runner/` | `Std.Test` basics, `Skip`, stdout golden |
 | `tests/console/` | `PushReadLn` + `ReadLn` |
-| `tests/tui/` | Native headless TUI (`OpenForTest`, `TestPump`, …); subdirs: `host/`, `scene/`, `controls/`, `menu/`, `modals/`, `frames/` — see [TUI testing layout](../docs/pascal/std/tui/app/testing.md#regression-layout-teststui) |
+| `tests/tui/` | Native headless TUI (`OpenForTest`, Turbo Vision command spike, `TestPump`, …) |
 | `tests/graph/` | Headless graph smoke + pixel golden |
 | `tests/manual/` | Manual demos (not auto-discovered) |
 
@@ -66,15 +66,6 @@ fpas examples/pascal/std/json_basics.fpas
 fpas examples/pascal/std/graph_basics.fpas
 fpas examples/pascal/std/task_basics.fpas
 fpas examples/math/mandelbrot/mandelbrot_graph.fpas
-fpas examples/pascal/tui/host_dispatch_minimal.fpas
-fpas examples/pascal/tui/host_dispatch_paint.fpas
-fpas examples/pascal/tui/host_dispatch_quit.fpas
-fpas examples/pascal/tui/local_view_paint.fpas
-fpas examples/pascal/tui/view_scoped_commands.fpas
-fpas examples/pascal/tui/show_modal_existing_view.fpas
-fpas examples/pascal/tui/show_dialog.fpas
-fpas examples/pascal/tui/framed_window.fpas
-fpas examples/pascal/tui/framed_dialog.fpas
 ```
 
 ### Projects (`.fpasprj`)
@@ -84,7 +75,6 @@ Use when the main program imports **non-library units** (for example `App.*` or 
 ```sh
 fpas examples/pascal/units-basic/units-basic.fpasprj
 fpas examples/math/mandelbrot/mandelbrot.fpasprj
-fpas apps/ide/ide.fpasprj
 ```
 
 Do **not** pass a `unit` source alone (for example `mandelbrot_color.fpas` or `math_utils.fpas`) — the compiler expects a `program` as the main file.
@@ -149,12 +139,6 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/std/time_basics.fpas` | `Std.Time` — monotonic time, elapsed time, timestamp, sleep |
 | `pascal/std/array_basics.fpas` | `Std.Array` — `Length`, `Sort`, `Any`, `All` |
 | `math/mandelbrot/mandelbrot_graph.fpas` | `Std.Graph` — native Mandelbrot explorer |
-| `pascal/tui/local_view_paint.fpas` | `Std.Tui` — local view paint, parent-relative layout, `HostSetViewRect` |
-| `pascal/tui/view_scoped_commands.fpas` | `Std.Tui` — `HostBindCommandToView` and focus/ancestor command routing |
-| `pascal/tui/show_modal_existing_view.fpas` | `Std.Tui` — `ShowModal` for an existing view subtree |
-| `pascal/tui/show_dialog.fpas` | `Std.Tui` — `ShowDialog`, host widgets, OK/Cancel, and `HostSetActiveModalResult` |
-| `pascal/tui/framed_window.fpas` | `Std.Tui` — painted movable frame windows on a desktop work area |
-| `pascal/tui/framed_dialog.fpas` | `Std.Tui` — `ShowFramedDialog`, gray modal chrome, OK/Escape/close dismissal |
 | `math/julia/julia.fpas` | ASCII Julia set (**interactive** — see below) |
 | `math/julia/julia_graph.fpas` | Native-window Julia explorer with `Std.Graph` |
 
@@ -173,19 +157,7 @@ Helper units under those folders are built only through the project; see the one
 
 Larger programs live outside `examples/` but follow the same `.fpasprj` workflow.
 
-| Path | Contents |
-|------|----------|
-| `apps/ide/` | `ide.fpasprj` — Turbo Pascal–style hosted TUI shell (`Ide.Shell`, `Ide.Menu`, `Ide.Status`, `Ide.Theme`) |
-
-Run from the repository root:
-
-```sh
-fpas apps/ide/ide.fpasprj
-```
-
-The IDE is **interactive**: it opens the alternate screen and blocks in `Application.Run` until you quit. Use **Alt+X** or **File → Exit** from the menu bar, or open **Help → About** for a modal About dialog. Host widgets paint the chrome (menu bar, blue desktop, status bar), so the shell omits global `OnPaint` — see `apps/ide/src/shell.fpas` and `docs/pascal/std/tui/app/README.md`.
-
-CI compiles it with `fpas check apps/ide/ide.fpasprj` (listed in `NON_INTERACTIVE_CHECK_EXAMPLES` in [`crates/fpas-cli/src/main_tests/examples.rs`](../crates/fpas-cli/src/main_tests/examples.rs)). For a smaller single-file menu bar sample, see `pascal/tui/menu_bar.fpas`.
+`apps/ide/` is not a current runnable app during the `Std.Tui` Turbo Vision rewrite. It remains in the tree for migration work tracked under [`docs/future/turbo-vision-4-rust/`](../docs/future/turbo-vision-4-rust/).
 
 ## Interactive demos (terminal)
 
@@ -197,16 +169,4 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 | `math/julia/julia_graph.fpas` | Single-file native-window Julia explorer; arrows pan, `WASD` changes Julia constant, wheel zooms, left click recenters, `Esc` quits |
 | `math/mandelbrot/mandelbrot_graph.fpas` | Single-file native-window Mandelbrot explorer; arrows pan, wheel zooms, left click recenters, `1/2/3` switch palettes, `Esc` quits |
 | `math/mandelbrot/mandelbrot.fpasprj` | Project; fullscreen Mandelbrot explorer |
-| `pascal/tui/minimal_application.fpas` | `Application.Configure` + `Application.Run` dispatch mode; **Escape** to quit |
-| `pascal/tui/host_dispatch_minimal.fpas` | One **`HostProcessNext`** call then **`Close`** (dispatch bridge); same TUI session behavior as `minimal_application.fpas` |
-| `pascal/tui/host_dispatch_paint.fpas` | **`HostRegisterOnPaint`** + **`HostDispatchRedraw`** (one paint pass) |
-| `pascal/tui/host_dispatch_quit.fpas` | **`HostRequestQuit`** from **`OnPaint`**, then **`HostRunLoop`** (cooperative exit) |
-| `pascal/tui/menu_bar.fpas` | **`HostCreateMenuBarView`** with Alt+letter shortcuts and pull-down **`OnCommand`** dispatch; **Escape** to quit |
-| `pascal/tui/local_view_paint.fpas` | Local view paint only; press **M** to move a child view and **Escape** to quit |
-| `pascal/tui/view_scoped_commands.fpas` | Focus-aware view commands; **Tab** changes focus, **Ctrl+S** resolves per panel, **Escape** quits |
-| `pascal/tui/show_modal_existing_view.fpas` | Existing view subtree becomes modal; **Tab** stays in the subtree, **Escape** closes the modal |
-| `pascal/tui/show_dialog.fpas` | Owned modal dialog; **Ctrl+D** opens it, **Tab** to OK/Cancel, **Enter** accepts, **Escape** cancels, **Ctrl+Q** quits |
-| `pascal/tui/framed_window.fpas` | Two painted frame windows; drag title bars, **F6** next window, **■** closes, **Escape** quits |
-| `pascal/tui/framed_dialog.fpas` | Painted modal dialog; **Ctrl+D** opens, **OK** / **Escape** / **■** closes, **Ctrl+Q** quits |
-| `apps/ide/ide.fpasprj` | Multi-unit IDE shell — menu bar, desktop fill, status bar; **Help → About** opens a modal About dialog; **Alt+X** or **File → Exit** quits |
-TUI and Graph apps use the same hosted dispatch model: `Application.Configure(App, Handlers)` registers `On*` handlers; `Application.Run(App)` starts the hosted loop. See `docs/pascal/std/tui/app/README.md` and `docs/pascal/std/graph/app/README.md`. The console's own event type remains **`Std.Console.Event`**.
+TUI examples are being rewritten for the Turbo Vision-backed API. Current automated TUI coverage is under `tests/tui/`. Graph apps use `Application.Configure(App, Handlers)` and `Application.Run(App)`; see `docs/pascal/std/graph/app/README.md`.

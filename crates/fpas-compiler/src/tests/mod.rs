@@ -1,6 +1,6 @@
 use fpas_bytecode::Op;
 use fpas_parser::parse;
-use fpas_std::{ConsoleEvent, ConsoleKeyEvent, key_event::key_kind_index};
+use fpas_std::{ConsoleKeyEvent, key_event::key_kind_index};
 
 fn compile_ok(source: &str) -> fpas_bytecode::Chunk {
     let (program, errors) = parse(source);
@@ -77,16 +77,6 @@ fn compile_err(source: &str) -> crate::CompileError {
     let (program, errors) = parse(source);
     assert!(errors.is_empty(), "Parse errors: {errors:?}");
     crate::compile(&program).expect_err("compilation should fail")
-}
-
-fn compile_run_with_console_events(source: &str, events: &[ConsoleEvent]) -> fpas_vm::VmOutput {
-    let chunk = compile_ok(source);
-    let mut vm = fpas_vm::Vm::new(chunk);
-    for event in events {
-        vm.push_console_event(event.clone());
-    }
-    vm.run().expect("VM should not error");
-    vm.output().clone()
 }
 
 fn parse_fails(source: &str) {

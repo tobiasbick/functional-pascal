@@ -13,6 +13,18 @@ impl TuiSession {
         key_input: &mut KeyInput,
         location: SourceLocation,
     ) -> Result<(), StdError> {
+        self.open_deferred(console, location)?;
+        self.acquire_terminal(console, key_input, location)
+    }
+
+    /// Open a TUI application session without acquiring terminal state.
+    ///
+    /// This is used when the concrete backend owns the terminal lifecycle itself.
+    pub fn open_deferred(
+        &mut self,
+        console: &mut Console,
+        location: SourceLocation,
+    ) -> Result<(), StdError> {
         if self.open {
             return Err(session_state_error(
                 "Application.Open() cannot open a second Std.Tui session while one is already active.",
@@ -30,11 +42,32 @@ impl TuiSession {
         self.owns_mouse = false;
         console.abort_tui_paint();
 
+        Ok(())
+    }
+
+    /// Acquire terminal state for the retained terminal backend if it is not owned already.
+    pub fn acquire_terminal(
+        &mut self,
+        console: &mut Console,
+        key_input: &mut KeyInput,
+        location: SourceLocation,
+    ) -> Result<(), StdError> {
+        self.ensure_open(
+            "Application.Run(App) requires an open Std.Tui application session.",
+            "Open the application first and keep the returned handle alive while running it.",
+            location,
+        )?;
+        if self.headless || self.owns_raw_mode || self.owns_alt_screen || self.owns_mouse {
+            return Ok(());
+        }
         if !console.has_terminal_writer() {
             return Ok(());
         }
 
-        key_input.enable_raw_mode_explicit(location)?;
+        if let Err(error) = key_input.enable_raw_mode_explicit(location) {
+            self.open = false;
+            return Err(error);
+        }
         self.owns_raw_mode = true;
 
         if let Err(error) = console.enter_alt_screen(location) {

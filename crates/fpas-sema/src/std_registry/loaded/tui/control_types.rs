@@ -7,17 +7,8 @@ use crate::std_registry::loaded::type_registration;
 use crate::types::Ty;
 use fpas_std::std_symbols as s;
 
-/// Registered types used by retained control APIs.
+/// Registered types used by frame-root transition queries.
 pub(super) struct TuiControlTypes {
-    pub(super) radio_option: Ty,
-    pub(super) input_line_state: Ty,
-    pub(super) check_box_state: Ty,
-    pub(super) radio_group_state: Ty,
-    pub(super) list_box_item: Ty,
-    pub(super) list_box_state: Ty,
-    pub(super) scroll_bar_state: Ty,
-    pub(super) scroll_view_state: Ty,
-    pub(super) memo_state: Ty,
     pub(super) frame_root_state: Ty,
     pub(super) frame_scroll_state: Ty,
     pub(super) frame_window_entry: Ty,
@@ -25,7 +16,7 @@ pub(super) struct TuiControlTypes {
 
 /// Register retained control input and state records.
 pub(super) fn register(checker: &mut Checker) -> TuiControlTypes {
-    let radio_option = type_registration::register_record_type(
+    type_registration::register_record_type(
         checker,
         s::STD_TUI_RADIO_OPTION,
         vec![
@@ -35,7 +26,7 @@ pub(super) fn register(checker: &mut Checker) -> TuiControlTypes {
             ("enabled".into(), Ty::Boolean),
         ],
     );
-    let input_line_state = type_registration::register_record_type(
+    type_registration::register_record_type(
         checker,
         s::STD_TUI_INPUT_LINE_STATE,
         vec![
@@ -44,12 +35,12 @@ pub(super) fn register(checker: &mut Checker) -> TuiControlTypes {
             ("scrollOffset".into(), Ty::Integer),
         ],
     );
-    let check_box_state = type_registration::register_record_type(
+    type_registration::register_record_type(
         checker,
         s::STD_TUI_CHECK_BOX_STATE,
         vec![("checked".into(), Ty::Boolean)],
     );
-    let radio_group_state = type_registration::register_record_type(
+    type_registration::register_record_type(
         checker,
         s::STD_TUI_RADIO_GROUP_STATE,
         vec![
@@ -57,7 +48,7 @@ pub(super) fn register(checker: &mut Checker) -> TuiControlTypes {
             ("focusedIndex".into(), Ty::Integer),
         ],
     );
-    let list_box_item = type_registration::register_record_type(
+    type_registration::register_record_type(
         checker,
         s::STD_TUI_LIST_BOX_ITEM,
         vec![
@@ -66,7 +57,7 @@ pub(super) fn register(checker: &mut Checker) -> TuiControlTypes {
             ("enabled".into(), Ty::Boolean),
         ],
     );
-    let list_box_state = type_registration::register_record_type(
+    type_registration::register_record_type(
         checker,
         s::STD_TUI_LIST_BOX_STATE,
         vec![
@@ -74,7 +65,7 @@ pub(super) fn register(checker: &mut Checker) -> TuiControlTypes {
             ("scrollOffset".into(), Ty::Integer),
         ],
     );
-    let scroll_bar_state = type_registration::register_record_type(
+    type_registration::register_record_type(
         checker,
         s::STD_TUI_SCROLL_BAR_STATE,
         vec![
@@ -83,7 +74,7 @@ pub(super) fn register(checker: &mut Checker) -> TuiControlTypes {
             ("viewportLength".into(), Ty::Integer),
         ],
     );
-    let scroll_view_state = type_registration::register_record_type(
+    type_registration::register_record_type(
         checker,
         s::STD_TUI_SCROLL_VIEW_STATE,
         vec![
@@ -91,7 +82,7 @@ pub(super) fn register(checker: &mut Checker) -> TuiControlTypes {
             ("lineCount".into(), Ty::Integer),
         ],
     );
-    let memo_state = type_registration::register_record_type(
+    type_registration::register_record_type(
         checker,
         s::STD_TUI_MEMO_STATE,
         vec![
@@ -145,15 +136,6 @@ pub(super) fn register(checker: &mut Checker) -> TuiControlTypes {
         ],
     );
     TuiControlTypes {
-        radio_option,
-        input_line_state,
-        check_box_state,
-        radio_group_state,
-        list_box_item,
-        list_box_state,
-        scroll_bar_state,
-        scroll_view_state,
-        memo_state,
         frame_root_state,
         frame_scroll_state,
         frame_window_entry,

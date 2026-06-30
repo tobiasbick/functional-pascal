@@ -1,114 +1,69 @@
-# Types and registration
+# Std.Tui types
 
-## Types and signatures
+## `Application`
 
-Reuse existing types from `**Std.Tui`** and `**Std.Console`** where possible: `**Application**`, `**Size**`, `**Std.Console.KeyEvent**`.
+Opaque handle for a TUI application session.
 
-### `ViewId`
+## `Rect`
 
-Logical name: `Std.Tui.ViewId`. Short: `ViewId` when `Std.Tui` is imported.
-
-Opaque host-owned handle for one entry in the retained view tree. Sema registers `ViewId` as an empty record; only host routines return values. User code cannot construct literals or pass bare integers where a `ViewId` is expected.
-
-Use `Option of ViewId` when a view may be absent. See [ViewId rules](testing.md#viewid-type-decided).
-
-### `Rect`
-
-Rectangle in terminal cells. `QueryViewRect` returns absolute screen coordinates. During
-`OnViewPaint`, `Bounds` is local to the view (`x = 0`, `y = 0`) and Console coordinates use the
-same local origin.
+Rectangle in terminal cells.
 
 | Field | Type | Meaning |
-| ----- | ---- | ------- |
-| `x` | `integer` | Left edge in terminal cells. |
-| `y` | `integer` | Top edge in terminal cells. |
-| `width` | `integer` | Width in terminal cells. |
-| `height` | `integer` | Height in terminal cells. |
+| --- | --- | --- |
+| `x` | `integer` | Left edge. |
+| `y` | `integer` | Top edge. |
+| `width` | `integer` | Width in cells. |
+| `height` | `integer` | Height in cells. |
 
-### Scene-graph introspection types
-
-`ViewState` reports the resolved state used by paint, focus, and hit-testing:
+## `Size`
 
 | Field | Type | Meaning |
-| ----- | ---- | ------- |
-| `visible` | `boolean` | The view and all ancestors are visible. |
-| `enabled` | `boolean` | The view accepts input and may hold focus. |
-| `focused` | `boolean` | This view is the focused leaf. |
-| `active` | `boolean` | This view lies on the active focus path. |
-| `exposed` | `boolean` | The view has at least one visible cell after clipping. |
+| --- | --- | --- |
+| `width` | `integer` | Width in cells. |
+| `height` | `integer` | Height in cells. |
 
-`ViewOptions` reports retained behavior flags: `selectable`, `tabStop`, `preProcess`,
-`postProcess`, and `clipChildren`.
+## `TuiDialog`
 
-`ViewLayout` reports anchor/grow flags: `anchorLeft`, `anchorTop`, `anchorRight`, `anchorBottom`,
-and integer margins `marginLeft`, `marginTop`, `marginRight`, `marginBottom`. See
-[Views and focus](views.md#anchorgrow-layout).
+Opaque Turbo Vision dialog handle returned by `Application.CreateDialog`.
 
-`ResolvedView` contains `rect: Rect`, `clip: Option of Rect`, `state: ViewState`, and
-`options: ViewOptions`. `rect` is absolute and unclipped; `clip` is the effective visible rectangle.
+## `TuiButton`
 
-`ViewKind` identifies native content attached to a retained node: `Generic`, `SolidFill`, `MenuBar`,
-`StatusBar`, `Label`, `Button`, `InputLine`, `CheckBox`, `RadioGroup`, `ListBox`, `ScrollBar`,
-`ScrollView`, or `Frame`. `Generic` means no native widget is attached; a Pascal paint handler may
-still exist.
+Opaque Turbo Vision button handle returned by `Application.CreateButton`.
 
-`ViewSnapshot` contains `id`, `parent`, direct `children`, `resolved`, and `kind`. Arrays returned by
-`QuerySceneGraph` contain these records in back-to-front depth-first paint order.
+## `ViewId`
 
-### Control types
+Opaque transition handle used by remaining frame and query APIs. New Turbo Vision code should use `TuiDialog` and `TuiButton` where possible.
 
-`RadioOption` contains `label: string`, `accelerator: Option of string`, `commandId: Option of integer`,
-and `enabled: boolean`. `InputLineState` reports `text`, zero-based `cursor`, and `scrollOffset`.
-`CheckBoxState` reports `checked`. `RadioGroupState` reports zero-based `selectedIndex` and
-`focusedIndex`, using `-1` when no enabled option exists. See [Retained controls](controls.md).
-`ListBoxItem` contains `text`, optional `commandId`, and `enabled`; `ListBoxState` reports
-`selectedIndex` (`-1` when no enabled row exists) and the first visible `scrollOffset`.
+## `ScreenCell`
 
-### `ExitReason`
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `ch` | `string` | Cell text. |
+| `fg` | `integer` | Foreground color. |
+| `bg` | `integer` | Background color. |
 
-Enum describing why the hosted loop stopped (`**Std.Tui.ExitReason`**). **Registry:** the type and variants `**UserQuit**`, `**HostStop`**, `**HostAndUserStop**`, `**HostShutdown**` are registered in [`loaded/tui/`](../../../../../crates/fpas-sema/src/std_registry/loaded/tui/mod.rs) and known to the compiler enum tables. **VM:** [`Application.Run`](../../../../../crates/fpas-vm/src/vm/execute/io/tui_run.rs) records `**last_exit_reason**`, invokes the registered `**OnExit**`, and then performs close semantics. The current hosted loop reports `**UserQuit`** when `**Application.HostRequestQuit(App)`** ends the run, `**HostStop`** when low-level code stops the active hosted session during `**Run`**, `**HostAndUserStop`** when both stop signals are present in the same turn, and `**HostShutdown`** when VM global shutdown is requested while the hosted run is active.
+## Frame Transition Records
 
+`FrameRootState`, `FrameScrollState`, and `FrameWindowEntry` remain for transition frame queries. See [Frame transition API](frames.md).
 
-| Variant    | Meaning                                                                                                                                                    |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `UserQuit` | Normal exit requested by the application, for example Escape handled in `**OnKeyPressed**` calling `**Application.HostRequestQuit(App)`**. |
-| `HostStop` | Host ended the loop for an internal reason (documented per implementation).                                                                                |
-| `HostAndUserStop` | Host stop and user quit were both requested in the same dispatch turn; host stop takes precedence but the combined reason is preserved. |
-| `HostShutdown` | The VM entered global shutdown while `Application.Run` was active (for example due to a concurrent task failure). |
+## `ApplicationHandlers`
 
+Record for bundled transition handlers used by `Application.Configure`. Optional handler fields use `Some(Handler)` or `None`.
 
-Future variants (signals, fatal I/O) may extend this enum; handlers must tolerate unknown variants if the language allows exhaustiveness rules.
+For new Turbo Vision command dispatch, prefer `Application.OnCommand(App, Handler)`.
 
-### Handler signatures (normative)
+## `ExitReason`
 
-All procedures run on the **main VM thread**. Parameters use `**App: Application`** for session context.
+Registered enum for transition run-loop exit reporting.
 
-```pascal
-// Conceptual — final Pascal declarations ship with sema registration.
+| Variant | Meaning |
+| --- | --- |
+| `UserQuit` | The application requested exit. |
+| `HostStop` | The backend stopped the active run. |
+| `HostAndUserStop` | Both stop paths happened during the same run. |
+| `HostShutdown` | The VM entered shutdown while the run was active. |
 
-function OnKeyPressed(App: Application; Key: Std.Console.KeyEvent): boolean;
-// Returns true if the key was consumed (no further default processing for this event).
+## See Also
 
-procedure OnResize(App: Application; NewSize: Size);
-
-procedure OnViewPaint(App: Application; ViewId: ViewId; Bounds: Rect);
-
-procedure OnPaint(App: Application);
-
-procedure OnIdle(App: Application);
-
-procedure OnExit(App: Application; Reason: ExitReason);
-```
-
-`**OnKeyPressed` return value:** `true` = **consumed**. The host does not promise a second consumer; later phases may use consumption for command routing.
-
-`**OnResize`:** `NewSize` matches `**Application.Size(App)`** after the resize is applied.
-
----
-
-## See also
-
-- [Views and focus](views.md)
-- [Modals and dialogs](modals.md)
-- [Handlers](handlers.md)
-- [Hosted dispatch overview](README.md)
+- [Application](README.md)
+- [Session API](../session.md)

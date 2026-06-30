@@ -1,64 +1,15 @@
-# TUI terminal verification checklist
+# Std.Tui terminal checklist
 
-Manual terminal checks for hosted `Std.Tui` applications.
+Use this checklist after changes to `Std.Tui` session, backend, or test behavior.
 
-Use this checklist after changes to terminal behavior, hosted dispatch, focus, modals, or view paint. Headless regression tests run under `fpas test` — see [Native testing](app/testing.md). API reference: [Hosted dispatch](app/README.md).
+| Scope | Command | Expected result |
+| --- | --- | --- |
+| Rust sema TUI tests | `cargo test -p fpas-sema std_units::tui` | Current TUI symbols typecheck and removed symbols fail. |
+| Rust compiler TUI tests | `cargo test -p fpas-compiler std_library::tui` | Current TUI lowering and runtime tests pass. |
+| FPAS TUI tests | `cargo run -q -p fpas-cli -- test tests/tui/` | Headless TUI regression tests pass. |
+| Full Rust suite | `cargo test --workspace` | Workspace tests pass. |
 
-## Prerequisites
+## See Also
 
-- Build or install `fpas` first (`cargo build --release -p fpas-cli`).
-- Run the headless TUI suite first when the change touches hosted dispatch, retained views, menus,
-  modals, frames, or redraw damage: `cargo run -q -p fpas-cli -- test tests/tui/`.
-- Run checks in a real terminal, not only through editor task output.
-- Start each example from the repository root with `fpas <path>`.
-- Record the terminal, OS, shell, and terminal size for any failed or suspicious result.
-
-## Headless canaries before manual smoke
-
-These tests cover deterministic behavior that is hard to inspect reliably by eye in a real terminal.
-Run the focused path when the matching manual check fails.
-
-| Area | Focused command | Regression class |
-| ---- | --------------- | ---------------- |
-| Resize/input ordering | `cargo test -p fpas-vm tui_host_process_next_dispatches_resize_burst_before_key_and_mouse` | Coalesced resize bursts must dispatch before later key and mouse input. |
-| Full TUI integration | `cargo run -q -p fpas-cli -- test tests/tui/` | Hosted headless lifecycle, view tree, controls, menu, modal, and frame flows. |
-| Frame occlusion repair | `cargo run -q -p fpas-cli -- test tests/tui/frames/` | Move, close, resize, zoom, and scroll must repaint newly exposed frame cells. |
-| Menu overlay repair | `cargo run -q -p fpas-cli -- test tests/tui/menu/` | Pull-down overlays must open and close without leaving stale cells over frames. |
-
-## Smoke checks
-
-| Check | Command | Expected result |
-| ----- | ------- | --------------- |
-| Hosted startup and shutdown | `fpas examples/pascal/tui/minimal_application.fpas` | Alternate-screen/raw-mode state is restored after Escape exits. Initial paint shows the current terminal size. |
-| Redraw and resize | `fpas examples/pascal/tui/minimal_application.fpas` | Resizing the terminal updates the displayed size and does not leave stale rows or columns behind. |
-| Local view paint | `fpas examples/pascal/tui/local_view_paint.fpas` | View-local paint runs in the documented order and only redraws the visible host-managed regions. |
-| View-scoped commands | `fpas examples/pascal/tui/view_scoped_commands.fpas` | Tab traversal changes focus, focused-view shortcuts win over less-local command maps, and global shortcuts still work when no local binding matches. |
-| Menu overlay | `fpas examples/pascal/tui/menu_bar.fpas` | Keyboard and mouse navigation open pull-down menus, highlight the selected row, dispatch enabled commands, and repaint the application surface after the menu closes. |
-| Existing-view modal | `fpas examples/pascal/tui/show_modal_existing_view.fpas` | While the modal is active, focus, key commands, and mouse events are scoped to the modal view subtree. Closing the modal restores background interaction. |
-| Owned dialog modal | `fpas examples/pascal/tui/show_dialog.fpas` | Opens an owned modal root with OK/Cancel focus targets. Escape sets Cancel via modal-local command binding, closes the dialog, unregisters the owned root, and restores background focus. |
-| Painted frame windows | `fpas examples/pascal/tui/framed_window.fpas` | Two movable painted frame roots on a desktop work area; title-bar drag, F6 activation, and close chrome. |
-| Painted framed dialog | `fpas examples/pascal/tui/framed_dialog.fpas` | `ShowFramedDialog` opens gray modal chrome; OK, Escape, or ■ closes the owned frame and restores the desktop. |
-| IDE About dialog | `fpas apps/ide/ide.fpasprj` | Help → About immediately shows a framed dialog and its contents; Enter, Escape, and a left click on OK close it and restore the shell. |
-
-## Real-terminal observations
-
-For each smoke check, verify these points before marking the run clean:
-
-1. The terminal mode is restored after normal quit and after closing the terminal window.
-2. The cursor is not left hidden after the program exits.
-3. The screen does not flicker excessively during resize, focus traversal, or modal open/close.
-4. The first frame appears without requiring a key press.
-5. Rapid resize bursts settle on the final terminal size.
-6. Escape or the documented quit shortcut exits exactly once and does not require a second key press.
-7. Mouse-enabled examples do not leak clicks from an active modal to background views.
-8. Menu pull-downs and framed windows do not leave stale cells after open, close, move, resize, or
-   zoom.
-9. Paste/focus events, where supported by the terminal, do not panic and do not starve paint or quit
-   handling.
-
-## See also
-
+- [Application](app/README.md)
 - [Native testing](app/testing.md)
-- [Hosted dispatch](app/README.md)
-- [Terminal UI index](README.md)
-- [Standard library index](../README.md)

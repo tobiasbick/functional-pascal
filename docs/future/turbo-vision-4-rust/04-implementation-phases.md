@@ -47,7 +47,7 @@ Goal: prove Turbo Vision commands can call into FPAS.
   - [x] create window or dialog. Implemented `Application.CreateDialog`.
   - [x] create button. Implemented `Application.CreateButton`.
   - [x] register command callback. Implemented `Application.OnCommand`.
-  - [x] run or pump application. Implemented one-step `Application.Pump`.
+  - [x] run or pump application. Implemented one-step `Application.Pump` and the Turbo Vision branch of `Application.Run`.
   - [x] quit application. Implemented `Application.Quit`.
 - [x] Add sema registration for only the spike API.
 - [x] Add compiler lowering for only the spike API.
@@ -61,6 +61,10 @@ Notes:
 - The Rust VM test constructs `turbo_vision::core::event::Event::command(42)` and verifies that the registered FPAS `OnCommand` handler receives `42`.
 - Added the public headless spike API: `TuiDialog`, `TuiButton`, `Application.CreateDialog`, `Application.CreateButton`, `Application.AddChild`, `Application.OnCommand`, `Application.TestClickButton`, `Application.Pump`, and `Application.Quit`.
 - Added `tests/tui/controls/tui_turbo_vision_spike_test.fpas`, which creates a dialog/button, queues a button command, dispatches it through `Application.Pump`, and requests quit from the FPAS command handler.
+- Added `tests/tui/controls/tui_turbo_vision_run_test.fpas`, which uses `Application.Run` over the Turbo Vision headless path and verifies that the queued button command reaches FPAS.
+- `Application.Run` now detects Turbo Vision handles. In headless sessions it drains queued commands without a terminal; in terminal sessions it builds a short-lived upstream `turbo_vision::app::Application` from the Send-safe FPAS handle metadata and calls upstream `run()`.
+- `Application.Open` now opens a logical FPAS session without acquiring retained-engine terminal state. The old retained hosted loop acquires terminal state in its own `Application.Run` path; the Turbo Vision path leaves terminal initialization to upstream Turbo Vision.
+- Added `tui_session_open_deferred_does_not_acquire_terminal_writer` to guard the deferred-open terminal boundary.
 - Updated `docs/pascal/std/tui/app/README.md` for the implemented spike API only.
 
 Go/no-go:
@@ -68,19 +72,30 @@ Go/no-go:
 - [x] Button command reaches FPAS callback.
 - [x] Callback can request quit.
 - [x] Test can run without manual terminal interaction.
-- [ ] Production `Application.Open` / `Application.Run` use Turbo Vision's terminal application loop.
+- [x] Production `Application.Run` can use Turbo Vision's terminal application loop after Turbo Vision handles are created.
+- [x] Production `Application.Open` no longer acquires the old retained-engine terminal session before Turbo Vision runs.
 
 ## Phase 3: Remove Old Public Host API
 
 Goal: stop expanding the old retained engine.
 
-- [ ] Remove or de-register old `Application.Host*` public calls.
+- [x] Remove or de-register old `Application.Host*` public calls.
 - [ ] Remove old query calls tied to retained internals.
 - [ ] Remove old `TuiIntrinsic` variants that are no longer reachable.
-- [ ] Update compiler and bytecode tests.
+- [x] Update compiler tests for the removed public Host API.
+- [ ] Update bytecode tests after unreachable intrinsic variants are removed.
 - [ ] Update diagnostics to mention the new API when old symbols are absent.
 
 Temporary breakage allowed only inside this phase if fixed before moving on.
+
+Notes:
+
+- De-registered the old public `Application.Host*` Sema modules and removed the corresponding compiler lowering modules.
+- Replaced Sema tests with negative coverage showing old Host symbols are absent.
+- Replaced active compiler TUI tests with current session, Turbo Vision command-run, and old-symbol negative coverage.
+- Deleted FPAS TUI regression tests that only exercised the removed retained Host API.
+- Rewrote `docs/pascal/std/tui/` app/session pages so current docs describe implemented behavior only.
+- Remaining public retained transition surface is the old query set plus `ShowFramedDialog`; remove those next.
 
 ## Phase 4: Replace Runtime Engine
 

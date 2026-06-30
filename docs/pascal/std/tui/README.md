@@ -1,18 +1,19 @@
 # Terminal UI
 
-Hosted terminal applications and session APIs.
+Terminal UI APIs for Functional Pascal.
+
+The current `Std.Tui` surface is a small application facade plus a Turbo Vision command-callback spike. The previous retained public host API has been removed from the Pascal surface.
 
 | Topic | Description |
-|-------|-------------|
-| [Session API](session.md) | `Application.Open`, size, `RequestRedraw` |
-| [Hosted dispatch](app/README.md) | `Configure`, `Run`, `On*` handlers, host widgets |
-| [Views and focus](app/views.md) | Retained view tree, clipping, Tab focus, paint order |
-| [Modals and dialogs](app/modals.md) | `ShowModal`, `ShowDialog`, results, focus restore |
-| [Terminal checklist](terminal-checklist.md) | Manual smoke tests |
-| [Cell width](cell-width.md) | Unicode display-width policy for painting and layout |
+| --- | --- |
+| [Session API](session.md) | `Application.Open`, `Run`, `Close`, size, redraw |
+| [Application](app/README.md) | Current application, Turbo Vision handles, and test helpers |
+| [Types](app/types.md) | `Application`, `Rect`, `TuiDialog`, `TuiButton`, transition query records |
+| [Native testing](app/testing.md) | Headless tests with `OpenForTest` and `Test*` helpers |
+| [Terminal checklist](terminal-checklist.md) | Local verification commands |
+| [Cell width](cell-width.md) | Unicode display-width policy |
 
-## See also
+## See Also
 
-- [`Std.Console`](../console/README.md) — low-level I/O and events
-- [Concurrency — scheduling](../../language/concurrency/scheduling.md) — main-thread `On*` handlers
-- [Standard library index](../README.md)
+- [`Std.Console`](../console/README.md)
+- [Std index](../README.md)

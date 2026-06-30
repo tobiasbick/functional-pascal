@@ -130,30 +130,21 @@ end.",
 }
 
 #[test]
-fn std_tui_host_dispatch_surface_typechecks() {
-    check_ok(
+fn std_tui_old_host_dispatch_surface_is_not_registered() {
+    let errs = check_errors(
         "\
 program T;
 uses Std.Tui;
 
-procedure OnPaint(App: Application);
-begin
-end;
-
-procedure OnIdle(App: Application);
-begin
-end;
-
 begin
   var App: Application := Application.Open();
-    Application.HostRegisterOnPaint(App, OnPaint);
-        Application.HostRegisterOnIdle(App, 16, OnIdle);
-  var Tag: integer := Application.HostProcessNext(App, 64);
-  var Dr: integer := Application.HostDispatchRedraw(App);
-  Application.HostRequestQuit(App);
-    Application.Run(App);
-  Application.HostRunLoop(App, 8);
+  Application.HostProcessNext(App, 64)
 end.",
+    );
+    assert!(
+        errs.iter().any(|e| e.message.contains("Unknown procedure")
+            && e.message.contains("Application.HostProcessNext")),
+        "{errs:#?}"
     );
 }
 
@@ -176,7 +167,7 @@ end.",
 }
 
 #[test]
-fn std_tui_host_register_on_idle_wrong_arg_count() {
+fn std_tui_old_host_idle_registration_is_not_registered() {
     let errs = check_errors(
         "\
 program T;
@@ -187,39 +178,15 @@ begin
 end.",
     );
     assert!(
-        errs.iter()
-            .any(|e| e.message.contains("expects 3 arguments, got 2")),
+        errs.iter().any(|e| e.message.contains("Unknown procedure")
+            && e.message.contains("Application.HostRegisterOnIdle")),
         "{errs:#?}"
     );
 }
 
 #[test]
-fn std_tui_host_register_on_idle_requires_procedure_signature() {
+fn std_tui_old_host_exit_registration_is_not_registered() {
     let errs = check_errors(
-        "\
-program T;
-uses Std.Tui;
-
-function WrongOnIdle(App: Application): boolean;
-begin
-  return true
-end;
-
-begin
-  var App: Application := Application.Open();
-  Application.HostRegisterOnIdle(App, 10, WrongOnIdle)
-end.",
-    );
-    assert!(
-        errs.iter()
-            .any(|e| e.message.contains("procedure") || e.message.contains("Type mismatch")),
-        "{errs:#?}"
-    );
-}
-
-#[test]
-fn std_tui_host_register_on_exit_typechecks() {
-    check_ok(
         "\
 program T;
 uses Std.Tui;
@@ -234,10 +201,15 @@ begin
   Application.Close(App)
 end.",
     );
+    assert!(
+        errs.iter().any(|e| e.message.contains("Unknown procedure")
+            && e.message.contains("Application.HostRegisterOnExit")),
+        "{errs:#?}"
+    );
 }
 
 #[test]
-fn std_tui_host_run_loop_wrong_arg_count() {
+fn std_tui_old_host_run_loop_is_not_registered() {
     let errs = check_errors(
         "\
 program T;
@@ -248,68 +220,27 @@ begin
 end.",
     );
     assert!(
-        errs.iter()
-            .any(|e| e.message.contains("expects 2 arguments, got 1")),
+        errs.iter().any(|e| e.message.contains("Unknown procedure")
+            && e.message.contains("Application.HostRunLoop")),
         "{errs:#?}"
     );
 }
 
 #[test]
-fn std_tui_host_register_on_exit_wrong_arg_count() {
-    let errs = check_errors(
-        "\
-program T;
-uses Std.Tui;
-begin
-  var App: Application := Application.Open();
-  Application.HostRegisterOnExit(App)
-end.",
-    );
-    assert!(
-        errs.iter()
-            .any(|e| e.message.contains("expects 2 arguments, got 1")),
-        "{errs:#?}"
-    );
-}
-
-#[test]
-fn std_tui_host_register_on_exit_requires_procedure_signature() {
+fn std_tui_old_host_request_quit_is_not_registered() {
     let errs = check_errors(
         "\
 program T;
 uses Std.Tui;
 
-function WrongOnExit(App: Application; Reason: ExitReason): boolean;
-begin
-  return true
-end;
-
 begin
   var App: Application := Application.Open();
-  Application.HostRegisterOnExit(App, WrongOnExit)
+  Application.HostRequestQuit(App)
 end.",
     );
     assert!(
-        errs.iter()
-            .any(|e| { e.message.contains("procedure") || e.message.contains("Type mismatch") }),
-        "{errs:#?}"
-    );
-}
-
-#[test]
-fn std_tui_host_request_quit_wrong_arg_count() {
-    let errs = check_errors(
-        "\
-program T;
-uses Std.Tui;
-begin
-  var App: Application := Application.Open();
-  Application.HostRequestQuit(App, App)
-end.",
-    );
-    assert!(
-        errs.iter()
-            .any(|e| e.message.contains("expects 1 arguments, got 2")),
+        errs.iter().any(|e| e.message.contains("Unknown procedure")
+            && e.message.contains("Application.HostRequestQuit")),
         "{errs:#?}"
     );
 }

@@ -1,4 +1,4 @@
-//! Lower frame-root host calls.
+//! Lower frame-root dialog and query calls.
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/frames.md`
 
@@ -10,56 +10,23 @@ use fpas_std::std_symbols as s;
 use super::super::super::Compiler;
 
 impl Compiler {
-    /// Lower one frame-root call when `name` belongs to the frame host API.
+    /// Lower one frame-root call when `name` belongs to the remaining frame API.
     pub(super) fn compile_tui_frame_call(
         &mut self,
         name: &str,
         args: &[Expr],
         location: SourceLocation,
     ) -> Result<bool, CompileError> {
-        let (arity, intrinsic, returns_value) = match name {
-            s::STD_TUI_APPLICATION_HOST_SET_DESKTOP_WORK_AREA => {
-                (5, TuiIntrinsic::HostSetDesktopWorkArea, true)
-            }
-            s::STD_TUI_APPLICATION_HOST_CREATE_FRAME_VIEW => {
-                (12, TuiIntrinsic::HostCreateFrameView, true)
-            }
+        let (arity, intrinsic) = match name {
             s::STD_TUI_APPLICATION_SHOW_FRAMED_DIALOG => {
-                (12, TuiIntrinsic::ApplicationShowFramedDialog, true)
+                (12, TuiIntrinsic::ApplicationShowFramedDialog)
             }
-            s::STD_TUI_APPLICATION_HOST_ACTIVATE_NEXT_WINDOW => {
-                (1, TuiIntrinsic::HostActivateNextWindow, true)
-            }
-            s::STD_TUI_APPLICATION_HOST_ZOOM_FRAME_ROOT => {
-                (2, TuiIntrinsic::HostZoomFrameRoot, true)
-            }
-            s::STD_TUI_APPLICATION_HOST_RESTORE_FRAME_ROOT => {
-                (2, TuiIntrinsic::HostRestoreFrameRoot, true)
-            }
-            s::STD_TUI_APPLICATION_QUERY_FRAME_ROOT_STATE => {
-                (2, TuiIntrinsic::QueryFrameRootState, true)
-            }
-            s::STD_TUI_APPLICATION_HOST_CASCADE_FRAME_ROOTS => {
-                (3, TuiIntrinsic::HostCascadeFrameRoots, true)
-            }
-            s::STD_TUI_APPLICATION_HOST_TILE_FRAME_ROOTS => {
-                (1, TuiIntrinsic::HostTileFrameRoots, true)
-            }
-            s::STD_TUI_APPLICATION_HOST_SET_FRAME_CONTENT_SIZE => {
-                (4, TuiIntrinsic::HostSetFrameContentSize, false)
-            }
-            s::STD_TUI_APPLICATION_HOST_SCROLL_FRAME => (4, TuiIntrinsic::HostScrollFrame, false),
-            s::STD_TUI_APPLICATION_HOST_SET_FRAME_SCROLL_OFFSET => {
-                (4, TuiIntrinsic::HostSetFrameScrollOffset, false)
-            }
+            s::STD_TUI_APPLICATION_QUERY_FRAME_ROOT_STATE => (2, TuiIntrinsic::QueryFrameRootState),
             s::STD_TUI_APPLICATION_QUERY_FRAME_SCROLL_STATE => {
-                (2, TuiIntrinsic::QueryFrameScrollState, true)
+                (2, TuiIntrinsic::QueryFrameScrollState)
             }
             s::STD_TUI_APPLICATION_QUERY_FRAME_WINDOW_LIST => {
-                (1, TuiIntrinsic::QueryFrameWindowList, true)
-            }
-            s::STD_TUI_APPLICATION_HOST_ACTIVATE_FRAME_WINDOW => {
-                (2, TuiIntrinsic::HostActivateFrameWindow, true)
+                (1, TuiIntrinsic::QueryFrameWindowList)
             }
             _ => return Ok(false),
         };
@@ -67,11 +34,7 @@ impl Compiler {
         for arg in args {
             self.compile_expr(arg)?;
         }
-        if returns_value {
-            self.emit_intrinsic(Intrinsic::Tui(intrinsic), location);
-        } else {
-            self.emit_intrinsic_unit(Intrinsic::Tui(intrinsic), location);
-        }
+        self.emit_intrinsic(Intrinsic::Tui(intrinsic), location);
         Ok(true)
     }
 }

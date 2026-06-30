@@ -174,6 +174,7 @@ pub(crate) struct TurboVisionDialog {
     pub children: Vec<u32>,
 }
 
+#[derive(Clone)]
 pub(crate) struct TurboVisionButton {
     pub bounds: TurboVisionRect,
     pub text: String,

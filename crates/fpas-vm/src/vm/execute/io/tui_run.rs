@@ -26,6 +26,17 @@ enum IdleWaitOutcome {
 impl Worker {
     pub(super) fn tui_application_run(&mut self, line: SourceLocation) -> Result<(), VmError> {
         self.pop_tui_application(line)?;
+        if self.with_tui(|tui| !tui.turbo_vision.objects.is_empty()) {
+            let run_result = self.turbo_vision_application_run(line);
+            let close_result = self.close_tui_application_state(line);
+
+            return match (run_result, close_result) {
+                (Err(error), _) => Err(error),
+                (Ok(()), Err(error)) => Err(error),
+                (Ok(()), Ok(())) => Ok(()),
+            };
+        }
+
         self.prepare_tui_application_run(line)?;
 
         let run_result = self.tui_application_run_loop(line);
@@ -76,6 +87,9 @@ impl Worker {
                 line,
             ));
         }
+        self.with_console_and_key_input(|console, key_input| {
+            tui.session.acquire_terminal(console, key_input, line)
+        })?;
         tui.run_active = true;
         Ok(())
     }

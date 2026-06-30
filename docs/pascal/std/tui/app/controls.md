@@ -1,90 +1,17 @@
-# Retained controls
+# Std.Tui controls
 
-`Std.Tui` exposes native label, button, input-line, memo, checkbox, radio-group, list-box, scroll-bar, and
-scroll-view controls. The host paints them with the built-in dialog palette and integrates them with
-retained focus, clipping, commands, mouse input, keyboard input, and paste.
+The old retained `Application.HostCreate*View` control API is no longer public.
 
-## Construction
+The current Turbo Vision spike exposes only button handles:
 
-All constructors start with `(App, X, Y, Width, Height)` and return `ViewId`:
+| Symbol | Description |
+| --- | --- |
+| `TuiButton` | Opaque Turbo Vision button handle. |
+| `Application.CreateButton(App, Bounds, Text, CommandId): TuiButton` | Create a button. |
+| `Application.AddChild(App, Dialog, Button)` | Attach the button to a dialog. |
+| `Application.TestClickButton(App, Button)` | Queue a headless test click for the button. |
 
-| Call suffix | Model arguments |
-| ----------- | --------------- |
-| `HostCreateLabelView` | `Text`, `Accelerator: Option of string` |
-| `HostCreateButtonView` | `Caption`, `CommandId: Option of integer`, `IsDefault` |
-| `HostCreateInputLineView` | `Text` |
-| `HostCreateMemoView` | `Text` (multiline, `\n` separated) |
-| `HostCreateCheckBoxView` | `Label`, `Accelerator`, `CommandId`, `Checked` |
-| `HostCreateRadioGroupView` | `Options: array of RadioOption` |
-| `HostCreateListBoxView` | `Items: array of ListBoxItem` |
-| `HostCreateScrollBarView` | `ContentLength`, `ViewportLength`, `Vertical` |
-| `HostCreateScrollView` | `Lines: array of string` |
+## See Also
 
-`RadioOption` contains `label`, `accelerator`, `commandId`, and `enabled`. Labels are not selectable;
-the other controls are selectable Tab stops. Parent them with `HostSetViewParent` when used in
-a dialog subtree.
-
-## Input and commands
-
-- Buttons activate on left-button release after a left-button press on the same button, or with
-  Enter/Space. Releasing outside the pressed button cancels the mouse activation.
-- Input lines accept character keys, Left/Right/Home/End, Backspace/Delete, and bracketed paste.
-- Memos accept character keys, Enter for new lines, arrow keys with Shift for selection, PageUp/PageDown
-  for vertical scroll, Backspace/Delete, and bracketed paste. An integrated vertical scroll bar appears
-  when line count exceeds the view height.
-- Checkboxes toggle with left click, Enter, or Space.
-- Radio groups move the focused option with arrow keys and select with Enter/Space; clicking a row
-  selects it directly.
-- Optional command ids invoke `ApplicationHandlers.OnCommand` after activation.
-- List boxes use Up/Down/Home/End, Enter/Space, direct row clicks, and mouse-wheel scrolling.
-  Empty list boxes paint a disabled `(empty)` placeholder in the first row.
-- Empty memos paint a disabled `(empty)` placeholder until they receive focus or contain text.
-- Focused buttons, checkboxes, selected list-box rows, and focused radio options use the shared
-  active dialog palette. Input lines and memos use the same active palette for the cursor cell.
-- Scroll bars and scroll views use Up/Down/Home/End, PageUp/PageDown, mouse-wheel scrolling, and
-  scroll-bar arrow/track clicks. Dragging the thumb captures the pointer until button release.
-  Scroll views reserve one column for an integrated vertical bar when content overflows.
-
-## State
-
-| Call | Result/effect |
-| ---- | ------------- |
-| `QueryInputLineState` | `InputLineState(text, cursor, scrollOffset)` |
-| `QueryMemoState` | `MemoState(text, cursorLine, cursorColumn, scrollOffset, selectionAnchorLine, selectionAnchorColumn)`; anchor fields are `-1` when no range is active |
-| `QueryCheckBoxState` | `CheckBoxState(checked)` |
-| `QueryRadioGroupState` | `RadioGroupState(selectedIndex, focusedIndex)`; `-1` means none |
-| `HostSetInputLineText` | Replaces text and clamps cursor |
-| `HostSetMemoText` | Replaces memo text and resets cursor, selection, and scroll |
-| `HostSetCheckBoxChecked` | Sets checked state |
-| `HostSetRadioGroupSelected` | Selects an enabled zero-based option |
-| `QueryListBoxState` | `ListBoxState(selectedIndex, scrollOffset)`; `-1` means no enabled row |
-| `HostSetListBoxItems` | Replaces rows and resets selection/scroll |
-| `HostSetListBoxSelected` | Selects and reveals an enabled row |
-| `QueryScrollBarState` | `ScrollBarState(scrollOffset, contentLength, viewportLength)` |
-| `HostSetScrollBarExtents` | Replaces logical scroll extents and clamps offset |
-| `QueryScrollViewState` | `ScrollViewState(scrollOffset, lineCount)` |
-| `HostSetScrollViewLines` | Replaces lines and resets scroll |
-
-## Examples
-
-| Path | Demonstrates |
-| ---- | ------------ |
-| [`examples/pascal/tui/settings_dialog.fpas`](../../../../../examples/pascal/tui/settings_dialog.fpas) | Label, input line, checkbox, radio group, list box, memo, and OK/Cancel buttons in one framed modal |
-| [`tests/tui/modals/tui_settings_dialog_workflow_test.fpas`](../../../../../tests/tui/modals/tui_settings_dialog_workflow_test.fpas) | Headless workflow coverage for the same mixed-control dialog shape |
-| [`tests/tui/controls/tui_controls_test.fpas`](../../../../../tests/tui/controls/tui_controls_test.fpas) | Standalone label, button, input, checkbox, and radio interactions |
-| [`tests/tui/controls/tui_list_box_test.fpas`](../../../../../tests/tui/controls/tui_list_box_test.fpas) | List selection, command dispatch, scrolling, and empty-state behavior |
-| [`tests/tui/controls/tui_memo_test.fpas`](../../../../../tests/tui/controls/tui_memo_test.fpas) | Memo editing, newline insertion, paste, state query, and reset |
-
-## Implementation (contributors)
-
-| Concern | Location |
-| ------- | -------- |
-| Models/paint | `crates/fpas-std/src/tui/widget/control/` |
-| VM bridge/input | `crates/fpas-vm/src/vm/execute/io/tui/control_model/` |
-| FPAS regression | `tests/tui/controls/tui_controls_test.fpas`, `tests/tui/controls/tui_memo_test.fpas`, `tests/tui/controls/tui_list_box_test.fpas`, `tests/tui/controls/tui_scroll_bar_test.fpas`, `tests/tui/controls/tui_scroll_view_test.fpas` |
-
-## See also
-
-- [Views and focus](views.md)
+- [Application](README.md)
 - [Native testing](testing.md)
-- [`Std.Tui` application](README.md)

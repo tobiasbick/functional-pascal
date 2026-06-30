@@ -17,7 +17,6 @@ struct ExampleCase {
 const NON_INTERACTIVE_CHECK_EXAMPLES: &[&str] = &[
     "examples/pascal/library-deps/mylib/mylib.fpasprj",
     "examples/pascal/monorepo/monorepo.fpasworkspace",
-    "apps/ide/ide.fpasprj",
 ];
 
 /// Canonical allowlist for automated example runs (CI, agents, local smoke).
@@ -172,18 +171,6 @@ const NON_INTERACTIVE_EXAMPLES: &[ExampleCase] = &[
     },
     ExampleCase {
         path: "examples/pascal/std/time_basics.fpas",
-        args: &[],
-    },
-    ExampleCase {
-        path: "examples/pascal/tui/host_dispatch_minimal.fpas",
-        args: &[],
-    },
-    ExampleCase {
-        path: "examples/pascal/tui/host_dispatch_paint.fpas",
-        args: &[],
-    },
-    ExampleCase {
-        path: "examples/pascal/tui/host_dispatch_quit.fpas",
         args: &[],
     },
     ExampleCase {

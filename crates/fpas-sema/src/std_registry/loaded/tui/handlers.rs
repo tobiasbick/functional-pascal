@@ -9,10 +9,6 @@ use fpas_std::std_symbols as s;
 pub(super) struct TuiRegistrationTypes<'a> {
     /// `Std.Tui.Application` type.
     pub application: &'a Ty,
-    /// `Std.Tui.ViewId` type.
-    pub view_id: &'a Ty,
-    /// `Std.Tui.Rect` type.
-    pub rect: &'a Ty,
     /// `Std.Tui.Size` type.
     pub size: &'a Ty,
     /// `Std.Console.KeyEvent` type.
@@ -32,8 +28,6 @@ pub(super) fn register_application_handlers(
 ) -> (Ty, TuiCallbackTypes) {
     let &TuiRegistrationTypes {
         application,
-        view_id,
-        rect,
         size,
         key_event,
         console_event,
@@ -70,15 +64,6 @@ pub(super) fn register_application_handlers(
         params: vec![
             p("App", application.clone(), false),
             p("CommandId", Ty::Integer, false),
-        ],
-        variadic: false,
-    });
-    let on_view_paint = Ty::Procedure(ProcedureTy {
-        type_params: Vec::new(),
-        params: vec![
-            p("App", application.clone(), false),
-            p("ViewId", view_id.clone(), false),
-            p("Rect", rect.clone(), false),
         ],
         variadic: false,
     });
@@ -197,21 +182,7 @@ pub(super) fn register_application_handlers(
         ],
     );
 
-    let callbacks = TuiCallbackTypes {
-        on_key_pressed,
-        on_mouse,
-        on_paste,
-        on_focus_gained,
-        on_focus_lost,
-        on_activate,
-        on_deactivate,
-        on_command,
-        on_view_paint,
-        on_resize,
-        on_paint,
-        on_idle,
-        on_exit,
-    };
+    let callbacks = TuiCallbackTypes { on_command };
 
     (application_handlers, callbacks)
 }

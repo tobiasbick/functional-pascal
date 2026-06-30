@@ -6,9 +6,54 @@ use crate::console_event::ConsoleEvent;
 use crate::key_event::key_kind_index;
 use crate::{ConsoleKeyEvent, DamageRegion};
 use fpas_bytecode::SourceLocation;
+use std::io::{self, Write};
+use std::sync::{Arc, Mutex};
 
 fn test_location() -> SourceLocation {
     SourceLocation::new(1, 1)
+}
+
+#[derive(Clone)]
+struct SharedBufferWriter {
+    bytes: Arc<Mutex<Vec<u8>>>,
+}
+
+impl Write for SharedBufferWriter {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.bytes.lock().unwrap().extend_from_slice(buf);
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+}
+
+fn console_with_shared_writer() -> (Console, Arc<Mutex<Vec<u8>>>) {
+    let bytes = Arc::new(Mutex::new(Vec::new()));
+    let writer = SharedBufferWriter {
+        bytes: Arc::clone(&bytes),
+    };
+    (Console::with_writer(Box::new(writer)), bytes)
+}
+
+#[test]
+fn tui_session_open_deferred_does_not_acquire_terminal_writer() {
+    let mut session = TuiSession::default();
+    let (mut console, bytes) = console_with_shared_writer();
+    let mut key_input = KeyInput::new();
+
+    session
+        .open_deferred(&mut console, test_location())
+        .expect("deferred open should succeed");
+    session
+        .close(&mut console, &mut key_input, test_location())
+        .expect("close should succeed");
+
+    assert!(
+        bytes.lock().unwrap().is_empty(),
+        "deferred TUI open should not emit terminal control sequences"
+    );
 }
 
 #[test]

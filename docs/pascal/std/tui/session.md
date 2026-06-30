@@ -1,244 +1,68 @@
-# `Std.Tui`
+# Std.Tui session API
 
-Terminal-application structure for Functional Pascal programs that manage their own state and main loop.
+`Std.Tui` provides an opaque `Application` handle for terminal UI sessions.
 
-Add the unit to your program:
+## Quick Reference
+
+| Symbol | Description |
+| --- | --- |
+| `Application.Open(): Application` | Create a logical application handle. |
+| `Application.OpenForTest(Width, Height): Application` | Create a headless test application. |
+| `Application.Close(App)` | Close a logical application handle. |
+| `Application.CloseForTest(App)` | Close a headless test application. |
+| `Application.Size(App): Size` | Return the current size. |
+| `Application.RequestRedraw(App)` | Mark the app dirty. |
+| `Application.Run(App)` | Run the active backend and close the app on success. |
+| `Application.Quit(App)` | Request that the running backend exits. |
+
+`Application.Open` returns immediately and does not acquire terminal state. Backend-specific terminal ownership starts in `Application.Run`.
+
+After a successful `Application.Run(App)`, the runtime has already closed `App`; calling `Application.Close(App)` again is a runtime error.
+
+## Example
 
 ```pascal
-program Example;
-uses Std.Tui;
+program TuiButtonTest;
+
+uses Std.Tui, Std.Test;
+
+mutable var
+  mutable var LastCommand: integer := -1;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
 begin
-  var App: Application := Application.Open();
-  Application.Close(App)
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+procedure OnCommand(App: Application; CommandId: integer);
+begin
+  LastCommand := CommandId;
+  Application.Quit(App)
+end;
+
+begin
+  var App: Application := Application.OpenForTest(40, 12);
+  var Dialog: TuiDialog := Application.CreateDialog(App, Bounds(2, 1, 24, 8), 'Demo');
+  var Button: TuiButton := Application.CreateButton(App, Bounds(4, 4, 10, 2), 'Quit', 77);
+  Application.AddChild(App, Dialog, Button);
+  Application.OnCommand(App, OnCommand);
+  Application.TestClickButton(App, Button);
+  Application.Run(App);
+  AssertEquals(77, LastCommand)
 end.
 ```
 
-
-## Importing and names
-
-After `uses Std.Tui;` you can refer to the unit in either form:
-
-
-| Style               | Example                      |
-| ------------------- | ---------------------------- |
-| **Fully qualified** | `Std.Tui.Application.Open()` |
-| **Short**           | `Application.Open()`         |
-
-
-`Std.Tui` exports nested names such as `Application.Open`, `Application.Run`, and `EventKind.Resize`. These short forms are available only when `Std.Tui` appears in `uses`.
-
-For the **Rust-hosted dispatch bridge** (`Application.HostProcessNext`, `Application.HostDispatchRedraw`, …), see [Hosted dispatch](app/README.md).
-
-`Std.Tui` builds on [`Std.Console`](../console/README.md): the `key` field of `Std.Tui.TuiEvent` has type **`Std.Console.KeyEvent`** (and its `kind` field is **`Std.Console.KeyKind`**). The **`Tui`** prefix avoids clashing with **`Std.Console.Event`**. Import **`Std.Console`** alongside **`Std.Tui`** when you need short names such as `KeyKind` or `WriteLn`, or use fully qualified `Std.Console.*` names.
-
----
-
-## Current status
-
-`Std.Tui` provides a **hosted dispatch** application path:
-
-- `Application` is the TUI session handle.
-- `Size` exposes terminal width and height.
-- `TuiEvent` and `EventKind` describe key and resize input for handler signatures.
-- `Application.RequestRedraw` marks the session as needing a hosted redraw.
-- `Application.Configure` + `Application.Run` register `On*` handlers and run the Rust-hosted loop.
-
-Session lifecycle:
-
-- `Application.Open` starts the terminal session (raw mode and alternate screen when connected to a real terminal).
-- `Application.Close` releases that session and restores terminal state.
-- `Application.Size` reads the current terminal dimensions.
-- `Application.Run` closes the session automatically when the hosted loop exits.
-
-See [Hosted dispatch](app/README.md) for the full dispatch API, `ApplicationHandlers`, [views and focus](app/views.md), and [modals and dialogs](app/modals.md).
-
----
-
-## Quick reference
-
-Everything below requires `uses Std.Tui;`. Key types for `TuiEvent.key` come from `**Std.Console`** (add `uses Std.Console` for short names like `KeyKind`).
-
-
-| Kind         | Name                                                                                        | Notes                                                              |
-| ------------ | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| type         | `Application`                                                                               | opaque application/session handle                                  |
-| type         | `Size`                                                                                      | record with `width` and `height`                                   |
-| type         | `EventKind`                                                                                 | enum with `Key` and `Resize`                                       |
-| type         | `TuiEvent`                                                                                  | record for one application event (`key` is `Std.Console.KeyEvent`) |
-| type         | `Std.Console.KeyKind`                                                                       | enum for logical keys (reused; not defined under `Std.Tui`)        |
-| type         | `Std.Console.KeyEvent`                                                                      | record for one key input (reused; not defined under `Std.Tui`)     |
-| function     | `Application.Open(): Application`                                                           | create/open an application session                                 |
-| procedure    | `Application.Close(App: Application)`                                                       | close the application session                                      |
-| function     | `Application.Size(App: Application): Size`                                                  | current terminal size                                              |
-| procedure    | `Application.Configure(App: Application; Handlers: ApplicationHandlers)`                    | register hosted `On*` handlers                                     |
-| procedure    | `Application.Run(App: Application)`                                                         | run the hosted event loop (closes the session on exit)             |
-| procedure    | `Application.RequestRedraw(App: Application)`                                               | mark the application as needing redraw                             |
-| enum members | `Std.Console.KeyKind.`* (short `KeyKind.*` with `uses Std.Console`)                         | same as [`Std.Console`](../console/README.md)                             |
-| enum members | `EventKind.Key`, `EventKind.Resize`                                                         | TUI event kinds                                                    |
-
-
----
-
-## Types
-
-### Type `Application`
-
-Logical name: `Std.Tui.Application`. Short: `Application` when `Std.Tui` is imported.
-
-`Application` is an opaque handle for terminal-session lifecycle, event access, and redraw coordination. Programs keep ownership of their own state; the handle exists only to model the session itself.
-
----
-
-### Type `Size`
-
-Logical name: `Std.Tui.Size`. Short: `Size` when `Std.Tui` is imported.
-
-Conceptual declaration:
-
-```pascal
-type Size = record
-  width: integer;
-  height: integer
-end;
-```
-
-
-| Field    | Type      | Meaning                  |
-| -------- | --------- | ------------------------ |
-| `width`  | `integer` | terminal width in cells  |
-| `height` | `integer` | terminal height in cells |
-
-
----
-
-### Key input types (`Std.Console.KeyKind`, `Std.Console.KeyEvent`)
-
-`Std.Tui` does not define its own key types. Use **`Std.Console.KeyKind`** and **`Std.Console.KeyEvent`** for `TuiEvent.key` (see [`Std.Console`](../console/README.md) — `ReadKeyEvent`, `KeyEvent`, `KeyKind`). With `uses Std.Console`, the short names **`KeyKind`** and **`KeyEvent`** refer to those console types.
-
----
-
-### Type `EventKind`
-
-Logical name: `Std.Tui.EventKind`. Short: `EventKind` when `Std.Tui` is imported.
-
-Variants:
-
-- `Key`
-- `Resize`
-
----
-
-### Type `TuiEvent`
-
-Logical name: `Std.Tui.TuiEvent`. Short: `TuiEvent` when `Std.Tui` is imported.
-
-Conceptual declaration:
-
-```pascal
-type TuiEvent = record
-  kind: EventKind;
-  key: Std.Console.KeyEvent;
-  size: Size
-end;
-```
-
-
-| Field  | Type                   | Meaning                          |
-| ------ | ---------------------- | -------------------------------- |
-| `kind` | `EventKind`            | which event payload is active    |
-| `key`  | `Std.Console.KeyEvent` | populated for `EventKind.Key`    |
-| `size` | `Size`                 | populated for `EventKind.Resize` |
-
-
----
-
-## Routines
-
-### `function Application.Open(): Application`
-
-Create or open a terminal application session.
-
-The initial runtime acquires the terminal session needed for a TUI loop by enabling raw mode and entering the alternate screen when the runtime is connected to an interactive terminal.
-
-### `procedure Application.Close(App: Application)`
-
-Close the application session and release its terminal-session ownership.
-
-The initial runtime restores any terminal state acquired by `Application.Open()`.
-
-### `function Application.Size(App: Application): Size`
-
-Return the current terminal size for the application.
-
-### `procedure Application.RequestRedraw(App: Application)`
-
-Mark the application as needing a redraw. The hosted loop consumes this flag before the next hosted paint pass.
-
-**Runtime (Rust only):** `TuiSession::is_redraw_pending` in `crates/fpas-std` peeks the same flag without consuming it; used by the VM host when servicing `TuiHostDispatchRedraw` and the bounded `TuiHostRunLoop` path (see `docs/pascal/std/tui/app/README.md`).
-
----
-
-## Dispatch model
-
-For full applications, use `Application.Configure` + `Application.Run` instead of a manual event loop. Register `On*` handlers once; the host calls them:
-
-```pascal
-program TuiMinimalApplication;
-uses Std.Console, Std.Tui;
-
-procedure OnPaint(App: Application);
-begin
-  var S: Size := Application.Size(App);
-  ClrScr();
-  GotoXY(1, 1);
-  WriteLn('Size: ', S.width, 'x', S.height);
-  WriteLn('Press Escape to exit')
-end;
-
-function OnKeyPressed(App: Application; Key: Std.Console.KeyEvent): boolean;
-begin
-  if Key.kind = KeyKind.Escape then
-  begin
-    Application.HostRequestQuit(App);
-    return true
-  end;
-  Application.RequestRedraw(App);
-  return false
-end;
-
-procedure OnResize(App: Application; NewSize: Size);
-begin
-  Application.RequestRedraw(App)
-end;
-
-begin
-  var App: Application := Application.Open();
-  var Handlers: ApplicationHandlers := record
-    OnPaint := Some(OnPaint);
-    OnKeyPressed := Some(OnKeyPressed);
-    OnResize := Some(OnResize);
-  end;
-  Application.Configure(App, Handlers);
-  Application.Run(App)
-end.
-```
-
-`Application.Run` performs `Application.Close` automatically after the loop exits. See [Hosted dispatch](app/README.md) for the full dispatch API and `ApplicationHandlers` fields.
-
-Example: [`examples/pascal/tui/minimal_application.fpas`](../../../../examples/pascal/tui/minimal_application.fpas)
-
----
-
-## Implementation (contributors)
+## Implementation
 
 | Concern | Location |
-|---------|----------|
+| --- | --- |
 | Sema registry | [`loaded/tui/mod.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/tui/mod.rs) |
-| Std units | [`std_units/mod.rs`](../../../../crates/fpas-std/src/std_units/mod.rs) |
+| Compiler lowering | [`std_calls/tui/`](../../../../crates/fpas-compiler/src/compiler/std_calls/tui/) |
+| VM execution | [`execute/io/tui/`](../../../../crates/fpas-vm/src/vm/execute/io/tui/) |
+| Runtime session | [`tui/session/`](../../../../crates/fpas-std/src/tui/session/) |
 
-## See also
+## See Also
 
 - [Terminal UI index](README.md)
-- [Hosted dispatch](app/README.md)
-- [`Std.Console`](../console/README.md)
-- [Standard library index](../README.md)
+- [Application](app/README.md)
+- [Std index](../README.md)

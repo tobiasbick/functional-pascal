@@ -45,65 +45,6 @@ impl Compiler {
                 );
                 Ok(true)
             }
-            s::STD_TUI_APPLICATION_HOST_BIND_COMMAND_TO_ACTIVE_MODAL => {
-                self.expect_exact_args(
-                    s::STD_TUI_APPLICATION_HOST_BIND_COMMAND_TO_ACTIVE_MODAL,
-                    3,
-                    args,
-                    location,
-                )?;
-                for arg in args {
-                    self.compile_expr(arg)?;
-                }
-                self.emit_intrinsic_unit(
-                    Intrinsic::Tui(TuiIntrinsic::HostBindCommandToActiveModal),
-                    location,
-                );
-                Ok(true)
-            }
-            s::STD_TUI_APPLICATION_HOST_ENTER_MODAL => {
-                self.expect_exact_args(s::STD_TUI_APPLICATION_HOST_ENTER_MODAL, 2, args, location)?;
-                self.compile_expr(&args[0])?;
-                self.compile_expr(&args[1])?;
-                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostEnterModal), location);
-                Ok(true)
-            }
-            s::STD_TUI_APPLICATION_HOST_LEAVE_MODAL => {
-                self.expect_exact_args(s::STD_TUI_APPLICATION_HOST_LEAVE_MODAL, 1, args, location)?;
-                self.compile_expr(&args[0])?;
-                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::HostLeaveModal), location);
-                Ok(true)
-            }
-            s::STD_TUI_APPLICATION_HOST_SET_ACTIVE_MODAL_RESULT => {
-                self.expect_exact_args(
-                    s::STD_TUI_APPLICATION_HOST_SET_ACTIVE_MODAL_RESULT,
-                    2,
-                    args,
-                    location,
-                )?;
-                self.compile_expr(&args[0])?;
-                self.compile_expr(&args[1])?;
-                self.emit_intrinsic_unit(
-                    Intrinsic::Tui(TuiIntrinsic::HostSetActiveModalResult),
-                    location,
-                );
-                Ok(true)
-            }
-            s::STD_TUI_APPLICATION_HOST_ATTACH_VIEW_TO_ACTIVE_MODAL => {
-                self.expect_exact_args(
-                    s::STD_TUI_APPLICATION_HOST_ATTACH_VIEW_TO_ACTIVE_MODAL,
-                    2,
-                    args,
-                    location,
-                )?;
-                self.compile_expr(&args[0])?;
-                self.compile_expr(&args[1])?;
-                self.emit_intrinsic_unit(
-                    Intrinsic::Tui(TuiIntrinsic::HostAttachViewToActiveModal),
-                    location,
-                );
-                Ok(true)
-            }
             _ => Ok(false),
         }
     }

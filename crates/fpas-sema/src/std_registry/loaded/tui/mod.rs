@@ -6,11 +6,9 @@
 //! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 mod application_api;
-mod control_api;
 mod control_types;
 mod frame_api;
 mod handlers;
-mod host_api;
 mod introspection_types;
 
 use crate::check::Checker;
@@ -31,28 +29,12 @@ struct TuiTypes {
     key_event: Ty,
     console_event: Ty,
     application_handlers: Ty,
-    menu_bar_item: Ty,
-    menu_bar_style: Ty,
-    status_bar_segment: Ty,
-    status_bar_style: Ty,
     introspection: introspection_types::TuiIntrospectionTypes,
     controls: control_types::TuiControlTypes,
 }
 
 struct TuiCallbackTypes {
-    on_key_pressed: Ty,
-    on_mouse: Ty,
-    on_paste: Ty,
-    on_focus_gained: Ty,
-    on_focus_lost: Ty,
-    on_activate: Ty,
-    on_deactivate: Ty,
     on_command: Ty,
-    on_view_paint: Ty,
-    on_resize: Ty,
-    on_paint: Ty,
-    on_idle: Ty,
-    on_exit: Ty,
 }
 
 /// Register the `Std.Tui` semantic surface, including the application API and host bridge.
@@ -163,8 +145,6 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             ),
         ],
     );
-    let menu_bar_item =
-        type_registration::lookup_required_type(checker, s::STD_TUI_MENU_BAR_ITEM, "MenuBarItem");
     type_registration::register_record_type(
         checker,
         s::STD_TUI_MENU_BAR_STYLE,
@@ -177,8 +157,6 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             ("DisabledFg".into(), Ty::Integer),
         ],
     );
-    let menu_bar_style =
-        type_registration::lookup_required_type(checker, s::STD_TUI_MENU_BAR_STYLE, "MenuBarStyle");
     type_registration::register_record_type(
         checker,
         s::STD_TUI_STATUS_BAR_SEGMENT,
@@ -187,27 +165,15 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             ("AlignRight".into(), Ty::Boolean),
         ],
     );
-    let status_bar_segment = type_registration::lookup_required_type(
-        checker,
-        s::STD_TUI_STATUS_BAR_SEGMENT,
-        "StatusBarSegment",
-    );
     type_registration::register_record_type(
         checker,
         s::STD_TUI_STATUS_BAR_STYLE,
         vec![("BarBg".into(), Ty::Integer), ("BarFg".into(), Ty::Integer)],
     );
-    let status_bar_style = type_registration::lookup_required_type(
-        checker,
-        s::STD_TUI_STATUS_BAR_STYLE,
-        "StatusBarStyle",
-    );
     let (application_handlers, callbacks) = handlers::register_application_handlers(
         checker,
         &handlers::TuiRegistrationTypes {
             application: &application,
-            view_id: &view_id,
-            rect: &rect,
             size: &size,
             key_event: &key_event,
             console_event: &console_event,
@@ -236,15 +202,9 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         key_event,
         console_event,
         application_handlers,
-        menu_bar_item,
-        menu_bar_style,
-        status_bar_segment,
-        status_bar_style,
         introspection,
         controls,
     };
     application_api::register_application_api(checker, &types, &callbacks);
-    control_api::register(checker, &types);
     frame_api::register(checker, &types);
-    host_api::register_host_api(checker, &types, &callbacks);
 }

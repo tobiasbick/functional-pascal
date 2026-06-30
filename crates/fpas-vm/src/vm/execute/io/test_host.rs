@@ -6,8 +6,7 @@ use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use fpas_bytecode::{Intrinsic, SourceLocation, TestIntrinsic, Value};
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
-use fpas_std::ViewId;
-use fpas_std::{assert_screen_cell, assert_screen_line, assert_view_rect};
+use fpas_std::{assert_screen_cell, assert_screen_line};
 
 impl Worker {
     /// Executes `Std.Test` intrinsics that need hosted console or view state.
@@ -44,25 +43,6 @@ impl Worker {
                     actual_ch,
                     actual_fg,
                     actual_bg,
-                    line,
-                )?;
-            }
-            Intrinsic::Test(TestIntrinsic::AssertViewRect) => {
-                let expected_height = self.pop_int(line)?;
-                let expected_width = self.pop_int(line)?;
-                let expected_y = self.pop_int(line)?;
-                let expected_x = self.pop_int(line)?;
-                let view_id = self.pop_query_view_id(line)?;
-                self.pop_tui_application(line)?;
-                let rect = self
-                    .with_tui(|tui| tui.views.rect(view_id))
-                    .ok_or_else(|| query_view_rect_error(view_id, line))?;
-                assert_view_rect(
-                    expected_x,
-                    expected_y,
-                    expected_width,
-                    expected_height,
-                    rect,
                     line,
                 )?;
             }
@@ -131,18 +111,6 @@ fn query_cell_error(x: u16, y: u16, line: SourceLocation) -> VmError {
         RUNTIME_CONSOLE_STATE_ERROR,
         format!("AssertScreenCell({x}, {y}, …) is out of range or uses non-CRT colors."),
         "Assert cells inside the virtual screen after paint; v1 supports packed CRT colors only (0..=15).",
-        line,
-    )
-}
-
-fn query_view_rect_error(view_id: ViewId, line: SourceLocation) -> VmError {
-    runtime_error(
-        RUNTIME_CONSOLE_STATE_ERROR,
-        format!(
-            "AssertViewRect(App, {}, …) could not resolve the view rectangle.",
-            view_id.raw()
-        ),
-        "Pass a view handle returned by `Application.HostRegisterView` or a host widget constructor.",
         line,
     )
 }

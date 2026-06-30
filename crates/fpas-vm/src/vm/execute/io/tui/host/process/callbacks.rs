@@ -54,13 +54,8 @@ impl Worker {
         result
     }
 
-    /// Returns a redraw hint scoped to the focused view when one exists.
+    /// Returns a full-frame redraw hint for hosted event handlers.
     pub(super) fn focused_view_redraw_hint(&self) -> DamageRegion {
-        let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-        tui.views
-            .focused_id()
-            .and_then(|view_id| tui.views.rect(view_id))
-            .map(DamageRegion::Rect)
-            .unwrap_or(DamageRegion::FullFrame)
+        DamageRegion::FullFrame
     }
 }

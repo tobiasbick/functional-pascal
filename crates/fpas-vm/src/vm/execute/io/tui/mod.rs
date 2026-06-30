@@ -3,10 +3,8 @@
 //! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 mod application;
-mod damage;
 mod handlers;
 mod host;
-mod modal_host;
 mod query_host;
 mod records;
 mod test_host;

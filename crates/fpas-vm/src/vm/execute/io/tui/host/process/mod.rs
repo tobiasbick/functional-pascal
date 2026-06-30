@@ -4,14 +4,13 @@
 
 mod callbacks;
 mod command;
-mod focus;
 mod key;
 mod pointer;
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
 use fpas_bytecode::SourceLocation;
-use fpas_std::{ProcessOutcome, UiEvent, UiResize, ViewId, ViewRect};
+use fpas_std::{ProcessOutcome, UiEvent, UiResize};
 
 #[derive(Clone, Copy)]
 struct DispatchOutcomes {
@@ -24,9 +23,7 @@ impl Worker {
     ///
     /// Returns a status tag: `0` = none, `1` = key dispatched, `2` = resize dispatched,
     /// `3` = key (no handler), `4` = resize (no handler), `5`/`7`/`8`/`9`/`10`/`11`/`12`/`13`
-    /// for mouse/paste/focus events (dispatched or not), `18` = key blocked by active modal
-    /// scope, `19` = mouse blocked by active modal scope, `20` = command blocked by active
-    /// modal scope, `22` = key handler returned `false` (not consumed).
+    /// for mouse/paste/focus events (dispatched or not), `22` = key handler returned `false`.
     pub(in crate::vm::execute::io) fn tui_host_process_next_inner(
         &mut self,
         max_spins: usize,
@@ -71,23 +68,12 @@ impl Worker {
         };
 
         let app_rec = Self::tui_application_record();
-        let modal_scope = self.active_modal_scope();
 
         match event {
-            UiEvent::Key(key_event) => self.dispatch_tui_key_event(
-                key_event,
-                on_key,
-                app_rec,
-                modal_scope.as_deref(),
-                line,
-            ),
-            UiEvent::Mouse(mouse) => self.dispatch_tui_mouse_event(
-                mouse,
-                on_mouse,
-                app_rec,
-                modal_scope.as_deref(),
-                line,
-            ),
+            UiEvent::Key(key_event) => {
+                self.dispatch_tui_key_event(key_event, on_key, app_rec, line)
+            }
+            UiEvent::Mouse(mouse) => self.dispatch_tui_mouse_event(mouse, on_mouse, app_rec, line),
             UiEvent::Paste(text) => self.dispatch_console_event_handler(
                 on_paste,
                 [app_rec, Self::console_paste_event_record(text)],
@@ -108,21 +94,16 @@ impl Worker {
                 },
                 line,
             ),
-            UiEvent::FocusLost => {
-                self.with_tui(|tui| {
-                    tui.views.cancel_pointer_interactions();
-                });
-                self.dispatch_console_event_handler(
-                    on_focus_lost,
-                    [app_rec, Self::console_focus_lost_event_record()],
-                    Some(self.focused_view_redraw_hint()),
-                    DispatchOutcomes {
-                        hit: ProcessOutcome::FocusLost { handled: true },
-                        miss: ProcessOutcome::FocusLost { handled: false },
-                    },
-                    line,
-                )
-            }
+            UiEvent::FocusLost => self.dispatch_console_event_handler(
+                on_focus_lost,
+                [app_rec, Self::console_focus_lost_event_record()],
+                Some(self.focused_view_redraw_hint()),
+                DispatchOutcomes {
+                    hit: ProcessOutcome::FocusLost { handled: true },
+                    miss: ProcessOutcome::FocusLost { handled: false },
+                },
+                line,
+            ),
             UiEvent::Resize(UiResize {
                 old_width,
                 old_height,
@@ -131,19 +112,10 @@ impl Worker {
             }) => {
                 let old_width = old_width.unwrap_or(width);
                 let old_height = old_height.unwrap_or(height);
-                let terminal = ViewRect {
-                    x: 0,
-                    y: 0,
-                    width,
-                    height,
-                };
                 self.with_tui(|tui| {
                     let _ = tui
                         .session
                         .request_resize_redraw(old_width, old_height, width, height, line);
-                    let previous = Self::all_roots_damage_rects(tui);
-                    let _ = tui.views.relayout_all_roots(terminal);
-                    Self::request_all_roots_subtree_damage(tui, &previous, line);
                 });
                 if let Some(handler) = on_resize {
                     let _ = self.call_function_sync_allowing_shutdown(
@@ -158,11 +130,5 @@ impl Worker {
             }
             UiEvent::CloseRequested | UiEvent::Wheel(_) => Ok(ProcessOutcome::Idle),
         }
-    }
-
-    fn active_modal_scope(&self) -> Option<Vec<ViewId>> {
-        let tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-        let scope = Self::modal_scope_ids(&tui);
-        (!scope.is_empty()).then_some(scope)
     }
 }

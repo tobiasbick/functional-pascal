@@ -16,8 +16,7 @@
 
 use fpas_bytecode::{Chunk, Value};
 use fpas_std::{
-    CommandRegistry, Console, GraphHost, GraphSession, KeyInput, ModalStack, TextInput, TuiSession,
-    UiHost, ViewId, ViewRegistry, ViewWidget,
+    CommandRegistry, Console, GraphHost, GraphSession, KeyInput, TextInput, TuiSession, UiHost,
 };
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt;
@@ -63,12 +62,6 @@ pub(crate) struct TuiState {
     pub on_resize: Option<Value>,
     /// `OnPaint`-style handler: `procedure (Application)` (one argument).
     pub on_paint: Option<Value>,
-    /// View-local paint handlers: `procedure (Application, ViewId, Std.Tui.Rect)` keyed by view.
-    pub view_paints: HashMap<ViewId, Value>,
-    /// Native host widgets keyed by view id (for example solid-fill backgrounds).
-    pub view_widgets: HashMap<ViewId, ViewWidget>,
-    /// View-local command bindings keyed by the view whose ancestry should resolve them.
-    pub view_commands: HashMap<ViewId, CommandRegistry>,
     /// `OnIdle`-style handler: `procedure (Application)` (one argument).
     pub on_idle: Option<Value>,
     /// Idle interval for hosted `Application.Run` callbacks in milliseconds; `0` disables idle.
@@ -83,12 +76,8 @@ pub(crate) struct TuiState {
     pub host_stop_requested: bool,
     /// Guards the single hosted `Application.Run` entrypoint for the active session.
     pub run_active: bool,
-    /// Host-managed view registry for the active session (Phase 7 view/dialog surface).
-    pub views: ViewRegistry,
     /// Host-managed command shortcut registry for the active session (Phase 7).
     pub commands: CommandRegistry,
-    /// Host-managed modal stack for the active session (Phase 7).
-    pub modals: ModalStack,
     /// Turbo Vision backed handles for the `Std.Tui` rewrite spike.
     pub turbo_vision: TurboVisionState,
 }
@@ -108,9 +97,6 @@ impl Default for TuiState {
             on_command: None,
             on_resize: None,
             on_paint: None,
-            view_paints: HashMap::new(),
-            view_widgets: HashMap::new(),
-            view_commands: HashMap::new(),
             on_idle: None,
             idle_interval_ms: 0,
             on_exit: None,
@@ -118,9 +104,7 @@ impl Default for TuiState {
             quit_requested: false,
             host_stop_requested: false,
             run_active: false,
-            views: ViewRegistry::default(),
             commands: CommandRegistry::default(),
-            modals: ModalStack::default(),
             turbo_vision: TurboVisionState::default(),
         }
     }

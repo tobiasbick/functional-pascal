@@ -60,7 +60,6 @@ pub(crate) fn run(
         }
         TestIntrinsic::AssertScreenLine
         | TestIntrinsic::AssertScreenCell
-        | TestIntrinsic::AssertViewRect
         | TestIntrinsic::PushReadLn => {
             return Err(std_internal_error(
                 "internal: Std.Test input/screen/view assertions are handled in the VM",

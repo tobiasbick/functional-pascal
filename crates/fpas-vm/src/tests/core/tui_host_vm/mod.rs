@@ -6,7 +6,6 @@ use fpas_bytecode::{Chunk, Intrinsic, Op, TuiIntrinsic, Value};
 use fpas_std::ConsoleEvent;
 use fpas_std::ConsoleKeyEvent;
 use fpas_std::DamageRegion;
-use fpas_std::ViewId;
 use fpas_std::ViewRect;
 use fpas_std::key_event::key_kind_index;
 use std::sync::Arc;
@@ -14,7 +13,7 @@ use std::sync::Arc;
 use crate::Vm;
 use crate::tests::helpers::{
     build_function_chunk, emit_constant, key_event_value, loc, minimal_shared_state, run_err,
-    run_ok_output, tui_application_value, tui_view_id_value,
+    run_ok_output, tui_application_value,
 };
 use crate::vm::Worker;
 

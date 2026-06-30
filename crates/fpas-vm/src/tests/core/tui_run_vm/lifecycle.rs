@@ -371,9 +371,9 @@ fn tui_application_run_rejects_missing_on_paint_handler() {
 
     let error = run_err(chunk);
     assert!(
-        error.message.contains(
-            "Application.Run(App) requires a registered OnPaint handler, local view paint handler, or host widget view"
-        ),
+        error
+            .message
+            .contains("Application.Run(App) requires a registered OnPaint handler"),
         "unexpected runtime error: {}",
         error.message
     );

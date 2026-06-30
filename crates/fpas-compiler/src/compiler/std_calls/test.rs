@@ -79,14 +79,6 @@ impl Compiler {
                 );
                 Ok(true)
             }
-            s::STD_TEST_ASSERT_VIEW_RECT => {
-                self.expect_exact_args(s::STD_TEST_ASSERT_VIEW_RECT, 6, args, location)?;
-                for arg in args {
-                    self.compile_expr(arg)?;
-                }
-                self.emit_intrinsic_unit(Intrinsic::Test(TestIntrinsic::AssertViewRect), location);
-                Ok(true)
-            }
             s::STD_TEST_PUSH_READLN => {
                 self.expect_exact_args(s::STD_TEST_PUSH_READLN, 1, args, location)?;
                 self.compile_expr(&args[0])?;

@@ -6,7 +6,6 @@ use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use fpas_bytecode::{Intrinsic, SourceLocation, TuiIntrinsic, Value};
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
-use fpas_std::ViewId;
 
 impl Worker {
     /// Executes read-only native TUI query intrinsics.
@@ -82,14 +81,6 @@ impl Worker {
             ));
         }
         Ok(x as u16)
-    }
-
-    pub(in crate::vm::execute::io) fn pop_query_view_id(
-        &mut self,
-        line: SourceLocation,
-    ) -> Result<ViewId, VmError> {
-        let view_id = self.pop_tui_view_id(line)?;
-        self.require_registered_tui_view(view_id, line)
     }
 }
 

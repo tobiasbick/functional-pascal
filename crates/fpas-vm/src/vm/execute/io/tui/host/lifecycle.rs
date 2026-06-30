@@ -93,9 +93,6 @@ impl Worker {
         tui.on_command = None;
         tui.on_resize = None;
         tui.on_paint = None;
-        tui.view_paints.clear();
-        tui.view_widgets.clear();
-        tui.view_commands.clear();
         tui.on_idle = None;
         tui.idle_interval_ms = 0;
         tui.on_exit = None;
@@ -103,9 +100,7 @@ impl Worker {
         tui.quit_requested = false;
         tui.host_stop_requested = false;
         tui.run_active = false;
-        tui.views.clear();
         tui.commands.clear();
-        tui.modals.clear();
         tui.turbo_vision = Default::default();
         close_result?;
         Ok(())
@@ -132,11 +127,7 @@ impl Worker {
         tui.on_command = None;
         tui.on_resize = None;
         tui.on_paint = None;
-        tui.view_paints.clear();
-        tui.view_widgets.clear();
-        tui.view_commands.clear();
         tui.commands.clear();
-        tui.modals.clear();
         tui.turbo_vision = Default::default();
     }
 }

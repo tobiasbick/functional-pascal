@@ -2,7 +2,7 @@
 
 This page tracks the public Pascal-to-VM bridge for contributors.
 
-The old public `Application.Host*` view, modal, and widget bridge has been removed from bytecode and the VM `views/*` module. The transitional retained `ViewRegistry` remains only for the host event loop until a follow-up removes it from `fpas-std` and `TuiState`.
+The old public `Application.Host*` view, modal, and widget bridge has been removed from bytecode, the VM, and `fpas-std`. The hosted loop supports global handlers (`HostRegisterOnPaint`, `HostRegisterOnKeyPressed`, `HostBindCommand`, and related calls) plus screen queries. Turbo Vision widget construction uses the separate `Create*` facade.
 
 Current public lowering includes:
 

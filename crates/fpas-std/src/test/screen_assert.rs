@@ -3,7 +3,6 @@
 //! **Documentation:** `docs/pascal/std/testing/test.md`
 
 use super::assert::{assert_equals_integer, assert_equals_string, fail_with_message};
-use crate::ViewRect;
 use crate::error::StdError;
 use fpas_bytecode::SourceLocation;
 
@@ -38,19 +37,4 @@ pub fn assert_screen_cell(
     }
     assert_equals_integer(expected_fg, i64::from(actual_fg), location)?;
     assert_equals_integer(expected_bg, i64::from(actual_bg), location)
-}
-
-/// Fail when a view rectangle differs from the expected bounds.
-pub fn assert_view_rect(
-    expected_x: i64,
-    expected_y: i64,
-    expected_width: i64,
-    expected_height: i64,
-    actual: ViewRect,
-    location: SourceLocation,
-) -> Result<(), StdError> {
-    assert_equals_integer(expected_x, actual.x, location)?;
-    assert_equals_integer(expected_y, actual.y, location)?;
-    assert_equals_integer(expected_width, actual.width, location)?;
-    assert_equals_integer(expected_height, actual.height, location)
 }

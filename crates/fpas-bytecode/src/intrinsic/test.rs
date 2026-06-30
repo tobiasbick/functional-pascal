@@ -39,12 +39,6 @@ pub enum TestIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/testing/test.md`
     AssertScreenCell = 376,
-    /// `Std.Test.AssertViewRect(App, V, X, Y, W, H)` — compare a view rectangle.
-    ///
-    /// Stack: `App`, `V`, `X`, `Y`, `W`, `H` (`H` on top).
-    ///
-    /// **Documentation:** `docs/pascal/std/testing/test.md`
-    AssertViewRect = 377,
 
     /// `Std.Test.PushReadLn(Line)` — queue one line for the next `Std.Console.ReadLn`.
     ///

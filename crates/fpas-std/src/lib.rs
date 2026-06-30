@@ -73,19 +73,12 @@ pub use std_units::{
     canonical_std_unit_from_tail, is_std_root_segment, std_symbols, std_unit_symbols,
     std_units_list_for_hint,
 };
-pub use test::{
-    assert_screen_cell, assert_screen_line, assert_view_rect, reset_test_skip_state,
-    test_was_skipped,
-};
+pub use test::{assert_screen_cell, assert_screen_line, reset_test_skip_state, test_was_skipped};
 pub use tui::{
     BlockedInput, COMMAND_ID_CLOSE, COMMAND_ID_NEXT_WINDOW, COMMAND_ID_ZOOM, COMMAND_ID_ZOOM_BACK,
-    CommandEvent, CommandId, CommandKind, CommandRegistry, DamageRegion, DesktopMetrics,
-    EventOutcome, EventPhase, EventRoute, FocusDirection, ModalClose, ModalId, ModalResult,
-    ModalStack, ProcessOutcome, ResolvedView, RootActivation, RoutedEvent, ScrollBarStyle,
-    SolidFillWidget, StatusBarSegment, StatusBarStyle, StatusBarWidget, TUI_EVENT_KIND_VARIANTS,
-    TUI_EXIT_REASON_VARIANTS, TUI_VIEW_KIND_VARIANTS, TuiEvent, TuiHost, TuiSession, ViewId,
-    ViewKind, ViewLayout, ViewOptions, ViewRect, ViewRegistry, ViewState, ViewWidget,
-    WindowPalette, WindowShadow,
+    CommandEvent, CommandId, CommandKind, CommandRegistry, DamageRegion, FocusDirection,
+    ProcessOutcome, TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent, TuiHost,
+    TuiSession, ViewId, ViewRect,
 };
 pub use ui::{UiEvent, UiHost, UiHostSurface, UiModifiers, UiMouse, UiResize, UiWheel};
 

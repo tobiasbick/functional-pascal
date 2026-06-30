@@ -377,6 +377,5 @@ pub(in super::super) const STD_TEST_SYMBOLS: &[&str] = &[
     std_symbols::STD_TEST_SKIP,
     std_symbols::STD_TEST_ASSERT_SCREEN_LINE,
     std_symbols::STD_TEST_ASSERT_SCREEN_CELL,
-    std_symbols::STD_TEST_ASSERT_VIEW_RECT,
     std_symbols::STD_TEST_PUSH_READLN,
 ];

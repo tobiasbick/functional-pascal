@@ -39,10 +39,6 @@ macro_rules! std_tui {
     };
 }
 
-mod tui_introspection;
-pub use tui_introspection::*;
-mod tui_view_state;
-pub use tui_view_state::*;
 macro_rules! std_graph {
     ($suffix:literal) => {
         concat!("Std.Graph.", $suffix)
@@ -544,5 +540,4 @@ pub const STD_TEST_FAIL: &str = std_test!("Fail");
 pub const STD_TEST_SKIP: &str = std_test!("Skip");
 pub const STD_TEST_ASSERT_SCREEN_LINE: &str = std_test!("AssertScreenLine");
 pub const STD_TEST_ASSERT_SCREEN_CELL: &str = std_test!("AssertScreenCell");
-pub const STD_TEST_ASSERT_VIEW_RECT: &str = std_test!("AssertViewRect");
 pub const STD_TEST_PUSH_READLN: &str = std_test!("PushReadLn");

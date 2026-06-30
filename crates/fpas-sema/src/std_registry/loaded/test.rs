@@ -4,7 +4,6 @@
 
 use super::super::builtins::register_assert_equals_builtin;
 use super::super::{define_proc, p};
-use super::type_registration;
 use crate::check::Checker;
 use crate::types::Ty;
 use fpas_std::std_symbols as s;
@@ -45,22 +44,4 @@ pub(super) fn register_std_test(checker: &mut Checker) {
         s::STD_TEST_PUSH_READLN,
         vec![p("Line", Ty::String, false)],
     );
-    if checker.scopes.lookup(s::STD_TUI_APPLICATION).is_some() {
-        let application =
-            type_registration::lookup_required_type(checker, s::STD_TUI_APPLICATION, "Application");
-        let view_id =
-            type_registration::lookup_required_type(checker, s::STD_TUI_VIEW_ID, "ViewId");
-        define_proc(
-            checker,
-            s::STD_TEST_ASSERT_VIEW_RECT,
-            vec![
-                p("App", application, false),
-                p("V", view_id, false),
-                p("X", Ty::Integer, false),
-                p("Y", Ty::Integer, false),
-                p("W", Ty::Integer, false),
-                p("H", Ty::Integer, false),
-            ],
-        );
-    }
 }

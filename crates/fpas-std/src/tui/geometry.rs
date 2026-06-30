@@ -1,36 +1,10 @@
-//! Rust-internal view registry for the TUI application framework (Phase 7).
+//! Terminal-cell geometry types shared by session, host, and screen queries.
 //!
-//! View handles are opaque identifiers maintained entirely by the host. The registry tracks a
-//! small view tree: root views use absolute terminal coordinates, child views use coordinates
-//! relative to their parent, and sibling order defines paint and hit-test z-order.
-//!
-//! Spec: `docs/pascal/std/tui/app/README.md`
+//! **Documentation:** `docs/pascal/std/tui/app/README.md` (from the repository root).
 
-mod activation;
-mod desktop;
-mod focus;
-mod geometry;
-mod introspection;
-mod layout;
-mod routing;
-mod state;
-mod tree;
-
-use std::collections::HashMap;
-
-#[cfg(test)]
-mod tests;
-
-pub use activation::RootActivation;
-pub use desktop::{DesktopMetrics, WindowPalette, WindowShadow};
-pub use introspection::{TUI_VIEW_KIND_VARIANTS, ViewKind};
-pub use layout::ViewLayout;
-pub use routing::{EventOutcome, EventPhase, EventRoute, RoutedEvent};
-pub use state::{ResolvedView, ViewOptions, ViewState};
-
-/// Opaque handle identifying a host-managed view.
+/// Opaque handle identifying a host-managed view or Turbo Vision widget.
 ///
-/// FPAS still treats this as an integer token on the Pascal side.
+/// FPAS treats this as an integer token on the Pascal side.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ViewId(u32);
 
@@ -41,14 +15,14 @@ impl ViewId {
         Self(raw)
     }
 
-    /// Return the raw host representation used in the VM bridge today.
+    /// Return the raw host representation used in the VM bridge.
     #[must_use]
     pub const fn raw(self) -> u32 {
         self.0
     }
 }
 
-/// Axis-aligned bounding box for a view in terminal-cell coordinates.
+/// Axis-aligned bounding box in terminal-cell coordinates.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ViewRect {
     /// Left edge in terminal cells.
@@ -132,35 +106,4 @@ impl ViewRect {
     fn bottom(self) -> i64 {
         self.y.saturating_add(self.height.max(0))
     }
-}
-
-#[derive(Debug)]
-struct ViewEntry {
-    id: ViewId,
-    local_rect: ViewRect,
-    parent: Option<ViewId>,
-    children: Vec<ViewId>,
-    current_child: Option<ViewId>,
-    state: ViewState,
-    options: ViewOptions,
-    layout: ViewLayout,
-}
-
-/// Host-side registry for all active views in a TUI session.
-///
-/// Root views use absolute terminal coordinates. Child views use coordinates relative to their
-/// parent. Sibling insertion order defines z-order: later siblings paint later and therefore sit
-/// on top during hit-testing.
-///
-/// Focus traversal is derived from tree order and each view's [`ViewOptions`].
-#[derive(Debug, Default)]
-pub struct ViewRegistry {
-    next_id: u32,
-    views: Vec<ViewEntry>,
-    view_index: HashMap<ViewId, usize>,
-    roots: Vec<ViewId>,
-    focused: Option<ViewId>,
-    pointer_capture: Option<ViewId>,
-    pointer_press: Option<ViewId>,
-    desktop: DesktopMetrics,
 }

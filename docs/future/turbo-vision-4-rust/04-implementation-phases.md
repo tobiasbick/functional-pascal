@@ -107,7 +107,7 @@ Notes:
 Goal: make Turbo Vision the only production TUI engine.
 
 - [x] Remove old frame/window manager.
-- [ ] Remove old retained view registry.
+- [x] Remove old retained view registry.
 - [x] Remove old menu widget implementation.
 - [x] Remove old retained control-widget intrinsic and event dispatch paths.
 - [x] Remove remaining old control-widget storage/rendering where Turbo Vision supplies replacements.
@@ -127,7 +127,8 @@ Notes:
 - Moved `activate_next_root_excluding` into `view/activation.rs` so `NextWindow` still cycles retained roots without the frame module.
 - Kept generic desktop metrics, root shadows, and solid-fill/status-bar widgets for the transitional retained view registry.
 - Next: remove the retained `ViewRegistry` from `fpas-std` and `TuiState`, then continue Turbo Vision-backed module layout from the phase target tree.
-- Removed the VM `views/*` bytecode bridge and retained-view/modal/status-bar intrinsic variants. Kept `HostBindCommand`, host-loop handlers, and `modal_host` helpers for the transitional retained engine. Pruned `STD_TUI_SYMBOLS` to the current public Turbo Vision facade plus host-loop symbols.
+- Removed the VM `views/*` bytecode bridge and retained-view/modal/status-bar intrinsic variants. Pruned `STD_TUI_SYMBOLS` to the current public Turbo Vision facade plus host-loop symbols.
+- Removed `fpas-std/tui/view/*`, `widget/*`, and `modal/*` plus `TuiState.views`, `view_paints`, `view_widgets`, `view_commands`, and `modals`. The hosted loop now uses global `OnPaint` only; event handlers request full-frame redraw hints. Removed `Std.Test.AssertViewRect`.
 
 Expected new layout, adjust before editing if implementation reveals better boundaries:
 

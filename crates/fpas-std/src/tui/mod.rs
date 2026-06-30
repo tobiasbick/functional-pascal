@@ -1,16 +1,14 @@
-//! `Std.Tui` runtime: session, host bridge, views, widgets, and dispatch helpers.
+//! `Std.Tui` runtime: session, host bridge, commands, and dispatch helpers.
 //!
 //! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 mod command;
 mod damage;
 mod event;
+mod geometry;
 mod host;
-mod modal;
 mod process;
 mod session;
-mod view;
-mod widget;
 
 #[cfg(test)]
 mod tests;
@@ -21,15 +19,7 @@ pub use command::{
 };
 pub use damage::DamageRegion;
 pub use event::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent};
+pub use geometry::{ViewId, ViewRect};
 pub use host::TuiHost;
-pub use modal::{ModalClose, ModalId, ModalResult, ModalStack};
 pub use process::{BlockedInput, FocusDirection, ProcessOutcome};
 pub use session::TuiSession;
-pub use view::{
-    DesktopMetrics, EventOutcome, EventPhase, EventRoute, ResolvedView, RootActivation,
-    RoutedEvent, TUI_VIEW_KIND_VARIANTS, ViewId, ViewKind, ViewLayout, ViewOptions, ViewRect,
-    ViewRegistry, ViewState, WindowPalette, WindowShadow,
-};
-pub use widget::{
-    ScrollBarStyle, SolidFillWidget, StatusBarSegment, StatusBarStyle, StatusBarWidget, ViewWidget,
-};

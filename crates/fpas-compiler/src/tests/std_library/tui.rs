@@ -5,6 +5,14 @@
 use super::super::{compile_and_run, compile_err, compile_ok, compile_run_error};
 use fpas_bytecode::{Intrinsic, Op, TuiIntrinsic};
 
+fn has_removed_tui_help(error: &fpas_diagnostics::Diagnostic) -> bool {
+    error.help.as_deref().is_some_and(|help| {
+        help.contains("old retained Std.Tui host/view API")
+            && help.contains("Application.CreateDialog")
+            && help.contains("Application.OnCommand")
+    })
+}
+
 #[test]
 fn std_tui_open_close_and_reopen_succeeds() {
     let out = compile_and_run(
@@ -104,7 +112,8 @@ end.",
 
     assert!(
         err.message.contains("Unknown procedure")
-            && err.message.contains("Application.HostRequestQuit"),
+            && err.message.contains("Application.HostRequestQuit")
+            && has_removed_tui_help(&err),
         "unexpected compiler error: {}",
         err.message
     );
@@ -126,7 +135,8 @@ end.",
     assert!(
         (err.message.contains("Unknown function or procedure")
             || err.message.contains("Unknown procedure"))
-            && err.message.contains("Application.QuerySceneGraph"),
+            && err.message.contains("Application.QuerySceneGraph")
+            && has_removed_tui_help(&err),
         "unexpected compiler error: {}",
         err.message
     );
@@ -148,7 +158,8 @@ end.",
     assert!(
         (err.message.contains("Unknown function or procedure")
             || err.message.contains("Unknown procedure"))
-            && err.message.contains("Application.ShowFramedDialog"),
+            && err.message.contains("Application.ShowFramedDialog")
+            && has_removed_tui_help(&err),
         "unexpected compiler error: {}",
         err.message
     );

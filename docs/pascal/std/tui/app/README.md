@@ -3,6 +3,7 @@
 `Std.Tui.Application` is the application facade for terminal UI code.
 
 The current public surface is intentionally small while the implementation moves to the Rust `turbo-vision` crate. The old retained `Application.Host*` API is not registered.
+Calls to removed retained APIs such as `Application.Host*`, retained view queries, modal queries, and `Application.ShowFramedDialog` report a Sema error with a migration hint toward the current Turbo Vision facade.
 
 ## Current API
 

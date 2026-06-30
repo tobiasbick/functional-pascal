@@ -1,12 +1,17 @@
 use super::Checker;
+use crate::check::name_resolution::removed_std_symbols::hint_for_removed_std_callable;
 use crate::std_units::hint_for_unknown_std_name;
 use fpas_parser::{Designator, DesignatorPart};
 
+mod removed_std_symbols;
 mod std_names;
 mod types;
 
 impl Checker {
     pub(crate) fn hint_unknown_callable(&self, name: &str) -> String {
+        if let Some(hint) = hint_for_removed_std_callable(name) {
+            return hint.to_string();
+        }
         hint_for_unknown_std_name(name, &self.loaded_std_units)
     }
 

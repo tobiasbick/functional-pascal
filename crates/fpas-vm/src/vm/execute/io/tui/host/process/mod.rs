@@ -88,22 +88,16 @@ impl Worker {
                 modal_scope.as_deref(),
                 line,
             ),
-            UiEvent::Paste(text) => {
-                if self.try_dispatch_control_paste(&text, line) {
-                    Ok(ProcessOutcome::WidgetConsumed)
-                } else {
-                    self.dispatch_console_event_handler(
-                        on_paste,
-                        [app_rec, Self::console_paste_event_record(text)],
-                        Some(self.focused_view_redraw_hint()),
-                        DispatchOutcomes {
-                            hit: ProcessOutcome::Paste { handled: true },
-                            miss: ProcessOutcome::Paste { handled: false },
-                        },
-                        line,
-                    )
-                }
-            }
+            UiEvent::Paste(text) => self.dispatch_console_event_handler(
+                on_paste,
+                [app_rec, Self::console_paste_event_record(text)],
+                Some(self.focused_view_redraw_hint()),
+                DispatchOutcomes {
+                    hit: ProcessOutcome::Paste { handled: true },
+                    miss: ProcessOutcome::Paste { handled: false },
+                },
+                line,
+            ),
             UiEvent::FocusGained => {
                 let outcome = self.dispatch_console_event_handler(
                     on_focus_gained,

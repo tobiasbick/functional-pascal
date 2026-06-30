@@ -25,7 +25,6 @@ impl Worker {
         };
 
         if self.try_exec_tui_modal_intrinsic(intrinsic, line)?
-            || self.try_exec_tui_control_intrinsic(intrinsic, line)?
             || self.try_exec_tui_command_binding_intrinsic(intrinsic, line)?
             || self.try_exec_tui_view_tree_intrinsic(intrinsic, line)?
             || self.try_exec_tui_view_widget_intrinsic(intrinsic, line)?

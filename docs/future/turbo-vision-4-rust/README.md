@@ -25,6 +25,5 @@ Use [implementation phases](04-implementation-phases.md) as the tracked checklis
 
 Planned next work:
 
-- Add old-symbol diagnostics that point users at the current Turbo Vision facade.
 - Replace retained-engine internals with Turbo Vision-backed application, dialog, command, event, and widget modules.
 - Migrate TUI examples and `apps/ide` to the new API.

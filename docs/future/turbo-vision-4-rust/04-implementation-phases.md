@@ -84,7 +84,7 @@ Goal: stop expanding the old retained engine.
 - [x] Remove old `TuiIntrinsic` variants that are no longer reachable.
 - [x] Update compiler tests for the removed public Host API.
 - [x] Update bytecode tests after unreachable intrinsic variants are removed.
-- [ ] Update diagnostics to mention the new API when old symbols are absent.
+- [x] Update diagnostics to mention the new API when old symbols are absent.
 
 Temporary breakage allowed only inside this phase if fixed before moving on.
 
@@ -99,7 +99,8 @@ Notes:
 - Kept only headless screen queries (`QueryScreenSize`, `QueryScreenLine`, `QueryScreenCell`) as current public test surface.
 - Removed the now-unreachable retained query, frame, framed-dialog, modal-depth, and focused-view `TuiIntrinsic` variants.
 - Replaced retained query bytecode tests with screen-query coverage and removed direct frame/framed-dialog intrinsic tests.
-- Next: add old-symbol diagnostics that point users at the current Turbo Vision facade.
+- Added Sema diagnostics for removed old TUI symbols so unknown `Application.Host*`, retained query, modal, and framed-dialog calls point users at the current Turbo Vision facade.
+- Next: replace retained-engine internals with Turbo Vision-backed application, dialog, command, event, and widget modules.
 
 ## Phase 4: Replace Runtime Engine
 
@@ -108,9 +109,20 @@ Goal: make Turbo Vision the only production TUI engine.
 - [ ] Remove old retained view registry.
 - [ ] Remove old frame/window manager.
 - [ ] Remove old menu widget implementation.
-- [ ] Remove old control widgets where Turbo Vision supplies replacements.
+- [x] Remove old retained control-widget intrinsic and event dispatch paths.
+- [x] Remove remaining old control-widget storage/rendering where Turbo Vision supplies replacements.
 - [ ] Keep or adapt only reusable terminal/test abstractions.
 - [ ] Keep files below project size expectations by grouping by concern.
+
+Notes:
+
+- Removed the unreachable old retained control-widget `TuiIntrinsic` variants for labels, buttons, input lines, check boxes, radio groups, list boxes, scroll bars, scroll views, and memos.
+- Removed the VM-side retained control intrinsic bridge and retained control input dispatcher. Host key, mouse, and paste processing now skip the old control-model dispatch path.
+- Verified no remaining code references to the removed retained control intrinsic names or old retained control dispatch functions.
+- Removed retained control widget storage/rendering types from `fpas-std`, including label, button, input line, check box, radio group, list box, standalone scroll bar, scroll view, and memo widgets.
+- Kept only `ScrollBarStyle` because legacy frame chrome still uses the style values internally. The standalone retained scroll bar widget is gone.
+- Removed old retained control symbol names from the known `Std.Tui` symbol list.
+- Next: remove or replace the retained menu and frame/window runtime modules, then continue with the retained view registry removal.
 
 Expected new layout, adjust before editing if implementation reveals better boundaries:
 

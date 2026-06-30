@@ -41,8 +41,6 @@ macro_rules! std_tui {
 
 mod tui_introspection;
 pub use tui_introspection::*;
-mod tui_controls;
-pub use tui_controls::*;
 mod tui_frames;
 pub use tui_frames::*;
 mod tui_view_state;

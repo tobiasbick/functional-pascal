@@ -64,9 +64,6 @@ impl Worker {
                 }));
             }
         }
-        if let Some(tag) = self.try_dispatch_control_key(&key_event, line)? {
-            return Ok(tag);
-        }
         if let Some(tag) = self.try_dispatch_widget_key(key_event.clone(), modal_scope, line)? {
             return Ok(tag);
         }

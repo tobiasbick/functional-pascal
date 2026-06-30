@@ -4,6 +4,14 @@
 
 use super::{check_errors, check_ok};
 
+fn has_removed_tui_help(error: &fpas_diagnostics::Diagnostic) -> bool {
+    error.help.as_deref().is_some_and(|help| {
+        help.contains("old retained Std.Tui host/view API")
+            && help.contains("Application.CreateDialog")
+            && help.contains("Application.OnCommand")
+    })
+}
+
 #[test]
 fn std_tui_exit_reason_enum_is_available() {
     check_ok(
@@ -143,7 +151,8 @@ end.",
     );
     assert!(
         errs.iter().any(|e| e.message.contains("Unknown procedure")
-            && e.message.contains("Application.HostProcessNext")),
+            && e.message.contains("Application.HostProcessNext")
+            && has_removed_tui_help(e)),
         "{errs:#?}"
     );
 }
@@ -179,7 +188,8 @@ end.",
     );
     assert!(
         errs.iter().any(|e| e.message.contains("Unknown procedure")
-            && e.message.contains("Application.HostRegisterOnIdle")),
+            && e.message.contains("Application.HostRegisterOnIdle")
+            && has_removed_tui_help(e)),
         "{errs:#?}"
     );
 }
@@ -203,7 +213,8 @@ end.",
     );
     assert!(
         errs.iter().any(|e| e.message.contains("Unknown procedure")
-            && e.message.contains("Application.HostRegisterOnExit")),
+            && e.message.contains("Application.HostRegisterOnExit")
+            && has_removed_tui_help(e)),
         "{errs:#?}"
     );
 }
@@ -221,7 +232,8 @@ end.",
     );
     assert!(
         errs.iter().any(|e| e.message.contains("Unknown procedure")
-            && e.message.contains("Application.HostRunLoop")),
+            && e.message.contains("Application.HostRunLoop")
+            && has_removed_tui_help(e)),
         "{errs:#?}"
     );
 }
@@ -240,7 +252,8 @@ end.",
     );
     assert!(
         errs.iter().any(|e| e.message.contains("Unknown procedure")
-            && e.message.contains("Application.HostRequestQuit")),
+            && e.message.contains("Application.HostRequestQuit")
+            && has_removed_tui_help(e)),
         "{errs:#?}"
     );
 }
@@ -259,7 +272,8 @@ end.",
     );
     assert!(
         errs.iter().any(|e| e.message.contains("Unknown procedure")
-            && e.message.contains("Application.QuerySceneGraph")),
+            && e.message.contains("Application.QuerySceneGraph")
+            && has_removed_tui_help(e)),
         "{errs:#?}"
     );
 }
@@ -278,7 +292,8 @@ end.",
     );
     assert!(
         errs.iter().any(|e| e.message.contains("Unknown procedure")
-            && e.message.contains("Application.ShowFramedDialog")),
+            && e.message.contains("Application.ShowFramedDialog")
+            && has_removed_tui_help(e)),
         "{errs:#?}"
     );
 }

@@ -2,8 +2,6 @@
 
 use super::geometry::offset_from_thumb_start;
 use super::{ScrollBarHit, ScrollModel, drag_offset, hit_zone, thumb_geometry, track_cells};
-use crate::{ScrollBarOrientation, ScrollBarWidget, ViewRect};
-
 #[test]
 fn scroll_model_clamps_offset() {
     let mut model = ScrollModel::new(10, 3);
@@ -96,43 +94,4 @@ fn thumb_geometry_preserves_bounds_for_edge_extents() {
             }
         }
     }
-}
-
-#[test]
-fn repeated_thumb_drags_clamp_without_overshoot() {
-    let mut bar = ScrollBarWidget::new(ScrollBarOrientation::Vertical, 1_000_000, 10);
-    let rect = ViewRect {
-        x: 0,
-        y: 0,
-        width: 1,
-        height: 10,
-    };
-    let max_offset = 999_990;
-
-    assert!(bar.begin_thumb_drag(rect, 1, 2));
-    assert!(bar.drag_thumb(rect, 1, 10));
-    assert_eq!(bar.scroll_offset(), max_offset);
-    assert!(!bar.drag_thumb(rect, 1, 10));
-    assert_eq!(bar.scroll_offset(), max_offset);
-    assert!(bar.drag_thumb(rect, 1, 1));
-    assert_eq!(bar.scroll_offset(), 0);
-    assert!(!bar.drag_thumb(rect, 1, 1));
-    assert_eq!(bar.scroll_offset(), 0);
-    bar.end_thumb_drag();
-}
-
-#[test]
-fn scroll_bar_thumb_drag_updates_offset() {
-    let mut bar = ScrollBarWidget::new(ScrollBarOrientation::Vertical, 20, 4);
-    let rect = ViewRect {
-        x: 0,
-        y: 0,
-        width: 1,
-        height: 8,
-    };
-    assert!(bar.begin_thumb_drag(rect, 1, 2));
-    assert!(bar.drag_thumb(rect, 1, 6));
-    assert_eq!(bar.scroll_offset(), 12);
-    bar.end_thumb_drag();
-    assert!(!bar.thumb_drag_active());
 }

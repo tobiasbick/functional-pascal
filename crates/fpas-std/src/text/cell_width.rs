@@ -29,7 +29,8 @@ pub fn str_display_width(text: &str) -> i64 {
 
 /// Display-column offset immediately before the scalar at `char_index`.
 #[must_use]
-pub fn char_display_offset(text: &str, char_index: usize) -> usize {
+#[cfg(test)]
+fn char_display_offset(text: &str, char_index: usize) -> usize {
     text.chars()
         .take(char_index)
         .map(|ch| usize::from(display_width(ch)))
@@ -76,14 +77,6 @@ pub fn layout_display_cells(text: &str, max_cols: usize) -> Vec<(usize, char)> {
     }
 
     result
-}
-
-/// Yield `(column_offset, char)` pairs for painting up to `max_cols` terminal columns.
-pub fn text_cells_for_paint(
-    text: &str,
-    max_cols: i64,
-) -> impl Iterator<Item = (usize, char)> + Clone + '_ {
-    layout_display_cells(text, max_cols.max(0) as usize).into_iter()
 }
 
 /// Lay out title text into a fixed-width title slot.

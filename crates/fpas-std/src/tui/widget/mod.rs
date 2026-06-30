@@ -11,12 +11,7 @@ mod menu_style;
 mod solid_fill;
 mod status_bar;
 
-pub use control::{
-    ButtonStyle, ButtonWidget, CheckBoxStyle, CheckBoxWidget, InputLineStyle, InputLineWidget,
-    LabelStyle, LabelWidget, ListBoxItem, ListBoxStyle, ListBoxWidget, MemoStyle, MemoWidget,
-    RadioGroupStyle, RadioGroupWidget, RadioOption, ScrollBarStyle, ScrollBarWidget,
-    ScrollViewStyle, ScrollViewWidget,
-};
+pub use control::ScrollBarStyle;
 pub use frame::{
     FrameButtonSlots, FrameCapabilities, FrameChromeHit, FrameContentSize, FrameGeometry,
     FrameGeometryError, FrameKind, FrameRoot, FrameRootSpec, FrameRootState, FrameScrollHit,
@@ -41,24 +36,6 @@ pub enum ViewWidget {
     MenuBar(MenuBarWidget),
     /// Declarative status bar rendered in Rust (display-only).
     StatusBar(StatusBarWidget),
-    /// Static dialog label rendered in Rust.
-    Label(LabelWidget),
-    /// Dialog push button rendered in Rust.
-    Button(ButtonWidget),
-    /// Single-line dialog text input rendered in Rust.
-    InputLine(InputLineWidget),
-    /// Dialog checkbox rendered in Rust.
-    CheckBox(CheckBoxWidget),
-    /// Dialog radio group rendered in Rust.
-    RadioGroup(RadioGroupWidget),
-    /// Scrolling list box.
-    ListBox(ListBoxWidget),
-    /// Standalone scroll bar.
-    ScrollBar(ScrollBarWidget),
-    /// Scrolling multi-line text view.
-    ScrollView(ScrollViewWidget),
-    /// Multi-line editable memo control.
-    Memo(MemoWidget),
     /// Window or dialog frame with host-painted chrome.
     Frame(FrameWidget),
 }
@@ -67,39 +44,6 @@ impl ViewWidget {
     /// Synchronize control paint flags with resolved retained view state.
     pub fn sync_view_state(&mut self, state: ViewState) {
         match self {
-            Self::Label(widget) => widget.enabled = state.enabled,
-            Self::Button(widget) => {
-                widget.enabled = state.enabled;
-                widget.focused = state.focused;
-            }
-            Self::InputLine(widget) => {
-                widget.enabled = state.enabled;
-                widget.focused = state.focused;
-            }
-            Self::CheckBox(widget) => {
-                widget.enabled = state.enabled;
-                widget.focused = state.focused;
-            }
-            Self::RadioGroup(widget) => {
-                widget.enabled = state.enabled;
-                widget.focused = state.focused;
-            }
-            Self::ListBox(widget) => {
-                widget.enabled = state.enabled;
-                widget.focused = state.focused;
-            }
-            Self::ScrollBar(widget) => {
-                widget.enabled = state.enabled;
-                widget.focused = state.focused;
-            }
-            Self::ScrollView(widget) => {
-                widget.enabled = state.enabled;
-                widget.focused = state.focused;
-            }
-            Self::Memo(widget) => {
-                widget.enabled = state.enabled;
-                widget.focused = state.focused;
-            }
             Self::Frame(widget) => widget.active = state.active,
             Self::SolidFill(_) | Self::MenuBar(_) | Self::StatusBar(_) => {}
         }
@@ -111,15 +55,6 @@ impl ViewWidget {
             Self::SolidFill(_) => ViewKind::SolidFill,
             Self::MenuBar(_) => ViewKind::MenuBar,
             Self::StatusBar(_) => ViewKind::StatusBar,
-            Self::Label(_) => ViewKind::Label,
-            Self::Button(_) => ViewKind::Button,
-            Self::InputLine(_) => ViewKind::InputLine,
-            Self::CheckBox(_) => ViewKind::CheckBox,
-            Self::RadioGroup(_) => ViewKind::RadioGroup,
-            Self::ListBox(_) => ViewKind::ListBox,
-            Self::ScrollBar(_) => ViewKind::ScrollBar,
-            Self::ScrollView(_) => ViewKind::ScrollView,
-            Self::Memo(_) => ViewKind::Memo,
             Self::Frame(_) => ViewKind::Frame,
         }
     }
@@ -130,15 +65,6 @@ impl ViewWidget {
             Self::SolidFill(widget) => widget.paint(console, rect, damage),
             Self::MenuBar(widget) => widget.paint(console, rect, damage),
             Self::StatusBar(widget) => widget.paint(console, rect, damage),
-            Self::Label(widget) => widget.paint(console, rect, damage),
-            Self::Button(widget) => widget.paint(console, rect, damage),
-            Self::InputLine(widget) => widget.paint(console, rect, damage),
-            Self::CheckBox(widget) => widget.paint(console, rect, damage),
-            Self::RadioGroup(widget) => widget.paint(console, rect, damage),
-            Self::ListBox(widget) => widget.paint(console, rect, damage),
-            Self::ScrollBar(widget) => widget.paint(console, rect, damage),
-            Self::ScrollView(widget) => widget.paint(console, rect, damage),
-            Self::Memo(widget) => widget.paint(console, rect, damage),
             Self::Frame(widget) => {
                 widget.paint_underlay(console, rect, damage);
                 widget.paint_overlay(console, rect, damage);
@@ -182,18 +108,9 @@ impl ViewWidget {
                 .damage_rects(rect)
                 .into_iter()
                 .any(|region| damage.intersects_rect(region)),
-            Self::SolidFill(_)
-            | Self::StatusBar(_)
-            | Self::Label(_)
-            | Self::Button(_)
-            | Self::InputLine(_)
-            | Self::CheckBox(_)
-            | Self::RadioGroup(_)
-            | Self::ListBox(_)
-            | Self::ScrollBar(_)
-            | Self::ScrollView(_)
-            | Self::Memo(_)
-            | Self::Frame(_) => damage.intersects_rect(rect),
+            Self::SolidFill(_) | Self::StatusBar(_) | Self::Frame(_) => {
+                damage.intersects_rect(rect)
+            }
         }
     }
 
@@ -204,18 +121,9 @@ impl ViewWidget {
     pub fn contains_point(&self, rect: ViewRect, mouse_x: i64, mouse_y: i64) -> bool {
         match self {
             Self::MenuBar(widget) => widget.contains_point(rect, mouse_x, mouse_y),
-            Self::SolidFill(_)
-            | Self::StatusBar(_)
-            | Self::Label(_)
-            | Self::Button(_)
-            | Self::InputLine(_)
-            | Self::CheckBox(_)
-            | Self::RadioGroup(_)
-            | Self::ListBox(_)
-            | Self::ScrollBar(_)
-            | Self::ScrollView(_)
-            | Self::Memo(_)
-            | Self::Frame(_) => rect.contains_console_mouse(mouse_x, mouse_y),
+            Self::SolidFill(_) | Self::StatusBar(_) | Self::Frame(_) => {
+                rect.contains_console_mouse(mouse_x, mouse_y)
+            }
         }
     }
 }

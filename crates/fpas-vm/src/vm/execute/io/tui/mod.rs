@@ -16,6 +16,7 @@ mod records;
 mod testing;
 mod tv_geometry;
 mod tv_run;
+mod windows;
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
@@ -67,6 +68,12 @@ impl Worker {
             }
             Intrinsic::Tui(TuiIntrinsic::TestClickButton) => {
                 self.turbo_vision_test_click_button(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::CreateWindow) => {
+                self.turbo_vision_create_window(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::AddWindow) => {
+                self.turbo_vision_add_window(line)?;
             }
             _ => return Ok(false),
         }

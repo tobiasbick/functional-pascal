@@ -141,6 +141,7 @@ impl fmt::Debug for TurboVisionState {
 
 pub(crate) enum TurboVisionObject {
     Dialog(TurboVisionDialog),
+    Window(TurboVisionWindow),
     Button(TurboVisionButton),
 }
 
@@ -156,6 +157,13 @@ pub(crate) struct TurboVisionDialog {
     pub bounds: TurboVisionRect,
     pub title: String,
     pub children: Vec<u32>,
+}
+
+pub(crate) struct TurboVisionWindow {
+    pub bounds: TurboVisionRect,
+    pub title: String,
+    pub children: Vec<u32>,
+    pub on_desktop: bool,
 }
 
 #[derive(Clone)]

@@ -9,7 +9,7 @@ use crate::vm::shared::{TurboVisionButton, TurboVisionObject, TurboVisionRect};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 use turbo_vision::app::Application as TurboVisionApplication;
-use turbo_vision::views::{button::Button, dialog::Dialog};
+use turbo_vision::views::{button::Button, dialog::Dialog, window::Window};
 
 const HEADLESS_RUN_MAX_COMMANDS: usize = 4096;
 
@@ -62,7 +62,8 @@ impl Worker {
         &self,
         line: SourceLocation,
     ) -> Result<TurboVisionApplication, VmError> {
-        let snapshots = self.turbo_vision_dialog_snapshots();
+        let window_snapshots = self.turbo_vision_window_snapshots();
+        let dialog_snapshots = self.turbo_vision_dialog_snapshots();
         let mut app = TurboVisionApplication::new().map_err(|error| {
             runtime_error(
                 RUNTIME_CONSOLE_STATE_ERROR,
@@ -72,7 +73,20 @@ impl Worker {
             )
         })?;
 
-        for dialog in snapshots {
+        for window in window_snapshots {
+            let mut window_view = Window::new(turbo_rect(window.bounds), &window.title);
+            for button in window.buttons {
+                window_view.add(Box::new(Button::new(
+                    turbo_rect(button.bounds),
+                    &button.text,
+                    button.command_id,
+                    false,
+                )));
+            }
+            app.desktop.add(Box::new(window_view));
+        }
+
+        for dialog in dialog_snapshots {
             let mut dialog_view = Dialog::new_modal(turbo_rect(dialog.bounds), &dialog.title);
             for button in dialog.buttons {
                 dialog_view.add(Box::new(Button::new(
@@ -86,6 +100,35 @@ impl Worker {
         }
 
         Ok(app)
+    }
+
+    fn turbo_vision_window_snapshots(&self) -> Vec<TurboVisionWindowSnapshot> {
+        self.with_tui(|tui| {
+            tui.turbo_vision
+                .objects
+                .values()
+                .filter_map(|object| {
+                    let TurboVisionObject::Window(window) = object else {
+                        return None;
+                    };
+                    if !window.on_desktop {
+                        return None;
+                    }
+                    Some(TurboVisionWindowSnapshot {
+                        bounds: window.bounds,
+                        title: window.title.clone(),
+                        buttons: window
+                            .children
+                            .iter()
+                            .filter_map(|handle| match tui.turbo_vision.objects.get(handle) {
+                                Some(TurboVisionObject::Button(button)) => Some(button.clone()),
+                                _ => None,
+                            })
+                            .collect(),
+                    })
+                })
+                .collect()
+        })
     }
 
     fn turbo_vision_dialog_snapshots(&self) -> Vec<TurboVisionDialogSnapshot> {
@@ -113,6 +156,12 @@ impl Worker {
                 .collect()
         })
     }
+}
+
+struct TurboVisionWindowSnapshot {
+    bounds: TurboVisionRect,
+    title: String,
+    buttons: Vec<TurboVisionButton>,
 }
 
 struct TurboVisionDialogSnapshot {

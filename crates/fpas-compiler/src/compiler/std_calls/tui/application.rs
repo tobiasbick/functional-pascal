@@ -64,6 +64,14 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::CreateDialog), location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_CREATE_WINDOW => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_CREATE_WINDOW, 3, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::CreateWindow), location);
+                Ok(true)
+            }
             s::STD_TUI_APPLICATION_CREATE_BUTTON => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_CREATE_BUTTON, 4, args, location)?;
                 for arg in args {
@@ -78,6 +86,14 @@ impl Compiler {
                     self.compile_expr(arg)?;
                 }
                 self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::AddChild), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_ADD_WINDOW => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_ADD_WINDOW, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::AddWindow), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_ON_COMMAND => {

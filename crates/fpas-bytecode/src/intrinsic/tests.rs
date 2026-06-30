@@ -243,6 +243,8 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Tui(TuiIntrinsic::Pump),
     Intrinsic::Tui(TuiIntrinsic::Quit),
     Intrinsic::Tui(TuiIntrinsic::TestClickButton),
+    Intrinsic::Tui(TuiIntrinsic::CreateWindow),
+    Intrinsic::Tui(TuiIntrinsic::AddWindow),
     Intrinsic::Tui(TuiIntrinsic::OpenForTest),
     Intrinsic::Tui(TuiIntrinsic::TestPump),
     Intrinsic::Tui(TuiIntrinsic::TestPumpUntilIdle),

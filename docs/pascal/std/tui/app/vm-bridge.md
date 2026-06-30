@@ -14,8 +14,10 @@ Current public lowering includes:
 | `Application.Run` | `TuiApplicationRun` |
 | `Application.Quit` | `TuiQuit` |
 | `Application.CreateDialog` | `TuiCreateDialog` |
+| `Application.CreateWindow` | `TuiCreateWindow` |
 | `Application.CreateButton` | `TuiCreateButton` |
 | `Application.AddChild` | `TuiAddChild` |
+| `Application.AddWindow` | `TuiAddWindow` |
 | `Application.OnCommand` | `TuiOnCommand` |
 | `Application.Pump` | `TuiPump` |
 | `Application.TestClickButton` | `TuiTestClickButton` |
@@ -32,6 +34,7 @@ Turbo Vision bridge code lives under `crates/fpas-vm/src/vm/execute/io/tui/`:
 | `application.rs` | `Application.Open`, `Configure`, `Run`, `Size`, `RequestRedraw` |
 | `handles.rs` | Turbo Vision handle records and `Rect` decoding |
 | `dialogs.rs` | `CreateDialog` |
+| `windows.rs` | `CreateWindow`, `AddWindow` |
 | `controls.rs` | `CreateButton`, `AddChild` |
 | `callbacks.rs` | Turbo Vision command event to FPAS `OnCommand` |
 | `commands.rs` | `Pump`, `Quit`, `TestClickButton`, command queue |

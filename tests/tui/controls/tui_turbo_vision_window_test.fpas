@@ -1,0 +1,32 @@
+program TuiTurboVisionWindowTest;
+
+uses Std.Tui, Std.Test;
+
+mutable var
+  mutable var LastCommand: integer := -1;
+  mutable var CommandCalls: integer := 0;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+procedure OnCommand(App: Application; CommandId: integer);
+begin
+  LastCommand := CommandId;
+  CommandCalls := CommandCalls + 1;
+  Application.Quit(App)
+end;
+
+begin
+  var App: Application := Application.OpenForTest(60, 20);
+  var WindowHandle: Window := Application.CreateWindow(App, Bounds(5, 3, 40, 12), 'Demo');
+  var ButtonHandle: TuiButton := Application.CreateButton(App, Bounds(10, 6, 12, 2), 'Quit', Command.Quit);
+  Application.AddChild(App, WindowHandle, ButtonHandle);
+  Application.AddWindow(App, WindowHandle);
+  Application.OnCommand(App, OnCommand);
+  Application.TestClickButton(App, ButtonHandle);
+  Application.Run(App);
+  AssertEquals(Command.Quit, LastCommand);
+  AssertEquals(1, CommandCalls)
+end.

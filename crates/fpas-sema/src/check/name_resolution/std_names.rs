@@ -23,19 +23,21 @@ impl Checker {
 
     /// Loads a `Std.*` unit on demand when code uses a fully qualified name without `uses`.
     pub(crate) fn builtin_std_dispatch_name(&self, name: &str) -> String {
+        let canonical = canonical_symbol_name(name);
+        if let Some(qualified) = self.short_builtin_redirect.get(&canonical) {
+            return qualified.clone();
+        }
         if name.contains('.') {
-            self.scopes
+            return self
+                .scopes
                 .lookup_original_name(name)
                 .unwrap_or(name)
-                .to_string()
-        } else if let Some(qualified) = self
-            .short_builtin_redirect
-            .get(&canonical_symbol_name(name))
-        {
-            qualified.clone()
-        } else {
-            name.to_string()
+                .to_string();
         }
+        if let Some(qualified) = self.short_builtin_redirect.get(&canonical) {
+            return qualified.clone();
+        }
+        name.to_string()
     }
 
     pub(crate) fn ensure_fq_std_unit_loaded(&mut self, fully_qualified_name: &str) {

@@ -5,3 +5,5 @@
     Pump = 434,
     Quit = 435,
     TestClickButton = 436,
+    CreateWindow = 437,
+    AddWindow = 438,

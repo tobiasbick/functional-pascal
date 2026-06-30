@@ -153,7 +153,7 @@ Implement in this order:
 - [x] `Application` — session open/close/run, Turbo Vision pump, and `OnCommand` from Phase 2–3 spike.
 - [x] `Rect`, `Point`, `Size` — value records registered in Sema (`Point` added 2026-06-29).
 - [x] `Command` — `Command.Accept`, `Command.Cancel`, `Command.Close`, `Command.Quit` integer constants (2026-06-29; `Accept` not `Ok` — `Ok` is a keyword).
-- [ ] `Window`
+- [x] `Window` — `Application.CreateWindow`, `Application.AddWindow`, and `Application.AddChild` parent support (2026-06-29).
 - [ ] `Dialog` — spike uses `TuiDialog`; rename and extend when `Window` lands.
 - [ ] `Button` — spike uses `TuiButton`; rename when dialog/window API stabilizes.
 - [ ] `StaticText`

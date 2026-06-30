@@ -9,6 +9,7 @@ use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 use turbo_vision::core::geometry::Rect;
 
 const TUI_DIALOG_TYPE: &str = "Std.Tui.TuiDialog";
+const TUI_WINDOW_TYPE: &str = "Std.Tui.Window";
 const TUI_BUTTON_TYPE: &str = "Std.Tui.TuiButton";
 const HANDLE_FIELD: &str = "__id";
 const TUI_RECT_TYPE: &str = "Std.Tui.Rect";
@@ -18,15 +19,54 @@ impl Worker {
         turbo_vision_handle_record(TUI_DIALOG_TYPE, handle)
     }
 
+    pub(super) fn turbo_vision_window_record(handle: u32) -> Value {
+        turbo_vision_handle_record(TUI_WINDOW_TYPE, handle)
+    }
+
     pub(super) fn turbo_vision_button_record(handle: u32) -> Value {
         turbo_vision_handle_record(TUI_BUTTON_TYPE, handle)
     }
 
+    #[allow(dead_code)] // retained for future dialog-only intrinsics
     pub(super) fn pop_turbo_vision_dialog_handle(
         &mut self,
         line: SourceLocation,
     ) -> Result<u32, VmError> {
         self.pop_turbo_vision_handle(TUI_DIALOG_TYPE, "Dialog", line)
+    }
+
+    pub(super) fn pop_turbo_vision_window_handle(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<u32, VmError> {
+        self.pop_turbo_vision_handle(TUI_WINDOW_TYPE, "Window", line)
+    }
+
+    pub(super) fn pop_turbo_vision_parent_handle(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<TurboVisionParentHandle, VmError> {
+        match self.pop(line)? {
+            Value::Record { type_name, fields } if type_name == TUI_DIALOG_TYPE => {
+                Ok(TurboVisionParentHandle::Dialog(
+                    self.decode_turbo_vision_handle_record(&fields, "Dialog", line)?,
+                ))
+            }
+            Value::Record { type_name, fields } if type_name == TUI_WINDOW_TYPE => {
+                Ok(TurboVisionParentHandle::Window(
+                    self.decode_turbo_vision_handle_record(&fields, "Window", line)?,
+                ))
+            }
+            other => Err(runtime_error(
+                TYPE_MISMATCH_CODE,
+                format!(
+                    "Parent handle expected {TUI_DIALOG_TYPE} or {TUI_WINDOW_TYPE}, got {}",
+                    other.type_name()
+                ),
+                "Pass a handle from `Application.CreateDialog` or `Application.CreateWindow`.",
+                line,
+            )),
+        }
     }
 
     pub(super) fn pop_turbo_vision_button_handle(
@@ -86,25 +126,7 @@ impl Worker {
     ) -> Result<u32, VmError> {
         match self.pop(line)? {
             Value::Record { type_name, fields } if type_name == expected_type => {
-                let Some(Value::Integer(raw)) = fields
-                    .iter()
-                    .find(|(name, _)| name == HANDLE_FIELD)
-                    .map(|(_, value)| value)
-                else {
-                    return Err(turbo_vision_handle_error(
-                        label,
-                        "missing handle token",
-                        line,
-                    ));
-                };
-                if !(1..=i64::from(u32::MAX)).contains(raw) {
-                    return Err(turbo_vision_handle_error(
-                        label,
-                        "handle token is out of range",
-                        line,
-                    ));
-                }
-                Ok(*raw as u32)
+                self.decode_turbo_vision_handle_record(&fields, label, line)
             }
             other => Err(runtime_error(
                 TYPE_MISMATCH_CODE,
@@ -116,6 +138,33 @@ impl Worker {
                 line,
             )),
         }
+    }
+
+    fn decode_turbo_vision_handle_record(
+        &self,
+        fields: &[(String, Value)],
+        label: &'static str,
+        line: SourceLocation,
+    ) -> Result<u32, VmError> {
+        let Some(Value::Integer(raw)) = fields
+            .iter()
+            .find(|(name, _)| name == HANDLE_FIELD)
+            .map(|(_, value)| value)
+        else {
+            return Err(turbo_vision_handle_error(
+                label,
+                "missing handle token",
+                line,
+            ));
+        };
+        if !(1..=i64::from(u32::MAX)).contains(raw) {
+            return Err(turbo_vision_handle_error(
+                label,
+                "handle token is out of range",
+                line,
+            ));
+        }
+        Ok(*raw as u32)
     }
 
     fn turbo_vision_i16_field(
@@ -159,6 +208,11 @@ fn turbo_vision_handle_record(type_name: &'static str, handle: u32) -> Value {
         type_name: type_name.into(),
         fields: vec![(HANDLE_FIELD.into(), Value::Integer(i64::from(handle)))],
     }
+}
+
+pub(super) enum TurboVisionParentHandle {
+    Dialog(u32),
+    Window(u32),
 }
 
 fn turbo_vision_handle_error(

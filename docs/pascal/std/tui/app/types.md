@@ -40,6 +40,10 @@ Standard command identifiers for buttons and `OnCommand` handlers. Application-d
 | `Command.Close` | `3` | Close the source view or window. |
 | `Command.Quit` | `4` | Exit the application (`Application.Quit`). |
 
+## `Window`
+
+Opaque Turbo Vision window handle returned by `Application.CreateWindow`. Call `Application.AddWindow` before `Application.Run` to show the window on the desktop.
+
 ## `TuiDialog`
 
 Opaque Turbo Vision dialog handle returned by `Application.CreateDialog`.

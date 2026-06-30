@@ -59,6 +59,16 @@ pub(super) fn register_application_api(
     );
     define_func(
         checker,
+        s::STD_TUI_APPLICATION_CREATE_WINDOW,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Bounds", types.rect.clone(), false),
+            p("Title", Ty::String, false),
+        ],
+        types.window.clone(),
+    );
+    define_func(
+        checker,
         s::STD_TUI_APPLICATION_CREATE_BUTTON,
         vec![
             p("App", types.application.clone(), false),
@@ -70,11 +80,10 @@ pub(super) fn register_application_api(
     );
     define_proc(
         checker,
-        s::STD_TUI_APPLICATION_ADD_CHILD,
+        s::STD_TUI_APPLICATION_ADD_WINDOW,
         vec![
             p("App", types.application.clone(), false),
-            p("Dialog", types.dialog.clone(), false),
-            p("Child", types.button.clone(), false),
+            p("Window", types.window.clone(), false),
         ],
     );
     define_proc(

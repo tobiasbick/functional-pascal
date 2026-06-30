@@ -80,7 +80,7 @@ Go/no-go:
 Goal: stop expanding the old retained engine.
 
 - [x] Remove or de-register old `Application.Host*` public calls.
-- [ ] Remove old query calls tied to retained internals.
+- [x] Remove old query calls tied to retained internals.
 - [ ] Remove old `TuiIntrinsic` variants that are no longer reachable.
 - [x] Update compiler tests for the removed public Host API.
 - [ ] Update bytecode tests after unreachable intrinsic variants are removed.
@@ -95,7 +95,9 @@ Notes:
 - Replaced active compiler TUI tests with current session, Turbo Vision command-run, and old-symbol negative coverage.
 - Deleted FPAS TUI regression tests that only exercised the removed retained Host API.
 - Rewrote `docs/pascal/std/tui/` app/session pages so current docs describe implemented behavior only.
-- Remaining public retained transition surface is the old query set plus `ShowFramedDialog`; remove those next.
+- De-registered retained `Application.QueryView*`, `Application.QuerySceneGraph`, frame queries, modal depth/focus queries, and `Application.ShowFramedDialog`.
+- Kept only headless screen queries (`QueryScreenSize`, `QueryScreenLine`, `QueryScreenCell`) as current public test surface.
+- Next: remove old unreachable `TuiIntrinsic` variants and their VM/runtime implementation modules.
 
 ## Phase 4: Replace Runtime Engine
 

@@ -111,6 +111,50 @@ end.",
 }
 
 #[test]
+fn std_tui_old_retained_query_api_is_not_registered() {
+    let err = compile_err(
+        "\
+program T;
+uses Std.Tui;
+
+begin
+  var App: Application := Application.Open();
+  Application.QuerySceneGraph(App)
+end.",
+    );
+
+    assert!(
+        (err.message.contains("Unknown function or procedure")
+            || err.message.contains("Unknown procedure"))
+            && err.message.contains("Application.QuerySceneGraph"),
+        "unexpected compiler error: {}",
+        err.message
+    );
+}
+
+#[test]
+fn std_tui_old_framed_dialog_api_is_not_registered() {
+    let err = compile_err(
+        "\
+program T;
+uses Std.Tui;
+
+begin
+  var App: Application := Application.Open();
+  Application.ShowFramedDialog(App, 1, 1, 1, 10, 5, 'Old', false, false, false, false, true)
+end.",
+    );
+
+    assert!(
+        (err.message.contains("Unknown function or procedure")
+            || err.message.contains("Unknown procedure"))
+            && err.message.contains("Application.ShowFramedDialog"),
+        "unexpected compiler error: {}",
+        err.message
+    );
+}
+
+#[test]
 fn std_tui_turbo_vision_command_run_spike_succeeds() {
     let out = compile_and_run(
         "\

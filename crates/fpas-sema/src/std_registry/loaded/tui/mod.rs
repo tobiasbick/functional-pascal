@@ -6,10 +6,7 @@
 //! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 mod application_api;
-mod control_types;
-mod frame_api;
 mod handlers;
-mod introspection_types;
 
 use crate::check::Checker;
 use crate::std_registry::loaded::type_registration;
@@ -19,31 +16,27 @@ use fpas_std::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS};
 
 struct TuiTypes {
     application: Ty,
-    view_id: Ty,
     dialog: Ty,
     button: Ty,
     rect: Ty,
     size: Ty,
     screen_cell: Ty,
-    menu_bar_state: Ty,
     key_event: Ty,
     console_event: Ty,
     application_handlers: Ty,
-    introspection: introspection_types::TuiIntrospectionTypes,
-    controls: control_types::TuiControlTypes,
 }
 
 struct TuiCallbackTypes {
     on_command: Ty,
 }
 
-/// Register the `Std.Tui` semantic surface, including the application API and host bridge.
+/// Register the current `Std.Tui` semantic surface.
 ///
 /// **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 pub(super) fn register_std_tui(checker: &mut Checker) {
     let application =
         type_registration::register_record_type(checker, s::STD_TUI_APPLICATION, Vec::new());
-    let view_id = type_registration::register_record_type(checker, s::STD_TUI_VIEW_ID, Vec::new());
+    type_registration::register_record_type(checker, s::STD_TUI_VIEW_ID, Vec::new());
     let dialog = type_registration::register_record_type(checker, s::STD_TUI_DIALOG, Vec::new());
     let button = type_registration::register_record_type(checker, s::STD_TUI_BUTTON, Vec::new());
     let rect = type_registration::register_record_type(
@@ -73,19 +66,6 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             ("bg".into(), Ty::Integer),
         ],
     );
-    let introspection = introspection_types::register(checker, &view_id, &rect);
-    let controls = control_types::register(checker);
-    let menu_bar_state = type_registration::register_record_type(
-        checker,
-        s::STD_TUI_MENU_BAR_STATE,
-        vec![
-            ("menuActive".into(), Ty::Boolean),
-            ("hoveredIndex".into(), Ty::Integer),
-            ("submenuOpen".into(), Ty::Boolean),
-            ("submenuBarIndex".into(), Ty::Integer),
-            ("selectedEntry".into(), Ty::Integer),
-        ],
-    );
     let key_event = type_registration::lookup_required_type(
         checker,
         s::STD_CONSOLE_KEY_EVENT,
@@ -105,70 +85,6 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         checker,
         s::STD_TUI_EXIT_REASON,
         TUI_EXIT_REASON_VARIANTS,
-    );
-    type_registration::register_record_type_with_defaults(
-        checker,
-        s::STD_TUI_MENU_POPUP_ITEM,
-        vec![
-            ("Label".into(), Ty::String),
-            ("Shortcut".into(), Ty::String),
-            ("Enabled".into(), Ty::Boolean),
-            ("CommandId".into(), Ty::Integer),
-            ("Separator".into(), Ty::Boolean),
-        ],
-        vec![
-            ("Label".into(), None),
-            ("Shortcut".into(), None),
-            ("Enabled".into(), None),
-            ("CommandId".into(), None),
-            (
-                "Separator".into(),
-                Some(type_registration::default_false_expr()),
-            ),
-        ],
-    );
-    type_registration::register_record_type(
-        checker,
-        s::STD_TUI_MENU_BAR_ITEM,
-        vec![
-            ("Label".into(), Ty::String),
-            ("Shortcut".into(), Ty::String),
-            ("Enabled".into(), Ty::Boolean),
-            ("CommandId".into(), Ty::Integer),
-            (
-                "Submenu".into(),
-                Ty::Array(Box::new(type_registration::lookup_required_type(
-                    checker,
-                    s::STD_TUI_MENU_POPUP_ITEM,
-                    "MenuPopupItem",
-                ))),
-            ),
-        ],
-    );
-    type_registration::register_record_type(
-        checker,
-        s::STD_TUI_MENU_BAR_STYLE,
-        vec![
-            ("BarBg".into(), Ty::Integer),
-            ("BarFg".into(), Ty::Integer),
-            ("AccelFg".into(), Ty::Integer),
-            ("HighlightBg".into(), Ty::Integer),
-            ("HighlightFg".into(), Ty::Integer),
-            ("DisabledFg".into(), Ty::Integer),
-        ],
-    );
-    type_registration::register_record_type(
-        checker,
-        s::STD_TUI_STATUS_BAR_SEGMENT,
-        vec![
-            ("Text".into(), Ty::String),
-            ("AlignRight".into(), Ty::Boolean),
-        ],
-    );
-    type_registration::register_record_type(
-        checker,
-        s::STD_TUI_STATUS_BAR_STYLE,
-        vec![("BarBg".into(), Ty::Integer), ("BarFg".into(), Ty::Integer)],
     );
     let (application_handlers, callbacks) = handlers::register_application_handlers(
         checker,
@@ -192,19 +108,14 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
 
     let types = TuiTypes {
         application,
-        view_id,
         dialog,
         button,
         rect,
         size,
         screen_cell,
-        menu_bar_state,
         key_event,
         console_event,
         application_handlers,
-        introspection,
-        controls,
     };
     application_api::register_application_api(checker, &types, &callbacks);
-    frame_api::register(checker, &types);
 }

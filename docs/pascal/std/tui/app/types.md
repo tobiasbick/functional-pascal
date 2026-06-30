@@ -30,10 +30,6 @@ Opaque Turbo Vision dialog handle returned by `Application.CreateDialog`.
 
 Opaque Turbo Vision button handle returned by `Application.CreateButton`.
 
-## `ViewId`
-
-Opaque transition handle used by remaining frame and query APIs. New Turbo Vision code should use `TuiDialog` and `TuiButton` where possible.
-
 ## `ScreenCell`
 
 | Field | Type | Meaning |
@@ -41,10 +37,6 @@ Opaque transition handle used by remaining frame and query APIs. New Turbo Visio
 | `ch` | `string` | Cell text. |
 | `fg` | `integer` | Foreground color. |
 | `bg` | `integer` | Background color. |
-
-## Frame Transition Records
-
-`FrameRootState`, `FrameScrollState`, and `FrameWindowEntry` remain for transition frame queries. See [Frame transition API](frames.md).
 
 ## `ApplicationHandlers`
 

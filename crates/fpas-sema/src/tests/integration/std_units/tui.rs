@@ -244,3 +244,41 @@ end.",
         "{errs:#?}"
     );
 }
+
+#[test]
+fn std_tui_old_retained_query_api_is_not_registered() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Tui;
+
+begin
+  var App: Application := Application.Open();
+  Application.QuerySceneGraph(App)
+end.",
+    );
+    assert!(
+        errs.iter().any(|e| e.message.contains("Unknown procedure")
+            && e.message.contains("Application.QuerySceneGraph")),
+        "{errs:#?}"
+    );
+}
+
+#[test]
+fn std_tui_old_framed_dialog_api_is_not_registered() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Tui;
+
+begin
+  var App: Application := Application.Open();
+  Application.ShowFramedDialog(App, 1, 1, 1, 10, 5, 'Old', false, false, false, false, true)
+end.",
+    );
+    assert!(
+        errs.iter().any(|e| e.message.contains("Unknown procedure")
+            && e.message.contains("Application.ShowFramedDialog")),
+        "{errs:#?}"
+    );
+}

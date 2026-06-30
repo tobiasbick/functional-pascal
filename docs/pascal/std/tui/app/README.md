@@ -33,18 +33,15 @@ The current public surface is intentionally small while the implementation moves
 | `Application.TestPaste(App, Text)` | Queue pasted text for tests. |
 | `Application.TestFocus(App, Gained)` | Queue a focus event for tests. |
 
-## Transition Queries
+## Screen Queries
 
-The following query functions remain public during the rewrite because existing tests and bridge code still use their value records:
+The following query functions remain public for headless tests:
 
 | Symbol | Description |
 | --- | --- |
 | `Application.QueryScreenSize(App): Size` | Return the headless screen size. |
 | `Application.QueryScreenLine(App, Y): string` | Return one screen line. |
 | `Application.QueryScreenCell(App, X, Y): ScreenCell` | Return one screen cell. |
-| `Application.QueryFrameRootState(App, ViewId): FrameRootState` | Return frame-root state for a transition frame handle. |
-| `Application.QueryFrameScrollState(App, ViewId): FrameScrollState` | Return frame scroll state. |
-| `Application.QueryFrameWindowList(App): array of FrameWindowEntry` | Return transition frame windows. |
 
 ## See Also
 

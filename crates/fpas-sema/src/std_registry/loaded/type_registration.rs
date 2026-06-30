@@ -97,11 +97,6 @@ pub(super) fn default_zero_expr() -> Expr {
     Expr::Integer(0, synthetic_span())
 }
 
-/// Build the semantic default for boolean record fields.
-pub(super) fn default_false_expr() -> Expr {
-    Expr::Bool(false, synthetic_span())
-}
-
 /// Look up a type symbol registered earlier in std unit loading.
 pub(super) fn lookup_required_type(checker: &Checker, qualified_name: &str, message: &str) -> Ty {
     checker

@@ -157,30 +157,20 @@ impl ViewRegistry {
 
     /// Parent bounds used to lay out direct children of `parent_id`.
     fn layout_bounds_for_children(&self, parent_id: ViewId) -> ViewRect {
-        if let Some(frame) = self.frame_roots.get(&parent_id) {
-            let view = frame.geometry.view;
+        self.local_rect(parent_id).map_or(
             ViewRect {
                 x: 0,
                 y: 0,
-                width: view.width,
-                height: view.height,
-            }
-        } else {
-            self.local_rect(parent_id).map_or(
-                ViewRect {
-                    x: 0,
-                    y: 0,
-                    width: 0,
-                    height: 0,
-                },
-                |rect| ViewRect {
-                    x: 0,
-                    y: 0,
-                    width: rect.width,
-                    height: rect.height,
-                },
-            )
-        }
+                width: 0,
+                height: 0,
+            },
+            |rect| ViewRect {
+                x: 0,
+                y: 0,
+                width: rect.width,
+                height: rect.height,
+            },
+        )
     }
 }
 

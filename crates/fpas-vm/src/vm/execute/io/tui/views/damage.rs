@@ -1,6 +1,6 @@
-//! View-subtree and frame-root redraw damage helpers.
+//! View-subtree redraw damage helpers.
 //!
-//! **Documentation:** `docs/pascal/std/tui/app/frames.md`
+//! **Documentation:** `docs/pascal/std/tui/app/README.md`
 
 use crate::vm::{TuiState, Worker};
 use fpas_bytecode::SourceLocation;
@@ -19,8 +19,8 @@ impl Worker {
             .collect()
     }
 
-    /// Subtree screen rects plus optional frame-root shadow regions.
-    pub(in crate::vm::execute::io::tui) fn frame_damage_rects(
+    /// Subtree screen rects plus optional root shadow regions.
+    pub(in crate::vm::execute::io::tui) fn root_damage_rects(
         tui: &TuiState,
         root: ViewId,
     ) -> Vec<ViewRect> {
@@ -47,14 +47,14 @@ impl Worker {
         }
     }
 
-    /// Marks frame-root subtree damage, optionally pairing a pre-move snapshot with the current layout.
-    pub(in crate::vm::execute::io::tui) fn request_frame_subtree_damage(
+    /// Marks root subtree damage, optionally pairing a pre-move snapshot with the current layout.
+    pub(in crate::vm::execute::io::tui) fn request_root_subtree_damage(
         tui: &mut TuiState,
         previous: Option<&[ViewRect]>,
         root: ViewId,
         line: SourceLocation,
     ) {
-        let next = Self::frame_damage_rects(tui, root);
+        let next = Self::root_damage_rects(tui, root);
         match previous {
             None => Self::request_rect_redraws(tui, &next, &[], line),
             Some(prev) => Self::request_rect_redraws(tui, prev, &next, line),
@@ -71,17 +71,17 @@ impl Worker {
             .views
             .roots()
             .iter()
-            .flat_map(|root| Self::frame_damage_rects(tui, *root))
+            .flat_map(|root| Self::root_damage_rects(tui, *root))
             .collect::<Vec<_>>();
         Self::request_rect_redraws(tui, previous, &next, line);
     }
 
-    /// Collects frame damage rects for every registered root.
+    /// Collects damage rects for every registered root.
     pub(in crate::vm::execute::io::tui) fn all_roots_damage_rects(tui: &TuiState) -> Vec<ViewRect> {
         tui.views
             .roots()
             .iter()
-            .flat_map(|root| Self::frame_damage_rects(tui, *root))
+            .flat_map(|root| Self::root_damage_rects(tui, *root))
             .collect()
     }
 

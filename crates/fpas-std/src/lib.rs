@@ -80,17 +80,12 @@ pub use test::{
 pub use tui::{
     BlockedInput, COMMAND_ID_CLOSE, COMMAND_ID_NEXT_WINDOW, COMMAND_ID_ZOOM, COMMAND_ID_ZOOM_BACK,
     CommandEvent, CommandId, CommandKind, CommandRegistry, DamageRegion, DesktopMetrics,
-    EventOutcome, EventPhase, EventRoute, FocusDirection, FrameButtonSlots, FrameCapabilities,
-    FrameChromeHit, FrameContentSize, FrameGeometry, FrameGeometryError, FrameKind, FrameRoot,
-    FrameRootSpec, FrameRootState, FrameScrollHit, FrameScrollState, FrameScrollbars, FrameStyle,
-    FrameWidget, FrameWindowDescriptor, FramedDialogRoot, ModalClose, ModalId, ModalResult,
-    ModalStack, ProcessOutcome, ResolvedView, RootActivation, RoutedEvent, ScrollBarHit,
-    ScrollBarOrientation, ScrollBarStyle, ScrollBarThumb, ScrollModel, SolidFillWidget,
-    StatusBarSegment, StatusBarStyle, StatusBarWidget, TUI_EVENT_KIND_VARIANTS,
+    EventOutcome, EventPhase, EventRoute, FocusDirection, ModalClose, ModalId, ModalResult,
+    ModalStack, ProcessOutcome, ResolvedView, RootActivation, RoutedEvent, ScrollBarStyle,
+    SolidFillWidget, StatusBarSegment, StatusBarStyle, StatusBarWidget, TUI_EVENT_KIND_VARIANTS,
     TUI_EXIT_REASON_VARIANTS, TUI_VIEW_KIND_VARIANTS, TuiEvent, TuiHost, TuiSession, ViewId,
     ViewKind, ViewLayout, ViewOptions, ViewRect, ViewRegistry, ViewState, ViewWidget,
-    WindowPalette, WindowShadow, drag_offset, hit_zone, register_framed_dialog_root,
-    thumb_geometry, track_cells,
+    WindowPalette, WindowShadow,
 };
 pub use ui::{UiEvent, UiHost, UiHostSurface, UiModifiers, UiMouse, UiResize, UiWheel};
 

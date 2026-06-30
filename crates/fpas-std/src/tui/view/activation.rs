@@ -1,8 +1,5 @@
 //! Active-window management: root activation and click-to-front z-order.
 //!
-//! These primitives are the desktop/window-manager foundation for the framed window and dialog
-//! behavior documented in `docs/pascal/std/tui/app/frames.md`.
-//!
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
 use super::{ViewId, ViewRegistry};
@@ -81,5 +78,33 @@ impl ViewRegistry {
         let id = self.roots.remove(position);
         self.roots.push(id);
         true
+    }
+
+    /// Activate the next root in z-order, skipping `exclude` roots (for example modals).
+    ///
+    /// Cycles from the current active root toward the back and wraps to the front. Returns `None`
+    /// when no eligible roots exist.
+    pub fn activate_next_root_excluding(&mut self, exclude: &[ViewId]) -> Option<RootActivation> {
+        let eligible: Vec<ViewId> = self
+            .roots()
+            .iter()
+            .copied()
+            .filter(|root| !exclude.contains(root))
+            .collect();
+        if eligible.is_empty() {
+            return None;
+        }
+
+        let active = self.active_root().filter(|root| eligible.contains(root));
+        let active_index = active
+            .and_then(|active| eligible.iter().position(|root| *root == active))
+            .unwrap_or_else(|| eligible.len().saturating_sub(1));
+        let next_index = if active_index == 0 {
+            eligible.len() - 1
+        } else {
+            active_index - 1
+        };
+        let next = eligible[next_index];
+        self.activate_root(next)
     }
 }

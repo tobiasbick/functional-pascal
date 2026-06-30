@@ -106,8 +106,8 @@ Notes:
 
 Goal: make Turbo Vision the only production TUI engine.
 
+- [x] Remove old frame/window manager.
 - [ ] Remove old retained view registry.
-- [ ] Remove old frame/window manager.
 - [x] Remove old menu widget implementation.
 - [x] Remove old retained control-widget intrinsic and event dispatch paths.
 - [x] Remove remaining old control-widget storage/rendering where Turbo Vision supplies replacements.
@@ -123,8 +123,10 @@ Notes:
 - Kept only `ScrollBarStyle` because legacy frame chrome still uses the style values internally. The standalone retained scroll bar widget is gone.
 - Removed old retained control symbol names from the known `Std.Tui` symbol list.
 - Removed the retained menu-bar widget, popup, parser, event dispatcher, bytecode intrinsics, and old known-symbol entries. Current `docs/pascal/` does not describe the removed retained menu API; planned future `MenuBar` work remains in Phase 5.
-- Removed the now-unused VM frame chrome event dispatcher. Remaining frame/window storage, rendering, and known-symbol cleanup are still covered by the open frame/window manager item.
-- Next: remove or replace the remaining retained frame/window runtime modules, then continue with the retained view registry removal.
+- Removed the retained frame/window runtime from `fpas-std` and `fpas-vm`: deleted `widget/frame/`, frame-only `scroll/`, `ViewWidget::Frame`, frame-root registry state, frame command dispatch (zoom/restore/close), and frame symbol entries from `STD_TUI_SYMBOLS`.
+- Moved `activate_next_root_excluding` into `view/activation.rs` so `NextWindow` still cycles retained roots without the frame module.
+- Kept generic desktop metrics, root shadows, and solid-fill/status-bar widgets for the transitional retained view registry.
+- Next: remove the retained view registry and VM `views/*` bridge, then continue Turbo Vision-backed module layout from the phase target tree.
 
 Expected new layout, adjust before editing if implementation reveals better boundaries:
 

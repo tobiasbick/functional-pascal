@@ -8,7 +8,6 @@ mod event;
 mod host;
 mod modal;
 mod process;
-mod scroll;
 mod session;
 mod view;
 mod widget;
@@ -25,10 +24,6 @@ pub use event::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent};
 pub use host::TuiHost;
 pub use modal::{ModalClose, ModalId, ModalResult, ModalStack};
 pub use process::{BlockedInput, FocusDirection, ProcessOutcome};
-pub use scroll::{
-    ScrollBarHit, ScrollBarOrientation, ScrollBarThumb, ScrollModel, drag_offset, hit_zone,
-    thumb_geometry, track_cells,
-};
 pub use session::TuiSession;
 pub use view::{
     DesktopMetrics, EventOutcome, EventPhase, EventRoute, ResolvedView, RootActivation,
@@ -36,9 +31,5 @@ pub use view::{
     ViewRegistry, ViewState, WindowPalette, WindowShadow,
 };
 pub use widget::{
-    FrameButtonSlots, FrameCapabilities, FrameChromeHit, FrameContentSize, FrameGeometry,
-    FrameGeometryError, FrameKind, FrameRoot, FrameRootSpec, FrameRootState, FrameScrollHit,
-    FrameScrollState, FrameScrollbars, FrameStyle, FrameWidget, FrameWindowDescriptor,
-    FramedDialogRoot, ScrollBarStyle, SolidFillWidget, StatusBarSegment, StatusBarStyle,
-    StatusBarWidget, ViewWidget, register_framed_dialog_root,
+    ScrollBarStyle, SolidFillWidget, StatusBarSegment, StatusBarStyle, StatusBarWidget, ViewWidget,
 };

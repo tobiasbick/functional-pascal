@@ -184,13 +184,6 @@ impl Worker {
         self.with_tui(|tui| {
             let mut widget = tui.view_widgets.remove(&view.id)?;
             widget.sync_view_state(view.state);
-            if let ViewWidget::Frame(frame) = &mut widget
-                && let Some(state) = tui.views.frame_root_state(view.id).copied()
-            {
-                frame.content_size = state.content_size;
-                frame.scroll_x = state.scroll_x;
-                frame.scroll_y = state.scroll_y;
-            }
             Some(widget)
         })
     }

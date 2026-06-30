@@ -3,17 +3,10 @@
 //! Spec: `docs/pascal/std/tui/app/README.md`
 
 mod control;
-pub(crate) mod frame;
 mod solid_fill;
 mod status_bar;
 
 pub use control::ScrollBarStyle;
-pub use frame::{
-    FrameButtonSlots, FrameCapabilities, FrameChromeHit, FrameContentSize, FrameGeometry,
-    FrameGeometryError, FrameKind, FrameRoot, FrameRootSpec, FrameRootState, FrameScrollHit,
-    FrameScrollState, FrameScrollbars, FrameStyle, FrameWidget, FrameWindowDescriptor,
-    FramedDialogRoot, register_framed_dialog_root,
-};
 pub use solid_fill::SolidFillWidget;
 pub use status_bar::{StatusBarSegment, StatusBarStyle, StatusBarWidget};
 
@@ -28,25 +21,18 @@ pub enum ViewWidget {
     SolidFill(SolidFillWidget),
     /// Declarative status bar rendered in Rust (display-only).
     StatusBar(StatusBarWidget),
-    /// Window or dialog frame with host-painted chrome.
-    Frame(FrameWidget),
 }
 
 impl ViewWidget {
     /// Synchronize control paint flags with resolved retained view state.
-    pub fn sync_view_state(&mut self, state: ViewState) {
-        match self {
-            Self::Frame(widget) => widget.active = state.active,
-            Self::SolidFill(_) | Self::StatusBar(_) => {}
-        }
-    }
+    pub fn sync_view_state(&mut self, _state: ViewState) {}
+
     /// Return the stable introspection kind for this native widget.
     #[must_use]
     pub fn kind(&self) -> ViewKind {
         match self {
             Self::SolidFill(_) => ViewKind::SolidFill,
             Self::StatusBar(_) => ViewKind::StatusBar,
-            Self::Frame(_) => ViewKind::Frame,
         }
     }
 
@@ -55,31 +41,24 @@ impl ViewWidget {
         match self {
             Self::SolidFill(widget) => widget.paint(console, rect, damage),
             Self::StatusBar(widget) => widget.paint(console, rect, damage),
-            Self::Frame(widget) => {
-                widget.paint_underlay(console, rect, damage);
-                widget.paint_overlay(console, rect, damage);
-            }
         }
     }
 
     /// Paint the widget phase that precedes local handlers and descendants.
     pub fn paint_underlay(&self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
-        match self {
-            Self::Frame(widget) => widget.paint_underlay(console, rect, damage),
-            _ => self.paint(console, rect, damage),
-        }
+        self.paint(console, rect, damage);
     }
 
     /// Paint chrome that must remain above local handlers and descendants.
-    pub fn paint_overlay(&self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
-        if let Self::Frame(widget) = self {
-            widget.paint_overlay(console, rect, damage);
-        }
-    }
+    pub fn paint_overlay(&self, _console: &mut Console, _rect: ViewRect, _damage: DamageRegion) {}
 
     /// Paint menu popups after other widgets so pull-downs stay visible.
-    pub fn paint_scene_overlay(&self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
-        let _ = (console, rect, damage);
+    pub fn paint_scene_overlay(
+        &self,
+        _console: &mut Console,
+        _rect: ViewRect,
+        _damage: DamageRegion,
+    ) {
     }
 
     /// Return whether this widget contributes a paint layer above the retained scene.
@@ -91,11 +70,7 @@ impl ViewWidget {
     /// Returns whether `damage` intersects any paintable region for this widget.
     #[must_use]
     pub fn intersects_damage(&self, rect: ViewRect, damage: DamageRegion) -> bool {
-        match self {
-            Self::SolidFill(_) | Self::StatusBar(_) | Self::Frame(_) => {
-                damage.intersects_rect(rect)
-            }
-        }
+        damage.intersects_rect(rect)
     }
 
     /// Returns whether a mouse point hits this widget, including open menu popups.
@@ -103,10 +78,6 @@ impl ViewWidget {
     /// Mouse coordinates are one-based, matching `Std.Console.Event`.
     #[must_use]
     pub fn contains_point(&self, rect: ViewRect, mouse_x: i64, mouse_y: i64) -> bool {
-        match self {
-            Self::SolidFill(_) | Self::StatusBar(_) | Self::Frame(_) => {
-                rect.contains_console_mouse(mouse_x, mouse_y)
-            }
-        }
+        rect.contains_console_mouse(mouse_x, mouse_y)
     }
 }

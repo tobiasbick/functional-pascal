@@ -93,31 +93,7 @@ impl Worker {
                 Ok(Some(ProcessOutcome::Command { handled: changed }))
             }
             CommandKind::Zoom | CommandKind::ZoomBack => {
-                let root = self.with_tui(|tui| {
-                    command
-                        .source
-                        .and_then(|id| tui.views.frame_root_of(id))
-                        .or_else(|| {
-                            tui.views
-                                .active_root()
-                                .filter(|root| tui.views.frame_root_state(*root).is_some())
-                        })
-                });
-                let Some(root) = root else {
-                    return Ok(Some(ProcessOutcome::Command { handled: false }));
-                };
-                let previous = self.with_tui(|tui| Worker::frame_damage_rects(tui, root));
-                let ok = self.with_tui(|tui| match command.kind {
-                    CommandKind::Zoom => tui.views.zoom_frame_root(root),
-                    CommandKind::ZoomBack => tui.views.restore_frame_root(root),
-                    _ => false,
-                });
-                if ok {
-                    self.with_tui(|tui| {
-                        Worker::request_frame_subtree_damage(tui, Some(&previous), root, line);
-                    });
-                }
-                Ok(Some(ProcessOutcome::Command { handled: ok }))
+                Ok(Some(ProcessOutcome::Command { handled: false }))
             }
         }
     }
@@ -127,24 +103,12 @@ impl Worker {
         command: CommandEvent,
         line: SourceLocation,
     ) -> Result<bool, VmError> {
-        let root = command.source.and_then(|id| {
-            self.with_tui(|tui| {
-                tui.views
-                    .frame_root_of(id)
-                    .or_else(|| tui.views.frame_root_state(id).map(|_| id))
-            })
-        });
+        let root = command
+            .source
+            .and_then(|id| self.with_tui(|tui| tui.views.root_of(id)));
         let Some(root) = root else {
             return Ok(false);
         };
-        let closable = self.with_tui(|tui| {
-            tui.views
-                .frame_root_state(root)
-                .is_some_and(|state| state.capabilities.closable)
-        });
-        if !closable {
-            return Ok(false);
-        }
 
         let is_active_modal = self.with_tui(|tui| tui.modals.active_root_view() == Some(root));
         if is_active_modal {
@@ -152,7 +116,6 @@ impl Worker {
             return Ok(true);
         }
 
-        self.with_tui(|tui| Self::unregister_tui_view_subtree(tui, root, line));
-        Ok(true)
+        Ok(false)
     }
 }

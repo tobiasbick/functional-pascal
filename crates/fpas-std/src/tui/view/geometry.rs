@@ -1,7 +1,6 @@
 //! Resolve local view geometry, ancestor transforms, and effective clips.
 
 use super::{ResolvedView, ViewId, ViewRect, ViewRegistry};
-use crate::tui::widget::frame::FrameGeometry;
 
 #[derive(Clone, Copy)]
 enum ClipLimit {
@@ -72,22 +71,9 @@ impl ViewRegistry {
             None
         };
 
-        let frame = self.frame_roots.get(&id);
-        let frame_geometry = frame.and_then(|frame| {
-            FrameGeometry::resolve(rect, frame.content_size, frame.capabilities).ok()
-        });
-        let content_origin = match (frame, frame_geometry) {
-            (Some(frame), Some(geometry)) => (
-                geometry.view.x - frame.scroll_x.offset() as i64,
-                geometry.view.y - frame.scroll_y.offset() as i64,
-            ),
-            _ => (rect.x, rect.y),
-        };
+        let content_origin = (rect.x, rect.y);
         let child_limit = if !visible {
             ClipLimit::Hidden
-        } else if let Some(geometry) = frame_geometry {
-            clip.and_then(|limit| geometry.view.intersection(limit))
-                .map_or(ClipLimit::Hidden, ClipLimit::Rect)
         } else if entry.options.clip_children {
             clip.map_or(ClipLimit::Hidden, ClipLimit::Rect)
         } else {

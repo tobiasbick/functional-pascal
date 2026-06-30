@@ -4,8 +4,8 @@
 
 mod application;
 mod commands;
+mod controls;
 mod handles;
-mod widgets;
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;

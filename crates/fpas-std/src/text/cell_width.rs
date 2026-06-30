@@ -2,6 +2,8 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/cell-width.md`
 
+#![allow(dead_code)] // retained for future Turbo Vision text layout; covered by unit tests below.
+
 use unicode_width::UnicodeWidthChar;
 
 /// Continuation filler for the second column of a wide character.

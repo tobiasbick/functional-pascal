@@ -1,8 +1,8 @@
 # Std.Tui cell width
 
-TUI rendering uses terminal cell widths when text is painted into screen buffers.
+Unicode display-width policy for terminal-cell layout. The helpers live in `fpas-std` for future Turbo Vision title and label rendering; they are not part of the current public Pascal API.
 
-The current public API exposes cell contents through:
+The public test surface exposes rendered output through:
 
 | Symbol | Description |
 | --- | --- |

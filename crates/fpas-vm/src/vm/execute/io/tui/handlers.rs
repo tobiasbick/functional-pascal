@@ -119,27 +119,7 @@ impl Worker {
         }
     }
 
-    /// Reads a boolean field from a record field list.
-    pub(in crate::vm::execute::io) fn bool_record_field(
-        fields: &[(String, Value)],
-        field_name: &str,
-        line: SourceLocation,
-    ) -> Result<bool, VmError> {
-        match Self::required_record_field(fields, field_name, line)? {
-            Value::Boolean(value) => Ok(*value),
-            other => Err(runtime_error(
-                TYPE_MISMATCH_CODE,
-                format!(
-                    "Record field `{field_name}` must be boolean, got {}",
-                    other.type_name()
-                ),
-                format!("Set `{field_name} := true` or `false`."),
-                line,
-            )),
-        }
-    }
-
-    /// Reads an optional handler field (`Some(fn)` or `None`) and validates its arity.
+    /// Pops a handler function and an `Application` record from the stack, validates arity, then
     pub(in crate::vm::execute::io) fn optional_host_handler_field(
         &self,
         fields: &[(String, Value)],
@@ -159,70 +139,6 @@ impl Worker {
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 format!("ApplicationHandlers.{field_name} must be `Some(handler)` or `None`"),
                 help,
-                line,
-            )),
-        }
-    }
-
-    /// Reads an optional integer field from the stack.
-    pub(in crate::vm::execute::io) fn pop_optional_integer(
-        &mut self,
-        label: &str,
-        line: SourceLocation,
-    ) -> Result<Option<i64>, VmError> {
-        match self.pop(line)? {
-            Value::OptionNone => Ok(None),
-            Value::OptionSome(inner) => match *inner {
-                Value::Integer(value) => Ok(Some(value)),
-                other => Err(runtime_error(
-                    RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-                    format!(
-                        "{label} expects `Option of integer`, got Some({})",
-                        other.type_name()
-                    ),
-                    "Pass `None` or `Some(<color index>)` using a CRT color constant or integer from 0 to 15.",
-                    line,
-                )),
-            },
-            other => Err(runtime_error(
-                RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-                format!(
-                    "{label} expects `Option of integer`, got {}",
-                    other.type_name()
-                ),
-                "Pass `None` or `Some(<color index>)` using a CRT color constant or integer from 0 to 15.",
-                line,
-            )),
-        }
-    }
-
-    /// Reads an optional character field from the stack.
-    pub(in crate::vm::execute::io) fn pop_optional_char(
-        &mut self,
-        label: &str,
-        line: SourceLocation,
-    ) -> Result<Option<char>, VmError> {
-        match self.pop(line)? {
-            Value::OptionNone => Ok(None),
-            Value::OptionSome(inner) => match *inner {
-                Value::Str(value) => single_char_from_optional_string(&value, label, line),
-                other => Err(runtime_error(
-                    RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-                    format!(
-                        "{label} expects `Option of string`, got Some({})",
-                        other.type_name()
-                    ),
-                    "Pass `None` or `Some('.')` with a single-character string.",
-                    line,
-                )),
-            },
-            other => Err(runtime_error(
-                RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-                format!(
-                    "{label} expects `Option of string`, got {}",
-                    other.type_name()
-                ),
-                "Pass `None` or `Some('.')` with a single-character string.",
                 line,
             )),
         }
@@ -251,25 +167,5 @@ impl Worker {
         self.validate_host_handler_function(&func, arity, label, hint, line)?;
         self.with_tui(|tui| setter(tui, func));
         Ok(())
-    }
-}
-
-fn single_char_from_optional_string(
-    value: &str,
-    label: &str,
-    line: SourceLocation,
-) -> Result<Option<char>, VmError> {
-    if value.is_empty() {
-        return Ok(None);
-    }
-    let mut chars = value.chars();
-    match (chars.next(), chars.next()) {
-        (Some(c), None) => Ok(Some(c)),
-        _ => Err(runtime_error(
-            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-            format!("{label} expects a single-character string, got `{value}`"),
-            "Pass `None` or `Some('.')` with a single-character string.",
-            line,
-        )),
     }
 }

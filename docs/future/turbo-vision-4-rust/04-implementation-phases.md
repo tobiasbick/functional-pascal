@@ -111,7 +111,7 @@ Goal: make Turbo Vision the only production TUI engine.
 - [x] Remove old menu widget implementation.
 - [x] Remove old retained control-widget intrinsic and event dispatch paths.
 - [x] Remove remaining old control-widget storage/rendering where Turbo Vision supplies replacements.
-- [ ] Keep or adapt only reusable terminal/test abstractions.
+- [x] Keep or adapt only reusable terminal/test abstractions.
 - [ ] Keep files below project size expectations by grouping by concern.
 
 Notes:
@@ -125,10 +125,10 @@ Notes:
 - Removed the retained menu-bar widget, popup, parser, event dispatcher, bytecode intrinsics, and old known-symbol entries. Current `docs/pascal/` does not describe the removed retained menu API; planned future `MenuBar` work remains in Phase 5.
 - Removed the retained frame/window runtime from `fpas-std` and `fpas-vm`: deleted `widget/frame/`, frame-only `scroll/`, `ViewWidget::Frame`, frame-root registry state, frame command dispatch (zoom/restore/close), and frame symbol entries from `STD_TUI_SYMBOLS`.
 - Moved `activate_next_root_excluding` into `view/activation.rs` so `NextWindow` still cycles retained roots without the frame module.
-- Kept generic desktop metrics, root shadows, and solid-fill/status-bar widgets for the transitional retained view registry.
-- Next: remove the retained `ViewRegistry` from `fpas-std` and `TuiState`, then continue Turbo Vision-backed module layout from the phase target tree.
+- Next: continue Turbo Vision-backed module layout from the phase target tree.
 - Removed the VM `views/*` bytecode bridge and retained-view/modal/status-bar intrinsic variants. Pruned `STD_TUI_SYMBOLS` to the current public Turbo Vision facade plus host-loop symbols.
 - Removed `fpas-std/tui/view/*`, `widget/*`, and `modal/*` plus `TuiState.views`, `view_paints`, `view_widgets`, `view_commands`, and `modals`. The hosted loop now uses global `OnPaint` only; event handlers request full-frame redraw hints. Removed `Std.Test.AssertViewRect`.
+- Removed retained-widget CRT paint helpers (`fill_rect_crt`, `write_text_at_crt`, `write_char_at_crt`) and unused handler stack decoders. Renamed `turbo_vision/widgets.rs` to `controls.rs`.
 
 Expected new layout, adjust before editing if implementation reveals better boundaries:
 

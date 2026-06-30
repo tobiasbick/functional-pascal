@@ -1,5 +1,7 @@
 # Std.Tui dialogs
 
+The retained modal stack and `ShowModal` APIs are removed.
+
 The current Turbo Vision spike exposes dialog handles:
 
 | Symbol | Description |
@@ -7,8 +9,6 @@ The current Turbo Vision spike exposes dialog handles:
 | `TuiDialog` | Opaque Turbo Vision dialog handle. |
 | `Application.CreateDialog(App, Bounds, Title): TuiDialog` | Create a dialog. |
 | `Application.AddChild(App, Dialog, Button)` | Attach a button child to a dialog. |
-
-The older retained modal helpers are transition internals unless they are listed in [Application](README.md).
 
 ## See Also
 

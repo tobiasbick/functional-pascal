@@ -10,10 +10,8 @@ pub(super) const TEXT_MODE_CO40: i64 = 4;
 pub(super) const TEXT_MODE_CO80: i64 = 5;
 pub(super) const TEXT_MODE_MONO: i64 = 7;
 
-mod cells;
 mod frames;
 mod paint_context;
-mod text_at;
 mod writing;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

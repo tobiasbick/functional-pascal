@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/README.md` (Turbo Vision spike API).
 
-use super::widgets::unknown_handle_error;
+use super::controls::unknown_handle_error;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use crate::vm::shared::{TurboVisionButton, TurboVisionObject, TurboVisionRect};

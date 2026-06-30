@@ -16,7 +16,7 @@ Calls to removed retained APIs such as `Application.Host*`, retained view querie
 | `Application.Size(App): Size` | Return the current application size. |
 | `Application.RequestRedraw(App)` | Mark the application as needing a redraw. |
 | `Application.Configure(App, Handlers)` | Store an `ApplicationHandlers` bundle. |
-| `Application.Run(App)` | Run the active backend. Turbo Vision objects use the Turbo Vision path; otherwise the remaining retained transition path is used. |
+| `Application.Run(App)` | Run the active backend. Turbo Vision objects use the Turbo Vision path; otherwise the hosted global-handler loop runs. |
 | `Application.Quit(App)` | Request that `Application.Run` exits. |
 | `Application.CreateDialog(App, Bounds, Title): TuiDialog` | Create a Turbo Vision dialog handle. |
 | `Application.CreateButton(App, Bounds, Text, CommandId): TuiButton` | Create a Turbo Vision button handle. |

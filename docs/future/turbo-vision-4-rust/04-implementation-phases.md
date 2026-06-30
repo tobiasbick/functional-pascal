@@ -112,7 +112,7 @@ Goal: make Turbo Vision the only production TUI engine.
 - [x] Remove old retained control-widget intrinsic and event dispatch paths.
 - [x] Remove remaining old control-widget storage/rendering where Turbo Vision supplies replacements.
 - [x] Keep or adapt only reusable terminal/test abstractions.
-- [ ] Keep files below project size expectations by grouping by concern.
+- [x] Keep files below project size expectations by grouping by concern.
 
 Notes:
 
@@ -129,19 +129,21 @@ Notes:
 - Removed the VM `views/*` bytecode bridge and retained-view/modal/status-bar intrinsic variants. Pruned `STD_TUI_SYMBOLS` to the current public Turbo Vision facade plus host-loop symbols.
 - Removed `fpas-std/tui/view/*`, `widget/*`, and `modal/*` plus `TuiState.views`, `view_paints`, `view_widgets`, `view_commands`, and `modals`. The hosted loop now uses global `OnPaint` only; event handlers request full-frame redraw hints. Removed `Std.Test.AssertViewRect`.
 - Removed retained-widget CRT paint helpers (`fill_rect_crt`, `write_text_at_crt`, `write_char_at_crt`) and unused handler stack decoders. Renamed `turbo_vision/widgets.rs` to `controls.rs`.
+- Flattened `turbo_vision/` into themed VM modules (`handles`, `dialogs`, `controls`, `callbacks`, `commands`, `tv_run`, `events`, `testing`) and renamed `test_host.rs` to `testing.rs`. See `docs/pascal/std/tui/app/vm-bridge.md`.
 
-Expected new layout, adjust before editing if implementation reveals better boundaries:
+Expected layout under `crates/fpas-vm/src/vm/execute/io/tui/` (implemented; `tv_run.rs` holds Turbo Vision `Application.Run` because `application.rs` is the Pascal session lifecycle):
 
 ```text
-crates/fpas-vm/src/vm/execute/io/tui/
-  application.rs     -- Application lifecycle and handle lookup
+  application.rs     -- Application lifecycle and configuration
   callbacks.rs       -- FPAS callback invocation from Turbo Vision commands
-  commands.rs        -- command IDs and conversion
-  controls.rs        -- widget construction bridge
-  dialogs.rs         -- modal dialog bridge
-  events.rs          -- event conversion and injection
+  commands.rs        -- command queue, Pump, Quit, TestClickButton
+  controls.rs        -- button construction and AddChild
+  dialogs.rs         -- CreateDialog
+  events.rs          -- headless test event injection
   handles.rs         -- host-owned handle table
-  testing.rs         -- headless/test-only bridge
+  testing.rs         -- OpenForTest, TestPump*, CloseForTest
+  tv_run.rs          -- Turbo Vision Application.Run (terminal + headless)
+  host/              -- hosted global-handler loop
 ```
 
 ## Phase 5: Build the Real API

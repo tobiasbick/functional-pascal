@@ -1,97 +1,19 @@
-//! Turbo Vision application-level callback and test-pump operations.
+//! Turbo Vision `Application.Run` integration.
 //!
-//! **Documentation:** `docs/pascal/std/tui/app/README.md` (Turbo Vision spike API).
+//! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
-use super::controls::unknown_handle_error;
+use super::tv_geometry::turbo_rect;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use crate::vm::shared::{TurboVisionButton, TurboVisionObject, TurboVisionRect};
-use fpas_bytecode::{SourceLocation, Value};
+use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
-use fpas_std::ProcessOutcome;
 use turbo_vision::app::Application as TurboVisionApplication;
-use turbo_vision::core::event::Event;
 use turbo_vision::views::{button::Button, dialog::Dialog};
 
 const HEADLESS_RUN_MAX_COMMANDS: usize = 4096;
 
 impl Worker {
-    pub(super) fn turbo_vision_register_on_command(
-        &mut self,
-        line: SourceLocation,
-    ) -> Result<(), crate::vm::diagnostics::VmError> {
-        self.register_tui_handler(
-            2,
-            "OnCommand",
-            "Pass a `procedure (Application, integer)` command handler.",
-            |tui, function| tui.on_command = Some(function),
-            line,
-        )?;
-        Ok(())
-    }
-
-    pub(super) fn turbo_vision_test_click_button(
-        &mut self,
-        line: SourceLocation,
-    ) -> Result<(), crate::vm::diagnostics::VmError> {
-        let button_handle = self.pop_turbo_vision_button_handle(line)?;
-        self.pop_tui_application(line)?;
-        self.with_tui(|tui| {
-            let Some(TurboVisionObject::Button(button)) =
-                tui.turbo_vision.objects.get(&button_handle)
-            else {
-                return Err(unknown_handle_error("Button", button_handle, line));
-            };
-            tui.turbo_vision
-                .pending_commands
-                .push_back(button.command_id);
-            Ok(())
-        })?;
-        Ok(())
-    }
-
-    pub(super) fn turbo_vision_pump(
-        &mut self,
-        line: SourceLocation,
-    ) -> Result<(), crate::vm::diagnostics::VmError> {
-        self.pop_tui_application(line)?;
-        let outcome = self.turbo_vision_pump_next_command(line)?;
-        self.push(Value::Integer(outcome.bridge_tag()))
-    }
-
-    fn turbo_vision_pump_next_command(
-        &mut self,
-        line: SourceLocation,
-    ) -> Result<ProcessOutcome, VmError> {
-        let command = self.with_tui(|tui| {
-            if tui.turbo_vision.quit_requested {
-                None
-            } else {
-                tui.turbo_vision.pending_commands.pop_front()
-            }
-        });
-
-        let Some(command) = command else {
-            return Ok(ProcessOutcome::Idle);
-        };
-
-        Ok(self
-            .dispatch_turbo_vision_command_event(&Event::command(command), line)?
-            .unwrap_or(ProcessOutcome::Idle))
-    }
-
-    pub(super) fn turbo_vision_quit(
-        &mut self,
-        line: SourceLocation,
-    ) -> Result<(), crate::vm::diagnostics::VmError> {
-        self.pop_tui_application(line)?;
-        self.with_tui(|tui| {
-            tui.quit_requested = true;
-            tui.turbo_vision.quit_requested = true;
-        });
-        Ok(())
-    }
-
     pub(in crate::vm::execute::io) fn turbo_vision_application_run(
         &mut self,
         line: SourceLocation,
@@ -197,8 +119,4 @@ struct TurboVisionDialogSnapshot {
     bounds: TurboVisionRect,
     title: String,
     buttons: Vec<TurboVisionButton>,
-}
-
-fn turbo_rect(rect: TurboVisionRect) -> turbo_vision::core::geometry::Rect {
-    turbo_vision::core::geometry::Rect::from_coords(rect.x, rect.y, rect.width, rect.height)
 }

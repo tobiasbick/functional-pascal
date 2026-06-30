@@ -1,41 +1,16 @@
-//! Turbo Vision dialog and button construction.
+//! Turbo Vision button construction and parent attachment bridge.
 //!
-//! **Documentation:** `docs/pascal/std/tui/app/README.md` (Turbo Vision spike API).
+//! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
+use super::tv_geometry::{turbo_rect, unknown_handle_error};
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
-use crate::vm::shared::{TurboVisionButton, TurboVisionDialog, TurboVisionObject, TurboVisionRect};
+use crate::vm::shared::{TurboVisionButton, TurboVisionObject};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 use turbo_vision::views::{button::Button, dialog::Dialog};
 
 impl Worker {
-    pub(super) fn turbo_vision_create_dialog(
-        &mut self,
-        line: SourceLocation,
-    ) -> Result<(), VmError> {
-        let title = self.pop_turbo_vision_string("Dialog title", line)?;
-        let bounds = self.pop_turbo_vision_rect(line)?;
-        self.pop_tui_application(line)?;
-
-        let _dialog = Dialog::new_modal(bounds, &title);
-        let bounds = state_rect(bounds);
-        let handle = self.with_tui(|tui| {
-            let handle = tui.turbo_vision.next_handle;
-            tui.turbo_vision.next_handle = handle.saturating_add(1).max(1);
-            tui.turbo_vision.objects.insert(
-                handle,
-                TurboVisionObject::Dialog(TurboVisionDialog {
-                    bounds,
-                    title,
-                    children: Vec::new(),
-                }),
-            );
-            handle
-        });
-        self.push(Self::turbo_vision_dialog_record(handle))
-    }
-
     pub(super) fn turbo_vision_create_button(
         &mut self,
         line: SourceLocation,
@@ -54,7 +29,7 @@ impl Worker {
         self.pop_tui_application(line)?;
 
         let _button = Button::new(bounds, &text, command_id, false);
-        let bounds = state_rect(bounds);
+        let bounds = super::tv_geometry::state_rect(bounds);
         let handle = self.with_tui(|tui| {
             let handle = tui.turbo_vision.next_handle;
             tui.turbo_vision.next_handle = handle.saturating_add(1).max(1);
@@ -134,30 +109,4 @@ impl Worker {
         })?;
         Ok(())
     }
-}
-
-fn state_rect(rect: turbo_vision::core::geometry::Rect) -> TurboVisionRect {
-    TurboVisionRect {
-        x: rect.a.x,
-        y: rect.a.y,
-        width: rect.b.x - rect.a.x,
-        height: rect.b.y - rect.a.y,
-    }
-}
-
-fn turbo_rect(rect: TurboVisionRect) -> turbo_vision::core::geometry::Rect {
-    turbo_vision::core::geometry::Rect::from_coords(rect.x, rect.y, rect.width, rect.height)
-}
-
-pub(super) fn unknown_handle_error(
-    label: &'static str,
-    handle: u32,
-    line: SourceLocation,
-) -> VmError {
-    runtime_error(
-        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-        format!("{label} handle {handle} is not live"),
-        "Use a handle returned by the matching Turbo Vision constructor in the active application session.",
-        line,
-    )
 }

@@ -1,6 +1,6 @@
 //! FPAS handle records and value decoding for Turbo Vision objects.
 //!
-//! **Documentation:** `docs/pascal/std/tui/app/README.md` (Turbo Vision spike API).
+//! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError, runtime_error};

@@ -1,6 +1,6 @@
-//! Command-event conversion from upstream Turbo Vision into the FPAS callback path.
+//! FPAS callback invocation from Turbo Vision command events.
 //!
-//! **Documentation:** `docs/pascal/std/tui/app/README.md` (current callback contract).
+//! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;

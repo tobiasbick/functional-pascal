@@ -23,6 +23,23 @@ Current public lowering includes:
 | `Application.QueryScreenLine` | `TuiQueryScreenLine` |
 | `Application.QueryScreenCell` | `TuiQueryScreenCell` |
 
+## Rust module layout
+
+Turbo Vision bridge code lives under `crates/fpas-vm/src/vm/execute/io/tui/`:
+
+| Module | Responsibility |
+| --- | --- |
+| `application.rs` | `Application.Open`, `Configure`, `Run`, `Size`, `RequestRedraw` |
+| `handles.rs` | Turbo Vision handle records and `Rect` decoding |
+| `dialogs.rs` | `CreateDialog` |
+| `controls.rs` | `CreateButton`, `AddChild` |
+| `callbacks.rs` | Turbo Vision command event to FPAS `OnCommand` |
+| `commands.rs` | `Pump`, `Quit`, `TestClickButton`, command queue |
+| `tv_run.rs` | Terminal and headless `Application.Run` for Turbo Vision |
+| `events.rs` | Headless `TestSend*` event injection |
+| `testing.rs` | `OpenForTest`, `TestPump*`, `CloseForTest` |
+| `host/` | Hosted global-handler loop (`HostRegister*`, `HostProcessNext`) |
+
 ## See Also
 
 - [Application](README.md)

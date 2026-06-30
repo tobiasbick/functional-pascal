@@ -150,12 +150,12 @@ Expected layout under `crates/fpas-vm/src/vm/execute/io/tui/` (implemented; `tv_
 
 Implement in this order:
 
-- [ ] `Application`
-- [ ] `Rect`, `Point`, `Size`
-- [ ] `Command`
+- [x] `Application` — session open/close/run, Turbo Vision pump, and `OnCommand` from Phase 2–3 spike.
+- [x] `Rect`, `Point`, `Size` — value records registered in Sema (`Point` added 2026-06-29).
+- [x] `Command` — `Command.Accept`, `Command.Cancel`, `Command.Close`, `Command.Quit` integer constants (2026-06-29; `Accept` not `Ok` — `Ok` is a keyword).
 - [ ] `Window`
-- [ ] `Dialog`
-- [ ] `Button`
+- [ ] `Dialog` — spike uses `TuiDialog`; rename and extend when `Window` lands.
+- [ ] `Button` — spike uses `TuiButton`; rename when dialog/window API stabilizes.
 - [ ] `StaticText`
 - [ ] `InputLine`
 - [ ] `MenuBar`

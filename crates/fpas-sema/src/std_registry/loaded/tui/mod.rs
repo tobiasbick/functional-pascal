@@ -6,6 +6,7 @@
 //! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 mod application_api;
+mod command_api;
 mod handlers;
 
 use crate::check::Checker;
@@ -48,6 +49,11 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             ("width".into(), Ty::Integer),
             ("height".into(), Ty::Integer),
         ],
+    );
+    type_registration::register_record_type(
+        checker,
+        s::STD_TUI_POINT,
+        vec![("x".into(), Ty::Integer), ("y".into(), Ty::Integer)],
     );
     let size = type_registration::register_record_type(
         checker,
@@ -105,6 +111,8 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             ("size".into(), size.clone()),
         ],
     );
+
+    command_api::register_command_constants(checker);
 
     let types = TuiTypes {
         application,

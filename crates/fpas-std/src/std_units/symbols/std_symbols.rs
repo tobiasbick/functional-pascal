@@ -223,7 +223,12 @@ pub const STD_TUI_BUTTON: &str = std_tui!("TuiButton");
 /// Hosted-dispatch handler bundle for `Std.Tui.Application.Configure`; see `docs/pascal/std/tui/app/README.md`.
 pub const STD_TUI_APPLICATION_HANDLERS: &str = std_tui!("ApplicationHandlers");
 pub const STD_TUI_RECT: &str = std_tui!("Rect");
+pub const STD_TUI_POINT: &str = std_tui!("Point");
 pub const STD_TUI_SIZE: &str = std_tui!("Size");
+pub const STD_TUI_COMMAND_ACCEPT: &str = std_tui!("Command.Accept");
+pub const STD_TUI_COMMAND_CANCEL: &str = std_tui!("Command.Cancel");
+pub const STD_TUI_COMMAND_CLOSE: &str = std_tui!("Command.Close");
+pub const STD_TUI_COMMAND_QUIT: &str = std_tui!("Command.Quit");
 pub const STD_TUI_SCREEN_CELL: &str = std_tui!("ScreenCell");
 pub const STD_TUI_EVENT: &str = std_tui!("TuiEvent");
 pub const STD_TUI_EVENT_KIND: &str = std_tui!("EventKind");

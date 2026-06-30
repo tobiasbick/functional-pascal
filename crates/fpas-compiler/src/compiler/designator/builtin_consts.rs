@@ -1,5 +1,6 @@
 use fpas_bytecode::Value;
 use fpas_std::std_symbols as s;
+use fpas_std::{COMMAND_CANCEL, COMMAND_CLOSE, COMMAND_OK, COMMAND_QUIT};
 
 use super::Compiler;
 
@@ -32,6 +33,10 @@ impl Compiler {
             s::STD_CONSOLE_CO80 => Some(Value::Integer(5)),
             s::STD_CONSOLE_MONO => Some(Value::Integer(7)),
             s::STD_CONSOLE_FONT_8X8 => Some(Value::Integer(256)),
+            s::STD_TUI_COMMAND_ACCEPT => Some(Value::Integer(COMMAND_OK)),
+            s::STD_TUI_COMMAND_CANCEL => Some(Value::Integer(COMMAND_CANCEL)),
+            s::STD_TUI_COMMAND_CLOSE => Some(Value::Integer(COMMAND_CLOSE)),
+            s::STD_TUI_COMMAND_QUIT => Some(Value::Integer(COMMAND_QUIT)),
             _ => None,
         }
     }

@@ -173,7 +173,7 @@ program T;
 uses Std.Tui, Std.Test;
 
 const
-  CmdOk: integer := 100;
+  CmdOk: integer := Command.Accept;
 
 mutable var
   mutable var SeenCommand: integer := 0;

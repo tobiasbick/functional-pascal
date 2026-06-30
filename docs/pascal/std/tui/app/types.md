@@ -15,12 +15,30 @@ Rectangle in terminal cells.
 | `width` | `integer` | Width in cells. |
 | `height` | `integer` | Height in cells. |
 
+## `Point`
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `x` | `integer` | Horizontal cell offset. |
+| `y` | `integer` | Vertical cell offset. |
+
 ## `Size`
 
 | Field | Type | Meaning |
 | --- | --- | --- |
 | `width` | `integer` | Width in cells. |
 | `height` | `integer` | Height in cells. |
+
+## `Command` constants
+
+Standard command identifiers for buttons and `OnCommand` handlers. Application-defined commands use other positive integers.
+
+| Constant | Value | Meaning |
+| --- | --- | --- |
+| `Command.Accept` | `1` | Accept or confirm (dialog OK). Named `Accept` because `Ok` is a language keyword. |
+| `Command.Cancel` | `2` | Cancel the current action or dialog. |
+| `Command.Close` | `3` | Close the source view or window. |
+| `Command.Quit` | `4` | Exit the application (`Application.Quit`). |
 
 ## `TuiDialog`
 

@@ -156,6 +156,14 @@ impl Worker {
                     line,
                 )?;
             }
+            Intrinsic::Tui(TuiIntrinsic::HostBindCommand) => {
+                let command_id = self.pop_int(line)?;
+                let key = self.pop_console_key_event(line)?;
+                self.pop_tui_application(line)?;
+                self.with_tui(|tui| {
+                    tui.commands.bind(key, fpas_std::CommandId(command_id));
+                });
+            }
             Intrinsic::Tui(TuiIntrinsic::HostInvokeOnKeyPressed) => {
                 let key_event = self.pop_console_key_event(line)?;
                 self.pop_tui_application(line)?;

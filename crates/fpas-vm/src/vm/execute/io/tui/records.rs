@@ -6,7 +6,7 @@ use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
-use fpas_std::{ViewId, ViewLayout, ViewRect};
+use fpas_std::{ViewId, ViewRect};
 
 const TUI_APPLICATION_TYPE: &str = "Std.Tui.Application";
 const TUI_VIEW_ID_TYPE: &str = "Std.Tui.ViewId";
@@ -73,6 +73,34 @@ impl Worker {
         }
     }
 
+    /// Pops and decodes a required `Std.Tui.ViewId` value.
+    pub(in crate::vm::execute::io) fn pop_tui_view_id(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<ViewId, VmError> {
+        let value = self.pop(line)?;
+        Self::tui_view_id_from_value(&value, line)
+    }
+
+    /// Validates that a host view handle still exists in the registry.
+    pub(in crate::vm::execute::io) fn require_registered_tui_view(
+        &self,
+        view_id: ViewId,
+        line: SourceLocation,
+    ) -> Result<ViewId, VmError> {
+        let exists = self.with_tui(|tui| tui.views.rect(view_id).is_some());
+        if exists {
+            Ok(view_id)
+        } else {
+            Err(runtime_error(
+                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                format!("Unknown host view handle {}", view_id.raw()),
+                "Pass a valid `Std.Tui.ViewId` from the current Turbo Vision facade or a retained test fixture.",
+                line,
+            ))
+        }
+    }
+
     /// Constructs a `Std.Tui.Size` record with `width` and `height` fields.
     pub(in crate::vm::execute::io) fn tui_size_record(width: i64, height: i64) -> Value {
         Value::Record {
@@ -107,31 +135,5 @@ impl Worker {
                 ("height".into(), Value::Integer(rect.height)),
             ],
         }
-    }
-
-    /// Decode a `Std.Tui.ViewLayout` record from the VM stack.
-    pub(in crate::vm::execute::io) fn pop_tui_view_layout(
-        &mut self,
-        line: SourceLocation,
-    ) -> Result<ViewLayout, VmError> {
-        let value = self.pop(line)?;
-        let Value::Record { fields, .. } = value else {
-            return Err(runtime_error(
-                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                "Expected a `Std.Tui.ViewLayout` record.",
-                "Pass a `ViewLayout` record with anchor and margin fields.",
-                line,
-            ));
-        };
-        Ok(ViewLayout {
-            anchor_left: Self::bool_record_field(&fields, "anchorLeft", line)?,
-            anchor_top: Self::bool_record_field(&fields, "anchorTop", line)?,
-            anchor_right: Self::bool_record_field(&fields, "anchorRight", line)?,
-            anchor_bottom: Self::bool_record_field(&fields, "anchorBottom", line)?,
-            margin_left: self.integer_record_field(&fields, "marginLeft", line)?,
-            margin_top: self.integer_record_field(&fields, "marginTop", line)?,
-            margin_right: self.integer_record_field(&fields, "marginRight", line)?,
-            margin_bottom: self.integer_record_field(&fields, "marginBottom", line)?,
-        })
     }
 }

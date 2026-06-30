@@ -79,12 +79,6 @@ pub fn layout_display_cells(text: &str, max_cols: usize) -> Vec<(usize, char)> {
     result
 }
 
-/// Lay out title text into a fixed-width title slot.
-#[must_use]
-pub fn truncate_for_title_slot(text: &str, max_cols: usize) -> Vec<(usize, char)> {
-    layout_display_cells(text, max_cols)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -125,14 +119,6 @@ mod tests {
     #[test]
     fn layout_fits_wide_characters() {
         assert_eq!(layout_display_cells("日本", 4), vec![(0, '日'), (2, '本')]);
-    }
-
-    #[test]
-    fn title_slot_matches_frame_truncation() {
-        assert_eq!(
-            truncate_for_title_slot("Long dialog title", 4),
-            vec![(0, 'L'), (1, 'o'), (2, 'n'), (3, '…')]
-        );
     }
 
     #[test]

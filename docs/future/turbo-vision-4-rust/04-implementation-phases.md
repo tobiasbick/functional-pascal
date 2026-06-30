@@ -126,7 +126,8 @@ Notes:
 - Removed the retained frame/window runtime from `fpas-std` and `fpas-vm`: deleted `widget/frame/`, frame-only `scroll/`, `ViewWidget::Frame`, frame-root registry state, frame command dispatch (zoom/restore/close), and frame symbol entries from `STD_TUI_SYMBOLS`.
 - Moved `activate_next_root_excluding` into `view/activation.rs` so `NextWindow` still cycles retained roots without the frame module.
 - Kept generic desktop metrics, root shadows, and solid-fill/status-bar widgets for the transitional retained view registry.
-- Next: remove the retained view registry and VM `views/*` bridge, then continue Turbo Vision-backed module layout from the phase target tree.
+- Next: remove the retained `ViewRegistry` from `fpas-std` and `TuiState`, then continue Turbo Vision-backed module layout from the phase target tree.
+- Removed the VM `views/*` bytecode bridge and retained-view/modal/status-bar intrinsic variants. Kept `HostBindCommand`, host-loop handlers, and `modal_host` helpers for the transitional retained engine. Pruned `STD_TUI_SYMBOLS` to the current public Turbo Vision facade plus host-loop symbols.
 
 Expected new layout, adjust before editing if implementation reveals better boundaries:
 

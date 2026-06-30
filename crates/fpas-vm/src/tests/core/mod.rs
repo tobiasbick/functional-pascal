@@ -10,7 +10,6 @@ mod string_index;
 mod sync_call_halt;
 mod tui_configure_vm;
 mod tui_event_ordering_vm;
-mod tui_focus_vm;
 mod tui_host_vm;
 mod tui_latency_vm;
 mod tui_run_vm;

@@ -1,6 +1,3 @@
-    HostSetViewVisible = 387,
-    HostSetViewEnabled = 388,
-    HostSetViewLayout = 426,
     CreateDialog = 430,
     CreateButton = 431,
     AddChild = 432,

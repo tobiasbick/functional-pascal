@@ -1,4 +1,4 @@
-//! View-subtree redraw damage helpers.
+//! View-subtree redraw damage helpers for the transitional retained host loop.
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/README.md`
 
@@ -47,20 +47,6 @@ impl Worker {
         }
     }
 
-    /// Marks root subtree damage, optionally pairing a pre-move snapshot with the current layout.
-    pub(in crate::vm::execute::io::tui) fn request_root_subtree_damage(
-        tui: &mut TuiState,
-        previous: Option<&[ViewRect]>,
-        root: ViewId,
-        line: SourceLocation,
-    ) {
-        let next = Self::root_damage_rects(tui, root);
-        match previous {
-            None => Self::request_rect_redraws(tui, &next, &[], line),
-            Some(prev) => Self::request_rect_redraws(tui, prev, &next, line),
-        }
-    }
-
     /// Marks damage for every registered root's subtree before and after a bulk layout operation.
     pub(in crate::vm::execute::io::tui) fn request_all_roots_subtree_damage(
         tui: &mut TuiState,
@@ -83,17 +69,5 @@ impl Worker {
             .iter()
             .flat_map(|root| Self::root_damage_rects(tui, *root))
             .collect()
-    }
-
-    /// Terminal bounds used as the parent rectangle for anchored root views.
-    pub(in crate::vm::execute::io::tui) fn terminal_bounds(worker: &Worker) -> ViewRect {
-        let (width, height) =
-            worker.with_console(|console| (console.screen_width(), console.screen_height()));
-        ViewRect {
-            x: 0,
-            y: 0,
-            width,
-            height,
-        }
     }
 }

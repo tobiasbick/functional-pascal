@@ -2,7 +2,7 @@
 
 This page tracks the public Pascal-to-VM bridge for contributors.
 
-The old public `Application.Host*` bridge has been de-registered from Sema and is no longer lowered by the compiler. Some internal VM code still exists until the runtime cleanup phase removes the retained implementation.
+The old public `Application.Host*` view, modal, and widget bridge has been removed from bytecode and the VM `views/*` module. The transitional retained `ViewRegistry` remains only for the host event loop until a follow-up removes it from `fpas-std` and `TuiState`.
 
 Current public lowering includes:
 

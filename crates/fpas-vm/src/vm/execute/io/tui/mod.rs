@@ -3,15 +3,14 @@
 //! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 mod application;
+mod damage;
 mod handlers;
 mod host;
+mod modal_host;
 mod query_host;
 mod records;
-mod status_bar_model;
 mod test_host;
 mod turbo_vision;
-mod view_geometry;
-mod views;
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
@@ -28,7 +27,6 @@ impl Worker {
             || self.try_exec_turbo_vision_intrinsic(intrinsic, line)?
             || self.try_exec_tui_test_host_intrinsic(intrinsic, line)?
             || self.try_exec_tui_query_host_intrinsic(intrinsic, line)?
-            || self.try_exec_tui_view_intrinsic(intrinsic, line)?
             || self.try_exec_tui_host_intrinsic(intrinsic, line)?
         {
             return Ok(true);

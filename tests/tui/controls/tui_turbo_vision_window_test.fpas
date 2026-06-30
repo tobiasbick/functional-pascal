@@ -21,7 +21,7 @@ end;
 begin
   var App: Application := Application.OpenForTest(60, 20);
   var WindowHandle: Window := Application.CreateWindow(App, Bounds(5, 3, 40, 12), 'Demo');
-  var ButtonHandle: TuiButton := Application.CreateButton(App, Bounds(10, 6, 12, 2), 'Quit', Command.Quit);
+  var ButtonHandle: Button := Application.CreateButton(App, Bounds(10, 6, 12, 2), 'Quit', Command.Quit);
   Application.AddChild(App, WindowHandle, ButtonHandle);
   Application.AddWindow(App, WindowHandle);
   Application.OnCommand(App, OnCommand);

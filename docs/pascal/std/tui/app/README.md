@@ -18,9 +18,9 @@ Calls to removed retained APIs such as `Application.Host*`, retained view querie
 | `Application.Configure(App, Handlers)` | Store an `ApplicationHandlers` bundle. |
 | `Application.Run(App)` | Run the active backend. Turbo Vision objects use the Turbo Vision path; otherwise the hosted global-handler loop runs. |
 | `Application.Quit(App)` | Request that `Application.Run` exits. |
-| `Application.CreateDialog(App, Bounds, Title): TuiDialog` | Create a Turbo Vision dialog handle. |
+| `Application.CreateDialog(App, Bounds, Title): Dialog` | Create a Turbo Vision dialog handle. |
 | `Application.CreateWindow(App, Bounds, Title): Window` | Create a Turbo Vision window handle. |
-| `Application.CreateButton(App, Bounds, Text, CommandId): TuiButton` | Create a Turbo Vision button handle. |
+| `Application.CreateButton(App, Bounds, Text, CommandId): Button` | Create a Turbo Vision button handle. |
 | `Application.AddChild(App, Parent, Button)` | Attach a button to a dialog or window parent. |
 | `Application.AddWindow(App, Window)` | Place a window on the application desktop. |
 | `Application.OnCommand(App, Handler)` | Register `procedure (Application, integer)` for command dispatch. Use `Command.*` constants for standard actions. |

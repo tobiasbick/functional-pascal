@@ -8,9 +8,9 @@ use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 use turbo_vision::core::geometry::Rect;
 
-const TUI_DIALOG_TYPE: &str = "Std.Tui.TuiDialog";
+const TUI_DIALOG_TYPE: &str = "Std.Tui.Dialog";
 const TUI_WINDOW_TYPE: &str = "Std.Tui.Window";
-const TUI_BUTTON_TYPE: &str = "Std.Tui.TuiButton";
+const TUI_BUTTON_TYPE: &str = "Std.Tui.Button";
 const HANDLE_FIELD: &str = "__id";
 const TUI_RECT_TYPE: &str = "Std.Tui.Rect";
 

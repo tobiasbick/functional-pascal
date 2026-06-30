@@ -191,9 +191,9 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(40, 12);
-  var Dialog: TuiDialog := Application.CreateDialog(App, Bounds(2, 2, 20, 6), 'Command');
-  var OkButton: TuiButton := Application.CreateButton(App, Bounds(4, 3, 8, 1), 'OK', CmdOk);
-  Application.AddChild(App, Dialog, OkButton);
+  var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(2, 2, 20, 6), 'Command');
+  var OkButton: Button := Application.CreateButton(App, Bounds(4, 3, 8, 1), 'OK', CmdOk);
+  Application.AddChild(App, DialogHandle, OkButton);
   Application.OnCommand(App, OnCommand);
   Application.TestClickButton(App, OkButton);
   Application.Run(App);

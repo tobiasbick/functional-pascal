@@ -25,13 +25,13 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(40, 12);
-  var Dialog: TuiDialog := Application.CreateDialog(App, Bounds(2, 1, 24, 8), 'Demo');
-  var Button: TuiButton := Application.CreateButton(App, Bounds(4, 4, 10, 2), 'Quit', 77);
-  Application.AddChild(App, Dialog, Button);
+  var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(2, 1, 24, 8), 'Demo');
+  var ButtonHandle: Button := Application.CreateButton(App, Bounds(4, 4, 10, 2), 'Quit', Command.Quit);
+  Application.AddChild(App, DialogHandle, ButtonHandle);
   Application.OnCommand(App, OnCommand);
-  Application.TestClickButton(App, Button);
+  Application.TestClickButton(App, ButtonHandle);
   Application.Run(App);
-  AssertEquals(77, LastCommand)
+  AssertEquals(Command.Quit, LastCommand)
 end.
 ```
 

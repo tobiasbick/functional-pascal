@@ -154,8 +154,8 @@ Implement in this order:
 - [x] `Rect`, `Point`, `Size` — value records registered in Sema (`Point` added 2026-06-29).
 - [x] `Command` — `Command.Accept`, `Command.Cancel`, `Command.Close`, `Command.Quit` integer constants (2026-06-29; `Accept` not `Ok` — `Ok` is a keyword).
 - [x] `Window` — `Application.CreateWindow`, `Application.AddWindow`, and `Application.AddChild` parent support (2026-06-29).
-- [ ] `Dialog` — spike uses `TuiDialog`; rename and extend when `Window` lands.
-- [ ] `Button` — spike uses `TuiButton`; rename when dialog/window API stabilizes.
+- [x] `Dialog` — `Dialog` handle type (renamed from spike `TuiDialog`, 2026-06-29).
+- [x] `Button` — `Button` handle type (renamed from spike `TuiButton`, 2026-06-29).
 - [ ] `StaticText`
 - [ ] `InputLine`
 - [ ] `MenuBar`

@@ -6,8 +6,8 @@ The current Turbo Vision spike exposes dialog handles:
 
 | Symbol | Description |
 | --- | --- |
-| `TuiDialog` | Opaque Turbo Vision dialog handle. |
-| `Application.CreateDialog(App, Bounds, Title): TuiDialog` | Create a dialog. |
+| `Dialog` | Opaque Turbo Vision dialog handle. |
+| `Application.CreateDialog(App, Bounds, Title): Dialog` | Create a dialog. |
 | `Application.AddChild(App, Dialog, Button)` | Attach a button child to a dialog. |
 
 ## See Also

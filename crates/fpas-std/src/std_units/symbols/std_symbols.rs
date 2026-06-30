@@ -218,9 +218,9 @@ pub const STD_TIME_SLEEP: &str = std_time!("Sleep");
 
 pub const STD_TUI_APPLICATION: &str = std_tui!("Application");
 pub const STD_TUI_VIEW_ID: &str = std_tui!("ViewId");
-pub const STD_TUI_DIALOG: &str = std_tui!("TuiDialog");
+pub const STD_TUI_DIALOG: &str = std_tui!("Dialog");
 pub const STD_TUI_WINDOW: &str = std_tui!("Window");
-pub const STD_TUI_BUTTON: &str = std_tui!("TuiButton");
+pub const STD_TUI_BUTTON: &str = std_tui!("Button");
 /// Hosted-dispatch handler bundle for `Std.Tui.Application.Configure`; see `docs/pascal/std/tui/app/README.md`.
 pub const STD_TUI_APPLICATION_HANDLERS: &str = std_tui!("ApplicationHandlers");
 pub const STD_TUI_RECT: &str = std_tui!("Rect");

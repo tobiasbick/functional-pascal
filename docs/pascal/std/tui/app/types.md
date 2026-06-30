@@ -44,11 +44,11 @@ Standard command identifiers for buttons and `OnCommand` handlers. Application-d
 
 Opaque Turbo Vision window handle returned by `Application.CreateWindow`. Call `Application.AddWindow` before `Application.Run` to show the window on the desktop.
 
-## `TuiDialog`
+## `Dialog`
 
 Opaque Turbo Vision dialog handle returned by `Application.CreateDialog`.
 
-## `TuiButton`
+## `Button`
 
 Opaque Turbo Vision button handle returned by `Application.CreateButton`.
 

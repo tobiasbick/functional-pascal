@@ -274,8 +274,6 @@ pub const STD_TUI_APPLICATION_QUERY_ROOT_VIEWS: &str = std_tui!("Application.Que
 pub const STD_TUI_APPLICATION_QUERY_VIEW_RECT: &str = std_tui!("Application.QueryViewRect");
 pub const STD_TUI_APPLICATION_QUERY_VIEW_PARENT: &str = std_tui!("Application.QueryViewParent");
 pub const STD_TUI_APPLICATION_QUERY_VIEW_CHILDREN: &str = std_tui!("Application.QueryViewChildren");
-pub const STD_TUI_APPLICATION_QUERY_MENU_BAR_STATE: &str =
-    std_tui!("Application.QueryMenuBarState");
 pub const STD_TUI_APPLICATION_QUERY_MODAL_DEPTH: &str = std_tui!("Application.QueryModalDepth");
 pub const STD_TUI_APPLICATION_QUERY_FOCUSED_VIEW_ID: &str =
     std_tui!("Application.QueryFocusedViewId");
@@ -355,16 +353,6 @@ pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT: &str =
 /// Register a host-managed solid-fill widget view and return its handle.
 pub const STD_TUI_APPLICATION_HOST_CREATE_SOLID_FILL_VIEW: &str =
     std_tui!("Application.HostCreateSolidFillView");
-/// Register a host-managed menu bar widget from a Pascal item model.
-pub const STD_TUI_APPLICATION_HOST_CREATE_MENU_BAR_VIEW: &str =
-    std_tui!("Application.HostCreateMenuBarView");
-/// Replace the item model for an existing menu bar widget view.
-pub const STD_TUI_APPLICATION_HOST_SET_MENU_BAR_ITEMS: &str =
-    std_tui!("Application.HostSetMenuBarItems");
-pub const STD_TUI_MENU_BAR_STATE: &str = std_tui!("MenuBarState");
-pub const STD_TUI_MENU_BAR_ITEM: &str = std_tui!("MenuBarItem");
-pub const STD_TUI_MENU_BAR_STYLE: &str = std_tui!("MenuBarStyle");
-pub const STD_TUI_MENU_POPUP_ITEM: &str = std_tui!("MenuPopupItem");
 /// Register a host-managed status bar widget from a Pascal segment model.
 pub const STD_TUI_APPLICATION_HOST_CREATE_STATUS_BAR_VIEW: &str =
     std_tui!("Application.HostCreateStatusBarView");

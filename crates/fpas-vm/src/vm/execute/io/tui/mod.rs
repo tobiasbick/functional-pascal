@@ -3,10 +3,8 @@
 //! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 mod application;
-mod frame_model;
 mod handlers;
 mod host;
-mod menu_bar_model;
 mod query_host;
 mod records;
 mod status_bar_model;
@@ -14,7 +12,6 @@ mod test_host;
 mod turbo_vision;
 mod view_geometry;
 mod views;
-mod widget_target;
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;

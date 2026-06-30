@@ -1,6 +1,4 @@
     HostSetActiveModalResult = 381,
     HostCreateSolidFillView = 343,
-    HostCreateMenuBarView = 344,
-    HostSetMenuBarItems = 345,
     HostCreateStatusBarView = 346,
     HostSetStatusBarSegments = 347,

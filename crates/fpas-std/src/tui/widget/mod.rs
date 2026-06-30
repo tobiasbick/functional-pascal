@@ -4,10 +4,6 @@
 
 mod control;
 pub(crate) mod frame;
-mod menu_bar;
-mod menu_label_paint;
-mod menu_popup;
-mod menu_style;
 mod solid_fill;
 mod status_bar;
 
@@ -18,8 +14,6 @@ pub use frame::{
     FrameScrollState, FrameScrollbars, FrameStyle, FrameWidget, FrameWindowDescriptor,
     FramedDialogRoot, register_framed_dialog_root,
 };
-pub use menu_bar::{MenuBarItem, MenuBarMouseResult, MenuBarState, MenuBarStyle, MenuBarWidget};
-pub use menu_popup::MenuPopupItem;
 pub use solid_fill::SolidFillWidget;
 pub use status_bar::{StatusBarSegment, StatusBarStyle, StatusBarWidget};
 
@@ -32,8 +26,6 @@ use crate::{Console, DamageRegion, ViewKind, ViewRect, ViewState};
 pub enum ViewWidget {
     /// Solid CRT-color fill, optionally tiled with one character.
     SolidFill(SolidFillWidget),
-    /// Declarative horizontal menu bar rendered and hit-tested in Rust.
-    MenuBar(MenuBarWidget),
     /// Declarative status bar rendered in Rust (display-only).
     StatusBar(StatusBarWidget),
     /// Window or dialog frame with host-painted chrome.
@@ -45,7 +37,7 @@ impl ViewWidget {
     pub fn sync_view_state(&mut self, state: ViewState) {
         match self {
             Self::Frame(widget) => widget.active = state.active,
-            Self::SolidFill(_) | Self::MenuBar(_) | Self::StatusBar(_) => {}
+            Self::SolidFill(_) | Self::StatusBar(_) => {}
         }
     }
     /// Return the stable introspection kind for this native widget.
@@ -53,7 +45,6 @@ impl ViewWidget {
     pub fn kind(&self) -> ViewKind {
         match self {
             Self::SolidFill(_) => ViewKind::SolidFill,
-            Self::MenuBar(_) => ViewKind::MenuBar,
             Self::StatusBar(_) => ViewKind::StatusBar,
             Self::Frame(_) => ViewKind::Frame,
         }
@@ -63,7 +54,6 @@ impl ViewWidget {
     pub fn paint(&self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
         match self {
             Self::SolidFill(widget) => widget.paint(console, rect, damage),
-            Self::MenuBar(widget) => widget.paint(console, rect, damage),
             Self::StatusBar(widget) => widget.paint(console, rect, damage),
             Self::Frame(widget) => {
                 widget.paint_underlay(console, rect, damage);
@@ -89,25 +79,19 @@ impl ViewWidget {
 
     /// Paint menu popups after other widgets so pull-downs stay visible.
     pub fn paint_scene_overlay(&self, console: &mut Console, rect: ViewRect, damage: DamageRegion) {
-        if let Self::MenuBar(widget) = self {
-            widget.paint_popup_overlay(console, rect, damage);
-        }
+        let _ = (console, rect, damage);
     }
 
     /// Return whether this widget contributes a paint layer above the retained scene.
     #[must_use]
     pub fn has_scene_overlay(&self) -> bool {
-        matches!(self, Self::MenuBar(_))
+        false
     }
 
     /// Returns whether `damage` intersects any paintable region for this widget.
     #[must_use]
     pub fn intersects_damage(&self, rect: ViewRect, damage: DamageRegion) -> bool {
         match self {
-            Self::MenuBar(widget) => widget
-                .damage_rects(rect)
-                .into_iter()
-                .any(|region| damage.intersects_rect(region)),
             Self::SolidFill(_) | Self::StatusBar(_) | Self::Frame(_) => {
                 damage.intersects_rect(rect)
             }
@@ -120,7 +104,6 @@ impl ViewWidget {
     #[must_use]
     pub fn contains_point(&self, rect: ViewRect, mouse_x: i64, mouse_y: i64) -> bool {
         match self {
-            Self::MenuBar(widget) => widget.contains_point(rect, mouse_x, mouse_y),
             Self::SolidFill(_) | Self::StatusBar(_) | Self::Frame(_) => {
                 rect.contains_console_mouse(mouse_x, mouse_y)
             }

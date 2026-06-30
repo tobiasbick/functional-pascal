@@ -26,10 +26,6 @@ impl Worker {
                 .route_event(RoutedEvent::Mouse(mouse), modal_scope)
         };
 
-        self.sync_menu_bar_hover_outside_pointer(mouse, modal_scope, line)?;
-        if let Some(tag) = self.try_dispatch_widget_mouse(mouse, modal_scope, line)? {
-            return Ok(tag);
-        }
         if modal_scope.is_some() && route.target.is_none() {
             return Ok(ProcessOutcome::Blocked(BlockedInput::Pointer));
         }
@@ -50,9 +46,6 @@ impl Worker {
                 self.request_focus_transition_redraw(previous, current, line)?;
                 self.invoke_focus_transition(had_previous, line)?;
             }
-        }
-        if let Some(tag) = self.try_dispatch_widget_wheel(mouse, modal_scope, line)? {
-            return Ok(tag);
         }
         let redraw_hint = self.mouse_redraw_hint(modal_scope, mouse);
         self.dispatch_console_event_handler(

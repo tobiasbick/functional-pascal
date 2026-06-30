@@ -108,7 +108,7 @@ Goal: make Turbo Vision the only production TUI engine.
 
 - [ ] Remove old retained view registry.
 - [ ] Remove old frame/window manager.
-- [ ] Remove old menu widget implementation.
+- [x] Remove old menu widget implementation.
 - [x] Remove old retained control-widget intrinsic and event dispatch paths.
 - [x] Remove remaining old control-widget storage/rendering where Turbo Vision supplies replacements.
 - [ ] Keep or adapt only reusable terminal/test abstractions.
@@ -122,7 +122,9 @@ Notes:
 - Removed retained control widget storage/rendering types from `fpas-std`, including label, button, input line, check box, radio group, list box, standalone scroll bar, scroll view, and memo widgets.
 - Kept only `ScrollBarStyle` because legacy frame chrome still uses the style values internally. The standalone retained scroll bar widget is gone.
 - Removed old retained control symbol names from the known `Std.Tui` symbol list.
-- Next: remove or replace the retained menu and frame/window runtime modules, then continue with the retained view registry removal.
+- Removed the retained menu-bar widget, popup, parser, event dispatcher, bytecode intrinsics, and old known-symbol entries. Current `docs/pascal/` does not describe the removed retained menu API; planned future `MenuBar` work remains in Phase 5.
+- Removed the now-unused VM frame chrome event dispatcher. Remaining frame/window storage, rendering, and known-symbol cleanup are still covered by the open frame/window manager item.
+- Next: remove or replace the remaining retained frame/window runtime modules, then continue with the retained view registry removal.
 
 Expected new layout, adjust before editing if implementation reveals better boundaries:
 

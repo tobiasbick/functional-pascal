@@ -39,7 +39,6 @@ pub use widget::{
     FrameButtonSlots, FrameCapabilities, FrameChromeHit, FrameContentSize, FrameGeometry,
     FrameGeometryError, FrameKind, FrameRoot, FrameRootSpec, FrameRootState, FrameScrollHit,
     FrameScrollState, FrameScrollbars, FrameStyle, FrameWidget, FrameWindowDescriptor,
-    FramedDialogRoot, MenuBarItem, MenuBarMouseResult, MenuBarState, MenuBarStyle, MenuBarWidget,
-    MenuPopupItem, ScrollBarStyle, SolidFillWidget, StatusBarSegment, StatusBarStyle,
+    FramedDialogRoot, ScrollBarStyle, SolidFillWidget, StatusBarSegment, StatusBarStyle,
     StatusBarWidget, ViewWidget, register_framed_dialog_root,
 };

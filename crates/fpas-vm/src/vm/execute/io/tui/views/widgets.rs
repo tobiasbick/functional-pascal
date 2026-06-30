@@ -53,47 +53,6 @@ impl Worker {
                 });
                 self.push(Self::tui_view_id_record(view_id))?;
             }
-            TuiIntrinsic::HostCreateMenuBarView => {
-                let style = self.pop_menu_bar_style(line)?;
-                let items = self.pop_menu_bar_items(line)?;
-                let height = self.pop_int(line)?;
-                let width = self.pop_int(line)?;
-                let y = self.pop_int(line)?;
-                let x = self.pop_int(line)?;
-                self.pop_tui_application(line)?;
-                let view_rect = validate_view_rect(
-                    "Application.HostCreateMenuBarView",
-                    ViewRect {
-                        x,
-                        y,
-                        width,
-                        height,
-                    },
-                    line,
-                )?;
-                let widget = ViewWidget::MenuBar(fpas_std::MenuBarWidget::new(items, style));
-                let view_id = self.with_tui(|tui| {
-                    let view_id = tui.views.register(view_rect);
-                    tui.view_widgets.insert(view_id, widget);
-                    let _ = tui.session.request_redraw_rect(view_rect, line);
-                    view_id
-                });
-                self.push(Self::tui_view_id_record(view_id))?;
-            }
-            TuiIntrinsic::HostSetMenuBarItems => {
-                let items = self.pop_menu_bar_items(line)?;
-                let view_id = self.pop_tui_view_id(line)?;
-                self.pop_tui_application(line)?;
-                let view_id = self.require_registered_tui_view(view_id, line)?;
-                self.with_tui(|tui| {
-                    if let Some(ViewWidget::MenuBar(menu)) = tui.view_widgets.get_mut(&view_id) {
-                        menu.set_items(items);
-                        if let Some(rect) = tui.views.rect(view_id) {
-                            let _ = tui.session.request_redraw_rect(rect, line);
-                        }
-                    }
-                });
-            }
             TuiIntrinsic::HostCreateStatusBarView => {
                 let style = self.pop_status_bar_style(line)?;
                 let segments = self.pop_status_bar_segments(line)?;

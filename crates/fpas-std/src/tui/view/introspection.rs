@@ -3,8 +3,7 @@
 //! **Documentation:** `docs/pascal/std/tui/app/views.md`
 
 /// Pascal-visible `Std.Tui.ViewKind` variants in runtime discriminant order.
-pub const TUI_VIEW_KIND_VARIANTS: &[&str] =
-    &["Generic", "SolidFill", "MenuBar", "StatusBar", "Frame"];
+pub const TUI_VIEW_KIND_VARIANTS: &[&str] = &["Generic", "SolidFill", "StatusBar", "Frame"];
 
 /// Kind of retained view content attached to a scene-graph node.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -14,8 +13,6 @@ pub enum ViewKind {
     Generic,
     /// Solid-fill widget.
     SolidFill,
-    /// Menu-bar widget.
-    MenuBar,
     /// Status-bar widget.
     StatusBar,
     /// Host-painted window or dialog frame.

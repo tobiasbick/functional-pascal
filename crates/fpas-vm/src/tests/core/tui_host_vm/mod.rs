@@ -21,7 +21,6 @@ use crate::vm::Worker;
 mod commands;
 mod focus_gained;
 mod focus_lost;
-mod frame_views;
 mod idle_registration;
 mod modal_bindings;
 mod modal_views;

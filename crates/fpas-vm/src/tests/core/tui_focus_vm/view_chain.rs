@@ -39,7 +39,7 @@ fn host_register_view_returns_distinct_integer_handles() {
 }
 
 #[test]
-fn host_push_child_view_populates_focus_chain_and_query_focused_view_id() {
+fn host_push_child_view_populates_focus_chain_and_focuses_first_child() {
     let mut chunk = Chunk::new();
     chunk.emit(
         Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))),
@@ -88,12 +88,6 @@ fn host_push_child_view_populates_focus_chain_and_query_focused_view_id() {
     );
     chunk.emit(Op::PrintLn, loc());
 
-    chunk.emit(Op::GetLocal(0), loc());
-    chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::QueryFocusedViewId))),
-        loc(),
-    );
-    chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
     let shared = Arc::new(minimal_shared_state(chunk));
@@ -107,7 +101,9 @@ fn host_push_child_view_populates_focus_chain_and_query_focused_view_id() {
     worker.run().expect("VM should succeed");
 
     let lines = shared.console.lock().unwrap().output().lines.clone();
-    assert_eq!(lines, vec!["14", "Some(0)"]);
+    assert_eq!(lines, vec!["14"]);
+    let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+    assert_eq!(tui.views.focused_id().map(|id| id.raw()), Some(0));
 }
 
 #[test]
@@ -142,21 +138,13 @@ fn host_unregister_view_removes_it_from_focus_chain() {
         loc(),
     );
 
-    chunk.emit(Op::GetLocal(0), loc());
-    chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::QueryFocusedViewId))),
-        loc(),
-    );
-    chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
     let shared = Arc::new(minimal_shared_state(chunk));
     let mut worker = Worker::new_main(Arc::clone(&shared));
     worker.run().expect("VM should succeed");
 
-    let lines = shared.console.lock().unwrap().output().lines.clone();
-    assert_eq!(lines, vec!["None"]);
-
     let tui = shared.tui.lock().unwrap();
+    assert_eq!(tui.views.focused_id(), None);
     assert!(!tui.views.has_focusable_children());
 }

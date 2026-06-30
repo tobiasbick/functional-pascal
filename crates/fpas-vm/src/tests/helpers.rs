@@ -46,10 +46,6 @@ pub(super) fn tui_view_id_value(raw: u32) -> Value {
     }
 }
 
-pub(super) fn tui_view_id_option_some(raw: u32) -> Value {
-    Value::OptionSome(Box::new(tui_view_id_value(raw)))
-}
-
 pub(super) fn graph_application_value() -> Value {
     Value::Record {
         type_name: "Std.Graph.Application".into(),
@@ -105,18 +101,6 @@ pub(super) fn tui_screen_cell_value(ch: char, fg: i64, bg: i64) -> Value {
             ("ch".into(), Value::Str(ch.to_string())),
             ("fg".into(), Value::Integer(fg)),
             ("bg".into(), Value::Integer(bg)),
-        ],
-    }
-}
-
-pub(super) fn tui_rect_value(x: i64, y: i64, width: i64, height: i64) -> Value {
-    Value::Record {
-        type_name: "Std.Tui.Rect".into(),
-        fields: vec![
-            ("x".into(), Value::Integer(x)),
-            ("y".into(), Value::Integer(y)),
-            ("width".into(), Value::Integer(width)),
-            ("height".into(), Value::Integer(height)),
         ],
     }
 }

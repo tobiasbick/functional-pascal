@@ -33,7 +33,6 @@ impl Worker {
             || self.try_exec_tui_test_host_intrinsic(intrinsic, line)?
             || self.try_exec_tui_query_host_intrinsic(intrinsic, line)?
             || self.try_exec_tui_view_intrinsic(intrinsic, line)?
-            || self.try_exec_tui_frame_intrinsic(intrinsic, line)?
             || self.try_exec_tui_host_intrinsic(intrinsic, line)?
         {
             return Ok(true);

@@ -6,7 +6,7 @@ use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use fpas_bytecode::{Intrinsic, SourceLocation, TuiIntrinsic, Value};
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
-use fpas_std::{ViewId, ViewKind};
+use fpas_std::ViewId;
 
 impl Worker {
     /// Executes read-only native TUI query intrinsics.
@@ -42,154 +42,10 @@ impl Worker {
                 })?;
                 self.push(Self::tui_screen_cell_record(ch, fg, bg))?;
             }
-            Intrinsic::Tui(TuiIntrinsic::QueryRootViews) => {
-                self.pop_tui_application(line)?;
-                let ids = self.with_tui(|tui| {
-                    tui.views
-                        .roots()
-                        .iter()
-                        .map(|id| Self::tui_view_id_record(*id))
-                        .collect::<Vec<_>>()
-                });
-                self.push(Value::Array(ids))?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::QueryViewRect) => {
-                let view_id = self.pop_query_view_id(line)?;
-                self.pop_tui_application(line)?;
-                let rect = self
-                    .with_tui(|tui| tui.views.rect(view_id))
-                    .ok_or_else(|| query_view_rect_error(view_id, line))?;
-                self.push(Self::tui_rect_record(rect))?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::QueryViewParent) => {
-                let view_id = self.pop_query_view_id(line)?;
-                self.pop_tui_application(line)?;
-                let parent = self.with_tui(|tui| tui.views.parent(view_id));
-                self.push(match parent {
-                    Some(id) => Value::OptionSome(Box::new(Self::tui_view_id_record(id))),
-                    None => Value::OptionNone,
-                })?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::QueryViewChildren) => {
-                let view_id = self.pop_query_view_id(line)?;
-                self.pop_tui_application(line)?;
-                let children = self.with_tui(|tui| {
-                    tui.views
-                        .children(view_id)
-                        .iter()
-                        .map(|id| Self::tui_view_id_record(*id))
-                        .collect::<Vec<_>>()
-                });
-                self.push(Value::Array(children))?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::QueryViewState) => {
-                let view_id = self.pop_query_view_id(line)?;
-                self.pop_tui_application(line)?;
-                let view = self
-                    .with_tui(|tui| tui.views.resolved(view_id))
-                    .ok_or_else(|| {
-                        query_view_introspection_error("QueryViewState", view_id, line)
-                    })?;
-                self.push(Self::tui_view_state_record(view.state))?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::QueryViewOptions) => {
-                let view_id = self.pop_query_view_id(line)?;
-                self.pop_tui_application(line)?;
-                let options = self
-                    .with_tui(|tui| tui.views.options(view_id))
-                    .ok_or_else(|| {
-                        query_view_introspection_error("QueryViewOptions", view_id, line)
-                    })?;
-                self.push(Self::tui_view_options_record(options))?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::QueryViewLayout) => {
-                let view_id = self.pop_query_view_id(line)?;
-                self.pop_tui_application(line)?;
-                let layout = self
-                    .with_tui(|tui| tui.views.layout(view_id))
-                    .ok_or_else(|| {
-                        query_view_introspection_error("QueryViewLayout", view_id, line)
-                    })?;
-                self.push(Self::tui_view_layout_record(layout))?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::QueryResolvedView) => {
-                let view_id = self.pop_query_view_id(line)?;
-                self.pop_tui_application(line)?;
-                let view = self
-                    .with_tui(|tui| tui.views.resolved(view_id))
-                    .ok_or_else(|| {
-                        query_view_introspection_error("QueryResolvedView", view_id, line)
-                    })?;
-                self.push(Self::tui_resolved_view_record(view))?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::QueryViewKind) => {
-                let view_id = self.pop_query_view_id(line)?;
-                self.pop_tui_application(line)?;
-                let kind = self.with_tui(|tui| {
-                    tui.view_widgets
-                        .get(&view_id)
-                        .map_or(ViewKind::Generic, fpas_std::ViewWidget::kind)
-                });
-                self.push(Self::tui_view_kind_value(kind))?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::QuerySceneGraph) => {
-                self.pop_tui_application(line)?;
-                let snapshots = self.with_tui(|tui| {
-                    tui.views
-                        .paint_order()
-                        .into_iter()
-                        .filter_map(|view_id| {
-                            let view = tui.views.resolved(view_id)?;
-                            let parent = tui.views.parent(view_id);
-                            let children = tui.views.children(view_id);
-                            let kind = tui
-                                .view_widgets
-                                .get(&view_id)
-                                .map_or(ViewKind::Generic, fpas_std::ViewWidget::kind);
-                            Some(Self::tui_view_snapshot_record(view, parent, children, kind))
-                        })
-                        .collect::<Vec<_>>()
-                });
-                self.push(Value::Array(snapshots))?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::QueryMenuBarState) => {
-                let view_id = self.pop_query_view_id(line)?;
-                self.pop_tui_application(line)?;
-                let snapshot = self.with_tui(|tui| match tui.view_widgets.get(&view_id) {
-                    Some(fpas_std::ViewWidget::MenuBar(menu)) => Some(menu.query_state()),
-                    Some(_) => None,
-                    None => None,
-                });
-                let Some(state) = snapshot else {
-                    return Err(query_menu_bar_state_error(view_id, line));
-                };
-                self.push(Self::tui_menu_bar_state_record(state))?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::QueryModalDepth) => {
-                self.pop_tui_application(line)?;
-                let depth = self.with_tui(|tui| tui.modals.depth() as i64);
-                self.push(Value::Integer(depth))?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::QueryFocusedViewId) => {
-                self.pop_tui_application(line)?;
-                let focused_id = self.with_tui(|tui| tui.views.focused_id());
-                self.push(match focused_id {
-                    Some(id) => Value::OptionSome(Box::new(Self::tui_view_id_record(id))),
-                    None => Value::OptionNone,
-                })?;
-            }
             _ => return Ok(false),
         }
 
         Ok(true)
-    }
-
-    pub(in crate::vm::execute::io) fn pop_query_view_id(
-        &mut self,
-        line: SourceLocation,
-    ) -> Result<ViewId, VmError> {
-        let view_id = self.pop_tui_view_id(line)?;
-        self.require_registered_tui_view(view_id, line)
     }
 
     pub(in crate::vm::execute::io) fn screen_row_to_u16(
@@ -227,6 +83,14 @@ impl Worker {
         }
         Ok(x as u16)
     }
+
+    pub(in crate::vm::execute::io) fn pop_query_view_id(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<ViewId, VmError> {
+        let view_id = self.pop_tui_view_id(line)?;
+        self.require_registered_tui_view(view_id, line)
+    }
 }
 
 fn query_cell_error(x: u16, y: u16, line: SourceLocation) -> VmError {
@@ -236,46 +100,6 @@ fn query_cell_error(x: u16, y: u16, line: SourceLocation) -> VmError {
             "Application.QueryScreenCell(App, {x}, {y}) is out of range or uses non-CRT colors."
         ),
         "Query cells inside the virtual screen after paint; v1 supports packed CRT colors only (0..=15).",
-        line,
-    )
-}
-
-fn query_view_rect_error(view_id: ViewId, line: SourceLocation) -> VmError {
-    runtime_error(
-        RUNTIME_CONSOLE_STATE_ERROR,
-        format!(
-            "Application.QueryViewRect(App, {}) could not resolve the view rectangle.",
-            view_id.raw()
-        ),
-        "Pass a view handle returned by `Application.HostRegisterView` or a host widget constructor.",
-        line,
-    )
-}
-
-fn query_menu_bar_state_error(view_id: ViewId, line: SourceLocation) -> VmError {
-    runtime_error(
-        RUNTIME_CONSOLE_STATE_ERROR,
-        format!(
-            "Application.QueryMenuBarState(App, {}) requires a menu bar view handle.",
-            view_id.raw()
-        ),
-        "Pass the view id returned by `Application.HostCreateMenuBarView`.",
-        line,
-    )
-}
-
-fn query_view_introspection_error(
-    operation: &str,
-    view_id: ViewId,
-    line: SourceLocation,
-) -> VmError {
-    runtime_error(
-        RUNTIME_CONSOLE_STATE_ERROR,
-        format!(
-            "Application.{operation}(App, {}) could not resolve the registered view.",
-            view_id.raw()
-        ),
-        "Pass a live view handle returned by `Application.HostRegisterView`, `Application.ShowDialog`, or a host widget constructor.",
         line,
     )
 }

@@ -2,46 +2,6 @@ use super::*;
 use fpas_std::ModalResult;
 
 #[test]
-fn tui_host_modal_depth_tracks_enter_and_leave() {
-    let mut chunk = Chunk::new();
-    chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))),
-        loc(),
-    );
-    chunk.emit(Op::Dup, loc());
-    emit_constant(&mut chunk, Value::Integer(10));
-    chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostEnterModal))),
-        loc(),
-    );
-    chunk.emit(Op::Dup, loc());
-    emit_constant(&mut chunk, Value::Integer(20));
-    chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostEnterModal))),
-        loc(),
-    );
-    chunk.emit(Op::Dup, loc());
-    chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::QueryModalDepth))),
-        loc(),
-    );
-    chunk.emit(Op::PrintLn, loc());
-    chunk.emit(Op::Dup, loc());
-    chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::HostLeaveModal))),
-        loc(),
-    );
-    chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::QueryModalDepth))),
-        loc(),
-    );
-    chunk.emit(Op::PrintLn, loc());
-    chunk.emit(Op::Halt, loc());
-
-    assert_eq!(run_ok_output(chunk), vec!["2", "1"]);
-}
-
-#[test]
 fn tui_host_set_active_modal_result_accepts_builtin_and_command_codes() {
     let mut chunk = Chunk::new();
     chunk.emit(
@@ -445,44 +405,6 @@ fn tui_application_show_dialog_registers_owned_root_and_close_modal_removes_it()
     let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
     assert_eq!(tui.modals.depth(), 0);
     assert!(tui.views.is_empty());
-}
-
-#[test]
-fn tui_application_show_framed_dialog_geometry_error_is_atomic() {
-    let mut chunk = Chunk::new();
-    chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))),
-        loc(),
-    );
-    chunk.emit(Op::Dup, loc());
-    emit_constant(&mut chunk, Value::Integer(10));
-    emit_constant(&mut chunk, Value::Integer(0));
-    emit_constant(&mut chunk, Value::Integer(0));
-    emit_constant(&mut chunk, Value::Integer(3));
-    emit_constant(&mut chunk, Value::Integer(2));
-    emit_constant(&mut chunk, Value::Str("Too small".into()));
-    emit_constant(&mut chunk, Value::Boolean(false));
-    emit_constant(&mut chunk, Value::Boolean(false));
-    emit_constant(&mut chunk, Value::Boolean(false));
-    emit_constant(&mut chunk, Value::Boolean(false));
-    emit_constant(&mut chunk, Value::Boolean(false));
-    chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(
-            TuiIntrinsic::ApplicationShowFramedDialog,
-        ))),
-        loc(),
-    );
-    chunk.emit(Op::Halt, loc());
-
-    let shared = Arc::new(minimal_shared_state(chunk));
-    let mut worker = Worker::new_main(Arc::clone(&shared));
-    let error = worker.run().expect_err("invalid frame geometry must fail");
-    assert!(error.message.contains("requires at least 4x3"));
-
-    let tui = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-    assert_eq!(tui.modals.depth(), 0);
-    assert!(tui.views.is_empty());
-    assert!(tui.view_widgets.is_empty());
 }
 
 #[test]

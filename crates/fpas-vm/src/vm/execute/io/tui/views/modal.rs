@@ -6,12 +6,8 @@ use crate::vm::diagnostics::{VmError, runtime_error};
 use crate::vm::{TuiState, Worker};
 use fpas_bytecode::{SourceLocation, TuiIntrinsic};
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
-use fpas_std::{
-    FrameCapabilities, FrameContentSize, FrameKind, FrameRootSpec, FrameWidget, ModalClose,
-    ModalId, ModalResult, ViewId, ViewRect, ViewWidget, register_framed_dialog_root,
-};
+use fpas_std::{ModalClose, ModalId, ModalResult, ViewId, ViewRect};
 
-use super::super::frame_model::frame_geometry_error;
 use super::super::view_geometry::validate_view_rect;
 
 impl Worker {
@@ -71,73 +67,6 @@ impl Worker {
                     let _ = tui.views.focus_first_in_scope(&next_scope);
                     view_id
                 });
-                self.push(Self::tui_view_id_record(dialog_root))?;
-            }
-            TuiIntrinsic::ApplicationShowFramedDialog => {
-                let closable = self.pop_bool(line)?;
-                let scrollable = self.pop_bool(line)?;
-                let zoomable = self.pop_bool(line)?;
-                let resizable = self.pop_bool(line)?;
-                let movable = self.pop_bool(line)?;
-                let title = self.pop_control_string("Title", line)?;
-                let height = self.pop_int(line)?;
-                let width = self.pop_int(line)?;
-                let y = self.pop_int(line)?;
-                let x = self.pop_int(line)?;
-                let modal_id = self.pop_int(line)?;
-                self.pop_tui_application(line)?;
-                let outer = validate_view_rect(
-                    "Application.ShowFramedDialog",
-                    ViewRect {
-                        x,
-                        y,
-                        width,
-                        height,
-                    },
-                    line,
-                )?;
-                let capabilities = FrameCapabilities {
-                    movable,
-                    resizable,
-                    closable,
-                    zoomable,
-                    scrollable,
-                };
-                let content_size = FrameContentSize::new(0, 0);
-                let spec = FrameRootSpec {
-                    kind: FrameKind::Dialog,
-                    outer,
-                    content_size,
-                    capabilities,
-                    options: Default::default(),
-                };
-                let dialog_root = self.with_tui(|tui| {
-                    let previous_scope = Self::modal_scope_ids(tui);
-                    let previous_active_root = tui.views.active_root();
-                    let previous_focus = tui.views.focused_id();
-                    let dialog = register_framed_dialog_root(
-                        &mut tui.views,
-                        &mut tui.modals,
-                        ModalId(modal_id),
-                        spec,
-                    )
-                    .map_err(|error| frame_geometry_error(error, line))?;
-                    tui.view_widgets.insert(
-                        dialog.frame.view_id,
-                        ViewWidget::Frame(FrameWidget::new(
-                            title,
-                            FrameKind::Dialog,
-                            capabilities,
-                            content_size,
-                        )),
-                    );
-                    tui.modals
-                        .set_return_context(previous_active_root, previous_focus);
-                    let next_scope = Self::modal_scope_ids(tui);
-                    Self::request_scope_redraws(tui, &previous_scope, &next_scope, line);
-                    let _ = tui.views.focus_first_in_scope(&next_scope);
-                    Ok(dialog.frame.view_id)
-                })?;
                 self.push(Self::tui_view_id_record(dialog_root))?;
             }
             TuiIntrinsic::ApplicationCloseModal | TuiIntrinsic::HostLeaveModal => {

@@ -2,7 +2,7 @@
 
 This page tracks the public Pascal-to-VM bridge for contributors.
 
-The old public `Application.Host*` bridge has been de-registered from Sema and is no longer lowered by the compiler. Some internal bytecode and VM variants still exist until the runtime cleanup phase removes the retained implementation.
+The old public `Application.Host*` bridge has been de-registered from Sema and is no longer lowered by the compiler. Some internal VM code still exists until the runtime cleanup phase removes the retained implementation.
 
 Current public lowering includes:
 
@@ -19,6 +19,9 @@ Current public lowering includes:
 | `Application.OnCommand` | `TuiOnCommand` |
 | `Application.Pump` | `TuiPump` |
 | `Application.TestClickButton` | `TuiTestClickButton` |
+| `Application.QueryScreenSize` | `TuiQueryScreenSize` |
+| `Application.QueryScreenLine` | `TuiQueryScreenLine` |
+| `Application.QueryScreenCell` | `TuiQueryScreenCell` |
 
 ## See Also
 

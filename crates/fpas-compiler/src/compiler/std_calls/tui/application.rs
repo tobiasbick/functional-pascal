@@ -122,6 +122,19 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::CreateCheckBox), location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_CREATE_RADIO_BUTTON => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_CREATE_RADIO_BUTTON,
+                    5,
+                    args,
+                    location,
+                )?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::CreateRadioButton), location);
+                Ok(true)
+            }
             s::STD_TUI_APPLICATION_CREATE_MENU_BAR => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_CREATE_MENU_BAR, 3, args, location)?;
                 for arg in args {

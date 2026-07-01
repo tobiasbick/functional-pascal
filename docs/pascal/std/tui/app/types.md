@@ -68,6 +68,10 @@ Opaque Turbo Vision selectable string list handle returned by `Application.Creat
 
 Opaque Turbo Vision boolean check box handle returned by `Application.CreateCheckBox`.
 
+## `RadioButton`
+
+Opaque Turbo Vision radio button handle returned by `Application.CreateRadioButton`. Buttons that share a `GroupId` form one mutually exclusive group.
+
 ## `MenuBar`
 
 Opaque Turbo Vision menu bar handle returned by `Application.CreateMenuBar`.

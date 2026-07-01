@@ -67,6 +67,9 @@ impl Worker {
             Intrinsic::Tui(TuiIntrinsic::CreateCheckBox) => {
                 self.turbo_vision_create_check_box(line)?;
             }
+            Intrinsic::Tui(TuiIntrinsic::CreateRadioButton) => {
+                self.turbo_vision_create_radio_button(line)?;
+            }
             Intrinsic::Tui(TuiIntrinsic::AddChild) => {
                 self.turbo_vision_add_child(line)?;
             }

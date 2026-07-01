@@ -2,7 +2,7 @@
 
 The old retained `Application.HostCreate*View` control API is no longer public.
 
-The current Turbo Vision facade exposes button, static text, input line, list box, and check box handles:
+The current Turbo Vision facade exposes button, static text, input line, list box, check box, and radio button handles:
 
 | Symbol | Description |
 | --- | --- |
@@ -11,12 +11,14 @@ The current Turbo Vision facade exposes button, static text, input line, list bo
 | `InputLine` | Opaque single-line Turbo Vision text input handle. |
 | `ListBox` | Opaque Turbo Vision selectable string list handle. |
 | `CheckBox` | Opaque Turbo Vision boolean check box handle. |
+| `RadioButton` | Opaque Turbo Vision mutually exclusive radio button handle. |
 | `Application.CreateButton(App, Bounds, Text, CommandId): Button` | Create a button. |
 | `Application.CreateStaticText(App, Bounds, Text): StaticText` | Create a static text label. |
 | `Application.CreateInputLine(App, Bounds, Text, MaxLength): InputLine` | Create a single-line text input with initial text and maximum length. |
 | `Application.CreateListBox(App, Bounds, Items, CommandId): ListBox` | Create a selectable list from an array of strings. Enter or double-click dispatches `CommandId` in an interactive Turbo Vision run. |
 | `Application.CreateCheckBox(App, Bounds, Text, Checked): CheckBox` | Create a check box with an initial checked state. |
-| `Application.AddChild(App, Parent, Child)` | Attach a button, static text, input line, list box, or check box child to a dialog or window. |
+| `Application.CreateRadioButton(App, Bounds, Text, GroupId, Selected): RadioButton` | Create a radio button in a group. Buttons with the same `GroupId` are mutually exclusive. |
+| `Application.AddChild(App, Parent, Child)` | Attach a button, static text, input line, list box, check box, or radio button child to a dialog or window. |
 | `Application.TestClickButton(App, Button)` | Queue a headless test click for the button. |
 
 Application chrome uses root-level handles:

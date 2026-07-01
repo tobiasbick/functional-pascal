@@ -24,6 +24,7 @@ struct TuiTypes {
     input_line: Ty,
     list_box: Ty,
     check_box: Ty,
+    radio_button: Ty,
     menu_bar: Ty,
     menu_bar_item: Ty,
     status_line: Ty,
@@ -58,6 +59,8 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         type_registration::register_record_type(checker, s::STD_TUI_LIST_BOX, Vec::new());
     let check_box =
         type_registration::register_record_type(checker, s::STD_TUI_CHECK_BOX, Vec::new());
+    let radio_button =
+        type_registration::register_record_type(checker, s::STD_TUI_RADIO_BUTTON, Vec::new());
     let menu_bar =
         type_registration::register_record_type(checker, s::STD_TUI_MENU_BAR, Vec::new());
     let menu_bar_item = type_registration::register_record_type(
@@ -164,6 +167,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         input_line,
         list_box,
         check_box,
+        radio_button,
         menu_bar,
         menu_bar_item,
         status_line,

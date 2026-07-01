@@ -8,7 +8,7 @@ use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use crate::vm::shared::{
     TurboVisionCheckBox, TurboVisionInputLine, TurboVisionListBox, TurboVisionObject,
-    TurboVisionStaticText,
+    TurboVisionRadioButton, TurboVisionStaticText,
 };
 use fpas_bytecode::SourceLocation;
 use fpas_bytecode::Value;
@@ -17,7 +17,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use turbo_vision::views::{
     button::Button, checkbox::CheckBox, input_line::InputLine, listbox::ListBox,
-    static_text::StaticText,
+    radiobutton::RadioButton, static_text::StaticText,
 };
 
 impl Worker {
@@ -196,6 +196,47 @@ impl Worker {
         self.push(Self::turbo_vision_check_box_record(handle))
     }
 
+    pub(super) fn turbo_vision_create_radio_button(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        let selected = self.pop_bool(line)?;
+        let group_id = self.pop_int(line)?;
+        let group_id = u16::try_from(group_id).map_err(|_| {
+            runtime_error(
+                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                "RadioButton group id is outside the Turbo Vision u16 range",
+                "Use a group id from 0 to 65535.",
+                line,
+            )
+        })?;
+        let text = self.pop_turbo_vision_string("RadioButton text", line)?;
+        let bounds = self.pop_turbo_vision_rect(line)?;
+        self.pop_tui_application(line)?;
+
+        let mut radio_button = RadioButton::new(bounds, &text, group_id);
+        if selected {
+            radio_button.select();
+        }
+        let bounds = super::tv_geometry::state_rect(bounds);
+        let handle = self.with_tui(|tui| {
+            let handle = tui.turbo_vision.next_handle;
+            tui.turbo_vision.next_handle = handle.saturating_add(1).max(1);
+            tui.turbo_vision.objects.insert(
+                handle,
+                TurboVisionObject::RadioButton(TurboVisionRadioButton {
+                    bounds,
+                    text,
+                    group_id,
+                    selected,
+                    attached: false,
+                }),
+            );
+            handle
+        });
+        self.push(Self::turbo_vision_radio_button_record(handle))
+    }
+
     pub(super) fn turbo_vision_add_child(&mut self, line: SourceLocation) -> Result<(), VmError> {
         let child = self.pop_turbo_vision_child_handle(line)?;
         let parent = self.pop_turbo_vision_parent_handle(line)?;
@@ -229,6 +270,11 @@ impl Worker {
                     if matches!(child, TurboVisionChildHandle::CheckBox(_)) =>
                 {
                     check_box.attached
+                }
+                Some(TurboVisionObject::RadioButton(radio_button))
+                    if matches!(child, TurboVisionChildHandle::RadioButton(_)) =>
+                {
+                    radio_button.attached
                 }
                 _ => return Err(unknown_handle_error(child_label, child_handle, line)),
             };
@@ -267,6 +313,7 @@ impl Worker {
                 Some(TurboVisionObject::InputLine(input_line)) => input_line.attached = true,
                 Some(TurboVisionObject::ListBox(list_box)) => list_box.attached = true,
                 Some(TurboVisionObject::CheckBox(check_box)) => check_box.attached = true,
+                Some(TurboVisionObject::RadioButton(radio_button)) => radio_button.attached = true,
                 _ => {}
             }
             Ok(())
@@ -310,7 +357,8 @@ impl TurboVisionChildHandle {
             | Self::StaticText(handle)
             | Self::InputLine(handle)
             | Self::ListBox(handle)
-            | Self::CheckBox(handle) => *handle,
+            | Self::CheckBox(handle)
+            | Self::RadioButton(handle) => *handle,
         }
     }
 
@@ -321,6 +369,7 @@ impl TurboVisionChildHandle {
             Self::InputLine(_) => "InputLine",
             Self::ListBox(_) => "ListBox",
             Self::CheckBox(_) => "CheckBox",
+            Self::RadioButton(_) => "RadioButton",
         }
     }
 }

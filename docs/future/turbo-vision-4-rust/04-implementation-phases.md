@@ -162,7 +162,7 @@ Implement in this order:
 - [x] `StatusLine` — `StatusLine`, `StatusItem`, `Application.CreateStatusLine`, and `Application.SetStatusLine` (2026-07-01).
 - [x] `ListBox` — `Application.CreateListBox`, `ListBox` handle type, string-array items, select command id, and `Application.AddChild` child support (2026-07-01).
 - [x] `CheckBox` — `Application.CreateCheckBox`, `CheckBox` handle type, initial checked state, and `Application.AddChild` child support (2026-07-01).
-- [ ] `RadioButton`
+- [x] `RadioButton` — `Application.CreateRadioButton`, `RadioButton` handle type, group id, selected state, and `Application.AddChild` child support (2026-07-01).
 - [ ] `Memo` or `TextViewer`
 - [ ] file dialog only after the core app and tests are stable
 

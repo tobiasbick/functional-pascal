@@ -7,7 +7,8 @@ use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use crate::vm::shared::{
     TurboVisionButton, TurboVisionCheckBox, TurboVisionInputLine, TurboVisionListBox,
-    TurboVisionObject, TurboVisionRect, TurboVisionStaticText, TurboVisionStatusItem,
+    TurboVisionObject, TurboVisionRadioButton, TurboVisionRect, TurboVisionStaticText,
+    TurboVisionStatusItem,
 };
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
@@ -17,8 +18,8 @@ use turbo_vision::app::Application as TurboVisionApplication;
 use turbo_vision::core::menu_data::{Menu, MenuItem};
 use turbo_vision::views::{
     button::Button, checkbox::CheckBox, dialog::Dialog, input_line::InputLine, listbox::ListBox,
-    menu_bar::MenuBar, menu_bar::SubMenu, static_text::StaticText, status_line::StatusItem,
-    status_line::StatusLine, window::Window,
+    menu_bar::MenuBar, menu_bar::SubMenu, radiobutton::RadioButton, static_text::StaticText,
+    status_line::StatusItem, status_line::StatusLine, window::Window,
 };
 
 const HEADLESS_RUN_MAX_COMMANDS: usize = 4096;
@@ -210,6 +211,7 @@ enum TurboVisionChildSnapshot {
     InputLine(TurboVisionInputLine),
     ListBox(TurboVisionListBox),
     CheckBox(TurboVisionCheckBox),
+    RadioButton(TurboVisionRadioButton),
 }
 
 fn child_snapshots(
@@ -233,6 +235,9 @@ fn child_snapshots(
             }
             Some(TurboVisionObject::CheckBox(check_box)) => {
                 Some(TurboVisionChildSnapshot::CheckBox(check_box.clone()))
+            }
+            Some(TurboVisionObject::RadioButton(radio_button)) => {
+                Some(TurboVisionChildSnapshot::RadioButton(radio_button.clone()))
             }
             _ => None,
         })
@@ -268,6 +273,9 @@ fn add_window_child(window: &mut Window, child: TurboVisionChildSnapshot) {
         TurboVisionChildSnapshot::CheckBox(check_box) => {
             window.add(Box::new(build_check_box(check_box)));
         }
+        TurboVisionChildSnapshot::RadioButton(radio_button) => {
+            window.add(Box::new(build_radio_button(radio_button)));
+        }
     }
 }
 
@@ -300,6 +308,9 @@ fn add_dialog_child(dialog: &mut Dialog, child: TurboVisionChildSnapshot) {
         TurboVisionChildSnapshot::CheckBox(check_box) => {
             dialog.add(Box::new(build_check_box(check_box)));
         }
+        TurboVisionChildSnapshot::RadioButton(radio_button) => {
+            dialog.add(Box::new(build_radio_button(radio_button)));
+        }
     }
 }
 
@@ -313,6 +324,18 @@ fn build_check_box(snapshot: TurboVisionCheckBox) -> CheckBox {
     let mut check_box = CheckBox::new(turbo_rect(snapshot.bounds), &snapshot.text);
     check_box.set_checked(snapshot.checked);
     check_box
+}
+
+fn build_radio_button(snapshot: TurboVisionRadioButton) -> RadioButton {
+    let mut radio_button = RadioButton::new(
+        turbo_rect(snapshot.bounds),
+        &snapshot.text,
+        snapshot.group_id,
+    );
+    if snapshot.selected {
+        radio_button.select();
+    }
+    radio_button
 }
 
 fn build_menu_bar(snapshot: TurboVisionMenuBarSnapshot) -> MenuBar {

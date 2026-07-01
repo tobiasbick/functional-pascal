@@ -123,6 +123,18 @@ pub(super) fn register_application_api(
     );
     define_func(
         checker,
+        s::STD_TUI_APPLICATION_CREATE_RADIO_BUTTON,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Bounds", types.rect.clone(), false),
+            p("Text", Ty::String, false),
+            p("GroupId", Ty::Integer, false),
+            p("Selected", Ty::Boolean, false),
+        ],
+        types.radio_button.clone(),
+    );
+    define_func(
+        checker,
         s::STD_TUI_APPLICATION_CREATE_MENU_BAR,
         vec![
             p("App", types.application.clone(), false),

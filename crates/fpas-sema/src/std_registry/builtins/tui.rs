@@ -46,6 +46,7 @@ pub(super) fn check_tui_builtin_std_call(
     let input_line = lookup_named_type(c, s::STD_TUI_INPUT_LINE);
     let list_box = lookup_named_type(c, s::STD_TUI_LIST_BOX);
     let check_box = lookup_named_type(c, s::STD_TUI_CHECK_BOX);
+    let radio_button = lookup_named_type(c, s::STD_TUI_RADIO_BUTTON);
 
     if app_ty != application {
         c.error_with_code(
@@ -70,12 +71,13 @@ pub(super) fn check_tui_builtin_std_call(
         && child_ty != input_line
         && child_ty != list_box
         && child_ty != check_box
+        && child_ty != radio_button
     {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
-            "`Application.AddChild` child must be a button, static text, input line, list box, or check box handle"
+            "`Application.AddChild` child must be a button, static text, input line, list box, check box, or radio button handle"
                 .to_string(),
-            "Pass a handle from `Application.CreateButton`, `Application.CreateStaticText`, `Application.CreateInputLine`, `Application.CreateListBox`, or `Application.CreateCheckBox`.",
+            "Pass a handle from `Application.CreateButton`, `Application.CreateStaticText`, `Application.CreateInputLine`, `Application.CreateListBox`, `Application.CreateCheckBox`, or `Application.CreateRadioButton`.",
             span,
         );
     }

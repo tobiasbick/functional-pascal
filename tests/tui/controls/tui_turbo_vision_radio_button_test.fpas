@@ -1,0 +1,32 @@
+program TuiTurboVisionRadioButtonTest;
+
+uses Std.Tui, Std.Test;
+
+mutable var
+  mutable var LastCommand: integer := -1;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+procedure OnCommand(App: Application; CommandId: integer);
+begin
+  LastCommand := CommandId;
+  Application.Quit(App)
+end;
+
+begin
+  var App: Application := Application.OpenForTest(50, 16);
+  var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(2, 1, 40, 12), 'Radio');
+  var OptionA: RadioButton := Application.CreateRadioButton(App, Bounds(3, 2, 24, 1), 'Option A', 1, true);
+  var OptionB: RadioButton := Application.CreateRadioButton(App, Bounds(3, 3, 24, 1), 'Option B', 1, false);
+  var ButtonHandle: Button := Application.CreateButton(App, Bounds(4, 8, 10, 2), 'Quit', Command.Quit);
+  Application.AddChild(App, DialogHandle, OptionA);
+  Application.AddChild(App, DialogHandle, OptionB);
+  Application.AddChild(App, DialogHandle, ButtonHandle);
+  Application.OnCommand(App, OnCommand);
+  Application.TestClickButton(App, ButtonHandle);
+  Application.Run(App);
+  AssertEquals(Command.Quit, LastCommand)
+end.

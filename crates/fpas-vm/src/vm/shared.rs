@@ -151,6 +151,7 @@ pub(crate) enum TurboVisionObject {
     InputLine(TurboVisionInputLine),
     ListBox(TurboVisionListBox),
     CheckBox(TurboVisionCheckBox),
+    RadioButton(TurboVisionRadioButton),
     MenuBar(TurboVisionMenuBar),
     StatusLine(TurboVisionStatusLine),
 }
@@ -212,6 +213,15 @@ pub(crate) struct TurboVisionCheckBox {
     pub bounds: TurboVisionRect,
     pub text: String,
     pub checked: bool,
+    pub attached: bool,
+}
+
+#[derive(Clone)]
+pub(crate) struct TurboVisionRadioButton {
+    pub bounds: TurboVisionRect,
+    pub text: String,
+    pub group_id: u16,
+    pub selected: bool,
     pub attached: bool,
 }
 

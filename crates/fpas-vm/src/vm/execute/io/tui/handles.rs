@@ -15,6 +15,7 @@ const TUI_STATIC_TEXT_TYPE: &str = "Std.Tui.StaticText";
 const TUI_INPUT_LINE_TYPE: &str = "Std.Tui.InputLine";
 const TUI_LIST_BOX_TYPE: &str = "Std.Tui.ListBox";
 const TUI_CHECK_BOX_TYPE: &str = "Std.Tui.CheckBox";
+const TUI_RADIO_BUTTON_TYPE: &str = "Std.Tui.RadioButton";
 const TUI_MENU_BAR_TYPE: &str = "Std.Tui.MenuBar";
 const TUI_STATUS_LINE_TYPE: &str = "Std.Tui.StatusLine";
 const HANDLE_FIELD: &str = "__id";
@@ -47,6 +48,10 @@ impl Worker {
 
     pub(super) fn turbo_vision_check_box_record(handle: u32) -> Value {
         turbo_vision_handle_record(TUI_CHECK_BOX_TYPE, handle)
+    }
+
+    pub(super) fn turbo_vision_radio_button_record(handle: u32) -> Value {
+        turbo_vision_handle_record(TUI_RADIO_BUTTON_TYPE, handle)
     }
 
     pub(super) fn turbo_vision_menu_bar_record(handle: u32) -> Value {
@@ -150,13 +155,18 @@ impl Worker {
                     self.decode_turbo_vision_handle_record(&fields, "CheckBox", line)?,
                 ))
             }
+            Value::Record { type_name, fields } if type_name == TUI_RADIO_BUTTON_TYPE => {
+                Ok(TurboVisionChildHandle::RadioButton(
+                    self.decode_turbo_vision_handle_record(&fields, "RadioButton", line)?,
+                ))
+            }
             other => Err(runtime_error(
                 TYPE_MISMATCH_CODE,
                 format!(
-                    "Child handle expected {TUI_BUTTON_TYPE}, {TUI_STATIC_TEXT_TYPE}, {TUI_INPUT_LINE_TYPE}, {TUI_LIST_BOX_TYPE}, or {TUI_CHECK_BOX_TYPE}, got {}",
+                    "Child handle expected {TUI_BUTTON_TYPE}, {TUI_STATIC_TEXT_TYPE}, {TUI_INPUT_LINE_TYPE}, {TUI_LIST_BOX_TYPE}, {TUI_CHECK_BOX_TYPE}, or {TUI_RADIO_BUTTON_TYPE}, got {}",
                     other.type_name()
                 ),
-                "Pass a handle from `Application.CreateButton`, `Application.CreateStaticText`, `Application.CreateInputLine`, `Application.CreateListBox`, or `Application.CreateCheckBox`.",
+                "Pass a handle from `Application.CreateButton`, `Application.CreateStaticText`, `Application.CreateInputLine`, `Application.CreateListBox`, `Application.CreateCheckBox`, or `Application.CreateRadioButton`.",
                 line,
             )),
         }
@@ -307,6 +317,7 @@ pub(super) enum TurboVisionChildHandle {
     InputLine(u32),
     ListBox(u32),
     CheckBox(u32),
+    RadioButton(u32),
 }
 
 fn turbo_vision_handle_error(

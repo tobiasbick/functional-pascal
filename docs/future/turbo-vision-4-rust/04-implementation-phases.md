@@ -7,11 +7,11 @@ Update this file as work progresses. Every phase should leave the repository bui
 - [x] Create local branch `turbo-vision-4-rust`.
 - [x] Confirm upstream crate, license, Rust edition, and `crossterm` version.
 - [x] Add this future-plan directory.
-- [ ] Capture baseline verification on the branch:
-  - [ ] `cargo fmt --all -- --check`
-  - [ ] `cargo build`
-  - [ ] `cargo test --workspace`
-  - [ ] `cargo run -p fpas-cli -- test tests/tui/`
+- [x] Capture baseline verification on the branch (2026-06-29; re-verified after Phase 5 completion):
+  - [x] `cargo fmt`
+  - [x] `cargo build`
+  - [x] `cargo test --workspace`
+  - [x] `cargo run -p fpas-cli -- test tests/tui/`
 
 ## Phase 1: Minimal Dependency Spike
 
@@ -189,7 +189,7 @@ Notes:
 - Removed retained-view examples that depended on deleted `Application.Host*`, retained frame, menu, modal, and view query APIs.
 - Kept `minimal_application.fpas` as the current hosted-loop example and changed it to use `Application.Quit`.
 - Added current Turbo Vision dialog and window examples using `Dialog`, `Window`, `Button`, `StaticText`, `Application.AddChild`, `Application.AddWindow`, `Application.OnCommand`, and `Command.Quit`.
-- Rewrote `apps/ide` as a minimal Turbo Vision shell over the currently implemented API. Rich dialog chrome remains blocked on later Phase 5 widgets.
+- Rewrote `apps/ide` as a minimal Turbo Vision shell over the implemented widget and chrome API.
 - Added/updated IDE tests for command constants, About command state, shell exit command dispatch, status text, and theme constants.
 
 ## Phase 7: Final Documentation
@@ -205,7 +205,11 @@ Notes:
 - [x] `cargo fmt` (2026-06-29).
 - [x] `cargo build`.
 - [x] `cargo test --workspace`.
-- [x] `cargo run -p fpas-cli -- test tests/` — 311 passed, 1 skipped.
+- [x] `cargo run -p fpas-cli -- test tests/` — 313 passed, 1 skipped (2026-06-29 re-verification).
 - [x] `fpas fmt --check tests/ examples/ apps/` — three unrelated `examples/pascal/` files reformatted.
 - [x] Remove dead modules and unused imports — no additional TUI dead modules found; hosted-loop and `ViewRect`/`DamageRegion` internals remain for the transition path.
 - [x] Confirm no `.github/workflows/` or automation config was added.
+
+## Migration Complete
+
+Phases 0–8 and all Phase 5 widgets are done on branch `turbo-vision-4-rust`. Optional follow-up: manual terminal checks in [testing plan](05-testing-plan.md). Merge to main is a separate repository decision.

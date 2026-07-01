@@ -1,46 +1,45 @@
 # Inventory
 
-Use this file before deleting or moving code. Check each area and update the notes when implementation starts.
+Migration status: **complete on branch `turbo-vision-4-rust`** (2026-06-29). This file records what was removed, rewritten, or kept.
 
 ## Rust Runtime Areas
 
-Likely removal or heavy rewrite:
+Rewritten or reduced during migration:
 
-- [ ] `crates/fpas-std/src/tui/`
-- [ ] `crates/fpas-vm/src/vm/execute/io/tui_run.rs`
-- [ ] `crates/fpas-vm/src/vm/execute/io/tui/`
-- [ ] `crates/fpas-vm/src/vm/shared.rs` fields for old `TuiState`
+- [x] `crates/fpas-std/src/tui/` — retained view/widget runtime removed; session, host loop, damage, and geometry helpers kept.
+- [x] `crates/fpas-vm/src/vm/execute/io/tui_run.rs` — hosted `Application.Run` plus Turbo Vision branch dispatch.
+- [x] `crates/fpas-vm/src/vm/execute/io/tui/` — Turbo Vision facade modules (`controls`, `dialogs`, `file_dialog`, `tv_run`, `host/`, …).
+- [x] `crates/fpas-vm/src/vm/shared.rs` — `TurboVisionState` and handle snapshots; old `TuiState.views` removed.
 
-Keep only if still needed after the spike:
+Kept for transition and testing:
 
-- [ ] shared console input/event normalization
-- [ ] test host utilities that can be adapted to Turbo Vision
-- [ ] generic VM callback invocation helpers
+- [x] shared console input/event normalization
+- [x] test host utilities adapted to headless Turbo Vision and hosted-loop tests
+- [x] generic VM callback invocation helpers
 
 ## Compiler and Bytecode Areas
 
-Likely rewrite:
+- [x] `crates/fpas-sema/src/std_registry/loaded/tui/` — current Turbo Vision public API
+- [x] `crates/fpas-compiler/src/compiler/std_calls/tui/` — current lowering
+- [x] `crates/fpas-bytecode/src/intrinsic/tui/` — Turbo Vision intrinsics through `CreateTextViewer = 451`
+- [x] intrinsic tests updated for current `TuiIntrinsic` set
 
-- [ ] `crates/fpas-sema/src/std_registry/loaded/tui/`
-- [ ] `crates/fpas-compiler/src/compiler/std_calls/tui/`
-- [ ] `crates/fpas-bytecode/src/intrinsic/tui/`
-- [ ] intrinsic tests that assert old `TuiIntrinsic` variants
+Target state achieved:
 
-Target state:
-
-- [ ] remove old `Host*` intrinsic variants
-- [ ] add only the intrinsic bridge needed by the new API
-- [ ] keep intrinsic IDs compact; no backward-compatibility gap preservation is required
+- [x] old public `Host*` Pascal surface removed; internal host-loop intrinsics remain for `Application.Configure`
+- [x] intrinsic bridge matches implemented `Application.*` facade only
+- [x] intrinsic IDs kept compact; no backward-compatibility gap preservation
 
 ## Docs
 
-Current spec (replaced during Turbo Vision migration):
+Current spec under `docs/pascal/std/tui/`:
 
 - [x] `docs/pascal/std/tui/README.md`
 - [x] `docs/pascal/std/tui/session.md`
 - [x] `docs/pascal/std/tui/app/README.md`
 - [x] `docs/pascal/std/tui/app/controls.md`
 - [x] `docs/pascal/std/tui/app/modals.md`
+- [x] `docs/pascal/std/tui/app/file-dialog.md`
 - [x] `docs/pascal/std/tui/app/handlers.md`
 - [x] `docs/pascal/std/tui/app/testing.md`
 - [x] `docs/pascal/std/tui/app/types.md`
@@ -55,38 +54,27 @@ Removed stale retained-engine stubs:
 
 ## FPAS Tests
 
-Likely delete or rewrite:
+Current layout after migration:
 
-- [ ] `tests/tui/host/`
-- [ ] `tests/tui/scene/`
-- [ ] `tests/tui/controls/`
-- [ ] `tests/tui/frames/`
-- [ ] `tests/tui/menu/`
-- [ ] `tests/tui/modals/`
+- [x] `tests/tui/host/` — hosted-loop and screen-query tests (kept)
+- [x] `tests/tui/controls/` — Turbo Vision widget regression tests (12 files)
+- [x] removed `tests/tui/scene/`, `frames/`, `menu/`, `modals/` retained-engine-only dirs
 
-Do not preserve assertions that exist only for old retained-view internals, including:
+Removed assertion categories:
 
-- old local-paint retained scene graph behavior
-- `QuerySceneGraph`
-- `QueryViewState`
-- `QueryResolvedView`
-- `QueryFrameRootState`
-- `QueryMenuBarState`
-- old `HostProcessNext` process tags
+- [x] old local-paint retained scene graph behavior
+- [x] `QuerySceneGraph`, `QueryViewState`, `QueryResolvedView`, `QueryFrameRootState`, `QueryMenuBarState`
+- [x] old `HostProcessNext` process tags
 
 ## Examples and Apps
 
-Likely rewrite:
+- [x] `examples/pascal/tui/` — Turbo Vision examples
+- [x] TUI entries in `examples/README.md`
+- [x] `apps/ide/` — minimal Turbo Vision shell
 
-- [ ] `examples/pascal/tui/`
-- [ ] TUI entries in `examples/README.md`
-- [ ] `apps/ide/`
+## Names Removed from Public API
 
-Examples should demonstrate the new FPAS API, not preserve old host bridge names.
-
-## Names to Remove
-
-Remove these from the public API unless a later implementation note explicitly keeps one:
+Removed unless noted; replacement uses `Create*`, `AddChild`, `Run`, `OnCommand`, and `RunFileDialog`:
 
 - `Application.HostRegisterView`
 - `Application.HostPushChildView`
@@ -101,5 +89,3 @@ Remove these from the public API unless a later implementation note explicitly k
 - `Application.QueryViewState`
 - `Application.QueryResolvedView`
 - `Application.QueryFrameRootState`
-
-The replacement API should use ordinary names such as `CreateWindow`, `CreateDialog`, `CreateButton`, `AddChild`, `Run`, and `OnCommand`.

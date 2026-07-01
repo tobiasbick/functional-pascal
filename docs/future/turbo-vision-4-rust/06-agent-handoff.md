@@ -43,9 +43,11 @@ Use this file when continuing after context loss.
 
 ## Good Next Task
 
-Phases 0–8 and Phase 5 widgets are complete on branch `turbo-vision-4-rust`. Optional follow-up: manual terminal checks in [testing plan](05-testing-plan.md).
+Phases 0–8 and Phase 5 widgets are complete on branch `turbo-vision-4-rust`. No further migration tasks are tracked.
 
-Before starting new TUI work, read [implementation phases](04-implementation-phases.md) and `.agents/skills/fpas-change-checklist/SKILL.md`.
+Optional follow-up: manual terminal checks in [testing plan](05-testing-plan.md).
+
+Before starting new TUI features beyond the migration, read `docs/pascal/std/tui/` and `.agents/skills/fpas-change-checklist/SKILL.md`.
 
 ## Progress Update Rule
 

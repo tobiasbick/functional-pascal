@@ -1,6 +1,6 @@
 # `Std.Tui` Turbo Vision Rewrite
 
-Status: **implemented on branch `turbo-vision-4-rust`**. Current user-facing behavior is documented under `docs/pascal/std/tui/`. This directory keeps the migration plan, inventory, and deferred work notes.
+Status: **migration complete on branch `turbo-vision-4-rust`**. Current user-facing behavior is documented under `docs/pascal/std/tui/`. This directory keeps the decision record, inventory, and phase history.
 
 ## Goal
 
@@ -19,8 +19,7 @@ The rewrite broke every previous retained `Application.Host*` API. The project h
 
 ## Active Plan
 
-Use [implementation phases](04-implementation-phases.md) as the tracked checklist and handoff point.
-
-Remaining optional work:
+[Implementation phases](04-implementation-phases.md) are complete. Optional follow-up:
 
 - Manual terminal checks from [testing plan](05-testing-plan.md).
+- Merge `turbo-vision-4-rust` when ready.

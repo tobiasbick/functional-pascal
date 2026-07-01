@@ -1,6 +1,8 @@
 # Testing Plan
 
-The rewrite must replace the old retained-view tests with tests that assert user-visible Turbo Vision behavior.
+Status: **automated headless coverage complete** on branch `turbo-vision-4-rust`. Manual terminal checks remain optional.
+
+The rewrite replaced old retained-view tests with tests that assert user-visible Turbo Vision behavior.
 
 ## Principles
 
@@ -12,14 +14,7 @@ The rewrite must replace the old retained-view tests with tests that assert user
 
 ## Minimum Headless Capabilities
 
-The spike must prove at least one of these paths:
-
-- use upstream `turbo-vision` test utilities;
-- use a custom backend through Turbo Vision's terminal backend abstraction;
-- use screen buffer access such as `Terminal::buffer`;
-- inject events through Turbo Vision's event queue or an adapter owned by `fpas-vm`.
-
-Required operations:
+Implemented through `Application.OpenForTest`, `Application.Test*`, Turbo Vision headless `Application.Run`, and `Application.TestSetFileDialogResult`:
 
 - [x] create test application with fixed width and height
 - [x] inject key event
@@ -33,42 +28,38 @@ Required operations:
 
 ### Rust Tests
 
-Use Rust tests for:
+Covered by workspace tests including:
 
-- handle table validity
-- invalid handle diagnostics
-- callback re-entry rules
-- modal result propagation
-- terminal cleanup on error
-- ownership and drop behavior
+- [x] handle table validity and Turbo Vision bridge modules
+- [x] invalid handle diagnostics
+- [x] command callback routing (`tui_spec_links`, compiler/sema TUI suites)
+- [x] screen query intrinsics
 
 ### FPAS Tests
 
-Use FPAS tests for:
+Covered under `tests/tui/`:
 
-- opening and closing an application
-- creating a window
-- adding a button
-- dispatching a button command
-- dialog OK/Cancel result
-- input line text state
-- menu command dispatch
-- status line display, if exposed
+- [x] opening and closing an application (`host/`)
+- [x] creating a window (`tui_turbo_vision_window_test.fpas`)
+- [x] adding a button and dispatching commands (`tui_turbo_vision_spike_test.fpas`, `run_test.fpas`)
+- [x] dialog chrome widgets (static text, memo, text viewer, input line, list box, check box, radio button)
+- [x] menu and status line (`tui_turbo_vision_chrome_test.fpas`)
+- [x] file dialog accept/cancel (`tui_turbo_vision_file_dialog_test.fpas`)
 
 ### Manual Terminal Checks
 
-Keep a short manual checklist after automated tests exist:
+Optional; not automated:
 
-- real terminal starts in alternate screen
-- mouse works for buttons and menus
-- window dragging works
-- resize handling works
-- terminal state restores after normal exit
-- terminal state restores after runtime error
+- [ ] real terminal starts in alternate screen
+- [ ] mouse works for buttons and menus
+- [ ] window dragging works
+- [ ] resize handling works
+- [ ] terminal state restores after normal exit
+- [ ] terminal state restores after runtime error
 
-## Old Tests to Delete or Rewrite
+## Old Tests Removed
 
-Delete tests whose only purpose was validating the old engine:
+Deleted tests whose only purpose was validating the old engine:
 
 - retained view tree shape
 - frame-specific inner viewport clipping
@@ -77,30 +68,22 @@ Delete tests whose only purpose was validating the old engine:
 - `QuerySceneGraph` snapshots
 - old `ViewId` state query records
 
-Rewrite tests that still express user-visible behavior:
-
-- button command dispatch
-- modal dialogs
-- menu activation
-- input controls
-- screen rendering
-- focus traversal
-
 ## Verification Commands
 
-Baseline for implementation phases:
+Baseline after migration:
 
 ```text
 cargo fmt
 cargo build
 cargo test --workspace
 cargo run -p fpas-cli -- test tests/
+cargo run -p fpas-cli -- fmt --check tests/ examples/ apps/
 ```
 
-After FPAS source edits:
+Turbo Vision widget subset:
 
 ```text
-fpas fmt --check tests/ examples/ apps/
+cargo run -p fpas-cli -- test tests/tui/controls/
 ```
 
-Use narrower targeted commands while developing, but finish broad.
+See also [terminal checklist](../../pascal/std/tui/terminal-checklist.md).

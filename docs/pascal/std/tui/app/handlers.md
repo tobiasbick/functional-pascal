@@ -2,9 +2,9 @@
 
 `ApplicationHandlers` is a record for bundled event handlers used by `Application.Configure`. Optional fields use `Some(Handler)` or `None`.
 
-The hosted global-handler loop still supports `OnPaint`, `OnKeyPressed`, `OnResize`, and related handlers for apps that do not construct Turbo Vision widgets.
+These handlers apply only to the **hosted canvas** run loop. See [Two application models](../README.md#two-application-models): if the session contains any Turbo Vision widget handle, `Application.Run` uses the Turbo Vision path and **does not** call `OnPaint`, `OnKeyPressed`, or the other `Application.Configure` handlers.
 
-Turbo Vision apps should register command callbacks with `Application.OnCommand`:
+Turbo Vision apps register command callbacks with `Application.OnCommand`:
 
 ```pascal
 procedure OnCommand(App: Application; CommandId: integer);

@@ -121,6 +121,12 @@ Notes for the VM layer:
   Turbo Vision desktop. See `reconcile.rs`, `headless_paint.rs`, and
   `tests/tui/controls/tui_turbo_vision_live_tree_test.fpas`.
 
+- **Dual-architecture clarity (2026-07-01).**
+  Documented the Turbo Vision facade vs hosted canvas split in
+  `docs/pascal/std/tui/README.md` and `docs/pascal/std/tui/app/README.md`.
+  `Application.Run` selects the backend from whether any Turbo Vision handle exists.
+  Mixing `Application.Configure` with widget `Create*` calls is documented as unsupported.
+
 ---
 
 ## Phase A: Modal `ExecDialog` (+ InputLine read-back)
@@ -262,6 +268,8 @@ headless screen query after the next step.
 ---
 
 ## Phase D: Dual-architecture clarity (docs)
+
+**Status:** landed (2026-07-01). See **Already Landed** above.
 
 **Problem.** `Std.Tui` exposes two paradigms: the hosted immediate-mode loop
 (`ApplicationHandlers` with `OnPaint`/`OnKeyPressed` drawing through

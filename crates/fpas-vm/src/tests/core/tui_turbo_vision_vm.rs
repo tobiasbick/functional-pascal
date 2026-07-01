@@ -102,3 +102,30 @@ fn turbo_vision_input_line_text_read_back_via_input_text() {
 
     assert_eq!(worker.stack.last(), Some(&Value::Str("initial".into())));
 }
+
+/// `Application.Run` selects the Turbo Vision backend when any widget handle exists,
+/// so `OnPaint` is not required on that path.
+#[test]
+fn application_run_uses_turbo_vision_path_when_widget_handles_exist() {
+    let mut chunk = Chunk::new();
+    emit_open_for_test(&mut chunk, 40, 12);
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, tui_rect_value(2, 1, 24, 8));
+    emit_constant(&mut chunk, Value::Str("Demo".into()));
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::CreateDialog))),
+        loc(),
+    );
+    chunk.emit(Op::Pop, loc());
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationRun))),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(shared);
+    worker
+        .run()
+        .expect("turbo vision Application.Run should not require OnPaint");
+}

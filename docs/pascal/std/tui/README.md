@@ -2,9 +2,30 @@
 
 Terminal UI APIs for Functional Pascal.
 
-`Std.Tui` exposes a Turbo Vision application facade backed by the Rust `turbo-vision` crate. Widgets are opaque handles created before `Application.Run` and attached with `Application.AddChild`, `Application.AddWindow`, `Application.SetMenuBar`, or `Application.SetStatusLine`. Command dispatch uses `Application.OnCommand` and `Command.*` constants.
+## Two application models
 
-A legacy hosted global-handler loop (`Application.Configure` with `OnPaint`, `OnKeyPressed`, and related handlers) remains for transition apps that do not construct Turbo Vision widgets.
+`Std.Tui` exposes **two ways to build a terminal application**. Choose one model per program. **Mixing them is unsupported.**
+
+| Model | Best for | How you build the UI | Event loop |
+| --- | --- | --- | --- |
+| **Turbo Vision facade** | Dialogs, windows, menus, buttons, file pickers, IDE-style chrome | Retained widget handles (`Application.CreateDialog`, `CreateButton`, `AddChild`, …) | Turbo Vision event pump; user actions arrive as integer commands via `Application.OnCommand` |
+| **Hosted canvas** | Custom fullscreen rendering, animations, demos that own every pixel | `Std.Console` drawing inside an `OnPaint` handler registered through `Application.Configure` | Hosted global-handler loop (`OnPaint`, `OnKeyPressed`, `OnResize`, …) |
+
+### How `Application.Run` chooses
+
+`Application.Run` inspects the active session:
+
+1. **Turbo Vision path** — runs when **any** Turbo Vision widget handle was created (`Application.CreateDialog`, `CreateWindow`, `CreateButton`, `CreateMenuBar`, and the other `Create*` calls). `OnPaint` is not used; commands flow through `Application.OnCommand`.
+2. **Hosted canvas path** — runs when **no** Turbo Vision handles exist. `Application.Run` **requires** a registered `OnPaint` handler.
+
+Creating even one Turbo Vision handle permanently selects the Turbo Vision path for that session. Calling `Application.Configure` alongside widget construction does not combine the two models — hosted handlers are ignored once widgets exist.
+
+### Examples
+
+| Style | Starting points |
+| --- | --- |
+| Turbo Vision | `examples/pascal/tui/turbo_vision_dialog.fpas`, `apps/ide` |
+| Hosted canvas | `examples/pascal/tui/minimal_application.fpas`, `examples/math/mandelbrot` |
 
 | Topic | Description |
 | --- | --- |

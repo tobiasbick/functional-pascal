@@ -4,6 +4,22 @@
 
 The public surface is implemented over the Rust `turbo-vision` crate. The old retained `Application.Host*` API is not registered. Calls to removed retained APIs such as `Application.Host*`, retained view queries, modal queries, and `Application.ShowFramedDialog` report a Sema error with a migration hint toward the current Turbo Vision facade.
 
+## Which API should I use?
+
+Read [Two application models](../README.md#two-application-models) on the Std.Tui hub first. Summary:
+
+| Goal | API surface | Minimum setup |
+| --- | --- | --- |
+| Widgets (dialogs, buttons, menus) | Turbo Vision `Application.Create*` handles, `AddChild`, `OnCommand`, `Run` | Create at least one widget handle, register `OnCommand`, call `Run` |
+| Custom canvas (draw every cell yourself) | `Application.Configure` + `ApplicationHandlers` | Register `OnPaint` (required), optional `OnKeyPressed` / `OnResize`, draw with `Std.Console` inside `OnPaint`, call `Run` |
+
+`Application.Run` picks the backend from session state:
+
+- **Any** `Application.Create*` call → Turbo Vision run loop. `OnPaint` is not consulted.
+- **No** Turbo Vision handles → hosted canvas loop. `OnPaint` is mandatory.
+
+Do not call `Application.Configure` expecting it to paint over a Turbo Vision widget tree, and do not call `Application.CreateButton` in a canvas app — the two models do not compose.
+
 ## Current API
 
 | Symbol | Description |

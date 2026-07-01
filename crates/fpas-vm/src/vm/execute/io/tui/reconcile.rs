@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/future/turbo-vision-4-rust/07-post-migration-improvements.md` (Phase C)
 
 use super::tv_geometry::turbo_rect;
-use super::tv_run::{add_window_child, child_snapshots};
+use super::tv_run::{add_window_child, child_snapshots, turbo_vision_build_modal_dialog};
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
 use crate::vm::shared::TurboVisionObject;
@@ -18,6 +18,10 @@ impl Worker {
     }
 
     /// Reset reconcile bookkeeping at the start of `Application.Run`.
+    ///
+    /// Seeds the already-shown roots so the first reconcile only mirrors roots
+    /// created later: on-desktop windows and every existing dialog (dialogs are
+    /// shown as soon as they exist, mirroring `build_turbo_vision_application`).
     pub(in crate::vm::execute::io::tui) fn turbo_vision_begin_run(&mut self) {
         self.with_tui(|tui| {
             tui.turbo_vision.pending_reconcile = false;
@@ -25,11 +29,10 @@ impl Worker {
                 .turbo_vision
                 .objects
                 .iter()
-                .filter_map(|(handle, object)| {
-                    let TurboVisionObject::Window(window) = object else {
-                        return None;
-                    };
-                    window.on_desktop.then_some(*handle)
+                .filter_map(|(handle, object)| match object {
+                    TurboVisionObject::Window(window) => window.on_desktop.then_some(*handle),
+                    TurboVisionObject::Dialog(_) => Some(*handle),
+                    _ => None,
                 })
                 .collect();
         });
@@ -53,6 +56,7 @@ impl Worker {
         });
         if dirty && let Some(app) = live_app {
             self.turbo_vision_sync_new_windows_to_app(app)?;
+            self.turbo_vision_sync_new_dialogs_to_app(app)?;
         }
         Ok(())
     }
@@ -93,6 +97,46 @@ impl Worker {
             self.with_tui(|tui| {
                 tui.turbo_vision.live_synced_handles.insert(handle);
             });
+        }
+        Ok(())
+    }
+
+    /// Add dialogs created after `Application.Run` started onto the live desktop.
+    ///
+    /// Edits made in a dialog shown this way are not committed back to FPAS input
+    /// handles; use `Application.ExecDialog` for modal read-back.
+    fn turbo_vision_sync_new_dialogs_to_app(
+        &mut self,
+        app: &mut TurboVisionApplication,
+    ) -> Result<(), VmError> {
+        let pending = self.with_tui(|tui| {
+            tui.turbo_vision
+                .objects
+                .iter()
+                .filter_map(|(handle, object)| {
+                    let TurboVisionObject::Dialog(_) = object else {
+                        return None;
+                    };
+                    (!tui.turbo_vision.live_synced_handles.contains(handle)).then_some(*handle)
+                })
+                .collect::<Vec<_>>()
+        });
+
+        for handle in pending {
+            let mut input_bindings = Vec::new();
+            let dialog_view = self.with_tui(|tui| {
+                turbo_vision_build_modal_dialog(
+                    &tui.turbo_vision.objects,
+                    handle,
+                    &mut input_bindings,
+                )
+            });
+            if let Some(dialog_view) = dialog_view {
+                app.desktop.add(dialog_view);
+                self.with_tui(|tui| {
+                    tui.turbo_vision.live_synced_handles.insert(handle);
+                });
+            }
         }
         Ok(())
     }

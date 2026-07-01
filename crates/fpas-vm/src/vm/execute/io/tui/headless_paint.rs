@@ -31,24 +31,32 @@ impl Worker {
         let ops = self.with_tui(|tui| {
             let mut ops = Vec::new();
             for object in tui.turbo_vision.objects.values() {
-                let TurboVisionObject::Window(window) = object else {
+                // Windows are shown once placed on the desktop; dialogs are shown
+                // as soon as they exist (mirroring `build_turbo_vision_application`).
+                let container = match object {
+                    TurboVisionObject::Window(window) if window.on_desktop => {
+                        Some((window.bounds, window.title.as_str(), &window.children))
+                    }
+                    TurboVisionObject::Dialog(dialog) => {
+                        Some((dialog.bounds, dialog.title.as_str(), &dialog.children))
+                    }
+                    _ => None,
+                };
+                let Some((bounds, title, children)) = container else {
                     continue;
                 };
-                if !window.on_desktop {
-                    continue;
-                }
                 ops.push(HeadlessPaintOp::Text {
-                    x: window.bounds.x.saturating_add(1),
-                    y: window.bounds.y,
-                    text: window.title.clone(),
+                    x: bounds.x.saturating_add(1),
+                    y: bounds.y,
+                    text: title.to_string(),
                     fg: TITLE_FG,
                     bg: TITLE_BG,
                 });
-                for handle in &window.children {
+                for handle in children {
                     let Some(child) = tui.turbo_vision.objects.get(handle) else {
                         continue;
                     };
-                    collect_child_paint_ops(&mut ops, window.bounds.x, window.bounds.y, child);
+                    collect_child_paint_ops(&mut ops, bounds.x, bounds.y, child);
                 }
             }
             ops

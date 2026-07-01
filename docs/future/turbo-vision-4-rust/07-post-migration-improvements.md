@@ -116,10 +116,14 @@ Notes for the VM layer:
 
 - **Live widget tree during run (2026-07-01).**
   `Application.Run` reconciles FPAS-side Turbo Vision mutations after each command step.
-  Headless runs paint on-desktop windows into the CRT buffer so `Application.QueryScreenCell`
-  observes widgets created inside `OnCommand`. Interactive runs mirror new windows onto the live
-  Turbo Vision desktop. See `reconcile.rs`, `headless_paint.rs`, and
-  `tests/tui/controls/tui_turbo_vision_live_tree_test.fpas`.
+  Headless runs paint on-desktop windows and dialogs into the CRT buffer so
+  `Application.QueryScreenCell` observes roots created inside `OnCommand`. Interactive runs
+  mirror new windows and new dialogs onto the live Turbo Vision desktop. See `reconcile.rs`,
+  `headless_paint.rs`, `tests/tui/controls/tui_turbo_vision_live_tree_test.fpas`, and
+  `tests/tui/controls/tui_turbo_vision_live_dialog_test.fpas`.
+  Known limits: reconciliation adds **new top-level roots** (windows, dialogs); it does not yet
+  re-render property changes to already-shown views, and edits in a live (non-modal) dialog are
+  not committed back to FPAS input handles — use `Application.ExecDialog` for modal read-back.
 
 - **Dual-architecture clarity (2026-07-01).**
   Documented the Turbo Vision facade vs hosted canvas split in

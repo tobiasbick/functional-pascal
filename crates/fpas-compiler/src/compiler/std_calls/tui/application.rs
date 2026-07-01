@@ -93,6 +93,14 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::CreateStaticText), location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_CREATE_MEMO => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_CREATE_MEMO, 3, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::CreateMemo), location);
+                Ok(true)
+            }
             s::STD_TUI_APPLICATION_CREATE_INPUT_LINE => {
                 self.expect_exact_args(
                     s::STD_TUI_APPLICATION_CREATE_INPUT_LINE,

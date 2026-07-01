@@ -16,3 +16,4 @@
     CreateListBox = 445,
     CreateCheckBox = 446,
     CreateRadioButton = 447,
+    CreateMemo = 448,

@@ -7,8 +7,8 @@ use super::tv_geometry::unknown_handle_error;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use crate::vm::shared::{
-    TurboVisionCheckBox, TurboVisionInputLine, TurboVisionListBox, TurboVisionObject,
-    TurboVisionRadioButton, TurboVisionStaticText,
+    TurboVisionCheckBox, TurboVisionInputLine, TurboVisionListBox, TurboVisionMemo,
+    TurboVisionObject, TurboVisionRadioButton, TurboVisionStaticText,
 };
 use fpas_bytecode::SourceLocation;
 use fpas_bytecode::Value;
@@ -16,7 +16,7 @@ use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 use std::cell::RefCell;
 use std::rc::Rc;
 use turbo_vision::views::{
-    button::Button, checkbox::CheckBox, input_line::InputLine, listbox::ListBox,
+    button::Button, checkbox::CheckBox, input_line::InputLine, listbox::ListBox, memo::Memo,
     radiobutton::RadioButton, static_text::StaticText,
 };
 
@@ -81,6 +81,29 @@ impl Worker {
             handle
         });
         self.push(Self::turbo_vision_static_text_record(handle))
+    }
+
+    pub(super) fn turbo_vision_create_memo(&mut self, line: SourceLocation) -> Result<(), VmError> {
+        let text = self.pop_turbo_vision_string("Memo text", line)?;
+        let bounds = self.pop_turbo_vision_rect(line)?;
+        self.pop_tui_application(line)?;
+
+        let _memo = Memo::new(bounds);
+        let bounds = super::tv_geometry::state_rect(bounds);
+        let handle = self.with_tui(|tui| {
+            let handle = tui.turbo_vision.next_handle;
+            tui.turbo_vision.next_handle = handle.saturating_add(1).max(1);
+            tui.turbo_vision.objects.insert(
+                handle,
+                TurboVisionObject::Memo(TurboVisionMemo {
+                    bounds,
+                    text,
+                    attached: false,
+                }),
+            );
+            handle
+        });
+        self.push(Self::turbo_vision_memo_record(handle))
     }
 
     pub(super) fn turbo_vision_create_input_line(
@@ -256,6 +279,11 @@ impl Worker {
                 {
                     static_text.attached
                 }
+                Some(TurboVisionObject::Memo(memo))
+                    if matches!(child, TurboVisionChildHandle::Memo(_)) =>
+                {
+                    memo.attached
+                }
                 Some(TurboVisionObject::InputLine(input_line))
                     if matches!(child, TurboVisionChildHandle::InputLine(_)) =>
                 {
@@ -310,6 +338,7 @@ impl Worker {
             match tui.turbo_vision.objects.get_mut(&child_handle) {
                 Some(TurboVisionObject::Button(button)) => button.attached = true,
                 Some(TurboVisionObject::StaticText(static_text)) => static_text.attached = true,
+                Some(TurboVisionObject::Memo(memo)) => memo.attached = true,
                 Some(TurboVisionObject::InputLine(input_line)) => input_line.attached = true,
                 Some(TurboVisionObject::ListBox(list_box)) => list_box.attached = true,
                 Some(TurboVisionObject::CheckBox(check_box)) => check_box.attached = true,
@@ -355,6 +384,7 @@ impl TurboVisionChildHandle {
         match self {
             Self::Button(handle)
             | Self::StaticText(handle)
+            | Self::Memo(handle)
             | Self::InputLine(handle)
             | Self::ListBox(handle)
             | Self::CheckBox(handle)
@@ -366,6 +396,7 @@ impl TurboVisionChildHandle {
         match self {
             Self::Button(_) => "Button",
             Self::StaticText(_) => "StaticText",
+            Self::Memo(_) => "Memo",
             Self::InputLine(_) => "InputLine",
             Self::ListBox(_) => "ListBox",
             Self::CheckBox(_) => "CheckBox",

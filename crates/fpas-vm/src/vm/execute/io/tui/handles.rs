@@ -12,6 +12,7 @@ const TUI_DIALOG_TYPE: &str = "Std.Tui.Dialog";
 const TUI_WINDOW_TYPE: &str = "Std.Tui.Window";
 const TUI_BUTTON_TYPE: &str = "Std.Tui.Button";
 const TUI_STATIC_TEXT_TYPE: &str = "Std.Tui.StaticText";
+const TUI_MEMO_TYPE: &str = "Std.Tui.Memo";
 const TUI_INPUT_LINE_TYPE: &str = "Std.Tui.InputLine";
 const TUI_LIST_BOX_TYPE: &str = "Std.Tui.ListBox";
 const TUI_CHECK_BOX_TYPE: &str = "Std.Tui.CheckBox";
@@ -36,6 +37,10 @@ impl Worker {
 
     pub(super) fn turbo_vision_static_text_record(handle: u32) -> Value {
         turbo_vision_handle_record(TUI_STATIC_TEXT_TYPE, handle)
+    }
+
+    pub(super) fn turbo_vision_memo_record(handle: u32) -> Value {
+        turbo_vision_handle_record(TUI_MEMO_TYPE, handle)
     }
 
     pub(super) fn turbo_vision_input_line_record(handle: u32) -> Value {
@@ -140,6 +145,11 @@ impl Worker {
                     self.decode_turbo_vision_handle_record(&fields, "StaticText", line)?,
                 ))
             }
+            Value::Record { type_name, fields } if type_name == TUI_MEMO_TYPE => {
+                Ok(TurboVisionChildHandle::Memo(
+                    self.decode_turbo_vision_handle_record(&fields, "Memo", line)?,
+                ))
+            }
             Value::Record { type_name, fields } if type_name == TUI_INPUT_LINE_TYPE => {
                 Ok(TurboVisionChildHandle::InputLine(
                     self.decode_turbo_vision_handle_record(&fields, "InputLine", line)?,
@@ -163,10 +173,10 @@ impl Worker {
             other => Err(runtime_error(
                 TYPE_MISMATCH_CODE,
                 format!(
-                    "Child handle expected {TUI_BUTTON_TYPE}, {TUI_STATIC_TEXT_TYPE}, {TUI_INPUT_LINE_TYPE}, {TUI_LIST_BOX_TYPE}, {TUI_CHECK_BOX_TYPE}, or {TUI_RADIO_BUTTON_TYPE}, got {}",
+                    "Child handle expected {TUI_BUTTON_TYPE}, {TUI_STATIC_TEXT_TYPE}, {TUI_MEMO_TYPE}, {TUI_INPUT_LINE_TYPE}, {TUI_LIST_BOX_TYPE}, {TUI_CHECK_BOX_TYPE}, or {TUI_RADIO_BUTTON_TYPE}, got {}",
                     other.type_name()
                 ),
-                "Pass a handle from `Application.CreateButton`, `Application.CreateStaticText`, `Application.CreateInputLine`, `Application.CreateListBox`, `Application.CreateCheckBox`, or `Application.CreateRadioButton`.",
+                "Pass a handle from `Application.CreateButton`, `Application.CreateStaticText`, `Application.CreateMemo`, `Application.CreateInputLine`, `Application.CreateListBox`, `Application.CreateCheckBox`, or `Application.CreateRadioButton`.",
                 line,
             )),
         }
@@ -314,6 +324,7 @@ pub(super) enum TurboVisionParentHandle {
 pub(super) enum TurboVisionChildHandle {
     Button(u32),
     StaticText(u32),
+    Memo(u32),
     InputLine(u32),
     ListBox(u32),
     CheckBox(u32),

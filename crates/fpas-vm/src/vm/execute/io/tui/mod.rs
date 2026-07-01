@@ -58,6 +58,9 @@ impl Worker {
             Intrinsic::Tui(TuiIntrinsic::CreateStaticText) => {
                 self.turbo_vision_create_static_text(line)?;
             }
+            Intrinsic::Tui(TuiIntrinsic::CreateMemo) => {
+                self.turbo_vision_create_memo(line)?;
+            }
             Intrinsic::Tui(TuiIntrinsic::CreateInputLine) => {
                 self.turbo_vision_create_input_line(line)?;
             }

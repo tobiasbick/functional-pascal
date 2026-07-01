@@ -90,6 +90,16 @@ pub(super) fn register_application_api(
     );
     define_func(
         checker,
+        s::STD_TUI_APPLICATION_CREATE_MEMO,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Bounds", types.rect.clone(), false),
+            p("Text", Ty::String, false),
+        ],
+        types.memo.clone(),
+    );
+    define_func(
+        checker,
         s::STD_TUI_APPLICATION_CREATE_INPUT_LINE,
         vec![
             p("App", types.application.clone(), false),

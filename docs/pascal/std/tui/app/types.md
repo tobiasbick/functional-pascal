@@ -56,6 +56,10 @@ Opaque Turbo Vision button handle returned by `Application.CreateButton`.
 
 Opaque non-interactive Turbo Vision text label handle returned by `Application.CreateStaticText`.
 
+## `Memo`
+
+Opaque multi-line Turbo Vision text editor handle returned by `Application.CreateMemo`. Initial `Text` may contain newline characters.
+
 ## `InputLine`
 
 Opaque single-line Turbo Vision text input handle returned by `Application.CreateInputLine`.

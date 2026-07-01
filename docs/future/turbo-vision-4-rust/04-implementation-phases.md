@@ -163,7 +163,7 @@ Implement in this order:
 - [x] `ListBox` — `Application.CreateListBox`, `ListBox` handle type, string-array items, select command id, and `Application.AddChild` child support (2026-07-01).
 - [x] `CheckBox` — `Application.CreateCheckBox`, `CheckBox` handle type, initial checked state, and `Application.AddChild` child support (2026-07-01).
 - [x] `RadioButton` — `Application.CreateRadioButton`, `RadioButton` handle type, group id, selected state, and `Application.AddChild` child support (2026-07-01).
-- [ ] `Memo` or `TextViewer`
+- [x] `Memo` — `Application.CreateMemo`, `Memo` handle type, multi-line initial text, and `Application.AddChild` child support (2026-07-01; `TextViewer` deferred).
 - [ ] file dialog only after the core app and tests are stable
 
 Each item requires:

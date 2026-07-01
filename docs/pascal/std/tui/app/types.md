@@ -60,6 +60,10 @@ Opaque non-interactive Turbo Vision text label handle returned by `Application.C
 
 Opaque multi-line Turbo Vision text editor handle returned by `Application.CreateMemo`. Initial `Text` may contain newline characters.
 
+## `TextViewer`
+
+Opaque read-only multi-line Turbo Vision text viewer handle returned by `Application.CreateTextViewer`. Initial `Text` may contain newline characters. Use for logs, help text, and long read-only content. Distinct from `Memo` (editable) and `StaticText` (short label).
+
 ## `InputLine`
 
 Opaque single-line Turbo Vision text input handle returned by `Application.CreateInputLine`.

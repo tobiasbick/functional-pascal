@@ -13,7 +13,7 @@ The rewrite broke every previous retained `Application.Host*` API. The project h
 1. [Decision record](01-decision-record.md) — why the rewrite exists and what is in scope.
 2. [Inventory](02-inventory.md) — code, docs, tests, and examples affected by removal.
 3. [Target API](03-target-api.md) — proposed FPAS-facing API shape.
-4. [Implementation phases](04-implementation-phases.md) — tracked checklist (Phases 0–8 complete; deferred widgets below).
+4. [Implementation phases](04-implementation-phases.md) — tracked checklist (Phases 0–8 and Phase 5 widgets complete).
 5. [Testing plan](05-testing-plan.md) — headless tests, event injection, and verification.
 6. [Agent handoff](06-agent-handoff.md) — rules for continuing after context loss.
 
@@ -21,7 +21,6 @@ The rewrite broke every previous retained `Application.Host*` API. The project h
 
 Use [implementation phases](04-implementation-phases.md) as the tracked checklist and handoff point.
 
-Remaining optional work (in order):
+Remaining optional work:
 
-1. **TextViewer** — read-only scrollable text (`Application.CreateTextViewer`, planned).
-2. Manual terminal checks from [testing plan](05-testing-plan.md).
+- Manual terminal checks from [testing plan](05-testing-plan.md).

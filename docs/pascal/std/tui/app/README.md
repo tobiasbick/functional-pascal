@@ -22,12 +22,13 @@ The public surface is implemented over the Rust `turbo-vision` crate. The old re
 | `Application.CreateButton(App, Bounds, Text, CommandId): Button` | Create a Turbo Vision button handle. |
 | `Application.CreateStaticText(App, Bounds, Text): StaticText` | Create a non-interactive Turbo Vision text label handle. |
 | `Application.CreateMemo(App, Bounds, Text): Memo` | Create a multi-line Turbo Vision text editor handle. |
+| `Application.CreateTextViewer(App, Bounds, Text): TextViewer` | Create a read-only multi-line Turbo Vision text viewer handle. |
 | `Application.CreateInputLine(App, Bounds, Text, MaxLength): InputLine` | Create a single-line Turbo Vision text input handle. |
 | `Application.CreateListBox(App, Bounds, Items, CommandId): ListBox` | Create a Turbo Vision list box from an array of strings. |
 | `Application.CreateCheckBox(App, Bounds, Text, Checked): CheckBox` | Create a Turbo Vision check box with an initial checked state. |
 | `Application.CreateRadioButton(App, Bounds, Text, GroupId, Selected): RadioButton` | Create a Turbo Vision radio button. Use the same `GroupId` for mutually exclusive options. |
 | `Application.RunFileDialog(App, Bounds, Title, Wildcard, StartPath): Option of string` | Show a modal file dialog. Returns `Some(path)` when a file is chosen and `None` when canceled. Pass `None` as `StartPath` for the current directory. |
-| `Application.AddChild(App, Parent, Child)` | Attach a button, static text, memo, input line, list box, check box, or radio button child to a dialog or window parent. |
+| `Application.AddChild(App, Parent, Child)` | Attach a button, static text, memo, text viewer, input line, list box, check box, or radio button child to a dialog or window parent. |
 | `Application.AddWindow(App, Window)` | Place a window on the application desktop. |
 | `Application.CreateMenuBar(App, Bounds, Items): MenuBar` | Create a top menu bar from an array of `MenuBarItem` records. |
 | `Application.SetMenuBar(App, MenuBar)` | Set the application menu bar root. |

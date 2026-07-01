@@ -43,11 +43,9 @@ Use this file when continuing after context loss.
 
 ## Good Next Task
 
-Phases 0–8 are complete on branch `turbo-vision-4-rust`. Continue with deferred Phase 5 widgets in this order:
+Phases 0–8 and Phase 5 widgets are complete on branch `turbo-vision-4-rust`. Optional follow-up: manual terminal checks in [testing plan](05-testing-plan.md).
 
-1. **TextViewer** — same checklist as other widgets after file dialog lands. Maps to `turbo_vision::views::text_viewer::TextViewer` (read-only scrolling text; not `Memo`).
-
-Before starting, read [implementation phases](04-implementation-phases.md) and `.agents/skills/fpas-change-checklist/SKILL.md`.
+Before starting new TUI work, read [implementation phases](04-implementation-phases.md) and `.agents/skills/fpas-change-checklist/SKILL.md`.
 
 ## Progress Update Rule
 

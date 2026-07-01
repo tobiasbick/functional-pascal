@@ -96,9 +96,9 @@ Planned surface:
 - `Application.AddChild(App, Parent, Child)`
 - `Application.Remove(App, View)`
 
-## Deferred widgets (not yet in `docs/pascal/`)
+## Deferred widgets
 
-1. **TextViewer** — read-only scrollable multi-line display for logs, help, and file preview. Planned `Application.CreateTextViewer(App, Bounds, Text): TextViewer` and `Application.AddChild` support. Distinct from `Memo` (editable) and `StaticText` (short label).
+None. Phase 5 widget work is complete.
 
 ## Dialog API
 

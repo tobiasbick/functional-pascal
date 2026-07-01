@@ -26,6 +26,7 @@ Turbo Vision regression tests under `tests/tui/controls/`:
 - `tui_turbo_vision_radio_button_test.fpas`
 - `tui_turbo_vision_chrome_test.fpas` — menu bar and status line
 - `tui_turbo_vision_file_dialog_test.fpas` — `RunFileDialog`, `TestSetFileDialogResult`
+- `tui_turbo_vision_text_viewer_test.fpas` — `TextViewer`, `AddChild`
 
 ## See Also
 

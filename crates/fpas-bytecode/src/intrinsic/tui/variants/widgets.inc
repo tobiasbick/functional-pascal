@@ -19,3 +19,4 @@
     CreateMemo = 448,
     RunFileDialog = 449,
     TestSetFileDialogResult = 450,
+    CreateTextViewer = 451,

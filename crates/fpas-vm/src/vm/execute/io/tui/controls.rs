@@ -8,7 +8,7 @@ use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use crate::vm::shared::{
     TurboVisionCheckBox, TurboVisionInputLine, TurboVisionListBox, TurboVisionMemo,
-    TurboVisionObject, TurboVisionRadioButton, TurboVisionStaticText,
+    TurboVisionObject, TurboVisionRadioButton, TurboVisionStaticText, TurboVisionTextViewer,
 };
 use fpas_bytecode::SourceLocation;
 use fpas_bytecode::Value;
@@ -17,7 +17,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use turbo_vision::views::{
     button::Button, checkbox::CheckBox, input_line::InputLine, listbox::ListBox, memo::Memo,
-    radiobutton::RadioButton, static_text::StaticText,
+    radiobutton::RadioButton, static_text::StaticText, text_viewer::TextViewer,
 };
 
 impl Worker {
@@ -104,6 +104,32 @@ impl Worker {
             handle
         });
         self.push(Self::turbo_vision_memo_record(handle))
+    }
+
+    pub(super) fn turbo_vision_create_text_viewer(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        let text = self.pop_turbo_vision_string("TextViewer text", line)?;
+        let bounds = self.pop_turbo_vision_rect(line)?;
+        self.pop_tui_application(line)?;
+
+        let _text_viewer = TextViewer::new(bounds);
+        let bounds = super::tv_geometry::state_rect(bounds);
+        let handle = self.with_tui(|tui| {
+            let handle = tui.turbo_vision.next_handle;
+            tui.turbo_vision.next_handle = handle.saturating_add(1).max(1);
+            tui.turbo_vision.objects.insert(
+                handle,
+                TurboVisionObject::TextViewer(TurboVisionTextViewer {
+                    bounds,
+                    text,
+                    attached: false,
+                }),
+            );
+            handle
+        });
+        self.push(Self::turbo_vision_text_viewer_record(handle))
     }
 
     pub(super) fn turbo_vision_create_input_line(
@@ -284,6 +310,11 @@ impl Worker {
                 {
                     memo.attached
                 }
+                Some(TurboVisionObject::TextViewer(text_viewer))
+                    if matches!(child, TurboVisionChildHandle::TextViewer(_)) =>
+                {
+                    text_viewer.attached
+                }
                 Some(TurboVisionObject::InputLine(input_line))
                     if matches!(child, TurboVisionChildHandle::InputLine(_)) =>
                 {
@@ -339,6 +370,7 @@ impl Worker {
                 Some(TurboVisionObject::Button(button)) => button.attached = true,
                 Some(TurboVisionObject::StaticText(static_text)) => static_text.attached = true,
                 Some(TurboVisionObject::Memo(memo)) => memo.attached = true,
+                Some(TurboVisionObject::TextViewer(text_viewer)) => text_viewer.attached = true,
                 Some(TurboVisionObject::InputLine(input_line)) => input_line.attached = true,
                 Some(TurboVisionObject::ListBox(list_box)) => list_box.attached = true,
                 Some(TurboVisionObject::CheckBox(check_box)) => check_box.attached = true,
@@ -385,6 +417,7 @@ impl TurboVisionChildHandle {
             Self::Button(handle)
             | Self::StaticText(handle)
             | Self::Memo(handle)
+            | Self::TextViewer(handle)
             | Self::InputLine(handle)
             | Self::ListBox(handle)
             | Self::CheckBox(handle)
@@ -397,6 +430,7 @@ impl TurboVisionChildHandle {
             Self::Button(_) => "Button",
             Self::StaticText(_) => "StaticText",
             Self::Memo(_) => "Memo",
+            Self::TextViewer(_) => "TextViewer",
             Self::InputLine(_) => "InputLine",
             Self::ListBox(_) => "ListBox",
             Self::CheckBox(_) => "CheckBox",

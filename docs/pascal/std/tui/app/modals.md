@@ -11,7 +11,7 @@ Turbo Vision dialogs and windows are opaque handles created before `Application.
 | `Application.AddWindow(App, Window)` | Place a window on the application desktop. |
 | `Application.AddChild(App, Parent, Child)` | Attach a control child to a dialog or window parent. |
 
-`Parent` may be a `Dialog` or `Window`. `Child` may be a `Button`, `StaticText`, `Memo`, `InputLine`, `ListBox`, `CheckBox`, or `RadioButton`.
+`Parent` may be a `Dialog` or `Window`. `Child` may be a `Button`, `StaticText`, `Memo`, `TextViewer`, `InputLine`, `ListBox`, `CheckBox`, or `RadioButton`.
 
 The retained modal stack and `ShowModal` APIs are removed.
 

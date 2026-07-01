@@ -152,6 +152,7 @@ pub(crate) enum TurboVisionObject {
     Button(TurboVisionButton),
     StaticText(TurboVisionStaticText),
     Memo(TurboVisionMemo),
+    TextViewer(TurboVisionTextViewer),
     InputLine(TurboVisionInputLine),
     ListBox(TurboVisionListBox),
     CheckBox(TurboVisionCheckBox),
@@ -198,6 +199,13 @@ pub(crate) struct TurboVisionStaticText {
 
 #[derive(Clone)]
 pub(crate) struct TurboVisionMemo {
+    pub bounds: TurboVisionRect,
+    pub text: String,
+    pub attached: bool,
+}
+
+#[derive(Clone)]
+pub(crate) struct TurboVisionTextViewer {
     pub bounds: TurboVisionRect,
     pub text: String,
     pub attached: bool,

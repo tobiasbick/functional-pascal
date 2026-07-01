@@ -8,7 +8,7 @@ use crate::vm::diagnostics::{VmError, runtime_error};
 use crate::vm::shared::{
     TurboVisionButton, TurboVisionCheckBox, TurboVisionInputLine, TurboVisionListBox,
     TurboVisionMemo, TurboVisionObject, TurboVisionRadioButton, TurboVisionRect,
-    TurboVisionStaticText, TurboVisionStatusItem,
+    TurboVisionStaticText, TurboVisionStatusItem, TurboVisionTextViewer,
 };
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
@@ -19,7 +19,8 @@ use turbo_vision::core::menu_data::{Menu, MenuItem};
 use turbo_vision::views::{
     button::Button, checkbox::CheckBox, dialog::Dialog, input_line::InputLine, listbox::ListBox,
     memo::Memo, menu_bar::MenuBar, menu_bar::SubMenu, radiobutton::RadioButton,
-    static_text::StaticText, status_line::StatusItem, status_line::StatusLine, window::Window,
+    static_text::StaticText, status_line::StatusItem, status_line::StatusLine,
+    text_viewer::TextViewer, window::Window,
 };
 
 const HEADLESS_RUN_MAX_COMMANDS: usize = 4096;
@@ -209,6 +210,7 @@ enum TurboVisionChildSnapshot {
     Button(TurboVisionButton),
     StaticText(TurboVisionStaticText),
     Memo(TurboVisionMemo),
+    TextViewer(TurboVisionTextViewer),
     InputLine(TurboVisionInputLine),
     ListBox(TurboVisionListBox),
     CheckBox(TurboVisionCheckBox),
@@ -230,6 +232,9 @@ fn child_snapshots(
             }
             Some(TurboVisionObject::Memo(memo)) => {
                 Some(TurboVisionChildSnapshot::Memo(memo.clone()))
+            }
+            Some(TurboVisionObject::TextViewer(text_viewer)) => {
+                Some(TurboVisionChildSnapshot::TextViewer(text_viewer.clone()))
             }
             Some(TurboVisionObject::InputLine(input_line)) => {
                 Some(TurboVisionChildSnapshot::InputLine(input_line.clone()))
@@ -266,6 +271,9 @@ fn add_window_child(window: &mut Window, child: TurboVisionChildSnapshot) {
         }
         TurboVisionChildSnapshot::Memo(memo) => {
             window.add(Box::new(build_memo(memo)));
+        }
+        TurboVisionChildSnapshot::TextViewer(text_viewer) => {
+            window.add(Box::new(build_text_viewer(text_viewer)));
         }
         TurboVisionChildSnapshot::InputLine(input_line) => {
             window.add(Box::new(InputLine::new(
@@ -305,6 +313,9 @@ fn add_dialog_child(dialog: &mut Dialog, child: TurboVisionChildSnapshot) {
         TurboVisionChildSnapshot::Memo(memo) => {
             dialog.add(Box::new(build_memo(memo)));
         }
+        TurboVisionChildSnapshot::TextViewer(text_viewer) => {
+            dialog.add(Box::new(build_text_viewer(text_viewer)));
+        }
         TurboVisionChildSnapshot::InputLine(input_line) => {
             dialog.add(Box::new(InputLine::new(
                 turbo_rect(input_line.bounds),
@@ -340,6 +351,12 @@ fn build_memo(snapshot: TurboVisionMemo) -> Memo {
     let mut memo = Memo::new(turbo_rect(snapshot.bounds));
     memo.set_text(&snapshot.text);
     memo
+}
+
+fn build_text_viewer(snapshot: TurboVisionTextViewer) -> TextViewer {
+    let mut text_viewer = TextViewer::new(turbo_rect(snapshot.bounds));
+    text_viewer.set_text(&snapshot.text);
+    text_viewer
 }
 
 fn build_radio_button(snapshot: TurboVisionRadioButton) -> RadioButton {

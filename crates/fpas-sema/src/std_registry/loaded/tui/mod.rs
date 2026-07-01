@@ -22,6 +22,7 @@ struct TuiTypes {
     button: Ty,
     static_text: Ty,
     memo: Ty,
+    text_viewer: Ty,
     input_line: Ty,
     list_box: Ty,
     check_box: Ty,
@@ -55,6 +56,8 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
     let static_text =
         type_registration::register_record_type(checker, s::STD_TUI_STATIC_TEXT, Vec::new());
     let memo = type_registration::register_record_type(checker, s::STD_TUI_MEMO, Vec::new());
+    let text_viewer =
+        type_registration::register_record_type(checker, s::STD_TUI_TEXT_VIEWER, Vec::new());
     let input_line =
         type_registration::register_record_type(checker, s::STD_TUI_INPUT_LINE, Vec::new());
     let list_box =
@@ -167,6 +170,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         button,
         static_text,
         memo,
+        text_viewer,
         input_line,
         list_box,
         check_box,

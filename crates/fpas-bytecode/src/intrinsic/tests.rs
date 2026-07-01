@@ -247,6 +247,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Tui(TuiIntrinsic::AddWindow),
     Intrinsic::Tui(TuiIntrinsic::CreateStaticText),
     Intrinsic::Tui(TuiIntrinsic::CreateMemo),
+    Intrinsic::Tui(TuiIntrinsic::CreateTextViewer),
     Intrinsic::Tui(TuiIntrinsic::CreateInputLine),
     Intrinsic::Tui(TuiIntrinsic::CreateMenuBar),
     Intrinsic::Tui(TuiIntrinsic::SetMenuBar),

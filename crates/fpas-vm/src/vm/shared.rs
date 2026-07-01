@@ -127,8 +127,6 @@ pub(crate) struct TurboVisionState {
     pub test_file_dialog_result: Option<Option<String>>,
     /// Headless override consumed by the next `ExecDialog` call (closing command id).
     pub test_dialog_result: Option<i64>,
-    /// Window handles already mirrored into the live Turbo Vision desktop during `Application.Run`.
-    pub live_synced_handles: HashSet<u32>,
     /// FPAS-side widget tree changed since the last reconcile step.
     pub pending_reconcile: bool,
 }
@@ -144,7 +142,6 @@ impl Default for TurboVisionState {
             quit_requested: false,
             test_file_dialog_result: None,
             test_dialog_result: None,
-            live_synced_handles: HashSet::new(),
             pending_reconcile: false,
         }
     }

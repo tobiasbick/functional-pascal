@@ -115,15 +115,19 @@ Notes for the VM layer:
   `Application.TestDispatchMenuCommand` drives headless menu command tests.
 
 - **Live widget tree during run (2026-07-01).**
-  `Application.Run` reconciles FPAS-side Turbo Vision mutations after each command step.
-  Headless runs paint on-desktop windows and dialogs into the CRT buffer so
-  `Application.QueryScreenCell` observes roots created inside `OnCommand`. Interactive runs
-  mirror new windows and new dialogs onto the live Turbo Vision desktop. See `reconcile.rs`,
-  `headless_paint.rs`, `tests/tui/controls/tui_turbo_vision_live_tree_test.fpas`, and
+  `Application.Run` reconciles FPAS-side Turbo Vision mutations after each event step
+  (commands and key/mouse input alike). Headless runs paint on-desktop windows and dialogs
+  into the CRT buffer so `Application.QueryScreenCell` observes roots created inside `OnCommand`.
+  Interactive runs rebuild the whole desktop from current FPAS state whenever the tree is
+  marked dirty, so new roots **and** children added to already-shown windows/dialogs both
+  appear live. See `reconcile.rs` (`turbo_vision_rebuild_desktop`), `tv_run.rs`
+  (`turbo_vision_populate_desktop`), `headless_paint.rs`,
+  `tests/tui/controls/tui_turbo_vision_live_tree_test.fpas`, and
   `tests/tui/controls/tui_turbo_vision_live_dialog_test.fpas`.
-  Known limits: reconciliation adds **new top-level roots** (windows, dialogs); it does not yet
-  re-render property changes to already-shown views, and edits in a live (non-modal) dialog are
-  not committed back to FPAS input handles — use `Application.ExecDialog` for modal read-back.
+  Known limits: a live rebuild resets focus to the top root and re-seeds widgets from FPAS
+  state, so uncommitted edits in a live (non-modal) dialog are lost — use
+  `Application.ExecDialog` for modal read-back. There are still no property setters
+  (`SetText`, `SetChecked`, …), so in-place property changes have no trigger yet.
 
 - **Dual-architecture clarity (2026-07-01).**
   Documented the Turbo Vision facade vs hosted canvas split in
@@ -273,14 +277,18 @@ correct command for a non-first entry.
 once before the loop. Commands are now live, but widgets created or mutated inside
 `OnCommand`, and `Application.RequestRedraw`, have no visible effect during a run.
 
-**Approach.** Replace the one-shot snapshot with a live handle↔view mapping owned
-for the duration of `turbo_vision_interactive_run`, applying FPAS-side mutations
-between event steps. Depends on Phase A's retained-handle work; do A and B first.
+**Approach (as landed).** A `pending_reconcile` dirty flag on the `turbo_vision`
+state is set whenever FPAS creates a widget or adds a child. After each event step
+the interactive loop calls `turbo_vision_reconcile_after_step`, which — when dirty —
+rebuilds the whole desktop from current FPAS state (`turbo_vision_rebuild_desktop`
+clears desktop roots, then `turbo_vision_populate_desktop` re-adds windows and
+dialogs). A full rebuild keeps new roots *and* children added to already-shown roots
+correct; it supersedes the earlier incremental "add new roots only" pass.
 
-**Files.** `tv_run.rs` (loop owns the app and reconciles a pending
-create/mutate queue each turn), `shared.rs` (pending-mutation queue on the
-`turbo_vision` state), `controls.rs`/`windows.rs`/`dialogs.rs` (apply mutations to
-live views).
+**Files.** `tv_run.rs` (`turbo_vision_populate_desktop`, shared by initial build and
+rebuild), `reconcile.rs` (`turbo_vision_rebuild_desktop`, dirty tracking),
+`shared.rs` (`pending_reconcile` flag), `controls.rs`/`windows.rs`/`dialogs.rs`
+(mark the tree dirty on mutation).
 
 **Tests.** Headless: an `OnCommand` handler adds a window; a later screen query
 observes it.

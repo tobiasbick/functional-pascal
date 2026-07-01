@@ -1,0 +1,35 @@
+{ Turbo Vision modal dialog demo. Run in a terminal; type a name, then }
+{ press OK or Cancel. The entered text is read back after the dialog closes. }
+
+program TuiExecDialog;
+
+uses Std.Console, Std.Tui;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+begin
+  var App: Application := Application.Open();
+  var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(20, 6, 40, 10), 'Your name');
+  var Prompt: StaticText := Application.CreateStaticText(App, Bounds(3, 2, 30, 1), 'Enter your name:');
+  var NameInput: InputLine := Application.CreateInputLine(App, Bounds(3, 4, 24, 1), 'World', 32);
+  var OkButton: Button := Application.CreateButton(App, Bounds(4, 6, 10, 2), 'O~K~', Command.Accept);
+  var CancelButton: Button := Application.CreateButton(App, Bounds(16, 6, 12, 2), 'Cancel', Command.Cancel);
+  Application.AddChild(App, DialogHandle, Prompt);
+  Application.AddChild(App, DialogHandle, NameInput);
+  Application.AddChild(App, DialogHandle, OkButton);
+  Application.AddChild(App, DialogHandle, CancelButton);
+  var Choice: DialogResult := Application.ExecDialog(App, DialogHandle);
+  var Name: string := Application.InputText(App, NameInput);
+  Application.Close(App);
+  if Choice.command = Command.Accept then
+  begin
+    WriteLn(('Hello, ' + Name) + '!')
+  end
+  else
+  begin
+    WriteLn('Canceled.')
+  end
+end.

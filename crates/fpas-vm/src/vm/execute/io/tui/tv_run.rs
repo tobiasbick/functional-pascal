@@ -79,8 +79,6 @@ impl Worker {
         &self,
         line: SourceLocation,
     ) -> Result<TurboVisionApplication, VmError> {
-        let window_snapshots = self.turbo_vision_window_snapshots();
-        let dialog_snapshots = self.turbo_vision_dialog_snapshots();
         let menu_bar_snapshot = self.turbo_vision_menu_bar_snapshot();
         let status_line_snapshot = self.turbo_vision_status_line_snapshot();
         let mut app = TurboVisionApplication::new().map_err(|error| {
@@ -103,7 +101,22 @@ impl Worker {
             app.set_status_line(build_status_line(status_line));
         }
 
-        for window in window_snapshots {
+        self.turbo_vision_populate_desktop(&mut app);
+
+        Ok(app)
+    }
+
+    /// Add every on-desktop window and every dialog from current FPAS state to the desktop.
+    ///
+    /// Shared by the initial build and by the live reconcile rebuild so both paths
+    /// construct identical views. Dialogs added this way are not modal and their
+    /// input edits are not committed back to FPAS handles; use
+    /// `Application.ExecDialog` for modal read-back.
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_populate_desktop(
+        &self,
+        app: &mut TurboVisionApplication,
+    ) {
+        for window in self.turbo_vision_window_snapshots() {
             let mut window_view = Window::new(turbo_rect(window.bounds), &window.title);
             for child in window.children {
                 add_window_child(&mut window_view, child);
@@ -111,7 +124,7 @@ impl Worker {
             app.desktop.add(Box::new(window_view));
         }
 
-        for dialog in dialog_snapshots {
+        for dialog in self.turbo_vision_dialog_snapshots() {
             let mut dialog_view = Dialog::new_modal(turbo_rect(dialog.bounds), &dialog.title);
             let mut input_bindings = Vec::new();
             for child in dialog.children {
@@ -119,8 +132,6 @@ impl Worker {
             }
             app.desktop.add(dialog_view);
         }
-
-        Ok(app)
     }
 
     fn turbo_vision_window_snapshots(&self) -> Vec<TurboVisionWindowSnapshot> {

@@ -134,10 +134,12 @@ impl Worker {
                 session.handle_event(&mut event);
                 if event.what == EventType::Command {
                     self.dispatch_turbo_vision_command_event(&Event::command(event.command), line)?;
-                    session.reconcile(self, line)?;
                 } else if event.what != EventType::Nothing {
                     self.dispatch_turbo_vision_unhandled_input(&mut event, line)?;
                 }
+                // Mirror FPAS mutations from any handler (command or key/mouse) so
+                // widgets created in `OnKey`/`OnMouse` appear without waiting for a command.
+                session.reconcile(self, line)?;
             }
 
             session.after_step();

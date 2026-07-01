@@ -133,6 +133,12 @@ Notes for the VM layer:
   (`command_map.rs`). `Command.Accept` / `Cancel` / `Close` / `Quit` semantics are
   unchanged. See `tests/tui/controls/tui_turbo_vision_reserved_command_test.fpas`.
 
+- **Live-loop testability seam (2026-07-01).**
+  `interactive_loop.rs` introduces `TurboVisionInteractiveSession` so the interactive
+  run loop can be driven by a scripted event source in Rust tests without a terminal.
+  See `turbo_vision_scripted_interactive_loop_dispatches_command_and_quits` in
+  `crates/fpas-vm/src/tests/core/tui_turbo_vision_vm.rs`.
+
 ---
 
 ## Phase A: Modal `ExecDialog` (+ InputLine read-back)
@@ -316,6 +322,8 @@ quit.
 ---
 
 ## Phase F: Live-loop testability seam
+
+**Status:** landed (2026-07-01). See **Already Landed** above.
 
 **Problem.** The interactive loop needs a real `Terminal` (`Application::new`
 calls `Terminal::init`), and upstream's `MockTerminal` is not pluggable into

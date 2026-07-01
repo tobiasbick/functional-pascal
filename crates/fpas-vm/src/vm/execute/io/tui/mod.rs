@@ -15,6 +15,7 @@ mod handlers;
 mod handles;
 mod headless_paint;
 mod host;
+mod interactive_loop;
 mod menu_build;
 mod navigation;
 mod query_host;

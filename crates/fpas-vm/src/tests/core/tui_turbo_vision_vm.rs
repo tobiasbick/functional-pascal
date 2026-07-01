@@ -184,3 +184,63 @@ fn turbo_vision_dispatch_translates_offset_reserved_command_to_fpas_id() {
         .clone();
     assert_eq!(output.lines, vec!["24"]);
 }
+
+/// The interactive loop seam accepts scripted Turbo Vision commands without a terminal.
+#[test]
+fn turbo_vision_scripted_interactive_loop_dispatches_command_and_quits() {
+    use fpas_std::COMMAND_QUIT;
+
+    let mut chunk = Chunk::new();
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnCommand".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(
+            TuiIntrinsic::HostRegisterOnCommand,
+        ))),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let on_command_start = chunk.len();
+    chunk.insert_function("OnCommand", on_command_start, 2);
+    chunk.emit(Op::GetLocal(1), loc());
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::Quit))),
+        loc(),
+    );
+    emit_constant(&mut chunk, Value::Unit);
+    chunk.emit(Op::Return, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("OnCommand registration should succeed");
+
+    worker
+        .turbo_vision_drive_scripted_interactive_loop_for_tests(
+            vec![TurboVisionEvent::command(COMMAND_QUIT as u16)],
+            loc(),
+        )
+        .expect("scripted interactive loop should succeed");
+
+    let output = shared
+        .console
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .output()
+        .clone();
+    assert_eq!(output.lines, vec![COMMAND_QUIT.to_string()]);
+    let quit = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+    assert!(quit.quit_requested || quit.turbo_vision.quit_requested);
+}

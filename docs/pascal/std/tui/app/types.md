@@ -31,7 +31,8 @@ Rectangle in terminal cells.
 
 ## `Command` constants
 
-Standard command identifiers for buttons and `OnCommand` handlers. Application-defined commands use other positive integers.
+Standard command identifiers for buttons and `OnCommand` handlers.
+Application-defined commands use other positive integers. The runtime offsets ids `24`, `29`, `30`, and `31` when handing them to Turbo Vision (they collide with upstream `CM_QUIT`, `CM_TILE`, `CM_CASCADE`, and `CM_SCREENSHOT`) and restores the original value in `OnCommand`.
 
 | Constant | Value | Meaning |
 | --- | --- | --- |

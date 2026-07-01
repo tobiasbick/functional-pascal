@@ -6,6 +6,7 @@ use crate::vm::shared::TurboVisionMenu;
 use turbo_vision::core::menu_data::{Menu, MenuItem};
 use turbo_vision::views::menu_bar::{MenuBar, SubMenu};
 
+use super::command_map::fpas_command_to_turbo_vision;
 use super::tv_geometry::turbo_rect;
 
 /// Build an upstream Turbo Vision menu from a stored FPAS menu snapshot.
@@ -17,7 +18,12 @@ pub(in crate::vm::execute::io::tui) fn build_upstream_menu(menu: &TurboVisionMen
             if item.command_id == 0 {
                 MenuItem::separator()
             } else {
-                MenuItem::new(&item.text, item.command_id, 0, 0)
+                MenuItem::new(
+                    &item.text,
+                    fpas_command_to_turbo_vision(item.command_id),
+                    0,
+                    0,
+                )
             }
         })
         .collect();

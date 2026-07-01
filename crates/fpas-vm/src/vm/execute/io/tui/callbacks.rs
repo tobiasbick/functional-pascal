@@ -8,6 +8,8 @@ use fpas_bytecode::SourceLocation;
 use fpas_std::{CommandEvent, CommandId, ProcessOutcome};
 use turbo_vision::core::event::{Event, EventType};
 
+use super::command_map::turbo_vision_command_to_fpas;
+
 impl Worker {
     /// Dispatch a Turbo Vision command event through the registered FPAS `OnCommand` callback.
     ///
@@ -22,7 +24,8 @@ impl Worker {
             return Ok(None);
         }
 
-        let command = CommandEvent::application(CommandId(i64::from(event.command)), None);
+        let fpas_command = turbo_vision_command_to_fpas(event.command);
+        let command = CommandEvent::application(CommandId(i64::from(fpas_command)), None);
         self.dispatch_tui_command(command, line).map(Some)
     }
 

@@ -4,6 +4,7 @@
 
 mod application;
 mod callbacks;
+mod command_map;
 mod commands;
 mod controls;
 mod dialogs;

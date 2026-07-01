@@ -2,6 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
+use super::command_map::fpas_command_to_turbo_vision;
 use super::menu_build::build_menu_bar_from_snapshot;
 use super::tv_geometry::turbo_rect;
 use crate::vm::Worker;
@@ -306,7 +307,7 @@ pub(in crate::vm::execute::io::tui) fn add_window_child(
             window.add(Box::new(Button::new(
                 turbo_rect(button.bounds),
                 &button.text,
-                button.command_id,
+                fpas_command_to_turbo_vision(button.command_id),
                 false,
             )));
         }
@@ -352,7 +353,7 @@ fn add_dialog_child(
             dialog.add(Box::new(Button::new(
                 turbo_rect(button.bounds),
                 &button.text,
-                button.command_id,
+                fpas_command_to_turbo_vision(button.command_id),
                 false,
             )));
         }
@@ -390,7 +391,10 @@ fn add_dialog_child(
 }
 
 fn build_list_box(snapshot: TurboVisionListBox) -> ListBox {
-    let mut list_box = ListBox::new(turbo_rect(snapshot.bounds), snapshot.command_id);
+    let mut list_box = ListBox::new(
+        turbo_rect(snapshot.bounds),
+        fpas_command_to_turbo_vision(snapshot.command_id),
+    );
     list_box.set_items(snapshot.items);
     list_box
 }
@@ -431,7 +435,13 @@ fn build_status_line(snapshot: TurboVisionStatusLineSnapshot) -> StatusLine {
         snapshot
             .items
             .into_iter()
-            .map(|item| StatusItem::new(&item.text, item.key_code, item.command_id))
+            .map(|item| {
+                StatusItem::new(
+                    &item.text,
+                    item.key_code,
+                    fpas_command_to_turbo_vision(item.command_id),
+                )
+            })
             .collect(),
     )
 }

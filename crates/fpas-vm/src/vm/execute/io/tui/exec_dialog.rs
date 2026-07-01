@@ -2,6 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/modals.md`
 
+use super::command_map::turbo_vision_command_to_fpas;
 use super::tv_geometry::unknown_handle_error;
 use super::tv_run::turbo_vision_build_modal_dialog;
 use crate::vm::Worker;
@@ -54,7 +55,7 @@ impl Worker {
             return Err(unknown_handle_error("Dialog", dialog_handle, line));
         };
 
-        let command = i64::from(dialog_view.execute(&mut app));
+        let command = i64::from(turbo_vision_command_to_fpas(dialog_view.execute(&mut app)));
         self.with_tui(|tui| {
             for (child_handle, binding) in &input_bindings {
                 if let Some(TurboVisionObject::InputLine(input_line)) =

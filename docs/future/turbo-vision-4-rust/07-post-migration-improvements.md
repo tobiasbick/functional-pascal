@@ -127,6 +127,12 @@ Notes for the VM layer:
   `Application.Run` selects the backend from whether any Turbo Vision handle exists.
   Mixing `Application.Configure` with widget `Create*` calls is documented as unsupported.
 
+- **Command-id collision guard (2026-07-01).**
+  FPAS command ids `24`, `29`, `30`, and `31` are offset into a private band when
+  passed to Turbo Vision widgets and restored before `OnCommand` dispatch
+  (`command_map.rs`). `Command.Accept` / `Cancel` / `Close` / `Quit` semantics are
+  unchanged. See `tests/tui/controls/tui_turbo_vision_reserved_command_test.fpas`.
+
 ---
 
 ## Phase A: Modal `ExecDialog` (+ InputLine read-back)
@@ -288,6 +294,8 @@ separate decision).
 ---
 
 ## Phase E: Command-id collision guard
+
+**Status:** landed (2026-07-01). See **Already Landed** above.
 
 **Problem.** FPAS command ids share the integer space with upstream built-ins
 (`CM_QUIT = 24`, `CM_TILE = 29`, `CM_CASCADE = 30`, `CM_SCREENSHOT = 31`). A user

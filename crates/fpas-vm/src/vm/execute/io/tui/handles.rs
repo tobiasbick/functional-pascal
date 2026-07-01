@@ -11,6 +11,12 @@ use turbo_vision::core::geometry::Rect;
 const TUI_DIALOG_TYPE: &str = "Std.Tui.Dialog";
 const TUI_WINDOW_TYPE: &str = "Std.Tui.Window";
 const TUI_BUTTON_TYPE: &str = "Std.Tui.Button";
+const TUI_STATIC_TEXT_TYPE: &str = "Std.Tui.StaticText";
+const TUI_INPUT_LINE_TYPE: &str = "Std.Tui.InputLine";
+const TUI_LIST_BOX_TYPE: &str = "Std.Tui.ListBox";
+const TUI_CHECK_BOX_TYPE: &str = "Std.Tui.CheckBox";
+const TUI_MENU_BAR_TYPE: &str = "Std.Tui.MenuBar";
+const TUI_STATUS_LINE_TYPE: &str = "Std.Tui.StatusLine";
 const HANDLE_FIELD: &str = "__id";
 const TUI_RECT_TYPE: &str = "Std.Tui.Rect";
 
@@ -25,6 +31,30 @@ impl Worker {
 
     pub(super) fn turbo_vision_button_record(handle: u32) -> Value {
         turbo_vision_handle_record(TUI_BUTTON_TYPE, handle)
+    }
+
+    pub(super) fn turbo_vision_static_text_record(handle: u32) -> Value {
+        turbo_vision_handle_record(TUI_STATIC_TEXT_TYPE, handle)
+    }
+
+    pub(super) fn turbo_vision_input_line_record(handle: u32) -> Value {
+        turbo_vision_handle_record(TUI_INPUT_LINE_TYPE, handle)
+    }
+
+    pub(super) fn turbo_vision_list_box_record(handle: u32) -> Value {
+        turbo_vision_handle_record(TUI_LIST_BOX_TYPE, handle)
+    }
+
+    pub(super) fn turbo_vision_check_box_record(handle: u32) -> Value {
+        turbo_vision_handle_record(TUI_CHECK_BOX_TYPE, handle)
+    }
+
+    pub(super) fn turbo_vision_menu_bar_record(handle: u32) -> Value {
+        turbo_vision_handle_record(TUI_MENU_BAR_TYPE, handle)
+    }
+
+    pub(super) fn turbo_vision_status_line_record(handle: u32) -> Value {
+        turbo_vision_handle_record(TUI_STATUS_LINE_TYPE, handle)
     }
 
     #[allow(dead_code)] // retained for future dialog-only intrinsics
@@ -74,6 +104,62 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<u32, VmError> {
         self.pop_turbo_vision_handle(TUI_BUTTON_TYPE, "Button", line)
+    }
+
+    pub(super) fn pop_turbo_vision_menu_bar_handle(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<u32, VmError> {
+        self.pop_turbo_vision_handle(TUI_MENU_BAR_TYPE, "MenuBar", line)
+    }
+
+    pub(super) fn pop_turbo_vision_status_line_handle(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<u32, VmError> {
+        self.pop_turbo_vision_handle(TUI_STATUS_LINE_TYPE, "StatusLine", line)
+    }
+
+    pub(super) fn pop_turbo_vision_child_handle(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<TurboVisionChildHandle, VmError> {
+        match self.pop(line)? {
+            Value::Record { type_name, fields } if type_name == TUI_BUTTON_TYPE => {
+                Ok(TurboVisionChildHandle::Button(
+                    self.decode_turbo_vision_handle_record(&fields, "Button", line)?,
+                ))
+            }
+            Value::Record { type_name, fields } if type_name == TUI_STATIC_TEXT_TYPE => {
+                Ok(TurboVisionChildHandle::StaticText(
+                    self.decode_turbo_vision_handle_record(&fields, "StaticText", line)?,
+                ))
+            }
+            Value::Record { type_name, fields } if type_name == TUI_INPUT_LINE_TYPE => {
+                Ok(TurboVisionChildHandle::InputLine(
+                    self.decode_turbo_vision_handle_record(&fields, "InputLine", line)?,
+                ))
+            }
+            Value::Record { type_name, fields } if type_name == TUI_LIST_BOX_TYPE => {
+                Ok(TurboVisionChildHandle::ListBox(
+                    self.decode_turbo_vision_handle_record(&fields, "ListBox", line)?,
+                ))
+            }
+            Value::Record { type_name, fields } if type_name == TUI_CHECK_BOX_TYPE => {
+                Ok(TurboVisionChildHandle::CheckBox(
+                    self.decode_turbo_vision_handle_record(&fields, "CheckBox", line)?,
+                ))
+            }
+            other => Err(runtime_error(
+                TYPE_MISMATCH_CODE,
+                format!(
+                    "Child handle expected {TUI_BUTTON_TYPE}, {TUI_STATIC_TEXT_TYPE}, {TUI_INPUT_LINE_TYPE}, {TUI_LIST_BOX_TYPE}, or {TUI_CHECK_BOX_TYPE}, got {}",
+                    other.type_name()
+                ),
+                "Pass a handle from `Application.CreateButton`, `Application.CreateStaticText`, `Application.CreateInputLine`, `Application.CreateListBox`, or `Application.CreateCheckBox`.",
+                line,
+            )),
+        }
     }
 
     pub(super) fn pop_turbo_vision_rect(&mut self, line: SourceLocation) -> Result<Rect, VmError> {
@@ -213,6 +299,14 @@ fn turbo_vision_handle_record(type_name: &'static str, handle: u32) -> Value {
 pub(super) enum TurboVisionParentHandle {
     Dialog(u32),
     Window(u32),
+}
+
+pub(super) enum TurboVisionChildHandle {
+    Button(u32),
+    StaticText(u32),
+    InputLine(u32),
+    ListBox(u32),
+    CheckBox(u32),
 }
 
 fn turbo_vision_handle_error(

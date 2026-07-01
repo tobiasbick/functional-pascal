@@ -4,12 +4,7 @@ uses Ide.Theme, Std.Console, Std.Test;
 
 begin
   AssertEquals(Blue, DesktopBg);
-  AssertEquals(Black, MenuBarFg);
-  AssertEquals(LightGray, MenuBarBg);
-  AssertEquals(LightGray, MenuBarHighlightFg);
-  AssertEquals(Black, MenuBarHighlightBg);
-  AssertEquals(DarkGray, MenuBarDisabledFg);
-  AssertEquals(Red, MenuBarAccelFg);
-  AssertEquals(Black, StatusBarFg);
-  AssertEquals(LightGray, StatusBarBg)
+  AssertEquals(Black, ChromeFg);
+  AssertEquals(LightGray, ChromeBg);
+  AssertEquals(Red, AccentFg)
 end.

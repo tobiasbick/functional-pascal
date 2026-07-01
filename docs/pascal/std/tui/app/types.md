@@ -52,6 +52,50 @@ Opaque Turbo Vision dialog handle returned by `Application.CreateDialog`.
 
 Opaque Turbo Vision button handle returned by `Application.CreateButton`.
 
+## `StaticText`
+
+Opaque non-interactive Turbo Vision text label handle returned by `Application.CreateStaticText`.
+
+## `InputLine`
+
+Opaque single-line Turbo Vision text input handle returned by `Application.CreateInputLine`.
+
+## `ListBox`
+
+Opaque Turbo Vision selectable string list handle returned by `Application.CreateListBox`.
+
+## `CheckBox`
+
+Opaque Turbo Vision boolean check box handle returned by `Application.CreateCheckBox`.
+
+## `MenuBar`
+
+Opaque Turbo Vision menu bar handle returned by `Application.CreateMenuBar`.
+
+## `MenuBarItem`
+
+Record used by `Application.CreateMenuBar`.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `menuText` | `string` | Top-level menu text. Use `~X~` markers for accelerators. |
+| `itemText` | `string` | Command entry text inside that top-level menu. |
+| `commandId` | `integer` | Command id dispatched by the menu item. |
+
+## `StatusLine`
+
+Opaque Turbo Vision status line handle returned by `Application.CreateStatusLine`.
+
+## `StatusItem`
+
+Record used by `Application.CreateStatusLine`.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `text` | `string` | Status item text. Use `~X~` markers for highlighted shortcuts. |
+| `keyCode` | `integer` | Turbo Vision key code. Use `0` when no keyboard shortcut is attached. |
+| `commandId` | `integer` | Command id dispatched by the status item. |
+
 ## `ScreenCell`
 
 | Field | Type | Meaning |

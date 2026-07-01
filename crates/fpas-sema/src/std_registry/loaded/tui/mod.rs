@@ -20,6 +20,14 @@ struct TuiTypes {
     dialog: Ty,
     window: Ty,
     button: Ty,
+    static_text: Ty,
+    input_line: Ty,
+    list_box: Ty,
+    check_box: Ty,
+    menu_bar: Ty,
+    menu_bar_item: Ty,
+    status_line: Ty,
+    status_item: Ty,
     rect: Ty,
     size: Ty,
     screen_cell: Ty,
@@ -42,6 +50,36 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
     let dialog = type_registration::register_record_type(checker, s::STD_TUI_DIALOG, Vec::new());
     let window = type_registration::register_record_type(checker, s::STD_TUI_WINDOW, Vec::new());
     let button = type_registration::register_record_type(checker, s::STD_TUI_BUTTON, Vec::new());
+    let static_text =
+        type_registration::register_record_type(checker, s::STD_TUI_STATIC_TEXT, Vec::new());
+    let input_line =
+        type_registration::register_record_type(checker, s::STD_TUI_INPUT_LINE, Vec::new());
+    let list_box =
+        type_registration::register_record_type(checker, s::STD_TUI_LIST_BOX, Vec::new());
+    let check_box =
+        type_registration::register_record_type(checker, s::STD_TUI_CHECK_BOX, Vec::new());
+    let menu_bar =
+        type_registration::register_record_type(checker, s::STD_TUI_MENU_BAR, Vec::new());
+    let menu_bar_item = type_registration::register_record_type(
+        checker,
+        s::STD_TUI_MENU_BAR_ITEM,
+        vec![
+            ("menuText".into(), Ty::String),
+            ("itemText".into(), Ty::String),
+            ("commandId".into(), Ty::Integer),
+        ],
+    );
+    let status_line =
+        type_registration::register_record_type(checker, s::STD_TUI_STATUS_LINE, Vec::new());
+    let status_item = type_registration::register_record_type(
+        checker,
+        s::STD_TUI_STATUS_ITEM,
+        vec![
+            ("text".into(), Ty::String),
+            ("keyCode".into(), Ty::Integer),
+            ("commandId".into(), Ty::Integer),
+        ],
+    );
     let rect = type_registration::register_record_type(
         checker,
         s::STD_TUI_RECT,
@@ -122,6 +160,14 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         dialog,
         window,
         button,
+        static_text,
+        input_line,
+        list_box,
+        check_box,
+        menu_bar,
+        menu_bar_item,
+        status_line,
+        status_item,
         rect,
         size,
         screen_cell,

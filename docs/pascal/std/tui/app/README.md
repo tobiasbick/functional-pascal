@@ -21,8 +21,16 @@ Calls to removed retained APIs such as `Application.Host*`, retained view querie
 | `Application.CreateDialog(App, Bounds, Title): Dialog` | Create a Turbo Vision dialog handle. |
 | `Application.CreateWindow(App, Bounds, Title): Window` | Create a Turbo Vision window handle. |
 | `Application.CreateButton(App, Bounds, Text, CommandId): Button` | Create a Turbo Vision button handle. |
-| `Application.AddChild(App, Parent, Button)` | Attach a button to a dialog or window parent. |
+| `Application.CreateStaticText(App, Bounds, Text): StaticText` | Create a non-interactive Turbo Vision text label handle. |
+| `Application.CreateInputLine(App, Bounds, Text, MaxLength): InputLine` | Create a single-line Turbo Vision text input handle. |
+| `Application.CreateListBox(App, Bounds, Items, CommandId): ListBox` | Create a Turbo Vision list box from an array of strings. |
+| `Application.CreateCheckBox(App, Bounds, Text, Checked): CheckBox` | Create a Turbo Vision check box with an initial checked state. |
+| `Application.AddChild(App, Parent, Child)` | Attach a button, static text, input line, list box, or check box child to a dialog or window parent. |
 | `Application.AddWindow(App, Window)` | Place a window on the application desktop. |
+| `Application.CreateMenuBar(App, Bounds, Items): MenuBar` | Create a top menu bar from an array of `MenuBarItem` records. |
+| `Application.SetMenuBar(App, MenuBar)` | Set the application menu bar root. |
+| `Application.CreateStatusLine(App, Bounds, Items): StatusLine` | Create a bottom status line from an array of `StatusItem` records. |
+| `Application.SetStatusLine(App, StatusLine)` | Set the application status line root. |
 | `Application.OnCommand(App, Handler)` | Register `procedure (Application, integer)` for command dispatch. Use `Command.*` constants for standard actions. |
 | `Application.Pump(App): integer` | Process one headless Turbo Vision pump step. |
 | `Application.TestClickButton(App, Button)` | Queue a test click for a Turbo Vision button. |

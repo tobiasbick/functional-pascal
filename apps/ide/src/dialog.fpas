@@ -1,124 +1,53 @@
-/// See docs/pascal/std/tui/app/frames.md.
+/// About command state for the FPAS IDE Turbo Vision rewrite.
 
 unit Ide.Dialog;
 
-uses Ide.Theme, Std.Console, Std.Str, Std.Tui;
+uses Std.Tui;
 
 const
-  /// Application-defined modal id for the About dialog.
-  AboutModalId: integer := 1;
-  /// Modal-local command: accept the About dialog.
+  /// Application-defined command: show the About dialog.
+  CmdHelpAbout: integer := 10;
+  /// Dialog-local command: accept the About dialog.
   CmdAboutOk: integer := 11;
-  /// Modal-local command: dismiss the About dialog without accepting.
-  CmdAboutCancel: integer := 12;
-  /// Host-validated modal result code for Accept.
-  ModalResultAccept: integer := 1;
-  /// Host-validated modal result code for Cancel.
-  ModalResultCancel: integer := 2;
 
-private const AboutWidth: integer := 42;
-private const AboutHeight: integer := 11;
+private mutable var AboutOpen: boolean := false;
 
-/// True while the About framed dialog is the active modal.
+private function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
 
 function IsOpen(App: Application): boolean;
 begin
-  return Application.QueryModalDepth(App) > 0
+  return AboutOpen
 end;
-
-private procedure BindAboutModalShortcuts(App: Application);
-begin
-  var EscapeKey: Std.Console.KeyEvent := record
-    kind := Std.Console.KeyKind.Escape;
-    ch := Std.Str.Chr(0);
-    shift := false;
-    ctrl := false;
-    alt := false;
-    meta := false;
-  end;
-  var EnterKey: Std.Console.KeyEvent := record
-    kind := Std.Console.KeyKind.Enter;
-    ch := Std.Str.Chr(0);
-    shift := false;
-    ctrl := false;
-    alt := false;
-    meta := false;
-  end;
-  Application.HostBindCommandToActiveModal(App, EscapeKey, CmdAboutCancel);
-  Application.HostBindCommandToActiveModal(App, EnterKey, CmdAboutOk)
-end;
-
-private procedure CloseAbout(App: Application; ResultCode: integer);
-begin
-  if not IsOpen(App) then
-  begin
-    return
-  end;
-  Application.HostSetActiveModalResult(App, ResultCode);
-  Application.CloseModal(App);
-  Application.RequestRedraw(App)
-end;
-
-/// Open a centered About dialog when none is active.
 
 procedure OpenAbout(App: Application);
 begin
-  if IsOpen(App) then
+  if AboutOpen then
   begin
     return
   end;
-  var S: Size := Application.Size(App);
-  var RawX: integer := ((S.width - AboutWidth) div 2) + 1;
-  var RawY: integer := ((S.height - AboutHeight) div 2) + 1;
-  mutable var X: integer := RawX;
-  mutable var Y: integer := RawY;
-  if X < 1 then
-  begin
-    X := 1
-  end;
-  if Y < 1 then
-  begin
-    Y := 1
-  end;
-  var Dialog: ViewId := Application.ShowFramedDialog(App, AboutModalId, X, Y, AboutWidth, AboutHeight, 'About FPAS IDE', false, false, false, false, true);
-  var Line1: ViewId := Application.HostCreateLabelView(App, 0, 0, 36, 1, 'Functional Pascal IDE shell', None);
-  Application.HostSetViewParent(App, Line1, Some(Dialog));
-  Application.HostSetViewRect(App, Line1, 2, 1, 36, 1);
-  var Line2: ViewId := Application.HostCreateLabelView(App, 0, 0, 36, 1, 'Turbo Vision-style hosted TUI', None);
-  Application.HostSetViewParent(App, Line2, Some(Dialog));
-  Application.HostSetViewRect(App, Line2, 2, 2, 36, 1);
-  var Line3: ViewId := Application.HostCreateLabelView(App, 0, 0, 36, 1, 'Press Enter on OK or Escape to close.', None);
-  Application.HostSetViewParent(App, Line3, Some(Dialog));
-  Application.HostSetViewRect(App, Line3, 2, 4, 36, 1);
-  var OkView: ViewId := Application.HostCreateButtonView(App, 0, 0, 8, 1, 'OK', Some(CmdAboutOk), true);
-  Application.HostSetViewParent(App, OkView, Some(Dialog));
-  Application.HostSetViewRect(App, OkView, 17, 6, 8, 1);
-  BindAboutModalShortcuts(App);
-  Application.RequestRedraw(App)
+  var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(4, 2, 40, 10), 'About FPAS IDE');
+  var LabelHandle: StaticText := Application.CreateStaticText(App, Bounds(4, 2, 30, 1), 'Functional Pascal IDE');
+  var VersionInput: InputLine := Application.CreateInputLine(App, Bounds(4, 4, 22, 1), 'turbo-vision', 32);
+  var OkButton: Button := Application.CreateButton(App, Bounds(14, 5, 10, 2), 'OK', CmdAboutOk);
+  Application.AddChild(App, DialogHandle, LabelHandle);
+  Application.AddChild(App, DialogHandle, VersionInput);
+  Application.AddChild(App, DialogHandle, OkButton);
+  AboutOpen := true
 end;
-
-/// Reserved for shell mouse dispatch; About controls use native widget routing.
-
-procedure HandleMouse(App: Application; Event: Std.Console.Event);
-begin
-end;
-
-/// Handle modal-local About commands. Returns true when the command was consumed.
 
 function HandleCommand(App: Application; CommandId: integer): boolean;
 begin
-  if not IsOpen(App) then
+  if CommandId = CmdHelpAbout then
   begin
-    return false
+    OpenAbout(App);
+    return true
   end;
   if CommandId = CmdAboutOk then
   begin
-    CloseAbout(App, ModalResultAccept);
-    return true
-  end;
-  if CommandId = CmdAboutCancel then
-  begin
-    CloseAbout(App, ModalResultCancel);
+    AboutOpen := false;
     return true
   end;
   return false

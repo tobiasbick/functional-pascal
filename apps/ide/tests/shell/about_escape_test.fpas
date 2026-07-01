@@ -1,37 +1,14 @@
-program IdeShellAboutEscapeTest;
+program IdeShellAboutCommandTest;
 
-uses Ide.Dialog, Ide.Shell, Std.Console, Std.Str, Std.Tui, Std.Test;
+uses Ide.Dialog, Ide.Shell, Std.Tui, Std.Test;
 
 begin
   var App: Application := Application.OpenForTest(80, 25);
-  AttachChrome(App);
-  Application.RequestRedraw(App);
-  Application.TestPump(App);
-  OpenAbout(App);
-  Application.TestPump(App);
-  AssertTrue(IsOpen(App));
-  AssertEquals(1, Application.QueryModalDepth(App));
-  case Application.QueryFocusedViewId(App) of
-    Some(Focused):
-    begin
-      AssertTrue(Application.QueryViewKind(App, Focused) = ViewKind.Button)
-    end;
-    None:
-    begin
-      Fail('About dialog must focus the OK button when it opens')
-    end
-  end;
-  var EscapeKey: Std.Console.KeyEvent := record
-    kind := Std.Console.KeyKind.Escape;
-    ch := Std.Str.Chr(0);
-    shift := false;
-    ctrl := false;
-    alt := false;
-    meta := false;
-  end;
-  Application.TestSendKey(App, EscapeKey);
-  Application.TestPump(App);
+  var ExitButton: Button := AttachChrome(App);
   AssertFalse(IsOpen(App));
-  AssertEquals(0, Application.QueryModalDepth(App));
+  AssertTrue(HandleCommand(App, CmdHelpAbout));
+  AssertTrue(IsOpen(App));
+  AssertTrue(HandleCommand(App, CmdAboutOk));
+  AssertFalse(IsOpen(App));
   Application.CloseForTest(App)
 end.

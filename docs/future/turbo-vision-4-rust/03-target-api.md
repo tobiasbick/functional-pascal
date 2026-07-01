@@ -84,9 +84,14 @@ Planned surface:
 - `Application.CreateWindow(App, Bounds, Title): Window`
 - `Application.CreateDialog(App, Bounds, Title): Dialog`
 - `Application.CreateButton(App, Bounds, Text, CommandId): Button`
-- `Application.CreateInputLine(App, Bounds, Text): InputLine`
-- `Application.CreateStaticText(App, Bounds, Text): View`
+- `Application.CreateInputLine(App, Bounds, Text, MaxLength): InputLine`
+- `Application.CreateStaticText(App, Bounds, Text): StaticText`
+- `Application.CreateListBox(App, Bounds, Items, CommandId): ListBox`
+- `Application.CreateCheckBox(App, Bounds, Text, Checked): CheckBox`
 - `Application.CreateMenuBar(App, Bounds, Items): MenuBar`
+- `Application.SetMenuBar(App, MenuBar)`
+- `Application.CreateStatusLine(App, Bounds, Items): StatusLine`
+- `Application.SetStatusLine(App, StatusLine)`
 - `Application.CreateStatusLine(App, Bounds, Items): StatusLine`
 - `Application.AddWindow(App, Window)`
 - `Application.AddChild(App, Parent, Child)`

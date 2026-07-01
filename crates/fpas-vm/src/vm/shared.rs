@@ -113,6 +113,8 @@ impl Default for TuiState {
 pub(crate) struct TurboVisionState {
     pub next_handle: u32,
     pub objects: HashMap<u32, TurboVisionObject>,
+    pub menu_bar: Option<u32>,
+    pub status_line: Option<u32>,
     pub pending_commands: VecDeque<u16>,
     pub quit_requested: bool,
 }
@@ -122,6 +124,8 @@ impl Default for TurboVisionState {
         Self {
             next_handle: 1,
             objects: HashMap::new(),
+            menu_bar: None,
+            status_line: None,
             pending_commands: VecDeque::new(),
             quit_requested: false,
         }
@@ -143,6 +147,12 @@ pub(crate) enum TurboVisionObject {
     Dialog(TurboVisionDialog),
     Window(TurboVisionWindow),
     Button(TurboVisionButton),
+    StaticText(TurboVisionStaticText),
+    InputLine(TurboVisionInputLine),
+    ListBox(TurboVisionListBox),
+    CheckBox(TurboVisionCheckBox),
+    MenuBar(TurboVisionMenuBar),
+    StatusLine(TurboVisionStatusLine),
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -172,6 +182,65 @@ pub(crate) struct TurboVisionButton {
     pub text: String,
     pub command_id: u16,
     pub attached: bool,
+}
+
+#[derive(Clone)]
+pub(crate) struct TurboVisionStaticText {
+    pub bounds: TurboVisionRect,
+    pub text: String,
+    pub attached: bool,
+}
+
+#[derive(Clone)]
+pub(crate) struct TurboVisionInputLine {
+    pub bounds: TurboVisionRect,
+    pub text: String,
+    pub max_length: usize,
+    pub attached: bool,
+}
+
+#[derive(Clone)]
+pub(crate) struct TurboVisionListBox {
+    pub bounds: TurboVisionRect,
+    pub items: Vec<String>,
+    pub command_id: u16,
+    pub attached: bool,
+}
+
+#[derive(Clone)]
+pub(crate) struct TurboVisionCheckBox {
+    pub bounds: TurboVisionRect,
+    pub text: String,
+    pub checked: bool,
+    pub attached: bool,
+}
+
+#[derive(Clone)]
+pub(crate) struct TurboVisionMenuBar {
+    pub bounds: TurboVisionRect,
+    pub items: Vec<TurboVisionMenuBarItem>,
+    pub attached: bool,
+}
+
+#[derive(Clone)]
+pub(crate) struct TurboVisionMenuBarItem {
+    pub menu_text: String,
+    pub item_text: String,
+    pub command_id: u16,
+}
+
+#[derive(Clone)]
+pub(crate) struct TurboVisionStatusLine {
+    pub bounds: TurboVisionRect,
+    pub items: Vec<TurboVisionStatusItem>,
+    pub attached: bool,
+}
+
+#[derive(Clone)]
+pub(crate) struct TurboVisionStatusItem {
+    pub text: String,
+    pub key_code: u16,
+    pub command_id: u16,
 }
 
 /// Shared `Std.Graph` lifecycle and hosted-dispatch state for the active VM.

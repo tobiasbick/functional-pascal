@@ -156,32 +156,40 @@ Implement in this order:
 - [x] `Window` — `Application.CreateWindow`, `Application.AddWindow`, and `Application.AddChild` parent support (2026-06-29).
 - [x] `Dialog` — `Dialog` handle type (renamed from spike `TuiDialog`, 2026-06-29).
 - [x] `Button` — `Button` handle type (renamed from spike `TuiButton`, 2026-06-29).
-- [ ] `StaticText`
-- [ ] `InputLine`
-- [ ] `MenuBar`
-- [ ] `StatusLine`
-- [ ] `ListBox`
-- [ ] `CheckBox`
+- [x] `StaticText` — `Application.CreateStaticText`, `StaticText` handle type, and `Application.AddChild` child support (2026-07-01).
+- [x] `InputLine` — `Application.CreateInputLine`, `InputLine` handle type, max-length validation, and `Application.AddChild` child support (2026-07-01).
+- [x] `MenuBar` — `MenuBar`, `MenuBarItem`, `Application.CreateMenuBar`, and `Application.SetMenuBar` with one command entry per top-level menu item (2026-07-01).
+- [x] `StatusLine` — `StatusLine`, `StatusItem`, `Application.CreateStatusLine`, and `Application.SetStatusLine` (2026-07-01).
+- [x] `ListBox` — `Application.CreateListBox`, `ListBox` handle type, string-array items, select command id, and `Application.AddChild` child support (2026-07-01).
+- [x] `CheckBox` — `Application.CreateCheckBox`, `CheckBox` handle type, initial checked state, and `Application.AddChild` child support (2026-07-01).
 - [ ] `RadioButton`
 - [ ] `Memo` or `TextViewer`
 - [ ] file dialog only after the core app and tests are stable
 
 Each item requires:
 
-- [ ] sema registration
-- [ ] compiler lowering
-- [ ] bytecode intrinsic if needed
-- [ ] VM/runtime implementation
-- [ ] current docs under `docs/pascal/std/tui/`
-- [ ] focused tests
+- [x] sema registration
+- [x] compiler lowering
+- [x] bytecode intrinsic if needed
+- [x] VM/runtime implementation
+- [x] current docs under `docs/pascal/std/tui/`
+- [x] focused tests
 
 ## Phase 6: Migrate Examples and IDE
 
-- [ ] Rewrite `examples/pascal/tui/`.
-- [ ] Update `examples/README.md`.
-- [ ] Rewrite `apps/ide/`.
-- [ ] Remove examples that only demonstrate deleted internals.
-- [ ] Run FPAS formatter checks on changed FPAS sources.
+- [x] Rewrite `examples/pascal/tui/`.
+- [x] Update `examples/README.md`.
+- [x] Rewrite `apps/ide/`.
+- [x] Remove examples that only demonstrate deleted internals.
+- [x] Run FPAS formatter checks on changed FPAS sources.
+
+Notes:
+
+- Removed retained-view examples that depended on deleted `Application.Host*`, retained frame, menu, modal, and view query APIs.
+- Kept `minimal_application.fpas` as the current hosted-loop example and changed it to use `Application.Quit`.
+- Added current Turbo Vision dialog and window examples using `Dialog`, `Window`, `Button`, `StaticText`, `Application.AddChild`, `Application.AddWindow`, `Application.OnCommand`, and `Command.Quit`.
+- Rewrote `apps/ide` as a minimal Turbo Vision shell over the currently implemented API. Rich dialog chrome remains blocked on later Phase 5 widgets.
+- Added/updated IDE tests for command constants, About command state, shell exit command dispatch, status text, and theme constants.
 
 ## Phase 7: Final Documentation
 

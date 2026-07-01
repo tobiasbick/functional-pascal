@@ -25,5 +25,5 @@ Use [implementation phases](04-implementation-phases.md) as the tracked checklis
 
 Planned next work:
 
-- Remove the retained view registry and VM `views/*` bridge.
-- Migrate TUI examples and `apps/ide` to the new API.
+- Continue Phase 5 widgets after the migrated demos are stable.
+- Start with `RadioButton`, then continue the remaining Phase 5 widgets.

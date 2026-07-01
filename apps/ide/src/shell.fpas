@@ -2,171 +2,83 @@
 
 unit Ide.Shell;
 
-uses Ide.Dialog, Ide.Menu, Ide.Status, Ide.Theme, Std.Console, Std.Tui;
+uses Ide.Dialog, Ide.Menu, Ide.Status, Std.Tui;
 
-{
-  Host widget view ids; `None` means not created yet.
-  Unit-private state shared by handlers below.
-}
+private mutable var LastCommand: integer := -1;
 
-private mutable var DesktopView: option of ViewId := None;
-private mutable var MenuBarView: option of ViewId := None;
-private mutable var StatusBarView: option of ViewId := None;
+private function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
 
-private const MenuBarHeight: integer := 1;
-private const StatusBarHeight: integer := 1;
-
-private function MenuBarLayout(): ViewLayout;
+private function FileMenuItem(): MenuBarItem;
 begin
   return record
-    anchorLeft := true;
-    anchorTop := true;
-    anchorRight := true;
-    anchorBottom := false;
-    marginLeft := 0;
-    marginTop := 0;
-    marginRight := 0;
-    marginBottom := 0;
+    menuText := '~F~ile';
+    itemText := CommandLabel(CmdFileExit);
+    commandId := CmdFileExit;
   end
 end;
 
-private function DesktopLayout(): ViewLayout;
+private function MainStatusItem(): StatusItem;
 begin
-  return record
-    anchorLeft := true;
-    anchorTop := true;
-    anchorRight := true;
-    anchorBottom := true;
-    marginLeft := 0;
-    marginTop := MenuBarHeight;
-    marginRight := 0;
-    marginBottom := StatusBarHeight;
-  end
+  return record text := MainStatusText(); keyCode := 0; commandId := CmdFileExit; end
 end;
 
-private function StatusBarLayout(): ViewLayout;
+function LastCommandId(): integer;
 begin
-  return record
-    anchorLeft := true;
-    anchorTop := false;
-    anchorRight := true;
-    anchorBottom := true;
-    marginLeft := 0;
-    marginTop := 0;
-    marginRight := 0;
-    marginBottom := 0;
-  end
-end;
-
-/// Bind global keyboard shortcuts for the IDE shell.
-
-private procedure BindShortcuts(App: Application);
-begin
-  var ExitKey: Std.Console.KeyEvent := record
-    kind := Std.Console.KeyKind.Character;
-    ch := 'x';
-    shift := false;
-    ctrl := false;
-    alt := true;
-    meta := false;
-  end;
-  Application.HostBindCommand(App, ExitKey, CmdFileExit)
-end;
-
-/// Create or resize menu bar, desktop, and status bar.
-
-private procedure EnsureChrome(App: Application);
-begin
-  var S: Size := Application.Size(App);
-  var DesktopHeight: integer := (S.height - MenuBarHeight) - StatusBarHeight;
-  var StatusY: integer := S.height - StatusBarHeight;
-  case MenuBarView of
-    None:
-    begin
-      var Bar: ViewId := Application.HostCreateMenuBarView(App, 0, 0, S.width, MenuBarHeight, DefaultItems(), DefaultStyle());
-      MenuBarView := Some(Bar);
-      Application.HostSetViewLayout(App, Bar, MenuBarLayout())
-    end;
-    Some(Bar):
-    begin
-      Application.HostSetViewRect(App, Bar, 0, 0, S.width, MenuBarHeight);
-      Application.HostSetViewLayout(App, Bar, MenuBarLayout())
-    end
-  end;
-  case DesktopView of
-    None:
-    begin
-      var Desktop: ViewId := Application.HostCreateSolidFillView(App, 0, MenuBarHeight, S.width, DesktopHeight, DesktopBg, None, None);
-      DesktopView := Some(Desktop);
-      Application.HostSetViewLayout(App, Desktop, DesktopLayout())
-    end;
-    Some(Desktop):
-    begin
-      Application.HostSetViewRect(App, Desktop, 0, MenuBarHeight, S.width, DesktopHeight);
-      Application.HostSetViewLayout(App, Desktop, DesktopLayout())
-    end
-  end;
-  case StatusBarView of
-    None:
-    begin
-      var Status: ViewId := Application.HostCreateStatusBarView(App, 0, StatusY, S.width, StatusBarHeight, DefaultStatusSegments(), DefaultStatusStyle());
-      StatusBarView := Some(Status);
-      Application.HostSetViewLayout(App, Status, StatusBarLayout())
-    end;
-    Some(Status):
-    begin
-      Application.HostSetViewRect(App, Status, 0, StatusY, S.width, StatusBarHeight);
-      Application.HostSetViewLayout(App, Status, StatusBarLayout())
-    end
-  end
+  return LastCommand
 end;
 
 private procedure OnCommand(App: Application; CommandId: integer);
 begin
-  if CommandId = CmdHelpAbout then
+  LastCommand := CommandId;
+  if Ide.Dialog.HandleCommand(App, CommandId) then
   begin
-    OpenAbout(App)
-  end
-  else if HandleCommand(App, CommandId) then
-  begin
-  end
-  else if CommandId = CmdFileExit then
-  begin
-    Application.HostRequestQuit(App)
-  end
-end;
-
-private procedure OnMouse(App: Application; Event: Std.Console.Event);
-begin
-  HandleMouse(App, Event)
-end;
-
-/// Keep host widgets aligned with the terminal size via anchor/grow layout flags.
-
-private procedure OnResize(App: Application; NewSize: Size);
-begin
-  Application.RequestRedraw(App)
-end;
-
-/// Wire IDE chrome and handlers onto an existing session (headless tests via `OpenForTest`).
-
-procedure AttachChrome(App: Application);
-begin
-  BindShortcuts(App);
-  EnsureChrome(App);
-  var Handlers: ApplicationHandlers := record
-    OnMouse := Some(OnMouse);
-    OnResize := Some(OnResize);
-    OnCommand := Some(OnCommand);
+    return
   end;
-  Application.Configure(App, Handlers)
+  if CommandId = CmdFileExit then
+  begin
+    Application.Quit(App)
+  end
 end;
 
-/// Open the terminal session, run the hosted TUI loop, and restore the terminal on exit.
+/// Build the current Turbo Vision IDE shell on an existing session.
+
+function AttachChrome(App: Application): Button;
+begin
+  var Menu: MenuBar := Application.CreateMenuBar(App, Bounds(0, 0, 80, 1), [FileMenuItem()]);
+  var Status: StatusLine := Application.CreateStatusLine(App, Bounds(0, 24, 80, 1), [
+                                                                                      MainStatusItem()
+
+                                                                                    ]);
+  var ShellWindow: Std.Tui.Window := Application.CreateWindow(App, Bounds(2, 1, 54, 14), MainStatusText());
+  var StatusLabel: StaticText := Application.CreateStaticText(App, Bounds(4, 2, 32, 1), MainStatusText());
+  var FileInput: InputLine := Application.CreateInputLine(App, Bounds(4, 4, 28, 1), 'untitled.fpas', 80);
+  var RecentFiles: ListBox := Application.CreateListBox(App, Bounds(4, 6, 28, 4), [
+                                                                                    'main.fpas',
+                                                                                    'tests/suite.fpasprj'
+
+                                                                                  ], CmdFileExit);
+  var AutoBuild: CheckBox := Application.CreateCheckBox(App, Bounds(34, 6, 14, 1), 'Auto build', false);
+  var ExitButton: Button := Application.CreateButton(App, Bounds(4, 11, 12, 2), CommandLabel(CmdFileExit), CmdFileExit);
+  Application.SetMenuBar(App, Menu);
+  Application.SetStatusLine(App, Status);
+  Application.AddChild(App, ShellWindow, StatusLabel);
+  Application.AddChild(App, ShellWindow, FileInput);
+  Application.AddChild(App, ShellWindow, RecentFiles);
+  Application.AddChild(App, ShellWindow, AutoBuild);
+  Application.AddChild(App, ShellWindow, ExitButton);
+  Application.AddWindow(App, ShellWindow);
+  Application.OnCommand(App, OnCommand);
+  return ExitButton
+end;
+
+/// Open the terminal session, run the Turbo Vision TUI loop, and restore the terminal on exit.
 
 procedure Run();
 begin
   var App: Application := Application.Open();
-  AttachChrome(App);
+  var ExitButton: Button := AttachChrome(App);
   Application.Run(App)
 end;

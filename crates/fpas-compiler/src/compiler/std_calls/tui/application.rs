@@ -80,6 +80,85 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::CreateButton), location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_CREATE_STATIC_TEXT => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_CREATE_STATIC_TEXT,
+                    3,
+                    args,
+                    location,
+                )?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::CreateStaticText), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_CREATE_INPUT_LINE => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_CREATE_INPUT_LINE,
+                    4,
+                    args,
+                    location,
+                )?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::CreateInputLine), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_CREATE_LIST_BOX => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_CREATE_LIST_BOX, 4, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::CreateListBox), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_CREATE_CHECK_BOX => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_CREATE_CHECK_BOX, 4, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::CreateCheckBox), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_CREATE_MENU_BAR => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_CREATE_MENU_BAR, 3, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::CreateMenuBar), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_SET_MENU_BAR => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_SET_MENU_BAR, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::SetMenuBar), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_CREATE_STATUS_LINE => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_CREATE_STATUS_LINE,
+                    3,
+                    args,
+                    location,
+                )?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::CreateStatusLine), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_SET_STATUS_LINE => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_SET_STATUS_LINE, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::SetStatusLine), location);
+                Ok(true)
+            }
             s::STD_TUI_APPLICATION_ADD_CHILD => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_ADD_CHILD, 3, args, location)?;
                 for arg in args {

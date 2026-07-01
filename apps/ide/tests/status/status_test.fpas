@@ -1,15 +1,7 @@
 program IdeStatusTest;
 
-uses Ide.Status, Ide.Theme, Std.Array, Std.Test;
+uses Ide.Status, Std.Test;
 
 begin
-  var Segments: array of StatusBarSegment := DefaultStatusSegments();
-  AssertEquals(2, Std.Array.Length(Segments));
-  AssertEquals(' F10 Menu ', Segments[0].Text);
-  AssertTrue(Segments[0].AlignRight = false);
-  AssertEquals('Ln 1, Col 1  Insert', Segments[1].Text);
-  AssertTrue(Segments[1].AlignRight = true);
-  var Style: StatusBarStyle := DefaultStatusStyle();
-  AssertEquals(StatusBarBg, Style.BarBg);
-  AssertEquals(StatusBarFg, Style.BarFg)
+  AssertEquals('FPAS IDE Turbo Vision rewrite', MainStatusText())
 end.

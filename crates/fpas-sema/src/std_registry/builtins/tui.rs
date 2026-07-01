@@ -28,7 +28,7 @@ pub(super) fn check_tui_builtin_std_call(
                 s::STD_TUI_APPLICATION_ADD_CHILD,
                 args.len()
             ),
-            "Example: Application.AddChild(App, Parent, Button).",
+            "Example: Application.AddChild(App, Parent, Child).",
             span,
         );
         return Some(Ty::Unit);
@@ -42,6 +42,10 @@ pub(super) fn check_tui_builtin_std_call(
     let dialog = lookup_named_type(c, s::STD_TUI_DIALOG);
     let window = lookup_named_type(c, s::STD_TUI_WINDOW);
     let button = lookup_named_type(c, s::STD_TUI_BUTTON);
+    let static_text = lookup_named_type(c, s::STD_TUI_STATIC_TEXT);
+    let input_line = lookup_named_type(c, s::STD_TUI_INPUT_LINE);
+    let list_box = lookup_named_type(c, s::STD_TUI_LIST_BOX);
+    let check_box = lookup_named_type(c, s::STD_TUI_CHECK_BOX);
 
     if app_ty != application {
         c.error_with_code(
@@ -61,11 +65,17 @@ pub(super) fn check_tui_builtin_std_call(
         );
     }
 
-    if child_ty != button {
+    if child_ty != button
+        && child_ty != static_text
+        && child_ty != input_line
+        && child_ty != list_box
+        && child_ty != check_box
+    {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
-            "`Application.AddChild` child must be a button handle".to_string(),
-            "Pass a button handle from `Application.CreateButton`.",
+            "`Application.AddChild` child must be a button, static text, input line, list box, or check box handle"
+                .to_string(),
+            "Pass a handle from `Application.CreateButton`, `Application.CreateStaticText`, `Application.CreateInputLine`, `Application.CreateListBox`, or `Application.CreateCheckBox`.",
             span,
         );
     }

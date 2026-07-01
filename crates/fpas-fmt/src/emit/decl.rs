@@ -495,13 +495,13 @@ end.",
         };
         let formatted = format_decls(&unit.declarations);
         let (_, errors) = parse_compilation_unit(&format!(
-            "unit Ide.Shell;\nuses Ide.Menu, Ide.Status, Ide.Theme, Std.Console, Std.Tui;\n\n{formatted}"
+            "unit Ide.Shell;\nuses Ide.Dialog, Ide.Menu, Ide.Status, Std.Tui;\n\n{formatted}"
         ));
         assert!(
             errors.is_empty(),
             "{errors:?}\n--- formatted ---\n{formatted}"
         );
-        assert!(formatted.contains("private mutable var DesktopView"));
+        assert!(formatted.contains("private mutable var LastCommand"));
         assert!(!formatted.contains("mutable var\n  private"));
     }
 }

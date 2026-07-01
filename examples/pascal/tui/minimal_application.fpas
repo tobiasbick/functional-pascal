@@ -18,7 +18,7 @@ function OnKeyPressed(App: Application; Key: Std.Console.KeyEvent): boolean;
 begin
   if Key.kind = KeyKind.Escape then
   begin
-    Application.HostRequestQuit(App);
+    Application.Quit(App);
     return true
   end;
   Application.RequestRedraw(App);

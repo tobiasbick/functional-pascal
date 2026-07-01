@@ -1,0 +1,45 @@
+program TuiTurboVisionChromeTest;
+
+uses Std.Tui, Std.Test;
+
+mutable var
+  mutable var LastCommand: integer := -1;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+function FileMenuItem(): MenuBarItem;
+begin
+  return record menuText := '~F~ile'; itemText := 'E~x~it'; commandId := Command.Quit; end
+end;
+
+function QuitStatusItem(): StatusItem;
+begin
+  return record text := '~Q~uit'; keyCode := 0; commandId := Command.Quit; end
+end;
+
+procedure OnCommand(App: Application; CommandId: integer);
+begin
+  LastCommand := CommandId;
+  Application.Quit(App)
+end;
+
+begin
+  var App: Application := Application.OpenForTest(60, 16);
+  var Menu: MenuBar := Application.CreateMenuBar(App, Bounds(0, 0, 60, 1), [FileMenuItem()]);
+  var Status: StatusLine := Application.CreateStatusLine(App, Bounds(0, 15, 60, 1), [
+                                                                                      QuitStatusItem()
+
+                                                                                    ]);
+  var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(2, 2, 34, 9), 'Chrome');
+  var ButtonHandle: Button := Application.CreateButton(App, Bounds(4, 5, 10, 2), 'Quit', Command.Quit);
+  Application.SetMenuBar(App, Menu);
+  Application.SetStatusLine(App, Status);
+  Application.AddChild(App, DialogHandle, ButtonHandle);
+  Application.OnCommand(App, OnCommand);
+  Application.TestClickButton(App, ButtonHandle);
+  Application.Run(App);
+  AssertEquals(Command.Quit, LastCommand)
+end.

@@ -1,0 +1,30 @@
+program TuiTurboVisionCheckBoxTest;
+
+uses Std.Tui, Std.Test;
+
+mutable var
+  mutable var LastCommand: integer := -1;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+procedure OnCommand(App: Application; CommandId: integer);
+begin
+  LastCommand := CommandId;
+  Application.Quit(App)
+end;
+
+begin
+  var App: Application := Application.OpenForTest(50, 14);
+  var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(2, 1, 38, 10), 'Check');
+  var CheckHandle: CheckBox := Application.CreateCheckBox(App, Bounds(3, 2, 24, 1), 'Enable option', true);
+  var ButtonHandle: Button := Application.CreateButton(App, Bounds(4, 6, 10, 2), 'Quit', Command.Quit);
+  Application.AddChild(App, DialogHandle, CheckHandle);
+  Application.AddChild(App, DialogHandle, ButtonHandle);
+  Application.OnCommand(App, OnCommand);
+  Application.TestClickButton(App, ButtonHandle);
+  Application.Run(App);
+  AssertEquals(Command.Quit, LastCommand)
+end.

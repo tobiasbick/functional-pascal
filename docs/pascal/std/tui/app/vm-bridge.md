@@ -16,8 +16,16 @@ Current public lowering includes:
 | `Application.CreateDialog` | `TuiCreateDialog` |
 | `Application.CreateWindow` | `TuiCreateWindow` |
 | `Application.CreateButton` | `TuiCreateButton` |
+| `Application.CreateStaticText` | `TuiCreateStaticText` |
+| `Application.CreateInputLine` | `TuiCreateInputLine` |
+| `Application.CreateListBox` | `TuiCreateListBox` |
+| `Application.CreateCheckBox` | `TuiCreateCheckBox` |
 | `Application.AddChild` | `TuiAddChild` |
 | `Application.AddWindow` | `TuiAddWindow` |
+| `Application.CreateMenuBar` | `TuiCreateMenuBar` |
+| `Application.SetMenuBar` | `TuiSetMenuBar` |
+| `Application.CreateStatusLine` | `TuiCreateStatusLine` |
+| `Application.SetStatusLine` | `TuiSetStatusLine` |
 | `Application.OnCommand` | `TuiOnCommand` |
 | `Application.Pump` | `TuiPump` |
 | `Application.TestClickButton` | `TuiTestClickButton` |
@@ -35,7 +43,8 @@ Turbo Vision bridge code lives under `crates/fpas-vm/src/vm/execute/io/tui/`:
 | `handles.rs` | Turbo Vision handle records and `Rect` decoding |
 | `dialogs.rs` | `CreateDialog` |
 | `windows.rs` | `CreateWindow`, `AddWindow` |
-| `controls.rs` | `CreateButton`, `AddChild` |
+| `controls.rs` | `CreateButton`, `CreateStaticText`, `CreateInputLine`, `CreateListBox`, `CreateCheckBox`, `AddChild` |
+| `navigation.rs` | `CreateMenuBar`, `SetMenuBar`, `CreateStatusLine`, `SetStatusLine` |
 | `callbacks.rs` | Turbo Vision command event to FPAS `OnCommand` |
 | `commands.rs` | `Pump`, `Quit`, `TestClickButton`, command queue |
 | `tv_run.rs` | Terminal and headless `Application.Run` for Turbo Vision |

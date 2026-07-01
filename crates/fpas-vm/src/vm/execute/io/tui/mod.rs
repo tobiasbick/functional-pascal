@@ -11,6 +11,7 @@ mod events;
 mod handlers;
 mod handles;
 mod host;
+mod navigation;
 mod query_host;
 mod records;
 mod testing;
@@ -54,6 +55,18 @@ impl Worker {
             Intrinsic::Tui(TuiIntrinsic::CreateButton) => {
                 self.turbo_vision_create_button(line)?;
             }
+            Intrinsic::Tui(TuiIntrinsic::CreateStaticText) => {
+                self.turbo_vision_create_static_text(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::CreateInputLine) => {
+                self.turbo_vision_create_input_line(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::CreateListBox) => {
+                self.turbo_vision_create_list_box(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::CreateCheckBox) => {
+                self.turbo_vision_create_check_box(line)?;
+            }
             Intrinsic::Tui(TuiIntrinsic::AddChild) => {
                 self.turbo_vision_add_child(line)?;
             }
@@ -74,6 +87,18 @@ impl Worker {
             }
             Intrinsic::Tui(TuiIntrinsic::AddWindow) => {
                 self.turbo_vision_add_window(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::CreateMenuBar) => {
+                self.turbo_vision_create_menu_bar(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::SetMenuBar) => {
+                self.turbo_vision_set_menu_bar(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::CreateStatusLine) => {
+                self.turbo_vision_create_status_line(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::SetStatusLine) => {
+                self.turbo_vision_set_status_line(line)?;
             }
             _ => return Ok(false),
         }

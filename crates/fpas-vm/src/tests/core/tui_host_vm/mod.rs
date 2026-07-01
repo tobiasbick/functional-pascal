@@ -12,8 +12,8 @@ use std::sync::Arc;
 
 use crate::Vm;
 use crate::tests::helpers::{
-    build_function_chunk, emit_constant, key_event_value, loc, minimal_shared_state, run_err,
-    run_ok_output, tui_application_value,
+    emit_constant, key_event_value, loc, minimal_shared_state, run_err, run_ok_output,
+    tui_application_value,
 };
 use crate::vm::Worker;
 

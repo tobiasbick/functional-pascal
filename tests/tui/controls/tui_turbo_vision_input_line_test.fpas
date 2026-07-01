@@ -1,0 +1,32 @@
+program TuiTurboVisionInputLineTest;
+
+uses Std.Tui, Std.Test;
+
+mutable var
+  mutable var LastCommand: integer := -1;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+procedure OnCommand(App: Application; CommandId: integer);
+begin
+  LastCommand := CommandId;
+  Application.Quit(App)
+end;
+
+begin
+  var App: Application := Application.OpenForTest(52, 14);
+  var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(2, 1, 38, 10), 'Input');
+  var LabelHandle: StaticText := Application.CreateStaticText(App, Bounds(4, 2, 12, 1), 'Name:');
+  var NameInput: InputLine := Application.CreateInputLine(App, Bounds(12, 2, 18, 1), 'FPAS', 32);
+  var ButtonHandle: Button := Application.CreateButton(App, Bounds(4, 6, 10, 2), 'Quit', Command.Quit);
+  Application.AddChild(App, DialogHandle, LabelHandle);
+  Application.AddChild(App, DialogHandle, NameInput);
+  Application.AddChild(App, DialogHandle, ButtonHandle);
+  Application.OnCommand(App, OnCommand);
+  Application.TestClickButton(App, ButtonHandle);
+  Application.Run(App);
+  AssertEquals(Command.Quit, LastCommand)
+end.

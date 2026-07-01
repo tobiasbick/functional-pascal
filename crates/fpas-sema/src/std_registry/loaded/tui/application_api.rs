@@ -78,6 +78,93 @@ pub(super) fn register_application_api(
         ],
         types.button.clone(),
     );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_CREATE_STATIC_TEXT,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Bounds", types.rect.clone(), false),
+            p("Text", Ty::String, false),
+        ],
+        types.static_text.clone(),
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_CREATE_INPUT_LINE,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Bounds", types.rect.clone(), false),
+            p("Text", Ty::String, false),
+            p("MaxLength", Ty::Integer, false),
+        ],
+        types.input_line.clone(),
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_CREATE_LIST_BOX,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Bounds", types.rect.clone(), false),
+            p("Items", Ty::Array(Box::new(Ty::String)), false),
+            p("CommandId", Ty::Integer, false),
+        ],
+        types.list_box.clone(),
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_CREATE_CHECK_BOX,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Bounds", types.rect.clone(), false),
+            p("Text", Ty::String, false),
+            p("Checked", Ty::Boolean, false),
+        ],
+        types.check_box.clone(),
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_CREATE_MENU_BAR,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Bounds", types.rect.clone(), false),
+            p(
+                "Items",
+                Ty::Array(Box::new(types.menu_bar_item.clone())),
+                false,
+            ),
+        ],
+        types.menu_bar.clone(),
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_SET_MENU_BAR,
+        vec![
+            p("App", types.application.clone(), false),
+            p("MenuBar", types.menu_bar.clone(), false),
+        ],
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_CREATE_STATUS_LINE,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Bounds", types.rect.clone(), false),
+            p(
+                "Items",
+                Ty::Array(Box::new(types.status_item.clone())),
+                false,
+            ),
+        ],
+        types.status_line.clone(),
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_SET_STATUS_LINE,
+        vec![
+            p("App", types.application.clone(), false),
+            p("StatusLine", types.status_line.clone(), false),
+        ],
+    );
     define_proc(
         checker,
         s::STD_TUI_APPLICATION_ADD_WINDOW,

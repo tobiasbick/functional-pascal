@@ -109,6 +109,9 @@ impl Worker {
     pub(super) fn turbo_vision_pump(&mut self, line: SourceLocation) -> Result<(), VmError> {
         self.pop_tui_application(line)?;
         let outcome = self.turbo_vision_pump_next_command(line)?;
+        if self.with_tui(|tui| tui.session.is_headless()) {
+            self.turbo_vision_reconcile_after_step(None, line)?;
+        }
         self.push(Value::Integer(outcome.bridge_tag()))
     }
 

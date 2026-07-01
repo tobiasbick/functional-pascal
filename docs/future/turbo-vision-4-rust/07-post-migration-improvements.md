@@ -114,6 +114,13 @@ Notes for the VM layer:
   `array of Menu` with multiple items and separators (`commandId = 0`).
   `Application.TestDispatchMenuCommand` drives headless menu command tests.
 
+- **Live widget tree during run (2026-07-01).**
+  `Application.Run` reconciles FPAS-side Turbo Vision mutations after each command step.
+  Headless runs paint on-desktop windows into the CRT buffer so `Application.QueryScreenCell`
+  observes widgets created inside `OnCommand`. Interactive runs mirror new windows onto the live
+  Turbo Vision desktop. See `reconcile.rs`, `headless_paint.rs`, and
+  `tests/tui/controls/tui_turbo_vision_live_tree_test.fpas`.
+
 ---
 
 ## Phase A: Modal `ExecDialog` (+ InputLine read-back)
@@ -230,6 +237,8 @@ correct command for a non-first entry.
 ---
 
 ## Phase C: Live widget tree during run
+
+**Status:** landed (2026-07-01). See **Already Landed** above.
 
 **Problem.** `build_turbo_vision_application` (`tv_run.rs`) snapshots FPAS state
 once before the loop. Commands are now live, but widgets created or mutated inside

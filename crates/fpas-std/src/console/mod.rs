@@ -112,6 +112,18 @@ impl Console {
     pub fn end_tui_view_paint(&mut self) {
         self.state.end_view_paint();
     }
+
+    /// Paint one CRT cell for headless Turbo Vision reconciliation (no terminal I/O).
+    #[doc(hidden)]
+    pub fn paint_headless_cell(&mut self, x: u16, y: u16, ch: char, fg: u8, bg: u8) {
+        self.state.paint_packed_cell(x, y, ch, fg, bg);
+    }
+
+    /// Clear the logical CRT buffer without emitting terminal output.
+    #[doc(hidden)]
+    pub fn clear_headless_screen(&mut self) {
+        self.state.clear_window();
+    }
 }
 
 #[cfg(test)]

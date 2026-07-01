@@ -35,6 +35,7 @@ impl Worker {
             );
             handle
         });
+        self.mark_turbo_vision_tree_dirty();
         self.push(Self::turbo_vision_window_record(handle))
     }
 
@@ -65,6 +66,7 @@ impl Worker {
             window.on_desktop = true;
             Ok(())
         })?;
+        self.mark_turbo_vision_tree_dirty();
         Ok(())
     }
 }

@@ -368,6 +368,19 @@ impl ConsoleState {
         self.cells[self.index(x, y)]
     }
 
+    /// Writes one CRT cell using packed palette colors (`0..=15`), bypassing the cursor.
+    pub(super) fn paint_packed_cell(&mut self, x: u16, y: u16, ch: char, fg: u8, bg: u8) {
+        if x == 0 || y == 0 || x > self.width || y > self.height {
+            return;
+        }
+        let idx = self.index(x, y);
+        self.cells[idx] = ScreenCell {
+            ch,
+            fg: RenderColor::Crt(fg.min(15)),
+            bg: RenderColor::Crt(bg.min(15)),
+        };
+    }
+
     pub(super) fn use_packed_colors(&mut self) {
         self.active_fg = RenderColor::Crt(self.fg);
         self.active_bg = RenderColor::Crt(self.bg);

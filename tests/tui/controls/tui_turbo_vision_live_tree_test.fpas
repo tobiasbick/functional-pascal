@@ -1,0 +1,36 @@
+program TuiTurboVisionLiveTreeTest;
+
+uses Std.Tui, Std.Test;
+
+const
+  CmdLive: integer := 50;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+procedure OnCommand(App: Application; CommandId: integer);
+begin
+  if CommandId = CmdLive then
+  begin
+    var WindowHandle: Window := Application.CreateWindow(App, Bounds(8, 4, 30, 10), 'Live');
+    var LabelHandle: StaticText := Application.CreateStaticText(App, Bounds(4, 3, 10, 1), 'LIVE');
+    Application.AddChild(App, WindowHandle, LabelHandle);
+    Application.AddWindow(App, WindowHandle)
+  end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(60, 20);
+  var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(2, 1, 24, 8), 'Host');
+  var OpenButton: Button := Application.CreateButton(App, Bounds(4, 4, 10, 2), 'Open', CmdLive);
+  Application.AddChild(App, DialogHandle, OpenButton);
+  Application.OnCommand(App, OnCommand);
+  Application.TestClickButton(App, OpenButton);
+  AssertEquals(16, Application.Pump(App));
+  var LiveCell: ScreenCell := Application.QueryScreenCell(App, 12, 7);
+  AssertTrue(LiveCell.ch = 'L');
+  Application.Quit(App);
+  AssertEquals(0, Application.Pump(App))
+end.

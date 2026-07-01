@@ -41,9 +41,11 @@ impl Worker {
         }
 
         if self.with_tui(|tui| tui.session.is_headless()) {
+            self.turbo_vision_begin_run();
             return self.turbo_vision_headless_run(line);
         }
 
+        self.turbo_vision_begin_run();
         let mut app = self.build_turbo_vision_application(line)?;
         self.turbo_vision_interactive_run(&mut app, line)
     }
@@ -76,6 +78,7 @@ impl Worker {
                 app.handle_event(&mut event);
                 if event.what == EventType::Command {
                     self.dispatch_turbo_vision_command_event(&Event::command(event.command), line)?;
+                    self.turbo_vision_reconcile_after_step(Some(app), line)?;
                 }
             }
 
@@ -94,6 +97,7 @@ impl Worker {
                 return Ok(());
             }
             let _ = self.turbo_vision_pump_next_command(line)?;
+            self.turbo_vision_reconcile_after_step(None, line)?;
         }
 
         Err(runtime_error(
@@ -246,7 +250,7 @@ struct TurboVisionStatusLineSnapshot {
     items: Vec<TurboVisionStatusItem>,
 }
 
-enum TurboVisionChildSnapshot {
+pub(in crate::vm::execute::io::tui) enum TurboVisionChildSnapshot {
     Button(TurboVisionButton),
     StaticText(TurboVisionStaticText),
     Memo(TurboVisionMemo),
@@ -257,7 +261,7 @@ enum TurboVisionChildSnapshot {
     RadioButton(TurboVisionRadioButton),
 }
 
-fn child_snapshots(
+pub(in crate::vm::execute::io::tui) fn child_snapshots(
     objects: &std::collections::HashMap<u32, TurboVisionObject>,
     handles: &[u32],
 ) -> Vec<TurboVisionChildSnapshot> {
@@ -293,7 +297,10 @@ fn child_snapshots(
         .collect()
 }
 
-fn add_window_child(window: &mut Window, child: TurboVisionChildSnapshot) {
+pub(in crate::vm::execute::io::tui) fn add_window_child(
+    window: &mut Window,
+    child: TurboVisionChildSnapshot,
+) {
     match child {
         TurboVisionChildSnapshot::Button(button) => {
             window.add(Box::new(Button::new(

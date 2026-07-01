@@ -53,6 +53,7 @@ impl Worker {
             );
             handle
         });
+        self.mark_turbo_vision_tree_dirty();
         self.push(Self::turbo_vision_button_record(handle))
     }
 
@@ -79,6 +80,7 @@ impl Worker {
             );
             handle
         });
+        self.mark_turbo_vision_tree_dirty();
         self.push(Self::turbo_vision_static_text_record(handle))
     }
 
@@ -102,6 +104,7 @@ impl Worker {
             );
             handle
         });
+        self.mark_turbo_vision_tree_dirty();
         self.push(Self::turbo_vision_memo_record(handle))
     }
 
@@ -128,6 +131,7 @@ impl Worker {
             );
             handle
         });
+        self.mark_turbo_vision_tree_dirty();
         self.push(Self::turbo_vision_text_viewer_record(handle))
     }
 
@@ -176,6 +180,7 @@ impl Worker {
             );
             handle
         });
+        self.mark_turbo_vision_tree_dirty();
         self.push(Self::turbo_vision_input_line_record(handle))
     }
 
@@ -213,6 +218,7 @@ impl Worker {
             );
             handle
         });
+        self.mark_turbo_vision_tree_dirty();
         self.push(Self::turbo_vision_list_box_record(handle))
     }
 
@@ -242,6 +248,7 @@ impl Worker {
             );
             handle
         });
+        self.mark_turbo_vision_tree_dirty();
         self.push(Self::turbo_vision_check_box_record(handle))
     }
 
@@ -283,6 +290,7 @@ impl Worker {
             );
             handle
         });
+        self.mark_turbo_vision_tree_dirty();
         self.push(Self::turbo_vision_radio_button_record(handle))
     }
 
@@ -379,6 +387,7 @@ impl Worker {
             }
             Ok(())
         })?;
+        self.mark_turbo_vision_tree_dirty();
         Ok(())
     }
 

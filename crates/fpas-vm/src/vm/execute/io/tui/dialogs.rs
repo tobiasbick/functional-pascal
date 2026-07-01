@@ -33,6 +33,7 @@ impl Worker {
             );
             handle
         });
+        self.mark_turbo_vision_tree_dirty();
         self.push(Self::turbo_vision_dialog_record(handle))
     }
 }

@@ -51,10 +51,8 @@ impl Worker {
             tui.turbo_vision.pending_reconcile = false;
             dirty
         });
-        if dirty {
-            if let Some(app) = live_app {
-                self.turbo_vision_sync_new_windows_to_app(app)?;
-            }
+        if dirty && let Some(app) = live_app {
+            self.turbo_vision_sync_new_windows_to_app(app)?;
         }
         Ok(())
     }

@@ -19,7 +19,7 @@ impl TurboVisionInputTextCell {
 
     /// Read the current host-side text.
     pub fn read(&self) -> String {
-        self.0.lock().expect("input line text cell lock").clone()
+        self.0.lock().unwrap_or_else(|e| e.into_inner()).clone()
     }
 
     /// Create a view binding for upstream `InputLine::new`.
@@ -29,6 +29,6 @@ impl TurboVisionInputTextCell {
 
     /// Copy edited view text back into the host cell.
     pub fn commit_view_binding(&self, binding: &Rc<RefCell<String>>) {
-        *self.0.lock().expect("input line text cell lock") = binding.borrow().clone();
+        *self.0.lock().unwrap_or_else(|e| e.into_inner()) = binding.borrow().clone();
     }
 }

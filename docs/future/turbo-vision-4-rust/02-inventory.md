@@ -34,22 +34,24 @@ Target state:
 
 ## Docs
 
-Current spec to replace after implementation:
+Current spec (replaced during Turbo Vision migration):
 
-- [ ] `docs/pascal/std/tui/README.md`
-- [ ] `docs/pascal/std/tui/session.md`
-- [ ] `docs/pascal/std/tui/app/README.md`
-- [ ] `docs/pascal/std/tui/app/views.md`
-- [ ] `docs/pascal/std/tui/app/controls.md`
-- [ ] `docs/pascal/std/tui/app/frames.md`
-- [ ] `docs/pascal/std/tui/app/modals.md`
-- [ ] `docs/pascal/std/tui/app/handlers.md`
-- [ ] `docs/pascal/std/tui/app/testing.md`
-- [ ] `docs/pascal/std/tui/app/types.md`
-- [ ] `docs/pascal/std/tui/app/vm-bridge.md`
-- [ ] `docs/pascal/std/tui/terminal-checklist.md`
+- [x] `docs/pascal/std/tui/README.md`
+- [x] `docs/pascal/std/tui/session.md`
+- [x] `docs/pascal/std/tui/app/README.md`
+- [x] `docs/pascal/std/tui/app/controls.md`
+- [x] `docs/pascal/std/tui/app/modals.md`
+- [x] `docs/pascal/std/tui/app/handlers.md`
+- [x] `docs/pascal/std/tui/app/testing.md`
+- [x] `docs/pascal/std/tui/app/types.md`
+- [x] `docs/pascal/std/tui/app/vm-bridge.md`
+- [x] `docs/pascal/std/tui/terminal-checklist.md`
+- [x] `docs/pascal/std/README.md` (TUI hub row and quick example)
 
-Rule: delete or rewrite docs only when the matching behavior is implemented. Until then, leave current docs as current spec.
+Removed stale retained-engine stubs:
+
+- [x] `docs/pascal/std/tui/app/views.md` (deleted)
+- [x] `docs/pascal/std/tui/app/frames.md` (deleted)
 
 ## FPAS Tests
 

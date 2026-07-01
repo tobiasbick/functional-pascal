@@ -1,8 +1,6 @@
 # Std.Tui controls
 
-The old retained `Application.HostCreate*View` control API is no longer public.
-
-The current Turbo Vision facade exposes button, static text, memo, input line, list box, check box, and radio button handles:
+Turbo Vision widget handles and application chrome.
 
 | Symbol | Description |
 | --- | --- |

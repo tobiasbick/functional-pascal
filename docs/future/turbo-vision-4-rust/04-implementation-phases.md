@@ -193,11 +193,11 @@ Notes:
 
 ## Phase 7: Final Documentation
 
-- [ ] Replace current `docs/pascal/std/tui/` with implemented API docs.
-- [ ] Remove stale retained-engine pages.
-- [ ] Update `docs/pascal/std/README.md`.
-- [ ] Update Rust `///` docs that link to old TUI paths.
-- [ ] Keep future-only notes in this directory.
+- [x] Replace current `docs/pascal/std/tui/` with implemented API docs (2026-06-29).
+- [x] Remove stale retained-engine pages (`app/frames.md`, `app/views.md`).
+- [x] Update `docs/pascal/std/README.md`.
+- [x] Rust `///` docs already link to current TUI paths; no stale `frames`/`views` links found.
+- [x] Keep future-only notes in this directory.
 
 ## Phase 8: Verification and Cleanup
 

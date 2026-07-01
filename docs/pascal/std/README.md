@@ -30,7 +30,7 @@ Each unit page is a **self-contained handbook**: importing and short vs qualifie
 | Numeric | [numeric/](numeric/README.md) | Math, Random |
 | Result / Option | [result/](result/README.md) | Result, Option helpers |
 | Concurrency | [concurrency/](concurrency/README.md) | Task (`Wait`, `WaitAll`) |
-| Terminal UI | [tui/](tui/README.md) | Session API, hosted dispatch, views, modals |
+| Terminal UI | [tui/](tui/README.md) | Turbo Vision application facade, controls, command dispatch |
 | Graphics | [graph/](graph/README.md) | Window, drawing, hosted dispatch |
 | Testing | [testing/](testing/README.md) | Std.Test assertions |
 
@@ -50,22 +50,34 @@ NormVideo();
 ### TUI application shell
 
 ```pascal
-uses Std.Console, Std.Tui;
+uses Std.Tui;
 
-procedure OnPaint(App: Application);
+procedure OnCommand(App: Application; CommandId: integer);
 begin
-  ClrScr();
-  WriteLn('Press Escape to exit')
+  if CommandId = Command.Quit then
+    Application.Quit(App)
 end;
 
 begin
   var App: Application := Application.Open();
-  Application.Configure(App, record OnPaint := Some(OnPaint) end);
+  var DialogHandle: Dialog := Application.CreateDialog(
+    App,
+    record x := 10; y := 5; width := 40; height := 10 end,
+    'Hello'
+  );
+  var OkButton: Button := Application.CreateButton(
+    App,
+    record x := 12; y := 7; width := 10; height := 1 end,
+    '~O~k',
+    Command.Accept
+  );
+  Application.AddChild(App, DialogHandle, OkButton);
+  Application.OnCommand(App, OnCommand);
   Application.Run(App)
 end.
 ```
 
-See [Hosted dispatch](tui/app/README.md) for handler registration and host widgets.
+See [Application](tui/app/README.md) for the full Turbo Vision API and [Handlers](tui/app/handlers.md) for command callbacks.
 
 ### Error handling helpers
 

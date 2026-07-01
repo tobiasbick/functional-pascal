@@ -15,6 +15,7 @@ use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 use std::cell::RefCell;
 use std::rc::Rc;
 use turbo_vision::app::Application as TurboVisionApplication;
+use turbo_vision::core::event::{Event, EventType};
 use turbo_vision::core::menu_data::{Menu, MenuItem};
 use turbo_vision::views::{
     button::Button, checkbox::CheckBox, dialog::Dialog, input_line::InputLine, listbox::ListBox,
@@ -44,8 +45,43 @@ impl Worker {
         }
 
         let mut app = self.build_turbo_vision_application(line)?;
-        app.run();
-        Ok(())
+        self.turbo_vision_interactive_run(&mut app, line)
+    }
+
+    /// Drive the live Turbo Vision event loop while routing application commands
+    /// back into the FPAS `OnCommand` callback.
+    ///
+    /// Turbo Vision's own `Application::run` consumes every event internally and
+    /// silently drops commands it does not recognize, so FPAS code could never
+    /// observe button, menu, or status-line actions during an interactive run.
+    /// This loop steps the event pump manually: after `handle_event` runs, any
+    /// event still typed as a command is one Turbo Vision left unhandled, i.e. an
+    /// application command, which is dispatched into the VM. A quit requested from
+    /// that callback (`Application.Quit`) or Turbo Vision's own quit (Alt+X) ends
+    /// the loop.
+    fn turbo_vision_interactive_run(
+        &mut self,
+        app: &mut TurboVisionApplication,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        app.running = true;
+        loop {
+            if !app.running
+                || self.with_tui(|tui| tui.quit_requested || tui.turbo_vision.quit_requested)
+            {
+                return Ok(());
+            }
+
+            if let Some(mut event) = app.get_event() {
+                app.handle_event(&mut event);
+                if event.what == EventType::Command {
+                    self.dispatch_turbo_vision_command_event(&Event::command(event.command), line)?;
+                }
+            }
+
+            let _ = app.desktop.remove_closed_windows();
+            let _ = app.desktop.handle_moved_windows(&mut app.terminal);
+        }
     }
 
     fn turbo_vision_headless_run(&mut self, line: SourceLocation) -> Result<(), VmError> {

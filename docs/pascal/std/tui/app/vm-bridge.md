@@ -53,7 +53,7 @@ Turbo Vision bridge code lives under `crates/fpas-vm/src/vm/execute/io/tui/`:
 | `callbacks.rs` | Turbo Vision command event to FPAS `OnCommand` |
 | `commands.rs` | `Pump`, `Quit`, `TestClickButton`, command queue |
 | `file_dialog.rs` | `RunFileDialog`, `TestSetFileDialogResult` |
-| `tv_run.rs` | Terminal and headless `Application.Run` for Turbo Vision |
+| `tv_run.rs` | Terminal and headless `Application.Run` for Turbo Vision. The terminal loop steps the Turbo Vision event pump itself so commands left unhandled by Turbo Vision (buttons, menus, status items) are routed into the FPAS `OnCommand` callback, and an `Application.Quit` from that callback ends the loop. |
 | `events.rs` | Headless `TestSend*` event injection |
 | `testing.rs` | `OpenForTest`, `TestPump*`, `CloseForTest` |
 | `host/` | Hosted global-handler loop (`HostRegister*`, `HostProcessNext`) |

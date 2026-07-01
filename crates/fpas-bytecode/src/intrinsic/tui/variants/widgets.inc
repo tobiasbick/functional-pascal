@@ -26,3 +26,4 @@
     TestDispatchMenuCommand = 455,
     RegisterOnKey = 456,
     RegisterOnMouse = 457,
+    SetText = 458,

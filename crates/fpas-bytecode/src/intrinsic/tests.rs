@@ -239,6 +239,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Tui(TuiIntrinsic::CreateDialog),
     Intrinsic::Tui(TuiIntrinsic::CreateButton),
     Intrinsic::Tui(TuiIntrinsic::AddChild),
+    Intrinsic::Tui(TuiIntrinsic::SetText),
     Intrinsic::Tui(TuiIntrinsic::RegisterOnCommand),
     Intrinsic::Tui(TuiIntrinsic::Pump),
     Intrinsic::Tui(TuiIntrinsic::Quit),

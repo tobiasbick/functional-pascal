@@ -21,6 +21,7 @@ Turbo Vision widget handles and application chrome.
 | `Application.CreateCheckBox(App, Bounds, Text, Checked): CheckBox` | Create a check box with an initial checked state. |
 | `Application.CreateRadioButton(App, Bounds, Text, GroupId, Selected): RadioButton` | Create a radio button in a group. Buttons with the same `GroupId` are mutually exclusive. |
 | `Application.AddChild(App, Parent, Child)` | Attach a button, static text, memo, text viewer, input line, list box, check box, or radio button child to a dialog or window. |
+| `Application.SetText(App, Control, Text)` | Replace the text of a button, static text, memo, text viewer, input line, check box, or radio button. The change re-renders live during `Application.Run` and is visible to headless screen queries. Not supported for list boxes. |
 | `Application.TestClickButton(App, Button)` | Queue a headless test click for the button. |
 
 Application chrome uses root-level handles:

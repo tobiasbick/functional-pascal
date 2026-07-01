@@ -225,6 +225,14 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::AddChild), location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_SET_TEXT => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_SET_TEXT, 3, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::SetText), location);
+                Ok(true)
+            }
             s::STD_TUI_APPLICATION_ADD_WINDOW => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_ADD_WINDOW, 2, args, location)?;
                 for arg in args {

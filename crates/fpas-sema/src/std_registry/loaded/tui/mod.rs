@@ -176,7 +176,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
     );
 
     command_api::register_command_constants(checker);
-    super::super::builtins::register_add_child_builtin(checker);
+    super::super::builtins::register_tui_builtins(checker);
 
     let types = TuiTypes {
         application,

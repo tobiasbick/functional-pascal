@@ -178,6 +178,7 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_APPLICATION_CREATE_STATUS_LINE,
     std_symbols::STD_TUI_APPLICATION_SET_STATUS_LINE,
     std_symbols::STD_TUI_APPLICATION_ADD_CHILD,
+    std_symbols::STD_TUI_APPLICATION_SET_TEXT,
     std_symbols::STD_TUI_APPLICATION_ADD_WINDOW,
     std_symbols::STD_TUI_APPLICATION_ON_COMMAND,
     std_symbols::STD_TUI_APPLICATION_PUMP,

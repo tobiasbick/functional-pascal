@@ -47,6 +47,7 @@ Do not call `Application.Configure` expecting it to paint over a Turbo Vision wi
 | `Application.ExecDialog(App, Dialog): DialogResult` | Run a dialog modally on the terminal. Returns the closing command in `DialogResult.command`. |
 | `Application.InputText(App, Field): string` | Read the current text of an `InputLine` handle (valid after `ExecDialog`). |
 | `Application.AddChild(App, Parent, Child)` | Attach a button, static text, memo, text viewer, input line, list box, check box, or radio button child to a dialog or window parent. |
+| `Application.SetText(App, Control, Text)` | Replace the text of a text-bearing control (button, static text, memo, text viewer, input line, check box, radio button) at runtime. Re-renders live and in headless queries. Not supported for list boxes. |
 | `Application.AddWindow(App, Window)` | Place a window on the application desktop. |
 | `Application.CreateMenuBar(App, Bounds, Menus): MenuBar` | Create a top menu bar from an array of `Menu` records. |
 | `Application.SetMenuBar(App, MenuBar)` | Set the application menu bar root. |

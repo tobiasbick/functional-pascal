@@ -289,6 +289,7 @@ pub const STD_TUI_APPLICATION_SET_MENU_BAR: &str = std_tui!("Application.SetMenu
 pub const STD_TUI_APPLICATION_CREATE_STATUS_LINE: &str = std_tui!("Application.CreateStatusLine");
 pub const STD_TUI_APPLICATION_SET_STATUS_LINE: &str = std_tui!("Application.SetStatusLine");
 pub const STD_TUI_APPLICATION_ADD_CHILD: &str = std_tui!("Application.AddChild");
+pub const STD_TUI_APPLICATION_SET_TEXT: &str = std_tui!("Application.SetText");
 pub const STD_TUI_APPLICATION_ADD_WINDOW: &str = std_tui!("Application.AddWindow");
 pub const STD_TUI_APPLICATION_ON_COMMAND: &str = std_tui!("Application.OnCommand");
 /// Register `function (Application, Std.Console.KeyEvent): boolean` for unhandled Turbo Vision keys.

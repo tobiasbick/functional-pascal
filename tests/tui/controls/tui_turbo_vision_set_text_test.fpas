@@ -1,0 +1,23 @@
+program TuiTurboVisionSetTextTest;
+
+uses Std.Tui, Std.Test;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(60, 20);
+  var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(2, 1, 30, 8), 'Host');
+  var Label: StaticText := Application.CreateStaticText(App, Bounds(3, 2, 20, 1), 'OLD');
+  Application.AddChild(App, DialogHandle, Label);
+  { An idle pump repaints the headless desktop from current FPAS state. }
+  AssertEquals(0, Application.Pump(App));
+  var Before: ScreenCell := Application.QueryScreenCell(App, 5, 3);
+  AssertTrue(Before.ch = 'O');
+  Application.SetText(App, Label, 'NEW');
+  AssertEquals(0, Application.Pump(App));
+  var After: ScreenCell := Application.QueryScreenCell(App, 5, 3);
+  AssertTrue(After.ch = 'N')
+end.

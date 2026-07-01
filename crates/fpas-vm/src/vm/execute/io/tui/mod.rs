@@ -96,6 +96,9 @@ impl Worker {
             Intrinsic::Tui(TuiIntrinsic::AddChild) => {
                 self.turbo_vision_add_child(line)?;
             }
+            Intrinsic::Tui(TuiIntrinsic::SetText) => {
+                self.turbo_vision_set_text(line)?;
+            }
             Intrinsic::Tui(TuiIntrinsic::RegisterOnCommand) => {
                 self.turbo_vision_register_on_command(line)?;
             }

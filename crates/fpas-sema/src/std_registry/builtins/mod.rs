@@ -7,7 +7,7 @@ mod test;
 mod tui;
 
 pub(super) use test::register_assert_equals_builtin;
-pub(super) use tui::register_add_child_builtin;
+pub(super) use tui::register_tui_builtins;
 
 use crate::check::Checker;
 use crate::types::Ty;

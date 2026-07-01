@@ -126,8 +126,16 @@ Notes for the VM layer:
   `tests/tui/controls/tui_turbo_vision_live_dialog_test.fpas`.
   Known limits: a live rebuild resets focus to the top root and re-seeds widgets from FPAS
   state, so uncommitted edits in a live (non-modal) dialog are lost — use
-  `Application.ExecDialog` for modal read-back. There are still no property setters
-  (`SetText`, `SetChecked`, …), so in-place property changes have no trigger yet.
+  `Application.ExecDialog` for modal read-back.
+
+- **Text property setter (2026-07-01).**
+  `Application.SetText(App, Control, Text)` updates the text of a button, static text, memo,
+  text viewer, input line, check box, or radio button at runtime. It marks the tree dirty, so
+  the change re-renders live (via the desktop rebuild) and is observable in headless screen
+  queries. List boxes are rejected (recreate with `CreateListBox`). Other setters
+  (`SetChecked`, `SetItems`, window/dialog `SetTitle`) are not implemented yet. See
+  `controls.rs` (`turbo_vision_set_text`), `builtins/tui.rs`, and
+  `tests/tui/controls/tui_turbo_vision_set_text_test.fpas`.
 
 - **Dual-architecture clarity (2026-07-01).**
   Documented the Turbo Vision facade vs hosted canvas split in

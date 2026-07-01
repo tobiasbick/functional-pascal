@@ -22,6 +22,11 @@ impl TurboVisionInputTextCell {
         self.0.lock().unwrap_or_else(|e| e.into_inner()).clone()
     }
 
+    /// Replace the host-side text.
+    pub fn set(&self, text: String) {
+        *self.0.lock().unwrap_or_else(|e| e.into_inner()) = text;
+    }
+
     /// Create a view binding for upstream `InputLine::new`.
     pub fn view_binding(&self) -> Rc<RefCell<String>> {
         Rc::new(RefCell::new(self.read()))

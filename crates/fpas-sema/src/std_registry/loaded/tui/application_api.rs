@@ -189,11 +189,7 @@ pub(super) fn register_application_api(
         vec![
             p("App", types.application.clone(), false),
             p("Bounds", types.rect.clone(), false),
-            p(
-                "Items",
-                Ty::Array(Box::new(types.menu_bar_item.clone())),
-                false,
-            ),
+            p("Menus", Ty::Array(Box::new(types.menu.clone())), false),
         ],
         types.menu_bar.clone(),
     );
@@ -260,6 +256,16 @@ pub(super) fn register_application_api(
         vec![
             p("App", types.application.clone(), false),
             p("Button", types.button.clone(), false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_TEST_DISPATCH_MENU_COMMAND,
+        vec![
+            p("App", types.application.clone(), false),
+            p("MenuBar", types.menu_bar.clone(), false),
+            p("MenuIndex", Ty::Integer, false),
+            p("ItemIndex", Ty::Integer, false),
         ],
     );
     define_func(

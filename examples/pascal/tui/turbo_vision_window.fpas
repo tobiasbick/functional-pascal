@@ -9,9 +9,14 @@ begin
   return record x := X; y := Y; width := Width; height := Height; end
 end;
 
-function FileMenuItem(): MenuBarItem;
+function ExitMenuItem(): MenuItem;
 begin
-  return record menuText := '~F~ile'; itemText := 'E~x~it'; commandId := Command.Quit; end
+  return record text := 'E~x~it'; commandId := Command.Quit; end
+end;
+
+function FileMenu(): Menu;
+begin
+  return record title := '~F~ile'; items := [ExitMenuItem()]; end
 end;
 
 function QuitStatusItem(): StatusItem;
@@ -29,7 +34,7 @@ end;
 
 begin
   var App: Application := Application.Open();
-  var Menu: MenuBar := Application.CreateMenuBar(App, Bounds(0, 0, 80, 1), [FileMenuItem()]);
+  var MenuBarHandle: MenuBar := Application.CreateMenuBar(App, Bounds(0, 0, 80, 1), [FileMenu()]);
   var Status: StatusLine := Application.CreateStatusLine(App, Bounds(0, 24, 80, 1), [
                                                                                       QuitStatusItem()
 
@@ -38,7 +43,7 @@ begin
   var LabelHandle: StaticText := Application.CreateStaticText(App, Bounds(4, 2, 28, 1), 'Window with static text');
   var NameInput: InputLine := Application.CreateInputLine(App, Bounds(4, 4, 20, 1), 'main.pas', 64);
   var ButtonHandle: Button := Application.CreateButton(App, Bounds(12, 6, 12, 2), 'Quit', Command.Quit);
-  Application.SetMenuBar(App, Menu);
+  Application.SetMenuBar(App, MenuBarHandle);
   Application.SetStatusLine(App, Status);
   Application.AddChild(App, WindowHandle, LabelHandle);
   Application.AddChild(App, WindowHandle, NameInput);

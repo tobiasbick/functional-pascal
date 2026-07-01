@@ -11,13 +11,14 @@ begin
   return record x := X; y := Y; width := Width; height := Height; end
 end;
 
-private function FileMenuItem(): MenuBarItem;
+private function ExitMenuItem(): MenuItem;
 begin
-  return record
-    menuText := '~F~ile';
-    itemText := CommandLabel(CmdFileExit);
-    commandId := CmdFileExit;
-  end
+  return record text := CommandLabel(CmdFileExit); commandId := CmdFileExit; end
+end;
+
+private function FileMenu(): Menu;
+begin
+  return record title := '~F~ile'; items := [ExitMenuItem()]; end
 end;
 
 private function MainStatusItem(): StatusItem;
@@ -47,7 +48,7 @@ end;
 
 function AttachChrome(App: Application): Button;
 begin
-  var Menu: MenuBar := Application.CreateMenuBar(App, Bounds(0, 0, 80, 1), [FileMenuItem()]);
+  var MenuBarHandle: MenuBar := Application.CreateMenuBar(App, Bounds(0, 0, 80, 1), [FileMenu()]);
   var Status: StatusLine := Application.CreateStatusLine(App, Bounds(0, 24, 80, 1), [
                                                                                       MainStatusItem()
 
@@ -62,7 +63,7 @@ begin
                                                                                   ], CmdFileExit);
   var AutoBuild: CheckBox := Application.CreateCheckBox(App, Bounds(34, 6, 14, 1), 'Auto build', false);
   var ExitButton: Button := Application.CreateButton(App, Bounds(4, 11, 12, 2), CommandLabel(CmdFileExit), CmdFileExit);
-  Application.SetMenuBar(App, Menu);
+  Application.SetMenuBar(App, MenuBarHandle);
   Application.SetStatusLine(App, Status);
   Application.AddChild(App, ShellWindow, StatusLabel);
   Application.AddChild(App, ShellWindow, FileInput);

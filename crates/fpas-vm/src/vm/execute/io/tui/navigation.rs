@@ -2,20 +2,20 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
+use super::menu_build::build_menu_bar;
 use super::tv_geometry::unknown_handle_error;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError, runtime_error};
 use crate::vm::shared::{
-    TurboVisionMenuBar, TurboVisionMenuBarItem, TurboVisionObject, TurboVisionStatusItem,
-    TurboVisionStatusLine,
+    TurboVisionMenu, TurboVisionMenuBar, TurboVisionMenuItem, TurboVisionObject,
+    TurboVisionStatusItem, TurboVisionStatusLine,
 };
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
-use turbo_vision::core::menu_data::{Menu, MenuItem};
-use turbo_vision::views::menu_bar::{MenuBar, SubMenu};
 use turbo_vision::views::status_line::{StatusItem, StatusLine};
 
-const TUI_MENU_BAR_ITEM_TYPE: &str = "Std.Tui.MenuBarItem";
+const TUI_MENU_TYPE: &str = "Std.Tui.Menu";
+const TUI_MENU_ITEM_TYPE: &str = "Std.Tui.MenuItem";
 const TUI_STATUS_ITEM_TYPE: &str = "Std.Tui.StatusItem";
 
 impl Worker {
@@ -23,16 +23,11 @@ impl Worker {
         &mut self,
         line: SourceLocation,
     ) -> Result<(), VmError> {
-        let items = self.pop_turbo_vision_menu_bar_items(line)?;
+        let menus = self.pop_turbo_vision_menus(line)?;
         let bounds = self.pop_turbo_vision_rect(line)?;
         self.pop_tui_application(line)?;
 
-        let mut menu_bar = MenuBar::new(bounds);
-        for item in &items {
-            let menu =
-                Menu::from_items(vec![MenuItem::new(&item.item_text, item.command_id, 0, 0)]);
-            menu_bar.add_submenu(SubMenu::new(&item.menu_text, menu));
-        }
+        let _menu_bar = build_menu_bar(bounds, &menus);
 
         let bounds = super::tv_geometry::state_rect(bounds);
         let handle = self.with_tui(|tui| {
@@ -42,7 +37,7 @@ impl Worker {
                 handle,
                 TurboVisionObject::MenuBar(TurboVisionMenuBar {
                     bounds,
-                    items,
+                    menus,
                     attached: false,
                 }),
             );
@@ -154,16 +149,16 @@ impl Worker {
         })
     }
 
-    fn pop_turbo_vision_menu_bar_items(
+    fn pop_turbo_vision_menus(
         &mut self,
         line: SourceLocation,
-    ) -> Result<Vec<TurboVisionMenuBarItem>, VmError> {
+    ) -> Result<Vec<TurboVisionMenu>, VmError> {
         let value = self.pop(line)?;
         let Value::Array(values) = value else {
             return Err(runtime_error(
                 TYPE_MISMATCH_CODE,
-                format!("MenuBar Items must be array, got {}", value.type_name()),
-                "Pass an array of Std.Tui.MenuBarItem records.",
+                format!("MenuBar Menus must be array, got {}", value.type_name()),
+                "Pass an array of Std.Tui.Menu records.",
                 line,
             ));
         };
@@ -171,15 +166,10 @@ impl Worker {
         values
             .into_iter()
             .map(|value| {
-                let fields = expect_record(value, TUI_MENU_BAR_ITEM_TYPE, "MenuBarItem", line)?;
-                let menu_text = string_field(&fields, "menuText", "MenuBarItem", line)?;
-                let item_text = string_field(&fields, "itemText", "MenuBarItem", line)?;
-                let command_id = u16_field(&fields, "commandId", "MenuBarItem command id", line)?;
-                Ok(TurboVisionMenuBarItem {
-                    menu_text,
-                    item_text,
-                    command_id,
-                })
+                let fields = expect_record(value, TUI_MENU_TYPE, "Menu", line)?;
+                let title = string_field(&fields, "title", "Menu", line)?;
+                let items = menu_items_field(&fields, line)?;
+                Ok(TurboVisionMenu { title, items })
             })
             .collect()
     }
@@ -213,6 +203,42 @@ impl Worker {
             })
             .collect()
     }
+}
+
+fn menu_items_field(
+    fields: &[(String, Value)],
+    line: SourceLocation,
+) -> Result<Vec<TurboVisionMenuItem>, VmError> {
+    let value = fields
+        .iter()
+        .find(|(name, _)| name == "items")
+        .map(|(_, value)| value)
+        .ok_or_else(|| {
+            runtime_error(
+                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                "Menu.items is missing",
+                "Pass a `Menu` record with an `items` array of `MenuItem` records.",
+                line,
+            )
+        })?;
+    let Value::Array(values) = value else {
+        return Err(runtime_error(
+            TYPE_MISMATCH_CODE,
+            format!("Menu.items must be array, got {}", value.type_name()),
+            "Pass an array of Std.Tui.MenuItem records.",
+            line,
+        ));
+    };
+
+    values
+        .iter()
+        .map(|value| {
+            let fields = expect_record(value.clone(), TUI_MENU_ITEM_TYPE, "MenuItem", line)?;
+            let text = string_field(&fields, "text", "MenuItem", line)?;
+            let command_id = u16_field(&fields, "commandId", "MenuItem command id", line)?;
+            Ok(TurboVisionMenuItem { text, command_id })
+        })
+        .collect()
 }
 
 fn expect_record(

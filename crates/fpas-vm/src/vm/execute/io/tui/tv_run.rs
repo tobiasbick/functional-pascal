@@ -2,6 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
+use super::menu_build::build_menu_bar_from_snapshot;
 use super::tv_geometry::turbo_rect;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
@@ -17,12 +18,10 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use turbo_vision::app::Application as TurboVisionApplication;
 use turbo_vision::core::event::{Event, EventType};
-use turbo_vision::core::menu_data::{Menu, MenuItem};
 use turbo_vision::views::{
     button::Button, checkbox::CheckBox, dialog::Dialog, input_line::InputLine, listbox::ListBox,
-    memo::Memo, menu_bar::MenuBar, menu_bar::SubMenu, radiobutton::RadioButton,
-    static_text::StaticText, status_line::StatusItem, status_line::StatusLine,
-    text_viewer::TextViewer, window::Window,
+    memo::Memo, radiobutton::RadioButton, static_text::StaticText, status_line::StatusItem,
+    status_line::StatusLine, text_viewer::TextViewer, window::Window,
 };
 
 const HEADLESS_RUN_MAX_COMMANDS: usize = 4096;
@@ -125,7 +124,10 @@ impl Worker {
         })?;
 
         if let Some(menu_bar) = menu_bar_snapshot {
-            app.set_menu_bar(build_menu_bar(menu_bar));
+            app.set_menu_bar(build_menu_bar_from_snapshot(
+                menu_bar.bounds,
+                &menu_bar.menus,
+            ));
         }
 
         if let Some(status_line) = status_line_snapshot {
@@ -199,7 +201,7 @@ impl Worker {
             match tui.turbo_vision.objects.get(&handle) {
                 Some(TurboVisionObject::MenuBar(menu_bar)) => Some(TurboVisionMenuBarSnapshot {
                     bounds: menu_bar.bounds,
-                    items: menu_bar.items.clone(),
+                    menus: menu_bar.menus.clone(),
                 }),
                 _ => None,
             }
@@ -236,7 +238,7 @@ struct TurboVisionDialogSnapshot {
 
 struct TurboVisionMenuBarSnapshot {
     bounds: TurboVisionRect,
-    items: Vec<crate::vm::shared::TurboVisionMenuBarItem>,
+    menus: Vec<crate::vm::shared::TurboVisionMenu>,
 }
 
 struct TurboVisionStatusLineSnapshot {
@@ -414,15 +416,6 @@ fn build_radio_button(snapshot: TurboVisionRadioButton) -> RadioButton {
         radio_button.select();
     }
     radio_button
-}
-
-fn build_menu_bar(snapshot: TurboVisionMenuBarSnapshot) -> MenuBar {
-    let mut menu_bar = MenuBar::new(turbo_rect(snapshot.bounds));
-    for item in snapshot.items {
-        let menu = Menu::from_items(vec![MenuItem::new(&item.item_text, item.command_id, 0, 0)]);
-        menu_bar.add_submenu(SubMenu::new(&item.menu_text, menu));
-    }
-    menu_bar
 }
 
 fn build_status_line(snapshot: TurboVisionStatusLineSnapshot) -> StatusLine {

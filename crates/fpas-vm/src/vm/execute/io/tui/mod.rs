@@ -13,6 +13,7 @@ mod file_dialog;
 mod handlers;
 mod handles;
 mod host;
+mod menu_build;
 mod navigation;
 mod query_host;
 mod records;
@@ -101,6 +102,9 @@ impl Worker {
             }
             Intrinsic::Tui(TuiIntrinsic::TestClickButton) => {
                 self.turbo_vision_test_click_button(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::TestDispatchMenuCommand) => {
+                self.turbo_vision_test_dispatch_menu_command(line)?;
             }
             Intrinsic::Tui(TuiIntrinsic::CreateWindow) => {
                 self.turbo_vision_create_window(line)?;

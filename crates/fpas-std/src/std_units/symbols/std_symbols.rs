@@ -231,7 +231,8 @@ pub const STD_TUI_LIST_BOX: &str = std_tui!("ListBox");
 pub const STD_TUI_CHECK_BOX: &str = std_tui!("CheckBox");
 pub const STD_TUI_RADIO_BUTTON: &str = std_tui!("RadioButton");
 pub const STD_TUI_MENU_BAR: &str = std_tui!("MenuBar");
-pub const STD_TUI_MENU_BAR_ITEM: &str = std_tui!("MenuBarItem");
+pub const STD_TUI_MENU: &str = std_tui!("Menu");
+pub const STD_TUI_MENU_ITEM: &str = std_tui!("MenuItem");
 pub const STD_TUI_STATUS_LINE: &str = std_tui!("StatusLine");
 pub const STD_TUI_STATUS_ITEM: &str = std_tui!("StatusItem");
 /// Hosted-dispatch handler bundle for `Std.Tui.Application.Configure`; see `docs/pascal/std/tui/app/README.md`.
@@ -293,6 +294,9 @@ pub const STD_TUI_APPLICATION_ON_COMMAND: &str = std_tui!("Application.OnCommand
 pub const STD_TUI_APPLICATION_PUMP: &str = std_tui!("Application.Pump");
 pub const STD_TUI_APPLICATION_QUIT: &str = std_tui!("Application.Quit");
 pub const STD_TUI_APPLICATION_TEST_CLICK_BUTTON: &str = std_tui!("Application.TestClickButton");
+/// Queue a menu item command for headless tests (`MenuIndex` / `ItemIndex` into `CreateMenuBar` data).
+pub const STD_TUI_APPLICATION_TEST_DISPATCH_MENU_COMMAND: &str =
+    std_tui!("Application.TestDispatchMenuCommand");
 pub const STD_TUI_APPLICATION_OPEN_FOR_TEST: &str = std_tui!("Application.OpenForTest");
 pub const STD_TUI_APPLICATION_TEST_PUMP: &str = std_tui!("Application.TestPump");
 pub const STD_TUI_APPLICATION_TEST_PUMP_UNTIL_IDLE: &str =

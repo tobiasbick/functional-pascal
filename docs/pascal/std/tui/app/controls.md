@@ -28,8 +28,9 @@ Application chrome uses root-level handles:
 | Symbol | Description |
 | --- | --- |
 | `MenuBar` | Opaque Turbo Vision menu bar handle. |
-| `MenuBarItem` | Record with `menuText`, `itemText`, and `commandId` fields. |
-| `Application.CreateMenuBar(App, Bounds, Items): MenuBar` | Create a menu bar. Each item creates one top-level menu with one command entry. |
+| `Menu` | Record with `title` and `items` for one top-level menu. |
+| `MenuItem` | Record with `text` and `commandId` (`0` = separator). |
+| `Application.CreateMenuBar(App, Bounds, Menus): MenuBar` | Create a menu bar from an array of `Menu` records. |
 | `Application.SetMenuBar(App, MenuBar)` | Set the active application menu bar. |
 | `StatusLine` | Opaque Turbo Vision status line handle. |
 | `StatusItem` | Record with `text`, `keyCode`, and `commandId` fields. |

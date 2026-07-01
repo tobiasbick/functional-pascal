@@ -23,3 +23,4 @@
     ExecDialog = 452,
     InputText = 453,
     TestSetDialogResult = 454,
+    TestDispatchMenuCommand = 455,

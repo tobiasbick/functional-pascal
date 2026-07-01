@@ -250,14 +250,19 @@ pub(crate) struct TurboVisionRadioButton {
 #[derive(Clone)]
 pub(crate) struct TurboVisionMenuBar {
     pub bounds: TurboVisionRect,
-    pub items: Vec<TurboVisionMenuBarItem>,
+    pub menus: Vec<TurboVisionMenu>,
     pub attached: bool,
 }
 
 #[derive(Clone)]
-pub(crate) struct TurboVisionMenuBarItem {
-    pub menu_text: String,
-    pub item_text: String,
+pub(crate) struct TurboVisionMenu {
+    pub title: String,
+    pub items: Vec<TurboVisionMenuItem>,
+}
+
+#[derive(Clone)]
+pub(crate) struct TurboVisionMenuItem {
+    pub text: String,
     pub command_id: u16,
 }
 

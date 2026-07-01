@@ -9,9 +9,14 @@ begin
   return record x := X; y := Y; width := Width; height := Height; end
 end;
 
-function FileMenuItem(): MenuBarItem;
+function ExitMenuItem(): MenuItem;
 begin
-  return record menuText := '~F~ile'; itemText := 'E~x~it'; commandId := Command.Quit; end
+  return record text := 'E~x~it'; commandId := Command.Quit; end
+end;
+
+function FileMenu(): Menu;
+begin
+  return record title := '~F~ile'; items := [ExitMenuItem()]; end
 end;
 
 function QuitStatusItem(): StatusItem;
@@ -29,7 +34,7 @@ end;
 
 begin
   var App: Application := Application.Open();
-  var Menu: MenuBar := Application.CreateMenuBar(App, Bounds(0, 0, 80, 1), [FileMenuItem()]);
+  var MenuBarHandle: MenuBar := Application.CreateMenuBar(App, Bounds(0, 0, 80, 1), [FileMenu()]);
   var Status: StatusLine := Application.CreateStatusLine(App, Bounds(0, 24, 80, 1), [
                                                                                       QuitStatusItem()
 
@@ -45,7 +50,7 @@ begin
                                                                               ], Command.Accept);
   var AutoRun: CheckBox := Application.CreateCheckBox(App, Bounds(24, 6, 12, 1), 'Auto run', false);
   var ButtonHandle: Button := Application.CreateButton(App, Bounds(10, 9, 12, 2), 'Quit', Command.Quit);
-  Application.SetMenuBar(App, Menu);
+  Application.SetMenuBar(App, MenuBarHandle);
   Application.SetStatusLine(App, Status);
   Application.AddChild(App, DialogHandle, LabelHandle);
   Application.AddChild(App, DialogHandle, NameInput);

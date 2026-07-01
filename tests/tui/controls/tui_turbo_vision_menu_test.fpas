@@ -1,0 +1,50 @@
+program TuiTurboVisionMenuTest;
+
+uses Std.Tui, Std.Test;
+
+const
+  CmdOpen: integer := 100;
+
+mutable var
+  mutable var LastCommand: integer := -1;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+function OpenMenuItem(): MenuItem;
+begin
+  return record text := '~O~pen'; commandId := CmdOpen; end
+end;
+
+function MenuSeparator(): MenuItem;
+begin
+  return record text := '-'; commandId := 0; end
+end;
+
+function ExitMenuItem(): MenuItem;
+begin
+  return record text := 'E~x~it'; commandId := Command.Quit; end
+end;
+
+function FileMenu(): Menu;
+begin
+  return record title := '~F~ile'; items := [OpenMenuItem(), MenuSeparator(), ExitMenuItem()]; end
+end;
+
+procedure OnCommand(App: Application; CommandId: integer);
+begin
+  LastCommand := CommandId;
+  Application.Quit(App)
+end;
+
+begin
+  var App: Application := Application.OpenForTest(60, 16);
+  var MenuBarHandle: MenuBar := Application.CreateMenuBar(App, Bounds(0, 0, 60, 1), [FileMenu()]);
+  Application.SetMenuBar(App, MenuBarHandle);
+  Application.OnCommand(App, OnCommand);
+  Application.TestDispatchMenuCommand(App, MenuBarHandle, 0, 2);
+  Application.Run(App);
+  AssertEquals(Command.Quit, LastCommand)
+end.

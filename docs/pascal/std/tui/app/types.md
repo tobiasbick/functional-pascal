@@ -92,15 +92,23 @@ Opaque Turbo Vision radio button handle returned by `Application.CreateRadioButt
 
 Opaque Turbo Vision menu bar handle returned by `Application.CreateMenuBar`.
 
-## `MenuBarItem`
+## `Menu`
 
-Record used by `Application.CreateMenuBar`.
+Record used by `Application.CreateMenuBar` for one top-level menu.
 
 | Field | Type | Meaning |
 | --- | --- | --- |
-| `menuText` | `string` | Top-level menu text. Use `~X~` markers for accelerators. |
-| `itemText` | `string` | Command entry text inside that top-level menu. |
-| `commandId` | `integer` | Command id dispatched by the menu item. |
+| `title` | `string` | Top-level menu text. Use `~X~` markers for accelerators. |
+| `items` | `array of MenuItem` | Entries inside the menu. |
+
+## `MenuItem`
+
+Record for one menu entry or separator.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `text` | `string` | Item label. Ignored when `commandId` is `0`. |
+| `commandId` | `integer` | Command dispatched when selected. Use `0` for a separator line. |
 
 ## `StatusLine`
 

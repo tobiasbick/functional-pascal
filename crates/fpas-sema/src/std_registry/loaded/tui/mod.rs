@@ -29,7 +29,7 @@ struct TuiTypes {
     check_box: Ty,
     radio_button: Ty,
     menu_bar: Ty,
-    menu_bar_item: Ty,
+    menu: Ty,
     status_line: Ty,
     status_item: Ty,
     rect: Ty,
@@ -74,13 +74,20 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         type_registration::register_record_type(checker, s::STD_TUI_RADIO_BUTTON, Vec::new());
     let menu_bar =
         type_registration::register_record_type(checker, s::STD_TUI_MENU_BAR, Vec::new());
-    let menu_bar_item = type_registration::register_record_type(
+    let menu_item = type_registration::register_record_type(
         checker,
-        s::STD_TUI_MENU_BAR_ITEM,
+        s::STD_TUI_MENU_ITEM,
         vec![
-            ("menuText".into(), Ty::String),
-            ("itemText".into(), Ty::String),
+            ("text".into(), Ty::String),
             ("commandId".into(), Ty::Integer),
+        ],
+    );
+    let menu = type_registration::register_record_type(
+        checker,
+        s::STD_TUI_MENU,
+        vec![
+            ("title".into(), Ty::String),
+            ("items".into(), Ty::Array(Box::new(menu_item.clone()))),
         ],
     );
     let status_line =
@@ -183,7 +190,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         check_box,
         radio_button,
         menu_bar,
-        menu_bar_item,
+        menu,
         status_line,
         status_item,
         rect,

@@ -32,13 +32,14 @@ The public surface is implemented over the Rust `turbo-vision` crate. The old re
 | `Application.InputText(App, Field): string` | Read the current text of an `InputLine` handle (valid after `ExecDialog`). |
 | `Application.AddChild(App, Parent, Child)` | Attach a button, static text, memo, text viewer, input line, list box, check box, or radio button child to a dialog or window parent. |
 | `Application.AddWindow(App, Window)` | Place a window on the application desktop. |
-| `Application.CreateMenuBar(App, Bounds, Items): MenuBar` | Create a top menu bar from an array of `MenuBarItem` records. |
+| `Application.CreateMenuBar(App, Bounds, Menus): MenuBar` | Create a top menu bar from an array of `Menu` records. |
 | `Application.SetMenuBar(App, MenuBar)` | Set the application menu bar root. |
 | `Application.CreateStatusLine(App, Bounds, Items): StatusLine` | Create a bottom status line from an array of `StatusItem` records. |
 | `Application.SetStatusLine(App, StatusLine)` | Set the application status line root. |
 | `Application.OnCommand(App, Handler)` | Register `procedure (Application, integer)` for command dispatch. Use `Command.*` constants for standard actions. |
 | `Application.Pump(App): integer` | Process one headless Turbo Vision pump step. |
 | `Application.TestClickButton(App, Button)` | Queue a test click for a Turbo Vision button. |
+| `Application.TestDispatchMenuCommand(App, MenuBar, MenuIndex, ItemIndex)` | Queue a menu item command for headless tests. |
 | `Application.TestPump(App)` | Process one headless test step. |
 | `Application.TestPumpUntilIdle(App)` | Process headless test work until idle. |
 | `Application.TestSendKey(App, Key)` | Queue a key event for tests. |

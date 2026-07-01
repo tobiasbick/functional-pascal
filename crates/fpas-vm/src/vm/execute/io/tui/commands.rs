@@ -4,9 +4,10 @@
 
 use super::tv_geometry::unknown_handle_error;
 use crate::vm::Worker;
-use crate::vm::diagnostics::VmError;
+use crate::vm::diagnostics::{VmError, runtime_error};
 use crate::vm::shared::TurboVisionObject;
 use fpas_bytecode::{SourceLocation, Value};
+use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 use fpas_std::ProcessOutcome;
 use turbo_vision::core::event::Event;
 
@@ -40,6 +41,66 @@ impl Worker {
             tui.turbo_vision
                 .pending_commands
                 .push_back(button.command_id);
+            Ok(())
+        })?;
+        Ok(())
+    }
+
+    /// Queue a menu item command for headless tests.
+    pub(super) fn turbo_vision_test_dispatch_menu_command(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        let item_index = usize::try_from(self.pop_int(line)?).map_err(|_| {
+            runtime_error(
+                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                "Menu item index must be non-negative",
+                "Pass a zero-based item index into the selected menu.",
+                line,
+            )
+        })?;
+        let menu_index = usize::try_from(self.pop_int(line)?).map_err(|_| {
+            runtime_error(
+                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                "Menu index must be non-negative",
+                "Pass a zero-based top-level menu index.",
+                line,
+            )
+        })?;
+        let menu_bar_handle = self.pop_turbo_vision_menu_bar_handle(line)?;
+        self.pop_tui_application(line)?;
+
+        self.with_tui(|tui| {
+            let Some(TurboVisionObject::MenuBar(menu_bar)) =
+                tui.turbo_vision.objects.get(&menu_bar_handle)
+            else {
+                return Err(unknown_handle_error("MenuBar", menu_bar_handle, line));
+            };
+            let Some(menu) = menu_bar.menus.get(menu_index) else {
+                return Err(runtime_error(
+                    RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                    format!("Menu index {menu_index} is out of range"),
+                    "Use a menu index returned by `Application.CreateMenuBar`.",
+                    line,
+                ));
+            };
+            let Some(item) = menu.items.get(item_index) else {
+                return Err(runtime_error(
+                    RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                    format!("Menu item index {item_index} is out of range"),
+                    "Use an item index inside the selected menu.",
+                    line,
+                ));
+            };
+            if item.command_id == 0 {
+                return Err(runtime_error(
+                    RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                    "Menu separators cannot be dispatched",
+                    "Select a menu item with a non-zero `commandId`.",
+                    line,
+                ));
+            }
+            tui.turbo_vision.pending_commands.push_back(item.command_id);
             Ok(())
         })?;
         Ok(())

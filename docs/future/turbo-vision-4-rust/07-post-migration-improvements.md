@@ -104,6 +104,16 @@ Notes for the VM layer:
   `handle_event` is dispatched into the FPAS `OnCommand` callback, and an
   `Application.Quit` from that callback ends the loop.
 
+- **Modal dialog read-back (2026-07-01).**
+  `Application.ExecDialog`, `Application.InputText`, `Application.TestSetDialogResult`,
+  and `DialogResult` — headless round-trip in
+  `tests/tui/controls/tui_turbo_vision_exec_dialog_test.fpas`.
+
+- **Multi-item menus (2026-07-01).**
+  `Menu` / `MenuItem` replace flat `MenuBarItem`. `Application.CreateMenuBar` accepts
+  `array of Menu` with multiple items and separators (`commandId = 0`).
+  `Application.TestDispatchMenuCommand` drives headless menu command tests.
+
 ---
 
 ## Phase A: Modal `ExecDialog` (+ InputLine read-back)

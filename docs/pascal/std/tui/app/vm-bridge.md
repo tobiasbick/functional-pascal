@@ -37,6 +37,7 @@ Current public lowering includes:
 | `Application.OnCommand` | `TuiOnCommand` |
 | `Application.Pump` | `TuiPump` |
 | `Application.TestClickButton` | `TuiTestClickButton` |
+| `Application.TestDispatchMenuCommand` | `TuiTestDispatchMenuCommand` |
 | `Application.QueryScreenSize` | `TuiQueryScreenSize` |
 | `Application.QueryScreenLine` | `TuiQueryScreenLine` |
 | `Application.QueryScreenCell` | `TuiQueryScreenCell` |
@@ -53,8 +54,9 @@ Turbo Vision bridge code lives under `crates/fpas-vm/src/vm/execute/io/tui/`:
 | `windows.rs` | `CreateWindow`, `AddWindow` |
 | `controls.rs` | `CreateButton`, `CreateStaticText`, `CreateMemo`, `CreateTextViewer`, `CreateInputLine`, `CreateListBox`, `CreateCheckBox`, `CreateRadioButton`, `AddChild` |
 | `navigation.rs` | `CreateMenuBar`, `SetMenuBar`, `CreateStatusLine`, `SetStatusLine` |
+| `menu_build.rs` | Upstream menu construction from FPAS `Menu` / `MenuItem` records |
 | `callbacks.rs` | Turbo Vision command event to FPAS `OnCommand` |
-| `commands.rs` | `Pump`, `Quit`, `TestClickButton`, command queue |
+| `commands.rs` | `Pump`, `Quit`, `TestClickButton`, `TestDispatchMenuCommand`, command queue |
 | `file_dialog.rs` | `RunFileDialog`, `TestSetFileDialogResult` |
 | `exec_dialog.rs` | `ExecDialog`, `InputText`, `TestSetDialogResult` |
 | `tv_run.rs` | Terminal and headless `Application.Run` for Turbo Vision. The terminal loop steps the Turbo Vision event pump itself so commands left unhandled by Turbo Vision (buttons, menus, status items) are routed into the FPAS `OnCommand` callback, and an `Application.Quit` from that callback ends the loop. |

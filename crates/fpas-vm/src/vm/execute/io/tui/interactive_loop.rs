@@ -1,6 +1,6 @@
 //! Turbo Vision interactive run loop and event-source seam.
 //!
-//! **Documentation:** `docs/future/turbo-vision-4-rust/07-post-migration-improvements.md` (Phase F)
+//! **Documentation:** `docs/future/turbo-vision-4-rust/07-post-migration-improvements.md` (Phase F/G)
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
@@ -135,6 +135,8 @@ impl Worker {
                 if event.what == EventType::Command {
                     self.dispatch_turbo_vision_command_event(&Event::command(event.command), line)?;
                     session.reconcile(self, line)?;
+                } else if event.what != EventType::Nothing {
+                    self.dispatch_turbo_vision_unhandled_input(&mut event, line)?;
                 }
             }
 

@@ -42,6 +42,8 @@ struct TuiTypes {
 
 struct TuiCallbackTypes {
     on_command: Ty,
+    on_key: Ty,
+    on_mouse: Ty,
 }
 
 /// Register the current `Std.Tui` semantic surface.

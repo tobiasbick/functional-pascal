@@ -244,3 +244,115 @@ fn turbo_vision_scripted_interactive_loop_dispatches_command_and_quits() {
     let quit = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
     assert!(quit.quit_requested || quit.turbo_vision.quit_requested);
 }
+
+#[test]
+fn turbo_vision_keyboard_event_maps_escape_kind() {
+    use fpas_std::key_event::key_kind_index;
+    use turbo_vision::core::event::{Event as TurboVisionEvent, KB_ESC};
+
+    let event = TurboVisionEvent::keyboard(KB_ESC);
+    let key = Worker::turbo_vision_keyboard_to_console_key_for_tests(&event);
+    assert_eq!(key.kind, key_kind_index("Escape"));
+}
+
+#[test]
+fn turbo_vision_unhandled_keyboard_dispatches_on_key() {
+    let mut chunk = Chunk::new();
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnKey".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::RegisterOnKey))),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let on_key_start = chunk.len();
+    chunk.insert_function("OnKey", on_key_start, 2);
+    emit_constant(&mut chunk, Value::Str("key".into()));
+    chunk.emit(Op::PrintLn, loc());
+    emit_constant(&mut chunk, Value::Boolean(true));
+    chunk.emit(Op::Return, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("OnKey registration should succeed");
+
+    let mut event = turbo_vision::core::event::Event::keyboard(turbo_vision::core::event::KB_ESC);
+    worker
+        .dispatch_turbo_vision_unhandled_input_for_tests(&mut event, loc())
+        .expect("OnKey dispatch should succeed");
+
+    assert_eq!(event.what, turbo_vision::core::event::EventType::Nothing);
+    let output = shared
+        .console
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .output()
+        .clone();
+    assert_eq!(output.lines, vec!["key"]);
+}
+
+#[test]
+fn turbo_vision_scripted_interactive_loop_dispatches_unhandled_key() {
+    use turbo_vision::core::event::{Event as TurboVisionEvent, KB_ESC};
+
+    let mut chunk = Chunk::new();
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen))),
+        loc(),
+    );
+    chunk.emit(Op::Dup, loc());
+    emit_constant(
+        &mut chunk,
+        Value::Function {
+            name: "OnKey".into(),
+            captures: vec![],
+        },
+    );
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::RegisterOnKey))),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let on_key_start = chunk.len();
+    chunk.insert_function("OnKey", on_key_start, 2);
+    emit_constant(&mut chunk, Value::Str("key".into()));
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::GetLocal(0), loc());
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::Quit))),
+        loc(),
+    );
+    emit_constant(&mut chunk, Value::Boolean(false));
+    chunk.emit(Op::Return, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(Arc::clone(&shared));
+    worker.run().expect("OnKey registration should succeed");
+
+    worker
+        .turbo_vision_drive_scripted_interactive_loop_for_tests(
+            vec![TurboVisionEvent::keyboard(KB_ESC)],
+            loc(),
+        )
+        .expect("scripted interactive loop should succeed");
+
+    let output = shared
+        .console
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .output()
+        .clone();
+    assert_eq!(output.lines, vec!["key"]);
+}

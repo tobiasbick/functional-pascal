@@ -58,6 +58,10 @@ pub(crate) struct TuiState {
     pub on_deactivate: Option<Value>,
     /// `OnCommand`-style handler: `procedure (Application, integer)` for host-resolved shortcuts.
     pub on_command: Option<Value>,
+    /// Turbo Vision `Application.OnKey`: `function (Application, Std.Console.KeyEvent): boolean`.
+    pub turbo_vision_on_key: Option<Value>,
+    /// Turbo Vision `Application.OnMouse`: `procedure (Application, Std.Console.Event)`.
+    pub turbo_vision_on_mouse: Option<Value>,
     /// `OnResize`-style handler: `procedure (Application, Size)` (two arguments).
     pub on_resize: Option<Value>,
     /// `OnPaint`-style handler: `procedure (Application)` (one argument).
@@ -95,6 +99,8 @@ impl Default for TuiState {
             on_activate: None,
             on_deactivate: None,
             on_command: None,
+            turbo_vision_on_key: None,
+            turbo_vision_on_mouse: None,
             on_resize: None,
             on_paint: None,
             on_idle: None,

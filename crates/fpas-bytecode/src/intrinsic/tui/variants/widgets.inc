@@ -24,3 +24,5 @@
     InputText = 453,
     TestSetDialogResult = 454,
     TestDispatchMenuCommand = 455,
+    RegisterOnKey = 456,
+    RegisterOnMouse = 457,

@@ -35,6 +35,8 @@ Current public lowering includes:
 | `Application.InputText` | `TuiInputText` |
 | `Application.TestSetDialogResult` | `TuiTestSetDialogResult` |
 | `Application.OnCommand` | `TuiOnCommand` |
+| `Application.OnKey` | `TuiRegisterOnKey` |
+| `Application.OnMouse` | `TuiRegisterOnMouse` |
 | `Application.Pump` | `TuiPump` |
 | `Application.TestClickButton` | `TuiTestClickButton` |
 | `Application.TestDispatchMenuCommand` | `TuiTestDispatchMenuCommand` |
@@ -56,10 +58,12 @@ Turbo Vision bridge code lives under `crates/fpas-vm/src/vm/execute/io/tui/`:
 | `navigation.rs` | `CreateMenuBar`, `SetMenuBar`, `CreateStatusLine`, `SetStatusLine` |
 | `menu_build.rs` | Upstream menu construction from FPAS `Menu` / `MenuItem` records |
 | `callbacks.rs` | Turbo Vision command event to FPAS `OnCommand` |
+| `tv_input_events.rs` | Unhandled Turbo Vision keyboard/mouse to FPAS `OnKey` / `OnMouse` |
+| `interactive_loop.rs` | Pluggable interactive run loop; dispatches commands and opt-in input hooks |
 | `commands.rs` | `Pump`, `Quit`, `TestClickButton`, `TestDispatchMenuCommand`, command queue |
 | `file_dialog.rs` | `RunFileDialog`, `TestSetFileDialogResult` |
 | `exec_dialog.rs` | `ExecDialog`, `InputText`, `TestSetDialogResult` |
-| `tv_run.rs` | Terminal and headless `Application.Run` for Turbo Vision. The terminal loop steps the Turbo Vision event pump itself so commands left unhandled by Turbo Vision (buttons, menus, status items) are routed into the FPAS `OnCommand` callback, and an `Application.Quit` from that callback ends the loop. |
+| `tv_run.rs` | Terminal and headless `Application.Run` for Turbo Vision. The terminal loop steps the Turbo Vision event pump itself so commands left unhandled by Turbo Vision (buttons, menus, status items) are routed into the FPAS `OnCommand` callback, and an `Application.Quit` from that callback ends the loop. Keyboard and mouse events still typed after `handle_event` can reach opt-in `Application.OnKey` / `Application.OnMouse` handlers. |
 | `events.rs` | Headless `TestSend*` event injection |
 | `testing.rs` | `OpenForTest`, `TestPump*`, `CloseForTest` |
 | `host/` | Hosted global-handler loop (`HostRegister*`, `HostProcessNext`) |

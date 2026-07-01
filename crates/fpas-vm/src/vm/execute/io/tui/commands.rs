@@ -26,6 +26,34 @@ impl Worker {
         Ok(())
     }
 
+    pub(super) fn turbo_vision_register_on_key(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        self.register_tui_handler(
+            2,
+            "OnKey",
+            "Pass a `function (Application, Std.Console.KeyEvent): boolean` handler.",
+            |tui, function| tui.turbo_vision_on_key = Some(function),
+            line,
+        )?;
+        Ok(())
+    }
+
+    pub(super) fn turbo_vision_register_on_mouse(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        self.register_tui_handler(
+            2,
+            "OnMouse",
+            "Pass a `procedure (Application, Std.Console.Event)` mouse handler.",
+            |tui, function| tui.turbo_vision_on_mouse = Some(function),
+            line,
+        )?;
+        Ok(())
+    }
+
     pub(super) fn turbo_vision_test_click_button(
         &mut self,
         line: SourceLocation,

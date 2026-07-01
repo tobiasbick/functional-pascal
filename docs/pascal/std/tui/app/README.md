@@ -53,6 +53,8 @@ Do not call `Application.Configure` expecting it to paint over a Turbo Vision wi
 | `Application.CreateStatusLine(App, Bounds, Items): StatusLine` | Create a bottom status line from an array of `StatusItem` records. |
 | `Application.SetStatusLine(App, StatusLine)` | Set the application status line root. |
 | `Application.OnCommand(App, Handler)` | Register `procedure (Application, integer)` for command dispatch. Use `Command.*` constants for standard actions. |
+| `Application.OnKey(App, Handler)` | Optional Turbo Vision hook: `function (Application, Std.Console.KeyEvent): boolean` for keys left unhandled by the widget tree. Return `true` to mark the key consumed. |
+| `Application.OnMouse(App, Handler)` | Optional Turbo Vision hook: `procedure (Application, Std.Console.Event)` for mouse events left unhandled by the widget tree. |
 | `Application.Pump(App): integer` | Process one headless Turbo Vision pump step. |
 | `Application.TestClickButton(App, Button)` | Queue a test click for a Turbo Vision button. |
 | `Application.TestDispatchMenuCommand(App, MenuBar, MenuIndex, ItemIndex)` | Queue a menu item command for headless tests. |

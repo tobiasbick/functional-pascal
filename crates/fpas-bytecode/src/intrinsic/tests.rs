@@ -244,6 +244,8 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Tui(TuiIntrinsic::Quit),
     Intrinsic::Tui(TuiIntrinsic::TestClickButton),
     Intrinsic::Tui(TuiIntrinsic::TestDispatchMenuCommand),
+    Intrinsic::Tui(TuiIntrinsic::RegisterOnKey),
+    Intrinsic::Tui(TuiIntrinsic::RegisterOnMouse),
     Intrinsic::Tui(TuiIntrinsic::CreateWindow),
     Intrinsic::Tui(TuiIntrinsic::AddWindow),
     Intrinsic::Tui(TuiIntrinsic::CreateStaticText),

@@ -239,6 +239,22 @@ pub(super) fn register_application_api(
             p("OnCommand", callbacks.on_command.clone(), false),
         ],
     );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_ON_KEY,
+        vec![
+            p("App", types.application.clone(), false),
+            p("OnKey", callbacks.on_key.clone(), false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_ON_MOUSE,
+        vec![
+            p("App", types.application.clone(), false),
+            p("OnMouse", callbacks.on_mouse.clone(), false),
+        ],
+    );
     define_func(
         checker,
         s::STD_TUI_APPLICATION_PUMP,

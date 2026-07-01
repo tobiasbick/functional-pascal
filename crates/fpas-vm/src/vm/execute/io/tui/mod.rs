@@ -23,6 +23,7 @@ mod reconcile;
 mod records;
 mod testing;
 mod tv_geometry;
+mod tv_input_events;
 mod tv_run;
 mod windows;
 
@@ -97,6 +98,12 @@ impl Worker {
             }
             Intrinsic::Tui(TuiIntrinsic::RegisterOnCommand) => {
                 self.turbo_vision_register_on_command(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::RegisterOnKey) => {
+                self.turbo_vision_register_on_key(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::RegisterOnMouse) => {
+                self.turbo_vision_register_on_mouse(line)?;
             }
             Intrinsic::Tui(TuiIntrinsic::Pump) => {
                 self.turbo_vision_pump(line)?;

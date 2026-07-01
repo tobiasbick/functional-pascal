@@ -291,6 +291,10 @@ pub const STD_TUI_APPLICATION_SET_STATUS_LINE: &str = std_tui!("Application.SetS
 pub const STD_TUI_APPLICATION_ADD_CHILD: &str = std_tui!("Application.AddChild");
 pub const STD_TUI_APPLICATION_ADD_WINDOW: &str = std_tui!("Application.AddWindow");
 pub const STD_TUI_APPLICATION_ON_COMMAND: &str = std_tui!("Application.OnCommand");
+/// Register `function (Application, Std.Console.KeyEvent): boolean` for unhandled Turbo Vision keys.
+pub const STD_TUI_APPLICATION_ON_KEY: &str = std_tui!("Application.OnKey");
+/// Register `procedure (Application, Std.Console.Event)` for unhandled Turbo Vision mouse events.
+pub const STD_TUI_APPLICATION_ON_MOUSE: &str = std_tui!("Application.OnMouse");
 pub const STD_TUI_APPLICATION_PUMP: &str = std_tui!("Application.Pump");
 pub const STD_TUI_APPLICATION_QUIT: &str = std_tui!("Application.Quit");
 pub const STD_TUI_APPLICATION_TEST_CLICK_BUTTON: &str = std_tui!("Application.TestClickButton");

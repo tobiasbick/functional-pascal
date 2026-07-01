@@ -182,7 +182,12 @@ pub(super) fn register_application_handlers(
         ],
     );
 
-    let callbacks = TuiCallbackTypes { on_command };
+    let on_key = on_key_pressed.clone();
+    let callbacks = TuiCallbackTypes {
+        on_command,
+        on_key,
+        on_mouse,
+    };
 
     (application_handlers, callbacks)
 }

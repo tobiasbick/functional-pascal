@@ -139,6 +139,13 @@ Notes for the VM layer:
   See `turbo_vision_scripted_interactive_loop_dispatches_command_and_quits` in
   `crates/fpas-vm/src/tests/core/tui_turbo_vision_vm.rs`.
 
+- **Optional raw key/mouse hooks (2026-07-01).**
+  `Application.OnKey` and `Application.OnMouse` register opt-in Turbo Vision fallbacks for
+  keyboard and mouse events still typed after `handle_event`. Separate from hosted
+  `Application.Configure` handlers. See `tv_input_events.rs` and
+  `turbo_vision_scripted_interactive_loop_dispatches_unhandled_key` in
+  `crates/fpas-vm/src/tests/core/tui_turbo_vision_vm.rs`.
+
 ---
 
 ## Phase A: Modal `ExecDialog` (+ InputLine read-back)
@@ -346,7 +353,12 @@ loop.
 
 ## Phase G (optional): Raw key/mouse hook in the Turbo Vision path
 
+**Status: landed (2026-07-01).**
+
 Only if a concrete use case appears. Today the Turbo Vision path routes commands
 to FPAS but not raw keyboard/mouse events. If needed, add an opt-in
 `OnKey`/`OnMouse` hook in `tv_run.rs` that fires for events left unhandled by the
 view tree. Otherwise leave the facade command-only.
+
+**Landed as:** `Application.OnKey`, `Application.OnMouse`, `tv_input_events.rs`,
+dispatch from `interactive_loop.rs` after `handle_event`.

@@ -4,7 +4,6 @@ uses Std.Console, Std.Conv, Std.Array;
 
 type
   { unless an else branch is present.                                    }
-
   Light = enum
     Red;
     Yellow;

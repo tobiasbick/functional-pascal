@@ -201,10 +201,10 @@ Notes:
 
 ## Phase 8: Verification and Cleanup
 
-- [ ] `cargo fmt`
-- [ ] `cargo build`
-- [ ] `cargo test --workspace`
-- [ ] `cargo run -p fpas-cli -- test tests/`
-- [ ] `fpas fmt --check tests/ examples/ apps/` when FPAS files changed
-- [ ] Remove dead modules and unused imports.
-- [ ] Confirm no `.github/workflows/` or automation config was added.
+- [x] `cargo fmt` (2026-06-29).
+- [x] `cargo build`.
+- [x] `cargo test --workspace`.
+- [x] `cargo run -p fpas-cli -- test tests/` — 311 passed, 1 skipped.
+- [x] `fpas fmt --check tests/ examples/ apps/` — three unrelated `examples/pascal/` files reformatted.
+- [x] Remove dead modules and unused imports — no additional TUI dead modules found; hosted-loop and `ViewRect`/`DamageRegion` internals remain for the transition path.
+- [x] Confirm no `.github/workflows/` or automation config was added.

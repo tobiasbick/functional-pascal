@@ -21,13 +21,13 @@ The spike must prove at least one of these paths:
 
 Required operations:
 
-- [ ] create test application with fixed width and height
-- [ ] inject key event
-- [ ] inject mouse event or command event
-- [ ] pump one event turn
-- [ ] query command callback result
-- [ ] query screen line or screen cell
-- [ ] close without leaving terminal raw mode active
+- [x] create test application with fixed width and height
+- [x] inject key event
+- [x] inject mouse event or command event
+- [x] pump one event turn
+- [x] query command callback result
+- [x] query screen line or screen cell
+- [x] close without leaving terminal raw mode active
 
 ## Test Categories
 

@@ -4,7 +4,6 @@ uses Std.Console, Std.Conv;
 
 type
   { A simple expression tree using enums with associated data }
-
   Expr = enum
     Num(Value: integer);
     Add(Left: integer; Right: integer);

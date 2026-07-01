@@ -37,6 +37,8 @@ end.
 
 Regression tests live under `tests/tui/`.
 
+Turbo Vision widget tests are in `tests/tui/controls/` (`tui_turbo_vision_*_test.fpas`). Hosted transition tests remain in `tests/tui/host/`.
+
 ## See Also
 
 - [Application](README.md)

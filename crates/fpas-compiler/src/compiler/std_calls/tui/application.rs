@@ -143,6 +143,14 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::CreateRadioButton), location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_RUN_FILE_DIALOG => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_RUN_FILE_DIALOG, 5, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::RunFileDialog), location);
+                Ok(true)
+            }
             s::STD_TUI_APPLICATION_CREATE_MENU_BAR => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_CREATE_MENU_BAR, 3, args, location)?;
                 for arg in args {

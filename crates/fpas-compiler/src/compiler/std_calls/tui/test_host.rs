@@ -96,6 +96,21 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::TestFocus), location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_TEST_SET_FILE_DIALOG_RESULT => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_TEST_SET_FILE_DIALOG_RESULT,
+                    2,
+                    args,
+                    location,
+                )?;
+                self.compile_expr(&args[0])?;
+                self.compile_expr(&args[1])?;
+                self.emit_intrinsic_unit(
+                    Intrinsic::Tui(TuiIntrinsic::TestSetFileDialogResult),
+                    location,
+                );
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

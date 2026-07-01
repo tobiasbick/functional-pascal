@@ -17,3 +17,5 @@
     CreateCheckBox = 446,
     CreateRadioButton = 447,
     CreateMemo = 448,
+    RunFileDialog = 449,
+    TestSetFileDialogResult = 450,

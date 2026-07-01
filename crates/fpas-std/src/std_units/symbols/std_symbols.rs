@@ -267,6 +267,11 @@ pub const STD_TUI_APPLICATION_CREATE_INPUT_LINE: &str = std_tui!("Application.Cr
 pub const STD_TUI_APPLICATION_CREATE_LIST_BOX: &str = std_tui!("Application.CreateListBox");
 pub const STD_TUI_APPLICATION_CREATE_CHECK_BOX: &str = std_tui!("Application.CreateCheckBox");
 pub const STD_TUI_APPLICATION_CREATE_RADIO_BUTTON: &str = std_tui!("Application.CreateRadioButton");
+/// Show a modal Turbo Vision file dialog and return the selected path, or `None` when canceled.
+pub const STD_TUI_APPLICATION_RUN_FILE_DIALOG: &str = std_tui!("Application.RunFileDialog");
+/// Queue the result returned by the next headless `Application.RunFileDialog` call.
+pub const STD_TUI_APPLICATION_TEST_SET_FILE_DIALOG_RESULT: &str =
+    std_tui!("Application.TestSetFileDialogResult");
 pub const STD_TUI_APPLICATION_CREATE_MENU_BAR: &str = std_tui!("Application.CreateMenuBar");
 pub const STD_TUI_APPLICATION_SET_MENU_BAR: &str = std_tui!("Application.SetMenuBar");
 pub const STD_TUI_APPLICATION_CREATE_STATUS_LINE: &str = std_tui!("Application.CreateStatusLine");

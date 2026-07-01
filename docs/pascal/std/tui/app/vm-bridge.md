@@ -28,6 +28,8 @@ Current public lowering includes:
 | `Application.SetMenuBar` | `TuiSetMenuBar` |
 | `Application.CreateStatusLine` | `TuiCreateStatusLine` |
 | `Application.SetStatusLine` | `TuiSetStatusLine` |
+| `Application.RunFileDialog` | `TuiRunFileDialog` |
+| `Application.TestSetFileDialogResult` | `TuiTestSetFileDialogResult` |
 | `Application.OnCommand` | `TuiOnCommand` |
 | `Application.Pump` | `TuiPump` |
 | `Application.TestClickButton` | `TuiTestClickButton` |
@@ -49,6 +51,7 @@ Turbo Vision bridge code lives under `crates/fpas-vm/src/vm/execute/io/tui/`:
 | `navigation.rs` | `CreateMenuBar`, `SetMenuBar`, `CreateStatusLine`, `SetStatusLine` |
 | `callbacks.rs` | Turbo Vision command event to FPAS `OnCommand` |
 | `commands.rs` | `Pump`, `Quit`, `TestClickButton`, command queue |
+| `file_dialog.rs` | `RunFileDialog`, `TestSetFileDialogResult` |
 | `tv_run.rs` | Terminal and headless `Application.Run` for Turbo Vision |
 | `events.rs` | Headless `TestSend*` event injection |
 | `testing.rs` | `OpenForTest`, `TestPump*`, `CloseForTest` |

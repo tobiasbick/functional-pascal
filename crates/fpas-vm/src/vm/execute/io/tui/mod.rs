@@ -8,6 +8,7 @@ mod commands;
 mod controls;
 mod dialogs;
 mod events;
+mod file_dialog;
 mod handlers;
 mod handles;
 mod host;
@@ -72,6 +73,9 @@ impl Worker {
             }
             Intrinsic::Tui(TuiIntrinsic::CreateRadioButton) => {
                 self.turbo_vision_create_radio_button(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::RunFileDialog) => {
+                self.turbo_vision_run_file_dialog(line)?;
             }
             Intrinsic::Tui(TuiIntrinsic::AddChild) => {
                 self.turbo_vision_add_child(line)?;

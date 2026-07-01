@@ -39,6 +39,20 @@ Regression tests live under `tests/tui/`.
 
 Turbo Vision widget tests are in `tests/tui/controls/` (`tui_turbo_vision_*_test.fpas`). Hosted transition tests remain in `tests/tui/host/`.
 
+File dialog headless example:
+
+```pascal
+Application.TestSetFileDialogResult(App, Some('selected.txt'));
+var Path: option of string := Application.RunFileDialog(
+  App,
+  Bounds(10, 5, 50, 14),
+  'Open File',
+  '*',
+  None
+);
+AssertEquals('selected.txt', Unwrap(Path))
+```
+
 ## See Also
 
 - [Application](README.md)

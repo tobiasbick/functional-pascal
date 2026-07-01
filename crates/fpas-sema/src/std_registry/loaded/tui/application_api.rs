@@ -145,6 +145,18 @@ pub(super) fn register_application_api(
     );
     define_func(
         checker,
+        s::STD_TUI_APPLICATION_RUN_FILE_DIALOG,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Bounds", types.rect.clone(), false),
+            p("Title", Ty::String, false),
+            p("Wildcard", Ty::String, false),
+            p("StartPath", Ty::Option(Box::new(Ty::String)), false),
+        ],
+        Ty::Option(Box::new(Ty::String)),
+    );
+    define_func(
+        checker,
         s::STD_TUI_APPLICATION_CREATE_MENU_BAR,
         vec![
             p("App", types.application.clone(), false),
@@ -303,6 +315,14 @@ pub(super) fn register_application_api(
         vec![
             p("App", types.application.clone(), false),
             p("Gained", Ty::Boolean, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_TEST_SET_FILE_DIALOG_RESULT,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Result", Ty::Option(Box::new(Ty::String)), false),
         ],
     );
     define_func(

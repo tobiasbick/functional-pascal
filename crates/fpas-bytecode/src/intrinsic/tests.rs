@@ -255,6 +255,8 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Tui(TuiIntrinsic::CreateListBox),
     Intrinsic::Tui(TuiIntrinsic::CreateCheckBox),
     Intrinsic::Tui(TuiIntrinsic::CreateRadioButton),
+    Intrinsic::Tui(TuiIntrinsic::RunFileDialog),
+    Intrinsic::Tui(TuiIntrinsic::TestSetFileDialogResult),
     Intrinsic::Tui(TuiIntrinsic::OpenForTest),
     Intrinsic::Tui(TuiIntrinsic::TestPump),
     Intrinsic::Tui(TuiIntrinsic::TestPumpUntilIdle),

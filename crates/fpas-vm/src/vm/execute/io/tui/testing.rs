@@ -48,6 +48,9 @@ impl Worker {
                 self.pop_tui_application(line)?;
                 self.close_tui_application_state(line)?;
             }
+            TuiIntrinsic::TestSetFileDialogResult => {
+                self.turbo_vision_test_set_file_dialog_result(line)?;
+            }
             other if self.exec_tui_test_event_intrinsic(other, line)? => {}
             _ => return Ok(false),
         }

@@ -117,6 +117,8 @@ pub(crate) struct TurboVisionState {
     pub status_line: Option<u32>,
     pub pending_commands: VecDeque<u16>,
     pub quit_requested: bool,
+    /// Headless override consumed by the next `RunFileDialog` call.
+    pub test_file_dialog_result: Option<Option<String>>,
 }
 
 impl Default for TurboVisionState {
@@ -128,6 +130,7 @@ impl Default for TurboVisionState {
             status_line: None,
             pending_commands: VecDeque::new(),
             quit_requested: false,
+            test_file_dialog_result: None,
         }
     }
 }

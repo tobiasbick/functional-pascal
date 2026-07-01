@@ -43,17 +43,11 @@ Use this file when continuing after context loss.
 
 ## Good Next Task
 
-If no implementation has started, do Phase 1 from [implementation phases](04-implementation-phases.md):
+Phases 0–8 are complete on branch `turbo-vision-4-rust`. Continue with deferred Phase 5 widgets in this order:
 
-- add the dependency in the narrowest crate that needs it;
-- build;
-- inspect `cargo tree -i crossterm`;
-- update the checklist with results.
+1. **TextViewer** — same checklist as other widgets after file dialog lands. Maps to `turbo_vision::views::text_viewer::TextViewer` (read-only scrolling text; not `Memo`).
 
-If Phase 1 is done, do Phase 2:
-
-- implement only the minimal FPAS callback spike;
-- avoid deleting old code until the command callback and headless test path are proven.
+Before starting, read [implementation phases](04-implementation-phases.md) and `.agents/skills/fpas-change-checklist/SKILL.md`.
 
 ## Progress Update Rule
 

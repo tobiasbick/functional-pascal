@@ -224,6 +224,45 @@ impl Worker {
         }
     }
 
+    pub(super) fn pop_optional_string(
+        &mut self,
+        label: &'static str,
+        line: SourceLocation,
+    ) -> Result<Option<String>, VmError> {
+        match self.pop(line)? {
+            Value::OptionNone => Ok(None),
+            Value::OptionSome(inner) => match *inner {
+                Value::Str(text) => Ok(Some(text)),
+                other => Err(runtime_error(
+                    TYPE_MISMATCH_CODE,
+                    format!(
+                        "{label} must be Option of string, got Some({})",
+                        other.type_name()
+                    ),
+                    "Pass `None` or `Some('path')`.",
+                    line,
+                )),
+            },
+            other => Err(runtime_error(
+                TYPE_MISMATCH_CODE,
+                format!(
+                    "{label} must be Option of string, got {}",
+                    other.type_name()
+                ),
+                "Pass `None` or `Some('path')`.",
+                line,
+            )),
+        }
+    }
+
+    pub(super) fn push_optional_string(&mut self, value: Option<String>) -> Result<(), VmError> {
+        match value {
+            Some(text) => self.push(Value::OptionSome(Box::new(Value::Str(text))))?,
+            None => self.push(Value::OptionNone)?,
+        }
+        Ok(())
+    }
+
     fn pop_turbo_vision_handle(
         &mut self,
         expected_type: &'static str,

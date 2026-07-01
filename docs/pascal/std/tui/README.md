@@ -13,6 +13,7 @@ A legacy hosted global-handler loop (`Application.Configure` with `OnPaint`, `On
 | [Types](app/types.md) | Handles, `Rect`, `Command` constants, menu/status records |
 | [Controls](app/controls.md) | Buttons, text fields, lists, check boxes, radio buttons, menu bar, status line |
 | [Dialogs and windows](app/modals.md) | `Dialog`, `Window`, and child attachment |
+| [File dialog](app/file-dialog.md) | Modal `Application.RunFileDialog` |
 | [Handlers](app/handlers.md) | `ApplicationHandlers`, `Application.OnCommand` |
 | [Lifecycle](app/lifecycle.md) | Open, run, quit, and close rules |
 | [Native testing](app/testing.md) | Headless tests with `OpenForTest` and `Test*` helpers |

@@ -163,8 +163,9 @@ Implement in this order:
 - [x] `ListBox` — `Application.CreateListBox`, `ListBox` handle type, string-array items, select command id, and `Application.AddChild` child support (2026-07-01).
 - [x] `CheckBox` — `Application.CreateCheckBox`, `CheckBox` handle type, initial checked state, and `Application.AddChild` child support (2026-07-01).
 - [x] `RadioButton` — `Application.CreateRadioButton`, `RadioButton` handle type, group id, selected state, and `Application.AddChild` child support (2026-07-01).
-- [x] `Memo` — `Application.CreateMemo`, `Memo` handle type, multi-line initial text, and `Application.AddChild` child support (2026-07-01; `TextViewer` deferred).
-- [ ] file dialog only after the core app and tests are stable
+- [x] `Memo` — `Application.CreateMemo`, `Memo` handle type, multi-line initial text, and `Application.AddChild` child support (2026-07-01).
+- [x] **File dialog** — `Application.RunFileDialog`, `Application.TestSetFileDialogResult`, `Option of string` result, headless test override (2026-06-29).
+- [ ] **`TextViewer`** — after file dialog; read-only scrollable multi-line display (`turbo_vision::views::text_viewer::TextViewer`). Not a substitute for `Memo` (editor) or `StaticText` (short label).
 
 Each item requires:
 

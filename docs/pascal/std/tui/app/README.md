@@ -26,6 +26,7 @@ The public surface is implemented over the Rust `turbo-vision` crate. The old re
 | `Application.CreateListBox(App, Bounds, Items, CommandId): ListBox` | Create a Turbo Vision list box from an array of strings. |
 | `Application.CreateCheckBox(App, Bounds, Text, Checked): CheckBox` | Create a Turbo Vision check box with an initial checked state. |
 | `Application.CreateRadioButton(App, Bounds, Text, GroupId, Selected): RadioButton` | Create a Turbo Vision radio button. Use the same `GroupId` for mutually exclusive options. |
+| `Application.RunFileDialog(App, Bounds, Title, Wildcard, StartPath): Option of string` | Show a modal file dialog. Returns `Some(path)` when a file is chosen and `None` when canceled. Pass `None` as `StartPath` for the current directory. |
 | `Application.AddChild(App, Parent, Child)` | Attach a button, static text, memo, input line, list box, check box, or radio button child to a dialog or window parent. |
 | `Application.AddWindow(App, Window)` | Place a window on the application desktop. |
 | `Application.CreateMenuBar(App, Bounds, Items): MenuBar` | Create a top menu bar from an array of `MenuBarItem` records. |
@@ -44,6 +45,7 @@ The public surface is implemented over the Rust `turbo-vision` crate. The old re
 | `Application.TestResize(App, Width, Height)` | Queue a resize for tests. |
 | `Application.TestPaste(App, Text)` | Queue pasted text for tests. |
 | `Application.TestFocus(App, Gained)` | Queue a focus event for tests. |
+| `Application.TestSetFileDialogResult(App, Result)` | Queue the `Option of string` returned by the next headless `Application.RunFileDialog` call. |
 
 ## Screen Queries
 
@@ -61,6 +63,7 @@ The following query functions remain public for headless tests:
 - [Application types](types.md)
 - [Controls](controls.md)
 - [Dialogs and windows](modals.md)
+- [File dialog](file-dialog.md)
 - [Handlers](handlers.md)
 - [Lifecycle](lifecycle.md)
 - [Native testing](testing.md)

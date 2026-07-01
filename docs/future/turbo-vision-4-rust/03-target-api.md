@@ -92,10 +92,13 @@ Planned surface:
 - `Application.SetMenuBar(App, MenuBar)`
 - `Application.CreateStatusLine(App, Bounds, Items): StatusLine`
 - `Application.SetStatusLine(App, StatusLine)`
-- `Application.CreateStatusLine(App, Bounds, Items): StatusLine`
 - `Application.AddWindow(App, Window)`
 - `Application.AddChild(App, Parent, Child)`
 - `Application.Remove(App, View)`
+
+## Deferred widgets (not yet in `docs/pascal/`)
+
+1. **TextViewer** — read-only scrollable multi-line display for logs, help, and file preview. Planned `Application.CreateTextViewer(App, Bounds, Text): TextViewer` and `Application.AddChild` support. Distinct from `Memo` (editable) and `StaticText` (short label).
 
 ## Dialog API
 

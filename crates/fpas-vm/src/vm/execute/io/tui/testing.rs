@@ -51,6 +51,9 @@ impl Worker {
             TuiIntrinsic::TestSetFileDialogResult => {
                 self.turbo_vision_test_set_file_dialog_result(line)?;
             }
+            TuiIntrinsic::TestSetDialogResult => {
+                self.turbo_vision_test_set_dialog_result(line)?;
+            }
             other if self.exec_tui_test_event_intrinsic(other, line)? => {}
             _ => return Ok(false),
         }

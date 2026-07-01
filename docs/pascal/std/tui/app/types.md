@@ -48,6 +48,14 @@ Opaque Turbo Vision window handle returned by `Application.CreateWindow`. Call `
 
 Opaque Turbo Vision dialog handle returned by `Application.CreateDialog`.
 
+## `DialogResult`
+
+Result of `Application.ExecDialog`.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `command` | `integer` | The command id that closed the dialog (for example `Command.Accept`). |
+
 ## `Button`
 
 Opaque Turbo Vision button handle returned by `Application.CreateButton`.

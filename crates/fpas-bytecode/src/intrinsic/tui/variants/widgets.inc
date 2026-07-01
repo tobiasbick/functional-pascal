@@ -20,3 +20,6 @@
     RunFileDialog = 449,
     TestSetFileDialogResult = 450,
     CreateTextViewer = 451,
+    ExecDialog = 452,
+    InputText = 453,
+    TestSetDialogResult = 454,

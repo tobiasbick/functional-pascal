@@ -18,6 +18,7 @@ use fpas_std::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS};
 struct TuiTypes {
     application: Ty,
     dialog: Ty,
+    dialog_result: Ty,
     window: Ty,
     button: Ty,
     static_text: Ty,
@@ -51,6 +52,11 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         type_registration::register_record_type(checker, s::STD_TUI_APPLICATION, Vec::new());
     type_registration::register_record_type(checker, s::STD_TUI_VIEW_ID, Vec::new());
     let dialog = type_registration::register_record_type(checker, s::STD_TUI_DIALOG, Vec::new());
+    let dialog_result = type_registration::register_record_type(
+        checker,
+        s::STD_TUI_DIALOG_RESULT,
+        vec![("command".into(), Ty::Integer)],
+    );
     let window = type_registration::register_record_type(checker, s::STD_TUI_WINDOW, Vec::new());
     let button = type_registration::register_record_type(checker, s::STD_TUI_BUTTON, Vec::new());
     let static_text =
@@ -166,6 +172,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
     let types = TuiTypes {
         application,
         dialog,
+        dialog_result,
         window,
         button,
         static_text,

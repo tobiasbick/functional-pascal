@@ -219,6 +219,8 @@ pub const STD_TIME_SLEEP: &str = std_time!("Sleep");
 pub const STD_TUI_APPLICATION: &str = std_tui!("Application");
 pub const STD_TUI_VIEW_ID: &str = std_tui!("ViewId");
 pub const STD_TUI_DIALOG: &str = std_tui!("Dialog");
+/// Result of a modal `Application.ExecDialog` call.
+pub const STD_TUI_DIALOG_RESULT: &str = std_tui!("DialogResult");
 pub const STD_TUI_WINDOW: &str = std_tui!("Window");
 pub const STD_TUI_BUTTON: &str = std_tui!("Button");
 pub const STD_TUI_STATIC_TEXT: &str = std_tui!("StaticText");
@@ -274,6 +276,13 @@ pub const STD_TUI_APPLICATION_RUN_FILE_DIALOG: &str = std_tui!("Application.RunF
 /// Queue the result returned by the next headless `Application.RunFileDialog` call.
 pub const STD_TUI_APPLICATION_TEST_SET_FILE_DIALOG_RESULT: &str =
     std_tui!("Application.TestSetFileDialogResult");
+/// Run a dialog modally and return the closing command.
+pub const STD_TUI_APPLICATION_EXEC_DIALOG: &str = std_tui!("Application.ExecDialog");
+/// Read the current text of an input line (valid after `Application.ExecDialog`).
+pub const STD_TUI_APPLICATION_INPUT_TEXT: &str = std_tui!("Application.InputText");
+/// Queue the closing command returned by the next headless `Application.ExecDialog` call.
+pub const STD_TUI_APPLICATION_TEST_SET_DIALOG_RESULT: &str =
+    std_tui!("Application.TestSetDialogResult");
 pub const STD_TUI_APPLICATION_CREATE_MENU_BAR: &str = std_tui!("Application.CreateMenuBar");
 pub const STD_TUI_APPLICATION_SET_MENU_BAR: &str = std_tui!("Application.SetMenuBar");
 pub const STD_TUI_APPLICATION_CREATE_STATUS_LINE: &str = std_tui!("Application.CreateStatusLine");

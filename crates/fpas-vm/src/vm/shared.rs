@@ -119,6 +119,8 @@ pub(crate) struct TurboVisionState {
     pub quit_requested: bool,
     /// Headless override consumed by the next `RunFileDialog` call.
     pub test_file_dialog_result: Option<Option<String>>,
+    /// Headless override consumed by the next `ExecDialog` call (closing command id).
+    pub test_dialog_result: Option<i64>,
 }
 
 impl Default for TurboVisionState {
@@ -131,6 +133,7 @@ impl Default for TurboVisionState {
             pending_commands: VecDeque::new(),
             quit_requested: false,
             test_file_dialog_result: None,
+            test_dialog_result: None,
         }
     }
 }
@@ -214,8 +217,8 @@ pub(crate) struct TurboVisionTextViewer {
 #[derive(Clone)]
 pub(crate) struct TurboVisionInputLine {
     pub bounds: TurboVisionRect,
-    pub text: String,
     pub max_length: usize,
+    pub text_cell: crate::vm::turbo_vision_input_text_cell::TurboVisionInputTextCell,
     pub attached: bool,
 }
 

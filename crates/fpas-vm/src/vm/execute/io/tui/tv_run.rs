@@ -13,6 +13,7 @@ use crate::vm::shared::{
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 use turbo_vision::app::Application as TurboVisionApplication;
 use turbo_vision::core::event::{Event, EventType};
@@ -141,8 +142,9 @@ impl Worker {
 
         for dialog in dialog_snapshots {
             let mut dialog_view = Dialog::new_modal(turbo_rect(dialog.bounds), &dialog.title);
+            let mut input_bindings = Vec::new();
             for child in dialog.children {
-                add_dialog_child(&mut dialog_view, child);
+                add_dialog_child(&mut dialog_view, child, 0, &mut input_bindings);
             }
             app.desktop.add(dialog_view);
         }
@@ -315,7 +317,7 @@ fn add_window_child(window: &mut Window, child: TurboVisionChildSnapshot) {
             window.add(Box::new(InputLine::new(
                 turbo_rect(input_line.bounds),
                 input_line.max_length,
-                Rc::new(RefCell::new(input_line.text)),
+                input_line.text_cell.view_binding(),
             )));
         }
         TurboVisionChildSnapshot::ListBox(list_box) => {
@@ -330,7 +332,12 @@ fn add_window_child(window: &mut Window, child: TurboVisionChildSnapshot) {
     }
 }
 
-fn add_dialog_child(dialog: &mut Dialog, child: TurboVisionChildSnapshot) {
+fn add_dialog_child(
+    dialog: &mut Dialog,
+    child: TurboVisionChildSnapshot,
+    child_handle: u32,
+    input_bindings: &mut Vec<(u32, Rc<RefCell<String>>)>,
+) {
     match child {
         TurboVisionChildSnapshot::Button(button) => {
             dialog.add(Box::new(Button::new(
@@ -353,10 +360,12 @@ fn add_dialog_child(dialog: &mut Dialog, child: TurboVisionChildSnapshot) {
             dialog.add(Box::new(build_text_viewer(text_viewer)));
         }
         TurboVisionChildSnapshot::InputLine(input_line) => {
+            let binding = input_line.text_cell.view_binding();
+            input_bindings.push((child_handle, binding.clone()));
             dialog.add(Box::new(InputLine::new(
                 turbo_rect(input_line.bounds),
                 input_line.max_length,
-                Rc::new(RefCell::new(input_line.text)),
+                binding,
             )));
         }
         TurboVisionChildSnapshot::ListBox(list_box) => {
@@ -425,4 +434,54 @@ fn build_status_line(snapshot: TurboVisionStatusLineSnapshot) -> StatusLine {
             .map(|item| StatusItem::new(&item.text, item.key_code, item.command_id))
             .collect(),
     )
+}
+
+/// Build a modal Turbo Vision dialog view from a live FPAS dialog handle.
+pub(in crate::vm::execute::io::tui) fn turbo_vision_build_modal_dialog(
+    objects: &HashMap<u32, crate::vm::shared::TurboVisionObject>,
+    handle: u32,
+    input_bindings: &mut Vec<(u32, Rc<RefCell<String>>)>,
+) -> Option<Box<Dialog>> {
+    let crate::vm::shared::TurboVisionObject::Dialog(dialog) = objects.get(&handle)? else {
+        return None;
+    };
+    let mut dialog_view = Dialog::new_modal(turbo_rect(dialog.bounds), &dialog.title);
+    for child_handle in &dialog.children {
+        let Some(child) = child_snapshot(objects, *child_handle) else {
+            continue;
+        };
+        add_dialog_child(&mut dialog_view, child, *child_handle, input_bindings);
+    }
+    Some(dialog_view)
+}
+
+fn child_snapshot(
+    objects: &HashMap<u32, crate::vm::shared::TurboVisionObject>,
+    handle: u32,
+) -> Option<TurboVisionChildSnapshot> {
+    match objects.get(&handle) {
+        Some(TurboVisionObject::Button(button)) => {
+            Some(TurboVisionChildSnapshot::Button(button.clone()))
+        }
+        Some(TurboVisionObject::StaticText(static_text)) => {
+            Some(TurboVisionChildSnapshot::StaticText(static_text.clone()))
+        }
+        Some(TurboVisionObject::Memo(memo)) => Some(TurboVisionChildSnapshot::Memo(memo.clone())),
+        Some(TurboVisionObject::TextViewer(text_viewer)) => {
+            Some(TurboVisionChildSnapshot::TextViewer(text_viewer.clone()))
+        }
+        Some(TurboVisionObject::InputLine(input_line)) => {
+            Some(TurboVisionChildSnapshot::InputLine(input_line.clone()))
+        }
+        Some(TurboVisionObject::ListBox(list_box)) => {
+            Some(TurboVisionChildSnapshot::ListBox(list_box.clone()))
+        }
+        Some(TurboVisionObject::CheckBox(check_box)) => {
+            Some(TurboVisionChildSnapshot::CheckBox(check_box.clone()))
+        }
+        Some(TurboVisionObject::RadioButton(radio_button)) => {
+            Some(TurboVisionChildSnapshot::RadioButton(radio_button.clone()))
+        }
+        _ => None,
+    }
 }

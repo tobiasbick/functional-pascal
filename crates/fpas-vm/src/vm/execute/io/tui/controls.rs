@@ -10,11 +10,10 @@ use crate::vm::shared::{
     TurboVisionCheckBox, TurboVisionInputLine, TurboVisionListBox, TurboVisionMemo,
     TurboVisionObject, TurboVisionRadioButton, TurboVisionStaticText, TurboVisionTextViewer,
 };
+use crate::vm::turbo_vision_input_text_cell::TurboVisionInputTextCell;
 use fpas_bytecode::SourceLocation;
 use fpas_bytecode::Value;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
-use std::cell::RefCell;
-use std::rc::Rc;
 use turbo_vision::views::{
     button::Button, checkbox::CheckBox, input_line::InputLine, listbox::ListBox, memo::Memo,
     radiobutton::RadioButton, static_text::StaticText, text_viewer::TextViewer,
@@ -160,7 +159,8 @@ impl Worker {
         let bounds = self.pop_turbo_vision_rect(line)?;
         self.pop_tui_application(line)?;
 
-        let _input_line = InputLine::new(bounds, max_length, Rc::new(RefCell::new(text.clone())));
+        let text_cell = TurboVisionInputTextCell::new(text.clone());
+        let _input_line = InputLine::new(bounds, max_length, text_cell.view_binding());
         let bounds = super::tv_geometry::state_rect(bounds);
         let handle = self.with_tui(|tui| {
             let handle = tui.turbo_vision.next_handle;
@@ -169,8 +169,8 @@ impl Worker {
                 handle,
                 TurboVisionObject::InputLine(TurboVisionInputLine {
                     bounds,
-                    text,
                     max_length,
+                    text_cell,
                     attached: false,
                 }),
             );

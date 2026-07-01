@@ -164,6 +164,22 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::RunFileDialog), location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_EXEC_DIALOG => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_EXEC_DIALOG, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::ExecDialog), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_INPUT_TEXT => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_INPUT_TEXT, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::InputText), location);
+                Ok(true)
+            }
             s::STD_TUI_APPLICATION_CREATE_MENU_BAR => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_CREATE_MENU_BAR, 3, args, location)?;
                 for arg in args {

@@ -2,13 +2,33 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/README.md` (current callback contract).
 
+use crate::tests::helpers::{emit_constant, loc, minimal_shared_state};
+use crate::vm::Worker;
 use fpas_bytecode::{Chunk, Intrinsic, Op, TuiIntrinsic, Value};
 use fpas_std::ProcessOutcome;
 use std::sync::Arc;
 use turbo_vision::core::event::Event as TurboVisionEvent;
 
-use crate::tests::helpers::{emit_constant, loc, minimal_shared_state};
-use crate::vm::Worker;
+fn emit_open_for_test(chunk: &mut Chunk, width: i64, height: i64) {
+    emit_constant(chunk, Value::Integer(width));
+    emit_constant(chunk, Value::Integer(height));
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::OpenForTest))),
+        loc(),
+    );
+}
+
+fn tui_rect_value(x: i64, y: i64, width: i64, height: i64) -> Value {
+    Value::Record {
+        type_name: "Std.Tui.Rect".into(),
+        fields: vec![
+            ("x".into(), Value::Integer(x)),
+            ("y".into(), Value::Integer(y)),
+            ("width".into(), Value::Integer(width)),
+            ("height".into(), Value::Integer(height)),
+        ],
+    }
+}
 
 #[test]
 fn turbo_vision_command_event_dispatches_registered_fpas_on_command() {
@@ -56,4 +76,29 @@ fn turbo_vision_command_event_dispatches_registered_fpas_on_command() {
         .output()
         .clone();
     assert_eq!(output.lines, vec!["42"]);
+}
+
+#[test]
+fn turbo_vision_input_line_text_read_back_via_input_text() {
+    let mut chunk = Chunk::new();
+    emit_open_for_test(&mut chunk, 80, 25);
+    chunk.emit(Op::Dup, loc());
+    emit_constant(&mut chunk, tui_rect_value(12, 2, 20, 1));
+    emit_constant(&mut chunk, Value::Str("initial".into()));
+    emit_constant(&mut chunk, Value::Integer(32));
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::CreateInputLine))),
+        loc(),
+    );
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::InputText))),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(shared);
+    worker.run().expect("input line read-back should succeed");
+
+    assert_eq!(worker.stack.last(), Some(&Value::Str("initial".into())));
 }

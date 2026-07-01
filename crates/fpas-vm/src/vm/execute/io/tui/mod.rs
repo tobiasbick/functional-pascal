@@ -8,6 +8,7 @@ mod commands;
 mod controls;
 mod dialogs;
 mod events;
+mod exec_dialog;
 mod file_dialog;
 mod handlers;
 mod handles;
@@ -79,6 +80,12 @@ impl Worker {
             }
             Intrinsic::Tui(TuiIntrinsic::RunFileDialog) => {
                 self.turbo_vision_run_file_dialog(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::ExecDialog) => {
+                self.turbo_vision_exec_dialog(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::InputText) => {
+                self.turbo_vision_input_text(line)?;
             }
             Intrinsic::Tui(TuiIntrinsic::AddChild) => {
                 self.turbo_vision_add_child(line)?;

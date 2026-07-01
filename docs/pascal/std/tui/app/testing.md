@@ -53,6 +53,15 @@ var Path: option of string := Application.RunFileDialog(
 AssertEquals('selected.txt', Unwrap(Path))
 ```
 
+Modal dialog headless example:
+
+```pascal
+Application.TestSetDialogResult(App, Command.Accept);
+var CloseResult: DialogResult := Application.ExecDialog(App, DialogHandle);
+AssertEquals(Command.Accept, CloseResult.command);
+AssertEquals('seeded', Application.InputText(App, NameInput))
+```
+
 ## See Also
 
 - [Application](README.md)

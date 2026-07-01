@@ -15,6 +15,7 @@ const TUI_STATIC_TEXT_TYPE: &str = "Std.Tui.StaticText";
 const TUI_MEMO_TYPE: &str = "Std.Tui.Memo";
 const TUI_TEXT_VIEWER_TYPE: &str = "Std.Tui.TextViewer";
 const TUI_INPUT_LINE_TYPE: &str = "Std.Tui.InputLine";
+const TUI_DIALOG_RESULT_TYPE: &str = "Std.Tui.DialogResult";
 const TUI_LIST_BOX_TYPE: &str = "Std.Tui.ListBox";
 const TUI_CHECK_BOX_TYPE: &str = "Std.Tui.CheckBox";
 const TUI_RADIO_BUTTON_TYPE: &str = "Std.Tui.RadioButton";
@@ -72,12 +73,25 @@ impl Worker {
         turbo_vision_handle_record(TUI_STATUS_LINE_TYPE, handle)
     }
 
-    #[allow(dead_code)] // retained for future dialog-only intrinsics
     pub(super) fn pop_turbo_vision_dialog_handle(
         &mut self,
         line: SourceLocation,
     ) -> Result<u32, VmError> {
         self.pop_turbo_vision_handle(TUI_DIALOG_TYPE, "Dialog", line)
+    }
+
+    pub(super) fn pop_turbo_vision_input_line_handle(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<u32, VmError> {
+        self.pop_turbo_vision_handle(TUI_INPUT_LINE_TYPE, "InputLine", line)
+    }
+
+    pub(super) fn push_dialog_result(&mut self, command: i64) -> Result<(), VmError> {
+        self.push(Value::Record {
+            type_name: TUI_DIALOG_RESULT_TYPE.into(),
+            fields: vec![("command".into(), Value::Integer(command))],
+        })
     }
 
     pub(super) fn pop_turbo_vision_window_handle(

@@ -5,9 +5,12 @@ Turbo Vision dialogs and windows are opaque handles created before `Application.
 | Symbol | Description |
 | --- | --- |
 | `Dialog` | Modal or modeless dialog handle. |
+| `DialogResult` | Result of `Application.ExecDialog`; field `command` holds the closing command id. |
 | `Window` | Desktop window handle. |
 | `Application.CreateDialog(App, Bounds, Title): Dialog` | Create a dialog. |
 | `Application.CreateWindow(App, Bounds, Title): Window` | Create a window. |
+| `Application.ExecDialog(App, Dialog): DialogResult` | Run a dialog modally. Returns the command that closed it. |
+| `Application.InputText(App, Field): string` | Read the text of an `InputLine` after `ExecDialog`. |
 | `Application.AddWindow(App, Window)` | Place a window on the application desktop. |
 | `Application.AddChild(App, Parent, Child)` | Attach a control child to a dialog or window parent. |
 

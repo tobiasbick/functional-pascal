@@ -21,8 +21,8 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use turbo_vision::app::Application as TurboVisionApplication;
 use turbo_vision::views::{
-    button::Button, checkbox::CheckBox, dialog::Dialog, input_line::InputLine, listbox::ListBox,
-    memo::Memo, radiobutton::RadioButton, static_text::StaticText, status_line::StatusItem,
+    button::Button, dialog::Dialog, input_line::InputLine, listbox::ListBox, memo::Memo,
+    radiobutton::RadioButton, static_text::StaticText, status_line::StatusItem,
     status_line::StatusLine, text_viewer::TextViewer, window::Window,
 };
 
@@ -325,7 +325,11 @@ pub(in crate::vm::execute::io::tui) fn add_window_child(
             window.add(Box::new(build_list_box(list_box)));
         }
         TurboVisionChildSnapshot::CheckBox(check_box) => {
-            window.add(Box::new(build_check_box(check_box)));
+            window.add(Box::new(super::bridged_check_box::BridgedCheckBox::new(
+                turbo_rect(check_box.bounds),
+                &check_box.text,
+                check_box.checked_cell.clone(),
+            )));
         }
         TurboVisionChildSnapshot::RadioButton(radio_button) => {
             window.add(Box::new(build_radio_button(radio_button)));
@@ -410,12 +414,6 @@ fn build_list_box(snapshot: TurboVisionListBox) -> ListBox {
     );
     list_box.set_items(snapshot.items);
     list_box
-}
-
-fn build_check_box(snapshot: TurboVisionCheckBox) -> CheckBox {
-    let mut check_box = CheckBox::new(turbo_rect(snapshot.bounds), &snapshot.text);
-    check_box.set_checked(snapshot.checked_cell.read());
-    check_box
 }
 
 fn build_memo(snapshot: TurboVisionMemo) -> Memo {

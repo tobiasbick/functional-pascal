@@ -49,6 +49,10 @@ impl View for BridgedCheckBox {
     }
 
     fn handle_event(&mut self, event: &mut Event) {
+        if super::check_box_mouse::try_toggle_check_box_on_mouse_down(&mut self.inner, event) {
+            self.sync_checked();
+            return;
+        }
         self.inner.handle_event(event);
         self.sync_checked();
     }

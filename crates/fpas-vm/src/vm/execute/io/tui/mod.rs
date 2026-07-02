@@ -7,6 +7,7 @@ mod bridged_check_box;
 mod bridged_list_box;
 mod bridged_radio_button;
 mod callbacks;
+mod check_box_mouse;
 mod chrome_layout;
 mod command_map;
 mod commands;

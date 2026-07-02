@@ -162,7 +162,7 @@ Helper units under those folders are built only through the project; see the one
 
 Larger programs live outside `examples/` but follow the same `.fpasprj` workflow.
 
-`apps/ide/` is a minimal Turbo Vision-backed shell during the `Std.Tui` rewrite. It currently demonstrates the available `Application`, `Window`, `Button`, and command callback API; richer IDE chrome waits for the remaining TUI widgets tracked under [`docs/future/turbo-vision-4-rust/`](../docs/future/turbo-vision-4-rust/).
+`apps/ide/` is a minimal Turbo Vision-backed shell. It demonstrates `Application`, `Window`, `Button`, and command callbacks; see [`docs/pascal/std/tui/`](../docs/pascal/std/tui/README.md) for the current API.
 
 ## Interactive demos (terminal)
 

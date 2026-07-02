@@ -28,4 +28,4 @@ Interactive examples (manual terminal): `examples/pascal/tui/exec_dialog.fpas`, 
 
 - [Application](app/README.md)
 - [Native testing](app/testing.md)
-- [Future testing plan](../../../future/turbo-vision-4-rust/05-testing-plan.md)
+- [Terminal checklist](terminal-checklist.md)

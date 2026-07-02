@@ -1,20 +1,19 @@
 ---
 name: turbo-vision-4-rust
-description: Use when planning or implementing the Functional Pascal `Std.Tui` rewrite over the Rust `turbo-vision` crate from `aovestdipaperino/turbo-vision-4-rust`, especially tasks touching `docs/future/turbo-vision-4-rust`, `docs/pascal/std/tui`, TUI sema/compiler/bytecode/VM/runtime code, TUI tests, examples, or `apps/ide`. Also use when checking upstream Turbo Vision API, dependency, license, crossterm compatibility, or deciding whether to delete old `Application.Host*` retained-view APIs.
+description: Use when extending or debugging Functional Pascal `Std.Tui` over the Rust `turbo-vision` crate from `aovestdipaperino/turbo-vision-4-rust`, especially tasks touching `docs/pascal/std/tui`, TUI sema/compiler/bytecode/VM/runtime code, TUI tests, examples, or `apps/ide`. Also use when checking upstream Turbo Vision API, dependency, license, or crossterm compatibility.
 ---
 
 # Turbo Vision 4 Rust
 
-Guide the `Std.Tui` rewrite toward a small FPAS-native facade over upstream `turbo-vision`. Treat this skill as project-local migration procedure, not as upstream API documentation.
+Guide for extending and maintaining the FPAS-native `Std.Tui` facade over upstream `turbo-vision`. Treat this skill as project-local integration procedure, not as upstream API documentation.
 
 ## Required First Reads
 
 Before edits, read these files in order:
 
-1. `docs/future/turbo-vision-4-rust/README.md`
-2. `docs/future/turbo-vision-4-rust/01-decision-record.md`
-3. `docs/future/turbo-vision-4-rust/04-implementation-phases.md`
-4. `.agents/skills/fpas-change-checklist/SKILL.md` when implementing or modifying behavior, public API, docs under `docs/pascal/`, tests, compiler, VM, runtime, or stdlib code.
+1. `docs/pascal/std/tui/README.md`
+2. `docs/pascal/std/tui/app/vm-bridge.md`
+3. `.agents/skills/fpas-change-checklist/SKILL.md` when implementing or modifying behavior, public API, docs under `docs/pascal/`, tests, compiler, VM, runtime, or stdlib code.
 
 If the task is about examples of how to apply the skill, read `references/api_reference.md`.
 
@@ -59,21 +58,11 @@ Avoid:
 
 ## Migration Workflow
 
-Follow `docs/future/turbo-vision-4-rust/04-implementation-phases.md`.
+The Turbo Vision rewrite is complete. For new `Std.Tui` work:
 
-1. Keep the phase checklist current in the same change.
-2. Prove the minimal dependency and callback spike before broad deletion.
-3. Do not delete the old TUI engine until FPAS command callback and headless/test execution are proven.
-4. After the spike, remove old retained-view internals instead of extending them.
-5. Replace tests that assert deleted internals with tests for user-visible behavior.
-
-Good first implementation target:
-
-- add `turbo-vision = "1.3.1"` or the verified current version;
-- build;
-- inspect `cargo tree -i crossterm`;
-- implement the smallest FPAS command callback spike;
-- update phase status with commands run and outcomes.
+1. Read the current spec under `docs/pascal/std/tui/`.
+2. Follow the end-to-end recipe in `docs/pascal/std/tui/app/vm-bridge.md`.
+3. Replace or extend tests that assert user-visible behavior, not deleted retained-engine internals.
 
 ## File and API Discipline
 
@@ -100,10 +89,9 @@ crates/fpas-vm/src/vm/execute/io/tui/
 
 ## Documentation Rules
 
-- Keep future plans in `docs/future/turbo-vision-4-rust/`.
-- Update `docs/pascal/std/tui/` only for implemented behavior.
-- Delete or rewrite stale `docs/pascal/std/tui/app/*` pages when their old Host API is removed.
-- Update Rust `///` docs that link to old TUI paths.
+- Update `docs/pascal/std/tui/` for implemented behavior only.
+- Keep speculative plans in `docs/future/`.
+- Update Rust `///` docs that link to `docs/pascal/std/tui/` paths.
 
 ## Testing Rules
 

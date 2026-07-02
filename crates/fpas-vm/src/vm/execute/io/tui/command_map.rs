@@ -5,15 +5,15 @@
 //! into a private band when passed to Turbo Vision and translated back before
 //! `OnCommand` dispatch.
 //!
-//! **Documentation:** `docs/future/turbo-vision-4-rust/07-post-migration-improvements.md` (Phase E)
+//! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
 /// Base band for FPAS-owned commands that collide with Turbo Vision built-ins.
 pub(in crate::vm::execute::io::tui) const FPAS_TV_COMMAND_OFFSET: u16 = 0x8000;
 
 /// Turbo Vision 1.3.1 `core::command::CM_*` ids reserved by upstream.
 ///
-/// Keep this list aligned with the checked upstream version in
-/// `docs/future/turbo-vision-4-rust/01-decision-record.md`. `0` is excluded
+/// Keep this list aligned with the checked upstream `turbo-vision` version in
+/// `Cargo.lock`. `0` is excluded
 /// because FPAS uses it as a menu separator command and never dispatches it.
 const TURBO_VISION_RESERVED_COMMANDS: &[u16] = &[
     10, 11, 12, 13, 14, 24, 25, 26, 27, 28, 29, 30, 31, 50, 51, 52, 53, 62, 63, 64, 65, 66, 100,

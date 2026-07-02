@@ -1,4 +1,4 @@
 interface:
   display_name: "Turbo Vision 4 Rust"
   short_description: "Guide the Std.Tui rewrite over turbo-vision."
-  default_prompt: "Use this skill when modifying or planning the Functional Pascal Std.Tui rewrite over turbo-vision-4-rust."
+  default_prompt: "Use this skill when extending or debugging Functional Pascal Std.Tui over turbo-vision."

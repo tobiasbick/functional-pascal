@@ -2,74 +2,37 @@
 
 Use these examples to calibrate behavior when this skill triggers.
 
-## Example 1: Add the dependency
+## Example 1: Add a new `Std.Tui` call
 
 User request:
 
 ```text
-continue with turbo-vision-4-rust, start with the dependency
+add Application.Foo for Turbo Vision
 ```
 
 Expected agent behavior:
 
-- Read the required future-plan files.
-- Check the current phase in `04-implementation-phases.md`.
-- Verify upstream `turbo-vision` version from crates.io or GitHub.
-- Add the dependency in the narrowest crate that needs it, or workspace dependencies if several crates need it.
-- Run `cargo build` and `cargo tree -i crossterm`.
-- Update `04-implementation-phases.md` with completed checks and any version notes.
-- Do not modify old `Application.Host*` APIs yet.
+- Read `docs/pascal/std/tui/app/vm-bridge.md` end-to-end recipe.
+- Follow `.agents/skills/fpas-change-checklist/SKILL.md`.
+- Verify upstream `turbo-vision` API from source or crates.io when bridging new widgets.
+- Add sema, compiler, bytecode, VM, docs, and tests in one focused change.
 
-## Example 2: Design the new API
+## Example 2: Fix live TUI behavior
 
 User request:
 
 ```text
-design the new Std.Tui API over Turbo Vision
+checkbox mouse click does not work in Application.Run
 ```
 
 Expected agent behavior:
 
-- Do not mirror Rust traits or builders into FPAS.
-- Work from `03-target-api.md`.
-- Propose handles for live objects and records for values.
-- Keep planned behavior in `docs/future/turbo-vision-4-rust/` until implementation exists.
-- Mention open decisions explicitly.
+- Read `docs/pascal/std/tui/app/controls.md` and `vm-bridge.md`.
+- Inspect `crates/fpas-vm/src/vm/execute/io/tui/` bridge modules.
+- Check whether upstream `turbo-vision` lacks the behavior before patching the FPAS facade.
+- Add Rust and/or FPAS regression tests under `tests/tui/controls/`.
 
-## Example 3: Implement command callback spike
-
-User request:
-
-```text
-implement the minimal callback spike
-```
-
-Expected agent behavior:
-
-- Read `fpas-change-checklist`.
-- Verify upstream constructors and event/command routing from source.
-- Implement only enough API for application, one window/dialog, one button, command callback, run or pump, and quit.
-- Add Rust VM coverage for callback and cleanup.
-- Add an FPAS test only if headless/test execution is available.
-- Stop before deleting old TUI internals unless the spike passes.
-
-## Example 4: Remove old Host APIs
-
-User request:
-
-```text
-delete the old TUI host API
-```
-
-Expected agent behavior:
-
-- Confirm Phase 2 callback and headless gate is complete.
-- Remove sema registrations, compiler lowering, bytecode intrinsics, VM implementations, docs, examples, and tests tied only to old `Application.Host*`.
-- Do not keep compatibility aliases.
-- Update current `docs/pascal/std/tui/` to describe only implemented replacement APIs.
-- Run broad verification.
-
-## Example 5: User asks about upstream API details
+## Example 3: User asks about upstream API details
 
 User request:
 

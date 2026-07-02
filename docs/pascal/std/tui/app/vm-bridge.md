@@ -87,4 +87,4 @@ Turbo Vision bridge code lives under `crates/fpas-vm/src/vm/execute/io/tui/`:
 ## See Also
 
 - [Application](README.md)
-- [Future Turbo Vision plan](../../../../future/turbo-vision-4-rust/README.md)
+- [Terminal checklist](../terminal-checklist.md)

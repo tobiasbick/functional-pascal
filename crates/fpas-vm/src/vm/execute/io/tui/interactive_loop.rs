@@ -1,6 +1,6 @@
 //! Turbo Vision interactive run loop and event-source seam.
 //!
-//! **Documentation:** `docs/future/turbo-vision-4-rust/07-post-migration-improvements.md` (Phase F/G)
+//! **Documentation:** `docs/pascal/std/tui/app/handlers.md`, `docs/pascal/std/tui/app/vm-bridge.md`
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;

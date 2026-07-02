@@ -12,7 +12,6 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Dictionaries | [Dictionary decision](09-remove-dict.md) | Decide whether `Std.Dict` stays, changes, or is removed |
 | Libraries | [Library export model](libraries.md) | Finer per-symbol exports and re-export rules beyond current unit exports |
 | Task runtime | [Task memory benchmark](task-memory-benchmark.md) | Reproduce async memory benchmark and validate future task-runtime behavior |
-| TUI | [`Std.Tui` Turbo Vision rewrite](turbo-vision-4-rust/README.md) | Branch-local migration history for `turbo-vision-4-rust`; delete this folder before merging |
 
 ## Rules
 

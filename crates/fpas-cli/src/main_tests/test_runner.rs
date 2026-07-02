@@ -40,29 +40,22 @@ fn test_cli_runs_passing_tests_in_directory() {
 fn test_cli_runs_native_tui_headless_test() {
     let cwd = create_temp_dir("fpas-tui-test");
     write_text(
-        &cwd.join("escape_test.fpas"),
-        "program E;\nuses Std.Console, Std.Tui, Std.Test;\n\
+        &cwd.join("command_test.fpas"),
+        "program E;\nuses Std.Tui, Std.Test;\n\
+         const CmdOk: integer := Command.Accept;\n\
          mutable var QuitSeen: boolean := false;\n\
-         procedure OnPaint(App: Application); begin end;\n\
-         function OnKeyPressed(App: Application; Key: KeyEvent): boolean;\n\
-         begin\n\
-           if Key.kind = KeyKind.Escape then\n\
-           begin\n\
-             QuitSeen := true;\n\
-             return true\n\
-           end;\n\
-           return false\n\
-         end;\n\
+         function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;\n\
+         begin return record x := X; y := Y; width := Width; height := Height; end end;\n\
+         procedure OnCommand(App: Application; CommandId: integer);\n\
+         begin if CommandId = CmdOk then QuitSeen := true; Application.Quit(App) end;\n\
          begin\n\
            var App: Application := Application.OpenForTest(80, 25);\n\
-           var Handlers: ApplicationHandlers := record\n\
-             OnPaint := Some(OnPaint);\n\
-             OnKeyPressed := Some(OnKeyPressed);\n\
-           end;\n\
-           Application.Configure(App, Handlers);\n\
-           Application.TestSendKey(App, record kind := KeyKind.Escape; ch := #27; shift := false; ctrl := false; alt := false; meta := false; end);\n\
-           Application.TestPump(App);\n\
-           Application.CloseForTest(App);\n\
+           var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(2, 2, 20, 6), 'Test');\n\
+           var OkButton: Button := Application.CreateButton(App, Bounds(4, 3, 8, 1), 'OK', CmdOk);\n\
+           Application.AddChild(App, DialogHandle, OkButton);\n\
+           Application.OnCommand(App, OnCommand);\n\
+           Application.TestClickButton(App, OkButton);\n\
+           Application.Run(App);\n\
            AssertTrue(QuitSeen)\n\
          end.",
     );
@@ -88,5 +81,5 @@ fn test_cli_runs_native_tui_headless_test() {
 
     assert_eq!(exit, 0, "stderr={}", String::from_utf8_lossy(&stderr));
     let text = String::from_utf8(stderr).expect("utf-8");
-    assert!(text.contains("PASS  escape_test.fpas"));
+    assert!(text.contains("PASS  command_test.fpas"));
 }

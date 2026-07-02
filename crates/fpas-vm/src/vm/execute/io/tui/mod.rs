@@ -11,17 +11,14 @@ mod command_map;
 mod commands;
 mod controls;
 mod dialogs;
-mod events;
 mod exec_dialog;
 mod file_dialog;
-mod handlers;
 mod handles;
 mod headless_paint;
-mod host;
 mod interactive_loop;
+mod lifecycle;
 mod menu_build;
 mod navigation;
-mod query_host;
 mod reconcile;
 mod records;
 mod testing;
@@ -44,8 +41,6 @@ impl Worker {
         if self.try_exec_tui_application_intrinsic(intrinsic, line)?
             || self.try_exec_turbo_vision_intrinsic(intrinsic, line)?
             || self.try_exec_tui_test_host_intrinsic(intrinsic, line)?
-            || self.try_exec_tui_query_host_intrinsic(intrinsic, line)?
-            || self.try_exec_tui_host_intrinsic(intrinsic, line)?
         {
             return Ok(true);
         }

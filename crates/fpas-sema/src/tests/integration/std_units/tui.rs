@@ -13,18 +13,18 @@ fn has_removed_tui_help(error: &fpas_diagnostics::Diagnostic) -> bool {
 }
 
 #[test]
-fn std_tui_exit_reason_enum_is_available() {
-    check_ok(
+fn std_tui_exit_reason_is_not_registered() {
+    let errs = check_errors(
         "\
 program T;
 uses Std.Tui;
 begin
-  var R: ExitReason := ExitReason.UserQuit;
-  var H: boolean := R = ExitReason.HostStop;
-    var B: boolean := R = ExitReason.HostAndUserStop;
-    var S: boolean := R = ExitReason.HostShutdown;
-  Application.Close(Application.Open())
+  var R: ExitReason := ExitReason.UserQuit
 end.",
+    );
+    assert!(
+        errs.iter().any(|e| e.message.contains("Unknown type `ExitReason`")),
+        "{errs:#?}"
     );
 }
 
@@ -37,7 +37,6 @@ uses Std.Tui;
 begin
   var App: Application := Application.Open();
   var Screen: Size := Application.Size(App);
-  Application.RequestRedraw(App);
   var Width: integer := Screen.width;
   var Height: integer := Screen.height;
   Application.Close(App)
@@ -221,11 +220,6 @@ fn std_tui_old_host_exit_registration_is_not_registered() {
         "\
 program T;
 uses Std.Tui;
-
-procedure OnExit(App: Application; Reason: ExitReason);
-begin
-end;
-
 begin
   var App: Application := Application.Open();
   Application.HostRegisterOnExit(App, OnExit);

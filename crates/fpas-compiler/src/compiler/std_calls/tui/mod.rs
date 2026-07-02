@@ -3,7 +3,6 @@
 //! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 mod application;
-mod query_host;
 mod test_host;
 
 use crate::error::CompileError;
@@ -24,9 +23,6 @@ impl Compiler {
             return Ok(true);
         }
         if self.compile_tui_test_host_call(name, args, location)? {
-            return Ok(true);
-        }
-        if self.compile_tui_query_host_call(name, args, location)? {
             return Ok(true);
         }
         Ok(false)

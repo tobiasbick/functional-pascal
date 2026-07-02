@@ -46,9 +46,7 @@ fn turbo_vision_command_event_dispatches_registered_fpas_on_command() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(
-            TuiIntrinsic::HostRegisterOnCommand,
-        ))),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::RegisterOnCommand))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -149,9 +147,7 @@ fn turbo_vision_dispatch_translates_offset_reserved_command_to_fpas_id() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(
-            TuiIntrinsic::HostRegisterOnCommand,
-        ))),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::RegisterOnCommand))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());
@@ -204,9 +200,7 @@ fn turbo_vision_scripted_interactive_loop_dispatches_command_and_quits() {
         },
     );
     chunk.emit(
-        Op::Intrinsic(u16::from(Intrinsic::Tui(
-            TuiIntrinsic::HostRegisterOnCommand,
-        ))),
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::RegisterOnCommand))),
         loc(),
     );
     chunk.emit(Op::Halt, loc());

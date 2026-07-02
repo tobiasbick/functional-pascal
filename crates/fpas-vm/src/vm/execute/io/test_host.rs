@@ -56,6 +56,42 @@ impl Worker {
         Ok(true)
     }
 
+    pub(in crate::vm::execute::io) fn screen_row_to_u16(
+        y: i64,
+        line: SourceLocation,
+    ) -> Result<u16, VmError> {
+        if y <= 0 || y > i64::from(u16::MAX) {
+            return Err(runtime_error(
+                RUNTIME_CONSOLE_STATE_ERROR,
+                format!(
+                    "Screen row coordinate must be in 1..={}, got {y}.",
+                    u16::MAX
+                ),
+                "Pass a one-based row index within the virtual screen height.",
+                line,
+            ));
+        }
+        Ok(y as u16)
+    }
+
+    pub(in crate::vm::execute::io) fn screen_column_to_u16(
+        x: i64,
+        line: SourceLocation,
+    ) -> Result<u16, VmError> {
+        if x <= 0 || x > i64::from(u16::MAX) {
+            return Err(runtime_error(
+                RUNTIME_CONSOLE_STATE_ERROR,
+                format!(
+                    "Screen column coordinate must be in 1..={}, got {x}.",
+                    u16::MAX
+                ),
+                "Pass one-based column coordinates within the virtual screen width.",
+                line,
+            ));
+        }
+        Ok(x as u16)
+    }
+
     fn pop_string(&mut self, line: SourceLocation) -> Result<String, VmError> {
         match self.pop(line)? {
             Value::Str(text) => Ok(text),

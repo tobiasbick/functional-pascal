@@ -1,6 +1,6 @@
 program TuiTurboVisionChromePaintTest;
 
-uses Std.Tui, Std.Test;
+uses Std.Console, Std.Tui, Std.Test;
 
 function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
 begin
@@ -31,13 +31,9 @@ begin
                                                                                     ]);
   Application.SetMenuBar(App, MenuBarHandle);
   Application.SetStatusLine(App, Status);
-  AssertEquals(0, Application.Pump(App));
-  var FirstMenu: ScreenCell := Application.QueryScreenCell(App, 1, 1);
-  var SecondMenu: ScreenCell := Application.QueryScreenCell(App, 6, 1);
-  var FirstStatus: ScreenCell := Application.QueryScreenCell(App, 1, 12);
-  var SecondStatus: ScreenCell := Application.QueryScreenCell(App, 7, 12);
-  AssertTrue(FirstMenu.ch = 'F');
-  AssertTrue(SecondMenu.ch = 'E');
-  AssertTrue(FirstStatus.ch = 'R');
-  AssertTrue(SecondStatus.ch = 'H')
+  Application.Pump(App);
+  AssertScreenCell(1, 1, 'F', White, Blue);
+  AssertScreenCell(6, 1, 'E', White, Blue);
+  AssertScreenCell(1, 12, 'R', LightGray, Black);
+  AssertScreenCell(7, 12, 'H', LightGray, Black)
 end.

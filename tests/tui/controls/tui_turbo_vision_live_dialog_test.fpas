@@ -1,6 +1,6 @@
 program TuiTurboVisionLiveDialogTest;
 
-uses Std.Tui, Std.Test;
+uses Std.Console, Std.Tui, Std.Test;
 
 const
   CmdOpen: integer := 60;
@@ -28,8 +28,7 @@ begin
   Application.OnCommand(App, OnCommand);
   Application.TestClickButton(App, OpenButton);
   AssertEquals(16, Application.Pump(App));
-  var Cell: ScreenCell := Application.QueryScreenCell(App, 10, 5);
-  AssertTrue(Cell.ch = 'D');
+  AssertScreenCell(10, 5, 'D', LightGray, Black);
   Application.Quit(App);
   AssertEquals(0, Application.Pump(App))
 end.

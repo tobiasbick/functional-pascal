@@ -2,7 +2,7 @@
 
 program MandelbrotShowcase;
 
-uses Std.Console, Std.Conv, Std.Math, Std.Str, Std.Tui, Mandelbrot.Color, Mandelbrot.Render;
+uses Std.Console, Std.Conv, Std.Math, Std.Option, Std.Str, Mandelbrot.Color, Mandelbrot.Render;
 
 type
   ExplorerState = record
@@ -83,9 +83,9 @@ end;
 
 procedure DrawHud(S: ExplorerState; Width: integer; Height: integer);
 begin
-  Std.Console.Window(1, 1, ScreenWidth(), ScreenHeight());
+  Window(1, 1, ScreenWidth(), ScreenHeight());
   var HudTop: integer := Max(ScreenHeight() - 1, 1);
-  Std.Console.Window(1, HudTop, ScreenWidth(), ScreenHeight());
+  Window(1, HudTop, ScreenWidth(), ScreenHeight());
   NormVideo();
   ClrScr();
   GotoXY(1, 1);
@@ -101,67 +101,74 @@ begin
     Write('  click center  wheel zoom  M middle=reset  arrows  +/-  PgUp/Dn  1/2/3  R  Esc')
   end;
   NormVideo();
-  Std.Console.Window(1, 1, Width, Height)
+  Window(1, 1, Width, Height)
 end;
 
 mutable var
   mutable var State: ExplorerState := DefaultState();
   mutable var RenderW: integer := 1;
   mutable var RenderH: integer := 1;
+  mutable var NeedsRedraw: boolean := true;
+  mutable var Quit: boolean := false;
 
-procedure OnPaint(App: Application);
+procedure RequestRedraw();
+begin
+  NeedsRedraw := true
+end;
+
+procedure PaintFrame();
 begin
   RenderW := RenderWidth();
   RenderH := RenderHeight();
-  Std.Console.Window(1, 1, RenderW, RenderH);
+  Window(1, 1, RenderW, RenderH);
   ClrScr();
   Render(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter, State.Palette);
   DrawHud(State, RenderW, RenderH)
 end;
 
-function OnKeyPressed(App: Application; Key: Std.Console.KeyEvent): boolean;
+function HandleKey(Key: KeyEvent): boolean;
 begin
   var StepX: real := State.SpanX(RenderW, RenderH) * 0.14;
   var StepY: real := State.SpanY * 0.14;
   if Key.kind = KeyKind.Escape then
   begin
-    Application.Quit(App);
+    Quit := true;
     return true
   end
   else if Key.kind = KeyKind.Left then
   begin
     State.CenterX := State.CenterX - StepX;
-    Application.RequestRedraw(App);
+    RequestRedraw();
     return true
   end
   else if Key.kind = KeyKind.Right then
   begin
     State.CenterX := State.CenterX + StepX;
-    Application.RequestRedraw(App);
+    RequestRedraw();
     return true
   end
   else if Key.kind = KeyKind.Up then
   begin
     State.CenterY := State.CenterY + StepY;
-    Application.RequestRedraw(App);
+    RequestRedraw();
     return true
   end
   else if Key.kind = KeyKind.Down then
   begin
     State.CenterY := State.CenterY - StepY;
-    Application.RequestRedraw(App);
+    RequestRedraw();
     return true
   end
   else if Key.kind = KeyKind.PageUp then
   begin
     State.MaxIter := Min(State.MaxIter + 32, 2048);
-    Application.RequestRedraw(App);
+    RequestRedraw();
     return true
   end
   else if Key.kind = KeyKind.PageDown then
   begin
     State.MaxIter := Max(State.MaxIter - 32, 32);
-    Application.RequestRedraw(App);
+    RequestRedraw();
     return true
   end
   else if Key.kind = KeyKind.Character then
@@ -170,37 +177,37 @@ begin
       '+', '=':
       begin
         State.SpanY := Max(State.SpanY * 0.82, 0.000001);
-        Application.RequestRedraw(App);
+        RequestRedraw();
         return true
       end;
       '-':
       begin
         State.SpanY := Min(State.SpanY / 0.82, 3.5);
-        Application.RequestRedraw(App);
+        RequestRedraw();
         return true
       end;
       '1':
       begin
         State.Palette := PaletteKind.DeepOcean;
-        Application.RequestRedraw(App);
+        RequestRedraw();
         return true
       end;
       '2':
       begin
         State.Palette := PaletteKind.Ember;
-        Application.RequestRedraw(App);
+        RequestRedraw();
         return true
       end;
       '3':
       begin
         State.Palette := PaletteKind.Aurora;
-        Application.RequestRedraw(App);
+        RequestRedraw();
         return true
       end;
       'r', 'R':
       begin
         State := DefaultState();
-        Application.RequestRedraw(App);
+        RequestRedraw();
         return true
       end
     end
@@ -208,18 +215,18 @@ begin
   return false
 end;
 
-procedure OnMouse(App: Application; Event: Std.Console.Event);
+procedure HandleMouse(Event: Event);
 begin
   var InView: boolean := Event.mouse_x >= 1;
   if Event.mouse_action = MouseAction.ScrollUp then
   begin
     State.SpanY := Max(State.SpanY * 0.88, 0.000001);
-    Application.RequestRedraw(App)
+    RequestRedraw()
   end
   else if Event.mouse_action = MouseAction.ScrollDown then
   begin
     State.SpanY := Min(State.SpanY / 0.88, 3.5);
-    Application.RequestRedraw(App)
+    RequestRedraw()
   end
   else if InView and (Event.mouse_action = MouseAction.Down) then
   begin
@@ -227,51 +234,80 @@ begin
     begin
       State.CenterX := ViewportCX(State, RenderW, RenderH, Event.mouse_x);
       State.CenterY := ViewportCY(State, RenderW, RenderH, Event.mouse_y);
-      Application.RequestRedraw(App)
+      RequestRedraw()
     end
     else if Event.mouse_button = MouseButton.Middle then
     begin
       State := DefaultState();
-      Application.RequestRedraw(App)
+      RequestRedraw()
     end
   end
 end;
 
-procedure OnResize(App: Application; NewSize: Size);
+procedure HandleResize(Width: integer; Height: integer);
 begin
-  var NewW: integer := Max(NewSize.width, 1);
-  var NewH: integer := Max(NewSize.height - 2, 1);
+  var NewW: integer := Max(Width, 1);
+  var NewH: integer := Max(Height - 2, 1);
   if (NewW <> RenderW) or (NewH <> RenderH) then
   begin
     RenderW := NewW;
     RenderH := NewH;
-    Application.RequestRedraw(App)
+    RequestRedraw()
   end
 end;
 
-procedure OnExit(App: Application; Reason: ExitReason);
+procedure HandleEvent(E: Event);
+begin
+  if E.kind = EventKind.Key then
+  begin
+    HandleKey(E.key)
+  end
+  else if E.kind = EventKind.Mouse then
+  begin
+    HandleMouse(E)
+  end
+  else if E.kind = EventKind.Resize then
+  begin
+    HandleResize(E.width, E.height)
+  end
+end;
+
+procedure ShutdownTerminal();
 begin
   CursorOn();
   DisablePaste();
   DisableFocus();
-  DisableMouse()
+  DisableMouse();
+  DisableRawMode();
+  LeaveAltScreen()
 end;
 
 begin
-  var App: Application := Application.Open();
-  RenderW := Max(ScreenWidth(), 1);
-  RenderH := Max(ScreenHeight() - 2, 1);
+  EnableRawMode();
+  EnterAltScreen();
   EnableMouse();
   EnableFocus();
   EnablePaste();
   CursorOff();
-  var Handlers: ApplicationHandlers := record
-    OnPaint := Some(OnPaint);
-    OnKeyPressed := Some(OnKeyPressed);
-    OnResize := Some(OnResize);
-    OnMouse := Some(OnMouse);
-    OnExit := Some(OnExit);
+  RenderW := RenderWidth();
+  RenderH := RenderHeight();
+  NeedsRedraw := true;
+  while not Quit do
+  begin
+    if NeedsRedraw then
+    begin
+      PaintFrame();
+      NeedsRedraw := false
+    end;
+    case ReadEventTimeout(16) of
+      Some(E):
+      begin
+        HandleEvent(E)
+      end;
+      None:
+      begin
+      end
+    end
   end;
-  Application.Configure(App, Handlers);
-  Application.Run(App)
+  ShutdownTerminal()
 end.

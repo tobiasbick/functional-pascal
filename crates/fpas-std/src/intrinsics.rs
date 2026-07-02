@@ -136,18 +136,10 @@ pub fn run_intrinsic(
             | Intrinsic::Tui(TuiIntrinsic::ApplicationOpen)
             | Intrinsic::Tui(TuiIntrinsic::ApplicationClose)
             | Intrinsic::Tui(TuiIntrinsic::ApplicationSize)
-            | Intrinsic::Tui(TuiIntrinsic::ApplicationRequestRedraw)
-            | Intrinsic::Tui(TuiIntrinsic::ApplicationConfigure)
-            | Intrinsic::Tui(TuiIntrinsic::HostRegisterOnKeyPressed)
-            | Intrinsic::Tui(TuiIntrinsic::HostInvokeOnKeyPressed)
-            | Intrinsic::Tui(TuiIntrinsic::HostRegisterOnResize)
-            | Intrinsic::Tui(TuiIntrinsic::HostProcessNext)
-            | Intrinsic::Tui(TuiIntrinsic::HostRegisterOnPaint)
-            | Intrinsic::Tui(TuiIntrinsic::HostRegisterOnIdle)
-            | Intrinsic::Tui(TuiIntrinsic::HostDispatchRedraw)
-            | Intrinsic::Tui(TuiIntrinsic::HostRunLoop)
-            | Intrinsic::Tui(TuiIntrinsic::HostRequestQuit)
-            | Intrinsic::Tui(TuiIntrinsic::HostRegisterOnExit)
+            | Intrinsic::Tui(TuiIntrinsic::ApplicationRun)
+            | Intrinsic::Tui(TuiIntrinsic::OpenForTest)
+            | Intrinsic::Tui(TuiIntrinsic::CloseForTest)
+            | Intrinsic::Tui(_)
     ) {
         return Err(std_internal_error(
             "internal: Std.Args, Std.Console, Std.Graph, and Std.Tui intrinsics are handled in the VM",

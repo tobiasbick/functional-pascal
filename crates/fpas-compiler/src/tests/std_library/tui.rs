@@ -25,7 +25,6 @@ begin
   Application.Close(First);
 
   var Second: Application := Application.Open();
-  Application.RequestRedraw(Second);
   Application.Close(Second)
 end.",
     );
@@ -65,7 +64,7 @@ uses Std.Tui;
 begin
   var App: Application := Application.Open();
   Application.Close(App);
-  Application.RequestRedraw(App)
+  Application.Size(App)
 end.",
     );
 

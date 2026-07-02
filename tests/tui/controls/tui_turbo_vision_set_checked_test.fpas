@@ -1,6 +1,6 @@
 program TuiTurboVisionSetCheckedTest;
 
-uses Std.Tui, Std.Test;
+uses Std.Console, Std.Tui, Std.Test;
 
 function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
 begin
@@ -13,10 +13,8 @@ begin
   var CheckHandle: CheckBox := Application.CreateCheckBox(App, Bounds(3, 2, 20, 1), 'opt', false);
   Application.AddChild(App, DialogHandle, CheckHandle);
   AssertEquals(0, Application.Pump(App));
-  var Before: ScreenCell := Application.QueryScreenCell(App, 5, 3);
-  AssertTrue(Before.ch = ' ');
+  AssertScreenCell(5, 3, ' ', LightGray, Black);
   Application.SetChecked(App, CheckHandle, true);
   AssertEquals(0, Application.Pump(App));
-  var After: ScreenCell := Application.QueryScreenCell(App, 5, 3);
-  AssertTrue(After.ch = 'X')
+  AssertScreenCell(5, 3, 'X', LightGray, Black)
 end.

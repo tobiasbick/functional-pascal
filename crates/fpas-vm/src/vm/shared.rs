@@ -15,9 +15,7 @@
 //! [`Self::task_results`] so wakeups cannot be missed between a poll and a block.
 
 use fpas_bytecode::{Chunk, Value};
-use fpas_std::{
-    CommandRegistry, Console, GraphHost, GraphSession, KeyInput, TextInput, TuiSession, UiHost,
-};
+use fpas_std::{Console, GraphHost, GraphSession, KeyInput, TextInput, TuiSession, UiHost};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -38,51 +36,15 @@ pub(crate) enum TaskResultState {
 #[derive(Debug)]
 pub(crate) struct TuiState {
     pub session: TuiSession,
-    /// Resize coalescing and the hosted-loop event pump (`docs/pascal/std/tui/app/README.md`).
-    pub host: UiHost,
-    /// `OnKeyPressed`-style handler: `function (Application, KeyEvent): boolean`.
-    pub on_key_pressed: Option<Value>,
-    /// `OnMouse`-style handler: `procedure (Application, Std.Console.Event)` (two arguments).
-    pub on_mouse: Option<Value>,
-    /// `OnPaste`-style handler: `procedure (Application, Std.Console.Event)` (two arguments).
-    pub on_paste: Option<Value>,
-    /// `OnFocusGained`-style handler: `procedure (Application, Std.Console.Event)` (two arguments).
-    pub on_focus_gained: Option<Value>,
-    /// `OnFocusLost`-style handler: `procedure (Application, Std.Console.Event)` (two arguments).
-    pub on_focus_lost: Option<Value>,
-    /// `OnActivate`-style handler: `procedure (Application)` — fired when a view in the focus
-    /// chain gains focus (Tab / Shift+Tab traversal, Phase 7 Step 2).
-    pub on_activate: Option<Value>,
-    /// `OnDeactivate`-style handler: `procedure (Application)` — fired when a view in the focus
-    /// chain loses focus (Tab / Shift+Tab traversal, Phase 7 Step 2).
-    pub on_deactivate: Option<Value>,
-    /// `OnCommand`-style handler: `procedure (Application, integer)` for host-resolved shortcuts.
+    /// Turbo Vision `Application.OnCommand`: `procedure (Application, integer)`.
     pub on_command: Option<Value>,
     /// Turbo Vision `Application.OnKey`: `function (Application, Std.Console.KeyEvent): boolean`.
     pub turbo_vision_on_key: Option<Value>,
     /// Turbo Vision `Application.OnMouse`: `procedure (Application, Std.Console.Event)`.
     pub turbo_vision_on_mouse: Option<Value>,
-    /// `OnResize`-style handler: `procedure (Application, Size)` (two arguments).
-    pub on_resize: Option<Value>,
-    /// `OnPaint`-style handler: `procedure (Application)` (one argument).
-    pub on_paint: Option<Value>,
-    /// `OnIdle`-style handler: `procedure (Application)` (one argument).
-    pub on_idle: Option<Value>,
-    /// Idle interval for hosted `Application.Run` callbacks in milliseconds; `0` disables idle.
-    pub idle_interval_ms: i64,
-    /// `OnExit`-style handler: `procedure (Application, ExitReason)` (registered when `Application.Run` / bridge exists).
-    pub on_exit: Option<Value>,
-    /// Last reason recorded for a hosted run (`Std.Tui.ExitReason` enum value); set when `Application.Run` stops.
-    pub last_exit_reason: Option<Value>,
-    /// Set by `TuiHostRequestQuit`; consumed when [`crate::vm::execute::io::tui::Worker`] run loop observes it.
+    /// Set by `Application.Quit`; consumed by the Turbo Vision run loop.
     pub quit_requested: bool,
-    /// Set when low-level code asks the active hosted `Application.Run` session to stop.
-    pub host_stop_requested: bool,
-    /// Guards the single hosted `Application.Run` entrypoint for the active session.
-    pub run_active: bool,
-    /// Host-managed command shortcut registry for the active session (Phase 7).
-    pub commands: CommandRegistry,
-    /// Turbo Vision backed handles for the `Std.Tui` rewrite spike.
+    /// Turbo Vision backed handles for the `Std.Tui` facade.
     pub turbo_vision: TurboVisionState,
 }
 
@@ -90,27 +52,10 @@ impl Default for TuiState {
     fn default() -> Self {
         Self {
             session: TuiSession::default(),
-            host: UiHost::for_terminal(),
-            on_key_pressed: None,
-            on_mouse: None,
-            on_paste: None,
-            on_focus_gained: None,
-            on_focus_lost: None,
-            on_activate: None,
-            on_deactivate: None,
             on_command: None,
             turbo_vision_on_key: None,
             turbo_vision_on_mouse: None,
-            on_resize: None,
-            on_paint: None,
-            on_idle: None,
-            idle_interval_ms: 0,
-            on_exit: None,
-            last_exit_reason: None,
             quit_requested: false,
-            host_stop_requested: false,
-            run_active: false,
-            commands: CommandRegistry::default(),
             turbo_vision: TurboVisionState::default(),
         }
     }

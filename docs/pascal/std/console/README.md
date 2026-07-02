@@ -108,6 +108,17 @@ Extended color procedures (`TextColorRGB`, `TextBackgroundRGB`, `TextColor256`, 
 | [Terminal events](events.md) | `ReadEvent`, raw mode, alt screen |
 | [Using together](using-together.md) | Mixing line and key input |
 
+## Interactive fullscreen loops
+
+Programs that own every cell (explorers, animations, custom TUIs) should use `Std.Console` directly — not `Std.Tui`. Typical setup:
+
+1. `EnableRawMode`, `EnterAltScreen`, optional `EnableMouse` / `EnableFocus` / `EnablePaste`, `CursorOff`
+2. A `mutable var NeedsRedraw` flag; paint proc writes with `Window`, `ClrScr`, `GotoXY`, `Write`, colors
+3. Loop: paint when `NeedsRedraw`, then `case ReadEventTimeout(16) of Some(E): …; None: … end` for keys, mouse, resize
+4. Cleanup: reverse the enable calls, `LeaveAltScreen`, `DisableRawMode`, `CursorOn`
+
+Reference: [`examples/math/mandelbrot/mandelbrot.fpas`](../../../../examples/math/mandelbrot/mandelbrot.fpas).
+
 ## Implementation (contributors)
 
 | Concern | Location |
@@ -120,5 +131,5 @@ Extended color procedures (`TextColorRGB`, `TextBackgroundRGB`, `TextColor256`, 
 
 ## See also
 
-- [`Std.Tui`](../tui/session.md) — hosted terminal applications
+- [`Std.Tui`](../tui/README.md) — Turbo Vision widget applications
 - [Standard library index](../README.md)

@@ -1,6 +1,6 @@
 program TuiTurboVisionSetStatusItemsTest;
 
-uses Std.Tui, Std.Test;
+uses Std.Console, Std.Tui, Std.Test;
 
 function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
 begin
@@ -25,10 +25,8 @@ begin
                                                                                     ]);
   Application.SetStatusLine(App, Status);
   AssertEquals(0, Application.Pump(App));
-  var Before: ScreenCell := Application.QueryScreenCell(App, 1, 25);
-  AssertTrue(Before.ch = 'O');
+  AssertScreenCell(1, 25, 'O', LightGray, Black);
   Application.SetStatusItems(App, Status, [NewStatusItem()]);
   AssertEquals(0, Application.Pump(App));
-  var After: ScreenCell := Application.QueryScreenCell(App, 1, 25);
-  AssertTrue(After.ch = 'N')
+  AssertScreenCell(1, 25, 'N', LightGray, Black)
 end.

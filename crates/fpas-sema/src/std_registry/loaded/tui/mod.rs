@@ -12,8 +12,8 @@ mod handlers;
 use crate::check::Checker;
 use crate::std_registry::loaded::type_registration;
 use crate::types::Ty;
+use fpas_std::TUI_EVENT_KIND_VARIANTS;
 use fpas_std::std_symbols as s;
-use fpas_std::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS};
 
 struct TuiTypes {
     application: Ty,
@@ -34,10 +34,6 @@ struct TuiTypes {
     status_item: Ty,
     rect: Ty,
     size: Ty,
-    screen_cell: Ty,
-    key_event: Ty,
-    console_event: Ty,
-    application_handlers: Ty,
 }
 
 struct TuiCallbackTypes {
@@ -126,15 +122,6 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
             ("height".into(), Ty::Integer),
         ],
     );
-    let screen_cell = type_registration::register_record_type(
-        checker,
-        s::STD_TUI_SCREEN_CELL,
-        vec![
-            ("ch".into(), Ty::String),
-            ("fg".into(), Ty::Integer),
-            ("bg".into(), Ty::Integer),
-        ],
-    );
     let key_event = type_registration::lookup_required_type(
         checker,
         s::STD_CONSOLE_KEY_EVENT,
@@ -150,21 +137,8 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         s::STD_TUI_EVENT_KIND,
         TUI_EVENT_KIND_VARIANTS,
     );
-    let exit_reason = type_registration::register_enum_type(
-        checker,
-        s::STD_TUI_EXIT_REASON,
-        TUI_EXIT_REASON_VARIANTS,
-    );
-    let (application_handlers, callbacks) = handlers::register_application_handlers(
-        checker,
-        &handlers::TuiRegistrationTypes {
-            application: &application,
-            size: &size,
-            key_event: &key_event,
-            console_event: &console_event,
-            exit_reason: &exit_reason,
-        },
-    );
+    let callbacks =
+        handlers::register_turbo_vision_callbacks(&application, &key_event, &console_event);
     type_registration::register_record_type(
         checker,
         s::STD_TUI_EVENT,
@@ -197,10 +171,6 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         status_item,
         rect,
         size,
-        screen_cell,
-        key_event,
-        console_event,
-        application_handlers,
     };
     application_api::register_application_api(checker, &types, &callbacks);
 }

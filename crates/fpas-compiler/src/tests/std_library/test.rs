@@ -140,50 +140,26 @@ fn std_test_assert_screen_line_passes_and_fails() {
     compile_ok(
         "\
 program T;
-uses Std.Console, Std.Tui, Std.Test;
+uses Std.Console, Std.Test;
 
-procedure OnPaint(App: Application);
 begin
   ClrScr();
   GotoXY(1, 1);
-  Write('Hi')
-end;
-
-begin
-  var App: Application := Application.OpenForTest(80, 25);
-  var Handlers: ApplicationHandlers := record
-    OnPaint := Some(OnPaint);
-  end;
-  Application.Configure(App, Handlers);
-  Application.RequestRedraw(App);
-  Application.TestPump(App);
-  AssertScreenLine('Hi', 1);
-  Application.CloseForTest(App)
+  Write('Hi');
+  AssertScreenLine('Hi', 1)
 end.",
     );
 
     let err = compile_run_error(
         "\
 program T;
-uses Std.Console, Std.Tui, Std.Test;
+uses Std.Console, Std.Test;
 
-procedure OnPaint(App: Application);
 begin
   ClrScr();
   GotoXY(1, 1);
-  Write('Hi')
-end;
-
-begin
-  var App: Application := Application.OpenForTest(80, 25);
-  var Handlers: ApplicationHandlers := record
-    OnPaint := Some(OnPaint);
-  end;
-  Application.Configure(App, Handlers);
-  Application.RequestRedraw(App);
-  Application.TestPump(App);
-  AssertScreenLine('Bye', 1);
-  Application.CloseForTest(App)
+  Write('Hi');
+  AssertScreenLine('Bye', 1)
 end.",
     );
     assert_eq!(err.code, RUNTIME_TEST_ASSERTION_FAILED);
@@ -199,25 +175,13 @@ fn std_test_assert_screen_line_passes_at_runtime() {
     compile_and_run(
         "\
 program T;
-uses Std.Console, Std.Tui, Std.Test;
+uses Std.Console, Std.Test;
 
-procedure OnPaint(App: Application);
 begin
   ClrScr();
   GotoXY(1, 1);
-  Write('Hi')
-end;
-
-begin
-  var App: Application := Application.OpenForTest(80, 25);
-  var Handlers: ApplicationHandlers := record
-    OnPaint := Some(OnPaint);
-  end;
-  Application.Configure(App, Handlers);
-  Application.RequestRedraw(App);
-  Application.TestPump(App);
-  AssertScreenLine('Hi', 1);
-  Application.CloseForTest(App)
+  Write('Hi');
+  AssertScreenLine('Hi', 1)
 end.",
     );
 }
@@ -227,52 +191,28 @@ fn std_test_assert_screen_cell_passes_and_fails() {
     compile_ok(
         "\
 program T;
-uses Std.Console, Std.Tui, Std.Test;
+uses Std.Console, Std.Test;
 
-procedure OnPaint(App: Application);
 begin
   ClrScr();
   GotoXY(1, 1);
   TextColor(Red);
-  Write('!')
-end;
-
-begin
-  var App: Application := Application.OpenForTest(80, 25);
-  var Handlers: ApplicationHandlers := record
-    OnPaint := Some(OnPaint);
-  end;
-  Application.Configure(App, Handlers);
-  Application.RequestRedraw(App);
-  Application.TestPump(App);
-  AssertScreenCell(1, 1, '!', Red, Black);
-  Application.CloseForTest(App)
+  Write('!');
+  AssertScreenCell(1, 1, '!', Red, Black)
 end.",
     );
 
     let err = compile_run_error(
         "\
 program T;
-uses Std.Console, Std.Tui, Std.Test;
+uses Std.Console, Std.Test;
 
-procedure OnPaint(App: Application);
 begin
   ClrScr();
   GotoXY(1, 1);
   TextColor(Red);
-  Write('!')
-end;
-
-begin
-  var App: Application := Application.OpenForTest(80, 25);
-  var Handlers: ApplicationHandlers := record
-    OnPaint := Some(OnPaint);
-  end;
-  Application.Configure(App, Handlers);
-  Application.RequestRedraw(App);
-  Application.TestPump(App);
-  AssertScreenCell(1, 1, '!', Blue, Black);
-  Application.CloseForTest(App)
+  Write('!');
+  AssertScreenCell(1, 1, '!', Blue, Black)
 end.",
     );
     assert_eq!(err.code, RUNTIME_TEST_ASSERTION_FAILED);

@@ -138,7 +138,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/std/task_basics.fpas` | `Std.Task` — `go`, `Wait`, `WaitAll` |
 | `pascal/std/time_basics.fpas` | `Std.Time` — monotonic time, elapsed time, timestamp, sleep |
 | `pascal/std/array_basics.fpas` | `Std.Array` — `Length`, `Sort`, `Any`, `All` |
-| `pascal/tui/minimal_application.fpas` | `Std.Tui` — hosted terminal loop with global handlers |
+| `pascal/tui/turbo_vision_dialog.fpas` | `Std.Tui` — Turbo Vision dialog demo |
 | `pascal/tui/turbo_vision_dialog.fpas` | `Std.Tui` — Turbo Vision dialog and button |
 | `pascal/tui/turbo_vision_window.fpas` | `Std.Tui` — Turbo Vision window, desktop attachment, and button |
 | `pascal/tui/exec_dialog.fpas` | `Std.Tui` — modal `ExecDialog` with `InputLine` read-back via `InputText` |
@@ -171,12 +171,12 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 | Path | Notes |
 |------|--------|
 | `math/julia/julia.fpas` | Single-file; pan/zoom with keys after first draw |
-| `pascal/tui/minimal_application.fpas` | Single-file terminal TUI; Escape exits |
+| `pascal/tui/turbo_vision_dialog.fpas` | Single-file Turbo Vision dialog; button exits |
 | `pascal/tui/turbo_vision_dialog.fpas` | Single-file Turbo Vision dialog; button exits |
 | `pascal/tui/turbo_vision_window.fpas` | Single-file Turbo Vision window; button exits |
 | `pascal/tui/exec_dialog.fpas` | Single-file modal dialog; OK/Cancel closes, entered name printed after |
 | `pascal/tui/runtime_setters.fpas` | Single-file dialog; Toggle updates label/check box live, Quit exits |
 | `math/julia/julia_graph.fpas` | Single-file native-window Julia explorer; arrows pan, `WASD` changes Julia constant, wheel zooms, left click recenters, `Esc` quits |
 | `math/mandelbrot/mandelbrot_graph.fpas` | Single-file native-window Mandelbrot explorer; arrows pan, wheel zooms, left click recenters, `1/2/3` switch palettes, `Esc` quits |
-| `math/mandelbrot/mandelbrot.fpasprj` | Project; fullscreen Mandelbrot explorer |
+| `math/mandelbrot/mandelbrot.fpasprj` | Project; fullscreen terminal Mandelbrot explorer (`Std.Console` event loop) |
 Current automated TUI coverage is under `tests/tui/`. Graph apps use `Application.Configure(App, Handlers)` and `Application.Run(App)`; see `docs/pascal/std/graph/app/README.md`.

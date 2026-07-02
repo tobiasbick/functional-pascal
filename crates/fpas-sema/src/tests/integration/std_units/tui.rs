@@ -23,7 +23,8 @@ begin
 end.",
     );
     assert!(
-        errs.iter().any(|e| e.message.contains("Unknown type `ExitReason`")),
+        errs.iter()
+            .any(|e| e.message.contains("Unknown type `ExitReason`")),
         "{errs:#?}"
     );
 }

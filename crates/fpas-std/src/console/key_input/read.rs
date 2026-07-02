@@ -16,9 +16,10 @@ impl KeyInput {
         {
             return Ok(true);
         }
-        if self.test_mode || !self.raw_mode {
+        if self.test_mode {
             return Ok(false);
         }
+        self.ensure_raw_mode(location)?;
         loop {
             if !event::poll(Duration::ZERO).map_err(|e| {
                 std_runtime_error(

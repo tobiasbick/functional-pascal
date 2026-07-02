@@ -45,6 +45,8 @@ Application chrome uses root-level handles:
 | `Application.SetStatusLine(App, StatusLine)` | Set the active application status line. |
 | `Application.SetStatusItems(App, StatusLine, Items)` | Replace the items on an attached status line at runtime. Re-renders live and in headless queries. |
 
+On a live terminal `Application.Run`, the runtime stretches the menu bar and status line to the full terminal width and pins the status line to the bottom row (matching Turbo Vision resize behavior). Headless `OpenForTest` runs keep the `Bounds` you pass to `Create*`.
+
 ## See Also
 
 - [Application](README.md)

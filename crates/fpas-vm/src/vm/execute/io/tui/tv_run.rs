@@ -2,6 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
+use super::chrome_layout::{layout_menu_bar_for_terminal, layout_status_line_for_terminal};
 use super::command_map::fpas_command_to_turbo_vision;
 use super::interactive_loop::ApplicationInteractiveSession;
 use super::menu_build::build_menu_bar_from_snapshot;
@@ -99,15 +100,18 @@ impl Worker {
         &self,
         app: &mut TurboVisionApplication,
     ) {
+        let (terminal_width, terminal_height) = app.terminal.size();
+
         if let Some(menu_bar) = self.turbo_vision_menu_bar_snapshot() {
-            app.set_menu_bar(build_menu_bar_from_snapshot(
-                menu_bar.bounds,
-                &menu_bar.menus,
-            ));
+            let mut menu_bar = build_menu_bar_from_snapshot(menu_bar.bounds, &menu_bar.menus);
+            layout_menu_bar_for_terminal(&mut menu_bar, terminal_width);
+            app.set_menu_bar(menu_bar);
         }
 
         if let Some(status_line) = self.turbo_vision_status_line_snapshot() {
-            app.set_status_line(build_status_line(status_line));
+            let mut status_line = build_status_line(status_line);
+            layout_status_line_for_terminal(&mut status_line, terminal_width, terminal_height);
+            app.set_status_line(status_line);
         }
     }
 

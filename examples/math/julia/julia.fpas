@@ -105,6 +105,7 @@ begin
 end;
 
 begin
+  EnableRawMode();
   Window(1, 1, 80, 25);
   CursorOff();
   mutable var XMin: real := -1.8;
@@ -180,5 +181,6 @@ begin
     end;
     Delay(16)
   until Quit;
+  DisableRawMode();
   CursorOn()
 end.

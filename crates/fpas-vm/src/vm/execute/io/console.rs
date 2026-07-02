@@ -1,7 +1,7 @@
 use crate::vm::Worker;
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError, internal_error, runtime_error};
 use fpas_bytecode::{ConsoleIntrinsic, Intrinsic, SourceLocation, Value};
-use fpas_std::{Console, ConsoleKeyEvent, KeyInput, TextInput, UiMouse};
+use fpas_std::{Console, ConsoleKeyEvent, KeyInput, TextInput};
 
 impl Worker {
     pub(in crate::vm::execute) fn with_console<R>(&self, f: impl FnOnce(&mut Console) -> R) -> R {
@@ -360,95 +360,10 @@ impl Worker {
             meta,
         )
     }
-
-    fn non_key_console_event_record(kind: usize, mouse: Option<UiMouse>, text: String) -> Value {
-        let (mouse_action, mouse_button, mouse_x, mouse_y, shift, ctrl, alt, meta) = mouse
-            .map_or_else(
-                || {
-                    (
-                        fpas_std::mouse_action_index("Unknown"),
-                        fpas_std::mouse_button_index("None"),
-                        0,
-                        0,
-                        false,
-                        false,
-                        false,
-                        false,
-                    )
-                },
-                |mouse| {
-                    (
-                        mouse.action,
-                        mouse.button,
-                        mouse.x,
-                        mouse.y,
-                        mouse.modifiers.shift,
-                        mouse.modifiers.ctrl,
-                        mouse.modifiers.alt,
-                        mouse.modifiers.meta,
-                    )
-                },
-            );
-
-        Self::console_event_record_fields(
-            kind,
-            ConsoleKeyEvent::new(
-                fpas_std::key_event::key_kind_index("Unknown"),
-                '\0',
-                false,
-                false,
-                false,
-                false,
-            ),
-            mouse_action,
-            mouse_button,
-            mouse_x,
-            mouse_y,
-            0,
-            0,
-            text,
-            shift,
-            ctrl,
-            alt,
-            meta,
-        )
-    }
-
-    /// Builds one `Std.Console.Event` mouse record from the internal shared UI payload.
-    pub(in crate::vm::execute::io) fn console_mouse_event_record(mouse: UiMouse) -> Value {
-        Self::non_key_console_event_record(
-            fpas_std::event_kind_index("Mouse"),
-            Some(mouse),
-            String::new(),
-        )
-    }
-
-    /// Builds one `Std.Console.Event` paste record from bracketed paste text.
-    pub(in crate::vm::execute::io) fn console_paste_event_record(text: String) -> Value {
-        Self::non_key_console_event_record(fpas_std::event_kind_index("Paste"), None, text)
-    }
-
-    /// Builds one `Std.Console.Event` focus-gained record.
-    pub(in crate::vm::execute::io) fn console_focus_gained_event_record() -> Value {
-        Self::non_key_console_event_record(
-            fpas_std::event_kind_index("FocusGained"),
-            None,
-            String::new(),
-        )
-    }
-
-    /// Builds one `Std.Console.Event` focus-lost record.
-    pub(in crate::vm::execute::io) fn console_focus_lost_event_record() -> Value {
-        Self::non_key_console_event_record(
-            fpas_std::event_kind_index("FocusLost"),
-            None,
-            String::new(),
-        )
-    }
 }
 
 impl Worker {
-    /// Pop a `Std.Console.KeyEvent` record (used by `Std.Tui` host dispatch).
+    /// Pop a `Std.Console.KeyEvent` record from the stack.
     pub(in crate::vm::execute::io) fn pop_console_key_event(
         &mut self,
         line: SourceLocation,
@@ -524,107 +439,6 @@ impl Worker {
         let meta = read_bool("meta")?;
 
         Ok(ConsoleKeyEvent::new(kind, ch, shift, ctrl, alt, meta))
-    }
-
-    /// Pop a `Std.Console.Event` record and convert it to the runtime event model.
-    pub(in crate::vm::execute::io) fn pop_console_event(
-        &mut self,
-        line: SourceLocation,
-    ) -> Result<fpas_std::ConsoleEvent, VmError> {
-        const EVENT: &str = "Std.Console.Event";
-        match self.pop(line)? {
-            Value::Record { type_name, fields } if type_name == EVENT => {
-                Self::console_event_from_fields(&fields, line)
-            }
-            Value::Record { type_name, fields } if type_name == "<record>" => {
-                Self::console_event_from_fields(&fields, line)
-            }
-            other => Err(runtime_error(
-                TYPE_MISMATCH_CODE,
-                format!("Expected {EVENT}, got {}", other.type_name()),
-                "Pass a `Std.Console.Event` value.",
-                line,
-            )),
-        }
-    }
-
-    fn console_event_from_fields(
-        fields: &[(String, Value)],
-        line: SourceLocation,
-    ) -> Result<fpas_std::ConsoleEvent, VmError> {
-        let field = |name: &str| -> Result<&Value, VmError> {
-            fields
-                .iter()
-                .find(|(k, _)| k == name)
-                .map(|(_, v)| v)
-                .ok_or_else(|| {
-                    internal_error(
-                        format!("Std.Console.Event missing field `{name}`"),
-                        "This indicates a compiler/runtime mismatch.",
-                        line,
-                    )
-                })
-        };
-
-        let read_int = |name: &str| -> Result<i64, VmError> {
-            match field(name)? {
-                Value::Integer(i) => Ok(*i),
-                _ => Err(internal_error(
-                    format!("Std.Console.Event.{name} must be an integer"),
-                    "This indicates a compiler/runtime mismatch.",
-                    line,
-                )),
-            }
-        };
-
-        let read_bool = |name: &str| -> Result<bool, VmError> {
-            match field(name)? {
-                Value::Boolean(b) => Ok(*b),
-                _ => Err(internal_error(
-                    format!("Std.Console.Event.{name} must be a boolean"),
-                    "This indicates a compiler/runtime mismatch.",
-                    line,
-                )),
-            }
-        };
-
-        let kind = read_int("kind")? as usize;
-        let key = match field("key")? {
-            Value::Record { fields, .. } => Self::console_key_event_from_fields(fields, line)?,
-            _ => {
-                return Err(internal_error(
-                    "Std.Console.Event.key must be a KeyEvent record",
-                    "This indicates a compiler/runtime mismatch.",
-                    line,
-                ));
-            }
-        };
-        let text = match field("text")? {
-            Value::Str(s) => s.clone(),
-            _ => {
-                return Err(internal_error(
-                    "Std.Console.Event.text must be a string",
-                    "This indicates a compiler/runtime mismatch.",
-                    line,
-                ));
-            }
-        };
-
-        Ok(fpas_std::ConsoleEvent {
-            kind,
-            key,
-            mouse_action: read_int("mouse_action")? as usize,
-            mouse_button: read_int("mouse_button")? as usize,
-            mouse_x: read_int("mouse_x")?,
-            mouse_y: read_int("mouse_y")?,
-            width: read_int("width")?,
-            height: read_int("height")?,
-            text,
-            shift: read_bool("shift")?,
-            ctrl: read_bool("ctrl")?,
-            alt: read_bool("alt")?,
-            meta: read_bool("meta")?,
-        })
     }
 }
 

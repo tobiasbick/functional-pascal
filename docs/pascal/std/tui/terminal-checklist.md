@@ -8,12 +8,11 @@ Use this checklist after changes to `Std.Tui` session, Turbo Vision bridge, or t
 | Rust compiler TUI tests | `cargo test -p fpas-compiler std_library::tui` | Current TUI lowering and runtime tests pass. |
 | Rust VM TUI doc links | `cargo test -p fpas-vm tui_spec_links` | TUI Rust sources link to existing `docs/pascal/std/tui/` files. |
 | FPAS Turbo Vision controls | `cargo run -q -p fpas-cli -- test tests/tui/controls/` | Headless Turbo Vision widget tests pass. |
-| FPAS hosted transition tests | `cargo run -q -p fpas-cli -- test tests/tui/host/` | Headless hosted-loop and screen-query tests pass. |
 | Full FPAS suite | `cargo run -q -p fpas-cli -- test tests/` | Full regression suite passes. |
 | Full Rust suite | `cargo test --workspace` | Workspace tests pass. |
 | FPAS formatting | `cargo run -q -p fpas-cli -- fmt --check tests/ examples/ apps/` | No formatting drift. |
 
-Turbo Vision regression tests under `tests/tui/controls/` (24 files). Core coverage:
+Turbo Vision regression tests under `tests/tui/controls/` (25 files). Core coverage:
 
 - **Spike / run** — `spike_test`, `run_test`
 - **Widgets** — `window`, `static_text`, `memo`, `text_viewer`, `input_line`, `list_box`, `check_box`, `radio_button`

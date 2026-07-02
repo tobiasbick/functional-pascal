@@ -1,6 +1,6 @@
 # Std.Tui native testing
 
-Headless TUI tests use `Application.OpenForTest` and the `Application.Test*` helpers.
+Headless Turbo Vision tests use `Application.OpenForTest`, widget construction, `Application.TestClickButton` or `Application.TestDispatchMenuCommand`, and `Application.Run`.
 
 Example:
 
@@ -35,9 +35,9 @@ begin
 end.
 ```
 
-Regression tests live under `tests/tui/`.
+Regression tests live under `tests/tui/controls/` (`tui_turbo_vision_*_test.fpas`, `tui_run_path_test.fpas`).
 
-Turbo Vision widget tests are in `tests/tui/controls/` (`tui_turbo_vision_*_test.fpas`). Hosted transition tests remain in `tests/tui/host/`.
+To assert painted terminal output after `Application.Pump`, add `uses Std.Console` and call [`Std.Test`](../../testing/test.md) `AssertScreenLine` or `AssertScreenCell` on the virtual CRT back buffer.
 
 File dialog headless example:
 

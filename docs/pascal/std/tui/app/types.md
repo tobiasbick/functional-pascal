@@ -125,31 +125,6 @@ Record used by `Application.CreateStatusLine`.
 | `keyCode` | `integer` | Turbo Vision key code. Use `0` when no keyboard shortcut is attached. |
 | `commandId` | `integer` | Command id dispatched by the status item. |
 
-## `ScreenCell`
-
-| Field | Type | Meaning |
-| --- | --- | --- |
-| `ch` | `string` | Cell text. |
-| `fg` | `integer` | Foreground color. |
-| `bg` | `integer` | Background color. |
-
-## `ApplicationHandlers`
-
-Record for bundled transition handlers used by `Application.Configure`. Optional handler fields use `Some(Handler)` or `None`.
-
-For new Turbo Vision command dispatch, prefer `Application.OnCommand(App, Handler)`.
-
-## `ExitReason`
-
-Registered enum for transition run-loop exit reporting.
-
-| Variant | Meaning |
-| --- | --- |
-| `UserQuit` | The application requested exit. |
-| `HostStop` | The backend stopped the active run. |
-| `HostAndUserStop` | Both stop paths happened during the same run. |
-| `HostShutdown` | The VM entered shutdown while the run was active. |
-
 ## See Also
 
 - [Application](README.md)

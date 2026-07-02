@@ -66,7 +66,7 @@ Queue one input line for the next blocking `Std.Console.ReadLn` (or line-buffere
 
 ### `procedure AssertScreenLine(Expected: string; Y: integer)`
 
-Fail with **F4023** when row `Y` (one-based) of the virtual CRT back buffer does not equal `Expected`. Use after `Application.TestPump` in headless TUI tests. Requires `uses Std.Console` (or `Std.Tui`, which pulls console symbols).
+Fail with **F4023** when row `Y` (one-based) of the virtual CRT back buffer does not equal `Expected`. Use after drawing with `Std.Console` or after `Application.Pump` in headless Turbo Vision tests. Requires `uses Std.Console`.
 
 ### `procedure AssertScreenCell(X, Y: integer; Ch: string; Fg, Bg: integer)`
 
@@ -118,8 +118,9 @@ Flags and discovery rules: [CLI](../../program-structure/cli.md).
 | Need | Native API |
 | ---- | ---------- |
 | `ReadLn` input | `Std.Test.PushReadLn` |
-| Hosted TUI input | `Application.TestSendKey`, `TestPump`, … (`docs/pascal/std/tui/app/README.md`) |
+| Headless Turbo Vision | `Application.OpenForTest`, `TestClickButton`, `Application.Run` (`docs/pascal/std/tui/app/testing.md`) |
 | Headless graph input | `Application.OpenForTest`, `Application.TestSendKey` |
+| Screen output | `AssertScreenLine`, `AssertScreenCell` |
 
 `*.script.toml` currently contains only project runner configuration such as `[test.overrides]`;
 event input belongs in native FPAS APIs (`PushReadLn`, `TestSendKey`, graph test injectors).
@@ -135,7 +136,7 @@ After a successful test run, `fpas test` may compare optional golden files besid
 | Sidecar | Compares | Typical use |
 |---------|----------|-------------|
 | `<test>.expect.stdout` | Captured `WriteLn` lines | Console output |
-| `<test>.expect.screen` | Compact CRT screen rows | Hosted `Std.Tui` paint (`GotoXY`, `ClrScr`, …) |
+| `<test>.expect.screen` | Compact CRT screen rows | `Std.Console` or headless Turbo Vision paint |
 | `<test>.expect.pixels` | Headless graph frame spot checks (`x y 0xRRGGBB`) | `Std.Graph` after `Present` |
 
 Golden sidecars are documented here because they are runner-side checks, not `Std.Test`

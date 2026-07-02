@@ -43,7 +43,9 @@ separate API and is not part of this cleanup.
 7. Update `docs/pascal/std/tui/` to describe only the Turbo Vision facade after
    the removal lands. **Done** — hub and `app/README.md` rewritten.
 8. Update `docs/pascal/std/console/` if a new console loop helper or documented
-   Mandelbrot pattern is added.
+   Mandelbrot pattern is added. **Done** — interactive loop section in console hub;
+   remaining TUI subpages (`handlers`, `types`, `testing`, `vm-bridge`, `session`,
+   `terminal-checklist`, `cell-width`) and `Std.Test` docs updated.
 
 ## Merge note
 

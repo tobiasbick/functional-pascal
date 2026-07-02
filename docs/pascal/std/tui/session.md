@@ -11,8 +11,7 @@
 | `Application.Close(App)` | Close a logical application handle. |
 | `Application.CloseForTest(App)` | Close a headless test application. |
 | `Application.Size(App): Size` | Return the current size. |
-| `Application.RequestRedraw(App)` | Mark the app dirty. |
-| `Application.Run(App)` | Run the active backend and close the app on success. |
+| `Application.Run(App)` | Run the Turbo Vision event loop and close the app on success. |
 | `Application.Quit(App)` | Request that the running backend exits. |
 
 `Application.Open` returns immediately and does not acquire terminal state. Backend-specific terminal ownership starts in `Application.Run`.

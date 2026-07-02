@@ -49,12 +49,8 @@ impl Worker {
         Ok(())
     }
 
-    /// Replace all desktop windows and dialogs with views freshly built from FPAS state.
-    ///
-    /// The desktop background stays in place (`Desktop::remove_child` never touches
-    /// it). Menu bar and status line live on the application, not the desktop, and
-    /// are not rebuilt here.
     fn turbo_vision_rebuild_desktop(&self, app: &mut TurboVisionApplication) {
+        self.turbo_vision_sync_chrome_from_fpas(app);
         while app.desktop.child_count() > 0 {
             app.desktop.remove_child(0);
         }

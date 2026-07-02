@@ -82,3 +82,26 @@ fn tui_query_screen_cell_reads_blank_headless_cell() {
 
     assert_eq!(worker.stack.last(), Some(&tui_screen_cell_value(' ', 7, 0)));
 }
+
+#[test]
+fn tui_query_screen_cell_rejects_row_outside_screen_height() {
+    let mut chunk = Chunk::new();
+    emit_open_for_test(&mut chunk, 80, 25);
+    emit_constant(&mut chunk, tui_application_value());
+    emit_constant(&mut chunk, Value::Integer(1));
+    emit_constant(&mut chunk, Value::Integer(26));
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::QueryScreenCell))),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let shared = Arc::new(minimal_shared_state(chunk));
+    let mut worker = Worker::new_main(shared);
+    let err = worker.run().expect_err("out-of-range query should fail");
+    assert!(
+        err.message.contains("outside the virtual screen"),
+        "unexpected error: {}",
+        err.message
+    );
+}

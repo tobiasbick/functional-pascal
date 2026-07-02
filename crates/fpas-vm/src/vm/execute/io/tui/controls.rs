@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
-use super::handles::{TurboVisionChildHandle, TurboVisionParentHandle};
+use super::handles::{CheckedControlHandle, TurboVisionChildHandle, TurboVisionParentHandle};
 use super::tv_geometry::unknown_handle_error;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
@@ -449,6 +449,73 @@ impl Worker {
                 line,
             )),
             _ => Err(unknown_handle_error(label, handle, line)),
+        })?;
+        self.mark_turbo_vision_tree_dirty();
+        Ok(())
+    }
+
+    /// Replace the checked/selected state of a check box or radio button.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui/app/controls.md`
+    pub(super) fn turbo_vision_set_checked(&mut self, line: SourceLocation) -> Result<(), VmError> {
+        let checked = self.pop_bool(line)?;
+        let control = self.pop_turbo_vision_checked_control_handle(line)?;
+        self.pop_tui_application(line)?;
+
+        self.with_tui(|tui| match control {
+            CheckedControlHandle::CheckBox(handle) => {
+                let Some(TurboVisionObject::CheckBox(check_box)) =
+                    tui.turbo_vision.objects.get_mut(&handle)
+                else {
+                    return Err(unknown_handle_error("CheckBox", handle, line));
+                };
+                check_box.checked = checked;
+                Ok(())
+            }
+            CheckedControlHandle::RadioButton(handle) => {
+                let group_id = match tui.turbo_vision.objects.get(&handle) {
+                    Some(TurboVisionObject::RadioButton(radio_button)) => radio_button.group_id,
+                    _ => return Err(unknown_handle_error("RadioButton", handle, line)),
+                };
+                if checked {
+                    for object in tui.turbo_vision.objects.values_mut() {
+                        let TurboVisionObject::RadioButton(radio_button) = object else {
+                            continue;
+                        };
+                        if radio_button.group_id == group_id {
+                            radio_button.selected = false;
+                        }
+                    }
+                }
+                let Some(TurboVisionObject::RadioButton(radio_button)) =
+                    tui.turbo_vision.objects.get_mut(&handle)
+                else {
+                    return Err(unknown_handle_error("RadioButton", handle, line));
+                };
+                radio_button.selected = checked;
+                Ok(())
+            }
+        })?;
+        self.mark_turbo_vision_tree_dirty();
+        Ok(())
+    }
+
+    /// Replace the items of a list box.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui/app/controls.md`
+    pub(super) fn turbo_vision_set_items(&mut self, line: SourceLocation) -> Result<(), VmError> {
+        let items = self.pop_turbo_vision_string_array("SetItems items", line)?;
+        let list_handle = self.pop_turbo_vision_list_box_handle(line)?;
+        self.pop_tui_application(line)?;
+
+        self.with_tui(|tui| {
+            let Some(TurboVisionObject::ListBox(list_box)) =
+                tui.turbo_vision.objects.get_mut(&list_handle)
+            else {
+                return Err(unknown_handle_error("ListBox", list_handle, line));
+            };
+            list_box.items = items;
+            Ok(())
         })?;
         self.mark_turbo_vision_tree_dirty();
         Ok(())

@@ -1,0 +1,34 @@
+program TuiTurboVisionSetStatusItemsTest;
+
+uses Std.Tui, Std.Test;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+function OldStatusItem(): StatusItem;
+begin
+  return record text := 'OLD'; keyCode := 0; commandId := 0; end
+end;
+
+function NewStatusItem(): StatusItem;
+begin
+  return record text := 'NEW'; keyCode := 0; commandId := 0; end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(60, 25);
+  var Status: StatusLine := Application.CreateStatusLine(App, Bounds(1, 25, 60, 1), [
+                                                                                      OldStatusItem()
+
+                                                                                    ]);
+  Application.SetStatusLine(App, Status);
+  AssertEquals(0, Application.Pump(App));
+  var Before: ScreenCell := Application.QueryScreenCell(App, 1, 25);
+  AssertTrue(Before.ch = 'O');
+  Application.SetStatusItems(App, Status, [NewStatusItem()]);
+  AssertEquals(0, Application.Pump(App));
+  var After: ScreenCell := Application.QueryScreenCell(App, 1, 25);
+  AssertTrue(After.ch = 'N')
+end.

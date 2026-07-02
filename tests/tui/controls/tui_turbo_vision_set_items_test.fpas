@@ -1,0 +1,22 @@
+program TuiTurboVisionSetItemsTest;
+
+uses Std.Tui, Std.Test;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(60, 20);
+  var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(2, 1, 30, 10), 'Host');
+  var ListHandle: ListBox := Application.CreateListBox(App, Bounds(3, 2, 20, 4), ['alpha', 'beta'], Command.Accept);
+  Application.AddChild(App, DialogHandle, ListHandle);
+  AssertEquals(0, Application.Pump(App));
+  var Before: ScreenCell := Application.QueryScreenCell(App, 5, 3);
+  AssertTrue(Before.ch = 'a');
+  Application.SetItems(App, ListHandle, ['one']);
+  AssertEquals(0, Application.Pump(App));
+  var After: ScreenCell := Application.QueryScreenCell(App, 5, 3);
+  AssertTrue(After.ch = 'o')
+end.

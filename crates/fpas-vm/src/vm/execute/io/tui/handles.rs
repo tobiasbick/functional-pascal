@@ -128,6 +128,40 @@ impl Worker {
         }
     }
 
+    pub(super) fn pop_turbo_vision_list_box_handle(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<u32, VmError> {
+        self.pop_turbo_vision_handle(TUI_LIST_BOX_TYPE, "ListBox", line)
+    }
+
+    pub(super) fn pop_turbo_vision_checked_control_handle(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<CheckedControlHandle, VmError> {
+        match self.pop(line)? {
+            Value::Record { type_name, fields } if type_name == TUI_CHECK_BOX_TYPE => {
+                Ok(CheckedControlHandle::CheckBox(
+                    self.decode_turbo_vision_handle_record(&fields, "CheckBox", line)?,
+                ))
+            }
+            Value::Record { type_name, fields } if type_name == TUI_RADIO_BUTTON_TYPE => {
+                Ok(CheckedControlHandle::RadioButton(
+                    self.decode_turbo_vision_handle_record(&fields, "RadioButton", line)?,
+                ))
+            }
+            other => Err(runtime_error(
+                TYPE_MISMATCH_CODE,
+                format!(
+                    "Checked control expected {TUI_CHECK_BOX_TYPE} or {TUI_RADIO_BUTTON_TYPE}, got {}",
+                    other.type_name()
+                ),
+                "Pass a handle from `Application.CreateCheckBox` or `Application.CreateRadioButton`.",
+                line,
+            )),
+        }
+    }
+
     pub(super) fn pop_turbo_vision_button_handle(
         &mut self,
         line: SourceLocation,
@@ -391,6 +425,11 @@ pub(super) enum TurboVisionChildHandle {
     TextViewer(u32),
     InputLine(u32),
     ListBox(u32),
+    CheckBox(u32),
+    RadioButton(u32),
+}
+
+pub(super) enum CheckedControlHandle {
     CheckBox(u32),
     RadioButton(u32),
 }

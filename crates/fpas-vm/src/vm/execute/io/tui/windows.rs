@@ -2,6 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
+use super::handles::TurboVisionParentHandle;
 use super::tv_geometry::state_rect;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
@@ -65,6 +66,42 @@ impl Worker {
 
             window.on_desktop = true;
             Ok(())
+        })?;
+        self.mark_turbo_vision_tree_dirty();
+        Ok(())
+    }
+
+    /// Replace the title of a window or dialog root.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui/app/README.md`
+    pub(super) fn turbo_vision_set_title(&mut self, line: SourceLocation) -> Result<(), VmError> {
+        let title = self.pop_turbo_vision_string("SetTitle title", line)?;
+        let root = self.pop_turbo_vision_parent_handle(line)?;
+        self.pop_tui_application(line)?;
+
+        self.with_tui(|tui| match root {
+            TurboVisionParentHandle::Dialog(handle) => {
+                let Some(TurboVisionObject::Dialog(dialog)) =
+                    tui.turbo_vision.objects.get_mut(&handle)
+                else {
+                    return Err(super::tv_geometry::unknown_handle_error(
+                        "Dialog", handle, line,
+                    ));
+                };
+                dialog.title = title;
+                Ok(())
+            }
+            TurboVisionParentHandle::Window(handle) => {
+                let Some(TurboVisionObject::Window(window)) =
+                    tui.turbo_vision.objects.get_mut(&handle)
+                else {
+                    return Err(super::tv_geometry::unknown_handle_error(
+                        "Window", handle, line,
+                    ));
+                };
+                window.title = title;
+                Ok(())
+            }
         })?;
         self.mark_turbo_vision_tree_dirty();
         Ok(())

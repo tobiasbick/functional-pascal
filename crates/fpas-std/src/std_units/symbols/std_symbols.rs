@@ -286,10 +286,15 @@ pub const STD_TUI_APPLICATION_TEST_SET_DIALOG_RESULT: &str =
     std_tui!("Application.TestSetDialogResult");
 pub const STD_TUI_APPLICATION_CREATE_MENU_BAR: &str = std_tui!("Application.CreateMenuBar");
 pub const STD_TUI_APPLICATION_SET_MENU_BAR: &str = std_tui!("Application.SetMenuBar");
+pub const STD_TUI_APPLICATION_SET_MENUS: &str = std_tui!("Application.SetMenus");
 pub const STD_TUI_APPLICATION_CREATE_STATUS_LINE: &str = std_tui!("Application.CreateStatusLine");
 pub const STD_TUI_APPLICATION_SET_STATUS_LINE: &str = std_tui!("Application.SetStatusLine");
+pub const STD_TUI_APPLICATION_SET_STATUS_ITEMS: &str = std_tui!("Application.SetStatusItems");
 pub const STD_TUI_APPLICATION_ADD_CHILD: &str = std_tui!("Application.AddChild");
 pub const STD_TUI_APPLICATION_SET_TEXT: &str = std_tui!("Application.SetText");
+pub const STD_TUI_APPLICATION_SET_CHECKED: &str = std_tui!("Application.SetChecked");
+pub const STD_TUI_APPLICATION_SET_ITEMS: &str = std_tui!("Application.SetItems");
+pub const STD_TUI_APPLICATION_SET_TITLE: &str = std_tui!("Application.SetTitle");
 pub const STD_TUI_APPLICATION_ADD_WINDOW: &str = std_tui!("Application.AddWindow");
 pub const STD_TUI_APPLICATION_ON_COMMAND: &str = std_tui!("Application.OnCommand");
 /// Register `function (Application, Std.Console.KeyEvent): boolean` for unhandled Turbo Vision keys.

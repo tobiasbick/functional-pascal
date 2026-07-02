@@ -99,6 +99,15 @@ impl Worker {
             Intrinsic::Tui(TuiIntrinsic::SetText) => {
                 self.turbo_vision_set_text(line)?;
             }
+            Intrinsic::Tui(TuiIntrinsic::SetChecked) => {
+                self.turbo_vision_set_checked(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::SetItems) => {
+                self.turbo_vision_set_items(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::SetTitle) => {
+                self.turbo_vision_set_title(line)?;
+            }
             Intrinsic::Tui(TuiIntrinsic::RegisterOnCommand) => {
                 self.turbo_vision_register_on_command(line)?;
             }
@@ -137,6 +146,12 @@ impl Worker {
             }
             Intrinsic::Tui(TuiIntrinsic::SetStatusLine) => {
                 self.turbo_vision_set_status_line(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::SetMenus) => {
+                self.turbo_vision_set_menus(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::SetStatusItems) => {
+                self.turbo_vision_set_status_items(line)?;
             }
             _ => return Ok(false),
         }

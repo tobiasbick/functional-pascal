@@ -217,6 +217,22 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::SetStatusLine), location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_SET_MENUS => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_SET_MENUS, 3, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::SetMenus), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_SET_STATUS_ITEMS => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_SET_STATUS_ITEMS, 3, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::SetStatusItems), location);
+                Ok(true)
+            }
             s::STD_TUI_APPLICATION_ADD_CHILD => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_ADD_CHILD, 3, args, location)?;
                 for arg in args {
@@ -231,6 +247,30 @@ impl Compiler {
                     self.compile_expr(arg)?;
                 }
                 self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::SetText), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_SET_CHECKED => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_SET_CHECKED, 3, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::SetChecked), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_SET_ITEMS => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_SET_ITEMS, 3, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::SetItems), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_SET_TITLE => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_SET_TITLE, 3, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::SetTitle), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_ADD_WINDOW => {

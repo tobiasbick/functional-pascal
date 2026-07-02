@@ -79,8 +79,6 @@ impl Worker {
         &self,
         line: SourceLocation,
     ) -> Result<TurboVisionApplication, VmError> {
-        let menu_bar_snapshot = self.turbo_vision_menu_bar_snapshot();
-        let status_line_snapshot = self.turbo_vision_status_line_snapshot();
         let mut app = TurboVisionApplication::new().map_err(|error| {
             runtime_error(
                 RUNTIME_CONSOLE_STATE_ERROR,
@@ -90,20 +88,27 @@ impl Worker {
             )
         })?;
 
-        if let Some(menu_bar) = menu_bar_snapshot {
+        self.turbo_vision_sync_chrome_from_fpas(&mut app);
+        self.turbo_vision_populate_desktop(&mut app);
+
+        Ok(app)
+    }
+
+    /// Refresh menu bar and status line on a live Turbo Vision application from FPAS state.
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_sync_chrome_from_fpas(
+        &self,
+        app: &mut TurboVisionApplication,
+    ) {
+        if let Some(menu_bar) = self.turbo_vision_menu_bar_snapshot() {
             app.set_menu_bar(build_menu_bar_from_snapshot(
                 menu_bar.bounds,
                 &menu_bar.menus,
             ));
         }
 
-        if let Some(status_line) = status_line_snapshot {
+        if let Some(status_line) = self.turbo_vision_status_line_snapshot() {
             app.set_status_line(build_status_line(status_line));
         }
-
-        self.turbo_vision_populate_desktop(&mut app);
-
-        Ok(app)
     }
 
     /// Add every on-desktop window and every dialog from current FPAS state to the desktop.

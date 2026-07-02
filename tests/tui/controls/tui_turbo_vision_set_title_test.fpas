@@ -1,0 +1,20 @@
+program TuiTurboVisionSetTitleTest;
+
+uses Std.Tui, Std.Test;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(60, 20);
+  var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(2, 1, 30, 8), 'OLD');
+  AssertEquals(0, Application.Pump(App));
+  var Before: ScreenCell := Application.QueryScreenCell(App, 3, 1);
+  AssertTrue(Before.ch = 'O');
+  Application.SetTitle(App, DialogHandle, 'NEW');
+  AssertEquals(0, Application.Pump(App));
+  var After: ScreenCell := Application.QueryScreenCell(App, 3, 1);
+  AssertTrue(After.ch = 'N')
+end.

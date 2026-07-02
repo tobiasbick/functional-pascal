@@ -27,3 +27,8 @@
     RegisterOnKey = 456,
     RegisterOnMouse = 457,
     SetText = 458,
+    SetChecked = 459,
+    SetItems = 460,
+    SetTitle = 461,
+    SetMenus = 462,
+    SetStatusItems = 463,

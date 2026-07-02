@@ -142,6 +142,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/tui/turbo_vision_dialog.fpas` | `Std.Tui` — Turbo Vision dialog and button |
 | `pascal/tui/turbo_vision_window.fpas` | `Std.Tui` — Turbo Vision window, desktop attachment, and button |
 | `pascal/tui/exec_dialog.fpas` | `Std.Tui` — modal `ExecDialog` with `InputLine` read-back via `InputText` |
+| `pascal/tui/runtime_setters.fpas` | `Std.Tui` — live `SetText` / `SetChecked` from `OnCommand` during `Run` |
 | `math/mandelbrot/mandelbrot_graph.fpas` | `Std.Graph` — native Mandelbrot explorer |
 | `math/julia/julia.fpas` | ASCII Julia set (**interactive** — see below) |
 | `math/julia/julia_graph.fpas` | Native-window Julia explorer with `Std.Graph` |
@@ -174,6 +175,7 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 | `pascal/tui/turbo_vision_dialog.fpas` | Single-file Turbo Vision dialog; button exits |
 | `pascal/tui/turbo_vision_window.fpas` | Single-file Turbo Vision window; button exits |
 | `pascal/tui/exec_dialog.fpas` | Single-file modal dialog; OK/Cancel closes, entered name printed after |
+| `pascal/tui/runtime_setters.fpas` | Single-file dialog; Toggle updates label/check box live, Quit exits |
 | `math/julia/julia_graph.fpas` | Single-file native-window Julia explorer; arrows pan, `WASD` changes Julia constant, wheel zooms, left click recenters, `Esc` quits |
 | `math/mandelbrot/mandelbrot_graph.fpas` | Single-file native-window Mandelbrot explorer; arrows pan, wheel zooms, left click recenters, `1/2/3` switch palettes, `Esc` quits |
 | `math/mandelbrot/mandelbrot.fpasprj` | Project; fullscreen Mandelbrot explorer |

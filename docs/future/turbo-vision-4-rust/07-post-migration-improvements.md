@@ -132,10 +132,23 @@ Notes for the VM layer:
   `Application.SetText(App, Control, Text)` updates the text of a button, static text, memo,
   text viewer, input line, check box, or radio button at runtime. It marks the tree dirty, so
   the change re-renders live (via the desktop rebuild) and is observable in headless screen
-  queries. List boxes are rejected (recreate with `CreateListBox`). Other setters
-  (`SetChecked`, `SetItems`, window/dialog `SetTitle`) are not implemented yet. See
+  queries. List boxes are rejected (use `Application.SetItems`). See
   `controls.rs` (`turbo_vision_set_text`), `builtins/tui.rs`, and
   `tests/tui/controls/tui_turbo_vision_set_text_test.fpas`.
+
+- **Additional property setters (2026-07-01).**
+  `Application.SetChecked(App, Control, Checked)` for check boxes and radio buttons;
+  `Application.SetItems(App, ListBox, Items)` for list boxes;
+  `Application.SetTitle(App, Root, Title)` for windows and dialogs. All mark the tree dirty
+  and re-render via the desktop rebuild. Headless paint shows check/radio markers and the first
+  list item for screen queries. See `tests/tui/controls/tui_turbo_vision_set_*_test.fpas`.
+
+- **Chrome refresh during reconcile (2026-07-01).**
+  Live rebuild now also re-syncs menu bar and status line from FPAS state
+  (`turbo_vision_sync_chrome_from_fpas`). `Application.SetMenus` and
+  `Application.SetStatusItems` mutate attached chrome at runtime. Headless paint draws the
+  first menu title and first status item. See `tests/tui/controls/tui_turbo_vision_set_menus_test.fpas`
+  and `tui_turbo_vision_set_status_items_test.fpas`.
 
 - **Dual-architecture clarity (2026-07-01).**
   Documented the Turbo Vision facade vs hosted canvas split in

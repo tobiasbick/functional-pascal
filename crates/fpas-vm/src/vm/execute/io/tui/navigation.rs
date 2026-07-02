@@ -78,7 +78,30 @@ impl Worker {
             menu_bar.attached = true;
             tui.turbo_vision.menu_bar = Some(handle);
             Ok(())
-        })
+        })?;
+        self.mark_turbo_vision_tree_dirty();
+        Ok(())
+    }
+
+    /// Replace the menus on an attached menu bar.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui/app/controls.md`
+    pub(super) fn turbo_vision_set_menus(&mut self, line: SourceLocation) -> Result<(), VmError> {
+        let menus = self.pop_turbo_vision_menus(line)?;
+        let handle = self.pop_turbo_vision_menu_bar_handle(line)?;
+        self.pop_tui_application(line)?;
+
+        self.with_tui(|tui| {
+            let Some(TurboVisionObject::MenuBar(menu_bar)) =
+                tui.turbo_vision.objects.get_mut(&handle)
+            else {
+                return Err(unknown_handle_error("MenuBar", handle, line));
+            };
+            menu_bar.menus = menus;
+            Ok(())
+        })?;
+        self.mark_turbo_vision_tree_dirty();
+        Ok(())
     }
 
     pub(super) fn turbo_vision_create_status_line(
@@ -146,7 +169,33 @@ impl Worker {
             status_line.attached = true;
             tui.turbo_vision.status_line = Some(handle);
             Ok(())
-        })
+        })?;
+        self.mark_turbo_vision_tree_dirty();
+        Ok(())
+    }
+
+    /// Replace the items on an attached status line.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui/app/controls.md`
+    pub(super) fn turbo_vision_set_status_items(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        let items = self.pop_turbo_vision_status_items(line)?;
+        let handle = self.pop_turbo_vision_status_line_handle(line)?;
+        self.pop_tui_application(line)?;
+
+        self.with_tui(|tui| {
+            let Some(TurboVisionObject::StatusLine(status_line)) =
+                tui.turbo_vision.objects.get_mut(&handle)
+            else {
+                return Err(unknown_handle_error("StatusLine", handle, line));
+            };
+            status_line.items = items;
+            Ok(())
+        })?;
+        self.mark_turbo_vision_tree_dirty();
+        Ok(())
     }
 
     fn pop_turbo_vision_menus(

@@ -19,6 +19,9 @@ pub(super) fn check_tui_builtin_std_call(
     match name {
         s::STD_TUI_APPLICATION_ADD_CHILD => Some(check_add_child(c, args, span)),
         s::STD_TUI_APPLICATION_SET_TEXT => Some(check_set_text(c, args, span)),
+        s::STD_TUI_APPLICATION_SET_CHECKED => Some(check_set_checked(c, args, span)),
+        s::STD_TUI_APPLICATION_SET_ITEMS => Some(check_set_items(c, args, span)),
+        s::STD_TUI_APPLICATION_SET_TITLE => Some(check_set_title(c, args, span)),
         _ => None,
     }
 }
@@ -164,11 +167,176 @@ fn check_set_text(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     Ty::Unit
 }
 
-/// Registers the polymorphic `Application.AddChild` and `Application.SetText` placeholders.
+/// Type-checks `Application.SetChecked(App, Control, Checked)`.
+fn check_set_checked(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+    if args.len() != 3 {
+        c.error_with_code(
+            SEMA_WRONG_ARGUMENT_COUNT,
+            format!(
+                "`{}` expects 3 arguments, got {}",
+                s::STD_TUI_APPLICATION_SET_CHECKED,
+                args.len()
+            ),
+            "Example: Application.SetChecked(App, CheckBox, true).",
+            span,
+        );
+        return Ty::Unit;
+    }
+
+    let app_ty = c.check_expr(&args[0]);
+    let control_ty = c.check_expr(&args[1]);
+    let checked_ty = c.check_expr(&args[2]);
+
+    let application = lookup_named_type(c, s::STD_TUI_APPLICATION);
+    let check_box = lookup_named_type(c, s::STD_TUI_CHECK_BOX);
+    let radio_button = lookup_named_type(c, s::STD_TUI_RADIO_BUTTON);
+
+    if app_ty != application {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            "`Application.SetChecked` first argument must be an application handle".to_string(),
+            "Pass the application handle returned by `Application.Open` or `OpenForTest`.",
+            span,
+        );
+    }
+
+    if control_ty != check_box && control_ty != radio_button {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            "`Application.SetChecked` control must be a check box or radio button handle"
+                .to_string(),
+            "Pass a handle from `Application.CreateCheckBox` or `Application.CreateRadioButton`.",
+            span,
+        );
+    }
+
+    if checked_ty != Ty::Boolean {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            format!("`Application.SetChecked` checked must be boolean, got {checked_ty}"),
+            "Pass `true` or `false`.",
+            span,
+        );
+    }
+
+    Ty::Unit
+}
+
+/// Type-checks `Application.SetItems(App, ListBox, Items)`.
+fn check_set_items(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+    if args.len() != 3 {
+        c.error_with_code(
+            SEMA_WRONG_ARGUMENT_COUNT,
+            format!(
+                "`{}` expects 3 arguments, got {}",
+                s::STD_TUI_APPLICATION_SET_ITEMS,
+                args.len()
+            ),
+            "Example: Application.SetItems(App, ListBox, ['one', 'two']).",
+            span,
+        );
+        return Ty::Unit;
+    }
+
+    let app_ty = c.check_expr(&args[0]);
+    let list_ty = c.check_expr(&args[1]);
+    let items_ty = c.check_expr(&args[2]);
+
+    let application = lookup_named_type(c, s::STD_TUI_APPLICATION);
+    let list_box = lookup_named_type(c, s::STD_TUI_LIST_BOX);
+
+    if app_ty != application {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            "`Application.SetItems` first argument must be an application handle".to_string(),
+            "Pass the application handle returned by `Application.Open` or `OpenForTest`.",
+            span,
+        );
+    }
+
+    if list_ty != list_box {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            "`Application.SetItems` list must be a list box handle".to_string(),
+            "Pass a handle from `Application.CreateListBox`.",
+            span,
+        );
+    }
+
+    if items_ty != Ty::Array(Box::new(Ty::String)) {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            format!("`Application.SetItems` items must be array of string, got {items_ty}"),
+            "Pass a string array, for example `['one', 'two']`.",
+            span,
+        );
+    }
+
+    Ty::Unit
+}
+
+/// Type-checks `Application.SetTitle(App, Root, Title)`.
+fn check_set_title(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+    if args.len() != 3 {
+        c.error_with_code(
+            SEMA_WRONG_ARGUMENT_COUNT,
+            format!(
+                "`{}` expects 3 arguments, got {}",
+                s::STD_TUI_APPLICATION_SET_TITLE,
+                args.len()
+            ),
+            "Example: Application.SetTitle(App, Dialog, 'New title').",
+            span,
+        );
+        return Ty::Unit;
+    }
+
+    let app_ty = c.check_expr(&args[0]);
+    let root_ty = c.check_expr(&args[1]);
+    let title_ty = c.check_expr(&args[2]);
+
+    let application = lookup_named_type(c, s::STD_TUI_APPLICATION);
+    let dialog = lookup_named_type(c, s::STD_TUI_DIALOG);
+    let window = lookup_named_type(c, s::STD_TUI_WINDOW);
+
+    if app_ty != application {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            "`Application.SetTitle` first argument must be an application handle".to_string(),
+            "Pass the application handle returned by `Application.Open` or `OpenForTest`.",
+            span,
+        );
+    }
+
+    if root_ty != dialog && root_ty != window {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            "`Application.SetTitle` root must be a dialog or window handle".to_string(),
+            "Pass a handle from `Application.CreateDialog` or `Application.CreateWindow`.",
+            span,
+        );
+    }
+
+    if title_ty != Ty::String {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            format!("`Application.SetTitle` title must be a string, got {title_ty}"),
+            "Pass a string value as the new title.",
+            span,
+        );
+    }
+
+    Ty::Unit
+}
+
+/// Registers polymorphic `Application.AddChild` and property-setter placeholders.
 pub(crate) fn register_tui_builtins(checker: &mut Checker) {
     for name in [
         s::STD_TUI_APPLICATION_ADD_CHILD,
         s::STD_TUI_APPLICATION_SET_TEXT,
+        s::STD_TUI_APPLICATION_SET_CHECKED,
+        s::STD_TUI_APPLICATION_SET_ITEMS,
+        s::STD_TUI_APPLICATION_SET_TITLE,
     ] {
         super::super::define_builtin_std(
             checker,

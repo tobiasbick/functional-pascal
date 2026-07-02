@@ -64,7 +64,7 @@ Turbo Vision bridge code lives under `crates/fpas-vm/src/vm/execute/io/tui/`:
 | `file_dialog.rs` | `RunFileDialog`, `TestSetFileDialogResult` |
 | `exec_dialog.rs` | `ExecDialog`, `InputText`, `TestSetDialogResult` |
 | `tv_run.rs` | Terminal and headless `Application.Run` for Turbo Vision. The terminal loop steps the Turbo Vision event pump itself so commands left unhandled by Turbo Vision (buttons, menus, status items) are routed into the FPAS `OnCommand` callback, and an `Application.Quit` from that callback ends the loop. Keyboard and mouse events still typed after `handle_event` can reach opt-in `Application.OnKey` / `Application.OnMouse` handlers. `turbo_vision_populate_desktop` builds the desktop roots and is shared with the live reconcile rebuild. |
-| `reconcile.rs` | Live widget-tree reconcile during a run. FPAS mutations set a dirty flag; after each event step the whole desktop is rebuilt from current FPAS state so new roots and children added to already-shown roots both appear. Headless runs repaint the CRT buffer instead. |
+| `reconcile.rs` | Live widget-tree reconcile during a run. FPAS mutations set a dirty flag; after each event step the whole desktop is rebuilt from current FPAS state so new roots and children added to already-shown roots both appear. Menu bar and status line are re-synced from FPAS state on the same dirty pass. Headless runs repaint the CRT buffer instead. |
 | `events.rs` | Headless `TestSend*` event injection |
 | `testing.rs` | `OpenForTest`, `TestPump*`, `CloseForTest` |
 | `host/` | Hosted global-handler loop (`HostRegister*`, `HostProcessNext`) |

@@ -201,6 +201,15 @@ pub(super) fn register_application_api(
             p("MenuBar", types.menu_bar.clone(), false),
         ],
     );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_SET_MENUS,
+        vec![
+            p("App", types.application.clone(), false),
+            p("MenuBar", types.menu_bar.clone(), false),
+            p("Menus", Ty::Array(Box::new(types.menu.clone())), false),
+        ],
+    );
     define_func(
         checker,
         s::STD_TUI_APPLICATION_CREATE_STATUS_LINE,
@@ -221,6 +230,19 @@ pub(super) fn register_application_api(
         vec![
             p("App", types.application.clone(), false),
             p("StatusLine", types.status_line.clone(), false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_SET_STATUS_ITEMS,
+        vec![
+            p("App", types.application.clone(), false),
+            p("StatusLine", types.status_line.clone(), false),
+            p(
+                "Items",
+                Ty::Array(Box::new(types.status_item.clone())),
+                false,
+            ),
         ],
     );
     define_proc(

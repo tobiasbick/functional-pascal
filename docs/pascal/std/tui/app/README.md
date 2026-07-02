@@ -48,11 +48,16 @@ Do not call `Application.Configure` expecting it to paint over a Turbo Vision wi
 | `Application.InputText(App, Field): string` | Read the current text of an `InputLine` handle (valid after `ExecDialog`). |
 | `Application.AddChild(App, Parent, Child)` | Attach a button, static text, memo, text viewer, input line, list box, check box, or radio button child to a dialog or window parent. |
 | `Application.SetText(App, Control, Text)` | Replace the text of a text-bearing control (button, static text, memo, text viewer, input line, check box, radio button) at runtime. Re-renders live and in headless queries. Not supported for list boxes. |
+| `Application.SetChecked(App, Control, Checked)` | Set check box checked state or radio button selected state at runtime. Radio selection clears siblings in the same group. |
+| `Application.SetItems(App, ListBox, Items)` | Replace list box items at runtime. |
+| `Application.SetTitle(App, Root, Title)` | Replace window or dialog title at runtime. |
 | `Application.AddWindow(App, Window)` | Place a window on the application desktop. |
 | `Application.CreateMenuBar(App, Bounds, Menus): MenuBar` | Create a top menu bar from an array of `Menu` records. |
 | `Application.SetMenuBar(App, MenuBar)` | Set the application menu bar root. |
+| `Application.SetMenus(App, MenuBar, Menus)` | Replace menus on an attached menu bar at runtime. |
 | `Application.CreateStatusLine(App, Bounds, Items): StatusLine` | Create a bottom status line from an array of `StatusItem` records. |
 | `Application.SetStatusLine(App, StatusLine)` | Set the application status line root. |
+| `Application.SetStatusItems(App, StatusLine, Items)` | Replace items on an attached status line at runtime. |
 | `Application.OnCommand(App, Handler)` | Register `procedure (Application, integer)` for command dispatch. Use `Command.*` constants for standard actions. |
 | `Application.OnKey(App, Handler)` | Optional Turbo Vision hook: `function (Application, Std.Console.KeyEvent): boolean` for keys left unhandled by the widget tree. Return `true` to mark the key consumed. |
 | `Application.OnMouse(App, Handler)` | Optional Turbo Vision hook: `procedure (Application, Std.Console.Event)` for mouse events left unhandled by the widget tree. |
@@ -78,8 +83,8 @@ The following query functions remain public for headless tests:
 | Symbol | Description |
 | --- | --- |
 | `Application.QueryScreenSize(App): Size` | Return the headless screen size. |
-| `Application.QueryScreenLine(App, Y): string` | Return one screen line. |
-| `Application.QueryScreenCell(App, X, Y): ScreenCell` | Return one screen cell. |
+| `Application.QueryScreenLine(App, Y): string` | Return one screen line (`Y` is one-based, `1..=height`). |
+| `Application.QueryScreenCell(App, X, Y): ScreenCell` | Return one screen cell (`X`/`Y` one-based, within `QueryScreenSize`). |
 
 ## See Also
 

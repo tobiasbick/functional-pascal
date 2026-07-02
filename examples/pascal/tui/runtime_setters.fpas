@@ -1,0 +1,56 @@
+{ Runtime property setters demo. Run in a terminal; press Toggle to update the }
+{ label and check box, then Quit to exit. }
+
+program TuiRuntimeSetters;
+
+uses Std.Tui;
+
+const
+  CmdToggle: integer := 50;
+
+mutable var
+  mutable var LabelHandle: StaticText := record  end;
+  mutable var CheckHandle: CheckBox := record  end;
+  mutable var Checked: boolean := false;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+procedure OnCommand(App: Application; CommandId: integer);
+begin
+  if CommandId = CmdToggle then
+  begin
+    Checked := not Checked;
+    Application.SetChecked(App, CheckHandle, Checked);
+    if Checked then
+    begin
+      Application.SetText(App, LabelHandle, 'Enabled')
+    end
+    else
+    begin
+      Application.SetText(App, LabelHandle, 'Disabled')
+    end
+  end
+  else if CommandId = Command.Quit then
+  begin
+    Application.Quit(App)
+  end
+end;
+
+begin
+  var App: Application := Application.Open();
+  var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(10, 5, 44, 11), 'Runtime setters');
+  LabelHandle := Application.CreateStaticText(App, Bounds(4, 2, 20, 1), 'Disabled');
+  CheckHandle := Application.CreateCheckBox(App, Bounds(4, 4, 20, 1), 'option', false);
+  var ToggleButton: Button := Application.CreateButton(App, Bounds(4, 6, 12, 2), '~T~oggle', CmdToggle);
+  var QuitButton: Button := Application.CreateButton(App, Bounds(18, 6, 10, 2), '~Q~uit', Command.Quit);
+  Application.AddChild(App, DialogHandle, LabelHandle);
+  Application.AddChild(App, DialogHandle, CheckHandle);
+  Application.AddChild(App, DialogHandle, ToggleButton);
+  Application.AddChild(App, DialogHandle, QuitButton);
+  Application.OnCommand(App, OnCommand);
+  Application.Run(App);
+  Application.Close(App)
+end.

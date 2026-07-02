@@ -1,0 +1,31 @@
+program TuiTurboVisionSetMenusTest;
+
+uses Std.Tui, Std.Test;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+function OldMenu(): Menu;
+begin
+  return record title := 'OLD'; items := []; end
+end;
+
+function NewMenu(): Menu;
+begin
+  return record title := 'NEW'; items := []; end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(60, 20);
+  var MenuBarHandle: MenuBar := Application.CreateMenuBar(App, Bounds(1, 1, 60, 1), [OldMenu()]);
+  Application.SetMenuBar(App, MenuBarHandle);
+  AssertEquals(0, Application.Pump(App));
+  var Before: ScreenCell := Application.QueryScreenCell(App, 1, 1);
+  AssertTrue(Before.ch = 'O');
+  Application.SetMenus(App, MenuBarHandle, [NewMenu()]);
+  AssertEquals(0, Application.Pump(App));
+  var After: ScreenCell := Application.QueryScreenCell(App, 1, 1);
+  AssertTrue(After.ch = 'N')
+end.

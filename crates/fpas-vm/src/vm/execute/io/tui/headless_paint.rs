@@ -30,6 +30,32 @@ impl Worker {
     ) {
         let ops = self.with_tui(|tui| {
             let mut ops = Vec::new();
+            if let Some(handle) = tui.turbo_vision.menu_bar
+                && let Some(TurboVisionObject::MenuBar(menu_bar)) =
+                    tui.turbo_vision.objects.get(&handle)
+                && let Some(menu) = menu_bar.menus.first()
+            {
+                ops.push(HeadlessPaintOp::Text {
+                    x: menu_bar.bounds.x,
+                    y: menu_bar.bounds.y,
+                    text: menu.title.clone(),
+                    fg: TITLE_FG,
+                    bg: TITLE_BG,
+                });
+            }
+            if let Some(handle) = tui.turbo_vision.status_line
+                && let Some(TurboVisionObject::StatusLine(status_line)) =
+                    tui.turbo_vision.objects.get(&handle)
+                && let Some(item) = status_line.items.first()
+            {
+                ops.push(HeadlessPaintOp::Text {
+                    x: status_line.bounds.x,
+                    y: status_line.bounds.y,
+                    text: item.text.clone(),
+                    fg: TEXT_FG,
+                    bg: TEXT_BG,
+                });
+            }
             for object in tui.turbo_vision.objects.values() {
                 // Windows are shown once placed on the desktop; dialogs are shown
                 // as soon as they exist (mirroring `build_turbo_vision_application`).
@@ -85,41 +111,55 @@ fn collect_child_paint_ops(
         TurboVisionObject::StaticText(static_text) => (
             static_text.bounds.x,
             static_text.bounds.y,
-            static_text.text.as_str(),
+            static_text.text.clone(),
         ),
         TurboVisionObject::Button(button) => {
-            (button.bounds.x, button.bounds.y, button.text.as_str())
+            (button.bounds.x, button.bounds.y, button.text.clone())
         }
-        TurboVisionObject::Memo(memo) => (memo.bounds.x, memo.bounds.y, memo.text.as_str()),
-        TurboVisionObject::CheckBox(check_box) => (
-            check_box.bounds.x,
-            check_box.bounds.y,
-            check_box.text.as_str(),
-        ),
-        TurboVisionObject::RadioButton(radio_button) => (
-            radio_button.bounds.x,
-            radio_button.bounds.y,
-            radio_button.text.as_str(),
-        ),
+        TurboVisionObject::Memo(memo) => (memo.bounds.x, memo.bounds.y, memo.text.clone()),
+        TurboVisionObject::CheckBox(check_box) => {
+            let marker = if check_box.checked { 'X' } else { ' ' };
+            (
+                check_box.bounds.x,
+                check_box.bounds.y,
+                format!("{marker} {}", check_box.text),
+            )
+        }
+        TurboVisionObject::RadioButton(radio_button) => {
+            let marker = if radio_button.selected { '*' } else { ' ' };
+            (
+                radio_button.bounds.x,
+                radio_button.bounds.y,
+                format!("{marker} {}", radio_button.text),
+            )
+        }
+        TurboVisionObject::ListBox(list_box) => {
+            let Some(first) = list_box.items.first() else {
+                return;
+            };
+            (list_box.bounds.x, list_box.bounds.y, first.clone())
+        }
         _ => return,
     };
     ops.push(HeadlessPaintOp::Text {
         x: parent_x.saturating_add(local_x),
         y: parent_y.saturating_add(local_y),
-        text: text.to_string(),
+        text,
         fg: TEXT_FG,
         bg: TEXT_BG,
     });
 }
 
 fn paint_text(console: &mut Console, x: i16, y: i16, text: &str, fg: u8, bg: u8) {
+    let screen_width = console.screen_width();
+    let screen_height = console.screen_height();
     let mut col = i64::from(x);
     let row = i64::from(y);
-    if row < 1 {
+    if row < 1 || row > screen_height {
         return;
     }
     for ch in text.chars() {
-        if col >= 1 {
+        if col >= 1 && col <= screen_width {
             console.paint_headless_cell(col as u16, row as u16, ch, fg, bg);
         }
         col = col.saturating_add(1);

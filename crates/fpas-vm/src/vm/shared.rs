@@ -252,7 +252,7 @@ pub(crate) struct TurboVisionRadioButton {
     pub bounds: TurboVisionRect,
     pub text: String,
     pub group_id: u16,
-    pub selected: bool,
+    pub selected_cell: crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell,
     pub attached: bool,
 }
 

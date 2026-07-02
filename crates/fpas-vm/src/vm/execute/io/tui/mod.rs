@@ -4,6 +4,7 @@
 
 mod application;
 mod bridged_check_box;
+mod bridged_radio_button;
 mod callbacks;
 mod command_map;
 mod commands;
@@ -96,6 +97,9 @@ impl Worker {
             }
             Intrinsic::Tui(TuiIntrinsic::Checked) => {
                 self.turbo_vision_checked(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::Selected) => {
+                self.turbo_vision_selected(line)?;
             }
             Intrinsic::Tui(TuiIntrinsic::AddChild) => {
                 self.turbo_vision_add_child(line)?;

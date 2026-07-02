@@ -34,6 +34,7 @@ Current public lowering includes:
 | `Application.ExecDialog` | `TuiExecDialog` |
 | `Application.InputText` | `TuiInputText` |
 | `Application.Checked` | `TuiChecked` |
+| `Application.Selected` | `TuiSelected` |
 | `Application.TestSetDialogResult` | `TuiTestSetDialogResult` |
 | `Application.OnCommand` | `TuiOnCommand` |
 | `Application.OnKey` | `TuiRegisterOnKey` |
@@ -63,8 +64,9 @@ Turbo Vision bridge code lives under `crates/fpas-vm/src/vm/execute/io/tui/`:
 | `interactive_loop.rs` | Pluggable interactive run loop; dispatches commands and opt-in input hooks |
 | `commands.rs` | `Pump`, `Quit`, `TestClickButton`, `TestDispatchMenuCommand`, command queue |
 | `file_dialog.rs` | `RunFileDialog`, `TestSetFileDialogResult` |
-| `exec_dialog.rs` | `ExecDialog`, `InputText`, `Checked`, `TestSetDialogResult` |
+| `exec_dialog.rs` | `ExecDialog`, `InputText`, `Checked`, `Selected`, `TestSetDialogResult` |
 | `bridged_check_box.rs` | Modal `CheckBox` view syncing checked state to FPAS |
+| `bridged_radio_button.rs` | Modal `RadioButton` view syncing selected state to FPAS |
 | `tv_run.rs` | Terminal and headless `Application.Run` for Turbo Vision. The terminal loop steps the Turbo Vision event pump itself so commands left unhandled by Turbo Vision (buttons, menus, status items) are routed into the FPAS `OnCommand` callback, and an `Application.Quit` from that callback ends the loop. Keyboard and mouse events still typed after `handle_event` can reach opt-in `Application.OnKey` / `Application.OnMouse` handlers. `turbo_vision_populate_desktop` builds the desktop roots and is shared with the live reconcile rebuild. |
 | `reconcile.rs` | Live widget-tree reconcile during a run. FPAS mutations set a dirty flag; after each event step the whole desktop is rebuilt from current FPAS state so new roots and children added to already-shown roots both appear. Menu bar and status line are re-synced from FPAS state on the same dirty pass. Headless runs repaint the CRT buffer instead. |
 | `events.rs` | Headless `TestSend*` event injection |

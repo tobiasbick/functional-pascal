@@ -48,9 +48,9 @@ Use this file when continuing after context loss.
 Migration Phases 0–8 and post-migration Phases A–G are **complete**. Pick from
 [07-post-migration-improvements.md — Remaining work](07-post-migration-improvements.md):
 
-1. `Application.Selected` for radio buttons after `ExecDialog` (highest product value).
-2. Headless paint for full menu bar and status line.
-3. Manual terminal checks from [testing plan](05-testing-plan.md).
+1. Manual terminal checks from [testing plan](05-testing-plan.md).
+2. Optional hosted canvas loop removal if that product decision is made.
+3. Merge to main when the repository decision is made.
 
 Before coding, skim `docs/pascal/std/tui/` so new work matches the current spec.
 

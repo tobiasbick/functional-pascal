@@ -94,6 +94,13 @@ impl Worker {
         self.pop_turbo_vision_handle(TUI_CHECK_BOX_TYPE, "CheckBox", line)
     }
 
+    pub(super) fn pop_turbo_vision_radio_button_handle(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<u32, VmError> {
+        self.pop_turbo_vision_handle(TUI_RADIO_BUTTON_TYPE, "RadioButton", line)
+    }
+
     pub(super) fn push_dialog_result(&mut self, command: i64) -> Result<(), VmError> {
         self.push(Value::Record {
             type_name: TUI_DIALOG_RESULT_TYPE.into(),

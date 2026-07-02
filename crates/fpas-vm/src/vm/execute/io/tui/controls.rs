@@ -285,7 +285,7 @@ impl Worker {
                     bounds,
                     text,
                     group_id,
-                    selected,
+                    selected_cell: TurboVisionBoolCell::new(selected),
                     attached: false,
                 }),
             );
@@ -484,7 +484,7 @@ impl Worker {
                             continue;
                         };
                         if radio_button.group_id == group_id {
-                            radio_button.selected = false;
+                            radio_button.selected_cell.set(false);
                         }
                     }
                 }
@@ -493,7 +493,7 @@ impl Worker {
                 else {
                     return Err(unknown_handle_error("RadioButton", handle, line));
                 };
-                radio_button.selected = checked;
+                radio_button.selected_cell.set(checked);
                 Ok(())
             }
         })?;

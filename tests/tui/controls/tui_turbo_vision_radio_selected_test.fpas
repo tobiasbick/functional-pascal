@@ -1,0 +1,23 @@
+program TuiTurboVisionRadioSelectedTest;
+
+uses Std.Tui, Std.Test;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(10, 5, 50, 10), 'Choice');
+  var First: RadioButton := Application.CreateRadioButton(App, Bounds(12, 2, 20, 1), 'first', 7, true);
+  var Second: RadioButton := Application.CreateRadioButton(App, Bounds(12, 3, 20, 1), 'second', 7, false);
+  Application.AddChild(App, DialogHandle, First);
+  Application.AddChild(App, DialogHandle, Second);
+  Application.SetChecked(App, Second, true);
+  Application.TestSetDialogResult(App, Command.Accept);
+  var CloseResult: DialogResult := Application.ExecDialog(App, DialogHandle);
+  AssertEquals(Command.Accept, CloseResult.command);
+  AssertFalse(Application.Selected(App, First));
+  AssertTrue(Application.Selected(App, Second))
+end.

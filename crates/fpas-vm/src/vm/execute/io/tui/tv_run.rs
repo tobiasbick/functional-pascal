@@ -132,8 +132,15 @@ impl Worker {
         for dialog in self.turbo_vision_dialog_snapshots() {
             let mut dialog_view = Dialog::new_modal(turbo_rect(dialog.bounds), &dialog.title);
             let mut input_bindings = Vec::new();
+            let radio_groups = HashMap::new();
             for child in dialog.children {
-                add_dialog_child(&mut dialog_view, child, 0, &mut input_bindings);
+                add_dialog_child(
+                    &mut dialog_view,
+                    child,
+                    0,
+                    &mut input_bindings,
+                    &radio_groups,
+                );
             }
             app.desktop.add(dialog_view);
         }
@@ -327,6 +334,7 @@ fn add_dialog_child(
     child: TurboVisionChildSnapshot,
     child_handle: u32,
     input_bindings: &mut Vec<(u32, Rc<RefCell<String>>)>,
+    radio_groups: &HashMap<u16, Vec<crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell>>,
 ) {
     match child {
         TurboVisionChildSnapshot::Button(button) => {
@@ -369,7 +377,19 @@ fn add_dialog_child(
             )));
         }
         TurboVisionChildSnapshot::RadioButton(radio_button) => {
-            dialog.add(Box::new(build_radio_button(radio_button)));
+            let group_cells = radio_groups
+                .get(&radio_button.group_id)
+                .cloned()
+                .unwrap_or_default();
+            dialog.add(Box::new(
+                super::bridged_radio_button::BridgedRadioButton::new(
+                    turbo_rect(radio_button.bounds),
+                    &radio_button.text,
+                    radio_button.group_id,
+                    radio_button.selected_cell.clone(),
+                    group_cells,
+                ),
+            ));
         }
     }
 }
@@ -407,7 +427,7 @@ fn build_radio_button(snapshot: TurboVisionRadioButton) -> RadioButton {
         &snapshot.text,
         snapshot.group_id,
     );
-    if snapshot.selected {
+    if snapshot.selected_cell.read() {
         radio_button.select();
     }
     radio_button
@@ -440,13 +460,37 @@ pub(in crate::vm::execute::io::tui) fn turbo_vision_build_modal_dialog(
         return None;
     };
     let mut dialog_view = Dialog::new_modal(turbo_rect(dialog.bounds), &dialog.title);
+    let radio_groups = radio_groups(objects, &dialog.children);
     for child_handle in &dialog.children {
         let Some(child) = child_snapshot(objects, *child_handle) else {
             continue;
         };
-        add_dialog_child(&mut dialog_view, child, *child_handle, input_bindings);
+        add_dialog_child(
+            &mut dialog_view,
+            child,
+            *child_handle,
+            input_bindings,
+            &radio_groups,
+        );
     }
     Some(dialog_view)
+}
+
+fn radio_groups(
+    objects: &HashMap<u32, crate::vm::shared::TurboVisionObject>,
+    handles: &[u32],
+) -> HashMap<u16, Vec<crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell>> {
+    let mut groups = HashMap::new();
+    for handle in handles {
+        let Some(TurboVisionObject::RadioButton(radio_button)) = objects.get(handle) else {
+            continue;
+        };
+        groups
+            .entry(radio_button.group_id)
+            .or_insert_with(Vec::new)
+            .push(radio_button.selected_cell.clone());
+    }
+    groups
 }
 
 fn child_snapshot(

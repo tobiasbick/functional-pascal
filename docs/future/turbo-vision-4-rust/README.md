@@ -34,8 +34,6 @@ backward-compatibility requirement for this work.
 
 See the **Remaining work** table in [07-post-migration-improvements.md](07-post-migration-improvements.md):
 
-- RadioButton selection read-back after `ExecDialog`
-- Fuller headless menu/status paint
 - ListBox selection (blocked on upstream)
 - Optional removal of the hosted canvas loop (`minimal_application.fpas`)
 - Manual terminal checks

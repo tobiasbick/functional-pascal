@@ -33,28 +33,28 @@ impl Worker {
             if let Some(handle) = tui.turbo_vision.menu_bar
                 && let Some(TurboVisionObject::MenuBar(menu_bar)) =
                     tui.turbo_vision.objects.get(&handle)
-                && let Some(menu) = menu_bar.menus.first()
             {
-                ops.push(HeadlessPaintOp::Text {
-                    x: menu_bar.bounds.x,
-                    y: menu_bar.bounds.y,
-                    text: menu.title.clone(),
-                    fg: TITLE_FG,
-                    bg: TITLE_BG,
-                });
+                collect_text_sequence_ops(
+                    &mut ops,
+                    menu_bar.bounds.x,
+                    menu_bar.bounds.y,
+                    menu_bar.menus.iter().map(|menu| menu.title.as_str()),
+                    TITLE_FG,
+                    TITLE_BG,
+                );
             }
             if let Some(handle) = tui.turbo_vision.status_line
                 && let Some(TurboVisionObject::StatusLine(status_line)) =
                     tui.turbo_vision.objects.get(&handle)
-                && let Some(item) = status_line.items.first()
             {
-                ops.push(HeadlessPaintOp::Text {
-                    x: status_line.bounds.x,
-                    y: status_line.bounds.y,
-                    text: item.text.clone(),
-                    fg: TEXT_FG,
-                    bg: TEXT_BG,
-                });
+                collect_text_sequence_ops(
+                    &mut ops,
+                    status_line.bounds.x,
+                    status_line.bounds.y,
+                    status_line.items.iter().map(|item| item.text.as_str()),
+                    TEXT_FG,
+                    TEXT_BG,
+                );
             }
             for object in tui.turbo_vision.objects.values() {
                 // Windows are shown once placed on the desktop; dialogs are shown
@@ -101,6 +101,32 @@ impl Worker {
     }
 }
 
+fn collect_text_sequence_ops<'a>(
+    ops: &mut Vec<HeadlessPaintOp>,
+    x: i16,
+    y: i16,
+    texts: impl IntoIterator<Item = &'a str>,
+    fg: u8,
+    bg: u8,
+) {
+    let mut current_x = x;
+    for text in texts {
+        if text.is_empty() {
+            continue;
+        }
+        ops.push(HeadlessPaintOp::Text {
+            x: current_x,
+            y,
+            text: text.to_string(),
+            fg,
+            bg,
+        });
+        current_x = current_x
+            .saturating_add(i16::try_from(text.chars().count()).unwrap_or(i16::MAX))
+            .saturating_add(1);
+    }
+}
+
 fn collect_child_paint_ops(
     ops: &mut Vec<HeadlessPaintOp>,
     parent_x: i16,
@@ -130,7 +156,11 @@ fn collect_child_paint_ops(
             )
         }
         TurboVisionObject::RadioButton(radio_button) => {
-            let marker = if radio_button.selected { '*' } else { ' ' };
+            let marker = if radio_button.selected_cell.read() {
+                '*'
+            } else {
+                ' '
+            };
             (
                 radio_button.bounds.x,
                 radio_button.bounds.y,

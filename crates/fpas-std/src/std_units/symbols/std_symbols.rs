@@ -283,6 +283,8 @@ pub const STD_TUI_APPLICATION_EXEC_DIALOG: &str = std_tui!("Application.ExecDial
 pub const STD_TUI_APPLICATION_INPUT_TEXT: &str = std_tui!("Application.InputText");
 /// Read the checked state of a check box (valid after `Application.ExecDialog`).
 pub const STD_TUI_APPLICATION_CHECKED: &str = std_tui!("Application.Checked");
+/// Read the selected state of a radio button (valid after `Application.ExecDialog`).
+pub const STD_TUI_APPLICATION_SELECTED: &str = std_tui!("Application.Selected");
 /// Queue the closing command returned by the next headless `Application.ExecDialog` call.
 pub const STD_TUI_APPLICATION_TEST_SET_DIALOG_RESULT: &str =
     std_tui!("Application.TestSetDialogResult");

@@ -194,6 +194,15 @@ pub(super) fn register_application_api(
     );
     define_func(
         checker,
+        s::STD_TUI_APPLICATION_SELECTED,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Field", types.radio_button.clone(), false),
+        ],
+        Ty::Boolean,
+    );
+    define_func(
+        checker,
         s::STD_TUI_APPLICATION_CREATE_MENU_BAR,
         vec![
             p("App", types.application.clone(), false),

@@ -1,0 +1,43 @@
+program TuiTurboVisionChromePaintTest;
+
+uses Std.Tui, Std.Test;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+function MenuWithTitle(Title: string): Menu;
+begin
+  return record title := Title; items := []; end
+end;
+
+function StatusWithText(Text: string): StatusItem;
+begin
+  return record text := Text; keyCode := 0; commandId := 0; end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(60, 12);
+  var MenuBarHandle: MenuBar := Application.CreateMenuBar(App, Bounds(1, 1, 60, 1), [
+                                                                                      MenuWithTitle('FILE'),
+                                                                                      MenuWithTitle('EDIT')
+
+                                                                                    ]);
+  var Status: StatusLine := Application.CreateStatusLine(App, Bounds(1, 12, 60, 1), [
+                                                                                      StatusWithText('READY'),
+                                                                                      StatusWithText('HELP')
+
+                                                                                    ]);
+  Application.SetMenuBar(App, MenuBarHandle);
+  Application.SetStatusLine(App, Status);
+  AssertEquals(0, Application.Pump(App));
+  var FirstMenu: ScreenCell := Application.QueryScreenCell(App, 1, 1);
+  var SecondMenu: ScreenCell := Application.QueryScreenCell(App, 6, 1);
+  var FirstStatus: ScreenCell := Application.QueryScreenCell(App, 1, 12);
+  var SecondStatus: ScreenCell := Application.QueryScreenCell(App, 7, 12);
+  AssertTrue(FirstMenu.ch = 'F');
+  AssertTrue(SecondMenu.ch = 'E');
+  AssertTrue(FirstStatus.ch = 'R');
+  AssertTrue(SecondStatus.ch = 'H')
+end.

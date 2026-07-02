@@ -173,6 +173,7 @@ pub(in super::super) const STD_TUI_SYMBOLS: &[&str] = &[
     std_symbols::STD_TUI_APPLICATION_EXEC_DIALOG,
     std_symbols::STD_TUI_APPLICATION_INPUT_TEXT,
     std_symbols::STD_TUI_APPLICATION_CHECKED,
+    std_symbols::STD_TUI_APPLICATION_SELECTED,
     std_symbols::STD_TUI_APPLICATION_TEST_SET_DIALOG_RESULT,
     std_symbols::STD_TUI_APPLICATION_CREATE_MENU_BAR,
     std_symbols::STD_TUI_APPLICATION_SET_MENU_BAR,

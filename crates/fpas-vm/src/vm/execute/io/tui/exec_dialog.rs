@@ -88,6 +88,16 @@ impl Worker {
         self.push(Value::Boolean(checked))
     }
 
+    /// Read the selected state of a `RadioButton` handle.
+    pub(super) fn turbo_vision_selected(&mut self, line: SourceLocation) -> Result<(), VmError> {
+        let radio_button_handle = self.pop_turbo_vision_radio_button_handle(line)?;
+        self.pop_tui_application(line)?;
+
+        let selected = self
+            .with_tui(|tui| radio_button_selected(&tui.turbo_vision, radio_button_handle, line))?;
+        self.push(Value::Boolean(selected))
+    }
+
     /// Queue the closing command consumed by the next headless `Application.ExecDialog` call.
     pub(super) fn turbo_vision_test_set_dialog_result(
         &mut self,
@@ -121,5 +131,16 @@ fn check_box_checked(
     match state.objects.get(&handle) {
         Some(TurboVisionObject::CheckBox(check_box)) => Ok(check_box.checked_cell.read()),
         _ => Err(unknown_handle_error("CheckBox", handle, line)),
+    }
+}
+
+fn radio_button_selected(
+    state: &TurboVisionState,
+    handle: u32,
+    line: SourceLocation,
+) -> Result<bool, VmError> {
+    match state.objects.get(&handle) {
+        Some(TurboVisionObject::RadioButton(radio_button)) => Ok(radio_button.selected_cell.read()),
+        _ => Err(unknown_handle_error("RadioButton", handle, line)),
     }
 }

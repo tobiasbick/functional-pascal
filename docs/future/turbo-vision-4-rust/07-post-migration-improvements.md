@@ -23,7 +23,7 @@ Implement **one item per change**. Verify with `cargo fmt`, `cargo build`, `carg
 | 1 | **RadioButton read-back after `ExecDialog`** | landed | Added `Application.Selected(App, RadioButton): boolean`, shared radio bool cells, `BridgedRadioButton` in modal dialogs, and group exclusivity through the shared state. |
 | 2 | **Headless paint — full menu/status chrome** | landed | `headless_paint.rs` draws every menu title and every status item into the headless CRT buffer so `QueryScreenCell` can assert chrome beyond the first item. |
 | 3 | **ListBox selection read-back** | landed | Added `Application.ListSelection(App, ListBox): integer`, FPAS-owned selection cells, and a modal `BridgedListBox`; returns a zero-based index or `-1` for an empty list. |
-| 4 | **Remove hosted canvas loop** | deferred | `Application.Configure` + internal `Host*` intrinsics still power `examples/pascal/tui/minimal_application.fpas` and graph demos. Separate product decision; document in `docs/pascal/` only after removal. |
+| 4 | **Remove hosted canvas loop** | decided | Track in [hosted canvas loop removal](08-hosted-canvas-loop-removal.md): `minimal_application.fpas`, the terminal Mandelbrot project, TUI host tests, and internal `Host*` runtime must be adapted or removed. `Std.Graph` demos are separate and do not block this TUI cleanup. |
 | 5 | **Manual terminal verification** | open | Checklist in [testing plan](05-testing-plan.md) and `docs/pascal/std/tui/terminal-checklist.md`. |
 | 6 | **Merge `turbo-vision-4-rust`** | open | Repository decision when manual checks and remaining items are acceptable. |
 

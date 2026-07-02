@@ -83,9 +83,9 @@ end;
 
 procedure DrawHud(S: ExplorerState; Width: integer; Height: integer);
 begin
-  Window(1, 1, ScreenWidth(), ScreenHeight());
+  Std.Console.Window(1, 1, ScreenWidth(), ScreenHeight());
   var HudTop: integer := Max(ScreenHeight() - 1, 1);
-  Window(1, HudTop, ScreenWidth(), ScreenHeight());
+  Std.Console.Window(1, HudTop, ScreenWidth(), ScreenHeight());
   NormVideo();
   ClrScr();
   GotoXY(1, 1);
@@ -101,7 +101,7 @@ begin
     Write('  click center  wheel zoom  M middle=reset  arrows  +/-  PgUp/Dn  1/2/3  R  Esc')
   end;
   NormVideo();
-  Window(1, 1, Width, Height)
+  Std.Console.Window(1, 1, Width, Height)
 end;
 
 mutable var
@@ -113,7 +113,7 @@ procedure OnPaint(App: Application);
 begin
   RenderW := RenderWidth();
   RenderH := RenderHeight();
-  Window(1, 1, RenderW, RenderH);
+  Std.Console.Window(1, 1, RenderW, RenderH);
   ClrScr();
   Render(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter, State.Palette);
   DrawHud(State, RenderW, RenderH)
@@ -125,7 +125,7 @@ begin
   var StepY: real := State.SpanY * 0.14;
   if Key.kind = KeyKind.Escape then
   begin
-    Application.HostRequestQuit(App);
+    Application.Quit(App);
     return true
   end
   else if Key.kind = KeyKind.Left then

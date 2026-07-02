@@ -243,7 +243,7 @@ pub(crate) struct TurboVisionListBox {
 pub(crate) struct TurboVisionCheckBox {
     pub bounds: TurboVisionRect,
     pub text: String,
-    pub checked: bool,
+    pub checked_cell: crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell,
     pub attached: bool,
 }
 

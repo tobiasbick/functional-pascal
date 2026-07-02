@@ -19,6 +19,7 @@ mod execute;
 mod helpers;
 mod shared;
 mod shutdown;
+mod turbo_vision_bool_cell;
 mod turbo_vision_input_text_cell;
 mod worker;
 

@@ -362,7 +362,11 @@ fn add_dialog_child(
             dialog.add(Box::new(build_list_box(list_box)));
         }
         TurboVisionChildSnapshot::CheckBox(check_box) => {
-            dialog.add(Box::new(build_check_box(check_box)));
+            dialog.add(Box::new(super::bridged_check_box::BridgedCheckBox::new(
+                turbo_rect(check_box.bounds),
+                &check_box.text,
+                check_box.checked_cell.clone(),
+            )));
         }
         TurboVisionChildSnapshot::RadioButton(radio_button) => {
             dialog.add(Box::new(build_radio_button(radio_button)));
@@ -381,7 +385,7 @@ fn build_list_box(snapshot: TurboVisionListBox) -> ListBox {
 
 fn build_check_box(snapshot: TurboVisionCheckBox) -> CheckBox {
     let mut check_box = CheckBox::new(turbo_rect(snapshot.bounds), &snapshot.text);
-    check_box.set_checked(snapshot.checked);
+    check_box.set_checked(snapshot.checked_cell.read());
     check_box
 }
 

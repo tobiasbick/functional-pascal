@@ -1,5 +1,5 @@
-{ Turbo Vision modal dialog demo. Run in a terminal; type a name, then }
-{ press OK or Cancel. The entered text is read back after the dialog closes. }
+{ Turbo Vision modal dialog demo. Run in a terminal; type a name, toggle the }
+{ checkbox, then press OK or Cancel. Values are read back after the dialog closes. }
 
 program TuiExecDialog;
 
@@ -12,21 +12,31 @@ end;
 
 begin
   var App: Application := Application.Open();
-  var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(20, 6, 40, 10), 'Your name');
+  var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(20, 6, 40, 11), 'Your name');
   var Prompt: StaticText := Application.CreateStaticText(App, Bounds(3, 2, 30, 1), 'Enter your name:');
   var NameInput: InputLine := Application.CreateInputLine(App, Bounds(3, 4, 24, 1), 'World', 32);
-  var OkButton: Button := Application.CreateButton(App, Bounds(4, 6, 10, 2), 'O~K~', Command.Accept);
-  var CancelButton: Button := Application.CreateButton(App, Bounds(16, 6, 12, 2), 'Cancel', Command.Cancel);
+  var Newsletter: CheckBox := Application.CreateCheckBox(App, Bounds(3, 5, 24, 1), 'Newsletter', false);
+  var OkButton: Button := Application.CreateButton(App, Bounds(4, 7, 10, 2), 'O~K~', Command.Accept);
+  var CancelButton: Button := Application.CreateButton(App, Bounds(16, 7, 12, 2), 'Cancel', Command.Cancel);
   Application.AddChild(App, DialogHandle, Prompt);
   Application.AddChild(App, DialogHandle, NameInput);
+  Application.AddChild(App, DialogHandle, Newsletter);
   Application.AddChild(App, DialogHandle, OkButton);
   Application.AddChild(App, DialogHandle, CancelButton);
   var Choice: DialogResult := Application.ExecDialog(App, DialogHandle);
   var Name: string := Application.InputText(App, NameInput);
+  var WantsNews: boolean := Application.Checked(App, Newsletter);
   Application.Close(App);
   if Choice.command = Command.Accept then
   begin
-    WriteLn(('Hello, ' + Name) + '!')
+    if WantsNews then
+    begin
+      WriteLn(('Hello, ' + Name) + '! Newsletter on.')
+    end
+    else
+    begin
+      WriteLn(('Hello, ' + Name) + '!')
+    end
   end
   else
   begin

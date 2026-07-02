@@ -118,7 +118,11 @@ fn collect_child_paint_ops(
         }
         TurboVisionObject::Memo(memo) => (memo.bounds.x, memo.bounds.y, memo.text.clone()),
         TurboVisionObject::CheckBox(check_box) => {
-            let marker = if check_box.checked { 'X' } else { ' ' };
+            let marker = if check_box.checked_cell.read() {
+                'X'
+            } else {
+                ' '
+            };
             (
                 check_box.bounds.x,
                 check_box.bounds.y,

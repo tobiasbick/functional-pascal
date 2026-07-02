@@ -32,3 +32,4 @@
     SetTitle = 461,
     SetMenus = 462,
     SetStatusItems = 463,
+    Checked = 464,

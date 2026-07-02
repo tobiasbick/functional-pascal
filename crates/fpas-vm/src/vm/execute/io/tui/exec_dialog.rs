@@ -78,6 +78,16 @@ impl Worker {
         self.push(Value::Str(text))
     }
 
+    /// Read the checked state of a `CheckBox` handle.
+    pub(super) fn turbo_vision_checked(&mut self, line: SourceLocation) -> Result<(), VmError> {
+        let check_box_handle = self.pop_turbo_vision_check_box_handle(line)?;
+        self.pop_tui_application(line)?;
+
+        let checked =
+            self.with_tui(|tui| check_box_checked(&tui.turbo_vision, check_box_handle, line))?;
+        self.push(Value::Boolean(checked))
+    }
+
     /// Queue the closing command consumed by the next headless `Application.ExecDialog` call.
     pub(super) fn turbo_vision_test_set_dialog_result(
         &mut self,
@@ -100,5 +110,16 @@ fn input_line_text(
     match state.objects.get(&handle) {
         Some(TurboVisionObject::InputLine(input_line)) => Ok(input_line.text_cell.read()),
         _ => Err(unknown_handle_error("InputLine", handle, line)),
+    }
+}
+
+fn check_box_checked(
+    state: &TurboVisionState,
+    handle: u32,
+    line: SourceLocation,
+) -> Result<bool, VmError> {
+    match state.objects.get(&handle) {
+        Some(TurboVisionObject::CheckBox(check_box)) => Ok(check_box.checked_cell.read()),
+        _ => Err(unknown_handle_error("CheckBox", handle, line)),
     }
 }

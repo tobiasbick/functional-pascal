@@ -150,6 +150,11 @@ Notes for the VM layer:
   first menu title and first status item. See `tests/tui/controls/tui_turbo_vision_set_menus_test.fpas`
   and `tui_turbo_vision_set_status_items_test.fpas`.
 
+- **CheckBox read-back after modal dialog (2026-07-02).**
+  `Application.Checked(App, CheckBox)` reads the checked state after `Application.ExecDialog`.
+  Modal dialogs use a bridged Turbo Vision checkbox that syncs user toggles back into FPAS state.
+  See `tests/tui/controls/tui_turbo_vision_checked_test.fpas`.
+
 - **Dual-architecture clarity (2026-07-01).**
   Documented the Turbo Vision facade vs hosted canvas split in
   `docs/pascal/std/tui/README.md` and `docs/pascal/std/tui/app/README.md`.

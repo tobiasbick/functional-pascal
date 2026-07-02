@@ -10,6 +10,7 @@ use crate::vm::shared::{
     TurboVisionCheckBox, TurboVisionInputLine, TurboVisionListBox, TurboVisionMemo,
     TurboVisionObject, TurboVisionRadioButton, TurboVisionStaticText, TurboVisionTextViewer,
 };
+use crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell;
 use crate::vm::turbo_vision_input_text_cell::TurboVisionInputTextCell;
 use fpas_bytecode::SourceLocation;
 use fpas_bytecode::Value;
@@ -242,7 +243,7 @@ impl Worker {
                 TurboVisionObject::CheckBox(TurboVisionCheckBox {
                     bounds,
                     text,
-                    checked,
+                    checked_cell: TurboVisionBoolCell::new(checked),
                     attached: false,
                 }),
             );
@@ -469,7 +470,7 @@ impl Worker {
                 else {
                     return Err(unknown_handle_error("CheckBox", handle, line));
                 };
-                check_box.checked = checked;
+                check_box.checked_cell.set(checked);
                 Ok(())
             }
             CheckedControlHandle::RadioButton(handle) => {

@@ -269,6 +269,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Tui(TuiIntrinsic::TestSetFileDialogResult),
     Intrinsic::Tui(TuiIntrinsic::ExecDialog),
     Intrinsic::Tui(TuiIntrinsic::InputText),
+    Intrinsic::Tui(TuiIntrinsic::Checked),
     Intrinsic::Tui(TuiIntrinsic::TestSetDialogResult),
     Intrinsic::Tui(TuiIntrinsic::OpenForTest),
     Intrinsic::Tui(TuiIntrinsic::TestPump),

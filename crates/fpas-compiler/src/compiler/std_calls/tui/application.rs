@@ -180,6 +180,14 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::InputText), location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_CHECKED => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_CHECKED, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::Checked), location);
+                Ok(true)
+            }
             s::STD_TUI_APPLICATION_CREATE_MENU_BAR => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_CREATE_MENU_BAR, 3, args, location)?;
                 for arg in args {

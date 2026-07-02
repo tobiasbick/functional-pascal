@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 mod application;
+mod bridged_check_box;
 mod callbacks;
 mod command_map;
 mod commands;
@@ -92,6 +93,9 @@ impl Worker {
             }
             Intrinsic::Tui(TuiIntrinsic::InputText) => {
                 self.turbo_vision_input_text(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::Checked) => {
+                self.turbo_vision_checked(line)?;
             }
             Intrinsic::Tui(TuiIntrinsic::AddChild) => {
                 self.turbo_vision_add_child(line)?;

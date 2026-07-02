@@ -212,4 +212,11 @@ Notes:
 
 ## Migration Complete
 
-Phases 0–8 and all Phase 5 widgets are done on branch `turbo-vision-4-rust`. Optional follow-up: manual terminal checks in [testing plan](05-testing-plan.md). Merge to main is a separate repository decision.
+Phases 0–8 and all Phase 5 widgets are done on branch `turbo-vision-4-rust`.
+
+Post-migration Phases A–G and follow-up setter/read-back work are **complete** — see
+[07-post-migration-improvements.md](07-post-migration-improvements.md) for landed detail and
+**remaining work** (RadioButton read-back, headless chrome paint, optional hosted-loop removal,
+manual terminal checks, merge).
+
+Optional: manual terminal checks in [testing plan](05-testing-plan.md). Merge to main is a separate repository decision.

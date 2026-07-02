@@ -1,6 +1,8 @@
 # Inventory
 
-Migration status: **complete on branch `turbo-vision-4-rust`** (2026-06-29). This file records what was removed, rewritten, or kept.
+Migration status: **complete on branch `turbo-vision-4-rust`** (core migration 2026-06-29; post-migration
+through 2026-07-02). This file records what was removed, rewritten, or kept. Open items are in
+[07-post-migration-improvements.md](07-post-migration-improvements.md).
 
 ## Rust Runtime Areas
 
@@ -8,8 +10,11 @@ Rewritten or reduced during migration:
 
 - [x] `crates/fpas-std/src/tui/` — retained view/widget runtime removed; session, host loop, damage, and geometry helpers kept.
 - [x] `crates/fpas-vm/src/vm/execute/io/tui_run.rs` — hosted `Application.Run` plus Turbo Vision branch dispatch.
-- [x] `crates/fpas-vm/src/vm/execute/io/tui/` — Turbo Vision facade modules (`controls`, `dialogs`, `file_dialog`, `tv_run`, `host/`, …).
-- [x] `crates/fpas-vm/src/vm/shared.rs` — `TurboVisionState` and handle snapshots; old `TuiState.views` removed.
+- [x] `crates/fpas-vm/src/vm/execute/io/tui/` — Turbo Vision facade (`controls`, `dialogs`, `windows`,
+  `navigation`, `exec_dialog`, `file_dialog`, `reconcile`, `headless_paint`, `bridged_check_box`,
+  `interactive_loop`, `tv_run`, `host/`, …)
+- [x] `crates/fpas-vm/src/vm/shared.rs` — `TurboVisionState`, handle snapshots, `TurboVisionBoolCell` /
+  `TurboVisionInputTextCell`; old `TuiState.views` removed
 
 Kept for transition and testing:
 
@@ -21,7 +26,8 @@ Kept for transition and testing:
 
 - [x] `crates/fpas-sema/src/std_registry/loaded/tui/` — current Turbo Vision public API
 - [x] `crates/fpas-compiler/src/compiler/std_calls/tui/` — current lowering
-- [x] `crates/fpas-bytecode/src/intrinsic/tui/` — Turbo Vision intrinsics through `CreateTextViewer = 451`
+- [x] `crates/fpas-bytecode/src/intrinsic/tui/` — Turbo Vision widget intrinsics through `Checked = 464`
+  (`widgets.inc`; session/query intrinsics in sibling variant files)
 - [x] intrinsic tests updated for current `TuiIntrinsic` set
 
 Target state achieved:
@@ -57,7 +63,7 @@ Removed stale retained-engine stubs:
 Current layout after migration:
 
 - [x] `tests/tui/host/` — hosted-loop and screen-query tests (kept)
-- [x] `tests/tui/controls/` — Turbo Vision widget regression tests (12 files)
+- [x] `tests/tui/controls/` — Turbo Vision widget and post-migration regression tests (24 files)
 - [x] removed `tests/tui/scene/`, `frames/`, `menu/`, `modals/` retained-engine-only dirs
 
 Removed assertion categories:
@@ -68,7 +74,8 @@ Removed assertion categories:
 
 ## Examples and Apps
 
-- [x] `examples/pascal/tui/` — Turbo Vision examples
+- [x] `examples/pascal/tui/` — Turbo Vision examples (`turbo_vision_dialog`, `turbo_vision_window`,
+  `exec_dialog`, `runtime_setters`, `minimal_application` for hosted loop)
 - [x] TUI entries in `examples/README.md`
 - [x] `apps/ide/` — minimal Turbo Vision shell
 

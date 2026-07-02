@@ -1,76 +1,81 @@
 # Testing Plan
 
-Status: **automated headless coverage complete** on branch `turbo-vision-4-rust`. Manual terminal checks remain optional.
+Status: **automated headless coverage complete** on branch `turbo-vision-4-rust` (24 widget/control
+tests under `tests/tui/controls/` as of 2026-07-02). Manual terminal checks remain optional.
 
 The rewrite replaced old retained-view tests with tests that assert user-visible Turbo Vision behavior.
 
 ## Principles
 
 - Prefer FPAS regression tests for public `Std.Tui` behavior.
-- Use Rust VM tests for bridge invariants that FPAS cannot express.
+- Use Rust VM tests for bridge invariants FPAS cannot express (input-line cell, scripted interactive loop, query bounds).
 - Do not preserve tests for deleted internals.
 - Keep headless tests deterministic.
 - Do not require a human terminal for CI-style local verification.
 
-## Minimum Headless Capabilities
+## Minimum headless capabilities
 
-Implemented through `Application.OpenForTest`, `Application.Test*`, Turbo Vision headless `Application.Run`, and `Application.TestSetFileDialogResult`:
+Implemented via `Application.OpenForTest`, `Application.Test*`, Turbo Vision `Application.Run` /
+`Application.Pump`, and test overrides (`TestSetFileDialogResult`, `TestSetDialogResult`):
 
-- [x] create test application with fixed width and height
-- [x] inject key event
-- [x] inject mouse event or command event
-- [x] pump one event turn
-- [x] query command callback result
-- [x] query screen line or screen cell
+- [x] fixed-size test application
+- [x] inject key / mouse / command events
+- [x] pump or run one or more event turns
+- [x] query command callback results
+- [x] query screen size, line, and cell (with bounds validation)
+- [x] modal dialog close command and field read-back (`InputText`, `Checked`)
+- [x] live tree mutations visible after reconcile (`live_tree`, `live_dialog` tests)
+- [x] runtime property setters (`set_*` tests)
 - [x] close without leaving terminal raw mode active
 
-## Test Categories
+## Test categories
 
-### Rust Tests
+### Rust tests (`crates/fpas-vm/src/tests/`)
 
-Covered by workspace tests including:
+- [x] Turbo Vision command callback routing
+- [x] screen query intrinsics and out-of-range diagnostics
+- [x] scripted interactive loop (command + unhandled key)
+- [x] handle / bridge module invariants
 
-- [x] handle table validity and Turbo Vision bridge modules
-- [x] invalid handle diagnostics
-- [x] command callback routing (`tui_spec_links`, compiler/sema TUI suites)
-- [x] screen query intrinsics
+### FPAS tests (`tests/tui/`)
 
-### FPAS Tests
+**Hosted loop** (`tests/tui/host/`):
 
-Covered under `tests/tui/`:
+- [x] open/close, configure handlers, screen queries
 
-- [x] opening and closing an application (`host/`)
-- [x] creating a window (`tui_turbo_vision_window_test.fpas`)
-- [x] adding a button and dispatching commands (`tui_turbo_vision_spike_test.fpas`, `run_test.fpas`)
-- [x] dialog chrome widgets (static text, memo, text viewer, input line, list box, check box, radio button)
-- [x] menu and status line (`tui_turbo_vision_chrome_test.fpas`)
-- [x] file dialog accept/cancel (`tui_turbo_vision_file_dialog_test.fpas`)
+**Turbo Vision controls** (`tests/tui/controls/`, 24 files):
 
-### Manual Terminal Checks
+| Theme | Examples |
+| --- | --- |
+| Spike / run | `tui_turbo_vision_spike_test.fpas`, `run_test.fpas` |
+| Chrome | `chrome_test.fpas`, `menu_test.fpas` |
+| Widgets | `window`, `static_text`, `memo`, `text_viewer`, `input_line`, `list_box`, `check_box`, `radio_button` |
+| File / modal | `file_dialog_test.fpas`, `exec_dialog_test.fpas`, `checked_test.fpas` |
+| Live reconcile | `live_tree_test.fpas`, `live_dialog_test.fpas` |
+| Runtime setters | `set_text`, `set_checked`, `set_items`, `set_title`, `set_menus`, `set_status_items` |
+| Command map | `reserved_command_test.fpas` |
 
-Optional; not automated:
+### Manual terminal checks
 
-- [ ] real terminal starts in alternate screen
-- [ ] mouse works for buttons and menus
-- [ ] window dragging works
-- [ ] resize handling works
-- [ ] terminal state restores after normal exit
-- [ ] terminal state restores after runtime error
+Optional; not automated — see `docs/pascal/std/tui/terminal-checklist.md`:
 
-## Old Tests Removed
+- [ ] alternate screen and restored terminal on exit
+- [ ] mouse on buttons and menus
+- [ ] window drag / resize
+- [ ] runtime error still restores terminal
+- [ ] `exec_dialog.fpas` and `runtime_setters.fpas` behave as expected interactively
 
-Deleted tests whose only purpose was validating the old engine:
+## Removed test categories
 
-- retained view tree shape
-- frame-specific inner viewport clipping
+Tests deleted because they only validated the old retained engine:
+
+- retained view tree / scene graph
+- frame inner viewport clipping
 - old menu overlay compositor
-- `HostProcessNext` integer process tags
-- `QuerySceneGraph` snapshots
-- old `ViewId` state query records
+- `HostProcessNext` process tags
+- `QuerySceneGraph`, `QueryViewState`, retained modal depth queries
 
-## Verification Commands
-
-Baseline after migration:
+## Verification commands
 
 ```text
 cargo fmt
@@ -80,10 +85,14 @@ cargo run -p fpas-cli -- test tests/
 cargo run -p fpas-cli -- fmt --check tests/ examples/ apps/
 ```
 
-Turbo Vision widget subset:
+Turbo Vision subset:
 
 ```text
 cargo run -p fpas-cli -- test tests/tui/controls/
 ```
 
-See also [terminal checklist](../../pascal/std/tui/terminal-checklist.md).
+Post-migration setter subset:
+
+```text
+cargo run -p fpas-cli -- test tests/tui/controls/ --filter set_
+```

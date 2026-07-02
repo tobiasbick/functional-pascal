@@ -13,22 +13,17 @@ Use this checklist after changes to `Std.Tui` session, Turbo Vision bridge, or t
 | Full Rust suite | `cargo test --workspace` | Workspace tests pass. |
 | FPAS formatting | `cargo run -q -p fpas-cli -- fmt --check tests/ examples/ apps/` | No formatting drift. |
 
-Turbo Vision regression tests under `tests/tui/controls/`:
+Turbo Vision regression tests under `tests/tui/controls/` (24 files). Core coverage:
 
-- `tui_turbo_vision_spike_test.fpas` — dialog, button, `OnCommand`
-- `tui_turbo_vision_run_test.fpas` — `Application.Run` path
-- `tui_turbo_vision_window_test.fpas` — `Window`, `AddWindow`
-- `tui_turbo_vision_static_text_test.fpas`
-- `tui_turbo_vision_memo_test.fpas`
-- `tui_turbo_vision_input_line_test.fpas`
-- `tui_turbo_vision_list_box_test.fpas`
-- `tui_turbo_vision_check_box_test.fpas`
-- `tui_turbo_vision_radio_button_test.fpas`
-- `tui_turbo_vision_chrome_test.fpas` — menu bar and status line
-- `tui_turbo_vision_menu_test.fpas` — multi-item menu with separator
-- `tui_turbo_vision_file_dialog_test.fpas` — `RunFileDialog`, `TestSetFileDialogResult`
-- `tui_turbo_vision_exec_dialog_test.fpas` — `ExecDialog`, `InputText`, `TestSetDialogResult`
-- `tui_turbo_vision_text_viewer_test.fpas` — `TextViewer`, `AddChild`
+- **Spike / run** — `spike_test`, `run_test`
+- **Widgets** — `window`, `static_text`, `memo`, `text_viewer`, `input_line`, `list_box`, `check_box`, `radio_button`
+- **Chrome** — `chrome_test`, `menu_test`
+- **Modals** — `file_dialog_test`, `exec_dialog_test`, `checked_test`
+- **Live reconcile** — `live_tree_test`, `live_dialog_test`
+- **Runtime setters** — `set_text`, `set_checked`, `set_items`, `set_title`, `set_menus`, `set_status_items`
+- **Command map** — `reserved_command_test`
+
+Interactive examples (manual terminal): `examples/pascal/tui/exec_dialog.fpas`, `runtime_setters.fpas`.
 
 ## See Also
 

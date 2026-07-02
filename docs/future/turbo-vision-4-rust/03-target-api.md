@@ -1,48 +1,48 @@
 # Target API
 
-This is a planning sketch, not current specification. Move pieces into `docs/pascal/std/tui/` only after implementation.
+**Status: archival planning sketch** (pre-migration). For the implemented API, read
+`docs/pascal/std/tui/`. This file records original intent and gaps vs what shipped.
 
-## Shape
+## Implemented (summary)
 
-Use host-owned handles for live UI objects:
+| Area | Shipped as |
+| --- | --- |
+| Session | `Application.Open`, `Close`, `Run`, `Quit`, `OpenForTest` |
+| Handles | `Window`, `Dialog`, `Button`, `StaticText`, `Memo`, `TextViewer`, `InputLine`, `ListBox`, `CheckBox`, `RadioButton`, `MenuBar`, `StatusLine` |
+| Construction | `Application.Create*`, `AddChild`, `AddWindow`, `SetMenuBar`, `SetStatusLine` |
+| Commands | `Command.Accept`, `Cancel`, `Close`, `Quit` + app-defined ids |
+| Callbacks | `OnCommand`; optional `OnKey`, `OnMouse` (Turbo Vision path) |
+| Modals | `ExecDialog` → `DialogResult`; `InputText`; `Checked`; `RunFileDialog` |
+| Runtime mutation | `SetText`, `SetChecked`, `SetItems`, `SetTitle`, `SetMenus`, `SetStatusItems` |
+| Menus | `Menu` / `MenuItem` records (multi-item, separators via `commandId = 0`) |
+| Testing | `TestClickButton`, `TestDispatchMenuCommand`, `TestSetDialogResult`, screen queries |
+| Hosted canvas (parallel) | `Application.Configure` + global handlers — **not** mixed with `Create*` |
 
-- `Application`
-- `View`
-- `Window`
-- `Dialog`
-- `Button`
-- `InputLine`
-- `MenuBar`
-- `StatusLine`
+Planning names that changed during implementation:
 
-Use records for value types:
+- `Command.Ok` → `Command.Accept`
+- `Application.RunDialog` → `Application.ExecDialog`
+- flat `MenuBarItem` → nested `Menu` / `MenuItem`
+- spike `TuiDialog` / `TuiButton` → `Dialog` / `Button`
 
-- `Point`
-- `Size`
-- `Rect`
-- `Event`
-- `KeyEvent`
-- `MouseEvent`
+## Not implemented / deferred
 
-Use command constants or a simple command type:
+| Planned idea | Status |
+| --- | --- |
+| `View` as a public umbrella handle | not shipped; use concrete widget handles |
+| `Application.Remove` | not shipped |
+| `Application.OnEvent` unified handler | not shipped; use `OnCommand` / `OnKey` / `OnMouse` |
+| `Application.Size` | not shipped; use `QueryScreenSize` in tests |
+| ListBox selection read-back | blocked on upstream `turbo-vision` 1.3.1 |
+| RadioButton selection read-back after modal | planned — see [07-post-migration-improvements.md](07-post-migration-improvements.md) |
+| Remove hosted `Configure` loop | deferred — `minimal_application.fpas` still uses it |
 
-- `Command.Ok`
-- `Command.Cancel`
-- `Command.Close`
-- `Command.Quit`
-- application-defined command IDs
+## Original shape (historical)
 
-## Naming Rules
+Host-owned handles for live UI objects; records for `Point`, `Size`, `Rect`; command integers for
+actions. Naming rules: no `Host*` in public names; no Rust surface leaked to Pascal.
 
-- Do not use `Host*` for public names.
-- Do not expose Rust type names when a Pascal name is clearer.
-- Do not expose Rust traits, boxes, builders, or ownership concepts.
-- Prefer `Application.CreateX` and `Application.AddChild` for handle-based construction.
-- Prefer `Window.*` and `Dialog.*` only if method syntax is already well supported and reads better.
-
-## Minimal Spike API
-
-The first implementation should be this small:
+### Minimal spike (landed)
 
 ```pascal
 uses Std.Tui;
@@ -54,71 +54,17 @@ begin
 end;
 
 var App: Application := Application.Open();
-var Win: Window := Application.CreateWindow(App, Rect.Create(5, 3, 50, 15), 'Demo');
-var Btn: Button := Application.CreateButton(App, Rect.Create(18, 8, 30, 10), 'Quit', Command.Quit);
-
+var Win: Window := Application.CreateWindow(App, Bounds(5, 3, 50, 15), 'Demo');
+var Btn: Button := Application.CreateButton(App, Bounds(18, 8, 30, 10), 'Quit', Command.Quit);
 Application.AddChild(App, Win, Btn);
 Application.AddWindow(App, Win);
 Application.OnCommand(App, OnCommand);
 Application.Run(App);
 ```
 
-Accept alternate exact spelling during implementation if it better fits existing FPAS type and method rules.
+See `examples/pascal/tui/turbo_vision_window.fpas` and related examples for current spelling (`Bounds` record literals, dialog-centric demos).
 
-## Core Application API
+## See also
 
-Planned surface:
-
-- `Application.Open(): Application`
-- `Application.Close(App: Application)`
-- `Application.Run(App: Application)`
-- `Application.Quit(App: Application)`
-- `Application.Size(App: Application): Size`
-- `Application.OnCommand(App: Application; Handler: procedure(App: Application; CommandId: integer))`
-- `Application.OnEvent(App: Application; Handler: function(App: Application; Event: Event): boolean)` if needed after command routing works
-
-## View Construction API
-
-Planned surface:
-
-- `Application.CreateWindow(App, Bounds, Title): Window`
-- `Application.CreateDialog(App, Bounds, Title): Dialog`
-- `Application.CreateButton(App, Bounds, Text, CommandId): Button`
-- `Application.CreateInputLine(App, Bounds, Text, MaxLength): InputLine`
-- `Application.CreateStaticText(App, Bounds, Text): StaticText`
-- `Application.CreateListBox(App, Bounds, Items, CommandId): ListBox`
-- `Application.CreateCheckBox(App, Bounds, Text, Checked): CheckBox`
-- `Application.CreateMenuBar(App, Bounds, Items): MenuBar`
-- `Application.SetMenuBar(App, MenuBar)`
-- `Application.CreateStatusLine(App, Bounds, Items): StatusLine`
-- `Application.SetStatusLine(App, StatusLine)`
-- `Application.AddWindow(App, Window)`
-- `Application.AddChild(App, Parent, Child)`
-- `Application.Remove(App, View)`
-
-## Deferred widgets
-
-None. Phase 5 widget work is complete.
-
-## Dialog API
-
-Planned surface:
-
-- `Application.RunDialog(App, Dialog): integer`
-- `Application.EndDialog(App, Dialog, CommandId)`
-- `Command.Ok`
-- `Command.Cancel`
-
-Do not keep `ShowFramedDialog` as the main API. Turbo Vision dialogs are already framed.
-
-## Testing API
-
-Planned surface depends on the spike:
-
-- `Application.OpenForTest(Width, Height): Application`
-- `Application.InjectKey(App, Key)`
-- `Application.InjectMouse(App, Event)`
-- `Application.Pump(App)`
-- `Application.QueryScreenLine(App, Y): string`
-
-Keep test APIs visibly test-oriented. Do not force production authors to understand the event pump.
+- [Implementation phases](04-implementation-phases.md) — migration checklist
+- [Post-migration improvements](07-post-migration-improvements.md) — remaining work

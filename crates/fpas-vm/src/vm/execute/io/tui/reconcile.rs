@@ -10,7 +10,7 @@ use turbo_vision::app::Application as TurboVisionApplication;
 impl Worker {
     /// Record that FPAS-side Turbo Vision state changed and needs mirroring.
     pub(in crate::vm::execute::io::tui) fn mark_turbo_vision_tree_dirty(&mut self) {
-        self.with_tui(|tui| tui.turbo_vision.pending_reconcile = true);
+        self.with_tui(|tui| tui.turbo_vision.pending_reconcile.set(true));
     }
 
     /// Reset reconcile bookkeeping at the start of `Application.Run`.
@@ -18,7 +18,7 @@ impl Worker {
     /// The initial desktop is built once by `build_turbo_vision_application`, so
     /// the first reconcile only needs to fire once FPAS mutates the tree.
     pub(in crate::vm::execute::io::tui) fn turbo_vision_begin_run(&mut self) {
-        self.with_tui(|tui| tui.turbo_vision.pending_reconcile = false);
+        self.with_tui(|tui| tui.turbo_vision.pending_reconcile.set(false));
     }
 
     /// Mirror FPAS widget mutations after one Turbo Vision run step.
@@ -39,8 +39,8 @@ impl Worker {
         }
 
         let dirty = self.with_tui(|tui| {
-            let dirty = tui.turbo_vision.pending_reconcile;
-            tui.turbo_vision.pending_reconcile = false;
+            let dirty = tui.turbo_vision.pending_reconcile.read();
+            tui.turbo_vision.pending_reconcile.set(false);
             dirty
         });
         if dirty && let Some(app) = live_app {

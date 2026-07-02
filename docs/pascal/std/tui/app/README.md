@@ -54,6 +54,7 @@
 | `Application.OnMouse(App, Handler)` | Optional hook: `procedure (Application, Std.Console.Event)` for mouse events left unhandled by the widget tree. |
 | `Application.Pump(App): integer` | Process one headless Turbo Vision pump step. |
 | `Application.TestClickButton(App, Button)` | Queue a test click for a Turbo Vision button. |
+| `Application.TestClickMouse(App, X, Y)` | Queue a headless left click at screen coordinates on a check box or radio button. |
 | `Application.TestDispatchMenuCommand(App, MenuBar, MenuIndex, ItemIndex)` | Queue a menu item command for headless tests. |
 | `Application.TestSetFileDialogResult(App, Result)` | Queue the `Option of string` returned by the next headless `Application.RunFileDialog` call. |
 | `Application.TestSetDialogResult(App, Command)` | Queue the closing command returned by the next headless `Application.ExecDialog` call. |

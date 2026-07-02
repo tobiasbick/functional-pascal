@@ -335,6 +335,14 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::TestClickButton), location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_TEST_CLICK_MOUSE => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_TEST_CLICK_MOUSE, 3, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::TestClickMouse), location);
+                Ok(true)
+            }
             s::STD_TUI_APPLICATION_TEST_DISPATCH_MENU_COMMAND => {
                 self.expect_exact_args(
                     s::STD_TUI_APPLICATION_TEST_DISPATCH_MENU_COMMAND,

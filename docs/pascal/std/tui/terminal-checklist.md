@@ -12,10 +12,10 @@ Use this checklist after changes to `Std.Tui` session, Turbo Vision bridge, or t
 | Full Rust suite | `cargo test --workspace` | Workspace tests pass. |
 | FPAS formatting | `cargo run -q -p fpas-cli -- fmt --check tests/ examples/ apps/` | No formatting drift. |
 
-Turbo Vision regression tests under `tests/tui/controls/` (28 files). Core coverage:
+Turbo Vision regression tests under `tests/tui/controls/` (30 files). Core coverage:
 
 - **Spike / run** — `spike_test`, `run_test`
-- **Widgets** — `window`, `static_text`, `memo`, `text_viewer`, `input_line`, `list_box`, `check_box`, `radio_button`
+- **Widgets** — `window`, `static_text`, `memo`, `text_viewer`, `input_line`, `list_box`, `check_box`, `check_box_mouse`, `radio_button`, `radio_button_mouse`
 - **Chrome** — `chrome_test`, `menu_test`
 - **Modals** — `file_dialog_test`, `exec_dialog_test`, `checked_test`
 - **Live reconcile** — `live_tree_test`, `live_dialog_test`

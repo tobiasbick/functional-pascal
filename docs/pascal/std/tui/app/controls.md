@@ -19,7 +19,7 @@ Turbo Vision widget handles and application chrome.
 | `Application.CreateInputLine(App, Bounds, Text, MaxLength): InputLine` | Create a single-line text input with initial text and maximum length. |
 | `Application.CreateListBox(App, Bounds, Items, CommandId): ListBox` | Create a selectable list from an array of strings. Enter or double-click dispatches `CommandId` in an interactive Turbo Vision run. |
 | `Application.CreateCheckBox(App, Bounds, Text, Checked): CheckBox` | Create a check box with an initial checked state. Left-click toggles during `Application.Run`. |
-| `Application.CreateRadioButton(App, Bounds, Text, GroupId, Selected): RadioButton` | Create a radio button in a group. Buttons with the same `GroupId` are mutually exclusive. |
+| `Application.CreateRadioButton(App, Bounds, Text, GroupId, Selected): RadioButton` | Create a radio button in a group. Buttons with the same `GroupId` are mutually exclusive. Left-click selects during `Application.Run`. |
 | `Application.AddChild(App, Parent, Child)` | Attach a button, static text, memo, text viewer, input line, list box, check box, or radio button child to a dialog or window. |
 | `Application.SetText(App, Control, Text)` | Replace the text of a button, static text, memo, text viewer, input line, check box, or radio button. The change re-renders live during `Application.Run` and is visible to headless screen queries. Not supported for list boxes. |
 | `Application.SetChecked(App, Control, Checked)` | Set the checked state of a check box or the selected state of a radio button. Selecting a radio button clears other buttons in the same group. |
@@ -28,6 +28,7 @@ Turbo Vision widget handles and application chrome.
 | `Application.SetItems(App, ListBox, Items)` | Replace the string items of a list box. |
 | `Application.SetTitle(App, Root, Title)` | Replace the title of a window or dialog root. |
 | `Application.TestClickButton(App, Button)` | Queue a headless test click for the button. |
+| `Application.TestClickMouse(App, X, Y)` | Queue a headless left click at screen coordinates on a check box or radio button. |
 
 Application chrome uses root-level handles:
 

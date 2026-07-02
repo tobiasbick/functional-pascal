@@ -21,8 +21,10 @@ mod interactive_loop;
 mod lifecycle;
 mod menu_build;
 mod navigation;
+mod radio_button_mouse;
 mod reconcile;
 mod records;
+mod test_mouse;
 mod testing;
 mod tv_geometry;
 mod tv_input_events;
@@ -134,6 +136,9 @@ impl Worker {
             }
             Intrinsic::Tui(TuiIntrinsic::TestClickButton) => {
                 self.turbo_vision_test_click_button(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::TestClickMouse) => {
+                self.turbo_vision_test_click_mouse(line)?;
             }
             Intrinsic::Tui(TuiIntrinsic::TestDispatchMenuCommand) => {
                 self.turbo_vision_test_dispatch_menu_command(line)?;

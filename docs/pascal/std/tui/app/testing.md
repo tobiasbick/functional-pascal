@@ -1,6 +1,6 @@
 # Std.Tui native testing
 
-Headless Turbo Vision tests use `Application.OpenForTest`, widget construction, `Application.TestClickButton` or `Application.TestDispatchMenuCommand`, and `Application.Run`.
+Headless Turbo Vision tests use `Application.OpenForTest`, widget construction, `Application.TestClickButton`, `Application.TestClickMouse`, or `Application.TestDispatchMenuCommand`, and `Application.Run`.
 
 Example:
 
@@ -37,7 +37,7 @@ end.
 
 Regression tests live under `tests/tui/controls/` (`tui_turbo_vision_*_test.fpas`, `tui_run_path_test.fpas`).
 
-To assert painted terminal output after `Application.Pump`, add `uses Std.Console` and call [`Std.Test`](../../testing/test.md) `AssertScreenLine` or `AssertScreenCell` on the virtual CRT back buffer.
+To assert painted terminal output after `Application.Pump`, add `uses Std.Console` and call [`Std.Test`](../../testing/test.md) `AssertScreenLine` or `AssertScreenCell` on the virtual CRT back buffer. Use `Application.TestClickMouse(App, X, Y)` with screen coordinates that match the painted check box or radio button marker cell.
 
 File dialog headless example:
 

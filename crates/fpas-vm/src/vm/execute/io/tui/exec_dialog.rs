@@ -44,11 +44,13 @@ impl Worker {
         })?;
 
         let mut input_bindings = Vec::new();
+        let tree_dirty = self.with_tui(|tui| tui.turbo_vision.pending_reconcile.clone());
         let dialog_view = self.with_tui(|tui| {
             turbo_vision_build_modal_dialog(
                 &tui.turbo_vision.objects,
                 dialog_handle,
                 &mut input_bindings,
+                tree_dirty,
             )
         });
         let Some(mut dialog_view) = dialog_view else {

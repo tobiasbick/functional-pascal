@@ -35,3 +35,4 @@
     Checked = 464,
     Selected = 465,
     ListSelection = 466,
+    TestClickMouse = 467,

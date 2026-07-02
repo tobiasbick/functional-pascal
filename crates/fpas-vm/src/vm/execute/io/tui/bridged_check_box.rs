@@ -81,3 +81,22 @@ impl View for BridgedCheckBox {
         self.inner.get_palette()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use turbo_vision::core::event::{Event, EventType, MB_LEFT_BUTTON};
+    use turbo_vision::core::geometry::Rect;
+
+    #[test]
+    fn mouse_down_toggles_check_box_and_syncs_cell() {
+        let checked_cell = TurboVisionBoolCell::new(false);
+        let bounds = Rect::new(0, 0, 12, 1);
+        let mut check_box = BridgedCheckBox::new(bounds, "opt", checked_cell.clone());
+
+        let mut event = Event::mouse(EventType::MouseDown, bounds.a, MB_LEFT_BUTTON, false);
+        check_box.handle_event(&mut event);
+
+        assert!(checked_cell.read());
+    }
+}

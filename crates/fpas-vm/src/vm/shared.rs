@@ -73,7 +73,7 @@ pub(crate) struct TurboVisionState {
     /// Headless override consumed by the next `ExecDialog` call (closing command id).
     pub test_dialog_result: Option<i64>,
     /// FPAS-side widget tree changed since the last reconcile step.
-    pub pending_reconcile: bool,
+    pub pending_reconcile: crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell,
 }
 
 impl Default for TurboVisionState {
@@ -87,7 +87,7 @@ impl Default for TurboVisionState {
             quit_requested: false,
             test_file_dialog_result: None,
             test_dialog_result: None,
-            pending_reconcile: false,
+            pending_reconcile: crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell::new(false),
         }
     }
 }

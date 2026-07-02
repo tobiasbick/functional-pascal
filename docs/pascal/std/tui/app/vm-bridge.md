@@ -46,6 +46,7 @@ Current public lowering includes:
 | `Application.OnMouse` | `TuiRegisterOnMouse` |
 | `Application.Pump` | `TuiPump` |
 | `Application.TestClickButton` | `TuiTestClickButton` |
+| `Application.TestClickMouse` | `TuiTestClickMouse` |
 | `Application.TestDispatchMenuCommand` | `TuiTestDispatchMenuCommand` |
 | `Application.OpenForTest` | `TuiOpenForTest` |
 | `Application.CloseForTest` | `TuiCloseForTest` |
@@ -69,12 +70,14 @@ Turbo Vision bridge code lives under `crates/fpas-vm/src/vm/execute/io/tui/`:
 | `callbacks.rs` | Turbo Vision command event to FPAS `OnCommand` |
 | `tv_input_events.rs` | Unhandled Turbo Vision keyboard/mouse to FPAS `OnKey` / `OnMouse` |
 | `interactive_loop.rs` | Pluggable interactive run loop; dispatches commands and opt-in input hooks |
-| `commands.rs` | `Pump`, `Quit`, `TestClickButton`, `TestDispatchMenuCommand`, command queue |
+| `commands.rs` | `Pump`, `Quit`, `TestClickButton`, `TestClickMouse`, `TestDispatchMenuCommand`, command queue |
+| `test_mouse.rs` | Headless `TestClickMouse` hit testing for check boxes and radio buttons |
 | `file_dialog.rs` | `RunFileDialog`, `TestSetFileDialogResult` |
 | `exec_dialog.rs` | `ExecDialog`, `InputText`, `Checked`, `Selected`, `ListSelection`, `TestSetDialogResult` |
 | `bridged_check_box.rs` | Modal `CheckBox` view syncing checked state to FPAS |
 | `bridged_list_box.rs` | Modal `ListBox` view syncing selected index to FPAS |
 | `bridged_radio_button.rs` | Modal `RadioButton` view syncing selected state to FPAS |
+| `radio_button_mouse.rs` | Left-click select for live Turbo Vision radio buttons |
 | `tv_run.rs` | Terminal and headless `Application.Run` for Turbo Vision |
 | `reconcile.rs` | Live widget-tree reconcile and headless CRT repaint |
 | `headless_paint.rs` | Headless desktop paint into the console back buffer |

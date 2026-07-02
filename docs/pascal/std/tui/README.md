@@ -6,7 +6,7 @@ Terminal UI APIs for Functional Pascal.
 
 `Std.Tui` is the Turbo Vision application facade: dialogs, windows, menus, buttons, file pickers, and IDE-style chrome. Widgets are retained handles (`Application.CreateDialog`, `CreateButton`, `AddChild`, …). User actions arrive as integer commands through `Application.OnCommand`, and the runtime drives the Turbo Vision event pump via `Application.Run`.
 
-Simple terminal programs that draw every cell themselves (fullscreen explorers, animations, custom loops) belong in [`Std.Console`](../console/README.md) with raw mode, alternate screen, and `ReadEventTimeout` / `PollEvent` — not in `Std.Tui`.
+Simple terminal programs that draw every cell themselves (fullscreen explorers, animations, custom loops) use [`Std.Console`](../console/README.md) with raw mode, alternate screen, and `ReadEventTimeout` / `PollEvent`.
 
 ### Examples
 

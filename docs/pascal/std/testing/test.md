@@ -153,8 +153,8 @@ procedures.
 | [`console/readln_order_test.fpas`](../../../../tests/console/readln_order_test.fpas) | Multiple `PushReadLn` lines in order |
 | [`runner/skip_test.fpas`](../../../../tests/runner/skip_test.fpas) | `Skip` + runner `SKIP` reporting |
 | [`runner/stdout_echo_test.fpas`](../../../../tests/runner/stdout_echo_test.fpas) | `*.expect.stdout` |
-| [`tui/host/tui_escape_test.fpas`](../../../../tests/tui/host/tui_escape_test.fpas) | Escape + `AssertScreenLine` (native headless API) |
-| [`tui/host/tui_mouse_test.fpas`](../../../../tests/tui/host/tui_mouse_test.fpas) | `TestSendMouse` + `OnMouse` (native headless API) |
+| [`tui/controls/tui_turbo_vision_run_test.fpas`](../../../../tests/tui/controls/tui_turbo_vision_run_test.fpas) | Headless Turbo Vision `Application.Run` + `AssertScreenLine` |
+| [`tui/controls/tui_turbo_vision_chrome_paint_test.fpas`](../../../../tests/tui/controls/tui_turbo_vision_chrome_paint_test.fpas) | Menu/status chrome + `AssertScreenCell` after `Application.Pump` |
 | [`graph/graph_smoke_test.fpas`](../../../../tests/graph/graph_smoke_test.fpas) | Headless graph (`OpenForTest` + `TestSendKey`) + `*.expect.pixels` |
 | [`suite.fpasprj`](../../../../tests/suite.fpasprj) | `kind = "test"` project bundle |
 

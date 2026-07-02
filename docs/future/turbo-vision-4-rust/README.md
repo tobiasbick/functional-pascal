@@ -21,11 +21,8 @@ backward-compatibility requirement for this work.
 5. [Testing plan](05-testing-plan.md) — automated and manual verification.
 6. [Agent handoff](06-agent-handoff.md) — rules for continuing after context loss.
 7. [Post-migration improvements](07-post-migration-improvements.md) — **start here for open work**.
-8. [Hosted canvas loop removal](08-hosted-canvas-loop-removal.md) — decided follow-up.
 
-Before merging this branch, delete this `docs/future/turbo-vision-4-rust/` directory. It is
-branch-local migration history. If any follow-up in this directory should survive the merge, move
-it to a standalone `docs/future/` document first.
+Before merging this branch, delete this `docs/future/turbo-vision-4-rust/` directory.
 
 ## What is done
 
@@ -33,13 +30,12 @@ it to a standalone `docs/future/` document first.
 | --- | --- |
 | Phases 0–8 (dependency spike → verification) | complete |
 | Post-migration Phases A–G (read-back, menus, live tree, docs, command map, test seam, input hooks) | complete |
-| Runtime setters, chrome refresh, `Application.Checked`, `Application.Selected`, `Application.ListSelection`, query bounds | complete |
+| Runtime setters, chrome refresh, `Application.Checked`, `Application.Selected`, `Application.ListSelection` | complete |
+| Console vs TUI split | complete |
 
 ## What is still open
 
 See the **Remaining work** table in [07-post-migration-improvements.md](07-post-migration-improvements.md):
 
-- Decided removal of the TUI hosted canvas loop (see
-  [hosted canvas loop removal](08-hosted-canvas-loop-removal.md))
 - Manual terminal checks
 - Merge to main (repository decision)

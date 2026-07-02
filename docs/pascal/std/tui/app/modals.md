@@ -19,7 +19,7 @@ Turbo Vision dialogs and windows are opaque handles created before `Application.
 
 `Parent` may be a `Dialog` or `Window`. `Child` may be a `Button`, `StaticText`, `Memo`, `TextViewer`, `InputLine`, `ListBox`, `CheckBox`, or `RadioButton`.
 
-The retained modal stack and `ShowModal` APIs are removed.
+Use `Application.ExecDialog` for modal dialogs with read-back (`InputText`, `Checked`, `Selected`, `ListSelection`).
 
 ## See Also
 

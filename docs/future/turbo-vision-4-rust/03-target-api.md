@@ -15,8 +15,8 @@
 | Modals | `ExecDialog` → `DialogResult`; `InputText`; `Checked`; `Selected`; `ListSelection`; `RunFileDialog` |
 | Runtime mutation | `SetText`, `SetChecked`, `SetItems`, `SetTitle`, `SetMenus`, `SetStatusItems` |
 | Menus | `Menu` / `MenuItem` records (multi-item, separators via `commandId = 0`) |
-| Testing | `TestClickButton`, `TestDispatchMenuCommand`, `TestSetDialogResult`, screen queries |
-| Hosted canvas (parallel) | `Application.Configure` + global handlers — **not** mixed with `Create*` |
+| Testing | `TestClickButton`, `TestDispatchMenuCommand`, `TestSetDialogResult`; screen checks via `Std.Test.AssertScreenLine` / `AssertScreenCell` |
+| Hosted canvas (parallel) | removed (Track 08); use `Std.Console` for custom terminal loops |
 
 Planning names that changed during implementation:
 
@@ -32,10 +32,10 @@ Planning names that changed during implementation:
 | `View` as a public umbrella handle | not shipped; use concrete widget handles |
 | `Application.Remove` | not shipped |
 | `Application.OnEvent` unified handler | not shipped; use `OnCommand` / `OnKey` / `OnMouse` |
-| `Application.Size` | not shipped; use `QueryScreenSize` in tests |
+| `Application.Size` | not shipped |
 | ListBox selection read-back | shipped as `Application.ListSelection` |
 | RadioButton selection read-back after modal | shipped as `Application.Selected` |
-| Remove hosted `Configure` loop | deferred — `minimal_application.fpas` still uses it |
+| Remove hosted `Configure` loop | removed (Track 08) |
 
 ## Original shape (historical)
 

@@ -21,11 +21,11 @@ Implement **one item per change**. Verify with `cargo fmt`, `cargo build`, `carg
 | Priority | Item | Status | Notes |
 | --- | --- | --- | --- |
 | 1 | **RadioButton read-back after `ExecDialog`** | landed | Added `Application.Selected(App, RadioButton): boolean`, shared radio bool cells, `BridgedRadioButton` in modal dialogs, and group exclusivity through the shared state. |
-| 2 | **Headless paint — full menu/status chrome** | landed | `headless_paint.rs` draws every menu title and every status item into the headless CRT buffer so `QueryScreenCell` can assert chrome beyond the first item. |
+| 2 | **Headless paint — full menu/status chrome** | landed | `headless_paint.rs` draws every menu title and every status item into the headless CRT buffer so `Std.Test.AssertScreenCell` can assert chrome beyond the first item. |
 | 3 | **ListBox selection read-back** | landed | Added `Application.ListSelection(App, ListBox): integer`, FPAS-owned selection cells, and a modal `BridgedListBox`; returns a zero-based index or `-1` for an empty list. |
-| 4 | **Remove hosted canvas loop** | decided | Track in [hosted canvas loop removal](08-hosted-canvas-loop-removal.md): `minimal_application.fpas`, the terminal Mandelbrot project, TUI host tests, and internal `Host*` runtime must be adapted or removed. `Std.Graph` demos are separate and do not block this TUI cleanup. |
+| 4 | **Console vs TUI split** | landed | Terminal explorers on `Std.Console`; widget apps on Turbo Vision `Std.Tui`. |
 | 5 | **Manual terminal verification** | open | Checklist in [testing plan](05-testing-plan.md) and `docs/pascal/std/tui/terminal-checklist.md`. |
-| 6 | **Merge `turbo-vision-4-rust`** | open | Repository decision when manual checks and remaining items are acceptable. |
+| 6 | **Merge `turbo-vision-4-rust`** | open | Repository decision when manual checks are acceptable. |
 
 ### Known limits (documented, not necessarily bugs)
 
@@ -33,8 +33,6 @@ Implement **one item per change**. Verify with `cargo fmt`, `cargo build`, `carg
   non-modal dialog are lost — use `Application.ExecDialog` for modal read-back.
 - Headless `ExecDialog` does not run Turbo Vision views; use `TestSetDialogResult` and seed state via
   `SetChecked` / `SetText` for automated tests.
-- Mixing `Application.Configure` (hosted canvas) with Turbo Vision `Create*` handles in one app is
-  unsupported.
 
 ## Phase history
 
@@ -43,7 +41,7 @@ Implement **one item per change**. Verify with `cargo fmt`, `cargo build`, `carg
 | A | Modal `ExecDialog`, `InputText`, `DialogResult`, `TestSetDialogResult` | landed |
 | B | Multi-item `Menu` / `MenuItem`, separators | landed |
 | C | Live widget tree reconcile during `Run` | landed |
-| D | Dual-architecture docs (Turbo Vision vs hosted canvas) | landed |
+| D | Product docs (`Std.Tui` vs `Std.Console`) | landed |
 | E | Command-id collision guard (`command_map.rs`) | landed |
 | F | Interactive-loop testability seam (`interactive_loop.rs`) | landed |
 | G | Optional `OnKey` / `OnMouse` Turbo Vision hooks | landed |
@@ -53,7 +51,7 @@ Implement **one item per change**. Verify with `cargo fmt`, `cargo build`, `carg
 | — | `Application.Selected` + modal radio button bridge | landed |
 | — | `Application.ListSelection` + modal list box bridge | landed |
 | — | Full headless menu/status chrome paint | landed |
-| — | Screen query bounds validation | landed |
+| — | Console vs TUI product split | landed |
 
 ## Landed detail (by theme)
 
@@ -98,7 +96,8 @@ Implement **one item per change**. Verify with `cargo fmt`, `cargo build`, `carg
 - Command-map hardening (2026-07-02): reserved id coverage was expanded from the application-swallowed subset
   (`24`, `29`, `30`, `31`) to every public upstream `core::command::CM_*` id in `turbo-vision` 1.3.1
   except `CM_CONTINUE = 0`, which FPAS uses as a menu separator and does not dispatch.
-- `query_host.rs` — `QueryScreenLine` / `QueryScreenCell` validate against painted screen size.
+- `headless_paint.rs` — menu bar and status line paint into the CRT back buffer for `Std.Test` screen asserts.
+- Screen assertion bounds: `Std.Test.AssertScreenLine` / `AssertScreenCell` validate against painted screen size (`test_host.rs`, `Console::query_screen_*`).
 
 ## How to work in this repo
 

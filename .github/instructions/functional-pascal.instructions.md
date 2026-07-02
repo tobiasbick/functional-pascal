@@ -256,7 +256,7 @@ end.
 | `Std.Args` | Process arguments after `--` | `ParamCount`, `ParamStr` |
 | `Std.Env` | Process environment | `Get`, `Exists` |
 | `Std.Graph` | Native windowed graphics | Hosted: `Application.Configure`, `Application.Run`, `ApplicationHandlers`, `On*` handlers. Drawing: `Application.Open`, `Application.DrawLine`, `Application.DrawText`, `Application.Present`, `Event`, `EventKind`, … |
-| `Std.Tui` | Terminal applications | Hosted: `Application.Configure`, `Application.Run`, `ApplicationHandlers`, `On*` handlers. Session: `Application.Open`, `Application.Size`, `Application.RequestRedraw`, `TuiEvent`, `EventKind` |
+| `Std.Tui` | Turbo Vision terminal UI | `Application.Open`, `Create*`, `AddChild`, `OnCommand`, `Pump`, `Run`, `ExecDialog`, `RunFileDialog`, `OpenForTest`, `Test*`, … Custom paint loops belong in `Std.Console`, not `Std.Tui`. |
 | `Std.Str` | String operations | `Length`, `ToUpper`, `ToLower`, `Trim`, `Contains`, `StartsWith`, `EndsWith`, `Substring`, `IndexOf`, `Replace`, `Split`, `Join`, `IsNumeric`, `Format`, … |
 | `Std.Conv` | Type conversions | `IntToStr`, `StrToInt`, `IntToReal`, `RealToStr`, `StrToReal`, `CharToStr`, `BoolToStr`, … |
 | `Std.Math` | Math functions | `Pi`, `Sqrt`, `Pow`, `Floor`, `Ceil`, `Round`, `Sin`, `Cos`, `Log`, `Abs`, `Min`, `Max`, `Clamp`, … |
@@ -406,7 +406,7 @@ Examples: [`examples/pascal/library-deps/`](../../examples/pascal/library-deps/)
 ## Tests (`fpas test`)
 
 - Test entry files are named `*_test.fpas` and live under [`tests/`](../../tests/) (not `examples/`).
-- Run a directory, project, or single file: `fpas test tests/`, `fpas test tests/suite.fpasprj`, `fpas test tests/tui/host/tui_escape_test.fpas`.
+- Run a directory, project, or single file: `fpas test tests/`, `fpas test tests/suite.fpasprj`, `fpas test tests/tui/controls/tui_turbo_vision_run_test.fpas`.
 - Assertions and runner behavior: [`docs/pascal/std/testing/test.md`](../../docs/pascal/std/testing/test.md).
 
 ## Key Rules Summary
@@ -422,4 +422,4 @@ Examples: [`examples/pascal/library-deps/`](../../examples/pascal/library-deps/)
 9. **`Result`/`Option` for expected errors** — `panic` only for broken invariants
 10. **`try` propagates errors** — unwraps or returns early
 11. **First-class calls** — pass named routines or function-typed variables; nest helpers for mutual recursion
-12. **Full TUI and Graph apps use hosted dispatch** — `Application.Configure` + `Application.Run`
+12. **Graph apps use hosted dispatch** — `Application.Configure` + `Application.Run`. **Turbo Vision TUI** uses `Create*` + `OnCommand` + `Run`. **Custom terminal loops** use `Std.Console`.

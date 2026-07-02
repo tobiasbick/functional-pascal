@@ -96,7 +96,7 @@ Notes:
 - Deleted FPAS TUI regression tests that only exercised the removed retained Host API.
 - Rewrote `docs/pascal/std/tui/` app/session pages so current docs describe implemented behavior only.
 - De-registered retained `Application.QueryView*`, `Application.QuerySceneGraph`, frame queries, modal depth/focus queries, and `Application.ShowFramedDialog`.
-- Kept only headless screen queries (`QueryScreenSize`, `QueryScreenLine`, `QueryScreenCell`) as current public test surface.
+- Kept headless screen queries as the public test surface during migration; removed with Track 08 in favor of `Std.Test.AssertScreenLine` / `AssertScreenCell` on the CRT back buffer.
 - Removed the now-unreachable retained query, frame, framed-dialog, modal-depth, and focused-view `TuiIntrinsic` variants.
 - Replaced retained query bytecode tests with screen-query coverage and removed direct frame/framed-dialog intrinsic tests.
 - Added Sema diagnostics for removed old TUI symbols so unknown `Application.Host*`, retained query, modal, and framed-dialog calls point users at the current Turbo Vision facade.
@@ -141,10 +141,11 @@ Expected layout under `crates/fpas-vm/src/vm/execute/io/tui/` (implemented; `tv_
   dialogs.rs         -- CreateDialog
   events.rs          -- headless test event injection
   handles.rs         -- host-owned handle table
-  testing.rs         -- OpenForTest, TestPump*, CloseForTest
+  testing.rs         -- OpenForTest, TestSetDialogResult, CloseForTest
   tv_run.rs          -- Turbo Vision Application.Run (terminal + headless)
-  host/              -- hosted global-handler loop
 ```
+
+Track 08 removed the hosted canvas branch (`host/`, `TestPump*`, `Application.QueryScreen*`).
 
 ## Phase 5: Build the Real API
 
@@ -187,7 +188,7 @@ Each item requires:
 Notes:
 
 - Removed retained-view examples that depended on deleted `Application.Host*`, retained frame, menu, modal, and view query APIs.
-- Kept `minimal_application.fpas` as the current hosted-loop example and changed it to use `Application.Quit`.
+- Removed `minimal_application.fpas` in Track 08; terminal Mandelbrot uses `Std.Console`.
 - Added current Turbo Vision dialog and window examples using `Dialog`, `Window`, `Button`, `StaticText`, `Application.AddChild`, `Application.AddWindow`, `Application.OnCommand`, and `Command.Quit`.
 - Rewrote `apps/ide` as a minimal Turbo Vision shell over the implemented widget and chrome API.
 - Added/updated IDE tests for command constants, About command state, shell exit command dispatch, status text, and theme constants.

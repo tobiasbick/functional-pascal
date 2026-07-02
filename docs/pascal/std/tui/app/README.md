@@ -1,8 +1,6 @@
 # Std.Tui application
 
-`Std.Tui.Application` is the Turbo Vision application facade for terminal UI code.
-
-The public surface is implemented over the Rust `turbo-vision` crate. The old retained `Application.Host*` API and the hosted canvas loop (`Application.Configure`, `ApplicationHandlers`, `TestPump`, screen queries) are not registered. Calls to removed APIs report a Sema error with a migration hint toward the current facade or [`Std.Console`](../../console/README.md) for custom terminal loops.
+`Std.Tui.Application` is the Turbo Vision application facade for terminal UI code, implemented over the Rust `turbo-vision` crate.
 
 ## Minimum setup
 

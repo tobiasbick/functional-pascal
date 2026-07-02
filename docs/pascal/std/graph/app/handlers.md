@@ -14,7 +14,7 @@
 | `OnIdle` | no | `procedure (Application)` |
 | `OnExit` | no | `procedure (Application, ExitReason)` |
 
-Register once with `Application.Configure(App, Handlers)` or the explicit `Application.HostRegisterOn*` helpers.
+Register once with `Application.Configure(App, Handlers)`.
 
 ## Example
 

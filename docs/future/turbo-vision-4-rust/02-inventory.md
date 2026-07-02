@@ -9,17 +9,17 @@ through 2026-07-02). This file records what was removed, rewritten, or kept. Ope
 Rewritten or reduced during migration:
 
 - [x] `crates/fpas-std/src/tui/` — retained view/widget runtime removed; session, host loop, damage, and geometry helpers kept.
-- [x] `crates/fpas-vm/src/vm/execute/io/tui_run.rs` — hosted `Application.Run` plus Turbo Vision branch dispatch.
+- [x] `crates/fpas-vm/src/vm/execute/io/tui_run.rs` — Turbo Vision `Application.Run` only (hosted canvas branch removed in Track 08).
 - [x] `crates/fpas-vm/src/vm/execute/io/tui/` — Turbo Vision facade (`controls`, `dialogs`, `windows`,
   `navigation`, `exec_dialog`, `file_dialog`, `reconcile`, `headless_paint`, `bridged_check_box`,
-  `interactive_loop`, `tv_run`, `host/`, …)
+  `interactive_loop`, `tv_run`, …)
 - [x] `crates/fpas-vm/src/vm/shared.rs` — `TurboVisionState`, handle snapshots, `TurboVisionBoolCell` /
   `TurboVisionInputTextCell`; old `TuiState.views` removed
 
 Kept for transition and testing:
 
 - [x] shared console input/event normalization
-- [x] test host utilities adapted to headless Turbo Vision and hosted-loop tests
+- [x] test host utilities adapted to headless Turbo Vision (`OpenForTest`, `Std.Test` screen asserts)
 - [x] generic VM callback invocation helpers
 
 ## Compiler and Bytecode Areas
@@ -32,7 +32,7 @@ Kept for transition and testing:
 
 Target state achieved:
 
-- [x] old public `Host*` Pascal surface removed; internal host-loop intrinsics remain for `Application.Configure`
+- [x] old public `Host*` Pascal surface removed; TUI hosted canvas loop and its intrinsics removed (Track 08)
 - [x] intrinsic bridge matches implemented `Application.*` facade only
 - [x] intrinsic IDs kept compact; no backward-compatibility gap preservation
 
@@ -62,8 +62,8 @@ Removed stale retained-engine stubs:
 
 Current layout after migration:
 
-- [x] `tests/tui/host/` — hosted-loop and screen-query tests (kept)
-- [x] `tests/tui/controls/` — Turbo Vision widget and post-migration regression tests (24 files)
+- [x] `tests/tui/controls/` — Turbo Vision widget and post-migration regression tests (28 files)
+- [x] removed `tests/tui/host/` (hosted canvas loop tests; Track 08)
 - [x] removed `tests/tui/scene/`, `frames/`, `menu/`, `modals/` retained-engine-only dirs
 
 Removed assertion categories:
@@ -75,7 +75,8 @@ Removed assertion categories:
 ## Examples and Apps
 
 - [x] `examples/pascal/tui/` — Turbo Vision examples (`turbo_vision_dialog`, `turbo_vision_window`,
-  `exec_dialog`, `runtime_setters`, `minimal_application` for hosted loop)
+  `exec_dialog`, `runtime_setters`)
+- [x] `examples/math/mandelbrot/mandelbrot.fpasprj` — terminal explorer on `Std.Console` (not `Std.Tui`)
 - [x] TUI entries in `examples/README.md`
 - [x] `apps/ide/` — minimal Turbo Vision shell
 

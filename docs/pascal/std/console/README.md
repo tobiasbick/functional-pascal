@@ -110,7 +110,7 @@ Extended color procedures (`TextColorRGB`, `TextBackgroundRGB`, `TextColor256`, 
 
 ## Interactive fullscreen loops
 
-Programs that own every cell (explorers, animations, custom TUIs) should use `Std.Console` directly — not `Std.Tui`. Typical setup:
+Programs that own every cell (explorers, animations, custom TUIs) use `Std.Console` with raw mode, alternate screen, and structured events. Typical setup:
 
 1. `EnableRawMode`, `EnterAltScreen`, optional `EnableMouse` / `EnableFocus` / `EnablePaste`, `CursorOff`
 2. A `mutable var NeedsRedraw` flag; paint proc writes with `Window`, `ClrScr`, `GotoXY`, `Write`, colors

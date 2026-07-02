@@ -1,8 +1,6 @@
 # Std.Tui VM bridge
 
-This page tracks the public Pascal-to-VM bridge for contributors.
-
-The old public `Application.Host*` surface and the hosted canvas loop (`Application.Configure`, `ApplicationHandlers`, `TestPump`, screen queries) are removed. Turbo Vision widget construction and the interactive run loop use the `Create*` facade and `tv_run.rs`.
+This page tracks the public Pascal-to-VM bridge for contributors. Turbo Vision widget construction and the interactive run loop use the `Create*` facade and `tv_run.rs`.
 
 Current public lowering includes:
 
@@ -52,7 +50,7 @@ Current public lowering includes:
 | `Application.OpenForTest` | `TuiOpenForTest` |
 | `Application.CloseForTest` | `TuiCloseForTest` |
 
-Screen assertions in headless tests use [`Std.Test`](../../testing/test.md) intrinsics on the shared console back buffer, not TUI query intrinsics.
+Screen assertions in headless tests use [`Std.Test`](../../testing/test.md) `AssertScreenLine` and `AssertScreenCell` on the shared console back buffer.
 
 ## Rust module layout
 

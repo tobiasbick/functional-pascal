@@ -29,7 +29,7 @@ Use this file when continuing after context loss.
 
 - Backward compatibility is not required.
 - The old public `Application.Host*` Pascal API is removed.
-- Internal host-loop intrinsics remain for `Application.Configure` until a separate removal decision.
+- `Std.Tui` is Turbo Vision widgets (`Create*` + `Run`). Custom terminal paint loops use `Std.Console`.
 - `docs/pascal/` describes only implemented behavior.
 - Planned behavior stays in `docs/future/`.
 - Do not add GitHub Actions, Dependabot, or CI automation.
@@ -49,8 +49,7 @@ Migration Phases 0–8 and post-migration Phases A–G are **complete**. Pick fr
 [07-post-migration-improvements.md — Remaining work](07-post-migration-improvements.md):
 
 1. Manual terminal checks from [testing plan](05-testing-plan.md).
-2. Optional hosted canvas loop removal if that product decision is made.
-3. Merge to main when the repository decision is made.
+2. Merge to main when the repository decision is made.
 
 Before coding, skim `docs/pascal/std/tui/` so new work matches the current spec.
 

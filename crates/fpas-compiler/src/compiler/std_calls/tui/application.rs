@@ -196,6 +196,14 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::Selected), location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_LIST_SELECTION => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_LIST_SELECTION, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::ListSelection), location);
+                Ok(true)
+            }
             s::STD_TUI_APPLICATION_CREATE_MENU_BAR => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_CREATE_MENU_BAR, 3, args, location)?;
                 for arg in args {

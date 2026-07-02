@@ -46,6 +46,27 @@ end.",
 }
 
 #[test]
+fn std_tui_list_selection_surface_is_available() {
+    check_ok(
+        "\
+program T;
+uses Std.Tui;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+begin
+  var App: Application := Application.Open();
+  var ListHandle: ListBox := Application.CreateListBox(App, Bounds(1, 1, 20, 4), ['one'], Command.Accept);
+  var Selection: integer := Application.ListSelection(App, ListHandle);
+  Application.Close(App)
+end.",
+    );
+}
+
+#[test]
 fn std_tui_fully_qualified_call_works_without_uses_clause() {
     check_ok(
         "\

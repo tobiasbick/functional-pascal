@@ -12,7 +12,7 @@
 | Construction | `Application.Create*`, `AddChild`, `AddWindow`, `SetMenuBar`, `SetStatusLine` |
 | Commands | `Command.Accept`, `Cancel`, `Close`, `Quit` + app-defined ids |
 | Callbacks | `OnCommand`; optional `OnKey`, `OnMouse` (Turbo Vision path) |
-| Modals | `ExecDialog` → `DialogResult`; `InputText`; `Checked`; `RunFileDialog` |
+| Modals | `ExecDialog` → `DialogResult`; `InputText`; `Checked`; `Selected`; `ListSelection`; `RunFileDialog` |
 | Runtime mutation | `SetText`, `SetChecked`, `SetItems`, `SetTitle`, `SetMenus`, `SetStatusItems` |
 | Menus | `Menu` / `MenuItem` records (multi-item, separators via `commandId = 0`) |
 | Testing | `TestClickButton`, `TestDispatchMenuCommand`, `TestSetDialogResult`, screen queries |
@@ -33,8 +33,8 @@ Planning names that changed during implementation:
 | `Application.Remove` | not shipped |
 | `Application.OnEvent` unified handler | not shipped; use `OnCommand` / `OnKey` / `OnMouse` |
 | `Application.Size` | not shipped; use `QueryScreenSize` in tests |
-| ListBox selection read-back | blocked on upstream `turbo-vision` 1.3.1 |
-| RadioButton selection read-back after modal | planned — see [07-post-migration-improvements.md](07-post-migration-improvements.md) |
+| ListBox selection read-back | shipped as `Application.ListSelection` |
+| RadioButton selection read-back after modal | shipped as `Application.Selected` |
 | Remove hosted `Configure` loop | deferred — `minimal_application.fpas` still uses it |
 
 ## Original shape (historical)

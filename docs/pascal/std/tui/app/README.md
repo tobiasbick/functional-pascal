@@ -48,6 +48,7 @@ Do not call `Application.Configure` expecting it to paint over a Turbo Vision wi
 | `Application.InputText(App, Field): string` | Read the current text of an `InputLine` handle (valid after `ExecDialog`). |
 | `Application.Checked(App, Field): boolean` | Read the checked state of a `CheckBox` handle (valid after `ExecDialog`). |
 | `Application.Selected(App, Field): boolean` | Read the selected state of a `RadioButton` handle (valid after `ExecDialog`). |
+| `Application.ListSelection(App, ListBox): integer` | Read the zero-based selected list-box index, or `-1` when no item is selected. |
 | `Application.AddChild(App, Parent, Child)` | Attach a button, static text, memo, text viewer, input line, list box, check box, or radio button child to a dialog or window parent. |
 | `Application.SetText(App, Control, Text)` | Replace the text of a text-bearing control (button, static text, memo, text viewer, input line, check box, radio button) at runtime. Re-renders live and in headless queries. Not supported for list boxes. |
 | `Application.SetChecked(App, Control, Checked)` | Set check box checked state or radio button selected state at runtime. Radio selection clears siblings in the same group. |

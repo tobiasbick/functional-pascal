@@ -98,6 +98,19 @@ impl Worker {
         self.push(Value::Boolean(selected))
     }
 
+    /// Read the selected index of a `ListBox` handle.
+    pub(super) fn turbo_vision_list_selection(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        let list_box_handle = self.pop_turbo_vision_list_box_handle(line)?;
+        self.pop_tui_application(line)?;
+
+        let selection =
+            self.with_tui(|tui| list_box_selection(&tui.turbo_vision, list_box_handle, line))?;
+        self.push(Value::Integer(selection))
+    }
+
     /// Queue the closing command consumed by the next headless `Application.ExecDialog` call.
     pub(super) fn turbo_vision_test_set_dialog_result(
         &mut self,
@@ -142,5 +155,20 @@ fn radio_button_selected(
     match state.objects.get(&handle) {
         Some(TurboVisionObject::RadioButton(radio_button)) => Ok(radio_button.selected_cell.read()),
         _ => Err(unknown_handle_error("RadioButton", handle, line)),
+    }
+}
+
+fn list_box_selection(
+    state: &TurboVisionState,
+    handle: u32,
+    line: SourceLocation,
+) -> Result<i64, VmError> {
+    match state.objects.get(&handle) {
+        Some(TurboVisionObject::ListBox(list_box)) => Ok(list_box
+            .selection_cell
+            .read()
+            .map(|selection| selection as i64)
+            .unwrap_or(-1)),
+        _ => Err(unknown_handle_error("ListBox", handle, line)),
     }
 }

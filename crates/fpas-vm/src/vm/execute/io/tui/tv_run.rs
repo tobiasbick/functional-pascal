@@ -367,7 +367,12 @@ fn add_dialog_child(
             )));
         }
         TurboVisionChildSnapshot::ListBox(list_box) => {
-            dialog.add(Box::new(build_list_box(list_box)));
+            dialog.add(Box::new(super::bridged_list_box::BridgedListBox::new(
+                turbo_rect(list_box.bounds),
+                list_box.items,
+                fpas_command_to_turbo_vision(list_box.command_id),
+                list_box.selection_cell,
+            )));
         }
         TurboVisionChildSnapshot::CheckBox(check_box) => {
             dialog.add(Box::new(super::bridged_check_box::BridgedCheckBox::new(

@@ -12,6 +12,7 @@ use crate::vm::shared::{
 };
 use crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell;
 use crate::vm::turbo_vision_input_text_cell::TurboVisionInputTextCell;
+use crate::vm::turbo_vision_list_selection_cell::TurboVisionListSelectionCell;
 use fpas_bytecode::SourceLocation;
 use fpas_bytecode::Value;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
@@ -212,6 +213,9 @@ impl Worker {
                 handle,
                 TurboVisionObject::ListBox(TurboVisionListBox {
                     bounds,
+                    selection_cell: TurboVisionListSelectionCell::new(initial_list_selection(
+                        &items,
+                    )),
                     items,
                     command_id,
                     attached: false,
@@ -515,7 +519,9 @@ impl Worker {
             else {
                 return Err(unknown_handle_error("ListBox", list_handle, line));
             };
+            let selection = initial_list_selection(&items);
             list_box.items = items;
+            list_box.selection_cell.set(selection);
             Ok(())
         })?;
         self.mark_turbo_vision_tree_dirty();
@@ -549,6 +555,10 @@ impl Worker {
             )),
         }
     }
+}
+
+fn initial_list_selection(items: &[String]) -> Option<usize> {
+    if items.is_empty() { None } else { Some(0) }
 }
 
 impl TurboVisionChildHandle {

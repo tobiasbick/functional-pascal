@@ -285,6 +285,8 @@ pub const STD_TUI_APPLICATION_INPUT_TEXT: &str = std_tui!("Application.InputText
 pub const STD_TUI_APPLICATION_CHECKED: &str = std_tui!("Application.Checked");
 /// Read the selected state of a radio button (valid after `Application.ExecDialog`).
 pub const STD_TUI_APPLICATION_SELECTED: &str = std_tui!("Application.Selected");
+/// Read the selected index of a list box, or `-1` when no item is selected.
+pub const STD_TUI_APPLICATION_LIST_SELECTION: &str = std_tui!("Application.ListSelection");
 /// Queue the closing command returned by the next headless `Application.ExecDialog` call.
 pub const STD_TUI_APPLICATION_TEST_SET_DIALOG_RESULT: &str =
     std_tui!("Application.TestSetDialogResult");

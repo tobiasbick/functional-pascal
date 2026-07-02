@@ -203,6 +203,15 @@ pub(super) fn register_application_api(
     );
     define_func(
         checker,
+        s::STD_TUI_APPLICATION_LIST_SELECTION,
+        vec![
+            p("App", types.application.clone(), false),
+            p("ListBox", types.list_box.clone(), false),
+        ],
+        Ty::Integer,
+    );
+    define_func(
+        checker,
         s::STD_TUI_APPLICATION_CREATE_MENU_BAR,
         vec![
             p("App", types.application.clone(), false),

@@ -32,7 +32,7 @@ Rectangle in terminal cells.
 ## `Command` constants
 
 Standard command identifiers for buttons and `OnCommand` handlers.
-Application-defined commands use other positive integers. The runtime offsets ids `24`, `29`, `30`, and `31` when handing them to Turbo Vision (they collide with upstream `CM_QUIT`, `CM_TILE`, `CM_CASCADE`, and `CM_SCREENSHOT`) and restores the original value in `OnCommand`.
+Application-defined commands use other positive integers. When a command id collides with an upstream Turbo Vision `CM_*` id, the runtime offsets it before handing it to Turbo Vision and restores the original value in `OnCommand`. This includes upstream standard, broadcast, file/edit/search/view/help, and demo command ids from `turbo-vision` 1.3.1.
 
 | Constant | Value | Meaning |
 | --- | --- | --- |

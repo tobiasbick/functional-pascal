@@ -24,6 +24,7 @@ Turbo Vision widget handles and application chrome.
 | `Application.SetText(App, Control, Text)` | Replace the text of a button, static text, memo, text viewer, input line, check box, or radio button. The change re-renders live during `Application.Run` and is visible to headless screen queries. Not supported for list boxes. |
 | `Application.SetChecked(App, Control, Checked)` | Set the checked state of a check box or the selected state of a radio button. Selecting a radio button clears other buttons in the same group. |
 | `Application.Selected(App, RadioButton): boolean` | Read a radio button's selected state. Use after `Application.ExecDialog` for modal choices. |
+| `Application.ListSelection(App, ListBox): integer` | Read the zero-based selected list-box index. Returns `-1` when the list is empty. |
 | `Application.SetItems(App, ListBox, Items)` | Replace the string items of a list box. |
 | `Application.SetTitle(App, Root, Title)` | Replace the title of a window or dialog root. |
 | `Application.TestClickButton(App, Button)` | Queue a headless test click for the button. |

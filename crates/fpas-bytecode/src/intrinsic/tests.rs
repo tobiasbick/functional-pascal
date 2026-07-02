@@ -271,6 +271,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Tui(TuiIntrinsic::InputText),
     Intrinsic::Tui(TuiIntrinsic::Checked),
     Intrinsic::Tui(TuiIntrinsic::Selected),
+    Intrinsic::Tui(TuiIntrinsic::ListSelection),
     Intrinsic::Tui(TuiIntrinsic::TestSetDialogResult),
     Intrinsic::Tui(TuiIntrinsic::OpenForTest),
     Intrinsic::Tui(TuiIntrinsic::TestPump),

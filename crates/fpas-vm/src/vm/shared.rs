@@ -236,6 +236,7 @@ pub(crate) struct TurboVisionListBox {
     pub bounds: TurboVisionRect,
     pub items: Vec<String>,
     pub command_id: u16,
+    pub selection_cell: crate::vm::turbo_vision_list_selection_cell::TurboVisionListSelectionCell,
     pub attached: bool,
 }
 

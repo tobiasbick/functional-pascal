@@ -28,13 +28,12 @@ backward-compatibility requirement for this work.
 | --- | --- |
 | Phases 0–8 (dependency spike → verification) | complete |
 | Post-migration Phases A–G (read-back, menus, live tree, docs, command map, test seam, input hooks) | complete |
-| Runtime setters, chrome refresh, `Application.Checked`, query bounds | complete |
+| Runtime setters, chrome refresh, `Application.Checked`, `Application.Selected`, `Application.ListSelection`, query bounds | complete |
 
 ## What is still open
 
 See the **Remaining work** table in [07-post-migration-improvements.md](07-post-migration-improvements.md):
 
-- ListBox selection (blocked on upstream)
 - Optional removal of the hosted canvas loop (`minimal_application.fpas`)
 - Manual terminal checks
 - Merge to main (repository decision)

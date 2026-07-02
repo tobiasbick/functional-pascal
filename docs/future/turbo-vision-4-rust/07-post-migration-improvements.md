@@ -9,8 +9,8 @@ Current user-facing behavior lives in `docs/pascal/std/tui/`. Do not describe un
 ## Summary
 
 The Turbo Vision facade is usable for real apps: modal `ExecDialog` with `InputText`, `Checked`,
-and `Selected` read-back, multi-item menus, live widget tree reconcile, runtime property setters, chrome refresh,
-command-id collision guard, full headless menu/status chrome paint, scripted interactive-loop tests,
+`Selected`, and `ListSelection` read-back, multi-item menus, live widget tree reconcile,
+runtime property setters, chrome refresh, command-id collision guard, full headless menu/status chrome paint, scripted interactive-loop tests,
 and optional `OnKey`/`OnMouse` hooks.
 
 ## Remaining work
@@ -22,7 +22,7 @@ Implement **one item per change**. Verify with `cargo fmt`, `cargo build`, `carg
 | --- | --- | --- | --- |
 | 1 | **RadioButton read-back after `ExecDialog`** | landed | Added `Application.Selected(App, RadioButton): boolean`, shared radio bool cells, `BridgedRadioButton` in modal dialogs, and group exclusivity through the shared state. |
 | 2 | **Headless paint — full menu/status chrome** | landed | `headless_paint.rs` draws every menu title and every status item into the headless CRT buffer so `QueryScreenCell` can assert chrome beyond the first item. |
-| 3 | **ListBox selection read-back** | blocked | `turbo-vision` 1.3.1 has no public selected-index getter. Do not add `Application.ListSelection` until upstream exposes one or FPAS owns selection state explicitly. |
+| 3 | **ListBox selection read-back** | landed | Added `Application.ListSelection(App, ListBox): integer`, FPAS-owned selection cells, and a modal `BridgedListBox`; returns a zero-based index or `-1` for an empty list. |
 | 4 | **Remove hosted canvas loop** | deferred | `Application.Configure` + internal `Host*` intrinsics still power `examples/pascal/tui/minimal_application.fpas` and graph demos. Separate product decision; document in `docs/pascal/` only after removal. |
 | 5 | **Manual terminal verification** | open | Checklist in [testing plan](05-testing-plan.md) and `docs/pascal/std/tui/terminal-checklist.md`. |
 | 6 | **Merge `turbo-vision-4-rust`** | open | Repository decision when manual checks and remaining items are acceptable. |
@@ -51,6 +51,7 @@ Implement **one item per change**. Verify with `cargo fmt`, `cargo build`, `carg
 | — | Chrome sync on reconcile (`turbo_vision_sync_chrome_from_fpas`) | landed |
 | — | `Application.Checked` + modal checkbox bridge | landed |
 | — | `Application.Selected` + modal radio button bridge | landed |
+| — | `Application.ListSelection` + modal list box bridge | landed |
 | — | Full headless menu/status chrome paint | landed |
 | — | Screen query bounds validation | landed |
 
@@ -64,12 +65,16 @@ Implement **one item per change**. Verify with `cargo fmt`, `cargo build`, `carg
 
 ### Modal read-back
 
-- `exec_dialog.rs` — `ExecDialog`, `InputText`, `Checked`, `Selected`, `TestSetDialogResult`.
+- `exec_dialog.rs` — `ExecDialog`, `InputText`, `Checked`, `Selected`, `ListSelection`, `TestSetDialogResult`.
 - `turbo_vision_input_text_cell.rs` — shared `InputLine` text after modal `execute`.
+- `turbo_vision_list_selection_cell.rs`, `bridged_list_box.rs` — shared list-box selection after modal `execute`.
 - `turbo_vision_bool_cell.rs`, `bridged_check_box.rs` — shared checkbox state in modal dialogs.
 - `bridged_radio_button.rs` — shared radio selection state in modal dialogs.
 - Tests: `tui_turbo_vision_exec_dialog_test.fpas`, `tui_turbo_vision_checked_test.fpas`,
-  `tui_turbo_vision_radio_selected_test.fpas`.
+  `tui_turbo_vision_radio_selected_test.fpas`, `tui_turbo_vision_list_selection_test.fpas`;
+  `bridged_list_box::tests::keyboard_navigation_syncs_selection_cell` covers upstream keyboard
+  navigation syncing into the FPAS selection cell. Sema/compiler coverage verifies the public
+  `Application.ListSelection` symbol and `TuiIntrinsic::ListSelection` lowering.
 - Verification for `Application.Selected` (2026-07-02): `cargo fmt`, `cargo build`,
   `cargo test --workspace`, `cargo run -q -p fpas-cli -- fmt --check tests/tui/controls/tui_turbo_vision_radio_selected_test.fpas`,
   `cargo run -q -p fpas-cli -- test tests/tui/controls/`.
@@ -89,7 +94,10 @@ Implement **one item per change**. Verify with `cargo fmt`, `cargo build`, `carg
 
 ### Safety and queries
 
-- `command_map.rs` — reserved Turbo Vision command ids offset for user widgets.
+- `command_map.rs` — reserved Turbo Vision `CM_*` command ids offset for user widgets.
+- Command-map hardening (2026-07-02): reserved id coverage was expanded from the application-swallowed subset
+  (`24`, `29`, `30`, `31`) to every public upstream `core::command::CM_*` id in `turbo-vision` 1.3.1
+  except `CM_CONTINUE = 0`, which FPAS uses as a menu separator and does not dispatch.
 - `query_host.rs` — `QueryScreenLine` / `QueryScreenCell` validate against painted screen size.
 
 ## How to work in this repo
@@ -118,7 +126,7 @@ Copy an existing call and rename. Good anchors:
 | # | Layer | File |
 | --- | --- | --- |
 | 1 | Symbol | `crates/fpas-std/src/std_units/symbols/std_symbols.rs` |
-| 2 | Bytecode | `crates/fpas-bytecode/src/intrinsic/tui/variants/widgets.inc` (next free id after highest in file; currently `Selected = 465`) |
+| 2 | Bytecode | `crates/fpas-bytecode/src/intrinsic/tui/variants/widgets.inc` (next free id after highest in file; currently `ListSelection = 466`) |
 | 3 | Sema | `crates/fpas-sema/src/std_registry/loaded/tui/application_api.rs` (+ `builtins/tui.rs` if polymorphic) |
 | 4 | Compiler | `crates/fpas-compiler/src/compiler/std_calls/tui/application.rs` |
 | 5 | VM | `crates/fpas-vm/src/vm/execute/io/tui/` + dispatch in `mod.rs` |
@@ -137,5 +145,5 @@ Re-verify if the crate version changes (`~/.cargo/registry/src/*/turbo-vision-1.
 - `Dialog::execute` — modal close command; basis for `Application.ExecDialog`.
 - `InputLine::new(..., Rc<RefCell<String>>)` — FPAS mirrors via `TurboVisionInputTextCell`.
 - `CheckBox::is_checked` — no shared cell upstream; FPAS uses `BridgedCheckBox` + `TurboVisionBoolCell` for modal sync.
-- `ListBox` — no public selection getter in 1.3.1.
+- `ListBox` — exposes `get_selection`; FPAS still uses `BridgedListBox` so modal interaction mirrors selection into host state.
 - `Application::run` — handles only built-in commands; FPAS owns the interactive loop in `tv_run.rs`.

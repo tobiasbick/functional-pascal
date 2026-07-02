@@ -21,6 +21,7 @@ mod shared;
 mod shutdown;
 mod turbo_vision_bool_cell;
 mod turbo_vision_input_text_cell;
+mod turbo_vision_list_selection_cell;
 mod worker;
 
 pub use diagnostics::VmError;

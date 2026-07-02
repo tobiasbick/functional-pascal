@@ -13,6 +13,7 @@ Turbo Vision dialogs and windows are opaque handles created before `Application.
 | `Application.InputText(App, Field): string` | Read the text of an `InputLine` after `ExecDialog`. |
 | `Application.Checked(App, Field): boolean` | Read the checked state of a `CheckBox` after `ExecDialog`. |
 | `Application.Selected(App, Field): boolean` | Read the selected state of a `RadioButton` after `ExecDialog`. |
+| `Application.ListSelection(App, ListBox): integer` | Read the zero-based selected list-box index after `ExecDialog`, or `-1` when no item is selected. |
 | `Application.AddWindow(App, Window)` | Place a window on the application desktop. |
 | `Application.AddChild(App, Parent, Child)` | Attach a control child to a dialog or window parent. |
 

@@ -1,14 +1,12 @@
 program IdeDialogTest;
 
-uses Ide.Dialog, Std.Tui, Std.Test;
+uses Ide.Dialog, Ide.Menu, Std.Tui, Std.Test;
 
 begin
   var App: Application := Application.OpenForTest(80, 25);
-  AssertFalse(IsOpen(App));
+  AssertEquals(100, CmdHelpAbout);
+  Application.TestSetDialogResult(App, Command.Accept);
   AssertTrue(HandleCommand(App, CmdHelpAbout));
-  AssertTrue(IsOpen(App));
-  AssertTrue(HandleCommand(App, CmdAboutOk));
-  AssertFalse(IsOpen(App));
   AssertFalse(HandleCommand(App, Command.Quit));
   Application.CloseForTest(App)
 end.

@@ -2,11 +2,33 @@
 
 unit Ide.Menu;
 
+uses Std.Tui;
+
 const
-  /// Command id dispatched when the user chooses File / Exit.
-  CmdFileExit: integer := 1;
-  /// Command id dispatched when the user chooses Help / About.
-  CmdHelpAbout: integer := 10;
+  /// Command id dispatched when the user chooses File / Exit (`Command.Quit`).
+  CmdFileExit: integer := 4;
+  /// Command id dispatched when the user chooses Help / About (`CM_ABOUT` in Turbo Vision).
+  CmdHelpAbout: integer := 100;
+
+function ExitMenuItem(): MenuItem;
+begin
+  return record text := '~E~xit'; commandId := CmdFileExit; end
+end;
+
+function AboutMenuItem(): MenuItem;
+begin
+  return record text := '~A~bout'; commandId := CmdHelpAbout; end
+end;
+
+function FileMenu(): Menu;
+begin
+  return record title := '~F~ile'; items := [ExitMenuItem()]; end
+end;
+
+function HelpMenu(): Menu;
+begin
+  return record title := '~H~elp'; items := [AboutMenuItem()]; end
+end;
 
 function CommandLabel(CommandId: integer): string;
 begin

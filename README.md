@@ -239,6 +239,14 @@ Planned work (not current behavior): [`docs/future/`](docs/future/).
 | `fpas-std` | Standard library intrinsics |
 | `fpas-diagnostics` | Error codes and diagnostic utilities |
 
+## Third-party dependencies
+
+| Component | Role | Upstream |
+|-----------|------|----------|
+| [`turbo-vision`](https://crates.io/crates/turbo-vision) | Terminal UI backend for `Std.Tui` (dialogs, menus, widgets, event loop) | [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust) |
+
+The workspace pins `turbo-vision` in the root [`Cargo.toml`](Cargo.toml). `Std.Tui` exposes an FPAS-native facade over that crate; see [`docs/pascal/std/tui/`](docs/pascal/std/tui/README.md).
+
 ## Status
 
 **v0.0.1 — Experimental.** The language specification and compiler are under active development. Expect breaking changes.

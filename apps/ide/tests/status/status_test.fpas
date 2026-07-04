@@ -3,5 +3,5 @@ program IdeStatusTest;
 uses Ide.Status, Std.Test;
 
 begin
-  AssertEquals('FPAS IDE Turbo Vision rewrite', MainStatusText())
+  AssertEquals('', MainStatusText())
 end.

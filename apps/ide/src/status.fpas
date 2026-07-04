@@ -4,5 +4,5 @@ unit Ide.Status;
 
 function MainStatusText(): string;
 begin
-  return 'FPAS IDE Turbo Vision rewrite'
+  return ''
 end;

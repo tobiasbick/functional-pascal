@@ -1,0 +1,12 @@
+program IdeShellAboutMenuTest;
+
+uses Ide.Dialog, Ide.Menu, Ide.Shell, Std.Tui, Std.Test;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  var MenuBarHandle: MenuBar := AttachChrome(App);
+  Application.TestSetDialogResult(App, Command.Accept);
+  Application.TestDispatchMenuCommand(App, MenuBarHandle, 1, 0);
+  Application.Run(App);
+  AssertEquals(CmdHelpAbout, LastCommandId())
+end.

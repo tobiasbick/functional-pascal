@@ -3,8 +3,16 @@ program IdeMenuTest;
 uses Ide.Menu, Std.Test;
 
 begin
-  AssertEquals(1, CmdFileExit);
-  AssertEquals(10, CmdHelpAbout);
+  AssertEquals(4, CmdFileExit);
+  AssertEquals(100, CmdHelpAbout);
+  var ExitItem: MenuItem := ExitMenuItem();
+  var AboutItem: MenuItem := AboutMenuItem();
+  var FileTopMenu: Menu := FileMenu();
+  var HelpTopMenu: Menu := HelpMenu();
+  AssertEquals(CmdFileExit, ExitItem.commandId);
+  AssertEquals(CmdHelpAbout, AboutItem.commandId);
+  AssertEquals('~F~ile', FileTopMenu.title);
+  AssertEquals('~H~elp', HelpTopMenu.title);
   AssertEquals('Exit', CommandLabel(CmdFileExit));
   AssertEquals('About', CommandLabel(CmdHelpAbout));
   AssertEquals('Unknown', CommandLabel(999))

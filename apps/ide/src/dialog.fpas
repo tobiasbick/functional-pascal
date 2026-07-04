@@ -1,53 +1,16 @@
-/// About command state for the FPAS IDE Turbo Vision rewrite.
+/// Command dispatch for FPAS IDE dialogs.
 
 unit Ide.Dialog;
 
-uses Std.Tui;
+uses Ide.Dialog.About, Ide.Menu, Std.Tui;
 
-const
-  /// Application-defined command: show the About dialog.
-  CmdHelpAbout: integer := 10;
-  /// Dialog-local command: accept the About dialog.
-  CmdAboutOk: integer := 11;
-
-private mutable var AboutOpen: boolean := false;
-
-private function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
-begin
-  return record x := X; y := Y; width := Width; height := Height; end
-end;
-
-function IsOpen(App: Application): boolean;
-begin
-  return AboutOpen
-end;
-
-procedure OpenAbout(App: Application);
-begin
-  if AboutOpen then
-  begin
-    return
-  end;
-  var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(4, 2, 40, 10), 'About FPAS IDE');
-  var LabelHandle: StaticText := Application.CreateStaticText(App, Bounds(4, 2, 30, 1), 'Functional Pascal IDE');
-  var VersionInput: InputLine := Application.CreateInputLine(App, Bounds(4, 4, 22, 1), 'turbo-vision', 32);
-  var OkButton: Button := Application.CreateButton(App, Bounds(14, 5, 10, 2), 'OK', CmdAboutOk);
-  Application.AddChild(App, DialogHandle, LabelHandle);
-  Application.AddChild(App, DialogHandle, VersionInput);
-  Application.AddChild(App, DialogHandle, OkButton);
-  AboutOpen := true
-end;
+/// Handle IDE dialog commands. Returns `true` when `CommandId` was consumed.
 
 function HandleCommand(App: Application; CommandId: integer): boolean;
 begin
   if CommandId = CmdHelpAbout then
   begin
-    OpenAbout(App);
-    return true
-  end;
-  if CommandId = CmdAboutOk then
-  begin
-    AboutOpen := false;
+    ShowAbout(App);
     return true
   end;
   return false

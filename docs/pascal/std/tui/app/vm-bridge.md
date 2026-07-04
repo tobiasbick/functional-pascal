@@ -2,6 +2,8 @@
 
 This page tracks the public Pascal-to-VM bridge for contributors. Turbo Vision widget construction and the interactive run loop use the `Create*` facade and `tv_run.rs`.
 
+**Upstream:** the VM bridge calls into [`turbo-vision`](https://crates.io/crates/turbo-vision) from [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust). Keep reserved `CM_*` command ids aligned with the pinned crate version in `Cargo.lock`.
+
 Current public lowering includes:
 
 | Pascal symbol | VM intrinsic |

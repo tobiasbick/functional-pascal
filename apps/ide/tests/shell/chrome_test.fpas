@@ -4,8 +4,8 @@ uses Ide.Menu, Ide.Shell, Std.Tui, Std.Test;
 
 begin
   var App: Application := Application.OpenForTest(80, 25);
-  var ExitButton: Button := AttachChrome(App);
-  Application.TestClickButton(App, ExitButton);
+  var MenuBarHandle: MenuBar := AttachChrome(App);
+  Application.TestDispatchMenuCommand(App, MenuBarHandle, 0, 0);
   Application.Run(App);
   AssertEquals(CmdFileExit, LastCommandId())
 end.

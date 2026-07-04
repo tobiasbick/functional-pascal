@@ -2,28 +2,13 @@
 
 unit Ide.Shell;
 
-uses Ide.Dialog, Ide.Menu, Ide.Status, Std.Tui;
+uses Ide.Dialog, Ide.Menu, Std.Tui;
 
 private mutable var LastCommand: integer := -1;
 
 private function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
 begin
   return record x := X; y := Y; width := Width; height := Height; end
-end;
-
-private function ExitMenuItem(): MenuItem;
-begin
-  return record text := CommandLabel(CmdFileExit); commandId := CmdFileExit; end
-end;
-
-private function FileMenu(): Menu;
-begin
-  return record title := '~F~ile'; items := [ExitMenuItem()]; end
-end;
-
-private function MainStatusItem(): StatusItem;
-begin
-  return record text := MainStatusText(); keyCode := 0; commandId := CmdFileExit; end
 end;
 
 function LastCommandId(): integer;
@@ -44,35 +29,20 @@ begin
   end
 end;
 
-/// Build the current Turbo Vision IDE shell on an existing session.
+/// Build the minimal Turbo Vision IDE chrome on an existing session.
 
-function AttachChrome(App: Application): Button;
+function AttachChrome(App: Application): MenuBar;
 begin
-  var MenuBarHandle: MenuBar := Application.CreateMenuBar(App, Bounds(0, 0, 80, 1), [FileMenu()]);
-  var Status: StatusLine := Application.CreateStatusLine(App, Bounds(0, 24, 80, 1), [
-                                                                                      MainStatusItem()
+  var MenuBarHandle: MenuBar := Application.CreateMenuBar(App, Bounds(0, 0, 80, 1), [
+                                                                                      FileMenu(),
+                                                                                      HelpMenu()
 
                                                                                     ]);
-  var ShellWindow: Std.Tui.Window := Application.CreateWindow(App, Bounds(2, 1, 54, 14), MainStatusText());
-  var StatusLabel: StaticText := Application.CreateStaticText(App, Bounds(4, 2, 32, 1), MainStatusText());
-  var FileInput: InputLine := Application.CreateInputLine(App, Bounds(4, 4, 28, 1), 'untitled.fpas', 80);
-  var RecentFiles: ListBox := Application.CreateListBox(App, Bounds(4, 6, 28, 4), [
-                                                                                    'main.fpas',
-                                                                                    'tests/suite.fpasprj'
-
-                                                                                  ], CmdFileExit);
-  var AutoBuild: CheckBox := Application.CreateCheckBox(App, Bounds(34, 6, 14, 1), 'Auto build', false);
-  var ExitButton: Button := Application.CreateButton(App, Bounds(4, 11, 12, 2), CommandLabel(CmdFileExit), CmdFileExit);
+  var Status: StatusLine := Application.CreateStatusLine(App, Bounds(0, 24, 80, 1), []);
   Application.SetMenuBar(App, MenuBarHandle);
   Application.SetStatusLine(App, Status);
-  Application.AddChild(App, ShellWindow, StatusLabel);
-  Application.AddChild(App, ShellWindow, FileInput);
-  Application.AddChild(App, ShellWindow, RecentFiles);
-  Application.AddChild(App, ShellWindow, AutoBuild);
-  Application.AddChild(App, ShellWindow, ExitButton);
-  Application.AddWindow(App, ShellWindow);
   Application.OnCommand(App, OnCommand);
-  return ExitButton
+  return MenuBarHandle
 end;
 
 /// Open the terminal session, run the Turbo Vision TUI loop, and restore the terminal on exit.
@@ -80,6 +50,6 @@ end;
 procedure Run();
 begin
   var App: Application := Application.Open();
-  var ExitButton: Button := AttachChrome(App);
+  AttachChrome(App);
   Application.Run(App)
 end;

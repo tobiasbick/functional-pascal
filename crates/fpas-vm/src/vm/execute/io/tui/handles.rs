@@ -2,77 +2,19 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
+use super::handle_records::{
+    HANDLE_FIELD, TUI_BUTTON_TYPE, TUI_CHECK_BOX_TYPE, TUI_DIALOG_RESULT_TYPE, TUI_DIALOG_TYPE,
+    TUI_INPUT_LINE_TYPE, TUI_LIST_BOX_TYPE, TUI_MEMO_TYPE, TUI_MENU_BAR_TYPE,
+    TUI_RADIO_BUTTON_TYPE, TUI_RECT_TYPE, TUI_STATIC_TEXT_TYPE, TUI_STATUS_LINE_TYPE,
+    TUI_TEXT_VIEWER_TYPE, TUI_WINDOW_TYPE,
+};
 use crate::vm::Worker;
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 use turbo_vision::core::geometry::Rect;
 
-const TUI_DIALOG_TYPE: &str = "Std.Tui.Dialog";
-const TUI_WINDOW_TYPE: &str = "Std.Tui.Window";
-const TUI_BUTTON_TYPE: &str = "Std.Tui.Button";
-const TUI_STATIC_TEXT_TYPE: &str = "Std.Tui.StaticText";
-const TUI_MEMO_TYPE: &str = "Std.Tui.Memo";
-const TUI_TEXT_VIEWER_TYPE: &str = "Std.Tui.TextViewer";
-const TUI_INPUT_LINE_TYPE: &str = "Std.Tui.InputLine";
-const TUI_DIALOG_RESULT_TYPE: &str = "Std.Tui.DialogResult";
-const TUI_LIST_BOX_TYPE: &str = "Std.Tui.ListBox";
-const TUI_CHECK_BOX_TYPE: &str = "Std.Tui.CheckBox";
-const TUI_RADIO_BUTTON_TYPE: &str = "Std.Tui.RadioButton";
-const TUI_MENU_BAR_TYPE: &str = "Std.Tui.MenuBar";
-const TUI_STATUS_LINE_TYPE: &str = "Std.Tui.StatusLine";
-const HANDLE_FIELD: &str = "__id";
-const TUI_RECT_TYPE: &str = "Std.Tui.Rect";
-
 impl Worker {
-    pub(super) fn turbo_vision_dialog_record(handle: u32) -> Value {
-        turbo_vision_handle_record(TUI_DIALOG_TYPE, handle)
-    }
-
-    pub(super) fn turbo_vision_window_record(handle: u32) -> Value {
-        turbo_vision_handle_record(TUI_WINDOW_TYPE, handle)
-    }
-
-    pub(super) fn turbo_vision_button_record(handle: u32) -> Value {
-        turbo_vision_handle_record(TUI_BUTTON_TYPE, handle)
-    }
-
-    pub(super) fn turbo_vision_static_text_record(handle: u32) -> Value {
-        turbo_vision_handle_record(TUI_STATIC_TEXT_TYPE, handle)
-    }
-
-    pub(super) fn turbo_vision_memo_record(handle: u32) -> Value {
-        turbo_vision_handle_record(TUI_MEMO_TYPE, handle)
-    }
-
-    pub(super) fn turbo_vision_text_viewer_record(handle: u32) -> Value {
-        turbo_vision_handle_record(TUI_TEXT_VIEWER_TYPE, handle)
-    }
-
-    pub(super) fn turbo_vision_input_line_record(handle: u32) -> Value {
-        turbo_vision_handle_record(TUI_INPUT_LINE_TYPE, handle)
-    }
-
-    pub(super) fn turbo_vision_list_box_record(handle: u32) -> Value {
-        turbo_vision_handle_record(TUI_LIST_BOX_TYPE, handle)
-    }
-
-    pub(super) fn turbo_vision_check_box_record(handle: u32) -> Value {
-        turbo_vision_handle_record(TUI_CHECK_BOX_TYPE, handle)
-    }
-
-    pub(super) fn turbo_vision_radio_button_record(handle: u32) -> Value {
-        turbo_vision_handle_record(TUI_RADIO_BUTTON_TYPE, handle)
-    }
-
-    pub(super) fn turbo_vision_menu_bar_record(handle: u32) -> Value {
-        turbo_vision_handle_record(TUI_MENU_BAR_TYPE, handle)
-    }
-
-    pub(super) fn turbo_vision_status_line_record(handle: u32) -> Value {
-        turbo_vision_handle_record(TUI_STATUS_LINE_TYPE, handle)
-    }
-
     pub(super) fn pop_turbo_vision_dialog_handle(
         &mut self,
         line: SourceLocation,
@@ -417,13 +359,6 @@ impl Worker {
             ));
         }
         Ok(value)
-    }
-}
-
-fn turbo_vision_handle_record(type_name: &'static str, handle: u32) -> Value {
-    Value::Record {
-        type_name: type_name.into(),
-        fields: vec![(HANDLE_FIELD.into(), Value::Integer(i64::from(handle)))],
     }
 }
 

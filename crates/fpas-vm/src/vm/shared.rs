@@ -15,13 +15,24 @@
 //! [`Self::task_results`] so wakeups cannot be missed between a poll and a block.
 
 use fpas_bytecode::{Chunk, Value};
-use fpas_std::{Console, GraphHost, GraphSession, KeyInput, TextInput, TuiSession, UiHost};
+use fpas_std::{Console, KeyInput, TextInput};
 use std::collections::{HashMap, HashSet, VecDeque};
-use std::fmt;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Condvar, Mutex, RwLock};
 #[cfg(test)]
 use std::time::Duration;
+
+mod graph;
+mod tui;
+
+pub(crate) use graph::GraphState;
+pub(crate) use tui::{
+    TuiState, TurboVisionButton, TurboVisionCheckBox, TurboVisionDialog, TurboVisionInputLine,
+    TurboVisionListBox, TurboVisionMemo, TurboVisionMenu, TurboVisionMenuBar, TurboVisionMenuItem,
+    TurboVisionObject, TurboVisionRadioButton, TurboVisionRect, TurboVisionState,
+    TurboVisionStaticText, TurboVisionStatusItem, TurboVisionStatusLine, TurboVisionTextViewer,
+    TurboVisionWindow,
+};
 
 pub(crate) enum TaskResultPoll {
     Pending,
@@ -31,274 +42,6 @@ pub(crate) enum TaskResultPoll {
 
 pub(crate) enum TaskResultState {
     Available(Value),
-}
-
-#[derive(Debug)]
-pub(crate) struct TuiState {
-    pub session: TuiSession,
-    /// Turbo Vision `Application.OnCommand`: `procedure (Application, integer)`.
-    pub on_command: Option<Value>,
-    /// Turbo Vision `Application.OnKey`: `function (Application, Std.Console.KeyEvent): boolean`.
-    pub turbo_vision_on_key: Option<Value>,
-    /// Turbo Vision `Application.OnMouse`: `procedure (Application, Std.Console.Event)`.
-    pub turbo_vision_on_mouse: Option<Value>,
-    /// Set by `Application.Quit`; consumed by the Turbo Vision run loop.
-    pub quit_requested: bool,
-    /// Turbo Vision backed handles for the `Std.Tui` facade.
-    pub turbo_vision: TurboVisionState,
-}
-
-impl Default for TuiState {
-    fn default() -> Self {
-        Self {
-            session: TuiSession::default(),
-            on_command: None,
-            turbo_vision_on_key: None,
-            turbo_vision_on_mouse: None,
-            quit_requested: false,
-            turbo_vision: TurboVisionState::default(),
-        }
-    }
-}
-
-pub(crate) struct TurboVisionState {
-    pub next_handle: u32,
-    pub objects: HashMap<u32, TurboVisionObject>,
-    pub menu_bar: Option<u32>,
-    pub status_line: Option<u32>,
-    pub pending_commands: VecDeque<u16>,
-    pub quit_requested: bool,
-    /// Headless override consumed by the next `RunFileDialog` call.
-    pub test_file_dialog_result: Option<Option<String>>,
-    /// Headless override consumed by the next `ExecDialog` call (closing command id).
-    pub test_dialog_result: Option<i64>,
-    /// FPAS-side widget tree changed since the last reconcile step.
-    pub pending_reconcile: crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell,
-}
-
-impl Default for TurboVisionState {
-    fn default() -> Self {
-        Self {
-            next_handle: 1,
-            objects: HashMap::new(),
-            menu_bar: None,
-            status_line: None,
-            pending_commands: VecDeque::new(),
-            quit_requested: false,
-            test_file_dialog_result: None,
-            test_dialog_result: None,
-            pending_reconcile: crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell::new(false),
-        }
-    }
-}
-
-impl fmt::Debug for TurboVisionState {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("TurboVisionState")
-            .field("next_handle", &self.next_handle)
-            .field("object_count", &self.objects.len())
-            .field("pending_commands", &self.pending_commands)
-            .field("quit_requested", &self.quit_requested)
-            .finish()
-    }
-}
-
-pub(crate) enum TurboVisionObject {
-    Dialog(TurboVisionDialog),
-    Window(TurboVisionWindow),
-    Button(TurboVisionButton),
-    StaticText(TurboVisionStaticText),
-    Memo(TurboVisionMemo),
-    TextViewer(TurboVisionTextViewer),
-    InputLine(TurboVisionInputLine),
-    ListBox(TurboVisionListBox),
-    CheckBox(TurboVisionCheckBox),
-    RadioButton(TurboVisionRadioButton),
-    MenuBar(TurboVisionMenuBar),
-    StatusLine(TurboVisionStatusLine),
-}
-
-#[derive(Debug, Clone, Copy)]
-pub(crate) struct TurboVisionRect {
-    pub x: i16,
-    pub y: i16,
-    pub width: i16,
-    pub height: i16,
-}
-
-pub(crate) struct TurboVisionDialog {
-    pub bounds: TurboVisionRect,
-    pub title: String,
-    pub children: Vec<u32>,
-}
-
-pub(crate) struct TurboVisionWindow {
-    pub bounds: TurboVisionRect,
-    pub title: String,
-    pub children: Vec<u32>,
-    pub on_desktop: bool,
-}
-
-#[derive(Clone)]
-pub(crate) struct TurboVisionButton {
-    pub bounds: TurboVisionRect,
-    pub text: String,
-    pub command_id: u16,
-    pub attached: bool,
-}
-
-#[derive(Clone)]
-pub(crate) struct TurboVisionStaticText {
-    pub bounds: TurboVisionRect,
-    pub text: String,
-    pub attached: bool,
-}
-
-#[derive(Clone)]
-pub(crate) struct TurboVisionMemo {
-    pub bounds: TurboVisionRect,
-    pub text: String,
-    pub attached: bool,
-}
-
-#[derive(Clone)]
-pub(crate) struct TurboVisionTextViewer {
-    pub bounds: TurboVisionRect,
-    pub text: String,
-    pub attached: bool,
-}
-
-#[derive(Clone)]
-pub(crate) struct TurboVisionInputLine {
-    pub bounds: TurboVisionRect,
-    pub max_length: usize,
-    pub text_cell: crate::vm::turbo_vision_input_text_cell::TurboVisionInputTextCell,
-    pub attached: bool,
-}
-
-#[derive(Clone)]
-pub(crate) struct TurboVisionListBox {
-    pub bounds: TurboVisionRect,
-    pub items: Vec<String>,
-    pub command_id: u16,
-    pub selection_cell: crate::vm::turbo_vision_list_selection_cell::TurboVisionListSelectionCell,
-    pub attached: bool,
-}
-
-#[derive(Clone)]
-pub(crate) struct TurboVisionCheckBox {
-    pub bounds: TurboVisionRect,
-    pub text: String,
-    pub checked_cell: crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell,
-    pub attached: bool,
-}
-
-#[derive(Clone)]
-pub(crate) struct TurboVisionRadioButton {
-    pub bounds: TurboVisionRect,
-    pub text: String,
-    pub group_id: u16,
-    pub selected_cell: crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell,
-    pub attached: bool,
-}
-
-#[derive(Clone)]
-pub(crate) struct TurboVisionMenuBar {
-    pub bounds: TurboVisionRect,
-    pub menus: Vec<TurboVisionMenu>,
-    pub attached: bool,
-}
-
-#[derive(Clone)]
-pub(crate) struct TurboVisionMenu {
-    pub title: String,
-    pub items: Vec<TurboVisionMenuItem>,
-}
-
-#[derive(Clone)]
-pub(crate) struct TurboVisionMenuItem {
-    pub text: String,
-    pub command_id: u16,
-}
-
-#[derive(Clone)]
-pub(crate) struct TurboVisionStatusLine {
-    pub bounds: TurboVisionRect,
-    pub items: Vec<TurboVisionStatusItem>,
-    pub attached: bool,
-}
-
-#[derive(Clone)]
-pub(crate) struct TurboVisionStatusItem {
-    pub text: String,
-    pub key_code: u16,
-    pub command_id: u16,
-}
-
-/// Shared `Std.Graph` lifecycle and hosted-dispatch state for the active VM.
-#[derive(Debug)]
-pub(crate) struct GraphState {
-    /// Current graph session and runtime-owned backbuffer state.
-    pub session: GraphSession,
-    /// Resize coalescing and the hosted-loop event pump (`docs/pascal/std/graph/app/README.md`).
-    pub host: GraphHost,
-    /// `OnKeyPressed`-style handler: `function (Application, KeyEvent): boolean`.
-    pub on_key_pressed: Option<Value>,
-    /// `OnMouse`-style handler: `procedure (Application, Event)`.
-    pub on_mouse: Option<Value>,
-    /// `OnWheel`-style handler: `procedure (Application, Event)`.
-    pub on_wheel: Option<Value>,
-    /// `OnResize`-style handler: `procedure (Application, Size)`.
-    pub on_resize: Option<Value>,
-    /// `OnCloseRequested`-style handler: `procedure (Application)`.
-    pub on_close_requested: Option<Value>,
-    /// `OnPaint`-style handler: `procedure (Application)`.
-    pub on_paint: Option<Value>,
-    /// `OnIdle`-style handler: `procedure (Application)`.
-    pub on_idle: Option<Value>,
-    /// Idle interval for hosted `Application.Run` in milliseconds; `0` disables idle.
-    pub idle_interval_ms: i64,
-    /// `OnExit`-style handler: `procedure (Application, ExitReason)`.
-    pub on_exit: Option<Value>,
-    /// Last reason recorded for a hosted run.
-    pub last_exit_reason: Option<Value>,
-    /// Set by `Application.HostRequestQuit`.
-    pub quit_requested: bool,
-    /// Set when the native window requests close during a hosted run.
-    pub window_closed: bool,
-    /// Set when low-level code asks the active hosted run to stop.
-    pub host_stop_requested: bool,
-    /// Guards the single hosted `Application.Run` entrypoint.
-    pub run_active: bool,
-    /// Test-only events queued before `Application.Open`.
-    pub pending_test_events: Vec<fpas_std::GraphEvent>,
-    /// Whether the active session was opened with `Application.OpenForTest`.
-    pub headless_test_open: bool,
-}
-
-impl Default for GraphState {
-    fn default() -> Self {
-        Self {
-            session: GraphSession::default(),
-            host: UiHost::for_graph(),
-            on_key_pressed: None,
-            on_mouse: None,
-            on_wheel: None,
-            on_resize: None,
-            on_close_requested: None,
-            on_paint: None,
-            on_idle: None,
-            idle_interval_ms: 0,
-            on_exit: None,
-            last_exit_reason: None,
-            quit_requested: false,
-            window_closed: false,
-            host_stop_requested: false,
-            run_active: false,
-            pending_test_events: Vec::new(),
-            headless_test_open: false,
-        }
-    }
 }
 
 /// Shared state for the parallel VM.

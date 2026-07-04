@@ -1,7 +1,7 @@
 use crate::Vm;
 use crate::vm::{GraphState, SharedState};
 use fpas_bytecode::{Chunk, Op, SourceLocation, Value};
-use fpas_std::{Console, ConsoleEvent, ConsoleKeyEvent, KeyInput, TextInput};
+use fpas_std::{Console, KeyInput, TextInput};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::atomic::{AtomicBool, AtomicU64};
 use std::sync::{Condvar, Mutex, RwLock};
@@ -32,13 +32,6 @@ pub(super) fn loc() -> SourceLocation {
     SourceLocation::new(1, 1)
 }
 
-pub(super) fn tui_application_value() -> Value {
-    Value::Record {
-        type_name: "Std.Tui.Application".into(),
-        fields: vec![],
-    }
-}
-
 pub(super) fn graph_application_value() -> Value {
     Value::Record {
         type_name: "Std.Graph.Application".into(),
@@ -52,76 +45,6 @@ pub(super) fn graph_size_value(width: i64, height: i64) -> Value {
         fields: vec![
             ("width".into(), Value::Integer(width)),
             ("height".into(), Value::Integer(height)),
-        ],
-    }
-}
-
-pub(super) fn key_event_value(ev: ConsoleKeyEvent) -> Value {
-    Value::Record {
-        type_name: "Std.Console.KeyEvent".into(),
-        fields: vec![
-            ("kind".into(), Value::Integer(ev.kind as i64)),
-            (
-                "ch".into(),
-                Value::Str(if ev.ch == '\0' {
-                    String::new()
-                } else {
-                    ev.ch.to_string()
-                }),
-            ),
-            ("shift".into(), Value::Boolean(ev.shift)),
-            ("ctrl".into(), Value::Boolean(ev.ctrl)),
-            ("alt".into(), Value::Boolean(ev.alt)),
-            ("meta".into(), Value::Boolean(ev.meta)),
-        ],
-    }
-}
-
-pub(super) fn tui_size_value(width: i64, height: i64) -> Value {
-    Value::Record {
-        type_name: "Std.Tui.Size".into(),
-        fields: vec![
-            ("width".into(), Value::Integer(width)),
-            ("height".into(), Value::Integer(height)),
-        ],
-    }
-}
-
-pub(super) fn tui_screen_cell_value(ch: char, fg: i64, bg: i64) -> Value {
-    Value::Record {
-        type_name: "Std.Tui.ScreenCell".into(),
-        fields: vec![
-            ("ch".into(), Value::Str(ch.to_string())),
-            ("fg".into(), Value::Integer(fg)),
-            ("bg".into(), Value::Integer(bg)),
-        ],
-    }
-}
-
-/// Builds a `Std.Console.Event` record for bytecode-level injection tests.
-pub(super) fn console_event_value(event: ConsoleEvent) -> Value {
-    Value::Record {
-        type_name: "Std.Console.Event".into(),
-        fields: vec![
-            ("kind".into(), Value::Integer(event.kind as i64)),
-            ("key".into(), key_event_value(event.key)),
-            (
-                "mouse_action".into(),
-                Value::Integer(event.mouse_action as i64),
-            ),
-            (
-                "mouse_button".into(),
-                Value::Integer(event.mouse_button as i64),
-            ),
-            ("mouse_x".into(), Value::Integer(event.mouse_x)),
-            ("mouse_y".into(), Value::Integer(event.mouse_y)),
-            ("width".into(), Value::Integer(event.width)),
-            ("height".into(), Value::Integer(event.height)),
-            ("text".into(), Value::Str(event.text)),
-            ("shift".into(), Value::Boolean(event.shift)),
-            ("ctrl".into(), Value::Boolean(event.ctrl)),
-            ("alt".into(), Value::Boolean(event.alt)),
-            ("meta".into(), Value::Boolean(event.meta)),
         ],
     }
 }

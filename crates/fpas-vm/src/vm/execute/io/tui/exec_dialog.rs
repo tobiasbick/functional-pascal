@@ -4,7 +4,7 @@
 
 use super::command_map::turbo_vision_command_to_fpas;
 use super::tv_geometry::unknown_handle_error;
-use super::tv_run::turbo_vision_build_modal_dialog;
+use super::tv_views::turbo_vision_build_modal_dialog;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use crate::vm::shared::{TurboVisionObject, TurboVisionState};

@@ -13,9 +13,11 @@ use crate::limits::checked_collection_len;
 use crate::numeric_text::is_pascal_numeric;
 use fpas_bytecode::{Intrinsic, SourceLocation, StrIntrinsic, Value};
 use fpas_diagnostics::codes::{
-    RUNTIME_FORMAT_MISMATCH, RUNTIME_INTRINSIC_STACK_STATE_ERROR, RUNTIME_NUMERIC_DOMAIN_ERROR,
+    RUNTIME_INTRINSIC_STACK_STATE_ERROR, RUNTIME_NUMERIC_DOMAIN_ERROR,
     RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,
 };
+
+mod format;
 
 /// Runs a `Std.Str` intrinsic if `intrinsic` matches; leaves stack unchanged and returns `Ok(None)` otherwise.
 pub(crate) fn run(
@@ -319,7 +321,7 @@ pub(crate) fn run(
             }
             args.reverse();
             let template = pop_string(pop_value(stack, location)?, location)?;
-            let result = apply_format(&template, &args, location)?;
+            let result = format::apply_format(&template, &args, location)?;
             stack.push(Value::Str(result));
         }
         _ => return Ok(None),
@@ -341,160 +343,6 @@ fn checked_pad_width(
         ))
     } else {
         Ok(width as usize)
-    }
-}
-
-/// Applies printf-style format specifiers (`%d`, `%f`, `%s`, `%%`) to `args`.
-///
-/// **Documentation:** `docs/pascal/std/text/str/README.md`
-fn apply_format(
-    template: &str,
-    args: &[Value],
-    location: SourceLocation,
-) -> Result<String, StdError> {
-    let mut out = String::with_capacity(template.len());
-    let mut arg_iter = args.iter();
-    let chars: Vec<char> = template.chars().collect();
-    let mut i = 0;
-    while i < chars.len() {
-        if chars[i] != '%' {
-            out.push(chars[i]);
-            i += 1;
-            continue;
-        }
-        i += 1;
-        if i >= chars.len() {
-            return Err(std_runtime_error(
-                RUNTIME_FORMAT_MISMATCH,
-                "Format: trailing `%` at end of template string",
-                "Escape a literal percent sign as `%%`.",
-                location,
-            ));
-        }
-        match chars[i] {
-            '%' => {
-                out.push('%');
-            }
-            'd' => {
-                let arg = arg_iter.next().ok_or_else(|| {
-                    std_runtime_error(
-                        RUNTIME_FORMAT_MISMATCH,
-                        "Format: not enough arguments for `%d` specifier",
-                        "Add the missing integer argument or remove the specifier.",
-                        location,
-                    )
-                })?;
-                match arg {
-                    Value::Integer(n) => out.push_str(&n.to_string()),
-                    _ => {
-                        return Err(std_runtime_error(
-                            RUNTIME_FORMAT_MISMATCH,
-                            format!(
-                                "Format: `%d` expects an integer, got {}",
-                                value_type_name(arg)
-                            ),
-                            "Pass an integer value for the `%d` specifier.",
-                            location,
-                        ));
-                    }
-                }
-            }
-            'f' => {
-                let arg = arg_iter.next().ok_or_else(|| {
-                    std_runtime_error(
-                        RUNTIME_FORMAT_MISMATCH,
-                        "Format: not enough arguments for `%f` specifier",
-                        "Add the missing real argument or remove the specifier.",
-                        location,
-                    )
-                })?;
-                match arg {
-                    Value::Real(r) => out.push_str(&format_real(*r)),
-                    Value::Integer(n) => out.push_str(&format_real(*n as f64)),
-                    _ => {
-                        return Err(std_runtime_error(
-                            RUNTIME_FORMAT_MISMATCH,
-                            format!(
-                                "Format: `%f` expects a real or integer, got {}",
-                                value_type_name(arg)
-                            ),
-                            "Pass a real value for the `%f` specifier.",
-                            location,
-                        ));
-                    }
-                }
-            }
-            's' => {
-                let arg = arg_iter.next().ok_or_else(|| {
-                    std_runtime_error(
-                        RUNTIME_FORMAT_MISMATCH,
-                        "Format: not enough arguments for `%s` specifier",
-                        "Add the missing string argument or remove the specifier.",
-                        location,
-                    )
-                })?;
-                match arg {
-                    Value::Str(s) => out.push_str(s),
-                    _ => {
-                        return Err(std_runtime_error(
-                            RUNTIME_FORMAT_MISMATCH,
-                            format!(
-                                "Format: `%s` expects a string, got {}",
-                                value_type_name(arg)
-                            ),
-                            "Pass a string value for the `%s` specifier.",
-                            location,
-                        ));
-                    }
-                }
-            }
-            other => {
-                return Err(std_runtime_error(
-                    RUNTIME_FORMAT_MISMATCH,
-                    format!("Format: unknown specifier `%{other}`"),
-                    "Supported specifiers: `%d` (integer), `%f` (real), `%s` (string), `%%` (literal %).",
-                    location,
-                ));
-            }
-        }
-        i += 1;
-    }
-    if arg_iter.next().is_some() {
-        return Err(std_runtime_error(
-            RUNTIME_FORMAT_MISMATCH,
-            "Format: more arguments than format specifiers",
-            "Remove the extra argument or add a matching specifier to the template.",
-            location,
-        ));
-    }
-    Ok(out)
-}
-
-fn format_real(r: f64) -> String {
-    if r.fract() == 0.0 && r.is_finite() {
-        format!("{r:.1}")
-    } else {
-        // Trim trailing zeros while keeping at least one decimal place.
-        let s = format!("{r}");
-        if s.contains('.') { s } else { format!("{s}.0") }
-    }
-}
-
-fn value_type_name(v: &Value) -> &'static str {
-    match v {
-        Value::Integer(_) => "integer",
-        Value::Real(_) => "real",
-        Value::Boolean(_) => "boolean",
-        Value::Str(_) => "string",
-        Value::Array(_) => "array",
-        Value::Dict(_) => "dict",
-        Value::Record { .. } => "record",
-        Value::Enum { .. } => "enum",
-        Value::Unit => "unit",
-        Value::ResultOk(_) | Value::ResultError(_) => "result",
-        Value::OptionSome(_) | Value::OptionNone => "option",
-        Value::Function { .. } => "function",
-        Value::Task(_) => "task",
     }
 }
 

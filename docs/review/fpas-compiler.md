@@ -2,17 +2,17 @@
 
 ## Summary
 
-The compiler crate has a good thematic directory structure, but package Clippy could not complete because `fpas-vm` fails as a dependency under `-D warnings`.
+The compiler crate has a good thematic directory structure. Package Clippy now passes after the `fpas-vm` lint blockers were resolved on 2026-07-04. The remaining concern is oversized compiler test files.
 
 ## Findings
 
-### Medium: Compiler Clippy is blocked by VM dependency warnings
+### Resolved: Compiler Clippy was blocked by VM dependency warnings
 
-Evidence: `cargo clippy -p fpas-compiler --all-targets -- -D warnings` failed while checking `fpas-vm`, specifically `crates/fpas-vm/src/vm/shared.rs:51`.
+Evidence: `cargo clippy -p fpas-compiler --all-targets -- -D warnings` previously failed while checking `fpas-vm`, specifically `crates/fpas-vm/src/vm/shared.rs:51`.
 
-Impact: Compiler-only changes cannot currently use strict package Clippy as a clean verification signal. That weakens review isolation because compiler regressions can be hidden behind VM lint failures.
+Impact: Compiler-only changes could not use strict package Clippy as a clean verification signal.
 
-Suggested fix: Fix the `fpas-vm` Clippy blockers first, then rerun `cargo clippy -p fpas-compiler --all-targets -- -D warnings`.
+Resolution: `fpas-vm` lint blockers were fixed on 2026-07-04. `cargo clippy -p fpas-compiler --all-targets -- -D warnings` now passes.
 
 ### Low: Large compiler test files are over the repository structure threshold
 
@@ -24,5 +24,4 @@ Suggested fix: Split by behavior under existing themed directories, for example 
 
 ## Verification
 
-- `cargo clippy -p fpas-compiler --all-targets -- -D warnings` failed because `fpas-vm` fails.
-
+- `cargo clippy -p fpas-compiler --all-targets -- -D warnings` passed after the `fpas-vm` fix.

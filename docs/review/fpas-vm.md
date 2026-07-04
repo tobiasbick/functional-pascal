@@ -28,7 +28,7 @@ Evidence: resolved for `fpas-vm`; a recursive scan under `crates/fpas-vm/src` no
 
 Impact: TUI creation, handle storage, reconciliation, run-loop integration, and shared runtime state were tightly coupled. The split reduces the risk of changing unrelated TUI behavior while adding a single control or event path.
 
-Next step: move to the next crate-level structure finding from the review.
+Next step: continue with `fpas-cli` structure cleanup per [fpas-cli.md](fpas-cli.md).
 
 ## Verification
 

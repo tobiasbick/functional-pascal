@@ -4,6 +4,8 @@ Open planning items for Functional Pascal. This directory is for ideas, rewrites
 
 Current implemented behavior belongs under `docs/pascal/`, not here.
 
+Refactor backlogs (bridge internals, incremental tech debt): [docs/refactor/](../refactor/README.md).
+
 ## Planned Work
 
 | Area | Plan | Scope |

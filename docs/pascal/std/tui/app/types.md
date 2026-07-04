@@ -32,14 +32,14 @@ Rectangle in terminal cells.
 ## `Command` constants
 
 Standard command identifiers for buttons and `OnCommand` handlers.
-Application-defined commands use other positive integers. When a command id collides with an upstream Turbo Vision `CM_*` id, the runtime offsets it before handing it to Turbo Vision and restores the original value in `OnCommand`. This includes upstream standard, broadcast, file/edit/search/view/help, and demo command ids from `turbo-vision` 1.3.1.
+Application-defined commands use other positive integers. When a command id collides with an upstream Turbo Vision `CM_*` id, the runtime offsets it before handing it to Turbo Vision and restores the original value in `OnCommand`. This includes upstream standard, broadcast, file/edit/search/view/help, and demo command ids from `turbo-vision` 2.0. The four `Command.*` constants pass through unchanged because they match Borland values.
 
 | Constant | Value | Meaning |
 | --- | --- | --- |
-| `Command.Accept` | `1` | Accept or confirm (dialog OK). Named `Accept` because `Ok` is a language keyword. |
-| `Command.Cancel` | `2` | Cancel the current action or dialog. |
-| `Command.Close` | `3` | Close the source view or window. |
-| `Command.Quit` | `4` | Exit the application (`Application.Quit`). |
+| `Command.Quit` | `1` | Exit the application (`Application.Quit`; Borland `cmQuit`). |
+| `Command.Close` | `4` | Close the source view or window (Borland `cmClose`). |
+| `Command.Accept` | `10` | Accept or confirm (dialog OK; Borland `cmOK`). Named `Accept` because `Ok` is a language keyword. |
+| `Command.Cancel` | `11` | Cancel the current action or dialog (Borland `cmCancel`). |
 
 ## `Window`
 

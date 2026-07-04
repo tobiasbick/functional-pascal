@@ -3,7 +3,7 @@ program IdeMenuTest;
 uses Ide.Menu, Std.Test;
 
 begin
-  AssertEquals(4, CmdFileExit);
+  AssertEquals(1, CmdFileExit);
   AssertEquals(100, CmdHelpAbout);
   var ExitItem: MenuItem := ExitMenuItem();
   var AboutItem: MenuItem := AboutMenuItem();

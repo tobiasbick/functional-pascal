@@ -1,6 +1,6 @@
 # Std.Tui application
 
-`Std.Tui.Application` is the Turbo Vision application facade for terminal UI code, implemented over the Rust [`turbo-vision`](https://crates.io/crates/turbo-vision) crate from [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust).
+`Std.Tui.Application` is the Turbo Vision application facade for terminal UI code, implemented over [`turbo-vision`](https://crates.io/crates/turbo-vision) 2.0 from [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust).
 
 ## Minimum setup
 

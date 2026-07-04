@@ -2,19 +2,23 @@
 
 ## Summary
 
-The formatter crate passed package Clippy. The main concern is structural size in the emitter modules.
+The formatter crate passes package Clippy. Emitter modules were split by AST sub-responsibility; no `fpas-fmt` source file now exceeds 400 lines.
 
 ## Findings
 
-### Low: Emitter files are large enough to slow behavior-specific review
+### Resolved: Emitter files were large enough to slow behavior-specific review
 
-Evidence: `crates/fpas-fmt/src/emit/decl.rs` has 467 lines, `crates/fpas-fmt/src/emit/stmt.rs` has 451 lines, and `crates/fpas-fmt/src/emit/expr.rs` has 428 lines.
+Evidence (before split): `crates/fpas-fmt/src/emit/decl.rs` had 467 lines, `stmt.rs` had 451 lines, and `expr.rs` had 428 lines.
 
-Impact: Formatter changes are often subtle and snapshot-sensitive. Large emitter files make it harder to isolate formatting behavior by source construct.
+Remediation (2026-07-04):
 
-Suggested fix: Split emitters by AST sub-responsibility when the next formatter change touches them. Candidate splits: declaration grouping versus individual declarations, case/loop statements versus simple statements, and primary/postfix expressions versus binary expressions.
+- `emit/decl/` — `group.rs` (declaration block grouping), `item.rs` (individual declarations), `mod.rs` (public API + tests).
+- `emit/stmt/` — `loops.rs` (control flow), `line.rs` (layout helpers and `var` statements), `mod.rs` (dispatcher + tests).
+- `emit/expr/` — `binary.rs` (operators and line-breaking), `literal.rs` (aggregates and formatting helpers), `mod.rs` (primary/postfix emission + tests).
+
+Largest file after split: `emit/expr/mod.rs` (~264 lines).
 
 ## Verification
 
+- `cargo test -p fpas-fmt` passed (unit, golden, round-trip, fuzz).
 - `cargo clippy -p fpas-fmt --all-targets -- -D warnings` passed.
-

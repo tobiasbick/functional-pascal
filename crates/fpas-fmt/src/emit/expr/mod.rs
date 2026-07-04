@@ -1,11 +1,17 @@
 //! Expressions and designators.
 
-use fpas_parser::{BinaryOp, Designator, DesignatorPart, Expr, FieldInit, UnaryOp};
+mod binary;
+mod literal;
 
-use crate::style::INDENT_WIDTH;
+use fpas_parser::{Designator, DesignatorPart, Expr, UnaryOp};
 
 use super::Emitter;
 use super::wrap::{exceeds_width, measure_emit, text_width};
+use binary::{binary_op_spaced, binary_prec, emit_binary_with_break};
+use literal::{
+    emit_array_literal, emit_record_field_inits, emit_record_fields, format_real, format_string,
+    needs_space_after_negate, record_literal_end,
+};
 
 /// Formats an expression.
 #[must_use]
@@ -19,7 +25,7 @@ pub(crate) fn emit_expr(emitter: &mut Emitter, expr: &Expr, min_prec: u8) {
     emit_expr_impl(emitter, expr, min_prec, min_prec == 0);
 }
 
-fn emit_expr_impl(emitter: &mut Emitter, expr: &Expr, min_prec: u8, allow_wrap: bool) {
+pub(super) fn emit_expr_impl(emitter: &mut Emitter, expr: &Expr, min_prec: u8, allow_wrap: bool) {
     if allow_wrap {
         let base_column = emitter.column();
         if matches!(expr, Expr::BinaryOp { .. }) {
@@ -167,191 +173,6 @@ pub(crate) fn emit_arg_list(emitter: &mut Emitter, args: &[Expr]) {
             emitter.write(", ");
         }
         emit_expr(emitter, arg, 0);
-    }
-}
-
-fn emit_record_fields(emitter: &mut Emitter, fields: &[FieldInit]) {
-    let inline = measure_emit(|inner| {
-        inner.write("record ");
-        emit_record_field_inits(inner, fields);
-        inner.write(record_literal_end(fields));
-    });
-    if !exceeds_width(emitter.column(), text_width(&inline)) {
-        emitter.write("record ");
-        emit_record_field_inits(emitter, fields);
-        emitter.write(record_literal_end(fields));
-        return;
-    }
-
-    let base_column = emitter.indent_level() * INDENT_WIDTH;
-    let field_column = base_column + INDENT_WIDTH;
-    emitter.write("record\n");
-    for (index, field) in fields.iter().enumerate() {
-        if index > 0 {
-            emitter.write("\n");
-        }
-        write_to_column(emitter, field_column);
-        emitter.write(&field.name);
-        emitter.write(" := ");
-        emit_expr_impl(emitter, &field.value, 0, false);
-        emitter.write(";");
-    }
-    emitter.write("\n");
-    write_to_column(emitter, base_column);
-    emitter.write("end");
-}
-
-fn write_to_column(emitter: &mut Emitter, column: usize) {
-    let pad = column.saturating_sub(emitter.column());
-    emitter.write(&" ".repeat(pad));
-}
-
-fn emit_array_literal(emitter: &mut Emitter, elements: &[Expr]) {
-    let items: Vec<String> = elements
-        .iter()
-        .map(|element| measure_emit(|inner| emit_expr_impl(inner, element, 0, false)))
-        .collect();
-    if items.is_empty() {
-        emitter.write("[]");
-        return;
-    }
-
-    let single_line = format!("[{}]", items.join(", "));
-    if !exceeds_width(emitter.column(), text_width(&single_line)) {
-        emitter.write(&single_line);
-        return;
-    }
-
-    let base_column = emitter.column();
-    let item_column = base_column + INDENT_WIDTH;
-    emitter.write("[\n");
-    for (index, item) in items.iter().enumerate() {
-        write_block_at_column(emitter, item_column, item);
-        if index + 1 < items.len() {
-            emitter.write(",");
-        }
-        emitter.write("\n");
-    }
-    emitter.newline_to_column(base_column);
-    emitter.write("]");
-}
-
-fn write_block_at_column(emitter: &mut Emitter, column: usize, text: &str) {
-    for (index, line) in text.split('\n').enumerate() {
-        if index > 0 {
-            emitter.write("\n");
-            emitter.newline_to_column(column);
-        } else {
-            let pad = column.saturating_sub(emitter.column());
-            emitter.write(&" ".repeat(pad));
-        }
-        emitter.write(line);
-    }
-}
-
-fn emit_binary_with_break(emitter: &mut Emitter, expr: &Expr, base_column: usize) {
-    let Expr::BinaryOp {
-        op, left, right, ..
-    } = expr
-    else {
-        emit_expr_impl(emitter, expr, 0, false);
-        return;
-    };
-    let prec = binary_prec(*op);
-    emit_expr_impl(emitter, left, prec + 1, false);
-    let op_token = binary_op_spaced(*op).trim();
-    emitter.write(" ");
-    emitter.write(op_token);
-    emitter.newline_to_column(base_column);
-    emit_expr_impl(emitter, right, prec, false);
-}
-
-fn emit_record_field_inits(emitter: &mut Emitter, fields: &[FieldInit]) {
-    for (index, field) in fields.iter().enumerate() {
-        if index > 0 {
-            emitter.write("; ");
-        }
-        emitter.write(&field.name);
-        emitter.write(" := ");
-        emit_expr(emitter, &field.value, 0);
-    }
-}
-
-fn record_literal_end(fields: &[FieldInit]) -> &'static str {
-    if fields.is_empty() { " end" } else { "; end" }
-}
-
-fn format_string(value: &str) -> String {
-    let mut out = String::from("'");
-    for ch in value.chars() {
-        if ch == '\'' {
-            out.push_str("''");
-        } else {
-            out.push(ch);
-        }
-    }
-    out.push('\'');
-    out
-}
-
-fn format_real(value: f64) -> String {
-    if value.is_finite() && value.fract() == 0.0 && value.abs() < 1e15 {
-        return format!("{value:.1}");
-    }
-    let text = format!("{value}");
-    if text.contains('.') || text.contains('e') || text.contains('E') {
-        return text;
-    }
-    format!("{text}.0")
-}
-
-fn needs_space_after_negate(operand: &Expr) -> bool {
-    !matches!(
-        operand,
-        Expr::Integer(..) | Expr::Real(..) | Expr::Paren(..)
-    )
-}
-
-fn binary_prec(op: BinaryOp) -> u8 {
-    match op {
-        BinaryOp::Mul
-        | BinaryOp::RealDiv
-        | BinaryOp::IntDiv
-        | BinaryOp::Mod
-        | BinaryOp::And
-        | BinaryOp::Shl
-        | BinaryOp::Shr => 3,
-        BinaryOp::Add | BinaryOp::Sub | BinaryOp::Or | BinaryOp::Xor => 2,
-        BinaryOp::Eq
-        | BinaryOp::NotEq
-        | BinaryOp::Lt
-        | BinaryOp::Gt
-        | BinaryOp::LtEq
-        | BinaryOp::GtEq
-        | BinaryOp::In => 1,
-    }
-}
-
-fn binary_op_spaced(op: BinaryOp) -> &'static str {
-    match op {
-        BinaryOp::Mul => " * ",
-        BinaryOp::RealDiv => " / ",
-        BinaryOp::IntDiv => " div ",
-        BinaryOp::Mod => " mod ",
-        BinaryOp::And => " and ",
-        BinaryOp::Shl => " shl ",
-        BinaryOp::Shr => " shr ",
-        BinaryOp::Add => " + ",
-        BinaryOp::Sub => " - ",
-        BinaryOp::Or => " or ",
-        BinaryOp::Xor => " xor ",
-        BinaryOp::Eq => " = ",
-        BinaryOp::NotEq => " <> ",
-        BinaryOp::Lt => " < ",
-        BinaryOp::Gt => " > ",
-        BinaryOp::LtEq => " <= ",
-        BinaryOp::GtEq => " >= ",
-        BinaryOp::In => " in ",
     }
 }
 

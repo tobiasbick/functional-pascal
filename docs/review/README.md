@@ -16,12 +16,12 @@ Scope: all current Cargo workspace crates under `crates/*`. This review is captu
 - `fpas-vm`: structure splits and Clippy blockers resolved. See [fpas-vm.md](fpas-vm.md).
 - `fpas-std`: runtime module splits, `std_units/symbols` registry split, and `tui/tests` split resolved. No `fpas-std` source file now exceeds 400 lines. See [fpas-std.md](fpas-std.md).
 - `fpas-cli`: `cli_input`, `cli_test`, and `project/tests/imports` structure splits resolved. No `fpas-cli` Rust source file now exceeds 400 lines. See [fpas-cli.md](fpas-cli.md).
+- `fpas-fmt`: `emit/decl`, `emit/stmt`, and `emit/expr` structure splits resolved. No `fpas-fmt` source file now exceeds 400 lines. See [fpas-fmt.md](fpas-fmt.md).
 - `fpas-compiler`: package Clippy is unblocked now that `fpas-vm` passes strict linting.
 
 ## Highest Priority Findings
 
-1. `fpas-fmt`: emitter modules are large but below the hard split threshold; defer splits until the next formatter change. See [fpas-fmt.md](fpas-fmt.md).
-2. `fpas-compiler`: oversized compiler test files remain low priority. See [fpas-compiler.md](fpas-compiler.md).
+1. `fpas-compiler`: oversized compiler test files remain low priority. See [fpas-compiler.md](fpas-compiler.md).
 
 ## Per-Crate Notes
 

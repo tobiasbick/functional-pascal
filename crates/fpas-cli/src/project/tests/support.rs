@@ -1,5 +1,5 @@
 use super::*;
-use fpas_parser::Program;
+use fpas_parser::{DesignatorPart, Program};
 
 /// Converts a path into TOML-friendly forward-slash form.
 pub(super) fn toml_path(path: &std::path::Path) -> String {

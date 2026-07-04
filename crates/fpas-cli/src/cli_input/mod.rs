@@ -2,101 +2,23 @@
 //!
 //! Spec: [Projects & CLI](../../../docs/pascal/program-structure/cli.md).
 
-use crate::cli_paths::{
-    PROJECT_FILE_EXTENSION, SOURCE_FILE_EXTENSION, WORKSPACE_FILE_EXTENSION, has_extension,
-    normalize_input_path,
-};
-use fpas_project::{discover_run_project_in_workspace, discover_workspace_file};
-use std::fs;
-use std::path::{Path, PathBuf};
+mod discovery;
+mod help;
+mod mode;
+mod types;
+
+use std::path::Path;
 use std::time::Duration;
 
-/// Text printed for `fpas -h` / `fpas --help` (stdout).
-pub(crate) const CLI_HELP: &str = "\
-fpas — Functional Pascal compiler
+pub(crate) use discovery::discover_check_input;
+pub(crate) use help::CLI_HELP;
+pub(crate) use types::{
+    CliConfig, CliInput, FmtCliConfig, ResolvedCli, TestCliConfig, TestReportFormat,
+};
 
-Usage:
-    fpas [<file.fpas | file.fpasprj>] [-- <args>...]       Run a source file or project
-    fpas [-- <args>...]                                   Discover a workspace program or `.fpasprj` in cwd
-    fpas check [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
-                                                          Type-check without running
-    fpas check                                            Discover `.fpasworkspace` or `.fpasprj` in cwd
-    fpas test [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
-                                                          Run `*_test.fpas` programs
-    fpas test [--list] [--fail-fast] [--strict] [--filter <pattern>] [--report json] [--timeout <secs>] [--jobs <n>] [--script <path>] [<path>]             Discover tests in cwd when path omitted
-    fpas fmt [<path>...]                                  Format sources in place (multiple paths ok)
-    fpas fmt [--check] [--list] [<path>...]               Check formatting (exit 2 if changes needed)
-    fpas fmt --stdout <file.fpas>                         Print formatted text to stdout (one file)
-    fpas fmt                                              Discover `.fpasworkspace` or `.fpasprj` in cwd
+use mode::{CliMode, parse_cli_mode, split_program_args, usage_error};
 
-Options:
-  -h, --help      Print this help
-  -V, --version   Print version
-
-Program arguments after `--` are visible through `Std.Args` when running programs.
-
-";
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[allow(clippy::enum_variant_names)]
-pub(crate) enum CliInput {
-    SourceFile(PathBuf),
-    ProjectFile(PathBuf),
-    WorkspaceFile(PathBuf),
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct CliConfig {
-    pub input: CliInput,
-    pub program_args: Vec<String>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum TestReportFormat {
-    Json,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct FmtCliConfig {
-    pub explicit_args: Vec<String>,
-    pub cwd: PathBuf,
-    pub check_only: bool,
-    pub stdout: bool,
-    pub list_changed: bool,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct TestCliConfig {
-    pub input: CliInput,
-    pub cwd: PathBuf,
-    pub fail_fast: bool,
-    pub list_only: bool,
-    pub script_path: Option<PathBuf>,
-    pub filter: Option<String>,
-    pub report: Option<TestReportFormat>,
-    pub timeout: Option<Duration>,
-    pub jobs: usize,
-    pub strict: bool,
-}
-
-/// Result of parsing CLI arguments before loading sources.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum ResolvedCli {
-    Run(CliConfig),
-    Check(CliConfig),
-    Fmt(FmtCliConfig),
-    Test(TestCliConfig),
-    Help,
-    Version,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum CliMode {
-    Run,
-    Check,
-    Fmt,
-    Test,
-}
+use discovery::{discover_input, resolve_explicit_input};
 
 /// Resolves at most one positional path or project discovery, for unit tests only.
 ///
@@ -136,7 +58,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
     let mut fail_fast = false;
     let mut strict = false;
     let mut list_only = false;
-    let mut script_path = None::<PathBuf>;
+    let mut script_path = None::<std::path::PathBuf>;
     let mut filter = None::<String>;
     let mut report = None::<TestReportFormat>;
     let mut timeout = None::<Duration>;
@@ -169,7 +91,10 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
                             .to_string(),
                     );
                 };
-                if script_path.replace(PathBuf::from(path)).is_some() {
+                if script_path
+                    .replace(std::path::PathBuf::from(path))
+                    .is_some()
+                {
                     return Err("Duplicate `--script` option.".to_string());
                 }
             }
@@ -342,144 +267,4 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             strict,
         }),
     })
-}
-
-fn parse_cli_mode(cli_args: &[String]) -> Result<(CliMode, &[String]), String> {
-    if cli_args.first().is_some_and(|arg| arg == "check") {
-        return Ok((CliMode::Check, &cli_args[1..]));
-    }
-    if cli_args.first().is_some_and(|arg| arg == "fmt") {
-        return Ok((CliMode::Fmt, &cli_args[1..]));
-    }
-    if cli_args.first().is_some_and(|arg| arg == "test") {
-        return Ok((CliMode::Test, &cli_args[1..]));
-    }
-
-    Ok((CliMode::Run, cli_args))
-}
-
-fn usage_error(mode: CliMode) -> String {
-    match mode {
-        CliMode::Run => {
-            "Usage: fpas [<file.fpas | file.fpasprj>] [-- <args>...]\n  help: `fpas --help` shows options."
-                .to_string()
-        }
-        CliMode::Check => {
-            "Usage: fpas check [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]\n  help: `fpas --help` shows options."
-                .to_string()
-        }
-        CliMode::Fmt => {
-            "Usage: fpas fmt [--check] [--list] [--stdout] [<path>...]\n  help: `fpas --help` shows options."
-                .to_string()
-        }
-        CliMode::Test => {
-            "Usage: fpas test [--list] [--fail-fast] [--filter <pattern>] [--report json] [--timeout <secs>] [--jobs <n>] [--script <path>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]\n  help: `fpas --help` shows options."
-                .to_string()
-        }
-    }
-}
-
-fn split_program_args(args: &[String]) -> (&[String], Vec<String>) {
-    let Some(separator) = args.iter().position(|arg| arg == "--") else {
-        return (args, Vec::new());
-    };
-
-    (&args[..separator], args[separator + 1..].to_vec())
-}
-
-fn resolve_explicit_input(input: &str, cwd: &Path, mode: CliMode) -> Result<CliInput, String> {
-    let path = normalize_input_path(input, cwd);
-    if path.is_dir() {
-        return Ok(CliInput::SourceFile(path));
-    }
-    if has_extension(&path, SOURCE_FILE_EXTENSION) {
-        if mode == CliMode::Test {
-            crate::cli_test::validate_explicit_test_file(&path)?;
-        }
-        return Ok(CliInput::SourceFile(path));
-    }
-    if has_extension(&path, PROJECT_FILE_EXTENSION) {
-        return Ok(CliInput::ProjectFile(path));
-    }
-    if matches!(mode, CliMode::Check | CliMode::Fmt | CliMode::Test)
-        && has_extension(&path, WORKSPACE_FILE_EXTENSION)
-    {
-        return Ok(CliInput::WorkspaceFile(path));
-    }
-
-    let expected = match mode {
-        CliMode::Run => "a `.fpas` or `.fpasprj` file",
-        CliMode::Check => "a `.fpas` file, directory, `.fpasprj`, or `.fpasworkspace` file",
-        CliMode::Fmt => "a `.fpas`, `.fpasprj`, or `.fpasworkspace` file",
-        CliMode::Test => "a `.fpas` file, directory, `.fpasprj`, or `.fpasworkspace` file",
-    };
-    Err(format!(
-        "Unsupported input `{}`. Expected {expected}.",
-        path.display()
-    ))
-}
-
-fn discover_input(cwd: &Path, mode: CliMode) -> Result<CliInput, String> {
-    match mode {
-        CliMode::Check | CliMode::Fmt | CliMode::Test => discover_check_input(cwd),
-        CliMode::Run => discover_run_input(cwd),
-    }
-}
-
-fn discover_run_input(cwd: &Path) -> Result<CliInput, String> {
-    if let Some(workspace_path) = discover_workspace_file(cwd)? {
-        let program_path = discover_run_project_in_workspace(&workspace_path)?;
-        return Ok(CliInput::ProjectFile(program_path));
-    }
-
-    discover_project_file(cwd)
-}
-
-/// Discovers workspace or project input for `fpas check`, `fpas fmt`, and `fpas test` when no path is given.
-pub(crate) fn discover_check_input(cwd: &Path) -> Result<CliInput, String> {
-    if let Some(workspace_path) = discover_workspace_file(cwd)? {
-        return Ok(CliInput::WorkspaceFile(workspace_path));
-    }
-
-    discover_project_file(cwd)
-}
-
-fn discover_project_file(cwd: &Path) -> Result<CliInput, String> {
-    let read_dir = fs::read_dir(cwd)
-        .map_err(|e| format!("Error reading current directory `{}`: {e}", cwd.display()))?;
-
-    let mut candidates = Vec::<PathBuf>::new();
-    for entry in read_dir {
-        let entry = entry.map_err(|e| {
-            format!(
-                "Error reading entries from current directory `{}`: {e}",
-                cwd.display()
-            )
-        })?;
-        let path = entry.path();
-        if path.is_file() && has_extension(&path, PROJECT_FILE_EXTENSION) {
-            candidates.push(path);
-        }
-    }
-
-    candidates.sort();
-
-    match candidates.len() {
-        0 => Err(format!(
-            "No `.fpasprj` file found in current directory `{}`.\n  help: Pass a `.fpas`, `.fpasprj`, or `.fpasworkspace` path explicitly.",
-            cwd.display()
-        )),
-        1 => Ok(CliInput::ProjectFile(candidates.remove(0))),
-        _ => {
-            let entries = candidates
-                .iter()
-                .map(|path| path.display().to_string())
-                .collect::<Vec<_>>()
-                .join(", ");
-            Err(format!(
-                "Found multiple `.fpasprj` files in current directory `{}`: {entries}.\n  help: Pass the desired `.fpasprj` file path explicitly.",
-                cwd.display()
-            ))
-        }
-    }
 }

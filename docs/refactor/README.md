@@ -13,7 +13,7 @@ Structured refactor backlogs for Functional Pascal. Use this directory when work
 | ID | Topic | Status |
 | --- | --- | --- |
 | [tui-bridge/00-context.md](tui-bridge/00-context.md) | TUI bridge — current architecture (reference) | Reference (keep updated when bridge changes) |
-| [tui-bridge/01-single-tv-session.md](tui-bridge/01-single-tv-session.md) | One `TurboVisionApplication` per FPAS session | Pending |
+| [tui-bridge/01-single-tv-session.md](tui-bridge/01-single-tv-session.md) | One `TurboVisionApplication` per FPAS session | In progress |
 | [tui-bridge/02-about-message-box.md](tui-bridge/02-about-message-box.md) | About / simple dialogs via upstream `message_box` | Pending |
 | [tui-bridge/03-headless-test-util.md](tui-bridge/03-headless-test-util.md) | Headless tests via TV `test-util` + `MockTerminal` | Pending |
 | [tui-bridge/04-command-map-sync.md](tui-bridge/04-command-map-sync.md) | Keep reserved `CM_*` list aligned with upstream | Ongoing |

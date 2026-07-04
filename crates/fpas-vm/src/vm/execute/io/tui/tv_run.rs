@@ -3,7 +3,6 @@
 //! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
 use super::chrome_layout::{layout_menu_bar_for_terminal, layout_status_line_for_terminal};
-use super::interactive_loop::ApplicationInteractiveSession;
 use super::menu_build::build_menu_bar_from_snapshot;
 use super::tv_geometry::turbo_rect;
 use super::tv_views::{
@@ -41,9 +40,8 @@ impl Worker {
         }
 
         self.turbo_vision_begin_run();
-        let mut app = self.build_turbo_vision_application(line)?;
-        let mut session = ApplicationInteractiveSession::new(&mut app);
-        self.turbo_vision_drive_interactive_loop(&mut session, line)
+        self.turbo_vision_refresh_live_desktop(line)?;
+        self.turbo_vision_drive_live_interactive_loop(line)
     }
 
     fn turbo_vision_headless_run(&mut self, line: SourceLocation) -> Result<(), VmError> {
@@ -67,25 +65,6 @@ impl Worker {
             "Call `Application.Quit(App)` from the command handler or stop queueing commands.",
             line,
         ))
-    }
-
-    fn build_turbo_vision_application(
-        &self,
-        line: SourceLocation,
-    ) -> Result<TurboVisionApplication, VmError> {
-        let mut app = TurboVisionApplication::new().map_err(|error| {
-            runtime_error(
-                RUNTIME_CONSOLE_STATE_ERROR,
-                format!("Turbo Vision terminal initialization failed: {error}"),
-                "Run the program from an interactive terminal or use `Application.OpenForTest` in automated tests.",
-                line,
-            )
-        })?;
-
-        self.turbo_vision_sync_chrome_from_fpas(&mut app);
-        self.turbo_vision_populate_desktop(&mut app);
-
-        Ok(app)
     }
 
     /// Refresh menu bar and status line on a live Turbo Vision application from FPAS state.

@@ -26,6 +26,7 @@ mod navigation;
 mod radio_button_mouse;
 mod reconcile;
 mod records;
+mod session_app;
 mod test_mouse;
 mod testing;
 mod tv_geometry;

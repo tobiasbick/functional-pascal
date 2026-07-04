@@ -10,7 +10,6 @@ use crate::vm::diagnostics::{VmError, runtime_error};
 use crate::vm::shared::{TurboVisionObject, TurboVisionState};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
-use turbo_vision::app::Application as TurboVisionApplication;
 
 impl Worker {
     /// Run a modal Turbo Vision dialog and push `DialogResult`.
@@ -34,15 +33,6 @@ impl Worker {
             return self.push_dialog_result(command);
         }
 
-        let mut app = TurboVisionApplication::new().map_err(|error| {
-            runtime_error(
-                RUNTIME_CONSOLE_STATE_ERROR,
-                format!("Turbo Vision terminal initialization failed: {error}"),
-                "Run the program from an interactive terminal or use `Application.OpenForTest` with `Application.TestSetDialogResult` in automated tests.",
-                line,
-            )
-        })?;
-
         let mut input_bindings = Vec::new();
         let tree_dirty = self.with_tui(|tui| tui.turbo_vision.pending_reconcile.clone());
         let dialog_view = self.with_tui(|tui| {
@@ -57,7 +47,11 @@ impl Worker {
             return Err(unknown_handle_error("Dialog", dialog_handle, line));
         };
 
-        let command = i64::from(turbo_vision_command_to_fpas(dialog_view.execute(&mut app)));
+        let command = self.turbo_vision_with_live_app(line, |app| {
+            Ok(i64::from(turbo_vision_command_to_fpas(
+                dialog_view.execute(app),
+            )))
+        })?;
         self.with_tui(|tui| {
             for (child_handle, binding) in &input_bindings {
                 if let Some(TurboVisionObject::InputLine(input_line)) =

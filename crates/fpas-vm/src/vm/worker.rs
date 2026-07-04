@@ -7,6 +7,7 @@ use super::shared::{SharedState, TaskState};
 use super::{CallFrame, STACK_MAX, TIMESLICE};
 use fpas_bytecode::{SourceLocation, Value};
 use std::sync::Arc;
+use turbo_vision::app::Application as TurboVisionApplication;
 
 /// A worker runs on a single OS thread and executes tasks pulled from the shared queue.
 ///
@@ -24,6 +25,8 @@ pub(crate) struct Worker {
     pub sync_call_depth: u32,
     /// Allows specific synchronous cleanup callbacks to run during global shutdown.
     pub allow_shutdown_during_sync_call: bool,
+    /// Live turbo-vision application for the main task (not `Send`; main worker only).
+    pub live_turbo_vision_app: Option<TurboVisionApplication>,
 }
 
 impl Worker {
@@ -40,6 +43,7 @@ impl Worker {
             instructions_until_yield: TIMESLICE,
             sync_call_depth: 0,
             allow_shutdown_during_sync_call: false,
+            live_turbo_vision_app: None,
         }
     }
 
@@ -56,6 +60,7 @@ impl Worker {
             instructions_until_yield: TIMESLICE,
             sync_call_depth: 0,
             allow_shutdown_during_sync_call: false,
+            live_turbo_vision_app: None,
         }
     }
 

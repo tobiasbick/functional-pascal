@@ -5,7 +5,6 @@
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
 use fpas_bytecode::SourceLocation;
-use turbo_vision::app::Application as TurboVisionApplication;
 use turbo_vision::core::event::{Event, EventType};
 
 #[cfg(test)]
@@ -30,47 +29,6 @@ pub(crate) trait TurboVisionInteractiveSession {
 
     /// Mirror FPAS-side widget mutations after a command was dispatched.
     fn reconcile(&mut self, worker: &mut Worker, line: SourceLocation) -> Result<(), VmError>;
-}
-
-/// Production session backed by a live Turbo Vision `Application`.
-pub(in crate::vm::execute::io::tui) struct ApplicationInteractiveSession<'a> {
-    app: &'a mut TurboVisionApplication,
-}
-
-impl<'a> ApplicationInteractiveSession<'a> {
-    pub(in crate::vm::execute::io::tui) fn new(app: &'a mut TurboVisionApplication) -> Self {
-        Self { app }
-    }
-}
-
-impl TurboVisionInteractiveSession for ApplicationInteractiveSession<'_> {
-    fn set_running(&mut self, running: bool) {
-        self.app.running = running;
-    }
-
-    fn is_running(&self) -> bool {
-        self.app.running
-    }
-
-    fn next_event(&mut self) -> Option<Event> {
-        self.app.get_event()
-    }
-
-    fn handle_event(&mut self, event: &mut Event) {
-        self.app.handle_event(event);
-    }
-
-    fn after_step(&mut self) {
-        let _ = self.app.desktop.remove_closed_windows();
-        let _ = self
-            .app
-            .desktop
-            .handle_moved_windows(&mut self.app.terminal);
-    }
-
-    fn reconcile(&mut self, worker: &mut Worker, line: SourceLocation) -> Result<(), VmError> {
-        worker.turbo_vision_reconcile_after_step(Some(self.app), line)
-    }
 }
 
 /// Scripted events for tests without a real terminal.

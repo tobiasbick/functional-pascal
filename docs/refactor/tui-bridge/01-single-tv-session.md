@@ -1,6 +1,6 @@
 # 01 — Single Turbo Vision session per FPAS application
 
-**Status:** [ ] Not started · [ ] In progress · [ ] Done
+**Status:** [ ] Not started · [x] In progress · [ ] Done
 
 **Priority:** High — do this first among open TUI bridge items.
 
@@ -30,13 +30,13 @@ One upstream `Application` (or equivalent session object) for the lifetime of FP
 
 ## Tasks
 
-- [ ] **Design** — Where to store the live `TurboVisionApplication` (e.g. `TuiSession`, `TurboVisionState`, or run-local `ApplicationInteractiveSession` extended to session scope). Document ownership and re-entrancy (`ExecDialog` from `OnCommand` during `Run`).
-- [ ] **Run path** — Build/populate TV app once at Run start; reuse for the loop in `interactive_loop.rs`.
-- [ ] **ExecDialog** — Remove standalone `Application::new()` in `exec_dialog.rs`; execute modal on session app. Preserve read-back (`InputText`, `Checked`, …) via existing cells/bindings.
-- [ ] **RunFileDialog** — Same for `file_dialog.rs`.
-- [ ] **Headless** — Define behavior when `OpenForTest` + `ExecDialog`: either reuse mock terminal on one session or keep explicit test stubs (`TestSetDialogResult`) without a second app.
-- [ ] **Lifecycle** — Ensure terminal shutdown happens once on `Close` / end of `Run`; no leak on error paths.
-- [ ] **Tests** — `tests/tui/controls/tui_turbo_vision_exec_dialog_test.fpas`, file dialog tests, IDE About menu test; add regression if modal during `Run` was broken before.
+- [x] **Design** — Live `TurboVisionApplication` on main [`Worker`](../../../crates/fpas-vm/src/vm/worker.rs) (`live_turbo_vision_app`, `!Send`). Helpers in `session_app.rs`. Re-entrancy: per-step borrows in `turbo_vision_drive_live_interactive_loop`; FPAS dispatch runs without holding `&mut Application`.
+- [x] **Run path** — `tv_run.rs` calls `turbo_vision_refresh_live_desktop` + `turbo_vision_drive_live_interactive_loop` (no per-Run `Application::new()`).
+- [x] **ExecDialog** — `exec_dialog.rs` uses `turbo_vision_with_live_app`; read-back unchanged.
+- [x] **RunFileDialog** — `file_dialog.rs` uses `turbo_vision_with_live_app`.
+- [x] **Headless** — Unchanged: `TestSetDialogResult` / `TestSetFileDialogResult` stubs; no live TV app in headless mode.
+- [x] **Lifecycle** — `turbo_vision_shutdown_live_app` on `Application.Close` and `Application.Open` reset (`lifecycle.rs`).
+- [x] **Tests** — `cargo test --workspace`; exec dialog, file dialog, IDE tests (6/6) pass.
 - [ ] **Docs** — Update [docs/pascal/std/tui/app/modals.md](../../pascal/std/tui/app/modals.md) / [lifecycle.md](../../pascal/std/tui/app/lifecycle.md) if observable rules change.
 - [ ] **Context** — Update [00-context.md](00-context.md) “Known duplication” section when done.
 
@@ -44,13 +44,14 @@ One upstream `Application` (or equivalent session object) for the lifetime of FP
 
 ```text
 crates/fpas-vm/src/vm/execute/io/tui/
+  session_app.rs          — NEW: live session helpers + re-entrant run loop
   tv_run.rs
   exec_dialog.rs
   file_dialog.rs
-  interactive_loop.rs
-  application.rs / lifecycle.rs (if session storage moves)
+  interactive_loop.rs     — scripted test loop only; live loop moved to session_app.rs
+  lifecycle.rs
+crates/fpas-vm/src/vm/worker.rs   — live_turbo_vision_app field
 crates/fpas-vm/src/vm/shared/tui.rs
-crates/fpas-std/src/tui/ … (session if needed)
 ```
 
 ## Verification

@@ -49,7 +49,10 @@ impl Worker {
         Ok(())
     }
 
-    fn turbo_vision_rebuild_desktop(&self, app: &mut TurboVisionApplication) {
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_rebuild_desktop(
+        &self,
+        app: &mut TurboVisionApplication,
+    ) {
         self.turbo_vision_sync_chrome_from_fpas(app);
         while app.desktop.child_count() > 0 {
             app.desktop.remove_child(0);

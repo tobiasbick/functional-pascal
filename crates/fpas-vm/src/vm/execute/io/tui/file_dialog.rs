@@ -7,7 +7,6 @@ use crate::vm::diagnostics::{VmError, runtime_error};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 use std::path::PathBuf;
-use turbo_vision::app::Application as TurboVisionApplication;
 use turbo_vision::views::file_dialog::FileDialog;
 
 impl Worker {
@@ -36,20 +35,11 @@ impl Worker {
             return self.push_optional_string(result.unwrap_or(None));
         }
 
-        let mut app = TurboVisionApplication::new().map_err(|error| {
-            runtime_error(
-                RUNTIME_CONSOLE_STATE_ERROR,
-                format!("Turbo Vision terminal initialization failed: {error}"),
-                "Run the program from an interactive terminal or use `Application.OpenForTest` with `Application.TestSetFileDialogResult` in automated tests.",
-                line,
-            )
-        })?;
-
         let initial_dir = start_path
             .filter(|path| !path.is_empty())
             .map(PathBuf::from);
         let mut file_dialog = FileDialog::new(bounds, &title, &wildcard, initial_dir).build();
-        let selected = file_dialog.execute(&mut app);
+        let selected = self.turbo_vision_with_live_app(line, |app| Ok(file_dialog.execute(app)))?;
         self.push_optional_string(selected.map(|path| path.to_string_lossy().into_owned()))
     }
 

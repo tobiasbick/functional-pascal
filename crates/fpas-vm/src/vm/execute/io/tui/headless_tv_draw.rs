@@ -288,6 +288,63 @@ mod tests {
         );
     }
 
+    fn find_substring(buffer: &[Vec<Cell>], text: &str) -> Option<(usize, usize)> {
+        for (row, line) in buffer.iter().enumerate() {
+            let row_text: String = line.iter().map(|cell| cell.ch).collect();
+            if let Some(col) = row_text.find(text) {
+                return Some((col, row));
+            }
+        }
+        None
+    }
+
+    #[test]
+    fn headless_tv_app_draws_static_text_in_window() {
+        use super::super::bridged_static_text::BridgedStaticText;
+        use turbo_vision::views::window::Window;
+
+        let mut app = HeadlessTvApp::new(60, 20).expect("headless app");
+        app.update_desktop_bounds();
+        let mut window = Window::new(Rect::from_coords(8, 4, 30, 10), "Live");
+        window.add(Box::new(BridgedStaticText::new(
+            Rect::from_coords(4, 3, 10, 1),
+            "LIVE",
+        )));
+        app.desktop.add(Box::new(window));
+        app.draw();
+
+        let buffer = app.terminal.buffer();
+        assert_eq!(
+            find_substring(buffer, "LIVE"),
+            Some((31, 9)),
+            "static text LIVE in desktop window (TV buffer coords)"
+        );
+    }
+
+    #[test]
+    fn headless_tv_app_draws_window_above_older_dialog() {
+        use super::super::bridged_static_text::BridgedStaticText;
+        use turbo_vision::views::window::Window;
+
+        let mut app = HeadlessTvApp::new(60, 20).expect("headless app");
+        app.update_desktop_bounds();
+        let host_dialog = Dialog::new_modal(Rect::from_coords(2, 1, 24, 8), "Host");
+        app.desktop.add(host_dialog);
+        let mut window = Window::new(Rect::from_coords(8, 4, 30, 10), "Live");
+        window.add(Box::new(BridgedStaticText::new(
+            Rect::from_coords(4, 3, 10, 1),
+            "LIVE",
+        )));
+        app.desktop.add(Box::new(window));
+        app.draw();
+
+        assert_eq!(
+            find_substring(app.terminal.buffer(), "LIVE"),
+            Some((31, 9)),
+            "window static text paints above an older desktop dialog"
+        );
+    }
+
     #[test]
     fn headless_tv_app_draws_dialog_title_and_checkbox_marker() {
         let mut app = HeadlessTvApp::new(60, 20).expect("headless app");

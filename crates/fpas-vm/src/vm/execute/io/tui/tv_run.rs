@@ -108,93 +108,152 @@ impl Worker {
         self.turbo_vision_clear_live_view_ids();
         let tree_dirty = self.with_tui(|tui| tui.turbo_vision.pending_reconcile.clone());
 
-        let windows = self.with_tui(|tui| {
-            let mut windows = Vec::new();
+        let mut roots = self.with_tui(|tui| {
+            let mut roots = Vec::new();
             for (handle, object) in &tui.turbo_vision.objects {
-                let TurboVisionObject::Window(window) = object else {
-                    continue;
-                };
-                if !window.on_desktop {
-                    continue;
+                match object {
+                    TurboVisionObject::Window(window) if window.on_desktop => {
+                        roots.push(DesktopRootSnapshot {
+                            handle: *handle,
+                            kind: DesktopRootKind::Window {
+                                bounds: window.bounds,
+                                title: window.title.clone(),
+                                children: window.children.clone(),
+                            },
+                        });
+                    }
+                    TurboVisionObject::Dialog(dialog) => {
+                        roots.push(DesktopRootSnapshot {
+                            handle: *handle,
+                            kind: DesktopRootKind::Dialog {
+                                bounds: dialog.bounds,
+                                title: dialog.title.clone(),
+                                children: dialog.children.clone(),
+                            },
+                        });
+                    }
+                    _ => {}
                 }
-                windows.push((
-                    *handle,
-                    window.bounds,
-                    window.title.clone(),
-                    window.children.clone(),
-                ));
             }
-            windows.sort_by_key(|(handle, _, _, _)| *handle);
-            windows
+            roots.sort_by_key(|root| root.handle);
+            roots
         });
 
-        for (window_handle, bounds, title, child_handles) in windows {
-            let children =
-                self.with_tui(|tui| child_snapshots(&tui.turbo_vision.objects, &child_handles));
-            let radio_groups = radio_groups_from_snapshots(&children);
-            let mut window_view = Window::new(turbo_rect(bounds), &title);
-            let mut child_registrations = Vec::new();
-            for (child_handle, child) in child_handles.into_iter().zip(children) {
-                let (view_id, input_line_binding) =
-                    add_window_child(&mut window_view, child, &radio_groups, tree_dirty.clone());
-                if let Some(binding) = input_line_binding {
-                    self.turbo_vision_register_input_line_view_binding(child_handle, binding);
-                }
-                child_registrations.push((child_handle, view_id));
-            }
-            let root_id = desktop.add(Box::new(window_view));
-            self.turbo_vision_register_live_view_id(window_handle, root_id);
-            for (child_handle, view_id) in child_registrations {
-                self.turbo_vision_register_live_child_view(child_handle, root_id, view_id);
-            }
-        }
-
-        let dialogs = self.with_tui(|tui| {
-            let mut dialogs = Vec::new();
-            for (handle, object) in &tui.turbo_vision.objects {
-                let TurboVisionObject::Dialog(dialog) = object else {
-                    continue;
-                };
-                dialogs.push((
-                    *handle,
-                    dialog.bounds,
-                    dialog.title.clone(),
-                    dialog.children.clone(),
-                ));
-            }
-            dialogs.sort_by_key(|(handle, _, _, _)| *handle);
-            dialogs
-        });
-
-        for (dialog_handle, bounds, title, child_handles) in dialogs {
-            let children =
-                self.with_tui(|tui| child_snapshots(&tui.turbo_vision.objects, &child_handles));
-            let radio_groups = radio_groups_from_snapshots(&children);
-            let mut dialog_view = Dialog::new_modal(turbo_rect(bounds), &title);
-            let mut input_bindings = Vec::new();
-            let mut child_registrations = Vec::new();
-            for (child_handle, child) in child_handles.into_iter().zip(children) {
-                let (view_id, input_line_binding) = add_dialog_child(
-                    &mut dialog_view,
-                    child,
-                    child_handle,
-                    &mut input_bindings,
-                    &radio_groups,
+        for root in roots {
+            match root.kind {
+                DesktopRootKind::Window {
+                    bounds,
+                    title,
+                    children: child_handles,
+                } => self.turbo_vision_add_window_root_to_desktop(
+                    desktop,
+                    root.handle,
+                    bounds,
+                    title,
+                    child_handles,
                     tree_dirty.clone(),
-                );
-                if let Some(binding) = input_line_binding {
-                    self.turbo_vision_register_input_line_view_binding(child_handle, binding);
-                }
-                child_registrations.push((child_handle, view_id));
-            }
-            let root_id = desktop.add(dialog_view);
-            self.turbo_vision_register_live_view_id(dialog_handle, root_id);
-            for (child_handle, view_id) in child_registrations {
-                self.turbo_vision_register_live_child_view(child_handle, root_id, view_id);
+                ),
+                DesktopRootKind::Dialog {
+                    bounds,
+                    title,
+                    children: child_handles,
+                } => self.turbo_vision_add_dialog_root_to_desktop(
+                    desktop,
+                    root.handle,
+                    bounds,
+                    title,
+                    child_handles,
+                    tree_dirty.clone(),
+                ),
             }
         }
     }
 
+    fn turbo_vision_add_window_root_to_desktop(
+        &self,
+        desktop: &mut turbo_vision::views::desktop::Desktop,
+        window_handle: u32,
+        bounds: crate::vm::shared::TurboVisionRect,
+        title: String,
+        child_handles: Vec<u32>,
+        tree_dirty: crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell,
+    ) {
+        let children =
+            self.with_tui(|tui| child_snapshots(&tui.turbo_vision.objects, &child_handles));
+        let radio_groups = radio_groups_from_snapshots(&children);
+        let mut window_view = Window::new(turbo_rect(bounds), &title);
+        let mut child_registrations = Vec::new();
+        for (child_handle, child) in child_handles.into_iter().zip(children) {
+            let (view_id, input_line_binding) =
+                add_window_child(&mut window_view, child, &radio_groups, tree_dirty.clone());
+            if let Some(binding) = input_line_binding {
+                self.turbo_vision_register_input_line_view_binding(child_handle, binding);
+            }
+            child_registrations.push((child_handle, view_id));
+        }
+        let root_id = desktop.add(Box::new(window_view));
+        self.turbo_vision_register_live_view_id(window_handle, root_id);
+        for (child_handle, view_id) in child_registrations {
+            self.turbo_vision_register_live_child_view(child_handle, root_id, view_id);
+        }
+    }
+
+    fn turbo_vision_add_dialog_root_to_desktop(
+        &self,
+        desktop: &mut turbo_vision::views::desktop::Desktop,
+        dialog_handle: u32,
+        bounds: crate::vm::shared::TurboVisionRect,
+        title: String,
+        child_handles: Vec<u32>,
+        tree_dirty: crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell,
+    ) {
+        let children =
+            self.with_tui(|tui| child_snapshots(&tui.turbo_vision.objects, &child_handles));
+        let radio_groups = radio_groups_from_snapshots(&children);
+        let mut dialog_view = Dialog::new_modal(turbo_rect(bounds), &title);
+        let mut input_bindings = Vec::new();
+        let mut child_registrations = Vec::new();
+        for (child_handle, child) in child_handles.into_iter().zip(children) {
+            let (view_id, input_line_binding) = add_dialog_child(
+                &mut dialog_view,
+                child,
+                child_handle,
+                &mut input_bindings,
+                &radio_groups,
+                tree_dirty.clone(),
+            );
+            if let Some(binding) = input_line_binding {
+                self.turbo_vision_register_input_line_view_binding(child_handle, binding);
+            }
+            child_registrations.push((child_handle, view_id));
+        }
+        let root_id = desktop.add(dialog_view);
+        self.turbo_vision_register_live_view_id(dialog_handle, root_id);
+        for (child_handle, view_id) in child_registrations {
+            self.turbo_vision_register_live_child_view(child_handle, root_id, view_id);
+        }
+    }
+}
+
+enum DesktopRootKind {
+    Window {
+        bounds: crate::vm::shared::TurboVisionRect,
+        title: String,
+        children: Vec<u32>,
+    },
+    Dialog {
+        bounds: crate::vm::shared::TurboVisionRect,
+        title: String,
+        children: Vec<u32>,
+    },
+}
+
+struct DesktopRootSnapshot {
+    handle: u32,
+    kind: DesktopRootKind,
+}
+
+impl Worker {
     pub(in crate::vm::execute::io::tui) fn turbo_vision_window_snapshots(
         &self,
     ) -> Vec<TurboVisionWindowSnapshot> {

@@ -27,9 +27,10 @@ begin
   var OpenButton: Button := Application.CreateButton(App, Bounds(4, 4, 10, 2), 'Open', CmdLive);
   Application.AddChild(App, DialogHandle, OpenButton);
   Application.OnCommand(App, OnCommand);
+  AssertEquals(0, Application.Pump(App));
   Application.TestClickButton(App, OpenButton);
   AssertEquals(16, Application.Pump(App));
-  AssertScreenCell(12, 9, '▄', LightGray, Black);
+  AssertScreenCell(32, 10, 'L', Black, LightGray);
   Application.Quit(App);
   AssertEquals(0, Application.Pump(App))
 end.

@@ -35,7 +35,9 @@ begin
 end.
 ```
 
-Regression tests live under `tests/tui/controls/` (`tui_turbo_vision_*_test.fpas`, `tui_run_path_test.fpas`).
+Regression tests live under `tests/tui/controls/` (`tui_turbo_vision_*_test.fpas`, `tui_run_path_test.fpas`) and `apps/ide/tests/` (menu, About, chrome).
+
+Headless `Application.OpenForTest` sessions do not open a live turbo-vision application. Queue modal results with `Application.TestSetDialogResult` before `Application.ExecDialog`, and file-picker results with `Application.TestSetFileDialogResult` before `Application.RunFileDialog`. Interactive programs use the shared live session described in [Lifecycle](lifecycle.md).
 
 To assert painted terminal output after `Application.Pump`, add `uses Std.Console` and call [`Std.Test`](../../testing/test.md) `AssertScreenLine` or `AssertScreenCell` on the virtual CRT back buffer. Use `Application.TestClickMouse(App, X, Y)` with screen coordinates that match the painted check box or radio button marker cell.
 

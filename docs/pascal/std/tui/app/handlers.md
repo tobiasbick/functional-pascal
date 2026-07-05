@@ -16,6 +16,8 @@ Application.OnCommand(App, OnCommand);
 
 `Application.OnCommand` expects `procedure (Application, integer)`. Use `Command.Accept`, `Command.Cancel`, `Command.Close`, and `Command.Quit` for standard actions, or application-defined positive integers for custom commands.
 
+On an interactive terminal you may call `Application.ExecDialog` or `Application.RunFileDialog` from inside `OnCommand` while `Application.Run` is active. The runtime reuses the same upstream turbo-vision session, so menu bar and status line stay visible (see [Dialogs and windows](modals.md) and [Lifecycle](lifecycle.md)).
+
 ## Optional raw input hooks
 
 When a keyboard or mouse event survives Turbo Vision `handle_event` without being cleared, the interactive run loop can forward it to optional hooks:
@@ -42,5 +44,7 @@ Custom fullscreen terminal programs that paint every cell themselves belong in [
 ## See Also
 
 - [Application](README.md)
+- [Dialogs and windows](modals.md)
 - [Types](types.md) (`Command` constants)
+- [Lifecycle](lifecycle.md)
 - [Session API](../session.md)

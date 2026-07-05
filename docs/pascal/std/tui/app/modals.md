@@ -21,8 +21,18 @@ Turbo Vision dialogs and windows are opaque handles created before `Application.
 
 Use `Application.ExecDialog` for modal dialogs with read-back (`InputText`, `Checked`, `Selected`, `ListSelection`).
 
+## Interactive session
+
+On an interactive terminal, `Application.ExecDialog` runs on the same upstream turbo-vision application instance as `Application.Run`. The menu bar and status line from the running session stay visible while the modal is open.
+
+You may call `Application.ExecDialog` from `OnCommand` while `Run` is active (for example Help → About). The run loop dispatches Pascal handlers without holding the upstream application, so the modal can execute on the shared session.
+
+Headless `Application.OpenForTest` sessions do not open a live turbo-vision application. Queue the closing command with `Application.TestSetDialogResult` before `Application.ExecDialog`.
+
 ## See Also
 
 - [Application](README.md)
+- [Application lifecycle](lifecycle.md)
+- [Handlers](handlers.md) — `ExecDialog` from `OnCommand` during `Run`
 - [Controls](controls.md)
 - [Types](types.md)

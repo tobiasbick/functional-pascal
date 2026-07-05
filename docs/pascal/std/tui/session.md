@@ -14,7 +14,7 @@
 | `Application.Run(App)` | Run the Turbo Vision event loop and close the app on success. |
 | `Application.Quit(App)` | Request that the running backend exits. |
 
-`Application.Open` returns immediately and does not acquire terminal state. Backend-specific terminal ownership starts in `Application.Run`.
+`Application.Open` returns immediately and does not acquire terminal state. Backend-specific terminal ownership starts in `Application.Run`, `Application.ExecDialog`, or `Application.RunFileDialog` — whichever needs the terminal first. Those calls reuse one upstream turbo-vision application until `Application.Close`. See [Application lifecycle](app/lifecycle.md).
 
 After a successful `Application.Run(App)`, the runtime has already closed `App`; calling `Application.Close(App)` again is a runtime error.
 

@@ -10,6 +10,8 @@
 4. `Application.OnCommand` (and optional `OnKey` / `OnMouse`)
 5. `Application.Run` — requires at least one Turbo Vision widget handle
 
+On an interactive terminal, `Run`, `ExecDialog`, and `RunFileDialog` share one upstream turbo-vision application for the `Open` … `Close` lifetime. See [Lifecycle](lifecycle.md).
+
 ## Current API
 
 | Symbol | Description |

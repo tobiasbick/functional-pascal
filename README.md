@@ -245,7 +245,7 @@ Planned work (not current behavior): [`docs/future/`](docs/future/).
 |-----------|------|----------|
 | [`turbo-vision`](https://crates.io/crates/turbo-vision) | Terminal UI backend for `Std.Tui` (dialogs, menus, widgets, event loop) | [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust) |
 
-The workspace pins `turbo-vision` 2.0 (git tag `v2.0.0`) in the root [`Cargo.toml`](Cargo.toml). `Std.Tui` exposes an FPAS-native facade over that crate; see [`docs/pascal/std/tui/`](docs/pascal/std/tui/README.md).
+The workspace pins `turbo-vision` 2.0 (git tag `v2.0.0`) in the root [`Cargo.toml`](Cargo.toml). `Std.Tui` exposes an FPAS-native facade over that crate; see [`docs/pascal/std/tui/`](docs/pascal/std/tui/README.md). Bridge refactor backlog: [`docs/refactor/tui-bridge/`](docs/refactor/tui-bridge/00-context.md).
 
 ## Status
 

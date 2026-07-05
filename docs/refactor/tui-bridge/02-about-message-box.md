@@ -2,9 +2,9 @@
 
 **Status:** [ ] Not started · [ ] In progress · [ ] Done
 
-**Priority:** Medium (quick win once session model is clear)
+**Priority:** Medium (quick win; session model is in place)
 
-**Depends on:** Ideally [01-single-tv-session.md](01-single-tv-session.md) for live About during `Run`; can prototype headless/IDE-only first.
+**Depends on:** [done/02-single-tv-session.md](done/02-single-tv-session.md) — completed. Live About during `Run` uses `Worker.live_turbo_vision_app` via `turbo_vision_with_live_app`.
 
 **Blocks:** [07-pascal-message-box-api.md](07-pascal-message-box-api.md) (optional public API)
 
@@ -25,12 +25,12 @@ We duplicate layout, sizing, and Borland conventions in FPAS.
 
 ## Tasks
 
-- [ ] **Spike** — From bridge code, call `message_box(app, text, MF_ABOUT | MF_OK_BUTTON)` on the session `Application` (after 01) or ephemeral app for isolated test.
+- [ ] **Spike** — From bridge code, call `message_box(app, text, MF_ABOUT | MF_OK_BUTTON)` on the live session via `turbo_vision_with_live_app` in `session_app.rs`.
 - [ ] **Bridge helper** — Add private Rust helper (e.g. in new `msgbox.rs` under `tui/`) that takes message + flags, runs modal, returns closing `CommandId` mapped through `command_map.rs`.
 - [ ] **IDE** — Replace `Ide.Dialog.About.ShowAbout` body with call to bridge helper (keep `CmdHelpAbout` menu wiring in FPAS).
 - [ ] **Remove dead FPAS layout** — Delete manual dialog construction in `about.fpas` once helper works; keep `AboutMessage()` / title strings in FPAS or move to Rust constants (team choice).
-- [ ] **Tests** — Update `apps/ide/tests/dialog/dialog_test.fpas` and `about_menu_test.fpas`; no regression in headless (`TestSetDialogResult` path may still apply until 01/03 unify).
-- [ ] **Docs** — If user-visible: note in IDE/examples only; public API wait for [07](07-pascal-message-box-api.md).
+- [ ] **Tests** — Update `apps/ide/tests/dialog/dialog_test.fpas` and `about_menu_test.fpas`; headless path may still use `TestSetDialogResult` until [03-headless-test-util.md](03-headless-test-util.md).
+- [ ] **Docs** — Contributor note in `vm-bridge.md` when `msgbox.rs` exists; public Pascal API waits for [07](07-pascal-message-box-api.md). No change to [modals.md](../../pascal/std/tui/app/modals.md) until a public symbol is added.
 
 ## Files (expected touch)
 
@@ -39,6 +39,7 @@ crates/fpas-vm/src/vm/execute/io/tui/msgbox.rs   (new, ~80–120 LOC)
 apps/ide/src/dialog/about.fpas                   (shrink)
 apps/ide/src/dialog.fpas
 apps/ide/tests/…
+docs/pascal/std/tui/app/vm-bridge.md             (module row when added)
 ```
 
 ## Verification
@@ -52,3 +53,4 @@ cargo run -q -p fpas-cli -- apps/ide/ide.fpasprj   # manual: Help → About
 
 - Do not reimplement `message_box` sizing logic in FPAS.
 - `input_box` is a separate follow-up if needed (upstream `helpers::msgbox::input_box`).
+- Standard About boxes are not built with `CreateDialog` + `ExecDialog`; custom dialogs still use the handle graph in [modals.md](../../pascal/std/tui/app/modals.md).

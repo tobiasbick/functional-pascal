@@ -13,7 +13,8 @@ Before edits, read these files in order:
 
 1. `docs/pascal/std/tui/README.md`
 2. `docs/pascal/std/tui/app/vm-bridge.md`
-3. `.agents/skills/fpas-change-checklist/SKILL.md` when implementing or modifying behavior, public API, docs under `docs/pascal/`, tests, compiler, VM, runtime, or stdlib code.
+3. `docs/refactor/tui-bridge/00-context.md` when changing bridge architecture or modal/session behavior
+4. `.agents/skills/fpas-change-checklist/SKILL.md` when implementing or modifying behavior, public API, docs under `docs/pascal/`, tests, compiler, VM, runtime, or stdlib code.
 
 If the task is about examples of how to apply the skill, read `references/api_reference.md`.
 
@@ -77,15 +78,17 @@ Expected VM bridge shape may change, but keep concerns separated:
 
 ```text
 crates/fpas-vm/src/vm/execute/io/tui/
-  application.rs
-  callbacks.rs
-  commands.rs
-  controls.rs
-  dialogs.rs
-  events.rs
-  handles.rs
-  testing.rs
+  session_app.rs    — live turbo-vision Application (main worker only)
+  tv_run.rs         — Run entry, desktop projection
+  exec_dialog.rs    — ExecDialog on live session
+  file_dialog.rs    — RunFileDialog on live session
+  reconcile.rs      — desktop rebuild after FPAS mutations
+  interactive_loop.rs — scripted test loop only
+  controls.rs, dialogs.rs, navigation.rs, …
+crates/fpas-vm/src/vm/worker.rs — live_turbo_vision_app field
 ```
+
+Open bridge refactors: `docs/refactor/tui-bridge/` (see `done/` for completed items).
 
 ## Documentation Rules
 

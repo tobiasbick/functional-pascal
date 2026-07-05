@@ -4,7 +4,7 @@
 
 **Priority:** Medium–high (large refactor, high long-term payoff)
 
-**Depends on:** [01-single-tv-session.md](01-single-tv-session.md) recommended so headless and live share one draw/event path.
+**Depends on:** [done/02-single-tv-session.md](done/02-single-tv-session.md) recommended so headless and live share one draw/event path.
 
 **Blocks:** Retiring most of `headless_paint.rs`; simpler `AssertScreenCell` semantics aligned with TV.
 

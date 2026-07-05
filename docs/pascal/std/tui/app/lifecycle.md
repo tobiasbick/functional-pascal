@@ -8,8 +8,18 @@ Use `Application.Quit(App)` from callbacks to request loop exit.
 
 Headless tests use `Application.OpenForTest`, test event helpers, and `Application.CloseForTest`.
 
+## Interactive terminal session
+
+On an interactive terminal, the VM keeps one upstream turbo-vision application for the lifetime of a Pascal `Application.Open` … `Application.Close` pair (or until the next `Application.Open` resets state). The first call among `Application.Run`, `Application.ExecDialog`, or `Application.RunFileDialog` that needs the terminal creates that instance; later calls reuse it. Terminal shutdown runs once on `Application.Close`.
+
+`Application.Run` drives the event loop on that instance. `Application.ExecDialog` and `Application.RunFileDialog` may run while `Run` is active (nested modals).
+
+Headless tests (`Application.OpenForTest`) do not use the live session; modal and file-dialog results come from test stubs (`Application.TestSetDialogResult`, `Application.TestSetFileDialogResult`).
+
 ## See Also
 
 - [Application](README.md)
 - [Session API](../session.md)
+- [Dialogs and windows](modals.md) — nested modals during `Run`
+- [Handlers](handlers.md)
 - [Native testing](testing.md)

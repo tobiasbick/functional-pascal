@@ -26,7 +26,7 @@
 
 ## Headless tests
 
-Interactive terminal code calls upstream `FileDialog::execute`. Headless `Application.OpenForTest` sessions do not open a real modal loop; call `Application.TestSetFileDialogResult` before `Application.RunFileDialog` to assert accept or cancel behavior.
+Interactive terminal code calls upstream `FileDialog::execute` on the shared live turbo-vision session (the same instance as `Application.Run` when both are used in one program). Headless `Application.OpenForTest` sessions do not open a real modal loop; call `Application.TestSetFileDialogResult` before `Application.RunFileDialog` to assert accept or cancel behavior.
 
 ## See Also
 

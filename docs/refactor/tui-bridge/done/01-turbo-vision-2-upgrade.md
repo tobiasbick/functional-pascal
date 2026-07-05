@@ -28,7 +28,7 @@ Code using symbolic `Command.*` needs no change. Numeric literals must be update
 
 ## Follow-ups (not part of this item)
 
-See open items in [../README.md](../README.md): single session, message_box, headless test-util, etc.
+See open items in [../README.md](../README.md): message_box, headless test-util, etc. Single live session per FPAS app: [02-single-tv-session.md](02-single-tv-session.md) (done).
 
 ## Commit reference
 

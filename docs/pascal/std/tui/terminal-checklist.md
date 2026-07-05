@@ -8,6 +8,7 @@ Use this checklist after changes to `Std.Tui` session, Turbo Vision bridge, or t
 | Rust compiler TUI tests | `cargo test -p fpas-compiler std_library::tui` | Current TUI lowering and runtime tests pass. |
 | Rust VM TUI doc links | `cargo test -p fpas-vm tui_spec_links` | TUI Rust sources link to existing `docs/pascal/std/tui/` files. |
 | FPAS Turbo Vision controls | `cargo run -q -p fpas-cli -- test tests/tui/controls/` | Headless Turbo Vision widget tests pass. |
+| IDE shell | `cargo run -q -p fpas-cli -- test apps/ide/tests/` | IDE menu, About, chrome tests pass. |
 | Full FPAS suite | `cargo run -q -p fpas-cli -- test tests/` | Full regression suite passes. |
 | Full Rust suite | `cargo test --workspace` | Workspace tests pass. |
 | FPAS formatting | `cargo run -q -p fpas-cli -- fmt --check tests/ examples/ apps/` | No formatting drift. |
@@ -22,7 +23,7 @@ Turbo Vision regression tests under `tests/tui/controls/` (30 files). Core cover
 - **Runtime setters** — `set_text`, `set_checked`, `set_items`, `set_title`, `set_menus`, `set_status_items`
 - **Command map** — `reserved_command_test`
 
-Interactive examples (manual terminal): `examples/pascal/tui/exec_dialog.fpas`, `runtime_setters.fpas`.
+Interactive examples (manual terminal): `examples/pascal/tui/exec_dialog.fpas`, `runtime_setters.fpas`, `apps/ide` (Help → About during `Run` — menu/status stay visible on shared live session).
 
 ## See Also
 

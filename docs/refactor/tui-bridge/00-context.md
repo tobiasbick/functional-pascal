@@ -1,6 +1,6 @@
 # TUI bridge — current architecture (reference)
 
-- [ ] Update this page when a refactor item materially changes the bridge (keep in sync)
+- [x] Update this page when a refactor item materially changes the bridge (keep in sync)
 
 Living summary of how FPAS integrates [turbo-vision 2.0](https://github.com/aovestdipaperino/turbo-vision-4-rust). Read this before starting any item in this folder.
 
@@ -16,7 +16,8 @@ Pascal Application.*
     → TurboVisionState (crates/fpas-vm/src/vm/shared/tui.rs)
          HashMap<u32, TurboVisionObject>  — authoritative handle graph
     → projection at Run / reconcile
-    → turbo_vision::app::Application  — ephemeral or per-Run instance today
+    → turbo_vision::app::Application  — one live instance per Open…Close on main worker
+         (Worker.live_turbo_vision_app in session_app.rs)
 ```
 
 ## What delegates to turbo-vision (interactive)
@@ -24,10 +25,10 @@ Pascal Application.*
 | Concern | Upstream | FPAS bridge entry |
 | --- | --- | --- |
 | Widget types | `views::*` | Built in `tv_views.rs`, `menu_build.rs` from FPAS snapshots |
-| Event loop | `get_event`, `handle_event`, desktop cleanup | `interactive_loop.rs` |
+| Event loop | `get_event`, `handle_event`, desktop cleanup | `session_app.rs` (`turbo_vision_drive_live_interactive_loop`) |
 | Menu / status | `MenuBar`, `StatusLine` | `navigation.rs`, `chrome_layout.rs` |
-| Modal execute | `Dialog::execute` | `exec_dialog.rs` |
-| File picker | `FileDialog` | `file_dialog.rs` |
+| Modal execute | `Dialog::execute` | `exec_dialog.rs` (on live session) |
+| File picker | `FileDialog` | `file_dialog.rs` (on live session) |
 | Command ids | Borland `CM_*` in `core/command.rs` | `command_map.rs` + `fpas-std` `command_ids.rs` |
 
 ## What FPAS reimplements today
@@ -43,17 +44,18 @@ Pascal Application.*
 
 ## Known duplication (refactor targets)
 
-1. **Second `Application`** — `exec_dialog.rs` and `file_dialog.rs` call `TurboVisionApplication::new()` instead of using the Run session → [01-single-tv-session.md](01-single-tv-session.md)
-2. **Dual run paths** — interactive TV loop vs headless queue + custom painter → [03-headless-test-util.md](03-headless-test-util.md)
-3. **Manual About layout** — IDE builds dialog in FPAS; upstream has `helpers::msgbox` → [02-about-message-box.md](02-about-message-box.md)
+1. **Dual run paths** — interactive TV loop vs headless queue + custom painter → [03-headless-test-util.md](03-headless-test-util.md)
+2. **Manual About layout** — IDE builds dialog in FPAS; upstream has `helpers::msgbox` → [02-about-message-box.md](02-about-message-box.md)
+
+**Done:** single live `Application` per FPAS session — [done/02-single-tv-session.md](done/02-single-tv-session.md)
 
 ## Bridge size (approximate)
 
 | Area | Files | LOC |
 | --- | --- | --- |
-| `crates/fpas-vm/src/vm/execute/io/tui/` | 32 | ~4 760 |
-| Related cells + `shared/tui.rs` + `tui_run.rs` | ~4 | ~130 |
-| **Total** | ~36 | ~4 900 |
+| `crates/fpas-vm/src/vm/execute/io/tui/` | 33 | ~4 900 |
+| Related cells + `shared/tui.rs` + `tui_run.rs` + `worker.rs` | ~5 | ~200 |
+| **Total** | ~38 | ~5 100 |
 
 ## Public Pascal surface
 
@@ -76,5 +78,6 @@ cargo fmt
 cargo build
 cargo test --workspace
 cargo run -q -p fpas-cli -- test tests/tui/controls/
+cargo run -q -p fpas-cli -- test apps/ide/tests/
 cargo run -q -p fpas-cli -- test apps/ide/tests/
 ```

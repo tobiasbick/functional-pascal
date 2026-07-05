@@ -4,7 +4,7 @@ Terminal UI APIs for Functional Pascal.
 
 ## Turbo Vision facade
 
-`Std.Tui` is the Turbo Vision application facade: dialogs, windows, menus, buttons, file pickers, and IDE-style chrome. Widgets are retained handles (`Application.CreateDialog`, `CreateButton`, `AddChild`, …). User actions arrive as integer commands through `Application.OnCommand`, and the runtime drives the Turbo Vision event pump via `Application.Run`.
+`Std.Tui` is the Turbo Vision application facade: dialogs, windows, menus, buttons, file pickers, and IDE-style chrome. Widgets are retained handles (`Application.CreateDialog`, `CreateButton`, `AddChild`, …). User actions arrive as integer commands through `Application.OnCommand`, and the runtime drives the Turbo Vision event pump via `Application.Run`. Interactive modals (`ExecDialog`, `RunFileDialog`) run on the same upstream session as `Run`.
 
 **Upstream:** [`Std.Tui`](app/README.md) is implemented over [`turbo-vision`](https://crates.io/crates/turbo-vision) 2.0 from [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust) (workspace git dependency on tag `v2.0.0`).
 
@@ -25,8 +25,8 @@ Simple terminal programs that draw every cell themselves (fullscreen explorers, 
 | [Controls](app/controls.md) | Buttons, text fields, lists, check boxes, radio buttons, menu bar, status line |
 | [Dialogs and windows](app/modals.md) | `Dialog`, `Window`, and child attachment |
 | [File dialog](app/file-dialog.md) | Modal `Application.RunFileDialog` |
-| [Handlers](handlers.md) | `Application.OnCommand`, `OnKey`, `OnMouse` |
-| [Lifecycle](app/lifecycle.md) | Open, run, quit, and close rules |
+| [Handlers](app/handlers.md) | `Application.OnCommand`, `OnKey`, `OnMouse` |
+| [Lifecycle](app/lifecycle.md) | Open, run, quit, close, shared live session |
 | [Native testing](app/testing.md) | Headless tests with `OpenForTest` and Turbo Vision `Test*` helpers |
 | [VM bridge](app/vm-bridge.md) | Pascal-to-intrinsic map for contributors |
 | [Terminal checklist](terminal-checklist.md) | Local verification commands |

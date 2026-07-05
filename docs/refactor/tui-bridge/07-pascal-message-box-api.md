@@ -4,7 +4,7 @@
 
 **Priority:** Low — only when FPAS programs need standard dialogs beyond IDE internals
 
-**Depends on:** [02-about-message-box.md](02-about-message-box.md) (Rust helper proven), [01-single-tv-session.md](01-single-tv-session.md)
+**Depends on:** [02-about-message-box.md](02-about-message-box.md) (Rust helper proven), [done/02-single-tv-session.md](done/02-single-tv-session.md)
 
 ## Problem
 

@@ -4,7 +4,7 @@
 //! modals and `Application.Run` share one upstream app instead of calling
 //! `Application::new()` per `ExecDialog` / `RunFileDialog`.
 //!
-//! **Documentation:** `docs/refactor/tui-bridge/done/02-single-tv-session.md`
+//! **Documentation:** `docs/pascal/std/tui/session.md`
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};

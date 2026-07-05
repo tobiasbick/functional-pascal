@@ -2,7 +2,7 @@
 //!
 //! Upstream `Button` has no runtime title setter; the bridge rebuilds the inner view in place.
 //!
-//! **Documentation:** `docs/refactor/tui-bridge/done/05-reduce-reconcile-rebuild.md`
+//! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
 use turbo_vision::core::command::CommandId;
 use turbo_vision::core::event::Event;

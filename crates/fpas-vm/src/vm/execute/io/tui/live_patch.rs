@@ -2,7 +2,7 @@
 //!
 //! Avoids a full desktop rebuild when upstream setters can mirror FPAS handle state.
 //!
-//! **Documentation:** `docs/refactor/tui-bridge/done/05-reduce-reconcile-rebuild.md`
+//! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
 use super::bridged_button::BridgedButton;
 use super::bridged_check_box::BridgedCheckBox;

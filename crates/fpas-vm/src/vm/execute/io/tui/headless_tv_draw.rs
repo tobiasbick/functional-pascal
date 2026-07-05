@@ -1,6 +1,6 @@
 //! Headless turbo-vision draw path: upstream `draw` into a memory backend, then CRT export.
 //!
-//! **Documentation:** `docs/refactor/tui-bridge/done/04-headless-test-util.md`
+//! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
 use super::chrome_layout::{layout_menu_bar_for_terminal, layout_status_line_for_terminal};
 use super::menu_build::build_menu_bar_from_snapshot;

@@ -57,7 +57,7 @@ end.
 | --- | --- |
 | Sema registry | [`loaded/tui/mod.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/tui/mod.rs) |
 | Compiler lowering | [`std_calls/tui/`](../../../../crates/fpas-compiler/src/compiler/std_calls/tui/) |
-| VM execution | [`execute/io/tui/`](../../../../crates/fpas-vm/src/vm/execute/io/tui/) (`msgbox.rs`: [done/03-about-message-box](../../../../docs/refactor/tui-bridge/done/03-about-message-box.md)) |
+| VM execution | [`execute/io/tui/`](../../../../crates/fpas-vm/src/vm/execute/io/tui/) (`msgbox.rs`: [message-box.md](app/message-box.md)) |
 | Runtime session | [`tui/session/`](../../../../crates/fpas-std/src/tui/session/) |
 
 ## See Also

@@ -37,7 +37,7 @@ Headless `Application.OpenForTest` sessions do not open a live turbo-vision appl
 
 ### IDE About tests
 
-Headless `MessageBox` reuses the `TestSetDialogResult` queue (same as `ExecDialog`); screen paint uses upstream TV `draw` ([04](../../../refactor/tui-bridge/done/04-headless-test-util.md)).
+Headless `MessageBox` reuses the `TestSetDialogResult` queue (same as `ExecDialog`); screen paint uses upstream TV `draw` (see [vm-bridge.md](vm-bridge.md)).
 
 ## See Also
 

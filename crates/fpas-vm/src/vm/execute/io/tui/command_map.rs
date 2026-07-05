@@ -196,7 +196,7 @@ mod tests {
         fpas.sort_unstable();
         assert_eq!(
             fpas, upstream,
-            "update TURBO_VISION_RESERVED_COMMANDS after turbo-vision bump (see docs/refactor/tui-bridge/done/04-command-map-sync.md)"
+            "update TURBO_VISION_RESERVED_COMMANDS after turbo-vision bump (see docs/pascal/std/tui/app/vm-bridge.md)"
         );
     }
 }

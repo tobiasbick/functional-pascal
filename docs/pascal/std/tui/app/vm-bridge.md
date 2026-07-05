@@ -2,7 +2,53 @@
 
 This page tracks the public Pascal-to-VM bridge for contributors. Turbo Vision widget construction and the interactive run loop use the `Create*` facade, `session_app.rs`, and `tv_run.rs`.
 
-**Upstream:** the VM bridge calls into [`turbo-vision`](https://crates.io/crates/turbo-vision) 2.0 from [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust) (git tag `v2.0.0` until crates.io publishes 2.x). Keep reserved `CM_*` command ids aligned with the pinned upstream version in `Cargo.lock`. Planned bridge work: [docs/refactor/tui-bridge/](../../../refactor/tui-bridge/00-context.md).
+**Upstream:** the VM bridge calls into [`turbo-vision`](https://crates.io/crates/turbo-vision) 2.0 from [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust) (git tag `v2.0.0` until crates.io publishes 2.x). Keep reserved `CM_*` command ids aligned with the pinned upstream version in `Cargo.lock` (see [Turbo Vision bump checklist](#turbo-vision-bump-checklist) below).
+
+## Architecture
+
+Expose a **Pascal-native** `Std.Tui` API (`Application.Create*`, `OnCommand`, `Run`) over upstream Turbo Vision. FPAS programs do not see Rust `View` traits, builders, or ownership.
+
+```text
+Pascal Application.*
+    → VM intrinsics (crates/fpas-vm/src/vm/execute/io/tui/mod.rs)
+    → TurboVisionState (crates/fpas-vm/src/vm/shared/tui.rs)
+         HashMap<u32, TurboVisionObject>  — authoritative handle graph
+    → projection at Run / reconcile
+    → turbo_vision::app::Application  — one live instance per Open…Close on main worker
+         (Worker.live_turbo_vision_app in session_app.rs)
+```
+
+| Concern | Upstream | FPAS bridge entry |
+| --- | --- | --- |
+| Widget types | `views::*` | `tv_views.rs`, `menu_build.rs` from FPAS snapshots |
+| Event loop | `get_event`, `handle_event` | `session_app.rs` |
+| Menu / status | `MenuBar`, `StatusLine` | `navigation.rs`, `chrome_layout.rs` |
+| Modal execute | `Dialog::execute` | `exec_dialog.rs` (live session) |
+| Message box | `helpers::msgbox::message_box` | `msgbox.rs` — [message-box.md](message-box.md) |
+| File picker | `FileDialog` | `file_dialog.rs` (live session) |
+| Command ids | Borland `CM_*` | `command_map.rs` + `fpas-std` `command_ids.rs` |
+
+| Concern | Location | Notes |
+| --- | --- | --- |
+| Retained handles | `shared/tui.rs`, `control_create.rs` | `Create*` writes FPAS records; upstream widgets rebuilt at reconcile |
+| Headless paint | `headless_tv_draw.rs` | Upstream TV `draw` → CRT export |
+| Headless input | `HeadlessTvEventInbox`, `test_mouse.rs` | `TestClickMouse` via TV `handle_event` |
+| Headless commands | `commands.rs`, `tv_run.rs` | Queue + `Pump` instead of TV event loop |
+| Full desktop rebuild | `reconcile.rs`, `tv_run.rs` | `pending_reconcile` → wipe → repopulate; data mutations use `live_patch.rs` when possible |
+| Desktop z-order | `tv_run.rs` | Windows and dialogs merged, sorted by handle, so newer windows stack above older dialogs |
+| Live view maps | `live_patch.rs`, `tv_run.rs` | `live_view_ids` + `live_child_root_view_ids` (parent root `ViewId`) |
+| State cells | `turbo_vision_*_cell.rs`, `bridged_*.rs` | Checkbox/radio/list/input sync; `Bridged*` for live `SetText` |
+| Command offset band | `command_map.rs` | Colliding app ids use `0x8000` band; `Command.*` pass through |
+
+## Turbo Vision bump checklist
+
+On every `turbo-vision` tag or revision bump in `Cargo.lock`:
+
+1. Run `cargo test -p fpas-vm reserved_list_matches_upstream` — update `TURBO_VISION_RESERVED_COMMANDS` in `command_map.rs` if it fails.
+2. Confirm `fpas-std` `COMMAND_*` constants still match Borland `CM_*` for `Command.Quit`, `Close`, `Accept`, `Cancel`.
+3. Run `fpas test tests/tui/controls/tui_turbo_vision_reserved_command_test.fpas` and `fpas test apps/ide/tests/`.
+
+After any bridge change, also run [terminal checklist](../terminal-checklist.md) (`cargo test --workspace`, `tests/tui/controls/`, `apps/ide/tests/`).
 
 Current public lowering includes:
 
@@ -88,16 +134,15 @@ Turbo Vision bridge code lives under `crates/fpas-vm/src/vm/execute/io/tui/`:
 | `bridged_text_viewer.rs` | `TextViewer` view with live `SetText` patching |
 | `tv_run.rs` | Terminal and headless `Application.Run` for Turbo Vision |
 | `reconcile.rs` | Live widget-tree reconcile and headless CRT repaint |
-| `live_patch.rs` | Incremental live updates for data mutations ([refactor 05](../../../refactor/tui-bridge/done/05-reduce-reconcile-rebuild.md)) |
-| `headless_tv_draw.rs` | Headless upstream TV `draw` → CRT export ([refactor 04](../../../refactor/tui-bridge/done/04-headless-test-util.md)) |
+| `live_patch.rs` | Incremental live updates for data mutations |
+| `headless_tv_draw.rs` | Headless upstream TV `draw` → CRT export |
 | `tv_headless_backend.rs` | In-memory `Backend` for headless TV `Terminal` |
 | `testing.rs` | `OpenForTest`, `CloseForTest`, dialog test result seeding |
 | `tui_run.rs` | `Application.Run` entry (Turbo Vision only) |
 
-Contributor refactor backlog (bridge internals, not user spec): [docs/refactor/tui-bridge/](../../../refactor/tui-bridge/00-context.md).
-
 ## See Also
 
 - [Application](README.md)
+- [Session](../session.md)
 - [Terminal checklist](../terminal-checklist.md)
-- [Refactor 03 — message_box (done)](../../../refactor/tui-bridge/done/03-about-message-box.md)
+- [Message box](message-box.md)

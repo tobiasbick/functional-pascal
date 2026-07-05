@@ -17,18 +17,6 @@ use turbo_vision::views::{
     status_line::StatusLine, window::Window,
 };
 
-pub(in crate::vm::execute::io::tui) struct TurboVisionWindowSnapshot {
-    pub bounds: TurboVisionRect,
-    pub title: String,
-    pub children: Vec<TurboVisionChildSnapshot>,
-}
-
-pub(in crate::vm::execute::io::tui) struct TurboVisionDialogSnapshot {
-    pub bounds: TurboVisionRect,
-    pub title: String,
-    pub children: Vec<TurboVisionChildSnapshot>,
-}
-
 pub(in crate::vm::execute::io::tui) struct TurboVisionMenuBarSnapshot {
     pub bounds: TurboVisionRect,
     pub menus: Vec<crate::vm::shared::TurboVisionMenu>,

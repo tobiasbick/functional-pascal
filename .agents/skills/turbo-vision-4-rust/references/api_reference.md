@@ -56,7 +56,7 @@ use turbo-vision message_box for IDE About instead of CreateDialog in about.fpas
 
 Expected agent behavior:
 
-- Read [docs/refactor/tui-bridge/done/03-about-message-box.md](../../../../docs/refactor/tui-bridge/done/03-about-message-box.md) and `docs/pascal/std/tui/app/modals.md`.
+- Read [message-box.md](../../../../docs/pascal/std/tui/app/message-box.md) and `docs/pascal/std/tui/app/modals.md`.
 - Verify `turbo_vision::helpers::msgbox` at the pinned tag in `Cargo.lock`.
 - Add `TuiIntrinsic::MessageBox` (sema → compiler → VM) or reuse plan in refactor doc; call `message_box` inside `turbo_vision_with_live_app`; headless returns `test_dialog_result`.
 - Shrink `apps/ide/src/dialog/about.fpas` to `Application.MessageBox(...)`; keep headless IDE tests passing with `TestSetDialogResult`.

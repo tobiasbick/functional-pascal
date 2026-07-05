@@ -128,4 +128,4 @@ crates/fpas-compiler/src/
 
 Then proceed with the implementation.
 
-TUI VM bridge refactors (single session, `message_box`, headless test-util): plan and status live under [`docs/refactor/tui-bridge/`](docs/refactor/tui-bridge/00-context.md). Read the matching item before changing `crates/fpas-vm/src/vm/execute/io/tui/` or `apps/ide` dialog code.
+TUI VM bridge (`crates/fpas-vm/src/vm/execute/io/tui/`, `apps/ide` dialog code): read [docs/pascal/std/tui/app/vm-bridge.md](docs/pascal/std/tui/app/vm-bridge.md) and [terminal-checklist.md](docs/pascal/std/tui/terminal-checklist.md) before changing bridge behavior.

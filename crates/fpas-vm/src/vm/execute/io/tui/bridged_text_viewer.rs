@@ -1,6 +1,6 @@
 //! `TextViewer` view wrapper with `as_any_mut` for live `SetText` patching.
 //!
-//! **Documentation:** `docs/refactor/tui-bridge/done/05-reduce-reconcile-rebuild.md`
+//! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
 use turbo_vision::core::event::Event;
 use turbo_vision::core::geometry::Rect;

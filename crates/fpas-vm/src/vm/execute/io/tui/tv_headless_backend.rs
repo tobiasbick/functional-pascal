@@ -1,6 +1,6 @@
 //! In-memory turbo-vision [`Backend`] for headless FPAS tests.
 //!
-//! **Documentation:** `docs/refactor/tui-bridge/done/04-headless-test-util.md`
+//! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
 use std::io;
 use std::sync::{Arc, Mutex};

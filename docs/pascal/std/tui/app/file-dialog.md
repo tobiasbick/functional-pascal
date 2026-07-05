@@ -28,7 +28,7 @@
 
 Interactive terminal code calls upstream `FileDialog::execute` on the shared live turbo-vision session (the same instance as `Application.Run` when both are used in one program). Headless `Application.OpenForTest` sessions do not open a real modal loop; call `Application.TestSetFileDialogResult` before `Application.RunFileDialog` to assert accept or cancel behavior.
 
-Like `RunFileDialog`, `Application.MessageBox` calls an upstream helper on the live session instead of building FPAS widget handles. See [vm-bridge.md](vm-bridge.md) and [done/03-about-message-box](../../../refactor/tui-bridge/done/03-about-message-box.md).
+Like `RunFileDialog`, `Application.MessageBox` calls an upstream helper on the live session instead of building FPAS widget handles. See [vm-bridge.md](vm-bridge.md) and [message-box.md](message-box.md).
 
 ## See Also
 

@@ -6,9 +6,8 @@ use super::chrome_layout::{layout_menu_bar_for_terminal, layout_status_line_for_
 use super::menu_build::build_menu_bar_from_snapshot;
 use super::tv_geometry::turbo_rect;
 use super::tv_views::{
-    TurboVisionDialogSnapshot, TurboVisionMenuBarSnapshot, TurboVisionStatusLineSnapshot,
-    TurboVisionWindowSnapshot, add_dialog_child, add_window_child, build_status_line,
-    child_snapshots, radio_groups_from_snapshots,
+    TurboVisionMenuBarSnapshot, TurboVisionStatusLineSnapshot, add_dialog_child, add_window_child,
+    build_status_line, child_snapshots, radio_groups_from_snapshots,
 };
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
@@ -254,69 +253,6 @@ struct DesktopRootSnapshot {
 }
 
 impl Worker {
-    pub(in crate::vm::execute::io::tui) fn turbo_vision_window_snapshots(
-        &self,
-    ) -> Vec<TurboVisionWindowSnapshot> {
-        self.with_tui(|tui| {
-            let mut snapshots: Vec<_> = tui
-                .turbo_vision
-                .objects
-                .iter()
-                .filter_map(|(handle, object)| {
-                    let TurboVisionObject::Window(window) = object else {
-                        return None;
-                    };
-                    if !window.on_desktop {
-                        return None;
-                    }
-                    Some((
-                        *handle,
-                        TurboVisionWindowSnapshot {
-                            bounds: window.bounds,
-                            title: window.title.clone(),
-                            children: child_snapshots(&tui.turbo_vision.objects, &window.children),
-                        },
-                    ))
-                })
-                .collect();
-            snapshots.sort_by_key(|(handle, _)| *handle);
-            snapshots
-                .into_iter()
-                .map(|(_, snapshot)| snapshot)
-                .collect()
-        })
-    }
-
-    pub(in crate::vm::execute::io::tui) fn turbo_vision_dialog_snapshots(
-        &self,
-    ) -> Vec<TurboVisionDialogSnapshot> {
-        self.with_tui(|tui| {
-            let mut snapshots: Vec<_> = tui
-                .turbo_vision
-                .objects
-                .iter()
-                .filter_map(|(handle, object)| {
-                    let TurboVisionObject::Dialog(dialog) = object else {
-                        return None;
-                    };
-                    Some((
-                        *handle,
-                        TurboVisionDialogSnapshot {
-                            bounds: dialog.bounds,
-                            title: dialog.title.clone(),
-                            children: child_snapshots(&tui.turbo_vision.objects, &dialog.children),
-                        },
-                    ))
-                })
-                .collect();
-            snapshots.sort_by_key(|(handle, _)| *handle);
-            snapshots
-                .into_iter()
-                .map(|(_, snapshot)| snapshot)
-                .collect()
-        })
-    }
-
     pub(in crate::vm::execute::io::tui) fn turbo_vision_menu_bar_snapshot(
         &self,
     ) -> Option<TurboVisionMenuBarSnapshot> {

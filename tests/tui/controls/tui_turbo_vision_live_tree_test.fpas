@@ -30,7 +30,7 @@ begin
   AssertEquals(0, Application.Pump(App));
   Application.TestClickButton(App, OpenButton);
   AssertEquals(16, Application.Pump(App));
-  AssertScreenCell(32, 10, 'L', Black, LightGray);
+  AssertScreenCell(14, 10, 'L', Yellow, Blue);
   Application.Quit(App);
   AssertEquals(0, Application.Pump(App))
 end.

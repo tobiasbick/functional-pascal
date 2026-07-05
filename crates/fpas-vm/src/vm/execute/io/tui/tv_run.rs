@@ -108,7 +108,7 @@ impl Worker {
         self.turbo_vision_clear_live_view_ids();
         let tree_dirty = self.with_tui(|tui| tui.turbo_vision.pending_reconcile.clone());
 
-        let mut roots = self.with_tui(|tui| {
+        let roots = self.with_tui(|tui| {
             let mut roots = Vec::new();
             for (handle, object) in &tui.turbo_vision.objects {
                 match object {
@@ -347,5 +347,172 @@ impl Worker {
                 _ => None,
             }
         })
+    }
+}
+
+#[cfg(test)]
+mod populate_tests {
+    use super::*;
+    use crate::vm::shared::{
+        TurboVisionButton, TurboVisionDialog, TurboVisionObject, TurboVisionRect,
+        TurboVisionStaticText, TurboVisionWindow,
+    };
+    use fpas_bytecode::{Chunk, Intrinsic, Op, SourceLocation, TuiIntrinsic, Value};
+    use std::sync::Arc;
+
+    fn loc() -> SourceLocation {
+        SourceLocation::new(1, 1)
+    }
+
+    fn turbo_rect(x: i16, y: i16, width: i16, height: i16) -> TurboVisionRect {
+        TurboVisionRect {
+            x,
+            y,
+            width,
+            height,
+        }
+    }
+
+    fn open_headless_worker() -> Worker {
+        let mut chunk = Chunk::new();
+        let width_idx = chunk
+            .add_constant(Value::Integer(60))
+            .expect("constant should fit");
+        chunk.emit(Op::Constant(width_idx), loc());
+        let height_idx = chunk
+            .add_constant(Value::Integer(20))
+            .expect("constant should fit");
+        chunk.emit(Op::Constant(height_idx), loc());
+        chunk.emit(
+            Op::Intrinsic(u16::from(Intrinsic::Tui(TuiIntrinsic::OpenForTest))),
+            loc(),
+        );
+        chunk.emit(Op::Halt, loc());
+        let shared = Arc::new(crate::vm::SharedState {
+            chunk,
+            program_args: Vec::new(),
+            globals: std::sync::RwLock::new(std::collections::HashMap::new()),
+            task_queue: std::sync::Mutex::new(std::collections::VecDeque::new()),
+            task_available: std::sync::Condvar::new(),
+            task_results: std::sync::Mutex::new(std::collections::HashMap::new()),
+            task_completions: std::sync::Mutex::new(std::collections::HashSet::new()),
+            task_results_available: std::sync::Condvar::new(),
+            next_task_id: std::sync::atomic::AtomicU64::new(1),
+            console: std::sync::Mutex::new(fpas_std::Console::new()),
+            text_input: std::sync::Mutex::new(fpas_std::TextInput::new()),
+            key_input: std::sync::Mutex::new(fpas_std::KeyInput::new()),
+            tui: std::sync::Mutex::new(Default::default()),
+            graph: std::sync::Mutex::new(crate::vm::GraphState::default()),
+            shutdown: std::sync::atomic::AtomicBool::new(false),
+            abort_spawned_bytecode: std::sync::atomic::AtomicBool::new(false),
+        });
+        let mut worker = Worker::new_main(shared);
+        worker.run().expect("open for test");
+        worker
+    }
+
+    #[test]
+    fn populate_window_static_text_without_dialog() {
+        let shared = {
+            let worker = open_headless_worker();
+            Arc::clone(&worker.shared)
+        };
+        let mut worker = Worker::new_main(Arc::clone(&shared));
+
+        worker.with_tui(|tui| {
+            tui.turbo_vision.objects.insert(
+                3,
+                TurboVisionObject::Window(TurboVisionWindow {
+                    bounds: turbo_rect(8, 4, 30, 10),
+                    title: "Live".into(),
+                    children: vec![4],
+                    on_desktop: true,
+                }),
+            );
+            tui.turbo_vision.objects.insert(
+                4,
+                TurboVisionObject::StaticText(TurboVisionStaticText {
+                    bounds: turbo_rect(4, 3, 10, 1),
+                    text: "LIVE".into(),
+                    attached: true,
+                }),
+            );
+            tui.turbo_vision.next_handle = 5;
+            tui.turbo_vision.pending_reconcile.set(true);
+        });
+
+        worker.turbo_vision_paint_headless_desktop_for_tests(true);
+
+        let live_label = shared
+            .console
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .query_screen_cell(14, 10);
+        assert_eq!(
+            live_label.map(|(ch, _, _)| ch),
+            Some('L'),
+            "window-only populate should paint LIVE at FPAS (14, 10)"
+        );
+    }
+
+    #[test]
+    fn populate_merged_roots_paint_live_label_on_console() {
+        let shared = {
+            let worker = open_headless_worker();
+            Arc::clone(&worker.shared)
+        };
+        let mut worker = Worker::new_main(Arc::clone(&shared));
+
+        worker.with_tui(|tui| {
+            tui.turbo_vision.objects.insert(
+                1,
+                TurboVisionObject::Dialog(TurboVisionDialog {
+                    bounds: turbo_rect(2, 1, 24, 8),
+                    title: "Host".into(),
+                    children: vec![2],
+                }),
+            );
+            tui.turbo_vision.objects.insert(
+                2,
+                TurboVisionObject::Button(TurboVisionButton {
+                    bounds: turbo_rect(4, 4, 10, 2),
+                    text: "Open".into(),
+                    command_id: 50,
+                    attached: true,
+                }),
+            );
+            tui.turbo_vision.objects.insert(
+                3,
+                TurboVisionObject::Window(TurboVisionWindow {
+                    bounds: turbo_rect(8, 4, 30, 10),
+                    title: "Live".into(),
+                    children: vec![4],
+                    on_desktop: true,
+                }),
+            );
+            tui.turbo_vision.objects.insert(
+                4,
+                TurboVisionObject::StaticText(TurboVisionStaticText {
+                    bounds: turbo_rect(4, 3, 10, 1),
+                    text: "LIVE".into(),
+                    attached: true,
+                }),
+            );
+            tui.turbo_vision.next_handle = 5;
+            tui.turbo_vision.pending_reconcile.set(true);
+        });
+
+        worker.turbo_vision_paint_headless_desktop_for_tests(true);
+
+        let live_label = shared
+            .console
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .query_screen_cell(14, 10);
+        assert_eq!(
+            live_label.map(|(ch, _, _)| ch),
+            Some('L'),
+            "LIVE label should paint after merged-root populate"
+        );
     }
 }

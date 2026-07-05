@@ -145,6 +145,12 @@ impl Worker {
         self.headless_tv_app = app_slot;
     }
 
+    /// Test hook for headless desktop paint through the Worker reconcile path.
+    #[cfg(test)]
+    pub(crate) fn turbo_vision_paint_headless_desktop_for_tests(&mut self, rebuild: bool) {
+        self.turbo_vision_paint_headless_desktop(fpas_bytecode::SourceLocation::new(1, 1), rebuild);
+    }
+
     /// Release the headless turbo-vision session.
     pub(in crate::vm::execute::io::tui) fn turbo_vision_shutdown_headless_app(&mut self) {
         if let Some(mut app) = self.headless_tv_app.take() {
@@ -290,12 +296,73 @@ mod tests {
 
     fn find_substring(buffer: &[Vec<Cell>], text: &str) -> Option<(usize, usize)> {
         for (row, line) in buffer.iter().enumerate() {
-            let row_text: String = line.iter().map(|cell| cell.ch).collect();
-            if let Some(col) = row_text.find(text) {
-                return Some((col, row));
+            for col in 0..line.len().saturating_sub(text.len()) {
+                if line[col..col + text.len()]
+                    .iter()
+                    .map(|cell| cell.ch)
+                    .collect::<String>()
+                    == text
+                {
+                    return Some((col, row));
+                }
             }
         }
         None
+    }
+
+    #[test]
+    fn export_terminal_buffer_preserves_dialog_static_text() {
+        let mut app = HeadlessTvApp::new(60, 20).expect("headless app");
+        app.update_desktop_bounds();
+        let mut dialog = Dialog::new_modal(Rect::from_coords(6, 3, 20, 6), "Live");
+        dialog.add(Box::new(
+            super::super::bridged_static_text::BridgedStaticText::new(
+                Rect::from_coords(4, 2, 6, 1),
+                "DLG",
+            ),
+        ));
+        app.desktop.add(dialog);
+        app.draw();
+
+        let mut console = fpas_std::Console::new();
+        console.resize(60, 20);
+        export_terminal_buffer_to_console(&app.terminal, &mut console);
+        assert_eq!(
+            console.query_screen_cell(12, 8).map(|(ch, _, _)| ch),
+            Some('D'),
+            "dialog static text should export to FPAS (12, 8)"
+        );
+    }
+
+    #[test]
+    fn export_terminal_buffer_preserves_window_static_text() {
+        use super::super::bridged_static_text::BridgedStaticText;
+        use turbo_vision::views::window::Window;
+
+        let mut app = HeadlessTvApp::new(60, 20).expect("headless app");
+        app.update_desktop_bounds();
+        let mut window = Window::new(Rect::from_coords(8, 4, 30, 10), "Live");
+        window.add(Box::new(BridgedStaticText::new(
+            Rect::from_coords(4, 3, 10, 1),
+            "LIVE",
+        )));
+        app.desktop.add(Box::new(window));
+        app.draw();
+
+        let buffer = app.terminal.buffer();
+        let live_pos = find_substring(buffer, "LIVE").expect("LIVE in terminal buffer");
+        assert_eq!(buffer[live_pos.1][live_pos.0].ch, 'L');
+
+        let mut console = fpas_std::Console::new();
+        console.resize(60, 20);
+        export_terminal_buffer_to_console(&app.terminal, &mut console);
+        assert_eq!(
+            console
+                .query_screen_cell(live_pos.0 as u16 + 1, live_pos.1 as u16 + 1)
+                .map(|(ch, _, _)| ch),
+            Some('L'),
+            "console export should preserve LIVE at FPAS coords"
+        );
     }
 
     #[test]
@@ -316,7 +383,7 @@ mod tests {
         let buffer = app.terminal.buffer();
         assert_eq!(
             find_substring(buffer, "LIVE"),
-            Some((31, 9)),
+            Some((13, 9)),
             "static text LIVE in desktop window (TV buffer coords)"
         );
     }
@@ -340,7 +407,7 @@ mod tests {
 
         assert_eq!(
             find_substring(app.terminal.buffer(), "LIVE"),
-            Some((31, 9)),
+            Some((13, 9)),
             "window static text paints above an older desktop dialog"
         );
     }

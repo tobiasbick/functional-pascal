@@ -1,6 +1,6 @@
 # 05 — Incremental view updates instead of full desktop rebuild
 
-**Status:** [x] Audit · [x] Phase A (partial) · [ ] Phase B · [ ] Headless populate skip
+**Status:** [x] Audit · [x] Phase A · [x] Headless repaint skip · [ ] Phase B · [ ] SetText memo/textviewer
 
 **Priority:** Low — architectural; after bridge stabilisation
 
@@ -36,7 +36,7 @@ Still keep FPAS handle graph authoritative for Pascal and headless introspection
 | `windows.rs` `SetTitle` | title mutation | **Data** — live patch |
 | `dialogs.rs` `CreateDialog` | root | **Structural** |
 | `navigation.rs` | menu/status chrome | **Structural** (chrome sync on rebuild) |
-| `test_mouse.rs` | headless click | **Repaint** — headless pump always repaints |
+| `test_mouse.rs` | headless click | **Repaint** — patch cells + `pending_headless_repaint` |
 | `bridged_radio_button.rs` | user select | **Structural** — group exclusivity + `tree_dirty` |
 
 ## Tasks
@@ -45,7 +45,7 @@ Still keep FPAS handle graph authoritative for Pascal and headless introspection
 - [x] **Phase A** — `live_patch.rs`: `SetChecked`, `SetItems`, `SetTitle` patch live views; `live_view_ids` + `live_child_desktop_indices` registered at populate.
 - [ ] **Phase A follow-up** — `SetText` for `Memo` / `TextViewer` / `InputLine` when upstream setters + `as_any_mut` allow; `StaticText` still rebuilds.
 - [ ] **Phase B** — Stable handle→`ViewId` map survives window reorder; document re-entrancy and modal cases.
-- [ ] **Headless** — Skip desktop wipe in `headless_tv_draw` when only data changed (cells already shared on bridged controls).
+- [x] **Headless** — `pending_headless_repaint` skips desktop wipe; data mutations patch existing `HeadlessTvApp` tree.
 - [x] **Tests** — `set_text`, `set_checked`, `set_items`, `set_title`, full `tests/tui/controls/`.
 - [ ] **Perf** — Optional benchmark or manual note if IDE-scale trees feel sluggish before/after.
 - [x] **Context** — [00-context.md](00-context.md).
@@ -78,5 +78,5 @@ cargo test --workspace
 
 ## Notes
 
-- Live patch falls back to full rebuild when no live session or view id is missing.
+- Live and headless share `apply_live_data_mutation_to_desktop`; headless reconcile skips populate when only `pending_headless_repaint` is set.
 - `SetText` on `StaticText` still marks structural dirty — upstream has no runtime label setter.

@@ -13,12 +13,20 @@ impl Worker {
         self.with_tui(|tui| tui.turbo_vision.pending_reconcile.set(true));
     }
 
+    /// Record that the headless desktop needs redraw without structural rebuild.
+    pub(in crate::vm::execute::io::tui) fn mark_turbo_vision_headless_repaint(&mut self) {
+        self.with_tui(|tui| tui.turbo_vision.pending_headless_repaint.set(true));
+    }
+
     /// Reset reconcile bookkeeping at the start of `Application.Run`.
     ///
     /// The initial desktop is built once by `build_turbo_vision_application`, so
     /// the first reconcile only needs to fire once FPAS mutates the tree.
     pub(in crate::vm::execute::io::tui) fn turbo_vision_begin_run(&mut self) {
-        self.with_tui(|tui| tui.turbo_vision.pending_reconcile.set(false));
+        self.with_tui(|tui| {
+            tui.turbo_vision.pending_reconcile.set(false);
+            tui.turbo_vision.pending_headless_repaint.set(false);
+        });
     }
 
     /// Mirror FPAS widget mutations after one Turbo Vision run step.
@@ -34,7 +42,18 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<(), VmError> {
         if self.with_tui(|tui| tui.session.is_headless()) {
-            self.turbo_vision_paint_headless_desktop(line);
+            let (structural, repaint) = self.with_tui(|tui| {
+                let structural = tui.turbo_vision.pending_reconcile.read();
+                tui.turbo_vision.pending_reconcile.set(false);
+                let repaint = tui.turbo_vision.pending_headless_repaint.read();
+                tui.turbo_vision.pending_headless_repaint.set(false);
+                (structural, repaint)
+            });
+            if structural {
+                self.turbo_vision_paint_headless_desktop(line, true);
+            } else if repaint {
+                self.turbo_vision_paint_headless_desktop(line, false);
+            }
             return Ok(());
         }
 

@@ -10,7 +10,7 @@ use super::bridged_radio_button::BridgedRadioButton;
 use crate::vm::Worker;
 use crate::vm::shared::TurboVisionObject;
 use std::collections::HashMap;
-use turbo_vision::app::Application as TurboVisionApplication;
+use turbo_vision::views::desktop::Desktop;
 use turbo_vision::views::dialog::Dialog;
 use turbo_vision::views::listbox::ListBox;
 use turbo_vision::views::view::{View, ViewId};
@@ -44,11 +44,36 @@ impl Worker {
         mutation: LiveDataMutation,
     ) {
         if self.with_tui(|tui| tui.session.is_headless()) {
+            if self.turbo_vision_try_headless_data_mutation(&mutation) {
+                self.mark_turbo_vision_headless_repaint();
+            } else {
+                self.mark_turbo_vision_tree_dirty();
+            }
             return;
         }
         if !self.turbo_vision_try_live_data_mutation(mutation) {
             self.mark_turbo_vision_tree_dirty();
         }
+    }
+
+    fn turbo_vision_try_headless_data_mutation(&mut self, mutation: &LiveDataMutation) -> bool {
+        let view_ids = self.with_tui(|tui| tui.turbo_vision.live_view_ids.clone());
+        let child_desktop_indices =
+            self.with_tui(|tui| tui.turbo_vision.live_child_desktop_indices.clone());
+        let mut app_slot = self.headless_tv_app.take();
+        let Some(app) = app_slot.as_mut() else {
+            self.headless_tv_app = app_slot;
+            return false;
+        };
+        let ok = apply_live_data_mutation_to_desktop(
+            app.desktop_mut(),
+            &view_ids,
+            &child_desktop_indices,
+            mutation,
+            self,
+        );
+        self.headless_tv_app = app_slot;
+        ok
     }
 
     fn turbo_vision_try_live_data_mutation(&mut self, mutation: LiveDataMutation) -> bool {
@@ -62,8 +87,13 @@ impl Worker {
             Some(app) => app,
             None => return false,
         };
-        let ok =
-            apply_live_data_mutation(&mut app, &view_ids, &child_desktop_indices, &mutation, self);
+        let ok = apply_live_data_mutation_to_desktop(
+            &mut app.desktop,
+            &view_ids,
+            &child_desktop_indices,
+            &mutation,
+            self,
+        );
         self.live_turbo_vision_app = Some(app);
         ok
     }
@@ -104,8 +134,8 @@ impl Worker {
     }
 }
 
-fn apply_live_data_mutation(
-    app: &mut TurboVisionApplication,
+fn apply_live_data_mutation_to_desktop(
+    desktop: &mut turbo_vision::views::desktop::Desktop,
     view_ids: &HashMap<u32, u16>,
     child_desktop_indices: &HashMap<u32, usize>,
     mutation: &LiveDataMutation,
@@ -117,7 +147,7 @@ fn apply_live_data_mutation(
                 return false;
             };
             let title = title.clone();
-            with_live_view_mut(app, location, |view| {
+            with_live_view_mut(desktop, location, |view| {
                 if let Some(window) = view.as_any_mut().downcast_mut::<Window>() {
                     window.set_title(&title);
                     return true;
@@ -136,16 +166,16 @@ fn apply_live_data_mutation(
             } else {
                 group_handles
             };
-            targets
-                .iter()
-                .all(|&member| patch_checked_handle(app, view_ids, child_desktop_indices, member))
+            targets.iter().all(|&member| {
+                patch_checked_handle(desktop, view_ids, child_desktop_indices, member)
+            })
         }
         LiveDataMutation::SetListItems {
             handle,
             items,
             selection,
         } => patch_list_items(
-            app,
+            desktop,
             view_ids,
             child_desktop_indices,
             *handle,
@@ -175,13 +205,13 @@ fn locate_live_view(
 }
 
 fn with_live_view_mut(
-    app: &mut TurboVisionApplication,
+    desktop: &mut Desktop,
     location: LiveViewLocation,
     patch: impl FnOnce(&mut dyn View) -> bool,
 ) -> bool {
     match location {
         LiveViewLocation::DesktopRoot(view_id) => {
-            let Some(view) = app.desktop.child_by_id_mut(view_id) else {
+            let Some(view) = desktop.child_by_id_mut(view_id) else {
                 return false;
             };
             patch(view)
@@ -190,7 +220,7 @@ fn with_live_view_mut(
             root_index,
             view_id,
         } => {
-            let root = app.desktop.child_at_mut(root_index);
+            let root = desktop.child_at_mut(root_index);
             if let Some(window) = root.as_any_mut().downcast_mut::<Window>() {
                 let Some(child) = window.child_by_id_mut(view_id) else {
                     return false;
@@ -209,7 +239,7 @@ fn with_live_view_mut(
 }
 
 fn patch_checked_handle(
-    app: &mut TurboVisionApplication,
+    desktop: &mut Desktop,
     view_ids: &HashMap<u32, u16>,
     child_desktop_indices: &HashMap<u32, usize>,
     handle: u32,
@@ -217,7 +247,7 @@ fn patch_checked_handle(
     let Some(location) = locate_live_view(view_ids, child_desktop_indices, handle) else {
         return false;
     };
-    with_live_view_mut(app, location, |view| {
+    with_live_view_mut(desktop, location, |view| {
         if let Some(check_box) = view.as_any_mut().downcast_mut::<BridgedCheckBox>() {
             check_box.sync_from_cell();
             return true;
@@ -231,7 +261,7 @@ fn patch_checked_handle(
 }
 
 fn patch_list_items(
-    app: &mut TurboVisionApplication,
+    desktop: &mut Desktop,
     view_ids: &HashMap<u32, u16>,
     child_desktop_indices: &HashMap<u32, usize>,
     handle: u32,
@@ -241,7 +271,7 @@ fn patch_list_items(
     let Some(location) = locate_live_view(view_ids, child_desktop_indices, handle) else {
         return false;
     };
-    with_live_view_mut(app, location, |view| {
+    with_live_view_mut(desktop, location, |view| {
         if let Some(list_box) = view.as_any_mut().downcast_mut::<BridgedListBox>() {
             list_box.set_items_from_fpas(items, selection);
             return true;

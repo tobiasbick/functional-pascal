@@ -53,13 +53,18 @@ impl Worker {
                     check_box.checked_cell.set(!check_box.checked_cell.read());
                     Ok(())
                 })?;
+                self.turbo_vision_after_data_mutation(
+                    super::live_patch::LiveDataMutation::SetChecked { handle },
+                );
             }
             HeadlessMouseClick::RadioButton(handle) => {
                 self.select_radio_button_group(handle, line)?;
+                self.turbo_vision_after_data_mutation(
+                    super::live_patch::LiveDataMutation::SetChecked { handle },
+                );
             }
         }
 
-        self.mark_turbo_vision_tree_dirty();
         Ok(())
     }
 

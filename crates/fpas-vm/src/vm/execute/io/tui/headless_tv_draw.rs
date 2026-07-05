@@ -71,13 +71,20 @@ impl HeadlessTvApp {
         }
         self.desktop.update_cursor(&mut self.terminal);
     }
+
+    pub(in crate::vm::execute::io::tui) fn desktop_mut(&mut self) -> &mut Desktop {
+        &mut self.desktop
+    }
 }
 
 impl Worker {
     /// Repaint the headless desktop using upstream turbo-vision `draw`.
+    ///
+    /// When `rebuild` is false, the existing desktop tree is kept and only redrawn.
     pub(in crate::vm::execute::io::tui) fn turbo_vision_paint_headless_desktop(
         &mut self,
         _line: SourceLocation,
+        rebuild: bool,
     ) {
         let width = self.with_console(|console| console.screen_width() as u16);
         let height = self.with_console(|console| console.screen_height() as u16);
@@ -99,10 +106,12 @@ impl Worker {
         };
 
         self.turbo_vision_sync_chrome_to_headless_app(app);
-        while app.desktop.child_count() > 0 {
-            app.desktop.remove_child(0);
+        if rebuild {
+            while app.desktop.child_count() > 0 {
+                app.desktop.remove_child(0);
+            }
+            self.turbo_vision_populate_desktop_on(&mut app.desktop);
         }
-        self.turbo_vision_populate_desktop_on(&mut app.desktop);
         app.draw();
 
         let terminal = &app.terminal;

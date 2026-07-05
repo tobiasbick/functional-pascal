@@ -85,7 +85,9 @@ Turbo Vision bridge code lives under `crates/fpas-vm/src/vm/execute/io/tui/`:
 | `radio_button_mouse.rs` | Left-click select for live Turbo Vision radio buttons |
 | `tv_run.rs` | Terminal and headless `Application.Run` for Turbo Vision |
 | `reconcile.rs` | Live widget-tree reconcile and headless CRT repaint |
-| `headless_paint.rs` | Headless desktop paint into the console back buffer |
+| `headless_paint.rs` | Headless desktop paint into CRT (legacy ASCII path; production) |
+| `headless_tv_draw.rs` | Spike: upstream TV `draw` → CRT export ([refactor 03](../../../refactor/tui-bridge/03-headless-test-util.md); not wired) |
+| `tv_headless_backend.rs` | In-memory `Backend` for headless TV `Terminal` |
 | `testing.rs` | `OpenForTest`, `CloseForTest`, dialog test result seeding |
 | `tui_run.rs` | `Application.Run` entry (Turbo Vision only) |
 

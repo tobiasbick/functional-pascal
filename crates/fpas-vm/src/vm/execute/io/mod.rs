@@ -14,6 +14,8 @@ mod test_host;
 mod tui;
 mod tui_run;
 
+pub(in crate::vm) use tui::HeadlessTvApp;
+
 impl Worker {
     pub(super) fn try_exec_io(&mut self, op: Op, line: SourceLocation) -> Result<bool, VmError> {
         match op {

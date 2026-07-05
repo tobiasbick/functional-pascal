@@ -19,6 +19,7 @@ mod file_dialog;
 mod handle_records;
 mod handles;
 mod headless_paint;
+mod headless_tv_draw;
 mod interactive_loop;
 mod lifecycle;
 mod menu_build;
@@ -31,6 +32,7 @@ mod session_app;
 mod test_mouse;
 mod testing;
 mod tv_geometry;
+mod tv_headless_backend;
 mod tv_input_events;
 mod tv_run;
 mod tv_views;
@@ -181,3 +183,5 @@ impl Worker {
         Ok(true)
     }
 }
+
+pub(in crate::vm) use headless_tv_draw::HeadlessTvApp;

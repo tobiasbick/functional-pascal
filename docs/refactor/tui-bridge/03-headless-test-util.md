@@ -1,6 +1,6 @@
 # 03 — Headless tests via turbo-vision `test-util`
 
-**Status:** [ ] Not started · [ ] In progress · [ ] Done
+**Status:** [ ] Not started · [x] In progress · [ ] Done
 
 **Priority:** Medium–high (large refactor, high long-term payoff)
 
@@ -38,7 +38,8 @@ Reduce or remove `headless_paint.rs` when parity is proven.
 
 ## Tasks
 
-- [ ] **Dependency** — Add `test-util` feature to workspace `turbo-vision` dependency; confirm license/build impact (MIT upstream).
+- [x] **Dependency** — `test-util` feature on workspace `turbo-vision` dependency (`Cargo.toml`).
+- [x] **Spike (unwired)** — `tv_headless_backend.rs` + `headless_tv_draw.rs`: `Terminal::with_backend` + `Application::draw` path; exports `terminal.buffer()` to CRT. Not wired to `Pump` yet — 11/30 `tests/tui/controls/` assertions differ (TV widget chrome vs legacy ASCII painter).
 - [ ] **Prototype** — One FPAS test (`tui_turbo_vision_chrome_paint_test.fpas` or Rust integration test) drawing menu bar via MockTerminal.
 - [ ] **Session wiring** — Headless `OpenForTest` attaches MockTerminal to session `Application` instead of skipping TV init entirely (coordinate with 01).
 - [ ] **Port paint** — Replace `turbo_vision_paint_headless_desktop` call sites with TV draw → buffer export.

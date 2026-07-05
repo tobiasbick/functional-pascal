@@ -188,6 +188,7 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<(), VmError> {
         self.turbo_vision_shutdown_live_app();
+        self.turbo_vision_shutdown_headless_app();
         let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
         let close_result = self.with_console_and_key_input(|console, key_input| {
             tui.session.close(console, key_input, line)
@@ -204,6 +205,7 @@ impl Worker {
     /// Clears Turbo Vision state before opening a new application session.
     pub(in crate::vm::execute::io) fn reset_tui_session_state(&mut self) {
         self.turbo_vision_shutdown_live_app();
+        self.turbo_vision_shutdown_headless_app();
         let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
         tui.turbo_vision_on_key = None;
         tui.turbo_vision_on_mouse = None;

@@ -97,6 +97,14 @@ impl Worker {
         &self,
         app: &mut TurboVisionApplication,
     ) {
+        self.turbo_vision_populate_desktop_on(&mut app.desktop);
+    }
+
+    /// Add every on-desktop window and dialog from FPAS state to `desktop`.
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_populate_desktop_on(
+        &self,
+        desktop: &mut turbo_vision::views::desktop::Desktop,
+    ) {
         let tree_dirty = self.with_tui(|tui| tui.turbo_vision.pending_reconcile.clone());
         for window in self.turbo_vision_window_snapshots() {
             let radio_groups = radio_groups_from_snapshots(&window.children);
@@ -104,7 +112,7 @@ impl Worker {
             for child in window.children {
                 add_window_child(&mut window_view, child, &radio_groups, tree_dirty.clone());
             }
-            app.desktop.add(Box::new(window_view));
+            desktop.add(Box::new(window_view));
         }
 
         for dialog in self.turbo_vision_dialog_snapshots() {
@@ -121,11 +129,13 @@ impl Worker {
                     tree_dirty.clone(),
                 );
             }
-            app.desktop.add(dialog_view);
+            desktop.add(dialog_view);
         }
     }
 
-    fn turbo_vision_window_snapshots(&self) -> Vec<TurboVisionWindowSnapshot> {
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_window_snapshots(
+        &self,
+    ) -> Vec<TurboVisionWindowSnapshot> {
         self.with_tui(|tui| {
             tui.turbo_vision
                 .objects
@@ -147,7 +157,9 @@ impl Worker {
         })
     }
 
-    fn turbo_vision_dialog_snapshots(&self) -> Vec<TurboVisionDialogSnapshot> {
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_dialog_snapshots(
+        &self,
+    ) -> Vec<TurboVisionDialogSnapshot> {
         self.with_tui(|tui| {
             tui.turbo_vision
                 .objects
@@ -166,7 +178,9 @@ impl Worker {
         })
     }
 
-    fn turbo_vision_menu_bar_snapshot(&self) -> Option<TurboVisionMenuBarSnapshot> {
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_menu_bar_snapshot(
+        &self,
+    ) -> Option<TurboVisionMenuBarSnapshot> {
         self.with_tui(|tui| {
             let handle = tui.turbo_vision.menu_bar?;
             match tui.turbo_vision.objects.get(&handle) {
@@ -179,7 +193,9 @@ impl Worker {
         })
     }
 
-    fn turbo_vision_status_line_snapshot(&self) -> Option<TurboVisionStatusLineSnapshot> {
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_status_line_snapshot(
+        &self,
+    ) -> Option<TurboVisionStatusLineSnapshot> {
         self.with_tui(|tui| {
             let handle = tui.turbo_vision.status_line?;
             match tui.turbo_vision.objects.get(&handle) {

@@ -19,7 +19,7 @@ _No items currently blocked on planning only._
 | [tui-bridge/00-context.md](tui-bridge/00-context.md) | TUI bridge — current architecture (reference) | Reference (keep updated when bridge changes) |
 | [tui-bridge/done/02-single-tv-session.md](tui-bridge/done/02-single-tv-session.md) | One `TurboVisionApplication` per FPAS session | Done |
 | [tui-bridge/done/03-about-message-box.md](tui-bridge/done/03-about-message-box.md) | About / simple dialogs via upstream `message_box` | Done |
-| [tui-bridge/03-headless-test-util.md](tui-bridge/03-headless-test-util.md) | Headless tests via TV `test-util` + `MockTerminal` | Pending |
+| [tui-bridge/03-headless-test-util.md](tui-bridge/03-headless-test-util.md) | Headless tests via TV `test-util` + `MockTerminal` | In progress (spike unwired) |
 | [tui-bridge/04-command-map-sync.md](tui-bridge/04-command-map-sync.md) | Keep reserved `CM_*` list aligned with upstream | Ongoing |
 | [tui-bridge/05-reduce-reconcile-rebuild.md](tui-bridge/05-reduce-reconcile-rebuild.md) | Incremental view updates instead of full desktop rebuild | Pending |
 | [tui-bridge/06-review-bridged-widgets.md](tui-bridge/06-review-bridged-widgets.md) | Re-evaluate `Bridged*` wrappers after TV 2.0 | Pending |

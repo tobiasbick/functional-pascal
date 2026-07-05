@@ -9,6 +9,8 @@ use fpas_bytecode::{SourceLocation, Value};
 use std::sync::Arc;
 use turbo_vision::app::Application as TurboVisionApplication;
 
+use super::execute::HeadlessTvApp;
+
 /// A worker runs on a single OS thread and executes tasks pulled from the shared queue.
 ///
 /// The main program (task 0) is executed by the main worker directly.
@@ -27,6 +29,8 @@ pub(crate) struct Worker {
     pub allow_shutdown_during_sync_call: bool,
     /// Live turbo-vision application for the main task (not `Send`; main worker only).
     pub live_turbo_vision_app: Option<TurboVisionApplication>,
+    /// Headless turbo-vision draw session for `OpenForTest` (main worker only).
+    pub(in crate::vm) headless_tv_app: Option<HeadlessTvApp>,
 }
 
 impl Worker {
@@ -44,6 +48,7 @@ impl Worker {
             sync_call_depth: 0,
             allow_shutdown_during_sync_call: false,
             live_turbo_vision_app: None,
+            headless_tv_app: None,
         }
     }
 
@@ -61,6 +66,7 @@ impl Worker {
             sync_call_depth: 0,
             allow_shutdown_during_sync_call: false,
             live_turbo_vision_app: None,
+            headless_tv_app: None,
         }
     }
 

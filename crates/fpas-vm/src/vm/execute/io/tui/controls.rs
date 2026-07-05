@@ -149,7 +149,7 @@ impl Worker {
                 }
                 Some(TurboVisionObject::Button(button)) => {
                     button.text = text;
-                    Ok(None)
+                    Ok(Some(LiveDataMutation::SetText { handle }))
                 }
                 Some(TurboVisionObject::StaticText(static_text)) => {
                     static_text.text = text;
@@ -157,11 +157,11 @@ impl Worker {
                 }
                 Some(TurboVisionObject::CheckBox(check_box)) => {
                     check_box.text = text;
-                    Ok(None)
+                    Ok(Some(LiveDataMutation::SetText { handle }))
                 }
                 Some(TurboVisionObject::RadioButton(radio_button)) => {
                     radio_button.text = text;
-                    Ok(None)
+                    Ok(Some(LiveDataMutation::SetText { handle }))
                 }
                 Some(TurboVisionObject::ListBox(_)) => Err(runtime_error(
                     RUNTIME_INTRINSIC_STACK_STATE_ERROR,

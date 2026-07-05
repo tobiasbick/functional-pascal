@@ -2,7 +2,7 @@
 //!
 //! Upstream `StaticText` has no runtime text setter; the bridge rebuilds the inner view in place.
 //!
-//! **Documentation:** `docs/refactor/tui-bridge/05-reduce-reconcile-rebuild.md`
+//! **Documentation:** `docs/refactor/tui-bridge/done/05-reduce-reconcile-rebuild.md`
 
 use turbo_vision::core::event::Event;
 use turbo_vision::core::geometry::Rect;

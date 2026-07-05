@@ -13,8 +13,8 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use turbo_vision::views::{
-    button::Button, dialog::Dialog, input_line::InputLine, listbox::ListBox,
-    status_line::StatusItem, status_line::StatusLine, window::Window,
+    dialog::Dialog, input_line::InputLine, listbox::ListBox, status_line::StatusItem,
+    status_line::StatusLine, window::Window,
 };
 
 pub(in crate::vm::execute::io::tui) struct TurboVisionWindowSnapshot {
@@ -97,7 +97,7 @@ pub(in crate::vm::execute::io::tui) fn add_window_child(
 ) {
     match child {
         TurboVisionChildSnapshot::Button(button) => (
-            window.add(Box::new(Button::new(
+            window.add(Box::new(super::bridged_button::BridgedButton::new(
                 turbo_rect(button.bounds),
                 &button.text,
                 fpas_command_to_turbo_vision(button.command_id),
@@ -185,7 +185,7 @@ pub(in crate::vm::execute::io::tui) fn add_dialog_child(
 ) {
     match child {
         TurboVisionChildSnapshot::Button(button) => (
-            dialog.add(Box::new(Button::new(
+            dialog.add(Box::new(super::bridged_button::BridgedButton::new(
                 turbo_rect(button.bounds),
                 &button.text,
                 fpas_command_to_turbo_vision(button.command_id),

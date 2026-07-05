@@ -47,7 +47,7 @@ Pascal Application.*
 
 ## Known duplication (refactor targets)
 
-**Done:** incremental live/headless data patch — [05-reduce-reconcile-rebuild.md](05-reduce-reconcile-rebuild.md). `Bridged*` review + headless mouse — [done/06-review-bridged-widgets.md](done/06-review-bridged-widgets.md).
+**Done:** incremental live/headless data patch — [done/05-reduce-reconcile-rebuild.md](done/05-reduce-reconcile-rebuild.md). `Bridged*` review + headless mouse — [done/06-review-bridged-widgets.md](done/06-review-bridged-widgets.md).
 
 **Done:** single live `Application` per FPAS session — [done/02-single-tv-session.md](done/02-single-tv-session.md). IDE About via upstream `message_box` — [done/03-about-message-box.md](done/03-about-message-box.md).
 

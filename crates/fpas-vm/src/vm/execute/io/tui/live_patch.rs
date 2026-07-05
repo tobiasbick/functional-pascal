@@ -2,8 +2,9 @@
 //!
 //! Avoids a full desktop rebuild when upstream setters can mirror FPAS handle state.
 //!
-//! **Documentation:** `docs/refactor/tui-bridge/05-reduce-reconcile-rebuild.md`
+//! **Documentation:** `docs/refactor/tui-bridge/done/05-reduce-reconcile-rebuild.md`
 
+use super::bridged_button::BridgedButton;
 use super::bridged_check_box::BridgedCheckBox;
 use super::bridged_list_box::BridgedListBox;
 use super::bridged_memo::BridgedMemo;
@@ -393,6 +394,18 @@ fn patch_set_text(
         return false;
     };
     with_live_view_mut(desktop, location, |view| {
+        if let Some(button) = view.as_any_mut().downcast_mut::<BridgedButton>() {
+            button.set_text_from_fpas(&text);
+            return true;
+        }
+        if let Some(check_box) = view.as_any_mut().downcast_mut::<BridgedCheckBox>() {
+            check_box.set_text_from_fpas(&text);
+            return true;
+        }
+        if let Some(radio) = view.as_any_mut().downcast_mut::<BridgedRadioButton>() {
+            radio.set_text_from_fpas(&text);
+            return true;
+        }
         if let Some(static_text) = view.as_any_mut().downcast_mut::<BridgedStaticText>() {
             static_text.set_text_from_fpas(&text);
             return true;
@@ -412,6 +425,9 @@ fn patch_set_text(
 impl Worker {
     fn turbo_vision_text_for_set_text(&self, handle: u32) -> Option<String> {
         self.with_tui(|tui| match tui.turbo_vision.objects.get(&handle) {
+            Some(TurboVisionObject::Button(button)) => Some(button.text.clone()),
+            Some(TurboVisionObject::CheckBox(check_box)) => Some(check_box.text.clone()),
+            Some(TurboVisionObject::RadioButton(radio_button)) => Some(radio_button.text.clone()),
             Some(TurboVisionObject::StaticText(static_text)) => Some(static_text.text.clone()),
             Some(TurboVisionObject::Memo(memo)) => Some(memo.text.clone()),
             Some(TurboVisionObject::TextViewer(text_viewer)) => Some(text_viewer.text.clone()),

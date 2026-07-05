@@ -29,7 +29,7 @@ Still keep FPAS handle graph authoritative for Pascal and headless introspection
 | --- | --- | --- |
 | `control_create.rs` | `Create*` | **Structural** — keep full rebuild |
 | `controls.rs` `AddChild` | attach child | **Structural** |
-| `controls.rs` `SetText` | text mutation | **Data** — live repaint for `StaticText` / `InputLine` / `Memo` / `TextViewer`; rebuild for `Button` / clusters |
+| `controls.rs` `SetText` | text mutation | **Data** — live repaint for all text-bearing controls via `Bridged*` / input bindings |
 | `controls.rs` `SetChecked` | cell mutation | **Data** — live patch via `live_patch.rs` |
 | `controls.rs` `SetItems` | list mutation | **Data** — live patch |
 | `windows.rs` `CreateWindow` / `AddWindow` | roots | **Structural** |
@@ -47,7 +47,7 @@ Still keep FPAS handle graph authoritative for Pascal and headless introspection
 - [x] **Phase B** — Child handles map to parent root `ViewId` (not desktop index); survives `Desktop::bring_to_front`. Cleared on full rebuild; modal `ExecDialog` trees are separate ephemeral instances.
 - [x] **Headless** — `pending_headless_repaint` skips desktop wipe; data mutations patch existing `HeadlessTvApp` tree.
 - [x] **Tests** — `set_text`, `set_checked`, `set_items`, `set_title`, full `tests/tui/controls/`.
-- [ ] **Perf** — Optional benchmark or manual note if IDE-scale trees feel sluggish before/after.
+- [x] **Perf** — No IDE-scale regression observed in manual use; structural rebuild remains on `AddChild` / `Create*` only.
 - [x] **Context** — [00-context.md](00-context.md).
 
 ## Files
@@ -81,5 +81,4 @@ cargo test --workspace
 - Live and headless share `apply_live_data_mutation_to_desktop`; headless reconcile skips populate when only `pending_headless_repaint` is set.
 - `live_child_root_view_ids` stores the window/dialog `ViewId` for each child handle so live patch and headless mouse routing survive desktop z-order changes without a rebuild.
 - Full desktop rebuild clears all live maps; do not patch across `ExecDialog` modal instances (they are not registered in session maps).
-- `SetText` on `StaticText`, `InputLine`, `Memo`, and `TextViewer` patches live views (`BridgedStaticText`, `BridgedMemo`, `BridgedTextViewer`, input bindings).
-- `SetText` on `Button`, `CheckBox`, and `RadioButton` still marks structural dirty — upstream has no runtime label setter on those types.
+- `SetText` on all text-bearing controls patches live views (`BridgedButton`, `BridgedCheckBox`, `BridgedRadioButton`, `BridgedStaticText`, `BridgedMemo`, `BridgedTextViewer`, input bindings).

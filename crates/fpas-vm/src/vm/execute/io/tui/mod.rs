@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 mod application;
+mod bridged_button;
 mod bridged_check_box;
 mod bridged_list_box;
 mod bridged_memo;

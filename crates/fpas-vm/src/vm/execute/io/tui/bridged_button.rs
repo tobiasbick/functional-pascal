@@ -1,36 +1,49 @@
-//! `TextViewer` view wrapper with `as_any_mut` for live `SetText` patching.
+//! `Button` view wrapper with `as_any_mut` for live `SetText` patching.
+//!
+//! Upstream `Button` has no runtime title setter; the bridge rebuilds the inner view in place.
 //!
 //! **Documentation:** `docs/refactor/tui-bridge/done/05-reduce-reconcile-rebuild.md`
 
+use turbo_vision::core::command::CommandId;
 use turbo_vision::core::event::Event;
 use turbo_vision::core::geometry::Rect;
 use turbo_vision::core::palette::Palette;
 use turbo_vision::core::palette_chain::PaletteChainNode;
 use turbo_vision::core::state::StateFlags;
 use turbo_vision::terminal::Terminal;
-use turbo_vision::views::text_viewer::TextViewer;
+use turbo_vision::views::button::Button;
 use turbo_vision::views::view::View;
 
-/// Turbo Vision text viewer that can be patched from FPAS `SetText` without a desktop rebuild.
-pub(in crate::vm::execute::io::tui) struct BridgedTextViewer {
-    inner: TextViewer,
+/// Turbo Vision button that can be patched from FPAS `SetText` without a desktop rebuild.
+pub(in crate::vm::execute::io::tui) struct BridgedButton {
+    inner: Button,
+    command: CommandId,
+    is_default: bool,
 }
 
-impl BridgedTextViewer {
-    /// Build a text viewer seeded from `text`.
-    pub fn new(bounds: Rect, text: &str) -> Self {
-        let mut inner = TextViewer::new(bounds);
-        inner.set_text(text);
-        Self { inner }
+impl BridgedButton {
+    /// Build a button seeded from `title` and `command`.
+    pub fn new(bounds: Rect, title: &str, command: CommandId, is_default: bool) -> Self {
+        Self {
+            inner: Button::new(bounds, title, command, is_default),
+            command,
+            is_default,
+        }
     }
 
-    /// Push FPAS text into the upstream text viewer (live patch path).
+    /// Push FPAS text into the upstream button (live patch path).
     pub(in crate::vm::execute::io::tui) fn set_text_from_fpas(&mut self, text: &str) {
-        self.inner.set_text(text);
+        let bounds = self.inner.bounds();
+        let disabled = self.inner.is_disabled();
+        let mut inner = Button::new(bounds, text, self.command, self.is_default);
+        if disabled {
+            inner.set_disabled(true);
+        }
+        self.inner = inner;
     }
 }
 
-impl View for BridgedTextViewer {
+impl View for BridgedButton {
     fn bounds(&self) -> Rect {
         self.inner.bounds()
     }
@@ -73,5 +86,18 @@ impl View for BridgedTextViewer {
 
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use turbo_vision::core::geometry::Rect;
+
+    #[test]
+    fn set_text_from_fpas_updates_without_panic() {
+        let bounds = Rect::new(0, 0, 10, 2);
+        let mut button = BridgedButton::new(bounds, "OLD", 1, false);
+        button.set_text_from_fpas("NEW");
     }
 }

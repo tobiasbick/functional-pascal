@@ -79,12 +79,16 @@ Turbo Vision bridge code lives under `crates/fpas-vm/src/vm/execute/io/tui/`:
 | `file_dialog.rs` | `RunFileDialog`, `TestSetFileDialogResult` |
 | `exec_dialog.rs` | `ExecDialog`, `InputText`, `Checked`, `Selected`, `ListSelection`, `TestSetDialogResult` |
 | `msgbox.rs` | `MessageBox` — upstream `helpers::msgbox::message_box` on live session |
+| `bridged_button.rs` | `Button` view with live `SetText` patching |
 | `bridged_check_box.rs` | Modal `CheckBox` view syncing checked state to FPAS |
 | `bridged_list_box.rs` | Modal `ListBox` view syncing selected index to FPAS |
 | `bridged_radio_button.rs` | Modal `RadioButton` view syncing selected state and FPAS group cells |
+| `bridged_static_text.rs` | `StaticText` view with live `SetText` patching |
+| `bridged_memo.rs` | `Memo` view with live `SetText` patching |
+| `bridged_text_viewer.rs` | `TextViewer` view with live `SetText` patching |
 | `tv_run.rs` | Terminal and headless `Application.Run` for Turbo Vision |
 | `reconcile.rs` | Live widget-tree reconcile and headless CRT repaint |
-| `live_patch.rs` | Incremental live updates for `SetChecked` / `SetItems` / `SetTitle` ([refactor 05](../../../refactor/tui-bridge/05-reduce-reconcile-rebuild.md)) |
+| `live_patch.rs` | Incremental live updates for data mutations ([refactor 05](../../../refactor/tui-bridge/done/05-reduce-reconcile-rebuild.md)) |
 | `headless_tv_draw.rs` | Headless upstream TV `draw` → CRT export ([refactor 04](../../../refactor/tui-bridge/done/04-headless-test-util.md)) |
 | `tv_headless_backend.rs` | In-memory `Backend` for headless TV `Terminal` |
 | `testing.rs` | `OpenForTest`, `CloseForTest`, dialog test result seeding |

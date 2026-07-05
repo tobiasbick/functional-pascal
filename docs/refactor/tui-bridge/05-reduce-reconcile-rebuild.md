@@ -1,10 +1,10 @@
 # 05 — Incremental view updates instead of full desktop rebuild
 
-**Status:** [ ] Not started · [ ] In progress · [ ] Done
+**Status:** [x] Audit · [x] Phase A (partial) · [ ] Phase B · [ ] Headless populate skip
 
-**Priority:** Low — architectural; do after 01 and preferably 03
+**Priority:** Low — architectural; after bridge stabilisation
 
-**Depends on:** [done/02-single-tv-session.md](done/02-single-tv-session.md), [done/04-headless-test-util.md](done/04-headless-test-util.md) (recommended)
+**Depends on:** [done/02-single-tv-session.md](done/02-single-tv-session.md), [done/04-headless-test-util.md](done/04-headless-test-util.md)
 
 ## Problem
 
@@ -23,22 +23,41 @@ This is simple and correct but expensive and fights upstream identity/focus/moda
 
 Still keep FPAS handle graph authoritative for Pascal and headless introspection.
 
+## Audit — `mark_turbo_vision_tree_dirty` call sites
+
+| Site | Trigger | Classification |
+| --- | --- | --- |
+| `control_create.rs` | `Create*` | **Structural** — keep full rebuild |
+| `controls.rs` `AddChild` | attach child | **Structural** |
+| `controls.rs` `SetText` | text mutation | **Data** — still rebuild (no upstream `set_text` on `StaticText` / `Button`) |
+| `controls.rs` `SetChecked` | cell mutation | **Data** — live patch via `live_patch.rs` |
+| `controls.rs` `SetItems` | list mutation | **Data** — live patch |
+| `windows.rs` `CreateWindow` / `AddWindow` | roots | **Structural** |
+| `windows.rs` `SetTitle` | title mutation | **Data** — live patch |
+| `dialogs.rs` `CreateDialog` | root | **Structural** |
+| `navigation.rs` | menu/status chrome | **Structural** (chrome sync on rebuild) |
+| `test_mouse.rs` | headless click | **Repaint** — headless pump always repaints |
+| `bridged_radio_button.rs` | user select | **Structural** — group exclusivity + `tree_dirty` |
+
 ## Tasks
 
-- [ ] **Audit** — List all calls to `mark_turbo_vision_tree_dirty` / `pending_reconcile`; classify structural vs data mutation.
-- [ ] **Upstream API** — For each control, confirm TV 2.0 setters (`set_text`, `set_checked`, list `set_items`, …) match bridge needs.
-- [ ] **Phase A** — Narrow reconcile triggers; implement live updates in `controls.rs` for `SetText`, `SetChecked`, `SetItems`, `SetTitle` without full rebuild (partially exists — verify completeness).
-- [ ] **Phase B** — Design handle→view map on session; document re-entrancy and modal cases.
-- [ ] **Remove** — Full rebuild on hot paths where incremental path proven.
-- [ ] **Tests** — `tui_turbo_vision_set_text_test.fpas`, `set_checked`, `set_items`, `set_title`, live tree tests.
+- [x] **Audit** — Table above.
+- [x] **Phase A** — `live_patch.rs`: `SetChecked`, `SetItems`, `SetTitle` patch live views; `live_view_ids` + `live_child_desktop_indices` registered at populate.
+- [ ] **Phase A follow-up** — `SetText` for `Memo` / `TextViewer` / `InputLine` when upstream setters + `as_any_mut` allow; `StaticText` still rebuilds.
+- [ ] **Phase B** — Stable handle→`ViewId` map survives window reorder; document re-entrancy and modal cases.
+- [ ] **Headless** — Skip desktop wipe in `headless_tv_draw` when only data changed (cells already shared on bridged controls).
+- [x] **Tests** — `set_text`, `set_checked`, `set_items`, `set_title`, full `tests/tui/controls/`.
 - [ ] **Perf** — Optional benchmark or manual note if IDE-scale trees feel sluggish before/after.
-- [ ] **Context** — Update [00-context.md](00-context.md).
+- [x] **Context** — [00-context.md](00-context.md).
 
-## Files (expected touch)
+## Files
 
 ```text
+crates/fpas-vm/src/vm/execute/io/tui/live_patch.rs       — NEW: live data mutation patch
 crates/fpas-vm/src/vm/execute/io/tui/reconcile.rs
 crates/fpas-vm/src/vm/execute/io/tui/controls.rs
+crates/fpas-vm/src/vm/execute/io/tui/windows.rs
+crates/fpas-vm/src/vm/execute/io/tui/tv_run.rs
 crates/fpas-vm/src/vm/execute/io/tui/tv_views.rs
 crates/fpas-vm/src/vm/shared/tui.rs
 ```
@@ -48,6 +67,7 @@ crates/fpas-vm/src/vm/shared/tui.rs
 ```text
 cargo run -q -p fpas-cli -- test tests/tui/controls/tui_turbo_vision_set_text_test.fpas
 cargo run -q -p fpas-cli -- test tests/tui/controls/tui_turbo_vision_live_tree_test.fpas
+cargo run -q -p fpas-cli -- test tests/tui/controls/
 cargo test --workspace
 ```
 
@@ -58,4 +78,5 @@ cargo test --workspace
 
 ## Notes
 
-- TV 2.0 `Event.info` field may matter for scroll/history commands — reconcile with [04-command-map-sync.md](04-command-map-sync.md) if bridging new broadcasts.
+- Live patch falls back to full rebuild when no live session or view id is missing.
+- `SetText` on `StaticText` still marks structural dirty — upstream has no runtime label setter.

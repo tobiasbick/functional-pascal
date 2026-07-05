@@ -33,6 +33,11 @@ impl BridgedCheckBox {
     fn sync_checked(&mut self) {
         self.checked_cell.set(self.inner.is_checked());
     }
+
+    /// Push FPAS cell state into the upstream checkbox (live patch path).
+    pub(in crate::vm::execute::io::tui) fn sync_from_cell(&mut self) {
+        self.inner.set_checked(self.checked_cell.read());
+    }
 }
 
 impl View for BridgedCheckBox {
@@ -75,6 +80,10 @@ impl View for BridgedCheckBox {
 
     fn get_palette(&self) -> Option<Palette> {
         self.inner.get_palette()
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
     }
 }
 

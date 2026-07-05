@@ -84,6 +84,7 @@ Turbo Vision bridge code lives under `crates/fpas-vm/src/vm/execute/io/tui/`:
 | `bridged_radio_button.rs` | Modal `RadioButton` view syncing selected state and FPAS group cells |
 | `tv_run.rs` | Terminal and headless `Application.Run` for Turbo Vision |
 | `reconcile.rs` | Live widget-tree reconcile and headless CRT repaint |
+| `live_patch.rs` | Incremental live updates for `SetChecked` / `SetItems` / `SetTitle` ([refactor 05](../../../refactor/tui-bridge/05-reduce-reconcile-rebuild.md)) |
 | `headless_tv_draw.rs` | Headless upstream TV `draw` → CRT export ([refactor 04](../../../refactor/tui-bridge/done/04-headless-test-util.md)) |
 | `tv_headless_backend.rs` | In-memory `Backend` for headless TV `Terminal` |
 | `testing.rs` | `OpenForTest`, `CloseForTest`, dialog test result seeding |

@@ -20,6 +20,7 @@ mod handles;
 mod headless_tv_draw;
 mod interactive_loop;
 mod lifecycle;
+mod live_patch;
 mod menu_build;
 mod msgbox;
 mod navigation;

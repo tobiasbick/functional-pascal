@@ -92,44 +92,36 @@ pub(in crate::vm::execute::io::tui) fn add_window_child(
     child: TurboVisionChildSnapshot,
     radio_groups: &HashMap<u16, Vec<crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell>>,
     tree_dirty: crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell,
-) {
+) -> turbo_vision::views::view::ViewId {
     match child {
-        TurboVisionChildSnapshot::Button(button) => {
-            window.add(Box::new(Button::new(
-                turbo_rect(button.bounds),
-                &button.text,
-                fpas_command_to_turbo_vision(button.command_id),
-                false,
-            )));
-        }
-        TurboVisionChildSnapshot::StaticText(static_text) => {
-            window.add(Box::new(StaticText::new(
-                turbo_rect(static_text.bounds),
-                &static_text.text,
-            )));
-        }
-        TurboVisionChildSnapshot::Memo(memo) => {
-            window.add(Box::new(build_memo(memo)));
-        }
+        TurboVisionChildSnapshot::Button(button) => window.add(Box::new(Button::new(
+            turbo_rect(button.bounds),
+            &button.text,
+            fpas_command_to_turbo_vision(button.command_id),
+            false,
+        ))),
+        TurboVisionChildSnapshot::StaticText(static_text) => window.add(Box::new(StaticText::new(
+            turbo_rect(static_text.bounds),
+            &static_text.text,
+        ))),
+        TurboVisionChildSnapshot::Memo(memo) => window.add(Box::new(build_memo(memo))),
         TurboVisionChildSnapshot::TextViewer(text_viewer) => {
-            window.add(Box::new(build_text_viewer(text_viewer)));
+            window.add(Box::new(build_text_viewer(text_viewer)))
         }
-        TurboVisionChildSnapshot::InputLine(input_line) => {
-            window.add(Box::new(InputLine::new(
-                turbo_rect(input_line.bounds),
-                input_line.max_length,
-                input_line.text_cell.view_binding(),
-            )));
-        }
+        TurboVisionChildSnapshot::InputLine(input_line) => window.add(Box::new(InputLine::new(
+            turbo_rect(input_line.bounds),
+            input_line.max_length,
+            input_line.text_cell.view_binding(),
+        ))),
         TurboVisionChildSnapshot::ListBox(list_box) => {
-            window.add(Box::new(build_list_box(list_box)));
+            window.add(Box::new(build_list_box(list_box)))
         }
         TurboVisionChildSnapshot::CheckBox(check_box) => {
             window.add(Box::new(super::bridged_check_box::BridgedCheckBox::new(
                 turbo_rect(check_box.bounds),
                 &check_box.text,
                 check_box.checked_cell.clone(),
-            )));
+            )))
         }
         TurboVisionChildSnapshot::RadioButton(radio_button) => {
             let group_cells = radio_groups
@@ -145,7 +137,7 @@ pub(in crate::vm::execute::io::tui) fn add_window_child(
                     group_cells,
                     tree_dirty,
                 ),
-            ));
+            ))
         }
     }
 }
@@ -157,27 +149,21 @@ pub(in crate::vm::execute::io::tui) fn add_dialog_child(
     input_bindings: &mut Vec<(u32, Rc<RefCell<String>>)>,
     radio_groups: &HashMap<u16, Vec<crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell>>,
     tree_dirty: crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell,
-) {
+) -> turbo_vision::views::view::ViewId {
     match child {
-        TurboVisionChildSnapshot::Button(button) => {
-            dialog.add(Box::new(Button::new(
-                turbo_rect(button.bounds),
-                &button.text,
-                fpas_command_to_turbo_vision(button.command_id),
-                false,
-            )));
-        }
-        TurboVisionChildSnapshot::StaticText(static_text) => {
-            dialog.add(Box::new(StaticText::new(
-                turbo_rect(static_text.bounds),
-                &static_text.text,
-            )));
-        }
-        TurboVisionChildSnapshot::Memo(memo) => {
-            dialog.add(Box::new(build_memo(memo)));
-        }
+        TurboVisionChildSnapshot::Button(button) => dialog.add(Box::new(Button::new(
+            turbo_rect(button.bounds),
+            &button.text,
+            fpas_command_to_turbo_vision(button.command_id),
+            false,
+        ))),
+        TurboVisionChildSnapshot::StaticText(static_text) => dialog.add(Box::new(StaticText::new(
+            turbo_rect(static_text.bounds),
+            &static_text.text,
+        ))),
+        TurboVisionChildSnapshot::Memo(memo) => dialog.add(Box::new(build_memo(memo))),
         TurboVisionChildSnapshot::TextViewer(text_viewer) => {
-            dialog.add(Box::new(build_text_viewer(text_viewer)));
+            dialog.add(Box::new(build_text_viewer(text_viewer)))
         }
         TurboVisionChildSnapshot::InputLine(input_line) => {
             let binding = input_line.text_cell.view_binding();
@@ -186,7 +172,7 @@ pub(in crate::vm::execute::io::tui) fn add_dialog_child(
                 turbo_rect(input_line.bounds),
                 input_line.max_length,
                 binding,
-            )));
+            )))
         }
         TurboVisionChildSnapshot::ListBox(list_box) => {
             dialog.add(Box::new(super::bridged_list_box::BridgedListBox::new(
@@ -194,14 +180,14 @@ pub(in crate::vm::execute::io::tui) fn add_dialog_child(
                 list_box.items,
                 fpas_command_to_turbo_vision(list_box.command_id),
                 list_box.selection_cell,
-            )));
+            )))
         }
         TurboVisionChildSnapshot::CheckBox(check_box) => {
             dialog.add(Box::new(super::bridged_check_box::BridgedCheckBox::new(
                 turbo_rect(check_box.bounds),
                 &check_box.text,
                 check_box.checked_cell.clone(),
-            )));
+            )))
         }
         TurboVisionChildSnapshot::RadioButton(radio_button) => {
             let group_cells = radio_groups
@@ -217,7 +203,7 @@ pub(in crate::vm::execute::io::tui) fn add_dialog_child(
                     group_cells,
                     tree_dirty,
                 ),
-            ));
+            ))
         }
     }
 }

@@ -35,6 +35,10 @@ pub(crate) struct TurboVisionState {
     pub test_dialog_result: Option<i64>,
     /// FPAS-side widget tree changed since the last reconcile step.
     pub pending_reconcile: crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell,
+    /// FPAS handle → live turbo-vision `ViewId` (as `u16`); cleared on full desktop rebuild.
+    pub live_view_ids: HashMap<u32, u16>,
+    /// Child handle → desktop root index at build time (for live patch lookup).
+    pub live_child_desktop_indices: HashMap<u32, usize>,
 }
 
 impl Default for TurboVisionState {
@@ -49,6 +53,8 @@ impl Default for TurboVisionState {
             test_file_dialog_result: None,
             test_dialog_result: None,
             pending_reconcile: crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell::new(false),
+            live_view_ids: HashMap::new(),
+            live_child_desktop_indices: HashMap::new(),
         }
     }
 }

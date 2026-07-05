@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
 use super::handles::{CheckedControlHandle, TurboVisionChildHandle, TurboVisionParentHandle};
+use super::live_patch::LiveDataMutation;
 use super::tv_geometry::unknown_handle_error;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
@@ -214,11 +215,15 @@ impl Worker {
                 Ok(())
             }
         })?;
-        self.mark_turbo_vision_tree_dirty();
+        let mutation_handle = match control {
+            CheckedControlHandle::CheckBox(handle) => handle,
+            CheckedControlHandle::RadioButton(handle) => handle,
+        };
+        self.turbo_vision_after_data_mutation(LiveDataMutation::SetChecked {
+            handle: mutation_handle,
+        });
         Ok(())
     }
-
-    /// Replace the items of a list box.
     ///
     /// **Documentation:** `docs/pascal/std/tui/app/controls.md`
     pub(super) fn turbo_vision_set_items(&mut self, line: SourceLocation) -> Result<(), VmError> {
@@ -226,18 +231,22 @@ impl Worker {
         let list_handle = self.pop_turbo_vision_list_box_handle(line)?;
         self.pop_tui_application(line)?;
 
-        self.with_tui(|tui| {
+        let selection = self.with_tui(|tui| {
             let Some(TurboVisionObject::ListBox(list_box)) =
                 tui.turbo_vision.objects.get_mut(&list_handle)
             else {
                 return Err(unknown_handle_error("ListBox", list_handle, line));
             };
             let selection = initial_list_selection(&items);
-            list_box.items = items;
+            list_box.items = items.clone();
             list_box.selection_cell.set(selection);
-            Ok(())
+            Ok(selection)
         })?;
-        self.mark_turbo_vision_tree_dirty();
+        self.turbo_vision_after_data_mutation(LiveDataMutation::SetListItems {
+            handle: list_handle,
+            items,
+            selection,
+        });
         Ok(())
     }
 

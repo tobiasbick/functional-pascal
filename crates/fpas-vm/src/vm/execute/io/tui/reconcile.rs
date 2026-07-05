@@ -53,6 +53,7 @@ impl Worker {
         &self,
         app: &mut TurboVisionApplication,
     ) {
+        self.turbo_vision_clear_live_view_ids();
         self.turbo_vision_sync_chrome_from_fpas(app);
         while app.desktop.child_count() > 0 {
             app.desktop.remove_child(0);

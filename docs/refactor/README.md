@@ -21,7 +21,7 @@ _No items currently blocked on planning only._
 | [tui-bridge/done/03-about-message-box.md](tui-bridge/done/03-about-message-box.md) | About / simple dialogs via upstream `message_box` | Done |
 | [tui-bridge/done/04-headless-test-util.md](tui-bridge/done/04-headless-test-util.md) | Headless tests via TV `draw` + in-memory backend | Done |
 | [tui-bridge/04-command-map-sync.md](tui-bridge/04-command-map-sync.md) | Keep reserved `CM_*` list aligned with upstream | Ongoing (bump checklist + `reserved_list_matches_upstream` test) |
-| [tui-bridge/05-reduce-reconcile-rebuild.md](tui-bridge/05-reduce-reconcile-rebuild.md) | Incremental view updates instead of full desktop rebuild | Pending |
+| [tui-bridge/05-reduce-reconcile-rebuild.md](tui-bridge/05-reduce-reconcile-rebuild.md) | Incremental view updates instead of full desktop rebuild | In progress (Phase A) |
 | [tui-bridge/06-review-bridged-widgets.md](tui-bridge/06-review-bridged-widgets.md) | Re-evaluate `Bridged*` wrappers after TV 2.0 | Done (headless mouse follow-up open) |
 | [tui-bridge/07-pascal-message-box-api.md](tui-bridge/07-pascal-message-box-api.md) | Optional `Std.Tui` wrapper for upstream dialog helpers | Pending |
 | [tui-bridge/done/01-turbo-vision-2-upgrade.md](tui-bridge/done/01-turbo-vision-2-upgrade.md) | Upgrade to turbo-vision 2.0 + Borland command ids | Done |

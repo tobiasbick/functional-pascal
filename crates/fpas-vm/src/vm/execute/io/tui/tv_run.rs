@@ -105,31 +105,81 @@ impl Worker {
         &self,
         desktop: &mut turbo_vision::views::desktop::Desktop,
     ) {
+        self.turbo_vision_clear_live_view_ids();
         let tree_dirty = self.with_tui(|tui| tui.turbo_vision.pending_reconcile.clone());
-        for window in self.turbo_vision_window_snapshots() {
-            let radio_groups = radio_groups_from_snapshots(&window.children);
-            let mut window_view = Window::new(turbo_rect(window.bounds), &window.title);
-            for child in window.children {
-                add_window_child(&mut window_view, child, &radio_groups, tree_dirty.clone());
+
+        let windows = self.with_tui(|tui| {
+            let mut windows = Vec::new();
+            for (handle, object) in &tui.turbo_vision.objects {
+                let TurboVisionObject::Window(window) = object else {
+                    continue;
+                };
+                if !window.on_desktop {
+                    continue;
+                }
+                windows.push((
+                    *handle,
+                    window.bounds,
+                    window.title.clone(),
+                    window.children.clone(),
+                ));
             }
-            desktop.add(Box::new(window_view));
+            windows.sort_by_key(|(handle, _, _, _)| *handle);
+            windows
+        });
+
+        for (window_handle, bounds, title, child_handles) in windows {
+            let desktop_index = desktop.child_count();
+            let children =
+                self.with_tui(|tui| child_snapshots(&tui.turbo_vision.objects, &child_handles));
+            let radio_groups = radio_groups_from_snapshots(&children);
+            let mut window_view = Window::new(turbo_rect(bounds), &title);
+            for (child_handle, child) in child_handles.into_iter().zip(children) {
+                let view_id =
+                    add_window_child(&mut window_view, child, &radio_groups, tree_dirty.clone());
+                self.turbo_vision_register_live_child_view(child_handle, desktop_index, view_id);
+            }
+            let root_id = desktop.add(Box::new(window_view));
+            self.turbo_vision_register_live_view_id(window_handle, root_id);
         }
 
-        for dialog in self.turbo_vision_dialog_snapshots() {
-            let radio_groups = radio_groups_from_snapshots(&dialog.children);
-            let mut dialog_view = Dialog::new_modal(turbo_rect(dialog.bounds), &dialog.title);
+        let dialogs = self.with_tui(|tui| {
+            let mut dialogs = Vec::new();
+            for (handle, object) in &tui.turbo_vision.objects {
+                let TurboVisionObject::Dialog(dialog) = object else {
+                    continue;
+                };
+                dialogs.push((
+                    *handle,
+                    dialog.bounds,
+                    dialog.title.clone(),
+                    dialog.children.clone(),
+                ));
+            }
+            dialogs.sort_by_key(|(handle, _, _, _)| *handle);
+            dialogs
+        });
+
+        for (dialog_handle, bounds, title, child_handles) in dialogs {
+            let desktop_index = desktop.child_count();
+            let children =
+                self.with_tui(|tui| child_snapshots(&tui.turbo_vision.objects, &child_handles));
+            let radio_groups = radio_groups_from_snapshots(&children);
+            let mut dialog_view = Dialog::new_modal(turbo_rect(bounds), &title);
             let mut input_bindings = Vec::new();
-            for child in dialog.children {
-                add_dialog_child(
+            for (child_handle, child) in child_handles.into_iter().zip(children) {
+                let view_id = add_dialog_child(
                     &mut dialog_view,
                     child,
-                    0,
+                    child_handle,
                     &mut input_bindings,
                     &radio_groups,
                     tree_dirty.clone(),
                 );
+                self.turbo_vision_register_live_child_view(child_handle, desktop_index, view_id);
             }
-            desktop.add(dialog_view);
+            let root_id = desktop.add(dialog_view);
+            self.turbo_vision_register_live_view_id(dialog_handle, root_id);
         }
     }
 

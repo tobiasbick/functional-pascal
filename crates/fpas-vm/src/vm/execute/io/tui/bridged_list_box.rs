@@ -42,6 +42,19 @@ impl BridgedListBox {
     fn sync_selection(&mut self) {
         self.selection_cell.set(self.inner.get_selection());
     }
+
+    /// Replace list items and selection from FPAS host state (live patch path).
+    pub(in crate::vm::execute::io::tui) fn set_items_from_fpas(
+        &mut self,
+        items: Vec<String>,
+        selection: Option<usize>,
+    ) {
+        self.inner.set_items(items);
+        if let Some(index) = selection {
+            self.inner.set_selection(index);
+        }
+        self.sync_selection();
+    }
 }
 
 impl View for BridgedListBox {
@@ -93,6 +106,10 @@ impl View for BridgedListBox {
 
     fn get_palette(&self) -> Option<Palette> {
         self.inner.get_palette()
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
     }
 }
 

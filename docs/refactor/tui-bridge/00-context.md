@@ -39,7 +39,7 @@ Pascal Application.*
 | Retained handles | `shared/tui.rs`, `control_create.rs` | `Create*` only writes FPAS records; upstream widgets rebuilt later |
 | Headless paint | `headless_tv_draw.rs` | Upstream TV `draw` → CRT export ([done/04-headless-test-util.md](done/04-headless-test-util.md)) |
 | Headless commands | `commands.rs`, `tv_run.rs` | Queue + `Pump` instead of TV event loop |
-| Full desktop rebuild | `reconcile.rs`, `tv_run.rs` | `pending_reconcile` → wipe desktop → repopulate |
+| Full desktop rebuild | `reconcile.rs`, `tv_run.rs` | `pending_reconcile` → wipe desktop → repopulate; data mutations use `live_patch.rs` when possible |
 | State cells | `turbo_vision_*_cell.rs`, `bridged_*.rs` | Sync checkbox/radio/list/input back to FPAS handles; live mouse on clusters is upstream TV 2.0 |
 | Command offset band | `command_map.rs` | App-defined ids that collide with `CM_*` use `0x8000` band; `Command.*` pass through |
 

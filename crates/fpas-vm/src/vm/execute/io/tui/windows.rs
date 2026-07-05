@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
 use super::handles::TurboVisionParentHandle;
+use super::live_patch::LiveDataMutation;
 use super::tv_geometry::state_rect;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
@@ -79,7 +80,7 @@ impl Worker {
         let root = self.pop_turbo_vision_parent_handle(line)?;
         self.pop_tui_application(line)?;
 
-        self.with_tui(|tui| match root {
+        let root_handle = self.with_tui(|tui| match root {
             TurboVisionParentHandle::Dialog(handle) => {
                 let Some(TurboVisionObject::Dialog(dialog)) =
                     tui.turbo_vision.objects.get_mut(&handle)
@@ -88,8 +89,8 @@ impl Worker {
                         "Dialog", handle, line,
                     ));
                 };
-                dialog.title = title;
-                Ok(())
+                dialog.title = title.clone();
+                Ok(handle)
             }
             TurboVisionParentHandle::Window(handle) => {
                 let Some(TurboVisionObject::Window(window)) =
@@ -99,11 +100,14 @@ impl Worker {
                         "Window", handle, line,
                     ));
                 };
-                window.title = title;
-                Ok(())
+                window.title = title.clone();
+                Ok(handle)
             }
         })?;
-        self.mark_turbo_vision_tree_dirty();
+        self.turbo_vision_after_data_mutation(LiveDataMutation::SetTitle {
+            handle: root_handle,
+            title,
+        });
         Ok(())
     }
 }

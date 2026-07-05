@@ -39,8 +39,8 @@ pub(crate) struct TurboVisionState {
     pub pending_headless_repaint: crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell,
     /// FPAS handle → live turbo-vision `ViewId` (as `u16`); cleared on full desktop rebuild.
     pub live_view_ids: HashMap<u32, u16>,
-    /// Child handle → desktop root index at build time (for live patch lookup).
-    pub live_child_desktop_indices: HashMap<u32, usize>,
+    /// Child handle → parent window/dialog `ViewId` at build time (stable across desktop reorder).
+    pub live_child_root_view_ids: HashMap<u32, u16>,
 }
 
 impl Default for TurboVisionState {
@@ -59,7 +59,7 @@ impl Default for TurboVisionState {
                 false,
             ),
             live_view_ids: HashMap::new(),
-            live_child_desktop_indices: HashMap::new(),
+            live_child_root_view_ids: HashMap::new(),
         }
     }
 }

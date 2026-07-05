@@ -5,7 +5,10 @@
 mod application;
 mod bridged_check_box;
 mod bridged_list_box;
+mod bridged_memo;
 mod bridged_radio_button;
+mod bridged_static_text;
+mod bridged_text_viewer;
 mod callbacks;
 mod chrome_layout;
 mod command_map;

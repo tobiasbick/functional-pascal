@@ -1,6 +1,6 @@
 # 05 — Incremental view updates instead of full desktop rebuild
 
-**Status:** [x] Audit · [x] Phase A · [x] SetText inputline · [x] Headless repaint skip · [ ] Phase B · [ ] SetText memo/textviewer
+**Status:** [x] Audit · [x] Phase A · [x] SetText inputline/memo/textviewer · [x] Headless repaint skip · [x] Phase B
 
 **Priority:** Low — architectural; after bridge stabilisation
 
@@ -29,7 +29,7 @@ Still keep FPAS handle graph authoritative for Pascal and headless introspection
 | --- | --- | --- |
 | `control_create.rs` | `Create*` | **Structural** — keep full rebuild |
 | `controls.rs` `AddChild` | attach child | **Structural** |
-| `controls.rs` `SetText` | text mutation | **Data** — live repaint for `InputLine` (shared binding); rebuild for `Memo` / `TextViewer` / `StaticText` / `Button` / clusters |
+| `controls.rs` `SetText` | text mutation | **Data** — live repaint for `StaticText` / `InputLine` / `Memo` / `TextViewer`; rebuild for `Button` / clusters |
 | `controls.rs` `SetChecked` | cell mutation | **Data** — live patch via `live_patch.rs` |
 | `controls.rs` `SetItems` | list mutation | **Data** — live patch |
 | `windows.rs` `CreateWindow` / `AddWindow` | roots | **Structural** |
@@ -42,9 +42,9 @@ Still keep FPAS handle graph authoritative for Pascal and headless introspection
 ## Tasks
 
 - [x] **Audit** — Table above.
-- [x] **Phase A** — `live_patch.rs`: `SetChecked`, `SetItems`, `SetTitle` patch live views; `live_view_ids` + `live_child_desktop_indices` registered at populate.
-- [x] **Phase A follow-up** — `SetText` on `InputLine` skips rebuild (shared text binding + repaint); `Memo` / `TextViewer` still rebuild until upstream `as_any_mut` or `Bridged*` wrappers.
-- [ ] **Phase B** — Stable handle→`ViewId` map survives window reorder; document re-entrancy and modal cases.
+- [x] **Phase A** — `live_patch.rs`: `SetChecked`, `SetItems`, `SetTitle` patch live views; `live_view_ids` + `live_child_root_view_ids` registered at populate.
+- [x] **Phase A follow-up** — `SetText` on `StaticText` / `InputLine` / `Memo` / `TextViewer` via live patch (`BridgedStaticText`, `BridgedMemo`, `BridgedTextViewer`, shared input bindings).
+- [x] **Phase B** — Child handles map to parent root `ViewId` (not desktop index); survives `Desktop::bring_to_front`. Cleared on full rebuild; modal `ExecDialog` trees are separate ephemeral instances.
 - [x] **Headless** — `pending_headless_repaint` skips desktop wipe; data mutations patch existing `HeadlessTvApp` tree.
 - [x] **Tests** — `set_text`, `set_checked`, `set_items`, `set_title`, full `tests/tui/controls/`.
 - [ ] **Perf** — Optional benchmark or manual note if IDE-scale trees feel sluggish before/after.
@@ -79,5 +79,7 @@ cargo test --workspace
 ## Notes
 
 - Live and headless share `apply_live_data_mutation_to_desktop`; headless reconcile skips populate when only `pending_headless_repaint` is set.
-- `SetText` on `InputLine` updates the shared view binding and requests repaint only; `Memo` and `TextViewer` still rebuild (no upstream `as_any_mut` on stock views).
-- `SetText` on `StaticText`, `Button`, `CheckBox`, and `RadioButton` still marks structural dirty — upstream has no runtime label setter on those types.
+- `live_child_root_view_ids` stores the window/dialog `ViewId` for each child handle so live patch and headless mouse routing survive desktop z-order changes without a rebuild.
+- Full desktop rebuild clears all live maps; do not patch across `ExecDialog` modal instances (they are not registered in session maps).
+- `SetText` on `StaticText`, `InputLine`, `Memo`, and `TextViewer` patches live views (`BridgedStaticText`, `BridgedMemo`, `BridgedTextViewer`, input bindings).
+- `SetText` on `Button`, `CheckBox`, and `RadioButton` still marks structural dirty — upstream has no runtime label setter on those types.

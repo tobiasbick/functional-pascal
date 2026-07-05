@@ -41,7 +41,8 @@ Pascal Application.*
 | Headless input | `HeadlessTvEventInbox` + `test_mouse.rs` | `TestClickMouse` routes through TV `handle_event`; FPAS hit-test maps handle → live view bounds |
 | Headless commands | `commands.rs`, `tv_run.rs` | Queue + `Pump` instead of TV event loop |
 | Full desktop rebuild | `reconcile.rs`, `tv_run.rs` | `pending_reconcile` → wipe desktop → repopulate; data mutations use `live_patch.rs` when possible |
-| State cells | `turbo_vision_*_cell.rs`, `bridged_*.rs` | Sync checkbox/radio/list/input back to FPAS handles; live mouse on clusters is upstream TV 2.0 |
+| Live view maps | `live_patch.rs`, `tv_run.rs` | `live_view_ids` + `live_child_root_view_ids` (parent root `ViewId`, survives z-order) |
+| State cells | `turbo_vision_*_cell.rs`, `bridged_*.rs` | Sync checkbox/radio/list/input back to FPAS handles; `BridgedMemo` / `BridgedTextViewer` / `BridgedStaticText` for live `SetText` |
 | Command offset band | `command_map.rs` | App-defined ids that collide with `CM_*` use `0x8000` band; `Command.*` pass through |
 
 ## Known duplication (refactor targets)
@@ -78,7 +79,7 @@ On every `turbo-vision` tag or revision bump in `Cargo.lock`:
 2. Confirm `fpas-std` `COMMAND_*` constants still match Borland `CM_*` for `Command.Quit`, `Close`, `Accept`, `Cancel`.
 3. Run `fpas test tests/tui/controls/tui_turbo_vision_reserved_command_test.fpas` and IDE About tests.
 
-Full checklist: [04-command-map-sync.md](04-command-map-sync.md).
+Full checklist: [done/04-command-map-sync.md](done/04-command-map-sync.md).
 
 ## Verification baseline
 

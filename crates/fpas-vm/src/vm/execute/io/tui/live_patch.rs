@@ -6,7 +6,10 @@
 
 use super::bridged_check_box::BridgedCheckBox;
 use super::bridged_list_box::BridgedListBox;
+use super::bridged_memo::BridgedMemo;
 use super::bridged_radio_button::BridgedRadioButton;
+use super::bridged_static_text::BridgedStaticText;
+use super::bridged_text_viewer::BridgedTextViewer;
 use crate::vm::Worker;
 use crate::vm::shared::TurboVisionObject;
 use std::cell::RefCell;
@@ -40,7 +43,10 @@ pub(in crate::vm::execute::io::tui) enum LiveDataMutation {
 
 enum LiveViewLocation {
     DesktopRoot(ViewId),
-    DesktopChild { root_index: usize, view_id: ViewId },
+    DesktopChild {
+        root_view_id: ViewId,
+        view_id: ViewId,
+    },
 }
 
 impl Worker {
@@ -64,8 +70,8 @@ impl Worker {
 
     fn turbo_vision_try_headless_data_mutation(&mut self, mutation: &LiveDataMutation) -> bool {
         let view_ids = self.with_tui(|tui| tui.turbo_vision.live_view_ids.clone());
-        let child_desktop_indices =
-            self.with_tui(|tui| tui.turbo_vision.live_child_desktop_indices.clone());
+        let child_root_view_ids =
+            self.with_tui(|tui| tui.turbo_vision.live_child_root_view_ids.clone());
         let mut app_slot = self.headless_tv_app.take();
         let Some(app) = app_slot.as_mut() else {
             self.headless_tv_app = app_slot;
@@ -74,7 +80,7 @@ impl Worker {
         let ok = apply_live_data_mutation_to_desktop(
             app.desktop_mut(),
             &view_ids,
-            &child_desktop_indices,
+            &child_root_view_ids,
             mutation,
             self,
         );
@@ -87,8 +93,8 @@ impl Worker {
             return false;
         }
         let view_ids = self.with_tui(|tui| tui.turbo_vision.live_view_ids.clone());
-        let child_desktop_indices =
-            self.with_tui(|tui| tui.turbo_vision.live_child_desktop_indices.clone());
+        let child_root_view_ids =
+            self.with_tui(|tui| tui.turbo_vision.live_child_root_view_ids.clone());
         let mut app = match self.live_turbo_vision_app.take() {
             Some(app) => app,
             None => return false,
@@ -96,7 +102,7 @@ impl Worker {
         let ok = apply_live_data_mutation_to_desktop(
             &mut app.desktop,
             &view_ids,
-            &child_desktop_indices,
+            &child_root_view_ids,
             &mutation,
             self,
         );
@@ -119,7 +125,7 @@ impl Worker {
     pub(in crate::vm::execute::io::tui) fn turbo_vision_register_live_child_view(
         &self,
         handle: u32,
-        desktop_root_index: usize,
+        root_view_id: ViewId,
         view_id: ViewId,
     ) {
         self.with_tui(|tui| {
@@ -127,8 +133,8 @@ impl Worker {
                 .live_view_ids
                 .insert(handle, view_id.as_u16());
             tui.turbo_vision
-                .live_child_desktop_indices
-                .insert(handle, desktop_root_index);
+                .live_child_root_view_ids
+                .insert(handle, root_view_id.as_u16());
         });
     }
 
@@ -136,7 +142,7 @@ impl Worker {
         self.input_line_view_bindings.borrow_mut().clear();
         self.with_tui(|tui| {
             tui.turbo_vision.live_view_ids.clear();
-            tui.turbo_vision.live_child_desktop_indices.clear();
+            tui.turbo_vision.live_child_root_view_ids.clear();
         });
     }
 
@@ -168,11 +174,11 @@ impl Worker {
         handle: u32,
     ) -> Option<Point> {
         let view_ids = self.with_tui(|tui| tui.turbo_vision.live_view_ids.clone());
-        let child_desktop_indices =
-            self.with_tui(|tui| tui.turbo_vision.live_child_desktop_indices.clone());
+        let child_root_view_ids =
+            self.with_tui(|tui| tui.turbo_vision.live_child_root_view_ids.clone());
         let mut app_slot = self.headless_tv_app.take();
         let point = app_slot.as_mut().and_then(|app| {
-            live_view_bounds_origin(app.desktop_mut(), &view_ids, &child_desktop_indices, handle)
+            live_view_bounds_origin(app.desktop_mut(), &view_ids, &child_root_view_ids, handle)
         });
         self.headless_tv_app = app_slot;
         point
@@ -182,13 +188,13 @@ impl Worker {
 fn apply_live_data_mutation_to_desktop(
     desktop: &mut turbo_vision::views::desktop::Desktop,
     view_ids: &HashMap<u32, u16>,
-    child_desktop_indices: &HashMap<u32, usize>,
+    child_root_view_ids: &HashMap<u32, u16>,
     mutation: &LiveDataMutation,
     worker: &Worker,
 ) -> bool {
     match mutation {
         LiveDataMutation::SetTitle { handle, title } => {
-            let Some(location) = locate_live_view(view_ids, child_desktop_indices, *handle) else {
+            let Some(location) = locate_live_view(view_ids, child_root_view_ids, *handle) else {
                 return false;
             };
             let title = title.clone();
@@ -211,9 +217,9 @@ fn apply_live_data_mutation_to_desktop(
             } else {
                 group_handles
             };
-            targets.iter().all(|&member| {
-                patch_checked_handle(desktop, view_ids, child_desktop_indices, member)
-            })
+            targets
+                .iter()
+                .all(|&member| patch_checked_handle(desktop, view_ids, child_root_view_ids, member))
         }
         LiveDataMutation::SetListItems {
             handle,
@@ -222,13 +228,13 @@ fn apply_live_data_mutation_to_desktop(
         } => patch_list_items(
             desktop,
             view_ids,
-            child_desktop_indices,
+            child_root_view_ids,
             *handle,
             items.clone(),
             *selection,
         ),
         LiveDataMutation::SetText { handle } => {
-            patch_input_line_text(view_ids, child_desktop_indices, *handle, worker)
+            patch_set_text(desktop, view_ids, child_root_view_ids, *handle, worker)
         }
     }
 }
@@ -239,13 +245,13 @@ fn view_id_for_handle(view_ids: &HashMap<u32, u16>, handle: u32) -> Option<ViewI
 
 fn locate_live_view(
     view_ids: &HashMap<u32, u16>,
-    child_desktop_indices: &HashMap<u32, usize>,
+    child_root_view_ids: &HashMap<u32, u16>,
     handle: u32,
 ) -> Option<LiveViewLocation> {
     let view_id = view_id_for_handle(view_ids, handle)?;
-    if let Some(root_index) = child_desktop_indices.get(&handle) {
+    if let Some(root_view_id) = child_root_view_ids.get(&handle) {
         return Some(LiveViewLocation::DesktopChild {
-            root_index: *root_index,
+            root_view_id: ViewId::from_u16(*root_view_id),
             view_id,
         });
     }
@@ -265,10 +271,12 @@ fn with_live_view_mut(
             patch(view)
         }
         LiveViewLocation::DesktopChild {
-            root_index,
+            root_view_id,
             view_id,
         } => {
-            let root = desktop.child_at_mut(root_index);
+            let Some(root) = desktop.child_by_id_mut(root_view_id) else {
+                return false;
+            };
             if let Some(window) = root.as_any_mut().downcast_mut::<Window>() {
                 let Some(child) = window.child_by_id_mut(view_id) else {
                     return false;
@@ -289,19 +297,19 @@ fn with_live_view_mut(
 fn live_view_bounds_origin(
     desktop: &mut Desktop,
     view_ids: &HashMap<u32, u16>,
-    child_desktop_indices: &HashMap<u32, usize>,
+    child_root_view_ids: &HashMap<u32, u16>,
     handle: u32,
 ) -> Option<Point> {
-    let location = locate_live_view(view_ids, child_desktop_indices, handle)?;
+    let location = locate_live_view(view_ids, child_root_view_ids, handle)?;
     match location {
         LiveViewLocation::DesktopRoot(view_id) => {
             desktop.child_by_id(view_id).map(|view| view.bounds().a)
         }
         LiveViewLocation::DesktopChild {
-            root_index,
+            root_view_id,
             view_id,
         } => {
-            let root = desktop.child_at_mut(root_index);
+            let root = desktop.child_by_id_mut(root_view_id)?;
             if let Some(dialog) = root.as_any_mut().downcast_mut::<Dialog>() {
                 return dialog.child_by_id(view_id).map(|view| view.bounds().a);
             }
@@ -316,10 +324,10 @@ fn live_view_bounds_origin(
 fn patch_checked_handle(
     desktop: &mut Desktop,
     view_ids: &HashMap<u32, u16>,
-    child_desktop_indices: &HashMap<u32, usize>,
+    child_root_view_ids: &HashMap<u32, u16>,
     handle: u32,
 ) -> bool {
-    let Some(location) = locate_live_view(view_ids, child_desktop_indices, handle) else {
+    let Some(location) = locate_live_view(view_ids, child_root_view_ids, handle) else {
         return false;
     };
     with_live_view_mut(desktop, location, |view| {
@@ -338,12 +346,12 @@ fn patch_checked_handle(
 fn patch_list_items(
     desktop: &mut Desktop,
     view_ids: &HashMap<u32, u16>,
-    child_desktop_indices: &HashMap<u32, usize>,
+    child_root_view_ids: &HashMap<u32, u16>,
     handle: u32,
     items: Vec<String>,
     selection: Option<usize>,
 ) -> bool {
-    let Some(location) = locate_live_view(view_ids, child_desktop_indices, handle) else {
+    let Some(location) = locate_live_view(view_ids, child_root_view_ids, handle) else {
         return false;
     };
     with_live_view_mut(desktop, location, |view| {
@@ -362,22 +370,55 @@ fn patch_list_items(
     })
 }
 
-fn patch_input_line_text(
+fn patch_set_text(
+    desktop: &mut Desktop,
     view_ids: &HashMap<u32, u16>,
-    child_desktop_indices: &HashMap<u32, usize>,
+    child_root_view_ids: &HashMap<u32, u16>,
     handle: u32,
     worker: &Worker,
 ) -> bool {
-    locate_live_view(view_ids, child_desktop_indices, handle).is_some()
-        && worker.with_tui(|tui| {
-            matches!(
-                tui.turbo_vision.objects.get(&handle),
-                Some(TurboVisionObject::InputLine(_))
-            )
-        })
+    if worker.with_tui(|tui| {
+        matches!(
+            tui.turbo_vision.objects.get(&handle),
+            Some(TurboVisionObject::InputLine(_))
+        )
+    }) {
+        return locate_live_view(view_ids, child_root_view_ids, handle).is_some();
+    }
+
+    let Some(text) = worker.turbo_vision_text_for_set_text(handle) else {
+        return false;
+    };
+    let Some(location) = locate_live_view(view_ids, child_root_view_ids, handle) else {
+        return false;
+    };
+    with_live_view_mut(desktop, location, |view| {
+        if let Some(static_text) = view.as_any_mut().downcast_mut::<BridgedStaticText>() {
+            static_text.set_text_from_fpas(&text);
+            return true;
+        }
+        if let Some(memo) = view.as_any_mut().downcast_mut::<BridgedMemo>() {
+            memo.set_text_from_fpas(&text);
+            return true;
+        }
+        if let Some(text_viewer) = view.as_any_mut().downcast_mut::<BridgedTextViewer>() {
+            text_viewer.set_text_from_fpas(&text);
+            return true;
+        }
+        false
+    })
 }
 
 impl Worker {
+    fn turbo_vision_text_for_set_text(&self, handle: u32) -> Option<String> {
+        self.with_tui(|tui| match tui.turbo_vision.objects.get(&handle) {
+            Some(TurboVisionObject::StaticText(static_text)) => Some(static_text.text.clone()),
+            Some(TurboVisionObject::Memo(memo)) => Some(memo.text.clone()),
+            Some(TurboVisionObject::TextViewer(text_viewer)) => Some(text_viewer.text.clone()),
+            _ => None,
+        })
+    }
+
     fn turbo_vision_radio_group_handles(&self, handle: u32) -> Vec<u32> {
         self.with_tui(|tui| {
             let group_id = match tui.turbo_vision.objects.get(&handle) {
@@ -395,5 +436,77 @@ impl Worker {
                 })
                 .collect()
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+    use turbo_vision::core::geometry::Rect;
+
+    fn sample_desktop_with_two_windows() -> (Desktop, ViewId, ViewId, ViewId, ViewId) {
+        let mut desktop = Desktop::new(Rect::new(0, 0, 80, 25));
+        let mut back = Window::new(Rect::new(5, 3, 30, 10), "Back");
+        let back_child = back.add(Box::new(BridgedStaticText::new(
+            Rect::new(2, 2, 10, 1),
+            "BACK",
+        )));
+        let back_root = desktop.add(Box::new(back));
+
+        let mut front = Window::new(Rect::new(10, 5, 30, 10), "Front");
+        let front_child = front.add(Box::new(BridgedStaticText::new(
+            Rect::new(2, 2, 10, 1),
+            "FRONT",
+        )));
+        let front_root = desktop.add(Box::new(front));
+
+        (desktop, back_root, back_child, front_root, front_child)
+    }
+
+    #[test]
+    fn child_live_patch_survives_desktop_bring_to_front() {
+        let (mut desktop, back_root, back_child, front_root, _front_child) =
+            sample_desktop_with_two_windows();
+        assert!(desktop.bring_to_front(front_root));
+
+        let view_ids = HashMap::from([(1u32, back_child.as_u16())]);
+        let root_view_ids = HashMap::from([(1u32, back_root.as_u16())]);
+
+        let location = locate_live_view(&view_ids, &root_view_ids, 1).expect("locate child");
+        assert!(with_live_view_mut(&mut desktop, location, |view| {
+            view.as_any_mut()
+                .downcast_mut::<BridgedStaticText>()
+                .is_some()
+        }));
+    }
+
+    #[test]
+    fn locate_live_view_requires_correct_parent_root_view_id() {
+        let (mut desktop, back_root, back_child, front_root, _front_child) =
+            sample_desktop_with_two_windows();
+        assert!(desktop.bring_to_front(back_root));
+
+        let view_ids = HashMap::from([(42u32, back_child.as_u16())]);
+        let mut root_view_ids = HashMap::from([(42u32, back_root.as_u16())]);
+
+        assert!(with_live_view_mut(
+            &mut desktop,
+            locate_live_view(&view_ids, &root_view_ids, 42).unwrap(),
+            |view| view
+                .as_any_mut()
+                .downcast_mut::<BridgedStaticText>()
+                .is_some(),
+        ));
+
+        root_view_ids.insert(42, front_root.as_u16());
+        assert!(!with_live_view_mut(
+            &mut desktop,
+            locate_live_view(&view_ids, &root_view_ids, 42).unwrap(),
+            |view| view
+                .as_any_mut()
+                .downcast_mut::<BridgedStaticText>()
+                .is_some(),
+        ));
     }
 }

@@ -129,21 +129,24 @@ impl Worker {
         });
 
         for (window_handle, bounds, title, child_handles) in windows {
-            let desktop_index = desktop.child_count();
             let children =
                 self.with_tui(|tui| child_snapshots(&tui.turbo_vision.objects, &child_handles));
             let radio_groups = radio_groups_from_snapshots(&children);
             let mut window_view = Window::new(turbo_rect(bounds), &title);
+            let mut child_registrations = Vec::new();
             for (child_handle, child) in child_handles.into_iter().zip(children) {
                 let (view_id, input_line_binding) =
                     add_window_child(&mut window_view, child, &radio_groups, tree_dirty.clone());
                 if let Some(binding) = input_line_binding {
                     self.turbo_vision_register_input_line_view_binding(child_handle, binding);
                 }
-                self.turbo_vision_register_live_child_view(child_handle, desktop_index, view_id);
+                child_registrations.push((child_handle, view_id));
             }
             let root_id = desktop.add(Box::new(window_view));
             self.turbo_vision_register_live_view_id(window_handle, root_id);
+            for (child_handle, view_id) in child_registrations {
+                self.turbo_vision_register_live_child_view(child_handle, root_id, view_id);
+            }
         }
 
         let dialogs = self.with_tui(|tui| {
@@ -164,12 +167,12 @@ impl Worker {
         });
 
         for (dialog_handle, bounds, title, child_handles) in dialogs {
-            let desktop_index = desktop.child_count();
             let children =
                 self.with_tui(|tui| child_snapshots(&tui.turbo_vision.objects, &child_handles));
             let radio_groups = radio_groups_from_snapshots(&children);
             let mut dialog_view = Dialog::new_modal(turbo_rect(bounds), &title);
             let mut input_bindings = Vec::new();
+            let mut child_registrations = Vec::new();
             for (child_handle, child) in child_handles.into_iter().zip(children) {
                 let (view_id, input_line_binding) = add_dialog_child(
                     &mut dialog_view,
@@ -182,10 +185,13 @@ impl Worker {
                 if let Some(binding) = input_line_binding {
                     self.turbo_vision_register_input_line_view_binding(child_handle, binding);
                 }
-                self.turbo_vision_register_live_child_view(child_handle, desktop_index, view_id);
+                child_registrations.push((child_handle, view_id));
             }
             let root_id = desktop.add(dialog_view);
             self.turbo_vision_register_live_view_id(dialog_handle, root_id);
+            for (child_handle, view_id) in child_registrations {
+                self.turbo_vision_register_live_child_view(child_handle, root_id, view_id);
+            }
         }
     }
 

@@ -1,0 +1,20 @@
+program TuiTurboVisionSetTextMemoTest;
+
+uses Std.Console, Std.Tui, Std.Test;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(60, 20);
+  var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(2, 1, 30, 8), 'Host');
+  var Body: Memo := Application.CreateMemo(App, Bounds(3, 2, 20, 3), 'OLD');
+  Application.AddChild(App, DialogHandle, Body);
+  AssertEquals(0, Application.Pump(App));
+  AssertScreenCell(7, 6, 'O', White, Green);
+  Application.SetText(App, Body, 'NEW');
+  AssertEquals(0, Application.Pump(App));
+  AssertScreenCell(7, 6, 'N', White, Green)
+end.

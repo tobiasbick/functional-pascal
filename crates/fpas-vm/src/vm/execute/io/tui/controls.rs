@@ -124,11 +124,11 @@ impl Worker {
             match tui.turbo_vision.objects.get_mut(&handle) {
                 Some(TurboVisionObject::Memo(memo)) => {
                     memo.text = text;
-                    Ok(None)
+                    Ok(Some(LiveDataMutation::SetText { handle }))
                 }
                 Some(TurboVisionObject::TextViewer(text_viewer)) => {
                     text_viewer.text = text;
-                    Ok(None)
+                    Ok(Some(LiveDataMutation::SetText { handle }))
                 }
                 Some(TurboVisionObject::InputLine(input_line)) => {
                     if text.len() > input_line.max_length {
@@ -153,7 +153,7 @@ impl Worker {
                 }
                 Some(TurboVisionObject::StaticText(static_text)) => {
                     static_text.text = text;
-                    Ok(None)
+                    Ok(Some(LiveDataMutation::SetText { handle }))
                 }
                 Some(TurboVisionObject::CheckBox(check_box)) => {
                     check_box.text = text;

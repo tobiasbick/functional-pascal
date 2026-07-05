@@ -13,9 +13,8 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use turbo_vision::views::{
-    button::Button, dialog::Dialog, input_line::InputLine, listbox::ListBox, memo::Memo,
-    static_text::StaticText, status_line::StatusItem, status_line::StatusLine,
-    text_viewer::TextViewer, window::Window,
+    button::Button, dialog::Dialog, input_line::InputLine, listbox::ListBox,
+    status_line::StatusItem, status_line::StatusLine, window::Window,
 };
 
 pub(in crate::vm::execute::io::tui) struct TurboVisionWindowSnapshot {
@@ -107,16 +106,30 @@ pub(in crate::vm::execute::io::tui) fn add_window_child(
             None,
         ),
         TurboVisionChildSnapshot::StaticText(static_text) => (
-            window.add(Box::new(StaticText::new(
-                turbo_rect(static_text.bounds),
-                &static_text.text,
+            window.add(Box::new(
+                super::bridged_static_text::BridgedStaticText::new(
+                    turbo_rect(static_text.bounds),
+                    &static_text.text,
+                ),
+            )),
+            None,
+        ),
+        TurboVisionChildSnapshot::Memo(memo) => (
+            window.add(Box::new(super::bridged_memo::BridgedMemo::new(
+                turbo_rect(memo.bounds),
+                &memo.text,
             ))),
             None,
         ),
-        TurboVisionChildSnapshot::Memo(memo) => (window.add(Box::new(build_memo(memo))), None),
-        TurboVisionChildSnapshot::TextViewer(text_viewer) => {
-            (window.add(Box::new(build_text_viewer(text_viewer))), None)
-        }
+        TurboVisionChildSnapshot::TextViewer(text_viewer) => (
+            window.add(Box::new(
+                super::bridged_text_viewer::BridgedTextViewer::new(
+                    turbo_rect(text_viewer.bounds),
+                    &text_viewer.text,
+                ),
+            )),
+            None,
+        ),
         TurboVisionChildSnapshot::InputLine(input_line) => {
             let binding = input_line.text_cell.view_binding();
             let view_id = window.add(Box::new(InputLine::new(
@@ -181,16 +194,30 @@ pub(in crate::vm::execute::io::tui) fn add_dialog_child(
             None,
         ),
         TurboVisionChildSnapshot::StaticText(static_text) => (
-            dialog.add(Box::new(StaticText::new(
-                turbo_rect(static_text.bounds),
-                &static_text.text,
+            dialog.add(Box::new(
+                super::bridged_static_text::BridgedStaticText::new(
+                    turbo_rect(static_text.bounds),
+                    &static_text.text,
+                ),
+            )),
+            None,
+        ),
+        TurboVisionChildSnapshot::Memo(memo) => (
+            dialog.add(Box::new(super::bridged_memo::BridgedMemo::new(
+                turbo_rect(memo.bounds),
+                &memo.text,
             ))),
             None,
         ),
-        TurboVisionChildSnapshot::Memo(memo) => (dialog.add(Box::new(build_memo(memo))), None),
-        TurboVisionChildSnapshot::TextViewer(text_viewer) => {
-            (dialog.add(Box::new(build_text_viewer(text_viewer))), None)
-        }
+        TurboVisionChildSnapshot::TextViewer(text_viewer) => (
+            dialog.add(Box::new(
+                super::bridged_text_viewer::BridgedTextViewer::new(
+                    turbo_rect(text_viewer.bounds),
+                    &text_viewer.text,
+                ),
+            )),
+            None,
+        ),
         TurboVisionChildSnapshot::InputLine(input_line) => {
             let binding = input_line.text_cell.view_binding();
             input_bindings.push((child_handle, Rc::clone(&binding)));
@@ -310,18 +337,6 @@ fn build_list_box(snapshot: TurboVisionListBox) -> ListBox {
     );
     list_box.set_items(snapshot.items);
     list_box
-}
-
-fn build_memo(snapshot: TurboVisionMemo) -> Memo {
-    let mut memo = Memo::new(turbo_rect(snapshot.bounds));
-    memo.set_text(&snapshot.text);
-    memo
-}
-
-fn build_text_viewer(snapshot: TurboVisionTextViewer) -> TextViewer {
-    let mut text_viewer = TextViewer::new(turbo_rect(snapshot.bounds));
-    text_viewer.set_text(&snapshot.text);
-    text_viewer
 }
 
 fn radio_groups(

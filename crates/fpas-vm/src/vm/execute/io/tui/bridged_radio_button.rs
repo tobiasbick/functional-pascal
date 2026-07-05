@@ -66,14 +66,11 @@ impl View for BridgedRadioButton {
     }
 
     fn handle_event(&mut self, event: &mut Event) {
-        if super::radio_button_mouse::try_select_radio_button_on_mouse_down(&mut self.inner, event)
-        {
-            self.sync_selected();
-            self.tree_dirty.set(true);
-            return;
-        }
         self.inner.handle_event(event);
         self.sync_selected();
+        if self.inner.is_selected() {
+            self.tree_dirty.set(true);
+        }
     }
 
     fn can_focus(&self) -> bool {

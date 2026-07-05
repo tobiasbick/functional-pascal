@@ -40,12 +40,14 @@ Pascal Application.*
 | Headless paint | `headless_tv_draw.rs` | Upstream TV `draw` → CRT export ([done/04-headless-test-util.md](done/04-headless-test-util.md)) |
 | Headless commands | `commands.rs`, `tv_run.rs` | Queue + `Pump` instead of TV event loop |
 | Full desktop rebuild | `reconcile.rs`, `tv_run.rs` | `pending_reconcile` → wipe desktop → repopulate |
-| State cells | `turbo_vision_*_cell.rs`, `bridged_*.rs` | Sync checkbox/radio/list/input back to FPAS handles |
+| State cells | `turbo_vision_*_cell.rs`, `bridged_*.rs` | Sync checkbox/radio/list/input back to FPAS handles; live mouse on clusters is upstream TV 2.0 |
 | Command offset band | `command_map.rs` | App-defined ids that collide with `CM_*` use `0x8000` band; `Command.*` pass through |
 
 ## Known duplication (refactor targets)
 
 1. **Headless input** — queue + `test_mouse.rs` hit-test vs TV `push_event` → follow-up in [done/04-headless-test-util.md](done/04-headless-test-util.md)
+
+**Done:** duplicate live cluster mouse helpers removed — [06-review-bridged-widgets.md](06-review-bridged-widgets.md).
 
 **Done:** single live `Application` per FPAS session — [done/02-single-tv-session.md](done/02-single-tv-session.md). IDE About via upstream `message_box` — [done/03-about-message-box.md](done/03-about-message-box.md).
 
@@ -69,6 +71,16 @@ Workspace pin (until crates.io publishes 2.x):
 turbo-vision = { git = "https://github.com/aovestdipaperino/turbo-vision-4-rust", tag = "v2.0.0" }
 ```
 
+## Turbo Vision bump checklist
+
+On every `turbo-vision` tag or revision bump in `Cargo.lock`:
+
+1. Run `cargo test -p fpas-vm reserved_list_matches_upstream` — updates `TURBO_VISION_RESERVED_COMMANDS` in `command_map.rs` if it fails.
+2. Confirm `fpas-std` `COMMAND_*` constants still match Borland `CM_*` for `Command.Quit`, `Close`, `Accept`, `Cancel`.
+3. Run `fpas test tests/tui/controls/tui_turbo_vision_reserved_command_test.fpas` and IDE About tests.
+
+Full checklist: [04-command-map-sync.md](04-command-map-sync.md).
+
 ## Verification baseline
 
 After any bridge change:
@@ -78,6 +90,5 @@ cargo fmt
 cargo build
 cargo test --workspace
 cargo run -q -p fpas-cli -- test tests/tui/controls/
-cargo run -q -p fpas-cli -- test apps/ide/tests/
 cargo run -q -p fpas-cli -- test apps/ide/tests/
 ```

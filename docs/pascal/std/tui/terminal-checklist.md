@@ -19,7 +19,7 @@ Turbo Vision regression tests under `tests/tui/controls/` (30 files). IDE shell:
 Core coverage:
 
 - **Spike / run** — `spike_test`, `run_test`
-- **Widgets** — `window`, `static_text`, `memo`, `text_viewer`, `input_line`, `list_box`, `check_box`, `check_box_mouse`, `radio_button`, `radio_button_mouse`
+- **Widgets** — `window`, `static_text`, `memo`, `text_viewer`, `input_line`, `list_box`, `check_box`, `radio_button`, `bridged_*` (modal cell sync)
 - **Chrome** — `chrome_test`, `menu_test`
 - **Modals** — `file_dialog_test`, `exec_dialog_test`, `checked_test`
 - **Live reconcile** — `live_tree_test`, `live_dialog_test`

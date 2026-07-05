@@ -1,6 +1,6 @@
 # 04 — Keep reserved `CM_*` list aligned with upstream
 
-**Status:** [x] Initial 2.0 sync done · [ ] Ongoing process documented · [ ] Automate check (optional)
+**Status:** [x] Initial 2.0 sync done · [x] Ongoing process documented · [x] Automate check (Rust test)
 
 **Priority:** Ongoing — repeat on every turbo-vision version bump
 
@@ -26,15 +26,15 @@ Repeatable checklist on every turbo-vision tag bump (crates.io or git).
 - [x] Update `COMMAND_*` constants to Borland values
 - [x] Refresh `TURBO_VISION_RESERVED_COMMANDS` for 2.0
 - [x] Update Pascal docs for `Command.*` values
-- [ ] **Process** — Add short “bump checklist” subsection here or in [00-context.md](00-context.md) with link to upstream `src/core/command.rs` for pinned tag
-- [ ] **Tests** — Ensure `command_map` unit tests cover any new reserved ids upstream adds
-- [ ] **Optional** — Rust test or script that diffs reserved list against upstream file (fail CI locally when bumping dep)
-- [ ] **IDE** — Confirm `CmdHelpAbout = 100` (`CM_ABOUT`) still correct after each bump; About **menu** command stays `CM_ABOUT` while the dialog close button uses `CM_OK` → `Command.Accept` ([done/03-about-message-box.md](done/03-about-message-box.md))
+- [x] **Process** — Bump checklist in [00-context.md](00-context.md) and below
+- [x] **Tests** — `reserved_list_matches_upstream_cm_constants` in `command_map.rs` diffs against upstream `CM_*` constants
+- [x] **Automate check** — `cargo test -p fpas-vm reserved_list_matches_upstream` on every turbo-vision bump
+- [x] **IDE** — `CmdHelpAbout = 100` (`CM_ABOUT`); About menu uses `CM_ABOUT`, close button `CM_OK` → `Command.Accept` ([done/03-about-message-box.md](done/03-about-message-box.md))
 
 ## Bump checklist (manual)
 
-1. Read upstream `src/core/command.rs` at the pinned tag in `Cargo.lock`.
-2. Update `TURBO_VISION_RESERVED_COMMANDS` in `command_map.rs` (all `CM_*` used by framework; exclude gaps intended for user apps if documented upstream).
+1. Bump `turbo-vision` in `Cargo.toml` / `Cargo.lock`.
+2. Run `cargo test -p fpas-vm reserved_list_matches_upstream` — on failure, update `TURBO_VISION_RESERVED_COMMANDS` in `command_map.rs` from upstream [`src/core/command.rs`](https://github.com/aovestdipaperino/turbo-vision-4-rust/blob/v2.0.0/src/core/command.rs) (all non-zero `CM_*` except `CM_CONTINUE`).
 3. Confirm `fpas_standard_command` pass-through set still matches Pascal `Command.*` constants.
 4. Run:
 

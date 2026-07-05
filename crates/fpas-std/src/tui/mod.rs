@@ -8,6 +8,7 @@ mod damage;
 mod event;
 mod geometry;
 mod host;
+mod message_box_options;
 mod process;
 mod session;
 
@@ -23,5 +24,11 @@ pub use damage::DamageRegion;
 pub use event::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent};
 pub use geometry::{ViewId, ViewRect};
 pub use host::TuiHost;
+pub use message_box_options::{
+    MESSAGE_BOX_OPTION_ABOUT, MESSAGE_BOX_OPTION_CANCEL_BUTTON, MESSAGE_BOX_OPTION_CONFIRMATION,
+    MESSAGE_BOX_OPTION_ERROR, MESSAGE_BOX_OPTION_INFORMATION, MESSAGE_BOX_OPTION_NO_BUTTON,
+    MESSAGE_BOX_OPTION_OK_BUTTON, MESSAGE_BOX_OPTION_OK_CANCEL, MESSAGE_BOX_OPTION_WARNING,
+    MESSAGE_BOX_OPTION_YES_BUTTON, MESSAGE_BOX_OPTION_YES_NO_CANCEL,
+};
 pub use process::{BlockedInput, FocusDirection, ProcessOutcome};
 pub use session::TuiSession;

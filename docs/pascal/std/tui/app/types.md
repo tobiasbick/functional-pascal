@@ -41,7 +41,25 @@ Application-defined commands use other positive integers. When a command id coll
 | `Command.Accept` | `10` | Accept or confirm (dialog OK; Borland `cmOK`). Named `Accept` because `Ok` is a language keyword. |
 | `Command.Cancel` | `11` | Cancel the current action or dialog (Borland `cmCancel`). |
 
-Applications may intentionally reuse other Borland `CM_*` values for menu items when they match upstream semantics. The FPAS IDE Help → About entry uses `100` (`CM_ABOUT` in turbo-vision 2.0). The runtime offsets that id on Turbo Vision widgets and restores `100` in `OnCommand`. Standard message-box OK buttons use `Command.Accept` (`10`, Borland `cmOK`) — see the IDE About flow in [Dialogs and windows](modals.md).
+Applications may intentionally reuse other Borland `CM_*` values for menu items when they match upstream semantics. The FPAS IDE Help → About entry uses `100` (`CM_ABOUT` in turbo-vision 2.0). The runtime offsets that id on Turbo Vision widgets and restores `100` in `OnCommand`. Standard message-box OK buttons use `Command.Accept` (`10`, Borland `cmOK`) — see [Message box](message-box.md).
+
+## `MessageBoxOption` constants
+
+Option flags for [`Application.MessageBox`](message-box.md). Combine type and button flags with `+`.
+
+| Constant | Value |
+| --- | --- |
+| `MessageBoxOption.Warning` | `0` |
+| `MessageBoxOption.Error` | `1` |
+| `MessageBoxOption.Information` | `2` |
+| `MessageBoxOption.Confirmation` | `3` |
+| `MessageBoxOption.About` | `4` |
+| `MessageBoxOption.YesButton` | `256` |
+| `MessageBoxOption.NoButton` | `512` |
+| `MessageBoxOption.OkButton` | `1024` |
+| `MessageBoxOption.CancelButton` | `2048` |
+| `MessageBoxOption.OkCancel` | `3072` |
+| `MessageBoxOption.YesNoCancel` | `3840` |
 
 ## `Window`
 

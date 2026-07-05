@@ -1,6 +1,6 @@
 //! Turbo Vision upstream `message_box` bridge.
 //!
-//! **Documentation:** `docs/refactor/tui-bridge/done/03-about-message-box.md`
+//! **Documentation:** `docs/pascal/std/tui/app/message-box.md`
 
 use super::command_map::turbo_vision_command_to_fpas;
 use crate::vm::Worker;
@@ -16,7 +16,7 @@ impl Worker {
             runtime_error(
                 RUNTIME_CONSOLE_STATE_ERROR,
                 "Application.MessageBox options must fit in 16 bits",
-                "Pass a non-negative options value such as `1028` (`MF_ABOUT | MF_OK_BUTTON`).",
+                "Pass a non-negative options value such as `MessageBoxOption.About + MessageBoxOption.OkButton`.",
                 line,
             )
         })?;

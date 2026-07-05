@@ -38,7 +38,7 @@ Current public lowering includes:
 | `Application.RunFileDialog` | `TuiRunFileDialog` |
 | `Application.TestSetFileDialogResult` | `TuiTestSetFileDialogResult` |
 | `Application.ExecDialog` | `TuiExecDialog` |
-| `Application.MessageBox` | `TuiMessageBox` (registered; no public Pascal spec page until [07](../../../refactor/tui-bridge/07-pascal-message-box-api.md)) |
+| `Application.MessageBox` | `TuiMessageBox` — see [message-box.md](message-box.md) |
 | `Application.InputText` | `TuiInputText` |
 | `Application.Checked` | `TuiChecked` |
 | `Application.Selected` | `TuiSelected` |

@@ -12,7 +12,7 @@
 
 On an interactive terminal, `Run`, `ExecDialog`, and `RunFileDialog` share one upstream turbo-vision application for the `Open` … `Close` lifetime. See [Lifecycle](lifecycle.md).
 
-Custom modal layout (`CreateDialog` + `ExecDialog`) is for dialogs with read-back or app-specific widgets. Standard Borland message boxes use `Application.MessageBox` (contributor details in [vm-bridge.md](vm-bridge.md); public spec in [07-pascal-message-box-api.md](../../../refactor/tui-bridge/07-pascal-message-box-api.md)) — see [Dialogs and windows](modals.md#custom-modal-layout).
+Custom modal layout (`CreateDialog` + `ExecDialog`) is for dialogs with read-back or app-specific widgets. Standard Borland message boxes use [`Application.MessageBox`](message-box.md) — see also [Dialogs and windows](modals.md#custom-modal-layout).
 
 ## Current API
 
@@ -37,6 +37,7 @@ Custom modal layout (`CreateDialog` + `ExecDialog`) is for dialogs with read-bac
 | `Application.CreateRadioButton(App, Bounds, Text, GroupId, Selected): RadioButton` | Create a Turbo Vision radio button. Use the same `GroupId` for mutually exclusive options. |
 | `Application.RunFileDialog(App, Bounds, Title, Wildcard, StartPath): Option of string` | Show a modal file dialog. Returns `Some(path)` when a file is chosen and `None` when canceled. Pass `None` as `StartPath` for the current directory. |
 | `Application.ExecDialog(App, Dialog): DialogResult` | Run a dialog modally on the terminal. Returns the closing command in `DialogResult.command`. |
+| `Application.MessageBox(App, Message, Options): integer` | Show an upstream Turbo Vision message box. Returns the closing command id. See [Message box](message-box.md). |
 | `Application.InputText(App, Field): string` | Read the current text of an `InputLine` handle (valid after `ExecDialog`). |
 | `Application.Checked(App, Field): boolean` | Read the checked state of a `CheckBox` handle (valid after `ExecDialog`). |
 | `Application.Selected(App, Field): boolean` | Read the selected state of a `RadioButton` handle (valid after `ExecDialog`). |
@@ -71,7 +72,7 @@ For headless screen assertions after `Pump`, use [`Std.Test`](../../testing/test
 - [Application types](types.md)
 - [Controls](controls.md)
 - [Dialogs and windows](modals.md)
-- [File dialog](file-dialog.md)
+- [Message box](message-box.md)
 - [Handlers](handlers.md)
 - [Lifecycle](lifecycle.md)
 - [Native testing](testing.md)

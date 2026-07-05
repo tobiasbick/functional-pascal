@@ -77,9 +77,12 @@ pub use test::{assert_screen_cell, assert_screen_line, reset_test_skip_state, te
 pub use tui::{
     BlockedInput, COMMAND_CANCEL, COMMAND_CLOSE, COMMAND_ID_CLOSE, COMMAND_ID_NEXT_WINDOW,
     COMMAND_ID_ZOOM, COMMAND_ID_ZOOM_BACK, COMMAND_OK, COMMAND_QUIT, CommandEvent, CommandId,
-    CommandKind, CommandRegistry, DamageRegion, FocusDirection, ProcessOutcome,
-    TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent, TuiHost, TuiSession, ViewId,
-    ViewRect,
+    CommandKind, CommandRegistry, DamageRegion, FocusDirection, MESSAGE_BOX_OPTION_ABOUT,
+    MESSAGE_BOX_OPTION_CANCEL_BUTTON, MESSAGE_BOX_OPTION_CONFIRMATION, MESSAGE_BOX_OPTION_ERROR,
+    MESSAGE_BOX_OPTION_INFORMATION, MESSAGE_BOX_OPTION_NO_BUTTON, MESSAGE_BOX_OPTION_OK_BUTTON,
+    MESSAGE_BOX_OPTION_OK_CANCEL, MESSAGE_BOX_OPTION_WARNING, MESSAGE_BOX_OPTION_YES_BUTTON,
+    MESSAGE_BOX_OPTION_YES_NO_CANCEL, ProcessOutcome, TUI_EVENT_KIND_VARIANTS,
+    TUI_EXIT_REASON_VARIANTS, TuiEvent, TuiHost, TuiSession, ViewId, ViewRect,
 };
 pub use ui::{UiEvent, UiHost, UiHostSurface, UiModifiers, UiMouse, UiResize, UiWheel};
 

@@ -20,7 +20,7 @@ On an interactive terminal you may call `Application.ExecDialog` or `Application
 
 ### IDE About flow (today)
 
-Help → About in `apps/ide` dispatches menu command `100` (`CM_ABOUT`) to `OnCommand`, which calls `Ide.Dialog.ShowAbout`. That procedure calls `Application.MessageBox` with upstream `MF_ABOUT | MF_OK_BUTTON`; dismissal returns `Command.Accept` (`10`). See [done/03-about-message-box](../../../refactor/tui-bridge/done/03-about-message-box.md).
+Help → About in `apps/ide` dispatches menu command `100` (`CM_ABOUT`) to `OnCommand`, which calls `Ide.Dialog.ShowAbout`. That procedure calls `Application.MessageBox` with `MessageBoxOption.About + MessageBoxOption.OkButton`; dismissal returns `Command.Accept` (`10`). See [Message box](message-box.md) and [done/03-about-message-box](../../../refactor/tui-bridge/done/03-about-message-box.md).
 
 ## Optional raw input hooks
 

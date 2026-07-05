@@ -4,7 +4,7 @@
 
 **Depends on:** [02-single-tv-session.md](02-single-tv-session.md)
 
-**Follow-up:** [07-pascal-message-box-api.md](../07-pascal-message-box-api.md) (optional public Pascal spec)
+**Follow-up:** [done/07-pascal-message-box-api.md](07-pascal-message-box-api.md) (public Pascal spec)
 
 ## Summary
 
@@ -40,5 +40,5 @@ cargo run -q -p fpas-cli -- test apps/ide/tests/
 
 ## Notes
 
-- `Application.MessageBox` is registered in sema but has **no** public `docs/pascal/` page until [07](../07-pascal-message-box-api.md).
+- `Application.MessageBox` is documented in [docs/pascal/std/tui/app/message-box.md](../../pascal/std/tui/app/message-box.md).
 - Custom dialogs with read-back still use `CreateDialog` + `ExecDialog`.

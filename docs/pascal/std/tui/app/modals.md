@@ -25,7 +25,7 @@ Use `Application.ExecDialog` for modal dialogs with read-back (`InputText`, `Che
 
 Build the dialog with `CreateDialog`, `AddChild`, and related APIs, then run it with `Application.ExecDialog`.
 
-For standard Borland message boxes (About, OK, Yes/No), the bridge exposes `Application.MessageBox(App, Message, Options): integer` (registered in sema; contributor details in [vm-bridge.md](vm-bridge.md)). The FPAS IDE About box (`apps/ide/src/dialog/about.fpas`) uses this call with options `1028` (`MF_ABOUT | MF_OK_BUTTON`). A future public spec with named constants is described in [07-pascal-message-box-api.md](../../../refactor/tui-bridge/07-pascal-message-box-api.md).
+For standard Borland message boxes (About, OK, Yes/No), use [`Application.MessageBox`](message-box.md). The FPAS IDE About box (`apps/ide/src/dialog/about.fpas`) calls it with `MessageBoxOption.About + MessageBoxOption.OkButton`.
 
 ## Interactive session
 
@@ -44,6 +44,6 @@ Headless `MessageBox` reuses the `TestSetDialogResult` queue (same as `ExecDialo
 - [Application](README.md)
 - [Application lifecycle](lifecycle.md)
 - [Handlers](handlers.md) — `ExecDialog` from `OnCommand` during `Run`
-- [File dialog](file-dialog.md) — upstream `FileDialog` on live session (pattern for planned `MessageBox`)
+- [Message box](message-box.md) — `Application.MessageBox` and `MessageBoxOption.*`
 - [Controls](controls.md)
 - [Types](types.md) — `Command.Accept`, menu `CM_ABOUT` (`100`)

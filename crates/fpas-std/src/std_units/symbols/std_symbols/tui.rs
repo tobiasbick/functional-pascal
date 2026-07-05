@@ -28,6 +28,18 @@ pub const STD_TUI_COMMAND_ACCEPT: &str = std_tui!("Command.Accept");
 pub const STD_TUI_COMMAND_CANCEL: &str = std_tui!("Command.Cancel");
 pub const STD_TUI_COMMAND_CLOSE: &str = std_tui!("Command.Close");
 pub const STD_TUI_COMMAND_QUIT: &str = std_tui!("Command.Quit");
+pub const STD_TUI_MESSAGE_BOX_OPTION_WARNING: &str = std_tui!("MessageBoxOption.Warning");
+pub const STD_TUI_MESSAGE_BOX_OPTION_ERROR: &str = std_tui!("MessageBoxOption.Error");
+pub const STD_TUI_MESSAGE_BOX_OPTION_INFORMATION: &str = std_tui!("MessageBoxOption.Information");
+pub const STD_TUI_MESSAGE_BOX_OPTION_CONFIRMATION: &str = std_tui!("MessageBoxOption.Confirmation");
+pub const STD_TUI_MESSAGE_BOX_OPTION_ABOUT: &str = std_tui!("MessageBoxOption.About");
+pub const STD_TUI_MESSAGE_BOX_OPTION_YES_BUTTON: &str = std_tui!("MessageBoxOption.YesButton");
+pub const STD_TUI_MESSAGE_BOX_OPTION_NO_BUTTON: &str = std_tui!("MessageBoxOption.NoButton");
+pub const STD_TUI_MESSAGE_BOX_OPTION_OK_BUTTON: &str = std_tui!("MessageBoxOption.OkButton");
+pub const STD_TUI_MESSAGE_BOX_OPTION_CANCEL_BUTTON: &str =
+    std_tui!("MessageBoxOption.CancelButton");
+pub const STD_TUI_MESSAGE_BOX_OPTION_YES_NO_CANCEL: &str = std_tui!("MessageBoxOption.YesNoCancel");
+pub const STD_TUI_MESSAGE_BOX_OPTION_OK_CANCEL: &str = std_tui!("MessageBoxOption.OkCancel");
 pub const STD_TUI_SCREEN_CELL: &str = std_tui!("ScreenCell");
 pub const STD_TUI_EVENT: &str = std_tui!("TuiEvent");
 pub const STD_TUI_EVENT_KIND: &str = std_tui!("EventKind");
@@ -233,6 +245,17 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_COMMAND_CANCEL,
     STD_TUI_COMMAND_CLOSE,
     STD_TUI_COMMAND_QUIT,
+    STD_TUI_MESSAGE_BOX_OPTION_WARNING,
+    STD_TUI_MESSAGE_BOX_OPTION_ERROR,
+    STD_TUI_MESSAGE_BOX_OPTION_INFORMATION,
+    STD_TUI_MESSAGE_BOX_OPTION_CONFIRMATION,
+    STD_TUI_MESSAGE_BOX_OPTION_ABOUT,
+    STD_TUI_MESSAGE_BOX_OPTION_YES_BUTTON,
+    STD_TUI_MESSAGE_BOX_OPTION_NO_BUTTON,
+    STD_TUI_MESSAGE_BOX_OPTION_OK_BUTTON,
+    STD_TUI_MESSAGE_BOX_OPTION_CANCEL_BUTTON,
+    STD_TUI_MESSAGE_BOX_OPTION_YES_NO_CANCEL,
+    STD_TUI_MESSAGE_BOX_OPTION_OK_CANCEL,
     STD_TUI_SCREEN_CELL,
     STD_TUI_EVENT,
     STD_TUI_EVENT_KIND,

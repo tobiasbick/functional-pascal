@@ -1,6 +1,12 @@
 use fpas_bytecode::Value;
 use fpas_std::std_symbols as s;
-use fpas_std::{COMMAND_CANCEL, COMMAND_CLOSE, COMMAND_OK, COMMAND_QUIT};
+use fpas_std::{
+    COMMAND_CANCEL, COMMAND_CLOSE, COMMAND_OK, COMMAND_QUIT, MESSAGE_BOX_OPTION_ABOUT,
+    MESSAGE_BOX_OPTION_CANCEL_BUTTON, MESSAGE_BOX_OPTION_CONFIRMATION, MESSAGE_BOX_OPTION_ERROR,
+    MESSAGE_BOX_OPTION_INFORMATION, MESSAGE_BOX_OPTION_NO_BUTTON, MESSAGE_BOX_OPTION_OK_BUTTON,
+    MESSAGE_BOX_OPTION_OK_CANCEL, MESSAGE_BOX_OPTION_WARNING, MESSAGE_BOX_OPTION_YES_BUTTON,
+    MESSAGE_BOX_OPTION_YES_NO_CANCEL,
+};
 
 use super::Compiler;
 
@@ -37,6 +43,35 @@ impl Compiler {
             s::STD_TUI_COMMAND_CANCEL => Some(Value::Integer(COMMAND_CANCEL)),
             s::STD_TUI_COMMAND_CLOSE => Some(Value::Integer(COMMAND_CLOSE)),
             s::STD_TUI_COMMAND_QUIT => Some(Value::Integer(COMMAND_QUIT)),
+            s::STD_TUI_MESSAGE_BOX_OPTION_WARNING => {
+                Some(Value::Integer(MESSAGE_BOX_OPTION_WARNING))
+            }
+            s::STD_TUI_MESSAGE_BOX_OPTION_ERROR => Some(Value::Integer(MESSAGE_BOX_OPTION_ERROR)),
+            s::STD_TUI_MESSAGE_BOX_OPTION_INFORMATION => {
+                Some(Value::Integer(MESSAGE_BOX_OPTION_INFORMATION))
+            }
+            s::STD_TUI_MESSAGE_BOX_OPTION_CONFIRMATION => {
+                Some(Value::Integer(MESSAGE_BOX_OPTION_CONFIRMATION))
+            }
+            s::STD_TUI_MESSAGE_BOX_OPTION_ABOUT => Some(Value::Integer(MESSAGE_BOX_OPTION_ABOUT)),
+            s::STD_TUI_MESSAGE_BOX_OPTION_YES_BUTTON => {
+                Some(Value::Integer(MESSAGE_BOX_OPTION_YES_BUTTON))
+            }
+            s::STD_TUI_MESSAGE_BOX_OPTION_NO_BUTTON => {
+                Some(Value::Integer(MESSAGE_BOX_OPTION_NO_BUTTON))
+            }
+            s::STD_TUI_MESSAGE_BOX_OPTION_OK_BUTTON => {
+                Some(Value::Integer(MESSAGE_BOX_OPTION_OK_BUTTON))
+            }
+            s::STD_TUI_MESSAGE_BOX_OPTION_CANCEL_BUTTON => {
+                Some(Value::Integer(MESSAGE_BOX_OPTION_CANCEL_BUTTON))
+            }
+            s::STD_TUI_MESSAGE_BOX_OPTION_YES_NO_CANCEL => {
+                Some(Value::Integer(MESSAGE_BOX_OPTION_YES_NO_CANCEL))
+            }
+            s::STD_TUI_MESSAGE_BOX_OPTION_OK_CANCEL => {
+                Some(Value::Integer(MESSAGE_BOX_OPTION_OK_CANCEL))
+            }
             _ => None,
         }
     }

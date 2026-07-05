@@ -8,6 +8,7 @@
 mod application_api;
 mod command_api;
 mod handlers;
+mod message_box_api;
 
 use crate::check::Checker;
 use crate::std_registry::loaded::type_registration;
@@ -150,6 +151,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
     );
 
     command_api::register_command_constants(checker);
+    message_box_api::register_message_box_option_constants(checker);
     super::super::builtins::register_tui_builtins(checker);
 
     let types = TuiTypes {

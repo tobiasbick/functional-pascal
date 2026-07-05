@@ -17,7 +17,8 @@ end;
 
 procedure ShowAbout(App: Application);
 begin
-  var CloseCommand: integer := Application.MessageBox(App, AboutMessage(), 1028);
+  var CloseCommand: integer := Application.MessageBox(App, AboutMessage(), MessageBoxOption.About +
+                                                                           MessageBoxOption.OkButton);
   if CloseCommand <> Command.Accept then
   begin
     return

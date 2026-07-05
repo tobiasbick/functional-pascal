@@ -1,0 +1,23 @@
+{ Standard Turbo Vision message box demo. Run in a terminal; dismiss with OK. }
+
+program TuiMessageBox;
+
+uses Std.Console, Std.Tui;
+
+begin
+  var App: Application := Application.Open();
+  var CloseCommand: integer := Application.MessageBox(App, (('Functional Pascal' + '
+') + '
+') +
+                                                           'Turbo Vision message box demo.', MessageBoxOption.Information +
+                                                                                             MessageBoxOption.OkButton);
+  Application.Close(App);
+  if CloseCommand = Command.Accept then
+  begin
+    WriteLn('OK')
+  end
+  else
+  begin
+    WriteLn('Dismissed: ', CloseCommand)
+  end
+end.

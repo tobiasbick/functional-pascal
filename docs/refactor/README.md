@@ -23,7 +23,7 @@ _No items currently blocked on planning only._
 | [tui-bridge/04-command-map-sync.md](tui-bridge/04-command-map-sync.md) | Keep reserved `CM_*` list aligned with upstream | Ongoing (bump checklist + `reserved_list_matches_upstream` test) |
 | [tui-bridge/05-reduce-reconcile-rebuild.md](tui-bridge/05-reduce-reconcile-rebuild.md) | Incremental view updates instead of full desktop rebuild | Done (Phase B optional) |
 | [tui-bridge/06-review-bridged-widgets.md](tui-bridge/06-review-bridged-widgets.md) | Re-evaluate `Bridged*` wrappers after TV 2.0 | Done (headless mouse follow-up open) |
-| [tui-bridge/07-pascal-message-box-api.md](tui-bridge/07-pascal-message-box-api.md) | Optional `Std.Tui` wrapper for upstream dialog helpers | Pending |
+| [tui-bridge/done/07-pascal-message-box-api.md](tui-bridge/done/07-pascal-message-box-api.md) | Public `Std.Tui` message box API | Done |
 | [tui-bridge/done/01-turbo-vision-2-upgrade.md](tui-bridge/done/01-turbo-vision-2-upgrade.md) | Upgrade to turbo-vision 2.0 + Borland command ids | Done |
 
 ## Themes
@@ -36,9 +36,9 @@ Add sibling directories here when other areas need the same treatment (compiler,
 
 ## Suggested order (TUI bridge)
 
-1. [07-pascal-message-box-api](tui-bridge/07-pascal-message-box-api.md) — only if FPAS callers need more than IDE/internal use
+_No pending bridge items. On every `turbo-vision` bump: run [04-command-map-sync](tui-bridge/04-command-map-sync.md) (`cargo test -p fpas-vm reserved_list_matches_upstream`)._
 
-On every `turbo-vision` bump: run [04-command-map-sync](tui-bridge/04-command-map-sync.md) (`cargo test -p fpas-vm reserved_list_matches_upstream`).
+Open follow-ups: headless `TestClickMouse` via `push_event` ([06-review-bridged-widgets.md](tui-bridge/06-review-bridged-widgets.md)); optional reconcile Phase B ([05-reduce-reconcile-rebuild.md](tui-bridge/05-reduce-reconcile-rebuild.md)).
 
 ## See also
 

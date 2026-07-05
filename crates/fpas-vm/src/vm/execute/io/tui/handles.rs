@@ -4,7 +4,7 @@
 
 use super::handle_records::{
     HANDLE_FIELD, TUI_BUTTON_TYPE, TUI_CHECK_BOX_TYPE, TUI_DIALOG_RESULT_TYPE, TUI_DIALOG_TYPE,
-    TUI_INPUT_LINE_TYPE, TUI_LIST_BOX_TYPE, TUI_MEMO_TYPE, TUI_MENU_BAR_TYPE,
+    TUI_INPUT_LINE_TYPE, TUI_LIST_BOX_TYPE, TUI_MEMO_TYPE, TUI_MENU_BAR_TYPE, TUI_OUTLINE_TYPE,
     TUI_RADIO_BUTTON_TYPE, TUI_RECT_TYPE, TUI_STATIC_TEXT_TYPE, TUI_STATUS_LINE_TYPE,
     TUI_TEXT_VIEWER_TYPE, TUI_WINDOW_TYPE,
 };
@@ -91,6 +91,13 @@ impl Worker {
         self.pop_turbo_vision_handle(TUI_LIST_BOX_TYPE, "ListBox", line)
     }
 
+    pub(super) fn pop_turbo_vision_outline_handle(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<u32, VmError> {
+        self.pop_turbo_vision_handle(TUI_OUTLINE_TYPE, "Outline", line)
+    }
+
     pub(super) fn pop_turbo_vision_checked_control_handle(
         &mut self,
         line: SourceLocation,
@@ -174,6 +181,11 @@ impl Worker {
                     self.decode_turbo_vision_handle_record(&fields, "ListBox", line)?,
                 ))
             }
+            Value::Record { type_name, fields } if type_name == TUI_OUTLINE_TYPE => {
+                Ok(TurboVisionChildHandle::Outline(
+                    self.decode_turbo_vision_handle_record(&fields, "Outline", line)?,
+                ))
+            }
             Value::Record { type_name, fields } if type_name == TUI_CHECK_BOX_TYPE => {
                 Ok(TurboVisionChildHandle::CheckBox(
                     self.decode_turbo_vision_handle_record(&fields, "CheckBox", line)?,
@@ -187,10 +199,10 @@ impl Worker {
             other => Err(runtime_error(
                 TYPE_MISMATCH_CODE,
                 format!(
-                    "Child handle expected {TUI_BUTTON_TYPE}, {TUI_STATIC_TEXT_TYPE}, {TUI_MEMO_TYPE}, {TUI_TEXT_VIEWER_TYPE}, {TUI_INPUT_LINE_TYPE}, {TUI_LIST_BOX_TYPE}, {TUI_CHECK_BOX_TYPE}, or {TUI_RADIO_BUTTON_TYPE}, got {}",
+                    "Child handle expected {TUI_BUTTON_TYPE}, {TUI_STATIC_TEXT_TYPE}, {TUI_MEMO_TYPE}, {TUI_TEXT_VIEWER_TYPE}, {TUI_INPUT_LINE_TYPE}, {TUI_LIST_BOX_TYPE}, {TUI_OUTLINE_TYPE}, {TUI_CHECK_BOX_TYPE}, or {TUI_RADIO_BUTTON_TYPE}, got {}",
                     other.type_name()
                 ),
-                "Pass a handle from `Application.CreateButton`, `Application.CreateStaticText`, `Application.CreateMemo`, `Application.CreateTextViewer`, `Application.CreateInputLine`, `Application.CreateListBox`, `Application.CreateCheckBox`, or `Application.CreateRadioButton`.",
+                "Pass a handle from `Application.CreateButton`, `Application.CreateStaticText`, `Application.CreateMemo`, `Application.CreateTextViewer`, `Application.CreateInputLine`, `Application.CreateListBox`, `Application.CreateOutline`, `Application.CreateCheckBox`, or `Application.CreateRadioButton`.",
                 line,
             )),
         }
@@ -374,6 +386,7 @@ pub(super) enum TurboVisionChildHandle {
     TextViewer(u32),
     InputLine(u32),
     ListBox(u32),
+    Outline(u32),
     CheckBox(u32),
     RadioButton(u32),
 }

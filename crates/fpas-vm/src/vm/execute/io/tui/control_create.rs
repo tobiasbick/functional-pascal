@@ -7,8 +7,8 @@ use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use crate::vm::shared::{
     TurboVisionButton, TurboVisionCheckBox, TurboVisionInputLine, TurboVisionListBox,
-    TurboVisionMemo, TurboVisionObject, TurboVisionRadioButton, TurboVisionStaticText,
-    TurboVisionTextViewer,
+    TurboVisionMemo, TurboVisionObject, TurboVisionOutline, TurboVisionRadioButton,
+    TurboVisionStaticText, TurboVisionTextViewer,
 };
 use crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell;
 use crate::vm::turbo_vision_input_text_cell::TurboVisionInputTextCell;
@@ -224,6 +224,34 @@ impl Worker {
         });
         self.mark_turbo_vision_tree_dirty();
         self.push(Self::turbo_vision_list_box_record(handle))
+    }
+
+    pub(super) fn turbo_vision_create_outline(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        let roots = self.pop_outline_roots("Outline roots", line)?;
+        let bounds = self.pop_turbo_vision_rect(line)?;
+        self.pop_tui_application(line)?;
+
+        let bounds = super::tv_geometry::state_rect(bounds);
+        let selection = super::outline_nodes::initial_outline_selection(&roots);
+        let handle = self.with_tui(|tui| {
+            let handle = tui.turbo_vision.next_handle;
+            tui.turbo_vision.next_handle = handle.saturating_add(1).max(1);
+            tui.turbo_vision.objects.insert(
+                handle,
+                TurboVisionObject::Outline(TurboVisionOutline {
+                    bounds,
+                    roots,
+                    selection_cell: TurboVisionListSelectionCell::new(selection),
+                    attached: false,
+                }),
+            );
+            handle
+        });
+        self.mark_turbo_vision_tree_dirty();
+        self.push(Self::turbo_vision_outline_record(handle))
     }
 
     pub(super) fn turbo_vision_create_check_box(

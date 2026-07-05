@@ -4,6 +4,7 @@
 
 use super::handles::{CheckedControlHandle, TurboVisionChildHandle, TurboVisionParentHandle};
 use super::live_patch::LiveDataMutation;
+use super::outline_nodes::initial_outline_selection;
 use super::tv_geometry::unknown_handle_error;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
@@ -51,6 +52,11 @@ impl Worker {
                     if matches!(child, TurboVisionChildHandle::ListBox(_)) =>
                 {
                     list_box.attached
+                }
+                Some(TurboVisionObject::Outline(outline))
+                    if matches!(child, TurboVisionChildHandle::Outline(_)) =>
+                {
+                    outline.attached
                 }
                 Some(TurboVisionObject::CheckBox(check_box))
                     if matches!(child, TurboVisionChildHandle::CheckBox(_)) =>
@@ -100,6 +106,7 @@ impl Worker {
                 Some(TurboVisionObject::TextViewer(text_viewer)) => text_viewer.attached = true,
                 Some(TurboVisionObject::InputLine(input_line)) => input_line.attached = true,
                 Some(TurboVisionObject::ListBox(list_box)) => list_box.attached = true,
+                Some(TurboVisionObject::Outline(outline)) => outline.attached = true,
                 Some(TurboVisionObject::CheckBox(check_box)) => check_box.attached = true,
                 Some(TurboVisionObject::RadioButton(radio_button)) => radio_button.attached = true,
                 _ => {}
@@ -167,6 +174,12 @@ impl Worker {
                     RUNTIME_INTRINSIC_STACK_STATE_ERROR,
                     "Application.SetText does not support ListBox handles",
                     "Recreate the list box with `Application.CreateListBox` to change its items.",
+                    line,
+                )),
+                Some(TurboVisionObject::Outline(_)) => Err(runtime_error(
+                    RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                    "Application.SetText does not support Outline handles",
+                    "Use `Application.SetOutlineNodes` to replace the outline tree.",
                     line,
                 )),
                 _ => Err(unknown_handle_error(label, handle, line)),
@@ -258,6 +271,36 @@ impl Worker {
         Ok(())
     }
 
+    /// Replace the node tree of an `Outline` handle at runtime.
+    ///
+    /// **Documentation:** `docs/pascal/std/tui/app/controls.md`
+    pub(super) fn turbo_vision_set_outline_nodes(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        let roots = self.pop_outline_roots("SetOutlineNodes roots", line)?;
+        let outline_handle = self.pop_turbo_vision_outline_handle(line)?;
+        self.pop_tui_application(line)?;
+
+        let selection = self.with_tui(|tui| {
+            let Some(TurboVisionObject::Outline(outline)) =
+                tui.turbo_vision.objects.get_mut(&outline_handle)
+            else {
+                return Err(unknown_handle_error("Outline", outline_handle, line));
+            };
+            let selection = initial_outline_selection(&roots);
+            outline.roots = roots.clone();
+            outline.selection_cell.set(selection);
+            Ok(selection)
+        })?;
+        self.turbo_vision_after_data_mutation(LiveDataMutation::SetOutlineNodes {
+            handle: outline_handle,
+            roots,
+            selection,
+        });
+        Ok(())
+    }
+
     pub(in crate::vm::execute::io::tui) fn pop_turbo_vision_string_array(
         &mut self,
         label: &'static str,
@@ -300,6 +343,7 @@ impl TurboVisionChildHandle {
             | Self::TextViewer(handle)
             | Self::InputLine(handle)
             | Self::ListBox(handle)
+            | Self::Outline(handle)
             | Self::CheckBox(handle)
             | Self::RadioButton(handle) => *handle,
         }
@@ -313,6 +357,7 @@ impl TurboVisionChildHandle {
             Self::TextViewer(_) => "TextViewer",
             Self::InputLine(_) => "InputLine",
             Self::ListBox(_) => "ListBox",
+            Self::Outline(_) => "Outline",
             Self::CheckBox(_) => "CheckBox",
             Self::RadioButton(_) => "RadioButton",
         }

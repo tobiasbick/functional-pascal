@@ -1,0 +1,32 @@
+program TuiTurboVisionOutlineTest;
+
+uses Std.Tui, Std.Test;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+function Leaf(Text: string): OutlineNode;
+begin
+  return record text := Text; children := []; expanded := false; end
+end;
+
+function Node(Text: string; Children: array of OutlineNode; Expanded: boolean): OutlineNode;
+begin
+  return record text := Text; children := Children; expanded := Expanded; end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(60, 20);
+  var Roots: array of OutlineNode := [Node('Root', [Leaf('child.fpas')], false)];
+  var ExpandedRoots: array of OutlineNode := [Node('Root', [Leaf('child.fpas')], true)];
+  var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(2, 1, 30, 10), 'Tree');
+  var OutlineHandle: Outline := Application.CreateOutline(App, Bounds(3, 2, 20, 6), Roots);
+  Application.AddChild(App, DialogHandle, OutlineHandle);
+  AssertEquals(0, Application.Pump(App));
+  AssertEquals('Root', Application.OutlineSelectedText(App, OutlineHandle));
+  Application.SetOutlineNodes(App, OutlineHandle, ExpandedRoots);
+  AssertEquals(0, Application.Pump(App));
+  AssertEquals('Root', Application.OutlineSelectedText(App, OutlineHandle))
+end.

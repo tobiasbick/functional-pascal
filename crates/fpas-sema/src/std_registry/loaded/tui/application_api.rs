@@ -119,6 +119,20 @@ pub(super) fn register_application_api(
     );
     define_func(
         checker,
+        s::STD_TUI_APPLICATION_CREATE_OUTLINE,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Bounds", types.rect.clone(), false),
+            p(
+                "Roots",
+                Ty::Array(Box::new(types.outline_node.clone())),
+                false,
+            ),
+        ],
+        types.outline.clone(),
+    );
+    define_func(
+        checker,
         s::STD_TUI_APPLICATION_CREATE_CHECK_BOX,
         vec![
             p("App", types.application.clone(), false),
@@ -206,6 +220,24 @@ pub(super) fn register_application_api(
             p("ListBox", types.list_box.clone(), false),
         ],
         Ty::Integer,
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_OUTLINE_SELECTION,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Outline", types.outline.clone(), false),
+        ],
+        Ty::Integer,
+    );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_OUTLINE_SELECTED_TEXT,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Outline", types.outline.clone(), false),
+        ],
+        Ty::String,
     );
     define_func(
         checker,

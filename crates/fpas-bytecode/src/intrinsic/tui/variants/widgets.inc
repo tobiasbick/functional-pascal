@@ -37,3 +37,7 @@
     ListSelection = 466,
     TestClickMouse = 467,
     MessageBox = 468,
+    CreateOutline = 469,
+    SetOutlineNodes = 470,
+    OutlineSelection = 471,
+    OutlineSelectedText = 472,

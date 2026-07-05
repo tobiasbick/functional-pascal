@@ -7,6 +7,7 @@ mod bridged_button;
 mod bridged_check_box;
 mod bridged_list_box;
 mod bridged_memo;
+mod bridged_outline;
 mod bridged_radio_button;
 mod bridged_static_text;
 mod bridged_text_viewer;
@@ -22,12 +23,15 @@ mod file_dialog;
 mod handle_records;
 mod handles;
 mod headless_tv_draw;
+#[cfg(test)]
 mod interactive_loop;
 mod lifecycle;
 mod live_patch;
 mod menu_build;
 mod msgbox;
 mod navigation;
+mod outline_nodes;
+mod outline_read;
 mod reconcile;
 mod records;
 mod session_app;
@@ -89,6 +93,9 @@ impl Worker {
             Intrinsic::Tui(TuiIntrinsic::CreateListBox) => {
                 self.turbo_vision_create_list_box(line)?;
             }
+            Intrinsic::Tui(TuiIntrinsic::CreateOutline) => {
+                self.turbo_vision_create_outline(line)?;
+            }
             Intrinsic::Tui(TuiIntrinsic::CreateCheckBox) => {
                 self.turbo_vision_create_check_box(line)?;
             }
@@ -116,6 +123,12 @@ impl Worker {
             Intrinsic::Tui(TuiIntrinsic::ListSelection) => {
                 self.turbo_vision_list_selection(line)?;
             }
+            Intrinsic::Tui(TuiIntrinsic::OutlineSelection) => {
+                self.turbo_vision_outline_selection(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::OutlineSelectedText) => {
+                self.turbo_vision_outline_selected_text(line)?;
+            }
             Intrinsic::Tui(TuiIntrinsic::AddChild) => {
                 self.turbo_vision_add_child(line)?;
             }
@@ -127,6 +140,9 @@ impl Worker {
             }
             Intrinsic::Tui(TuiIntrinsic::SetItems) => {
                 self.turbo_vision_set_items(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::SetOutlineNodes) => {
+                self.turbo_vision_set_outline_nodes(line)?;
             }
             Intrinsic::Tui(TuiIntrinsic::SetTitle) => {
                 self.turbo_vision_set_title(line)?;

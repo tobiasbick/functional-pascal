@@ -27,6 +27,8 @@ struct TuiTypes {
     text_viewer: Ty,
     input_line: Ty,
     list_box: Ty,
+    outline: Ty,
+    outline_node: Ty,
     check_box: Ty,
     radio_button: Ty,
     menu_bar: Ty,
@@ -67,6 +69,17 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         type_registration::register_record_type(checker, s::STD_TUI_INPUT_LINE, Vec::new());
     let list_box =
         type_registration::register_record_type(checker, s::STD_TUI_LIST_BOX, Vec::new());
+    let outline_node_ref = Ty::Named(s::STD_TUI_OUTLINE_NODE.into());
+    let outline_node = type_registration::register_record_type(
+        checker,
+        s::STD_TUI_OUTLINE_NODE,
+        vec![
+            ("text".into(), Ty::String),
+            ("children".into(), Ty::Array(Box::new(outline_node_ref))),
+            ("expanded".into(), Ty::Boolean),
+        ],
+    );
+    let outline = type_registration::register_record_type(checker, s::STD_TUI_OUTLINE, Vec::new());
     let check_box =
         type_registration::register_record_type(checker, s::STD_TUI_CHECK_BOX, Vec::new());
     let radio_button =
@@ -165,6 +178,8 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         text_viewer,
         input_line,
         list_box,
+        outline,
+        outline_node,
         check_box,
         radio_button,
         menu_bar,

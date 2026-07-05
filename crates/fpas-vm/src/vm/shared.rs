@@ -29,9 +29,9 @@ pub(crate) use graph::GraphState;
 pub(crate) use tui::{
     TuiState, TurboVisionButton, TurboVisionCheckBox, TurboVisionDialog, TurboVisionInputLine,
     TurboVisionListBox, TurboVisionMemo, TurboVisionMenu, TurboVisionMenuBar, TurboVisionMenuItem,
-    TurboVisionObject, TurboVisionRadioButton, TurboVisionRect, TurboVisionState,
-    TurboVisionStaticText, TurboVisionStatusItem, TurboVisionStatusLine, TurboVisionTextViewer,
-    TurboVisionWindow,
+    TurboVisionObject, TurboVisionOutline, TurboVisionOutlineNode, TurboVisionRadioButton,
+    TurboVisionRect, TurboVisionState, TurboVisionStaticText, TurboVisionStatusItem,
+    TurboVisionStatusLine, TurboVisionTextViewer, TurboVisionWindow,
 };
 
 pub(crate) enum TaskResultPoll {

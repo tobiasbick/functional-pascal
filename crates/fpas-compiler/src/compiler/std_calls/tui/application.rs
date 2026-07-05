@@ -116,6 +116,14 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::CreateListBox), location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_CREATE_OUTLINE => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_CREATE_OUTLINE, 3, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::CreateOutline), location);
+                Ok(true)
+            }
             s::STD_TUI_APPLICATION_CREATE_CHECK_BOX => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_CREATE_CHECK_BOX, 4, args, location)?;
                 for arg in args {
@@ -191,6 +199,32 @@ impl Compiler {
                     self.compile_expr(arg)?;
                 }
                 self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::ListSelection), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_OUTLINE_SELECTION => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_OUTLINE_SELECTION,
+                    2,
+                    args,
+                    location,
+                )?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::OutlineSelection), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_OUTLINE_SELECTED_TEXT => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_OUTLINE_SELECTED_TEXT,
+                    2,
+                    args,
+                    location,
+                )?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::OutlineSelectedText), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_CREATE_MENU_BAR => {
@@ -276,6 +310,19 @@ impl Compiler {
                     self.compile_expr(arg)?;
                 }
                 self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::SetItems), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_SET_OUTLINE_NODES => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_SET_OUTLINE_NODES,
+                    3,
+                    args,
+                    location,
+                )?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::SetOutlineNodes), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_SET_TITLE => {

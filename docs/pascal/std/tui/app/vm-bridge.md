@@ -128,6 +128,7 @@ Turbo Vision bridge code lives under `crates/fpas-vm/src/vm/execute/io/tui/`:
 | `bridged_button.rs` | `Button` view with live `SetText` patching |
 | `bridged_check_box.rs` | Modal `CheckBox` view syncing checked state to FPAS |
 | `bridged_list_box.rs` | Modal `ListBox` view syncing selected index to FPAS |
+| `bridged_outline.rs` | Modal `OutlineViewer` view syncing selection to FPAS |
 | `bridged_radio_button.rs` | Modal `RadioButton` view syncing selected state and FPAS group cells |
 | `bridged_static_text.rs` | `StaticText` view with live `SetText` patching |
 | `bridged_memo.rs` | `Memo` view with live `SetText` patching |

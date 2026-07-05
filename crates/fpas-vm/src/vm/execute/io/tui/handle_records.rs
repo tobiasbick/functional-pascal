@@ -14,6 +14,8 @@ pub(in crate::vm::execute::io::tui) const TUI_TEXT_VIEWER_TYPE: &str = "Std.Tui.
 pub(in crate::vm::execute::io::tui) const TUI_INPUT_LINE_TYPE: &str = "Std.Tui.InputLine";
 pub(in crate::vm::execute::io::tui) const TUI_DIALOG_RESULT_TYPE: &str = "Std.Tui.DialogResult";
 pub(in crate::vm::execute::io::tui) const TUI_LIST_BOX_TYPE: &str = "Std.Tui.ListBox";
+pub(in crate::vm::execute::io::tui) const TUI_OUTLINE_TYPE: &str = "Std.Tui.Outline";
+pub(in crate::vm::execute::io::tui) const TUI_OUTLINE_NODE_TYPE: &str = "Std.Tui.OutlineNode";
 pub(in crate::vm::execute::io::tui) const TUI_CHECK_BOX_TYPE: &str = "Std.Tui.CheckBox";
 pub(in crate::vm::execute::io::tui) const TUI_RADIO_BUTTON_TYPE: &str = "Std.Tui.RadioButton";
 pub(in crate::vm::execute::io::tui) const TUI_MENU_BAR_TYPE: &str = "Std.Tui.MenuBar";
@@ -52,6 +54,10 @@ impl Worker {
 
     pub(super) fn turbo_vision_list_box_record(handle: u32) -> Value {
         turbo_vision_handle_record(TUI_LIST_BOX_TYPE, handle)
+    }
+
+    pub(super) fn turbo_vision_outline_record(handle: u32) -> Value {
+        turbo_vision_handle_record(TUI_OUTLINE_TYPE, handle)
     }
 
     pub(super) fn turbo_vision_check_box_record(handle: u32) -> Value {

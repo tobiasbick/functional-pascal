@@ -12,6 +12,8 @@ pub const STD_TUI_MEMO: &str = std_tui!("Memo");
 pub const STD_TUI_TEXT_VIEWER: &str = std_tui!("TextViewer");
 pub const STD_TUI_INPUT_LINE: &str = std_tui!("InputLine");
 pub const STD_TUI_LIST_BOX: &str = std_tui!("ListBox");
+pub const STD_TUI_OUTLINE: &str = std_tui!("Outline");
+pub const STD_TUI_OUTLINE_NODE: &str = std_tui!("OutlineNode");
 pub const STD_TUI_CHECK_BOX: &str = std_tui!("CheckBox");
 pub const STD_TUI_RADIO_BUTTON: &str = std_tui!("RadioButton");
 pub const STD_TUI_MENU_BAR: &str = std_tui!("MenuBar");
@@ -66,6 +68,7 @@ pub const STD_TUI_APPLICATION_CREATE_MEMO: &str = std_tui!("Application.CreateMe
 pub const STD_TUI_APPLICATION_CREATE_TEXT_VIEWER: &str = std_tui!("Application.CreateTextViewer");
 pub const STD_TUI_APPLICATION_CREATE_INPUT_LINE: &str = std_tui!("Application.CreateInputLine");
 pub const STD_TUI_APPLICATION_CREATE_LIST_BOX: &str = std_tui!("Application.CreateListBox");
+pub const STD_TUI_APPLICATION_CREATE_OUTLINE: &str = std_tui!("Application.CreateOutline");
 pub const STD_TUI_APPLICATION_CREATE_CHECK_BOX: &str = std_tui!("Application.CreateCheckBox");
 pub const STD_TUI_APPLICATION_CREATE_RADIO_BUTTON: &str = std_tui!("Application.CreateRadioButton");
 /// Show a modal Turbo Vision file dialog and return the selected path, or `None` when canceled.
@@ -85,6 +88,9 @@ pub const STD_TUI_APPLICATION_CHECKED: &str = std_tui!("Application.Checked");
 pub const STD_TUI_APPLICATION_SELECTED: &str = std_tui!("Application.Selected");
 /// Read the selected index of a list box, or `-1` when no item is selected.
 pub const STD_TUI_APPLICATION_LIST_SELECTION: &str = std_tui!("Application.ListSelection");
+pub const STD_TUI_APPLICATION_OUTLINE_SELECTION: &str = std_tui!("Application.OutlineSelection");
+pub const STD_TUI_APPLICATION_OUTLINE_SELECTED_TEXT: &str =
+    std_tui!("Application.OutlineSelectedText");
 /// Queue the closing command returned by the next headless `Application.ExecDialog` call.
 pub const STD_TUI_APPLICATION_TEST_SET_DIALOG_RESULT: &str =
     std_tui!("Application.TestSetDialogResult");
@@ -98,6 +104,7 @@ pub const STD_TUI_APPLICATION_ADD_CHILD: &str = std_tui!("Application.AddChild")
 pub const STD_TUI_APPLICATION_SET_TEXT: &str = std_tui!("Application.SetText");
 pub const STD_TUI_APPLICATION_SET_CHECKED: &str = std_tui!("Application.SetChecked");
 pub const STD_TUI_APPLICATION_SET_ITEMS: &str = std_tui!("Application.SetItems");
+pub const STD_TUI_APPLICATION_SET_OUTLINE_NODES: &str = std_tui!("Application.SetOutlineNodes");
 pub const STD_TUI_APPLICATION_SET_TITLE: &str = std_tui!("Application.SetTitle");
 pub const STD_TUI_APPLICATION_ADD_WINDOW: &str = std_tui!("Application.AddWindow");
 pub const STD_TUI_APPLICATION_ON_COMMAND: &str = std_tui!("Application.OnCommand");
@@ -230,6 +237,8 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_TEXT_VIEWER,
     STD_TUI_INPUT_LINE,
     STD_TUI_LIST_BOX,
+    STD_TUI_OUTLINE,
+    STD_TUI_OUTLINE_NODE,
     STD_TUI_CHECK_BOX,
     STD_TUI_RADIO_BUTTON,
     STD_TUI_MENU_BAR,
@@ -274,6 +283,7 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_APPLICATION_CREATE_TEXT_VIEWER,
     STD_TUI_APPLICATION_CREATE_INPUT_LINE,
     STD_TUI_APPLICATION_CREATE_LIST_BOX,
+    STD_TUI_APPLICATION_CREATE_OUTLINE,
     STD_TUI_APPLICATION_CREATE_CHECK_BOX,
     STD_TUI_APPLICATION_CREATE_RADIO_BUTTON,
     STD_TUI_APPLICATION_RUN_FILE_DIALOG,
@@ -284,6 +294,8 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_APPLICATION_CHECKED,
     STD_TUI_APPLICATION_SELECTED,
     STD_TUI_APPLICATION_LIST_SELECTION,
+    STD_TUI_APPLICATION_OUTLINE_SELECTION,
+    STD_TUI_APPLICATION_OUTLINE_SELECTED_TEXT,
     STD_TUI_APPLICATION_TEST_SET_DIALOG_RESULT,
     STD_TUI_APPLICATION_CREATE_MENU_BAR,
     STD_TUI_APPLICATION_SET_MENU_BAR,
@@ -295,6 +307,7 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_APPLICATION_SET_TEXT,
     STD_TUI_APPLICATION_SET_CHECKED,
     STD_TUI_APPLICATION_SET_ITEMS,
+    STD_TUI_APPLICATION_SET_OUTLINE_NODES,
     STD_TUI_APPLICATION_SET_TITLE,
     STD_TUI_APPLICATION_ADD_WINDOW,
     STD_TUI_APPLICATION_ON_COMMAND,

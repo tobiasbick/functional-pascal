@@ -84,6 +84,7 @@ pub(crate) enum TurboVisionObject {
     TextViewer(TurboVisionTextViewer),
     InputLine(TurboVisionInputLine),
     ListBox(TurboVisionListBox),
+    Outline(TurboVisionOutline),
     CheckBox(TurboVisionCheckBox),
     RadioButton(TurboVisionRadioButton),
     MenuBar(TurboVisionMenuBar),
@@ -153,6 +154,22 @@ pub(crate) struct TurboVisionListBox {
     pub bounds: TurboVisionRect,
     pub items: Vec<String>,
     pub command_id: u16,
+    pub selection_cell: crate::vm::turbo_vision_list_selection_cell::TurboVisionListSelectionCell,
+    pub attached: bool,
+}
+
+/// One node in an FPAS outline tree.
+#[derive(Clone, Debug)]
+pub(crate) struct TurboVisionOutlineNode {
+    pub text: String,
+    pub children: Vec<TurboVisionOutlineNode>,
+    pub expanded: bool,
+}
+
+#[derive(Clone)]
+pub(crate) struct TurboVisionOutline {
+    pub bounds: TurboVisionRect,
+    pub roots: Vec<TurboVisionOutlineNode>,
     pub selection_cell: crate::vm::turbo_vision_list_selection_cell::TurboVisionListSelectionCell,
     pub attached: bool,
 }

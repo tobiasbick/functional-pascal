@@ -101,6 +101,20 @@ Opaque single-line Turbo Vision text input handle returned by `Application.Creat
 
 Opaque Turbo Vision selectable string list handle returned by `Application.CreateListBox`.
 
+## `Outline`
+
+Opaque Turbo Vision hierarchical outline handle returned by `Application.CreateOutline`. Backed by upstream `OutlineViewer`.
+
+## `OutlineNode`
+
+Record describing one node in an outline tree.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `text` | `string` | Label shown for the node. |
+| `children` | `array of OutlineNode` | Child nodes. Use an empty array for leaves. |
+| `expanded` | `boolean` | When `true`, child nodes are visible in the outline. |
+
 ## `CheckBox`
 
 Opaque Turbo Vision boolean check box handle returned by `Application.CreateCheckBox`.

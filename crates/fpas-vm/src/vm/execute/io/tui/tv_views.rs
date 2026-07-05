@@ -6,8 +6,8 @@ use super::command_map::fpas_command_to_turbo_vision;
 use super::tv_geometry::turbo_rect;
 use crate::vm::shared::{
     TurboVisionButton, TurboVisionCheckBox, TurboVisionInputLine, TurboVisionListBox,
-    TurboVisionMemo, TurboVisionObject, TurboVisionRadioButton, TurboVisionRect,
-    TurboVisionStaticText, TurboVisionStatusItem, TurboVisionTextViewer,
+    TurboVisionMemo, TurboVisionObject, TurboVisionOutline, TurboVisionRadioButton,
+    TurboVisionRect, TurboVisionStaticText, TurboVisionStatusItem, TurboVisionTextViewer,
 };
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -34,6 +34,7 @@ pub(in crate::vm::execute::io::tui) enum TurboVisionChildSnapshot {
     TextViewer(TurboVisionTextViewer),
     InputLine(TurboVisionInputLine),
     ListBox(TurboVisionListBox),
+    Outline(TurboVisionOutline),
     CheckBox(TurboVisionCheckBox),
     RadioButton(TurboVisionRadioButton),
 }
@@ -62,6 +63,9 @@ pub(in crate::vm::execute::io::tui) fn child_snapshots(
             }
             Some(TurboVisionObject::ListBox(list_box)) => {
                 Some(TurboVisionChildSnapshot::ListBox(list_box.clone()))
+            }
+            Some(TurboVisionObject::Outline(outline)) => {
+                Some(TurboVisionChildSnapshot::Outline(outline.clone()))
             }
             Some(TurboVisionObject::CheckBox(check_box)) => {
                 Some(TurboVisionChildSnapshot::CheckBox(check_box.clone()))
@@ -130,6 +134,14 @@ pub(in crate::vm::execute::io::tui) fn add_window_child(
         TurboVisionChildSnapshot::ListBox(list_box) => {
             (window.add(Box::new(build_list_box(list_box))), None)
         }
+        TurboVisionChildSnapshot::Outline(outline) => (
+            window.add(Box::new(super::bridged_outline::BridgedOutline::new(
+                turbo_rect(outline.bounds),
+                &outline.roots,
+                outline.selection_cell,
+            ))),
+            None,
+        ),
         TurboVisionChildSnapshot::CheckBox(check_box) => (
             window.add(Box::new(super::bridged_check_box::BridgedCheckBox::new(
                 turbo_rect(check_box.bounds),
@@ -222,6 +234,14 @@ pub(in crate::vm::execute::io::tui) fn add_dialog_child(
                 list_box.items,
                 fpas_command_to_turbo_vision(list_box.command_id),
                 list_box.selection_cell,
+            ))),
+            None,
+        ),
+        TurboVisionChildSnapshot::Outline(outline) => (
+            dialog.add(Box::new(super::bridged_outline::BridgedOutline::new(
+                turbo_rect(outline.bounds),
+                &outline.roots,
+                outline.selection_cell,
             ))),
             None,
         ),
@@ -364,6 +384,9 @@ fn child_snapshot(
         }
         Some(TurboVisionObject::ListBox(list_box)) => {
             Some(TurboVisionChildSnapshot::ListBox(list_box.clone()))
+        }
+        Some(TurboVisionObject::Outline(outline)) => {
+            Some(TurboVisionChildSnapshot::Outline(outline.clone()))
         }
         Some(TurboVisionObject::CheckBox(check_box)) => {
             Some(TurboVisionChildSnapshot::CheckBox(check_box.clone()))

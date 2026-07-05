@@ -33,6 +33,7 @@ Custom modal layout (`CreateDialog` + `ExecDialog`) is for dialogs with read-bac
 | `Application.CreateTextViewer(App, Bounds, Text): TextViewer` | Create a read-only multi-line Turbo Vision text viewer handle. |
 | `Application.CreateInputLine(App, Bounds, Text, MaxLength): InputLine` | Create a single-line Turbo Vision text input handle. |
 | `Application.CreateListBox(App, Bounds, Items, CommandId): ListBox` | Create a Turbo Vision list box from an array of strings. |
+| `Application.CreateOutline(App, Bounds, Roots): Outline` | Create a Turbo Vision outline tree from an array of `OutlineNode` records. |
 | `Application.CreateCheckBox(App, Bounds, Text, Checked): CheckBox` | Create a Turbo Vision check box with an initial checked state. |
 | `Application.CreateRadioButton(App, Bounds, Text, GroupId, Selected): RadioButton` | Create a Turbo Vision radio button. Use the same `GroupId` for mutually exclusive options. |
 | `Application.RunFileDialog(App, Bounds, Title, Wildcard, StartPath): Option of string` | Show a modal file dialog. Returns `Some(path)` when a file is chosen and `None` when canceled. Pass `None` as `StartPath` for the current directory. |
@@ -42,10 +43,13 @@ Custom modal layout (`CreateDialog` + `ExecDialog`) is for dialogs with read-bac
 | `Application.Checked(App, Field): boolean` | Read the checked state of a `CheckBox` handle (valid after `ExecDialog`). |
 | `Application.Selected(App, Field): boolean` | Read the selected state of a `RadioButton` handle (valid after `ExecDialog`). |
 | `Application.ListSelection(App, ListBox): integer` | Read the zero-based selected list-box index, or `-1` when no item is selected. |
-| `Application.AddChild(App, Parent, Child)` | Attach a button, static text, memo, text viewer, input line, list box, check box, or radio button child to a dialog or window parent. |
+| `Application.OutlineSelection(App, Outline): integer` | Read the zero-based flat visible selection index in an outline, or `-1` when the outline is empty. |
+| `Application.OutlineSelectedText(App, Outline): string` | Read the label text of the selected outline node. |
+| `Application.AddChild(App, Parent, Child)` | Attach a button, static text, memo, text viewer, input line, list box, outline, check box, or radio button child to a dialog or window parent. |
 | `Application.SetText(App, Control, Text)` | Replace the text of a text-bearing control at runtime. |
 | `Application.SetChecked(App, Control, Checked)` | Set check box checked state or radio button selected state at runtime. |
 | `Application.SetItems(App, ListBox, Items)` | Replace list box items at runtime. |
+| `Application.SetOutlineNodes(App, Outline, Roots)` | Replace outline nodes at runtime. |
 | `Application.SetTitle(App, Root, Title)` | Replace window or dialog title at runtime. |
 | `Application.AddWindow(App, Window)` | Place a window on the application desktop. |
 | `Application.CreateMenuBar(App, Bounds, Menus): MenuBar` | Create a top menu bar from an array of `Menu` records. |

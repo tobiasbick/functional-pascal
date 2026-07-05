@@ -10,6 +10,8 @@ Turbo Vision widget handles and application chrome.
 | `TextViewer` | Opaque read-only multi-line Turbo Vision text viewer handle. |
 | `InputLine` | Opaque single-line Turbo Vision text input handle. |
 | `ListBox` | Opaque Turbo Vision selectable string list handle. |
+| `Outline` | Opaque Turbo Vision hierarchical outline tree handle. |
+| `OutlineNode` | Record describing one outline node and its children. |
 | `CheckBox` | Opaque Turbo Vision boolean check box handle. |
 | `RadioButton` | Opaque Turbo Vision mutually exclusive radio button handle. |
 | `Application.CreateButton(App, Bounds, Text, CommandId): Button` | Create a button. |
@@ -18,14 +20,18 @@ Turbo Vision widget handles and application chrome.
 | `Application.CreateTextViewer(App, Bounds, Text): TextViewer` | Create a read-only multi-line text viewer with initial content. |
 | `Application.CreateInputLine(App, Bounds, Text, MaxLength): InputLine` | Create a single-line text input with initial text and maximum length. |
 | `Application.CreateListBox(App, Bounds, Items, CommandId): ListBox` | Create a selectable list from an array of strings. Enter or double-click dispatches `CommandId` in an interactive Turbo Vision run. |
+| `Application.CreateOutline(App, Bounds, Roots): Outline` | Create a hierarchical outline from an array of `OutlineNode` records. Use arrow keys to move, Right/Left or Enter to expand or collapse nodes with children. |
 | `Application.CreateCheckBox(App, Bounds, Text, Checked): CheckBox` | Create a check box with an initial checked state. Left-click toggles during `Application.Run`. |
 | `Application.CreateRadioButton(App, Bounds, Text, GroupId, Selected): RadioButton` | Create a radio button in a group. Buttons with the same `GroupId` are mutually exclusive. Left-click selects during `Application.Run`. |
-| `Application.AddChild(App, Parent, Child)` | Attach a button, static text, memo, text viewer, input line, list box, check box, or radio button child to a dialog or window. |
-| `Application.SetText(App, Control, Text)` | Replace the text of a button, static text, memo, text viewer, input line, check box, or radio button. The change re-renders live during `Application.Run` and is visible to headless screen queries. Not supported for list boxes. |
+| `Application.AddChild(App, Parent, Child)` | Attach a button, static text, memo, text viewer, input line, list box, outline, check box, or radio button child to a dialog or window. |
+| `Application.SetText(App, Control, Text)` | Replace the text of a button, static text, memo, text viewer, input line, check box, or radio button. The change re-renders live during `Application.Run` and is visible to headless screen queries. Not supported for list boxes or outlines. |
 | `Application.SetChecked(App, Control, Checked)` | Set the checked state of a check box or the selected state of a radio button. Selecting a radio button clears other buttons in the same group. |
 | `Application.Selected(App, RadioButton): boolean` | Read a radio button's selected state. Use after `Application.ExecDialog` for modal choices. |
 | `Application.ListSelection(App, ListBox): integer` | Read the zero-based selected list-box index. Returns `-1` when the list is empty. |
 | `Application.SetItems(App, ListBox, Items)` | Replace the string items of a list box. |
+| `Application.OutlineSelection(App, Outline): integer` | Read the zero-based flat visible selection index in an outline. Returns `-1` when the outline is empty. |
+| `Application.OutlineSelectedText(App, Outline): string` | Read the label text of the selected outline node. Returns an empty string when nothing is selected. |
+| `Application.SetOutlineNodes(App, Outline, Roots)` | Replace the node tree of an outline. Re-renders live and in headless queries. |
 | `Application.SetTitle(App, Root, Title)` | Replace the title of a window or dialog root. |
 | `Application.TestClickButton(App, Button)` | Queue a headless test click for the button. |
 | `Application.TestClickMouse(App, X, Y)` | Queue a headless left click at screen coordinates on a check box or radio button. |

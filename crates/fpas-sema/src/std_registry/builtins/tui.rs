@@ -21,6 +21,7 @@ pub(super) fn check_tui_builtin_std_call(
         s::STD_TUI_APPLICATION_SET_TEXT => Some(check_set_text(c, args, span)),
         s::STD_TUI_APPLICATION_SET_CHECKED => Some(check_set_checked(c, args, span)),
         s::STD_TUI_APPLICATION_SET_ITEMS => Some(check_set_items(c, args, span)),
+        s::STD_TUI_APPLICATION_SET_OUTLINE_NODES => Some(check_set_outline_nodes(c, args, span)),
         s::STD_TUI_APPLICATION_SET_TITLE => Some(check_set_title(c, args, span)),
         _ => None,
     }
@@ -54,6 +55,7 @@ fn check_add_child(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     let text_viewer = lookup_named_type(c, s::STD_TUI_TEXT_VIEWER);
     let input_line = lookup_named_type(c, s::STD_TUI_INPUT_LINE);
     let list_box = lookup_named_type(c, s::STD_TUI_LIST_BOX);
+    let outline = lookup_named_type(c, s::STD_TUI_OUTLINE);
     let check_box = lookup_named_type(c, s::STD_TUI_CHECK_BOX);
     let radio_button = lookup_named_type(c, s::STD_TUI_RADIO_BUTTON);
 
@@ -81,14 +83,15 @@ fn check_add_child(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         && child_ty != text_viewer
         && child_ty != input_line
         && child_ty != list_box
+        && child_ty != outline
         && child_ty != check_box
         && child_ty != radio_button
     {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
-            "`Application.AddChild` child must be a button, static text, memo, text viewer, input line, list box, check box, or radio button handle"
+            "`Application.AddChild` child must be a button, static text, memo, text viewer, input line, list box, outline, check box, or radio button handle"
                 .to_string(),
-            "Pass a handle from `Application.CreateButton`, `Application.CreateStaticText`, `Application.CreateMemo`, `Application.CreateTextViewer`, `Application.CreateInputLine`, `Application.CreateListBox`, `Application.CreateCheckBox`, or `Application.CreateRadioButton`.",
+            "Pass a handle from `Application.CreateButton`, `Application.CreateStaticText`, `Application.CreateMemo`, `Application.CreateTextViewer`, `Application.CreateInputLine`, `Application.CreateListBox`, `Application.CreateOutline`, `Application.CreateCheckBox`, or `Application.CreateRadioButton`.",
             span,
         );
     }
@@ -275,6 +278,63 @@ fn check_set_items(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     Ty::Unit
 }
 
+/// Type-checks `Application.SetOutlineNodes(App, Outline, Roots)`.
+fn check_set_outline_nodes(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+    if args.len() != 3 {
+        c.error_with_code(
+            SEMA_WRONG_ARGUMENT_COUNT,
+            format!(
+                "`{}` expects 3 arguments, got {}",
+                s::STD_TUI_APPLICATION_SET_OUTLINE_NODES,
+                args.len()
+            ),
+            "Example: Application.SetOutlineNodes(App, Outline, Roots).",
+            span,
+        );
+        return Ty::Unit;
+    }
+
+    let app_ty = c.check_expr(&args[0]);
+    let outline_ty = c.check_expr(&args[1]);
+    let roots_ty = c.check_expr(&args[2]);
+
+    let application = lookup_named_type(c, s::STD_TUI_APPLICATION);
+    let outline = lookup_named_type(c, s::STD_TUI_OUTLINE_NODE);
+    let outline_handle = lookup_named_type(c, s::STD_TUI_OUTLINE);
+
+    if app_ty != application {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            "`Application.SetOutlineNodes` first argument must be an application handle"
+                .to_string(),
+            "Pass the application handle returned by `Application.Open` or `OpenForTest`.",
+            span,
+        );
+    }
+
+    if outline_ty != outline_handle {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            "`Application.SetOutlineNodes` outline must be an outline handle".to_string(),
+            "Pass a handle from `Application.CreateOutline`.",
+            span,
+        );
+    }
+
+    if roots_ty != Ty::Array(Box::new(outline.clone())) {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            format!(
+                "`Application.SetOutlineNodes` roots must be array of OutlineNode, got {roots_ty}"
+            ),
+            "Pass an array of Std.Tui.OutlineNode records.",
+            span,
+        );
+    }
+
+    Ty::Unit
+}
+
 /// Type-checks `Application.SetTitle(App, Root, Title)`.
 fn check_set_title(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     if args.len() != 3 {
@@ -336,6 +396,7 @@ pub(crate) fn register_tui_builtins(checker: &mut Checker) {
         s::STD_TUI_APPLICATION_SET_TEXT,
         s::STD_TUI_APPLICATION_SET_CHECKED,
         s::STD_TUI_APPLICATION_SET_ITEMS,
+        s::STD_TUI_APPLICATION_SET_OUTLINE_NODES,
         s::STD_TUI_APPLICATION_SET_TITLE,
     ] {
         super::super::define_builtin_std(

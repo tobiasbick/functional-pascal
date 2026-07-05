@@ -8,11 +8,12 @@ use super::bridged_button::BridgedButton;
 use super::bridged_check_box::BridgedCheckBox;
 use super::bridged_list_box::BridgedListBox;
 use super::bridged_memo::BridgedMemo;
+use super::bridged_outline::BridgedOutline;
 use super::bridged_radio_button::BridgedRadioButton;
 use super::bridged_static_text::BridgedStaticText;
 use super::bridged_text_viewer::BridgedTextViewer;
 use crate::vm::Worker;
-use crate::vm::shared::TurboVisionObject;
+use crate::vm::shared::{TurboVisionObject, TurboVisionOutlineNode};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -35,6 +36,11 @@ pub(in crate::vm::execute::io::tui) enum LiveDataMutation {
     SetListItems {
         handle: u32,
         items: Vec<String>,
+        selection: Option<usize>,
+    },
+    SetOutlineNodes {
+        handle: u32,
+        roots: Vec<TurboVisionOutlineNode>,
         selection: Option<usize>,
     },
     SetText {
@@ -234,6 +240,18 @@ fn apply_live_data_mutation_to_desktop(
             items.clone(),
             *selection,
         ),
+        LiveDataMutation::SetOutlineNodes {
+            handle,
+            roots,
+            selection,
+        } => patch_outline_nodes(
+            desktop,
+            view_ids,
+            child_root_view_ids,
+            *handle,
+            roots.clone(),
+            *selection,
+        ),
         LiveDataMutation::SetText { handle } => {
             patch_set_text(desktop, view_ids, child_root_view_ids, *handle, worker)
         }
@@ -365,6 +383,26 @@ fn patch_list_items(
             if let Some(index) = selection {
                 list_box.set_selection(index);
             }
+            return true;
+        }
+        false
+    })
+}
+
+fn patch_outline_nodes(
+    desktop: &mut Desktop,
+    view_ids: &HashMap<u32, u16>,
+    child_root_view_ids: &HashMap<u32, u16>,
+    handle: u32,
+    roots: Vec<TurboVisionOutlineNode>,
+    selection: Option<usize>,
+) -> bool {
+    let Some(location) = locate_live_view(view_ids, child_root_view_ids, handle) else {
+        return false;
+    };
+    with_live_view_mut(desktop, location, |view| {
+        if let Some(outline) = view.as_any_mut().downcast_mut::<BridgedOutline>() {
+            outline.set_roots_from_fpas(roots, selection);
             return true;
         }
         false

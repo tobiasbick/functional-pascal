@@ -22,8 +22,8 @@ begin
   var MenuBarHandle: MenuBar := Application.CreateMenuBar(App, Bounds(1, 1, 60, 1), [OldMenu()]);
   Application.SetMenuBar(App, MenuBarHandle);
   Application.Pump(App);
-  AssertScreenCell(1, 1, 'O', White, Blue);
+  AssertScreenCell(3, 1, 'O', Black, LightGray);
   Application.SetMenus(App, MenuBarHandle, [NewMenu()]);
   AssertEquals(0, Application.Pump(App));
-  AssertScreenCell(1, 1, 'N', White, Blue)
+  AssertScreenCell(3, 1, 'N', Black, LightGray)
 end.

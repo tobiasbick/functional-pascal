@@ -4,7 +4,7 @@
 
 **Priority:** Low — architectural; do after 01 and preferably 03
 
-**Depends on:** [done/02-single-tv-session.md](done/02-single-tv-session.md), [03-headless-test-util.md](03-headless-test-util.md) (recommended)
+**Depends on:** [done/02-single-tv-session.md](done/02-single-tv-session.md), [done/04-headless-test-util.md](done/04-headless-test-util.md) (recommended)
 
 ## Problem
 

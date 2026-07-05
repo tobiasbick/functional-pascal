@@ -1,6 +1,6 @@
 //! In-memory turbo-vision [`Backend`] for headless FPAS tests.
 //!
-//! **Documentation:** `docs/refactor/tui-bridge/03-headless-test-util.md`
+//! **Documentation:** `docs/refactor/tui-bridge/done/04-headless-test-util.md`
 
 use std::io;
 use std::sync::Mutex;
@@ -26,6 +26,10 @@ impl TvHeadlessBackend {
     }
 
     /// Queues an input event for the next `poll_event` call.
+    ///
+    /// Reserved for routing `TestClickMouse` / keyboard through TV `handle_event`
+    /// instead of duplicate hit-test (refactor 03 follow-up).
+    #[allow(dead_code)]
     pub fn push_event(&self, event: Event) {
         if let Ok(mut events) = self.events.lock() {
             events.push(event);

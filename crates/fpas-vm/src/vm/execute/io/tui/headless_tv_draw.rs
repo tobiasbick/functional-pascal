@@ -1,6 +1,6 @@
 //! Headless turbo-vision draw path: upstream `draw` into a memory backend, then CRT export.
 //!
-//! **Documentation:** `docs/refactor/tui-bridge/03-headless-test-util.md`
+//! **Documentation:** `docs/refactor/tui-bridge/done/04-headless-test-util.md`
 
 use super::chrome_layout::{layout_menu_bar_for_terminal, layout_status_line_for_terminal};
 use super::menu_build::build_menu_bar_from_snapshot;
@@ -74,9 +74,8 @@ impl HeadlessTvApp {
 }
 
 impl Worker {
-    /// Repaint the headless desktop using upstream turbo-vision `draw` (spike; not wired).
-    #[allow(dead_code)]
-    pub(in crate::vm::execute::io::tui) fn turbo_vision_paint_headless_desktop_via_tv_draw(
+    /// Repaint the headless desktop using upstream turbo-vision `draw`.
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_paint_headless_desktop(
         &mut self,
         _line: SourceLocation,
     ) {
@@ -146,9 +145,6 @@ fn export_terminal_buffer_to_console(terminal: &Terminal, console: &mut Console)
     let buffer = terminal.buffer();
     for (row, line) in buffer.iter().enumerate() {
         for (col, cell) in line.iter().enumerate() {
-            if cell.ch == ' ' {
-                continue;
-            }
             let (fg, bg) = tv_attr_to_console_colors(cell);
             console.paint_headless_cell(col as u16 + 1, row as u16 + 1, cell.ch, fg, bg);
         }
@@ -156,13 +152,120 @@ fn export_terminal_buffer_to_console(terminal: &Terminal, console: &mut Console)
 }
 
 fn tv_attr_to_console_colors(cell: &Cell) -> (u8, u8) {
-    let fg = match cell.attr.fg {
-        TvColor::Rgb { .. } => 7,
+    (
+        tv_color_to_console_index(cell.attr.fg),
+        tv_color_to_console_index(cell.attr.bg),
+    )
+}
+
+fn tv_color_to_console_index(color: TvColor) -> u8 {
+    match color {
+        TvColor::Rgb { r, g, b } => TvColor::from_rgb(r, g, b).to_index(),
         other => other.to_index(),
-    };
-    let bg = match cell.attr.bg {
-        TvColor::Rgb { .. } => 0,
-        other => other.to_index(),
-    };
-    (fg, bg)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::chrome_layout::layout_status_line_for_terminal;
+    use super::*;
+    use turbo_vision::core::geometry::Rect;
+    use turbo_vision::core::menu_data::Menu;
+    use turbo_vision::views::dialog::Dialog;
+    use turbo_vision::views::menu_bar::{MenuBar, SubMenu};
+    use turbo_vision::views::status_line::{StatusItem, StatusLine};
+
+    fn find_char(buffer: &[Vec<Cell>], ch: char) -> Option<(usize, usize)> {
+        for (row, line) in buffer.iter().enumerate() {
+            for (col, cell) in line.iter().enumerate() {
+                if cell.ch == ch {
+                    return Some((col, row));
+                }
+            }
+        }
+        None
+    }
+
+    #[test]
+    fn headless_tv_app_draws_menu_title_on_screen() {
+        let mut app = HeadlessTvApp::new(60, 20).expect("headless app");
+        let mut menu_bar = MenuBar::new(Rect::new(0, 0, 60, 1));
+        menu_bar.add_submenu(SubMenu::new("OLD", Menu::new()));
+        app.menu_bar = Some(menu_bar);
+        app.update_desktop_bounds();
+        app.draw();
+
+        assert_eq!(
+            find_char(app.terminal.buffer(), 'O'),
+            Some((2, 0)),
+            "menu title should paint at TV column 2, row 0"
+        );
+    }
+
+    #[test]
+    fn headless_tv_app_draws_status_text_on_bottom_row() {
+        let mut app = HeadlessTvApp::new(60, 25).expect("headless app");
+        let mut status_line =
+            StatusLine::new(Rect::new(0, 24, 60, 25), vec![StatusItem::new("OLD", 0, 0)]);
+        layout_status_line_for_terminal(&mut status_line, 60, 25);
+        app.status_line = Some(status_line);
+        app.update_desktop_bounds();
+        app.draw();
+
+        assert_eq!(
+            find_char(app.terminal.buffer(), 'O'),
+            Some((1, 24)),
+            "status text should paint on bottom TV row"
+        );
+    }
+
+    #[test]
+    fn headless_tv_app_draws_chrome_menu_titles() {
+        let mut app = HeadlessTvApp::new(60, 12).expect("headless app");
+        let mut menu_bar = MenuBar::new(Rect::new(0, 0, 60, 1));
+        menu_bar.add_submenu(SubMenu::new("FILE", Menu::new()));
+        menu_bar.add_submenu(SubMenu::new("EDIT", Menu::new()));
+        app.menu_bar = Some(menu_bar);
+        app.update_desktop_bounds();
+        app.draw();
+
+        let buffer = app.terminal.buffer();
+        assert_eq!(find_char(buffer, 'F'), Some((2, 0)));
+        assert_eq!(find_char(buffer, 'E'), Some((5, 0)));
+    }
+
+    #[test]
+    fn headless_tv_app_draws_static_text_in_dialog() {
+        let mut app = HeadlessTvApp::new(60, 20).expect("headless app");
+        app.update_desktop_bounds();
+        let mut dialog_view = Dialog::new_modal(Rect::from_coords(2, 1, 30, 8), "Host");
+        dialog_view.add(Box::new(turbo_vision::views::static_text::StaticText::new(
+            Rect::from_coords(3, 2, 20, 1),
+            "OLD",
+        )));
+        app.desktop.add(dialog_view);
+        app.draw();
+
+        assert_eq!(
+            find_char(app.terminal.buffer(), 'O'),
+            Some((6, 5)),
+            "static text O in modal dialog (TV buffer coords)"
+        );
+    }
+
+    #[test]
+    fn headless_tv_app_draws_dialog_title_and_checkbox_marker() {
+        let mut app = HeadlessTvApp::new(60, 20).expect("headless app");
+        app.update_desktop_bounds();
+        let mut dialog_view = Dialog::new_modal(Rect::from_coords(2, 1, 30, 8), "OLD");
+        let check_box =
+            turbo_vision::views::checkbox::CheckBox::new(Rect::from_coords(3, 2, 20, 1), "opt");
+        dialog_view.add(Box::new(check_box));
+        app.desktop.add(dialog_view);
+        app.draw();
+
+        let buffer = app.terminal.buffer();
+        assert_eq!(find_char(buffer, 'O'), Some((16, 2)), "dialog title O");
+        assert_eq!(find_char(buffer, '['), Some((4, 2)), "checkbox marker");
+    }
 }

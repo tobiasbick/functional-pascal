@@ -13,8 +13,8 @@ begin
   var CheckHandle: CheckBox := Application.CreateCheckBox(App, Bounds(3, 2, 20, 1), 'opt', false);
   Application.AddChild(App, DialogHandle, CheckHandle);
   AssertEquals(0, Application.Pump(App));
-  AssertScreenCell(5, 3, ' ', LightGray, Black);
+  AssertScreenCell(7, 6, '[', White, Cyan);
   Application.TestClickMouse(App, 5, 3);
   AssertEquals(0, Application.Pump(App));
-  AssertScreenCell(5, 3, 'X', LightGray, Black)
+  AssertScreenCell(8, 6, 'X', White, Cyan)
 end.

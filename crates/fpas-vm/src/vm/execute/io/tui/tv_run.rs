@@ -137,22 +137,31 @@ impl Worker {
         &self,
     ) -> Vec<TurboVisionWindowSnapshot> {
         self.with_tui(|tui| {
-            tui.turbo_vision
+            let mut snapshots: Vec<_> = tui
+                .turbo_vision
                 .objects
-                .values()
-                .filter_map(|object| {
+                .iter()
+                .filter_map(|(handle, object)| {
                     let TurboVisionObject::Window(window) = object else {
                         return None;
                     };
                     if !window.on_desktop {
                         return None;
                     }
-                    Some(TurboVisionWindowSnapshot {
-                        bounds: window.bounds,
-                        title: window.title.clone(),
-                        children: child_snapshots(&tui.turbo_vision.objects, &window.children),
-                    })
+                    Some((
+                        *handle,
+                        TurboVisionWindowSnapshot {
+                            bounds: window.bounds,
+                            title: window.title.clone(),
+                            children: child_snapshots(&tui.turbo_vision.objects, &window.children),
+                        },
+                    ))
                 })
+                .collect();
+            snapshots.sort_by_key(|(handle, _)| *handle);
+            snapshots
+                .into_iter()
+                .map(|(_, snapshot)| snapshot)
                 .collect()
         })
     }
@@ -161,19 +170,28 @@ impl Worker {
         &self,
     ) -> Vec<TurboVisionDialogSnapshot> {
         self.with_tui(|tui| {
-            tui.turbo_vision
+            let mut snapshots: Vec<_> = tui
+                .turbo_vision
                 .objects
-                .values()
-                .filter_map(|object| {
+                .iter()
+                .filter_map(|(handle, object)| {
                     let TurboVisionObject::Dialog(dialog) = object else {
                         return None;
                     };
-                    Some(TurboVisionDialogSnapshot {
-                        bounds: dialog.bounds,
-                        title: dialog.title.clone(),
-                        children: child_snapshots(&tui.turbo_vision.objects, &dialog.children),
-                    })
+                    Some((
+                        *handle,
+                        TurboVisionDialogSnapshot {
+                            bounds: dialog.bounds,
+                            title: dialog.title.clone(),
+                            children: child_snapshots(&tui.turbo_vision.objects, &dialog.children),
+                        },
+                    ))
                 })
+                .collect();
+            snapshots.sort_by_key(|(handle, _)| *handle);
+            snapshots
+                .into_iter()
+                .map(|(_, snapshot)| snapshot)
                 .collect()
         })
     }

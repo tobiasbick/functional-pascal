@@ -37,7 +37,7 @@ Headless `Application.OpenForTest` sessions do not open a live turbo-vision appl
 
 ### IDE About tests
 
-`apps/ide/tests/shell/about_menu_test.fpas` dispatches Help → About with `TestDispatchMenuCommand` and queues `Command.Accept` before `Run`. `apps/ide/tests/dialog/dialog_test.fpas` calls `HandleCommand` directly with `CmdHelpAbout` (`100`). Headless `MessageBox` reuses the `TestSetDialogResult` queue until the headless path is unified ([03](../../../refactor/tui-bridge/03-headless-test-util.md)).
+Headless `MessageBox` reuses the `TestSetDialogResult` queue (same as `ExecDialog`); screen paint uses upstream TV `draw` ([04](../../../refactor/tui-bridge/done/04-headless-test-util.md)).
 
 ## See Also
 

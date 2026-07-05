@@ -9,16 +9,16 @@ use turbo_vision::core::geometry::Rect;
 use turbo_vision::views::View;
 use turbo_vision::views::{menu_bar::MenuBar, status_line::StatusLine};
 
-/// Stretch the menu bar to the full terminal width, keeping its top row and height.
+/// Stretch the menu bar to the full terminal width on the top row (TV row 0).
 pub(in crate::vm::execute::io::tui) fn layout_menu_bar_for_terminal(
     menu_bar: &mut MenuBar,
     terminal_width: i16,
 ) {
-    let bounds = menu_bar.bounds();
-    if bounds.a.x == 0 && bounds.width() == terminal_width {
-        return;
+    let height = menu_bar.bounds().height();
+    let target = Rect::new(0, 0, terminal_width, height);
+    if menu_bar.bounds() != target {
+        menu_bar.set_bounds(target);
     }
-    menu_bar.set_bounds(Rect::new(0, bounds.a.y, terminal_width, bounds.b.y));
 }
 
 /// Pin the status line to the bottom row and stretch it to the full terminal width.

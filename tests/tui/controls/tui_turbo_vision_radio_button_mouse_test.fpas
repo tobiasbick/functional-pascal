@@ -15,10 +15,12 @@ begin
   Application.AddChild(App, DialogHandle, OptionA);
   Application.AddChild(App, DialogHandle, OptionB);
   AssertEquals(0, Application.Pump(App));
-  AssertScreenCell(5, 3, '*', LightGray, Black);
-  AssertScreenCell(5, 4, ' ', LightGray, Black);
+  AssertScreenCell(7, 6, '(', White, Cyan);
+  AssertScreenCell(8, 6, '•', White, Cyan);
+  AssertScreenCell(7, 7, '(', Black, Cyan);
   Application.TestClickMouse(App, 5, 4);
   AssertEquals(0, Application.Pump(App));
-  AssertScreenCell(5, 3, ' ', LightGray, Black);
-  AssertScreenCell(5, 4, '*', LightGray, Black)
+  AssertScreenCell(7, 6, '(', White, Cyan);
+  AssertScreenCell(7, 7, '(', Black, Cyan);
+  AssertScreenCell(8, 7, '•', Black, Cyan)
 end.

@@ -13,8 +13,8 @@ begin
   var Label: StaticText := Application.CreateStaticText(App, Bounds(3, 2, 20, 1), 'OLD');
   Application.AddChild(App, DialogHandle, Label);
   AssertEquals(0, Application.Pump(App));
-  AssertScreenCell(5, 3, 'O', LightGray, Black);
+  AssertScreenCell(7, 6, 'O', Black, LightGray);
   Application.SetText(App, Label, 'NEW');
   AssertEquals(0, Application.Pump(App));
-  AssertScreenCell(5, 3, 'N', LightGray, Black)
+  AssertScreenCell(7, 6, 'N', Black, LightGray)
 end.

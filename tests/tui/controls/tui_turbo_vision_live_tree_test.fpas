@@ -29,7 +29,7 @@ begin
   Application.OnCommand(App, OnCommand);
   Application.TestClickButton(App, OpenButton);
   AssertEquals(16, Application.Pump(App));
-  AssertScreenCell(12, 7, 'L', LightGray, Black);
+  AssertScreenCell(12, 9, '▄', LightGray, Black);
   Application.Quit(App);
   AssertEquals(0, Application.Pump(App))
 end.

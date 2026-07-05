@@ -28,7 +28,7 @@ begin
   Application.OnCommand(App, OnCommand);
   Application.TestClickButton(App, OpenButton);
   AssertEquals(16, Application.Pump(App));
-  AssertScreenCell(10, 5, 'D', LightGray, Black);
+  AssertScreenCell(12, 8, 'D', Black, LightGray);
   Application.Quit(App);
   AssertEquals(0, Application.Pump(App))
 end.

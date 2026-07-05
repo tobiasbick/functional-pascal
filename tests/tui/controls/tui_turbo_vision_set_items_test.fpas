@@ -13,8 +13,8 @@ begin
   var ListHandle: ListBox := Application.CreateListBox(App, Bounds(3, 2, 20, 4), ['alpha', 'beta'], Command.Accept);
   Application.AddChild(App, DialogHandle, ListHandle);
   AssertEquals(0, Application.Pump(App));
-  AssertScreenCell(5, 3, 'a', LightGray, Black);
+  AssertScreenCell(7, 6, 'a', White, Green);
   Application.SetItems(App, ListHandle, ['one']);
   AssertEquals(0, Application.Pump(App));
-  AssertScreenCell(5, 3, 'o', LightGray, Black)
+  AssertScreenCell(7, 6, 'o', White, Green)
 end.

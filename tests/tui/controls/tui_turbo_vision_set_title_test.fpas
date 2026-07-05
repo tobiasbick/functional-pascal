@@ -11,8 +11,8 @@ begin
   var App: Application := Application.OpenForTest(60, 20);
   var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(2, 1, 30, 8), 'OLD');
   Application.Pump(App);
-  AssertScreenCell(3, 1, 'O', White, Blue);
+  AssertScreenCell(17, 3, 'O', White, LightGray);
   Application.SetTitle(App, DialogHandle, 'NEW');
   AssertEquals(0, Application.Pump(App));
-  AssertScreenCell(3, 1, 'N', White, Blue)
+  AssertScreenCell(17, 3, 'N', White, LightGray)
 end.

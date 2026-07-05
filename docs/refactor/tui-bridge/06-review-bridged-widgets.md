@@ -2,7 +2,7 @@
 
 **Status:** [ ] Not started · [ ] In progress · [ ] Done
 
-**Priority:** Medium — after or in parallel with [03-headless-test-util.md](03-headless-test-util.md)
+**Priority:** Medium — after or in parallel with [done/04-headless-test-util.md](done/04-headless-test-util.md)
 
 **Depends on:** turbo-vision 2.0 behavior (radio groups, mouse on clusters, disabled commands)
 
@@ -35,7 +35,7 @@ For each wrapper, document **keep**, **shrink**, or **delete**:
 - [ ] **CheckBox** — Compare live + headless tests with stock `CheckBox` only; try removing `BridgedCheckBox` behind cfg if tests pass.
 - [ ] **RadioButton** — Same; verify group id exclusivity matches FPAS `GroupId`.
 - [ ] **ListBox** — Verify selection sync and Enter/double-click command dispatch.
-- [ ] **Mouse** — Consolidate live vs headless input after [03](03-headless-test-util.md).
+- [ ] **Mouse** — Consolidate live vs headless input after [04](done/04-headless-test-util.md) follow-up.
 - [ ] **Delete** — Remove unused `*_mouse.rs` or bridged modules per matrix.
 - [ ] **Tests** — `tui_turbo_vision_check_box_mouse_test.fpas`, `radio_button_mouse_test.fpas`, radio/list tests.
 - [ ] **Context** — Update [00-context.md](00-context.md) bridge table.

@@ -37,7 +37,7 @@ Pascal Application.*
 | Concern | Location | Notes |
 | --- | --- | --- |
 | Retained handles | `shared/tui.rs`, `control_create.rs` | `Create*` only writes FPAS records; upstream widgets rebuilt later |
-| Headless paint | `headless_paint.rs` | Text-only CRT buffer; **does not** call TV `draw` |
+| Headless paint | `headless_tv_draw.rs` | Upstream TV `draw` → CRT export ([done/04-headless-test-util.md](done/04-headless-test-util.md)) |
 | Headless commands | `commands.rs`, `tv_run.rs` | Queue + `Pump` instead of TV event loop |
 | Full desktop rebuild | `reconcile.rs`, `tv_run.rs` | `pending_reconcile` → wipe desktop → repopulate |
 | State cells | `turbo_vision_*_cell.rs`, `bridged_*.rs` | Sync checkbox/radio/list/input back to FPAS handles |
@@ -45,7 +45,7 @@ Pascal Application.*
 
 ## Known duplication (refactor targets)
 
-1. **Dual run paths** — interactive TV loop vs headless queue + custom painter → [03-headless-test-util.md](03-headless-test-util.md)
+1. **Headless input** — queue + `test_mouse.rs` hit-test vs TV `push_event` → follow-up in [done/04-headless-test-util.md](done/04-headless-test-util.md)
 
 **Done:** single live `Application` per FPAS session — [done/02-single-tv-session.md](done/02-single-tv-session.md). IDE About via upstream `message_box` — [done/03-about-message-box.md](done/03-about-message-box.md).
 

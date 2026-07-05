@@ -18,7 +18,6 @@ mod exec_dialog;
 mod file_dialog;
 mod handle_records;
 mod handles;
-mod headless_paint;
 mod headless_tv_draw;
 mod interactive_loop;
 mod lifecycle;

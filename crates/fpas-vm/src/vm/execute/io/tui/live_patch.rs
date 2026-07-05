@@ -9,7 +9,9 @@ use super::bridged_list_box::BridgedListBox;
 use super::bridged_radio_button::BridgedRadioButton;
 use crate::vm::Worker;
 use crate::vm::shared::TurboVisionObject;
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::rc::Rc;
 use turbo_vision::core::geometry::Point;
 use turbo_vision::views::desktop::Desktop;
 use turbo_vision::views::dialog::Dialog;
@@ -30,6 +32,9 @@ pub(in crate::vm::execute::io::tui) enum LiveDataMutation {
         handle: u32,
         items: Vec<String>,
         selection: Option<usize>,
+    },
+    SetText {
+        handle: u32,
     },
 }
 
@@ -128,10 +133,33 @@ impl Worker {
     }
 
     pub(in crate::vm::execute::io::tui) fn turbo_vision_clear_live_view_ids(&self) {
+        self.input_line_view_bindings.borrow_mut().clear();
         self.with_tui(|tui| {
             tui.turbo_vision.live_view_ids.clear();
             tui.turbo_vision.live_child_desktop_indices.clear();
         });
+    }
+
+    /// Remember the `InputLine` view binding built during desktop populate.
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_register_input_line_view_binding(
+        &self,
+        handle: u32,
+        binding: Rc<RefCell<String>>,
+    ) {
+        self.input_line_view_bindings
+            .borrow_mut()
+            .insert(handle, binding);
+    }
+
+    /// Mirror host `SetText` into the live turbo-vision `InputLine` buffer.
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_sync_input_line_view_binding(
+        &self,
+        handle: u32,
+        text: &str,
+    ) {
+        if let Some(binding) = self.input_line_view_bindings.borrow().get(&handle) {
+            *binding.borrow_mut() = text.to_string();
+        }
     }
 
     /// Top-left desktop coordinate for a registered live view (headless mouse routing).
@@ -199,6 +227,9 @@ fn apply_live_data_mutation_to_desktop(
             items.clone(),
             *selection,
         ),
+        LiveDataMutation::SetText { handle } => {
+            patch_input_line_text(view_ids, child_desktop_indices, *handle, worker)
+        }
     }
 }
 
@@ -329,6 +360,21 @@ fn patch_list_items(
         }
         false
     })
+}
+
+fn patch_input_line_text(
+    view_ids: &HashMap<u32, u16>,
+    child_desktop_indices: &HashMap<u32, usize>,
+    handle: u32,
+    worker: &Worker,
+) -> bool {
+    locate_live_view(view_ids, child_desktop_indices, handle).is_some()
+        && worker.with_tui(|tui| {
+            matches!(
+                tui.turbo_vision.objects.get(&handle),
+                Some(TurboVisionObject::InputLine(_))
+            )
+        })
 }
 
 impl Worker {

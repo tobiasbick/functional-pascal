@@ -1,6 +1,6 @@
 # 05 — Incremental view updates instead of full desktop rebuild
 
-**Status:** [x] Audit · [x] Phase A · [x] Headless repaint skip · [ ] Phase B · [ ] SetText memo/textviewer
+**Status:** [x] Audit · [x] Phase A · [x] SetText inputline · [x] Headless repaint skip · [ ] Phase B · [ ] SetText memo/textviewer
 
 **Priority:** Low — architectural; after bridge stabilisation
 
@@ -29,7 +29,7 @@ Still keep FPAS handle graph authoritative for Pascal and headless introspection
 | --- | --- | --- |
 | `control_create.rs` | `Create*` | **Structural** — keep full rebuild |
 | `controls.rs` `AddChild` | attach child | **Structural** |
-| `controls.rs` `SetText` | text mutation | **Data** — still rebuild (no upstream `set_text` on `StaticText` / `Button`) |
+| `controls.rs` `SetText` | text mutation | **Data** — live repaint for `InputLine` (shared binding); rebuild for `Memo` / `TextViewer` / `StaticText` / `Button` / clusters |
 | `controls.rs` `SetChecked` | cell mutation | **Data** — live patch via `live_patch.rs` |
 | `controls.rs` `SetItems` | list mutation | **Data** — live patch |
 | `windows.rs` `CreateWindow` / `AddWindow` | roots | **Structural** |
@@ -43,7 +43,7 @@ Still keep FPAS handle graph authoritative for Pascal and headless introspection
 
 - [x] **Audit** — Table above.
 - [x] **Phase A** — `live_patch.rs`: `SetChecked`, `SetItems`, `SetTitle` patch live views; `live_view_ids` + `live_child_desktop_indices` registered at populate.
-- [ ] **Phase A follow-up** — `SetText` for `Memo` / `TextViewer` / `InputLine` when upstream setters + `as_any_mut` allow; `StaticText` still rebuilds.
+- [x] **Phase A follow-up** — `SetText` on `InputLine` skips rebuild (shared text binding + repaint); `Memo` / `TextViewer` still rebuild until upstream `as_any_mut` or `Bridged*` wrappers.
 - [ ] **Phase B** — Stable handle→`ViewId` map survives window reorder; document re-entrancy and modal cases.
 - [x] **Headless** — `pending_headless_repaint` skips desktop wipe; data mutations patch existing `HeadlessTvApp` tree.
 - [x] **Tests** — `set_text`, `set_checked`, `set_items`, `set_title`, full `tests/tui/controls/`.
@@ -79,4 +79,5 @@ cargo test --workspace
 ## Notes
 
 - Live and headless share `apply_live_data_mutation_to_desktop`; headless reconcile skips populate when only `pending_headless_repaint` is set.
-- `SetText` on `StaticText` still marks structural dirty — upstream has no runtime label setter.
+- `SetText` on `InputLine` updates the shared view binding and requests repaint only; `Memo` and `TextViewer` still rebuild (no upstream `as_any_mut` on stock views).
+- `SetText` on `StaticText`, `Button`, `CheckBox`, and `RadioButton` still marks structural dirty — upstream has no runtime label setter on those types.

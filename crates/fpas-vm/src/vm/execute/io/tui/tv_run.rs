@@ -135,8 +135,11 @@ impl Worker {
             let radio_groups = radio_groups_from_snapshots(&children);
             let mut window_view = Window::new(turbo_rect(bounds), &title);
             for (child_handle, child) in child_handles.into_iter().zip(children) {
-                let view_id =
+                let (view_id, input_line_binding) =
                     add_window_child(&mut window_view, child, &radio_groups, tree_dirty.clone());
+                if let Some(binding) = input_line_binding {
+                    self.turbo_vision_register_input_line_view_binding(child_handle, binding);
+                }
                 self.turbo_vision_register_live_child_view(child_handle, desktop_index, view_id);
             }
             let root_id = desktop.add(Box::new(window_view));
@@ -168,7 +171,7 @@ impl Worker {
             let mut dialog_view = Dialog::new_modal(turbo_rect(bounds), &title);
             let mut input_bindings = Vec::new();
             for (child_handle, child) in child_handles.into_iter().zip(children) {
-                let view_id = add_dialog_child(
+                let (view_id, input_line_binding) = add_dialog_child(
                     &mut dialog_view,
                     child,
                     child_handle,
@@ -176,6 +179,9 @@ impl Worker {
                     &radio_groups,
                     tree_dirty.clone(),
                 );
+                if let Some(binding) = input_line_binding {
+                    self.turbo_vision_register_input_line_view_binding(child_handle, binding);
+                }
                 self.turbo_vision_register_live_child_view(child_handle, desktop_index, view_id);
             }
             let root_id = desktop.add(dialog_view);

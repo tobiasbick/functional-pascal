@@ -120,56 +120,64 @@ impl Worker {
 
         let handle = control.handle();
         let label = control.label();
-        self.with_tui(|tui| match tui.turbo_vision.objects.get_mut(&handle) {
-            Some(TurboVisionObject::Button(button)) => {
-                button.text = text;
-                Ok(())
-            }
-            Some(TurboVisionObject::StaticText(static_text)) => {
-                static_text.text = text;
-                Ok(())
-            }
-            Some(TurboVisionObject::Memo(memo)) => {
-                memo.text = text;
-                Ok(())
-            }
-            Some(TurboVisionObject::TextViewer(text_viewer)) => {
-                text_viewer.text = text;
-                Ok(())
-            }
-            Some(TurboVisionObject::CheckBox(check_box)) => {
-                check_box.text = text;
-                Ok(())
-            }
-            Some(TurboVisionObject::RadioButton(radio_button)) => {
-                radio_button.text = text;
-                Ok(())
-            }
-            Some(TurboVisionObject::InputLine(input_line)) => {
-                if text.len() > input_line.max_length {
-                    return Err(runtime_error(
-                        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                        format!(
-                            "InputLine text length {} exceeds MaxLength {}",
-                            text.len(),
-                            input_line.max_length
-                        ),
-                        "Pass a shorter text or recreate the input line with a larger MaxLength.",
-                        line,
-                    ));
+        let live_patch = self.with_tui(|tui| -> Result<Option<LiveDataMutation>, VmError> {
+            match tui.turbo_vision.objects.get_mut(&handle) {
+                Some(TurboVisionObject::Memo(memo)) => {
+                    memo.text = text;
+                    Ok(None)
                 }
-                input_line.text_cell.set(text);
-                Ok(())
+                Some(TurboVisionObject::TextViewer(text_viewer)) => {
+                    text_viewer.text = text;
+                    Ok(None)
+                }
+                Some(TurboVisionObject::InputLine(input_line)) => {
+                    if text.len() > input_line.max_length {
+                        return Err(runtime_error(
+                            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                            format!(
+                                "InputLine text length {} exceeds MaxLength {}",
+                                text.len(),
+                                input_line.max_length
+                            ),
+                            "Pass a shorter text or recreate the input line with a larger MaxLength.",
+                            line,
+                        ));
+                    }
+                    input_line.text_cell.set(text.clone());
+                    self.turbo_vision_sync_input_line_view_binding(handle, &text);
+                    Ok(Some(LiveDataMutation::SetText { handle }))
+                }
+                Some(TurboVisionObject::Button(button)) => {
+                    button.text = text;
+                    Ok(None)
+                }
+                Some(TurboVisionObject::StaticText(static_text)) => {
+                    static_text.text = text;
+                    Ok(None)
+                }
+                Some(TurboVisionObject::CheckBox(check_box)) => {
+                    check_box.text = text;
+                    Ok(None)
+                }
+                Some(TurboVisionObject::RadioButton(radio_button)) => {
+                    radio_button.text = text;
+                    Ok(None)
+                }
+                Some(TurboVisionObject::ListBox(_)) => Err(runtime_error(
+                    RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                    "Application.SetText does not support ListBox handles",
+                    "Recreate the list box with `Application.CreateListBox` to change its items.",
+                    line,
+                )),
+                _ => Err(unknown_handle_error(label, handle, line)),
             }
-            Some(TurboVisionObject::ListBox(_)) => Err(runtime_error(
-                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                "Application.SetText does not support ListBox handles",
-                "Recreate the list box with `Application.CreateListBox` to change its items.",
-                line,
-            )),
-            _ => Err(unknown_handle_error(label, handle, line)),
         })?;
-        self.mark_turbo_vision_tree_dirty();
+
+        if let Some(mutation) = live_patch {
+            self.turbo_vision_after_data_mutation(mutation);
+        } else {
+            self.mark_turbo_vision_tree_dirty();
+        }
         Ok(())
     }
 

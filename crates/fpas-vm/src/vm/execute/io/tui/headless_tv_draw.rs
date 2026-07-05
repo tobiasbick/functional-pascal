@@ -101,10 +101,6 @@ impl HeadlessTvApp {
     pub(in crate::vm::execute::io::tui) fn desktop_mut(&mut self) -> &mut Desktop {
         &mut self.desktop
     }
-
-    pub(in crate::vm::execute::io::tui) fn desktop(&self) -> &Desktop {
-        &self.desktop
-    }
 }
 
 impl Worker {

@@ -1,7 +1,10 @@
 //! Send-safe text storage for Turbo Vision `InputLine` handles.
 //!
 //! Host state keeps an `Arc<Mutex<String>>`. Views bind through a short-lived
-//! `Rc<RefCell<String>>` that is copied back after modal `execute`.
+//! `Rc<RefCell<String>>` registered on the main [`Worker`](crate::vm::Worker) at
+//! desktop populate time so `SetText` can mirror into the live view buffer.
+//!
+//! **Documentation:** `docs/pascal/std/tui/app/controls.md`
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -27,7 +30,7 @@ impl TurboVisionInputTextCell {
         *self.0.lock().unwrap_or_else(|e| e.into_inner()) = text;
     }
 
-    /// Create a view binding for upstream `InputLine::new`.
+    /// Create a view binding seeded from the current host text.
     pub fn view_binding(&self) -> Rc<RefCell<String>> {
         Rc::new(RefCell::new(self.read()))
     }

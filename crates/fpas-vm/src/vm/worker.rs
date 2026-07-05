@@ -6,6 +6,9 @@ use super::diagnostics::{STACK_OVERFLOW_CODE, VmError};
 use super::shared::{SharedState, TaskState};
 use super::{CallFrame, STACK_MAX, TIMESLICE};
 use fpas_bytecode::{SourceLocation, Value};
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::rc::Rc;
 use std::sync::Arc;
 use turbo_vision::app::Application as TurboVisionApplication;
 
@@ -31,6 +34,8 @@ pub(crate) struct Worker {
     pub live_turbo_vision_app: Option<TurboVisionApplication>,
     /// Headless turbo-vision draw session for `OpenForTest` (main worker only).
     pub(in crate::vm) headless_tv_app: Option<HeadlessTvApp>,
+    /// Live `InputLine` view text buffers keyed by FPAS handle (main worker only).
+    pub(in crate::vm) input_line_view_bindings: RefCell<HashMap<u32, Rc<RefCell<String>>>>,
 }
 
 impl Worker {
@@ -49,6 +54,7 @@ impl Worker {
             allow_shutdown_during_sync_call: false,
             live_turbo_vision_app: None,
             headless_tv_app: None,
+            input_line_view_bindings: RefCell::new(HashMap::new()),
         }
     }
 
@@ -67,6 +73,7 @@ impl Worker {
             allow_shutdown_during_sync_call: false,
             live_turbo_vision_app: None,
             headless_tv_app: None,
+            input_line_view_bindings: RefCell::new(HashMap::new()),
         }
     }
 

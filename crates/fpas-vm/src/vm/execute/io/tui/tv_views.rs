@@ -92,52 +92,69 @@ pub(in crate::vm::execute::io::tui) fn add_window_child(
     child: TurboVisionChildSnapshot,
     radio_groups: &HashMap<u16, Vec<crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell>>,
     tree_dirty: crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell,
-) -> turbo_vision::views::view::ViewId {
+) -> (
+    turbo_vision::views::view::ViewId,
+    Option<Rc<RefCell<String>>>,
+) {
     match child {
-        TurboVisionChildSnapshot::Button(button) => window.add(Box::new(Button::new(
-            turbo_rect(button.bounds),
-            &button.text,
-            fpas_command_to_turbo_vision(button.command_id),
-            false,
-        ))),
-        TurboVisionChildSnapshot::StaticText(static_text) => window.add(Box::new(StaticText::new(
-            turbo_rect(static_text.bounds),
-            &static_text.text,
-        ))),
-        TurboVisionChildSnapshot::Memo(memo) => window.add(Box::new(build_memo(memo))),
+        TurboVisionChildSnapshot::Button(button) => (
+            window.add(Box::new(Button::new(
+                turbo_rect(button.bounds),
+                &button.text,
+                fpas_command_to_turbo_vision(button.command_id),
+                false,
+            ))),
+            None,
+        ),
+        TurboVisionChildSnapshot::StaticText(static_text) => (
+            window.add(Box::new(StaticText::new(
+                turbo_rect(static_text.bounds),
+                &static_text.text,
+            ))),
+            None,
+        ),
+        TurboVisionChildSnapshot::Memo(memo) => (window.add(Box::new(build_memo(memo))), None),
         TurboVisionChildSnapshot::TextViewer(text_viewer) => {
-            window.add(Box::new(build_text_viewer(text_viewer)))
+            (window.add(Box::new(build_text_viewer(text_viewer))), None)
         }
-        TurboVisionChildSnapshot::InputLine(input_line) => window.add(Box::new(InputLine::new(
-            turbo_rect(input_line.bounds),
-            input_line.max_length,
-            input_line.text_cell.view_binding(),
-        ))),
+        TurboVisionChildSnapshot::InputLine(input_line) => {
+            let binding = input_line.text_cell.view_binding();
+            let view_id = window.add(Box::new(InputLine::new(
+                turbo_rect(input_line.bounds),
+                input_line.max_length,
+                Rc::clone(&binding),
+            )));
+            (view_id, Some(binding))
+        }
         TurboVisionChildSnapshot::ListBox(list_box) => {
-            window.add(Box::new(build_list_box(list_box)))
+            (window.add(Box::new(build_list_box(list_box))), None)
         }
-        TurboVisionChildSnapshot::CheckBox(check_box) => {
+        TurboVisionChildSnapshot::CheckBox(check_box) => (
             window.add(Box::new(super::bridged_check_box::BridgedCheckBox::new(
                 turbo_rect(check_box.bounds),
                 &check_box.text,
                 check_box.checked_cell.clone(),
-            )))
-        }
+            ))),
+            None,
+        ),
         TurboVisionChildSnapshot::RadioButton(radio_button) => {
             let group_cells = radio_groups
                 .get(&radio_button.group_id)
                 .cloned()
                 .unwrap_or_default();
-            window.add(Box::new(
-                super::bridged_radio_button::BridgedRadioButton::new(
-                    turbo_rect(radio_button.bounds),
-                    &radio_button.text,
-                    radio_button.group_id,
-                    radio_button.selected_cell.clone(),
-                    group_cells,
-                    tree_dirty,
-                ),
-            ))
+            (
+                window.add(Box::new(
+                    super::bridged_radio_button::BridgedRadioButton::new(
+                        turbo_rect(radio_button.bounds),
+                        &radio_button.text,
+                        radio_button.group_id,
+                        radio_button.selected_cell.clone(),
+                        group_cells,
+                        tree_dirty,
+                    ),
+                )),
+                None,
+            )
         }
     }
 }
@@ -149,61 +166,76 @@ pub(in crate::vm::execute::io::tui) fn add_dialog_child(
     input_bindings: &mut Vec<(u32, Rc<RefCell<String>>)>,
     radio_groups: &HashMap<u16, Vec<crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell>>,
     tree_dirty: crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell,
-) -> turbo_vision::views::view::ViewId {
+) -> (
+    turbo_vision::views::view::ViewId,
+    Option<Rc<RefCell<String>>>,
+) {
     match child {
-        TurboVisionChildSnapshot::Button(button) => dialog.add(Box::new(Button::new(
-            turbo_rect(button.bounds),
-            &button.text,
-            fpas_command_to_turbo_vision(button.command_id),
-            false,
-        ))),
-        TurboVisionChildSnapshot::StaticText(static_text) => dialog.add(Box::new(StaticText::new(
-            turbo_rect(static_text.bounds),
-            &static_text.text,
-        ))),
-        TurboVisionChildSnapshot::Memo(memo) => dialog.add(Box::new(build_memo(memo))),
+        TurboVisionChildSnapshot::Button(button) => (
+            dialog.add(Box::new(Button::new(
+                turbo_rect(button.bounds),
+                &button.text,
+                fpas_command_to_turbo_vision(button.command_id),
+                false,
+            ))),
+            None,
+        ),
+        TurboVisionChildSnapshot::StaticText(static_text) => (
+            dialog.add(Box::new(StaticText::new(
+                turbo_rect(static_text.bounds),
+                &static_text.text,
+            ))),
+            None,
+        ),
+        TurboVisionChildSnapshot::Memo(memo) => (dialog.add(Box::new(build_memo(memo))), None),
         TurboVisionChildSnapshot::TextViewer(text_viewer) => {
-            dialog.add(Box::new(build_text_viewer(text_viewer)))
+            (dialog.add(Box::new(build_text_viewer(text_viewer))), None)
         }
         TurboVisionChildSnapshot::InputLine(input_line) => {
             let binding = input_line.text_cell.view_binding();
-            input_bindings.push((child_handle, binding.clone()));
-            dialog.add(Box::new(InputLine::new(
+            input_bindings.push((child_handle, Rc::clone(&binding)));
+            let view_id = dialog.add(Box::new(InputLine::new(
                 turbo_rect(input_line.bounds),
                 input_line.max_length,
-                binding,
-            )))
+                binding.clone(),
+            )));
+            (view_id, Some(binding))
         }
-        TurboVisionChildSnapshot::ListBox(list_box) => {
+        TurboVisionChildSnapshot::ListBox(list_box) => (
             dialog.add(Box::new(super::bridged_list_box::BridgedListBox::new(
                 turbo_rect(list_box.bounds),
                 list_box.items,
                 fpas_command_to_turbo_vision(list_box.command_id),
                 list_box.selection_cell,
-            )))
-        }
-        TurboVisionChildSnapshot::CheckBox(check_box) => {
+            ))),
+            None,
+        ),
+        TurboVisionChildSnapshot::CheckBox(check_box) => (
             dialog.add(Box::new(super::bridged_check_box::BridgedCheckBox::new(
                 turbo_rect(check_box.bounds),
                 &check_box.text,
                 check_box.checked_cell.clone(),
-            )))
-        }
+            ))),
+            None,
+        ),
         TurboVisionChildSnapshot::RadioButton(radio_button) => {
             let group_cells = radio_groups
                 .get(&radio_button.group_id)
                 .cloned()
                 .unwrap_or_default();
-            dialog.add(Box::new(
-                super::bridged_radio_button::BridgedRadioButton::new(
-                    turbo_rect(radio_button.bounds),
-                    &radio_button.text,
-                    radio_button.group_id,
-                    radio_button.selected_cell.clone(),
-                    group_cells,
-                    tree_dirty,
-                ),
-            ))
+            (
+                dialog.add(Box::new(
+                    super::bridged_radio_button::BridgedRadioButton::new(
+                        turbo_rect(radio_button.bounds),
+                        &radio_button.text,
+                        radio_button.group_id,
+                        radio_button.selected_cell.clone(),
+                        group_cells,
+                        tree_dirty,
+                    ),
+                )),
+                None,
+            )
         }
     }
 }
@@ -259,7 +291,7 @@ pub(in crate::vm::execute::io::tui) fn turbo_vision_build_modal_dialog(
         let Some(child) = child_snapshot(objects, *child_handle) else {
             continue;
         };
-        add_dialog_child(
+        let _ = add_dialog_child(
             &mut dialog_view,
             child,
             *child_handle,

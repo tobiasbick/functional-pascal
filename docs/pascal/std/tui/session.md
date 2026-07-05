@@ -57,11 +57,13 @@ end.
 | --- | --- |
 | Sema registry | [`loaded/tui/mod.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/tui/mod.rs) |
 | Compiler lowering | [`std_calls/tui/`](../../../../crates/fpas-compiler/src/compiler/std_calls/tui/) |
-| VM execution | [`execute/io/tui/`](../../../../crates/fpas-vm/src/vm/execute/io/tui/) |
+| VM execution | [`execute/io/tui/`](../../../../crates/fpas-vm/src/vm/execute/io/tui/) (`msgbox.rs`: [done/03-about-message-box](../../../../docs/refactor/tui-bridge/done/03-about-message-box.md)) |
 | Runtime session | [`tui/session/`](../../../../crates/fpas-std/src/tui/session/) |
 
 ## See Also
 
 - [Terminal UI index](README.md)
 - [Application](app/README.md)
+- [Dialogs and windows](app/modals.md) — custom `ExecDialog` vs standard message boxes
+- [Application lifecycle](app/lifecycle.md)
 - [Std index](../README.md)

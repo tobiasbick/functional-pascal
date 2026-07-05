@@ -254,6 +254,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Tui(TuiIntrinsic::ListSelection),
     Intrinsic::Tui(TuiIntrinsic::TestClickMouse),
     Intrinsic::Tui(TuiIntrinsic::TestSetDialogResult),
+    Intrinsic::Tui(TuiIntrinsic::MessageBox),
     Intrinsic::Tui(TuiIntrinsic::OpenForTest),
     Intrinsic::Tui(TuiIntrinsic::CloseForTest),
     Intrinsic::Test(TestIntrinsic::AssertTrue),

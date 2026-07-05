@@ -4,11 +4,6 @@ unit Ide.Dialog.About;
 
 uses Std.Tui;
 
-function AboutTitle(): string;
-begin
-  return 'About ℹ️'
-end;
-
 function AboutMessage(): string;
 begin
   return 'FPAS IDE
@@ -18,38 +13,12 @@ Functional Pascal IDE
 Built with Turbo Vision'
 end;
 
-private function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
-begin
-  return record x := X; y := Y; width := Width; height := Height; end
-end;
-
-private function AboutDialogBounds(App: Application): Rect;
-begin
-  var Size: Size := Application.Size(App);
-  var DialogWidth: integer := 40;
-  var DialogHeight: integer := 11;
-  var DialogX: integer := (Size.width - DialogWidth) div 2;
-  var DialogY: integer := ((Size.height - DialogHeight) - 2) div 2;
-  return Bounds(DialogX, DialogY, DialogWidth, DialogHeight)
-end;
-
 /// Show the modal About dialog and block until the user dismisses it.
 
 procedure ShowAbout(App: Application);
 begin
-  var DialogRect: Rect := AboutDialogBounds(App);
-  var DialogHandle: Dialog := Application.CreateDialog(App, DialogRect, AboutTitle());
-  var Message: TextViewer := Application.CreateTextViewer(App, Bounds(DialogRect.x + 2, DialogRect.y +
-                                                                                        2, DialogRect.width -
-                                                                                           4, DialogRect.height -
-                                                                                              5), AboutMessage());
-  var OkButton: Button := Application.CreateButton(App, Bounds(DialogRect.x +
-                                                               (DialogRect.width - 10) div 2, (DialogRect.y + DialogRect.height) -
-                                                                                              4, 10, 2), 'O~K~', Command.Accept);
-  Application.AddChild(App, DialogHandle, Message);
-  Application.AddChild(App, DialogHandle, OkButton);
-  var CloseResult: DialogResult := Application.ExecDialog(App, DialogHandle);
-  if CloseResult.command <> Command.Accept then
+  var CloseCommand: integer := Application.MessageBox(App, AboutMessage(), 1028);
+  if CloseCommand <> Command.Accept then
   begin
     return
   end

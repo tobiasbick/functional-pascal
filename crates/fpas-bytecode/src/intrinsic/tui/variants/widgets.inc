@@ -36,3 +36,4 @@
     Selected = 465,
     ListSelection = 466,
     TestClickMouse = 467,
+    MessageBox = 468,

@@ -163,6 +163,16 @@ pub(super) fn register_application_api(
     );
     define_func(
         checker,
+        s::STD_TUI_APPLICATION_MESSAGE_BOX,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Message", Ty::String, false),
+            p("Options", Ty::Integer, false),
+        ],
+        Ty::Integer,
+    );
+    define_func(
+        checker,
         s::STD_TUI_APPLICATION_INPUT_TEXT,
         vec![
             p("App", types.application.clone(), false),

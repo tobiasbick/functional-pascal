@@ -39,7 +39,7 @@ Regression tests live under `tests/tui/controls/` (`tui_turbo_vision_*_test.fpas
 
 Headless `Application.OpenForTest` sessions do not open a live turbo-vision application. Queue modal results with `Application.TestSetDialogResult` before `Application.ExecDialog`, and file-picker results with `Application.TestSetFileDialogResult` before `Application.RunFileDialog`. Interactive programs use the shared live session described in [Lifecycle](lifecycle.md).
 
-IDE tests under `apps/ide/tests/` cover menu dispatch and About (`about_menu_test.fpas`, `dialog_test.fpas`) using the headless stubs above.
+IDE tests under `apps/ide/tests/` cover menu dispatch and About (`about_menu_test.fpas`, `dialog_test.fpas`) using `TestSetDialogResult` before `MessageBox` or `ExecDialog`.
 
 To assert painted terminal output after `Application.Pump`, add `uses Std.Console` and call [`Std.Test`](../../testing/test.md) `AssertScreenLine` or `AssertScreenCell` on the virtual CRT back buffer. Use `Application.TestClickMouse(App, X, Y)` with screen coordinates that match the painted check box or radio button marker cell.
 
@@ -69,4 +69,6 @@ AssertEquals('seeded', Application.InputText(App, NameInput))
 ## See Also
 
 - [Application](README.md)
+- [Dialogs and windows](modals.md) — IDE About tests
+- [Handlers](handlers.md) — `TestDispatchMenuCommand`
 - [Std.Test](../../testing/test.md)

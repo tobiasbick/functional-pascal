@@ -20,7 +20,7 @@ On an interactive terminal you may call `Application.ExecDialog` or `Application
 
 ### IDE About flow (today)
 
-Help → About in `apps/ide` dispatches menu command `100` (`CM_ABOUT`) to `OnCommand`, which calls `Ide.Dialog.ShowAbout`. That procedure builds a custom dialog and runs `Application.ExecDialog`; dismissal returns `Command.Accept` (`10`) in `DialogResult.command`. Refactor [02-about-message-box](../../../refactor/tui-bridge/02-about-message-box.md) will replace the hand-built dialog with upstream `message_box` while keeping the menu command unchanged.
+Help → About in `apps/ide` dispatches menu command `100` (`CM_ABOUT`) to `OnCommand`, which calls `Ide.Dialog.ShowAbout`. That procedure calls `Application.MessageBox` with upstream `MF_ABOUT | MF_OK_BUTTON`; dismissal returns `Command.Accept` (`10`). See [done/03-about-message-box](../../../refactor/tui-bridge/done/03-about-message-box.md).
 
 ## Optional raw input hooks
 
@@ -51,4 +51,5 @@ Custom fullscreen terminal programs that paint every cell themselves belong in [
 - [Dialogs and windows](modals.md)
 - [Types](types.md) (`Command` constants)
 - [Lifecycle](lifecycle.md)
+- [Native testing](testing.md) — IDE About headless tests
 - [Session API](../session.md)

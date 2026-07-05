@@ -75,5 +75,5 @@ cargo run -q -p fpas-cli -- test tests/tui/controls/
 ## Notes
 
 - Keep FPAS-level `TestSetDialogResult` until modals use shared session draw path.
-- [02-about-message-box.md](02-about-message-box.md) (in progress) will add `Application.MessageBox`; headless phase 1 reuses the same `TestSetDialogResult` queue as `ExecDialog` until this item lands.
+- [done/03-about-message-box.md](done/03-about-message-box.md) added `Application.MessageBox`; headless reuses the same `TestSetDialogResult` queue as `ExecDialog` until this item unifies the headless draw path.
 - Upstream doc: `turbo-vision` `test_util.rs` on tag `v2.0.0`.

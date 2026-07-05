@@ -48,7 +48,10 @@ Application chrome uses root-level handles:
 
 On a live terminal `Application.Run`, the runtime stretches the menu bar and status line to the full terminal width and pins the status line to the bottom row (matching Turbo Vision resize behavior). Headless `OpenForTest` runs keep the `Bounds` you pass to `Create*`.
 
+`TextViewer` and other controls are composed into custom dialogs (for example the FPAS IDE About box today). Standard Borland message boxes do not use these widgets — see [Dialogs and windows](modals.md#custom-modal-layout).
+
 ## See Also
 
 - [Application](README.md)
+- [Dialogs and windows](modals.md)
 - [Native testing](testing.md)

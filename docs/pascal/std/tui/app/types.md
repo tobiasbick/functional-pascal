@@ -130,4 +130,5 @@ Record used by `Application.CreateStatusLine`.
 ## See Also
 
 - [Application](README.md)
+- [Dialogs and windows](modals.md) — `Command.Accept`, menu `CM_ABOUT`, custom vs standard modals
 - [Session API](../session.md)

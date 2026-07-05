@@ -18,7 +18,7 @@ Before edits, read these files in order:
 
 If the task is about examples of how to apply the skill, read `references/api_reference.md`.
 
-For upstream `message_box` / IDE About work, read [docs/refactor/tui-bridge/02-about-message-box.md](../../../docs/refactor/tui-bridge/02-about-message-box.md) before editing bridge or `apps/ide/src/dialog/`.
+For upstream `message_box` / IDE About work, see [docs/refactor/tui-bridge/done/03-about-message-box.md](../../../docs/refactor/tui-bridge/done/03-about-message-box.md).
 
 ## Upstream Verification Rule
 
@@ -91,6 +91,8 @@ crates/fpas-vm/src/vm/worker.rs — live_turbo_vision_app field
 ```
 
 Open bridge refactors: `docs/refactor/tui-bridge/` (see `done/` for completed items).
+
+`Application.MessageBox` is implemented per [done/03-about-message-box](../../../docs/refactor/tui-bridge/done/03-about-message-box.md). Public Pascal docs wait for [07-pascal-message-box-api](../../../docs/refactor/tui-bridge/07-pascal-message-box-api.md).
 
 ## Documentation Rules
 

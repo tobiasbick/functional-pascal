@@ -28,7 +28,7 @@ Simple terminal programs that draw every cell themselves (fullscreen explorers, 
 | [Handlers](app/handlers.md) | `Application.OnCommand`, `OnKey`, `OnMouse` |
 | [Lifecycle](app/lifecycle.md) | Open, run, quit, close, shared live session |
 | [Native testing](app/testing.md) | Headless tests with `OpenForTest` and Turbo Vision `Test*` helpers |
-| [VM bridge](app/vm-bridge.md) | Pascal-to-intrinsic map for contributors |
+| [VM bridge](app/vm-bridge.md) | Pascal-to-intrinsic map; [bridge refactors](../../refactor/tui-bridge/00-context.md) |
 | [Terminal checklist](terminal-checklist.md) | Local verification commands |
 | [Cell width](cell-width.md) | Unicode display-width policy |
 

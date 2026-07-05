@@ -63,6 +63,8 @@ pub const STD_TUI_APPLICATION_TEST_SET_FILE_DIALOG_RESULT: &str =
     std_tui!("Application.TestSetFileDialogResult");
 /// Run a dialog modally and return the closing command.
 pub const STD_TUI_APPLICATION_EXEC_DIALOG: &str = std_tui!("Application.ExecDialog");
+/// Show an upstream Turbo Vision message box and return the closing command id.
+pub const STD_TUI_APPLICATION_MESSAGE_BOX: &str = std_tui!("Application.MessageBox");
 /// Read the current text of an input line (valid after `Application.ExecDialog`).
 pub const STD_TUI_APPLICATION_INPUT_TEXT: &str = std_tui!("Application.InputText");
 /// Read the checked state of a check box (valid after `Application.ExecDialog`).
@@ -254,6 +256,7 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_APPLICATION_RUN_FILE_DIALOG,
     STD_TUI_APPLICATION_TEST_SET_FILE_DIALOG_RESULT,
     STD_TUI_APPLICATION_EXEC_DIALOG,
+    STD_TUI_APPLICATION_MESSAGE_BOX,
     STD_TUI_APPLICATION_INPUT_TEXT,
     STD_TUI_APPLICATION_CHECKED,
     STD_TUI_APPLICATION_SELECTED,

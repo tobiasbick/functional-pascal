@@ -25,3 +25,4 @@ Headless tests (`Application.OpenForTest`) do not use the live session; modal an
 - [Dialogs and windows](modals.md) — nested modals during `Run`
 - [Handlers](handlers.md)
 - [Native testing](testing.md)
+- [File dialog](file-dialog.md) — upstream native modal on live session

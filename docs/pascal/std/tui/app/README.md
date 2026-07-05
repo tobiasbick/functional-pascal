@@ -12,7 +12,7 @@
 
 On an interactive terminal, `Run`, `ExecDialog`, and `RunFileDialog` share one upstream turbo-vision application for the `Open` … `Close` lifetime. See [Lifecycle](lifecycle.md).
 
-Custom modal layout (`CreateDialog` + `ExecDialog`) is for dialogs with read-back or app-specific widgets. Standard Borland message boxes (About, OK, Yes/No) are planned via upstream `message_box` — see [Dialogs and windows](modals.md#custom-modal-layout).
+Custom modal layout (`CreateDialog` + `ExecDialog`) is for dialogs with read-back or app-specific widgets. Standard Borland message boxes use `Application.MessageBox` (contributor details in [vm-bridge.md](vm-bridge.md); public spec in [07-pascal-message-box-api.md](../../../refactor/tui-bridge/07-pascal-message-box-api.md)) — see [Dialogs and windows](modals.md#custom-modal-layout).
 
 ## Current API
 
@@ -75,4 +75,5 @@ For headless screen assertions after `Pump`, use [`Std.Test`](../../testing/test
 - [Handlers](handlers.md)
 - [Lifecycle](lifecycle.md)
 - [Native testing](testing.md)
+- [VM bridge](vm-bridge.md)
 - [VM bridge](vm-bridge.md)

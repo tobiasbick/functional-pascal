@@ -22,6 +22,7 @@ mod headless_paint;
 mod interactive_loop;
 mod lifecycle;
 mod menu_build;
+mod msgbox;
 mod navigation;
 mod radio_button_mouse;
 mod reconcile;
@@ -95,6 +96,9 @@ impl Worker {
             }
             Intrinsic::Tui(TuiIntrinsic::ExecDialog) => {
                 self.turbo_vision_exec_dialog(line)?;
+            }
+            Intrinsic::Tui(TuiIntrinsic::MessageBox) => {
+                self.turbo_vision_message_box(line)?;
             }
             Intrinsic::Tui(TuiIntrinsic::InputText) => {
                 self.turbo_vision_input_text(line)?;

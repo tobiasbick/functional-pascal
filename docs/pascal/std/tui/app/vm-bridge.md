@@ -38,6 +38,7 @@ Current public lowering includes:
 | `Application.RunFileDialog` | `TuiRunFileDialog` |
 | `Application.TestSetFileDialogResult` | `TuiTestSetFileDialogResult` |
 | `Application.ExecDialog` | `TuiExecDialog` |
+| `Application.MessageBox` | `TuiMessageBox` (registered; no public Pascal spec page until [07](../../../refactor/tui-bridge/07-pascal-message-box-api.md)) |
 | `Application.InputText` | `TuiInputText` |
 | `Application.Checked` | `TuiChecked` |
 | `Application.Selected` | `TuiSelected` |
@@ -77,6 +78,7 @@ Turbo Vision bridge code lives under `crates/fpas-vm/src/vm/execute/io/tui/`:
 | `test_mouse.rs` | Headless `TestClickMouse` hit testing for check boxes and radio buttons |
 | `file_dialog.rs` | `RunFileDialog`, `TestSetFileDialogResult` |
 | `exec_dialog.rs` | `ExecDialog`, `InputText`, `Checked`, `Selected`, `ListSelection`, `TestSetDialogResult` |
+| `msgbox.rs` | `MessageBox` — upstream `helpers::msgbox::message_box` on live session |
 | `bridged_check_box.rs` | Modal `CheckBox` view syncing checked state to FPAS |
 | `bridged_list_box.rs` | Modal `ListBox` view syncing selected index to FPAS |
 | `bridged_radio_button.rs` | Modal `RadioButton` view syncing selected state to FPAS |
@@ -89,9 +91,8 @@ Turbo Vision bridge code lives under `crates/fpas-vm/src/vm/execute/io/tui/`:
 
 Contributor refactor backlog (bridge internals, not user spec): [docs/refactor/tui-bridge/](../../../refactor/tui-bridge/00-context.md).
 
-**In progress:** [02-about-message-box](../../../refactor/tui-bridge/02-about-message-box.md) — `Application.MessageBox` intrinsic (IDE-only until public spec in [07](../../../refactor/tui-bridge/07-pascal-message-box-api.md)) calling `msgbox.rs` → upstream `helpers::msgbox`.
-
 ## See Also
 
 - [Application](README.md)
 - [Terminal checklist](../terminal-checklist.md)
+- [Refactor 03 — message_box (done)](../../../refactor/tui-bridge/done/03-about-message-box.md)

@@ -20,6 +20,8 @@ FPAS wraps upstream widgets to mirror state into VM cells and to patch input gap
 
 Turbo Vision 2.0 release notes claim: mutually exclusive radio groups, mouse-clickable clusters, disabled-command enforcement, UTF-8 safety. Some bridge code may be obsolete or duplicative.
 
+Standard message boxes ([done/03-about-message-box.md](done/03-about-message-box.md)) bypass `Bridged*` wrappers entirely — upstream `helpers::msgbox` constructs stock views inside `message_box`.
+
 ## Target
 
 For each wrapper, document **keep**, **shrink**, or **delete**:

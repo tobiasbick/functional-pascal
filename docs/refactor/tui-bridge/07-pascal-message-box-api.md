@@ -4,11 +4,11 @@
 
 **Priority:** Low — only when FPAS programs need standard dialogs beyond IDE internals
 
-**Depends on:** [02-about-message-box.md](02-about-message-box.md) (Rust helper proven), [done/02-single-tv-session.md](done/02-single-tv-session.md)
+**Depends on:** [done/03-about-message-box.md](done/03-about-message-box.md) (Rust helper proven), [done/02-single-tv-session.md](done/02-single-tv-session.md)
 
 ## Problem
 
-Today only widget-composition APIs exist (`CreateDialog`, `ExecDialog`, …). Common Turbo Vision flows use `message_box` / `input_box` helpers. Without a thin Pascal surface, every app rebuilds OK/Cancel dialogs by hand (as IDE About did before [02](02-about-message-box.md)).
+Today only widget-composition APIs exist for custom dialogs (`CreateDialog`, `ExecDialog`, …). `Application.MessageBox` is registered for IDE use ([done/03](done/03-about-message-box.md)) but has no public spec page yet. Common Turbo Vision flows also include `input_box` helpers.
 
 ## Target (if implemented)
 
@@ -20,18 +20,16 @@ Application.MessageBox(App, Message, Flags): integer;
 Application.InputBox(App, Title, Label, Default, Limit): DialogResult + string;
 ```
 
-Phase 1 ([02-about-message-box.md](02-about-message-box.md)) may register `Application.MessageBox` in sema/stdlib for IDE internal use before this public spec exists.
+Phase 1 shipped `Application.MessageBox` in sema/stdlib for IDE internal use ([done/03-about-message-box.md](done/03-about-message-box.md)); this item adds the public spec and named constants.
 
-Flags could mirror upstream `MF_*` constants as `MessageBox.About`, `MessageBox.OkButton`, … or a single options integer documented beside Borland.
-
-Upstream flag values at turbo-vision 2.0.0 (see `helpers/msgbox.rs`): type `MF_ABOUT = 4`, `MF_OK_BUTTON = 0x0400`; closing `CM_OK = 10` matches `Command.Accept`. Spike and private helper: [02-about-message-box.md](02-about-message-box.md).
+Upstream flag values at turbo-vision 2.0.0 (see `helpers/msgbox.rs`): type `MF_ABOUT = 4`, `MF_OK_BUTTON = 0x0400`; closing `CM_OK = 10` matches `Command.Accept`. Implementation: [done/03-about-message-box.md](done/03-about-message-box.md).
 
 ## Tasks
 
 - [ ] **Need** — Confirm at least two call sites (IDE + one example/test) want public API vs internal-only Rust helper.
 - [ ] **Spec** — Page under `docs/pascal/std/tui/app/` (e.g. `message-box.md`); link from app README.
 - [ ] **Sema/registry** — Register symbols in `fpas-sema` `std_registry/loaded/tui/`.
-- [ ] **Compiler/bytecode/vm** — Intrinsics calling same Rust helper as [02](02-about-message-box.md).
+- [ ] **Compiler/bytecode/vm** — Already implemented in [done/03](done/03-about-message-box.md); extend only if public API adds symbols.
 - [ ] **Migrate IDE** — `ShowAbout` uses public API if exposed.
 - [ ] **Example** — Short `examples/pascal/tui/message_box.fpas` (not `*_test.fpas`).
 - [ ] **Tests** — Headless close command via `TestSetDialogResult` or MockTerminal path.
@@ -45,10 +43,10 @@ Upstream flag values at turbo-vision 2.0.0 (see `helpers/msgbox.rs`): type `MF_A
 ## Files (expected touch)
 
 ```text
-docs/pascal/std/tui/app/message-box.md
-crates/fpas-sema/src/std_registry/loaded/tui/
-crates/fpas-compiler/src/compiler/std_calls/tui/
-crates/fpas-bytecode/src/intrinsic/tui/
+crates/fpas-sema/src/std_registry/loaded/tui/application_api.rs
+crates/fpas-compiler/src/compiler/std_calls/tui/application.rs
+crates/fpas-bytecode/src/intrinsic/tui/variants/session.inc
+crates/fpas-std/src/std_units/symbols/std_symbols/tui.rs
 crates/fpas-vm/src/vm/execute/io/tui/msgbox.rs
 examples/pascal/tui/
 tests/tui/controls/   (optional *_test.fpas)

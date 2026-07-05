@@ -38,7 +38,7 @@ If yes, update docs **in the same change**:
 
 If behavior is unchanged, explicitly note **docs: unchanged** in the final summary.
 
-Do not put planned or hypothetical behavior in `docs/pascal/`. Use `docs/future/` for plans only.
+Do not put planned or hypothetical behavior in `docs/pascal/`. Use `docs/future/` for product roadmap and `docs/refactor/` for bridge internals (for example [tui-bridge/done/03-about-message-box.md](../../../docs/refactor/tui-bridge/done/03-about-message-box.md)). Contributor pages such as [vm-bridge.md](../../../docs/pascal/std/tui/app/vm-bridge.md) may link to refactor plans; user-facing unit pages should describe only implemented symbols.
 
 ## Step 3 — Test check
 

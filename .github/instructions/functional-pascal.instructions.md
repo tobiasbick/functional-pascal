@@ -256,7 +256,7 @@ end.
 | `Std.Args` | Process arguments after `--` | `ParamCount`, `ParamStr` |
 | `Std.Env` | Process environment | `Get`, `Exists` |
 | `Std.Graph` | Native windowed graphics | Hosted: `Application.Configure`, `Application.Run`, `ApplicationHandlers`, `On*` handlers. Drawing: `Application.Open`, `Application.DrawLine`, `Application.DrawText`, `Application.Present`, `Event`, `EventKind`, … |
-| `Std.Tui` | Turbo Vision terminal UI | `Application.Open`, `Create*`, `AddChild`, `OnCommand`, `Pump`, `Run`, `ExecDialog`, `RunFileDialog`, `OpenForTest`, `Test*`, … Custom paint loops belong in `Std.Console`, not `Std.Tui`. |
+| `Std.Tui` | Turbo Vision terminal UI | `Application.Open`, `Create*`, `AddChild`, `OnCommand`, `Pump`, `Run`, `ExecDialog`, `RunFileDialog`, `OpenForTest`, `Test*`, … Custom paint loops belong in `Std.Console`, not `Std.Tui`. IDE About (`apps/ide`) uses custom `ExecDialog` today — see [modals.md](../../docs/pascal/std/tui/app/modals.md). |
 | `Std.Str` | String operations | `Length`, `ToUpper`, `ToLower`, `Trim`, `Contains`, `StartsWith`, `EndsWith`, `Substring`, `IndexOf`, `Replace`, `Split`, `Join`, `IsNumeric`, `Format`, … |
 | `Std.Conv` | Type conversions | `IntToStr`, `StrToInt`, `IntToReal`, `RealToStr`, `StrToReal`, `CharToStr`, `BoolToStr`, … |
 | `Std.Math` | Math functions | `Pi`, `Sqrt`, `Pow`, `Floor`, `Ceil`, `Round`, `Sin`, `Cos`, `Log`, `Abs`, `Min`, `Max`, `Clamp`, … |

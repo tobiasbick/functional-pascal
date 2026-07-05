@@ -46,4 +46,4 @@ Manual: run IDE, open Help → About during live session; menu/status remain con
 
 - FPAS handle graph remains source of truth for `Create*`; public Pascal API unchanged.
 - Headless path still uses queue + custom painter ([03-headless-test-util.md](../03-headless-test-util.md)).
-- Follow-up: [02-about-message-box.md](../02-about-message-box.md) — replace IDE hand-built About with upstream `message_box`.
+- Follow-up: [03-about-message-box.md](03-about-message-box.md) — IDE About via upstream `message_box`.

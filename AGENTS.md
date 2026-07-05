@@ -127,3 +127,5 @@ crates/fpas-compiler/src/
 ```
 
 Then proceed with the implementation.
+
+TUI VM bridge refactors (single session, `message_box`, headless test-util): plan and status live under [`docs/refactor/tui-bridge/`](docs/refactor/tui-bridge/00-context.md). Read the matching item before changing `crates/fpas-vm/src/vm/execute/io/tui/` or `apps/ide` dialog code.

@@ -1,6 +1,6 @@
 # 06 — Re-evaluate `Bridged*` view wrappers after TV 2.0
 
-**Status:** [x] Matrix · [x] CheckBox shrink · [x] RadioButton shrink · [x] ListBox review · [ ] Headless mouse follow-up · [x] Delete `*_mouse.rs` · [x] Tests · [x] Context
+**Status:** [x] Matrix · [x] CheckBox shrink · [x] RadioButton shrink · [x] ListBox review · [x] Headless mouse follow-up · [x] Delete `*_mouse.rs` · [x] Tests · [x] Context
 
 **Priority:** Medium — after [done/04-headless-test-util.md](done/04-headless-test-util.md)
 
@@ -34,7 +34,7 @@ For each wrapper, document **keep**, **shrink**, or **delete**:
 - [x] **CheckBox** — `BridgedCheckBox` delegates mouse to upstream `CheckBox`; wrapper only syncs `TurboVisionBoolCell`.
 - [x] **RadioButton** — Same for mouse; wrapper keeps FPAS group-cell exclusivity (radios are dialog siblings, not upstream `Group` children).
 - [x] **ListBox** — Window chrome uses stock `ListBox`; dialogs/`ExecDialog` keep `BridgedListBox` for `ListSelection` read-back.
-- [ ] **Mouse** — Consolidate headless `test_mouse.rs` with `TvHeadlessBackend::push_event` ([done/04-headless-test-util.md](done/04-headless-test-util.md) follow-up).
+- [x] **Mouse** — Headless `TestClickMouse` routes through `HeadlessTvEventInbox` + desktop `handle_event` ([done/04-headless-test-util.md](done/04-headless-test-util.md) follow-up).
 - [x] **Delete** — Removed `check_box_mouse.rs`, `radio_button_mouse.rs`.
 - [x] **Tests** — Rust unit tests on `Bridged*`; FPAS control tests below.
 - [x] **Context** — [00-context.md](00-context.md) bridge table updated.
@@ -61,5 +61,5 @@ cargo run -q -p fpas-cli -- test tests/tui/controls/
 ## Notes
 
 - Do not remove cells if `ExecDialog` read-back still depends on them without an upstream read API.
-- Headless `TestClickMouse` still updates FPAS cells directly via stored bounds — not routed through TV events yet.
+- Headless `TestClickMouse` routes through `HeadlessTvEventInbox` and upstream cluster mouse handling; FPAS cells sync via `Bridged*` wrappers.
 - `live_tree_test` title-bar glyph vs `LIVE` label visibility remains a separate follow-up.

@@ -10,6 +10,7 @@ use super::bridged_radio_button::BridgedRadioButton;
 use crate::vm::Worker;
 use crate::vm::shared::TurboVisionObject;
 use std::collections::HashMap;
+use turbo_vision::core::geometry::Point;
 use turbo_vision::views::desktop::Desktop;
 use turbo_vision::views::dialog::Dialog;
 use turbo_vision::views::listbox::ListBox;
@@ -132,6 +133,22 @@ impl Worker {
             tui.turbo_vision.live_child_desktop_indices.clear();
         });
     }
+
+    /// Top-left desktop coordinate for a registered live view (headless mouse routing).
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_live_view_click_point(
+        &mut self,
+        handle: u32,
+    ) -> Option<Point> {
+        let view_ids = self.with_tui(|tui| tui.turbo_vision.live_view_ids.clone());
+        let child_desktop_indices =
+            self.with_tui(|tui| tui.turbo_vision.live_child_desktop_indices.clone());
+        let mut app_slot = self.headless_tv_app.take();
+        let point = app_slot.as_mut().and_then(|app| {
+            live_view_bounds_origin(app.desktop_mut(), &view_ids, &child_desktop_indices, handle)
+        });
+        self.headless_tv_app = app_slot;
+        point
+    }
 }
 
 fn apply_live_data_mutation_to_desktop(
@@ -234,6 +251,33 @@ fn with_live_view_mut(
                 return patch(child);
             }
             false
+        }
+    }
+}
+
+fn live_view_bounds_origin(
+    desktop: &mut Desktop,
+    view_ids: &HashMap<u32, u16>,
+    child_desktop_indices: &HashMap<u32, usize>,
+    handle: u32,
+) -> Option<Point> {
+    let location = locate_live_view(view_ids, child_desktop_indices, handle)?;
+    match location {
+        LiveViewLocation::DesktopRoot(view_id) => {
+            desktop.child_by_id(view_id).map(|view| view.bounds().a)
+        }
+        LiveViewLocation::DesktopChild {
+            root_index,
+            view_id,
+        } => {
+            let root = desktop.child_at_mut(root_index);
+            if let Some(dialog) = root.as_any_mut().downcast_mut::<Dialog>() {
+                return dialog.child_by_id(view_id).map(|view| view.bounds().a);
+            }
+            if let Some(window) = root.as_any_mut().downcast_mut::<Window>() {
+                return window.child_by_id(view_id).map(|view| view.bounds().a);
+            }
+            None
         }
     }
 }

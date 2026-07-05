@@ -4,12 +4,15 @@
 
 use super::chrome_layout::{layout_menu_bar_for_terminal, layout_status_line_for_terminal};
 use super::menu_build::build_menu_bar_from_snapshot;
-use super::tv_headless_backend::TvHeadlessBackend;
+use super::tv_headless_backend::{HeadlessTvEventInbox, TvHeadlessBackend};
 use crate::vm::Worker;
 use fpas_bytecode::SourceLocation;
 use fpas_std::Console;
+use std::time::Duration;
 use turbo_vision::core::command_set;
 use turbo_vision::core::draw::Cell;
+use turbo_vision::core::event::{Event, EventType, MB_LEFT_BUTTON};
+use turbo_vision::core::geometry::Point;
 use turbo_vision::core::geometry::Rect;
 use turbo_vision::core::palette::TvColor;
 use turbo_vision::terminal::Terminal;
@@ -24,11 +27,12 @@ pub(in crate::vm) struct HeadlessTvApp {
     desktop: Desktop,
     menu_bar: Option<MenuBar>,
     status_line: Option<StatusLine>,
+    event_inbox: HeadlessTvEventInbox,
 }
 
 impl HeadlessTvApp {
     fn new(width: u16, height: u16) -> turbo_vision::core::error::Result<Self> {
-        let backend = TvHeadlessBackend::new(width, height);
+        let (backend, event_inbox) = TvHeadlessBackend::new(width, height);
         let terminal = Terminal::with_backend(Box::new(backend))?;
         let (width, height) = terminal.size();
         command_set::init_command_set();
@@ -39,7 +43,29 @@ impl HeadlessTvApp {
             desktop,
             menu_bar: None,
             status_line: None,
+            event_inbox,
         })
+    }
+
+    /// Queue a left mouse down at desktop coordinates for headless test input.
+    pub(in crate::vm::execute::io::tui) fn push_mouse_down(&self, x: i16, y: i16) {
+        self.event_inbox.push(Event::mouse(
+            EventType::MouseDown,
+            Point::new(x, y),
+            MB_LEFT_BUTTON,
+            false,
+        ));
+    }
+
+    /// Poll one queued input event and dispatch it through the desktop view tree.
+    pub(in crate::vm::execute::io::tui) fn dispatch_next_input_event(
+        &mut self,
+    ) -> std::io::Result<Option<Event>> {
+        let Some(mut event) = self.terminal.poll_event(Duration::ZERO)? else {
+            return Ok(None);
+        };
+        self.desktop.handle_event(&mut event);
+        Ok(Some(event))
     }
 
     fn update_desktop_bounds(&mut self) {
@@ -74,6 +100,10 @@ impl HeadlessTvApp {
 
     pub(in crate::vm::execute::io::tui) fn desktop_mut(&mut self) -> &mut Desktop {
         &mut self.desktop
+    }
+
+    pub(in crate::vm::execute::io::tui) fn desktop(&self) -> &Desktop {
+        &self.desktop
     }
 }
 

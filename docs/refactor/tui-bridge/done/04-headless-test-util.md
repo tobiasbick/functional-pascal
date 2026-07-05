@@ -30,7 +30,7 @@ Headless `Application.OpenForTest` + `Run` used a **parallel ASCII painter** (`h
 
 ## Follow-up (not blocking)
 
-- [ ] **Input** — Route `TestClickButton` / `TestClickMouse` through `TvHeadlessBackend::push_event` + TV `handle_event`; retire duplicate hit-test in `test_mouse.rs` where upstream covers it.
+- [x] **Input** — `TestClickMouse` routes through `HeadlessTvEventInbox` + desktop `handle_event`; duplicate hit-test removed from `test_mouse.rs`.
 - [ ] **Shared session** — Optional: attach headless terminal to the same session `Application` as live (coordinate with future session work).
 
 ## Files touched

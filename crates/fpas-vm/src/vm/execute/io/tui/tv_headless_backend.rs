@@ -3,37 +3,44 @@
 //! **Documentation:** `docs/refactor/tui-bridge/done/04-headless-test-util.md`
 
 use std::io;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use turbo_vision::core::event::Event;
 use turbo_vision::terminal::Backend;
+
+/// Queues synthetic input for a paired [`TvHeadlessBackend`].
+pub(in crate::vm::execute::io::tui) struct HeadlessTvEventInbox {
+    events: Arc<Mutex<Vec<Event>>>,
+}
+
+impl HeadlessTvEventInbox {
+    /// Queues an input event for the next `poll_event` call on the paired backend.
+    pub fn push(&self, event: Event) {
+        if let Ok(mut events) = self.events.lock() {
+            events.push(event);
+        }
+    }
+}
 
 /// Fixed-size terminal backend with a queued event inbox for headless tests.
 pub(in crate::vm::execute::io::tui) struct TvHeadlessBackend {
     width: u16,
     height: u16,
-    events: Mutex<Vec<Event>>,
+    events: Arc<Mutex<Vec<Event>>>,
 }
 
 impl TvHeadlessBackend {
-    /// Creates a backend reporting `width` × `height` character cells.
-    pub fn new(width: u16, height: u16) -> Self {
-        Self {
-            width,
-            height,
-            events: Mutex::new(Vec::new()),
-        }
-    }
-
-    /// Queues an input event for the next `poll_event` call.
-    ///
-    /// Reserved for routing `TestClickMouse` / keyboard through TV `handle_event`
-    /// instead of duplicate hit-test (refactor 03 follow-up).
-    #[allow(dead_code)]
-    pub fn push_event(&self, event: Event) {
-        if let Ok(mut events) = self.events.lock() {
-            events.push(event);
-        }
+    /// Creates a backend and the inbox used to queue `TestClickMouse` / keyboard events.
+    pub fn new(width: u16, height: u16) -> (Self, HeadlessTvEventInbox) {
+        let events = Arc::new(Mutex::new(Vec::new()));
+        (
+            Self {
+                width,
+                height,
+                events: Arc::clone(&events),
+            },
+            HeadlessTvEventInbox { events },
+        )
     }
 }
 

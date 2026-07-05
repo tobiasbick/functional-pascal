@@ -15,7 +15,7 @@ FPAS wraps upstream widgets to mirror state into VM cells and to patch input gap
 | `bridged_check_box.rs` | `TurboVisionBoolCell` sync after upstream events |
 | `bridged_radio_button.rs` | Group exclusivity in FPAS cells + `tree_dirty` |
 | `bridged_list_box.rs` | Selection cell sync |
-| `test_mouse.rs` | Headless coordinate hit-test (separate from live) |
+| `test_mouse.rs` | Headless coordinate hit-test maps FPAS logical coords to live TV view bounds before dispatch |
 
 Turbo Vision 2.0 `Cluster::handle_cluster_event` handles left-click toggle/select inside bounds (not only Space when focused). The former `check_box_mouse.rs` / `radio_button_mouse.rs` modules duplicated that behavior.
 

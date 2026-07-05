@@ -38,6 +38,7 @@ Pascal Application.*
 | --- | --- | --- |
 | Retained handles | `shared/tui.rs`, `control_create.rs` | `Create*` only writes FPAS records; upstream widgets rebuilt later |
 | Headless paint | `headless_tv_draw.rs` | Upstream TV `draw` → CRT export ([done/04-headless-test-util.md](done/04-headless-test-util.md)) |
+| Headless input | `HeadlessTvEventInbox` + `test_mouse.rs` | `TestClickMouse` routes through TV `handle_event`; FPAS hit-test maps handle → live view bounds |
 | Headless commands | `commands.rs`, `tv_run.rs` | Queue + `Pump` instead of TV event loop |
 | Full desktop rebuild | `reconcile.rs`, `tv_run.rs` | `pending_reconcile` → wipe desktop → repopulate; data mutations use `live_patch.rs` when possible |
 | State cells | `turbo_vision_*_cell.rs`, `bridged_*.rs` | Sync checkbox/radio/list/input back to FPAS handles; live mouse on clusters is upstream TV 2.0 |
@@ -45,9 +46,7 @@ Pascal Application.*
 
 ## Known duplication (refactor targets)
 
-1. **Headless input** — queue + `test_mouse.rs` hit-test vs TV `push_event` → follow-up in [done/04-headless-test-util.md](done/04-headless-test-util.md)
-
-**Done:** incremental live/headless data patch — [05-reduce-reconcile-rebuild.md](05-reduce-reconcile-rebuild.md). Duplicate cluster mouse helpers removed — [06-review-bridged-widgets.md](06-review-bridged-widgets.md).
+**Done:** incremental live/headless data patch — [05-reduce-reconcile-rebuild.md](05-reduce-reconcile-rebuild.md). `Bridged*` review + headless mouse — [done/06-review-bridged-widgets.md](done/06-review-bridged-widgets.md).
 
 **Done:** single live `Application` per FPAS session — [done/02-single-tv-session.md](done/02-single-tv-session.md). IDE About via upstream `message_box` — [done/03-about-message-box.md](done/03-about-message-box.md).
 

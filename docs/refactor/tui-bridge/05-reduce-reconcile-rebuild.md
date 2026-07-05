@@ -36,7 +36,7 @@ Still keep FPAS handle graph authoritative for Pascal and headless introspection
 | `windows.rs` `SetTitle` | title mutation | **Data** — live patch |
 | `dialogs.rs` `CreateDialog` | root | **Structural** |
 | `navigation.rs` | menu/status chrome | **Structural** (chrome sync on rebuild) |
-| `test_mouse.rs` | headless click | **Repaint** — patch cells + `pending_headless_repaint` |
+| `test_mouse.rs` | headless click | **Repaint** — TV `handle_event` + `pending_headless_repaint` |
 | `bridged_radio_button.rs` | user select | **Structural** — group exclusivity + `tree_dirty` |
 
 ## Tasks

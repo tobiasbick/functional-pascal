@@ -18,6 +18,8 @@ Before edits, read these files in order:
 
 If the task is about examples of how to apply the skill, read `references/api_reference.md`.
 
+For upstream `message_box` / IDE About work, read [docs/refactor/tui-bridge/02-about-message-box.md](../../../docs/refactor/tui-bridge/02-about-message-box.md) before editing bridge or `apps/ide/src/dialog/`.
+
 ## Upstream Verification Rule
 
 Do not rely on model memory for `turbo-vision` API details. It is a young crate and may change.

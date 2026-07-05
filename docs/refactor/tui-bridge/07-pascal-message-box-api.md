@@ -15,12 +15,16 @@ Today only widget-composition APIs exist (`CreateDialog`, `ExecDialog`, …). Co
 Minimal Pascal API wrapping upstream helpers, not reimplemented layout:
 
 ```pascal
-{ sketch — names and shapes TBD }
+{ sketch — names and shapes TBD; phase 1 may ship Application.MessageBox for IDE only without this doc page }
 Application.MessageBox(App, Message, Flags): integer;
 Application.InputBox(App, Title, Label, Default, Limit): DialogResult + string;
 ```
 
+Phase 1 ([02-about-message-box.md](02-about-message-box.md)) may register `Application.MessageBox` in sema/stdlib for IDE internal use before this public spec exists.
+
 Flags could mirror upstream `MF_*` constants as `MessageBox.About`, `MessageBox.OkButton`, … or a single options integer documented beside Borland.
+
+Upstream flag values at turbo-vision 2.0.0 (see `helpers/msgbox.rs`): type `MF_ABOUT = 4`, `MF_OK_BUTTON = 0x0400`; closing `CM_OK = 10` matches `Command.Accept`. Spike and private helper: [02-about-message-box.md](02-about-message-box.md).
 
 ## Tasks
 

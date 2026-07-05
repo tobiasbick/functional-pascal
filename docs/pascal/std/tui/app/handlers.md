@@ -18,6 +18,10 @@ Application.OnCommand(App, OnCommand);
 
 On an interactive terminal you may call `Application.ExecDialog` or `Application.RunFileDialog` from inside `OnCommand` while `Application.Run` is active. The runtime reuses the same upstream turbo-vision session, so menu bar and status line stay visible (see [Dialogs and windows](modals.md) and [Lifecycle](lifecycle.md)).
 
+### IDE About flow (today)
+
+Help → About in `apps/ide` dispatches menu command `100` (`CM_ABOUT`) to `OnCommand`, which calls `Ide.Dialog.ShowAbout`. That procedure builds a custom dialog and runs `Application.ExecDialog`; dismissal returns `Command.Accept` (`10`) in `DialogResult.command`. Refactor [02-about-message-box](../../../refactor/tui-bridge/02-about-message-box.md) will replace the hand-built dialog with upstream `message_box` while keeping the menu command unchanged.
+
 ## Optional raw input hooks
 
 When a keyboard or mouse event survives Turbo Vision `handle_event` without being cleared, the interactive run loop can forward it to optional hooks:

@@ -89,6 +89,8 @@ Turbo Vision bridge code lives under `crates/fpas-vm/src/vm/execute/io/tui/`:
 
 Contributor refactor backlog (bridge internals, not user spec): [docs/refactor/tui-bridge/](../../../refactor/tui-bridge/00-context.md).
 
+**In progress:** [02-about-message-box](../../../refactor/tui-bridge/02-about-message-box.md) — `Application.MessageBox` intrinsic (IDE-only until public spec in [07](../../../refactor/tui-bridge/07-pascal-message-box-api.md)) calling `msgbox.rs` → upstream `helpers::msgbox`.
+
 ## See Also
 
 - [Application](README.md)

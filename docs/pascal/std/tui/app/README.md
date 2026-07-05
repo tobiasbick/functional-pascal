@@ -12,6 +12,8 @@
 
 On an interactive terminal, `Run`, `ExecDialog`, and `RunFileDialog` share one upstream turbo-vision application for the `Open` … `Close` lifetime. See [Lifecycle](lifecycle.md).
 
+Custom modal layout (`CreateDialog` + `ExecDialog`) is for dialogs with read-back or app-specific widgets. Standard Borland message boxes (About, OK, Yes/No) are planned via upstream `message_box` — see [Dialogs and windows](modals.md#custom-modal-layout).
+
 ## Current API
 
 | Symbol | Description |

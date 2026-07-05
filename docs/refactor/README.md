@@ -14,7 +14,7 @@ Structured refactor backlogs for Functional Pascal. Use this directory when work
 | --- | --- | --- |
 | [tui-bridge/00-context.md](tui-bridge/00-context.md) | TUI bridge — current architecture (reference) | Reference (keep updated when bridge changes) |
 | [tui-bridge/done/02-single-tv-session.md](tui-bridge/done/02-single-tv-session.md) | One `TurboVisionApplication` per FPAS session | Done |
-| [tui-bridge/02-about-message-box.md](tui-bridge/02-about-message-box.md) | About / simple dialogs via upstream `message_box` | Pending |
+| [tui-bridge/02-about-message-box.md](tui-bridge/02-about-message-box.md) | About / simple dialogs via upstream `message_box` | In progress |
 | [tui-bridge/03-headless-test-util.md](tui-bridge/03-headless-test-util.md) | Headless tests via TV `test-util` + `MockTerminal` | Pending |
 | [tui-bridge/04-command-map-sync.md](tui-bridge/04-command-map-sync.md) | Keep reserved `CM_*` list aligned with upstream | Ongoing |
 | [tui-bridge/05-reduce-reconcile-rebuild.md](tui-bridge/05-reduce-reconcile-rebuild.md) | Incremental view updates instead of full desktop rebuild | Pending |
@@ -32,7 +32,7 @@ Add sibling directories here when other areas need the same treatment (compiler,
 
 ## Suggested order (TUI bridge)
 
-1. [02-about-message-box](tui-bridge/02-about-message-box.md) — small win; live About during `Run` now shares session ([done/02-single-tv-session](tui-bridge/done/02-single-tv-session.md))
+1. [02-about-message-box](tui-bridge/02-about-message-box.md) — `Application.MessageBox` + upstream `message_box` for IDE About ([done/02-single-tv-session](tui-bridge/done/02-single-tv-session.md) unblocks live About)
 2. [04-command-map-sync](tui-bridge/04-command-map-sync.md) — do on every turbo-vision bump (already partly done for 2.0)
 3. [03-headless-test-util](tui-bridge/03-headless-test-util.md) — larger; reduces dual live/headless paths
 4. [06-review-bridged-widgets](tui-bridge/06-review-bridged-widgets.md) — after (3) or in parallel with TV regression

@@ -29,7 +29,7 @@ Repeatable checklist on every turbo-vision tag bump (crates.io or git).
 - [ ] **Process** — Add short “bump checklist” subsection here or in [00-context.md](00-context.md) with link to upstream `src/core/command.rs` for pinned tag
 - [ ] **Tests** — Ensure `command_map` unit tests cover any new reserved ids upstream adds
 - [ ] **Optional** — Rust test or script that diffs reserved list against upstream file (fail CI locally when bumping dep)
-- [ ] **IDE** — Confirm `CmdHelpAbout = 100` (`CM_ABOUT`) still correct after each bump
+- [ ] **IDE** — Confirm `CmdHelpAbout = 100` (`CM_ABOUT`) still correct after each bump; after [02-about-message-box.md](02-about-message-box.md), About **menu** command stays `CM_ABOUT` while the dialog close button uses `CM_OK` → `Command.Accept`
 
 ## Bump checklist (manual)
 

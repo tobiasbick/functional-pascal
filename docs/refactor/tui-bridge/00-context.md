@@ -28,6 +28,7 @@ Pascal Application.*
 | Event loop | `get_event`, `handle_event`, desktop cleanup | `session_app.rs` (`turbo_vision_drive_live_interactive_loop`) |
 | Menu / status | `MenuBar`, `StatusLine` | `navigation.rs`, `chrome_layout.rs` |
 | Modal execute | `Dialog::execute` | `exec_dialog.rs` (on live session) |
+| Message box | `helpers::msgbox::message_box` | Planned: `msgbox.rs` + `Application.MessageBox` → [02-about-message-box.md](02-about-message-box.md) |
 | File picker | `FileDialog` | `file_dialog.rs` (on live session) |
 | Command ids | Borland `CM_*` in `core/command.rs` | `command_map.rs` + `fpas-std` `command_ids.rs` |
 
@@ -45,7 +46,7 @@ Pascal Application.*
 ## Known duplication (refactor targets)
 
 1. **Dual run paths** — interactive TV loop vs headless queue + custom painter → [03-headless-test-util.md](03-headless-test-util.md)
-2. **Manual About layout** — IDE builds dialog in FPAS; upstream has `helpers::msgbox` → [02-about-message-box.md](02-about-message-box.md)
+2. **Manual About layout** — IDE `about.fpas` builds `CreateDialog` + `ExecDialog` (~57 LOC); upstream `helpers::msgbox::message_box` with `MF_ABOUT | MF_OK_BUTTON` is the target → [02-about-message-box.md](02-about-message-box.md) (in progress)
 
 **Done:** single live `Application` per FPAS session — [done/02-single-tv-session.md](done/02-single-tv-session.md)
 

@@ -13,7 +13,9 @@ Use this checklist after changes to `Std.Tui` session, Turbo Vision bridge, or t
 | Full Rust suite | `cargo test --workspace` | Workspace tests pass. |
 | FPAS formatting | `cargo run -q -p fpas-cli -- fmt --check tests/ examples/ apps/` | No formatting drift. |
 
-Turbo Vision regression tests under `tests/tui/controls/` (30 files). Core coverage:
+Turbo Vision regression tests under `tests/tui/controls/` (30 files). IDE shell: `apps/ide/tests/` (6 tests, including About menu and dialog dispatch).
+
+Core coverage:
 
 - **Spike / run** — `spike_test`, `run_test`
 - **Widgets** — `window`, `static_text`, `memo`, `text_viewer`, `input_line`, `list_box`, `check_box`, `check_box_mouse`, `radio_button`, `radio_button_mouse`
@@ -29,4 +31,4 @@ Interactive examples (manual terminal): `examples/pascal/tui/exec_dialog.fpas`, 
 
 - [Application](app/README.md)
 - [Native testing](app/testing.md)
-- [Terminal checklist](terminal-checklist.md)
+- [VM bridge](app/vm-bridge.md)

@@ -77,7 +77,7 @@ begin
 end.
 ```
 
-See [Application](tui/app/README.md) for the full Turbo Vision API and [Handlers](tui/app/handlers.md) for command callbacks.
+See [Application](tui/app/README.md) for the full Turbo Vision API, [Dialogs and windows](tui/app/modals.md) for custom vs standard modals, and [Handlers](tui/app/handlers.md) for command callbacks.
 
 ### Error handling helpers
 

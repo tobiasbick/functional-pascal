@@ -45,3 +45,19 @@ Expected agent behavior:
 - Browse or fetch upstream source instead of relying on memory.
 - Cite the upstream file or summarize the exact checked signature.
 - If network access is unavailable, say the answer is unverified and may be stale.
+
+## Example 4: Replace hand-built About with upstream `message_box`
+
+User request:
+
+```text
+use turbo-vision message_box for IDE About instead of CreateDialog in about.fpas
+```
+
+Expected agent behavior:
+
+- Read [docs/refactor/tui-bridge/02-about-message-box.md](../../../../docs/refactor/tui-bridge/02-about-message-box.md) and `docs/pascal/std/tui/app/modals.md`.
+- Verify `turbo_vision::helpers::msgbox` at the pinned tag in `Cargo.lock`.
+- Add `TuiIntrinsic::MessageBox` (sema → compiler → VM) or reuse plan in refactor doc; call `message_box` inside `turbo_vision_with_live_app`; headless returns `test_dialog_result`.
+- Shrink `apps/ide/src/dialog/about.fpas` to `Application.MessageBox(...)`; keep headless IDE tests passing with `TestSetDialogResult`.
+- Update `vm-bridge.md` module table when `msgbox.rs` is added.

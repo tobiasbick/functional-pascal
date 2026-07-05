@@ -14,6 +14,8 @@ On an interactive terminal, the VM keeps one upstream turbo-vision application f
 
 `Application.Run` drives the event loop on that instance. `Application.ExecDialog` and `Application.RunFileDialog` may run while `Run` is active (nested modals).
 
+Standard Borland message boxes (About, OK/Cancel) are not a separate public API yet; the IDE About dialog uses custom `ExecDialog` layout today ([modals.md](modals.md#custom-modal-layout)).
+
 Headless tests (`Application.OpenForTest`) do not use the live session; modal and file-dialog results come from test stubs (`Application.TestSetDialogResult`, `Application.TestSetFileDialogResult`).
 
 ## See Also

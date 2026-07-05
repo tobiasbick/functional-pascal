@@ -41,6 +41,8 @@ Application-defined commands use other positive integers. When a command id coll
 | `Command.Accept` | `10` | Accept or confirm (dialog OK; Borland `cmOK`). Named `Accept` because `Ok` is a language keyword. |
 | `Command.Cancel` | `11` | Cancel the current action or dialog (Borland `cmCancel`). |
 
+Applications may intentionally reuse other Borland `CM_*` values for menu items when they match upstream semantics. The FPAS IDE Help → About entry uses `100` (`CM_ABOUT` in turbo-vision 2.0). The runtime offsets that id on Turbo Vision widgets and restores `100` in `OnCommand`. Standard message-box OK buttons use `Command.Accept` (`10`, Borland `cmOK`) — see the IDE About flow in [Dialogs and windows](modals.md).
+
 ## `Window`
 
 Opaque Turbo Vision window handle returned by `Application.CreateWindow`. Call `Application.AddWindow` before `Application.Run` to show the window on the desktop.

@@ -2,12 +2,17 @@
 
 unit Ide.Dialog;
 
-uses Ide.Dialog.About, Ide.Menu, Std.Tui;
+uses Ide.Dialog.About, Ide.Dialog.Open, Ide.Menu, Std.Tui;
 
 /// Handle IDE dialog commands. Returns `true` when `CommandId` was consumed.
 
 function HandleCommand(App: Application; CommandId: integer): boolean;
 begin
+  if CommandId = CmdFileOpen then
+  begin
+    ShowOpen(App);
+    return true
+  end;
   if CommandId = CmdHelpAbout then
   begin
     ShowAbout(App);

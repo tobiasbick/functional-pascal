@@ -1,0 +1,29 @@
+/// File open flow for the FPAS IDE.
+
+unit Ide.Dialog.Open;
+
+uses Std.Option, Std.Tui;
+
+private function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+/// Show the file picker and confirm the chosen path in a follow-up message box.
+
+procedure ShowOpen(App: Application);
+begin
+  var Selected: option of string := Application.RunFileDialog(App, Bounds(10, 5, 50, 14), 'Open File', '*', None);
+  if IsNone(Selected) then
+  begin
+    var _: integer := Application.MessageBox(App, 'Open canceled.', MessageBoxOption.Information +
+                                                                    MessageBoxOption.OkButton);
+    return
+  end;
+  var Path: string := Unwrap(Selected);
+  var Message: string := 'Selected file:
+
+' + Path;
+  var _: integer := Application.MessageBox(App, Message, MessageBoxOption.Information +
+                                                         MessageBoxOption.OkButton)
+end;

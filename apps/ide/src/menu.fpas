@@ -7,8 +7,15 @@ uses Std.Tui;
 const
   /// Command id dispatched when the user chooses File / Exit (`Command.Quit`).
   CmdFileExit: integer := 1;
+  /// Command id dispatched when the user chooses File / Open.
+  CmdFileOpen: integer := 2;
   /// Command id dispatched when the user chooses Help / About (`CM_ABOUT` in Turbo Vision).
   CmdHelpAbout: integer := 100;
+
+function OpenMenuItem(): MenuItem;
+begin
+  return record text := '~O~pen'; commandId := CmdFileOpen; end
+end;
 
 function ExitMenuItem(): MenuItem;
 begin
@@ -22,7 +29,7 @@ end;
 
 function FileMenu(): Menu;
 begin
-  return record title := '~F~ile'; items := [ExitMenuItem()]; end
+  return record title := '~F~ile'; items := [OpenMenuItem(), ExitMenuItem()]; end
 end;
 
 function HelpMenu(): Menu;
@@ -35,6 +42,10 @@ begin
   if CommandId = CmdFileExit then
   begin
     return 'Exit'
+  end;
+  if CommandId = CmdFileOpen then
+  begin
+    return 'Open'
   end;
   if CommandId = CmdHelpAbout then
   begin

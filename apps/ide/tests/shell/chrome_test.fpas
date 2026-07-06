@@ -5,7 +5,7 @@ uses Ide.Menu, Ide.Shell, Std.Tui, Std.Test;
 begin
   var App: Application := Application.OpenForTest(80, 25);
   var MenuBarHandle: MenuBar := AttachChrome(App);
-  Application.TestDispatchMenuCommand(App, MenuBarHandle, 0, 0);
+  Application.TestDispatchMenuCommand(App, MenuBarHandle, 0, 1);
   Application.Run(App);
   AssertEquals(CmdFileExit, LastCommandId())
 end.

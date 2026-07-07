@@ -4,9 +4,10 @@
 
 use super::headless::try2_ensure_headless_app;
 use super::modals::try2_exec_view;
-use super::records::{TUI_BUTTON_TYPE, TUI_DIALOG_TYPE};
+use super::records::{TUI_BUTTON_TYPE, TUI_DIALOG_TYPE, TUI_WINDOW_TYPE};
 use super::views::{
-    try2_button_new, try2_dialog_add_button, try2_dialog_attach_button, try2_dialog_new_modal,
+    try2_button_new, try2_desktop_add, try2_dialog_add_button, try2_dialog_attach_button,
+    try2_dialog_new_modal, try2_window_attach_button, try2_window_new,
 };
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
@@ -112,6 +113,22 @@ impl Worker {
                 })?;
                 self.try2_inject_command(command, line)?;
             }
+            TuiIntrinsic::WindowNew => {
+                let title = self.pop_turbo_vision_string("Window title", line)?;
+                let bounds = self.pop_turbo_vision_rect(line)?;
+                let handle = try2_window_new(self, bounds, title, line)?;
+                self.push(Self::turbo_vision_window_record(handle))?;
+            }
+            TuiIntrinsic::WindowAdd => {
+                let button_handle = self.pop_try2_handle(TUI_BUTTON_TYPE, "Button", line)?;
+                let window_handle = self.pop_try2_handle(TUI_WINDOW_TYPE, "Window", line)?;
+                try2_window_attach_button(self, window_handle, button_handle, line)?;
+            }
+            TuiIntrinsic::DesktopAdd => {
+                let window_handle = self.pop_try2_handle(TUI_WINDOW_TYPE, "Window", line)?;
+                self.pop_tui_application(line)?;
+                try2_desktop_add(self, window_handle, line)?;
+            }
             _ => return Ok(false),
         }
 
@@ -161,11 +178,7 @@ impl Worker {
         Ok(handle)
     }
 
-    fn try2_inject_keyboard(
-        &mut self,
-        key_code: u16,
-        line: SourceLocation,
-    ) -> Result<(), VmError> {
+    fn try2_inject_keyboard(&mut self, key_code: u16, line: SourceLocation) -> Result<(), VmError> {
         if !self.with_tui(|tui| tui.session.is_headless()) {
             return Err(runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,
@@ -181,11 +194,7 @@ impl Worker {
         Ok(())
     }
 
-    fn try2_inject_command(
-        &mut self,
-        command: u16,
-        line: SourceLocation,
-    ) -> Result<(), VmError> {
+    fn try2_inject_command(&mut self, command: u16, line: SourceLocation) -> Result<(), VmError> {
         if !self.with_tui(|tui| tui.session.is_headless()) {
             return Err(runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,

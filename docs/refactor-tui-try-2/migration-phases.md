@@ -41,7 +41,7 @@ Estimates assume focused hobby-project pace (part-time).
 
 ---
 
-## Phase 2 — Vertical slice: Button + Dialog + ExecView (3–4 days) — **in progress**
+## Phase 2 — Vertical slice: Button + Dialog + ExecView (3–4 days) — **complete** (2026-07-07)
 
 **Work**
 
@@ -57,7 +57,7 @@ Estimates assume focused hobby-project pace (part-time).
 **Exit criteria**
 
 - [x] `fpas test tests/tui/smoke/modal_button_try2_test.fpas` passes.
-- [ ] Interactive smoke: manual run of tiny program in terminal (document in phase notes).
+- [x] Interactive smoke: manual run of tiny program in terminal — `fpas run examples/pascal/tui/modal_button_try2.fpas` (OK/Cancel/× with mouse or Enter/Esc).
 
 ---
 
@@ -67,9 +67,9 @@ Estimates assume focused hobby-project pace (part-time).
 
 - [ ] `Application.Run` with `OnCommand` callback parameter (sema overload; **partial:** try-2 run loop landed via `OnCommand` + `Run`).
 - [x] `Application.Quit` → stop run loop — **partial:** `quit_requested` honored on try-2 path; live `app.running` wiring TBD.
-- [ ] `Window.New`, `Window.Add`, `Desktop.Add`.
+- [x] `Window.New`, `Window.Add`, `Desktop.Add` — intrinsics 480–482; `tests/tui/smoke/window_quit_try2_test.fpas`.
 - [ ] `StaticText`, menu/status chrome (`chrome.rs`).
-- [ ] FPAS tests: modeless window + quit command.
+- [x] FPAS tests: modeless window + quit command — `window_quit_try2_test.fpas` (button click → `CM_QUIT` → `Application.Quit`).
 
 **Exit criteria**
 

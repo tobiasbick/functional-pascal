@@ -1,45 +1,55 @@
-//! Try-2 `Button` construction and `Dialog.Add`.
+//! Try-2 `Window` construction and `Window.Add`.
 //!
 //! **Documentation:** `docs/refactor-tui-try-2/target-api.md`
 
+use super::button::button_click_point;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use crate::vm::execute::io::tui::try2::registry::{RegistryError, ViewKind};
 use crate::vm::execute::io::tui::try2::session::Try2Root;
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
-use turbo_vision::core::command::CommandId;
-use turbo_vision::core::geometry::{Point, Rect};
+use turbo_vision::core::geometry::Rect;
 use turbo_vision::views::View;
-use turbo_vision::views::button::Button;
+use turbo_vision::views::window::Window;
 
-/// Creates a detached button (`Button.New`).
-pub(in crate::vm::execute::io::tui::try2) fn try2_button_new(
+/// Creates a modeless window root in the try-2 session (`Window.New`).
+pub(in crate::vm::execute::io::tui::try2) fn try2_window_new(
     worker: &mut Worker,
     bounds: Rect,
-    text: String,
-    command: CommandId,
-    is_default: bool,
+    title: String,
     line: SourceLocation,
 ) -> Result<u32, VmError> {
     if !worker.try2.is_open() {
         return Err(try2_session_closed_error(line));
     }
-    let button = Box::new(Button::new(bounds, &text, command, is_default));
-    Ok(worker.try2.insert_detached_button(button, bounds))
+
+    let window = Window::new(bounds, &title);
+    Ok(worker
+        .try2
+        .insert_root(Try2Root::Window(Box::new(window)), ViewKind::Window))
 }
 
-/// Attaches a detached button to a modal dialog (`Dialog.Add`).
-pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_attach_button(
+/// Attaches a detached button to a window (`Window.Add`).
+pub(in crate::vm::execute::io::tui::try2) fn try2_window_attach_button(
     worker: &mut Worker,
-    dialog_handle: u32,
+    window_handle: u32,
     button_handle: u32,
     line: SourceLocation,
 ) -> Result<(), VmError> {
+    if worker.try2.is_on_desktop(window_handle) {
+        return Err(runtime_error(
+            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            format!("Window handle {window_handle} is already on the desktop"),
+            "Call `Window.Add` before `Desktop.Add`.",
+            line,
+        ));
+    }
+
     worker
         .try2
         .registry
-        .require(dialog_handle, ViewKind::Dialog)
+        .require(window_handle, ViewKind::Window)
         .map_err(|error| registry_error(error, line))?;
     worker
         .try2
@@ -51,25 +61,25 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_attach_button(
         return Err(runtime_error(
             RUNTIME_INTRINSIC_STACK_STATE_ERROR,
             format!("Button handle {button_handle} is not detached"),
-            "Pass a handle from `Button.New` that has not been added to a dialog yet.",
+            "Pass a handle from `Button.New` that has not been added to a parent yet.",
             line,
         ));
     };
 
     let (view_id, click) = {
-        let Some(Try2Root::ModalDialog(dialog)) = worker.try2.root_mut(dialog_handle) else {
+        let Some(Try2Root::Window(window)) = worker.try2.root_mut(window_handle) else {
             return Err(runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                format!("Handle {dialog_handle} is not a Dialog"),
-                "Pass a handle from `Dialog.NewModal`.",
+                format!("Handle {window_handle} is not a Window"),
+                "Pass a handle from `Window.New`.",
                 line,
             ));
         };
-        let dialog_bounds = dialog.bounds();
-        let view_id = dialog.add(detached.button).as_u16();
+        let window_bounds = window.bounds();
+        let view_id = window.add(detached.button).as_u16();
         (
             view_id,
-            button_click_point(dialog_bounds, detached.local_bounds),
+            button_click_point(window_bounds, detached.local_bounds),
         )
     };
 
@@ -80,31 +90,6 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_attach_button(
         .map_err(|_| registry_error(RegistryError::UnknownHandle(button_handle), line))?;
     worker.try2.set_button_click_point(button_handle, click);
     Ok(())
-}
-
-/// Adds a button child to a try-2 modal dialog (`Dialog.AddButton` convenience API).
-pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_add_button(
-    worker: &mut Worker,
-    dialog_handle: u32,
-    bounds: Rect,
-    text: String,
-    command: CommandId,
-    is_default: bool,
-    line: SourceLocation,
-) -> Result<u32, VmError> {
-    let button_handle = try2_button_new(worker, bounds, text, command, is_default, line)?;
-    try2_dialog_attach_button(worker, dialog_handle, button_handle, line)?;
-    Ok(button_handle)
-}
-
-pub(in crate::vm::execute::io::tui::try2) fn button_click_point(
-    dialog_bounds: Rect,
-    button_bounds: Rect,
-) -> Point {
-    Point::new(
-        dialog_bounds.a.x + button_bounds.a.x + button_bounds.width() / 2,
-        dialog_bounds.a.y + button_bounds.a.y + button_bounds.height() / 2,
-    )
 }
 
 fn try2_session_closed_error(line: SourceLocation) -> VmError {
@@ -120,7 +105,7 @@ fn registry_error(error: RegistryError, line: SourceLocation) -> VmError {
     let (message, help) = match error {
         RegistryError::UnknownHandle(handle) => (
             format!("Handle {handle} is not live"),
-            "Use a handle returned by `Dialog.NewModal` in the active session.",
+            "Use a handle returned by `Window.New` in the active session.",
         ),
         RegistryError::WrongKind {
             handle,
@@ -128,7 +113,7 @@ fn registry_error(error: RegistryError, line: SourceLocation) -> VmError {
             actual,
         } => (
             format!("Handle {handle} expected {:?}, got {:?}", expected, actual),
-            "Pass a Dialog handle as the parent.",
+            "Pass a Window handle as the parent.",
         ),
     };
     runtime_error(RUNTIME_INTRINSIC_STACK_STATE_ERROR, message, help, line)
@@ -140,58 +125,51 @@ mod tests {
     use crate::tests::helpers::{loc, minimal_shared_state};
     use crate::vm::Worker;
     use crate::vm::execute::io::tui::try2::registry::ViewKind;
-    use crate::vm::execute::io::tui::try2::views::dialog::try2_dialog_new_modal;
+    use crate::vm::execute::io::tui::try2::views::button::try2_button_new;
     use fpas_bytecode::Chunk;
     use std::sync::Arc;
-    use turbo_vision::core::command::CM_OK;
+    use turbo_vision::core::command::CM_QUIT;
 
     #[test]
-    fn add_button_registers_upstream_view_id() {
+    fn new_registers_window_root() {
         let shared = Arc::new(minimal_shared_state(Chunk::new()));
         let mut worker = Worker::new_main(shared);
         worker.try2.open();
-        let dialog = try2_dialog_new_modal(&mut worker, Rect::new(2, 1, 30, 10), "T".into(), loc())
-            .expect("dialog");
-        let button = try2_dialog_add_button(
-            &mut worker,
-            dialog,
-            Rect::new(8, 5, 18, 7),
-            "OK".into(),
-            CM_OK,
-            true,
-            loc(),
-        )
-        .expect("button");
-        let entry = worker
-            .try2
-            .registry
-            .require(button, ViewKind::Button)
-            .expect("button entry");
-        assert_ne!(entry.view_id, 0);
+        let bounds = Rect::new(5, 3, 30, 10);
+        let handle = try2_window_new(&mut worker, bounds, "Test".into(), loc()).expect("window");
+        assert_eq!(
+            worker
+                .try2
+                .registry
+                .require(handle, ViewKind::Window)
+                .unwrap()
+                .kind,
+            ViewKind::Window
+        );
     }
 
     #[test]
-    fn button_new_and_dialog_add_registers_upstream_view_id() {
+    fn button_new_and_window_add_registers_upstream_view_id() {
         let shared = Arc::new(minimal_shared_state(Chunk::new()));
         let mut worker = Worker::new_main(shared);
         worker.try2.open();
-        let dialog = try2_dialog_new_modal(
+        let window = try2_window_new(
             &mut worker,
-            Rect::from_coords(5, 3, 30, 8),
-            "T".into(),
+            Rect::from_coords(5, 3, 30, 10),
+            "Test".into(),
             loc(),
         )
-        .expect("dialog");
+        .expect("window");
         let button = try2_button_new(
             &mut worker,
             Rect::from_coords(10, 4, 20, 6),
-            "OK".into(),
-            CM_OK,
-            true,
+            "Quit".into(),
+            CM_QUIT,
+            false,
             loc(),
         )
         .expect("button");
-        try2_dialog_attach_button(&mut worker, dialog, button, loc()).expect("attach");
+        try2_window_attach_button(&mut worker, window, button, loc()).expect("attach");
         let entry = worker
             .try2
             .registry

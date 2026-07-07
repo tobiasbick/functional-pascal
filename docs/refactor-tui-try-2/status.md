@@ -5,8 +5,8 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 ## Current phase
 
 **Phase 1** — **complete** (foundation; `TuiState` slimming deferred to phase 7).  
-**Phase 2** — **in progress** (vertical slice landed; interactive manual smoke open).  
-**Phase 3** — next: `Window.New`, `Desktop.Add`, `Run(App, OnCommand)` signature.
+**Phase 2** — **complete** (vertical slice + interactive manual smoke verified).  
+**Phase 3** — **in progress** (Window/Desktop landed; chrome + `Run(App, OnCommand)` 2-arg sema pending).
 
 ## Phase 1 closure notes
 
@@ -39,6 +39,8 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 | FPAS run smoke test | `tests/tui/smoke/run_quit_try2_test.fpas` |
 | `Application.TestClickButton` (try-2 headless mouse) | `try2/testing.rs` |
 | `Application.New` alias | sema + compiler → `ApplicationOpen` |
+| `Window.New`, `Window.Add`, `Desktop.Add` | `try2/views/window.rs`, `try2/views/desktop.rs`; intrinsics 480–482 |
+| FPAS window + quit smoke test | `tests/tui/smoke/window_quit_try2_test.fpas` |
 
 ## Tests passing
 
@@ -48,7 +50,7 @@ fpas test tests/tui/smoke/
 cargo test -p fpas-cli fpas_regression_suite_passes
 ```
 
-Covers: registry, geometry, session, dialog, button, headless ExecView → CM_OK, TestClickButton, run/quit smoke; full regression suite (try-1 + try-2 coexistence).
+Covers: registry, geometry, session, dialog, button, window, desktop, headless ExecView → CM_OK, TestClickButton, run/quit + window/quit smoke; full regression suite (try-1 + try-2 coexistence).
 
 ## Blockers
 
@@ -58,9 +60,8 @@ Headless try-2 modals run through `HeadlessTvApp::exec_modal_view`. Interactive 
 
 ## Next steps
 
-1. Phase 2 exit: interactive manual smoke (terminal)
-2. Phase 3: `Window.New`, `Desktop.Add`, `Application.Run(App, OnCommand)` 2-arg sema
-3. Remove `Application.Try2InjectCommand` when `Test.InjectEvent` lands
+1. Phase 3 remainder: `StaticText`, menu/status chrome (`chrome.rs`), `Application.Run(App, OnCommand)` 2-arg sema
+2. Port `examples/pascal/tui/turbo_vision_window.fpas` to try-2 API
 
 ## Unchanged (try-1 still authoritative)
 

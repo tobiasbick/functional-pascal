@@ -68,9 +68,7 @@ mod tests {
     use crate::tests::helpers::{loc, minimal_shared_state};
     use crate::vm::Worker;
     use crate::vm::execute::io::tui::try2::headless::try2_ensure_headless_app;
-    use crate::vm::execute::io::tui::try2::views::{
-        try2_dialog_add_button, try2_dialog_new_modal,
-    };
+    use crate::vm::execute::io::tui::try2::views::{try2_dialog_add_button, try2_dialog_new_modal};
     use fpas_bytecode::Chunk;
     use std::sync::Arc;
     use turbo_vision::core::command::CM_OK;
@@ -83,12 +81,11 @@ mod tests {
         worker.with_console(|console| console.resize(width, height));
         {
             let mut tui = worker.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-            worker
-                .with_console(|console| {
-                    tui.session
-                        .open_for_test(console, loc())
-                        .expect("open_for_test");
-                });
+            worker.with_console(|console| {
+                tui.session
+                    .open_for_test(console, loc())
+                    .expect("open_for_test");
+            });
         }
         worker.open_try2_session();
         worker
@@ -97,13 +94,9 @@ mod tests {
     #[test]
     fn headless_exec_view_default_ok_button_returns_cm_ok() {
         let mut worker = headless_try2_worker(40, 14);
-        let dialog = try2_dialog_new_modal(
-            &mut worker,
-            Rect::new(5, 3, 30, 8),
-            "Test".into(),
-            loc(),
-        )
-        .expect("dialog");
+        let dialog =
+            try2_dialog_new_modal(&mut worker, Rect::new(5, 3, 30, 8), "Test".into(), loc())
+                .expect("dialog");
         try2_dialog_add_button(
             &mut worker,
             dialog,

@@ -10,7 +10,7 @@ end;
 begin
   var App: Application := Application.OpenForTest(40, 14);
   var Dlg: Dialog := Dialog.NewModal(Bounds(5, 3, 30, 8), 'Test');
-  var Btn: Button := Button.New(Bounds(10, 4, 20, 6), 'OK', CM_OK, true);
+  var Btn: Button := Button.New(Bounds(10, 4, 10, 2), 'OK', CM_OK, true);
   Dialog.Add(Dlg, Btn);
   Application.TestClickButton(App, Btn);
   var Cmd: integer := Application.ExecView(App, Dlg);

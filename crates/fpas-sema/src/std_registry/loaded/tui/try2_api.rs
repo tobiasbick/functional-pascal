@@ -8,7 +8,12 @@ use fpas_std::std_symbols as s;
 ///
 /// **Documentation:** `docs/refactor-tui-try-2/target-api.md`
 pub(super) fn register_try2_api(checker: &mut Checker, types: &TuiTypes) {
-    for name in [s::STD_TUI_CM_OK, s::STD_TUI_CM_CANCEL, s::STD_TUI_CM_QUIT] {
+    for name in [
+        s::STD_TUI_CM_OK,
+        s::STD_TUI_CM_CANCEL,
+        s::STD_TUI_CM_CLOSE,
+        s::STD_TUI_CM_QUIT,
+    ] {
         super::super::super::define_const(checker, name, Ty::Integer);
     }
 
@@ -75,6 +80,31 @@ pub(super) fn register_try2_api(checker: &mut Checker, types: &TuiTypes) {
         vec![
             p("App", types.application.clone(), false),
             p("KeyCode", Ty::Integer, false),
+        ],
+    );
+    define_func(
+        checker,
+        s::STD_TUI_WINDOW_NEW,
+        vec![
+            p("Bounds", types.rect.clone(), false),
+            p("Title", Ty::String, false),
+        ],
+        types.window.clone(),
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_WINDOW_ADD,
+        vec![
+            p("Win", types.window.clone(), false),
+            p("Child", types.button.clone(), false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_DESKTOP_ADD,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Win", types.window.clone(), false),
         ],
     );
 }

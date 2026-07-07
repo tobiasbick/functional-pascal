@@ -6,12 +6,12 @@ Target module layout after try-2. Follow [AGENTS.md](../../AGENTS.md): one conce
 
 ### Current `try2/` tree (branch tip)
 
-Coexists with try-1 until phase 7. Pascal intrinsics wired for the phase-2 vertical slice.
+Coexists with try-1 until phase 7. Pascal intrinsics wired through phase 3 (partial).
 
 ```text
 crates/fpas-vm/src/vm/execute/io/tui/try2/
   mod.rs
-  session.rs       — Try2Session on Worker (registry, roots, detached buttons)
+  session.rs       — Try2Session on Worker (registry, roots, detached buttons, desktop windows)
   registry.rs      — ViewRegistry + ViewKind
   geometry.rs      — FPAS Rect ↔ turbo_vision Rect
   records.rs       — opaque handle record helpers
@@ -26,6 +26,8 @@ crates/fpas-vm/src/vm/execute/io/tui/try2/
     mod.rs
     dialog.rs      — Dialog.NewModal
     button.rs      — Button.New, Dialog.Add, Dialog.AddButton
+    window.rs      — Window.New, Window.Add
+    desktop.rs     — Desktop.Add
 ```
 
 `HeadlessTvApp` in `headless_tv_draw.rs` remains for headless paint/modal/run until phase 7 consolidation.

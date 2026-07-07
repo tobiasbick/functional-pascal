@@ -10,7 +10,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     let variants_dir = manifest_dir.join("src/intrinsic/tui/variants");
     println!("cargo:rerun-if-changed={}", variants_dir.display());
 
-    let fragments = ["session.inc", "chrome.inc", "test_host.inc", "widgets.inc", "try2.inc"];
+    let fragments = [
+        "session.inc",
+        "chrome.inc",
+        "test_host.inc",
+        "widgets.inc",
+        "try2.inc",
+    ];
 
     let mut variants = String::new();
     for fragment in fragments {

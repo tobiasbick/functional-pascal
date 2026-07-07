@@ -28,11 +28,15 @@ pub const STD_TUI_POINT: &str = std_tui!("Point");
 pub const STD_TUI_SIZE: &str = std_tui!("Size");
 pub const STD_TUI_CM_OK: &str = std_tui!("CM_OK");
 pub const STD_TUI_CM_CANCEL: &str = std_tui!("CM_CANCEL");
+pub const STD_TUI_CM_CLOSE: &str = std_tui!("CM_CLOSE");
 pub const STD_TUI_CM_QUIT: &str = std_tui!("CM_QUIT");
 pub const STD_TUI_DIALOG_NEW_MODAL: &str = std_tui!("Dialog.NewModal");
 pub const STD_TUI_DIALOG_ADD_BUTTON: &str = std_tui!("Dialog.AddButton");
 pub const STD_TUI_DIALOG_ADD: &str = std_tui!("Dialog.Add");
 pub const STD_TUI_BUTTON_NEW: &str = std_tui!("Button.New");
+pub const STD_TUI_WINDOW_NEW: &str = std_tui!("Window.New");
+pub const STD_TUI_WINDOW_ADD: &str = std_tui!("Window.Add");
+pub const STD_TUI_DESKTOP_ADD: &str = std_tui!("Desktop.Add");
 pub const STD_TUI_COMMAND_ACCEPT: &str = std_tui!("Command.Accept");
 pub const STD_TUI_COMMAND_CANCEL: &str = std_tui!("Command.Cancel");
 pub const STD_TUI_COMMAND_CLOSE: &str = std_tui!("Command.Close");
@@ -91,8 +95,7 @@ pub const STD_TUI_APPLICATION_EXEC_VIEW: &str = std_tui!("Application.ExecView")
 /// Queue a turbo-vision keyboard event for the next headless try-2 modal (internal test helper).
 pub const STD_TUI_APPLICATION_TRY2_INJECT_KEYBOARD: &str =
     std_tui!("Application.Try2InjectKeyboard");
-pub const STD_TUI_APPLICATION_TRY2_INJECT_COMMAND: &str =
-    std_tui!("Application.Try2InjectCommand");
+pub const STD_TUI_APPLICATION_TRY2_INJECT_COMMAND: &str = std_tui!("Application.Try2InjectCommand");
 /// Show an upstream Turbo Vision message box and return the closing command id.
 pub const STD_TUI_APPLICATION_MESSAGE_BOX: &str = std_tui!("Application.MessageBox");
 /// Read the current text of an input line (valid after `Application.ExecDialog`).
@@ -267,11 +270,15 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_SIZE,
     STD_TUI_CM_OK,
     STD_TUI_CM_CANCEL,
+    STD_TUI_CM_CLOSE,
     STD_TUI_CM_QUIT,
     STD_TUI_DIALOG_NEW_MODAL,
     STD_TUI_DIALOG_ADD_BUTTON,
     STD_TUI_DIALOG_ADD,
     STD_TUI_BUTTON_NEW,
+    STD_TUI_WINDOW_NEW,
+    STD_TUI_WINDOW_ADD,
+    STD_TUI_DESKTOP_ADD,
     STD_TUI_COMMAND_ACCEPT,
     STD_TUI_COMMAND_CANCEL,
     STD_TUI_COMMAND_CLOSE,

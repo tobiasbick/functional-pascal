@@ -28,8 +28,8 @@ impl Worker {
         }
 
         self.with_tui(|tui| {
-            use crate::vm::shared::TurboVisionObject;
             use super::super::tv_geometry::unknown_handle_error;
+            use crate::vm::shared::TurboVisionObject;
             let Some(TurboVisionObject::Button(button)) =
                 tui.turbo_vision.objects.get(&button_handle)
             else {
@@ -60,7 +60,7 @@ impl Worker {
             return Err(runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,
                 format!("Button handle {button_handle} has no try-2 click target"),
-                "Use a button attached via `Dialog.Add` or `Dialog.AddButton` in the active try-2 session.",
+                "Use a button attached via `Dialog.Add`, `Window.Add`, or `Dialog.AddButton` in the active try-2 session.",
                 line,
             ));
         };
@@ -85,9 +85,7 @@ impl Worker {
 mod tests {
     use super::*;
     use crate::tests::helpers::{loc, minimal_shared_state};
-    use crate::vm::execute::io::tui::try2::views::{
-        try2_dialog_add_button, try2_dialog_new_modal,
-    };
+    use crate::vm::execute::io::tui::try2::views::{try2_dialog_add_button, try2_dialog_new_modal};
     use fpas_bytecode::Chunk;
     use std::sync::Arc;
     use turbo_vision::core::command::CM_OK;

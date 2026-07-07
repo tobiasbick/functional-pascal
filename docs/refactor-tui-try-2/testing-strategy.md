@@ -84,7 +84,7 @@ end;
 begin
   var App := Application.OpenForTest(40, 14);
   var Dlg := Dialog.NewModal(Bounds(5, 3, 30, 8), 'Test');
-  var Btn := Button.New(Bounds(10, 4, 20, 6), 'OK', CM_OK, true);
+  var Btn := Button.New(Bounds(10, 4, 10, 2), 'OK', CM_OK, true);
   Dlg.Add(Btn);
   Test.Click(App, Btn);   { interim: Application.TestClickButton(App, Btn) }
   var Cmd := Application.ExecView(App, Dlg);
@@ -131,9 +131,14 @@ Final: `fpas test tests/` or `cargo test -p fpas-cli fpas_regression_suite_passe
 
 ## Interactive manual checklist
 
-From [terminal-checklist.md](../pascal/std/tui/terminal-checklist.md) — run after phase 6:
+From [terminal-checklist.md](../pascal/std/tui/terminal-checklist.md) — run after phase 2 (try-2 vertical slice):
 
-- [ ] Modal dialog: keyboard OK/Cancel
+```bash
+fpas run examples/pascal/tui/modal_button_try2.fpas
+```
+
+- [ ] Modal: OK and Cancel with mouse click
+- [ ] Modal: Enter on default OK, Esc on Cancel
 - [ ] Mouse click on check box and radio button
 - [ ] Menu accelerator and pull-down command
 - [ ] Window behind dialog z-order

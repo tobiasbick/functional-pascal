@@ -64,10 +64,7 @@ impl Compiler {
                 for arg in args {
                     self.compile_expr(arg)?;
                 }
-                self.emit_intrinsic_unit(
-                    Intrinsic::Tui(TuiIntrinsic::Try2InjectCommand),
-                    location,
-                );
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::Try2InjectCommand), location);
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_TRY2_INJECT_KEYBOARD => {
@@ -84,6 +81,30 @@ impl Compiler {
                     Intrinsic::Tui(TuiIntrinsic::Try2InjectKeyboard),
                     location,
                 );
+                Ok(true)
+            }
+            s::STD_TUI_WINDOW_NEW => {
+                self.expect_exact_args(s::STD_TUI_WINDOW_NEW, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::WindowNew), location);
+                Ok(true)
+            }
+            s::STD_TUI_WINDOW_ADD => {
+                self.expect_exact_args(s::STD_TUI_WINDOW_ADD, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::WindowAdd), location);
+                Ok(true)
+            }
+            s::STD_TUI_DESKTOP_ADD => {
+                self.expect_exact_args(s::STD_TUI_DESKTOP_ADD, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::DesktopAdd), location);
                 Ok(true)
             }
             _ => Ok(false),

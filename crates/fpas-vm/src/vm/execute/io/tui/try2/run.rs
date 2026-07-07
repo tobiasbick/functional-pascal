@@ -46,10 +46,7 @@ pub(in crate::vm::execute::io::tui) fn try2_application_run(
     try2_live_application_run(worker, line)
 }
 
-fn try2_headless_application_run(
-    worker: &mut Worker,
-    line: SourceLocation,
-) -> Result<(), VmError> {
+fn try2_headless_application_run(worker: &mut Worker, line: SourceLocation) -> Result<(), VmError> {
     try2_ensure_headless_app(worker, line)?;
     let mut idle_steps = 0usize;
 
@@ -110,9 +107,7 @@ fn try2_live_application_run(worker: &mut Worker, line: SourceLocation) -> Resul
     worker.turbo_vision_set_live_app_running(true);
 
     loop {
-        if !worker.turbo_vision_live_app_running()
-            || worker.with_tui(|tui| tui.quit_requested)
-        {
+        if !worker.turbo_vision_live_app_running() || worker.with_tui(|tui| tui.quit_requested) {
             return Ok(());
         }
 

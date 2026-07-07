@@ -1,0 +1,28 @@
+program WindowQuitTry2Test;
+
+uses Std.Tui, Std.Test;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+procedure OnCommand(App: Application; Cmd: integer);
+begin
+  if Cmd = CM_QUIT then
+  begin
+    Application.Quit(App)
+  end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(60, 20);
+  var Win: Window := Window.New(Bounds(5, 3, 30, 10), 'Test');
+  var Btn: Button := Button.New(Bounds(10, 4, 10, 2), 'Quit', CM_QUIT, false);
+  Window.Add(Win, Btn);
+  Desktop.Add(App, Win);
+  Application.OnCommand(App, OnCommand);
+  Application.TestClickButton(App, Btn);
+  Application.Run(App);
+  Application.CloseForTest(App)
+end.

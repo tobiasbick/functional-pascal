@@ -17,7 +17,8 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 | `Application.TestClickButton` | ✅ try-2 path | `try2/testing.rs` |
 | `Try2InjectCommand` / `Try2InjectKeyboard` | ✅ interim | `try2/intrinsics.rs` — remove when `Test.InjectEvent` lands |
 | `CM_OK`, `CM_CANCEL`, `CM_QUIT` | ✅ | sema + `fpas-std/tui/cm_constants.rs` |
-| `Window.New`, `Desktop.Add`, … | ❌ phase 3+ | — |
+| `Window.New`, `Window.Add`, `Desktop.Add` | ✅ | `try2/views/window.rs`, `try2/views/desktop.rs` |
+| `StaticText`, `MenuBar`, `StatusLine` | ❌ phase 3 remainder | `chrome.rs` |
 
 ## Application and session
 
@@ -59,9 +60,9 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 | `radiobutton::RadioButton` | `RadioButton` | ❌ phase 4 |
 | `memo::Memo` | `Memo` | ❌ phase 4 |
 | `text_viewer::TextViewer` | `TextViewer` | ❌ phase 4 |
-| `window::Window` | `Window` | ❌ phase 3 |
-| `menu_bar::MenuBar` | `MenuBar` | ❌ phase 3 (`chrome.rs`) |
-| `status_line::StatusLine` | `StatusLine` | ❌ phase 3 (`chrome.rs`) |
+| `window::Window` | `Window` | ✅ `Window.New`, `Window.Add`, `Desktop.Add` |
+| `menu_bar::MenuBar` | `MenuBar` | ❌ phase 3 remainder (`chrome.rs`) |
+| `status_line::StatusLine` | `StatusLine` | ❌ phase 3 remainder (`chrome.rs`) |
 
 ## Controls (later phases)
 

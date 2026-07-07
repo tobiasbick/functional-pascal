@@ -4,9 +4,11 @@
 
 use super::registry::{ViewKind, ViewRegistry};
 use std::collections::HashMap;
+use std::collections::HashSet;
 use turbo_vision::core::geometry::{Point, Rect};
 use turbo_vision::views::button::Button;
 use turbo_vision::views::dialog::Dialog;
+use turbo_vision::views::window::Window;
 
 /// Button constructed by `Button.New` and not yet attached to a dialog.
 pub(crate) struct DetachedButton {
@@ -17,6 +19,7 @@ pub(crate) struct DetachedButton {
 /// Owned top-level widget waiting for modal exec or desktop attach.
 pub(crate) enum Try2Root {
     ModalDialog(Box<Dialog>),
+    Window(Box<Window>),
 }
 
 /// Rust-owned try-2 session (coexists with try-1 `TurboVisionState` until phase 7).
@@ -30,6 +33,8 @@ pub(crate) struct Try2Session {
     detached_buttons: HashMap<u32, DetachedButton>,
     /// Headless test click targets keyed by try-2 button handle.
     button_clicks: HashMap<u32, Point>,
+    /// Window handles attached to the upstream desktop via `Desktop.Add`.
+    desktop_windows: HashSet<u32>,
 }
 
 impl Try2Session {
@@ -41,6 +46,7 @@ impl Try2Session {
         self.roots.clear();
         self.detached_buttons.clear();
         self.button_clicks.clear();
+        self.desktop_windows.clear();
     }
 
     /// Returns `true` after [`Self::open`].
@@ -82,11 +88,7 @@ impl Try2Session {
     }
 
     /// Inserts a detached button and returns its FPAS handle.
-    pub fn insert_detached_button(
-        &mut self,
-        button: Box<Button>,
-        local_bounds: Rect,
-    ) -> u32 {
+    pub fn insert_detached_button(&mut self, button: Box<Button>, local_bounds: Rect) -> u32 {
         let handle = self.registry.allocate(0, ViewKind::Button);
         self.detached_buttons.insert(
             handle,
@@ -117,6 +119,17 @@ impl Try2Session {
     /// Validates session is open.
     pub fn require_open(&self) -> bool {
         self.session_open
+    }
+
+    /// Returns `true` when `handle` was passed to `Desktop.Add`.
+    #[must_use]
+    pub fn is_on_desktop(&self, handle: u32) -> bool {
+        self.desktop_windows.contains(&handle)
+    }
+
+    /// Records that a window handle now lives on the upstream desktop.
+    pub fn mark_desktop_window(&mut self, handle: u32) {
+        self.desktop_windows.insert(handle);
     }
 }
 

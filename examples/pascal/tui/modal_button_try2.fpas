@@ -1,0 +1,39 @@
+{ Try-2 Turbo Vision modal demo (branch refactor/tui-try-2). }
+{ Run in a terminal: click OK or Cancel, or use Enter / Esc. }
+{ Rect fields are x, y, width, height (not corner coordinates). }
+
+program TuiModalButtonTry2;
+
+uses Std.Console, Std.Tui;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+begin
+  var App: Application := Application.Open();
+  var Dlg: Dialog := Dialog.NewModal(Bounds(10, 4, 34, 10), 'Try-2 modal');
+  var OkBtn: Button := Button.New(Bounds(6, 6, 10, 2), 'OK', CM_OK, true);
+  var CancelBtn: Button := Button.New(Bounds(18, 6, 12, 2), 'Cancel', CM_CANCEL, false);
+  Dialog.Add(Dlg, OkBtn);
+  Dialog.Add(Dlg, CancelBtn);
+  var Cmd: integer := Application.ExecView(App, Dlg);
+  if Cmd = CM_OK then
+  begin
+    WriteLn('OK')
+  end
+  else if Cmd = CM_CANCEL then
+  begin
+    WriteLn('Cancel')
+  end
+  else if Cmd = CM_CLOSE then
+  begin
+    WriteLn('Close')
+  end
+  else
+  begin
+    WriteLn('Command: ', Cmd)
+  end;
+  Application.Close(App)
+end.

@@ -5,3 +5,6 @@
     ButtonNew = 477,
     DialogAdd = 478,
     Try2InjectCommand = 479,
+    WindowNew = 480,
+    WindowAdd = 481,
+    DesktopAdd = 482,

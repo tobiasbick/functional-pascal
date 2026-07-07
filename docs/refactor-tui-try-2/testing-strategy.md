@@ -2,6 +2,16 @@
 
 Test plan for try-2. Goal: prove **user-visible behavior** and **thin bridge invariants**, not snapshot/reconcile internals.
 
+## Current (landed on branch)
+
+| Test | Path |
+| --- | --- |
+| Modal OK via `ExecView` | `tests/tui/smoke/modal_button_try2_test.fpas` |
+| Run / `OnCommand` / `CM_QUIT` | `tests/tui/smoke/run_quit_try2_test.fpas` |
+| Rust unit tests | `cargo test -p fpas-vm try2::` (registry, geometry, events, dialog, button, modals) |
+
+try-1 `tests/tui/controls/*` (37 files) still run unchanged — coexistence routing in `try2_should_handle_application_run()`.
+
 ## Principles
 
 1. **Prefer real upstream paths** — headless `exec_view` + `put_event` over `TestSetDialogResult`.
@@ -12,11 +22,13 @@ Test plan for try-2. Goal: prove **user-visible behavior** and **thin bridge inv
 
 ## Test directory layout (target)
 
+Final names may drop the `_try2` suffix when try-1 tests are removed (phase 7).
+
 ```text
 tests/tui/
   smoke/
-    modal_button_test.fpas
-    run_quit_test.fpas
+    modal_button_try2_test.fpas   { landed — target: modal_button_test.fpas }
+    run_quit_try2_test.fpas       { landed — target: run_quit_test.fpas }
   views/
     button_test.fpas
     dialog_test.fpas
@@ -74,7 +86,7 @@ begin
   var Dlg := Dialog.NewModal(Bounds(5, 3, 30, 8), 'Test');
   var Btn := Button.New(Bounds(10, 4, 20, 6), 'OK', CM_OK, true);
   Dlg.Add(Btn);
-  Test.Click(App, Btn);   { or Test.InjectEvent — pick one API }
+  Test.Click(App, Btn);   { interim: Application.TestClickButton(App, Btn) }
   var Cmd := Application.ExecView(App, Dlg);
   AssertEquals(CM_OK, Cmd);
   Application.CloseForTest(App)
@@ -97,8 +109,8 @@ end.
 | --- | --- |
 | `registry.rs` | invalid handle, use-after-close, duplicate free |
 | `geometry.rs` | rect round-trip |
-| `events.rs` | command dispatches to callback; `CM_QUIT` stops run |
-| `headless.rs` | draw produces non-empty buffer |
+| `events.rs` | command ids pass through unchanged ✅; full callback dispatch covered by FPAS smoke |
+| `headless.rs` | draw produces non-empty buffer (via `HeadlessTvApp` + modal smoke) |
 
 Keep tests in the same file as the module when under ~100 lines; otherwise `#[cfg(test)] mod tests` in submodule.
 

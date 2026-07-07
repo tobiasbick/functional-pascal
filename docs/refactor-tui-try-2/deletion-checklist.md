@@ -22,6 +22,11 @@ Complete list of try-1 artifacts to remove during [phase 7](migration-phases.md#
 - `Application.TestSetFileDialogResult`, `TestSetDialogResult`
 - `Command.Quit`, `Command.Close`, `Command.Accept`, `Command.Cancel`
 
+### Interim try-2-only symbols (remove before public spec)
+
+- `Dialog.AddButton` — convenience wrapper; prefer `Button.New` + `Dialog.Add`
+- `Application.Try2InjectKeyboard`, `Application.Try2InjectCommand` — replace with `Test.InjectEvent` / `Test.Click`
+
 ### Replaced symbols (not deleted, renamed)
 
 | try-1 | try-2 |
@@ -37,6 +42,8 @@ Complete list of try-1 artifacts to remove during [phase 7](migration-phases.md#
 ## Bytecode intrinsics
 
 Remove `TuiCreate*` and related try-1 variants from `fpas-bytecode` (grep `TuiCreate`, `TuiAddChild`, `TuiInputText`, `TuiPump`, `TuiTestSet`).
+
+Remove try-2 interim variants from `try2.inc` when superseded: `DialogAddButton`, `Try2InjectKeyboard`, `Try2InjectCommand` (grep `Try2Inject`, `DialogAddButton`).
 
 Add try-2 intrinsics per [upstream-mapping.md](upstream-mapping.md).
 

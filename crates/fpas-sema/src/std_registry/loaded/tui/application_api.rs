@@ -18,6 +18,12 @@ pub(super) fn register_application_api(
         vec![],
         types.application.clone(),
     );
+    define_func(
+        checker,
+        s::STD_TUI_APPLICATION_NEW,
+        vec![],
+        types.application.clone(),
+    );
     define_proc(
         checker,
         s::STD_TUI_APPLICATION_CLOSE,

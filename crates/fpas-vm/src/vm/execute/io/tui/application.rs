@@ -28,7 +28,11 @@ impl Worker {
                 self.close_tui_application_state(line)?;
             }
             Intrinsic::Tui(TuiIntrinsic::ApplicationRun) => {
-                self.tui_application_run(line)?;
+                if self.try2_should_handle_application_run() {
+                    super::try2::try2_application_run(self, line)?;
+                } else {
+                    self.tui_application_run(line)?;
+                }
                 self.push(Value::Unit)?;
             }
             Intrinsic::Tui(TuiIntrinsic::ApplicationSize) => {

@@ -220,4 +220,10 @@ impl Worker {
     pub(in crate::vm::execute::io::tui) fn open_try2_session(&mut self) {
         self.try2.open();
     }
+
+    /// Returns `true` when `Application.Run` should use the try-2 loop instead of try-1.
+    pub(in crate::vm::execute::io::tui) fn try2_should_handle_application_run(&self) -> bool {
+        self.try2.is_open()
+            && self.with_tui(|tui| tui.turbo_vision.objects.is_empty())
+    }
 }

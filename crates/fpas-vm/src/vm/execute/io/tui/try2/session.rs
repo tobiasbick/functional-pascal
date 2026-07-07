@@ -4,7 +4,15 @@
 
 use super::registry::{ViewKind, ViewRegistry};
 use std::collections::HashMap;
+use turbo_vision::core::geometry::{Point, Rect};
+use turbo_vision::views::button::Button;
 use turbo_vision::views::dialog::Dialog;
+
+/// Button constructed by `Button.New` and not yet attached to a dialog.
+pub(crate) struct DetachedButton {
+    pub button: Box<Button>,
+    pub local_bounds: Rect,
+}
 
 /// Owned top-level widget waiting for modal exec or desktop attach.
 pub(crate) enum Try2Root {
@@ -18,6 +26,10 @@ pub(crate) struct Try2Session {
     session_open: bool,
     app_handle: Option<u32>,
     roots: HashMap<u32, Try2Root>,
+    /// Buttons from `Button.New` awaiting `Dialog.Add`.
+    detached_buttons: HashMap<u32, DetachedButton>,
+    /// Headless test click targets keyed by try-2 button handle.
+    button_clicks: HashMap<u32, Point>,
 }
 
 impl Try2Session {
@@ -27,6 +39,8 @@ impl Try2Session {
         self.session_open = false;
         self.app_handle = None;
         self.roots.clear();
+        self.detached_buttons.clear();
+        self.button_clicks.clear();
     }
 
     /// Returns `true` after [`Self::open`].
@@ -65,6 +79,39 @@ impl Try2Session {
     /// Removes a root widget (for modal exec).
     pub fn take_root(&mut self, handle: u32) -> Option<Try2Root> {
         self.roots.remove(&handle)
+    }
+
+    /// Inserts a detached button and returns its FPAS handle.
+    pub fn insert_detached_button(
+        &mut self,
+        button: Box<Button>,
+        local_bounds: Rect,
+    ) -> u32 {
+        let handle = self.registry.allocate(0, ViewKind::Button);
+        self.detached_buttons.insert(
+            handle,
+            DetachedButton {
+                button,
+                local_bounds,
+            },
+        );
+        handle
+    }
+
+    /// Removes a detached button for `Dialog.Add`.
+    pub fn take_detached_button(&mut self, handle: u32) -> Option<DetachedButton> {
+        self.detached_buttons.remove(&handle)
+    }
+
+    /// Records the screen point used by headless `Application.TestClickButton`.
+    pub fn set_button_click_point(&mut self, handle: u32, point: Point) {
+        self.button_clicks.insert(handle, point);
+    }
+
+    /// Screen point for a try-2 button handle, if registered.
+    #[must_use]
+    pub fn button_click_point(&self, handle: u32) -> Option<Point> {
+        self.button_clicks.get(&handle).copied()
     }
 
     /// Validates session is open.

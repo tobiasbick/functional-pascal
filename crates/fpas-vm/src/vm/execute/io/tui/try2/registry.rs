@@ -80,6 +80,15 @@ impl ViewRegistry {
         self.entries.remove(&handle)
     }
 
+    /// Updates the upstream view id for an existing handle (detached → attached).
+    pub fn set_view_id(&mut self, handle: u32, view_id: u16) -> Result<(), RegistryError> {
+        let Some(entry) = self.entries.get_mut(&handle) else {
+            return Err(RegistryError::UnknownHandle(handle));
+        };
+        entry.view_id = view_id;
+        Ok(())
+    }
+
     /// Drop all entries (session close).
     pub fn clear(&mut self) {
         self.entries.clear();
@@ -134,6 +143,14 @@ mod tests {
             registry.require(h, ViewKind::Button),
             Err(RegistryError::WrongKind { .. })
         ));
+    }
+
+    #[test]
+    fn set_view_id_updates_entry() {
+        let mut registry = ViewRegistry::new();
+        let h = registry.allocate(0, ViewKind::Button);
+        registry.set_view_id(h, 7).expect("set");
+        assert_eq!(registry.get(h).unwrap().view_id, 7);
     }
 
     #[test]

@@ -1,6 +1,6 @@
 # Verification
 
-Definition of done for the try-2 TUI rewrite. All items must pass before deleting [this plan directory](README.md).
+Definition of done for the try-2 TUI rewrite. **All items apply at phase 7 completion** — not the current coexistence branch. For branch progress see [status.md](status.md).
 
 ## Build and format
 
@@ -47,10 +47,12 @@ All must return **no matches** (except git history).
 - [ ] Examples under `examples/pascal/tui/` compile and run.
 - [ ] [terminal-checklist.md](../pascal/std/tui/terminal-checklist.md) updated.
 
-## API completeness (phase 1 scope)
+## API completeness (final public spec)
 
-- [ ] `Application.New`, `Close`, `Size`, `OpenForTest`, `CloseForTest`
-- [ ] `Application.Run`, `Quit`, `ExecView`
+Partial on branch today — see [upstream-mapping.md](upstream-mapping.md#implementation-status-branch-refactortui-try-2-2026-07-07).
+
+- [ ] `Application.New`, `Close`, `Size`, `OpenForTest`, `CloseForTest` — **partial:** `New`/session via try-1 + `try2.reset()`
+- [ ] `Application.Run`, `Quit`, `ExecView` — **partial:** try-2 path landed for headless smoke
 - [ ] `Application.MessageBox`, `RunFileDialog`
 - [ ] `Desktop.Add`
 - [ ] `Dialog`, `Window`, `Button`, `StaticText`, `InputLine`, `ListBox`, `CheckBox`, `RadioButton`, `Memo`, `TextViewer`

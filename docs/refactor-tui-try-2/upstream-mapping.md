@@ -4,15 +4,30 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 
 **Sources:** [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust) tag `v2.0.0` — `src/lib.rs`, `src/views/`, `src/app/application.rs`, `src/helpers/`.
 
+## Implementation status (branch `refactor/tui-try-2`, 2026-07-07)
+
+| FPAS symbol | Status | VM location |
+| --- | --- | --- |
+| `Dialog.NewModal` | ✅ | `try2/views/dialog.rs` |
+| `Button.New`, `Dialog.Add` | ✅ | `try2/views/button.rs` |
+| `Dialog.AddButton` | ✅ convenience | `try2/views/button.rs` |
+| `Application.ExecView` | ✅ | `try2/modals.rs`, `try2/headless.rs` |
+| `Application.Run` + `OnCommand` | ✅ partial | `try2/run.rs` — uses `Application.OnCommand` registration; 2-arg `Run` deferred |
+| `Application.Quit` | ✅ via try-1 | `quit_requested`; try-2 run loop honors it |
+| `Application.TestClickButton` | ✅ try-2 path | `try2/testing.rs` |
+| `Try2InjectCommand` / `Try2InjectKeyboard` | ✅ interim | `try2/intrinsics.rs` — remove when `Test.InjectEvent` lands |
+| `CM_OK`, `CM_CANCEL`, `CM_QUIT` | ✅ | sema + `fpas-std/tui/cm_constants.rs` |
+| `Window.New`, `Desktop.Add`, … | ❌ phase 3+ | — |
+
 ## Application and session
 
-| Upstream Rust | FPAS try-2 | VM module |
+| Upstream Rust | FPAS try-2 | VM module (landed → target) |
 | --- | --- | --- |
-| `Application::new()` | `Application.New` / first interactive op | `session.rs` |
-| `Application::run()` | `Application.Run` | `run.rs` |
-| `Application::get_event()` | Internal run loop | `run.rs` |
-| `Application::handle_event()` | Internal + callbacks | `events.rs` |
-| `Application::exec_view(Box<dyn View>)` | `Application.ExecView` | `modals.rs` |
+| `Application::new()` | `Application.New` / first interactive op | `try2/app.rs` → `session.rs` |
+| `Application::run()` | `Application.Run` | `try2/run.rs` → `run.rs` |
+| `Application::get_event()` | Internal run loop | `try2/run.rs` |
+| `Application::handle_event()` | Internal + callbacks | `try2/events.rs` → `events.rs` |
+| `Application::exec_view(Box<dyn View>)` | `Application.ExecView` | `try2/modals.rs` → `modals.rs` |
 | `Application::set_menu_bar` | `Application.SetMenuBar` | `chrome.rs` |
 | `Application::set_status_line` | `Application.SetStatusLine` | `chrome.rs` |
 | `Application::put_event` | `Test.InjectEvent` (headless) | `headless.rs` |
@@ -31,22 +46,24 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 | `Window::new` | `Window.New` | |
 | `Dialog::execute` | Used inside `exec_view` | Do not expose separately initially |
 
-## Controls (phase 1 — ship with vertical slice)
+## Controls (phase 2 vertical slice — partial)
 
-| Upstream type | FPAS | Upstream constructor |
+| Upstream type | FPAS | Status |
 | --- | --- | --- |
-| `button::Button` | `Button` | `Button::new(rect, text, cmd, default)` |
-| `static_text::StaticText` | `StaticText` | `StaticText::new` |
-| `input_line::InputLine` | `InputLine` | `InputLine::new` |
-| `listbox::ListBox` | `ListBox` | `ListBox::new` |
-| `checkbox::CheckBox` | `CheckBox` | `CheckBox::new` |
-| `radiobutton::RadioButton` | `RadioButton` | `RadioButton::new` |
-| `memo::Memo` | `Memo` | `Memo::new` |
-| `text_viewer::TextViewer` | `TextViewer` | `TextViewer::new` |
-| `menu_bar::MenuBar` | `MenuBar` | Built from FPAS menu records |
-| `status_line::StatusLine` | `StatusLine` | Built from FPAS status records |
+| `button::Button` | `Button` | ✅ `Button.New`, `Dialog.Add` |
+| `dialog::Dialog` | `Dialog` | ✅ `Dialog.NewModal` only |
+| `static_text::StaticText` | `StaticText` | ❌ phase 4 |
+| `input_line::InputLine` | `InputLine` | ❌ phase 4 |
+| `listbox::ListBox` | `ListBox` | ❌ phase 4 |
+| `checkbox::CheckBox` | `CheckBox` | ❌ phase 4 |
+| `radiobutton::RadioButton` | `RadioButton` | ❌ phase 4 |
+| `memo::Memo` | `Memo` | ❌ phase 4 |
+| `text_viewer::TextViewer` | `TextViewer` | ❌ phase 4 |
+| `window::Window` | `Window` | ❌ phase 3 |
+| `menu_bar::MenuBar` | `MenuBar` | ❌ phase 3 (`chrome.rs`) |
+| `status_line::StatusLine` | `StatusLine` | ❌ phase 3 (`chrome.rs`) |
 
-## Controls (phase 2 — after vertical slice)
+## Controls (later phases)
 
 | Upstream type | FPAS | Priority |
 | --- | --- | --- |
@@ -119,15 +136,16 @@ Map each to FPAS `Test.*` helpers or delete FPAS stubs if redundant.
 
 ## Intrinsic naming convention (try-2)
 
+Land in `fpas-bytecode/src/intrinsic/tui/variants/try2.inc` (473+). Current:
+
 ```text
-TuiApplicationNew
-TuiApplicationRun
-TuiDialogNew
-TuiDialogAddButton
-TuiButtonNew
-TuiButtonSetText
-TuiExecView
-…
+DialogNewModal = 473
+DialogAddButton = 474
+ExecView = 475
+Try2InjectKeyboard = 476
+ButtonNew = 477
+DialogAdd = 478
+Try2InjectCommand = 479
 ```
 
-Group by widget in `fpas-bytecode` enum; keep alphabetical within TUI section.
+Future widgets: `TuiWindowNew`, `TuiDesktopAdd`, `TuiButtonSetText`, … — group by widget; keep alphabetical within the try-2 section.

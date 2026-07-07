@@ -31,6 +31,8 @@ pub const STD_TUI_CM_CANCEL: &str = std_tui!("CM_CANCEL");
 pub const STD_TUI_CM_QUIT: &str = std_tui!("CM_QUIT");
 pub const STD_TUI_DIALOG_NEW_MODAL: &str = std_tui!("Dialog.NewModal");
 pub const STD_TUI_DIALOG_ADD_BUTTON: &str = std_tui!("Dialog.AddButton");
+pub const STD_TUI_DIALOG_ADD: &str = std_tui!("Dialog.Add");
+pub const STD_TUI_BUTTON_NEW: &str = std_tui!("Button.New");
 pub const STD_TUI_COMMAND_ACCEPT: &str = std_tui!("Command.Accept");
 pub const STD_TUI_COMMAND_CANCEL: &str = std_tui!("Command.Cancel");
 pub const STD_TUI_COMMAND_CLOSE: &str = std_tui!("Command.Close");
@@ -52,6 +54,7 @@ pub const STD_TUI_EVENT: &str = std_tui!("TuiEvent");
 pub const STD_TUI_EVENT_KIND: &str = std_tui!("EventKind");
 pub const STD_TUI_EXIT_REASON: &str = std_tui!("ExitReason");
 pub const STD_TUI_APPLICATION_OPEN: &str = std_tui!("Application.Open");
+pub const STD_TUI_APPLICATION_NEW: &str = std_tui!("Application.New");
 pub const STD_TUI_APPLICATION_CLOSE: &str = std_tui!("Application.Close");
 /// Configure hosted-dispatch handlers from a single bundle; see `docs/pascal/std/tui/app/README.md`.
 pub const STD_TUI_APPLICATION_CONFIGURE: &str = std_tui!("Application.Configure");
@@ -88,6 +91,8 @@ pub const STD_TUI_APPLICATION_EXEC_VIEW: &str = std_tui!("Application.ExecView")
 /// Queue a turbo-vision keyboard event for the next headless try-2 modal (internal test helper).
 pub const STD_TUI_APPLICATION_TRY2_INJECT_KEYBOARD: &str =
     std_tui!("Application.Try2InjectKeyboard");
+pub const STD_TUI_APPLICATION_TRY2_INJECT_COMMAND: &str =
+    std_tui!("Application.Try2InjectCommand");
 /// Show an upstream Turbo Vision message box and return the closing command id.
 pub const STD_TUI_APPLICATION_MESSAGE_BOX: &str = std_tui!("Application.MessageBox");
 /// Read the current text of an input line (valid after `Application.ExecDialog`).
@@ -265,6 +270,8 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_CM_QUIT,
     STD_TUI_DIALOG_NEW_MODAL,
     STD_TUI_DIALOG_ADD_BUTTON,
+    STD_TUI_DIALOG_ADD,
+    STD_TUI_BUTTON_NEW,
     STD_TUI_COMMAND_ACCEPT,
     STD_TUI_COMMAND_CANCEL,
     STD_TUI_COMMAND_CLOSE,
@@ -285,6 +292,7 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_EVENT_KIND,
     STD_TUI_EXIT_REASON,
     STD_TUI_APPLICATION_OPEN,
+    STD_TUI_APPLICATION_NEW,
     STD_TUI_APPLICATION_CLOSE,
     STD_TUI_APPLICATION_CONFIGURE,
     STD_TUI_APPLICATION_RUN,
@@ -306,6 +314,7 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_APPLICATION_EXEC_DIALOG,
     STD_TUI_APPLICATION_EXEC_VIEW,
     STD_TUI_APPLICATION_TRY2_INJECT_KEYBOARD,
+    STD_TUI_APPLICATION_TRY2_INJECT_COMMAND,
     STD_TUI_APPLICATION_MESSAGE_BOX,
     STD_TUI_APPLICATION_INPUT_TEXT,
     STD_TUI_APPLICATION_CHECKED,

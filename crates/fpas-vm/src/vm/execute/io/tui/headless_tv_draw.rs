@@ -62,6 +62,16 @@ impl HeadlessTvApp {
         ));
     }
 
+    /// Queue a left mouse up at desktop coordinates for headless test input.
+    pub(in crate::vm::execute::io::tui) fn push_mouse_up(&self, x: i16, y: i16) {
+        self.event_inbox.push(Event::mouse(
+            EventType::MouseUp,
+            Point::new(x, y),
+            MB_LEFT_BUTTON,
+            false,
+        ));
+    }
+
     /// Queue a keyboard event for the next headless poll.
     pub(in crate::vm::execute::io::tui) fn push_keyboard(&self, key_code: KeyCode) {
         self.event_inbox.push(Event::keyboard(key_code));
@@ -133,6 +143,38 @@ impl HeadlessTvApp {
         };
         self.desktop.handle_event(&mut event);
         Ok(Some(event))
+    }
+
+    /// Queue a command event for the next headless poll.
+    pub(in crate::vm::execute::io::tui) fn push_command(&self, command: CommandId) {
+        self.event_inbox.push(Event::command(command));
+    }
+
+    /// One headless `Application.Run` iteration: draw, poll, dispatch, return command events.
+    pub(in crate::vm::execute::io::tui) fn run_step(
+        &mut self,
+    ) -> std::io::Result<Option<CommandId>> {
+        self.draw();
+        let _ = self.terminal.flush();
+
+        let Ok(Some(mut event)) = self.terminal.poll_event(Duration::from_millis(20)) else {
+            return Ok(None);
+        };
+
+        if let Some(ref mut menu_bar) = self.menu_bar {
+            menu_bar.handle_event(&mut event);
+        }
+        if event.what != EventType::Nothing {
+            self.desktop.handle_event(&mut event);
+        }
+        if let Some(ref mut status_line) = self.status_line {
+            status_line.handle_event(&mut event);
+        }
+
+        if event.what == EventType::Command {
+            return Ok(Some(event.command));
+        }
+        Ok(None)
     }
 
     fn update_desktop_bounds(&mut self) {

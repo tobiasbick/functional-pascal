@@ -5,5 +5,7 @@
 mod button;
 mod dialog;
 
-pub(in crate::vm::execute::io::tui::try2) use button::try2_dialog_add_button;
+pub(in crate::vm::execute::io::tui::try2) use button::{
+    try2_button_new, try2_dialog_add_button, try2_dialog_attach_button,
+};
 pub(in crate::vm::execute::io::tui::try2) use dialog::try2_dialog_new_modal;

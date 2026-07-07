@@ -1,6 +1,6 @@
 # IDE migration
 
-Notes for rewriting [`apps/ide`](../../apps/ide) on the try-2 API.
+Notes for rewriting [`apps/ide`](../../apps/ide) on the try-2 API. **Not started** — IDE still uses try-1 (`Application.Create*`, `AddChild`, …) until [phase 6](migration-phases.md#phase-6--ide-migration-2-4-days).
 
 ## Current IDE TUI usage
 

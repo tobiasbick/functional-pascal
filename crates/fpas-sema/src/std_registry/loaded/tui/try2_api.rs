@@ -23,6 +23,25 @@ pub(super) fn register_try2_api(checker: &mut Checker, types: &TuiTypes) {
     );
     define_func(
         checker,
+        s::STD_TUI_BUTTON_NEW,
+        vec![
+            p("Bounds", types.rect.clone(), false),
+            p("Text", Ty::String, false),
+            p("Command", Ty::Integer, false),
+            p("IsDefault", Ty::Boolean, false),
+        ],
+        types.button.clone(),
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_DIALOG_ADD,
+        vec![
+            p("Dlg", types.dialog.clone(), false),
+            p("Child", types.button.clone(), false),
+        ],
+    );
+    define_func(
+        checker,
         s::STD_TUI_DIALOG_ADD_BUTTON,
         vec![
             p("Dlg", types.dialog.clone(), false),
@@ -41,6 +60,14 @@ pub(super) fn register_try2_api(checker: &mut Checker, types: &TuiTypes) {
             p("Dialog", types.dialog.clone(), false),
         ],
         Ty::Integer,
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_TRY2_INJECT_COMMAND,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Command", Ty::Integer, false),
+        ],
     );
     define_proc(
         checker,

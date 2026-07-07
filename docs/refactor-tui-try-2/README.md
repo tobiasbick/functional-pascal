@@ -10,7 +10,8 @@ This is a **breaking rewrite**. There is no backward-compatibility requirement f
 | --- | --- |
 | Decision | Approved direction — Rust `turbo_vision::Application` is the single source of truth |
 | Branch | `refactor/tui-try-2` |
-| Implementation | Phase 1 in progress (internal `try2/` scaffold) |
+| Implementation | Phase 1 complete; phase 2 vertical slice in progress (`try2/` on `refactor/tui-try-2`) |
+| Smoke tests | `tests/tui/smoke/modal_button_try2_test.fpas`, `run_quit_try2_test.fpas` |
 | Baseline | [baseline.md](baseline.md) — try-1 snapshot before rewrite |
 | Upstream pin | `turbo-vision` 2.0, git tag `v2.0.0` (see workspace `Cargo.toml`) |
 

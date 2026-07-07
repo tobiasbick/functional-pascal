@@ -277,14 +277,14 @@ begin
 end.
 ```
 
-## API naming decisions (resolve during phase 1 impl)
+## API naming decisions (resolved on branch)
 
-| Topic | Options | Recommendation |
-| --- | --- | --- |
-| `New` vs `Create` | `Dialog.New` / `Dialog.Create` | `New` — matches upstream `::new` |
-| `Application.Open` vs `New` | Both | Keep `Open` only if docs already use it everywhere |
-| `Desktop.Add` vs `Application.AddWindow` | Namespace | `Desktop.Add` — matches upstream `desktop.add` |
-| `ExecView` vs `ExecDialog` | Name | `ExecView` — upstream `exec_view`; dialogs are views |
+| Topic | Decision |
+| --- | --- |
+| `New` vs `Create` | **`New`** — `Dialog.NewModal`, `Button.New` landed |
+| `Application.Open` vs `New` | **Both** — `Application.New` aliases `ApplicationOpen` |
+| `Desktop.Add` vs `Application.AddWindow` | **`Desktop.Add`** — not implemented yet (phase 3) |
+| `ExecView` vs `ExecDialog` | **`ExecView`** — intrinsic 475 landed |
 
 ## Sema and compiler impact
 

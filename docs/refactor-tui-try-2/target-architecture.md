@@ -106,12 +106,14 @@ Read-back after modal (`InputLine.Text`, `CheckBox.Checked`, …) queries the li
 ```text
 app.get_event / run inner loop
   → event.what == Command
-  → turbo_vision_command_to_fpas (identity mapping in try-2)
+  → try2_command_for_callback (identity — no command_map offset)
   → dispatch OnCommand(App, command_id)
-  → if Command == CM_QUIT → app.running = false
+  → if CM_QUIT or Application.Quit → stop run loop
 ```
 
-Unhandled keyboard/mouse after desktop dispatch → `OnKey` / `OnMouse` (same as try-1, without command translation).
+**Coexistence:** `Application.Run` uses try-2 loop when `Try2Session` is open and try-1 `turbo_vision.objects` is empty; otherwise try-1 run + offset translation still apply.
+
+Unhandled keyboard/mouse after desktop dispatch → `OnKey` / `OnMouse` (live try-2 run delegates unhandled input to try-1 helpers today).
 
 ## Headless architecture
 
@@ -119,9 +121,9 @@ Unhandled keyboard/mouse after desktop dispatch → `OnKey` / `OnMouse` (same as
 
 ```text
 OpenForTest(w, h)
-  → Terminal with TvHeadlessBackend (keep or simplify tv_headless_backend.rs)
-  → Application::new() using that terminal
-  → same Group::add / exec_view code as interactive mode
+  → FPAS console + TvHeadlessBackend (current: HeadlessTvApp in headless_tv_draw.rs)
+  → same Group::add / exec_view / run_step code paths as interactive mode
+  → target: single headless Application::new() terminal (phase 7 consolidation)
 ```
 
 ### Test input
@@ -131,7 +133,9 @@ OpenForTest(w, h)
 | `app.put_event(Event::…)` | Inject keys, commands, mouse |
 | Upstream `test-util` helpers | Prefer when they exist for a scenario |
 | `Test.Click(Button)` | Thin wrapper: resolve bounds → synthesize mouse event → `handle_event` |
-| `Test.SetModalResult(CommandId)` | **Remove** if `exec_view` can run headlessly with injected events |
+| `Application.TestClickButton` | **Interim landed name** on branch (`try2/testing.rs`) |
+| `Application.Try2InjectCommand` | **Interim** headless command injection for run smoke tests |
+| `Test.SetModalResult(CommandId)` | **Remove** when all modals use injected events (modal smoke already does) |
 
 Target: delete `TestSetDialogResult` / `TestSetFileDialogResult` stubs by driving real modal loops in headless mode.
 
@@ -142,11 +146,12 @@ Unchanged: [`Std.Test`](../../docs/pascal/std/testing/test.md) `AssertScreenLine
 ## Worker fields (target)
 
 ```rust
-// crates/fpas-vm/src/vm/worker.rs (conceptual)
+// crates/fpas-vm/src/vm/worker.rs (current + target)
 pub(crate) live_turbo_vision_app: Option<TurboVisionApplication>,
-pub(crate) tv_view_registry: ViewRegistry,
+pub(crate) try2: Try2Session,              // current coexistence bridge
+// target after phase 7: tv_view_registry on Worker or folded into session
 // TuiState retains: session, on_command, on_key, on_mouse, quit_requested
-// Remove: turbo_vision: TurboVisionState with TurboVisionObject map
+// Remove after phase 7: turbo_vision: TurboVisionState with TurboVisionObject map
 ```
 
 ## Concurrency

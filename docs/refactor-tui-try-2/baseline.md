@@ -73,30 +73,42 @@ Try-2 headless path should prefer `MockTerminal` + `put_event` over FPAS `TestSe
 
 Uses try-1 API throughout `src/` (menu, shell, dialog/open, about message box). Tests in `apps/ide/tests/`.
 
-## What try-2 changes first (phase 1)
+## What try-2 adds (phase 1 complete; phase 2 in progress)
 
-Internal-only additions on this branch (try-1 API still live):
+Phase 1 landed internal foundation; phase 2 added branch-only Pascal symbols (not yet in `docs/pascal/`). try-1 API and tests remain authoritative until phase 7.
+
+**Current `try2/` tree** (see [rust-layout.md](rust-layout.md)):
 
 ```text
 crates/fpas-vm/src/vm/execute/io/tui/try2/
-  mod.rs
-  registry.rs    — FpasViewId ↔ upstream ViewId
-  geometry.rs    — Rect conversion (extracted from tv_geometry.rs)
+  mod.rs, session.rs, registry.rs, geometry.rs, records.rs
+  events.rs, run.rs, headless.rs, modals.rs, app.rs, intrinsics.rs, testing.rs
+  views/dialog.rs, views/button.rs
 
-crates/fpas-std/src/tui/cm_constants.rs — upstream CM_* values for try-2 Pascal surface
+crates/fpas-std/src/tui/cm_constants.rs
 ```
 
-No Pascal-visible API switch until phase 2 vertical slice.
+**Branch-only Pascal surface** (coexists with try-1 on `refactor/tui-try-2`):
 
-## Verification commands at baseline
+- `Dialog.NewModal`, `Button.New`, `Dialog.Add`, `Dialog.AddButton`
+- `Application.ExecView`, `CM_OK` / `CM_CANCEL` / `CM_QUIT`
+- `Application.Try2InjectKeyboard`, `Application.Try2InjectCommand` (headless test helpers)
+- try-2 `Application.Run` when session is open and no try-1 widgets exist
 
-All pass on branch tip before phase 1 code:
+**Smoke tests:** `tests/tui/smoke/modal_button_try2_test.fpas`, `run_quit_try2_test.fpas`.
+
+## Verification commands (branch tip)
+
+try-1 suite must keep passing while both bridges coexist:
 
 ```bash
 cargo build --workspace
 cargo test --workspace
+cargo test -p fpas-vm try2::
+fpas test tests/tui/smoke/
 fpas test tests/tui/
 fpas test apps/ide/tests/
+cargo test -p fpas-cli fpas_regression_suite_passes
 ```
 
-Record results when phase 1 lands; try-1 suite must keep passing until deliberate break in phase 2.
+Recorded 2026-07-07 after phase 1 + phase 2 vertical slice: all green.

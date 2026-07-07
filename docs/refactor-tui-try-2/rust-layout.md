@@ -4,16 +4,31 @@ Target module layout after try-2. Follow [AGENTS.md](../../AGENTS.md): one conce
 
 ## VM bridge (`crates/fpas-vm/src/vm/execute/io/tui/`)
 
-### Phase 1 scaffold (landed on `refactor/tui-try-2`)
+### Current `try2/` tree (branch tip)
 
-Try-2 code lives under `try2/` until try-1 modules are deleted in phase 7:
+Coexists with try-1 until phase 7. Pascal intrinsics wired for the phase-2 vertical slice.
 
 ```text
 crates/fpas-vm/src/vm/execute/io/tui/try2/
   mod.rs
-  registry.rs    — ViewRegistry + ViewKind (tests included)
-  geometry.rs    — FPAS Rect ↔ turbo_vision Rect
+  session.rs       — Try2Session on Worker (registry, roots, detached buttons)
+  registry.rs      — ViewRegistry + ViewKind
+  geometry.rs      — FPAS Rect ↔ turbo_vision Rect
+  records.rs       — opaque handle record helpers
+  events.rs        — OnCommand dispatch (no command_map offset)
+  run.rs           — Application.Run (headless + live)
+  headless.rs      — headless ExecView ensure + export
+  modals.rs        — Application.ExecView
+  app.rs           — live Application::new (no try-1 populate)
+  intrinsics.rs    — try-2 VM dispatch
+  testing.rs       — TestClickButton try-2 path
+  views/
+    mod.rs
+    dialog.rs      — Dialog.NewModal
+    button.rs      — Button.New, Dialog.Add, Dialog.AddButton
 ```
+
+`HeadlessTvApp` in `headless_tv_draw.rs` remains for headless paint/modal/run until phase 7 consolidation.
 
 ### Target tree (after phase 7)
 

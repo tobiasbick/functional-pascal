@@ -1,0 +1,17 @@
+program RunQuitTry2Test;
+
+uses Std.Tui, Std.Test;
+
+procedure OnCommand(App: Application; Cmd: integer);
+begin
+  AssertEquals(CM_QUIT, Cmd);
+  Application.Quit(App)
+end;
+
+begin
+  var App: Application := Application.OpenForTest(40, 14);
+  Application.OnCommand(App, OnCommand);
+  Application.Try2InjectCommand(App, CM_QUIT);
+  Application.Run(App);
+  Application.CloseForTest(App)
+end.

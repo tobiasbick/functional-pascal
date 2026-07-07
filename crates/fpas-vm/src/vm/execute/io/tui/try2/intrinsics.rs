@@ -4,8 +4,10 @@
 
 use super::headless::try2_ensure_headless_app;
 use super::modals::try2_exec_view;
-use super::records::TUI_DIALOG_TYPE;
-use super::views::{try2_dialog_add_button, try2_dialog_new_modal};
+use super::records::{TUI_BUTTON_TYPE, TUI_DIALOG_TYPE};
+use super::views::{
+    try2_button_new, try2_dialog_add_button, try2_dialog_attach_button, try2_dialog_new_modal,
+};
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use crate::vm::execute::io::tui::handle_records::HANDLE_FIELD;
@@ -57,6 +59,27 @@ impl Worker {
                 )?;
                 self.push(Self::turbo_vision_button_record(button_handle))?;
             }
+            TuiIntrinsic::ButtonNew => {
+                let is_default = self.pop_bool(line)?;
+                let command = self.pop_int(line)?;
+                let command = u16::try_from(command).map_err(|_| {
+                    runtime_error(
+                        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                        "Button command id is outside the Turbo Vision u16 range",
+                        "Use a command id from 0 to 65535.",
+                        line,
+                    )
+                })?;
+                let text = self.pop_turbo_vision_string("Button text", line)?;
+                let bounds = self.pop_turbo_vision_rect(line)?;
+                let handle = try2_button_new(self, bounds, text, command, is_default, line)?;
+                self.push(Self::turbo_vision_button_record(handle))?;
+            }
+            TuiIntrinsic::DialogAdd => {
+                let button_handle = self.pop_try2_handle(TUI_BUTTON_TYPE, "Button", line)?;
+                let dialog_handle = self.pop_try2_handle(TUI_DIALOG_TYPE, "Dialog", line)?;
+                try2_dialog_attach_button(self, dialog_handle, button_handle, line)?;
+            }
             TuiIntrinsic::ExecView => {
                 let dialog_handle = self.pop_try2_handle(TUI_DIALOG_TYPE, "Dialog", line)?;
                 self.pop_tui_application(line)?;
@@ -75,6 +98,19 @@ impl Worker {
                     )
                 })?;
                 self.try2_inject_keyboard(key_code, line)?;
+            }
+            TuiIntrinsic::Try2InjectCommand => {
+                let command = self.pop_int(line)?;
+                self.pop_tui_application(line)?;
+                let command = u16::try_from(command).map_err(|_| {
+                    runtime_error(
+                        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                        format!("Command id {command} is outside the Turbo Vision u16 range"),
+                        "Use a command id from 0 to 65535.",
+                        line,
+                    )
+                })?;
+                self.try2_inject_command(command, line)?;
             }
             _ => return Ok(false),
         }
@@ -141,6 +177,26 @@ impl Worker {
         try2_ensure_headless_app(self, line)?;
         if let Some(app) = self.headless_tv_app.as_ref() {
             app.push_keyboard(key_code);
+        }
+        Ok(())
+    }
+
+    fn try2_inject_command(
+        &mut self,
+        command: u16,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        if !self.with_tui(|tui| tui.session.is_headless()) {
+            return Err(runtime_error(
+                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                "Application.Try2InjectCommand is only supported in headless OpenForTest sessions",
+                "Call `Application.OpenForTest` before injecting synthetic commands.",
+                line,
+            ));
+        }
+        try2_ensure_headless_app(self, line)?;
+        if let Some(app) = self.headless_tv_app.as_ref() {
+            app.push_command(command);
         }
         Ok(())
     }

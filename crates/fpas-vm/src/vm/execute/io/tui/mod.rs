@@ -167,7 +167,7 @@ impl Worker {
                 self.turbo_vision_quit(line)?;
             }
             Intrinsic::Tui(TuiIntrinsic::TestClickButton) => {
-                self.turbo_vision_test_click_button(line)?;
+                self.exec_test_click_button(line)?;
             }
             Intrinsic::Tui(TuiIntrinsic::TestClickMouse) => {
                 self.turbo_vision_test_click_mouse(line)?;

@@ -21,41 +21,43 @@ Estimates assume focused hobby-project pace (part-time).
 
 ---
 
-## Phase 1 — Foundation (2–3 days)
+## Phase 1 — Foundation (2–3 days) — **complete** (2026-07-07)
 
 **Work**
 
-- [x] Add `ViewRegistry` in `try2/registry.rs` (coexists with try-1; not wired to Worker yet).
-- [ ] Slim `TuiState` on Worker ([rust-layout.md](rust-layout.md)) — `Try2Session` on Worker landed; full `TuiState` slimming deferred
+- [x] Add `ViewRegistry` in `try2/registry.rs` (wired on `Worker` via `Try2Session`).
+- [x] ~~Slim `TuiState` on Worker~~ — **deferred to phase 7** ([rust-layout.md](rust-layout.md)): requires deleting try-1 `TurboVisionState`; `Try2Session` on `Worker` is the coexistence bridge until then.
 - [x] Implement `try2/session.rs` integration with `TuiSession.open` / `OpenForTest`
 - [x] Implement `try2/geometry.rs` rect conversion.
 - [x] Add `fpas-std/tui/cm_constants.rs` with core `CM_*` constants.
-- [ ] Sema + compiler stubs for `Application.New` / `Close` only.
+- [x] Sema + compiler for `Application.New` / `Close` — `Application.New` → `ApplicationOpen`; `Close` / `CloseForTest` reuse try-1 intrinsics + `try2.reset()` on close.
 - [x] Rust unit tests: registry allocate/validate/clear.
 
 **Exit criteria**
 
-- `cargo build` passes.
-- `cargo test -p fpas-vm` registry tests pass.
-- No user-facing API published yet (internal only).
+- [x] `cargo build` passes.
+- [x] `cargo test -p fpas-vm` registry tests pass.
+- [x] No *public* `docs/pascal/` spec for try-2 yet (internal/refactor docs only; try-2 Pascal symbols coexist on branch).
 
 ---
 
-## Phase 2 — Vertical slice: Button + Dialog + ExecView (3–4 days)
+## Phase 2 — Vertical slice: Button + Dialog + ExecView (3–4 days) — **in progress**
 
 **Work**
 
 - [x] `Dialog.NewModal`, `Dialog.Add(Button)` — Rust internal (`try2/views/`)
+- [x] `Button.New`, `Dialog.Add` — Pascal API + intrinsics (477/478); smoke test uses target pattern
 - [x] `Application.ExecView` → upstream `exec_view` (headless via `HeadlessTvApp::exec_modal_view`; interactive via `try2/app.rs`)
 - [x] `headless.rs`: headless modal loop + CRT export (`try2/headless.rs`, `headless_tv_draw.rs`)
-- [ ] `Test.InjectEvent` or click helper for button command.
+- [x] `Test.InjectEvent` or click helper for button command (`Application.TestClickButton` try-2 path).
 - [x] One FPAS test: modal OK returns `CM_OK` (`tests/tui/smoke/modal_button_try2_test.fpas`).
-- [ ] `events.rs`: `OnCommand` dispatch without offset translation.
+- [x] `events.rs`: `OnCommand` dispatch without offset translation (`try2/events.rs`)
+- [x] `Application.Run` on try-2 path (`try2/run.rs`; uses `Application.OnCommand` until 2-arg `Run` lands)
 
 **Exit criteria**
 
-- `fpas test tests/tui/smoke/modal_button_test.fpas` (new minimal test) passes.
-- Interactive smoke: manual run of tiny program in terminal (document in phase notes).
+- [x] `fpas test tests/tui/smoke/modal_button_try2_test.fpas` passes.
+- [ ] Interactive smoke: manual run of tiny program in terminal (document in phase notes).
 
 ---
 
@@ -63,8 +65,8 @@ Estimates assume focused hobby-project pace (part-time).
 
 **Work**
 
-- [ ] `Application.Run` with `OnCommand` callback parameter.
-- [ ] `Application.Quit` → `app.running = false`.
+- [ ] `Application.Run` with `OnCommand` callback parameter (sema overload; **partial:** try-2 run loop landed via `OnCommand` + `Run`).
+- [x] `Application.Quit` → stop run loop — **partial:** `quit_requested` honored on try-2 path; live `app.running` wiring TBD.
 - [ ] `Window.New`, `Window.Add`, `Desktop.Add`.
 - [ ] `StaticText`, menu/status chrome (`chrome.rs`).
 - [ ] FPAS tests: modeless window + quit command.
@@ -72,7 +74,7 @@ Estimates assume focused hobby-project pace (part-time).
 **Exit criteria**
 
 - Port simplified `examples/pascal/tui/turbo_vision_window.fpas` to new API.
-- `cargo test --workspace` passes (old TUI tests may still fail — expected).
+- `cargo test --workspace` passes (try-1 `tests/tui/controls/*` must stay green until phase 7 — coexistence routing).
 
 ---
 
@@ -127,6 +129,7 @@ Estimates assume focused hobby-project pace (part-time).
 **Work**
 
 - [ ] Remove all modules in [deletion-checklist.md](deletion-checklist.md).
+- [ ] **Slim `TuiState`**: drop `TurboVisionState`, `TurboVisionObject`, snapshot structs ([rust-layout.md](rust-layout.md)).
 - [ ] Remove old bytecode intrinsics and sema symbols.
 - [ ] Remove old `docs/pascal/std/tui/` pages; write new spec from [target-api.md](target-api.md).
 - [ ] Update skill, AGENTS.md bridge pointers, `.cursor/rules` TUI examples.

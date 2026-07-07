@@ -19,6 +19,11 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen), location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_NEW => {
+                self.expect_zero_args(s::STD_TUI_APPLICATION_NEW, args, location)?;
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::ApplicationOpen), location);
+                Ok(true)
+            }
             s::STD_TUI_APPLICATION_CLOSE => {
                 self.expect_exact_args(s::STD_TUI_APPLICATION_CLOSE, 1, args, location)?;
                 self.compile_expr(&args[0])?;

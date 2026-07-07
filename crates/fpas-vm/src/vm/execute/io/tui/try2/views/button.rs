@@ -9,10 +9,82 @@ use crate::vm::execute::io::tui::try2::session::Try2Root;
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 use turbo_vision::core::command::CommandId;
-use turbo_vision::core::geometry::Rect;
+use turbo_vision::core::geometry::{Point, Rect};
+use turbo_vision::views::View;
 use turbo_vision::views::button::Button;
 
-/// Adds a button child to a try-2 modal dialog.
+/// Creates a detached button (`Button.New`).
+pub(in crate::vm::execute::io::tui::try2) fn try2_button_new(
+    worker: &mut Worker,
+    bounds: Rect,
+    text: String,
+    command: CommandId,
+    is_default: bool,
+    line: SourceLocation,
+) -> Result<u32, VmError> {
+    if !worker.try2.is_open() {
+        return Err(try2_session_closed_error(line));
+    }
+    let button = Box::new(Button::new(bounds, &text, command, is_default));
+    Ok(worker
+        .try2
+        .insert_detached_button(button, bounds))
+}
+
+/// Attaches a detached button to a modal dialog (`Dialog.Add`).
+pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_attach_button(
+    worker: &mut Worker,
+    dialog_handle: u32,
+    button_handle: u32,
+    line: SourceLocation,
+) -> Result<(), VmError> {
+    worker
+        .try2
+        .registry
+        .require(dialog_handle, ViewKind::Dialog)
+        .map_err(|error| registry_error(error, line))?;
+    worker
+        .try2
+        .registry
+        .require(button_handle, ViewKind::Button)
+        .map_err(|error| registry_error(error, line))?;
+
+    let Some(detached) = worker.try2.take_detached_button(button_handle) else {
+        return Err(runtime_error(
+            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            format!("Button handle {button_handle} is not detached"),
+            "Pass a handle from `Button.New` that has not been added to a dialog yet.",
+            line,
+        ));
+    };
+
+    let (view_id, click) = {
+        let Some(Try2Root::ModalDialog(dialog)) = worker.try2.root_mut(dialog_handle) else {
+            return Err(runtime_error(
+                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                format!("Handle {dialog_handle} is not a Dialog"),
+                "Pass a handle from `Dialog.NewModal`.",
+                line,
+            ));
+        };
+        let dialog_bounds = dialog.bounds();
+        let view_id = dialog.add(detached.button).as_u16();
+        (
+            view_id,
+            button_click_point(dialog_bounds, detached.local_bounds),
+        )
+    };
+
+    worker
+        .try2
+        .registry
+        .set_view_id(button_handle, view_id)
+        .map_err(|_| registry_error(RegistryError::UnknownHandle(button_handle), line))?;
+    worker.try2.set_button_click_point(button_handle, click);
+    Ok(())
+}
+
+/// Adds a button child to a try-2 modal dialog (`Dialog.AddButton` convenience API).
 pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_add_button(
     worker: &mut Worker,
     dialog_handle: u32,
@@ -22,30 +94,34 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_add_button(
     is_default: bool,
     line: SourceLocation,
 ) -> Result<u32, VmError> {
-    worker
-        .try2
-        .registry
-        .require(dialog_handle, ViewKind::Dialog)
-        .map_err(|error| registry_error(error, line))?;
+    let button_handle = try2_button_new(worker, bounds, text, command, is_default, line)?;
+    try2_dialog_attach_button(worker, dialog_handle, button_handle, line)?;
+    Ok(button_handle)
+}
 
-    let Some(Try2Root::ModalDialog(dialog)) = worker.try2.root_mut(dialog_handle) else {
-        return Err(runtime_error(
-            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-            format!("Handle {dialog_handle} is not a Dialog"),
-            "Pass a handle from `Dialog.NewModal`.",
-            line,
-        ));
-    };
+pub(in crate::vm::execute::io::tui::try2) fn button_click_point(
+    dialog_bounds: Rect,
+    button_bounds: Rect,
+) -> Point {
+    Point::new(
+        dialog_bounds.a.x + button_bounds.a.x + button_bounds.width() / 2,
+        dialog_bounds.a.y + button_bounds.a.y + button_bounds.height() / 2,
+    )
+}
 
-    let button = Button::new(bounds, &text, command, is_default);
-    let view_id = dialog.add(Box::new(button)).as_u16();
-    Ok(worker.try2.registry.allocate(view_id, ViewKind::Button))
+fn try2_session_closed_error(line: SourceLocation) -> VmError {
+    runtime_error(
+        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+        "Try-2 TUI session is not open",
+        "Call `Application.New` before creating Turbo Vision widgets on the try-2 path.",
+        line,
+    )
 }
 
 fn registry_error(error: RegistryError, line: SourceLocation) -> VmError {
     let (message, help) = match error {
         RegistryError::UnknownHandle(handle) => (
-            format!("Dialog handle {handle} is not live"),
+            format!("Handle {handle} is not live"),
             "Use a handle returned by `Dialog.NewModal` in the active session.",
         ),
         RegistryError::WrongKind {
@@ -94,5 +170,36 @@ mod tests {
             .require(button, ViewKind::Button)
             .expect("button entry");
         assert_ne!(entry.view_id, 0);
+    }
+
+    #[test]
+    fn button_new_and_dialog_add_registers_upstream_view_id() {
+        let shared = Arc::new(minimal_shared_state(Chunk::new()));
+        let mut worker = Worker::new_main(shared);
+        worker.try2.open();
+        let dialog = try2_dialog_new_modal(
+            &mut worker,
+            Rect::from_coords(5, 3, 30, 8),
+            "T".into(),
+            loc(),
+        )
+        .expect("dialog");
+        let button = try2_button_new(
+            &mut worker,
+            Rect::from_coords(10, 4, 20, 6),
+            "OK".into(),
+            CM_OK,
+            true,
+            loc(),
+        )
+        .expect("button");
+        try2_dialog_attach_button(&mut worker, dialog, button, loc()).expect("attach");
+        let entry = worker
+            .try2
+            .registry
+            .require(button, ViewKind::Button)
+            .expect("button entry");
+        assert_ne!(entry.view_id, 0);
+        assert!(worker.try2.button_click_point(button).is_some());
     }
 }

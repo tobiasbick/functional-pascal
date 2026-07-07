@@ -2,3 +2,6 @@
     DialogAddButton = 474,
     ExecView = 475,
     Try2InjectKeyboard = 476,
+    ButtonNew = 477,
+    DialogAdd = 478,
+    Try2InjectCommand = 479,

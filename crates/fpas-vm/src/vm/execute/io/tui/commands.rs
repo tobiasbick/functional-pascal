@@ -54,26 +54,6 @@ impl Worker {
         Ok(())
     }
 
-    pub(super) fn turbo_vision_test_click_button(
-        &mut self,
-        line: SourceLocation,
-    ) -> Result<(), VmError> {
-        let button_handle = self.pop_turbo_vision_button_handle(line)?;
-        self.pop_tui_application(line)?;
-        self.with_tui(|tui| {
-            let Some(TurboVisionObject::Button(button)) =
-                tui.turbo_vision.objects.get(&button_handle)
-            else {
-                return Err(unknown_handle_error("Button", button_handle, line));
-            };
-            tui.turbo_vision
-                .pending_commands
-                .push_back(button.command_id);
-            Ok(())
-        })?;
-        Ok(())
-    }
-
     /// Queue a menu item command for headless tests.
     pub(super) fn turbo_vision_test_dispatch_menu_command(
         &mut self,

@@ -1,5 +1,5 @@
 mod concurrency;
 mod core;
-mod helpers;
+pub(crate) mod helpers;
 mod pool;
 mod runtime;

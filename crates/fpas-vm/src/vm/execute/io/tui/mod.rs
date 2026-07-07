@@ -37,6 +37,9 @@ mod records;
 mod session_app;
 mod test_mouse;
 mod testing;
+mod try2;
+
+pub(in crate::vm) use try2::Try2Session;
 mod tv_geometry;
 mod tv_headless_backend;
 mod tv_input_events;

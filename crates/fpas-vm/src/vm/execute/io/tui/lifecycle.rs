@@ -198,6 +198,7 @@ impl Worker {
         tui.on_command = None;
         tui.quit_requested = false;
         tui.turbo_vision = Default::default();
+        self.try2.reset();
         close_result?;
         Ok(())
     }
@@ -212,5 +213,11 @@ impl Worker {
         tui.on_command = None;
         tui.quit_requested = false;
         tui.turbo_vision = Default::default();
+        self.try2.reset();
+    }
+
+    /// Opens a try-2 session after try-1 state has been reset.
+    pub(in crate::vm::execute::io::tui) fn open_try2_session(&mut self) {
+        self.try2.open();
     }
 }

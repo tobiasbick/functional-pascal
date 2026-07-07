@@ -11,11 +11,13 @@ use fpas_std::Console;
 use std::time::Duration;
 use turbo_vision::core::command_set;
 use turbo_vision::core::draw::Cell;
-use turbo_vision::core::event::{Event, EventType, MB_LEFT_BUTTON};
+use turbo_vision::core::command::{CM_QUIT, CommandId};
+use turbo_vision::core::event::{Event, EventType, KeyCode, MB_LEFT_BUTTON};
 use turbo_vision::core::geometry::Point;
 use turbo_vision::core::geometry::Rect;
 use turbo_vision::core::palette::TvColor;
 use turbo_vision::terminal::Terminal;
+use turbo_vision::core::state::SF_MODAL;
 use turbo_vision::views::View;
 use turbo_vision::views::desktop::Desktop;
 use turbo_vision::views::menu_bar::MenuBar;
@@ -31,7 +33,10 @@ pub(in crate::vm) struct HeadlessTvApp {
 }
 
 impl HeadlessTvApp {
-    fn new(width: u16, height: u16) -> turbo_vision::core::error::Result<Self> {
+    pub(in crate::vm::execute::io::tui) fn new(
+        width: u16,
+        height: u16,
+    ) -> turbo_vision::core::error::Result<Self> {
         let (backend, event_inbox) = TvHeadlessBackend::new(width, height);
         let terminal = Terminal::with_backend(Box::new(backend))?;
         let (width, height) = terminal.size();
@@ -55,6 +60,68 @@ impl HeadlessTvApp {
             MB_LEFT_BUTTON,
             false,
         ));
+    }
+
+    /// Queue a keyboard event for the next headless poll.
+    pub(in crate::vm::execute::io::tui) fn push_keyboard(&self, key_code: KeyCode) {
+        self.event_inbox.push(Event::keyboard(key_code));
+    }
+
+    /// Runs a modal event loop for `view` on this headless desktop.
+    ///
+    /// Matches upstream `Application::exec_view` without menu/status chrome.
+    pub(in crate::vm::execute::io::tui) fn exec_modal_view(
+        &mut self,
+        view: Box<dyn View>,
+    ) -> CommandId {
+        let is_modal = (view.state() & SF_MODAL) != 0;
+        self.desktop.add(view);
+        let view_id = self
+            .desktop
+            .top_view_id()
+            .expect("modal view was just added to the desktop");
+
+        if !is_modal {
+            return 0;
+        }
+
+        loop {
+            self.draw();
+            let _ = self.terminal.flush();
+
+            if let Ok(Some(mut event)) = self.terminal.poll_event(Duration::from_millis(20)) {
+                if let Some(ref mut menu_bar) = self.menu_bar {
+                    menu_bar.handle_event(&mut event);
+                }
+                if event.what != EventType::Nothing {
+                    self.desktop.handle_event(&mut event);
+                }
+                if let Some(ref mut status_line) = self.status_line {
+                    status_line.handle_event(&mut event);
+                }
+            }
+
+            if self.desktop.contains_id(view_id) {
+                let end_state = self
+                    .desktop
+                    .child_by_id(view_id)
+                    .map(|child| child.get_end_state())
+                    .unwrap_or(0);
+                if end_state != 0 {
+                    let close_ok = self
+                        .desktop
+                        .child_by_id_mut(view_id)
+                        .map(|child| child.valid(end_state))
+                        .unwrap_or(true);
+                    if close_ok {
+                        self.desktop.remove_child_by_id(view_id);
+                        return end_state;
+                    }
+                }
+            } else {
+                return CM_QUIT;
+            }
+        }
     }
 
     /// Poll one queued input event and dispatch it through the desktop view tree.
@@ -155,6 +222,32 @@ impl Worker {
     pub(in crate::vm::execute::io::tui) fn turbo_vision_shutdown_headless_app(&mut self) {
         if let Some(mut app) = self.headless_tv_app.take() {
             let _ = app.terminal.shutdown();
+        }
+    }
+
+    /// Ensures a headless turbo-vision session exists at the given terminal size.
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_ensure_headless_app(
+        &mut self,
+        width: u16,
+        height: u16,
+    ) -> turbo_vision::core::error::Result<()> {
+        let needs_new = self.headless_tv_app.as_ref().is_none_or(|app| {
+            let (app_w, app_h) = app.terminal.size();
+            i64::from(app_w) != i64::from(width) || i64::from(app_h) != i64::from(height)
+        });
+        if needs_new {
+            self.turbo_vision_shutdown_headless_app();
+            self.headless_tv_app = Some(HeadlessTvApp::new(width, height)?);
+        }
+        Ok(())
+    }
+
+    /// Exports the headless turbo-vision buffer to the FPAS console.
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_export_headless_to_console(&self) {
+        if let Some(app) = self.headless_tv_app.as_ref() {
+            self.with_console(|console| {
+                export_terminal_buffer_to_console(&app.terminal, console);
+            });
         }
     }
 

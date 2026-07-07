@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicBool, AtomicU64};
 use std::sync::{Condvar, Mutex, RwLock};
 
 /// Minimal [`SharedState`] shell for tests (matches [`crate::vm::Vm::build`] field init except chunk).
-pub(super) fn minimal_shared_state(chunk: Chunk) -> SharedState {
+pub(crate) fn minimal_shared_state(chunk: Chunk) -> SharedState {
     SharedState {
         chunk,
         program_args: Vec::new(),
@@ -28,7 +28,7 @@ pub(super) fn minimal_shared_state(chunk: Chunk) -> SharedState {
     }
 }
 
-pub(super) fn loc() -> SourceLocation {
+pub(crate) fn loc() -> SourceLocation {
     SourceLocation::new(1, 1)
 }
 

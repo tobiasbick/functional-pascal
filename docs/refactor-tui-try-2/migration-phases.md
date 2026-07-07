@@ -10,10 +10,10 @@ Estimates assume focused hobby-project pace (part-time).
 
 **Work**
 
-- [ ] Read this plan directory end-to-end.
-- [ ] Inventory `test_util` exports at `v2.0.0` (local `cargo doc` or upstream source).
-- [ ] Freeze try-1: avoid large unrelated TUI changes on main while rewrite branch is active.
-- [ ] Create working branch `refactor/tui-try-2`.
+- [x] Read this plan directory end-to-end.
+- [x] Inventory `test_util` exports at `v2.0.0` — see [baseline.md](baseline.md#upstream-test-util-v200).
+- [x] Freeze try-1: rewrite work on `refactor/tui-try-2` only; `main` unchanged after plan merge.
+- [x] Create working branch `refactor/tui-try-2`.
 
 **Exit criteria**
 
@@ -25,12 +25,13 @@ Estimates assume focused hobby-project pace (part-time).
 
 **Work**
 
-- [ ] Add `ViewRegistry` and slim `TuiState` ([rust-layout.md](rust-layout.md)).
-- [ ] Implement `session.rs`: `Application.New`, `Close`, `Size`, `OpenForTest`.
-- [ ] Implement `geometry.rs` rect conversion.
-- [ ] Add `fpas-std/tui/command.rs` with core `CM_*` constants.
+- [x] Add `ViewRegistry` in `try2/registry.rs` (coexists with try-1; not wired to Worker yet).
+- [ ] Slim `TuiState` on Worker ([rust-layout.md](rust-layout.md)) — `Try2Session` on Worker landed; full `TuiState` slimming deferred
+- [x] Implement `try2/session.rs` integration with `TuiSession.open` / `OpenForTest`
+- [x] Implement `try2/geometry.rs` rect conversion.
+- [x] Add `fpas-std/tui/cm_constants.rs` with core `CM_*` constants.
 - [ ] Sema + compiler stubs for `Application.New` / `Close` only.
-- [ ] Rust unit tests: registry allocate/validate/clear.
+- [x] Rust unit tests: registry allocate/validate/clear.
 
 **Exit criteria**
 
@@ -44,9 +45,9 @@ Estimates assume focused hobby-project pace (part-time).
 
 **Work**
 
-- [ ] `Button.New`, `Dialog.NewModal`, `Dialog.Add(Button)`.
-- [ ] `Application.ExecView` → upstream `exec_view`.
-- [ ] `headless.rs`: headless `Application::new`, draw to CRT buffer.
+- [x] `Dialog.NewModal`, `Dialog.Add(Button)` — Rust internal (`try2/views/`)
+- [x] `Application.ExecView` → upstream `exec_view` (headless via `HeadlessTvApp::exec_modal_view`; interactive via `try2/app.rs`)
+- [x] `headless.rs`: headless modal loop + CRT export (`try2/headless.rs`, `headless_tv_draw.rs`)
 - [ ] `Test.InjectEvent` or click helper for button command.
 - [ ] One FPAS test: modal OK returns `CM_OK`.
 - [ ] `events.rs`: `OnCommand` dispatch without offset translation.

@@ -4,7 +4,18 @@ Target module layout after try-2. Follow [AGENTS.md](../../AGENTS.md): one conce
 
 ## VM bridge (`crates/fpas-vm/src/vm/execute/io/tui/`)
 
-### Target tree
+### Phase 1 scaffold (landed on `refactor/tui-try-2`)
+
+Try-2 code lives under `try2/` until try-1 modules are deleted in phase 7:
+
+```text
+crates/fpas-vm/src/vm/execute/io/tui/try2/
+  mod.rs
+  registry.rs    — ViewRegistry + ViewKind (tests included)
+  geometry.rs    — FPAS Rect ↔ turbo_vision Rect
+```
+
+### Target tree (after phase 7)
 
 ```text
 crates/fpas-vm/src/vm/execute/io/tui/

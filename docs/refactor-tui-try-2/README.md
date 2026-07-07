@@ -9,7 +9,9 @@ This is a **breaking rewrite**. There is no backward-compatibility requirement f
 | Item | State |
 | --- | --- |
 | Decision | Approved direction — Rust `turbo_vision::Application` is the single source of truth |
-| Implementation | Not started |
+| Branch | `refactor/tui-try-2` |
+| Implementation | Phase 1 in progress (internal `try2/` scaffold) |
+| Baseline | [baseline.md](baseline.md) — try-1 snapshot before rewrite |
 | Upstream pin | `turbo-vision` 2.0, git tag `v2.0.0` (see workspace `Cargo.toml`) |
 
 ## Problem in one sentence
@@ -24,6 +26,8 @@ Pascal programs compose UI like upstream Turbo Vision (`Dialog.New`, `Add`, `Exe
 
 | Document | Contents |
 | --- | --- |
+| [Baseline snapshot](baseline.md) | Frozen try-1 metrics, API, tests, upstream `test_util` inventory |
+| [Implementation status](status.md) | Living progress log and blockers |
 | [Goals and principles](goals-and-principles.md) | Success criteria, constraints, explicit non-goals |
 | [Current problems](current-problems.md) | Why the existing facade is hard to maintain |
 | [Target architecture](target-architecture.md) | Runtime data flow, session model, headless path |

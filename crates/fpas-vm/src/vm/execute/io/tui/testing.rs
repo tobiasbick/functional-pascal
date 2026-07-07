@@ -31,6 +31,7 @@ impl Worker {
                     let mut tui = self.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
                     self.with_console(|console| tui.session.open_for_test(console, line))?;
                 }
+                self.open_try2_session();
                 self.push(Self::tui_application_record())?;
             }
             TuiIntrinsic::CloseForTest => {

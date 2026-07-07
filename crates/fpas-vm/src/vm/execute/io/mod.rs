@@ -15,6 +15,7 @@ mod tui;
 mod tui_run;
 
 pub(in crate::vm) use tui::HeadlessTvApp;
+pub(in crate::vm) use tui::Try2Session;
 
 impl Worker {
     pub(super) fn try_exec_io(&mut self, op: Op, line: SourceLocation) -> Result<bool, VmError> {

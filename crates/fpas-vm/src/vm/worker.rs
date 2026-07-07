@@ -12,7 +12,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 use turbo_vision::app::Application as TurboVisionApplication;
 
-use super::execute::HeadlessTvApp;
+use super::execute::{HeadlessTvApp, Try2Session};
 
 /// A worker runs on a single OS thread and executes tasks pulled from the shared queue.
 ///
@@ -34,6 +34,8 @@ pub(crate) struct Worker {
     pub live_turbo_vision_app: Option<TurboVisionApplication>,
     /// Headless turbo-vision draw session for `OpenForTest` (main worker only).
     pub(in crate::vm) headless_tv_app: Option<HeadlessTvApp>,
+    /// Try-2 TUI rewrite: Rust-owned view registry (see `docs/refactor-tui-try-2/`).
+    pub(in crate::vm) try2: Try2Session,
     /// Live `InputLine` view text buffers keyed by FPAS handle (main worker only).
     pub(in crate::vm) input_line_view_bindings: RefCell<HashMap<u32, Rc<RefCell<String>>>>,
 }
@@ -54,6 +56,7 @@ impl Worker {
             allow_shutdown_during_sync_call: false,
             live_turbo_vision_app: None,
             headless_tv_app: None,
+            try2: Try2Session::default(),
             input_line_view_bindings: RefCell::new(HashMap::new()),
         }
     }
@@ -73,6 +76,7 @@ impl Worker {
             allow_shutdown_during_sync_call: false,
             live_turbo_vision_app: None,
             headless_tv_app: None,
+            try2: Try2Session::default(),
             input_line_view_bindings: RefCell::new(HashMap::new()),
         }
     }

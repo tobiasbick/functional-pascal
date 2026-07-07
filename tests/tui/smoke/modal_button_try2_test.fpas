@@ -1,0 +1,21 @@
+program ModalButtonTry2Test;
+
+uses Std.Tui, Std.Test;
+
+const
+  KbEnter: integer := 7181;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(40, 14);
+  var Dlg: Dialog := Dialog.NewModal(Bounds(5, 3, 30, 8), 'Test');
+  var Btn: Button := Dialog.AddButton(Dlg, Bounds(10, 4, 20, 6), 'OK', CM_OK, true);
+  Application.Try2InjectKeyboard(App, KbEnter);
+  var Cmd: integer := Application.ExecView(App, Dlg);
+  AssertEquals(CM_OK, Cmd);
+  Application.CloseForTest(App)
+end.

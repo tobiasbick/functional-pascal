@@ -49,7 +49,7 @@ Estimates assume focused hobby-project pace (part-time).
 - [x] `Application.ExecView` → upstream `exec_view` (headless via `HeadlessTvApp::exec_modal_view`; interactive via `try2/app.rs`)
 - [x] `headless.rs`: headless modal loop + CRT export (`try2/headless.rs`, `headless_tv_draw.rs`)
 - [ ] `Test.InjectEvent` or click helper for button command.
-- [ ] One FPAS test: modal OK returns `CM_OK`.
+- [x] One FPAS test: modal OK returns `CM_OK` (`tests/tui/smoke/modal_button_try2_test.fpas`).
 - [ ] `events.rs`: `OnCommand` dispatch without offset translation.
 
 **Exit criteria**

@@ -8,6 +8,7 @@
 pub mod app;
 pub mod geometry;
 pub mod headless;
+pub mod intrinsics;
 pub mod modals;
 pub mod records;
 pub mod registry;

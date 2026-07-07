@@ -26,6 +26,11 @@ pub const STD_TUI_APPLICATION_HANDLERS: &str = std_tui!("ApplicationHandlers");
 pub const STD_TUI_RECT: &str = std_tui!("Rect");
 pub const STD_TUI_POINT: &str = std_tui!("Point");
 pub const STD_TUI_SIZE: &str = std_tui!("Size");
+pub const STD_TUI_CM_OK: &str = std_tui!("CM_OK");
+pub const STD_TUI_CM_CANCEL: &str = std_tui!("CM_CANCEL");
+pub const STD_TUI_CM_QUIT: &str = std_tui!("CM_QUIT");
+pub const STD_TUI_DIALOG_NEW_MODAL: &str = std_tui!("Dialog.NewModal");
+pub const STD_TUI_DIALOG_ADD_BUTTON: &str = std_tui!("Dialog.AddButton");
 pub const STD_TUI_COMMAND_ACCEPT: &str = std_tui!("Command.Accept");
 pub const STD_TUI_COMMAND_CANCEL: &str = std_tui!("Command.Cancel");
 pub const STD_TUI_COMMAND_CLOSE: &str = std_tui!("Command.Close");
@@ -78,6 +83,11 @@ pub const STD_TUI_APPLICATION_TEST_SET_FILE_DIALOG_RESULT: &str =
     std_tui!("Application.TestSetFileDialogResult");
 /// Run a dialog modally and return the closing command.
 pub const STD_TUI_APPLICATION_EXEC_DIALOG: &str = std_tui!("Application.ExecDialog");
+/// Run a modal dialog via try-2 `Application.ExecView` and return the closing command id.
+pub const STD_TUI_APPLICATION_EXEC_VIEW: &str = std_tui!("Application.ExecView");
+/// Queue a turbo-vision keyboard event for the next headless try-2 modal (internal test helper).
+pub const STD_TUI_APPLICATION_TRY2_INJECT_KEYBOARD: &str =
+    std_tui!("Application.Try2InjectKeyboard");
 /// Show an upstream Turbo Vision message box and return the closing command id.
 pub const STD_TUI_APPLICATION_MESSAGE_BOX: &str = std_tui!("Application.MessageBox");
 /// Read the current text of an input line (valid after `Application.ExecDialog`).
@@ -250,6 +260,11 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_RECT,
     STD_TUI_POINT,
     STD_TUI_SIZE,
+    STD_TUI_CM_OK,
+    STD_TUI_CM_CANCEL,
+    STD_TUI_CM_QUIT,
+    STD_TUI_DIALOG_NEW_MODAL,
+    STD_TUI_DIALOG_ADD_BUTTON,
     STD_TUI_COMMAND_ACCEPT,
     STD_TUI_COMMAND_CANCEL,
     STD_TUI_COMMAND_CLOSE,
@@ -289,6 +304,8 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_APPLICATION_RUN_FILE_DIALOG,
     STD_TUI_APPLICATION_TEST_SET_FILE_DIALOG_RESULT,
     STD_TUI_APPLICATION_EXEC_DIALOG,
+    STD_TUI_APPLICATION_EXEC_VIEW,
+    STD_TUI_APPLICATION_TRY2_INJECT_KEYBOARD,
     STD_TUI_APPLICATION_MESSAGE_BOX,
     STD_TUI_APPLICATION_INPUT_TEXT,
     STD_TUI_APPLICATION_CHECKED,

@@ -43,6 +43,9 @@ impl Compiler {
             s::STD_TUI_COMMAND_CANCEL => Some(Value::Integer(COMMAND_CANCEL)),
             s::STD_TUI_COMMAND_CLOSE => Some(Value::Integer(COMMAND_CLOSE)),
             s::STD_TUI_COMMAND_QUIT => Some(Value::Integer(COMMAND_QUIT)),
+            s::STD_TUI_CM_OK => Some(Value::Integer(COMMAND_OK)),
+            s::STD_TUI_CM_CANCEL => Some(Value::Integer(COMMAND_CANCEL)),
+            s::STD_TUI_CM_QUIT => Some(Value::Integer(COMMAND_QUIT)),
             s::STD_TUI_MESSAGE_BOX_OPTION_WARNING => {
                 Some(Value::Integer(MESSAGE_BOX_OPTION_WARNING))
             }

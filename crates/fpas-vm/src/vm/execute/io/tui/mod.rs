@@ -59,6 +59,7 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<bool, VmError> {
         if self.try_exec_tui_application_intrinsic(intrinsic, line)?
+            || self.try_exec_try2_intrinsic(intrinsic, line)?
             || self.try_exec_turbo_vision_intrinsic(intrinsic, line)?
             || self.try_exec_tui_test_host_intrinsic(intrinsic, line)?
         {

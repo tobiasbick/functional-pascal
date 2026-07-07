@@ -1,0 +1,60 @@
+use crate::error::CompileError;
+use fpas_bytecode::{Intrinsic, SourceLocation, TuiIntrinsic};
+use fpas_parser::Expr;
+use fpas_std::std_symbols as s;
+
+use super::super::super::Compiler;
+
+impl Compiler {
+    /// Lower try-2 `Std.Tui` calls to VM intrinsics.
+    pub(super) fn compile_tui_try2_call(
+        &mut self,
+        name: &str,
+        args: &[Expr],
+        location: SourceLocation,
+    ) -> Result<bool, CompileError> {
+        match name {
+            s::STD_TUI_DIALOG_NEW_MODAL => {
+                self.expect_exact_args(s::STD_TUI_DIALOG_NEW_MODAL, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::DialogNewModal), location);
+                Ok(true)
+            }
+            s::STD_TUI_DIALOG_ADD_BUTTON => {
+                self.expect_exact_args(s::STD_TUI_DIALOG_ADD_BUTTON, 5, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::DialogAddButton), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_EXEC_VIEW => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_EXEC_VIEW, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::ExecView), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_TRY2_INJECT_KEYBOARD => {
+                self.expect_exact_args(
+                    s::STD_TUI_APPLICATION_TRY2_INJECT_KEYBOARD,
+                    2,
+                    args,
+                    location,
+                )?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(
+                    Intrinsic::Tui(TuiIntrinsic::Try2InjectKeyboard),
+                    location,
+                );
+                Ok(true)
+            }
+            _ => Ok(false),
+        }
+    }
+}

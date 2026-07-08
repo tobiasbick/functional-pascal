@@ -9,8 +9,10 @@ mod desktop;
 mod dialog;
 mod input_line;
 mod list_box;
+mod memo;
 mod radio_button;
 mod static_text;
+mod text_viewer;
 mod window;
 
 pub(in crate::vm::execute::io::tui::try2) use attach::{
@@ -28,8 +30,12 @@ pub(in crate::vm::execute::io::tui::try2) use input_line::{
 pub(in crate::vm::execute::io::tui::try2) use list_box::{
     try2_list_box_new, try2_list_box_selection, try2_list_box_set_items,
 };
+pub(in crate::vm::execute::io::tui::try2) use memo::{try2_memo_new, try2_memo_set_text};
 pub(in crate::vm::execute::io::tui::try2) use radio_button::{
     try2_radio_button_new, try2_radio_button_selected, try2_radio_button_set_selected,
 };
 pub(in crate::vm::execute::io::tui::try2) use static_text::try2_static_text_new;
+pub(in crate::vm::execute::io::tui::try2) use text_viewer::{
+    try2_text_viewer_new, try2_text_viewer_set_text,
+};
 pub(in crate::vm::execute::io::tui::try2) use window::try2_window_new;

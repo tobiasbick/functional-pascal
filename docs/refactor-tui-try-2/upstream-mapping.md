@@ -59,8 +59,8 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 | `listbox::ListBox` | `ListBox` | ✅ `try2/views/list_box.rs` |
 | `checkbox::CheckBox` | `CheckBox` | ✅ `try2/views/check_box.rs` |
 | `radiobutton::RadioButton` | `RadioButton` | ✅ `try2/views/radio_button.rs` |
-| `memo::Memo` | `Memo` | ❌ phase 4 |
-| `text_viewer::TextViewer` | `TextViewer` | ❌ phase 4 |
+| `memo::Memo` | `Memo` | ✅ `try2/views/memo.rs` |
+| `text_viewer::TextViewer` | `TextViewer` | ✅ `try2/views/text_viewer.rs` |
 | `window::Window` | `Window` | ✅ `Window.New`, `Window.Add`, `Desktop.Add` |
 | `menu_bar::MenuBar` | `MenuBar` | ✅ `try2/chrome.rs` |
 | `status_line::StatusLine` | `StatusLine` | ✅ `try2/chrome.rs` |

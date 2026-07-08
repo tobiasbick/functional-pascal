@@ -149,6 +149,40 @@ pub(super) fn register_try2_api(
     );
     define_func(
         checker,
+        s::STD_TUI_MEMO_NEW,
+        vec![
+            p("Bounds", types.rect.clone(), false),
+            p("Text", Ty::String, false),
+        ],
+        types.memo.clone(),
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_MEMO_SET_TEXT,
+        vec![
+            p("M", types.memo.clone(), false),
+            p("Text", Ty::String, false),
+        ],
+    );
+    define_func(
+        checker,
+        s::STD_TUI_TEXT_VIEWER_NEW,
+        vec![
+            p("Bounds", types.rect.clone(), false),
+            p("Text", Ty::String, false),
+        ],
+        types.text_viewer.clone(),
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_TEXT_VIEWER_SET_TEXT,
+        vec![
+            p("V", types.text_viewer.clone(), false),
+            p("Text", Ty::String, false),
+        ],
+    );
+    define_func(
+        checker,
         s::STD_TUI_DIALOG_ADD_BUTTON,
         vec![
             p("Dlg", types.dialog.clone(), false),

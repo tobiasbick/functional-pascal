@@ -6,7 +6,7 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 
 **Phase 1** — **complete** (foundation; `TuiState` slimming deferred to phase 7).  
 **Phase 2** — **complete** (vertical slice + interactive manual smoke verified).  
-**Phase 4** — **in progress** (`CheckBox`, `InputLine`, `ListBox`, `RadioButton` landed; `Memo`, `TextViewer` pending).
+**Phase 4** — **complete** (all phase-1 widgets on try-2 path; old control tests cleanup pending).
 
 ## Phase 1 closure notes
 

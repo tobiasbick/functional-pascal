@@ -24,3 +24,7 @@
     RadioButtonNew = 496,
     RadioButtonSelected = 497,
     RadioButtonSetSelected = 498,
+    MemoNew = 499,
+    MemoSetText = 500,
+    TextViewerNew = 501,
+    TextViewerSetText = 502,

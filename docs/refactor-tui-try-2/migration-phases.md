@@ -78,20 +78,19 @@ Estimates assume focused hobby-project pace (part-time).
 
 ---
 
-## Phase 4 — Remaining phase-1 widgets (3–4 days) — **in progress**
+## Phase 4 — Remaining phase-1 widgets (3–4 days) — **complete**
 
 **Work**
 
-- [x] `InputLine`, `CheckBox`, `ListBox`, `RadioButton` — `*.New`, `Dialog.Add` / `Window.Add`, read-back + setters (partial).
-- [ ] `Memo`, `TextViewer`.
-- [x] Read-back methods: `InputLine.Text`, `CheckBox.Checked`, `ListBox.Selection`, `RadioButton.Selected` (partial; more widgets pending).
-- [x] Runtime setters: `InputLine.SetText`, `CheckBox.SetChecked`, `ListBox.SetItems`, `RadioButton.SetSelected` (partial).
-- [x] FPAS tests: `tests/tui/views/check_box_try2_test.fpas`, `input_line_try2_test.fpas`, `list_box_try2_test.fpas`, `radio_button_try2_test.fpas` (partial).
+- [x] `InputLine`, `CheckBox`, `ListBox`, `RadioButton`, `Memo`, `TextViewer` — `*.New`, `Dialog.Add` / `Window.Add`, read-back + setters.
+- [x] Read-back methods: `InputLine.Text`, `CheckBox.Checked`, `ListBox.Selection`, `RadioButton.Selected` (where applicable).
+- [x] Runtime setters: `InputLine.SetText`, `CheckBox.SetChecked`, `ListBox.SetItems`, `RadioButton.SetSelected`, `Memo.SetText`, `TextViewer.SetText`.
+- [x] FPAS tests: `tests/tui/views/*_try2_test.fpas` for all phase-1 widgets.
 
 **Exit criteria**
 
 - New test suite covers all phase-1 widgets in [upstream-mapping.md](upstream-mapping.md).
-- Delete corresponding old `tests/tui/controls/tui_turbo_vision_*` files as each is replaced.
+- Delete corresponding old `tests/tui/controls/tui_turbo_vision_*` files as each is replaced (pending cleanup pass).
 
 ---
 

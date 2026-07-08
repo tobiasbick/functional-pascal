@@ -217,6 +217,38 @@ impl Compiler {
                 );
                 Ok(true)
             }
+            s::STD_TUI_MEMO_NEW => {
+                self.expect_exact_args(s::STD_TUI_MEMO_NEW, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::MemoNew), location);
+                Ok(true)
+            }
+            s::STD_TUI_MEMO_SET_TEXT => {
+                self.expect_exact_args(s::STD_TUI_MEMO_SET_TEXT, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::MemoSetText), location);
+                Ok(true)
+            }
+            s::STD_TUI_TEXT_VIEWER_NEW => {
+                self.expect_exact_args(s::STD_TUI_TEXT_VIEWER_NEW, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::TextViewerNew), location);
+                Ok(true)
+            }
+            s::STD_TUI_TEXT_VIEWER_SET_TEXT => {
+                self.expect_exact_args(s::STD_TUI_TEXT_VIEWER_SET_TEXT, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::TextViewerSetText), location);
+                Ok(true)
+            }
             s::STD_TUI_MENU_BAR_NEW => {
                 self.expect_exact_args(s::STD_TUI_MENU_BAR_NEW, 2, args, location)?;
                 for arg in args {

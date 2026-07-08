@@ -469,6 +469,8 @@ fn check_try2_dialog_add(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     let input_line = lookup_named_type(c, s::STD_TUI_INPUT_LINE);
     let list_box = lookup_named_type(c, s::STD_TUI_LIST_BOX);
     let radio_button = lookup_named_type(c, s::STD_TUI_RADIO_BUTTON);
+    let memo = lookup_named_type(c, s::STD_TUI_MEMO);
+    let text_viewer = lookup_named_type(c, s::STD_TUI_TEXT_VIEWER);
 
     let dlg_ty = c.check_expr(&args[0]);
     let child_ty = c.check_expr(&args[1]);
@@ -488,12 +490,14 @@ fn check_try2_dialog_add(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         && child_ty != input_line
         && child_ty != list_box
         && child_ty != radio_button
+        && child_ty != memo
+        && child_ty != text_viewer
     {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
-            "`Dialog.Add` child must be a button, static text, check box, input line, list box, or radio button handle"
+            "`Dialog.Add` child must be a button, static text, check box, input line, list box, radio button, memo, or text viewer handle"
                 .to_string(),
-            "Pass a handle from `Button.New`, `StaticText.New`, `CheckBox.New`, `InputLine.New`, `ListBox.New`, or `RadioButton.New`.",
+            "Pass a handle from `Button.New`, `StaticText.New`, `CheckBox.New`, `InputLine.New`, `ListBox.New`, `RadioButton.New`, `Memo.New`, or `TextViewer.New`.",
             span,
         );
     }
@@ -519,6 +523,8 @@ fn check_try2_window_add(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     let input_line = lookup_named_type(c, s::STD_TUI_INPUT_LINE);
     let list_box = lookup_named_type(c, s::STD_TUI_LIST_BOX);
     let radio_button = lookup_named_type(c, s::STD_TUI_RADIO_BUTTON);
+    let memo = lookup_named_type(c, s::STD_TUI_MEMO);
+    let text_viewer = lookup_named_type(c, s::STD_TUI_TEXT_VIEWER);
 
     let win_ty = c.check_expr(&args[0]);
     let child_ty = c.check_expr(&args[1]);
@@ -538,12 +544,14 @@ fn check_try2_window_add(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         && child_ty != input_line
         && child_ty != list_box
         && child_ty != radio_button
+        && child_ty != memo
+        && child_ty != text_viewer
     {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
-            "`Window.Add` child must be a button, static text, check box, input line, list box, or radio button handle"
+            "`Window.Add` child must be a button, static text, check box, input line, list box, radio button, memo, or text viewer handle"
                 .to_string(),
-            "Pass a handle from `Button.New`, `StaticText.New`, `CheckBox.New`, `InputLine.New`, `ListBox.New`, or `RadioButton.New`.",
+            "Pass a handle from `Button.New`, `StaticText.New`, `CheckBox.New`, `InputLine.New`, `ListBox.New`, `RadioButton.New`, `Memo.New`, or `TextViewer.New`.",
             span,
         );
     }

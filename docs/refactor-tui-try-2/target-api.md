@@ -135,9 +135,11 @@ procedure InputLine.SetText(Line: InputLine; Text: string);
 ### `Memo` / `TextViewer`
 
 ```pascal
-function Memo.New(…): Memo;
-function TextViewer.New(…): TextViewer;
-procedure Memo.SetText(…);
+function Memo.New(Bounds: Rect; Text: string): Memo;
+procedure Memo.SetText(M: Memo; Text: string);
+
+function TextViewer.New(Bounds: Rect; Text: string): TextViewer;
+procedure TextViewer.SetText(V: TextViewer; Text: string);
 ```
 
 ### `ListBox`

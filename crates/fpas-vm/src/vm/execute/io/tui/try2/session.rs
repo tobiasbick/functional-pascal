@@ -56,6 +56,18 @@ pub(crate) struct DetachedRadioButton {
     pub local_bounds: Rect,
 }
 
+/// Memo constructed by `Memo.New` and not yet attached to a parent.
+pub(crate) struct DetachedMemo {
+    pub memo: Box<dyn View>,
+    pub local_bounds: Rect,
+}
+
+/// Text viewer constructed by `TextViewer.New` and not yet attached to a parent.
+pub(crate) struct DetachedTextViewer {
+    pub text_viewer: Box<dyn View>,
+    pub local_bounds: Rect,
+}
+
 /// Host-side radio button state retained after attach.
 #[derive(Clone)]
 pub(crate) struct Try2RadioButtonState {
@@ -116,6 +128,10 @@ pub(crate) struct Try2Session {
     detached_list_boxes: HashMap<u32, DetachedListBox>,
     /// Radio buttons from `RadioButton.New` awaiting parent attach.
     detached_radio_buttons: HashMap<u32, DetachedRadioButton>,
+    /// Memos from `Memo.New` awaiting parent attach.
+    detached_memos: HashMap<u32, DetachedMemo>,
+    /// Text viewers from `TextViewer.New` awaiting parent attach.
+    detached_text_viewers: HashMap<u32, DetachedTextViewer>,
     /// Host-side check box state keyed by try-2 handle.
     check_box_cells: HashMap<u32, TurboVisionBoolCell>,
     /// Host-side input line state keyed by try-2 handle.
@@ -126,6 +142,10 @@ pub(crate) struct Try2Session {
     radio_button_states: HashMap<u32, Try2RadioButtonState>,
     /// Radio group members keyed by FPAS `GroupId`.
     radio_group_members: HashMap<u16, Vec<u32>>,
+    /// Host-side memo text keyed by try-2 handle.
+    memo_texts: HashMap<u32, String>,
+    /// Host-side text viewer text keyed by try-2 handle.
+    text_viewer_texts: HashMap<u32, String>,
     /// Child handle to parent dialog/window handle after attach.
     child_parents: HashMap<u32, u32>,
     /// Headless test click targets keyed by try-2 button handle.
@@ -151,11 +171,15 @@ impl Try2Session {
         self.detached_input_lines.clear();
         self.detached_list_boxes.clear();
         self.detached_radio_buttons.clear();
+        self.detached_memos.clear();
+        self.detached_text_viewers.clear();
         self.check_box_cells.clear();
         self.input_line_states.clear();
         self.list_box_states.clear();
         self.radio_button_states.clear();
         self.radio_group_members.clear();
+        self.memo_texts.clear();
+        self.text_viewer_texts.clear();
         self.child_parents.clear();
         self.button_clicks.clear();
         self.desktop_windows.clear();
@@ -510,6 +534,106 @@ impl Try2Session {
                 state.selected_cell.set(false);
             }
         }
+    }
+
+    /// Inserts a detached memo and returns its FPAS handle.
+    pub fn insert_detached_memo(
+        &mut self,
+        memo: Box<dyn View>,
+        local_bounds: Rect,
+        text: String,
+    ) -> u32 {
+        let handle = self.registry.allocate(0, ViewKind::Memo);
+        self.memo_texts.insert(handle, text);
+        self.detached_memos.insert(
+            handle,
+            DetachedMemo {
+                memo,
+                local_bounds,
+            },
+        );
+        handle
+    }
+
+    /// Replaces a detached memo view after `Memo.SetText`.
+    pub fn replace_detached_memo(&mut self, handle: u32, memo: Box<dyn View>) {
+        if let Some(detached) = self.detached_memos.get_mut(&handle) {
+            detached.memo = memo;
+        }
+    }
+
+    /// Removes a detached memo for parent attach.
+    pub fn take_detached_memo(&mut self, handle: u32) -> Option<DetachedMemo> {
+        self.detached_memos.remove(&handle)
+    }
+
+    /// Returns host-side memo text.
+    #[must_use]
+    pub fn memo_text(&self, handle: u32) -> Option<&str> {
+        self.memo_texts.get(&handle).map(String::as_str)
+    }
+
+    /// Updates host-side memo text.
+    pub fn set_memo_text(&mut self, handle: u32, text: String) {
+        self.memo_texts.insert(handle, text);
+    }
+
+    /// Returns detached memo bounds when still awaiting attach.
+    #[must_use]
+    pub fn detached_memo_bounds(&self, handle: u32) -> Option<Rect> {
+        self.detached_memos
+            .get(&handle)
+            .map(|detached| detached.local_bounds)
+    }
+
+    /// Inserts a detached text viewer and returns its FPAS handle.
+    pub fn insert_detached_text_viewer(
+        &mut self,
+        text_viewer: Box<dyn View>,
+        local_bounds: Rect,
+        text: String,
+    ) -> u32 {
+        let handle = self.registry.allocate(0, ViewKind::TextViewer);
+        self.text_viewer_texts.insert(handle, text);
+        self.detached_text_viewers.insert(
+            handle,
+            DetachedTextViewer {
+                text_viewer,
+                local_bounds,
+            },
+        );
+        handle
+    }
+
+    /// Replaces a detached text viewer after `TextViewer.SetText`.
+    pub fn replace_detached_text_viewer(&mut self, handle: u32, text_viewer: Box<dyn View>) {
+        if let Some(detached) = self.detached_text_viewers.get_mut(&handle) {
+            detached.text_viewer = text_viewer;
+        }
+    }
+
+    /// Removes a detached text viewer for parent attach.
+    pub fn take_detached_text_viewer(&mut self, handle: u32) -> Option<DetachedTextViewer> {
+        self.detached_text_viewers.remove(&handle)
+    }
+
+    /// Returns host-side text viewer text.
+    #[must_use]
+    pub fn text_viewer_text(&self, handle: u32) -> Option<&str> {
+        self.text_viewer_texts.get(&handle).map(String::as_str)
+    }
+
+    /// Updates host-side text viewer text.
+    pub fn set_text_viewer_text(&mut self, handle: u32, text: String) {
+        self.text_viewer_texts.insert(handle, text);
+    }
+
+    /// Returns detached text viewer bounds when still awaiting attach.
+    #[must_use]
+    pub fn detached_text_viewer_bounds(&self, handle: u32) -> Option<Rect> {
+        self.detached_text_viewers
+            .get(&handle)
+            .map(|detached| detached.local_bounds)
     }
 
     /// Stores menu bar data for a registry handle.

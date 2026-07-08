@@ -24,11 +24,6 @@ impl Worker {
         let message = self.pop_turbo_vision_string("MessageBox Message", line)?;
         self.pop_tui_application(line)?;
 
-        if self.try2.is_open() {
-            let command = try2_message_box(self, message, options, line)?;
-            return self.push(Value::Integer(command));
-        }
-
         if self.current_task_id != 0 {
             return Err(runtime_error(
                 RUNTIME_CONSOLE_STATE_ERROR,
@@ -39,10 +34,18 @@ impl Worker {
         }
 
         if self.with_tui(|tui| tui.session.is_headless()) {
-            let command = self
-                .with_tui(|tui| tui.turbo_vision.test_dialog_result.take())
-                .unwrap_or(0);
+            if let Some(command) = self.with_tui(|tui| tui.turbo_vision.test_dialog_result.take()) {
+                return self.push(Value::Integer(command));
+            }
+        }
+
+        if self.try2.is_open() {
+            let command = try2_message_box(self, message, options, line)?;
             return self.push(Value::Integer(command));
+        }
+
+        if self.with_tui(|tui| tui.session.is_headless()) {
+            return self.push(Value::Integer(0));
         }
 
         let command = self.turbo_vision_with_live_app(line, |app| {

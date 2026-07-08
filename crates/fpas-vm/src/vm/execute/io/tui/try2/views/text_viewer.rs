@@ -52,10 +52,9 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_text_viewer_set_text(
             Ok(())
         })?;
     } else if let Some(bounds) = worker.try2.detached_text_viewer_bounds(handle) {
-        worker.try2.replace_detached_text_viewer(
-            handle,
-            Box::new(BridgedTextViewer::new(bounds, &text)),
-        );
+        worker
+            .try2
+            .replace_detached_text_viewer(handle, Box::new(BridgedTextViewer::new(bounds, &text)));
     }
 
     Ok(())
@@ -216,13 +215,9 @@ mod tests {
         let shared = Arc::new(minimal_shared_state(Chunk::new()));
         let mut worker = Worker::new_main(shared);
         worker.try2.open();
-        let handle = try2_text_viewer_new(
-            &mut worker,
-            Rect::new(3, 2, 20, 4),
-            "hello".into(),
-            loc(),
-        )
-        .expect("text viewer");
+        let handle =
+            try2_text_viewer_new(&mut worker, Rect::new(3, 2, 20, 4), "hello".into(), loc())
+                .expect("text viewer");
         assert_eq!(
             worker
                 .try2
@@ -240,13 +235,8 @@ mod tests {
         let shared = Arc::new(minimal_shared_state(Chunk::new()));
         let mut worker = Worker::new_main(shared);
         worker.try2.open();
-        let handle = try2_text_viewer_new(
-            &mut worker,
-            Rect::new(3, 2, 20, 4),
-            "old".into(),
-            loc(),
-        )
-        .expect("text viewer");
+        let handle = try2_text_viewer_new(&mut worker, Rect::new(3, 2, 20, 4), "old".into(), loc())
+            .expect("text viewer");
         try2_text_viewer_set_text(&mut worker, handle, "new".into(), loc()).expect("set text");
         assert_eq!(worker.try2.text_viewer_text(handle), Some("new"));
     }
@@ -259,13 +249,9 @@ mod tests {
         let dialog =
             try2_dialog_new_modal(&mut worker, Rect::new(5, 3, 30, 8), "Test".into(), loc())
                 .expect("dialog");
-        let viewer = try2_text_viewer_new(
-            &mut worker,
-            Rect::new(3, 2, 20, 4),
-            "body".into(),
-            loc(),
-        )
-        .expect("text viewer");
+        let viewer =
+            try2_text_viewer_new(&mut worker, Rect::new(3, 2, 20, 4), "body".into(), loc())
+                .expect("text viewer");
         try2_dialog_attach_text_viewer(&mut worker, dialog, viewer, loc()).expect("attach");
         try2_text_viewer_set_text(&mut worker, viewer, "updated".into(), loc()).expect("set text");
         assert_eq!(worker.try2.text_viewer_text(viewer), Some("updated"));

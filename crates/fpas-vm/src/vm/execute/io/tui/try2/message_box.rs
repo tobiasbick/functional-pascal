@@ -12,11 +12,11 @@ use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 use turbo_vision::core::command::{CM_CANCEL, CM_NO, CM_OK, CM_YES, CommandId};
 use turbo_vision::core::geometry::Rect;
+use turbo_vision::helpers::msgbox::message_box;
 use turbo_vision::helpers::msgbox::{
     MF_ABOUT, MF_CANCEL_BUTTON, MF_CONFIRMATION, MF_ERROR, MF_INFORMATION, MF_NO_BUTTON,
     MF_OK_BUTTON, MF_WARNING, MF_YES_BUTTON,
 };
-use turbo_vision::helpers::msgbox::message_box;
 use turbo_vision::views::View;
 use turbo_vision::views::button::Button;
 use turbo_vision::views::dialog::Dialog;
@@ -118,12 +118,7 @@ fn build_message_box_dialog(bounds: Rect, message: &str, options: u16) -> Box<dy
     let mut total_width = -2i16;
     for (flag, label, command) in button_specs.iter() {
         if (options & flag) != 0 {
-            let button = Button::new(
-                Rect::new(0, 0, 10, 2),
-                label,
-                *command,
-                buttons.is_empty(),
-            );
+            let button = Button::new(Rect::new(0, 0, 10, 2), label, *command, buttons.is_empty());
             total_width += 10 + 2;
             buttons.push((button, *command));
         }
@@ -178,13 +173,8 @@ mod tests {
             .as_ref()
             .expect("headless app")
             .push_keyboard(KB_ENTER);
-        let command = try2_message_box(
-            &mut worker,
-            "Hello".into(),
-            MF_ABOUT | MF_OK_BUTTON,
-            loc(),
-        )
-        .expect("message box");
+        let command = try2_message_box(&mut worker, "Hello".into(), MF_ABOUT | MF_OK_BUTTON, loc())
+            .expect("message box");
         assert_eq!(command, i64::from(CM_OK));
     }
 }

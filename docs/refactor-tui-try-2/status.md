@@ -6,7 +6,10 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 
 **Phase 1** — **complete** (foundation; `TuiState` slimming deferred to phase 7).  
 **Phase 2** — **complete** (vertical slice + interactive manual smoke verified).  
+**Phase 3** — **complete** (run loop, desktop/window, static text, chrome).
 **Phase 4** — **complete** (all phase-1 widgets on try-2 path; old control tests cleanup pending).
+**Phase 5** — **partial** (`MessageBox`, `OnKey`, `OnMouse` landed; `RunFileDialog` live path landed, headless still uses try-1 queued result).
+**Phase 6** — **partial** (`apps/ide` source/tests migrated for menu, status, About, Open, Exit; manual terminal sign-off pending).
 
 ## Phase 1 closure notes
 
@@ -46,26 +49,48 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 | `Application.Run(App, OnCommand)` | sema `builtins/tui.rs`; intrinsic `ApplicationRunWithOnCommand` (484) |
 | FPAS chrome + run smoke tests | `window_chrome_try2_test.fpas`, `run_quit_try2_test.fpas` |
 | Try-2 window example | `examples/pascal/tui/turbo_vision_window_try2.fpas` |
+| Phase-4 controls | `InputLine`, `ListBox`, `CheckBox`, `RadioButton`, `Memo`, `TextViewer` in `try2/views/` |
+| Phase-4 control tests | `tests/tui/views/*_try2_test.fpas` |
+| Phase-5 modal/helper routes | `try2/message_box.rs`, `try2/file_dialog.rs`, `Application.OnKey`, `Application.OnMouse` |
+| Phase-5 tests | `tests/tui/modals/message_box_try2_test.fpas`, `tests/tui/events/on_key_try2_test.fpas` |
 
 ## Landed (2026-07-08)
+
+| Item | Location |
+| --- | --- |
+| IDE command constants | `CM_OPEN`, `CM_ABOUT`, `CM_USER` exported through `Std.Tui`, sema, and compiler built-in consts |
+| Try-2 message box example | `examples/pascal/tui/message_box.fpas` now uses `Application.New` and `CM_OK` |
+| Try-2 file dialog example | `examples/pascal/tui/file_dialog_try2.fpas` |
+| IDE menu/status shell migration | `apps/ide/src/menu.fpas`, `apps/ide/src/shell.fpas`, `apps/ide/src/dialog/about.fpas` |
+| IDE try-2 tests | `apps/ide/tests/` uses `Application.Run(App, OnCommand)`, `Try2InjectCommand`, and `Try2InjectKeyboard` |
 
 ```bash
 cargo test -p fpas-vm try2::
 fpas test tests/tui/smoke/
+fpas test tests/tui/views/
+fpas test tests/tui/modals/message_box_try2_test.fpas
+fpas test tests/tui/events/on_key_try2_test.fpas
+fpas test apps/ide/tests/
 cargo test -p fpas-cli fpas_regression_suite_passes
 ```
 
-Covers: registry, geometry, session, dialog, button, window, desktop, static text, chrome, headless ExecView → CM_OK, TestClickButton, `Run(App, OnCommand)`, run/quit + window/quit + window/chrome smoke; full regression suite (try-1 + try-2 coexistence).
+Covers: registry, geometry, session, dialog, button, window, desktop, static text, chrome, phase-1 widgets, headless ExecView → CM_OK, TestClickButton, `Run(App, OnCommand)`, message box, `OnKey`, IDE menu/status/dialog flows, run/quit + window/quit + window/chrome smoke; full regression suite (try-1 + try-2 coexistence).
 
 ## Next steps
 
-1. **Phase 4** — `InputLine`, `ListBox`, `CheckBox`, `RadioButton`, `Memo`, `TextViewer` (see [migration-phases.md](migration-phases.md))
+1. **Finish Phase 5 blocker** — replace the headless `RunFileDialog` try-1 queued result path when upstream exposes a headless-safe picker API or an acceptable local adapter is designed.
+2. **Finish Phase 6** — run the manual terminal checklist for IDE menus, About, Open file, and Exit.
+3. **Phase 7** — delete try-1 bridge, rewrite the public `docs/pascal/std/tui/` spec, and archive this plan directory.
 
 ## Blockers
 
 ### Upstream `Application::with_terminal` (optional)
 
 Headless try-2 modals run through `HeadlessTvApp::exec_modal_view`. Interactive path uses `Application::new()` without try-1 snapshot populate.
+
+### Headless `FileDialog::execute`
+
+Upstream `FileDialog::execute(&mut Application)` is available for live `Application`, but the branch cannot currently construct a full upstream `Application` over the headless terminal because the required fields/constructors are private. The current headless `RunFileDialog` test path therefore still uses the try-1 `test_file_dialog_result` queue instead of duplicating upstream picker logic.
 
 ## Unchanged (try-1 still authoritative)
 

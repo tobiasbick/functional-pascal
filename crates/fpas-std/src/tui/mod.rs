@@ -16,6 +16,7 @@ mod session;
 #[cfg(test)]
 mod tests;
 
+pub use cm_constants::{CM_ABOUT, CM_OPEN, CM_USER};
 pub use command::{
     COMMAND_ID_CLOSE, COMMAND_ID_NEXT_WINDOW, COMMAND_ID_ZOOM, COMMAND_ID_ZOOM_BACK, CommandEvent,
     CommandId, CommandKind, CommandRegistry,

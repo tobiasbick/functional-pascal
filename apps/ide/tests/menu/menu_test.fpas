@@ -3,9 +3,9 @@ program IdeMenuTest;
 uses Ide.Menu, Std.Test;
 
 begin
-  AssertEquals(1, CmdFileExit);
-  AssertEquals(2, CmdFileOpen);
-  AssertEquals(100, CmdHelpAbout);
+  AssertEquals(CM_QUIT, CmdFileExit);
+  AssertEquals(CM_OPEN, CmdFileOpen);
+  AssertEquals(CM_ABOUT, CmdHelpAbout);
   var OpenItem: MenuItem := OpenMenuItem();
   var ExitItem: MenuItem := ExitMenuItem();
   var AboutItem: MenuItem := AboutMenuItem();

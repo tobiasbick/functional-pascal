@@ -2,7 +2,7 @@
 
 unit Ide.Shell;
 
-uses Ide.Dialog, Ide.Menu, Std.Tui;
+uses Ide.Dialog, Ide.Menu, Ide.Status, Std.Tui;
 
 private mutable var LastCommand: integer := -1;
 
@@ -16,16 +16,21 @@ begin
   return LastCommand
 end;
 
-private procedure OnCommand(App: Application; CommandId: integer);
+procedure OnCommand(App: Application; CommandId: integer);
 begin
+  if CommandId = CmdFileExit then
+  begin
+    if LastCommand = -1 then
+    begin
+      LastCommand := CommandId
+    end;
+    Application.Quit(App);
+    return
+  end;
   LastCommand := CommandId;
   if Ide.Dialog.HandleCommand(App, CommandId) then
   begin
     return
-  end;
-  if CommandId = CmdFileExit then
-  begin
-    Application.Quit(App)
   end
 end;
 
@@ -33,15 +38,10 @@ end;
 
 function AttachChrome(App: Application): MenuBar;
 begin
-  var MenuBarHandle: MenuBar := Application.CreateMenuBar(App, Bounds(0, 0, 80, 1), [
-                                                                                      FileMenu(),
-                                                                                      HelpMenu()
-
-                                                                                    ]);
-  var Status: StatusLine := Application.CreateStatusLine(App, Bounds(0, 24, 80, 1), []);
+  var MenuBarHandle: MenuBar := MenuBar.New(Bounds(0, 0, 80, 1), [FileMenu(), HelpMenu()]);
+  var Status: StatusLine := StatusLine.New(Bounds(0, 24, 80, 1), []);
   Application.SetMenuBar(App, MenuBarHandle);
   Application.SetStatusLine(App, Status);
-  Application.OnCommand(App, OnCommand);
   return MenuBarHandle
 end;
 
@@ -49,7 +49,8 @@ end;
 
 procedure Run();
 begin
-  var App: Application := Application.Open();
+  var App: Application := Application.New();
   AttachChrome(App);
-  Application.Run(App)
+  Application.Run(App, OnCommand);
+  Application.Close(App)
 end;

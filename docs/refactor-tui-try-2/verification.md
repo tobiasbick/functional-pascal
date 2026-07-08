@@ -49,16 +49,17 @@ All must return **no matches** (except git history).
 
 ## API completeness (final public spec)
 
-Partial on branch today — see [upstream-mapping.md](upstream-mapping.md#implementation-status-branch-refactortui-try-2-2026-07-07).
+Partial on branch today — see [upstream-mapping.md](upstream-mapping.md#implementation-status-branch-refactortui-try-2-2026-07-08).
 
-- [ ] `Application.New`, `Close`, `Size`, `OpenForTest`, `CloseForTest` — **partial:** `New`/session via try-1 + `try2.reset()`
-- [ ] `Application.Run`, `Quit`, `ExecView` — **partial:** try-2 path landed for headless smoke
-- [ ] `Application.MessageBox`, `RunFileDialog`
-- [ ] `Desktop.Add`
-- [ ] `Dialog`, `Window`, `Button`, `StaticText`, `InputLine`, `ListBox`, `CheckBox`, `RadioButton`, `Memo`, `TextViewer`
-- [ ] `MenuBar`, `StatusLine` + setters
-- [ ] `CM_*` constants for all commands used by IDE and tests
-- [ ] `OnCommand`; `OnKey` / `OnMouse` if promised in spec
+- [x] `Application.New`, `Close`, `OpenForTest`, `CloseForTest` — session via try-1 entry points plus `try2.reset()` on close
+- [x] `Application.Run`, `Quit`, `ExecView` — try-2 path landed for headless/live smoke; live quit wiring remains a cleanup note in [migration-phases.md](migration-phases.md)
+- [x] `Application.MessageBox`
+- [ ] `Application.RunFileDialog` — live route landed; headless still uses try-1 queued result because upstream `FileDialog::execute` needs a full `Application`
+- [x] `Desktop.Add`
+- [x] `Dialog`, `Window`, `Button`, `StaticText`, `InputLine`, `ListBox`, `CheckBox`, `RadioButton`, `Memo`, `TextViewer`
+- [x] `MenuBar`, `StatusLine` + setters
+- [x] `CM_*` constants for all commands used by IDE and tests (`CM_OPEN`, `CM_ABOUT`, `CM_USER` included)
+- [x] `OnCommand`, `OnKey`, `OnMouse`
 
 ## Behavioral smoke (manual)
 

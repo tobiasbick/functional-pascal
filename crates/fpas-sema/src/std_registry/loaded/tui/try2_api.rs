@@ -17,6 +17,9 @@ pub(super) fn register_try2_api(
         s::STD_TUI_CM_CANCEL,
         s::STD_TUI_CM_CLOSE,
         s::STD_TUI_CM_QUIT,
+        s::STD_TUI_CM_ABOUT,
+        s::STD_TUI_CM_OPEN,
+        s::STD_TUI_CM_USER,
     ] {
         super::super::super::define_const(checker, name, Ty::Integer);
     }

@@ -4,9 +4,10 @@ uses Ide.Dialog, Ide.Menu, Ide.Shell, Std.Tui, Std.Test;
 
 begin
   var App: Application := Application.OpenForTest(80, 25);
-  var MenuBarHandle: MenuBar := AttachChrome(App);
-  Application.TestSetDialogResult(App, Command.Accept);
-  Application.TestDispatchMenuCommand(App, MenuBarHandle, 1, 0);
-  Application.Run(App);
+  var _: MenuBar := AttachChrome(App);
+  Application.Try2InjectCommand(App, CmdHelpAbout);
+  Application.Try2InjectKeyboard(App, 7181);
+  Application.Try2InjectCommand(App, CM_QUIT);
+  Application.Run(App, OnCommand);
   AssertEquals(CmdHelpAbout, LastCommandId())
 end.

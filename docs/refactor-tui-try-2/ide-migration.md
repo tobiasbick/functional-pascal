@@ -1,18 +1,18 @@
 # IDE migration
 
-Notes for rewriting [`apps/ide`](../../apps/ide) on the try-2 API. **Not started** — IDE still uses try-1 (`Application.Create*`, `AddChild`, …) until [phase 6](migration-phases.md#phase-6--ide-migration-2-4-days).
+Notes for rewriting [`apps/ide`](../../apps/ide) on the try-2 API. **First pass landed** — menu, status, shell run loop, About, Open, and automated IDE tests now use the try-2 API. Manual terminal sign-off and the headless FileDialog blocker remain.
 
 ## Current IDE TUI usage
 
-| Area | Files | try-1 patterns |
+| Area | Files | try-2 status |
 | --- | --- | --- |
-| Shell / main loop | `src/shell.fpas`, `src/main.fpas` | `Application.Open`, `Run`, `OnCommand` |
-| Menu | `src/menu.fpas` | `CreateMenuBar`, `SetMenuBar`, `SetMenus`, `Command.Quit`, `CM_ABOUT` via offset |
-| Status | `src/status.fpas` | `CreateStatusLine`, `SetStatusLine` |
-| Dialogs | `src/dialog.fpas`, `src/dialog/about.fpas`, `src/dialog/open.fpas` | `CreateDialog`, `AddChild`, `MessageBox`, `RunFileDialog` |
+| Shell / main loop | `src/shell.fpas`, `src/main.fpas` | `Application.New`, `Application.Run(App, OnCommand)`, `Application.Close` |
+| Menu | `src/menu.fpas` | `MenuBar.New`, `SetMenuBar`, direct `CM_QUIT`, `CM_OPEN`, `CM_ABOUT` |
+| Status | `src/status.fpas` | `StatusLine.New`, `SetStatusLine` |
+| Dialogs | `src/dialog.fpas`, `src/dialog/about.fpas`, `src/dialog/open.fpas` | `Application.MessageBox`, `Application.RunFileDialog`; Open headless tests still seed `TestSetFileDialogResult` |
 | Theme | `src/theme.fpas` | May be layout constants only |
 
-Tests: `apps/ide/tests/` — menu, shell, dialog, status, theme.
+Tests: `apps/ide/tests/` — menu, shell, dialog, status, theme. Shell/dialog tests use `Try2InjectCommand` and `Try2InjectKeyboard`; Open keeps `TestSetFileDialogResult` until `RunFileDialog` has a headless upstream path.
 
 ## Target structure (unchanged units)
 
@@ -123,9 +123,10 @@ if Cmd = CM_OK then
 
 Replace:
 
-- `Application.CreateMenuBar` → `MenuBar.New`
-- `Application.TestDispatchMenuCommand` → `Test.DispatchMenu` (or equivalent)
-- `Command.*` → `CM_*`
+- [x] `Application.CreateMenuBar` → `MenuBar.New`
+- [x] `Application.TestDispatchMenuCommand` → `Try2InjectCommand` / run-loop command injection
+- [x] `Command.*` → `CM_*`
+- [ ] `Application.TestSetFileDialogResult` → headless file dialog event path, after the upstream/API blocker is resolved
 
 ## IDE-specific commands
 

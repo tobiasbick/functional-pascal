@@ -94,33 +94,33 @@ Estimates assume focused hobby-project pace (part-time).
 
 ---
 
-## Phase 5 — Modals and helpers (2 days)
+## Phase 5 — Modals and helpers (2 days) — **partial**
 
 **Work**
 
 - [x] `Application.MessageBox` (try-2 headless via `try2_headless_exec_view`; live via upstream `message_box`)
-- [ ] `Application.RunFileDialog` (live path done; headless still uses try-1 `test_file_dialog_result` queue until upstream headless API)
+- [ ] `Application.RunFileDialog` (live path done; headless still uses try-1 `test_file_dialog_result` queue until upstream headless API or a clean local adapter)
 - [x] `OnKey` / `OnMouse` optional hooks (`OnKey` headless + live; `OnMouse` live; export `Application.OnKey` / `OnMouse` from `Std.Tui`)
 
 **Exit criteria**
 
-- Port `examples/pascal/tui/message_box.fpas` and `file_dialog` example.
-- No `TestSetDialogResult` / `TestSetFileDialogResult` in new tests (`tests/tui/modals/message_box_try2_test.fpas` uses `Try2InjectKeyboard` only).
+- [x] Port `examples/pascal/tui/message_box.fpas` and add a try-2 file dialog example (`examples/pascal/tui/file_dialog_try2.fpas`).
+- [ ] No `TestSetDialogResult` / `TestSetFileDialogResult` in new tests (`tests/tui/modals/message_box_try2_test.fpas` uses `Try2InjectKeyboard` only; IDE Open still uses `TestSetFileDialogResult` until the FileDialog headless blocker is resolved).
 
 ---
 
-## Phase 6 — IDE migration (2–4 days)
+## Phase 6 — IDE migration (2–4 days) — **partial**
 
 **Work**
 
-- [ ] Rewrite `apps/ide/src/` per [ide-migration.md](ide-migration.md).
-- [ ] Rewrite `apps/ide/tests/`.
+- [x] Rewrite `apps/ide/src/` per [ide-migration.md](ide-migration.md) for menu, status, About, Open, and Exit.
+- [x] Rewrite `apps/ide/tests/` for try-2 run helpers and command injection.
 - [ ] Manual terminal checklist for IDE menus, About, Open file.
 
 **Exit criteria**
 
-- `fpas test apps/ide/tests/` all pass.
-- IDE usable interactively (manual sign-off).
+- [x] `fpas test apps/ide/tests/` all pass.
+- [ ] IDE usable interactively (manual sign-off).
 
 ---
 

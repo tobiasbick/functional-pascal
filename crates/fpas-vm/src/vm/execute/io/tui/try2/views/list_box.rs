@@ -35,13 +35,9 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_list_box_new(
         command,
         selection_cell.clone(),
     ));
-    Ok(worker.try2.insert_detached_list_box(
-        list_box,
-        bounds,
-        items,
-        command,
-        selection_cell,
-    ))
+    Ok(worker
+        .try2
+        .insert_detached_list_box(list_box, bounds, items, command, selection_cell))
 }
 
 /// Returns the selected item index, or `-1` when empty (`ListBox.Selection`).
@@ -283,7 +279,10 @@ mod tests {
                 .kind,
             ViewKind::ListBox
         );
-        assert_eq!(try2_list_box_selection(&mut worker, handle, loc()).unwrap(), 0);
+        assert_eq!(
+            try2_list_box_selection(&mut worker, handle, loc()).unwrap(),
+            0
+        );
     }
 
     #[test]
@@ -306,7 +305,10 @@ mod tests {
         );
         try2_list_box_set_items(&mut worker, handle, vec!["one".into()], loc())
             .expect("set one item");
-        assert_eq!(try2_list_box_selection(&mut worker, handle, loc()).unwrap(), 0);
+        assert_eq!(
+            try2_list_box_selection(&mut worker, handle, loc()).unwrap(),
+            0
+        );
     }
 
     #[test]

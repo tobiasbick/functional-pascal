@@ -8,7 +8,12 @@ Test plan for try-2. Goal: prove **user-visible behavior** and **thin bridge inv
 | --- | --- |
 | Modal OK via `ExecView` | `tests/tui/smoke/modal_button_try2_test.fpas` |
 | Run / `OnCommand` / `CM_QUIT` | `tests/tui/smoke/run_quit_try2_test.fpas` |
-| Rust unit tests | `cargo test -p fpas-vm try2::` (registry, geometry, events, dialog, button, modals) |
+| Window / desktop / chrome smoke | `tests/tui/smoke/window_quit_try2_test.fpas`, `window_chrome_try2_test.fpas` |
+| Phase-1 widgets | `tests/tui/views/*_try2_test.fpas` |
+| Message box | `tests/tui/modals/message_box_try2_test.fpas` |
+| Keyboard callback | `tests/tui/events/on_key_try2_test.fpas` |
+| IDE shell/menu/dialog flows | `apps/ide/tests/` |
+| Rust unit tests | `cargo test -p fpas-vm try2::` (registry, geometry, events, dialog, button, widgets, modals) |
 
 try-1 `tests/tui/controls/*` (37 files) still run unchanged — coexistence routing in `try2_should_handle_application_run()`.
 
@@ -29,27 +34,25 @@ tests/tui/
   smoke/
     modal_button_try2_test.fpas   { landed — target: modal_button_test.fpas }
     run_quit_try2_test.fpas       { landed — target: run_quit_test.fpas }
+    window_quit_try2_test.fpas    { landed — target: window_quit_test.fpas }
+    window_chrome_try2_test.fpas  { landed — target: window_chrome_test.fpas }
   views/
-    button_test.fpas
-    dialog_test.fpas
-    window_test.fpas
-    input_line_test.fpas
-    listbox_test.fpas
-    checkbox_test.fpas
-    radio_button_test.fpas
-    static_text_test.fpas
-    memo_test.fpas
-    text_viewer_test.fpas
+    input_line_try2_test.fpas     { landed — target: input_line_test.fpas }
+    list_box_try2_test.fpas       { landed — target: list_box_test.fpas }
+    check_box_try2_test.fpas      { landed — target: check_box_test.fpas }
+    radio_button_try2_test.fpas   { landed — target: radio_button_test.fpas }
+    memo_try2_test.fpas           { landed — target: memo_test.fpas }
+    text_viewer_try2_test.fpas    { landed — target: text_viewer_test.fpas }
   chrome/
     menu_bar_test.fpas
     status_line_test.fpas
   modals/
-    message_box_test.fpas
+    message_box_try2_test.fpas    { landed — target: message_box_test.fpas }
     file_dialog_test.fpas
   events/
-    on_key_test.fpas
+    on_key_try2_test.fpas         { landed — target: on_key_test.fpas }
     on_mouse_test.fpas
-    command_ids_test.fpas    { CM_OK, CM_QUIT pass through unchanged }
+    command_ids_test.fpas        { CM_OK, CM_QUIT pass through unchanged }
 ```
 
 Update [`tests/suite.fpasprj`](../tests/suite.fpasprj) when old paths are removed.
@@ -110,7 +113,8 @@ end.
 | `registry.rs` | invalid handle, use-after-close, duplicate free |
 | `geometry.rs` | rect round-trip |
 | `events.rs` | command ids pass through unchanged ✅; full callback dispatch covered by FPAS smoke |
-| `headless.rs` | draw produces non-empty buffer (via `HeadlessTvApp` + modal smoke) |
+| `headless.rs` | draw produces non-empty buffer (via `HeadlessTvApp` + modal/message-box smoke) |
+| `views/*` | widget construction, attach, read-back, and setters |
 
 Keep tests in the same file as the module when under ~100 lines; otherwise `#[cfg(test)] mod tests` in submodule.
 
@@ -131,10 +135,14 @@ Final: `fpas test tests/` or `cargo test -p fpas-cli fpas_regression_suite_passe
 
 ## Interactive manual checklist
 
-From [terminal-checklist.md](../pascal/std/tui/terminal-checklist.md) — run after phase 2 (try-2 vertical slice):
+From [terminal-checklist.md](../pascal/std/tui/terminal-checklist.md) — rerun as Phase 5/6 work changes live interaction:
 
 ```bash
 fpas run examples/pascal/tui/modal_button_try2.fpas
+fpas run examples/pascal/tui/turbo_vision_window_try2.fpas
+fpas run examples/pascal/tui/message_box.fpas
+fpas run examples/pascal/tui/file_dialog_try2.fpas
+cargo run -p fpas-cli -- apps/ide/ide.fpasprj
 ```
 
 - [ ] Modal: OK and Cancel with mouse click
@@ -144,6 +152,7 @@ fpas run examples/pascal/tui/modal_button_try2.fpas
 - [ ] Window behind dialog z-order
 - [ ] IDE About message box
 - [ ] IDE Open file dialog
+- [ ] IDE File / Exit
 - [ ] Terminal resize during `Run` (if upstream handles)
 
 ## Coverage gaps acceptable in v1

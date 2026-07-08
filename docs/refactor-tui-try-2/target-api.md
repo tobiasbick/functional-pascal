@@ -13,7 +13,7 @@ Single unit exporting:
 - Core: `Application`, geometry types, `CommandId`, `CM_*` constants
 - Views: `Dialog`, `Window`, `Button`, … each with `New` and mutation methods
 - Modals: `Application.ExecView`, `MessageBox`, `FileDialog`
-- Optional: `ApplicationHandlers` (phase 2)
+- Optional: `ApplicationHandlers` (later; current branch uses explicit callback registration / callback parameters)
 
 ## Core types
 
@@ -208,18 +208,12 @@ Application.Run(App, OnCommand);
 ### Optional: `OnKey` / `OnMouse`
 
 ```pascal
-Application.Run(App, OnCommand, OnKey, OnMouse);
-```
-
-Or register before `Run`:
-
-```pascal
-Application.SetOnKey(App, OnKey);
-Application.SetOnMouse(App, OnMouse);
+Application.OnKey(App, OnKey);
+Application.OnMouse(App, OnMouse);
 Application.Run(App, OnCommand);
 ```
 
-Pick **one** style during implementation; document only the chosen form.
+The branch has `Application.OnKey` and `Application.OnMouse` registration. `Application.Run(App, OnCommand)` is the landed callback-parameter form for commands.
 
 ### Optional: hosted dispatch
 
@@ -285,7 +279,7 @@ end.
 | --- | --- |
 | `New` vs `Create` | **`New`** — `Dialog.NewModal`, `Button.New` landed |
 | `Application.Open` vs `New` | **Both** — `Application.New` aliases `ApplicationOpen` |
-| `Desktop.Add` vs `Application.AddWindow` | **`Desktop.Add`** — not implemented yet (phase 3) |
+| `Desktop.Add` vs `Application.AddWindow` | **`Desktop.Add`** — landed in phase 3 |
 | `ExecView` vs `ExecDialog` | **`ExecView`** — intrinsic 475 landed |
 
 ## Sema and compiler impact

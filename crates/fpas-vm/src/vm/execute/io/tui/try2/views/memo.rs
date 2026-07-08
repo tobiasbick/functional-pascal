@@ -205,13 +205,8 @@ mod tests {
         let shared = Arc::new(minimal_shared_state(Chunk::new()));
         let mut worker = Worker::new_main(shared);
         worker.try2.open();
-        let handle = try2_memo_new(
-            &mut worker,
-            Rect::new(3, 2, 20, 4),
-            "hello".into(),
-            loc(),
-        )
-        .expect("memo");
+        let handle = try2_memo_new(&mut worker, Rect::new(3, 2, 20, 4), "hello".into(), loc())
+            .expect("memo");
         assert_eq!(
             worker
                 .try2
@@ -243,13 +238,8 @@ mod tests {
         let dialog =
             try2_dialog_new_modal(&mut worker, Rect::new(5, 3, 30, 8), "Test".into(), loc())
                 .expect("dialog");
-        let memo = try2_memo_new(
-            &mut worker,
-            Rect::new(3, 2, 20, 4),
-            "body".into(),
-            loc(),
-        )
-        .expect("memo");
+        let memo =
+            try2_memo_new(&mut worker, Rect::new(3, 2, 20, 4), "body".into(), loc()).expect("memo");
         try2_dialog_attach_memo(&mut worker, dialog, memo, loc()).expect("attach");
         try2_memo_set_text(&mut worker, memo, "updated".into(), loc()).expect("set text");
         assert_eq!(worker.try2.memo_text(memo), Some("updated"));

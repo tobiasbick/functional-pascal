@@ -144,6 +144,8 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/tui/exec_dialog.fpas` | `Std.Tui` — modal `ExecDialog` with `InputLine` read-back via `InputText` |
 | `pascal/tui/modal_button_try2.fpas` | `Std.Tui` try-2 — `Dialog.NewModal`, `Button.New`, `ExecView` (interactive; branch `refactor/tui-try-2`) |
 | `pascal/tui/turbo_vision_window_try2.fpas` | `Std.Tui` try-2 — window, static text, menu/status chrome, `Run(App, OnCommand)` (branch `refactor/tui-try-2`) |
+| `pascal/tui/message_box.fpas` | `Std.Tui` try-2 — upstream message box helper and `CM_OK` result |
+| `pascal/tui/file_dialog_try2.fpas` | `Std.Tui` try-2 — upstream file dialog helper |
 | `pascal/tui/runtime_setters.fpas` | `Std.Tui` — live `SetText` / `SetChecked` from `OnCommand` during `Run` |
 | `math/mandelbrot/mandelbrot_graph.fpas` | `Std.Graph` — native Mandelbrot explorer |
 | `math/julia/julia.fpas` | ASCII Julia set (**interactive** — see below) |
@@ -179,6 +181,8 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 | `pascal/tui/exec_dialog.fpas` | Single-file modal dialog; OK/Cancel closes, entered name printed after |
 | `pascal/tui/modal_button_try2.fpas` | Try-2 modal; OK/Cancel via mouse or Enter/Esc (`refactor/tui-try-2` branch) |
 | `pascal/tui/turbo_vision_window_try2.fpas` | Try-2 window with menu bar, status line, static text, Quit (`refactor/tui-try-2` branch) |
+| `pascal/tui/message_box.fpas` | Try-2 message box; OK closes and prints the result |
+| `pascal/tui/file_dialog_try2.fpas` | Try-2 file dialog; choose a file or cancel |
 | `pascal/tui/runtime_setters.fpas` | Single-file dialog; Toggle updates label/check box live, Quit exits |
 | `math/julia/julia_graph.fpas` | Single-file native-window Julia explorer; arrows pan, `WASD` changes Julia constant, wheel zooms, left click recenters, `Esc` quits |
 | `math/mandelbrot/mandelbrot_graph.fpas` | Single-file native-window Mandelbrot explorer; arrows pan, wheel zooms, left click recenters, `1/2/3` switch palettes, `Esc` quits |

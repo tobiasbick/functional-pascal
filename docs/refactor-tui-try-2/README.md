@@ -10,8 +10,8 @@ This is a **breaking rewrite**. There is no backward-compatibility requirement f
 | --- | --- |
 | Decision | Approved direction — Rust `turbo_vision::Application` is the single source of truth |
 | Branch | `refactor/tui-try-2` |
-| Implementation | Phase 2 complete; phase 3 next (`Window.New`, `Desktop.Add`) |
-| Smoke tests | `tests/tui/smoke/modal_button_try2_test.fpas`, `run_quit_try2_test.fpas` |
+| Implementation | Phase 4 complete; Phase 5 partial; Phase 6 IDE migration partial with automated tests green |
+| Try-2 tests | `tests/tui/smoke/*_try2_test.fpas`, `tests/tui/views/*_try2_test.fpas`, `tests/tui/modals/message_box_try2_test.fpas`, `tests/tui/events/on_key_try2_test.fpas`, `apps/ide/tests/` |
 | Baseline | [baseline.md](baseline.md) — try-1 snapshot before rewrite |
 | Upstream pin | `turbo-vision` 2.0, git tag `v2.0.0` (see workspace `Cargo.toml`) |
 
@@ -21,7 +21,7 @@ The current bridge keeps a parallel FPAS widget snapshot and rebuilds the live T
 
 ## Target in one sentence
 
-Pascal programs compose UI like upstream Turbo Vision (`Dialog.New`, `Add`, `ExecView`, `Run`), while the VM owns one live `turbo_vision::Application` and maps handles to upstream `ViewId` values — no reconcile, no `Bridged*` views, no command offset band.
+Pascal programs compose UI like upstream Turbo Vision (`Dialog.NewModal`, `Window.New`, `Add`, `ExecView`, `Run`), while the VM owns a try-2 session that maps opaque Pascal handles to live Turbo Vision views. The branch still coexists with try-1 until Phase 7; the final target removes reconcile, the command offset band, and remaining `Bridged*` adapter views.
 
 ## Document map
 

@@ -19,7 +19,7 @@ procedure ShowAbout(App: Application);
 begin
   var CloseCommand: integer := Application.MessageBox(App, AboutMessage(), MessageBoxOption.About +
                                                                            MessageBoxOption.OkButton);
-  if CloseCommand <> Command.Accept then
+  if CloseCommand <> CM_OK then
   begin
     return
   end

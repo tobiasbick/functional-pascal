@@ -4,9 +4,9 @@ Target module layout after try-2. Follow [AGENTS.md](../../AGENTS.md): one conce
 
 ## VM bridge (`crates/fpas-vm/src/vm/execute/io/tui/`)
 
-### Current `try2/` tree (branch tip)
+### Current `try2/` tree (branch tip, 2026-07-08)
 
-Coexists with try-1 until phase 7. Pascal intrinsics wired through phase 3.
+Coexists with try-1 until phase 7. Pascal intrinsics are wired through Phase 4, with partial Phase 5 routing for `MessageBox`, `RunFileDialog`, `OnKey`, and `OnMouse`.
 
 ```text
 crates/fpas-vm/src/vm/execute/io/tui/try2/
@@ -21,6 +21,9 @@ crates/fpas-vm/src/vm/execute/io/tui/try2/
   modals.rs        — Application.ExecView
   app.rs           — live Application::new (no try-1 populate)
   chrome.rs        — MenuBar/StatusLine.New + SetMenuBar/SetStatusLine sync
+  message_box.rs   — Application.MessageBox try-2 route
+  file_dialog.rs   — Application.RunFileDialog try-2 route (headless still queued)
+  view_lookup.rs   — lookup attached child views for live mutation/read-back
   intrinsics.rs    — try-2 VM dispatch
   testing.rs       — TestClickButton try-2 path
   views/
@@ -31,9 +34,16 @@ crates/fpas-vm/src/vm/execute/io/tui/try2/
     attach.rs      — Dialog.Add / Window.Add child dispatch
     window.rs      — Window.New, Window.Add
     desktop.rs     — Desktop.Add
+    input_line.rs   — InputLine.New/Text/SetText
+    list_box.rs     — ListBox.New/Selection/SetItems
+    check_box.rs    — CheckBox.New/Checked/SetChecked
+    radio_button.rs — RadioButton.New/Selected/SetSelected
+    memo.rs         — Memo.New/SetText
+    text_viewer.rs  — TextViewer.New/SetText
 ```
 
 `HeadlessTvApp` in `headless_tv_draw.rs` remains for headless paint/modal/run until phase 7 consolidation.
+Several Phase-4 controls still reuse existing `Bridged*` view types for state synchronization and live mutation. That is an accepted coexistence shortcut on the branch, not the Phase-7 target.
 
 ### Target tree (after phase 7)
 
@@ -57,8 +67,8 @@ crates/fpas-vm/src/vm/execute/io/tui/
     button.rs
     static_text.rs
     input_line.rs
-    listbox.rs
-    checkbox.rs
+    list_box.rs
+    check_box.rs
     radio_button.rs
     memo.rs
     text_viewer.rs

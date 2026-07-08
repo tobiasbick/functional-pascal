@@ -16,10 +16,14 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 | `Application.Quit` | ✅ via try-1 | `quit_requested`; try-2 run loop honors it |
 | `Application.TestClickButton` | ✅ try-2 path | `try2/testing.rs` |
 | `Try2InjectCommand` / `Try2InjectKeyboard` | ✅ interim | `try2/intrinsics.rs` — remove when `Test.InjectEvent` lands |
-| `CM_OK`, `CM_CANCEL`, `CM_QUIT` | ✅ | sema + `fpas-std/tui/cm_constants.rs` |
+| `CM_OK`, `CM_CANCEL`, `CM_CLOSE`, `CM_QUIT`, `CM_OPEN`, `CM_ABOUT`, `CM_USER` | ✅ | sema + `fpas-std/tui/cm_constants.rs`; compiler built-in constants |
 | `Window.New`, `Window.Add`, `Desktop.Add` | ✅ | `try2/views/window.rs`, `try2/views/desktop.rs` |
 | `StaticText.New`, `Dialog.Add` / `Window.Add` | ✅ | `try2/views/static_text.rs`, `try2/views/attach.rs` |
 | `MenuBar.New`, `StatusLine.New`, `SetMenuBar`, `SetStatusLine` | ✅ | `try2/chrome.rs` |
+| `InputLine`, `ListBox`, `CheckBox`, `RadioButton`, `Memo`, `TextViewer` | ✅ | `try2/views/*` |
+| `Application.MessageBox` | ✅ | `try2/message_box.rs` |
+| `Application.RunFileDialog` | partial | `try2/file_dialog.rs` — live route landed; headless still uses try-1 queued result because upstream `FileDialog::execute` needs a full `Application` |
+| `Application.OnKey`, `Application.OnMouse` | ✅ | try-1 registration intrinsics; try-2 run delegates unhandled input through shared handlers |
 
 ## Application and session
 
@@ -48,7 +52,7 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 | `Window::new` | `Window.New` | |
 | `Dialog::execute` | Used inside `exec_view` | Do not expose separately initially |
 
-## Controls (phase 2 vertical slice — partial)
+## Controls and chrome (landed through Phase 4)
 
 | Upstream type | FPAS | Status |
 | --- | --- | --- |
@@ -70,7 +74,7 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 | Upstream type | FPAS | Priority |
 | --- | --- | --- |
 | `outline::Outline` | `Outline` | Medium — IDE may not need immediately |
-| `file_dialog::FileDialog` | `Application.RunFileDialog` | High |
+| `file_dialog::FileDialog` | `Application.RunFileDialog` | High — live path landed; headless is blocked on upstream/application construction |
 | `editor::EditorWindow` | `EditorWindow` | Low |
 | `help_window::HelpWindow` | — | Low |
 | `color_dialog::ColorDialog` | — | Low |
@@ -90,7 +94,7 @@ Export constants from `turbo_vision::core::command` (see upstream `prelude`).
 | View | `CM_ZOOM_IN`, `CM_TILE`, `CM_CASCADE` | same |
 | Help | `CM_HELP_INDEX`, `CM_ABOUT` | same |
 
-**Removed:** `command_map.rs` offset translation. FPAS `OnCommand` receives the same integer upstream emitted.
+**Try-2 callbacks:** `OnCommand` receives the same integer upstream emitted. The old `command_map.rs` offset translation still exists for try-1 coexistence and is removed in Phase 7.
 
 **Convention:** application-private commands start at `CM_USER` (4096) or another documented base.
 
@@ -130,7 +134,7 @@ Map each to FPAS `Test.*` helpers or delete FPAS stubs if redundant.
 ## Bump checklist (per upstream release)
 
 1. Diff `core/command.rs` — add/remove `CM_*` in `fpas-std` and sema constants.
-2. Diff `views/` — new widgets → new row in phase 2 table.
+2. Diff `views/` — new widgets → new row in the controls table.
 3. Run `cargo test -p fpas-vm` bridge tests.
 4. Run `fpas test tests/tui/`.
 5. Run `fpas test apps/ide/tests/`.
@@ -148,6 +152,29 @@ Try2InjectKeyboard = 476
 ButtonNew = 477
 DialogAdd = 478
 Try2InjectCommand = 479
+WindowNew = 480
+WindowAdd = 481
+DesktopAdd = 482
+StaticTextNew = 483
+ApplicationRunWithOnCommand = 484
+MenuBarNew = 485
+StatusLineNew = 486
+CheckBoxNew = 487
+InputLineNew = 488
+CheckBoxChecked = 489
+CheckBoxSetChecked = 490
+InputLineText = 491
+InputLineSetText = 492
+ListBoxNew = 493
+ListBoxSelection = 494
+ListBoxSetItems = 495
+RadioButtonNew = 496
+RadioButtonSelected = 497
+RadioButtonSetSelected = 498
+MemoNew = 499
+MemoSetText = 500
+TextViewerNew = 501
+TextViewerSetText = 502
 ```
 
-Future widgets: `TuiWindowNew`, `TuiDesktopAdd`, `TuiButtonSetText`, … — group by widget; keep alphabetical within the try-2 section.
+Future widgets: continue the try-2 range, group by widget, and keep related read-back/setter intrinsics adjacent.

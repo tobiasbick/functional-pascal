@@ -4,16 +4,16 @@ uses Ide.Dialog, Ide.Menu, Std.Option, Std.Tui, Std.Test;
 
 begin
   var App: Application := Application.OpenForTest(80, 25);
-  AssertEquals(100, CmdHelpAbout);
-  AssertEquals(2, CmdFileOpen);
-  Application.TestSetDialogResult(App, Command.Accept);
+  AssertEquals(CM_ABOUT, CmdHelpAbout);
+  AssertEquals(CM_OPEN, CmdFileOpen);
+  Application.Try2InjectKeyboard(App, 7181);
   AssertTrue(HandleCommand(App, CmdHelpAbout));
   Application.TestSetFileDialogResult(App, Some('demo.fpas'));
-  Application.TestSetDialogResult(App, Command.Accept);
+  Application.Try2InjectKeyboard(App, 7181);
   AssertTrue(HandleCommand(App, CmdFileOpen));
   Application.TestSetFileDialogResult(App, None);
-  Application.TestSetDialogResult(App, Command.Accept);
+  Application.Try2InjectKeyboard(App, 7181);
   AssertTrue(HandleCommand(App, CmdFileOpen));
-  AssertFalse(HandleCommand(App, Command.Quit));
+  AssertFalse(HandleCommand(App, CM_QUIT));
   Application.CloseForTest(App)
 end.

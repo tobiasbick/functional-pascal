@@ -421,10 +421,7 @@ impl Try2Session {
 
     /// Returns the shared list box selection cell for a handle.
     #[must_use]
-    pub fn list_box_selection_cell(
-        &self,
-        handle: u32,
-    ) -> Option<&TurboVisionListSelectionCell> {
+    pub fn list_box_selection_cell(&self, handle: u32) -> Option<&TurboVisionListSelectionCell> {
         self.list_box_states
             .get(&handle)
             .map(|state| &state.selection_cell)
@@ -545,13 +542,8 @@ impl Try2Session {
     ) -> u32 {
         let handle = self.registry.allocate(0, ViewKind::Memo);
         self.memo_texts.insert(handle, text);
-        self.detached_memos.insert(
-            handle,
-            DetachedMemo {
-                memo,
-                local_bounds,
-            },
-        );
+        self.detached_memos
+            .insert(handle, DetachedMemo { memo, local_bounds });
         handle
     }
 

@@ -6,9 +6,9 @@ use super::chrome::{try2_menu_bar_new, try2_status_line_new};
 use super::headless::try2_ensure_headless_app;
 use super::modals::try2_exec_view;
 use super::records::{
-    TUI_BUTTON_TYPE, TUI_CHECK_BOX_TYPE, TUI_DIALOG_TYPE, TUI_INPUT_LINE_TYPE,
-    TUI_LIST_BOX_TYPE, TUI_MEMO_TYPE, TUI_RADIO_BUTTON_TYPE, TUI_STATIC_TEXT_TYPE,
-    TUI_TEXT_VIEWER_TYPE, TUI_WINDOW_TYPE,
+    TUI_BUTTON_TYPE, TUI_CHECK_BOX_TYPE, TUI_DIALOG_TYPE, TUI_INPUT_LINE_TYPE, TUI_LIST_BOX_TYPE,
+    TUI_MEMO_TYPE, TUI_RADIO_BUTTON_TYPE, TUI_STATIC_TEXT_TYPE, TUI_TEXT_VIEWER_TYPE,
+    TUI_WINDOW_TYPE,
 };
 use super::registry::ViewKind;
 use super::views::{
@@ -238,8 +238,7 @@ impl Worker {
                 })?;
                 let text = self.pop_turbo_vision_string("RadioButton text", line)?;
                 let bounds = self.pop_turbo_vision_rect(line)?;
-                let handle =
-                    try2_radio_button_new(self, bounds, text, group_id, selected, line)?;
+                let handle = try2_radio_button_new(self, bounds, text, group_id, selected, line)?;
                 self.push(Self::turbo_vision_radio_button_record(handle))?;
             }
             TuiIntrinsic::RadioButtonSelected => {

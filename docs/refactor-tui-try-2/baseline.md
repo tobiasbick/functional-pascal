@@ -73,9 +73,9 @@ Try-2 headless path should prefer `MockTerminal` + `put_event` over FPAS `TestSe
 
 Uses try-1 API throughout `src/` (menu, shell, dialog/open, about message box). Tests in `apps/ide/tests/`.
 
-## What try-2 adds (phase 1 complete; phase 2 in progress)
+## What try-2 adds (branch progress as of 2026-07-08)
 
-Phase 1 landed internal foundation; phase 2 added branch-only Pascal symbols (not yet in `docs/pascal/`). try-1 API and tests remain authoritative until phase 7.
+Phases 1-4 landed branch-only Pascal symbols (not yet in `docs/pascal/`). Phase 5 is partially landed. Phase 6 has a first IDE source/test migration pass, with manual terminal sign-off still pending. try-1 API and tests remain authoritative until phase 7.
 
 **Current `try2/` tree** (see [rust-layout.md](rust-layout.md)):
 
@@ -83,7 +83,11 @@ Phase 1 landed internal foundation; phase 2 added branch-only Pascal symbols (no
 crates/fpas-vm/src/vm/execute/io/tui/try2/
   mod.rs, session.rs, registry.rs, geometry.rs, records.rs
   events.rs, run.rs, headless.rs, modals.rs, app.rs, intrinsics.rs, testing.rs
-  views/dialog.rs, views/button.rs
+  chrome.rs, message_box.rs, file_dialog.rs, view_lookup.rs
+  views/dialog.rs, views/button.rs, views/window.rs, views/desktop.rs
+  views/static_text.rs, views/attach.rs
+  views/input_line.rs, views/list_box.rs, views/check_box.rs
+  views/radio_button.rs, views/memo.rs, views/text_viewer.rs
 
 crates/fpas-std/src/tui/cm_constants.rs
 ```
@@ -91,11 +95,17 @@ crates/fpas-std/src/tui/cm_constants.rs
 **Branch-only Pascal surface** (coexists with try-1 on `refactor/tui-try-2`):
 
 - `Dialog.NewModal`, `Button.New`, `Dialog.Add`, `Dialog.AddButton`
-- `Application.ExecView`, `CM_OK` / `CM_CANCEL` / `CM_QUIT`
+- `Window.New`, `Window.Add`, `Desktop.Add`, `StaticText.New`
+- `InputLine.New`, `ListBox.New`, `CheckBox.New`, `RadioButton.New`, `Memo.New`, `TextViewer.New`
+- `InputLine.Text`, `CheckBox.Checked`, `ListBox.Selection`, `RadioButton.Selected`
+- `InputLine.SetText`, `CheckBox.SetChecked`, `ListBox.SetItems`, `RadioButton.SetSelected`, `Memo.SetText`, `TextViewer.SetText`
+- `MenuBar.New`, `StatusLine.New`, `Application.SetMenuBar`, `Application.SetStatusLine`
+- `Application.ExecView`, `Application.MessageBox`, `Application.Run(App, OnCommand)`, `Application.OnKey`, `Application.OnMouse`, `CM_*`
 - `Application.Try2InjectKeyboard`, `Application.Try2InjectCommand` (headless test helpers)
 - try-2 `Application.Run` when session is open and no try-1 widgets exist
+- IDE commands currently used by `apps/ide`: `CM_OPEN`, `CM_ABOUT`, `CM_QUIT`, plus `CM_USER` as the application-private base
 
-**Smoke tests:** `tests/tui/smoke/modal_button_try2_test.fpas`, `run_quit_try2_test.fpas`.
+**Try-2 tests:** `tests/tui/smoke/*_try2_test.fpas`, `tests/tui/views/*_try2_test.fpas`, `tests/tui/modals/message_box_try2_test.fpas`, `tests/tui/events/on_key_try2_test.fpas`, `apps/ide/tests/`.
 
 ## Verification commands (branch tip)
 
@@ -111,4 +121,4 @@ fpas test apps/ide/tests/
 cargo test -p fpas-cli fpas_regression_suite_passes
 ```
 
-Recorded 2026-07-07 after phase 1 + phase 2 vertical slice: all green.
+Recorded 2026-07-08 after phases 1-4, partial phase 5, and partial phase 6: targeted try-2 suites, `apps/ide/tests/`, and the full regression suite were green.

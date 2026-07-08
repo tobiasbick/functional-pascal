@@ -36,8 +36,7 @@ pub(in crate::vm::execute::io::tui) fn try2_run_file_dialog(
     let initial_dir = start_path
         .filter(|path| !path.is_empty())
         .map(PathBuf::from);
-    let mut file_dialog =
-        FileDialog::new(bounds, &title, &wildcard, initial_dir).build();
+    let mut file_dialog = FileDialog::new(bounds, &title, &wildcard, initial_dir).build();
 
     let selected = if worker.with_tui(|tui| tui.session.is_headless()) {
         try2_headless_run_file_dialog(worker, line)?

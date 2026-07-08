@@ -30,6 +30,9 @@ pub const STD_TUI_CM_OK: &str = std_tui!("CM_OK");
 pub const STD_TUI_CM_CANCEL: &str = std_tui!("CM_CANCEL");
 pub const STD_TUI_CM_CLOSE: &str = std_tui!("CM_CLOSE");
 pub const STD_TUI_CM_QUIT: &str = std_tui!("CM_QUIT");
+pub const STD_TUI_CM_ABOUT: &str = std_tui!("CM_ABOUT");
+pub const STD_TUI_CM_OPEN: &str = std_tui!("CM_OPEN");
+pub const STD_TUI_CM_USER: &str = std_tui!("CM_USER");
 pub const STD_TUI_DIALOG_NEW_MODAL: &str = std_tui!("Dialog.NewModal");
 pub const STD_TUI_DIALOG_ADD_BUTTON: &str = std_tui!("Dialog.AddButton");
 pub const STD_TUI_DIALOG_ADD: &str = std_tui!("Dialog.Add");
@@ -291,6 +294,9 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_CM_CANCEL,
     STD_TUI_CM_CLOSE,
     STD_TUI_CM_QUIT,
+    STD_TUI_CM_ABOUT,
+    STD_TUI_CM_OPEN,
+    STD_TUI_CM_USER,
     STD_TUI_DIALOG_NEW_MODAL,
     STD_TUI_DIALOG_ADD_BUTTON,
     STD_TUI_DIALOG_ADD,

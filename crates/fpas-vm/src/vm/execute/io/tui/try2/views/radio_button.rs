@@ -35,7 +35,9 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_radio_button_new(
         selected_cell.clone(),
     );
     if selected {
-        worker.try2.deselect_radio_group_except(group_id, Some(handle));
+        worker
+            .try2
+            .deselect_radio_group_except(group_id, Some(handle));
         selected_cell.set(true);
     }
     let radio_button = build_bridged_radio_button(
@@ -99,7 +101,9 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_radio_button_set_selected(
     let group_id = state.group_id;
 
     if selected {
-        worker.try2.deselect_radio_group_except(group_id, Some(handle));
+        worker
+            .try2
+            .deselect_radio_group_except(group_id, Some(handle));
     }
     let Some(cell) = worker.try2.radio_button_selected_cell(handle) else {
         return Err(missing_radio_button_state(handle, line));

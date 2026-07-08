@@ -5,14 +5,14 @@ program TuiMessageBox;
 uses Std.Console, Std.Tui;
 
 begin
-  var App: Application := Application.Open();
+  var App: Application := Application.New();
   var CloseCommand: integer := Application.MessageBox(App, (('Functional Pascal' + '
 ') + '
 ') +
                                                            'Turbo Vision message box demo.', MessageBoxOption.Information +
                                                                                              MessageBoxOption.OkButton);
   Application.Close(App);
-  if CloseCommand = Command.Accept then
+  if CloseCommand = CM_OK then
   begin
     WriteLn('OK')
   end

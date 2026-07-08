@@ -53,9 +53,22 @@ impl BridgedRadioButton {
         }
     }
 
+    /// Copy upstream radio state into the host cell (try-2 read-back path).
+    pub(in crate::vm::execute::io::tui) fn sync_selected_from_view(&mut self) {
+        self.sync_selected();
+    }
+
     /// Push FPAS cell state into the upstream radio button (live patch path).
     pub(in crate::vm::execute::io::tui) fn sync_from_cell(&mut self) {
         self.inner.set_selected(self.selected_cell.read());
+    }
+
+    /// Refreshes mutual-exclusion cells after a new group member is registered.
+    pub(in crate::vm::execute::io::tui) fn update_group_cells(
+        &mut self,
+        group_cells: Vec<TurboVisionBoolCell>,
+    ) {
+        self.group_cells = group_cells;
     }
 
     /// Push FPAS label text into the upstream radio button (live patch path).

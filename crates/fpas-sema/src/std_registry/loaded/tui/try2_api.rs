@@ -124,6 +124,31 @@ pub(super) fn register_try2_api(
     );
     define_func(
         checker,
+        s::STD_TUI_RADIO_BUTTON_NEW,
+        vec![
+            p("Bounds", types.rect.clone(), false),
+            p("Text", Ty::String, false),
+            p("GroupId", Ty::Integer, false),
+            p("Selected", Ty::Boolean, false),
+        ],
+        types.radio_button.clone(),
+    );
+    define_func(
+        checker,
+        s::STD_TUI_RADIO_BUTTON_SELECTED,
+        vec![p("Rb", types.radio_button.clone(), false)],
+        Ty::Boolean,
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_RADIO_BUTTON_SET_SELECTED,
+        vec![
+            p("Rb", types.radio_button.clone(), false),
+            p("Selected", Ty::Boolean, false),
+        ],
+    );
+    define_func(
+        checker,
         s::STD_TUI_DIALOG_ADD_BUTTON,
         vec![
             p("Dlg", types.dialog.clone(), false),

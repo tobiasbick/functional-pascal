@@ -50,6 +50,21 @@ pub(crate) struct DetachedListBox {
     pub local_bounds: Rect,
 }
 
+/// Radio button constructed by `RadioButton.New` and not yet attached to a parent.
+pub(crate) struct DetachedRadioButton {
+    pub radio_button: Box<dyn View>,
+    pub local_bounds: Rect,
+}
+
+/// Host-side radio button state retained after attach.
+#[derive(Clone)]
+pub(crate) struct Try2RadioButtonState {
+    pub bounds: Rect,
+    pub text: String,
+    pub group_id: u16,
+    pub selected_cell: TurboVisionBoolCell,
+}
+
 /// Host-side list box state retained after attach.
 pub(crate) struct Try2ListBoxState {
     pub items: Vec<String>,
@@ -99,12 +114,18 @@ pub(crate) struct Try2Session {
     detached_input_lines: HashMap<u32, DetachedInputLine>,
     /// List boxes from `ListBox.New` awaiting parent attach.
     detached_list_boxes: HashMap<u32, DetachedListBox>,
+    /// Radio buttons from `RadioButton.New` awaiting parent attach.
+    detached_radio_buttons: HashMap<u32, DetachedRadioButton>,
     /// Host-side check box state keyed by try-2 handle.
     check_box_cells: HashMap<u32, TurboVisionBoolCell>,
     /// Host-side input line state keyed by try-2 handle.
     input_line_states: HashMap<u32, Try2InputLineState>,
     /// Host-side list box state keyed by try-2 handle.
     list_box_states: HashMap<u32, Try2ListBoxState>,
+    /// Host-side radio button state keyed by try-2 handle.
+    radio_button_states: HashMap<u32, Try2RadioButtonState>,
+    /// Radio group members keyed by FPAS `GroupId`.
+    radio_group_members: HashMap<u16, Vec<u32>>,
     /// Child handle to parent dialog/window handle after attach.
     child_parents: HashMap<u32, u32>,
     /// Headless test click targets keyed by try-2 button handle.
@@ -129,9 +150,12 @@ impl Try2Session {
         self.detached_check_boxes.clear();
         self.detached_input_lines.clear();
         self.detached_list_boxes.clear();
+        self.detached_radio_buttons.clear();
         self.check_box_cells.clear();
         self.input_line_states.clear();
         self.list_box_states.clear();
+        self.radio_button_states.clear();
+        self.radio_group_members.clear();
         self.child_parents.clear();
         self.button_clicks.clear();
         self.desktop_windows.clear();
@@ -385,6 +409,107 @@ impl Try2Session {
     /// Mutable access to list box host state.
     pub fn list_box_state_mut(&mut self, handle: u32) -> Option<&mut Try2ListBoxState> {
         self.list_box_states.get_mut(&handle)
+    }
+
+    /// Registers radio button host state and returns its FPAS handle.
+    pub fn insert_radio_button_state(
+        &mut self,
+        bounds: Rect,
+        text: String,
+        group_id: u16,
+        selected_cell: TurboVisionBoolCell,
+    ) -> u32 {
+        let handle = self.registry.allocate(0, ViewKind::RadioButton);
+        self.radio_button_states.insert(
+            handle,
+            Try2RadioButtonState {
+                bounds,
+                text,
+                group_id,
+                selected_cell,
+            },
+        );
+        self.radio_group_members
+            .entry(group_id)
+            .or_default()
+            .push(handle);
+        handle
+    }
+
+    /// Inserts a detached radio button view for an existing handle.
+    pub fn insert_detached_radio_button(
+        &mut self,
+        handle: u32,
+        radio_button: Box<dyn View>,
+        local_bounds: Rect,
+    ) {
+        self.detached_radio_buttons.insert(
+            handle,
+            DetachedRadioButton {
+                radio_button,
+                local_bounds,
+            },
+        );
+    }
+
+    /// Replaces a detached radio button view after group membership changes.
+    pub fn replace_detached_radio_button(&mut self, handle: u32, radio_button: Box<dyn View>) {
+        if let Some(detached) = self.detached_radio_buttons.get_mut(&handle) {
+            detached.radio_button = radio_button;
+        }
+    }
+
+    /// Removes a detached radio button for parent attach.
+    pub fn take_detached_radio_button(&mut self, handle: u32) -> Option<DetachedRadioButton> {
+        self.detached_radio_buttons.remove(&handle)
+    }
+
+    /// Snapshot of radio button host state.
+    #[must_use]
+    pub fn radio_button_state(&self, handle: u32) -> Option<&Try2RadioButtonState> {
+        self.radio_button_states.get(&handle)
+    }
+
+    /// Returns the shared selected cell for a radio button handle.
+    #[must_use]
+    pub fn radio_button_selected_cell(&self, handle: u32) -> Option<&TurboVisionBoolCell> {
+        self.radio_button_states
+            .get(&handle)
+            .map(|state| &state.selected_cell)
+    }
+
+    /// Returns live handles in a radio group.
+    #[must_use]
+    pub fn radio_group_member_handles(&self, group_id: u16) -> Vec<u32> {
+        self.radio_group_members
+            .get(&group_id)
+            .cloned()
+            .unwrap_or_default()
+    }
+
+    /// Returns shared selection cells for all members of a radio group.
+    #[must_use]
+    pub fn radio_group_cells(&self, group_id: u16) -> Vec<TurboVisionBoolCell> {
+        self.radio_group_member_handles(group_id)
+            .into_iter()
+            .filter_map(|handle| {
+                self.radio_button_states
+                    .get(&handle)
+                    .map(|state| state.selected_cell.clone())
+            })
+            .collect()
+    }
+
+    /// Clears selection for every member of a radio group except `keep`.
+    pub fn deselect_radio_group_except(&mut self, group_id: u16, keep: Option<u32>) {
+        for handle in self.radio_group_member_handles(group_id) {
+            if keep == Some(handle) {
+                continue;
+            }
+            if let Some(state) = self.radio_button_states.get(&handle) {
+                state.selected_cell.set(false);
+            }
+        }
     }
 
     /// Stores menu bar data for a registry handle.

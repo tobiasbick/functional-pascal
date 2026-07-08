@@ -21,3 +21,6 @@
     ListBoxNew = 493,
     ListBoxSelection = 494,
     ListBoxSetItems = 495,
+    RadioButtonNew = 496,
+    RadioButtonSelected = 497,
+    RadioButtonSetSelected = 498,

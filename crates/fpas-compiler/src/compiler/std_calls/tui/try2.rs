@@ -190,6 +190,33 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::ListBoxSetItems), location);
                 Ok(true)
             }
+            s::STD_TUI_RADIO_BUTTON_NEW => {
+                self.expect_exact_args(s::STD_TUI_RADIO_BUTTON_NEW, 4, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::RadioButtonNew), location);
+                Ok(true)
+            }
+            s::STD_TUI_RADIO_BUTTON_SELECTED => {
+                self.expect_exact_args(s::STD_TUI_RADIO_BUTTON_SELECTED, 1, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::RadioButtonSelected), location);
+                Ok(true)
+            }
+            s::STD_TUI_RADIO_BUTTON_SET_SELECTED => {
+                self.expect_exact_args(s::STD_TUI_RADIO_BUTTON_SET_SELECTED, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(
+                    Intrinsic::Tui(TuiIntrinsic::RadioButtonSetSelected),
+                    location,
+                );
+                Ok(true)
+            }
             s::STD_TUI_MENU_BAR_NEW => {
                 self.expect_exact_args(s::STD_TUI_MENU_BAR_NEW, 2, args, location)?;
                 for arg in args {

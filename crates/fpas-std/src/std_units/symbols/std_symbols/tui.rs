@@ -47,6 +47,9 @@ pub const STD_TUI_INPUT_LINE_SET_TEXT: &str = std_tui!("InputLine.SetText");
 pub const STD_TUI_LIST_BOX_NEW: &str = std_tui!("ListBox.New");
 pub const STD_TUI_LIST_BOX_SELECTION: &str = std_tui!("ListBox.Selection");
 pub const STD_TUI_LIST_BOX_SET_ITEMS: &str = std_tui!("ListBox.SetItems");
+pub const STD_TUI_RADIO_BUTTON_NEW: &str = std_tui!("RadioButton.New");
+pub const STD_TUI_RADIO_BUTTON_SELECTED: &str = std_tui!("RadioButton.Selected");
+pub const STD_TUI_RADIO_BUTTON_SET_SELECTED: &str = std_tui!("RadioButton.SetSelected");
 pub const STD_TUI_MENU_BAR_NEW: &str = std_tui!("MenuBar.New");
 pub const STD_TUI_STATUS_LINE_NEW: &str = std_tui!("StatusLine.New");
 pub const STD_TUI_COMMAND_ACCEPT: &str = std_tui!("Command.Accept");
@@ -301,6 +304,9 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_LIST_BOX_NEW,
     STD_TUI_LIST_BOX_SELECTION,
     STD_TUI_LIST_BOX_SET_ITEMS,
+    STD_TUI_RADIO_BUTTON_NEW,
+    STD_TUI_RADIO_BUTTON_SELECTED,
+    STD_TUI_RADIO_BUTTON_SET_SELECTED,
     STD_TUI_MENU_BAR_NEW,
     STD_TUI_STATUS_LINE_NEW,
     STD_TUI_COMMAND_ACCEPT,

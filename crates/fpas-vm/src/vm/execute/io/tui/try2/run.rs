@@ -8,6 +8,7 @@ use super::events::try2_dispatch_on_command;
 use super::headless::try2_ensure_headless_app;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
+use crate::vm::execute::io::tui::headless_tv_draw::HeadlessRunStep;
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 use turbo_vision::core::command::CM_QUIT;
@@ -65,7 +66,7 @@ fn try2_headless_application_run(worker: &mut Worker, line: SourceLocation) -> R
             break;
         }
 
-        let command = {
+        let step = {
             let Some(app) = worker.headless_tv_app.as_mut() else {
                 return Err(runtime_error(
                     RUNTIME_CONSOLE_STATE_ERROR,
@@ -74,7 +75,7 @@ fn try2_headless_application_run(worker: &mut Worker, line: SourceLocation) -> R
                     line,
                 ));
             };
-            app.run_step().map_err(|error| {
+            app.run_step_outcome().map_err(|error| {
                 runtime_error(
                     RUNTIME_CONSOLE_STATE_ERROR,
                     format!("Headless Turbo Vision run step failed: {error}"),
@@ -84,15 +85,22 @@ fn try2_headless_application_run(worker: &mut Worker, line: SourceLocation) -> R
             })?
         };
 
-        match command {
-            Some(command) => {
+        match step {
+            HeadlessRunStep::Command(command) => {
                 idle_steps = 0;
                 try2_dispatch_on_command(worker, command, line)?;
                 if command == CM_QUIT || worker.with_tui(|tui| tui.quit_requested) {
                     break;
                 }
             }
-            None => {
+            HeadlessRunStep::Unhandled(mut event) => {
+                idle_steps = 0;
+                worker.dispatch_turbo_vision_unhandled_input(&mut event, line)?;
+                if worker.with_tui(|tui| tui.quit_requested) {
+                    break;
+                }
+            }
+            HeadlessRunStep::Idle => {
                 idle_steps = idle_steps.saturating_add(1);
                 if idle_steps > TRY2_HEADLESS_RUN_MAX_IDLE_STEPS {
                     return Err(runtime_error(

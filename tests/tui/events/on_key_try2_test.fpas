@@ -1,0 +1,21 @@
+program OnKeyTry2Test;
+
+uses Std.Console, Std.Tui, Std.Test;
+
+function HandleKey(App: Application; Key: Std.Console.KeyEvent): boolean;
+begin
+  Application.Quit(App);
+  return true
+end;
+
+procedure OnCommand(App: Application; Cmd: integer);
+begin
+end;
+
+begin
+  var App: Application := Application.OpenForTest(40, 14);
+  Application.OnKey(App, HandleKey);
+  Application.Try2InjectKeyboard(App, 283);
+  Application.Run(App, OnCommand);
+  Application.CloseForTest(App)
+end.

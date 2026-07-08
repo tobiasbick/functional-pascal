@@ -100,7 +100,7 @@ Estimates assume focused hobby-project pace (part-time).
 
 - [x] `Application.MessageBox` (try-2 headless via `try2_headless_exec_view`; live via upstream `message_box`)
 - [ ] `Application.RunFileDialog` (live path done; headless still uses try-1 `test_file_dialog_result` queue until upstream headless API)
-- [ ] `OnKey` / `OnMouse` optional hooks
+- [x] `OnKey` / `OnMouse` optional hooks (`OnKey` headless + live; `OnMouse` live; export `Application.OnKey` / `OnMouse` from `Std.Tui`)
 
 **Exit criteria**
 

@@ -23,6 +23,13 @@ use turbo_vision::views::desktop::Desktop;
 use turbo_vision::views::menu_bar::MenuBar;
 use turbo_vision::views::status_line::StatusLine;
 
+/// Outcome of one headless turbo-vision poll/dispatch iteration.
+pub(in crate::vm::execute::io::tui) enum HeadlessRunStep {
+    Idle,
+    Command(CommandId),
+    Unhandled(Event),
+}
+
 /// Turbo Vision session used for headless paint (no crossterm).
 pub(in crate::vm) struct HeadlessTvApp {
     terminal: Terminal,
@@ -170,11 +177,21 @@ impl HeadlessTvApp {
     pub(in crate::vm::execute::io::tui) fn run_step(
         &mut self,
     ) -> std::io::Result<Option<CommandId>> {
+        match self.run_step_outcome()? {
+            HeadlessRunStep::Command(command) => Ok(Some(command)),
+            HeadlessRunStep::Idle | HeadlessRunStep::Unhandled(_) => Ok(None),
+        }
+    }
+
+    /// One headless run iteration including unhandled keyboard/mouse events for `OnKey` / `OnMouse`.
+    pub(in crate::vm::execute::io::tui) fn run_step_outcome(
+        &mut self,
+    ) -> std::io::Result<HeadlessRunStep> {
         self.draw();
         let _ = self.terminal.flush();
 
         let Ok(Some(mut event)) = self.terminal.poll_event(Duration::from_millis(20)) else {
-            return Ok(None);
+            return Ok(HeadlessRunStep::Idle);
         };
 
         if let Some(ref mut menu_bar) = self.menu_bar {
@@ -187,10 +204,11 @@ impl HeadlessTvApp {
             status_line.handle_event(&mut event);
         }
 
-        if event.what == EventType::Command {
-            return Ok(Some(event.command));
+        match event.what {
+            EventType::Command => Ok(HeadlessRunStep::Command(event.command)),
+            EventType::Nothing => Ok(HeadlessRunStep::Idle),
+            _ => Ok(HeadlessRunStep::Unhandled(event)),
         }
-        Ok(None)
     }
 
     pub(in crate::vm::execute::io::tui) fn update_desktop_bounds(&mut self) {

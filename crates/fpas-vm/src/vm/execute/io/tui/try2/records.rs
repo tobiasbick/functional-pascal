@@ -19,4 +19,5 @@ pub(in crate::vm::execute::io::tui::try2) fn handle_record(
 pub(in crate::vm::execute::io::tui::try2) const TUI_APPLICATION_TYPE: &str = "Std.Tui.Application";
 pub(in crate::vm::execute::io::tui::try2) const TUI_DIALOG_TYPE: &str = "Std.Tui.Dialog";
 pub(in crate::vm::execute::io::tui::try2) const TUI_WINDOW_TYPE: &str = "Std.Tui.Window";
+pub(in crate::vm::execute::io::tui::try2) const TUI_STATIC_TEXT_TYPE: &str = "Std.Tui.StaticText";
 pub(in crate::vm::execute::io::tui::try2) const TUI_BUTTON_TYPE: &str = "Std.Tui.Button";

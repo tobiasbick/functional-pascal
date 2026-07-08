@@ -164,4 +164,42 @@ mod tests {
         try2_desktop_add(&mut worker, window, loc()).expect("desktop add");
         assert!(worker.try2.button_click_point(button).is_some());
     }
+
+    #[test]
+    fn desktop_button_click_produces_quit_command_in_run_step() {
+        let mut worker = headless_try2_worker(60, 20);
+        let window = try2_window_new(
+            &mut worker,
+            Rect::from_coords(5, 3, 35, 13),
+            "Test".into(),
+            loc(),
+        )
+        .expect("window");
+        let button = try2_button_new(
+            &mut worker,
+            Rect::from_coords(10, 4, 20, 6),
+            "Quit".into(),
+            CM_QUIT,
+            false,
+            loc(),
+        )
+        .expect("button");
+        try2_window_attach_button(&mut worker, window, button, loc()).expect("attach");
+        try2_desktop_add(&mut worker, window, loc()).expect("desktop add");
+
+        let point = worker.try2.button_click_point(button).expect("click point");
+        try2_ensure_headless_app(&mut worker, loc()).expect("headless app");
+        let app = worker.headless_tv_app.as_mut().expect("app");
+        app.push_mouse_down(point.x, point.y);
+        app.push_mouse_up(point.x, point.y);
+
+        let mut command = None;
+        for _ in 0..16 {
+            if let Ok(Some(cmd)) = app.run_step() {
+                command = Some(cmd);
+                break;
+            }
+        }
+        assert_eq!(command, Some(CM_QUIT));
+    }
 }

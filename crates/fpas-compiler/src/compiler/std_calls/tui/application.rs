@@ -31,9 +31,25 @@ impl Compiler {
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_RUN => {
-                self.expect_exact_args(s::STD_TUI_APPLICATION_RUN, 1, args, location)?;
-                self.compile_expr(&args[0])?;
-                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::ApplicationRun), location);
+                if args.len() == 1 {
+                    self.expect_exact_args(s::STD_TUI_APPLICATION_RUN, 1, args, location)?;
+                    self.compile_expr(&args[0])?;
+                    self.emit_intrinsic_unit(
+                        Intrinsic::Tui(TuiIntrinsic::ApplicationRun),
+                        location,
+                    );
+                } else if args.len() == 2 {
+                    self.expect_exact_args(s::STD_TUI_APPLICATION_RUN, 2, args, location)?;
+                    for arg in args {
+                        self.compile_expr(arg)?;
+                    }
+                    self.emit_intrinsic_unit(
+                        Intrinsic::Tui(TuiIntrinsic::ApplicationRunWithOnCommand),
+                        location,
+                    );
+                } else {
+                    self.expect_exact_args(s::STD_TUI_APPLICATION_RUN, 1, args, location)?;
+                }
                 Ok(true)
             }
             s::STD_TUI_APPLICATION_SIZE => {

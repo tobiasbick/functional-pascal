@@ -1,13 +1,17 @@
-use super::super::super::{define_func, define_proc, p};
-use super::TuiTypes;
+use super::super::super::{define_builtin_std, define_func, define_proc, p};
+use super::{TuiCallbackTypes, TuiTypes};
 use crate::check::Checker;
-use crate::types::Ty;
+use crate::types::{ProcedureTy, Ty};
 use fpas_std::std_symbols as s;
 
 /// Register try-2 `Std.Tui` symbols (coexists with try-1 on `refactor/tui-try-2`).
 ///
 /// **Documentation:** `docs/refactor-tui-try-2/target-api.md`
-pub(super) fn register_try2_api(checker: &mut Checker, types: &TuiTypes) {
+pub(super) fn register_try2_api(
+    checker: &mut Checker,
+    types: &TuiTypes,
+    _callbacks: &TuiCallbackTypes,
+) {
     for name in [
         s::STD_TUI_CM_OK,
         s::STD_TUI_CM_CANCEL,
@@ -37,13 +41,14 @@ pub(super) fn register_try2_api(checker: &mut Checker, types: &TuiTypes) {
         ],
         types.button.clone(),
     );
-    define_proc(
+    define_func(
         checker,
-        s::STD_TUI_DIALOG_ADD,
+        s::STD_TUI_STATIC_TEXT_NEW,
         vec![
-            p("Dlg", types.dialog.clone(), false),
-            p("Child", types.button.clone(), false),
+            p("Bounds", types.rect.clone(), false),
+            p("Text", Ty::String, false),
         ],
+        types.static_text.clone(),
     );
     define_func(
         checker,
@@ -93,18 +98,41 @@ pub(super) fn register_try2_api(checker: &mut Checker, types: &TuiTypes) {
     );
     define_proc(
         checker,
-        s::STD_TUI_WINDOW_ADD,
-        vec![
-            p("Win", types.window.clone(), false),
-            p("Child", types.button.clone(), false),
-        ],
-    );
-    define_proc(
-        checker,
         s::STD_TUI_DESKTOP_ADD,
         vec![
             p("App", types.application.clone(), false),
             p("Win", types.window.clone(), false),
         ],
     );
+    define_func(
+        checker,
+        s::STD_TUI_MENU_BAR_NEW,
+        vec![
+            p("Bounds", types.rect.clone(), false),
+            p("Menus", Ty::Array(Box::new(types.menu.clone())), false),
+        ],
+        types.menu_bar.clone(),
+    );
+    define_func(
+        checker,
+        s::STD_TUI_STATUS_LINE_NEW,
+        vec![
+            p("Bounds", types.rect.clone(), false),
+            p(
+                "Items",
+                Ty::Array(Box::new(types.status_item.clone())),
+                false,
+            ),
+        ],
+        types.status_line.clone(),
+    );
+
+    let builtin_placeholder = Ty::Procedure(ProcedureTy {
+        type_params: Vec::new(),
+        params: Vec::new(),
+        variadic: false,
+    });
+    for name in [s::STD_TUI_DIALOG_ADD, s::STD_TUI_WINDOW_ADD] {
+        define_builtin_std(checker, name, builtin_placeholder.clone());
+    }
 }

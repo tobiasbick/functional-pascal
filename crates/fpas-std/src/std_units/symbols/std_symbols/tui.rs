@@ -37,6 +37,9 @@ pub const STD_TUI_BUTTON_NEW: &str = std_tui!("Button.New");
 pub const STD_TUI_WINDOW_NEW: &str = std_tui!("Window.New");
 pub const STD_TUI_WINDOW_ADD: &str = std_tui!("Window.Add");
 pub const STD_TUI_DESKTOP_ADD: &str = std_tui!("Desktop.Add");
+pub const STD_TUI_STATIC_TEXT_NEW: &str = std_tui!("StaticText.New");
+pub const STD_TUI_MENU_BAR_NEW: &str = std_tui!("MenuBar.New");
+pub const STD_TUI_STATUS_LINE_NEW: &str = std_tui!("StatusLine.New");
 pub const STD_TUI_COMMAND_ACCEPT: &str = std_tui!("Command.Accept");
 pub const STD_TUI_COMMAND_CANCEL: &str = std_tui!("Command.Cancel");
 pub const STD_TUI_COMMAND_CLOSE: &str = std_tui!("Command.Close");
@@ -279,6 +282,9 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_WINDOW_NEW,
     STD_TUI_WINDOW_ADD,
     STD_TUI_DESKTOP_ADD,
+    STD_TUI_STATIC_TEXT_NEW,
+    STD_TUI_MENU_BAR_NEW,
+    STD_TUI_STATUS_LINE_NEW,
     STD_TUI_COMMAND_ACCEPT,
     STD_TUI_COMMAND_CANCEL,
     STD_TUI_COMMAND_CLOSE,

@@ -2,12 +2,14 @@
 //!
 //! **Documentation:** `docs/refactor-tui-try-2/target-api.md`
 
+use super::chrome::{try2_menu_bar_new, try2_status_line_new};
 use super::headless::try2_ensure_headless_app;
 use super::modals::try2_exec_view;
-use super::records::{TUI_BUTTON_TYPE, TUI_DIALOG_TYPE, TUI_WINDOW_TYPE};
+use super::records::{TUI_BUTTON_TYPE, TUI_DIALOG_TYPE, TUI_STATIC_TEXT_TYPE, TUI_WINDOW_TYPE};
+use super::registry::ViewKind;
 use super::views::{
-    try2_button_new, try2_desktop_add, try2_dialog_add_button, try2_dialog_attach_button,
-    try2_dialog_new_modal, try2_window_attach_button, try2_window_new,
+    try2_button_new, try2_desktop_add, try2_dialog_add_button, try2_dialog_attach_child,
+    try2_dialog_new_modal, try2_static_text_new, try2_window_attach_child, try2_window_new,
 };
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
@@ -77,9 +79,9 @@ impl Worker {
                 self.push(Self::turbo_vision_button_record(handle))?;
             }
             TuiIntrinsic::DialogAdd => {
-                let button_handle = self.pop_try2_handle(TUI_BUTTON_TYPE, "Button", line)?;
+                let (child_handle, child_kind) = self.pop_try2_child_handle(line)?;
                 let dialog_handle = self.pop_try2_handle(TUI_DIALOG_TYPE, "Dialog", line)?;
-                try2_dialog_attach_button(self, dialog_handle, button_handle, line)?;
+                try2_dialog_attach_child(self, dialog_handle, child_handle, child_kind, line)?;
             }
             TuiIntrinsic::ExecView => {
                 let dialog_handle = self.pop_try2_handle(TUI_DIALOG_TYPE, "Dialog", line)?;
@@ -120,19 +122,59 @@ impl Worker {
                 self.push(Self::turbo_vision_window_record(handle))?;
             }
             TuiIntrinsic::WindowAdd => {
-                let button_handle = self.pop_try2_handle(TUI_BUTTON_TYPE, "Button", line)?;
+                let (child_handle, child_kind) = self.pop_try2_child_handle(line)?;
                 let window_handle = self.pop_try2_handle(TUI_WINDOW_TYPE, "Window", line)?;
-                try2_window_attach_button(self, window_handle, button_handle, line)?;
+                try2_window_attach_child(self, window_handle, child_handle, child_kind, line)?;
             }
             TuiIntrinsic::DesktopAdd => {
                 let window_handle = self.pop_try2_handle(TUI_WINDOW_TYPE, "Window", line)?;
                 self.pop_tui_application(line)?;
                 try2_desktop_add(self, window_handle, line)?;
             }
+            TuiIntrinsic::StaticTextNew => {
+                let text = self.pop_turbo_vision_string("StaticText text", line)?;
+                let bounds = self.pop_turbo_vision_rect(line)?;
+                let handle = try2_static_text_new(self, bounds, text, line)?;
+                self.push(Self::turbo_vision_static_text_record(handle))?;
+            }
+            TuiIntrinsic::MenuBarNew => {
+                let menus = self.parse_turbo_vision_menus(line)?;
+                let bounds = self.pop_turbo_vision_rect(line)?;
+                let handle = try2_menu_bar_new(self, bounds, menus, line)?;
+                self.push(Self::turbo_vision_menu_bar_record(handle))?;
+            }
+            TuiIntrinsic::StatusLineNew => {
+                let items = self.parse_turbo_vision_status_items(line)?;
+                let bounds = self.pop_turbo_vision_rect(line)?;
+                let handle = try2_status_line_new(self, bounds, items, line)?;
+                self.push(Self::turbo_vision_status_line_record(handle))?;
+            }
             _ => return Ok(false),
         }
 
         Ok(true)
+    }
+
+    fn pop_try2_child_handle(&mut self, line: SourceLocation) -> Result<(u32, ViewKind), VmError> {
+        match self.pop(line)? {
+            Value::Record { type_name, fields } if type_name == TUI_BUTTON_TYPE => Ok((
+                self.decode_try2_handle(&fields, "Button", line)?,
+                ViewKind::Button,
+            )),
+            Value::Record { type_name, fields } if type_name == TUI_STATIC_TEXT_TYPE => Ok((
+                self.decode_try2_handle(&fields, "StaticText", line)?,
+                ViewKind::StaticText,
+            )),
+            other => Err(runtime_error(
+                RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                format!(
+                    "Expected `Std.Tui.Button` or `Std.Tui.StaticText`, got {}",
+                    other.type_name()
+                ),
+                "Pass a child handle from `Button.New` or `StaticText.New`.",
+                line,
+            )),
+        }
     }
 
     fn pop_try2_handle(

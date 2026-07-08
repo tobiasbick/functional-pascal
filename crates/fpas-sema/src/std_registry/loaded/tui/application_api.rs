@@ -29,11 +29,6 @@ pub(super) fn register_application_api(
         s::STD_TUI_APPLICATION_CLOSE,
         vec![p("App", types.application.clone(), false)],
     );
-    define_proc(
-        checker,
-        s::STD_TUI_APPLICATION_RUN,
-        vec![p("App", types.application.clone(), false)],
-    );
     define_func(
         checker,
         s::STD_TUI_APPLICATION_SIZE,

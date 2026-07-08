@@ -6,6 +6,7 @@
 //! **Documentation:** `docs/refactor-tui-try-2/target-architecture.md`
 
 pub mod app;
+pub mod chrome;
 pub mod events;
 pub mod geometry;
 pub mod headless;
@@ -18,8 +19,9 @@ pub mod session;
 pub mod testing;
 pub mod views;
 
+pub(in crate::vm::execute::io::tui) use chrome::{try2_set_menu_bar, try2_set_status_line};
 pub(in crate::vm::execute::io::tui::try2) use modals::try2_exec_view;
-pub(in crate::vm::execute::io::tui) use run::try2_application_run;
+pub(in crate::vm::execute::io::tui) use run::{try2_application_run, try2_application_run_loop};
 #[allow(unused_imports, reason = "wired in phase 2 intrinsics")]
 pub(in crate::vm::execute::io::tui::try2) use views::{
     try2_dialog_add_button, try2_dialog_new_modal,

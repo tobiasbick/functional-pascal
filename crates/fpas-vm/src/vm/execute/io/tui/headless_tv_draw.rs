@@ -52,6 +52,22 @@ impl HeadlessTvApp {
         })
     }
 
+    /// Replaces menu bar and status line chrome, then reclamps the desktop bounds.
+    pub(in crate::vm::execute::io::tui) fn replace_chrome(
+        &mut self,
+        menu_bar: Option<MenuBar>,
+        status_line: Option<StatusLine>,
+    ) {
+        self.menu_bar = menu_bar;
+        self.status_line = status_line;
+        self.update_desktop_bounds();
+    }
+
+    /// Returns the headless terminal size in columns and rows.
+    pub(in crate::vm::execute::io::tui) fn terminal_size(&self) -> (i16, i16) {
+        self.terminal.size()
+    }
+
     /// Queue a left mouse down at desktop coordinates for headless test input.
     pub(in crate::vm::execute::io::tui) fn push_mouse_down(&self, x: i16, y: i16) {
         self.event_inbox.push(Event::mouse(
@@ -177,7 +193,7 @@ impl HeadlessTvApp {
         Ok(None)
     }
 
-    fn update_desktop_bounds(&mut self) {
+    pub(in crate::vm::execute::io::tui) fn update_desktop_bounds(&mut self) {
         let (width, height) = self.terminal.size();
         let mut desktop_bounds = Rect::new(0, 0, width, height);
 

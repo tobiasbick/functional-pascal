@@ -8,3 +8,7 @@
     WindowNew = 480,
     WindowAdd = 481,
     DesktopAdd = 482,
+    StaticTextNew = 483,
+    ApplicationRunWithOnCommand = 484,
+    MenuBarNew = 485,
+    StatusLineNew = 486,

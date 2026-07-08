@@ -107,6 +107,30 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::DesktopAdd), location);
                 Ok(true)
             }
+            s::STD_TUI_STATIC_TEXT_NEW => {
+                self.expect_exact_args(s::STD_TUI_STATIC_TEXT_NEW, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::StaticTextNew), location);
+                Ok(true)
+            }
+            s::STD_TUI_MENU_BAR_NEW => {
+                self.expect_exact_args(s::STD_TUI_MENU_BAR_NEW, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::MenuBarNew), location);
+                Ok(true)
+            }
+            s::STD_TUI_STATUS_LINE_NEW => {
+                self.expect_exact_args(s::STD_TUI_STATUS_LINE_NEW, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::StatusLineNew), location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

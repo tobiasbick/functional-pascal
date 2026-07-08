@@ -4,7 +4,7 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 
 **Sources:** [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust) tag `v2.0.0` — `src/lib.rs`, `src/views/`, `src/app/application.rs`, `src/helpers/`.
 
-## Implementation status (branch `refactor/tui-try-2`, 2026-07-07)
+## Implementation status (branch `refactor/tui-try-2`, 2026-07-08)
 
 | FPAS symbol | Status | VM location |
 | --- | --- | --- |
@@ -12,13 +12,14 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 | `Button.New`, `Dialog.Add` | ✅ | `try2/views/button.rs` |
 | `Dialog.AddButton` | ✅ convenience | `try2/views/button.rs` |
 | `Application.ExecView` | ✅ | `try2/modals.rs`, `try2/headless.rs` |
-| `Application.Run` + `OnCommand` | ✅ partial | `try2/run.rs` — uses `Application.OnCommand` registration; 2-arg `Run` deferred |
+| `Application.Run` + `OnCommand` | ✅ | `try2/run.rs` — `Application.Run(App)` or `Application.Run(App, OnCommand)` (intrinsic 484) |
 | `Application.Quit` | ✅ via try-1 | `quit_requested`; try-2 run loop honors it |
 | `Application.TestClickButton` | ✅ try-2 path | `try2/testing.rs` |
 | `Try2InjectCommand` / `Try2InjectKeyboard` | ✅ interim | `try2/intrinsics.rs` — remove when `Test.InjectEvent` lands |
 | `CM_OK`, `CM_CANCEL`, `CM_QUIT` | ✅ | sema + `fpas-std/tui/cm_constants.rs` |
 | `Window.New`, `Window.Add`, `Desktop.Add` | ✅ | `try2/views/window.rs`, `try2/views/desktop.rs` |
-| `StaticText`, `MenuBar`, `StatusLine` | ❌ phase 3 remainder | `chrome.rs` |
+| `StaticText.New`, `Dialog.Add` / `Window.Add` | ✅ | `try2/views/static_text.rs`, `try2/views/attach.rs` |
+| `MenuBar.New`, `StatusLine.New`, `SetMenuBar`, `SetStatusLine` | ✅ | `try2/chrome.rs` |
 
 ## Application and session
 
@@ -53,7 +54,7 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 | --- | --- | --- |
 | `button::Button` | `Button` | ✅ `Button.New`, `Dialog.Add` |
 | `dialog::Dialog` | `Dialog` | ✅ `Dialog.NewModal` only |
-| `static_text::StaticText` | `StaticText` | ❌ phase 4 |
+| `static_text::StaticText` | `StaticText` | ✅ `try2/views/static_text.rs` |
 | `input_line::InputLine` | `InputLine` | ❌ phase 4 |
 | `listbox::ListBox` | `ListBox` | ❌ phase 4 |
 | `checkbox::CheckBox` | `CheckBox` | ❌ phase 4 |
@@ -61,8 +62,8 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 | `memo::Memo` | `Memo` | ❌ phase 4 |
 | `text_viewer::TextViewer` | `TextViewer` | ❌ phase 4 |
 | `window::Window` | `Window` | ✅ `Window.New`, `Window.Add`, `Desktop.Add` |
-| `menu_bar::MenuBar` | `MenuBar` | ❌ phase 3 remainder (`chrome.rs`) |
-| `status_line::StatusLine` | `StatusLine` | ❌ phase 3 remainder (`chrome.rs`) |
+| `menu_bar::MenuBar` | `MenuBar` | ✅ `try2/chrome.rs` |
+| `status_line::StatusLine` | `StatusLine` | ✅ `try2/chrome.rs` |
 
 ## Controls (later phases)
 

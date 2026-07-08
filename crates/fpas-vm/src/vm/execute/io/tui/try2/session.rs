@@ -3,17 +3,37 @@
 //! **Documentation:** `docs/refactor-tui-try-2/target-architecture.md`
 
 use super::registry::{ViewKind, ViewRegistry};
+use crate::vm::shared::{TurboVisionMenu, TurboVisionRect, TurboVisionStatusItem};
 use std::collections::HashMap;
 use std::collections::HashSet;
 use turbo_vision::core::geometry::{Point, Rect};
 use turbo_vision::views::button::Button;
 use turbo_vision::views::dialog::Dialog;
+use turbo_vision::views::static_text::StaticText;
 use turbo_vision::views::window::Window;
 
-/// Button constructed by `Button.New` and not yet attached to a dialog.
+/// Button constructed by `Button.New` and not yet attached to a parent.
 pub(crate) struct DetachedButton {
     pub button: Box<Button>,
     pub local_bounds: Rect,
+}
+
+/// Static text constructed by `StaticText.New` and not yet attached to a parent.
+pub(crate) struct DetachedStaticText {
+    pub static_text: Box<StaticText>,
+    pub local_bounds: Rect,
+}
+
+/// Menu bar data owned by try-2 until attached via `Application.SetMenuBar`.
+pub(crate) struct Try2MenuBarState {
+    pub bounds: TurboVisionRect,
+    pub menus: Vec<TurboVisionMenu>,
+}
+
+/// Status line data owned by try-2 until attached via `Application.SetStatusLine`.
+pub(crate) struct Try2StatusLineState {
+    pub bounds: TurboVisionRect,
+    pub items: Vec<TurboVisionStatusItem>,
 }
 
 /// Owned top-level widget waiting for modal exec or desktop attach.
@@ -29,12 +49,18 @@ pub(crate) struct Try2Session {
     session_open: bool,
     app_handle: Option<u32>,
     roots: HashMap<u32, Try2Root>,
-    /// Buttons from `Button.New` awaiting `Dialog.Add`.
+    /// Buttons from `Button.New` awaiting parent attach.
     detached_buttons: HashMap<u32, DetachedButton>,
+    /// Static text from `StaticText.New` awaiting parent attach.
+    detached_static_texts: HashMap<u32, DetachedStaticText>,
     /// Headless test click targets keyed by try-2 button handle.
     button_clicks: HashMap<u32, Point>,
     /// Window handles attached to the upstream desktop via `Desktop.Add`.
     desktop_windows: HashSet<u32>,
+    menu_bars: HashMap<u32, Try2MenuBarState>,
+    status_lines: HashMap<u32, Try2StatusLineState>,
+    attached_menu_bar: Option<u32>,
+    attached_status_line: Option<u32>,
 }
 
 impl Try2Session {
@@ -45,8 +71,13 @@ impl Try2Session {
         self.app_handle = None;
         self.roots.clear();
         self.detached_buttons.clear();
+        self.detached_static_texts.clear();
         self.button_clicks.clear();
         self.desktop_windows.clear();
+        self.menu_bars.clear();
+        self.status_lines.clear();
+        self.attached_menu_bar = None;
+        self.attached_status_line = None;
     }
 
     /// Returns `true` after [`Self::open`].
@@ -100,9 +131,77 @@ impl Try2Session {
         handle
     }
 
-    /// Removes a detached button for `Dialog.Add`.
+    /// Removes a detached button for parent attach.
     pub fn take_detached_button(&mut self, handle: u32) -> Option<DetachedButton> {
         self.detached_buttons.remove(&handle)
+    }
+
+    /// Inserts a detached static text and returns its FPAS handle.
+    pub fn insert_detached_static_text(
+        &mut self,
+        static_text: Box<StaticText>,
+        local_bounds: Rect,
+    ) -> u32 {
+        let handle = self.registry.allocate(0, ViewKind::StaticText);
+        self.detached_static_texts.insert(
+            handle,
+            DetachedStaticText {
+                static_text,
+                local_bounds,
+            },
+        );
+        handle
+    }
+
+    /// Removes a detached static text for parent attach.
+    pub fn take_detached_static_text(&mut self, handle: u32) -> Option<DetachedStaticText> {
+        self.detached_static_texts.remove(&handle)
+    }
+
+    /// Stores menu bar data for a registry handle.
+    pub fn insert_menu_bar(&mut self, handle: u32, state: Try2MenuBarState) {
+        self.menu_bars.insert(handle, state);
+    }
+
+    /// Stores status line data for a registry handle.
+    pub fn insert_status_line(&mut self, handle: u32, state: Try2StatusLineState) {
+        self.status_lines.insert(handle, state);
+    }
+
+    /// Returns the attached menu bar handle, if any.
+    #[must_use]
+    pub fn attached_menu_bar(&self) -> Option<u32> {
+        self.attached_menu_bar
+    }
+
+    /// Returns the attached status line handle, if any.
+    #[must_use]
+    pub fn attached_status_line(&self) -> Option<u32> {
+        self.attached_status_line
+    }
+
+    /// Marks a menu bar as application chrome.
+    pub fn set_attached_menu_bar(&mut self, handle: u32) {
+        self.attached_menu_bar = Some(handle);
+    }
+
+    /// Marks a status line as application chrome.
+    pub fn set_attached_status_line(&mut self, handle: u32) {
+        self.attached_status_line = Some(handle);
+    }
+
+    /// Snapshot of the attached menu bar, if set.
+    #[must_use]
+    pub fn attached_menu_bar_snapshot(&self) -> Option<&Try2MenuBarState> {
+        self.attached_menu_bar
+            .and_then(|handle| self.menu_bars.get(&handle))
+    }
+
+    /// Snapshot of the attached status line, if set.
+    #[must_use]
+    pub fn attached_status_line_snapshot(&self) -> Option<&Try2StatusLineState> {
+        self.attached_status_line
+            .and_then(|handle| self.status_lines.get(&handle))
     }
 
     /// Records the screen point used by headless `Application.TestClickButton`.

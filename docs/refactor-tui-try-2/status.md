@@ -1,12 +1,12 @@
 # Implementation status
 
-Living progress log for branch `refactor/tui-try-2`. Update each work session. Plan docs last synced with code: **2026-07-07**.
+Living progress log for branch `refactor/tui-try-2`. Update each work session. Plan docs last synced with code: **2026-07-08**.
 
 ## Current phase
 
 **Phase 1** — **complete** (foundation; `TuiState` slimming deferred to phase 7).  
 **Phase 2** — **complete** (vertical slice + interactive manual smoke verified).  
-**Phase 3** — **in progress** (Window/Desktop landed; chrome + `Run(App, OnCommand)` 2-arg sema pending).
+**Phase 3** — **complete** (2026-07-08): Window/Desktop, StaticText, chrome, `Application.Run(App, OnCommand)`.
 
 ## Phase 1 closure notes
 
@@ -41,8 +41,13 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 | `Application.New` alias | sema + compiler → `ApplicationOpen` |
 | `Window.New`, `Window.Add`, `Desktop.Add` | `try2/views/window.rs`, `try2/views/desktop.rs`; intrinsics 480–482 |
 | FPAS window + quit smoke test | `tests/tui/smoke/window_quit_try2_test.fpas` |
+| `StaticText.New`, `Window.Add` / `Dialog.Add` child dispatch | `try2/views/static_text.rs`, `try2/views/attach.rs` |
+| `MenuBar.New`, `StatusLine.New`, `SetMenuBar` / `SetStatusLine` | `try2/chrome.rs`; routes when try-2 handles run |
+| `Application.Run(App, OnCommand)` | sema `builtins/tui.rs`; intrinsic `ApplicationRunWithOnCommand` (484) |
+| FPAS chrome + run smoke tests | `window_chrome_try2_test.fpas`, `run_quit_try2_test.fpas` |
+| Try-2 window example | `examples/pascal/tui/turbo_vision_window_try2.fpas` |
 
-## Tests passing
+## Landed (2026-07-08)
 
 ```bash
 cargo test -p fpas-vm try2::
@@ -50,18 +55,17 @@ fpas test tests/tui/smoke/
 cargo test -p fpas-cli fpas_regression_suite_passes
 ```
 
-Covers: registry, geometry, session, dialog, button, window, desktop, headless ExecView → CM_OK, TestClickButton, run/quit + window/quit smoke; full regression suite (try-1 + try-2 coexistence).
+Covers: registry, geometry, session, dialog, button, window, desktop, static text, chrome, headless ExecView → CM_OK, TestClickButton, `Run(App, OnCommand)`, run/quit + window/quit + window/chrome smoke; full regression suite (try-1 + try-2 coexistence).
+
+## Next steps
+
+1. **Phase 4** — `InputLine`, `ListBox`, `CheckBox`, `RadioButton`, `Memo`, `TextViewer` (see [migration-phases.md](migration-phases.md))
 
 ## Blockers
 
 ### Upstream `Application::with_terminal` (optional)
 
 Headless try-2 modals run through `HeadlessTvApp::exec_modal_view`. Interactive path uses `Application::new()` without try-1 snapshot populate.
-
-## Next steps
-
-1. Phase 3 remainder: `StaticText`, menu/status chrome (`chrome.rs`), `Application.Run(App, OnCommand)` 2-arg sema
-2. Port `examples/pascal/tui/turbo_vision_window.fpas` to try-2 API
 
 ## Unchanged (try-1 still authoritative)
 

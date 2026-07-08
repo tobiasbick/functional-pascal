@@ -61,20 +61,20 @@ Estimates assume focused hobby-project pace (part-time).
 
 ---
 
-## Phase 3 — Run loop + Desktop + Window (2–3 days)
+## Phase 3 — Run loop + Desktop + Window (2–3 days) — **complete** (2026-07-08)
 
 **Work**
 
-- [ ] `Application.Run` with `OnCommand` callback parameter (sema overload; **partial:** try-2 run loop landed via `OnCommand` + `Run`).
+- [x] `Application.Run` with `OnCommand` callback parameter — `Application.Run(App, OnCommand)` sema + intrinsic 484.
 - [x] `Application.Quit` → stop run loop — **partial:** `quit_requested` honored on try-2 path; live `app.running` wiring TBD.
 - [x] `Window.New`, `Window.Add`, `Desktop.Add` — intrinsics 480–482; `tests/tui/smoke/window_quit_try2_test.fpas`.
-- [ ] `StaticText`, menu/status chrome (`chrome.rs`).
+- [x] `StaticText`, menu/status chrome (`chrome.rs`) — `StaticText.New`, `MenuBar.New`, `StatusLine.New`, `SetMenuBar`/`SetStatusLine` routing.
 - [x] FPAS tests: modeless window + quit command — `window_quit_try2_test.fpas` (button click → `CM_QUIT` → `Application.Quit`).
 
 **Exit criteria**
 
-- Port simplified `examples/pascal/tui/turbo_vision_window.fpas` to new API.
-- `cargo test --workspace` passes (try-1 `tests/tui/controls/*` must stay green until phase 7 — coexistence routing).
+- [x] Port simplified `examples/pascal/tui/turbo_vision_window.fpas` to new API — `examples/pascal/tui/turbo_vision_window_try2.fpas`.
+- [x] `cargo test --workspace` passes (try-1 `tests/tui/controls/*` must stay green until phase 7 — coexistence routing).
 
 ---
 

@@ -21,8 +21,7 @@ begin
   var Btn: Button := Button.New(Bounds(10, 4, 10, 2), 'Quit', CM_QUIT, false);
   Window.Add(Win, Btn);
   Desktop.Add(App, Win);
-  Application.OnCommand(App, OnCommand);
   Application.TestClickButton(App, Btn);
-  Application.Run(App);
+  Application.Run(App, OnCommand);
   Application.CloseForTest(App)
 end.

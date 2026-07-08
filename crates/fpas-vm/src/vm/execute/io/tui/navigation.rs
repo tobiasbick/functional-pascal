@@ -50,6 +50,12 @@ impl Worker {
         &mut self,
         line: SourceLocation,
     ) -> Result<(), VmError> {
+        if self.try2_should_handle_application_run() {
+            let handle = self.pop_turbo_vision_menu_bar_handle(line)?;
+            self.pop_tui_application(line)?;
+            return super::try2::try2_set_menu_bar(self, handle, line);
+        }
+
         let handle = self.pop_turbo_vision_menu_bar_handle(line)?;
         self.pop_tui_application(line)?;
 
@@ -141,6 +147,12 @@ impl Worker {
         &mut self,
         line: SourceLocation,
     ) -> Result<(), VmError> {
+        if self.try2_should_handle_application_run() {
+            let handle = self.pop_turbo_vision_status_line_handle(line)?;
+            self.pop_tui_application(line)?;
+            return super::try2::try2_set_status_line(self, handle, line);
+        }
+
         let handle = self.pop_turbo_vision_status_line_handle(line)?;
         self.pop_tui_application(line)?;
 
@@ -196,6 +208,22 @@ impl Worker {
         })?;
         self.mark_turbo_vision_tree_dirty();
         Ok(())
+    }
+
+    /// Parses menu records for try-2 `MenuBar.New`.
+    pub(in crate::vm::execute::io::tui) fn parse_turbo_vision_menus(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<Vec<TurboVisionMenu>, VmError> {
+        self.pop_turbo_vision_menus(line)
+    }
+
+    /// Parses status items for try-2 `StatusLine.New`.
+    pub(in crate::vm::execute::io::tui) fn parse_turbo_vision_status_items(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<Vec<TurboVisionStatusItem>, VmError> {
+        self.pop_turbo_vision_status_items(line)
     }
 
     fn pop_turbo_vision_menus(

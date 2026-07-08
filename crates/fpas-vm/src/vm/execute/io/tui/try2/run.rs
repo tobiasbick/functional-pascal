@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/refactor-tui-try-2/target-api.md`
 
 use super::app::try2_ensure_live_app;
+use super::chrome::try2_sync_chrome_to_app;
 use super::events::try2_dispatch_on_command;
 use super::headless::try2_ensure_headless_app;
 use crate::vm::Worker;
@@ -34,10 +35,19 @@ pub(in crate::vm::execute::io::tui) fn try2_application_run(
         return Err(runtime_error(
             RUNTIME_CONSOLE_STATE_ERROR,
             "Application.Run(App) requires `Application.OnCommand(App, Handler)` on the try-2 path",
-            "Register a command handler before starting the run loop.",
+            "Register a command handler before starting the run loop, or pass the handler to `Application.Run(App, OnCommand)`.",
             line,
         ));
     }
+
+    try2_application_run_loop(worker, line)
+}
+
+pub(in crate::vm::execute::io::tui) fn try2_application_run_loop(
+    worker: &mut Worker,
+    line: SourceLocation,
+) -> Result<(), VmError> {
+    try2_sync_chrome_to_app(worker, line)?;
 
     if worker.with_tui(|tui| tui.session.is_headless()) {
         return try2_headless_application_run(worker, line);

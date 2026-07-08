@@ -2,6 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/README.md`
 
+use super::try2::try2_run_file_dialog;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use fpas_bytecode::SourceLocation;
@@ -20,6 +21,11 @@ impl Worker {
         let title = self.pop_turbo_vision_string("FileDialog Title", line)?;
         let bounds = self.pop_turbo_vision_rect(line)?;
         self.pop_tui_application(line)?;
+
+        if self.try2.is_open() {
+            let selected = try2_run_file_dialog(self, bounds, title, wildcard, start_path, line)?;
+            return self.push_optional_string(selected);
+        }
 
         if self.current_task_id != 0 {
             return Err(runtime_error(

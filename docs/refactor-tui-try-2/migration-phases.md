@@ -98,14 +98,14 @@ Estimates assume focused hobby-project pace (part-time).
 
 **Work**
 
-- [ ] `Application.MessageBox`
-- [ ] `Application.RunFileDialog`
+- [x] `Application.MessageBox` (try-2 headless via `try2_headless_exec_view`; live via upstream `message_box`)
+- [ ] `Application.RunFileDialog` (live path done; headless still uses try-1 `test_file_dialog_result` queue until upstream headless API)
 - [ ] `OnKey` / `OnMouse` optional hooks
 
 **Exit criteria**
 
 - Port `examples/pascal/tui/message_box.fpas` and `file_dialog` example.
-- No `TestSetDialogResult` / `TestSetFileDialogResult` in new tests.
+- No `TestSetDialogResult` / `TestSetFileDialogResult` in new tests (`tests/tui/modals/message_box_try2_test.fpas` uses `Try2InjectKeyboard` only).
 
 ---
 

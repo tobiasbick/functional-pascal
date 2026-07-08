@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/pascal/std/tui/app/message-box.md`
 
 use super::command_map::turbo_vision_command_to_fpas;
+use super::try2::try2_message_box;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
@@ -22,6 +23,11 @@ impl Worker {
         })?;
         let message = self.pop_turbo_vision_string("MessageBox Message", line)?;
         self.pop_tui_application(line)?;
+
+        if self.try2.is_open() {
+            let command = try2_message_box(self, message, options, line)?;
+            return self.push(Value::Integer(command));
+        }
 
         if self.current_task_id != 0 {
             return Err(runtime_error(

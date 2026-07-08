@@ -52,6 +52,54 @@ pub(super) fn register_try2_api(
     );
     define_func(
         checker,
+        s::STD_TUI_CHECK_BOX_NEW,
+        vec![
+            p("Bounds", types.rect.clone(), false),
+            p("Text", Ty::String, false),
+            p("Checked", Ty::Boolean, false),
+        ],
+        types.check_box.clone(),
+    );
+    define_func(
+        checker,
+        s::STD_TUI_INPUT_LINE_NEW,
+        vec![
+            p("Bounds", types.rect.clone(), false),
+            p("Text", Ty::String, false),
+            p("MaxLength", Ty::Integer, false),
+        ],
+        types.input_line.clone(),
+    );
+    define_func(
+        checker,
+        s::STD_TUI_CHECK_BOX_CHECKED,
+        vec![p("Cb", types.check_box.clone(), false)],
+        Ty::Boolean,
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_CHECK_BOX_SET_CHECKED,
+        vec![
+            p("Cb", types.check_box.clone(), false),
+            p("Checked", Ty::Boolean, false),
+        ],
+    );
+    define_func(
+        checker,
+        s::STD_TUI_INPUT_LINE_TEXT,
+        vec![p("Line", types.input_line.clone(), false)],
+        Ty::String,
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_INPUT_LINE_SET_TEXT,
+        vec![
+            p("Line", types.input_line.clone(), false),
+            p("Text", Ty::String, false),
+        ],
+    );
+    define_func(
+        checker,
         s::STD_TUI_DIALOG_ADD_BUTTON,
         vec![
             p("Dlg", types.dialog.clone(), false),

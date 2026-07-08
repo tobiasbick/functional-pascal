@@ -5,11 +5,16 @@
 use super::chrome::{try2_menu_bar_new, try2_status_line_new};
 use super::headless::try2_ensure_headless_app;
 use super::modals::try2_exec_view;
-use super::records::{TUI_BUTTON_TYPE, TUI_DIALOG_TYPE, TUI_STATIC_TEXT_TYPE, TUI_WINDOW_TYPE};
+use super::records::{
+    TUI_BUTTON_TYPE, TUI_CHECK_BOX_TYPE, TUI_DIALOG_TYPE, TUI_INPUT_LINE_TYPE,
+    TUI_STATIC_TEXT_TYPE, TUI_WINDOW_TYPE,
+};
 use super::registry::ViewKind;
 use super::views::{
-    try2_button_new, try2_desktop_add, try2_dialog_add_button, try2_dialog_attach_child,
-    try2_dialog_new_modal, try2_static_text_new, try2_window_attach_child, try2_window_new,
+    try2_button_new, try2_check_box_checked, try2_check_box_new, try2_check_box_set_checked,
+    try2_desktop_add, try2_dialog_add_button, try2_dialog_attach_child, try2_dialog_new_modal,
+    try2_input_line_new, try2_input_line_set_text, try2_input_line_text, try2_static_text_new,
+    try2_window_attach_child, try2_window_new,
 };
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
@@ -149,6 +154,48 @@ impl Worker {
                 let handle = try2_status_line_new(self, bounds, items, line)?;
                 self.push(Self::turbo_vision_status_line_record(handle))?;
             }
+            TuiIntrinsic::CheckBoxNew => {
+                let checked = self.pop_bool(line)?;
+                let text = self.pop_turbo_vision_string("CheckBox text", line)?;
+                let bounds = self.pop_turbo_vision_rect(line)?;
+                let handle = try2_check_box_new(self, bounds, text, checked, line)?;
+                self.push(Self::turbo_vision_check_box_record(handle))?;
+            }
+            TuiIntrinsic::InputLineNew => {
+                let max_length = self.pop_int(line)?;
+                let max_length = usize::try_from(max_length).map_err(|_| {
+                    runtime_error(
+                        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                        "InputLine MaxLength must be non-negative",
+                        "Use a MaxLength value from 0 to the platform usize maximum.",
+                        line,
+                    )
+                })?;
+                let text = self.pop_turbo_vision_string("InputLine text", line)?;
+                let bounds = self.pop_turbo_vision_rect(line)?;
+                let handle = try2_input_line_new(self, bounds, text, max_length, line)?;
+                self.push(Self::turbo_vision_input_line_record(handle))?;
+            }
+            TuiIntrinsic::CheckBoxChecked => {
+                let handle = self.pop_try2_handle(TUI_CHECK_BOX_TYPE, "CheckBox", line)?;
+                let checked = try2_check_box_checked(self, handle, line)?;
+                self.push(Value::Boolean(checked))?;
+            }
+            TuiIntrinsic::CheckBoxSetChecked => {
+                let checked = self.pop_bool(line)?;
+                let handle = self.pop_try2_handle(TUI_CHECK_BOX_TYPE, "CheckBox", line)?;
+                try2_check_box_set_checked(self, handle, checked, line)?;
+            }
+            TuiIntrinsic::InputLineText => {
+                let handle = self.pop_try2_handle(TUI_INPUT_LINE_TYPE, "InputLine", line)?;
+                let text = try2_input_line_text(self, handle, line)?;
+                self.push(Value::Str(text))?;
+            }
+            TuiIntrinsic::InputLineSetText => {
+                let text = self.pop_turbo_vision_string("InputLine text", line)?;
+                let handle = self.pop_try2_handle(TUI_INPUT_LINE_TYPE, "InputLine", line)?;
+                try2_input_line_set_text(self, handle, text, line)?;
+            }
             _ => return Ok(false),
         }
 
@@ -165,13 +212,21 @@ impl Worker {
                 self.decode_try2_handle(&fields, "StaticText", line)?,
                 ViewKind::StaticText,
             )),
+            Value::Record { type_name, fields } if type_name == TUI_CHECK_BOX_TYPE => Ok((
+                self.decode_try2_handle(&fields, "CheckBox", line)?,
+                ViewKind::CheckBox,
+            )),
+            Value::Record { type_name, fields } if type_name == TUI_INPUT_LINE_TYPE => Ok((
+                self.decode_try2_handle(&fields, "InputLine", line)?,
+                ViewKind::InputLine,
+            )),
             other => Err(runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 format!(
-                    "Expected `Std.Tui.Button` or `Std.Tui.StaticText`, got {}",
+                    "Expected a try-2 child widget handle, got {}",
                     other.type_name()
                 ),
-                "Pass a child handle from `Button.New` or `StaticText.New`.",
+                "Pass a child handle from `Button.New`, `StaticText.New`, `CheckBox.New`, or `InputLine.New`.",
                 line,
             )),
         }

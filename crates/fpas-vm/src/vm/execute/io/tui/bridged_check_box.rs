@@ -34,6 +34,11 @@ impl BridgedCheckBox {
         self.checked_cell.set(self.inner.is_checked());
     }
 
+    /// Copy upstream checkbox state into the host cell (try-2 read-back path).
+    pub(in crate::vm::execute::io::tui) fn sync_checked_from_view(&mut self) {
+        self.sync_checked();
+    }
+
     /// Push FPAS cell state into the upstream checkbox (live patch path).
     pub(in crate::vm::execute::io::tui) fn sync_from_cell(&mut self) {
         self.inner.set_checked(self.checked_cell.read());

@@ -17,6 +17,7 @@ pub mod registry;
 pub mod run;
 pub mod session;
 pub mod testing;
+pub mod view_lookup;
 pub mod views;
 
 pub(in crate::vm::execute::io::tui) use chrome::{try2_set_menu_bar, try2_set_status_line};

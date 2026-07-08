@@ -3,6 +3,8 @@
 //! **Documentation:** `docs/refactor-tui-try-2/target-api.md`
 
 use super::button::try2_dialog_attach_button;
+use super::check_box::{try2_dialog_attach_check_box, try2_window_attach_check_box};
+use super::input_line::{try2_dialog_attach_input_line, try2_window_attach_input_line};
 use super::static_text::{try2_dialog_attach_static_text, try2_window_attach_static_text};
 use super::window::try2_window_attach_button;
 use crate::vm::Worker;
@@ -24,10 +26,16 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_attach_child(
         ViewKind::StaticText => {
             try2_dialog_attach_static_text(worker, dialog_handle, child_handle, line)
         }
+        ViewKind::CheckBox => {
+            try2_dialog_attach_check_box(worker, dialog_handle, child_handle, line)
+        }
+        ViewKind::InputLine => {
+            try2_dialog_attach_input_line(worker, dialog_handle, child_handle, line)
+        }
         other => Err(runtime_error(
             RUNTIME_INTRINSIC_STACK_STATE_ERROR,
             format!("Dialog.Add does not accept child kind {other:?}"),
-            "Attach a `Button` or `StaticText` created with `Button.New` or `StaticText.New`.",
+            "Attach a `Button`, `StaticText`, `CheckBox`, or `InputLine` created with the matching `*.New` constructor.",
             line,
         )),
     }
@@ -46,10 +54,16 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_window_attach_child(
         ViewKind::StaticText => {
             try2_window_attach_static_text(worker, window_handle, child_handle, line)
         }
+        ViewKind::CheckBox => {
+            try2_window_attach_check_box(worker, window_handle, child_handle, line)
+        }
+        ViewKind::InputLine => {
+            try2_window_attach_input_line(worker, window_handle, child_handle, line)
+        }
         other => Err(runtime_error(
             RUNTIME_INTRINSIC_STACK_STATE_ERROR,
             format!("Window.Add does not accept child kind {other:?}"),
-            "Attach a `Button` or `StaticText` created with `Button.New` or `StaticText.New`.",
+            "Attach a `Button`, `StaticText`, `CheckBox`, or `InputLine` created with the matching `*.New` constructor.",
             line,
         )),
     }

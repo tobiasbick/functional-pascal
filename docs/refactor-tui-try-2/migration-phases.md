@@ -78,14 +78,15 @@ Estimates assume focused hobby-project pace (part-time).
 
 ---
 
-## Phase 4 — Remaining phase-1 widgets (3–4 days)
+## Phase 4 — Remaining phase-1 widgets (3–4 days) — **in progress**
 
 **Work**
 
-- [ ] `InputLine`, `ListBox`, `CheckBox`, `RadioButton`, `Memo`, `TextViewer`.
-- [ ] Read-back methods: `InputLine.Text`, `ListBox.Selection`, etc.
-- [ ] Runtime setters: `SetText`, `SetItems`, `SetChecked`, `SetTitle`.
-- [ ] FPAS tests: one file per widget under `tests/tui/views/` (new layout).
+- [x] `InputLine`, `CheckBox` — `*.New`, `Dialog.Add` / `Window.Add`, read-back + setters (partial).
+- [ ] `ListBox`, `RadioButton`, `Memo`, `TextViewer`.
+- [x] Read-back methods: `InputLine.Text`, `CheckBox.Checked` (partial; more widgets pending).
+- [x] Runtime setters: `InputLine.SetText`, `CheckBox.SetChecked` (partial).
+- [x] FPAS tests: `tests/tui/views/check_box_try2_test.fpas`, `input_line_try2_test.fpas` (partial).
 
 **Exit criteria**
 

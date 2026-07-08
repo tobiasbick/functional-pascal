@@ -115,6 +115,57 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::StaticTextNew), location);
                 Ok(true)
             }
+            s::STD_TUI_CHECK_BOX_NEW => {
+                self.expect_exact_args(s::STD_TUI_CHECK_BOX_NEW, 3, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::CheckBoxNew), location);
+                Ok(true)
+            }
+            s::STD_TUI_INPUT_LINE_NEW => {
+                self.expect_exact_args(s::STD_TUI_INPUT_LINE_NEW, 3, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::InputLineNew), location);
+                Ok(true)
+            }
+            s::STD_TUI_CHECK_BOX_CHECKED => {
+                self.expect_exact_args(s::STD_TUI_CHECK_BOX_CHECKED, 1, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::CheckBoxChecked), location);
+                Ok(true)
+            }
+            s::STD_TUI_CHECK_BOX_SET_CHECKED => {
+                self.expect_exact_args(s::STD_TUI_CHECK_BOX_SET_CHECKED, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(
+                    Intrinsic::Tui(TuiIntrinsic::CheckBoxSetChecked),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_TUI_INPUT_LINE_TEXT => {
+                self.expect_exact_args(s::STD_TUI_INPUT_LINE_TEXT, 1, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::InputLineText), location);
+                Ok(true)
+            }
+            s::STD_TUI_INPUT_LINE_SET_TEXT => {
+                self.expect_exact_args(s::STD_TUI_INPUT_LINE_SET_TEXT, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::InputLineSetText), location);
+                Ok(true)
+            }
             s::STD_TUI_MENU_BAR_NEW => {
                 self.expect_exact_args(s::STD_TUI_MENU_BAR_NEW, 2, args, location)?;
                 for arg in args {

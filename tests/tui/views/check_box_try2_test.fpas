@@ -1,0 +1,18 @@
+program CheckBoxTry2Test;
+
+uses Std.Tui, Std.Test;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(80, 25);
+  var Dlg: Dialog := Dialog.NewModal(Bounds(10, 5, 50, 10), 'Options');
+  var OptIn: CheckBox := CheckBox.New(Bounds(12, 2, 20, 1), 'opt in', false);
+  Dialog.Add(Dlg, OptIn);
+  CheckBox.SetChecked(OptIn, true);
+  AssertTrue(CheckBox.Checked(OptIn));
+  Application.CloseForTest(App)
+end.

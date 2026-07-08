@@ -21,3 +21,5 @@ pub(in crate::vm::execute::io::tui::try2) const TUI_DIALOG_TYPE: &str = "Std.Tui
 pub(in crate::vm::execute::io::tui::try2) const TUI_WINDOW_TYPE: &str = "Std.Tui.Window";
 pub(in crate::vm::execute::io::tui::try2) const TUI_STATIC_TEXT_TYPE: &str = "Std.Tui.StaticText";
 pub(in crate::vm::execute::io::tui::try2) const TUI_BUTTON_TYPE: &str = "Std.Tui.Button";
+pub(in crate::vm::execute::io::tui::try2) const TUI_CHECK_BOX_TYPE: &str = "Std.Tui.CheckBox";
+pub(in crate::vm::execute::io::tui::try2) const TUI_INPUT_LINE_TYPE: &str = "Std.Tui.InputLine";

@@ -1,0 +1,24 @@
+program ListBoxSelectionTry2Test;
+
+uses Std.Tui, Std.Test;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(60, 20);
+  var Dlg: Dialog := Dialog.NewModal(Bounds(2, 1, 30, 10), 'List');
+  var ListHandle: ListBox := ListBox.New(Bounds(3, 2, 20, 4), ['alpha', 'beta'], CM_OK);
+  var EmptyHandle: ListBox := ListBox.New(Bounds(3, 7, 20, 3), [], CM_OK);
+  Dialog.Add(Dlg, ListHandle);
+  Dialog.Add(Dlg, EmptyHandle);
+  AssertEquals(0, ListBox.Selection(ListHandle));
+  AssertEquals(-1, ListBox.Selection(EmptyHandle));
+  ListBox.SetItems(ListHandle, []);
+  AssertEquals(-1, ListBox.Selection(ListHandle));
+  ListBox.SetItems(ListHandle, ['one']);
+  AssertEquals(0, ListBox.Selection(ListHandle));
+  Application.CloseForTest(App)
+end.

@@ -6,6 +6,7 @@ use super::registry::{ViewKind, ViewRegistry};
 use crate::vm::shared::{TurboVisionMenu, TurboVisionRect, TurboVisionStatusItem};
 use crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell;
 use crate::vm::turbo_vision_input_text_cell::TurboVisionInputTextCell;
+use crate::vm::turbo_vision_list_selection_cell::TurboVisionListSelectionCell;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -41,6 +42,19 @@ pub(crate) struct DetachedInputLine {
     pub local_bounds: Rect,
     pub text_cell: TurboVisionInputTextCell,
     pub max_length: usize,
+}
+
+/// List box constructed by `ListBox.New` and not yet attached to a parent.
+pub(crate) struct DetachedListBox {
+    pub list_box: Box<dyn View>,
+    pub local_bounds: Rect,
+}
+
+/// Host-side list box state retained after attach.
+pub(crate) struct Try2ListBoxState {
+    pub items: Vec<String>,
+    pub command_id: u16,
+    pub selection_cell: TurboVisionListSelectionCell,
 }
 
 /// Host-side input line state retained after attach.
@@ -83,10 +97,14 @@ pub(crate) struct Try2Session {
     detached_check_boxes: HashMap<u32, DetachedCheckBox>,
     /// Input lines from `InputLine.New` awaiting parent attach.
     detached_input_lines: HashMap<u32, DetachedInputLine>,
+    /// List boxes from `ListBox.New` awaiting parent attach.
+    detached_list_boxes: HashMap<u32, DetachedListBox>,
     /// Host-side check box state keyed by try-2 handle.
     check_box_cells: HashMap<u32, TurboVisionBoolCell>,
     /// Host-side input line state keyed by try-2 handle.
     input_line_states: HashMap<u32, Try2InputLineState>,
+    /// Host-side list box state keyed by try-2 handle.
+    list_box_states: HashMap<u32, Try2ListBoxState>,
     /// Child handle to parent dialog/window handle after attach.
     child_parents: HashMap<u32, u32>,
     /// Headless test click targets keyed by try-2 button handle.
@@ -110,8 +128,10 @@ impl Try2Session {
         self.detached_static_texts.clear();
         self.detached_check_boxes.clear();
         self.detached_input_lines.clear();
+        self.detached_list_boxes.clear();
         self.check_box_cells.clear();
         self.input_line_states.clear();
+        self.list_box_states.clear();
         self.child_parents.clear();
         self.button_clicks.clear();
         self.desktop_windows.clear();
@@ -316,6 +336,55 @@ impl Try2Session {
     #[must_use]
     pub fn child_parent(&self, child_handle: u32) -> Option<u32> {
         self.child_parents.get(&child_handle).copied()
+    }
+
+    /// Inserts a detached list box and returns its FPAS handle.
+    pub fn insert_detached_list_box(
+        &mut self,
+        list_box: Box<dyn View>,
+        local_bounds: Rect,
+        items: Vec<String>,
+        command_id: u16,
+        selection_cell: TurboVisionListSelectionCell,
+    ) -> u32 {
+        let handle = self.registry.allocate(0, ViewKind::ListBox);
+        self.list_box_states.insert(
+            handle,
+            Try2ListBoxState {
+                items,
+                command_id,
+                selection_cell,
+            },
+        );
+        self.detached_list_boxes.insert(
+            handle,
+            DetachedListBox {
+                list_box,
+                local_bounds,
+            },
+        );
+        handle
+    }
+
+    /// Removes a detached list box for parent attach.
+    pub fn take_detached_list_box(&mut self, handle: u32) -> Option<DetachedListBox> {
+        self.detached_list_boxes.remove(&handle)
+    }
+
+    /// Returns the shared list box selection cell for a handle.
+    #[must_use]
+    pub fn list_box_selection_cell(
+        &self,
+        handle: u32,
+    ) -> Option<&TurboVisionListSelectionCell> {
+        self.list_box_states
+            .get(&handle)
+            .map(|state| &state.selection_cell)
+    }
+
+    /// Mutable access to list box host state.
+    pub fn list_box_state_mut(&mut self, handle: u32) -> Option<&mut Try2ListBoxState> {
+        self.list_box_states.get_mut(&handle)
     }
 
     /// Stores menu bar data for a registry handle.

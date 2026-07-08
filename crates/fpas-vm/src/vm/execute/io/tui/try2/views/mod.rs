@@ -8,6 +8,7 @@ mod check_box;
 mod desktop;
 mod dialog;
 mod input_line;
+mod list_box;
 mod static_text;
 mod window;
 
@@ -22,6 +23,9 @@ pub(in crate::vm::execute::io::tui::try2) use desktop::try2_desktop_add;
 pub(in crate::vm::execute::io::tui::try2) use dialog::try2_dialog_new_modal;
 pub(in crate::vm::execute::io::tui::try2) use input_line::{
     try2_input_line_new, try2_input_line_set_text, try2_input_line_text,
+};
+pub(in crate::vm::execute::io::tui::try2) use list_box::{
+    try2_list_box_new, try2_list_box_selection, try2_list_box_set_items,
 };
 pub(in crate::vm::execute::io::tui::try2) use static_text::try2_static_text_new;
 pub(in crate::vm::execute::io::tui::try2) use window::try2_window_new;

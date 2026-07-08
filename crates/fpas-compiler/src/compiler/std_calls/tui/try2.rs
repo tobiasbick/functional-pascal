@@ -166,6 +166,30 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::InputLineSetText), location);
                 Ok(true)
             }
+            s::STD_TUI_LIST_BOX_NEW => {
+                self.expect_exact_args(s::STD_TUI_LIST_BOX_NEW, 3, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::ListBoxNew), location);
+                Ok(true)
+            }
+            s::STD_TUI_LIST_BOX_SELECTION => {
+                self.expect_exact_args(s::STD_TUI_LIST_BOX_SELECTION, 1, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::ListBoxSelection), location);
+                Ok(true)
+            }
+            s::STD_TUI_LIST_BOX_SET_ITEMS => {
+                self.expect_exact_args(s::STD_TUI_LIST_BOX_SET_ITEMS, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::ListBoxSetItems), location);
+                Ok(true)
+            }
             s::STD_TUI_MENU_BAR_NEW => {
                 self.expect_exact_args(s::STD_TUI_MENU_BAR_NEW, 2, args, location)?;
                 for arg in args {

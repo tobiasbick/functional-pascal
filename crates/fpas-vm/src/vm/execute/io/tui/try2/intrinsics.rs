@@ -7,13 +7,14 @@ use super::headless::try2_ensure_headless_app;
 use super::modals::try2_exec_view;
 use super::records::{
     TUI_BUTTON_TYPE, TUI_CHECK_BOX_TYPE, TUI_DIALOG_TYPE, TUI_INPUT_LINE_TYPE,
-    TUI_STATIC_TEXT_TYPE, TUI_WINDOW_TYPE,
+    TUI_LIST_BOX_TYPE, TUI_STATIC_TEXT_TYPE, TUI_WINDOW_TYPE,
 };
 use super::registry::ViewKind;
 use super::views::{
     try2_button_new, try2_check_box_checked, try2_check_box_new, try2_check_box_set_checked,
     try2_desktop_add, try2_dialog_add_button, try2_dialog_attach_child, try2_dialog_new_modal,
-    try2_input_line_new, try2_input_line_set_text, try2_input_line_text, try2_static_text_new,
+    try2_input_line_new, try2_input_line_set_text, try2_input_line_text, try2_list_box_new,
+    try2_list_box_selection, try2_list_box_set_items, try2_static_text_new,
     try2_window_attach_child, try2_window_new,
 };
 use crate::vm::Worker;
@@ -196,6 +197,31 @@ impl Worker {
                 let handle = self.pop_try2_handle(TUI_INPUT_LINE_TYPE, "InputLine", line)?;
                 try2_input_line_set_text(self, handle, text, line)?;
             }
+            TuiIntrinsic::ListBoxNew => {
+                let command = self.pop_int(line)?;
+                let command = u16::try_from(command).map_err(|_| {
+                    runtime_error(
+                        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                        "ListBox command id is outside the Turbo Vision u16 range",
+                        "Use a command id from 0 to 65535.",
+                        line,
+                    )
+                })?;
+                let items = self.pop_turbo_vision_string_array("ListBox items", line)?;
+                let bounds = self.pop_turbo_vision_rect(line)?;
+                let handle = try2_list_box_new(self, bounds, items, command, line)?;
+                self.push(Self::turbo_vision_list_box_record(handle))?;
+            }
+            TuiIntrinsic::ListBoxSelection => {
+                let handle = self.pop_try2_handle(TUI_LIST_BOX_TYPE, "ListBox", line)?;
+                let selection = try2_list_box_selection(self, handle, line)?;
+                self.push(Value::Integer(selection))?;
+            }
+            TuiIntrinsic::ListBoxSetItems => {
+                let items = self.pop_turbo_vision_string_array("ListBox items", line)?;
+                let handle = self.pop_try2_handle(TUI_LIST_BOX_TYPE, "ListBox", line)?;
+                try2_list_box_set_items(self, handle, items, line)?;
+            }
             _ => return Ok(false),
         }
 
@@ -220,13 +246,17 @@ impl Worker {
                 self.decode_try2_handle(&fields, "InputLine", line)?,
                 ViewKind::InputLine,
             )),
+            Value::Record { type_name, fields } if type_name == TUI_LIST_BOX_TYPE => Ok((
+                self.decode_try2_handle(&fields, "ListBox", line)?,
+                ViewKind::ListBox,
+            )),
             other => Err(runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 format!(
                     "Expected a try-2 child widget handle, got {}",
                     other.type_name()
                 ),
-                "Pass a child handle from `Button.New`, `StaticText.New`, `CheckBox.New`, or `InputLine.New`.",
+                "Pass a child handle from `Button.New`, `StaticText.New`, `CheckBox.New`, `InputLine.New`, or `ListBox.New`.",
                 line,
             )),
         }

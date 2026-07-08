@@ -467,6 +467,7 @@ fn check_try2_dialog_add(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     let static_text = lookup_named_type(c, s::STD_TUI_STATIC_TEXT);
     let check_box = lookup_named_type(c, s::STD_TUI_CHECK_BOX);
     let input_line = lookup_named_type(c, s::STD_TUI_INPUT_LINE);
+    let list_box = lookup_named_type(c, s::STD_TUI_LIST_BOX);
 
     let dlg_ty = c.check_expr(&args[0]);
     let child_ty = c.check_expr(&args[1]);
@@ -484,12 +485,13 @@ fn check_try2_dialog_add(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         && child_ty != static_text
         && child_ty != check_box
         && child_ty != input_line
+        && child_ty != list_box
     {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
-            "`Dialog.Add` child must be a button, static text, check box, or input line handle"
+            "`Dialog.Add` child must be a button, static text, check box, input line, or list box handle"
                 .to_string(),
-            "Pass a handle from `Button.New`, `StaticText.New`, `CheckBox.New`, or `InputLine.New`.",
+            "Pass a handle from `Button.New`, `StaticText.New`, `CheckBox.New`, `InputLine.New`, or `ListBox.New`.",
             span,
         );
     }
@@ -513,6 +515,7 @@ fn check_try2_window_add(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     let static_text = lookup_named_type(c, s::STD_TUI_STATIC_TEXT);
     let check_box = lookup_named_type(c, s::STD_TUI_CHECK_BOX);
     let input_line = lookup_named_type(c, s::STD_TUI_INPUT_LINE);
+    let list_box = lookup_named_type(c, s::STD_TUI_LIST_BOX);
 
     let win_ty = c.check_expr(&args[0]);
     let child_ty = c.check_expr(&args[1]);
@@ -530,12 +533,13 @@ fn check_try2_window_add(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         && child_ty != static_text
         && child_ty != check_box
         && child_ty != input_line
+        && child_ty != list_box
     {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
-            "`Window.Add` child must be a button, static text, check box, or input line handle"
+            "`Window.Add` child must be a button, static text, check box, input line, or list box handle"
                 .to_string(),
-            "Pass a handle from `Button.New`, `StaticText.New`, `CheckBox.New`, or `InputLine.New`.",
+            "Pass a handle from `Button.New`, `StaticText.New`, `CheckBox.New`, `InputLine.New`, or `ListBox.New`.",
             span,
         );
     }

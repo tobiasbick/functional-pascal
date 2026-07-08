@@ -82,11 +82,11 @@ Estimates assume focused hobby-project pace (part-time).
 
 **Work**
 
-- [x] `InputLine`, `CheckBox` — `*.New`, `Dialog.Add` / `Window.Add`, read-back + setters (partial).
-- [ ] `ListBox`, `RadioButton`, `Memo`, `TextViewer`.
-- [x] Read-back methods: `InputLine.Text`, `CheckBox.Checked` (partial; more widgets pending).
-- [x] Runtime setters: `InputLine.SetText`, `CheckBox.SetChecked` (partial).
-- [x] FPAS tests: `tests/tui/views/check_box_try2_test.fpas`, `input_line_try2_test.fpas` (partial).
+- [x] `InputLine`, `CheckBox`, `ListBox` — `*.New`, `Dialog.Add` / `Window.Add`, read-back + setters (partial).
+- [ ] `RadioButton`, `Memo`, `TextViewer`.
+- [x] Read-back methods: `InputLine.Text`, `CheckBox.Checked`, `ListBox.Selection` (partial; more widgets pending).
+- [x] Runtime setters: `InputLine.SetText`, `CheckBox.SetChecked`, `ListBox.SetItems` (partial).
+- [x] FPAS tests: `tests/tui/views/check_box_try2_test.fpas`, `input_line_try2_test.fpas`, `list_box_try2_test.fpas` (partial).
 
 **Exit criteria**
 

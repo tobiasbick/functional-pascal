@@ -100,6 +100,30 @@ pub(super) fn register_try2_api(
     );
     define_func(
         checker,
+        s::STD_TUI_LIST_BOX_NEW,
+        vec![
+            p("Bounds", types.rect.clone(), false),
+            p("Items", Ty::Array(Box::new(Ty::String)), false),
+            p("Command", Ty::Integer, false),
+        ],
+        types.list_box.clone(),
+    );
+    define_func(
+        checker,
+        s::STD_TUI_LIST_BOX_SELECTION,
+        vec![p("Lb", types.list_box.clone(), false)],
+        Ty::Integer,
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_LIST_BOX_SET_ITEMS,
+        vec![
+            p("Lb", types.list_box.clone(), false),
+            p("Items", Ty::Array(Box::new(Ty::String)), false),
+        ],
+    );
+    define_func(
+        checker,
         s::STD_TUI_DIALOG_ADD_BUTTON,
         vec![
             p("Dlg", types.dialog.clone(), false),

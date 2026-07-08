@@ -43,6 +43,11 @@ impl BridgedListBox {
         self.selection_cell.set(self.inner.get_selection());
     }
 
+    /// Copy upstream list selection into the host cell (try-2 read-back path).
+    pub(in crate::vm::execute::io::tui) fn sync_selection_from_view(&mut self) {
+        self.sync_selection();
+    }
+
     /// Replace list items and selection from FPAS host state (live patch path).
     pub(in crate::vm::execute::io::tui) fn set_items_from_fpas(
         &mut self,

@@ -18,3 +18,6 @@
     CheckBoxSetChecked = 490,
     InputLineText = 491,
     InputLineSetText = 492,
+    ListBoxNew = 493,
+    ListBoxSelection = 494,
+    ListBoxSetItems = 495,

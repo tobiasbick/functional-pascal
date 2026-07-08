@@ -56,7 +56,7 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 | `dialog::Dialog` | `Dialog` | ✅ `Dialog.NewModal` only |
 | `static_text::StaticText` | `StaticText` | ✅ `try2/views/static_text.rs` |
 | `input_line::InputLine` | `InputLine` | ✅ `try2/views/input_line.rs` |
-| `listbox::ListBox` | `ListBox` | ❌ phase 4 |
+| `listbox::ListBox` | `ListBox` | ✅ `try2/views/list_box.rs` |
 | `checkbox::CheckBox` | `CheckBox` | ✅ `try2/views/check_box.rs` |
 | `radiobutton::RadioButton` | `RadioButton` | ❌ phase 4 |
 | `memo::Memo` | `Memo` | ❌ phase 4 |

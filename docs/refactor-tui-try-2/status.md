@@ -142,5 +142,13 @@ Upstream `FileDialog::execute(&mut Application)` is available for live `Applicat
 
 ## Unchanged (try-1 VM code remains)
 
-- try-1 VM intrinsics and modules (`try_exec_turbo_vision_intrinsic`, `control_create.rs`, …) — dead at Pascal layer; file deletion is the next batch
+- `tv_run.rs`, `reconcile.rs`, `interactive_loop.rs` — legacy run/reconcile path (no Pascal callers; VM unit tests only)
 - `docs/pascal/std/tui/` — public spec rewrite in Phase 8
+
+## Phase 7 VM batch (2026-07-09)
+
+Deleted try-1-only VM modules:
+
+- `control_create.rs`, `controls.rs`, `dialogs.rs`, `exec_dialog.rs`, `outline_read.rs`, `windows.rs`
+
+`try_exec_turbo_vision_intrinsic` now dispatches only: `MessageBox`, `RunFileDialog`, callback registration (`OnKey`/`OnMouse`/`OnCommand`), `Quit`, chrome attach (`SetMenuBar`/`SetStatusLine`), and test helpers.

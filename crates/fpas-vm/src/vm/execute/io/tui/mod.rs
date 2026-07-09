@@ -15,10 +15,6 @@ mod callbacks;
 mod chrome_layout;
 mod command_map;
 mod commands;
-mod control_create;
-mod controls;
-mod dialogs;
-mod exec_dialog;
 mod file_dialog;
 mod handle_records;
 mod handles;
@@ -31,7 +27,6 @@ mod menu_build;
 mod msgbox;
 mod navigation;
 mod outline_nodes;
-mod outline_read;
 mod reconcile;
 mod records;
 mod session_app;
@@ -45,7 +40,6 @@ mod tv_headless_backend;
 mod tv_input_events;
 mod tv_run;
 mod tv_views;
-mod windows;
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
@@ -69,87 +63,18 @@ impl Worker {
         Ok(false)
     }
 
-    /// Execute Turbo Vision backed `Std.Tui` spike intrinsics.
+    /// Dispatch remaining try-1 intrinsics still shared with the try-2 path.
     pub(super) fn try_exec_turbo_vision_intrinsic(
         &mut self,
         intrinsic: Intrinsic,
         line: SourceLocation,
     ) -> Result<bool, VmError> {
         match intrinsic {
-            Intrinsic::Tui(TuiIntrinsic::CreateDialog) => {
-                self.turbo_vision_create_dialog(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::CreateButton) => {
-                self.turbo_vision_create_button(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::CreateStaticText) => {
-                self.turbo_vision_create_static_text(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::CreateMemo) => {
-                self.turbo_vision_create_memo(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::CreateTextViewer) => {
-                self.turbo_vision_create_text_viewer(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::CreateInputLine) => {
-                self.turbo_vision_create_input_line(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::CreateListBox) => {
-                self.turbo_vision_create_list_box(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::CreateOutline) => {
-                self.turbo_vision_create_outline(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::CreateCheckBox) => {
-                self.turbo_vision_create_check_box(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::CreateRadioButton) => {
-                self.turbo_vision_create_radio_button(line)?;
-            }
             Intrinsic::Tui(TuiIntrinsic::RunFileDialog) => {
                 self.turbo_vision_run_file_dialog(line)?;
             }
-            Intrinsic::Tui(TuiIntrinsic::ExecDialog) => {
-                self.turbo_vision_exec_dialog(line)?;
-            }
             Intrinsic::Tui(TuiIntrinsic::MessageBox) => {
                 self.turbo_vision_message_box(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::InputText) => {
-                self.turbo_vision_input_text(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::Checked) => {
-                self.turbo_vision_checked(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::Selected) => {
-                self.turbo_vision_selected(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::ListSelection) => {
-                self.turbo_vision_list_selection(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::OutlineSelection) => {
-                self.turbo_vision_outline_selection(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::OutlineSelectedText) => {
-                self.turbo_vision_outline_selected_text(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::AddChild) => {
-                self.turbo_vision_add_child(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::SetText) => {
-                self.turbo_vision_set_text(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::SetChecked) => {
-                self.turbo_vision_set_checked(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::SetItems) => {
-                self.turbo_vision_set_items(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::SetOutlineNodes) => {
-                self.turbo_vision_set_outline_nodes(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::SetTitle) => {
-                self.turbo_vision_set_title(line)?;
             }
             Intrinsic::Tui(TuiIntrinsic::RegisterOnCommand) => {
                 self.turbo_vision_register_on_command(line)?;
@@ -159,9 +84,6 @@ impl Worker {
             }
             Intrinsic::Tui(TuiIntrinsic::RegisterOnMouse) => {
                 self.turbo_vision_register_on_mouse(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::Pump) => {
-                self.turbo_vision_pump(line)?;
             }
             Intrinsic::Tui(TuiIntrinsic::Quit) => {
                 self.turbo_vision_quit(line)?;
@@ -175,29 +97,11 @@ impl Worker {
             Intrinsic::Tui(TuiIntrinsic::TestDispatchMenuCommand) => {
                 self.turbo_vision_test_dispatch_menu_command(line)?;
             }
-            Intrinsic::Tui(TuiIntrinsic::CreateWindow) => {
-                self.turbo_vision_create_window(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::AddWindow) => {
-                self.turbo_vision_add_window(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::CreateMenuBar) => {
-                self.turbo_vision_create_menu_bar(line)?;
-            }
             Intrinsic::Tui(TuiIntrinsic::SetMenuBar) => {
                 self.turbo_vision_set_menu_bar(line)?;
             }
-            Intrinsic::Tui(TuiIntrinsic::CreateStatusLine) => {
-                self.turbo_vision_create_status_line(line)?;
-            }
             Intrinsic::Tui(TuiIntrinsic::SetStatusLine) => {
                 self.turbo_vision_set_status_line(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::SetMenus) => {
-                self.turbo_vision_set_menus(line)?;
-            }
-            Intrinsic::Tui(TuiIntrinsic::SetStatusItems) => {
-                self.turbo_vision_set_status_items(line)?;
             }
             _ => return Ok(false),
         }

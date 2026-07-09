@@ -2,50 +2,20 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
-use super::menu_build::build_menu_bar;
 use super::tv_geometry::unknown_handle_error;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError, runtime_error};
 use crate::vm::shared::{
-    TurboVisionMenu, TurboVisionMenuBar, TurboVisionMenuItem, TurboVisionObject,
-    TurboVisionStatusItem, TurboVisionStatusLine,
+    TurboVisionMenu, TurboVisionMenuItem, TurboVisionObject, TurboVisionStatusItem,
 };
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
-use turbo_vision::views::status_line::{StatusItem, StatusLine};
 
 const TUI_MENU_TYPE: &str = "Std.Tui.Menu";
 const TUI_MENU_ITEM_TYPE: &str = "Std.Tui.MenuItem";
 const TUI_STATUS_ITEM_TYPE: &str = "Std.Tui.StatusItem";
 
 impl Worker {
-    pub(super) fn turbo_vision_create_menu_bar(
-        &mut self,
-        line: SourceLocation,
-    ) -> Result<(), VmError> {
-        let menus = self.pop_turbo_vision_menus(line)?;
-        let bounds = self.pop_turbo_vision_rect(line)?;
-        self.pop_tui_application(line)?;
-
-        let _menu_bar = build_menu_bar(bounds, &menus);
-
-        let bounds = super::tv_geometry::state_rect(bounds);
-        let handle = self.with_tui(|tui| {
-            let handle = tui.turbo_vision.next_handle;
-            tui.turbo_vision.next_handle = handle.saturating_add(1).max(1);
-            tui.turbo_vision.objects.insert(
-                handle,
-                TurboVisionObject::MenuBar(TurboVisionMenuBar {
-                    bounds,
-                    menus,
-                    attached: false,
-                }),
-            );
-            handle
-        });
-        self.push(Self::turbo_vision_menu_bar_record(handle))
-    }
-
     pub(super) fn turbo_vision_set_menu_bar(
         &mut self,
         line: SourceLocation,
@@ -89,60 +59,6 @@ impl Worker {
         Ok(())
     }
 
-    /// Replace the menus on an attached menu bar.
-    ///
-    /// **Documentation:** `docs/pascal/std/tui/app/controls.md`
-    pub(super) fn turbo_vision_set_menus(&mut self, line: SourceLocation) -> Result<(), VmError> {
-        let menus = self.pop_turbo_vision_menus(line)?;
-        let handle = self.pop_turbo_vision_menu_bar_handle(line)?;
-        self.pop_tui_application(line)?;
-
-        self.with_tui(|tui| {
-            let Some(TurboVisionObject::MenuBar(menu_bar)) =
-                tui.turbo_vision.objects.get_mut(&handle)
-            else {
-                return Err(unknown_handle_error("MenuBar", handle, line));
-            };
-            menu_bar.menus = menus;
-            Ok(())
-        })?;
-        self.mark_turbo_vision_tree_dirty();
-        Ok(())
-    }
-
-    pub(super) fn turbo_vision_create_status_line(
-        &mut self,
-        line: SourceLocation,
-    ) -> Result<(), VmError> {
-        let items = self.pop_turbo_vision_status_items(line)?;
-        let bounds = self.pop_turbo_vision_rect(line)?;
-        self.pop_tui_application(line)?;
-
-        let _status_line = StatusLine::new(
-            bounds,
-            items
-                .iter()
-                .map(|item| StatusItem::new(&item.text, item.key_code, item.command_id))
-                .collect(),
-        );
-
-        let bounds = super::tv_geometry::state_rect(bounds);
-        let handle = self.with_tui(|tui| {
-            let handle = tui.turbo_vision.next_handle;
-            tui.turbo_vision.next_handle = handle.saturating_add(1).max(1);
-            tui.turbo_vision.objects.insert(
-                handle,
-                TurboVisionObject::StatusLine(TurboVisionStatusLine {
-                    bounds,
-                    items,
-                    attached: false,
-                }),
-            );
-            handle
-        });
-        self.push(Self::turbo_vision_status_line_record(handle))
-    }
-
     pub(super) fn turbo_vision_set_status_line(
         &mut self,
         line: SourceLocation,
@@ -180,30 +96,6 @@ impl Worker {
             }
             status_line.attached = true;
             tui.turbo_vision.status_line = Some(handle);
-            Ok(())
-        })?;
-        self.mark_turbo_vision_tree_dirty();
-        Ok(())
-    }
-
-    /// Replace the items on an attached status line.
-    ///
-    /// **Documentation:** `docs/pascal/std/tui/app/controls.md`
-    pub(super) fn turbo_vision_set_status_items(
-        &mut self,
-        line: SourceLocation,
-    ) -> Result<(), VmError> {
-        let items = self.pop_turbo_vision_status_items(line)?;
-        let handle = self.pop_turbo_vision_status_line_handle(line)?;
-        self.pop_tui_application(line)?;
-
-        self.with_tui(|tui| {
-            let Some(TurboVisionObject::StatusLine(status_line)) =
-                tui.turbo_vision.objects.get_mut(&handle)
-            else {
-                return Err(unknown_handle_error("StatusLine", handle, line));
-            };
-            status_line.items = items;
             Ok(())
         })?;
         self.mark_turbo_vision_tree_dirty();

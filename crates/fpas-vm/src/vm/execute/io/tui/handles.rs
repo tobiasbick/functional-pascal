@@ -372,6 +372,34 @@ impl Worker {
         }
         Ok(value)
     }
+
+    pub(in crate::vm::execute::io::tui) fn pop_turbo_vision_string_array(
+        &mut self,
+        label: &'static str,
+        line: SourceLocation,
+    ) -> Result<Vec<String>, VmError> {
+        match self.pop(line)? {
+            Value::Array(values) => values
+                .into_iter()
+                .enumerate()
+                .map(|(index, value)| match value {
+                    Value::Str(text) => Ok(text),
+                    other => Err(runtime_error(
+                        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                        format!("{label}[{index}] must be string, got {}", other.type_name()),
+                        "Pass an array of string values.",
+                        line,
+                    )),
+                })
+                .collect(),
+            other => Err(runtime_error(
+                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                format!("{label} must be array of string, got {}", other.type_name()),
+                "Pass a string array, for example `['one', 'two']`.",
+                line,
+            )),
+        }
+    }
 }
 
 pub(super) enum TurboVisionParentHandle {

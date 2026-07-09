@@ -6,7 +6,6 @@ use super::super::view_lookup::try2_with_child_view;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use crate::vm::execute::io::tui::bridged_list_box::BridgedListBox;
-use crate::vm::execute::io::tui::controls::initial_list_selection;
 use crate::vm::execute::io::tui::try2::registry::{RegistryError, ViewKind};
 use crate::vm::execute::io::tui::try2::session::{DetachedListBox, Try2Root};
 use crate::vm::turbo_vision_list_selection_cell::TurboVisionListSelectionCell;
@@ -245,6 +244,10 @@ fn registry_error(error: RegistryError, line: SourceLocation) -> VmError {
         ),
     };
     runtime_error(RUNTIME_INTRINSIC_STACK_STATE_ERROR, message, help, line)
+}
+
+fn initial_list_selection(items: &[String]) -> Option<usize> {
+    if items.is_empty() { None } else { Some(0) }
 }
 
 #[cfg(test)]

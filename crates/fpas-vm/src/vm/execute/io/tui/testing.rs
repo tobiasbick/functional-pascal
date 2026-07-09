@@ -4,7 +4,7 @@
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
-use fpas_bytecode::{Intrinsic, SourceLocation, TuiIntrinsic};
+use fpas_bytecode::{Intrinsic, SourceLocation, TuiIntrinsic, Value};
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 
 impl Worker {
@@ -48,6 +48,19 @@ impl Worker {
         }
 
         Ok(true)
+    }
+
+    /// Queue the closing command consumed by the next headless modal call.
+    pub(super) fn turbo_vision_test_set_dialog_result(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        let command = self.pop_int(line)?;
+        self.pop_tui_application(line)?;
+        self.with_tui(|tui| {
+            tui.turbo_vision.test_dialog_result = Some(command);
+        });
+        Ok(())
     }
 
     fn test_dimension_to_u16(value: i64, name: &str, line: SourceLocation) -> Result<u16, VmError> {

@@ -1,4 +1,4 @@
-//! Try-2 headless test helpers (`Application.TestClickButton`).
+//! Try-2 headless test helpers (`Application.TestClickButton`, `TestDispatchMenuCommand`).
 //!
 //! **Documentation:** `docs/refactor-tui-try-2/testing-strategy.md`
 
@@ -8,6 +8,73 @@ use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
+
+/// Queues a menu item command from try-2 menu bar state for headless tests.
+pub(in crate::vm::execute::io::tui) fn try2_test_dispatch_menu_command(
+    worker: &mut Worker,
+    menu_bar_handle: u32,
+    menu_index: usize,
+    item_index: usize,
+    line: SourceLocation,
+) -> Result<(), VmError> {
+    worker
+        .try2
+        .registry
+        .require(menu_bar_handle, ViewKind::MenuBar)
+        .map_err(|error| menu_bar_error(error, menu_bar_handle, line))?;
+
+    let Some(command) = worker
+        .try2
+        .menu_item_command_id(menu_bar_handle, menu_index, item_index)
+    else {
+        return Err(menu_item_error(menu_index, item_index, line));
+    };
+
+    if !worker.with_tui(|tui| tui.session.is_headless()) {
+        return Err(runtime_error(
+            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            "Application.TestDispatchMenuCommand is only supported in headless `Application.OpenForTest` runs",
+            "Call `Application.OpenForTest` before `Application.TestDispatchMenuCommand`.",
+            line,
+        ));
+    }
+
+    try2_ensure_headless_app(worker, line)?;
+    let Some(app) = worker.headless_tv_app.as_ref() else {
+        return Err(runtime_error(
+            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            "Headless Turbo Vision session is not initialized",
+            "Call `Application.OpenForTest` before `Application.TestDispatchMenuCommand`.",
+            line,
+        ));
+    };
+
+    app.push_command(command);
+    Ok(())
+}
+
+fn menu_bar_error(error: super::registry::RegistryError, _handle: u32, line: SourceLocation) -> VmError {
+    let (message, help) = match error {
+        super::registry::RegistryError::UnknownHandle(handle) => (
+            format!("MenuBar handle {handle} is not registered in the try-2 session"),
+            "Use a handle returned by `MenuBar.New`.",
+        ),
+        super::registry::RegistryError::WrongKind { handle, .. } => (
+            format!("Handle {handle} is not a MenuBar"),
+            "Pass a handle from `MenuBar.New`.",
+        ),
+    };
+    runtime_error(RUNTIME_INTRINSIC_STACK_STATE_ERROR, message, help, line)
+}
+
+fn menu_item_error(menu_index: usize, item_index: usize, line: SourceLocation) -> VmError {
+    runtime_error(
+        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+        format!("Menu item ({menu_index}, {item_index}) is out of range or a separator"),
+        "Use a menu and item index from the `MenuBar.New` data.",
+        line,
+    )
+}
 
 impl Worker {
     /// Handles `Application.TestClickButton` for try-2 or falls back to try-1.

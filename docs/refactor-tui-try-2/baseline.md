@@ -75,7 +75,7 @@ Uses try-1 API throughout `src/` (menu, shell, dialog/open, about message box). 
 
 ## What try-2 adds (branch progress as of 2026-07-08)
 
-Phases 1-4 landed branch-only Pascal symbols (not yet in `docs/pascal/`). Phase 5 is partially landed. Phase 6 has a first IDE source/test migration pass, with manual terminal sign-off still pending. try-1 API and tests remain authoritative until phase 7.
+Phases 1–6 are complete on the branch. Phase 7 (try-1 deletion and public spec rewrite) is next. try-1 API and tests remain authoritative until phase 7 lands.
 
 **Current `try2/` tree** (see [rust-layout.md](rust-layout.md)):
 

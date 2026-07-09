@@ -78,6 +78,21 @@ impl Worker {
         let menu_bar_handle = self.pop_turbo_vision_menu_bar_handle(line)?;
         self.pop_tui_application(line)?;
 
+        if self
+            .try2
+            .registry
+            .require(menu_bar_handle, super::try2::registry::ViewKind::MenuBar)
+            .is_ok()
+        {
+            return super::try2::testing::try2_test_dispatch_menu_command(
+                self,
+                menu_bar_handle,
+                menu_index,
+                item_index,
+                line,
+            );
+        }
+
         self.with_tui(|tui| {
             let Some(TurboVisionObject::MenuBar(menu_bar)) =
                 tui.turbo_vision.objects.get(&menu_bar_handle)

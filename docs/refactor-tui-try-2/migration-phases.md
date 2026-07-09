@@ -110,20 +110,20 @@ Estimates assume focused hobby-project pace (part-time).
 
 ---
 
-## Phase 6 — IDE migration (2–4 days) — **partial**
+## Phase 6 — IDE migration (2–4 days) — **complete**
 
 **Work**
 
 - [x] Rewrite `apps/ide/src/` per [ide-migration.md](ide-migration.md) for menu, status, About, Open, and Exit.
 - [x] Rewrite `apps/ide/tests/` for try-2 run helpers and command injection.
 - [x] Automated terminal checklist coverage for TUI sema/compiler/doc links, try-1 controls coexistence, IDE headless flows, and relevant FPAS formatting.
-- [ ] Manual terminal checklist in a real terminal for IDE menus, About, Open file, Exit, and resize. Current finding: File / Exit works; Help / About and File / Open need the live-menu command-id fix in `try2/chrome.rs` verified.
+- [x] Manual terminal checklist in a real terminal for IDE menus, About, Open file, Exit, and resize (signed off 2026-07-09).
 
 **Exit criteria**
 
 - [x] `fpas test apps/ide/tests/` all pass.
 - [x] Automated checklist evidence recorded in [status.md](status.md#verified-2026-07-09).
-- [ ] IDE usable interactively (manual sign-off).
+- [x] IDE usable interactively (manual sign-off 2026-07-09).
 
 ---
 

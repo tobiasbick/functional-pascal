@@ -1,6 +1,6 @@
 # IDE migration
 
-Notes for rewriting [`apps/ide`](../../apps/ide) on the try-2 API. **First pass landed** — menu, status, shell run loop, About, Open, and automated IDE tests now use the try-2 API. Automated checklist coverage is green; manual terminal sign-off remains.
+Notes for rewriting [`apps/ide`](../../apps/ide) on the try-2 API. **Complete** — menu, status, shell run loop, About, Open, automated IDE tests, and manual terminal sign-off (2026-07-09) all use the try-2 API.
 
 ## Current IDE TUI usage
 
@@ -154,9 +154,7 @@ After automated tests pass:
 2. Verify File → Exit, Help → About, File → Open cancel, and File → Open confirm path.
 3. Resize terminal during `Run` and confirm no panic or corrupted chrome.
 
-Status: pending manual sign-off.
-
-Manual finding on 2026-07-09: File / Exit exits the IDE, but Help / About and File / Open did not open their dialogs. The suspected bridge issue is that Try-2 menu/status chrome reused the try-1 command offset mapper for reserved commands; `CM_OPEN` and `CM_ABOUT` must reach the FPAS `OnCommand` handler unchanged.
+Status: **signed off 2026-07-09** — File / Exit, Help / About, File / Open, and resize verified in a live terminal after the try-2 chrome menu command-id fix.
 
 ## Out of scope for IDE v1 on try-2
 

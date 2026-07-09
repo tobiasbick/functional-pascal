@@ -631,6 +631,23 @@ impl Try2Session {
             .map(|detached| detached.local_bounds)
     }
 
+    /// Returns the command id for a menu bar item, if present and not a separator.
+    pub fn menu_item_command_id(
+        &self,
+        handle: u32,
+        menu_index: usize,
+        item_index: usize,
+    ) -> Option<u16> {
+        let state = self.menu_bars.get(&handle)?;
+        let menu = state.menus.get(menu_index)?;
+        let item = menu.items.get(item_index)?;
+        if item.command_id == 0 {
+            None
+        } else {
+            Some(item.command_id)
+        }
+    }
+
     /// Stores menu bar data for a registry handle.
     pub fn insert_menu_bar(&mut self, handle: u32, state: Try2MenuBarState) {
         self.menu_bars.insert(handle, state);

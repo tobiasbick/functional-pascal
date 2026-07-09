@@ -4,9 +4,9 @@ uses Ide.Dialog, Ide.Menu, Ide.Shell, Std.Tui, Std.Test;
 
 begin
   var App: Application := Application.OpenForTest(80, 25);
-  var _: MenuBar := AttachChrome(App);
+  var MenuBarHandle: MenuBar := AttachChrome(App);
   Application.TestSetFileDialogResult(App, Some('src/main.fpas'));
-  Application.Try2InjectCommand(App, CmdFileOpen);
+  Application.TestDispatchMenuCommand(App, MenuBarHandle, 0, 0);
   Application.Try2InjectKeyboard(App, 7181);
   Application.Try2InjectCommand(App, CM_QUIT);
   Application.Run(App, OnCommand);

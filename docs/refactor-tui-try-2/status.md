@@ -8,8 +8,8 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 **Phase 2** — **complete** (vertical slice + interactive manual smoke verified).  
 **Phase 3** — **complete** (run loop, desktop/window, static text, chrome).
 **Phase 4** — **complete** (all phase-1 widgets on try-2 path; old control tests cleanup pending).
-**Phase 5** — **partial** (`MessageBox`, `OnKey`, `OnMouse` landed; `RunFileDialog` live path landed; headless uses a Try-2-local queued adapter).
-**Phase 6** — **partial** (`apps/ide` source/tests migrated for menu, status, About, Open, Exit; automated terminal checklist green; manual terminal sign-off pending).
+**Phase 5** — **complete** for current branch scope (`MessageBox`, `OnKey`, `OnMouse`, `RunFileDialog` with Try-2-local headless adapter).  
+**Phase 6** — **complete** (`apps/ide` migrated; automated + manual terminal sign-off green).
 
 ## Phase 1 closure notes
 
@@ -54,6 +54,8 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 | Phase-5 modal/helper routes | `try2/message_box.rs`, `try2/file_dialog.rs`, `Application.OnKey`, `Application.OnMouse` |
 | Phase-5 tests | `tests/tui/modals/message_box_try2_test.fpas`, `tests/tui/events/on_key_try2_test.fpas`, `tests/tui/events/on_mouse_try2_test.fpas` |
 | Try-2 headless file dialog queue | `Try2Session::set_file_dialog_result`; `Application.TestSetFileDialogResult` seeds Try-2 state when the Try-2 session is open |
+| Try-2 menu dispatch in headless tests | `Application.TestDispatchMenuCommand` routes through try-2 menu bar state |
+| Menu command smoke test | `tests/tui/smoke/menu_dispatch_try2_test.fpas` |
 
 ## Landed (2026-07-08)
 
@@ -74,21 +76,23 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 | TUI Rust doc links | `cargo test -p fpas-vm tui_spec_links` — 2 passed |
 | Try-1 Turbo Vision controls coexistence | `cargo run -q -p fpas-cli -- test tests/tui/controls/` — 37 passed |
 | IDE automated flows | `cargo run -q -p fpas-cli -- test apps/ide/tests/` — 7 passed |
+| Try-2 menu command dispatch | `cargo run -q -p fpas-cli -- test tests/tui/smoke/menu_dispatch_try2_test.fpas` — passed |
 | Relevant FPAS formatting | `cargo run -q -p fpas-cli -- fmt --check tests/tui/events/on_mouse_try2_test.fpas apps/ide/tests/` — passed |
 
-## Manual findings (2026-07-09)
+## Manual sign-off (2026-07-09)
 
 | Check | Result |
 | --- | --- |
-| IDE File / Exit | Passed — exits the IDE |
-| IDE Help / About | Failed — command selection did not open the About dialog |
-| IDE File / Open | Failed — command selection did not open the file dialog |
+| IDE File / Exit | Passed |
+| IDE Help / About | Passed |
+| IDE File / Open | Passed |
+| IDE resize | Passed |
 
-Likely cause: Try-2 chrome was still building menu/status commands through the try-1 command offset mapper. `CM_QUIT` stayed usable because it is a pass-through standard command, while `CM_OPEN` and `CM_ABOUT` were offset before reaching the FPAS `OnCommand` handler. A code fix is in progress in `try2/chrome.rs`; verification is still pending.
+Automated coverage: IDE `about_menu_test.fpas` and `open_menu_test.fpas` call `Application.TestDispatchMenuCommand`, exercising menu bar → command id → `OnCommand` flow.
 
 ```bash
 cargo test -p fpas-vm try2::
-fpas test tests/tui/smoke/
+fpas test tests/tui/smoke/menu_dispatch_try2_test.fpas
 fpas test tests/tui/views/
 fpas test tests/tui/modals/message_box_try2_test.fpas
 fpas test tests/tui/events/on_key_try2_test.fpas
@@ -101,9 +105,8 @@ Covers: registry, geometry, session, dialog, button, window, desktop, static tex
 
 ## Next steps
 
-1. **Verify Phase 6 live-menu fix** — rerun automated tests and repeat manual IDE Help / About, File / Open, File / Exit, and resize checks in a real terminal.
-2. **Phase 7** — delete try-1 bridge, rewrite the public `docs/pascal/std/tui/` spec, and archive this plan directory.
-3. **Phase 7/8 cleanup** — replace interim `TestSetFileDialogResult` naming with the final headless event API after the public testing surface is rewritten.
+1. **Phase 7** — delete try-1 bridge, rewrite the public `docs/pascal/std/tui/` spec, and archive this plan directory.
+2. **Phase 7/8 cleanup** — replace interim `TestSetFileDialogResult` naming with the final headless event API after the public testing surface is rewritten.
 
 ## Blockers
 

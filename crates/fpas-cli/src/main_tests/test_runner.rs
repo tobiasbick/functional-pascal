@@ -42,20 +42,19 @@ fn test_cli_runs_native_tui_headless_test() {
     write_text(
         &cwd.join("command_test.fpas"),
         "program E;\nuses Std.Tui, Std.Test;\n\
-         const CmdOk: integer := Command.Accept;\n\
          mutable var QuitSeen: boolean := false;\n\
          function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;\n\
          begin return record x := X; y := Y; width := Width; height := Height; end end;\n\
          procedure OnCommand(App: Application; CommandId: integer);\n\
-         begin if CommandId = CmdOk then QuitSeen := true; Application.Quit(App) end;\n\
+         begin if CommandId = CM_OK then QuitSeen := true; Application.Quit(App) end;\n\
          begin\n\
            var App: Application := Application.OpenForTest(80, 25);\n\
-           var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(2, 2, 20, 6), 'Test');\n\
-           var OkButton: Button := Application.CreateButton(App, Bounds(4, 3, 8, 1), 'OK', CmdOk);\n\
-           Application.AddChild(App, DialogHandle, OkButton);\n\
-           Application.OnCommand(App, OnCommand);\n\
+           var Win: Std.Tui.Window := Window.New(Bounds(2, 1, 24, 8), 'Test');\n\
+           var OkButton: Button := Button.New(Bounds(4, 4, 10, 2), 'OK', CM_OK, true);\n\
+           Window.Add(Win, OkButton);\n\
+           Desktop.Add(App, Win);\n\
            Application.TestClickButton(App, OkButton);\n\
-           Application.Run(App);\n\
+           Application.Run(App, OnCommand);\n\
            AssertTrue(QuitSeen)\n\
          end.",
     );

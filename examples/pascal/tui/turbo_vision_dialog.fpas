@@ -1,4 +1,4 @@
-{ Turbo Vision dialog demo. Run in a terminal; choose the button to exit. }
+{ Turbo Vision window demo with dialog-style layout. Run in a terminal; choose Quit to exit. }
 
 program TuiTurboVisionDialog;
 
@@ -11,7 +11,7 @@ end;
 
 function ExitMenuItem(): MenuItem;
 begin
-  return record text := 'E~x~it'; commandId := Command.Quit; end
+  return record text := 'E~x~it'; commandId := CM_QUIT; end
 end;
 
 function FileMenu(): Menu;
@@ -21,12 +21,12 @@ end;
 
 function QuitStatusItem(): StatusItem;
 begin
-  return record text := '~Q~uit'; keyCode := 0; commandId := Command.Quit; end
+  return record text := '~Q~uit'; keyCode := 0; commandId := CM_QUIT; end
 end;
 
 procedure OnCommand(App: Application; CommandId: integer);
 begin
-  if CommandId = Command.Quit then
+  if CommandId = CM_QUIT then
   begin
     Application.Quit(App)
   end
@@ -34,29 +34,22 @@ end;
 
 begin
   var App: Application := Application.Open();
-  var MenuBarHandle: MenuBar := Application.CreateMenuBar(App, Bounds(0, 0, 80, 1), [FileMenu()]);
-  var Status: StatusLine := Application.CreateStatusLine(App, Bounds(0, 24, 80, 1), [
-                                                                                      QuitStatusItem()
-
-                                                                                    ]);
-  var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(4, 2, 40, 13), 'FPAS');
-  var LabelHandle: StaticText := Application.CreateStaticText(App, Bounds(4, 2, 24, 1), 'Turbo Vision facade');
-  var NameInput: InputLine := Application.CreateInputLine(App, Bounds(4, 4, 18, 1), 'FPAS', 32);
-  var Choices: ListBox := Application.CreateListBox(App, Bounds(4, 6, 18, 3), [
-                                                                                'Edit',
-                                                                                'Build',
-                                                                                'Run'
-
-                                                                              ], Command.Accept);
-  var AutoRun: CheckBox := Application.CreateCheckBox(App, Bounds(24, 6, 12, 1), 'Auto run', false);
-  var ButtonHandle: Button := Application.CreateButton(App, Bounds(10, 9, 12, 2), 'Quit', Command.Quit);
-  Application.SetMenuBar(App, MenuBarHandle);
+  var Bar: MenuBar := MenuBar.New(Bounds(0, 0, 80, 1), [FileMenu()]);
+  var Status: StatusLine := StatusLine.New(Bounds(0, 24, 80, 1), [QuitStatusItem()]);
+  var Win: Window := Window.New(Bounds(4, 2, 40, 13), 'FPAS');
+  var LabelHandle: StaticText := StaticText.New(Bounds(4, 2, 24, 1), 'Turbo Vision facade');
+  var NameInput: InputLine := InputLine.New(Bounds(4, 4, 18, 1), 'FPAS', 32);
+  var Choices: ListBox := ListBox.New(Bounds(4, 6, 18, 3), ['Edit', 'Build', 'Run'], CM_OK);
+  var AutoRun: CheckBox := CheckBox.New(Bounds(24, 6, 12, 1), 'Auto run', false);
+  var ButtonHandle: Button := Button.New(Bounds(10, 9, 12, 2), 'Quit', CM_QUIT, false);
+  Window.Add(Win, LabelHandle);
+  Window.Add(Win, NameInput);
+  Window.Add(Win, Choices);
+  Window.Add(Win, AutoRun);
+  Window.Add(Win, ButtonHandle);
+  Desktop.Add(App, Win);
+  Application.SetMenuBar(App, Bar);
   Application.SetStatusLine(App, Status);
-  Application.AddChild(App, DialogHandle, LabelHandle);
-  Application.AddChild(App, DialogHandle, NameInput);
-  Application.AddChild(App, DialogHandle, Choices);
-  Application.AddChild(App, DialogHandle, AutoRun);
-  Application.AddChild(App, DialogHandle, ButtonHandle);
-  Application.OnCommand(App, OnCommand);
-  Application.Run(App)
+  Application.Run(App, OnCommand);
+  Application.Close(App)
 end.

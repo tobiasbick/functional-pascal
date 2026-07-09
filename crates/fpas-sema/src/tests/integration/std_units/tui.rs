@@ -6,9 +6,9 @@ use super::{check_errors, check_ok};
 
 fn has_removed_tui_help(error: &fpas_diagnostics::Diagnostic) -> bool {
     error.help.as_deref().is_some_and(|help| {
-        help.contains("old retained Std.Tui host/view API")
-            && help.contains("Application.CreateDialog")
-            && help.contains("Application.OnCommand")
+        help.contains("old try-1 Std.Tui host/view API")
+            && help.contains("Dialog.NewModal")
+            && help.contains("Application.Run(App, OnCommand)")
     })
 }
 
@@ -46,7 +46,7 @@ end.",
 }
 
 #[test]
-fn std_tui_list_selection_surface_is_available() {
+fn std_tui_list_box_selection_surface_is_available() {
     check_ok(
         "\
 program T;
@@ -59,8 +59,8 @@ end;
 
 begin
   var App: Application := Application.Open();
-  var ListHandle: ListBox := Application.CreateListBox(App, Bounds(1, 1, 20, 4), ['one'], Command.Accept);
-  var Selection: integer := Application.ListSelection(App, ListHandle);
+  var ListHandle: ListBox := ListBox.New(Bounds(1, 1, 20, 4), ['one'], CM_OK);
+  var Selection: integer := ListBox.Selection(ListHandle);
   Application.Close(App)
 end.",
     );
@@ -155,6 +155,33 @@ begin
   var App: Application := Application.Open();
   Application.Close(App)
 end.",
+    );
+}
+
+#[test]
+fn std_tui_create_dialog_api_is_not_registered() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Tui;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+begin
+  var App: Application := Application.Open();
+  Application.CreateDialog(App, Bounds(1, 1, 10, 5), 'Old')
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| (e.message.contains("Unknown function or procedure")
+                || e.message.contains("Unknown procedure"))
+                && e.message.contains("Application.CreateDialog")
+                && has_removed_tui_help(e)),
+        "{errs:#?}"
     );
 }
 

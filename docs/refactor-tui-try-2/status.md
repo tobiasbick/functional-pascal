@@ -124,11 +124,11 @@ Covers: registry, geometry, session, dialog, button, window, desktop, static tex
 
 | Metric | Value |
 | --- | --- |
-| Controls tests removed | **31 / 37** |
-| Controls tests remaining | **6** |
+| Controls tests removed | **37 / 37** |
+| Examples migrated to try-2 | **5 / 5** (`exec_dialog`, `runtime_setters`, `turbo_vision_dialog`, `turbo_vision_outline`, `turbo_vision_window`) |
 | VM / sema / `docs/pascal/std/tui/` rewrite | Not started |
 
-Remaining try-1 controls (Phase 8 / mouse): outline (2), live tree/dialog (2), `check_box_mouse`, `radio_button_mouse`.
+Remaining Phase 7 work: remove try-1 VM modules and sema symbols per [deletion-checklist.md](deletion-checklist.md); simplify coexistence routing once try-1 intrinsics are gone.
 
 ## Blockers
 
@@ -140,8 +140,7 @@ Headless try-2 modals run through `HeadlessTvApp::exec_modal_view`. Interactive 
 
 Upstream `FileDialog::execute(&mut Application)` is available for live `Application`, but the branch cannot currently construct a full upstream `Application` over the headless terminal because the required fields/constructors are private. The current headless `RunFileDialog` test path uses a Try-2-local queued adapter on `Try2Session`; it no longer consumes the try-1 `test_file_dialog_result` queue.
 
-## Unchanged (try-1 still authoritative)
+## Unchanged (try-1 VM code remains)
 
-- All `Application.Create*` Pascal API
-- `TurboVisionObject` snapshot + reconcile
-- `tests/tui/controls/*` — **empty** (37/37 deleted; try-2 replacements in `tests/tui/views/`, `tests/tui/smoke/`, `tests/tui/events/`)
+- try-1 VM intrinsics and modules (`try_exec_turbo_vision_intrinsic`, `control_create.rs`, …) — dead at Pascal layer; file deletion is the next batch
+- `docs/pascal/std/tui/` — public spec rewrite in Phase 8

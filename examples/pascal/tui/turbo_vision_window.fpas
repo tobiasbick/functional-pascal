@@ -11,7 +11,7 @@ end;
 
 function ExitMenuItem(): MenuItem;
 begin
-  return record text := 'E~x~it'; commandId := Command.Quit; end
+  return record text := 'E~x~it'; commandId := CM_QUIT; end
 end;
 
 function FileMenu(): Menu;
@@ -21,12 +21,12 @@ end;
 
 function QuitStatusItem(): StatusItem;
 begin
-  return record text := '~Q~uit'; keyCode := 0; commandId := Command.Quit; end
+  return record text := '~Q~uit'; keyCode := 0; commandId := CM_QUIT; end
 end;
 
 procedure OnCommand(App: Application; CommandId: integer);
 begin
-  if CommandId = Command.Quit then
+  if CommandId = CM_QUIT then
   begin
     Application.Quit(App)
   end
@@ -34,21 +34,18 @@ end;
 
 begin
   var App: Application := Application.Open();
-  var MenuBarHandle: MenuBar := Application.CreateMenuBar(App, Bounds(0, 0, 80, 1), [FileMenu()]);
-  var Status: StatusLine := Application.CreateStatusLine(App, Bounds(0, 24, 80, 1), [
-                                                                                      QuitStatusItem()
-
-                                                                                    ]);
-  var WindowHandle: Window := Application.CreateWindow(App, Bounds(5, 3, 42, 12), 'FPAS IDE');
-  var LabelHandle: StaticText := Application.CreateStaticText(App, Bounds(4, 2, 28, 1), 'Window with static text');
-  var NameInput: InputLine := Application.CreateInputLine(App, Bounds(4, 4, 20, 1), 'main.pas', 64);
-  var ButtonHandle: Button := Application.CreateButton(App, Bounds(12, 6, 12, 2), 'Quit', Command.Quit);
-  Application.SetMenuBar(App, MenuBarHandle);
+  var Bar: MenuBar := MenuBar.New(Bounds(0, 0, 80, 1), [FileMenu()]);
+  var Status: StatusLine := StatusLine.New(Bounds(0, 24, 80, 1), [QuitStatusItem()]);
+  var Win: Window := Window.New(Bounds(5, 3, 42, 12), 'FPAS IDE');
+  var LabelHandle: StaticText := StaticText.New(Bounds(4, 2, 28, 1), 'Window with static text');
+  var NameInput: InputLine := InputLine.New(Bounds(4, 4, 20, 1), 'main.pas', 64);
+  var ButtonHandle: Button := Button.New(Bounds(12, 6, 12, 2), 'Quit', CM_QUIT, false);
+  Window.Add(Win, LabelHandle);
+  Window.Add(Win, NameInput);
+  Window.Add(Win, ButtonHandle);
+  Desktop.Add(App, Win);
+  Application.SetMenuBar(App, Bar);
   Application.SetStatusLine(App, Status);
-  Application.AddChild(App, WindowHandle, LabelHandle);
-  Application.AddChild(App, WindowHandle, NameInput);
-  Application.AddChild(App, WindowHandle, ButtonHandle);
-  Application.AddWindow(App, WindowHandle);
-  Application.OnCommand(App, OnCommand);
-  Application.Run(App)
+  Application.Run(App, OnCommand);
+  Application.Close(App)
 end.

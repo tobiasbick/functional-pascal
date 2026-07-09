@@ -351,6 +351,22 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::OutlineSetNodes), location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_MESSAGE_BOX => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_MESSAGE_BOX, 3, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::MessageBox), location);
+                Ok(true)
+            }
+            s::STD_TUI_APPLICATION_RUN_FILE_DIALOG => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_RUN_FILE_DIALOG, 5, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::RunFileDialog), location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

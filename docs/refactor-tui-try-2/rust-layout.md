@@ -4,7 +4,7 @@ Target module layout after try-2. Follow [AGENTS.md](../../AGENTS.md): one conce
 
 ## VM bridge (`crates/fpas-vm/src/vm/execute/io/tui/`)
 
-### Current `try2/` tree (branch tip, 2026-07-08)
+### Current `try2/` tree (branch tip, 2026-07-09)
 
 Coexists with try-1 until phase 7. Pascal intrinsics are wired through Phase 4, with partial Phase 5 routing for `MessageBox`, `RunFileDialog`, `OnKey`, and `OnMouse`.
 
@@ -22,7 +22,7 @@ crates/fpas-vm/src/vm/execute/io/tui/try2/
   app.rs           — live Application::new (no try-1 populate)
   chrome.rs        — MenuBar/StatusLine.New + SetMenuBar/SetStatusLine sync
   message_box.rs   — Application.MessageBox try-2 route
-  file_dialog.rs   — Application.RunFileDialog try-2 route (headless still queued)
+  file_dialog.rs   — Application.RunFileDialog try-2 route (live upstream, headless Try2Session queue adapter)
   view_lookup.rs   — lookup attached child views for live mutation/read-back
   intrinsics.rs    — try-2 VM dispatch
   testing.rs       — TestClickButton try-2 path

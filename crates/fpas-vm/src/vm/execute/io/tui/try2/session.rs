@@ -156,6 +156,8 @@ pub(crate) struct Try2Session {
     status_lines: HashMap<u32, Try2StatusLineState>,
     attached_menu_bar: Option<u32>,
     attached_status_line: Option<u32>,
+    /// Headless file dialog result queued by the interim test helper.
+    file_dialog_result: Option<Option<String>>,
 }
 
 impl Try2Session {
@@ -187,6 +189,7 @@ impl Try2Session {
         self.status_lines.clear();
         self.attached_menu_bar = None;
         self.attached_status_line = None;
+        self.file_dialog_result = None;
     }
 
     /// Returns `true` after [`Self::open`].
@@ -699,6 +702,17 @@ impl Try2Session {
     /// Records that a window handle now lives on the upstream desktop.
     pub fn mark_desktop_window(&mut self, handle: u32) {
         self.desktop_windows.insert(handle);
+    }
+
+    /// Queues the result consumed by the next headless `Application.RunFileDialog`.
+    pub fn set_file_dialog_result(&mut self, result: Option<String>) {
+        self.file_dialog_result = Some(result);
+    }
+
+    /// Consumes the queued headless file dialog result, if one was set.
+    #[must_use]
+    pub fn take_file_dialog_result(&mut self) -> Option<Option<String>> {
+        self.file_dialog_result.take()
     }
 }
 

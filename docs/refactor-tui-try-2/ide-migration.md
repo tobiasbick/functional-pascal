@@ -1,6 +1,6 @@
 # IDE migration
 
-Notes for rewriting [`apps/ide`](../../apps/ide) on the try-2 API. **First pass landed** — menu, status, shell run loop, About, Open, and automated IDE tests now use the try-2 API. Manual terminal sign-off and the headless FileDialog blocker remain.
+Notes for rewriting [`apps/ide`](../../apps/ide) on the try-2 API. **First pass landed** — menu, status, shell run loop, About, Open, and automated IDE tests now use the try-2 API. Automated checklist coverage is green; manual terminal sign-off remains.
 
 ## Current IDE TUI usage
 
@@ -9,10 +9,16 @@ Notes for rewriting [`apps/ide`](../../apps/ide) on the try-2 API. **First pass 
 | Shell / main loop | `src/shell.fpas`, `src/main.fpas` | `Application.New`, `Application.Run(App, OnCommand)`, `Application.Close` |
 | Menu | `src/menu.fpas` | `MenuBar.New`, `SetMenuBar`, direct `CM_QUIT`, `CM_OPEN`, `CM_ABOUT` |
 | Status | `src/status.fpas` | `StatusLine.New`, `SetStatusLine` |
-| Dialogs | `src/dialog.fpas`, `src/dialog/about.fpas`, `src/dialog/open.fpas` | `Application.MessageBox`, `Application.RunFileDialog`; Open headless tests still seed `TestSetFileDialogResult` |
+| Dialogs | `src/dialog.fpas`, `src/dialog/about.fpas`, `src/dialog/open.fpas` | `Application.MessageBox`, `Application.RunFileDialog`; Open headless tests seed the interim Try-2 file dialog adapter through `TestSetFileDialogResult` |
 | Theme | `src/theme.fpas` | May be layout constants only |
 
-Tests: `apps/ide/tests/` — menu, shell, dialog, status, theme. Shell/dialog tests use `Try2InjectCommand` and `Try2InjectKeyboard`; Open keeps `TestSetFileDialogResult` until `RunFileDialog` has a headless upstream path.
+Tests: `apps/ide/tests/` — menu, shell, dialog, status, theme. Shell/dialog tests use `Try2InjectCommand` and `Try2InjectKeyboard`; Open uses `TestSetFileDialogResult` as an interim helper that now seeds Try-2 session state.
+
+Latest automated sign-off, recorded 2026-07-09:
+
+- `cargo run -q -p fpas-cli -- test apps/ide/tests/` — 7 passed.
+- `cargo test -p fpas-sema std_units::tui`, `cargo test -p fpas-compiler std_library::tui`, and `cargo test -p fpas-vm tui_spec_links` all passed.
+- `cargo run -q -p fpas-cli -- test tests/tui/controls/` passed, confirming try-1 controls still coexist while IDE uses try-2.
 
 ## Target structure (unchanged units)
 
@@ -126,7 +132,7 @@ Replace:
 - [x] `Application.CreateMenuBar` → `MenuBar.New`
 - [x] `Application.TestDispatchMenuCommand` → `Try2InjectCommand` / run-loop command injection
 - [x] `Command.*` → `CM_*`
-- [ ] `Application.TestSetFileDialogResult` → headless file dialog event path, after the upstream/API blocker is resolved
+- [ ] `Application.TestSetFileDialogResult` → final headless file dialog event path during Phase 7/8 public testing cleanup
 
 ## IDE-specific commands
 
@@ -144,9 +150,13 @@ Document in `apps/ide/README` if one exists, or in source comments only.
 
 After automated tests pass:
 
-1. Launch IDE in a real terminal.
-2. File → Exit, Help → About, File → Open (cancel and confirm paths).
-3. Resize terminal — confirm no panic (upstream `handle_redraw`).
+1. Launch IDE in a real terminal: `cargo run -p fpas-cli -- apps/ide/ide.fpasprj`.
+2. Verify File → Exit, Help → About, File → Open cancel, and File → Open confirm path.
+3. Resize terminal during `Run` and confirm no panic or corrupted chrome.
+
+Status: pending manual sign-off.
+
+Manual finding on 2026-07-09: File / Exit exits the IDE, but Help / About and File / Open did not open their dialogs. The suspected bridge issue is that Try-2 menu/status chrome reused the try-1 command offset mapper for reserved commands; `CM_OPEN` and `CM_ABOUT` must reach the FPAS `OnCommand` handler unchanged.
 
 ## Out of scope for IDE v1 on try-2
 

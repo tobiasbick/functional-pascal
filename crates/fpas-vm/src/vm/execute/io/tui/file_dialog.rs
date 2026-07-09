@@ -56,6 +56,10 @@ impl Worker {
     ) -> Result<(), VmError> {
         let result = self.pop_optional_string("FileDialog test result", line)?;
         self.pop_tui_application(line)?;
+        if self.try2.is_open() {
+            self.try2.set_file_dialog_result(result);
+            return Ok(());
+        }
         self.with_tui(|tui| {
             tui.turbo_vision.test_file_dialog_result = Some(result);
         });

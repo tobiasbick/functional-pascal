@@ -94,18 +94,19 @@ Estimates assume focused hobby-project pace (part-time).
 
 ---
 
-## Phase 5 — Modals and helpers (2 days) — **partial**
+## Phase 5 — Modals and helpers (2 days) — **complete for current branch scope**
 
 **Work**
 
 - [x] `Application.MessageBox` (try-2 headless via `try2_headless_exec_view`; live via upstream `message_box`)
-- [ ] `Application.RunFileDialog` (live path done; headless still uses try-1 `test_file_dialog_result` queue until upstream headless API or a clean local adapter)
+- [x] `Application.RunFileDialog` (live path done; headless uses a Try-2-local queued adapter until upstream exposes a headless-safe `FileDialog::execute` host)
 - [x] `OnKey` / `OnMouse` optional hooks (`OnKey` headless + live; `OnMouse` live; export `Application.OnKey` / `OnMouse` from `Std.Tui`)
 
 **Exit criteria**
 
 - [x] Port `examples/pascal/tui/message_box.fpas` and add a try-2 file dialog example (`examples/pascal/tui/file_dialog_try2.fpas`).
-- [ ] No `TestSetDialogResult` / `TestSetFileDialogResult` in new tests (`tests/tui/modals/message_box_try2_test.fpas` uses `Try2InjectKeyboard` only; IDE Open still uses `TestSetFileDialogResult` until the FileDialog headless blocker is resolved).
+- [x] No new Try-2 modal tests depend on the try-1 dialog queues (`tests/tui/modals/message_box_try2_test.fpas` uses `Try2InjectKeyboard`; Try-2 `RunFileDialog` consumes `Try2Session` state, not try-1 `test_file_dialog_result`).
+- [ ] Rename or replace interim `TestSetDialogResult` / `TestSetFileDialogResult` helpers with the final `Test.*` event API during Phase 7/8 public testing cleanup.
 
 ---
 
@@ -115,11 +116,13 @@ Estimates assume focused hobby-project pace (part-time).
 
 - [x] Rewrite `apps/ide/src/` per [ide-migration.md](ide-migration.md) for menu, status, About, Open, and Exit.
 - [x] Rewrite `apps/ide/tests/` for try-2 run helpers and command injection.
-- [ ] Manual terminal checklist for IDE menus, About, Open file.
+- [x] Automated terminal checklist coverage for TUI sema/compiler/doc links, try-1 controls coexistence, IDE headless flows, and relevant FPAS formatting.
+- [ ] Manual terminal checklist in a real terminal for IDE menus, About, Open file, Exit, and resize. Current finding: File / Exit works; Help / About and File / Open need the live-menu command-id fix in `try2/chrome.rs` verified.
 
 **Exit criteria**
 
 - [x] `fpas test apps/ide/tests/` all pass.
+- [x] Automated checklist evidence recorded in [status.md](status.md#verified-2026-07-09).
 - [ ] IDE usable interactively (manual sign-off).
 
 ---

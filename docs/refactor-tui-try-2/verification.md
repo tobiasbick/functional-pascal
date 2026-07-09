@@ -49,12 +49,12 @@ All must return **no matches** (except git history).
 
 ## API completeness (final public spec)
 
-Partial on branch today — see [upstream-mapping.md](upstream-mapping.md#implementation-status-branch-refactortui-try-2-2026-07-08).
+Partial on branch today — see [upstream-mapping.md](upstream-mapping.md#implementation-status-branch-refactortui-try-2-2026-07-09).
 
 - [x] `Application.New`, `Close`, `OpenForTest`, `CloseForTest` — session via try-1 entry points plus `try2.reset()` on close
 - [x] `Application.Run`, `Quit`, `ExecView` — try-2 path landed for headless/live smoke; live quit wiring remains a cleanup note in [migration-phases.md](migration-phases.md)
 - [x] `Application.MessageBox`
-- [ ] `Application.RunFileDialog` — live route landed; headless still uses try-1 queued result because upstream `FileDialog::execute` needs a full `Application`
+- [x] `Application.RunFileDialog` — live route landed; headless uses a Try-2-local queued adapter because upstream `FileDialog::execute` needs a full `Application`
 - [x] `Desktop.Add`
 - [x] `Dialog`, `Window`, `Button`, `StaticText`, `InputLine`, `ListBox`, `CheckBox`, `RadioButton`, `Memo`, `TextViewer`
 - [x] `MenuBar`, `StatusLine` + setters

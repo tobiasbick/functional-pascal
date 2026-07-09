@@ -12,6 +12,7 @@ Test plan for try-2. Goal: prove **user-visible behavior** and **thin bridge inv
 | Phase-1 widgets | `tests/tui/views/*_try2_test.fpas` |
 | Message box | `tests/tui/modals/message_box_try2_test.fpas` |
 | Keyboard callback | `tests/tui/events/on_key_try2_test.fpas` |
+| Mouse callback | `tests/tui/events/on_mouse_try2_test.fpas` |
 | IDE shell/menu/dialog flows | `apps/ide/tests/` |
 | Rust unit tests | `cargo test -p fpas-vm try2::` (registry, geometry, events, dialog, button, widgets, modals) |
 
@@ -51,7 +52,7 @@ tests/tui/
     file_dialog_test.fpas
   events/
     on_key_try2_test.fpas         { landed — target: on_key_test.fpas }
-    on_mouse_test.fpas
+    on_mouse_try2_test.fpas       { landed — target: on_mouse_test.fpas }
     command_ids_test.fpas        { CM_OK, CM_QUIT pass through unchanged }
 ```
 
@@ -132,6 +133,21 @@ fpas test apps/ide/tests/
 ```
 
 Final: `fpas test tests/` or `cargo test -p fpas-cli fpas_regression_suite_passes`.
+
+### Phase 6 automated checklist (2026-07-09)
+
+The IDE migration has current automated coverage for the terminal checklist subset that can run headlessly:
+
+```bash
+cargo test -p fpas-sema std_units::tui
+cargo test -p fpas-compiler std_library::tui
+cargo test -p fpas-vm tui_spec_links
+cargo run -q -p fpas-cli -- test tests/tui/controls/
+cargo run -q -p fpas-cli -- test apps/ide/tests/
+cargo run -q -p fpas-cli -- fmt --check tests/tui/events/on_mouse_try2_test.fpas apps/ide/tests/
+```
+
+Manual IDE sign-off still requires a real terminal session; do not mark Phase 6 complete until the checklist below is exercised interactively.
 
 ## Interactive manual checklist
 

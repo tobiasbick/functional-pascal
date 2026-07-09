@@ -4,7 +4,7 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 
 **Sources:** [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust) tag `v2.0.0` — `src/lib.rs`, `src/views/`, `src/app/application.rs`, `src/helpers/`.
 
-## Implementation status (branch `refactor/tui-try-2`, 2026-07-08)
+## Implementation status (branch `refactor/tui-try-2`, 2026-07-09)
 
 | FPAS symbol | Status | VM location |
 | --- | --- | --- |
@@ -22,7 +22,7 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 | `MenuBar.New`, `StatusLine.New`, `SetMenuBar`, `SetStatusLine` | ✅ | `try2/chrome.rs` |
 | `InputLine`, `ListBox`, `CheckBox`, `RadioButton`, `Memo`, `TextViewer` | ✅ | `try2/views/*` |
 | `Application.MessageBox` | ✅ | `try2/message_box.rs` |
-| `Application.RunFileDialog` | partial | `try2/file_dialog.rs` — live route landed; headless still uses try-1 queued result because upstream `FileDialog::execute` needs a full `Application` |
+| `Application.RunFileDialog` | ✅ with local headless adapter | `try2/file_dialog.rs` — live route uses upstream `FileDialog::execute`; headless consumes Try-2 session state because upstream `FileDialog::execute` needs a full `Application` |
 | `Application.OnKey`, `Application.OnMouse` | ✅ | try-1 registration intrinsics; try-2 run delegates unhandled input through shared handlers |
 
 ## Application and session
@@ -74,7 +74,7 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 | Upstream type | FPAS | Priority |
 | --- | --- | --- |
 | `outline::Outline` | `Outline` | Medium — IDE may not need immediately |
-| `file_dialog::FileDialog` | `Application.RunFileDialog` | High — live path landed; headless is blocked on upstream/application construction |
+| `file_dialog::FileDialog` | `Application.RunFileDialog` | High — live path landed; headless uses a Try-2-local queued adapter until upstream/application construction is available |
 | `editor::EditorWindow` | `EditorWindow` | Low |
 | `help_window::HelpWindow` | — | Low |
 | `color_dialog::ColorDialog` | — | Low |

@@ -61,11 +61,61 @@ fn try2_headless_run_file_dialog(
     line: SourceLocation,
 ) -> Result<Option<PathBuf>, VmError> {
     try2_ensure_headless_app(worker, line)?;
-    // Headless file picker still uses the try-1 queued result until upstream exposes
-    // a headless-safe `FileDialog::execute` host.
     let _ = line;
     Ok(worker
-        .with_tui(|tui| tui.turbo_vision.test_file_dialog_result.take())
+        .try2
+        .take_file_dialog_result()
         .unwrap_or(None)
         .map(PathBuf::from))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tests::helpers::{loc, minimal_shared_state};
+    use crate::vm::Worker;
+    use fpas_bytecode::Chunk;
+    use std::sync::Arc;
+
+    fn headless_try2_worker(width: u16, height: u16) -> Worker {
+        let shared = Arc::new(minimal_shared_state(Chunk::new()));
+        let mut worker = Worker::new_main(shared);
+        worker.with_console(|console| console.resize(width, height));
+        {
+            let mut tui = worker.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+            worker.with_console(|console| {
+                tui.session
+                    .open_for_test(console, loc())
+                    .expect("open_for_test");
+            });
+        }
+        worker.open_try2_session();
+        worker
+    }
+
+    #[test]
+    fn headless_file_dialog_uses_try2_queue() {
+        let mut worker = headless_try2_worker(80, 25);
+        worker.with_tui(|tui| {
+            tui.turbo_vision.test_file_dialog_result = Some(Some("try1.txt".into()));
+        });
+        worker.try2.set_file_dialog_result(Some("try2.txt".into()));
+
+        let selected = try2_run_file_dialog(
+            &mut worker,
+            Rect::new(10, 5, 50, 14),
+            "Open File".into(),
+            "*".into(),
+            None,
+            loc(),
+        )
+        .expect("file dialog");
+
+        assert_eq!(selected, Some("try2.txt".into()));
+        assert_eq!(
+            worker.with_tui(|tui| tui.turbo_vision.test_file_dialog_result.clone()),
+            Some(Some("try1.txt".into())),
+            "try-2 headless file dialog must not consume the try-1 queue"
+        );
+    }
 }

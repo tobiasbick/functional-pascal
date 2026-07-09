@@ -81,10 +81,12 @@ Each view is a record with an opaque `id` field (not visible to users if we use 
 
 ### `Dialog`
 
+Current branch status: `Dialog.NewModal` and `Dialog.Add` are landed. Plain modeless `Dialog.New` is target API only until a caller needs it.
+
 ```pascal
 type Dialog = … opaque …
 
-function Dialog.New(Bounds: Rect; Title: string): Dialog;
+function Dialog.New(Bounds: Rect; Title: string): Dialog;  { target, not landed }
 procedure Dialog.Add(Dlg: Dialog; Child: Button);
 procedure Dialog.Add(Dlg: Dialog; Child: StaticText);
 procedure Dialog.Add(Dlg: Dialog; Child: InputLine);
@@ -152,6 +154,8 @@ procedure ListBox.SetItems(Lb: ListBox; Items: array of string);
 
 ### `Outline`
 
+Current branch status: outline remains on the try-1 `Application.CreateOutline` API until Phase 7 or a dedicated try-2 outline pass.
+
 ```pascal
 type OutlineNode = record text: string; children: array of OutlineNode; end;
 
@@ -177,6 +181,8 @@ procedure RadioButton.SetSelected(Rb: RadioButton; Selected: boolean);
 
 ### `MenuBar` / `StatusLine`
 
+Current branch status: `MenuBar.New`, `StatusLine.New`, `Application.SetMenuBar`, and `Application.SetStatusLine` are landed. `MenuBar.SetMenus` and `StatusLine.SetItems` are target API only.
+
 Data records unchanged from try-1:
 
 ```pascal
@@ -186,10 +192,10 @@ type
   StatusItem = record text: string; keyCode: integer; commandId: CommandId; end;
 
 function MenuBar.New(Bounds: Rect; Menus: array of Menu): MenuBar;
-procedure MenuBar.SetMenus(Bar: MenuBar; Menus: array of Menu);
+procedure MenuBar.SetMenus(Bar: MenuBar; Menus: array of Menu);  { target, not landed }
 
 function StatusLine.New(Bounds: Rect; Items: array of StatusItem): StatusLine;
-procedure StatusLine.SetItems(Line: StatusLine; Items: array of StatusItem);
+procedure StatusLine.SetItems(Line: StatusLine; Items: array of StatusItem);  { target, not landed }
 ```
 
 ## Event handlers

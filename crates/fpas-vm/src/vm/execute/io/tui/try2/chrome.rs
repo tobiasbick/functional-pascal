@@ -9,15 +9,16 @@ use crate::vm::diagnostics::{VmError, runtime_error};
 use crate::vm::execute::io::tui::chrome_layout::{
     layout_menu_bar_for_terminal, layout_status_line_for_terminal,
 };
-use crate::vm::execute::io::tui::menu_build::build_menu_bar_from_snapshot;
 use crate::vm::execute::io::tui::try2::registry::{RegistryError, ViewKind};
 use crate::vm::execute::io::tui::try2::session::{Try2MenuBarState, Try2StatusLineState};
-use crate::vm::execute::io::tui::tv_geometry::state_rect;
-use crate::vm::execute::io::tui::tv_views::{TurboVisionStatusLineSnapshot, build_status_line};
+use crate::vm::execute::io::tui::tv_geometry::{state_rect, turbo_rect};
 use crate::vm::shared::{TurboVisionMenu, TurboVisionStatusItem};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 use turbo_vision::core::geometry::Rect;
+use turbo_vision::core::menu_data::{Menu, MenuItem};
+use turbo_vision::views::menu_bar::{MenuBar, SubMenu};
+use turbo_vision::views::status_line::{StatusItem, StatusLine};
 
 /// Creates a menu bar handle (`MenuBar.New`).
 pub(in crate::vm::execute::io::tui::try2) fn try2_menu_bar_new(
@@ -125,13 +126,11 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_sync_chrome_to_app(
     let menu_bar = worker
         .try2
         .attached_menu_bar_snapshot()
-        .map(|snapshot| build_menu_bar_from_snapshot(snapshot.bounds, &snapshot.menus));
-    let status_line = worker.try2.attached_status_line_snapshot().map(|snapshot| {
-        build_status_line(TurboVisionStatusLineSnapshot {
-            bounds: snapshot.bounds,
-            items: snapshot.items.clone(),
-        })
-    });
+        .map(|snapshot| build_try2_menu_bar(snapshot.bounds, &snapshot.menus));
+    let status_line = worker
+        .try2
+        .attached_status_line_snapshot()
+        .map(|snapshot| build_try2_status_line(snapshot.bounds, &snapshot.items));
 
     if worker.with_tui(|tui| tui.session.is_headless()) {
         try2_ensure_headless_app(worker, line)?;
@@ -182,6 +181,45 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_sync_chrome_to_app(
     Ok(())
 }
 
+fn build_try2_menu_bar(
+    bounds: crate::vm::shared::TurboVisionRect,
+    menus: &[TurboVisionMenu],
+) -> MenuBar {
+    let mut menu_bar = MenuBar::new(turbo_rect(bounds));
+    for menu in menus {
+        menu_bar.add_submenu(SubMenu::new(&menu.title, build_try2_menu(menu)));
+    }
+    menu_bar
+}
+
+fn build_try2_menu(menu: &TurboVisionMenu) -> Menu {
+    Menu::from_items(
+        menu.items
+            .iter()
+            .map(|item| {
+                if item.command_id == 0 {
+                    MenuItem::separator()
+                } else {
+                    MenuItem::new(&item.text, item.command_id, 0, 0)
+                }
+            })
+            .collect(),
+    )
+}
+
+fn build_try2_status_line(
+    bounds: crate::vm::shared::TurboVisionRect,
+    items: &[TurboVisionStatusItem],
+) -> StatusLine {
+    StatusLine::new(
+        turbo_rect(bounds),
+        items
+            .iter()
+            .map(|item| StatusItem::new(&item.text, item.key_code, item.command_id))
+            .collect(),
+    )
+}
+
 fn try2_session_closed_error(line: SourceLocation) -> VmError {
     runtime_error(
         RUNTIME_INTRINSIC_STACK_STATE_ERROR,
@@ -217,4 +255,66 @@ fn status_line_error(error: RegistryError, line: SourceLocation) -> VmError {
         ),
     };
     runtime_error(RUNTIME_INTRINSIC_STACK_STATE_ERROR, message, help, line)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::vm::shared::{TurboVisionMenuItem, TurboVisionRect};
+    use turbo_vision::core::command::{CM_ABOUT, CM_OPEN};
+    use turbo_vision::core::event::{Event, EventType, KB_F3};
+    use turbo_vision::core::menu_data::MenuItem;
+    use turbo_vision::views::View;
+
+    fn rect() -> TurboVisionRect {
+        TurboVisionRect {
+            x: 0,
+            y: 0,
+            width: 80,
+            height: 1,
+        }
+    }
+
+    #[test]
+    fn try2_menu_commands_keep_upstream_ids() {
+        let menu = build_try2_menu(&TurboVisionMenu {
+            title: "~F~ile".into(),
+            items: vec![
+                TurboVisionMenuItem {
+                    text: "~O~pen".into(),
+                    command_id: CM_OPEN,
+                },
+                TurboVisionMenuItem {
+                    text: "-".into(),
+                    command_id: 0,
+                },
+                TurboVisionMenuItem {
+                    text: "~A~bout".into(),
+                    command_id: CM_ABOUT,
+                },
+            ],
+        });
+
+        assert_eq!(menu.items[0].command(), Some(CM_OPEN));
+        assert!(matches!(menu.items[1], MenuItem::Separator));
+        assert_eq!(menu.items[2].command(), Some(CM_ABOUT));
+    }
+
+    #[test]
+    fn try2_status_commands_keep_upstream_ids() {
+        let status_line = build_try2_status_line(
+            rect(),
+            &[TurboVisionStatusItem {
+                text: "~F3~ Open".into(),
+                key_code: KB_F3,
+                command_id: CM_OPEN,
+            }],
+        );
+
+        let mut event = Event::keyboard(KB_F3);
+        let mut status_line = status_line;
+        status_line.handle_event(&mut event);
+        assert_eq!(event.what, EventType::Command);
+        assert_eq!(event.command, CM_OPEN);
+    }
 }

@@ -46,6 +46,10 @@ impl Worker {
             )
         })?;
 
+        if self.try2_should_handle_application_run() {
+            return self.try2_test_click_mouse(x, y, line);
+        }
+
         let clicked =
             self.with_tui(|tui| apply_headless_mouse_click_at(&tui.turbo_vision.objects, x, y));
 
@@ -114,6 +118,46 @@ impl Worker {
         }
 
         self.mark_turbo_vision_headless_repaint();
+        Ok(())
+    }
+
+    fn try2_test_click_mouse(
+        &mut self,
+        x: i16,
+        y: i16,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        let width = self.with_console(|console| console.screen_width() as u16);
+        let height = self.with_console(|console| console.screen_height() as u16);
+        if x < 0 || y < 0 || x >= width as i16 || y >= height as i16 {
+            return Err(runtime_error(
+                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                format!("Mouse coordinate ({x}, {y}) is outside the headless terminal"),
+                "Use screen coordinates within the headless terminal size.",
+                line,
+            ));
+        }
+
+        self.turbo_vision_ensure_headless_app(width, height)
+            .map_err(|error| {
+                runtime_error(
+                    RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                    format!("Headless Turbo Vision initialization failed: {error}"),
+                    "Call `Application.OpenForTest` before `Application.TestClickMouse`.",
+                    line,
+                )
+            })?;
+        let Some(app) = self.headless_tv_app.as_ref() else {
+            return Err(runtime_error(
+                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                "Headless Turbo Vision session is not initialized",
+                "Call `Application.OpenForTest` before `Application.TestClickMouse`.",
+                line,
+            ));
+        };
+
+        app.push_mouse_down(x, y);
+        app.push_mouse_up(x, y);
         Ok(())
     }
 }

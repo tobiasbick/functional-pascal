@@ -179,7 +179,7 @@ end.",
 }
 
 #[test]
-fn std_tui_application_run_wrong_arg_count() {
+fn std_tui_application_run_rejects_bad_handler_and_arg_count() {
     let errs = check_errors(
         "\
 program T;
@@ -191,7 +191,22 @@ end.",
     );
     assert!(
         errs.iter()
-            .any(|e| e.message.contains("expects 1 arguments, got 2")),
+            .any(|e| e.message.contains("OnCommand handler must be")),
+        "{errs:#?}"
+    );
+
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Tui;
+begin
+    var App: Application := Application.Open();
+    Application.Run(App, App, App)
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| e.message.contains("expects 1 or 2 arguments, got 3")),
         "{errs:#?}"
     );
 }

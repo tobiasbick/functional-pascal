@@ -1,17 +1,18 @@
-//! Try-2 `Button` construction and `Dialog.Add`.
+//! Try-2 `Button` construction, attach, and `SetText`.
 //!
 //! **Documentation:** `docs/refactor-tui-try-2/target-api.md`
 
+use super::super::view_lookup::try2_with_child_view;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
+use crate::vm::execute::io::tui::bridged_button::BridgedButton;
 use crate::vm::execute::io::tui::try2::registry::{RegistryError, ViewKind};
-use crate::vm::execute::io::tui::try2::session::Try2Root;
+use crate::vm::execute::io::tui::try2::session::{DetachedButton, Try2Root};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 use turbo_vision::core::command::CommandId;
 use turbo_vision::core::geometry::{Point, Rect};
 use turbo_vision::views::View;
-use turbo_vision::views::button::Button;
 
 /// Creates a detached button (`Button.New`).
 pub(in crate::vm::execute::io::tui::try2) fn try2_button_new(
@@ -25,8 +26,50 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_button_new(
     if !worker.try2.is_open() {
         return Err(try2_session_closed_error(line));
     }
-    let button = Box::new(Button::new(bounds, &text, command, is_default));
-    Ok(worker.try2.insert_detached_button(button, bounds))
+    let button = Box::new(BridgedButton::new(bounds, &text, command, is_default));
+    Ok(worker
+        .try2
+        .insert_detached_button(button, bounds, command, is_default, text))
+}
+
+/// Replaces button label text (`Button.SetText`).
+pub(in crate::vm::execute::io::tui::try2) fn try2_button_set_text(
+    worker: &mut Worker,
+    handle: u32,
+    text: String,
+    line: SourceLocation,
+) -> Result<(), VmError> {
+    worker
+        .try2
+        .registry
+        .require(handle, ViewKind::Button)
+        .map_err(|error| registry_error(error, line))?;
+
+    worker.try2.set_button_text(handle, text.clone());
+
+    if worker.try2.child_parent(handle).is_some() {
+        try2_with_child_view(worker, handle, ViewKind::Button, line, |view| {
+            if let Some(button) = view.as_any_mut().downcast_mut::<BridgedButton>() {
+                button.set_text_from_fpas(&text);
+            }
+            Ok(())
+        })?;
+    } else if let Some(bounds) = worker.try2.detached_button_bounds(handle) {
+        let Some(state) = worker.try2.button_state(handle) else {
+            return Err(missing_button_state(handle, line));
+        };
+        worker.try2.replace_detached_button(
+            handle,
+            Box::new(BridgedButton::new(
+                bounds,
+                &text,
+                state.command,
+                state.is_default,
+            )),
+        );
+    }
+
+    Ok(())
 }
 
 /// Attaches a detached button to a modal dialog (`Dialog.Add`).
@@ -47,7 +90,11 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_attach_button(
         .require(button_handle, ViewKind::Button)
         .map_err(|error| registry_error(error, line))?;
 
-    let Some(detached) = worker.try2.take_detached_button(button_handle) else {
+    let Some(DetachedButton {
+        button,
+        local_bounds,
+    }) = worker.try2.take_detached_button(button_handle)
+    else {
         return Err(runtime_error(
             RUNTIME_INTRINSIC_STACK_STATE_ERROR,
             format!("Button handle {button_handle} is not detached"),
@@ -66,11 +113,8 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_attach_button(
             ));
         };
         let dialog_bounds = dialog.bounds();
-        let view_id = dialog.add(detached.button).as_u16();
-        (
-            view_id,
-            button_click_point(dialog_bounds, detached.local_bounds),
-        )
+        let view_id = dialog.add(button).as_u16();
+        (view_id, button_click_point(dialog_bounds, local_bounds))
     };
 
     worker
@@ -78,6 +122,7 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_attach_button(
         .registry
         .set_view_id(button_handle, view_id)
         .map_err(|_| registry_error(RegistryError::UnknownHandle(button_handle), line))?;
+    worker.try2.set_child_parent(button_handle, dialog_handle);
     worker.try2.set_button_click_point(button_handle, click);
     Ok(())
 }
@@ -104,6 +149,15 @@ pub(in crate::vm::execute::io::tui::try2) fn button_click_point(
     Point::new(
         dialog_bounds.a.x + button_bounds.a.x + button_bounds.width() / 2,
         dialog_bounds.a.y + button_bounds.a.y + button_bounds.height() / 2,
+    )
+}
+
+fn missing_button_state(handle: u32, line: SourceLocation) -> VmError {
+    runtime_error(
+        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+        format!("Button handle {handle} has no try-2 host state"),
+        "Use a handle returned by `Button.New` in the active session.",
+        line,
     )
 }
 
@@ -199,5 +253,23 @@ mod tests {
             .expect("button entry");
         assert_ne!(entry.view_id, 0);
         assert!(worker.try2.button_click_point(button).is_some());
+    }
+
+    #[test]
+    fn set_text_updates_host_state() {
+        let shared = Arc::new(minimal_shared_state(Chunk::new()));
+        let mut worker = Worker::new_main(shared);
+        worker.try2.open();
+        let handle = try2_button_new(
+            &mut worker,
+            Rect::new(3, 2, 10, 4),
+            "OLD".into(),
+            CM_OK,
+            false,
+            loc(),
+        )
+        .expect("button");
+        try2_button_set_text(&mut worker, handle, "NEW".into(), loc()).expect("set text");
+        assert_eq!(worker.try2.button_state(handle).unwrap().text, "NEW");
     }
 }

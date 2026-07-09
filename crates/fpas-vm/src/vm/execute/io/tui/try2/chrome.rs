@@ -114,6 +114,56 @@ pub(in crate::vm::execute::io::tui) fn try2_set_status_line(
     try2_sync_chrome_to_app(worker, line)
 }
 
+/// Replaces menu bar menus (`MenuBar.SetMenus`).
+pub(in crate::vm::execute::io::tui::try2) fn try2_menu_bar_set_menus(
+    worker: &mut Worker,
+    menu_bar_handle: u32,
+    menus: Vec<TurboVisionMenu>,
+    line: SourceLocation,
+) -> Result<(), VmError> {
+    worker
+        .try2
+        .registry
+        .require(menu_bar_handle, ViewKind::MenuBar)
+        .map_err(|error| menu_bar_error(error, line))?;
+
+    worker
+        .try2
+        .set_menu_bar_menus(menu_bar_handle, menus)
+        .map_err(|_| menu_bar_error(RegistryError::UnknownHandle(menu_bar_handle), line))?;
+
+    if worker.try2.attached_menu_bar() == Some(menu_bar_handle) {
+        try2_sync_chrome_to_app(worker, line)?;
+    }
+
+    Ok(())
+}
+
+/// Replaces status line items (`StatusLine.SetItems`).
+pub(in crate::vm::execute::io::tui::try2) fn try2_status_line_set_items(
+    worker: &mut Worker,
+    status_line_handle: u32,
+    items: Vec<TurboVisionStatusItem>,
+    line: SourceLocation,
+) -> Result<(), VmError> {
+    worker
+        .try2
+        .registry
+        .require(status_line_handle, ViewKind::StatusLine)
+        .map_err(|error| status_line_error(error, line))?;
+
+    worker
+        .try2
+        .set_status_line_items(status_line_handle, items)
+        .map_err(|_| status_line_error(RegistryError::UnknownHandle(status_line_handle), line))?;
+
+    if worker.try2.attached_status_line() == Some(status_line_handle) {
+        try2_sync_chrome_to_app(worker, line)?;
+    }
+
+    Ok(())
+}
+
 /// Applies stored menu bar and status line snapshots to the live or headless app.
 pub(in crate::vm::execute::io::tui::try2) fn try2_sync_chrome_to_app(
     worker: &mut Worker,
@@ -316,5 +366,47 @@ mod tests {
         status_line.handle_event(&mut event);
         assert_eq!(event.what, EventType::Command);
         assert_eq!(event.command, CM_OPEN);
+    }
+
+    #[test]
+    fn set_menus_updates_attached_chrome_snapshot() {
+        use crate::tests::helpers::{loc, minimal_shared_state};
+        use crate::vm::Worker;
+        use fpas_bytecode::Chunk;
+        use std::sync::Arc;
+
+        let shared = Arc::new(minimal_shared_state(Chunk::new()));
+        let mut worker = Worker::new_main(shared);
+        worker.try2.open();
+        let handle = try2_menu_bar_new(
+            &mut worker,
+            Rect::new(0, 0, 60, 1),
+            vec![TurboVisionMenu {
+                title: "OLD".into(),
+                items: vec![],
+            }],
+            loc(),
+        )
+        .expect("menu bar");
+        try2_set_menu_bar(&mut worker, handle, loc()).expect("attach");
+        try2_menu_bar_set_menus(
+            &mut worker,
+            handle,
+            vec![TurboVisionMenu {
+                title: "NEW".into(),
+                items: vec![],
+            }],
+            loc(),
+        )
+        .expect("set menus");
+        assert_eq!(
+            worker
+                .try2
+                .attached_menu_bar_snapshot()
+                .expect("snapshot")
+                .menus[0]
+                .title,
+            "NEW"
+        );
     }
 }

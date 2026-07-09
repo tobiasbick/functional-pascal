@@ -129,15 +129,16 @@ tests/tui/controls/    — entire directory after porting to tests/tui/views/
 
 37 try-1 files — delete each when try-2 replacement lands; remove directory in phase 7.
 
-**Progress (2026-07-09):** **20/37** try-1 control tests deleted.
+**Progress (2026-07-09):** **31/37** try-1 control tests deleted.
 
 | Removed | try-2 replacement |
 | --- | --- |
 | Phase-1 widgets + read-back/setter (13) | `tests/tui/views/*_try2_test.fpas` |
 | `run`, `window`, `chrome`, `menu`, `exec_dialog`, `static_text` (6) | `tests/tui/smoke/*_try2_test.fpas` |
 | `message_box` (1) | `tests/tui/modals/message_box_try2_test.fpas` |
+| `file_dialog` (1) | `tests/tui/modals/file_dialog_try2_test.fpas` |
 
-**17** files remain: outline (2), live tree/dialog (2), `file_dialog`, `Pump`/`spike`, paint/setter chrome tests, mouse tests (2), `reserved_command`, `tui_run_path`.
+**16** files remain: outline (2), live tree/dialog (2), `Pump`/`spike`, paint/setter chrome tests, mouse tests (2), `reserved_command`, `tui_run_path`.
 
 ## Examples
 

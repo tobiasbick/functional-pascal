@@ -1,0 +1,32 @@
+program ReservedCommandTry2Test;
+
+uses Std.Tui, Std.Test;
+
+const
+  CmdReserved: integer := 24;
+
+mutable var
+  mutable var LastCommand: integer := -1;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+procedure OnCommand(App: Application; Cmd: integer);
+begin
+  LastCommand := Cmd;
+  Application.Quit(App)
+end;
+
+begin
+  var App: Application := Application.OpenForTest(50, 14);
+  var Win: Window := Window.New(Bounds(2, 1, 30, 9), 'Demo');
+  var Btn: Button := Button.New(Bounds(4, 4, 12, 2), 'Action', CmdReserved, false);
+  Window.Add(Win, Btn);
+  Desktop.Add(App, Win);
+  Application.TestClickButton(App, Btn);
+  Application.Run(App, OnCommand);
+  AssertEquals(CmdReserved, LastCommand);
+  Application.CloseForTest(App)
+end.

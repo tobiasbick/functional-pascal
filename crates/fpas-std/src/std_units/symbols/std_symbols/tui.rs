@@ -34,13 +34,17 @@ pub const STD_TUI_CM_ABOUT: &str = std_tui!("CM_ABOUT");
 pub const STD_TUI_CM_OPEN: &str = std_tui!("CM_OPEN");
 pub const STD_TUI_CM_USER: &str = std_tui!("CM_USER");
 pub const STD_TUI_DIALOG_NEW_MODAL: &str = std_tui!("Dialog.NewModal");
+pub const STD_TUI_DIALOG_SET_TITLE: &str = std_tui!("Dialog.SetTitle");
 pub const STD_TUI_DIALOG_ADD_BUTTON: &str = std_tui!("Dialog.AddButton");
 pub const STD_TUI_DIALOG_ADD: &str = std_tui!("Dialog.Add");
 pub const STD_TUI_BUTTON_NEW: &str = std_tui!("Button.New");
+pub const STD_TUI_BUTTON_SET_TEXT: &str = std_tui!("Button.SetText");
 pub const STD_TUI_WINDOW_NEW: &str = std_tui!("Window.New");
+pub const STD_TUI_WINDOW_SET_TITLE: &str = std_tui!("Window.SetTitle");
 pub const STD_TUI_WINDOW_ADD: &str = std_tui!("Window.Add");
 pub const STD_TUI_DESKTOP_ADD: &str = std_tui!("Desktop.Add");
 pub const STD_TUI_STATIC_TEXT_NEW: &str = std_tui!("StaticText.New");
+pub const STD_TUI_STATIC_TEXT_SET_TEXT: &str = std_tui!("StaticText.SetText");
 pub const STD_TUI_CHECK_BOX_NEW: &str = std_tui!("CheckBox.New");
 pub const STD_TUI_INPUT_LINE_NEW: &str = std_tui!("InputLine.New");
 pub const STD_TUI_CHECK_BOX_CHECKED: &str = std_tui!("CheckBox.Checked");
@@ -58,7 +62,9 @@ pub const STD_TUI_MEMO_SET_TEXT: &str = std_tui!("Memo.SetText");
 pub const STD_TUI_TEXT_VIEWER_NEW: &str = std_tui!("TextViewer.New");
 pub const STD_TUI_TEXT_VIEWER_SET_TEXT: &str = std_tui!("TextViewer.SetText");
 pub const STD_TUI_MENU_BAR_NEW: &str = std_tui!("MenuBar.New");
+pub const STD_TUI_MENU_BAR_SET_MENUS: &str = std_tui!("MenuBar.SetMenus");
 pub const STD_TUI_STATUS_LINE_NEW: &str = std_tui!("StatusLine.New");
+pub const STD_TUI_STATUS_LINE_SET_ITEMS: &str = std_tui!("StatusLine.SetItems");
 pub const STD_TUI_COMMAND_ACCEPT: &str = std_tui!("Command.Accept");
 pub const STD_TUI_COMMAND_CANCEL: &str = std_tui!("Command.Cancel");
 pub const STD_TUI_COMMAND_CLOSE: &str = std_tui!("Command.Close");
@@ -298,13 +304,17 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_CM_OPEN,
     STD_TUI_CM_USER,
     STD_TUI_DIALOG_NEW_MODAL,
+    STD_TUI_DIALOG_SET_TITLE,
     STD_TUI_DIALOG_ADD_BUTTON,
     STD_TUI_DIALOG_ADD,
     STD_TUI_BUTTON_NEW,
+    STD_TUI_BUTTON_SET_TEXT,
     STD_TUI_WINDOW_NEW,
+    STD_TUI_WINDOW_SET_TITLE,
     STD_TUI_WINDOW_ADD,
     STD_TUI_DESKTOP_ADD,
     STD_TUI_STATIC_TEXT_NEW,
+    STD_TUI_STATIC_TEXT_SET_TEXT,
     STD_TUI_CHECK_BOX_NEW,
     STD_TUI_INPUT_LINE_NEW,
     STD_TUI_CHECK_BOX_CHECKED,
@@ -322,7 +332,9 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_TEXT_VIEWER_NEW,
     STD_TUI_TEXT_VIEWER_SET_TEXT,
     STD_TUI_MENU_BAR_NEW,
+    STD_TUI_MENU_BAR_SET_MENUS,
     STD_TUI_STATUS_LINE_NEW,
+    STD_TUI_STATUS_LINE_SET_ITEMS,
     STD_TUI_COMMAND_ACCEPT,
     STD_TUI_COMMAND_CANCEL,
     STD_TUI_COMMAND_CLOSE,

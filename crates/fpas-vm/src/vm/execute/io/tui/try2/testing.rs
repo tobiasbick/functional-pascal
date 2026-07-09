@@ -53,7 +53,11 @@ pub(in crate::vm::execute::io::tui) fn try2_test_dispatch_menu_command(
     Ok(())
 }
 
-fn menu_bar_error(error: super::registry::RegistryError, _handle: u32, line: SourceLocation) -> VmError {
+fn menu_bar_error(
+    error: super::registry::RegistryError,
+    _handle: u32,
+    line: SourceLocation,
+) -> VmError {
     let (message, help) = match error {
         super::registry::RegistryError::UnknownHandle(handle) => (
             format!("MenuBar handle {handle} is not registered in the try-2 session"),

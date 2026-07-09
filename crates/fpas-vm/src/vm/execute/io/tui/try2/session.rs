@@ -13,21 +13,26 @@ use std::collections::HashSet;
 use std::rc::Rc;
 use turbo_vision::core::geometry::{Point, Rect};
 use turbo_vision::views::View;
-use turbo_vision::views::button::Button;
 use turbo_vision::views::dialog::Dialog;
-use turbo_vision::views::static_text::StaticText;
 use turbo_vision::views::window::Window;
 
 /// Button constructed by `Button.New` and not yet attached to a parent.
 pub(crate) struct DetachedButton {
-    pub button: Box<Button>,
+    pub button: Box<dyn View>,
     pub local_bounds: Rect,
 }
 
 /// Static text constructed by `StaticText.New` and not yet attached to a parent.
 pub(crate) struct DetachedStaticText {
-    pub static_text: Box<StaticText>,
+    pub static_text: Box<dyn View>,
     pub local_bounds: Rect,
+}
+
+/// Host-side button state retained after attach.
+pub(crate) struct Try2ButtonState {
+    pub command: u16,
+    pub is_default: bool,
+    pub text: String,
 }
 
 /// Check box constructed by `CheckBox.New` and not yet attached to a parent.
@@ -142,6 +147,10 @@ pub(crate) struct Try2Session {
     radio_button_states: HashMap<u32, Try2RadioButtonState>,
     /// Radio group members keyed by FPAS `GroupId`.
     radio_group_members: HashMap<u16, Vec<u32>>,
+    /// Host-side button state keyed by try-2 handle.
+    button_states: HashMap<u32, Try2ButtonState>,
+    /// Host-side static text keyed by try-2 handle.
+    static_text_texts: HashMap<u32, String>,
     /// Host-side memo text keyed by try-2 handle.
     memo_texts: HashMap<u32, String>,
     /// Host-side text viewer text keyed by try-2 handle.
@@ -180,6 +189,8 @@ impl Try2Session {
         self.list_box_states.clear();
         self.radio_button_states.clear();
         self.radio_group_members.clear();
+        self.button_states.clear();
+        self.static_text_texts.clear();
         self.memo_texts.clear();
         self.text_viewer_texts.clear();
         self.child_parents.clear();
@@ -231,8 +242,23 @@ impl Try2Session {
     }
 
     /// Inserts a detached button and returns its FPAS handle.
-    pub fn insert_detached_button(&mut self, button: Box<Button>, local_bounds: Rect) -> u32 {
+    pub fn insert_detached_button(
+        &mut self,
+        button: Box<dyn View>,
+        local_bounds: Rect,
+        command: u16,
+        is_default: bool,
+        text: String,
+    ) -> u32 {
         let handle = self.registry.allocate(0, ViewKind::Button);
+        self.button_states.insert(
+            handle,
+            Try2ButtonState {
+                command,
+                is_default,
+                text,
+            },
+        );
         self.detached_buttons.insert(
             handle,
             DetachedButton {
@@ -243,6 +269,34 @@ impl Try2Session {
         handle
     }
 
+    /// Replaces a detached button view after `Button.SetText`.
+    pub fn replace_detached_button(&mut self, handle: u32, button: Box<dyn View>) {
+        if let Some(detached) = self.detached_buttons.get_mut(&handle) {
+            detached.button = button;
+        }
+    }
+
+    /// Returns detached button bounds when still awaiting attach.
+    #[must_use]
+    pub fn detached_button_bounds(&self, handle: u32) -> Option<Rect> {
+        self.detached_buttons
+            .get(&handle)
+            .map(|detached| detached.local_bounds)
+    }
+
+    /// Returns host-side button state.
+    #[must_use]
+    pub fn button_state(&self, handle: u32) -> Option<&Try2ButtonState> {
+        self.button_states.get(&handle)
+    }
+
+    /// Updates host-side button text.
+    pub fn set_button_text(&mut self, handle: u32, text: String) {
+        if let Some(state) = self.button_states.get_mut(&handle) {
+            state.text = text;
+        }
+    }
+
     /// Removes a detached button for parent attach.
     pub fn take_detached_button(&mut self, handle: u32) -> Option<DetachedButton> {
         self.detached_buttons.remove(&handle)
@@ -251,10 +305,12 @@ impl Try2Session {
     /// Inserts a detached static text and returns its FPAS handle.
     pub fn insert_detached_static_text(
         &mut self,
-        static_text: Box<StaticText>,
+        static_text: Box<dyn View>,
         local_bounds: Rect,
+        text: String,
     ) -> u32 {
         let handle = self.registry.allocate(0, ViewKind::StaticText);
+        self.static_text_texts.insert(handle, text);
         self.detached_static_texts.insert(
             handle,
             DetachedStaticText {
@@ -263,6 +319,32 @@ impl Try2Session {
             },
         );
         handle
+    }
+
+    /// Replaces a detached static text view after `StaticText.SetText`.
+    pub fn replace_detached_static_text(&mut self, handle: u32, static_text: Box<dyn View>) {
+        if let Some(detached) = self.detached_static_texts.get_mut(&handle) {
+            detached.static_text = static_text;
+        }
+    }
+
+    /// Returns detached static text bounds when still awaiting attach.
+    #[must_use]
+    pub fn detached_static_text_bounds(&self, handle: u32) -> Option<Rect> {
+        self.detached_static_texts
+            .get(&handle)
+            .map(|detached| detached.local_bounds)
+    }
+
+    /// Returns host-side static text.
+    #[must_use]
+    pub fn static_text_text(&self, handle: u32) -> Option<&str> {
+        self.static_text_texts.get(&handle).map(String::as_str)
+    }
+
+    /// Updates host-side static text.
+    pub fn set_static_text_text(&mut self, handle: u32, text: String) {
+        self.static_text_texts.insert(handle, text);
     }
 
     /// Removes a detached static text for parent attach.
@@ -653,9 +735,35 @@ impl Try2Session {
         self.menu_bars.insert(handle, state);
     }
 
+    /// Replaces menu bar menus (`MenuBar.SetMenus`).
+    pub fn set_menu_bar_menus(
+        &mut self,
+        handle: u32,
+        menus: Vec<TurboVisionMenu>,
+    ) -> Result<(), ()> {
+        let Some(state) = self.menu_bars.get_mut(&handle) else {
+            return Err(());
+        };
+        state.menus = menus;
+        Ok(())
+    }
+
     /// Stores status line data for a registry handle.
     pub fn insert_status_line(&mut self, handle: u32, state: Try2StatusLineState) {
         self.status_lines.insert(handle, state);
+    }
+
+    /// Replaces status line items (`StatusLine.SetItems`).
+    pub fn set_status_line_items(
+        &mut self,
+        handle: u32,
+        items: Vec<TurboVisionStatusItem>,
+    ) -> Result<(), ()> {
+        let Some(state) = self.status_lines.get_mut(&handle) else {
+            return Err(());
+        };
+        state.items = items;
+        Ok(())
     }
 
     /// Returns the attached menu bar handle, if any.

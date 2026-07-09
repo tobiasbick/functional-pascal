@@ -2,7 +2,9 @@
 //!
 //! **Documentation:** `docs/refactor-tui-try-2/target-api.md`
 
-use super::chrome::{try2_menu_bar_new, try2_status_line_new};
+use super::chrome::{
+    try2_menu_bar_new, try2_menu_bar_set_menus, try2_status_line_new, try2_status_line_set_items,
+};
 use super::headless::try2_ensure_headless_app;
 use super::modals::try2_exec_view;
 use super::records::{
@@ -12,17 +14,20 @@ use super::records::{
 };
 use super::registry::ViewKind;
 use super::views::{
-    try2_button_new, try2_check_box_checked, try2_check_box_new, try2_check_box_set_checked,
-    try2_desktop_add, try2_dialog_add_button, try2_dialog_attach_child, try2_dialog_new_modal,
-    try2_input_line_new, try2_input_line_set_text, try2_input_line_text, try2_list_box_new,
-    try2_list_box_selection, try2_list_box_set_items, try2_memo_new, try2_memo_set_text,
-    try2_radio_button_new, try2_radio_button_selected, try2_radio_button_set_selected,
-    try2_static_text_new, try2_text_viewer_new, try2_text_viewer_set_text,
-    try2_window_attach_child, try2_window_new,
+    try2_button_new, try2_button_set_text, try2_check_box_checked, try2_check_box_new,
+    try2_check_box_set_checked, try2_desktop_add, try2_dialog_add_button, try2_dialog_attach_child,
+    try2_dialog_new_modal, try2_dialog_set_title, try2_input_line_new, try2_input_line_set_text,
+    try2_input_line_text, try2_list_box_new, try2_list_box_selection, try2_list_box_set_items,
+    try2_memo_new, try2_memo_set_text, try2_radio_button_new, try2_radio_button_selected,
+    try2_radio_button_set_selected, try2_static_text_new, try2_static_text_set_text,
+    try2_text_viewer_new, try2_text_viewer_set_text, try2_window_attach_child, try2_window_new,
+    try2_window_set_title,
 };
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
-use crate::vm::execute::io::tui::handle_records::HANDLE_FIELD;
+use crate::vm::execute::io::tui::handle_records::{
+    HANDLE_FIELD, TUI_MENU_BAR_TYPE, TUI_STATUS_LINE_TYPE,
+};
 use fpas_bytecode::{Intrinsic, SourceLocation, TuiIntrinsic, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_INTRINSIC_STACK_STATE_ERROR, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
@@ -272,6 +277,36 @@ impl Worker {
                 let text = self.pop_turbo_vision_string("TextViewer text", line)?;
                 let handle = self.pop_try2_handle(TUI_TEXT_VIEWER_TYPE, "TextViewer", line)?;
                 try2_text_viewer_set_text(self, handle, text, line)?;
+            }
+            TuiIntrinsic::StaticTextSetText => {
+                let text = self.pop_turbo_vision_string("StaticText text", line)?;
+                let handle = self.pop_try2_handle(TUI_STATIC_TEXT_TYPE, "StaticText", line)?;
+                try2_static_text_set_text(self, handle, text, line)?;
+            }
+            TuiIntrinsic::ButtonSetText => {
+                let text = self.pop_turbo_vision_string("Button text", line)?;
+                let handle = self.pop_try2_handle(TUI_BUTTON_TYPE, "Button", line)?;
+                try2_button_set_text(self, handle, text, line)?;
+            }
+            TuiIntrinsic::DialogSetTitle => {
+                let title = self.pop_turbo_vision_string("Dialog title", line)?;
+                let handle = self.pop_try2_handle(TUI_DIALOG_TYPE, "Dialog", line)?;
+                try2_dialog_set_title(self, handle, title, line)?;
+            }
+            TuiIntrinsic::WindowSetTitle => {
+                let title = self.pop_turbo_vision_string("Window title", line)?;
+                let handle = self.pop_try2_handle(TUI_WINDOW_TYPE, "Window", line)?;
+                try2_window_set_title(self, handle, title, line)?;
+            }
+            TuiIntrinsic::MenuBarSetMenus => {
+                let menus = self.parse_turbo_vision_menus(line)?;
+                let handle = self.pop_try2_handle(TUI_MENU_BAR_TYPE, "MenuBar", line)?;
+                try2_menu_bar_set_menus(self, handle, menus, line)?;
+            }
+            TuiIntrinsic::StatusLineSetItems => {
+                let items = self.parse_turbo_vision_status_items(line)?;
+                let handle = self.pop_try2_handle(TUI_STATUS_LINE_TYPE, "StatusLine", line)?;
+                try2_status_line_set_items(self, handle, items, line)?;
             }
             _ => return Ok(false),
         }

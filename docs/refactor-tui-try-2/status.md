@@ -7,10 +7,10 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 **Phase 1** — **complete** (foundation; `TuiState` slimming deferred to phase 7).  
 **Phase 2** — **complete** (vertical slice + interactive manual smoke verified).  
 **Phase 3** — **complete** (run loop, desktop/window, static text, chrome).
-**Phase 4** — **complete** (all phase-1 widgets on try-2 path; **20/37** old control tests removed in phase 7).
+**Phase 4** — **complete** (all phase-1 widgets on try-2 path; **31/37** old control tests removed in phase 7).
 **Phase 5** — **complete** for current branch scope (`MessageBox`, `OnKey`, `OnMouse`, `RunFileDialog` with Try-2-local headless adapter).  
 **Phase 6** — **complete** (`apps/ide` migrated; automated + manual terminal sign-off green).  
-**Phase 7** — **in progress** (try-1 deletion; **20/37** `tests/tui/controls/` removed, **17** remain).
+**Phase 7** — **in progress** (try-1 deletion; **31/37** `tests/tui/controls/` removed, **6** remain).
 
 ## Phase 1 closure notes
 
@@ -52,8 +52,9 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 | Try-2 window example | `examples/pascal/tui/turbo_vision_window_try2.fpas` |
 | Phase-4 controls | `InputLine`, `ListBox`, `CheckBox`, `RadioButton`, `Memo`, `TextViewer` in `try2/views/` |
 | Phase-4 control tests | `tests/tui/views/*_try2_test.fpas` |
+| Phase-4/7 setters | `StaticText.SetText`, `Button.SetText`, `Dialog.SetTitle`, `Window.SetTitle`, `MenuBar.SetMenus`, `StatusLine.SetItems` on try-2 path |
 | Phase-5 modal/helper routes | `try2/message_box.rs`, `try2/file_dialog.rs`, `Application.OnKey`, `Application.OnMouse` |
-| Phase-5 tests | `tests/tui/modals/message_box_try2_test.fpas`, `tests/tui/events/on_key_try2_test.fpas`, `tests/tui/events/on_mouse_try2_test.fpas` |
+| Phase-5 tests | `tests/tui/modals/message_box_try2_test.fpas`, `tests/tui/modals/file_dialog_try2_test.fpas`, `tests/tui/events/on_key_try2_test.fpas`, `tests/tui/events/on_mouse_try2_test.fpas` |
 | Try-2 headless file dialog queue | `Try2Session::set_file_dialog_result`; `Application.TestSetFileDialogResult` seeds Try-2 state when the Try-2 session is open |
 | Try-2 menu dispatch in headless tests | `Application.TestDispatchMenuCommand` routes through try-2 menu bar state |
 | Menu command smoke test | `tests/tui/smoke/menu_dispatch_try2_test.fpas` |
@@ -75,7 +76,7 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 | TUI sema surface | `cargo test -p fpas-sema std_units::tui` — 17 passed |
 | TUI compiler lowering/runtime tests | `cargo test -p fpas-compiler std_library::tui` — 10 passed |
 | TUI Rust doc links | `cargo test -p fpas-vm tui_spec_links` — 2 passed |
-| Try-1 Turbo Vision controls coexistence | `cargo run -q -p fpas-cli -- test tests/tui/controls/` — 37 passed |
+| Try-1 Turbo Vision controls coexistence | `cargo run -q -p fpas-cli -- test tests/tui/controls/` — 6 passed |
 | IDE automated flows | `cargo run -q -p fpas-cli -- test apps/ide/tests/` — 7 passed |
 | Try-2 menu command dispatch | `cargo run -q -p fpas-cli -- test tests/tui/smoke/menu_dispatch_try2_test.fpas` — passed |
 | Relevant FPAS formatting | `cargo run -q -p fpas-cli -- fmt --check tests/tui/events/on_mouse_try2_test.fpas apps/ide/tests/` — passed |
@@ -116,13 +117,18 @@ Covers: registry, geometry, session, dialog, button, window, desktop, static tex
 | Widgets + read-back | 13 tests (`check_box`, `input_line`, `list_box`, `memo`, `radio_button`, `text_viewer`, `checked`, `list_selection`, `set_items`, `set_text_*`, `radio_selected`) | `tests/tui/views/*_try2_test.fpas` (6) |
 | Run / chrome / modals | 7 tests (`run`, `window`, `chrome`, `menu`, `exec_dialog`, `message_box`, `static_text`) | `tests/tui/smoke/*_try2_test.fpas`, `tests/tui/modals/message_box_try2_test.fpas` |
 
+| Phase-5 modal | 1 test (`file_dialog`) | `tests/tui/modals/file_dialog_try2_test.fpas` |
+| Custom command id | 1 test (`reserved_command`) | `tests/tui/smoke/reserved_command_try2_test.fpas` |
+| Setters / title | 3 tests (`set_text`, `set_text_button`, `set_title`) | `tests/tui/views/*_set_*_try2_test.fpas` |
+| Chrome / pump | 6 tests (`set_menus`, `set_status_items`, `chrome_paint`, `set_checked`, `spike`, `tui_run_path`) | `tests/tui/smoke/*_try2_test.fpas` |
+
 | Metric | Value |
 | --- | --- |
-| Controls tests removed | **20 / 37** |
-| Controls tests remaining | **17** |
+| Controls tests removed | **31 / 37** |
+| Controls tests remaining | **6** |
 | VM / sema / `docs/pascal/std/tui/` rewrite | Not started |
 
-Remaining try-1 controls (no try-2 FPAS test yet or try-1-only API): outline (2), live tree/dialog (2), `file_dialog`, `Pump`/`spike`, screen paint (`set_checked`, `chrome_paint`, `set_text_*`), `set_menus`/`set_status_items`, mouse tests (2), `reserved_command`, `tui_run_path`.
+Remaining try-1 controls (Phase 8 / mouse): outline (2), live tree/dialog (2), `check_box_mouse`, `radio_button_mouse`.
 
 ## Blockers
 
@@ -138,4 +144,4 @@ Upstream `FileDialog::execute(&mut Application)` is available for live `Applicat
 
 - All `Application.Create*` Pascal API
 - `TurboVisionObject` snapshot + reconcile
-- `tests/tui/controls/*` (37 files)
+- `tests/tui/controls/*` (**6** files remain; 31 deleted)

@@ -91,6 +91,14 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::WindowNew), location);
                 Ok(true)
             }
+            s::STD_TUI_WINDOW_SET_TITLE => {
+                self.expect_exact_args(s::STD_TUI_WINDOW_SET_TITLE, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::WindowSetTitle), location);
+                Ok(true)
+            }
             s::STD_TUI_WINDOW_ADD => {
                 self.expect_exact_args(s::STD_TUI_WINDOW_ADD, 2, args, location)?;
                 for arg in args {
@@ -249,6 +257,30 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::TextViewerSetText), location);
                 Ok(true)
             }
+            s::STD_TUI_STATIC_TEXT_SET_TEXT => {
+                self.expect_exact_args(s::STD_TUI_STATIC_TEXT_SET_TEXT, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::StaticTextSetText), location);
+                Ok(true)
+            }
+            s::STD_TUI_BUTTON_SET_TEXT => {
+                self.expect_exact_args(s::STD_TUI_BUTTON_SET_TEXT, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::ButtonSetText), location);
+                Ok(true)
+            }
+            s::STD_TUI_DIALOG_SET_TITLE => {
+                self.expect_exact_args(s::STD_TUI_DIALOG_SET_TITLE, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::DialogSetTitle), location);
+                Ok(true)
+            }
             s::STD_TUI_MENU_BAR_NEW => {
                 self.expect_exact_args(s::STD_TUI_MENU_BAR_NEW, 2, args, location)?;
                 for arg in args {
@@ -263,6 +295,25 @@ impl Compiler {
                     self.compile_expr(arg)?;
                 }
                 self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::StatusLineNew), location);
+                Ok(true)
+            }
+            s::STD_TUI_MENU_BAR_SET_MENUS => {
+                self.expect_exact_args(s::STD_TUI_MENU_BAR_SET_MENUS, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::MenuBarSetMenus), location);
+                Ok(true)
+            }
+            s::STD_TUI_STATUS_LINE_SET_ITEMS => {
+                self.expect_exact_args(s::STD_TUI_STATUS_LINE_SET_ITEMS, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(
+                    Intrinsic::Tui(TuiIntrinsic::StatusLineSetItems),
+                    location,
+                );
                 Ok(true)
             }
             _ => Ok(false),

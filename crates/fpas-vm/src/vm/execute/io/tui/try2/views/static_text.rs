@@ -1,15 +1,17 @@
-//! Try-2 `StaticText` construction and parent attachment.
+//! Try-2 `StaticText` construction, parent attachment, and `SetText`.
 //!
 //! **Documentation:** `docs/refactor-tui-try-2/target-api.md`
 
+use super::super::view_lookup::try2_with_child_view;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
+use crate::vm::execute::io::tui::bridged_static_text::BridgedStaticText;
 use crate::vm::execute::io::tui::try2::registry::{RegistryError, ViewKind};
-use crate::vm::execute::io::tui::try2::session::Try2Root;
+use crate::vm::execute::io::tui::try2::session::{DetachedStaticText, Try2Root};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 use turbo_vision::core::geometry::Rect;
-use turbo_vision::views::static_text::StaticText;
+use turbo_vision::views::View;
 
 /// Creates a detached static text label (`StaticText.New`).
 pub(in crate::vm::execute::io::tui::try2) fn try2_static_text_new(
@@ -22,8 +24,41 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_static_text_new(
         return Err(try2_session_closed_error(line));
     }
 
-    let static_text = Box::new(StaticText::new(bounds, &text));
-    Ok(worker.try2.insert_detached_static_text(static_text, bounds))
+    let static_text = Box::new(BridgedStaticText::new(bounds, &text));
+    Ok(worker
+        .try2
+        .insert_detached_static_text(static_text, bounds, text))
+}
+
+/// Replaces static text content (`StaticText.SetText`).
+pub(in crate::vm::execute::io::tui::try2) fn try2_static_text_set_text(
+    worker: &mut Worker,
+    handle: u32,
+    text: String,
+    line: SourceLocation,
+) -> Result<(), VmError> {
+    worker
+        .try2
+        .registry
+        .require(handle, ViewKind::StaticText)
+        .map_err(|error| registry_error(error, line))?;
+
+    worker.try2.set_static_text_text(handle, text.clone());
+
+    if worker.try2.child_parent(handle).is_some() {
+        try2_with_child_view(worker, handle, ViewKind::StaticText, line, |view| {
+            if let Some(static_text) = view.as_any_mut().downcast_mut::<BridgedStaticText>() {
+                static_text.set_text_from_fpas(&text);
+            }
+            Ok(())
+        })?;
+    } else if let Some(bounds) = worker.try2.detached_static_text_bounds(handle) {
+        worker
+            .try2
+            .replace_detached_static_text(handle, Box::new(BridgedStaticText::new(bounds, &text)));
+    }
+
+    Ok(())
 }
 
 /// Attaches a detached static text to a modal dialog (`Dialog.Add`).
@@ -44,7 +79,11 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_attach_static_text(
         .require(static_text_handle, ViewKind::StaticText)
         .map_err(|error| registry_error(error, line))?;
 
-    let Some(detached) = worker.try2.take_detached_static_text(static_text_handle) else {
+    let Some(DetachedStaticText {
+        static_text,
+        local_bounds: _,
+    }) = worker.try2.take_detached_static_text(static_text_handle)
+    else {
         return Err(runtime_error(
             RUNTIME_INTRINSIC_STACK_STATE_ERROR,
             format!("StaticText handle {static_text_handle} is not detached"),
@@ -62,7 +101,7 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_attach_static_text(
                 line,
             ));
         };
-        dialog.add(detached.static_text).as_u16()
+        dialog.add(static_text).as_u16()
     };
 
     worker
@@ -70,6 +109,9 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_attach_static_text(
         .registry
         .set_view_id(static_text_handle, view_id)
         .map_err(|_| registry_error(RegistryError::UnknownHandle(static_text_handle), line))?;
+    worker
+        .try2
+        .set_child_parent(static_text_handle, dialog_handle);
     Ok(())
 }
 
@@ -100,7 +142,11 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_window_attach_static_text(
         .require(static_text_handle, ViewKind::StaticText)
         .map_err(|error| registry_error(error, line))?;
 
-    let Some(detached) = worker.try2.take_detached_static_text(static_text_handle) else {
+    let Some(DetachedStaticText {
+        static_text,
+        local_bounds: _,
+    }) = worker.try2.take_detached_static_text(static_text_handle)
+    else {
         return Err(runtime_error(
             RUNTIME_INTRINSIC_STACK_STATE_ERROR,
             format!("StaticText handle {static_text_handle} is not detached"),
@@ -118,7 +164,7 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_window_attach_static_text(
                 line,
             ));
         };
-        window.add(detached.static_text).as_u16()
+        window.add(static_text).as_u16()
     };
 
     worker
@@ -126,6 +172,9 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_window_attach_static_text(
         .registry
         .set_view_id(static_text_handle, view_id)
         .map_err(|_| registry_error(RegistryError::UnknownHandle(static_text_handle), line))?;
+    worker
+        .try2
+        .set_child_parent(static_text_handle, window_handle);
     Ok(())
 }
 
@@ -184,6 +233,17 @@ mod tests {
                 .kind,
             ViewKind::StaticText
         );
+    }
+
+    #[test]
+    fn set_text_updates_host_state() {
+        let shared = Arc::new(minimal_shared_state(Chunk::new()));
+        let mut worker = Worker::new_main(shared);
+        worker.try2.open();
+        let handle = try2_static_text_new(&mut worker, Rect::new(3, 2, 20, 1), "OLD".into(), loc())
+            .expect("static text");
+        try2_static_text_set_text(&mut worker, handle, "NEW".into(), loc()).expect("set text");
+        assert_eq!(worker.try2.static_text_text(handle), Some("NEW"));
     }
 
     #[test]

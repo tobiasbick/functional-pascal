@@ -1,6 +1,6 @@
-program TuiTurboVisionFileDialogTest;
+program FileDialogTry2Test;
 
-uses Std.Tui, Std.Option, Std.Test;
+uses Std.Option, Std.Tui, Std.Test;
 
 function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
 begin
@@ -15,5 +15,6 @@ begin
   AssertEquals('selected.txt', Unwrap(Selected));
   Application.TestSetFileDialogResult(App, None);
   var Canceled: option of string := Application.RunFileDialog(App, Bounds(10, 5, 50, 14), 'Open File', '*', None);
-  AssertTrue(IsNone(Canceled))
+  AssertTrue(IsNone(Canceled));
+  Application.CloseForTest(App)
 end.

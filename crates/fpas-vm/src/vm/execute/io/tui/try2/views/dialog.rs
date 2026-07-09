@@ -28,6 +28,36 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_new_modal(
         .insert_root(Try2Root::ModalDialog(dialog), ViewKind::Dialog))
 }
 
+/// Replaces a modal dialog title (`Dialog.SetTitle`).
+pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_set_title(
+    worker: &mut Worker,
+    handle: u32,
+    title: String,
+    line: SourceLocation,
+) -> Result<(), VmError> {
+    worker
+        .try2
+        .registry
+        .require(handle, ViewKind::Dialog)
+        .map_err(|_| dialog_not_live_error(handle, line))?;
+
+    let Some(Try2Root::ModalDialog(dialog)) = worker.try2.root_mut(handle) else {
+        return Err(dialog_not_live_error(handle, line));
+    };
+
+    dialog.set_title(&title);
+    Ok(())
+}
+
+fn dialog_not_live_error(handle: u32, line: SourceLocation) -> VmError {
+    runtime_error(
+        RUNTIME_CONSOLE_STATE_ERROR,
+        format!("Dialog handle {handle} is not live"),
+        "Use a handle from `Dialog.NewModal` in the active session.",
+        line,
+    )
+}
+
 fn try2_session_closed_error(line: SourceLocation) -> VmError {
     runtime_error(
         RUNTIME_CONSOLE_STATE_ERROR,

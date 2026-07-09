@@ -184,6 +184,30 @@ pub(super) fn register_try2_api(
             p("Text", Ty::String, false),
         ],
     );
+    define_proc(
+        checker,
+        s::STD_TUI_STATIC_TEXT_SET_TEXT,
+        vec![
+            p("Txt", types.static_text.clone(), false),
+            p("Text", Ty::String, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_BUTTON_SET_TEXT,
+        vec![
+            p("Btn", types.button.clone(), false),
+            p("Text", Ty::String, false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_DIALOG_SET_TITLE,
+        vec![
+            p("Dlg", types.dialog.clone(), false),
+            p("Title", Ty::String, false),
+        ],
+    );
     define_func(
         checker,
         s::STD_TUI_DIALOG_ADD_BUTTON,
@@ -254,6 +278,14 @@ pub(super) fn register_try2_api(
     );
     define_proc(
         checker,
+        s::STD_TUI_WINDOW_SET_TITLE,
+        vec![
+            p("Win", types.window.clone(), false),
+            p("Title", Ty::String, false),
+        ],
+    );
+    define_proc(
+        checker,
         s::STD_TUI_DESKTOP_ADD,
         vec![
             p("App", types.application.clone(), false),
@@ -281,6 +313,26 @@ pub(super) fn register_try2_api(
             ),
         ],
         types.status_line.clone(),
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_MENU_BAR_SET_MENUS,
+        vec![
+            p("Bar", types.menu_bar.clone(), false),
+            p("Menus", Ty::Array(Box::new(types.menu.clone())), false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_STATUS_LINE_SET_ITEMS,
+        vec![
+            p("Line", types.status_line.clone(), false),
+            p(
+                "Items",
+                Ty::Array(Box::new(types.status_item.clone())),
+                false,
+            ),
+        ],
     );
 
     let builtin_placeholder = Ty::Procedure(ProcedureTy {

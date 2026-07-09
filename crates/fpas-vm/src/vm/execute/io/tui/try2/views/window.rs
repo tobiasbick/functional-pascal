@@ -30,6 +30,32 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_window_new(
         .insert_root(Try2Root::Window(Box::new(window)), ViewKind::Window))
 }
 
+/// Replaces a window title (`Window.SetTitle`).
+pub(in crate::vm::execute::io::tui::try2) fn try2_window_set_title(
+    worker: &mut Worker,
+    handle: u32,
+    title: String,
+    line: SourceLocation,
+) -> Result<(), VmError> {
+    worker
+        .try2
+        .registry
+        .require(handle, ViewKind::Window)
+        .map_err(|error| registry_error(error, line))?;
+
+    let Some(Try2Root::Window(window)) = worker.try2.root_mut(handle) else {
+        return Err(runtime_error(
+            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            format!("Window handle {handle} is not an owned try-2 root"),
+            "Call `Window.SetTitle` before `Desktop.Add`.",
+            line,
+        ));
+    };
+
+    window.set_title(&title);
+    Ok(())
+}
+
 /// Attaches a detached button to a window (`Window.Add`).
 pub(in crate::vm::execute::io::tui::try2) fn try2_window_attach_button(
     worker: &mut Worker,
@@ -88,6 +114,7 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_window_attach_button(
         .registry
         .set_view_id(button_handle, view_id)
         .map_err(|_| registry_error(RegistryError::UnknownHandle(button_handle), line))?;
+    worker.try2.set_child_parent(button_handle, window_handle);
     worker.try2.set_button_click_point(button_handle, click);
     Ok(())
 }

@@ -181,7 +181,7 @@ procedure RadioButton.SetSelected(Rb: RadioButton; Selected: boolean);
 
 ### `MenuBar` / `StatusLine`
 
-Current branch status: `MenuBar.New`, `StatusLine.New`, `Application.SetMenuBar`, and `Application.SetStatusLine` are landed. `MenuBar.SetMenus` and `StatusLine.SetItems` are target API only.
+Current branch status: `MenuBar.New`, `StatusLine.New`, `Application.SetMenuBar`, `Application.SetStatusLine`, `MenuBar.SetMenus`, and `StatusLine.SetItems` are landed on the try-2 path.
 
 Data records unchanged from try-1:
 
@@ -192,10 +192,10 @@ type
   StatusItem = record text: string; keyCode: integer; commandId: CommandId; end;
 
 function MenuBar.New(Bounds: Rect; Menus: array of Menu): MenuBar;
-procedure MenuBar.SetMenus(Bar: MenuBar; Menus: array of Menu);  { target, not landed }
+procedure MenuBar.SetMenus(Bar: MenuBar; Menus: array of Menu);
 
 function StatusLine.New(Bounds: Rect; Items: array of StatusItem): StatusLine;
-procedure StatusLine.SetItems(Line: StatusLine; Items: array of StatusItem);  { target, not landed }
+procedure StatusLine.SetItems(Line: StatusLine; Items: array of StatusItem);
 ```
 
 ## Event handlers

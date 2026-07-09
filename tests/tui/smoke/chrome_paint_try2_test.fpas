@@ -1,0 +1,45 @@
+program ChromePaintTry2Test;
+
+uses Std.Console, Std.Tui, Std.Test;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+function MenuWithTitle(Title: string): Menu;
+begin
+  return record title := Title; items := []; end
+end;
+
+function StatusWithText(Text: string): StatusItem;
+begin
+  return record text := Text; keyCode := 0; commandId := 0; end
+end;
+
+procedure OnCommand(App: Application; Cmd: integer);
+begin
+  if Cmd = CM_QUIT then
+    Application.Quit(App)
+end;
+
+begin
+  var App: Application := Application.OpenForTest(60, 12);
+  var Bar: MenuBar := MenuBar.New(Bounds(0, 0, 60, 1), [
+    MenuWithTitle('FILE'),
+    MenuWithTitle('EDIT')
+  ]);
+  var Status: StatusLine := StatusLine.New(Bounds(0, 11, 60, 1), [
+    StatusWithText('READY'),
+    StatusWithText('HELP')
+  ]);
+  Application.SetMenuBar(App, Bar);
+  Application.SetStatusLine(App, Status);
+  Application.Try2InjectCommand(App, CM_QUIT);
+  Application.Run(App, OnCommand);
+  AssertScreenCell(3, 1, 'F', Black, LightGray);
+  AssertScreenCell(6, 1, 'E', Black, LightGray);
+  AssertScreenCell(2, 12, 'R', Black, LightGray);
+  AssertScreenCell(11, 12, 'H', Black, LightGray);
+  Application.CloseForTest(App)
+end.

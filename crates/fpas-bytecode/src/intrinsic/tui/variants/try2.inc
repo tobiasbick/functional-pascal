@@ -34,3 +34,7 @@
     WindowSetTitle = 506,
     MenuBarSetMenus = 507,
     StatusLineSetItems = 508,
+    OutlineNew = 509,
+    OutlineHostSelection = 510,
+    OutlineHostSelectedText = 511,
+    OutlineSetNodes = 512,

@@ -316,6 +316,41 @@ impl Compiler {
                 );
                 Ok(true)
             }
+            s::STD_TUI_OUTLINE_NEW => {
+                self.expect_exact_args(s::STD_TUI_OUTLINE_NEW, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::OutlineNew), location);
+                Ok(true)
+            }
+            s::STD_TUI_OUTLINE_SELECTION => {
+                self.expect_exact_args(s::STD_TUI_OUTLINE_SELECTION, 1, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::OutlineHostSelection), location);
+                Ok(true)
+            }
+            s::STD_TUI_OUTLINE_SELECTED_TEXT => {
+                self.expect_exact_args(s::STD_TUI_OUTLINE_SELECTED_TEXT, 1, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(
+                    Intrinsic::Tui(TuiIntrinsic::OutlineHostSelectedText),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_TUI_OUTLINE_SET_NODES => {
+                self.expect_exact_args(s::STD_TUI_OUTLINE_SET_NODES, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::OutlineSetNodes), location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

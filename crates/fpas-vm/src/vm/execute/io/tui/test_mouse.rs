@@ -147,17 +147,28 @@ impl Worker {
                     line,
                 )
             })?;
-        let Some(app) = self.headless_tv_app.as_ref() else {
-            return Err(runtime_error(
+        let point = self
+            .try2
+            .mouse_point_for_screen(x, y)
+            .unwrap_or_else(|| turbo_vision::core::geometry::Point::new(x, y));
+
+        let mut app = self.headless_tv_app.take().ok_or_else(|| {
+            runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,
                 "Headless Turbo Vision session is not initialized",
                 "Call `Application.OpenForTest` before `Application.TestClickMouse`.",
                 line,
-            ));
-        };
-
-        app.push_mouse_down(x, y);
-        app.push_mouse_up(x, y);
+            )
+        })?;
+        app.push_mouse_down(point.x, point.y);
+        if app.desktop_mut().child_count() > 0 {
+            let _ = app.dispatch_next_input_event();
+        }
+        app.push_mouse_up(point.x, point.y);
+        if app.desktop_mut().child_count() > 0 {
+            let _ = app.dispatch_next_input_event();
+        }
+        self.headless_tv_app = Some(app);
         Ok(())
     }
 }

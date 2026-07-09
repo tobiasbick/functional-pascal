@@ -61,6 +61,11 @@ impl BridgedOutline {
         }
         self.sync_selection();
     }
+
+    /// Copies the upstream outline selection into the shared FPAS cell.
+    pub(in crate::vm::execute::io::tui) fn sync_selection_from_view(&mut self) {
+        self.sync_selection();
+    }
 }
 
 impl View for BridgedOutline {

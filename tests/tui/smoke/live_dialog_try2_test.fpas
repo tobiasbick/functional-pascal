@@ -1,0 +1,44 @@
+program LiveDialogTry2Test;
+
+uses Std.Console, Std.Tui, Std.Test;
+
+const
+  CmdOpen: integer := 60;
+
+mutable var
+  mutable var NestedClosed: boolean := false;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+procedure OnCommand(App: Application; CommandId: integer);
+begin
+  if CommandId = CmdOpen then
+  begin
+    var LiveDlg: Dialog := Dialog.NewModal(Bounds(6, 3, 20, 6), 'Live');
+    var Label: StaticText := StaticText.New(Bounds(4, 2, 6, 1), 'DLG');
+    var OkBtn: Button := Button.New(Bounds(6, 4, 6, 2), 'OK', CM_OK, true);
+    Dialog.Add(LiveDlg, Label);
+    Dialog.Add(LiveDlg, OkBtn);
+    Application.TestClickButton(App, OkBtn);
+    AssertEquals(CM_OK, Application.ExecView(App, LiveDlg));
+    NestedClosed := true;
+    Application.Try2InjectCommand(App, CM_QUIT)
+  end;
+  if CommandId = CM_QUIT then
+    Application.Quit(App)
+end;
+
+begin
+  var App: Application := Application.OpenForTest(60, 20);
+  var Host: Std.Tui.Window := Window.New(Bounds(2, 1, 24, 8), 'Host');
+  var OpenButton: Button := Button.New(Bounds(4, 4, 10, 2), 'Open', CmdOpen, false);
+  Window.Add(Host, OpenButton);
+  Desktop.Add(App, Host);
+  Application.TestClickButton(App, OpenButton);
+  Application.Run(App, OnCommand);
+  AssertTrue(NestedClosed);
+  Application.CloseForTest(App)
+end.

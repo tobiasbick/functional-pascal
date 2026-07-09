@@ -7,10 +7,10 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 **Phase 1** — **complete** (foundation; `TuiState` slimming deferred to phase 7).  
 **Phase 2** — **complete** (vertical slice + interactive manual smoke verified).  
 **Phase 3** — **complete** (run loop, desktop/window, static text, chrome).
-**Phase 4** — **complete** (all phase-1 widgets on try-2 path; **31/37** old control tests removed in phase 7).
+**Phase 4** — **complete** (all phase-1 widgets on try-2 path including `Outline`; control tests migrated in phase 7).
 **Phase 5** — **complete** for current branch scope (`MessageBox`, `OnKey`, `OnMouse`, `RunFileDialog` with Try-2-local headless adapter).  
 **Phase 6** — **complete** (`apps/ide` migrated; automated + manual terminal sign-off green).  
-**Phase 7** — **in progress** (try-1 deletion; **31/37** `tests/tui/controls/` removed, **6** remain).
+**Phase 7** — **controls tests complete** (all **37/37** `tests/tui/controls/` removed; try-2 replacements landed). VM try-1 module deletion next per [deletion-checklist.md](deletion-checklist.md).
 
 ## Phase 1 closure notes
 
@@ -18,7 +18,7 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 | --- | --- |
 | `Try2Session` + `ViewRegistry` | Done — `Worker.try2`, lifecycle hooks, registry tests. |
 | `Application.New` / `Close` | Done — `New` → `ApplicationOpen`; `Close` / `CloseForTest` + `try2.reset()`. |
-| Slim `TuiState` | **Not phase 1** — needs try-1 deletion (phase 7); try-1 `tests/tui/controls/*` still authoritative. |
+| Slim `TuiState` | **Next** — try-1 control tests removed; delete VM try-1 modules per [deletion-checklist.md](deletion-checklist.md). |
 
 ## Landed (2026-07-07)
 
@@ -107,7 +107,7 @@ Covers: registry, geometry, session, dialog, button, window, desktop, static tex
 
 ## Next steps
 
-1. **Phase 7 (incremental)** — continue deleting `tests/tui/controls/*` as each try-2 replacement is confirmed; then VM modules, sema symbols, and public docs per [deletion-checklist.md](deletion-checklist.md).
+1. **Phase 7 (VM deletion)** — remove try-1 VM modules, sema symbols, and public docs per [deletion-checklist.md](deletion-checklist.md). **Follow-up:** try-2 `TestClickMouse` hit-target routing exists; checkbox/radio toggle via mouse on desktop windows needs a dedicated fix (smoke tests verify coordinate routing only).
 2. **Phase 7/8 cleanup** — replace interim `TestSetFileDialogResult` naming with the final headless event API after the public testing surface is rewritten.
 
 ## Phase 7 progress (2026-07-09)
@@ -144,4 +144,4 @@ Upstream `FileDialog::execute(&mut Application)` is available for live `Applicat
 
 - All `Application.Create*` Pascal API
 - `TurboVisionObject` snapshot + reconcile
-- `tests/tui/controls/*` (**6** files remain; 31 deleted)
+- `tests/tui/controls/*` — **empty** (37/37 deleted; try-2 replacements in `tests/tui/views/`, `tests/tui/smoke/`, `tests/tui/events/`)

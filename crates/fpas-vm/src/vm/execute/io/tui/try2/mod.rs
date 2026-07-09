@@ -19,6 +19,7 @@ pub mod registry;
 pub mod run;
 pub mod session;
 pub mod testing;
+pub mod view_click;
 pub mod view_lookup;
 pub mod views;
 

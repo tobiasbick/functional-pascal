@@ -129,7 +129,7 @@ tests/tui/controls/    — entire directory after porting to tests/tui/views/
 
 37 try-1 files — delete each when try-2 replacement lands; remove directory in phase 7.
 
-**Progress (2026-07-09):** **31/37** try-1 control tests deleted.
+**Progress (2026-07-09):** **37/37** try-1 control tests deleted. Directory `tests/tui/controls/` is empty.
 
 | Removed | try-2 replacement |
 | --- | --- |

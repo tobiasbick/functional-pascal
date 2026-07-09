@@ -1,0 +1,38 @@
+program OutlineSelectionTry2Test;
+
+uses Std.Tui, Std.Test;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+function Leaf(Text: string): OutlineNode;
+begin
+  return record text := Text; children := []; expanded := false; end
+end;
+
+function Node(Text: string; Children: array of OutlineNode; Expanded: boolean): OutlineNode;
+begin
+  return record text := Text; children := Children; expanded := Expanded; end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(60, 20);
+  var EmptyRoots: array of OutlineNode := [];
+  var Roots: array of OutlineNode := [Node('root', [Leaf('child')], false)];
+  var ExpandedRoots: array of OutlineNode := [Node('one', [Leaf('two')], true)];
+  var Dlg: Dialog := Dialog.NewModal(Bounds(2, 1, 30, 10), 'Outline');
+  var Tree: Outline := Outline.New(Bounds(3, 2, 20, 6), Roots);
+  var EmptyTree: Outline := Outline.New(Bounds(3, 9, 20, 4), EmptyRoots);
+  Dialog.Add(Dlg, Tree);
+  Dialog.Add(Dlg, EmptyTree);
+  AssertEquals(0, Outline.Selection(Tree));
+  AssertEquals('root', Outline.SelectedText(Tree));
+  AssertEquals(-1, Outline.Selection(EmptyTree));
+  AssertEquals('', Outline.SelectedText(EmptyTree));
+  Outline.SetNodes(Tree, ExpandedRoots);
+  AssertEquals(0, Outline.Selection(Tree));
+  AssertEquals('one', Outline.SelectedText(Tree));
+  Application.CloseForTest(App)
+end.

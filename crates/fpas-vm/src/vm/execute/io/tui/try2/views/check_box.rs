@@ -109,8 +109,11 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_attach_check_box(
         .require(check_box_handle, ViewKind::CheckBox)
         .map_err(|error| registry_error(error, line))?;
 
-    let Some(DetachedCheckBox { check_box, .. }) =
-        worker.try2.take_detached_check_box(check_box_handle)
+    let Some(DetachedCheckBox {
+        check_box,
+        local_bounds,
+        ..
+    }) = worker.try2.take_detached_check_box(check_box_handle)
     else {
         return Err(runtime_error(
             RUNTIME_INTRINSIC_STACK_STATE_ERROR,
@@ -120,7 +123,7 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_attach_check_box(
         ));
     };
 
-    let view_id = {
+    let (view_id, hit, click) = {
         let Some(Try2Root::ModalDialog(dialog)) = worker.try2.root_mut(dialog_handle) else {
             return Err(runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,
@@ -129,8 +132,14 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_attach_check_box(
                 line,
             ));
         };
-        dialog.add(check_box).as_u16()
+        let dialog_bounds = dialog.bounds();
+        let hit = super::super::view_click::widget_screen_bounds(dialog_bounds, local_bounds);
+        let click = super::super::view_click::widget_mouse_click_point(dialog_bounds, local_bounds);
+        let view_id = dialog.add(check_box).as_u16();
+        (view_id, hit, click)
     };
+
+    worker.try2.register_mouse_hit_target(hit, click);
 
     worker
         .try2
@@ -170,8 +179,11 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_window_attach_check_box(
         .require(check_box_handle, ViewKind::CheckBox)
         .map_err(|error| registry_error(error, line))?;
 
-    let Some(DetachedCheckBox { check_box, .. }) =
-        worker.try2.take_detached_check_box(check_box_handle)
+    let Some(DetachedCheckBox {
+        check_box,
+        local_bounds,
+        ..
+    }) = worker.try2.take_detached_check_box(check_box_handle)
     else {
         return Err(runtime_error(
             RUNTIME_INTRINSIC_STACK_STATE_ERROR,
@@ -181,7 +193,7 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_window_attach_check_box(
         ));
     };
 
-    let view_id = {
+    let (view_id, hit, click) = {
         let Some(Try2Root::Window(window)) = worker.try2.root_mut(window_handle) else {
             return Err(runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,
@@ -190,8 +202,14 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_window_attach_check_box(
                 line,
             ));
         };
-        window.add(check_box).as_u16()
+        let window_bounds = window.bounds();
+        let hit = super::super::view_click::widget_screen_bounds(window_bounds, local_bounds);
+        let click = super::super::view_click::widget_mouse_click_point(window_bounds, local_bounds);
+        let view_id = window.add(check_box).as_u16();
+        (view_id, hit, click)
     };
+
+    worker.try2.register_mouse_hit_target(hit, click);
 
     worker
         .try2

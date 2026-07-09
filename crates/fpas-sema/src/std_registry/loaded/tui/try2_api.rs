@@ -103,6 +103,43 @@ pub(super) fn register_try2_api(
     );
     define_func(
         checker,
+        s::STD_TUI_OUTLINE_NEW,
+        vec![
+            p("Bounds", types.rect.clone(), false),
+            p(
+                "Roots",
+                Ty::Array(Box::new(types.outline_node.clone())),
+                false,
+            ),
+        ],
+        types.outline.clone(),
+    );
+    define_func(
+        checker,
+        s::STD_TUI_OUTLINE_SELECTION,
+        vec![p("O", types.outline.clone(), false)],
+        Ty::Integer,
+    );
+    define_func(
+        checker,
+        s::STD_TUI_OUTLINE_SELECTED_TEXT,
+        vec![p("O", types.outline.clone(), false)],
+        Ty::String,
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_OUTLINE_SET_NODES,
+        vec![
+            p("O", types.outline.clone(), false),
+            p(
+                "Roots",
+                Ty::Array(Box::new(types.outline_node.clone())),
+                false,
+            ),
+        ],
+    );
+    define_func(
+        checker,
         s::STD_TUI_LIST_BOX_NEW,
         vec![
             p("Bounds", types.rect.clone(), false),

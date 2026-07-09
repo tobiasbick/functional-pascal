@@ -114,6 +114,15 @@ impl HeadlessTvApp {
             .top_view_id()
             .expect("modal view was just added to the desktop");
 
+        // Drain pre-queued headless test input (mouse/keyboard) before the modal loop.
+        for _ in 0..8 {
+            if let Ok(Some(mut event)) = self.terminal.poll_event(Duration::ZERO) {
+                self.desktop.handle_event(&mut event);
+            } else {
+                break;
+            }
+        }
+
         if !is_modal {
             return 0;
         }

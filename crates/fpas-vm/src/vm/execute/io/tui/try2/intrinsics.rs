@@ -9,8 +9,8 @@ use super::headless::try2_ensure_headless_app;
 use super::modals::try2_exec_view;
 use super::records::{
     TUI_BUTTON_TYPE, TUI_CHECK_BOX_TYPE, TUI_DIALOG_TYPE, TUI_INPUT_LINE_TYPE, TUI_LIST_BOX_TYPE,
-    TUI_MEMO_TYPE, TUI_RADIO_BUTTON_TYPE, TUI_STATIC_TEXT_TYPE, TUI_TEXT_VIEWER_TYPE,
-    TUI_WINDOW_TYPE,
+    TUI_MEMO_TYPE, TUI_OUTLINE_TYPE, TUI_RADIO_BUTTON_TYPE, TUI_STATIC_TEXT_TYPE,
+    TUI_TEXT_VIEWER_TYPE, TUI_WINDOW_TYPE,
 };
 use super::registry::ViewKind;
 use super::views::{
@@ -18,10 +18,11 @@ use super::views::{
     try2_check_box_set_checked, try2_desktop_add, try2_dialog_add_button, try2_dialog_attach_child,
     try2_dialog_new_modal, try2_dialog_set_title, try2_input_line_new, try2_input_line_set_text,
     try2_input_line_text, try2_list_box_new, try2_list_box_selection, try2_list_box_set_items,
-    try2_memo_new, try2_memo_set_text, try2_radio_button_new, try2_radio_button_selected,
-    try2_radio_button_set_selected, try2_static_text_new, try2_static_text_set_text,
-    try2_text_viewer_new, try2_text_viewer_set_text, try2_window_attach_child, try2_window_new,
-    try2_window_set_title,
+    try2_memo_new, try2_memo_set_text, try2_outline_new, try2_outline_selected_text,
+    try2_outline_selection, try2_outline_set_nodes, try2_radio_button_new,
+    try2_radio_button_selected, try2_radio_button_set_selected, try2_static_text_new,
+    try2_static_text_set_text, try2_text_viewer_new, try2_text_viewer_set_text,
+    try2_window_attach_child, try2_window_new, try2_window_set_title,
 };
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
@@ -308,6 +309,27 @@ impl Worker {
                 let handle = self.pop_try2_handle(TUI_STATUS_LINE_TYPE, "StatusLine", line)?;
                 try2_status_line_set_items(self, handle, items, line)?;
             }
+            TuiIntrinsic::OutlineNew => {
+                let roots = self.pop_outline_roots("Outline roots", line)?;
+                let bounds = self.pop_turbo_vision_rect(line)?;
+                let handle = try2_outline_new(self, bounds, roots, line)?;
+                self.push(Self::turbo_vision_outline_record(handle))?;
+            }
+            TuiIntrinsic::OutlineHostSelection => {
+                let handle = self.pop_try2_handle(TUI_OUTLINE_TYPE, "Outline", line)?;
+                let selection = try2_outline_selection(self, handle, line)?;
+                self.push(Value::Integer(selection))?;
+            }
+            TuiIntrinsic::OutlineHostSelectedText => {
+                let handle = self.pop_try2_handle(TUI_OUTLINE_TYPE, "Outline", line)?;
+                let text = try2_outline_selected_text(self, handle, line)?;
+                self.push(Value::Str(text))?;
+            }
+            TuiIntrinsic::OutlineSetNodes => {
+                let roots = self.pop_outline_roots("Outline.SetNodes roots", line)?;
+                let handle = self.pop_try2_handle(TUI_OUTLINE_TYPE, "Outline", line)?;
+                try2_outline_set_nodes(self, handle, roots, line)?;
+            }
             _ => return Ok(false),
         }
 
@@ -336,6 +358,10 @@ impl Worker {
                 self.decode_try2_handle(&fields, "ListBox", line)?,
                 ViewKind::ListBox,
             )),
+            Value::Record { type_name, fields } if type_name == TUI_OUTLINE_TYPE => Ok((
+                self.decode_try2_handle(&fields, "Outline", line)?,
+                ViewKind::Outline,
+            )),
             Value::Record { type_name, fields } if type_name == TUI_RADIO_BUTTON_TYPE => Ok((
                 self.decode_try2_handle(&fields, "RadioButton", line)?,
                 ViewKind::RadioButton,
@@ -354,7 +380,7 @@ impl Worker {
                     "Expected a try-2 child widget handle, got {}",
                     other.type_name()
                 ),
-                "Pass a child handle from `Button.New`, `StaticText.New`, `CheckBox.New`, `InputLine.New`, `ListBox.New`, `RadioButton.New`, `Memo.New`, or `TextViewer.New`.",
+                "Pass a child handle from `Button.New`, `StaticText.New`, `CheckBox.New`, `InputLine.New`, `ListBox.New`, `Outline.New`, `RadioButton.New`, `Memo.New`, or `TextViewer.New`.",
                 line,
             )),
         }

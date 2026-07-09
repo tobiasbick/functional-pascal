@@ -1,4 +1,4 @@
-program TuiTurboVisionOutlineTest;
+program OutlineTry2Test;
 
 uses Std.Tui, Std.Test;
 
@@ -21,12 +21,11 @@ begin
   var App: Application := Application.OpenForTest(60, 20);
   var Roots: array of OutlineNode := [Node('Root', [Leaf('child.fpas')], false)];
   var ExpandedRoots: array of OutlineNode := [Node('Root', [Leaf('child.fpas')], true)];
-  var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(2, 1, 30, 10), 'Tree');
-  var OutlineHandle: Outline := Application.CreateOutline(App, Bounds(3, 2, 20, 6), Roots);
-  Application.AddChild(App, DialogHandle, OutlineHandle);
-  AssertEquals(0, Application.Pump(App));
-  AssertEquals('Root', Application.OutlineSelectedText(App, OutlineHandle));
-  Application.SetOutlineNodes(App, OutlineHandle, ExpandedRoots);
-  AssertEquals(0, Application.Pump(App));
-  AssertEquals('Root', Application.OutlineSelectedText(App, OutlineHandle))
+  var Dlg: Dialog := Dialog.NewModal(Bounds(2, 1, 30, 10), 'Tree');
+  var Tree: Outline := Outline.New(Bounds(3, 2, 20, 6), Roots);
+  Dialog.Add(Dlg, Tree);
+  AssertEquals('Root', Outline.SelectedText(Tree));
+  Outline.SetNodes(Tree, ExpandedRoots);
+  AssertEquals('Root', Outline.SelectedText(Tree));
+  Application.CloseForTest(App)
 end.

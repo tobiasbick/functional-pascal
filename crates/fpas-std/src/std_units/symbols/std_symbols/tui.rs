@@ -51,6 +51,10 @@ pub const STD_TUI_CHECK_BOX_CHECKED: &str = std_tui!("CheckBox.Checked");
 pub const STD_TUI_CHECK_BOX_SET_CHECKED: &str = std_tui!("CheckBox.SetChecked");
 pub const STD_TUI_INPUT_LINE_TEXT: &str = std_tui!("InputLine.Text");
 pub const STD_TUI_INPUT_LINE_SET_TEXT: &str = std_tui!("InputLine.SetText");
+pub const STD_TUI_OUTLINE_NEW: &str = std_tui!("Outline.New");
+pub const STD_TUI_OUTLINE_SELECTION: &str = std_tui!("Outline.Selection");
+pub const STD_TUI_OUTLINE_SELECTED_TEXT: &str = std_tui!("Outline.SelectedText");
+pub const STD_TUI_OUTLINE_SET_NODES: &str = std_tui!("Outline.SetNodes");
 pub const STD_TUI_LIST_BOX_NEW: &str = std_tui!("ListBox.New");
 pub const STD_TUI_LIST_BOX_SELECTION: &str = std_tui!("ListBox.Selection");
 pub const STD_TUI_LIST_BOX_SET_ITEMS: &str = std_tui!("ListBox.SetItems");
@@ -321,6 +325,10 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_CHECK_BOX_SET_CHECKED,
     STD_TUI_INPUT_LINE_TEXT,
     STD_TUI_INPUT_LINE_SET_TEXT,
+    STD_TUI_OUTLINE_NEW,
+    STD_TUI_OUTLINE_SELECTION,
+    STD_TUI_OUTLINE_SELECTED_TEXT,
+    STD_TUI_OUTLINE_SET_NODES,
     STD_TUI_LIST_BOX_NEW,
     STD_TUI_LIST_BOX_SELECTION,
     STD_TUI_LIST_BOX_SET_ITEMS,

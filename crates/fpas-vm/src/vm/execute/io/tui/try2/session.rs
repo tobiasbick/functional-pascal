@@ -3,7 +3,9 @@
 //! **Documentation:** `docs/refactor-tui-try-2/target-architecture.md`
 
 use super::registry::{ViewKind, ViewRegistry};
-use crate::vm::shared::{TurboVisionMenu, TurboVisionRect, TurboVisionStatusItem};
+use crate::vm::shared::{
+    TurboVisionMenu, TurboVisionOutlineNode, TurboVisionRect, TurboVisionStatusItem,
+};
 use crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell;
 use crate::vm::turbo_vision_input_text_cell::TurboVisionInputTextCell;
 use crate::vm::turbo_vision_list_selection_cell::TurboVisionListSelectionCell;
@@ -55,6 +57,12 @@ pub(crate) struct DetachedListBox {
     pub local_bounds: Rect,
 }
 
+/// Outline constructed by `Outline.New` and not yet attached to a parent.
+pub(crate) struct DetachedOutline {
+    pub outline: Box<dyn View>,
+    pub local_bounds: Rect,
+}
+
 /// Radio button constructed by `RadioButton.New` and not yet attached to a parent.
 pub(crate) struct DetachedRadioButton {
     pub radio_button: Box<dyn View>,
@@ -86,6 +94,12 @@ pub(crate) struct Try2RadioButtonState {
 pub(crate) struct Try2ListBoxState {
     pub items: Vec<String>,
     pub command_id: u16,
+    pub selection_cell: TurboVisionListSelectionCell,
+}
+
+/// Host-side outline state retained after attach.
+pub(crate) struct Try2OutlineState {
+    pub roots: Vec<TurboVisionOutlineNode>,
     pub selection_cell: TurboVisionListSelectionCell,
 }
 
@@ -131,6 +145,8 @@ pub(crate) struct Try2Session {
     detached_input_lines: HashMap<u32, DetachedInputLine>,
     /// List boxes from `ListBox.New` awaiting parent attach.
     detached_list_boxes: HashMap<u32, DetachedListBox>,
+    /// Outlines from `Outline.New` awaiting parent attach.
+    detached_outlines: HashMap<u32, DetachedOutline>,
     /// Radio buttons from `RadioButton.New` awaiting parent attach.
     detached_radio_buttons: HashMap<u32, DetachedRadioButton>,
     /// Memos from `Memo.New` awaiting parent attach.
@@ -143,6 +159,8 @@ pub(crate) struct Try2Session {
     input_line_states: HashMap<u32, Try2InputLineState>,
     /// Host-side list box state keyed by try-2 handle.
     list_box_states: HashMap<u32, Try2ListBoxState>,
+    /// Host-side outline state keyed by try-2 handle.
+    outline_states: HashMap<u32, Try2OutlineState>,
     /// Host-side radio button state keyed by try-2 handle.
     radio_button_states: HashMap<u32, Try2RadioButtonState>,
     /// Radio group members keyed by FPAS `GroupId`.
@@ -159,6 +177,8 @@ pub(crate) struct Try2Session {
     child_parents: HashMap<u32, u32>,
     /// Headless test click targets keyed by try-2 button handle.
     button_clicks: HashMap<u32, Point>,
+    /// Screen-space mouse hit targets for check boxes and radio buttons.
+    mouse_hit_targets: Vec<(Rect, Point)>,
     /// Window handles attached to the upstream desktop via `Desktop.Add`.
     desktop_windows: HashSet<u32>,
     menu_bars: HashMap<u32, Try2MenuBarState>,
@@ -181,12 +201,14 @@ impl Try2Session {
         self.detached_check_boxes.clear();
         self.detached_input_lines.clear();
         self.detached_list_boxes.clear();
+        self.detached_outlines.clear();
         self.detached_radio_buttons.clear();
         self.detached_memos.clear();
         self.detached_text_viewers.clear();
         self.check_box_cells.clear();
         self.input_line_states.clear();
         self.list_box_states.clear();
+        self.outline_states.clear();
         self.radio_button_states.clear();
         self.radio_group_members.clear();
         self.button_states.clear();
@@ -195,6 +217,7 @@ impl Try2Session {
         self.text_viewer_texts.clear();
         self.child_parents.clear();
         self.button_clicks.clear();
+        self.mouse_hit_targets.clear();
         self.desktop_windows.clear();
         self.menu_bars.clear();
         self.status_lines.clear();
@@ -517,6 +540,56 @@ impl Try2Session {
         self.list_box_states.get_mut(&handle)
     }
 
+    /// Inserts a detached outline and returns its FPAS handle.
+    pub fn insert_detached_outline(
+        &mut self,
+        outline: Box<dyn View>,
+        local_bounds: Rect,
+        roots: Vec<TurboVisionOutlineNode>,
+        selection_cell: TurboVisionListSelectionCell,
+    ) -> u32 {
+        let handle = self.registry.allocate(0, ViewKind::Outline);
+        self.outline_states.insert(
+            handle,
+            Try2OutlineState {
+                roots,
+                selection_cell,
+            },
+        );
+        self.detached_outlines.insert(
+            handle,
+            DetachedOutline {
+                outline,
+                local_bounds,
+            },
+        );
+        handle
+    }
+
+    /// Removes a detached outline for parent attach.
+    pub fn take_detached_outline(&mut self, handle: u32) -> Option<DetachedOutline> {
+        self.detached_outlines.remove(&handle)
+    }
+
+    /// Returns the shared outline selection cell for a handle.
+    #[must_use]
+    pub fn outline_selection_cell(&self, handle: u32) -> Option<&TurboVisionListSelectionCell> {
+        self.outline_states
+            .get(&handle)
+            .map(|state| &state.selection_cell)
+    }
+
+    /// Read-only outline host state.
+    #[must_use]
+    pub fn outline_state(&self, handle: u32) -> Option<&Try2OutlineState> {
+        self.outline_states.get(&handle)
+    }
+
+    /// Mutable access to outline host state.
+    pub fn outline_state_mut(&mut self, handle: u32) -> Option<&mut Try2OutlineState> {
+        self.outline_states.get_mut(&handle)
+    }
+
     /// Registers radio button host state and returns its FPAS handle.
     pub fn insert_radio_button_state(
         &mut self,
@@ -811,6 +884,22 @@ impl Try2Session {
     #[must_use]
     pub fn button_click_point(&self, handle: u32) -> Option<Point> {
         self.button_clicks.get(&handle).copied()
+    }
+
+    /// Registers a screen-space hit target for headless `TestClickMouse`.
+    pub fn register_mouse_hit_target(&mut self, hit: Rect, click: Point) {
+        self.mouse_hit_targets.push((hit, click));
+    }
+
+    /// Resolves a queued screen click to a desktop mouse coordinate when possible.
+    #[must_use]
+    pub fn mouse_point_for_screen(&self, x: i16, y: i16) -> Option<Point> {
+        for (hit, click) in &self.mouse_hit_targets {
+            if super::view_click::point_in_screen_bounds(*hit, x, y) {
+                return Some(*click);
+            }
+        }
+        None
     }
 
     /// Validates session is open.

@@ -154,16 +154,16 @@ procedure ListBox.SetItems(Lb: ListBox; Items: array of string);
 
 ### `Outline`
 
-Current branch status: outline remains on the try-1 `Application.CreateOutline` API until Phase 7 or a dedicated try-2 outline pass.
-
 ```pascal
-type OutlineNode = record text: string; children: array of OutlineNode; end;
+type OutlineNode = record text: string; children: array of OutlineNode; expanded: boolean; end;
 
 function Outline.New(Bounds: Rect; Roots: array of OutlineNode): Outline;
 function Outline.Selection(O: Outline): integer;
 function Outline.SelectedText(O: Outline): string;
 procedure Outline.SetNodes(O: Outline; Roots: array of OutlineNode);
 ```
+
+Intrinsics: `OutlineNew` (509), `OutlineHostSelection` (510), `OutlineHostSelectedText` (511), `OutlineSetNodes` (512).
 
 ### `CheckBox` / `RadioButton`
 

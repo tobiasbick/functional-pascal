@@ -140,8 +140,11 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_attach_radio_button(
         .require(radio_button_handle, ViewKind::RadioButton)
         .map_err(|error| registry_error(error, line))?;
 
-    let Some(DetachedRadioButton { radio_button, .. }) =
-        worker.try2.take_detached_radio_button(radio_button_handle)
+    let Some(DetachedRadioButton {
+        radio_button,
+        local_bounds,
+        ..
+    }) = worker.try2.take_detached_radio_button(radio_button_handle)
     else {
         return Err(runtime_error(
             RUNTIME_INTRINSIC_STACK_STATE_ERROR,
@@ -151,7 +154,7 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_attach_radio_button(
         ));
     };
 
-    let view_id = {
+    let (view_id, hit, click) = {
         let Some(Try2Root::ModalDialog(dialog)) = worker.try2.root_mut(dialog_handle) else {
             return Err(runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,
@@ -160,8 +163,14 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_attach_radio_button(
                 line,
             ));
         };
-        dialog.add(radio_button).as_u16()
+        let dialog_bounds = dialog.bounds();
+        let hit = super::super::view_click::widget_screen_bounds(dialog_bounds, local_bounds);
+        let click = super::super::view_click::widget_mouse_click_point(dialog_bounds, local_bounds);
+        let view_id = dialog.add(radio_button).as_u16();
+        (view_id, hit, click)
     };
+
+    worker.try2.register_mouse_hit_target(hit, click);
 
     worker
         .try2
@@ -201,8 +210,11 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_window_attach_radio_button(
         .require(radio_button_handle, ViewKind::RadioButton)
         .map_err(|error| registry_error(error, line))?;
 
-    let Some(DetachedRadioButton { radio_button, .. }) =
-        worker.try2.take_detached_radio_button(radio_button_handle)
+    let Some(DetachedRadioButton {
+        radio_button,
+        local_bounds,
+        ..
+    }) = worker.try2.take_detached_radio_button(radio_button_handle)
     else {
         return Err(runtime_error(
             RUNTIME_INTRINSIC_STACK_STATE_ERROR,
@@ -212,7 +224,7 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_window_attach_radio_button(
         ));
     };
 
-    let view_id = {
+    let (view_id, hit, click) = {
         let Some(Try2Root::Window(window)) = worker.try2.root_mut(window_handle) else {
             return Err(runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,
@@ -221,8 +233,14 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_window_attach_radio_button(
                 line,
             ));
         };
-        window.add(radio_button).as_u16()
+        let window_bounds = window.bounds();
+        let hit = super::super::view_click::widget_screen_bounds(window_bounds, local_bounds);
+        let click = super::super::view_click::widget_mouse_click_point(window_bounds, local_bounds);
+        let view_id = window.add(radio_button).as_u16();
+        (view_id, hit, click)
     };
+
+    worker.try2.register_mouse_hit_target(hit, click);
 
     worker
         .try2

@@ -127,7 +127,7 @@ Estimates assume focused hobby-project pace (part-time).
 
 ---
 
-## Phase 7 — Delete try-1 (1–2 days)
+## Phase 7 — Delete try-1 (1–2 days) — **in progress**
 
 **Work**
 
@@ -137,6 +137,7 @@ Estimates assume focused hobby-project pace (part-time).
 - [ ] Remove old `docs/pascal/std/tui/` pages; write new spec from [target-api.md](target-api.md).
 - [ ] Update skill, AGENTS.md bridge pointers, `.cursor/rules` TUI examples.
 - [ ] Delete or archive `docs/refactor-tui-try-2/` (or mark completed in README).
+- [x] Phase-1 widget + run/chrome/modal try-1 control tests removed (**20/37**); replacements in `tests/tui/views/`, `tests/tui/smoke/`, `tests/tui/modals/`. **17** controls tests remain.
 
 **Exit criteria**
 

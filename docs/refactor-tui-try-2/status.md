@@ -7,9 +7,10 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 **Phase 1** — **complete** (foundation; `TuiState` slimming deferred to phase 7).  
 **Phase 2** — **complete** (vertical slice + interactive manual smoke verified).  
 **Phase 3** — **complete** (run loop, desktop/window, static text, chrome).
-**Phase 4** — **complete** (all phase-1 widgets on try-2 path; old control tests cleanup pending).
+**Phase 4** — **complete** (all phase-1 widgets on try-2 path; **20/37** old control tests removed in phase 7).
 **Phase 5** — **complete** for current branch scope (`MessageBox`, `OnKey`, `OnMouse`, `RunFileDialog` with Try-2-local headless adapter).  
-**Phase 6** — **complete** (`apps/ide` migrated; automated + manual terminal sign-off green).
+**Phase 6** — **complete** (`apps/ide` migrated; automated + manual terminal sign-off green).  
+**Phase 7** — **in progress** (try-1 deletion; **20/37** `tests/tui/controls/` removed, **17** remain).
 
 ## Phase 1 closure notes
 
@@ -105,8 +106,23 @@ Covers: registry, geometry, session, dialog, button, window, desktop, static tex
 
 ## Next steps
 
-1. **Phase 7** — delete try-1 bridge, rewrite the public `docs/pascal/std/tui/` spec, and archive this plan directory.
+1. **Phase 7 (incremental)** — continue deleting `tests/tui/controls/*` as each try-2 replacement is confirmed; then VM modules, sema symbols, and public docs per [deletion-checklist.md](deletion-checklist.md).
 2. **Phase 7/8 cleanup** — replace interim `TestSetFileDialogResult` naming with the final headless event API after the public testing surface is rewritten.
+
+## Phase 7 progress (2026-07-09)
+
+| Batch | Deleted (try-1) | try-2 replacement |
+| --- | --- | --- |
+| Widgets + read-back | 13 tests (`check_box`, `input_line`, `list_box`, `memo`, `radio_button`, `text_viewer`, `checked`, `list_selection`, `set_items`, `set_text_*`, `radio_selected`) | `tests/tui/views/*_try2_test.fpas` (6) |
+| Run / chrome / modals | 7 tests (`run`, `window`, `chrome`, `menu`, `exec_dialog`, `message_box`, `static_text`) | `tests/tui/smoke/*_try2_test.fpas`, `tests/tui/modals/message_box_try2_test.fpas` |
+
+| Metric | Value |
+| --- | --- |
+| Controls tests removed | **20 / 37** |
+| Controls tests remaining | **17** |
+| VM / sema / `docs/pascal/std/tui/` rewrite | Not started |
+
+Remaining try-1 controls (no try-2 FPAS test yet or try-1-only API): outline (2), live tree/dialog (2), `file_dialog`, `Pump`/`spike`, screen paint (`set_checked`, `chrome_paint`, `set_text_*`), `set_menus`/`set_status_items`, mouse tests (2), `reserved_command`, `tui_run_path`.
 
 ## Blockers
 

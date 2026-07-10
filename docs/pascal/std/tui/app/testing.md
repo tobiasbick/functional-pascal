@@ -1,6 +1,6 @@
 # Std.Tui native testing
 
-Headless Turbo Vision tests use `Application.OpenForTest`, widget construction, `Application.TestClickButton`, `Application.TestClickMouse`, or `Application.TestDispatchMenuCommand`, and `Application.Run`.
+Headless Turbo Vision tests use `Application.OpenForTest`, try-2 view construction, test injection helpers, and `Application.Run`.
 
 Example:
 
@@ -9,41 +9,44 @@ program TuiButtonTest;
 
 uses Std.Tui, Std.Test;
 
-mutable var
-  mutable var LastCommand: integer := -1;
+procedure OnCommand(App: Application; Cmd: integer);
+begin
+  AssertEquals(CM_QUIT, Cmd);
+  Application.Quit(App)
+end;
 
 function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
 begin
   return record x := X; y := Y; width := Width; height := Height; end
 end;
 
-procedure OnCommand(App: Application; CommandId: integer);
-begin
-  LastCommand := CommandId;
-  Application.Quit(App)
-end;
-
 begin
   var App: Application := Application.OpenForTest(40, 12);
-  var DialogHandle: Dialog := Application.CreateDialog(App, Bounds(2, 1, 24, 8), 'Demo');
-  var ButtonHandle: Button := Application.CreateButton(App, Bounds(4, 4, 10, 2), 'Quit', Command.Quit);
-  Application.AddChild(App, DialogHandle, ButtonHandle);
-  Application.OnCommand(App, OnCommand);
-  Application.TestClickButton(App, ButtonHandle);
-  Application.Run(App);
-  AssertEquals(Command.Quit, LastCommand)
+  var Dlg: Dialog := Dialog.NewModal(Bounds(2, 1, 24, 8), 'Demo');
+  var Btn: Button := Button.New(Bounds(4, 4, 10, 2), 'Quit', CM_QUIT, false);
+  Dialog.Add(Dlg, Btn);
+  Application.TestClickButton(App, Btn);
+  var Cmd: integer := Application.ExecView(App, Dlg);
+  AssertEquals(CM_QUIT, Cmd);
+  Application.CloseForTest(App)
 end.
 ```
 
-Regression tests live under `tests/tui/controls/` (`tui_turbo_vision_*_test.fpas`, including `tui_turbo_vision_outline_test.fpas` and `tui_turbo_vision_outline_selection_test.fpas`, `tui_run_path_test.fpas`) and `apps/ide/tests/` (menu, About, chrome).
+Regression tests live under `tests/tui/views/`, `tests/tui/smoke/`, `tests/tui/modals/`, `tests/tui/events/`, and `apps/ide/tests/`.
 
-Headless `Application.OpenForTest` sessions do not open a live turbo-vision application. Queue modal results with `Application.TestSetDialogResult` before `Application.ExecDialog`, and file-picker results with `Application.TestSetFileDialogResult` before `Application.RunFileDialog`. Interactive programs use the shared live session described in [Lifecycle](lifecycle.md).
+## Headless run loop
 
-IDE tests under `apps/ide/tests/` cover menu dispatch and About (`about_menu_test.fpas`, `dialog_test.fpas`) using `TestSetDialogResult` before `MessageBox` or `ExecDialog`.
+For desktop programs that call `Application.Run` in headless mode, inject commands or keys before `Run`:
 
-To assert painted terminal output after `Application.Pump`, add `uses Std.Console` and call [`Std.Test`](../../testing/test.md) `AssertScreenLine` or `AssertScreenCell` on the virtual CRT back buffer. Use `Application.TestClickMouse(App, X, Y)` with screen coordinates that match the painted check box or radio button marker cell.
+```pascal
+var App: Application := Application.OpenForTest(40, 14);
+Application.Try2InjectCommand(App, CM_QUIT);
+Application.Run(App, OnCommand);
+```
 
-File dialog headless example:
+`Application.Try2InjectKeyboard` queues a Turbo Vision key code for the next run-loop turn (used by IDE and event tests).
+
+## File dialog stub
 
 ```pascal
 Application.TestSetFileDialogResult(App, Some('selected.txt'));
@@ -57,18 +60,25 @@ var Path: option of string := Application.RunFileDialog(
 AssertEquals('selected.txt', Unwrap(Path))
 ```
 
-Modal dialog headless example:
+## Message box stub
+
+When exercising the stub queue path (without driving a full headless modal loop):
 
 ```pascal
-Application.TestSetDialogResult(App, Command.Accept);
-var CloseResult: DialogResult := Application.ExecDialog(App, DialogHandle);
-AssertEquals(Command.Accept, CloseResult.command);
-AssertEquals('seeded', Application.InputText(App, NameInput))
+Application.TestSetDialogResult(App, CM_OK);
+var Cmd: integer := Application.MessageBox(App, 'Hello', MessageBoxOption.About + MessageBoxOption.OkButton);
+AssertEquals(CM_OK, Cmd);
 ```
+
+Prefer real headless modal paths (`ExecView` + `TestClickButton`) where possible.
+
+## Screen assertions
+
+To assert painted terminal output, add `uses Std.Console` and call [`Std.Test`](../../testing/test.md) `AssertScreenLine` or `AssertScreenCell` on the virtual CRT back buffer. Use `Application.TestClickMouse(App, X, Y)` with screen coordinates that match the painted check box or radio button marker cell.
 
 ## See Also
 
 - [Application](README.md)
-- [Dialogs and windows](modals.md) — IDE About tests
-- [Handlers](handlers.md) — `TestDispatchMenuCommand`
+- [Dialogs and windows](modals.md)
+- [Handlers](handlers.md)
 - [Std.Test](../../testing/test.md)

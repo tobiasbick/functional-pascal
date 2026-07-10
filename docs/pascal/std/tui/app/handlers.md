@@ -1,26 +1,30 @@
 # Std.Tui handlers
 
-Turbo Vision applications register callbacks on the `Application` handle. Commands are the primary input channel; optional hooks cover keyboard and mouse events that the widget tree does not consume.
+Turbo Vision applications handle user input through command ids and optional keyboard/mouse hooks.
 
-## `Application.OnCommand`
+## `Application.Run(App, OnCommand)`
+
+Primary command channel:
 
 ```pascal
-procedure OnCommand(App: Application; CommandId: integer);
+procedure OnCommand(App: Application; Cmd: integer);
 begin
-  if CommandId = Command.Quit then
+  if Cmd = CM_QUIT then
     Application.Quit(App)
 end;
 
-Application.OnCommand(App, OnCommand);
+Application.Run(App, OnCommand);
 ```
 
-`Application.OnCommand` expects `procedure (Application, integer)`. Use `Command.Accept`, `Command.Cancel`, `Command.Close`, and `Command.Quit` for standard actions, or application-defined positive integers for custom commands.
+`OnCommand` must be `procedure (Application, integer)`. Use `CM_*` constants for standard actions, or application-defined positive integers for custom commands.
 
-On an interactive terminal you may call `Application.ExecDialog` or `Application.RunFileDialog` from inside `OnCommand` while `Application.Run` is active. The runtime reuses the same upstream turbo-vision session, so menu bar and status line stay visible (see [Dialogs and windows](modals.md) and [Lifecycle](lifecycle.md)).
+`Application.Run(App)` with one argument is also supported when a handler was registered through the VM host path; prefer the two-argument form in application code.
 
-### IDE About flow (today)
+On an interactive terminal you may call `Application.ExecView`, `Application.MessageBox`, or `Application.RunFileDialog` from inside `OnCommand` while `Run` is active. The runtime reuses the same upstream turbo-vision session, so menu bar and status line stay visible (see [Dialogs and windows](modals.md) and [Lifecycle](lifecycle.md)).
 
-Help → About in `apps/ide` dispatches menu command `100` (`CM_ABOUT`) to `OnCommand`, which calls `Ide.Dialog.ShowAbout`. That procedure calls `Application.MessageBox` with `MessageBoxOption.About + MessageBoxOption.OkButton`; dismissal returns `Command.Accept` (`10`). See [Message box](message-box.md).
+### IDE About flow
+
+Help → About in `apps/ide` dispatches menu command `CM_ABOUT` to `OnCommand`, which calls `Ide.Dialog.ShowAbout`. That procedure calls `Application.MessageBox` with `MessageBoxOption.About + MessageBoxOption.OkButton`; dismissal returns `CM_OK`. See [Message box](message-box.md).
 
 ## Optional raw input hooks
 
@@ -38,6 +42,7 @@ end;
 
 Application.OnKey(App, OnKey);
 Application.OnMouse(App, OnMouse);
+Application.Run(App, OnCommand);
 ```
 
 - `Application.OnKey` expects `function (Application, Std.Console.KeyEvent): boolean`. Return `true` to mark the key consumed for the rest of the loop turn.
@@ -49,7 +54,7 @@ Custom fullscreen terminal programs that paint every cell themselves belong in [
 
 - [Application](README.md)
 - [Dialogs and windows](modals.md)
-- [Types](types.md) (`Command` constants)
+- [Types](types.md) (`CM_*` constants)
 - [Lifecycle](lifecycle.md)
-- [Native testing](testing.md) — IDE About headless tests
+- [Native testing](testing.md)
 - [Session API](../session.md)

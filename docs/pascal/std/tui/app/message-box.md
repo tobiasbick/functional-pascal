@@ -2,7 +2,7 @@
 
 `Application.MessageBox` shows a standard Borland-style modal message box backed by upstream `turbo_vision::helpers::msgbox::message_box`. Use it for About boxes, OK prompts, and Yes/No/Cancel confirmations without building a custom dialog.
 
-Custom layouts with read-back widgets still use [`CreateDialog`](modals.md#custom-modal-layout) and [`ExecDialog`](modals.md).
+Custom layouts with read-back widgets use [`Dialog.NewModal`](modals.md) and [`Application.ExecView`](modals.md).
 
 ## Signature
 
@@ -10,7 +10,7 @@ Custom layouts with read-back widgets still use [`CreateDialog`](modals.md#custo
 function Application.MessageBox(App: Application; Message: string; Options: integer): integer;
 ```
 
-Returns the closing command id. OK buttons map to [`Command.Accept`](types.md#command-constants) (`10`, Borland `cmOK`). Cancel maps to [`Command.Cancel`](types.md#command-constants) (`11`). Yes/No map to upstream `cmYes` / `cmNo` (also available as `Command.Accept` / `Command.Cancel` where the helper emits those ids).
+Returns the closing command id. OK buttons return `CM_OK` (`10`). Cancel returns `CM_CANCEL` (`11`). Yes/No map to upstream `cmYes` / `cmNo`.
 
 `Options` combines a **type** flag with one or more **button** flags. Combine flags with `+` when the bit patterns do not overlap.
 
@@ -54,7 +54,7 @@ var CloseCommand: integer := Application.MessageBox(
   'FPAS IDE' + #10 + #10 + 'Functional Pascal IDE',
   MessageBoxOption.About + MessageBoxOption.OkButton
 );
-if CloseCommand = Command.Accept then
+if CloseCommand = CM_OK then
 begin
   { user dismissed with OK }
 end
@@ -74,17 +74,17 @@ You may call `MessageBox` from `OnCommand` while `Run` is active (for example He
 
 ## Headless tests
 
-`Application.OpenForTest` does not open a live turbo-vision session. Queue the closing command with [`Application.TestSetDialogResult`](testing.md) before `MessageBox` (same queue as `ExecDialog`).
+Headless `OpenForTest` runs a real upstream modal paint path via `try2_headless_exec_view`, or you can queue a stub result with [`Application.TestSetDialogResult`](testing.md) before `MessageBox`.
 
 ```pascal
-Application.TestSetDialogResult(App, Command.Accept);
+Application.TestSetDialogResult(App, CM_OK);
 var Cmd: integer := Application.MessageBox(App, 'Hello', MessageBoxOption.About + MessageBoxOption.OkButton);
-AssertEquals(Command.Accept, Cmd);
+AssertEquals(CM_OK, Cmd);
 ```
 
 ## See also
 
 - [Dialogs and windows](modals.md)
-- [Handlers](handlers.md) — IDE About flow
+- [Handlers](handlers.md)
 - [Native testing](testing.md)
 - [Application types](types.md)

@@ -5,70 +5,47 @@
 ## Minimum setup
 
 1. `Application.Open` or `Application.OpenForTest`
-2. Create widget handles with `Application.Create*`
-3. `Application.AddChild` / `Application.AddWindow` as needed
-4. `Application.OnCommand` (and optional `OnKey` / `OnMouse`)
-5. `Application.Run` — requires at least one Turbo Vision widget handle
+2. Create views with `Dialog.NewModal`, `Button.New`, `Window.New`, … (see [Controls](controls.md) and [Dialogs and windows](modals.md))
+3. Attach children with `Dialog.Add` / `Window.Add`; place windows with `Desktop.Add`
+4. Optional: `Application.OnKey` / `Application.OnMouse` before `Run`
+5. `Application.Run(App, OnCommand)` — blocking event loop
 
-On an interactive terminal, `Run`, `ExecDialog`, and `RunFileDialog` share one upstream turbo-vision application for the `Open` … `Close` lifetime. See [Lifecycle](lifecycle.md).
+On an interactive terminal, `Run`, `ExecView`, `MessageBox`, and `RunFileDialog` share one upstream turbo-vision application for the `Open` … `Close` lifetime. See [Lifecycle](lifecycle.md).
 
-Custom modal layout (`CreateDialog` + `ExecDialog`) is for dialogs with read-back or app-specific widgets. Standard Borland message boxes use [`Application.MessageBox`](message-box.md) — see also [Dialogs and windows](modals.md#custom-modal-layout).
+Custom modal layout (`Dialog.NewModal` + `ExecView`) is for dialogs with read-back or app-specific widgets. Standard Borland message boxes use [`Application.MessageBox`](message-box.md).
 
-## Current API
+## `Application.*` symbols
 
 | Symbol | Description |
 | --- | --- |
-| `Application.Open(): Application` | Open a logical TUI application handle. Terminal ownership is acquired by `Application.Run`. |
+| `Application.New(): Application` | Alias for `Application.Open`. |
+| `Application.Open(): Application` | Open a logical TUI application handle. |
 | `Application.OpenForTest(Width, Height): Application` | Open a headless test application. |
 | `Application.Close(App)` | Close an open application handle. |
 | `Application.CloseForTest(App)` | Close a headless test application. |
 | `Application.Size(App): Size` | Return the current application size. |
-| `Application.Run(App)` | Run the Turbo Vision event loop. Requires at least one `Create*` widget handle. |
+| `Application.Run(App)` | Run the event loop using a previously registered handler (see [Handlers](handlers.md)). |
+| `Application.Run(App, OnCommand)` | Run with `procedure (Application, integer)`. |
 | `Application.Quit(App)` | Request that `Application.Run` exits. |
-| `Application.CreateDialog(App, Bounds, Title): Dialog` | Create a Turbo Vision dialog handle. |
-| `Application.CreateWindow(App, Bounds, Title): Window` | Create a Turbo Vision window handle. |
-| `Application.CreateButton(App, Bounds, Text, CommandId): Button` | Create a Turbo Vision button handle. |
-| `Application.CreateStaticText(App, Bounds, Text): StaticText` | Create a non-interactive Turbo Vision text label handle. |
-| `Application.CreateMemo(App, Bounds, Text): Memo` | Create a multi-line Turbo Vision text editor handle. |
-| `Application.CreateTextViewer(App, Bounds, Text): TextViewer` | Create a read-only multi-line Turbo Vision text viewer handle. |
-| `Application.CreateInputLine(App, Bounds, Text, MaxLength): InputLine` | Create a single-line Turbo Vision text input handle. |
-| `Application.CreateListBox(App, Bounds, Items, CommandId): ListBox` | Create a Turbo Vision list box from an array of strings. |
-| `Application.CreateOutline(App, Bounds, Roots): Outline` | Create a Turbo Vision outline tree from an array of `OutlineNode` records. |
-| `Application.CreateCheckBox(App, Bounds, Text, Checked): CheckBox` | Create a Turbo Vision check box with an initial checked state. |
-| `Application.CreateRadioButton(App, Bounds, Text, GroupId, Selected): RadioButton` | Create a Turbo Vision radio button. Use the same `GroupId` for mutually exclusive options. |
-| `Application.RunFileDialog(App, Bounds, Title, Wildcard, StartPath): Option of string` | Show a modal file dialog. Returns `Some(path)` when a file is chosen and `None` when canceled. Pass `None` as `StartPath` for the current directory. |
-| `Application.ExecDialog(App, Dialog): DialogResult` | Run a dialog modally on the terminal. Returns the closing command in `DialogResult.command`. |
-| `Application.MessageBox(App, Message, Options): integer` | Show an upstream Turbo Vision message box. Returns the closing command id. See [Message box](message-box.md). |
-| `Application.InputText(App, Field): string` | Read the current text of an `InputLine` handle (valid after `ExecDialog`). |
-| `Application.Checked(App, Field): boolean` | Read the checked state of a `CheckBox` handle (valid after `ExecDialog`). |
-| `Application.Selected(App, Field): boolean` | Read the selected state of a `RadioButton` handle (valid after `ExecDialog`). |
-| `Application.ListSelection(App, ListBox): integer` | Read the zero-based selected list-box index, or `-1` when no item is selected. |
-| `Application.OutlineSelection(App, Outline): integer` | Read the zero-based flat visible selection index in an outline, or `-1` when the outline is empty. |
-| `Application.OutlineSelectedText(App, Outline): string` | Read the label text of the selected outline node. |
-| `Application.AddChild(App, Parent, Child)` | Attach a button, static text, memo, text viewer, input line, list box, outline, check box, or radio button child to a dialog or window parent. |
-| `Application.SetText(App, Control, Text)` | Replace the text of a text-bearing control at runtime. |
-| `Application.SetChecked(App, Control, Checked)` | Set check box checked state or radio button selected state at runtime. |
-| `Application.SetItems(App, ListBox, Items)` | Replace list box items at runtime. |
-| `Application.SetOutlineNodes(App, Outline, Roots)` | Replace outline nodes at runtime. |
-| `Application.SetTitle(App, Root, Title)` | Replace window or dialog title at runtime. |
-| `Application.AddWindow(App, Window)` | Place a window on the application desktop. |
-| `Application.CreateMenuBar(App, Bounds, Menus): MenuBar` | Create a top menu bar from an array of `Menu` records. |
-| `Application.SetMenuBar(App, MenuBar)` | Set the application menu bar root. |
-| `Application.SetMenus(App, MenuBar, Menus)` | Replace menus on an attached menu bar at runtime. |
-| `Application.CreateStatusLine(App, Bounds, Items): StatusLine` | Create a bottom status line from an array of `StatusItem` records. |
-| `Application.SetStatusLine(App, StatusLine)` | Set the application status line root. |
-| `Application.SetStatusItems(App, StatusLine, Items)` | Replace items on an attached status line at runtime. |
-| `Application.OnCommand(App, Handler)` | Register `procedure (Application, integer)` for command dispatch. Use `Command.*` constants for standard actions. |
-| `Application.OnKey(App, Handler)` | Optional hook: `function (Application, Std.Console.KeyEvent): boolean` for keys left unhandled by the widget tree. |
-| `Application.OnMouse(App, Handler)` | Optional hook: `procedure (Application, Std.Console.Event)` for mouse events left unhandled by the widget tree. |
-| `Application.Pump(App): integer` | Process one headless Turbo Vision pump step. |
-| `Application.TestClickButton(App, Button)` | Queue a test click for a Turbo Vision button. |
-| `Application.TestClickMouse(App, X, Y)` | Queue a headless left click at screen coordinates on a check box or radio button. |
-| `Application.TestDispatchMenuCommand(App, MenuBar, MenuIndex, ItemIndex)` | Queue a menu item command for headless tests. |
-| `Application.TestSetFileDialogResult(App, Result)` | Queue the `Option of string` returned by the next headless `Application.RunFileDialog` call. |
-| `Application.TestSetDialogResult(App, Command)` | Queue the closing command returned by the next headless `Application.ExecDialog` call. |
+| `Application.ExecView(App, Dialog): integer` | Run a modal dialog or window view; returns the closing command id. |
+| `Application.MessageBox(App, Message, Options): integer` | Show an upstream message box. See [Message box](message-box.md). |
+| `Application.RunFileDialog(App, Bounds, Title, Wildcard, StartPath): Option of string` | Modal file picker. See [File dialog](file-dialog.md). |
+| `Desktop.Add(App, Window)` | Place a modeless window on the desktop. |
+| `Application.SetMenuBar(App, MenuBar)` | Attach a menu bar to the live session. |
+| `Application.SetStatusLine(App, StatusLine)` | Attach a status line to the live session. |
+| `Application.OnKey(App, Handler)` | Optional: `function (Application, Std.Console.KeyEvent): boolean`. |
+| `Application.OnMouse(App, Handler)` | Optional: `procedure (Application, Std.Console.Event)`. |
+| `Application.TestClickButton(App, Button)` | Headless: queue a button click before `Run` or `ExecView`. |
+| `Application.TestClickMouse(App, X, Y)` | Headless: left-click at screen coordinates. |
+| `Application.TestDispatchMenuCommand(App, MenuBar, MenuIndex, ItemIndex)` | Headless: dispatch a menu item command id. |
+| `Application.Try2InjectCommand(App, Command)` | Headless interim helper: inject a command during `Run` tests. |
+| `Application.Try2InjectKeyboard(App, KeyCode)` | Headless interim helper: inject a keyboard event. |
+| `Application.TestSetFileDialogResult(App, Result)` | Headless: queue the next `RunFileDialog` result. |
+| `Application.TestSetDialogResult(App, Command)` | Headless: queue the closing command for the next `MessageBox` (stub path). |
 
-For headless screen assertions after `Pump`, use [`Std.Test`](../../testing/test.md) `AssertScreenLine` / `AssertScreenCell` with `uses Std.Console`.
+View factories (`Button.New`, `Dialog.Add`, `InputLine.Text`, …) are documented in [Controls](controls.md) and [Dialogs and windows](modals.md).
+
+For headless screen assertions, add `uses Std.Console` and call [`Std.Test`](../../testing/test.md) `AssertScreenLine` / `AssertScreenCell` on the virtual CRT back buffer.
 
 ## See Also
 
@@ -80,5 +57,4 @@ For headless screen assertions after `Pump`, use [`Std.Test`](../../testing/test
 - [Handlers](handlers.md)
 - [Lifecycle](lifecycle.md)
 - [Native testing](testing.md)
-- [VM bridge](vm-bridge.md)
 - [VM bridge](vm-bridge.md)

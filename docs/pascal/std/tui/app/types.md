@@ -29,19 +29,23 @@ Rectangle in terminal cells.
 | `width` | `integer` | Width in cells. |
 | `height` | `integer` | Height in cells. |
 
-## `Command` constants
+## Command ids (`CM_*`)
 
-Standard command identifiers for buttons and `OnCommand` handlers.
-Application-defined commands use other positive integers. When a command id collides with an upstream Turbo Vision `CM_*` id, the runtime offsets it before handing it to Turbo Vision and restores the original value in `OnCommand`. This includes upstream standard, broadcast, file/edit/search/view/help, and demo command ids from `turbo-vision` 2.0. The four `Command.*` constants pass through unchanged because they match Borland values.
+Command ids are plain integers. Upstream Turbo Vision `CM_*` constants are exported from `Std.Tui` and pass through to `OnCommand` unchanged.
 
 | Constant | Value | Meaning |
 | --- | --- | --- |
-| `Command.Quit` | `1` | Exit the application (`Application.Quit`; Borland `cmQuit`). |
-| `Command.Close` | `4` | Close the source view or window (Borland `cmClose`). |
-| `Command.Accept` | `10` | Accept or confirm (dialog OK; Borland `cmOK`). Named `Accept` because `Ok` is a language keyword. |
-| `Command.Cancel` | `11` | Cancel the current action or dialog (Borland `cmCancel`). |
+| `CM_QUIT` | `1` | Exit the application (`Application.Quit`; Borland `cmQuit`). |
+| `CM_CLOSE` | `4` | Close the source view or window (Borland `cmClose`). |
+| `CM_OK` | `10` | Accept or confirm (dialog OK; Borland `cmOK`). |
+| `CM_CANCEL` | `11` | Cancel the current action or dialog (Borland `cmCancel`). |
+| `CM_ABOUT` | `100` | Standard About command (IDE Help → About). |
+| `CM_OPEN` | `102` | Standard Open command (IDE File → Open). |
+| `CM_USER` | `4096` | Suggested base for application-private command ids. |
 
-Applications may intentionally reuse other Borland `CM_*` values for menu items when they match upstream semantics. The FPAS IDE Help → About entry uses `100` (`CM_ABOUT` in turbo-vision 2.0). The runtime offsets that id on Turbo Vision widgets and restores `100` in `OnCommand`. Standard message-box OK buttons use `Command.Accept` (`10`, Borland `cmOK`) — see [Message box](message-box.md).
+Legacy aliases `Command.Quit`, `Command.Close`, `Command.Accept`, and `Command.Cancel` map to the same values as `CM_QUIT`, `CM_CLOSE`, `CM_OK`, and `CM_CANCEL`. Prefer `CM_*` in new code.
+
+Application-defined commands use other positive integers. Avoid reusing upstream reserved `CM_*` ids for custom widgets when possible.
 
 ## `MessageBoxOption` constants
 
@@ -63,47 +67,39 @@ Option flags for [`Application.MessageBox`](message-box.md). Combine type and bu
 
 ## `Window`
 
-Opaque Turbo Vision window handle returned by `Application.CreateWindow`. Call `Application.AddWindow` before `Application.Run` to show the window on the desktop.
+Opaque Turbo Vision window handle from `Window.New`. Call `Desktop.Add` before `Application.Run` to show the window.
 
 ## `Dialog`
 
-Opaque Turbo Vision dialog handle returned by `Application.CreateDialog`.
-
-## `DialogResult`
-
-Result of `Application.ExecDialog`.
-
-| Field | Type | Meaning |
-| --- | --- | --- |
-| `command` | `integer` | The command id that closed the dialog (for example `Command.Accept`). |
+Opaque Turbo Vision dialog handle from `Dialog.NewModal`.
 
 ## `Button`
 
-Opaque Turbo Vision button handle returned by `Application.CreateButton`.
+Opaque button handle from `Button.New`.
 
 ## `StaticText`
 
-Opaque non-interactive Turbo Vision text label handle returned by `Application.CreateStaticText`.
+Opaque static text handle from `StaticText.New`.
 
 ## `Memo`
 
-Opaque multi-line Turbo Vision text editor handle returned by `Application.CreateMemo`. Initial `Text` may contain newline characters.
+Opaque multi-line editor handle from `Memo.New`.
 
 ## `TextViewer`
 
-Opaque read-only multi-line Turbo Vision text viewer handle returned by `Application.CreateTextViewer`. Initial `Text` may contain newline characters. Use for logs, help text, and long read-only content. Distinct from `Memo` (editable) and `StaticText` (short label).
+Opaque read-only multi-line viewer handle from `TextViewer.New`.
 
 ## `InputLine`
 
-Opaque single-line Turbo Vision text input handle returned by `Application.CreateInputLine`.
+Opaque single-line input handle from `InputLine.New`.
 
 ## `ListBox`
 
-Opaque Turbo Vision selectable string list handle returned by `Application.CreateListBox`.
+Opaque list box handle from `ListBox.New`.
 
 ## `Outline`
 
-Opaque Turbo Vision hierarchical outline handle returned by `Application.CreateOutline`. Backed by upstream `OutlineViewer`.
+Opaque outline handle from `Outline.New`. Backed by upstream `OutlineViewer`.
 
 ## `OutlineNode`
 
@@ -117,19 +113,19 @@ Record describing one node in an outline tree.
 
 ## `CheckBox`
 
-Opaque Turbo Vision boolean check box handle returned by `Application.CreateCheckBox`.
+Opaque check box handle from `CheckBox.New`.
 
 ## `RadioButton`
 
-Opaque Turbo Vision radio button handle returned by `Application.CreateRadioButton`. Buttons that share a `GroupId` form one mutually exclusive group.
+Opaque radio button handle from `RadioButton.New`. Buttons that share a `GroupId` form one mutually exclusive group.
 
 ## `MenuBar`
 
-Opaque Turbo Vision menu bar handle returned by `Application.CreateMenuBar`.
+Opaque menu bar handle from `MenuBar.New`.
 
 ## `Menu`
 
-Record used by `Application.CreateMenuBar` for one top-level menu.
+Record used by `MenuBar.New` for one top-level menu.
 
 | Field | Type | Meaning |
 | --- | --- | --- |
@@ -147,11 +143,11 @@ Record for one menu entry or separator.
 
 ## `StatusLine`
 
-Opaque Turbo Vision status line handle returned by `Application.CreateStatusLine`.
+Opaque status line handle from `StatusLine.New`.
 
 ## `StatusItem`
 
-Record used by `Application.CreateStatusLine`.
+Record used by `StatusLine.New`.
 
 | Field | Type | Meaning |
 | --- | --- | --- |
@@ -162,5 +158,5 @@ Record used by `Application.CreateStatusLine`.
 ## See Also
 
 - [Application](README.md)
-- [Dialogs and windows](modals.md) — `Command.Accept`, menu `CM_ABOUT`, custom vs standard modals
+- [Dialogs and windows](modals.md)
 - [Session API](../session.md)

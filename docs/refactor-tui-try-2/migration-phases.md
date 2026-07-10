@@ -134,7 +134,7 @@ Estimates assume focused hobby-project pace (part-time).
 - [ ] Remove all modules in [deletion-checklist.md](deletion-checklist.md).
 - [x] **Slim `TuiState`**: drop `TurboVisionState`, `TurboVisionObject`, snapshot structs ([rust-layout.md](rust-layout.md)).
 - [ ] Remove old bytecode intrinsics and sema symbols.
-- [ ] Remove old `docs/pascal/std/tui/` pages; write new spec from [target-api.md](target-api.md).
+- [x] Remove old `docs/pascal/std/tui/` pages; write new spec from [target-api.md](target-api.md). **2026-07-10:** core pages rewritten (`README`, `session`, `app/*`).
 - [ ] Update skill, AGENTS.md bridge pointers, `.cursor/rules` TUI examples.
 - [ ] Delete or archive `docs/refactor-tui-try-2/` (or mark completed in README).
 - [x] Phase-1 widget + run/chrome/modal try-1 control tests removed (**37/37**). Replacements in `tests/tui/views/`, `tests/tui/smoke/`, `tests/tui/events/`, `tests/tui/modals/`.

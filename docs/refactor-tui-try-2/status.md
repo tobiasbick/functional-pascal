@@ -10,7 +10,8 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 **Phase 4** — **complete** (all phase-1 widgets on try-2 path including `Outline`; control tests migrated in phase 7).
 **Phase 5** — **complete** for current branch scope (`MessageBox`, `OnKey`, `OnMouse`, `RunFileDialog` with Try-2-local headless adapter).  
 **Phase 6** — **complete** (`apps/ide` migrated; automated + manual terminal sign-off green).  
-**Phase 7** — **in progress** (try-1 snapshot removed; `docs/pascal/std/tui/` rewrite remains for Phase 8).
+**Phase 7** — **in progress** (VM deletion largely complete; interim test symbols remain).  
+**Phase 8** — **in progress** (`docs/pascal/std/tui/` rewrite for try-2 API).
 
 ## Phase 1 closure notes
 
@@ -143,6 +144,16 @@ Upstream `FileDialog::execute(&mut Application)` is available for live `Applicat
 ## Unchanged (Phase 8)
 
 - `docs/pascal/std/tui/` — public spec rewrite in Phase 8
+
+## Phase 8 docs rewrite (2026-07-10)
+
+Public spec under `docs/pascal/std/tui/` updated for try-2 API:
+
+- `README.md`, `session.md`, `terminal-checklist.md`
+- `app/README.md`, `types.md`, `controls.md`, `modals.md`, `handlers.md`, `lifecycle.md`, `testing.md`, `message-box.md`, `vm-bridge.md`
+- `docs/pascal/std/README.md` TUI example
+
+Removed try-1 `Application.Create*` / `ExecDialog` / offset-band references from public docs. `CM_*` documented as canonical command ids; `Command.*` noted as legacy aliases.
 
 ## Phase 7 dead-code cleanup (2026-07-10)
 

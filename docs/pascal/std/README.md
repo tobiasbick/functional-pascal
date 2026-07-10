@@ -52,28 +52,26 @@ NormVideo();
 ```pascal
 uses Std.Tui;
 
-procedure OnCommand(App: Application; CommandId: integer);
+procedure OnCommand(App: Application; Cmd: integer);
 begin
-  if CommandId = Command.Quit then
+  if Cmd = CM_QUIT then
     Application.Quit(App)
 end;
 
 begin
   var App: Application := Application.Open();
-  var DialogHandle: Dialog := Application.CreateDialog(
-    App,
+  var Dlg: Dialog := Dialog.NewModal(
     record x := 10; y := 5; width := 40; height := 10 end,
     'Hello'
   );
-  var OkButton: Button := Application.CreateButton(
-    App,
+  var OkButton: Button := Button.New(
     record x := 12; y := 7; width := 10; height := 1 end,
     '~O~k',
-    Command.Accept
+    CM_OK,
+    true
   );
-  Application.AddChild(App, DialogHandle, OkButton);
-  Application.OnCommand(App, OnCommand);
-  Application.Run(App)
+  Dialog.Add(Dlg, OkButton);
+  Application.Run(App, OnCommand)
 end.
 ```
 

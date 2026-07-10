@@ -1,4 +1,4 @@
-//! `Std.Tui` value constructors: `Application` and `Size` records.
+//! Try-2 `Std.Tui` value constructors: `Application` and `Size` records.
 //!
 //! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 

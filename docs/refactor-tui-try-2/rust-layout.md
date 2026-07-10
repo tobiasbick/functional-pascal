@@ -13,14 +13,17 @@ crates/fpas-vm/src/vm/execute/io/tui/try2/
   mod.rs
   session.rs       — Try2Session on Worker (registry, roots, detached widgets, desktop windows)
   registry.rs      — ViewRegistry + ViewKind
-  # Rectangle conversion remains in ../tv_geometry.rs during Phase 7.
+  geometry.rs      — FPAS Rect ↔ turbo_vision Rect
   records.rs       — opaque handle record helpers
   events.rs        — OnCommand dispatch (no command_map offset)
   run.rs           — Application.Run (headless + live)
   headless.rs      — headless ExecView ensure + export
   modals.rs        — Application.ExecView
   app.rs           — live Application::new (no try-1 populate)
+  application_records.rs — `Application` and `Size` VM value constructors
   chrome.rs        — MenuBar/StatusLine.New + SetMenuBar/SetStatusLine sync
+  chrome_input.rs  — MenuBar/StatusLine record decoding
+  commands.rs      — callback registration, Quit, and headless menu dispatch (pending split)
   message_box.rs   — Application.MessageBox try-2 route
   file_dialog.rs   — Application.RunFileDialog try-2 route (live upstream, headless Try2Session queue adapter)
   view_lookup.rs   — lookup attached child views for live mutation/read-back

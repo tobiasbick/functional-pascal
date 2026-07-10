@@ -92,7 +92,7 @@ Export constants from `turbo_vision::core::command` (see upstream `prelude`).
 | View | `CM_ZOOM_IN`, `CM_TILE`, `CM_CASCADE` | same |
 | Help | `CM_HELP_INDEX`, `CM_ABOUT` | same |
 
-**Try-2 callbacks:** `OnCommand` receives the same integer upstream emitted. `command_map.rs` retains only the reserved-command synchronization test; no offset translation remains.
+**Try-2 callbacks:** `OnCommand` receives the same integer upstream emitted. There is no command-map translation layer.
 
 **Convention:** application-private commands start at `CM_USER` (4096) or another documented base.
 

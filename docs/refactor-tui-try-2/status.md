@@ -114,6 +114,11 @@ Covers: registry, geometry, session, dialog, button, window, desktop, static tex
 # Phase 7 progress (2026-07-10)
 
 - Deleted duplicate `command_ids.rs`; `CM_*` values come from `cm_constants.rs` only
+- Deleted test-only `command_map.rs`; the upstream bump checklist now compares `cm_constants.rs` directly
+- Moved `commands.rs` into `try2/commands.rs`; callback, quit, and test dispatch ownership no longer lives at the legacy bridge root
+- Moved `tv_geometry.rs` into `try2/geometry.rs`; chrome now owns the current rectangle conversion path
+- Moved `navigation.rs` into `try2/chrome_input.rs`; chrome record decoding no longer lives at the legacy bridge root
+- Moved `records.rs` into `try2/application_records.rs`; application and size value construction now lives with the Try-2 session
 - Merged `msgbox.rs`, `file_dialog.rs`, and `test_mouse.rs` into `try2/message_box.rs`, `try2/file_dialog.rs`, and `try2/testing.rs`
 
 ## Phase 7 progress (2026-07-09)

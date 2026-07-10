@@ -52,19 +52,19 @@ Add try-2 intrinsics per [upstream-mapping.md](upstream-mapping.md).
 ```
 crates/fpas-vm/src/vm/execute/io/tui/reconcile.rs
 crates/fpas-vm/src/vm/execute/io/tui/live_patch.rs
-crates/fpas-vm/src/vm/execute/io/tui/command_map.rs
+~~crates/fpas-vm/src/vm/execute/io/tui/command_map.rs~~ — deleted; `cm_constants.rs` is canonical
 crates/fpas-vm/src/vm/execute/io/tui/control_create.rs
 crates/fpas-vm/src/vm/execute/io/tui/tv_views.rs
 crates/fpas-vm/src/vm/execute/io/tui/controls.rs
 crates/fpas-vm/src/vm/execute/io/tui/dialogs.rs
 crates/fpas-vm/src/vm/execute/io/tui/windows.rs
-crates/fpas-vm/src/vm/execute/io/tui/navigation.rs
+~~crates/fpas-vm/src/vm/execute/io/tui/navigation.rs~~ → `try2/chrome_input.rs`
 crates/fpas-vm/src/vm/execute/io/tui/chrome_layout.rs
 crates/fpas-vm/src/vm/execute/io/tui/handle_records.rs
 crates/fpas-vm/src/vm/execute/io/tui/handles.rs
-crates/fpas-vm/src/vm/execute/io/tui/records.rs
+~~crates/fpas-vm/src/vm/execute/io/tui/records.rs~~ → `try2/application_records.rs`
 crates/fpas-vm/src/vm/execute/io/tui/interactive_loop.rs
-crates/fpas-vm/src/vm/execute/io/tui/commands.rs
+~~crates/fpas-vm/src/vm/execute/io/tui/commands.rs~~ → `try2/commands.rs`
 crates/fpas-vm/src/vm/execute/io/tui/outline_nodes.rs
 crates/fpas-vm/src/vm/execute/io/tui/outline_read.rs
 crates/fpas-vm/src/vm/execute/io/tui/callbacks.rs
@@ -90,7 +90,7 @@ Merged into new modules — delete old names after merge:
 
 - `session_app.rs` → `session.rs`
 - `tv_run.rs` → `run.rs`
-- `tv_geometry.rs` → `geometry.rs`
+- `tv_geometry.rs` → `try2/geometry.rs` (completed)
 - `menu_build.rs` → `chrome.rs`
 
 ## VM types (delete from `shared/tui.rs`)
@@ -116,7 +116,6 @@ FPAS_TV_COMMAND_OFFSET
 bridged_
 TuiCreateDialog
 TuiAddChild
-reserved_list_matches_upstream
 ```
 
 ## Tests (delete directory when empty)

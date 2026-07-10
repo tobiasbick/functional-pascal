@@ -1,4 +1,4 @@
-//! FPAS handle record construction for Turbo Vision objects.
+//! Try-2 FPAS handle record construction for Turbo Vision objects.
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 

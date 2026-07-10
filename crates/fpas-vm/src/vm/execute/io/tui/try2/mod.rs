@@ -4,8 +4,10 @@
 
 pub mod app;
 pub mod chrome;
+mod chrome_input;
 pub mod events;
 pub mod file_dialog;
+pub mod geometry;
 pub mod headless;
 pub mod intrinsics;
 pub mod message_box;
@@ -28,3 +30,6 @@ pub(in crate::vm::execute::io::tui::try2) use views::{
 };
 
 pub(in crate::vm) use session::Try2Session;
+mod application_records;
+mod commands;
+pub(in crate::vm::execute::io::tui) mod handle_records;

@@ -13,22 +13,22 @@ const TUI_MENU_ITEM_TYPE: &str = "Std.Tui.MenuItem";
 const TUI_STATUS_ITEM_TYPE: &str = "Std.Tui.StatusItem";
 
 impl Worker {
-    pub(super) fn turbo_vision_set_menu_bar(
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_set_menu_bar(
         &mut self,
         line: SourceLocation,
     ) -> Result<(), VmError> {
         let handle = self.pop_turbo_vision_menu_bar_handle(line)?;
         self.pop_tui_application(line)?;
-        super::try2::try2_set_menu_bar(self, handle, line)
+        super::try2_set_menu_bar(self, handle, line)
     }
 
-    pub(super) fn turbo_vision_set_status_line(
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_set_status_line(
         &mut self,
         line: SourceLocation,
     ) -> Result<(), VmError> {
         let handle = self.pop_turbo_vision_status_line_handle(line)?;
         self.pop_tui_application(line)?;
-        super::try2::try2_set_status_line(self, handle, line)
+        super::try2_set_status_line(self, handle, line)
     }
 
     /// Parses menu records for try-2 `MenuBar.New`.

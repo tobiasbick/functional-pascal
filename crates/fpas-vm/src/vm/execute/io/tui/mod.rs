@@ -12,21 +12,15 @@ mod bridged_radio_button;
 mod bridged_static_text;
 mod bridged_text_viewer;
 mod chrome_layout;
-mod command_map;
-mod commands;
-mod handle_records;
 mod handles;
 mod headless_tv_draw;
 mod lifecycle;
-mod navigation;
 mod outline_nodes;
-mod records;
 mod session_app;
 mod testing;
 mod try2;
 
 pub(in crate::vm) use try2::Try2Session;
-mod tv_geometry;
 mod tv_headless_backend;
 mod tv_input_events;
 

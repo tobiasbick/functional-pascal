@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/refactor-tui-try-2/target-api.md`
 
 use super::app::try2_ensure_live_app;
+use super::geometry::{state_rect, turbo_rect};
 use super::headless::try2_ensure_headless_app;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
@@ -11,7 +12,6 @@ use crate::vm::execute::io::tui::chrome_layout::{
 };
 use crate::vm::execute::io::tui::try2::registry::{RegistryError, ViewKind};
 use crate::vm::execute::io::tui::try2::session::{Try2MenuBarState, Try2StatusLineState};
-use crate::vm::execute::io::tui::tv_geometry::{state_rect, turbo_rect};
 use crate::vm::shared::{TurboVisionMenu, TurboVisionStatusItem};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;

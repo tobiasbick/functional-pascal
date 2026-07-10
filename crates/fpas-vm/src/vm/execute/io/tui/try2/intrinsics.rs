@@ -5,6 +5,7 @@
 use super::chrome::{
     try2_menu_bar_new, try2_menu_bar_set_menus, try2_status_line_new, try2_status_line_set_items,
 };
+use super::handle_records::{HANDLE_FIELD, TUI_MENU_BAR_TYPE, TUI_STATUS_LINE_TYPE};
 use super::headless::try2_ensure_headless_app;
 use super::modals::try2_exec_view;
 use super::records::{
@@ -26,9 +27,6 @@ use super::views::{
 };
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
-use crate::vm::execute::io::tui::handle_records::{
-    HANDLE_FIELD, TUI_MENU_BAR_TYPE, TUI_STATUS_LINE_TYPE,
-};
 use fpas_bytecode::{Intrinsic, SourceLocation, TuiIntrinsic, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_INTRINSIC_STACK_STATE_ERROR, RUNTIME_VM_OPERAND_TYPE_MISMATCH,

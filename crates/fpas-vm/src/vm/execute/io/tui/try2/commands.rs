@@ -8,7 +8,7 @@ use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 
 impl Worker {
-    pub(super) fn turbo_vision_register_on_command(
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_register_on_command(
         &mut self,
         line: SourceLocation,
     ) -> Result<(), VmError> {
@@ -22,7 +22,7 @@ impl Worker {
         Ok(())
     }
 
-    pub(super) fn turbo_vision_register_on_key(
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_register_on_key(
         &mut self,
         line: SourceLocation,
     ) -> Result<(), VmError> {
@@ -36,7 +36,7 @@ impl Worker {
         Ok(())
     }
 
-    pub(super) fn turbo_vision_register_on_mouse(
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_register_on_mouse(
         &mut self,
         line: SourceLocation,
     ) -> Result<(), VmError> {
@@ -51,7 +51,7 @@ impl Worker {
     }
 
     /// Queue a menu item command for headless tests.
-    pub(super) fn turbo_vision_test_dispatch_menu_command(
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_test_dispatch_menu_command(
         &mut self,
         line: SourceLocation,
     ) -> Result<(), VmError> {
@@ -74,7 +74,7 @@ impl Worker {
         let menu_bar_handle = self.pop_turbo_vision_menu_bar_handle(line)?;
         self.pop_tui_application(line)?;
 
-        super::try2::testing::try2_test_dispatch_menu_command(
+        super::testing::try2_test_dispatch_menu_command(
             self,
             menu_bar_handle,
             menu_index,
@@ -83,7 +83,10 @@ impl Worker {
         )
     }
 
-    pub(super) fn turbo_vision_quit(&mut self, line: SourceLocation) -> Result<(), VmError> {
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_quit(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
         self.pop_tui_application(line)?;
         self.with_tui(|tui| tui.quit_requested = true);
         Ok(())

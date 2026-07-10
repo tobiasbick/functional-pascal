@@ -1,4 +1,4 @@
-//! Turbo Vision geometry helpers shared across bridge modules.
+//! Try-2 Turbo Vision geometry helpers.
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 

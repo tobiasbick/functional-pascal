@@ -26,15 +26,14 @@ Pascal Application.* / View.* / Desktop.Add
 | Headless tests | `try2/testing.rs`, `testing.rs`, `test_mouse.rs` |
 | Bridged live views | `bridged_*.rs` — checkbox/radio/input sync for try-2 attach path |
 | Handle records | `handles.rs`, `handle_records.rs` |
-| Reserved `CM_*` list | `command_map.rs` (upstream sync test only) |
+| Pascal `CM_*` constants | `crates/fpas-std/src/tui/cm_constants.rs` |
 
 ## Turbo Vision bump checklist
 
 On every `turbo-vision` tag or revision bump in `Cargo.lock`:
 
-1. Run `cargo test -p fpas-vm reserved_list_matches_upstream` — update `TURBO_VISION_RESERVED_COMMANDS` in `command_map.rs` if it fails.
-2. Confirm `fpas-std` `CM_*` constants still match upstream `core::command`.
-3. Run `fpas test tests/tui/` and `fpas test apps/ide/tests/`.
+1. Compare `fpas-std/src/tui/cm_constants.rs` with upstream `core::command` and update the exported subset as needed.
+2. Run `fpas test tests/tui/` and `fpas test apps/ide/tests/`.
 
 After any bridge change, also run [terminal checklist](../terminal-checklist.md).
 

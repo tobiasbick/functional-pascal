@@ -10,7 +10,7 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 **Phase 4** — **complete** (all phase-1 widgets on try-2 path including `Outline`; control tests migrated in phase 7).
 **Phase 5** — **complete** for current branch scope (`MessageBox`, `OnKey`, `OnMouse`, `RunFileDialog` with Try-2-local headless adapter).  
 **Phase 6** — **complete** (`apps/ide` migrated; automated + manual terminal sign-off green).  
-**Phase 7** — **controls tests complete** (all **37/37** `tests/tui/controls/` removed; try-2 replacements landed). VM try-1 module deletion next per [deletion-checklist.md](deletion-checklist.md).
+**Phase 7** — **in progress** (controls tests complete; try-1 VM run/reconcile path removed; `TurboVisionObject` snapshot slimming next).
 
 ## Phase 1 closure notes
 
@@ -140,10 +140,19 @@ Headless try-2 modals run through `HeadlessTvApp::exec_modal_view`. Interactive 
 
 Upstream `FileDialog::execute(&mut Application)` is available for live `Application`, but the branch cannot currently construct a full upstream `Application` over the headless terminal because the required fields/constructors are private. The current headless `RunFileDialog` test path uses a Try-2-local queued adapter on `Try2Session`; it no longer consumes the try-1 `test_file_dialog_result` queue.
 
-## Unchanged (try-1 VM code remains)
+## Unchanged (Phase 8)
 
-- `tv_run.rs`, `reconcile.rs`, `interactive_loop.rs` — legacy run/reconcile path (no Pascal callers; VM unit tests only)
 - `docs/pascal/std/tui/` — public spec rewrite in Phase 8
+- `TurboVisionObject` snapshot types in `shared/tui.rs` — dead after reconcile removal; delete in next batch
+
+## Phase 7 VM batch (2026-07-10)
+
+Removed legacy try-1 run/reconcile bridge:
+
+- Deleted: `tui_run.rs`, `tv_run.rs`, `reconcile.rs`, `live_patch.rs`, `interactive_loop.rs`, `tv_views.rs`, `menu_build.rs`
+- `Application.Run` always uses `try2/run.rs` (no coexistence fallback)
+- Bytecode: dropped try-1 widget intrinsics from `widgets.inc` (`Create*`, `Pump`, `ExecDialog`, setters/getters); kept shared chrome/modal/test intrinsics
+- Headless paint via try-1 `turbo_vision_populate_desktop` removed from `headless_tv_draw.rs`
 
 ## Phase 7 VM batch (2026-07-09)
 

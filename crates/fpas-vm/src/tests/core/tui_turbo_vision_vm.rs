@@ -153,9 +153,9 @@ fn turbo_vision_dispatch_translates_offset_reserved_command_to_fpas_id() {
     assert_eq!(output.lines, vec!["24"]);
 }
 
-/// The interactive loop seam accepts scripted Turbo Vision commands without a terminal.
+/// `Application.Quit` sets quit flags when dispatched from a registered `OnCommand` handler.
 #[test]
-fn turbo_vision_scripted_interactive_loop_dispatches_command_and_quits() {
+fn turbo_vision_on_command_handler_can_quit_application() {
     use fpas_std::COMMAND_QUIT;
 
     let mut chunk = Chunk::new();
@@ -194,11 +194,11 @@ fn turbo_vision_scripted_interactive_loop_dispatches_command_and_quits() {
     worker.run().expect("OnCommand registration should succeed");
 
     worker
-        .turbo_vision_drive_scripted_interactive_loop_for_tests(
-            vec![TurboVisionEvent::command(COMMAND_QUIT as u16)],
+        .dispatch_turbo_vision_command_event_for_tests(
+            &TurboVisionEvent::command(COMMAND_QUIT as u16),
             loc(),
         )
-        .expect("scripted interactive loop should succeed");
+        .expect("command dispatch should succeed");
 
     let output = shared
         .console
@@ -269,7 +269,7 @@ fn turbo_vision_unhandled_keyboard_dispatches_on_key() {
 }
 
 #[test]
-fn turbo_vision_scripted_interactive_loop_dispatches_unhandled_key() {
+fn turbo_vision_unhandled_keyboard_dispatches_on_key_and_can_quit() {
     use turbo_vision::core::event::{Event as TurboVisionEvent, KB_ESC};
 
     let mut chunk = Chunk::new();
@@ -307,12 +307,10 @@ fn turbo_vision_scripted_interactive_loop_dispatches_unhandled_key() {
     let mut worker = Worker::new_main(Arc::clone(&shared));
     worker.run().expect("OnKey registration should succeed");
 
+    let mut event = TurboVisionEvent::keyboard(KB_ESC);
     worker
-        .turbo_vision_drive_scripted_interactive_loop_for_tests(
-            vec![TurboVisionEvent::keyboard(KB_ESC)],
-            loc(),
-        )
-        .expect("scripted interactive loop should succeed");
+        .dispatch_turbo_vision_unhandled_input_for_tests(&mut event, loc())
+        .expect("OnKey dispatch should succeed");
 
     let output = shared
         .console

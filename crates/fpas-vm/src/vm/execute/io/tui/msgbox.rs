@@ -2,13 +2,11 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/message-box.md`
 
-use super::command_map::turbo_vision_command_to_fpas;
 use super::try2::try2_message_box;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
-use turbo_vision::helpers::msgbox::message_box;
 
 impl Worker {
     /// Show an upstream Turbo Vision message box and push the closing command id.
@@ -39,20 +37,16 @@ impl Worker {
             }
         }
 
-        if self.try2.is_open() {
-            let command = try2_message_box(self, message, options, line)?;
-            return self.push(Value::Integer(command));
+        if !self.try2.is_open() {
+            return Err(runtime_error(
+                RUNTIME_CONSOLE_STATE_ERROR,
+                "Application.MessageBox requires an open try-2 session",
+                "Call `Application.Open` or `Application.OpenForTest` before `Application.MessageBox`.",
+                line,
+            ));
         }
 
-        if self.with_tui(|tui| tui.session.is_headless()) {
-            return self.push(Value::Integer(0));
-        }
-
-        let command = self.turbo_vision_with_live_app(line, |app| {
-            Ok(i64::from(turbo_vision_command_to_fpas(message_box(
-                app, &message, options,
-            ))))
-        })?;
+        let command = try2_message_box(self, message, options, line)?;
         self.push(Value::Integer(command))
     }
 }

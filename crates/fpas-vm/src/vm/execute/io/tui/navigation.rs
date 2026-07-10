@@ -2,12 +2,9 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
-use super::tv_geometry::unknown_handle_error;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError, runtime_error};
-use crate::vm::shared::{
-    TurboVisionMenu, TurboVisionMenuItem, TurboVisionObject, TurboVisionStatusItem,
-};
+use crate::vm::shared::{TurboVisionMenu, TurboVisionMenuItem, TurboVisionStatusItem};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 
@@ -20,86 +17,18 @@ impl Worker {
         &mut self,
         line: SourceLocation,
     ) -> Result<(), VmError> {
-        if self.try2_should_handle_application_run() {
-            let handle = self.pop_turbo_vision_menu_bar_handle(line)?;
-            self.pop_tui_application(line)?;
-            return super::try2::try2_set_menu_bar(self, handle, line);
-        }
-
         let handle = self.pop_turbo_vision_menu_bar_handle(line)?;
         self.pop_tui_application(line)?;
-
-        self.with_tui(|tui| {
-            let Some(TurboVisionObject::MenuBar(menu_bar)) =
-                tui.turbo_vision.objects.get_mut(&handle)
-            else {
-                return Err(unknown_handle_error("MenuBar", handle, line));
-            };
-            if menu_bar.attached {
-                return Err(runtime_error(
-                    RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                    format!("MenuBar handle {handle} is already attached"),
-                    "Only set a Turbo Vision menu bar as application chrome once.",
-                    line,
-                ));
-            }
-            if tui.turbo_vision.menu_bar.is_some() {
-                return Err(runtime_error(
-                    RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                    "Application already has a Turbo Vision menu bar",
-                    "Set only one menu bar for the active application session.",
-                    line,
-                ));
-            }
-            menu_bar.attached = true;
-            tui.turbo_vision.menu_bar = Some(handle);
-            Ok(())
-        })?;
-        self.mark_turbo_vision_tree_dirty();
-        Ok(())
+        super::try2::try2_set_menu_bar(self, handle, line)
     }
 
     pub(super) fn turbo_vision_set_status_line(
         &mut self,
         line: SourceLocation,
     ) -> Result<(), VmError> {
-        if self.try2_should_handle_application_run() {
-            let handle = self.pop_turbo_vision_status_line_handle(line)?;
-            self.pop_tui_application(line)?;
-            return super::try2::try2_set_status_line(self, handle, line);
-        }
-
         let handle = self.pop_turbo_vision_status_line_handle(line)?;
         self.pop_tui_application(line)?;
-
-        self.with_tui(|tui| {
-            let Some(TurboVisionObject::StatusLine(status_line)) =
-                tui.turbo_vision.objects.get_mut(&handle)
-            else {
-                return Err(unknown_handle_error("StatusLine", handle, line));
-            };
-            if status_line.attached {
-                return Err(runtime_error(
-                    RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                    format!("StatusLine handle {handle} is already attached"),
-                    "Only set a Turbo Vision status line as application chrome once.",
-                    line,
-                ));
-            }
-            if tui.turbo_vision.status_line.is_some() {
-                return Err(runtime_error(
-                    RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                    "Application already has a Turbo Vision status line",
-                    "Set only one status line for the active application session.",
-                    line,
-                ));
-            }
-            status_line.attached = true;
-            tui.turbo_vision.status_line = Some(handle);
-            Ok(())
-        })?;
-        self.mark_turbo_vision_tree_dirty();
-        Ok(())
+        super::try2::try2_set_status_line(self, handle, line)
     }
 
     /// Parses menu records for try-2 `MenuBar.New`.

@@ -4,11 +4,8 @@
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
-use crate::vm::shared::{TurboVisionObject, TurboVisionRect};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
-use turbo_vision::core::command::CM_RADIO_SELECTED;
-use turbo_vision::core::event::EventType;
 
 impl Worker {
     /// Queue a left mouse down at screen coordinates for headless `OpenForTest` runs.
@@ -46,79 +43,7 @@ impl Worker {
             )
         })?;
 
-        if self.try2_should_handle_application_run() {
-            return self.try2_test_click_mouse(x, y, line);
-        }
-
-        let clicked =
-            self.with_tui(|tui| apply_headless_mouse_click_at(&tui.turbo_vision.objects, x, y));
-
-        let Some(clicked) = clicked else {
-            return Err(runtime_error(
-                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                format!("No Turbo Vision control at screen position ({x}, {y})"),
-                "Click inside a check box or radio button painted by the headless desktop.",
-                line,
-            ));
-        };
-
-        if self.headless_tv_app.is_none() {
-            self.turbo_vision_paint_headless_desktop(line, true);
-        }
-
-        let handle = clicked.handle();
-        let Some(click_point) = self.turbo_vision_live_view_click_point(handle) else {
-            return Err(runtime_error(
-                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                format!("No Turbo Vision control at screen position ({x}, {y})"),
-                "Call `Application.Pump` once before `Application.TestClickMouse`.",
-                line,
-            ));
-        };
-
-        let mut app_slot = self.headless_tv_app.take();
-        let Some(app) = app_slot.as_mut() else {
-            self.headless_tv_app = app_slot;
-            return Err(runtime_error(
-                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                "Headless Turbo Vision session is not initialized",
-                "Call `Application.Pump` once before `Application.TestClickMouse`.",
-                line,
-            ));
-        };
-
-        app.push_mouse_down(click_point.x, click_point.y);
-        let dispatched = app.dispatch_next_input_event().map_err(|error| {
-            runtime_error(
-                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                format!("Headless Turbo Vision input dispatch failed: {error}"),
-                "Retry after `Application.Pump` rebuilds the desktop.",
-                line,
-            )
-        })?;
-
-        self.headless_tv_app = app_slot;
-
-        let Some(event) = dispatched else {
-            return Err(runtime_error(
-                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                format!("No Turbo Vision control at screen position ({x}, {y})"),
-                "Click inside a check box or radio button painted by the headless desktop.",
-                line,
-            ));
-        };
-
-        if !mouse_click_consumed(&event) {
-            return Err(runtime_error(
-                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                format!("No Turbo Vision control at screen position ({x}, {y})"),
-                "Click inside a check box or radio button painted by the headless desktop.",
-                line,
-            ));
-        }
-
-        self.mark_turbo_vision_headless_repaint();
-        Ok(())
+        self.try2_test_click_mouse(x, y, line)
     }
 
     fn try2_test_click_mouse(
@@ -171,82 +96,4 @@ impl Worker {
         self.headless_tv_app = Some(app);
         Ok(())
     }
-}
-
-enum HeadlessMouseClick {
-    CheckBox(u32),
-    RadioButton(u32),
-}
-
-impl HeadlessMouseClick {
-    fn handle(self) -> u32 {
-        match self {
-            Self::CheckBox(handle) | Self::RadioButton(handle) => handle,
-        }
-    }
-}
-
-fn apply_headless_mouse_click_at(
-    objects: &std::collections::HashMap<u32, TurboVisionObject>,
-    x: i16,
-    y: i16,
-) -> Option<HeadlessMouseClick> {
-    for object in objects.values() {
-        let (parent_bounds, children) = match object {
-            TurboVisionObject::Window(window) if window.on_desktop => {
-                (window.bounds, &window.children)
-            }
-            TurboVisionObject::Dialog(dialog) => (dialog.bounds, &dialog.children),
-            _ => continue,
-        };
-        if let Some(click) = hit_test_children(objects, parent_bounds, children, x, y) {
-            return Some(click);
-        }
-    }
-    None
-}
-
-fn hit_test_children(
-    objects: &std::collections::HashMap<u32, TurboVisionObject>,
-    parent_bounds: TurboVisionRect,
-    children: &[u32],
-    x: i16,
-    y: i16,
-) -> Option<HeadlessMouseClick> {
-    for handle in children {
-        let Some(child) = objects.get(handle) else {
-            continue;
-        };
-        let bounds = match child {
-            TurboVisionObject::CheckBox(check_box) => check_box.bounds,
-            TurboVisionObject::RadioButton(radio_button) => radio_button.bounds,
-            _ => continue,
-        };
-        if point_in_bounds(parent_bounds, bounds, x, y) {
-            return match child {
-                TurboVisionObject::CheckBox(_) => Some(HeadlessMouseClick::CheckBox(*handle)),
-                TurboVisionObject::RadioButton(_) => Some(HeadlessMouseClick::RadioButton(*handle)),
-                _ => None,
-            };
-        }
-    }
-    None
-}
-
-fn point_in_bounds(
-    parent_bounds: TurboVisionRect,
-    local_bounds: TurboVisionRect,
-    x: i16,
-    y: i16,
-) -> bool {
-    let left = parent_bounds.x.saturating_add(local_bounds.x);
-    let top = parent_bounds.y.saturating_add(local_bounds.y);
-    let right = left.saturating_add(local_bounds.width);
-    let bottom = top.saturating_add(local_bounds.height);
-    x >= left && x < right && y >= top && y < bottom
-}
-
-fn mouse_click_consumed(event: &turbo_vision::core::event::Event) -> bool {
-    event.what == EventType::Nothing
-        || (event.what == EventType::Broadcast && event.command == CM_RADIO_SELECTED)
 }

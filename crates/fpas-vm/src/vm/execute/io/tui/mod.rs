@@ -19,15 +19,10 @@ mod file_dialog;
 mod handle_records;
 mod handles;
 mod headless_tv_draw;
-#[cfg(test)]
-mod interactive_loop;
 mod lifecycle;
-mod live_patch;
-mod menu_build;
 mod msgbox;
 mod navigation;
 mod outline_nodes;
-mod reconcile;
 mod records;
 mod session_app;
 mod test_mouse;
@@ -38,8 +33,6 @@ pub(in crate::vm) use try2::Try2Session;
 mod tv_geometry;
 mod tv_headless_backend;
 mod tv_input_events;
-mod tv_run;
-mod tv_views;
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
@@ -63,7 +56,7 @@ impl Worker {
         Ok(false)
     }
 
-    /// Dispatch remaining try-1 intrinsics still shared with the try-2 path.
+    /// Dispatch shared application chrome, modal, and test intrinsics on the try-2 path.
     pub(super) fn try_exec_turbo_vision_intrinsic(
         &mut self,
         intrinsic: Intrinsic,

@@ -2,11 +2,8 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
-use super::chrome_layout::{layout_menu_bar_for_terminal, layout_status_line_for_terminal};
-use super::menu_build::build_menu_bar_from_snapshot;
 use super::tv_headless_backend::{HeadlessTvEventInbox, TvHeadlessBackend};
 use crate::vm::Worker;
-use fpas_bytecode::SourceLocation;
 use fpas_std::Console;
 use std::time::Duration;
 use turbo_vision::core::command::{CM_QUIT, CommandId};
@@ -256,53 +253,6 @@ impl HeadlessTvApp {
 }
 
 impl Worker {
-    /// Repaint the headless desktop using upstream turbo-vision `draw`.
-    ///
-    /// When `rebuild` is false, the existing desktop tree is kept and only redrawn.
-    pub(in crate::vm::execute::io::tui) fn turbo_vision_paint_headless_desktop(
-        &mut self,
-        _line: SourceLocation,
-        rebuild: bool,
-    ) {
-        let width = self.with_console(|console| console.screen_width() as u16);
-        let height = self.with_console(|console| console.screen_height() as u16);
-        let needs_new = self.headless_tv_app.as_ref().is_none_or(|app| {
-            let (app_w, app_h) = app.terminal.size();
-            i64::from(app_w) != i64::from(width) || i64::from(app_h) != i64::from(height)
-        });
-        if needs_new {
-            self.turbo_vision_shutdown_headless_app();
-            if let Ok(app) = HeadlessTvApp::new(width, height) {
-                self.headless_tv_app = Some(app);
-            }
-        }
-
-        let mut app_slot = self.headless_tv_app.take();
-        let Some(app) = app_slot.as_mut() else {
-            self.headless_tv_app = app_slot;
-            return;
-        };
-
-        self.turbo_vision_sync_chrome_to_headless_app(app);
-        if rebuild {
-            while app.desktop.child_count() > 0 {
-                app.desktop.remove_child(0);
-            }
-            self.turbo_vision_populate_desktop_on(&mut app.desktop);
-        }
-        app.draw();
-
-        let terminal = &app.terminal;
-        self.with_console(|console| export_terminal_buffer_to_console(terminal, console));
-        self.headless_tv_app = app_slot;
-    }
-
-    /// Test hook for headless desktop paint through the Worker reconcile path.
-    #[cfg(test)]
-    pub(crate) fn turbo_vision_paint_headless_desktop_for_tests(&mut self, rebuild: bool) {
-        self.turbo_vision_paint_headless_desktop(fpas_bytecode::SourceLocation::new(1, 1), rebuild);
-    }
-
     /// Release the headless turbo-vision session.
     pub(in crate::vm::execute::io::tui) fn turbo_vision_shutdown_headless_app(&mut self) {
         if let Some(mut app) = self.headless_tv_app.take() {
@@ -334,28 +284,6 @@ impl Worker {
                 export_terminal_buffer_to_console(&app.terminal, console);
             });
         }
-    }
-
-    fn turbo_vision_sync_chrome_to_headless_app(&self, app: &mut HeadlessTvApp) {
-        let (terminal_width, terminal_height) = app.terminal.size();
-
-        if let Some(menu_bar) = self.turbo_vision_menu_bar_snapshot() {
-            let mut menu_bar = build_menu_bar_from_snapshot(menu_bar.bounds, &menu_bar.menus);
-            layout_menu_bar_for_terminal(&mut menu_bar, terminal_width);
-            app.menu_bar = Some(menu_bar);
-        } else {
-            app.menu_bar = None;
-        }
-
-        if let Some(status_line) = self.turbo_vision_status_line_snapshot() {
-            let mut status_line = super::tv_views::build_status_line(status_line);
-            layout_status_line_for_terminal(&mut status_line, terminal_width, terminal_height);
-            app.status_line = Some(status_line);
-        } else {
-            app.status_line = None;
-        }
-
-        app.update_desktop_bounds();
     }
 }
 

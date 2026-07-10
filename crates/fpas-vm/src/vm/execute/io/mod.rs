@@ -12,7 +12,6 @@ mod graph_run;
 mod hosted_common;
 mod test_host;
 mod tui;
-mod tui_run;
 
 pub(in crate::vm) use tui::HeadlessTvApp;
 pub(in crate::vm) use tui::Try2Session;

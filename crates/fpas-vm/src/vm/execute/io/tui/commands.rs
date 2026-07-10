@@ -2,14 +2,10 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
-use super::tv_geometry::unknown_handle_error;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
-use crate::vm::shared::TurboVisionObject;
-use fpas_bytecode::{SourceLocation, Value};
+use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
-use fpas_std::ProcessOutcome;
-use turbo_vision::core::event::Event;
 
 impl Worker {
     pub(super) fn turbo_vision_register_on_command(
@@ -78,85 +74,13 @@ impl Worker {
         let menu_bar_handle = self.pop_turbo_vision_menu_bar_handle(line)?;
         self.pop_tui_application(line)?;
 
-        if self
-            .try2
-            .registry
-            .require(menu_bar_handle, super::try2::registry::ViewKind::MenuBar)
-            .is_ok()
-        {
-            return super::try2::testing::try2_test_dispatch_menu_command(
-                self,
-                menu_bar_handle,
-                menu_index,
-                item_index,
-                line,
-            );
-        }
-
-        self.with_tui(|tui| {
-            let Some(TurboVisionObject::MenuBar(menu_bar)) =
-                tui.turbo_vision.objects.get(&menu_bar_handle)
-            else {
-                return Err(unknown_handle_error("MenuBar", menu_bar_handle, line));
-            };
-            let Some(menu) = menu_bar.menus.get(menu_index) else {
-                return Err(runtime_error(
-                    RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                    format!("Menu index {menu_index} is out of range"),
-                    "Use a menu index returned by `Application.CreateMenuBar`.",
-                    line,
-                ));
-            };
-            let Some(item) = menu.items.get(item_index) else {
-                return Err(runtime_error(
-                    RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                    format!("Menu item index {item_index} is out of range"),
-                    "Use an item index inside the selected menu.",
-                    line,
-                ));
-            };
-            if item.command_id == 0 {
-                return Err(runtime_error(
-                    RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                    "Menu separators cannot be dispatched",
-                    "Select a menu item with a non-zero `commandId`.",
-                    line,
-                ));
-            }
-            tui.turbo_vision.pending_commands.push_back(item.command_id);
-            Ok(())
-        })?;
-        Ok(())
-    }
-
-    pub(super) fn turbo_vision_pump(&mut self, line: SourceLocation) -> Result<(), VmError> {
-        self.pop_tui_application(line)?;
-        let outcome = self.turbo_vision_pump_next_command(line)?;
-        if self.with_tui(|tui| tui.session.is_headless()) {
-            self.turbo_vision_reconcile_after_step(None, line)?;
-        }
-        self.push(Value::Integer(outcome.bridge_tag()))
-    }
-
-    pub(in crate::vm::execute::io::tui) fn turbo_vision_pump_next_command(
-        &mut self,
-        line: SourceLocation,
-    ) -> Result<ProcessOutcome, VmError> {
-        let command = self.with_tui(|tui| {
-            if tui.turbo_vision.quit_requested {
-                None
-            } else {
-                tui.turbo_vision.pending_commands.pop_front()
-            }
-        });
-
-        let Some(command) = command else {
-            return Ok(ProcessOutcome::Idle);
-        };
-
-        Ok(self
-            .dispatch_turbo_vision_command_event(&Event::command(command), line)?
-            .unwrap_or(ProcessOutcome::Idle))
+        super::try2::testing::try2_test_dispatch_menu_command(
+            self,
+            menu_bar_handle,
+            menu_index,
+            item_index,
+            line,
+        )
     }
 
     pub(super) fn turbo_vision_quit(&mut self, line: SourceLocation) -> Result<(), VmError> {

@@ -28,22 +28,14 @@ impl Worker {
                 self.close_tui_application_state(line)?;
             }
             Intrinsic::Tui(TuiIntrinsic::ApplicationRun) => {
-                if self.try2_should_handle_application_run() {
-                    super::try2::try2_application_run(self, line)?;
-                } else {
-                    self.tui_application_run(line)?;
-                }
+                super::try2::try2_application_run(self, line)?;
                 self.push(Value::Unit)?;
             }
             Intrinsic::Tui(TuiIntrinsic::ApplicationRunWithOnCommand) => {
                 let handler = self.pop(line)?;
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| tui.on_command = Some(handler));
-                if self.try2_should_handle_application_run() {
-                    super::try2::try2_application_run_loop(self, line)?;
-                } else {
-                    self.turbo_vision_application_run(line)?;
-                }
+                super::try2::try2_application_run_loop(self, line)?;
                 self.push(Value::Unit)?;
             }
             Intrinsic::Tui(TuiIntrinsic::ApplicationSize) => {

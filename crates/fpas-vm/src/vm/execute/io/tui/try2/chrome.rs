@@ -3,13 +3,11 @@
 //! **Documentation:** `docs/refactor-tui-try-2/target-api.md`
 
 use super::app::try2_ensure_live_app;
+use super::chrome_layout::{layout_menu_bar_for_terminal, layout_status_line_for_terminal};
 use super::geometry::{state_rect, turbo_rect};
 use super::headless::try2_ensure_headless_app;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
-use crate::vm::execute::io::tui::chrome_layout::{
-    layout_menu_bar_for_terminal, layout_status_line_for_terminal,
-};
 use crate::vm::execute::io::tui::try2::registry::{RegistryError, ViewKind};
 use crate::vm::execute::io::tui::try2::session::{Try2MenuBarState, Try2StatusLineState};
 use crate::vm::shared::{TurboVisionMenu, TurboVisionStatusItem};

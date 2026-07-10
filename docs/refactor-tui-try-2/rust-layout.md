@@ -45,8 +45,8 @@ crates/fpas-vm/src/vm/execute/io/tui/try2/
     text_viewer.rs  — TextViewer.New/SetText
 ```
 
-`HeadlessTvApp` in `headless_tv_draw.rs` remains for headless paint/modal/run until Phase-7 consolidation.
-Several Phase-4 controls still reuse existing `Bridged*` view types for state synchronization and live mutation. That is an accepted coexistence shortcut on the branch, not the Phase-7 target.
+`HeadlessTvApp` now lives in `try2/headless_draw.rs` for headless paint, modal execution, and run-loop input.
+`CheckBox`, `RadioButton`, and `Outline` still use small `Bridged*` view types because their pinned upstream types do not provide `View::as_any_mut`; the wrappers preserve read-back after live input. This remains a Phase-7 cleanup target.
 
 ### Target tree (after phase 7)
 
@@ -156,7 +156,7 @@ Delete `TurboVisionState`, `TurboVisionObject`, and all snapshot structs.
 | --- | --- |
 | `reconcile.rs` | No dual-state reconcile |
 | `live_patch.rs` | Direct live mutation |
-| `bridged_*.rs` (8 files) | No adapter views |
+| `bridged_*.rs` (3 files) | No adapter views |
 | `command_map.rs` | No offset band |
 | `control_create.rs` | Replaced by `views/*` |
 | `tv_views.rs` | Replaced by `views/*` |

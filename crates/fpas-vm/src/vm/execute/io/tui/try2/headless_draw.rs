@@ -1,8 +1,8 @@
-//! Headless turbo-vision draw path: upstream `draw` into a memory backend, then CRT export.
+//! Try-2 headless turbo-vision draw path: upstream `draw` into a memory backend, then CRT export.
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
-use super::try2::headless_backend::{HeadlessTvEventInbox, TvHeadlessBackend};
+use super::headless_backend::{HeadlessTvEventInbox, TvHeadlessBackend};
 use crate::vm::Worker;
 use fpas_std::Console;
 use std::time::Duration;
@@ -422,12 +422,10 @@ mod tests {
         let mut app = HeadlessTvApp::new(60, 20).expect("headless app");
         app.update_desktop_bounds();
         let mut dialog = Dialog::new_modal(Rect::from_coords(6, 3, 20, 6), "Live");
-        dialog.add(Box::new(
-            super::super::bridged_static_text::BridgedStaticText::new(
-                Rect::from_coords(4, 2, 6, 1),
-                "DLG",
-            ),
-        ));
+        dialog.add(Box::new(turbo_vision::views::static_text::StaticText::new(
+            Rect::from_coords(4, 2, 6, 1),
+            "DLG",
+        )));
         app.desktop.add(dialog);
         app.draw();
 
@@ -443,13 +441,13 @@ mod tests {
 
     #[test]
     fn export_terminal_buffer_preserves_window_static_text() {
-        use super::super::bridged_static_text::BridgedStaticText;
+        use turbo_vision::views::static_text::StaticText;
         use turbo_vision::views::window::Window;
 
         let mut app = HeadlessTvApp::new(60, 20).expect("headless app");
         app.update_desktop_bounds();
         let mut window = Window::new(Rect::from_coords(8, 4, 30, 10), "Live");
-        window.add(Box::new(BridgedStaticText::new(
+        window.add(Box::new(StaticText::new(
             Rect::from_coords(4, 3, 10, 1),
             "LIVE",
         )));
@@ -474,13 +472,13 @@ mod tests {
 
     #[test]
     fn headless_tv_app_draws_static_text_in_window() {
-        use super::super::bridged_static_text::BridgedStaticText;
+        use turbo_vision::views::static_text::StaticText;
         use turbo_vision::views::window::Window;
 
         let mut app = HeadlessTvApp::new(60, 20).expect("headless app");
         app.update_desktop_bounds();
         let mut window = Window::new(Rect::from_coords(8, 4, 30, 10), "Live");
-        window.add(Box::new(BridgedStaticText::new(
+        window.add(Box::new(StaticText::new(
             Rect::from_coords(4, 3, 10, 1),
             "LIVE",
         )));
@@ -497,7 +495,7 @@ mod tests {
 
     #[test]
     fn headless_tv_app_draws_window_above_older_dialog() {
-        use super::super::bridged_static_text::BridgedStaticText;
+        use turbo_vision::views::static_text::StaticText;
         use turbo_vision::views::window::Window;
 
         let mut app = HeadlessTvApp::new(60, 20).expect("headless app");
@@ -505,7 +503,7 @@ mod tests {
         let host_dialog = Dialog::new_modal(Rect::from_coords(2, 1, 24, 8), "Host");
         app.desktop.add(host_dialog);
         let mut window = Window::new(Rect::from_coords(8, 4, 30, 10), "Live");
-        window.add(Box::new(BridgedStaticText::new(
+        window.add(Box::new(StaticText::new(
             Rect::from_coords(4, 3, 10, 1),
             "LIVE",
         )));

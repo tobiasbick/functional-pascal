@@ -2,15 +2,15 @@
 //!
 //! **Documentation:** `docs/refactor-tui-try-2/target-api.md`
 
-use super::super::view_lookup::try2_with_child_view;
+use super::super::view_lookup::{try2_replace_child_view, try2_with_child_view};
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
-use crate::vm::execute::io::tui::bridged_text_viewer::BridgedTextViewer;
 use crate::vm::execute::io::tui::try2::registry::{RegistryError, ViewKind};
 use crate::vm::execute::io::tui::try2::session::{DetachedTextViewer, Try2Root};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 use turbo_vision::core::geometry::Rect;
+use turbo_vision::views::text_viewer::TextViewer;
 
 /// Creates a detached text viewer (`TextViewer.New`).
 pub(in crate::vm::execute::io::tui::try2) fn try2_text_viewer_new(
@@ -23,7 +23,7 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_text_viewer_new(
         return Err(try2_session_closed_error(line));
     }
 
-    let text_viewer = Box::new(BridgedTextViewer::new(bounds, &text));
+    let text_viewer = Box::new(text_viewer_with_text(bounds, &text));
     Ok(worker
         .try2
         .insert_detached_text_viewer(text_viewer, bounds, text))
@@ -45,19 +45,29 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_text_viewer_set_text(
     worker.try2.set_text_viewer_text(handle, text.clone());
 
     if worker.try2.child_parent(handle).is_some() {
-        try2_with_child_view(worker, handle, ViewKind::TextViewer, line, |view| {
-            if let Some(text_viewer) = view.as_any_mut().downcast_mut::<BridgedTextViewer>() {
-                text_viewer.set_text_from_fpas(&text);
-            }
-            Ok(())
+        let bounds = try2_with_child_view(worker, handle, ViewKind::TextViewer, line, |view| {
+            Ok(view.bounds())
         })?;
+        try2_replace_child_view(
+            worker,
+            handle,
+            ViewKind::TextViewer,
+            Box::new(text_viewer_with_text(bounds, &text)),
+            line,
+        )?;
     } else if let Some(bounds) = worker.try2.detached_text_viewer_bounds(handle) {
         worker
             .try2
-            .replace_detached_text_viewer(handle, Box::new(BridgedTextViewer::new(bounds, &text)));
+            .replace_detached_text_viewer(handle, Box::new(text_viewer_with_text(bounds, &text)));
     }
 
     Ok(())
+}
+
+fn text_viewer_with_text(bounds: Rect, text: &str) -> TextViewer {
+    let mut text_viewer = TextViewer::new(bounds);
+    text_viewer.set_text(text);
+    text_viewer
 }
 
 /// Attaches a detached text viewer to a modal dialog (`Dialog.Add`).

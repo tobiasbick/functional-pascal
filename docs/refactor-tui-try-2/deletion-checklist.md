@@ -74,17 +74,19 @@ crates/fpas-vm/src/vm/execute/io/tui/exec_dialog.rs
 ~~crates/fpas-vm/src/vm/execute/io/tui/msgbox.rs~~ → `try2/message_box.rs`
 ~~crates/fpas-vm/src/vm/execute/io/tui/test_mouse.rs~~ → `try2/testing.rs`
 ~~crates/fpas-vm/src/vm/execute/io/tui/lifecycle.rs~~ → `try2/lifecycle.rs`
-crates/fpas-vm/src/vm/execute/io/tui/headless_tv_draw.rs
+crates/fpas-vm/src/vm/execute/io/tui/headless_tv_draw.rs — remaining renderer migration
 ~~crates/fpas-vm/src/vm/execute/io/tui/application.rs~~ → `try2/application_intrinsics.rs`
-crates/fpas-vm/src/vm/execute/io/tui/bridged_button.rs
-crates/fpas-vm/src/vm/execute/io/tui/bridged_check_box.rs
-crates/fpas-vm/src/vm/execute/io/tui/bridged_list_box.rs
-crates/fpas-vm/src/vm/execute/io/tui/bridged_outline.rs
-crates/fpas-vm/src/vm/execute/io/tui/bridged_radio_button.rs
-crates/fpas-vm/src/vm/execute/io/tui/bridged_static_text.rs
-crates/fpas-vm/src/vm/execute/io/tui/bridged_memo.rs
-crates/fpas-vm/src/vm/execute/io/tui/bridged_text_viewer.rs
+~~crates/fpas-vm/src/vm/execute/io/tui/bridged_button.rs~~ — deleted; `Button.SetText` replaces the upstream child view directly
+~~crates/fpas-vm/src/vm/execute/io/tui/bridged_check_box.rs~~ → `try2/bridged_check_box.rs`
+~~crates/fpas-vm/src/vm/execute/io/tui/bridged_list_box.rs~~ — deleted; direct `ListBox` supports item replacement and selection read-back
+~~crates/fpas-vm/src/vm/execute/io/tui/bridged_outline.rs~~ → `try2/bridged_outline.rs`
+~~crates/fpas-vm/src/vm/execute/io/tui/bridged_radio_button.rs~~ → `try2/bridged_radio_button.rs`
+~~crates/fpas-vm/src/vm/execute/io/tui/bridged_static_text.rs~~ — deleted; `StaticText.SetText` replaces the upstream child view directly
+~~crates/fpas-vm/src/vm/execute/io/tui/bridged_memo.rs~~ — deleted; `Memo.SetText` replaces the upstream child view directly
+~~crates/fpas-vm/src/vm/execute/io/tui/bridged_text_viewer.rs~~ — deleted; `TextViewer.SetText` replaces the upstream child view directly
 ```
+
+The three remaining `try2/bridged_*.rs` files require an upstream read-back hook before removal. Do not delete them until `CheckBox`, `RadioButton`, and `OutlineViewer` expose a supported runtime state query through `dyn View`.
 
 Merged into new modules — delete old names after merge:
 

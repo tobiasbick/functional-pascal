@@ -1,4 +1,4 @@
-//! Modal `RadioButton` view that mirrors selected state into the FPAS host cell.
+//! Try-2 modal `RadioButton` view that mirrors selected state into the FPAS host cell.
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/modals.md`
 

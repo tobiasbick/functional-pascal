@@ -3,14 +3,19 @@
 //! **Documentation:** `docs/refactor-tui-try-2/target-architecture.md`
 
 pub mod app;
+pub(in crate::vm::execute::io::tui) mod bridged_check_box;
+pub(in crate::vm::execute::io::tui) mod bridged_outline;
+pub(in crate::vm::execute::io::tui) mod bridged_radio_button;
 pub mod chrome;
 mod chrome_input;
+pub(in crate::vm::execute::io::tui) mod chrome_layout;
 pub mod events;
 pub mod file_dialog;
 pub mod geometry;
 pub(in crate::vm::execute::io::tui) mod handles;
 pub mod headless;
 pub(in crate::vm::execute::io::tui) mod headless_backend;
+pub(in crate::vm::execute::io::tui) mod headless_draw;
 pub(in crate::vm::execute::io::tui) mod input_events;
 pub mod intrinsics;
 pub mod message_box;

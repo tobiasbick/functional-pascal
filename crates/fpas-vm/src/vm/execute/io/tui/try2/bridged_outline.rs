@@ -1,7 +1,8 @@
-//! Modal `ListBox` view that mirrors selection into the FPAS host cell.
+//! Try-2 modal `OutlineViewer` wired to FPAS outline selection state.
 //!
-//! **Documentation:** `docs/pascal/std/tui/app/modals.md`
+//! **Documentation:** `docs/pascal/std/tui/app/controls.md`
 
+use crate::vm::shared::TurboVisionOutlineNode;
 use crate::vm::turbo_vision_list_selection_cell::TurboVisionListSelectionCell;
 use turbo_vision::core::event::Event;
 use turbo_vision::core::geometry::Rect;
@@ -9,27 +10,31 @@ use turbo_vision::core::palette::Palette;
 use turbo_vision::core::palette_chain::PaletteChainNode;
 use turbo_vision::core::state::StateFlags;
 use turbo_vision::terminal::Terminal;
-use turbo_vision::views::listbox::ListBox;
+use turbo_vision::views::list_viewer::ListViewer;
+use turbo_vision::views::outline::OutlineViewer;
 use turbo_vision::views::view::View;
 
-/// Turbo Vision list box wired to a shared FPAS selection cell.
-pub(in crate::vm::execute::io::tui) struct BridgedListBox {
-    inner: ListBox,
+use super::outline_nodes::build_outline_tv_roots;
+
+/// Turbo Vision outline viewer wired to a shared FPAS selection cell.
+pub(in crate::vm::execute::io::tui) struct BridgedOutline {
+    inner: OutlineViewer<String>,
     selection_cell: TurboVisionListSelectionCell,
 }
 
-impl BridgedListBox {
-    /// Build a modal list box seeded from `selection_cell`.
+impl BridgedOutline {
+    /// Build an outline viewer from FPAS node data and a selection cell.
     pub fn new(
         bounds: Rect,
-        items: Vec<String>,
-        command_id: u16,
+        roots: &[TurboVisionOutlineNode],
         selection_cell: TurboVisionListSelectionCell,
     ) -> Self {
-        let mut inner = ListBox::new(bounds, command_id);
-        inner.set_items(items);
+        let mut inner = OutlineViewer::new(bounds, |text: &String| text.clone());
+        for root in build_outline_tv_roots(roots) {
+            inner.add_root(root);
+        }
         if let Some(selection) = selection_cell.read() {
-            inner.set_selection(selection);
+            inner.set_list_selection(selection);
         }
         let mut bridged = Self {
             inner,
@@ -40,29 +45,30 @@ impl BridgedListBox {
     }
 
     fn sync_selection(&mut self) {
-        self.selection_cell.set(self.inner.get_selection());
+        self.selection_cell.set(self.inner.list_state().focused);
     }
 
-    /// Copy upstream list selection into the host cell (try-2 read-back path).
-    pub(in crate::vm::execute::io::tui) fn sync_selection_from_view(&mut self) {
+    /// Replace outline roots from FPAS host state (live patch path).
+    pub(in crate::vm::execute::io::tui) fn set_roots_from_fpas(
+        &mut self,
+        roots: Vec<TurboVisionOutlineNode>,
+        selection: Option<usize>,
+    ) {
+        let tv_roots = build_outline_tv_roots(&roots);
+        self.inner.set_roots(tv_roots);
+        if let Some(index) = selection {
+            self.inner.set_list_selection(index);
+        }
         self.sync_selection();
     }
 
-    /// Replace list items and selection from FPAS host state (live patch path).
-    pub(in crate::vm::execute::io::tui) fn set_items_from_fpas(
-        &mut self,
-        items: Vec<String>,
-        selection: Option<usize>,
-    ) {
-        self.inner.set_items(items);
-        if let Some(index) = selection {
-            self.inner.set_selection(index);
-        }
+    /// Copies the upstream outline selection into the shared FPAS cell.
+    pub(in crate::vm::execute::io::tui) fn sync_selection_from_view(&mut self) {
         self.sync_selection();
     }
 }
 
-impl View for BridgedListBox {
+impl View for BridgedOutline {
     fn bounds(&self) -> Rect {
         self.inner.bounds()
     }
@@ -121,23 +127,38 @@ impl View for BridgedListBox {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use turbo_vision::core::event::{Event, KB_DOWN};
+    use crate::vm::shared::TurboVisionOutlineNode;
+    use turbo_vision::core::event::{Event, KB_DOWN, KB_RIGHT};
+
+    fn sample_roots() -> Vec<TurboVisionOutlineNode> {
+        vec![TurboVisionOutlineNode {
+            text: "root".into(),
+            expanded: false,
+            children: vec![TurboVisionOutlineNode {
+                text: "child".into(),
+                expanded: false,
+                children: Vec::new(),
+            }],
+        }]
+    }
 
     #[test]
     fn keyboard_navigation_syncs_selection_cell() {
-        let selection_cell = TurboVisionListSelectionCell::new(None);
-        let mut list_box = BridgedListBox::new(
+        let selection_cell = TurboVisionListSelectionCell::new(Some(0));
+        let mut outline = BridgedOutline::new(
             Rect::new(0, 0, 20, 4),
-            vec!["alpha".into(), "beta".into(), "gamma".into()],
-            100,
+            &sample_roots(),
             selection_cell.clone(),
         );
 
         assert_eq!(selection_cell.read(), Some(0));
 
-        let mut event = Event::keyboard(KB_DOWN);
-        list_box.handle_event(&mut event);
+        let mut expand = Event::keyboard(KB_RIGHT);
+        outline.handle_event(&mut expand);
+        assert_eq!(selection_cell.read(), Some(0));
 
+        let mut down = Event::keyboard(KB_DOWN);
+        outline.handle_event(&mut down);
         assert_eq!(selection_cell.read(), Some(1));
     }
 }

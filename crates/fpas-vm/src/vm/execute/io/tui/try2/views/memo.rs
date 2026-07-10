@@ -2,15 +2,15 @@
 //!
 //! **Documentation:** `docs/refactor-tui-try-2/target-api.md`
 
-use super::super::view_lookup::try2_with_child_view;
+use super::super::view_lookup::{try2_replace_child_view, try2_with_child_view};
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
-use crate::vm::execute::io::tui::bridged_memo::BridgedMemo;
 use crate::vm::execute::io::tui::try2::registry::{RegistryError, ViewKind};
 use crate::vm::execute::io::tui::try2::session::{DetachedMemo, Try2Root};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 use turbo_vision::core::geometry::Rect;
+use turbo_vision::views::memo::Memo;
 
 /// Creates a detached memo (`Memo.New`).
 pub(in crate::vm::execute::io::tui::try2) fn try2_memo_new(
@@ -23,7 +23,7 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_memo_new(
         return Err(try2_session_closed_error(line));
     }
 
-    let memo = Box::new(BridgedMemo::new(bounds, &text));
+    let memo = Box::new(memo_with_text(bounds, &text));
     Ok(worker.try2.insert_detached_memo(memo, bounds, text))
 }
 
@@ -43,19 +43,29 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_memo_set_text(
     worker.try2.set_memo_text(handle, text.clone());
 
     if worker.try2.child_parent(handle).is_some() {
-        try2_with_child_view(worker, handle, ViewKind::Memo, line, |view| {
-            if let Some(memo) = view.as_any_mut().downcast_mut::<BridgedMemo>() {
-                memo.set_text_from_fpas(&text);
-            }
-            Ok(())
+        let bounds = try2_with_child_view(worker, handle, ViewKind::Memo, line, |view| {
+            Ok(view.bounds())
         })?;
+        try2_replace_child_view(
+            worker,
+            handle,
+            ViewKind::Memo,
+            Box::new(memo_with_text(bounds, &text)),
+            line,
+        )?;
     } else if let Some(bounds) = worker.try2.detached_memo_bounds(handle) {
         worker
             .try2
-            .replace_detached_memo(handle, Box::new(BridgedMemo::new(bounds, &text)));
+            .replace_detached_memo(handle, Box::new(memo_with_text(bounds, &text)));
     }
 
     Ok(())
+}
+
+fn memo_with_text(bounds: Rect, text: &str) -> Memo {
+    let mut memo = Memo::new(bounds);
+    memo.set_text(text);
+    memo
 }
 
 /// Attaches a detached memo to a modal dialog (`Dialog.Add`).

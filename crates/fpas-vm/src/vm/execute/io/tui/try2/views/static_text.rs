@@ -2,15 +2,15 @@
 //!
 //! **Documentation:** `docs/refactor-tui-try-2/target-api.md`
 
-use super::super::view_lookup::try2_with_child_view;
+use super::super::view_lookup::{try2_replace_child_view, try2_with_child_view};
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
-use crate::vm::execute::io::tui::bridged_static_text::BridgedStaticText;
 use crate::vm::execute::io::tui::try2::registry::{RegistryError, ViewKind};
 use crate::vm::execute::io::tui::try2::session::{DetachedStaticText, Try2Root};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 use turbo_vision::core::geometry::Rect;
+use turbo_vision::views::static_text::StaticText;
 
 /// Creates a detached static text label (`StaticText.New`).
 pub(in crate::vm::execute::io::tui::try2) fn try2_static_text_new(
@@ -23,7 +23,7 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_static_text_new(
         return Err(try2_session_closed_error(line));
     }
 
-    let static_text = Box::new(BridgedStaticText::new(bounds, &text));
+    let static_text = Box::new(StaticText::new(bounds, &text));
     Ok(worker
         .try2
         .insert_detached_static_text(static_text, bounds, text))
@@ -45,16 +45,20 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_static_text_set_text(
     worker.try2.set_static_text_text(handle, text.clone());
 
     if worker.try2.child_parent(handle).is_some() {
-        try2_with_child_view(worker, handle, ViewKind::StaticText, line, |view| {
-            if let Some(static_text) = view.as_any_mut().downcast_mut::<BridgedStaticText>() {
-                static_text.set_text_from_fpas(&text);
-            }
-            Ok(())
+        let bounds = try2_with_child_view(worker, handle, ViewKind::StaticText, line, |view| {
+            Ok(view.bounds())
         })?;
+        try2_replace_child_view(
+            worker,
+            handle,
+            ViewKind::StaticText,
+            Box::new(StaticText::new(bounds, &text)),
+            line,
+        )?;
     } else if let Some(bounds) = worker.try2.detached_static_text_bounds(handle) {
         worker
             .try2
-            .replace_detached_static_text(handle, Box::new(BridgedStaticText::new(bounds, &text)));
+            .replace_detached_static_text(handle, Box::new(StaticText::new(bounds, &text)));
     }
 
     Ok(())

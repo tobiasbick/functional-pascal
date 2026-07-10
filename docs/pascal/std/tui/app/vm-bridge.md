@@ -16,16 +16,16 @@ Pascal Application.* / View.* / Desktop.Add
 
 | Concern | Location |
 | --- | --- |
-| Session lifecycle | `lifecycle.rs`, `application.rs`, `session_app.rs` |
+| Session lifecycle | `try2/lifecycle.rs`, `try2/application_intrinsics.rs`, `try2/session_app.rs` |
 | Try-2 view registry | `try2/session.rs`, `try2/registry.rs`, `try2/views/` |
-| Run loop | `try2/run.rs`, `tv_input_events.rs` |
+| Run loop | `try2/run.rs`, `try2/input_events.rs` |
 | Command callbacks | `try2/events.rs` — upstream `CM_*` ids pass through unchanged |
-| Chrome | `try2/chrome.rs`, `navigation.rs`, `chrome_layout.rs` |
-| Modals | `try2/modals.rs`, `try2/message_box.rs`, `try2/file_dialog.rs`, `msgbox.rs`, `file_dialog.rs` |
-| Headless paint | `headless_tv_draw.rs`, `try2/headless.rs` |
-| Headless tests | `try2/testing.rs`, `testing.rs`, `test_mouse.rs` |
-| Bridged live views | `bridged_*.rs` — checkbox/radio/input sync for try-2 attach path |
-| Handle records | `handles.rs`, `handle_records.rs` |
+| Chrome | `try2/chrome.rs`, `try2/chrome_input.rs`, `try2/chrome_layout.rs` |
+| Modals | `try2/modals.rs`, `try2/message_box.rs`, `try2/file_dialog.rs` |
+| Headless paint | `try2/headless_draw.rs` |
+| Headless tests | `try2/testing.rs` |
+| Bridged live views | `try2/bridged_check_box.rs`, `try2/bridged_outline.rs`, `try2/bridged_radio_button.rs` — upstream control types without a downcast hook |
+| Handle records | `try2/handles.rs`, `try2/handle_records.rs` |
 | Pascal `CM_*` constants | `crates/fpas-std/src/tui/cm_constants.rs` |
 
 ## Turbo Vision bump checklist

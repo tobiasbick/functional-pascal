@@ -1,4 +1,4 @@
-//! Modal `CheckBox` view that mirrors checked state into the FPAS host cell.
+//! Try-2 modal `CheckBox` view that mirrors checked state into the FPAS host cell.
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/modals.md`
 

@@ -66,6 +66,69 @@ where
     f(child)
 }
 
+/// Replaces an attached child while retaining its FPAS handle.
+pub(in crate::vm::execute::io::tui::try2) fn try2_replace_child_view(
+    worker: &mut Worker,
+    child_handle: u32,
+    expected: ViewKind,
+    replacement: Box<dyn View>,
+    line: SourceLocation,
+) -> Result<(), VmError> {
+    let view_id = worker
+        .try2
+        .registry
+        .require(child_handle, expected)
+        .map_err(|error| registry_error(error, line))?
+        .view_id;
+    let Some(parent_handle) = worker.try2.child_parent(child_handle) else {
+        return Err(runtime_error(
+            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            format!("Handle {child_handle} is not attached to a parent"),
+            "Call `Dialog.Add` or `Window.Add` before replacing the widget.",
+            line,
+        ));
+    };
+    let Some(root) = worker.try2.root_mut(parent_handle) else {
+        return Err(runtime_error(
+            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            format!("Parent handle {parent_handle} is not an owned try-2 root"),
+            "Replace the widget before `Desktop.Add` or `Application.ExecView` consumes its parent.",
+            line,
+        ));
+    };
+
+    let view_id = ViewId::from_u16(view_id);
+    let replacement_id = match root {
+        Try2Root::ModalDialog(dialog) => {
+            if !dialog.remove_by_id(view_id) {
+                return Err(missing_child_error(child_handle, parent_handle, line));
+            }
+            dialog.add(replacement)
+        }
+        Try2Root::Window(window) => {
+            if !window.remove_by_id(view_id) {
+                return Err(missing_child_error(child_handle, parent_handle, line));
+            }
+            window.add(replacement)
+        }
+    };
+    worker
+        .try2
+        .registry
+        .set_view_id(child_handle, replacement_id.as_u16())
+        .map_err(|_| registry_error(RegistryError::UnknownHandle(child_handle), line))?;
+    Ok(())
+}
+
+fn missing_child_error(child_handle: u32, parent_handle: u32, line: SourceLocation) -> VmError {
+    runtime_error(
+        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+        format!("Child handle {child_handle} is not live under parent {parent_handle}"),
+        "Use a handle returned by the try-2 widget constructor in the active session.",
+        line,
+    )
+}
+
 fn registry_error(error: RegistryError, line: SourceLocation) -> VmError {
     let (message, help) = match error {
         RegistryError::UnknownHandle(handle) => (

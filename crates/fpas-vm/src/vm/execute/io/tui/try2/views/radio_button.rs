@@ -2,10 +2,10 @@
 //!
 //! **Documentation:** `docs/refactor-tui-try-2/target-api.md`
 
+use super::super::bridged_radio_button::BridgedRadioButton;
 use super::super::view_lookup::try2_with_child_view;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
-use crate::vm::execute::io::tui::bridged_radio_button::BridgedRadioButton;
 use crate::vm::execute::io::tui::try2::registry::{RegistryError, ViewKind};
 use crate::vm::execute::io::tui::try2::session::{DetachedRadioButton, Try2Root};
 use crate::vm::turbo_vision_bool_cell::TurboVisionBoolCell;

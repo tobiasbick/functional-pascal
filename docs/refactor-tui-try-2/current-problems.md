@@ -22,7 +22,7 @@ Pascal Application.Create*
 | --- | --- |
 | Rust modules in `execute/io/tui/` | 41 |
 | Approximate LOC | ~6,500 |
-| `Bridged*` adapter views | 8 (`bridged_button`, `bridged_check_box`, `bridged_list_box`, `bridged_outline`, `bridged_radio_button`, `bridged_static_text`, `bridged_memo`, `bridged_text_viewer`) |
+| `Bridged*` adapter views | 3 (`bridged_check_box`, `bridged_outline`, `bridged_radio_button`) |
 | Headless-specific paths | `headless_tv_draw.rs`, `HeadlessTvApp`, duplicate chrome sync |
 
 The bridge grew to paper over the snapshot/live split (`live_patch.rs`, `live_view_ids`, `live_child_root_view_ids`) instead of calling upstream directly.

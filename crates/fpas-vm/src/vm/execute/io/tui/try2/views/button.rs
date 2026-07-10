@@ -2,10 +2,9 @@
 //!
 //! **Documentation:** `docs/refactor-tui-try-2/target-api.md`
 
-use super::super::view_lookup::try2_with_child_view;
+use super::super::view_lookup::{try2_replace_child_view, try2_with_child_view};
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
-use crate::vm::execute::io::tui::bridged_button::BridgedButton;
 use crate::vm::execute::io::tui::try2::registry::{RegistryError, ViewKind};
 use crate::vm::execute::io::tui::try2::session::{DetachedButton, Try2Root};
 use fpas_bytecode::SourceLocation;
@@ -13,6 +12,7 @@ use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 use turbo_vision::core::command::CommandId;
 use turbo_vision::core::geometry::{Point, Rect};
 use turbo_vision::views::View;
+use turbo_vision::views::button::Button;
 
 /// Creates a detached button (`Button.New`).
 pub(in crate::vm::execute::io::tui::try2) fn try2_button_new(
@@ -26,7 +26,7 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_button_new(
     if !worker.try2.is_open() {
         return Err(try2_session_closed_error(line));
     }
-    let button = Box::new(BridgedButton::new(bounds, &text, command, is_default));
+    let button = Box::new(Button::new(bounds, &text, command, is_default));
     Ok(worker
         .try2
         .insert_detached_button(button, bounds, command, is_default, text))
@@ -48,24 +48,30 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_button_set_text(
     worker.try2.set_button_text(handle, text.clone());
 
     if worker.try2.child_parent(handle).is_some() {
-        try2_with_child_view(worker, handle, ViewKind::Button, line, |view| {
-            if let Some(button) = view.as_any_mut().downcast_mut::<BridgedButton>() {
-                button.set_text_from_fpas(&text);
-            }
-            Ok(())
+        let bounds = try2_with_child_view(worker, handle, ViewKind::Button, line, |view| {
+            Ok(view.bounds())
         })?;
+        let (command, is_default) = {
+            let Some(state) = worker.try2.button_state(handle) else {
+                return Err(missing_button_state(handle, line));
+            };
+            (state.command, state.is_default)
+        };
+        try2_replace_child_view(
+            worker,
+            handle,
+            ViewKind::Button,
+            Box::new(Button::new(bounds, &text, command, is_default)),
+            line,
+        )?;
     } else if let Some(bounds) = worker.try2.detached_button_bounds(handle) {
         let Some(state) = worker.try2.button_state(handle) else {
             return Err(missing_button_state(handle, line));
         };
+        let (command, is_default) = (state.command, state.is_default);
         worker.try2.replace_detached_button(
             handle,
-            Box::new(BridgedButton::new(
-                bounds,
-                &text,
-                state.command,
-                state.is_default,
-            )),
+            Box::new(Button::new(bounds, &text, command, is_default)),
         );
     }
 

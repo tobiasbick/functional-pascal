@@ -122,7 +122,26 @@ Covers: registry, geometry, session, dialog, button, window, desktop, static tex
 - Moved `handle_records.rs` into `try2/handle_records.rs`; opaque widget records now belong to the Try-2 bridge
 - Moved `handles.rs` and `tv_input_events.rs` into `try2/`; widget decoding and unhandled input dispatch no longer live at the legacy bridge root
 - Moved application, lifecycle, and live-session ownership into `try2/`; the legacy bridge root now retains only headless support and adapter views
+- Moved test-session lifecycle and the headless backend into `try2/`; the renderer is the remaining legacy headless root module
+- Deleted `BridgedStaticText`; `StaticText.SetText` replaces the upstream child view and updates its registry view id
+- Deleted `BridgedButton`; `Button.SetText` uses the same direct upstream child replacement path
+- Deleted `BridgedMemo` and `BridgedTextViewer`; both `SetText` routes replace the upstream child view and retain the FPAS handle
+- Deleted `BridgedListBox`; direct upstream `ListBox` synchronizes selection on read-back and replaces items in place
+- The remaining checkbox, radio-button, and outline adapters live under `try2/`; their host-cell synchronization remains unchanged
+- Moved the headless renderer, chrome layout, and remaining adapters into `try2/`; `tui/mod.rs` is now dispatch and re-exports only
 - Merged `msgbox.rs`, `file_dialog.rs`, and `test_mouse.rs` into `try2/message_box.rs`, `try2/file_dialog.rs`, and `try2/testing.rs`
+
+## Phase 7 adapter checkpoint (2026-07-10)
+
+- Direct upstream migration is complete for `Button`, `StaticText`, `Memo`, `TextViewer`, and `ListBox`.
+- `CheckBox`, `RadioButton`, and `OutlineViewer` at the pinned `turbo-vision` `v2.0.0` revision do not implement `View::as_any_mut`.
+- Their adapters remain necessary to copy live keyboard and mouse selection back to FPAS host cells. Removing them without an upstream hook would regress `Checked`, `Selected`, `Outline.Selection`, and `Outline.SelectedText` after interactive input.
+- Resume this cleanup after upstream adds downcast support (or another public read-back hook) for those three view types; then replace the views directly and remove `try2/bridged_{check_box,radio_button,outline}.rs`.
+- Verification at this checkpoint: focused Rust Try-2 suite (60), Sema TUI tests (18), compiler TUI tests (11), and FPAS `tests/tui/` (30) pass. `apps/ide/tests/` currently has two separate headless run-loop failures in `shell/about_menu_test.fpas` and `shell/open_menu_test.fpas` after their modal command; see the next work item below.
+
+## Next work item
+
+Investigate the IDE headless command queue: `TestDispatchMenuCommand`, modal keyboard dismissal, and the queued `CM_QUIT` do not complete the run loop in `about_menu_test.fpas` or `open_menu_test.fpas`. The TUI suite itself passes; reproduce with `cargo run -q -p fpas-cli -- test apps/ide/tests/` before changing `try2/run.rs` or headless modal routing.
 
 ## Phase 7 progress (2026-07-09)
 

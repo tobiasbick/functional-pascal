@@ -1,4 +1,4 @@
-//! Live-terminal layout for Turbo Vision menu bar and status line.
+//! Try-2 terminal layout for Turbo Vision menu bar and status line.
 //!
 //! Matches upstream `Application::handle_redraw` so chrome spans the full
 //! terminal before the first frame, not only after a resize event.

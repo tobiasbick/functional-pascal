@@ -5,9 +5,9 @@
 use super::app::try2_ensure_live_app;
 use super::chrome::try2_sync_chrome_to_app;
 use super::headless::{try2_ensure_headless_app, try2_headless_exec_view};
+use super::headless_draw::HeadlessTvApp;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
-use crate::vm::execute::io::tui::headless_tv_draw::HeadlessTvApp;
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 use turbo_vision::core::command::{CM_CANCEL, CM_NO, CM_OK, CM_YES, CommandId};

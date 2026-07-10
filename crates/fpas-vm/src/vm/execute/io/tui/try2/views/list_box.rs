@@ -5,13 +5,13 @@
 use super::super::view_lookup::try2_with_child_view;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
-use crate::vm::execute::io::tui::bridged_list_box::BridgedListBox;
 use crate::vm::execute::io::tui::try2::registry::{RegistryError, ViewKind};
 use crate::vm::execute::io::tui::try2::session::{DetachedListBox, Try2Root};
 use crate::vm::turbo_vision_list_selection_cell::TurboVisionListSelectionCell;
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 use turbo_vision::core::geometry::Rect;
+use turbo_vision::views::listbox::ListBox;
 
 /// Creates a detached list box (`ListBox.New`).
 pub(in crate::vm::execute::io::tui::try2) fn try2_list_box_new(
@@ -27,11 +27,11 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_list_box_new(
 
     let selection = initial_list_selection(&items);
     let selection_cell = TurboVisionListSelectionCell::new(selection);
-    let list_box = Box::new(BridgedListBox::new(
+    let list_box = Box::new(list_box_with_items(
         bounds,
         items.clone(),
         command,
-        selection_cell.clone(),
+        selection,
     ));
     Ok(worker
         .try2
@@ -51,12 +51,16 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_list_box_selection(
         .map_err(|error| registry_error(error, line))?;
 
     if worker.try2.child_parent(handle).is_some() {
-        let _ = try2_with_child_view(worker, handle, ViewKind::ListBox, line, |view| {
-            if let Some(list_box) = view.as_any_mut().downcast_mut::<BridgedListBox>() {
-                list_box.sync_selection_from_view();
-            }
-            Ok(())
-        });
+        let selection = try2_with_child_view(worker, handle, ViewKind::ListBox, line, |view| {
+            let Some(list_box) = view.as_any_mut().downcast_mut::<ListBox>() else {
+                return Err(missing_list_box_view(handle, line));
+            };
+            Ok(list_box.get_selection())
+        })?;
+        let Some(cell) = worker.try2.list_box_selection_cell(handle) else {
+            return Err(missing_list_box_state(handle, line));
+        };
+        cell.set(selection);
     }
 
     Ok(worker
@@ -90,8 +94,12 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_list_box_set_items(
 
     if worker.try2.child_parent(handle).is_some() {
         try2_with_child_view(worker, handle, ViewKind::ListBox, line, |view| {
-            if let Some(list_box) = view.as_any_mut().downcast_mut::<BridgedListBox>() {
-                list_box.set_items_from_fpas(items, selection);
+            let Some(list_box) = view.as_any_mut().downcast_mut::<ListBox>() else {
+                return Err(missing_list_box_view(handle, line));
+            };
+            list_box.set_items(items);
+            if let Some(selection) = selection {
+                list_box.set_selection(selection);
             }
             Ok(())
         })?;
@@ -209,10 +217,33 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_window_attach_list_box(
     Ok(())
 }
 
+fn list_box_with_items(
+    bounds: Rect,
+    items: Vec<String>,
+    command: u16,
+    selection: Option<usize>,
+) -> ListBox {
+    let mut list_box = ListBox::new(bounds, command);
+    list_box.set_items(items);
+    if let Some(selection) = selection {
+        list_box.set_selection(selection);
+    }
+    list_box
+}
+
 fn missing_list_box_state(handle: u32, line: SourceLocation) -> VmError {
     runtime_error(
         RUNTIME_INTRINSIC_STACK_STATE_ERROR,
         format!("ListBox handle {handle} has no host state"),
+        "Use a handle returned by `ListBox.New` in the active try-2 session.",
+        line,
+    )
+}
+
+fn missing_list_box_view(handle: u32, line: SourceLocation) -> VmError {
+    runtime_error(
+        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+        format!("ListBox handle {handle} is not backed by an upstream ListBox"),
         "Use a handle returned by `ListBox.New` in the active try-2 session.",
         line,
     )
@@ -330,6 +361,12 @@ mod tests {
         )
         .expect("list box");
         try2_dialog_attach_list_box(&mut worker, dialog, list_box, loc()).expect("attach");
+        try2_list_box_set_items(&mut worker, list_box, vec!["updated".into()], loc())
+            .expect("set attached items");
+        assert_eq!(
+            try2_list_box_selection(&mut worker, list_box, loc()).unwrap(),
+            0
+        );
         let entry = worker
             .try2
             .registry

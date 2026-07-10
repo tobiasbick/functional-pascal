@@ -100,7 +100,7 @@ fn turbo_vision_input_line_text_read_back_via_input_line_text() {
 /// `Application.Quit` sets quit flags when dispatched from a registered `OnCommand` handler.
 #[test]
 fn turbo_vision_on_command_handler_can_quit_application() {
-    use fpas_std::COMMAND_QUIT;
+    use fpas_std::CM_QUIT;
 
     let mut chunk = Chunk::new();
     chunk.emit(
@@ -138,7 +138,7 @@ fn turbo_vision_on_command_handler_can_quit_application() {
     worker.run().expect("OnCommand registration should succeed");
 
     worker
-        .try2_dispatch_command_event_for_tests(COMMAND_QUIT as u16, loc())
+        .try2_dispatch_command_event_for_tests(CM_QUIT as u16, loc())
         .expect("command dispatch should succeed");
 
     let output = shared
@@ -147,7 +147,7 @@ fn turbo_vision_on_command_handler_can_quit_application() {
         .unwrap_or_else(|e| e.into_inner())
         .output()
         .clone();
-    assert_eq!(output.lines, vec![COMMAND_QUIT.to_string()]);
+    assert_eq!(output.lines, vec![CM_QUIT.to_string()]);
     let quit = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
     assert!(quit.quit_requested);
 }

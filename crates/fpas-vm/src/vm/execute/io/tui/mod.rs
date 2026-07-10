@@ -14,17 +14,14 @@ mod bridged_text_viewer;
 mod chrome_layout;
 mod command_map;
 mod commands;
-mod file_dialog;
 mod handle_records;
 mod handles;
 mod headless_tv_draw;
 mod lifecycle;
-mod msgbox;
 mod navigation;
 mod outline_nodes;
 mod records;
 mod session_app;
-mod test_mouse;
 mod testing;
 mod try2;
 

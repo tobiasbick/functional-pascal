@@ -893,12 +893,6 @@ impl Try2Session {
         None
     }
 
-    /// Validates session is open.
-    #[cfg(test)]
-    pub fn require_open(&self) -> bool {
-        self.session_open
-    }
-
     /// Returns `true` when `handle` was passed to `Desktop.Add`.
     #[must_use]
     pub fn is_on_desktop(&self, handle: u32) -> bool {

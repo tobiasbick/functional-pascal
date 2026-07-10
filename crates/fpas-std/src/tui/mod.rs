@@ -4,7 +4,6 @@
 
 mod cm_constants;
 mod command;
-mod command_ids;
 mod damage;
 mod event;
 mod geometry;
@@ -16,12 +15,11 @@ mod session;
 #[cfg(test)]
 mod tests;
 
-pub use cm_constants::{CM_ABOUT, CM_OPEN, CM_USER};
+pub use cm_constants::{CM_ABOUT, CM_CANCEL, CM_CLOSE, CM_OK, CM_OPEN, CM_QUIT, CM_USER};
 pub use command::{
     COMMAND_ID_CLOSE, COMMAND_ID_NEXT_WINDOW, COMMAND_ID_ZOOM, COMMAND_ID_ZOOM_BACK, CommandEvent,
     CommandId, CommandKind, CommandRegistry,
 };
-pub use command_ids::{COMMAND_CANCEL, COMMAND_CLOSE, COMMAND_OK, COMMAND_QUIT};
 pub use damage::DamageRegion;
 pub use event::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent};
 pub use geometry::{ViewId, ViewRect};

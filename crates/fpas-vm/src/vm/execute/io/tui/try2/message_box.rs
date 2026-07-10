@@ -7,7 +7,8 @@ use super::chrome::try2_sync_chrome_to_app;
 use super::headless::{try2_ensure_headless_app, try2_headless_exec_view};
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
-use fpas_bytecode::SourceLocation;
+use crate::vm::execute::io::tui::headless_tv_draw::HeadlessTvApp;
+use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 use turbo_vision::core::command::{CM_CANCEL, CM_NO, CM_OK, CM_YES, CommandId};
 use turbo_vision::core::geometry::Rect;
@@ -146,7 +147,36 @@ fn build_message_box_dialog(bounds: Rect, message: &str, options: u16) -> Box<dy
     dialog
 }
 
-use crate::vm::execute::io::tui::headless_tv_draw::HeadlessTvApp;
+impl Worker {
+    /// Show an upstream Turbo Vision message box and push the closing command id.
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_message_box(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        let options = u16::try_from(self.pop_int(line)?).map_err(|_| {
+            runtime_error(
+                RUNTIME_CONSOLE_STATE_ERROR,
+                "Application.MessageBox options must fit in 16 bits",
+                "Pass a non-negative options value such as `MessageBoxOption.About + MessageBoxOption.OkButton`.",
+                line,
+            )
+        })?;
+        let message = self.pop_turbo_vision_string("MessageBox Message", line)?;
+        self.pop_tui_application(line)?;
+
+        if !self.try2.is_open() {
+            return Err(runtime_error(
+                RUNTIME_CONSOLE_STATE_ERROR,
+                "Application.MessageBox requires an open try-2 session",
+                "Call `Application.Open` or `Application.OpenForTest` before `Application.MessageBox`.",
+                line,
+            ));
+        }
+
+        let command = try2_message_box(self, message, options, line)?;
+        self.push(Value::Integer(command))
+    }
+}
 
 #[cfg(test)]
 mod tests {

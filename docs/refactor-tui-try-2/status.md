@@ -111,6 +111,11 @@ Covers: registry, geometry, session, dialog, button, window, desktop, static tex
 1. **Phase 7 (VM deletion)** — remove try-1 VM modules, sema symbols, and public docs per [deletion-checklist.md](deletion-checklist.md). **Follow-up:** try-2 `TestClickMouse` hit-target routing exists; checkbox/radio toggle via mouse on desktop windows needs a dedicated fix (smoke tests verify coordinate routing only).
 2. **Phase 7/8 cleanup** — replace interim `TestSetFileDialogResult` naming with the final headless event API after the public testing surface is rewritten.
 
+# Phase 7 progress (2026-07-10)
+
+- Deleted duplicate `command_ids.rs`; `CM_*` values come from `cm_constants.rs` only
+- Merged `msgbox.rs`, `file_dialog.rs`, and `test_mouse.rs` into `try2/message_box.rs`, `try2/file_dialog.rs`, and `try2/testing.rs`
+
 ## Phase 7 progress (2026-07-09)
 
 | Batch | Deleted (try-1) | try-2 replacement |

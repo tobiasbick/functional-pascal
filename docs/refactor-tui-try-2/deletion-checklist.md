@@ -65,18 +65,17 @@ crates/fpas-vm/src/vm/execute/io/tui/handles.rs
 crates/fpas-vm/src/vm/execute/io/tui/records.rs
 crates/fpas-vm/src/vm/execute/io/tui/interactive_loop.rs
 crates/fpas-vm/src/vm/execute/io/tui/commands.rs
-crates/fpas-vm/src/vm/execute/io/tui/test_mouse.rs
 crates/fpas-vm/src/vm/execute/io/tui/outline_nodes.rs
 crates/fpas-vm/src/vm/execute/io/tui/outline_read.rs
 crates/fpas-vm/src/vm/execute/io/tui/callbacks.rs
 crates/fpas-vm/src/vm/execute/io/tui/tv_input_events.rs
 crates/fpas-vm/src/vm/execute/io/tui/exec_dialog.rs
-crates/fpas-vm/src/vm/execute/io/tui/file_dialog.rs
-crates/fpas-vm/src/vm/execute/io/tui/msgbox.rs
+~~crates/fpas-vm/src/vm/execute/io/tui/file_dialog.rs~~ → `try2/file_dialog.rs`
+~~crates/fpas-vm/src/vm/execute/io/tui/msgbox.rs~~ → `try2/message_box.rs`
+~~crates/fpas-vm/src/vm/execute/io/tui/test_mouse.rs~~ → `try2/testing.rs`
 crates/fpas-vm/src/vm/execute/io/tui/lifecycle.rs
 crates/fpas-vm/src/vm/execute/io/tui/headless_tv_draw.rs
 crates/fpas-vm/src/vm/execute/io/tui/application.rs
-crates/fpas-vm/src/vm/execute/io/tui/tui_run.rs
 crates/fpas-vm/src/vm/execute/io/tui/bridged_button.rs
 crates/fpas-vm/src/vm/execute/io/tui/bridged_check_box.rs
 crates/fpas-vm/src/vm/execute/io/tui/bridged_list_box.rs
@@ -104,7 +103,7 @@ Merged into new modules — delete old names after merge:
 
 ## fpas-std
 
-- `command_ids.rs` — `COMMAND_QUIT`, `COMMAND_OK`, etc. if superseded by `CM_*`
+- ~~`command_ids.rs`~~ — deleted; `CM_*` in `cm_constants.rs` is canonical
 - Any `TurboVisionBoolCell` usage only for reconcile — remove if unused
 
 Grep patterns that must return **no hits** in `crates/`:
@@ -117,7 +116,6 @@ FPAS_TV_COMMAND_OFFSET
 bridged_
 TuiCreateDialog
 TuiAddChild
-COMMAND_QUIT
 reserved_list_matches_upstream
 ```
 

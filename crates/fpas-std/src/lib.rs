@@ -75,9 +75,9 @@ pub use std_units::{
 };
 pub use test::{assert_screen_cell, assert_screen_line, reset_test_skip_state, test_was_skipped};
 pub use tui::{
-    BlockedInput, CM_ABOUT, CM_OPEN, CM_USER, COMMAND_CANCEL, COMMAND_CLOSE, COMMAND_ID_CLOSE,
-    COMMAND_ID_NEXT_WINDOW, COMMAND_ID_ZOOM, COMMAND_ID_ZOOM_BACK, COMMAND_OK, COMMAND_QUIT,
-    CommandEvent, CommandId, CommandKind, CommandRegistry, DamageRegion, FocusDirection,
+    BlockedInput, CM_ABOUT, CM_CANCEL, CM_CLOSE, CM_OK, CM_OPEN, CM_QUIT, CM_USER,
+    COMMAND_ID_CLOSE, COMMAND_ID_NEXT_WINDOW, COMMAND_ID_ZOOM, COMMAND_ID_ZOOM_BACK, CommandEvent,
+    CommandId, CommandKind, CommandRegistry, DamageRegion, FocusDirection,
     MESSAGE_BOX_OPTION_ABOUT, MESSAGE_BOX_OPTION_CANCEL_BUTTON, MESSAGE_BOX_OPTION_CONFIRMATION,
     MESSAGE_BOX_OPTION_ERROR, MESSAGE_BOX_OPTION_INFORMATION, MESSAGE_BOX_OPTION_NO_BUTTON,
     MESSAGE_BOX_OPTION_OK_BUTTON, MESSAGE_BOX_OPTION_OK_CANCEL, MESSAGE_BOX_OPTION_WARNING,

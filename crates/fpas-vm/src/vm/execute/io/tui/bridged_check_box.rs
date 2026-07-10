@@ -39,18 +39,9 @@ impl BridgedCheckBox {
         self.sync_checked();
     }
 
-    /// Push FPAS cell state into the upstream checkbox (live patch path).
+    /// Push FPAS cell state into the upstream checkbox (try-2 setter path).
     pub(in crate::vm::execute::io::tui) fn sync_from_cell(&mut self) {
         self.inner.set_checked(self.checked_cell.read());
-    }
-
-    /// Push FPAS label text into the upstream checkbox (live patch path).
-    pub(in crate::vm::execute::io::tui) fn set_text_from_fpas(&mut self, text: &str) {
-        let bounds = self.inner.bounds();
-        let checked = self.checked_cell.read();
-        let mut inner = CheckBox::new(bounds, text);
-        inner.set_checked(checked);
-        self.inner = inner;
     }
 }
 

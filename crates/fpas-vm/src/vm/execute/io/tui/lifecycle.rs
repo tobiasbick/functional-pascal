@@ -144,28 +144,6 @@ impl Worker {
         Ok(())
     }
 
-    /// Invokes the registered Turbo Vision `OnCommand` handler.
-    pub(in crate::vm::execute::io) fn dispatch_tui_command(
-        &mut self,
-        command: fpas_std::CommandEvent,
-        line: SourceLocation,
-    ) -> Result<fpas_std::ProcessOutcome, VmError> {
-        use fpas_std::ProcessOutcome;
-
-        let handler = self.with_tui(|tui| tui.on_command.clone());
-        let Some(handler) = handler else {
-            return Ok(ProcessOutcome::Command { handled: false });
-        };
-
-        let app_rec = Self::tui_application_record();
-        let _ = self.call_function_sync_allowing_shutdown(
-            &handler,
-            &[app_rec, Value::Integer(command.id.0)],
-            line,
-        )?;
-        Ok(ProcessOutcome::Command { handled: true })
-    }
-
     /// Pops a `Std.Tui.Application` record from the stack, returning an error on type mismatch.
     pub(in crate::vm::execute::io) fn pop_tui_application(
         &mut self,

@@ -56,6 +56,18 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_dispatch_on_command_handler(
 }
 
 #[cfg(test)]
+impl Worker {
+    /// Dispatches a command id through the registered try-2 `OnCommand` handler.
+    pub(crate) fn try2_dispatch_command_event_for_tests(
+        &mut self,
+        command: CommandId,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        try2_dispatch_on_command(self, command, line)
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
     use turbo_vision::core::command::{CM_OK, CM_QUIT};

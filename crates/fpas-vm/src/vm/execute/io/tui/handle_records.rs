@@ -12,7 +12,6 @@ pub(in crate::vm::execute::io::tui) const TUI_STATIC_TEXT_TYPE: &str = "Std.Tui.
 pub(in crate::vm::execute::io::tui) const TUI_MEMO_TYPE: &str = "Std.Tui.Memo";
 pub(in crate::vm::execute::io::tui) const TUI_TEXT_VIEWER_TYPE: &str = "Std.Tui.TextViewer";
 pub(in crate::vm::execute::io::tui) const TUI_INPUT_LINE_TYPE: &str = "Std.Tui.InputLine";
-pub(in crate::vm::execute::io::tui) const TUI_DIALOG_RESULT_TYPE: &str = "Std.Tui.DialogResult";
 pub(in crate::vm::execute::io::tui) const TUI_LIST_BOX_TYPE: &str = "Std.Tui.ListBox";
 pub(in crate::vm::execute::io::tui) const TUI_OUTLINE_TYPE: &str = "Std.Tui.Outline";
 pub(in crate::vm::execute::io::tui) const TUI_OUTLINE_NODE_TYPE: &str = "Std.Tui.OutlineNode";

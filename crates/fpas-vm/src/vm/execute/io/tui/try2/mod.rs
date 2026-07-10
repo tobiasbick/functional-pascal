@@ -1,15 +1,11 @@
 //! TUI try-2 bridge (Rust-owned widget tree).
 //!
-//! Coexists with try-1 modules until phase 7 deletion. Phase-2 Pascal intrinsics
-//! (`Dialog.NewModal`, `Button.New`, `Application.ExecView`, …) dispatch here.
-//!
 //! **Documentation:** `docs/refactor-tui-try-2/target-architecture.md`
 
 pub mod app;
 pub mod chrome;
 pub mod events;
 pub mod file_dialog;
-pub mod geometry;
 pub mod headless;
 pub mod intrinsics;
 pub mod message_box;

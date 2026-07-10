@@ -11,7 +11,6 @@ mod bridged_outline;
 mod bridged_radio_button;
 mod bridged_static_text;
 mod bridged_text_viewer;
-mod callbacks;
 mod chrome_layout;
 mod command_map;
 mod commands;

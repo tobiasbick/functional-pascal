@@ -70,15 +70,6 @@ impl BridgedRadioButton {
     ) {
         self.group_cells = group_cells;
     }
-
-    /// Push FPAS label text into the upstream radio button (live patch path).
-    pub(in crate::vm::execute::io::tui) fn set_text_from_fpas(&mut self, text: &str) {
-        let bounds = self.inner.bounds();
-        let selected = self.selected_cell.read();
-        let mut inner = RadioButton::new(bounds, text, self.group_id);
-        inner.set_selected(selected);
-        self.inner = inner;
-    }
 }
 
 impl View for BridgedRadioButton {

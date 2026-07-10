@@ -26,7 +26,7 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 | --- | --- |
 | Baseline snapshot | [baseline.md](baseline.md) |
 | `ViewRegistry` + tests | `crates/fpas-vm/.../try2/registry.rs` |
-| Rect conversion | `try2/geometry.rs` |
+| Rect conversion | `tv_geometry.rs` |
 | `CM_*` constants (internal) | `crates/fpas-std/src/tui/cm_constants.rs` |
 | `Try2Session` on `Worker` | `try2/session.rs`, `worker.rs` |
 | Lifecycle hooks (reset on close) | `lifecycle.rs` |
@@ -143,6 +143,15 @@ Upstream `FileDialog::execute(&mut Application)` is available for live `Applicat
 ## Unchanged (Phase 8)
 
 - `docs/pascal/std/tui/` — public spec rewrite in Phase 8
+
+## Phase 7 dead-code cleanup (2026-07-10)
+
+- Deleted `tui/callbacks.rs` (try-1 command offset dispatch); `OnCommand` uses `try2/events.rs` only
+- `command_map.rs` slimmed to reserved `CM_*` list + upstream sync test (no offset band)
+- Deleted unused `try2/geometry.rs` (duplicate of `tv_geometry.rs`)
+- Removed `dispatch_tui_command` from `lifecycle.rs`; dead `set_text_from_fpas` on checkbox/radio bridged views
+- `message_box.rs` returns upstream command ids unchanged
+- VM tests use `try2_dispatch_command_event_for_tests` instead of deleted try-1 dispatch helpers
 
 ## Phase 7 snapshot cleanup (2026-07-10)
 

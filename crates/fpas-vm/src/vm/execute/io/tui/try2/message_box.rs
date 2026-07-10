@@ -7,7 +7,6 @@ use super::chrome::try2_sync_chrome_to_app;
 use super::headless::{try2_ensure_headless_app, try2_headless_exec_view};
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
-use crate::vm::execute::io::tui::command_map::turbo_vision_command_to_fpas;
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 use turbo_vision::core::command::{CM_CANCEL, CM_NO, CM_OK, CM_YES, CommandId};
@@ -55,7 +54,7 @@ pub(in crate::vm::execute::io::tui) fn try2_message_box(
         message_box(app, &message, options)
     };
 
-    Ok(i64::from(turbo_vision_command_to_fpas(command)))
+    Ok(i64::from(command))
 }
 
 fn try2_headless_message_box(

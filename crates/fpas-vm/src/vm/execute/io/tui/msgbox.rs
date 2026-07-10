@@ -22,21 +22,6 @@ impl Worker {
         let message = self.pop_turbo_vision_string("MessageBox Message", line)?;
         self.pop_tui_application(line)?;
 
-        if self.current_task_id != 0 {
-            return Err(runtime_error(
-                RUNTIME_CONSOLE_STATE_ERROR,
-                "Application.MessageBox(App, ...) must run on the main task",
-                "Call `Application.MessageBox` from the main program, not from a `go` task.",
-                line,
-            ));
-        }
-
-        if self.with_tui(|tui| tui.session.is_headless()) {
-            if let Some(command) = self.with_tui(|tui| tui.turbo_vision.test_dialog_result.take()) {
-                return self.push(Value::Integer(command));
-            }
-        }
-
         if !self.try2.is_open() {
             return Err(runtime_error(
                 RUNTIME_CONSOLE_STATE_ERROR,

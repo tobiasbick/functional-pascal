@@ -4,7 +4,7 @@
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
-use fpas_bytecode::{Intrinsic, SourceLocation, TuiIntrinsic, Value};
+use fpas_bytecode::{Intrinsic, SourceLocation, TuiIntrinsic};
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 
 impl Worker {
@@ -57,9 +57,7 @@ impl Worker {
     ) -> Result<(), VmError> {
         let command = self.pop_int(line)?;
         self.pop_tui_application(line)?;
-        self.with_tui(|tui| {
-            tui.turbo_vision.test_dialog_result = Some(command);
-        });
+        self.try2.set_dialog_result(command);
         Ok(())
     }
 

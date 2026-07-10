@@ -187,6 +187,8 @@ pub(crate) struct Try2Session {
     attached_status_line: Option<u32>,
     /// Headless file dialog result queued by the interim test helper.
     file_dialog_result: Option<Option<String>>,
+    /// Headless modal stub consumed by the next `MessageBox` call (interim test helper).
+    dialog_result: Option<i64>,
 }
 
 impl Try2Session {
@@ -224,6 +226,7 @@ impl Try2Session {
         self.attached_menu_bar = None;
         self.attached_status_line = None;
         self.file_dialog_result = None;
+        self.dialog_result = None;
     }
 
     /// Returns `true` after [`Self::open`].
@@ -927,6 +930,17 @@ impl Try2Session {
     #[must_use]
     pub fn take_file_dialog_result(&mut self) -> Option<Option<String>> {
         self.file_dialog_result.take()
+    }
+
+    /// Queues the closing command consumed by the next headless `Application.MessageBox`.
+    pub fn set_dialog_result(&mut self, command: i64) {
+        self.dialog_result = Some(command);
+    }
+
+    /// Consumes the queued headless modal result, if one was set.
+    #[must_use]
+    pub fn take_dialog_result(&mut self) -> Option<i64> {
+        self.dialog_result.take()
     }
 }
 

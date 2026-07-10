@@ -10,12 +10,14 @@
 /// Keep this list aligned with the checked upstream `turbo-vision` version in
 /// `Cargo.lock`. `0` is excluded because FPAS uses it as a menu separator
 /// command and never dispatches it.
+#[cfg(test)]
 const TURBO_VISION_RESERVED_COMMANDS: &[u16] = &[
     1, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 20, 21, 22, 23, 24, 25, 26, 31, 50, 51, 52, 55, 57, 60,
     61, 62, 63, 66, 67, 69, 70, 100, 101, 102, 103, 108, 109, 111, 115, 116, 117, 118, 120, 121,
     130, 131, 132, 133, 140, 141, 150, 151, 152, 300, 301, 302, 303, 304, 305,
 ];
 
+#[cfg(test)]
 /// Returns `true` when `command_id` collides with an upstream built-in command.
 pub(in crate::vm::execute::io::tui) fn turbo_vision_reserved_command(command_id: u16) -> bool {
     TURBO_VISION_RESERVED_COMMANDS.contains(&command_id)

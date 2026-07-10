@@ -28,7 +28,7 @@ mod tui;
 pub(crate) use graph::GraphState;
 pub(crate) use tui::{
     TuiState, TurboVisionMenu, TurboVisionMenuItem, TurboVisionOutlineNode, TurboVisionRect,
-    TurboVisionState, TurboVisionStatusItem,
+    TurboVisionStatusItem,
 };
 
 pub(crate) enum TaskResultPoll {

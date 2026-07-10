@@ -132,7 +132,7 @@ Estimates assume focused hobby-project pace (part-time).
 **Work**
 
 - [ ] Remove all modules in [deletion-checklist.md](deletion-checklist.md).
-- [ ] **Slim `TuiState`**: drop `TurboVisionState`, `TurboVisionObject`, snapshot structs ([rust-layout.md](rust-layout.md)).
+- [x] **Slim `TuiState`**: drop `TurboVisionState`, `TurboVisionObject`, snapshot structs ([rust-layout.md](rust-layout.md)).
 - [ ] Remove old bytecode intrinsics and sema symbols.
 - [ ] Remove old `docs/pascal/std/tui/` pages; write new spec from [target-api.md](target-api.md).
 - [ ] Update skill, AGENTS.md bridge pointers, `.cursor/rules` TUI examples.

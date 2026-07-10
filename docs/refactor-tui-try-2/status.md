@@ -150,13 +150,14 @@ Upstream `FileDialog::execute(&mut Application)` is available for live `Applicat
 - `command_map.rs` slimmed to reserved `CM_*` list + upstream sync test (no offset band)
 - Deleted unused `try2/geometry.rs` (duplicate of `tv_geometry.rs`)
 - Removed `dispatch_tui_command` from `lifecycle.rs`; dead `set_text_from_fpas` on checkbox/radio bridged views
-- `message_box.rs` returns upstream command ids unchanged
+- `message_box.rs` returns upstream command ids unchanged; headless `TestSetDialogResult` stub moved to `Try2Session`
 - VM tests use `try2_dispatch_command_event_for_tests` instead of deleted try-1 dispatch helpers
+- Dropped `TurboVisionState` from `TuiState`; headless test hooks live on `Try2Session` only
 
 ## Phase 7 snapshot cleanup (2026-07-10)
 
 - `TurboVisionObject` enum and widget snapshot structs removed from `shared/tui.rs`
-- `TurboVisionState` reduced to headless `test_dialog_result` stub
+- `TurboVisionState` removed; headless test hooks (`dialog_result`, `file_dialog_result`) live on `Try2Session`
 - Dead try-1 handle decoders removed from `handles.rs`; `input_line_view_bindings` removed from `Worker`
 - `fpas-std` symbol table: dropped try-1 `Application.Create*` / `Pump` / setter getters
 - `TestClickButton` and file-dialog tests no longer reference try-1 queues

@@ -175,7 +175,6 @@ impl Worker {
         tui.turbo_vision_on_mouse = None;
         tui.on_command = None;
         tui.quit_requested = false;
-        tui.turbo_vision = Default::default();
         self.try2.reset();
         close_result?;
         Ok(())
@@ -190,7 +189,6 @@ impl Worker {
         tui.turbo_vision_on_mouse = None;
         tui.on_command = None;
         tui.quit_requested = false;
-        tui.turbo_vision = Default::default();
         self.try2.reset();
     }
 

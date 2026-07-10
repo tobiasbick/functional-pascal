@@ -104,24 +104,11 @@ pub const STD_TUI_APPLICATION_SHOW_DIALOG: &str = std_tui!("Application.ShowDial
 pub const STD_TUI_APPLICATION_CLOSE_MODAL: &str = std_tui!("Application.CloseModal");
 pub const STD_TUI_APPLICATION_SIZE: &str = std_tui!("Application.Size");
 pub const STD_TUI_APPLICATION_REQUEST_REDRAW: &str = std_tui!("Application.RequestRedraw");
-pub const STD_TUI_APPLICATION_CREATE_DIALOG: &str = std_tui!("Application.CreateDialog");
-pub const STD_TUI_APPLICATION_CREATE_WINDOW: &str = std_tui!("Application.CreateWindow");
-pub const STD_TUI_APPLICATION_CREATE_BUTTON: &str = std_tui!("Application.CreateButton");
-pub const STD_TUI_APPLICATION_CREATE_STATIC_TEXT: &str = std_tui!("Application.CreateStaticText");
-pub const STD_TUI_APPLICATION_CREATE_MEMO: &str = std_tui!("Application.CreateMemo");
-pub const STD_TUI_APPLICATION_CREATE_TEXT_VIEWER: &str = std_tui!("Application.CreateTextViewer");
-pub const STD_TUI_APPLICATION_CREATE_INPUT_LINE: &str = std_tui!("Application.CreateInputLine");
-pub const STD_TUI_APPLICATION_CREATE_LIST_BOX: &str = std_tui!("Application.CreateListBox");
-pub const STD_TUI_APPLICATION_CREATE_OUTLINE: &str = std_tui!("Application.CreateOutline");
-pub const STD_TUI_APPLICATION_CREATE_CHECK_BOX: &str = std_tui!("Application.CreateCheckBox");
-pub const STD_TUI_APPLICATION_CREATE_RADIO_BUTTON: &str = std_tui!("Application.CreateRadioButton");
 /// Show a modal Turbo Vision file dialog and return the selected path, or `None` when canceled.
 pub const STD_TUI_APPLICATION_RUN_FILE_DIALOG: &str = std_tui!("Application.RunFileDialog");
 /// Queue the result returned by the next headless `Application.RunFileDialog` call.
 pub const STD_TUI_APPLICATION_TEST_SET_FILE_DIALOG_RESULT: &str =
     std_tui!("Application.TestSetFileDialogResult");
-/// Run a dialog modally and return the closing command.
-pub const STD_TUI_APPLICATION_EXEC_DIALOG: &str = std_tui!("Application.ExecDialog");
 /// Run a modal dialog via try-2 `Application.ExecView` and return the closing command id.
 pub const STD_TUI_APPLICATION_EXEC_VIEW: &str = std_tui!("Application.ExecView");
 /// Queue a turbo-vision keyboard event for the next headless try-2 modal (internal test helper).
@@ -130,48 +117,22 @@ pub const STD_TUI_APPLICATION_TRY2_INJECT_KEYBOARD: &str =
 pub const STD_TUI_APPLICATION_TRY2_INJECT_COMMAND: &str = std_tui!("Application.Try2InjectCommand");
 /// Show an upstream Turbo Vision message box and return the closing command id.
 pub const STD_TUI_APPLICATION_MESSAGE_BOX: &str = std_tui!("Application.MessageBox");
-/// Read the current text of an input line (valid after `Application.ExecDialog`).
-pub const STD_TUI_APPLICATION_INPUT_TEXT: &str = std_tui!("Application.InputText");
-/// Read the checked state of a check box (valid after `Application.ExecDialog`).
-pub const STD_TUI_APPLICATION_CHECKED: &str = std_tui!("Application.Checked");
-/// Read the selected state of a radio button (valid after `Application.ExecDialog`).
-pub const STD_TUI_APPLICATION_SELECTED: &str = std_tui!("Application.Selected");
-/// Read the selected index of a list box, or `-1` when no item is selected.
-pub const STD_TUI_APPLICATION_LIST_SELECTION: &str = std_tui!("Application.ListSelection");
-pub const STD_TUI_APPLICATION_OUTLINE_SELECTION: &str = std_tui!("Application.OutlineSelection");
-pub const STD_TUI_APPLICATION_OUTLINE_SELECTED_TEXT: &str =
-    std_tui!("Application.OutlineSelectedText");
-/// Queue the closing command returned by the next headless `Application.ExecDialog` call.
+/// Queue the closing command returned by the next headless modal call.
 pub const STD_TUI_APPLICATION_TEST_SET_DIALOG_RESULT: &str =
     std_tui!("Application.TestSetDialogResult");
-pub const STD_TUI_APPLICATION_CREATE_MENU_BAR: &str = std_tui!("Application.CreateMenuBar");
 pub const STD_TUI_APPLICATION_SET_MENU_BAR: &str = std_tui!("Application.SetMenuBar");
-pub const STD_TUI_APPLICATION_SET_MENUS: &str = std_tui!("Application.SetMenus");
-pub const STD_TUI_APPLICATION_CREATE_STATUS_LINE: &str = std_tui!("Application.CreateStatusLine");
 pub const STD_TUI_APPLICATION_SET_STATUS_LINE: &str = std_tui!("Application.SetStatusLine");
-pub const STD_TUI_APPLICATION_SET_STATUS_ITEMS: &str = std_tui!("Application.SetStatusItems");
-pub const STD_TUI_APPLICATION_ADD_CHILD: &str = std_tui!("Application.AddChild");
-pub const STD_TUI_APPLICATION_SET_TEXT: &str = std_tui!("Application.SetText");
-pub const STD_TUI_APPLICATION_SET_CHECKED: &str = std_tui!("Application.SetChecked");
-pub const STD_TUI_APPLICATION_SET_ITEMS: &str = std_tui!("Application.SetItems");
-pub const STD_TUI_APPLICATION_SET_OUTLINE_NODES: &str = std_tui!("Application.SetOutlineNodes");
-pub const STD_TUI_APPLICATION_SET_TITLE: &str = std_tui!("Application.SetTitle");
-pub const STD_TUI_APPLICATION_ADD_WINDOW: &str = std_tui!("Application.AddWindow");
 pub const STD_TUI_APPLICATION_ON_COMMAND: &str = std_tui!("Application.OnCommand");
 /// Register `function (Application, Std.Console.KeyEvent): boolean` for unhandled Turbo Vision keys.
 pub const STD_TUI_APPLICATION_ON_KEY: &str = std_tui!("Application.OnKey");
 /// Register `procedure (Application, Std.Console.Event)` for unhandled Turbo Vision mouse events.
 pub const STD_TUI_APPLICATION_ON_MOUSE: &str = std_tui!("Application.OnMouse");
-pub const STD_TUI_APPLICATION_PUMP: &str = std_tui!("Application.Pump");
 pub const STD_TUI_APPLICATION_QUIT: &str = std_tui!("Application.Quit");
 pub const STD_TUI_APPLICATION_TEST_CLICK_BUTTON: &str = std_tui!("Application.TestClickButton");
 /// Queue a menu item command for headless tests (`MenuIndex` / `ItemIndex` into `CreateMenuBar` data).
 pub const STD_TUI_APPLICATION_TEST_DISPATCH_MENU_COMMAND: &str =
     std_tui!("Application.TestDispatchMenuCommand");
 pub const STD_TUI_APPLICATION_OPEN_FOR_TEST: &str = std_tui!("Application.OpenForTest");
-pub const STD_TUI_APPLICATION_TEST_PUMP: &str = std_tui!("Application.TestPump");
-pub const STD_TUI_APPLICATION_TEST_PUMP_UNTIL_IDLE: &str =
-    std_tui!("Application.TestPumpUntilIdle");
 pub const STD_TUI_APPLICATION_CLOSE_FOR_TEST: &str = std_tui!("Application.CloseForTest");
 pub const STD_TUI_APPLICATION_TEST_SEND_KEY: &str = std_tui!("Application.TestSendKey");
 pub const STD_TUI_APPLICATION_TEST_SEND_MOUSE: &str = std_tui!("Application.TestSendMouse");
@@ -369,54 +330,22 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_APPLICATION_RUN,
     STD_TUI_APPLICATION_SIZE,
     STD_TUI_APPLICATION_REQUEST_REDRAW,
-    STD_TUI_APPLICATION_CREATE_DIALOG,
-    STD_TUI_APPLICATION_CREATE_WINDOW,
-    STD_TUI_APPLICATION_CREATE_BUTTON,
-    STD_TUI_APPLICATION_CREATE_STATIC_TEXT,
-    STD_TUI_APPLICATION_CREATE_MEMO,
-    STD_TUI_APPLICATION_CREATE_TEXT_VIEWER,
-    STD_TUI_APPLICATION_CREATE_INPUT_LINE,
-    STD_TUI_APPLICATION_CREATE_LIST_BOX,
-    STD_TUI_APPLICATION_CREATE_OUTLINE,
-    STD_TUI_APPLICATION_CREATE_CHECK_BOX,
-    STD_TUI_APPLICATION_CREATE_RADIO_BUTTON,
     STD_TUI_APPLICATION_RUN_FILE_DIALOG,
     STD_TUI_APPLICATION_TEST_SET_FILE_DIALOG_RESULT,
-    STD_TUI_APPLICATION_EXEC_DIALOG,
     STD_TUI_APPLICATION_EXEC_VIEW,
     STD_TUI_APPLICATION_TRY2_INJECT_KEYBOARD,
     STD_TUI_APPLICATION_TRY2_INJECT_COMMAND,
     STD_TUI_APPLICATION_MESSAGE_BOX,
-    STD_TUI_APPLICATION_INPUT_TEXT,
-    STD_TUI_APPLICATION_CHECKED,
-    STD_TUI_APPLICATION_SELECTED,
-    STD_TUI_APPLICATION_LIST_SELECTION,
-    STD_TUI_APPLICATION_OUTLINE_SELECTION,
-    STD_TUI_APPLICATION_OUTLINE_SELECTED_TEXT,
     STD_TUI_APPLICATION_TEST_SET_DIALOG_RESULT,
-    STD_TUI_APPLICATION_CREATE_MENU_BAR,
     STD_TUI_APPLICATION_SET_MENU_BAR,
-    STD_TUI_APPLICATION_SET_MENUS,
-    STD_TUI_APPLICATION_CREATE_STATUS_LINE,
     STD_TUI_APPLICATION_SET_STATUS_LINE,
-    STD_TUI_APPLICATION_SET_STATUS_ITEMS,
-    STD_TUI_APPLICATION_ADD_CHILD,
-    STD_TUI_APPLICATION_SET_TEXT,
-    STD_TUI_APPLICATION_SET_CHECKED,
-    STD_TUI_APPLICATION_SET_ITEMS,
-    STD_TUI_APPLICATION_SET_OUTLINE_NODES,
-    STD_TUI_APPLICATION_SET_TITLE,
-    STD_TUI_APPLICATION_ADD_WINDOW,
     STD_TUI_APPLICATION_ON_COMMAND,
     STD_TUI_APPLICATION_ON_KEY,
     STD_TUI_APPLICATION_ON_MOUSE,
-    STD_TUI_APPLICATION_PUMP,
     STD_TUI_APPLICATION_QUIT,
     STD_TUI_APPLICATION_TEST_CLICK_BUTTON,
     STD_TUI_APPLICATION_TEST_DISPATCH_MENU_COMMAND,
     STD_TUI_APPLICATION_OPEN_FOR_TEST,
-    STD_TUI_APPLICATION_TEST_PUMP,
-    STD_TUI_APPLICATION_TEST_PUMP_UNTIL_IDLE,
     STD_TUI_APPLICATION_CLOSE_FOR_TEST,
     STD_TUI_APPLICATION_TEST_SEND_KEY,
     STD_TUI_APPLICATION_TEST_SEND_MOUSE,

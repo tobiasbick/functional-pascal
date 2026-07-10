@@ -10,7 +10,7 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 **Phase 4** — **complete** (all phase-1 widgets on try-2 path including `Outline`; control tests migrated in phase 7).
 **Phase 5** — **complete** for current branch scope (`MessageBox`, `OnKey`, `OnMouse`, `RunFileDialog` with Try-2-local headless adapter).  
 **Phase 6** — **complete** (`apps/ide` migrated; automated + manual terminal sign-off green).  
-**Phase 7** — **in progress** (controls tests complete; try-1 VM run/reconcile path removed; `TurboVisionObject` snapshot slimming next).
+**Phase 7** — **in progress** (try-1 snapshot removed; `docs/pascal/std/tui/` rewrite remains for Phase 8).
 
 ## Phase 1 closure notes
 
@@ -143,7 +143,14 @@ Upstream `FileDialog::execute(&mut Application)` is available for live `Applicat
 ## Unchanged (Phase 8)
 
 - `docs/pascal/std/tui/` — public spec rewrite in Phase 8
-- `TurboVisionObject` snapshot types in `shared/tui.rs` — dead after reconcile removal; delete in next batch
+
+## Phase 7 snapshot cleanup (2026-07-10)
+
+- `TurboVisionObject` enum and widget snapshot structs removed from `shared/tui.rs`
+- `TurboVisionState` reduced to headless `test_dialog_result` stub
+- Dead try-1 handle decoders removed from `handles.rs`; `input_line_view_bindings` removed from `Worker`
+- `fpas-std` symbol table: dropped try-1 `Application.Create*` / `Pump` / setter getters
+- `TestClickButton` and file-dialog tests no longer reference try-1 queues
 
 ## Phase 7 VM batch (2026-07-10)
 

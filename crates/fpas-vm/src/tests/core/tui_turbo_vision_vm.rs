@@ -208,7 +208,7 @@ fn turbo_vision_on_command_handler_can_quit_application() {
         .clone();
     assert_eq!(output.lines, vec![COMMAND_QUIT.to_string()]);
     let quit = shared.tui.lock().unwrap_or_else(|e| e.into_inner());
-    assert!(quit.quit_requested || quit.turbo_vision.quit_requested);
+    assert!(quit.quit_requested);
 }
 
 #[test]

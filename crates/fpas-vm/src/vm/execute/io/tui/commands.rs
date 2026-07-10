@@ -85,10 +85,7 @@ impl Worker {
 
     pub(super) fn turbo_vision_quit(&mut self, line: SourceLocation) -> Result<(), VmError> {
         self.pop_tui_application(line)?;
-        self.with_tui(|tui| {
-            tui.quit_requested = true;
-            tui.turbo_vision.quit_requested = true;
-        });
+        self.with_tui(|tui| tui.quit_requested = true);
         Ok(())
     }
 }

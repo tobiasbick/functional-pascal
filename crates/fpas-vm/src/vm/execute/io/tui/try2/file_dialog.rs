@@ -96,10 +96,7 @@ mod tests {
     #[test]
     fn headless_file_dialog_uses_try2_queue() {
         let mut worker = headless_try2_worker(80, 25);
-        worker.with_tui(|tui| {
-            tui.turbo_vision.test_file_dialog_result = Some(Some("try1.txt".into()));
-        });
-        worker.try2.set_file_dialog_result(Some("try2.txt".into()));
+        worker.try2.set_file_dialog_result(Some("picked.txt".into()));
 
         let selected = try2_run_file_dialog(
             &mut worker,
@@ -111,11 +108,6 @@ mod tests {
         )
         .expect("file dialog");
 
-        assert_eq!(selected, Some("try2.txt".into()));
-        assert_eq!(
-            worker.with_tui(|tui| tui.turbo_vision.test_file_dialog_result.clone()),
-            Some(Some("try1.txt".into())),
-            "try-2 headless file dialog must not consume the try-1 queue"
-        );
+        assert_eq!(selected, Some("picked.txt".into()));
     }
 }

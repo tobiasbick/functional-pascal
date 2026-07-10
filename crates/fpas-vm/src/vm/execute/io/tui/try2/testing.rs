@@ -80,37 +80,33 @@ fn menu_item_error(menu_index: usize, item_index: usize, line: SourceLocation) -
     )
 }
 
+fn button_handle_error(
+    error: super::registry::RegistryError,
+    _handle: u32,
+    line: SourceLocation,
+) -> VmError {
+    let (message, help) = match error {
+        super::registry::RegistryError::UnknownHandle(handle) => (
+            format!("Button handle {handle} is not registered in the try-2 session"),
+            "Use a handle returned by `Button.New` or `Dialog.AddButton`.",
+        ),
+        super::registry::RegistryError::WrongKind { handle, .. } => (
+            format!("Handle {handle} is not a Button"),
+            "Pass a handle from `Button.New` or `Dialog.AddButton`.",
+        ),
+    };
+    runtime_error(RUNTIME_INTRINSIC_STACK_STATE_ERROR, message, help, line)
+}
+
 impl Worker {
-    /// Handles `Application.TestClickButton` for try-2 or falls back to try-1.
+    /// Handles `Application.TestClickButton` on the try-2 headless path.
     pub(in crate::vm::execute::io::tui) fn exec_test_click_button(
         &mut self,
         line: SourceLocation,
     ) -> Result<(), VmError> {
         let button_handle = self.pop_turbo_vision_button_handle(line)?;
         self.pop_tui_application(line)?;
-
-        if self
-            .try2
-            .registry
-            .require(button_handle, ViewKind::Button)
-            .is_ok()
-        {
-            return self.try2_queue_button_click(button_handle, line);
-        }
-
-        self.with_tui(|tui| {
-            use super::super::tv_geometry::unknown_handle_error;
-            use crate::vm::shared::TurboVisionObject;
-            let Some(TurboVisionObject::Button(button)) =
-                tui.turbo_vision.objects.get(&button_handle)
-            else {
-                return Err(unknown_handle_error("Button", button_handle, line));
-            };
-            tui.turbo_vision
-                .pending_commands
-                .push_back(button.command_id);
-            Ok(())
-        })
+        self.try2_queue_button_click(button_handle, line)
     }
 
     fn try2_queue_button_click(
@@ -118,6 +114,11 @@ impl Worker {
         button_handle: u32,
         line: SourceLocation,
     ) -> Result<(), VmError> {
+        self.try2
+            .registry
+            .require(button_handle, ViewKind::Button)
+            .map_err(|error| button_handle_error(error, button_handle, line))?;
+
         if !self.with_tui(|tui| tui.session.is_headless()) {
             return Err(runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,

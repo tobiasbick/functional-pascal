@@ -6,9 +6,6 @@ use super::diagnostics::{STACK_OVERFLOW_CODE, VmError};
 use super::shared::{SharedState, TaskState};
 use super::{CallFrame, STACK_MAX, TIMESLICE};
 use fpas_bytecode::{SourceLocation, Value};
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::rc::Rc;
 use std::sync::Arc;
 use turbo_vision::app::Application as TurboVisionApplication;
 
@@ -36,8 +33,6 @@ pub(crate) struct Worker {
     pub(in crate::vm) headless_tv_app: Option<HeadlessTvApp>,
     /// Try-2 TUI rewrite: Rust-owned view registry (see `docs/refactor-tui-try-2/`).
     pub(in crate::vm) try2: Try2Session,
-    /// Live `InputLine` view text buffers keyed by FPAS handle (main worker only).
-    pub(in crate::vm) input_line_view_bindings: RefCell<HashMap<u32, Rc<RefCell<String>>>>,
 }
 
 impl Worker {
@@ -57,7 +52,6 @@ impl Worker {
             live_turbo_vision_app: None,
             headless_tv_app: None,
             try2: Try2Session::default(),
-            input_line_view_bindings: RefCell::new(HashMap::new()),
         }
     }
 
@@ -77,7 +71,6 @@ impl Worker {
             live_turbo_vision_app: None,
             headless_tv_app: None,
             try2: Try2Session::default(),
-            input_line_view_bindings: RefCell::new(HashMap::new()),
         }
     }
 

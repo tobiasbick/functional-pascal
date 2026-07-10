@@ -2,7 +2,7 @@
 
 Planning documents for replacing the current FPAS Turbo Vision facade with a **Rust-owned widget tree** and a **Turbo-Vision-aligned Pascal API**.
 
-This is a **breaking rewrite**. There is no backward-compatibility requirement for the hobby project. When implementation is complete, the public spec moves from here into `docs/pascal/std/tui/` and this directory is removed or archived.
+This is a **breaking rewrite**. There is no backward-compatibility requirement for the hobby project. The public spec now lives in `docs/pascal/std/tui/`; this directory remains only for the Phase-7 cleanup plan and historical baseline.
 
 ## Status
 
@@ -10,7 +10,7 @@ This is a **breaking rewrite**. There is no backward-compatibility requirement f
 | --- | --- |
 | Decision | Approved direction — Rust `turbo_vision::Application` is the single source of truth |
 | Branch | `refactor/tui-try-2` |
-| Implementation | Phase 4 complete; Phase 5 partial; Phase 6 IDE migration partial with automated tests green |
+| Implementation | Phases 1-6 complete; Phase 7 cleanup in progress |
 | Try-2 tests | `tests/tui/smoke/*_try2_test.fpas`, `tests/tui/views/*_try2_test.fpas`, `tests/tui/modals/message_box_try2_test.fpas`, `tests/tui/events/on_key_try2_test.fpas`, `apps/ide/tests/` |
 | Baseline | [baseline.md](baseline.md) — try-1 snapshot before rewrite |
 | Upstream pin | `turbo-vision` 2.0, git tag `v2.0.0` (see workspace `Cargo.toml`) |

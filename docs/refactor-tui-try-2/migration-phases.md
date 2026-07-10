@@ -28,7 +28,7 @@ Estimates assume focused hobby-project pace (part-time).
 - [x] Add `ViewRegistry` in `try2/registry.rs` (wired on `Worker` via `Try2Session`).
 - [x] ~~Slim `TuiState` on Worker~~ — **deferred to phase 7** ([rust-layout.md](rust-layout.md)): requires deleting try-1 `TurboVisionState`; `Try2Session` on `Worker` is the coexistence bridge until then.
 - [x] Implement `try2/session.rs` integration with `TuiSession.open` / `OpenForTest`
-- [x] Implement `try2/geometry.rs` rect conversion.
+- [x] Implement FPAS-to-Turbo-Vision rect conversion (`tv_geometry.rs`).
 - [x] Add `fpas-std/tui/cm_constants.rs` with core `CM_*` constants.
 - [x] Sema + compiler for `Application.New` / `Close` — `Application.New` → `ApplicationOpen`; `Close` / `CloseForTest` reuse try-1 intrinsics + `try2.reset()` on close.
 - [x] Rust unit tests: registry allocate/validate/clear.
@@ -151,7 +151,7 @@ Estimates assume focused hobby-project pace (part-time).
 Not blocking completion:
 
 - [ ] `Application.Configure` + `ApplicationHandlers` (Graph parity).
-- [ ] `Outline` and remaining phase-2 widgets.
+- [x] `Outline`.
 - [ ] `EditorWindow` for IDE editor pane.
 - [ ] Generate `CM_*` from upstream build script to avoid drift.
 

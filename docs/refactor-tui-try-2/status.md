@@ -1,6 +1,6 @@
 # Implementation status
 
-Living progress log for branch `refactor/tui-try-2`. Update each work session. Plan docs last synced with code: **2026-07-09**.
+Living progress log for branch `refactor/tui-try-2`. Update each work session. Plan docs last synced with code: **2026-07-10**.
 
 ## Current phase
 
@@ -10,8 +10,8 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 **Phase 4** — **complete** (all phase-1 widgets on try-2 path including `Outline`; control tests migrated in phase 7).
 **Phase 5** — **complete** for current branch scope (`MessageBox`, `OnKey`, `OnMouse`, `RunFileDialog` with Try-2-local headless adapter).  
 **Phase 6** — **complete** (`apps/ide` migrated; automated + manual terminal sign-off green).  
-**Phase 7** — **in progress** (VM deletion largely complete; interim test symbols remain).  
-**Phase 8** — **in progress** (`docs/pascal/std/tui/` rewrite for try-2 API).
+**Phase 7** — **in progress** (legacy bridge modules and interim test symbols remain).  
+**Phase 8** — optional follow-ups; public docs were rewritten as Phase 7 work.
 
 ## Phase 1 closure notes
 
@@ -19,7 +19,7 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 | --- | --- |
 | `Try2Session` + `ViewRegistry` | Done — `Worker.try2`, lifecycle hooks, registry tests. |
 | `Application.New` / `Close` | Done — `New` → `ApplicationOpen`; `Close` / `CloseForTest` + `try2.reset()`. |
-| Slim `TuiState` | **Next** — try-1 control tests removed; delete VM try-1 modules per [deletion-checklist.md](deletion-checklist.md). |
+| Slim `TuiState` | Done — `TurboVisionState`, `TurboVisionObject`, and snapshot structs removed. |
 
 ## Landed (2026-07-07)
 
@@ -108,7 +108,7 @@ Covers: registry, geometry, session, dialog, button, window, desktop, static tex
 
 ## Next steps
 
-1. **Phase 7 (VM deletion)** — remove try-1 VM modules, sema symbols, and public docs per [deletion-checklist.md](deletion-checklist.md). **Follow-up:** try-2 `TestClickMouse` hit-target routing exists; checkbox/radio toggle via mouse on desktop windows needs a dedicated fix (smoke tests verify coordinate routing only).
+1. **Phase 7 (VM deletion)** — remove try-1 VM modules and sema symbols per [deletion-checklist.md](deletion-checklist.md). Headless `TestClickMouse` toggles checkbox and radio-button targets; regressions live under `tests/tui/events/`.
 2. **Phase 7/8 cleanup** — replace interim `TestSetFileDialogResult` naming with the final headless event API after the public testing surface is rewritten.
 
 # Phase 7 progress (2026-07-10)
@@ -146,11 +146,7 @@ Headless try-2 modals run through `HeadlessTvApp::exec_modal_view`. Interactive 
 
 Upstream `FileDialog::execute(&mut Application)` is available for live `Application`, but the branch cannot currently construct a full upstream `Application` over the headless terminal because the required fields/constructors are private. The current headless `RunFileDialog` test path uses a Try-2-local queued adapter on `Try2Session`; it no longer consumes the try-1 `test_file_dialog_result` queue.
 
-## Unchanged (Phase 8)
-
-- `docs/pascal/std/tui/` — public spec rewrite in Phase 8
-
-## Phase 8 docs rewrite (2026-07-10)
+## Public docs rewrite (2026-07-10)
 
 Public spec under `docs/pascal/std/tui/` updated for try-2 API:
 

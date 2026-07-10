@@ -4,16 +4,16 @@ Target module layout after try-2. Follow [AGENTS.md](../../AGENTS.md): one conce
 
 ## VM bridge (`crates/fpas-vm/src/vm/execute/io/tui/`)
 
-### Current `try2/` tree (branch tip, 2026-07-09)
+### Current `try2/` tree (branch tip, 2026-07-10)
 
-Coexists with try-1 until phase 7. Pascal intrinsics are wired through Phase 4, with partial Phase 5 routing for `MessageBox`, `RunFileDialog`, `OnKey`, and `OnMouse`.
+Phase 7 is removing the remaining try-1 bridge modules. Try-2 owns all public view construction, run, modal, and callback routes.
 
 ```text
 crates/fpas-vm/src/vm/execute/io/tui/try2/
   mod.rs
   session.rs       — Try2Session on Worker (registry, roots, detached widgets, desktop windows)
   registry.rs      — ViewRegistry + ViewKind
-  geometry.rs      — FPAS Rect ↔ turbo_vision Rect
+  # Rectangle conversion remains in ../tv_geometry.rs during Phase 7.
   records.rs       — opaque handle record helpers
   events.rs        — OnCommand dispatch (no command_map offset)
   run.rs           — Application.Run (headless + live)
@@ -29,7 +29,7 @@ crates/fpas-vm/src/vm/execute/io/tui/try2/
   views/
     mod.rs
     dialog.rs      — Dialog.NewModal
-    button.rs      — Button.New, Dialog.Add, Dialog.AddButton
+    button.rs      — Button.New
     static_text.rs — StaticText.New
     attach.rs      — Dialog.Add / Window.Add child dispatch
     window.rs      — Window.New, Window.Add
@@ -42,7 +42,7 @@ crates/fpas-vm/src/vm/execute/io/tui/try2/
     text_viewer.rs  — TextViewer.New/SetText
 ```
 
-`HeadlessTvApp` in `headless_tv_draw.rs` remains for headless paint/modal/run until phase 7 consolidation.
+`HeadlessTvApp` in `headless_tv_draw.rs` remains for headless paint/modal/run until Phase-7 consolidation.
 Several Phase-4 controls still reuse existing `Bridged*` view types for state synchronization and live mutation. That is an accepted coexistence shortcut on the branch, not the Phase-7 target.
 
 ### Target tree (after phase 7)

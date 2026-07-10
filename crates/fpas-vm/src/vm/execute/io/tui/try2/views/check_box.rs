@@ -139,7 +139,9 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_attach_check_box(
         (view_id, hit, click)
     };
 
-    worker.try2.register_mouse_hit_target(hit, click);
+    worker
+        .try2
+        .register_mouse_hit_target(check_box_handle, hit, click);
 
     worker
         .try2
@@ -209,7 +211,9 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_window_attach_check_box(
         (view_id, hit, click)
     };
 
-    worker.try2.register_mouse_hit_target(hit, click);
+    worker
+        .try2
+        .register_mouse_hit_target(check_box_handle, hit, click);
 
     worker
         .try2

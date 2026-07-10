@@ -60,7 +60,7 @@ Avoid:
 
 ## Migration Workflow
 
-The Turbo Vision rewrite is complete. For new `Std.Tui` work:
+The Turbo Vision public API rewrite is complete; Phase-7 bridge cleanup remains in progress. For new `Std.Tui` work:
 
 1. Read the current spec under `docs/pascal/std/tui/`.
 2. Follow the end-to-end recipe in `docs/pascal/std/tui/app/vm-bridge.md`.
@@ -75,7 +75,7 @@ Follow project `AGENTS.md` structure rules:
 - prefer subdirectories over crowded modules;
 - remove dead code introduced or exposed by the rewrite.
 
-Expected VM bridge shape may change, but keep concerns separated:
+The current bridge is transitional: `try2/` owns public widget construction and runtime routes, while legacy root modules remain until Phase 7 completes. Use `docs/pascal/std/tui/app/vm-bridge.md` for the current file map and `docs/refactor-tui-try-2/status.md` for cleanup status. Do not reintroduce `reconcile.rs`, `ExecDialog`, or command-offset routing.
 
 ```text
 crates/fpas-vm/src/vm/execute/io/tui/

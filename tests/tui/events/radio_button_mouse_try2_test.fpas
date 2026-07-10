@@ -26,7 +26,7 @@ begin
   Application.TestClickMouse(App, 5, 4);
   Application.TestInjectCommand(App, CM_QUIT);
   Application.Run(App, OnCommand);
-  AssertTrue(RadioButton.Selected(OptionA));
-  AssertFalse(RadioButton.Selected(OptionB));
+  AssertFalse(RadioButton.Selected(OptionA));
+  AssertTrue(RadioButton.Selected(OptionB));
   Application.CloseForTest(App)
 end.

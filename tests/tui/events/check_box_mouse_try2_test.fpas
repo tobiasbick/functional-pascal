@@ -24,6 +24,6 @@ begin
   Application.TestClickMouse(App, 5, 3);
   Application.TestInjectCommand(App, CM_QUIT);
   Application.Run(App, OnCommand);
-  AssertFalse(CheckBox.Checked(Opt));
+  AssertTrue(CheckBox.Checked(Opt));
   Application.CloseForTest(App)
 end.

@@ -136,7 +136,7 @@ tests/tui/controls/    — entire directory after porting to tests/tui/views/
 | `message_box` (1) | `tests/tui/modals/message_box_try2_test.fpas` |
 | `file_dialog` (1) | `tests/tui/modals/file_dialog_try2_test.fpas` |
 
-**16** files remain: outline (2), live tree/dialog (2), `Pump`/`spike`, paint/setter chrome tests, mouse tests (2), `reserved_command`, `tui_run_path`.
+No try-1 control tests remain. The retained Try-2 tests keep their `_try2` suffix until the final naming cleanup.
 
 ## Examples
 

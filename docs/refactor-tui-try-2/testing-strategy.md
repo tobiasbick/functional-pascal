@@ -13,10 +13,11 @@ Test plan for try-2. Goal: prove **user-visible behavior** and **thin bridge inv
 | Message box | `tests/tui/modals/message_box_try2_test.fpas` |
 | Keyboard callback | `tests/tui/events/on_key_try2_test.fpas` |
 | Mouse callback | `tests/tui/events/on_mouse_try2_test.fpas` |
+| Check box / radio mouse state | `tests/tui/events/check_box_mouse_try2_test.fpas`, `radio_button_mouse_try2_test.fpas` |
 | IDE shell/menu/dialog flows | `apps/ide/tests/` |
 | Rust unit tests | `cargo test -p fpas-vm try2::` (registry, geometry, events, dialog, button, widgets, modals) |
 
-try-1 `tests/tui/controls/*` (37 files) still run unchanged — coexistence routing in `try2_should_handle_application_run()`.
+All 37 try-1 `tests/tui/controls/*` files were removed. Their behavioral replacements live in the Try-2 test directories.
 
 ## Principles
 
@@ -163,7 +164,7 @@ cargo run -p fpas-cli -- apps/ide/ide.fpasprj
 
 - [ ] Modal: OK and Cancel with mouse click
 - [ ] Modal: Enter on default OK, Esc on Cancel
-- [ ] Mouse click on check box and radio button
+- [x] Headless mouse click on check box and radio button
 - [ ] Menu accelerator and pull-down command
 - [ ] Window behind dialog z-order
 - [ ] IDE About message box

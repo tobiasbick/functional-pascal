@@ -116,6 +116,7 @@ fn try2_headless_application_run(worker: &mut Worker, line: SourceLocation) -> R
         }
     }
 
+    worker.apply_pending_mouse_state_toggles(line)?;
     worker.turbo_vision_export_headless_to_console();
     Ok(())
 }

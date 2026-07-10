@@ -10,7 +10,6 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 | --- | --- | --- |
 | `Dialog.NewModal` | ✅ | `try2/views/dialog.rs` |
 | `Button.New`, `Dialog.Add` | ✅ | `try2/views/button.rs` |
-| `Dialog.AddButton` | ✅ convenience | `try2/views/button.rs` |
 | `Application.ExecView` | ✅ | `try2/modals.rs`, `try2/headless.rs` |
 | `Application.Run` + `OnCommand` | ✅ | `try2/run.rs` — `Application.Run(App)` or `Application.Run(App, OnCommand)` (intrinsic 484) |
 | `Application.Quit` | ✅ via try-1 | `quit_requested`; try-2 run loop honors it |
@@ -69,11 +68,10 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 | `menu_bar::MenuBar` | `MenuBar` | ✅ `try2/chrome.rs` |
 | `status_line::StatusLine` | `StatusLine` | ✅ `try2/chrome.rs` |
 
-## Controls (later phases)
+## Controls not implemented
 
 | Upstream type | FPAS | Priority |
 | --- | --- | --- |
-| `outline::Outline` | `Outline` | Medium — IDE may not need immediately |
 | `file_dialog::FileDialog` | `Application.RunFileDialog` | High — live path landed; headless uses a Try-2-local queued adapter until upstream/application construction is available |
 | `editor::EditorWindow` | `EditorWindow` | Low |
 | `help_window::HelpWindow` | — | Low |
@@ -94,7 +92,7 @@ Export constants from `turbo_vision::core::command` (see upstream `prelude`).
 | View | `CM_ZOOM_IN`, `CM_TILE`, `CM_CASCADE` | same |
 | Help | `CM_HELP_INDEX`, `CM_ABOUT` | same |
 
-**Try-2 callbacks:** `OnCommand` receives the same integer upstream emitted. The old `command_map.rs` offset translation still exists for try-1 coexistence and is removed in Phase 7.
+**Try-2 callbacks:** `OnCommand` receives the same integer upstream emitted. `command_map.rs` retains only the reserved-command synchronization test; no offset translation remains.
 
 **Convention:** application-private commands start at `CM_USER` (4096) or another documented base.
 
@@ -146,7 +144,6 @@ Land in `fpas-bytecode/src/intrinsic/tui/variants/try2.inc` (473+). Current:
 
 ```text
 DialogNewModal = 473
-DialogAddButton = 474
 ExecView = 475
 TestInjectKeyboard = 476
 ButtonNew = 477

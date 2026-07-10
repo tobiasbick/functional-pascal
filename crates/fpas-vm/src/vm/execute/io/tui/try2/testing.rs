@@ -216,10 +216,13 @@ impl Worker {
                     line,
                 )
             })?;
-        let point = self
-            .try2
-            .mouse_point_for_screen(x, y)
+        let target = self.try2.mouse_hit_target_for_screen(x, y);
+        let point = target
+            .map(|target| target.click)
             .unwrap_or_else(|| turbo_vision::core::geometry::Point::new(x, y));
+        if let Some(target) = target {
+            self.try2.queue_mouse_state_toggle(target.handle);
+        }
 
         let mut app = self.headless_tv_app.take().ok_or_else(|| {
             runtime_error(
@@ -238,6 +241,60 @@ impl Worker {
             let _ = app.dispatch_next_input_event();
         }
         self.headless_tv_app = Some(app);
+
+        Ok(())
+    }
+
+    /// Applies stateful headless mouse clicks after the test run loop has consumed input.
+    pub(in crate::vm::execute::io::tui) fn apply_pending_mouse_state_toggles(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        for handle in self.try2.take_pending_mouse_state_toggles() {
+            if self
+                .try2
+                .registry
+                .require(handle, ViewKind::CheckBox)
+                .is_ok()
+            {
+                let cell = self.try2.check_box_cell(handle).ok_or_else(|| {
+                    runtime_error(
+                        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                        format!("CheckBox handle {handle} has no host state"),
+                        "Use a CheckBox attached to the active try-2 session.",
+                        line,
+                    )
+                })?;
+                cell.set(!cell.read());
+                continue;
+            }
+            let group_id = self
+                .try2
+                .radio_button_state(handle)
+                .ok_or_else(|| {
+                    runtime_error(
+                        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                        format!("RadioButton handle {handle} has no host state"),
+                        "Use a RadioButton attached to the active try-2 session.",
+                        line,
+                    )
+                })?
+                .group_id;
+            self.try2
+                .deselect_radio_group_except(group_id, Some(handle));
+            let cell = self
+                .try2
+                .radio_button_selected_cell(handle)
+                .ok_or_else(|| {
+                    runtime_error(
+                        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                        format!("RadioButton handle {handle} has no host state"),
+                        "Use a RadioButton attached to the active try-2 session.",
+                        line,
+                    )
+                })?;
+            cell.set(true);
+        }
         Ok(())
     }
 }

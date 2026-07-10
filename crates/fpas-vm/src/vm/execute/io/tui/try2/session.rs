@@ -78,6 +78,17 @@ pub(crate) struct DetachedTextViewer {
     pub local_bounds: Rect,
 }
 
+/// A headless screen-space target for a stateful control.
+#[derive(Clone, Copy)]
+pub(crate) struct MouseHitTarget {
+    /// Opaque try-2 handle for the target control.
+    pub handle: u32,
+    /// Screen-space rectangle that accepts the click.
+    pub hit: Rect,
+    /// Point delivered to Turbo Vision for the click.
+    pub click: Point,
+}
+
 /// Host-side radio button state retained after attach.
 #[derive(Clone)]
 pub(crate) struct Try2RadioButtonState {
@@ -174,7 +185,9 @@ pub(crate) struct Try2Session {
     /// Headless test click targets keyed by try-2 button handle.
     button_clicks: HashMap<u32, Point>,
     /// Screen-space mouse hit targets for check boxes and radio buttons.
-    mouse_hit_targets: Vec<(Rect, Point)>,
+    mouse_hit_targets: Vec<MouseHitTarget>,
+    /// Stateful controls clicked through the headless test hook during the next run loop.
+    pending_mouse_state_toggles: Vec<u32>,
     /// Window handles attached to the upstream desktop via `Desktop.Add`.
     desktop_windows: HashSet<u32>,
     menu_bars: HashMap<u32, Try2MenuBarState>,
@@ -216,6 +229,7 @@ impl Try2Session {
         self.child_parents.clear();
         self.button_clicks.clear();
         self.mouse_hit_targets.clear();
+        self.pending_mouse_state_toggles.clear();
         self.desktop_windows.clear();
         self.menu_bars.clear();
         self.status_lines.clear();
@@ -877,20 +891,31 @@ impl Try2Session {
         self.button_clicks.get(&handle).copied()
     }
 
-    /// Registers a screen-space hit target for headless `TestClickMouse`.
-    pub fn register_mouse_hit_target(&mut self, hit: Rect, click: Point) {
-        self.mouse_hit_targets.push((hit, click));
+    /// Registers a screen-space control target for headless `TestClickMouse`.
+    pub fn register_mouse_hit_target(&mut self, handle: u32, hit: Rect, click: Point) {
+        self.mouse_hit_targets
+            .push(MouseHitTarget { handle, hit, click });
     }
 
     /// Resolves a queued screen click to a desktop mouse coordinate when possible.
     #[must_use]
-    pub fn mouse_point_for_screen(&self, x: i16, y: i16) -> Option<Point> {
-        for (hit, click) in &self.mouse_hit_targets {
-            if super::view_click::point_in_screen_bounds(*hit, x, y) {
-                return Some(*click);
+    pub fn mouse_hit_target_for_screen(&self, x: i16, y: i16) -> Option<MouseHitTarget> {
+        for target in &self.mouse_hit_targets {
+            if super::view_click::point_in_screen_bounds(target.hit, x, y) {
+                return Some(*target);
             }
         }
         None
+    }
+
+    /// Queues a stateful control transition for headless `TestClickMouse`.
+    pub fn queue_mouse_state_toggle(&mut self, handle: u32) {
+        self.pending_mouse_state_toggles.push(handle);
+    }
+
+    /// Takes all stateful control transitions queued by headless mouse tests.
+    pub fn take_pending_mouse_state_toggles(&mut self) -> Vec<u32> {
+        std::mem::take(&mut self.pending_mouse_state_toggles)
     }
 
     /// Returns `true` when `handle` was passed to `Desktop.Add`.

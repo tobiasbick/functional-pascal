@@ -162,7 +162,7 @@ Removed try-1 `Application.Create*` / `ExecDialog` / offset-band references from
 - Deleted unused `try2/geometry.rs` (duplicate of `tv_geometry.rs`)
 - Removed `dispatch_tui_command` from `lifecycle.rs`; dead `set_text_from_fpas` on checkbox/radio bridged views
 - `message_box.rs` returns upstream command ids unchanged; headless `TestSetDialogResult` stub moved to `Try2Session`
-- VM tests use `try2_dispatch_command_event_for_tests` instead of deleted try-1 dispatch helpers
+- Dropped `Command.*` Pascal aliases; use `CM_*` constants (`command_api.rs` removed)
 - Dropped `TurboVisionState` from `TuiState`; headless test hooks live on `Try2Session` only
 
 ## Phase 7 snapshot cleanup (2026-07-10)

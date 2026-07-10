@@ -69,10 +69,6 @@ pub const STD_TUI_MENU_BAR_NEW: &str = std_tui!("MenuBar.New");
 pub const STD_TUI_MENU_BAR_SET_MENUS: &str = std_tui!("MenuBar.SetMenus");
 pub const STD_TUI_STATUS_LINE_NEW: &str = std_tui!("StatusLine.New");
 pub const STD_TUI_STATUS_LINE_SET_ITEMS: &str = std_tui!("StatusLine.SetItems");
-pub const STD_TUI_COMMAND_ACCEPT: &str = std_tui!("Command.Accept");
-pub const STD_TUI_COMMAND_CANCEL: &str = std_tui!("Command.Cancel");
-pub const STD_TUI_COMMAND_CLOSE: &str = std_tui!("Command.Close");
-pub const STD_TUI_COMMAND_QUIT: &str = std_tui!("Command.Quit");
 pub const STD_TUI_MESSAGE_BOX_OPTION_WARNING: &str = std_tui!("MessageBoxOption.Warning");
 pub const STD_TUI_MESSAGE_BOX_OPTION_ERROR: &str = std_tui!("MessageBoxOption.Error");
 pub const STD_TUI_MESSAGE_BOX_OPTION_INFORMATION: &str = std_tui!("MessageBoxOption.Information");
@@ -304,10 +300,6 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_MENU_BAR_SET_MENUS,
     STD_TUI_STATUS_LINE_NEW,
     STD_TUI_STATUS_LINE_SET_ITEMS,
-    STD_TUI_COMMAND_ACCEPT,
-    STD_TUI_COMMAND_CANCEL,
-    STD_TUI_COMMAND_CLOSE,
-    STD_TUI_COMMAND_QUIT,
     STD_TUI_MESSAGE_BOX_OPTION_WARNING,
     STD_TUI_MESSAGE_BOX_OPTION_ERROR,
     STD_TUI_MESSAGE_BOX_OPTION_INFORMATION,

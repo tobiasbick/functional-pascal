@@ -4,7 +4,7 @@ use crate::check::Checker;
 use crate::types::{ProcedureTy, Ty};
 use fpas_std::std_symbols as s;
 
-/// Register try-2 `Std.Tui` symbols (coexists with try-1 on `refactor/tui-try-2`).
+/// Register try-2 `Std.Tui` view and application symbols.
 ///
 /// **Documentation:** `docs/refactor-tui-try-2/target-api.md`
 pub(super) fn register_try2_api(

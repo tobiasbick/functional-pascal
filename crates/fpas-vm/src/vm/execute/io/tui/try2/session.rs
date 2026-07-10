@@ -246,6 +246,7 @@ impl Try2Session {
 
     /// Application handle for the active session, if any.
     #[must_use]
+    #[cfg(test)]
     pub fn app_handle(&self) -> Option<u32> {
         self.app_handle
     }
@@ -364,6 +365,8 @@ impl Try2Session {
 
     /// Returns host-side static text.
     #[must_use]
+    /// Read host-side static text (unit tests).
+    #[cfg(test)]
     pub fn static_text_text(&self, handle: u32) -> Option<&str> {
         self.static_text_texts.get(&handle).map(String::as_str)
     }
@@ -722,6 +725,8 @@ impl Try2Session {
 
     /// Returns host-side memo text.
     #[must_use]
+    /// Read host-side memo text (unit tests).
+    #[cfg(test)]
     pub fn memo_text(&self, handle: u32) -> Option<&str> {
         self.memo_texts.get(&handle).map(String::as_str)
     }
@@ -772,6 +777,8 @@ impl Try2Session {
 
     /// Returns host-side text viewer text.
     #[must_use]
+    /// Read host-side text viewer text (unit tests).
+    #[cfg(test)]
     pub fn text_viewer_text(&self, handle: u32) -> Option<&str> {
         self.text_viewer_texts.get(&handle).map(String::as_str)
     }
@@ -906,6 +913,7 @@ impl Try2Session {
     }
 
     /// Validates session is open.
+    #[cfg(test)]
     pub fn require_open(&self) -> bool {
         self.session_open
     }

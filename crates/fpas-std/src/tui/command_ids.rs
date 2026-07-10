@@ -1,14 +1,14 @@
-//! Pascal-facing command identifiers for Turbo Vision widgets and callbacks.
+//! Internal command id values shared by the compiler and VM.
 //!
-//! Values match Borland Turbo Vision / `turbo-vision` 2.0 `CM_*` constants.
+//! Pascal programs use `CM_*` constants from `Std.Tui` (`CM_OK`, `CM_QUIT`, …).
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/types.md`
 
-/// Standard dialog accept command (`Command.Accept`; Borland `cmOK`).
+/// Borland `cmOK` / `CM_OK`.
 pub const COMMAND_OK: i64 = 10;
-/// Standard dialog cancel command (`Command.Cancel`; Borland `cmCancel`).
+/// Borland `cmCancel` / `CM_CANCEL`.
 pub const COMMAND_CANCEL: i64 = 11;
-/// Close the source view or window (`Command.Close`; Borland `cmClose`).
+/// Borland `cmClose` / `CM_CLOSE`.
 pub const COMMAND_CLOSE: i64 = 4;
-/// Exit the application (`Command.Quit`; Borland `cmQuit`).
+/// Borland `cmQuit` / `CM_QUIT`.
 pub const COMMAND_QUIT: i64 = 1;

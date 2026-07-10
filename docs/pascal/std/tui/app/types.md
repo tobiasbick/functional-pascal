@@ -43,8 +43,6 @@ Command ids are plain integers. Upstream Turbo Vision `CM_*` constants are expor
 | `CM_OPEN` | `102` | Standard Open command (IDE File → Open). |
 | `CM_USER` | `4096` | Suggested base for application-private command ids. |
 
-Legacy aliases `Command.Quit`, `Command.Close`, `Command.Accept`, and `Command.Cancel` map to the same values as `CM_QUIT`, `CM_CLOSE`, `CM_OK`, and `CM_CANCEL`. Prefer `CM_*` in new code.
-
 Application-defined commands use other positive integers. Avoid reusing upstream reserved `CM_*` ids for custom widgets when possible.
 
 ## `MessageBoxOption` constants

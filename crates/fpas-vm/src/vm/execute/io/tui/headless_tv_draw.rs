@@ -180,6 +180,7 @@ impl HeadlessTvApp {
     }
 
     /// One headless `Application.Run` iteration: draw, poll, dispatch, return command events.
+    #[cfg(test)]
     pub(in crate::vm::execute::io::tui) fn run_step(
         &mut self,
     ) -> std::io::Result<Option<CommandId>> {

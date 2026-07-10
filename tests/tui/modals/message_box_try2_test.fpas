@@ -7,5 +7,5 @@ begin
   Application.Try2InjectKeyboard(App, 7181);
   var AcceptCommand: integer := Application.MessageBox(App, 'Hello', MessageBoxOption.About +
                                                                      MessageBoxOption.OkButton);
-  AssertEquals(Command.Accept, AcceptCommand)
+  AssertEquals(CM_OK, AcceptCommand)
 end.

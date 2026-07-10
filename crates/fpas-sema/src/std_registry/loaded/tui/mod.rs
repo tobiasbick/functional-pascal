@@ -6,7 +6,6 @@
 //! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 mod application_api;
-mod command_api;
 mod handlers;
 mod message_box_api;
 mod try2_api;
@@ -162,7 +161,6 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         ],
     );
 
-    command_api::register_command_constants(checker);
     message_box_api::register_message_box_option_constants(checker);
     super::super::builtins::register_tui_builtins(checker);
 

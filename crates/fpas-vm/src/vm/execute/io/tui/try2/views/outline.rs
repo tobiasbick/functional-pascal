@@ -16,7 +16,6 @@ use crate::vm::turbo_vision_list_selection_cell::TurboVisionListSelectionCell;
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 use turbo_vision::core::geometry::Rect;
-use turbo_vision::views::View;
 
 /// Creates a detached outline (`Outline.New`).
 pub(in crate::vm::execute::io::tui::try2) fn try2_outline_new(

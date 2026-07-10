@@ -15,7 +15,6 @@ use turbo_vision::views::view::View;
 /// Turbo Vision radio button wired to shared FPAS group selection cells.
 pub(in crate::vm::execute::io::tui) struct BridgedRadioButton {
     inner: RadioButton,
-    group_id: u16,
     selected_cell: TurboVisionBoolCell,
     group_cells: Vec<TurboVisionBoolCell>,
     tree_dirty: TurboVisionBoolCell,
@@ -35,7 +34,6 @@ impl BridgedRadioButton {
         inner.set_selected(selected_cell.read());
         Self {
             inner,
-            group_id,
             selected_cell,
             group_cells,
             tree_dirty,

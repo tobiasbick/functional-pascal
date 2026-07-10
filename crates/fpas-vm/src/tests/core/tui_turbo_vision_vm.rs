@@ -6,7 +6,6 @@ use crate::tests::helpers::{emit_constant, loc, minimal_shared_state};
 use crate::vm::Worker;
 use fpas_bytecode::{Chunk, Intrinsic, Op, TuiIntrinsic, Value};
 use std::sync::Arc;
-use turbo_vision::core::event::{Event as TurboVisionEvent, EventType, KB_ESC};
 
 fn emit_open_for_test(chunk: &mut Chunk, width: i64, height: i64) {
     emit_constant(chunk, Value::Integer(width));

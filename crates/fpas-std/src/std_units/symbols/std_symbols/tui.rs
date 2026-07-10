@@ -35,7 +35,6 @@ pub const STD_TUI_CM_OPEN: &str = std_tui!("CM_OPEN");
 pub const STD_TUI_CM_USER: &str = std_tui!("CM_USER");
 pub const STD_TUI_DIALOG_NEW_MODAL: &str = std_tui!("Dialog.NewModal");
 pub const STD_TUI_DIALOG_SET_TITLE: &str = std_tui!("Dialog.SetTitle");
-pub const STD_TUI_DIALOG_ADD_BUTTON: &str = std_tui!("Dialog.AddButton");
 pub const STD_TUI_DIALOG_ADD: &str = std_tui!("Dialog.Add");
 pub const STD_TUI_BUTTON_NEW: &str = std_tui!("Button.New");
 pub const STD_TUI_BUTTON_SET_TEXT: &str = std_tui!("Button.SetText");
@@ -107,10 +106,10 @@ pub const STD_TUI_APPLICATION_TEST_SET_FILE_DIALOG_RESULT: &str =
     std_tui!("Application.TestSetFileDialogResult");
 /// Run a modal dialog via try-2 `Application.ExecView` and return the closing command id.
 pub const STD_TUI_APPLICATION_EXEC_VIEW: &str = std_tui!("Application.ExecView");
-/// Queue a turbo-vision keyboard event for the next headless try-2 modal (internal test helper).
-pub const STD_TUI_APPLICATION_TRY2_INJECT_KEYBOARD: &str =
-    std_tui!("Application.Try2InjectKeyboard");
-pub const STD_TUI_APPLICATION_TRY2_INJECT_COMMAND: &str = std_tui!("Application.Try2InjectCommand");
+/// Queue a turbo-vision keyboard event for the next headless run-loop turn (test helper).
+pub const STD_TUI_APPLICATION_TEST_INJECT_KEYBOARD: &str =
+    std_tui!("Application.TestInjectKeyboard");
+pub const STD_TUI_APPLICATION_TEST_INJECT_COMMAND: &str = std_tui!("Application.TestInjectCommand");
 /// Show an upstream Turbo Vision message box and return the closing command id.
 pub const STD_TUI_APPLICATION_MESSAGE_BOX: &str = std_tui!("Application.MessageBox");
 /// Queue the closing command returned by the next headless modal call.
@@ -266,7 +265,6 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_CM_USER,
     STD_TUI_DIALOG_NEW_MODAL,
     STD_TUI_DIALOG_SET_TITLE,
-    STD_TUI_DIALOG_ADD_BUTTON,
     STD_TUI_DIALOG_ADD,
     STD_TUI_BUTTON_NEW,
     STD_TUI_BUTTON_SET_TEXT,
@@ -325,8 +323,8 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_APPLICATION_RUN_FILE_DIALOG,
     STD_TUI_APPLICATION_TEST_SET_FILE_DIALOG_RESULT,
     STD_TUI_APPLICATION_EXEC_VIEW,
-    STD_TUI_APPLICATION_TRY2_INJECT_KEYBOARD,
-    STD_TUI_APPLICATION_TRY2_INJECT_COMMAND,
+    STD_TUI_APPLICATION_TEST_INJECT_KEYBOARD,
+    STD_TUI_APPLICATION_TEST_INJECT_COMMAND,
     STD_TUI_APPLICATION_MESSAGE_BOX,
     STD_TUI_APPLICATION_TEST_SET_DIALOG_RESULT,
     STD_TUI_APPLICATION_SET_MENU_BAR,

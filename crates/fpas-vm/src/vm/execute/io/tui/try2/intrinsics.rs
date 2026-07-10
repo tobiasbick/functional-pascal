@@ -15,14 +15,14 @@ use super::records::{
 use super::registry::ViewKind;
 use super::views::{
     try2_button_new, try2_button_set_text, try2_check_box_checked, try2_check_box_new,
-    try2_check_box_set_checked, try2_desktop_add, try2_dialog_add_button, try2_dialog_attach_child,
-    try2_dialog_new_modal, try2_dialog_set_title, try2_input_line_new, try2_input_line_set_text,
-    try2_input_line_text, try2_list_box_new, try2_list_box_selection, try2_list_box_set_items,
-    try2_memo_new, try2_memo_set_text, try2_outline_new, try2_outline_selected_text,
-    try2_outline_selection, try2_outline_set_nodes, try2_radio_button_new,
-    try2_radio_button_selected, try2_radio_button_set_selected, try2_static_text_new,
-    try2_static_text_set_text, try2_text_viewer_new, try2_text_viewer_set_text,
-    try2_window_attach_child, try2_window_new, try2_window_set_title,
+    try2_check_box_set_checked, try2_desktop_add, try2_dialog_attach_child, try2_dialog_new_modal,
+    try2_dialog_set_title, try2_input_line_new, try2_input_line_set_text, try2_input_line_text,
+    try2_list_box_new, try2_list_box_selection, try2_list_box_set_items, try2_memo_new,
+    try2_memo_set_text, try2_outline_new, try2_outline_selected_text, try2_outline_selection,
+    try2_outline_set_nodes, try2_radio_button_new, try2_radio_button_selected,
+    try2_radio_button_set_selected, try2_static_text_new, try2_static_text_set_text,
+    try2_text_viewer_new, try2_text_viewer_set_text, try2_window_attach_child, try2_window_new,
+    try2_window_set_title,
 };
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
@@ -51,31 +51,6 @@ impl Worker {
                 let bounds = self.pop_turbo_vision_rect(line)?;
                 let handle = try2_dialog_new_modal(self, bounds, title, line)?;
                 self.push(Self::turbo_vision_dialog_record(handle))?;
-            }
-            TuiIntrinsic::DialogAddButton => {
-                let is_default = self.pop_bool(line)?;
-                let command = self.pop_int(line)?;
-                let command = u16::try_from(command).map_err(|_| {
-                    runtime_error(
-                        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                        "Button command id is outside the Turbo Vision u16 range",
-                        "Use a command id from 0 to 65535.",
-                        line,
-                    )
-                })?;
-                let text = self.pop_turbo_vision_string("Button text", line)?;
-                let bounds = self.pop_turbo_vision_rect(line)?;
-                let dialog_handle = self.pop_try2_handle(TUI_DIALOG_TYPE, "Dialog", line)?;
-                let button_handle = try2_dialog_add_button(
-                    self,
-                    dialog_handle,
-                    bounds,
-                    text,
-                    command,
-                    is_default,
-                    line,
-                )?;
-                self.push(Self::turbo_vision_button_record(button_handle))?;
             }
             TuiIntrinsic::ButtonNew => {
                 let is_default = self.pop_bool(line)?;
@@ -433,7 +408,7 @@ impl Worker {
         if !self.with_tui(|tui| tui.session.is_headless()) {
             return Err(runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                "Application.Try2InjectKeyboard is only supported in headless OpenForTest sessions",
+                "Application.TestInjectKeyboard is only supported in headless OpenForTest sessions",
                 "Call `Application.OpenForTest` before injecting synthetic keys.",
                 line,
             ));
@@ -449,7 +424,7 @@ impl Worker {
         if !self.with_tui(|tui| tui.session.is_headless()) {
             return Err(runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                "Application.Try2InjectCommand is only supported in headless OpenForTest sessions",
+                "Application.TestInjectCommand is only supported in headless OpenForTest sessions",
                 "Call `Application.OpenForTest` before injecting synthetic commands.",
                 line,
             ));

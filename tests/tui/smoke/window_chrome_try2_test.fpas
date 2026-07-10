@@ -42,7 +42,7 @@ begin
   Desktop.Add(App, Win);
   Application.SetMenuBar(App, Bar);
   Application.SetStatusLine(App, Status);
-  Application.Try2InjectCommand(App, CM_QUIT);
+  Application.TestInjectCommand(App, CM_QUIT);
   Application.Run(App, OnCommand);
   Application.CloseForTest(App)
 end.

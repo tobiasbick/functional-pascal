@@ -127,7 +127,8 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_attach_button(
     Ok(())
 }
 
-/// Adds a button child to a try-2 modal dialog (`Dialog.AddButton` convenience API).
+/// Adds a button child to a try-2 modal dialog (test helper).
+#[cfg(test)]
 pub(in crate::vm::execute::io::tui::try2) fn try2_dialog_add_button(
     worker: &mut Worker,
     dialog_handle: u32,

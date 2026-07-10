@@ -20,7 +20,9 @@ end;
 procedure OnCommand(App: Application; Cmd: integer);
 begin
   if Cmd = CM_QUIT then
+  begin
     Application.Quit(App)
+  end
 end;
 
 begin
@@ -28,7 +30,7 @@ begin
   var Status: StatusLine := StatusLine.New(Bounds(0, 24, 60, 1), [OldStatusItem()]);
   Application.SetStatusLine(App, Status);
   StatusLine.SetItems(Status, [NewStatusItem()]);
-  Application.Try2InjectCommand(App, CM_QUIT);
+  Application.TestInjectCommand(App, CM_QUIT);
   Application.Run(App, OnCommand);
   Application.CloseForTest(App)
 end.

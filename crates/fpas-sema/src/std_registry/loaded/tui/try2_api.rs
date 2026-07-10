@@ -247,18 +247,6 @@ pub(super) fn register_try2_api(
     );
     define_func(
         checker,
-        s::STD_TUI_DIALOG_ADD_BUTTON,
-        vec![
-            p("Dlg", types.dialog.clone(), false),
-            p("Bounds", types.rect.clone(), false),
-            p("Text", Ty::String, false),
-            p("Command", Ty::Integer, false),
-            p("IsDefault", Ty::Boolean, false),
-        ],
-        types.button.clone(),
-    );
-    define_func(
-        checker,
         s::STD_TUI_APPLICATION_EXEC_VIEW,
         vec![
             p("App", types.application.clone(), false),
@@ -268,7 +256,7 @@ pub(super) fn register_try2_api(
     );
     define_proc(
         checker,
-        s::STD_TUI_APPLICATION_TRY2_INJECT_COMMAND,
+        s::STD_TUI_APPLICATION_TEST_INJECT_COMMAND,
         vec![
             p("App", types.application.clone(), false),
             p("Command", Ty::Integer, false),
@@ -276,7 +264,7 @@ pub(super) fn register_try2_api(
     );
     define_proc(
         checker,
-        s::STD_TUI_APPLICATION_TRY2_INJECT_KEYBOARD,
+        s::STD_TUI_APPLICATION_TEST_INJECT_KEYBOARD,
         vec![
             p("App", types.application.clone(), false),
             p("KeyCode", Ty::Integer, false),

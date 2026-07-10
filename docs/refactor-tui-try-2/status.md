@@ -36,11 +36,11 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 | `Dialog.Add(Button)` (Rust internal) | `try2/views/button.rs` |
 | Headless `ExecView` (Rust internal) | `try2/modals.rs`, `try2/headless.rs`, `headless_tv_draw.rs` |
 | Live `ExecView` (interactive, no try-1 populate) | `try2/app.rs`, `try2/modals.rs` |
-| Pascal API + intrinsics | `Dialog.NewModal`, `Button.New`, `Dialog.Add`, `Dialog.AddButton`, `Application.ExecView`, `CM_*` |
+| Pascal API + intrinsics | `Dialog.NewModal`, `Button.New`, `Dialog.Add`, `Application.ExecView`, `CM_*` |
 | FPAS smoke test | `tests/tui/smoke/modal_button_try2_test.fpas` (`Button.New` + `Dialog.Add`) |
 | `Application.Run` (try-2 path) | `try2/run.rs`; routes when try-2 session open and no try-1 widgets |
 | `OnCommand` without offset | `try2/events.rs` |
-| `Application.Try2InjectCommand` | headless command injection for run tests |
+| `Application.TestInjectCommand` | headless command injection for run tests |
 | FPAS run smoke test | `tests/tui/smoke/run_quit_try2_test.fpas` |
 | `Application.TestClickButton` (try-2 headless mouse) | `try2/testing.rs` |
 | `Application.New` alias | sema + compiler → `ApplicationOpen` |
@@ -68,7 +68,7 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 | Try-2 message box example | `examples/pascal/tui/message_box.fpas` now uses `Application.New` and `CM_OK` |
 | Try-2 file dialog example | `examples/pascal/tui/file_dialog_try2.fpas` |
 | IDE menu/status shell migration | `apps/ide/src/menu.fpas`, `apps/ide/src/shell.fpas`, `apps/ide/src/dialog/about.fpas` |
-| IDE try-2 tests | `apps/ide/tests/` uses `Application.Run(App, OnCommand)`, `Try2InjectCommand`, and `Try2InjectKeyboard` |
+| IDE try-2 tests | `apps/ide/tests/` uses `Application.Run(App, OnCommand)`, `TestInjectCommand`, and `TestInjectKeyboard` |
 
 ## Verified (2026-07-09)
 

@@ -15,7 +15,7 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 | `Application.Run` + `OnCommand` | ✅ | `try2/run.rs` — `Application.Run(App)` or `Application.Run(App, OnCommand)` (intrinsic 484) |
 | `Application.Quit` | ✅ via try-1 | `quit_requested`; try-2 run loop honors it |
 | `Application.TestClickButton` | ✅ try-2 path | `try2/testing.rs` |
-| `Try2InjectCommand` / `Try2InjectKeyboard` | ✅ interim | `try2/intrinsics.rs` — remove when `Test.InjectEvent` lands |
+| `TestInjectCommand` / `TestInjectKeyboard` | ✅ interim | `try2/intrinsics.rs` — remove when `Test.InjectEvent` lands |
 | `CM_OK`, `CM_CANCEL`, `CM_CLOSE`, `CM_QUIT`, `CM_OPEN`, `CM_ABOUT`, `CM_USER` | ✅ | sema + `fpas-std/tui/cm_constants.rs`; compiler built-in constants |
 | `Window.New`, `Window.Add`, `Desktop.Add` | ✅ | `try2/views/window.rs`, `try2/views/desktop.rs` |
 | `StaticText.New`, `Dialog.Add` / `Window.Add` | ✅ | `try2/views/static_text.rs`, `try2/views/attach.rs` |
@@ -148,10 +148,10 @@ Land in `fpas-bytecode/src/intrinsic/tui/variants/try2.inc` (473+). Current:
 DialogNewModal = 473
 DialogAddButton = 474
 ExecView = 475
-Try2InjectKeyboard = 476
+TestInjectKeyboard = 476
 ButtonNew = 477
 DialogAdd = 478
-Try2InjectCommand = 479
+TestInjectCommand = 479
 WindowNew = 480
 WindowAdd = 481
 DesktopAdd = 482

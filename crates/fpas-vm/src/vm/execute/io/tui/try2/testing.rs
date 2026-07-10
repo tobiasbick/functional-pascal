@@ -88,11 +88,11 @@ fn button_handle_error(
     let (message, help) = match error {
         super::registry::RegistryError::UnknownHandle(handle) => (
             format!("Button handle {handle} is not registered in the try-2 session"),
-            "Use a handle returned by `Button.New` or `Dialog.AddButton`.",
+            "Use a handle returned by `Button.New`.",
         ),
         super::registry::RegistryError::WrongKind { handle, .. } => (
             format!("Handle {handle} is not a Button"),
-            "Pass a handle from `Button.New` or `Dialog.AddButton`.",
+            "Pass a handle from `Button.New`.",
         ),
     };
     runtime_error(RUNTIME_INTRINSIC_STACK_STATE_ERROR, message, help, line)
@@ -132,7 +132,7 @@ impl Worker {
             return Err(runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,
                 format!("Button handle {button_handle} has no try-2 click target"),
-                "Use a button attached via `Dialog.Add`, `Window.Add`, or `Dialog.AddButton` in the active try-2 session.",
+                "Use a button attached via `Dialog.Add` or `Window.Add` in the active try-2 session.",
                 line,
             ));
         };

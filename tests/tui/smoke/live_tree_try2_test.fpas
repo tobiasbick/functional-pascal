@@ -24,7 +24,9 @@ begin
     LiveOpened := true
   end;
   if CommandId = CM_QUIT then
+  begin
     Application.Quit(App)
+  end
 end;
 
 begin
@@ -34,7 +36,7 @@ begin
   Window.Add(Host, OpenButton);
   Desktop.Add(App, Host);
   Application.TestClickButton(App, OpenButton);
-  Application.Try2InjectCommand(App, CM_QUIT);
+  Application.TestInjectCommand(App, CM_QUIT);
   Application.Run(App, OnCommand);
   AssertTrue(LiveOpened);
   Application.CloseForTest(App)

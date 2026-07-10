@@ -12,7 +12,7 @@ Notes for rewriting [`apps/ide`](../../apps/ide) on the try-2 API. **Complete** 
 | Dialogs | `src/dialog.fpas`, `src/dialog/about.fpas`, `src/dialog/open.fpas` | `Application.MessageBox`, `Application.RunFileDialog`; Open headless tests seed the interim Try-2 file dialog adapter through `TestSetFileDialogResult` |
 | Theme | `src/theme.fpas` | May be layout constants only |
 
-Tests: `apps/ide/tests/` — menu, shell, dialog, status, theme. Shell/dialog tests use `Try2InjectCommand` and `Try2InjectKeyboard`; Open uses `TestSetFileDialogResult` as an interim helper that now seeds Try-2 session state.
+Tests: `apps/ide/tests/` — menu, shell, dialog, status, theme. Shell/dialog tests use `TestInjectCommand` and `TestInjectKeyboard`; Open uses `TestSetFileDialogResult` as an interim helper that now seeds Try-2 session state.
 
 Latest automated sign-off, recorded 2026-07-09:
 
@@ -130,7 +130,7 @@ if Cmd = CM_OK then
 Replace:
 
 - [x] `Application.CreateMenuBar` → `MenuBar.New`
-- [x] `Application.TestDispatchMenuCommand` → `Try2InjectCommand` / run-loop command injection
+- [x] `Application.TestDispatchMenuCommand` → `TestInjectCommand` / run-loop command injection
 - [x] `Command.*` → `CM_*`
 - [ ] `Application.TestSetFileDialogResult` → final headless file dialog event path during Phase 7/8 public testing cleanup
 

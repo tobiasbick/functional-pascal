@@ -33,7 +33,7 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_outline_new(
     let outline = Box::new(BridgedOutline::new(bounds, &roots, selection_cell.clone()));
     Ok(worker
         .try2
-        .insert_detached_outline(outline, bounds, roots, selection_cell))
+        .insert_detached_outline(outline, roots, selection_cell))
 }
 
 /// Returns the flat visible selection index, or `-1` when empty (`Outline.Selection`).

@@ -7,7 +7,6 @@ Turbo Vision dialogs and windows are opaque handles created before `Application.
 | `Dialog.NewModal(Bounds, Title): Dialog` | Create a modal dialog for `Application.ExecView`. |
 | `Dialog.Add(Dlg, Child)` | Attach a control child to a dialog. |
 | `Dialog.SetTitle(Dlg, Title)` | Replace dialog title text. |
-| `Dialog.AddButton(Dlg, Bounds, Text, Command, IsDefault): Button` | Convenience: create and attach a button in one call. |
 | `Window.New(Bounds, Title): Window` | Create a desktop window. |
 | `Window.Add(Win, Child)` | Attach a control child to a window. |
 | `Window.SetTitle(Win, Title)` | Replace window title text. |

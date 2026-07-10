@@ -23,7 +23,8 @@ pub(in crate::vm::execute::io::tui) use chrome::{try2_set_menu_bar, try2_set_sta
 pub(in crate::vm::execute::io::tui) use file_dialog::try2_run_file_dialog;
 pub(in crate::vm::execute::io::tui) use message_box::try2_message_box;
 pub(in crate::vm::execute::io::tui) use run::{try2_application_run, try2_application_run_loop};
-#[allow(unused_imports, reason = "wired in phase 2 intrinsics")]
+#[cfg(test)]
+#[allow(unused_imports, reason = "test-only dialog button helper")]
 pub(in crate::vm::execute::io::tui::try2) use views::{
     try2_dialog_add_button, try2_dialog_new_modal,
 };

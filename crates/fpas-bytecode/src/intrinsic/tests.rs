@@ -232,7 +232,6 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Tui(TuiIntrinsic::OpenForTest),
     Intrinsic::Tui(TuiIntrinsic::CloseForTest),
     Intrinsic::Tui(TuiIntrinsic::DialogNewModal),
-    Intrinsic::Tui(TuiIntrinsic::DialogAddButton),
     Intrinsic::Tui(TuiIntrinsic::ExecView),
     Intrinsic::Tui(TuiIntrinsic::Try2InjectKeyboard),
     Intrinsic::Tui(TuiIntrinsic::ButtonNew),

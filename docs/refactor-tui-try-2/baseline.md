@@ -101,7 +101,7 @@ crates/fpas-std/src/tui/cm_constants.rs
 - `InputLine.SetText`, `CheckBox.SetChecked`, `ListBox.SetItems`, `RadioButton.SetSelected`, `Memo.SetText`, `TextViewer.SetText`
 - `MenuBar.New`, `StatusLine.New`, `Application.SetMenuBar`, `Application.SetStatusLine`
 - `Application.ExecView`, `Application.MessageBox`, `Application.Run(App, OnCommand)`, `Application.OnKey`, `Application.OnMouse`, `CM_*`
-- `Application.Try2InjectKeyboard`, `Application.Try2InjectCommand` (headless test helpers)
+- `Application.TestInjectKeyboard`, `Application.TestInjectCommand` (headless test helpers)
 - try-2 `Application.Run` when session is open and no try-1 widgets exist
 - IDE commands currently used by `apps/ide`: `CM_OPEN`, `CM_ABOUT`, `CM_QUIT`, plus `CM_USER` as the application-private base
 

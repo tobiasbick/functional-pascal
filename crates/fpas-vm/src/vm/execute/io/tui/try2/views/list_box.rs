@@ -35,7 +35,7 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_list_box_new(
     ));
     Ok(worker
         .try2
-        .insert_detached_list_box(list_box, bounds, items, command, selection_cell))
+        .insert_detached_list_box(list_box, items, selection_cell))
 }
 
 /// Returns the selected item index, or `-1` when empty (`ListBox.Selection`).

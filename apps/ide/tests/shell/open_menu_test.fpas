@@ -7,8 +7,8 @@ begin
   var MenuBarHandle: MenuBar := AttachChrome(App);
   Application.TestSetFileDialogResult(App, Some('src/main.fpas'));
   Application.TestDispatchMenuCommand(App, MenuBarHandle, 0, 0);
-  Application.Try2InjectKeyboard(App, 7181);
-  Application.Try2InjectCommand(App, CM_QUIT);
+  Application.TestInjectKeyboard(App, 7181);
+  Application.TestInjectCommand(App, CM_QUIT);
   Application.Run(App, OnCommand);
   AssertEquals(CmdFileOpen, LastCommandId())
 end.

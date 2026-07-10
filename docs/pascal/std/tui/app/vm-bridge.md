@@ -54,7 +54,8 @@ After any bridge change, also run [terminal checklist](../terminal-checklist.md)
 | `Application.RunFileDialog` | `RunFileDialog` |
 | `Application.SetMenuBar` / `SetStatusLine` | `SetMenuBar` / `SetStatusLine` |
 | `Application.OnKey` / `OnMouse` | `RegisterOnKey` / `RegisterOnMouse` |
-| `Application.Try2InjectCommand` | `Try2InjectCommand` (interim headless test) |
+| `Application.TestInjectCommand` | `Try2InjectCommand` (interim headless test) |
+| `Application.TestInjectKeyboard` | `Try2InjectKeyboard` (interim headless test) |
 | `Application.TestClickButton` | `TestClickButton` |
 
 Full opcode tables: `crates/fpas-bytecode/src/intrinsic/tui/variants/try2.inc` and `widgets.inc`.

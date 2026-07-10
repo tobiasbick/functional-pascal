@@ -96,7 +96,9 @@ mod tests {
     #[test]
     fn headless_file_dialog_uses_try2_queue() {
         let mut worker = headless_try2_worker(80, 25);
-        worker.try2.set_file_dialog_result(Some("picked.txt".into()));
+        worker
+            .try2
+            .set_file_dialog_result(Some("picked.txt".into()));
 
         let selected = try2_run_file_dialog(
             &mut worker,

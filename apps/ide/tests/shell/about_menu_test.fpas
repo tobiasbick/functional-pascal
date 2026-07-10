@@ -6,8 +6,8 @@ begin
   var App: Application := Application.OpenForTest(80, 25);
   var MenuBarHandle: MenuBar := AttachChrome(App);
   Application.TestDispatchMenuCommand(App, MenuBarHandle, 1, 0);
-  Application.Try2InjectKeyboard(App, 7181);
-  Application.Try2InjectCommand(App, CM_QUIT);
+  Application.TestInjectKeyboard(App, 7181);
+  Application.TestInjectCommand(App, CM_QUIT);
   Application.Run(App, OnCommand);
   AssertEquals(CmdHelpAbout, LastCommandId())
 end.

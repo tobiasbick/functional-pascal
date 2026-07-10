@@ -105,7 +105,7 @@ Estimates assume focused hobby-project pace (part-time).
 **Exit criteria**
 
 - [x] Port `examples/pascal/tui/message_box.fpas` and add a try-2 file dialog example (`examples/pascal/tui/file_dialog_try2.fpas`).
-- [x] No new Try-2 modal tests depend on the try-1 dialog queues (`tests/tui/modals/message_box_try2_test.fpas` uses `Try2InjectKeyboard`; Try-2 `RunFileDialog` consumes `Try2Session` state, not try-1 `test_file_dialog_result`).
+- [x] No new Try-2 modal tests depend on the try-1 dialog queues (`tests/tui/modals/message_box_try2_test.fpas` uses `TestInjectKeyboard`; Try-2 `RunFileDialog` consumes `Try2Session` state, not try-1 `test_file_dialog_result`).
 - [ ] Rename or replace interim `TestSetDialogResult` / `TestSetFileDialogResult` helpers with the final `Test.*` event API during Phase 7/8 public testing cleanup.
 
 ---

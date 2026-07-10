@@ -19,9 +19,9 @@ mod window;
 pub(in crate::vm::execute::io::tui::try2) use attach::{
     try2_dialog_attach_child, try2_window_attach_child,
 };
-pub(in crate::vm::execute::io::tui::try2) use button::{
-    try2_button_new, try2_button_set_text, try2_dialog_add_button,
-};
+#[cfg(test)]
+pub(in crate::vm::execute::io::tui::try2) use button::try2_dialog_add_button;
+pub(in crate::vm::execute::io::tui::try2) use button::{try2_button_new, try2_button_set_text};
 pub(in crate::vm::execute::io::tui::try2) use check_box::{
     try2_check_box_checked, try2_check_box_new, try2_check_box_set_checked,
 };

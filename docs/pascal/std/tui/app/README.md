@@ -38,8 +38,8 @@ Custom modal layout (`Dialog.NewModal` + `ExecView`) is for dialogs with read-ba
 | `Application.TestClickButton(App, Button)` | Headless: queue a button click before `Run` or `ExecView`. |
 | `Application.TestClickMouse(App, X, Y)` | Headless: left-click at screen coordinates. |
 | `Application.TestDispatchMenuCommand(App, MenuBar, MenuIndex, ItemIndex)` | Headless: dispatch a menu item command id. |
-| `Application.Try2InjectCommand(App, Command)` | Headless interim helper: inject a command during `Run` tests. |
-| `Application.Try2InjectKeyboard(App, KeyCode)` | Headless interim helper: inject a keyboard event. |
+| `Application.TestInjectCommand(App, Command)` | Headless interim helper: inject a command during `Run` tests. |
+| `Application.TestInjectKeyboard(App, KeyCode)` | Headless interim helper: inject a keyboard event. |
 | `Application.TestSetFileDialogResult(App, Result)` | Headless: queue the next `RunFileDialog` result. |
 | `Application.TestSetDialogResult(App, Command)` | Headless: queue the closing command for the next `MessageBox` (stub path). |
 

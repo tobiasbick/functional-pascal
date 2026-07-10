@@ -40,11 +40,11 @@ For desktop programs that call `Application.Run` in headless mode, inject comman
 
 ```pascal
 var App: Application := Application.OpenForTest(40, 14);
-Application.Try2InjectCommand(App, CM_QUIT);
+Application.TestInjectCommand(App, CM_QUIT);
 Application.Run(App, OnCommand);
 ```
 
-`Application.Try2InjectKeyboard` queues a Turbo Vision key code for the next run-loop turn (used by IDE and event tests).
+`Application.TestInjectKeyboard` queues a Turbo Vision key code for the next run-loop turn (used by IDE and event tests).
 
 ## File dialog stub
 

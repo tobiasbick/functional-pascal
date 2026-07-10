@@ -35,6 +35,8 @@ const REMOVED_TUI_PREFIXES: &[&str] = &[
     "Application.OnCommand",
     "Application.Pump",
     "Command.",
+    "Dialog.AddButton",
+    "Application.Try2Inject",
 ];
 
 /// Returns a migration hint when `name` targets a removed `Std.Tui` callable.

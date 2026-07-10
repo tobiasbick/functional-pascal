@@ -41,7 +41,6 @@ pub(crate) struct Try2ButtonState {
 pub(crate) struct DetachedCheckBox {
     pub check_box: Box<dyn View>,
     pub local_bounds: Rect,
-    pub checked_cell: TurboVisionBoolCell,
 }
 
 /// Input line constructed by `InputLine.New` and not yet attached to a parent.
@@ -54,13 +53,11 @@ pub(crate) struct DetachedInputLine {
 /// List box constructed by `ListBox.New` and not yet attached to a parent.
 pub(crate) struct DetachedListBox {
     pub list_box: Box<dyn View>,
-    pub local_bounds: Rect,
 }
 
 /// Outline constructed by `Outline.New` and not yet attached to a parent.
 pub(crate) struct DetachedOutline {
     pub outline: Box<dyn View>,
-    pub local_bounds: Rect,
 }
 
 /// Radio button constructed by `RadioButton.New` and not yet attached to a parent.
@@ -93,7 +90,6 @@ pub(crate) struct Try2RadioButtonState {
 /// Host-side list box state retained after attach.
 pub(crate) struct Try2ListBoxState {
     pub items: Vec<String>,
-    pub command_id: u16,
     pub selection_cell: TurboVisionListSelectionCell,
 }
 
@@ -395,7 +391,6 @@ impl Try2Session {
             DetachedCheckBox {
                 check_box,
                 local_bounds,
-                checked_cell,
             },
         );
         handle
@@ -504,9 +499,7 @@ impl Try2Session {
     pub fn insert_detached_list_box(
         &mut self,
         list_box: Box<dyn View>,
-        local_bounds: Rect,
         items: Vec<String>,
-        command_id: u16,
         selection_cell: TurboVisionListSelectionCell,
     ) -> u32 {
         let handle = self.registry.allocate(0, ViewKind::ListBox);
@@ -514,17 +507,11 @@ impl Try2Session {
             handle,
             Try2ListBoxState {
                 items,
-                command_id,
                 selection_cell,
             },
         );
-        self.detached_list_boxes.insert(
-            handle,
-            DetachedListBox {
-                list_box,
-                local_bounds,
-            },
-        );
+        self.detached_list_boxes
+            .insert(handle, DetachedListBox { list_box });
         handle
     }
 
@@ -550,7 +537,6 @@ impl Try2Session {
     pub fn insert_detached_outline(
         &mut self,
         outline: Box<dyn View>,
-        local_bounds: Rect,
         roots: Vec<TurboVisionOutlineNode>,
         selection_cell: TurboVisionListSelectionCell,
     ) -> u32 {
@@ -562,13 +548,8 @@ impl Try2Session {
                 selection_cell,
             },
         );
-        self.detached_outlines.insert(
-            handle,
-            DetachedOutline {
-                outline,
-                local_bounds,
-            },
-        );
+        self.detached_outlines
+            .insert(handle, DetachedOutline { outline });
         handle
     }
 

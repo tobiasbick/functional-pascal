@@ -2,13 +2,11 @@
 //!
 //! **Documentation:** `docs/refactor-tui-try-2/target-api.md`
 
+use super::super::outline_nodes::{initial_outline_selection, outline_label_at_flat_index};
 use super::super::view_lookup::try2_with_child_view;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
 use crate::vm::execute::io::tui::bridged_outline::BridgedOutline;
-use crate::vm::execute::io::tui::outline_nodes::{
-    initial_outline_selection, outline_label_at_flat_index,
-};
 use crate::vm::execute::io::tui::try2::registry::{RegistryError, ViewKind};
 use crate::vm::execute::io::tui::try2::session::{DetachedOutline, Try2Root};
 use crate::vm::shared::TurboVisionOutlineNode;

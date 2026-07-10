@@ -60,22 +60,22 @@ crates/fpas-vm/src/vm/execute/io/tui/dialogs.rs
 crates/fpas-vm/src/vm/execute/io/tui/windows.rs
 ~~crates/fpas-vm/src/vm/execute/io/tui/navigation.rs~~ → `try2/chrome_input.rs`
 crates/fpas-vm/src/vm/execute/io/tui/chrome_layout.rs
-crates/fpas-vm/src/vm/execute/io/tui/handle_records.rs
-crates/fpas-vm/src/vm/execute/io/tui/handles.rs
+~~crates/fpas-vm/src/vm/execute/io/tui/handle_records.rs~~ → `try2/handle_records.rs`
+~~crates/fpas-vm/src/vm/execute/io/tui/handles.rs~~ → `try2/handles.rs`
 ~~crates/fpas-vm/src/vm/execute/io/tui/records.rs~~ → `try2/application_records.rs`
 crates/fpas-vm/src/vm/execute/io/tui/interactive_loop.rs
 ~~crates/fpas-vm/src/vm/execute/io/tui/commands.rs~~ → `try2/commands.rs`
 crates/fpas-vm/src/vm/execute/io/tui/outline_nodes.rs
 crates/fpas-vm/src/vm/execute/io/tui/outline_read.rs
 crates/fpas-vm/src/vm/execute/io/tui/callbacks.rs
-crates/fpas-vm/src/vm/execute/io/tui/tv_input_events.rs
+~~crates/fpas-vm/src/vm/execute/io/tui/tv_input_events.rs~~ → `try2/input_events.rs`
 crates/fpas-vm/src/vm/execute/io/tui/exec_dialog.rs
 ~~crates/fpas-vm/src/vm/execute/io/tui/file_dialog.rs~~ → `try2/file_dialog.rs`
 ~~crates/fpas-vm/src/vm/execute/io/tui/msgbox.rs~~ → `try2/message_box.rs`
 ~~crates/fpas-vm/src/vm/execute/io/tui/test_mouse.rs~~ → `try2/testing.rs`
-crates/fpas-vm/src/vm/execute/io/tui/lifecycle.rs
+~~crates/fpas-vm/src/vm/execute/io/tui/lifecycle.rs~~ → `try2/lifecycle.rs`
 crates/fpas-vm/src/vm/execute/io/tui/headless_tv_draw.rs
-crates/fpas-vm/src/vm/execute/io/tui/application.rs
+~~crates/fpas-vm/src/vm/execute/io/tui/application.rs~~ → `try2/application_intrinsics.rs`
 crates/fpas-vm/src/vm/execute/io/tui/bridged_button.rs
 crates/fpas-vm/src/vm/execute/io/tui/bridged_check_box.rs
 crates/fpas-vm/src/vm/execute/io/tui/bridged_list_box.rs

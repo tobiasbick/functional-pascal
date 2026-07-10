@@ -14,7 +14,7 @@ use turbo_vision::views::list_viewer::ListViewer;
 use turbo_vision::views::outline::OutlineViewer;
 use turbo_vision::views::view::View;
 
-use super::outline_nodes::build_outline_tv_roots;
+use super::try2::outline_nodes::build_outline_tv_roots;
 
 /// Turbo Vision outline viewer wired to a shared FPAS selection cell.
 pub(in crate::vm::execute::io::tui) struct BridgedOutline {

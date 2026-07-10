@@ -1,4 +1,4 @@
-//! Headless Turbo Vision testing intrinsics.
+//! Try-2 headless Turbo Vision testing intrinsics.
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/testing.md`
 
@@ -9,7 +9,7 @@ use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 
 impl Worker {
     /// Executes headless Turbo Vision testing intrinsics.
-    pub(super) fn try_exec_tui_test_host_intrinsic(
+    pub(in crate::vm::execute::io::tui) fn try_exec_tui_test_host_intrinsic(
         &mut self,
         intrinsic: Intrinsic,
         line: SourceLocation,

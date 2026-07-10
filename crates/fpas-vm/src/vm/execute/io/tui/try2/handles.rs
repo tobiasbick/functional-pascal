@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
-use super::try2::handle_records::{
+use super::handle_records::{
     HANDLE_FIELD, TUI_BUTTON_TYPE, TUI_MENU_BAR_TYPE, TUI_RECT_TYPE, TUI_STATUS_LINE_TYPE,
 };
 use crate::vm::Worker;

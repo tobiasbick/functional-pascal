@@ -1,4 +1,4 @@
-//! `Std.Tui` application lifecycle intrinsics.
+//! Try-2 `Std.Tui` application lifecycle intrinsics.
 //!
 //! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 
@@ -8,7 +8,7 @@ use fpas_bytecode::{Intrinsic, SourceLocation, TuiIntrinsic, Value};
 
 impl Worker {
     /// Executes application-level `Std.Tui` intrinsics.
-    pub(super) fn try_exec_tui_application_intrinsic(
+    pub(in crate::vm::execute::io::tui) fn try_exec_tui_application_intrinsic(
         &mut self,
         intrinsic: Intrinsic,
         line: SourceLocation,
@@ -28,14 +28,14 @@ impl Worker {
                 self.close_tui_application_state(line)?;
             }
             Intrinsic::Tui(TuiIntrinsic::ApplicationRun) => {
-                super::try2::try2_application_run(self, line)?;
+                super::try2_application_run(self, line)?;
                 self.push(Value::Unit)?;
             }
             Intrinsic::Tui(TuiIntrinsic::ApplicationRunWithOnCommand) => {
                 let handler = self.pop(line)?;
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| tui.on_command = Some(handler));
-                super::try2::try2_application_run_loop(self, line)?;
+                super::try2_application_run_loop(self, line)?;
                 self.push(Value::Unit)?;
             }
             Intrinsic::Tui(TuiIntrinsic::ApplicationSize) => {

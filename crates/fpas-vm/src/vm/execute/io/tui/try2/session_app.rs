@@ -1,4 +1,4 @@
-//! Live turbo-vision `Application` session owned for one FPAS `Application.Open` … `Close` cycle.
+//! Try-2 live turbo-vision `Application` session owned for one FPAS `Application.Open` … `Close` cycle.
 //!
 //! The session lives on the main [`Worker`](crate::vm::Worker) only (`!Send`). Try-2 modals and
 //! `Application.Run` share one upstream app instead of calling `Application::new()` per modal.

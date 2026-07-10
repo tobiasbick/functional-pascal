@@ -119,6 +119,9 @@ Covers: registry, geometry, session, dialog, button, window, desktop, static tex
 - Moved `tv_geometry.rs` into `try2/geometry.rs`; chrome now owns the current rectangle conversion path
 - Moved `navigation.rs` into `try2/chrome_input.rs`; chrome record decoding no longer lives at the legacy bridge root
 - Moved `records.rs` into `try2/application_records.rs`; application and size value construction now lives with the Try-2 session
+- Moved `handle_records.rs` into `try2/handle_records.rs`; opaque widget records now belong to the Try-2 bridge
+- Moved `handles.rs` and `tv_input_events.rs` into `try2/`; widget decoding and unhandled input dispatch no longer live at the legacy bridge root
+- Moved application, lifecycle, and live-session ownership into `try2/`; the legacy bridge root now retains only headless support and adapter views
 - Merged `msgbox.rs`, `file_dialog.rs`, and `test_mouse.rs` into `try2/message_box.rs`, `try2/file_dialog.rs`, and `try2/testing.rs`
 
 ## Phase 7 progress (2026-07-09)

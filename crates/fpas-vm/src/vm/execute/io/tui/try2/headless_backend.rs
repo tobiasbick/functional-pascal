@@ -1,4 +1,4 @@
-//! In-memory turbo-vision [`Backend`] for headless FPAS tests.
+//! Try-2 in-memory turbo-vision [`Backend`] for headless FPAS tests.
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 

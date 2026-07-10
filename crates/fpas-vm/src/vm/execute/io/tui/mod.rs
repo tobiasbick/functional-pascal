@@ -2,7 +2,6 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 
-mod application;
 mod bridged_button;
 mod bridged_check_box;
 mod bridged_list_box;
@@ -12,17 +11,10 @@ mod bridged_radio_button;
 mod bridged_static_text;
 mod bridged_text_viewer;
 mod chrome_layout;
-mod handles;
 mod headless_tv_draw;
-mod lifecycle;
-mod outline_nodes;
-mod session_app;
-mod testing;
 mod try2;
 
 pub(in crate::vm) use try2::Try2Session;
-mod tv_headless_backend;
-mod tv_input_events;
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;

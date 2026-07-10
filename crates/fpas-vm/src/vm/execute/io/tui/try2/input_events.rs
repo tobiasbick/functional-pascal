@@ -1,4 +1,4 @@
-//! Turbo Vision keyboard and mouse fallback dispatch for the interactive run loop.
+//! Try-2 Turbo Vision keyboard and mouse fallback dispatch.
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/handlers.md`
 

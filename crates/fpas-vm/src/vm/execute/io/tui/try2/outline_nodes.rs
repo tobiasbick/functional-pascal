@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/controls.md`
 
-use super::try2::handle_records::TUI_OUTLINE_NODE_TYPE;
+use super::handle_records::TUI_OUTLINE_NODE_TYPE;
 use crate::vm::Worker;
 use crate::vm::diagnostics::{TYPE_MISMATCH_CODE, VmError, runtime_error};
 use crate::vm::shared::TurboVisionOutlineNode;

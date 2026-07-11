@@ -21,7 +21,7 @@ pub use command::{
     CommandId, CommandKind, CommandRegistry,
 };
 pub use damage::DamageRegion;
-pub use event::{TUI_EVENT_KIND_VARIANTS, TUI_EXIT_REASON_VARIANTS, TuiEvent};
+pub use event::TuiEvent;
 pub use geometry::{ViewId, ViewRect};
 pub use host::TuiHost;
 pub use message_box_options::{

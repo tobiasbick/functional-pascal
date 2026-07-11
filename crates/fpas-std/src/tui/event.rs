@@ -2,13 +2,6 @@ use crate::console::Console;
 use crate::console_event::event_kind_index;
 use crate::{ConsoleEvent, ConsoleKeyEvent, UiEvent, UiModifiers, UiMouse, UiResize};
 
-/// Variants for `Std.Tui.EventKind`.
-pub const TUI_EVENT_KIND_VARIANTS: &[&str] = &["Key", "Resize", "Mouse"];
-
-/// Variants for `Std.Tui.ExitReason` used by hosted dispatch and `Application.Run`.
-pub const TUI_EXIT_REASON_VARIANTS: &[&str] =
-    &["UserQuit", "HostStop", "HostAndUserStop", "HostShutdown"];
-
 /// Host-normalized event emitted by an active TUI application session.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TuiEvent {
@@ -82,7 +75,7 @@ pub(super) fn map_console_ui_event(console: &mut Console, event: ConsoleEvent) -
     None
 }
 
-/// Maps one console event into the public `Std.Tui` event model.
+/// Maps one console event into the internal `TuiEvent` model.
 pub(crate) fn map_console_event(console: &mut Console, event: ConsoleEvent) -> Option<TuiEvent> {
     map_console_ui_event(console, event).and_then(ui_event_as_tui_event)
 }

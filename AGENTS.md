@@ -128,4 +128,4 @@ crates/fpas-compiler/src/
 
 Then proceed with the implementation.
 
-TUI VM bridge (`crates/fpas-vm/src/vm/execute/io/tui/`, `apps/ide` dialog code): read [docs/pascal/std/tui/app/vm-bridge.md](docs/pascal/std/tui/app/vm-bridge.md) and [terminal-checklist.md](docs/pascal/std/tui/terminal-checklist.md) before changing bridge behavior.
+TUI VM bridge (`crates/fpas-vm/src/vm/execute/io/tui/`, `apps/ide` dialog code): read [docs/pascal/std/tui/app/vm-bridge.md](docs/pascal/std/tui/app/vm-bridge.md) and [terminal-checklist.md](docs/pascal/std/tui/terminal-checklist.md) before changing bridge behavior. The current implementation is owned by `tui/try2/`; use the `Application.New`/view-factory API and do not reintroduce `Create*`, `ExecDialog`, reconcile, or command-offset paths.

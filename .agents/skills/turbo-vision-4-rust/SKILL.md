@@ -79,15 +79,17 @@ The current bridge is transitional: `try2/` owns public widget construction and 
 
 ```text
 crates/fpas-vm/src/vm/execute/io/tui/
-  session_app.rs    — live turbo-vision Application (main worker only)
-  tv_run.rs         — Run entry, desktop projection
-  exec_dialog.rs    — ExecDialog on live session
-  file_dialog.rs    — RunFileDialog on live session
-  reconcile.rs      — desktop rebuild after FPAS mutations
-  interactive_loop.rs — scripted test loop only
-  controls.rs, dialogs.rs, navigation.rs, …
-crates/fpas-vm/src/vm/worker.rs — live_turbo_vision_app field
+  mod.rs                       — top-level intrinsic dispatch
+  try2/
+    application_intrinsics.rs  — Application.* dispatch
+    session.rs, registry.rs    — handle and root ownership
+    session_app.rs             — live upstream Application ownership
+    run.rs, input_events.rs    — live and headless event routing
+    headless_draw.rs           — headless terminal and modal loop
+    views/                     — direct widget construction and setters
 ```
+
+Three small adapters remain for `CheckBox`, `RadioButton`, and `Outline` because the pinned upstream types lack a supported live-state read-back hook. Do not replace them with snapshot/reconcile code; see `docs/refactor-tui-try-2/status.md` before touching them.
 
 `Application.MessageBox` is documented in [message-box.md](../../../docs/pascal/std/tui/app/message-box.md).
 

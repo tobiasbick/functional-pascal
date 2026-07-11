@@ -20,6 +20,13 @@ impl HeadlessTvEventInbox {
             events.push(event);
         }
     }
+
+    /// Restores an event so the next backend poll returns it before queued input.
+    pub fn push_front(&self, event: Event) {
+        if let Ok(mut events) = self.events.lock() {
+            events.insert(0, event);
+        }
+    }
 }
 
 /// Fixed-size terminal backend with a queued event inbox for headless tests.

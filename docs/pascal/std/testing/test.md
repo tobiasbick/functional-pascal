@@ -66,7 +66,7 @@ Queue one input line for the next blocking `Std.Console.ReadLn` (or line-buffere
 
 ### `procedure AssertScreenLine(Expected: string; Y: integer)`
 
-Fail with **F4023** when row `Y` (one-based) of the virtual CRT back buffer does not equal `Expected`. Use after drawing with `Std.Console` or after `Application.Pump` in headless Turbo Vision tests. Requires `uses Std.Console`.
+Fail with **F4023** when row `Y` (one-based) of the virtual CRT back buffer does not equal `Expected`. Use after drawing with `Std.Console` or after a headless `Std.Tui` run or modal path has rendered. Requires `uses Std.Console`.
 
 ### `procedure AssertScreenCell(X, Y: integer; Ch: string; Fg, Bg: integer)`
 
@@ -153,8 +153,8 @@ procedures.
 | [`console/readln_order_test.fpas`](../../../../tests/console/readln_order_test.fpas) | Multiple `PushReadLn` lines in order |
 | [`runner/skip_test.fpas`](../../../../tests/runner/skip_test.fpas) | `Skip` + runner `SKIP` reporting |
 | [`runner/stdout_echo_test.fpas`](../../../../tests/runner/stdout_echo_test.fpas) | `*.expect.stdout` |
-| [`tui/controls/tui_turbo_vision_run_test.fpas`](../../../../tests/tui/controls/tui_turbo_vision_run_test.fpas) | Headless Turbo Vision `Application.Run` + `AssertScreenLine` |
-| [`tui/controls/tui_turbo_vision_chrome_paint_test.fpas`](../../../../tests/tui/controls/tui_turbo_vision_chrome_paint_test.fpas) | Menu/status chrome + `AssertScreenCell` after `Application.Pump` |
+| [`tui/smoke/run_quit_try2_test.fpas`](../../../../tests/tui/smoke/run_quit_try2_test.fpas) | Headless Try-2 `Application.Run` |
+| [`tui/smoke/chrome_paint_try2_test.fpas`](../../../../tests/tui/smoke/chrome_paint_try2_test.fpas) | Menu/status chrome + `AssertScreenCell` |
 | [`graph/graph_smoke_test.fpas`](../../../../tests/graph/graph_smoke_test.fpas) | Headless graph (`OpenForTest` + `TestSendKey`) + `*.expect.pixels` |
 | [`suite.fpasprj`](../../../../tests/suite.fpasprj) | `kind = "test"` project bundle |
 

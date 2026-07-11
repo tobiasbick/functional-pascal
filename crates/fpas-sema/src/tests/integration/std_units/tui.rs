@@ -13,20 +13,34 @@ fn has_removed_tui_help(error: &fpas_diagnostics::Diagnostic) -> bool {
 }
 
 #[test]
-fn std_tui_exit_reason_is_not_registered() {
+fn std_tui_legacy_value_types_are_not_registered() {
     let errs = check_errors(
         "\
 program T;
 uses Std.Tui;
 begin
-  var R: ExitReason := ExitReason.UserQuit
+  var Id: ViewId := 0;
+  var DialogResultValue: DialogResult := 0;
+  var Cell: ScreenCell := 0;
+  var Event: TuiEvent := 0;
+  var Kind: EventKind := 0;
+  var Reason: ExitReason := 0
 end.",
     );
-    assert!(
-        errs.iter()
-            .any(|e| e.message.contains("Unknown type `ExitReason`")),
-        "{errs:#?}"
-    );
+    for type_name in [
+        "ViewId",
+        "DialogResult",
+        "ScreenCell",
+        "TuiEvent",
+        "EventKind",
+        "ExitReason",
+    ] {
+        assert!(
+            errs.iter()
+                .any(|e| e.message.contains(&format!("Unknown type `{type_name}`"))),
+            "{errs:#?}"
+        );
+    }
 }
 
 #[test]
@@ -201,6 +215,31 @@ end.",
         errs.iter().any(|e| e.message.contains("Unknown procedure")
             && e.message.contains("Application.HostProcessNext")
             && has_removed_tui_help(e)),
+        "{errs:#?}"
+    );
+}
+
+#[test]
+fn std_tui_old_redraw_and_input_helpers_are_not_registered() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Tui;
+
+begin
+  var App: Application := Application.Open();
+  Application.RequestRedraw(App);
+  Application.TestSendKey(App, 27)
+end.",
+    );
+    assert!(
+        errs.iter()
+            .any(|e| e.message.contains("Application.RequestRedraw") && has_removed_tui_help(e)),
+        "{errs:#?}"
+    );
+    assert!(
+        errs.iter()
+            .any(|e| e.message.contains("Application.TestSendKey") && has_removed_tui_help(e)),
         "{errs:#?}"
     );
 }

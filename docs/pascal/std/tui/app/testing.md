@@ -46,6 +46,8 @@ Application.Run(App, OnCommand);
 
 `Application.TestInjectKeyboard` queues a Turbo Vision key code for the next run-loop turn (used by IDE and event tests).
 
+When a queued keyboard or mouse event closes a modal started by a command handler, later queued application commands remain available to the outer `Application.Run` loop. This lets a test dismiss a modal and then inject `CM_QUIT` in the same sequence.
+
 ## File dialog stub
 
 ```pascal

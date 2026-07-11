@@ -5,9 +5,8 @@
 use fpas_parser::{Designator, DesignatorPart, Program};
 use fpas_std::key_event::KEY_KIND_VARIANTS;
 use fpas_std::{
-    EVENT_KIND_VARIANTS, MOUSE_ACTION_VARIANTS, MOUSE_BUTTON_VARIANTS, TUI_EVENT_KIND_VARIANTS,
-    TUI_EXIT_REASON_VARIANTS, canonical_std_unit_from_segments, is_std_root_segment,
-    std_symbols as s,
+    EVENT_KIND_VARIANTS, MOUSE_ACTION_VARIANTS, MOUSE_BUTTON_VARIANTS,
+    canonical_std_unit_from_segments, is_std_root_segment, std_symbols as s,
 };
 
 use crate::error::{CompileError, compile_error};
@@ -147,10 +146,8 @@ impl Compiler {
     }
 
     pub(super) fn register_std_tui_enums(&mut self) {
-        // `Std.Tui.TuiEvent.key` is `Std.Console.KeyEvent` (field `kind` is `Std.Console.KeyKind`).
+        // `Std.Tui` callbacks use `Std.Console.KeyEvent` for keyboard input.
         self.register_enum_variants(s::STD_CONSOLE_KEY_KIND, KEY_KIND_VARIANTS);
-        self.register_enum_variants(s::STD_TUI_EVENT_KIND, TUI_EVENT_KIND_VARIANTS);
-        self.register_enum_variants(s::STD_TUI_EXIT_REASON, TUI_EXIT_REASON_VARIANTS);
     }
 
     pub(super) fn register_std_json_enum(&mut self) {

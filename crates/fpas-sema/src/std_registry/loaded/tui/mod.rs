@@ -13,7 +13,6 @@ mod try2_api;
 use crate::check::Checker;
 use crate::std_registry::loaded::type_registration;
 use crate::types::Ty;
-use fpas_std::TUI_EVENT_KIND_VARIANTS;
 use fpas_std::std_symbols as s;
 
 struct TuiTypes {
@@ -49,13 +48,7 @@ struct TuiCallbackTypes {
 pub(super) fn register_std_tui(checker: &mut Checker) {
     let application =
         type_registration::register_record_type(checker, s::STD_TUI_APPLICATION, Vec::new());
-    type_registration::register_record_type(checker, s::STD_TUI_VIEW_ID, Vec::new());
     let dialog = type_registration::register_record_type(checker, s::STD_TUI_DIALOG, Vec::new());
-    let _dialog_result = type_registration::register_record_type(
-        checker,
-        s::STD_TUI_DIALOG_RESULT,
-        vec![("command".into(), Ty::Integer)],
-    );
     let window = type_registration::register_record_type(checker, s::STD_TUI_WINDOW, Vec::new());
     let button = type_registration::register_record_type(checker, s::STD_TUI_BUTTON, Vec::new());
     let static_text =
@@ -144,22 +137,8 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         s::STD_CONSOLE_EVENT,
         "Std.Console.Event must be registered before Std.Tui (see loaded/mod.rs)",
     );
-    let event_kind = type_registration::register_enum_type(
-        checker,
-        s::STD_TUI_EVENT_KIND,
-        TUI_EVENT_KIND_VARIANTS,
-    );
     let callbacks =
         handlers::register_turbo_vision_callbacks(&application, &key_event, &console_event);
-    type_registration::register_record_type(
-        checker,
-        s::STD_TUI_EVENT,
-        vec![
-            ("kind".into(), event_kind),
-            ("key".into(), key_event.clone()),
-            ("size".into(), size.clone()),
-        ],
-    );
 
     message_box_api::register_message_box_option_constants(checker);
     super::super::builtins::register_tui_builtins(checker);

@@ -1,6 +1,6 @@
 # Implementation status
 
-Living progress log for branch `refactor/tui-try-2`. Update each work session. Plan docs last synced with code: **2026-07-10**.
+Living progress log for branch `refactor/tui-try-2`. Update each work session. Plan docs last synced with code: **2026-07-11**.
 
 ## Current phase
 
@@ -10,7 +10,7 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 **Phase 4** — **complete** (all phase-1 widgets on try-2 path including `Outline`; control tests migrated in phase 7).
 **Phase 5** — **complete** for current branch scope (`MessageBox`, `OnKey`, `OnMouse`, `RunFileDialog` with Try-2-local headless adapter).  
 **Phase 6** — **complete** (`apps/ide` migrated; automated + manual terminal sign-off green).  
-**Phase 7** — **in progress** (legacy bridge modules and interim test symbols remain).  
+**Phase 7** — **in progress** (three upstream-dependent read-back adapters and interim test helpers remain).
 **Phase 8** — optional follow-ups; public docs were rewritten as Phase 7 work.
 
 ## Phase 1 closure notes
@@ -108,8 +108,8 @@ Covers: registry, geometry, session, dialog, button, window, desktop, static tex
 
 ## Next steps
 
-1. **Phase 7 (VM deletion)** — remove try-1 VM modules and sema symbols per [deletion-checklist.md](deletion-checklist.md). Headless `TestClickMouse` toggles checkbox and radio-button targets; regressions live under `tests/tui/events/`.
-2. **Phase 7/8 cleanup** — replace interim `TestSetFileDialogResult` naming with the final headless event API after the public testing surface is rewritten.
+1. **Phase 7 (adapter deletion)** — remove the three remaining adapters after upstream provides live-state read-back hooks; regressions live under `tests/tui/events/` and `tests/tui/views/`.
+2. **Phase 7/8 cleanup** — replace interim `TestSetFileDialogResult` naming with the final headless event API when that API is designed and implemented.
 
 # Phase 7 progress (2026-07-10)
 
@@ -137,11 +137,31 @@ Covers: registry, geometry, session, dialog, button, window, desktop, static tex
 - `CheckBox`, `RadioButton`, and `OutlineViewer` at the pinned `turbo-vision` `v2.0.0` revision do not implement `View::as_any_mut`.
 - Their adapters remain necessary to copy live keyboard and mouse selection back to FPAS host cells. Removing them without an upstream hook would regress `Checked`, `Selected`, `Outline.Selection`, and `Outline.SelectedText` after interactive input.
 - Resume this cleanup after upstream adds downcast support (or another public read-back hook) for those three view types; then replace the views directly and remove `try2/bridged_{check_box,radio_button,outline}.rs`.
-- Verification at this checkpoint: focused Rust Try-2 suite (60), Sema TUI tests (18), compiler TUI tests (11), and FPAS `tests/tui/` (30) pass. `apps/ide/tests/` currently has two separate headless run-loop failures in `shell/about_menu_test.fpas` and `shell/open_menu_test.fpas` after their modal command; see the next work item below.
+- Verification at this checkpoint: focused Rust Try-2 suite (61), Sema TUI tests (18), compiler TUI tests (11), FPAS `tests/tui/` (30), and `apps/ide/tests/` (7) pass.
+
+## Phase 7 headless modal queue fix (2026-07-11)
+
+- `HeadlessTvApp::exec_modal_view` now preserves queued application commands while it drains modal keyboard or mouse input.
+- A modal checks its closing command before polling the next queued event, so a following `CM_QUIT` reaches the outer `Application.Run` loop.
+- Rust regression: `modal_preserves_queued_application_command_for_outer_run_loop`.
+- IDE regressions fixed: `apps/ide/tests/shell/about_menu_test.fpas` and `open_menu_test.fpas`.
+
+## Phase 7 instruction sync (2026-07-11)
+
+- Updated `AGENTS.md`, `.agents/skills/turbo-vision-4-rust/SKILL.md`, `.github/instructions/functional-pascal.instructions.md`, and `.cursor/rules/functional-pascal.mdc` for the direct Try-2 API and current module layout.
+- Removed stale guidance for `Application.Create*`, `AddChild`, `Pump`, `ExecDialog`, retained hosted TUI dispatch, and deleted root bridge modules.
+
+## Phase 7 symbol and documentation audit (2026-07-11)
+
+- Removed 59 unregistered Try-1 and retained-host names from `fpas-std`'s `Std.Tui` symbol table; the remaining entries match the current Sema registrations and headless test helpers.
+- Removed six undocumented legacy value types (`ViewId`, `DialogResult`, `ScreenCell`, `TuiEvent`, `EventKind`, and `ExitReason`) from the FPAS surface, including compiler enum and equality special cases.
+- Confirmed that `crates/fpas-vm/src/vm/execute/io/tui/` contains only `mod.rs` and `try2/`; no root Try-1 bridge module remains.
+- Updated `docs/pascal/std/testing/test.md` to describe rendered Try-2 headless paths and link to the current `tests/tui/smoke/` examples.
+- Rewrote [deletion-checklist.md](deletion-checklist.md) as a current audit: root migration work is complete and only the three upstream read-back adapters remain.
 
 ## Next work item
 
-Investigate the IDE headless command queue: `TestDispatchMenuCommand`, modal keyboard dismissal, and the queued `CM_QUIT` do not complete the run loop in `about_menu_test.fpas` or `open_menu_test.fpas`. The TUI suite itself passes; reproduce with `cargo run -q -p fpas-cli -- test apps/ide/tests/` before changing `try2/run.rs` or headless modal routing.
+Remove the remaining `CheckBox`, `RadioButton`, and `Outline` adapters when the pinned upstream version provides a read-back hook for their live state. Do not delete the plan directory during that cleanup.
 
 ## Phase 7 progress (2026-07-09)
 
@@ -159,9 +179,9 @@ Investigate the IDE headless command queue: `TestDispatchMenuCommand`, modal key
 | --- | --- |
 | Controls tests removed | **37 / 37** |
 | Examples migrated to try-2 | **5 / 5** (`exec_dialog`, `runtime_setters`, `turbo_vision_dialog`, `turbo_vision_outline`, `turbo_vision_window`) |
-| VM / sema / `docs/pascal/std/tui/` rewrite | Not started |
+| VM / sema / `docs/pascal/std/tui/` rewrite | Completed later in Phase 7 (2026-07-10/11) |
 
-Remaining Phase 7 work: remove try-1 VM modules and sema symbols per [deletion-checklist.md](deletion-checklist.md); simplify coexistence routing once try-1 intrinsics are gone.
+Remaining Phase 7 work: remove the three upstream-dependent read-back adapters recorded in [deletion-checklist.md](deletion-checklist.md).
 
 ## Blockers
 

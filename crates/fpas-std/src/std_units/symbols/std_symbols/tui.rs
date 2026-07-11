@@ -1,10 +1,7 @@
 //! `Std.Tui` symbol names and registry group.
 
 pub const STD_TUI_APPLICATION: &str = std_tui!("Application");
-pub const STD_TUI_VIEW_ID: &str = std_tui!("ViewId");
 pub const STD_TUI_DIALOG: &str = std_tui!("Dialog");
-/// Result of a modal `Application.ExecDialog` call.
-pub const STD_TUI_DIALOG_RESULT: &str = std_tui!("DialogResult");
 pub const STD_TUI_WINDOW: &str = std_tui!("Window");
 pub const STD_TUI_BUTTON: &str = std_tui!("Button");
 pub const STD_TUI_STATIC_TEXT: &str = std_tui!("StaticText");
@@ -21,8 +18,6 @@ pub const STD_TUI_MENU: &str = std_tui!("Menu");
 pub const STD_TUI_MENU_ITEM: &str = std_tui!("MenuItem");
 pub const STD_TUI_STATUS_LINE: &str = std_tui!("StatusLine");
 pub const STD_TUI_STATUS_ITEM: &str = std_tui!("StatusItem");
-/// Hosted-dispatch handler bundle for `Std.Tui.Application.Configure`; see `docs/pascal/std/tui/app/README.md`.
-pub const STD_TUI_APPLICATION_HANDLERS: &str = std_tui!("ApplicationHandlers");
 pub const STD_TUI_RECT: &str = std_tui!("Rect");
 pub const STD_TUI_POINT: &str = std_tui!("Point");
 pub const STD_TUI_SIZE: &str = std_tui!("Size");
@@ -80,25 +75,12 @@ pub const STD_TUI_MESSAGE_BOX_OPTION_CANCEL_BUTTON: &str =
     std_tui!("MessageBoxOption.CancelButton");
 pub const STD_TUI_MESSAGE_BOX_OPTION_YES_NO_CANCEL: &str = std_tui!("MessageBoxOption.YesNoCancel");
 pub const STD_TUI_MESSAGE_BOX_OPTION_OK_CANCEL: &str = std_tui!("MessageBoxOption.OkCancel");
-pub const STD_TUI_SCREEN_CELL: &str = std_tui!("ScreenCell");
-pub const STD_TUI_EVENT: &str = std_tui!("TuiEvent");
-pub const STD_TUI_EVENT_KIND: &str = std_tui!("EventKind");
-pub const STD_TUI_EXIT_REASON: &str = std_tui!("ExitReason");
 pub const STD_TUI_APPLICATION_OPEN: &str = std_tui!("Application.Open");
 pub const STD_TUI_APPLICATION_NEW: &str = std_tui!("Application.New");
 pub const STD_TUI_APPLICATION_CLOSE: &str = std_tui!("Application.Close");
-/// Configure hosted-dispatch handlers from a single bundle; see `docs/pascal/std/tui/app/README.md`.
-pub const STD_TUI_APPLICATION_CONFIGURE: &str = std_tui!("Application.Configure");
 /// Dispatch-mode hosted application loop; see `docs/pascal/std/tui/app/README.md`.
 pub const STD_TUI_APPLICATION_RUN: &str = std_tui!("Application.Run");
-/// High-level modal helper rooted at a host-managed view subtree.
-pub const STD_TUI_APPLICATION_SHOW_MODAL: &str = std_tui!("Application.ShowModal");
-/// High-level dialog helper that creates a root host-managed view and shows it modally.
-pub const STD_TUI_APPLICATION_SHOW_DIALOG: &str = std_tui!("Application.ShowDialog");
-/// Close the active modal dialog shown via `Application.ShowModal`.
-pub const STD_TUI_APPLICATION_CLOSE_MODAL: &str = std_tui!("Application.CloseModal");
 pub const STD_TUI_APPLICATION_SIZE: &str = std_tui!("Application.Size");
-pub const STD_TUI_APPLICATION_REQUEST_REDRAW: &str = std_tui!("Application.RequestRedraw");
 /// Show a modal Turbo Vision file dialog and return the selected path, or `None` when canceled.
 pub const STD_TUI_APPLICATION_RUN_FILE_DIALOG: &str = std_tui!("Application.RunFileDialog");
 /// Queue the result returned by the next headless `Application.RunFileDialog` call.
@@ -117,7 +99,6 @@ pub const STD_TUI_APPLICATION_TEST_SET_DIALOG_RESULT: &str =
     std_tui!("Application.TestSetDialogResult");
 pub const STD_TUI_APPLICATION_SET_MENU_BAR: &str = std_tui!("Application.SetMenuBar");
 pub const STD_TUI_APPLICATION_SET_STATUS_LINE: &str = std_tui!("Application.SetStatusLine");
-pub const STD_TUI_APPLICATION_ON_COMMAND: &str = std_tui!("Application.OnCommand");
 /// Register `function (Application, Std.Console.KeyEvent): boolean` for unhandled Turbo Vision keys.
 pub const STD_TUI_APPLICATION_ON_KEY: &str = std_tui!("Application.OnKey");
 /// Register `procedure (Application, Std.Console.Event)` for unhandled Turbo Vision mouse events.
@@ -129,113 +110,11 @@ pub const STD_TUI_APPLICATION_TEST_DISPATCH_MENU_COMMAND: &str =
     std_tui!("Application.TestDispatchMenuCommand");
 pub const STD_TUI_APPLICATION_OPEN_FOR_TEST: &str = std_tui!("Application.OpenForTest");
 pub const STD_TUI_APPLICATION_CLOSE_FOR_TEST: &str = std_tui!("Application.CloseForTest");
-pub const STD_TUI_APPLICATION_TEST_SEND_KEY: &str = std_tui!("Application.TestSendKey");
-pub const STD_TUI_APPLICATION_TEST_SEND_MOUSE: &str = std_tui!("Application.TestSendMouse");
-pub const STD_TUI_APPLICATION_TEST_MOVE_MOUSE: &str = std_tui!("Application.TestMoveMouse");
 pub const STD_TUI_APPLICATION_TEST_CLICK_MOUSE: &str = std_tui!("Application.TestClickMouse");
-pub const STD_TUI_APPLICATION_TEST_RESIZE: &str = std_tui!("Application.TestResize");
-pub const STD_TUI_APPLICATION_TEST_PASTE: &str = std_tui!("Application.TestPaste");
-pub const STD_TUI_APPLICATION_TEST_FOCUS: &str = std_tui!("Application.TestFocus");
-pub const STD_TUI_APPLICATION_QUERY_SCREEN_SIZE: &str = std_tui!("Application.QueryScreenSize");
-pub const STD_TUI_APPLICATION_QUERY_SCREEN_LINE: &str = std_tui!("Application.QueryScreenLine");
-pub const STD_TUI_APPLICATION_QUERY_SCREEN_CELL: &str = std_tui!("Application.QueryScreenCell");
-pub const STD_TUI_APPLICATION_QUERY_ROOT_VIEWS: &str = std_tui!("Application.QueryRootViews");
-pub const STD_TUI_APPLICATION_QUERY_VIEW_RECT: &str = std_tui!("Application.QueryViewRect");
-pub const STD_TUI_APPLICATION_QUERY_VIEW_PARENT: &str = std_tui!("Application.QueryViewParent");
-pub const STD_TUI_APPLICATION_QUERY_VIEW_CHILDREN: &str = std_tui!("Application.QueryViewChildren");
-pub const STD_TUI_APPLICATION_QUERY_MODAL_DEPTH: &str = std_tui!("Application.QueryModalDepth");
-pub const STD_TUI_APPLICATION_QUERY_FOCUSED_VIEW_ID: &str =
-    std_tui!("Application.QueryFocusedViewId");
-pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_KEY_PRESSED: &str =
-    std_tui!("Application.HostRegisterOnKeyPressed");
-pub const STD_TUI_APPLICATION_HOST_INVOKE_ON_KEY_PRESSED: &str =
-    std_tui!("Application.HostInvokeOnKeyPressed");
-pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_RESIZE: &str =
-    std_tui!("Application.HostRegisterOnResize");
-pub const STD_TUI_APPLICATION_HOST_PROCESS_NEXT: &str = std_tui!("Application.HostProcessNext");
-pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_PAINT: &str =
-    std_tui!("Application.HostRegisterOnPaint");
-/// Register `procedure (Application)` plus an idle interval in milliseconds for hosted `OnIdle` callbacks.
-pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_IDLE: &str =
-    std_tui!("Application.HostRegisterOnIdle");
-pub const STD_TUI_APPLICATION_HOST_DISPATCH_REDRAW: &str =
-    std_tui!("Application.HostDispatchRedraw");
-pub const STD_TUI_APPLICATION_HOST_RUN_LOOP: &str = std_tui!("Application.HostRunLoop");
-pub const STD_TUI_APPLICATION_HOST_REQUEST_QUIT: &str = std_tui!("Application.HostRequestQuit");
-pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_EXIT: &str =
-    std_tui!("Application.HostRegisterOnExit");
-/// Register `procedure (Application, Std.Console.Event)` for hosted mouse-event dispatch.
-pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_MOUSE: &str =
-    std_tui!("Application.HostRegisterOnMouse");
-/// Register `procedure (Application, Std.Console.Event)` for bracketed-paste dispatch.
-pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_PASTE: &str =
-    std_tui!("Application.HostRegisterOnPaste");
-/// Register `procedure (Application, Std.Console.Event)` for terminal focus-gained dispatch.
-pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_FOCUS_GAINED: &str =
-    std_tui!("Application.HostRegisterOnFocusGained");
-/// Register `procedure (Application, Std.Console.Event)` for terminal focus-lost dispatch.
-pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_FOCUS_LOST: &str =
-    std_tui!("Application.HostRegisterOnFocusLost");
-/// Register `procedure (Application)` for host-managed view focus-gained dispatch (Tab traversal).
-pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_ACTIVATE: &str =
-    std_tui!("Application.HostRegisterOnActivate");
-/// Register `procedure (Application)` for host-managed view focus-lost dispatch (Tab traversal).
-pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_DEACTIVATE: &str =
-    std_tui!("Application.HostRegisterOnDeactivate");
-/// Register `procedure (Application, integer)` for hosted command dispatch.
-pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_COMMAND: &str =
-    std_tui!("Application.HostRegisterOnCommand");
-/// Bind a `Std.Console.KeyEvent` shortcut to a hosted command id.
-pub const STD_TUI_APPLICATION_HOST_BIND_COMMAND: &str = std_tui!("Application.HostBindCommand");
-/// Bind a `Std.Console.KeyEvent` shortcut to a host-managed view subtree.
-pub const STD_TUI_APPLICATION_HOST_BIND_COMMAND_TO_VIEW: &str =
-    std_tui!("Application.HostBindCommandToView");
-/// Bind a `Std.Console.KeyEvent` shortcut to the active modal frame.
-pub const STD_TUI_APPLICATION_HOST_BIND_COMMAND_TO_ACTIVE_MODAL: &str =
-    std_tui!("Application.HostBindCommandToActiveModal");
-/// Push an application-defined modal id onto the hosted modal stack.
-pub const STD_TUI_APPLICATION_HOST_ENTER_MODAL: &str = std_tui!("Application.HostEnterModal");
-/// Pop the active hosted modal frame, if any.
-pub const STD_TUI_APPLICATION_HOST_LEAVE_MODAL: &str = std_tui!("Application.HostLeaveModal");
-/// Set and validate the active hosted modal result code.
-pub const STD_TUI_APPLICATION_HOST_SET_ACTIVE_MODAL_RESULT: &str =
-    std_tui!("Application.HostSetActiveModalResult");
-/// Register a host-managed view and return its opaque `ViewId`.
-pub const STD_TUI_APPLICATION_HOST_REGISTER_VIEW: &str = std_tui!("Application.HostRegisterView");
-/// Remove a host-managed view by handle.
-pub const STD_TUI_APPLICATION_HOST_UNREGISTER_VIEW: &str =
-    std_tui!("Application.HostUnregisterView");
-/// Append a host-managed view to the focus chain.
-pub const STD_TUI_APPLICATION_HOST_PUSH_CHILD_VIEW: &str =
-    std_tui!("Application.HostPushChildView");
-/// Attach a host-managed view handle to the active modal scope.
-pub const STD_TUI_APPLICATION_HOST_ATTACH_VIEW_TO_ACTIVE_MODAL: &str =
-    std_tui!("Application.HostAttachViewToActiveModal");
-/// Update the bounding rectangle for a host-managed view handle.
-pub const STD_TUI_APPLICATION_HOST_SET_VIEW_RECT: &str = std_tui!("Application.HostSetViewRect");
-/// Re-parent a host-managed view. Pass `None` as `Parent` to detach it back to the root list.
-pub const STD_TUI_APPLICATION_HOST_SET_VIEW_PARENT: &str =
-    std_tui!("Application.HostSetViewParent");
-/// Register a local paint handler for a host-managed view.
-pub const STD_TUI_APPLICATION_HOST_REGISTER_ON_VIEW_PAINT: &str =
-    std_tui!("Application.HostRegisterOnViewPaint");
-/// Register a host-managed solid-fill widget view and return its handle.
-pub const STD_TUI_APPLICATION_HOST_CREATE_SOLID_FILL_VIEW: &str =
-    std_tui!("Application.HostCreateSolidFillView");
-/// Register a host-managed status bar widget from a Pascal segment model.
-pub const STD_TUI_APPLICATION_HOST_CREATE_STATUS_BAR_VIEW: &str =
-    std_tui!("Application.HostCreateStatusBarView");
-/// Replace the segment model for an existing status bar widget view.
-pub const STD_TUI_APPLICATION_HOST_SET_STATUS_BAR_SEGMENTS: &str =
-    std_tui!("Application.HostSetStatusBarSegments");
-pub const STD_TUI_STATUS_BAR_SEGMENT: &str = std_tui!("StatusBarSegment");
-pub const STD_TUI_STATUS_BAR_STYLE: &str = std_tui!("StatusBarStyle");
 
 pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_APPLICATION,
-    STD_TUI_VIEW_ID,
     STD_TUI_DIALOG,
-    STD_TUI_DIALOG_RESULT,
     STD_TUI_WINDOW,
     STD_TUI_BUTTON,
     STD_TUI_STATIC_TEXT,
@@ -252,7 +131,6 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_MENU_ITEM,
     STD_TUI_STATUS_LINE,
     STD_TUI_STATUS_ITEM,
-    STD_TUI_APPLICATION_HANDLERS,
     STD_TUI_RECT,
     STD_TUI_POINT,
     STD_TUI_SIZE,
@@ -309,17 +187,11 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_MESSAGE_BOX_OPTION_CANCEL_BUTTON,
     STD_TUI_MESSAGE_BOX_OPTION_YES_NO_CANCEL,
     STD_TUI_MESSAGE_BOX_OPTION_OK_CANCEL,
-    STD_TUI_SCREEN_CELL,
-    STD_TUI_EVENT,
-    STD_TUI_EVENT_KIND,
-    STD_TUI_EXIT_REASON,
     STD_TUI_APPLICATION_OPEN,
     STD_TUI_APPLICATION_NEW,
     STD_TUI_APPLICATION_CLOSE,
-    STD_TUI_APPLICATION_CONFIGURE,
     STD_TUI_APPLICATION_RUN,
     STD_TUI_APPLICATION_SIZE,
-    STD_TUI_APPLICATION_REQUEST_REDRAW,
     STD_TUI_APPLICATION_RUN_FILE_DIALOG,
     STD_TUI_APPLICATION_TEST_SET_FILE_DIALOG_RESULT,
     STD_TUI_APPLICATION_EXEC_VIEW,
@@ -329,7 +201,6 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_APPLICATION_TEST_SET_DIALOG_RESULT,
     STD_TUI_APPLICATION_SET_MENU_BAR,
     STD_TUI_APPLICATION_SET_STATUS_LINE,
-    STD_TUI_APPLICATION_ON_COMMAND,
     STD_TUI_APPLICATION_ON_KEY,
     STD_TUI_APPLICATION_ON_MOUSE,
     STD_TUI_APPLICATION_QUIT,
@@ -337,32 +208,5 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_APPLICATION_TEST_DISPATCH_MENU_COMMAND,
     STD_TUI_APPLICATION_OPEN_FOR_TEST,
     STD_TUI_APPLICATION_CLOSE_FOR_TEST,
-    STD_TUI_APPLICATION_TEST_SEND_KEY,
-    STD_TUI_APPLICATION_TEST_SEND_MOUSE,
-    STD_TUI_APPLICATION_TEST_MOVE_MOUSE,
     STD_TUI_APPLICATION_TEST_CLICK_MOUSE,
-    STD_TUI_APPLICATION_TEST_RESIZE,
-    STD_TUI_APPLICATION_TEST_PASTE,
-    STD_TUI_APPLICATION_TEST_FOCUS,
-    STD_TUI_APPLICATION_QUERY_SCREEN_SIZE,
-    STD_TUI_APPLICATION_QUERY_SCREEN_LINE,
-    STD_TUI_APPLICATION_QUERY_SCREEN_CELL,
-    STD_TUI_APPLICATION_HOST_REGISTER_ON_KEY_PRESSED,
-    STD_TUI_APPLICATION_HOST_INVOKE_ON_KEY_PRESSED,
-    STD_TUI_APPLICATION_HOST_REGISTER_ON_RESIZE,
-    STD_TUI_APPLICATION_HOST_PROCESS_NEXT,
-    STD_TUI_APPLICATION_HOST_REGISTER_ON_PAINT,
-    STD_TUI_APPLICATION_HOST_REGISTER_ON_IDLE,
-    STD_TUI_APPLICATION_HOST_DISPATCH_REDRAW,
-    STD_TUI_APPLICATION_HOST_RUN_LOOP,
-    STD_TUI_APPLICATION_HOST_REQUEST_QUIT,
-    STD_TUI_APPLICATION_HOST_REGISTER_ON_EXIT,
-    STD_TUI_APPLICATION_HOST_REGISTER_ON_MOUSE,
-    STD_TUI_APPLICATION_HOST_REGISTER_ON_PASTE,
-    STD_TUI_APPLICATION_HOST_REGISTER_ON_FOCUS_GAINED,
-    STD_TUI_APPLICATION_HOST_REGISTER_ON_FOCUS_LOST,
-    STD_TUI_APPLICATION_HOST_REGISTER_ON_ACTIVATE,
-    STD_TUI_APPLICATION_HOST_REGISTER_ON_DEACTIVATE,
-    STD_TUI_APPLICATION_HOST_REGISTER_ON_COMMAND,
-    STD_TUI_APPLICATION_HOST_BIND_COMMAND,
 ];

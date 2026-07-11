@@ -1,10 +1,10 @@
 # Deletion checklist
 
-Complete list of try-1 artifacts to remove during [phase 7](migration-phases.md#phase-7--delete-try-1-12-days). Use `rg` to confirm zero matches before closing the rewrite.
+Audited status of the Phase-7 deletion work. The root bridge is gone; this file records the intentional exceptions and commands for re-checking the final upstream-dependent cleanup.
 
 ## Pascal public API (sema / docs)
 
-### Removed symbols
+### Removed Try-1 symbols (confirmed)
 
 - `Application.CreateDialog`, `CreateWindow`, `CreateButton`, `CreateStaticText`
 - `Application.CreateMemo`, `CreateTextViewer`, `CreateInputLine`
@@ -15,23 +15,24 @@ Complete list of try-1 artifacts to remove during [phase 7](migration-phases.md#
 - `Application.InputText`, `Checked`, `Selected`
 - `Application.ListSelection`, `OutlineSelection`, `OutlineSelectedText`
 - `Application.SetText`, `SetChecked`, `SetItems`, `SetOutlineNodes`, `SetTitle`
-- `Application.SetMenuBar` — **keep** (same name)
 - `Application.SetMenus`, `SetStatusItems` → move to `MenuBar.SetMenus`, `StatusLine.SetItems`
 - `Application.Pump`
-- `Application.TestClickButton`, `TestClickMouse`, `TestDispatchMenuCommand`
-- `Application.TestSetFileDialogResult`, `TestSetDialogResult`
 - `Command.Quit`, `Command.Close`, `Command.Accept`, `Command.Cancel`
+- Legacy value types `ViewId`, `DialogResult`, `ScreenCell`, `TuiEvent`, `EventKind`, and `ExitReason`
 
-### Interim try-2-only symbols (remove before public spec)
+### Current Try-2 testing surface (intentionally retained)
 
-- ~~`Dialog.AddButton`~~ — removed; use `Button.New` + `Dialog.Add`
-- `Application.TestInjectKeyboard`, `Application.TestInjectCommand` — replace with `Test.InjectEvent` / `Test.Click`
+- `Application.TestClickButton`, `TestClickMouse`, and `TestDispatchMenuCommand`
+- `Application.TestSetFileDialogResult` and `TestSetDialogResult`
+- `Application.TestInjectKeyboard` and `TestInjectCommand` (interim headless event helpers)
+
+`Application.SetMenuBar` and `Application.SetStatusLine` are current API and remain registered.
 
 ### Replaced symbols (not deleted, renamed)
 
 | try-1 | try-2 |
 | --- | --- |
-| `Application.Open` | `Application.New` or keep `Open` as alias |
+| `Application.Open` | `Application.New` (both remain registered) |
 | `Application.ExecDialog` | `Application.ExecView` |
 | `Application.InputText` | `InputLine.Text` |
 | `Application.Checked` | `CheckBox.Checked` |
@@ -41,94 +42,40 @@ Complete list of try-1 artifacts to remove during [phase 7](migration-phases.md#
 
 ## Bytecode intrinsics
 
-Remove `TuiCreate*` and related try-1 variants from `fpas-bytecode` (grep `TuiCreate`, `TuiAddChild`, `TuiInputText`, `TuiPump`, `TuiTestSet`).
+Try-1 `TuiCreate*`, child-add, input, pump, and snapshot intrinsics have been removed. The current `try2.inc` retains `Try2InjectKeyboard` and `Try2InjectCommand` because the Pascal surface still exposes them as interim headless test helpers.
 
-Remove try-2 interim variants from `try2.inc` when superseded: ~~`DialogAddButton`~~ (removed), `Try2InjectKeyboard`, `Try2InjectCommand` (Pascal renamed to `TestInject*`; bytecode names unchanged).
+## VM modules
 
-Add try-2 intrinsics per [upstream-mapping.md](upstream-mapping.md).
-
-## VM modules (delete files)
-
-```
-crates/fpas-vm/src/vm/execute/io/tui/reconcile.rs
-crates/fpas-vm/src/vm/execute/io/tui/live_patch.rs
-~~crates/fpas-vm/src/vm/execute/io/tui/command_map.rs~~ — deleted; `cm_constants.rs` is canonical
-crates/fpas-vm/src/vm/execute/io/tui/control_create.rs
-crates/fpas-vm/src/vm/execute/io/tui/tv_views.rs
-crates/fpas-vm/src/vm/execute/io/tui/controls.rs
-crates/fpas-vm/src/vm/execute/io/tui/dialogs.rs
-crates/fpas-vm/src/vm/execute/io/tui/windows.rs
-~~crates/fpas-vm/src/vm/execute/io/tui/navigation.rs~~ → `try2/chrome_input.rs`
-crates/fpas-vm/src/vm/execute/io/tui/chrome_layout.rs
-~~crates/fpas-vm/src/vm/execute/io/tui/handle_records.rs~~ → `try2/handle_records.rs`
-~~crates/fpas-vm/src/vm/execute/io/tui/handles.rs~~ → `try2/handles.rs`
-~~crates/fpas-vm/src/vm/execute/io/tui/records.rs~~ → `try2/application_records.rs`
-crates/fpas-vm/src/vm/execute/io/tui/interactive_loop.rs
-~~crates/fpas-vm/src/vm/execute/io/tui/commands.rs~~ → `try2/commands.rs`
-crates/fpas-vm/src/vm/execute/io/tui/outline_nodes.rs
-crates/fpas-vm/src/vm/execute/io/tui/outline_read.rs
-crates/fpas-vm/src/vm/execute/io/tui/callbacks.rs
-~~crates/fpas-vm/src/vm/execute/io/tui/tv_input_events.rs~~ → `try2/input_events.rs`
-crates/fpas-vm/src/vm/execute/io/tui/exec_dialog.rs
-~~crates/fpas-vm/src/vm/execute/io/tui/file_dialog.rs~~ → `try2/file_dialog.rs`
-~~crates/fpas-vm/src/vm/execute/io/tui/msgbox.rs~~ → `try2/message_box.rs`
-~~crates/fpas-vm/src/vm/execute/io/tui/test_mouse.rs~~ → `try2/testing.rs`
-~~crates/fpas-vm/src/vm/execute/io/tui/lifecycle.rs~~ → `try2/lifecycle.rs`
-crates/fpas-vm/src/vm/execute/io/tui/headless_tv_draw.rs — remaining renderer migration
-~~crates/fpas-vm/src/vm/execute/io/tui/application.rs~~ → `try2/application_intrinsics.rs`
-~~crates/fpas-vm/src/vm/execute/io/tui/bridged_button.rs~~ — deleted; `Button.SetText` replaces the upstream child view directly
-~~crates/fpas-vm/src/vm/execute/io/tui/bridged_check_box.rs~~ → `try2/bridged_check_box.rs`
-~~crates/fpas-vm/src/vm/execute/io/tui/bridged_list_box.rs~~ — deleted; direct `ListBox` supports item replacement and selection read-back
-~~crates/fpas-vm/src/vm/execute/io/tui/bridged_outline.rs~~ → `try2/bridged_outline.rs`
-~~crates/fpas-vm/src/vm/execute/io/tui/bridged_radio_button.rs~~ → `try2/bridged_radio_button.rs`
-~~crates/fpas-vm/src/vm/execute/io/tui/bridged_static_text.rs~~ — deleted; `StaticText.SetText` replaces the upstream child view directly
-~~crates/fpas-vm/src/vm/execute/io/tui/bridged_memo.rs~~ — deleted; `Memo.SetText` replaces the upstream child view directly
-~~crates/fpas-vm/src/vm/execute/io/tui/bridged_text_viewer.rs~~ — deleted; `TextViewer.SetText` replaces the upstream child view directly
-```
+All former root bridge modules have been deleted or moved into `try2/`; `tui/mod.rs` is now dispatch and re-exports only. Direct upstream views replaced the `StaticText`, `Button`, `Memo`, `TextViewer`, and `ListBox` adapters.
 
 The three remaining `try2/bridged_*.rs` files require an upstream read-back hook before removal. Do not delete them until `CheckBox`, `RadioButton`, and `OutlineViewer` expose a supported runtime state query through `dyn View`.
 
-Merged into new modules — delete old names after merge:
+## VM types
 
-- `session_app.rs` → `session.rs`
-- `tv_run.rs` → `run.rs`
-- `tv_geometry.rs` → `try2/geometry.rs` (completed)
-- `menu_build.rs` → `chrome.rs`
-
-## VM types (delete from `shared/tui.rs`)
-
-- `TurboVisionState`
-- `TurboVisionObject` enum and all `TurboVision*` snapshot structs
-- `pending_reconcile`, `pending_headless_repaint`
-- `live_view_ids`, `live_child_root_view_ids`
-- `test_file_dialog_result`, `test_dialog_result` (if headless uses real modals)
+`TurboVisionState`, `TurboVisionObject`, snapshot structs, reconcile queues, and old live-view id lists have been removed. Headless modal and file-dialog queues belong to `Try2Session`.
 
 ## fpas-std
 
 - ~~`command_ids.rs`~~ — deleted; `CM_*` in `cm_constants.rs` is canonical
-- Any `TurboVisionBoolCell` usage only for reconcile — remove if unused
+- Removed 59 unregistered Try-1 and retained-host symbol names from `std_symbols/tui.rs` on 2026-07-11.
+- Removed six undocumented legacy value types from the FPAS symbol table, Sema registration, and compiler special cases on 2026-07-11. Internal Rust input events remain implementation detail only.
 
-Grep patterns that must return **no hits** in `crates/`:
+The following patterns must return **no hits** in `crates/`:
 
 ```text
 TurboVisionObject
 pending_reconcile
 turbo_vision_reconcile
 FPAS_TV_COMMAND_OFFSET
-bridged_
 TuiCreateDialog
 TuiAddChild
 ```
 
-## Tests (delete directory when empty)
+`bridged_` is intentionally limited to `try2/bridged_check_box.rs`, `try2/bridged_radio_button.rs`, and `try2/bridged_outline.rs` until upstream exposes a read-back hook.
 
-```text
-tests/tui/controls/    — entire directory after porting to tests/tui/views/
-```
+## Tests
 
-37 try-1 files — delete each when try-2 replacement lands; remove directory in phase 7.
-
-**Progress (2026-07-09):** **37/37** try-1 control tests deleted. Directory `tests/tui/controls/` is empty.
+**Completed (2026-07-09):** all 37 try-1 control tests and `tests/tui/controls/` were removed. Try-2 regressions live under `tests/tui/views/`, `tests/tui/smoke/`, `tests/tui/events/`, and `tests/tui/modals/`.
 
 | Removed | try-2 replacement |
 | --- | --- |
@@ -141,42 +88,16 @@ No try-1 control tests remain. The retained Try-2 tests keep their `_try2` suffi
 
 ## Examples
 
-Rewrite to try-2 API:
+The TUI examples use the current Try-2 factories and modal API. No Try-1 example migration remains in this checklist.
 
-```text
-examples/pascal/tui/turbo_vision_dialog.fpas
-examples/pascal/tui/turbo_vision_window.fpas
-examples/pascal/tui/exec_dialog.fpas
-examples/pascal/tui/runtime_setters.fpas
-examples/pascal/tui/turbo_vision_outline.fpas
-examples/pascal/tui/message_box.fpas
-```
+## Documentation
 
-## Documentation to replace
-
-Remove or fully rewrite under `docs/pascal/std/tui/`:
-
-- `app/README.md` — `Application.Create*` table
-- `app/types.md` — `Command.*`, offset band section
-- `app/vm-bridge.md` — 40-module table, reconcile architecture
-- `app/controls.md`, `modals.md`, `handlers.md` — align with [target-api.md](target-api.md)
-
-Keep until rewritten:
-
-- `cell-width.md` — if still accurate for CRT
-- `terminal-checklist.md` — update commands only
+The public `docs/pascal/std/tui/` pages were rewritten for the direct Try-2 API. [app/types.md](../pascal/std/tui/app/types.md) defines the complete public type surface. Keep the plan directory as the implementation handoff and upstream-adapter record; it is not a public API specification.
 
 ## Planning docs
 
-When done:
-
-- Delete `docs/refactor-tui-try-2/` **or** add banner at top of README: `Status: completed — see docs/pascal/std/tui/`
-- Remove entry from `docs/future/README.md` if one was added
+Keep `docs/refactor-tui-try-2/` until the upstream adapter blocker is resolved. Update [status.md](status.md) and this checklist when that changes.
 
 ## Skill / agent instructions
 
-Update:
-
-- `.agents/skills/turbo-vision-4-rust/SKILL.md`
-- `.github/instructions/functional-pascal.instructions.md` (TUI section)
-- `.cursor/rules/functional-pascal.mdc` (`Std.Tui` table)
+Updated on 2026-07-11: `.agents/skills/turbo-vision-4-rust/SKILL.md`, `.github/instructions/functional-pascal.instructions.md`, and `.cursor/rules/functional-pascal.mdc` describe the direct Try-2 layout.

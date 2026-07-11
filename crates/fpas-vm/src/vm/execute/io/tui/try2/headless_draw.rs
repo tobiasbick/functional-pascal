@@ -111,9 +111,13 @@ impl HeadlessTvApp {
             .top_view_id()
             .expect("modal view was just added to the desktop");
 
-        // Drain pre-queued headless test input (mouse/keyboard) before the modal loop.
+        // Let pre-queued modal input close the view, but preserve application commands for Run.
         for _ in 0..8 {
             if let Ok(Some(mut event)) = self.terminal.poll_event(Duration::ZERO) {
+                if event.what == EventType::Command {
+                    self.event_inbox.push_front(event);
+                    break;
+                }
                 self.desktop.handle_event(&mut event);
             } else {
                 break;
@@ -127,18 +131,6 @@ impl HeadlessTvApp {
         loop {
             self.draw();
             let _ = self.terminal.flush();
-
-            if let Ok(Some(mut event)) = self.terminal.poll_event(Duration::from_millis(20)) {
-                if let Some(ref mut menu_bar) = self.menu_bar {
-                    menu_bar.handle_event(&mut event);
-                }
-                if event.what != EventType::Nothing {
-                    self.desktop.handle_event(&mut event);
-                }
-                if let Some(ref mut status_line) = self.status_line {
-                    status_line.handle_event(&mut event);
-                }
-            }
 
             if self.desktop.contains_id(view_id) {
                 let end_state = self
@@ -159,6 +151,18 @@ impl HeadlessTvApp {
                 }
             } else {
                 return CM_QUIT;
+            }
+
+            if let Ok(Some(mut event)) = self.terminal.poll_event(Duration::from_millis(20)) {
+                if let Some(ref mut menu_bar) = self.menu_bar {
+                    menu_bar.handle_event(&mut event);
+                }
+                if event.what != EventType::Nothing {
+                    self.desktop.handle_event(&mut event);
+                }
+                if let Some(ref mut status_line) = self.status_line {
+                    status_line.handle_event(&mut event);
+                }
             }
         }
     }
@@ -319,6 +323,11 @@ mod tests {
     use super::*;
     use turbo_vision::core::geometry::Rect;
     use turbo_vision::core::menu_data::Menu;
+    use turbo_vision::core::{
+        command::{CM_OK, CM_QUIT},
+        event::KB_ENTER,
+    };
+    use turbo_vision::views::button::Button;
     use turbo_vision::views::dialog::Dialog;
     use turbo_vision::views::menu_bar::{MenuBar, SubMenu};
     use turbo_vision::views::status_line::{StatusItem, StatusLine};
@@ -348,6 +357,26 @@ mod tests {
             Some((2, 0)),
             "menu title should paint at TV column 2, row 0"
         );
+    }
+
+    #[test]
+    fn modal_preserves_queued_application_command_for_outer_run_loop() {
+        let mut app = HeadlessTvApp::new(60, 20).expect("headless app");
+        app.update_desktop_bounds();
+        let mut dialog = Dialog::new_modal(Rect::from_coords(8, 4, 32, 12), "Modal");
+        dialog.add(Box::new(Button::new(
+            Rect::from_coords(10, 6, 20, 8),
+            "OK",
+            CM_OK,
+            true,
+        )));
+        dialog.set_initial_focus();
+
+        app.push_keyboard(KB_ENTER);
+        app.push_command(CM_QUIT);
+
+        assert_eq!(app.exec_modal_view(dialog), CM_OK);
+        assert_eq!(app.run_step().expect("run step"), Some(CM_QUIT));
     }
 
     #[test]

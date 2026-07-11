@@ -8,7 +8,7 @@ use fpas_parser::Program;
 use fpas_std::key_event::KEY_KIND_VARIANTS;
 use fpas_std::{
     EVENT_KIND_VARIANTS, GRAPH_EVENT_KIND_VARIANTS, MOUSE_ACTION_VARIANTS, MOUSE_BUTTON_VARIANTS,
-    STD_UNIT_CONSOLE, STD_UNIT_GRAPH, STD_UNIT_JSON, STD_UNIT_TUI, TUI_EVENT_KIND_VARIANTS,
+    STD_UNIT_CONSOLE, STD_UNIT_GRAPH, STD_UNIT_JSON, STD_UNIT_TUI,
     canonical_std_unit_from_segments, std_unit_symbols,
 };
 
@@ -86,12 +86,6 @@ impl Compiler {
                     STD_UNIT_TUI,
                     "KeyKind",
                     KEY_KIND_VARIANTS,
-                );
-                record_enum_member_short_names(
-                    &mut seen,
-                    STD_UNIT_TUI,
-                    "EventKind",
-                    TUI_EVENT_KIND_VARIANTS,
                 );
             } else if unit == STD_UNIT_GRAPH {
                 record_enum_member_short_names(

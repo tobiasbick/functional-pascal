@@ -1,5 +1,7 @@
 # Std.Tui types
 
+This page defines the complete public FPAS type surface of `Std.Tui`.
+
 ## `Application`
 
 Opaque handle for a TUI application session.

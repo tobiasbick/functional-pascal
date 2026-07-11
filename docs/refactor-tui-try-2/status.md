@@ -106,6 +106,13 @@ cargo test -p fpas-cli fpas_regression_suite_passes
 
 Covers: registry, geometry, session, dialog, button, window, desktop, static text, chrome, phase-1 widgets, headless ExecView → CM_OK, `Test.Click`, `Run(App, OnCommand)`, message box, `OnKey`, `OnMouse`, IDE menu/status/dialog flows, run/quit + window/quit + window/chrome smoke; full regression suite.
 
+## Phase 7 Stream D prep (2026-07-11)
+
+- Plan README banner points to public spec and stream A blocker.
+- Quick comparison reframed as historical try-1 vs landed try-2.
+- [deletion-checklist.md](deletion-checklist.md) documents three remaining VM adapters with link to [tui-bridged-readback.md](../future/tui-bridged-readback.md).
+- Full archive (`Status: completed`) remains after stream A.
+
 ## Next steps
 
 See [remaining-work.md](remaining-work.md) for the ordered backlog. Summary:

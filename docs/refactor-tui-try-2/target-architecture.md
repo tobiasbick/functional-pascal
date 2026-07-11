@@ -111,9 +111,9 @@ app.get_event / run inner loop
   → if CM_QUIT or Application.Quit → stop run loop
 ```
 
-**Coexistence:** `Application.Run` uses try-2 loop when `Try2Session` is open and try-1 `turbo_vision.objects` is empty; otherwise try-1 run + offset translation still apply.
+**Run loop:** `Application.Run` always uses the try-2 loop (`try2/run.rs`). Try-1 reconcile and command offset translation are removed.
 
-Unhandled keyboard/mouse after desktop dispatch → `OnKey` / `OnMouse` (live try-2 run delegates unhandled input to try-1 helpers today).
+Unhandled keyboard/mouse after desktop dispatch → `OnKey` / `OnMouse` via shared registration intrinsics and try-2 input delegation.
 
 ## Headless architecture
 

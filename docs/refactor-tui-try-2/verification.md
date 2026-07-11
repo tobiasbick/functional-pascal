@@ -1,6 +1,6 @@
 # Verification
 
-Definition of done for the try-2 TUI rewrite. **All items apply at phase 7 completion** — not the current coexistence branch. For branch progress see [status.md](status.md).
+Definition of done for the try-2 TUI rewrite. **Phase 7 sign-off** requires stream A (adapter removal) — see [remaining-work.md](remaining-work.md). Branch progress: [status.md](status.md).
 
 ## Build and format
 
@@ -60,7 +60,7 @@ Phase 7 sign-off requires zero `bridged_` hits.
 
 Partial on branch today — see [upstream-mapping.md](upstream-mapping.md#implementation-status-branch-refactortui-try-2-2026-07-09).
 
-- [x] `Application.New`, `Close`, `OpenForTest`, `CloseForTest` — session via try-1 entry points plus `try2.reset()` on close
+- [x] `Application.New`, `Close`, `OpenForTest`, `CloseForTest` — try-2 session lifecycle (`try2/lifecycle.rs`, `try2/application_intrinsics.rs`)
 - [x] `Application.Run`, `Quit`, `ExecView` — try-2 path landed for headless/live smoke; live quit wiring remains a cleanup note in [migration-phases.md](migration-phases.md)
 - [x] `Application.MessageBox`
 - [x] `Application.RunFileDialog` — live route landed; headless uses a Try-2-local queued adapter because upstream `FileDialog::execute` needs a full `Application`
@@ -95,7 +95,7 @@ Run in a real terminal:
 
 - [ ] [migration-phases.md](migration-phases.md) Phase 7 exit criteria — streams B + C done; stream A (adapters) + stream D (archive) remain.
 - [x] [deletion-checklist.md](deletion-checklist.md) root migration items confirmed (2026-07-11)
-- [ ] Archive or mark completed in [README.md](README.md) after stream A (`rg bridged_ crates/` → no matches)
+- [ ] Archive or mark completed in [README.md](README.md) after stream A (`rg bridged_ crates/` → no matches). Partial: top banner + historical quick comparison updated (2026-07-11).
 
 ## Last automated run (2026-07-11)
 

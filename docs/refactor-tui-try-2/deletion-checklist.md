@@ -85,6 +85,16 @@ TuiAddChild
 
 No try-1 control tests remain. Try-2 regression files use standard `*_test.fpas` names under `tests/tui/{smoke,views,modals,events}/`.
 
+## VM bridge exceptions (stream A)
+
+Three upstream read-back adapters remain until [tui-bridged-readback.md](../future/tui-bridged-readback.md) is resolved:
+
+- `try2/bridged_check_box.rs`
+- `try2/bridged_radio_button.rs`
+- `try2/bridged_outline.rs`
+
+Verify with `rg bridged_ crates/` — expect exactly these three files until stream A completes.
+
 ## Examples
 
 The TUI examples use the current Try-2 factories and modal API. No Try-1 example migration remains in this checklist.

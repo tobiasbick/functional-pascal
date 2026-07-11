@@ -1,6 +1,9 @@
 # Std.Tui rewrite (try 2)
 
-Planning documents for replacing the current FPAS Turbo Vision facade with a **Rust-owned widget tree** and a **Turbo-Vision-aligned Pascal API**.
+> **Public spec (implemented):** [`docs/pascal/std/tui/`](../pascal/std/tui/)  
+> **Phase 7 closure:** blocked on three checkbox/radio/outline bridge adapters — [remaining-work.md](remaining-work.md) stream A, [tui-bridged-readback.md](../future/tui-bridged-readback.md).
+
+Planning documents for replacing the FPAS Turbo Vision facade with a **Rust-owned widget tree** and a **Turbo-Vision-aligned Pascal API**.
 
 This is a **breaking rewrite**. There is no backward-compatibility requirement for the hobby project. The public spec now lives in `docs/pascal/std/tui/`; this directory remains only for the Phase-7 cleanup plan and historical baseline.
 
@@ -51,13 +54,15 @@ Pascal programs compose UI like upstream Turbo Vision (`Dialog.NewModal`, `Windo
 - Project structure rules: [`AGENTS.md`](../../AGENTS.md)
 - Turbo Vision integration skill: [`.agents/skills/turbo-vision-4-rust/SKILL.md`](../../.agents/skills/turbo-vision-4-rust/SKILL.md)
 
-## Quick comparison
+## Quick comparison (historical)
 
-| Aspect | Current (try 1) | Target (try 2) |
+Try-1 is removed from the codebase. This table records why the rewrite happened.
+
+| Aspect | Try 1 (removed) | Try 2 (landed) |
 | --- | --- | --- |
-| Widget authority | FPAS `TurboVisionObject` snapshot | Live `turbo_vision::Application` |
-| Composition API | `Application.Create*` + `Application.AddChild(App, …)` | `Dialog.New` + `Dialog.Add` (record methods) |
-| Structural updates | Full desktop rebuild (`reconcile.rs`) | Direct `Group::add` / remove on live tree |
-| Command ids | Subset `Command.*` + `0x8000` offset band | Full upstream `CM_*` constants |
-| Bridge size | ~6.5k LOC, 41 files | `try2/` module tree; root `tui/mod.rs` is dispatch only |
-| Per-view `handle_event` | Not supported | Still not supported (language limit) |
+| Widget authority | FPAS widget snapshot | Live `turbo_vision::Application` |
+| Composition API | `Application.Create*` + `AddChild` | `Dialog.NewModal`, `Button.New`, `Dialog.Add`, … |
+| Structural updates | Full desktop rebuild (`reconcile.rs`) | Direct upstream tree mutations |
+| Command ids | Subset `Command.*` + offset band | Upstream `CM_*` constants |
+| Bridge layout | ~6.5k LOC, 41 root modules | `tui/mod.rs` + `try2/` (three read-back adapters remain) |
+| Per-view `handle_event` | Not supported | Not supported (language limit) |

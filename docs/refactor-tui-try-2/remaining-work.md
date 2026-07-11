@@ -93,7 +93,7 @@ Safe to do in the same PR as Stream B or immediately after.
 
 1. Add completion banner to [README.md](README.md): `Status: completed — see docs/pascal/std/tui/`.
 2. Move historical baseline/problem docs to `docs/future/` **or** keep this directory as archive with a one-line pointer at the top.
-3. Remove stale coexistence / try-1 references from [README.md](README.md) quick comparison table.
+3. [x] Remove stale coexistence / try-1 references from [README.md](README.md) quick comparison table (2026-07-11).
 
 ---
 

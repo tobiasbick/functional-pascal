@@ -4,7 +4,7 @@
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
-use fpas_bytecode::{Intrinsic, SourceLocation, TuiIntrinsic, Value};
+use fpas_bytecode::{Intrinsic, SourceLocation, TuiIntrinsic};
 
 impl Worker {
     /// Executes application-level `Std.Tui` intrinsics.
@@ -27,16 +27,17 @@ impl Worker {
                 self.pop_tui_application(line)?;
                 self.close_tui_application_state(line)?;
             }
+            // The compiler lowers `Application.Run` with `emit_intrinsic_unit`, which emits the
+            // statement-level `Op::Unit` itself; pushing another unit here would leak one stack
+            // slot and shift every local declared after `Run`.
             Intrinsic::Tui(TuiIntrinsic::ApplicationRun) => {
                 super::try2_application_run(self, line)?;
-                self.push(Value::Unit)?;
             }
             Intrinsic::Tui(TuiIntrinsic::ApplicationRunWithOnCommand) => {
                 let handler = self.pop(line)?;
                 self.pop_tui_application(line)?;
                 self.with_tui(|tui| tui.on_command = Some(handler));
                 super::try2_application_run_loop(self, line)?;
-                self.push(Value::Unit)?;
             }
             Intrinsic::Tui(TuiIntrinsic::ApplicationSize) => {
                 self.pop_tui_application(line)?;

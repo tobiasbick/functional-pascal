@@ -212,6 +212,12 @@ See [remaining-work.md](remaining-work.md) for the ordered backlog. Summary:
 - IDE shell now creates its initial `untitled.fpas` editor window.
 - Regression: `tests/tui/smoke/editor_window_test.fpas` covers construction, desktop attachment, and a clean headless run-loop exit.
 
+## Run intrinsic stack-balance fix (2026-07-11)
+
+- `ApplicationRun` and `ApplicationRunWithOnCommand` pushed a VM-side unit although the compiler already emits the statement-level `Op::Unit` (`emit_intrinsic_unit`). The leaked slot shifted every local declared after `Application.Run`, so later reads returned `unit`.
+- Fixed in `try2/application_intrinsics.rs`; regression: `tests/tui/smoke/run_stack_balance_test.fpas` (covers both `Run(App, OnCommand)` and `Configure` + `Run(App)`).
+- New manual live smoke helper for the optional verification item: `examples/pascal/tui/mouse_toggle_smoke.fpas`. Manual sign-off 2026-07-11: interactive mouse toggle for checkbox/radio on a live window; read-back matched the on-screen selection.
+
 ## Phase 8 command constants (2026-07-11)
 
 - `fpas-std/build.rs` now generates the selected Pascal `CM_*` values from the pinned `turbo_vision::core::command` dependency.

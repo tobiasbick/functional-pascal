@@ -38,7 +38,7 @@ rg "bridged_" crates/
 
 First command must return **no matches** in `crates/` (2026-07-11: clean after session comment update).
 
-`bridged_` is allowed **only** in these three files until [remaining-work.md](remaining-work.md) stream A completes ([future plan](../future/tui-bridged-readback.md)):
+Until [remaining-work.md](remaining-work.md) stream A completes ([future plan](../future/tui-bridged-readback.md)), only these three adapter modules may exist, and `bridged_` references outside them are limited to their `mod` declarations in `try2/mod.rs` and their constructors in `try2/views/{check_box,radio_button,outline}.rs`:
 
 - `crates/fpas-vm/src/vm/execute/io/tui/try2/bridged_check_box.rs`
 - `crates/fpas-vm/src/vm/execute/io/tui/try2/bridged_radio_button.rs`
@@ -79,12 +79,12 @@ Run in a real terminal:
 - [x] Menu: pull-down + accelerator (IDE automated + manual 2026-07-09)
 - [x] `Application.Quit` from status item (IDE)
 - [x] IDE: About, Open, Exit (manual sign-off 2026-07-09)
-- [ ] Interactive desktop mouse toggle for checkbox/radio on live window (optional; headless path covered)
+- [x] Interactive desktop mouse toggle for checkbox/radio on live window — manual sign-off 2026-07-11 via `fpas run examples/pascal/tui/mouse_toggle_smoke.fpas` (printed read-back matched the on-screen selection)
 
 ## Performance sanity (informal)
 
-- [ ] No full desktop rebuild on `SetText` during `Run` (structural add/remove only mutates tree incrementally)
-- [ ] Typing in `InputLine` does not allocate a new desktop each keypress
+- [x] No full desktop rebuild on `SetText` during `Run` — verified by inspection 2026-07-11: every `SetText` route goes through `try2_replace_child_view` (`try2/view_lookup.rs`), which does `remove_by_id` + `add` on the single owning dialog/window group; the reconcile path no longer exists.
+- [x] Typing in `InputLine` does not allocate a new desktop each keypress — verified by inspection 2026-07-11: the live loop (`try2/run.rs`) passes each event to the one upstream `app.handle_event` (`try2/session_app.rs`); per-turn housekeeping is limited to `remove_closed_windows` / `handle_moved_windows`.
 
 ## Agent / contributor assets
 

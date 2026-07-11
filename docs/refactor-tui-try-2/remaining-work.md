@@ -121,5 +121,5 @@ cargo test -p fpas-cli fpas_regression_suite_passes
 fpas test tests/tui/
 fpas test apps/ide/tests/
 rg "TurboVisionObject|pending_reconcile|FPAS_TV_COMMAND_OFFSET|TuiCreateDialog" crates/
-rg "bridged_" crates/    # expect exactly three files until Stream A
+rg "bridged_" crates/    # until Stream A: hits only in try2/mod.rs, the three views/{check_box,radio_button,outline}.rs constructors, and the three bridged_*.rs adapters
 ```

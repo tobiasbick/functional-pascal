@@ -1,0 +1,67 @@
+{ Interactive mouse smoke check for checkbox/radio read-back.
+  Run in a real terminal, toggle the controls with the mouse, then Quit.
+  The program prints the read-back state afterwards; it must match what
+  you selected on screen. Covers the optional live-terminal item in
+  docs/refactor-tui-try-2/verification.md. }
+
+program TuiMouseToggleSmoke;
+
+uses Std.Tui, Std.Console, Std.Conv;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+function ExitMenuItem(): MenuItem;
+begin
+  return record text := 'E~x~it'; commandId := CM_QUIT; end
+end;
+
+function FileMenu(): Menu;
+begin
+  return record title := '~F~ile'; items := [ExitMenuItem()]; end
+end;
+
+function QuitStatusItem(): StatusItem;
+begin
+  return record text := '~Q~uit'; keyCode := 0; commandId := CM_QUIT; end
+end;
+
+procedure OnCommand(App: Application; CommandId: integer);
+begin
+  if CommandId = CM_QUIT then
+  begin
+    Application.Quit(App)
+  end
+end;
+
+begin
+  var App: Application := Application.Open();
+  var Bar: MenuBar := MenuBar.New(Bounds(0, 0, 80, 1), [FileMenu()]);
+  var Status: StatusLine := StatusLine.New(Bounds(0, 24, 80, 1), [QuitStatusItem()]);
+  var Win: Std.Tui.Window := Std.Tui.Window.New(Bounds(5, 3, 46, 14), 'Mouse toggle smoke');
+  var Hint: StaticText := StaticText.New(Bounds(3, 2, 38, 1), 'Toggle with the mouse, then Quit');
+  var AutoRun: CheckBox := CheckBox.New(Bounds(3, 4, 20, 1), 'Auto run', false);
+  var Debug: RadioButton := RadioButton.New(Bounds(3, 6, 20, 1), 'Debug', 7, true);
+  var Release: RadioButton := RadioButton.New(Bounds(3, 7, 20, 1), 'Release', 7, false);
+  var QuitButton: Button := Button.New(Bounds(28, 9, 12, 2), 'Quit', CM_QUIT, false);
+  Window.Add(Win, Hint);
+  Window.Add(Win, AutoRun);
+  Window.Add(Win, Debug);
+  Window.Add(Win, Release);
+  Window.Add(Win, QuitButton);
+  Desktop.Add(App, Win);
+  Application.SetMenuBar(App, Bar);
+  Application.SetStatusLine(App, Status);
+  Application.Run(App, OnCommand);
+  var AutoRunChecked: boolean := CheckBox.Checked(AutoRun);
+  var DebugSelected: boolean := RadioButton.Selected(Debug);
+  var ReleaseSelected: boolean := RadioButton.Selected(Release);
+  Application.Close(App);
+  WriteLn('Read-back after interactive input:');
+  WriteLn('  Auto run checked:  ' + BoolToStr(AutoRunChecked));
+  WriteLn('  Debug selected:    ' + BoolToStr(DebugSelected));
+  WriteLn('  Release selected:  ' + BoolToStr(ReleaseSelected));
+  WriteLn('Expected: values match what you toggled on screen.')
+end.

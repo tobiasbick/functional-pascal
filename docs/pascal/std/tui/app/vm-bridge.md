@@ -50,6 +50,7 @@ After any bridge change, also run [terminal checklist](../terminal-checklist.md)
 | `Button.New` | `ButtonNew` |
 | `Dialog.Add` / `Window.Add` | polymorphic builtins → attach intrinsics |
 | `Desktop.Add` | `DesktopAdd` |
+| `EditorWindow.New` | `EditorWindowNew` |
 | `Application.MessageBox` | `MessageBox` |
 | `Application.RunFileDialog` | `RunFileDialog` |
 | `Application.SetMenuBar` / `SetStatusLine` | `SetMenuBar` / `SetStatusLine` |

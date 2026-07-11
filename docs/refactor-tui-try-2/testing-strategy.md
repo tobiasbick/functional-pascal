@@ -185,7 +185,7 @@ cargo run -p fpas-cli -- apps/ide/ide.fpasprj
 
 ## Coverage gaps acceptable in v1
 
-- `EditorWindow`, help system, color dialog
+- Help system, color dialog (`EditorWindow` landed in phase 8 with `tests/tui/smoke/editor_window_test.fpas`)
 - SSH / remote keys (`TV_REMOTE_KEYS`)
 - Palette customization
 - Tile/cascade window management

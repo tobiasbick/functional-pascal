@@ -69,12 +69,13 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 | `window::Window` | `Window` | ✅ `Window.New`, `Window.Add`, `Desktop.Add` |
 | `menu_bar::MenuBar` | `MenuBar` | ✅ `try2/chrome.rs` |
 | `status_line::StatusLine` | `StatusLine` | ✅ `try2/chrome.rs` |
+| `outline::OutlineViewer` | `Outline` | ✅ `try2/views/outline.rs` (read-back via bridged adapter — stream A) |
+| `edit_window::EditWindow` | `EditorWindow` | ✅ `try2/views/editor_window.rs` (phase 8, 2026-07-11) |
 
 ## Upstream controls not exposed by the FPAS facade
 
 | Upstream type | FPAS | Priority |
 | --- | --- | --- |
-| `editor::EditorWindow` | `EditorWindow` | Low |
 | `help_window::HelpWindow` | — | Low |
 | `color_dialog::ColorDialog` | — | Low |
 | `scroller::Scroller` | — | Low |

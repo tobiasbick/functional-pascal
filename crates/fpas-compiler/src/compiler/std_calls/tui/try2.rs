@@ -73,6 +73,14 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::WindowNew), location);
                 Ok(true)
             }
+            s::STD_TUI_EDITOR_WINDOW_NEW => {
+                self.expect_exact_args(s::STD_TUI_EDITOR_WINDOW_NEW, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::EditorWindowNew), location);
+                Ok(true)
+            }
             s::STD_TUI_WINDOW_SET_TITLE => {
                 self.expect_exact_args(s::STD_TUI_WINDOW_SET_TITLE, 2, args, location)?;
                 for arg in args {

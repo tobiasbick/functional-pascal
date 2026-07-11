@@ -4,7 +4,7 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 
 **Sources:** [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust) tag `v2.0.0` — `src/lib.rs`, `src/views/`, `src/app/application.rs`, `src/helpers/`.
 
-## Implementation status (branch `refactor/tui-try-2`, 2026-07-09)
+## Implementation status (branch `refactor/tui-try-2`, 2026-07-11)
 
 | FPAS symbol | Status | VM location |
 | --- | --- | --- |
@@ -12,7 +12,7 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 | `Button.New`, `Dialog.Add` | ✅ | `try2/views/button.rs` |
 | `Application.ExecView` | ✅ | `try2/modals.rs`, `try2/headless.rs` |
 | `Application.Run` + `OnCommand` | ✅ | `try2/run.rs` — `Application.Run(App)` or `Application.Run(App, OnCommand)` (intrinsic 484) |
-| `Application.Quit` | ✅ via try-1 | `quit_requested`; try-2 run loop honors it |
+| `Application.Quit` | ✅ | `try2/commands.rs`, `try2/run.rs` |
 | `Test.Click` | ✅ | `try2/testing.rs` |
 | `Test.DispatchMenu` | ✅ | `try2/testing.rs` |
 | `Test.InjectCommand` | ✅ | `try2/intrinsics.rs` |
@@ -24,23 +24,23 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 | `InputLine`, `ListBox`, `CheckBox`, `RadioButton`, `Memo`, `TextViewer` | ✅ | `try2/views/*` |
 | `Application.MessageBox` | ✅ | `try2/message_box.rs` |
 | `Application.RunFileDialog` | ✅ with local headless adapter | `try2/file_dialog.rs` — live route uses upstream `FileDialog::execute`; headless consumes Try-2 session state because upstream `FileDialog::execute` needs a full `Application` |
-| `Application.OnKey`, `Application.OnMouse` | ✅ | try-1 registration intrinsics; try-2 run delegates unhandled input through shared handlers |
+| `Application.OnKey`, `Application.OnMouse` | ✅ | `try2/events.rs`, `try2/input_events.rs` |
 
 ## Application and session
 
 | Upstream Rust | FPAS try-2 | VM module (landed → target) |
 | --- | --- | --- |
-| `Application::new()` | `Application.New` / first interactive op | `try2/app.rs` → `session.rs` |
-| `Application::run()` | `Application.Run` | `try2/run.rs` → `run.rs` |
+| `Application::new()` | `Application.New` / first interactive op | `try2/application_intrinsics.rs`, `try2/lifecycle.rs`, `try2/session_app.rs` |
+| `Application::run()` | `Application.Run` | `try2/run.rs` |
 | `Application::get_event()` | Internal run loop | `try2/run.rs` |
-| `Application::handle_event()` | Internal + callbacks | `try2/events.rs` → `events.rs` |
-| `Application::exec_view(Box<dyn View>)` | `Application.ExecView` | `try2/modals.rs` → `modals.rs` |
-| `Application::set_menu_bar` | `Application.SetMenuBar` | `chrome.rs` |
-| `Application::set_status_line` | `Application.SetStatusLine` | `chrome.rs` |
-| `Application::put_event` | `Test.InjectEvent` (headless) | `headless.rs` |
-| `app.running = false` | `Application.Quit` | `run.rs` |
-| `terminal.size()` | `Application.Size` | `session.rs` |
-| `helpers::msgbox::message_box` | `Application.MessageBox` | `modals.rs` |
+| `Application::handle_event()` | Internal + callbacks | `try2/events.rs`, `try2/input_events.rs` |
+| `Application::exec_view(Box<dyn View>)` | `Application.ExecView` | `try2/modals.rs`, `try2/headless.rs` |
+| `Application::set_menu_bar` | `Application.SetMenuBar` | `try2/chrome.rs` |
+| `Application::set_status_line` | `Application.SetStatusLine` | `try2/chrome.rs` |
+| `Application::put_event` | `Test.InjectCommand` / `Test.InjectKeyboard` (headless) | `try2/intrinsics.rs`, `try2/testing.rs` |
+| `app.running = false` | `Application.Quit` | `try2/commands.rs`, `try2/run.rs` |
+| `terminal.size()` | `Application.Size` | `try2/application_intrinsics.rs`, `try2/application_records.rs` |
+| `helpers::msgbox::message_box` | `Application.MessageBox` | `try2/message_box.rs` |
 
 ## Desktop and groups
 
@@ -70,11 +70,10 @@ Reference for binding `turbo-vision` 2.0 (`v2.0.0`) to the try-2 FPAS API. Refre
 | `menu_bar::MenuBar` | `MenuBar` | ✅ `try2/chrome.rs` |
 | `status_line::StatusLine` | `StatusLine` | ✅ `try2/chrome.rs` |
 
-## Controls not implemented
+## Upstream controls not exposed by the FPAS facade
 
 | Upstream type | FPAS | Priority |
 | --- | --- | --- |
-| `file_dialog::FileDialog` | `Application.RunFileDialog` | High — live path landed; headless uses a Try-2-local queued adapter until upstream/application construction is available |
 | `editor::EditorWindow` | `EditorWindow` | Low |
 | `help_window::HelpWindow` | — | Low |
 | `color_dialog::ColorDialog` | — | Low |
@@ -112,14 +111,14 @@ Export constants from `turbo_vision::core::command` (see upstream `prelude`).
 | --- | --- |
 | `Rect::new(x1, y1, x2, y2)` corners | `record x, y, width, height` |
 
-VM converts FPAS width/height to upstream corner rect (reuse logic from [`tv_geometry.rs`](../../crates/fpas-vm/src/vm/execute/io/tui/tv_geometry.rs)).
+VM converts FPAS width/height to upstream corner rect in [`try2/geometry.rs`](../../crates/fpas-vm/src/vm/execute/io/tui/try2/geometry.rs).
 
 ## View trait (not exposed)
 
 These stay in Rust only:
 
 - `View::draw`, `handle_event`, `bounds`, `set_bounds`
-- `View::as_any` / `as_any_mut` — used internally for `SetText` / read-back
+- `View::as_any` / `as_any_mut` — not a supported read-back route for the three bridged controls at the pinned upstream revision
 - `IdleView::idle` — overlay widgets if needed later
 
 ## test-util feature

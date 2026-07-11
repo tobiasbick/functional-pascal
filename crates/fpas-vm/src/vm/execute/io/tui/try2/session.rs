@@ -16,6 +16,7 @@ use std::rc::Rc;
 use turbo_vision::core::geometry::{Point, Rect};
 use turbo_vision::views::View;
 use turbo_vision::views::dialog::Dialog;
+use turbo_vision::views::edit_window::EditWindow;
 use turbo_vision::views::window::Window;
 
 /// Button constructed by `Button.New` and not yet attached to a parent.
@@ -133,6 +134,7 @@ pub(crate) struct Try2StatusLineState {
 pub(crate) enum Try2Root {
     ModalDialog(Box<Dialog>),
     Window(Box<Window>),
+    EditorWindow(Box<EditWindow>),
 }
 
 /// Rust-owned try-2 session (replaces the old try-1 widget snapshot).

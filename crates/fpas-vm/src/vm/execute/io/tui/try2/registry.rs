@@ -12,6 +12,7 @@ pub enum ViewKind {
     Application,
     Dialog,
     Window,
+    EditorWindow,
     Button,
     StaticText,
     InputLine,

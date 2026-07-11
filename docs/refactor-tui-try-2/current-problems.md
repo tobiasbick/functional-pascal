@@ -12,7 +12,7 @@ Pascal Application.Create*
     → live turbo_vision::Application on Worker.live_turbo_vision_app
 ```
 
-**Symptom:** Every structural change (`AddChild`, `AddWindow`, `SetMenus`, …) marks the tree dirty. During `Run`, `turbo_vision_reconcile_after_step` may rebuild the entire desktop ([`reconcile.rs`](../../crates/fpas-vm/src/vm/execute/io/tui/reconcile.rs)).
+**Symptom:** Every structural change (`AddChild`, `AddWindow`, `SetMenus`, …) marks the tree dirty. During `Run`, `turbo_vision_reconcile_after_step` may rebuild the entire desktop (`reconcile.rs`, removed in Phase 7).
 
 **Cost:** Two representations of the same UI must stay in sync. Bugs show up as stale focus, wrong z-order, or missing children after live mutations.
 
@@ -23,7 +23,7 @@ Pascal Application.Create*
 | Rust modules in `execute/io/tui/` | 41 |
 | Approximate LOC | ~6,500 |
 | `Bridged*` adapter views | 3 (`bridged_check_box`, `bridged_outline`, `bridged_radio_button`) |
-| Headless-specific paths | `headless_tv_draw.rs`, `HeadlessTvApp`, duplicate chrome sync |
+| Headless-specific paths | former root `headless_tv_draw.rs`, `HeadlessTvApp`, duplicate chrome sync |
 
 The bridge grew to paper over the snapshot/live split (`live_patch.rs`, `live_view_ids`, `live_child_root_view_ids`) instead of calling upstream directly.
 
@@ -51,7 +51,7 @@ The FPAS API neither matches upstream naming nor reduces ceremony.
 
 ## Command ID translation
 
-[`command_map.rs`](../../crates/fpas-vm/src/vm/execute/io/tui/command_map.rs) maintains:
+The former `command_map.rs` module (removed in Phase 7) maintained:
 
 - A list of ~50 reserved upstream `CM_*` ids
 - An offset band `0x8000` for colliding application commands
@@ -65,8 +65,8 @@ The FPAS API neither matches upstream naming nor reduces ceremony.
 
 Try-1 maintains:
 
-- A separate `HeadlessTvApp` built from the FPAS snapshot ([`headless_tv_draw.rs`](../../crates/fpas-vm/src/vm/execute/io/tui/headless_tv_draw.rs))
-- `Pump` + command queue ([`commands.rs`](../../crates/fpas-vm/src/vm/execute/io/tui/commands.rs))
+- A separate `HeadlessTvApp` built from the FPAS snapshot (former root `headless_tv_draw.rs`)
+- `Pump` + command queue (former root `commands.rs`)
 - Test stubs (try-1): `TestSetDialogResult`, `TestSetFileDialogResult`, interim `Application.Test*` click/inject helpers — replaced on try-2 by `Std.Tui.Test.*` plus stub queues on `Application` (see [testing.md](../pascal/std/tui/app/testing.md))
 
 Many tests existed only to validate the bridge (`tests/tui/controls/`, removed in phase 7) — 37 files for `SetText`, reconcile, and reserved-command behavior.
@@ -79,13 +79,14 @@ The skill [`.agents/skills/turbo-vision-4-rust/SKILL.md`](../../.agents/skills/t
 
 | Piece | Keep? | Notes |
 | --- | --- | --- |
-| One live session per `Open…Close` | Yes | [`session_app.rs`](../../crates/fpas-vm/src/vm/execute/io/tui/session_app.rs) pattern |
+| One live session per `Open…Close` | Yes | [`try2/session_app.rs`](../../crates/fpas-vm/src/vm/execute/io/tui/try2/session_app.rs) pattern |
 | Shared session for `Run` / modals | Yes | Avoid `Application::new()` per dialog |
 | `msgbox.rs` / upstream `message_box` | Yes | Already thin |
 | Menu/status record types | Yes | FPAS-friendly data; build upstream in Rust |
 | `OpenForTest` + screen asserts via `Std.Test` | Yes | Adapt to new headless path |
 | `TurboVisionObject` snapshot | **No** | Delete |
-| `reconcile` / `live_patch` / `Bridged*` | **No** | Delete |
+| `reconcile` / `live_patch` | **No** | Deleted in Phase 7 |
+| `Bridged*` adapters | **No** | Three temporary read-back adapters remain until upstream provides a supported hook |
 | `command_map` offset band | **No** | Delete |
 | `Application.Create*` namespace | **No** | Replace with view record APIs |
 

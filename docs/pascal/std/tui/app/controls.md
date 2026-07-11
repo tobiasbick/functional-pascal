@@ -2,6 +2,10 @@
 
 Turbo Vision widget handles and application chrome. Views are created with type-local `*.New` factories, then attached with `Dialog.Add` or `Window.Add`.
 
+## Editor window
+
+`EditorWindow.New(Bounds, Title): Window` creates a complete editable desktop window with the upstream editor, scrollbars, and position indicator. Add it directly with `Desktop.Add(App, Editor)`; do not call `Window.Add` on it. Text read-back and file I/O are not exposed by this first API slice.
+
 ## Interactive controls
 
 | Symbol | Description |

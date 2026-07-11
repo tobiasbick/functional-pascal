@@ -113,7 +113,7 @@ app.get_event / run inner loop
 
 **Run loop:** `Application.Run` always uses the try-2 loop (`try2/run.rs`). Try-1 reconcile and command offset translation are removed.
 
-Unhandled keyboard/mouse after desktop dispatch → `OnKey` / `OnMouse` via shared registration intrinsics and try-2 input delegation.
+Unhandled keyboard/mouse after desktop dispatch → `OnKey` / `OnMouse` through `try2/events.rs` and `try2/input_events.rs`.
 
 ## Headless architecture
 
@@ -121,9 +121,9 @@ Unhandled keyboard/mouse after desktop dispatch → `OnKey` / `OnMouse` via shar
 
 ```text
 OpenForTest(w, h)
-  → FPAS console + TvHeadlessBackend (current: HeadlessTvApp in headless_tv_draw.rs)
+  → FPAS console + TvHeadlessBackend (current: `HeadlessTvApp` in `try2/headless_draw.rs`)
   → same Group::add / exec_view / run_step code paths as interactive mode
-  → target: single headless Application::new() terminal (phase 7 consolidation)
+  → full upstream headless `Application` construction remains unavailable at the pin; the `HeadlessTvApp` route is the documented non-blocking adapter
 ```
 
 ### Test input

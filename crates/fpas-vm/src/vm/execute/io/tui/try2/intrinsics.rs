@@ -17,13 +17,13 @@ use super::registry::ViewKind;
 use super::views::{
     try2_button_new, try2_button_set_text, try2_check_box_checked, try2_check_box_new,
     try2_check_box_set_checked, try2_desktop_add, try2_dialog_attach_child, try2_dialog_new_modal,
-    try2_dialog_set_title, try2_input_line_new, try2_input_line_set_text, try2_input_line_text,
-    try2_list_box_new, try2_list_box_selection, try2_list_box_set_items, try2_memo_new,
-    try2_memo_set_text, try2_outline_new, try2_outline_selected_text, try2_outline_selection,
-    try2_outline_set_nodes, try2_radio_button_new, try2_radio_button_selected,
-    try2_radio_button_set_selected, try2_static_text_new, try2_static_text_set_text,
-    try2_text_viewer_new, try2_text_viewer_set_text, try2_window_attach_child, try2_window_new,
-    try2_window_set_title,
+    try2_dialog_set_title, try2_editor_window_new, try2_input_line_new, try2_input_line_set_text,
+    try2_input_line_text, try2_list_box_new, try2_list_box_selection, try2_list_box_set_items,
+    try2_memo_new, try2_memo_set_text, try2_outline_new, try2_outline_selected_text,
+    try2_outline_selection, try2_outline_set_nodes, try2_radio_button_new,
+    try2_radio_button_selected, try2_radio_button_set_selected, try2_static_text_new,
+    try2_static_text_set_text, try2_text_viewer_new, try2_text_viewer_set_text,
+    try2_window_attach_child, try2_window_new, try2_window_set_title,
 };
 use crate::vm::Worker;
 use crate::vm::diagnostics::{VmError, runtime_error};
@@ -107,6 +107,12 @@ impl Worker {
                 let title = self.pop_turbo_vision_string("Window title", line)?;
                 let bounds = self.pop_turbo_vision_rect(line)?;
                 let handle = try2_window_new(self, bounds, title, line)?;
+                self.push(Self::turbo_vision_window_record(handle))?;
+            }
+            TuiIntrinsic::EditorWindowNew => {
+                let title = self.pop_turbo_vision_string("EditorWindow title", line)?;
+                let bounds = self.pop_turbo_vision_rect(line)?;
+                let handle = try2_editor_window_new(self, bounds, title, line)?;
                 self.push(Self::turbo_vision_window_record(handle))?;
             }
             TuiIntrinsic::WindowAdd => {

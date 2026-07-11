@@ -16,12 +16,12 @@
 
 The rewrite is complete when all of the following hold:
 
-- [ ] `apps/ide` builds and its test suite passes on the new API.
-- [ ] All `tests/tui/` coverage is rewritten or replaced; no tests assert reconcile or `Bridged*` behavior.
-- [ ] VM bridge under `crates/fpas-vm/src/vm/execute/io/tui/` is at most ~15 focused modules (see [rust-layout.md](rust-layout.md)).
-- [ ] No `TurboVisionObject` enum, no `pending_reconcile`, no `command_map` offset band.
+- [x] `apps/ide` builds and its test suite passes on the new API.
+- [x] All public `tests/tui/` coverage is rewritten or replaced; no FPAS test asserts reconcile or old retained-engine behavior.
+- [x] VM bridge under `crates/fpas-vm/src/vm/execute/io/tui/` has no legacy root bridge modules; focused try-2 modules own the remaining concerns (see [rust-layout.md](rust-layout.md)).
+- [x] No `TurboVisionObject` enum, no `pending_reconcile`, no `command_map` offset band.
 - [ ] Public docs live under `docs/pascal/std/tui/`; this plan directory is obsolete.
-- [ ] Verification commands in [verification.md](verification.md) pass.
+- [x] Verification commands in [verification.md](verification.md) pass; final Phase-7 sign-off awaits Stream A.
 
 ## Design principles (from AGENTS.md)
 
@@ -52,9 +52,9 @@ These four differences from upstream Rust are **intentional** and permanent:
 3. **Application-level events** — `OnCommand` / `OnKey` / `OnMouse` callbacks instead of per-type `handle_event`.
 4. **FPAS error model** — `Application.New` returns `Application` or uses runtime errors for terminal init failure (match existing `Std.Tui` session style).
 
-## Optional enhancement (phase 2+)
+## Optional enhancement (landed)
 
-**Hosted dispatch** like `Std.Graph` — `Application.Configure(App, Handlers)` with an `ApplicationHandlers` record. Not required for the first vertical slice; see [target-api.md](target-api.md#optional-hosted-dispatch).
+`Application.Configure(App, Handlers)` with an `ApplicationHandlers` record landed on 2026-07-11; see [target-api.md](target-api.md#optional-hosted-dispatch).
 
 ## Decision log
 

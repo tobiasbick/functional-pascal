@@ -51,6 +51,8 @@ procedure Run();
 begin
   var App: Application := Application.New();
   AttachChrome(App);
+  var Editor: Window := EditorWindow.New(Bounds(2, 2, 76, 20), 'untitled.fpas');
+  Desktop.Add(App, Editor);
   Application.Run(App, OnCommand);
   Application.Close(App)
 end;

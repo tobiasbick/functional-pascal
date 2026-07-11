@@ -35,6 +35,7 @@ pub const STD_TUI_DIALOG_ADD: &str = std_tui!("Dialog.Add");
 pub const STD_TUI_BUTTON_NEW: &str = std_tui!("Button.New");
 pub const STD_TUI_BUTTON_SET_TEXT: &str = std_tui!("Button.SetText");
 pub const STD_TUI_WINDOW_NEW: &str = std_tui!("Window.New");
+pub const STD_TUI_EDITOR_WINDOW_NEW: &str = std_tui!("EditorWindow.New");
 pub const STD_TUI_WINDOW_SET_TITLE: &str = std_tui!("Window.SetTitle");
 pub const STD_TUI_WINDOW_ADD: &str = std_tui!("Window.Add");
 pub const STD_TUI_DESKTOP_ADD: &str = std_tui!("Desktop.Add");
@@ -151,6 +152,7 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_BUTTON_NEW,
     STD_TUI_BUTTON_SET_TEXT,
     STD_TUI_WINDOW_NEW,
+    STD_TUI_EDITOR_WINDOW_NEW,
     STD_TUI_WINDOW_SET_TITLE,
     STD_TUI_WINDOW_ADD,
     STD_TUI_DESKTOP_ADD,

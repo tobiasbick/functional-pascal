@@ -49,6 +49,7 @@ where
     let child = match root {
         Try2Root::ModalDialog(dialog) => dialog.child_by_id_mut(view_id),
         Try2Root::Window(window) => window.child_by_id_mut(view_id),
+        Try2Root::EditorWindow(_) => None,
     };
 
     let Some(child) = child else {
@@ -110,6 +111,14 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_replace_child_view(
                 return Err(missing_child_error(child_handle, parent_handle, line));
             }
             window.add(replacement)
+        }
+        Try2Root::EditorWindow(_) => {
+            return Err(runtime_error(
+                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                "EditorWindow does not accept separately attached FPAS child views",
+                "Create the editor window as a desktop root with `EditorWindow.New`.",
+                line,
+            ));
         }
     };
     worker

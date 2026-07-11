@@ -28,9 +28,9 @@ Estimates assume focused hobby-project pace (part-time).
 - [x] Add `ViewRegistry` in `try2/registry.rs` (wired on `Worker` via `Try2Session`).
 - [x] ~~Slim `TuiState` on Worker~~ — completed in phase 7 ([rust-layout.md](rust-layout.md)).
 - [x] Implement `try2/session.rs` integration with `TuiSession.open` / `OpenForTest`
-- [x] Implement FPAS-to-Turbo-Vision rect conversion (`tv_geometry.rs`).
+- [x] Implement FPAS-to-Turbo-Vision rect conversion (`try2/geometry.rs`).
 - [x] Add `fpas-std/tui/cm_constants.rs` with core `CM_*` constants.
-- [x] Sema + compiler for `Application.New` / `Close` — `Application.New` → `ApplicationOpen`; `Close` / `CloseForTest` reuse try-1 intrinsics + `try2.reset()` on close.
+- [x] Sema + compiler for `Application.New` / `Close` — `Application.New` → `ApplicationOpen`; `Close` / `CloseForTest` reset the try-2 session on close.
 - [x] Rust unit tests: registry allocate/validate/clear.
 
 **Exit criteria**
@@ -48,7 +48,7 @@ Estimates assume focused hobby-project pace (part-time).
 - [x] `Dialog.NewModal`, `Dialog.Add(Button)` — Rust internal (`try2/views/`)
 - [x] `Button.New`, `Dialog.Add` — Pascal API + intrinsics (477/478); smoke test uses target pattern
 - [x] `Application.ExecView` → upstream `exec_view` (headless via `HeadlessTvApp::exec_modal_view`; interactive via `try2/app.rs`)
-- [x] `headless.rs`: headless modal loop + CRT export (`try2/headless.rs`, `headless_tv_draw.rs`)
+- [x] `headless.rs`: headless modal loop + CRT export (`try2/headless.rs`, `try2/headless_draw.rs`)
 - [x] `Test.Click` or click helper for button command (try-2 path via `try2/testing.rs`).
 - [x] One FPAS test: modal OK returns `CM_OK` (`tests/tui/smoke/modal_button_test.fpas`).
 - [x] `events.rs`: `OnCommand` dispatch without offset translation (`try2/events.rs`)
@@ -66,7 +66,7 @@ Estimates assume focused hobby-project pace (part-time).
 **Work**
 
 - [x] `Application.Run` with `OnCommand` callback parameter — `Application.Run(App, OnCommand)` sema + intrinsic 484.
-- [x] `Application.Quit` → stop run loop — **partial:** `quit_requested` honored on try-2 path; live `app.running` wiring TBD.
+- [x] `Application.Quit` → stop the try-2 run loop (`try2/commands.rs`, `try2/run.rs`).
 - [x] `Window.New`, `Window.Add`, `Desktop.Add` — intrinsics 480–482; `tests/tui/smoke/window_quit_test.fpas`.
 - [x] `StaticText`, menu/status chrome (`chrome.rs`) — `StaticText.New`, `MenuBar.New`, `StatusLine.New`, `SetMenuBar`/`SetStatusLine` routing.
 - [x] FPAS tests: modeless window + quit command — `window_quit_test.fpas` (button click → `CM_QUIT` → `Application.Quit`).
@@ -152,10 +152,10 @@ Estimates assume focused hobby-project pace (part-time).
 
 Not blocking completion:
 
-- [ ] `Application.Configure` + `ApplicationHandlers` (Graph parity). **Done (2026-07-11).**
+- [x] `Application.Configure` + `ApplicationHandlers` (Graph parity; done 2026-07-11).
 - [x] `Outline`.
-- [ ] `EditorWindow` for IDE editor pane.
-- [ ] Generate `CM_*` from upstream build script to avoid drift.
+- [x] `EditorWindow` for IDE editor pane (upstream `EditWindow`, 2026-07-11; headless desktop-root regression: `tests/tui/smoke/editor_window_test.fpas`).
+- [x] Generate the selected `CM_*` values from upstream in `fpas-std/build.rs` to avoid numeric drift (2026-07-11).
 
 ---
 

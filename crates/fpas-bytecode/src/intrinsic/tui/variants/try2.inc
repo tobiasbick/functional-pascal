@@ -38,3 +38,4 @@
     OutlineHostSelectedText = 511,
     OutlineSetNodes = 512,
     ApplicationConfigure = 513,
+    EditorWindowNew = 514,

@@ -1,0 +1,25 @@
+program EditorWindowTest;
+
+uses Std.Tui, Std.Test;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+procedure OnCommand(App: Application; Cmd: integer);
+begin
+  if Cmd = CM_QUIT then
+  begin
+    Application.Quit(App)
+  end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(60, 20);
+  var Editor: Window := EditorWindow.New(Bounds(4, 2, 40, 14), 'untitled.fpas');
+  Desktop.Add(App, Editor);
+  Test.InjectCommand(App, CM_QUIT);
+  Application.Run(App, OnCommand);
+  Application.CloseForTest(App)
+end.

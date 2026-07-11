@@ -285,6 +285,15 @@ pub(super) fn register_try2_api(
         ],
         types.window.clone(),
     );
+    define_func(
+        checker,
+        s::STD_TUI_EDITOR_WINDOW_NEW,
+        vec![
+            p("Bounds", types.rect.clone(), false),
+            p("Title", Ty::String, false),
+        ],
+        types.window.clone(),
+    );
     define_proc(
         checker,
         s::STD_TUI_WINDOW_SET_TITLE,

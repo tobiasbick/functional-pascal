@@ -186,9 +186,9 @@ See [remaining-work.md](remaining-work.md) for the ordered backlog. Summary:
 | Grep try-1 internals | `rg TurboVisionObject\|pending_reconcile\|…` in `crates/` — no matches (2026-07-11) |
 | Grep try-1 docs | `rg Application.CreateDialog\|AddChild\|Command.Quit` in `docs/pascal/std/tui/` — no matches |
 | Grep adapters | `rg bridged_ crates/` — exactly three intentional files (stream A) |
-| TUI sema | `cargo test -p fpas-sema std_units::tui` — 24 passed |
+| TUI sema | `cargo test -p fpas-sema std_units::tui` — 25 passed |
 | Full regression | `cargo test -p fpas-cli fpas_regression_suite_passes` — passed |
-| TUI FPAS tests | `fpas test tests/tui/` — 30 passed |
+| TUI FPAS tests | `fpas test tests/tui/` — 32 passed |
 
 ## Phase 7 symbol and documentation audit (2026-07-11)
 
@@ -204,6 +204,18 @@ See [remaining-work.md](remaining-work.md) for the ordered backlog. Summary:
 **Stream A (blocked):** remove `CheckBox`, `RadioButton`, and `Outline` adapters when upstream exposes live read-back — see [remaining-work.md](remaining-work.md).
 
 **Stream D (after A):** run [verification.md](verification.md) sign-off and archive this plan directory.
+
+## Phase 8 editor window (2026-07-11)
+
+- Added `EditorWindow.New(Bounds, Title): Window`, backed directly by upstream `EditWindow`.
+- An editor window is a complete desktop root with its own editor, scrollbars, and position indicator; it does not accept FPAS child views through `Window.Add`.
+- IDE shell now creates its initial `untitled.fpas` editor window.
+- Regression: `tests/tui/smoke/editor_window_test.fpas` covers construction, desktop attachment, and a clean headless run-loop exit.
+
+## Phase 8 command constants (2026-07-11)
+
+- `fpas-std/build.rs` now generates the selected Pascal `CM_*` values from the pinned `turbo_vision::core::command` dependency.
+- `CM_USER` remains the explicit FPAS application-private base; adding or removing public Pascal constants remains an intentional change to the list in the build script.
 
 ## Phase 7 progress (2026-07-09)
 

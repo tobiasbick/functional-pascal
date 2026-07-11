@@ -7,6 +7,7 @@ mod button;
 mod check_box;
 mod desktop;
 mod dialog;
+mod editor_window;
 mod input_line;
 mod list_box;
 mod memo;
@@ -29,6 +30,7 @@ pub(in crate::vm::execute::io::tui::try2) use desktop::try2_desktop_add;
 pub(in crate::vm::execute::io::tui::try2) use dialog::{
     try2_dialog_new_modal, try2_dialog_set_title,
 };
+pub(in crate::vm::execute::io::tui::try2) use editor_window::try2_editor_window_new;
 pub(in crate::vm::execute::io::tui::try2) use input_line::{
     try2_input_line_new, try2_input_line_set_text, try2_input_line_text,
 };

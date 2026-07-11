@@ -10,6 +10,7 @@ use crate::vm::execute::io::tui::try2::registry::{RegistryError, ViewKind};
 use crate::vm::execute::io::tui::try2::session::Try2Root;
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
+use turbo_vision::views::View;
 /// Adds a try-2 window to the upstream desktop (`Desktop.Add`).
 pub(in crate::vm::execute::io::tui::try2) fn try2_desktop_add(
     worker: &mut Worker,
@@ -34,19 +35,34 @@ pub(in crate::vm::execute::io::tui::try2) fn try2_desktop_add(
         ));
     }
 
-    worker
+    let kind = worker
         .try2
         .registry
-        .require(window_handle, ViewKind::Window)
-        .map_err(|error| registry_error(error, line))?;
-
-    let Some(Try2Root::Window(window)) = worker.try2.take_root(window_handle) else {
+        .get(window_handle)
+        .ok_or_else(|| registry_error(RegistryError::UnknownHandle(window_handle), line))?
+        .kind;
+    if kind != ViewKind::Window && kind != ViewKind::EditorWindow {
+        return Err(registry_error(
+            RegistryError::WrongKind {
+                handle: window_handle,
+                expected: ViewKind::Window,
+                actual: kind,
+            },
+            line,
+        ));
+    }
+    let Some(root) = worker.try2.take_root(window_handle) else {
         return Err(runtime_error(
             RUNTIME_INTRINSIC_STACK_STATE_ERROR,
             format!("Handle {window_handle} is not a Window"),
             "Pass a handle from `Window.New`.",
             line,
         ));
+    };
+    let window: Box<dyn View> = match root {
+        Try2Root::Window(window) => window,
+        Try2Root::EditorWindow(window) => window,
+        Try2Root::ModalDialog(_) => unreachable!("validated desktop root"),
     };
 
     let view_id = if worker.with_tui(|tui| tui.session.is_headless()) {

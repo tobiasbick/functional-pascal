@@ -396,6 +396,42 @@ end.",
 }
 
 #[test]
+fn std_tui_application_interim_test_helpers_are_not_registered() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Tui;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(40, 12);
+  var Btn: Button := Button.New(Bounds(4, 4, 10, 2), 'OK', CM_OK, true);
+  var MenuBarHandle: MenuBar := MenuBar.New(Bounds(0, 0, 40, 1), []);
+  Application.TestClickButton(App, Btn);
+  Application.TestDispatchMenuCommand(App, MenuBarHandle, 0, 0);
+  Application.TestInjectCommand(App, CM_QUIT);
+  Application.TestInjectKeyboard(App, 283)
+end.",
+    );
+    for name in [
+        "Application.TestClickButton",
+        "Application.TestDispatchMenuCommand",
+        "Application.TestInjectCommand",
+        "Application.TestInjectKeyboard",
+    ] {
+        assert!(
+            errs.iter()
+                .any(|e| e.message.contains(&format!("Unknown procedure `{name}`"))),
+            "expected unknown procedure for {name}: {errs:#?}"
+        );
+    }
+}
+
+#[test]
 fn std_tui_test_click_is_available() {
     check_ok(
         "\

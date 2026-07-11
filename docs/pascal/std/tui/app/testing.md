@@ -1,6 +1,6 @@
 # Std.Tui native testing
 
-Headless Turbo Vision tests use `Application.OpenForTest`, try-2 view construction, test injection helpers, and `Application.Run`.
+Headless Turbo Vision tests use `Application.OpenForTest`, try-2 view construction, `Std.Tui.Test.*` helpers, and `Application.Run`.
 
 Example:
 
@@ -34,21 +34,26 @@ end.
 
 Regression tests live under `tests/tui/views/`, `tests/tui/smoke/`, `tests/tui/modals/`, `tests/tui/events/`, and `apps/ide/tests/`.
 
-## Interim vs target test API
+## Headless test helpers (`Std.Tui.Test.*`)
 
-The registered surface today uses `Application.Test*` names. Phase 7 closure will introduce `Std.Tui.Test.*` helpers and retire the interim names (see [remaining-work.md](../../../refactor-tui-try-2/remaining-work.md) stream B).
+Use `uses Std.Tui` (and `Std.Test` when asserting). Short names such as `Test.Click` resolve inside the TUI unit.
 
-| Interim (current) | Target (planned) | Status |
-| --- | --- | --- |
-| `Application.TestClickButton` | `Std.Tui.Test.Click` | **Landed** — both names compile to the same intrinsic |
-| `Application.TestClickMouse` | covered by `Test.InjectEvent` (future) or retained coordinate helper |
-| `Application.TestInjectKeyboard` | `Std.Tui.Test.InjectKeyboard` | **Landed** — both names compile to the same intrinsic |
-| `Application.TestInjectCommand` | `Std.Tui.Test.InjectCommand` | **Landed** — both names compile to the same intrinsic |
-| `Application.TestDispatchMenuCommand` | `Std.Tui.Test.DispatchMenu` | **Landed** — both names compile to the same intrinsic |
-| `Application.TestSetDialogResult` | prefer real headless modal loops |
-| `Application.TestSetFileDialogResult` | prefer upstream headless execute when available |
+| Symbol | Description |
+| --- | --- |
+| `Test.Click(App, Button)` | Queue a headless button click at the button center. |
+| `Test.DispatchMenu(App, MenuBar, MenuIndex, ItemIndex)` | Dispatch a menu item command id from menu bar data. |
+| `Test.InjectCommand(App, Command)` | Queue a command for the next headless `Application.Run` turn. |
+| `Test.InjectKeyboard(App, KeyCode)` | Queue a Turbo Vision key code for the next run-loop turn. |
 
-Until migration completes, examples in this page use the preferred `Test.*` names where available; interim `Application.Test*` symbols remain registered as aliases.
+Additional helpers on `Application` (stub queues and coordinate clicks):
+
+| Symbol | Description |
+| --- | --- |
+| `Application.TestClickMouse(App, X, Y)` | Left-click at screen coordinates (check box / radio marker cells). |
+| `Application.TestSetDialogResult(App, Command)` | Stub queue for the next headless `MessageBox` when not driving a full modal loop. |
+| `Application.TestSetFileDialogResult(App, Result)` | Stub queue for the next headless `RunFileDialog`. |
+
+Prefer real headless modal paths (`ExecView` + `Test.Click`) over stub queues where possible.
 
 ## Headless run loop
 

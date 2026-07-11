@@ -23,7 +23,7 @@ All 37 try-1 `tests/tui/controls/*` files were removed. Their behavioral replace
 
 Ordered backlog: [remaining-work.md](../remaining-work.md).
 
-1. **Stream B** — `Test.Click`, `Test.DispatchMenu`, `Test.InjectCommand`, and `Test.InjectKeyboard` landed; call sites migrated.
+1. **Stream B** — `Test.*` helpers landed; interim `Application.TestClickButton` / `TestInject*` / `TestDispatchMenuCommand` removed from registration.
 2. ~~**Stream C** — drop `_try2` suffix from test filenames.~~ **Done (2026-07-11).**
 3. **Stream A** — remove three `bridged_*` adapters when upstream read-back lands.
 
@@ -98,7 +98,7 @@ begin
   var Dlg := Dialog.NewModal(Bounds(5, 3, 30, 8), 'Test');
   var Btn := Button.New(Bounds(10, 4, 10, 2), 'OK', CM_OK, true);
   Dlg.Add(Btn);
-  Test.Click(App, Btn);   { interim: Application.TestClickButton(App, Btn) }
+  Test.Click(App, Btn);
   var Cmd := Application.ExecView(App, Dlg);
   AssertEquals(CM_OK, Cmd);
   Application.CloseForTest(App)
@@ -116,7 +116,7 @@ end.
 | `Test.InjectEvent(App, …)` | **Future** — unified low-level event injection from `Std.Console` records |
 | `Test.Pump(App)` | **Optional** — one `get_event` iteration without blocking; use sparingly |
 
-**Remove (when call sites gone):** `TestSetDialogResult`, `TestSetFileDialogResult`, `Application.TestClickButton`, `Application.TestDispatchMenuCommand`, `Application.TestInjectCommand`, `Application.TestInjectKeyboard`.
+**Remove (when call sites gone):** `TestSetDialogResult`, `TestSetFileDialogResult`.
 
 ## Rust tests (`crates/fpas-vm`)
 

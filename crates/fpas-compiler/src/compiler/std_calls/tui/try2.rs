@@ -46,26 +46,16 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Tui(TuiIntrinsic::ExecView), location);
                 Ok(true)
             }
-            s::STD_TUI_APPLICATION_TEST_INJECT_COMMAND | s::STD_TUI_TEST_INJECT_COMMAND => {
-                self.expect_exact_args(
-                    s::STD_TUI_APPLICATION_TEST_INJECT_COMMAND,
-                    2,
-                    args,
-                    location,
-                )?;
+            s::STD_TUI_TEST_INJECT_COMMAND => {
+                self.expect_exact_args(s::STD_TUI_TEST_INJECT_COMMAND, 2, args, location)?;
                 for arg in args {
                     self.compile_expr(arg)?;
                 }
                 self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::Try2InjectCommand), location);
                 Ok(true)
             }
-            s::STD_TUI_APPLICATION_TEST_INJECT_KEYBOARD | s::STD_TUI_TEST_INJECT_KEYBOARD => {
-                self.expect_exact_args(
-                    s::STD_TUI_APPLICATION_TEST_INJECT_KEYBOARD,
-                    2,
-                    args,
-                    location,
-                )?;
+            s::STD_TUI_TEST_INJECT_KEYBOARD => {
+                self.expect_exact_args(s::STD_TUI_TEST_INJECT_KEYBOARD, 2, args, location)?;
                 for arg in args {
                     self.compile_expr(arg)?;
                 }

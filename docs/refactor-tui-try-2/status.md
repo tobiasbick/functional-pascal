@@ -111,9 +111,8 @@ Covers: registry, geometry, session, dialog, button, window, desktop, static tex
 See [remaining-work.md](remaining-work.md) for the ordered backlog. Summary:
 
 1. **Stream A (blocked)** — remove `try2/bridged_{check_box,radio_button,outline}.rs` when upstream exposes live read-back.
-2. **Stream B (in progress)** — `Test.Click`, `Test.DispatchMenu`, `Test.InjectCommand`, and `Test.InjectKeyboard` landed; remove interim `Application.Test*` names when ready.
-3. ~~**Stream C** — rename `*_try2_test.fpas` files.~~ **Done (2026-07-11).**
-4. **Stream D** — run [verification.md](verification.md) and archive this plan directory.
+2. ~~**Stream B** — land `Test.*` helpers and remove interim `Application.Test*` names.~~ **Done (2026-07-11).**
+3. **Stream D** — run [verification.md](verification.md) and archive this plan directory (after Stream A).
 
 # Phase 7 progress (2026-07-10)
 
@@ -154,6 +153,11 @@ See [remaining-work.md](remaining-work.md) for the ordered backlog. Summary:
 
 - Updated `AGENTS.md`, `.agents/skills/turbo-vision-4-rust/SKILL.md`, `.github/instructions/functional-pascal.instructions.md`, and `.cursor/rules/functional-pascal.mdc` for the direct Try-2 API and current module layout.
 - Removed stale guidance for `Application.Create*`, `AddChild`, `Pump`, `ExecDialog`, retained hosted TUI dispatch, and deleted root bridge modules.
+
+## Phase 7 Stream B test API closure (2026-07-11)
+
+- Removed interim `Application.TestClickButton`, `TestDispatchMenuCommand`, `TestInjectCommand`, and `TestInjectKeyboard` from sema and `fpas-std` symbol table.
+- Public spec under `docs/pascal/std/tui/app/testing.md` documents `Std.Tui.Test.*` only (plus remaining stub/coordinate helpers on `Application`).
 
 ## Phase 7 Stream C test rename (2026-07-11)
 

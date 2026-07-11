@@ -22,9 +22,8 @@ Audited status of the Phase-7 deletion work. The root bridge is gone; this file 
 
 ### Current Try-2 testing surface (intentionally retained)
 
-- `Application.TestClickButton`, `Test.Click` (preferred), `TestClickMouse`, `Application.TestDispatchMenuCommand`, and `Test.DispatchMenu` (preferred)
-- `Application.TestSetFileDialogResult` and `TestSetDialogResult`
-- `Application.TestInjectKeyboard`, `Test.InjectKeyboard` (preferred), `Application.TestInjectCommand`, and `Test.InjectCommand` (preferred)
+- `Test.Click`, `Test.DispatchMenu`, `Test.InjectCommand`, and `Test.InjectKeyboard` (headless helpers under `Std.Tui.Test.*`)
+- `Application.TestClickMouse`, `TestSetDialogResult`, and `TestSetFileDialogResult` (stub/coordinate helpers)
 
 `Application.SetMenuBar` and `Application.SetStatusLine` are current API and remain registered.
 

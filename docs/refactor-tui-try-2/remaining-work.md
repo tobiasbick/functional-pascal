@@ -10,7 +10,7 @@ Ordered backlog after the 2026-07-11 symbol audit. Public API and docs live unde
 | Stream | Status | Blocks Phase 7 sign-off? |
 | --- | --- | --- |
 | A — Upstream read-back adapters | **Blocked** on `turbo-vision` `v2.0.0` | Yes |
-| B — Interim test API cleanup | **Next actionable** | No (can ship with interim names) |
+| B — Interim test API cleanup | **Done (2026-07-11)** | No |
 | C — Test file rename (`*_try2_*`) | **Done (2026-07-11)** | No |
 | D — Plan archive | After A + verification green | Yes |
 
@@ -41,40 +41,29 @@ Root bridge migration is **complete**: `crates/fpas-vm/src/vm/execute/io/tui/` c
 
 ## Stream B — Finalize headless test API (no upstream dependency)
 
-**Current interim Pascal surface** (registered and documented):
+**Registered Pascal surface:**
 
-| Interim symbol | Role |
+| Symbol | Role |
 | --- | --- |
-| `Application.TestInjectCommand` | Queue command for next headless `Run` turn |
-| `Application.TestInjectKeyboard` | Queue Turbo Vision key code |
-| `Application.TestClickButton` | Mouse click at button center |
+| `Test.Click` | Mouse click at button center |
+| `Test.DispatchMenu` | Menu bar item → command id |
+| `Test.InjectCommand` | Queue command for next headless `Run` turn |
+| `Test.InjectKeyboard` | Queue Turbo Vision key code |
 | `Application.TestClickMouse` | Screen-coordinate click (+ stateful control toggle) |
-| `Application.TestDispatchMenuCommand` | Menu bar item → command id |
 | `Application.TestSetDialogResult` | Stub queue for headless `MessageBox` |
 | `Application.TestSetFileDialogResult` | Stub queue for headless `RunFileDialog` |
 
-Bytecode intrinsics may keep historical names (`Try2InjectCommand`, …) to avoid opcode renumbering.
-
-**Target shape** (from [testing-strategy.md](testing-strategy.md)):
-
-| Target | Replaces |
-| --- | --- |
-| `Std.Tui.Test.Click(App, Button)` | `Application.TestClickButton` |
-| `Std.Tui.Test.InjectCommand(App, Command)` | `Application.TestInjectCommand` |
-| `Std.Tui.Test.InjectKeyboard(App, KeyCode)` | `Application.TestInjectKeyboard` |
-| `Std.Tui.Test.InjectEvent(App, …)` | future unified low-level events |
-| `Std.Tui.Test.DispatchMenu(App, MenuBar, …)` | `TestDispatchMenuCommand` |
-| Real headless modal loops | `TestSetDialogResult`, `TestSetFileDialogResult` where feasible |
+Bytecode intrinsics keep historical Rust names (`TestClickButton`, `Try2InjectCommand`, …) to avoid opcode renumbering.
 
 **Implementation order:**
 
 1. [x] Add `Std.Tui.Test.Click` in sema + symbols (alias to `TestClickButton` intrinsic).
-2. [x] Migrate `tests/tui/` and `apps/ide/tests/` to `Test.Click` and `Test.DispatchMenu`; keep interim `Application.Test*` names until step 4.
-3. [x] Add `Std.Tui.Test.DispatchMenu`, `Test.InjectCommand`, and `Test.InjectKeyboard` aliases. Remaining: unified `Test.InjectEvent` when event records are wired.
-4. Update [docs/pascal/std/tui/app/testing.md](../pascal/std/tui/app/testing.md) to show target API only.
-5. Remove interim symbols from `std_symbols/tui.rs` when call sites are gone.
+2. [x] Migrate `tests/tui/` and `apps/ide/tests/` to `Test.*` helpers.
+3. [x] Add `Test.DispatchMenu`, `Test.InjectCommand`, and `Test.InjectKeyboard`.
+4. [x] Update [docs/pascal/std/tui/app/testing.md](../pascal/std/tui/app/testing.md) to show target API only.
+5. [x] Remove interim `Application.TestClickButton`, `TestDispatchMenuCommand`, `TestInjectCommand`, and `TestInjectKeyboard` from symbol table and sema (2026-07-11).
 
-**Do not start** until Stream A decision is explicit if renaming would churn the same test files twice — otherwise B can proceed now.
+Optional later: unified `Test.InjectEvent` when `Std.Console` event records are wired.
 
 ---
 

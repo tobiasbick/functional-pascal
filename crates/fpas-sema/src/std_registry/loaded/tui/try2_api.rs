@@ -254,22 +254,6 @@ pub(super) fn register_try2_api(
         ],
         Ty::Integer,
     );
-    define_proc(
-        checker,
-        s::STD_TUI_APPLICATION_TEST_INJECT_COMMAND,
-        vec![
-            p("App", types.application.clone(), false),
-            p("Command", Ty::Integer, false),
-        ],
-    );
-    define_proc(
-        checker,
-        s::STD_TUI_APPLICATION_TEST_INJECT_KEYBOARD,
-        vec![
-            p("App", types.application.clone(), false),
-            p("KeyCode", Ty::Integer, false),
-        ],
-    );
     define_func(
         checker,
         s::STD_TUI_APPLICATION_MESSAGE_BOX,

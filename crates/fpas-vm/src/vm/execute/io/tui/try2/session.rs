@@ -880,7 +880,7 @@ impl Try2Session {
             .and_then(|handle| self.status_lines.get(&handle))
     }
 
-    /// Records the screen point used by headless `Application.TestClickButton`.
+    /// Records the screen point used by headless `Test.Click`.
     pub fn set_button_click_point(&mut self, handle: u32, point: Point) {
         self.button_clicks.insert(handle, point);
     }

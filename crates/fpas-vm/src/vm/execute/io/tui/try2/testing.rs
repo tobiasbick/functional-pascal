@@ -1,4 +1,4 @@
-//! Try-2 headless test helpers (`Application.TestClickButton`, `TestDispatchMenuCommand`).
+//! Try-2 headless test helpers (`Test.Click`, `Test.DispatchMenu`, `Application.TestClickMouse`).
 //!
 //! **Documentation:** `docs/refactor-tui-try-2/testing-strategy.md`
 
@@ -33,8 +33,8 @@ pub(in crate::vm::execute::io::tui) fn try2_test_dispatch_menu_command(
     if !worker.with_tui(|tui| tui.session.is_headless()) {
         return Err(runtime_error(
             RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-            "Application.TestDispatchMenuCommand is only supported in headless `Application.OpenForTest` runs",
-            "Call `Application.OpenForTest` before `Application.TestDispatchMenuCommand`.",
+            "Test.DispatchMenu is only supported in headless `Application.OpenForTest` runs",
+            "Call `Application.OpenForTest` before `Test.DispatchMenu`.",
             line,
         ));
     }
@@ -44,7 +44,7 @@ pub(in crate::vm::execute::io::tui) fn try2_test_dispatch_menu_command(
         return Err(runtime_error(
             RUNTIME_INTRINSIC_STACK_STATE_ERROR,
             "Headless Turbo Vision session is not initialized",
-            "Call `Application.OpenForTest` before `Application.TestDispatchMenuCommand`.",
+            "Call `Application.OpenForTest` before `Test.DispatchMenu`.",
             line,
         ));
     };
@@ -99,7 +99,7 @@ fn button_handle_error(
 }
 
 impl Worker {
-    /// Handles `Application.TestClickButton` on the try-2 headless path.
+    /// Handles `Test.Click` on the try-2 headless path.
     pub(in crate::vm::execute::io::tui) fn exec_test_click_button(
         &mut self,
         line: SourceLocation,
@@ -122,8 +122,8 @@ impl Worker {
         if !self.with_tui(|tui| tui.session.is_headless()) {
             return Err(runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                "Application.TestClickButton is only supported in headless `Application.OpenForTest` runs",
-                "Call `Application.OpenForTest` before `Application.TestClickButton`.",
+                "Test.Click is only supported in headless `Application.OpenForTest` runs",
+                "Call `Application.OpenForTest` before `Test.Click`.",
                 line,
             ));
         }
@@ -142,7 +142,7 @@ impl Worker {
             return Err(runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,
                 "Headless Turbo Vision session is not initialized",
-                "Call `Application.OpenForTest` before `Application.TestClickButton`.",
+                "Call `Application.OpenForTest` before `Test.Click`.",
                 line,
             ));
         };

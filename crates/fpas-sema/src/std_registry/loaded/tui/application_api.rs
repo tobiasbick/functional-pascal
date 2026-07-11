@@ -76,29 +76,11 @@ pub(super) fn register_application_api(
     );
     define_proc(
         checker,
-        s::STD_TUI_APPLICATION_TEST_CLICK_BUTTON,
-        vec![
-            p("App", types.application.clone(), false),
-            p("Button", types.button.clone(), false),
-        ],
-    );
-    define_proc(
-        checker,
         s::STD_TUI_APPLICATION_TEST_CLICK_MOUSE,
         vec![
             p("App", types.application.clone(), false),
             p("X", Ty::Integer, false),
             p("Y", Ty::Integer, false),
-        ],
-    );
-    define_proc(
-        checker,
-        s::STD_TUI_APPLICATION_TEST_DISPATCH_MENU_COMMAND,
-        vec![
-            p("App", types.application.clone(), false),
-            p("MenuBar", types.menu_bar.clone(), false),
-            p("MenuIndex", Ty::Integer, false),
-            p("ItemIndex", Ty::Integer, false),
         ],
     );
     define_func(

@@ -406,7 +406,7 @@ impl Worker {
         if !self.with_tui(|tui| tui.session.is_headless()) {
             return Err(runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                "Application.TestInjectKeyboard is only supported in headless OpenForTest sessions",
+                "Test.InjectKeyboard is only supported in headless OpenForTest sessions",
                 "Call `Application.OpenForTest` before injecting synthetic keys.",
                 line,
             ));
@@ -422,7 +422,7 @@ impl Worker {
         if !self.with_tui(|tui| tui.session.is_headless()) {
             return Err(runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                "Application.TestInjectCommand is only supported in headless OpenForTest sessions",
+                "Test.InjectCommand is only supported in headless OpenForTest sessions",
                 "Call `Application.OpenForTest` before injecting synthetic commands.",
                 line,
             ));

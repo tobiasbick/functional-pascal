@@ -138,8 +138,8 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         s::STD_CONSOLE_EVENT,
         "Std.Console.Event must be registered before Std.Tui (see loaded/mod.rs)",
     );
-    let callbacks =
-        handlers::register_turbo_vision_callbacks(&application, &key_event, &console_event);
+    let (application_handlers, callbacks) =
+        handlers::register_application_handlers(checker, &application, &key_event, &console_event);
 
     message_box_api::register_message_box_option_constants(checker);
     super::super::builtins::register_tui_builtins(checker);
@@ -165,7 +165,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         rect,
         size,
     };
-    application_api::register_application_api(checker, &types, &callbacks);
+    application_api::register_application_api(checker, &types, &callbacks, &application_handlers);
     test_api::register_test_api(checker, &types);
     try2_api::register_try2_api(checker, &types, &callbacks);
 }

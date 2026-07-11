@@ -90,6 +90,8 @@ Run in a real terminal:
 
 - [x] `.agents/skills/turbo-vision-4-rust/SKILL.md` reflects try-2 architecture (2026-07-11)
 - [x] `AGENTS.md` TUI bridge path example matches [rust-layout.md](rust-layout.md)
+- [x] `AGENTS.md` upstream watch section documents periodic turbo-vision read-back check and Stream A closure (2026-07-11)
+- [x] `AI_CONTRIBUTING.md` lists Stream A adapter removal as a good entry point (2026-07-11)
 
 ## Plan closure
 

@@ -73,7 +73,7 @@ fn check_application_run(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
             c.error_with_code(
                 SEMA_WRONG_ARGUMENT_COUNT,
                 format!("`Application.Run` expects 1 or 2 arguments, got {count}"),
-                "Use `Application.Run(App)` or `Application.Run(App, OnCommand)`.",
+                "Use `Application.Run(App)` after `Application.Configure`, or `Application.Run(App, OnCommand)`.",
                 span,
             );
             c.check_args_only(args);

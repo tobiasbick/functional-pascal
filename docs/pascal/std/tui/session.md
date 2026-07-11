@@ -11,8 +11,9 @@
 | `Application.Close(App)` | Close a logical application handle. |
 | `Application.CloseForTest(App)` | Close a headless test application. |
 | `Application.Size(App): Size` | Return the current size. |
-| `Application.Run(App)` | Run the Turbo Vision event loop (requires a registered `OnCommand` handler). |
+| `Application.Run(App)` | Run the Turbo Vision event loop (requires `Application.Configure` or a registered handler). |
 | `Application.Run(App, OnCommand)` | Run with an inline `procedure (Application, integer)` handler. |
+| `Application.Configure(App, Handlers)` | Install bundled `ApplicationHandlers` before `Run(App)`. |
 | `Application.Quit(App)` | Request that the running loop exits. |
 
 `Application.Open` returns immediately and does not acquire terminal state. Backend-specific terminal ownership starts in `Application.Run`, `Application.ExecView`, `Application.MessageBox`, or `Application.RunFileDialog` — whichever needs the terminal first. Those calls reuse one upstream turbo-vision application until `Application.Close`. See [Application lifecycle](app/lifecycle.md).

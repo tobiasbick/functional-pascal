@@ -75,7 +75,7 @@ Follow project `AGENTS.md` structure rules:
 - prefer subdirectories over crowded modules;
 - remove dead code introduced or exposed by the rewrite.
 
-The current bridge is transitional: `try2/` owns public widget construction and runtime routes, while legacy root modules remain until Phase 7 completes. Use `docs/pascal/std/tui/app/vm-bridge.md` for the current file map and `docs/refactor-tui-try-2/status.md` for cleanup status. Do not reintroduce `reconcile.rs`, `ExecDialog`, or command-offset routing.
+The current bridge is try-2 only: `tui/mod.rs` dispatches to `try2/`; no legacy root bridge modules remain. Use `docs/pascal/std/tui/app/vm-bridge.md` for the file map and `docs/refactor-tui-try-2/status.md` for cleanup status. Do not reintroduce `reconcile.rs`, `ExecDialog`, or command-offset routing.
 
 ```text
 crates/fpas-vm/src/vm/execute/io/tui/
@@ -89,7 +89,7 @@ crates/fpas-vm/src/vm/execute/io/tui/
     views/                     — direct widget construction and setters
 ```
 
-Three small adapters remain for `CheckBox`, `RadioButton`, and `Outline` because the pinned upstream types lack a supported live-state read-back hook. Do not replace them with snapshot/reconcile code; see `docs/refactor-tui-try-2/status.md` before touching them.
+Three small adapters remain for `CheckBox`, `RadioButton`, and `Outline` because the pinned upstream types lack a supported live-state read-back hook. Do not replace them with snapshot/reconcile code; see `docs/future/tui-bridged-readback.md` and `docs/refactor-tui-try-2/status.md` before touching them. Periodically check upstream for read-back ([AGENTS.md](../../../AGENTS.md#upstream-watch--turbo-vision-4-rust-read-back-stream-a)); closure is a good contributor entry point ([AI_CONTRIBUTING.md](../../../AI_CONTRIBUTING.md#good-entry-points)).
 
 `Application.MessageBox` is documented in [message-box.md](../../../docs/pascal/std/tui/app/message-box.md).
 

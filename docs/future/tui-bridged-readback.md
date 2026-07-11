@@ -4,6 +4,8 @@
 **Branch:** `refactor/tui-try-2`  
 **Plan handoff:** [remaining-work.md](../refactor-tui-try-2/remaining-work.md) stream A
 
+The try-2 TUI rewrite is **functionally complete**. Only this upstream gap blocks formal Phase 7 sign-off (adapter deletion + plan archive).
+
 ## Problem
 
 FPAS try-2 still ships three VM bridge adapters:
@@ -15,6 +17,24 @@ FPAS try-2 still ships three VM bridge adapters:
 At the current upstream pin, `CheckBox`, `RadioButton`, and `OutlineViewer` do not expose a supported live-state read-back hook through `dyn View`. There is no reliable `as_any_mut` downcast after `handle_event`, so the adapters copy keyboard/mouse selection into FPAS host cells. That keeps `CheckBox.Checked`, `RadioButton.Selected`, `Outline.Selection`, and `Outline.SelectedText` correct after interactive input.
 
 Other widgets (`ListBox`, `Button`, `StaticText`, …) already use direct upstream views.
+
+## Contributor entry point
+
+This is a well-scoped closure task once upstream read-back exists (or after you add it upstream first):
+
+1. Read [AI_CONTRIBUTING.md](../../AI_CONTRIBUTING.md#good-entry-points) — **Close TUI Stream A**.
+2. Follow the done-when checklist below and [verification.md](../refactor-tui-try-2/verification.md).
+3. Optional split: implement read-back in [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust), then return to FPAS to delete the three adapters.
+
+## Periodic check (agents)
+
+When touching TUI/VM code, before claiming the rewrite is fully closed, or when asked about remaining TUI work:
+
+1. Compare upstream tags/releases against the workspace pin in root `Cargo.toml` (`turbo-vision` tag `v2.0.0`).
+2. Search upstream for read-back or `as_any_mut` on `CheckBox`, `RadioButton`, and `OutlineViewer`.
+3. If unblocked, proceed with Stream A in [remaining-work.md](../refactor-tui-try-2/remaining-work.md).
+
+Full procedure: [AGENTS.md](../../AGENTS.md#upstream-watch--turbo-vision-4-rust-read-back-stream-a).
 
 ## Done when
 

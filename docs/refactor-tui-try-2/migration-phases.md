@@ -152,7 +152,7 @@ Estimates assume focused hobby-project pace (part-time).
 
 Not blocking completion:
 
-- [ ] `Application.Configure` + `ApplicationHandlers` (Graph parity).
+- [ ] `Application.Configure` + `ApplicationHandlers` (Graph parity). **Done (2026-07-11).**
 - [x] `Outline`.
 - [ ] `EditorWindow` for IDE editor pane.
 - [ ] Generate `CM_*` from upstream build script to avoid drift.

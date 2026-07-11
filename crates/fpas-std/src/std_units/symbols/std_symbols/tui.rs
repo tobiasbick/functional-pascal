@@ -1,6 +1,7 @@
 //! `Std.Tui` symbol names and registry group.
 
 pub const STD_TUI_APPLICATION: &str = std_tui!("Application");
+pub const STD_TUI_APPLICATION_HANDLERS: &str = std_tui!("ApplicationHandlers");
 pub const STD_TUI_DIALOG: &str = std_tui!("Dialog");
 pub const STD_TUI_WINDOW: &str = std_tui!("Window");
 pub const STD_TUI_BUTTON: &str = std_tui!("Button");
@@ -78,6 +79,8 @@ pub const STD_TUI_MESSAGE_BOX_OPTION_OK_CANCEL: &str = std_tui!("MessageBoxOptio
 pub const STD_TUI_APPLICATION_OPEN: &str = std_tui!("Application.Open");
 pub const STD_TUI_APPLICATION_NEW: &str = std_tui!("Application.New");
 pub const STD_TUI_APPLICATION_CLOSE: &str = std_tui!("Application.Close");
+/// Install bundled command and optional input handlers (Graph-style hosted dispatch).
+pub const STD_TUI_APPLICATION_CONFIGURE: &str = std_tui!("Application.Configure");
 /// Dispatch-mode hosted application loop; see `docs/pascal/std/tui/app/README.md`.
 pub const STD_TUI_APPLICATION_RUN: &str = std_tui!("Application.Run");
 pub const STD_TUI_APPLICATION_SIZE: &str = std_tui!("Application.Size");
@@ -114,6 +117,7 @@ pub const STD_TUI_APPLICATION_TEST_CLICK_MOUSE: &str = std_tui!("Application.Tes
 
 pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_APPLICATION,
+    STD_TUI_APPLICATION_HANDLERS,
     STD_TUI_DIALOG,
     STD_TUI_WINDOW,
     STD_TUI_BUTTON,
@@ -190,6 +194,7 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_APPLICATION_OPEN,
     STD_TUI_APPLICATION_NEW,
     STD_TUI_APPLICATION_CLOSE,
+    STD_TUI_APPLICATION_CONFIGURE,
     STD_TUI_APPLICATION_RUN,
     STD_TUI_APPLICATION_SIZE,
     STD_TUI_APPLICATION_RUN_FILE_DIALOG,

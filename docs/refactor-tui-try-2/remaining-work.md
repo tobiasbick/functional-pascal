@@ -3,7 +3,7 @@
 Ordered backlog after the 2026-07-11 symbol audit. Public API and docs live under `docs/pascal/std/tui/`; this file is the implementation handoff only.
 
 **Branch:** `refactor/tui-try-2`  
-**Last synced:** 2026-07-11 (stream D partial doc scrub)
+**Last synced:** 2026-07-11 (stream D partial — contributor docs + upstream watch links)
 
 ## Summary
 
@@ -36,6 +36,8 @@ Root bridge migration is **complete**: `crates/fpas-vm/src/vm/execute/io/tui/` c
 4. Re-run regressions: `tests/tui/views/check_box_test.fpas`, `radio_button_test.fpas`, `outline_*_test.fpas`, `tests/tui/events/check_box_mouse_test.fpas`, `radio_button_mouse_test.fpas`.
 
 **Optional upstream issue text:** see [docs/future/tui-bridged-readback.md](../future/tui-bridged-readback.md).
+
+**Periodic check (agents):** When touching TUI/VM code or before claiming Phase 7 complete, compare [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust) tags against the workspace pin (`v2.0.0` in root `Cargo.toml`) and search upstream for read-back or `as_any_mut` on `CheckBox`, `RadioButton`, and `OutlineViewer`. Procedure: [AGENTS.md](../../AGENTS.md#upstream-watch--turbo-vision-4-rust-read-back-stream-a). Good first task for contributors: [AI_CONTRIBUTING.md](../../AI_CONTRIBUTING.md#good-entry-points).
 
 ---
 

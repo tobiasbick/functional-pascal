@@ -35,8 +35,8 @@ pub(in crate::vm::execute::io::tui) fn try2_application_run(
     if worker.with_tui(|tui| tui.on_command.is_none()) {
         return Err(runtime_error(
             RUNTIME_CONSOLE_STATE_ERROR,
-            "Application.Run(App) requires `Application.OnCommand(App, Handler)` on the try-2 path",
-            "Register a command handler before starting the run loop, or pass the handler to `Application.Run(App, OnCommand)`.",
+            "Application.Run(App) requires a command handler",
+            "Call `Application.Configure(App, Handlers)` with `OnCommand` set, register `Application.OnCommand`, or pass the handler to `Application.Run(App, OnCommand)`.",
             line,
         ));
     }

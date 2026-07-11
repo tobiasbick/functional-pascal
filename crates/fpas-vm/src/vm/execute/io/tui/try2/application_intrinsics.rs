@@ -46,6 +46,41 @@ impl Worker {
                 };
                 self.push(Self::tui_size_record(width, height))?;
             }
+            Intrinsic::Tui(TuiIntrinsic::ApplicationConfigure) => {
+                let handlers = self.pop_tui_application_handlers(line)?;
+                self.pop_tui_application(line)?;
+
+                let on_command = Self::required_record_field(&handlers, "OnCommand", line)?.clone();
+                self.validate_host_handler_function(
+                    &on_command,
+                    2,
+                    "OnCommand",
+                    "Set `OnCommand := Handler` where `Handler` is `procedure (Application, integer)`.",
+                    line,
+                )?;
+                let on_key = self.optional_host_handler_field(
+                    &handlers,
+                    "OnKey",
+                    2,
+                    "OnKey",
+                    "Set `OnKey := Some(Handler)` or `None`; the handler must be `function (Application, Std.Console.KeyEvent): boolean`.",
+                    line,
+                )?;
+                let on_mouse = self.optional_host_handler_field(
+                    &handlers,
+                    "OnMouse",
+                    2,
+                    "OnMouse",
+                    "Set `OnMouse := Some(Handler)` or `None`; the handler must be `procedure (Application, Std.Console.Event)`.",
+                    line,
+                )?;
+
+                self.with_tui(|tui| {
+                    tui.on_command = Some(on_command);
+                    tui.turbo_vision_on_key = on_key;
+                    tui.turbo_vision_on_mouse = on_mouse;
+                });
+            }
             _ => return Ok(false),
         }
 

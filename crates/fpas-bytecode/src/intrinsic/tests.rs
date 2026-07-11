@@ -270,6 +270,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Tui(TuiIntrinsic::OutlineHostSelection),
     Intrinsic::Tui(TuiIntrinsic::OutlineHostSelectedText),
     Intrinsic::Tui(TuiIntrinsic::OutlineSetNodes),
+    Intrinsic::Tui(TuiIntrinsic::ApplicationConfigure),
     Intrinsic::Test(TestIntrinsic::AssertTrue),
     Intrinsic::Test(TestIntrinsic::AssertFalse),
     Intrinsic::Test(TestIntrinsic::AssertEqualsInteger),

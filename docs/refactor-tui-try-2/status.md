@@ -10,8 +10,8 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 **Phase 4** — **complete** (all phase-1 widgets on try-2 path including `Outline`; control tests migrated in phase 7).
 **Phase 5** — **complete** for current branch scope (`MessageBox`, `OnKey`, `OnMouse`, `RunFileDialog` with Try-2-local headless adapter).  
 **Phase 6** — **complete** (`apps/ide` migrated; automated + manual terminal sign-off green).  
-**Phase 7** — **in progress** (bridge migration complete; three upstream read-back adapters + interim test API remain — [remaining-work.md](remaining-work.md)).
-**Phase 8** — optional follow-ups; public docs were rewritten as Phase 7 work.
+**Phase 7** — **in progress** (bridge migration complete; streams B + C done; three upstream read-back adapters block sign-off — [remaining-work.md](remaining-work.md)).
+**Phase 8** — optional follow-ups in progress (`Application.Configure` + `ApplicationHandlers` landed 2026-07-11); public docs were rewritten as Phase 7 work.
 
 ## Phase 1 closure notes
 
@@ -113,6 +113,12 @@ Covers: registry, geometry, session, dialog, button, window, desktop, static tex
 - [deletion-checklist.md](deletion-checklist.md) documents three remaining VM adapters with link to [tui-bridged-readback.md](../future/tui-bridged-readback.md).
 - Full archive (`Status: completed`) remains after stream A.
 - Scrubbed stale coexistence references in `baseline.md`, `current-problems.md`, `ide-migration.md`, `migration-phases.md`, `target-architecture.md`, `testing-strategy.md`, and `rust-layout.md`.
+
+## Phase 7 contributor docs (2026-07-11)
+
+- [AGENTS.md](../../AGENTS.md#upstream-watch--turbo-vision-4-rust-read-back-stream-a) — periodic upstream check for checkbox/radio/outline read-back and Stream A closure steps.
+- [AI_CONTRIBUTING.md](../../AI_CONTRIBUTING.md#good-entry-points) — Stream A listed as a well-scoped contributor entry point (upstream fix optional, same closure path).
+- [docs/future/tui-bridged-readback.md](../future/tui-bridged-readback.md) — blocker handoff, done-when checklist, suggested upstream issue text.
 
 ## Next steps
 

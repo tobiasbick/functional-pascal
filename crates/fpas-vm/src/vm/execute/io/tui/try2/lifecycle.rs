@@ -11,6 +11,7 @@ use fpas_diagnostics::codes::{
 };
 
 const TUI_APPLICATION_TYPE: &str = "Std.Tui.Application";
+const TUI_APPLICATION_HANDLERS_TYPE: &str = "Std.Tui.ApplicationHandlers";
 
 impl Worker {
     /// Acquires the TUI state lock for the duration of `f`.
@@ -155,6 +156,27 @@ impl Worker {
                 TYPE_MISMATCH_CODE,
                 format!("Expected {TUI_APPLICATION_TYPE}, got {}", other.type_name()),
                 "Pass the value returned by Std.Tui.Application.Open().",
+                line,
+            )),
+        }
+    }
+
+    /// Pops a `Std.Tui.ApplicationHandlers` record from the stack.
+    pub(in crate::vm::execute::io) fn pop_tui_application_handlers(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<Vec<(String, Value)>, VmError> {
+        match self.pop(line)? {
+            Value::Record { type_name, fields } if type_name == TUI_APPLICATION_HANDLERS_TYPE => {
+                Ok(fields)
+            }
+            other => Err(runtime_error(
+                TYPE_MISMATCH_CODE,
+                format!(
+                    "Expected {TUI_APPLICATION_HANDLERS_TYPE}, got {}",
+                    other.type_name()
+                ),
+                "Pass a `Std.Tui.ApplicationHandlers` record to `Application.Configure(App, Handlers)`.",
                 line,
             )),
         }

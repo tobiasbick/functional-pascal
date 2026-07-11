@@ -7,8 +7,8 @@
 1. `Application.Open` or `Application.OpenForTest`
 2. Create views with `Dialog.NewModal`, `Button.New`, `Window.New`, … (see [Controls](controls.md) and [Dialogs and windows](modals.md))
 3. Attach children with `Dialog.Add` / `Window.Add`; place windows with `Desktop.Add`
-4. Optional: `Application.OnKey` / `Application.OnMouse` before `Run`
-5. `Application.Run(App, OnCommand)` — blocking event loop
+4. Optional: `Application.OnKey` / `Application.OnMouse` before `Run`, or bundle handlers with `Application.Configure`
+5. `Application.Run(App, OnCommand)` or `Application.Configure` then `Application.Run(App)` — blocking event loop
 
 On an interactive terminal, `Run`, `ExecView`, `MessageBox`, and `RunFileDialog` share one upstream turbo-vision application for the `Open` … `Close` lifetime. See [Lifecycle](lifecycle.md).
 
@@ -24,8 +24,9 @@ Custom modal layout (`Dialog.NewModal` + `ExecView`) is for dialogs with read-ba
 | `Application.Close(App)` | Close an open application handle. |
 | `Application.CloseForTest(App)` | Close a headless test application. |
 | `Application.Size(App): Size` | Return the current application size. |
-| `Application.Run(App)` | Run the event loop using a previously registered handler (see [Handlers](handlers.md)). |
+| `Application.Run(App)` | Run the event loop using a handler from `Application.Configure` (see [Handlers](handlers.md)). |
 | `Application.Run(App, OnCommand)` | Run with `procedure (Application, integer)`. |
+| `Application.Configure(App, Handlers)` | Install bundled `ApplicationHandlers` (Graph-style hosted dispatch). |
 | `Application.Quit(App)` | Request that `Application.Run` exits. |
 | `Application.ExecView(App, Dialog): integer` | Run a modal dialog or window view; returns the closing command id. |
 | `Application.MessageBox(App, Message, Options): integer` | Show an upstream message box. See [Message box](message-box.md). |

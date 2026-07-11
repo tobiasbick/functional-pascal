@@ -30,6 +30,17 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::ApplicationClose), location);
                 Ok(true)
             }
+            s::STD_TUI_APPLICATION_CONFIGURE => {
+                self.expect_exact_args(s::STD_TUI_APPLICATION_CONFIGURE, 2, args, location)?;
+                for arg in args {
+                    self.compile_expr(arg)?;
+                }
+                self.emit_intrinsic_unit(
+                    Intrinsic::Tui(TuiIntrinsic::ApplicationConfigure),
+                    location,
+                );
+                Ok(true)
+            }
             s::STD_TUI_APPLICATION_RUN => {
                 if args.len() == 1 {
                     self.expect_exact_args(s::STD_TUI_APPLICATION_RUN, 1, args, location)?;

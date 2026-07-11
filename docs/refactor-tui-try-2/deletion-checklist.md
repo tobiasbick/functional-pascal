@@ -110,3 +110,5 @@ Keep `docs/refactor-tui-try-2/` until stream A (adapter removal) and [verificati
 ## Skill / agent instructions
 
 Updated on 2026-07-11: `.agents/skills/turbo-vision-4-rust/SKILL.md`, `.github/instructions/functional-pascal.instructions.md`, and `.cursor/rules/functional-pascal.mdc` describe the direct Try-2 layout.
+
+Periodic upstream read-back check and Stream A closure: [AGENTS.md](../../AGENTS.md#upstream-watch--turbo-vision-4-rust-read-back-stream-a). Contributor entry point: [AI_CONTRIBUTING.md](../../AI_CONTRIBUTING.md#good-entry-points).

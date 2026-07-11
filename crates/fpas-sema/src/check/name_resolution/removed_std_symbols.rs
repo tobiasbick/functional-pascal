@@ -15,7 +15,6 @@ const REMOVED_TUI_PREFIXES: &[&str] = &[
     "Application.ShowModal",
     "Application.ShowDialog",
     "Application.CloseModal",
-    "Application.Configure",
     "Application.RequestRedraw",
     "Application.Create",
     "Application.AddChild",

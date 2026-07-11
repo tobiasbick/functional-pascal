@@ -129,3 +129,25 @@ crates/fpas-compiler/src/
 Then proceed with the implementation.
 
 TUI VM bridge (`crates/fpas-vm/src/vm/execute/io/tui/`, `apps/ide` dialog code): read [docs/pascal/std/tui/app/vm-bridge.md](docs/pascal/std/tui/app/vm-bridge.md) and [terminal-checklist.md](docs/pascal/std/tui/terminal-checklist.md) before changing bridge behavior. The current implementation is owned by `tui/try2/`; use the `Application.New`/view-factory API and do not reintroduce `Create*`, `ExecDialog`, reconcile, or command-offset paths.
+
+## Upstream watch — `turbo-vision-4-rust` read-back (Stream A)
+
+The try-2 TUI bridge is **functionally complete**; formal closure is blocked on three upstream widget types. Periodically check whether [aovestdipaperino/turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust) has landed live read-back for:
+
+- `CheckBox` (checked state after input)
+- `RadioButton` (selected index after input)
+- `OutlineViewer` (selection / selected text after input)
+
+**Why:** At the workspace pin (`turbo-vision` tag `v2.0.0` in root `Cargo.toml`), those types do not expose a supported read-back hook through `dyn View` (no reliable `as_any_mut` downcast). FPAS keeps three intentional VM adapters — `try2/bridged_check_box.rs`, `bridged_radio_button.rs`, `bridged_outline.rs` — so `CheckBox.Checked`, `RadioButton.Selected`, `Outline.Selection`, and `Outline.SelectedText` stay correct after keyboard/mouse input. Other widgets (`ListBox`, `Button`, `StaticText`, …) already use direct upstream views.
+
+**When to check:** When touching TUI/VM code, before claiming the try-2 rewrite is fully closed, or when the user asks about remaining TUI work. Compare upstream tags/releases against the current pin; search upstream for read-back or `as_any_mut` on those three types.
+
+**When unblocked:**
+
+1. Bump the `turbo-vision` git tag in root `Cargo.toml`.
+2. Replace adapter construction in `try2/views/{check_box,radio_button,outline}.rs` with direct upstream views.
+3. Delete the three `bridged_*.rs` files and their `mod` entries in `try2/mod.rs`.
+4. Run the verification list in [docs/future/tui-bridged-readback.md](docs/future/tui-bridged-readback.md) and [docs/refactor-tui-try-2/verification.md](docs/refactor-tui-try-2/verification.md).
+5. Confirm `rg bridged_ crates/` returns no matches; complete Stream D plan archive per [docs/refactor-tui-try-2/remaining-work.md](docs/refactor-tui-try-2/remaining-work.md).
+
+Handoff and suggested upstream issue text: [docs/future/tui-bridged-readback.md](docs/future/tui-bridged-readback.md). TUI skill: [`.agents/skills/turbo-vision-4-rust/SKILL.md`](.agents/skills/turbo-vision-4-rust/SKILL.md).

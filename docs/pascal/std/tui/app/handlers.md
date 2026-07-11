@@ -16,9 +16,32 @@ end;
 Application.Run(App, OnCommand);
 ```
 
-`OnCommand` must be `procedure (Application, integer)`. Use `CM_*` constants for standard actions, or application-defined positive integers for custom commands.
+## `Application.Configure` + `Application.Run(App)`
 
-`Application.Run(App)` with one argument is also supported when a handler was registered through the VM host path; prefer the two-argument form in application code.
+Graph-style hosted dispatch bundles command and optional input handlers:
+
+```pascal
+var Handlers: ApplicationHandlers := record
+  OnCommand := OnCommand;
+  OnKey := None;
+  OnMouse := None
+end;
+
+Application.Configure(App, Handlers);
+Application.Run(App);
+```
+
+## `ApplicationHandlers`
+
+| Field | Required | Signature |
+| --- | --- | --- |
+| `OnCommand` | yes | `procedure (Application, integer)` |
+| `OnKey` | no | `function (Application, Std.Console.KeyEvent): boolean` |
+| `OnMouse` | no | `procedure (Application, Std.Console.Event)` |
+
+Register once with `Application.Configure(App, Handlers)`. Use `CM_*` constants for standard actions.
+
+`Application.Run(App)` with one argument requires a handler from `Configure` (or legacy VM registration). Prefer `Application.Run(App, OnCommand)` or `Configure` + `Run(App)` in application code.
 
 On an interactive terminal you may call `Application.ExecView`, `Application.MessageBox`, or `Application.RunFileDialog` from inside `OnCommand` while `Run` is active. The runtime reuses the same upstream turbo-vision session, so menu bar and status line stay visible (see [Dialogs and windows](modals.md) and [Lifecycle](lifecycle.md)).
 

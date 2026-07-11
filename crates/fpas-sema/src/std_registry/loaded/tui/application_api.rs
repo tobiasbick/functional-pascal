@@ -13,6 +13,7 @@ pub(super) fn register_application_api(
     checker: &mut Checker,
     types: &TuiTypes,
     callbacks: &TuiCallbackTypes,
+    application_handlers: &Ty,
 ) {
     define_func(
         checker,
@@ -30,6 +31,14 @@ pub(super) fn register_application_api(
         checker,
         s::STD_TUI_APPLICATION_CLOSE,
         vec![p("App", types.application.clone(), false)],
+    );
+    define_proc(
+        checker,
+        s::STD_TUI_APPLICATION_CONFIGURE,
+        vec![
+            p("App", types.application.clone(), false),
+            p("Handlers", application_handlers.clone(), false),
+        ],
     );
     define_func(
         checker,

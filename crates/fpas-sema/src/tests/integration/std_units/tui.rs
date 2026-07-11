@@ -432,6 +432,32 @@ end.",
 }
 
 #[test]
+fn std_tui_application_configure_surface_is_available() {
+    check_ok(
+        "\
+program T;
+uses Std.Tui;
+
+procedure OnCommand(App: Application; Cmd: integer);
+begin
+  if Cmd = CM_QUIT then
+    Application.Quit(App)
+end;
+
+begin
+  var App: Application := Application.OpenForTest(40, 12);
+  var Handlers: ApplicationHandlers := record
+    OnCommand := OnCommand;
+    OnKey := None;
+    OnMouse := None;
+  end;
+  Application.Configure(App, Handlers);
+  Application.CloseForTest(App)
+end.",
+    );
+}
+
+#[test]
 fn std_tui_test_click_is_available() {
     check_ok(
         "\

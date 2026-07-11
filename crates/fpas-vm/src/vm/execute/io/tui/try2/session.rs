@@ -135,7 +135,7 @@ pub(crate) enum Try2Root {
     Window(Box<Window>),
 }
 
-/// Rust-owned try-2 session (replaces the try-1 `TurboVisionObject` snapshot).
+/// Rust-owned try-2 session (replaces the old try-1 widget snapshot).
 #[derive(Default)]
 pub(crate) struct Try2Session {
     pub registry: ViewRegistry,

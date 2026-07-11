@@ -35,7 +35,7 @@ Root bridge migration is **complete**: `crates/fpas-vm/src/vm/execute/io/tui/` c
 3. Delete the three `bridged_*.rs` files.
 4. Re-run regressions: `tests/tui/views/check_box_test.fpas`, `radio_button_test.fpas`, `outline_*_test.fpas`, `tests/tui/events/check_box_mouse_test.fpas`, `radio_button_mouse_test.fpas`.
 
-**Optional upstream issue text:** expose `View::as_any_mut` (or equivalent) on checkbox, radio, and outline types so embedders can sync external state after `handle_event`.
+**Optional upstream issue text:** see [docs/future/tui-bridged-readback.md](../future/tui-bridged-readback.md).
 
 ---
 

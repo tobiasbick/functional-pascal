@@ -36,9 +36,9 @@ rg "Application\.CreateDialog|Application\.AddChild|Command\.Quit" docs/pascal/s
 rg "bridged_" crates/
 ```
 
-First two commands must return **no matches** (except git history).
+First command must return **no matches** in `crates/` (2026-07-11: clean after session comment update).
 
-`bridged_` is allowed **only** in these three files until [remaining-work.md](remaining-work.md) stream A completes:
+`bridged_` is allowed **only** in these three files until [remaining-work.md](remaining-work.md) stream A completes ([future plan](../future/tui-bridged-readback.md)):
 
 - `crates/fpas-vm/src/vm/execute/io/tui/try2/bridged_check_box.rs`
 - `crates/fpas-vm/src/vm/execute/io/tui/try2/bridged_radio_button.rs`
@@ -96,6 +96,19 @@ Run in a real terminal:
 - [ ] [migration-phases.md](migration-phases.md) Phase 7 exit criteria — streams B + C done; stream A (adapters) + stream D (archive) remain.
 - [x] [deletion-checklist.md](deletion-checklist.md) root migration items confirmed (2026-07-11)
 - [ ] Archive or mark completed in [README.md](README.md) after stream A (`rg bridged_ crates/` → no matches)
+
+## Last automated run (2026-07-11)
+
+| Command | Result |
+| --- | --- |
+| `cargo fmt --check` | pass |
+| `cargo build --workspace` | pass |
+| `cargo test -p fpas-vm try2::` | 61 passed |
+| `cargo test -p fpas-sema std_units::tui` | 24 passed |
+| `cargo test -p fpas-cli fpas_regression_suite_passes` | pass |
+| `fpas fmt --check tests/tui/ apps/ide/tests/` | pass |
+| `rg TurboVisionObject\|…` in `crates/` | no matches |
+| `rg bridged_ crates/` | 3 intentional files (stream A) |
 
 ## Sign-off template
 

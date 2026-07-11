@@ -58,7 +58,7 @@ After any bridge change, also run [terminal checklist](../terminal-checklist.md)
 | `Test.Click` | `TestClickButton` |
 | `Test.DispatchMenu` | `TestDispatchMenuCommand` |
 
-Interim test helpers are scheduled for rename during Phase 7 closure — see [remaining-work.md](../../../../refactor-tui-try-2/remaining-work.md) stream B.
+Headless stub/coordinate helpers remain on `Application` (`TestClickMouse`, `TestSetDialogResult`, `TestSetFileDialogResult`). Three checkbox/radio/outline bridge adapters remain until upstream read-back — see [tui-bridged-readback.md](../../../../future/tui-bridged-readback.md).
 
 Full opcode tables: `crates/fpas-bytecode/src/intrinsic/tui/variants/try2.inc` and `widgets.inc`.
 

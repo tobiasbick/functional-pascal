@@ -44,8 +44,9 @@ Pascal programs compose UI like upstream Turbo Vision (`Dialog.NewModal`, `Windo
 
 ## Related reading
 
-- Current spec (to be replaced): [`docs/pascal/std/tui/`](../pascal/std/tui/)
-- Current VM bridge notes: [`docs/pascal/std/tui/app/vm-bridge.md`](../pascal/std/tui/app/vm-bridge.md)
+- Current spec: [`docs/pascal/std/tui/`](../pascal/std/tui/)
+- VM bridge map: [`docs/pascal/std/tui/app/vm-bridge.md`](../pascal/std/tui/app/vm-bridge.md)
+- Upstream read-back blocker: [`docs/future/tui-bridged-readback.md`](../future/tui-bridged-readback.md)
 - Graph hosted dispatch (pattern reference): [`docs/pascal/std/graph/app/README.md`](../pascal/std/graph/app/README.md)
 - Project structure rules: [`AGENTS.md`](../../AGENTS.md)
 - Turbo Vision integration skill: [`.agents/skills/turbo-vision-4-rust/SKILL.md`](../../.agents/skills/turbo-vision-4-rust/SKILL.md)

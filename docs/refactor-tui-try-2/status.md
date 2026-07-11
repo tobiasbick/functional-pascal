@@ -169,7 +169,7 @@ See [remaining-work.md](remaining-work.md) for the ordered backlog. Summary:
 
 | Check | Result |
 | --- | --- |
-| Grep try-1 internals | `rg TurboVisionObject\|pending_reconcile\|…` in `crates/` — no code matches (comment-only in `session.rs`) |
+| Grep try-1 internals | `rg TurboVisionObject\|pending_reconcile\|…` in `crates/` — no matches (2026-07-11) |
 | Grep try-1 docs | `rg Application.CreateDialog\|AddChild\|Command.Quit` in `docs/pascal/std/tui/` — no matches |
 | Grep adapters | `rg bridged_ crates/` — exactly three intentional files (stream A) |
 | TUI sema | `cargo test -p fpas-sema std_units::tui` — 24 passed |

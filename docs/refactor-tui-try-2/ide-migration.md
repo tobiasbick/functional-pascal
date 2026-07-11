@@ -130,7 +130,7 @@ if Cmd = CM_OK then
 Replace:
 
 - [x] `Application.CreateMenuBar` → `MenuBar.New`
-- [x] `Application.TestDispatchMenuCommand` → `TestInjectCommand` / run-loop command injection
+- [x] `Test.DispatchMenu` → run-loop command injection (replaces interim menu dispatch helper)
 - [x] `Command.*` → `CM_*`
 - [ ] `Application.TestSetFileDialogResult` → final headless file dialog path or `Std.Tui.Test.*` during Phase 7 closure ([remaining-work.md](remaining-work.md) stream B)
 

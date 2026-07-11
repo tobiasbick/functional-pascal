@@ -54,7 +54,7 @@ Phase 7 sign-off requires zero `bridged_` hits.
 - [x] Rust `///` doc links point to current `docs/pascal/std/tui/…` paths (`cargo test -p fpas-vm tui_spec_links`).
 - [x] Examples under `examples/pascal/tui/` use try-2 factories.
 - [x] [terminal-checklist.md](../pascal/std/tui/terminal-checklist.md) updated.
-- [ ] Interim test helper names documented with target `Std.Tui.Test.*` migration — `Test.Click` landed; remaining helpers in [remaining-work.md](remaining-work.md) stream B.
+- [x] Headless test helpers documented as `Std.Tui.Test.*` (`Test.Click`, `Test.DispatchMenu`, `Test.InjectCommand`, `Test.InjectKeyboard`) — 2026-07-11.
 
 ## API completeness (final public spec)
 
@@ -93,9 +93,9 @@ Run in a real terminal:
 
 ## Plan closure
 
-- [ ] [migration-phases.md](migration-phases.md) Phase 7 exit criteria (streams A + B + D in [remaining-work.md](remaining-work.md))
+- [ ] [migration-phases.md](migration-phases.md) Phase 7 exit criteria — streams B + C done; stream A (adapters) + stream D (archive) remain.
 - [x] [deletion-checklist.md](deletion-checklist.md) root migration items confirmed (2026-07-11)
-- [ ] Archive or remove `docs/refactor-tui-try-2/` after stream A
+- [ ] Archive or mark completed in [README.md](README.md) after stream A (`rg bridged_ crates/` → no matches)
 
 ## Sign-off template
 

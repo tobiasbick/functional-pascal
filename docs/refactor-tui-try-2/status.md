@@ -40,9 +40,9 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 | FPAS smoke test | `tests/tui/smoke/modal_button_test.fpas` (`Button.New` + `Dialog.Add`) |
 | `Application.Run` (try-2 path) | `try2/run.rs`; routes when try-2 session open and no try-1 widgets |
 | `OnCommand` without offset | `try2/events.rs` |
-| `Application.TestInjectCommand` | headless command injection for run tests |
+| `Test.InjectCommand` | headless command injection for run tests |
 | FPAS run smoke test | `tests/tui/smoke/run_quit_test.fpas` |
-| `Application.TestClickButton` (try-2 headless mouse) | `try2/testing.rs` |
+| `Test.Click` (try-2 headless mouse) | `try2/testing.rs` |
 | `Application.New` alias | sema + compiler → `ApplicationOpen` |
 | `Window.New`, `Window.Add`, `Desktop.Add` | `try2/views/window.rs`, `try2/views/desktop.rs`; intrinsics 480–482 |
 | FPAS window + quit smoke test | `tests/tui/smoke/window_quit_test.fpas` |
@@ -57,7 +57,7 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 | Phase-5 modal/helper routes | `try2/message_box.rs`, `try2/file_dialog.rs`, `Application.OnKey`, `Application.OnMouse` |
 | Phase-5 tests | `tests/tui/modals/message_box_test.fpas`, `tests/tui/modals/file_dialog_test.fpas`, `tests/tui/events/on_key_test.fpas`, `tests/tui/events/on_mouse_test.fpas` |
 | Try-2 headless file dialog queue | `Try2Session::set_file_dialog_result`; `Application.TestSetFileDialogResult` seeds Try-2 state when the Try-2 session is open |
-| Try-2 menu dispatch in headless tests | `Application.TestDispatchMenuCommand` routes through try-2 menu bar state |
+| Try-2 menu dispatch in headless tests | `Test.DispatchMenu` routes through try-2 menu bar state |
 | Menu command smoke test | `tests/tui/smoke/menu_dispatch_test.fpas` |
 
 ## Landed (2026-07-08)
@@ -68,7 +68,7 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 | Try-2 message box example | `examples/pascal/tui/message_box.fpas` now uses `Application.New` and `CM_OK` |
 | Try-2 file dialog example | `examples/pascal/tui/file_dialog_try2.fpas` |
 | IDE menu/status shell migration | `apps/ide/src/menu.fpas`, `apps/ide/src/shell.fpas`, `apps/ide/src/dialog/about.fpas` |
-| IDE try-2 tests | `apps/ide/tests/` uses `Application.Run(App, OnCommand)`, `TestInjectCommand`, and `TestInjectKeyboard` |
+| IDE try-2 tests | `apps/ide/tests/` uses `Application.Run(App, OnCommand)`, `Test.InjectCommand`, and `Test.InjectKeyboard` |
 
 ## Verified (2026-07-09)
 
@@ -104,7 +104,7 @@ fpas test apps/ide/tests/
 cargo test -p fpas-cli fpas_regression_suite_passes
 ```
 
-Covers: registry, geometry, session, dialog, button, window, desktop, static text, chrome, phase-1 widgets, headless ExecView → CM_OK, TestClickButton, `Run(App, OnCommand)`, message box, `OnKey`, `OnMouse`, IDE menu/status/dialog flows, run/quit + window/quit + window/chrome smoke; full regression suite (try-1 + try-2 coexistence).
+Covers: registry, geometry, session, dialog, button, window, desktop, static text, chrome, phase-1 widgets, headless ExecView → CM_OK, `Test.Click`, `Run(App, OnCommand)`, message box, `OnKey`, `OnMouse`, IDE menu/status/dialog flows, run/quit + window/quit + window/chrome smoke; full regression suite.
 
 ## Next steps
 
@@ -165,22 +165,16 @@ See [remaining-work.md](remaining-work.md) for the ordered backlog. Summary:
 - Dropped `Try2` from program identifiers (`RunQuitTry2Test` → `RunQuitTest`, etc.).
 - Updated doc paths under `docs/refactor-tui-try-2/` and `docs/pascal/std/`.
 
-## Phase 7 Test.Click alias (2026-07-11)
+## Verified (2026-07-11)
 
-- Registered `Std.Tui.Test.Click` in sema, symbols, and compiler (maps to `TestClickButton` intrinsic).
-- Public docs show `Test.Click` as preferred name; `Application.TestClickButton` remains interim alias.
-
-## Phase 7 Test.InjectCommand / Test.InjectKeyboard aliases (2026-07-11)
-
-- Registered `Std.Tui.Test.InjectCommand` and `Std.Tui.Test.InjectKeyboard` (map to `Try2InjectCommand` / `Try2InjectKeyboard` intrinsics).
-- Migrated all FPAS call sites from interim `Application.TestInject*` names to `Test.Inject*`.
-- Interim `Application.TestInject*` names remain registered until Stream B step 5.
-
-## Phase 7 Test.DispatchMenu alias + test migration (2026-07-11)
-
-- Registered `Std.Tui.Test.DispatchMenu` (maps to `TestDispatchMenuCommand` intrinsic).
-- Migrated `tests/tui/smoke/*` button tests and IDE menu tests from interim `Application.TestClickButton` / `Application.TestDispatchMenuCommand` to `Test.Click` / `Test.DispatchMenu`.
-- Interim `Application.Test*` names remain registered until Stream B step 4.
+| Check | Result |
+| --- | --- |
+| Grep try-1 internals | `rg TurboVisionObject\|pending_reconcile\|…` in `crates/` — no code matches (comment-only in `session.rs`) |
+| Grep try-1 docs | `rg Application.CreateDialog\|AddChild\|Command.Quit` in `docs/pascal/std/tui/` — no matches |
+| Grep adapters | `rg bridged_ crates/` — exactly three intentional files (stream A) |
+| TUI sema | `cargo test -p fpas-sema std_units::tui` — 24 passed |
+| Full regression | `cargo test -p fpas-cli fpas_regression_suite_passes` — passed |
+| TUI FPAS tests | `fpas test tests/tui/` — 30 passed |
 
 ## Phase 7 symbol and documentation audit (2026-07-11)
 
@@ -193,9 +187,9 @@ See [remaining-work.md](remaining-work.md) for the ordered backlog. Summary:
 
 ## Next work item
 
-**Stream B (in progress):** `Test.Click`, `Test.DispatchMenu`, `Test.InjectCommand`, and `Test.InjectKeyboard` registered; FPAS tests migrated (2026-07-11) — see [remaining-work.md](remaining-work.md).
+**Stream A (blocked):** remove `CheckBox`, `RadioButton`, and `Outline` adapters when upstream exposes live read-back — see [remaining-work.md](remaining-work.md).
 
-**Stream A (blocked):** remove `CheckBox`, `RadioButton`, and `Outline` adapters when the pinned upstream version provides a read-back hook. Do not delete the plan directory until verification is green.
+**Stream D (after A):** run [verification.md](verification.md) sign-off and archive this plan directory.
 
 ## Phase 7 progress (2026-07-09)
 

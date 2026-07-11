@@ -49,7 +49,7 @@ Estimates assume focused hobby-project pace (part-time).
 - [x] `Button.New`, `Dialog.Add` — Pascal API + intrinsics (477/478); smoke test uses target pattern
 - [x] `Application.ExecView` → upstream `exec_view` (headless via `HeadlessTvApp::exec_modal_view`; interactive via `try2/app.rs`)
 - [x] `headless.rs`: headless modal loop + CRT export (`try2/headless.rs`, `headless_tv_draw.rs`)
-- [x] `Test.InjectEvent` or click helper for button command (`Application.TestClickButton` try-2 path).
+- [x] `Test.Click` or click helper for button command (try-2 path via `try2/testing.rs`).
 - [x] One FPAS test: modal OK returns `CM_OK` (`tests/tui/smoke/modal_button_test.fpas`).
 - [x] `events.rs`: `OnCommand` dispatch without offset translation (`try2/events.rs`)
 - [x] `Application.Run` on try-2 path (`try2/run.rs`; uses `Application.OnCommand` until 2-arg `Run` lands)
@@ -105,8 +105,8 @@ Estimates assume focused hobby-project pace (part-time).
 **Exit criteria**
 
 - [x] Port `examples/pascal/tui/message_box.fpas` and add a try-2 file dialog example (`examples/pascal/tui/file_dialog_try2.fpas`).
-- [x] No new Try-2 modal tests depend on the try-1 dialog queues (`tests/tui/modals/message_box_test.fpas` uses `TestInjectKeyboard`; Try-2 `RunFileDialog` consumes `Try2Session` state, not try-1 `test_file_dialog_result`).
-- [ ] Rename or replace interim `TestSetDialogResult` / `TestSetFileDialogResult` and `TestInject*` helpers with `Std.Tui.Test.*` during Phase 7 closure — see [remaining-work.md](remaining-work.md) stream B.
+- [x] No new Try-2 modal tests depend on the try-1 dialog queues (`tests/tui/modals/message_box_test.fpas` uses `Test.InjectKeyboard`; Try-2 `RunFileDialog` consumes `Try2Session` state, not try-1 `test_file_dialog_result`).
+- [x] Headless inject/click helpers renamed to `Std.Tui.Test.*` (stream B, 2026-07-11). Stub queues `TestSetDialogResult` / `TestSetFileDialogResult` remain on `Application` until real headless modal paths replace them.
 
 ---
 
@@ -138,7 +138,7 @@ Estimates assume focused hobby-project pace (part-time).
 - [x] Update skill, AGENTS.md bridge pointers, `.cursor/rules` TUI examples (**2026-07-11**).
 - [ ] Delete or archive `docs/refactor-tui-try-2/` (or mark completed in README) — after [verification.md](verification.md) and stream A.
 - [x] Phase-1 widget + run/chrome/modal try-1 control tests removed (**37/37**). Replacements in `tests/tui/views/`, `tests/tui/smoke/`, `tests/tui/events/`, `tests/tui/modals/`.
-- [ ] Finalize headless test API (`Std.Tui.Test.*`) — [remaining-work.md](remaining-work.md) stream B (`Test.Click` landed 2026-07-11).
+- [x] Finalize headless test API (`Std.Tui.Test.*`) — stream B complete (2026-07-11).
 
 **Exit criteria**
 

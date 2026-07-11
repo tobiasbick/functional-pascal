@@ -105,11 +105,8 @@ Safe to do in the same PR as Stream B or immediately after.
 
 ## Suggested next session (agent pick)
 
-1. ~~**Stream B step 1** — register `Std.Tui.Test.Click`~~ **Done (2026-07-11).**
-2. ~~**Stream B step 2** — migrate FPAS tests from `Application.TestClickButton` to `Test.Click`.~~ **Done (2026-07-11).**
-3. ~~**Stream B step 3** — add `Test.DispatchMenu`, `Test.InjectCommand`, and `Test.InjectKeyboard` aliases; migrate call sites.~~ **Done (2026-07-11).** Remaining: unified `Test.InjectEvent` (optional); remove interim `Application.Test*` names (step 5).
-4. ~~Leave Stream A parked until upstream contact or bump.~~
-5. ~~**Stream C** — rename 30 `*_try2_test.fpas` files to `*_test.fpas`.~~ **Done (2026-07-11).**
+1. **Stream A** — upstream read-back for checkbox, radio, outline; delete three `bridged_*.rs` files.
+2. **Stream D** — re-run [verification.md](verification.md) after stream A; archive `docs/refactor-tui-try-2/`.
 
 ---
 

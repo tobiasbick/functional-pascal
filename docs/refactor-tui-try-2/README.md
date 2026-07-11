@@ -10,7 +10,7 @@ This is a **breaking rewrite**. There is no backward-compatibility requirement f
 | --- | --- |
 | Decision | Approved direction — Rust `turbo_vision::Application` is the single source of truth |
 | Branch | `refactor/tui-try-2` |
-| Implementation | Phases 1–6 complete; Phase 7 bridge migration complete. **Remaining:** three upstream read-back adapters, interim test API rename, plan archive. See [remaining-work.md](remaining-work.md). |
+| Implementation | Phases 1–6 complete; Phase 7 bridge migration complete. **Remaining:** three upstream read-back adapters (stream A) and plan archive (stream D). Streams B + C done — see [remaining-work.md](remaining-work.md). |
 | Try-2 tests | `tests/tui/smoke/*_test.fpas`, `tests/tui/views/*_test.fpas`, `tests/tui/modals/`, `tests/tui/events/`, `apps/ide/tests/` |
 | Baseline | [baseline.md](baseline.md) — try-1 snapshot before rewrite |
 | Upstream pin | `turbo-vision` 2.0, git tag `v2.0.0` (see workspace `Cargo.toml`) |

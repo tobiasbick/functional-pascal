@@ -133,8 +133,8 @@ OpenForTest(w, h)
 | `app.put_event(Event::…)` | Inject keys, commands, mouse |
 | Upstream `test-util` helpers | Prefer when they exist for a scenario |
 | `Test.Click(Button)` | Thin wrapper: resolve bounds → synthesize mouse event → `handle_event` |
-| `Application.TestClickButton` | **Interim landed name** on branch (`try2/testing.rs`) |
-| `Application.TestInjectCommand` | **Interim** headless command injection for run smoke tests |
+| `Test.Click` | Headless button click (`try2/testing.rs`) |
+| `Test.InjectCommand` | Headless command injection for run smoke tests |
 | `Test.SetModalResult(CommandId)` | **Remove** when all modals use injected events (modal smoke already does) |
 
 Target: delete `TestSetDialogResult` / `TestSetFileDialogResult` stubs by driving real modal loops in headless mode.

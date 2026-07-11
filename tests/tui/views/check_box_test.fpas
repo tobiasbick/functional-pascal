@@ -1,4 +1,4 @@
-program MemoTry2Test;
+program CheckBoxTest;
 
 uses Std.Tui, Std.Test;
 
@@ -9,9 +9,10 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(80, 25);
-  var Dlg: Dialog := Dialog.NewModal(Bounds(10, 5, 50, 10), 'Memo');
-  var Body: Memo := Memo.New(Bounds(12, 2, 30, 5), 'OLD');
-  Dialog.Add(Dlg, Body);
-  Memo.SetText(Body, 'NEW');
+  var Dlg: Dialog := Dialog.NewModal(Bounds(10, 5, 50, 10), 'Options');
+  var OptIn: CheckBox := CheckBox.New(Bounds(12, 2, 20, 1), 'opt in', false);
+  Dialog.Add(Dlg, OptIn);
+  CheckBox.SetChecked(OptIn, true);
+  AssertTrue(CheckBox.Checked(OptIn));
   Application.CloseForTest(App)
 end.

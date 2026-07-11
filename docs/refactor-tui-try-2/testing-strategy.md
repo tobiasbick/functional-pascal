@@ -6,18 +6,26 @@ Test plan for try-2. Goal: prove **user-visible behavior** and **thin bridge inv
 
 | Test | Path |
 | --- | --- |
-| Modal OK via `ExecView` | `tests/tui/smoke/modal_button_try2_test.fpas` |
-| Run / `OnCommand` / `CM_QUIT` | `tests/tui/smoke/run_quit_try2_test.fpas` |
-| Window / desktop / chrome smoke | `tests/tui/smoke/window_quit_try2_test.fpas`, `window_chrome_try2_test.fpas` |
-| Phase-1 widgets | `tests/tui/views/*_try2_test.fpas` |
-| Message box | `tests/tui/modals/message_box_try2_test.fpas` |
-| Keyboard callback | `tests/tui/events/on_key_try2_test.fpas` |
-| Mouse callback | `tests/tui/events/on_mouse_try2_test.fpas` |
-| Check box / radio mouse state | `tests/tui/events/check_box_mouse_try2_test.fpas`, `radio_button_mouse_try2_test.fpas` |
+| Modal OK via `ExecView` | `tests/tui/smoke/modal_button_test.fpas` |
+| Run / `OnCommand` / `CM_QUIT` | `tests/tui/smoke/run_quit_test.fpas` |
+| Window / desktop / chrome smoke | `tests/tui/smoke/window_quit_test.fpas`, `window_chrome_test.fpas` |
+| Phase-1 widgets | `tests/tui/views/*_test.fpas` |
+| Message box | `tests/tui/modals/message_box_test.fpas` |
+| Keyboard callback | `tests/tui/events/on_key_test.fpas` |
+| Mouse callback | `tests/tui/events/on_mouse_test.fpas` |
+| Check box / radio mouse state | `tests/tui/events/check_box_mouse_test.fpas`, `radio_button_mouse_test.fpas` |
 | IDE shell/menu/dialog flows | `apps/ide/tests/` |
 | Rust unit tests | `cargo test -p fpas-vm try2::` (registry, geometry, events, dialog, button, widgets, modals) |
 
 All 37 try-1 `tests/tui/controls/*` files were removed. Their behavioral replacements live in the Try-2 test directories.
+
+## Phase 7 cleanup queue
+
+Ordered backlog: [remaining-work.md](../remaining-work.md).
+
+1. **Stream B** — `Test.Click`, `Test.DispatchMenu`, `Test.InjectCommand`, and `Test.InjectKeyboard` landed; call sites migrated.
+2. ~~**Stream C** — drop `_try2` suffix from test filenames.~~ **Done (2026-07-11).**
+3. **Stream A** — remove three `bridged_*` adapters when upstream read-back lands.
 
 ## Principles
 
@@ -27,37 +35,36 @@ All 37 try-1 `tests/tui/controls/*` files were removed. Their behavioral replace
 4. **Rust tests for registry and diagnostics** — invalid handles, double-close, callback re-entry.
 5. **Delete, don’t port** tests that only validate try-1 bridge mechanics.
 
-## Test directory layout (target)
-
-Final names may drop the `_try2` suffix when try-1 tests are removed (phase 7).
+## Test directory layout
 
 ```text
 tests/tui/
   smoke/
-    modal_button_try2_test.fpas   { landed — target: modal_button_test.fpas }
-    run_quit_try2_test.fpas       { landed — target: run_quit_test.fpas }
-    window_quit_try2_test.fpas    { landed — target: window_quit_test.fpas }
-    window_chrome_try2_test.fpas  { landed — target: window_chrome_test.fpas }
+    modal_button_test.fpas
+    run_quit_test.fpas
+    window_quit_test.fpas
+    window_chrome_test.fpas
+    menu_dispatch_test.fpas
+    …
   views/
-    input_line_try2_test.fpas     { landed — target: input_line_test.fpas }
-    list_box_try2_test.fpas       { landed — target: list_box_test.fpas }
-    check_box_try2_test.fpas      { landed — target: check_box_test.fpas }
-    radio_button_try2_test.fpas   { landed — target: radio_button_test.fpas }
-    memo_try2_test.fpas           { landed — target: memo_test.fpas }
-    text_viewer_try2_test.fpas    { landed — target: text_viewer_test.fpas }
-  chrome/
-    menu_bar_test.fpas
-    status_line_test.fpas
+    input_line_test.fpas
+    list_box_test.fpas
+    check_box_test.fpas
+    radio_button_test.fpas
+    memo_test.fpas
+    text_viewer_test.fpas
+    …
   modals/
-    message_box_try2_test.fpas    { landed — target: message_box_test.fpas }
+    message_box_test.fpas
     file_dialog_test.fpas
   events/
-    on_key_try2_test.fpas         { landed — target: on_key_test.fpas }
-    on_mouse_try2_test.fpas       { landed — target: on_mouse_test.fpas }
-    command_ids_test.fpas        { CM_OK, CM_QUIT pass through unchanged }
+    on_key_test.fpas
+    on_mouse_test.fpas
+    check_box_mouse_test.fpas
+    radio_button_mouse_test.fpas
 ```
 
-Update [`tests/suite.fpasprj`](../tests/suite.fpasprj) when old paths are removed.
+[`tests/suite.fpasprj`](../tests/suite.fpasprj) includes `tui/**/*_test.fpas`.
 
 ## Tests to delete (try-1)
 
@@ -103,10 +110,13 @@ end.
 | Helper | Behavior |
 | --- | --- |
 | `Test.Click(App, Button)` | Synthesize mouse down/up at button center; `handle_event` |
-| `Test.InjectEvent(App, …)` | Low-level; map from `Std.Console` event records |
+| `Test.DispatchMenu(App, MenuBar, …)` | Dispatch menu item command id for headless `Run` |
+| `Test.InjectCommand(App, Command)` | Queue command for next headless `Run` turn |
+| `Test.InjectKeyboard(App, KeyCode)` | Queue Turbo Vision key code |
+| `Test.InjectEvent(App, …)` | **Future** — unified low-level event injection from `Std.Console` records |
 | `Test.Pump(App)` | **Optional** — one `get_event` iteration without blocking; use sparingly |
 
-**Remove:** `TestSetDialogResult`, `TestSetFileDialogResult`, `TestClickButton` (rename to `Test.Click`), `TestDispatchMenuCommand` → `Test.DispatchMenu` if still needed.
+**Remove (when call sites gone):** `TestSetDialogResult`, `TestSetFileDialogResult`, `Application.TestClickButton`, `Application.TestDispatchMenuCommand`, `Application.TestInjectCommand`, `Application.TestInjectKeyboard`.
 
 ## Rust tests (`crates/fpas-vm`)
 
@@ -145,7 +155,7 @@ cargo test -p fpas-compiler std_library::tui
 cargo test -p fpas-vm tui_spec_links
 cargo run -q -p fpas-cli -- test tests/tui/controls/
 cargo run -q -p fpas-cli -- test apps/ide/tests/
-cargo run -q -p fpas-cli -- fmt --check tests/tui/events/on_mouse_try2_test.fpas apps/ide/tests/
+cargo run -q -p fpas-cli -- fmt --check tests/tui/events/on_mouse_test.fpas apps/ide/tests/
 ```
 
 Manual IDE sign-off still requires a real terminal session; do not mark Phase 6 complete until the checklist below is exercised interactively.

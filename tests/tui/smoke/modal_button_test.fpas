@@ -1,4 +1,4 @@
-program ModalButtonTry2Test;
+program ModalButtonTest;
 
 uses Std.Tui, Std.Test;
 
@@ -12,7 +12,7 @@ begin
   var Dlg: Dialog := Dialog.NewModal(Bounds(5, 3, 30, 8), 'Test');
   var Btn: Button := Button.New(Bounds(10, 4, 10, 2), 'OK', CM_OK, true);
   Dialog.Add(Dlg, Btn);
-  Application.TestClickButton(App, Btn);
+  Test.Click(App, Btn);
   var Cmd: integer := Application.ExecView(App, Dlg);
   AssertEquals(CM_OK, Cmd);
   Application.CloseForTest(App)

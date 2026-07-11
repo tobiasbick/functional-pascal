@@ -406,7 +406,7 @@ Examples: [`examples/pascal/library-deps/`](../../examples/pascal/library-deps/)
 ## Tests (`fpas test`)
 
 - Test entry files are named `*_test.fpas` and live under [`tests/`](../../tests/) (not `examples/`).
-- Run a directory, project, or single file: `fpas test tests/`, `fpas test tests/suite.fpasprj`, `fpas test tests/tui/smoke/run_quit_try2_test.fpas`.
+- Run a directory, project, or single file: `fpas test tests/`, `fpas test tests/suite.fpasprj`, `fpas test tests/tui/smoke/run_quit_test.fpas`.
 - Assertions and runner behavior: [`docs/pascal/std/testing/test.md`](../../docs/pascal/std/testing/test.md).
 
 ## Key Rules Summary

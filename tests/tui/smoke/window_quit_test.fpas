@@ -1,4 +1,4 @@
-program WindowSetTitleTry2Test;
+program WindowQuitTest;
 
 uses Std.Tui, Std.Test;
 
@@ -17,10 +17,11 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(60, 20);
-  var Win: Std.Tui.Window := Window.New(Bounds(2, 1, 30, 8), 'OLD');
-  Window.SetTitle(Win, 'NEW');
+  var Win: Window := Window.New(Bounds(5, 3, 30, 10), 'Test');
+  var Btn: Button := Button.New(Bounds(10, 4, 10, 2), 'Quit', CM_QUIT, false);
+  Window.Add(Win, Btn);
   Desktop.Add(App, Win);
-  Application.TestInjectCommand(App, CM_QUIT);
+  Test.Click(App, Btn);
   Application.Run(App, OnCommand);
   Application.CloseForTest(App)
 end.

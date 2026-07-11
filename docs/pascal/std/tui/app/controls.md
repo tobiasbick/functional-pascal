@@ -50,9 +50,11 @@ Record types `Menu`, `MenuItem`, `StatusItem`, and `OutlineNode` are defined in 
 
 | Symbol | Description |
 | --- | --- |
-| `Application.TestClickButton(App, Button)` | Queue a headless button click. |
+| `Application.TestClickButton(App, Button)` | Queue a headless button click (prefer `Test.Click`). |
+| `Test.Click(App, Button)` | Preferred headless button click helper. |
 | `Application.TestClickMouse(App, X, Y)` | Queue a headless left click at screen coordinates. |
-| `Application.TestDispatchMenuCommand(App, MenuBar, MenuIndex, ItemIndex)` | Dispatch a menu item command id. |
+| `Application.TestDispatchMenuCommand(App, MenuBar, MenuIndex, ItemIndex)` | Dispatch a menu item command id (prefer `Test.DispatchMenu`). |
+| `Test.DispatchMenu(App, MenuBar, MenuIndex, ItemIndex)` | Preferred headless menu dispatch helper. |
 
 On a live terminal `Application.Run`, the runtime stretches the menu bar and status line to the full terminal width and pins the status line to the bottom row.
 

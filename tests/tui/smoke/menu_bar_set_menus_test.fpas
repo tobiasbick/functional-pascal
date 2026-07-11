@@ -1,10 +1,20 @@
-program WindowQuitTry2Test;
+program MenuBarSetMenusTest;
 
 uses Std.Tui, Std.Test;
 
 function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
 begin
   return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+function OldMenu(): Menu;
+begin
+  return record title := 'OLD'; items := []; end
+end;
+
+function NewMenu(): Menu;
+begin
+  return record title := 'NEW'; items := []; end
 end;
 
 procedure OnCommand(App: Application; Cmd: integer);
@@ -17,11 +27,10 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(60, 20);
-  var Win: Window := Window.New(Bounds(5, 3, 30, 10), 'Test');
-  var Btn: Button := Button.New(Bounds(10, 4, 10, 2), 'Quit', CM_QUIT, false);
-  Window.Add(Win, Btn);
-  Desktop.Add(App, Win);
-  Application.TestClickButton(App, Btn);
+  var Bar: MenuBar := MenuBar.New(Bounds(0, 0, 60, 1), [OldMenu()]);
+  Application.SetMenuBar(App, Bar);
+  MenuBar.SetMenus(Bar, [NewMenu()]);
+  Test.InjectCommand(App, CM_QUIT);
   Application.Run(App, OnCommand);
   Application.CloseForTest(App)
 end.

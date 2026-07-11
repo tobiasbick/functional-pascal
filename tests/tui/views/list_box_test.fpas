@@ -1,4 +1,4 @@
-program ListBoxSelectionTry2Test;
+program ListBoxSelectionTest;
 
 uses Std.Tui, Std.Test;
 

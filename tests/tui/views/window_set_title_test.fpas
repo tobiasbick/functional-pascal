@@ -1,20 +1,10 @@
-program MenuBarSetMenusTry2Test;
+program WindowSetTitleTest;
 
 uses Std.Tui, Std.Test;
 
 function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
 begin
   return record x := X; y := Y; width := Width; height := Height; end
-end;
-
-function OldMenu(): Menu;
-begin
-  return record title := 'OLD'; items := []; end
-end;
-
-function NewMenu(): Menu;
-begin
-  return record title := 'NEW'; items := []; end
 end;
 
 procedure OnCommand(App: Application; Cmd: integer);
@@ -27,10 +17,10 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(60, 20);
-  var Bar: MenuBar := MenuBar.New(Bounds(0, 0, 60, 1), [OldMenu()]);
-  Application.SetMenuBar(App, Bar);
-  MenuBar.SetMenus(Bar, [NewMenu()]);
-  Application.TestInjectCommand(App, CM_QUIT);
+  var Win: Std.Tui.Window := Window.New(Bounds(2, 1, 30, 8), 'OLD');
+  Window.SetTitle(Win, 'NEW');
+  Desktop.Add(App, Win);
+  Test.InjectCommand(App, CM_QUIT);
   Application.Run(App, OnCommand);
   Application.CloseForTest(App)
 end.

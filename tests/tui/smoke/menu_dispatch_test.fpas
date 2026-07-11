@@ -1,4 +1,4 @@
-program MenuDispatchTry2Test;
+program MenuDispatchTest;
 
 uses Std.Tui, Std.Test;
 
@@ -33,7 +33,7 @@ begin
   var App: Application := Application.OpenForTest(60, 16);
   var MenuBarHandle: MenuBar := MenuBar.New(Bounds(0, 0, 60, 1), [FileMenu()]);
   Application.SetMenuBar(App, MenuBarHandle);
-  Application.TestDispatchMenuCommand(App, MenuBarHandle, 0, 0);
+  Test.DispatchMenu(App, MenuBarHandle, 0, 0);
   Application.Run(App, OnCommand);
   AssertEquals(CM_OPEN, LastCommand);
   Application.CloseForTest(App)

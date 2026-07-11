@@ -18,12 +18,12 @@ Try-2 regression tests under `tests/tui/views/`, `tests/tui/smoke/`, `tests/tui/
 
 Core coverage:
 
-- **Run / quit** — `run_quit_try2_test`, `window_quit_try2_test`
-- **Widgets** — `tests/tui/views/*_try2_test.fpas`
-- **Chrome** — `window_chrome_try2_test`, `menu_bar_set_menus_try2_test`, `status_line_set_items_try2_test`
-- **Modals** — `message_box_try2_test`, `file_dialog_try2_test`
-- **Events** — `on_key_try2_test`, `on_mouse_try2_test`, mouse smoke tests
-- **Command ids** — `reserved_command_try2_test`
+- **Run / quit** — `run_quit_test`, `window_quit_test`
+- **Widgets** — `tests/tui/views/*_test.fpas`
+- **Chrome** — `window_chrome_test`, `menu_bar_set_menus_test`, `status_line_set_items_test`
+- **Modals** — `message_box_test`, `file_dialog_test`
+- **Events** — `on_key_test`, `on_mouse_test`, mouse smoke tests
+- **Command ids** — `reserved_command_test`
 
 Interactive examples (manual terminal): `examples/pascal/tui/turbo_vision_dialog.fpas`, `turbo_vision_window_try2.fpas`, `apps/ide` (Help → About during `Run`).
 

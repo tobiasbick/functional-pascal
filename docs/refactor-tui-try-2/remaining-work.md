@@ -1,0 +1,137 @@
+# Remaining work (Phase 7 closure)
+
+Ordered backlog after the 2026-07-11 symbol audit. Public API and docs live under `docs/pascal/std/tui/`; this file is the implementation handoff only.
+
+**Branch:** `refactor/tui-try-2`  
+**Last synced:** 2026-07-11
+
+## Summary
+
+| Stream | Status | Blocks Phase 7 sign-off? |
+| --- | --- | --- |
+| A — Upstream read-back adapters | **Blocked** on `turbo-vision` `v2.0.0` | Yes |
+| B — Interim test API cleanup | **Next actionable** | No (can ship with interim names) |
+| C — Test file rename (`*_try2_*`) | **Done (2026-07-11)** | No |
+| D — Plan archive | After A + verification green | Yes |
+
+Root bridge migration is **complete**: `crates/fpas-vm/src/vm/execute/io/tui/` contains only `mod.rs` and `try2/`.
+
+---
+
+## Stream A — Remove three `bridged_*` adapters (upstream-dependent)
+
+**Files (intentional exceptions today):**
+
+- `try2/bridged_check_box.rs`
+- `try2/bridged_radio_button.rs`
+- `try2/bridged_outline.rs`
+
+**Why they remain:** At pin `v2.0.0`, `CheckBox`, `RadioButton`, and `OutlineViewer` do not expose a supported live-state read-back hook through `dyn View` (no reliable `as_any_mut` downcast). The adapters copy keyboard/mouse selection into FPAS host cells so `CheckBox.Checked`, `RadioButton.Selected`, `Outline.Selection`, and `Outline.SelectedText` stay correct after interactive input.
+
+**Done when:**
+
+1. Upstream adds downcast or a documented read-back API for those three types **or** FPAS bumps to a revision that includes it.
+2. Replace adapter construction in `try2/views/{check_box,radio_button,outline}.rs` with direct upstream views (same pattern as `ListBox`, `Button`, `StaticText`).
+3. Delete the three `bridged_*.rs` files.
+4. Re-run regressions: `tests/tui/views/check_box_test.fpas`, `radio_button_test.fpas`, `outline_*_test.fpas`, `tests/tui/events/check_box_mouse_test.fpas`, `radio_button_mouse_test.fpas`.
+
+**Optional upstream issue text:** expose `View::as_any_mut` (or equivalent) on checkbox, radio, and outline types so embedders can sync external state after `handle_event`.
+
+---
+
+## Stream B — Finalize headless test API (no upstream dependency)
+
+**Current interim Pascal surface** (registered and documented):
+
+| Interim symbol | Role |
+| --- | --- |
+| `Application.TestInjectCommand` | Queue command for next headless `Run` turn |
+| `Application.TestInjectKeyboard` | Queue Turbo Vision key code |
+| `Application.TestClickButton` | Mouse click at button center |
+| `Application.TestClickMouse` | Screen-coordinate click (+ stateful control toggle) |
+| `Application.TestDispatchMenuCommand` | Menu bar item → command id |
+| `Application.TestSetDialogResult` | Stub queue for headless `MessageBox` |
+| `Application.TestSetFileDialogResult` | Stub queue for headless `RunFileDialog` |
+
+Bytecode intrinsics may keep historical names (`Try2InjectCommand`, …) to avoid opcode renumbering.
+
+**Target shape** (from [testing-strategy.md](testing-strategy.md)):
+
+| Target | Replaces |
+| --- | --- |
+| `Std.Tui.Test.Click(App, Button)` | `Application.TestClickButton` |
+| `Std.Tui.Test.InjectCommand(App, Command)` | `Application.TestInjectCommand` |
+| `Std.Tui.Test.InjectKeyboard(App, KeyCode)` | `Application.TestInjectKeyboard` |
+| `Std.Tui.Test.InjectEvent(App, …)` | future unified low-level events |
+| `Std.Tui.Test.DispatchMenu(App, MenuBar, …)` | `TestDispatchMenuCommand` |
+| Real headless modal loops | `TestSetDialogResult`, `TestSetFileDialogResult` where feasible |
+
+**Implementation order:**
+
+1. [x] Add `Std.Tui.Test.Click` in sema + symbols (alias to `TestClickButton` intrinsic).
+2. [x] Migrate `tests/tui/` and `apps/ide/tests/` to `Test.Click` and `Test.DispatchMenu`; keep interim `Application.Test*` names until step 4.
+3. [x] Add `Std.Tui.Test.DispatchMenu`, `Test.InjectCommand`, and `Test.InjectKeyboard` aliases. Remaining: unified `Test.InjectEvent` when event records are wired.
+4. Update [docs/pascal/std/tui/app/testing.md](../pascal/std/tui/app/testing.md) to show target API only.
+5. Remove interim symbols from `std_symbols/tui.rs` when call sites are gone.
+
+**Do not start** until Stream A decision is explicit if renaming would churn the same test files twice — otherwise B can proceed now.
+
+---
+
+## Stream C — Drop `_try2` test suffix
+
+All 37 try-1 `tests/tui/controls/*` files are gone. The 30 Try-2 regression files now use the standard `*_test.fpas` naming (2026-07-11).
+
+**Steps:**
+
+1. [x] Rename `tests/tui/**/*_try2_test.fpas` → `*_test.fpas` (preserve theme subdirs).
+2. [x] [`tests/suite.fpasprj`](../../tests/suite.fpasprj) already globbed `tui/**/*_test.fpas` — no change required.
+3. [x] Run `fpas test tests/tui/` and `cargo test -p fpas-cli fpas_regression_suite_passes`.
+
+Safe to do in the same PR as Stream B or immediately after.
+
+---
+
+## Stream D — Close the rewrite plan
+
+**Prerequisites:**
+
+- Stream A complete (`rg bridged_ crates/` → no matches).
+- [verification.md](verification.md) checklist green (grep invariants, docs, tests, manual smoke).
+- [migration-phases.md](migration-phases.md) Phase 7 boxes checked.
+
+**Then:**
+
+1. Add completion banner to [README.md](README.md): `Status: completed — see docs/pascal/std/tui/`.
+2. Move historical baseline/problem docs to `docs/future/` **or** keep this directory as archive with a one-line pointer at the top.
+3. Remove stale coexistence / try-1 references from [README.md](README.md) quick comparison table.
+
+---
+
+## Secondary blocker (non-blocking for A/B/C)
+
+**Headless `RunFileDialog`:** Live path uses upstream `FileDialog::execute`. Headless tests use `Try2Session` queue via `TestSetFileDialogResult` because constructing a full upstream `Application` over the headless terminal is not available at the current pin. Documented in [status.md](status.md#blockers). Replace the queue when upstream or VM exposes a headless-safe execute path.
+
+---
+
+## Suggested next session (agent pick)
+
+1. ~~**Stream B step 1** — register `Std.Tui.Test.Click`~~ **Done (2026-07-11).**
+2. ~~**Stream B step 2** — migrate FPAS tests from `Application.TestClickButton` to `Test.Click`.~~ **Done (2026-07-11).**
+3. ~~**Stream B step 3** — add `Test.DispatchMenu`, `Test.InjectCommand`, and `Test.InjectKeyboard` aliases; migrate call sites.~~ **Done (2026-07-11).** Remaining: unified `Test.InjectEvent` (optional); remove interim `Application.Test*` names (step 5).
+4. ~~Leave Stream A parked until upstream contact or bump.~~
+5. ~~**Stream C** — rename 30 `*_try2_test.fpas` files to `*_test.fpas`.~~ **Done (2026-07-11).**
+
+---
+
+## Verification commands (quick)
+
+```bash
+cargo test -p fpas-vm try2::
+cargo test -p fpas-sema std_units::tui
+cargo test -p fpas-cli fpas_regression_suite_passes
+fpas test tests/tui/
+fpas test apps/ide/tests/
+rg "TurboVisionObject|pending_reconcile|FPAS_TV_COMMAND_OFFSET|TuiCreateDialog" crates/
+rg "bridged_" crates/    # expect exactly three files until Stream A
+```

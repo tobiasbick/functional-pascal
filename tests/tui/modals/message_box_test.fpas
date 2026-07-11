@@ -1,10 +1,10 @@
-program MessageBoxTry2Test;
+program MessageBoxTest;
 
 uses Std.Tui, Std.Test;
 
 begin
   var App: Application := Application.OpenForTest(60, 20);
-  Application.TestInjectKeyboard(App, 7181);
+  Test.InjectKeyboard(App, 7181);
   var AcceptCommand: integer := Application.MessageBox(App, 'Hello', MessageBoxOption.About +
                                                                      MessageBoxOption.OkButton);
   AssertEquals(CM_OK, AcceptCommand)

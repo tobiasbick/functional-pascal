@@ -1,4 +1,4 @@
-program TextViewerTry2Test;
+program TextViewerTest;
 
 uses Std.Tui, Std.Test;
 

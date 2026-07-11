@@ -22,9 +22,9 @@ Audited status of the Phase-7 deletion work. The root bridge is gone; this file 
 
 ### Current Try-2 testing surface (intentionally retained)
 
-- `Application.TestClickButton`, `TestClickMouse`, and `TestDispatchMenuCommand`
+- `Application.TestClickButton`, `Test.Click` (preferred), `TestClickMouse`, `Application.TestDispatchMenuCommand`, and `Test.DispatchMenu` (preferred)
 - `Application.TestSetFileDialogResult` and `TestSetDialogResult`
-- `Application.TestInjectKeyboard` and `TestInjectCommand` (interim headless event helpers)
+- `Application.TestInjectKeyboard`, `Test.InjectKeyboard` (preferred), `Application.TestInjectCommand`, and `Test.InjectCommand` (preferred)
 
 `Application.SetMenuBar` and `Application.SetStatusLine` are current API and remain registered.
 
@@ -79,12 +79,12 @@ TuiAddChild
 
 | Removed | try-2 replacement |
 | --- | --- |
-| Phase-1 widgets + read-back/setter (13) | `tests/tui/views/*_try2_test.fpas` |
-| `run`, `window`, `chrome`, `menu`, `exec_dialog`, `static_text` (6) | `tests/tui/smoke/*_try2_test.fpas` |
-| `message_box` (1) | `tests/tui/modals/message_box_try2_test.fpas` |
-| `file_dialog` (1) | `tests/tui/modals/file_dialog_try2_test.fpas` |
+| Phase-1 widgets + read-back/setter (13) | `tests/tui/views/*_test.fpas` |
+| `run`, `window`, `chrome`, `menu`, `exec_dialog`, `static_text` (6) | `tests/tui/smoke/*_test.fpas` |
+| `message_box` (1) | `tests/tui/modals/message_box_test.fpas` |
+| `file_dialog` (1) | `tests/tui/modals/file_dialog_test.fpas` |
 
-No try-1 control tests remain. The retained Try-2 tests keep their `_try2` suffix until the final naming cleanup.
+No try-1 control tests remain. Try-2 regression files use standard `*_test.fpas` names under `tests/tui/{smoke,views,modals,events}/`.
 
 ## Examples
 
@@ -96,7 +96,7 @@ The public `docs/pascal/std/tui/` pages were rewritten for the direct Try-2 API.
 
 ## Planning docs
 
-Keep `docs/refactor-tui-try-2/` until the upstream adapter blocker is resolved. Update [status.md](status.md) and this checklist when that changes.
+Keep `docs/refactor-tui-try-2/` until stream A (adapter removal) and [verification.md](verification.md) are green. Track ordered next steps in [remaining-work.md](remaining-work.md).
 
 ## Skill / agent instructions
 

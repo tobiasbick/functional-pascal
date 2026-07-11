@@ -1,4 +1,4 @@
-program LiveTreeTry2Test;
+program LiveTreeTest;
 
 uses Std.Tui, Std.Test;
 
@@ -35,8 +35,8 @@ begin
   var OpenButton: Button := Button.New(Bounds(4, 4, 10, 2), 'Open', CmdLive, false);
   Window.Add(Host, OpenButton);
   Desktop.Add(App, Host);
-  Application.TestClickButton(App, OpenButton);
-  Application.TestInjectCommand(App, CM_QUIT);
+  Test.Click(App, OpenButton);
+  Test.InjectCommand(App, CM_QUIT);
   Application.Run(App, OnCommand);
   AssertTrue(LiveOpened);
   Application.CloseForTest(App)

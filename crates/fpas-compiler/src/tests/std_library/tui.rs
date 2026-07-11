@@ -219,7 +219,7 @@ begin
   var OkButton: Button := Button.New(Bounds(4, 4, 10, 2), 'OK', CM_OK, true);
   Window.Add(Win, OkButton);
   Desktop.Add(App, Win);
-  Application.TestClickButton(App, OkButton);
+  Test.Click(App, OkButton);
   Application.Run(App, OnCommand);
   AssertEquals(CM_OK, SeenCommand)
 end.",

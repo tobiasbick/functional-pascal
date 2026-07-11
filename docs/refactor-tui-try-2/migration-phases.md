@@ -50,13 +50,13 @@ Estimates assume focused hobby-project pace (part-time).
 - [x] `Application.ExecView` → upstream `exec_view` (headless via `HeadlessTvApp::exec_modal_view`; interactive via `try2/app.rs`)
 - [x] `headless.rs`: headless modal loop + CRT export (`try2/headless.rs`, `headless_tv_draw.rs`)
 - [x] `Test.InjectEvent` or click helper for button command (`Application.TestClickButton` try-2 path).
-- [x] One FPAS test: modal OK returns `CM_OK` (`tests/tui/smoke/modal_button_try2_test.fpas`).
+- [x] One FPAS test: modal OK returns `CM_OK` (`tests/tui/smoke/modal_button_test.fpas`).
 - [x] `events.rs`: `OnCommand` dispatch without offset translation (`try2/events.rs`)
 - [x] `Application.Run` on try-2 path (`try2/run.rs`; uses `Application.OnCommand` until 2-arg `Run` lands)
 
 **Exit criteria**
 
-- [x] `fpas test tests/tui/smoke/modal_button_try2_test.fpas` passes.
+- [x] `fpas test tests/tui/smoke/modal_button_test.fpas` passes.
 - [x] Interactive smoke: manual run of tiny program in terminal — `fpas run examples/pascal/tui/modal_button_try2.fpas` (OK/Cancel/× with mouse or Enter/Esc).
 
 ---
@@ -67,9 +67,9 @@ Estimates assume focused hobby-project pace (part-time).
 
 - [x] `Application.Run` with `OnCommand` callback parameter — `Application.Run(App, OnCommand)` sema + intrinsic 484.
 - [x] `Application.Quit` → stop run loop — **partial:** `quit_requested` honored on try-2 path; live `app.running` wiring TBD.
-- [x] `Window.New`, `Window.Add`, `Desktop.Add` — intrinsics 480–482; `tests/tui/smoke/window_quit_try2_test.fpas`.
+- [x] `Window.New`, `Window.Add`, `Desktop.Add` — intrinsics 480–482; `tests/tui/smoke/window_quit_test.fpas`.
 - [x] `StaticText`, menu/status chrome (`chrome.rs`) — `StaticText.New`, `MenuBar.New`, `StatusLine.New`, `SetMenuBar`/`SetStatusLine` routing.
-- [x] FPAS tests: modeless window + quit command — `window_quit_try2_test.fpas` (button click → `CM_QUIT` → `Application.Quit`).
+- [x] FPAS tests: modeless window + quit command — `window_quit_test.fpas` (button click → `CM_QUIT` → `Application.Quit`).
 
 **Exit criteria**
 
@@ -85,7 +85,7 @@ Estimates assume focused hobby-project pace (part-time).
 - [x] `InputLine`, `CheckBox`, `ListBox`, `RadioButton`, `Memo`, `TextViewer` — `*.New`, `Dialog.Add` / `Window.Add`, read-back + setters.
 - [x] Read-back methods: `InputLine.Text`, `CheckBox.Checked`, `ListBox.Selection`, `RadioButton.Selected` (where applicable).
 - [x] Runtime setters: `InputLine.SetText`, `CheckBox.SetChecked`, `ListBox.SetItems`, `RadioButton.SetSelected`, `Memo.SetText`, `TextViewer.SetText`.
-- [x] FPAS tests: `tests/tui/views/*_try2_test.fpas` for all phase-1 widgets.
+- [x] FPAS tests: `tests/tui/views/*_test.fpas` for all phase-1 widgets.
 
 **Exit criteria**
 
@@ -105,8 +105,8 @@ Estimates assume focused hobby-project pace (part-time).
 **Exit criteria**
 
 - [x] Port `examples/pascal/tui/message_box.fpas` and add a try-2 file dialog example (`examples/pascal/tui/file_dialog_try2.fpas`).
-- [x] No new Try-2 modal tests depend on the try-1 dialog queues (`tests/tui/modals/message_box_try2_test.fpas` uses `TestInjectKeyboard`; Try-2 `RunFileDialog` consumes `Try2Session` state, not try-1 `test_file_dialog_result`).
-- [ ] Rename or replace interim `TestSetDialogResult` / `TestSetFileDialogResult` helpers with the final `Test.*` event API during Phase 7/8 public testing cleanup.
+- [x] No new Try-2 modal tests depend on the try-1 dialog queues (`tests/tui/modals/message_box_test.fpas` uses `TestInjectKeyboard`; Try-2 `RunFileDialog` consumes `Try2Session` state, not try-1 `test_file_dialog_result`).
+- [ ] Rename or replace interim `TestSetDialogResult` / `TestSetFileDialogResult` and `TestInject*` helpers with `Std.Tui.Test.*` during Phase 7 closure — see [remaining-work.md](remaining-work.md) stream B.
 
 ---
 
@@ -131,18 +131,19 @@ Estimates assume focused hobby-project pace (part-time).
 
 **Work**
 
-- [ ] Remove all modules in [deletion-checklist.md](deletion-checklist.md).
+- [x] Remove root bridge modules listed in [deletion-checklist.md](deletion-checklist.md) (complete except three `bridged_*` adapters — [remaining-work.md](remaining-work.md) stream A).
 - [x] **Slim `TuiState`**: drop `TurboVisionState`, `TurboVisionObject`, snapshot structs ([rust-layout.md](rust-layout.md)).
-- [ ] Remove old bytecode intrinsics and sema symbols.
-- [x] Remove old `docs/pascal/std/tui/` pages; write new spec from [target-api.md](target-api.md). **2026-07-10:** core pages rewritten (`README`, `session`, `app/*`).
-- [ ] Update skill, AGENTS.md bridge pointers, `.cursor/rules` TUI examples.
-- [ ] Delete or archive `docs/refactor-tui-try-2/` (or mark completed in README).
+- [x] Remove old bytecode intrinsics and sema symbols for try-1 widget/create/pump paths.
+- [x] Remove old `docs/pascal/std/tui/` try-1 pages; write new spec from [target-api.md](target-api.md). **2026-07-10/11:** core pages rewritten.
+- [x] Update skill, AGENTS.md bridge pointers, `.cursor/rules` TUI examples (**2026-07-11**).
+- [ ] Delete or archive `docs/refactor-tui-try-2/` (or mark completed in README) — after [verification.md](verification.md) and stream A.
 - [x] Phase-1 widget + run/chrome/modal try-1 control tests removed (**37/37**). Replacements in `tests/tui/views/`, `tests/tui/smoke/`, `tests/tui/events/`, `tests/tui/modals/`.
+- [ ] Finalize headless test API (`Std.Tui.Test.*`) — [remaining-work.md](remaining-work.md) stream B (`Test.Click` landed 2026-07-11).
 
 **Exit criteria**
 
 - [verification.md](verification.md) checklist all green.
-- `rg TurboVisionObject` / `rg pending_reconcile` / `rg bridged_` returns no matches in `crates/`.
+- `rg TurboVisionObject` / `rg pending_reconcile` / `rg bridged_` returns no matches in `crates/` (today `bridged_` is limited to three intentional files until stream A).
 
 ---
 

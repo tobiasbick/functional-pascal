@@ -10,8 +10,8 @@ This is a **breaking rewrite**. There is no backward-compatibility requirement f
 | --- | --- |
 | Decision | Approved direction — Rust `turbo_vision::Application` is the single source of truth |
 | Branch | `refactor/tui-try-2` |
-| Implementation | Phases 1-6 complete; Phase 7 cleanup in progress. Three adapters await an upstream read-back hook; the IDE headless command queue has two documented failing tests. |
-| Try-2 tests | `tests/tui/smoke/*_try2_test.fpas`, `tests/tui/views/*_try2_test.fpas`, `tests/tui/modals/message_box_try2_test.fpas`, `tests/tui/events/on_key_try2_test.fpas`, `apps/ide/tests/` |
+| Implementation | Phases 1–6 complete; Phase 7 bridge migration complete. **Remaining:** three upstream read-back adapters, interim test API rename, plan archive. See [remaining-work.md](remaining-work.md). |
+| Try-2 tests | `tests/tui/smoke/*_test.fpas`, `tests/tui/views/*_test.fpas`, `tests/tui/modals/`, `tests/tui/events/`, `apps/ide/tests/` |
 | Baseline | [baseline.md](baseline.md) — try-1 snapshot before rewrite |
 | Upstream pin | `turbo-vision` 2.0, git tag `v2.0.0` (see workspace `Cargo.toml`) |
 
@@ -21,7 +21,7 @@ The current bridge keeps a parallel FPAS widget snapshot and rebuilds the live T
 
 ## Target in one sentence
 
-Pascal programs compose UI like upstream Turbo Vision (`Dialog.NewModal`, `Window.New`, `Add`, `ExecView`, `Run`), while the VM owns a try-2 session that maps opaque Pascal handles to live Turbo Vision views. The branch still coexists with try-1 until Phase 7; the final target removes reconcile, the command offset band, and remaining `Bridged*` adapter views.
+Pascal programs compose UI like upstream Turbo Vision (`Dialog.NewModal`, `Window.New`, `Add`, `ExecView`, `Run`), while the VM owns a try-2 session that maps opaque Pascal handles to live Turbo Vision views. Reconcile, the command offset band, and most adapter views are removed; three checkbox/radio/outline adapters remain until upstream exposes live read-back.
 
 ## Document map
 
@@ -40,6 +40,7 @@ Pascal programs compose UI like upstream Turbo Vision (`Dialog.NewModal`, `Windo
 | [IDE migration](ide-migration.md) | `apps/ide` rewrite notes |
 | [Deletion checklist](deletion-checklist.md) | Old symbols, files, and docs to remove |
 | [Verification](verification.md) | Definition of done before deleting this plan |
+| [Remaining work](remaining-work.md) | Ordered backlog: adapters, test API, rename, archive |
 
 ## Related reading
 
@@ -57,5 +58,5 @@ Pascal programs compose UI like upstream Turbo Vision (`Dialog.NewModal`, `Windo
 | Composition API | `Application.Create*` + `Application.AddChild(App, …)` | `Dialog.New` + `Dialog.Add` (record methods) |
 | Structural updates | Full desktop rebuild (`reconcile.rs`) | Direct `Group::add` / remove on live tree |
 | Command ids | Subset `Command.*` + `0x8000` offset band | Full upstream `CM_*` constants |
-| Bridge size | ~6.5k LOC, 41 files | ~1.5–2.5k LOC, ~12–15 files (estimate) |
+| Bridge size | ~6.5k LOC, 41 files | `try2/` module tree; root `tui/mod.rs` is dispatch only |
 | Per-view `handle_event` | Not supported | Still not supported (language limit) |

@@ -96,7 +96,7 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::RegisterOnMouse), location);
                 Ok(true)
             }
-            s::STD_TUI_APPLICATION_TEST_CLICK_BUTTON => {
+            s::STD_TUI_APPLICATION_TEST_CLICK_BUTTON | s::STD_TUI_TEST_CLICK => {
                 self.expect_exact_args(
                     s::STD_TUI_APPLICATION_TEST_CLICK_BUTTON,
                     2,
@@ -117,7 +117,7 @@ impl Compiler {
                 self.emit_intrinsic_unit(Intrinsic::Tui(TuiIntrinsic::TestClickMouse), location);
                 Ok(true)
             }
-            s::STD_TUI_APPLICATION_TEST_DISPATCH_MENU_COMMAND => {
+            s::STD_TUI_APPLICATION_TEST_DISPATCH_MENU_COMMAND | s::STD_TUI_TEST_DISPATCH_MENU => {
                 self.expect_exact_args(
                     s::STD_TUI_APPLICATION_TEST_DISPATCH_MENU_COMMAND,
                     4,

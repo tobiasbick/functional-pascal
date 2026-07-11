@@ -105,7 +105,7 @@ crates/fpas-std/src/tui/cm_constants.rs
 - try-2 `Application.Run` when session is open and no try-1 widgets exist
 - IDE commands currently used by `apps/ide`: `CM_OPEN`, `CM_ABOUT`, `CM_QUIT`, plus `CM_USER` as the application-private base
 
-**Try-2 tests:** `tests/tui/smoke/*_try2_test.fpas`, `tests/tui/views/*_try2_test.fpas`, `tests/tui/modals/message_box_try2_test.fpas`, `tests/tui/events/on_key_try2_test.fpas`, `apps/ide/tests/`.
+**Try-2 tests:** `tests/tui/smoke/*_test.fpas`, `tests/tui/views/*_test.fpas`, `tests/tui/modals/message_box_test.fpas`, `tests/tui/events/on_key_test.fpas`, `apps/ide/tests/`.
 
 ## Verification commands (branch tip)
 

@@ -1,4 +1,4 @@
-program DialogSetTitleTry2Test;
+program DialogSetTitleTest;
 
 uses Std.Tui, Std.Test;
 
@@ -13,7 +13,7 @@ begin
   Dialog.SetTitle(Dlg, 'NEW');
   var Btn: Button := Button.New(Bounds(10, 5, 12, 2), 'OK', CM_OK, true);
   Dialog.Add(Dlg, Btn);
-  Application.TestClickButton(App, Btn);
+  Test.Click(App, Btn);
   AssertEquals(CM_OK, Application.ExecView(App, Dlg));
   Application.CloseForTest(App)
 end.

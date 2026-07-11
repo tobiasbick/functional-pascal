@@ -1,12 +1,10 @@
-program ReservedCommandTry2Test;
+program ClickQuitTest;
 
 uses Std.Tui, Std.Test;
 
-const
-  CmdReserved: integer := 24;
-
 mutable var
   mutable var LastCommand: integer := -1;
+  mutable var CommandCalls: integer := 0;
 
 function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
 begin
@@ -16,17 +14,19 @@ end;
 procedure OnCommand(App: Application; Cmd: integer);
 begin
   LastCommand := Cmd;
+  CommandCalls := CommandCalls + 1;
   Application.Quit(App)
 end;
 
 begin
-  var App: Application := Application.OpenForTest(50, 14);
-  var Win: Window := Window.New(Bounds(2, 1, 30, 9), 'Demo');
-  var Btn: Button := Button.New(Bounds(4, 4, 12, 2), 'Action', CmdReserved, false);
+  var App: Application := Application.OpenForTest(40, 12);
+  var Win: Std.Tui.Window := Window.New(Bounds(2, 1, 24, 8), 'Demo');
+  var Btn: Button := Button.New(Bounds(4, 4, 10, 2), 'Quit', CM_QUIT, false);
   Window.Add(Win, Btn);
   Desktop.Add(App, Win);
-  Application.TestClickButton(App, Btn);
+  Test.Click(App, Btn);
   Application.Run(App, OnCommand);
-  AssertEquals(CmdReserved, LastCommand);
+  AssertEquals(CM_QUIT, LastCommand);
+  AssertEquals(1, CommandCalls);
   Application.CloseForTest(App)
 end.

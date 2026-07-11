@@ -1,6 +1,6 @@
-# Current problems (try 1)
+# Current problems (try 1 — historical)
 
-Analysis of the existing `Std.Tui` facade as of the try-2 planning date. References point at the pre-rewrite codebase.
+Analysis of the **pre-rewrite** `Std.Tui` facade. The try-2 branch removed reconcile, snapshot state, and the root bridge; this document remains as baseline context only. For open items see [remaining-work.md](remaining-work.md).
 
 ## Architecture: dual state
 

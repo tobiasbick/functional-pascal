@@ -1,4 +1,4 @@
-program RunQuitTry2Test;
+program RunQuitTest;
 
 uses Std.Tui, Std.Test;
 
@@ -10,7 +10,7 @@ end;
 
 begin
   var App: Application := Application.OpenForTest(40, 14);
-  Application.TestInjectCommand(App, CM_QUIT);
+  Test.InjectCommand(App, CM_QUIT);
   Application.Run(App, OnCommand);
   Application.CloseForTest(App)
 end.

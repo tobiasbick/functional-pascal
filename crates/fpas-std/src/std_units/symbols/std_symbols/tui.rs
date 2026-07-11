@@ -92,6 +92,10 @@ pub const STD_TUI_APPLICATION_EXEC_VIEW: &str = std_tui!("Application.ExecView")
 pub const STD_TUI_APPLICATION_TEST_INJECT_KEYBOARD: &str =
     std_tui!("Application.TestInjectKeyboard");
 pub const STD_TUI_APPLICATION_TEST_INJECT_COMMAND: &str = std_tui!("Application.TestInjectCommand");
+/// Headless test helper: queue a keyboard event (`Test.InjectKeyboard` is the preferred name).
+pub const STD_TUI_TEST_INJECT_KEYBOARD: &str = std_tui!("Test.InjectKeyboard");
+/// Headless test helper: queue a command (`Test.InjectCommand` is the preferred name).
+pub const STD_TUI_TEST_INJECT_COMMAND: &str = std_tui!("Test.InjectCommand");
 /// Show an upstream Turbo Vision message box and return the closing command id.
 pub const STD_TUI_APPLICATION_MESSAGE_BOX: &str = std_tui!("Application.MessageBox");
 /// Queue the closing command returned by the next headless modal call.
@@ -105,9 +109,13 @@ pub const STD_TUI_APPLICATION_ON_KEY: &str = std_tui!("Application.OnKey");
 pub const STD_TUI_APPLICATION_ON_MOUSE: &str = std_tui!("Application.OnMouse");
 pub const STD_TUI_APPLICATION_QUIT: &str = std_tui!("Application.Quit");
 pub const STD_TUI_APPLICATION_TEST_CLICK_BUTTON: &str = std_tui!("Application.TestClickButton");
+/// Headless test helper: queue a button click (`Test.Click` is the preferred name).
+pub const STD_TUI_TEST_CLICK: &str = std_tui!("Test.Click");
 /// Queue a menu item command for headless tests (`MenuIndex` / `ItemIndex` into `CreateMenuBar` data).
 pub const STD_TUI_APPLICATION_TEST_DISPATCH_MENU_COMMAND: &str =
     std_tui!("Application.TestDispatchMenuCommand");
+/// Headless test helper: dispatch a menu item command (`Test.DispatchMenu` is the preferred name).
+pub const STD_TUI_TEST_DISPATCH_MENU: &str = std_tui!("Test.DispatchMenu");
 pub const STD_TUI_APPLICATION_OPEN_FOR_TEST: &str = std_tui!("Application.OpenForTest");
 pub const STD_TUI_APPLICATION_CLOSE_FOR_TEST: &str = std_tui!("Application.CloseForTest");
 pub const STD_TUI_APPLICATION_TEST_CLICK_MOUSE: &str = std_tui!("Application.TestClickMouse");
@@ -197,6 +205,8 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_APPLICATION_EXEC_VIEW,
     STD_TUI_APPLICATION_TEST_INJECT_KEYBOARD,
     STD_TUI_APPLICATION_TEST_INJECT_COMMAND,
+    STD_TUI_TEST_INJECT_KEYBOARD,
+    STD_TUI_TEST_INJECT_COMMAND,
     STD_TUI_APPLICATION_MESSAGE_BOX,
     STD_TUI_APPLICATION_TEST_SET_DIALOG_RESULT,
     STD_TUI_APPLICATION_SET_MENU_BAR,
@@ -205,7 +215,9 @@ pub(in crate::std_units) const STD_TUI_SYMBOLS: &[&str] = &[
     STD_TUI_APPLICATION_ON_MOUSE,
     STD_TUI_APPLICATION_QUIT,
     STD_TUI_APPLICATION_TEST_CLICK_BUTTON,
+    STD_TUI_TEST_CLICK,
     STD_TUI_APPLICATION_TEST_DISPATCH_MENU_COMMAND,
+    STD_TUI_TEST_DISPATCH_MENU,
     STD_TUI_APPLICATION_OPEN_FOR_TEST,
     STD_TUI_APPLICATION_CLOSE_FOR_TEST,
     STD_TUI_APPLICATION_TEST_CLICK_MOUSE,

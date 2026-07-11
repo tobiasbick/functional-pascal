@@ -53,7 +53,7 @@ fn test_cli_runs_native_tui_headless_test() {
            var OkButton: Button := Button.New(Bounds(4, 4, 10, 2), 'OK', CM_OK, true);\n\
            Window.Add(Win, OkButton);\n\
            Desktop.Add(App, Win);\n\
-           Application.TestClickButton(App, OkButton);\n\
+           Test.Click(App, OkButton);\n\
            Application.Run(App, OnCommand);\n\
            AssertTrue(QuitSeen)\n\
          end.",

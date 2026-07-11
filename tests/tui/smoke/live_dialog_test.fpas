@@ -1,4 +1,4 @@
-program LiveDialogTry2Test;
+program LiveDialogTest;
 
 uses Std.Console, Std.Tui, Std.Test;
 
@@ -22,10 +22,10 @@ begin
     var OkBtn: Button := Button.New(Bounds(6, 4, 6, 2), 'OK', CM_OK, true);
     Dialog.Add(LiveDlg, Label);
     Dialog.Add(LiveDlg, OkBtn);
-    Application.TestClickButton(App, OkBtn);
+    Test.Click(App, OkBtn);
     AssertEquals(CM_OK, Application.ExecView(App, LiveDlg));
     NestedClosed := true;
-    Application.TestInjectCommand(App, CM_QUIT)
+    Test.InjectCommand(App, CM_QUIT)
   end;
   if CommandId = CM_QUIT then
   begin
@@ -39,7 +39,7 @@ begin
   var OpenButton: Button := Button.New(Bounds(4, 4, 10, 2), 'Open', CmdOpen, false);
   Window.Add(Host, OpenButton);
   Desktop.Add(App, Host);
-  Application.TestClickButton(App, OpenButton);
+  Test.Click(App, OpenButton);
   Application.Run(App, OnCommand);
   AssertTrue(NestedClosed);
   Application.CloseForTest(App)

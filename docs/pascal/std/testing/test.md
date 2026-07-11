@@ -118,7 +118,7 @@ Flags and discovery rules: [CLI](../../program-structure/cli.md).
 | Need | Native API |
 | ---- | ---------- |
 | `ReadLn` input | `Std.Test.PushReadLn` |
-| Headless Turbo Vision | `Application.OpenForTest`, `TestClickButton`, `Application.Run` (`docs/pascal/std/tui/app/testing.md`) |
+| Headless Turbo Vision | `Application.OpenForTest`, `Test.Click`, `Test.DispatchMenu`, `Test.InjectCommand`, `Test.InjectKeyboard`, `Application.Run` (`docs/pascal/std/tui/app/testing.md`) |
 | Headless graph input | `Application.OpenForTest`, `Application.TestSendKey` |
 | Screen output | `AssertScreenLine`, `AssertScreenCell` |
 
@@ -153,8 +153,8 @@ procedures.
 | [`console/readln_order_test.fpas`](../../../../tests/console/readln_order_test.fpas) | Multiple `PushReadLn` lines in order |
 | [`runner/skip_test.fpas`](../../../../tests/runner/skip_test.fpas) | `Skip` + runner `SKIP` reporting |
 | [`runner/stdout_echo_test.fpas`](../../../../tests/runner/stdout_echo_test.fpas) | `*.expect.stdout` |
-| [`tui/smoke/run_quit_try2_test.fpas`](../../../../tests/tui/smoke/run_quit_try2_test.fpas) | Headless Try-2 `Application.Run` |
-| [`tui/smoke/chrome_paint_try2_test.fpas`](../../../../tests/tui/smoke/chrome_paint_try2_test.fpas) | Menu/status chrome + `AssertScreenCell` |
+| [`tui/smoke/run_quit_test.fpas`](../../../../tests/tui/smoke/run_quit_test.fpas) | Headless Try-2 `Application.Run` |
+| [`tui/smoke/chrome_paint_test.fpas`](../../../../tests/tui/smoke/chrome_paint_test.fpas) | Menu/status chrome + `AssertScreenCell` |
 | [`graph/graph_smoke_test.fpas`](../../../../tests/graph/graph_smoke_test.fpas) | Headless graph (`OpenForTest` + `TestSendKey`) + `*.expect.pixels` |
 | [`suite.fpasprj`](../../../../tests/suite.fpasprj) | `kind = "test"` project bundle |
 

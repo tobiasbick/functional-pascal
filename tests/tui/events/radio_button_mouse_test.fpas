@@ -1,4 +1,4 @@
-program RadioButtonMouseTry2Test;
+program RadioButtonMouseTest;
 
 uses Std.Tui, Std.Test;
 
@@ -24,7 +24,7 @@ begin
   Window.Add(Win, OptionB);
   Desktop.Add(App, Win);
   Application.TestClickMouse(App, 5, 4);
-  Application.TestInjectCommand(App, CM_QUIT);
+  Test.InjectCommand(App, CM_QUIT);
   Application.Run(App, OnCommand);
   AssertFalse(RadioButton.Selected(OptionA));
   AssertTrue(RadioButton.Selected(OptionB));

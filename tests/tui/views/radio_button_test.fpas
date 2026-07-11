@@ -1,4 +1,4 @@
-program RadioButtonTry2Test;
+program RadioButtonTest;
 
 uses Std.Tui, Std.Test;
 

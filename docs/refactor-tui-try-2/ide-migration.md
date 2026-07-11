@@ -132,7 +132,7 @@ Replace:
 - [x] `Application.CreateMenuBar` → `MenuBar.New`
 - [x] `Application.TestDispatchMenuCommand` → `TestInjectCommand` / run-loop command injection
 - [x] `Command.*` → `CM_*`
-- [ ] `Application.TestSetFileDialogResult` → final headless file dialog event path during Phase 7/8 public testing cleanup
+- [ ] `Application.TestSetFileDialogResult` → final headless file dialog path or `Std.Tui.Test.*` during Phase 7 closure ([remaining-work.md](remaining-work.md) stream B)
 
 ## IDE-specific commands
 

@@ -1,4 +1,4 @@
-program StaticTextSetTextTry2Test;
+program CheckBoxMouseTest;
 
 uses Std.Tui, Std.Test;
 
@@ -18,11 +18,12 @@ end;
 begin
   var App: Application := Application.OpenForTest(60, 20);
   var Win: Std.Tui.Window := Window.New(Bounds(2, 1, 30, 8), 'Host');
-  var Label: StaticText := StaticText.New(Bounds(3, 2, 20, 1), 'OLD');
-  Window.Add(Win, Label);
-  StaticText.SetText(Label, 'NEW');
+  var Opt: CheckBox := CheckBox.New(Bounds(3, 2, 20, 1), 'opt', false);
+  Window.Add(Win, Opt);
   Desktop.Add(App, Win);
-  Application.TestInjectCommand(App, CM_QUIT);
+  Application.TestClickMouse(App, 5, 3);
+  Test.InjectCommand(App, CM_QUIT);
   Application.Run(App, OnCommand);
+  AssertTrue(CheckBox.Checked(Opt));
   Application.CloseForTest(App)
 end.

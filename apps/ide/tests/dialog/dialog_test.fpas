@@ -6,13 +6,13 @@ begin
   var App: Application := Application.OpenForTest(80, 25);
   AssertEquals(CM_ABOUT, CmdHelpAbout);
   AssertEquals(CM_OPEN, CmdFileOpen);
-  Application.TestInjectKeyboard(App, 7181);
+  Test.InjectKeyboard(App, 7181);
   AssertTrue(HandleCommand(App, CmdHelpAbout));
   Application.TestSetFileDialogResult(App, Some('demo.fpas'));
-  Application.TestInjectKeyboard(App, 7181);
+  Test.InjectKeyboard(App, 7181);
   AssertTrue(HandleCommand(App, CmdFileOpen));
   Application.TestSetFileDialogResult(App, None);
-  Application.TestInjectKeyboard(App, 7181);
+  Test.InjectKeyboard(App, 7181);
   AssertTrue(HandleCommand(App, CmdFileOpen));
   AssertFalse(HandleCommand(App, CM_QUIT));
   Application.CloseForTest(App)

@@ -42,7 +42,7 @@ begin
   var Dlg: Dialog := Dialog.NewModal(Bounds(2, 1, 24, 8), 'Demo');
   var Btn: Button := Button.New(Bounds(4, 4, 10, 2), 'Quit', CM_QUIT, false);
   Dialog.Add(Dlg, Btn);
-  Application.TestClickButton(App, Btn);
+  Test.Click(App, Btn);
   Application.Run(App, OnCommand);
   Application.CloseForTest(App)
 end.

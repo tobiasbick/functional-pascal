@@ -394,3 +394,107 @@ end.",
         "{errs:#?}"
     );
 }
+
+#[test]
+fn std_tui_test_click_is_available() {
+    check_ok(
+        "\
+program T;
+uses Std.Tui, Std.Test;
+
+procedure OnCommand(App: Application; Cmd: integer);
+begin
+  AssertEquals(CM_QUIT, Cmd);
+  Application.Quit(App)
+end;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(40, 12);
+  var Dlg: Dialog := Dialog.NewModal(Bounds(2, 1, 24, 8), 'Demo');
+  var Btn: Button := Button.New(Bounds(4, 4, 10, 2), 'Quit', CM_QUIT, false);
+  Dialog.Add(Dlg, Btn);
+  Test.Click(App, Btn);
+  Test.InjectCommand(App, CM_QUIT);
+  Application.Run(App, OnCommand);
+  Application.CloseForTest(App)
+end.",
+    );
+}
+
+#[test]
+fn std_tui_test_dispatch_menu_is_available() {
+    check_ok(
+        "\
+program T;
+uses Std.Tui, Std.Test;
+
+procedure OnCommand(App: Application; Cmd: integer);
+begin
+  AssertEquals(CM_QUIT, Cmd);
+  Application.Quit(App)
+end;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+begin
+  var App: Application := Application.OpenForTest(40, 12);
+  var MenuBarHandle: MenuBar := MenuBar.New(Bounds(0, 0, 40, 1), [
+    record title := 'File'; items := [record text := 'Quit'; commandId := CM_QUIT; end]; end
+  ]);
+  Application.SetMenuBar(App, MenuBarHandle);
+  Test.DispatchMenu(App, MenuBarHandle, 0, 0);
+  Application.Run(App, OnCommand);
+  Application.CloseForTest(App)
+end.",
+    );
+}
+
+#[test]
+fn std_tui_test_inject_command_is_available() {
+    check_ok(
+        "\
+program T;
+uses Std.Tui;
+
+procedure OnCommand(App: Application; Cmd: integer);
+begin
+  Application.Quit(App)
+end;
+
+begin
+  var App: Application := Application.OpenForTest(40, 12);
+  Test.InjectCommand(App, CM_QUIT);
+  Application.Run(App, OnCommand);
+  Application.CloseForTest(App)
+end.",
+    );
+}
+
+#[test]
+fn std_tui_test_inject_keyboard_is_available() {
+    check_ok(
+        "\
+program T;
+uses Std.Tui;
+
+procedure OnCommand(App: Application; Cmd: integer);
+begin
+  Application.Quit(App)
+end;
+
+begin
+  var App: Application := Application.OpenForTest(40, 12);
+  Test.InjectKeyboard(App, 283);
+  Application.Run(App, OnCommand);
+  Application.CloseForTest(App)
+end.",
+    );
+}

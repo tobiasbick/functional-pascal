@@ -1,4 +1,4 @@
-program OutlineSelectionTry2Test;
+program OutlineSelectionTest;
 
 uses Std.Tui, Std.Test;
 

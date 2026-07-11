@@ -53,9 +53,16 @@ After any bridge change, also run [terminal checklist](../terminal-checklist.md)
 | `Application.RunFileDialog` | `RunFileDialog` |
 | `Application.SetMenuBar` / `SetStatusLine` | `SetMenuBar` / `SetStatusLine` |
 | `Application.OnKey` / `OnMouse` | `RegisterOnKey` / `RegisterOnMouse` |
-| `Application.TestInjectCommand` | `Try2InjectCommand` (interim headless test) |
-| `Application.TestInjectKeyboard` | `Try2InjectKeyboard` (interim headless test) |
+| `Application.TestInjectCommand` | `Try2InjectCommand` (interim; prefer `Test.InjectCommand`) |
+| `Test.InjectCommand` | `Try2InjectCommand` (preferred Pascal name) |
+| `Application.TestInjectKeyboard` | `Try2InjectKeyboard` (interim; prefer `Test.InjectKeyboard`) |
+| `Test.InjectKeyboard` | `Try2InjectKeyboard` (preferred Pascal name) |
 | `Application.TestClickButton` | `TestClickButton` |
+| `Test.Click` | `TestClickButton` (preferred Pascal name) |
+| `Application.TestDispatchMenuCommand` | `TestDispatchMenuCommand` |
+| `Test.DispatchMenu` | `TestDispatchMenuCommand` (preferred Pascal name) |
+
+Interim test helpers are scheduled for rename during Phase 7 closure — see [remaining-work.md](../../../../refactor-tui-try-2/remaining-work.md) stream B.
 
 Full opcode tables: `crates/fpas-bytecode/src/intrinsic/tui/variants/try2.inc` and `widgets.inc`.
 

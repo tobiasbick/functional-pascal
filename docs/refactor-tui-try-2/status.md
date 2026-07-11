@@ -10,7 +10,7 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 **Phase 4** — **complete** (all phase-1 widgets on try-2 path including `Outline`; control tests migrated in phase 7).
 **Phase 5** — **complete** for current branch scope (`MessageBox`, `OnKey`, `OnMouse`, `RunFileDialog` with Try-2-local headless adapter).  
 **Phase 6** — **complete** (`apps/ide` migrated; automated + manual terminal sign-off green).  
-**Phase 7** — **in progress** (three upstream-dependent read-back adapters and interim test helpers remain).
+**Phase 7** — **in progress** (bridge migration complete; three upstream read-back adapters + interim test API remain — [remaining-work.md](remaining-work.md)).
 **Phase 8** — optional follow-ups; public docs were rewritten as Phase 7 work.
 
 ## Phase 1 closure notes
@@ -37,28 +37,28 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 | Headless `ExecView` (Rust internal) | `try2/modals.rs`, `try2/headless.rs`, `headless_tv_draw.rs` |
 | Live `ExecView` (interactive, no try-1 populate) | `try2/app.rs`, `try2/modals.rs` |
 | Pascal API + intrinsics | `Dialog.NewModal`, `Button.New`, `Dialog.Add`, `Application.ExecView`, `CM_*` |
-| FPAS smoke test | `tests/tui/smoke/modal_button_try2_test.fpas` (`Button.New` + `Dialog.Add`) |
+| FPAS smoke test | `tests/tui/smoke/modal_button_test.fpas` (`Button.New` + `Dialog.Add`) |
 | `Application.Run` (try-2 path) | `try2/run.rs`; routes when try-2 session open and no try-1 widgets |
 | `OnCommand` without offset | `try2/events.rs` |
 | `Application.TestInjectCommand` | headless command injection for run tests |
-| FPAS run smoke test | `tests/tui/smoke/run_quit_try2_test.fpas` |
+| FPAS run smoke test | `tests/tui/smoke/run_quit_test.fpas` |
 | `Application.TestClickButton` (try-2 headless mouse) | `try2/testing.rs` |
 | `Application.New` alias | sema + compiler → `ApplicationOpen` |
 | `Window.New`, `Window.Add`, `Desktop.Add` | `try2/views/window.rs`, `try2/views/desktop.rs`; intrinsics 480–482 |
-| FPAS window + quit smoke test | `tests/tui/smoke/window_quit_try2_test.fpas` |
+| FPAS window + quit smoke test | `tests/tui/smoke/window_quit_test.fpas` |
 | `StaticText.New`, `Window.Add` / `Dialog.Add` child dispatch | `try2/views/static_text.rs`, `try2/views/attach.rs` |
 | `MenuBar.New`, `StatusLine.New`, `SetMenuBar` / `SetStatusLine` | `try2/chrome.rs`; routes when try-2 handles run |
 | `Application.Run(App, OnCommand)` | sema `builtins/tui.rs`; intrinsic `ApplicationRunWithOnCommand` (484) |
-| FPAS chrome + run smoke tests | `window_chrome_try2_test.fpas`, `run_quit_try2_test.fpas` |
+| FPAS chrome + run smoke tests | `window_chrome_test.fpas`, `run_quit_test.fpas` |
 | Try-2 window example | `examples/pascal/tui/turbo_vision_window_try2.fpas` |
 | Phase-4 controls | `InputLine`, `ListBox`, `CheckBox`, `RadioButton`, `Memo`, `TextViewer` in `try2/views/` |
-| Phase-4 control tests | `tests/tui/views/*_try2_test.fpas` |
+| Phase-4 control tests | `tests/tui/views/*_test.fpas` |
 | Phase-4/7 setters | `StaticText.SetText`, `Button.SetText`, `Dialog.SetTitle`, `Window.SetTitle`, `MenuBar.SetMenus`, `StatusLine.SetItems` on try-2 path |
 | Phase-5 modal/helper routes | `try2/message_box.rs`, `try2/file_dialog.rs`, `Application.OnKey`, `Application.OnMouse` |
-| Phase-5 tests | `tests/tui/modals/message_box_try2_test.fpas`, `tests/tui/modals/file_dialog_try2_test.fpas`, `tests/tui/events/on_key_try2_test.fpas`, `tests/tui/events/on_mouse_try2_test.fpas` |
+| Phase-5 tests | `tests/tui/modals/message_box_test.fpas`, `tests/tui/modals/file_dialog_test.fpas`, `tests/tui/events/on_key_test.fpas`, `tests/tui/events/on_mouse_test.fpas` |
 | Try-2 headless file dialog queue | `Try2Session::set_file_dialog_result`; `Application.TestSetFileDialogResult` seeds Try-2 state when the Try-2 session is open |
 | Try-2 menu dispatch in headless tests | `Application.TestDispatchMenuCommand` routes through try-2 menu bar state |
-| Menu command smoke test | `tests/tui/smoke/menu_dispatch_try2_test.fpas` |
+| Menu command smoke test | `tests/tui/smoke/menu_dispatch_test.fpas` |
 
 ## Landed (2026-07-08)
 
@@ -79,8 +79,8 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 | TUI Rust doc links | `cargo test -p fpas-vm tui_spec_links` — 2 passed |
 | Try-1 Turbo Vision controls coexistence | `cargo run -q -p fpas-cli -- test tests/tui/controls/` — 6 passed |
 | IDE automated flows | `cargo run -q -p fpas-cli -- test apps/ide/tests/` — 7 passed |
-| Try-2 menu command dispatch | `cargo run -q -p fpas-cli -- test tests/tui/smoke/menu_dispatch_try2_test.fpas` — passed |
-| Relevant FPAS formatting | `cargo run -q -p fpas-cli -- fmt --check tests/tui/events/on_mouse_try2_test.fpas apps/ide/tests/` — passed |
+| Try-2 menu command dispatch | `cargo run -q -p fpas-cli -- test tests/tui/smoke/menu_dispatch_test.fpas` — passed |
+| Relevant FPAS formatting | `cargo run -q -p fpas-cli -- fmt --check tests/tui/events/on_mouse_test.fpas apps/ide/tests/` — passed |
 
 ## Manual sign-off (2026-07-09)
 
@@ -91,15 +91,15 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 | IDE File / Open | Passed |
 | IDE resize | Passed |
 
-Automated coverage: IDE `about_menu_test.fpas` and `open_menu_test.fpas` call `Application.TestDispatchMenuCommand`, exercising menu bar → command id → `OnCommand` flow.
+Automated coverage: IDE `about_menu_test.fpas` and `open_menu_test.fpas` call `Test.DispatchMenu`, exercising menu bar → command id → `OnCommand` flow.
 
 ```bash
 cargo test -p fpas-vm try2::
-fpas test tests/tui/smoke/menu_dispatch_try2_test.fpas
+fpas test tests/tui/smoke/menu_dispatch_test.fpas
 fpas test tests/tui/views/
-fpas test tests/tui/modals/message_box_try2_test.fpas
-fpas test tests/tui/events/on_key_try2_test.fpas
-fpas test tests/tui/events/on_mouse_try2_test.fpas
+fpas test tests/tui/modals/message_box_test.fpas
+fpas test tests/tui/events/on_key_test.fpas
+fpas test tests/tui/events/on_mouse_test.fpas
 fpas test apps/ide/tests/
 cargo test -p fpas-cli fpas_regression_suite_passes
 ```
@@ -108,8 +108,12 @@ Covers: registry, geometry, session, dialog, button, window, desktop, static tex
 
 ## Next steps
 
-1. **Phase 7 (adapter deletion)** — remove the three remaining adapters after upstream provides live-state read-back hooks; regressions live under `tests/tui/events/` and `tests/tui/views/`.
-2. **Phase 7/8 cleanup** — replace interim `TestSetFileDialogResult` naming with the final headless event API when that API is designed and implemented.
+See [remaining-work.md](remaining-work.md) for the ordered backlog. Summary:
+
+1. **Stream A (blocked)** — remove `try2/bridged_{check_box,radio_button,outline}.rs` when upstream exposes live read-back.
+2. **Stream B (in progress)** — `Test.Click`, `Test.DispatchMenu`, `Test.InjectCommand`, and `Test.InjectKeyboard` landed; remove interim `Application.Test*` names when ready.
+3. ~~**Stream C** — rename `*_try2_test.fpas` files.~~ **Done (2026-07-11).**
+4. **Stream D** — run [verification.md](verification.md) and archive this plan directory.
 
 # Phase 7 progress (2026-07-10)
 
@@ -151,6 +155,29 @@ Covers: registry, geometry, session, dialog, button, window, desktop, static tex
 - Updated `AGENTS.md`, `.agents/skills/turbo-vision-4-rust/SKILL.md`, `.github/instructions/functional-pascal.instructions.md`, and `.cursor/rules/functional-pascal.mdc` for the direct Try-2 API and current module layout.
 - Removed stale guidance for `Application.Create*`, `AddChild`, `Pump`, `ExecDialog`, retained hosted TUI dispatch, and deleted root bridge modules.
 
+## Phase 7 Stream C test rename (2026-07-11)
+
+- Renamed 30 `tests/tui/**/*_try2_test.fpas` files to `*_test.fpas` (smoke, views, modals, events).
+- Dropped `Try2` from program identifiers (`RunQuitTry2Test` → `RunQuitTest`, etc.).
+- Updated doc paths under `docs/refactor-tui-try-2/` and `docs/pascal/std/`.
+
+## Phase 7 Test.Click alias (2026-07-11)
+
+- Registered `Std.Tui.Test.Click` in sema, symbols, and compiler (maps to `TestClickButton` intrinsic).
+- Public docs show `Test.Click` as preferred name; `Application.TestClickButton` remains interim alias.
+
+## Phase 7 Test.InjectCommand / Test.InjectKeyboard aliases (2026-07-11)
+
+- Registered `Std.Tui.Test.InjectCommand` and `Std.Tui.Test.InjectKeyboard` (map to `Try2InjectCommand` / `Try2InjectKeyboard` intrinsics).
+- Migrated all FPAS call sites from interim `Application.TestInject*` names to `Test.Inject*`.
+- Interim `Application.TestInject*` names remain registered until Stream B step 5.
+
+## Phase 7 Test.DispatchMenu alias + test migration (2026-07-11)
+
+- Registered `Std.Tui.Test.DispatchMenu` (maps to `TestDispatchMenuCommand` intrinsic).
+- Migrated `tests/tui/smoke/*` button tests and IDE menu tests from interim `Application.TestClickButton` / `Application.TestDispatchMenuCommand` to `Test.Click` / `Test.DispatchMenu`.
+- Interim `Application.Test*` names remain registered until Stream B step 4.
+
 ## Phase 7 symbol and documentation audit (2026-07-11)
 
 - Removed 59 unregistered Try-1 and retained-host names from `fpas-std`'s `Std.Tui` symbol table; the remaining entries match the current Sema registrations and headless test helpers.
@@ -158,22 +185,25 @@ Covers: registry, geometry, session, dialog, button, window, desktop, static tex
 - Confirmed that `crates/fpas-vm/src/vm/execute/io/tui/` contains only `mod.rs` and `try2/`; no root Try-1 bridge module remains.
 - Updated `docs/pascal/std/testing/test.md` to describe rendered Try-2 headless paths and link to the current `tests/tui/smoke/` examples.
 - Rewrote [deletion-checklist.md](deletion-checklist.md) as a current audit: root migration work is complete and only the three upstream read-back adapters remain.
+- Added [remaining-work.md](remaining-work.md) — ordered backlog for adapter removal, test API, rename, and plan archive.
 
 ## Next work item
 
-Remove the remaining `CheckBox`, `RadioButton`, and `Outline` adapters when the pinned upstream version provides a read-back hook for their live state. Do not delete the plan directory during that cleanup.
+**Stream B (in progress):** `Test.Click`, `Test.DispatchMenu`, `Test.InjectCommand`, and `Test.InjectKeyboard` registered; FPAS tests migrated (2026-07-11) — see [remaining-work.md](remaining-work.md).
+
+**Stream A (blocked):** remove `CheckBox`, `RadioButton`, and `Outline` adapters when the pinned upstream version provides a read-back hook. Do not delete the plan directory until verification is green.
 
 ## Phase 7 progress (2026-07-09)
 
 | Batch | Deleted (try-1) | try-2 replacement |
 | --- | --- | --- |
-| Widgets + read-back | 13 tests (`check_box`, `input_line`, `list_box`, `memo`, `radio_button`, `text_viewer`, `checked`, `list_selection`, `set_items`, `set_text_*`, `radio_selected`) | `tests/tui/views/*_try2_test.fpas` (6) |
-| Run / chrome / modals | 7 tests (`run`, `window`, `chrome`, `menu`, `exec_dialog`, `message_box`, `static_text`) | `tests/tui/smoke/*_try2_test.fpas`, `tests/tui/modals/message_box_try2_test.fpas` |
+| Widgets + read-back | 13 tests (`check_box`, `input_line`, `list_box`, `memo`, `radio_button`, `text_viewer`, `checked`, `list_selection`, `set_items`, `set_text_*`, `radio_selected`) | `tests/tui/views/*_test.fpas` (6) |
+| Run / chrome / modals | 7 tests (`run`, `window`, `chrome`, `menu`, `exec_dialog`, `message_box`, `static_text`) | `tests/tui/smoke/*_test.fpas`, `tests/tui/modals/message_box_test.fpas` |
 
-| Phase-5 modal | 1 test (`file_dialog`) | `tests/tui/modals/file_dialog_try2_test.fpas` |
-| Custom command id | 1 test (`reserved_command`) | `tests/tui/smoke/reserved_command_try2_test.fpas` |
-| Setters / title | 3 tests (`set_text`, `set_text_button`, `set_title`) | `tests/tui/views/*_set_*_try2_test.fpas` |
-| Chrome / pump | 6 tests (`set_menus`, `set_status_items`, `chrome_paint`, `set_checked`, `spike`, `tui_run_path`) | `tests/tui/smoke/*_try2_test.fpas` |
+| Phase-5 modal | 1 test (`file_dialog`) | `tests/tui/modals/file_dialog_test.fpas` |
+| Custom command id | 1 test (`reserved_command`) | `tests/tui/smoke/reserved_command_test.fpas` |
+| Setters / title | 3 tests (`set_text`, `set_text_button`, `set_title`) | `tests/tui/views/*_set_*_test.fpas` |
+| Chrome / pump | 6 tests (`set_menus`, `set_status_items`, `chrome_paint`, `set_checked`, `spike`, `tui_run_path`) | `tests/tui/smoke/*_test.fpas` |
 
 | Metric | Value |
 | --- | --- |

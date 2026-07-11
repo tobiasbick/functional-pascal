@@ -31,7 +31,7 @@ You may call `ExecView` or `MessageBox` from `OnCommand` while `Run` is active (
 
 ## Headless tests
 
-Headless `Application.OpenForTest` sessions paint modals through upstream `draw` without a live terminal loop. Use `Application.TestClickButton` before `ExecView`, or `Application.TestSetDialogResult` before `MessageBox` when exercising the stub queue path. See [Native testing](testing.md).
+Headless `Application.OpenForTest` sessions paint modals through upstream `draw` without a live terminal loop. Use `Test.Click` before `ExecView`, or `Application.TestSetDialogResult` before `MessageBox` when exercising the stub queue path. See [Native testing](testing.md).
 
 ## See Also
 

@@ -8,6 +8,7 @@
 mod application_api;
 mod handlers;
 mod message_box_api;
+mod test_api;
 mod try2_api;
 
 use crate::check::Checker;
@@ -165,5 +166,6 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
         size,
     };
     application_api::register_application_api(checker, &types, &callbacks);
+    test_api::register_test_api(checker, &types);
     try2_api::register_try2_api(checker, &types, &callbacks);
 }

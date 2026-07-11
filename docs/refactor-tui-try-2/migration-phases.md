@@ -26,7 +26,7 @@ Estimates assume focused hobby-project pace (part-time).
 **Work**
 
 - [x] Add `ViewRegistry` in `try2/registry.rs` (wired on `Worker` via `Try2Session`).
-- [x] ~~Slim `TuiState` on Worker~~ — **deferred to phase 7** ([rust-layout.md](rust-layout.md)): requires deleting try-1 `TurboVisionState`; `Try2Session` on `Worker` is the coexistence bridge until then.
+- [x] ~~Slim `TuiState` on Worker~~ — completed in phase 7 ([rust-layout.md](rust-layout.md)).
 - [x] Implement `try2/session.rs` integration with `TuiSession.open` / `OpenForTest`
 - [x] Implement FPAS-to-Turbo-Vision rect conversion (`tv_geometry.rs`).
 - [x] Add `fpas-std/tui/cm_constants.rs` with core `CM_*` constants.
@@ -74,7 +74,7 @@ Estimates assume focused hobby-project pace (part-time).
 **Exit criteria**
 
 - [x] Port simplified `examples/pascal/tui/turbo_vision_window.fpas` to new API — `examples/pascal/tui/turbo_vision_window_try2.fpas`.
-- [x] `cargo test --workspace` passes (try-1 `tests/tui/controls/*` must stay green until phase 7 — coexistence routing).
+- [x] `cargo test --workspace` passes (phase 7 removed try-1 `tests/tui/controls/*`; try-2 suite under `tests/tui/`).
 
 ---
 
@@ -116,7 +116,7 @@ Estimates assume focused hobby-project pace (part-time).
 
 - [x] Rewrite `apps/ide/src/` per [ide-migration.md](ide-migration.md) for menu, status, About, Open, and Exit.
 - [x] Rewrite `apps/ide/tests/` for try-2 run helpers and command injection.
-- [x] Automated terminal checklist coverage for TUI sema/compiler/doc links, try-1 controls coexistence, IDE headless flows, and relevant FPAS formatting.
+- [x] Automated terminal checklist coverage for TUI sema/compiler/doc links, IDE headless flows, and relevant FPAS formatting (try-1 controls suite removed in phase 7).
 - [x] Manual terminal checklist in a real terminal for IDE menus, About, Open file, Exit, and resize (signed off 2026-07-09).
 
 **Exit criteria**
@@ -136,14 +136,15 @@ Estimates assume focused hobby-project pace (part-time).
 - [x] Remove old bytecode intrinsics and sema symbols for try-1 widget/create/pump paths.
 - [x] Remove old `docs/pascal/std/tui/` try-1 pages; write new spec from [target-api.md](target-api.md). **2026-07-10/11:** core pages rewritten.
 - [x] Update skill, AGENTS.md bridge pointers, `.cursor/rules` TUI examples (**2026-07-11**).
-- [ ] Delete or archive `docs/refactor-tui-try-2/` (or mark completed in README) — after [verification.md](verification.md) and stream A.
+- [ ] Delete or archive `docs/refactor-tui-try-2/` — after stream A. Partial: plan banner, quick comparison, and public spec cross-links updated (2026-07-11).
 - [x] Phase-1 widget + run/chrome/modal try-1 control tests removed (**37/37**). Replacements in `tests/tui/views/`, `tests/tui/smoke/`, `tests/tui/events/`, `tests/tui/modals/`.
 - [x] Finalize headless test API (`Std.Tui.Test.*`) — stream B complete (2026-07-11).
 
 **Exit criteria**
 
-- [verification.md](verification.md) checklist all green.
-- `rg TurboVisionObject` / `rg pending_reconcile` / `rg bridged_` returns no matches in `crates/` (today `bridged_` is limited to three intentional files until stream A).
+- [verification.md](verification.md) checklist all green except stream A adapter grep and final archive banner.
+- `rg TurboVisionObject` / `rg pending_reconcile` — no matches in `crates/` (2026-07-11).
+- `rg bridged_ crates/` — zero matches after stream A (three intentional files today).
 
 ---
 

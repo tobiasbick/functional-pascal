@@ -143,15 +143,14 @@ Target: delete `TestSetDialogResult` / `TestSetFileDialogResult` stubs by drivin
 
 Unchanged: [`Std.Test`](../../docs/pascal/std/testing/test.md) `AssertScreenLine` / `AssertScreenCell` on the console back buffer after draw.
 
-## Worker fields (target)
+## Worker fields (landed)
 
 ```rust
-// crates/fpas-vm/src/vm/worker.rs (current + target)
+// crates/fpas-vm/src/vm/worker.rs
 pub(crate) live_turbo_vision_app: Option<TurboVisionApplication>,
-pub(crate) try2: Try2Session,              // current coexistence bridge
-// target after phase 7: tv_view_registry on Worker or folded into session
-// TuiState retains: session, on_command, on_key, on_mouse, quit_requested
-// Remove after phase 7: turbo_vision: TurboVisionState with TurboVisionObject map
+pub(crate) try2: Try2Session,              // view registry, chrome, headless queues
+// TuiState: session, on_command, on_key, on_mouse, quit_requested
+// Removed in phase 7: turbo_vision: TurboVisionState with TurboVisionObject map
 ```
 
 ## Concurrency

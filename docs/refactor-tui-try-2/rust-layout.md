@@ -28,7 +28,7 @@ crates/fpas-vm/src/vm/execute/io/tui/try2/
   file_dialog.rs   — Application.RunFileDialog try-2 route (live upstream, headless Try2Session queue adapter)
   view_lookup.rs   — lookup attached child views for live mutation/read-back
   intrinsics.rs    — try-2 VM dispatch
-  testing.rs       — TestClickButton try-2 path
+  testing.rs       — Test.Click, Test.DispatchMenu, TestClickMouse try-2 paths
   views/
     mod.rs
     dialog.rs      — Dialog.NewModal

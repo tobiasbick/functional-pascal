@@ -20,7 +20,7 @@ Documented in [`docs/pascal/std/tui/`](../pascal/std/tui/). Summary:
 - Read-back: `InputText`, `Checked`, `Selected`, `ListSelection`, outline helpers
 - Runtime setters: `SetText`, `SetChecked`, `SetItems`, `SetTitle`, `SetMenus`, `SetStatusItems`
 - Handlers: `OnCommand`, `OnKey`, `OnMouse`
-- Headless: `Pump`, `TestClickButton`, `TestClickMouse`, `TestDispatchMenuCommand`, `TestSetDialogResult`, `TestSetFileDialogResult`
+- Headless: `Test.Click`, `Test.DispatchMenu`, `Test.InjectCommand`, `Test.InjectKeyboard`, `TestClickMouse`, `TestSetDialogResult`, `TestSetFileDialogResult`
 - Commands: `Command.Quit` (1), `Command.Close` (4), `Command.Accept` (10), `Command.Cancel` (11) + offset band `0x8000` for collisions
 
 ## VM bridge (try-1)
@@ -71,11 +71,11 @@ Try-2 headless path should prefer `MockTerminal` + `put_event` over FPAS `TestSe
 
 ## IDE (`apps/ide`)
 
-Uses try-1 API throughout `src/` (menu, shell, dialog/open, about message box). Tests in `apps/ide/tests/`.
+Migrated to try-2 API in `src/` (menu, shell, dialog/open, about). Tests in `apps/ide/tests/`.
 
-## What try-2 adds (branch progress as of 2026-07-08)
+## What try-2 adds (branch progress)
 
-Phases 1–6 are complete on the branch. Phase 7 (try-1 deletion and public spec rewrite) is next. try-1 API and tests remain authoritative until phase 7 lands.
+Phases 1–7 bridge migration complete except three read-back adapters (stream A). Public spec: [`docs/pascal/std/tui/`](../pascal/std/tui/).
 
 **Current `try2/` tree** (see [rust-layout.md](rust-layout.md)):
 

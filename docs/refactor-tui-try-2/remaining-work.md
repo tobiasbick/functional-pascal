@@ -3,7 +3,7 @@
 Ordered backlog after the 2026-07-11 symbol audit. Public API and docs live under `docs/pascal/std/tui/`; this file is the implementation handoff only.
 
 **Branch:** `refactor/tui-try-2`  
-**Last synced:** 2026-07-11
+**Last synced:** 2026-07-11 (stream D partial doc scrub)
 
 ## Summary
 

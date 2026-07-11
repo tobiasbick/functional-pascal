@@ -67,9 +67,9 @@ Try-1 maintains:
 
 - A separate `HeadlessTvApp` built from the FPAS snapshot ([`headless_tv_draw.rs`](../../crates/fpas-vm/src/vm/execute/io/tui/headless_tv_draw.rs))
 - `Pump` + command queue ([`commands.rs`](../../crates/fpas-vm/src/vm/execute/io/tui/commands.rs))
-- Test stubs: `TestSetDialogResult`, `TestSetFileDialogResult`, `TestClickButton`, `TestClickMouse`, `TestDispatchMenuCommand`
+- Test stubs (try-1): `TestSetDialogResult`, `TestSetFileDialogResult`, interim `Application.Test*` click/inject helpers — replaced on try-2 by `Std.Tui.Test.*` plus stub queues on `Application` (see [testing.md](../pascal/std/tui/app/testing.md))
 
-Many tests exist only to validate the bridge ([`tests/tui/controls/`](../tests/tui/controls/)) — 37 files, several for `SetText`, reconcile, and reserved-command behavior.
+Many tests existed only to validate the bridge (`tests/tui/controls/`, removed in phase 7) — 37 files for `SetText`, reconcile, and reserved-command behavior.
 
 ## Documentation drift risk
 

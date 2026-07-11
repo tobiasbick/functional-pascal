@@ -77,7 +77,7 @@ Living progress log for branch `refactor/tui-try-2`. Update each work session. P
 | TUI sema surface | `cargo test -p fpas-sema std_units::tui` — 17 passed |
 | TUI compiler lowering/runtime tests | `cargo test -p fpas-compiler std_library::tui` — 10 passed |
 | TUI Rust doc links | `cargo test -p fpas-vm tui_spec_links` — 2 passed |
-| Try-1 Turbo Vision controls coexistence | `cargo run -q -p fpas-cli -- test tests/tui/controls/` — 6 passed |
+| Try-1 Turbo Vision controls coexistence | **Historical** — `tests/tui/controls/` removed in phase 7; replaced by `tests/tui/{views,smoke,events,modals}/` |
 | IDE automated flows | `cargo run -q -p fpas-cli -- test apps/ide/tests/` — 7 passed |
 | Try-2 menu command dispatch | `cargo run -q -p fpas-cli -- test tests/tui/smoke/menu_dispatch_test.fpas` — passed |
 | Relevant FPAS formatting | `cargo run -q -p fpas-cli -- fmt --check tests/tui/events/on_mouse_test.fpas apps/ide/tests/` — passed |
@@ -112,6 +112,7 @@ Covers: registry, geometry, session, dialog, button, window, desktop, static tex
 - Quick comparison reframed as historical try-1 vs landed try-2.
 - [deletion-checklist.md](deletion-checklist.md) documents three remaining VM adapters with link to [tui-bridged-readback.md](../future/tui-bridged-readback.md).
 - Full archive (`Status: completed`) remains after stream A.
+- Scrubbed stale coexistence references in `baseline.md`, `current-problems.md`, `ide-migration.md`, `migration-phases.md`, `target-architecture.md`, `testing-strategy.md`, and `rust-layout.md`.
 
 ## Next steps
 

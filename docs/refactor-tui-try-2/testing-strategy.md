@@ -23,9 +23,10 @@ All 37 try-1 `tests/tui/controls/*` files were removed. Their behavioral replace
 
 Ordered backlog: [remaining-work.md](../remaining-work.md).
 
-1. **Stream B** — `Test.*` helpers landed; interim `Application.TestClickButton` / `TestInject*` / `TestDispatchMenuCommand` removed from registration.
+1. ~~**Stream B** — `Test.*` helpers landed; interim `Application.Test*` inject/click names removed.~~ **Done (2026-07-11).**
 2. ~~**Stream C** — drop `_try2` suffix from test filenames.~~ **Done (2026-07-11).**
-3. **Stream A** — remove three `bridged_*` adapters when upstream read-back lands.
+3. **Stream D (partial)** — plan banner, quick comparison, coexistence doc scrub (2026-07-11). Full archive after stream A.
+4. **Stream A** — remove three `bridged_*` adapters when upstream read-back lands.
 
 ## Principles
 
@@ -153,9 +154,9 @@ The IDE migration has current automated coverage for the terminal checklist subs
 cargo test -p fpas-sema std_units::tui
 cargo test -p fpas-compiler std_library::tui
 cargo test -p fpas-vm tui_spec_links
-cargo run -q -p fpas-cli -- test tests/tui/controls/
+cargo run -q -p fpas-cli -- test tests/tui/
 cargo run -q -p fpas-cli -- test apps/ide/tests/
-cargo run -q -p fpas-cli -- fmt --check tests/tui/events/on_mouse_test.fpas apps/ide/tests/
+cargo run -q -p fpas-cli -- fmt --check tests/tui/ apps/ide/tests/
 ```
 
 Manual IDE sign-off still requires a real terminal session; do not mark Phase 6 complete until the checklist below is exercised interactively.

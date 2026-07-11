@@ -12,13 +12,13 @@ Notes for rewriting [`apps/ide`](../../apps/ide) on the try-2 API. **Complete** 
 | Dialogs | `src/dialog.fpas`, `src/dialog/about.fpas`, `src/dialog/open.fpas` | `Application.MessageBox`, `Application.RunFileDialog`; Open headless tests seed the interim Try-2 file dialog adapter through `TestSetFileDialogResult` |
 | Theme | `src/theme.fpas` | May be layout constants only |
 
-Tests: `apps/ide/tests/` — menu, shell, dialog, status, theme. Shell/dialog tests use `TestInjectCommand` and `TestInjectKeyboard`; Open uses `TestSetFileDialogResult` as an interim helper that now seeds Try-2 session state.
+Tests: `apps/ide/tests/` — menu, shell, dialog, status, theme. Shell/dialog tests use `Test.InjectCommand` and `Test.InjectKeyboard`; Open uses `TestSetFileDialogResult` to seed Try-2 session state.
 
 Latest automated sign-off, recorded 2026-07-09:
 
 - `cargo run -q -p fpas-cli -- test apps/ide/tests/` — 7 passed.
 - `cargo test -p fpas-sema std_units::tui`, `cargo test -p fpas-compiler std_library::tui`, and `cargo test -p fpas-vm tui_spec_links` all passed.
-- `cargo run -q -p fpas-cli -- test tests/tui/controls/` passed, confirming try-1 controls still coexist while IDE uses try-2.
+- Try-1 `tests/tui/controls/` suite removed in phase 7; IDE and try-2 regressions cover the same flows under `tests/tui/` and `apps/ide/tests/`.
 
 ## Target structure (unchanged units)
 

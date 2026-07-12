@@ -1,6 +1,6 @@
 //! Map scripted graph events to `fpas_std::GraphEvent`.
 //!
-//! **Documentation:** [`docs/future/test-framework/scripted-input.md`](../../../docs/future/test-framework/scripted-input.md),
+//! **Documentation:** [`docs/pascal/std/testing/test.md`](../../../docs/pascal/std/testing/test.md),
 //! [`docs/pascal/std/graph/session.md`](../../../docs/pascal/std/graph/session.md).
 
 use fpas_std::{ConsoleKeyEvent, GraphEvent};

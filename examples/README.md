@@ -44,7 +44,7 @@ fpas test tests/runner/assert_basics_test.fpas
 cargo test -p fpas-cli fpas_regression_suite_passes
 ```
 
-Test files are named `*_test.fpas`. `Skip` tests are reported as skipped (use `--strict` to fail the run). See [`docs/pascal/std/testing/test.md`](../docs/pascal/std/testing/test.md) and [`docs/future/test-framework/README.md`](../docs/future/test-framework/README.md).
+Test files are named `*_test.fpas`. `Skip` tests are reported as skipped (use `--strict` to fail the run). See [`docs/pascal/std/testing/test.md`](../docs/pascal/std/testing/test.md).
 
 `tests/manual/assert_fail_demo.fpas` is a manual failure demo (not `*_test.fpas`); run it with `fpas tests/manual/assert_fail_demo.fpas` to inspect **F4023** output.
 

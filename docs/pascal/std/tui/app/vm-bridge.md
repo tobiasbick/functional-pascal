@@ -60,7 +60,7 @@ After any bridge change, also run [terminal checklist](../terminal-checklist.md)
 | `Test.Click` | `TestClickButton` |
 | `Test.DispatchMenu` | `TestDispatchMenuCommand` |
 
-Headless stub/coordinate helpers remain on `Application` (`TestClickMouse`, `TestSetDialogResult`, `TestSetFileDialogResult`). Three checkbox/radio/outline bridge adapters remain until upstream read-back — see [tui-bridged-readback.md](../../../../future/tui-bridged-readback.md). Agents: periodic upstream check in [AGENTS.md](../../../../AGENTS.md#upstream-watch--turbo-vision-4-rust-read-back-stream-a); contributors: [AI_CONTRIBUTING.md](../../../../AI_CONTRIBUTING.md#good-entry-points).
+Headless stub/coordinate helpers remain on `Application` (`TestClickMouse`, `TestSetDialogResult`, `TestSetFileDialogResult`). Three checkbox/radio/outline bridge adapters remain until upstream read-back — see [tui-bridged-readback.md](../../../../future/tui-bridged-readback.md). Agents: periodic upstream check in [AGENTS.md](../../../../../AGENTS.md#upstream-watch--turbo-vision-4-rust-read-back-stream-a); contributors: [AI_CONTRIBUTING.md](../../../../../AI_CONTRIBUTING.md#good-entry-points).
 
 Full opcode tables: `crates/fpas-bytecode/src/intrinsic/tui/variants/bridge.inc` and `widgets.inc`.
 

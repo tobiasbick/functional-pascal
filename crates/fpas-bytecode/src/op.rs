@@ -119,7 +119,7 @@ pub enum Op {
     ///
     /// Stack layout: `[..., arg0, arg1, ..., argN, function_value]` → `[..., return_value]`
     ///
-    /// **Documentation:** `docs/future/closures.md`
+    /// **Documentation:** `docs/pascal/language/functions/first-class.md`
     CallValue(u8),
     /// Return from function (top-of-stack is return value).
     Return,
@@ -148,7 +148,7 @@ pub enum Op {
     // ── Dicts ───────────────────────────────────────────────
     /// Build dict from N key-value pairs on stack (2*N values: k0, v0, k1, v1, …).
     ///
-    /// **Documentation:** `docs/future/advanced-types.md`
+    /// **Documentation:** `docs/pascal/language/types/dictionaries.md`
     MakeDict(u16),
 
     // ── Records ─────────────────────────────────────────────
@@ -206,15 +206,15 @@ pub enum Op {
     /// Build enum variant: field_count values on stack.
     /// (type_name_const_idx, variant_name_const_idx, field_count)
     ///
-    /// **Documentation:** `docs/future/advanced-types.md`
+    /// **Documentation:** `docs/pascal/language/types/enums.md`
     MakeEnum(u16, u16, u8),
     /// Pop enum value; push `true` if variant name matches the constant at index.
     ///
-    /// **Documentation:** `docs/future/advanced-types.md`
+    /// **Documentation:** `docs/pascal/language/types/enums.md`
     IsVariant(u16),
     /// Pop enum value; push field at given positional index. Panics on wrong variant.
     ///
-    /// **Documentation:** `docs/future/advanced-types.md`
+    /// **Documentation:** `docs/pascal/language/types/enums.md`
     EnumField(u8),
 
     // ── Concurrency (stack VM task surface) ─────────────────

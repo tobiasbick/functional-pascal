@@ -1,6 +1,6 @@
 //! Test source file naming and validation for `kind = "test"` projects.
 //!
-//! **Documentation:** `docs/pascal/program-structure/projects.md`, `docs/future/test-framework/runner.md`.
+//! **Documentation:** `docs/pascal/program-structure/projects.md`, `docs/pascal/std/testing/test.md`.
 
 use std::path::Path;
 

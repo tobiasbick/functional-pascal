@@ -56,7 +56,7 @@ pub enum Expr {
     ArrayLiteral(Vec<Expr>, Span),
     /// Dict literal: `['key': value, ...]` or `[:]` for empty dict.
     ///
-    /// **Documentation:** `docs/future/advanced-types.md`
+    /// **Documentation:** `docs/pascal/language/types/dictionaries.md`
     DictLiteral(Vec<(Expr, Expr)>, Span),
     RecordLiteral {
         fields: Vec<FieldInit>,

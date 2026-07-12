@@ -1,6 +1,6 @@
 //! Test result aggregation and summary output.
 //!
-//! **Documentation:** [`docs/future/test-framework/runner.md`](../../../docs/future/test-framework/runner.md)
+//! **Documentation:** [`docs/pascal/std/testing/test.md`](../../../docs/pascal/std/testing/test.md)
 
 use std::io::Write;
 

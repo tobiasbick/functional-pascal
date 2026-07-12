@@ -1,6 +1,6 @@
 //! Wall-clock timeout wrapper for single test VM runs.
 //!
-//! **Documentation:** [`docs/future/test-framework/runner.md`](../../../docs/future/test-framework/runner.md)
+//! **Documentation:** [`docs/pascal/std/testing/test.md`](../../../docs/pascal/std/testing/test.md)
 
 use std::sync::mpsc;
 use std::thread;

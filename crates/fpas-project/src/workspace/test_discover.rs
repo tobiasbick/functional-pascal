@@ -1,6 +1,6 @@
 //! Workspace discovery helpers for `fpas test`.
 //!
-//! Documentation: `docs/pascal/program-structure/projects.md`, `docs/future/test-framework/runner.md`.
+//! Documentation: `docs/pascal/program-structure/projects.md`, `docs/pascal/std/testing/test.md`.
 
 use super::loading::{load_workspace, read_member_project_manifest};
 use crate::ProjectKind;

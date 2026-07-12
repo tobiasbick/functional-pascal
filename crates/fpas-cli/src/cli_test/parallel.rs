@@ -1,6 +1,6 @@
 //! Parallel test execution for `fpas test`.
 //!
-//! **Documentation:** [`docs/future/test-framework/runner.md`](../../../docs/future/test-framework/runner.md)
+//! **Documentation:** [`docs/pascal/std/testing/test.md`](../../../docs/pascal/std/testing/test.md)
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;

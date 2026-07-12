@@ -1,6 +1,6 @@
 //! Optional `[test]` manifest overrides for `fpas test`.
 //!
-//! Spec: [`docs/future/test-framework/runner.md`](../../../docs/future/test-framework/runner.md)
+//! Spec: [`docs/pascal/std/testing/test.md`](../../../docs/pascal/std/testing/test.md)
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};

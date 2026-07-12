@@ -1,7 +1,7 @@
 //! `fpas test` — discover and run `*_test.fpas` programs.
 //!
 //! Spec: [`docs/pascal/program-structure/cli.md`](../../../docs/pascal/program-structure/cli.md),
-//! [`docs/future/test-framework/runner.md`](../../../docs/future/test-framework/runner.md).
+//! [`docs/pascal/std/testing/test.md`](../../../docs/pascal/std/testing/test.md).
 
 mod discover;
 mod expect_pixels;

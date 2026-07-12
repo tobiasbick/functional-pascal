@@ -1,6 +1,6 @@
 //! Sidecar TOML scripts for scripted test input.
 //!
-//! **Documentation:** [`docs/future/test-framework/scripted-input.md`](../../../docs/future/test-framework/scripted-input.md)
+//! **Documentation:** [`docs/pascal/std/testing/test.md`](../../../docs/pascal/std/testing/test.md)
 
 mod apply;
 mod graph;

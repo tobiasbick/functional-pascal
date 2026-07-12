@@ -1,6 +1,6 @@
 //! Run a single FPAS test program.
 //!
-//! **Documentation:** [`docs/future/test-framework/runner.md`](../../../docs/future/test-framework/runner.md)
+//! **Documentation:** [`docs/pascal/std/testing/test.md`](../../../docs/pascal/std/testing/test.md)
 
 mod hook_exec;
 mod load;

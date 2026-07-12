@@ -32,7 +32,7 @@ pub enum TypeExpr {
     },
     /// `dict of K to V`
     ///
-    /// **Documentation:** `docs/future/advanced-types.md`
+    /// **Documentation:** `docs/pascal/language/types/dictionaries.md`
     Dict {
         key_type: Box<TypeExpr>,
         value_type: Box<TypeExpr>,

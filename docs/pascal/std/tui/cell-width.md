@@ -2,7 +2,7 @@
 
 Unicode display-width policy for terminal-cell layout. The helpers live in `fpas-std` for Turbo Vision title and label rendering; they are not part of the current public Pascal API.
 
-Headless tests assert rendered output through [`Std.Test`](../../testing/test.md) on the shared console back buffer:
+Headless tests assert rendered output through [`Std.Test`](../testing/test.md) on the shared console back buffer:
 
 | Symbol | Description |
 | --- | --- |

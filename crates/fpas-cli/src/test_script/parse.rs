@@ -1,6 +1,6 @@
 //! TOML sidecar parsing for test scripts.
 //!
-//! **Documentation:** [`docs/future/test-framework/scripted-input.md`](../../../docs/future/test-framework/scripted-input.md)
+//! **Documentation:** [`docs/pascal/std/testing/test.md`](../../../docs/pascal/std/testing/test.md)
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -76,7 +76,7 @@ pub fn load_script(path: &Path) -> Result<ScriptFile, String> {
 pub fn parse_script_text(text: &str, path: &Path) -> Result<ScriptFile, String> {
     let root: toml::Table = toml::from_str(text).map_err(|error| {
         format!(
-            "Invalid script `{}`: {error}\n  help: See docs/future/test-framework/scripted-input.md.",
+            "Invalid script `{}`: {error}\n  help: See docs/pascal/std/testing/test.md.",
             path.display()
         )
     })?;

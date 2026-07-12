@@ -1,6 +1,6 @@
 //! Test file discovery for `fpas test`.
 //!
-//! **Documentation:** [`docs/future/test-framework/runner.md`](../../../docs/future/test-framework/runner.md)
+//! **Documentation:** [`docs/pascal/std/testing/test.md`](../../../docs/pascal/std/testing/test.md)
 
 use std::fs;
 use std::path::{Path, PathBuf};

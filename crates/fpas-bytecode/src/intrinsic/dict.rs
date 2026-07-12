@@ -10,15 +10,15 @@ use num_enum::TryFromPrimitive;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u16)]
 pub enum DictIntrinsic {
-    /// **Documentation:** `docs/future/advanced-types.md`
+    /// **Documentation:** `docs/pascal/std/collections/dict.md`
     Length = 120,
-    /// **Documentation:** `docs/future/advanced-types.md`
+    /// **Documentation:** `docs/pascal/std/collections/dict.md`
     ContainsKey = 121,
-    /// **Documentation:** `docs/future/advanced-types.md`
+    /// **Documentation:** `docs/pascal/std/collections/dict.md`
     Keys = 122,
-    /// **Documentation:** `docs/future/advanced-types.md`
+    /// **Documentation:** `docs/pascal/std/collections/dict.md`
     Values = 123,
-    /// **Documentation:** `docs/future/advanced-types.md`
+    /// **Documentation:** `docs/pascal/std/collections/dict.md`
     Remove = 124,
     /// **Documentation:** `docs/pascal/std/collections/dict.md`
     Get = 125,

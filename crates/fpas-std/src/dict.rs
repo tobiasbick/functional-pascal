@@ -1,6 +1,6 @@
 //! Runtime implementations for `Std.Dict.*` intrinsics.
 //!
-//! **Documentation:** `docs/future/advanced-types.md`
+//! **Documentation:** `docs/pascal/std/collections/dict.md`
 
 use crate::error::StdError;
 use crate::intrinsic_args::{pop_dict, pop_value};

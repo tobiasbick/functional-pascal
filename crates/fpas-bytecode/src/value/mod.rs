@@ -11,7 +11,7 @@ pub enum Value {
     Str(String),
     /// Enum variant with optional associated data.
     ///
-    /// **Documentation:** `docs/future/advanced-types.md`
+    /// **Documentation:** `docs/pascal/language/types/enums.md`
     Enum {
         type_name: String,
         variant: String,
@@ -21,7 +21,7 @@ pub enum Value {
     Array(Vec<Value>),
     /// Key-value collection (ordered by insertion).
     ///
-    /// **Documentation:** `docs/future/advanced-types.md`
+    /// **Documentation:** `docs/pascal/language/types/dictionaries.md`
     Dict(Vec<(Value, Value)>),
     /// Record with named fields (field order matches definition).
     Record {

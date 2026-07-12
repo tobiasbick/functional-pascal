@@ -1,6 +1,6 @@
 //! Apply parsed script events to a VM before `run()`.
 //!
-//! **Documentation:** [`docs/future/test-framework/scripted-input.md`](../../../docs/future/test-framework/scripted-input.md)
+//! **Documentation:** [`docs/pascal/std/testing/test.md`](../../../docs/pascal/std/testing/test.md)
 
 use super::graph;
 use super::parse::{ScriptEvent, ScriptFile};

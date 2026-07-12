@@ -1,6 +1,6 @@
 //! VM execution for enum variant opcodes (`MakeEnum`, `IsVariant`, `EnumField`).
 //!
-//! **Documentation:** `docs/future/advanced-types.md`
+//! **Documentation:** `docs/pascal/language/types/enums.md`
 
 use crate::vm::diagnostics::VmError;
 use crate::vm::{Worker, runtime_error};

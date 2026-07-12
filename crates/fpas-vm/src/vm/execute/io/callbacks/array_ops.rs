@@ -6,7 +6,7 @@ use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
 impl Worker {
     /// `Std.Array.Map(Arr, F)` — transform each element.
     ///
-    /// **Documentation:** `docs/future/closures.md`
+    /// **Documentation:** `docs/pascal/std/collections/array/higher-order.md`
     pub(super) fn exec_array_map(&mut self, line: SourceLocation) -> Result<(), VmError> {
         let func = self.pop(line)?;
         let array = self.pop_array_value(line, "Std.Array.Map")?;
@@ -22,7 +22,7 @@ impl Worker {
 
     /// `Std.Array.Filter(Arr, F)` — keep matching elements.
     ///
-    /// **Documentation:** `docs/future/closures.md`
+    /// **Documentation:** `docs/pascal/std/collections/array/higher-order.md`
     pub(super) fn exec_array_filter(&mut self, line: SourceLocation) -> Result<(), VmError> {
         let func = self.pop(line)?;
         let array = self.pop_array_value(line, "Std.Array.Filter")?;
@@ -40,7 +40,7 @@ impl Worker {
 
     /// `Std.Array.Reduce(Arr, Init, F)` — fold into single value.
     ///
-    /// **Documentation:** `docs/future/closures.md`
+    /// **Documentation:** `docs/pascal/std/collections/array/higher-order.md`
     pub(super) fn exec_array_reduce(&mut self, line: SourceLocation) -> Result<(), VmError> {
         let func = self.pop(line)?;
         let init = self.pop(line)?;

@@ -80,7 +80,7 @@ pub enum Ty {
     GenericParam(String, Option<TypeConstraint>),
     /// `dict of K to V` — key-value collection.
     ///
-    /// **Documentation:** `docs/future/advanced-types.md`
+    /// **Documentation:** `docs/pascal/language/types/dictionaries.md`
     Dict(Box<Ty>, Box<Ty>),
     /// `task` — handle to a spawned concurrent task (return type erased at runtime).
     ///

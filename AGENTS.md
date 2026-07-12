@@ -66,8 +66,6 @@ Do not describe unimplemented behavior in `docs/pascal/`. Plans belong in `docs/
 ## CI and automation
 
 - **No GitHub Actions workflows.** Do not add `.github/workflows/`, Dependabot, or similar CI/automation config.
-- **Keep** existing `.github/instructions/` files (e.g. Copilot instructions) unless the user asks to change them.
-- **Do not recreate** removed CI workflow configuration. Verify changes locally with `cargo fmt`, `cargo build`, `cargo test --workspace`, and `fpas fmt --check` when relevant.
 
 ## Structural Rules
 

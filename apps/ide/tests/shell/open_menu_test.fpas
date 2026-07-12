@@ -1,8 +1,9 @@
 program IdeShellOpenMenuTest;
 
-uses Ide.Dialog, Ide.Menu, Ide.Shell, Std.Tui, Std.Test;
+uses Ide.Dialog, Ide.Shell, Ide.Ui.Menu, Ide.Workspace.Session, Std.Option, Std.Tui, Std.Test;
 
 begin
+  Reset();
   var App: Application := Application.OpenForTest(80, 25);
   var MenuBarHandle: MenuBar := AttachChrome(App);
   Application.TestSetFileDialogResult(App, Some('src/main.fpas'));
@@ -10,5 +11,8 @@ begin
   Test.InjectKeyboard(App, 7181);
   Test.InjectCommand(App, CM_QUIT);
   Application.Run(App, OnCommand);
-  AssertEquals(CmdFileOpen, LastCommandId())
+  AssertEquals(CmdFileOpen, LastCommandId());
+  AssertEquals(1, OpenFileCount());
+  AssertEquals('src/main.fpas', OpenFileAt(0));
+  Reset()
 end.

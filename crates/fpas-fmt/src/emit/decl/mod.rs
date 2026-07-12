@@ -130,7 +130,7 @@ end.",
 
     #[test]
     fn unit_shell_private_state_round_trip() {
-        let source = include_str!("../../../../../apps/ide/src/shell.fpas");
+        let source = include_str!("../../../../../apps/ide/src/shell/shell.fpas");
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
         let fpas_parser::CompilationUnit::Unit(unit) = unit else {

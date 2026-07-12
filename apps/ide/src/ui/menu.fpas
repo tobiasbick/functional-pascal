@@ -1,6 +1,6 @@
-/// Command constants for the FPAS IDE shell.
+/// Command constants and menu definitions for the FPAS IDE shell.
 
-unit Ide.Menu;
+unit Ide.Ui.Menu;
 
 uses Std.Tui;
 

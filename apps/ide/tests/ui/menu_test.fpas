@@ -1,6 +1,6 @@
-program IdeMenuTest;
+program IdeUiMenuTest;
 
-uses Ide.Menu, Std.Test;
+uses Ide.Ui.Menu, Std.Test;
 
 begin
   AssertEquals(CM_QUIT, CmdFileExit);

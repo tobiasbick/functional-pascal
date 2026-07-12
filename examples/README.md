@@ -166,7 +166,7 @@ Helper units under those folders are built only through the project; see the one
 
 Larger programs live outside `examples/` but follow the same `.fpasprj` workflow.
 
-`apps/ide/` is a minimal Turbo Vision-backed IDE shell (menu bar, status line, File / Exit, Help / About). It uses [`Std.Tui`](../docs/pascal/std/tui/README.md) over [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust). Run with `cargo run -p fpas-cli -- apps/ide/ide.fpasprj`.
+`apps/ide/` is a Turbo Vision-backed IDE shell organized by theme under `src/` (`shell/`, `ui/`, `dialog/`, `workspace/`). Units use the `Ide.*` namespace (for example `Ide.Ui.Menu`, `Ide.Workspace.Session`). **File → Open** accepts `.fpas`, `.fpasprj`, and `.fpasworkspace` paths; the IDE keeps an in-memory session (one workspace or project root plus open source files) and reflects it in the status line. It uses [`Std.Tui`](../docs/pascal/std/tui/README.md) over [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust). Run with `cargo run -p fpas-cli -- apps/ide/ide.fpasprj`.
 
 ## Interactive demos (terminal)
 

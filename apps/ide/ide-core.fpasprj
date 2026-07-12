@@ -3,7 +3,17 @@ name = "ide-core"
 kind = "library"
 
 [exports]
-units = ["Ide.Shell", "Ide.Menu", "Ide.Status", "Ide.Theme", "Ide.Dialog"]
+units = [
+  "Ide.Shell",
+  "Ide.Ui.Menu",
+  "Ide.Ui.Status",
+  "Ide.Ui.Theme",
+  "Ide.Dialog",
+  "Ide.Dialog.Open",
+  "Ide.Dialog.About",
+  "Ide.Workspace.Classify",
+  "Ide.Workspace.Session",
+]
 
 [sources]
 include = ["src/**/*.fpas"]

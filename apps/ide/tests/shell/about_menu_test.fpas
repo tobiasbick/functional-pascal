@@ -1,6 +1,6 @@
 program IdeShellAboutMenuTest;
 
-uses Ide.Dialog, Ide.Menu, Ide.Shell, Std.Tui, Std.Test;
+uses Ide.Dialog, Ide.Shell, Ide.Ui.Menu, Std.Tui, Std.Test;
 
 begin
   var App: Application := Application.OpenForTest(80, 25);

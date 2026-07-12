@@ -1,0 +1,12 @@
+program IdeWorkspaceClassifyTest;
+
+uses Ide.Workspace.Classify, Std.Test;
+
+begin
+  AssertTrue(ClassifyPath('suite.fpasworkspace') = OpenKind.Workspace);
+  AssertTrue(ClassifyPath('  Suite.FPASWORKSPACE  ') = OpenKind.Workspace);
+  AssertTrue(ClassifyPath('apps/ide/ide.fpasprj') = OpenKind.Project);
+  AssertTrue(ClassifyPath('tests/foo_test.fpas') = OpenKind.TestFile);
+  AssertTrue(ClassifyPath('src/main.fpas') = OpenKind.SourceFile);
+  AssertTrue(ClassifyPath('readme.txt') = OpenKind.Unknown)
+end.

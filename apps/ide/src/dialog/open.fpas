@@ -2,28 +2,39 @@
 
 unit Ide.Dialog.Open;
 
-uses Std.Option, Std.Tui;
+uses Ide.Ui.Status, Ide.Workspace.Session, Std.Option, Std.Result, Std.Tui;
 
 private function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
 begin
   return record x := X; y := Y; width := Width; height := Height; end
 end;
 
-/// Show the file picker and confirm the chosen path in a follow-up message box.
-
-procedure ShowOpen(App: Application);
+private procedure RefreshStatus(Status: StatusLine);
 begin
-  var Selected: option of string := Application.RunFileDialog(App, Bounds(10, 5, 50, 14), 'Open File', '*', None);
+  StatusLine.SetItems(Status, StatusItems())
+end;
+
+/// Show the file picker and register the chosen path in the workspace session.
+
+procedure ShowOpen(App: Application; Status: StatusLine);
+begin
+  var Selected: option of string := Application.RunFileDialog(App, Bounds(10, 5, 50, 14), 'Open', '*', None);
   if IsNone(Selected) then
   begin
     var _: integer := Application.MessageBox(App, 'Open canceled.', MessageBoxOption.Information +
                                                                     MessageBoxOption.OkButton);
     return
   end;
-  var Path: string := Unwrap(Selected);
-  var Message: string := 'Selected file:
-
-' + Path;
-  var _: integer := Application.MessageBox(App, Message, MessageBoxOption.Information +
-                                                         MessageBoxOption.OkButton)
+  var Path: string := Std.Option.Unwrap(Selected);
+  case OpenPath(Path) of
+    Ok(_):
+    begin
+      RefreshStatus(Status)
+    end;
+    Error(E):
+    begin
+      var BoxOptions: integer := 1 + 1024;
+      var _: integer := Application.MessageBox(App, E, BoxOptions)
+    end
+  end
 end;

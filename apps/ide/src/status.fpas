@@ -1,8 +1,0 @@
-/// Status text for the FPAS IDE shell.
-
-unit Ide.Status;
-
-function MainStatusText(): string;
-begin
-  return ''
-end;

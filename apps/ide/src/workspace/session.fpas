@@ -1,0 +1,146 @@
+/// In-memory workspace session: one root plus open source files.
+
+unit Ide.Workspace.Session;
+
+uses Ide.Workspace.Classify, Std.Array, Std.Conv, Std.Option, Std.Result, Std.Str;
+
+private mutable var HasRoot: boolean := false;
+private mutable var RootIsWorkspace: boolean := false;
+private mutable var RootPathStorage: string := '';
+private mutable var OpenFilesStorage: array of string := [];
+
+private function PathsEqual(A: string; B: string): boolean;
+begin
+  return ToLower(Trim(A)) = ToLower(Trim(B))
+end;
+
+private function HasOpenFileInternal(Path: string): boolean;
+begin
+  for Existing: string in OpenFilesStorage do
+  begin
+    if PathsEqual(Existing, Path) then
+    begin
+      return true
+    end
+  end;
+  return false
+end;
+
+private procedure SetRoot(IsWorkspace: boolean; Path: string);
+begin
+  HasRoot := true;
+  RootIsWorkspace := IsWorkspace;
+  RootPathStorage := Trim(Path);
+  OpenFilesStorage := []
+end;
+
+private procedure AddOpenFile(Path: string);
+begin
+  mutable var Files: array of string := OpenFilesStorage;
+  Push(Files, Trim(Path));
+  OpenFilesStorage := Files
+end;
+
+/// Human-readable root kind label (`Workspace`, `Project`, or empty).
+
+function RootKindLabel(): string;
+begin
+  if not HasRoot then
+  begin
+    return ''
+  end;
+  if RootIsWorkspace then
+  begin
+    return 'Workspace'
+  end;
+  return 'Project'
+end;
+
+private function OpenSummary(): string;
+begin
+  var FileCount: integer := Std.Array.Length(OpenFilesStorage);
+  if HasRoot then
+  begin
+    var Prefix: string := (RootKindLabel() + ': ') + RootPathStorage;
+    if FileCount = 0 then
+    begin
+      return Prefix
+    end;
+    return ((Prefix + ' | ') + IntToStr(FileCount)) + ' files'
+  end;
+  if FileCount = 1 then
+  begin
+    return IntToStr(FileCount) + ' file'
+  end;
+  return IntToStr(FileCount) + ' files'
+end;
+
+/// Clear session state. Used by tests.
+
+procedure Reset();
+begin
+  HasRoot := false;
+  RootIsWorkspace := false;
+  RootPathStorage := '';
+  OpenFilesStorage := []
+end;
+
+/// Open or register `Path` in the session.
+
+function OpenPath(Path: string): result of string, string;
+begin
+  var Kind: OpenKind := ClassifyPath(Path);
+  if Kind = OpenKind.Unknown then
+  begin
+    return Error('Unsupported file type. Expected .fpas, .fpasprj, or .fpasworkspace.')
+  end;
+  if Kind = OpenKind.Workspace then
+  begin
+    SetRoot(true, Path);
+    return Ok(OpenSummary())
+  end;
+  if Kind = OpenKind.Project then
+  begin
+    SetRoot(false, Path);
+    return Ok(OpenSummary())
+  end;
+  if HasOpenFileInternal(Path) then
+  begin
+    return Ok(OpenSummary())
+  end;
+  AddOpenFile(Path);
+  return Ok(OpenSummary())
+end;
+
+/// Active root path, if any.
+
+function RootPath(): option of string;
+begin
+  if not HasRoot then
+  begin
+    return None
+  end;
+  return Some(RootPathStorage)
+end;
+
+/// Number of open `.fpas` / test files in the session.
+
+function OpenFileCount(): integer;
+begin
+  return Std.Array.Length(OpenFilesStorage)
+end;
+
+/// Open file path at zero-based `FileIndex`.
+
+function OpenFileAt(FileIndex: integer): string;
+begin
+  var Files: array of string := OpenFilesStorage;
+  return Files[FileIndex]
+end;
+
+/// Returns true when `Path` is already listed in open files.
+
+function HasOpenFile(Path: string): boolean;
+begin
+  return HasOpenFileInternal(Path)
+end;

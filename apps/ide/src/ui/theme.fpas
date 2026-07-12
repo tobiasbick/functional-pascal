@@ -1,6 +1,6 @@
 /// Current colors for the minimal FPAS IDE shell.
 
-unit Ide.Theme;
+unit Ide.Ui.Theme;
 
 uses Std.Console;
 

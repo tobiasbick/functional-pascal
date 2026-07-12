@@ -1,6 +1,6 @@
-program IdeThemeTest;
+program IdeUiThemeTest;
 
-uses Ide.Theme, Std.Console, Std.Test;
+uses Ide.Ui.Theme, Std.Console, Std.Test;
 
 begin
   AssertEquals(Blue, DesktopBg);

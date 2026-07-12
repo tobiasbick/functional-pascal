@@ -1,19 +1,30 @@
 program IdeDialogTest;
 
-uses Ide.Dialog, Ide.Menu, Std.Option, Std.Tui, Std.Test;
+uses Ide.Dialog, Ide.Ui.Menu, Ide.Workspace.Session, Std.Option, Std.Test, Std.Tui;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
 
 begin
+  Reset();
   var App: Application := Application.OpenForTest(80, 25);
+  var Status: StatusLine := StatusLine.New(Bounds(0, 24, 80, 1), []);
   AssertEquals(CM_ABOUT, CmdHelpAbout);
   AssertEquals(CM_OPEN, CmdFileOpen);
   Test.InjectKeyboard(App, 7181);
-  AssertTrue(HandleCommand(App, CmdHelpAbout));
-  Application.TestSetFileDialogResult(App, Some('demo.fpas'));
+  AssertTrue(HandleCommand(App, CmdHelpAbout, Status));
+  Application.TestSetFileDialogResult(App, Some('demo.fpasprj'));
   Test.InjectKeyboard(App, 7181);
-  AssertTrue(HandleCommand(App, CmdFileOpen));
+  AssertTrue(HandleCommand(App, CmdFileOpen, Status));
+  AssertTrue(IsSome(RootPath()));
+  AssertEquals('demo.fpasprj', Std.Option.Unwrap(RootPath()));
+  Reset();
   Application.TestSetFileDialogResult(App, None);
   Test.InjectKeyboard(App, 7181);
-  AssertTrue(HandleCommand(App, CmdFileOpen));
-  AssertFalse(HandleCommand(App, CM_QUIT));
+  AssertTrue(HandleCommand(App, CmdFileOpen, Status));
+  AssertFalse(IsSome(RootPath()));
+  AssertFalse(HandleCommand(App, CM_QUIT, Status));
   Application.CloseForTest(App)
 end.

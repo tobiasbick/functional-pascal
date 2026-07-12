@@ -1,0 +1,15 @@
+program IdeUiStatusTest;
+
+uses Ide.Ui.Status, Ide.Workspace.Session, Std.Array, Std.Option, Std.Result, Std.Str, Std.Test;
+
+begin
+  Reset();
+  AssertEquals(0, Std.Array.Length(StatusItems()));
+  var ProjectOutcome: result of string, string := OpenPath('apps/ide/ide.fpasprj');
+  AssertTrue(IsOk(ProjectOutcome));
+  var Items: array of StatusItem := StatusItems();
+  AssertEquals(1, Std.Array.Length(Items));
+  AssertTrue(Std.Str.Contains(Items[0].text, 'Project'));
+  AssertTrue(Std.Str.Contains(Items[0].text, 'ide.fpasprj'));
+  Reset()
+end.

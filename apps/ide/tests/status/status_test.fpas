@@ -1,7 +1,0 @@
-program IdeStatusTest;
-
-uses Ide.Status, Std.Test;
-
-begin
-  AssertEquals('', MainStatusText())
-end.

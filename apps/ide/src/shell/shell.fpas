@@ -2,9 +2,10 @@
 
 unit Ide.Shell;
 
-uses Ide.Dialog, Ide.Menu, Ide.Status, Std.Tui;
+uses Ide.Dialog, Ide.Ui.Menu, Ide.Ui.Status, Std.Tui;
 
 private mutable var LastCommand: integer := -1;
+private mutable var StatusHandle: StatusLine := record  end;
 
 private function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
 begin
@@ -14,6 +15,13 @@ end;
 function LastCommandId(): integer;
 begin
   return LastCommand
+end;
+
+/// Replace status line items from the current workspace session.
+
+procedure RefreshStatus();
+begin
+  StatusLine.SetItems(StatusHandle, StatusItems())
 end;
 
 procedure OnCommand(App: Application; CommandId: integer);
@@ -28,7 +36,7 @@ begin
     return
   end;
   LastCommand := CommandId;
-  if Ide.Dialog.HandleCommand(App, CommandId) then
+  if Ide.Dialog.HandleCommand(App, CommandId, StatusHandle) then
   begin
     return
   end
@@ -39,9 +47,9 @@ end;
 function AttachChrome(App: Application): MenuBar;
 begin
   var MenuBarHandle: MenuBar := MenuBar.New(Bounds(0, 0, 80, 1), [FileMenu(), HelpMenu()]);
-  var Status: StatusLine := StatusLine.New(Bounds(0, 24, 80, 1), []);
+  StatusHandle := StatusLine.New(Bounds(0, 24, 80, 1), StatusItems());
   Application.SetMenuBar(App, MenuBarHandle);
-  Application.SetStatusLine(App, Status);
+  Application.SetStatusLine(App, StatusHandle);
   return MenuBarHandle
 end;
 
@@ -51,8 +59,6 @@ procedure Run();
 begin
   var App: Application := Application.New();
   AttachChrome(App);
-  var Editor: Window := EditorWindow.New(Bounds(2, 2, 76, 20), 'untitled.fpas');
-  Desktop.Add(App, Editor);
   Application.Run(App, OnCommand);
   Application.Close(App)
 end;

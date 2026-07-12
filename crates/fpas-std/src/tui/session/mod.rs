@@ -2,10 +2,7 @@
 
 mod input;
 mod lifecycle;
-mod redraw;
 
-use super::damage::DamageTracker;
-use crate::DamageRegion;
 use crate::error::{StdError, std_runtime_error};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
@@ -14,8 +11,6 @@ use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 #[derive(Debug, Default)]
 pub struct TuiSession {
     open: bool,
-    damage: DamageTracker,
-    redraw_hint: Option<DamageRegion>,
     owns_raw_mode: bool,
     owns_alt_screen: bool,
     owns_mouse: bool,

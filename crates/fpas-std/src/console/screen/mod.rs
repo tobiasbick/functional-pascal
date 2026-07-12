@@ -11,7 +11,6 @@ pub(super) const TEXT_MODE_CO80: i64 = 5;
 pub(super) const TEXT_MODE_MONO: i64 = 7;
 
 mod frames;
-mod paint_context;
 mod writing;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -47,58 +46,6 @@ impl WindowRect {
             right: self.right.max(other.right),
             bottom: self.bottom.max(other.bottom),
         }
-    }
-
-    pub(super) fn intersection(self, other: Self) -> Option<Self> {
-        let left = self.left.max(other.left);
-        let top = self.top.max(other.top);
-        let right = self.right.min(other.right);
-        let bottom = self.bottom.min(other.bottom);
-        (left <= right && top <= bottom).then_some(Self {
-            left,
-            top,
-            right,
-            bottom,
-        })
-    }
-
-    pub(super) fn contains(self, x: u16, y: u16) -> bool {
-        x >= self.left && x <= self.right && y >= self.top && y <= self.bottom
-    }
-
-    pub(super) fn from_zero_based_rect(
-        x: i64,
-        y: i64,
-        width: i64,
-        height: i64,
-        screen_width: u16,
-        screen_height: u16,
-    ) -> Option<Self> {
-        if width <= 0 || height <= 0 {
-            return None;
-        }
-
-        let screen_width = i64::from(screen_width.max(1));
-        let screen_height = i64::from(screen_height.max(1));
-        let left = x.max(0);
-        let top = y.max(0);
-        let right = x
-            .saturating_add(width.saturating_sub(1))
-            .min(screen_width.saturating_sub(1));
-        let bottom = y
-            .saturating_add(height.saturating_sub(1))
-            .min(screen_height.saturating_sub(1));
-
-        if left > right || top > bottom {
-            return None;
-        }
-
-        Some(Self {
-            left: u16::try_from(left.saturating_add(1)).ok()?,
-            top: u16::try_from(top.saturating_add(1)).ok()?,
-            right: u16::try_from(right.saturating_add(1)).ok()?,
-            bottom: u16::try_from(bottom.saturating_add(1)).ok()?,
-        })
     }
 }
 
@@ -220,16 +167,6 @@ pub(super) struct ConsoleState {
     prev_cells: Vec<ScreenCell>,
     /// Mutated screen region since the last committed present.
     pending_frame_damage: Option<FrameDamage>,
-    paint_context: Option<PaintContext>,
-}
-
-#[derive(Debug, Clone, Copy)]
-struct PaintContext {
-    clip: WindowRect,
-    saved_window: WindowRect,
-    saved_cursor_x: u16,
-    saved_cursor_y: u16,
-    saved_pending_wrap: bool,
 }
 
 impl ConsoleState {
@@ -259,7 +196,6 @@ impl ConsoleState {
             cells: vec![blank; width as usize * height as usize],
             prev_cells: Vec::new(),
             pending_frame_damage: None,
-            paint_context: None,
         }
     }
 
@@ -349,13 +285,18 @@ impl ConsoleState {
     }
 
     pub(super) fn set_window(&mut self, window: WindowRect) {
-        self.window = match self.paint_context {
-            Some(context) => window.intersection(context.clip).unwrap_or(context.clip),
-            None => window,
-        };
+        self.window = window;
         self.cursor_x = 1;
         self.cursor_y = 1;
         self.pending_wrap = false;
+    }
+
+    pub(super) fn clip_window(&self, window: WindowRect) -> Option<WindowRect> {
+        Some(window)
+    }
+
+    pub(super) fn can_paint_cell(&self, _x: u16, _y: u16) -> bool {
+        true
     }
 
     pub(super) fn set_cursor(&mut self, x: u16, y: u16) {

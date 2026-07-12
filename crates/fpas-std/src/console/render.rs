@@ -2,8 +2,7 @@
 //! and 256-color sequences. See `docs/pascal/std/console/README.md` (from repository root).
 
 use super::Console;
-use super::screen::{FrameDamage, WindowRect};
-use crate::DamageRegion;
+use super::screen::FrameDamage;
 use crate::error::{StdError, std_runtime_error};
 use crossterm::QueueableCommand;
 use crossterm::cursor::{Hide, MoveTo, SetCursorStyle, Show};
@@ -14,44 +13,9 @@ use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 use std::io::Write;
 
 impl Console {
-    pub(crate) fn begin_tui_paint(&mut self, damage: DamageRegion) {
-        self.tui_paint_active = true;
-        match damage {
-            DamageRegion::FullFrame => self.state.mark_full_damage(),
-            DamageRegion::Rect(rect) => {
-                if let Some(region) = WindowRect::from_zero_based_rect(
-                    rect.x,
-                    rect.y,
-                    rect.width,
-                    rect.height,
-                    self.state.width,
-                    self.state.height,
-                ) {
-                    self.state.mark_damage_rect(region);
-                }
-            }
-        }
-    }
-
-    pub(crate) fn finish_tui_paint(&mut self, location: SourceLocation) -> Result<(), StdError> {
-        self.state.end_view_paint();
-        self.tui_paint_active = false;
-        self.render_screen(location)
-    }
-
-    pub(crate) fn abort_tui_paint(&mut self) {
-        self.state.end_view_paint();
-        self.tui_paint_active = false;
-        self.state.clear_frame_damage();
-    }
-
     /// Render only the cells that changed since the last frame (differential rendering).
     /// On the very first frame, clear the terminal and draw everything.
     pub(super) fn render_screen(&mut self, location: SourceLocation) -> Result<(), StdError> {
-        if self.tui_paint_active {
-            return Ok(());
-        }
-
         let first_frame = self.state.is_first_frame();
         let damage = self.state.take_frame_damage();
 

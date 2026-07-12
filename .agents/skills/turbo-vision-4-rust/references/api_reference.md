@@ -27,10 +27,10 @@ checkbox mouse click does not work in Application.Run
 
 Expected agent behavior:
 
-- Read `docs/pascal/std/tui/app/controls.md` and `vm-bridge.md`.
-- Inspect `crates/fpas-vm/src/vm/execute/io/tui/` bridge modules.
+- Read `docs/pascal/std/tui/app/controls.md`, `vm-bridge.md`, and `terminal-checklist.md`.
+- Inspect `crates/fpas-vm/src/vm/execute/io/tui/` bridge modules (especially `bridge/bridged_check_box.rs` for checkbox input).
 - Check whether upstream `turbo-vision` lacks the behavior before patching the FPAS facade.
-- Add Rust and/or FPAS regression tests under `tests/tui/controls/`.
+- Add Rust and/or FPAS regression tests under `tests/tui/events/` or `tests/tui/views/` (e.g. `check_box_mouse_test.fpas`, `check_box_test.fpas`).
 
 ## Example 3: User asks about upstream API details
 

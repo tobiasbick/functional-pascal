@@ -31,7 +31,7 @@ The **FPAS regression suite** lives in [`tests/`](../tests/) as `*_test.fpas` fi
 | `tests/concurrency/` | `go` / task concurrency |
 | `tests/runner/` | `Std.Test` basics, `Skip`, stdout golden |
 | `tests/console/` | `PushReadLn` + `ReadLn` |
-| `tests/tui/controls/` | Headless Turbo Vision (`OpenForTest`, `TestClickButton`, `Application.Run`, `AssertScreenCell`, …) |
+| `tests/tui/` | Headless Turbo Vision (`views/`, `events/`, `smoke/`, `modals/` — `OpenForTest`, `TestClickButton`, `Application.Run`, `AssertScreenCell`, …) |
 | `tests/graph/` | Headless graph smoke + pixel golden |
 | `tests/manual/` | Manual demos (not auto-discovered) |
 
@@ -185,4 +185,4 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 | `math/julia/julia_graph.fpas` | Single-file native-window Julia explorer; arrows pan, `WASD` changes Julia constant, wheel zooms, left click recenters, `Esc` quits |
 | `math/mandelbrot/mandelbrot_graph.fpas` | Single-file native-window Mandelbrot explorer; arrows pan, wheel zooms, left click recenters, `1/2/3` switch palettes, `Esc` quits |
 | `math/mandelbrot/mandelbrot.fpasprj` | Project; fullscreen terminal Mandelbrot explorer (`Std.Console` event loop) |
-Automated Turbo Vision coverage is under `tests/tui/controls/`. Graph apps use `Application.Configure(App, Handlers)` and `Application.Run(App)`; see `docs/pascal/std/graph/app/README.md`. Custom terminal loops use `Std.Console`; see `docs/pascal/std/console/README.md`.
+Automated Turbo Vision coverage is under `tests/tui/` (`views/`, `events/`, `smoke/`, `modals/`). Graph apps use `Application.Configure(App, Handlers)` and `Application.Run(App)`; see `docs/pascal/std/graph/app/README.md`. Custom terminal loops use `Std.Console`; see `docs/pascal/std/console/README.md`.

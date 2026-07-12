@@ -40,7 +40,6 @@ pub struct Console {
     /// Fragments from `Write` not yet ended by `WriteLn`; one logical line for capture.
     capture_line_buf: String,
     state: ConsoleState,
-    tui_paint_active: bool,
     writer: Option<Box<dyn Write + Send>>,
 }
 
@@ -56,7 +55,6 @@ impl Console {
             captured: CapturedOutput::default(),
             capture_line_buf: String::new(),
             state: ConsoleState::new(DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT),
-            tui_paint_active: false,
             writer: None,
         }
     }
@@ -68,7 +66,6 @@ impl Console {
             captured: CapturedOutput::default(),
             capture_line_buf: String::new(),
             state: ConsoleState::new(width, height),
-            tui_paint_active: false,
             writer: Some(writer),
         }
     }
@@ -99,18 +96,6 @@ impl Console {
 
     pub(crate) fn has_terminal_writer(&self) -> bool {
         self.writer.is_some()
-    }
-
-    /// Begin an enforced retained-view paint context.
-    #[doc(hidden)]
-    pub fn begin_tui_view_paint(&mut self, rect: crate::ViewRect, clip: crate::ViewRect) -> bool {
-        self.state.begin_view_paint(rect, clip)
-    }
-
-    /// Restore console window/cursor state after a retained-view paint callback.
-    #[doc(hidden)]
-    pub fn end_tui_view_paint(&mut self) {
-        self.state.end_view_paint();
     }
 
     /// Paint one CRT cell for headless Turbo Vision reconciliation (no terminal I/O).

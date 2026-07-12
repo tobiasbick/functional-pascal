@@ -179,7 +179,7 @@ impl Worker {
             runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 "Dynamic comparison requires comparable operands of compatible types",
-                "Ensure both operands are comparable types (integer, real, boolean, string, ViewId, Option, or Result).",
+                "Ensure both operands are comparable types (integer, real, boolean, string, Option, or Result).",
                 line,
             )
         })?;
@@ -190,10 +190,6 @@ impl Worker {
 /// Compare two runtime values, returning `None` for incompatible or
 /// unordered pairs (e.g. NaN).
 fn dyn_compare(left: &Value, right: &Value) -> Option<std::cmp::Ordering> {
-    if let (Some(left_id), Some(right_id)) = (tui_view_id_raw(left), tui_view_id_raw(right)) {
-        return Some(left_id.cmp(&right_id));
-    }
-
     if option_pair(left, right) || result_pair(left, right) {
         return Some(if left == right {
             std::cmp::Ordering::Equal
@@ -221,24 +217,4 @@ fn option_pair(left: &Value, right: &Value) -> bool {
 fn result_pair(left: &Value, right: &Value) -> bool {
     matches!(left, Value::ResultOk(_) | Value::ResultError(_))
         && matches!(right, Value::ResultOk(_) | Value::ResultError(_))
-}
-
-fn tui_view_id_raw(value: &Value) -> Option<u32> {
-    const TUI_VIEW_ID_TYPE: &str = "Std.Tui.ViewId";
-    const TUI_VIEW_ID_RAW_FIELD: &str = "__id";
-
-    let Value::Record { type_name, fields } = value else {
-        return None;
-    };
-    if type_name != TUI_VIEW_ID_TYPE {
-        return None;
-    }
-    let Value::Integer(raw) = fields
-        .iter()
-        .find(|(name, _)| name == TUI_VIEW_ID_RAW_FIELD)
-        .map(|(_, value)| value)?
-    else {
-        return None;
-    };
-    u32::try_from(*raw).ok()
 }

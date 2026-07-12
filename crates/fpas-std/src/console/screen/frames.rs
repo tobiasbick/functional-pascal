@@ -16,10 +16,6 @@ impl ConsoleState {
         WindowRect::full(self.width, self.height)
     }
 
-    pub(in super::super) fn mark_full_damage(&mut self) {
-        self.pending_frame_damage = Some(FrameDamage::FullFrame);
-    }
-
     pub(in super::super) fn mark_damage_rect(&mut self, rect: WindowRect) {
         self.pending_frame_damage = Some(match self.pending_frame_damage {
             Some(FrameDamage::FullFrame) => FrameDamage::FullFrame,
@@ -30,10 +26,6 @@ impl ConsoleState {
 
     pub(in super::super) fn take_frame_damage(&mut self) -> Option<FrameDamage> {
         self.pending_frame_damage.take()
-    }
-
-    pub(in super::super) fn clear_frame_damage(&mut self) {
-        self.pending_frame_damage = None;
     }
 
     /// Snapshot the current cells as the previous frame.

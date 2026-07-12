@@ -122,14 +122,6 @@ impl std::fmt::Display for Value {
                 write!(f, "}}")
             }
             Value::Record { type_name, fields } => {
-                if type_name == "Std.Tui.ViewId"
-                    && let Some(Value::Integer(raw)) = fields
-                        .iter()
-                        .find(|(name, _)| name == "__id")
-                        .map(|(_, value)| value)
-                {
-                    return write!(f, "{raw}");
-                }
                 write!(f, "{type_name}{{")?;
                 for (i, (name, val)) in fields.iter().enumerate() {
                     if i > 0 {
@@ -174,15 +166,6 @@ mod tests {
             (Value::Str("x".into()), Value::Boolean(true)),
         ]);
         assert_eq!(value.to_string(), "{k: 1, x: true}");
-    }
-
-    #[test]
-    fn display_formats_view_id_record_as_raw_integer() {
-        let value = Value::Record {
-            type_name: "Std.Tui.ViewId".into(),
-            fields: vec![("__id".into(), Value::Integer(42))],
-        };
-        assert_eq!(value.to_string(), "42");
     }
 
     #[test]

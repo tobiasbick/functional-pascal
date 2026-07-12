@@ -5,6 +5,5 @@
 mod events;
 mod helpers;
 mod lifecycle;
-mod redraw;
 
 pub(super) use super::{TuiEvent, TuiSession};

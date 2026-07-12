@@ -54,8 +54,9 @@ Ask: **What would break if this regressed?**
 Rules:
 
 - FPAS regression tests live in [`tests/`](../../../tests/), not `examples/`
-- Name: `*_test.fpas`, use `Std.Test` where asserting output
-- After FPAS test edits: `fpas test tests/` or `cargo test -p fpas-cli fpas_regression_suite_passes`
+- Bundle the suite via [`tests/suite.fpasprj`](../../../tests/suite.fpasprj)
+- Name: `*_test.fpas`, use `Std.Test` where asserting output — spec: [`docs/pascal/std/testing/test.md`](../../../docs/pascal/std/testing/test.md)
+- After FPAS test edits: `fpas test tests/`, `fpas test tests/suite.fpasprj`, or `cargo test -p fpas-cli fpas_regression_suite_passes`
 - Add tests only for meaningful behavior — skip trivial or duplicate coverage
 
 If no new test is warranted, state **why** (e.g. refactor-only, covered by existing test X).
@@ -86,13 +87,15 @@ cargo test --workspace
 When `.fpas` under `examples/`, `tests/`, or `apps/` changed:
 
 ```text
-fpas fmt --check <paths>   # or scripts/format-fpas-sources.sh
+fpas fmt --check <paths>   # or scripts/format-fpas-sources.sh / .ps1
 ```
+
+Style rules: [`docs/pascal/tools/fmt-style.md`](../../../docs/pascal/tools/fmt-style.md).
 
 When FPAS tests changed:
 
 ```text
-fpas test tests/           # or targeted path
+fpas test tests/           # or fpas test tests/suite.fpasprj / targeted path
 ```
 
 ## Step 6 — Closing report

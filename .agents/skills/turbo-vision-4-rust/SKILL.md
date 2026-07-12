@@ -1,6 +1,6 @@
 ---
 name: turbo-vision-4-rust
-description: Use when extending or debugging Functional Pascal `Std.Tui` over the Rust `turbo-vision` crate from `aovestdipaperino/turbo-vision-4-rust`, especially tasks touching `docs/pascal/std/tui`, TUI sema/compiler/bytecode/VM/runtime code, TUI tests, examples, or `apps/ide`. Also use when checking upstream Turbo Vision API, dependency, license, or crossterm compatibility.
+description: Use when extending or debugging Functional Pascal `Std.Tui` over the Rust `turbo-vision` crate from `aovestdipaperino/turbo-vision-4-rust`, especially tasks touching `docs/pascal/std/tui`, TUI sema/compiler/bytecode/VM/runtime code, TUI tests, examples, or `apps/ide`. Also use when checking upstream Turbo Vision API, dependency, license, or crossterm compatibility, or closing the three remaining `bridged_*` read-back adapters.
 ---
 
 # Turbo Vision 4 Rust
@@ -12,8 +12,9 @@ Guide for extending and maintaining the FPAS-native `Std.Tui` facade over upstre
 Before edits, read these files in order:
 
 1. `docs/pascal/std/tui/README.md`
-2. `docs/pascal/std/tui/app/vm-bridge.md`
-3. `.agents/skills/fpas-change-checklist/SKILL.md` when implementing or modifying behavior, public API, docs under `docs/pascal/`, tests, compiler, VM, runtime, or stdlib code.
+2. `docs/pascal/std/tui/app/vm-bridge.md` — canonical bridge file map
+3. `docs/pascal/std/tui/terminal-checklist.md` — local verification commands after bridge changes
+4. `.agents/skills/fpas-change-checklist/SKILL.md` when implementing or modifying behavior, public API, docs under `docs/pascal/`, tests, compiler, VM, runtime, or stdlib code.
 
 If the task is about examples of how to apply the skill, read `references/api_reference.md`.
 
@@ -58,13 +59,20 @@ Avoid:
 - creating broad adapters for `Application.Host*` calls;
 - documenting planned behavior in `docs/pascal/` before it exists.
 
-## Migration Workflow
+## Current Status
 
-The Turbo Vision public API rewrite is complete; Phase-7 bridge cleanup remains in progress. For new `Std.Tui` work:
+The Turbo Vision rewrite is **functionally complete**. The bridge under `crates/fpas-vm/src/vm/execute/io/tui/bridge/` is live and headless-testable.
+
+Remaining work is narrow:
+
+- three `bridged_*` adapters (`CheckBox`, `RadioButton`, `Outline`) until upstream exposes live read-back — see [tui-bridged-readback.md](../../../docs/future/tui-bridged-readback.md);
+- periodic upstream checks before declaring Stream A closed ([AGENTS.md](../../../AGENTS.md#upstream-watch--turbo-vision-4-rust-read-back-stream-a)).
+
+For new `Std.Tui` work:
 
 1. Read the current spec under `docs/pascal/std/tui/`.
 2. Follow the end-to-end recipe in `docs/pascal/std/tui/app/vm-bridge.md`.
-3. Replace or extend tests that assert user-visible behavior, not deleted retained-engine internals.
+3. Extend tests that assert user-visible behavior, not deleted retained-engine internals.
 
 ## File and API Discipline
 
@@ -75,21 +83,22 @@ Follow project `AGENTS.md` structure rules:
 - prefer subdirectories over crowded modules;
 - remove dead code introduced or exposed by the rewrite.
 
-The current bridge is Turbo Vision only: `tui/mod.rs` dispatches to `bridge/`; no legacy root bridge modules remain. Use `docs/pascal/std/tui/app/vm-bridge.md` for the file map and `docs/future/tui-bridged-readback.md` for the remaining cleanup status. Do not reintroduce `reconcile.rs`, `ExecDialog`, or command-offset routing.
+The current bridge is Turbo Vision only: `tui/mod.rs` dispatches to `bridge/`; no legacy root bridge modules remain. Use [vm-bridge.md](../../../docs/pascal/std/tui/app/vm-bridge.md) for the authoritative file map — do not duplicate it here. Do not reintroduce `reconcile.rs`, `ExecDialog`, or command-offset routing.
 
-```text
-crates/fpas-vm/src/vm/execute/io/tui/
-  mod.rs                       — top-level intrinsic dispatch
-  bridge/
-    application_intrinsics.rs  — Application.* dispatch
-    session.rs, registry.rs    — handle and root ownership
-    session_app.rs             — live upstream Application ownership
-    run.rs, input_events.rs    — live and headless event routing
-    headless_draw.rs           — headless terminal and modal loop
-    views/                     — direct widget construction and setters
-```
+Key bridge areas (details in vm-bridge.md):
 
-Three small adapters remain for `CheckBox`, `RadioButton`, and `Outline` because the pinned upstream types lack a supported live-state read-back hook. Do not replace them with snapshot/reconcile code; see `docs/future/tui-bridged-readback.md` before touching them. Periodically check upstream for read-back ([AGENTS.md](../../../AGENTS.md#upstream-watch--turbo-vision-4-rust-read-back-stream-a)); closure is a good contributor entry point ([AI_CONTRIBUTING.md](../../../AI_CONTRIBUTING.md#good-entry-points)).
+| Concern | Location |
+| --- | --- |
+| Intrinsic dispatch | `mod.rs`, `bridge/application_intrinsics.rs`, `bridge/intrinsics.rs` |
+| Session lifecycle | `bridge/lifecycle.rs`, `bridge/session_app.rs` |
+| View registry | `bridge/session.rs`, `bridge/registry.rs`, `bridge/views/` |
+| Run loop / input | `bridge/run.rs`, `bridge/input_events.rs` |
+| Commands / chrome | `bridge/events.rs`, `bridge/chrome*.rs` |
+| Modals | `bridge/modals.rs`, `bridge/message_box.rs`, `bridge/file_dialog.rs` |
+| Headless | `bridge/headless_draw.rs`, `bridge/testing.rs` |
+| Upstream read-back adapters | `bridge/bridged_check_box.rs`, `bridge/bridged_radio_button.rs`, `bridge/bridged_outline.rs` |
+
+Do not replace the three adapters with snapshot/reconcile code. Closure steps: [tui-bridged-readback.md](../../../docs/future/tui-bridged-readback.md) and [AI_CONTRIBUTING.md](../../../AI_CONTRIBUTING.md#good-entry-points).
 
 `Application.MessageBox` is documented in [message-box.md](../../../docs/pascal/std/tui/app/message-box.md).
 
@@ -101,13 +110,11 @@ Three small adapters remain for `CheckBox`, `RadioButton`, and `Outline` because
 
 ## Testing Rules
 
-The rewrite is incomplete until testability is proven.
-
 Prefer:
 
-- Rust tests for bridge invariants, invalid handles, callback re-entry, cleanup, and diagnostics.
-- FPAS tests for public behavior: open app, create window/dialog, add button, dispatch command, dialog result, input state, menu command.
-- Headless tests over manual terminal checks.
+- Rust tests for bridge invariants, invalid handles, callback re-entry, cleanup, and diagnostics (`bridge/testing.rs`, `cargo test -p fpas-vm bridge::`).
+- FPAS tests for public behavior under `tests/tui/` — themed subdirs: `views/`, `events/`, `smoke/`, `modals/`.
+- Headless tests over manual terminal checks; run [terminal-checklist.md](../../../docs/pascal/std/tui/terminal-checklist.md) after bridge edits.
 
 Do not preserve tests that only validate old retained-view internals such as `QuerySceneGraph`, retained clip state, `HostProcessNext` integer tags, or old frame-root query records.
 

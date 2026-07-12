@@ -5,14 +5,6 @@
 use super::super::{compile_and_run, compile_err, compile_ok, compile_run_error};
 use fpas_bytecode::{Intrinsic, Op, TuiIntrinsic};
 
-fn has_removed_tui_help(error: &fpas_diagnostics::Diagnostic) -> bool {
-    error.help.as_deref().is_some_and(|help| {
-        help.contains("old try-1 Std.Tui host/view API")
-            && help.contains("Dialog.NewModal")
-            && help.contains("Application.Run(App, OnCommand)")
-    })
-}
-
 #[test]
 fn std_tui_open_close_and_reopen_succeeds() {
     let out = compile_and_run(
@@ -91,102 +83,6 @@ end.",
 
     assert!(
         err.message.contains("expects 0 arguments"),
-        "unexpected compiler error: {}",
-        err.message
-    );
-}
-
-#[test]
-fn std_tui_create_dialog_api_is_not_registered() {
-    let err = compile_err(
-        "\
-program T;
-uses Std.Tui;
-
-function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
-begin
-  return record x := X; y := Y; width := Width; height := Height; end
-end;
-
-begin
-  var App: Application := Application.Open();
-  Application.CreateDialog(App, Bounds(1, 1, 10, 5), 'Old')
-end.",
-    );
-
-    assert!(
-        (err.message.contains("Unknown function or procedure")
-            || err.message.contains("Unknown procedure"))
-            && err.message.contains("Application.CreateDialog")
-            && has_removed_tui_help(&err),
-        "unexpected compiler error: {}",
-        err.message
-    );
-}
-
-#[test]
-fn std_tui_old_host_api_is_not_registered() {
-    let err = compile_err(
-        "\
-program T;
-uses Std.Tui;
-
-begin
-  var App: Application := Application.Open();
-  Application.HostRequestQuit(App)
-end.",
-    );
-
-    assert!(
-        err.message.contains("Unknown procedure")
-            && err.message.contains("Application.HostRequestQuit")
-            && has_removed_tui_help(&err),
-        "unexpected compiler error: {}",
-        err.message
-    );
-}
-
-#[test]
-fn std_tui_old_retained_query_api_is_not_registered() {
-    let err = compile_err(
-        "\
-program T;
-uses Std.Tui;
-
-begin
-  var App: Application := Application.Open();
-  Application.QuerySceneGraph(App)
-end.",
-    );
-
-    assert!(
-        (err.message.contains("Unknown function or procedure")
-            || err.message.contains("Unknown procedure"))
-            && err.message.contains("Application.QuerySceneGraph")
-            && has_removed_tui_help(&err),
-        "unexpected compiler error: {}",
-        err.message
-    );
-}
-
-#[test]
-fn std_tui_old_framed_dialog_api_is_not_registered() {
-    let err = compile_err(
-        "\
-program T;
-uses Std.Tui;
-
-begin
-  var App: Application := Application.Open();
-  Application.ShowFramedDialog(App, 1, 1, 1, 10, 5, 'Old', false, false, false, false, true)
-end.",
-    );
-
-    assert!(
-        (err.message.contains("Unknown function or procedure")
-            || err.message.contains("Unknown procedure"))
-            && err.message.contains("Application.ShowFramedDialog")
-            && has_removed_tui_help(&err),
         "unexpected compiler error: {}",
         err.message
     );

@@ -4,12 +4,10 @@
 
 mod cm_constants;
 mod command;
-mod damage;
 mod event;
 mod geometry;
 mod host;
 mod message_box_options;
-mod process;
 mod session;
 
 #[cfg(test)]
@@ -20,7 +18,6 @@ pub use command::{
     COMMAND_ID_CLOSE, COMMAND_ID_NEXT_WINDOW, COMMAND_ID_ZOOM, COMMAND_ID_ZOOM_BACK, CommandEvent,
     CommandId, CommandKind, CommandRegistry,
 };
-pub use damage::DamageRegion;
 pub use event::TuiEvent;
 pub use geometry::{ViewId, ViewRect};
 pub use host::TuiHost;
@@ -30,5 +27,4 @@ pub use message_box_options::{
     MESSAGE_BOX_OPTION_OK_BUTTON, MESSAGE_BOX_OPTION_OK_CANCEL, MESSAGE_BOX_OPTION_WARNING,
     MESSAGE_BOX_OPTION_YES_BUTTON, MESSAGE_BOX_OPTION_YES_NO_CANCEL,
 };
-pub use process::{BlockedInput, FocusDirection, ProcessOutcome};
 pub use session::TuiSession;

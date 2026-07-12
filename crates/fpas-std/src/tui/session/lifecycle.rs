@@ -22,7 +22,7 @@ impl TuiSession {
     /// This is used when the concrete backend owns the terminal lifecycle itself.
     pub fn open_deferred(
         &mut self,
-        console: &mut Console,
+        _console: &mut Console,
         location: SourceLocation,
     ) -> Result<(), StdError> {
         if self.open {
@@ -35,13 +35,9 @@ impl TuiSession {
 
         self.open = true;
         self.headless = false;
-        self.damage.clear();
-        self.redraw_hint = None;
         self.owns_raw_mode = false;
         self.owns_alt_screen = false;
         self.owns_mouse = false;
-        console.abort_tui_paint();
-
         Ok(())
     }
 
@@ -105,8 +101,6 @@ impl TuiSession {
         )?;
 
         let mut first_error = None;
-        console.abort_tui_paint();
-
         if self.owns_alt_screen
             && let Err(error) = console.leave_alt_screen(location)
         {
@@ -128,8 +122,6 @@ impl TuiSession {
         }
 
         self.open = false;
-        self.damage.clear();
-        self.redraw_hint = None;
         self.owns_raw_mode = false;
         self.owns_alt_screen = false;
         self.owns_mouse = false;
@@ -148,7 +140,7 @@ impl TuiSession {
     /// console to the desired virtual terminal size before calling this method.
     pub fn open_for_test(
         &mut self,
-        console: &mut Console,
+        _console: &mut Console,
         location: SourceLocation,
     ) -> Result<(), StdError> {
         if self.open {
@@ -159,11 +151,8 @@ impl TuiSession {
             ));
         }
 
-        console.abort_tui_paint();
         self.open = true;
         self.headless = true;
-        self.damage.clear();
-        self.redraw_hint = None;
         self.owns_raw_mode = false;
         self.owns_alt_screen = false;
         self.owns_mouse = false;

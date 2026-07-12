@@ -33,6 +33,15 @@ When asked to implement or modify behavior:
 6. When editing `.fpas` under `examples/`, `tests/`, or `apps/`, run `scripts/format-fpas-sources.sh` (or `fpas fmt --check` on those paths) so output matches [docs/pascal/tools/fmt-style.md](docs/pascal/tools/fmt-style.md).
 7. Before finishing, apply [Definition of done](#definition-of-done). For behavior or API changes, read the project skill [`.agents/skills/fpas-change-checklist/SKILL.md`](.agents/skills/fpas-change-checklist/SKILL.md).
 
+### Agent skills (FPAS)
+
+| Skill | When |
+| --- | --- |
+| [`fpas-authoring`](.agents/skills/fpas-authoring/SKILL.md) | Writing or editing `.fpas` sources, formatting, file placement |
+| [`fpas-projects`](.agents/skills/fpas-projects/SKILL.md) | `.fpasprj`, `.fpasworkspace`, CLI, test bundles |
+| [`fpas-change-checklist`](.agents/skills/fpas-change-checklist/SKILL.md) | Docs, tests, verify before finishing a behavior change |
+| [`turbo-vision-4-rust`](.agents/skills/turbo-vision-4-rust/SKILL.md) | `Std.Tui` bridge, upstream read-back closure |
+
 ## Definition of done
 
 Every implementation or behavior change is incomplete until docs and tests are checked — not only when the user asks.

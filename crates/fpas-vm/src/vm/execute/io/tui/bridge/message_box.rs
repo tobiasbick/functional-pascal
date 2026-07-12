@@ -65,14 +65,14 @@ fn bridge_headless_message_box(
     line: SourceLocation,
 ) -> Result<CommandId, VmError> {
     if let Some(command) = worker.bridge.take_dialog_result() {
-        return Ok(u16::try_from(command).map_err(|_| {
+        return u16::try_from(command).map_err(|_| {
             runtime_error(
                 RUNTIME_CONSOLE_STATE_ERROR,
                 "Application.TestSetDialogResult command must fit in 16 bits",
                 "Pass a non-negative command id such as `CM_OK` or a custom widget command.",
                 line,
             )
-        })?);
+        });
     }
 
     bridge_ensure_headless_app(worker, line)?;

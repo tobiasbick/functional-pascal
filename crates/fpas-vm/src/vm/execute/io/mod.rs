@@ -14,7 +14,7 @@ mod test_host;
 mod tui;
 
 pub(in crate::vm) use tui::HeadlessTvApp;
-pub(in crate::vm) use tui::TuiSession;
+pub(in crate::vm) use tui::TurboVisionSession;
 
 impl Worker {
     pub(super) fn try_exec_io(&mut self, op: Op, line: SourceLocation) -> Result<bool, VmError> {

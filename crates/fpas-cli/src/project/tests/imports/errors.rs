@@ -1,4 +1,4 @@
-use super::{build_program, load_and_build_program, load_project, write_program_project_file};
+use super::{build_program, load_project, write_program_project_file};
 use crate::test_support::{create_temp_dir, write_text};
 use std::fs;
 

@@ -4,7 +4,7 @@
 
 mod bridge;
 
-pub(in crate::vm) use bridge::TuiSession;
+pub(in crate::vm) use bridge::TurboVisionSession;
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;

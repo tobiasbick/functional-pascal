@@ -40,7 +40,7 @@ pub(in crate::vm::execute::io::tui::bridge) use views::{
     bridge_dialog_add_button, bridge_dialog_new_modal,
 };
 
-pub(in crate::vm) use session::TuiSession;
+pub(in crate::vm) use session::TurboVisionSession;
 mod application_intrinsics;
 mod application_records;
 mod commands;

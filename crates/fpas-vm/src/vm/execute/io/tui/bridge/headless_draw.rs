@@ -106,10 +106,9 @@ impl HeadlessTvApp {
     ) -> CommandId {
         let is_modal = (view.state() & SF_MODAL) != 0;
         self.desktop.add(view);
-        let view_id = self
-            .desktop
-            .top_view_id()
-            .expect("modal view was just added to the desktop");
+        let Some(view_id) = self.desktop.top_view_id() else {
+            return CM_QUIT;
+        };
 
         // Let pre-queued modal input close the view, but preserve application commands for Run.
         for _ in 0..8 {

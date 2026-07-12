@@ -214,7 +214,7 @@ impl Worker {
         self.bridge.reset();
     }
 
-    /// Opens a Turbo Vision session after try-1 state has been reset.
+    /// Opens a reset Turbo Vision session.
     pub(in crate::vm::execute::io::tui) fn open_bridge_session(&mut self) {
         self.bridge.open();
     }

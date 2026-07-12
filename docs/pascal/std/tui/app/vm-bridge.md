@@ -9,7 +9,7 @@ Contributor map for the Pascal-to-VM bridge. User-facing API docs live in [READM
 ```text
 Pascal Application.* / View.* / Desktop.Add
     → VM intrinsics (crates/fpas-vm/src/vm/execute/io/tui/)
-    → TuiSession + ViewRegistry (bridge/session.rs, bridge/registry.rs)
+    → TurboVisionSession + ViewRegistry (bridge/session.rs, bridge/registry.rs)
     → turbo_vision::app::Application on Worker.live_turbo_vision_app
          one live instance per Open … Close on the main worker
 ```

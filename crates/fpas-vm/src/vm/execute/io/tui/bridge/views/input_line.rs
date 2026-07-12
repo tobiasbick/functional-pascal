@@ -93,10 +93,10 @@ pub(in crate::vm::execute::io::tui::bridge) fn bridge_input_line_set_text(
     };
     cell.set(text.clone());
 
-    if worker.bridge.child_parent(handle).is_some() {
-        if let Some(binding) = worker.bridge.input_line_binding(handle) {
-            *binding.borrow_mut() = text;
-        }
+    if worker.bridge.child_parent(handle).is_some()
+        && let Some(binding) = worker.bridge.input_line_binding(handle)
+    {
+        *binding.borrow_mut() = text;
     }
 
     Ok(())

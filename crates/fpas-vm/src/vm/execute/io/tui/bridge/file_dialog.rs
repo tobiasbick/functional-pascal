@@ -38,7 +38,7 @@ pub(in crate::vm::execute::io::tui) fn bridge_run_file_dialog(
         .map(PathBuf::from);
     let mut file_dialog = FileDialog::new(bounds, &title, &wildcard, initial_dir).build();
 
-    let selected = if worker.with_tui(|tui| tui.session.is_headless()) {
+    let selected: Option<PathBuf> = if worker.with_tui(|tui| tui.session.is_headless()) {
         bridge_headless_run_file_dialog(worker, line)?
     } else {
         bridge_ensure_live_app(worker, line)?;
@@ -67,6 +67,43 @@ fn bridge_headless_run_file_dialog(
         .take_file_dialog_result()
         .unwrap_or(None)
         .map(PathBuf::from))
+}
+
+impl Worker {
+    /// Run a modal Turbo Vision file dialog and push `Option of string`.
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_run_file_dialog(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        let start_path = self.pop_optional_string("FileDialog StartPath", line)?;
+        let wildcard = self.pop_turbo_vision_string("FileDialog Wildcard", line)?;
+        let title = self.pop_turbo_vision_string("FileDialog Title", line)?;
+        let bounds = self.pop_turbo_vision_rect(line)?;
+        self.pop_tui_application(line)?;
+
+        if !self.bridge.is_open() {
+            return Err(runtime_error(
+                RUNTIME_CONSOLE_STATE_ERROR,
+                "Application.RunFileDialog requires an open Turbo Vision session",
+                "Call `Application.Open` or `Application.OpenForTest` before `Application.RunFileDialog`.",
+                line,
+            ));
+        }
+
+        let selected = bridge_run_file_dialog(self, bounds, title, wildcard, start_path, line)?;
+        self.push_optional_string(selected)
+    }
+
+    /// Queue the result consumed by the next headless `Application.RunFileDialog` call.
+    pub(in crate::vm::execute::io::tui) fn turbo_vision_test_set_file_dialog_result(
+        &mut self,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
+        let result = self.pop_optional_string("FileDialog test result", line)?;
+        self.pop_tui_application(line)?;
+        self.bridge.set_file_dialog_result(result);
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -111,42 +148,5 @@ mod tests {
         .expect("file dialog");
 
         assert_eq!(selected, Some("picked.txt".into()));
-    }
-}
-
-impl Worker {
-    /// Run a modal Turbo Vision file dialog and push `Option of string`.
-    pub(in crate::vm::execute::io::tui) fn turbo_vision_run_file_dialog(
-        &mut self,
-        line: SourceLocation,
-    ) -> Result<(), VmError> {
-        let start_path = self.pop_optional_string("FileDialog StartPath", line)?;
-        let wildcard = self.pop_turbo_vision_string("FileDialog Wildcard", line)?;
-        let title = self.pop_turbo_vision_string("FileDialog Title", line)?;
-        let bounds = self.pop_turbo_vision_rect(line)?;
-        self.pop_tui_application(line)?;
-
-        if !self.bridge.is_open() {
-            return Err(runtime_error(
-                RUNTIME_CONSOLE_STATE_ERROR,
-                "Application.RunFileDialog requires an open Turbo Vision session",
-                "Call `Application.Open` or `Application.OpenForTest` before `Application.RunFileDialog`.",
-                line,
-            ));
-        }
-
-        let selected = bridge_run_file_dialog(self, bounds, title, wildcard, start_path, line)?;
-        self.push_optional_string(selected)
-    }
-
-    /// Queue the result consumed by the next headless `Application.RunFileDialog` call.
-    pub(in crate::vm::execute::io::tui) fn turbo_vision_test_set_file_dialog_result(
-        &mut self,
-        line: SourceLocation,
-    ) -> Result<(), VmError> {
-        let result = self.pop_optional_string("FileDialog test result", line)?;
-        self.pop_tui_application(line)?;
-        self.bridge.set_file_dialog_result(result);
-        Ok(())
     }
 }

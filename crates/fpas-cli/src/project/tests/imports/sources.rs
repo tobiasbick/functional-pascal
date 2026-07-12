@@ -1,4 +1,4 @@
-use super::{Decl, build_program, load_project, toml_path, write_program_project_file};
+use super::{Decl, build_program, load_project, toml_path};
 use crate::test_support::{create_temp_dir, write_text};
 use std::fs;
 

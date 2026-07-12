@@ -1,4 +1,4 @@
-//! Turbo Vision bridge live turbo-vision `Application` session (no try-1 snapshot populate).
+//! Turbo Vision bridge live `Application` session.
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 

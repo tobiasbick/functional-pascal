@@ -146,6 +146,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/tui/message_box.fpas` | `Std.Tui` — upstream message box helper and `CM_OK` result |
 | `pascal/tui/file_dialog.fpas` | `Std.Tui` — upstream file dialog helper |
 | `pascal/tui/runtime_setters.fpas` | `Std.Tui` — live `StaticText.SetText` / `CheckBox.SetChecked` from `OnCommand` during `Run` |
+| `pascal/tui/mouse_toggle_smoke.fpas` | `Std.Tui` — interactive mouse read-back smoke for checkbox/radio |
 | `math/mandelbrot/mandelbrot_graph.fpas` | `Std.Graph` — native Mandelbrot explorer |
 | `math/julia/julia.fpas` | ASCII Julia set (**interactive** — see below) |
 | `math/julia/julia_graph.fpas` | Native-window Julia explorer with `Std.Graph` |
@@ -182,7 +183,9 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 | `pascal/tui/message_box.fpas` | Message box; OK closes and prints the result |
 | `pascal/tui/file_dialog.fpas` | File dialog; choose a file or cancel |
 | `pascal/tui/runtime_setters.fpas` | Window; Toggle updates label/check box live, Quit exits |
+| `pascal/tui/mouse_toggle_smoke.fpas` | Interactive mouse read-back smoke for checkbox/radio (manual terminal check) |
 | `math/julia/julia_graph.fpas` | Single-file native-window Julia explorer; arrows pan, `WASD` changes Julia constant, wheel zooms, left click recenters, `Esc` quits |
 | `math/mandelbrot/mandelbrot_graph.fpas` | Single-file native-window Mandelbrot explorer; arrows pan, wheel zooms, left click recenters, `1/2/3` switch palettes, `Esc` quits |
 | `math/mandelbrot/mandelbrot.fpasprj` | Project; fullscreen terminal Mandelbrot explorer (`Std.Console` event loop) |
+
 Automated Turbo Vision coverage is under `tests/tui/` (`views/`, `events/`, `smoke/`, `modals/`). Graph apps use `Application.Configure(App, Handlers)` and `Application.Run(App)`; see `docs/pascal/std/graph/app/README.md`. Custom terminal loops use `Std.Console`; see `docs/pascal/std/console/README.md`.

@@ -43,17 +43,29 @@ Well-scoped tasks with clear handoff docs are easier to land than open-ended ref
 **Start here:**
 
 - [docs/future/tui-bridged-readback.md](docs/future/tui-bridged-readback.md) — blocker, done-when checklist, upstream issue text
-- [docs/future/tui-bridged-readback.md](docs/future/tui-bridged-readback.md) — remaining adapter handoff
 - [AGENTS.md § Upstream watch — turbo-vision-4-rust read-back](AGENTS.md#upstream-watch--turbo-vision-4-rust-read-back-stream-a) — periodic check and closure steps
 - [`.agents/skills/turbo-vision-4-rust/SKILL.md`](.agents/skills/turbo-vision-4-rust/SKILL.md) — upstream API and dependency conventions
 
 **Optional upstream contribution:** Implement read-back in turbo-vision-4-rust first, then return to FPAS for the adapter deletion — same closure path, split across two repos.
+
+## Agent skills
+
+Project skills under [`.agents/skills/`](.agents/skills/) complement `AGENTS.md`:
+
+| Skill | Use when |
+| --- | --- |
+| [`fpas-authoring`](.agents/skills/fpas-authoring/SKILL.md) | Writing or editing `.fpas` sources, formatting, file placement |
+| [`fpas-projects`](.agents/skills/fpas-projects/SKILL.md) | `.fpasprj`, `.fpasworkspace`, CLI, test bundles |
+| [`fpas-change-checklist`](.agents/skills/fpas-change-checklist/SKILL.md) | Docs, tests, verify before finishing a behavior change |
+| [`turbo-vision-4-rust`](.agents/skills/turbo-vision-4-rust/SKILL.md) | `Std.Tui` bridge and upstream read-back closure |
 
 ## Contribution Standard
 
 All AI contributions must follow `AGENTS.md` (including [Definition of done](AGENTS.md#definition-of-done)).
 
 For behavior or API work, read [`.agents/skills/fpas-change-checklist/SKILL.md`](.agents/skills/fpas-change-checklist/SKILL.md) at the start and re-check before finishing.
+
+When writing `.fpas` sources or project manifests, also read [`fpas-authoring`](.agents/skills/fpas-authoring/SKILL.md) and [`fpas-projects`](.agents/skills/fpas-projects/SKILL.md) as needed.
 
 Core expectations:
 
@@ -102,11 +114,12 @@ When contributing:
 
 1. Read `AGENTS.md`.
 2. Read the relevant area hub in `docs/pascal/` (for std work, start at [`docs/pascal/std/README.md`](docs/pascal/std/README.md)).
-3. Inspect the existing implementation.
-4. Prefer simplification and consolidation.
-5. Add or update tests (Rust in `crates/*/src/tests/` or `crates/*/tests/`; FPAS `*_test.fpas` under `tests/`).
-6. Ensure the final result matches the current specification.
-7. Verify with `cargo fmt`, `cargo build`, and `cargo test --workspace` unless the change is docs-only.
+3. For `.fpas` authoring or project/CLI work, read [`fpas-authoring`](.agents/skills/fpas-authoring/SKILL.md) and/or [`fpas-projects`](.agents/skills/fpas-projects/SKILL.md).
+4. Inspect the existing implementation.
+5. Prefer simplification and consolidation.
+6. Add or update tests (Rust in `crates/*/src/tests/` or `crates/*/tests/`; FPAS `*_test.fpas` under `tests/`).
+7. Ensure the final result matches the current specification.
+8. Verify with `cargo fmt`, `cargo build`, and `cargo test --workspace` unless the change is docs-only.
 
 ## Non-Goals
 

@@ -171,7 +171,7 @@ More examples in the [`examples/`](examples/) directory.
 
 ### Tests
 
-Author-facing tests are `*_test.fpas` programs under [`tests/`](tests/) (`stdlib/`, `concurrency/`, `runner/`, `console/`, `tui/`, `graph/`). Run the full suite with `fpas test tests/` or `cargo test -p fpas-cli fpas_regression_suite_passes`. See [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md) and [`examples/README.md`](examples/README.md).
+Author-facing tests are `*_test.fpas` programs under [`tests/`](tests/) (`stdlib/`, `concurrency/`, `runner/`, `console/`, `tui/` with `views/`, `events/`, `smoke/`, `modals/`, `graph/`). Run the full suite with `fpas test tests/` or `cargo test -p fpas-cli fpas_regression_suite_passes`. See [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md) and [`examples/README.md`](examples/README.md).
 
 ### Multi-file projects and libraries
 
@@ -219,7 +219,7 @@ Planned work (not current behavior): [`docs/future/`](docs/future/).
 ## Contributing
 
 - Language spec: [`docs/pascal/`](docs/pascal/) ([hub](docs/pascal/README.md)) — source of truth for implemented behavior
-- AI agents: [`AI_CONTRIBUTING.md`](AI_CONTRIBUTING.md) and [`AGENTS.md`](AGENTS.md)
+- AI agents: [`AI_CONTRIBUTING.md`](AI_CONTRIBUTING.md), [`AGENTS.md`](AGENTS.md), and project skills under [`.agents/skills/`](.agents/skills/) (`fpas-authoring`, `fpas-projects`, `fpas-change-checklist`, `turbo-vision-4-rust`)
 - Examples: [`examples/README.md`](examples/README.md)
 - FPAS tests: [`tests/`](tests/) and [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md)
 - Verify locally: `cargo fmt`, `cargo build`, `cargo test --workspace`, and `fpas fmt --check` on touched `.fpas` paths when relevant

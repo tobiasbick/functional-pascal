@@ -14,7 +14,7 @@ Canonical output rules for the AST pretty-printer. These are **normative for `fp
 
 There is **no** “messy input” column in this doc yet. Source before formatting may omit `begin` / `end`, use `WRITELN`, or extra blank lines — those are normalized in the golden blocks. Comments are preserved (see [Comments](#comments)).
 
-Spec links: [`language/basics/README.md`](../language/basics/README.md), [`language/control-flow/README.md`](../language/control-flow/README.md), [`.cursor/rules/functional-pascal.mdc`](../../../.cursor/rules/functional-pascal.mdc).
+Spec links: [`language/basics/README.md`](../language/basics/README.md), [`language/control-flow/README.md`](../language/control-flow/README.md), [`.agents/skills/fpas-authoring/SKILL.md`](../../../.agents/skills/fpas-authoring/SKILL.md).
 
 ---
 

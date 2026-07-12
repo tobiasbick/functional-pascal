@@ -1,4 +1,4 @@
-//! Borland / Turbo Vision `CM_*` command identifiers for try-2 `Std.Tui`.
+//! Borland / Turbo Vision `CM_*` command identifiers for Turbo Vision `Std.Tui`.
 //!
 //! Values are generated from the pinned `turbo_vision::core::command` dependency
 //! by `crates/fpas-std/build.rs`. `CM_USER` remains project-local.
@@ -7,7 +7,7 @@
 
 #![allow(
     dead_code,
-    reason = "try-2 constants; sema exposes the supported Pascal subset"
+    reason = "Turbo Vision constants; sema exposes the supported Pascal subset"
 )]
 
 include!(concat!(env!("OUT_DIR"), "/cm_constants_generated.rs"));

@@ -153,7 +153,7 @@ procedures.
 | [`console/readln_order_test.fpas`](../../../../tests/console/readln_order_test.fpas) | Multiple `PushReadLn` lines in order |
 | [`runner/skip_test.fpas`](../../../../tests/runner/skip_test.fpas) | `Skip` + runner `SKIP` reporting |
 | [`runner/stdout_echo_test.fpas`](../../../../tests/runner/stdout_echo_test.fpas) | `*.expect.stdout` |
-| [`tui/smoke/run_quit_test.fpas`](../../../../tests/tui/smoke/run_quit_test.fpas) | Headless Try-2 `Application.Run` |
+| [`tui/smoke/run_quit_test.fpas`](../../../../tests/tui/smoke/run_quit_test.fpas) | Headless Turbo Vision bridge `Application.Run` |
 | [`tui/smoke/chrome_paint_test.fpas`](../../../../tests/tui/smoke/chrome_paint_test.fpas) | Menu/status chrome + `AssertScreenCell` |
 | [`graph/graph_smoke_test.fpas`](../../../../tests/graph/graph_smoke_test.fpas) | Headless graph (`OpenForTest` + `TestSendKey`) + `*.expect.pixels` |
 | [`suite.fpasprj`](../../../../tests/suite.fpasprj) | `kind = "test"` project bundle |

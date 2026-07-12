@@ -9,7 +9,7 @@ use fpas_bytecode::{SourceLocation, Value};
 use std::sync::Arc;
 use turbo_vision::app::Application as TurboVisionApplication;
 
-use super::execute::{HeadlessTvApp, Try2Session};
+use super::execute::{HeadlessTvApp, TuiSession};
 
 /// A worker runs on a single OS thread and executes tasks pulled from the shared queue.
 ///
@@ -31,8 +31,8 @@ pub(crate) struct Worker {
     pub live_turbo_vision_app: Option<TurboVisionApplication>,
     /// Headless turbo-vision draw session for `OpenForTest` (main worker only).
     pub(in crate::vm) headless_tv_app: Option<HeadlessTvApp>,
-    /// Try-2 TUI rewrite: Rust-owned view registry (see `docs/refactor-tui-try-2/`).
-    pub(in crate::vm) try2: Try2Session,
+    /// TUI bridge: Rust-owned view registry (see `docs/pascal/std/tui/app/vm-bridge.md`).
+    pub(in crate::vm) bridge: TuiSession,
 }
 
 impl Worker {
@@ -51,7 +51,7 @@ impl Worker {
             allow_shutdown_during_sync_call: false,
             live_turbo_vision_app: None,
             headless_tv_app: None,
-            try2: Try2Session::default(),
+            bridge: TuiSession::default(),
         }
     }
 
@@ -70,7 +70,7 @@ impl Worker {
             allow_shutdown_during_sync_call: false,
             live_turbo_vision_app: None,
             headless_tv_app: None,
-            try2: Try2Session::default(),
+            bridge: TuiSession::default(),
         }
     }
 

@@ -1,4 +1,4 @@
-//! Shared `Std.Tui` session state and try-2 record helpers.
+//! Shared `Std.Tui` session state and Turbo Vision record helpers.
 //!
 //! **Documentation:** `docs/pascal/std/tui/app/vm-bridge.md`
 
@@ -14,7 +14,7 @@ pub(crate) struct TuiState {
     pub turbo_vision_on_key: Option<Value>,
     /// Turbo Vision `Application.OnMouse`: `procedure (Application, Std.Console.Event)`.
     pub turbo_vision_on_mouse: Option<Value>,
-    /// Set by `Application.Quit`; consumed by the try-2 run loop.
+    /// Set by `Application.Quit`; consumed by the Turbo Vision run loop.
     pub quit_requested: bool,
 }
 

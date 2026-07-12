@@ -14,7 +14,7 @@ Simple terminal programs that draw every cell themselves (fullscreen explorers, 
 
 | Style | Starting points |
 | --- | --- |
-| Turbo Vision | `examples/pascal/tui/turbo_vision_dialog.fpas`, `examples/pascal/tui/turbo_vision_window_try2.fpas`, `apps/ide` |
+| Turbo Vision | `examples/pascal/tui/turbo_vision_dialog.fpas`, `examples/pascal/tui/turbo_vision_window.fpas`, `apps/ide` |
 | Console event loop | `examples/math/mandelbrot/mandelbrot.fpasprj`, `examples/math/julia/julia.fpas` |
 
 | Topic | Description |

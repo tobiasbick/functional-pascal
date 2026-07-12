@@ -45,7 +45,7 @@ begin
   return MenuBarHandle
 end;
 
-/// Open the terminal session, run the Turbo Vision TUI loop, and restore the terminal on exit.
+/// Open the terminal session, run the Turbo Vision loop, and restore the terminal on exit.
 
 procedure Run();
 begin

@@ -61,7 +61,7 @@ fn turbo_vision_command_event_dispatches_registered_fpas_on_command() {
     worker.run().expect("callback registration should succeed");
 
     worker
-        .try2_dispatch_command_event_for_tests(42, loc())
+        .bridge_dispatch_command_event_for_tests(42, loc())
         .expect("command dispatch should succeed");
 
     let output = shared
@@ -138,7 +138,7 @@ fn turbo_vision_on_command_handler_can_quit_application() {
     worker.run().expect("OnCommand registration should succeed");
 
     worker
-        .try2_dispatch_command_event_for_tests(CM_QUIT as u16, loc())
+        .bridge_dispatch_command_event_for_tests(CM_QUIT as u16, loc())
         .expect("command dispatch should succeed");
 
     let output = shared

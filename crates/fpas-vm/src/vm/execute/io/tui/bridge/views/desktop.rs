@@ -1,0 +1,224 @@
+//! Turbo Vision bridge `Desktop.Add` — attach modeless windows to the live or headless desktop.
+//!
+//! **Documentation:** `docs/pascal/std/tui/app/README.md`
+
+use super::super::app::bridge_ensure_live_app;
+use super::super::headless::bridge_ensure_headless_app;
+use crate::vm::Worker;
+use crate::vm::diagnostics::{VmError, runtime_error};
+use crate::vm::execute::io::tui::bridge::registry::{RegistryError, ViewKind};
+use crate::vm::execute::io::tui::bridge::session::TuiRoot;
+use fpas_bytecode::SourceLocation;
+use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
+use turbo_vision::views::View;
+/// Adds a Turbo Vision window to the upstream desktop (`Desktop.Add`).
+pub(in crate::vm::execute::io::tui::bridge) fn bridge_desktop_add(
+    worker: &mut Worker,
+    window_handle: u32,
+    line: SourceLocation,
+) -> Result<(), VmError> {
+    if !worker.bridge.is_open() {
+        return Err(runtime_error(
+            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            "TUI session is not open",
+            "Call `Application.Open` before `Desktop.Add`.",
+            line,
+        ));
+    }
+
+    if worker.bridge.is_on_desktop(window_handle) {
+        return Err(runtime_error(
+            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            format!("Window handle {window_handle} is already on the desktop"),
+            "Each window may only be added once per session.",
+            line,
+        ));
+    }
+
+    let kind = worker
+        .bridge
+        .registry
+        .get(window_handle)
+        .ok_or_else(|| registry_error(RegistryError::UnknownHandle(window_handle), line))?
+        .kind;
+    if kind != ViewKind::Window && kind != ViewKind::EditorWindow {
+        return Err(registry_error(
+            RegistryError::WrongKind {
+                handle: window_handle,
+                expected: ViewKind::Window,
+                actual: kind,
+            },
+            line,
+        ));
+    }
+    let Some(root) = worker.bridge.take_root(window_handle) else {
+        return Err(runtime_error(
+            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            format!("Handle {window_handle} is not a Window"),
+            "Pass a handle from `Window.New`.",
+            line,
+        ));
+    };
+    let window: Box<dyn View> = match root {
+        TuiRoot::Window(window) => window,
+        TuiRoot::EditorWindow(window) => window,
+        TuiRoot::ModalDialog(_) => unreachable!("validated desktop root"),
+    };
+
+    let view_id = if worker.with_tui(|tui| tui.session.is_headless()) {
+        bridge_ensure_headless_app(worker, line)?;
+        let Some(app) = worker.headless_tv_app.as_mut() else {
+            return Err(runtime_error(
+                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                "Headless Turbo Vision session is not initialized",
+                "Call `Application.OpenForTest` before `Desktop.Add`.",
+                line,
+            ));
+        };
+        app.desktop_mut().add(window).as_u16()
+    } else {
+        bridge_ensure_live_app(worker, line)?;
+        let Some(app) = worker.live_turbo_vision_app.as_mut() else {
+            return Err(runtime_error(
+                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                "Turbo Vision live session is not initialized",
+                "Call `Application.Open` before `Desktop.Add`.",
+                line,
+            ));
+        };
+        app.desktop.add(window).as_u16()
+    };
+
+    worker.bridge.mark_desktop_window(window_handle);
+    worker
+        .bridge
+        .registry
+        .set_view_id(window_handle, view_id)
+        .map_err(|_| registry_error(RegistryError::UnknownHandle(window_handle), line))?;
+    Ok(())
+}
+
+fn registry_error(error: RegistryError, line: SourceLocation) -> VmError {
+    let (message, help) = match error {
+        RegistryError::UnknownHandle(handle) => (
+            format!("Handle {handle} is not live"),
+            "Use a handle returned by `Window.New` in the active session.",
+        ),
+        RegistryError::WrongKind {
+            handle,
+            expected,
+            actual,
+        } => (
+            format!("Handle {handle} expected {:?}, got {:?}", expected, actual),
+            "Pass a Window handle to `Desktop.Add`.",
+        ),
+    };
+    runtime_error(RUNTIME_INTRINSIC_STACK_STATE_ERROR, message, help, line)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tests::helpers::{loc, minimal_shared_state};
+    use crate::vm::Worker;
+    use crate::vm::execute::io::tui::bridge::registry::ViewKind;
+    use crate::vm::execute::io::tui::bridge::views::button::bridge_button_new;
+    use crate::vm::execute::io::tui::bridge::views::window::{
+        bridge_window_attach_button, bridge_window_new,
+    };
+    use fpas_bytecode::Chunk;
+    use std::sync::Arc;
+    use turbo_vision::core::command::CM_QUIT;
+    use turbo_vision::core::geometry::Rect;
+
+    fn headless_bridge_worker(width: u16, height: u16) -> Worker {
+        let shared = Arc::new(minimal_shared_state(Chunk::new()));
+        let mut worker = Worker::new_main(shared);
+        worker.with_console(|console| console.resize(width, height));
+        {
+            let mut tui = worker.shared.tui.lock().unwrap_or_else(|e| e.into_inner());
+            worker.with_console(|console| {
+                tui.session
+                    .open_for_test(console, loc())
+                    .expect("open_for_test");
+            });
+        }
+        worker.open_bridge_session();
+        worker
+    }
+
+    #[test]
+    fn desktop_add_registers_upstream_view_id() {
+        let mut worker = headless_bridge_worker(60, 20);
+        let window = bridge_window_new(&mut worker, Rect::new(5, 3, 30, 10), "Test".into(), loc())
+            .expect("window");
+        bridge_desktop_add(&mut worker, window, loc()).expect("desktop add");
+        let entry = worker
+            .bridge
+            .registry
+            .require(window, ViewKind::Window)
+            .expect("window entry");
+        assert_ne!(entry.view_id, 0);
+        assert!(worker.bridge.is_on_desktop(window));
+    }
+
+    #[test]
+    fn window_with_quit_button_on_desktop() {
+        let mut worker = headless_bridge_worker(60, 20);
+        let window = bridge_window_new(&mut worker, Rect::new(5, 3, 30, 10), "Test".into(), loc())
+            .expect("window");
+        let button = bridge_button_new(
+            &mut worker,
+            Rect::new(10, 4, 20, 6),
+            "Quit".into(),
+            CM_QUIT,
+            false,
+            loc(),
+        )
+        .expect("button");
+        bridge_window_attach_button(&mut worker, window, button, loc()).expect("attach");
+        bridge_desktop_add(&mut worker, window, loc()).expect("desktop add");
+        assert!(worker.bridge.button_click_point(button).is_some());
+    }
+
+    #[test]
+    fn desktop_button_click_produces_quit_command_in_run_step() {
+        let mut worker = headless_bridge_worker(60, 20);
+        let window = bridge_window_new(
+            &mut worker,
+            Rect::from_coords(5, 3, 35, 13),
+            "Test".into(),
+            loc(),
+        )
+        .expect("window");
+        let button = bridge_button_new(
+            &mut worker,
+            Rect::from_coords(10, 4, 20, 6),
+            "Quit".into(),
+            CM_QUIT,
+            false,
+            loc(),
+        )
+        .expect("button");
+        bridge_window_attach_button(&mut worker, window, button, loc()).expect("attach");
+        bridge_desktop_add(&mut worker, window, loc()).expect("desktop add");
+
+        let point = worker
+            .bridge
+            .button_click_point(button)
+            .expect("click point");
+        bridge_ensure_headless_app(&mut worker, loc()).expect("headless app");
+        let app = worker.headless_tv_app.as_mut().expect("app");
+        app.push_mouse_down(point.x, point.y);
+        app.push_mouse_up(point.x, point.y);
+
+        let mut command = None;
+        for _ in 0..16 {
+            if let Ok(Some(cmd)) = app.run_step() {
+                command = Some(cmd);
+                break;
+            }
+        }
+        assert_eq!(command, Some(CM_QUIT));
+    }
+}

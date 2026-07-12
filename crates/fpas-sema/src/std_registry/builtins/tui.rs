@@ -19,8 +19,8 @@ pub(super) fn check_tui_builtin_std_call(
 ) -> Option<Ty> {
     match name {
         s::STD_TUI_APPLICATION_RUN => Some(check_application_run(c, args, span)),
-        s::STD_TUI_DIALOG_ADD => Some(check_try2_dialog_add(c, args, span)),
-        s::STD_TUI_WINDOW_ADD => Some(check_try2_window_add(c, args, span)),
+        s::STD_TUI_DIALOG_ADD => Some(check_bridge_dialog_add(c, args, span)),
+        s::STD_TUI_WINDOW_ADD => Some(check_bridge_window_add(c, args, span)),
         _ => None,
     }
 }
@@ -83,7 +83,7 @@ fn check_application_run(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     Ty::Unit
 }
 
-fn check_try2_dialog_add(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_bridge_dialog_add(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
@@ -139,7 +139,7 @@ fn check_try2_dialog_add(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     Ty::Unit
 }
 
-fn check_try2_window_add(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_bridge_window_add(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,

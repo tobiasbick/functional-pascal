@@ -2,7 +2,7 @@
   Run in a real terminal, toggle the controls with the mouse, then Quit.
   The program prints the read-back state afterwards; it must match what
   you selected on screen. Covers the optional live-terminal item in
-  docs/refactor-tui-try-2/verification.md. }
+  docs/future/tui-bridged-readback.md. }
 
 program TuiMouseToggleSmoke;
 

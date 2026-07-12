@@ -142,9 +142,9 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/tui/turbo_vision_outline.fpas` | `Std.Tui` — outline tree in a window |
 | `pascal/tui/turbo_vision_window.fpas` | `Std.Tui` — window, static text, input line, menu/status chrome |
 | `pascal/tui/exec_dialog.fpas` | `Std.Tui` — modal `ExecView` with `InputLine.Text` / `CheckBox.Checked` read-back |
-| `pascal/tui/modal_button_try2.fpas` | `Std.Tui` — `Dialog.NewModal`, `Button.New`, `ExecView` |
+| `pascal/tui/modal_button.fpas` | `Std.Tui` — `Dialog.NewModal`, `Button.New`, `ExecView` |
 | `pascal/tui/message_box.fpas` | `Std.Tui` — upstream message box helper and `CM_OK` result |
-| `pascal/tui/file_dialog_try2.fpas` | `Std.Tui` — upstream file dialog helper |
+| `pascal/tui/file_dialog.fpas` | `Std.Tui` — upstream file dialog helper |
 | `pascal/tui/runtime_setters.fpas` | `Std.Tui` — live `StaticText.SetText` / `CheckBox.SetChecked` from `OnCommand` during `Run` |
 | `math/mandelbrot/mandelbrot_graph.fpas` | `Std.Graph` — native Mandelbrot explorer |
 | `math/julia/julia.fpas` | ASCII Julia set (**interactive** — see below) |
@@ -178,9 +178,9 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 | `pascal/tui/turbo_vision_outline.fpas` | Outline tree in a window; Close exits |
 | `pascal/tui/turbo_vision_window.fpas` | Window with menu bar, status line, input line; Quit exits |
 | `pascal/tui/exec_dialog.fpas` | Modal dialog; OK/Cancel closes, entered name printed after |
-| `pascal/tui/modal_button_try2.fpas` | Modal; OK/Cancel via mouse or Enter/Esc |
+| `pascal/tui/modal_button.fpas` | Modal; OK/Cancel via mouse or Enter/Esc |
 | `pascal/tui/message_box.fpas` | Message box; OK closes and prints the result |
-| `pascal/tui/file_dialog_try2.fpas` | File dialog; choose a file or cancel |
+| `pascal/tui/file_dialog.fpas` | File dialog; choose a file or cancel |
 | `pascal/tui/runtime_setters.fpas` | Window; Toggle updates label/check box live, Quit exits |
 | `math/julia/julia_graph.fpas` | Single-file native-window Julia explorer; arrows pan, `WASD` changes Julia constant, wheel zooms, left click recenters, `Esc` quits |
 | `math/mandelbrot/mandelbrot_graph.fpas` | Single-file native-window Mandelbrot explorer; arrows pan, wheel zooms, left click recenters, `1/2/3` switch palettes, `Esc` quits |

@@ -90,7 +90,7 @@ pub const STD_TUI_APPLICATION_RUN_FILE_DIALOG: &str = std_tui!("Application.RunF
 /// Queue the result returned by the next headless `Application.RunFileDialog` call.
 pub const STD_TUI_APPLICATION_TEST_SET_FILE_DIALOG_RESULT: &str =
     std_tui!("Application.TestSetFileDialogResult");
-/// Run a modal dialog via try-2 `Application.ExecView` and return the closing command id.
+/// Run a modal dialog via Turbo Vision `Application.ExecView` and return the closing command id.
 pub const STD_TUI_APPLICATION_EXEC_VIEW: &str = std_tui!("Application.ExecView");
 /// Headless test helper: queue a keyboard event.
 pub const STD_TUI_TEST_INJECT_KEYBOARD: &str = std_tui!("Test.InjectKeyboard");

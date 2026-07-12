@@ -2,9 +2,9 @@
 //!
 //! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 
-mod try2;
+mod bridge;
 
-pub(in crate::vm) use try2::Try2Session;
+pub(in crate::vm) use bridge::TuiSession;
 
 use crate::vm::Worker;
 use crate::vm::diagnostics::VmError;
@@ -18,7 +18,7 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<bool, VmError> {
         if self.try_exec_tui_application_intrinsic(intrinsic, line)?
-            || self.try_exec_try2_intrinsic(intrinsic, line)?
+            || self.try_exec_bridge_intrinsic(intrinsic, line)?
             || self.try_exec_turbo_vision_intrinsic(intrinsic, line)?
             || self.try_exec_tui_test_host_intrinsic(intrinsic, line)?
         {
@@ -28,7 +28,7 @@ impl Worker {
         Ok(false)
     }
 
-    /// Dispatch shared application chrome, modal, and test intrinsics on the try-2 path.
+    /// Dispatch shared application chrome, modal, and test intrinsics on the Turbo Vision path.
     pub(super) fn try_exec_turbo_vision_intrinsic(
         &mut self,
         intrinsic: Intrinsic,
@@ -75,4 +75,4 @@ impl Worker {
     }
 }
 
-pub(in crate::vm) use try2::headless_draw::HeadlessTvApp;
+pub(in crate::vm) use bridge::headless_draw::HeadlessTvApp;

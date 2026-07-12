@@ -1,6 +1,6 @@
 //! Hints for standard-library symbols intentionally removed from the public surface.
 
-const TUI_REMOVED_HINT: &str = "The old try-1 Std.Tui host/view API was removed during the Turbo Vision rewrite. Use the try-2 facade: Application.Open or OpenForTest, Dialog.NewModal, Button.New, Dialog.Add, Window.New, Desktop.Add, Application.Run(App, OnCommand), Application.ExecView, and CM_* command constants.";
+const TUI_REMOVED_HINT: &str = "The old try-1 Std.Tui host/view API was removed during the Turbo Vision rewrite. Use the Turbo Vision facade: Application.Open or OpenForTest, Dialog.NewModal, Button.New, Dialog.Add, Window.New, Desktop.Add, Application.Run(App, OnCommand), Application.ExecView, and CM_* command constants.";
 
 const REMOVED_TUI_PREFIXES: &[&str] = &[
     "Application.Host",
@@ -43,7 +43,7 @@ const REMOVED_TUI_PREFIXES: &[&str] = &[
     "Application.QueryScreen",
     "Command.",
     "Dialog.AddButton",
-    "Application.Try2Inject",
+    "Application.TestInject",
 ];
 
 /// Returns a migration hint when `name` targets a removed `Std.Tui` callable.

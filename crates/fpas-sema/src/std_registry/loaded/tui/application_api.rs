@@ -6,9 +6,9 @@ use fpas_std::std_symbols as s;
 
 /// Register lifecycle, chrome, and test helpers on `Std.Tui.Application`.
 ///
-/// View construction lives in try-2 `Dialog.NewModal`, `Button.New`, `Window.New`, etc.
+/// View construction lives in Turbo Vision `Dialog.NewModal`, `Button.New`, `Window.New`, etc.
 ///
-/// **Documentation:** `docs/pascal/std/tui/session.md`, `docs/refactor-tui-try-2/target-api.md`
+/// **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md`
 pub(super) fn register_application_api(
     checker: &mut Checker,
     types: &TuiTypes,

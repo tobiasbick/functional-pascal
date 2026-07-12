@@ -1,0 +1,24 @@
+{ Standard Turbo Vision file dialog demo on the Turbo Vision path. Run in a terminal. }
+
+program TuiFileDialog;
+
+uses Std.Console, Std.Option, Std.Tui;
+
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+begin
+  var App: Application := Application.New();
+  var Selected: option of string := Application.RunFileDialog(App, Bounds(10, 5, 50, 14), 'Open File', '*', None);
+  Application.Close(App);
+  if IsSome(Selected) then
+  begin
+    WriteLn('Selected: ', Unwrap(Selected))
+  end
+  else
+  begin
+    WriteLn('Canceled')
+  end
+end.

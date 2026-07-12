@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         "chrome.inc",
         "test_host.inc",
         "widgets.inc",
-        "try2.inc",
+        "bridge.inc",
     ];
 
     let mut variants = String::new();

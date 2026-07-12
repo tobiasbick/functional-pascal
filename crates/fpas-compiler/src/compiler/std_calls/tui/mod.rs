@@ -3,8 +3,8 @@
 //! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 mod application;
+mod bridge;
 mod test_host;
-mod try2;
 
 use crate::error::CompileError;
 use fpas_bytecode::SourceLocation;
@@ -23,7 +23,7 @@ impl Compiler {
         if self.compile_tui_application_call(name, args, location)? {
             return Ok(true);
         }
-        if self.compile_tui_try2_call(name, args, location)? {
+        if self.compile_tui_bridge_call(name, args, location)? {
             return Ok(true);
         }
         if self.compile_tui_test_host_call(name, args, location)? {

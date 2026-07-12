@@ -74,7 +74,7 @@ You may call `MessageBox` from `OnCommand` while `Run` is active (for example He
 
 ## Headless tests
 
-Headless `OpenForTest` runs a real upstream modal paint path via `try2_headless_exec_view`, or you can queue a stub result with [`Application.TestSetDialogResult`](testing.md) before `MessageBox`.
+Headless `OpenForTest` runs a real upstream modal paint path via `bridge_headless_exec_view`, or you can queue a stub result with [`Application.TestSetDialogResult`](testing.md) before `MessageBox`.
 
 ```pascal
 Application.TestSetDialogResult(App, CM_OK);

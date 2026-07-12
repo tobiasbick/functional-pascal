@@ -6,10 +6,10 @@
 //! **Documentation:** `docs/pascal/std/tui/session.md`, `docs/pascal/std/tui/app/README.md` (from the repository root).
 
 mod application_api;
+mod bridge_api;
 mod handlers;
 mod message_box_api;
 mod test_api;
-mod try2_api;
 
 use crate::check::Checker;
 use crate::std_registry::loaded::type_registration;
@@ -167,5 +167,5 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
     };
     application_api::register_application_api(checker, &types, &callbacks, &application_handlers);
     test_api::register_test_api(checker, &types);
-    try2_api::register_try2_api(checker, &types, &callbacks);
+    bridge_api::register_bridge_api(checker, &types, &callbacks);
 }

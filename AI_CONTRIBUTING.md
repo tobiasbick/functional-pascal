@@ -36,14 +36,14 @@ Well-scoped tasks with clear handoff docs are easier to land than open-ended ref
 
 ### Close TUI Stream A — remove three `bridged_*` adapters
 
-**What:** Finish the last step of the try-2 TUI rewrite once upstream read-back exists for `CheckBox`, `RadioButton`, and `OutlineViewer` in [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust).
+**What:** Finish the last step of the Turbo Vision rewrite once upstream read-back exists for `CheckBox`, `RadioButton`, and `OutlineViewer` in [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust).
 
 **Why it is a good fit:** The migration is already done (API, docs, IDE, tests). Only three small VM shim files remain because the current `turbo-vision` pin (`v2.0.0`) lacks live state read-back for those widget types. Success is verifiable: delete adapters, bump the dependency, re-run listed regressions, `rg bridged_ crates/` → zero, then archive the plan.
 
 **Start here:**
 
 - [docs/future/tui-bridged-readback.md](docs/future/tui-bridged-readback.md) — blocker, done-when checklist, upstream issue text
-- [docs/refactor-tui-try-2/remaining-work.md](docs/refactor-tui-try-2/remaining-work.md) — Stream A / D handoff
+- [docs/future/tui-bridged-readback.md](docs/future/tui-bridged-readback.md) — remaining adapter handoff
 - [AGENTS.md § Upstream watch — turbo-vision-4-rust read-back](AGENTS.md#upstream-watch--turbo-vision-4-rust-read-back-stream-a) — periodic check and closure steps
 - [`.agents/skills/turbo-vision-4-rust/SKILL.md`](.agents/skills/turbo-vision-4-rust/SKILL.md) — upstream API and dependency conventions
 

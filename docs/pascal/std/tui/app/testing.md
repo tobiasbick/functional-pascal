@@ -1,6 +1,6 @@
 # Std.Tui native testing
 
-Headless Turbo Vision tests use `Application.OpenForTest`, try-2 view construction, `Std.Tui.Test.*` helpers, and `Application.Run`.
+Headless Turbo Vision tests use `Application.OpenForTest`, Turbo Vision view construction, `Std.Tui.Test.*` helpers, and `Application.Run`.
 
 Example:
 

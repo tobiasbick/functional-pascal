@@ -1,67 +1,49 @@
-# Std.Tui: upstream read-back for checkbox, radio, and outline
+# Std.Tui: three upstream read-back blockers
 
-**Status:** blocked on `turbo-vision` v2.0.0 (git tag `v2.0.0`)  
-**Branch:** `refactor/tui-try-2`  
-**Plan handoff:** [remaining-work.md](../refactor-tui-try-2/remaining-work.md) stream A
+**Status:** the Turbo Vision bridge refactor is complete except for these three adapters.
+**Upstream pin:** `turbo-vision` git tag `v2.0.0`.
 
-The try-2 TUI rewrite is **functionally complete**. Only this upstream gap blocks formal Phase 7 sign-off (adapter deletion + plan archive).
+## Blockers
 
-## Problem
+| Upstream view | FPAS adapter | Required read-back |
+| --- | --- | --- |
+| `CheckBox` | `bridge/bridged_check_box.rs` | checked state |
+| `RadioButton` | `bridge/bridged_radio_button.rs` | selected index |
+| `OutlineViewer` | `bridge/bridged_outline.rs` | selection and selected text |
 
-FPAS try-2 still ships three VM bridge adapters:
+At the pinned upstream revision, these concrete views cannot be downcast from `dyn View` after `handle_event`; `View` has no supported `as_any_mut`-style hook. The adapters therefore synchronize keyboard and mouse changes into FPAS host cells. Removing them earlier would regress `CheckBox.Checked`, `RadioButton.Selected`, `Outline.Selection`, or `Outline.SelectedText`.
 
-- `crates/fpas-vm/src/vm/execute/io/tui/try2/bridged_check_box.rs`
-- `crates/fpas-vm/src/vm/execute/io/tui/try2/bridged_radio_button.rs`
-- `crates/fpas-vm/src/vm/execute/io/tui/try2/bridged_outline.rs`
+All other TUI widgets use direct upstream views. The current API is documented under [docs/pascal/std/tui/](../pascal/std/tui/README.md).
 
-At the current upstream pin, `CheckBox`, `RadioButton`, and `OutlineViewer` do not expose a supported live-state read-back hook through `dyn View`. There is no reliable `as_any_mut` downcast after `handle_event`, so the adapters copy keyboard/mouse selection into FPAS host cells. That keeps `CheckBox.Checked`, `RadioButton.Selected`, `Outline.Selection`, and `Outline.SelectedText` correct after interactive input.
+## Periodic upstream check
 
-Other widgets (`ListBox`, `Button`, `StaticText`, …) already use direct upstream views.
+Before touching TUI/VM code or declaring the refactor closed:
 
-## Contributor entry point
+1. Compare upstream releases with the `v2.0.0` pin in the root `Cargo.toml`.
+2. Check whether `CheckBox`, `RadioButton`, and `OutlineViewer` have documented live read-back or downcasting through `dyn View`.
+3. If available, bump the dependency and complete the closure steps below.
 
-This is a well-scoped closure task once upstream read-back exists (or after you add it upstream first):
+## Closure steps
 
-1. Read [AI_CONTRIBUTING.md](../../AI_CONTRIBUTING.md#good-entry-points) — **Close TUI Stream A**.
-2. Follow the done-when checklist below and [verification.md](../refactor-tui-try-2/verification.md).
-3. Optional split: implement read-back in [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust), then return to FPAS to delete the three adapters.
+1. Replace the three adapter constructions in `bridge/views/{check_box,radio_button,outline}.rs` with direct upstream views.
+2. Delete the three `bridged_*.rs` files and their declarations in `bridge/mod.rs`.
+3. Run:
 
-## Periodic check (agents)
+   ```bash
+   cargo test -p fpas-vm bridge::
+   fpas test tests/tui/views/check_box_test.fpas
+   fpas test tests/tui/views/radio_button_test.fpas
+   fpas test tests/tui/views/outline_test.fpas
+   fpas test tests/tui/views/outline_selection_test.fpas
+   fpas test tests/tui/events/check_box_mouse_test.fpas
+   fpas test tests/tui/events/radio_button_mouse_test.fpas
+   rg bridged_ crates/  # expect no matches
+   ```
 
-When touching TUI/VM code, before claiming the rewrite is fully closed, or when asked about remaining TUI work:
+4. Remove this file's blocker notice and the archive reference once the commands are green.
 
-1. Compare upstream tags/releases against the workspace pin in root `Cargo.toml` (`turbo-vision` tag `v2.0.0`).
-2. Search upstream for read-back or `as_any_mut` on `CheckBox`, `RadioButton`, and `OutlineViewer`.
-3. If unblocked, proceed with Stream A in [remaining-work.md](../refactor-tui-try-2/remaining-work.md).
-
-Full procedure: [AGENTS.md](../../AGENTS.md#upstream-watch--turbo-vision-4-rust-read-back-stream-a).
-
-## Done when
-
-1. Upstream adds downcast or a documented read-back API for those three types **or** FPAS bumps to a revision that includes it.
-2. Replace adapter construction in `try2/views/{check_box,radio_button,outline}.rs` with direct upstream views.
-3. Delete the three `bridged_*.rs` files and their `mod` declarations in `try2/mod.rs`.
-4. Re-run regressions:
-   - `tests/tui/views/check_box_test.fpas`
-   - `tests/tui/views/radio_button_test.fpas`
-   - `tests/tui/views/outline_test.fpas`
-   - `tests/tui/views/outline_selection_test.fpas`
-   - `tests/tui/events/check_box_mouse_test.fpas`
-   - `tests/tui/events/radio_button_mouse_test.fpas`
-5. `rg bridged_ crates/` returns no matches.
-6. Complete [verification.md](../refactor-tui-try-2/verification.md) plan closure (stream D).
-
-## Suggested upstream issue text
+## Suggested upstream issue
 
 > **Title:** Expose live read-back for `CheckBox`, `RadioButton`, and `OutlineViewer` embedders
 >
 > FPAS embeds turbo-vision views behind opaque Pascal handles. After keyboard/mouse input, we need to sync external state for checkbox checked state, radio selection, and outline selection/text. ListBox and other types already support this pattern; checkbox, radio, and outline require `View::as_any_mut` (or an equivalent documented read-back API) on those concrete types so embedders can update host cells after `handle_event`.
-
-## Verification
-
-```bash
-rg bridged_ crates/                    # expect zero after fix
-fpas test tests/tui/views/check_box_test.fpas
-fpas test tests/tui/events/check_box_mouse_test.fpas
-cargo test -p fpas-vm try2::
-```

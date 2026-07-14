@@ -15,7 +15,7 @@ monorepo/
 From the repository root:
 
 ```sh
-fpas examples/pascal/monorepo/apps/hello/hello.fpasprj
+fpas run examples/pascal/monorepo/apps/hello/hello.fpasprj
 ```
 
 From the workspace directory (runs the sole program member `hello`):

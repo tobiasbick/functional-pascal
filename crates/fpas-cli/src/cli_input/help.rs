@@ -5,8 +5,8 @@ pub(crate) const CLI_HELP: &str = "\
 fpas — Functional Pascal compiler
 
 Usage:
-    fpas [<file.fpas | file.fpasprj>] [-- <args>...]       Run a source file or project
-    fpas [-- <args>...]                                   Discover a workspace program or `.fpasprj` in cwd
+    fpas run [<file.fpas | file.fpasprj>] [-- <args>...]   Run a source file or project
+    fpas run [-- <args>...]                               Discover a workspace program or `.fpasprj` in cwd
     fpas check [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
                                                           Type-check without running
     fpas check                                            Discover `.fpasworkspace` or `.fpasprj` in cwd

@@ -8,8 +8,8 @@ This folder contains two Julia-set demos:
 ## Run
 
 ```sh
-fpas examples/math/julia/julia.fpas
-fpas examples/math/julia/julia_graph.fpas
+fpas run examples/math/julia/julia.fpas
+fpas run examples/math/julia/julia_graph.fpas
 ```
 
 ## `julia_graph.fpas` controls

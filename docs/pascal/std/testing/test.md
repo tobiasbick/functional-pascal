@@ -1,6 +1,6 @@
 # `Std.Test`
 
-Assertion procedures for FPAS test programs. Run single tests with `fpas` or batch-discover them with `fpas test` (see [CLI](../../program-structure/cli.md)).
+Assertion procedures for FPAS test programs. Run single tests with `fpas run` or batch-discover them with `fpas test` (see [CLI](../../program-structure/cli.md)).
 
 ```pascal
 program Example;
@@ -94,7 +94,7 @@ See [Projects](../../program-structure/projects.md) for `kind = "test"` manifest
 ### Single file
 
 ```sh
-fpas tests/runner/assert_basics_test.fpas
+fpas run tests/runner/assert_basics_test.fpas
 ```
 
 ### Batch runner

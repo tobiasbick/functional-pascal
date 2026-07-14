@@ -71,8 +71,10 @@ fn run_cli_rejects_directory_path() {
     let cwd = create_temp_dir("run-source-directory");
     write_text(&cwd.join("main.fpas"), "program Main;\nbegin\nend.\n");
 
-    let (exit_code, _, stderr_output) =
-        support::run_cli_args_and_capture_output(&[cwd.to_string_lossy().to_string()], &cwd);
+    let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
+        &[String::from("run"), cwd.to_string_lossy().to_string()],
+        &cwd,
+    );
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     assert_eq!(exit_code, 1);

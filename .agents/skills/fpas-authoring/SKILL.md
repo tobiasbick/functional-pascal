@@ -37,7 +37,7 @@ TUI tests group under `tests/tui/` (`views/`, `events/`, `smoke/`, `modals/`). B
 
 ## Decision workflow
 
-1. **Single-file scratch?** → `program` file; run with `fpas path.fpas` or `fpas check path.fpas`.
+1. **Single-file scratch?** → `program` file; run with `fpas run path.fpas` or `fpas check path.fpas`.
 2. **Multi-file app or library?** → follow `fpas-projects` skill; add units + `.fpasprj`.
 3. **Assert runtime behavior?** → `*_test.fpas` under `tests/` with `uses Std.Test`.
 4. **Teach a feature?** → `examples/` demo; keep it short and runnable.

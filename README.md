@@ -34,7 +34,7 @@ The binary is at `target/release/fpas` (or `fpas.exe` on Windows). Run it direct
 Alternatively, run without installing:
 
 ```sh
-cargo run -p fpas-cli -- examples/hello.fpas
+cargo run -p fpas-cli -- run examples/hello.fpas
 ```
 
 ### Hello World
@@ -52,7 +52,7 @@ end.
 Run it:
 
 ```sh
-fpas hello.fpas
+fpas run hello.fpas
 ```
 
 ### Formatting
@@ -178,11 +178,11 @@ Author-facing tests are `*_test.fpas` programs under [`tests/`](tests/) (`stdlib
 Larger programs use a `.fpasprj` project file. Reusable code is **source-level only**: `kind = "library"` projects whose units are merged at load time (no precompiled library artifacts). Reference them from `[dependencies].projects` (paths) or `[dependencies].workspace` (member `project.name` inside a `.fpasworkspace`). Libraries may hide internal units from dependents with `[exports].units` in the library `.fpasprj`. See [Projects](docs/pascal/program-structure/projects.md), [library-deps](examples/pascal/library-deps/), and [monorepo](examples/pascal/monorepo/).
 
 ```sh
-fpas my-app.fpasprj
+fpas run my-app.fpasprj
 fpas check my-lib.fpasprj
 fpas check my-suite.fpasworkspace   # check every workspace member
 cd my-suite && fpas check           # discover .fpasworkspace in cwd
-cd my-suite && fpas                 # run the sole program member
+cd my-suite && fpas run             # run the sole program member
 ```
 
 ## Documentation

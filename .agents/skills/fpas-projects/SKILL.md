@@ -3,7 +3,7 @@ name: fpas-projects
 description: >
   Guides Functional Pascal project manifests, workspaces, CLI workflows, and test bundles. Use when
   creating or editing `.fpasprj`, `.fpasworkspace`, dependencies, exports, `suite.fpasprj`, or running
-  `fpas`, `fpas check`, `fpas test`, `fpas fmt`. Also use when the user asks about project discovery,
+  `fpas run`, `fpas check`, `fpas test`, `fpas fmt`. Also use when the user asks about project discovery,
   library linking, workspace members, or how to run/check tests.
 ---
 
@@ -96,15 +96,16 @@ members = [
 ]
 ```
 
-Workspace lists members; **each consumer still declares its own** `[dependencies]`. `fpas check` with no path checks all members; `fpas` with no path runs the sole `kind = "program"` member.
+Workspace lists members; **each consumer still declares its own** `[dependencies]`. `fpas check` with no path checks all members; `fpas run` with no path runs the sole `kind = "program"` member.
 
 ## CLI quick reference
 
 | Command | Purpose |
 |---------|---------|
-| `fpas` | Discover and run program in cwd (workspace or single `.fpasprj`) |
-| `fpas <file.fpas>` | Run single program file |
-| `fpas <file.fpasprj>` | Run program project |
+| `fpas` | Print usage |
+| `fpas run` | Discover and run program in cwd (workspace or single `.fpasprj`) |
+| `fpas run <file.fpas>` | Run single program file |
+| `fpas run <file.fpasprj>` | Run program project |
 | `fpas check [<path>]` | Type-check without running (`.fpas`, dir, `.fpasprj`, `.fpasworkspace`) |
 | `fpas test [<path>]` | Run `*_test.fpas` entries; discover `kind = "test"` in workspace |
 | `fpas fmt [<path>]` | Format `.fpas` sources |
@@ -120,7 +121,7 @@ Full CLI spec: [`docs/pascal/program-structure/cli.md`](../../../docs/pascal/pro
 
 ```text
 fpas check my-app.fpasprj          # type-check project
-fpas my-app.fpasprj                # run program project
+fpas run my-app.fpasprj            # run program project
 fpas test tests/                   # full regression tree
 fpas test tests/suite.fpasprj      # bundled manifest
 fpas test tests/tui/smoke/run_quit_test.fpas

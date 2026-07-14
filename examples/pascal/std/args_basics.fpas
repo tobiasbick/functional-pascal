@@ -1,4 +1,4 @@
-{ Run: fpas examples/pascal/std/args_basics.fpas -- alpha beta }
+{ Run: fpas run examples/pascal/std/args_basics.fpas -- alpha beta }
 
 program ArgsBasics;
 

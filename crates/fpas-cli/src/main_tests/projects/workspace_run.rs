@@ -49,7 +49,7 @@ include = ["src/**/*.fpas"]
     );
 
     let (exit_code, stdout_output, stderr_output) =
-        support::run_cli_args_and_capture_output(&[], &cwd);
+        support::run_cli_args_and_capture_output(&[String::from("run")], &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     assert_eq!(exit_code, 0, "stderr: {stderr_output}");
@@ -90,7 +90,8 @@ include = ["main.fpas"]
         );
     }
 
-    let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(&[], &cwd);
+    let (exit_code, _, stderr_output) =
+        support::run_cli_args_and_capture_output(&[String::from("run")], &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     assert_eq!(exit_code, 1);
@@ -124,7 +125,8 @@ include = ["lib.fpas"]
     );
     write_text(&cwd.join("lib.fpas"), "unit L.Core;\n");
 
-    let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(&[], &cwd);
+    let (exit_code, _, stderr_output) =
+        support::run_cli_args_and_capture_output(&[String::from("run")], &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     assert_eq!(exit_code, 1);
@@ -147,7 +149,8 @@ members = []
         );
     }
 
-    let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(&[], &cwd);
+    let (exit_code, _, stderr_output) =
+        support::run_cli_args_and_capture_output(&[String::from("run")], &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     assert_eq!(exit_code, 1);

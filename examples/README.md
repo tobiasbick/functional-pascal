@@ -46,7 +46,7 @@ cargo test -p fpas-cli fpas_regression_suite_passes
 
 Test files are named `*_test.fpas`. `Skip` tests are reported as skipped (use `--strict` to fail the run). See [`docs/pascal/std/testing/test.md`](../docs/pascal/std/testing/test.md).
 
-`tests/manual/assert_fail_demo.fpas` is a manual failure demo (not `*_test.fpas`); run it with `fpas tests/manual/assert_fail_demo.fpas` to inspect **F4023** output.
+`tests/manual/assert_fail_demo.fpas` is a manual failure demo (not `*_test.fpas`); run it with `fpas run tests/manual/assert_fail_demo.fpas` to inspect **F4023** output.
 
 Expected failures (runtime/compile errors, CLI args) are exercised from `test_suite_negative.rs`.
 
@@ -57,15 +57,15 @@ Expected failures (runtime/compile errors, CLI args) are exercised from `test_su
 Use when the file begins with `program` and only imports `Std.*` (or needs no other units):
 
 ```sh
-fpas examples/hello.fpas
-fpas examples/fibonacci.fpas
-fpas examples/pascal/std/args_basics.fpas -- one two
-fpas examples/pascal/std/str_basics.fpas
-fpas examples/pascal/std/dict_basics.fpas
-fpas examples/pascal/std/json_basics.fpas
-fpas examples/pascal/std/graph_basics.fpas
-fpas examples/pascal/std/task_basics.fpas
-fpas examples/math/mandelbrot/mandelbrot_graph.fpas
+fpas run examples/hello.fpas
+fpas run examples/fibonacci.fpas
+fpas run examples/pascal/std/args_basics.fpas -- one two
+fpas run examples/pascal/std/str_basics.fpas
+fpas run examples/pascal/std/dict_basics.fpas
+fpas run examples/pascal/std/json_basics.fpas
+fpas run examples/pascal/std/graph_basics.fpas
+fpas run examples/pascal/std/task_basics.fpas
+fpas run examples/math/mandelbrot/mandelbrot_graph.fpas
 ```
 
 ### Projects (`.fpasprj`)
@@ -73,8 +73,8 @@ fpas examples/math/mandelbrot/mandelbrot_graph.fpas
 Use when the main program imports **non-library units** (for example `App.*` or `Mandelbrot.*`). The project file links all sources:
 
 ```sh
-fpas examples/pascal/units-basic/units-basic.fpasprj
-fpas examples/math/mandelbrot/mandelbrot.fpasprj
+fpas run examples/pascal/units-basic/units-basic.fpasprj
+fpas run examples/math/mandelbrot/mandelbrot.fpasprj
 ```
 
 Do **not** pass a `unit` source alone (for example `mandelbrot_color.fpas` or `math_utils.fpas`) — the compiler expects a `program` as the main file.
@@ -84,7 +84,7 @@ Do **not** pass a `unit` source alone (for example `mandelbrot_color.fpas` or `m
 Program and library as separate `.fpasprj` files linked via `[dependencies].projects`:
 
 ```sh
-fpas examples/pascal/library-deps/app/app.fpasprj
+fpas run examples/pascal/library-deps/app/app.fpasprj
 fpas check examples/pascal/library-deps/mylib/mylib.fpasprj
 ```
 
@@ -95,7 +95,7 @@ See [pascal/library-deps/README.md](pascal/library-deps/README.md).
 When a program lives in one project and reusable units live in another, use `kind = "library"` plus `[dependencies].projects` on the program `.fpasprj`. Optional `.fpasworkspace` lists all projects for `fpas check`:
 
 ```sh
-fpas examples/pascal/monorepo/apps/hello/hello.fpasprj
+fpas run examples/pascal/monorepo/apps/hello/hello.fpasprj
 cd examples/pascal/monorepo && fpas check
 ```
 
@@ -166,7 +166,7 @@ Helper units under those folders are built only through the project; see the one
 
 Larger programs live outside `examples/` but follow the same `.fpasprj` workflow.
 
-`apps/ide/` is a Turbo Vision-backed IDE shell organized by theme under `src/` (`shell/`, `ui/`, `dialog/`, `workspace/`). Units use the `Ide.*` namespace (for example `Ide.Ui.Menu`, `Ide.Workspace.Session`). **File → Open** accepts `.fpas`, `.fpasprj`, and `.fpasworkspace` paths; the IDE keeps an in-memory session (one workspace or project root plus open source files) and reflects it in the status line. It uses [`Std.Tui`](../docs/pascal/std/tui/README.md) over [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust). Run with `cargo run -p fpas-cli -- apps/ide/ide.fpasprj`.
+`apps/ide/` is a Turbo Vision-backed IDE shell organized by theme under `src/` (`shell/`, `ui/`, `dialog/`, `workspace/`). Units use the `Ide.*` namespace (for example `Ide.Ui.Menu`, `Ide.Workspace.Session`). **File → Open** accepts `.fpas`, `.fpasprj`, and `.fpasworkspace` paths; the IDE keeps an in-memory session (one workspace or project root plus open source files) and reflects it in the status line. It uses [`Std.Tui`](../docs/pascal/std/tui/README.md) over [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust). Run with `cargo run -p fpas-cli -- run apps/ide/ide.fpasprj`.
 
 ## Interactive demos (terminal)
 

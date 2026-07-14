@@ -16,7 +16,9 @@ pub(crate) use types::{
     CliConfig, CliInput, FmtCliConfig, ResolvedCli, TestCliConfig, TestReportFormat,
 };
 
-use mode::{CliMode, parse_cli_mode, split_program_args, usage_error};
+use mode::{
+    CliMode, parse_cli_mode, program_args_require_run_error, split_program_args, usage_error,
+};
 
 use discovery::{discover_input, resolve_explicit_input};
 
@@ -38,6 +40,22 @@ pub(crate) fn resolve_cli_input(args: &[String], cwd: &Path) -> Result<CliInput,
 
 pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<ResolvedCli, String> {
     let (cli_args, program_args) = split_program_args(args);
+
+    if cli_args.is_empty() {
+        if !program_args.is_empty() {
+            return Err(program_args_require_run_error());
+        }
+        return Ok(ResolvedCli::Help);
+    }
+
+    if cli_args.len() == 1 {
+        match cli_args[0].as_str() {
+            "-h" | "--help" => return Ok(ResolvedCli::Help),
+            "-V" | "--version" => return Ok(ResolvedCli::Version),
+            _ => {}
+        }
+    }
+
     let (mode, cli_args) = parse_cli_mode(cli_args)?;
 
     if matches!(mode, CliMode::Check | CliMode::Fmt | CliMode::Test) && !program_args.is_empty() {
@@ -229,9 +247,15 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
         }
 
         if arg.starts_with('-') {
-            return Err(format!(
-                "Unknown option `{arg}`.\n  help: Pass a source or project path, or `fpas --help`."
-            ));
+            let hint = match mode {
+                CliMode::Run => "Pass a source or project path after `fpas run`, or `fpas --help`.",
+                CliMode::Check => {
+                    "Pass a source or project path after `fpas check`, or `fpas --help`."
+                }
+                CliMode::Test => "Pass a test path after `fpas test`, or `fpas --help`.",
+                CliMode::Fmt => unreachable!("fmt mode handled above"),
+            };
+            return Err(format!("Unknown option `{arg}`.\n  help: {hint}"));
         }
 
         if input.replace(arg.clone()).is_some() {

@@ -15,7 +15,7 @@ library-deps/
 From the repository root:
 
 ```sh
-fpas examples/pascal/library-deps/app/app.fpasprj
+fpas run examples/pascal/library-deps/app/app.fpasprj
 fpas check examples/pascal/library-deps/mylib/mylib.fpasprj
 ```
 

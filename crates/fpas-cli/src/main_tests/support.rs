@@ -40,7 +40,13 @@ pub(super) fn run_and_capture_stderr(path: &str, source: &str) -> (i32, String) 
 }
 
 pub(super) fn run_cli_and_capture_output(project_file: &Path, cwd: &Path) -> (i32, String, String) {
-    run_cli_args_and_capture_output(&[project_file.to_string_lossy().to_string()], cwd)
+    run_cli_args_and_capture_output(
+        &[
+            String::from("run"),
+            project_file.to_string_lossy().to_string(),
+        ],
+        cwd,
+    )
 }
 
 pub(super) fn run_cli_args_and_capture_output(

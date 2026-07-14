@@ -19,8 +19,8 @@ It demonstrates:
 ## Run
 
 ```sh
-cargo run -p fpas-cli -- examples/math/mandelbrot/mandelbrot.fpasprj
-fpas examples/math/mandelbrot/mandelbrot_graph.fpas
+cargo run -p fpas-cli -- run examples/math/mandelbrot/mandelbrot.fpasprj
+fpas run examples/math/mandelbrot/mandelbrot_graph.fpas
 ```
 
 ## Controls

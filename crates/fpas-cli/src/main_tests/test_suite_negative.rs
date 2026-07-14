@@ -15,8 +15,10 @@ fn repo_root() -> PathBuf {
 fn run_file_expect_failure(rel_path: &str, stderr_contains: Option<&str>) {
     let root = repo_root();
     let path = root.join(rel_path);
-    let (exit_code, _stdout, stderr) =
-        support::run_cli_args_and_capture_output(&[path.to_string_lossy().to_string()], &root);
+    let (exit_code, _stdout, stderr) = support::run_cli_args_and_capture_output(
+        &[String::from("run"), path.to_string_lossy().to_string()],
+        &root,
+    );
     assert_ne!(
         exit_code, 0,
         "expected failure for `{rel_path}`\nstderr:\n{stderr}"
@@ -36,6 +38,7 @@ fn std_args_receives_program_arguments_after_cli_separator() {
         "tests/stdlib/args/std_args_receives_program_arguments_after_cli_separator_cli_args.fpas",
     );
     let args = vec![
+        String::from("run"),
         path.to_string_lossy().to_string(),
         String::from("--"),
         String::from("one"),

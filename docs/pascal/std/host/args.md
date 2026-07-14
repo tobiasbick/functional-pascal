@@ -15,7 +15,7 @@ end.
 Run program arguments after the CLI separator:
 
 ```text
-fpas app.fpas -- input.txt verbose
+fpas run app.fpas -- input.txt verbose
 ```
 
 

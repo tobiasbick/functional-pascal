@@ -8,24 +8,26 @@ pub(super) enum CliMode {
     Test,
 }
 
-pub(super) fn parse_cli_mode(cli_args: &[String]) -> Result<(CliMode, &[String]), String> {
-    if cli_args.first().is_some_and(|arg| arg == "check") {
-        return Ok((CliMode::Check, &cli_args[1..]));
-    }
-    if cli_args.first().is_some_and(|arg| arg == "fmt") {
-        return Ok((CliMode::Fmt, &cli_args[1..]));
-    }
-    if cli_args.first().is_some_and(|arg| arg == "test") {
-        return Ok((CliMode::Test, &cli_args[1..]));
-    }
+const SUBCOMMANDS: &str = "`run`, `check`, `test`, or `fmt`";
 
-    Ok((CliMode::Run, cli_args))
+pub(super) fn parse_cli_mode(cli_args: &[String]) -> Result<(CliMode, &[String]), String> {
+    let Some(first) = cli_args.first() else {
+        return Err(missing_subcommand_error());
+    };
+
+    match first.as_str() {
+        "check" => Ok((CliMode::Check, &cli_args[1..])),
+        "fmt" => Ok((CliMode::Fmt, &cli_args[1..])),
+        "test" => Ok((CliMode::Test, &cli_args[1..])),
+        "run" => Ok((CliMode::Run, &cli_args[1..])),
+        _ => Err(unexpected_cli_token_error(first)),
+    }
 }
 
 pub(super) fn usage_error(mode: CliMode) -> String {
     match mode {
         CliMode::Run => {
-            "Usage: fpas [<file.fpas | file.fpasprj>] [-- <args>...]\n  help: `fpas --help` shows options."
+            "Usage: fpas run [<file.fpas | file.fpasprj>] [-- <args>...]\n  help: `fpas --help` shows options."
                 .to_string()
         }
         CliMode::Check => {
@@ -40,6 +42,27 @@ pub(super) fn usage_error(mode: CliMode) -> String {
             "Usage: fpas test [--list] [--fail-fast] [--filter <pattern>] [--report json] [--timeout <secs>] [--jobs <n>] [--script <path>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]\n  help: `fpas --help` shows options."
                 .to_string()
         }
+    }
+}
+
+pub(super) fn missing_subcommand_error() -> String {
+    format!("Missing subcommand. Expected {SUBCOMMANDS}.\n  help: `fpas --help` lists commands.")
+}
+
+pub(super) fn program_args_require_run_error() -> String {
+    "Program arguments after `--` require `fpas run`.\n  help: `fpas run [<file.fpas | file.fpasprj>] -- <args>...`"
+        .to_string()
+}
+
+fn unexpected_cli_token_error(token: &str) -> String {
+    if token.ends_with(".fpas") || token.ends_with(".fpasprj") {
+        format!(
+            "Expected a subcommand before `{token}`. Use `fpas run {token}` to execute a program.\n  help: `fpas --help` lists commands."
+        )
+    } else {
+        format!(
+            "Unknown subcommand `{token}`. Expected {SUBCOMMANDS}.\n  help: `fpas --help` lists commands."
+        )
     }
 }
 

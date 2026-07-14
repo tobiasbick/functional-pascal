@@ -230,7 +230,7 @@ fn non_interactive_examples_run_successfully() {
 }
 
 fn cli_args_for(example: &ExampleCase) -> Vec<String> {
-    let mut args = vec![example.path.to_owned()];
+    let mut args = vec![String::from("run"), example.path.to_owned()];
     if !example.args.is_empty() {
         args.push("--".to_owned());
         args.extend(example.args.iter().map(|arg| (*arg).to_owned()));

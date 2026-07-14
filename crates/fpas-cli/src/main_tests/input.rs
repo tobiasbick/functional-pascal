@@ -1,10 +1,17 @@
 use super::support::run_cli_args_and_capture_output;
 use super::{ResolvedCli, resolve_cli_config, *};
 
+fn run_args(args: &[&str]) -> Vec<String> {
+    std::iter::once("run")
+        .chain(args.iter().copied())
+        .map(str::to_owned)
+        .collect()
+}
+
 #[test]
 fn resolve_cli_input_uses_explicit_source_file() {
     let cwd = create_temp_dir("source");
-    let result = resolve_cli_input(&[String::from("src/main.fpas")], &cwd);
+    let result = resolve_cli_input(&run_args(&["src/main.fpas"]), &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     assert_eq!(result, Ok(CliInput::SourceFile(cwd.join("src/main.fpas"))));
@@ -13,7 +20,7 @@ fn resolve_cli_input_uses_explicit_source_file() {
 #[test]
 fn resolve_cli_input_uses_explicit_project_file() {
     let cwd = create_temp_dir("project");
-    let result = resolve_cli_input(&[String::from("my-app.fpasprj")], &cwd);
+    let result = resolve_cli_input(&run_args(&["my-app.fpasprj"]), &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     assert_eq!(
@@ -25,7 +32,7 @@ fn resolve_cli_input_uses_explicit_project_file() {
 #[test]
 fn resolve_cli_input_rejects_unknown_extension() {
     let cwd = create_temp_dir("unknown-ext");
-    let result = resolve_cli_input(&[String::from("project.toml")], &cwd);
+    let result = resolve_cli_input(&run_args(&["project.toml"]), &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     let error = result.expect_err("unknown extension must fail");
@@ -57,7 +64,6 @@ kind = "library"
 include = ["lib.fpas"]
 "#,
     );
-    write_text(&cwd.join("lib.fpas"), "unit L.Core;\n");
     write_text(
         &cwd.join("app.fpasprj"),
         r#"[project]
@@ -71,7 +77,7 @@ include = ["main.fpas"]
     );
     write_text(&cwd.join("main.fpas"), "program App;\nbegin\nend.\n");
 
-    let result = resolve_cli_input(&[], &cwd);
+    let result = resolve_cli_input(&run_args(&[]), &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     assert_eq!(result, Ok(CliInput::ProjectFile(cwd.join("app.fpasprj"))));
@@ -90,7 +96,7 @@ members = []
         );
     }
 
-    let run_result = resolve_cli_input(&[], &cwd);
+    let run_result = resolve_cli_input(&run_args(&[]), &cwd);
     let check_result = resolve_cli_config(&[String::from("check")], &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
@@ -111,7 +117,7 @@ fn resolve_cli_input_discovers_project_file_when_no_args_are_given() {
     let project_path = cwd.join("demo.fpasprj");
     write_file(&project_path);
 
-    let result = resolve_cli_input(&[], &cwd);
+    let result = resolve_cli_input(&run_args(&[]), &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     assert_eq!(result, Ok(CliInput::ProjectFile(project_path)));
@@ -120,7 +126,7 @@ fn resolve_cli_input_discovers_project_file_when_no_args_are_given() {
 #[test]
 fn resolve_cli_input_fails_when_no_project_file_exists() {
     let cwd = create_temp_dir("discover-none");
-    let result = resolve_cli_input(&[], &cwd);
+    let result = resolve_cli_input(&run_args(&[]), &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     let error = result.expect_err("missing project file must fail");
@@ -133,7 +139,7 @@ fn resolve_cli_input_fails_when_multiple_project_files_exist() {
     write_file(&cwd.join("a.fpasprj"));
     write_file(&cwd.join("b.fpasprj"));
 
-    let result = resolve_cli_input(&[], &cwd);
+    let result = resolve_cli_input(&run_args(&[]), &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     let error = result.expect_err("multiple project files must fail");
@@ -145,8 +151,8 @@ fn resolve_cli_input_fails_when_multiple_project_files_exist() {
 #[test]
 fn resolve_cli_input_handles_case_insensitive_extensions() {
     let cwd = create_temp_dir("case-ext");
-    let result_fpas = resolve_cli_input(&[String::from("Main.FPAS")], &cwd);
-    let result_prj = resolve_cli_input(&[String::from("app.FPASPRJ")], &cwd);
+    let result_fpas = resolve_cli_input(&run_args(&["Main.FPAS"]), &cwd);
+    let result_prj = resolve_cli_input(&run_args(&["app.FPASPRJ"]), &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     assert_eq!(result_fpas, Ok(CliInput::SourceFile(cwd.join("Main.FPAS"))));
@@ -159,14 +165,24 @@ fn resolve_cli_input_handles_case_insensitive_extensions() {
 #[test]
 fn resolve_cli_input_rejects_more_than_one_argument() {
     let cwd = create_temp_dir("too-many-args");
-    let result = resolve_cli_input(&[String::from("a.fpas"), String::from("b.fpas")], &cwd);
+    let result = resolve_cli_input(&run_args(&["a.fpas", "b.fpas"]), &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     let error = result.expect_err("multiple arguments must fail");
     assert!(
-        error.starts_with("Usage: fpas [<file.fpas | file.fpasprj>]"),
+        error.starts_with("Usage: fpas run [<file.fpas | file.fpasprj>]"),
         "unexpected error: {error}"
     );
+}
+
+#[test]
+fn resolve_cli_config_rejects_bare_source_path_without_run_subcommand() {
+    let cwd = create_temp_dir("bare-source-path");
+    let result = resolve_cli_config(&[String::from("main.fpas")], &cwd);
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    let error = result.expect_err("bare source path must fail");
+    assert!(error.contains("fpas run main.fpas"));
 }
 
 #[test]
@@ -174,6 +190,7 @@ fn resolve_cli_config_splits_program_arguments_after_separator() {
     let cwd = create_temp_dir("program-args");
     let result = resolve_cli_config(
         &[
+            String::from("run"),
             String::from("main.fpas"),
             String::from("--"),
             String::from("one"),
@@ -195,7 +212,14 @@ fn resolve_cli_config_splits_program_arguments_after_separator() {
 #[test]
 fn resolve_cli_config_rejects_define_style_flags() {
     let cwd = create_temp_dir("no-define");
-    let result = resolve_cli_config(&[String::from("-DDEBUG"), String::from("main.fpas")], &cwd);
+    let result = resolve_cli_config(
+        &[
+            String::from("run"),
+            String::from("-DDEBUG"),
+            String::from("main.fpas"),
+        ],
+        &cwd,
+    );
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     let error = result.expect_err("define flags are not supported");
@@ -214,6 +238,7 @@ fn resolve_cli_config_help_and_version_are_exclusive() {
         resolve_cli_config(&[String::from("-h")], &cwd),
         Ok(ResolvedCli::Help)
     );
+    assert_eq!(resolve_cli_config(&[], &cwd), Ok(ResolvedCli::Help));
     assert_eq!(
         resolve_cli_config(&[String::from("--version")], &cwd),
         Ok(ResolvedCli::Version)
@@ -229,6 +254,16 @@ fn resolve_cli_config_help_and_version_are_exclusive() {
 }
 
 #[test]
+fn resolve_cli_config_rejects_program_args_without_run_subcommand() {
+    let cwd = create_temp_dir("program-args-without-run");
+    let result = resolve_cli_config(&[String::from("--"), String::from("one")], &cwd);
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    let error = result.expect_err("program args without run must fail");
+    assert!(error.contains("require `fpas run`"));
+}
+
+#[test]
 fn run_cli_help_and_version_exit_zero() {
     let cwd = create_temp_dir("run-help");
 
@@ -236,7 +271,13 @@ fn run_cli_help_and_version_exit_zero() {
         run_cli_args_and_capture_output(&[String::from("--help")], &cwd);
     assert_eq!(code_h, 0);
     assert!(help_text.contains("Usage:"));
+    assert!(help_text.contains("fpas run"));
     assert!(stderr_h.is_empty());
+
+    let (code_bare, bare_help, stderr_bare) = run_cli_args_and_capture_output(&[], &cwd);
+    assert_eq!(code_bare, 0);
+    assert!(bare_help.contains("fpas run"));
+    assert!(stderr_bare.is_empty());
 
     let (code_v, ver, stderr_v) =
         run_cli_args_and_capture_output(&[String::from("--version")], &cwd);

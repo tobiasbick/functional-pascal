@@ -6,7 +6,7 @@ Process arguments, environment, filesystem, paths, subprocesses, and time.
 |------|-------------|
 | [`Std.Args`](args.md) | Arguments after `--` |
 | [`Std.Env`](env.md) | Environment variables |
-| [`Std.Fs`](fs.md) | File read/write and directories |
+| [`Std.Fs`](fs.md) | File read/write, directories, and glob expansion |
 | [`Std.Path`](path.md) | Pure path manipulation |
 | [`Std.Proc`](proc.md) | Blocking process execution |
 | [`Std.Time`](time.md) | Timestamps and sleep |

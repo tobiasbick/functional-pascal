@@ -34,4 +34,8 @@ pub enum FsIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     CreateDir = 320,
+    /// `Std.Fs.Glob(Pattern)` - expand a glob pattern to matching file paths.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/fs.md`
+    Glob = 343,
 }

@@ -1,6 +1,6 @@
 # IDE project and workspace tree
 
-**Status:** `Std.Toml` completed on 2026-07-14. `Std.Fs.Glob` is the next step; the IDE tree window remains planned.
+**Status:** `Std.Toml` and `Std.Fs.Glob` completed on 2026-07-14. The IDE tree window (step 3) is next.
 
 ## Goal
 
@@ -24,8 +24,8 @@ Project and workspace manifests remain TOML. Do not migrate them to JSON.
 Implement the work strictly in this order:
 
 1. `Std.Toml` — complete
-2. `Std.Fs.Glob`
-3. IDE project/workspace tree window
+2. `Std.Fs.Glob` — complete
+3. IDE project/workspace tree window — **next**
 
 Each item must land with its own current documentation, tests, and completed-plan status before beginning the next one.
 
@@ -47,10 +47,10 @@ This is a TOML parser API, not a second project loader. It must not resolve work
 ### Completion checks
 
 - Unit registration, compiler lowering, bytecode, and runtime wiring are covered by focused Rust tests.
-- FPAS regression tests cover all TOML value kinds, nested tables, arrays of tables, invalid syntax, duplicate keys, and serialisation round-trips.
+- FPAS regression tests under `tests/stdlib/toml/`.
 - [`Std.Toml`](../pascal/std/text/toml.md) documents the implemented API.
 
-## 2. `Std.Fs.Glob` — next
+## 2. `Std.Fs.Glob` — complete
 
 Add a filesystem operation that resolves FPAS project source patterns such as `src/**/*.fpas` into actual files. `Std.Fs.ReadText` alone cannot expand `[sources].include` patterns, so this step is required before the IDE can build a real directory/file tree.
 
@@ -67,11 +67,22 @@ Do not add a general-purpose file explorer, recursive directory listing API, wat
 
 ### Completion checks
 
-- Rust tests cover ordinary patterns, recursive patterns, no matches, invalid patterns, and stable ordering.
-- FPAS regression tests cover the public API with temporary fixtures.
-- `docs/pascal/std/host/fs.md` describes the implemented behavior and platform considerations.
+- Rust tests in `crates/fpas-std/src/fs.rs` cover ordinary patterns, recursive patterns, no matches, invalid patterns, plain file paths, and stable ordering.
+- FPAS regression tests under `tests/stdlib/fs/`:
+  - `fs_glob_flat_pattern_returns_sorted_paths_test.fpas`
+  - `fs_glob_recursive_pattern_test.fpas`
+  - `fs_glob_no_matches_returns_empty_array_test.fpas`
+  - `fs_glob_invalid_pattern_returns_error_test.fpas`
+- [`Std.Fs`](../pascal/std/host/fs.md) documents `Glob` and platform considerations.
 
-## 3. IDE project/workspace tree window
+### Implemented behavior (summary)
+
+- Returns only regular files; directories are never included.
+- Valid patterns with no matches return `Ok([])` rather than an error.
+- A plain existing file path without glob metacharacters returns `Ok([Path])`.
+- Returned path strings use `/` separators for deterministic cross-platform ordering.
+
+## 3. IDE project/workspace tree window — next
 
 Extend the FPAS IDE source so `File / Open` creates a tree window automatically after it successfully opens a project or workspace root.
 
@@ -100,4 +111,11 @@ Extend the FPAS IDE source so `File / Open` creates a tree window automatically 
 
 ## Handoff
 
-The next implementation step is **2. `Std.Fs.Glob`**. Do not start the IDE window before `Std.Fs.Glob` exposes a tested public API.
+The next implementation step is **3. IDE project/workspace tree window**.
+
+Prerequisites are satisfied:
+
+- [`Std.Toml`](../pascal/std/text/toml.md) — parse workspace and project manifests in FPAS.
+- [`Std.Fs.Glob`](../pascal/std/host/fs.md) — expand `[sources].include` patterns in FPAS.
+
+Do not re-open steps 1 or 2 unless a regression is found in docs or tests.

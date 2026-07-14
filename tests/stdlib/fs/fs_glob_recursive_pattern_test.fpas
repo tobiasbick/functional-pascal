@@ -1,0 +1,66 @@
+program FsGlobRecursivePatternTest;
+
+uses Std.Array, Std.Fs, Std.Test;
+
+const
+  Root: string := '_fpas_glob_tree_';
+
+begin
+  case CreateDir(Root) of
+    Ok(_):
+    begin
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end;
+  case CreateDir(Root + '/src') of
+    Ok(_):
+    begin
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end;
+  case CreateDir(Root + '/src/ui') of
+    Ok(_):
+    begin
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end;
+  case WriteText(Root + '/src/main.fpas', '') of
+    Ok(_):
+    begin
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end;
+  case WriteText(Root + '/src/ui/menu.fpas', '') of
+    Ok(_):
+    begin
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end;
+  case Glob(Root + '/src/**/*.fpas') of
+    Ok(Paths):
+    begin
+      AssertEquals(2, Std.Array.Length(Paths));
+      AssertEquals(Root + '/src/main.fpas', Paths[0]);
+      AssertEquals(Root + '/src/ui/menu.fpas', Paths[1])
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end
+end.

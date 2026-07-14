@@ -1,0 +1,39 @@
+program FsGlobFlatPatternReturnsSortedPathsTest;
+
+uses Std.Array, Std.Fs, Std.Test;
+
+const
+  Prefix: string := '_fpas_glob_flat_';
+
+begin
+  case WriteText(Prefix + 'b.txt', '') of
+    Ok(_):
+    begin
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end;
+  case WriteText(Prefix + 'a.txt', '') of
+    Ok(_):
+    begin
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end;
+  case Glob(Prefix + '*.txt') of
+    Ok(Paths):
+    begin
+      AssertEquals(2, Std.Array.Length(Paths));
+      AssertEquals(Prefix + 'a.txt', Paths[0]);
+      AssertEquals(Prefix + 'b.txt', Paths[1])
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end
+end.

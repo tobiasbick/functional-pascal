@@ -707,6 +707,7 @@ dependencies = [
  "crossterm",
  "fpas-bytecode",
  "fpas-diagnostics",
+ "glob",
  "rand",
  "serde_json",
  "softbuffer",

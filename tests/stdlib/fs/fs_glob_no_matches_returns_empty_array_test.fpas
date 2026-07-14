@@ -1,0 +1,16 @@
+program FsGlobNoMatchesReturnsEmptyArrayTest;
+
+uses Std.Array, Std.Fs, Std.Test;
+
+begin
+  case Glob('__fpas_glob_no_match__/**/*.fpas') of
+    Ok(Paths):
+    begin
+      AssertEquals(0, Std.Array.Length(Paths))
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end
+end.

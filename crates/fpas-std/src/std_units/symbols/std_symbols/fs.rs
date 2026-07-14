@@ -6,6 +6,7 @@ pub const STD_FS_EXISTS: &str = std_fs!("Exists");
 pub const STD_FS_IS_FILE: &str = std_fs!("IsFile");
 pub const STD_FS_IS_DIR: &str = std_fs!("IsDir");
 pub const STD_FS_CREATE_DIR: &str = std_fs!("CreateDir");
+pub const STD_FS_GLOB: &str = std_fs!("Glob");
 
 pub(in crate::std_units) const STD_FS_SYMBOLS: &[&str] = &[
     STD_FS_READ_TEXT,
@@ -14,4 +15,5 @@ pub(in crate::std_units) const STD_FS_SYMBOLS: &[&str] = &[
     STD_FS_IS_FILE,
     STD_FS_IS_DIR,
     STD_FS_CREATE_DIR,
+    STD_FS_GLOB,
 ];

@@ -41,4 +41,13 @@ pub(super) fn register_std_fs(checker: &mut Checker) {
         vec![p("Path", Ty::String, false)],
         Ty::Result(Box::new(Ty::Boolean), Box::new(Ty::String)),
     );
+    define_func(
+        checker,
+        s::STD_FS_GLOB,
+        vec![p("Pattern", Ty::String, false)],
+        Ty::Result(
+            Box::new(Ty::Array(Box::new(Ty::String))),
+            Box::new(Ty::String),
+        ),
+    );
 }

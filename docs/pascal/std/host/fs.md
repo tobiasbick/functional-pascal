@@ -21,7 +21,7 @@ Text reads and writes use UTF-8.
 
 ## Importing and names
 
-After `uses Std.Fs;` use **`ReadText`**, **`WriteText`**, **`Exists`**, **`IsFile`**, **`IsDir`**, **`CreateDir`**, or the fully qualified forms such as **`Std.Fs.ReadText`**.
+After `uses Std.Fs;` use **`ReadText`**, **`WriteText`**, **`Exists`**, **`IsFile`**, **`IsDir`**, **`CreateDir`**, **`Glob`**, or the fully qualified forms such as **`Std.Fs.ReadText`**.
 
 ---
 
@@ -37,6 +37,7 @@ Requires `uses Std.Fs;`.
 | function | `IsFile(Path: string): boolean` | `true` for a regular file |
 | function | `IsDir(Path: string): boolean` | `true` for a directory |
 | function | `CreateDir(Path: string): Result of boolean, string` | creates one directory, returns `Ok(true)` |
+| function | `Glob(Pattern: string): Result of array of string, string` | expands a glob pattern to matching file paths |
 
 Fallible operations return `Error(message)` with a host error string instead of raising a runtime panic.
 
@@ -110,6 +111,36 @@ Creates a single directory at `Path`. Parent directories must already exist.
 if Std.Result.IsOk(CreateDir('build/output')) then
   WriteLn('directory created')
 ```
+
+---
+
+## `function Glob(Pattern: string): Result of array of string, string`
+
+Expands `Pattern` against the host filesystem and returns every matching **file** path in stable sorted order. Directory entries are never included.
+
+```pascal
+case Glob('src/**/*.fpas') of
+  Ok(Paths):
+  begin
+    WriteLn(Std.Array.Length(Paths))
+  end;
+  Error(Message):
+  begin
+    WriteLn(Message)
+  end
+end
+```
+
+Behavior:
+
+- Patterns use the same glob syntax as project `[sources].include` entries (`*`, `?`, `**`, `[...]`).
+- Relative patterns are evaluated from the current working directory of the FPAS process.
+- A plain file path without glob metacharacters returns `Ok([Path])` when that file exists, otherwise `Ok([])`.
+- A valid pattern with no file matches returns `Ok([])` rather than an error.
+- Invalid pattern syntax or filesystem failures return `Error(message)`.
+- Returned paths use `/` separators for deterministic cross-platform ordering.
+
+Platform notes: `Glob` follows the host OS filesystem and the Rust `glob` crate. On Windows, drive-relative patterns and separator normalization follow the same rules as the project loader and `fpas fmt` glob expansion.
 
 ---
 

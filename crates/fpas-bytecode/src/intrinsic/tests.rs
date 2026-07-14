@@ -18,6 +18,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Fs(FsIntrinsic::IsFile),
     Intrinsic::Fs(FsIntrinsic::IsDir),
     Intrinsic::Fs(FsIntrinsic::CreateDir),
+    Intrinsic::Fs(FsIntrinsic::Glob),
     Intrinsic::Time(TimeIntrinsic::TimestampMillis),
     Intrinsic::Time(TimeIntrinsic::MonotonicMillis),
     Intrinsic::Time(TimeIntrinsic::ElapsedMillis),

@@ -55,6 +55,12 @@ impl Compiler {
                 self.emit_intrinsic(Intrinsic::Fs(FsIntrinsic::CreateDir), location);
                 Ok(true)
             }
+            s::STD_FS_GLOB => {
+                self.expect_exact_args(s::STD_FS_GLOB, 1, args, location)?;
+                self.compile_expr(&args[0])?;
+                self.emit_intrinsic(Intrinsic::Fs(FsIntrinsic::Glob), location);
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

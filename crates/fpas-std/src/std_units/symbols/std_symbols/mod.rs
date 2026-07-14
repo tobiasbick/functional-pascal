@@ -99,6 +99,11 @@ macro_rules! std_json {
         concat!("Std.Json.", $suffix)
     };
 }
+macro_rules! std_toml {
+    ($suffix:literal) => {
+        concat!("Std.Toml.", $suffix)
+    };
+}
 macro_rules! std_test {
     ($suffix:literal) => {
         concat!("Std.Test.", $suffix)
@@ -125,6 +130,7 @@ mod string;
 mod task;
 mod test;
 mod time;
+mod toml;
 mod tui;
 
 pub use args::*;
@@ -147,4 +153,5 @@ pub use string::*;
 pub use task::*;
 pub use test::*;
 pub use time::*;
+pub use toml::*;
 pub use tui::*;

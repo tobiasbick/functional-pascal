@@ -1,0 +1,72 @@
+program TomlParseArraysOfTablesAndEdgeValuesTest;
+
+uses Std.Array, Std.Dict, Std.Option, Std.Str, Std.Test, Std.Toml;
+
+begin
+  var Parsed: result of TomlValue, string := Parse(((((((((((((('empty = []' + Chr(10)) + 'special = nan') + Chr(10)) + 'point.x = 1') + Chr(10)) + 'point.y = 2') + Chr(10)) + '[[products]]') + Chr(10)) + 'name = ''Hammer''') + Chr(10)) + '[[products]]') + Chr(10)) +
+                                                   'name = ''Nail''');
+  case Parsed of
+    Ok(Value):
+    begin
+      case Value of
+        TomlValue.Table(Fields):
+        begin
+          case Std.Option.Unwrap(Std.Dict.Get(Fields, 'empty')) of
+            TomlValue.Array(Items):
+            begin
+              AssertEquals(0, Std.Array.Length(Items))
+            end
+          end;
+          case Std.Option.Unwrap(Std.Dict.Get(Fields, 'special')) of
+            TomlValue.Float(Number):
+            begin
+              AssertTrue(Number <> Number)
+            end
+          end;
+          case Std.Option.Unwrap(Std.Dict.Get(Fields, 'point')) of
+            TomlValue.Table(Point):
+            begin
+              AssertEquals(2, Std.Dict.Length(Point))
+            end
+          end;
+          case Std.Option.Unwrap(Std.Dict.Get(Fields, 'products')) of
+            TomlValue.Array(Products):
+            begin
+              AssertEquals(2, Std.Array.Length(Products));
+              case Products[0] of
+                TomlValue.Table(Product):
+                begin
+                  case Std.Option.Unwrap(Std.Dict.Get(Product, 'name')) of
+                    TomlValue.String(Name):
+                    begin
+                      AssertEquals('Hammer', Name)
+                    end
+                  end
+                end
+              end;
+              case Products[1] of
+                TomlValue.Table(Product):
+                begin
+                  case Std.Option.Unwrap(Std.Dict.Get(Product, 'name')) of
+                    TomlValue.String(Name):
+                    begin
+                      AssertEquals('Nail', Name)
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+        else
+        begin
+          Fail('Expected TOML table')
+        end
+      end
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end
+end.

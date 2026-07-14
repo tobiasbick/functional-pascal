@@ -287,7 +287,7 @@ impl Checker {
         );
     }
 
-    fn resolve_enum_ty<'a>(&'a self, ty: &'a Ty) -> Option<&'a EnumTy> {
+    pub(super) fn resolve_enum_ty<'a>(&'a self, ty: &'a Ty) -> Option<&'a EnumTy> {
         match ty {
             Ty::Enum(enum_ty) => Some(enum_ty),
             Ty::Named(name) => {

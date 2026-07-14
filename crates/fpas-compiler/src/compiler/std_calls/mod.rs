@@ -22,6 +22,7 @@ mod support;
 mod task;
 mod test;
 mod time;
+mod toml;
 mod tui;
 
 use crate::error::CompileError;
@@ -84,6 +85,9 @@ impl Compiler {
             return Ok(true);
         }
         if self.compile_json_call(name, args, location)? {
+            return Ok(true);
+        }
+        if self.compile_toml_call(name, args, location)? {
             return Ok(true);
         }
         if self.compile_result_option_call(name, args, location)? {

@@ -1,0 +1,73 @@
+program TomlParseAllValueKindsTest;
+
+uses Std.Array, Std.Dict, Std.Option, Std.Str, Std.Test, Std.Toml;
+
+begin
+  var Parsed: result of TomlValue, string := Parse(((((((((((((('title = ''TOML''' + Chr(10)) + 'integer = -42') + Chr(10)) + 'float = 1.5') + Chr(10)) + 'enabled = true') + Chr(10)) + 'when = 1979-05-27T07:32:00Z') + Chr(10)) + 'items = [''a'', 2]') + Chr(10)) + '[nested]') + Chr(10)) +
+                                                   'value = ''ok''');
+  case Parsed of
+    Ok(Value):
+    begin
+      case Value of
+        TomlValue.Table(Fields):
+        begin
+          case Std.Option.Unwrap(Std.Dict.Get(Fields, 'title')) of
+            TomlValue.String(Text):
+            begin
+              AssertEquals('TOML', Text)
+            end
+          end;
+          case Std.Option.Unwrap(Std.Dict.Get(Fields, 'integer')) of
+            TomlValue.Integer(Number):
+            begin
+              AssertEquals(-42, Number)
+            end
+          end;
+          case Std.Option.Unwrap(Std.Dict.Get(Fields, 'float')) of
+            TomlValue.Float(Number):
+            begin
+              AssertEquals(1.5, Number)
+            end
+          end;
+          case Std.Option.Unwrap(Std.Dict.Get(Fields, 'enabled')) of
+            TomlValue.Boolean(Enabled):
+            begin
+              AssertTrue(Enabled)
+            end
+          end;
+          case Std.Option.Unwrap(Std.Dict.Get(Fields, 'when')) of
+            TomlValue.Datetime(When):
+            begin
+              AssertEquals('1979-05-27T07:32:00Z', When)
+            end
+          end;
+          case Std.Option.Unwrap(Std.Dict.Get(Fields, 'items')) of
+            TomlValue.Array(Items):
+            begin
+              AssertEquals(2, Std.Array.Length(Items))
+            end
+          end;
+          case Std.Option.Unwrap(Std.Dict.Get(Fields, 'nested')) of
+            TomlValue.Table(Nested):
+            begin
+              case Std.Option.Unwrap(Std.Dict.Get(Nested, 'value')) of
+                TomlValue.String(Text):
+                begin
+                  AssertEquals('ok', Text)
+                end
+              end
+            end
+          end
+        end
+        else
+        begin
+          Fail('Expected TOML table')
+        end
+      end
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end
+end.

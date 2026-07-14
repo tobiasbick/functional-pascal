@@ -18,6 +18,7 @@ pub const STD_UNIT_OPTION: &str = "Std.Option";
 pub const STD_UNIT_TASK: &str = "Std.Task";
 pub const STD_UNIT_DICT: &str = "Std.Dict";
 pub const STD_UNIT_JSON: &str = "Std.Json";
+pub const STD_UNIT_TOML: &str = "Std.Toml";
 pub const STD_UNIT_TUI: &str = "Std.Tui";
 pub const STD_UNIT_GRAPH: &str = "Std.Graph";
 pub const STD_UNIT_TEST: &str = "Std.Test";
@@ -43,5 +44,6 @@ pub const STD_UNITS_KNOWN: &[&str] = &[
     STD_UNIT_TASK,
     STD_UNIT_DICT,
     STD_UNIT_JSON,
+    STD_UNIT_TOML,
     STD_UNIT_TEST,
 ];

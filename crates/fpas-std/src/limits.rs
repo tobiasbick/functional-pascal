@@ -12,6 +12,9 @@ pub(crate) const MAX_COLLECTION_LEN: i64 = 1_000_000;
 /// Maximum nesting depth accepted by `Std.Json.Parse` and `Std.Json.Stringify`.
 pub(crate) const MAX_JSON_DEPTH: usize = 256;
 
+/// Maximum nesting depth accepted by `Std.Toml.Parse` and `Std.Toml.Stringify`.
+pub(crate) const MAX_TOML_DEPTH: usize = 256;
+
 /// Validates a non-negative collection length against [`MAX_COLLECTION_LEN`].
 pub(crate) fn checked_collection_len(
     count: i64,

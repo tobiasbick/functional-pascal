@@ -212,6 +212,8 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Graph(GraphIntrinsic::TestSendKey),
     Intrinsic::Json(JsonIntrinsic::Parse),
     Intrinsic::Json(JsonIntrinsic::Stringify),
+    Intrinsic::Toml(TomlIntrinsic::Parse),
+    Intrinsic::Toml(TomlIntrinsic::Stringify),
     Intrinsic::Tui(TuiIntrinsic::ApplicationOpen),
     Intrinsic::Tui(TuiIntrinsic::ApplicationClose),
     Intrinsic::Tui(TuiIntrinsic::ApplicationSize),

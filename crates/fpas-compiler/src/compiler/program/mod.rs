@@ -8,7 +8,7 @@ use crate::error::CompileError;
 use fpas_bytecode::{Op, Value};
 use fpas_parser::{Decl, Program, TypeBody};
 
-use fpas_std::{STD_UNIT_CONSOLE, STD_UNIT_JSON, STD_UNIT_TUI};
+use fpas_std::{STD_UNIT_CONSOLE, STD_UNIT_JSON, STD_UNIT_TOML, STD_UNIT_TUI};
 
 use super::{Compiler, canonical_name};
 
@@ -33,6 +33,9 @@ impl Compiler {
         }
         if Self::program_uses_std_unit(program, STD_UNIT_JSON) {
             self.register_std_json_enum();
+        }
+        if Self::program_uses_std_unit(program, STD_UNIT_TOML) {
+            self.register_std_toml_enum();
         }
         self.build_short_aliases(program);
         self.collect_module_globals(program);

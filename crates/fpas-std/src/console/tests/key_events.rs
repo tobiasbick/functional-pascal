@@ -1,8 +1,14 @@
 use super::*;
 
+fn test_key_input() -> KeyInput {
+    let mut input = KeyInput::new();
+    input.push_chars("");
+    input
+}
+
 #[test]
 fn key_input_test_queue_readkey_keypressed() {
-    let mut k = KeyInput::new();
+    let mut k = test_key_input();
     assert!(!k.key_pressed(test_location()).unwrap());
     k.push_chars("a");
     assert!(k.key_pressed(test_location()).unwrap());
@@ -12,7 +18,7 @@ fn key_input_test_queue_readkey_keypressed() {
 
 #[test]
 fn key_input_extended_sequence() {
-    let mut k = KeyInput::new();
+    let mut k = test_key_input();
     k.push_chars("\0H");
     assert_eq!(k.read_key(test_location()).unwrap(), '\0');
     assert_eq!(k.read_key(test_location()).unwrap(), 'H');
@@ -20,7 +26,7 @@ fn key_input_extended_sequence() {
 
 #[test]
 fn key_input_key_pressed_sees_event_queue_without_char_queue() {
-    let mut k = KeyInput::new();
+    let mut k = test_key_input();
     assert!(!k.key_pressed(test_location()).unwrap());
     k.push_key_event(ConsoleKeyEvent::new(0, '\0', false, false, false, false));
     assert!(k.key_pressed(test_location()).unwrap());
@@ -28,7 +34,7 @@ fn key_input_key_pressed_sees_event_queue_without_char_queue() {
 
 #[test]
 fn key_input_read_key_event_fifo() {
-    let mut k = KeyInput::new();
+    let mut k = test_key_input();
     k.push_key_event(ConsoleKeyEvent::new(7, '\0', true, false, false, false));
     k.push_key_event(ConsoleKeyEvent::new(8, '\0', false, true, false, false));
     let a = k.read_key_event(test_location()).unwrap();
@@ -41,7 +47,7 @@ fn key_input_read_key_event_fifo() {
 
 #[test]
 fn key_input_read_key_does_not_consume_event_queue() {
-    let mut k = KeyInput::new();
+    let mut k = test_key_input();
     k.push_key_event(ConsoleKeyEvent::new(5, ' ', false, false, false, false));
     k.push_chars("z");
     assert_eq!(k.read_key(test_location()).unwrap(), 'z');
@@ -52,7 +58,7 @@ fn key_input_read_key_does_not_consume_event_queue() {
 
 #[test]
 fn key_input_live_queue_feeds_read_key_event() {
-    let mut k = KeyInput::new();
+    let mut k = test_key_input();
     assert!(k.push_live_event(Event::Key(CrosstermKeyEvent::new(
         KeyCode::Char('x'),
         KeyModifiers::SHIFT,
@@ -67,7 +73,7 @@ fn key_input_live_queue_feeds_read_key_event() {
 
 #[test]
 fn key_input_key_pressed_ignores_unified_only_events() {
-    let mut k = KeyInput::new();
+    let mut k = test_key_input();
     k.push_console_event(ConsoleEvent::focus_gained());
     assert!(!k.key_pressed(test_location()).unwrap());
     assert!(k.event_pending(test_location()).unwrap());
@@ -75,7 +81,7 @@ fn key_input_key_pressed_ignores_unified_only_events() {
 
 #[test]
 fn key_input_read_event_returns_queued_resize() {
-    let mut k = KeyInput::new();
+    let mut k = test_key_input();
     k.push_console_event(ConsoleEvent::resize(120, 40));
     assert!(k.event_pending(test_location()).unwrap());
     let event = k.read_event(test_location()).unwrap();
@@ -86,7 +92,7 @@ fn key_input_read_event_returns_queued_resize() {
 
 #[test]
 fn key_input_read_event_preserves_fifo_across_event_kinds() {
-    let mut k = KeyInput::new();
+    let mut k = test_key_input();
     k.push_console_event(ConsoleEvent::paste("hello".into()));
     k.push_console_event(ConsoleEvent::focus_lost());
 
@@ -100,7 +106,7 @@ fn key_input_read_event_preserves_fifo_across_event_kinds() {
 
 #[test]
 fn key_input_live_mouse_event_maps_to_one_based_console_coordinates() {
-    let mut k = KeyInput::new();
+    let mut k = test_key_input();
     assert!(k.push_live_event(Event::Mouse(MouseEvent {
         kind: MouseEventKind::Drag(MouseButton::Right),
         column: 4,
@@ -121,7 +127,7 @@ fn key_input_live_mouse_event_maps_to_one_based_console_coordinates() {
 
 #[test]
 fn key_input_live_key_event_is_visible_to_unified_event_api() {
-    let mut k = KeyInput::new();
+    let mut k = test_key_input();
     assert!(k.push_live_event(Event::Key(CrosstermKeyEvent::new(
         KeyCode::Char('Z'),
         KeyModifiers::ALT | KeyModifiers::SHIFT,
@@ -138,6 +144,6 @@ fn key_input_live_key_event_is_visible_to_unified_event_api() {
 
 #[test]
 fn key_input_event_pending_is_false_when_all_queues_are_empty() {
-    let mut k = KeyInput::new();
+    let mut k = test_key_input();
     assert!(!k.event_pending(test_location()).unwrap());
 }

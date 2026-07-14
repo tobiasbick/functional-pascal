@@ -7,7 +7,7 @@ mod labels;
 
 use super::super::super::Checker;
 use crate::scope::{Symbol, SymbolKind};
-use crate::types::Ty;
+use crate::types::{EnumTy, Ty};
 use fpas_diagnostics::codes::{
     SEMA_INVALID_PANIC_ARGUMENT, SEMA_NON_BOOLEAN_CONDITION, SEMA_TYPE_MISMATCH,
 };
@@ -59,8 +59,10 @@ impl Checker {
     ) {
         let case_ty = self.check_expr(expr);
         let is_result_or_option = matches!(&case_ty, Ty::Result(_, _) | Ty::Option(_) | Ty::Error);
-        let is_data_enum = matches!(&case_ty, Ty::Enum(enum_ty) if enum_ty.has_data());
-        let is_simple_enum = matches!(&case_ty, Ty::Enum(enum_ty) if !enum_ty.has_data());
+        let is_data_enum = self.resolve_enum_ty(&case_ty).is_some_and(EnumTy::has_data);
+        let is_simple_enum = self
+            .resolve_enum_ty(&case_ty)
+            .is_some_and(|enum_ty| !enum_ty.has_data());
 
         self.check_case_expression_type(
             &case_ty,

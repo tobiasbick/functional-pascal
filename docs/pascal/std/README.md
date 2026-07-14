@@ -25,7 +25,7 @@ Each unit page is a **self-contained handbook**: importing and short vs qualifie
 |------|-----|----------------|
 | Console | [console/](console/README.md) | Text I/O, CRT screen, keyboard, events |
 | Host I/O | [host/](host/README.md) | Args, Env, Fs, Path, Proc, Time |
-| Text | [text/](text/README.md) | Str, Conv, Parse, Json |
+| Text | [text/](text/README.md) | Str, Conv, Parse, Json, Toml |
 | Collections | [collections/](collections/README.md) | Array, Dict |
 | Numeric | [numeric/](numeric/README.md) | Math, Random |
 | Result / Option | [result/](result/README.md) | Result, Option helpers |

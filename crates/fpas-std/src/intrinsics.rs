@@ -20,6 +20,7 @@ use crate::random;
 use crate::result_option;
 use crate::str;
 use crate::time;
+use crate::toml;
 use fpas_bytecode::{
     ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, DictIntrinsic, GraphIntrinsic, Intrinsic,
     OptionIntrinsic, ResultIntrinsic, SourceLocation, TaskIntrinsic, TuiIntrinsic, Value,
@@ -43,6 +44,7 @@ const STD_UNIT_DISPATCHERS: &[StdUnitDispatch] = &[
     dict::run,
     json::run,
     time::run,
+    toml::run,
     crate::test::run,
 ];
 

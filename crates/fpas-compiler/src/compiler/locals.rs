@@ -163,6 +163,21 @@ impl Compiler {
             ],
         );
     }
+
+    pub(super) fn register_std_toml_enum(&mut self) {
+        self.register_data_enum_variants(
+            s::STD_TOML_VALUE,
+            &[
+                ("String", &["Value"]),
+                ("Integer", &["Value"]),
+                ("Float", &["Value"]),
+                ("Boolean", &["Value"]),
+                ("Datetime", &["Value"]),
+                ("Array", &["Items"]),
+                ("Table", &["Fields"]),
+            ],
+        );
+    }
 }
 
 #[cfg(test)]

@@ -13,6 +13,7 @@ fpas-diagnostics = { path = "../fpas-diagnostics" }
 rand = { workspace = true }
 serde_json = { workspace = true }
 softbuffer = { workspace = true }
+toml = { workspace = true }
 unicode-width = { workspace = true }
 winit = { workspace = true }
 

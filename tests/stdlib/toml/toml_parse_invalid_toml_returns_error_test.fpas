@@ -1,0 +1,8 @@
+program TomlParseInvalidTomlReturnsErrorTest;
+
+uses Std.Result, Std.Test, Std.Toml;
+
+begin
+  var Parsed: result of TomlValue, string := Parse('answer = [1,');
+  AssertTrue(IsError(Parsed))
+end.

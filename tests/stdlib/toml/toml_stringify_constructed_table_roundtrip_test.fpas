@@ -1,0 +1,54 @@
+program TomlStringifyConstructedTableRoundtripTest;
+
+uses Std.Array, Std.Dict, Std.Option, Std.Test, Std.Toml;
+
+begin
+  var Source: TomlValue := TomlValue.Table(['project': TomlValue.Table(['name': TomlValue.String('demo'), 'version': TomlValue.Integer(1), 'released': TomlValue.Datetime('2026-07-14')]), 'enabled': TomlValue.Boolean(true), 'targets': TomlValue.Array([
+                                                                                                                                                                                                                                                            TomlValue.String('linux'),
+                                                                                                                                                                                                                                                            TomlValue.String('windows')
+
+                                                                                                                                                                                                                                                          ])]);
+  var Encoded: string := Stringify(Source);
+  var Parsed: result of TomlValue, string := Parse(Encoded);
+  case Parsed of
+    Ok(Value):
+    begin
+      case Value of
+        TomlValue.Table(Fields):
+        begin
+          case Std.Option.Unwrap(Std.Dict.Get(Fields, 'project')) of
+            TomlValue.Table(Project):
+            begin
+              case Std.Option.Unwrap(Std.Dict.Get(Project, 'name')) of
+                TomlValue.String(Name):
+                begin
+                  AssertEquals('demo', Name)
+                end
+              end;
+              case Std.Option.Unwrap(Std.Dict.Get(Project, 'released')) of
+                TomlValue.Datetime(Date):
+                begin
+                  AssertEquals('2026-07-14', Date)
+                end
+              end
+            end
+          end;
+          case Std.Option.Unwrap(Std.Dict.Get(Fields, 'targets')) of
+            TomlValue.Array(Targets):
+            begin
+              AssertEquals(2, Std.Array.Length(Targets))
+            end
+          end
+        end
+        else
+        begin
+          Fail('Expected TOML table')
+        end
+      end
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end
+end.

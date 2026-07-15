@@ -29,7 +29,9 @@ cd functional-pascal
 cargo build --release
 ```
 
-The binary is at `target/release/fpas` (or `fpas.exe` on Windows). Run it directly or add `target/release` to your `PATH`.
+The executable is at `target/release/fpas` (or `fpas.exe` on Windows). Keep the adjacent `target/release/lib/` directory with it: it contains the bundled source standard library. Run the executable directly or add the whole `target/release` directory to your `PATH`.
+
+To prepare the distributable layout under `bin/`, run `./dist.sh` on Unix or `./dist.ps1` on Windows. Both scripts copy the executable and `lib/` together.
 
 Alternatively, run without installing:
 

@@ -7,9 +7,7 @@ use crate::vm::turbo_vision_list_selection_cell::TurboVisionListSelectionCell;
 use turbo_vision::core::draw::DrawBuffer;
 use turbo_vision::core::event::Event;
 use turbo_vision::core::geometry::Rect;
-use turbo_vision::core::palette::{
-    LISTBOX_FOCUSED, LISTBOX_NORMAL, LISTBOX_SELECTED, Palette,
-};
+use turbo_vision::core::palette::{LISTBOX_FOCUSED, LISTBOX_NORMAL, LISTBOX_SELECTED, Palette};
 use turbo_vision::core::palette_chain::PaletteChainNode;
 use turbo_vision::core::state::{GrowFlags, StateFlags};
 use turbo_vision::terminal::Terminal;

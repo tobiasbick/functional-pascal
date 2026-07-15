@@ -61,8 +61,9 @@ impl ConsoleState {
         }
 
         let mut left = x;
-        let mut right = x + width - 1;
-        for column in x..=right {
+        let write_right = x + width - 1;
+        let mut right = write_right;
+        for column in x..=write_right {
             let repaired = self.repair_wide_cell(column, y);
             left = left.min(repaired.left);
             right = right.max(repaired.right);

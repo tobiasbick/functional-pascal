@@ -4,15 +4,18 @@
 
 use crate::vm::shared::TurboVisionOutlineNode;
 use crate::vm::turbo_vision_list_selection_cell::TurboVisionListSelectionCell;
+use turbo_vision::core::draw::DrawBuffer;
 use turbo_vision::core::event::Event;
 use turbo_vision::core::geometry::Rect;
-use turbo_vision::core::palette::Palette;
+use turbo_vision::core::palette::{
+    LISTBOX_FOCUSED, LISTBOX_NORMAL, LISTBOX_SELECTED, Palette,
+};
 use turbo_vision::core::palette_chain::PaletteChainNode;
-use turbo_vision::core::state::StateFlags;
+use turbo_vision::core::state::{GrowFlags, StateFlags};
 use turbo_vision::terminal::Terminal;
 use turbo_vision::views::list_viewer::ListViewer;
 use turbo_vision::views::outline::OutlineViewer;
-use turbo_vision::views::view::View;
+use turbo_vision::views::view::{View, write_line_to_terminal};
 
 use super::outline_nodes::build_outline_tv_roots;
 
@@ -20,6 +23,8 @@ use super::outline_nodes::build_outline_tv_roots;
 pub(in crate::vm::execute::io::tui) struct BridgedOutline {
     inner: OutlineViewer<String>,
     selection_cell: TurboVisionListSelectionCell,
+    /// Grow flags used when the outline is nested in a resizable parent.
+    grow_mode: GrowFlags,
 }
 
 impl BridgedOutline {
@@ -39,6 +44,7 @@ impl BridgedOutline {
         let mut bridged = Self {
             inner,
             selection_cell,
+            grow_mode: 0,
         };
         bridged.sync_selection();
         bridged
@@ -78,7 +84,53 @@ impl View for BridgedOutline {
     }
 
     fn draw(&mut self, terminal: &mut Terminal) {
-        self.inner.draw(terminal);
+        // Upstream `OutlineViewer::draw` uses fixed listbox attributes and ignores the
+        // owner palette chain. Remap through `map_color` so outlines inside blue windows
+        // inherit window colors instead of painting a light-gray background.
+        let bounds = self.bounds();
+        let width = bounds.width_clamped() as usize;
+        let height = bounds.height_clamped() as usize;
+        let list_state = self.inner.list_state();
+        let item_count = self.inner.item_count();
+
+        let color_normal = if self.is_focused() {
+            self.map_color(LISTBOX_FOCUSED)
+        } else {
+            self.map_color(LISTBOX_NORMAL)
+        };
+        let color_selected = self.map_color(LISTBOX_SELECTED);
+
+        for row in 0..height {
+            let mut buf = DrawBuffer::new(width);
+            let item_idx = list_state.top_item + row;
+
+            if item_idx < item_count {
+                let is_selected = list_state.focused == Some(item_idx);
+                let color = if is_selected {
+                    color_selected
+                } else {
+                    color_normal
+                };
+                let text = self.inner.get_text(item_idx, width);
+                buf.move_str(0, &text, color);
+                let text_len = text.chars().count();
+                if text_len < width {
+                    buf.move_char(text_len, ' ', color, width - text_len);
+                }
+            } else {
+                buf.move_char(0, ' ', color_normal, width);
+            }
+
+            write_line_to_terminal(terminal, bounds.a.x, bounds.a.y + row as i16, &buf);
+        }
+    }
+
+    fn grow_mode(&self) -> GrowFlags {
+        self.grow_mode
+    }
+
+    fn set_grow_mode(&mut self, grow_mode: GrowFlags) {
+        self.grow_mode = grow_mode;
     }
 
     fn handle_event(&mut self, event: &mut Event) {
@@ -140,6 +192,25 @@ mod tests {
                 children: Vec::new(),
             }],
         }]
+    }
+
+    #[test]
+    fn grow_mode_stretches_with_parent_group() {
+        use turbo_vision::core::state::{GF_GROW_HI_X, GF_GROW_HI_Y};
+        use turbo_vision::views::group::Group;
+
+        let selection_cell = TurboVisionListSelectionCell::new(Some(0));
+        let mut outline =
+            BridgedOutline::new(Rect::new(0, 0, 10, 5), &sample_roots(), selection_cell);
+        outline.set_grow_mode(GF_GROW_HI_X | GF_GROW_HI_Y);
+
+        let mut group = Group::new(Rect::new(0, 0, 10, 5));
+        group.add(Box::new(outline));
+        group.set_bounds(Rect::new(0, 0, 20, 10));
+
+        let child = group.child_at(0);
+        assert_eq!(child.bounds().width(), 20);
+        assert_eq!(child.bounds().height(), 10);
     }
 
     #[test]

@@ -2,7 +2,8 @@
 
 unit Ide.Dialog.Open;
 
-uses Ide.Ui.Status, Ide.Workspace.Session, Std.Option, Std.Result, Std.Tui;
+uses
+  Ide.Ui.Status, Ide.Workspace.Session, Ide.Workspace.TreeWindow, Std.Option, Std.Result, Std.Tui;
 
 private function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
 begin
@@ -29,7 +30,11 @@ begin
   case OpenPath(Path) of
     Ok(_):
     begin
-      RefreshStatus(Status)
+      RefreshStatus(Status);
+      if LoadedName() <> '' then
+      begin
+        Show(App)
+      end
     end;
     Error(E):
     begin

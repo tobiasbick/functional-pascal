@@ -1,0 +1,215 @@
+/// Build `OutlineNode` trees from resolved project and workspace session state.
+
+unit Ide.Workspace.TreeBuild;
+
+uses
+  Ide.Workspace.Load, Ide.Workspace.Model, Ide.Workspace.Sources, Ide.Workspace.Session, Std.Array,
+  Std.Path, Std.Result, Std.Str, Std.Tui;
+
+private function FileLeaf(Text: string): OutlineNode;
+begin
+  return record text := Text; children := []; expanded := false; end
+end;
+
+private function DirNode(Text: string; Children: array of OutlineNode): OutlineNode;
+begin
+  return record text := Text; children := Children; expanded := true; end
+end;
+
+private function ProjectDirNode(Text: string; Children: array of OutlineNode): OutlineNode;
+begin
+  return record text := Text; children := Children; expanded := true; end
+end;
+
+private function StripPrefix(Path: string; Prefix: string): string;
+begin
+  if Prefix = '' then
+  begin
+    return Path
+  end;
+  if StartsWith(Path, Prefix) then
+  begin
+    return Substring(Path, Std.Str.Length(Prefix), Std.Str.Length(Path) - Std.Str.Length(Prefix))
+  end;
+  return ''
+end;
+
+private function FirstSegment(Rel: string): string;
+begin
+  if Rel = '' then
+  begin
+    return ''
+  end;
+  var Parts: array of string := Split(Rel, '/');
+  if Std.Array.Length(Parts) = 0 then
+  begin
+    return ''
+  end;
+  return Parts[0]
+end;
+
+private function HasUniqueSegment(Segments: array of string; Segment: string): boolean;
+begin
+  for Existing: string in Segments do
+  begin
+    if Existing = Segment then
+    begin
+      return true
+    end
+  end;
+  return false
+end;
+
+private function AddUniqueSegment(Segments: array of string; Segment: string): array of string;
+begin
+  if Segment = '' then
+  begin
+    return Segments
+  end;
+  if HasUniqueSegment(Segments, Segment) then
+  begin
+    return Segments
+  end;
+  mutable var Out: array of string := Segments;
+  Push(Out, Segment);
+  return Out
+end;
+
+private function CollectSegments(Paths: array of string; Prefix: string): array of string;
+begin
+  mutable var Segments: array of string := [];
+  for Path: string in Paths do
+  begin
+    var Rel: string := StripPrefix(Path, Prefix);
+    if Rel = '' then
+    begin
+      continue
+    end;
+    Segments := AddUniqueSegment(Segments, FirstSegment(Rel))
+  end;
+  return Segments
+end;
+
+private function IsDirectorySegment(Paths: array of string; Prefix: string; Segment: string): boolean;
+begin
+  var ChildPrefix: string := (Prefix + Segment) + '/';
+  for Path: string in Paths do
+  begin
+    if StartsWith(Path, ChildPrefix) then
+    begin
+      return true
+    end
+  end;
+  return false
+end;
+
+private function BuildLevel(Paths: array of string; Prefix: string): array of OutlineNode;
+begin
+  var Segments: array of string := Sort(CollectSegments(Paths, Prefix));
+  mutable var DirNames: array of string := [];
+  mutable var FileNames: array of string := [];
+  for Segment: string in Segments do
+  begin
+    if IsDirectorySegment(Paths, Prefix, Segment) then
+    begin
+      Push(DirNames, Segment)
+    end
+    else
+    begin
+      Push(FileNames, Segment)
+    end
+  end;
+  DirNames := Sort(DirNames);
+  FileNames := Sort(FileNames);
+  mutable var Nodes: array of OutlineNode := [];
+  for DirName: string in DirNames do
+  begin
+    var ChildPrefix: string := (Prefix + DirName) + '/';
+    Push(Nodes, DirNode(DirName, BuildLevel(Paths, ChildPrefix)))
+  end;
+  for FileName: string in FileNames do
+  begin
+    Push(Nodes, FileLeaf(FileName))
+  end;
+  return Nodes
+end;
+
+/// Build directory and file nodes for one project's resolved source paths.
+
+function BuildProjectDirectoryNodes(Paths: array of string): array of OutlineNode;
+begin
+  return BuildLevel(Paths, '')
+end;
+
+/// Build the outline subtree for one loaded project manifest.
+
+function BuildProjectRootNode(Proj: LoadedProject): result of OutlineNode, string;
+begin
+  case ResolveProjectRelativeSources(Proj) of
+    Error(Message):
+    begin
+      return Error(Message)
+    end;
+    Ok(Paths):
+    begin
+      var Label: string := Std.Path.BaseName(Proj.Path);
+      return Ok(ProjectDirNode(Label, BuildProjectDirectoryNodes(Paths)))
+    end
+  end
+end;
+
+/// Build outline roots for the active workspace session root.
+
+function BuildSessionRootNodes(): result of array of OutlineNode, string;
+begin
+  case ActiveRootSlot() of
+    RootSlotKind.Empty:
+    begin
+      return Ok([])
+    end;
+    RootSlotKind.Workspace:
+    begin
+      var Ws: LoadedWorkspace := ActiveWorkspace();
+      mutable var ProjectNodes: array of OutlineNode := [];
+      var MemberCount: integer := WorkspaceMemberCount();
+      mutable var MemberIndex: integer := 0;
+      while MemberIndex < MemberCount do
+      begin
+        case LoadProject(WorkspaceMemberAt(MemberIndex)) of
+          Error(Message):
+          begin
+            return Error(Message)
+          end;
+          Ok(Proj):
+          begin
+            case BuildProjectRootNode(Proj) of
+              Error(Message):
+              begin
+                return Error(Message)
+              end;
+              Ok(Node):
+              begin
+                Push(ProjectNodes, Node)
+              end
+            end
+          end
+        end;
+        MemberIndex := MemberIndex + 1
+      end;
+      return Ok([ProjectDirNode(Ws.Name, ProjectNodes)])
+    end;
+    RootSlotKind.Project:
+    begin
+      case BuildProjectRootNode(ActiveProject()) of
+        Error(Message):
+        begin
+          return Error(Message)
+        end;
+        Ok(Node):
+        begin
+          return Ok([Node])
+        end
+      end
+    end
+  end
+end;

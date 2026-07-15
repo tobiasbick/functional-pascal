@@ -5,8 +5,17 @@ uses Std.Array, Std.Fs, Std.Test;
 const
   Root: string := '_fpas_glob_tree_';
 
+procedure EnsureDir(Path: string);
 begin
-  case CreateDir(Root) of
+  if Exists(Path) then
+  begin
+    if not IsDir(Path) then
+    begin
+      Fail(('Expected directory: ') + Path)
+    end;
+    return
+  end;
+  case CreateDir(Path) of
     Ok(_):
     begin
     end;
@@ -14,25 +23,13 @@ begin
     begin
       Fail(Message)
     end
-  end;
-  case CreateDir(Root + '/src') of
-    Ok(_):
-    begin
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end;
-  case CreateDir(Root + '/src/ui') of
-    Ok(_):
-    begin
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end;
+  end
+end;
+
+begin
+  EnsureDir(Root);
+  EnsureDir(Root + '/src');
+  EnsureDir(Root + '/src/ui');
   case WriteText(Root + '/src/main.fpas', '') of
     Ok(_):
     begin

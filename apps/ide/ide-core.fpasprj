@@ -14,6 +14,9 @@ units = [
   "Ide.Workspace.Classify",
   "Ide.Workspace.Model",
   "Ide.Workspace.Load",
+  "Ide.Workspace.Sources",
+  "Ide.Workspace.TreeBuild",
+  "Ide.Workspace.TreeWindow",
   "Ide.Workspace.Session",
 ]
 

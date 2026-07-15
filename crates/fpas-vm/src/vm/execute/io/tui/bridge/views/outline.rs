@@ -204,7 +204,7 @@ pub(in crate::vm::execute::io::tui::bridge) fn bridge_window_attach_outline(
         .require(outline_handle, ViewKind::Outline)
         .map_err(|error| registry_error(error, line))?;
 
-    let Some(DetachedOutline { outline, .. }) = worker.bridge.take_detached_outline(outline_handle)
+    let Some(DetachedOutline { mut outline, .. }) = worker.bridge.take_detached_outline(outline_handle)
     else {
         return Err(runtime_error(
             RUNTIME_INTRINSIC_STACK_STATE_ERROR,
@@ -213,6 +213,9 @@ pub(in crate::vm::execute::io::tui::bridge) fn bridge_window_attach_outline(
             line,
         ));
     };
+
+    use turbo_vision::core::state::{GF_GROW_HI_X, GF_GROW_HI_Y};
+    outline.set_grow_mode(GF_GROW_HI_X | GF_GROW_HI_Y);
 
     let view_id = {
         let Some(TuiRoot::Window(window)) = worker.bridge.root_mut(window_handle) else {

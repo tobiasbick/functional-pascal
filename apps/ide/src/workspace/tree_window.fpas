@@ -1,0 +1,82 @@
+/// Non-modal desktop tree window for the active workspace or project root.
+
+unit Ide.Workspace.TreeWindow;
+
+uses Ide.Workspace.Session, Ide.Workspace.TreeBuild, Std.Array, Std.Result, Std.Tui;
+
+private mutable var HasTreeWindow: boolean := false;
+private mutable var TreeWindowHandle: Window := record  end;
+private mutable var TreeOutlineHandle: Outline := record  end;
+private mutable var TreeShownForTests: boolean := false;
+
+private const TREE_WIN_X: integer := 1;
+private const TREE_WIN_Y: integer := 1;
+private const TREE_WIN_W: integer := 40;
+private const TREE_WIN_H: integer := 22;
+
+private function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+begin
+  return record x := X; y := Y; width := Width; height := Height; end
+end;
+
+private function TreeWindowTitle(): string;
+begin
+  var Name: string := LoadedName();
+  if Name = '' then
+  begin
+    return 'Project tree'
+  end;
+  return Name
+end;
+
+/// Reset tree window handles. Used by tests.
+
+procedure Reset();
+begin
+  HasTreeWindow := false;
+  TreeWindowHandle := record  end;
+  TreeOutlineHandle := record  end;
+  TreeShownForTests := false
+end;
+
+/// Returns true after `Show` successfully attached or refreshed a tree window.
+
+function WasShown(): boolean;
+begin
+  return TreeShownForTests
+end;
+
+/// Create or refresh the desktop tree window for the current session root.
+
+procedure Show(App: Application);
+begin
+  case BuildSessionRootNodes() of
+    Error(Message):
+    begin
+      var BoxOptions: integer := 1 + 1024;
+      var _: integer := Application.MessageBox(App, Message, BoxOptions)
+    end;
+    Ok(Roots):
+    begin
+      if Std.Array.Length(Roots) = 0 then
+      begin
+        return
+      end;
+      var Title: string := TreeWindowTitle();
+      if HasTreeWindow then
+      begin
+        Window.SetTitle(TreeWindowHandle, Title);
+        Outline.SetNodes(TreeOutlineHandle, Roots)
+      end
+      else
+      begin
+        TreeWindowHandle := Window.New(Bounds(TREE_WIN_X, TREE_WIN_Y, TREE_WIN_W, TREE_WIN_H), Title);
+        TreeOutlineHandle := Outline.New(Bounds(0, 0, TREE_WIN_W - 2, TREE_WIN_H - 2), Roots);
+        Window.Add(TreeWindowHandle, TreeOutlineHandle);
+        Desktop.Add(App, TreeWindowHandle);
+        HasTreeWindow := true
+      end;
+      TreeShownForTests := true
+    end
+  end
+end;

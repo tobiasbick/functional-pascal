@@ -79,6 +79,27 @@ begin
   return ProjectState
 end;
 
+/// Active root slot for the current session.
+
+function ActiveRootSlot(): RootSlotKind;
+begin
+  return RootSlot
+end;
+
+/// Snapshot of the loaded workspace payload.
+
+function ActiveWorkspace(): LoadedWorkspace;
+begin
+  return CurrentWorkspace()
+end;
+
+/// Snapshot of the loaded project payload.
+
+function ActiveProject(): LoadedProject;
+begin
+  return CurrentProject()
+end;
+
 /// Human-readable root kind label (`Workspace`, `Project`, or empty).
 
 function RootKindLabel(): string;

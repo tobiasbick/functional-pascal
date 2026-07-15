@@ -135,6 +135,7 @@ Behavior:
 
 - Patterns use the same glob syntax as project `[sources].include` entries (`*`, `?`, `**`, `[...]`).
 - Relative patterns are evaluated from the current working directory of the FPAS process.
+- Repository FPAS tests and demos that create files for globbing or I/O round-trips write under `.temp-data/` (gitignored) when run from the repository root. See [`Std.Test`](../testing/test.md).
 - A plain file path without glob metacharacters returns `Ok([Path])` when that file exists, otherwise `Ok([])`.
 - A valid pattern with no file matches returns `Ok([])` rather than an error.
 - Invalid pattern syntax or filesystem failures return `Error(message)`.

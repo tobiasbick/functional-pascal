@@ -86,6 +86,8 @@ end.
 
 Test entry files must be `program`, not bare `unit`. Spec: [`docs/pascal/std/testing/test.md`](../../../docs/pascal/std/testing/test.md).
 
+Filesystem scratch for FPAS tests/demos: write under `.temp-data/` at the repository root (gitignored). Never leave fixtures in `crates/`, beside `tests/`, or as bare `_fpas_*` files in the cwd.
+
 ## FPAS rules models often get wrong
 
 Do **not** assume Delphi/Free Pascal:

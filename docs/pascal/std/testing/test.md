@@ -109,6 +109,14 @@ fpas test --strict
 
 Flags and discovery rules: [CLI](../../program-structure/cli.md).
 
+Run `fpas test` from the **repository root**. Relative filesystem fixtures written by tests use that process working directory.
+
+### Scratch files (`.temp-data/`)
+
+Tests that create real files or directories must write under `.temp-data/` at the repository root (for example `.temp-data/_fpas_glob_tree_/…`). That directory is gitignored. Do not create scratch trees beside `tests/`, under `crates/`, or with bare `_fpas_*` names in the cwd root.
+
+Rust unit tests that need temporary files should keep using `std::env::temp_dir()` (or the crate `create_temp_dir` helpers); `.temp-data/` is only for FPAS programs that exercise `Std.Fs` against the process cwd.
+
 ---
 
 ## Scripted input (legacy)

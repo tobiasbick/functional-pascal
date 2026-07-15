@@ -26,5 +26,6 @@ debug/
 bin/
 
 .mcp.json
-crates/fpas-cli/_fpas_fs_demo.txt
-_fpas_fs_demo.txt
+
+# Scratch files created by FPAS filesystem tests/demos (cwd = repository root)
+.temp-data/

@@ -3,9 +3,32 @@ program FsGlobFlatPatternReturnsSortedPathsTest;
 uses Std.Array, Std.Fs, Std.Test;
 
 const
-  Prefix: string := '_fpas_glob_flat_';
+  Scratch: string := '.temp-data';
+  Prefix: string := Scratch + '/_fpas_glob_flat_';
+
+procedure EnsureDir(Path: string);
+begin
+  if Exists(Path) then
+  begin
+    if not IsDir(Path) then
+    begin
+      Fail(('Expected directory: ') + Path)
+    end;
+    return
+  end;
+  case CreateDir(Path) of
+    Ok(_):
+    begin
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end
+end;
 
 begin
+  EnsureDir(Scratch);
   case WriteText(Prefix + 'b.txt', '') of
     Ok(_):
     begin

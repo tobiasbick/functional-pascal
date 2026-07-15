@@ -1,13 +1,27 @@
-{ Spec: docs/pascal/std/host/fs.md — writes ./_fpas_fs_demo.txt in the working directory. }
+{ Spec: docs/pascal/std/host/fs.md — writes under .temp-data/ (gitignored scratch). }
 
 program FsBasics;
 
 uses Std.Console, Std.Fs, Std.Result;
 
 const
-  DemoPath: string := '_fpas_fs_demo.txt';
+  Scratch: string := '.temp-data';
+  DemoPath: string := Scratch + '/_fpas_fs_demo.txt';
 
 begin
+  if not Exists(Scratch) then
+  begin
+    case CreateDir(Scratch) of
+      Ok(_):
+      begin
+      end;
+      Error(M):
+      begin
+        WriteLn('create scratch error: ', M);
+        return
+      end
+    end
+  end;
   case WriteText(DemoPath, 'hello from Std.Fs') of
     Ok(_):
     begin

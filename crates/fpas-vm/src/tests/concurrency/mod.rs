@@ -1,3 +1,4 @@
+mod cooperative_sleep;
 mod fixtures;
 mod spawn_path_detached;
 mod spawn_path_errors;

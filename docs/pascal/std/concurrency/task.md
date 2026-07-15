@@ -75,7 +75,7 @@ An empty array completes immediately.
 | Registration | [`loaded/channel_task.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/channel_task.rs), [`builtins/channel_task.rs`](../../../../crates/fpas-sema/src/std_registry/builtins/channel_task.rs) |
 | Compiler | [`std_calls/task.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/task.rs), [`compiler/stmt/concurrency/mod.rs`](../../../../crates/fpas-compiler/src/compiler/stmt/concurrency/mod.rs), [`compiler/expr/mod.rs`](../../../../crates/fpas-compiler/src/compiler/expr/mod.rs) |
 | Bytecode | [`chunk.rs`](../../../../crates/fpas-bytecode/src/chunk.rs), [`intrinsic/mod.rs`](../../../../crates/fpas-bytecode/src/intrinsic/mod.rs) |
-| VM | [`shared.rs`](../../../../crates/fpas-vm/src/vm/shared.rs), [`tasks/spawn.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/tasks/spawn.rs), [`tasks/wait.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/tasks/wait.rs), [`tasks/scheduling.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/tasks/scheduling.rs), [`concurrency/mod.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/mod.rs) |
+| VM | [`shared.rs`](../../../../crates/fpas-vm/src/vm/shared.rs), [`shared/timers.rs`](../../../../crates/fpas-vm/src/vm/shared/timers.rs), [`tasks/spawn.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/tasks/spawn.rs), [`tasks/sleep.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/tasks/sleep.rs), [`tasks/wait.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/tasks/wait.rs), [`tasks/scheduling.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/tasks/scheduling.rs), [`concurrency/mod.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/mod.rs) |
 
 ## See also
 

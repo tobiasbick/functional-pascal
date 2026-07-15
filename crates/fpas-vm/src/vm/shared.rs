@@ -8,6 +8,9 @@
 //! each protect a single concern. **Do not acquire more than one of these locks at the same time**
 //! from VM or intrinsic code unless the order is documented here and consistently followed.
 //! [`RwLock`] on `globals` is separate; avoid holding `globals` while waiting on `task_available`.
+//! Result waits may take `task_results` and then briefly inspect `task_queue`; no path may acquire
+//! those two locks in the reverse order. Timer wakeup drops `task_queue` before taking
+//! `task_results` to notify a result waiter that runnable work exists.
 //! Pool workers follow [`super::Worker::pool_loop`]: take `task_queue`, then wait on
 //! `task_available` while holding that guard (standard `Condvar` pattern).
 //! `TaskWait` / `WaitAll` must not use that same wait for **result** readiness: notifications from
@@ -23,7 +26,10 @@ use std::sync::{Condvar, Mutex, RwLock};
 use std::time::Duration;
 
 mod graph;
+mod timers;
 mod tui;
+
+pub(crate) use timers::TaskTimers;
 
 pub(crate) use graph::GraphState;
 pub(crate) use tui::{
@@ -38,7 +44,8 @@ pub(crate) enum TaskResultPoll {
 }
 
 pub(crate) enum TaskResultState {
-    Available(Value),
+    Unit,
+    Value(Box<Value>),
 }
 
 /// Shared state for the parallel VM.
@@ -60,6 +67,9 @@ pub(crate) struct SharedState {
     /// Signalled when new tasks are pushed or existing tasks become ready.
     pub task_available: Condvar,
 
+    /// Spawned tasks suspended by cooperative `Std.Time.Sleep`.
+    pub task_timers: TaskTimers,
+
     /// Completed task states for tasks whose results can still be observed.
     pub task_results: Mutex<HashMap<u64, TaskResultState>>,
     /// Task ids whose results were consumed by `Wait` but may still be observed by `WaitAll`.
@@ -67,6 +77,8 @@ pub(crate) struct SharedState {
     /// Woken when [`Self::task_results`] gains or updates an entry (for example after
     /// [`Self::store_task_result`]). Always wait while holding the [`Self::task_results`] mutex.
     pub task_results_available: Condvar,
+    /// Number of retained tasks that have recorded a result during this VM lifetime.
+    pub completed_task_count: AtomicU64,
     /// Next task id (monotonically increasing; 0 = main program).
     pub next_task_id: AtomicU64,
 
@@ -118,6 +130,35 @@ impl SharedState {
         self.task_available.notify_one();
     }
 
+    /// Append a due timer bucket to the ready queue and wake pool workers.
+    pub(crate) fn enqueue_tasks(&self, tasks: Vec<TaskState>) {
+        if tasks.is_empty() {
+            return;
+        }
+        self.task_queue
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .extend(tasks);
+        self.task_available.notify_all();
+        // A spawned task may be waiting for a sleeping child while occupying the only pool
+        // worker. Pair this notification with the result mutex so it cannot be lost between the
+        // waiter's ready-queue check and its condvar wait.
+        let _results = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
+        self.task_results_available.notify_all();
+    }
+
+    /// Suspend a spawned task without holding its pool worker.
+    pub(crate) fn schedule_task_after(&self, task: TaskState, milliseconds: u64) {
+        self.task_timers.schedule(task, milliseconds);
+    }
+
+    /// Move due timer buckets to the shared ready queue until shutdown.
+    pub(crate) fn timer_loop(&self) {
+        while let Some(tasks) = self.task_timers.wait_for_due(&self.shutdown) {
+            self.enqueue_tasks(tasks);
+        }
+    }
+
     /// Pop the oldest ready task from the queue (returns `None` if empty).
     pub(crate) fn try_dequeue_task(&self) -> Option<TaskState> {
         self.task_queue
@@ -128,13 +169,15 @@ impl SharedState {
 
     /// Store a completed task's return value and notify waiters.
     pub(crate) fn store_task_result(&self, id: u64, value: Value) {
-        self.task_results
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .insert(id, TaskResultState::Available(value));
+        let state = match value {
+            Value::Unit => TaskResultState::Unit,
+            value => TaskResultState::Value(Box::new(value)),
+        };
+        let mut results = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
+        results.insert(id, state);
+        self.completed_task_count.fetch_add(1, Ordering::Release);
+        drop(results);
         self.task_results_available.notify_all();
-        // Legacy: tests and pool code may wait on `task_available` while holding `task_queue`.
-        self.task_available.notify_all();
     }
 
     /// Returns `true` when every task id in `task_ids` has a recorded result.
@@ -152,7 +195,7 @@ impl SharedState {
     /// Consume a completed task result if it is still available.
     pub(crate) fn poll_task_result(&self, id: u64) -> TaskResultPoll {
         let mut task_results = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
-        let Some(state) = task_results.get_mut(&id) else {
+        let Some(state) = task_results.remove(&id) else {
             if self
                 .task_completions
                 .lock()
@@ -164,17 +207,15 @@ impl SharedState {
             return TaskResultPoll::Pending;
         };
 
-        match state {
-            TaskResultState::Available(value) => {
-                let result = value.clone();
-                task_results.remove(&id);
-                self.task_completions
-                    .lock()
-                    .unwrap_or_else(|e| e.into_inner())
-                    .insert(id);
-                TaskResultPoll::Available(result)
-            }
-        }
+        let result = match state {
+            TaskResultState::Unit => Value::Unit,
+            TaskResultState::Value(value) => *value,
+        };
+        self.task_completions
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .insert(id);
+        TaskResultPoll::Available(result)
     }
 
     /// Signal all workers to shut down.
@@ -188,6 +229,7 @@ impl SharedState {
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .clear();
+        self.task_timers.notify_shutdown();
         self.task_available.notify_all();
         self.task_results_available.notify_all();
     }
@@ -234,7 +276,7 @@ impl SharedState {
         let mut guard = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
         loop {
             match guard.get(&task_id) {
-                Some(TaskResultState::Available(_)) => return,
+                Some(_) => return,
                 None if self
                     .task_completions
                     .lock()
@@ -245,7 +287,7 @@ impl SharedState {
                 }
                 None => {}
             }
-            if self.is_shutdown() {
+            if self.is_shutdown() || self.has_ready_task() {
                 return;
             }
             guard = self
@@ -263,22 +305,42 @@ impl SharedState {
                 .task_completions
                 .lock()
                 .unwrap_or_else(|e| e.into_inner());
-            let all = task_ids
+            let missing = task_ids
                 .iter()
-                .all(|id| guard.contains_key(id) || completions.contains(id));
+                .filter(|id| !guard.contains_key(id) && !completions.contains(id))
+                .count();
             drop(completions);
-            if all || self.is_shutdown() {
+            if missing == 0 || self.is_shutdown() {
                 return;
             }
-            guard = self
-                .task_results_available
-                .wait(guard)
-                .unwrap_or_else(|e| e.into_inner());
+            if self.has_ready_task() {
+                return;
+            }
+
+            let target = self
+                .completed_task_count
+                .load(Ordering::Acquire)
+                .saturating_add(missing as u64);
+            while self.completed_task_count.load(Ordering::Acquire) < target && !self.is_shutdown()
+            {
+                guard = self
+                    .task_results_available
+                    .wait(guard)
+                    .unwrap_or_else(|e| e.into_inner());
+            }
         }
     }
 
     /// Check whether shutdown has been requested.
     pub(crate) fn is_shutdown(&self) -> bool {
         self.shutdown.load(Ordering::Acquire)
+    }
+
+    fn has_ready_task(&self) -> bool {
+        !self
+            .task_queue
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .is_empty()
     }
 }

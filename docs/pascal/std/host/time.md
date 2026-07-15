@@ -1,6 +1,6 @@
 # `Std.Time`
 
-Wall-clock and monotonic time helpers plus blocking sleep. This page is the full API for the unit.
+Wall-clock and monotonic time helpers plus task-aware sleep. This page is the full API for the unit.
 
 ```pascal
 program Example;
@@ -12,7 +12,7 @@ begin
 end.
 ```
 
-`Std.Time` exposes host clock values and blocking sleep. It is separate from `Std.Console.Delay`, which remains available for CRT-style console programs.
+`Std.Time` exposes host clock values and task-aware sleep. It is separate from `Std.Console.Delay`, which remains available for CRT-style console programs.
 
 
 ## Importing and names
@@ -30,7 +30,7 @@ Requires `uses Std.Time;`.
 | function | `TimestampMillis(): integer` | UTC wall-clock milliseconds since the Unix epoch |
 | function | `MonotonicMillis(): integer` | monotonic milliseconds since runtime initialization |
 | function | `ElapsedMillis(Start: integer): integer` | monotonic milliseconds since `Start` |
-| procedure | `Sleep(Milliseconds: integer)` | block for a non-negative millisecond count |
+| procedure | `Sleep(Milliseconds: integer)` | wait for a non-negative millisecond count |
 
 ---
 
@@ -43,9 +43,12 @@ Requires `uses Std.Time;`.
 
 ---
 
-## Blocking behavior
+## Scheduling behavior
 
-`Sleep` blocks the thread that executes it. When called from a `go` task, only that worker thread sleeps.
+`Sleep` blocks the main program thread when called by the main task. When called from a spawned
+`go` task, the VM suspends that task in its cooperative timer queue and immediately releases the
+pool worker to run other ready tasks. After the deadline, the timer driver places the suspended task
+back on the shared ready queue.
 
 ---
 
@@ -83,7 +86,8 @@ WriteLn(ElapsedMillis(Start))
 
 ## `procedure Sleep(Milliseconds: integer)`
 
-Blocks for the given number of milliseconds. Negative values produce a runtime error.
+Waits for the given number of milliseconds. Spawned tasks wait cooperatively without pinning a pool
+worker. Negative values produce a runtime error.
 
 ```pascal
 Sleep(250)
@@ -96,6 +100,7 @@ Sleep(250)
 | Concern | Location |
 |---------|----------|
 | Runtime execution | [`time.rs`](../../../../crates/fpas-std/src/time.rs) |
+| Spawned-task timers | [`sleep.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/tasks/sleep.rs), [`timers.rs`](../../../../crates/fpas-vm/src/vm/shared/timers.rs) |
 | Call lowering | [`std_calls/time.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/time.rs) |
 | Registration | [`std_registry/loaded/time.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/time.rs) |
 | Intrinsic ids | [`intrinsic/time.rs`](../../../../crates/fpas-bytecode/src/intrinsic/time.rs) |

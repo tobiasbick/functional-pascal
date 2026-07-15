@@ -105,6 +105,8 @@ impl Worker {
             };
             task_ids.push(*id);
         }
+        task_ids.sort_unstable();
+        task_ids.dedup();
 
         let all_done = self.shared.all_tasks_recorded(&task_ids);
 

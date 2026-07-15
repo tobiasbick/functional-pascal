@@ -26,7 +26,7 @@ mod worker;
 
 pub use diagnostics::VmError;
 pub(crate) use diagnostics::{internal_error, runtime_error};
-pub(crate) use shared::{GraphState, SharedState, TaskResultPoll, TaskState, TuiState};
+pub(crate) use shared::{GraphState, SharedState, TaskResultPoll, TaskState, TaskTimers, TuiState};
 pub use shutdown::VmShutdownHandle;
 pub(crate) use worker::Worker;
 
@@ -119,9 +119,11 @@ impl Vm {
             globals: RwLock::new(HashMap::new()),
             task_queue: Mutex::new(VecDeque::new()),
             task_available: Condvar::new(),
+            task_timers: TaskTimers::new(),
             task_results: Mutex::new(HashMap::new()),
             task_completions: Mutex::new(HashSet::new()),
             task_results_available: Condvar::new(),
+            completed_task_count: AtomicU64::new(0),
             next_task_id: AtomicU64::new(1),
             console: Mutex::new(console),
             text_input: Mutex::new(TextInput::new()),
@@ -139,6 +141,12 @@ impl Vm {
     #[cfg(test)]
     pub(crate) fn worker_pool_size_for_tests(&self) -> usize {
         self.pool_size
+    }
+
+    /// Test-only override for deterministic scheduler tests.
+    #[cfg(test)]
+    pub(crate) fn set_worker_pool_size_for_tests(&mut self, pool_size: usize) {
+        self.pool_size = pool_size;
     }
 
     /// Test-only: whether global shutdown was requested after a run (or mid-run failure).
@@ -251,6 +259,9 @@ impl Vm {
                 }));
             }
 
+            let timer_shared = Arc::clone(&shared);
+            let timer_handle = scope.spawn(move || timer_shared.timer_loop());
+
             // Run main program on this thread. Always shut down when the main worker returns or
             // unwinds so pool threads are not left blocked on an empty queue.
             let main_result = {
@@ -276,6 +287,14 @@ impl Vm {
                     Err(_) => {}
                 }
             }
+
+            timer_handle.join().map_err(|_| {
+                internal_error(
+                    "Timer driver thread panicked",
+                    "The cooperative task timer crashed unexpectedly. This indicates a VM bug.",
+                    SourceLocation::new(1, 1),
+                )
+            })?;
 
             main_result
         })

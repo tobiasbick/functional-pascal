@@ -5,6 +5,7 @@
 use crate::vm::Worker;
 
 mod scheduling;
+mod sleep;
 mod spawn;
 mod wait;
 

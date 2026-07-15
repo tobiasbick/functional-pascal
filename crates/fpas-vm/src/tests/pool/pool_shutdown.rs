@@ -1,4 +1,4 @@
-use crate::vm::{CallFrame, GraphState, SharedState, TuiState, Worker};
+use crate::vm::{CallFrame, GraphState, SharedState, TaskTimers, TuiState, Worker};
 use fpas_bytecode::{Chunk, Op, Value};
 use fpas_std::{Console, KeyInput, TextInput};
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -20,9 +20,11 @@ fn pool_tasks_stop_without_side_effects_after_abort_flag() {
         globals: RwLock::new(HashMap::new()),
         task_queue: Mutex::new(VecDeque::new()),
         task_available: Condvar::new(),
+        task_timers: TaskTimers::new(),
         task_results: Mutex::new(HashMap::new()),
         task_completions: Mutex::new(HashSet::new()),
         task_results_available: Condvar::new(),
+        completed_task_count: AtomicU64::new(0),
         next_task_id: AtomicU64::new(1),
         console: Mutex::new(Console::new()),
         text_input: Mutex::new(TextInput::new()),

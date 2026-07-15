@@ -51,11 +51,11 @@ fn wait_for_task_progress_wakes_on_enqueue_notify() {
 }
 
 #[test]
-fn wait_for_task_progress_wakes_on_store_task_result() {
+fn wait_until_task_result_ready_wakes_on_store_task_result() {
     let shared = Arc::new(minimal_shared_state(minimal_halt_chunk()));
     let s2 = Arc::clone(&shared);
     let waiter = thread::spawn(move || {
-        s2.wait_for_task_progress(None);
+        s2.wait_until_task_result_ready(42);
     });
     thread::sleep(Duration::from_millis(30));
     shared.store_task_result(42, Value::Integer(1));

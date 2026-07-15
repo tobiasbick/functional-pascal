@@ -120,6 +120,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/for-in/for_in_example.fpas` | `for V in array` |
 | `pascal/for-in/dict_for_in_example.fpas` | `for K in dict` (key iteration) |
 | `pascal/concurrency/go_statement_example.fpas` | Fire-and-forget `go` (no `task` handle) |
+| `pascal/concurrency/task_memory_benchmark.fpas` | Parameterized cooperative task-memory benchmark; measure peak RSS externally |
 | `pascal/generics/generic_functions.fpas` | Generic functions |
 | `pascal/generics/generic_record_methods.fpas` | Method-level generics and constraints on record methods |
 | `pascal/pattern-matching/` | Guards and exhaustiveness |

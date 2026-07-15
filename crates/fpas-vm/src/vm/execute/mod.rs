@@ -24,6 +24,8 @@ pub(super) enum StepResult {
     Return,
     /// `Op::Halt` was decoded.
     Halt,
+    /// The current spawned task was saved in a cooperative wait queue.
+    Suspended,
 }
 
 impl Worker {
@@ -72,6 +74,9 @@ impl Worker {
             || self.try_exec_enums(op, line)?
             || self.try_exec_io(op, line)?
         {
+            if self.task_suspended {
+                return Ok(StepResult::Suspended);
+            }
             self.maybe_timeslice_yield();
             return Ok(StepResult::Continue);
         }
@@ -135,6 +140,12 @@ impl Worker {
             match self.exec_one(self.current_location)? {
                 StepResult::Continue => {}
                 StepResult::Halt => return Ok(()),
+                StepResult::Suspended => {
+                    self.task_suspended = false;
+                    if !self.pick_next_task() {
+                        return Ok(());
+                    }
+                }
                 StepResult::Return => {
                     let line = self.current_location;
                     let return_val = self.pop(line)?;

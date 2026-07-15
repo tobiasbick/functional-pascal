@@ -1,62 +1,91 @@
-# Future: Task memory benchmark
+# Task memory benchmark
 
-## Goal
+## Status
 
-We should be able to reproduce the synthetic concurrency memory benchmark from [How Much Memory Do You Need to Run 1 Million Concurrent Tasks?](https://pkolaczk.github.io/memory-consumption-of-async/) in Functional Pascal:
+Implemented and validated on 2026-07-15. Functional Pascal can now reproduce the synthetic
+concurrency benchmark from [How Much Memory Do You Need to Run 1 Million Concurrent
+Tasks?](https://pkolaczk.github.io/memory-consumption-of-async/):
 
-1. Spawn **N** concurrent tasks (`go`).
-2. Each task waits **10 seconds** (idle, no CPU work).
-3. Block until all tasks finish (`WaitAll`).
-4. Measure **peak RSS** externally while the process is alive.
+1. Spawn **N** retained tasks with `go`.
+2. Each task waits **10 seconds** without occupying a pool worker.
+3. Block until every task finishes with `WaitAll`.
+4. Measure peak process memory externally.
 
-Scale targets used in that article: **1**, **10k**, **100k**, and **1M** tasks. FPAS would compare against **Go goroutines** and similar green-thread models, not Rust `async`/`await` runtimes.
+The parameterized benchmark is
+[`examples/pascal/concurrency/task_memory_benchmark.fpas`](../../examples/pascal/concurrency/task_memory_benchmark.fpas).
+Use arguments `1000`, `10000`, `100000`, and `1000000` for the fixed scales. The original article
+also measures the one-task runtime baseline; pass `1` when that data point is needed.
 
-## Current state
+## Implemented runtime behavior
 
-**Nothing useful happens today.** The language surface looks sufficient on paper (`go`, `Std.Task.WaitAll`, `Std.Time.Sleep`), but a naïve port does not produce a meaningful benchmark:
+- `Std.Time.Sleep` on a spawned task saves the task state in a millisecond-bucketed timer queue and
+  releases the pool worker immediately. One timer-driver thread returns due buckets to the shared
+  FIFO ready queue. Main-task `Sleep` remains a blocking host wait.
+- Empty operand and call stacks release spare allocation before a sleeping task is retained.
+- Unit-valued task results use a compact completion representation instead of retaining a full
+  `Value` per completion.
+- `WaitAll` sorts and deduplicates handle ids once, then uses the retained-task completion count to
+  wait for the missing group before rescanning. It no longer scans all **N** handles after every
+  individual completion.
+- Result completion no longer wakes unrelated workers waiting for ready tasks.
+- Timer-ready work wakes a spawned `Wait`/`WaitAll` waiter, preventing single-worker starvation
+  when a spawned parent waits for a sleeping child.
 
-- **`Std.Time.Sleep` blocks an OS worker thread** ([`docs/pascal/std/host/time.md`](../pascal/std/host/time.md)). The VM runs spawned tasks on a small pool (`max(1, available_parallelism − 1)` workers; see [`docs/pascal/language/concurrency/scheduling.md`](../pascal/language/concurrency/scheduling.md)). Most tasks sit in the ready queue while a handful of workers sleep on the host clock.
-- **No cooperative timer wait** — there is no async-style sleep that suspends a task without holding a worker (no timer wheel + `Yield` integration).
-- **No progress output** — a bench program that only spawns and waits appears hung for a long time during the spawn loop and again during `WaitAll`, with no stdout or metrics.
-- **Per-task memory is unbounded in user code** — retaining **N** `task` handles in an `array of task` plus **N** `TaskState` queue entries and result-map slots is required for `WaitAll` today; we have not validated or optimized footprint at 100k–1M scale.
-- **No curated examples or measurement notes** in the repository (a draft under `examples/` was removed until the runtime can support the benchmark honestly).
+Regression coverage:
 
-So we **cannot** yet claim FPAS numbers comparable to the blog post, and we should not ship example programs that imply we can.
+- [`crates/fpas-vm/src/tests/concurrency/cooperative_sleep.rs`](../../crates/fpas-vm/src/tests/concurrency/cooperative_sleep.rs)
+  forces one pool worker and proves multiple sleeps overlap.
+- [`tests/concurrency/cooperative_sleep_test.fpas`](../../tests/concurrency/cooperative_sleep_test.fpas)
+  covers the compiled FPAS surface end to end.
 
-## What we need
+## Reference measurements
 
-| Area | Requirement |
-|------|-------------|
-| **Scheduling** | Cooperative wait that does not pin a pool thread for the full sleep duration (timer + resume on the shared ready queue, or equivalent). |
-| **Spawn path** | Fast bulk spawn and queue growth at 100k–1M tasks without pathological mutex contention or redundant allocations per `TaskState`. |
-| **Handles** | Clarify whether `WaitAll` must retain **N** handles in FPAS source, or whether a barrier primitive (e.g. spawn-and-forget with a join counter) is needed for fair memory comparison. |
-| **Examples** | Four fixed-scale programs (1k / 10k / 100k / 1M) under `examples/pascal/concurrency/`, commented with the blog link and **external** RSS measurement commands — excluded from CI smoke tests. |
-| **Validation** | Run at least 1k and 10k locally; document observed peak RSS and wall time on a reference machine before publishing 100k / 1M expectations. |
+Release runner built with `cargo build --release -p fpas-cli`. Measurements were taken on Windows
+11 Pro 64-bit (10.0.26200), AMD Ryzen AI 9 HX PRO 370, 12 cores / 24 logical processors. A
+PowerShell parent process sampled `WorkingSet64` and `PeakWorkingSet64` every 10 ms while the child
+was alive.
+
+| Tasks | Program elapsed | External wall time | Peak working set |
+|------:|----------------:|-------------------:|-----------------:|
+| 1,000 | 10,012 ms | 10,098 ms | 10.19 MiB |
+| 10,000 | 10,076 ms | 10,109 ms | 12.84 MiB |
+| 100,000 | 10,660 ms | 10,723 ms | 34.26 MiB |
+| 1,000,000 | 16,608 ms | 16,703 ms | 251.71 MiB |
+
+These values validate runtime behavior; they are not directly interchangeable with the article's
+Linux RSS results. Windows working set and Linux RSS differ, and `fpas run` parses and compiles the
+source in the measured process before executing the VM. Reproduce competing runtimes on the same
+machine and measurement tool before publishing comparative claims.
+
+## Measurement commands
+
+Build once before measuring:
+
+```text
+cargo build --release -p fpas-cli
+```
+
+Linux example:
+
+```text
+/usr/bin/time -v target/release/fpas run examples/pascal/concurrency/task_memory_benchmark.fpas -- 1000000
+```
+
+On PowerShell, start `target/release/fpas.exe` with `Start-Process -PassThru`, sample
+`WorkingSet64`/`PeakWorkingSet64` while `HasExited` is false, and record wall time with
+`Diagnostics.Stopwatch`.
+
+## Comparison boundary
+
+This program intentionally retains an `array of task` and uses `WaitAll`. It is structurally
+comparable to the article's Tokio, async-std, C#, Node.js, Python, Elixir, and thread/virtual-thread
+variants, which also retain task or thread objects. The Go variant uses a compact `WaitGroup`
+instead. FPAS would need a task-group/join-counter primitive for a direct WaitGroup-style memory
+comparison; this benchmark must not be presented as that variant.
 
 ## Related docs
 
-- Language: [`docs/pascal/language/concurrency/README.md`](../pascal/language/concurrency/README.md), [`docs/pascal/std/concurrency/task.md`](../pascal/std/concurrency/task.md), [`docs/pascal/std/host/time.md`](../pascal/std/host/time.md)
-
-## Sketch (not runnable yet)
-
-```pascal
-{ Target shape once cooperative sleep exists — do not add as an example until it works. }
-
-program TaskMemory10k;
-
-uses Std.Array, Std.Task, Std.Time;
-
-const TaskCount: integer := 10_000;
-
-procedure Worker();
-begin
-  Sleep(10_000)  { must become cooperative, not thread-blocking }
-end;
-
-begin
-  mutable var Tasks: array of task := [];
-  for I: integer := 1 to TaskCount do
-    Push(Tasks, go Worker());
-  WaitAll(Tasks)
-end.
-```
+- [Concurrency overview](../pascal/language/concurrency/README.md)
+- [Scheduling](../pascal/language/concurrency/scheduling.md)
+- [`Std.Task`](../pascal/std/concurrency/task.md)
+- [`Std.Time`](../pascal/std/host/time.md)

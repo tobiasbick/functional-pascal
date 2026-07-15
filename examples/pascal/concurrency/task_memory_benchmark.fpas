@@ -1,0 +1,43 @@
+{ Reproduces https://pkolaczk.github.io/memory-consumption-of-async/ }
+{ Build first: cargo build --release -p fpas-cli }
+{ Linux: /usr/bin/time -v target/release/fpas run this-file.fpas -- 10000 }
+{ PowerShell: use Start-Process -PassThru and inspect PeakWorkingSet64 after WaitForExit(). }
+
+program TaskMemoryBenchmark;
+
+uses Std.Args, Std.Array, Std.Console, Std.Conv, Std.Task, Std.Time;
+
+const
+  SleepMillis: integer := 10000;
+  ProgressEvery: integer := 10000;
+
+procedure Worker();
+begin
+  Sleep(SleepMillis)
+end;
+
+begin
+  if ParamCount() <> 1 then
+  begin
+    panic('usage: task_memory_benchmark.fpas -- TASK_COUNT')
+  end;
+  var TaskCount: integer := StrToInt(ParamStr(0));
+  if TaskCount < 1 then
+  begin
+    panic('TASK_COUNT must be positive')
+  end;
+  WriteLn(('spawning ' + IntToStr(TaskCount)) + ' tasks');
+  var Started: integer := MonotonicMillis();
+  mutable var Tasks: array of task := [];
+  for I: integer := 1 to TaskCount do
+  begin
+    Push(Tasks, go Worker());
+    if I mod ProgressEvery = 0 then
+    begin
+      WriteLn('spawned ' + IntToStr(I))
+    end
+  end;
+  WriteLn('all tasks spawned; waiting');
+  WaitAll(Tasks);
+  WriteLn(('completed in ' + IntToStr(ElapsedMillis(Started))) + ' ms')
+end.

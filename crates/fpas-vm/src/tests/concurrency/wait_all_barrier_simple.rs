@@ -71,3 +71,39 @@ fn wait_all_two_tasks_barrier_then_wait_each_prints() {
 
     assert_eq!(run_ok_output(chunk), vec!["7", "7"]);
 }
+
+#[test]
+fn wait_all_deduplicates_repeated_handles() {
+    let callee = "Seven";
+    let chunk = build_zero_arg_function_chunk(
+        callee,
+        |chunk| {
+            emit_constant(
+                chunk,
+                Value::Function {
+                    name: callee.to_string(),
+                    captures: Vec::new(),
+                },
+            );
+            chunk.emit(Op::SpawnTask(0), loc());
+            chunk.emit(Op::Dup, loc());
+            chunk.emit(Op::Dup, loc());
+            chunk.emit(Op::MakeArray(2), loc());
+            chunk.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::WaitAll))),
+                loc(),
+            );
+            chunk.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
+                loc(),
+            );
+            chunk.emit(Op::PrintLn, loc());
+        },
+        |chunk| {
+            emit_constant(chunk, Value::Integer(7));
+            chunk.emit(Op::Return, loc());
+        },
+    );
+
+    assert_eq!(run_ok_output(chunk), vec!["7"]);
+}

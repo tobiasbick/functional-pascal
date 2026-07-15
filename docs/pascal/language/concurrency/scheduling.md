@@ -14,9 +14,14 @@ When the **main task** finishes (normally or with a runtime error), the runtime 
 
 Spawned tasks can be **preempted cooperatively** after a fixed instruction budget and on the **`Yield`** opcode so long-running bytecode cannot starve other queued tasks on the same worker. The shared ready queue is **FIFO**: the oldest suspended task is resumed first. The **main** program task always runs on the thread that started execution and is **not** placed on the shared ready queue; a main-thread `Yield` yields the OS thread so pool workers can run.
 
+`Std.Time.Sleep` is also a cooperative suspension point for spawned tasks. Sleeping tasks are grouped
+by millisecond deadline in a shared timer queue. One timer-driver thread moves each due group to the
+ready queue, so sleeping tasks do not occupy pool workers. `Sleep` on the main task remains a blocking
+host wait.
+
 ## Shared runtime state
 
-Worker threads and the main execution thread share one runtime state: immutable bytecode, a mutex-protected **ready queue** of suspended tasks paired with a **condition variable** so idle workers block instead of spinning, **task id** allocation, **task result** storage for handles used with `Wait`, a **shutdown** flag, and mutex-protected **console**, **input**, and **TUI** state so concurrent tasks do not corrupt I/O. Hosted TUI `On*` handlers run on the **main** thread only.
+Worker threads and the main execution thread share one runtime state: immutable bytecode, a mutex-protected **ready queue** of suspended tasks paired with a **condition variable** so idle workers block instead of spinning, the cooperative **timer queue**, **task id** allocation, **task result** storage for handles used with `Wait`, a **shutdown** flag, and mutex-protected **console**, **input**, and **TUI** state so concurrent tasks do not corrupt I/O. Hosted TUI `On*` handlers run on the **main** thread only.
 
 ## See also
 

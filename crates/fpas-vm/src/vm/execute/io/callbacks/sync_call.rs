@@ -126,6 +126,13 @@ impl Worker {
                         caller_line,
                     ));
                 }
+                StepResult::Suspended => {
+                    return Err(internal_error(
+                        "Task suspended during synchronous function call",
+                        "Synchronous callbacks cannot suspend. This indicates a VM dispatch bug.",
+                        caller_line,
+                    ));
+                }
                 StepResult::Return => {
                     let location = self.current_location;
                     let return_value = self.pop(location)?;

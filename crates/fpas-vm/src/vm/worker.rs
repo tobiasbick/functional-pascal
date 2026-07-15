@@ -25,6 +25,8 @@ pub(crate) struct Worker {
     pub current_task_retain_result: bool,
     pub instructions_until_yield: u32,
     pub sync_call_depth: u32,
+    /// Set by cooperative waits so the run loop returns without completing the current task.
+    pub task_suspended: bool,
     /// Allows specific synchronous cleanup callbacks to run during global shutdown.
     pub allow_shutdown_during_sync_call: bool,
     /// Live turbo-vision application for the main task (not `Send`; main worker only).
@@ -48,6 +50,7 @@ impl Worker {
             current_task_retain_result: false,
             instructions_until_yield: TIMESLICE,
             sync_call_depth: 0,
+            task_suspended: false,
             allow_shutdown_during_sync_call: false,
             live_turbo_vision_app: None,
             headless_tv_app: None,
@@ -67,6 +70,7 @@ impl Worker {
             current_task_retain_result: false,
             instructions_until_yield: TIMESLICE,
             sync_call_depth: 0,
+            task_suspended: false,
             allow_shutdown_during_sync_call: false,
             live_turbo_vision_app: None,
             headless_tv_app: None,
@@ -82,6 +86,7 @@ impl Worker {
         self.call_stack = task.call_stack;
         self.current_task_retain_result = task.retain_result;
         self.instructions_until_yield = TIMESLICE;
+        self.task_suspended = false;
     }
 
     /// Save the current task's state so it can be enqueued for later resumption.

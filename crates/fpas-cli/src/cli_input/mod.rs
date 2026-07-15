@@ -81,10 +81,26 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
     let mut report = None::<TestReportFormat>;
     let mut timeout = None::<Duration>;
     let mut jobs = None::<usize>;
+    let mut standard_library = None::<std::path::PathBuf>;
     let mut positional = Vec::new();
     let mut index = 0;
     while index < cli_args.len() {
         match cli_args[index].as_str() {
+            "--std-lib" if matches!(mode, CliMode::Run | CliMode::Check) => {
+                index += 1;
+                let Some(path) = cli_args.get(index) else {
+                    return Err(
+                        "Missing directory after `--std-lib`.\n  help: `fpas run --std-lib ./lib hello.fpas`."
+                            .to_string(),
+                    );
+                };
+                if standard_library
+                    .replace(std::path::PathBuf::from(path))
+                    .is_some()
+                {
+                    return Err("Duplicate `--std-lib` option.".to_string());
+                }
+            }
             "--check" if mode == CliMode::Fmt => check_only = true,
             "--stdout" if mode == CliMode::Fmt => {
                 if stdout_mode {
@@ -272,10 +288,12 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
         CliMode::Run => ResolvedCli::Run(CliConfig {
             input,
             program_args,
+            standard_library,
         }),
         CliMode::Check => ResolvedCli::Check(CliConfig {
             input,
             program_args,
+            standard_library,
         }),
         CliMode::Fmt => unreachable!("fmt mode handled above"),
         CliMode::Test => ResolvedCli::Test(TestCliConfig {

@@ -13,16 +13,26 @@ use fpas_diagnostics::DiagnosticSeverity;
 use fpas_project as project;
 
 /// Checks sources from CLI-resolved input without execution.
-pub(crate) fn check_cli(config: CliConfig, stderr: &mut dyn Write) -> i32 {
+pub(crate) fn check_cli(
+    config: CliConfig,
+    standard_library: Option<&project::StandardLibrary>,
+    stderr: &mut dyn Write,
+) -> i32 {
     match config.input {
-        CliInput::SourceFile(path) if path.is_dir() => check_source_directory(&path, stderr),
-        CliInput::SourceFile(path) => check_source_file(&path, stderr),
-        CliInput::ProjectFile(path) => check_project_file(&path, stderr),
-        CliInput::WorkspaceFile(path) => check_workspace_file(&path, stderr),
+        CliInput::SourceFile(path) if path.is_dir() => {
+            check_source_directory(&path, standard_library, stderr)
+        }
+        CliInput::SourceFile(path) => check_source_file(&path, standard_library, stderr),
+        CliInput::ProjectFile(path) => check_project_file(&path, standard_library, stderr),
+        CliInput::WorkspaceFile(path) => check_workspace_file(&path, standard_library, stderr),
     }
 }
 
-fn check_source_directory(dir: &Path, stderr: &mut dyn Write) -> i32 {
+fn check_source_directory(
+    dir: &Path,
+    standard_library: Option<&project::StandardLibrary>,
+    stderr: &mut dyn Write,
+) -> i32 {
     let files = collect_fpas_files_in_dir(dir);
     if files.is_empty() {
         let _ = writeln!(
@@ -35,14 +45,39 @@ fn check_source_directory(dir: &Path, stderr: &mut dyn Write) -> i32 {
 
     let mut exit_code = 0;
     for path in files {
-        if check_source_file(&path, stderr) != 0 {
+        if check_source_file(&path, standard_library, stderr) != 0 {
             exit_code = 1;
         }
     }
     exit_code
 }
 
-fn check_source_file(path: &Path, stderr: &mut dyn Write) -> i32 {
+fn check_source_file(
+    path: &Path,
+    standard_library: Option<&project::StandardLibrary>,
+    stderr: &mut dyn Write,
+) -> i32 {
+    if let Some(standard_library) = standard_library {
+        let linked = match project::build_program_with_standard_library(
+            path,
+            &[],
+            &project::ProjectLinkMeta::default(),
+            standard_library,
+        ) {
+            Ok(linked) => linked,
+            Err(message) => {
+                let _ = writeln!(stderr, "{message}");
+                return 1;
+            }
+        };
+        let path_text = path.to_string_lossy();
+        return check_parsed_program(
+            path_text.as_ref(),
+            &linked.program,
+            Some(&linked.source_paths),
+            stderr,
+        );
+    }
     let source = match fs::read_to_string(path) {
         Ok(source) => source,
         Err(error) => {
@@ -55,7 +90,11 @@ fn check_source_file(path: &Path, stderr: &mut dyn Write) -> i32 {
     check_parsed_source(path_text.as_ref(), &source, None, stderr)
 }
 
-fn check_project_file(path: &Path, stderr: &mut dyn Write) -> i32 {
+fn check_project_file(
+    path: &Path,
+    standard_library: Option<&project::StandardLibrary>,
+    stderr: &mut dyn Write,
+) -> i32 {
     let loaded = match project::load_project(path) {
         Ok(loaded) => loaded,
         Err(message) => {
@@ -77,10 +116,22 @@ fn check_project_file(path: &Path, stderr: &mut dyn Write) -> i32 {
                 );
                 return 1;
             };
-            let linked = match project::build_program_with_source_map(
-                &main,
-                &loaded.source_files,
-                &loaded.link_meta,
+            let linked = match standard_library.map_or_else(
+                || {
+                    project::build_program_with_source_map(
+                        &main,
+                        &loaded.source_files,
+                        &loaded.link_meta,
+                    )
+                },
+                |library| {
+                    project::build_program_with_standard_library(
+                        &main,
+                        &loaded.source_files,
+                        &loaded.link_meta,
+                        library,
+                    )
+                },
             ) {
                 Ok(program) => program,
                 Err(message) => {
@@ -97,9 +148,20 @@ fn check_project_file(path: &Path, stderr: &mut dyn Write) -> i32 {
             )
         }
         project::ProjectKind::Library => {
-            let linked = match project::build_library_check_with_source_map(
-                &loaded.source_files,
-                &loaded.link_meta,
+            let linked = match standard_library.map_or_else(
+                || {
+                    project::build_library_check_with_source_map(
+                        &loaded.source_files,
+                        &loaded.link_meta,
+                    )
+                },
+                |library| {
+                    project::build_library_check_with_standard_library(
+                        &loaded.source_files,
+                        &loaded.link_meta,
+                        library,
+                    )
+                },
             ) {
                 Ok(program) => program,
                 Err(message) => {
@@ -115,11 +177,15 @@ fn check_project_file(path: &Path, stderr: &mut dyn Write) -> i32 {
                 stderr,
             )
         }
-        project::ProjectKind::Test => check_test_project(&loaded, stderr),
+        project::ProjectKind::Test => check_test_project(&loaded, standard_library, stderr),
     }
 }
 
-fn check_test_project(loaded: &project::LoadedProject, stderr: &mut dyn Write) -> i32 {
+fn check_test_project(
+    loaded: &project::LoadedProject,
+    standard_library: Option<&project::StandardLibrary>,
+    stderr: &mut dyn Write,
+) -> i32 {
     let unit_files: Vec<PathBuf> = loaded
         .source_files
         .iter()
@@ -128,14 +194,22 @@ fn check_test_project(loaded: &project::LoadedProject, stderr: &mut dyn Write) -
         .collect();
 
     if !unit_files.is_empty() {
-        let linked =
-            match project::build_library_check_with_source_map(&unit_files, &loaded.link_meta) {
-                Ok(program) => program,
-                Err(message) => {
-                    let _ = writeln!(stderr, "{message}");
-                    return 1;
-                }
-            };
+        let linked = match standard_library.map_or_else(
+            || project::build_library_check_with_source_map(&unit_files, &loaded.link_meta),
+            |library| {
+                project::build_library_check_with_standard_library(
+                    &unit_files,
+                    &loaded.link_meta,
+                    library,
+                )
+            },
+        ) {
+            Ok(program) => program,
+            Err(message) => {
+                let _ = writeln!(stderr, "{message}");
+                return 1;
+            }
+        };
         let path_text = "test-project-units";
         if check_parsed_program(
             path_text,
@@ -153,10 +227,22 @@ fn check_test_project(loaded: &project::LoadedProject, stderr: &mut dyn Write) -
         .iter()
         .filter(|source| project::is_test_source_file(source))
     {
-        let linked = match project::build_program_with_source_map(
-            test_path,
-            &loaded.source_files,
-            &loaded.link_meta,
+        let linked = match standard_library.map_or_else(
+            || {
+                project::build_program_with_source_map(
+                    test_path,
+                    &loaded.source_files,
+                    &loaded.link_meta,
+                )
+            },
+            |library| {
+                project::build_program_with_standard_library(
+                    test_path,
+                    &loaded.source_files,
+                    &loaded.link_meta,
+                    library,
+                )
+            },
         ) {
             Ok(program) => program,
             Err(message) => {
@@ -179,7 +265,11 @@ fn check_test_project(loaded: &project::LoadedProject, stderr: &mut dyn Write) -
     0
 }
 
-fn check_workspace_file(path: &Path, stderr: &mut dyn Write) -> i32 {
+fn check_workspace_file(
+    path: &Path,
+    standard_library: Option<&project::StandardLibrary>,
+    stderr: &mut dyn Write,
+) -> i32 {
     let workspace = match project::load_workspace(path) {
         Ok(workspace) => workspace,
         Err(message) => {
@@ -190,7 +280,7 @@ fn check_workspace_file(path: &Path, stderr: &mut dyn Write) -> i32 {
 
     let mut exit_code = 0;
     for member in &workspace.member_projects {
-        let member_exit = check_project_file(member, stderr);
+        let member_exit = check_project_file(member, standard_library, stderr);
         if member_exit != 0 {
             exit_code = member_exit;
         }

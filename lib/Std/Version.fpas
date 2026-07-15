@@ -1,0 +1,5 @@
+unit Std.Version;
+
+const
+  CompilerVersion: string := '0.0.1';
+  LibraryVersion: string := '0.0.1';

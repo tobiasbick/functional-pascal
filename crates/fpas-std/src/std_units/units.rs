@@ -6,6 +6,8 @@ pub const STD_UNIT_PROC: &str = "Std.Proc";
 pub const STD_UNIT_PATH: &str = "Std.Path";
 pub const STD_UNIT_FS: &str = "Std.Fs";
 pub const STD_UNIT_TIME: &str = "Std.Time";
+/// Source-level version information supplied by the bundled standard library.
+pub const STD_UNIT_VERSION: &str = "Std.Version";
 pub const STD_UNIT_CONSOLE: &str = "Std.Console";
 pub const STD_UNIT_STR: &str = "Std.Str";
 pub const STD_UNIT_CONV: &str = "Std.Conv";

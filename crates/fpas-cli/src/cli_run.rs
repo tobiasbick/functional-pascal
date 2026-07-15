@@ -34,38 +34,61 @@ pub(crate) fn run_cli(
             let _ = writeln!(stdout, "fpas {}", env!("CARGO_PKG_VERSION"));
             0
         }
-        ResolvedCli::Check(config) => crate::cli_check::check_cli(config, stderr),
+        ResolvedCli::Check(config) => {
+            let library = match crate::standard_library::resolve_standard_library(
+                config.standard_library.as_deref(),
+            ) {
+                Ok(library) => library,
+                Err(message) => {
+                    let _ = writeln!(stderr, "{message}");
+                    return 1;
+                }
+            };
+            crate::cli_check::check_cli(config, library.as_ref(), stderr)
+        }
         ResolvedCli::Fmt(config) => crate::cli_fmt::format_cli(config, stdout.as_mut(), stderr),
         ResolvedCli::Test(config) => crate::cli_test::test_cli(config, stdout.as_mut(), stderr),
-        ResolvedCli::Run(config) => match config.input {
-            CliInput::SourceFile(path) if path.is_dir() => {
-                let _ = writeln!(
-                    stderr,
-                    "Cannot run directory `{}`.\n  help: Pass a `.fpas` program file or a `.fpasprj` project path.",
-                    path.display()
-                );
-                1
+        ResolvedCli::Run(config) => {
+            let library = match crate::standard_library::resolve_standard_library(
+                config.standard_library.as_deref(),
+            ) {
+                Ok(library) => library,
+                Err(message) => {
+                    let _ = writeln!(stderr, "{message}");
+                    return 1;
+                }
+            };
+            match config.input {
+                CliInput::SourceFile(path) if path.is_dir() => {
+                    let _ = writeln!(
+                        stderr,
+                        "Cannot run directory `{}`.\n  help: Pass a `.fpas` program file or a `.fpasprj` project path.",
+                        path.display()
+                    );
+                    1
+                }
+                CliInput::SourceFile(path) => {
+                    run_source_file(&path, library.as_ref(), config.program_args, stdout, stderr)
+                }
+                CliInput::ProjectFile(path) => {
+                    run_project_file(&path, library.as_ref(), config.program_args, stdout, stderr)
+                }
+                CliInput::WorkspaceFile(path) => {
+                    let _ = writeln!(
+                        stderr,
+                        "Cannot run workspace `{}`.\n  help: Use `fpas check` to validate workspace members, or pass a `.fpasprj` program path.",
+                        path.display()
+                    );
+                    1
+                }
             }
-            CliInput::SourceFile(path) => {
-                run_source_file(&path, config.program_args, stdout, stderr)
-            }
-            CliInput::ProjectFile(path) => {
-                run_project_file(&path, config.program_args, stdout, stderr)
-            }
-            CliInput::WorkspaceFile(path) => {
-                let _ = writeln!(
-                    stderr,
-                    "Cannot run workspace `{}`.\n  help: Use `fpas check` to validate workspace members, or pass a `.fpasprj` program path.",
-                    path.display()
-                );
-                1
-            }
-        },
+        }
     }
 }
 
 fn run_source_file(
     path: &Path,
+    standard_library: Option<&project::StandardLibrary>,
     program_args: Vec<String>,
     stdout: Box<dyn Write + Send>,
     stderr: &mut dyn Write,
@@ -78,12 +101,36 @@ fn run_source_file(
         }
     };
 
+    if let Some(standard_library) = standard_library {
+        let linked = match project::build_program_with_standard_library(
+            path,
+            &[],
+            &project::ProjectLinkMeta::default(),
+            standard_library,
+        ) {
+            Ok(linked) => linked,
+            Err(message) => {
+                let _ = writeln!(stderr, "{message}");
+                return 1;
+            }
+        };
+        let path_text = path.to_string_lossy();
+        return run_compiled_program(
+            path_text.as_ref(),
+            &linked.program,
+            Some(&linked.source_paths),
+            program_args,
+            stdout,
+            stderr,
+        );
+    }
     let path_text = path.to_string_lossy();
     run_source_impl(path_text.as_ref(), &source, program_args, stdout, stderr)
 }
 
 fn run_project_file(
     path: &Path,
+    standard_library: Option<&project::StandardLibrary>,
     program_args: Vec<String>,
     stdout: Box<dyn Write + Send>,
     stderr: &mut dyn Write,
@@ -109,10 +156,22 @@ fn run_project_file(
                 );
                 return 1;
             };
-            let linked_program = match project::build_program_with_source_map(
-                &main,
-                &loaded.source_files,
-                &loaded.link_meta,
+            let linked_program = match standard_library.map_or_else(
+                || {
+                    project::build_program_with_source_map(
+                        &main,
+                        &loaded.source_files,
+                        &loaded.link_meta,
+                    )
+                },
+                |library| {
+                    project::build_program_with_standard_library(
+                        &main,
+                        &loaded.source_files,
+                        &loaded.link_meta,
+                        library,
+                    )
+                },
             ) {
                 Ok(program) => program,
                 Err(message) => {

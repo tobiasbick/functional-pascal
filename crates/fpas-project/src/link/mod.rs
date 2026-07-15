@@ -7,6 +7,7 @@ mod rewrite;
 mod source_map;
 mod support;
 
+use crate::StandardLibrary;
 use crate::common::qualified_id_to_string;
 use crate::model::ProjectLinkMeta;
 use graph::{resolve_reachable_units, topo_sort_units};
@@ -46,7 +47,9 @@ pub fn build_program(
     Ok(build_program_with_source_map(main_path, source_files, link_meta)?.program)
 }
 
-pub use library_check::build_library_check_with_source_map;
+pub use library_check::{
+    build_library_check_with_source_map, build_library_check_with_standard_library,
+};
 
 /// Build a single linked `Program` together with the source-path table used to
 /// resolve diagnostics back to the originating file.
@@ -59,10 +62,38 @@ pub fn build_program_with_source_map(
     source_files: &[PathBuf],
     link_meta: &ProjectLinkMeta,
 ) -> Result<LinkedProgram, String> {
+    build_program_with_optional_standard_library(main_path, source_files, link_meta, None)
+}
+
+/// Builds a program while making implementation-owned standard-library sources available.
+pub fn build_program_with_standard_library(
+    main_path: &Path,
+    source_files: &[PathBuf],
+    link_meta: &ProjectLinkMeta,
+    standard_library: &StandardLibrary,
+) -> Result<LinkedProgram, String> {
+    build_program_with_optional_standard_library(
+        main_path,
+        source_files,
+        link_meta,
+        Some(standard_library),
+    )
+}
+
+fn build_program_with_optional_standard_library(
+    main_path: &Path,
+    source_files: &[PathBuf],
+    link_meta: &ProjectLinkMeta,
+    standard_library: Option<&StandardLibrary>,
+) -> Result<LinkedProgram, String> {
     let mut main_program = parse_program_file(main_path)?;
 
     let mut source_paths = vec![main_path.to_path_buf()];
-    let units = parse_unit_files(source_files, &mut source_paths)?;
+    let standard_source_files = standard_library.map_or(&[][..], StandardLibrary::source_files);
+    let mut all_source_files = source_files.to_vec();
+    all_source_files.extend_from_slice(standard_source_files);
+    let standard_source_paths = standard_source_files.iter().collect();
+    let units = parse_unit_files(&all_source_files, &mut source_paths, &standard_source_paths)?;
     let import_policy = ImportPolicy::new(link_meta, &units);
     import_policy.validate_root_uses(&main_program.uses)?;
 

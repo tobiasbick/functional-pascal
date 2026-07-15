@@ -11,6 +11,7 @@ use super::source_map::apply_program_source_id;
 use super::support::{
     collect_std_uses, internal_link_error, internal_symbol_error, merge_std_uses,
 };
+use crate::StandardLibrary;
 use crate::common::qualified_id_to_string;
 use crate::model::ProjectLinkMeta;
 
@@ -30,6 +31,27 @@ pub fn build_library_check_with_source_map(
     source_files: &[PathBuf],
     link_meta: &ProjectLinkMeta,
 ) -> Result<LinkedProgram, String> {
+    build_library_check_with_optional_standard_library(source_files, link_meta, None)
+}
+
+/// Builds a library-check stub while making implementation-owned standard-library sources available.
+pub fn build_library_check_with_standard_library(
+    source_files: &[PathBuf],
+    link_meta: &ProjectLinkMeta,
+    standard_library: &StandardLibrary,
+) -> Result<LinkedProgram, String> {
+    build_library_check_with_optional_standard_library(
+        source_files,
+        link_meta,
+        Some(standard_library),
+    )
+}
+
+fn build_library_check_with_optional_standard_library(
+    source_files: &[PathBuf],
+    link_meta: &ProjectLinkMeta,
+    standard_library: Option<&StandardLibrary>,
+) -> Result<LinkedProgram, String> {
     let (mut main_program, parse_errors) = fpas_parser::parse(LIBRARY_CHECK_SOURCE);
     let has_errors = parse_errors
         .iter()
@@ -40,7 +62,11 @@ pub fn build_library_check_with_source_map(
 
     apply_program_source_id(&mut main_program, 0);
     let mut source_paths = vec![PathBuf::from(LIBRARY_CHECK_STUB_PATH)];
-    let units = parse_unit_files(source_files, &mut source_paths)?;
+    let standard_source_files = standard_library.map_or(&[][..], StandardLibrary::source_files);
+    let mut all_source_files = source_files.to_vec();
+    all_source_files.extend_from_slice(standard_source_files);
+    let standard_source_paths = standard_source_files.iter().collect();
+    let units = parse_unit_files(&all_source_files, &mut source_paths, &standard_source_paths)?;
     let import_policy = super::import_policy::ImportPolicy::new(link_meta, &units);
 
     let reachable_unit_keys = collect_library_reachable_units(&units)?;

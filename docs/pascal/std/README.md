@@ -1,6 +1,6 @@
 # Standard library reference (`Std.*`)
 
-Built-in units under the reserved `Std` namespace. Import via `uses` and refer to symbols by short or fully qualified names:
+Standard-library units under the reserved `Std` namespace. Import via `uses` and refer to symbols by short or fully qualified names:
 
 ```pascal
 program Hello;
@@ -16,6 +16,8 @@ end.
 ```
 
 See [Units](../program-structure/units.md) for `uses` rules and the reserved `Std` namespace.
+
+Source-level standard-library units are loaded from the `lib` directory beside `fpas`. They remain implementation-owned: user projects cannot declare units under `Std.*`. Use `fpas run --std-lib <directory>` or `fpas check --std-lib <directory>` to replace the standard-library directory for that invocation.
 
 Each unit page is a **self-contained handbook**: importing and short vs qualified names, a **quick reference** table, then routines and types with parameters, behavior, edge cases, and examples.
 
@@ -33,6 +35,7 @@ Each unit page is a **self-contained handbook**: importing and short vs qualifie
 | Terminal UI | [tui/](tui/README.md) | Turbo Vision application facade ([upstream](https://github.com/aovestdipaperino/turbo-vision-4-rust)), controls, command dispatch; contributor bridge map in [vm-bridge.md](tui/app/vm-bridge.md) |
 | Graphics | [graph/](graph/README.md) | Window, drawing, hosted dispatch |
 | Testing | [testing/](testing/README.md) | Std.Test assertions |
+| Version | [version.md](version.md) | Compiler and library version constants |
 
 ## Quick examples
 

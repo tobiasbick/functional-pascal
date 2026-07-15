@@ -72,7 +72,7 @@ pub(super) fn build_imports(
     let mut candidates = HashMap::<String, BTreeSet<String>>::new();
 
     for used in uses {
-        if is_std_unit(used) {
+        if is_std_unit(used) && !units.contains_key(&canonical_unit_key(used)) {
             continue;
         }
         let key = canonical_unit_key(used);

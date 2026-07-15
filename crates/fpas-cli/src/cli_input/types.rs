@@ -15,6 +15,7 @@ pub(crate) enum CliInput {
 pub(crate) struct CliConfig {
     pub input: CliInput,
     pub program_args: Vec<String>,
+    pub standard_library: Option<PathBuf>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

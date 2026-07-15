@@ -19,7 +19,7 @@ pub(super) fn resolve_reachable_units(
     let mut reachable = HashSet::<String>::new();
 
     for used in root_uses {
-        if is_std_unit(used) {
+        if is_intrinsic_std_unit(used, units) {
             continue;
         }
         queue.push(canonical_unit_key(used));
@@ -33,7 +33,7 @@ pub(super) fn resolve_reachable_units(
             return Err(unknown_unit_error(&next, units, "program"));
         };
         for used in &unit_file.unit.uses {
-            if is_std_unit(used) {
+            if is_intrinsic_std_unit(used, units) {
                 continue;
             }
             let key = canonical_unit_key(used);
@@ -137,7 +137,7 @@ fn topo_visit(
         ));
     };
     for used in &unit_file.unit.uses {
-        if is_std_unit(used) {
+        if is_intrinsic_std_unit(used, units) {
             continue;
         }
         let dep_key = canonical_unit_key(used);
@@ -150,6 +150,10 @@ fn topo_visit(
     state.insert(key.to_string(), VisitState::Done);
     order.push(key.to_string());
     Ok(())
+}
+
+fn is_intrinsic_std_unit(used: &QualifiedId, units: &HashMap<String, UnitFile>) -> bool {
+    is_std_unit(used) && !units.contains_key(&canonical_unit_key(used))
 }
 
 #[cfg(test)]

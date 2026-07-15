@@ -14,6 +14,7 @@ mod examples;
 mod fmt;
 mod input;
 mod projects;
+mod standard_library;
 mod support;
 mod test_project;
 mod test_runner;

@@ -25,6 +25,7 @@ mod cli_input;
 mod cli_paths;
 mod cli_run;
 mod cli_test;
+mod standard_library;
 mod test_script;
 
 use std::env;

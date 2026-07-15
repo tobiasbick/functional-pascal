@@ -10,16 +10,18 @@ mod link;
 mod loading;
 mod model;
 mod paths;
+mod standard_library;
 mod test_manifest;
 mod test_sources;
 mod workspace;
 
 pub use link::{
-    LinkedProgram, build_library_check_with_source_map, build_program,
-    build_program_with_source_map,
+    LinkedProgram, build_library_check_with_source_map, build_library_check_with_standard_library,
+    build_program, build_program_with_source_map, build_program_with_standard_library,
 };
 pub use loading::load_project;
 pub use model::{LibraryExportPolicy, LoadedProject, ProjectKind, ProjectLinkMeta, SourceOrigin};
+pub use standard_library::{StandardLibrary, load_standard_library};
 pub use test_manifest::{TestFileOverride, TestManifest};
 pub use test_sources::is_test_source_file;
 pub use workspace::{

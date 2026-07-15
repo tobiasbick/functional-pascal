@@ -27,6 +27,7 @@ pub(super) fn parse_program_file(path: &Path) -> Result<Program, String> {
 pub(super) fn parse_unit_files(
     source_files: &[PathBuf],
     source_paths: &mut Vec<PathBuf>,
+    standard_source_paths: &std::collections::HashSet<&PathBuf>,
 ) -> Result<HashMap<String, UnitFile>, String> {
     let mut by_unit = HashMap::<String, UnitFile>::new();
 
@@ -49,7 +50,9 @@ pub(super) fn parse_unit_files(
         let source_id = next_source_id(source_paths.len())?;
         source_paths.push(source_path.clone());
         apply_unit_source_id(&mut unit, source_id);
-        validate_user_unit_name(source_path, &unit.name)?;
+        if !standard_source_paths.contains(source_path) {
+            validate_user_unit_name(source_path, &unit.name)?;
+        }
 
         let key = canonical_unit_key(&unit.name);
         if let Some(existing) = by_unit.get(&key) {

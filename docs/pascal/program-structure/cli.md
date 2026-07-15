@@ -17,6 +17,7 @@ The `fpas` command-line interface discovers projects, type-checks, runs programs
 - `fpas test [<path>]` — run `*_test.fpas` programs and print a pass/fail/skip summary. With no path, discovers a workspace or `.fpasprj` like `fpas check`. Flags: `--list`, `--fail-fast`, `--strict` (exit `1` when any test called `Skip`), `--filter <pattern>`, `--report json`, `--timeout <secs>`, `--jobs <n>` (`0` = available CPU parallelism), `--script <path>`. Sidecars beside each test file (all optional): `<test>.script.toml` (project overrides), `<test>.expect.stdout`, `<test>.expect.screen` (TUI), `<test>.expect.pixels` (headless graph). See [`Std.Test`](../std/testing/test.md). `--list` and `--report json` write results to stdout; progress lines stay on stderr.
 - `fpas -h` / `fpas --help` — prints usage to stdout and exits successfully.
 - `fpas -V` / `fpas --version` — prints the compiler version to stdout and exits successfully.
+- `fpas run --std-lib <directory> …` and `fpas check --std-lib <directory> …` — replace the implementation-owned source standard-library directory for that invocation. Without this option, `fpas` loads `lib` beside its executable.
 
 Program arguments after `--` require `fpas run` and are visible through `Std.Args` when running programs.
 

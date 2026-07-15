@@ -5,9 +5,9 @@ pub(crate) const CLI_HELP: &str = "\
 fpas — Functional Pascal compiler
 
 Usage:
-    fpas run [<file.fpas | file.fpasprj>] [-- <args>...]   Run a source file or project
+    fpas run [--std-lib <dir>] [<file.fpas | file.fpasprj>] [-- <args>...]   Run a source file or project
     fpas run [-- <args>...]                               Discover a workspace program or `.fpasprj` in cwd
-    fpas check [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
+    fpas check [--std-lib <dir>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
                                                           Type-check without running
     fpas check                                            Discover `.fpasworkspace` or `.fpasprj` in cwd
     fpas test [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
@@ -23,5 +23,6 @@ Options:
   -V, --version   Print version
 
 Program arguments after `--` are visible through `Std.Args` when running programs.
+`Std.*` source units are loaded from `lib` beside `fpas`; `--std-lib <dir>` replaces that directory for `run` and `check`.
 
 ";

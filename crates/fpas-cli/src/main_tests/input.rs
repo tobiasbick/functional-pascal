@@ -205,6 +205,7 @@ fn resolve_cli_config_splits_program_arguments_after_separator() {
         Ok(ResolvedCli::Run(CliConfig {
             input: CliInput::SourceFile(cwd.join("main.fpas")),
             program_args: vec![String::from("one"), String::from("-two")],
+            standard_library: None,
         }))
     );
 }

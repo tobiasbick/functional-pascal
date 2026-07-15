@@ -72,6 +72,7 @@ impl Worker {
         }
     }
 
+    /// Executes one hosted `Std.Console` intrinsic when recognized.
     pub(super) fn try_exec_console_intrinsic(
         &mut self,
         intrinsic: Intrinsic,
@@ -267,6 +268,72 @@ impl Worker {
             Intrinsic::Console(ConsoleIntrinsic::PollEvent) => {
                 let event = self.with_key_input(|k| k.poll_event(line))?;
                 self.push_optional_event(event)?;
+            }
+            Intrinsic::Console(ConsoleIntrinsic::CrtColor) => {
+                let index = self.pop_int(line)?;
+                let color = Self::console_crt_color(index, line)?;
+                self.push(Self::console_color_record(color))?;
+            }
+            Intrinsic::Console(ConsoleIntrinsic::Ansi256Color) => {
+                let index = self.pop_int(line)?;
+                let color = Self::console_ansi256_color(index, line)?;
+                self.push(Self::console_color_record(color))?;
+            }
+            Intrinsic::Console(ConsoleIntrinsic::RgbColor) => {
+                let blue = self.pop_int(line)?;
+                let green = self.pop_int(line)?;
+                let red = self.pop_int(line)?;
+                let color = Self::console_rgb_color(red, green, blue, line)?;
+                self.push(Self::console_color_record(color))?;
+            }
+            Intrinsic::Console(ConsoleIntrinsic::BeginFrame) => {
+                self.with_console(|console| console.begin_frame());
+            }
+            Intrinsic::Console(ConsoleIntrinsic::Present) => {
+                self.with_console(|console| console.present(line))?;
+            }
+            Intrinsic::Console(ConsoleIntrinsic::PutCell) => {
+                let cell = self.pop_console_cell(line)?;
+                let y = self.pop_int(line)?;
+                let x = self.pop_int(line)?;
+                self.with_console(|console| console.put_cell(x, y, cell, line))?;
+            }
+            Intrinsic::Console(ConsoleIntrinsic::GetCell) => {
+                let y = self.pop_int(line)?;
+                let x = self.pop_int(line)?;
+                let cell = self.with_console(|console| console.get_cell(x, y));
+                let value = cell
+                    .map(|cell| Value::OptionSome(Box::new(Self::console_cell_record(cell))))
+                    .unwrap_or(Value::OptionNone);
+                self.push(value)?;
+            }
+            Intrinsic::Console(ConsoleIntrinsic::FillRect) => {
+                let cell = self.pop_console_cell(line)?;
+                let rect = self.pop_console_rect(line)?;
+                self.with_console(|console| console.fill_rect(rect, cell, line))?;
+            }
+            Intrinsic::Console(ConsoleIntrinsic::WriteCells) => {
+                let cells = self.pop_console_cells(line)?;
+                let y = self.pop_int(line)?;
+                let x = self.pop_int(line)?;
+                self.with_console(|console| console.write_cells(x, y, &cells, line))?;
+            }
+            Intrinsic::Console(ConsoleIntrinsic::SaveRegion) => {
+                let rect = self.pop_console_rect(line)?;
+                let id = self.with_console(|console| console.save_region(rect, line))?;
+                self.push(Self::saved_region_record(id))?;
+            }
+            Intrinsic::Console(ConsoleIntrinsic::RestoreRegion) => {
+                let id = self.pop_saved_region(line)?;
+                self.with_console(|console| console.restore_region(id, line))?;
+            }
+            Intrinsic::Console(ConsoleIntrinsic::DiscardRegion) => {
+                let id = self.pop_saved_region(line)?;
+                self.with_console(|console| console.discard_region(id, line))?;
+            }
+            Intrinsic::Console(ConsoleIntrinsic::DisplayWidth) => {
+                let text = self.pop_console_text(line)?;
+                self.push(Value::Integer(Console::display_width(&text)))?;
             }
             _ => return Ok(false),
         }

@@ -4,7 +4,129 @@ use crate::std_registry::loaded::type_registration;
 use crate::types::Ty;
 use fpas_std::key_event::KEY_KIND_VARIANTS;
 use fpas_std::std_symbols as s;
-use fpas_std::{EVENT_KIND_VARIANTS, MOUSE_ACTION_VARIANTS, MOUSE_BUTTON_VARIANTS};
+use fpas_std::{
+    CONSOLE_COLOR_KIND_VARIANTS, EVENT_KIND_VARIANTS, MOUSE_ACTION_VARIANTS, MOUSE_BUTTON_VARIANTS,
+};
+
+/// Registers cell, color, frame, and saved-region types and operations.
+fn register_std_console_cell_api(checker: &mut Checker) {
+    let color_kind = type_registration::register_enum_type(
+        checker,
+        s::STD_CONSOLE_COLOR_KIND,
+        CONSOLE_COLOR_KIND_VARIANTS,
+    );
+    let color = type_registration::register_record_type(
+        checker,
+        s::STD_CONSOLE_COLOR,
+        vec![
+            ("kind".into(), color_kind),
+            ("index".into(), Ty::Integer),
+            ("red".into(), Ty::Integer),
+            ("green".into(), Ty::Integer),
+            ("blue".into(), Ty::Integer),
+        ],
+    );
+    let cell = type_registration::register_record_type(
+        checker,
+        s::STD_CONSOLE_CELL,
+        vec![
+            ("glyph".into(), Ty::String),
+            ("foreground".into(), color.clone()),
+            ("background".into(), color.clone()),
+        ],
+    );
+    let rect = type_registration::register_record_type(
+        checker,
+        s::STD_CONSOLE_RECT,
+        vec![
+            ("x".into(), Ty::Integer),
+            ("y".into(), Ty::Integer),
+            ("width".into(), Ty::Integer),
+            ("height".into(), Ty::Integer),
+        ],
+    );
+    let saved_region =
+        type_registration::register_record_type(checker, s::STD_CONSOLE_SAVED_REGION, Vec::new());
+
+    define_func(
+        checker,
+        s::STD_CONSOLE_CRT_COLOR,
+        vec![p("Index", Ty::Integer, false)],
+        color.clone(),
+    );
+    define_func(
+        checker,
+        s::STD_CONSOLE_ANSI_256_COLOR,
+        vec![p("Index", Ty::Integer, false)],
+        color.clone(),
+    );
+    define_func(
+        checker,
+        s::STD_CONSOLE_RGB_COLOR,
+        vec![
+            p("Red", Ty::Integer, false),
+            p("Green", Ty::Integer, false),
+            p("Blue", Ty::Integer, false),
+        ],
+        color,
+    );
+    define_proc(checker, s::STD_CONSOLE_BEGIN_FRAME, vec![]);
+    define_proc(checker, s::STD_CONSOLE_PRESENT, vec![]);
+    define_proc(
+        checker,
+        s::STD_CONSOLE_PUT_CELL,
+        vec![
+            p("X", Ty::Integer, false),
+            p("Y", Ty::Integer, false),
+            p("Value", cell.clone(), false),
+        ],
+    );
+    define_func(
+        checker,
+        s::STD_CONSOLE_GET_CELL,
+        vec![p("X", Ty::Integer, false), p("Y", Ty::Integer, false)],
+        Ty::Option(Box::new(cell.clone())),
+    );
+    define_proc(
+        checker,
+        s::STD_CONSOLE_FILL_RECT,
+        vec![
+            p("Bounds", rect.clone(), false),
+            p("Value", cell.clone(), false),
+        ],
+    );
+    define_proc(
+        checker,
+        s::STD_CONSOLE_WRITE_CELLS,
+        vec![
+            p("X", Ty::Integer, false),
+            p("Y", Ty::Integer, false),
+            p("Values", Ty::Array(Box::new(cell)), false),
+        ],
+    );
+    define_func(
+        checker,
+        s::STD_CONSOLE_SAVE_REGION,
+        vec![p("Bounds", rect, false)],
+        saved_region.clone(),
+    );
+    define_proc(
+        checker,
+        s::STD_CONSOLE_RESTORE_REGION,
+        vec![p("Region", saved_region.clone(), false)],
+    );
+    define_proc(
+        checker,
+        s::STD_CONSOLE_DISCARD_REGION,
+        vec![p("Region", saved_region, false)],
+    );
+    define_func(
+        checker,
+        s::STD_CONSOLE_DISPLAY_WIDTH,
+        vec![p("Text", Ty::String, false)],
+        Ty::Integer,
+    );
+}
 
 pub(super) fn register_std_console_key_api(checker: &mut Checker) {
     let key_kind_ty =
@@ -80,8 +202,10 @@ pub(super) fn register_std_console_key_api(checker: &mut Checker) {
     );
 }
 
+/// Registers the complete public `Std.Console` API.
 pub(super) fn register_std_console(checker: &mut Checker) {
     register_std_console_key_api(checker);
+    register_std_console_cell_api(checker);
 
     for color_name in [
         s::STD_CONSOLE_BLACK,

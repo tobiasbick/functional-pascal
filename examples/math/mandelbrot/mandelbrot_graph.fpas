@@ -309,7 +309,7 @@ mutable var
   mutable var DisplayScaleFactor: integer := 1;
   mutable var DisplayOffsetX: integer := 0;
   mutable var DisplayOffsetY: integer := 0;
-  mutable var DisplayWidth: integer := 160;
+  mutable var OutputWidth: integer := 160;
   mutable var DisplayHeight: integer := 100;
 
 function ComputeDisplayScale(
@@ -357,9 +357,9 @@ begin
   RenderWidth := LogicalWidth;
   RenderHeight := LogicalHeight;
   DisplayScaleFactor := ComputeDisplayScale(TargetWidth, TargetHeight, RenderWidth, RenderHeight);
-  DisplayWidth := RenderWidth * DisplayScaleFactor;
+  OutputWidth := RenderWidth * DisplayScaleFactor;
   DisplayHeight := RenderHeight * DisplayScaleFactor;
-  DisplayOffsetX := (TargetWidth - DisplayWidth) div 2;
+  DisplayOffsetX := (TargetWidth - OutputWidth) div 2;
   DisplayOffsetY := (TargetHeight - DisplayHeight) div 2
 end;
 

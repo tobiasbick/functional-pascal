@@ -2,55 +2,46 @@
 
 program JuliaAscii;
 
-uses Std.Console;
+uses Std.Array, Std.Console;
 
-procedure DrawBand(band: integer);
+function BandColor(Band: integer): Color;
 begin
-  case band of
+  case Band of
     0:
     begin
-      TextBackground(Blue);
-      TextColor(Blue)
+      return CrtColor(Blue)
     end;
     1:
     begin
-      TextBackground(LightBlue);
-      TextColor(LightBlue)
+      return CrtColor(LightBlue)
     end;
     2:
     begin
-      TextBackground(Cyan);
-      TextColor(Cyan)
+      return CrtColor(Cyan)
     end;
     3:
     begin
-      TextBackground(LightCyan);
-      TextColor(LightCyan)
+      return CrtColor(LightCyan)
     end;
     4:
     begin
-      TextBackground(Green);
-      TextColor(Green)
+      return CrtColor(Green)
     end;
     5:
     begin
-      TextBackground(LightGreen);
-      TextColor(LightGreen)
+      return CrtColor(LightGreen)
     end;
     6:
     begin
-      TextBackground(Yellow);
-      TextColor(Yellow)
+      return CrtColor(Yellow)
     end;
     7:
     begin
-      TextBackground(White);
-      TextColor(White)
+      return CrtColor(White)
     end
     else
     begin
-      TextBackground(White);
-      TextColor(White)
+      return CrtColor(White)
     end
   end
 end;
@@ -65,6 +56,7 @@ procedure Render(
   MaxIter: integer
 );
 begin
+  BeginFrame();
   var Wr: real := 79.0;
   var Hr: real := 24.0;
   mutable var zr: real := 0.0;
@@ -75,6 +67,7 @@ begin
   for Py: integer := 0 to 24 do
   begin
     var cy: real := YMax - (Py / Hr) * (YMax - YMin);
+    mutable var Cells: array of Cell := [];
     for Px: integer := 0 to 79 do
     begin
       var cx: real := XMin + (Px / Wr) * (XMax - XMin);
@@ -91,17 +84,21 @@ begin
       end;
       if N >= MaxIter then
       begin
-        TextBackground(Black);
-        TextColor(Black)
+        Push(Cells, record
+          glyph := ' ';
+          foreground := CrtColor(Black);
+          background := CrtColor(Black);
+        end)
       end
       else
       begin
-        DrawBand((N * 8) div MaxIter)
-      end;
-      Write(' ')
+        var CellShade: Color := BandColor((N * 8) div MaxIter);
+        Push(Cells, record glyph := ' '; foreground := CellShade; background := CellShade; end)
+      end
     end;
-    WriteLn()
-  end
+    WriteCells(1, Py + 1, Cells)
+  end;
+  Present()
 end;
 
 begin
@@ -116,7 +113,6 @@ begin
   var Ji: real := 0.156;
   var MaxIter: integer := 96;
   mutable var Quit: boolean := false;
-  ClrScr();
   Render(XMin, XMax, YMin, YMax, Jr, Ji, MaxIter);
   repeat
     if KeyPressed() then
@@ -175,7 +171,6 @@ begin
       end;
       if Changed and (not Quit) then
       begin
-        ClrScr();
         Render(XMin, XMax, YMin, YMax, Jr, Ji, MaxIter)
       end
     end;

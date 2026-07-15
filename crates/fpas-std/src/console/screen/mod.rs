@@ -1,4 +1,6 @@
-use std::borrow::Cow;
+use std::collections::HashMap;
+
+use super::cell::SavedRegionId;
 
 pub(super) const DEFAULT_SCREEN_WIDTH: u16 = 80;
 pub(super) const DEFAULT_SCREEN_HEIGHT: u16 = 25;
@@ -10,8 +12,13 @@ pub(super) const TEXT_MODE_CO40: i64 = 4;
 pub(super) const TEXT_MODE_CO80: i64 = 5;
 pub(super) const TEXT_MODE_MONO: i64 = 7;
 
+mod cells;
+mod color;
 mod frames;
+mod regions;
 mod writing;
+
+use color::RenderColor;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct WindowRect {
@@ -56,92 +63,17 @@ pub(super) enum FrameDamage {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) enum RenderColor {
-    Crt(u8),
-    Rgb { r: u8, g: u8, b: u8 },
-    Ansi256(u8),
-}
-
-/// Packed CRT palette indices 0–15 → ANSI SGR foreground (CSI `3x` / `9x` `m`).
-const CRT_FG_SGR: [&str; 16] = [
-    "\x1b[30m", "\x1b[34m", "\x1b[32m", "\x1b[36m", "\x1b[31m", "\x1b[35m", "\x1b[33m", "\x1b[37m",
-    "\x1b[90m", "\x1b[94m", "\x1b[92m", "\x1b[96m", "\x1b[91m", "\x1b[95m", "\x1b[93m", "\x1b[97m",
-];
-
-/// Packed CRT palette indices 0–15 → ANSI SGR background (CSI `4x` / `10x` `m`).
-const CRT_BG_SGR: [&str; 16] = [
-    "\x1b[40m",
-    "\x1b[44m",
-    "\x1b[42m",
-    "\x1b[46m",
-    "\x1b[41m",
-    "\x1b[45m",
-    "\x1b[43m",
-    "\x1b[47m",
-    "\x1b[100m",
-    "\x1b[104m",
-    "\x1b[102m",
-    "\x1b[106m",
-    "\x1b[101m",
-    "\x1b[105m",
-    "\x1b[103m",
-    "\x1b[107m",
-];
-
-impl RenderColor {
-    /// ANSI SGR sequence to set the foreground (truecolor / 256 / or CRT palette).
-    ///
-    /// Used by the CRT redraw path so output is plain CSI bytes. `crossterm::style::SetForegroundColor`
-    /// can emit `\e[m` when the writer is not a color-capable TTY (for example tests that capture
-    /// to an in-memory buffer on Windows).
-    ///
-    /// Spec: `docs/pascal/std/console/README.md` (from repository root).
-    pub(super) fn ansi_set_fg(self) -> Cow<'static, str> {
-        match self {
-            Self::Crt(i) => {
-                Cow::Borrowed(CRT_FG_SGR.get(i as usize).copied().unwrap_or("\x1b[97m"))
-            }
-            Self::Rgb { r, g, b } => Cow::Owned(format!("\x1b[38;2;{r};{g};{b}m")),
-            Self::Ansi256(index) => Cow::Owned(format!("\x1b[38;5;{index}m")),
-        }
-    }
-
-    /// ANSI SGR sequence to set the background (truecolor / 256 / or CRT palette).
-    ///
-    /// Spec: `docs/pascal/std/console/README.md` (from repository root).
-    pub(super) fn ansi_set_bg(self) -> Cow<'static, str> {
-        match self {
-            Self::Crt(i) => {
-                Cow::Borrowed(CRT_BG_SGR.get(i as usize).copied().unwrap_or("\x1b[107m"))
-            }
-            Self::Rgb { r, g, b } => Cow::Owned(format!("\x1b[48;2;{r};{g};{b}m")),
-            Self::Ansi256(index) => Cow::Owned(format!("\x1b[48;5;{index}m")),
-        }
-    }
-
-    /// Returns packed CRT index when this color is palette-backed.
-    pub(super) fn packed_index(self) -> Option<u8> {
-        match self {
-            Self::Crt(index) => Some(index),
-            Self::Rgb { .. } | Self::Ansi256(_) => None,
-        }
-    }
-
-    #[cfg(test)]
-    fn debug_label(self) -> String {
-        match self {
-            Self::Crt(index) => format!("crt:{index}"),
-            Self::Rgb { r, g, b } => format!("rgb:{r},{g},{b}"),
-            Self::Ansi256(index) => format!("ansi256:{index}"),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct ScreenCell {
     pub(super) ch: char,
     pub(super) fg: RenderColor,
     pub(super) bg: RenderColor,
+    pub(super) continuation: bool,
+}
+
+#[derive(Debug, Clone)]
+struct SavedRegion {
+    rect: WindowRect,
+    cells: Vec<ScreenCell>,
 }
 
 #[derive(Debug, Clone)]
@@ -167,6 +99,8 @@ pub(super) struct ConsoleState {
     prev_cells: Vec<ScreenCell>,
     /// Mutated screen region since the last committed present.
     pending_frame_damage: Option<FrameDamage>,
+    saved_regions: HashMap<SavedRegionId, SavedRegion>,
+    next_saved_region_id: u64,
 }
 
 impl ConsoleState {
@@ -177,6 +111,7 @@ impl ConsoleState {
             ch: ' ',
             fg: RenderColor::Crt(7),
             bg: RenderColor::Crt(0),
+            continuation: false,
         };
         Self {
             width,
@@ -196,6 +131,8 @@ impl ConsoleState {
             cells: vec![blank; width as usize * height as usize],
             prev_cells: Vec::new(),
             pending_frame_damage: None,
+            saved_regions: HashMap::new(),
+            next_saved_region_id: 1,
         }
     }
 
@@ -226,6 +163,7 @@ impl ConsoleState {
             ch: ' ',
             fg: self.active_fg,
             bg: self.active_bg,
+            continuation: false,
         };
         let old_width = self.width;
         let old_height = self.height;
@@ -243,6 +181,7 @@ impl ConsoleState {
         self.width = new_width;
         self.height = new_height;
         self.cells = new_cells;
+        self.normalize_wide_cells();
         self.prev_cells.clear();
         self.pending_frame_damage = Some(FrameDamage::FullFrame);
 
@@ -281,6 +220,7 @@ impl ConsoleState {
             ch: ' ',
             fg: self.active_fg,
             bg: self.active_bg,
+            continuation: false,
         }
     }
 
@@ -319,6 +259,7 @@ impl ConsoleState {
             ch,
             fg: RenderColor::Crt(fg.min(15)),
             bg: RenderColor::Crt(bg.min(15)),
+            continuation: false,
         };
     }
 

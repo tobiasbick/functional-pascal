@@ -107,7 +107,7 @@ pub(super) fn register_std_tui(checker: &mut Checker) {
     );
     let rect = type_registration::register_record_type(
         checker,
-        s::STD_TUI_RECT,
+        s::STD_TUI_TUI_RECT,
         vec![
             ("x".into(), Ty::Integer),
             ("y".into(), Ty::Integer),

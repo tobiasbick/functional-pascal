@@ -29,7 +29,7 @@ impl Console {
         self.enable_crt_mode();
         self.state.fg |= 0x08;
         self.state.use_packed_colors();
-        self.render_screen(location)
+        self.render_if_ready(location)
     }
 
     /// `Std.Console.LowVideo()` — disable the packed bright foreground bit.
@@ -38,7 +38,7 @@ impl Console {
         self.enable_crt_mode();
         self.state.fg &= 0x07;
         self.state.use_packed_colors();
-        self.render_screen(location)
+        self.render_if_ready(location)
     }
 
     /// `Std.Console.NormVideo()` — restore packed light-gray-on-black colors.
@@ -48,7 +48,7 @@ impl Console {
         self.state.fg = 7;
         self.state.bg = 0;
         self.state.use_packed_colors();
-        self.render_screen(location)
+        self.render_if_ready(location)
     }
 
     pub fn text_attr(&self) -> i64 {
@@ -63,7 +63,7 @@ impl Console {
         self.state.fg = attr & 0x0F;
         self.state.bg = (attr >> 4) & 0x0F;
         self.state.use_packed_colors();
-        self.render_screen(location)
+        self.render_if_ready(location)
     }
 
     /// `Std.Console.TextColorRGB(R, G, B)` — set fg to 24-bit truecolor.

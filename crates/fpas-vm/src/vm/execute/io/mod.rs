@@ -6,6 +6,7 @@ use fpas_std::run_intrinsic;
 mod args;
 mod callbacks;
 mod console;
+mod console_cell_records;
 mod console_records;
 mod graph;
 mod graph_run;

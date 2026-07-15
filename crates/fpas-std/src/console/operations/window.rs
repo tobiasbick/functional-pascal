@@ -12,14 +12,14 @@ impl Console {
         self.sync_terminal_size();
         self.enable_crt_mode();
         self.state.clear_window();
-        self.render_screen(location)
+        self.render_if_ready(location)
     }
 
     pub fn clr_eol(&mut self, location: SourceLocation) -> Result<(), StdError> {
         self.sync_terminal_size();
         self.enable_crt_mode();
         self.state.clear_eol();
-        self.render_screen(location)
+        self.render_if_ready(location)
     }
 
     /// `Std.Console.WindMin` as packed coordinate (low byte: X, high byte: Y).
@@ -38,14 +38,14 @@ impl Console {
         self.sync_terminal_size();
         self.enable_crt_mode();
         self.state.del_line();
-        self.render_screen(location)
+        self.render_if_ready(location)
     }
 
     pub fn ins_line(&mut self, location: SourceLocation) -> Result<(), StdError> {
         self.sync_terminal_size();
         self.enable_crt_mode();
         self.state.ins_line();
-        self.render_screen(location)
+        self.render_if_ready(location)
     }
 
     pub fn window(
@@ -81,7 +81,7 @@ impl Console {
             right: x2,
             bottom: y2,
         });
-        self.render_screen(location)
+        self.render_if_ready(location)
     }
 
     /// `Std.Console.TextMode(Mode)` — reset packed CRT state and clear the screen.
@@ -98,7 +98,7 @@ impl Console {
         self.state.cursor_visible = true;
         self.state.cursor_big = false;
         self.state.clear_window();
-        self.render_screen(location)
+        self.render_if_ready(location)
     }
 
     pub fn last_mode(&self) -> i64 {

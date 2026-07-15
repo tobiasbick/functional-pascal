@@ -4,6 +4,30 @@ Extended color procedures (`TextColorRGB`, `TextBackgroundRGB`, `TextColor256`, 
 
 ---
 
+## Cell color values
+
+The [cell drawing API](cells-frames.md) stores foreground and background colors directly in each
+`Cell`. Construct them with:
+
+| Function | Accepted values | `ColorKind` |
+|----------|-----------------|-------------|
+| `CrtColor(Index)` | `Index: 0..15` | `Crt` |
+| `Ansi256Color(Index)` | `Index: 0..255` | `Ansi256` |
+| `RgbColor(Red, Green, Blue)` | each channel `0..255` | `Rgb` |
+
+```pascal
+var Value: Cell := record
+  glyph := 'X';
+  foreground := RgbColor(255, 128, 0);
+  background := Ansi256Color(17);
+end;
+PutCell(1, 1, Value)
+```
+
+Unlike the stateful text-color procedures below, these are values attached to cells. All three
+modes round-trip through `GetCell` and saved regions. `CrtColor` accepts the named constants in the
+next section, such as `White` and `Black`.
+
 ---
 
 ### `procedure TextColor(Color)`
@@ -117,4 +141,5 @@ WriteLn('256-color text');
 ## See also
 
 - [Console overview](README.md)
+- [Cells and frames](cells-frames.md)
 - [Quick reference](README.md#quick-reference)

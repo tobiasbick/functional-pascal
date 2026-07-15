@@ -14,7 +14,7 @@ private const TREE_WIN_Y: integer := 1;
 private const TREE_WIN_W: integer := 40;
 private const TREE_WIN_H: integer := 22;
 
-private function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+private function Bounds(X: integer; Y: integer; Width: integer; Height: integer): TuiRect;
 begin
   return record x := X; y := Y; width := Width; height := Height; end
 end;

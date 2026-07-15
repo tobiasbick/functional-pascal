@@ -5,6 +5,7 @@
 //! **Maintenance:** Keep that Markdown file in sync with this module, `crates/fpas-vm/src/vm.rs`
 //! (console intrinsics), and `crates/fpas-compiler/src/compiler.rs` (`Write` / `WriteLn` / read intrinsics).
 
+mod cell;
 mod input;
 mod key_input;
 mod operations;
@@ -16,6 +17,9 @@ mod validation;
 #[cfg(test)]
 mod tests;
 
+pub use cell::{
+    CONSOLE_COLOR_KIND_VARIANTS, ConsoleCell, ConsoleColor, ConsoleRect, SavedRegionId,
+};
 pub use input::{ReadLnQueue, TextInput, read_line_from_stdin};
 pub use key_input::KeyInput;
 pub use snapshot::ScreenSnapshot;
@@ -41,6 +45,7 @@ pub struct Console {
     capture_line_buf: String,
     state: ConsoleState,
     writer: Option<Box<dyn Write + Send>>,
+    frame_depth: u32,
 }
 
 impl Default for Console {
@@ -56,6 +61,7 @@ impl Console {
             capture_line_buf: String::new(),
             state: ConsoleState::new(DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT),
             writer: None,
+            frame_depth: 0,
         }
     }
 
@@ -67,6 +73,7 @@ impl Console {
             capture_line_buf: String::new(),
             state: ConsoleState::new(width, height),
             writer: Some(writer),
+            frame_depth: 0,
         }
     }
 

@@ -26,7 +26,7 @@ impl Console {
         let s = format!("{value}");
         self.state.write_text(&s, false);
         if self.state.crt_mode {
-            self.render_screen(location)?;
+            self.render_if_ready(location)?;
         } else if let Some(writer) = &mut self.writer {
             write!(writer, "{s}").map_err(|e| {
                 std_runtime_error(
@@ -58,7 +58,7 @@ impl Console {
         self.captured.lines.push(line);
         self.state.write_text(&s, true);
         if self.state.crt_mode {
-            self.render_screen(location)?;
+            self.render_if_ready(location)?;
         } else if let Some(writer) = &mut self.writer {
             writeln!(writer, "{s}").map_err(|e| {
                 std_runtime_error(

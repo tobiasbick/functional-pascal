@@ -25,7 +25,7 @@ Each unit page is a **self-contained handbook**: importing and short vs qualifie
 
 | Area | Hub | Units / topics |
 |------|-----|----------------|
-| Console | [console/](console/README.md) | Text I/O, CRT screen, keyboard, events |
+| Console | [console/](console/README.md) | Text I/O, retained cells/frames, CRT screen, keyboard, events |
 | Host I/O | [host/](host/README.md) | Args, Env, Fs, Path, Proc, Time |
 | Text | [text/](text/README.md) | Str, Conv, Parse, Json, Toml |
 | Collections | [collections/](collections/README.md) | Array, Dict |
@@ -49,6 +49,9 @@ TextColorRGB(255, 160, 0);
 WriteLn('Accent text');
 NormVideo();
 ```
+
+Fullscreen code can batch explicit cells with `BeginFrame`, `WriteCells`, and `Present`; see
+[Cells and frames](console/cells-frames.md).
 
 ### TUI application shell
 

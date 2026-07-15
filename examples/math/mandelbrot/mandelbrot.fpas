@@ -120,10 +120,15 @@ procedure PaintFrame();
 begin
   RenderW := RenderWidth();
   RenderH := RenderHeight();
-  Window(1, 1, RenderW, RenderH);
-  ClrScr();
+  BeginFrame();
+  FillRect(record x := 1; y := 1; width := ScreenWidth(); height := ScreenHeight(); end, record
+    glyph := ' ';
+    foreground := RgbColor(0, 0, 0);
+    background := RgbColor(0, 0, 0);
+  end);
   Render(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter, State.Palette);
-  DrawHud(State, RenderW, RenderH)
+  DrawHud(State, RenderW, RenderH);
+  Present()
 end;
 
 function HandleKey(Key: KeyEvent): boolean;

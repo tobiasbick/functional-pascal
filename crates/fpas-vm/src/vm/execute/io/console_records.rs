@@ -6,7 +6,7 @@ use fpas_bytecode::{SourceLocation, Value};
 use fpas_std::ConsoleKeyEvent;
 
 impl Worker {
-    pub(in crate::vm::execute::io) fn key_event_record(event: fpas_std::ConsoleKeyEvent) -> Value {
+    pub(in crate::vm::execute::io) fn key_event_record(event: ConsoleKeyEvent) -> Value {
         Value::Record {
             type_name: "Std.Console.KeyEvent".into(),
             fields: vec![
@@ -93,17 +93,14 @@ impl Worker {
         )
     }
 
-    /// Pop a `Std.Console.KeyEvent` record from the stack.
+    /// Pops a `Std.Console.KeyEvent` record from the stack.
     pub(in crate::vm::execute::io) fn pop_console_key_event(
         &mut self,
         line: SourceLocation,
     ) -> Result<ConsoleKeyEvent, VmError> {
         const KEY: &str = "Std.Console.KeyEvent";
         match self.pop(line)? {
-            Value::Record { type_name, fields } if type_name == KEY => {
-                Self::console_key_event_from_fields(&fields, line)
-            }
-            Value::Record { type_name, fields } if type_name == "<record>" => {
+            Value::Record { type_name, fields } if type_name == KEY || type_name == "<record>" => {
                 Self::console_key_event_from_fields(&fields, line)
             }
             other => Err(runtime_error(
@@ -122,8 +119,8 @@ impl Worker {
         let field = |name: &str| -> Result<&Value, VmError> {
             fields
                 .iter()
-                .find(|(k, _)| k == name)
-                .map(|(_, v)| v)
+                .find(|(key, _)| key == name)
+                .map(|(_, value)| value)
                 .ok_or_else(|| {
                     internal_error(
                         format!("Std.Console.KeyEvent missing field `{name}`"),
@@ -134,7 +131,7 @@ impl Worker {
         };
 
         let kind = match field("kind")? {
-            Value::Integer(i) if *i >= 0 => *i as usize,
+            Value::Integer(value) if *value >= 0 => *value as usize,
             _ => {
                 return Err(internal_error(
                     "Std.Console.KeyEvent.kind must be a non-negative integer",
@@ -144,7 +141,7 @@ impl Worker {
             }
         };
         let ch = match field("ch")? {
-            Value::Str(s) => key_event_char_from_string(s),
+            Value::Str(value) => key_event_char_from_string(value),
             _ => {
                 return Err(internal_error(
                     "Std.Console.KeyEvent.ch must be a string",
@@ -155,7 +152,7 @@ impl Worker {
         };
         let read_bool = |name: &str| -> Result<bool, VmError> {
             match field(name)? {
-                Value::Boolean(b) => Ok(*b),
+                Value::Boolean(value) => Ok(*value),
                 _ => Err(internal_error(
                     format!("Std.Console.KeyEvent.{name} must be a boolean"),
                     "This indicates a compiler/runtime mismatch.",
@@ -163,16 +160,18 @@ impl Worker {
                 )),
             }
         };
-        let shift = read_bool("shift")?;
-        let ctrl = read_bool("ctrl")?;
-        let alt = read_bool("alt")?;
-        let meta = read_bool("meta")?;
 
-        Ok(ConsoleKeyEvent::new(kind, ch, shift, ctrl, alt, meta))
+        Ok(ConsoleKeyEvent::new(
+            kind,
+            ch,
+            read_bool("shift")?,
+            read_bool("ctrl")?,
+            read_bool("alt")?,
+            read_bool("meta")?,
+        ))
     }
 }
 
-/// Maps a host key character to the FPAS `KeyEvent.ch` string field.
 fn key_event_char_value(ch: char) -> Value {
     if ch == '\0' {
         Value::Str(String::new())
@@ -181,12 +180,11 @@ fn key_event_char_value(ch: char) -> Value {
     }
 }
 
-/// Reads the host key character from a FPAS `KeyEvent.ch` string field.
-fn key_event_char_from_string(s: &str) -> char {
-    let mut chars = s.chars();
+fn key_event_char_from_string(value: &str) -> char {
+    let mut chars = value.chars();
     match (chars.next(), chars.next()) {
         (None, _) => '\0',
-        (Some(c), None) => c,
-        (Some(c), _) => c,
+        (Some(ch), None) => ch,
+        (Some(ch), _) => ch,
     }
 }

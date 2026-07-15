@@ -1,4 +1,6 @@
-use super::{ConsoleState, ScreenCell};
+use super::ConsoleState;
+use crate::console::cell::ConsoleCell;
+use crate::text::cell_width::display_width;
 
 impl ConsoleState {
     pub(in super::super) fn clear_window(&mut self) {
@@ -15,6 +17,7 @@ impl ConsoleState {
         self.cursor_x = 1;
         self.cursor_y = 1;
         self.pending_wrap = false;
+        self.normalize_wide_cells();
         self.mark_damage_rect(dirty);
     }
 
@@ -34,6 +37,7 @@ impl ConsoleState {
             let idx = self.index(x, y);
             self.cells[idx] = blank;
         }
+        self.normalize_wide_cells();
         self.mark_damage_rect(dirty);
     }
 
@@ -59,6 +63,7 @@ impl ConsoleState {
             let idx = self.index(x, dirty.bottom);
             self.cells[idx] = blank;
         }
+        self.normalize_wide_cells();
         self.mark_damage_rect(dirty);
     }
 
@@ -84,6 +89,7 @@ impl ConsoleState {
             let idx = self.index(x, dirty.top);
             self.cells[idx] = blank;
         }
+        self.normalize_wide_cells();
         self.mark_damage_rect(dirty);
     }
 
@@ -111,26 +117,30 @@ impl ConsoleState {
                     self.pending_wrap = false;
                     self.new_line();
                 }
+                let width = u16::from(display_width(ch));
+                if width == 0 {
+                    return;
+                }
+                if width == 2 && self.cursor_x == self.window_width() {
+                    self.new_line();
+                }
                 let x = self.abs_x();
                 let y = self.abs_y();
                 if self.can_paint_cell(x, y) {
-                    let idx = self.index(x, y);
-                    self.cells[idx] = ScreenCell {
-                        ch,
-                        fg: self.active_fg,
-                        bg: self.active_bg,
-                    };
-                    self.mark_damage_rect(super::WindowRect {
-                        left: x,
-                        top: y,
-                        right: x,
-                        bottom: y,
-                    });
+                    self.put_cell(
+                        x,
+                        y,
+                        ConsoleCell {
+                            glyph: ch,
+                            foreground: self.active_fg.into(),
+                            background: self.active_bg.into(),
+                        },
+                    );
                 }
-                if self.cursor_x == self.window_width() {
+                if self.cursor_x.saturating_add(width - 1) == self.window_width() {
                     self.pending_wrap = true;
                 } else {
-                    self.cursor_x += 1;
+                    self.cursor_x += width;
                 }
             }
         }
@@ -162,6 +172,7 @@ impl ConsoleState {
             let idx = self.index(x, dirty.bottom);
             self.cells[idx] = blank;
         }
+        self.normalize_wide_cells();
         self.mark_damage_rect(dirty);
     }
 }

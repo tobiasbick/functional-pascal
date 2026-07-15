@@ -6,15 +6,15 @@ fn enum_data_three_field_variant() {
         "\
 program EnumThree;
 uses Std.Console, Std.Conv;
-type Color = enum
+type PaintColor = enum
   Rgb(R: integer; G: integer; B: integer);
   Gray(Level: integer);
 end;
 begin
-  var C: Color := Color.Rgb(255, 128, 0);
+  var C: PaintColor := PaintColor.Rgb(255, 128, 0);
   case C of
-    Color.Rgb(R, G, B): WriteLn(Std.Conv.IntToStr(R) + ',' + Std.Conv.IntToStr(G) + ',' + Std.Conv.IntToStr(B));
-    Color.Gray(L): WriteLn(Std.Conv.IntToStr(L))
+    PaintColor.Rgb(R, G, B): WriteLn(Std.Conv.IntToStr(R) + ',' + Std.Conv.IntToStr(G) + ',' + Std.Conv.IntToStr(B));
+    PaintColor.Gray(L): WriteLn(Std.Conv.IntToStr(L))
   end
 end.",
     );

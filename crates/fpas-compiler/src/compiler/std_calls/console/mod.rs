@@ -2,6 +2,8 @@
 //!
 //! **Documentation:** `docs/pascal/std/console/README.md` (from the repository root).
 
+mod cells;
+mod frames;
 mod io;
 mod screen;
 mod style;
@@ -21,6 +23,12 @@ impl Compiler {
         args: &[Expr],
         location: SourceLocation,
     ) -> Result<bool, CompileError> {
+        if self.compile_console_cell_call(name, args, location)? {
+            return Ok(true);
+        }
+        if self.compile_console_frame_call(name, args, location)? {
+            return Ok(true);
+        }
         if self.compile_console_io_call(name, args, location)? {
             return Ok(true);
         }

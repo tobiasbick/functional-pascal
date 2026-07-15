@@ -1,0 +1,23 @@
+program UnicodeRegionTest;
+
+uses Std.Console, Std.Option, Std.Test;
+
+function CellWith(Glyph: string; Foreground: Color): Cell;
+begin
+  return record glyph := Glyph; foreground := Foreground; background := CrtColor(Black); end
+end;
+
+begin
+  AssertEquals(4, DisplayWidth('A中B'));
+  BeginFrame();
+  BeginFrame();
+  PutCell(2, 1, CellWith('中', CrtColor(Yellow)));
+  Present();
+  var Region: SavedRegion := SaveRegion(record x := 3; y := 1; width := 1; height := 1; end);
+  PutCell(3, 1, CellWith('X', CrtColor(White)));
+  RestoreRegion(Region);
+  Present();
+  var WideCell: Cell := Unwrap(GetCell(2, 1));
+  AssertEquals('中', WideCell.glyph);
+  AssertTrue(IsNone(GetCell(3, 1)))
+end.

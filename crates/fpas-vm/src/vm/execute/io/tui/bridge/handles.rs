@@ -39,7 +39,7 @@ impl Worker {
             return Err(runtime_error(
                 TYPE_MISMATCH_CODE,
                 format!("Expected {TUI_RECT_TYPE}, got {}", value.type_name()),
-                "Pass a Std.Tui.Rect value.",
+                "Pass a Std.Tui.TuiRect value.",
                 line,
             ));
         };
@@ -47,7 +47,7 @@ impl Worker {
             return Err(runtime_error(
                 TYPE_MISMATCH_CODE,
                 format!("Expected {TUI_RECT_TYPE}, got {type_name}"),
-                "Pass a Std.Tui.Rect value.",
+                "Pass a Std.Tui.TuiRect value.",
                 line,
             ));
         }
@@ -173,7 +173,7 @@ impl Worker {
         i16::try_from(value).map_err(|_| {
             runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                format!("Rect.{field_name}={value} is outside the Turbo Vision i16 range"),
+                format!("TuiRect.{field_name}={value} is outside the Turbo Vision i16 range"),
                 "Use coordinates in the range -32768..32767.",
                 line,
             )
@@ -190,7 +190,7 @@ impl Worker {
         if value <= 0 {
             return Err(runtime_error(
                 RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                format!("Rect.{field_name} must be positive, got {value}"),
+                format!("TuiRect.{field_name} must be positive, got {value}"),
                 "Use a positive width and height for Turbo Vision controls.",
                 line,
             ));

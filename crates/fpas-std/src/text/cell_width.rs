@@ -1,8 +1,8 @@
-//! Unicode display-width policy for terminal cell layout.
+//! Shared Unicode display-width policy for terminal cell layout.
 //!
-//! **Documentation:** `docs/pascal/std/tui/cell-width.md`
+//! **Documentation:** `docs/pascal/std/console/cells-frames.md`
 
-#![allow(dead_code)] // retained for future Turbo Vision text layout; covered by unit tests below.
+#![allow(dead_code)] // Layout helpers remain reserved for Turbo Vision text layout.
 
 use unicode_width::UnicodeWidthChar;
 

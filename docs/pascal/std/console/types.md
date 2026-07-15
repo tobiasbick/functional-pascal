@@ -2,6 +2,26 @@
 
 ## Types
 
+### Cell drawing types
+
+The retained screen API adds these public types:
+
+| Type | Shape | Purpose |
+|------|-------|---------|
+| `ColorKind` | enum: `Crt`, `Ansi256`, `Rgb` | identifies the representation stored in a `Color` |
+| `Color` | record: `kind`, `index`, `red`, `green`, `blue` | a CRT, ANSI 256-color, or RGB value |
+| `Cell` | record: `glyph`, `foreground`, `background` | one logical Unicode glyph and its colors |
+| `Rect` | record: `x`, `y`, `width`, `height` | a 1-based, screen-absolute rectangle |
+| `SavedRegion` | opaque record | a one-shot handle returned by `SaveRegion` |
+
+Construct `Color` values with `CrtColor`, `Ansi256Color`, or `RgbColor`. `SavedRegion` has no
+public fields and should only be passed to `RestoreRegion` or `DiscardRegion`.
+
+See [Cells and frames](cells-frames.md) for field meanings, Unicode width behavior, coordinate
+rules, and examples.
+
+---
+
 ### Type `KeyEvent` (record)
 
 Logical name in the compiler: `Std.Console.KeyEvent`. With `uses Std.Console`, you may write `KeyEvent`.
@@ -175,5 +195,6 @@ Variants in ordinal order:
 ## See also
 
 - [Console overview](README.md)
+- [Cells and frames](cells-frames.md)
 - [Keyboard](keyboard.md)
 - [Terminal events](events.md)

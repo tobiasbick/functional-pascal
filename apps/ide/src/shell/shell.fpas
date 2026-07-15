@@ -7,7 +7,7 @@ uses Ide.Dialog, Ide.Ui.Menu, Ide.Ui.Status, Std.Tui;
 private mutable var LastCommand: integer := -1;
 private mutable var StatusHandle: StatusLine := record  end;
 
-private function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+private function Bounds(X: integer; Y: integer; Width: integer; Height: integer): TuiRect;
 begin
   return record x := X; y := Y; width := Width; height := Height; end
 end;

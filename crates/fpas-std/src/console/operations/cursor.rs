@@ -13,7 +13,7 @@ impl Console {
             return Ok(());
         };
         self.state.set_cursor(x, y);
-        self.render_screen(location)
+        self.render_if_ready(location)
     }
 
     pub fn where_x(&self) -> i64 {
@@ -29,14 +29,14 @@ impl Console {
         self.enable_crt_mode();
         self.state.cursor_visible = true;
         self.state.cursor_big = false;
-        self.render_screen(location)
+        self.render_if_ready(location)
     }
 
     pub fn cursor_off(&mut self, location: SourceLocation) -> Result<(), StdError> {
         self.sync_terminal_size();
         self.enable_crt_mode();
         self.state.cursor_visible = false;
-        self.render_screen(location)
+        self.render_if_ready(location)
     }
 
     pub fn cursor_big(&mut self, location: SourceLocation) -> Result<(), StdError> {
@@ -44,6 +44,6 @@ impl Console {
         self.enable_crt_mode();
         self.state.cursor_visible = true;
         self.state.cursor_big = true;
-        self.render_screen(location)
+        self.render_if_ready(location)
     }
 }

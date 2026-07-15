@@ -6,7 +6,7 @@ This page defines the complete public FPAS type surface of `Std.Tui`.
 
 Opaque handle for a TUI application session.
 
-## `Rect`
+## `TuiRect`
 
 Rectangle in terminal cells.
 

@@ -20,7 +20,7 @@ pub(in crate::vm::execute::io::tui) const TUI_RADIO_BUTTON_TYPE: &str = "Std.Tui
 pub(in crate::vm::execute::io::tui) const TUI_MENU_BAR_TYPE: &str = "Std.Tui.MenuBar";
 pub(in crate::vm::execute::io::tui) const TUI_STATUS_LINE_TYPE: &str = "Std.Tui.StatusLine";
 pub(in crate::vm::execute::io::tui) const HANDLE_FIELD: &str = "__id";
-pub(in crate::vm::execute::io::tui) const TUI_RECT_TYPE: &str = "Std.Tui.Rect";
+pub(in crate::vm::execute::io::tui) const TUI_RECT_TYPE: &str = "Std.Tui.TuiRect";
 
 impl Worker {
     pub(super) fn turbo_vision_dialog_record(handle: u32) -> Value {

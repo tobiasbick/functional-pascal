@@ -11,9 +11,12 @@ use fpas_bytecode::{SourceLocation, Value};
 use std::io::{self, Write};
 use std::sync::{Arc, Mutex};
 
+mod cells;
 mod colors;
+mod frames;
 mod input;
 mod key_events;
+mod regions;
 mod screen;
 mod terminal;
 

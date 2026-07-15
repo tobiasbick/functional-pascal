@@ -42,6 +42,9 @@ impl Console {
                 writer.queue(MoveTo(0, y - 1)).map_err(map_err)?;
                 for x in 1..=state.width {
                     let cell = state.cell_at(x, y);
+                    if cell.continuation {
+                        continue;
+                    }
                     writer
                         .queue(Print(cell.fg.ansi_set_fg()))
                         .and_then(|w| w.queue(Print(cell.bg.ansi_set_bg())))
@@ -64,6 +67,9 @@ impl Console {
                         continue;
                     }
                     let cell = state.cell_at(x, y);
+                    if cell.continuation {
+                        continue;
+                    }
                     writer.queue(MoveTo(x - 1, y - 1)).map_err(map_err)?;
                     if last_fg != Some(cell.fg) {
                         writer

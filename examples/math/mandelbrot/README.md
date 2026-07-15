@@ -11,7 +11,9 @@ It demonstrates:
 - record methods via the `Complex` helper type
 - enum-driven palette selection
 - fork-join parallelism with one `go` task per rendered row
-- colorful console rendering that works with the current CRT-style screen model
+- truecolor `Cell` values built with `RgbColor`
+- one bulk `WriteCells` call per concurrently computed row
+- `BeginFrame` / `Present` redraws so the fractal and HUD are flushed together
 - raw-mode event handling with an exhaustive `case` on `EventKind` (key, mouse wheel, resize, paste, focus)
 - `EnableMouse` / `EnableFocus` / `EnablePaste` paired with matching `Disable*` on shutdown
 - resize awareness, alternate screen usage, and a live HUD
@@ -22,6 +24,9 @@ It demonstrates:
 cargo run -p fpas-cli -- run examples/math/mandelbrot/mandelbrot.fpasprj
 fpas run examples/math/mandelbrot/mandelbrot_graph.fpas
 ```
+
+The terminal project is also the full-screen example for the
+[`Std.Console` cell/frame API](../../../docs/pascal/std/console/cells-frames.md).
 
 ## Controls
 

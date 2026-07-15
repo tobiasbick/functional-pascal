@@ -8,7 +8,7 @@ program TuiMouseToggleSmoke;
 
 uses Std.Tui, Std.Console, Std.Conv;
 
-function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): TuiRect;
 begin
   return record x := X; y := Y; width := Width; height := Height; end
 end;

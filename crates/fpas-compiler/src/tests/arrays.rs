@@ -224,14 +224,14 @@ fn array_of_enums() {
         "\
 program ArrEnum;
 uses Std.Console;
-type Color = enum Red; Green; Blue; end;
+type PaintColor = enum Red; Green; Blue; end;
 begin
-  var Colors: array of Color := [Color.Red, Color.Blue, Color.Green];
-  if Colors[0] = Color.Red then
+  var PaintColors: array of PaintColor := [PaintColor.Red, PaintColor.Blue, PaintColor.Green];
+  if PaintColors[0] = PaintColor.Red then
     WriteLn('red')
   else
     WriteLn('other');
-  if Colors[1] = Color.Blue then
+  if PaintColors[1] = PaintColor.Blue then
     WriteLn('blue')
   else
     WriteLn('other')

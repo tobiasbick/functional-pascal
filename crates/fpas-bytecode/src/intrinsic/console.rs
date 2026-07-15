@@ -79,4 +79,30 @@ pub enum ConsoleIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/console/README.md`
     TextBackground256 = 246,
+    /// Constructs a classic CRT palette `Std.Console.Color`.
+    CrtColor = 381,
+    /// Constructs an ANSI 256-palette `Std.Console.Color`.
+    Ansi256Color = 382,
+    /// Constructs a truecolor `Std.Console.Color`.
+    RgbColor = 383,
+    /// Starts or nests a deferred console frame.
+    BeginFrame = 384,
+    /// Presents the current console frame.
+    Present = 385,
+    /// Paints one `Std.Console.Cell`.
+    PutCell = 386,
+    /// Reads one `Std.Console.Cell`.
+    GetCell = 387,
+    /// Fills a `Std.Console.Rect` with one cell.
+    FillRect = 388,
+    /// Paints an array of cells from left to right.
+    WriteCells = 389,
+    /// Saves a rectangular console region.
+    SaveRegion = 390,
+    /// Restores and consumes a saved console region.
+    RestoreRegion = 391,
+    /// Discards and consumes a saved console region.
+    DiscardRegion = 392,
+    /// Measures a string in terminal columns.
+    DisplayWidth = 393,
 }

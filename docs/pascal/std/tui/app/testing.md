@@ -15,7 +15,7 @@ begin
   Application.Quit(App)
 end;
 
-function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): TuiRect;
 begin
   return record x := X; y := Y; width := Width; height := Height; end
 end;

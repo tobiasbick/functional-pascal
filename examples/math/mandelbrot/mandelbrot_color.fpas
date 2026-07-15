@@ -34,7 +34,7 @@ begin
   return Clamp(Trunc(Frac(EscapeValue * 0.08) * 12.0), 0, 11)
 end;
 
-private function Sample(Kind: PaletteKind; EscapeValue: real): integer;
+function EscapeColor(Kind: PaletteKind; EscapeValue: real): Color;
 begin
   var Band: integer := BandIndex(EscapeValue);
   case Kind of
@@ -43,51 +43,51 @@ begin
       case Band of
         0:
         begin
-          return Blue
+          return RgbColor(5, 16, 37)
         end;
         1:
         begin
-          return Blue
+          return RgbColor(11, 31, 70)
         end;
         2:
         begin
-          return LightBlue
+          return RgbColor(16, 51, 106)
         end;
         3:
         begin
-          return Cyan
+          return RgbColor(20, 74, 138)
         end;
         4:
         begin
-          return LightCyan
+          return RgbColor(26, 99, 167)
         end;
         5:
         begin
-          return LightCyan
+          return RgbColor(34, 127, 193)
         end;
         6:
         begin
-          return Green
+          return RgbColor(46, 156, 207)
         end;
         7:
         begin
-          return LightGreen
+          return RgbColor(76, 183, 216)
         end;
         8:
         begin
-          return Yellow
+          return RgbColor(112, 208, 219)
         end;
         9:
         begin
-          return LightGray
+          return RgbColor(161, 224, 216)
         end;
         10:
         begin
-          return White
+          return RgbColor(212, 237, 232)
         end
         else
         begin
-          return White
+          return RgbColor(242, 248, 255)
         end
       end
     end;
@@ -96,51 +96,51 @@ begin
       case Band of
         0:
         begin
-          return Red
+          return RgbColor(64, 0, 0)
         end;
         1:
         begin
-          return Red
+          return RgbColor(106, 10, 0)
         end;
         2:
         begin
-          return LightRed
+          return RgbColor(138, 30, 0)
         end;
         3:
         begin
-          return Brown
+          return RgbColor(176, 58, 0)
         end;
         4:
         begin
-          return Yellow
+          return RgbColor(212, 90, 0)
         end;
         5:
         begin
-          return Yellow
+          return RgbColor(240, 122, 0)
         end;
         6:
         begin
-          return LightGray
+          return RgbColor(255, 159, 26)
         end;
         7:
         begin
-          return White
+          return RgbColor(255, 190, 74)
         end;
         8:
         begin
-          return LightMagenta
+          return RgbColor(255, 217, 120)
         end;
         9:
         begin
-          return Magenta
+          return RgbColor(255, 231, 166)
         end;
         10:
         begin
-          return LightRed
+          return RgbColor(255, 241, 204)
         end
         else
         begin
-          return White
+          return RgbColor(255, 248, 232)
         end
       end
     end;
@@ -149,65 +149,58 @@ begin
       case Band of
         0:
         begin
-          return DarkGray
+          return RgbColor(4, 16, 32)
         end;
         1:
         begin
-          return Blue
+          return RgbColor(10, 46, 72)
         end;
         2:
         begin
-          return LightBlue
+          return RgbColor(16, 77, 106)
         end;
         3:
         begin
-          return Cyan
+          return RgbColor(20, 104, 134)
         end;
         4:
         begin
-          return LightCyan
+          return RgbColor(25, 124, 143)
         end;
         5:
         begin
-          return Green
+          return RgbColor(35, 142, 124)
         end;
         6:
         begin
-          return LightGreen
+          return RgbColor(52, 169, 104)
         end;
         7:
         begin
-          return LightGreen
+          return RgbColor(100, 191, 100)
         end;
         8:
         begin
-          return Yellow
+          return RgbColor(148, 217, 118)
         end;
         9:
         begin
-          return LightGray
+          return RgbColor(200, 230, 138)
         end;
         10:
         begin
-          return White
+          return RgbColor(234, 240, 180)
         end
         else
         begin
-          return White
+          return RgbColor(248, 248, 224)
         end
       end
     end
   end
 end;
 
-procedure ApplyInsideColor();
+function InsideColor(): Color;
 begin
-  TextBackground(Black);
-  TextColor(Black)
-end;
-
-procedure ApplyEscapeColor(Kind: PaletteKind; EscapeValue: real);
-begin
-  TextBackground(Black);
-  TextColor(Sample(Kind, EscapeValue))
+  return RgbColor(0, 0, 0)
 end;

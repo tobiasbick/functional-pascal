@@ -1,5 +1,5 @@
-//! Shared Unicode terminal cell-width helpers for future TUI rendering.
+//! Shared Unicode terminal cell-width helpers for Console and TUI rendering.
 //!
-//! **Documentation:** `docs/pascal/std/tui/cell-width.md`
+//! **Documentation:** `docs/pascal/std/console/cells-frames.md`
 
-mod cell_width;
+pub(crate) mod cell_width;

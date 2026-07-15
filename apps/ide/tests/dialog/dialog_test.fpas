@@ -2,7 +2,7 @@ program IdeDialogTest;
 
 uses Ide.Dialog, Ide.Ui.Menu, Ide.Workspace.Session, Std.Option, Std.Test, Std.Tui;
 
-function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): TuiRect;
 begin
   return record x := X; y := Y; width := Width; height := Height; end
 end;

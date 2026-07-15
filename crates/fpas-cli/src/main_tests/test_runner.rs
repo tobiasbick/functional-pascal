@@ -43,7 +43,7 @@ fn test_cli_runs_native_tui_headless_test() {
         &cwd.join("command_test.fpas"),
         "program E;\nuses Std.Tui, Std.Test;\n\
          mutable var QuitSeen: boolean := false;\n\
-         function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;\n\
+         function Bounds(X: integer; Y: integer; Width: integer; Height: integer): TuiRect;\n\
          begin return record x := X; y := Y; width := Width; height := Height; end end;\n\
          procedure OnCommand(App: Application; CommandId: integer);\n\
          begin if CommandId = CM_OK then QuitSeen := true; Application.Quit(App) end;\n\

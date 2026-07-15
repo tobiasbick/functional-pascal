@@ -61,6 +61,7 @@ fpas run examples/hello.fpas
 fpas run examples/fibonacci.fpas
 fpas run examples/pascal/std/args_basics.fpas -- one two
 fpas run examples/pascal/std/str_basics.fpas
+fpas run examples/pascal/std/console_cells_basics.fpas
 fpas run examples/pascal/std/dict_basics.fpas
 fpas run examples/pascal/std/json_basics.fpas
 fpas run examples/pascal/std/graph_basics.fpas
@@ -125,6 +126,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/record-methods/` | Record methods |
 | `pascal/records/defaults_with_update.fpas` | Default fields and `with` updates |
 | `pascal/std/args_basics.fpas` | `Std.Args` — arguments passed after `--` |
+| `pascal/std/console_cells_basics.fpas` | `Std.Console` — framed cell fill/write/read-back and saved-region restore |
 | `pascal/std/str_basics.fpas` | `Std.Str` — trim, split/join, `Format`, search/replace |
 | `pascal/std/dict_basics.fpas` | `Std.Dict` — literals, `Get`, `Merge`, `Map`/`Filter` (qualified when also using `Std.Array` / `Std.Option`) |
 | `pascal/std/env_basics.fpas` | `Std.Env` — environment lookup and missing values |
@@ -148,7 +150,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/tui/runtime_setters.fpas` | `Std.Tui` — live `StaticText.SetText` / `CheckBox.SetChecked` from `OnCommand` during `Run` |
 | `pascal/tui/mouse_toggle_smoke.fpas` | `Std.Tui` — interactive mouse read-back smoke for checkbox/radio |
 | `math/mandelbrot/mandelbrot_graph.fpas` | `Std.Graph` — native Mandelbrot explorer |
-| `math/julia/julia.fpas` | ASCII Julia set (**interactive** — see below) |
+| `math/julia/julia.fpas` | Framed cell-buffer Julia set (**interactive** — see below) |
 | `math/julia/julia_graph.fpas` | Native-window Julia explorer with `Std.Graph` |
 
 ## Multi-unit projects

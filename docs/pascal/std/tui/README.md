@@ -21,7 +21,7 @@ Simple terminal programs that draw every cell themselves (fullscreen explorers, 
 | --- | --- |
 | [Session API](session.md) | `Application.Open`, `Run`, `Close`, size |
 | [Application](app/README.md) | `Application.*` lifecycle and helpers |
-| [Types](app/types.md) | Handles, `Rect`, `CM_*` constants, menu/status records |
+| [Types](app/types.md) | Handles, `TuiRect`, `CM_*` constants, menu/status records |
 | [Controls](app/controls.md) | Buttons, text fields, lists, check boxes, chrome |
 | [Dialogs and windows](app/modals.md) | `Dialog`, `Window`, `ExecView`, attachment |
 | [File dialog](app/file-dialog.md) | Modal `Application.RunFileDialog` |

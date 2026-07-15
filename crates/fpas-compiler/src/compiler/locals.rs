@@ -5,7 +5,7 @@
 use fpas_parser::{Designator, DesignatorPart, Program};
 use fpas_std::key_event::KEY_KIND_VARIANTS;
 use fpas_std::{
-    EVENT_KIND_VARIANTS, MOUSE_ACTION_VARIANTS, MOUSE_BUTTON_VARIANTS,
+    CONSOLE_COLOR_KIND_VARIANTS, EVENT_KIND_VARIANTS, MOUSE_ACTION_VARIANTS, MOUSE_BUTTON_VARIANTS,
     canonical_std_unit_from_segments, is_std_root_segment, std_symbols as s,
 };
 
@@ -139,6 +139,7 @@ impl Compiler {
     }
 
     pub(super) fn register_std_console_enums(&mut self) {
+        self.register_enum_variants(s::STD_CONSOLE_COLOR_KIND, CONSOLE_COLOR_KIND_VARIANTS);
         self.register_enum_variants(s::STD_CONSOLE_KEY_KIND, KEY_KIND_VARIANTS);
         self.register_enum_variants(s::STD_CONSOLE_EVENT_KIND, EVENT_KIND_VARIANTS);
         self.register_enum_variants(s::STD_CONSOLE_MOUSE_ACTION, MOUSE_ACTION_VARIANTS);

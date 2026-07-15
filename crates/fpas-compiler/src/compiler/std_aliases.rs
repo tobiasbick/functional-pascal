@@ -7,9 +7,9 @@ use std::collections::HashMap;
 use fpas_parser::Program;
 use fpas_std::key_event::KEY_KIND_VARIANTS;
 use fpas_std::{
-    EVENT_KIND_VARIANTS, GRAPH_EVENT_KIND_VARIANTS, MOUSE_ACTION_VARIANTS, MOUSE_BUTTON_VARIANTS,
-    STD_UNIT_CONSOLE, STD_UNIT_GRAPH, STD_UNIT_JSON, STD_UNIT_TOML, STD_UNIT_TUI,
-    canonical_std_unit_from_segments, std_unit_symbols,
+    CONSOLE_COLOR_KIND_VARIANTS, EVENT_KIND_VARIANTS, GRAPH_EVENT_KIND_VARIANTS,
+    MOUSE_ACTION_VARIANTS, MOUSE_BUTTON_VARIANTS, STD_UNIT_CONSOLE, STD_UNIT_GRAPH, STD_UNIT_JSON,
+    STD_UNIT_TOML, STD_UNIT_TUI, canonical_std_unit_from_segments, std_unit_symbols,
 };
 
 use super::{Compiler, canonical_name};
@@ -56,6 +56,12 @@ impl Compiler {
             }
             // Also register enum member short aliases (e.g. KeyKind.Space → Std.Console.KeyKind.Space).
             if unit == STD_UNIT_CONSOLE {
+                record_enum_member_short_names(
+                    &mut seen,
+                    STD_UNIT_CONSOLE,
+                    "ColorKind",
+                    CONSOLE_COLOR_KIND_VARIANTS,
+                );
                 record_enum_member_short_names(
                     &mut seen,
                     STD_UNIT_CONSOLE,

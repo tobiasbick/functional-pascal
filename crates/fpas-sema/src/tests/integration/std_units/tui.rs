@@ -27,7 +27,7 @@ fn std_tui_list_box_selection_surface_is_available() {
 program T;
 uses Std.Tui;
 
-function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): TuiRect;
 begin
   return record x := X; y := Y; width := Width; height := Height; end
 end;
@@ -205,7 +205,7 @@ begin
   Application.Quit(App)
 end;
 
-function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): TuiRect;
 begin
   return record x := X; y := Y; width := Width; height := Height; end
 end;
@@ -236,7 +236,7 @@ begin
   Application.Quit(App)
 end;
 
-function Bounds(X: integer; Y: integer; Width: integer; Height: integer): Rect;
+function Bounds(X: integer; Y: integer; Width: integer; Height: integer): TuiRect;
 begin
   return record x := X; y := Y; width := Width; height := Height; end
 end;

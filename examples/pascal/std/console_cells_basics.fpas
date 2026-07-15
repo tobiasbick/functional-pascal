@@ -1,0 +1,43 @@
+{ Spec: docs/pascal/std/console/cells-frames.md (from repository root). }
+
+program ConsoleCellsBasics;
+
+uses Std.Console, Std.Option;
+
+begin
+  var Bounds: Rect := record x := 1; y := 1; width := 6; height := 1; end;
+  var Underlay: SavedRegion := SaveRegion(Bounds);
+  BeginFrame();
+  FillRect(Bounds, record
+    glyph := ' ';
+    foreground := CrtColor(White);
+    background := Ansi256Color(24);
+  end);
+  var First: Cell := record
+    glyph := 'O';
+    foreground := RgbColor(255, 220, 120);
+    background := Ansi256Color(24);
+  end;
+  var Second: Cell := record
+    glyph := 'K';
+    foreground := RgbColor(156, 204, 255);
+    background := Ansi256Color(24);
+  end;
+  var LabelCells: array of Cell := [First, Second];
+  WriteCells(2, 1, LabelCells);
+  var ReadBack: option of Cell := GetCell(2, 1);
+  Present();
+  BeginFrame();
+  RestoreRegion(Underlay);
+  Present();
+  case ReadBack of
+    Some(Value):
+    begin
+      WriteLn('Read back: ' + Value.glyph)
+    end;
+    None:
+    begin
+      WriteLn('No cell')
+    end
+  end
+end.

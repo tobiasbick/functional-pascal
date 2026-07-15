@@ -1,5 +1,6 @@
 use super::*;
 
+mod cells;
 mod crt;
 mod events;
 mod input;

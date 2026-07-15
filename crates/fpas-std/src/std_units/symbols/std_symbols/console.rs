@@ -84,7 +84,44 @@ pub const STD_CONSOLE_CO40: &str = std_console!("CO40");
 pub const STD_CONSOLE_CO80: &str = std_console!("CO80");
 pub const STD_CONSOLE_MONO: &str = std_console!("Mono");
 pub const STD_CONSOLE_FONT_8X8: &str = std_console!("Font8x8");
+/// Qualified name of the `Std.Console.ColorKind` enum.
+pub const STD_CONSOLE_COLOR_KIND: &str = std_console!("ColorKind");
+/// Qualified name of the `Std.Console.Color` record.
+pub const STD_CONSOLE_COLOR: &str = std_console!("Color");
+/// Qualified name of the `Std.Console.Cell` record.
+pub const STD_CONSOLE_CELL: &str = std_console!("Cell");
+/// Qualified name of the `Std.Console.Rect` record.
+pub const STD_CONSOLE_RECT: &str = std_console!("Rect");
+/// Qualified name of the opaque `Std.Console.SavedRegion` record.
+pub const STD_CONSOLE_SAVED_REGION: &str = std_console!("SavedRegion");
+/// Qualified name of the `Std.Console.CrtColor` constructor.
+pub const STD_CONSOLE_CRT_COLOR: &str = std_console!("CrtColor");
+/// Qualified name of the `Std.Console.Ansi256Color` constructor.
+pub const STD_CONSOLE_ANSI_256_COLOR: &str = std_console!("Ansi256Color");
+/// Qualified name of the `Std.Console.RgbColor` constructor.
+pub const STD_CONSOLE_RGB_COLOR: &str = std_console!("RgbColor");
+/// Qualified name of `Std.Console.BeginFrame`.
+pub const STD_CONSOLE_BEGIN_FRAME: &str = std_console!("BeginFrame");
+/// Qualified name of `Std.Console.Present`.
+pub const STD_CONSOLE_PRESENT: &str = std_console!("Present");
+/// Qualified name of `Std.Console.PutCell`.
+pub const STD_CONSOLE_PUT_CELL: &str = std_console!("PutCell");
+/// Qualified name of `Std.Console.GetCell`.
+pub const STD_CONSOLE_GET_CELL: &str = std_console!("GetCell");
+/// Qualified name of `Std.Console.FillRect`.
+pub const STD_CONSOLE_FILL_RECT: &str = std_console!("FillRect");
+/// Qualified name of `Std.Console.WriteCells`.
+pub const STD_CONSOLE_WRITE_CELLS: &str = std_console!("WriteCells");
+/// Qualified name of `Std.Console.SaveRegion`.
+pub const STD_CONSOLE_SAVE_REGION: &str = std_console!("SaveRegion");
+/// Qualified name of `Std.Console.RestoreRegion`.
+pub const STD_CONSOLE_RESTORE_REGION: &str = std_console!("RestoreRegion");
+/// Qualified name of `Std.Console.DiscardRegion`.
+pub const STD_CONSOLE_DISCARD_REGION: &str = std_console!("DiscardRegion");
+/// Qualified name of `Std.Console.DisplayWidth`.
+pub const STD_CONSOLE_DISPLAY_WIDTH: &str = std_console!("DisplayWidth");
 
+/// Symbols exported by the `Std.Console` unit.
 pub(in crate::std_units) const STD_CONSOLE_SYMBOLS: &[&str] = &[
     STD_CONSOLE_WRITE_LN,
     STD_CONSOLE_WRITE,
@@ -170,4 +207,22 @@ pub(in crate::std_units) const STD_CONSOLE_SYMBOLS: &[&str] = &[
     STD_CONSOLE_CO80,
     STD_CONSOLE_MONO,
     STD_CONSOLE_FONT_8X8,
+    STD_CONSOLE_COLOR_KIND,
+    STD_CONSOLE_COLOR,
+    STD_CONSOLE_CELL,
+    STD_CONSOLE_RECT,
+    STD_CONSOLE_SAVED_REGION,
+    STD_CONSOLE_CRT_COLOR,
+    STD_CONSOLE_ANSI_256_COLOR,
+    STD_CONSOLE_RGB_COLOR,
+    STD_CONSOLE_BEGIN_FRAME,
+    STD_CONSOLE_PRESENT,
+    STD_CONSOLE_PUT_CELL,
+    STD_CONSOLE_GET_CELL,
+    STD_CONSOLE_FILL_RECT,
+    STD_CONSOLE_WRITE_CELLS,
+    STD_CONSOLE_SAVE_REGION,
+    STD_CONSOLE_RESTORE_REGION,
+    STD_CONSOLE_DISCARD_REGION,
+    STD_CONSOLE_DISPLAY_WIDTH,
 ];

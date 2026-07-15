@@ -18,7 +18,7 @@ fn emit_open_for_test(chunk: &mut Chunk, width: i64, height: i64) {
 
 fn tui_rect_value(x: i64, y: i64, width: i64, height: i64) -> Value {
     Value::Record {
-        type_name: "Std.Tui.Rect".into(),
+        type_name: "Std.Tui.TuiRect".into(),
         fields: vec![
             ("x".into(), Value::Integer(x)),
             ("y".into(), Value::Integer(y)),

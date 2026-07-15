@@ -3,26 +3,26 @@ program RectangleExample;
 uses Std.Console, Std.Conv;
 
 type
-  Rect = record
+  Rectangle = record
     W: integer;
     H: integer;
 
-    function Area(Self: Rect): integer;
+    function Area(Self: Rectangle): integer;
     begin
       return Self.W * Self.H
     end;
 
-    function Perimeter(Self: Rect): integer;
+    function Perimeter(Self: Rectangle): integer;
     begin
       return 2 * (Self.W + Self.H)
     end;
 
-    function IsSquare(Self: Rect): boolean;
+    function IsSquare(Self: Rectangle): boolean;
     begin
       return Self.W = Self.H
     end;
 
-    procedure Describe(Self: Rect);
+    procedure Describe(Self: Rectangle);
     begin
       mutable var Kind: string := 'Rectangle';
       if Self.IsSquare() then
@@ -35,8 +35,8 @@ type
   end;
 
 begin
-  var R: Rect := record W := 5; H := 3; end;
+  var R: Rectangle := record W := 5; H := 3; end;
   R.Describe();
-  var S: Rect := record W := 4; H := 4; end;
+  var S: Rectangle := record W := 4; H := 4; end;
   S.Describe()
 end.

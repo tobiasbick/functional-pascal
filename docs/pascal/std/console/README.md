@@ -1,6 +1,7 @@
 # `Std.Console`
 
-Text output, line-buffered stdin, and terminal input (CRT-style screen control plus structured key and event APIs).
+Text output, line-buffered stdin, retained cell/frame drawing, and terminal input (CRT-style
+screen control plus structured key and event APIs).
 
 ```pascal
 program Example;
@@ -60,6 +61,19 @@ Everything below requires `uses Std.Console;`.
 | function | `LastMode(): integer` | last value passed to `TextMode` |
 | function | `ScreenWidth(): integer` | current console screen width |
 | function | `ScreenHeight(): integer` | current console screen height |
+| function | `CrtColor(Index): Color` | construct a 16-color cell value |
+| function | `Ansi256Color(Index): Color` | construct a 256-color cell value |
+| function | `RgbColor(Red, Green, Blue): Color` | construct a truecolor cell value |
+| procedure | `BeginFrame()` | begin or nest a deferred screen frame |
+| procedure | `Present()` | complete a frame level; outermost call flushes |
+| procedure | `PutCell(X, Y, Value)` | paint one cell at absolute 1-based coordinates |
+| function | `GetCell(X, Y): Option of Cell` | read a cell; `None` outside the screen or on a wide continuation |
+| procedure | `FillRect(Bounds, Value)` | fill a clipped absolute rectangle |
+| procedure | `WriteCells(X, Y, Values)` | paint a cell array from left to right |
+| function | `SaveRegion(Bounds): SavedRegion` | capture a clipped region in a one-shot handle |
+| procedure | `RestoreRegion(Region)` | restore and consume a saved region |
+| procedure | `DiscardRegion(Region)` | consume a saved region without restoring |
+| function | `DisplayWidth(Text): integer` | Unicode terminal-column width |
 | procedure | `Sound(Hz)` | emit one terminal bell for positive `Hz` |
 | procedure | `NoSound()` | stop active tone state (no-op) |
 | procedure | `AssignCrt()` | enable CRT mode |
@@ -88,6 +102,11 @@ Everything below requires `uses Std.Console;`.
 | type | `EventKind` | enum |
 | type | `MouseAction` | enum |
 | type | `MouseButton` | enum |
+| type | `ColorKind` | enum: `Crt`, `Ansi256`, `Rgb` |
+| type | `Color` | cell color record |
+| type | `Cell` | glyph plus foreground/background colors |
+| type | `Rect` | absolute 1-based cell rectangle |
+| type | `SavedRegion` | opaque one-shot saved-region handle |
 | const | `Black`, `Blue`, `Green`, …, `White` | CRT-style color indices `0..15` |
 | const | `Blink` | text-attribute blink bit (`128`) |
 | const | `BW40`, `C40`, `BW80`, `C80`, `CO40`, `CO80`, `Mono`, `Font8x8` | text-mode compatibility constants |
@@ -100,6 +119,7 @@ Extended color procedures (`TextColorRGB`, `TextBackgroundRGB`, `TextColor256`, 
 |-------|-------------|
 | [Output](output.md) | `Write`, `WriteLn` |
 | [Screen control](screen.md) | Windows, cursor, scrolling |
+| [Cells and frames](cells-frames.md) | Retained cells, frame batching, bulk rows, saved regions |
 | [Screen utilities](screen-misc.md) | `Delay`, cursor visibility, `TextMode`, bell |
 | [Colors and attributes](colors.md) | CRT palette, RGB, 256-color |
 | [Types](types.md) | `KeyEvent`, `Event`, enums |
@@ -113,8 +133,10 @@ Extended color procedures (`TextColorRGB`, `TextBackgroundRGB`, `TextColor256`, 
 Programs that own every cell (explorers, animations, custom TUIs) use `Std.Console` with raw mode, alternate screen, and structured events. Typical setup:
 
 1. `EnableRawMode`, `EnterAltScreen`, optional `EnableMouse` / `EnableFocus` / `EnablePaste`, `CursorOff`
-2. A `mutable var NeedsRedraw` flag; paint proc writes with `Window`, `ClrScr`, `GotoXY`, `Write`, colors
-3. Loop: paint when `NeedsRedraw`, then `case ReadEventTimeout(16) of Some(E): …; None: … end` for keys, mouse, resize
+2. A `mutable var NeedsRedraw` flag; paint proc calls `BeginFrame`, draws with `FillRect`,
+   row-oriented `WriteCells`, and calls `Present`
+3. Loop: paint when `NeedsRedraw`, then `case ReadEventTimeout(16) of Some(E): …; None: … end`
+   for keys, mouse, resize
 4. Cleanup: reverse the enable calls, `LeaveAltScreen`, `DisableRawMode`, `CursorOn`
 
 Reference: [`examples/math/mandelbrot/mandelbrot.fpas`](../../../../examples/math/mandelbrot/mandelbrot.fpas).
@@ -125,6 +147,8 @@ Reference: [`examples/math/mandelbrot/mandelbrot.fpas`](../../../../examples/mat
 |---------|-----------|
 | User-facing registration | [`loaded/console.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/console.rs) |
 | Console backend | [`console/mod.rs`](../../../../crates/fpas-std/src/console/mod.rs) |
+| Cell/frame/region operations | [`console/operations/`](../../../../crates/fpas-std/src/console/operations/mod.rs) |
+| Retained screen model | [`console/screen/`](../../../../crates/fpas-std/src/console/screen/mod.rs) |
 | Key and event types | [`key_event.rs`](../../../../crates/fpas-std/src/key_event.rs), [`console_event.rs`](../../../../crates/fpas-std/src/console_event.rs) |
 | Bytecode / VM | [`intrinsic/mod.rs`](../../../../crates/fpas-bytecode/src/intrinsic/mod.rs), [`vm/mod.rs`](../../../../crates/fpas-vm/src/vm/mod.rs) |
 | Code generation | [`std_calls/console/`](../../../../crates/fpas-compiler/src/compiler/std_calls/console/mod.rs) |

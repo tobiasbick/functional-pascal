@@ -130,6 +130,10 @@ const NON_INTERACTIVE_EXAMPLES: &[ExampleCase] = &[
         args: &["alpha", "beta"],
     },
     ExampleCase {
+        path: "examples/pascal/std/console_cells_basics.fpas",
+        args: &[],
+    },
+    ExampleCase {
         path: "examples/pascal/std/dict_basics.fpas",
         args: &[],
     },

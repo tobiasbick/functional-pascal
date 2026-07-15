@@ -1,6 +1,6 @@
 # IDE project and workspace tree
 
-**Status:** `Std.Toml` and `Std.Fs.Glob` completed on 2026-07-14. The IDE tree window (step 3) is next.
+**Status:** `Std.Toml` and `Std.Fs.Glob` completed on 2026-07-14. IDE session state (manifest load + in-memory root) completed. The IDE tree window (step 4) is next.
 
 ## Goal
 
@@ -25,7 +25,8 @@ Implement the work strictly in this order:
 
 1. `Std.Toml` — complete
 2. `Std.Fs.Glob` — complete
-3. IDE project/workspace tree window — **next**
+3. IDE session state — complete
+4. IDE project/workspace tree window — next
 
 Each item must land with its own current documentation, tests, and completed-plan status before beginning the next one.
 
@@ -82,7 +83,27 @@ Do not add a general-purpose file explorer, recursive directory listing API, wat
 - A plain existing file path without glob metacharacters returns `Ok([Path])`.
 - Returned path strings use `/` separators for deterministic cross-platform ordering.
 
-## 3. IDE project/workspace tree window — next
+## 3. IDE session state — complete
+
+Keep a loaded workspace or project root in memory while the IDE runs. Opening another root replaces the previous one.
+
+### Implemented layout
+
+```text
+apps/ide/src/workspace/
+ ├── classify.fpas   path → OpenKind
+ ├── model.fpas      LoadedProject, LoadedWorkspace, RootState
+ ├── load.fpas       ReadText + Toml.Parse → model values
+ └── session.fpas    ActiveRoot + open files, OpenPath coordinator
+```
+
+### Completion checks
+
+- `OpenPath` loads `.fpasprj` / `.fpasworkspace` manifests instead of storing only the path string.
+- Session accessors expose name, kind, members, include patterns, and main path.
+- IDE tests under `apps/ide/tests/workspace/` cover load and session behavior.
+
+## 4. IDE project/workspace tree window — next
 
 Extend the FPAS IDE source so `File / Open` creates a tree window automatically after it successfully opens a project or workspace root.
 
@@ -111,7 +132,7 @@ Extend the FPAS IDE source so `File / Open` creates a tree window automatically 
 
 ## Handoff
 
-The next implementation step is **3. IDE project/workspace tree window**.
+The next implementation step is **4. IDE project/workspace tree window** after session-state tests pass.
 
 Prerequisites are satisfied:
 

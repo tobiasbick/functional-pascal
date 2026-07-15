@@ -7,10 +7,10 @@ uses Ide.Workspace.Session, Std.Array, Std.Conv, Std.Option, Std.Tui;
 private function SessionStatusItem(): StatusItem;
 begin
   mutable var Text: string := '';
-  var Root: option of string := RootPath();
-  if IsSome(Root) then
+  var Name: string := LoadedName();
+  if Name <> '' then
   begin
-    var Prefix: string := (RootKindLabel() + ': ') + Std.Option.Unwrap(Root);
+    var Prefix: string := (RootKindLabel() + ': ') + Name;
     var FileCount: integer := OpenFileCount();
     if FileCount = 0 then
     begin
@@ -40,8 +40,7 @@ end;
 
 function StatusItems(): array of StatusItem;
 begin
-  var Root: option of string := RootPath();
-  if IsNone(Root) then
+  if LoadedName() = '' then
   begin
     if OpenFileCount() = 0 then
     begin

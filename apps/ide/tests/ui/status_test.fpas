@@ -10,6 +10,7 @@ begin
   var Items: array of StatusItem := StatusItems();
   AssertEquals(1, Std.Array.Length(Items));
   AssertTrue(Std.Str.Contains(Items[0].text, 'Project'));
-  AssertTrue(Std.Str.Contains(Items[0].text, 'ide.fpasprj'));
+  AssertTrue(Std.Str.Contains(Items[0].text, 'ide'));
+  AssertFalse(Std.Str.Contains(Items[0].text, 'ide.fpasprj'));
   Reset()
 end.

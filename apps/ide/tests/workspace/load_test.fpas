@@ -1,0 +1,51 @@
+program IdeWorkspaceLoadTest;
+
+uses Ide.Workspace.Load, Ide.Workspace.Model, Std.Array, Std.Result, Std.Str, Std.Test;
+
+begin
+  case LoadProject('apps/ide/ide.fpasprj') of
+    Ok(Proj):
+    begin
+      AssertEquals('apps/ide/ide.fpasprj', Proj.Path);
+      AssertEquals('ide', Proj.Name);
+      AssertEquals('program', ProjectKindLabel(Proj.ManifestKind));
+      AssertTrue(Std.Str.Contains(Proj.MainPath, 'src/main.fpas'));
+      AssertEquals(1, Std.Array.Length(Proj.IncludePatterns));
+      AssertEquals('src/main.fpas', Proj.IncludePatterns[0]);
+      AssertEquals(0, Std.Array.Length(Proj.ExcludePatterns))
+    end;
+    Error(Message):
+    begin
+      AssertTrue(false)
+    end
+  end;
+  case LoadProject('apps/ide/ide-core.fpasprj') of
+    Ok(Proj):
+    begin
+      AssertEquals('ide-core', Proj.Name);
+      AssertEquals('library', ProjectKindLabel(Proj.ManifestKind));
+      AssertEquals('', Trim(Proj.MainPath));
+      AssertTrue(Std.Array.Length(Proj.IncludePatterns) > 0);
+      AssertTrue(Std.Array.Length(Proj.ExcludePatterns) > 0)
+    end;
+    Error(Message):
+    begin
+      AssertTrue(false)
+    end
+  end;
+  case LoadWorkspace('apps/ide/ide.fpasworkspace') of
+    Ok(Ws):
+    begin
+      AssertEquals('ide', Ws.Name);
+      AssertEquals(3, Std.Array.Length(Ws.MemberPaths));
+      AssertTrue(Std.Str.Contains(Ws.MemberPaths[0], 'ide-core.fpasprj'));
+      AssertTrue(Std.Str.Contains(Ws.MemberPaths[1], 'ide.fpasprj'));
+      AssertTrue(Std.Str.Contains(Ws.MemberPaths[2], 'ide-tests.fpasprj'))
+    end;
+    Error(Message):
+    begin
+      AssertTrue(false)
+    end
+  end;
+  AssertTrue(IsError(LoadProject('apps/ide/does-not-exist.fpasprj')))
+end.

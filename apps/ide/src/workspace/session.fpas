@@ -1,12 +1,25 @@
-/// In-memory workspace session: one root plus open source files.
+/// In-memory workspace session: loaded root state plus open source files.
 
 unit Ide.Workspace.Session;
 
-uses Ide.Workspace.Classify, Std.Array, Std.Conv, Std.Option, Std.Result, Std.Str;
+uses
+  Ide.Workspace.Classify, Ide.Workspace.Load, Ide.Workspace.Model, Std.Array, Std.Conv, Std.Option,
+  Std.Result, Std.Str;
 
-private mutable var HasRoot: boolean := false;
-private mutable var RootIsWorkspace: boolean := false;
-private mutable var RootPathStorage: string := '';
+private mutable var RootSlot: RootSlotKind := RootSlotKind.Empty;
+private mutable var WorkspaceState: LoadedWorkspace := record
+  Path := '';
+  Name := '';
+  MemberPaths := [];
+end;
+private mutable var ProjectState: LoadedProject := record
+  Path := '';
+  Name := '';
+  ManifestKind := ProjectKind.Executable;
+  MainPath := '';
+  IncludePatterns := [];
+  ExcludePatterns := [];
+end;
 private mutable var OpenFilesStorage: array of string := [];
 
 private function PathsEqual(A: string; B: string): boolean;
@@ -26,11 +39,26 @@ begin
   return false
 end;
 
-private procedure SetRoot(IsWorkspace: boolean; Path: string);
+private procedure SetWorkspaceRoot(Ws: LoadedWorkspace);
 begin
-  HasRoot := true;
-  RootIsWorkspace := IsWorkspace;
-  RootPathStorage := Trim(Path);
+  RootSlot := RootSlotKind.Workspace;
+  WorkspaceState := Ws;
+  ProjectState := record
+    Path := '';
+    Name := '';
+    ManifestKind := ProjectKind.Executable;
+    MainPath := '';
+    IncludePatterns := [];
+    ExcludePatterns := [];
+  end;
+  OpenFilesStorage := []
+end;
+
+private procedure SetProjectRoot(Proj: LoadedProject);
+begin
+  RootSlot := RootSlotKind.Project;
+  WorkspaceState := record Path := ''; Name := ''; MemberPaths := []; end;
+  ProjectState := Proj;
   OpenFilesStorage := []
 end;
 
@@ -41,27 +69,65 @@ begin
   OpenFilesStorage := Files
 end;
 
+private function CurrentWorkspace(): LoadedWorkspace;
+begin
+  return WorkspaceState
+end;
+
+private function CurrentProject(): LoadedProject;
+begin
+  return ProjectState
+end;
+
 /// Human-readable root kind label (`Workspace`, `Project`, or empty).
 
 function RootKindLabel(): string;
 begin
-  if not HasRoot then
-  begin
-    return ''
-  end;
-  if RootIsWorkspace then
-  begin
-    return 'Workspace'
-  end;
-  return 'Project'
+  case RootSlot of
+    RootSlotKind.Empty:
+    begin
+      return ''
+    end;
+    RootSlotKind.Workspace:
+    begin
+      return 'Workspace'
+    end;
+    RootSlotKind.Project:
+    begin
+      return 'Project'
+    end
+  end
+end;
+
+/// Display name of the loaded workspace or project root, or empty when none is open.
+
+function LoadedName(): string;
+begin
+  var Ws: LoadedWorkspace := CurrentWorkspace();
+  var Proj: LoadedProject := CurrentProject();
+  case RootSlot of
+    RootSlotKind.Empty:
+    begin
+      return ''
+    end;
+    RootSlotKind.Workspace:
+    begin
+      return Ws.Name
+    end;
+    RootSlotKind.Project:
+    begin
+      return Proj.Name
+    end
+  end
 end;
 
 private function OpenSummary(): string;
 begin
   var FileCount: integer := Std.Array.Length(OpenFilesStorage);
-  if HasRoot then
+  var Name: string := LoadedName();
+  if Name <> '' then
   begin
-    var Prefix: string := (RootKindLabel() + ': ') + RootPathStorage;
+    var Prefix: string := (RootKindLabel() + ': ') + Name;
     if FileCount = 0 then
     begin
       return Prefix
@@ -75,13 +141,96 @@ begin
   return IntToStr(FileCount) + ' files'
 end;
 
+/// Lowercase `project.kind` label for the active project root, or empty for workspace/no root.
+
+function ActiveProjectKindLabel(): string;
+begin
+  if RootSlot = RootSlotKind.Project then
+  begin
+    var Proj: LoadedProject := CurrentProject();
+    return ProjectKindLabel(Proj.ManifestKind)
+  end;
+  return ''
+end;
+
+/// Number of workspace member project paths when the active root is a workspace.
+
+function WorkspaceMemberCount(): integer;
+begin
+  if RootSlot = RootSlotKind.Workspace then
+  begin
+    var Ws: LoadedWorkspace := CurrentWorkspace();
+    return Std.Array.Length(Ws.MemberPaths)
+  end;
+  return 0
+end;
+
+/// Resolved member project path at zero-based `MemberIndex` for a workspace root.
+
+function WorkspaceMemberAt(MemberIndex: integer): string;
+begin
+  if RootSlot = RootSlotKind.Workspace then
+  begin
+    var Ws: LoadedWorkspace := CurrentWorkspace();
+    return Ws.MemberPaths[MemberIndex]
+  end;
+  return ''
+end;
+
+/// Number of `[sources].include` patterns for the active project root.
+
+function ProjectIncludePatternCount(): integer;
+begin
+  if RootSlot = RootSlotKind.Project then
+  begin
+    var Proj: LoadedProject := CurrentProject();
+    return Std.Array.Length(Proj.IncludePatterns)
+  end;
+  return 0
+end;
+
+/// Include pattern at zero-based `PatternIndex` for the active project root.
+
+function ProjectIncludePatternAt(PatternIndex: integer): string;
+begin
+  if RootSlot = RootSlotKind.Project then
+  begin
+    var Proj: LoadedProject := CurrentProject();
+    return Proj.IncludePatterns[PatternIndex]
+  end;
+  return ''
+end;
+
+/// Resolved program `main` path for the active project root, when present.
+
+function ProjectMainPath(): option of string;
+begin
+  if RootSlot = RootSlotKind.Project then
+  begin
+    var Proj: LoadedProject := CurrentProject();
+    if Trim(Proj.MainPath) = '' then
+    begin
+      return None
+    end;
+    return Some(Proj.MainPath)
+  end;
+  return None
+end;
+
 /// Clear session state. Used by tests.
 
 procedure Reset();
 begin
-  HasRoot := false;
-  RootIsWorkspace := false;
-  RootPathStorage := '';
+  RootSlot := RootSlotKind.Empty;
+  WorkspaceState := record Path := ''; Name := ''; MemberPaths := []; end;
+  ProjectState := record
+    Path := '';
+    Name := '';
+    ManifestKind := ProjectKind.Executable;
+    MainPath := '';
+    IncludePatterns := [];
+    ExcludePatterns := [];
+  end;
   OpenFilesStorage := []
 end;
 
@@ -96,13 +245,31 @@ begin
   end;
   if Kind = OpenKind.Workspace then
   begin
-    SetRoot(true, Path);
-    return Ok(OpenSummary())
+    case LoadWorkspace(Path) of
+      Error(Message):
+      begin
+        return Error(Message)
+      end;
+      Ok(Ws):
+      begin
+        SetWorkspaceRoot(Ws);
+        return Ok(OpenSummary())
+      end
+    end
   end;
   if Kind = OpenKind.Project then
   begin
-    SetRoot(false, Path);
-    return Ok(OpenSummary())
+    case LoadProject(Path) of
+      Error(Message):
+      begin
+        return Error(Message)
+      end;
+      Ok(Proj):
+      begin
+        SetProjectRoot(Proj);
+        return Ok(OpenSummary())
+      end
+    end
   end;
   if HasOpenFileInternal(Path) then
   begin
@@ -112,15 +279,26 @@ begin
   return Ok(OpenSummary())
 end;
 
-/// Active root path, if any.
+/// Active root manifest path, if any.
 
 function RootPath(): option of string;
 begin
-  if not HasRoot then
-  begin
-    return None
-  end;
-  return Some(RootPathStorage)
+  var Ws: LoadedWorkspace := CurrentWorkspace();
+  var Proj: LoadedProject := CurrentProject();
+  case RootSlot of
+    RootSlotKind.Empty:
+    begin
+      return None
+    end;
+    RootSlotKind.Workspace:
+    begin
+      return Some(Ws.Path)
+    end;
+    RootSlotKind.Project:
+    begin
+      return Some(Proj.Path)
+    end
+  end
 end;
 
 /// Number of open `.fpas` / test files in the session.

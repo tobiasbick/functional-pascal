@@ -12,6 +12,8 @@ units = [
   "Ide.Dialog.Open",
   "Ide.Dialog.About",
   "Ide.Workspace.Classify",
+  "Ide.Workspace.Model",
+  "Ide.Workspace.Load",
   "Ide.Workspace.Session",
 ]
 

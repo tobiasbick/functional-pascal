@@ -15,11 +15,12 @@ begin
   AssertEquals(CM_OPEN, CmdFileOpen);
   Test.InjectKeyboard(App, 7181);
   AssertTrue(HandleCommand(App, CmdHelpAbout, Status));
-  Application.TestSetFileDialogResult(App, Some('demo.fpasprj'));
+  Application.TestSetFileDialogResult(App, Some('apps/ide/ide.fpasprj'));
   Test.InjectKeyboard(App, 7181);
   AssertTrue(HandleCommand(App, CmdFileOpen, Status));
   AssertTrue(IsSome(RootPath()));
-  AssertEquals('demo.fpasprj', Std.Option.Unwrap(RootPath()));
+  AssertEquals('apps/ide/ide.fpasprj', Std.Option.Unwrap(RootPath()));
+  AssertEquals('ide', LoadedName());
   Reset();
   Application.TestSetFileDialogResult(App, None);
   Test.InjectKeyboard(App, 7181);

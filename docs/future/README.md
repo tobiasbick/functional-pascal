@@ -11,7 +11,6 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
 | Dictionaries | [Dictionary decision](09-remove-dict.md) | Decide whether `Std.Dict` stays, changes, or is removed |
 | Libraries | [Library export model](libraries.md) | Finer per-symbol exports and re-export rules beyond current unit exports |
-| Task runtime | [Task memory benchmark](task-memory-benchmark.md) | Reproduce async memory benchmark and validate future task-runtime behavior |
 | Std.Tui | [Turbo Vision bridge](tui-bridged-readback.md) | Functionally complete except for three upstream read-back adapters — good [contributor entry point](../../AI_CONTRIBUTING.md#good-entry-points) |
 | IDE | [Project tree](ide-project-tree.md) | `Std.Toml` and `Std.Fs.Glob` complete; IDE tree window next |
 

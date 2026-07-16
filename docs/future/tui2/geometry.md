@@ -22,6 +22,29 @@ TuiRect   = x, y, width, height
 - Intersection may return an empty rectangle.
 - Checked arithmetic reports overflow instead of wrapping coordinates.
 
+## Construction API
+
+Geometry values are constructed through static record functions. FPAS does not use overloads, so each alternative representation has a distinct name:
+
+```pascal
+TuiPoint.Create(X, Y)
+TuiSize.Create(Width, Height)
+
+TuiRect.Create(X, Y, Width, Height)
+TuiRect.FromEdges(Left, Top, Right, Bottom)
+TuiRect.FromPointSize(Position, Size)
+TuiRect.FromCorners(TopLeft, BottomRight)
+```
+
+- `Create` accepts the fields stored by the record.
+- `FromEdges` treats `Right` and `Bottom` as exclusive edges and rejects reversed edges.
+- `FromPointSize` combines a `TuiPoint` origin with a `TuiSize` extent.
+- `FromCorners` treats `BottomRight` as the exclusive corner and rejects reversed coordinates.
+- Copying an existing geometry record uses ordinary value assignment.
+- Free functions such as `TuiPointAt`, `TuiSizeOf`, and `TuiRectOf` are provisional implementation details to remove during the restructure.
+
+The static-call syntax is specified by the [static record function plan](../static-record-functions.md).
+
 ## Coordinate spaces
 
 | Space | Meaning |

@@ -1,0 +1,29 @@
+program Tui2GeometryTest;
+
+uses Std.Test, Std.Tui2;
+
+begin
+  var Point: TuiPoint := TuiPointAt(5, 7);
+  AssertEquals(5, Point.X);
+  AssertEquals(7, Point.Y);
+  var Size: TuiSize := TuiSizeOf(12, 4);
+  AssertFalse(Size.IsEmpty());
+  var EmptySize: TuiSize := TuiSizeOf(0, 4);
+  AssertTrue(EmptySize.IsEmpty());
+  var Bounds: TuiRect := TuiRectOf(2, 3, 8, 5);
+  AssertEquals(10, Bounds.Right());
+  AssertEquals(8, Bounds.Bottom());
+  AssertTrue(Bounds.Contains(TuiPointAt(2, 3)));
+  AssertTrue(Bounds.Contains(TuiPointAt(9, 7)));
+  AssertFalse(Bounds.Contains(TuiPointAt(10, 7)));
+  AssertFalse(Bounds.Contains(TuiPointAt(9, 8)));
+  var Overlap: TuiRect := Bounds.Intersect(TuiRectOf(6, 1, 8, 6));
+  AssertEquals(6, Overlap.X);
+  AssertEquals(3, Overlap.Y);
+  AssertEquals(4, Overlap.Width);
+  AssertEquals(4, Overlap.Height);
+  AssertTrue(Bounds.Intersects(Overlap));
+  var Empty: TuiRect := Bounds.Intersect(TuiRectOf(10, 3, 2, 2));
+  AssertTrue(Empty.IsEmpty());
+  AssertFalse(Bounds.Intersects(TuiRectOf(10, 3, 2, 2)))
+end.

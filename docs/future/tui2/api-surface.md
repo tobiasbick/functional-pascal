@@ -35,6 +35,22 @@ Std.Tui2 distinguishes immutable or copyable values from identities for live app
 
 These records describe values only. They do not own live views or contain copies of mutable widget state.
 
+### Value construction
+
+Value records use static functions owned by their type. FPAS retains its no-overload rule, so conversions from different representations have distinct names:
+
+```pascal
+TuiPoint.Create(X, Y)
+TuiSize.Create(Width, Height)
+
+TuiRect.Create(X, Y, Width, Height)
+TuiRect.FromEdges(Left, Top, Right, Bottom)
+TuiRect.FromPointSize(Position, Size)
+TuiRect.FromCorners(TopLeft, BottomRight)
+```
+
+`Create` accepts the record's stored representation. `From...` converts another representation. Copying an existing record uses assignment rather than `From(Other)`. This API depends on the general [static record function](../static-record-functions.md) language feature.
+
 ### Handler types
 
 | Type | Purpose |

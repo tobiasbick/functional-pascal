@@ -11,16 +11,23 @@ lib/
     Version.fpas
     Tui2.fpas
     Tui2/
-      Geometry.fpas
+      TuiPoint.fpas
+      TuiSize.fpas
+      TuiRect.fpas
+      Text.fpas
+      Cells.fpas
+      Canvas.fpas
       Registry.fpas
       Layout/
       Views/
       Controls/
 ```
 
-`stdlib.fpasprj` is a `kind = "library"` project. Its source list includes `Std/**/*.fpas`. Phase 0 exports `Std.Version`; each additional public source unit must be added explicitly to `[exports].units` when it is implemented.
+`stdlib.fpasprj` is a `kind = "library"` project. Its source list includes `Std/**/*.fpas`. `Std.Version` and the public `Std.Tui2` facade are exported explicitly; private implementation units are not. Every additional public source unit must be added explicitly to `[exports].units` when it is implemented.
 
-Internal implementation units use names such as `Std.Tui2.Geometry`. Trusted standard-library sources may declare multi-segment `Std.*` names. User projects may not declare any unit whose first segment is `Std`.
+`Std/Tui2.fpas` is the public facade. Every other Tui2 source file owns one concern and is an implementation unit. A value-record concern normally receives its own same-named source file. Directories group related concerns without combining their implementation into a catch-all unit.
+
+Internal implementation units use names such as `Std.Tui2.TuiRect`. Trusted standard-library sources may declare multi-segment `Std.*` names. User projects may not declare any unit whose first segment is `Std`.
 
 ## Export boundary
 
@@ -28,7 +35,7 @@ The manifest is authoritative:
 
 - exported units may appear in an application `uses` clause;
 - non-exported units are linkable only from other units in the same source standard library;
-- a user import of `Std.Tui2.Geometry` fails with an export diagnostic;
+- a user import of `Std.Tui2.TuiRect` fails with an export diagnostic;
 - source units do not need an entry in the Rust intrinsic-unit registry;
 - intrinsic units such as `Std.Console` continue to use their existing registry.
 

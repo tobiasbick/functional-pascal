@@ -8,6 +8,8 @@ This directory records the plan for a new terminal UI library implemented primar
 - The terminal backend remains a small Rust responsibility: read terminal events and render terminal cells.
 - `Std.Tui2` owns the event loop, view registry, focus, modal routing, commands, and widgets in FPAS source.
 - The public API uses the `Tui` prefix consistently to avoid short-name conflicts with `Std.Console` and `Std.Graph`.
+- Static record functions are a required language prerequisite. Value records use `Type.Create(...)` and distinct `Type.From...(...)` conversions instead of free factory functions or overloads.
+- FPAS source files own one concern and, for Tui2 value types, normally one record definition. Geometry therefore uses separate `TuiPoint.fpas`, `TuiSize.fpas`, and `TuiRect.fpas` implementation units.
 - The design takes interaction concepts from Turbo Vision, but does not reproduce its class hierarchy or Free Vision implementation.
 - Containers use a nested layout system based on size hints, per-axis size policies, stretch factors, spacers, margins, spacing, and alignment.
 - User intent is represented by reusable `TuiAction` handles with one synchronous handler; typed control changes use one handler per event.
@@ -39,6 +41,7 @@ This directory records the plan for a new terminal UI library implemented primar
 | [runtime-boundary.md](runtime-boundary.md) | Main-task access, posting, errors, and terminal restoration. |
 | [testing.md](testing.md) | Deterministic headless and failure-canary requirements. |
 | [implementation-phases.md](implementation-phases.md) | Ordered implementation and test milestones. |
+| [Static record functions](../static-record-functions.md) | Highest-priority language prerequisite for type-owned construction APIs. |
 
 ## Non-blocking extensions
 
@@ -46,4 +49,4 @@ The core contracts required through the first controls are decided. Custom layou
 
 ## Current implementation status
 
-Phase 0, the manifest-backed source standard library, is complete. The next implementation step is [Phase 1](implementation-phases.md#phase-1--geometry-text-cells-and-canvas).
+Phase 0 is complete. The first geometry implementation proves source-defined Std.Tui2 values, but its free factory functions and combined source file are provisional. The next step is the [static record function prerequisite](../static-record-functions.md), followed by the geometry restructure defined in [Phase 1](implementation-phases.md#phase-1--geometry-text-cells-and-canvas).

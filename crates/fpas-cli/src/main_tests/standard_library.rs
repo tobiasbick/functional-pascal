@@ -104,3 +104,44 @@ fn source_standard_library_is_copied_beside_the_cli_binary() {
     assert_eq!(exit, 0, "stderr: {stderr}");
     assert_eq!(stdout, "0.0.1\n");
 }
+
+fn run_repo_tui2_program(rel_path: &str) -> (i32, String, String) {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .expect("workspace root");
+    let program = root.join(rel_path);
+    support::run_cli_args_and_capture_output(
+        &[
+            String::from("run"),
+            String::from("--std-lib"),
+            root.join("lib").to_string_lossy().into_owned(),
+            program.to_string_lossy().into_owned(),
+        ],
+        root,
+    )
+}
+
+#[test]
+fn tui2_rejects_negative_sizes() {
+    let (exit, _stdout, stderr) =
+        run_repo_tui2_program("tests/stdlib/tui2/negative_size_runtime_error.fpas");
+
+    assert_ne!(exit, 0, "negative TuiSize must fail");
+    assert!(
+        stderr.contains("Tui2 width must not be negative"),
+        "stderr: {stderr}"
+    );
+}
+
+#[test]
+fn tui2_rejects_coordinate_edge_overflow() {
+    let (exit, _stdout, stderr) =
+        run_repo_tui2_program("tests/stdlib/tui2/edge_overflow_runtime_error.fpas");
+
+    assert_ne!(exit, 0, "overflowing TuiRect must fail");
+    assert!(
+        stderr.contains("Tui2 right edge overflows integer coordinates"),
+        "stderr: {stderr}"
+    );
+}

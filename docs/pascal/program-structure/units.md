@@ -80,9 +80,9 @@ end.
 
 The first segment `Std` (ASCII, any case) is reserved for the standard library. User-defined units use another root segment (for example `MyApp.Utils`).
 
-In `uses`, standard library entries are two-part names such as `Std.Console`.
+Intrinsic standard-library entries are two-part names such as `Std.Console`. Trusted source standard-library manifests may also export multi-segment units such as `Std.Tools.Format`; only units listed in that manifest's `[exports].units` may appear in an application `uses` clause.
 
-Unknown `uses` entries referring to `Std.*` are rejected with an error that lists the valid standard units.
+Unknown `uses` entries referring to `Std.*`, and private source standard-library units, are rejected with an error.
 
 ## Unit resolution
 

@@ -17,7 +17,7 @@ end.
 
 See [Units](../program-structure/units.md) for `uses` rules and the reserved `Std` namespace.
 
-Source-level standard-library units are loaded from the `lib` directory beside `fpas`. They remain implementation-owned: user projects cannot declare units under `Std.*`. Use `fpas run --std-lib <directory>` or `fpas check --std-lib <directory>` to replace the standard-library directory for that invocation.
+Source-level standard-library units are loaded from the `lib/stdlib.fpasprj` manifest beside `fpas`. They remain implementation-owned: user projects cannot declare units under `Std.*`. The manifest controls which source units are public; its private implementation units cannot be imported by applications. Use `fpas run --std-lib <directory>`, `fpas check --std-lib <directory>`, or `fpas test --std-lib <directory>` to replace the complete source standard library for that invocation.
 
 Each unit page is a **self-contained handbook**: importing and short vs qualified names, a **quick reference** table, then routines and types with parameters, behavior, edge cases, and examples.
 

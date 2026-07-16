@@ -94,7 +94,8 @@ fn build_program_with_optional_standard_library(
     all_source_files.extend_from_slice(standard_source_files);
     let standard_source_paths = standard_source_files.iter().collect();
     let units = parse_unit_files(&all_source_files, &mut source_paths, &standard_source_paths)?;
-    let import_policy = ImportPolicy::new(link_meta, &units);
+    let effective_link_meta = merge_standard_library_link_meta(link_meta, standard_library);
+    let import_policy = ImportPolicy::new(&effective_link_meta, &units);
     import_policy.validate_root_uses(&main_program.uses)?;
 
     let reachable_unit_keys = resolve_reachable_units(&main_program.uses, &units, &import_policy)?;
@@ -146,6 +147,8 @@ fn build_program_with_optional_standard_library(
         merged_unit_decls.extend(declarations);
     }
 
+    retain_intrinsic_std_uses(&mut std_uses, &units);
+
     let main_imports = build_imports(
         "__main__",
         &main_program.uses,
@@ -171,4 +174,28 @@ fn build_program_with_optional_standard_library(
         program: main_program,
         source_paths,
     })
+}
+
+pub(super) fn merge_standard_library_link_meta(
+    link_meta: &ProjectLinkMeta,
+    standard_library: Option<&StandardLibrary>,
+) -> ProjectLinkMeta {
+    let mut combined = link_meta.clone();
+    let Some(standard_library) = standard_library else {
+        return combined;
+    };
+    combined
+        .source_origins
+        .extend(standard_library.link_meta().source_origins.clone());
+    combined
+        .library_export_policies
+        .extend(standard_library.link_meta().library_export_policies.clone());
+    combined
+}
+
+pub(super) fn retain_intrinsic_std_uses(
+    std_uses: &mut Vec<fpas_parser::QualifiedId>,
+    units: &std::collections::HashMap<String, UnitFile>,
+) {
+    std_uses.retain(|used| !units.contains_key(&support::canonical_unit_key(used)));
 }

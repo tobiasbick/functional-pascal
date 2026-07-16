@@ -298,3 +298,53 @@ pub(crate) fn validate_project_source_units(
 
     Ok(validated)
 }
+
+/// Validates trusted standard-library sources declared by `stdlib.fpasprj`.
+pub(crate) fn validate_standard_library_source_units(
+    source_files: Vec<PathBuf>,
+    parse_cache: &mut ParsedSourceCache,
+) -> Result<Vec<PathBuf>, String> {
+    let mut validated = Vec::new();
+    let mut seen_unit_names = HashMap::<String, PathBuf>::new();
+
+    for source_path in source_files {
+        let (unit, _) = parse_cache.parse(&source_path, 0)?;
+        let CompilationUnit::Unit(unit) = unit else {
+            let CompilationUnit::Program(program) = unit else {
+                unreachable!("compilation unit is program or unit");
+            };
+            return Err(format!(
+                "Standard library source file `{}` declares `program {}`.\n  help: Standard library manifests may include `unit Std.*` files only.",
+                source_path.display(),
+                program.name
+            ));
+        };
+
+        let unit_name = qualified_id_to_string(&unit.name);
+        let is_std_unit = unit.name.parts.len() >= 2
+            && unit
+                .name
+                .parts
+                .first()
+                .is_some_and(|head| head.eq_ignore_ascii_case("std"));
+        if !is_std_unit {
+            return Err(format!(
+                "Standard library source file `{}` declares `unit {unit_name}`.\n  help: Trusted standard-library units must use the `Std.*` namespace.",
+                source_path.display()
+            ));
+        }
+
+        let key = unit_name.to_ascii_lowercase();
+        if let Some(first_path) = seen_unit_names.get(&key) {
+            return Err(format!(
+                "Duplicate standard-library unit name `{unit_name}` found in `{}` and `{}`.\n  help: Use a unique `Std.*` namespace per source file.",
+                first_path.display(),
+                source_path.display()
+            ));
+        }
+        seen_unit_names.insert(key, source_path.clone());
+        validated.push(source_path);
+    }
+
+    Ok(validated)
+}

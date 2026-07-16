@@ -2,11 +2,10 @@
 
 ## Phase 0 — Manifest-backed source standard library
 
-- Add `lib/stdlib.fpasprj` as the authoritative source standard-library manifest.
-- Support exported public units and private multi-segment `Std.*` implementation units.
-- Keep `Std` reserved for intrinsic units and manifest-trusted sources.
-- Make `run`, `check`, and `test` load the selected manifest.
-- Add tests for default discovery, override, private-unit rejection, collision, and namespace reservation.
+- **Complete.** `lib/stdlib.fpasprj` is the authoritative source standard-library manifest.
+- **Complete.** Public exports, private multi-segment `Std.*` implementation units, and manifest-trusted namespace validation are enforced.
+- **Complete.** `run`, `check`, and `test` load the selected manifest; `--std-lib` replaces the complete library.
+- **Complete.** Regression coverage verifies default discovery, override, private-unit rejection, intrinsic collisions, and namespace reservation.
 
 Completion contract: [source-library.md](source-library.md).
 

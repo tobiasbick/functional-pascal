@@ -24,6 +24,7 @@ fn test_cli_rejects_unit_file_as_test_entry() {
             timeout: None,
             jobs: 1,
             strict: false,
+            standard_library: None,
         },
         &mut stdout,
         &mut stderr,

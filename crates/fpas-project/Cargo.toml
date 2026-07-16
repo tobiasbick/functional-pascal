@@ -10,6 +10,7 @@ repository.workspace = true
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-lexer = { path = "../fpas-lexer" }
 fpas-parser = { path = "../fpas-parser" }
+fpas-std = { path = "../fpas-std" }
 glob = { workspace = true }
 serde = { workspace = true }
 toml = { workspace = true }

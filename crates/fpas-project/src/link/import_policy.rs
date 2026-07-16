@@ -32,9 +32,6 @@ impl<'a> ImportPolicy<'a> {
             return Ok(());
         }
         for used in uses {
-            if super::support::is_std_unit(used) {
-                continue;
-            }
             let target_key = canonical_unit_key(used);
             if !self.can_import(&SourceOrigin::Own, &target_key)? {
                 return Err(self.not_exported_error(&target_key));

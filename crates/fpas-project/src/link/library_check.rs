@@ -11,6 +11,7 @@ use super::source_map::apply_program_source_id;
 use super::support::{
     collect_std_uses, internal_link_error, internal_symbol_error, merge_std_uses,
 };
+use super::{merge_standard_library_link_meta, retain_intrinsic_std_uses};
 use crate::StandardLibrary;
 use crate::common::qualified_id_to_string;
 use crate::model::ProjectLinkMeta;
@@ -67,7 +68,8 @@ fn build_library_check_with_optional_standard_library(
     all_source_files.extend_from_slice(standard_source_files);
     let standard_source_paths = standard_source_files.iter().collect();
     let units = parse_unit_files(&all_source_files, &mut source_paths, &standard_source_paths)?;
-    let import_policy = super::import_policy::ImportPolicy::new(link_meta, &units);
+    let effective_link_meta = merge_standard_library_link_meta(link_meta, standard_library);
+    let import_policy = super::import_policy::ImportPolicy::new(&effective_link_meta, &units);
 
     let reachable_unit_keys = collect_library_reachable_units(&units)?;
     let unit_order = topo_sort_units(&reachable_unit_keys, &units)?;
@@ -117,6 +119,8 @@ fn build_library_check_with_optional_standard_library(
 
         merged_unit_decls.extend(declarations);
     }
+
+    retain_intrinsic_std_uses(&mut std_uses, &units);
 
     main_program.uses = std_uses;
     main_program.declarations = merged_unit_decls;

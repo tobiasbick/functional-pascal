@@ -86,7 +86,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
     let mut index = 0;
     while index < cli_args.len() {
         match cli_args[index].as_str() {
-            "--std-lib" if matches!(mode, CliMode::Run | CliMode::Check) => {
+            "--std-lib" if matches!(mode, CliMode::Run | CliMode::Check | CliMode::Test) => {
                 index += 1;
                 let Some(path) = cli_args.get(index) else {
                     return Err(
@@ -307,6 +307,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             timeout,
             jobs: jobs.unwrap_or(1),
             strict,
+            standard_library,
         }),
     })
 }

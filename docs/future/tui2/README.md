@@ -44,6 +44,6 @@ This directory records the plan for a new terminal UI library implemented primar
 
 The core contracts required through the first controls are decided. Custom layouts, capturing closures, action groups, richer menu construction, and additional controls may be designed later without changing the foundation.
 
-## Next step
+## Current implementation status
 
-Implement the manifest-backed source standard library described in [source-library.md](source-library.md).
+Phase 0, the manifest-backed source standard library, is complete. The next implementation step is [Phase 1](implementation-phases.md#phase-1--geometry-text-cells-and-canvas).

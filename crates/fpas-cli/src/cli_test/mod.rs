@@ -24,6 +24,7 @@ use discover::{discover_test_files, filter_test_paths};
 use fpas_project as project;
 use runner::{run_tests_parallel, run_tests_sequential};
 use std::path::Path;
+use std::sync::Arc;
 
 use parallel::effective_job_count;
 
@@ -33,6 +34,15 @@ pub(crate) fn test_cli(
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> i32 {
+    let standard_library =
+        match crate::standard_library::resolve_standard_library(config.standard_library.as_deref())
+        {
+            Ok(library) => library.map(Arc::new),
+            Err(message) => {
+                let _ = writeln!(stderr, "{message}");
+                return 1;
+            }
+        };
     let mut paths = match discover_test_files(&config.input, config.cwd.as_path()) {
         Ok(paths) => paths,
         Err(message) => {
@@ -72,10 +82,10 @@ pub(crate) fn test_cli(
 
     let job_count = effective_job_count(config.jobs, paths.len());
     if job_count <= 1 {
-        return run_tests_sequential(config, paths, stdout, stderr);
+        return run_tests_sequential(config, paths, standard_library, stdout, stderr);
     }
 
-    run_tests_parallel(config, paths, stdout, stderr)
+    run_tests_parallel(config, paths, standard_library, stdout, stderr)
 }
 
 /// Validates that an explicit single-file test target looks like a test program.

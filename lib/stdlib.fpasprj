@@ -1,0 +1,9 @@
+[project]
+name = "fpas-standard-library"
+kind = "library"
+
+[exports]
+units = ["Std.Version"]
+
+[sources]
+include = ["Std/**/*.fpas"]

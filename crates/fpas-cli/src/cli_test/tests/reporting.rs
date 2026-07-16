@@ -24,6 +24,7 @@ fn test_cli_json_report_writes_summary_to_stdout() {
             timeout: None,
             jobs: 1,
             strict: false,
+            standard_library: None,
         },
         &mut stdout,
         &mut stderr,

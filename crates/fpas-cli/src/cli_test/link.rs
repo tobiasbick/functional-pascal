@@ -4,6 +4,7 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use super::hooks;
 use super::run::LinkContext;
@@ -14,18 +15,31 @@ use fpas_project as project;
 #[derive(Default)]
 pub(super) struct LinkContextCache {
     contexts: HashMap<PathBuf, LinkContext>,
+    standard_library: Option<Arc<project::StandardLibrary>>,
 }
 
 impl LinkContextCache {
     /// Creates an empty cache for one `fpas test` invocation.
-    pub(super) fn new() -> Self {
-        Self::default()
+    pub(super) fn new(standard_library: Option<Arc<project::StandardLibrary>>) -> Self {
+        Self {
+            contexts: HashMap::new(),
+            standard_library,
+        }
     }
 
     /// Returns the enclosing project context for `path`, loading each project at most once.
     pub(super) fn context_for_test(&mut self, path: &Path) -> Result<Option<LinkContext>, String> {
         let Some(project_file) = find_enclosing_project(path)? else {
-            return Ok(None);
+            return Ok(self
+                .standard_library
+                .as_ref()
+                .map(|standard_library| LinkContext {
+                    source_files: Vec::new(),
+                    link_meta: project::ProjectLinkMeta::default(),
+                    test_manifest: project::TestManifest::default(),
+                    hooks: hooks::TestHooks::default(),
+                    standard_library: Some(Arc::clone(standard_library)),
+                }));
         };
         if let Some(context) = self.contexts.get(&project_file) {
             return Ok(Some(context.clone()));
@@ -38,6 +52,7 @@ impl LinkContextCache {
             link_meta: loaded.link_meta,
             test_manifest: loaded.test_manifest,
             hooks,
+            standard_library: self.standard_library.clone(),
         };
         self.contexts.insert(project_file, context.clone());
         Ok(Some(context))

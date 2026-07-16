@@ -25,6 +25,7 @@ fn test_cli_timeout_aborts_infinite_loop() {
             timeout: Some(Duration::from_secs(1)),
             jobs: 1,
             strict: false,
+            standard_library: None,
         },
         &mut stdout,
         &mut stderr,

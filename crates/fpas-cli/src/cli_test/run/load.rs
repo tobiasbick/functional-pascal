@@ -16,8 +16,18 @@ pub(super) fn load_program(
     link: Option<&LinkContext>,
 ) -> Result<(fpas_parser::Program, Option<Vec<PathBuf>>), String> {
     if let Some(link) = link {
-        let linked =
-            project::build_program_with_source_map(path, &link.source_files, &link.link_meta)?;
+        reject_unit_test_entry(path, link)?;
+        let linked = link.standard_library.as_deref().map_or_else(
+            || project::build_program_with_source_map(path, &link.source_files, &link.link_meta),
+            |standard_library| {
+                project::build_program_with_standard_library(
+                    path,
+                    &link.source_files,
+                    &link.link_meta,
+                    standard_library,
+                )
+            },
+        )?;
         return Ok((linked.program, Some(linked.source_paths)));
     }
 
@@ -43,6 +53,30 @@ pub(super) fn load_program(
             ))
         }
     }
+}
+
+fn reject_unit_test_entry(path: &Path, link: &LinkContext) -> Result<(), String> {
+    if !link.source_files.is_empty() {
+        return Ok(());
+    }
+
+    let source = fs::read_to_string(path)
+        .map_err(|error| format!("Error reading `{}`: {error}", path.display()))?;
+    let (unit, errors) = parse_compilation_unit(&source);
+    if errors
+        .iter()
+        .any(|diagnostic| diagnostic.as_diagnostic().severity == DiagnosticSeverity::Error)
+    {
+        return Ok(());
+    }
+    let CompilationUnit::Unit(unit) = unit else {
+        return Ok(());
+    };
+    let unit_name = unit.name.parts.join(".").trim().to_string();
+    Err(format!(
+        "Test file `{}` declares `unit {unit_name}`, but test entry points must be `program` files.\n  help: Rename to a `program …_test` file or import the unit from a test program.",
+        path.display()
+    ))
 }
 
 pub(super) fn apply_test_script(

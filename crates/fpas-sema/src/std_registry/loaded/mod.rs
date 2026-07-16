@@ -30,6 +30,8 @@ use fpas_std::{
     STD_UNIT_TEST, STD_UNIT_TIME, STD_UNIT_TOML, STD_UNIT_TUI, STD_UNITS_KNOWN,
 };
 
+const SOURCE_STD_UNIT_VERSION: &str = "Std.Version";
+
 pub fn register_loaded_std(checker: &mut Checker) {
     for unit in STD_UNITS_KNOWN {
         if checker.loaded_std_units.contains(*unit) {
@@ -57,6 +59,7 @@ pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
         STD_UNIT_OPTION => result_option::register_std_option(checker),
         STD_UNIT_TASK => channel_task::register_std_task(checker),
         STD_UNIT_TIME => time::register_std_time(checker),
+        SOURCE_STD_UNIT_VERSION => {}
         STD_UNIT_DICT => dict::register_std_dict(checker),
         STD_UNIT_JSON => json::register_std_json(checker),
         STD_UNIT_TOML => toml::register_std_toml(checker),

@@ -8,6 +8,7 @@ mod program;
 
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::time::Duration;
 
 use fpas_project as project;
@@ -25,6 +26,7 @@ pub(super) struct LinkContext {
     pub link_meta: project::ProjectLinkMeta,
     pub test_manifest: project::TestManifest,
     pub hooks: TestHooks,
+    pub standard_library: Option<Arc<project::StandardLibrary>>,
 }
 
 pub(super) fn test_display_path(path: &Path) -> std::borrow::Cow<'_, str> {

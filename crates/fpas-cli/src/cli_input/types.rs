@@ -44,6 +44,7 @@ pub(crate) struct TestCliConfig {
     pub timeout: Option<Duration>,
     pub jobs: usize,
     pub strict: bool,
+    pub standard_library: Option<PathBuf>,
 }
 
 /// Result of parsing CLI arguments before loading sources.

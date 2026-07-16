@@ -18,7 +18,7 @@ lib/
       Controls/
 ```
 
-`stdlib.fpasprj` is a `kind = "library"` project. Its source list includes `Std/**/*.fpas`, and its exports initially contain `Std.Version` and `Std.Tui2`.
+`stdlib.fpasprj` is a `kind = "library"` project. Its source list includes `Std/**/*.fpas`. Phase 0 exports `Std.Version`; each additional public source unit must be added explicitly to `[exports].units` when it is implemented.
 
 Internal implementation units use names such as `Std.Tui2.Geometry`. Trusted standard-library sources may declare multi-segment `Std.*` names. User projects may not declare any unit whose first segment is `Std`.
 

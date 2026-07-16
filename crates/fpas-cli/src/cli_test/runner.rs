@@ -2,6 +2,7 @@
 
 use std::io::Write;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use crate::cli_input::{TestCliConfig, TestReportFormat};
 
@@ -27,11 +28,12 @@ pub(super) fn finish_test_run(
 pub(super) fn run_tests_sequential(
     config: TestCliConfig,
     paths: Vec<PathBuf>,
+    standard_library: Option<Arc<fpas_project::StandardLibrary>>,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> i32 {
     let mut summary = Summary::default();
-    let mut links = LinkContextCache::new();
+    let mut links = LinkContextCache::new(standard_library);
     for (index, path) in paths.iter().enumerate() {
         let display = test_display_path(path).into_owned();
         let link = match links.context_for_test(path) {
@@ -68,13 +70,14 @@ pub(super) fn run_tests_sequential(
 pub(super) fn run_tests_parallel(
     config: TestCliConfig,
     paths: Vec<PathBuf>,
+    standard_library: Option<Arc<fpas_project::StandardLibrary>>,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> i32 {
     let mut summary = Summary::default();
     let mut prepared = Vec::new();
     let mut preload_results = Vec::new();
-    let mut links = LinkContextCache::new();
+    let mut links = LinkContextCache::new(standard_library);
 
     for (index, path) in paths.into_iter().enumerate() {
         let display = test_display_path(&path).into_owned();

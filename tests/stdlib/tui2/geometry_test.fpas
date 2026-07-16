@@ -3,27 +3,34 @@ program Tui2GeometryTest;
 uses Std.Test, Std.Tui2;
 
 begin
-  var Point: TuiPoint := TuiPointAt(5, 7);
+  var Point: TuiPoint := TuiPoint.Create(5, 7);
   AssertEquals(5, Point.X);
   AssertEquals(7, Point.Y);
-  var Size: TuiSize := TuiSizeOf(12, 4);
+  var Size: TuiSize := TuiSize.Create(12, 4);
   AssertFalse(Size.IsEmpty());
-  var EmptySize: TuiSize := TuiSizeOf(0, 4);
+  var EmptySize: TuiSize := TuiSize.Create(0, 4);
   AssertTrue(EmptySize.IsEmpty());
-  var Bounds: TuiRect := TuiRectOf(2, 3, 8, 5);
+  var Bounds: TuiRect := TuiRect.Create(2, 3, 8, 5);
   AssertEquals(10, Bounds.Right());
   AssertEquals(8, Bounds.Bottom());
-  AssertTrue(Bounds.Contains(TuiPointAt(2, 3)));
-  AssertTrue(Bounds.Contains(TuiPointAt(9, 7)));
-  AssertFalse(Bounds.Contains(TuiPointAt(10, 7)));
-  AssertFalse(Bounds.Contains(TuiPointAt(9, 8)));
-  var Overlap: TuiRect := Bounds.Intersect(TuiRectOf(6, 1, 8, 6));
+  AssertTrue(Bounds.Contains(TuiPoint.Create(2, 3)));
+  AssertTrue(Bounds.Contains(TuiPoint.Create(9, 7)));
+  AssertFalse(Bounds.Contains(TuiPoint.Create(10, 7)));
+  AssertFalse(Bounds.Contains(TuiPoint.Create(9, 8)));
+  var Edges: TuiRect := TuiRect.FromEdges(2, 3, 10, 8);
+  AssertEquals(8, Edges.Width);
+  AssertEquals(5, Edges.Height);
+  var PointSize: TuiRect := TuiRect.FromPointSize(TuiPoint.Create(2, 3), TuiSize.Create(8, 5));
+  AssertEquals(10, PointSize.Right());
+  var Corners: TuiRect := TuiRect.FromCorners(TuiPoint.Create(2, 3), TuiPoint.Create(10, 8));
+  AssertEquals(5, Corners.Height);
+  var Overlap: TuiRect := Bounds.Intersect(TuiRect.Create(6, 1, 8, 6));
   AssertEquals(6, Overlap.X);
   AssertEquals(3, Overlap.Y);
   AssertEquals(4, Overlap.Width);
   AssertEquals(4, Overlap.Height);
   AssertTrue(Bounds.Intersects(Overlap));
-  var Empty: TuiRect := Bounds.Intersect(TuiRectOf(10, 3, 2, 2));
+  var Empty: TuiRect := Bounds.Intersect(TuiRect.Create(10, 3, 2, 2));
   AssertTrue(Empty.IsEmpty());
-  AssertFalse(Bounds.Intersects(TuiRectOf(10, 3, 2, 2)))
+  AssertFalse(Bounds.Intersects(TuiRect.Create(10, 3, 2, 2)))
 end.

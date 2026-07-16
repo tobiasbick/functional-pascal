@@ -48,4 +48,4 @@ The core contracts required through the first controls are decided. Custom layou
 
 ## Current implementation status
 
-Phase 0 is complete. Static record functions now provide the required type-owned construction API. The first geometry implementation remains provisional because it still uses free factory functions and a combined source file. The next step is the geometry restructure defined in [Phase 1](implementation-phases.md#phase-1--geometry-text-cells-and-canvas).
+Phase 0 is complete. Phase 1 geometry is complete: static type-owned construction and focused value-record units are in place. The next step in [Phase 1](implementation-phases.md#phase-1--geometry-text-cells-and-canvas) is deterministic text width and cell primitives.

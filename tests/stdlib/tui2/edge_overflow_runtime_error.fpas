@@ -3,5 +3,5 @@ program Tui2EdgeOverflowRuntimeError;
 uses Std.Tui2;
 
 begin
-  TuiRectOf(9223372036854775807, 0, 1, 0)
+  TuiRect.Create(9223372036854775807, 0, 1, 0)
 end.

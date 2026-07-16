@@ -12,10 +12,8 @@ Completion contract: [source-library.md](source-library.md).
 ## Phase 1 — Geometry, text, cells, and canvas
 
 - **Complete prerequisite.** Static record functions are implemented with no overloads and type-only call resolution.
-- **Provisional implementation exists.** `Std.Tui2` exports zero-based geometry values, but the combined source file and free factory functions are not the final API.
-- Split geometry into private `TuiPoint.fpas`, `TuiSize.fpas`, and `TuiRect.fpas` units behind the public `Std.Tui2` facade.
-- Replace free factories with `TuiPoint.Create`, `TuiSize.Create`, `TuiRect.Create`, and the distinct `TuiRect.From...` conversions defined in [geometry.md](geometry.md).
-- Remove the provisional free geometry factory functions after all consumers and tests use the static API.
+- **Complete.** Geometry is split into private `TuiPoint.fpas`, `TuiSize.fpas`, and `TuiRect.fpas` units behind the public `Std.Tui2` facade.
+- **Complete.** `TuiPoint.Create`, `TuiSize.Create`, `TuiRect.Create`, and the distinct `TuiRect.From...` conversions replace free geometry factories.
 - Expose deterministic grapheme segmentation and display width as generic runtime text primitives.
 - Extend console cells to accept one grapheme cluster and preserve wide-glyph continuation invariants.
 - Implement `TuiCell`, semantic style roles, palettes, clipping, and the headless cell surface.

@@ -3,5 +3,5 @@ program Tui2NegativeSizeRuntimeError;
 uses Std.Tui2;
 
 begin
-  TuiSizeOf(-1, 0)
+  TuiSize.Create(-1, 0)
 end.

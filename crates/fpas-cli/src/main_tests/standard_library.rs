@@ -145,3 +145,15 @@ fn tui2_rejects_coordinate_edge_overflow() {
         "stderr: {stderr}"
     );
 }
+
+#[test]
+fn tui2_rejects_reversed_rectangle_edges() {
+    let (exit, _stdout, stderr) =
+        run_repo_tui2_program("tests/stdlib/tui2/reversed_edges_runtime_error.fpas");
+
+    assert_ne!(exit, 0, "reversed TuiRect edges must fail");
+    assert!(
+        stderr.contains("Tui2 right edge precedes its origin"),
+        "stderr: {stderr}"
+    );
+}

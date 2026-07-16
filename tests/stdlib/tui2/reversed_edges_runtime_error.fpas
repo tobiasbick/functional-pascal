@@ -1,0 +1,7 @@
+program Tui2ReversedEdgesRuntimeError;
+
+uses Std.Tui2;
+
+begin
+  TuiRect.FromEdges(5, 2, 4, 6)
+end.

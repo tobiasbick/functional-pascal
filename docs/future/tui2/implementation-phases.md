@@ -1,0 +1,67 @@
+# Std.Tui2 implementation phases
+
+## Phase 0 — Manifest-backed source standard library
+
+- Add `lib/stdlib.fpasprj` as the authoritative source standard-library manifest.
+- Support exported public units and private multi-segment `Std.*` implementation units.
+- Keep `Std` reserved for intrinsic units and manifest-trusted sources.
+- Make `run`, `check`, and `test` load the selected manifest.
+- Add tests for default discovery, override, private-unit rejection, collision, and namespace reservation.
+
+Completion contract: [source-library.md](source-library.md).
+
+## Phase 1 — Geometry, text, cells, and canvas
+
+- Implement zero-based `TuiPoint`, `TuiSize`, and half-open `TuiRect` operations in FPAS.
+- Expose deterministic grapheme segmentation and display width as generic runtime text primitives.
+- Extend console cells to accept one grapheme cluster and preserve wide-glyph continuation invariants.
+- Implement `TuiCell`, semantic style roles, palettes, clipping, and the headless cell surface.
+- Implement the transient `TuiCanvas` drawing boundary.
+
+Completion contracts: [geometry.md](geometry.md), [text-and-cells.md](text-and-cells.md), and the pure-value section of [testing.md](testing.md).
+
+## Phase 2 — Application registry and runtime safety
+
+- Implement application-scoped generational handles and explicit typed conversions.
+- Implement the desktop root, parent-child ownership, destruction, stale-handle diagnostics, and tags.
+- Add `OpenForTest` and transactional interactive terminal acquisition.
+- Add the VM terminal-mode restoration safety net.
+- Add the generic typed FIFO main-task post queue and enforce main-task-only UI mutation.
+
+Completion contracts: [handles-and-ownership.md](handles-and-ownership.md), [runtime-boundary.md](runtime-boundary.md), and the registry/failure sections of [testing.md](testing.md).
+
+## Phase 3 — Layout engine
+
+- Implement `TuiMeasureSpec` and `TuiMeasureResult`, including width-dependent measurement.
+- Implement minimum, preferred, and maximum size calculation.
+- Implement per-axis policies, stretch factors, spacers, margins, spacing, and alignment.
+- Implement horizontal and vertical layouts, followed by grid, form, and stacked layouts.
+- Support nesting, deterministic cell remainders, clipping below nested minimums, and the terminal-too-small overlay.
+- Add `TuiScrollView` for explicitly reachable overflow.
+
+Completion contract: [layout.md](layout.md) and the layout section of [testing.md](testing.md).
+
+## Phase 4 — Lifecycle, event routing, and actions
+
+- Implement the bounded application loop, posted callback draining, invalidation, and resize handling.
+- Implement deterministic `OnStart`, `OnStop`, and optional `OnTick` boundaries.
+- Implement attach, detach, measure, resize, paint, focus, blur, close-request, and closed transitions.
+- Implement z-order, hit-testing, focus traversal, pointer capture, modal roots, and raw fallback handlers.
+- Implement the action registry, reserved command range, shortcuts, synchronous activation, and bound-control propagation.
+- Implement typed single-handler notifications with `TuiChangeOrigin`.
+- Add `TuiCustomView` with pure measurement and clipped paint handlers.
+
+Completion contracts: [event-loop.md](event-loop.md), [actions-and-handlers.md](actions-and-handlers.md), [application-state.md](application-state.md), and [view-lifecycle.md](view-lifecycle.md).
+
+## Phase 5 — First usable controls
+
+- Add a frame or window, label, button, input line, check box, list box, and scroll bar.
+- Bind buttons, menus, status items, and shortcuts to reusable actions.
+- Add a minimal interactive application and a fully headless equivalent test.
+- Require keyboard, mouse where applicable, resize, lifecycle, and screen tests for each control.
+
+## Phase 6 — Full application chrome
+
+Add dialogs, menus, status lines, radio groups, stacked pages, memo/editor controls, text viewers, file selection, and advanced controls only after the earlier contracts remain stable.
+
+Custom layout callbacks, capturing closures, and a general application message bus are not prerequisites for this phase sequence.

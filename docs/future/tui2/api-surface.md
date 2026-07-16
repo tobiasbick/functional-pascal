@@ -1,0 +1,227 @@
+# Std.Tui2 API surface
+
+This document is an early inventory, not a frozen specification. Names, parameters, and grouping may change as implementation work exposes better boundaries.
+
+## Type categories
+
+Std.Tui2 distinguishes immutable or copyable values from identities for live application state.
+
+### Value records
+
+| Type | Purpose |
+| --- | --- |
+| `TuiPoint` | A cell coordinate. |
+| `TuiSize` | Width and height in cells. |
+| `TuiRect` | Local view bounds and clipping. |
+| `TuiCell` | One rendered terminal cell. |
+| `TuiPaintContext` | Local bounds, clip, state, and palette for one paint callback. |
+| `TuiMeasureSpec` | Bounded or unbounded measurement constraints per axis. |
+| `TuiMeasureResult` | Minimum, preferred, and maximum sizes returned by measurement. |
+| `TuiColor` | A terminal color value. |
+| `TuiPalette` | Semantic colors used by views. |
+| `TuiStyleRole` | Semantic palette role used during painting. |
+| `TuiKey` | A normalized key and modifiers when a TUI-specific form is needed. |
+| `TuiEvent` | An event routed through the TUI. |
+| `TuiCommand` | Positive command identity; low values are reserved for the standard library. |
+| `TuiChangeOrigin` | `User` or `Programmatic` origin for a typed value change. |
+| `TuiMenuItem` | A menu entry description. |
+| `TuiStatusItem` | A status-line entry description. |
+| `TuiSizePolicyKind` | One resizing policy for one axis. |
+| `TuiSizePolicy` | Independent horizontal and vertical resizing policies. |
+| `TuiAlignment` | Alignment inside an allocated layout rectangle. |
+| `TuiMargins` | Outer layout margins in cells. |
+| `TuiLayoutItem` | A view, nested layout, or spacer entry. |
+| `TuiSpacer` | Fixed or expanding empty layout space. |
+
+These records describe values only. They do not own live views or contain copies of mutable widget state.
+
+### Handler types
+
+| Type | Purpose |
+| --- | --- |
+| `TuiActionHandler` | Handle one semantic action. |
+| `TuiTextChangedHandler` | Observe a text value change. |
+| `TuiCheckedChangedHandler` | Observe a boolean checked-state change. |
+| `TuiListSelectionChangedHandler` | Observe a list selection change. |
+| `TuiRadioSelectionChangedHandler` | Observe a radio selection change. |
+| `TuiKeyHandler` | Handle routed or fallback key input. |
+| `TuiMouseHandler` | Handle routed or fallback mouse input. |
+| `TuiApplicationHandler` | Handle an application start or stop boundary. |
+| `TuiTickHandler` | Handle one enabled application tick. |
+| `TuiAttachHandler` | Observe attachment to a live parent. |
+| `TuiDetachHandler` | Observe removal from a live parent. |
+| `TuiMeasureHandler` | Calculate custom-view size information. |
+| `TuiResizeHandler` | Observe resolved bounds changing. |
+| `TuiPaintHandler` | Draw a custom view into a transient canvas. |
+| `TuiFocusHandler` | Observe focus acquisition. |
+| `TuiBlurHandler` | Observe focus loss. |
+| `TuiCloseRequestHandler` | Allow or reject closing. |
+| `TuiClosedHandler` | Observe completed closing. |
+
+### Live handles
+
+| Type | Purpose |
+| --- | --- |
+| `TuiApplication` | Application lifecycle, event dispatch, and redraw ownership. |
+| `TuiView` | Common identity for a live view. |
+| `TuiContainer` | Common identity for a view that can own children and a layout. |
+| `TuiCustomView` | Application-defined view implemented through lifecycle hooks. |
+| `TuiDesktop` | Root container for windows and application chrome. |
+| `TuiWindow` | Movable or framed top-level content. |
+| `TuiDialog` | Modal or modeless dialog content. |
+| `TuiMenuBar` | Application menu bar. |
+| `TuiStatusLine` | Application status and shortcut line. |
+| `TuiAction` | Reusable user operation shared by controls, menus, and shortcuts. |
+| `TuiButton` | Action-activating button. |
+| `TuiLabel` | Static or associated text. |
+| `TuiInputLine` | Single-line text input. |
+| `TuiListBox` | Selectable item list. |
+| `TuiScrollBar` | Scroll position and range control. |
+| `TuiCheckBox` | Boolean option control. |
+| `TuiRadioGroup` | Mutually exclusive option control. |
+| `TuiMemo` | Multi-line editable text. |
+| `TuiTextViewer` | Scrollable read-only text. |
+| `TuiScrollView` | Explicit viewport for content larger than its allocated rectangle. |
+| `TuiLayout` | Common identity for a live layout. |
+| `TuiHorizontalLayout` | Horizontal box layout. |
+| `TuiVerticalLayout` | Vertical box layout. |
+| `TuiGridLayout` | Row and column layout. |
+| `TuiFormLayout` | Label and field layout. |
+| `TuiStackedLayout` | Shared-area layout with one visible item. |
+
+Each live handle is a small opaque record backed by an internal registry identity. Handles do not expose Rust ownership or implementation objects.
+
+### Transient handles
+
+| Type | Purpose |
+| --- | --- |
+| `TuiCanvas` | Clipped drawing target valid only during one `OnPaint` callback. |
+
+Transient handles cannot be stored for later use. Operations reject them after their callback returns.
+
+## Core operations
+
+The following signatures illustrate ownership and naming. They are expected to evolve.
+
+### Application
+
+```pascal
+TuiApplication.Open(): TuiApplication
+TuiApplication.Run(App: TuiApplication)
+TuiApplication.Quit(App: TuiApplication)
+TuiApplication.Close(App: TuiApplication)
+TuiApplication.Invalidate(App: TuiApplication)
+TuiApplication.Desktop(App: TuiApplication): TuiDesktop
+TuiApplication.Tag(App: TuiApplication): integer
+TuiApplication.SetTag(App: TuiApplication; Tag: integer)
+TuiApplication.Post<T>(App: TuiApplication; Value: T; Handler: procedure(App: TuiApplication; Value: T)): boolean
+```
+
+### Common views
+
+```pascal
+TuiView.SetBounds(View: TuiView; Bounds: TuiRect)
+TuiView.Bounds(View: TuiView): TuiRect
+TuiView.Show(View: TuiView)
+TuiView.Hide(View: TuiView)
+TuiView.Enable(View: TuiView)
+TuiView.Disable(View: TuiView)
+TuiView.Focus(View: TuiView)
+TuiView.Invalidate(View: TuiView)
+TuiView.Tag(View: TuiView): integer
+TuiView.SetTag(View: TuiView; Tag: integer)
+TuiView.Destroy(View: TuiView)
+TuiView.Measure(View: TuiView; Spec: TuiMeasureSpec): TuiMeasureResult
+
+TuiContainer.Add(Container: TuiContainer; View: TuiView)
+TuiContainer.Remove(Container: TuiContainer; View: TuiView)
+TuiContainer.SetLayout(Container: TuiContainer; Layout: TuiLayout)
+```
+
+Typed view handles use explicit `AsView` operations so containers can accept different controls without discarding type-specific operations. Layout handles use matching `AsLayout` operations. Downcasts are not public.
+
+Views expose minimum, preferred, and maximum sizes plus independent horizontal and vertical size policies. Containers may attach nested layouts that assign the resolved bounds. See [layout.md](layout.md).
+
+### Containers and top-level views
+
+```pascal
+TuiDesktop.Add(Desktop: TuiDesktop; View: TuiView)
+
+TuiWindow.New(App: TuiApplication; Title: string): TuiWindow
+TuiWindow.Add(Window: TuiWindow; View: TuiView)
+
+TuiDialog.New(App: TuiApplication; Title: string): TuiDialog
+TuiDialog.Add(Dialog: TuiDialog; View: TuiView)
+TuiDialog.Execute(Dialog: TuiDialog): TuiCommand
+```
+
+### Basic controls
+
+```pascal
+TuiButton.New(App: TuiApplication; Action: TuiAction): TuiButton
+
+TuiLabel.New(App: TuiApplication; Text: string): TuiLabel
+TuiLabel.SetText(LabelView: TuiLabel; Text: string)
+
+TuiInputLine.New(App: TuiApplication; MaxLength: integer): TuiInputLine
+TuiInputLine.Text(Input: TuiInputLine): string
+TuiInputLine.SetText(Input: TuiInputLine; Text: string)
+```
+
+### Selection and text controls
+
+```pascal
+TuiListBox.New(App: TuiApplication): TuiListBox
+TuiListBox.SetItems(List: TuiListBox; Items: array of string)
+TuiListBox.Selected(List: TuiListBox): integer
+
+TuiCheckBox.New(App: TuiApplication; Text: string): TuiCheckBox
+TuiCheckBox.Checked(CheckBox: TuiCheckBox): boolean
+TuiCheckBox.SetChecked(CheckBox: TuiCheckBox; Checked: boolean)
+
+TuiRadioGroup.New(App: TuiApplication; Items: array of string): TuiRadioGroup
+TuiRadioGroup.Selected(Group: TuiRadioGroup): integer
+TuiRadioGroup.SetSelected(Group: TuiRadioGroup; Selected: integer)
+
+TuiMemo.New(App: TuiApplication): TuiMemo
+TuiMemo.Text(Memo: TuiMemo): string
+TuiMemo.SetText(Memo: TuiMemo; Text: string)
+
+TuiTextViewer.New(App: TuiApplication; Text: string): TuiTextViewer
+```
+
+## Actions and handlers
+
+`TuiCommand` is a distinct public type even if its initial runtime representation is an integer.
+
+`TuiAction` combines a command identity, presentation state, shortcut, and exactly one synchronous handler. Buttons, menus, status items, and shortcuts may activate the same action. Controls with values expose one typed handler per semantic change.
+
+Raw key and mouse handlers return `boolean` to participate in input propagation. Action handlers and typed change notifications do not return `boolean`.
+
+The core does not provide general multicast publish/subscribe. See [actions-and-handlers.md](actions-and-handlers.md) for the full contract.
+
+Application state and exact initial handler shapes are defined in [application-state.md](application-state.md).
+
+## View lifecycle
+
+Applications use `OnStart`, `OnStop`, and optional `OnTick` boundaries. Views have attach, detach, measure, resize, paint, focus, blur, close-request, and closed phases.
+
+Built-in controls implement these phases internally. `TuiCustomView` exposes one typed handler for each supported hook. See [view-lifecycle.md](view-lifecycle.md) for timing and mutation rules.
+
+## Lifetime direction
+
+- `TuiApplication` owns the live registry and desktop.
+- A container owns the child handles attached to it.
+- Closing the application invalidates every handle from that application.
+- Modal execution does not create a second terminal session.
+- Mutable widget state lives in the registry and is read through typed operations.
+
+Removal destroys the removed subtree, reparenting is initially unsupported, and explicit destruction follows [handles-and-ownership.md](handles-and-ownership.md).
+
+## Later extensions
+
+The following topics are not prerequisites for the first usable controls:
+
+- menu and status item construction;
+- custom layout callbacks;
+- checked action groups.

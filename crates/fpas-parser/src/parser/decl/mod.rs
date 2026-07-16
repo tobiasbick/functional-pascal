@@ -4,7 +4,7 @@ mod type_expr;
 
 use super::Parser;
 use crate::ast::*;
-use fpas_diagnostics::codes::PARSE_INVALID_VISIBILITY;
+use fpas_diagnostics::codes::{PARSE_INVALID_STATIC_PLACEMENT, PARSE_INVALID_VISIBILITY};
 use fpas_lexer::Token;
 
 impl Parser {
@@ -26,10 +26,34 @@ impl Parser {
                 Token::Procedure => {
                     decls.push(Decl::Procedure(self.parse_procedure_decl(visibility)));
                 }
+                Token::Static => {
+                    self.recover_invalid_static_decl();
+                }
                 _ => break,
             }
         }
         decls
+    }
+
+    /// `static` is only valid as `static function` inside a record type body.
+    fn recover_invalid_static_decl(&mut self) {
+        let span = self.current_span();
+        self.error_with_code(
+            PARSE_INVALID_STATIC_PLACEMENT,
+            "`static` is only valid on a function declared inside a record",
+            "Move the function into a `record … end` body and write `static function Name(...): T;`.",
+            span,
+        );
+        self.advance(); // consume `static`
+        match self.current_token() {
+            Token::Function => {
+                let _ = self.parse_function_decl(Visibility::default());
+            }
+            Token::Procedure => {
+                let _ = self.parse_procedure_decl(Visibility::default());
+            }
+            _ => {}
+        }
     }
 
     /// `docs/pascal/program-structure/units.md`: visibility modifiers are valid only in `unit` files.

@@ -143,6 +143,21 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
             emitter.write(";\n");
             emit_func_body(emitter, &function.body, comments);
         }
+        RecordMethod::StaticFunction(function) => {
+            emit_leading_comments(emitter, comments, function.span.offset, true);
+            emitter.write_current_indent();
+            emitter.write("static ");
+            emit_function_header(
+                emitter,
+                &function.name,
+                &function.type_params,
+                &function.params,
+            );
+            emitter.write(": ");
+            emit_type_expr(emitter, &function.return_type);
+            emitter.write(";\n");
+            emit_func_body(emitter, &function.body, comments);
+        }
         RecordMethod::Procedure(procedure) => {
             emit_leading_comments(emitter, comments, procedure.span.offset, true);
             emitter.write_current_indent();

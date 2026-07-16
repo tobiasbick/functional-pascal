@@ -91,7 +91,7 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'break'     | 'continue'  | 'result'    | 'option'
                 | 'ok'        | 'error'     | 'some'      | 'none'
                 | 'try'       | 'public'    | 'private'
-                | 'go'        | 'dict'      | 'with' ;
+                | 'go'        | 'dict'      | 'with'      | 'static' ;
 
 (* ---- Symbols --------------------------------------------------- *)
 
@@ -223,14 +223,18 @@ field_def           = identifier ':' type_expr [ ':=' expression ] ';' ;
 (* compiler substitutes the default automatically.  Fields without  *)
 (* a default must be supplied in every record literal.              *)
 
-record_method       = function_decl
+record_method       = [ 'static' ] function_decl
                     | procedure_decl ;
 
-(* Record methods must declare Self as the first parameter, typed   *)
-(* as the enclosing record. Callers use dot notation; Self is       *)
-(* passed implicitly: A.DistanceTo(B) → Point.DistanceTo(A, B).    *)
-(* Record methods may declare their own type_params via the shared  *)
-(* function_decl / procedure_decl grammar.                          *)
+(* Instance record methods must declare Self as the first parameter, *)
+(* typed as the enclosing record. Callers use value dot notation;    *)
+(* Self is passed implicitly: A.DistanceTo(B) → Point.DistanceTo(A, B). *)
+(*                                                                   *)
+(* `static function` has no Self parameter and is called through the *)
+(* type: Point.Create(X, Y). Static procedures are not supported.    *)
+(* Static and instance names share one case-insensitive name set.    *)
+(* Record methods may declare their own type_params via the shared   *)
+(* function_decl / procedure_decl grammar.                           *)
 
 enum_type           = 'enum' enum_member { enum_member } 'end' ;
 enum_member         = identifier [ enum_fields | '=' integer_literal ] ';' ;

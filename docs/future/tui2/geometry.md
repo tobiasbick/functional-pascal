@@ -43,7 +43,7 @@ TuiRect.FromCorners(TopLeft, BottomRight)
 - Copying an existing geometry record uses ordinary value assignment.
 - Free functions such as `TuiPointAt`, `TuiSizeOf`, and `TuiRectOf` are provisional implementation details to remove during the restructure.
 
-The static-call syntax is specified by the [static record function plan](../static-record-functions.md).
+The static-call syntax is specified by the implemented [record method reference](../../pascal/language/types/record-methods.md).
 
 ## Coordinate spaces
 

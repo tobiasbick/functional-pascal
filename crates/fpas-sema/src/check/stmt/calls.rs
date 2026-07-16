@@ -1,4 +1,5 @@
 use super::super::Checker;
+use crate::check::MethodCallTarget;
 use crate::scope::SymbolKind;
 use crate::types::{MethodKind, Ty};
 use fpas_diagnostics::codes::{
@@ -13,13 +14,20 @@ impl Checker {
         self.ensure_fq_std_unit_loaded(&name);
 
         if let Some(symbol) = self.scopes.lookup(&name) {
-            if symbol.kind == SymbolKind::BuiltinStd {
+            let kind = symbol.kind;
+            let ty = symbol.ty.clone();
+            if self.reject_instance_method_through_type(designator, span) {
+                self.check_args_only(args);
+                return;
+            }
+
+            if kind == SymbolKind::BuiltinStd {
                 let dispatch = self.builtin_std_dispatch_name(&name);
                 let _ = crate::std_registry::check_builtin_std_call(self, &dispatch, args, span);
                 return;
             }
 
-            match symbol.ty.clone() {
+            match ty {
                 Ty::Procedure(proc_ty) => {
                     self.check_procedure_call_args(&name, &proc_ty, args, span);
                     return;
@@ -63,7 +71,7 @@ impl Checker {
         self.check_args_only(args);
     }
 
-    /// Try to resolve a call statement as a record or interface method call.
+    /// Try to resolve a call statement as a record instance or static member call.
     fn try_check_method_call_stmt(
         &mut self,
         designator: &Designator,
@@ -84,26 +92,93 @@ impl Checker {
             span: designator.span,
         };
 
+        let through_type = self.designator_denotes_type(&receiver_designator);
         let receiver_ty = self.check_designator_expr(&receiver_designator);
         let resolved_receiver_ty = self.resolve_visible_type(&receiver_ty);
 
-        // Record (concrete) receiver — static dispatch.
         let record_ty = match &resolved_receiver_ty {
             Ty::Record(record_ty) => record_ty.clone(),
             _ => return false,
         };
 
         let qualified = format!("{}.{}", record_ty.name, method_name);
+        let call_key = crate::designator_lookup_key(designator);
+
+        if through_type {
+            if let Some(func_ty) =
+                self.resolve_static_function(&record_ty, &method_name, &qualified)
+            {
+                self.method_calls
+                    .insert(call_key, MethodCallTarget::Static(qualified.clone()));
+                self.check_static_call_args(
+                    &qualified,
+                    &func_ty.type_params,
+                    &func_ty.params,
+                    args,
+                    span,
+                );
+                return true;
+            }
+
+            if self
+                .resolve_method_kind(&record_ty, &method_name, &qualified)
+                .is_some()
+            {
+                self.error_with_code(
+                    SEMA_TYPE_MISMATCH,
+                    format!(
+                        "`{method_name}` is an instance method and must be called through a `{}.…` value",
+                        record_ty.name
+                    ),
+                    format!(
+                        "Call it as `Value.{method_name}(...)` where `Value` has type `{}`.",
+                        record_ty.name
+                    ),
+                    span,
+                );
+                self.check_args_only(args);
+                return true;
+            }
+            return false;
+        }
+
+        if self.is_static_on_record(&record_ty, &method_name) {
+            self.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                format!(
+                    "`{method_name}` is a static function and must be called through the type `{}.{}`",
+                    record_ty.name, method_name
+                ),
+                format!(
+                    "Write `{}.{}(...)` instead of calling it on a value.",
+                    record_ty.name, method_name
+                ),
+                span,
+            );
+            self.check_args_only(args);
+            return true;
+        }
+
         let method_kind = self.resolve_method_kind(&record_ty, &method_name, &qualified);
         let Some(method_kind) = method_kind else {
             return false;
         };
 
         self.method_calls
-            .insert(crate::designator_lookup_key(designator), qualified.clone());
+            .insert(call_key, MethodCallTarget::Instance(qualified.clone()));
 
         self.check_stmt_method_kind(&qualified, &method_kind, args, span);
         true
+    }
+
+    fn is_static_on_record(&self, record_ty: &crate::types::RecordTy, method_name: &str) -> bool {
+        record_ty
+            .static_functions
+            .iter()
+            .any(|(name, _)| name.eq_ignore_ascii_case(method_name))
+            || self
+                .resolve_static_function(record_ty, method_name, "")
+                .is_some()
     }
 
     fn check_stmt_method_kind(

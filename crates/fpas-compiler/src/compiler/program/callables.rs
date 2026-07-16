@@ -37,7 +37,7 @@ impl Compiler {
         method: &RecordMethod,
     ) -> Result<(), CompileError> {
         match method {
-            RecordMethod::Function(function) => {
+            RecordMethod::Function(function) | RecordMethod::StaticFunction(function) => {
                 let qualified = format!("{type_name}.{}", function.name);
                 self.compile_callable(&qualified, &function.params, &function.body, function.span)
             }

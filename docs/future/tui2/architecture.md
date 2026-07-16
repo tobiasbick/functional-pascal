@@ -12,7 +12,7 @@ The source standard-library loader must distinguish public units from private im
 
 The manifest and trusted namespace rules are fixed in [source-library.md](source-library.md).
 
-Type-owned construction depends on the general [static record function](../static-record-functions.md) language feature. Tui2 does not emulate static calls with free functions and does not require function overloading.
+Type-owned construction uses the implemented [static record function](../../pascal/language/types/record-methods.md) language feature. Tui2 does not emulate static calls with free functions and does not require function overloading.
 
 ## Public names
 

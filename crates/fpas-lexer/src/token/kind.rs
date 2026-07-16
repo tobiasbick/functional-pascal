@@ -1,7 +1,7 @@
 /// Lexical token produced by the Functional Pascal lexer.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
-    // Keywords (53)
+    // Keywords (54)
     Program,
     Unit,
     Uses,
@@ -55,6 +55,10 @@ pub enum Token {
     Go,
     Dict,
     With,
+    /// Marks a static record function: `static function Create(...): T`.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/record-methods.md`
+    Static,
 
     // Literals
     Integer(i64),

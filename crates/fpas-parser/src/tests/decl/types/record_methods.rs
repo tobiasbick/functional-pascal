@@ -1,4 +1,5 @@
 use super::*;
+use fpas_diagnostics::codes::PARSE_INVALID_STATIC_PLACEMENT;
 
 #[test]
 fn record_with_function_method() {
@@ -83,4 +84,95 @@ fn record_with_generic_function_method() {
         },
         _ => panic!("expected TypeDef"),
     }
+}
+
+#[test]
+fn record_with_static_function() {
+    let p = parse_ok(
+        "program T; type Point = record X: integer; Y: integer; \
+         static function Create(X: integer; Y: integer): Point; \
+         begin return record X := X; Y := Y; end end; \
+         end; begin end.",
+    );
+    match &p.declarations[0] {
+        Decl::TypeDef(td) => match &td.body {
+            TypeBody::Record(r) => {
+                assert_eq!(r.fields.len(), 2);
+                assert_eq!(r.methods.len(), 1);
+                match &r.methods[0] {
+                    RecordMethod::StaticFunction(f) => {
+                        assert_eq!(f.name, "Create");
+                        assert_eq!(f.params.len(), 2);
+                    }
+                    other => panic!("expected StaticFunction, got {other:?}"),
+                }
+            }
+            _ => panic!("expected Record"),
+        },
+        _ => panic!("expected TypeDef"),
+    }
+}
+
+#[test]
+fn record_static_and_instance_methods_together() {
+    let p = parse_ok(
+        "program T; type Point = record X: integer; Y: integer; \
+         static function Origin(): Point; \
+         begin return record X := 0; Y := 0; end end; \
+         function Sum(Self: Point): integer; begin return Self.X + Self.Y end; \
+         end; begin end.",
+    );
+    match &p.declarations[0] {
+        Decl::TypeDef(td) => match &td.body {
+            TypeBody::Record(r) => {
+                assert_eq!(r.methods.len(), 2);
+                assert!(matches!(&r.methods[0], RecordMethod::StaticFunction(_)));
+                assert!(matches!(&r.methods[1], RecordMethod::Function(_)));
+            }
+            _ => panic!("expected Record"),
+        },
+        _ => panic!("expected TypeDef"),
+    }
+}
+
+#[test]
+fn static_procedure_in_record_is_rejected() {
+    let (_p, errs) = parse_with_errors(
+        "program T; type Point = record X: integer; \
+         static procedure Reset(X: integer); begin end; \
+         end; begin end.",
+    );
+    let parse_err = errs.iter().find_map(ParseDiagnostic::as_parser_error);
+    let d = parse_err.expect("expected parser diagnostic");
+    assert_eq!(d.code, PARSE_INVALID_STATIC_PLACEMENT);
+    assert!(
+        d.message.contains("static procedure"),
+        "message: {}",
+        d.message
+    );
+}
+
+#[test]
+fn static_at_program_level_is_rejected() {
+    let (_p, errs) = parse_with_errors(
+        "program T; static function Foo(): integer; begin return 1 end; begin end.",
+    );
+    let parse_err = errs.iter().find_map(ParseDiagnostic::as_parser_error);
+    let d = parse_err.expect("expected parser diagnostic");
+    assert_eq!(d.code, PARSE_INVALID_STATIC_PLACEMENT);
+    assert!(
+        d.message
+            .contains("only valid on a function declared inside a record"),
+        "message: {}",
+        d.message
+    );
+}
+
+#[test]
+fn static_without_function_in_record_is_rejected() {
+    let (_p, errs) =
+        parse_with_errors("program T; type Point = record X: integer; static; end; begin end.");
+    let parse_err = errs.iter().find_map(ParseDiagnostic::as_parser_error);
+    let d = parse_err.expect("expected parser diagnostic");
+    assert_eq!(d.code, PARSE_INVALID_STATIC_PLACEMENT);
 }

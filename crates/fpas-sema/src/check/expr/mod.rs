@@ -135,6 +135,7 @@ impl Checker {
             name: "<anonymous>".into(),
             fields: field_types,
             methods: Vec::new(),
+            static_functions: Vec::new(),
         })
     }
 

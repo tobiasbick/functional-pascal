@@ -9,9 +9,30 @@ use std::collections::{HashMap, HashSet};
 /// Maps expression identity (`Expr` as `*const Expr`) to its semantic type.
 pub type ExprTypeMap = HashMap<usize, Ty>;
 
-/// Maps a call-expression identity to its qualified method name (e.g. `Point.DistanceTo`).
-/// Present only for calls that are record method invocations.
-pub type MethodCallMap = HashMap<usize, String>;
+/// How a record member call should be lowered by the compiler.
+///
+/// **Documentation:** `docs/pascal/language/types/record-methods.md`
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum MethodCallTarget {
+    /// Instance method: emit the receiver, then the explicit arguments.
+    Instance(String),
+    /// Static function: emit only the explicit arguments (no receiver).
+    Static(String),
+}
+
+impl MethodCallTarget {
+    /// Qualified callable name used for `Op::Call` (e.g. `Point.Create`).
+    #[must_use]
+    pub fn qualified_name(&self) -> &str {
+        match self {
+            Self::Instance(name) | Self::Static(name) => name,
+        }
+    }
+}
+
+/// Maps a call-expression (or call-statement designator) identity to its
+/// resolved record member call target.
+pub type MethodCallMap = HashMap<usize, MethodCallTarget>;
 
 /// Maps a named record type to its ordered field list, each entry carrying an optional
 /// cloned default expression. The order matches the type definition.

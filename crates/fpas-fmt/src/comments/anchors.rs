@@ -146,7 +146,9 @@ fn push_decl_start_offsets(decls: &[Decl], out: &mut Vec<usize>) {
         {
             for method in &record.methods {
                 match method {
-                    RecordMethod::Function(function) => out.push(function.span.offset),
+                    RecordMethod::Function(function) | RecordMethod::StaticFunction(function) => {
+                        out.push(function.span.offset)
+                    }
                     RecordMethod::Procedure(procedure) => out.push(procedure.span.offset),
                 }
             }
@@ -176,7 +178,8 @@ fn push_decl_anchors(decls: &[Decl], out: &mut Vec<EmissionAnchor>) {
                     }
                     for method in &record.methods {
                         match method {
-                            RecordMethod::Function(function) => {
+                            RecordMethod::Function(function)
+                            | RecordMethod::StaticFunction(function) => {
                                 push_routine_body_anchor(function.span, &function.body, out);
                             }
                             RecordMethod::Procedure(procedure) => {

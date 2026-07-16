@@ -22,6 +22,7 @@ mod types;
 
 pub use check::ExprTypeMap;
 pub use check::MethodCallMap;
+pub use check::MethodCallTarget;
 pub use check::RecordDefaultsMap;
 pub use check::ScalarCaseBindingMap;
 pub use error::SemaError;

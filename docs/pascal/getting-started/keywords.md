@@ -16,7 +16,7 @@ enum      array     panic     break
 continue  result    option    ok
 error     some      none      try
 public    private   go        dict
-with
+with      static
 ```
 
 Formal token definitions: [`grammar.ebnf`](../../specs/grammar.ebnf).

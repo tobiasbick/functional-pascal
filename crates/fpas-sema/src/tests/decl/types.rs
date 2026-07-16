@@ -294,3 +294,177 @@ fn record_duplicate_method_rejected() {
         "expected duplicate record method error, got: {errors:#?}"
     );
 }
+
+#[test]
+fn static_record_function_valid() {
+    check_ok(
+        "program T; uses Std.Console; \
+         type Point = record \
+           X: integer; Y: integer; \
+           static function Create(X: integer; Y: integer): Point; \
+           begin return record X := X; Y := Y; end end; \
+         end; \
+         begin \
+           var P: Point := Point.Create(3, 4); \
+           WriteLn(P.X) \
+         end.",
+    );
+}
+
+#[test]
+fn static_record_function_case_insensitive() {
+    check_ok(
+        "program T; uses Std.Console; \
+         type Point = record \
+           X: integer; Y: integer; \
+           static function Create(X: integer; Y: integer): Point; \
+           begin return record X := X; Y := Y; end end; \
+         end; \
+         begin \
+           var P: Point := point.create(1, 2); \
+           WriteLn(P.X) \
+         end.",
+    );
+}
+
+#[test]
+fn static_record_function_via_alias() {
+    check_ok(
+        "program T; uses Std.Console; \
+         type Point = record \
+           X: integer; Y: integer; \
+           static function Create(X: integer; Y: integer): Point; \
+           begin return record X := X; Y := Y; end end; \
+         end; \
+         type Alias = Point; \
+         begin \
+           var P: Alias := Alias.Create(5, 6); \
+           WriteLn(P.X) \
+         end.",
+    );
+}
+
+#[test]
+fn static_function_with_self_param_rejected() {
+    let errors = check_errors(
+        "program T; \
+         type Point = record \
+           X: integer; \
+           static function Create(Self: Point; X: integer): Point; \
+           begin return Self end; \
+         end; \
+         begin end.",
+    );
+    assert!(
+        errors.iter().any(
+            |error| error.code == fpas_diagnostics::codes::SEMA_TYPE_MISMATCH
+                && error
+                    .message
+                    .contains("must not declare a `Self` parameter")
+        ),
+        "expected Self rejection, got: {errors:#?}"
+    );
+}
+
+#[test]
+fn static_call_through_value_rejected() {
+    let errors = check_errors(
+        "program T; \
+         type Point = record \
+           X: integer; Y: integer; \
+           static function Create(X: integer; Y: integer): Point; \
+           begin return record X := X; Y := Y; end end; \
+         end; \
+         begin \
+           var P: Point := record X := 0; Y := 0; end; \
+           var Q: Point := P.Create(1, 2) \
+         end.",
+    );
+    assert!(
+        errors.iter().any(|error| {
+            error.code == fpas_diagnostics::codes::SEMA_TYPE_MISMATCH
+                && error.message.contains("static function")
+        }),
+        "expected static-through-value error, got: {errors:#?}"
+    );
+}
+
+#[test]
+fn instance_call_through_type_rejected() {
+    let errors = check_errors(
+        "program T; \
+         type Point = record \
+           X: integer; Y: integer; \
+           function Sum(Self: Point): integer; \
+           begin return Self.X + Self.Y end; \
+         end; \
+         begin \
+           var P: Point := record X := 1; Y := 2; end; \
+           var N: integer := Point.Sum(P) \
+         end.",
+    );
+    assert!(
+        errors.iter().any(|error| {
+            error.code == fpas_diagnostics::codes::SEMA_TYPE_MISMATCH
+                && error.message.contains("instance method")
+        }),
+        "expected instance-through-type error, got: {errors:#?}"
+    );
+}
+
+#[test]
+fn static_and_instance_duplicate_name_rejected() {
+    let errors = check_errors(
+        "program T; \
+         type Point = record \
+           X: integer; \
+           static function Sum(X: integer): integer; \
+           begin return X end; \
+           function Sum(Self: Point): integer; \
+           begin return Self.X end; \
+         end; \
+         begin end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION),
+        "expected duplicate name error, got: {errors:#?}"
+    );
+}
+
+#[test]
+fn static_overload_attempt_rejected() {
+    let errors = check_errors(
+        "program T; \
+         type Point = record \
+           X: integer; \
+           static function Create(X: integer): Point; \
+           begin return record X := X; end end; \
+           static function Create(X: integer; Y: integer): Point; \
+           begin return record X := X; end end; \
+         end; \
+         begin end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION),
+        "expected overload rejection, got: {errors:#?}"
+    );
+}
+
+#[test]
+fn static_generic_function_valid() {
+    check_ok(
+        "program T; uses Std.Console; \
+         type Box = record \
+           Value: integer; \
+           static function Wrap<T>(V: T): T; \
+           begin return V end; \
+         end; \
+         begin \
+           WriteLn(Box.Wrap(42)) \
+         end.",
+    );
+}

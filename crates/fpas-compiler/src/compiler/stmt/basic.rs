@@ -67,9 +67,17 @@ impl Compiler {
         location: SourceLocation,
     ) -> Result<(), CompileError> {
         let call_key = fpas_sema::designator_lookup_key(designator);
-        if let Some(qualified) = self.method_calls.get(&call_key).cloned() {
-            self.compile_method_call(designator, &qualified, args, location)?;
-            self.emit(Op::Pop, location);
+        if let Some(target) = self.method_calls.get(&call_key).cloned() {
+            match target {
+                fpas_sema::MethodCallTarget::Instance(qualified) => {
+                    self.compile_method_call(designator, &qualified, args, location)?;
+                    self.emit(Op::Pop, location);
+                }
+                fpas_sema::MethodCallTarget::Static(qualified) => {
+                    self.compile_call(&qualified, args, location)?;
+                    self.emit(Op::Pop, location);
+                }
+            }
         } else {
             let name = Self::resolve_designator_name(designator);
             self.compile_call(&name, args, location)?;

@@ -9,17 +9,9 @@
 
 Completion contract: [source-library.md](source-library.md).
 
-## Priority prerequisite — Static record functions
-
-- Implement the general `static function` record feature described in [static-record-functions.md](../static-record-functions.md).
-- Preserve the language's no-overload rule and resolve static calls only through a type.
-- Verify local, imported, qualified, and public-alias/private-implementation record types.
-- Update the implemented language reference and tests before restructuring Tui2 geometry.
-
-This prerequisite blocks further Phase 1 implementation.
-
 ## Phase 1 — Geometry, text, cells, and canvas
 
+- **Complete prerequisite.** Static record functions are implemented with no overloads and type-only call resolution.
 - **Provisional implementation exists.** `Std.Tui2` exports zero-based geometry values, but the combined source file and free factory functions are not the final API.
 - Split geometry into private `TuiPoint.fpas`, `TuiSize.fpas`, and `TuiRect.fpas` units behind the public `Std.Tui2` facade.
 - Replace free factories with `TuiPoint.Create`, `TuiSize.Create`, `TuiRect.Create`, and the distinct `TuiRect.From...` conversions defined in [geometry.md](geometry.md).

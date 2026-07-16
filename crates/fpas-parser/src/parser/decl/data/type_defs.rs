@@ -1,6 +1,6 @@
 use crate::ast::*;
 use crate::parser::Parser;
-use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
+use fpas_diagnostics::codes::{PARSE_EXPECTED_TOKEN, PARSE_INVALID_STATIC_PLACEMENT};
 use fpas_lexer::Token;
 
 impl Parser {
@@ -65,6 +65,11 @@ impl Parser {
                         self.parse_procedure_decl(Visibility::default()),
                     ));
                 }
+                Token::Static => {
+                    if let Some(method) = self.parse_static_record_method() {
+                        methods.push(method);
+                    }
+                }
                 _ => fields.push(self.parse_field_def()),
             }
         }
@@ -73,6 +78,37 @@ impl Parser {
             fields,
             methods,
             span: self.span_from(start),
+        }
+    }
+
+    /// Parse `static function …` inside a record. Rejects `static procedure` and bare `static`.
+    fn parse_static_record_method(&mut self) -> Option<RecordMethod> {
+        let static_span = self.current_span();
+        self.advance(); // consume `static`
+        match self.current_token() {
+            Token::Function => Some(RecordMethod::StaticFunction(
+                self.parse_function_decl(Visibility::default()),
+            )),
+            Token::Procedure => {
+                self.error_with_code(
+                    PARSE_INVALID_STATIC_PLACEMENT,
+                    "`static procedure` is not supported",
+                    "Only `static function` is allowed inside a record. Use an instance `procedure` with `Self`, or a `static function` that returns a value.",
+                    static_span,
+                );
+                // Recover by parsing the procedure so the rest of the record stays sync'd.
+                let _ = self.parse_procedure_decl(Visibility::default());
+                None
+            }
+            _ => {
+                self.error_with_code(
+                    PARSE_INVALID_STATIC_PLACEMENT,
+                    "`static` must be followed by `function` inside a record",
+                    "Write `static function Name(...): ReturnType; begin … end;`.",
+                    static_span,
+                );
+                None
+            }
         }
     }
 

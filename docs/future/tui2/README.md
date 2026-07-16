@@ -41,7 +41,6 @@ This directory records the plan for a new terminal UI library implemented primar
 | [runtime-boundary.md](runtime-boundary.md) | Main-task access, posting, errors, and terminal restoration. |
 | [testing.md](testing.md) | Deterministic headless and failure-canary requirements. |
 | [implementation-phases.md](implementation-phases.md) | Ordered implementation and test milestones. |
-| [Static record functions](../static-record-functions.md) | Highest-priority language prerequisite for type-owned construction APIs. |
 
 ## Non-blocking extensions
 
@@ -49,4 +48,4 @@ The core contracts required through the first controls are decided. Custom layou
 
 ## Current implementation status
 
-Phase 0 is complete. The first geometry implementation proves source-defined Std.Tui2 values, but its free factory functions and combined source file are provisional. The next step is the [static record function prerequisite](../static-record-functions.md), followed by the geometry restructure defined in [Phase 1](implementation-phases.md#phase-1--geometry-text-cells-and-canvas).
+Phase 0 is complete. Static record functions now provide the required type-owned construction API. The first geometry implementation remains provisional because it still uses free factory functions and a combined source file. The next step is the geometry restructure defined in [Phase 1](implementation-phases.md#phase-1--geometry-text-cells-and-canvas).

@@ -33,10 +33,13 @@ impl Checker {
         self.ensure_fq_std_unit_loaded(&name);
 
         if let Some(symbol) = self.scopes.lookup(&name) {
-            return CallResolution::Symbol {
-                kind: symbol.kind,
-                ty: symbol.ty.clone(),
-            };
+            let kind = symbol.kind;
+            let ty = symbol.ty.clone();
+            if self.reject_instance_method_through_type(designator, span) {
+                self.check_args_only(args);
+                return CallResolution::Failed;
+            }
+            return CallResolution::Symbol { kind, ty };
         }
 
         let method_result = if allow_procedure_result {

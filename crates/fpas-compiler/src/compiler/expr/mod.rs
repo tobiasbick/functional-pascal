@@ -35,8 +35,15 @@ impl Compiler {
             } => {
                 let location = Self::location_of(span);
                 let call_key = fpas_sema::expr_lookup_key(expr);
-                if let Some(qualified) = self.method_calls.get(&call_key).cloned() {
-                    self.compile_method_call(designator, &qualified, args, location)?;
+                if let Some(target) = self.method_calls.get(&call_key).cloned() {
+                    match target {
+                        fpas_sema::MethodCallTarget::Instance(qualified) => {
+                            self.compile_method_call(designator, &qualified, args, location)?;
+                        }
+                        fpas_sema::MethodCallTarget::Static(qualified) => {
+                            self.compile_call(&qualified, args, location)?;
+                        }
+                    }
                 } else {
                     let name = Self::resolve_designator_name(designator);
                     self.compile_call(&name, args, location)?;

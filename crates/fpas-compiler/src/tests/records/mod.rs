@@ -4,4 +4,5 @@ mod defaults;
 mod errors;
 mod methods;
 mod self_calls;
+mod static_methods;
 mod with_update;

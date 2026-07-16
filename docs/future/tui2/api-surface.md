@@ -49,7 +49,7 @@ TuiRect.FromPointSize(Position, Size)
 TuiRect.FromCorners(TopLeft, BottomRight)
 ```
 
-`Create` accepts the record's stored representation. `From...` converts another representation. Copying an existing record uses assignment rather than `From(Other)`. This API depends on the general [static record function](../static-record-functions.md) language feature.
+`Create` accepts the record's stored representation. `From...` converts another representation. Copying an existing record uses assignment rather than `From(Other)`. This API uses the implemented [static record function](../../pascal/language/types/record-methods.md) language feature.
 
 ### Handler types
 

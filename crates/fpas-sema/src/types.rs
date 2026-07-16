@@ -94,7 +94,12 @@ pub enum Ty {
 pub struct RecordTy {
     pub name: String,
     pub fields: Vec<(String, Ty)>,
+    /// Instance methods (require implicit `Self`).
     pub methods: Vec<(String, MethodKind)>,
+    /// Static functions called through the type name (no receiver).
+    ///
+    /// **Documentation:** `docs/pascal/language/types/record-methods.md`
+    pub static_functions: Vec<(String, FunctionTy)>,
 }
 
 /// Whether a record method is a function (returns a value) or a procedure.

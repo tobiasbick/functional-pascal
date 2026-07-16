@@ -83,9 +83,15 @@ pub struct RecordType {
 }
 
 /// A function or procedure declared inside a `record … end` block.
+///
+/// **Documentation:** `docs/pascal/language/types/record-methods.md`
 #[derive(Debug, Clone, PartialEq)]
 pub enum RecordMethod {
+    /// Instance function: first parameter must be `Self`.
     Function(FunctionDecl),
+    /// Static function: called through the type, no implicit receiver.
+    StaticFunction(FunctionDecl),
+    /// Instance procedure: first parameter must be `Self`.
     Procedure(ProcedureDecl),
 }
 

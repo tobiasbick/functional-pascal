@@ -67,4 +67,8 @@ pub const SOURCES: &[(&str, &str)] = &[
         "record_with_method",
         "program T; type Point = record X: integer; Y: integer; function Sum(Self: Point): integer; begin return Self.X + Self.Y end; end; begin end.",
     ),
+    (
+        "record_with_static_function",
+        "program T; type Point = record X: integer; Y: integer; static function Create(X: integer; Y: integer): Point; begin return record X := X; Y := Y; end end; end; begin end.",
+    ),
 ];

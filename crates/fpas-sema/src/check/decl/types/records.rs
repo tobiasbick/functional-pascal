@@ -1,13 +1,19 @@
 //! Record type checking.
 //!
-//! **Documentation:** `docs/pascal/language/types/records.md`
+//! **Documentation:** `docs/pascal/language/types/records.md`,
+//! `docs/pascal/language/types/record-methods.md`
 
 use super::Checker;
 use crate::scope::{FunctionCtx, Symbol, SymbolKind, canonical_symbol_name};
 use crate::types::{FunctionTy, MethodKind, ParamTy, ProcedureTy, RecordTy, Ty, TypeConstraint};
 use fpas_diagnostics::codes::{SEMA_DUPLICATE_DECLARATION, SEMA_TYPE_MISMATCH};
-use fpas_parser::{FuncBody, RecordMethod, RecordType, TypeDef, TypeParam};
+use fpas_parser::{FuncBody, FunctionDecl, RecordMethod, RecordType, TypeDef, TypeParam};
 use std::collections::HashSet;
+
+struct CheckedRecordMembers {
+    instance_methods: Vec<(String, MethodKind)>,
+    static_functions: Vec<(String, FunctionTy)>,
+}
 
 impl Checker {
     pub(super) fn check_record_type_def(&mut self, td: &TypeDef, record: &RecordType) {
@@ -76,13 +82,15 @@ impl Checker {
             name: td.name.clone(),
             fields,
             methods: Vec::new(),
+            static_functions: Vec::new(),
         };
         let mut ty = Ty::Record(record_ty);
 
-        let methods = self.check_record_methods(&td.name, &ty, &record.methods);
+        let members = self.check_record_methods(&td.name, &ty, &record.methods);
 
         if let Ty::Record(record_ty) = &mut ty {
-            record_ty.methods = methods;
+            record_ty.methods = members.instance_methods;
+            record_ty.static_functions = members.static_functions;
         }
 
         if let Some(existing) = self.scopes.lookup_mut(&td.name) {
@@ -95,157 +103,268 @@ impl Checker {
         type_name: &str,
         record_ty: &Ty,
         methods: &[RecordMethod],
-    ) -> Vec<(String, MethodKind)> {
+    ) -> CheckedRecordMembers {
         let mut checked_methods = Vec::new();
+        let mut checked_static = Vec::new();
         let mut seen_methods = HashSet::new();
 
         for method in methods {
             match method {
                 RecordMethod::Function(function) => {
-                    if !seen_methods.insert(canonical_symbol_name(&function.name)) {
-                        self.error_with_code(
-                            SEMA_DUPLICATE_DECLARATION,
-                            format!("Duplicate record method `{type_name}.{}`", function.name),
-                            "Each record method name must be unique within the record type.",
-                            function.span,
-                        );
-                        continue;
-                    }
-                    self.check_unique_formal_param_names(&function.params);
-
-                    let type_param_defs = Self::resolve_type_params(&function.type_params);
-
-                    // Resolve param/return types with the method's own type params in scope
-                    // so expressions like `Value: T` resolve `T` as a generic param.
-                    let (return_ty, params) =
-                        self.with_type_params(&function.type_params, function.span, |checker| {
-                            let return_ty = checker.resolve_method_param_type(
-                                &function.return_type,
-                                type_name,
-                                record_ty,
-                            );
-                            let params: Vec<ParamTy> = function
-                                .params
-                                .iter()
-                                .map(|param| ParamTy {
-                                    mutable: param.mutable,
-                                    name: param.name.clone(),
-                                    ty: checker.resolve_method_param_type(
-                                        &param.type_expr,
-                                        type_name,
-                                        record_ty,
-                                    ),
-                                })
-                                .collect();
-                            (return_ty, params)
-                        });
-
-                    if !self.validate_record_method_signature(
+                    if !self.register_record_member_name(
                         type_name,
                         &function.name,
-                        &params,
                         function.span,
+                        &mut seen_methods,
                     ) {
                         continue;
                     }
-
-                    let function_ty = FunctionTy {
-                        type_params: type_param_defs,
-                        params: params.clone(),
-                        return_type: Box::new(return_ty.clone()),
-                        variadic: false,
-                    };
-
-                    let qualified = format!("{type_name}.{}", function.name);
-                    self.scopes.define(
-                        &qualified,
-                        Symbol {
-                            ty: Ty::Function(function_ty.clone()),
-                            mutable: false,
-                            kind: SymbolKind::Function,
-                        },
-                    );
-
-                    self.check_method_body(
-                        &qualified,
-                        &function.type_params,
-                        &params,
-                        Some(return_ty),
-                        &function.body,
-                    );
-                    checked_methods
-                        .push((function.name.clone(), MethodKind::Function(function_ty)));
+                    if let Some(entry) =
+                        self.check_instance_function(type_name, record_ty, function)
+                    {
+                        checked_methods.push(entry);
+                    }
+                }
+                RecordMethod::StaticFunction(function) => {
+                    if !self.register_record_member_name(
+                        type_name,
+                        &function.name,
+                        function.span,
+                        &mut seen_methods,
+                    ) {
+                        continue;
+                    }
+                    if let Some(entry) = self.check_static_function(type_name, record_ty, function)
+                    {
+                        checked_static.push(entry);
+                    }
                 }
                 RecordMethod::Procedure(procedure) => {
-                    if !seen_methods.insert(canonical_symbol_name(&procedure.name)) {
-                        self.error_with_code(
-                            SEMA_DUPLICATE_DECLARATION,
-                            format!("Duplicate record method `{type_name}.{}`", procedure.name),
-                            "Each record method name must be unique within the record type.",
-                            procedure.span,
-                        );
-                        continue;
-                    }
-                    self.check_unique_formal_param_names(&procedure.params);
-
-                    let type_param_defs = Self::resolve_type_params(&procedure.type_params);
-
-                    let params =
-                        self.with_type_params(&procedure.type_params, procedure.span, |checker| {
-                            procedure
-                                .params
-                                .iter()
-                                .map(|param| ParamTy {
-                                    mutable: param.mutable,
-                                    name: param.name.clone(),
-                                    ty: checker.resolve_method_param_type(
-                                        &param.type_expr,
-                                        type_name,
-                                        record_ty,
-                                    ),
-                                })
-                                .collect::<Vec<_>>()
-                        });
-
-                    if !self.validate_record_method_signature(
+                    if !self.register_record_member_name(
                         type_name,
                         &procedure.name,
-                        &params,
                         procedure.span,
+                        &mut seen_methods,
                     ) {
                         continue;
                     }
-
-                    let procedure_ty = ProcedureTy {
-                        type_params: type_param_defs,
-                        variadic: false,
-                        params: params.clone(),
-                    };
-
-                    let qualified = format!("{type_name}.{}", procedure.name);
-                    self.scopes.define(
-                        &qualified,
-                        Symbol {
-                            ty: Ty::Procedure(procedure_ty.clone()),
-                            mutable: false,
-                            kind: SymbolKind::Procedure,
-                        },
-                    );
-
-                    self.check_method_body(
-                        &qualified,
-                        &procedure.type_params,
-                        &params,
-                        None,
-                        &procedure.body,
-                    );
-                    checked_methods
-                        .push((procedure.name.clone(), MethodKind::Procedure(procedure_ty)));
+                    if let Some(entry) =
+                        self.check_instance_procedure(type_name, record_ty, procedure)
+                    {
+                        checked_methods.push(entry);
+                    }
                 }
             }
         }
 
-        checked_methods
+        CheckedRecordMembers {
+            instance_methods: checked_methods,
+            static_functions: checked_static,
+        }
+    }
+
+    fn register_record_member_name(
+        &mut self,
+        type_name: &str,
+        name: &str,
+        span: fpas_lexer::Span,
+        seen: &mut HashSet<String>,
+    ) -> bool {
+        if seen.insert(canonical_symbol_name(name)) {
+            return true;
+        }
+        self.error_with_code(
+            SEMA_DUPLICATE_DECLARATION,
+            format!("Duplicate record method `{type_name}.{name}`"),
+            "Each record method name must be unique within the record type (static and instance names share one set).",
+            span,
+        );
+        false
+    }
+
+    fn check_instance_function(
+        &mut self,
+        type_name: &str,
+        record_ty: &Ty,
+        function: &FunctionDecl,
+    ) -> Option<(String, MethodKind)> {
+        self.check_unique_formal_param_names(&function.params);
+
+        let type_param_defs = Self::resolve_type_params(&function.type_params);
+
+        let (return_ty, params) =
+            self.with_type_params(&function.type_params, function.span, |checker| {
+                let return_ty =
+                    checker.resolve_method_param_type(&function.return_type, type_name, record_ty);
+                let params: Vec<ParamTy> = function
+                    .params
+                    .iter()
+                    .map(|param| ParamTy {
+                        mutable: param.mutable,
+                        name: param.name.clone(),
+                        ty: checker.resolve_method_param_type(
+                            &param.type_expr,
+                            type_name,
+                            record_ty,
+                        ),
+                    })
+                    .collect();
+                (return_ty, params)
+            });
+
+        if !self.validate_record_method_signature(type_name, &function.name, &params, function.span)
+        {
+            return None;
+        }
+
+        let function_ty = FunctionTy {
+            type_params: type_param_defs,
+            params: params.clone(),
+            return_type: Box::new(return_ty.clone()),
+            variadic: false,
+        };
+
+        let qualified = format!("{type_name}.{}", function.name);
+        self.scopes.define(
+            &qualified,
+            Symbol {
+                ty: Ty::Function(function_ty.clone()),
+                mutable: false,
+                kind: SymbolKind::Function,
+            },
+        );
+
+        self.check_method_body(
+            &qualified,
+            &function.type_params,
+            &params,
+            Some(return_ty),
+            &function.body,
+        );
+        Some((function.name.clone(), MethodKind::Function(function_ty)))
+    }
+
+    fn check_static_function(
+        &mut self,
+        type_name: &str,
+        record_ty: &Ty,
+        function: &FunctionDecl,
+    ) -> Option<(String, FunctionTy)> {
+        self.check_unique_formal_param_names(&function.params);
+
+        let type_param_defs = Self::resolve_type_params(&function.type_params);
+
+        let (return_ty, params) =
+            self.with_type_params(&function.type_params, function.span, |checker| {
+                let return_ty =
+                    checker.resolve_method_param_type(&function.return_type, type_name, record_ty);
+                let params: Vec<ParamTy> = function
+                    .params
+                    .iter()
+                    .map(|param| ParamTy {
+                        mutable: param.mutable,
+                        name: param.name.clone(),
+                        ty: checker.resolve_method_param_type(
+                            &param.type_expr,
+                            type_name,
+                            record_ty,
+                        ),
+                    })
+                    .collect();
+                (return_ty, params)
+            });
+
+        if !self.validate_static_function_signature(
+            type_name,
+            &function.name,
+            &params,
+            function.span,
+        ) {
+            return None;
+        }
+
+        let function_ty = FunctionTy {
+            type_params: type_param_defs,
+            params: params.clone(),
+            return_type: Box::new(return_ty.clone()),
+            variadic: false,
+        };
+
+        let qualified = format!("{type_name}.{}", function.name);
+        self.scopes.define(
+            &qualified,
+            Symbol {
+                ty: Ty::Function(function_ty.clone()),
+                mutable: false,
+                kind: SymbolKind::Function,
+            },
+        );
+
+        self.check_method_body(
+            &qualified,
+            &function.type_params,
+            &params,
+            Some(return_ty),
+            &function.body,
+        );
+        Some((function.name.clone(), function_ty))
+    }
+
+    fn check_instance_procedure(
+        &mut self,
+        type_name: &str,
+        record_ty: &Ty,
+        procedure: &fpas_parser::ProcedureDecl,
+    ) -> Option<(String, MethodKind)> {
+        self.check_unique_formal_param_names(&procedure.params);
+
+        let type_param_defs = Self::resolve_type_params(&procedure.type_params);
+
+        let params = self.with_type_params(&procedure.type_params, procedure.span, |checker| {
+            procedure
+                .params
+                .iter()
+                .map(|param| ParamTy {
+                    mutable: param.mutable,
+                    name: param.name.clone(),
+                    ty: checker.resolve_method_param_type(&param.type_expr, type_name, record_ty),
+                })
+                .collect::<Vec<_>>()
+        });
+
+        if !self.validate_record_method_signature(
+            type_name,
+            &procedure.name,
+            &params,
+            procedure.span,
+        ) {
+            return None;
+        }
+
+        let procedure_ty = ProcedureTy {
+            type_params: type_param_defs,
+            variadic: false,
+            params: params.clone(),
+        };
+
+        let qualified = format!("{type_name}.{}", procedure.name);
+        self.scopes.define(
+            &qualified,
+            Symbol {
+                ty: Ty::Procedure(procedure_ty.clone()),
+                mutable: false,
+                kind: SymbolKind::Procedure,
+            },
+        );
+
+        self.check_method_body(
+            &qualified,
+            &procedure.type_params,
+            &params,
+            None,
+            &procedure.body,
+        );
+        Some((procedure.name.clone(), MethodKind::Procedure(procedure_ty)))
     }
 
     fn validate_record_method_signature(
@@ -285,6 +404,32 @@ impl Checker {
             return false;
         }
 
+        true
+    }
+
+    fn validate_static_function_signature(
+        &mut self,
+        type_name: &str,
+        method_name: &str,
+        params: &[ParamTy],
+        span: fpas_lexer::Span,
+    ) -> bool {
+        if params
+            .iter()
+            .any(|param| param.name.eq_ignore_ascii_case("Self"))
+        {
+            self.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                format!(
+                    "Static record function `{type_name}.{method_name}` must not declare a `Self` parameter"
+                ),
+                format!(
+                    "Remove `Self` and call the function through the type: `{type_name}.{method_name}(...)`."
+                ),
+                span,
+            );
+            return false;
+        }
         true
     }
 

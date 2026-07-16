@@ -31,21 +31,34 @@ impl Compiler {
                 let call_key = fpas_sema::expr_lookup_key(expr);
                 let returns_value = self.go_call_returns_value(expr);
 
-                if let Some(qualified) = self.method_calls.get(&call_key).cloned() {
-                    let receiver = Designator {
-                        parts: designator.parts[..designator.parts.len() - 1].to_vec(),
-                        span: designator.span,
-                    };
-                    let mut wrapper_args = Vec::with_capacity(args.len() + 1);
-                    wrapper_args.push(Expr::Designator(receiver));
-                    wrapper_args.extend(args.iter().cloned());
-                    self.compile_go_wrapper_call(
-                        &qualified,
-                        &wrapper_args,
-                        returns_value,
-                        detached,
-                        span,
-                    )?;
+                if let Some(target) = self.method_calls.get(&call_key).cloned() {
+                    match target {
+                        fpas_sema::MethodCallTarget::Instance(qualified) => {
+                            let receiver = Designator {
+                                parts: designator.parts[..designator.parts.len() - 1].to_vec(),
+                                span: designator.span,
+                            };
+                            let mut wrapper_args = Vec::with_capacity(args.len() + 1);
+                            wrapper_args.push(Expr::Designator(receiver));
+                            wrapper_args.extend(args.iter().cloned());
+                            self.compile_go_wrapper_call(
+                                &qualified,
+                                &wrapper_args,
+                                returns_value,
+                                detached,
+                                span,
+                            )?;
+                        }
+                        fpas_sema::MethodCallTarget::Static(qualified) => {
+                            self.compile_go_wrapper_call(
+                                &qualified,
+                                args,
+                                returns_value,
+                                detached,
+                                span,
+                            )?;
+                        }
+                    }
                     return Ok(());
                 }
 

@@ -36,6 +36,15 @@ impl Compiler {
         name: &str,
         location: impl Copy + super::emit::IntoEmitLocation,
     ) -> Result<u16, CompileError> {
+        self.add_local_with_cell(name, false, location)
+    }
+
+    pub(super) fn add_local_with_cell(
+        &mut self,
+        name: &str,
+        is_cell: bool,
+        location: impl Copy + super::emit::IntoEmitLocation,
+    ) -> Result<u16, CompileError> {
         let location = location.into_emit_location();
         let slot = self.next_slot;
         self.next_slot = slot.checked_add(1).ok_or_else(|| {
@@ -56,6 +65,7 @@ impl Compiler {
             name: canonical_name(name),
             depth: self.scope_depth,
             slot,
+            is_cell,
         });
         Ok(slot)
     }
@@ -186,7 +196,10 @@ mod tests {
     use super::*;
     use fpas_bytecode::SourceLocation;
     use fpas_diagnostics::codes::COMPILE_BYTECODE_OPERAND_OVERFLOW;
-    use fpas_sema::{ExprTypeMap, MethodCallMap, RecordDefaultsMap, ScalarCaseBindingMap};
+    use fpas_sema::{
+        ClosureInfoMap, ExprTypeMap, MethodCallMap, NestedRoutineCaptureMap, RecordDefaultsMap,
+        ScalarCaseBindingMap,
+    };
 
     fn empty_compiler() -> Compiler {
         Compiler::new(
@@ -194,6 +207,8 @@ mod tests {
             MethodCallMap::default(),
             RecordDefaultsMap::default(),
             ScalarCaseBindingMap::default(),
+            ClosureInfoMap::default(),
+            NestedRoutineCaptureMap::default(),
         )
     }
 

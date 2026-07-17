@@ -4,7 +4,7 @@
 
 Planned language feature with two implementation milestones:
 
-1. bound record methods depend on [capturing closures](capturing-closures.md);
+1. bound record methods depend on [capturing closures](../pascal/language/functions/closures.md);
 2. event properties additionally depend on [record properties](record-properties.md).
 
 Expression postfix chaining is independent and is currently being implemented separately. Do not
@@ -186,7 +186,7 @@ Button.OnClick := procedure(Sender: TuiButton) begin Handle(Sender) end;
 ```
 
 The event setter owns one copy of the callable. Capture lifetime and task-transfer restrictions come
-from [capturing-closures.md](capturing-closures.md). Assigning a task-bound closure is valid when the
+from [closures.md](../pascal/language/functions/closures.md). Assigning a task-bound closure is valid when the
 event is raised on that same task.
 
 ## Diagnostics

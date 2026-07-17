@@ -57,6 +57,13 @@ impl NameRewriter<'_> {
                 self.rewrite_expr(base);
                 self.rewrite_postfix_operations(operations);
             }
+            Expr::Closure(closure) => {
+                self.rewrite_callable(
+                    &mut closure.params,
+                    closure.return_type.as_mut(),
+                    &mut closure.body,
+                );
+            }
         }
     }
 
@@ -135,6 +142,9 @@ impl NameRewriter<'_> {
                         }
                     }
                 }
+            }
+            Expr::Closure(_) => {
+                // Closures are not valid case patterns; leave nested names untouched.
             }
         }
     }

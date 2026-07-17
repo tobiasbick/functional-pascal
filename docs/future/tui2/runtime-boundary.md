@@ -19,7 +19,7 @@ function TuiApplication.Post(
 
 Posts are FIFO. The closure is type-checked at the call site and type-erased in the VM queue. The
 application event loop drains the queue before layout and after each bounded terminal wait. Worker
-posts obey the transfer rules in [capturing-closures.md](../capturing-closures.md).
+posts obey the transfer rules in [closures.md](../../pascal/language/functions/closures.md).
 
 Posting is the only Tui2 operation permitted from a worker task. It returns `false` when application shutdown has begun; otherwise it enqueues the callback and returns `true`. Queued callbacks not started before shutdown are discarded. Posted handlers run on the main task and may use the normal Tui2 API.
 

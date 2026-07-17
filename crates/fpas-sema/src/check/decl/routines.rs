@@ -1,5 +1,13 @@
+//! Routine declaration checking, including nested capture analysis.
+//!
+//! **Documentation:** `docs/pascal/language/functions/README.md`,
+//! `docs/pascal/language/functions/closures.md`
+
+use super::super::closures::{
+    CaptureBinding, NestedRoutineCaptureInfo, collect_captures, task_bound_from_captures,
+};
 use super::Checker;
-use crate::scope::{FunctionCtx, Symbol, SymbolKind};
+use crate::scope::{FunctionCtx, Symbol, SymbolKind, canonical_symbol_name};
 use crate::types::{FunctionTy, ParamTy, ProcedureTy, Ty, TypeConstraint};
 use fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION;
 use fpas_lexer::Span;
@@ -30,13 +38,24 @@ impl Checker {
             self.scopes.pop_scope();
         }
 
+        let is_nested = self.scopes.scope_count() > 1;
         let symbol = Symbol {
             ty: func_ty,
             mutable: false,
             kind: SymbolKind::Function,
+            task_bound: false,
         };
         self.register_routine_symbol(&f.name, symbol, &f.body, f.span);
-        self.check_routine_body(&f.name, &f.type_params, &params, Some(return_ty), &f.body);
+        let captures = self.check_routine_body_collecting_captures(
+            &f.name,
+            &f.type_params,
+            &params,
+            Some(return_ty),
+            &f.body,
+        );
+        if is_nested {
+            self.record_nested_routine_captures(&f.name, captures);
+        }
     }
 
     /// Check procedure declarations against `docs/pascal/language/functions/README.md`.
@@ -61,16 +80,30 @@ impl Checker {
             self.scopes.pop_scope();
         }
 
+        let is_nested = self.scopes.scope_count() > 1;
         let symbol = Symbol {
             ty: proc_ty,
             mutable: false,
             kind: SymbolKind::Procedure,
+            task_bound: false,
         };
         self.register_routine_symbol(&p.name, symbol, &p.body, p.span);
-        self.check_routine_body(&p.name, &p.type_params, &params, None, &p.body);
+        let captures = self.check_routine_body_collecting_captures(
+            &p.name,
+            &p.type_params,
+            &params,
+            None,
+            &p.body,
+        );
+        if is_nested {
+            self.record_nested_routine_captures(&p.name, captures);
+        }
     }
 
-    fn resolve_formal_params(&mut self, params: &[fpas_parser::FormalParam]) -> Vec<ParamTy> {
+    pub(crate) fn resolve_formal_params(
+        &mut self,
+        params: &[fpas_parser::FormalParam],
+    ) -> Vec<ParamTy> {
         params
             .iter()
             .map(|p| ParamTy {
@@ -81,17 +114,21 @@ impl Checker {
             .collect()
     }
 
-    fn check_routine_body(
+    /// Check a routine body and return lexical captures of the routine itself.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/closures.md`
+    pub(crate) fn check_routine_body_collecting_captures(
         &mut self,
         name: &str,
         type_params: &[fpas_parser::TypeParam],
         params: &[ParamTy],
         return_type: Option<Ty>,
         body: &FuncBody,
-    ) {
+    ) -> Vec<CaptureBinding> {
         let FuncBody::Block { nested, stmts } = body;
 
         self.scopes.push_scope();
+        let routine_scope_index = self.scopes.scope_count() - 1;
 
         for tp in type_params {
             let constraint = tp
@@ -104,6 +141,7 @@ impl Checker {
                     ty: Ty::GenericParam(tp.name.clone(), constraint),
                     mutable: false,
                     kind: SymbolKind::Type,
+                    task_bound: false,
                 },
             );
         }
@@ -115,6 +153,7 @@ impl Checker {
                     ty: p.ty.clone(),
                     mutable: p.mutable,
                     kind: SymbolKind::Param,
+                    task_bound: false,
                 },
             );
         }
@@ -132,8 +171,28 @@ impl Checker {
             self.check_stmt(stmt);
         }
 
+        let captures = collect_captures(
+            &self.scopes,
+            routine_scope_index,
+            body,
+            &self.closure_infos,
+            &self.nested_routine_captures,
+        );
+
         self.scopes.function_ctx = prev_ctx;
         self.scopes.pop_scope();
+        captures
+    }
+
+    fn record_nested_routine_captures(&mut self, name: &str, captures: Vec<CaptureBinding>) {
+        let task_bound = task_bound_from_captures(&captures);
+        self.nested_routine_captures.insert(
+            canonical_symbol_name(name),
+            NestedRoutineCaptureInfo {
+                captures,
+                task_bound,
+            },
+        );
     }
 
     fn register_routine_symbol(&mut self, name: &str, symbol: Symbol, body: &FuncBody, span: Span) {

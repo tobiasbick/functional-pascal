@@ -3,6 +3,7 @@ use crate::ast::*;
 
 mod aggregates;
 mod calls;
+mod closures;
 mod designators;
 mod operators;
 mod postfix;

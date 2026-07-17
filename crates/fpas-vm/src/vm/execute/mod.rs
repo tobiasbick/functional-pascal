@@ -1,4 +1,5 @@
 mod aggregates;
+mod closure;
 mod concurrency;
 mod control_calls;
 mod enums;
@@ -68,6 +69,7 @@ impl Worker {
         if self.try_exec_stack_scope(op, line)?
             || self.try_exec_numeric(op, line)?
             || self.try_exec_control_calls(op, line)?
+            || self.try_exec_closure_ops(op, line)?
             || self.try_exec_concurrency(op, line)?
             || self.try_exec_aggregates(op, line)?
             || self.try_exec_result_option(op, line)?

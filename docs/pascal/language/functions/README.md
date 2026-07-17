@@ -12,6 +12,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`function_decl`, `
 | [Function types](function-types.md) | Callable type expressions |
 | [First-class functions](first-class.md) | Variables and higher-order calls |
 | [Nested functions](nested.md) | Local helpers and mutual recursion |
+| [Capturing closures](closures.md) | Anonymous callables with lexical environments |
 | [Generic routines](generic-routines.md) | Type parameters on routines |
 | [Early return](early-return.md) | `return` exits immediately |
 | [Postfix chaining](postfix-chaining.md) | `.Field`, `[Index]`, and `.Method(args)` on expression results |

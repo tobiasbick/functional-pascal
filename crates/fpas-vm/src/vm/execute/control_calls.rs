@@ -71,7 +71,11 @@ impl Worker {
             Op::CallValue(argc) => {
                 let func = self.pop(line)?;
                 let (name, captures) = match func {
-                    Value::Function { name, captures } => (name, captures),
+                    Value::Function {
+                        name,
+                        captures,
+                        task_bound: _,
+                    } => (name, captures),
                     other => {
                         return Err(runtime_error(
                             RUNTIME_VM_OPERAND_TYPE_MISMATCH,

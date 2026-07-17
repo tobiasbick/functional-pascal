@@ -24,6 +24,7 @@ fn wait_succeeds_when_child_runs_long_enough_to_need_timeslice() {
                 Value::Function {
                     name: callee.to_string(),
                     captures: vec![],
+                    task_bound: false,
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());
@@ -55,6 +56,7 @@ fn wait_then_second_spawn_and_wait_is_independent() {
                     Value::Function {
                         name: f.to_string(),
                         captures: vec![],
+                        task_bound: false,
                     },
                 );
                 chunk.emit(Op::SpawnTask(0), loc());
@@ -88,6 +90,7 @@ fn wait_on_child_that_panics_surfaces_shutdown_to_waiter() {
                 Value::Function {
                     name: callee.to_string(),
                     captures: vec![],
+                    task_bound: false,
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());

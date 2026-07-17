@@ -20,9 +20,12 @@ begin
 end.
 ```
 
-Call sites pass a **named** function or procedure, or a **variable** whose type is a function or procedure type. Qualified routines work the same way: `Std.Console.WriteLn(...)`.
+Call sites pass a **named** function or procedure, a **closure expression**, or a
+**variable** whose type is a function or procedure type. Qualified routines work the
+same way: `Std.Console.WriteLn(...)`.
 
 ## See also
 
 - [Function types](function-types.md)
+- [Capturing closures](closures.md)
 - [`Std.Array`](../../std/collections/array/README.md) — `Map`, `Filter`, and other higher-order helpers

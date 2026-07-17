@@ -4,11 +4,13 @@
 //! and `docs/pascal/language/error-handling/README.md` (from the repository root).
 
 mod calls;
+mod closure;
 mod designator;
 mod operators;
 mod postfix;
 
 use super::Checker;
+use crate::scope::SymbolKind;
 use crate::types::Ty;
 use fpas_parser::*;
 
@@ -57,10 +59,19 @@ impl Checker {
             Expr::Postfix {
                 base, operations, ..
             } => self.check_postfix_expr(base, operations),
+            Expr::Closure(closure) => self.check_closure_expr(
+                expr,
+                closure.is_function,
+                &closure.params,
+                closure.return_type.as_ref(),
+                &closure.body,
+                closure.span,
+            ),
             Expr::Error(_) => Ty::Error,
         };
         let key = Self::expr_lookup_key(expr);
         self.expr_types.insert(key, ty.clone());
+        self.propagate_task_bound_expr(expr, key);
         ty
     }
 
@@ -95,7 +106,57 @@ impl Checker {
 
         let inner_key = Self::expr_lookup_key(inner);
         self.expr_types.insert(inner_key, inner_ty.clone());
+        if self.callable_expr_is_task_bound(inner) {
+            self.error_with_code(
+                fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE,
+                "Cannot spawn a task-bound callable across a task boundary",
+                "Mutable captures make a closure task-bound. Pass immutable values instead, or invoke the closure on the same task.",
+                span,
+            );
+        }
         Ty::Task(Box::new(inner_ty))
+    }
+
+    fn propagate_task_bound_expr(&mut self, expr: &Expr, key: usize) {
+        match expr {
+            Expr::Paren(inner, _) if self.expr_is_task_bound(Self::expr_lookup_key(inner)) => {
+                self.mark_expr_task_bound(key);
+            }
+            Expr::Designator(designator) if self.designator_refers_to_task_bound(designator) => {
+                self.mark_expr_task_bound(key);
+            }
+            _ => {}
+        }
+    }
+
+    pub(crate) fn callable_expr_is_task_bound(&self, expr: &Expr) -> bool {
+        match expr {
+            Expr::Call { designator, .. } => self.designator_refers_to_task_bound(designator),
+            other => self.expr_is_task_bound(Self::expr_lookup_key(other)),
+        }
+    }
+
+    pub(crate) fn designator_refers_to_task_bound(&self, designator: &Designator) -> bool {
+        let name = Self::resolve_designator_name(designator);
+        let Some(symbol) = self.scopes.lookup(&name).or_else(|| {
+            designator.parts.first().and_then(|part| match part {
+                DesignatorPart::Ident(base, _) => self.scopes.lookup(base),
+                _ => None,
+            })
+        }) else {
+            return false;
+        };
+        if symbol.task_bound {
+            return true;
+        }
+        if matches!(symbol.kind, SymbolKind::Function | SymbolKind::Procedure) {
+            let canonical = crate::scope::canonical_symbol_name(&name);
+            return self
+                .nested_routine_captures
+                .get(&canonical)
+                .is_some_and(|info| info.task_bound);
+        }
+        false
     }
 
     fn check_array_literal(&mut self, elements: &[Expr]) -> Ty {

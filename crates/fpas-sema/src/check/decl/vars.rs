@@ -43,12 +43,14 @@ impl Checker {
             _ => declared_ty.clone(),
         };
 
+        let task_bound = self.expr_is_task_bound(Self::expr_lookup_key(&v.value));
         if !self.scopes.define(
             &v.name,
             Symbol {
                 ty: stored_ty,
                 mutable,
                 kind: SymbolKind::Var,
+                task_bound,
             },
         ) {
             self.error_with_code(

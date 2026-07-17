@@ -34,6 +34,7 @@ fn wait_all_two_tasks_barrier_then_wait_each_prints() {
                 Value::Function {
                     name: callee.to_string(),
                     captures: vec![],
+                    task_bound: false,
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());
@@ -42,6 +43,7 @@ fn wait_all_two_tasks_barrier_then_wait_each_prints() {
                 Value::Function {
                     name: callee.to_string(),
                     captures: vec![],
+                    task_bound: false,
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());
@@ -83,6 +85,7 @@ fn wait_all_deduplicates_repeated_handles() {
                 Value::Function {
                     name: callee.to_string(),
                     captures: Vec::new(),
+                    task_bound: false,
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());

@@ -1,3 +1,4 @@
+mod closure;
 mod postfix;
 mod precedence;
 mod primary;

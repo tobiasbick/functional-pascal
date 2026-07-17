@@ -41,6 +41,7 @@ fn turbo_vision_command_event_dispatches_registered_fpas_on_command() {
         Value::Function {
             name: "OnCommand".into(),
             captures: vec![],
+            task_bound: false,
         },
     );
     chunk.emit(
@@ -113,6 +114,7 @@ fn turbo_vision_on_command_handler_can_quit_application() {
         Value::Function {
             name: "OnCommand".into(),
             captures: vec![],
+            task_bound: false,
         },
     );
     chunk.emit(
@@ -175,6 +177,7 @@ fn turbo_vision_unhandled_keyboard_dispatches_on_key() {
         Value::Function {
             name: "OnKey".into(),
             captures: vec![],
+            task_bound: false,
         },
     );
     chunk.emit(
@@ -224,6 +227,7 @@ fn turbo_vision_unhandled_keyboard_dispatches_on_key_and_can_quit() {
         Value::Function {
             name: "OnKey".into(),
             captures: vec![],
+            task_bound: false,
         },
     );
     chunk.emit(

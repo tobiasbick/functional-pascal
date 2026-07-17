@@ -5,6 +5,7 @@
 use crate::error::CompileError;
 use fpas_bytecode::Op;
 use fpas_parser::{FuncBody, FunctionDecl, ProcedureDecl, RecordMethod};
+use fpas_sema::CaptureBinding;
 
 use super::super::canonical_name;
 use super::Compiler;
@@ -68,7 +69,16 @@ impl Compiler {
         self.chunk
             .insert_function(canonical_name(name), code_start, arity);
 
-        self.compile_routine_body(params, body, location)?;
+        let captures = self
+            .nested_routine_captures
+            .get(&canonical_name(name))
+            .cloned();
+        self.compile_routine_body_with_captures(
+            params,
+            captures.as_ref().map(|info| info.captures.as_slice()),
+            body,
+            location,
+        )?;
 
         let after = self.chunk.len() as u32;
         self.patch_jump(jump_over, after, location)?;
@@ -80,10 +90,21 @@ impl Compiler {
     /// Saves and restores the compiler's local-variable state, compiles the
     /// function body inside a fresh scope, and emits the trailing `Unit`+`Return`.
     /// Returns `(code_start, body_end)` byte offsets for the caller.
-    #[allow(clippy::expect_used)] // Every routine body pushes one locals frame before `begin_scope`.
     pub(in crate::compiler) fn compile_routine_body(
         &mut self,
         params: &[fpas_parser::FormalParam],
+        body: &FuncBody,
+        location: impl super::super::emit::IntoEmitLocation + Copy,
+    ) -> Result<(usize, usize), CompileError> {
+        self.compile_routine_body_with_captures(params, None, body, location)
+    }
+
+    /// Compile a routine body with closure captures appended after parameters.
+    #[allow(clippy::expect_used)] // Every routine body pushes one locals frame before `begin_scope`.
+    pub(in crate::compiler) fn compile_routine_body_with_captures(
+        &mut self,
+        params: &[fpas_parser::FormalParam],
+        captures: Option<&[CaptureBinding]>,
         body: &FuncBody,
         location: impl super::super::emit::IntoEmitLocation + Copy,
     ) -> Result<(usize, usize), CompileError> {
@@ -100,6 +121,9 @@ impl Compiler {
 
         for param in params {
             self.add_local(&param.name, location)?;
+        }
+        for capture in captures.unwrap_or_default() {
+            self.add_local_with_cell(&capture.name, capture.mutable, location)?;
         }
 
         let FuncBody::Block { nested, stmts } = body;

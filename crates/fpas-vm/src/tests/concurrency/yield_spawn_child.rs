@@ -19,6 +19,7 @@ fn retained_spawn_child_yield_then_return_still_waits_correctly() {
                 Value::Function {
                     name: callee.to_string(),
                     captures: vec![],
+                    task_bound: false,
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());
@@ -47,6 +48,7 @@ fn main_emits_many_yields_before_wait_child_still_completes() {
         Value::Function {
             name: callee.to_string(),
             captures: vec![],
+            task_bound: false,
         },
     );
     chunk.emit(Op::SpawnTask(0), loc());
@@ -79,6 +81,7 @@ fn detached_spawn_child_yields_before_return() {
                 Value::Function {
                     name: callee.to_string(),
                     captures: vec![],
+                    task_bound: false,
                 },
             );
             chunk.emit(Op::SpawnDetachedTask(0), loc());

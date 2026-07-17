@@ -16,6 +16,7 @@ fn sync_call_rejects_halt_in_callback() {
                 Value::Function {
                     name: callee.to_string(),
                     captures: vec![],
+                    task_bound: false,
                 },
             );
             chunk.emit(

@@ -21,6 +21,7 @@ fn successful_spawn_program_sets_shutdown_before_returning() {
                 Value::Function {
                     name: callee.to_string(),
                     captures: vec![],
+                    task_bound: false,
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());
@@ -66,6 +67,7 @@ fn repeated_runs_with_spawn_chunk_each_complete_and_set_shutdown() {
                     Value::Function {
                         name: callee.to_string(),
                         captures: vec![],
+                        task_bound: false,
                     },
                 );
                 chunk.emit(Op::SpawnDetachedTask(0), loc());

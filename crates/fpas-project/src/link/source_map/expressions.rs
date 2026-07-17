@@ -1,4 +1,6 @@
+use super::declarations::apply_func_body_source_id;
 use super::support::apply_span;
+use super::types::{apply_formal_param_source_id, apply_type_expr_source_id};
 
 use fpas_parser::{Designator, DesignatorPart, Expr, FieldInit, PostfixOperation};
 
@@ -64,6 +66,16 @@ pub(super) fn apply_expr_source_id(expr: &mut Expr, source_id: u32) {
             apply_expr_source_id(base, source_id);
             apply_postfix_operations_source_id(operations, source_id);
             apply_span(span, source_id);
+        }
+        Expr::Closure(closure) => {
+            for param in &mut closure.params {
+                apply_formal_param_source_id(param, source_id);
+            }
+            if let Some(return_type) = &mut closure.return_type {
+                apply_type_expr_source_id(return_type, source_id);
+            }
+            apply_func_body_source_id(&mut closure.body, source_id);
+            apply_span(&mut closure.span, source_id);
         }
     }
 

@@ -19,6 +19,7 @@ fn retained_spawn_wait_prints_child_return_value() {
                 Value::Function {
                     name: callee.to_string(),
                     captures: vec![],
+                    task_bound: false,
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());
@@ -51,6 +52,7 @@ fn spawn_passes_two_arguments_and_child_returns_sum() {
                 Value::Function {
                     name: callee.to_string(),
                     captures: vec![],
+                    task_bound: false,
                 },
             );
             chunk.emit(Op::SpawnTask(2), loc());

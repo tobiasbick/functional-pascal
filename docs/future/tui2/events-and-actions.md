@@ -9,7 +9,7 @@ Those documents must be reconciled when this plan enters implementation.
 
 The implementation depends on:
 
-1. [capturing closures](../capturing-closures.md);
+1. [capturing closures](../../pascal/language/functions/closures.md);
 2. the bound-method milestone in [events and bound record methods](../events-and-bound-methods.md);
 3. [record properties](../record-properties.md);
 4. the event-property milestone in [events and bound record methods](../events-and-bound-methods.md).
@@ -218,7 +218,7 @@ TuiApplication.Post(
 ```
 
 Posting from the main task may retain task-bound mutable captures. Posting from a worker follows the
-transfer rules in `capturing-closures.md`: captured input must be transferable and mutable captured
+transfer rules in `docs/pascal/language/functions/closures.md`: captured input must be transferable and mutable captured
 worker state is rejected. Posted callbacks run FIFO on the application main task and are discarded
 if shutdown begins before they start.
 

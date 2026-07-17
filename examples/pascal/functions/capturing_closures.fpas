@@ -1,0 +1,35 @@
+program CapturingClosures;
+
+uses Std.Console, Std.Conv;
+
+function Counter(): function(): integer;
+begin
+  mutable var Value: integer := 0;
+  return function(): integer begin
+    Value := Value + 1;
+    return Value
+  end
+end;
+
+function MakeAdder(Base: integer): function(Value: integer): integer;
+function Add(Value: integer): integer;
+begin
+  return Base + Value
+end;
+begin
+  return Add
+end;
+
+begin
+  var Next: function(): integer := Counter();
+  WriteLn('counter: ', IntToStr(Next()), ', ', IntToStr(Next()));
+  mutable var Count: integer := 0;
+  var Increment: procedure() := procedure() begin
+    Count := Count + 1
+  end;
+  Increment();
+  Increment();
+  WriteLn('shared count: ', IntToStr(Count));
+  var AddTen: function(Value: integer): integer := MakeAdder(10);
+  WriteLn('named escape: ', IntToStr(AddTen(5)))
+end.

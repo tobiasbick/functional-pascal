@@ -31,12 +31,7 @@ impl Compiler {
         };
 
         if let Some(local_ref) = self.resolve_local(&base_name) {
-            match local_ref {
-                LocalRef::Local(slot) => self.emit(Op::GetLocal(slot), location),
-                LocalRef::Enclosing(depth, slot) => {
-                    self.emit(Op::GetEnclosing(depth, slot), location)
-                }
-            };
+            self.emit_local_ref_read(local_ref, location);
 
             for part in parts {
                 match part {
@@ -63,9 +58,9 @@ impl Compiler {
             // through to GetGlobal.
             if let Some(local_ref) = self.resolve_local(&name) {
                 match local_ref {
-                    LocalRef::Local(slot) => self.emit(Op::GetLocal(slot), location),
+                    LocalRef::Local(slot) => self.emit_local_read(slot, location),
                     LocalRef::Enclosing(depth, slot) => {
-                        self.emit(Op::GetEnclosing(depth, slot), location)
+                        self.emit(Op::GetEnclosing(depth, slot), location);
                     }
                 };
                 return Ok(());
@@ -76,10 +71,14 @@ impl Compiler {
             if let Some((_code_start, _arity)) =
                 self.chunk.functions().get(&canonical_function_name)
             {
+                if self.emit_captured_routine_closure(&canonical_function_name, location)? {
+                    return Ok(());
+                }
                 self.emit_constant(
                     Value::Function {
                         name: canonical_function_name,
                         captures: vec![],
+                        task_bound: false,
                     },
                     location,
                 )?;

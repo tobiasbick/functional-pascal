@@ -98,7 +98,7 @@ fn apply_procedure_source_id(procedure: &mut ProcedureDecl, source_id: u32) {
     apply_span(&mut procedure.span, source_id);
 }
 
-fn apply_func_body_source_id(body: &mut FuncBody, source_id: u32) {
+pub(super) fn apply_func_body_source_id(body: &mut FuncBody, source_id: u32) {
     let FuncBody::Block { nested, stmts } = body;
     for decl in nested {
         apply_decl_source_id(decl, source_id);

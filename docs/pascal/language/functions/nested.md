@@ -36,6 +36,10 @@ begin
 end;
 ```
 
+Nested routines that escape as first-class values capture their enclosing environment.
+See [Capturing closures](closures.md).
+
 ## See also
 
 - [Declarations](declarations.md)
+- [Capturing closures](closures.md)

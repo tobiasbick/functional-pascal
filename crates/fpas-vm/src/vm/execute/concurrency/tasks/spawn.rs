@@ -16,8 +16,12 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<(), VmError> {
         let func = self.pop(line)?;
-        let (name, captures) = match func {
-            Value::Function { name, captures } => (name, captures),
+        let (name, captures, task_bound) = match func {
+            Value::Function {
+                name,
+                captures,
+                task_bound,
+            } => (name, captures, task_bound),
             other => {
                 return Err(runtime_error(
                     RUNTIME_VM_OPERAND_TYPE_MISMATCH,
@@ -30,6 +34,15 @@ impl Worker {
                 ));
             }
         };
+
+        if task_bound {
+            return Err(runtime_error(
+                RUNTIME_INVALID_TASK,
+                format!("Cannot spawn task-bound closure `{name}` across a task boundary"),
+                "Mutable captures make a closure task-bound. Pass immutable values instead, or invoke the closure on the same task.",
+                line,
+            ));
+        }
 
         let (code_start, expected_arity) = self.lookup_function_entry(&name).ok_or_else(|| {
             runtime_error(

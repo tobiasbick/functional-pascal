@@ -6,9 +6,13 @@
 use std::collections::{HashMap, HashSet};
 
 use fpas_bytecode::Chunk;
-use fpas_sema::{ExprTypeMap, MethodCallMap, RecordDefaultsMap, ScalarCaseBindingMap};
+use fpas_sema::{
+    ClosureInfoMap, ExprTypeMap, MethodCallMap, NestedRoutineCaptureMap, RecordDefaultsMap,
+    ScalarCaseBindingMap,
+};
 
 mod binary_op;
+mod closures;
 mod designator;
 mod emit;
 mod expr;
@@ -24,9 +28,11 @@ struct Local {
     name: String,
     depth: u32,
     slot: u16,
+    is_cell: bool,
 }
 
 /// Result of resolving a variable name.
+#[derive(Clone, Copy)]
 enum LocalRef {
     /// Local in the current function frame.
     Local(u16),
@@ -73,6 +79,10 @@ pub struct Compiler {
     record_defaults: RecordDefaultsMap,
     /// Scalar `case` labels that sema resolved as guard bindings.
     scalar_case_bindings: ScalarCaseBindingMap,
+    /// Capture metadata for anonymous closures.
+    closure_infos: ClosureInfoMap,
+    /// Capture metadata for escaping named nested routines.
+    nested_routine_captures: NestedRoutineCaptureMap,
     /// Canonical names of module-level globals (`const` / `var` / `mutable var`).
     module_globals: HashSet<String>,
 }
@@ -94,6 +104,8 @@ impl Compiler {
         method_calls: MethodCallMap,
         record_defaults: RecordDefaultsMap,
         scalar_case_bindings: ScalarCaseBindingMap,
+        closure_infos: ClosureInfoMap,
+        nested_routine_captures: NestedRoutineCaptureMap,
     ) -> Self {
         Self {
             chunk: Chunk::new(),
@@ -108,6 +120,8 @@ impl Compiler {
             method_calls,
             record_defaults,
             scalar_case_bindings,
+            closure_infos,
+            nested_routine_captures,
             module_globals: HashSet::new(),
         }
     }

@@ -1,4 +1,5 @@
 mod calls;
+pub(crate) mod closures;
 mod context;
 mod decl;
 mod entry;
@@ -7,6 +8,11 @@ mod name_resolution;
 pub(crate) mod spans;
 mod stmt;
 
+pub use closures::CaptureBinding;
+pub use closures::ClosureInfo;
+pub use closures::ClosureInfoMap;
+pub use closures::NestedRoutineCaptureInfo;
+pub use closures::NestedRoutineCaptureMap;
 pub(crate) use context::Checker;
 pub use context::ExprTypeMap;
 pub use context::MethodCallMap;

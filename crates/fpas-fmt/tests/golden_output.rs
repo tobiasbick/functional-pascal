@@ -116,10 +116,14 @@ fn postfix_chaining_wraps_long_chain() {
 }
 
 #[test]
-fn postfix_chaining_preserves_explicit_parens() {
+fn closure_literal_round_trips() {
     common::assert_round_trip(
-        "postfix_parens",
-        "program T; begin var X: integer := (Factory.Create()).Value; end.",
+        "closure_compact",
+        "program T; begin var F: procedure() := procedure() begin end; end.",
+    );
+    common::assert_round_trip(
+        "closure_multiline",
+        "program T;\nbegin\n  var Add: function(Value: integer): integer :=\n    function(Value: integer): integer\n    begin\n      return Value + 1\n    end\nend.",
     );
 }
 

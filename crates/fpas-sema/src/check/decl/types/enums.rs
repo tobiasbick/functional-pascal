@@ -15,6 +15,7 @@ impl Checker {
                 ty: Ty::Named(td.name.clone()),
                 mutable: false,
                 kind: SymbolKind::Type,
+                task_bound: false,
             },
         ) {
             self.define_type_symbol(td, Ty::Error);
@@ -70,6 +71,7 @@ impl Checker {
                 ty: ty.clone(),
                 mutable: false,
                 kind,
+                task_bound: false,
             };
             self.register_enum_variant_symbols(&td.name, &variant.name, symbol, member.span);
         }
@@ -79,6 +81,7 @@ impl Checker {
                 ty,
                 mutable: false,
                 kind: SymbolKind::Type,
+                task_bound: false,
             };
         }
     }

@@ -13,6 +13,10 @@ pub struct Symbol {
     pub ty: Ty,
     pub mutable: bool,
     pub kind: SymbolKind,
+    /// `true` when this binding holds a task-bound callable (mutable captures).
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/closures.md`
+    pub task_bound: bool,
 }
 
 impl Symbol {
@@ -130,15 +134,26 @@ impl ScopeStack {
         self.scopes[0].symbols.remove(&canonical_name).is_some()
     }
 
-    /// Look up a symbol by name, searching from innermost to outermost scope.
-    pub fn lookup(&self, name: &str) -> Option<&Symbol> {
+    /// Look up a symbol and the scope index where it was found (0 = program root).
+    pub fn lookup_with_scope(&self, name: &str) -> Option<(usize, &Symbol)> {
         let canonical_name = canonical_symbol_name(name);
-        for scope in self.scopes.iter().rev() {
+        for (index, scope) in self.scopes.iter().enumerate().rev() {
             if let Some(sym) = scope.symbols.get(&canonical_name) {
-                return Some(&sym.symbol);
+                return Some((index, &sym.symbol));
             }
         }
         None
+    }
+
+    /// Number of scopes currently on the stack (including the program root).
+    #[must_use]
+    pub fn scope_count(&self) -> usize {
+        self.scopes.len()
+    }
+
+    /// Look up a symbol by name, searching from innermost to outermost scope.
+    pub fn lookup(&self, name: &str) -> Option<&Symbol> {
+        self.lookup_with_scope(name).map(|(_, symbol)| symbol)
     }
 
     /// Look up the original stored spelling for a symbol name.
@@ -212,6 +227,7 @@ mod tests {
                     ty: Ty::Integer,
                     mutable: false,
                     kind: SymbolKind::Var,
+                    task_bound: false,
                 }
             ),
             "root scope must remain usable after extra pop_scope"

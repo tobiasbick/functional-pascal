@@ -17,6 +17,7 @@ fn spawn_loads_closure_captures_onto_child_stack() {
                 Value::Function {
                     name: callee.to_string(),
                     captures: vec![Value::Integer(99)],
+                    task_bound: false,
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());
@@ -45,6 +46,7 @@ fn spawn_resolves_function_via_canonical_name_key() {
         Value::Function {
             name: "MixedCaseFn".to_string(),
             captures: vec![],
+            task_bound: false,
         },
     );
     chunk.emit(Op::SpawnTask(0), loc());

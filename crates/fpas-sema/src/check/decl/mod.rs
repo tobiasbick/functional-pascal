@@ -61,7 +61,7 @@ impl Checker {
         }
     }
 
-    pub(super) fn check_unique_formal_param_names(&mut self, params: &[FormalParam]) {
+    pub(crate) fn check_unique_formal_param_names(&mut self, params: &[FormalParam]) {
         let mut seen = HashSet::new();
         for param in params {
             if !seen.insert(canonical_symbol_name(&param.name)) {

@@ -39,8 +39,15 @@ pub fn compile(program: &Program) -> Result<Chunk, CompileError> {
 ///
 /// **Documentation:** `docs/pascal/program-structure/projects.md` (from the repository root).
 pub fn compile_all(program: &Program) -> Result<Chunk, Vec<CompileError>> {
-    let (sema_errors, expr_types, method_calls, record_defaults, scalar_case_bindings) =
-        fpas_sema::analyze_with_types(program);
+    let (
+        sema_errors,
+        expr_types,
+        method_calls,
+        record_defaults,
+        scalar_case_bindings,
+        closure_infos,
+        nested_routine_captures,
+    ) = fpas_sema::analyze_with_types(program);
     if !sema_errors.is_empty() {
         return Err(sema_errors);
     }
@@ -49,6 +56,8 @@ pub fn compile_all(program: &Program) -> Result<Chunk, Vec<CompileError>> {
         method_calls,
         record_defaults,
         scalar_case_bindings,
+        closure_infos,
+        nested_routine_captures,
     );
     match compiler.compile_program(program) {
         Ok(()) => validated_chunk(compiler).map_err(|error| vec![error]),

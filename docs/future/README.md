@@ -8,7 +8,6 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 
 | Area | Plan | Scope |
 |------|------|-------|
-| Language | [Capturing closures](capturing-closures.md) | Escaping anonymous and nested callables with managed lexical environments |
 | Language | [Record properties](record-properties.md) | Pascal-style computed record state backed by instance accessors |
 | Language | [Events and bound methods](events-and-bound-methods.md) | Bound method values and deterministic single-handler event properties |
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
@@ -25,12 +24,12 @@ milestones. Use this order:
 
 | Step | Plan or milestone | Why it comes here |
 | --- | --- | --- |
-| 0 | Finish the in-progress expression postfix-chaining implementation | Properties and Tui2 APIs should build on the final member-access behavior rather than modify it concurrently. |
-| 1 | [Capturing closures](capturing-closures.md) | Establishes managed callable environments, mutable captures, lifetime, and task-transfer rules. |
-| 2 | [Bound-method milestone](events-and-bound-methods.md#milestone-1-bound-record-methods) | Reuses closure environments and completes the three handler forms: named routine, closure, and bound method. |
-| 3 | [Record properties](record-properties.md) | Establishes computed getter/setter syntax and registry-backed state access without special Tui2 compiler behavior. |
-| 4 | [Event-property milestone](events-and-bound-methods.md#milestone-2-event-properties) | Specializes properties for assignment, `nil`, `Assigned`, and owner-only invocation. |
-| 5 | [Tui2 events and actions](tui2/events-and-actions.md) | Applies the completed language features to controls, lifecycle callbacks, actions, and posting. |
+| 1 | [Bound-method milestone](events-and-bound-methods.md#milestone-1-bound-record-methods) | Reuses capturing closures and completes the three handler forms: named routine, closure, and bound method. |
+| 2 | [Record properties](record-properties.md) | Establishes computed getter/setter syntax and registry-backed state access without special Tui2 compiler behavior. |
+| 3 | [Event-property milestone](events-and-bound-methods.md#milestone-2-event-properties) | Specializes properties for assignment, `nil`, `Assigned`, and owner-only invocation. |
+| 4 | [Tui2 events and actions](tui2/events-and-actions.md) | Applies the completed language features to controls, lifecycle callbacks, actions, and posting. |
+
+Capturing closures are implemented; see [`docs/pascal/language/functions/closures.md`](../pascal/language/functions/closures.md).
 
 Each step must finish its own docs, tests, formatter support, linker/source-map handling, and full
 verification before the next dependent step starts. Bound methods and record properties are

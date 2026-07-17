@@ -20,9 +20,14 @@ mod std_registry;
 mod std_units;
 mod types;
 
+pub use check::CaptureBinding;
+pub use check::ClosureInfo;
+pub use check::ClosureInfoMap;
 pub use check::ExprTypeMap;
 pub use check::MethodCallMap;
 pub use check::MethodCallTarget;
+pub use check::NestedRoutineCaptureInfo;
+pub use check::NestedRoutineCaptureMap;
 pub use check::RecordDefaultsMap;
 pub use check::ScalarCaseBindingMap;
 pub use error::SemaError;
@@ -46,6 +51,8 @@ pub fn analyze_with_types(
     MethodCallMap,
     RecordDefaultsMap,
     ScalarCaseBindingMap,
+    ClosureInfoMap,
+    NestedRoutineCaptureMap,
 ) {
     let mut checker = check::Checker::new();
     checker.check_program(program);

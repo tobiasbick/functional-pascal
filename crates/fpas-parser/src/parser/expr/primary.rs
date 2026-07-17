@@ -79,6 +79,9 @@ impl Parser {
                 let inner = self.parse_go_call_expression(start);
                 Expr::Go(Box::new(inner), self.span_from(start))
             }
+            Token::Function | Token::Procedure if self.at_closure_expr_start() => {
+                self.parse_closure_expr()
+            }
             _ => {
                 let span = self.current_span();
                 self.error_with_code(

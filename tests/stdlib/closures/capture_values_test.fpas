@@ -1,0 +1,29 @@
+program ClosureCaptureTest;
+
+uses Std.Console, Std.Conv, Std.Test;
+
+function Counter(): function(): integer;
+begin
+  mutable var Value: integer := 0;
+  return function(): integer begin
+    Value := Value + 1;
+    return Value
+  end
+end;
+
+begin
+  var Next: function(): integer := Counter();
+  AssertEquals(IntToStr(Next()), '1');
+  AssertEquals(IntToStr(Next()), '2');
+  mutable var Count: integer := 0;
+  var Inc: procedure() := procedure() begin
+    Count := Count + 1
+  end;
+  Inc();
+  AssertEquals(IntToStr(Count), '1');
+  var Base: integer := 10;
+  var Add: function(Value: integer): integer := function(Value: integer): integer begin
+    return Base + Value
+  end;
+  AssertEquals(IntToStr(Add(5)), '15')
+end.

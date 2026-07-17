@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/pascal/language/basics/README.md`, `docs/pascal/language/functions/README.md`, `docs/pascal/language/error-handling/README.md` (from the repository root).
 
 mod call;
+mod closure;
 mod constructors;
 mod literals;
 mod postfix;
@@ -96,6 +97,15 @@ impl Compiler {
                 base, operations, ..
             } => {
                 self.compile_postfix_expr(base, operations)?;
+            }
+            Expr::Closure(closure) => {
+                self.compile_closure_expr(
+                    expr,
+                    &closure.params,
+                    &closure.return_type,
+                    &closure.body,
+                    closure.span,
+                )?;
             }
             Expr::Error(span) => {
                 self.emit(Op::Unit, Self::location_of(span));

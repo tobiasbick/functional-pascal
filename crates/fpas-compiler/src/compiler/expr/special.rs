@@ -53,6 +53,7 @@ impl Compiler {
             Value::Function {
                 name: wrapper_name,
                 captures: vec![],
+                task_bound: false,
             },
             location,
         )?;

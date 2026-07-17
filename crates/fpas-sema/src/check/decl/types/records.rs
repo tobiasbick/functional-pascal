@@ -23,6 +23,7 @@ impl Checker {
                 ty: Ty::Named(td.name.clone()),
                 mutable: false,
                 kind: SymbolKind::Type,
+                task_bound: false,
             },
         ) {
             self.error_with_code(
@@ -231,6 +232,7 @@ impl Checker {
                 ty: Ty::Function(function_ty.clone()),
                 mutable: false,
                 kind: SymbolKind::Function,
+                task_bound: false,
             },
         );
 
@@ -297,6 +299,7 @@ impl Checker {
                 ty: Ty::Function(function_ty.clone()),
                 mutable: false,
                 kind: SymbolKind::Function,
+                task_bound: false,
             },
         );
 
@@ -354,6 +357,7 @@ impl Checker {
                 ty: Ty::Procedure(procedure_ty.clone()),
                 mutable: false,
                 kind: SymbolKind::Procedure,
+                task_bound: false,
             },
         );
 
@@ -458,6 +462,7 @@ impl Checker {
                     ty: Ty::GenericParam(tp.name.clone(), constraint),
                     mutable: false,
                     kind: SymbolKind::Type,
+                    task_bound: false,
                 },
             );
         }
@@ -469,6 +474,7 @@ impl Checker {
                     ty: param.ty.clone(),
                     mutable: param.mutable,
                     kind: SymbolKind::Param,
+                    task_bound: false,
                 },
             );
         }

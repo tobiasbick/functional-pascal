@@ -12,7 +12,7 @@ use super::super::expr::emit_expr;
 use super::super::stmt::emit_stmts_in_block;
 use super::super::types::{emit_formal_params_in_parens, emit_type_expr, format_type_params};
 
-pub(super) fn emit_decl(emitter: &mut Emitter, decl: &Decl, comments: &CommentMap) {
+pub(crate) fn emit_decl(emitter: &mut Emitter, decl: &Decl, comments: &CommentMap) {
     emit_leading_comments(emitter, comments, crate::span::decl_span(decl), true);
     match decl {
         Decl::Const(def) => emit_const_def(emitter, def, false, comments),

@@ -74,19 +74,23 @@ pub(super) fn values_equal(a: &Value, b: &Value) -> bool {
             Value::Function {
                 name: a_name,
                 captures: a_captures,
+                task_bound: a_bound,
             },
             Value::Function {
                 name: b_name,
                 captures: b_captures,
+                task_bound: b_bound,
             },
         ) => {
             a_name == b_name
+                && a_bound == b_bound
                 && a_captures.len() == b_captures.len()
                 && a_captures
                     .iter()
                     .zip(b_captures)
                     .all(|(left, right)| values_equal(left, right))
         }
+        (Value::Cell(a), Value::Cell(b)) => std::sync::Arc::ptr_eq(a, b),
         (Value::Task(a), Value::Task(b)) => a == b,
         _ => false,
     }

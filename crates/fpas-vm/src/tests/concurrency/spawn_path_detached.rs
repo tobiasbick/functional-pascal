@@ -19,6 +19,7 @@ fn detached_spawn_does_not_leave_task_handle_on_stack() {
                 Value::Function {
                     name: callee.to_string(),
                     captures: vec![],
+                    task_bound: false,
                 },
             );
             chunk.emit(Op::SpawnDetachedTask(0), loc());

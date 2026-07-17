@@ -83,6 +83,11 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     ///
     /// **Documentation:** `docs/pascal/language/types/records.md` (Default field values)
     SEMA_MISSING_RECORD_FIELD = 2015;
+
+    /// A task-bound callable (mutable captures) cannot cross a task boundary.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/closures.md`
+    SEMA_TASK_BOUND_CALLABLE = 2016;
 });
 
 define_codes!(COMPILE_ALLOCATED_CODES => {

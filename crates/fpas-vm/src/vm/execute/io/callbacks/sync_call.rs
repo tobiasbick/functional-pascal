@@ -18,7 +18,12 @@ impl Worker {
         args: &[Value],
         line: SourceLocation,
     ) -> Result<Value, VmError> {
-        let Value::Function { name, captures } = func else {
+        let Value::Function {
+            name,
+            captures,
+            task_bound: _,
+        } = func
+        else {
             return Err(runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 format!("Expected function value, got `{}`", func.type_name()),

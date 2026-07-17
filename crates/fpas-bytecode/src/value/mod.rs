@@ -40,13 +40,22 @@ pub enum Value {
     OptionNone,
     /// First-class function value (named or anonymous).
     ///
-    /// For closures, `captures` holds the values captured from enclosing scopes.
+    /// For closures, `captures` holds values or [`Value::Cell`] handles captured from
+    /// enclosing scopes. `task_bound` is true when any capture is a mutable cell.
     ///
-    /// **Documentation:** `docs/pascal/language/functions/first-class.md`
+    /// **Documentation:** `docs/pascal/language/functions/closures.md`
     Function {
         name: String,
         captures: Vec<Value>,
+        task_bound: bool,
     },
+    /// Shared mutable capture cell. Cloning shares the cell; the inner value is updated in place.
+    ///
+    /// Uses [`std::sync::Arc`] / [`std::sync::Mutex`] so [`Value`] stays `Send` + `Sync` for the
+    /// multi-threaded VM. Mutable captures still mark closures as `task_bound`.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/closures.md`
+    Cell(std::sync::Arc<std::sync::Mutex<Value>>),
     /// Task handle (runtime id).
     ///
     /// **Documentation:** `docs/pascal/language/concurrency/README.md`
@@ -71,6 +80,7 @@ impl Value {
             Value::OptionSome(_) => "Option.Some",
             Value::OptionNone => "Option.None",
             Value::Function { .. } => "function",
+            Value::Cell(_) => "cell",
             Value::Task(_) => "task",
         }
     }
@@ -137,6 +147,10 @@ impl std::fmt::Display for Value {
             Value::OptionSome(v) => write!(f, "Some({v})"),
             Value::OptionNone => write!(f, "None"),
             Value::Function { name, .. } => write!(f, "<function {name}>"),
+            Value::Cell(cell) => match cell.lock() {
+                Ok(guard) => write!(f, "<cell {guard}>"),
+                Err(_) => write!(f, "<cell <poisoned>>"),
+            },
             Value::Task(id) => write!(f, "<task {id}>"),
         }
     }

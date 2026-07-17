@@ -21,6 +21,7 @@ fn cooperative_shutdown_aborts_wait_on_spawned_task() {
                 Value::Function {
                     name: callee.to_string(),
                     captures: vec![],
+                    task_bound: false,
                 },
             );
             main.emit(Op::SpawnTask(0), loc());

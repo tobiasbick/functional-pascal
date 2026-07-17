@@ -26,6 +26,7 @@ fn two_wasteful_spawned_tasks_interleave_and_wait_all_completes() {
         Value::Function {
             name: slow_a.to_string(),
             captures: vec![],
+            task_bound: false,
         },
     );
     chunk.emit(Op::SpawnTask(0), loc());
@@ -34,6 +35,7 @@ fn two_wasteful_spawned_tasks_interleave_and_wait_all_completes() {
         Value::Function {
             name: slow_b.to_string(),
             captures: vec![],
+            task_bound: false,
         },
     );
     chunk.emit(Op::SpawnTask(0), loc());

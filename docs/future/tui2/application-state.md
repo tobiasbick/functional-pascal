@@ -9,7 +9,7 @@ handler to its state.
 
 The authoritative contracts are:
 
-- [capturing closures](../capturing-closures.md) for environment ownership, mutation, lifetime, and
+- [capturing closures](../../pascal/language/functions/closures.md) for environment ownership, mutation, lifetime, and
   task transfer;
 - [events and bound record methods](../events-and-bound-methods.md) for the language-level handler
   model;

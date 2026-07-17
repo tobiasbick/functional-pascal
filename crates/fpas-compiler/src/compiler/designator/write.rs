@@ -48,16 +48,19 @@ impl Compiler {
                         || self.module_globals.contains(&canonical_name(&qualified)))));
 
         if is_simple_target {
-            self.compile_expr(value)?;
             if let Some(local_ref) = self.resolve_local(&qualified) {
                 match local_ref {
-                    LocalRef::Local(slot) => self.emit(Op::SetLocal(slot), location),
+                    LocalRef::Local(slot) => {
+                        self.emit_local_write(slot, value, location)?;
+                    }
                     LocalRef::Enclosing(depth, slot) => {
-                        self.emit(Op::SetEnclosing(depth, slot), location)
+                        self.compile_expr(value)?;
+                        self.emit(Op::SetEnclosing(depth, slot), location);
                     }
                 };
                 self.emit(Op::Pop, location);
             } else {
+                self.compile_expr(value)?;
                 let idx = self.add_constant(Value::Str(qualified), location)?;
                 self.emit(Op::SetGlobal(idx), location);
                 self.emit(Op::Pop, location);
@@ -66,28 +69,26 @@ impl Compiler {
         }
 
         if remaining.is_empty() {
-            self.compile_expr(value)?;
             if let Some(local_ref) = self.resolve_local(&base_name) {
                 match local_ref {
-                    LocalRef::Local(slot) => self.emit(Op::SetLocal(slot), location),
+                    LocalRef::Local(slot) => {
+                        self.emit_local_write(slot, value, location)?;
+                    }
                     LocalRef::Enclosing(depth, slot) => {
-                        self.emit(Op::SetEnclosing(depth, slot), location)
+                        self.compile_expr(value)?;
+                        self.emit(Op::SetEnclosing(depth, slot), location);
                     }
                 };
                 self.emit(Op::Pop, location);
             } else {
+                self.compile_expr(value)?;
                 let idx = self.add_constant(Value::Str(base_name), location)?;
                 self.emit(Op::SetGlobal(idx), location);
                 self.emit(Op::Pop, location);
             }
         } else {
             if let Some(local_ref) = self.resolve_local(&base_name) {
-                match local_ref {
-                    LocalRef::Local(slot) => self.emit(Op::GetLocal(slot), location),
-                    LocalRef::Enclosing(depth, slot) => {
-                        self.emit(Op::GetEnclosing(depth, slot), location)
-                    }
-                };
+                self.emit_local_ref_update_start(local_ref, location);
             } else {
                 let idx = self.add_constant(Value::Str(base_name.clone()), location)?;
                 self.emit(Op::GetGlobal(idx), location);
@@ -124,12 +125,7 @@ impl Compiler {
             }
 
             if let Some(local_ref) = self.resolve_local(&base_name) {
-                match local_ref {
-                    LocalRef::Local(slot) => self.emit(Op::SetLocal(slot), location),
-                    LocalRef::Enclosing(depth, slot) => {
-                        self.emit(Op::SetEnclosing(depth, slot), location)
-                    }
-                };
+                self.emit_local_ref_update_finish(local_ref, location);
                 self.emit(Op::Pop, location);
             } else {
                 let idx = self.add_constant(Value::Str(base_name), location)?;

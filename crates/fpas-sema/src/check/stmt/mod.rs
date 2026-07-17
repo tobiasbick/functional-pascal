@@ -83,7 +83,7 @@ impl Checker {
                 span,
             } => self.check_call_stmt(designator, args, *span),
 
-            Stmt::Go { expr, span: _ } => {
+            Stmt::Go { expr, span } => {
                 // `go` accepts both procedure and function calls.
                 if let Expr::Call {
                     designator,
@@ -92,6 +92,14 @@ impl Checker {
                 } = expr
                 {
                     self.check_call_stmt(designator, args, *call_span);
+                    if self.designator_refers_to_task_bound(designator) {
+                        self.error_with_code(
+                            fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE,
+                            "Cannot spawn a task-bound callable across a task boundary",
+                            "Mutable captures make a closure task-bound. Pass immutable values instead, or invoke the closure on the same task.",
+                            *span,
+                        );
+                    }
                 } else {
                     self.check_expr(expr);
                 }
@@ -105,6 +113,14 @@ impl Checker {
 
         if !target_ty.is_error() {
             self.check_type_compat(&target_ty, &value_ty, "assignment", span);
+        }
+
+        let value_is_task_bound = self.expr_is_task_bound(Self::expr_lookup_key(value));
+        if target.parts.len() == 1
+            && let Some(DesignatorPart::Ident(base, _)) = target.parts.first()
+            && let Some(symbol) = self.scopes.lookup_mut(base)
+        {
+            symbol.task_bound = value_is_task_bound;
         }
 
         let base_resolved = match target.parts.first() {

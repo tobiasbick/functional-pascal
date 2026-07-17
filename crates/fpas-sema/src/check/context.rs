@@ -1,3 +1,4 @@
+use super::closures::{ClosureInfoMap, NestedRoutineCaptureMap};
 use crate::error::{SemaError, sema_error};
 use crate::scope::ScopeStack;
 use crate::types::Ty;
@@ -70,6 +71,18 @@ pub struct Checker {
     pub(crate) record_defaults: RecordDefaultsMap,
     /// `case` label expressions that bind the scrutinee for a guarded scalar arm.
     pub(crate) scalar_case_bindings: ScalarCaseBindingMap,
+    /// Closure expression identity → capture / capability metadata.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/closures.md`
+    pub(crate) closure_infos: ClosureInfoMap,
+    /// Nested routine name → capture metadata.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/closures.md`
+    pub(crate) nested_routine_captures: NestedRoutineCaptureMap,
+    /// Expression keys whose value is a task-bound callable.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/closures.md`
+    pub(crate) task_bound_exprs: HashSet<usize>,
 }
 
 impl Checker {
@@ -87,6 +100,9 @@ impl Checker {
             std_short_alias_keys: HashSet::new(),
             record_defaults: RecordDefaultsMap::new(),
             scalar_case_bindings: ScalarCaseBindingMap::new(),
+            closure_infos: ClosureInfoMap::new(),
+            nested_routine_captures: NestedRoutineCaptureMap::new(),
+            task_bound_exprs: HashSet::new(),
         }
     }
 
@@ -98,6 +114,8 @@ impl Checker {
         MethodCallMap,
         RecordDefaultsMap,
         ScalarCaseBindingMap,
+        ClosureInfoMap,
+        NestedRoutineCaptureMap,
     ) {
         (
             self.errors,
@@ -105,6 +123,8 @@ impl Checker {
             self.method_calls,
             self.record_defaults,
             self.scalar_case_bindings,
+            self.closure_infos,
+            self.nested_routine_captures,
         )
     }
 
@@ -116,6 +136,14 @@ impl Checker {
     /// - Keys are only used within a single `check_program` call.
     pub fn expr_lookup_key(expr: &Expr) -> usize {
         std::ptr::from_ref(expr) as usize
+    }
+
+    pub(crate) fn mark_expr_task_bound(&mut self, key: usize) {
+        self.task_bound_exprs.insert(key);
+    }
+
+    pub(crate) fn expr_is_task_bound(&self, key: usize) -> bool {
+        self.task_bound_exprs.contains(&key)
     }
 
     pub(crate) fn error_with_code(

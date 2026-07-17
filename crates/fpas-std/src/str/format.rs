@@ -155,6 +155,7 @@ fn value_type_name(v: &Value) -> &'static str {
         Value::ResultOk(_) | Value::ResultError(_) => "result",
         Value::OptionSome(_) | Value::OptionNone => "option",
         Value::Function { .. } => "function",
+        Value::Cell(_) => "cell",
         Value::Task(_) => "task",
     }
 }

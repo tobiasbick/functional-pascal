@@ -37,6 +37,7 @@ fn single_spawned_task_yield_only_child_still_returns() {
                 Value::Function {
                     name: callee.to_string(),
                     captures: vec![],
+                    task_bound: false,
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());
@@ -69,6 +70,7 @@ fn spawn_with_yield_opcode_does_not_fail_runtime() {
                 Value::Function {
                     name: callee.to_string(),
                     captures: vec![],
+                    task_bound: false,
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());

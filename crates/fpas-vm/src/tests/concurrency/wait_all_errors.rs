@@ -36,6 +36,7 @@ fn wait_all_on_array_when_child_panicked_reports_shutdown() {
         Value::Function {
             name: ok.to_string(),
             captures: vec![],
+            task_bound: false,
         },
     );
     chunk.emit(Op::SpawnTask(0), loc());
@@ -45,6 +46,7 @@ fn wait_all_on_array_when_child_panicked_reports_shutdown() {
         Value::Function {
             name: bad.to_string(),
             captures: vec![],
+            task_bound: false,
         },
     );
     chunk.emit(Op::SpawnTask(0), loc());

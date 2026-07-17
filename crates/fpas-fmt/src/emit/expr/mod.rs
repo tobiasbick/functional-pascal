@@ -1,6 +1,7 @@
 //! Expressions and designators.
 
 mod binary;
+mod closure;
 mod literal;
 mod postfix;
 
@@ -147,6 +148,13 @@ pub(super) fn emit_expr_impl(emitter: &mut Emitter, expr: &Expr, min_prec: u8, a
         Expr::Postfix {
             base, operations, ..
         } => emit_postfix(emitter, base, operations, allow_wrap),
+        Expr::Closure(closure) => closure::emit_closure(
+            emitter,
+            closure.is_function,
+            &closure.params,
+            &closure.return_type,
+            &closure.body,
+        ),
         Expr::Error(..) => emitter.write("<error>"),
     }
 }

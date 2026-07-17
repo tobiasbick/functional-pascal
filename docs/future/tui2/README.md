@@ -46,7 +46,7 @@ This directory records the plan for a new terminal UI library implemented primar
 
 ## Language prerequisites
 
-The event surface depends on the future plans for [capturing closures](../capturing-closures.md),
+The event surface depends on the implemented [capturing closures](../../pascal/language/functions/closures.md),
 [record properties](../record-properties.md), and
 [events and bound record methods](../events-and-bound-methods.md). Custom layouts, action groups,
 richer menu construction, and additional controls remain non-blocking extensions.

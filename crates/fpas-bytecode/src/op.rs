@@ -121,6 +121,25 @@ pub enum Op {
     ///
     /// **Documentation:** `docs/pascal/language/functions/first-class.md`
     CallValue(u8),
+    /// Build a closure from `capture_count` values below a name constant.
+    ///
+    /// Stack: `[..., capture0, …, captureN]` → `[..., Function { name, captures, task_bound }]`.
+    /// `task_bound` is true when any capture is a [`crate::Value::Cell`].
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/closures.md`
+    MakeClosure(u16, u8),
+    /// Wrap the top-of-stack value in a shared mutable [`crate::Value::Cell`].
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/closures.md`
+    MakeCell,
+    /// Read the value inside a [`crate::Value::Cell`] on top of the stack.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/closures.md`
+    CellGet,
+    /// Pop value, then pop cell; store value into the cell; push unit.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/closures.md`
+    CellSet,
     /// Return from function (top-of-stack is return value).
     Return,
     /// Read a local from an enclosing function's call frame.

@@ -20,6 +20,7 @@ fn spawned_task_global_is_visible_to_main_after_wait() {
                 Value::Function {
                     name: writer.to_string(),
                     captures: vec![],
+                    task_bound: false,
                 },
             );
             main.emit(Op::SpawnTask(0), loc());

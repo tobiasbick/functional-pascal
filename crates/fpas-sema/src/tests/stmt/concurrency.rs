@@ -85,20 +85,27 @@ end.",
 }
 
 #[test]
-fn task_wait_all_requires_task_array() {
+fn go_rejects_task_bound_mutable_closure() {
     let errors = check_errors(
         "\
 program T;
 uses Std.Task;
 begin
-  Std.Task.WaitAll([1, 2, 3])
+  mutable var Count: integer := 0;
+  var Inc: procedure() :=
+    procedure()
+    begin
+      Count := Count + 1
+    end;
+  go Inc()
 end.",
     );
 
     assert!(
         errors
             .iter()
-            .any(|error| error.message.contains("Type mismatch in task list")),
+            .any(|error| error.message.contains("task-bound")
+                || error.message.contains("Task-bound")),
         "errors: {errors:#?}"
     );
 }

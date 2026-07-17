@@ -99,6 +99,7 @@ impl Parser {
 
     fn can_start_expression(&self) -> bool {
         self.is_std_keyword_path_start()
+            || self.at_closure_expr_start()
             || matches!(
                 self.current_token(),
                 Token::Integer(_)

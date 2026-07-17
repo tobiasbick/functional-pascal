@@ -42,12 +42,7 @@ impl Compiler {
             for arg in args {
                 self.compile_expr(arg)?;
             }
-            match local_ref {
-                super::super::LocalRef::Local(slot) => self.emit(Op::GetLocal(slot), location),
-                super::super::LocalRef::Enclosing(depth, slot) => {
-                    self.emit(Op::GetEnclosing(depth, slot), location)
-                }
-            };
+            self.emit_local_ref_read(local_ref, location);
             let arity = Self::checked_u8_at(args.len(), "call arguments", location)?;
             self.emit(Op::CallValue(arity), location);
             return Ok(());
@@ -55,6 +50,11 @@ impl Compiler {
 
         for arg in args {
             self.compile_expr(arg)?;
+        }
+        if self.emit_captured_routine_closure(name, location)? {
+            let arity = Self::checked_u8_at(args.len(), "call arguments", location)?;
+            self.emit(Op::CallValue(arity), location);
+            return Ok(());
         }
         let name_idx = self.add_constant(Value::Str(name.into()), location)?;
         let arity = Self::checked_u8_at(args.len(), "call arguments", location)?;

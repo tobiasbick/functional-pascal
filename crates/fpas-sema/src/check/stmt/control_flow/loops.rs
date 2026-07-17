@@ -38,6 +38,7 @@ impl Checker {
                 ty: var_ty,
                 mutable: false,
                 kind: SymbolKind::ForVar,
+                task_bound: false,
             },
         );
 
@@ -85,6 +86,7 @@ impl Checker {
                 ty: var_ty,
                 mutable: false,
                 kind: SymbolKind::ForVar,
+                task_bound: false,
             },
         );
 

@@ -22,6 +22,7 @@ fn detached_child_panic_propagates_from_pool_when_main_halts_first() {
                 Value::Function {
                     name: callee.to_string(),
                     captures: vec![],
+                    task_bound: false,
                 },
             );
             chunk.emit(Op::SpawnDetachedTask(0), loc());
@@ -65,6 +66,7 @@ fn spawn_chunk_main_panic_still_sets_shutdown_with_worker_pool() {
         Value::Function {
             name: callee.to_string(),
             captures: vec![],
+            task_bound: false,
         },
     );
     chunk.emit(Op::SpawnDetachedTask(0), loc());

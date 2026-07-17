@@ -10,6 +10,7 @@ use crate::comments::CommentMap;
 use super::Emitter;
 
 pub(crate) use group::emit_decls;
+pub(crate) use item::emit_decl;
 
 /// Formats a declaration list (unit declarations or program type / top-level decls).
 #[must_use]

@@ -84,6 +84,7 @@ impl Checker {
                         ty: case_ty.clone(),
                         mutable: false,
                         kind: SymbolKind::Var,
+                        task_bound: false,
                     },
                 );
                 self.check_guard(&arm.guard, span);
@@ -123,6 +124,7 @@ impl Checker {
                             ty: ty.clone(),
                             mutable: false,
                             kind: SymbolKind::Var,
+                            task_bound: false,
                         },
                     );
                 }

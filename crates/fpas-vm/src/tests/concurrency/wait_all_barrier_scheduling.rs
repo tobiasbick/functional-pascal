@@ -21,6 +21,7 @@ fn wait_all_three_tasks_busy_children_then_barrier() {
                     Value::Function {
                         name: callee.to_string(),
                         captures: vec![],
+                        task_bound: false,
                     },
                 );
                 chunk.emit(Op::SpawnTask(0), loc());
@@ -54,6 +55,7 @@ fn main_yields_between_spawns_wait_all_still_completes() {
                 Value::Function {
                     name: callee.to_string(),
                     captures: vec![],
+                    task_bound: false,
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());
@@ -63,6 +65,7 @@ fn main_yields_between_spawns_wait_all_still_completes() {
                 Value::Function {
                     name: callee.to_string(),
                     captures: vec![],
+                    task_bound: false,
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());

@@ -44,9 +44,13 @@ impl Checker {
             return_type: None,
         });
 
+        // Program-body locals live in a non-root scope so closures can capture them.
+        // Module-level declarations remain in scope 0 and are not stored in closure environments.
+        self.scopes.push_scope();
         for stmt in &program.body {
             self.check_stmt(stmt);
         }
+        self.scopes.pop_scope();
 
         self.scopes.function_ctx = prev_ctx;
     }
@@ -59,6 +63,7 @@ impl Checker {
                     ty: Ty::Named(name.to_string()),
                     mutable: false,
                     kind: SymbolKind::Type,
+                    task_bound: false,
                 },
             );
         }

@@ -31,6 +31,7 @@ pub(super) fn register_enum_type(
             ty: enum_ty.clone(),
             mutable: false,
             kind: SymbolKind::Type,
+            task_bound: false,
         },
     );
 
@@ -42,6 +43,7 @@ pub(super) fn register_enum_type(
                 ty: enum_ty.clone(),
                 mutable: false,
                 kind: SymbolKind::EnumMember,
+                task_bound: false,
             },
         );
     }
@@ -67,6 +69,7 @@ pub(super) fn register_record_type(
             ty: record_ty.clone(),
             mutable: false,
             kind: SymbolKind::Type,
+            task_bound: false,
         },
     );
     record_ty

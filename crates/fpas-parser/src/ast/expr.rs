@@ -1,3 +1,4 @@
+use super::{FormalParam, FuncBody, TypeExpr};
 use fpas_lexer::Span;
 
 impl Expr {
@@ -25,6 +26,7 @@ impl Expr {
             | Self::RecordLiteral { span, .. }
             | Self::RecordUpdate { span, .. }
             | Self::Postfix { span, .. } => *span,
+            Self::Closure(closure) => closure.span,
         }
     }
 }
@@ -101,10 +103,33 @@ pub enum Expr {
         operations: Vec<PostfixOperation>,
         span: Span,
     },
+    /// Anonymous function or procedure expression (capturing closure).
+    ///
+    /// Parameter and result annotations are mandatory. The final `end` belongs to the
+    /// expression; surrounding syntax supplies any separator.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/closures.md`
+    Closure(Box<ClosureExpr>),
     /// Placeholder emitted when the parser fails to parse an expression.
     /// Downstream passes should propagate this as an error rather than
     /// checking or compiling it.
     Error(Span),
+}
+
+/// Payload for [`Expr::Closure`].
+///
+/// Kept behind a box so [`Expr`] does not grow large enough to trip
+/// `clippy::large_enum_variant` on dependent enums such as [`super::Stmt`].
+///
+/// **Documentation:** `docs/pascal/language/functions/closures.md`
+#[derive(Debug, Clone, PartialEq)]
+pub struct ClosureExpr {
+    /// `true` for `function(...) : T … end`, `false` for `procedure(...) … end`.
+    pub is_function: bool,
+    pub params: Vec<FormalParam>,
+    pub return_type: Option<TypeExpr>,
+    pub body: FuncBody,
+    pub span: Span,
 }
 
 /// One suffix in an [`Expr::Postfix`] chain.

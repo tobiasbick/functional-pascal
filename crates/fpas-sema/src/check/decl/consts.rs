@@ -27,6 +27,7 @@ impl Checker {
                 ty: declared_ty,
                 mutable: false,
                 kind: SymbolKind::Const,
+                task_bound: false,
             },
         ) {
             self.error_with_code(
@@ -85,7 +86,7 @@ impl Checker {
             Expr::ResultOk(inner, _) | Expr::ResultError(inner, _) | Expr::OptionSome(inner, _) => {
                 self.const_expr_is_compile_time_known(inner)
             }
-            Expr::Try(..) | Expr::Go(..) => false,
+            Expr::Try(..) | Expr::Go(..) | Expr::Closure(_) => false,
             Expr::OptionNone(_) => true,
             Expr::Call { .. } | Expr::Postfix { .. } | Expr::Error(_) => false,
             Expr::RecordUpdate { base, fields, .. } => {

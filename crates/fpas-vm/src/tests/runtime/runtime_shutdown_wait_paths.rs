@@ -22,6 +22,7 @@ fn wait_twice_on_same_task_second_wait_is_invalid_task() {
                 Value::Function {
                     name: callee.to_string(),
                     captures: vec![],
+                    task_bound: false,
                 },
             );
             chunk.emit(Op::SpawnTask(0), loc());
@@ -76,6 +77,7 @@ fn wait_all_empty_succeeds_and_sets_shutdown_with_spawn_pool() {
         Value::Function {
             name: callee.to_string(),
             captures: vec![],
+            task_bound: false,
         },
     );
     chunk.emit(Op::SpawnTask(0), loc());

@@ -16,6 +16,7 @@ fn call_value_executes_function_value_and_returns_result() {
                 Value::Function {
                     name: function_name.to_string(),
                     captures: vec![],
+                    task_bound: false,
                 },
             );
             chunk.emit(Op::CallValue(0), loc());
@@ -38,6 +39,7 @@ fn call_value_resolves_function_name_case_insensitively() {
         Value::Function {
             name: "ReturnNine".to_string(),
             captures: vec![],
+            task_bound: false,
         },
     );
     chunk.emit(Op::CallValue(0), loc());

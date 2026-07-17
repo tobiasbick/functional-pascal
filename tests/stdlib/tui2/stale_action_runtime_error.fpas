@@ -1,0 +1,10 @@
+program Tui2StaleActionRuntimeError;
+
+uses Std.Tui2;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
+  var Action: TuiAction := TuiAction.Create(App, TuiCommand.Create(1028), 'Stale');
+  App.Close();
+  Action.Text := 'invalid'
+end.

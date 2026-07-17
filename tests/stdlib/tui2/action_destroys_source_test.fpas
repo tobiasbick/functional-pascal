@@ -1,0 +1,21 @@
+program Tui2ActionDestroysSourceTest;
+
+uses Std.Test, Std.Tui2;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
+  var Action: TuiAction := TuiAction.Create(App, TuiCommand.Create(1025), 'Destroy');
+  var Button: TuiButton := TuiButton.Create(App, 'Destroy me');
+  Button.Action := Action;
+  mutable var DirectCalls: integer := 0;
+  Action.OnExecute := procedure(Sender: TuiAction; Source: TuiView) begin
+    Button.Destroy()
+  end;
+  Button.OnClick := procedure(Sender: TuiButton) begin
+    DirectCalls := DirectCalls + 1
+  end;
+  AssertTrue(Button.Click());
+  AssertFalse(Button.IsAlive());
+  AssertEquals(0, DirectCalls);
+  App.Close()
+end.

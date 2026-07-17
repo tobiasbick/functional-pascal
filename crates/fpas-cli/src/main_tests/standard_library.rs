@@ -157,3 +157,39 @@ fn tui2_rejects_reversed_rectangle_edges() {
         "stderr: {stderr}"
     );
 }
+
+#[test]
+fn tui2_rejects_cross_application_action_binding() {
+    let (exit, _stdout, stderr) =
+        run_repo_tui2_program("tests/stdlib/tui2/cross_application_action_runtime_error.fpas");
+
+    assert_ne!(exit, 0, "cross-application action binding must fail");
+    assert!(
+        stderr.contains("button action belongs to a different application"),
+        "stderr: {stderr}"
+    );
+}
+
+#[test]
+fn tui2_rejects_stale_action_access_after_application_close() {
+    let (exit, _stdout, stderr) =
+        run_repo_tui2_program("tests/stdlib/tui2/stale_action_runtime_error.fpas");
+
+    assert_ne!(exit, 0, "stale action access must fail");
+    assert!(
+        stderr.contains("action handle is stale"),
+        "stderr: {stderr}"
+    );
+}
+
+#[test]
+fn tui2_rejects_reserved_application_command() {
+    let (exit, _stdout, stderr) =
+        run_repo_tui2_program("tests/stdlib/tui2/reserved_application_command_runtime_error.fpas");
+
+    assert_ne!(exit, 0, "reserved application command must fail");
+    assert!(
+        stderr.contains("application commands must start at 1024"),
+        "stderr: {stderr}"
+    );
+}

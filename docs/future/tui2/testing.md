@@ -4,7 +4,9 @@ Std.Tui2 is designed for deterministic headless verification from the first impl
 
 ## Headless application
 
-`TuiApplication.OpenForTest(Size)` creates the same FPAS registry, layout, routing, lifecycle, and rendering state as an interactive application without changing terminal modes.
+The implemented headless application registry is documented in the current
+[`Std.Tui2` reference](../../pascal/std/tui2/README.md). Its future layout, routing, and rendering
+state must remain identical to the interactive application without changing terminal modes.
 
 Tests inject `Std.Console.Event` values into the application's event source and advance the loop one iteration at a time.
 
@@ -33,6 +35,7 @@ Every public control requires at least one keyboard test, one mouse test when ap
 
 ## Failure canaries
 
-Dedicated tests cover cross-application handles, stale generations, worker-task UI calls, forbidden paint mutation, callback panic cleanup, and terminal-open rollback.
+Remaining failure canaries cover worker-task UI calls, forbidden paint mutation, callback panic
+cleanup, and terminal-open rollback.
 
 Interactive smoke tests remain useful for terminal compatibility, but they are not the primary regression mechanism.

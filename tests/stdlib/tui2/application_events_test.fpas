@@ -1,0 +1,27 @@
+program Tui2ApplicationEventsTest;
+
+uses Std.Test, Std.Tui2;
+
+begin
+  mutable var Sequence: integer := 0;
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
+  App.OnStart := procedure(Sender: TuiApplication) begin
+    AssertEquals(App.Id, Sender.Id);
+    Sequence := Sequence * 10 + 1
+  end;
+  App.OnTick := procedure(Sender: TuiApplication; DeltaMilliseconds: integer) begin
+    AssertEquals(App.Id, Sender.Id);
+    Sequence := Sequence * 10 + DeltaMilliseconds
+  end;
+  App.OnStop := procedure(Sender: TuiApplication) begin
+    AssertEquals(App.Id, Sender.Id);
+    Sequence := Sequence * 10 + 3;
+    Sender.Close()
+  end;
+  App.Start();
+  App.Tick(2);
+  App.Close();
+  AssertEquals(123, Sequence);
+  AssertFalse(App.IsOpen());
+  App.Close()
+end.

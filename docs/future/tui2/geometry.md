@@ -1,49 +1,8 @@
 # Std.Tui2 geometry and coordinate spaces
 
-## Coordinate convention
-
-Std.Tui2 uses zero-based coordinates. `(0, 0)` is the upper-left cell, X increases to the right, and Y increases downward.
-
-`Std.Console` cell operations remain one-based. Conversion occurs exactly once at the final console rendering boundary. Incoming one-based mouse coordinates are converted exactly once when they enter Std.Tui2.
-
-## Value contracts
-
-```text
-TuiPoint  = x, y
-TuiSize   = width, height
-TuiRect   = x, y, width, height
-```
-
-- Sizes are non-negative.
-- Empty sizes and rectangles are valid internal values.
-- Public constructors reject negative width or height.
-- Right and bottom edges are exclusive.
-- `Contains(Rect, Point)` uses `x <= point.x < x + width` and the equivalent Y rule.
-- Intersection may return an empty rectangle.
-- Checked arithmetic reports overflow instead of wrapping coordinates.
-
-## Construction API
-
-Geometry values are constructed through static record functions. FPAS does not use overloads, so each alternative representation has a distinct name:
-
-```pascal
-TuiPoint.Create(X, Y)
-TuiSize.Create(Width, Height)
-
-TuiRect.Create(X, Y, Width, Height)
-TuiRect.FromEdges(Left, Top, Right, Bottom)
-TuiRect.FromPointSize(Position, Size)
-TuiRect.FromCorners(TopLeft, BottomRight)
-```
-
-- `Create` accepts the fields stored by the record.
-- `FromEdges` treats `Right` and `Bottom` as exclusive edges and rejects reversed edges.
-- `FromPointSize` combines a `TuiPoint` origin with a `TuiSize` extent.
-- `FromCorners` treats `BottomRight` as the exclusive corner and rejects reversed coordinates.
-- Copying an existing geometry record uses ordinary value assignment.
-- Geometry source is split into focused `Geometry/Point.fpas`, `Geometry/Size.fpas`, and `Geometry/Rect.fpas` implementation units behind the public facade.
-
-The static-call syntax is specified by the implemented [record method reference](../../pascal/language/types/record-methods.md).
+The implemented geometry values and constructor rules are documented in the current
+[`Std.Tui2` reference](../../pascal/std/tui2/README.md). This plan covers their future use by the
+view tree, renderer, and input router.
 
 ## Coordinate spaces
 
@@ -55,6 +14,9 @@ The static-call syntax is specified by the implemented [record method reference]
 | Console | One-based, screen-absolute coordinates used only at the terminal boundary. |
 
 View bounds are parent-relative. The registry caches resolved application rectangles and clips for paint and hit-testing. Applications do not store screen-absolute rectangles in child controls.
+
+Conversion between zero-based Tui2 coordinates and one-based `Std.Console` coordinates occurs
+exactly once at the terminal boundary. Incoming mouse coordinates follow the inverse conversion.
 
 Frames own an outer rectangle and expose an inner content rectangle. Child layout always receives the content rectangle.
 

@@ -10,7 +10,8 @@ Each FPAS source file owns one concern. For Tui2 value records this normally mea
 
 The source standard-library loader must distinguish public units from private implementation units. User code may import `Std.Tui2`; it must not import internal Tui2 units merely because their source files are bundled.
 
-The manifest and trusted namespace rules are fixed in [source-library.md](source-library.md).
+The implemented manifest and trusted namespace rules are documented in the
+[standard-library reference](../../pascal/std/README.md) and [CLI reference](../../pascal/program-structure/cli.md).
 
 Type-owned construction uses the implemented [static record function](../../pascal/language/types/record-methods.md) language feature. Tui2 does not emulate static calls with free functions and does not require function overloading.
 

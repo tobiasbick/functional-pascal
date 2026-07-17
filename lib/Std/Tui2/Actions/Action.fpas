@@ -1,0 +1,234 @@
+unit Std.Tui2.Actions.Action;
+
+uses Std.Array, Std.Tui2.Runtime.Application, Std.Tui2.Views.View, Std.Tui2.Actions.Command;
+
+type
+  TuiActionCallback = procedure(ApplicationId: integer; Slot: integer; Generation: integer; Source: TuiView);
+
+private mutable var TuiActionApplicationIds: array of integer := [];
+private mutable var TuiActionGenerations: array of integer := [];
+private mutable var TuiActionAlive: array of boolean := [];
+private mutable var TuiActionCommands: array of integer := [];
+private mutable var TuiActionTexts: array of string := [];
+private mutable var TuiActionEnabled: array of boolean := [];
+private mutable var TuiActionVisible: array of boolean := [];
+private mutable var TuiActionChecked: array of boolean := [];
+private mutable var TuiActionOnExecute: array of option of TuiActionCallback := [];
+
+private procedure TuiActionRequire(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  if (Slot <= 0) or (Slot > Length(TuiActionGenerations)) then
+  begin
+    panic('Tui2 action handle has an invalid registry slot')
+  end;
+  var Alive: boolean := TuiActionAlive[Slot - 1];
+  if not Alive then
+  begin
+    panic('Tui2 action handle is stale')
+  end;
+  if TuiActionGenerations[Slot - 1] <> Generation then
+  begin
+    panic('Tui2 action handle generation does not match the registry')
+  end;
+  if TuiActionApplicationIds[Slot - 1] <> ApplicationId then
+  begin
+    panic('Tui2 action belongs to a different application')
+  end;
+  var App: TuiApplication := record Id := ApplicationId; Generation := 1; end;
+  if not App.IsOpen() then
+  begin
+    panic('Tui2 action belongs to a closed application')
+  end
+end;
+
+private procedure TuiActionRelease(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  if (Slot <= 0) or (Slot > Length(TuiActionGenerations)) then
+  begin
+    return
+  end;
+  if ((TuiActionApplicationIds[Slot - 1] = ApplicationId) and (TuiActionGenerations[Slot - 1] = Generation)) and
+     TuiActionAlive[Slot - 1] then
+  begin
+    TuiActionOnExecute[Slot - 1] := None;
+    TuiActionAlive[Slot - 1] := false;
+    TuiActionGenerations[Slot - 1] := Generation + 1
+  end
+end;
+
+type
+  TuiAction = record
+    ApplicationId: integer;
+    Slot: integer;
+    Generation: integer;
+
+    static function Create(App: TuiApplication; Command: TuiCommand; Text: string): TuiAction;
+    begin
+      if not App.IsOpen() then
+      begin
+        panic('Tui2 cannot create an action for a closed application')
+      end;
+      if Command.Value <= 0 then
+      begin
+        panic('Tui2 action command identity must be positive')
+      end;
+      TuiActionApplicationIds := Std.Array.Concat(TuiActionApplicationIds, [App.Id]);
+      TuiActionGenerations := Std.Array.Concat(TuiActionGenerations, [1]);
+      TuiActionAlive := Std.Array.Concat(TuiActionAlive, [true]);
+      TuiActionCommands := Std.Array.Concat(TuiActionCommands, [Command.Value]);
+      TuiActionTexts := Std.Array.Concat(TuiActionTexts, [Text]);
+      TuiActionEnabled := Std.Array.Concat(TuiActionEnabled, [true]);
+      TuiActionVisible := Std.Array.Concat(TuiActionVisible, [true]);
+      TuiActionChecked := Std.Array.Concat(TuiActionChecked, [false]);
+      TuiActionOnExecute := Std.Array.Concat(TuiActionOnExecute, [None]);
+      var Action: TuiAction := record
+        ApplicationId := App.Id;
+        Slot := Length(TuiActionGenerations);
+        Generation := 1;
+      end;
+      var Cleanup: TuiApplicationCleanupCallback := procedure(ApplicationId: integer) begin
+        TuiActionRelease(ApplicationId, Action.Slot, Action.Generation)
+      end;
+      RegisterApplicationCleanup(App.Id, App.Generation, Cleanup);
+      return Action
+    end;
+
+    function IsAlive(Self: TuiAction): boolean;
+    begin
+      if (Self.Slot <= 0) or (Self.Slot > Length(TuiActionGenerations)) then
+      begin
+        return false
+      end;
+      return (TuiActionAlive[Self.Slot - 1] and (TuiActionGenerations[Self.Slot - 1] = Self.Generation)) and
+             (TuiActionApplicationIds[Self.Slot - 1] = Self.ApplicationId)
+    end;
+
+    function ReadCommand(Self: TuiAction): TuiCommand;
+    begin
+      TuiActionRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      return record Value := TuiActionCommands[Self.Slot - 1]; end
+    end;
+
+    function ReadText(Self: TuiAction): string;
+    begin
+      TuiActionRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      return TuiActionTexts[Self.Slot - 1]
+    end;
+
+    procedure WriteText(Self: TuiAction; Value: string);
+    begin
+      TuiActionRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      TuiActionTexts[Self.Slot - 1] := Value
+    end;
+
+    function ReadEnabled(Self: TuiAction): boolean;
+    begin
+      TuiActionRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      return TuiActionEnabled[Self.Slot - 1]
+    end;
+
+    procedure WriteEnabled(Self: TuiAction; Value: boolean);
+    begin
+      TuiActionRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      TuiActionEnabled[Self.Slot - 1] := Value
+    end;
+
+    function ReadVisible(Self: TuiAction): boolean;
+    begin
+      TuiActionRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      return TuiActionVisible[Self.Slot - 1]
+    end;
+
+    procedure WriteVisible(Self: TuiAction; Value: boolean);
+    begin
+      TuiActionRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      TuiActionVisible[Self.Slot - 1] := Value
+    end;
+
+    function ReadChecked(Self: TuiAction): boolean;
+    begin
+      TuiActionRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      return TuiActionChecked[Self.Slot - 1]
+    end;
+
+    procedure WriteChecked(Self: TuiAction; Value: boolean);
+    begin
+      TuiActionRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      TuiActionChecked[Self.Slot - 1] := Value
+    end;
+
+    function ReadOnExecute(Self: TuiAction): option of procedure(Sender: TuiAction; Source: TuiView);
+    begin
+      TuiActionRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      case TuiActionOnExecute[Self.Slot - 1] of
+        Some(Callback):
+        begin
+          return Some(procedure(Sender: TuiAction; Source: TuiView) begin
+            Callback(Sender.ApplicationId, Sender.Slot, Sender.Generation, Source)
+          end)
+        end;
+        None:
+        begin
+          return None
+        end
+      end
+    end;
+
+    procedure WriteOnExecute(
+  Self: TuiAction;
+  Handler: option of procedure(Sender: TuiAction; Source: TuiView)
+);
+    begin
+      TuiActionRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      case Handler of
+        Some(Value):
+        begin
+          var Callback: TuiActionCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer; Source: TuiView) begin
+            var Sender: TuiAction := record
+              ApplicationId := ApplicationId;
+              Slot := Slot;
+              Generation := Generation;
+            end;
+            Value(Sender, Source)
+          end;
+          TuiActionOnExecute[Self.Slot - 1] := Some(Callback)
+        end;
+        None:
+        begin
+          TuiActionOnExecute[Self.Slot - 1] := None
+        end
+      end
+    end;
+
+    function Activate(Self: TuiAction; Source: TuiView): boolean;
+    begin
+      TuiActionRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      if Source.ApplicationId <> Self.ApplicationId then
+      begin
+        panic('Tui2 action source belongs to a different application')
+      end;
+      if not TuiActionEnabled[Self.Slot - 1] then
+      begin
+        return false
+      end;
+      if Assigned(Self.OnExecute) then
+      begin
+        Self.OnExecute(Self, Source)
+      end;
+      return true
+    end;
+
+    procedure Destroy(Self: TuiAction);
+    begin
+      TuiActionRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      TuiActionRelease(Self.ApplicationId, Self.Slot, Self.Generation)
+    end;
+
+    property Command: TuiCommand read ReadCommand;
+    property Text: string read ReadText write WriteText;
+    property Enabled: boolean read ReadEnabled write WriteEnabled;
+    property Visible: boolean read ReadVisible write WriteVisible;
+    property Checked: boolean read ReadChecked write WriteChecked;
+
+    event OnExecute: procedure(Sender: TuiAction; Source: TuiView) read ReadOnExecute write WriteOnExecute;
+  end;

@@ -54,6 +54,24 @@ impl Compiler {
                 }
             }
         } else {
+            if let Some((global_name, consumed)) = self.module_global_prefix(d) {
+                let idx = self.add_constant(Value::Str(global_name), location)?;
+                self.emit(Op::GetGlobal(idx), location);
+                for part in d.parts.iter().skip(consumed) {
+                    match part {
+                        DesignatorPart::Ident(field, _) => {
+                            let idx = self.add_constant(Value::Str(field.clone()), location)?;
+                            self.emit(Op::FieldGet(idx), location);
+                        }
+                        DesignatorPart::Index(expr, _) => {
+                            self.compile_expr(expr)?;
+                            self.emit(Op::IndexGet, location);
+                        }
+                    }
+                }
+                return Ok(());
+            }
+
             let raw_name = Self::resolve_designator_name(d);
             let name = self.qualify_name(&raw_name).to_string();
             if let Some(value) = Self::builtin_const_value(&name) {
@@ -94,12 +112,8 @@ impl Compiler {
             }
 
             let remaining: Vec<_> = d.parts.iter().skip(1).collect();
-            let full_canonical = canonical_name(&name);
             if remaining.is_empty() {
                 let idx = self.add_constant(Value::Str(name), location)?;
-                self.emit(Op::GetGlobal(idx), location);
-            } else if self.module_globals.contains(&full_canonical) {
-                let idx = self.add_constant(Value::Str(full_canonical), location)?;
                 self.emit(Op::GetGlobal(idx), location);
             } else {
                 let idx = self.add_constant(Value::Str(canonical_name(&base_name)), location)?;

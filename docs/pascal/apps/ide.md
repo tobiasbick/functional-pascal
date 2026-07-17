@@ -51,4 +51,3 @@ Display-only in the current scope: no file activation, editor, refresh, or arbit
 - [Projects](../program-structure/projects.md) — manifest fields used by the loader
 - [Workspaces](../program-structure/workspaces.md)
 - [`Std.Tui` application facade](../std/tui/app/README.md)
-- Plan archive: [`docs/future/ide-project-tree.md`](../../future/ide-project-tree.md)

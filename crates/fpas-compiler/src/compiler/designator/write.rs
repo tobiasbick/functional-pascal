@@ -32,6 +32,51 @@ impl Compiler {
 
         let remaining: Vec<_> = parts.collect();
 
+        if let Some((global_name, consumed)) = self.module_global_prefix(target) {
+            if consumed == target.parts.len() {
+                self.compile_expr(value)?;
+                let idx = self.add_constant(Value::Str(global_name), location)?;
+                self.emit(Op::SetGlobal(idx), location);
+                self.emit(Op::Pop, location);
+                return Ok(());
+            }
+
+            let suffix = &target.parts[consumed..];
+            let idx = self.add_constant(Value::Str(global_name.clone()), location)?;
+            self.emit(Op::GetGlobal(idx), location);
+            for part in &suffix[..suffix.len() - 1] {
+                match part {
+                    DesignatorPart::Ident(field, _) => {
+                        let idx = self.add_constant(Value::Str(field.clone()), location)?;
+                        self.emit(Op::FieldGet(idx), location);
+                    }
+                    DesignatorPart::Index(expr, _) => {
+                        self.compile_expr(expr)?;
+                        self.emit(Op::IndexGet, location);
+                    }
+                }
+            }
+
+            match suffix.last() {
+                Some(DesignatorPart::Ident(field, _)) => {
+                    self.compile_expr(value)?;
+                    let idx = self.add_constant(Value::Str(field.clone()), location)?;
+                    self.emit(Op::FieldSet(idx), location);
+                }
+                Some(DesignatorPart::Index(expr, _)) => {
+                    self.compile_expr(expr)?;
+                    self.compile_expr(value)?;
+                    self.emit(Op::IndexSet, location);
+                }
+                None => return Ok(()),
+            }
+
+            let idx = self.add_constant(Value::Str(global_name), location)?;
+            self.emit(Op::SetGlobal(idx), location);
+            self.emit(Op::Pop, location);
+            return Ok(());
+        }
+
         // Whole-variable assignment: `X := v`, a linked qualified name registered as a
         // local (e.g. `Unit.__private__.State := v`), or a dotted module global.
         // A dotted chain rooted in a global record (e.g. `State.CenterX := v`) is NOT a

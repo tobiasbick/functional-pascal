@@ -1,0 +1,239 @@
+unit Std.Tui2.Controls.Button;
+
+uses
+  Std.Array, Std.Tui2.Runtime.Application, Std.Tui2.Views.View, Std.Tui2.Actions.Command,
+  Std.Tui2.Actions.Action;
+
+type
+  TuiButtonCallback = procedure(ApplicationId: integer; Slot: integer; Generation: integer);
+
+private mutable var TuiButtonApplicationIds: array of integer := [];
+private mutable var TuiButtonGenerations: array of integer := [];
+private mutable var TuiButtonAlive: array of boolean := [];
+private mutable var TuiButtonTexts: array of string := [];
+private mutable var TuiButtonEnabled: array of boolean := [];
+private mutable var TuiButtonHasAction: array of boolean := [];
+private mutable var TuiButtonActions: array of TuiAction := [];
+private mutable var TuiButtonOnClick: array of option of TuiButtonCallback := [];
+
+private procedure TuiButtonRequire(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  if (Slot <= 0) or (Slot > Length(TuiButtonGenerations)) then
+  begin
+    panic('Tui2 button handle has an invalid registry slot')
+  end;
+  var Alive: boolean := TuiButtonAlive[Slot - 1];
+  if not Alive then
+  begin
+    panic('Tui2 button handle is stale')
+  end;
+  if TuiButtonGenerations[Slot - 1] <> Generation then
+  begin
+    panic('Tui2 button handle generation does not match the registry')
+  end;
+  if TuiButtonApplicationIds[Slot - 1] <> ApplicationId then
+  begin
+    panic('Tui2 button belongs to a different application')
+  end;
+  var App: TuiApplication := record Id := ApplicationId; Generation := 1; end;
+  if not App.IsOpen() then
+  begin
+    panic('Tui2 button belongs to a closed application')
+  end
+end;
+
+private procedure TuiButtonRelease(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  if (Slot <= 0) or (Slot > Length(TuiButtonGenerations)) then
+  begin
+    return
+  end;
+  if ((TuiButtonApplicationIds[Slot - 1] = ApplicationId) and (TuiButtonGenerations[Slot - 1] = Generation)) and
+     TuiButtonAlive[Slot - 1] then
+  begin
+    TuiButtonOnClick[Slot - 1] := None;
+    TuiButtonHasAction[Slot - 1] := false;
+    TuiButtonAlive[Slot - 1] := false;
+    TuiButtonGenerations[Slot - 1] := Generation + 1
+  end
+end;
+
+type
+  TuiButton = record
+    ApplicationId: integer;
+    Slot: integer;
+    Generation: integer;
+
+    static function Create(App: TuiApplication; Text: string): TuiButton;
+    begin
+      if not App.IsOpen() then
+      begin
+        panic('Tui2 cannot create a button for a closed application')
+      end;
+      TuiButtonApplicationIds := Std.Array.Concat(TuiButtonApplicationIds, [App.Id]);
+      TuiButtonGenerations := Std.Array.Concat(TuiButtonGenerations, [1]);
+      TuiButtonAlive := Std.Array.Concat(TuiButtonAlive, [true]);
+      TuiButtonTexts := Std.Array.Concat(TuiButtonTexts, [Text]);
+      TuiButtonEnabled := Std.Array.Concat(TuiButtonEnabled, [true]);
+      TuiButtonHasAction := Std.Array.Concat(TuiButtonHasAction, [false]);
+      var EmptyAction: TuiAction := record ApplicationId := 0; Slot := 0; Generation := 0; end;
+      TuiButtonActions := Std.Array.Concat(TuiButtonActions, [EmptyAction]);
+      TuiButtonOnClick := Std.Array.Concat(TuiButtonOnClick, [None]);
+      var Button: TuiButton := record
+        ApplicationId := App.Id;
+        Slot := Length(TuiButtonGenerations);
+        Generation := 1;
+      end;
+      var Cleanup: TuiApplicationCleanupCallback := procedure(ApplicationId: integer) begin
+        TuiButtonRelease(ApplicationId, Button.Slot, Button.Generation)
+      end;
+      RegisterApplicationCleanup(App.Id, App.Generation, Cleanup);
+      return Button
+    end;
+
+    function IsAlive(Self: TuiButton): boolean;
+    begin
+      if (Self.Slot <= 0) or (Self.Slot > Length(TuiButtonGenerations)) then
+      begin
+        return false
+      end;
+      return (TuiButtonAlive[Self.Slot - 1] and (TuiButtonGenerations[Self.Slot - 1] = Self.Generation)) and
+             (TuiButtonApplicationIds[Self.Slot - 1] = Self.ApplicationId)
+    end;
+
+    static function AsView(Button: TuiButton): TuiView;
+    begin
+      TuiButtonRequire(Button.ApplicationId, Button.Slot, Button.Generation);
+      return record
+        ApplicationId := Button.ApplicationId;
+        Slot := Button.Slot;
+        Generation := Button.Generation;
+        Kind := TuiViewKind.Button;
+      end
+    end;
+
+    function ReadText(Self: TuiButton): string;
+    begin
+      TuiButtonRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      return TuiButtonTexts[Self.Slot - 1]
+    end;
+
+    procedure WriteText(Self: TuiButton; Value: string);
+    begin
+      TuiButtonRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      TuiButtonTexts[Self.Slot - 1] := Value
+    end;
+
+    function ReadEnabled(Self: TuiButton): boolean;
+    begin
+      TuiButtonRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      return TuiButtonEnabled[Self.Slot - 1]
+    end;
+
+    procedure WriteEnabled(Self: TuiButton; Value: boolean);
+    begin
+      TuiButtonRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      TuiButtonEnabled[Self.Slot - 1] := Value
+    end;
+
+    function ReadAction(Self: TuiButton): TuiAction;
+    begin
+      TuiButtonRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      if not TuiButtonHasAction[Self.Slot - 1] then
+      begin
+        panic('Tui2 button has no action')
+      end;
+      return TuiButtonActions[Self.Slot - 1]
+    end;
+
+    procedure WriteAction(Self: TuiButton; Value: TuiAction);
+    begin
+      TuiButtonRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      if Value.ApplicationId <> Self.ApplicationId then
+      begin
+        panic('Tui2 button action belongs to a different application')
+      end;
+      if not Value.IsAlive() then
+      begin
+        panic('Tui2 button action is stale')
+      end;
+      TuiButtonActions[Self.Slot - 1] := Value;
+      TuiButtonHasAction[Self.Slot - 1] := true
+    end;
+
+    function ReadOnClick(Self: TuiButton): option of procedure(Sender: TuiButton);
+    begin
+      TuiButtonRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      case TuiButtonOnClick[Self.Slot - 1] of
+        Some(Callback):
+        begin
+          return Some(procedure(Sender: TuiButton) begin
+            Callback(Sender.ApplicationId, Sender.Slot, Sender.Generation)
+          end)
+        end;
+        None:
+        begin
+          return None
+        end
+      end
+    end;
+
+    procedure WriteOnClick(Self: TuiButton; Handler: option of procedure(Sender: TuiButton));
+    begin
+      TuiButtonRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      case Handler of
+        Some(Value):
+        begin
+          var Callback: TuiButtonCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+            var Sender: TuiButton := record
+              ApplicationId := ApplicationId;
+              Slot := Slot;
+              Generation := Generation;
+            end;
+            Value(Sender)
+          end;
+          TuiButtonOnClick[Self.Slot - 1] := Some(Callback)
+        end;
+        None:
+        begin
+          TuiButtonOnClick[Self.Slot - 1] := None
+        end
+      end
+    end;
+
+    function Click(Self: TuiButton): boolean;
+    begin
+      TuiButtonRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      if not TuiButtonEnabled[Self.Slot - 1] then
+      begin
+        return false
+      end;
+      var Source: TuiView := TuiButton.AsView(Self);
+      if TuiButtonHasAction[Self.Slot - 1] then
+      begin
+        var Action: TuiAction := TuiButtonActions[Self.Slot - 1];
+        Action.Activate(Source)
+      end;
+      if not Self.IsAlive() then
+      begin
+        return true
+      end;
+      if Assigned(Self.OnClick) then
+      begin
+        Self.OnClick(Self)
+      end;
+      return true
+    end;
+
+    procedure Destroy(Self: TuiButton);
+    begin
+      TuiButtonRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      TuiButtonRelease(Self.ApplicationId, Self.Slot, Self.Generation)
+    end;
+
+    property Text: string read ReadText write WriteText;
+    property Enabled: boolean read ReadEnabled write WriteEnabled;
+    property Action: TuiAction read ReadAction write WriteAction;
+
+    event OnClick: procedure(Sender: TuiButton) read ReadOnClick write WriteOnClick;
+  end;

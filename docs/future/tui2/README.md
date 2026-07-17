@@ -1,6 +1,6 @@
 # Std.Tui2
 
-This directory records the plan for a new terminal UI library implemented primarily in Functional Pascal source.
+This directory records the remaining plan for the FPAS-native terminal UI library.
 
 ## Decisions
 
@@ -29,29 +29,20 @@ This directory records the plan for a new terminal UI library implemented primar
 | Document | Purpose |
 | --- | --- |
 | [architecture.md](architecture.md) | Units, names, geometry, and the view model. |
-| [api-surface.md](api-surface.md) | Planned value records, live handles, controls, and rough operations. |
+| [api-surface.md](api-surface.md) | Remaining value records, live handles, controls, and rough operations. |
 | [layout.md](layout.md) | Size contracts, layout items, allocation, and initial layout types. |
 | [event-loop.md](event-loop.md) | `Std.Console` input boundary and event routing order. |
-| [events-and-actions.md](events-and-actions.md) | Authoritative event, action, callback, and application-state contract. |
-| [actions-and-handlers.md](actions-and-handlers.md) | Temporary forwarding page from the superseded named-handler design. |
+| [events-and-actions.md](events-and-actions.md) | Remaining event, action, callback, and posting contract. |
 | [view-lifecycle.md](view-lifecycle.md) | Application lifecycle and custom-view measure, paint, focus, and close hooks. |
-| [source-library.md](source-library.md) | Source manifest, trusted `Std.*` units, exports, and overrides. |
-| [geometry.md](geometry.md) | Coordinate spaces, rectangle semantics, clipping, and hit-testing. |
+| [geometry.md](geometry.md) | Future coordinate spaces, clipping, and hit-testing. |
 | [handles-and-ownership.md](handles-and-ownership.md) | Generational capabilities, typed conversion, ownership, and destruction. |
-| [application-state.md](application-state.md) | Temporary forwarding page from the superseded fixed-state design. |
-| [text-and-cells.md](text-and-cells.md) | Grapheme width, cell repair, clipping, and semantic palettes. |
+| [text-and-cells.md](text-and-cells.md) | Remaining grapheme surface, cell repair, clipping, and canvas rules. |
 | [runtime-boundary.md](runtime-boundary.md) | Main-task access, posting, errors, and terminal restoration. |
-| [testing.md](testing.md) | Deterministic headless and failure-canary requirements. |
+| [testing.md](testing.md) | Remaining deterministic headless and failure-canary requirements. |
 | [implementation-phases.md](implementation-phases.md) | Ordered implementation and test milestones. |
-
-## Language prerequisites
-
-The event surface depends on the implemented [capturing closures](../../pascal/language/functions/closures.md),
-[bound record methods](../../pascal/language/types/record-methods.md#bound-methods-as-values),
-[record properties](../../pascal/language/types/record-properties.md), and
-[record events](../../pascal/language/types/record-events.md). Custom layouts, action groups,
-richer menu construction, and additional controls remain non-blocking extensions.
 
 ## Current implementation status
 
-Phase 0 is complete. Phase 1 geometry is complete: static type-owned construction and focused value-record units are in place. Grapheme-aware `Std.Console.DisplayWidth` is the shared deterministic text-width primitive. The next step in [Phase 1](implementation-phases.md#phase-1--geometry-text-cells-and-canvas) is the Tui2 cell surface and canvas boundary.
+Implemented behavior is documented in the current
+[`Std.Tui2` reference](../../pascal/std/tui2/README.md). The next ordered work is the Phase 1 cell
+surface and canvas boundary in [implementation-phases.md](implementation-phases.md).

@@ -1,0 +1,30 @@
+unit Std.Tui2.Views.View;
+
+uses Std.Tui2.Runtime.Application;
+
+type
+  TuiViewKind = enum
+    Empty;
+    Button;
+    Custom;
+  end;
+  TuiView = record
+    ApplicationId: integer;
+    Slot: integer;
+    Generation: integer;
+    Kind: TuiViewKind;
+
+    static function Empty(App: TuiApplication): TuiView;
+    begin
+      if not App.IsOpen() then
+      begin
+        panic('Tui2 cannot create a view source for a closed application')
+      end;
+      return record
+        ApplicationId := App.Id;
+        Slot := 0;
+        Generation := 0;
+        Kind := TuiViewKind.Empty;
+      end
+    end;
+  end;

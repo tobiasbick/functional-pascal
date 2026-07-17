@@ -1,0 +1,38 @@
+unit Std.Tui2.Actions.Command;
+
+const
+  TuiFirstApplicationCommand: integer := 1024;
+
+private function TuiCommandRequirePositive(Value: integer): integer;
+begin
+  if Value <= 0 then
+  begin
+    panic('Tui2 command identity must be positive')
+  end;
+  return Value
+end;
+
+type
+  TuiCommand = record
+    Value: integer;
+
+    static function FromStandard(Value: integer): TuiCommand;
+    begin
+      TuiCommandRequirePositive(Value);
+      if Value >= TuiFirstApplicationCommand then
+      begin
+        panic('Tui2 standard commands must be in the reserved range 1..1023')
+      end;
+      return record Value := Value; end
+    end;
+
+    static function Create(Value: integer): TuiCommand;
+    begin
+      TuiCommandRequirePositive(Value);
+      if Value < TuiFirstApplicationCommand then
+      begin
+        panic('Tui2 application commands must start at 1024')
+      end;
+      return record Value := Value; end
+    end;
+  end;

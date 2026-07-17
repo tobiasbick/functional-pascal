@@ -1,6 +1,8 @@
 # Std.Tui2 API surface
 
-This document is an early inventory, not a frozen specification. Names, parameters, and grouping may change as implementation work exposes better boundaries.
+This document inventories the remaining planned surface and is not a frozen specification.
+Implemented symbols are documented in the current
+[`Std.Tui2` reference](../../pascal/std/tui2/README.md).
 
 ## Type categories
 
@@ -10,19 +12,11 @@ Std.Tui2 distinguishes immutable or copyable values from identities for live app
 
 | Type | Purpose |
 | --- | --- |
-| `TuiPoint` | A cell coordinate. |
-| `TuiSize` | Width and height in cells. |
-| `TuiRect` | Local view bounds and clipping. |
-| `TuiCell` | One rendered terminal cell. |
 | `TuiPaintContext` | Local bounds, clip, state, and palette for one paint callback. |
 | `TuiMeasureSpec` | Bounded or unbounded measurement constraints per axis. |
 | `TuiMeasureResult` | Minimum, preferred, and maximum sizes returned by measurement. |
-| `TuiColor` | A terminal color value. |
-| `TuiPalette` | Semantic colors used by views. |
-| `TuiStyleRole` | Semantic palette role used during painting. |
 | `TuiKey` | A normalized key and modifiers when a TUI-specific form is needed. |
 | `TuiEvent` | An event routed through the TUI. |
-| `TuiCommand` | Positive command identity; low values are reserved for the standard library. |
 | `TuiChangeOrigin` | `User` or `Programmatic` origin for a typed value change. |
 | `TuiMenuItem` | A menu entry description. |
 | `TuiStatusItem` | A status-line entry description. |
@@ -35,35 +29,16 @@ Std.Tui2 distinguishes immutable or copyable values from identities for live app
 
 These records describe values only. They do not own live views or contain copies of mutable widget state.
 
-### Value construction
-
-Value records use static functions owned by their type. FPAS retains its no-overload rule, so conversions from different representations have distinct names:
-
-```pascal
-TuiPoint.Create(X, Y)
-TuiSize.Create(Width, Height)
-
-TuiRect.Create(X, Y, Width, Height)
-TuiRect.FromEdges(Left, Top, Right, Bottom)
-TuiRect.FromPointSize(Position, Size)
-TuiRect.FromCorners(TopLeft, BottomRight)
-```
-
-`Create` accepts the record's stored representation. `From...` converts another representation. Copying an existing record uses assignment rather than `From(Other)`. This API uses the implemented [static record function](../../pascal/language/types/record-methods.md) language feature.
-
 ### Handler types
 
 | Type | Purpose |
 | --- | --- |
-| `TuiActionHandler` | Handle one semantic action. |
 | `TuiTextChangedHandler` | Observe a text value change. |
 | `TuiCheckedChangedHandler` | Observe a boolean checked-state change. |
 | `TuiListSelectionChangedHandler` | Observe a list selection change. |
 | `TuiRadioSelectionChangedHandler` | Observe a radio selection change. |
 | `TuiKeyHandler` | Handle routed or fallback key input. |
 | `TuiMouseHandler` | Handle routed or fallback mouse input. |
-| `TuiApplicationHandler` | Handle an application start or stop boundary. |
-| `TuiTickHandler` | Handle one enabled application tick. |
 | `TuiAttachHandler` | Observe attachment to a live parent. |
 | `TuiDetachHandler` | Observe removal from a live parent. |
 | `TuiMeasureHandler` | Calculate custom-view size information. |
@@ -78,8 +53,6 @@ TuiRect.FromCorners(TopLeft, BottomRight)
 
 | Type | Purpose |
 | --- | --- |
-| `TuiApplication` | Application lifecycle, event dispatch, and redraw ownership. |
-| `TuiView` | Common identity for a live view. |
 | `TuiContainer` | Common identity for a view that can own children and a layout. |
 | `TuiCustomView` | Application-defined view implemented through lifecycle hooks. |
 | `TuiDesktop` | Root container for windows and application chrome. |
@@ -87,8 +60,6 @@ TuiRect.FromCorners(TopLeft, BottomRight)
 | `TuiDialog` | Modal or modeless dialog content. |
 | `TuiMenuBar` | Application menu bar. |
 | `TuiStatusLine` | Application status and shortcut line. |
-| `TuiAction` | Reusable user operation shared by controls, menus, and shortcuts. |
-| `TuiButton` | Action-activating button. |
 | `TuiLabel` | Static or associated text. |
 | `TuiInputLine` | Single-line text input. |
 | `TuiListBox` | Selectable item list. |
@@ -125,10 +96,8 @@ The following signatures illustrate ownership and naming. They are expected to e
 TuiApplication.Open(): TuiApplication
 TuiApplication.Run(App: TuiApplication)
 TuiApplication.Quit(App: TuiApplication)
-TuiApplication.Close(App: TuiApplication)
 TuiApplication.Invalidate(App: TuiApplication)
 App.Desktop: TuiDesktop                          { read-only property }
-App.Tag: integer                                 { read-write property }
 TuiApplication.Post(App: TuiApplication; Handler: procedure()): boolean
 ```
 
@@ -173,11 +142,6 @@ TuiDialog.Execute(Dialog: TuiDialog): TuiCommand
 ### Basic controls
 
 ```pascal
-TuiButton.Create(App: TuiApplication; Text: string): TuiButton
-Button.Action: TuiAction                          { write-only property }
-Button.Text: string                               { read-write property }
-Button.Enabled: boolean                           { read-write property }
-
 TuiLabel.Create(App: TuiApplication; Text: string): TuiLabel
 LabelView.Text: string                            { read-write property }
 
@@ -213,9 +177,8 @@ methods that validate handles and update the registry. Imperative operations suc
 
 `TuiCommand` is a distinct public type even if its initial runtime representation is an integer.
 
-`TuiAction` combines a command identity, presentation state, shortcut, and one synchronous
-`OnExecute` event. Buttons, menus, status items, and shortcuts may activate the same action. Controls
-with values expose one typed event per semantic change.
+The remaining action work binds menus, status items, and shortcuts to the existing `TuiAction`.
+Controls with values expose one typed event per semantic change.
 
 Raw key and mouse handlers return `boolean` to participate in input propagation. Action handlers and typed change notifications do not return `boolean`.
 

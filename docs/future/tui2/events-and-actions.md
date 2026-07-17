@@ -2,20 +2,9 @@
 
 ## Status and authority
 
-Planned Tui2 API contract. This document replaces the named-handler and unit-global-state decisions
-currently described in `actions-and-handlers.md`, the fixed handler storage rules in
-`application-state.md`, and the `Set...Handler` registration examples in `view-lifecycle.md`.
-Those documents must be reconciled when this plan enters implementation.
-
-The implementation depends on:
-
-1. [capturing closures](../../pascal/language/functions/closures.md);
-2. [bound record methods](../../pascal/language/types/record-methods.md#bound-methods-as-values);
-3. [record properties](../../pascal/language/types/record-properties.md);
-4. [record events](../../pascal/language/types/record-events.md).
-
-It does not depend on the implementation details of expression postfix chaining. The chaining work
-may finish independently and must not be modified as part of this plan.
+Implemented application, action, and semantic-button behavior is documented in the current
+[`Std.Tui2` reference](../../pascal/std/tui2/README.md). This plan covers the remaining custom-view,
+typed-change, raw-input, posting, and interactive-routing event surface.
 
 ## Design
 
@@ -48,7 +37,6 @@ Initial control events are:
 
 | Control | Event | Signature |
 | --- | --- | --- |
-| `TuiButton` | `OnClick` | `procedure(Sender: TuiButton)` |
 | `TuiInputLine` | `OnChanged` | `procedure(Sender: TuiInputLine; Value: string; Origin: TuiChangeOrigin)` |
 | `TuiCheckBox` | `OnChanged` | `procedure(Sender: TuiCheckBox; Value: boolean; Origin: TuiChangeOrigin)` |
 | `TuiListBox` | `OnSelectionChanged` | `procedure(Sender: TuiListBox; Selected: integer; Origin: TuiChangeOrigin)` |
@@ -118,15 +106,7 @@ This permits a reusable action plus one control-specific reaction without introd
 subscribers. Applications should normally put the operation itself in the action and use the direct
 event only for source-specific behavior.
 
-## Lifecycle events
-
-Application lifecycle event members are:
-
-```pascal
-App.OnStart := procedure(Sender: TuiApplication) begin ... end;
-App.OnStop := procedure(Sender: TuiApplication) begin ... end;
-App.OnTick := procedure(Sender: TuiApplication; DeltaMilliseconds: integer) begin ... end;
-```
+## Custom-view lifecycle events
 
 `TuiCustomView` exposes:
 
@@ -249,72 +229,37 @@ subscriptions.
 An application that needs domain-level fan-out may implement it explicitly using arrays of callable
 values and define its own ordering and lifetime rules.
 
-## Superseded API shapes
+## Remaining implementation
 
-The following planned shapes are removed before implementation:
+1. Add registry-backed lifecycle and raw-input events to `TuiCustomView` after its measure, canvas,
+   and generic view-registry prerequisites exist.
+2. Add typed value-change events and `TuiChangeOrigin` behavior.
+3. Route action activation from menus, shortcuts, injected tests, and commands.
+4. Add application fallback events and consumed/unconsumed raw-input routing.
+5. Add the main-task post queue and its worker-transfer enforcement.
+6. Complete closure release, panic cleanup, and shutdown canaries.
 
-```text
-TuiAction.New(..., Handler)
-TuiInputLine.SetChangedHandler(...)
-TuiCheckBox.SetChangedHandler(...)
-TuiListBox.SetSelectionHandler(...)
-TuiRadioGroup.SetSelectionHandler(...)
-TuiCustomView.SetPaintHandler(...)
-TuiCustomView.SetResizeHandler(...)
-TuiButton.SetText(...)
-TuiButton.SetEnabled(...)
-TuiButton.SetAction(...)
-```
+## Remaining tests
 
-Construction no longer receives a mandatory handler. Events start empty or use an internal default
-defined by the control. State-shaped getters and setters become properties; imperative operations
-remain methods or type-owned functions.
-
-## Implementation order
-
-1. Complete capturing closures, bound methods, record properties, and event properties.
-2. Add a small FPAS-only event canary outside Tui2.
-3. Add registry-backed event properties to `TuiApplication`, `TuiAction`, and `TuiCustomView`.
-4. Migrate application lifecycle and custom-view lifecycle registration.
-5. Implement `TuiAction.OnExecute` and action bindings.
-6. Implement button `OnClick` and the fixed action/direct-event ordering.
-7. Add typed value-change events and origin behavior.
-8. Add raw input and application fallback events.
-9. Add closure release, stale-handle, panic, and shutdown canaries.
-10. Reconcile every Tui2 planning document and continue the existing phase sequence.
-
-## Required tests
-
-- named routine, bound method, and capturing closure assigned to Tui2 events;
-- handler replacement and clearing through event accessors;
-- copied and converted handles resolving the same registry-backed event property;
-- action activation from button, menu, shortcut, test, and command;
-- action-before-direct-event ordering;
-- source destruction during action execution skips the direct event safely;
+- action activation from menu, shortcut, injected input, and command;
 - change origin and no event for assignment of unchanged property values;
 - raw input consumed and unconsumed paths;
-- closure-captured local surviving builder return;
 - captured stale handle diagnostic;
-- event closure release on view destruction and application shutdown;
+- event closure release on view destruction;
 - callback panic preserves the primary diagnostic and restores terminal modes;
 - posted closure FIFO and worker transfer rejection;
 - headless tests do not require an interactive terminal.
 
-## Acceptance criteria
+## Remaining acceptance criteria
 
-- Tui2 application code can use Pascal-style `On... := Handler` syntax;
-- ordinary events and actions have separate, documented purposes;
-- each event has deterministic single-handler behavior;
-- local application state no longer requires unit globals or integer tags;
-- registry-backed properties prevent handlers from being lost through handle copies;
-- destruction and panic paths release every closure environment;
-- ordinary and event properties remain distinct from a publish/subscribe bus;
-- old `Set...Handler` plan text is removed when implementation starts;
-- current `docs/pascal/` documentation is changed only after the API exists;
+- custom-view and typed-change events use the same registry-backed single-handler model;
+- actions activate consistently from every supported source;
+- raw handlers have deterministic consumption and fallback behavior;
+- posting preserves FIFO order and the task-transfer rules;
+- destruction and panic paths release every remaining closure environment;
 - complete Rust, FPAS, formatter, Clippy, and diff verification passes.
 
 ## Plan lifecycle
 
-Keep this document as the authoritative future event contract until Tui2 implements it. During
-implementation, mark completed steps here and make the next step explicit. Once current Tui2 docs
-and regression tests describe the shipped API, delete this plan and remove its future references.
+Delete this plan once its remaining behavior is implemented and described by current Tui2 docs and
+regression tests.

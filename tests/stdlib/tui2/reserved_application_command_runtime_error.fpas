@@ -1,0 +1,7 @@
+program Tui2ReservedApplicationCommandRuntimeError;
+
+uses Std.Tui2;
+
+begin
+  var Command: TuiCommand := TuiCommand.Create(1023)
+end.

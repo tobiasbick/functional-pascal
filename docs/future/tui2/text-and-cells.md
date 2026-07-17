@@ -1,10 +1,9 @@
 # Std.Tui2 text, cells, and palettes
 
-## Text unit
-
-Std.Tui2 lays out terminal text by extended grapheme cluster rather than by byte or Unicode scalar count. The shared runtime text boundary must expose deterministic grapheme segmentation and display width; this is a generic text/console capability, not widget logic.
-
-The existing console cell API must be extended from one Unicode scalar to one non-empty grapheme cluster before Tui2 text rendering is complete.
+Implemented color, style, cell-value, palette, and display-width behavior is documented in the
+current [`Std.Tui2` reference](../../pascal/std/tui2/README.md) and
+[`Std.Console` cell reference](../../pascal/std/console/cells-frames.md). This plan covers the
+remaining grapheme-aware surface and canvas behavior.
 
 ## Width policy
 
@@ -16,21 +15,13 @@ The existing console cell API must be extended from one Unicode scalar to one no
 - Unsupported control characters render as the replacement glyph.
 - A zero-width cluster without a preceding base glyph renders as the replacement glyph.
 
-The public measurement operation is shared with `Std.Console.DisplayWidth` so layout and final rendering cannot disagree.
+Measurement continues to use `Std.Console.DisplayWidth` so layout and final rendering cannot
+disagree.
 
-## Cell representation
+## Cell surface
 
-The source-level value boundary is implemented as follows:
-
-- `TuiColor` represents a classic color, an ANSI-256 palette entry, or RGB through distinct
-  `FromCrt`, `FromAnsi256`, and `FromRgb` constructors.
-- `TuiStyleRole` provides the semantic roles normal, disabled, focused, selected, shortcut,
-  frame, title, failure, warning, and accent.
-- `TuiStyle` carries foreground, background, and bold, dim, underline, and inverse attributes.
-- `TuiCell` stores a requested glyph and semantic style role.
-
-`TuiCell` is a pure value. The future cell surface validates that its glyph is a non-empty
-renderable grapheme and enforces wide-glyph continuation repair when it is painted.
+The cell surface validates each `TuiCell` glyph as one non-empty renderable grapheme and enforces
+wide-glyph continuation repair when it is painted.
 
 The internal surface distinguishes:
 
@@ -57,20 +48,8 @@ TuiCanvas.DrawFrame(Canvas: TuiCanvas; Bounds: TuiRect; Role: TuiStyleRole)
 
 `WriteText` draws one logical line and stops before a newline. Wrapping and multi-line placement belong to the calling control. Every operation is clipped and uses the same wide-glyph repair rules.
 
-## Semantic styling
+## Palette propagation
 
-Controls paint semantic `TuiStyleRole` values instead of fixed colors. `TuiPalette` maps roles to foreground, background, and attributes.
-
-`TuiPalette.Default()` supplies the standard CRT palette. `ForRole` resolves a role, while
-`WithRole` returns a palette copy with exactly one role replaced. The default mapping is light
-gray on black for normal and frame text, dark gray for disabled text, black on light cyan for
-focus, black on light gray for selection, yellow for titles and warnings, light red for failures,
-and light cyan for shortcuts and accents.
-
-Initial roles include normal, disabled, focused, selected, shortcut, frame, title, failure, warning, and accent. Applications may replace a palette at the application or subtree boundary. A palette change invalidates affected views.
-
-Color values support classic colors, indexed colors, and RGB. Capability fallback occurs only in the final console renderer; measurement and control logic are color-mode independent.
-
-## Phase 1 prerequisite
-
-Phase 1 adds or exposes the generic grapheme and cell primitives required by this contract before custom controls depend on them. Std.Tui2 itself remains FPAS source code.
+Applications may replace a palette at the application or subtree boundary. A palette change
+invalidates affected views. Color capability fallback occurs only in the final console renderer;
+measurement and control logic remain color-mode independent.

@@ -1,6 +1,8 @@
 # Std.Tui2
 
-`Std.Tui2` currently provides the value types used for terminal UI geometry.
+`Std.Tui2` provides terminal UI value types plus the first headless live-object surface for
+applications, actions, and buttons. Rendering, layout, terminal acquisition, and interactive input
+are not exposed yet.
 
 ```pascal
 program Geometry;
@@ -27,6 +29,11 @@ Coordinates are zero-based: `(0, 0)` is the upper-left cell, X grows to the righ
 | `TuiStyle` | Foreground, background, and text attributes. |
 | `TuiCell` | A glyph with a semantic style role. |
 | `TuiPalette` | An immutable mapping from semantic roles to styles. |
+| `TuiApplication` | An application-scoped headless registry and lifecycle boundary. |
+| `TuiCommand` | A validated positive command identity. |
+| `TuiView` | A typed source identity passed to actions. |
+| `TuiAction` | A reusable operation with live properties and one `OnExecute` event. |
+| `TuiButton` | A headless semantic button with an optional action and one `OnClick` event. |
 | `TuiPoint.Create(X, Y)` | Creates a point. |
 | `TuiSize.Create(Width, Height)` | Creates a non-negative size. |
 | `TuiRect.Create(X, Y, Width, Height)` | Creates a rectangle from its stored fields. |
@@ -103,11 +110,81 @@ var Custom: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(255, 128, 0), TuiCo
 var Updated: TuiPalette := Palette.WithRole(TuiStyleRole.Accent, Custom);
 ```
 
+## Headless applications and lifecycle events
+
+`TuiApplication.OpenForTest(Size)` creates an application-scoped registry without changing terminal
+modes. `Start`, `Tick`, and `Close` expose deterministic lifecycle boundaries for headless code.
+`Close` is idempotent and invalidates every action and button owned by the application.
+
+```pascal
+var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
+App.OnStart := procedure(Sender: TuiApplication) begin ... end;
+App.OnTick := procedure(Sender: TuiApplication; DeltaMilliseconds: integer) begin ... end;
+App.OnStop := procedure(Sender: TuiApplication) begin ... end;
+App.Start();
+App.Tick(16);
+App.Close()
+```
+
+The lifecycle members are single-handler [record events](../../language/types/record-events.md).
+Assigning another compatible handler replaces the previous handler; assigning `nil` clears it.
+Copied application handles resolve the same registry state. `Tag` is a read-write live property.
+
+## Commands and actions
+
+`TuiCommand.Create(Value)` creates an application command and requires `Value >= 1024`. Values
+`1..1023` are reserved for the standard library and can be created internally with
+`TuiCommand.FromStandard`. Zero and negative identities are invalid.
+
+```pascal
+var Save: TuiAction := TuiAction.Create(App, TuiCommand.Create(1024), 'Save');
+Save.Enabled := true;
+Save.OnExecute :=
+  procedure(Sender: TuiAction; Source: TuiView)
+  begin
+    SaveDocument()
+  end;
+```
+
+An action provides live `Command`, `Text`, `Enabled`, `Visible`, and `Checked` properties.
+`Activate(Source)` invokes `OnExecute` synchronously when enabled and returns whether activation was
+accepted. The source must belong to the same application. `Destroy` invalidates the action and
+releases its handler.
+
+## Buttons and direct events
+
+`TuiButton.Create(App, Text)` creates a headless semantic button. Its `Text`, `Enabled`, and `Action`
+properties use registry state; `OnClick` is a single-handler event.
+
+```pascal
+var Button: TuiButton := TuiButton.Create(App, 'Save');
+Button.Action := Save;
+Button.OnClick := procedure(Sender: TuiButton) begin ... end;
+Button.Click()
+```
+
+`Click` applies a deterministic order:
+
+1. reject the click when the button is disabled;
+2. activate the bound action when present;
+3. revalidate the button;
+4. invoke `OnClick` when the button still exists.
+
+If the action destroys the button or closes its application, `OnClick` is skipped. `AsView` returns
+the source identity supplied to the action. This API models semantic activation only; keyboard,
+mouse, painting, and layout behavior are not implemented by the current button.
+
 ## Implementation (contributors)
 
-`Std.Tui2` is a source-level standard-library facade in [`lib/Std/Tui2.fpas`](../../../../lib/Std/Tui2.fpas). Its geometry records are implemented in focused private units under [`lib/Std/Tui2/Geometry/`](../../../../lib/Std/Tui2/Geometry/). It is exported by [`lib/stdlib.fpasprj`](../../../../lib/stdlib.fpasprj).
+`Std.Tui2` is a source-level standard-library facade in [`lib/Std/Tui2.fpas`](../../../../lib/Std/Tui2.fpas).
+Geometry and cell values live in focused private units under `lib/Std/Tui2/Geometry/` and
+`lib/Std/Tui2/Cells/`. Live application, action, view, and button concerns are separated under
+`Runtime/`, `Actions/`, `Views/`, and `Controls/`. The facade is exported by
+[`lib/stdlib.fpasprj`](../../../../lib/stdlib.fpasprj).
 
 ## See also
 
 - [Standard library reference](../README.md)
+- [Record events](../../language/types/record-events.md)
+- [Record properties](../../language/types/record-properties.md)
 - [Units](../../program-structure/units.md)

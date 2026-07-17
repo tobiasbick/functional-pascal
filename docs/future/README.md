@@ -8,6 +8,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 
 | Area | Plan | Scope |
 |------|------|-------|
+| Language | [Expression postfix chaining](expression-postfix-chaining.md) | Field, index, and instance-method suffixes on expression results |
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
 | Dictionaries | [Dictionary decision](09-remove-dict.md) | Decide whether `Std.Dict` stays, changes, or is removed |
 | Libraries | [Library export model](libraries.md) | Finer per-symbol exports and re-export rules beyond current unit exports |

@@ -21,6 +21,10 @@ Completion contract: [source-library.md](source-library.md).
 - Implement clipping and the headless cell surface.
 - Implement the transient `TuiCanvas` drawing boundary.
 
+Expression postfix chaining is an optional ergonomic improvement tracked in
+[expression-postfix-chaining.md](../expression-postfix-chaining.md). Tui2 implementation does not
+wait for it; temporary values remain valid until the general language feature is complete.
+
 Completion contracts: [geometry.md](geometry.md), [text-and-cells.md](text-and-cells.md), and the pure-value section of [testing.md](testing.md).
 
 ## Phase 2 — Application registry and runtime safety

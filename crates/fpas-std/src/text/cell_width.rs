@@ -50,6 +50,12 @@ pub fn grapheme_cell_width(text: &str) -> Option<u8> {
     (width > 0).then_some(width)
 }
 
+/// Split text into its extended grapheme clusters.
+#[must_use]
+pub fn split_graphemes(text: &str) -> Vec<String> {
+    text.graphemes(true).map(str::to_owned).collect()
+}
+
 /// Display-column offset immediately before the scalar at `char_index`.
 #[must_use]
 #[cfg(test)]
@@ -144,6 +150,11 @@ mod tests {
         assert_eq!(grapheme_cell_width("👩‍💻"), Some(2));
         assert_eq!(grapheme_cell_width("AB"), None);
         assert_eq!(grapheme_cell_width("\u{0301}"), None);
+    }
+
+    #[test]
+    fn split_preserves_combined_and_joined_graphemes() {
+        assert_eq!(split_graphemes("Ae\u{0301}👩‍💻"), ["A", "e\u{0301}", "👩‍💻"]);
     }
 
     #[test]

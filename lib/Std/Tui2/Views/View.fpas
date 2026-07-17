@@ -1,6 +1,6 @@
 unit Std.Tui2.Views.View;
 
-uses Std.Tui2.Runtime.Application;
+uses Std.Array, Std.Tui2.Runtime.Application;
 
 type
   TuiViewKind = enum
@@ -8,6 +8,52 @@ type
     Button;
     Custom;
   end;
+
+private mutable var TuiViewApplicationIds: array of integer := [];
+private mutable var TuiViewGenerations: array of integer := [];
+private mutable var TuiViewAlive: array of boolean := [];
+private mutable var TuiViewTags: array of integer := [];
+
+private procedure TuiViewRequire(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  if (Slot <= 0) or (Slot > Std.Array.Length(TuiViewGenerations)) then
+  begin
+    panic('Tui2 view handle has an invalid registry slot')
+  end;
+  if not TuiViewAlive[Slot - 1] then
+  begin
+    panic('Tui2 view handle is stale')
+  end;
+  if TuiViewGenerations[Slot - 1] <> Generation then
+  begin
+    panic('Tui2 view handle generation does not match the registry')
+  end;
+  if TuiViewApplicationIds[Slot - 1] <> ApplicationId then
+  begin
+    panic('Tui2 view belongs to a different application')
+  end;
+  var App: TuiApplication := record Id := ApplicationId; Generation := 1; end;
+  if not App.IsOpen() then
+  begin
+    panic('Tui2 view belongs to a closed application')
+  end
+end;
+
+private procedure TuiViewRelease(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  if (Slot <= 0) or (Slot > Std.Array.Length(TuiViewGenerations)) then
+  begin
+    return
+  end;
+  if ((TuiViewApplicationIds[Slot - 1] = ApplicationId) and (TuiViewGenerations[Slot - 1] = Generation)) and
+     TuiViewAlive[Slot - 1] then
+  begin
+    TuiViewAlive[Slot - 1] := false;
+    TuiViewGenerations[Slot - 1] := Generation + 1
+  end
+end;
+
+type
   TuiView = record
     ApplicationId: integer;
     Slot: integer;
@@ -27,4 +73,79 @@ type
         Kind := TuiViewKind.Empty;
       end
     end;
+
+    static function Create(App: TuiApplication): TuiView;
+    begin
+      if not App.IsOpen() then
+      begin
+        panic('Tui2 cannot create a view for a closed application')
+      end;
+      mutable var Slot: integer := 0;
+      for I: integer := 0 to Std.Array.Length(TuiViewAlive) - 1 do
+      begin
+        if not TuiViewAlive[I] then
+        begin
+          Slot := I + 1;
+          TuiViewApplicationIds[I] := App.Id;
+          TuiViewAlive[I] := true;
+          TuiViewTags[I] := 0;
+          break
+        end
+      end;
+      if Slot = 0 then
+      begin
+        TuiViewApplicationIds := Std.Array.Concat(TuiViewApplicationIds, [App.Id]);
+        TuiViewGenerations := Std.Array.Concat(TuiViewGenerations, [1]);
+        TuiViewAlive := Std.Array.Concat(TuiViewAlive, [true]);
+        TuiViewTags := Std.Array.Concat(TuiViewTags, [0]);
+        Slot := Std.Array.Length(TuiViewGenerations)
+      end;
+      var View: TuiView := record
+        ApplicationId := App.Id;
+        Slot := Slot;
+        Generation := TuiViewGenerations[Slot - 1];
+        Kind := TuiViewKind.Custom;
+      end;
+      var Cleanup: TuiApplicationCleanupCallback := procedure(ApplicationId: integer) begin
+        TuiViewRelease(ApplicationId, View.Slot, View.Generation)
+      end;
+      RegisterApplicationCleanup(App.Id, App.Generation, Cleanup);
+      return View
+    end;
+
+    function IsAlive(Self: TuiView): boolean;
+    begin
+      if Self.Kind = TuiViewKind.Empty then
+      begin
+        var App: TuiApplication := record Id := Self.ApplicationId; Generation := 1; end;
+        return App.IsOpen()
+      end;
+      if (Self.Slot <= 0) or (Self.Slot > Std.Array.Length(TuiViewGenerations)) then
+      begin
+        return false
+      end;
+      return ((TuiViewApplicationIds[Self.Slot - 1] = Self.ApplicationId) and (TuiViewGenerations[Self.Slot -
+                                                                                                  1] = Self.Generation)) and
+             TuiViewAlive[Self.Slot - 1]
+    end;
+
+    function ReadTag(Self: TuiView): integer;
+    begin
+      TuiViewRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      return TuiViewTags[Self.Slot - 1]
+    end;
+
+    procedure WriteTag(Self: TuiView; Value: integer);
+    begin
+      TuiViewRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      TuiViewTags[Self.Slot - 1] := Value
+    end;
+
+    procedure Destroy(Self: TuiView);
+    begin
+      TuiViewRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      TuiViewRelease(Self.ApplicationId, Self.Slot, Self.Generation)
+    end;
+
+    property Tag: integer read ReadTag write WriteTag;
   end;

@@ -33,7 +33,9 @@ Coordinates are zero-based: `(0, 0)` is the upper-left cell, X grows to the righ
 | `TuiCanvas` | A transient, clipped drawing capability for a surface. |
 | `TuiApplication` | An application-scoped headless registry and lifecycle boundary. |
 | `TuiCommand` | A validated positive command identity. |
-| `TuiView` | A typed source identity passed to actions. |
+| `TuiView` | A headless application-scoped view handle and action source identity. |
+| `TuiContainer` | A headless owner of directly attached views. |
+| `TuiDesktop` | The explicit headless root container for one application. |
 | `TuiAction` | A reusable operation with live properties and one `OnExecute` event. |
 | `TuiButton` | A headless semantic button with an optional action and one `OnClick` event. |
 | `TuiPoint.Create(X, Y)` | Creates a point. |
@@ -104,8 +106,8 @@ one or two terminal columns. `TuiSurface.Create` owns a zero-based retained cell
 column clears the complete previous wide glyph. `TuiCanvas.Create(Surface, Bounds)` clips drawing
 to `Bounds`; `PutCell`, `FillRect`, and `WriteText` use zero-based surface coordinates.
 
-`WriteText` currently iterates Unicode scalars. Use `PutCell` with a `TuiCell` for a combined or
-joined grapheme until text segmentation is available to source-level Tui2 code.
+`WriteText` segments extended grapheme clusters before drawing, so combined and joined glyphs use
+the same width and continuation rules as direct `PutCell` calls.
 
 ## `TuiPalette`
 
@@ -138,6 +140,25 @@ App.Close()
 The lifecycle members are single-handler [record events](../../language/types/record-events.md).
 Assigning another compatible handler replaces the previous handler; assigning `nil` clears it.
 Copied application handles resolve the same registry state. `Tag` is a read-write live property.
+
+## Headless views
+
+`TuiView.Create(App)` creates an unattached custom view in the application's generational registry.
+Its `Tag` property is live registry state; `Destroy` invalidates the handle. Destroyed slots may be
+reused, always with a new generation, so an old copied handle remains stale. Closing the application
+invalidates every remaining view. `TuiView.Empty(App)` remains an action-source sentinel and is not a
+destroyable registry view.
+
+## Headless containers
+
+`TuiContainer.Create(App)` creates a live container backed by a view handle. `Add(Child)` accepts one
+live view from the same application and rejects an already attached view. `Contains(Child)` reports
+the current direct ownership relation. `Remove(Child)` removes and destroys that child, so its handle
+becomes stale. Nested container subtrees are not exposed yet.
+
+`TuiDesktop.Create(App)` creates the one explicit headless root container for an open application.
+It exposes the same `Add`, `Contains`, and `Remove` operations, and becomes stale when its application
+closes. The eventual `App.Desktop` property is not exposed yet.
 
 ## Commands and actions
 

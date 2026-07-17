@@ -1,0 +1,68 @@
+unit Std.Tui2.Views.Desktop;
+
+uses Std.Array, Std.Tui2.Runtime.Application, Std.Tui2.Views.Container, Std.Tui2.Views.View;
+
+private mutable var TuiDesktopApplicationIds: array of integer := [];
+private mutable var TuiDesktopContainers: array of TuiContainer := [];
+
+type
+  TuiDesktop = record
+    ApplicationId: integer;
+    Container: TuiContainer;
+
+    static function Create(App: TuiApplication): TuiDesktop;
+    begin
+      if not App.IsOpen() then
+      begin
+        panic('Tui2 cannot create a desktop for a closed application')
+      end;
+      for I: integer := 0 to Std.Array.Length(TuiDesktopApplicationIds) - 1 do
+      begin
+        if (TuiDesktopApplicationIds[I] = App.Id) and TuiDesktopContainers[I].IsAlive() then
+        begin
+          panic('Tui2 application already has a desktop root')
+        end
+      end;
+      var Container: TuiContainer := TuiContainer.Create(App);
+      TuiDesktopApplicationIds := Std.Array.Concat(TuiDesktopApplicationIds, [App.Id]);
+      TuiDesktopContainers := Std.Array.Concat(TuiDesktopContainers, [Container]);
+      return record ApplicationId := App.Id; Container := Container; end
+    end;
+
+    function IsAlive(Self: TuiDesktop): boolean;
+    begin
+      return Self.Container.IsAlive()
+    end;
+
+    static function AsContainer(Desktop: TuiDesktop): TuiContainer;
+    begin
+      if not Desktop.IsAlive() then
+      begin
+        panic('Tui2 desktop handle is stale')
+      end;
+      return Desktop.Container
+    end;
+
+    static function AsView(Desktop: TuiDesktop): TuiView;
+    begin
+      return TuiContainer.AsView(TuiDesktop.AsContainer(Desktop))
+    end;
+
+    procedure Add(Self: TuiDesktop; Child: TuiView);
+    begin
+      var Parent: TuiContainer := TuiDesktop.AsContainer(Self);
+      Parent.Add(Child)
+    end;
+
+    function Contains(Self: TuiDesktop; Child: TuiView): boolean;
+    begin
+      var Parent: TuiContainer := TuiDesktop.AsContainer(Self);
+      return Parent.Contains(Child)
+    end;
+
+    procedure Remove(Self: TuiDesktop; Child: TuiView);
+    begin
+      var Parent: TuiContainer := TuiDesktop.AsContainer(Self);
+      Parent.Remove(Child)
+    end;
+  end;

@@ -8,8 +8,7 @@ current [`Std.Tui2` reference](../../pascal/std/tui2/README.md) and
 
 - Implemented: console cells accept one renderable grapheme cluster and preserve wide-glyph continuation invariants.
 - Implemented: clipping and the headless cell surface.
-- Implemented: the transient `TuiCanvas` drawing boundary. Open: source-level `WriteText` still
-  needs grapheme segmentation; direct `TuiCell` drawing is already grapheme-aware.
+- Implemented: the transient `TuiCanvas` drawing boundary, including grapheme-aware `WriteText`.
 
 Completion contracts: [geometry.md](geometry.md), [text-and-cells.md](text-and-cells.md), and the pure-value section of [testing.md](testing.md).
 
@@ -17,8 +16,10 @@ Completion contracts: [geometry.md](geometry.md), [text-and-cells.md](text-and-c
 
 - **Partial foundation.** Headless applications, actions, and buttons use application-scoped
   registry slots, generation checks, cross-application validation, deterministic destruction, and
-  application-close cleanup. The generic view tree and reusable-slot allocator remain.
-- Generalize the existing generational handles to view and layout types and add reusable slots.
+  application-close cleanup. Custom views now use the same model, including reusable slots. The
+  generic view tree and layout registry remain. Headless containers now own direct view children,
+  and each headless application may create one desktop root; nested subtree ownership remains.
+- Generalize the existing generational handles to layout types.
 - Implement the desktop root, parent-child ownership, destruction, stale-handle diagnostics, and tags.
 - Extend `OpenForTest` to the generic view registry and add transactional interactive terminal acquisition.
 - Add the VM terminal-mode restoration safety net.

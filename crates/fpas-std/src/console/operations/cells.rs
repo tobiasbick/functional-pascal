@@ -1,6 +1,6 @@
 use super::super::{Console, ConsoleCell, ConsoleRect};
 use crate::error::{StdError, std_runtime_error};
-use crate::text::cell_width::{grapheme_cell_width, str_display_width};
+use crate::text::cell_width::{grapheme_cell_width, split_graphemes, str_display_width};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 
@@ -99,6 +99,14 @@ impl Console {
                 location,
             )
         })
+    }
+
+    /// Splits text into extended grapheme clusters.
+    ///
+    /// **Documentation:** `docs/pascal/std/console/cells-frames.md`.
+    #[must_use]
+    pub fn split_graphemes(text: &str) -> Vec<String> {
+        split_graphemes(text)
     }
 
     fn validate_cell(

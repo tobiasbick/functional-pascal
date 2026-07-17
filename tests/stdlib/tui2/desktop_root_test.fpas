@@ -1,0 +1,15 @@
+program Tui2DesktopRootTest;
+
+uses Std.Test, Std.Tui2;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
+  var Desktop: TuiDesktop := TuiDesktop.Create(App);
+  var Child: TuiView := TuiView.Create(App);
+  Desktop.Add(Child);
+  AssertTrue(Desktop.Contains(Child));
+  AssertTrue(TuiDesktop.AsView(Desktop).IsAlive());
+  App.Close();
+  AssertFalse(Desktop.IsAlive());
+  AssertFalse(Child.IsAlive())
+end.

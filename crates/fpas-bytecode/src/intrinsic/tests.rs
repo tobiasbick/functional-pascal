@@ -88,6 +88,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Console(ConsoleIntrinsic::DiscardRegion),
     Intrinsic::Console(ConsoleIntrinsic::DisplayWidth),
     Intrinsic::Console(ConsoleIntrinsic::GraphemeWidth),
+    Intrinsic::Console(ConsoleIntrinsic::SplitGraphemes),
     Intrinsic::Str(StrIntrinsic::Length),
     Intrinsic::Str(StrIntrinsic::ToUpper),
     Intrinsic::Str(StrIntrinsic::ToLower),

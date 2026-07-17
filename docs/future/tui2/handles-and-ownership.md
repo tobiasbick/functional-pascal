@@ -17,6 +17,11 @@ Every live-object constructor receives its owning `TuiApplication` explicitly. N
 
 Reused registry slots always receive a new generation. A stale handle can therefore never refer to a newly allocated object accidentally.
 
+Implemented: unattached `TuiView` handles use this registry model and expose a live `Tag` property.
+`TuiContainer` owns direct children through `Add` and destroys them through `Remove`. Nested
+subtree ownership remains the next ownership step. `TuiDesktop.Create(App)` creates one explicit
+root container for a live application.
+
 ## Validation
 
 Every public operation validates:

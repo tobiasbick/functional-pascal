@@ -46,10 +46,10 @@ TuiCanvas.DrawVerticalLine(Canvas: TuiCanvas; X: integer; Y: integer; Height: in
 TuiCanvas.DrawFrame(Canvas: TuiCanvas; Bounds: TuiRect; Role: TuiStyleRole)
 ```
 
-`WriteText` draws one logical line and stops before a newline. It currently iterates Unicode
-scalars, so a combined or joined grapheme must be passed through `PutCell` as a `TuiCell` until the
-source library can segment text. Wrapping and multi-line placement belong to the calling control.
-Every operation is clipped and uses the same wide-glyph repair rules.
+`WriteText` draws one logical line and stops before a newline. It segments extended grapheme
+clusters before painting, so combined and joined glyphs use the same rules as `PutCell`. Wrapping
+and multi-line placement belong to the calling control. Every operation is clipped and uses the same
+wide-glyph repair rules.
 
 ## Palette propagation
 

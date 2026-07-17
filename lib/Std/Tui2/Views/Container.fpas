@@ -1,0 +1,110 @@
+unit Std.Tui2.Views.Container;
+
+uses Std.Array, Std.Tui2.Runtime.Application, Std.Tui2.Views.View;
+
+private mutable var TuiContainerParentSlots: array of integer := [];
+private mutable var TuiContainerChildApplicationIds: array of integer := [];
+private mutable var TuiContainerChildSlots: array of integer := [];
+private mutable var TuiContainerChildGenerations: array of integer := [];
+private mutable var TuiContainerAttached: array of boolean := [];
+
+private procedure TuiContainerRequire(Container: TuiView);
+begin
+  if not Container.IsAlive() then
+  begin
+    panic('Tui2 container handle is stale')
+  end
+end;
+
+private function TuiContainerFindChild(Container: TuiView; Child: TuiView): integer;
+begin
+  for I: integer := 0 to Std.Array.Length(TuiContainerAttached) - 1 do
+  begin
+    if (((TuiContainerAttached[I] and (TuiContainerParentSlots[I] = Container.Slot)) and (TuiContainerChildApplicationIds[I] = Child.ApplicationId)) and (TuiContainerChildSlots[I] = Child.Slot)) and
+       (TuiContainerChildGenerations[I] = Child.Generation) then
+    begin
+      return I
+    end
+  end;
+  return -1
+end;
+
+private function TuiContainerIsAttached(Child: TuiView): boolean;
+begin
+  for I: integer := 0 to Std.Array.Length(TuiContainerAttached) - 1 do
+  begin
+    if ((TuiContainerAttached[I] and (TuiContainerChildApplicationIds[I] = Child.ApplicationId)) and (TuiContainerChildSlots[I] = Child.Slot)) and
+       (TuiContainerChildGenerations[I] = Child.Generation) then
+    begin
+      return true
+    end
+  end;
+  return false
+end;
+
+type
+  TuiContainer = record
+    View: TuiView;
+
+    static function Create(App: TuiApplication): TuiContainer;
+    begin
+      return record View := TuiView.Create(App); end
+    end;
+
+    static function AsView(Container: TuiContainer): TuiView;
+    begin
+      TuiContainerRequire(Container.View);
+      return Container.View
+    end;
+
+    function IsAlive(Self: TuiContainer): boolean;
+    begin
+      return Self.View.IsAlive()
+    end;
+
+    procedure Add(Self: TuiContainer; Child: TuiView);
+    begin
+      TuiContainerRequire(Self.View);
+      if not Child.IsAlive() then
+      begin
+        panic('Tui2 container cannot attach a stale view')
+      end;
+      if Child.ApplicationId <> Self.View.ApplicationId then
+      begin
+        panic('Tui2 container child belongs to a different application')
+      end;
+      if TuiContainerIsAttached(Child) then
+      begin
+        panic('Tui2 view is already attached to a container')
+      end;
+      TuiContainerParentSlots := Std.Array.Concat(TuiContainerParentSlots, [Self.View.Slot]);
+      TuiContainerChildApplicationIds := Std.Array.Concat(TuiContainerChildApplicationIds, [
+                                                                                             Child.ApplicationId
+
+                                                                                           ]);
+      TuiContainerChildSlots := Std.Array.Concat(TuiContainerChildSlots, [Child.Slot]);
+      TuiContainerChildGenerations := Std.Array.Concat(TuiContainerChildGenerations, [
+                                                                                       Child.Generation
+
+                                                                                     ]);
+      TuiContainerAttached := Std.Array.Concat(TuiContainerAttached, [true])
+    end;
+
+    function Contains(Self: TuiContainer; Child: TuiView): boolean;
+    begin
+      TuiContainerRequire(Self.View);
+      return TuiContainerFindChild(Self.View, Child) >= 0
+    end;
+
+    procedure Remove(Self: TuiContainer; Child: TuiView);
+    begin
+      TuiContainerRequire(Self.View);
+      var Index: integer := TuiContainerFindChild(Self.View, Child);
+      if Index < 0 then
+      begin
+        panic('Tui2 container does not own the view')
+      end;
+      TuiContainerAttached[Index] := false;
+      Child.Destroy()
+    end;
+  end;

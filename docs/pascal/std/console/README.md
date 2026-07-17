@@ -75,6 +75,7 @@ Everything below requires `uses Std.Console;`.
 | procedure | `DiscardRegion(Region)` | consume a saved region without restoring |
 | function | `DisplayWidth(Text): integer` | Unicode terminal-column width |
 | function | `GraphemeWidth(Glyph): integer` | Validate and measure one renderable grapheme |
+| function | `SplitGraphemes(Text): array of string` | Split text into extended grapheme clusters |
 | procedure | `Sound(Hz)` | emit one terminal bell for positive `Hz` |
 | procedure | `NoSound()` | stop active tone state (no-op) |
 | procedure | `AssignCrt()` | enable CRT mode |

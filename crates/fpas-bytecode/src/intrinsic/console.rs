@@ -107,4 +107,6 @@ pub enum ConsoleIntrinsic {
     DisplayWidth = 393,
     /// Validates and measures one renderable extended grapheme cluster.
     GraphemeWidth = 394,
+    /// Splits text into extended grapheme clusters.
+    SplitGraphemes = 395,
 }

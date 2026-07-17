@@ -123,6 +123,7 @@ pub fn run_intrinsic(
             | Intrinsic::Console(ConsoleIntrinsic::DiscardRegion)
             | Intrinsic::Console(ConsoleIntrinsic::DisplayWidth)
             | Intrinsic::Console(ConsoleIntrinsic::GraphemeWidth)
+            | Intrinsic::Console(ConsoleIntrinsic::SplitGraphemes)
             | Intrinsic::Graph(GraphIntrinsic::ApplicationOpen)
             | Intrinsic::Graph(GraphIntrinsic::ApplicationClose)
             | Intrinsic::Graph(GraphIntrinsic::ApplicationSize)

@@ -25,6 +25,7 @@ impl Compiler {
             s::STD_CONSOLE_WRITE_CELLS => (3, ConsoleIntrinsic::WriteCells, false),
             s::STD_CONSOLE_DISPLAY_WIDTH => (1, ConsoleIntrinsic::DisplayWidth, true),
             s::STD_CONSOLE_GRAPHEME_WIDTH => (1, ConsoleIntrinsic::GraphemeWidth, true),
+            s::STD_CONSOLE_SPLIT_GRAPHEMES => (1, ConsoleIntrinsic::SplitGraphemes, true),
             _ => return Ok(false),
         };
 

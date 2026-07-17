@@ -18,5 +18,9 @@ begin
   AssertEquals(' ', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(3, 1))).Glyph);
   Canvas.WriteText(TuiPoint.Create(0, 1), 'Hi', TuiStyleRole.Title);
   AssertEquals('H', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(0, 1))).Glyph);
-  AssertEquals('i', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(1, 1))).Glyph)
+  AssertEquals('i', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(1, 1))).Glyph);
+  Canvas.WriteText(TuiPoint.Create(0, 1), 'é中', TuiStyleRole.Accent);
+  AssertEquals('é', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(0, 1))).Glyph);
+  AssertEquals('中', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(1, 1))).Glyph);
+  AssertTrue(Std.Option.IsNone(Surface.TryCellAt(TuiPoint.Create(2, 1))))
 end.

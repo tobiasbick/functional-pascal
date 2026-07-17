@@ -340,6 +340,14 @@ impl Worker {
                 let width = Console::grapheme_width(&text, line)?;
                 self.push(Value::Integer(width))?;
             }
+            Intrinsic::Console(ConsoleIntrinsic::SplitGraphemes) => {
+                let text = self.pop_console_text(line)?;
+                let values = Console::split_graphemes(&text)
+                    .into_iter()
+                    .map(Value::Str)
+                    .collect();
+                self.push(Value::Array(values))?;
+            }
             _ => return Ok(false),
         }
 

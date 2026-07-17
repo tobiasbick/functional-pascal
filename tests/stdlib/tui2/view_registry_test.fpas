@@ -1,0 +1,19 @@
+program Tui2ViewRegistryTest;
+
+uses Std.Test, Std.Tui2;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
+  var First: TuiView := TuiView.Create(App);
+  First.Tag := 42;
+  AssertTrue(First.IsAlive());
+  AssertEquals(42, First.Tag);
+  First.Destroy();
+  AssertFalse(First.IsAlive());
+  var Second: TuiView := TuiView.Create(App);
+  AssertEquals(First.Slot, Second.Slot);
+  AssertFalse(First.Generation = Second.Generation);
+  AssertTrue(Second.IsAlive());
+  App.Close();
+  AssertFalse(Second.IsAlive())
+end.

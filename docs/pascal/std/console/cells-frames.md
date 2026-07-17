@@ -54,6 +54,7 @@ type
 | `DiscardRegion(Region)` | — | Consume a saved region without restoring it. |
 | `DisplayWidth(Text)` | `integer` | Return the terminal-column width of Unicode text by extended grapheme cluster. |
 | `GraphemeWidth(Glyph)` | `integer` | Validate one renderable extended grapheme cluster and return its width. |
+| `SplitGraphemes(Text)` | `array of string` | Split text into extended grapheme clusters. |
 
 ## Colors and cells
 
@@ -86,8 +87,9 @@ two terminal columns; ambiguous-width characters use one column.
 `Cell.glyph` must contain exactly one non-zero-width extended grapheme cluster. A base glyph with
 combining marks and a joined emoji sequence are valid cell glyphs; a standalone combining mark,
 an empty string, or multiple graphemes is rejected. `GraphemeWidth` applies that validation without
-painting. Use `DisplayWidth` when laying out complete strings whose terminal width may differ from
-their character count.
+painting. `SplitGraphemes` exposes the same segmentation for source-level text layout. Use
+`DisplayWidth` when laying out complete strings whose terminal width may differ from their character
+count.
 
 ## Drawing
 

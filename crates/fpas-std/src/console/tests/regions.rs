@@ -2,7 +2,7 @@ use super::*;
 
 fn cell(glyph: char, foreground: ConsoleColor) -> ConsoleCell {
     ConsoleCell {
-        glyph,
+        glyph: glyph.to_string(),
         foreground,
         background: ConsoleColor::Crt(0),
     }
@@ -19,7 +19,9 @@ fn saved_region_restores_glyphs_and_extended_colors_once() {
             blue: 30,
         },
     );
-    console.put_cell(1, 1, original, test_location()).unwrap();
+    console
+        .put_cell(1, 1, original.clone(), test_location())
+        .unwrap();
     let saved = console
         .save_region(
             ConsoleRect {
@@ -65,7 +67,9 @@ fn discard_region_expires_without_restoring() {
 fn saved_region_preserves_complete_wide_glyph() {
     let mut console = Console::new();
     let wide = cell('中', ConsoleColor::Crt(14));
-    console.put_cell(2, 1, wide, test_location()).unwrap();
+    console
+        .put_cell(2, 1, wide.clone(), test_location())
+        .unwrap();
     let saved = console
         .save_region(
             ConsoleRect {

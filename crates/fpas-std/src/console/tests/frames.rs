@@ -2,7 +2,7 @@ use super::*;
 
 fn cell(glyph: char) -> ConsoleCell {
     ConsoleCell {
-        glyph,
+        glyph: glyph.to_string(),
         foreground: ConsoleColor::Crt(7),
         background: ConsoleColor::Crt(0),
     }

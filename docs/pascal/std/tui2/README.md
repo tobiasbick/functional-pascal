@@ -29,6 +29,8 @@ Coordinates are zero-based: `(0, 0)` is the upper-left cell, X grows to the righ
 | `TuiStyle` | Foreground, background, and text attributes. |
 | `TuiCell` | A glyph with a semantic style role. |
 | `TuiPalette` | An immutable mapping from semantic roles to styles. |
+| `TuiSurface` | A headless retained cell surface. |
+| `TuiCanvas` | A transient, clipped drawing capability for a surface. |
 | `TuiApplication` | An application-scoped headless registry and lifecycle boundary. |
 | `TuiCommand` | A validated positive command identity. |
 | `TuiView` | A typed source identity passed to actions. |
@@ -96,7 +98,14 @@ var Cell: TuiCell := TuiCell.Create('X', TuiStyleRole.Focused);
 ```
 
 `TuiStyle.Create` additionally accepts `Bold`, `Dim`, `Underline`, and `Inverse` flags. A
-`TuiCell` is a value only; drawing and glyph validation are not exposed by `Std.Tui2` yet.
+`TuiCell.Create` requires exactly one non-zero-width extended grapheme cluster and its `Width()` is
+one or two terminal columns. `TuiSurface.Create` owns a zero-based retained cell grid;
+`TryCellAt` returns `None` outside the grid and on a wide-glyph continuation. Overwriting either
+column clears the complete previous wide glyph. `TuiCanvas.Create(Surface, Bounds)` clips drawing
+to `Bounds`; `PutCell`, `FillRect`, and `WriteText` use zero-based surface coordinates.
+
+`WriteText` currently iterates Unicode scalars. Use `PutCell` with a `TuiCell` for a combined or
+joined grapheme until text segmentation is available to source-level Tui2 code.
 
 ## `TuiPalette`
 

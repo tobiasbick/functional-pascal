@@ -105,4 +105,6 @@ pub enum ConsoleIntrinsic {
     DiscardRegion = 392,
     /// Measures a string in terminal columns.
     DisplayWidth = 393,
+    /// Validates and measures one renderable extended grapheme cluster.
+    GraphemeWidth = 394,
 }

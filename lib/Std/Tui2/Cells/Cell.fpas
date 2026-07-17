@@ -1,6 +1,6 @@
 unit Std.Tui2.Cells.Cell;
 
-uses Std.Tui2.Cells.StyleRole;
+uses Std.Tui2.Cells.Glyph, Std.Tui2.Cells.StyleRole;
 
 type
   TuiCell = record
@@ -9,6 +9,12 @@ type
 
     static function Create(Glyph: string; Role: TuiStyleRole): TuiCell;
     begin
+      TuiGlyphWidth(Glyph);
       return record Glyph := Glyph; Role := Role; end
+    end;
+
+    function Width(Self: TuiCell): integer;
+    begin
+      return TuiGlyphWidth(Self.Glyph)
     end;
   end;

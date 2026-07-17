@@ -18,7 +18,7 @@ private mutable var TuiButtonOnClick: array of option of TuiButtonCallback := []
 
 private procedure TuiButtonRequire(ApplicationId: integer; Slot: integer; Generation: integer);
 begin
-  if (Slot <= 0) or (Slot > Length(TuiButtonGenerations)) then
+  if (Slot <= 0) or (Slot > Std.Array.Length(TuiButtonGenerations)) then
   begin
     panic('Tui2 button handle has an invalid registry slot')
   end;
@@ -44,7 +44,7 @@ end;
 
 private procedure TuiButtonRelease(ApplicationId: integer; Slot: integer; Generation: integer);
 begin
-  if (Slot <= 0) or (Slot > Length(TuiButtonGenerations)) then
+  if (Slot <= 0) or (Slot > Std.Array.Length(TuiButtonGenerations)) then
   begin
     return
   end;
@@ -81,7 +81,7 @@ type
       TuiButtonOnClick := Std.Array.Concat(TuiButtonOnClick, [None]);
       var Button: TuiButton := record
         ApplicationId := App.Id;
-        Slot := Length(TuiButtonGenerations);
+        Slot := Std.Array.Length(TuiButtonGenerations);
         Generation := 1;
       end;
       var Cleanup: TuiApplicationCleanupCallback := procedure(ApplicationId: integer) begin
@@ -93,7 +93,7 @@ type
 
     function IsAlive(Self: TuiButton): boolean;
     begin
-      if (Self.Slot <= 0) or (Self.Slot > Length(TuiButtonGenerations)) then
+      if (Self.Slot <= 0) or (Self.Slot > Std.Array.Length(TuiButtonGenerations)) then
       begin
         return false
       end;

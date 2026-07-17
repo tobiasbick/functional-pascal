@@ -17,7 +17,7 @@ private mutable var TuiActionOnExecute: array of option of TuiActionCallback := 
 
 private procedure TuiActionRequire(ApplicationId: integer; Slot: integer; Generation: integer);
 begin
-  if (Slot <= 0) or (Slot > Length(TuiActionGenerations)) then
+  if (Slot <= 0) or (Slot > Std.Array.Length(TuiActionGenerations)) then
   begin
     panic('Tui2 action handle has an invalid registry slot')
   end;
@@ -43,7 +43,7 @@ end;
 
 private procedure TuiActionRelease(ApplicationId: integer; Slot: integer; Generation: integer);
 begin
-  if (Slot <= 0) or (Slot > Length(TuiActionGenerations)) then
+  if (Slot <= 0) or (Slot > Std.Array.Length(TuiActionGenerations)) then
   begin
     return
   end;
@@ -83,7 +83,7 @@ type
       TuiActionOnExecute := Std.Array.Concat(TuiActionOnExecute, [None]);
       var Action: TuiAction := record
         ApplicationId := App.Id;
-        Slot := Length(TuiActionGenerations);
+        Slot := Std.Array.Length(TuiActionGenerations);
         Generation := 1;
       end;
       var Cleanup: TuiApplicationCleanupCallback := procedure(ApplicationId: integer) begin
@@ -95,7 +95,7 @@ type
 
     function IsAlive(Self: TuiAction): boolean;
     begin
-      if (Self.Slot <= 0) or (Self.Slot > Length(TuiActionGenerations)) then
+      if (Self.Slot <= 0) or (Self.Slot > Std.Array.Length(TuiActionGenerations)) then
       begin
         return false
       end;

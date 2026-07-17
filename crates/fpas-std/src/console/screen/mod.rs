@@ -62,9 +62,9 @@ pub(super) enum FrameDamage {
     Rect(WindowRect),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct ScreenCell {
-    pub(super) ch: char,
+    pub(super) glyph: String,
     pub(super) fg: RenderColor,
     pub(super) bg: RenderColor,
     pub(super) continuation: bool,
@@ -108,7 +108,7 @@ impl ConsoleState {
         let width = width.max(1);
         let height = height.max(1);
         let blank = ScreenCell {
-            ch: ' ',
+            glyph: " ".into(),
             fg: RenderColor::Crt(7),
             bg: RenderColor::Crt(0),
             continuation: false,
@@ -160,7 +160,7 @@ impl ConsoleState {
         }
 
         let blank = ScreenCell {
-            ch: ' ',
+            glyph: " ".into(),
             fg: self.active_fg,
             bg: self.active_bg,
             continuation: false,
@@ -174,7 +174,7 @@ impl ConsoleState {
             for x in 1..=old_width.min(new_width) {
                 let old_idx = ((y - 1) * old_width + (x - 1)) as usize;
                 let new_idx = ((y - 1) * new_width + (x - 1)) as usize;
-                new_cells[new_idx] = old_cells[old_idx];
+                new_cells[new_idx] = old_cells[old_idx].clone();
             }
         }
 
@@ -217,7 +217,7 @@ impl ConsoleState {
 
     fn blank_cell(&self) -> ScreenCell {
         ScreenCell {
-            ch: ' ',
+            glyph: " ".into(),
             fg: self.active_fg,
             bg: self.active_bg,
             continuation: false,
@@ -246,7 +246,7 @@ impl ConsoleState {
     }
 
     pub(super) fn cell_at(&self, x: u16, y: u16) -> ScreenCell {
-        self.cells[self.index(x, y)]
+        self.cells[self.index(x, y)].clone()
     }
 
     /// Writes one CRT cell using packed palette colors (`0..=15`), bypassing the cursor.
@@ -256,7 +256,7 @@ impl ConsoleState {
         }
         let idx = self.index(x, y);
         self.cells[idx] = ScreenCell {
-            ch,
+            glyph: ch.to_string(),
             fg: RenderColor::Crt(fg.min(15)),
             bg: RenderColor::Crt(bg.min(15)),
             continuation: false,
@@ -295,7 +295,7 @@ impl ConsoleState {
     /// Returns the character content of one screen row (full width, space-padded).
     pub(super) fn row_text(&self, y: u16) -> String {
         (1..=self.width)
-            .map(|x| self.cells[self.index(x, y)].ch)
+            .map(|x| self.cells[self.index(x, y)].glyph.as_str())
             .collect()
     }
 
@@ -304,7 +304,12 @@ impl ConsoleState {
         let cell = self.cell_at(x, y);
         let fg = cell.fg.packed_index()?;
         let bg = cell.bg.packed_index()?;
-        Some((cell.ch, fg, bg))
+        let mut chars = cell.glyph.chars();
+        let ch = match (chars.next(), chars.next()) {
+            (Some(ch), None) => ch,
+            _ => return None,
+        };
+        Some((ch, fg, bg))
     }
 
     #[cfg(test)]
@@ -321,7 +326,8 @@ impl ConsoleState {
     #[cfg(test)]
     pub(super) fn cell_color_labels(&self, x: u16, y: u16) -> (char, String, String) {
         let cell = self.cell_at(x, y);
-        (cell.ch, cell.fg.debug_label(), cell.bg.debug_label())
+        let ch = cell.glyph.chars().next().unwrap_or(' ');
+        (ch, cell.fg.debug_label(), cell.bg.debug_label())
     }
 }
 

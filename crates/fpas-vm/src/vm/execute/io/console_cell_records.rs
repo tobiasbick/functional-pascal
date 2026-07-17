@@ -79,7 +79,7 @@ impl Worker {
         Value::Record {
             type_name: CELL_TYPE.into(),
             fields: vec![
-                ("glyph".into(), Value::Str(cell.glyph.to_string())),
+                ("glyph".into(), Value::Str(cell.glyph)),
                 (
                     "foreground".into(),
                     Self::console_color_record(cell.foreground),
@@ -181,19 +181,7 @@ impl Worker {
 fn console_cell_from_value(value: &Value, line: SourceLocation) -> Result<ConsoleCell, VmError> {
     let fields = record_fields(value, CELL_TYPE, line)?;
     let glyph = match field(fields, "glyph", CELL_TYPE, line)? {
-        Value::Str(glyph) => {
-            let mut chars = glyph.chars();
-            match (chars.next(), chars.next()) {
-                (Some(glyph), None) => glyph,
-                _ => {
-                    return Err(validation_error(
-                        "Std.Console.Cell.glyph must contain exactly one Unicode scalar",
-                        "Set `glyph` to a string containing one character.",
-                        line,
-                    ));
-                }
-            }
-        }
+        Value::Str(glyph) => glyph.clone(),
         other => {
             return Err(field_type_error(CELL_TYPE, "glyph", "string", other, line));
         }

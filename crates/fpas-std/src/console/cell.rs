@@ -24,10 +24,10 @@ pub enum ConsoleColor {
 }
 
 /// One logical terminal glyph and its foreground/background colors.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ConsoleCell {
-    /// The Unicode scalar painted at the cell.
-    pub glyph: char,
+    /// The one extended grapheme cluster painted at the cell.
+    pub glyph: String,
     /// Foreground color.
     pub foreground: ConsoleColor,
     /// Background color.

@@ -21,7 +21,7 @@ private mutable var TuiCleanupCallbacks: array of TuiApplicationCleanupCallback 
 
 private procedure TuiApplicationRequire(ApplicationId: integer; Generation: integer);
 begin
-  if (ApplicationId <= 0) or (ApplicationId > Length(TuiApplicationGenerations)) then
+  if (ApplicationId <= 0) or (ApplicationId > Std.Array.Length(TuiApplicationGenerations)) then
   begin
     panic('Tui2 application handle has an invalid registry slot')
   end;
@@ -63,12 +63,12 @@ type
       TuiApplicationOnStart := Std.Array.Concat(TuiApplicationOnStart, [None]);
       TuiApplicationOnStop := Std.Array.Concat(TuiApplicationOnStop, [None]);
       TuiApplicationOnTick := Std.Array.Concat(TuiApplicationOnTick, [None]);
-      return record Id := Length(TuiApplicationGenerations); Generation := 1; end
+      return record Id := Std.Array.Length(TuiApplicationGenerations); Generation := 1; end
     end;
 
     function IsOpen(Self: TuiApplication): boolean;
     begin
-      if (Self.Id <= 0) or (Self.Id > Length(TuiApplicationGenerations)) then
+      if (Self.Id <= 0) or (Self.Id > Std.Array.Length(TuiApplicationGenerations)) then
       begin
         return false
       end;
@@ -255,7 +255,7 @@ type
       begin
         Self.OnStop(Self)
       end;
-      for I: integer := 0 to Length(TuiCleanupApplicationIds) - 1 do
+      for I: integer := 0 to Std.Array.Length(TuiCleanupApplicationIds) - 1 do
       begin
         if TuiCleanupApplicationIds[I] = Self.Id then
         begin

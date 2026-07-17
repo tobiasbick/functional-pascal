@@ -1,6 +1,6 @@
 use super::{ConsoleState, FrameDamage, RenderColor, ScreenCell, WindowRect};
 use crate::console::cell::{ConsoleCell, ConsoleColor, ConsoleRect};
-use crate::text::cell_width::display_width;
+use crate::text::cell_width::grapheme_cell_width;
 
 impl From<ConsoleColor> for RenderColor {
     fn from(value: ConsoleColor) -> Self {
@@ -40,7 +40,7 @@ impl ConsoleState {
             return None;
         }
         Some(ConsoleCell {
-            glyph: cell.ch,
+            glyph: cell.glyph.clone(),
             foreground: cell.fg.into(),
             background: cell.bg.into(),
         })
@@ -55,7 +55,7 @@ impl ConsoleState {
     }
 
     fn put_cell_untracked(&mut self, x: u16, y: u16, cell: ConsoleCell) -> Option<WindowRect> {
-        let width = u16::from(display_width(cell.glyph));
+        let width = u16::from(grapheme_cell_width(&cell.glyph).unwrap_or(0));
         if width == 0 || !self.contains(x, y) || x.saturating_add(width - 1) > self.width {
             return None;
         }
@@ -73,7 +73,7 @@ impl ConsoleState {
         let bg = cell.background.into();
         let index = self.index(x, y);
         self.cells[index] = ScreenCell {
-            ch: cell.glyph,
+            glyph: cell.glyph,
             fg,
             bg,
             continuation: false,
@@ -81,7 +81,7 @@ impl ConsoleState {
         if width == 2 {
             let continuation = self.index(x + 1, y);
             self.cells[continuation] = ScreenCell {
-                ch: ' ',
+                glyph: " ".into(),
                 fg,
                 bg,
                 continuation: true,
@@ -102,7 +102,7 @@ impl ConsoleState {
         let mut damage: Option<WindowRect> = None;
         for y in rect.top..=rect.bottom {
             for x in rect.left..=rect.right {
-                if let Some(dirty) = self.put_cell_untracked(x, y, cell) {
+                if let Some(dirty) = self.put_cell_untracked(x, y, cell.clone()) {
                     damage = Some(match damage {
                         Some(existing) => existing.union(dirty),
                         None => dirty,
@@ -119,14 +119,14 @@ impl ConsoleState {
         let mut x = start_x;
         let mut damage: Option<WindowRect> = None;
         for cell in cells {
-            let width = u16::from(display_width(cell.glyph));
+            let width = u16::from(grapheme_cell_width(&cell.glyph).unwrap_or(0));
             if width == 0 {
                 continue;
             }
             if x > self.width || x.saturating_add(width - 1) > self.width {
                 break;
             }
-            if let Some(dirty) = self.put_cell_untracked(x, y, *cell) {
+            if let Some(dirty) = self.put_cell_untracked(x, y, cell.clone()) {
                 damage = Some(match damage {
                     Some(existing) => existing.union(dirty),
                     None => dirty,
@@ -161,24 +161,24 @@ impl ConsoleState {
         for y in 1..=self.height {
             for x in 1..=self.width {
                 let index = self.index(x, y);
-                let cell = self.cells[index];
+                let cell = self.cells[index].clone();
                 if cell.continuation {
                     let valid = x > 1
-                        && display_width(self.cells[self.index(x - 1, y)].ch) == 2
+                        && grapheme_cell_width(&self.cells[self.index(x - 1, y)].glyph) == Some(2)
                         && !self.cells[self.index(x - 1, y)].continuation;
                     if !valid {
                         self.cells[index] = ScreenCell {
-                            ch: ' ',
+                            glyph: " ".into(),
                             fg: cell.fg,
                             bg: cell.bg,
                             continuation: false,
                         };
                         changed = true;
                     }
-                } else if display_width(cell.ch) == 2 {
+                } else if grapheme_cell_width(&cell.glyph) == Some(2) {
                     if x == self.width {
                         self.cells[index] = ScreenCell {
-                            ch: ' ',
+                            glyph: " ".into(),
                             fg: cell.fg,
                             bg: cell.bg,
                             continuation: false,
@@ -187,7 +187,7 @@ impl ConsoleState {
                     } else {
                         let next = self.index(x + 1, y);
                         let continuation = ScreenCell {
-                            ch: ' ',
+                            glyph: " ".into(),
                             fg: cell.fg,
                             bg: cell.bg,
                             continuation: true,
@@ -217,19 +217,19 @@ impl ConsoleState {
         if current.continuation && x > 1 {
             left = x - 1;
             let index = self.index(left, y);
-            let old = self.cells[index];
+            let old = self.cells[index].clone();
             self.cells[index] = ScreenCell {
-                ch: ' ',
+                glyph: " ".into(),
                 fg: old.fg,
                 bg: old.bg,
                 continuation: false,
             };
-        } else if display_width(current.ch) == 2 && x < self.width {
+        } else if grapheme_cell_width(&current.glyph) == Some(2) && x < self.width {
             right = x + 1;
             let index = self.index(right, y);
-            let old = self.cells[index];
+            let old = self.cells[index].clone();
             self.cells[index] = ScreenCell {
-                ch: ' ',
+                glyph: " ".into(),
                 fg: old.fg,
                 bg: old.bg,
                 continuation: false,

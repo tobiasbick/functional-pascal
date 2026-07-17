@@ -35,6 +35,21 @@ pub fn str_display_width(text: &str) -> i64 {
         .sum()
 }
 
+/// Returns the terminal width of one renderable extended grapheme cluster.
+///
+/// Empty text, multiple clusters, and zero-width clusters return `None` so cell-oriented
+/// renderers can reject values that cannot occupy one logical cell.
+#[must_use]
+pub fn grapheme_cell_width(text: &str) -> Option<u8> {
+    let mut graphemes = text.graphemes(true);
+    let grapheme = graphemes.next()?;
+    if graphemes.next().is_some() {
+        return None;
+    }
+    let width = UnicodeWidthStr::width(grapheme).min(2) as u8;
+    (width > 0).then_some(width)
+}
+
 /// Display-column offset immediately before the scalar at `char_index`.
 #[must_use]
 #[cfg(test)]
@@ -121,6 +136,14 @@ mod tests {
     fn joined_emoji_uses_one_grapheme_width() {
         assert_eq!(str_display_width("👩‍💻"), 2);
         assert_eq!(str_display_width("A👩‍💻B"), 4);
+    }
+
+    #[test]
+    fn cell_width_requires_exactly_one_renderable_grapheme() {
+        assert_eq!(grapheme_cell_width("e\u{0301}"), Some(1));
+        assert_eq!(grapheme_cell_width("👩‍💻"), Some(2));
+        assert_eq!(grapheme_cell_width("AB"), None);
+        assert_eq!(grapheme_cell_width("\u{0301}"), None);
     }
 
     #[test]

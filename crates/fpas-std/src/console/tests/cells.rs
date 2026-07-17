@@ -2,7 +2,7 @@ use super::*;
 
 fn crt_cell(glyph: char, foreground: u8, background: u8) -> ConsoleCell {
     ConsoleCell {
-        glyph,
+        glyph: glyph.to_string(),
         foreground: ConsoleColor::Crt(foreground),
         background: ConsoleColor::Crt(background),
     }
@@ -12,7 +12,7 @@ fn crt_cell(glyph: char, foreground: u8, background: u8) -> ConsoleCell {
 fn put_and_get_cell_round_trip_all_color_kinds() {
     let mut console = Console::new();
     let cell = ConsoleCell {
-        glyph: 'X',
+        glyph: "X".into(),
         foreground: ConsoleColor::Rgb {
             red: 12,
             green: 34,
@@ -21,7 +21,9 @@ fn put_and_get_cell_round_trip_all_color_kinds() {
         background: ConsoleColor::Ansi256(123),
     };
 
-    console.put_cell(2, 3, cell, test_location()).unwrap();
+    console
+        .put_cell(2, 3, cell.clone(), test_location())
+        .unwrap();
 
     assert_eq!(console.get_cell(2, 3), Some(cell));
 }
@@ -67,7 +69,7 @@ fn write_cells_advances_by_unicode_display_width() {
             .collect::<String>(),
         "A中 B"
     );
-    assert_eq!(console.get_cell(2, 1), Some(cells[1]));
+    assert_eq!(console.get_cell(2, 1), Some(cells[1].clone()));
     assert_eq!(console.get_cell(3, 1), None);
     assert_eq!(Console::display_width("A中B"), 4);
 }
@@ -109,6 +111,34 @@ fn cell_operations_reject_standalone_zero_width_glyphs() {
 
     assert_eq!(
         error.message,
-        "PutCell cannot paint a standalone zero-width glyph"
+        "PutCell requires one non-zero-width extended grapheme cluster"
     );
+}
+
+#[test]
+fn cells_accept_one_extended_grapheme_cluster() {
+    let mut console = Console::new();
+    let cell = ConsoleCell {
+        glyph: "e\u{0301}".into(),
+        foreground: ConsoleColor::Crt(7),
+        background: ConsoleColor::Crt(0),
+    };
+
+    console
+        .put_cell(1, 1, cell.clone(), test_location())
+        .unwrap();
+
+    assert_eq!(console.get_cell(1, 1), Some(cell));
+}
+
+#[test]
+fn cells_reject_multiple_graphemes() {
+    let mut console = Console::new();
+    let cell = ConsoleCell {
+        glyph: "AB".into(),
+        foreground: ConsoleColor::Crt(7),
+        background: ConsoleColor::Crt(0),
+    };
+
+    assert!(console.put_cell(1, 1, cell, test_location()).is_err());
 }

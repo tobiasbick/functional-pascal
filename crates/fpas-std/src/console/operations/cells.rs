@@ -1,6 +1,6 @@
 use super::super::{Console, ConsoleCell, ConsoleRect};
 use crate::error::{StdError, std_runtime_error};
-use crate::text::cell_width::{display_width, str_display_width};
+use crate::text::cell_width::{grapheme_cell_width, str_display_width};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 
@@ -15,7 +15,7 @@ impl Console {
         cell: ConsoleCell,
         location: SourceLocation,
     ) -> Result<(), StdError> {
-        Self::validate_cell(cell, "PutCell", location)?;
+        Self::validate_cell(&cell, "PutCell", location)?;
         self.sync_terminal_size();
         self.enable_crt_mode();
         let (Some(x), Some(y)) = (
@@ -44,8 +44,8 @@ impl Console {
         cell: ConsoleCell,
         location: SourceLocation,
     ) -> Result<(), StdError> {
-        Self::validate_cell(cell, "FillRect", location)?;
-        if display_width(cell.glyph) != 1 {
+        Self::validate_cell(&cell, "FillRect", location)?;
+        if grapheme_cell_width(&cell.glyph) != Some(1) {
             return Err(std_runtime_error(
                 RUNTIME_CONSOLE_STATE_ERROR,
                 "FillRect requires a glyph that occupies exactly one terminal column",
@@ -68,7 +68,7 @@ impl Console {
         location: SourceLocation,
     ) -> Result<(), StdError> {
         for cell in cells {
-            Self::validate_cell(*cell, "WriteCells", location)?;
+            Self::validate_cell(cell, "WriteCells", location)?;
         }
         self.sync_terminal_size();
         self.enable_crt_mode();
@@ -87,16 +87,30 @@ impl Console {
         str_display_width(text)
     }
 
+    /// Validates one renderable extended grapheme cluster and returns its terminal width.
+    ///
+    /// **Documentation:** `docs/pascal/std/console/cells-frames.md`.
+    pub fn grapheme_width(text: &str, location: SourceLocation) -> Result<i64, StdError> {
+        grapheme_cell_width(text).map(i64::from).ok_or_else(|| {
+            std_runtime_error(
+                RUNTIME_CONSOLE_STATE_ERROR,
+                "GraphemeWidth requires one non-zero-width extended grapheme cluster",
+                "Pass one printable glyph, optionally with combining marks or joiners.",
+                location,
+            )
+        })
+    }
+
     fn validate_cell(
-        cell: ConsoleCell,
+        cell: &ConsoleCell,
         operation: &str,
         location: SourceLocation,
     ) -> Result<(), StdError> {
-        if display_width(cell.glyph) == 0 {
+        if grapheme_cell_width(&cell.glyph).is_none() {
             return Err(std_runtime_error(
                 RUNTIME_CONSOLE_STATE_ERROR,
-                format!("{operation} cannot paint a standalone zero-width glyph"),
-                "Combine the mark with a printable glyph before painting it.",
+                format!("{operation} requires one non-zero-width extended grapheme cluster"),
+                "Use one printable glyph, optionally with combining marks or joiners.",
                 location,
             ));
         }

@@ -1,6 +1,6 @@
 use super::{ConsoleState, SavedRegion};
 use crate::console::cell::{ConsoleRect, SavedRegionId};
-use crate::text::cell_width::display_width;
+use crate::text::cell_width::grapheme_cell_width;
 
 impl ConsoleState {
     pub(in super::super) fn save_region(&mut self, rect: ConsoleRect) -> Option<SavedRegionId> {
@@ -11,7 +11,8 @@ impl ConsoleState {
             rect.left -= 1;
         }
         if rect.right < self.width
-            && (rect.top..=rect.bottom).any(|y| display_width(self.cell_at(rect.right, y).ch) == 2)
+            && (rect.top..=rect.bottom)
+                .any(|y| grapheme_cell_width(&self.cell_at(rect.right, y).glyph) == Some(2))
         {
             rect.right += 1;
         }

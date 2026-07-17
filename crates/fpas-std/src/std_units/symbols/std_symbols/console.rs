@@ -120,6 +120,8 @@ pub const STD_CONSOLE_RESTORE_REGION: &str = std_console!("RestoreRegion");
 pub const STD_CONSOLE_DISCARD_REGION: &str = std_console!("DiscardRegion");
 /// Qualified name of `Std.Console.DisplayWidth`.
 pub const STD_CONSOLE_DISPLAY_WIDTH: &str = std_console!("DisplayWidth");
+/// Qualified name of `Std.Console.GraphemeWidth`.
+pub const STD_CONSOLE_GRAPHEME_WIDTH: &str = std_console!("GraphemeWidth");
 
 /// Symbols exported by the `Std.Console` unit.
 pub(in crate::std_units) const STD_CONSOLE_SYMBOLS: &[&str] = &[
@@ -225,4 +227,5 @@ pub(in crate::std_units) const STD_CONSOLE_SYMBOLS: &[&str] = &[
     STD_CONSOLE_RESTORE_REGION,
     STD_CONSOLE_DISCARD_REGION,
     STD_CONSOLE_DISPLAY_WIDTH,
+    STD_CONSOLE_GRAPHEME_WIDTH,
 ];

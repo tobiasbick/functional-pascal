@@ -11,7 +11,7 @@ impl ConsoleState {
         for y in dirty.top..=dirty.bottom {
             for x in dirty.left..=dirty.right {
                 let idx = self.index(x, y);
-                self.cells[idx] = blank;
+                self.cells[idx] = blank.clone();
             }
         }
         self.cursor_x = 1;
@@ -35,7 +35,7 @@ impl ConsoleState {
         };
         for x in dirty.left..=dirty.right {
             let idx = self.index(x, y);
-            self.cells[idx] = blank;
+            self.cells[idx] = blank.clone();
         }
         self.normalize_wide_cells();
         self.mark_damage_rect(dirty);
@@ -55,13 +55,13 @@ impl ConsoleState {
             for x in dirty.left..=dirty.right {
                 let dst = self.index(x, y);
                 let src = self.index(x, y + 1);
-                self.cells[dst] = self.cells[src];
+                self.cells[dst] = self.cells[src].clone();
             }
         }
         let blank = self.blank_cell();
         for x in dirty.left..=dirty.right {
             let idx = self.index(x, dirty.bottom);
-            self.cells[idx] = blank;
+            self.cells[idx] = blank.clone();
         }
         self.normalize_wide_cells();
         self.mark_damage_rect(dirty);
@@ -81,13 +81,13 @@ impl ConsoleState {
             for x in dirty.left..=dirty.right {
                 let dst = self.index(x, y);
                 let src = self.index(x, y - 1);
-                self.cells[dst] = self.cells[src];
+                self.cells[dst] = self.cells[src].clone();
             }
         }
         let blank = self.blank_cell();
         for x in dirty.left..=dirty.right {
             let idx = self.index(x, dirty.top);
-            self.cells[idx] = blank;
+            self.cells[idx] = blank.clone();
         }
         self.normalize_wide_cells();
         self.mark_damage_rect(dirty);
@@ -131,7 +131,7 @@ impl ConsoleState {
                         x,
                         y,
                         ConsoleCell {
-                            glyph: ch,
+                            glyph: ch.to_string(),
                             foreground: self.active_fg.into(),
                             background: self.active_bg.into(),
                         },
@@ -164,13 +164,13 @@ impl ConsoleState {
             for x in dirty.left..=dirty.right {
                 let dst = self.index(x, y);
                 let src = self.index(x, y + 1);
-                self.cells[dst] = self.cells[src];
+                self.cells[dst] = self.cells[src].clone();
             }
         }
         let blank = self.blank_cell();
         for x in dirty.left..=dirty.right {
             let idx = self.index(x, dirty.bottom);
-            self.cells[idx] = blank;
+            self.cells[idx] = blank.clone();
         }
         self.normalize_wide_cells();
         self.mark_damage_rect(dirty);

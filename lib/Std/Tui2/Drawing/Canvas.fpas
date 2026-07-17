@@ -1,0 +1,64 @@
+unit Std.Tui2.Drawing.Canvas;
+
+uses
+  Std.Str, Std.Tui2.Cells.Cell, Std.Tui2.Cells.StyleRole, Std.Tui2.Geometry.Point,
+  Std.Tui2.Geometry.Rect, Std.Tui2.Surface.Surface;
+
+type
+  TuiCanvas = record
+    Surface: TuiSurface;
+    Clip: TuiRect;
+
+    static function Create(Surface: TuiSurface; Bounds: TuiRect): TuiCanvas;
+    begin
+      return record Surface := Surface; Clip := Bounds.Intersect(Surface.Bounds()); end
+    end;
+
+    procedure PutCell(Self: TuiCanvas; Position: TuiPoint; Cell: TuiCell);
+    begin
+      if not Self.Clip.Contains(Position) then
+      begin
+        return
+      end;
+      var CellWidth: integer := Cell.Width();
+      if (CellWidth = 2) and not Self.Clip.Contains(TuiPoint.Create(Position.X + 1, Position.Y)) then
+      begin
+        Self.Surface.PutCell(Position, TuiCell.Create(' ', TuiStyleRole.Normal));
+        return
+      end;
+      Self.Surface.PutCell(Position, Cell)
+    end;
+
+    procedure FillRect(Self: TuiCanvas; Bounds: TuiRect; Cell: TuiCell);
+    begin
+      var CellWidth: integer := Cell.Width();
+      if CellWidth <> 1 then
+      begin
+        panic('Tui2 canvas FillRect requires a one-column cell')
+      end;
+      var Visible: TuiRect := Bounds.Intersect(Self.Clip);
+      for Y: integer := Visible.Y to Visible.Bottom() - 1 do
+      begin
+        for X: integer := Visible.X to Visible.Right() - 1 do
+        begin
+          Self.Surface.PutCell(TuiPoint.Create(X, Y), Cell)
+        end
+      end
+    end;
+
+    procedure WriteText(Self: TuiCanvas; Position: TuiPoint; Text: string; Role: TuiStyleRole);
+    begin
+      mutable var X: integer := Position.X;
+      for I: integer := 0 to Std.Str.Length(Text) - 1 do
+      begin
+        var Glyph: string := Std.Str.CharAt(Text, I);
+        if Glyph = Chr(10) then
+        begin
+          return
+        end;
+        var Cell: TuiCell := TuiCell.Create(Glyph, Role);
+        Self.PutCell(TuiPoint.Create(X, Position.Y), Cell);
+        X := X + Cell.Width()
+      end
+    end;
+  end;

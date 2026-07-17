@@ -48,7 +48,7 @@ impl Console {
                     writer
                         .queue(Print(cell.fg.ansi_set_fg()))
                         .and_then(|w| w.queue(Print(cell.bg.ansi_set_bg())))
-                        .and_then(|w| w.queue(Print(cell.ch)))
+                        .and_then(|w| w.queue(Print(&cell.glyph)))
                         .map_err(map_err)?;
                 }
             }
@@ -83,7 +83,7 @@ impl Console {
                             .map_err(map_err)?;
                         last_bg = Some(cell.bg);
                     }
-                    writer.queue(Print(cell.ch)).map_err(map_err)?;
+                    writer.queue(Print(&cell.glyph)).map_err(map_err)?;
                 }
             }
         }

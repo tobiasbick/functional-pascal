@@ -126,6 +126,12 @@ fn register_std_console_cell_api(checker: &mut Checker) {
         vec![p("Text", Ty::String, false)],
         Ty::Integer,
     );
+    define_func(
+        checker,
+        s::STD_CONSOLE_GRAPHEME_WIDTH,
+        vec![p("Glyph", Ty::String, false)],
+        Ty::Integer,
+    );
 }
 
 pub(super) fn register_std_console_key_api(checker: &mut Checker) {

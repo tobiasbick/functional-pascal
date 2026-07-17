@@ -1,0 +1,11 @@
+program GraphemeCellTest;
+
+uses Std.Console, Std.Option, Std.Test;
+
+begin
+  AssertEquals(1, GraphemeWidth('é'));
+  AssertEquals(2, GraphemeWidth('👩‍💻'));
+  var Value: Cell := record glyph := 'é'; foreground := CrtColor(7); background := CrtColor(0); end;
+  PutCell(1, 1, Value);
+  AssertEquals('é', Std.Option.Unwrap(GetCell(1, 1)).glyph)
+end.

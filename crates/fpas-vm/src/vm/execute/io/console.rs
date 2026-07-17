@@ -335,6 +335,11 @@ impl Worker {
                 let text = self.pop_console_text(line)?;
                 self.push(Value::Integer(Console::display_width(&text)))?;
             }
+            Intrinsic::Console(ConsoleIntrinsic::GraphemeWidth) => {
+                let text = self.pop_console_text(line)?;
+                let width = Console::grapheme_width(&text, line)?;
+                self.push(Value::Integer(width))?;
+            }
             _ => return Ok(false),
         }
 

@@ -6,9 +6,10 @@ The geometry, color, style, cell-value, palette, and display-width baseline is d
 current [`Std.Tui2` reference](../../pascal/std/tui2/README.md) and
 [`Std.Console` cell reference](../../pascal/std/console/cells-frames.md).
 
-- Extend console cells to accept one grapheme cluster and preserve wide-glyph continuation invariants.
-- Implement clipping and the headless cell surface.
-- Implement the transient `TuiCanvas` drawing boundary.
+- Implemented: console cells accept one renderable grapheme cluster and preserve wide-glyph continuation invariants.
+- Implemented: clipping and the headless cell surface.
+- Implemented: the transient `TuiCanvas` drawing boundary. Open: source-level `WriteText` still
+  needs grapheme segmentation; direct `TuiCell` drawing is already grapheme-aware.
 
 Completion contracts: [geometry.md](geometry.md), [text-and-cells.md](text-and-cells.md), and the pure-value section of [testing.md](testing.md).
 

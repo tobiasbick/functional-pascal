@@ -714,6 +714,7 @@ dependencies = [
  "softbuffer",
  "toml",
  "turbo-vision",
+ "unicode-segmentation",
  "unicode-width 0.2.2",
  "winit",
 ]

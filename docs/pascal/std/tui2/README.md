@@ -22,6 +22,11 @@ Coordinates are zero-based: `(0, 0)` is the upper-left cell, X grows to the righ
 | `TuiPoint` | A coordinate with `X` and `Y`. |
 | `TuiSize` | A non-negative extent with `Width` and `Height`. |
 | `TuiRect` | A rectangle with `X`, `Y`, `Width`, and `Height`. |
+| `TuiColor` | A CRT, ANSI-256, or RGB terminal color value. |
+| `TuiStyleRole` | A semantic role for a painted cell. |
+| `TuiStyle` | Foreground, background, and text attributes. |
+| `TuiCell` | A glyph with a semantic style role. |
+| `TuiPalette` | An immutable mapping from semantic roles to styles. |
 | `TuiPoint.Create(X, Y)` | Creates a point. |
 | `TuiSize.Create(Width, Height)` | Creates a non-negative size. |
 | `TuiRect.Create(X, Y, Width, Height)` | Creates a rectangle from its stored fields. |
@@ -71,9 +76,36 @@ var SameBounds: TuiRect := TuiRect.FromPointSize(
 );
 ```
 
+## Cell values
+
+`TuiColor` has distinct constructors for each representation. `FromCrt` accepts `0..15`, while
+`FromAnsi256` and every `FromRgb` channel accept `0..255`.
+
+```pascal
+var Foreground: TuiColor := TuiColor.FromCrt(14);
+var Background: TuiColor := TuiColor.FromRgb(10, 20, 30);
+var Style: TuiStyle := TuiStyle.FromColors(Foreground, Background);
+var Cell: TuiCell := TuiCell.Create('X', TuiStyleRole.Focused);
+```
+
+`TuiStyle.Create` additionally accepts `Bold`, `Dim`, `Underline`, and `Inverse` flags. A
+`TuiCell` is a value only; drawing and glyph validation are not exposed by `Std.Tui2` yet.
+
+## `TuiPalette`
+
+`TuiPalette.Default()` provides the standard semantic colors. `ForRole` resolves one style and
+`WithRole` returns a copy with one replacement, leaving the original palette unchanged.
+
+```pascal
+var Palette: TuiPalette := TuiPalette.Default();
+var Warning: TuiStyle := Palette.ForRole(TuiStyleRole.Warning);
+var Custom: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(255, 128, 0), TuiColor.FromCrt(0));
+var Updated: TuiPalette := Palette.WithRole(TuiStyleRole.Accent, Custom);
+```
+
 ## Implementation (contributors)
 
-`Std.Tui2` is a source-level standard-library facade in [`lib/Std/Tui2.fpas`](../../../../lib/Std/Tui2.fpas). Its geometry records are implemented in focused private units under [`lib/Std/Tui2/`](../../../../lib/Std/Tui2/). It is exported by [`lib/stdlib.fpasprj`](../../../../lib/stdlib.fpasprj).
+`Std.Tui2` is a source-level standard-library facade in [`lib/Std/Tui2.fpas`](../../../../lib/Std/Tui2.fpas). Its geometry records are implemented in focused private units under [`lib/Std/Tui2/Geometry/`](../../../../lib/Std/Tui2/Geometry/). It is exported by [`lib/stdlib.fpasprj`](../../../../lib/stdlib.fpasprj).
 
 ## See also
 

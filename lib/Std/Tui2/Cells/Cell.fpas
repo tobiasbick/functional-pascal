@@ -1,0 +1,14 @@
+unit Std.Tui2.Cells.Cell;
+
+uses Std.Tui2.Cells.StyleRole;
+
+type
+  TuiCell = record
+    Glyph: string;
+    Role: TuiStyleRole;
+
+    static function Create(Glyph: string; Role: TuiStyleRole): TuiCell;
+    begin
+      return record Glyph := Glyph; Role := Role; end
+    end;
+  end;

@@ -119,6 +119,13 @@ impl Compiler {
             );
         }
 
+        if let TypeBody::Alias(fpas_parser::TypeExpr::Named { id, .. }) = &type_def.body {
+            let source_name = id.parts.join(".");
+            if let Some(info) = self.enums.get(&canonical_name(&source_name)).cloned() {
+                self.enums.insert(canonical_name(&type_def.name), info);
+            }
+        }
+
         if let TypeBody::Record(record) = &type_def.body {
             for method in &record.methods {
                 self.compile_record_method(&type_def.name, method)?;

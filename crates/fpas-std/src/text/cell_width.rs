@@ -4,7 +4,8 @@
 
 #![allow(dead_code)] // Layout helpers remain reserved for Turbo Vision text layout.
 
-use unicode_width::UnicodeWidthChar;
+use unicode_segmentation::UnicodeSegmentation;
+use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 
 /// Continuation filler for the second column of a wide character.
 pub(crate) const WIDE_CONTINUATION: char = ' ';
@@ -23,10 +24,15 @@ pub fn display_width(ch: char) -> u8 {
     }
 }
 
-/// Sum display widths for every scalar in `text`.
+/// Sum display widths for every extended grapheme cluster in `text`.
+///
+/// Measuring clusters keeps joined emoji and a base glyph with combining marks together as one
+/// renderable unit. A cluster never contributes more than two terminal columns.
 #[must_use]
 pub fn str_display_width(text: &str) -> i64 {
-    text.chars().map(|ch| i64::from(display_width(ch))).sum()
+    text.graphemes(true)
+        .map(|grapheme| UnicodeWidthStr::width(grapheme).min(2) as i64)
+        .sum()
 }
 
 /// Display-column offset immediately before the scalar at `char_index`.
@@ -108,6 +114,13 @@ mod tests {
     fn combining_marks_do_not_advance() {
         assert_eq!(display_width('\u{0301}'), 0);
         assert_eq!(char_display_offset("e\u{0301}", 2), 1);
+        assert_eq!(str_display_width("e\u{0301}"), 1);
+    }
+
+    #[test]
+    fn joined_emoji_uses_one_grapheme_width() {
+        assert_eq!(str_display_width("👩‍💻"), 2);
+        assert_eq!(str_display_width("A👩‍💻B"), 4);
     }
 
     #[test]

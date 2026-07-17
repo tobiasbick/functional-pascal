@@ -1,6 +1,6 @@
-unit Std.Tui2.TuiRect;
+unit Std.Tui2.Geometry.Rect;
 
-uses Std.Tui2.TuiPoint, Std.Tui2.TuiSize;
+uses Std.Tui2.Geometry.Point, Std.Tui2.Geometry.Size;
 
 const
   TuiRectIntegerMax: integer := 9223372036854775807;

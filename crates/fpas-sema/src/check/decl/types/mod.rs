@@ -1,6 +1,6 @@
 use super::Checker;
 use crate::scope::{Symbol, SymbolKind};
-use crate::types::{GenericParamDef, Ty, TypeConstraint};
+use crate::types::{EnumTy, GenericParamDef, Ty, TypeConstraint};
 use fpas_diagnostics::codes::{SEMA_DUPLICATE_DECLARATION, SEMA_UNKNOWN_TYPE};
 use fpas_lexer::Span;
 use fpas_parser::{TypeBody, TypeDef, TypeParam};
@@ -19,7 +19,40 @@ impl Checker {
 
     fn check_alias_type_def(&mut self, td: &TypeDef, type_expr: &fpas_parser::TypeExpr) {
         let ty = self.resolve_type_expr(type_expr);
-        self.define_type_symbol(td, ty);
+        if !self.define_type_symbol(td, ty.clone()) {
+            return;
+        }
+
+        if let Ty::Enum(enum_ty) = ty {
+            self.register_enum_alias_variant_symbols(td, &enum_ty);
+        }
+    }
+
+    /// Expose qualified enum variants through an alias without adding ambiguous short names.
+    fn register_enum_alias_variant_symbols(&mut self, td: &TypeDef, enum_ty: &EnumTy) {
+        for variant in &enum_ty.variants {
+            let kind = if variant.fields.is_empty() {
+                SymbolKind::EnumMember
+            } else {
+                SymbolKind::EnumVariantConstructor
+            };
+            let qualified = format!("{}.{}", td.name, variant.name);
+            if !self.scopes.define_in_root(
+                &qualified,
+                Symbol {
+                    ty: Ty::Enum(enum_ty.clone()),
+                    mutable: false,
+                    kind,
+                },
+            ) {
+                self.error_with_code(
+                    SEMA_DUPLICATE_DECLARATION,
+                    format!("Duplicate enum member `{qualified}`"),
+                    "Each enum member name must be unique in the program.",
+                    td.span,
+                );
+            }
+        }
     }
 
     /// Execute `f` with the given type parameters in scope, then pop the scope.

@@ -29,4 +29,5 @@ softbuffer = "0.4"
 toml = "0.9"
 turbo-vision = { git = "https://github.com/aovestdipaperino/turbo-vision-4-rust", tag = "v2.0.0", features = ["test-util"] }
 unicode-width = "0.2"
+unicode-segmentation = "1"
 winit = "0.30"

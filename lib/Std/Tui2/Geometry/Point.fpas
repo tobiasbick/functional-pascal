@@ -1,4 +1,4 @@
-unit Std.Tui2.TuiPoint;
+unit Std.Tui2.Geometry.Point;
 
 type
   TuiPoint = record

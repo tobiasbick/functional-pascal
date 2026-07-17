@@ -1,4 +1,4 @@
-unit Std.Tui2.TuiSize;
+unit Std.Tui2.Geometry.Size;
 
 private function TuiSizeRequireNonNegative(Value: integer; Name: string): integer;
 begin

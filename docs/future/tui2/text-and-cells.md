@@ -20,6 +20,18 @@ The public measurement operation is shared with `Std.Console.DisplayWidth` so la
 
 ## Cell representation
 
+The source-level value boundary is implemented as follows:
+
+- `TuiColor` represents a classic color, an ANSI-256 palette entry, or RGB through distinct
+  `FromCrt`, `FromAnsi256`, and `FromRgb` constructors.
+- `TuiStyleRole` provides the semantic roles normal, disabled, focused, selected, shortcut,
+  frame, title, failure, warning, and accent.
+- `TuiStyle` carries foreground, background, and bold, dim, underline, and inverse attributes.
+- `TuiCell` stores a requested glyph and semantic style role.
+
+`TuiCell` is a pure value. The future cell surface validates that its glyph is a non-empty
+renderable grapheme and enforces wide-glyph continuation repair when it is painted.
+
 The internal surface distinguishes:
 
 ```text
@@ -49,7 +61,13 @@ TuiCanvas.DrawFrame(Canvas: TuiCanvas; Bounds: TuiRect; Role: TuiStyleRole)
 
 Controls paint semantic `TuiStyleRole` values instead of fixed colors. `TuiPalette` maps roles to foreground, background, and attributes.
 
-Initial roles include normal, disabled, focused, selected, shortcut, frame, title, error, warning, and accent. Applications may replace a palette at the application or subtree boundary. A palette change invalidates affected views.
+`TuiPalette.Default()` supplies the standard CRT palette. `ForRole` resolves a role, while
+`WithRole` returns a palette copy with exactly one role replaced. The default mapping is light
+gray on black for normal and frame text, dark gray for disabled text, black on light cyan for
+focus, black on light gray for selection, yellow for titles and warnings, light red for failures,
+and light cyan for shortcuts and accents.
+
+Initial roles include normal, disabled, focused, selected, shortcut, frame, title, failure, warning, and accent. Applications may replace a palette at the application or subtree boundary. A palette change invalidates affected views.
 
 Color values support classic colors, indexed colors, and RGB. Capability fallback occurs only in the final console renderer; measurement and control logic are color-mode independent.
 

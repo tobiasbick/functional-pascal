@@ -167,6 +167,24 @@ end.",
 }
 
 #[test]
+fn enum_variant_through_type_alias() {
+    let out = compile_and_run(
+        "\
+program AliasEnum;
+uses Std.Console;
+type Tint = enum Red; Green; Blue; end;
+type PaletteColor = Tint;
+begin
+  if PaletteColor.Green = PaletteColor.Green then
+  begin
+    WriteLn('green')
+  end
+end.",
+    );
+    assert_eq!(out.lines, vec!["green"]);
+}
+
+#[test]
 fn multiple_type_block_declarations() {
     let out = compile_and_run(
         "\

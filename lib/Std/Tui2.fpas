@@ -1,8 +1,16 @@
 unit Std.Tui2;
 
-uses Std.Tui2.TuiPoint, Std.Tui2.TuiSize, Std.Tui2.TuiRect;
+uses
+  Std.Tui2.Geometry.Point, Std.Tui2.Geometry.Size, Std.Tui2.Geometry.Rect, Std.Tui2.Cells.Color,
+  Std.Tui2.Cells.StyleRole, Std.Tui2.Cells.Style, Std.Tui2.Cells.Cell, Std.Tui2.Cells.Palette;
 
 type
-  TuiPoint = Std.Tui2.TuiPoint.TuiPoint;
-  TuiSize = Std.Tui2.TuiSize.TuiSize;
-  TuiRect = Std.Tui2.TuiRect.TuiRect;
+  TuiPoint = Std.Tui2.Geometry.Point.TuiPoint;
+  TuiSize = Std.Tui2.Geometry.Size.TuiSize;
+  TuiRect = Std.Tui2.Geometry.Rect.TuiRect;
+  TuiColorKind = Std.Tui2.Cells.Color.TuiColorKind;
+  TuiColor = Std.Tui2.Cells.Color.TuiColor;
+  TuiStyleRole = Std.Tui2.Cells.StyleRole.TuiStyleRole;
+  TuiStyle = Std.Tui2.Cells.Style.TuiStyle;
+  TuiCell = Std.Tui2.Cells.Cell.TuiCell;
+  TuiPalette = Std.Tui2.Cells.Palette.TuiPalette;

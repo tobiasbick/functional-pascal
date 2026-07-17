@@ -4,7 +4,7 @@
 
 `Std.Tui2` is the public unit. Its implementation may be split into focused private FPAS units below `lib/Std/Tui2/`.
 
-Each FPAS source file owns one concern. For Tui2 value records this normally means one record type per file, even when the record is small. Geometry therefore uses `TuiPoint.fpas`, `TuiSize.fpas`, and `TuiRect.fpas`, not one combined geometry unit. Text measurement, cell-surface state, canvas drawing, registry ownership, event routing, and each layout family also remain separate concerns. A nested directory introduces a matching namespace segment.
+Each FPAS source file owns one concern. For Tui2 value records this normally means one record type per file, even when the record is small. Geometry therefore uses `Geometry/Point.fpas`, `Geometry/Size.fpas`, and `Geometry/Rect.fpas`, not one combined geometry unit. Text measurement, cell-surface state, canvas drawing, registry ownership, event routing, and each layout family also remain separate concerns. A nested directory introduces a matching namespace segment.
 
 `Std.Tui2.fpas` remains a deliberately small public facade. It exposes the supported API and delegates to the focused implementation units; it does not become a second implementation location.
 

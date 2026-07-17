@@ -187,6 +187,17 @@ fn type_alias_names_are_case_insensitive() {
 }
 
 #[test]
+fn enum_variant_is_available_through_type_alias() {
+    check_ok(
+        "program T; \
+         type Color = enum Red; Green; end; \
+         type PaletteColor = Color; \
+         var C: PaletteColor := PaletteColor.Green; \
+         begin end.",
+    );
+}
+
+#[test]
 fn type_alias_to_unknown_type() {
     let errors = check_errors(
         "program T; \

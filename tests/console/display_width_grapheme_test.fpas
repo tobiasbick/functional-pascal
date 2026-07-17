@@ -1,0 +1,9 @@
+program DisplayWidthGraphemeTest;
+
+uses Std.Console;
+
+begin
+  WriteLn(DisplayWidth('é'));
+  WriteLn(DisplayWidth('👩‍💻'));
+  WriteLn(DisplayWidth('A👩‍💻B'))
+end.

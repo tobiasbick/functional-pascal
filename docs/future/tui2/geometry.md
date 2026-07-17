@@ -41,7 +41,7 @@ TuiRect.FromCorners(TopLeft, BottomRight)
 - `FromPointSize` combines a `TuiPoint` origin with a `TuiSize` extent.
 - `FromCorners` treats `BottomRight` as the exclusive corner and rejects reversed coordinates.
 - Copying an existing geometry record uses ordinary value assignment.
-- Geometry source is split into focused `TuiPoint.fpas`, `TuiSize.fpas`, and `TuiRect.fpas` implementation units behind the public facade.
+- Geometry source is split into focused `Geometry/Point.fpas`, `Geometry/Size.fpas`, and `Geometry/Rect.fpas` implementation units behind the public facade.
 
 The static-call syntax is specified by the implemented [record method reference](../../pascal/language/types/record-methods.md).
 

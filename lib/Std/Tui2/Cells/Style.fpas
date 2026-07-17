@@ -1,0 +1,44 @@
+unit Std.Tui2.Cells.Style;
+
+uses Std.Tui2.Cells.Color;
+
+type
+  TuiStyle = record
+    Foreground: TuiColor;
+    Background: TuiColor;
+    Bold: boolean;
+    Dim: boolean;
+    Underline: boolean;
+    Inverse: boolean;
+
+    static function FromColors(Foreground: TuiColor; Background: TuiColor): TuiStyle;
+    begin
+      return record
+        Foreground := Foreground;
+        Background := Background;
+        Bold := false;
+        Dim := false;
+        Underline := false;
+        Inverse := false;
+      end
+    end;
+
+    static function Create(
+  Foreground: TuiColor;
+  Background: TuiColor;
+  Bold: boolean;
+  Dim: boolean;
+  Underline: boolean;
+  Inverse: boolean
+): TuiStyle;
+    begin
+      return record
+        Foreground := Foreground;
+        Background := Background;
+        Bold := Bold;
+        Dim := Dim;
+        Underline := Underline;
+        Inverse := Inverse;
+      end
+    end;
+  end;

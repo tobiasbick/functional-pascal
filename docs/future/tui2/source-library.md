@@ -11,13 +11,19 @@ lib/
     Version.fpas
     Tui2.fpas
     Tui2/
-      TuiPoint.fpas
-      TuiSize.fpas
-      TuiRect.fpas
-      Text.fpas
-      Cells.fpas
-      Canvas.fpas
-      Registry.fpas
+      Geometry/
+        Point.fpas
+        Size.fpas
+        Rect.fpas
+      Text/
+      Cells/
+        Color.fpas
+        StyleRole.fpas
+        Style.fpas
+        Cell.fpas
+        Palette.fpas
+      Drawing/
+      Runtime/
       Layout/
       Views/
       Controls/
@@ -27,7 +33,7 @@ lib/
 
 `Std/Tui2.fpas` is the public facade. Every other Tui2 source file owns one concern and is an implementation unit. A value-record concern normally receives its own same-named source file. Directories group related concerns without combining their implementation into a catch-all unit.
 
-Internal implementation units use names such as `Std.Tui2.TuiRect`. Trusted standard-library sources may declare multi-segment `Std.*` names. User projects may not declare any unit whose first segment is `Std`.
+Internal implementation units use names such as `Std.Tui2.Geometry.Rect`. Trusted standard-library sources may declare multi-segment `Std.*` names. User projects may not declare any unit whose first segment is `Std`.
 
 ## Export boundary
 
@@ -35,7 +41,7 @@ The manifest is authoritative:
 
 - exported units may appear in an application `uses` clause;
 - non-exported units are linkable only from other units in the same source standard library;
-- a user import of `Std.Tui2.TuiRect` fails with an export diagnostic;
+- a user import of `Std.Tui2.Geometry.Rect` fails with an export diagnostic;
 - source units do not need an entry in the Rust intrinsic-unit registry;
 - intrinsic units such as `Std.Console` continue to use their existing registry.
 

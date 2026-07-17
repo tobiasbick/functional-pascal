@@ -1,0 +1,15 @@
+unit Std.Tui2.Cells.StyleRole;
+
+type
+  TuiStyleRole = enum
+    Normal;
+    Disabled;
+    Focused;
+    Selected;
+    Shortcut;
+    Frame;
+    Title;
+    Failure;
+    Warning;
+    Accent;
+  end;

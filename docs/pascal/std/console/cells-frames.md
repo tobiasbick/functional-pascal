@@ -52,7 +52,7 @@ type
 | `SaveRegion(Bounds)` | `SavedRegion` | Capture a clipped region in a one-shot handle. |
 | `RestoreRegion(Region)` | — | Restore and consume a saved region. |
 | `DiscardRegion(Region)` | — | Consume a saved region without restoring it. |
-| `DisplayWidth(Text)` | `integer` | Return the terminal-column width of Unicode text. |
+| `DisplayWidth(Text)` | `integer` | Return the terminal-column width of Unicode text by extended grapheme cluster. |
 
 ## Colors and cells
 
@@ -77,6 +77,10 @@ construct colors with the functions above and inspect `kind` plus the matching f
 
 - `ColorKind.Crt` and `ColorKind.Ansi256` use `index`.
 - `ColorKind.Rgb` uses `red`, `green`, and `blue`.
+
+`DisplayWidth` segments text into extended grapheme clusters, so a base glyph with combining marks
+or a joined emoji sequence is measured as one renderable unit. Each cluster occupies zero, one, or
+two terminal columns; ambiguous-width characters use one column.
 
 `Cell.glyph` must contain one Unicode scalar with non-zero display width. A standalone combining
 mark or another zero-width glyph is rejected. Use `DisplayWidth` when laying out strings whose

@@ -9,7 +9,7 @@ Std.Tui2 does not define a general `OnInit` callback. Construction and configura
 ```pascal
 var View: TuiCustomView := TuiCustomView.New(App);
 TuiView.SetSizePolicy(TuiCustomView.AsView(View), Policy);
-TuiCustomView.SetPaintHandler(View, PaintContent);
+View.OnPaint := PaintContent;
 TuiContainer.Add(Parent, TuiCustomView.AsView(View))
 ```
 
@@ -104,24 +104,25 @@ Once closing is accepted:
 
 An application stop is not required to ask every child for permission. Application-specific unsaved-work behavior belongs in an application action or top-level close handler.
 
-## Custom-view API shape
+## Custom-view event surface
 
-The rough registration surface is:
+Lifecycle handlers use Pascal-style event assignment:
 
 ```pascal
-TuiCustomView.New(App: TuiApplication): TuiCustomView
-TuiCustomView.SetAttachHandler(View: TuiCustomView; Handler: TuiAttachHandler)
-TuiCustomView.SetDetachHandler(View: TuiCustomView; Handler: TuiDetachHandler)
-TuiCustomView.SetMeasureHandler(View: TuiCustomView; Handler: TuiMeasureHandler)
-TuiCustomView.SetResizeHandler(View: TuiCustomView; Handler: TuiResizeHandler)
-TuiCustomView.SetPaintHandler(View: TuiCustomView; Handler: TuiPaintHandler)
-TuiCustomView.SetFocusHandler(View: TuiCustomView; Handler: TuiFocusHandler)
-TuiCustomView.SetBlurHandler(View: TuiCustomView; Handler: TuiBlurHandler)
-TuiCustomView.SetCloseRequestHandler(View: TuiCustomView; Handler: TuiCloseRequestHandler)
-TuiCustomView.SetClosedHandler(View: TuiCustomView; Handler: TuiClosedHandler)
+View.OnAttach := AttachHandler;
+View.OnDetach := DetachHandler;
+View.OnMeasure := MeasureHandler;
+View.OnResize := ResizeHandler;
+View.OnPaint := PaintHandler;
+View.OnFocus := FocusHandler;
+View.OnBlur := BlurHandler;
+View.OnCloseRequest := CloseRequestHandler;
+View.OnClosed := ClosedHandler;
 ```
 
-Each hook has at most one handler. Setting a handler replaces the previous one; a clear operation removes it. The initial handler shapes are part of the API surface and use named FPAS routines.
+Each event has at most one handler. Assignment replaces the previous handler and assignment of
+`nil` clears it. A handler may be a named routine, bound record method, or capturing closure. See
+[events-and-actions.md](events-and-actions.md).
 
 ## Mutation and re-entry
 

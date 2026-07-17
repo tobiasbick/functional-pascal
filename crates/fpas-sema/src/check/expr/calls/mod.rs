@@ -109,8 +109,8 @@ impl Checker {
 
         match &symbol_ty {
             Ty::Function(func_ty) => {
-                self.check_function_call_args(name, func_ty, args, span);
-                *func_ty.return_type.clone()
+                let inferred = self.check_function_call_args(name, func_ty, args, span);
+                Self::substitute_type_params(&func_ty.return_type, &inferred)
             }
             Ty::Procedure(_) => {
                 self.check_args_only(args);
@@ -163,8 +163,8 @@ impl Checker {
 
         match &symbol_ty {
             Ty::Function(func_ty) => {
-                self.check_function_call_args(name, func_ty, args, span);
-                *func_ty.return_type.clone()
+                let inferred = self.check_function_call_args(name, func_ty, args, span);
+                Self::substitute_type_params(&func_ty.return_type, &inferred)
             }
             Ty::Procedure(proc_ty) => {
                 self.check_procedure_call_args(name, proc_ty, args, span);

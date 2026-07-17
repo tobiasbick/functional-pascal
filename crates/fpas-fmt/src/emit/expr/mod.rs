@@ -2,6 +2,7 @@
 
 mod binary;
 mod literal;
+mod postfix;
 
 use fpas_parser::{Designator, DesignatorPart, Expr, UnaryOp};
 
@@ -12,6 +13,7 @@ use literal::{
     emit_array_literal, emit_record_field_inits, emit_record_fields, format_real, format_string,
     needs_space_after_negate, record_literal_end,
 };
+use postfix::emit_postfix;
 
 /// Formats an expression.
 #[must_use]
@@ -142,6 +144,9 @@ pub(super) fn emit_expr_impl(emitter: &mut Emitter, expr: &Expr, min_prec: u8, a
             emitter.write("go ");
             emit_expr(emitter, inner, 0);
         }
+        Expr::Postfix {
+            base, operations, ..
+        } => emit_postfix(emitter, base, operations, allow_wrap),
         Expr::Error(..) => emitter.write("<error>"),
     }
 }

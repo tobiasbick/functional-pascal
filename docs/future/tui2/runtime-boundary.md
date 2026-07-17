@@ -11,14 +11,15 @@ Calling them from a spawned task is a programming error with a diagnostic that i
 The runtime adds a generic typed main-task queue. Tui2 exposes it through this conceptual API:
 
 ```pascal
-function TuiApplication.Post<T>(
+function TuiApplication.Post(
   App: TuiApplication;
-  Value: T;
-  Handler: procedure(App: TuiApplication; Value: T)
+  Handler: procedure()
 ): boolean
 ```
 
-Posts are FIFO. The value and named handler are type-checked at the call site and type-erased in the VM queue. The application event loop drains the queue before layout and after each bounded terminal wait.
+Posts are FIFO. The closure is type-checked at the call site and type-erased in the VM queue. The
+application event loop drains the queue before layout and after each bounded terminal wait. Worker
+posts obey the transfer rules in [capturing-closures.md](../capturing-closures.md).
 
 Posting is the only Tui2 operation permitted from a worker task. It returns `false` when application shutdown has begun; otherwise it enqueues the callback and returns `true`. Queued callbacks not started before shutdown are discarded. Posted handlers run on the main task and may use the normal Tui2 API.
 

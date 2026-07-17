@@ -1,5 +1,5 @@
 use super::super::NameRewriter;
-use fpas_parser::{Designator, DesignatorPart, Expr};
+use fpas_parser::{Designator, DesignatorPart, Expr, PostfixOperation};
 
 impl NameRewriter<'_> {
     pub(in super::super) fn rewrite_expr(&mut self, expr: &mut Expr) {
@@ -50,6 +50,12 @@ impl NameRewriter<'_> {
                 for field in fields {
                     self.rewrite_expr(&mut field.value);
                 }
+            }
+            Expr::Postfix {
+                base, operations, ..
+            } => {
+                self.rewrite_expr(base);
+                self.rewrite_postfix_operations(operations);
             }
         }
     }
@@ -110,6 +116,38 @@ impl NameRewriter<'_> {
                 self.rewrite_case_pattern_expr(base, allow_binding_name);
                 for field in fields {
                     self.rewrite_case_pattern_expr(&mut field.value, allow_binding_name);
+                }
+            }
+            Expr::Postfix {
+                base, operations, ..
+            } => {
+                self.rewrite_case_pattern_expr(base, allow_binding_name);
+                for op in operations {
+                    match op {
+                        PostfixOperation::Field { .. } => {}
+                        PostfixOperation::Index { index, .. } => {
+                            self.rewrite_case_pattern_expr(index, allow_binding_name);
+                        }
+                        PostfixOperation::MethodCall { args, .. } => {
+                            for arg in args {
+                                self.rewrite_case_pattern_expr(arg, allow_binding_name);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fn rewrite_postfix_operations(&mut self, operations: &mut [PostfixOperation]) {
+        for op in operations {
+            match op {
+                PostfixOperation::Field { .. } => {}
+                PostfixOperation::Index { index, .. } => self.rewrite_expr(index),
+                PostfixOperation::MethodCall { args, .. } => {
+                    for arg in args {
+                        self.rewrite_expr(arg);
+                    }
                 }
             }
         }

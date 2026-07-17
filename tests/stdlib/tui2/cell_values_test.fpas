@@ -27,9 +27,11 @@ begin
   var AccentStyle: TuiStyle := Palette.ForRole(TuiStyleRole.Accent);
   AssertEquals(11, AccentStyle.Foreground.Index);
   var Custom: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), Background);
+  AssertEquals(2, Palette.WithRole(TuiStyleRole.Warning, Custom)
+                    .ForRole(TuiStyleRole.Warning)
+                    .Foreground
+                    .Green);
   var Updated: TuiPalette := Palette.WithRole(TuiStyleRole.Warning, Custom);
-  var UpdatedWarning: TuiStyle := Updated.ForRole(TuiStyleRole.Warning);
-  AssertEquals(2, UpdatedWarning.Foreground.Green);
   var UpdatedTitle: TuiStyle := Updated.ForRole(TuiStyleRole.Title);
   AssertEquals(14, UpdatedTitle.Foreground.Index)
 end.

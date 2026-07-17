@@ -87,7 +87,7 @@ impl Checker {
             }
             Expr::Try(..) | Expr::Go(..) => false,
             Expr::OptionNone(_) => true,
-            Expr::Call { .. } | Expr::Error(_) => false,
+            Expr::Call { .. } | Expr::Postfix { .. } | Expr::Error(_) => false,
             Expr::RecordUpdate { base, fields, .. } => {
                 self.const_expr_is_compile_time_known(base)
                     && fields

@@ -82,3 +82,51 @@ fn comments_brace_and_paren_star_blocks() {
         include_str!("golden/comments_block_styles.expected.fpas"),
     );
 }
+
+#[test]
+fn postfix_chaining_compact() {
+    common::assert_golden(
+        "postfix_chaining",
+        "program CompactPostfix; begin var X: integer := Factory.Create().Transform(2).Value; end.",
+        include_str!("golden/postfix_chaining.expected.fpas"),
+    );
+    common::assert_round_trip(
+        "postfix_chaining_round_trip",
+        "program CompactPostfix; begin var X: integer := Factory.Create().Transform(2).Value; end.",
+    );
+}
+
+#[test]
+fn postfix_chaining_wraps_long_chain() {
+    let source = "program T; begin var X: integer := VeryLongFactoryName.CreateVeryLongThing().TransformWithVeryLongName(VeryLongArgumentAlpha).ScaleWithAnotherLongName(VeryLongArgumentBeta).Value; end.";
+    let (unit, errors) = fpas_parser::parse_compilation_unit(source);
+    assert!(errors.is_empty(), "{errors:?}");
+    let formatted = fpas_fmt::format_source(source, &unit);
+    assert!(
+        formatted.contains("\n") && formatted.contains('.'),
+        "expected wrapped postfix suffixes: {formatted}"
+    );
+    assert!(
+        formatted
+            .lines()
+            .any(|line| line.trim_start().starts_with('.')),
+        "expected continuation line starting with `.`: {formatted}"
+    );
+    common::assert_round_trip("postfix_chaining_wrapped", &formatted);
+}
+
+#[test]
+fn postfix_chaining_preserves_explicit_parens() {
+    common::assert_round_trip(
+        "postfix_parens",
+        "program T; begin var X: integer := (Factory.Create()).Value; end.",
+    );
+}
+
+#[test]
+fn postfix_chaining_round_trips_field_index_mixture() {
+    common::assert_round_trip(
+        "postfix_field_index_mixture",
+        "program T; begin var X: integer := Factory.Create().Items[0].Value; end.",
+    );
+}

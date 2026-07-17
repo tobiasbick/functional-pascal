@@ -27,11 +27,7 @@ type
 begin
   var C: Counter := record Value := 0; Step := 5; end;
   C.Show();
-  var C2: Counter := C.Increment();
-  C2.Show();
-  var C3: Counter := C2.Increment();
-  var C4: Counter := C3.Increment();
-  C4.Show();
-  var C5: Counter := C4.Reset();
-  C5.Show()
+  WriteLn('Counter: ' + IntToStr(C.Increment().Increment().Increment().Value));
+  var Cleared: Counter := C.Increment().Increment().Reset();
+  Cleared.Show()
 end.

@@ -61,6 +61,18 @@ pub fn expr_lookup_key(expr: &fpas_parser::Expr) -> usize {
     check::Checker::expr_lookup_key(expr)
 }
 
+/// Stable key for looking up [`MethodCallMap`] entries for a postfix method operation.
+///
+/// Uses the memory address of the [`fpas_parser::PostfixOperation`] in the AST. Same soundness
+/// rationale as [`expr_lookup_key`]: the AST is immutable for the compile pipeline, so keys must
+/// match between sema and codegen for the same tree.
+///
+/// **Documentation:** `docs/pascal/language/functions/README.md`
+#[must_use]
+pub fn postfix_operation_lookup_key(op: &fpas_parser::PostfixOperation) -> usize {
+    check::Checker::postfix_operation_lookup_key(op)
+}
+
 /// Stable key for call-statement method resolution (address of the call's [`Designator`] in the AST).
 ///
 /// **Documentation:** `docs/pascal/language/functions/README.md` (record method calls; from the repository root).

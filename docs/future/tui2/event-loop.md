@@ -35,11 +35,14 @@ For each event, Std.Tui2 applies this order:
 4. Mouse events hit-test the topmost eligible view.
 5. Key events go to the focused eligible view.
 6. An eligible control may consume the input and activate its bound `TuiAction`.
-7. The action handler runs synchronously with the originating view as its source.
-8. Typed control changes notify their registered handler after state mutation.
-9. Unhandled key and mouse callbacks receive the original event.
+7. The action's `OnExecute` event runs synchronously with the originating view as its source.
+8. The control's direct semantic event runs after the action when the source remains live.
+9. Typed value-change events run after state mutation.
+10. Unhandled key and mouse events receive the original input.
 
-Raw input callbacks return `boolean`: `true` consumes the event and `false` leaves it available to the next routing step. Action handlers and typed change notifications are semantic callbacks and do not participate in raw input propagation. See [actions-and-handlers.md](actions-and-handlers.md).
+Raw input events return `boolean`: `true` consumes the event and `false` leaves it available to the
+next routing step. Action and typed change events are semantic callbacks and do not participate in
+raw input propagation. See [events-and-actions.md](events-and-actions.md).
 
 ## Key representation
 

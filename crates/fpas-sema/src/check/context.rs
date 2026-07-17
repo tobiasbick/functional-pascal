@@ -32,6 +32,11 @@ impl MethodCallTarget {
 
 /// Maps a call-expression (or call-statement designator) identity to its
 /// resolved record member call target.
+///
+/// Ordinary [`Expr::Call`](fpas_parser::Expr::Call) entries use [`crate::expr_lookup_key`]
+/// (or [`crate::designator_lookup_key`] for call statements). Postfix
+/// [`PostfixOperation::MethodCall`](fpas_parser::PostfixOperation::MethodCall) entries use
+/// [`crate::postfix_operation_lookup_key`] instead.
 pub type MethodCallMap = HashMap<usize, MethodCallTarget>;
 
 /// Maps a named record type to its ordered field list, each entry carrying an optional

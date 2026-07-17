@@ -14,8 +14,10 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`function_decl`, `
 | [Nested functions](nested.md) | Local helpers and mutual recursion |
 | [Generic routines](generic-routines.md) | Type parameters on routines |
 | [Early return](early-return.md) | `return` exits immediately |
+| [Postfix chaining](postfix-chaining.md) | `.Field`, `[Index]`, and `.Method(args)` on expression results |
 
 ## See also
 
 - [Types — generics](../types/generics.md)
 - [Basics](../basics/README.md)
+- [Record methods](../types/record-methods.md)

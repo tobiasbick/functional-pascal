@@ -232,6 +232,7 @@ end;
 | `function` / `procedure` formal lists | After `;` between parameters |
 | `record` / array literals | Multi-line when over width; keep v1 semicolon rules inside |
 | Long binary chains / calls | Break at lowest-precedence operator; never inside string literals |
+| Postfix chains (`.Field` / `[Index]` / `.Method(...)`) | Break before each suffix; indent continuations **2 spaces** from the expression base column |
 
 ## Indentation
 

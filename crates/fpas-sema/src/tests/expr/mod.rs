@@ -1,6 +1,8 @@
 use super::{check_errors, check_ok};
 use crate::analyze_with_types;
 
+mod postfix;
+
 // ── Literals ────────────────────────────────────────────────────
 
 #[test]

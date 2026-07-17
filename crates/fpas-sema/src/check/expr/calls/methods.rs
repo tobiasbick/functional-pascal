@@ -5,6 +5,7 @@ use crate::types::{GenericParamDef, MethodKind, ParamTy, Ty};
 use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_WRONG_ARGUMENT_COUNT};
 use fpas_lexer::Span;
 use fpas_parser::{Designator, DesignatorPart, Expr};
+use std::collections::HashMap;
 
 impl Checker {
     /// Try to resolve `designator(args)` as a record instance or static member call.
@@ -108,7 +109,7 @@ impl Checker {
         visible_params: &[ParamTy],
         args: &[Expr],
         span: Span,
-    ) {
+    ) -> HashMap<String, Ty> {
         self.check_method_call_args_with_hint(
             name,
             type_params,
@@ -116,7 +117,7 @@ impl Checker {
             args,
             span,
             "Check the number of arguments (Self is implicit).",
-        );
+        )
     }
 
     pub(in crate::check) fn check_static_call_args(
@@ -126,7 +127,7 @@ impl Checker {
         params: &[ParamTy],
         args: &[Expr],
         span: Span,
-    ) {
+    ) -> HashMap<String, Ty> {
         self.check_method_call_args_with_hint(
             name,
             type_params,
@@ -134,7 +135,7 @@ impl Checker {
             args,
             span,
             "Check the number of arguments.",
-        );
+        )
     }
 
     fn check_method_call_args_with_hint(
@@ -145,7 +146,7 @@ impl Checker {
         args: &[Expr],
         span: Span,
         arity_hint: &str,
-    ) {
+    ) -> HashMap<String, Ty> {
         if visible_params.len() != args.len() {
             self.error_with_code(
                 SEMA_WRONG_ARGUMENT_COUNT,
@@ -173,7 +174,7 @@ impl Checker {
             arg_types.push(arg_ty);
         }
 
-        self.validate_routine_constraints(type_params, visible_params, &arg_types, span);
+        self.validate_routine_constraints(type_params, visible_params, &arg_types, span)
     }
 
     /// True when the designator names a type symbol (possibly qualified).
@@ -271,14 +272,17 @@ impl Checker {
             {
                 self.method_calls
                     .insert(call_key, MethodCallTarget::Static(qualified.clone()));
-                self.check_static_call_args(
+                let inferred = self.check_static_call_args(
                     &qualified,
                     &func_ty.type_params,
                     &func_ty.params,
                     args,
                     span,
                 );
-                return Some(*func_ty.return_type.clone());
+                return Some(Self::substitute_type_params(
+                    &func_ty.return_type,
+                    &inferred,
+                ));
             }
 
             if self
@@ -344,14 +348,17 @@ impl Checker {
                     );
                     return Some(Ty::Error);
                 };
-                self.check_method_call_args(
+                let inferred = self.check_method_call_args(
                     &qualified,
                     &func_ty.type_params,
                     visible_params,
                     args,
                     span,
                 );
-                Some(*func_ty.return_type.clone())
+                Some(Self::substitute_type_params(
+                    &func_ty.return_type,
+                    &inferred,
+                ))
             }
             MethodKind::Procedure(proc_ty) => {
                 let Some(visible_params) = proc_ty.params.get(1..) else {

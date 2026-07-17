@@ -44,6 +44,15 @@ begin
 end.
 ```
 
+Returned record values can keep calling instance methods (and reading fields)
+without intermediate variables:
+
+```pascal
+var Next: Point := BuildOrigin().Offset(1.0, 2.0).Normalize();
+```
+
+See [Expression postfix chaining](../functions/postfix-chaining.md).
+
 ## Static functions
 
 A record may declare a `static function` inside its type body. Static functions

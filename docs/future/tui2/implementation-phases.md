@@ -21,10 +21,6 @@ Completion contract: [source-library.md](source-library.md).
 - Implement clipping and the headless cell surface.
 - Implement the transient `TuiCanvas` drawing boundary.
 
-Expression postfix chaining is an optional ergonomic improvement tracked in
-[expression-postfix-chaining.md](../expression-postfix-chaining.md). Tui2 implementation does not
-wait for it; temporary values remain valid until the general language feature is complete.
-
 Completion contracts: [geometry.md](geometry.md), [text-and-cells.md](text-and-cells.md), and the pure-value section of [testing.md](testing.md).
 
 ## Phase 2 — Application registry and runtime safety
@@ -50,15 +46,20 @@ Completion contract: [layout.md](layout.md) and the layout section of [testing.m
 
 ## Phase 4 — Lifecycle, event routing, and actions
 
+Language gate: capturing closures, bound record methods, record properties, and event properties
+must be complete before this phase starts. See the ordered sequence in
+[the future roadmap](../README.md#recommended-tui2-language-sequence).
+
 - Implement the bounded application loop, posted callback draining, invalidation, and resize handling.
 - Implement deterministic `OnStart`, `OnStop`, and optional `OnTick` boundaries.
 - Implement attach, detach, measure, resize, paint, focus, blur, close-request, and closed transitions.
 - Implement z-order, hit-testing, focus traversal, pointer capture, modal roots, and raw fallback handlers.
 - Implement the action registry, reserved command range, shortcuts, synchronous activation, and bound-control propagation.
-- Implement typed single-handler notifications with `TuiChangeOrigin`.
-- Add `TuiCustomView` with pure measurement and clipped paint handlers.
+- Implement typed single-handler event properties with `TuiChangeOrigin`.
+- Add `TuiCustomView` with pure measurement and clipped paint events.
 
-Completion contracts: [event-loop.md](event-loop.md), [actions-and-handlers.md](actions-and-handlers.md), [application-state.md](application-state.md), and [view-lifecycle.md](view-lifecycle.md).
+Completion contracts: [event-loop.md](event-loop.md),
+[events-and-actions.md](events-and-actions.md), and [view-lifecycle.md](view-lifecycle.md).
 
 ## Phase 5 — First usable controls
 
@@ -71,4 +72,5 @@ Completion contracts: [event-loop.md](event-loop.md), [actions-and-handlers.md](
 
 Add dialogs, menus, status lines, radio groups, stacked pages, memo/editor controls, text viewers, file selection, and advanced controls only after the earlier contracts remain stable.
 
-Custom layout callbacks, capturing closures, and a general application message bus are not prerequisites for this phase sequence.
+Custom layout callbacks and a general application message bus are not prerequisites for this phase
+sequence. The language gate listed before Phase 4 is required for its public API.

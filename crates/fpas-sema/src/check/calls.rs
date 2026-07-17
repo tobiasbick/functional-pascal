@@ -21,7 +21,7 @@ impl Checker {
         func_ty: &FunctionTy,
         args: &[Expr],
         span: Span,
-    ) {
+    ) -> HashMap<String, Ty> {
         self.check_routine_call_args(
             RoutineCallSignature {
                 name,
@@ -32,7 +32,7 @@ impl Checker {
             },
             args,
             span,
-        );
+        )
     }
 
     pub(crate) fn check_procedure_call_args(
@@ -60,7 +60,7 @@ impl Checker {
         signature: RoutineCallSignature<'_>,
         args: &[Expr],
         span: Span,
-    ) {
+    ) -> HashMap<String, Ty> {
         let RoutineCallSignature {
             name,
             routine_label,
@@ -106,7 +106,7 @@ impl Checker {
             arg_types.push(arg_ty);
         }
 
-        self.validate_routine_constraints(type_params, params, &arg_types, span);
+        self.validate_routine_constraints(type_params, params, &arg_types, span)
     }
 
     /// Infer type arguments from argument types, enforce consistent reuse, and
@@ -117,9 +117,9 @@ impl Checker {
         params: &[crate::types::ParamTy],
         arg_types: &[Ty],
         span: Span,
-    ) {
+    ) -> HashMap<String, Ty> {
         if type_params.is_empty() {
-            return;
+            return HashMap::new();
         }
 
         let mut inferred = HashMap::new();
@@ -140,6 +140,50 @@ impl Checker {
 
         if !check_params.is_empty() {
             self.validate_constraints(&check_params, &check_args, span);
+        }
+
+        inferred
+    }
+
+    /// Replace routine-level generic parameters with their call-site inferred types.
+    pub(crate) fn substitute_type_params(ty: &Ty, inferred: &HashMap<String, Ty>) -> Ty {
+        match ty {
+            Ty::GenericParam(name, _) => inferred
+                .get(&name.to_ascii_lowercase())
+                .cloned()
+                .unwrap_or_else(|| ty.clone()),
+            Ty::Array(inner) => Ty::Array(Box::new(Self::substitute_type_params(inner, inferred))),
+            Ty::Result(ok, err) => Ty::Result(
+                Box::new(Self::substitute_type_params(ok, inferred)),
+                Box::new(Self::substitute_type_params(err, inferred)),
+            ),
+            Ty::Option(inner) => {
+                Ty::Option(Box::new(Self::substitute_type_params(inner, inferred)))
+            }
+            Ty::Dict(key, value) => Ty::Dict(
+                Box::new(Self::substitute_type_params(key, inferred)),
+                Box::new(Self::substitute_type_params(value, inferred)),
+            ),
+            Ty::Task(inner) => Ty::Task(Box::new(Self::substitute_type_params(inner, inferred))),
+            Ty::Function(function_ty) => {
+                let mut substituted = function_ty.clone();
+                for param in &mut substituted.params {
+                    param.ty = Self::substitute_type_params(&param.ty, inferred);
+                }
+                substituted.return_type = Box::new(Self::substitute_type_params(
+                    &substituted.return_type,
+                    inferred,
+                ));
+                Ty::Function(substituted)
+            }
+            Ty::Procedure(procedure_ty) => {
+                let mut substituted = procedure_ty.clone();
+                for param in &mut substituted.params {
+                    param.ty = Self::substitute_type_params(&param.ty, inferred);
+                }
+                Ty::Procedure(substituted)
+            }
+            _ => ty.clone(),
         }
     }
 

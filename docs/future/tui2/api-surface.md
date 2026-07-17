@@ -127,31 +127,30 @@ TuiApplication.Run(App: TuiApplication)
 TuiApplication.Quit(App: TuiApplication)
 TuiApplication.Close(App: TuiApplication)
 TuiApplication.Invalidate(App: TuiApplication)
-TuiApplication.Desktop(App: TuiApplication): TuiDesktop
-TuiApplication.Tag(App: TuiApplication): integer
-TuiApplication.SetTag(App: TuiApplication; Tag: integer)
-TuiApplication.Post<T>(App: TuiApplication; Value: T; Handler: procedure(App: TuiApplication; Value: T)): boolean
+App.Desktop: TuiDesktop                          { read-only property }
+App.Tag: integer                                 { read-write property }
+TuiApplication.Post(App: TuiApplication; Handler: procedure()): boolean
 ```
 
 ### Common views
 
 ```pascal
-TuiView.SetBounds(View: TuiView; Bounds: TuiRect)
-TuiView.Bounds(View: TuiView): TuiRect
+View.Bounds: TuiRect                             { read-write property }
+View.Visible: boolean                            { read-write property }
+View.Enabled: boolean                            { read-write property }
+View.Tag: integer                                { read-write property }
 TuiView.Show(View: TuiView)
 TuiView.Hide(View: TuiView)
 TuiView.Enable(View: TuiView)
 TuiView.Disable(View: TuiView)
 TuiView.Focus(View: TuiView)
 TuiView.Invalidate(View: TuiView)
-TuiView.Tag(View: TuiView): integer
-TuiView.SetTag(View: TuiView; Tag: integer)
 TuiView.Destroy(View: TuiView)
 TuiView.Measure(View: TuiView; Spec: TuiMeasureSpec): TuiMeasureResult
 
 TuiContainer.Add(Container: TuiContainer; View: TuiView)
 TuiContainer.Remove(Container: TuiContainer; View: TuiView)
-TuiContainer.SetLayout(Container: TuiContainer; Layout: TuiLayout)
+Container.Layout: TuiLayout                      { read-write property }
 ```
 
 Typed view handles use explicit `AsView` operations so containers can accept different controls without discarding type-specific operations. Layout handles use matching `AsLayout` operations. Downcasts are not public.
@@ -163,10 +162,10 @@ Views expose minimum, preferred, and maximum sizes plus independent horizontal a
 ```pascal
 TuiDesktop.Add(Desktop: TuiDesktop; View: TuiView)
 
-TuiWindow.New(App: TuiApplication; Title: string): TuiWindow
+TuiWindow.Create(App: TuiApplication; Title: string): TuiWindow
 TuiWindow.Add(Window: TuiWindow; View: TuiView)
 
-TuiDialog.New(App: TuiApplication; Title: string): TuiDialog
+TuiDialog.Create(App: TuiApplication; Title: string): TuiDialog
 TuiDialog.Add(Dialog: TuiDialog; View: TuiView)
 TuiDialog.Execute(Dialog: TuiDialog): TuiCommand
 ```
@@ -174,49 +173,57 @@ TuiDialog.Execute(Dialog: TuiDialog): TuiCommand
 ### Basic controls
 
 ```pascal
-TuiButton.New(App: TuiApplication; Action: TuiAction): TuiButton
+TuiButton.Create(App: TuiApplication; Text: string): TuiButton
+Button.Action: TuiAction                          { write-only property }
+Button.Text: string                               { read-write property }
+Button.Enabled: boolean                           { read-write property }
 
-TuiLabel.New(App: TuiApplication; Text: string): TuiLabel
-TuiLabel.SetText(LabelView: TuiLabel; Text: string)
+TuiLabel.Create(App: TuiApplication; Text: string): TuiLabel
+LabelView.Text: string                            { read-write property }
 
-TuiInputLine.New(App: TuiApplication; MaxLength: integer): TuiInputLine
-TuiInputLine.Text(Input: TuiInputLine): string
-TuiInputLine.SetText(Input: TuiInputLine; Text: string)
+TuiInputLine.Create(App: TuiApplication; MaxLength: integer): TuiInputLine
+Input.Text: string                                { read-write property }
 ```
 
 ### Selection and text controls
 
 ```pascal
-TuiListBox.New(App: TuiApplication): TuiListBox
-TuiListBox.SetItems(List: TuiListBox; Items: array of string)
-TuiListBox.Selected(List: TuiListBox): integer
+TuiListBox.Create(App: TuiApplication): TuiListBox
+List.Items: array of string                       { read-write property }
+List.Selected: integer                            { read-write property }
 
-TuiCheckBox.New(App: TuiApplication; Text: string): TuiCheckBox
-TuiCheckBox.Checked(CheckBox: TuiCheckBox): boolean
-TuiCheckBox.SetChecked(CheckBox: TuiCheckBox; Checked: boolean)
+TuiCheckBox.Create(App: TuiApplication; Text: string): TuiCheckBox
+CheckBox.Checked: boolean                         { read-write property }
 
-TuiRadioGroup.New(App: TuiApplication; Items: array of string): TuiRadioGroup
-TuiRadioGroup.Selected(Group: TuiRadioGroup): integer
-TuiRadioGroup.SetSelected(Group: TuiRadioGroup; Selected: integer)
+TuiRadioGroup.Create(App: TuiApplication; Items: array of string): TuiRadioGroup
+Group.Selected: integer                           { read-write property }
 
-TuiMemo.New(App: TuiApplication): TuiMemo
-TuiMemo.Text(Memo: TuiMemo): string
-TuiMemo.SetText(Memo: TuiMemo; Text: string)
+TuiMemo.Create(App: TuiApplication): TuiMemo
+Memo.Text: string                                 { read-write property }
 
-TuiTextViewer.New(App: TuiApplication; Text: string): TuiTextViewer
+TuiTextViewer.Create(App: TuiApplication; Text: string): TuiTextViewer
+Viewer.Text: string                               { read-write property }
 ```
+
+The property notation above is the planned public syntax. Accessors remain ordinary focused FPAS
+methods that validate handles and update the registry. Imperative operations such as `Focus`,
+`Invalidate`, `Destroy`, `Add`, `Remove`, and `Execute` remain functions or procedures.
 
 ## Actions and handlers
 
 `TuiCommand` is a distinct public type even if its initial runtime representation is an integer.
 
-`TuiAction` combines a command identity, presentation state, shortcut, and exactly one synchronous handler. Buttons, menus, status items, and shortcuts may activate the same action. Controls with values expose one typed handler per semantic change.
+`TuiAction` combines a command identity, presentation state, shortcut, and one synchronous
+`OnExecute` event. Buttons, menus, status items, and shortcuts may activate the same action. Controls
+with values expose one typed event per semantic change.
 
 Raw key and mouse handlers return `boolean` to participate in input propagation. Action handlers and typed change notifications do not return `boolean`.
 
-The core does not provide general multicast publish/subscribe. See [actions-and-handlers.md](actions-and-handlers.md) for the full contract.
+The core does not provide general multicast publish/subscribe. See
+[events-and-actions.md](events-and-actions.md) for the full contract.
 
-Application state and exact initial handler shapes are defined in [application-state.md](application-state.md).
+Application state and exact initial event shapes are defined in
+[events-and-actions.md](events-and-actions.md).
 
 ## View lifecycle
 

@@ -84,83 +84,11 @@ impl Checker {
                     ty = self.resolve_visible_type(&ty);
 
                     ty = match part {
-                        DesignatorPart::Ident(field, span) => match &ty {
-                            Ty::Record(record_ty) => {
-                                if let Some((_, field_ty)) = record_ty
-                                    .fields
-                                    .iter()
-                                    .find(|(name, _)| name.eq_ignore_ascii_case(field))
-                                {
-                                    field_ty.clone()
-                                } else {
-                                    self.error_with_code(
-                                        SEMA_UNKNOWN_NAME,
-                                        format!("Record has no field `{field}`"),
-                                        "Check the field name against the record type.",
-                                        *span,
-                                    );
-                                    Ty::Error
-                                }
-                            }
-                            _ => {
-                                self.error_with_code(
-                                    SEMA_TYPE_MISMATCH,
-                                    format!("`.{field}` requires a record value"),
-                                    "Only records support field access with `.`.",
-                                    *span,
-                                );
-                                Ty::Error
-                            }
-                        },
+                        DesignatorPart::Ident(field, span) => {
+                            self.check_record_field_access(&ty, field, *span)
+                        }
                         DesignatorPart::Index(index_expr, span) => {
-                            let index_ty = self.check_expr(index_expr);
-
-                            match &ty {
-                                Ty::Array(inner) => {
-                                    if index_ty != Ty::Integer && !index_ty.is_error() {
-                                        self.error_with_code(
-                                            SEMA_TYPE_MISMATCH,
-                                            "Array index must be integer",
-                                            "Use an integer index expression.",
-                                            index_expr.span(),
-                                        );
-                                    }
-                                    *inner.clone()
-                                }
-                                Ty::Dict(key_ty, val_ty) => {
-                                    if !index_ty.compatible_with(key_ty) && !index_ty.is_error() {
-                                        self.error_with_code(
-                                            SEMA_TYPE_MISMATCH,
-                                            format!(
-                                                "Dict key type mismatch: expected `{key_ty}`, got `{index_ty}`"
-                                            ),
-                                            "Use a key matching the dict's key type.",
-                                            index_expr.span(),
-                                        );
-                                    }
-                                    *val_ty.clone()
-                                }
-                                Ty::String => {
-                                    if index_ty != Ty::Integer && !index_ty.is_error() {
-                                        self.error_with_code(
-                                            SEMA_TYPE_MISMATCH,
-                                            "String index must be an integer",
-                                            "Use an integer index, e.g. S[0].",
-                                            index_expr.span(),
-                                        );
-                                    }
-                                    Ty::String
-                                }
-                                _ => {
-                                    self.error_with_code(
-                                        SEMA_TYPE_MISMATCH,
-                                        "Indexed value is not an array, dict, or string",
-                                        "Use `A[I]` only on array, dict, or string values.",
-                                        *span,
-                                    );
-                                    Ty::Error
-                                }
-                            }
+                            self.check_index_access(&ty, index_expr, *span)
                         }
                     };
                 }
@@ -178,6 +106,98 @@ impl Checker {
                 .map(|symbol| symbol.ty.clone())
                 .unwrap_or_else(|| ty.clone()),
             _ => ty.clone(),
+        }
+    }
+
+    /// Resolve `.Field` on a value whose static type is `ty` (aliases already resolved by caller).
+    pub(crate) fn check_record_field_access(
+        &mut self,
+        ty: &Ty,
+        field: &str,
+        span: fpas_lexer::Span,
+    ) -> Ty {
+        match ty {
+            Ty::Record(record_ty) => {
+                if let Some((_, field_ty)) = record_ty
+                    .fields
+                    .iter()
+                    .find(|(name, _)| name.eq_ignore_ascii_case(field))
+                {
+                    field_ty.clone()
+                } else {
+                    self.error_with_code(
+                        SEMA_UNKNOWN_NAME,
+                        format!("Record has no field `{field}`"),
+                        "Check the field name against the record type.",
+                        span,
+                    );
+                    Ty::Error
+                }
+            }
+            _ => {
+                self.error_with_code(
+                    SEMA_TYPE_MISMATCH,
+                    format!("`.{field}` requires a record value"),
+                    "Only records support field access with `.`.",
+                    span,
+                );
+                Ty::Error
+            }
+        }
+    }
+
+    /// Resolve `[index]` on a value whose static type is `ty` (aliases already resolved by caller).
+    pub(crate) fn check_index_access(
+        &mut self,
+        ty: &Ty,
+        index_expr: &fpas_parser::Expr,
+        span: fpas_lexer::Span,
+    ) -> Ty {
+        let index_ty = self.check_expr(index_expr);
+
+        match ty {
+            Ty::Array(inner) => {
+                if index_ty != Ty::Integer && !index_ty.is_error() {
+                    self.error_with_code(
+                        SEMA_TYPE_MISMATCH,
+                        "Array index must be integer",
+                        "Use an integer index expression.",
+                        index_expr.span(),
+                    );
+                }
+                *inner.clone()
+            }
+            Ty::Dict(key_ty, val_ty) => {
+                if !index_ty.compatible_with(key_ty) && !index_ty.is_error() {
+                    self.error_with_code(
+                        SEMA_TYPE_MISMATCH,
+                        format!("Dict key type mismatch: expected `{key_ty}`, got `{index_ty}`"),
+                        "Use a key matching the dict's key type.",
+                        index_expr.span(),
+                    );
+                }
+                *val_ty.clone()
+            }
+            Ty::String => {
+                if index_ty != Ty::Integer && !index_ty.is_error() {
+                    self.error_with_code(
+                        SEMA_TYPE_MISMATCH,
+                        "String index must be an integer",
+                        "Use an integer index, e.g. S[0].",
+                        index_expr.span(),
+                    );
+                }
+                Ty::String
+            }
+            _ => {
+                self.error_with_code(
+                    SEMA_TYPE_MISMATCH,
+                    "Indexed value is not an array, dict, or string",
+                    "Use `A[I]` only on array, dict, or string values.",
+                    span,
+                );
+                Ty::Error
+            }
         }
     }
 

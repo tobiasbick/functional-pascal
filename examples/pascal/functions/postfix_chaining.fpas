@@ -1,0 +1,29 @@
+program PostfixChainingExample;
+
+uses Std.Console, Std.Conv;
+
+type
+  Num = record
+    Value: integer;
+
+    static function Create(Value: integer): Num;
+    begin
+      return record Value := Value; end
+    end;
+
+    function Scale(Self: Num; Factor: integer): Num;
+    begin
+      return record Value := Self.Value * Factor; end
+    end;
+
+    function Next(Self: Num): Num;
+    begin
+      return record Value := Self.Value + 1; end
+    end;
+  end;
+
+begin
+  WriteLn(IntToStr(Num.Create(3).Scale(2).Next().Value));
+  WriteLn(IntToStr([10, 20, 30][1]));
+  WriteLn(('ab')[0])
+end.

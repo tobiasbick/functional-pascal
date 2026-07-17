@@ -433,7 +433,13 @@ record_update       = 'with' field_init { field_init } 'end' ;
 (* typed field overrides are compile-time errors.                   *)
 (* Example: P with X := 10; end — produces a copy of P with X = 10 *)
 
-primary_expr        = integer_literal
+(* primary_atom is a complete call/designator/literal. After it, optional       *)
+(* postfix suffixes allow chaining on the result: `.Field`, `[Index]`,         *)
+(* and `.Method(args)`. Ordinary designators keep field/index inside the path. *)
+(* Documentation: docs/pascal/language/functions/README.md                     *)
+primary_expr        = primary_atom { postfix_suffix } ;
+
+primary_atom        = integer_literal
                     | real_literal
                     | string_literal
                     | 'true'
@@ -448,6 +454,9 @@ primary_expr        = integer_literal
                     | record_literal
                     | 'go' go_call                       (* task handle    *)
                     | designator [ call_args ] ;
+
+postfix_suffix      = '.' identifier [ call_args ]
+                    | '[' expression ']' ;
 
 (* -- Function call -- *)
 call_args           = '(' [ arg_list ] ')' ;

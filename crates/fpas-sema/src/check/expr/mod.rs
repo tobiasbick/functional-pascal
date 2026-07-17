@@ -6,6 +6,7 @@
 mod calls;
 mod designator;
 mod operators;
+mod postfix;
 
 use super::Checker;
 use crate::types::Ty;
@@ -53,6 +54,9 @@ impl Checker {
             Expr::RecordUpdate { base, fields, span } => {
                 self.check_record_update(base, fields, *span)
             }
+            Expr::Postfix {
+                base, operations, ..
+            } => self.check_postfix_expr(base, operations),
             Expr::Error(_) => Ty::Error,
         };
         let key = Self::expr_lookup_key(expr);

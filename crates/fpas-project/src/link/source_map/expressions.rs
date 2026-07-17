@@ -1,6 +1,6 @@
 use super::support::apply_span;
 
-use fpas_parser::{Designator, DesignatorPart, Expr, FieldInit};
+use fpas_parser::{Designator, DesignatorPart, Expr, FieldInit, PostfixOperation};
 
 pub(super) fn apply_expr_source_id(expr: &mut Expr, source_id: u32) {
     match expr {
@@ -56,6 +56,15 @@ pub(super) fn apply_expr_source_id(expr: &mut Expr, source_id: u32) {
             }
             apply_span(span, source_id);
         }
+        Expr::Postfix {
+            base,
+            operations,
+            span,
+        } => {
+            apply_expr_source_id(base, source_id);
+            apply_postfix_operations_source_id(operations, source_id);
+            apply_span(span, source_id);
+        }
     }
 
     match expr {
@@ -79,6 +88,24 @@ pub(super) fn apply_expr_source_id(expr: &mut Expr, source_id: u32) {
             }
         }
         _ => {}
+    }
+}
+
+fn apply_postfix_operations_source_id(operations: &mut [PostfixOperation], source_id: u32) {
+    for op in operations {
+        match op {
+            PostfixOperation::Field { span, .. } => apply_span(span, source_id),
+            PostfixOperation::Index { index, span } => {
+                apply_expr_source_id(index, source_id);
+                apply_span(span, source_id);
+            }
+            PostfixOperation::MethodCall { args, span, .. } => {
+                for arg in args {
+                    apply_expr_source_id(arg, source_id);
+                }
+                apply_span(span, source_id);
+            }
+        }
     }
 }
 

@@ -1,0 +1,5 @@
+program CompactPostfix;
+
+begin
+  var X: integer := Factory.Create().Transform(2).Value
+end.

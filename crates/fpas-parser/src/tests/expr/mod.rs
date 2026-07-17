@@ -5,6 +5,7 @@ mod aggregates;
 mod calls;
 mod designators;
 mod operators;
+mod postfix;
 mod precedence;
 mod primitives;
 

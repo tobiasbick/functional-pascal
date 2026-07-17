@@ -5,6 +5,7 @@
 mod call;
 mod constructors;
 mod literals;
+mod postfix;
 mod records;
 mod special;
 
@@ -90,6 +91,11 @@ impl Compiler {
             }
             Expr::Go(inner, span) => {
                 self.compile_go_expr(inner, *span)?;
+            }
+            Expr::Postfix {
+                base, operations, ..
+            } => {
+                self.compile_postfix_expr(base, operations)?;
             }
             Expr::Error(span) => {
                 self.emit(Op::Unit, Self::location_of(span));

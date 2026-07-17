@@ -23,7 +23,8 @@ impl Expr {
             | Self::UnaryOp { span, .. }
             | Self::BinaryOp { span, .. }
             | Self::RecordLiteral { span, .. }
-            | Self::RecordUpdate { span, .. } => *span,
+            | Self::RecordUpdate { span, .. }
+            | Self::Postfix { span, .. } => *span,
         }
     }
 }
@@ -88,10 +89,39 @@ pub enum Expr {
         fields: Vec<FieldInit>,
         span: Span,
     },
+    /// Primary expression followed by one or more postfix suffixes.
+    ///
+    /// Emitted only when at least one `.Field`, `[Index]`, or `.Method(args)` follows a
+    /// completed primary atom (for example a call). Ordinary designators keep
+    /// [`Expr::Designator`] / [`Expr::Call`].
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/README.md`
+    Postfix {
+        base: Box<Expr>,
+        operations: Vec<PostfixOperation>,
+        span: Span,
+    },
     /// Placeholder emitted when the parser fails to parse an expression.
     /// Downstream passes should propagate this as an error rather than
     /// checking or compiling it.
     Error(Span),
+}
+
+/// One suffix in an [`Expr::Postfix`] chain.
+///
+/// **Documentation:** `docs/pascal/language/functions/README.md`
+#[derive(Debug, Clone, PartialEq)]
+pub enum PostfixOperation {
+    /// `.Field` access on the preceding value.
+    Field { name: String, span: Span },
+    /// `[Index]` access on the preceding value.
+    Index { index: Box<Expr>, span: Span },
+    /// `.Method(args)` instance call on the preceding value.
+    MethodCall {
+        name: String,
+        args: Vec<Expr>,
+        span: Span,
+    },
 }
 
 /// Record or `new` field initializer.

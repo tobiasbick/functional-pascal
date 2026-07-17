@@ -104,6 +104,10 @@ pub struct RecordTy {
     ///
     /// **Documentation:** `docs/pascal/language/types/record-properties.md`
     pub properties: Vec<(String, PropertyTy)>,
+    /// Event members backed by `Option of Handler` accessors.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/record-events.md`
+    pub events: Vec<(String, EventTy)>,
 }
 
 /// A computed record property and its resolved accessor names.
@@ -117,6 +121,21 @@ pub struct PropertyTy {
     pub getter: Option<String>,
     /// Qualified setter name (`Record.SetText`), when writable.
     pub setter: Option<String>,
+}
+
+/// A record event and its resolved `Option of Handler` accessors.
+///
+/// **Documentation:** `docs/pascal/language/types/record-events.md`
+#[derive(Debug, Clone, PartialEq)]
+pub struct EventTy {
+    /// Declared handler callable type (function or procedure).
+    pub handler_ty: Ty,
+    /// Qualified getter name returning `Option of` the handler type.
+    pub getter: String,
+    /// Qualified setter name accepting `Option of` the handler type.
+    pub setter: String,
+    /// Declaring unit prefix of the record type name, or `None` for program-local types.
+    pub owner_unit: Option<String>,
 }
 
 /// Whether a record method is a function (returns a value) or a procedure.

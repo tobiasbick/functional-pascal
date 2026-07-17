@@ -159,9 +159,15 @@ impl Checker {
         }
 
         let prev_ctx = self.scopes.function_ctx.take();
+        let owner_unit = if let Some(context) = &prev_ctx {
+            context.owner_unit.clone()
+        } else {
+            name.rsplit_once('.').map(|(unit, _)| unit.to_string())
+        };
         self.scopes.function_ctx = Some(FunctionCtx {
             name: name.to_string(),
             return_type,
+            owner_unit,
         });
 
         for decl in nested {

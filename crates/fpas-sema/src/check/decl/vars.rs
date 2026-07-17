@@ -119,6 +119,19 @@ impl Checker {
                         "Properties are not record fields. Assign to the property after construction.",
                         span,
                     );
+                } else if self
+                    .find_record_event_on_type(record_ty, &field_init.name)
+                    .is_some()
+                {
+                    self.error_with_code(
+                        SEMA_UNKNOWN_NAME,
+                        format!(
+                            "Record type `{}` event `{}` cannot be initialized in a record literal",
+                            record_ty.name, field_init.name
+                        ),
+                        "Events are not record fields. Assign a handler after construction.",
+                        span,
+                    );
                 } else {
                     let known: Vec<&str> =
                         record_ty.fields.iter().map(|(n, _)| n.as_str()).collect();

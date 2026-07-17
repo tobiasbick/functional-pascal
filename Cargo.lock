@@ -685,6 +685,7 @@ dependencies = [
  "fpas-diagnostics",
  "fpas-lexer",
  "fpas-parser",
+ "fpas-sema",
  "fpas-std",
  "glob",
  "serde",

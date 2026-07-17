@@ -44,6 +44,10 @@ impl Checker {
                     );
                 }
 
+                if self.find_record_event_on_type(record_ty, member).is_some() {
+                    return self.reject_bare_event_read(&record_ty.name, member, span);
+                }
+
                 if self.is_static_function_on_record(record_ty, member) {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
@@ -63,10 +67,10 @@ impl Checker {
                     self.error_with_code(
                         SEMA_UNKNOWN_NAME,
                         format!(
-                            "Record `{}` has no field, property, or method `{member}`",
+                            "Record `{}` has no field, property, event, or method `{member}`",
                             record_ty.name
                         ),
-                        "Check the field, property, or instance method name against the record type.",
+                        "Check the field, property, event, or instance method name against the record type.",
                         span,
                     );
                     return Ty::Error;
@@ -78,7 +82,7 @@ impl Checker {
                 self.error_with_code(
                     SEMA_TYPE_MISMATCH,
                     format!("`.{member}` requires a record value"),
-                    "Only records support field, property, and bound-method access with `.`.",
+                    "Only records support field, property, event, and bound-method access with `.`.",
                     span,
                 );
                 Ty::Error

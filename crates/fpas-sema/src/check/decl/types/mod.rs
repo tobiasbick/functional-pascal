@@ -6,6 +6,7 @@ use fpas_lexer::Span;
 use fpas_parser::{TypeBody, TypeDef, TypeParam};
 
 mod enums;
+mod record_events;
 mod record_properties;
 mod records;
 

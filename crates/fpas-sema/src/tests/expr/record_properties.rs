@@ -160,7 +160,7 @@ begin
 end.";
     let (program, parse_errors) = fpas_parser::parse(src);
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
-    let (errors, _, _, _, _, _, _, _, reads, _) = analyze_with_types(&program);
+    let (errors, _, _, _, _, _, _, _, reads, _, _, _, _) = analyze_with_types(&program);
     assert!(errors.is_empty(), "{errors:#?}");
     assert!(!reads.is_empty(), "expected property read metadata");
     assert!(

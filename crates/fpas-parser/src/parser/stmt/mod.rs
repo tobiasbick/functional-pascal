@@ -57,7 +57,7 @@ impl Parser {
                 Stmt::Continue(span)
             }
             Token::Go => self.parse_go_stmt(),
-            Token::Ident(_) => self.parse_call_or_assign(),
+            Token::Ident(_) | Token::Event | Token::Property => self.parse_call_or_assign(),
             _ => self.parse_invalid_statement_start(),
         }
     }
@@ -98,7 +98,7 @@ impl Parser {
     }
 
     fn can_start_expression(&self) -> bool {
-        self.is_std_keyword_path_start()
+        self.is_ident_designator_start()
             || self.at_closure_expr_start()
             || matches!(
                 self.current_token(),
@@ -107,7 +107,6 @@ impl Parser {
                     | Token::Str(_)
                     | Token::True
                     | Token::False
-                    | Token::Ident(_)
                     | Token::LParen
                     | Token::LBracket
                     | Token::Not
@@ -117,6 +116,7 @@ impl Parser {
                     | Token::Error
                     | Token::Some
                     | Token::None
+                    | Token::Nil
                     | Token::Try
                     | Token::Go
             )

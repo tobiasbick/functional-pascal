@@ -335,6 +335,21 @@ impl Checker {
             return Some(Ty::Error);
         }
 
+        if let Some(ty) =
+            self.try_check_event_raise_on_record(super::super::event_access::EventRaiseRequest {
+                call_key: Self::expr_lookup_key(call_expr),
+                designator,
+                record_ty: &record_ty,
+                event_name: &method_name,
+                receiver_reads: receiver_reads.clone(),
+                args,
+                span,
+                as_statement: allow_procedure_result,
+            })
+        {
+            return Some(ty);
+        }
+
         let method_kind = self.resolve_method_kind(&record_ty, &method_name, &qualified)?;
 
         self.method_calls.insert(

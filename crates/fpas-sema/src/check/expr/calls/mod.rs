@@ -80,6 +80,9 @@ impl Checker {
         args: &[Expr],
         span: Span,
     ) -> Ty {
+        if let Some(ty) = self.try_check_assigned_call(call_expr, designator, args, span) {
+            return ty;
+        }
         match self.resolve_call_target(call_expr, designator, args, span, false) {
             CallResolution::Symbol { kind, ty } => {
                 let name = Self::resolve_designator_name(designator);

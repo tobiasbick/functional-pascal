@@ -7,8 +7,9 @@ use std::collections::{HashMap, HashSet};
 
 use fpas_bytecode::Chunk;
 use fpas_sema::{
-    BoundMethodMap, ClosureInfoMap, ExprTypeMap, MethodCallMap, NestedRoutineCaptureMap,
-    PropertyReadMap, PropertyWriteMap, RecordDefaultsMap, ScalarCaseBindingMap,
+    BoundMethodMap, ClosureInfoMap, EventAssignedMap, EventRaiseMap, EventWriteMap, ExprTypeMap,
+    MethodCallMap, NestedRoutineCaptureMap, PropertyReadMap, PropertyWriteMap, RecordDefaultsMap,
+    ScalarCaseBindingMap,
 };
 
 mod binary_op;
@@ -89,6 +90,12 @@ pub struct Compiler {
     property_reads: PropertyReadMap,
     /// Property setter assignments (`B.Text := …`).
     property_writes: PropertyWriteMap,
+    /// Event setter assignments (`B.OnClick := …`).
+    event_writes: EventWriteMap,
+    /// `Assigned(event)` calls.
+    event_assigned: EventAssignedMap,
+    /// Event raise calls.
+    event_raises: EventRaiseMap,
     /// Canonical names of module-level globals (`const` / `var` / `mutable var`).
     module_globals: HashSet<String>,
 }
@@ -116,6 +123,9 @@ impl Compiler {
         bound_methods: BoundMethodMap,
         property_reads: PropertyReadMap,
         property_writes: PropertyWriteMap,
+        event_writes: EventWriteMap,
+        event_assigned: EventAssignedMap,
+        event_raises: EventRaiseMap,
     ) -> Self {
         Self {
             chunk: Chunk::new(),
@@ -135,6 +145,9 @@ impl Compiler {
             bound_methods,
             property_reads,
             property_writes,
+            event_writes,
+            event_assigned,
+            event_raises,
             module_globals: HashSet::new(),
         }
     }

@@ -164,6 +164,21 @@ impl Checker {
             return true;
         }
 
+        if let Some(_ty) =
+            self.try_check_event_raise_on_record(super::super::expr::EventRaiseRequest {
+                call_key,
+                designator,
+                record_ty: &record_ty,
+                event_name: &method_name,
+                receiver_reads: receiver_reads.clone(),
+                args,
+                span,
+                as_statement: true,
+            })
+        {
+            return true;
+        }
+
         let method_kind = self.resolve_method_kind(&record_ty, &method_name, &qualified);
         let Some(method_kind) = method_kind else {
             return false;

@@ -15,6 +15,14 @@ struct CheckedRecordMembers {
     static_functions: Vec<(String, FunctionTy)>,
 }
 
+struct PendingMethodBody<'a> {
+    qualified_name: String,
+    type_params: &'a [TypeParam],
+    params: Vec<ParamTy>,
+    return_type: Option<Ty>,
+    body: &'a FuncBody,
+}
+
 impl Checker {
     pub(super) fn check_record_type_def(&mut self, td: &TypeDef, record: &RecordType) {
         if !self.scopes.define(
@@ -43,7 +51,7 @@ impl Checker {
                 self.error_with_code(
                     SEMA_DUPLICATE_DECLARATION,
                     format!("Duplicate record member `{}`", field.name),
-                    "Each field, method, static function, and property name must be unique within the record type.",
+                    "Each field, method, static function, property, and event name must be unique within the record type.",
                     field.span,
                 );
                 continue;
@@ -85,10 +93,12 @@ impl Checker {
             methods: Vec::new(),
             static_functions: Vec::new(),
             properties: Vec::new(),
+            events: Vec::new(),
         };
         let mut ty = Ty::Record(record_ty);
 
-        let members = self.check_record_methods(&td.name, &ty, &record.methods, &mut seen_members);
+        let (members, pending_bodies) =
+            self.check_record_methods(&td.name, &ty, &record.methods, &mut seen_members);
 
         if let Ty::Record(record_ty) = &mut ty {
             record_ty.methods = members.instance_methods;
@@ -101,20 +111,37 @@ impl Checker {
             record_ty.properties = properties;
         }
 
+        let events = self.check_record_events(&td.name, &ty, &record.events, &mut seen_members);
+        if let Ty::Record(record_ty) = &mut ty {
+            record_ty.events = events;
+        }
+
         if let Some(existing) = self.scopes.lookup_mut(&td.name) {
             *existing.ty_mut() = ty;
         }
+
+        // Method bodies run after properties and events are visible on the type symbol.
+        for pending in pending_bodies {
+            self.check_method_body(
+                &pending.qualified_name,
+                pending.type_params,
+                &pending.params,
+                pending.return_type,
+                pending.body,
+            );
+        }
     }
 
-    fn check_record_methods(
+    fn check_record_methods<'a>(
         &mut self,
         type_name: &str,
         record_ty: &Ty,
-        methods: &[RecordMethod],
+        methods: &'a [RecordMethod],
         seen_members: &mut HashSet<String>,
-    ) -> CheckedRecordMembers {
+    ) -> (CheckedRecordMembers, Vec<PendingMethodBody<'a>>) {
         let mut checked_methods = Vec::new();
         let mut checked_static = Vec::new();
+        let mut pending_bodies = Vec::new();
 
         for method in methods {
             match method {
@@ -127,10 +154,11 @@ impl Checker {
                     ) {
                         continue;
                     }
-                    if let Some(entry) =
+                    if let Some((entry, pending)) =
                         self.check_instance_function(type_name, record_ty, function)
                     {
                         checked_methods.push(entry);
+                        pending_bodies.push(pending);
                     }
                 }
                 RecordMethod::StaticFunction(function) => {
@@ -142,9 +170,11 @@ impl Checker {
                     ) {
                         continue;
                     }
-                    if let Some(entry) = self.check_static_function(type_name, record_ty, function)
+                    if let Some((entry, pending)) =
+                        self.check_static_function(type_name, record_ty, function)
                     {
                         checked_static.push(entry);
+                        pending_bodies.push(pending);
                     }
                 }
                 RecordMethod::Procedure(procedure) => {
@@ -156,19 +186,23 @@ impl Checker {
                     ) {
                         continue;
                     }
-                    if let Some(entry) =
+                    if let Some((entry, pending)) =
                         self.check_instance_procedure(type_name, record_ty, procedure)
                     {
                         checked_methods.push(entry);
+                        pending_bodies.push(pending);
                     }
                 }
             }
         }
 
-        CheckedRecordMembers {
-            instance_methods: checked_methods,
-            static_functions: checked_static,
-        }
+        (
+            CheckedRecordMembers {
+                instance_methods: checked_methods,
+                static_functions: checked_static,
+            },
+            pending_bodies,
+        )
     }
 
     fn register_record_member_name(
@@ -184,18 +218,18 @@ impl Checker {
         self.error_with_code(
             SEMA_DUPLICATE_DECLARATION,
             format!("Duplicate record member `{type_name}.{name}`"),
-            "Each field, method, static function, and property name must be unique within the record type.",
+            "Each field, method, static function, property, and event name must be unique within the record type.",
             span,
         );
         false
     }
 
-    fn check_instance_function(
+    fn check_instance_function<'a>(
         &mut self,
         type_name: &str,
         record_ty: &Ty,
-        function: &FunctionDecl,
-    ) -> Option<(String, MethodKind)> {
+        function: &'a FunctionDecl,
+    ) -> Option<((String, MethodKind), PendingMethodBody<'a>)> {
         self.check_unique_formal_param_names(&function.params);
 
         let type_param_defs = Self::resolve_type_params(&function.type_params);
@@ -243,22 +277,24 @@ impl Checker {
             },
         );
 
-        self.check_method_body(
-            &qualified,
-            &function.type_params,
-            &params,
-            Some(return_ty),
-            &function.body,
-        );
-        Some((function.name.clone(), MethodKind::Function(function_ty)))
+        Some((
+            (function.name.clone(), MethodKind::Function(function_ty)),
+            PendingMethodBody {
+                qualified_name: qualified,
+                type_params: &function.type_params,
+                params,
+                return_type: Some(return_ty),
+                body: &function.body,
+            },
+        ))
     }
 
-    fn check_static_function(
+    fn check_static_function<'a>(
         &mut self,
         type_name: &str,
         record_ty: &Ty,
-        function: &FunctionDecl,
-    ) -> Option<(String, FunctionTy)> {
+        function: &'a FunctionDecl,
+    ) -> Option<((String, FunctionTy), PendingMethodBody<'a>)> {
         self.check_unique_formal_param_names(&function.params);
 
         let type_param_defs = Self::resolve_type_params(&function.type_params);
@@ -310,22 +346,24 @@ impl Checker {
             },
         );
 
-        self.check_method_body(
-            &qualified,
-            &function.type_params,
-            &params,
-            Some(return_ty),
-            &function.body,
-        );
-        Some((function.name.clone(), function_ty))
+        Some((
+            (function.name.clone(), function_ty),
+            PendingMethodBody {
+                qualified_name: qualified,
+                type_params: &function.type_params,
+                params,
+                return_type: Some(return_ty),
+                body: &function.body,
+            },
+        ))
     }
 
-    fn check_instance_procedure(
+    fn check_instance_procedure<'a>(
         &mut self,
         type_name: &str,
         record_ty: &Ty,
-        procedure: &fpas_parser::ProcedureDecl,
-    ) -> Option<(String, MethodKind)> {
+        procedure: &'a fpas_parser::ProcedureDecl,
+    ) -> Option<((String, MethodKind), PendingMethodBody<'a>)> {
         self.check_unique_formal_param_names(&procedure.params);
 
         let type_param_defs = Self::resolve_type_params(&procedure.type_params);
@@ -368,14 +406,16 @@ impl Checker {
             },
         );
 
-        self.check_method_body(
-            &qualified,
-            &procedure.type_params,
-            &params,
-            None,
-            &procedure.body,
-        );
-        Some((procedure.name.clone(), MethodKind::Procedure(procedure_ty)))
+        Some((
+            (procedure.name.clone(), MethodKind::Procedure(procedure_ty)),
+            PendingMethodBody {
+                qualified_name: qualified,
+                type_params: &procedure.type_params,
+                params,
+                return_type: None,
+                body: &procedure.body,
+            },
+        ))
     }
 
     fn validate_record_method_signature(
@@ -486,9 +526,13 @@ impl Checker {
             );
         }
         let previous_ctx = self.scopes.function_ctx.take();
+        let owner_unit = qualified_name
+            .rsplit_once('.')
+            .and_then(|(type_name, _)| super::record_events::owner_unit_from_type_name(type_name));
         self.scopes.function_ctx = Some(FunctionCtx {
             name: qualified_name.to_string(),
             return_type,
+            owner_unit,
         });
         for decl in nested {
             self.check_decl(decl);

@@ -42,6 +42,7 @@ impl Checker {
         self.scopes.function_ctx = Some(FunctionCtx {
             name: program.name.clone(),
             return_type: None,
+            owner_unit: None,
         });
 
         // Program-body locals live in a non-root scope so closures can capture them.

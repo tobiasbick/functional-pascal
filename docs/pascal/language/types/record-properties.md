@@ -100,4 +100,5 @@ Properties are behavior, not stored record data:
 
 - [Records](records.md)
 - [Record methods](record-methods.md)
+- [Record events](record-events.md) — specialized callable members (not ordinary properties)
 - [First-class functions](../functions/first-class.md)

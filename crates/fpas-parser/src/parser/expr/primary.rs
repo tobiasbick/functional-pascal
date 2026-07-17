@@ -17,7 +17,7 @@ impl Parser {
     /// [`Self::apply_postfix_suffixes`].
     fn parse_primary_atom(&mut self) -> Expr {
         // Avoid cloning the String payload when dispatching an identifier.
-        if matches!(self.current_token(), Token::Ident(_)) || self.is_std_keyword_path_start() {
+        if self.is_ident_designator_start() {
             return self.parse_designator_or_call();
         }
 
@@ -72,6 +72,11 @@ impl Parser {
                 let span = self.current_span();
                 self.advance();
                 Expr::OptionNone(span)
+            }
+            Token::Nil => {
+                let span = self.current_span();
+                self.advance();
+                Expr::Nil(span)
             }
             Token::Go => {
                 let start = self.current_span();

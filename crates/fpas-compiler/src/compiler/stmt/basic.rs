@@ -34,6 +34,9 @@ impl Compiler {
         location: SourceLocation,
     ) -> Result<(), CompileError> {
         let key = fpas_sema::designator_lookup_key(target);
+        if let Some(info) = self.event_writes.get(&key).cloned() {
+            return self.compile_event_assignment(target, value, &info, location);
+        }
         if let Some(info) = self.property_writes.get(&key).cloned() {
             return self.compile_property_assignment(target, value, &info, location);
         }
@@ -71,6 +74,11 @@ impl Compiler {
         location: SourceLocation,
     ) -> Result<(), CompileError> {
         let call_key = fpas_sema::designator_lookup_key(designator);
+        if let Some(info) = self.event_raises.get(&call_key).cloned() {
+            self.compile_event_raise(designator, args, &info, location)?;
+            self.emit(Op::Pop, location);
+            return Ok(());
+        }
         if let Some(target) = self.method_calls.get(&call_key).cloned() {
             match target {
                 fpas_sema::MethodCallTarget::Instance {

@@ -7,6 +7,7 @@ mod bound_method;
 mod calls;
 mod closure;
 mod designator;
+mod event_access;
 mod operators;
 mod postfix;
 
@@ -14,6 +15,8 @@ use super::Checker;
 use crate::scope::SymbolKind;
 use crate::types::Ty;
 use fpas_parser::*;
+
+pub(crate) use event_access::EventRaiseRequest;
 
 impl Checker {
     pub(crate) fn check_expr(&mut self, expr: &Expr) -> Ty {
@@ -52,6 +55,15 @@ impl Checker {
                 Ty::Option(Box::new(inner_ty))
             }
             Expr::OptionNone(_) => Ty::Option(Box::new(Ty::Error)),
+            Expr::Nil(span) => {
+                self.error_with_code(
+                    fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
+                    "`nil` is only valid when clearing an event",
+                    "Write `Event := nil` to clear a handler, or use `None` for an `Option`.",
+                    *span,
+                );
+                Ty::Error
+            }
             Expr::Try(inner, span) => self.check_try_expr(inner, *span),
             Expr::Go(inner, span) => self.check_go_expr(inner, *span),
             Expr::RecordUpdate { base, fields, span } => {
@@ -107,6 +119,7 @@ impl Checker {
 
         let inner_key = Self::expr_lookup_key(inner);
         self.expr_types.insert(inner_key, inner_ty.clone());
+        self.reject_spawned_event_raise(inner_key, span);
         if self.callable_expr_is_task_bound(inner) {
             self.error_with_code(
                 fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE,
@@ -203,6 +216,7 @@ impl Checker {
             methods: Vec::new(),
             static_functions: Vec::new(),
             properties: Vec::new(),
+            events: Vec::new(),
         })
     }
 
@@ -270,6 +284,20 @@ impl Checker {
                         record_ty.name, field_init.name
                     ),
                     "Properties are not record fields. Assign to the property with `Value.Prop := …` instead.",
+                    span,
+                );
+                let _ = self.check_expr(&field_init.value);
+            } else if self
+                .find_record_event_on_type(&record_ty, &field_init.name)
+                .is_some()
+            {
+                self.error_with_code(
+                    fpas_diagnostics::codes::SEMA_UNKNOWN_NAME,
+                    format!(
+                        "Record type `{}` event `{}` cannot be set in a `with` update",
+                        record_ty.name, field_init.name
+                    ),
+                    "Events are not record fields. Assign with `Value.Event := Handler` or `:= nil`.",
                     span,
                 );
                 let _ = self.check_expr(&field_init.value);

@@ -96,6 +96,58 @@ pub struct PropertyWriteInfo {
 /// Maps assignment-target designator identity to [`PropertyWriteInfo`].
 pub type PropertyWriteMap = HashMap<usize, PropertyWriteInfo>;
 
+/// Semantic metadata for an event setter assignment (`B.OnClick := …` / `:= nil`).
+///
+/// **Documentation:** `docs/pascal/language/types/record-events.md`
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EventWriteInfo {
+    /// Qualified setter name (e.g. `Button.WriteOnClick`).
+    pub setter_name: String,
+    /// Number of designator parts forming the receiver before the event name.
+    pub receiver_part_count: usize,
+    /// Ordered property getter reads needed while evaluating the receiver path.
+    pub receiver_reads: Vec<PropertyReadInfo>,
+    /// When `true`, the RHS is `nil` and lowers to `None`; otherwise wrap as `Some`.
+    pub clear: bool,
+}
+
+/// Maps assignment-target designator identity to [`EventWriteInfo`].
+pub type EventWriteMap = HashMap<usize, EventWriteInfo>;
+
+/// Semantic metadata for `Assigned(event)`.
+///
+/// **Documentation:** `docs/pascal/language/types/record-events.md`
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EventAssignedInfo {
+    /// Qualified getter name returning `Option of Handler`.
+    pub getter_name: String,
+    /// Number of designator parts forming the receiver before the event name.
+    pub receiver_part_count: usize,
+    /// Ordered property getter reads needed while evaluating the receiver path.
+    pub receiver_reads: Vec<PropertyReadInfo>,
+}
+
+/// Maps `Assigned(...)` call-expression identity to [`EventAssignedInfo`].
+pub type EventAssignedMap = HashMap<usize, EventAssignedInfo>;
+
+/// Semantic metadata for owner-only event invocation (`B.OnClick(…)`).
+///
+/// **Documentation:** `docs/pascal/language/types/record-events.md`
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EventRaiseInfo {
+    /// Qualified getter name returning `Option of Handler`.
+    pub getter_name: String,
+    /// Number of designator parts forming the receiver before the event name.
+    pub receiver_part_count: usize,
+    /// Ordered property getter reads needed while evaluating the receiver path.
+    pub receiver_reads: Vec<PropertyReadInfo>,
+    /// Handler argument count (not counting the event receiver).
+    pub arity: u8,
+}
+
+/// Maps event call identity (expression or statement designator) to [`EventRaiseInfo`].
+pub type EventRaiseMap = HashMap<usize, EventRaiseInfo>;
+
 /// Maps a named record type to its ordered field list, each entry carrying an optional
 /// cloned default expression. The order matches the type definition.
 ///
@@ -147,6 +199,18 @@ pub struct Checker {
     ///
     /// **Documentation:** `docs/pascal/language/types/record-properties.md`
     pub(crate) property_writes: PropertyWriteMap,
+    /// Assignment-target designator identity → event setter metadata.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/record-events.md`
+    pub(crate) event_writes: EventWriteMap,
+    /// `Assigned(event)` call identity → getter metadata.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/record-events.md`
+    pub(crate) event_assigned: EventAssignedMap,
+    /// Event raise call identity → getter / arity metadata.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/record-events.md`
+    pub(crate) event_raises: EventRaiseMap,
     /// Expression keys whose value is a task-bound callable.
     ///
     /// **Documentation:** `docs/pascal/language/functions/closures.md`
@@ -173,10 +237,14 @@ impl Checker {
             bound_methods: BoundMethodMap::new(),
             property_reads: PropertyReadMap::new(),
             property_writes: PropertyWriteMap::new(),
+            event_writes: EventWriteMap::new(),
+            event_assigned: EventAssignedMap::new(),
+            event_raises: EventRaiseMap::new(),
             task_bound_exprs: HashSet::new(),
         }
     }
 
+    #[allow(clippy::type_complexity)]
     pub fn finish(
         self,
     ) -> (
@@ -190,6 +258,9 @@ impl Checker {
         BoundMethodMap,
         PropertyReadMap,
         PropertyWriteMap,
+        EventWriteMap,
+        EventAssignedMap,
+        EventRaiseMap,
     ) {
         (
             self.errors,
@@ -202,6 +273,9 @@ impl Checker {
             self.bound_methods,
             self.property_reads,
             self.property_writes,
+            self.event_writes,
+            self.event_assigned,
+            self.event_raises,
         )
     }
 

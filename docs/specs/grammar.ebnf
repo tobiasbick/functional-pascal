@@ -76,7 +76,7 @@ doc_line_comment = '//' '/' { (* any char except newline *) } newline ;
 (* `///` is lexically a line comment; formatters treat it as a      *)
 (* preservable doc line (see docs/pascal/tools/fmt-style.md).             *)
 
-(* ---- Keywords (53, case-insensitive) --------------------------- *)
+(* ---- Keywords (57, case-insensitive) --------------------------- *)
 
 keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'var'       | 'mutable'   | 'function'  | 'procedure'
@@ -91,7 +91,8 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'break'     | 'continue'  | 'result'    | 'option'
                 | 'ok'        | 'error'     | 'some'      | 'none'
                 | 'try'       | 'public'    | 'private'
-                | 'go'        | 'dict'      | 'with'      | 'static' | 'property' ;
+                | 'go'        | 'dict'      | 'with'      | 'static' | 'property'
+                | 'event'     | 'nil' ;
 
 (* ---- Symbols --------------------------------------------------- *)
 
@@ -214,7 +215,7 @@ formal_type_param   = [ 'mutable' ] identifier ':' type_expr ;
 (* ---- 2.4 Record & Enum Types ---------------------------------- *)
 
 record_type         = 'record'
-                      { field_def | record_method | record_property }
+                      { field_def | record_method | record_property | record_event }
                       'end' ;
 field_def           = identifier ':' type_expr [ ':=' expression ] ';' ;
 
@@ -244,6 +245,12 @@ record_property     = 'property' identifier ':' type_expr
                       { property_accessor } ';' ;
 property_accessor   = 'read' identifier
                     | 'write' identifier ;
+
+(* Events are specialized properties whose logical type is a callable. *)
+(* Both accessors are required and deal in Option of HandlerType.      *)
+(* See docs/pascal/language/types/record-events.md.                    *)
+record_event        = 'event' identifier ':' type_expr
+                      'read' identifier 'write' identifier ';' ;
 
 enum_type           = 'enum' enum_member { enum_member } 'end' ;
 enum_member         = identifier [ enum_fields | '=' integer_literal ] ';' ;
@@ -457,6 +464,7 @@ primary_atom        = integer_literal
                     | 'error' '(' expression ')'        (* Result Error   *)
                     | 'some' '(' expression ')'          (* Option Some    *)
                     | 'none'                             (* Option None    *)
+                    | 'nil'                              (* event clear only; see record-events.md *)
                     | '(' expression ')'
                     | array_literal
                     | dict_literal

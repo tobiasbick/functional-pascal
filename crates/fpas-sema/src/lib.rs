@@ -25,6 +25,12 @@ pub use check::BoundMethodMap;
 pub use check::CaptureBinding;
 pub use check::ClosureInfo;
 pub use check::ClosureInfoMap;
+pub use check::EventAssignedInfo;
+pub use check::EventAssignedMap;
+pub use check::EventRaiseInfo;
+pub use check::EventRaiseMap;
+pub use check::EventWriteInfo;
+pub use check::EventWriteMap;
 pub use check::ExprTypeMap;
 pub use check::MethodCallMap;
 pub use check::MethodCallTarget;
@@ -49,6 +55,7 @@ pub fn analyze(program: &Program) -> Vec<SemaError> {
 
 /// Like [`analyze`], but also returns the inferred type of every expression (by source key)
 /// and the map of record type defaults used by the compiler for default field expansion.
+#[allow(clippy::type_complexity)]
 pub fn analyze_with_types(
     program: &Program,
 ) -> (
@@ -62,6 +69,9 @@ pub fn analyze_with_types(
     BoundMethodMap,
     PropertyReadMap,
     PropertyWriteMap,
+    EventWriteMap,
+    EventAssignedMap,
+    EventRaiseMap,
 ) {
     let mut checker = check::Checker::new();
     checker.check_program(program);

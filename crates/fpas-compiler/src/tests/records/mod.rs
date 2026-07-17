@@ -3,6 +3,7 @@ mod basics;
 mod bound_methods;
 mod defaults;
 mod errors;
+mod events;
 mod methods;
 mod properties;
 mod self_calls;

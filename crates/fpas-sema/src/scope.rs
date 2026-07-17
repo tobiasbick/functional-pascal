@@ -71,10 +71,15 @@ pub struct ScopeStack {
     pub function_ctx: Option<FunctionCtx>,
 }
 
+/// Semantic context of the routine whose body is currently checked.
 #[derive(Debug, Clone)]
 pub struct FunctionCtx {
+    /// Diagnostic name of the routine.
     pub name: String,
+    /// Declared result type, or `None` for procedures and the program body.
     pub return_type: Option<Ty>,
+    /// Exact linked unit that owns the routine; nested routines inherit it.
+    pub owner_unit: Option<String>,
 }
 
 impl ScopeStack {

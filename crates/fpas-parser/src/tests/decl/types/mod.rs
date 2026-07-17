@@ -1,6 +1,7 @@
 use super::*;
 
 mod enums;
+mod record_events;
 mod record_methods;
 mod record_properties;
 mod records;

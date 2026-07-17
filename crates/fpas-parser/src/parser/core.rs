@@ -158,6 +158,9 @@ impl Parser {
     }
 
     pub(crate) fn expect_ident(&mut self) -> Option<(String, Span)> {
+        if let Some(ident) = self.try_consume_soft_keyword_ident() {
+            return Some(ident);
+        }
         let Token::Ident(name) = self.current_token().clone() else {
             let span = self.current_span();
             self.error_with_code(
@@ -183,17 +186,43 @@ impl Parser {
     /// [`Parser::parse_designator`]. In expression position, those keywords only start a
     /// designator when immediately followed by `.` (so `array of T` remains the array type and
     /// `result of T, E` remains the result type).
+    ///
+    /// `event` / `property` are also soft-accepted as identifiers outside record-member
+    /// declaration position so existing `Std.*.Event` type names keep working.
     pub(crate) fn try_consume_std_keyword_path_segment(&mut self) -> Option<(String, Span)> {
         let segment = match self.current_token() {
             Token::Array => "Array",
             Token::Result => "Result",
             Token::OptionKw => "Option",
             Token::Dict => "Dict",
+            Token::Event => "Event",
+            Token::Property => "Property",
             _ => return None,
         };
         let span = self.current_span();
         self.advance();
         Some((segment.to_owned(), span))
+    }
+
+    /// Soft-accept selected keywords as identifiers (preserving Std type names).
+    pub(crate) fn try_consume_soft_keyword_ident(&mut self) -> Option<(String, Span)> {
+        let name = match self.current_token() {
+            Token::Event => "Event",
+            Token::Property => "Property",
+            _ => return None,
+        };
+        let span = self.current_span();
+        self.advance();
+        Some((name.to_owned(), span))
+    }
+
+    /// True when the current token can start an identifier designator, including soft
+    /// keywords such as `Event` / `Property` used as names.
+    pub(crate) fn is_ident_designator_start(&self) -> bool {
+        matches!(
+            self.current_token(),
+            Token::Ident(_) | Token::Event | Token::Property
+        ) || self.is_std_keyword_path_start()
     }
 
     pub(crate) fn is_std_keyword_path_start(&self) -> bool {

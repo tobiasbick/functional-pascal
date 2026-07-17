@@ -177,5 +177,6 @@ Method-level type parameters are documented in [Generics](generics.md#generic-re
 - [Records](records.md)
 - [Generics](generics.md)
 - [Record properties](record-properties.md)
+- [Record events](record-events.md)
 - [First-class functions](../functions/first-class.md)
 - [Capturing closures](../functions/closures.md)

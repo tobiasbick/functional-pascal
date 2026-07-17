@@ -70,6 +70,37 @@ impl Compiler {
         Ok(slot)
     }
 
+    /// After a call that left `[temp_local, tos]`, overwrite the temp with `tos`, pop the
+    /// duplicate, and unregister the temporary local so only the expression result remains.
+    pub(super) fn collapse_temp_local_under_tos(
+        &mut self,
+        slot: u16,
+        location: impl Copy + super::emit::IntoEmitLocation,
+    ) -> Result<(), CompileError> {
+        let location = location.into_emit_location();
+        let Some(local) = self.locals.last() else {
+            return Err(compile_error(
+                COMPILE_BYTECODE_OPERAND_OVERFLOW,
+                "Internal error: collapsing a temporary local with no locals registered.",
+                "Re-run compilation and report this internal compiler error.",
+                Compiler::call_site_span(location),
+            ));
+        };
+        if local.slot != slot {
+            return Err(compile_error(
+                COMPILE_BYTECODE_OPERAND_OVERFLOW,
+                "Internal error: temporary local is not on top of the local stack.",
+                "Re-run compilation and report this internal compiler error.",
+                Compiler::call_site_span(location),
+            ));
+        }
+        self.emit(fpas_bytecode::Op::SetLocal(slot), location);
+        self.emit(fpas_bytecode::Op::Pop, location);
+        self.locals.pop();
+        self.next_slot -= 1;
+        Ok(())
+    }
+
     pub(super) fn resolve_local(&self, name: &str) -> Option<LocalRef> {
         let canonical = canonical_name(name);
         for local in self.locals.iter().rev() {
@@ -197,8 +228,9 @@ mod tests {
     use fpas_bytecode::SourceLocation;
     use fpas_diagnostics::codes::COMPILE_BYTECODE_OPERAND_OVERFLOW;
     use fpas_sema::{
-        BoundMethodMap, ClosureInfoMap, ExprTypeMap, MethodCallMap, NestedRoutineCaptureMap,
-        PropertyReadMap, PropertyWriteMap, RecordDefaultsMap, ScalarCaseBindingMap,
+        BoundMethodMap, ClosureInfoMap, EventAssignedMap, EventRaiseMap, EventWriteMap,
+        ExprTypeMap, MethodCallMap, NestedRoutineCaptureMap, PropertyReadMap, PropertyWriteMap,
+        RecordDefaultsMap, ScalarCaseBindingMap,
     };
 
     fn empty_compiler() -> Compiler {
@@ -212,6 +244,9 @@ mod tests {
             BoundMethodMap::default(),
             PropertyReadMap::default(),
             PropertyWriteMap::default(),
+            EventWriteMap::default(),
+            EventAssignedMap::default(),
+            EventRaiseMap::default(),
         )
     }
 

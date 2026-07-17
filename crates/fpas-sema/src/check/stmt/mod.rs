@@ -1,5 +1,6 @@
 mod calls;
 mod control_flow;
+mod event_assignment;
 mod property_assignment;
 
 use super::Checker;
@@ -90,6 +91,10 @@ impl Checker {
                 } = expr
                 {
                     self.check_call_stmt(designator, args, *call_span);
+                    self.reject_spawned_event_raise(
+                        crate::designator_lookup_key(designator),
+                        *span,
+                    );
                     if self.designator_refers_to_task_bound(designator) {
                         self.error_with_code(
                             fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE,

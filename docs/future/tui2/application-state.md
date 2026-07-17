@@ -11,8 +11,9 @@ The authoritative contracts are:
 
 - [capturing closures](../../pascal/language/functions/closures.md) for environment ownership, mutation, lifetime, and
   task transfer;
-- [events and bound record methods](../events-and-bound-methods.md) for the language-level handler
-  model;
+- [record events](../../pascal/language/types/record-events.md) and
+  [bound record methods](../../pascal/language/types/record-methods.md#bound-methods-as-values) for the
+  language-level handler model;
 - [Tui2 events and actions](events-and-actions.md) for concrete signatures and registry ownership.
 
 This forwarding page remains temporarily because the implementation phase plan still links to its

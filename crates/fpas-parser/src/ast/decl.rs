@@ -83,6 +83,10 @@ pub struct RecordType {
     ///
     /// **Documentation:** `docs/pascal/language/types/record-properties.md`
     pub properties: Vec<RecordProperty>,
+    /// Event members backed by `Option of Handler` accessors.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/record-events.md`
+    pub events: Vec<RecordEvent>,
     pub span: Span,
 }
 
@@ -97,6 +101,20 @@ pub struct RecordProperty {
     pub read: Option<String>,
     /// Instance procedure name after contextual `write`.
     pub write: Option<String>,
+    pub span: Span,
+}
+
+/// An event declared inside a `record … end` block.
+///
+/// **Documentation:** `docs/pascal/language/types/record-events.md`
+#[derive(Debug, Clone, PartialEq)]
+pub struct RecordEvent {
+    pub name: String,
+    pub type_expr: TypeExpr,
+    /// Instance getter returning `Option of` the handler type.
+    pub read: String,
+    /// Instance setter accepting `Option of` the handler type.
+    pub write: String,
     pub span: Span,
 }
 

@@ -16,10 +16,13 @@ enum      array     panic     break
 continue  result    option    ok
 error     some      none      try
 public    private   go        dict
-with      static
+with      static    property  event
+nil
 ```
 
-Formal token definitions: [`grammar.ebnf`](../../specs/grammar.ebnf).
+`property`, `event`, and `nil` are reserved words. `event` and `property` are also
+accepted as ordinary identifiers outside record-member declaration position so existing
+type names such as `Std.Console.Event` keep working.
 
 ## Example
 

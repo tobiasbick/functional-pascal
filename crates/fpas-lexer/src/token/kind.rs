@@ -1,7 +1,7 @@
 /// Lexical token produced by the Functional Pascal lexer.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
-    // Keywords (55)
+    // Keywords (57)
     Program,
     Unit,
     Uses,
@@ -63,6 +63,14 @@ pub enum Token {
     ///
     /// **Documentation:** `docs/pascal/language/types/record-properties.md`
     Property,
+    /// Marks a record event: `event OnClick: Handler read Get write Set`.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/record-events.md`
+    Event,
+    /// Clears an event handler: `Button.OnClick := nil`.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/record-events.md`
+    Nil,
 
     // Literals
     Integer(i64),

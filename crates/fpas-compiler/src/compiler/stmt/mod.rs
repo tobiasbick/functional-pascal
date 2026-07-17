@@ -1,6 +1,7 @@
 mod basic;
 mod concurrency;
 mod control_flow;
+mod event_assignment;
 mod loops;
 mod property_assignment;
 

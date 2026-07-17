@@ -15,5 +15,8 @@ glob = { workspace = true }
 serde = { workspace = true }
 toml = { workspace = true }
 
+[dev-dependencies]
+fpas-sema = { path = "../fpas-sema" }
+
 [lints]
 workspace = true

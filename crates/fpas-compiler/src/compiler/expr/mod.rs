@@ -6,6 +6,7 @@ mod bound_method;
 mod call;
 mod closure;
 mod constructors;
+mod event_access;
 mod literals;
 mod postfix;
 mod property;
@@ -39,7 +40,11 @@ impl Compiler {
             } => {
                 let location = Self::location_of(span);
                 let call_key = fpas_sema::expr_lookup_key(expr);
-                if let Some(target) = self.method_calls.get(&call_key).cloned() {
+                if let Some(info) = self.event_assigned.get(&call_key).cloned() {
+                    self.compile_event_assigned(args, &info, location)?;
+                } else if let Some(info) = self.event_raises.get(&call_key).cloned() {
+                    self.compile_event_raise(designator, args, &info, location)?;
+                } else if let Some(target) = self.method_calls.get(&call_key).cloned() {
                     match target {
                         fpas_sema::MethodCallTarget::Instance {
                             qualified_name,
@@ -120,6 +125,14 @@ impl Compiler {
             }
             Expr::Error(span) => {
                 self.emit(Op::Unit, Self::location_of(span));
+            }
+            Expr::Nil(span) => {
+                return Err(crate::error::internal_compiler_error(
+                    "`nil` reached expression lowering; it is only valid as an event clear",
+                    "Clear an event with `Event := nil`, or use `None` for an `Option`.",
+                    span.line,
+                    span.column,
+                ));
             }
         }
 

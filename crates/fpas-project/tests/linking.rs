@@ -251,3 +251,163 @@ members = ["lib.fpasprj", "lib.fpasprj"]
 
     assert!(error.contains("Duplicate workspace member"), "got: {error}");
 }
+
+#[test]
+fn linked_event_raise_is_owner_unit_only() {
+    let dir = temp_dir("event-owner");
+    let lib_dir = dir.join("lib");
+    let app_dir = dir.join("app");
+    let lib_project = lib_dir.join("lib.fpasprj");
+    let app_project = app_dir.join("app.fpasprj");
+
+    write(
+        &lib_project,
+        r#"[project]
+name = "widgets"
+kind = "library"
+
+[exports]
+units = ["Widgets"]
+
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    write(
+        &lib_dir.join("src/widgets.fpas"),
+        "\
+unit Widgets;
+
+type
+  ClickHandler = procedure(Sender: integer);
+
+  Button = record
+    Id: integer;
+
+    function ReadOnClick(Self: Button): Option of ClickHandler;
+    begin
+      return None
+    end;
+
+    procedure WriteOnClick(Self: Button; Handler: Option of ClickHandler);
+    begin
+    end;
+
+    event OnClick: ClickHandler read ReadOnClick write WriteOnClick;
+  end;
+",
+    );
+
+    write(
+        &app_project,
+        r#"[project]
+name = "app"
+kind = "program"
+main = "src/main.fpas"
+
+[dependencies]
+projects = ["../lib/lib.fpasprj"]
+
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    write(
+        &app_dir.join("src/main.fpas"),
+        "\
+program App;
+
+uses Widgets;
+
+procedure Handle(Sender: integer);
+begin
+end;
+
+begin
+  var B: Button := record Id := 1; end;
+  B.OnClick := Handle;
+  B.OnClick(1)
+end.
+",
+    );
+
+    let loaded = load_project(&app_project).expect("project should load");
+    let program = build_program(
+        loaded.main.as_deref().expect("main"),
+        &loaded.source_files,
+        &loaded.link_meta,
+    )
+    .expect("link should succeed");
+    let errors = fpas_sema::analyze(&program);
+    fs::remove_dir_all(&dir).ok();
+
+    assert!(
+        errors.iter().any(|e| e
+            .message
+            .contains("can only be raised from its declaring unit")),
+        "expected owner-only raise error, got: {errors:#?}"
+    );
+}
+
+#[test]
+fn linked_event_raise_rejects_child_namespace_unit() {
+    let dir = temp_dir("event-owner-child-unit");
+    let project = dir.join("app.fpasprj");
+
+    write(
+        &project,
+        r#"[project]
+name = "app"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    write(
+        &dir.join("src/widgets.fpas"),
+        "unit Company.Widgets;\n\
+type\n\
+  Button = record\n\
+    function ReadOnClick(Self: Button): Option of procedure();\n\
+    begin\n\
+      return None\n\
+    end;\n\
+    procedure WriteOnClick(Self: Button; Handler: Option of procedure());\n\
+    begin\n\
+    end;\n\
+    event OnClick: procedure() read ReadOnClick write WriteOnClick;\n\
+  end;\n",
+    );
+    write(
+        &dir.join("src/internal.fpas"),
+        "unit Company.Widgets.Internal;\n\
+uses Company.Widgets;\n\
+procedure RaiseForeign(ButtonValue: Button);\n\
+begin\n\
+  ButtonValue.OnClick()\n\
+end;\n",
+    );
+    write(
+        &dir.join("src/main.fpas"),
+        "program App;\nuses Company.Widgets.Internal;\nbegin\nend.\n",
+    );
+
+    let loaded = load_project(&project).expect("project should load");
+    let program = build_program(
+        loaded.main.as_deref().expect("main"),
+        &loaded.source_files,
+        &loaded.link_meta,
+    )
+    .expect("link should succeed");
+    let errors = fpas_sema::analyze(&program);
+    fs::remove_dir_all(&dir).ok();
+
+    assert!(
+        errors.iter().any(|error| error
+            .message
+            .contains("can only be raised from its declaring unit")),
+        "expected exact owner-unit error, got: {errors:#?}"
+    );
+}

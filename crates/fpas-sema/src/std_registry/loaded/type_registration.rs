@@ -63,6 +63,7 @@ pub(super) fn register_record_type(
         methods: Vec::new(),
         static_functions: Vec::new(),
         properties: Vec::new(),
+        events: Vec::new(),
     });
     checker.scopes.define(
         qualified_name,

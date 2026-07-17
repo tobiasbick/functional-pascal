@@ -58,6 +58,8 @@ fn keyword_token(raw: &str) -> Option<Token> {
         s if s.eq_ignore_ascii_case("with") => Some(Token::With),
         s if s.eq_ignore_ascii_case("static") => Some(Token::Static),
         s if s.eq_ignore_ascii_case("property") => Some(Token::Property),
+        s if s.eq_ignore_ascii_case("event") => Some(Token::Event),
+        s if s.eq_ignore_ascii_case("nil") => Some(Token::Nil),
         _ => None,
     }
 }

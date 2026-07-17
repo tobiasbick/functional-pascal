@@ -16,6 +16,9 @@ impl Checker {
     ///
     /// **Documentation:** `docs/pascal/language/types/record-properties.md`
     pub(crate) fn check_assign_stmt(&mut self, target: &Designator, value: &Expr, span: Span) {
+        if self.try_check_event_assignment(target, value, span) {
+            return;
+        }
         if self.try_check_property_assignment(target, value, span) {
             return;
         }

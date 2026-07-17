@@ -1,6 +1,6 @@
 unit Std.Tui2.Views.View;
 
-uses Std.Array, Std.Tui2.Runtime.Application;
+uses Std.Array, Std.Tui2.Geometry.Rect, Std.Tui2.Runtime.Application;
 
 type
   TuiViewKind = enum
@@ -8,11 +8,32 @@ type
     Button;
     Custom;
   end;
+  TuiViewCleanupCallback = procedure(ApplicationId: integer; Slot: integer; Generation: integer);
 
 private mutable var TuiViewApplicationIds: array of integer := [];
 private mutable var TuiViewGenerations: array of integer := [];
 private mutable var TuiViewAlive: array of boolean := [];
 private mutable var TuiViewTags: array of integer := [];
+private mutable var TuiViewBounds: array of TuiRect := [];
+private mutable var TuiViewVisible: array of boolean := [];
+private mutable var TuiViewEnabled: array of boolean := [];
+private mutable var TuiViewCleanupApplicationIds: array of integer := [];
+private mutable var TuiViewCleanupSlots: array of integer := [];
+private mutable var TuiViewCleanupGenerations: array of integer := [];
+private mutable var TuiViewCleanupCallbacks: array of TuiViewCleanupCallback := [];
+
+private procedure TuiViewRunCleanups(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  for I: integer := 0 to Std.Array.Length(TuiViewCleanupCallbacks) - 1 do
+  begin
+    if ((TuiViewCleanupApplicationIds[I] = ApplicationId) and (TuiViewCleanupSlots[I] = Slot)) and
+       (TuiViewCleanupGenerations[I] = Generation) then
+    begin
+      var Callback: TuiViewCleanupCallback := TuiViewCleanupCallbacks[I];
+      Callback(ApplicationId, Slot, Generation)
+    end
+  end
+end;
 
 private procedure TuiViewRequire(ApplicationId: integer; Slot: integer; Generation: integer);
 begin
@@ -89,6 +110,9 @@ type
           TuiViewApplicationIds[I] := App.Id;
           TuiViewAlive[I] := true;
           TuiViewTags[I] := 0;
+          TuiViewBounds[I] := TuiRect.Create(0, 0, 0, 0);
+          TuiViewVisible[I] := true;
+          TuiViewEnabled[I] := true;
           break
         end
       end;
@@ -98,6 +122,9 @@ type
         TuiViewGenerations := Std.Array.Concat(TuiViewGenerations, [1]);
         TuiViewAlive := Std.Array.Concat(TuiViewAlive, [true]);
         TuiViewTags := Std.Array.Concat(TuiViewTags, [0]);
+        TuiViewBounds := Std.Array.Concat(TuiViewBounds, [TuiRect.Create(0, 0, 0, 0)]);
+        TuiViewVisible := Std.Array.Concat(TuiViewVisible, [true]);
+        TuiViewEnabled := Std.Array.Concat(TuiViewEnabled, [true]);
         Slot := Std.Array.Length(TuiViewGenerations)
       end;
       var View: TuiView := record
@@ -141,11 +168,63 @@ type
       TuiViewTags[Self.Slot - 1] := Value
     end;
 
+    function ReadBounds(Self: TuiView): TuiRect;
+    begin
+      TuiViewRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      return TuiViewBounds[Self.Slot - 1]
+    end;
+
+    procedure WriteBounds(Self: TuiView; Value: TuiRect);
+    begin
+      TuiViewRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      TuiViewBounds[Self.Slot - 1] := Value
+    end;
+
+    function ReadVisible(Self: TuiView): boolean;
+    begin
+      TuiViewRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      return TuiViewVisible[Self.Slot - 1]
+    end;
+
+    procedure WriteVisible(Self: TuiView; Value: boolean);
+    begin
+      TuiViewRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      TuiViewVisible[Self.Slot - 1] := Value
+    end;
+
+    function ReadEnabled(Self: TuiView): boolean;
+    begin
+      TuiViewRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      return TuiViewEnabled[Self.Slot - 1]
+    end;
+
+    procedure WriteEnabled(Self: TuiView; Value: boolean);
+    begin
+      TuiViewRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      TuiViewEnabled[Self.Slot - 1] := Value
+    end;
+
     procedure Destroy(Self: TuiView);
     begin
       TuiViewRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      TuiViewRunCleanups(Self.ApplicationId, Self.Slot, Self.Generation);
       TuiViewRelease(Self.ApplicationId, Self.Slot, Self.Generation)
     end;
 
     property Tag: integer read ReadTag write WriteTag;
+    property Bounds: TuiRect read ReadBounds write WriteBounds;
+    property Visible: boolean read ReadVisible write WriteVisible;
+    property Enabled: boolean read ReadEnabled write WriteEnabled;
   end;
+
+procedure RegisterViewCleanup(View: TuiView; Callback: TuiViewCleanupCallback);
+begin
+  TuiViewRequire(View.ApplicationId, View.Slot, View.Generation);
+  TuiViewCleanupApplicationIds := Std.Array.Concat(TuiViewCleanupApplicationIds, [
+                                                                                   View.ApplicationId
+
+                                                                                 ]);
+  TuiViewCleanupSlots := Std.Array.Concat(TuiViewCleanupSlots, [View.Slot]);
+  TuiViewCleanupGenerations := Std.Array.Concat(TuiViewCleanupGenerations, [View.Generation]);
+  TuiViewCleanupCallbacks := Std.Array.Concat(TuiViewCleanupCallbacks, [Callback])
+end;

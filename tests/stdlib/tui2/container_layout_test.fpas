@@ -1,0 +1,38 @@
+program Tui2ContainerLayoutTest;
+
+uses Std.Test, Std.Tui2;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
+  var Container: TuiContainer := TuiContainer.Create(App);
+  var First: TuiLayout := TuiLayout.Create(App);
+  Container.Layout := Some(First);
+  case Container.Layout of
+    Some(Attached):
+    begin
+      AssertEquals(First.Slot, Attached.Slot)
+    end;
+    None:
+    begin
+      panic('expected the container layout to be attached')
+    end
+  end;
+  First.Destroy();
+  case Container.Layout of
+    Some(Attached):
+    begin
+      panic('expected the destroyed layout to detach from the container')
+    end;
+    None:
+    begin
+    end
+  end;
+  var Second: TuiLayout := TuiLayout.Create(App);
+  var Replacement: TuiLayout := TuiLayout.Create(App);
+  Container.Layout := Some(Second);
+  Container.Layout := Some(Replacement);
+  AssertFalse(Second.IsAlive());
+  var ContainerView: TuiView := TuiContainer.AsView(Container);
+  ContainerView.Destroy();
+  AssertFalse(Replacement.IsAlive())
+end.

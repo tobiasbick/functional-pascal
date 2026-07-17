@@ -1,0 +1,26 @@
+program Tui2ContainerSubtreeTest;
+
+uses Std.Test, Std.Tui2;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
+  var Parent: TuiContainer := TuiContainer.Create(App);
+  var ChildContainer: TuiContainer := TuiContainer.Create(App);
+  var Grandchild: TuiView := TuiView.Create(App);
+  ChildContainer.Add(Grandchild);
+  Parent.Add(TuiContainer.AsView(ChildContainer));
+  var ParentView: TuiView := TuiContainer.AsView(Parent);
+  ParentView.Destroy();
+  AssertFalse(Parent.IsAlive());
+  AssertFalse(ChildContainer.IsAlive());
+  AssertFalse(Grandchild.IsAlive());
+  var Owner: TuiContainer := TuiContainer.Create(App);
+  var AttachedContainer: TuiContainer := TuiContainer.Create(App);
+  var AttachedGrandchild: TuiView := TuiView.Create(App);
+  AttachedContainer.Add(AttachedGrandchild);
+  var AttachedView: TuiView := TuiContainer.AsView(AttachedContainer);
+  Owner.Add(AttachedView);
+  AttachedView.Destroy();
+  AssertFalse(Owner.Contains(AttachedView));
+  AssertFalse(AttachedGrandchild.IsAlive())
+end.

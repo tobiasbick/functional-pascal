@@ -1,8 +1,8 @@
 # Std.Tui2
 
 `Std.Tui2` provides terminal UI value types plus the first headless live-object surface for
-applications, actions, and buttons. Rendering, layout, terminal acquisition, and interactive input
-are not exposed yet.
+applications, actions, buttons, and layouts. Rendering, layout allocation, terminal acquisition, and
+interactive input are not exposed yet.
 
 ```pascal
 program Geometry;
@@ -36,6 +36,7 @@ Coordinates are zero-based: `(0, 0)` is the upper-left cell, X grows to the righ
 | `TuiView` | A headless application-scoped view handle and action source identity. |
 | `TuiContainer` | A headless owner of directly attached views. |
 | `TuiDesktop` | The explicit headless root container for one application. |
+| `TuiLayout` | A headless application-scoped layout identity. |
 | `TuiAction` | A reusable operation with live properties and one `OnExecute` event. |
 | `TuiButton` | A headless semantic button with an optional action and one `OnClick` event. |
 | `TuiPoint.Create(X, Y)` | Creates a point. |
@@ -144,21 +145,35 @@ Copied application handles resolve the same registry state. `Tag` is a read-writ
 ## Headless views
 
 `TuiView.Create(App)` creates an unattached custom view in the application's generational registry.
-Its `Tag` property is live registry state; `Destroy` invalidates the handle. Destroyed slots may be
-reused, always with a new generation, so an old copied handle remains stale. Closing the application
-invalidates every remaining view. `TuiView.Empty(App)` remains an action-source sentinel and is not a
-destroyable registry view.
+Its `Tag`, `Bounds`, `Visible`, and `Enabled` properties are live registry state. New views are
+visible and enabled and have empty bounds at `(0, 0)`. `Destroy` invalidates the handle. Destroyed
+slots may be reused, always with a new generation, so an old copied handle remains stale and the new
+view starts with the default state. Closing the application invalidates every remaining view.
+`TuiView.Empty(App)` remains an action-source sentinel and is not a destroyable registry view.
 
 ## Headless containers
 
 `TuiContainer.Create(App)` creates a live container backed by a view handle. `Add(Child)` accepts one
 live view from the same application and rejects an already attached view. `Contains(Child)` reports
 the current direct ownership relation. `Remove(Child)` removes and destroys that child, so its handle
-becomes stale. Nested container subtrees are not exposed yet.
+becomes stale. Containers may be nested: destroying a container's `AsView()` handle or removing an
+attached container destroys every descendant depth-first.
+
+`Layout` is an `option of TuiLayout` property. Assign `Some(Layout)` to attach the one layout owned
+by the container. Assigning `None`, assigning a different layout, or destroying the container destroys
+the former layout. Destroying an attached layout directly clears the property. A layout cannot belong
+to more than one container.
 
 `TuiDesktop.Create(App)` creates the one explicit headless root container for an open application.
 It exposes the same `Add`, `Contains`, and `Remove` operations, and becomes stale when its application
 closes. The eventual `App.Desktop` property is not exposed yet.
+
+## Headless layouts
+
+`TuiLayout.Create(App)` creates a live application-scoped layout handle. Like views, its `Tag`
+property is live registry state, `Destroy` invalidates it, and a reused slot always has a new
+generation. Closing the application invalidates all remaining layouts. Layout items, measurement,
+allocation, and nested layouts are not exposed yet.
 
 ## Commands and actions
 
@@ -208,8 +223,8 @@ mouse, painting, and layout behavior are not implemented by the current button.
 
 `Std.Tui2` is a source-level standard-library facade in [`lib/Std/Tui2.fpas`](../../../../lib/Std/Tui2.fpas).
 Geometry and cell values live in focused private units under `lib/Std/Tui2/Geometry/` and
-`lib/Std/Tui2/Cells/`. Live application, action, view, and button concerns are separated under
-`Runtime/`, `Actions/`, `Views/`, and `Controls/`. The facade is exported by
+`lib/Std/Tui2/Cells/`. Live application, action, view, layout, and button concerns are separated under
+`Runtime/`, `Actions/`, `Views/`, `Layouts/`, and `Controls/`. The facade is exported by
 [`lib/stdlib.fpasprj`](../../../../lib/stdlib.fpasprj).
 
 ## See also

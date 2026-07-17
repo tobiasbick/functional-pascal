@@ -16,10 +16,9 @@ Completion contracts: [geometry.md](geometry.md), [text-and-cells.md](text-and-c
 
 - **Partial foundation.** Headless applications, actions, and buttons use application-scoped
   registry slots, generation checks, cross-application validation, deterministic destruction, and
-  application-close cleanup. Custom views now use the same model, including reusable slots. The
-  generic view tree and layout registry remain. Headless containers now own direct view children,
-  and each headless application may create one desktop root; nested subtree ownership remains.
-- Generalize the existing generational handles to layout types.
+  application-close cleanup. Custom views and generic layouts use the same model, including reusable
+  slots. Views also retain bounds, visibility, and enabled state. Headless containers own child
+  subtrees and one root layout, and each headless application may create one desktop root.
 - Implement the desktop root, parent-child ownership, destruction, stale-handle diagnostics, and tags.
 - Extend `OpenForTest` to the generic view registry and add transactional interactive terminal acquisition.
 - Add the VM terminal-mode restoration safety net.

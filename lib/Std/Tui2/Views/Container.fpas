@@ -1,8 +1,12 @@
 unit Std.Tui2.Views.Container;
 
-uses Std.Array, Std.Tui2.Runtime.Application, Std.Tui2.Views.View;
+uses
+  Std.Array, Std.Tui2.Layouts.Layout, Std.Tui2.Runtime.Application, Std.Tui2.Views.ContainerLayout,
+  Std.Tui2.Views.View;
 
+private mutable var TuiContainerParentApplicationIds: array of integer := [];
 private mutable var TuiContainerParentSlots: array of integer := [];
+private mutable var TuiContainerParentGenerations: array of integer := [];
 private mutable var TuiContainerChildApplicationIds: array of integer := [];
 private mutable var TuiContainerChildSlots: array of integer := [];
 private mutable var TuiContainerChildGenerations: array of integer := [];
@@ -20,13 +24,57 @@ private function TuiContainerFindChild(Container: TuiView; Child: TuiView): inte
 begin
   for I: integer := 0 to Std.Array.Length(TuiContainerAttached) - 1 do
   begin
-    if (((TuiContainerAttached[I] and (TuiContainerParentSlots[I] = Container.Slot)) and (TuiContainerChildApplicationIds[I] = Child.ApplicationId)) and (TuiContainerChildSlots[I] = Child.Slot)) and
+    if (((((TuiContainerAttached[I] and (TuiContainerParentApplicationIds[I] = Container.ApplicationId)) and (TuiContainerParentSlots[I] = Container.Slot)) and (TuiContainerParentGenerations[I] = Container.Generation)) and (TuiContainerChildApplicationIds[I] = Child.ApplicationId)) and (TuiContainerChildSlots[I] = Child.Slot)) and
        (TuiContainerChildGenerations[I] = Child.Generation) then
     begin
       return I
     end
   end;
   return -1
+end;
+
+private procedure TuiContainerDestroyChildren(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  for I: integer := 0 to Std.Array.Length(TuiContainerAttached) - 1 do
+  begin
+    if ((TuiContainerAttached[I] and (TuiContainerParentApplicationIds[I] = ApplicationId)) and (TuiContainerParentSlots[I] = Slot)) and
+       (TuiContainerParentGenerations[I] = Generation) then
+    begin
+      TuiContainerAttached[I] := false;
+      var Child: TuiView := record
+        ApplicationId := TuiContainerChildApplicationIds[I];
+        Slot := TuiContainerChildSlots[I];
+        Generation := TuiContainerChildGenerations[I];
+        Kind := TuiViewKind.Custom;
+      end;
+      if Child.IsAlive() then
+      begin
+        Child.Destroy()
+      end
+    end
+  end
+end;
+
+private procedure TuiContainerDetachChild(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  for I: integer := 0 to Std.Array.Length(TuiContainerAttached) - 1 do
+  begin
+    if ((TuiContainerAttached[I] and (TuiContainerChildApplicationIds[I] = ApplicationId)) and (TuiContainerChildSlots[I] = Slot)) and
+       (TuiContainerChildGenerations[I] = Generation) then
+    begin
+      TuiContainerAttached[I] := false
+    end
+  end
+end;
+
+private procedure TuiContainerDestroyOwnedContent(
+  ApplicationId: integer;
+  Slot: integer;
+  Generation: integer
+);
+begin
+  TuiContainerLayoutDestroy(ApplicationId, Slot, Generation);
+  TuiContainerDestroyChildren(ApplicationId, Slot, Generation)
 end;
 
 private function TuiContainerIsAttached(Child: TuiView): boolean;
@@ -48,7 +96,12 @@ type
 
     static function Create(App: TuiApplication): TuiContainer;
     begin
-      return record View := TuiView.Create(App); end
+      var Container: TuiContainer := record View := TuiView.Create(App); end;
+      var Cleanup: TuiViewCleanupCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+        TuiContainerDestroyOwnedContent(ApplicationId, Slot, Generation)
+      end;
+      RegisterViewCleanup(Container.View, Cleanup);
+      return Container
     end;
 
     static function AsView(Container: TuiContainer): TuiView;
@@ -60,6 +113,18 @@ type
     function IsAlive(Self: TuiContainer): boolean;
     begin
       return Self.View.IsAlive()
+    end;
+
+    function ReadLayout(Self: TuiContainer): option of TuiLayout;
+    begin
+      TuiContainerRequire(Self.View);
+      return TuiContainerLayoutRead(Self.View)
+    end;
+
+    procedure WriteLayout(Self: TuiContainer; Value: option of TuiLayout);
+    begin
+      TuiContainerRequire(Self.View);
+      TuiContainerLayoutWrite(Self.View, Value)
     end;
 
     procedure Add(Self: TuiContainer; Child: TuiView);
@@ -77,7 +142,15 @@ type
       begin
         panic('Tui2 view is already attached to a container')
       end;
+      TuiContainerParentApplicationIds := Std.Array.Concat(TuiContainerParentApplicationIds, [
+                                                                                               Self.View.ApplicationId
+
+                                                                                             ]);
       TuiContainerParentSlots := Std.Array.Concat(TuiContainerParentSlots, [Self.View.Slot]);
+      TuiContainerParentGenerations := Std.Array.Concat(TuiContainerParentGenerations, [
+                                                                                         Self.View.Generation
+
+                                                                                       ]);
       TuiContainerChildApplicationIds := Std.Array.Concat(TuiContainerChildApplicationIds, [
                                                                                              Child.ApplicationId
 
@@ -87,7 +160,11 @@ type
                                                                                        Child.Generation
 
                                                                                      ]);
-      TuiContainerAttached := Std.Array.Concat(TuiContainerAttached, [true])
+      TuiContainerAttached := Std.Array.Concat(TuiContainerAttached, [true]);
+      var Cleanup: TuiViewCleanupCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+        TuiContainerDetachChild(ApplicationId, Slot, Generation)
+      end;
+      RegisterViewCleanup(Child, Cleanup)
     end;
 
     function Contains(Self: TuiContainer; Child: TuiView): boolean;
@@ -107,4 +184,6 @@ type
       TuiContainerAttached[Index] := false;
       Child.Destroy()
     end;
+
+    property Layout: option of TuiLayout read ReadLayout write WriteLayout;
   end;

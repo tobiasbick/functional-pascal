@@ -38,9 +38,13 @@ Every public control requires at least one keyboard test, one mouse test when ap
 Remaining failure canaries cover worker-task UI calls, forbidden paint mutation, callback panic
 cleanup, and terminal-open rollback.
 
-Implemented registry coverage includes `TuiView` slot reuse, stale generations, tags, and
-application-close cleanup, plus direct container attachment and destructive removal.
-Desktop coverage verifies its single root identity, direct child ownership, and invalidation on
-application close.
+Implemented registry coverage includes `TuiView` slot reuse, stale generations, tags, bounds,
+visibility, enabled state, and application-close cleanup, plus direct container attachment and
+destructive removal.
+Container coverage also verifies recursive destruction of nested child subtrees. Desktop coverage
+verifies its single root identity, direct child ownership, and invalidation on application close.
+`TuiLayout` coverage verifies the same slot reuse, stale-generation, tag, and application-close
+contracts before layout items and allocation are introduced. Container-layout coverage verifies
+attachment, direct layout destruction, replacement, and destruction with the container.
 
 Interactive smoke tests remain useful for terminal compatibility, but they are not the primary regression mechanism.

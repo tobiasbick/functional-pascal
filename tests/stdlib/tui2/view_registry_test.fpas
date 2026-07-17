@@ -6,14 +6,27 @@ begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
   var First: TuiView := TuiView.Create(App);
   First.Tag := 42;
+  First.Bounds := TuiRect.Create(2, 3, 8, 5);
+  First.Visible := false;
+  First.Enabled := false;
   AssertTrue(First.IsAlive());
   AssertEquals(42, First.Tag);
+  AssertEquals(2, First.Bounds.X);
+  AssertEquals(3, First.Bounds.Y);
+  AssertEquals(8, First.Bounds.Width);
+  AssertEquals(5, First.Bounds.Height);
+  AssertFalse(First.Visible);
+  AssertFalse(First.Enabled);
   First.Destroy();
   AssertFalse(First.IsAlive());
   var Second: TuiView := TuiView.Create(App);
   AssertEquals(First.Slot, Second.Slot);
   AssertFalse(First.Generation = Second.Generation);
   AssertTrue(Second.IsAlive());
+  AssertEquals(0, Second.Bounds.Width);
+  AssertEquals(0, Second.Bounds.Height);
+  AssertTrue(Second.Visible);
+  AssertTrue(Second.Enabled);
   App.Close();
   AssertFalse(Second.IsAlive())
 end.

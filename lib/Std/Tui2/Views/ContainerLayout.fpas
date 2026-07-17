@@ -1,0 +1,172 @@
+unit Std.Tui2.Views.ContainerLayout;
+
+uses Std.Array, Std.Tui2.Layouts.Layout, Std.Tui2.Views.View;
+
+private mutable var TuiContainerLayoutParentApplicationIds: array of integer := [];
+private mutable var TuiContainerLayoutParentSlots: array of integer := [];
+private mutable var TuiContainerLayoutParentGenerations: array of integer := [];
+private mutable var TuiContainerLayoutApplicationIds: array of integer := [];
+private mutable var TuiContainerLayoutSlots: array of integer := [];
+private mutable var TuiContainerLayoutGenerations: array of integer := [];
+private mutable var TuiContainerLayoutAttached: array of boolean := [];
+
+private function TuiContainerLayoutFind(Container: TuiView): integer;
+begin
+  for I: integer := 0 to Std.Array.Length(TuiContainerLayoutAttached) - 1 do
+  begin
+    if ((TuiContainerLayoutAttached[I] and (TuiContainerLayoutParentApplicationIds[I] = Container.ApplicationId)) and (TuiContainerLayoutParentSlots[I] = Container.Slot)) and
+       (TuiContainerLayoutParentGenerations[I] = Container.Generation) then
+    begin
+      return I
+    end
+  end;
+  return -1
+end;
+
+private function TuiContainerLayoutIsAttached(Layout: TuiLayout): boolean;
+begin
+  for I: integer := 0 to Std.Array.Length(TuiContainerLayoutAttached) - 1 do
+  begin
+    if ((TuiContainerLayoutAttached[I] and (TuiContainerLayoutApplicationIds[I] = Layout.ApplicationId)) and (TuiContainerLayoutSlots[I] = Layout.Slot)) and
+       (TuiContainerLayoutGenerations[I] = Layout.Generation) then
+    begin
+      return true
+    end
+  end;
+  return false
+end;
+
+private procedure TuiContainerLayoutDetach(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  for I: integer := 0 to Std.Array.Length(TuiContainerLayoutAttached) - 1 do
+  begin
+    if ((TuiContainerLayoutAttached[I] and (TuiContainerLayoutApplicationIds[I] = ApplicationId)) and (TuiContainerLayoutSlots[I] = Slot)) and
+       (TuiContainerLayoutGenerations[I] = Generation) then
+    begin
+      TuiContainerLayoutAttached[I] := false
+    end
+  end
+end;
+
+procedure TuiContainerLayoutDestroy(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  for I: integer := 0 to Std.Array.Length(TuiContainerLayoutAttached) - 1 do
+  begin
+    if ((TuiContainerLayoutAttached[I] and (TuiContainerLayoutParentApplicationIds[I] = ApplicationId)) and (TuiContainerLayoutParentSlots[I] = Slot)) and
+       (TuiContainerLayoutParentGenerations[I] = Generation) then
+    begin
+      TuiContainerLayoutAttached[I] := false;
+      var Layout: TuiLayout := record
+        ApplicationId := TuiContainerLayoutApplicationIds[I];
+        Slot := TuiContainerLayoutSlots[I];
+        Generation := TuiContainerLayoutGenerations[I];
+      end;
+      if Layout.IsAlive() then
+      begin
+        Layout.Destroy()
+      end
+    end
+  end
+end;
+
+function TuiContainerLayoutRead(Container: TuiView): option of TuiLayout;
+begin
+  var Index: integer := TuiContainerLayoutFind(Container);
+  if Index < 0 then
+  begin
+    return None
+  end;
+  var Layout: TuiLayout := record
+    ApplicationId := TuiContainerLayoutApplicationIds[Index];
+    Slot := TuiContainerLayoutSlots[Index];
+    Generation := TuiContainerLayoutGenerations[Index];
+  end;
+  if not Layout.IsAlive() then
+  begin
+    TuiContainerLayoutAttached[Index] := false;
+    return None
+  end;
+  return Some(Layout)
+end;
+
+procedure TuiContainerLayoutWrite(Container: TuiView; Value: option of TuiLayout);
+begin
+  var ExistingIndex: integer := TuiContainerLayoutFind(Container);
+  case Value of
+    None:
+    begin
+      if ExistingIndex >= 0 then
+      begin
+        TuiContainerLayoutAttached[ExistingIndex] := false;
+        var Existing: TuiLayout := record
+          ApplicationId := TuiContainerLayoutApplicationIds[ExistingIndex];
+          Slot := TuiContainerLayoutSlots[ExistingIndex];
+          Generation := TuiContainerLayoutGenerations[ExistingIndex];
+        end;
+        if Existing.IsAlive() then
+        begin
+          Existing.Destroy()
+        end
+      end
+    end;
+    Some(Layout):
+    begin
+      if not Layout.IsAlive() then
+      begin
+        panic('Tui2 container cannot attach a stale layout')
+      end;
+      if Layout.ApplicationId <> Container.ApplicationId then
+      begin
+        panic('Tui2 container layout belongs to a different application')
+      end;
+      if ExistingIndex >= 0 then
+      begin
+        var Existing: TuiLayout := record
+          ApplicationId := TuiContainerLayoutApplicationIds[ExistingIndex];
+          Slot := TuiContainerLayoutSlots[ExistingIndex];
+          Generation := TuiContainerLayoutGenerations[ExistingIndex];
+        end;
+        if ((Existing.ApplicationId = Layout.ApplicationId) and (Existing.Slot = Layout.Slot)) and
+           (Existing.Generation = Layout.Generation) then
+        begin
+          return
+        end;
+        TuiContainerLayoutAttached[ExistingIndex] := false;
+        if Existing.IsAlive() then
+        begin
+          Existing.Destroy()
+        end
+      end;
+      if TuiContainerLayoutIsAttached(Layout) then
+      begin
+        panic('Tui2 layout is already attached to a container')
+      end;
+      TuiContainerLayoutParentApplicationIds := Std.Array.Concat(TuiContainerLayoutParentApplicationIds, [
+                                                                                                           Container.ApplicationId
+
+                                                                                                         ]);
+      TuiContainerLayoutParentSlots := Std.Array.Concat(TuiContainerLayoutParentSlots, [
+                                                                                         Container.Slot
+
+                                                                                       ]);
+      TuiContainerLayoutParentGenerations := Std.Array.Concat(TuiContainerLayoutParentGenerations, [
+                                                                                                     Container.Generation
+
+                                                                                                   ]);
+      TuiContainerLayoutApplicationIds := Std.Array.Concat(TuiContainerLayoutApplicationIds, [
+                                                                                               Layout.ApplicationId
+
+                                                                                             ]);
+      TuiContainerLayoutSlots := Std.Array.Concat(TuiContainerLayoutSlots, [Layout.Slot]);
+      TuiContainerLayoutGenerations := Std.Array.Concat(TuiContainerLayoutGenerations, [
+                                                                                         Layout.Generation
+
+                                                                                       ]);
+      TuiContainerLayoutAttached := Std.Array.Concat(TuiContainerLayoutAttached, [true]);
+      var Cleanup: TuiLayoutCleanupCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+        TuiContainerLayoutDetach(ApplicationId, Slot, Generation)
+      end;
+      RegisterLayoutCleanup(Layout, Cleanup)
+    end
+  end
+end;

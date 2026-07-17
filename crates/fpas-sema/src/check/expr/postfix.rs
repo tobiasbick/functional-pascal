@@ -40,7 +40,8 @@ impl Checker {
         let resolved = self.resolve_visible_type(ty);
         match operation {
             PostfixOperation::Field { name, span } => {
-                self.check_record_field_access(&resolved, name, *span)
+                let key = Self::postfix_operation_lookup_key(operation);
+                self.check_record_member_access(&resolved, name, *span, Some((key, 0)))
             }
             PostfixOperation::Index { index, span } => {
                 self.check_index_access(&resolved, index, *span)
@@ -158,7 +159,7 @@ impl Checker {
         }
     }
 
-    fn is_static_function_on_record(
+    pub(crate) fn is_static_function_on_record(
         &self,
         record_ty: &crate::types::RecordTy,
         method_name: &str,

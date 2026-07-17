@@ -2,16 +2,17 @@
 
 ## Status
 
-Planned language feature with two implementation milestones:
+Two implementation milestones:
 
-1. bound record methods depend on [capturing closures](../pascal/language/functions/closures.md);
-2. event properties additionally depend on [record properties](record-properties.md).
+1. **Bound record methods — done.** Spec:
+   [record-methods.md](../pascal/language/types/record-methods.md#bound-methods-as-values),
+   [first-class.md](../pascal/language/functions/first-class.md). Depends on
+   [capturing closures](../pascal/language/functions/closures.md).
+2. **Event properties — planned.** Additionally depends on
+   [record properties](record-properties.md).
 
-Expression postfix chaining is independent and is currently being implemented separately. Do not
-mix its implementation with this plan.
-
-Current next step: finish capturing closures, implement bound method values, complete record
-properties, and then implement event properties.
+Current next language step for Tui2: [record properties](record-properties.md), then
+Milestone 2 (event properties) in this plan.
 
 ## Goals
 
@@ -31,6 +32,9 @@ Button.OnClick := nil;
 ```
 
 ## Milestone 1: bound record methods
+
+**Status: implemented.** User-facing docs live under `docs/pascal/` (links above). The rules
+below remain the design record for Milestone 2.
 
 Reading an instance method without calling it creates a callable value with the receiver bound:
 
@@ -235,10 +239,10 @@ required behavior.
 
 ### Bound-method milestone
 
-1. Complete the capturing-closure acceptance criteria.
-2. Add bound method parsing or AST interpretation, sema resolution, formatter handling, and lowering.
-3. Add receiver lifetime, evaluation-order, generic, and callable-compatibility tests.
-4. Update current language documentation for bound methods after that milestone works.
+1. ~~Complete the capturing-closure acceptance criteria.~~
+2. ~~Add bound method AST interpretation, sema resolution, and lowering.~~
+3. ~~Add receiver lifetime, evaluation-order, and callable-compatibility tests.~~
+4. ~~Update current language documentation for bound methods.~~
 
 ### Event-property milestone
 

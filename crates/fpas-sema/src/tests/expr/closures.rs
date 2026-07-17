@@ -22,7 +22,7 @@ end.",
     );
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
 
-    let (errors, _, _, _, _, closures, _) = analyze_with_types(&program);
+    let (errors, _, _, _, _, closures, _, _) = analyze_with_types(&program);
     assert!(errors.is_empty(), "{errors:#?}");
     assert_eq!(closures.len(), 2);
     assert!(
@@ -52,7 +52,7 @@ end.",
     );
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
 
-    let (errors, _, _, _, _, closures, _) = analyze_with_types(&program);
+    let (errors, _, _, _, _, closures, _, _) = analyze_with_types(&program);
     assert!(errors.is_empty(), "{errors:#?}");
     assert_eq!(closures.len(), 1);
     assert!(

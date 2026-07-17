@@ -53,6 +53,45 @@ var Next: Point := BuildOrigin().Offset(1.0, 2.0).Normalize();
 
 See [Expression postfix chaining](../functions/postfix-chaining.md).
 
+## Bound methods as values
+
+Reading an instance method without calling it produces a callable value with the
+receiver bound. The resulting type omits the implicit `Self` parameter:
+
+```pascal
+type
+  Counter = record
+    Base: integer;
+
+    function Add(Self: Counter; Value: integer): integer;
+    begin
+      return Self.Base + Value
+    end;
+  end;
+
+var C: Counter := record Base := 10; end;
+var AddTen: function(Value: integer): integer := C.Add;
+
+begin
+  WriteLn(AddTen(5))  { 15 — Counter.Add(C, 5) }
+end.
+```
+
+Rules:
+
+- The designator must resolve to one instance function or procedure (not a field).
+- Fields take priority over methods when both share a name.
+- The receiver is evaluated once and captured by value at the binding site.
+  Later assignment to the source variable does not change the bound callable.
+- A procedure method yields a procedure value; a function method yields a
+  function value.
+- Bound methods may be stored, passed, and returned wherever that callable type
+  is expected — see [First-class functions](../functions/first-class.md).
+- Binding a method whose `Self` is `mutable` is rejected; use a capturing
+  closure that explicitly closes over a `mutable var` instead.
+- Static functions are ordinary named callables (`Counter.Create`), not bound
+  method values. Binding a static name through a value (`C.Create`) is an error.
+
 ## Static functions
 
 A record may declare a `static function` inside its type body. Static functions
@@ -136,3 +175,5 @@ Method-level type parameters are documented in [Generics](generics.md#generic-re
 
 - [Records](records.md)
 - [Generics](generics.md)
+- [First-class functions](../functions/first-class.md)
+- [Capturing closures](../functions/closures.md)

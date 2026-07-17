@@ -7,8 +7,8 @@ use std::collections::{HashMap, HashSet};
 
 use fpas_bytecode::Chunk;
 use fpas_sema::{
-    ClosureInfoMap, ExprTypeMap, MethodCallMap, NestedRoutineCaptureMap, RecordDefaultsMap,
-    ScalarCaseBindingMap,
+    BoundMethodMap, ClosureInfoMap, ExprTypeMap, MethodCallMap, NestedRoutineCaptureMap,
+    RecordDefaultsMap, ScalarCaseBindingMap,
 };
 
 mod binary_op;
@@ -83,6 +83,8 @@ pub struct Compiler {
     closure_infos: ClosureInfoMap,
     /// Capture metadata for escaping named nested routines.
     nested_routine_captures: NestedRoutineCaptureMap,
+    /// Bound instance-method values (`C.Add`).
+    bound_methods: BoundMethodMap,
     /// Canonical names of module-level globals (`const` / `var` / `mutable var`).
     module_globals: HashSet<String>,
 }
@@ -106,6 +108,7 @@ impl Compiler {
         scalar_case_bindings: ScalarCaseBindingMap,
         closure_infos: ClosureInfoMap,
         nested_routine_captures: NestedRoutineCaptureMap,
+        bound_methods: BoundMethodMap,
     ) -> Self {
         Self {
             chunk: Chunk::new(),
@@ -122,6 +125,7 @@ impl Compiler {
             scalar_case_bindings,
             closure_infos,
             nested_routine_captures,
+            bound_methods,
             module_globals: HashSet::new(),
         }
     }

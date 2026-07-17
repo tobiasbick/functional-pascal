@@ -47,6 +47,7 @@ pub fn compile_all(program: &Program) -> Result<Chunk, Vec<CompileError>> {
         scalar_case_bindings,
         closure_infos,
         nested_routine_captures,
+        bound_methods,
     ) = fpas_sema::analyze_with_types(program);
     if !sema_errors.is_empty() {
         return Err(sema_errors);
@@ -58,6 +59,7 @@ pub fn compile_all(program: &Program) -> Result<Chunk, Vec<CompileError>> {
         scalar_case_bindings,
         closure_infos,
         nested_routine_captures,
+        bound_methods,
     );
     match compiler.compile_program(program) {
         Ok(()) => validated_chunk(compiler).map_err(|error| vec![error]),

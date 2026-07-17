@@ -7,7 +7,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_decl`, `type
 | Topic | Description |
 |-------|-------------|
 | [Records](records.md) | Declaration, literals, fields, immutability, default values |
-| [Record methods](record-methods.md) | Instance methods with implicit `Self`; static functions via the type |
+| [Record methods](record-methods.md) | Instance methods with implicit `Self`; bound method values; static functions via the type |
 | [Record update](record-update.md) | `with` copy-and-override expressions |
 | [Result and Option types](result-option-types.md) | `Result of T, E` and `Option of T` type forms |
 | [Enumerations](enums.md) | Plain, backed, and data-carrying enums |

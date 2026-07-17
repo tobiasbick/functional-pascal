@@ -82,7 +82,7 @@ fn unknown_field_on_postfix() {
     assert!(
         errors
             .iter()
-            .any(|e| e.message.contains("no field `Missing`")),
+            .any(|e| e.message.contains("no field or method `Missing`")),
         "{errors:#?}"
     );
 }
@@ -98,7 +98,7 @@ fn invalid_suffix_does_not_cascade_into_later_suffixes() {
     );
     assert_eq!(errors.len(), 1, "unexpected cascading errors: {errors:#?}");
     assert!(
-        errors[0].message.contains("no field `Missing`"),
+        errors[0].message.contains("no field or method `Missing`"),
         "{errors:#?}"
     );
 }

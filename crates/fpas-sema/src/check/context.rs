@@ -40,6 +40,25 @@ impl MethodCallTarget {
 /// [`crate::postfix_operation_lookup_key`] instead.
 pub type MethodCallMap = HashMap<usize, MethodCallTarget>;
 
+/// Semantic metadata for a bound instance-method value (`C.Add`).
+///
+/// **Documentation:** `docs/pascal/language/types/record-methods.md`
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BoundMethodInfo {
+    /// Qualified instance method name (e.g. `Counter.Add`).
+    pub qualified_name: String,
+    /// Explicit argument count after binding (Self omitted).
+    pub visible_arity: u8,
+    /// Number of designator parts forming the receiver before the method name.
+    ///
+    /// One for `C.Add`, three for `Items[0].Add`, and zero for postfix `.Add` because its
+    /// receiver is already on the stack.
+    pub receiver_part_count: usize,
+}
+
+/// Maps designator or postfix-operation identity to [`BoundMethodInfo`].
+pub type BoundMethodMap = HashMap<usize, BoundMethodInfo>;
+
 /// Maps a named record type to its ordered field list, each entry carrying an optional
 /// cloned default expression. The order matches the type definition.
 ///
@@ -79,6 +98,10 @@ pub struct Checker {
     ///
     /// **Documentation:** `docs/pascal/language/functions/closures.md`
     pub(crate) nested_routine_captures: NestedRoutineCaptureMap,
+    /// Designator / postfix Field identity → bound method metadata.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/record-methods.md`
+    pub(crate) bound_methods: BoundMethodMap,
     /// Expression keys whose value is a task-bound callable.
     ///
     /// **Documentation:** `docs/pascal/language/functions/closures.md`
@@ -102,6 +125,7 @@ impl Checker {
             scalar_case_bindings: ScalarCaseBindingMap::new(),
             closure_infos: ClosureInfoMap::new(),
             nested_routine_captures: NestedRoutineCaptureMap::new(),
+            bound_methods: BoundMethodMap::new(),
             task_bound_exprs: HashSet::new(),
         }
     }
@@ -116,6 +140,7 @@ impl Checker {
         ScalarCaseBindingMap,
         ClosureInfoMap,
         NestedRoutineCaptureMap,
+        BoundMethodMap,
     ) {
         (
             self.errors,
@@ -125,6 +150,7 @@ impl Checker {
             self.scalar_case_bindings,
             self.closure_infos,
             self.nested_routine_captures,
+            self.bound_methods,
         )
     }
 

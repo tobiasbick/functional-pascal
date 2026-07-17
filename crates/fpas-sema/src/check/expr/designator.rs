@@ -39,7 +39,8 @@ impl Checker {
                 Ty::Error
             }
             DesignatorPart::Ident(first, _) => {
-                let Some(symbol) = self.scopes.lookup(first) else {
+                let resolved_base = self.resolve_designator_base(designator);
+                let Some((mut ty, base_part_count)) = resolved_base else {
                     let full_name = Self::resolve_designator_name(designator);
                     let is_qualified_ident_chain = designator.parts.len() > 1
                         && designator
@@ -79,13 +80,20 @@ impl Checker {
                     return Ty::Error;
                 };
 
-                let mut ty = symbol.ty.clone();
-                for part in &designator.parts[1..] {
+                let designator_key = crate::designator_lookup_key(designator);
+                let trailing = designator.parts.len().saturating_sub(base_part_count);
+                for (offset, part) in designator.parts[base_part_count..].iter().enumerate() {
                     ty = self.resolve_visible_type(&ty);
 
                     ty = match part {
                         DesignatorPart::Ident(field, span) => {
-                            self.check_record_field_access(&ty, field, *span)
+                            let is_last = offset + 1 == trailing;
+                            let bind_key = if is_last {
+                                Some((designator_key, designator.parts.len() - 1))
+                            } else {
+                                None
+                            };
+                            self.check_record_member_access(&ty, field, *span, bind_key)
                         }
                         DesignatorPart::Index(index_expr, span) => {
                             self.check_index_access(&ty, index_expr, *span)
@@ -97,6 +105,29 @@ impl Checker {
         }
     }
 
+    fn resolve_designator_base(&self, designator: &Designator) -> Option<(Ty, usize)> {
+        let mut qualified = String::new();
+        let mut resolved = None;
+        for (index, part) in designator.parts.iter().enumerate() {
+            let DesignatorPart::Ident(name, _) = part else {
+                break;
+            };
+            if !qualified.is_empty() {
+                qualified.push('.');
+            }
+            qualified.push_str(name);
+            if let Some(symbol) = self.scopes.lookup(&qualified)
+                && matches!(
+                    symbol.kind,
+                    SymbolKind::Const | SymbolKind::Var | SymbolKind::Param | SymbolKind::ForVar
+                )
+            {
+                resolved = Some((symbol.ty.clone(), index + 1));
+            }
+        }
+        resolved
+    }
+
     pub(crate) fn resolve_visible_type(&self, ty: &Ty) -> Ty {
         match ty {
             Ty::Named(name) => self
@@ -106,43 +137,6 @@ impl Checker {
                 .map(|symbol| symbol.ty.clone())
                 .unwrap_or_else(|| ty.clone()),
             _ => ty.clone(),
-        }
-    }
-
-    /// Resolve `.Field` on a value whose static type is `ty` (aliases already resolved by caller).
-    pub(crate) fn check_record_field_access(
-        &mut self,
-        ty: &Ty,
-        field: &str,
-        span: fpas_lexer::Span,
-    ) -> Ty {
-        match ty {
-            Ty::Record(record_ty) => {
-                if let Some((_, field_ty)) = record_ty
-                    .fields
-                    .iter()
-                    .find(|(name, _)| name.eq_ignore_ascii_case(field))
-                {
-                    field_ty.clone()
-                } else {
-                    self.error_with_code(
-                        SEMA_UNKNOWN_NAME,
-                        format!("Record has no field `{field}`"),
-                        "Check the field name against the record type.",
-                        span,
-                    );
-                    Ty::Error
-                }
-            }
-            _ => {
-                self.error_with_code(
-                    SEMA_TYPE_MISMATCH,
-                    format!("`.{field}` requires a record value"),
-                    "Only records support field access with `.`.",
-                    span,
-                );
-                Ty::Error
-            }
         }
     }
 

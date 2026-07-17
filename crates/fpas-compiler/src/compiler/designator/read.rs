@@ -1,4 +1,4 @@
-use crate::error::{CompileError, compile_error};
+use crate::error::{CompileError, compile_error, internal_compiler_error};
 use fpas_bytecode::{Op, Value};
 use fpas_diagnostics::codes::COMPILE_INVALID_DESIGNATOR_BASE;
 use fpas_parser::{Designator, DesignatorPart};
@@ -7,7 +7,7 @@ use super::super::canonical_name;
 use super::{Compiler, LocalRef};
 
 impl Compiler {
-    /// Compile a designator for reading (e.g. `Arr[0]`, `P.X`, `X`).
+    /// Compile a designator for reading (e.g. `Arr[0]`, `P.X`, `X`, `C.Add`).
     pub(in super::super) fn compile_designator_read(
         &mut self,
         d: &Designator,
@@ -15,6 +15,11 @@ impl Compiler {
         let location = Self::location_of(&d.span);
         if self.try_emit_enum_constant(d, location)? {
             return Ok(());
+        }
+
+        let designator_key = fpas_sema::designator_lookup_key(d);
+        if let Some(info) = self.bound_methods.get(&designator_key).cloned() {
+            return self.compile_bound_method_designator(d, &info);
         }
 
         let mut parts = d.parts.iter();
@@ -112,5 +117,29 @@ impl Compiler {
         }
 
         Ok(())
+    }
+
+    fn compile_bound_method_designator(
+        &mut self,
+        d: &Designator,
+        info: &fpas_sema::BoundMethodInfo,
+    ) -> Result<(), CompileError> {
+        let location = Self::location_of(&d.span);
+        let receiver_part_count = info.receiver_part_count;
+        let receiver_parts = d.parts.get(..receiver_part_count).ok_or_else(|| {
+            internal_compiler_error(
+                "Bound-method receiver metadata exceeds the designator path.",
+                "Re-run compilation and report this internal compiler error.",
+                d.span.line,
+                d.span.column,
+            )
+        })?;
+        let receiver = Designator {
+            parts: receiver_parts.to_vec(),
+            span: d.span,
+        };
+        self.compile_designator_read(&receiver)?;
+
+        self.emit_bound_method_from_receiver(info, location)
     }
 }

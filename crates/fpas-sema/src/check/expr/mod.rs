@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/pascal/language/basics/README.md`, `docs/pascal/language/functions/README.md`,
 //! and `docs/pascal/language/error-handling/README.md` (from the repository root).
 
+mod bound_method;
 mod calls;
 mod closure;
 mod designator;

@@ -20,6 +20,8 @@ mod std_registry;
 mod std_units;
 mod types;
 
+pub use check::BoundMethodInfo;
+pub use check::BoundMethodMap;
 pub use check::CaptureBinding;
 pub use check::ClosureInfo;
 pub use check::ClosureInfoMap;
@@ -53,6 +55,7 @@ pub fn analyze_with_types(
     ScalarCaseBindingMap,
     ClosureInfoMap,
     NestedRoutineCaptureMap,
+    BoundMethodMap,
 ) {
     let mut checker = check::Checker::new();
     checker.check_program(program);

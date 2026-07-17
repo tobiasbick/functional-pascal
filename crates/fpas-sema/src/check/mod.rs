@@ -13,6 +13,8 @@ pub use closures::ClosureInfo;
 pub use closures::ClosureInfoMap;
 pub use closures::NestedRoutineCaptureInfo;
 pub use closures::NestedRoutineCaptureMap;
+pub use context::BoundMethodInfo;
+pub use context::BoundMethodMap;
 pub(crate) use context::Checker;
 pub use context::ExprTypeMap;
 pub use context::MethodCallMap;

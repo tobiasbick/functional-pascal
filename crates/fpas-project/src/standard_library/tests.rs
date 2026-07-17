@@ -1,3 +1,10 @@
+//! Unit tests for manifest-backed standard library loading.
+
+#![allow(
+    clippy::expect_used,
+    reason = "unit tests use expect to keep fixture setup compact"
+)]
+
 use super::*;
 use crate::{ProjectLinkMeta, build_program_with_standard_library};
 use std::fs;

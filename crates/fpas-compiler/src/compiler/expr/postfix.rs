@@ -24,8 +24,13 @@ impl Compiler {
             match op {
                 PostfixOperation::Field { name, span } => {
                     let location = Self::location_of(span);
-                    let idx = self.add_constant(Value::Str(name.clone()), location)?;
-                    self.emit(Op::FieldGet(idx), location);
+                    let key = fpas_sema::postfix_operation_lookup_key(op);
+                    if let Some(info) = self.bound_methods.get(&key).cloned() {
+                        self.emit_bound_method_from_receiver(&info, location)?;
+                    } else {
+                        let idx = self.add_constant(Value::Str(name.clone()), location)?;
+                        self.emit(Op::FieldGet(idx), location);
+                    }
                 }
                 PostfixOperation::Index { index, span } => {
                     let location = Self::location_of(span);

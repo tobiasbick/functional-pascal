@@ -1,5 +1,6 @@
 use super::*;
 mod basics;
+mod bound_methods;
 mod defaults;
 mod errors;
 mod methods;

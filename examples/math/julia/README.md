@@ -1,23 +1,17 @@
-# Julia Examples
+# Julia Showcase
 
-This folder contains two Julia-set demos:
+Fullscreen terminal Julia-set explorer (`Std.Console`). Multi-unit `.fpasprj`.
 
-- `julia.fpas` - the existing ASCII / CRT version
-- `julia_graph.fpas` - the native-window `Std.Graph` version
+Same scaffold as Mandelbrot, plus `WASD` to adjust the Julia constant and
+postfix iteration via `Z.Sq().Add(C)`.
 
 ## Run
 
 ```sh
-fpas run examples/math/julia/julia.fpas
-fpas run examples/math/julia/julia_graph.fpas
+fpas run examples/math/julia/julia.fpasprj
 ```
 
-## `julia_graph.fpas` controls
+## Controls
 
-- Arrow keys: pan
-- `+` / `-`: zoom in and out
-- Mouse wheel: zoom
-- Left click: re-center on the clicked pixel
-- Middle click or `R`: reset the view
-- `W`, `A`, `S`, `D`: adjust the Julia constant
-- `Esc`: quit
+Arrows pan; `WASD` change `Jr`/`Ji`; `+`/`-` and wheel zoom; click centers;
+`PageUp`/`PageDown` iterations; `1`/`2`/`3` palettes; `R` reset; `Esc` quits.

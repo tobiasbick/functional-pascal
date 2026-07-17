@@ -66,7 +66,6 @@ fpas run examples/pascal/std/dict_basics.fpas
 fpas run examples/pascal/std/json_basics.fpas
 fpas run examples/pascal/std/graph_basics.fpas
 fpas run examples/pascal/std/task_basics.fpas
-fpas run examples/math/mandelbrot/mandelbrot_graph.fpas
 ```
 
 ### Projects (`.fpasprj`)
@@ -76,6 +75,10 @@ Use when the main program imports **non-library units** (for example `App.*` or 
 ```sh
 fpas run examples/pascal/units-basic/units-basic.fpasprj
 fpas run examples/math/mandelbrot/mandelbrot.fpasprj
+fpas run examples/math/julia/julia.fpasprj
+fpas run examples/math/burning_ship/burning_ship.fpasprj
+fpas run examples/math/tricorn/tricorn.fpasprj
+fpas run examples/math/newton/newton.fpasprj
 ```
 
 Do **not** pass a `unit` source alone (for example `mandelbrot_color.fpas` or `math_utils.fpas`) — the compiler expects a `program` as the main file.
@@ -150,9 +153,8 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/tui/file_dialog.fpas` | `Std.Tui` — upstream file dialog helper |
 | `pascal/tui/runtime_setters.fpas` | `Std.Tui` — live `StaticText.SetText` / `CheckBox.SetChecked` from `OnCommand` during `Run` |
 | `pascal/tui/mouse_toggle_smoke.fpas` | `Std.Tui` — interactive mouse read-back smoke for checkbox/radio |
-| `math/mandelbrot/mandelbrot_graph.fpas` | `Std.Graph` — native Mandelbrot explorer |
-| `math/julia/julia.fpas` | Framed cell-buffer Julia set (**interactive** — see below) |
-| `math/julia/julia_graph.fpas` | Native-window Julia explorer with `Std.Graph` |
+
+All `math/` fractal demos are multi-unit `.fpasprj` projects — see the table below.
 
 ## Multi-unit projects
 
@@ -161,7 +163,11 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/units-basic/` | `units-basic.fpasprj`, `unit App.Math`, `App.Reporting`, program `UnitsBasic` |
 | `pascal/library-deps/` | Program `LibDemo` + library `MyLib.Core` via `[dependencies].projects` |
 | `pascal/monorepo/` | Workspace + `Demo.Greet` library + `Hello` via `[dependencies].workspace` |
-| `math/mandelbrot/` | `mandelbrot.fpasprj`, program `MandelbrotShowcase`, units `Mandelbrot.Color` and `Mandelbrot.Render` |
+| `math/mandelbrot/` | `mandelbrot.fpasprj`, program `MandelbrotShowcase`, units `Mandelbrot.Color` / `Mandelbrot.Render` |
+| `math/julia/` | `julia.fpasprj`, program `JuliaShowcase`, units `Julia.Color` / `Julia.Render` |
+| `math/burning_ship/` | `burning_ship.fpasprj`, program `BurningShipShowcase`, units `BurningShip.Color` / `BurningShip.Render` |
+| `math/tricorn/` | `tricorn.fpasprj`, program `TricornShowcase`, units `Tricorn.Color` / `Tricorn.Render` |
+| `math/newton/` | `newton.fpasprj`, program `NewtonShowcase`, units `Newton.Color` / `Newton.Render` |
 
 Helper units under those folders are built only through the project; see the one-line `{ ... }` comment at the top of each unit file.
 
@@ -177,7 +183,6 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 
 | Path | Notes |
 |------|--------|
-| `math/julia/julia.fpas` | Single-file; pan/zoom with keys after first draw |
 | `pascal/tui/turbo_vision_dialog.fpas` | Window with list box and controls; Quit exits |
 | `pascal/tui/turbo_vision_outline.fpas` | Outline tree in a window; Close exits |
 | `pascal/tui/turbo_vision_window.fpas` | Window with menu bar, status line, input line; Quit exits |
@@ -187,8 +192,10 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 | `pascal/tui/file_dialog.fpas` | File dialog; choose a file or cancel |
 | `pascal/tui/runtime_setters.fpas` | Window; Toggle updates label/check box live, Quit exits |
 | `pascal/tui/mouse_toggle_smoke.fpas` | Interactive mouse read-back smoke for checkbox/radio (manual terminal check) |
-| `math/julia/julia_graph.fpas` | Single-file native-window Julia explorer; arrows pan, `WASD` changes Julia constant, wheel zooms, left click recenters, `Esc` quits |
-| `math/mandelbrot/mandelbrot_graph.fpas` | Single-file native-window Mandelbrot explorer; arrows pan, wheel zooms, left click recenters, `1/2/3` switch palettes, `Esc` quits |
-| `math/mandelbrot/mandelbrot.fpasprj` | Project; fullscreen terminal Mandelbrot explorer (`Std.Console` event loop) |
+| `math/mandelbrot/mandelbrot.fpasprj` | Fullscreen terminal Mandelbrot explorer (`Std.Console`) |
+| `math/julia/julia.fpasprj` | Fullscreen terminal Julia explorer; `WASD` adjusts the constant |
+| `math/burning_ship/burning_ship.fpasprj` | Fullscreen terminal Burning Ship explorer |
+| `math/tricorn/tricorn.fpasprj` | Fullscreen terminal Tricorn explorer |
+| `math/newton/newton.fpasprj` | Fullscreen terminal Newton basins for `z^3-1` |
 
 Automated Turbo Vision coverage is under `tests/tui/` (`views/`, `events/`, `smoke/`, `modals/`). Graph apps use `Application.Configure(App, Handlers)` and `Application.Run(App)`; see `docs/pascal/std/graph/app/README.md`. Custom terminal loops use `Std.Console`; see `docs/pascal/std/console/README.md`.

@@ -1,0 +1,31 @@
+{ Built only via newton.fpasprj — not a standalone program. }
+
+unit Newton.Color;
+
+uses Std.Console, Std.Math;
+
+function RootColor(Root: integer; Shade: real): Color;
+begin
+  var T: real := Clamp(Shade, 0.2, 1.0);
+  if Root = 1 then
+  begin
+    return RgbColor(Trunc(T * 220.0), Trunc(T * 64.0), Trunc(T * 72.0))
+  end
+  else if Root = 2 then
+  begin
+    return RgbColor(Trunc(T * 48.0), Trunc(T * 190.0), Trunc(T * 96.0))
+  end
+  else if Root = 3 then
+  begin
+    return RgbColor(Trunc(T * 64.0), Trunc(T * 96.0), Trunc(T * 220.0))
+  end
+  else
+  begin
+    return RgbColor(0, 0, 0)
+  end
+end;
+
+function InsideColor(): Color;
+begin
+  return RgbColor(0, 0, 0)
+end;

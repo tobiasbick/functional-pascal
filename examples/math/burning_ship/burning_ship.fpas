@@ -1,8 +1,8 @@
-{ Run as `fpas run mandelbrot.fpasprj` (multi-unit project). Interactive; see examples/README.md. }
+{ Run as `fpas run burning_ship.fpasprj` (multi-unit project). Interactive; see examples/README.md. }
 
-program MandelbrotShowcase;
+program BurningShipShowcase;
 
-uses Std.Console, Std.Conv, Std.Math, Std.Option, Std.Str, Mandelbrot.Color, Mandelbrot.Render;
+uses Std.Console, Std.Conv, Std.Math, Std.Option, Std.Str, BurningShip.Color, BurningShip.Render;
 
 type
   ExplorerState = record
@@ -15,11 +15,11 @@ type
     static function Default(): ExplorerState;
     begin
       return record
-        CenterX := -0.75;
-        CenterY := 0.0;
-        SpanY := 2.4;
+        CenterX := -0.45;
+        CenterY := -0.55;
+        SpanY := 2.8;
         MaxIter := 160;
-        Palette := PaletteKind.DeepOcean;
+        Palette := PaletteKind.Ember;
       end
     end;
 
@@ -52,7 +52,7 @@ type
 
     function GetZoom(Self: ExplorerState): real;
     begin
-      return 2.4 / Self.SpanY
+      return 2.8 / Self.SpanY
     end;
 
     property Zoom: real read GetZoom;
@@ -92,7 +92,7 @@ begin
   ClrScr();
   GotoXY(1, 1);
   TextColorRGB(255, 220, 120);
-  Write('Functional Pascal Mandelbrot');
+  Write('Functional Pascal Burning Ship');
   TextColorRGB(156, 204, 255);
   Write('  tasks | units | records | truecolor | mouse | focus | paste');
   if ScreenHeight() >= 2 then
@@ -189,13 +189,13 @@ begin
       end;
       '-':
       begin
-        State.SpanY := Min(State.SpanY / 0.82, 3.5);
+        State.SpanY := Min(State.SpanY / 0.82, 4.0);
         RequestRedraw();
         return true
       end;
       '1':
       begin
-        State.Palette := PaletteKind.DeepOcean;
+        State.Palette := PaletteKind.Ember;
         RequestRedraw();
         return true
       end;
@@ -232,7 +232,7 @@ begin
   end
   else if Event.mouse_action = MouseAction.ScrollDown then
   begin
-    State.SpanY := Min(State.SpanY / 0.88, 3.5);
+    State.SpanY := Min(State.SpanY / 0.88, 4.0);
     RequestRedraw()
   end
   else if InView and (Event.mouse_action = MouseAction.Down) then

@@ -1,0 +1,7 @@
+[project]
+name = "newton"
+kind = "program"
+main = "newton.fpas"
+
+[sources]
+include = ["newton.fpas", "newton_color.fpas", "newton_render.fpas"]

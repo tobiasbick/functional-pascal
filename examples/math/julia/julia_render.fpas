@@ -1,17 +1,12 @@
-{ Built only via mandelbrot.fpasprj — not a standalone program. }
+{ Built only via julia.fpasprj — not a standalone program. }
 
-unit Mandelbrot.Render;
+unit Julia.Render;
 
-uses Std.Console, Std.Task, Std.Array, Std.Conv, Std.Math, Std.Str, Mandelbrot.Color;
+uses Std.Console, Std.Task, Std.Array, Std.Conv, Std.Math, Std.Str, Julia.Color;
 
 private type Complex = record
   Re: real;
   Im: real;
-
-  static function Zero(): Complex;
-  begin
-    return record Re := 0.0; Im := 0.0; end
-  end;
 
   static function Create(Re: real; Im: real): Complex;
   begin
@@ -38,10 +33,10 @@ private type PixelSample = record
   EscapeValue: real;
 end;
 
-private function Iterate(C: Complex; MaxIter: integer): PixelSample;
+private function Iterate(Z0: Complex; C: Complex; MaxIter: integer): PixelSample;
 begin
   var EscapeRadiusSq: real := 256.0;
-  mutable var Z: Complex := Complex.Zero();
+  mutable var Z: Complex := Z0;
   mutable var N: integer := 0;
   while (N < MaxIter) and (Z.MagSq() <= EscapeRadiusSq) do
   begin
@@ -57,8 +52,6 @@ begin
   return record IsInside := false; EscapeValue := Smooth; end
 end;
 
-{ Compute one row of iteration counts — runs as a concurrent task }
-
 private function ComputeRow(
   Py: integer;
   Width: integer;
@@ -67,7 +60,9 @@ private function ComputeRow(
   XMax: real;
   YMin: real;
   YMax: real;
-  MaxIter: integer
+  MaxIter: integer;
+  Jr: real;
+  Ji: real
 ): array of PixelSample;
 begin
   mutable var WidthRange: integer := Width - 1;
@@ -83,16 +78,15 @@ begin
   var Wr: real := IntToReal(WidthRange);
   var Hr: real := IntToReal(HeightRange);
   var cy: real := YMax - (Py / Hr) * (YMax - YMin);
+  var C: Complex := Complex.Create(Jr, Ji);
   mutable var Row: array of PixelSample := [];
   for Px: integer := 0 to Width - 1 do
   begin
     var cx: real := XMin + (Px / Wr) * (XMax - XMin);
-    Push(Row, Iterate(Complex.Create(cx, cy), MaxIter))
+    Push(Row, Iterate(Complex.Create(cx, cy), C, MaxIter))
   end;
   return Row
 end;
-
-{ Draw a pre-computed row to the console }
 
 private function EscapeGlyph(EscapeValue: real): string;
 begin
@@ -145,13 +139,15 @@ procedure Render(
   Width: integer;
   Height: integer;
   MaxIter: integer;
-  Palette: PaletteKind
+  Palette: PaletteKind;
+  Jr: real;
+  Ji: real
 );
 begin
   mutable var Tasks: array of task := [];
   for Py: integer := 0 to Height - 1 do
   begin
-    Push(Tasks, go ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter))
+    Push(Tasks, go ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter, Jr, Ji))
   end;
   for Py: integer := 0 to Height - 1 do
   begin

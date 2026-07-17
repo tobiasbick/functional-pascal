@@ -1,181 +1,346 @@
-{ Interactive CRT demo — blocks until Escape. Single-file; see examples/README.md. }
+{ Run as `fpas run julia.fpasprj` (multi-unit project). Interactive; see examples/README.md. }
 
-program JuliaAscii;
+program JuliaShowcase;
 
-uses Std.Array, Std.Console;
+uses Std.Console, Std.Conv, Std.Math, Std.Option, Std.Str, Julia.Color, Julia.Render;
 
-function BandColor(Band: integer): Color;
+type
+  ExplorerState = record
+    CenterX: real;
+    CenterY: real;
+    SpanY: real;
+    Jr: real;
+    Ji: real;
+    MaxIter: integer;
+    Palette: PaletteKind;
+
+    static function Default(): ExplorerState;
+    begin
+      return record
+        CenterX := 0.0;
+        CenterY := 0.0;
+        SpanY := 2.4;
+        Jr := -0.8;
+        Ji := 0.156;
+        MaxIter := 96;
+        Palette := PaletteKind.DeepOcean;
+      end
+    end;
+
+    function SpanX(Self: ExplorerState; Width: integer; Height: integer): real;
+    begin
+      var SafeWidth: integer := Max(Width, 1);
+      var SafeHeight: integer := Max(Height, 1);
+      return (Self.SpanY * (IntToReal(SafeWidth) / IntToReal(SafeHeight))) * 0.5
+    end;
+
+    function XMin(Self: ExplorerState; Width: integer; Height: integer): real;
+    begin
+      return Self.CenterX - (Self.SpanX(Width, Height) * 0.5)
+    end;
+
+    function XMax(Self: ExplorerState; Width: integer; Height: integer): real;
+    begin
+      return Self.CenterX + (Self.SpanX(Width, Height) * 0.5)
+    end;
+
+    function YMin(Self: ExplorerState): real;
+    begin
+      return Self.CenterY - (Self.SpanY * 0.5)
+    end;
+
+    function YMax(Self: ExplorerState): real;
+    begin
+      return Self.CenterY + (Self.SpanY * 0.5)
+    end;
+
+    function GetZoom(Self: ExplorerState): real;
+    begin
+      return 2.4 / Self.SpanY
+    end;
+
+    property Zoom: real read GetZoom;
+  end;
+
+function RenderWidth(): integer;
 begin
-  case Band of
-    0:
-    begin
-      return CrtColor(Blue)
-    end;
-    1:
-    begin
-      return CrtColor(LightBlue)
-    end;
-    2:
-    begin
-      return CrtColor(Cyan)
-    end;
-    3:
-    begin
-      return CrtColor(LightCyan)
-    end;
-    4:
-    begin
-      return CrtColor(Green)
-    end;
-    5:
-    begin
-      return CrtColor(LightGreen)
-    end;
-    6:
-    begin
-      return CrtColor(Yellow)
-    end;
-    7:
-    begin
-      return CrtColor(White)
+  return Max(ScreenWidth(), 1)
+end;
+
+function RenderHeight(): integer;
+begin
+  return Max(ScreenHeight() - 2, 1)
+end;
+
+function ViewportCX(State: ExplorerState; W: integer; H: integer; CellX: integer): real;
+begin
+  var Wr: integer := Max(W - 1, 1);
+  return State.XMin(W, H) +
+         (IntToReal(CellX - 1) / IntToReal(Wr)) * (State.XMax(W, H) - State.XMin(W, H))
+end;
+
+function ViewportCY(State: ExplorerState; W: integer; H: integer; CellY: integer): real;
+begin
+  var Hr: integer := Max(H - 1, 1);
+  return State.YMax() - (IntToReal(CellY - 1) / IntToReal(Hr)) * (State.YMax() - State.YMin())
+end;
+
+procedure DrawHud(S: ExplorerState; Width: integer; Height: integer);
+begin
+  Window(1, 1, ScreenWidth(), ScreenHeight());
+  var HudTop: integer := Max(ScreenHeight() - 1, 1);
+  Window(1, HudTop, ScreenWidth(), ScreenHeight());
+  NormVideo();
+  ClrScr();
+  GotoXY(1, 1);
+  TextColorRGB(255, 220, 120);
+  Write('Functional Pascal Julia');
+  TextColorRGB(156, 204, 255);
+  Write('  tasks | units | records | postfix | truecolor');
+  if ScreenHeight() >= 2 then
+  begin
+    GotoXY(1, 2);
+    NormVideo();
+    Write(Format('size=%dx%d  c=(%f,%f)  jr=%f  ji=%f  zoom=%f  iter=%d  pal=%s', Width, Height, S.CenterX, S.CenterY, S.Jr, S.Ji, S.Zoom, S.MaxIter, PaletteName(S.Palette)));
+    Write('  WASD=const  click  wheel  arrows  +/-  PgUp/Dn  1/2/3  R  Esc')
+  end;
+  NormVideo();
+  Window(1, 1, Width, Height)
+end;
+
+mutable var
+  mutable var State: ExplorerState := ExplorerState.Default();
+  mutable var RenderW: integer := 1;
+  mutable var RenderH: integer := 1;
+  mutable var NeedsRedraw: boolean := true;
+  mutable var Quit: boolean := false;
+
+procedure RequestRedraw();
+begin
+  NeedsRedraw := true
+end;
+
+procedure PaintFrame();
+begin
+  RenderW := RenderWidth();
+  RenderH := RenderHeight();
+  BeginFrame();
+  FillRect(record x := 1; y := 1; width := ScreenWidth(); height := ScreenHeight(); end, record
+    glyph := ' ';
+    foreground := RgbColor(0, 0, 0);
+    background := RgbColor(0, 0, 0);
+  end);
+  Render(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter, State.Palette, State.Jr, State.Ji);
+  DrawHud(State, RenderW, RenderH);
+  Present()
+end;
+
+function HandleKey(Key: KeyEvent): boolean;
+begin
+  var StepX: real := State.SpanX(RenderW, RenderH) * 0.14;
+  var StepY: real := State.SpanY * 0.14;
+  if Key.kind = KeyKind.Escape then
+  begin
+    Quit := true;
+    return true
+  end
+  else if Key.kind = KeyKind.Left then
+  begin
+    State.CenterX := State.CenterX - StepX;
+    RequestRedraw();
+    return true
+  end
+  else if Key.kind = KeyKind.Right then
+  begin
+    State.CenterX := State.CenterX + StepX;
+    RequestRedraw();
+    return true
+  end
+  else if Key.kind = KeyKind.Up then
+  begin
+    State.CenterY := State.CenterY + StepY;
+    RequestRedraw();
+    return true
+  end
+  else if Key.kind = KeyKind.Down then
+  begin
+    State.CenterY := State.CenterY - StepY;
+    RequestRedraw();
+    return true
+  end
+  else if Key.kind = KeyKind.PageUp then
+  begin
+    State.MaxIter := Min(State.MaxIter + 32, 2048);
+    RequestRedraw();
+    return true
+  end
+  else if Key.kind = KeyKind.PageDown then
+  begin
+    State.MaxIter := Max(State.MaxIter - 32, 32);
+    RequestRedraw();
+    return true
+  end
+  else if Key.kind = KeyKind.Character then
+  begin
+    case Key.ch of
+      '+', '=':
+      begin
+        State.SpanY := Max(State.SpanY * 0.82, 0.000001);
+        RequestRedraw();
+        return true
+      end;
+      '-':
+      begin
+        State.SpanY := Min(State.SpanY / 0.82, 3.5);
+        RequestRedraw();
+        return true
+      end;
+      '1':
+      begin
+        State.Palette := PaletteKind.DeepOcean;
+        RequestRedraw();
+        return true
+      end;
+      '2':
+      begin
+        State.Palette := PaletteKind.Ember;
+        RequestRedraw();
+        return true
+      end;
+      '3':
+      begin
+        State.Palette := PaletteKind.Aurora;
+        RequestRedraw();
+        return true
+      end;
+      'a', 'A':
+      begin
+        State.Jr := State.Jr - 0.02;
+        RequestRedraw();
+        return true
+      end;
+      'd', 'D':
+      begin
+        State.Jr := State.Jr + 0.02;
+        RequestRedraw();
+        return true
+      end;
+      'w', 'W':
+      begin
+        State.Ji := State.Ji + 0.02;
+        RequestRedraw();
+        return true
+      end;
+      's', 'S':
+      begin
+        State.Ji := State.Ji - 0.02;
+        RequestRedraw();
+        return true
+      end;
+      'r', 'R':
+      begin
+        State := ExplorerState.Default();
+        RequestRedraw();
+        return true
+      end
     end
-    else
+  end;
+  return false
+end;
+
+procedure HandleMouse(Event: Event);
+begin
+  var InView: boolean := Event.mouse_x >= 1;
+  if Event.mouse_action = MouseAction.ScrollUp then
+  begin
+    State.SpanY := Max(State.SpanY * 0.88, 0.000001);
+    RequestRedraw()
+  end
+  else if Event.mouse_action = MouseAction.ScrollDown then
+  begin
+    State.SpanY := Min(State.SpanY / 0.88, 3.5);
+    RequestRedraw()
+  end
+  else if InView and (Event.mouse_action = MouseAction.Down) then
+  begin
+    if Event.mouse_button = MouseButton.Left then
     begin
-      return CrtColor(White)
+      State.CenterX := ViewportCX(State, RenderW, RenderH, Event.mouse_x);
+      State.CenterY := ViewportCY(State, RenderW, RenderH, Event.mouse_y);
+      RequestRedraw()
+    end
+    else if Event.mouse_button = MouseButton.Middle then
+    begin
+      State := ExplorerState.Default();
+      RequestRedraw()
     end
   end
 end;
 
-procedure Render(
-  XMin: real;
-  XMax: real;
-  YMin: real;
-  YMax: real;
-  Jr: real;
-  Ji: real;
-  MaxIter: integer
-);
+procedure HandleResize(Width: integer; Height: integer);
 begin
-  BeginFrame();
-  var Wr: real := 79.0;
-  var Hr: real := 24.0;
-  mutable var zr: real := 0.0;
-  mutable var zi: real := 0.0;
-  mutable var tr: real := 0.0;
-  mutable var ti: real := 0.0;
-  mutable var N: integer := 0;
-  for Py: integer := 0 to 24 do
+  var NewW: integer := Max(Width, 1);
+  var NewH: integer := Max(Height - 2, 1);
+  if (NewW <> RenderW) or (NewH <> RenderH) then
   begin
-    var cy: real := YMax - (Py / Hr) * (YMax - YMin);
-    mutable var Cells: array of Cell := [];
-    for Px: integer := 0 to 79 do
-    begin
-      var cx: real := XMin + (Px / Wr) * (XMax - XMin);
-      zr := cx;
-      zi := cy;
-      N := 0;
-      while (N < MaxIter) and (zr * zr + zi * zi <= 4.0) do
-      begin
-        tr := (zr * zr - zi * zi) + Jr;
-        ti := (2.0 * zr) * zi + Ji;
-        zr := tr;
-        zi := ti;
-        N := N + 1
-      end;
-      if N >= MaxIter then
-      begin
-        Push(Cells, record
-          glyph := ' ';
-          foreground := CrtColor(Black);
-          background := CrtColor(Black);
-        end)
-      end
-      else
-      begin
-        var CellShade: Color := BandColor((N * 8) div MaxIter);
-        Push(Cells, record glyph := ' '; foreground := CellShade; background := CellShade; end)
-      end
-    end;
-    WriteCells(1, Py + 1, Cells)
-  end;
-  Present()
+    RenderW := NewW;
+    RenderH := NewH;
+    RequestRedraw()
+  end
+end;
+
+procedure HandleEvent(E: Event);
+begin
+  if E.kind = EventKind.Key then
+  begin
+    HandleKey(E.key)
+  end
+  else if E.kind = EventKind.Mouse then
+  begin
+    HandleMouse(E)
+  end
+  else if E.kind = EventKind.Resize then
+  begin
+    HandleResize(E.width, E.height)
+  end
+end;
+
+procedure ShutdownTerminal();
+begin
+  CursorOn();
+  DisablePaste();
+  DisableFocus();
+  DisableMouse();
+  DisableRawMode();
+  LeaveAltScreen()
 end;
 
 begin
   EnableRawMode();
-  Window(1, 1, 80, 25);
+  EnterAltScreen();
+  EnableMouse();
+  EnableFocus();
+  EnablePaste();
   CursorOff();
-  mutable var XMin: real := -1.8;
-  mutable var XMax: real := 1.8;
-  mutable var YMin: real := -1.2;
-  mutable var YMax: real := 1.2;
-  var Jr: real := -0.8;
-  var Ji: real := 0.156;
-  var MaxIter: integer := 96;
-  mutable var Quit: boolean := false;
-  Render(XMin, XMax, YMin, YMax, Jr, Ji, MaxIter);
-  repeat
-    if KeyPressed() then
+  RenderW := RenderWidth();
+  RenderH := RenderHeight();
+  NeedsRedraw := true;
+  while not Quit do
+  begin
+    if NeedsRedraw then
     begin
-      var ev: KeyEvent := ReadKeyEvent();
-      var W: real := XMax - XMin;
-      var H: real := YMax - YMin;
-      var StepX: real := W * 0.15;
-      var StepY: real := H * 0.15;
-      mutable var Changed: boolean := true;
-      if ev.kind = KeyKind.Escape then
-      begin
-        Quit := true
-      end
-      else if ev.kind = KeyKind.Left then
-      begin
-        XMin := XMin - StepX;
-        XMax := XMax - StepX
-      end
-      else if ev.kind = KeyKind.Right then
-      begin
-        XMin := XMin + StepX;
-        XMax := XMax + StepX
-      end
-      else if ev.kind = KeyKind.Up then
-      begin
-        YMin := YMin + StepY;
-        YMax := YMax + StepY
-      end
-      else if ev.kind = KeyKind.Down then
-      begin
-        YMin := YMin - StepY;
-        YMax := YMax - StepY
-      end
-      else if ev.ch = '+' then
-      begin
-        var Zx: real := W * 0.15;
-        var Zy: real := H * 0.15;
-        XMin := XMin + Zx;
-        XMax := XMax - Zx;
-        YMin := YMin + Zy;
-        YMax := YMax - Zy
-      end
-      else if ev.ch = '-' then
-      begin
-        var Zx: real := W * 0.15;
-        var Zy: real := H * 0.15;
-        XMin := XMin - Zx;
-        XMax := XMax + Zx;
-        YMin := YMin - Zy;
-        YMax := YMax + Zy
-      end
-      else
-      begin
-        Changed := false
-      end;
-      if Changed and (not Quit) then
-      begin
-        Render(XMin, XMax, YMin, YMax, Jr, Ji, MaxIter)
-      end
+      PaintFrame();
+      NeedsRedraw := false
     end;
-    Delay(16)
-  until Quit;
-  DisableRawMode();
-  CursorOn()
+    case ReadEventTimeout(16) of
+      Some(E):
+      begin
+        HandleEvent(E)
+      end;
+      None:
+      begin
+      end
+    end
+  end;
+  ShutdownTerminal()
 end.

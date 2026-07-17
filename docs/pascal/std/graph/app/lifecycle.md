@@ -37,7 +37,7 @@ Variants: `UserQuit`, `WindowClosed`, `HostStop`, `HostAndUserStop`, `HostShutdo
 
 ## Example
 
-See [`examples/pascal/std/graph_basics.fpas`](../../../../../examples/pascal/std/graph_basics.fpas) and [`examples/math/julia/julia_graph.fpas`](../../../../../examples/math/julia/julia_graph.fpas).
+See [`examples/pascal/std/graph_basics.fpas`](../../../../../examples/pascal/std/graph_basics.fpas).
 
 ## See also
 

@@ -4,7 +4,6 @@
 
 mod draw;
 mod events;
-mod examples;
 mod lowering;
 mod session;
 mod support;

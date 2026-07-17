@@ -1,8 +1,8 @@
-{ Built only via mandelbrot.fpasprj — not a standalone program. }
+{ Built only via burning_ship.fpasprj — not a standalone program. }
 
-unit Mandelbrot.Render;
+unit BurningShip.Render;
 
-uses Std.Console, Std.Task, Std.Array, Std.Conv, Std.Math, Std.Str, Mandelbrot.Color;
+uses Std.Console, Std.Task, Std.Array, Std.Conv, Std.Math, Std.Str, BurningShip.Color;
 
 private type Complex = record
   Re: real;
@@ -16,6 +16,11 @@ private type Complex = record
   static function Create(Re: real; Im: real): Complex;
   begin
     return record Re := Re; Im := Im; end
+  end;
+
+  function AbsComponents(Self: Complex): Complex;
+  begin
+    return record Re := Abs(Self.Re); Im := Abs(Self.Im); end
   end;
 
   function Sq(Self: Complex): Complex;
@@ -45,7 +50,7 @@ begin
   mutable var N: integer := 0;
   while (N < MaxIter) and (Z.MagSq() <= EscapeRadiusSq) do
   begin
-    Z := Z.Sq().Add(C);
+    Z := Z.AbsComponents().Sq().Add(C);
     N := N + 1
   end;
   if N >= MaxIter then
@@ -56,8 +61,6 @@ begin
   var Smooth: real := (IntToReal(N) + 1.0) - (Log(Log(MagnitudeSq) * 0.5) / Log(2.0));
   return record IsInside := false; EscapeValue := Smooth; end
 end;
-
-{ Compute one row of iteration counts — runs as a concurrent task }
 
 private function ComputeRow(
   Py: integer;
@@ -91,8 +94,6 @@ begin
   end;
   return Row
 end;
-
-{ Draw a pre-computed row to the console }
 
 private function EscapeGlyph(EscapeValue: real): string;
 begin

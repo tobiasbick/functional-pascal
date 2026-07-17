@@ -6,10 +6,6 @@ use super::super::super::compile_ok;
 
 pub(super) const GRAPH_BASICS_EXAMPLE: &str =
     include_str!("../../../../../../examples/pascal/std/graph_basics.fpas");
-pub(super) const JULIA_GRAPH_EXAMPLE: &str =
-    include_str!("../../../../../../examples/math/julia/julia_graph.fpas");
-pub(super) const MANDELBROT_GRAPH_EXAMPLE: &str =
-    include_str!("../../../../../../examples/math/mandelbrot/mandelbrot_graph.fpas");
 
 pub(super) fn with_headless<T>(f: impl FnOnce() -> T) -> T {
     with_headless_graph_backend_for_tests(f)

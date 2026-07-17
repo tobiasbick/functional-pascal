@@ -1,8 +1,8 @@
-{ Run as `fpas run mandelbrot.fpasprj` (multi-unit project). Interactive; see examples/README.md. }
+{ Run as `fpas run newton.fpasprj` (multi-unit project). Interactive; see examples/README.md. }
 
-program MandelbrotShowcase;
+program NewtonShowcase;
 
-uses Std.Console, Std.Conv, Std.Math, Std.Option, Std.Str, Mandelbrot.Color, Mandelbrot.Render;
+uses Std.Console, Std.Conv, Std.Math, Std.Option, Std.Str, Newton.Render;
 
 type
   ExplorerState = record
@@ -10,17 +10,10 @@ type
     CenterY: real;
     SpanY: real;
     MaxIter: integer;
-    Palette: PaletteKind;
 
     static function Default(): ExplorerState;
     begin
-      return record
-        CenterX := -0.75;
-        CenterY := 0.0;
-        SpanY := 2.4;
-        MaxIter := 160;
-        Palette := PaletteKind.DeepOcean;
-      end
+      return record CenterX := 0.0; CenterY := 0.0; SpanY := 3.0; MaxIter := 48; end
     end;
 
     function SpanX(Self: ExplorerState; Width: integer; Height: integer): real;
@@ -52,7 +45,7 @@ type
 
     function GetZoom(Self: ExplorerState): real;
     begin
-      return 2.4 / Self.SpanY
+      return 3.0 / Self.SpanY
     end;
 
     property Zoom: real read GetZoom;
@@ -67,8 +60,6 @@ function RenderHeight(): integer;
 begin
   return Max(ScreenHeight() - 2, 1)
 end;
-
-{ 1-based cell in the render viewport → complex plane (same mapping as row iteration) }
 
 function ViewportCX(State: ExplorerState; W: integer; H: integer; CellX: integer): real;
 begin
@@ -92,15 +83,15 @@ begin
   ClrScr();
   GotoXY(1, 1);
   TextColorRGB(255, 220, 120);
-  Write('Functional Pascal Mandelbrot');
+  Write('Functional Pascal Newton z^3-1');
   TextColorRGB(156, 204, 255);
-  Write('  tasks | units | records | truecolor | mouse | focus | paste');
+  Write('  tasks | units | records | postfix | truecolor');
   if ScreenHeight() >= 2 then
   begin
     GotoXY(1, 2);
     NormVideo();
-    Write(Format('size=%dx%d  center=(%f, %f)  zoom=%f  iter=%d  palette=%s', Width, Height, S.CenterX, S.CenterY, S.Zoom, S.MaxIter, PaletteName(S.Palette)));
-    Write('  click center  wheel zoom  M middle=reset  arrows  +/-  PgUp/Dn  1/2/3  R  Esc')
+    Write(Format('size=%dx%d  center=(%f, %f)  zoom=%f  iter=%d', Width, Height, S.CenterX, S.CenterY, S.Zoom, S.MaxIter));
+    Write('  click center  wheel zoom  arrows  +/-  PgUp/Dn  R  Esc')
   end;
   NormVideo();
   Window(1, 1, Width, Height)
@@ -128,7 +119,7 @@ begin
     foreground := RgbColor(0, 0, 0);
     background := RgbColor(0, 0, 0);
   end);
-  Render(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter, State.Palette);
+  Render(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter);
   DrawHud(State, RenderW, RenderH);
   Present()
 end;
@@ -168,13 +159,13 @@ begin
   end
   else if Key.kind = KeyKind.PageUp then
   begin
-    State.MaxIter := Min(State.MaxIter + 32, 2048);
+    State.MaxIter := Min(State.MaxIter + 8, 256);
     RequestRedraw();
     return true
   end
   else if Key.kind = KeyKind.PageDown then
   begin
-    State.MaxIter := Max(State.MaxIter - 32, 32);
+    State.MaxIter := Max(State.MaxIter - 8, 8);
     RequestRedraw();
     return true
   end
@@ -189,25 +180,7 @@ begin
       end;
       '-':
       begin
-        State.SpanY := Min(State.SpanY / 0.82, 3.5);
-        RequestRedraw();
-        return true
-      end;
-      '1':
-      begin
-        State.Palette := PaletteKind.DeepOcean;
-        RequestRedraw();
-        return true
-      end;
-      '2':
-      begin
-        State.Palette := PaletteKind.Ember;
-        RequestRedraw();
-        return true
-      end;
-      '3':
-      begin
-        State.Palette := PaletteKind.Aurora;
+        State.SpanY := Min(State.SpanY / 0.82, 6.0);
         RequestRedraw();
         return true
       end;
@@ -232,7 +205,7 @@ begin
   end
   else if Event.mouse_action = MouseAction.ScrollDown then
   begin
-    State.SpanY := Min(State.SpanY / 0.88, 3.5);
+    State.SpanY := Min(State.SpanY / 0.88, 6.0);
     RequestRedraw()
   end
   else if InView and (Event.mouse_action = MouseAction.Down) then

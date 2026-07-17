@@ -1,0 +1,7 @@
+[project]
+name = "tricorn"
+kind = "program"
+main = "tricorn.fpas"
+
+[sources]
+include = ["tricorn.fpas", "tricorn_color.fpas", "tricorn_render.fpas"]

@@ -1,0 +1,7 @@
+[project]
+name = "burning-ship"
+kind = "program"
+main = "burning_ship.fpas"
+
+[sources]
+include = ["burning_ship.fpas", "burning_ship_color.fpas", "burning_ship_render.fpas"]

@@ -1,9 +1,6 @@
-use fpas_std::{
-    ConsoleKeyEvent, GraphEvent, key_event::key_kind_index, last_headless_graph_frame_for_tests,
-    mouse_action_index, mouse_button_index,
-};
+use fpas_std::{GraphEvent, mouse_action_index, mouse_button_index};
 
-use super::support::{MANDELBROT_GRAPH_EXAMPLE, compile_run_with_graph_events, with_headless};
+use super::support::{compile_run_with_graph_events, with_headless};
 
 #[test]
 fn std_graph_on_mouse_down_dispatches_to_configured_handler() {
@@ -51,41 +48,5 @@ end.",
         );
 
         assert_eq!(out.lines, vec!["1"]);
-    });
-}
-
-#[test]
-fn std_graph_mandelbrot_example_handles_center_mouse_click_before_escape() {
-    with_headless(|| {
-        let out = compile_run_with_graph_events(
-            MANDELBROT_GRAPH_EXAMPLE,
-            &[
-                GraphEvent::Mouse {
-                    action: mouse_action_index("Down"),
-                    button: mouse_button_index("Left"),
-                    x: 640,
-                    y: 400,
-                    shift: false,
-                    ctrl: false,
-                    alt: false,
-                    meta: false,
-                },
-                GraphEvent::Key(ConsoleKeyEvent::new(
-                    key_kind_index("Escape"),
-                    '\0',
-                    false,
-                    false,
-                    false,
-                    false,
-                )),
-            ],
-        );
-
-        assert!(out.lines.is_empty(), "unexpected output: {:?}", out.lines);
-
-        let frame = last_headless_graph_frame_for_tests()
-            .expect("present should publish a headless frame snapshot");
-        assert_eq!(frame.width(), 1280);
-        assert_eq!(frame.height(), 800);
     });
 }

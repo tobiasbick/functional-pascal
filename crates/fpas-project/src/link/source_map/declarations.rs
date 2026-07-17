@@ -58,7 +58,15 @@ fn apply_record_type_source_id(record: &mut RecordType, source_id: u32) {
             RecordMethod::Procedure(procedure) => apply_procedure_source_id(procedure, source_id),
         }
     }
+    for property in &mut record.properties {
+        apply_record_property_source_id(property, source_id);
+    }
     apply_span(&mut record.span, source_id);
+}
+
+fn apply_record_property_source_id(property: &mut fpas_parser::RecordProperty, source_id: u32) {
+    apply_type_expr_source_id(&mut property.type_expr, source_id);
+    apply_span(&mut property.span, source_id);
 }
 
 fn apply_field_def_source_id(field: &mut FieldDef, source_id: u32) {

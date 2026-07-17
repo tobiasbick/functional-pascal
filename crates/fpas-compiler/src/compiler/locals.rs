@@ -198,7 +198,7 @@ mod tests {
     use fpas_diagnostics::codes::COMPILE_BYTECODE_OPERAND_OVERFLOW;
     use fpas_sema::{
         BoundMethodMap, ClosureInfoMap, ExprTypeMap, MethodCallMap, NestedRoutineCaptureMap,
-        RecordDefaultsMap, ScalarCaseBindingMap,
+        PropertyReadMap, PropertyWriteMap, RecordDefaultsMap, ScalarCaseBindingMap,
     };
 
     fn empty_compiler() -> Compiler {
@@ -210,6 +210,8 @@ mod tests {
             ClosureInfoMap::default(),
             NestedRoutineCaptureMap::default(),
             BoundMethodMap::default(),
+            PropertyReadMap::default(),
+            PropertyWriteMap::default(),
         )
     }
 

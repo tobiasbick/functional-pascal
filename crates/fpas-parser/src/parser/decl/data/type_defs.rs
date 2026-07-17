@@ -53,6 +53,7 @@ impl Parser {
         self.advance();
         let mut fields = Vec::new();
         let mut methods = Vec::new();
+        let mut properties = Vec::new();
         while !self.check(&Token::End) && !self.at_end() {
             match self.current_token() {
                 Token::Function => {
@@ -70,6 +71,9 @@ impl Parser {
                         methods.push(method);
                     }
                 }
+                Token::Property => {
+                    properties.push(self.parse_record_property());
+                }
                 _ => fields.push(self.parse_field_def()),
             }
         }
@@ -77,6 +81,74 @@ impl Parser {
         RecordType {
             fields,
             methods,
+            properties,
+            span: self.span_from(start),
+        }
+    }
+
+    /// Parse `property Name: Type [read Getter] [write Setter];`.
+    ///
+    /// `read` / `write` are contextual identifiers, not reserved keywords.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/record-properties.md`
+    fn parse_record_property(&mut self) -> RecordProperty {
+        let start = self.current_span();
+        self.advance(); // `property`
+        let (name, _) = self
+            .expect_ident()
+            .unwrap_or_else(|| self.error_ident(start));
+        self.expect(&Token::Colon);
+        let type_expr = self.parse_type_expr();
+
+        let mut read = None;
+        let mut write = None;
+        while matches!(self.current_token(), Token::Ident(_)) {
+            let Some((accessor_kw, kw_span)) = self.expect_ident() else {
+                break;
+            };
+            if accessor_kw.eq_ignore_ascii_case("read") {
+                if read.is_some() {
+                    self.error_with_code(
+                        PARSE_EXPECTED_TOKEN,
+                        "Duplicate `read` clause on property",
+                        "Write `property Name: Type read Getter write Setter;`.",
+                        kw_span,
+                    );
+                }
+                let (getter, _) = self
+                    .expect_ident()
+                    .unwrap_or_else(|| self.error_ident(kw_span));
+                read = Some(getter);
+            } else if accessor_kw.eq_ignore_ascii_case("write") {
+                if write.is_some() {
+                    self.error_with_code(
+                        PARSE_EXPECTED_TOKEN,
+                        "Duplicate `write` clause on property",
+                        "Write `property Name: Type read Getter write Setter;`.",
+                        kw_span,
+                    );
+                }
+                let (setter, _) = self
+                    .expect_ident()
+                    .unwrap_or_else(|| self.error_ident(kw_span));
+                write = Some(setter);
+            } else {
+                self.error_with_code(
+                    PARSE_EXPECTED_TOKEN,
+                    "Expected `read` or `write` in a property declaration",
+                    "Write `property Name: Type read Getter write Setter;`.",
+                    kw_span,
+                );
+                break;
+            }
+        }
+
+        self.expect_semi();
+        RecordProperty {
+            name,
+            type_expr,
+            read,
+            write,
             span: self.span_from(start),
         }
     }

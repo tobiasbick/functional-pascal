@@ -16,7 +16,12 @@ pub type ExprTypeMap = HashMap<usize, Ty>;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MethodCallTarget {
     /// Instance method: emit the receiver, then the explicit arguments.
-    Instance(String),
+    Instance {
+        /// Qualified callable name.
+        qualified_name: String,
+        /// Property getter reads needed while evaluating the receiver designator.
+        receiver_reads: Vec<PropertyReadInfo>,
+    },
     /// Static function: emit only the explicit arguments (no receiver).
     Static(String),
 }
@@ -26,7 +31,7 @@ impl MethodCallTarget {
     #[must_use]
     pub fn qualified_name(&self) -> &str {
         match self {
-            Self::Instance(name) | Self::Static(name) => name,
+            Self::Instance { qualified_name, .. } | Self::Static(qualified_name) => qualified_name,
         }
     }
 }
@@ -58,6 +63,38 @@ pub struct BoundMethodInfo {
 
 /// Maps designator or postfix-operation identity to [`BoundMethodInfo`].
 pub type BoundMethodMap = HashMap<usize, BoundMethodInfo>;
+
+/// Semantic metadata for a property getter read (`B.Text`).
+///
+/// **Documentation:** `docs/pascal/language/types/record-properties.md`
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PropertyReadInfo {
+    /// Qualified getter name (e.g. `Button.GetText`).
+    pub getter_name: String,
+    /// Number of designator parts forming the receiver before the property name.
+    ///
+    /// Zero for postfix `.Text` because its receiver is already on the stack.
+    pub receiver_part_count: usize,
+}
+
+/// Maps designator or postfix Field identity to its ordered property getter reads.
+pub type PropertyReadMap = HashMap<usize, Vec<PropertyReadInfo>>;
+
+/// Semantic metadata for a property setter assignment (`B.Text := …`).
+///
+/// **Documentation:** `docs/pascal/language/types/record-properties.md`
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PropertyWriteInfo {
+    /// Qualified setter name (e.g. `Button.SetText`).
+    pub setter_name: String,
+    /// Number of designator parts forming the receiver before the property name.
+    pub receiver_part_count: usize,
+    /// Ordered property getter reads needed while evaluating the receiver path.
+    pub receiver_reads: Vec<PropertyReadInfo>,
+}
+
+/// Maps assignment-target designator identity to [`PropertyWriteInfo`].
+pub type PropertyWriteMap = HashMap<usize, PropertyWriteInfo>;
 
 /// Maps a named record type to its ordered field list, each entry carrying an optional
 /// cloned default expression. The order matches the type definition.
@@ -102,6 +139,14 @@ pub struct Checker {
     ///
     /// **Documentation:** `docs/pascal/language/types/record-methods.md`
     pub(crate) bound_methods: BoundMethodMap,
+    /// Designator / postfix Field identity → property getter metadata.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/record-properties.md`
+    pub(crate) property_reads: PropertyReadMap,
+    /// Assignment-target designator identity → property setter metadata.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/record-properties.md`
+    pub(crate) property_writes: PropertyWriteMap,
     /// Expression keys whose value is a task-bound callable.
     ///
     /// **Documentation:** `docs/pascal/language/functions/closures.md`
@@ -126,6 +171,8 @@ impl Checker {
             closure_infos: ClosureInfoMap::new(),
             nested_routine_captures: NestedRoutineCaptureMap::new(),
             bound_methods: BoundMethodMap::new(),
+            property_reads: PropertyReadMap::new(),
+            property_writes: PropertyWriteMap::new(),
             task_bound_exprs: HashSet::new(),
         }
     }
@@ -141,6 +188,8 @@ impl Checker {
         ClosureInfoMap,
         NestedRoutineCaptureMap,
         BoundMethodMap,
+        PropertyReadMap,
+        PropertyWriteMap,
     ) {
         (
             self.errors,
@@ -151,6 +200,8 @@ impl Checker {
             self.closure_infos,
             self.nested_routine_captures,
             self.bound_methods,
+            self.property_reads,
+            self.property_writes,
         )
     }
 

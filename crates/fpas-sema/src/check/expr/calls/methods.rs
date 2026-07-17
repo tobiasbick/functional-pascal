@@ -255,7 +255,12 @@ impl Checker {
 
         let through_type = self.designator_denotes_type(&receiver_designator);
         // Resolve the full receiver path (supports qualified aliases like `Geom.Api.Point`).
+        let receiver_key = crate::designator_lookup_key(&receiver_designator);
         let receiver_ty = self.check_designator_expr(&receiver_designator);
+        let receiver_reads = self
+            .property_reads
+            .remove(&receiver_key)
+            .unwrap_or_default();
         let resolved_receiver_ty = self.resolve_visible_type(&receiver_ty);
 
         let record_ty = match &resolved_receiver_ty {
@@ -332,8 +337,13 @@ impl Checker {
 
         let method_kind = self.resolve_method_kind(&record_ty, &method_name, &qualified)?;
 
-        self.method_calls
-            .insert(call_key, MethodCallTarget::Instance(qualified.clone()));
+        self.method_calls.insert(
+            call_key,
+            MethodCallTarget::Instance {
+                qualified_name: qualified.clone(),
+                receiver_reads,
+            },
+        );
 
         match &method_kind {
             MethodKind::Function(func_ty) => {

@@ -88,12 +88,19 @@ impl Checker {
                     ty = match part {
                         DesignatorPart::Ident(field, span) => {
                             let is_last = offset + 1 == trailing;
-                            let bind_key = if is_last {
+                            let property_key = Some((designator_key, base_part_count + offset));
+                            let bound_key = if is_last {
                                 Some((designator_key, designator.parts.len() - 1))
                             } else {
                                 None
                             };
-                            self.check_record_member_access(&ty, field, *span, bind_key)
+                            self.check_record_member_access(
+                                &ty,
+                                field,
+                                *span,
+                                property_key,
+                                bound_key,
+                            )
                         }
                         DesignatorPart::Index(index_expr, span) => {
                             self.check_index_access(&ty, index_expr, *span)

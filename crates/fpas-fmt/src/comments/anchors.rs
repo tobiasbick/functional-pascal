@@ -155,6 +155,9 @@ fn push_decl_start_offsets(decls: &[Decl], out: &mut Vec<usize>) {
             for field in &record.fields {
                 out.push(field.span.offset);
             }
+            for property in &record.properties {
+                out.push(property.span.offset);
+            }
         }
     }
 }
@@ -186,6 +189,12 @@ fn push_decl_anchors(decls: &[Decl], out: &mut Vec<EmissionAnchor>) {
                                 push_routine_body_anchor(procedure.span, &procedure.body, out);
                             }
                         }
+                    }
+                    for property in &record.properties {
+                        out.push(EmissionAnchor {
+                            start: property.span.offset,
+                            end: span_end(property.span),
+                        });
                     }
                 }
             }

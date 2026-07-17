@@ -30,6 +30,10 @@ pub use check::MethodCallMap;
 pub use check::MethodCallTarget;
 pub use check::NestedRoutineCaptureInfo;
 pub use check::NestedRoutineCaptureMap;
+pub use check::PropertyReadInfo;
+pub use check::PropertyReadMap;
+pub use check::PropertyWriteInfo;
+pub use check::PropertyWriteMap;
 pub use check::RecordDefaultsMap;
 pub use check::ScalarCaseBindingMap;
 pub use error::SemaError;
@@ -56,6 +60,8 @@ pub fn analyze_with_types(
     ClosureInfoMap,
     NestedRoutineCaptureMap,
     BoundMethodMap,
+    PropertyReadMap,
+    PropertyWriteMap,
 ) {
     let mut checker = check::Checker::new();
     checker.check_program(program);

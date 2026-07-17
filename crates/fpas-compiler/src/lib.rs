@@ -48,6 +48,8 @@ pub fn compile_all(program: &Program) -> Result<Chunk, Vec<CompileError>> {
         closure_infos,
         nested_routine_captures,
         bound_methods,
+        property_reads,
+        property_writes,
     ) = fpas_sema::analyze_with_types(program);
     if !sema_errors.is_empty() {
         return Err(sema_errors);
@@ -60,6 +62,8 @@ pub fn compile_all(program: &Program) -> Result<Chunk, Vec<CompileError>> {
         closure_infos,
         nested_routine_captures,
         bound_methods,
+        property_reads,
+        property_writes,
     );
     match compiler.compile_program(program) {
         Ok(()) => validated_chunk(compiler).map_err(|error| vec![error]),

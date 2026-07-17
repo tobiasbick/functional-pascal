@@ -12,8 +12,8 @@ use super::super::context::BoundMethodInfo;
 impl Checker {
     /// Resolve a bare record member as a field or as a bound instance-method value.
     ///
-    /// When `bind_key` is `Some((key, receiver_part_count))`, a successful method resolution
-    /// records metadata for codegen.
+    /// Property and bound-method metadata use separate keys because properties may appear in the
+    /// middle of a designator while a bound method must be its final member.
     ///
     /// **Documentation:** `docs/pascal/language/types/record-methods.md`
     pub(crate) fn check_record_member_access(
@@ -21,7 +21,8 @@ impl Checker {
         ty: &Ty,
         member: &str,
         span: Span,
-        bind_key: Option<(usize, usize)>,
+        property_key: Option<(usize, usize)>,
+        bound_key: Option<(usize, usize)>,
     ) -> Ty {
         match ty {
             Ty::Record(record_ty) => {
@@ -31,6 +32,16 @@ impl Checker {
                     .find(|(name, _)| name.eq_ignore_ascii_case(member))
                 {
                     return field_ty.clone();
+                }
+
+                if let Some(property) = self.find_record_property(record_ty, member) {
+                    return self.property_read_type(
+                        &record_ty.name,
+                        member,
+                        &property,
+                        span,
+                        property_key,
+                    );
                 }
 
                 if self.is_static_function_on_record(record_ty, member) {
@@ -52,27 +63,85 @@ impl Checker {
                     self.error_with_code(
                         SEMA_UNKNOWN_NAME,
                         format!(
-                            "Record `{}` has no field or method `{member}`",
+                            "Record `{}` has no field, property, or method `{member}`",
                             record_ty.name
                         ),
-                        "Check the field or instance method name against the record type.",
+                        "Check the field, property, or instance method name against the record type.",
                         span,
                     );
                     return Ty::Error;
                 };
 
-                self.bound_callable_type(&qualified, &method_kind, span, bind_key)
+                self.bound_callable_type(&qualified, &method_kind, span, bound_key)
             }
             _ => {
                 self.error_with_code(
                     SEMA_TYPE_MISMATCH,
                     format!("`.{member}` requires a record value"),
-                    "Only records support field and bound-method access with `.`.",
+                    "Only records support field, property, and bound-method access with `.`.",
                     span,
                 );
                 Ty::Error
             }
         }
+    }
+
+    fn property_read_type(
+        &mut self,
+        record_name: &str,
+        member: &str,
+        property: &crate::types::PropertyTy,
+        span: Span,
+        bind_key: Option<(usize, usize)>,
+    ) -> Ty {
+        let Some(getter) = &property.getter else {
+            self.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                format!("Property `{record_name}.{member}` is write-only"),
+                format!("Assign to `{member}` instead of reading it."),
+                span,
+            );
+            return Ty::Error;
+        };
+        if let Some((key, receiver_part_count)) = bind_key {
+            self.property_reads.entry(key).or_default().push(
+                super::super::context::PropertyReadInfo {
+                    getter_name: getter.clone(),
+                    receiver_part_count,
+                },
+            );
+        }
+        property.ty.clone()
+    }
+
+    /// Look up a property on `record_ty`, falling back to the canonical type symbol.
+    ///
+    /// Method return types may embed a `RecordTy` snapshot taken before properties were
+    /// attached; the scope entry holds the complete type.
+    fn find_record_property(
+        &self,
+        record_ty: &crate::types::RecordTy,
+        member: &str,
+    ) -> Option<crate::types::PropertyTy> {
+        if let Some((_, property)) = record_ty
+            .properties
+            .iter()
+            .find(|(name, _)| name.eq_ignore_ascii_case(member))
+        {
+            return Some(property.clone());
+        }
+        if record_ty.name == "<anonymous>" {
+            return None;
+        }
+        let symbol = self.scopes.lookup(&record_ty.name)?;
+        let Ty::Record(canonical) = &symbol.ty else {
+            return None;
+        };
+        canonical
+            .properties
+            .iter()
+            .find(|(name, _)| name.eq_ignore_ascii_case(member))
+            .map(|(_, property)| property.clone())
     }
 
     fn bound_callable_type(

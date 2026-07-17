@@ -41,7 +41,13 @@ impl Checker {
         match operation {
             PostfixOperation::Field { name, span } => {
                 let key = Self::postfix_operation_lookup_key(operation);
-                self.check_record_member_access(&resolved, name, *span, Some((key, 0)))
+                self.check_record_member_access(
+                    &resolved,
+                    name,
+                    *span,
+                    Some((key, 0)),
+                    Some((key, 0)),
+                )
             }
             PostfixOperation::Index { index, span } => {
                 self.check_index_access(&resolved, index, *span)
@@ -104,8 +110,13 @@ impl Checker {
             return Ty::Error;
         };
 
-        self.method_calls
-            .insert(op_key, MethodCallTarget::Instance(qualified.clone()));
+        self.method_calls.insert(
+            op_key,
+            MethodCallTarget::Instance {
+                qualified_name: qualified.clone(),
+                receiver_reads: Vec::new(),
+            },
+        );
 
         match method_kind {
             MethodKind::Function(func_ty) => {

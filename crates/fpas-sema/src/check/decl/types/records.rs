@@ -35,15 +35,15 @@ impl Checker {
             return;
         }
 
-        let mut seen_fields = HashSet::new();
+        let mut seen_members = HashSet::new();
         let mut field_indexes = Vec::new();
         let mut fields = Vec::new();
         for (field_index, field) in record.fields.iter().enumerate() {
-            if !seen_fields.insert(canonical_symbol_name(&field.name)) {
+            if !seen_members.insert(canonical_symbol_name(&field.name)) {
                 self.error_with_code(
                     SEMA_DUPLICATE_DECLARATION,
-                    format!("Duplicate record field `{}`", field.name),
-                    "Each record field name must be unique within the record type.",
+                    format!("Duplicate record member `{}`", field.name),
+                    "Each field, method, static function, and property name must be unique within the record type.",
                     field.span,
                 );
                 continue;
@@ -84,14 +84,21 @@ impl Checker {
             fields,
             methods: Vec::new(),
             static_functions: Vec::new(),
+            properties: Vec::new(),
         };
         let mut ty = Ty::Record(record_ty);
 
-        let members = self.check_record_methods(&td.name, &ty, &record.methods);
+        let members = self.check_record_methods(&td.name, &ty, &record.methods, &mut seen_members);
 
         if let Ty::Record(record_ty) = &mut ty {
             record_ty.methods = members.instance_methods;
             record_ty.static_functions = members.static_functions;
+        }
+
+        let properties =
+            self.check_record_properties(&td.name, &ty, &record.properties, &mut seen_members);
+        if let Ty::Record(record_ty) = &mut ty {
+            record_ty.properties = properties;
         }
 
         if let Some(existing) = self.scopes.lookup_mut(&td.name) {
@@ -104,10 +111,10 @@ impl Checker {
         type_name: &str,
         record_ty: &Ty,
         methods: &[RecordMethod],
+        seen_members: &mut HashSet<String>,
     ) -> CheckedRecordMembers {
         let mut checked_methods = Vec::new();
         let mut checked_static = Vec::new();
-        let mut seen_methods = HashSet::new();
 
         for method in methods {
             match method {
@@ -116,7 +123,7 @@ impl Checker {
                         type_name,
                         &function.name,
                         function.span,
-                        &mut seen_methods,
+                        seen_members,
                     ) {
                         continue;
                     }
@@ -131,7 +138,7 @@ impl Checker {
                         type_name,
                         &function.name,
                         function.span,
-                        &mut seen_methods,
+                        seen_members,
                     ) {
                         continue;
                     }
@@ -145,7 +152,7 @@ impl Checker {
                         type_name,
                         &procedure.name,
                         procedure.span,
-                        &mut seen_methods,
+                        seen_members,
                     ) {
                         continue;
                     }
@@ -176,8 +183,8 @@ impl Checker {
         }
         self.error_with_code(
             SEMA_DUPLICATE_DECLARATION,
-            format!("Duplicate record method `{type_name}.{name}`"),
-            "Each record method name must be unique within the record type (static and instance names share one set).",
+            format!("Duplicate record member `{type_name}.{name}`"),
+            "Each field, method, static function, and property name must be unique within the record type.",
             span,
         );
         false

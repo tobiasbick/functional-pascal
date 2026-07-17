@@ -202,6 +202,7 @@ impl Checker {
             fields: field_types,
             methods: Vec::new(),
             static_functions: Vec::new(),
+            properties: Vec::new(),
         })
     }
 
@@ -257,6 +258,21 @@ impl Checker {
                     &format!("field update `{}`", field_init.name),
                     span,
                 );
+            } else if record_ty
+                .properties
+                .iter()
+                .any(|(name, _)| name.eq_ignore_ascii_case(&field_init.name))
+            {
+                self.error_with_code(
+                    fpas_diagnostics::codes::SEMA_UNKNOWN_NAME,
+                    format!(
+                        "Record type `{}` property `{}` cannot be set in a `with` update",
+                        record_ty.name, field_init.name
+                    ),
+                    "Properties are not record fields. Assign to the property with `Value.Prop := …` instead.",
+                    span,
+                );
+                let _ = self.check_expr(&field_init.value);
             } else {
                 let known: Vec<&str> = record_ty.fields.iter().map(|(n, _)| n.as_str()).collect();
                 self.error_with_code(

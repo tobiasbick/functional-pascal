@@ -1,7 +1,7 @@
 /// Lexical token produced by the Functional Pascal lexer.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
-    // Keywords (54)
+    // Keywords (55)
     Program,
     Unit,
     Uses,
@@ -59,6 +59,10 @@ pub enum Token {
     ///
     /// **Documentation:** `docs/pascal/language/types/record-methods.md`
     Static,
+    /// Marks a computed record property: `property Text: string read GetText write SetText`.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/record-properties.md`
+    Property,
 
     // Literals
     Integer(i64),

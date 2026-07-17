@@ -100,6 +100,23 @@ pub struct RecordTy {
     ///
     /// **Documentation:** `docs/pascal/language/types/record-methods.md`
     pub static_functions: Vec<(String, FunctionTy)>,
+    /// Computed properties backed by instance accessors.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/record-properties.md`
+    pub properties: Vec<(String, PropertyTy)>,
+}
+
+/// A computed record property and its resolved accessor names.
+///
+/// **Documentation:** `docs/pascal/language/types/record-properties.md`
+#[derive(Debug, Clone, PartialEq)]
+pub struct PropertyTy {
+    /// Declared property type.
+    pub ty: Ty,
+    /// Qualified getter name (`Record.GetText`), when readable.
+    pub getter: Option<String>,
+    /// Qualified setter name (`Record.SetText`), when writable.
+    pub setter: Option<String>,
 }
 
 /// Whether a record method is a function (returns a value) or a procedure.

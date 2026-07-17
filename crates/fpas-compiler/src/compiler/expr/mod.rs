@@ -8,6 +8,7 @@ mod closure;
 mod constructors;
 mod literals;
 mod postfix;
+mod property;
 mod records;
 mod special;
 
@@ -40,8 +41,17 @@ impl Compiler {
                 let call_key = fpas_sema::expr_lookup_key(expr);
                 if let Some(target) = self.method_calls.get(&call_key).cloned() {
                     match target {
-                        fpas_sema::MethodCallTarget::Instance(qualified) => {
-                            self.compile_method_call(designator, &qualified, args, location)?;
+                        fpas_sema::MethodCallTarget::Instance {
+                            qualified_name,
+                            receiver_reads,
+                        } => {
+                            self.compile_method_call(
+                                designator,
+                                &qualified_name,
+                                &receiver_reads,
+                                args,
+                                location,
+                            )?;
                         }
                         fpas_sema::MethodCallTarget::Static(qualified) => {
                             self.compile_call(&qualified, args, location)?;

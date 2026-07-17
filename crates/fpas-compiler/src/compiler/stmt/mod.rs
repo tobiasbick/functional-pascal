@@ -2,6 +2,7 @@ mod basic;
 mod concurrency;
 mod control_flow;
 mod loops;
+mod property_assignment;
 
 use crate::error::CompileError;
 use fpas_parser::Stmt;

@@ -93,7 +93,12 @@ impl Checker {
         };
 
         let through_type = self.designator_denotes_type(&receiver_designator);
+        let receiver_key = crate::designator_lookup_key(&receiver_designator);
         let receiver_ty = self.check_designator_expr(&receiver_designator);
+        let receiver_reads = self
+            .property_reads
+            .remove(&receiver_key)
+            .unwrap_or_default();
         let resolved_receiver_ty = self.resolve_visible_type(&receiver_ty);
 
         let record_ty = match &resolved_receiver_ty {
@@ -164,8 +169,13 @@ impl Checker {
             return false;
         };
 
-        self.method_calls
-            .insert(call_key, MethodCallTarget::Instance(qualified.clone()));
+        self.method_calls.insert(
+            call_key,
+            MethodCallTarget::Instance {
+                qualified_name: qualified.clone(),
+                receiver_reads,
+            },
+        );
 
         self.check_stmt_method_kind(&qualified, &method_kind, args, span);
         true

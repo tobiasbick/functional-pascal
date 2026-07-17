@@ -8,8 +8,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 
 | Area | Plan | Scope |
 |------|------|-------|
-| Language | [Record properties](record-properties.md) | Pascal-style computed record state backed by instance accessors |
-| Language | [Events and bound methods](events-and-bound-methods.md) | Bound methods done; remaining: deterministic single-handler event properties |
+| Language | [Events and bound methods](events-and-bound-methods.md) | Bound methods and record properties done; remaining: deterministic single-handler event properties |
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
 | Dictionaries | [Dictionary decision](09-remove-dict.md) | Decide whether `Std.Dict` stays, changes, or is removed |
 | Libraries | [Library export model](libraries.md) | Finer per-symbol exports and re-export rules beyond current unit exports |
@@ -24,18 +23,18 @@ milestones. Use this order:
 
 | Step | Plan or milestone | Why it comes here |
 | --- | --- | --- |
-| 1 | ~~[Bound-method milestone](events-and-bound-methods.md#milestone-1-bound-record-methods)~~ **done** | Reuses capturing closures; completes named routine, closure, and bound method handler forms. Spec: [record-methods.md](../pascal/language/types/record-methods.md#bound-methods-as-values). |
-| 2 | [Record properties](record-properties.md) | Establishes computed getter/setter syntax and registry-backed state access without special Tui2 compiler behavior. |
+| 1 | ~~Bound-method milestone~~ **done** | Spec: [record-methods.md](../pascal/language/types/record-methods.md#bound-methods-as-values). |
+| 2 | ~~Record properties~~ **done** | Spec: [record-properties.md](../pascal/language/types/record-properties.md). |
 | 3 | [Event-property milestone](events-and-bound-methods.md#milestone-2-event-properties) | Specializes properties for assignment, `nil`, `Assigned`, and owner-only invocation. |
 | 4 | [Tui2 events and actions](tui2/events-and-actions.md) | Applies the completed language features to controls, lifecycle callbacks, actions, and posting. |
 
-Capturing closures and bound record methods are implemented; see
-[`closures.md`](../pascal/language/functions/closures.md) and
-[`record-methods.md`](../pascal/language/types/record-methods.md#bound-methods-as-values).
+Capturing closures, bound record methods, and record properties are implemented; see
+[`closures.md`](../pascal/language/functions/closures.md),
+[`record-methods.md`](../pascal/language/types/record-methods.md#bound-methods-as-values), and
+[`record-properties.md`](../pascal/language/types/record-properties.md).
 
 Each remaining step must finish its own docs, tests, formatter support, linker/source-map handling,
-and full verification before the next dependent step starts. Event properties must wait for record
-properties.
+and full verification before the next dependent step starts.
 
 ## Rules
 

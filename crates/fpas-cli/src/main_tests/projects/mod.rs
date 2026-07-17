@@ -7,6 +7,7 @@ mod edge_cases;
 mod errors;
 mod exports;
 mod qualified;
+mod record_properties;
 mod resolution;
 mod run;
 mod support;

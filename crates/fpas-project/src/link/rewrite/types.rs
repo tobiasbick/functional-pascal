@@ -85,6 +85,9 @@ impl NameRewriter<'_> {
                         }
                     }
                 }
+                for property in &mut record.properties {
+                    self.rewrite_type_expr(&mut property.type_expr);
+                }
             }
             TypeBody::Enum(_) => {}
             TypeBody::Alias(type_expr) => self.rewrite_type_expr(type_expr),

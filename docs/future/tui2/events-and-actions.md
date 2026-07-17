@@ -11,7 +11,7 @@ The implementation depends on:
 
 1. [capturing closures](../../pascal/language/functions/closures.md);
 2. the bound-method milestone in [events and bound record methods](../events-and-bound-methods.md);
-3. [record properties](../record-properties.md);
+3. [record properties](../../pascal/language/types/record-properties.md);
 4. the event-property milestone in [events and bound record methods](../events-and-bound-methods.md).
 
 It does not depend on the implementation details of expression postfix chaining. The chaining work

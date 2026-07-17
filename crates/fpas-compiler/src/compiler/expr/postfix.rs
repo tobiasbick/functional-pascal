@@ -27,6 +27,16 @@ impl Compiler {
                     let key = fpas_sema::postfix_operation_lookup_key(op);
                     if let Some(info) = self.bound_methods.get(&key).cloned() {
                         self.emit_bound_method_from_receiver(&info, location)?;
+                    } else if let Some(infos) = self.property_reads.get(&key).cloned() {
+                        let info = infos.first().ok_or_else(|| {
+                            internal_compiler_error(
+                                "Property-read metadata has no getter entry.",
+                                "Re-run compilation and report this internal compiler error.",
+                                span.line,
+                                span.column,
+                            )
+                        })?;
+                        self.emit_property_get_from_receiver(info, location)?;
                     } else {
                         let idx = self.add_constant(Value::Str(name.clone()), location)?;
                         self.emit(Op::FieldGet(idx), location);
@@ -63,9 +73,9 @@ impl Compiler {
         };
 
         match target {
-            fpas_sema::MethodCallTarget::Instance(qualified) => {
+            fpas_sema::MethodCallTarget::Instance { qualified_name, .. } => {
                 // Receiver is already on the stack from the preceding chain.
-                if self.compile_std_library_call(&qualified, args, location)? {
+                if self.compile_std_library_call(&qualified_name, args, location)? {
                     return Ok(());
                 }
                 for arg in args {
@@ -73,7 +83,7 @@ impl Compiler {
                 }
                 let total_args =
                     Self::checked_u8_at(args.len() + 1, "method call arguments", location)?;
-                let name_idx = self.add_constant(Value::Str(qualified), location)?;
+                let name_idx = self.add_constant(Value::Str(qualified_name), location)?;
                 self.emit(Op::Call(name_idx, total_args), location);
             }
             fpas_sema::MethodCallTarget::Static(_) => {

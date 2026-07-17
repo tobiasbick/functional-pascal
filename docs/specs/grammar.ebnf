@@ -91,7 +91,7 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'break'     | 'continue'  | 'result'    | 'option'
                 | 'ok'        | 'error'     | 'some'      | 'none'
                 | 'try'       | 'public'    | 'private'
-                | 'go'        | 'dict'      | 'with'      | 'static' ;
+                | 'go'        | 'dict'      | 'with'      | 'static' | 'property' ;
 
 (* ---- Symbols --------------------------------------------------- *)
 
@@ -214,7 +214,7 @@ formal_type_param   = [ 'mutable' ] identifier ':' type_expr ;
 (* ---- 2.4 Record & Enum Types ---------------------------------- *)
 
 record_type         = 'record'
-                      { field_def | record_method }
+                      { field_def | record_method | record_property }
                       'end' ;
 field_def           = identifier ':' type_expr [ ':=' expression ] ';' ;
 
@@ -235,6 +235,15 @@ record_method       = [ 'static' ] function_decl
 (* Static and instance names share one case-insensitive name set.    *)
 (* Record methods may declare their own type_params via the shared   *)
 (* function_decl / procedure_decl grammar.                           *)
+
+(* Computed properties are backed by instance accessors. `read` and  *)
+(* `write` are contextual (not reserved keywords). At least one      *)
+(* accessor is required. See docs/pascal/language/types/             *)
+(* record-properties.md.                                             *)
+record_property     = 'property' identifier ':' type_expr
+                      { property_accessor } ';' ;
+property_accessor   = 'read' identifier
+                    | 'write' identifier ;
 
 enum_type           = 'enum' enum_member { enum_member } 'end' ;
 enum_member         = identifier [ enum_fields | '=' integer_literal ] ';' ;

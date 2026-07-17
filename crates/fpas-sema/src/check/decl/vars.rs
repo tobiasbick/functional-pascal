@@ -105,19 +105,36 @@ impl Checker {
                     span,
                 );
             } else {
-                let known: Vec<&str> = record_ty.fields.iter().map(|(n, _)| n.as_str()).collect();
-                self.error_with_code(
-                    SEMA_UNKNOWN_NAME,
-                    format!(
-                        "Record type `{}` has no field `{}`",
-                        record_ty.name, field_init.name
-                    ),
-                    format!(
-                        "Known fields: {}. Remove the unknown field or fix the name.",
-                        known.join(", ")
-                    ),
-                    span,
-                );
+                if record_ty
+                    .properties
+                    .iter()
+                    .any(|(name, _)| name.eq_ignore_ascii_case(&field_init.name))
+                {
+                    self.error_with_code(
+                        SEMA_UNKNOWN_NAME,
+                        format!(
+                            "Record type `{}` property `{}` cannot be initialized in a record literal",
+                            record_ty.name, field_init.name
+                        ),
+                        "Properties are not record fields. Assign to the property after construction.",
+                        span,
+                    );
+                } else {
+                    let known: Vec<&str> =
+                        record_ty.fields.iter().map(|(n, _)| n.as_str()).collect();
+                    self.error_with_code(
+                        SEMA_UNKNOWN_NAME,
+                        format!(
+                            "Record type `{}` has no field `{}`",
+                            record_ty.name, field_init.name
+                        ),
+                        format!(
+                            "Known fields: {}. Remove the unknown field or fix the name.",
+                            known.join(", ")
+                        ),
+                        span,
+                    );
+                }
                 // Still check sub-expressions to collect further errors.
                 let _ = self.check_expr(&field_init.value);
             }

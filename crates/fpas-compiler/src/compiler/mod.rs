@@ -8,7 +8,7 @@ use std::collections::{HashMap, HashSet};
 use fpas_bytecode::Chunk;
 use fpas_sema::{
     BoundMethodMap, ClosureInfoMap, ExprTypeMap, MethodCallMap, NestedRoutineCaptureMap,
-    RecordDefaultsMap, ScalarCaseBindingMap,
+    PropertyReadMap, PropertyWriteMap, RecordDefaultsMap, ScalarCaseBindingMap,
 };
 
 mod binary_op;
@@ -85,6 +85,10 @@ pub struct Compiler {
     nested_routine_captures: NestedRoutineCaptureMap,
     /// Bound instance-method values (`C.Add`).
     bound_methods: BoundMethodMap,
+    /// Property getter reads (`B.Text`).
+    property_reads: PropertyReadMap,
+    /// Property setter assignments (`B.Text := …`).
+    property_writes: PropertyWriteMap,
     /// Canonical names of module-level globals (`const` / `var` / `mutable var`).
     module_globals: HashSet<String>,
 }
@@ -101,6 +105,7 @@ fn canonical_name(name: &str) -> String {
 
 impl Compiler {
     /// Create a new compiler with the given sema results.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         expr_types: ExprTypeMap,
         method_calls: MethodCallMap,
@@ -109,6 +114,8 @@ impl Compiler {
         closure_infos: ClosureInfoMap,
         nested_routine_captures: NestedRoutineCaptureMap,
         bound_methods: BoundMethodMap,
+        property_reads: PropertyReadMap,
+        property_writes: PropertyWriteMap,
     ) -> Self {
         Self {
             chunk: Chunk::new(),
@@ -126,6 +133,8 @@ impl Compiler {
             closure_infos,
             nested_routine_captures,
             bound_methods,
+            property_reads,
+            property_writes,
             module_globals: HashSet::new(),
         }
     }

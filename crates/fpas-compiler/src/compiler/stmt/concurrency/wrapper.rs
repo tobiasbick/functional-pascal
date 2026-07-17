@@ -18,7 +18,24 @@ impl Compiler {
             self.compile_expr(expr)?;
         }
 
-        let params = self.go_wrapper_params(arg_exprs.len(), span);
+        self.compile_go_wrapper_after_args(
+            callee_name,
+            arg_exprs.len(),
+            returns_value,
+            detached,
+            span,
+        )
+    }
+
+    pub(super) fn compile_go_wrapper_after_args(
+        &mut self,
+        callee_name: &str,
+        arg_count: usize,
+        returns_value: bool,
+        detached: bool,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        let params = self.go_wrapper_params(arg_count, span);
         let call_args = params
             .iter()
             .map(|param| Expr::Designator(self.go_wrapper_param_designator(&param.name, span)))
@@ -49,7 +66,7 @@ impl Compiler {
             },
             span,
         )?;
-        self.emit_go_spawn(arg_exprs.len(), detached, span)?;
+        self.emit_go_spawn(arg_count, detached, span)?;
         Ok(())
     }
 

@@ -1,6 +1,7 @@
 use crate::error::CompileError;
 use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_parser::{Designator, Expr};
+use fpas_sema::PropertyReadInfo;
 
 use super::super::Compiler;
 
@@ -66,6 +67,7 @@ impl Compiler {
         &mut self,
         designator: &Designator,
         qualified_method: &str,
+        receiver_reads: &[PropertyReadInfo],
         args: &[Expr],
         location: SourceLocation,
     ) -> Result<(), CompileError> {
@@ -77,7 +79,7 @@ impl Compiler {
             parts: designator.parts[..designator.parts.len() - 1].to_vec(),
             span: designator.span,
         };
-        self.compile_designator_read(&receiver)?;
+        self.compile_property_receiver(&receiver, receiver_reads)?;
         for arg in args {
             self.compile_expr(arg)?;
         }

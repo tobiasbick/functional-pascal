@@ -33,17 +33,21 @@ impl Compiler {
 
                 if let Some(target) = self.method_calls.get(&call_key).cloned() {
                     match target {
-                        fpas_sema::MethodCallTarget::Instance(qualified) => {
+                        fpas_sema::MethodCallTarget::Instance {
+                            qualified_name,
+                            receiver_reads,
+                        } => {
                             let receiver = Designator {
                                 parts: designator.parts[..designator.parts.len() - 1].to_vec(),
                                 span: designator.span,
                             };
-                            let mut wrapper_args = Vec::with_capacity(args.len() + 1);
-                            wrapper_args.push(Expr::Designator(receiver));
-                            wrapper_args.extend(args.iter().cloned());
-                            self.compile_go_wrapper_call(
-                                &qualified,
-                                &wrapper_args,
+                            self.compile_property_receiver(&receiver, &receiver_reads)?;
+                            for arg in args {
+                                self.compile_expr(arg)?;
+                            }
+                            self.compile_go_wrapper_after_args(
+                                &qualified_name,
+                                args.len() + 1,
                                 returns_value,
                                 detached,
                                 span,

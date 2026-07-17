@@ -21,6 +21,9 @@ impl Compiler {
         if let Some(info) = self.bound_methods.get(&designator_key).cloned() {
             return self.compile_bound_method_designator(d, &info);
         }
+        if let Some(infos) = self.property_reads.get(&designator_key).cloned() {
+            return self.compile_property_read_designator(d, &infos);
+        }
 
         let mut parts = d.parts.iter();
         let base_name = match parts.next() {

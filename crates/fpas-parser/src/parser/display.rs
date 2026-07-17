@@ -57,6 +57,7 @@ pub(super) fn token_display(t: &Token) -> Cow<'static, str> {
         Token::Dict => "dict".into(),
         Token::With => "with".into(),
         Token::Static => "static".into(),
+        Token::Property => "property".into(),
         Token::Integer(v) => format!("{v}").into(),
         Token::Real(v) => format!("{v}").into(),
         Token::Str(s) => format!("'{s}'").into(),

@@ -79,6 +79,24 @@ pub enum TypeBody {
 pub struct RecordType {
     pub fields: Vec<FieldDef>,
     pub methods: Vec<RecordMethod>,
+    /// Computed properties backed by instance accessors.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/record-properties.md`
+    pub properties: Vec<RecordProperty>,
+    pub span: Span,
+}
+
+/// A computed property declared inside a `record … end` block.
+///
+/// **Documentation:** `docs/pascal/language/types/record-properties.md`
+#[derive(Debug, Clone, PartialEq)]
+pub struct RecordProperty {
+    pub name: String,
+    pub type_expr: TypeExpr,
+    /// Instance function name after contextual `read`.
+    pub read: Option<String>,
+    /// Instance procedure name after contextual `write`.
+    pub write: Option<String>,
     pub span: Span,
 }
 

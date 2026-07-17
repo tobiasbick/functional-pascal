@@ -8,11 +8,10 @@ Two implementation milestones:
    [record-methods.md](../pascal/language/types/record-methods.md#bound-methods-as-values),
    [first-class.md](../pascal/language/functions/first-class.md). Depends on
    [capturing closures](../pascal/language/functions/closures.md).
-2. **Event properties — planned.** Additionally depends on
-   [record properties](record-properties.md).
+2. **Event properties — planned.** Depends on implemented
+   [record properties](../pascal/language/types/record-properties.md).
 
-Current next language step for Tui2: [record properties](record-properties.md), then
-Milestone 2 (event properties) in this plan.
+Current next language step for Tui2: Milestone 2 (event properties) in this plan.
 
 ## Goals
 
@@ -97,7 +96,7 @@ implementation chosen by the declaring unit. For Tui2 handles they resolve the c
 registry entry.
 
 The declaration is based on the property machinery from
-[record-properties.md](record-properties.md), with additional callable and ownership rules. Event
+[record-properties.md](../pascal/language/types/record-properties.md), with additional callable and ownership rules. Event
 members are not allowed as ordinary record fields.
 
 ## Event declaration rules
@@ -246,7 +245,7 @@ required behavior.
 
 ### Event-property milestone
 
-5. Complete the record-property acceptance criteria.
+5. ~~Complete the record-property acceptance criteria.~~
 6. Add event declaration parsing, formatting, and accessor validation.
 7. Add assignment wrapping, `nil` clearing, and `Assigned`.
 8. Add owner-only invocation and empty-event diagnostics.

@@ -92,5 +92,6 @@ var
 ## See also
 
 - [Record methods](record-methods.md)
+- [Record properties](record-properties.md)
 - [Record update](record-update.md)
 - [Mutable parameters](../functions/mutable-parameters.md)

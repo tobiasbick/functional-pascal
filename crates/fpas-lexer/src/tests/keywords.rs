@@ -2,13 +2,13 @@ use super::toks;
 use crate::Token;
 
 #[test]
-fn all_54_keywords() {
+fn all_55_keywords() {
     let input = "program unit uses const var mutable function procedure begin end return \
                  if then else case of for to downto in in do while \
                  repeat until and or not xor div mod shl shr \
                  true false type record enum array panic break continue \
                  public private result option ok error some none try \
-                 go dict with static";
+                 go dict with static property";
     let tokens = toks(input);
     assert_eq!(
         tokens,
@@ -68,6 +68,7 @@ fn all_54_keywords() {
             Token::Dict,
             Token::With,
             Token::Static,
+            Token::Property,
         ]
     );
 }

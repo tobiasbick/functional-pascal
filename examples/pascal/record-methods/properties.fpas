@@ -1,0 +1,27 @@
+program PropertiesExample;
+
+uses Std.Console, Std.Conv;
+
+type
+  Counter = record
+    Base: integer;
+
+    function GetBase(Self: Counter): integer;
+    begin
+      return Self.Base
+    end;
+
+    procedure SetBase(Self: Counter; Value: integer);
+    begin
+      WriteLn('SetBase: ' + IntToStr(Value))
+    end;
+
+    property Value: integer read GetBase write SetBase;
+  end;
+
+begin
+  var C: Counter := record Base := 10; end;
+  WriteLn(IntToStr(C.Value));
+  C.Value := 20;
+  WriteLn(IntToStr(C.Value))
+end.

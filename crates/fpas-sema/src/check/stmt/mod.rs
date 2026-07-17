@@ -1,10 +1,8 @@
 mod calls;
 mod control_flow;
+mod property_assignment;
 
 use super::Checker;
-use crate::scope::SymbolKind;
-use fpas_diagnostics::codes::SEMA_IMMUTABLE_ASSIGNMENT;
-use fpas_lexer::Span;
 use fpas_parser::*;
 
 impl Checker {
@@ -104,52 +102,6 @@ impl Checker {
                     self.check_expr(expr);
                 }
             }
-        }
-    }
-
-    fn check_assign_stmt(&mut self, target: &Designator, value: &Expr, span: Span) {
-        let target_ty = self.check_designator_expr(target);
-        let value_ty = self.check_expr(value);
-
-        if !target_ty.is_error() {
-            self.check_type_compat(&target_ty, &value_ty, "assignment", span);
-        }
-
-        let value_is_task_bound = self.expr_is_task_bound(Self::expr_lookup_key(value));
-        if target.parts.len() == 1
-            && let Some(DesignatorPart::Ident(base, _)) = target.parts.first()
-            && let Some(symbol) = self.scopes.lookup_mut(base)
-        {
-            symbol.task_bound = value_is_task_bound;
-        }
-
-        let base_resolved = match target.parts.first() {
-            Some(DesignatorPart::Ident(base, _)) => self.scopes.lookup(base).is_some(),
-            _ => false,
-        };
-
-        if base_resolved && !self.designator_is_mutable_target(target) {
-            let target_name = Self::resolve_designator_name(target);
-            let hint = match target.parts.first() {
-                Some(DesignatorPart::Ident(base, _)) => self
-                    .scopes
-                    .lookup(base)
-                    .map(|symbol| match symbol.kind {
-                        SymbolKind::Const => "Constants cannot be reassigned.",
-                        SymbolKind::ForVar => "Loop variables are immutable inside the loop body.",
-                        SymbolKind::Param => "Mark the parameter `mutable` to allow reassignment.",
-                        _ => "Declare with `mutable var` to allow reassignment.",
-                    })
-                    .unwrap_or("Declare with `mutable var` to allow reassignment."),
-                _ => "Declare with `mutable var` to allow reassignment.",
-            };
-
-            self.error_with_code(
-                SEMA_IMMUTABLE_ASSIGNMENT,
-                format!("Cannot assign to `{target_name}`"),
-                hint,
-                span,
-            );
         }
     }
 }

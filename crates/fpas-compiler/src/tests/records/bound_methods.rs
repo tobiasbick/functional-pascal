@@ -205,10 +205,9 @@ end.",
 }
 
 #[test]
-fn callable_field_takes_priority_over_same_named_method() {
-    let out = compile_and_run(
+fn field_and_method_cannot_share_a_name() {
+    let err = compile_err(
         "program T;
-uses Std.Console, Std.Conv;
 function Double(Value: integer): integer;
 begin
   return Value * 2
@@ -222,12 +221,13 @@ type
     end;
   end;
 begin
-  var H: Handler := record Apply := Double; end;
-  var F: function(Value: integer): integer := H.Apply;
-  WriteLn(IntToStr(F(4)))
 end.",
     );
-    assert_eq!(out.lines, vec!["8"]);
+    assert!(
+        err.message.contains("Duplicate record member"),
+        "{}",
+        err.message
+    );
 }
 
 #[test]

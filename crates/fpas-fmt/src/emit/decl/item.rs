@@ -2,7 +2,7 @@
 
 use fpas_parser::{
     ConstDef, Decl, EnumMember, EnumType, FieldDef, FuncBody, FunctionDecl, ProcedureDecl,
-    RecordMethod, RecordType, TypeBody, TypeDef, VarDef, Visibility,
+    RecordMethod, RecordProperty, RecordType, TypeBody, TypeDef, VarDef, Visibility,
 };
 
 use crate::comments::{CommentMap, emit_leading_comments, emit_trailing_comments};
@@ -109,6 +109,14 @@ fn emit_record_type(emitter: &mut Emitter, record: &RecordType, comments: &Comme
             }
             emit_record_method(inner, method, comments);
         }
+        let need_property_gap = (!record.fields.is_empty() || !record.methods.is_empty())
+            && !record.properties.is_empty();
+        if need_property_gap {
+            inner.write("\n");
+        }
+        for property in &record.properties {
+            emit_record_property(inner, property, comments);
+        }
     });
     emitter.write_current_indent();
     emitter.write("end");
@@ -171,6 +179,24 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
             emit_func_body(emitter, &procedure.body, comments);
         }
     }
+}
+
+fn emit_record_property(emitter: &mut Emitter, property: &RecordProperty, comments: &CommentMap) {
+    emit_leading_comments(emitter, comments, property.span.offset, false);
+    emitter.write_current_indent();
+    emitter.write("property ");
+    emitter.write(&property.name);
+    emitter.write(": ");
+    emit_type_expr(emitter, &property.type_expr);
+    if let Some(getter) = &property.read {
+        emitter.write(" read ");
+        emitter.write(getter);
+    }
+    if let Some(setter) = &property.write {
+        emitter.write(" write ");
+        emitter.write(setter);
+    }
+    emitter.write(";\n");
 }
 
 fn emit_enum_type(emitter: &mut Emitter, enum_type: &EnumType) {

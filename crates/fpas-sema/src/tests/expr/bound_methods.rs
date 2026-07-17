@@ -115,7 +115,7 @@ begin
 end.",
     );
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
-    let (errors, _, _, _, _, _, _, bound) = analyze_with_types(&program);
+    let (errors, _, _, _, _, _, _, bound, _, _) = analyze_with_types(&program);
     assert!(errors.is_empty(), "{errors:#?}");
     assert!(
         bound

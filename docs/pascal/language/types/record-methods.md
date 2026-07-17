@@ -138,7 +138,8 @@ Rules:
 - Call through the type: `TypeName.FunctionName(Arguments)`.
 - Do not call a static function through a value (`Value.Create(...)` is an error).
 - Do not call an instance method through the type (`TypeName.Sum(...)` is an error).
-- Static and instance members share one case-insensitive name set; duplicates are rejected.
+- Static and instance members share one case-insensitive name set with fields and
+  properties; duplicates are rejected.
 - FPAS has no function overloading: two static functions in one record need distinct names.
 - `static procedure`, static fields, and special constructors are not part of this feature.
 - A public type alias whose resolved type is a record exposes the same static functions
@@ -175,5 +176,6 @@ Method-level type parameters are documented in [Generics](generics.md#generic-re
 
 - [Records](records.md)
 - [Generics](generics.md)
+- [Record properties](record-properties.md)
 - [First-class functions](../functions/first-class.md)
 - [Capturing closures](../functions/closures.md)

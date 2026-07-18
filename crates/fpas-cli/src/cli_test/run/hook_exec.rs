@@ -8,7 +8,7 @@ use std::time::Duration;
 use super::super::hooks::{TestHook, hook_program_source};
 use super::super::report::TestOutcome;
 use super::LinkContext;
-use super::program::{RunOutput, run_test_program};
+use super::program::{ProgramRunOptions, RunOutput, run_test_program};
 
 pub(super) fn run_optional_teardown(
     link: &LinkContext,
@@ -44,11 +44,14 @@ pub(super) fn run_test_hook(
     let outcome = run_test_program(
         &hook_path,
         Some(link),
-        None,
-        timeout,
         stderr,
-        display,
-        RunOutput::Hook,
+        ProgramRunOptions {
+            script_override: None,
+            timeout,
+            display,
+            output: RunOutput::Hook,
+            compiled: None,
+        },
     );
     let _ = fs::remove_file(&hook_path);
 

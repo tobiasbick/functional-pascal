@@ -15,7 +15,7 @@ fn pool_tasks_stop_without_side_effects_after_abort_flag() {
     chunk.emit(Op::Halt, loc());
 
     let shared = Arc::new(SharedState {
-        chunk,
+        chunk: Arc::new(chunk),
         program_args: Vec::new(),
         globals: RwLock::new(HashMap::new()),
         task_queue: Mutex::new(VecDeque::new()),

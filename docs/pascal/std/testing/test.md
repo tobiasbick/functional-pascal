@@ -111,6 +111,13 @@ Flags and discovery rules: [CLI](../../program-structure/cli.md).
 
 Run `fpas test` from the **repository root**. Relative filesystem fixtures written by tests use that process working directory.
 
+For compatible tests, the runner compiles bounded groups into one in-memory bytecode image. Each
+test still receives a fresh VM, globals, console, TUI/graph state, timeout, and golden-file
+evaluation. Tests with module-level declarations, project hooks, or a different unit/import
+environment stay on the single-program path. Bundle failures also fall back to individual
+compilation so diagnostics remain test-local. These images exist only for the current `fpas test`
+process; no bytecode cache files are written.
+
 ### Scratch files (`.temp-data/`)
 
 Tests that create real files or directories must write under `.temp-data/` at the repository root (for example `.temp-data/_fpas_glob_tree_/…`). That directory is gitignored. Do not create scratch trees beside `tests/`, under `crates/`, or with bare `_fpas_*` names in the cwd root.
@@ -176,6 +183,7 @@ Manual failure demo (not auto-discovered): [`manual/assert_fail_demo.fpas`](../.
 | Compiler | [`std_calls/test.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/test.rs) |
 | Runtime | [`test/`](../../../../crates/fpas-std/src/test/) |
 | Intrinsics | [`intrinsic/test.rs`](../../../../crates/fpas-bytecode/src/intrinsic/test.rs) |
+| In-memory runner images | [`cli_test/image/`](../../../../crates/fpas-cli/src/cli_test/image/) |
 
 ## See also
 

@@ -7,6 +7,7 @@ mod discover;
 mod expect_pixels;
 mod expect_stdout;
 mod hooks;
+mod image;
 mod link;
 mod parallel;
 mod report;

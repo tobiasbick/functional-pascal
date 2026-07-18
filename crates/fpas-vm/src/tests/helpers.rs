@@ -4,12 +4,12 @@ use fpas_bytecode::{Chunk, Op, SourceLocation, Value};
 use fpas_std::{Console, KeyInput, TextInput};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::atomic::{AtomicBool, AtomicU64};
-use std::sync::{Condvar, Mutex, RwLock};
+use std::sync::{Arc, Condvar, Mutex, RwLock};
 
 /// Minimal [`SharedState`] shell for tests (matches [`crate::vm::Vm::build`] field init except chunk).
 pub(crate) fn minimal_shared_state(chunk: Chunk) -> SharedState {
     SharedState {
-        chunk,
+        chunk: Arc::new(chunk),
         program_args: Vec::new(),
         globals: RwLock::new(HashMap::new()),
         task_queue: Mutex::new(VecDeque::new()),

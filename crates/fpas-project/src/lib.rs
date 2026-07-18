@@ -16,8 +16,10 @@ mod test_sources;
 mod workspace;
 
 pub use link::{
-    LinkedProgram, build_library_check_with_source_map, build_library_check_with_standard_library,
-    build_program, build_program_with_source_map, build_program_with_standard_library,
+    LinkedProgram, LinkedTestBundle, build_library_check_with_source_map,
+    build_library_check_with_standard_library, build_program, build_program_with_source_map,
+    build_program_with_standard_library, build_test_bundle_from_paths,
+    build_test_bundle_from_paths_with_standard_library,
 };
 pub use loading::load_project;
 pub use model::{LibraryExportPolicy, LoadedProject, ProjectKind, ProjectLinkMeta, SourceOrigin};

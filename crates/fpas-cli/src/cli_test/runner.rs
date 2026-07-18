@@ -1,15 +1,17 @@
 //! Sequential and parallel test-runner orchestration.
 
+use std::collections::HashMap;
 use std::io::Write;
 use std::path::PathBuf;
 use std::sync::Arc;
 
 use crate::cli_input::{TestCliConfig, TestReportFormat};
 
+use super::image::attach_test_images;
 use super::link::LinkContextCache;
 use super::parallel;
 use super::report::{Summary, TestOutcome, print_json_report, print_summary};
-use super::run::{run_single_test, test_display_path};
+use super::run::{run_single_test_prepared, test_display_path};
 
 pub(super) fn finish_test_run(
     config: &TestCliConfig,
@@ -34,12 +36,33 @@ pub(super) fn run_tests_sequential(
 ) -> i32 {
     let mut summary = Summary::default();
     let mut links = LinkContextCache::new(standard_library);
+    let mut prepared = Vec::with_capacity(paths.len());
+    let mut link_errors = HashMap::<usize, String>::new();
     for (index, path) in paths.iter().enumerate() {
         let display = test_display_path(path).into_owned();
-        let link = match links.context_for_test(path) {
-            Ok(Some(context)) => Some(context),
-            Ok(None) => None,
+        match links.context_for_test(path) {
+            Ok(link) => prepared.push(parallel::PreparedTest {
+                index,
+                path: path.clone(),
+                display,
+                link,
+                compiled: None,
+            }),
             Err(message) => {
+                link_errors.insert(index, message);
+            }
+        }
+    }
+    attach_test_images(&mut prepared);
+    let mut prepared = prepared
+        .into_iter()
+        .map(|test| (test.index, test))
+        .collect::<HashMap<_, _>>();
+
+    for (index, path) in paths.iter().enumerate() {
+        let display = test_display_path(path).into_owned();
+        let Some(test) = prepared.remove(&index) else {
+            if let Some(message) = link_errors.remove(&index) {
                 let _ = writeln!(stderr, "  FAIL  {display}");
                 let _ = writeln!(stderr, "        {message}");
                 summary.record(&display, TestOutcome::CompileError);
@@ -49,13 +72,15 @@ pub(super) fn run_tests_sequential(
                 }
                 continue;
             }
+            continue;
         };
-        let outcome = run_single_test(
-            path,
-            link.as_ref(),
+        let outcome = run_single_test_prepared(
+            &test.path,
+            test.link.as_ref(),
             config.script_path.as_deref(),
             config.timeout,
             stderr,
+            test.compiled.as_ref(),
         );
         summary.record(&display, outcome);
         if config.fail_fast && outcome.is_failure() {
@@ -87,6 +112,7 @@ pub(super) fn run_tests_parallel(
                 path,
                 display,
                 link,
+                compiled: None,
             }),
             Err(message) => {
                 let output = format!("  FAIL  {display}\n        {message}\n");
@@ -99,6 +125,8 @@ pub(super) fn run_tests_parallel(
             }
         }
     }
+
+    attach_test_images(&mut prepared);
 
     let mut results = preload_results;
     results.extend(parallel::run_tests_parallel(

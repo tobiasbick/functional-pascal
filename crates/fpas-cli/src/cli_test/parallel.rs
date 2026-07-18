@@ -9,7 +9,9 @@ use std::thread;
 use std::time::Duration;
 
 use super::report::TestOutcome;
-use super::run::{LinkContext, run_single_test_capture};
+#[cfg(test)]
+use super::run::run_single_test_capture;
+use super::run::{CompiledTestProgram, LinkContext, run_single_test_capture_prepared};
 
 /// One test ready to execute on a worker thread.
 #[derive(Clone)]
@@ -18,6 +20,7 @@ pub(super) struct PreparedTest {
     pub path: PathBuf,
     pub display: String,
     pub link: Option<LinkContext>,
+    pub compiled: Option<CompiledTestProgram>,
 }
 
 /// Buffered output from one test run, ordered by discovery index.
@@ -134,8 +137,13 @@ fn run_prepared_test(
     script_override: Option<&Path>,
     timeout: Option<Duration>,
 ) -> IndexedTestResult {
-    let (outcome, output_bytes) =
-        run_single_test_capture(&test.path, test.link.as_ref(), script_override, timeout);
+    let (outcome, output_bytes) = run_single_test_capture_prepared(
+        &test.path,
+        test.link.as_ref(),
+        script_override,
+        timeout,
+        test.compiled.as_ref(),
+    );
     IndexedTestResult {
         index: test.index,
         display: test.display,
@@ -203,12 +211,14 @@ mod tests {
                 path: first,
                 display: "one_test.fpas".to_string(),
                 link: None,
+                compiled: None,
             },
             PreparedTest {
                 index: 1,
                 path: second,
                 display: "two_test.fpas".to_string(),
                 link: None,
+                compiled: None,
             },
         ];
 
@@ -246,18 +256,21 @@ mod tests {
                 path: pass,
                 display: "pass_test.fpas".to_string(),
                 link: None,
+                compiled: None,
             },
             PreparedTest {
                 index: 1,
                 path: fail,
                 display: "fail_test.fpas".to_string(),
                 link: None,
+                compiled: None,
             },
             PreparedTest {
                 index: 2,
                 path: later,
                 display: "later_test.fpas".to_string(),
                 link: None,
+                compiled: None,
             },
         ];
 

@@ -141,7 +141,15 @@ impl Worker {
 
             match self.exec_one(self.current_location)? {
                 StepResult::Continue => {}
-                StepResult::Halt => return Ok(()),
+                StepResult::Halt => {
+                    if self.current_task_id == 0
+                        && let Some(entry_ip) = self.pending_entry_ip.take()
+                    {
+                        self.ip = entry_ip;
+                        continue;
+                    }
+                    return Ok(());
+                }
                 StepResult::Suspended => {
                     self.task_suspended = false;
                     if !self.pick_next_task() {

@@ -67,6 +67,8 @@ pub(crate) struct CallFrame {
 /// Internally uses `Worker` threads for parallel task execution.
 pub struct Vm {
     shared: Arc<SharedState>,
+    /// Optional procedure entered after module initialization reaches its halt.
+    entry_ip: Option<usize>,
     /// Pool size for worker threads (0 = main-thread only until first `go`).
     pool_size: usize,
 }
@@ -74,17 +76,31 @@ pub struct Vm {
 impl Vm {
     /// Create a new VM (output is captured, not streamed).
     pub fn new(chunk: Chunk) -> Self {
-        Self::build(chunk, Console::new(), Vec::new())
+        Self::build(Arc::new(chunk), None, Console::new(), Vec::new())
+    }
+
+    /// Create a VM from shared in-memory bytecode and enter one procedure after initialization.
+    ///
+    /// The image remains read-only and may be shared by multiple isolated VM instances. The
+    /// entry offset must come from the image's function table; malformed offsets are reported by
+    /// [`Self::run`] as bytecode control-flow errors.
+    pub fn from_image(chunk: Arc<Chunk>, entry_ip: usize) -> Self {
+        Self::build(chunk, Some(entry_ip), Console::new(), Vec::new())
     }
 
     /// Create a new VM with process arguments visible through `Std.Args`.
     pub fn with_args(chunk: Chunk, args: Vec<String>) -> Self {
-        Self::build(chunk, Console::new(), args)
+        Self::build(Arc::new(chunk), None, Console::new(), args)
     }
 
     /// Create a VM that streams output to the given writer immediately.
     pub fn with_writer(chunk: Chunk, writer: Box<dyn Write + Send>) -> Self {
-        Self::build(chunk, Console::with_writer(writer), Vec::new())
+        Self::build(
+            Arc::new(chunk),
+            None,
+            Console::with_writer(writer),
+            Vec::new(),
+        )
     }
 
     /// Create a VM that streams output and exposes process arguments through `Std.Args`.
@@ -93,10 +109,15 @@ impl Vm {
         writer: Box<dyn Write + Send>,
         args: Vec<String>,
     ) -> Self {
-        Self::build(chunk, Console::with_writer(writer), args)
+        Self::build(Arc::new(chunk), None, Console::with_writer(writer), args)
     }
 
-    fn build(chunk: Chunk, console: Console, program_args: Vec<String>) -> Self {
+    fn build(
+        chunk: Arc<Chunk>,
+        entry_ip: Option<usize>,
+        console: Console,
+        program_args: Vec<String>,
+    ) -> Self {
         // **Documentation:** `docs/pascal/language/concurrency/README.md` (from the repository root).
         //
         // Spawning `available_parallelism() - 1` workers for every `Vm::run()` caused severe
@@ -134,7 +155,11 @@ impl Vm {
             abort_spawned_bytecode: AtomicBool::new(false),
         });
 
-        Self { shared, pool_size }
+        Self {
+            shared,
+            entry_ip,
+            pool_size,
+        }
     }
 
     /// Test-only accessor for [`Self::build`] worker count (spawn chunks only).
@@ -240,7 +265,8 @@ impl Vm {
         // (for example `fpas test --jobs`) do not stack scoped thread blocks on worker threads.
         if self.pool_size == 0 {
             let _shutdown_after_main = ShutdownAfterMain(Arc::clone(&self.shared));
-            let mut main_worker = Worker::new_main(Arc::clone(&self.shared));
+            let mut main_worker =
+                Worker::new_main_with_entry(Arc::clone(&self.shared), self.entry_ip);
             return main_worker.run();
         }
 
@@ -266,7 +292,8 @@ impl Vm {
             // unwinds so pool threads are not left blocked on an empty queue.
             let main_result = {
                 let _shutdown_after_main = ShutdownAfterMain(Arc::clone(&shared));
-                let mut main_worker = Worker::new_main(Arc::clone(&shared));
+                let mut main_worker =
+                    Worker::new_main_with_entry(Arc::clone(&shared), self.entry_ip);
                 main_worker.run()
             };
 

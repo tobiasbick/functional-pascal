@@ -21,6 +21,8 @@ pub(crate) struct Worker {
     pub current_location: SourceLocation,
     pub stack: Vec<Value>,
     pub call_stack: Vec<CallFrame>,
+    /// Procedure entered after the image's module initialization halts.
+    pub pending_entry_ip: Option<usize>,
     pub current_task_id: u64,
     pub current_task_retain_result: bool,
     pub instructions_until_yield: u32,
@@ -39,13 +41,20 @@ pub(crate) struct Worker {
 
 impl Worker {
     /// Create a new worker for the main task (task 0, starts at ip=0).
+    #[cfg(test)]
     pub fn new_main(shared: Arc<SharedState>) -> Self {
+        Self::new_main_with_entry(shared, None)
+    }
+
+    /// Create the main worker with an optional post-initialization entry point.
+    pub fn new_main_with_entry(shared: Arc<SharedState>, entry_ip: Option<usize>) -> Self {
         Self {
             shared,
             ip: 0,
             current_location: SourceLocation::new(1, 1),
             stack: Vec::with_capacity(256),
             call_stack: Vec::new(),
+            pending_entry_ip: entry_ip,
             current_task_id: 0,
             current_task_retain_result: false,
             instructions_until_yield: TIMESLICE,
@@ -66,6 +75,7 @@ impl Worker {
             current_location: SourceLocation::new(1, 1),
             stack: Vec::new(),
             call_stack: Vec::new(),
+            pending_entry_ip: None,
             current_task_id: u64::MAX, // sentinel — no task loaded
             current_task_retain_result: false,
             instructions_until_yield: TIMESLICE,

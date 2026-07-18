@@ -225,7 +225,7 @@ fn graph_open_for_test_second_session_error_restores_headless_nesting() {
 
     Arc::get_mut(&mut shared)
         .expect("shared state should be unique in this test")
-        .chunk = second_open_chunk;
+        .chunk = Arc::new(second_open_chunk);
     {
         let mut worker = Worker::new_main(Arc::clone(&shared));
         let error = worker
@@ -247,7 +247,7 @@ fn graph_open_for_test_second_session_error_restores_headless_nesting() {
 
     Arc::get_mut(&mut shared)
         .expect("shared state should be unique in this test")
-        .chunk = close_chunk;
+        .chunk = Arc::new(close_chunk);
     {
         let mut worker = Worker::new_main(shared);
         worker

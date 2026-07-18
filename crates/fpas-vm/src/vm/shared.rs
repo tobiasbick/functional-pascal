@@ -21,7 +21,7 @@ use fpas_bytecode::{Chunk, Value};
 use fpas_std::{Console, KeyInput, TextInput};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Condvar, Mutex, RwLock};
+use std::sync::{Arc, Condvar, Mutex, RwLock};
 #[cfg(test)]
 use std::time::Duration;
 
@@ -54,7 +54,7 @@ pub(crate) enum TaskResultState {
 /// access individual fields through the appropriate synchronization primitive.
 pub(crate) struct SharedState {
     /// Compiled bytecode (read-only after construction).
-    pub chunk: Chunk,
+    pub chunk: Arc<Chunk>,
 
     /// Process arguments visible to `Std.Args` (read-only after construction).
     pub program_args: Vec<String>,

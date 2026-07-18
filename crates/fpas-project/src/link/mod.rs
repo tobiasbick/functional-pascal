@@ -6,6 +6,7 @@ mod parse;
 mod rewrite;
 mod source_map;
 mod support;
+mod test_bundle;
 
 use crate::StandardLibrary;
 use crate::common::qualified_id_to_string;
@@ -18,6 +19,7 @@ use rewrite::{NameRewriter, rename_top_level_decls};
 use support::{collect_std_uses, internal_link_error, internal_symbol_error, merge_std_uses};
 
 use fpas_parser::{Decl, Program, Unit};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug)]
@@ -49,6 +51,10 @@ pub fn build_program(
 
 pub use library_check::{
     build_library_check_with_source_map, build_library_check_with_standard_library,
+};
+pub use test_bundle::{
+    LinkedTestBundle, build_test_bundle_from_paths,
+    build_test_bundle_from_paths_with_standard_library,
 };
 
 /// Build a single linked `Program` together with the source-path table used to
@@ -87,24 +93,57 @@ fn build_program_with_optional_standard_library(
     standard_library: Option<&StandardLibrary>,
 ) -> Result<LinkedProgram, String> {
     let mut main_program = parse_program_file(main_path)?;
-
     let mut source_paths = vec![main_path.to_path_buf()];
-    let units = parse_unit_files(source_files, &mut source_paths, standard_library)?;
+    let environment = build_link_environment(
+        &main_program.uses,
+        source_files,
+        link_meta,
+        standard_library,
+        &mut source_paths,
+    )?;
+    rewrite_main_program(&mut main_program, main_path, &environment)?;
+
+    let mut declarations = environment.unit_declarations;
+    declarations.append(&mut main_program.declarations);
+    main_program.declarations = declarations;
+    Ok(LinkedProgram {
+        program: main_program,
+        source_paths,
+    })
+}
+
+pub(super) struct LinkEnvironment {
+    units: HashMap<String, UnitFile>,
+    link_meta: ProjectLinkMeta,
+    exports: HashMap<String, HashMap<String, String>>,
+    canonical_units: HashMap<String, Vec<String>>,
+    unit_declarations: Vec<Decl>,
+    std_uses: Vec<fpas_parser::QualifiedId>,
+}
+
+pub(super) fn build_link_environment(
+    root_uses: &[fpas_parser::QualifiedId],
+    source_files: &[PathBuf],
+    link_meta: &ProjectLinkMeta,
+    standard_library: Option<&StandardLibrary>,
+    source_paths: &mut Vec<PathBuf>,
+) -> Result<LinkEnvironment, String> {
+    let units = parse_unit_files(source_files, source_paths, standard_library)?;
     let effective_link_meta = merge_standard_library_link_meta(link_meta, standard_library);
     let import_policy = ImportPolicy::new(&effective_link_meta, &units);
-    import_policy.validate_root_uses(&main_program.uses)?;
+    import_policy.validate_root_uses(root_uses)?;
 
-    let reachable_unit_keys = resolve_reachable_units(&main_program.uses, &units, &import_policy)?;
+    let reachable_unit_keys = resolve_reachable_units(root_uses, &units, &import_policy)?;
     let unit_order = topo_sort_units(&reachable_unit_keys, &units)?;
     let (exports, all_symbols) = collect_unit_symbol_maps(&reachable_unit_keys, &units)?;
 
-    let canonical_units: std::collections::HashMap<String, Vec<String>> = units
+    let canonical_units: HashMap<String, Vec<String>> = units
         .iter()
         .map(|(key, uf)| (key.clone(), uf.unit.name.parts.clone()))
         .collect();
 
-    let mut std_uses = collect_std_uses(&main_program.uses);
-    let mut merged_unit_decls = Vec::<Decl>::new();
+    let mut std_uses = collect_std_uses(root_uses);
+    let mut unit_declarations = Vec::<Decl>::new();
 
     for unit_key in unit_order {
         let Some(unit_file) = units.get(&unit_key) else {
@@ -140,36 +179,47 @@ fn build_program_with_optional_standard_library(
         rewriter.rewrite_declarations(&mut declarations);
         rewriter.raise_first_error()?;
 
-        merged_unit_decls.extend(declarations);
+        unit_declarations.extend(declarations);
     }
 
     retain_intrinsic_std_uses(&mut std_uses, &units);
 
+    Ok(LinkEnvironment {
+        units,
+        link_meta: effective_link_meta,
+        exports,
+        canonical_units,
+        unit_declarations,
+        std_uses,
+    })
+}
+
+pub(super) fn rewrite_main_program(
+    main_program: &mut Program,
+    main_path: &Path,
+    environment: &LinkEnvironment,
+) -> Result<(), String> {
+    let import_policy = ImportPolicy::new(&environment.link_meta, &environment.units);
     let main_imports = build_imports(
         "__main__",
         &main_program.uses,
         None,
-        &exports,
-        &units,
+        &environment.exports,
+        &environment.units,
         &import_policy,
     )?;
     let mut main_rewriter = NameRewriter::new(
         main_path.to_string_lossy().into_owned(),
         &main_imports.resolved,
         &main_imports.ambiguous,
-        &canonical_units,
+        &environment.canonical_units,
     );
     main_rewriter.rewrite_declarations(&mut main_program.declarations);
     main_rewriter.rewrite_statements(&mut main_program.body);
     main_rewriter.raise_first_error()?;
 
-    main_program.uses = std_uses;
-    merged_unit_decls.append(&mut main_program.declarations);
-    main_program.declarations = merged_unit_decls;
-    Ok(LinkedProgram {
-        program: main_program,
-        source_paths,
-    })
+    main_program.uses.clone_from(&environment.std_uses);
+    Ok(())
 }
 
 pub(super) fn merge_standard_library_link_meta(

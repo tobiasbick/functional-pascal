@@ -625,6 +625,7 @@ dependencies = [
 name = "fpas-cli"
 version = "0.0.1"
 dependencies = [
+ "fpas-bytecode",
  "fpas-compiler",
  "fpas-diagnostics",
  "fpas-fmt",

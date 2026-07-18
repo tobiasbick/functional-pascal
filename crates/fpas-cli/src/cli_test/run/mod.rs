@@ -17,11 +17,13 @@ use super::hooks::TestHooks;
 use super::report::TestOutcome;
 
 use hook_exec::{run_optional_teardown, run_test_hook};
-use program::{RunOutput, run_test_program};
+pub(super) use program::CompiledTestProgram;
+use program::{ProgramRunOptions, RunOutput, run_test_program};
 
 /// Project sources used when linking a test program with local units.
 #[derive(Clone)]
 pub(super) struct LinkContext {
+    pub bundle_context: Option<PathBuf>,
     pub source_files: Vec<PathBuf>,
     pub link_meta: project::ProjectLinkMeta,
     pub test_manifest: project::TestManifest,
@@ -37,24 +39,36 @@ pub(super) fn test_display_path(path: &Path) -> std::borrow::Cow<'_, str> {
 }
 
 /// Compiles and runs one test file, capturing stderr-style output for parallel runs.
+#[cfg(test)]
 pub(super) fn run_single_test_capture(
     path: &Path,
     link: Option<&LinkContext>,
     script_override: Option<&Path>,
     timeout: Option<Duration>,
 ) -> (TestOutcome, Vec<u8>) {
+    run_single_test_capture_prepared(path, link, script_override, timeout, None)
+}
+
+pub(super) fn run_single_test_capture_prepared(
+    path: &Path,
+    link: Option<&LinkContext>,
+    script_override: Option<&Path>,
+    timeout: Option<Duration>,
+    compiled: Option<&CompiledTestProgram>,
+) -> (TestOutcome, Vec<u8>) {
     let mut buffer = Vec::new();
-    let outcome = run_single_test(path, link, script_override, timeout, &mut buffer);
+    let outcome =
+        run_single_test_prepared(path, link, script_override, timeout, &mut buffer, compiled);
     (outcome, buffer)
 }
 
-/// Compiles and runs one test file, classifying the result.
-pub(super) fn run_single_test(
+pub(super) fn run_single_test_prepared(
     path: &Path,
     link: Option<&LinkContext>,
     script_override: Option<&Path>,
     timeout: Option<Duration>,
     stderr: &mut dyn Write,
+    compiled: Option<&CompiledTestProgram>,
 ) -> TestOutcome {
     let display = test_display_path(path);
     let has_teardown = link.is_some_and(|context| context.hooks.teardown.is_some());
@@ -79,11 +93,14 @@ pub(super) fn run_single_test(
     let outcome = run_test_program(
         path,
         link,
-        script_override,
-        timeout,
         stderr,
-        &display,
-        body_output,
+        ProgramRunOptions {
+            script_override,
+            timeout,
+            display: &display,
+            output: body_output,
+            compiled,
+        },
     );
 
     if let Some(link) = link

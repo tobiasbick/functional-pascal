@@ -46,13 +46,15 @@ Completion contracts: [handles-and-ownership.md](handles-and-ownership.md), [run
   nested layouts; explicit container and desktop layout passes; and container resize detection.
 - **Implemented:** terminal-too-small detection with minimum, available, and per-axis overflow
   extents while preserving minimum child geometry.
-- Add `TuiScrollView` for explicitly reachable overflow.
+- **Implemented:** headless `TuiScrollView` viewport sizing, preferred content extent, clamped
+  two-axis offsets, resize/content invalidation, and offset layout allocation.
 
 Completion contract: [layout.md](layout.md) and the layout section of [testing.md](testing.md).
 
 ## Phase 4 — Lifecycle, event routing, and actions
 
-- Implement the bounded application loop, posted callback draining, invalidation, and resize handling.
+- **Next:** implement the bounded application loop, posted callback draining, invalidation, and
+  resize handling.
 - **Partial foundation.** Headless application lifecycle events, live action state,
   `TuiAction.OnExecute`, button action binding, and action-before-`OnClick` dispatch are implemented.
 - Integrate the existing lifecycle events with the bounded loop and terminal lifecycle.

@@ -135,6 +135,18 @@ fn tui2_rejects_negative_sizes() {
 }
 
 #[test]
+fn tui2_rejects_negative_scroll_offsets() {
+    let (exit, _stdout, stderr) =
+        run_repo_tui2_program("tests/stdlib/tui2/negative_scroll_offset_runtime_error.fpas");
+
+    assert_ne!(exit, 0, "negative TuiScrollView offset must fail");
+    assert!(
+        stderr.contains("Tui2 scroll offset must not be negative"),
+        "stderr: {stderr}"
+    );
+}
+
+#[test]
 fn tui2_rejects_coordinate_edge_overflow() {
     let (exit, _stdout, stderr) =
         run_repo_tui2_program("tests/stdlib/tui2/edge_overflow_runtime_error.fpas");

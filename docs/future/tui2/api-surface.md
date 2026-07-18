@@ -154,11 +154,23 @@ Container.NeedsLayout(): boolean
 Container.PerformLayout(): boolean
 Container.LayoutFit: TuiLayoutFit                 { read-only property }
 Desktop.LayoutFit: TuiLayoutFit                   { read-only property }
+TuiScrollView.Create(App: TuiApplication): TuiScrollView
+TuiScrollView.AsView(ScrollView: TuiScrollView): TuiView
+TuiScrollView.AsContainer(ScrollView: TuiScrollView): TuiContainer
+ScrollView.Layout: option of TuiLayout             { read-write property }
+ScrollView.Offset: TuiPoint                        { read-write property }
+ScrollView.ViewportSize: TuiSize                   { read-only property }
+ScrollView.ContentSize: TuiSize                    { read-only property }
+ScrollView.MaximumOffset: TuiPoint                 { read-only property }
+ScrollView.NeedsLayout(): boolean
+ScrollView.PerformLayout(): boolean
 ```
 
 Grid construction, form rows, stacked pages, recursive measurement/allocation, and explicit
 container invalidation passes are implemented. `LayoutFit` detects terminal-too-small state without
-compressing minimum geometry. Control-specific measurement remains planned.
+compressing minimum geometry. `TuiScrollView` exposes oversized preferred content through a clamped
+two-axis offset and lays it out at a negative local origin. Control-specific measurement remains
+planned.
 
 ### Containers and top-level views
 

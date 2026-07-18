@@ -60,6 +60,10 @@ exclusion, constrained recursive measurement, policy evaluation, stable remainde
 finite maximum sizes, alignment, and nested rectangle assignment.
 Terminal-too-small coverage verifies empty-container fit, two-axis shortages, preserved minimum
 geometry, desktop forwarding, and recovery after resize.
+Scroll-view coverage verifies empty viewport metrics, preferred content extent, per-axis maximum and
+clamped offsets, negative local allocation, content shrinkage, viewport growth, invalidation, and
+layout ownership cleanup. It also verifies recovery after a pass through the exposed container
+identity. A runtime-error canary verifies that callers cannot assign negative offsets.
 Grid coverage additionally verifies placement overlap rejection, positive spans, inferred tracks,
 span measurement, stable two-axis growth, per-axis alignment, direct child cleanup, and nesting
 through the common layout dispatcher. Form coverage verifies paired insertion, two-column

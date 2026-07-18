@@ -1,0 +1,57 @@
+unit Std.Tui2.Controls.ScrollViewGeometry;
+
+uses
+  Std.Tui2.Geometry.Point, Std.Tui2.Geometry.Rect, Std.Tui2.Geometry.Size, Std.Tui2.Layouts.Layout,
+  Std.Tui2.Layouts.LayoutMeasure, Std.Tui2.Layouts.MeasureResult, Std.Tui2.Layouts.MeasureSpec,
+  Std.Tui2.Views.View;
+
+private function TuiScrollViewGeometryMax(Left: integer; Right: integer): integer;
+begin
+  if Left > Right then
+  begin
+    return Left
+  end;
+  return Right
+end;
+
+private function TuiScrollViewGeometryMin(Left: integer; Right: integer): integer;
+begin
+  if Left < Right then
+  begin
+    return Left
+  end;
+  return Right
+end;
+
+function TuiScrollViewViewportSize(View: TuiView): TuiSize;
+begin
+  var Bounds: TuiRect := View.Bounds;
+  return TuiSize.Create(Bounds.Width, Bounds.Height)
+end;
+
+function TuiScrollViewContentSize(View: TuiView; Layout: option of TuiLayout): TuiSize;
+begin
+  var Viewport: TuiSize := TuiScrollViewViewportSize(View);
+  case Layout of
+    None:
+    begin
+      return Viewport
+    end;
+    Some(Value):
+    begin
+      var Measured: TuiMeasureResult := TuiLayoutMeasure.Measure(Value, TuiMeasureSpec.Unbounded());
+      return TuiSize.Create(TuiScrollViewGeometryMax(Viewport.Width, Measured.Preferred.Width), TuiScrollViewGeometryMax(Viewport.Height, Measured.Preferred.Height))
+    end
+  end
+end;
+
+function TuiScrollViewMaximumOffset(Viewport: TuiSize; Content: TuiSize): TuiPoint;
+begin
+  return TuiPoint.Create(TuiScrollViewGeometryMax(0, Content.Width - Viewport.Width), TuiScrollViewGeometryMax(0, Content.Height -
+                                                                                                                  Viewport.Height))
+end;
+
+function TuiScrollViewClampOffset(Offset: TuiPoint; Maximum: TuiPoint): TuiPoint;
+begin
+  return TuiPoint.Create(TuiScrollViewGeometryMin(Offset.X, Maximum.X), TuiScrollViewGeometryMin(Offset.Y, Maximum.Y))
+end;

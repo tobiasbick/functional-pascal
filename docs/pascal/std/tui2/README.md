@@ -64,6 +64,7 @@ Coordinates are zero-based: `(0, 0)` is the upper-left cell, X grows to the righ
 | `TuiLayoutArrange` | Recursive headless rectangle allocation. |
 | `TuiAction` | A reusable operation with live properties and one `OnExecute` event. |
 | `TuiButton` | A headless semantic button with an optional action and one `OnClick` event. |
+| `TuiScrollView` | A headless viewport that keeps oversized layout content reachable by offset. |
 | `TuiPoint.Create(X, Y)` | Creates a point. |
 | `TuiSize.Create(Width, Height)` | Creates a non-negative size. |
 | `TuiRect.Create(X, Y, Width, Height)` | Creates a rectangle from its stored fields. |
@@ -217,6 +218,27 @@ need to run a layout pass first.
 It exposes the same `Add`, `Contains`, `Remove`, `NeedsLayout`, `PerformLayout`, and read-only
 `LayoutFit` surface, and becomes stale when its application closes. The eventual `App.Desktop`
 property is not exposed yet.
+
+## Headless scroll views
+
+`TuiScrollView.Create(App)` creates a live viewport backed by an internal `TuiContainer`.
+`AsView()` exposes the view used for bounds and parent attachment, while `AsContainer()` exposes the
+container identity when direct child ownership is needed. The scroll view owns one root `Layout`
+with the same attachment, replacement, and destruction rules as a container.
+
+`ViewportSize` is the current view width and height. `ContentSize` is the component-wise maximum of
+that viewport and the root layout's unbounded preferred size. `MaximumOffset` is therefore the
+positive content excess on each axis. The read-write `Offset` property rejects negative coordinates
+and clamps coordinates beyond that maximum. Content or viewport shrinkage clamps a retained offset
+when it is next observed or laid out.
+
+`NeedsLayout()` reports root invalidation or viewport resizing. `PerformLayout()` arranges content at
+the negative local origin `(-Offset.X, -Offset.Y)` using the complete content size. This makes the
+resolved child bounds deterministic in headless applications. Interactive paint clipping, scroll
+input, and scroll bars are not part of this headless control.
+
+Destroying a scroll view destroys its internal container and root layout. Views referenced by the
+layout remain governed by the view tree and are not destroyed merely because the layout is destroyed.
 
 ## Headless layouts
 

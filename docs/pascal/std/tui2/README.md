@@ -47,6 +47,7 @@ Coordinates are zero-based: `(0, 0)` is the upper-left cell, X grows to the righ
 | `TuiSpacer` | A fixed or expanding empty layout extent. |
 | `TuiLayoutItem` | A validated view, nested-layout, or spacer description. |
 | `TuiLayoutItems` | Ordered live item-list operations for a layout. |
+| `TuiLayoutFit` | Minimum, available, and overflowing container extents. |
 | `TuiLayoutDirection` | Horizontal or vertical main-axis direction. |
 | `TuiLayoutKind` | Horizontal, vertical, grid, form, or stacked layout dispatch kind. |
 | `TuiLayoutSettings` | Live margins and spacing operations. |
@@ -206,9 +207,16 @@ height changes. It returns `false` when no layout is attached or the existing ge
 current. Moving a container without resizing it does not require a new pass because child bounds
 are local to the container.
 
+The read-only `LayoutFit` property measures the current root against the container size. Its
+`Minimum` and `Available` fields retain those two extents. `Overflow` contains the positive shortage
+on each axis, and `Fits()` is true only when both shortages are zero. A container without a layout
+has a zero minimum and always fits. The property reflects current inputs immediately; callers do not
+need to run a layout pass first.
+
 `TuiDesktop.Create(App)` creates the one explicit headless root container for an open application.
-It exposes the same `Add`, `Contains`, `Remove`, `NeedsLayout`, and `PerformLayout` operations, and
-becomes stale when its application closes. The eventual `App.Desktop` property is not exposed yet.
+It exposes the same `Add`, `Contains`, `Remove`, `NeedsLayout`, `PerformLayout`, and read-only
+`LayoutFit` surface, and becomes stale when its application closes. The eventual `App.Desktop`
+property is not exposed yet.
 
 ## Headless layouts
 
@@ -319,7 +327,9 @@ the item inside that slot still respects its finite maximum size and alignment.
 expanding spacers consume main-axis space but do not receive view bounds. Hidden views keep their
 previous bounds and are excluded from the pass. When the supplied bounds are below the combined
 minimum, items keep their minimum geometry and can extend beyond the supplied rectangle; a parent
-container is responsible for clipping that overflow.
+container is responsible for clipping that overflow. `Container.LayoutFit` reports the exact
+shortage without reducing item bounds. Headless layout therefore detects terminal-too-small state;
+paint clipping will be applied by the interactive rendering layer.
 
 ```pascal
 var Row: TuiHorizontalLayout := TuiHorizontalLayout.Create(App);

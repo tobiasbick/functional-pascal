@@ -1,0 +1,54 @@
+program Tui2TerminalTooSmallTest;
+
+uses Std.Test, Std.Tui2;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
+  var Desktop: TuiDesktop := TuiDesktop.Create(App);
+  var Container: TuiContainer := TuiDesktop.AsContainer(Desktop);
+  var DesktopView: TuiView := TuiDesktop.AsView(Desktop);
+  DesktopView.Bounds := TuiRect.Create(0, 0, 8, 3);
+  var EmptyFit: TuiLayoutFit := Desktop.LayoutFit;
+  AssertTrue(EmptyFit.Fits());
+  AssertEquals(0, EmptyFit.Minimum.Width);
+  AssertEquals(8, EmptyFit.Available.Width);
+  AssertEquals(0, EmptyFit.Overflow.Width);
+  var Root: TuiHorizontalLayout := TuiHorizontalLayout.Create(App);
+  var First: TuiView := TuiView.Create(App);
+  var Second: TuiView := TuiView.Create(App);
+  First.SizeHint := TuiMeasureResult.Fixed(TuiSize.Create(4, 3));
+  Second.SizeHint := TuiMeasureResult.Fixed(TuiSize.Create(5, 2));
+  AssertTrue(TuiLayoutSettings.SetMargins(Root.AsLayout(), TuiMargins.Uniform(1)));
+  AssertTrue(TuiLayoutSettings.SetSpacing(Root.AsLayout(), 1));
+  AssertTrue(TuiLayoutItems.Add(Root.AsLayout(), TuiLayoutItem.ForView(First, TuiAlignment.Fill(), 0)));
+  AssertTrue(TuiLayoutItems.Add(Root.AsLayout(), TuiLayoutItem.ForView(Second, TuiAlignment.Fill(), 0)));
+  Container.Layout := Some(Root.AsLayout());
+  var TooSmall: TuiLayoutFit := Container.LayoutFit;
+  AssertFalse(TooSmall.Fits());
+  AssertEquals(12, TooSmall.Minimum.Width);
+  AssertEquals(5, TooSmall.Minimum.Height);
+  AssertEquals(8, TooSmall.Available.Width);
+  AssertEquals(3, TooSmall.Available.Height);
+  AssertEquals(4, TooSmall.Overflow.Width);
+  AssertEquals(2, TooSmall.Overflow.Height);
+  AssertTrue(Desktop.PerformLayout());
+  AssertEquals(1, First.Bounds.X);
+  AssertEquals(1, First.Bounds.Y);
+  AssertEquals(4, First.Bounds.Width);
+  AssertEquals(3, First.Bounds.Height);
+  AssertEquals(6, Second.Bounds.X);
+  AssertEquals(5, Second.Bounds.Width);
+  AssertEquals(2, Second.Bounds.Height);
+  DesktopView.Bounds := TuiRect.Create(0, 0, 12, 5);
+  var ExactFit: TuiLayoutFit := Desktop.LayoutFit;
+  AssertTrue(ExactFit.Fits());
+  AssertEquals(0, ExactFit.Overflow.Width);
+  AssertEquals(0, ExactFit.Overflow.Height);
+  AssertTrue(Desktop.NeedsLayout());
+  AssertTrue(Desktop.PerformLayout());
+  AssertFalse(Desktop.NeedsLayout());
+  DesktopView.Destroy();
+  First.Destroy();
+  Second.Destroy();
+  App.Close()
+end.

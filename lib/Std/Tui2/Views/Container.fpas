@@ -1,7 +1,8 @@
 unit Std.Tui2.Views.Container;
 
 uses
-  Std.Array, Std.Tui2.Layouts.Layout, Std.Tui2.Runtime.Application, Std.Tui2.Views.ContainerLayout,
+  Std.Array, Std.Tui2.Layouts.Layout, Std.Tui2.Layouts.LayoutFit, Std.Tui2.Runtime.Application,
+  Std.Tui2.Views.ContainerLayout, Std.Tui2.Views.ContainerLayoutFit,
   Std.Tui2.Views.ContainerLayoutPass, Std.Tui2.Views.View;
 
 private mutable var TuiContainerParentApplicationIds: array of integer := [];
@@ -197,5 +198,12 @@ type
       return TuiContainerLayoutPerformPass(Self.View)
     end;
 
+    function ReadLayoutFit(Self: TuiContainer): TuiLayoutFit;
+    begin
+      TuiContainerRequire(Self.View);
+      return TuiContainerMeasureLayoutFit(Self.View)
+    end;
+
     property Layout: option of TuiLayout read ReadLayout write WriteLayout;
+    property LayoutFit: TuiLayoutFit read ReadLayoutFit;
   end;

@@ -46,5 +46,5 @@ This directory records the remaining plan for the FPAS-native terminal UI librar
 Implemented behavior is documented in the current
 [`Std.Tui2` reference](../../pascal/std/tui2/README.md). Phase 3 now has recursive horizontal,
 vertical, grid, form, and stacked measurement/allocation plus explicit container invalidation passes.
-The next ordered layout work is terminal-too-small handling in
+Terminal-too-small detection is also implemented. The next ordered layout work is `TuiScrollView` in
 [implementation-phases.md](implementation-phases.md).

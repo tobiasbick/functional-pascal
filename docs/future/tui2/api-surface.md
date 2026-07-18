@@ -15,6 +15,7 @@ Std.Tui2 distinguishes immutable or copyable values from identities for live app
 | `TuiPaintContext` | Local bounds, clip, state, and palette for one paint callback. |
 | `TuiMeasureSpec` | Bounded or unbounded measurement constraints per axis. |
 | `TuiMeasureResult` | Minimum, preferred, and maximum sizes returned by measurement. |
+| `TuiLayoutFit` | Minimum, available, and per-axis overflow extents for a container. |
 | `TuiKey` | A normalized key and modifiers when a TUI-specific form is needed. |
 | `TuiEvent` | An event routed through the TUI. |
 | `TuiChangeOrigin` | `User` or `Programmatic` origin for a typed value change. |
@@ -151,10 +152,13 @@ TuiLayoutMeasure.Measure(Layout: TuiLayout; Spec: TuiMeasureSpec): TuiMeasureRes
 TuiLayoutArrange.Arrange(Layout: TuiLayout; Bounds: TuiRect): boolean
 Container.NeedsLayout(): boolean
 Container.PerformLayout(): boolean
+Container.LayoutFit: TuiLayoutFit                 { read-only property }
+Desktop.LayoutFit: TuiLayoutFit                   { read-only property }
 ```
 
 Grid construction, form rows, stacked pages, recursive measurement/allocation, and explicit
-container invalidation passes are implemented. Control-specific measurement remains planned.
+container invalidation passes are implemented. `LayoutFit` detects terminal-too-small state without
+compressing minimum geometry. Control-specific measurement remains planned.
 
 ### Containers and top-level views
 

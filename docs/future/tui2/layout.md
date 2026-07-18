@@ -176,7 +176,11 @@ and control-specific measurement remain planned.
 
 ## Terminal overflow
 
-Minimum sizes are never silently violated. When a nested container receives less space than its measured minimum, its content keeps minimum geometry and is clipped to the container. Applications use `TuiScrollView` when clipped content must remain reachable.
+Minimum sizes are never silently violated. When a container receives less space than its measured
+minimum, its content keeps minimum geometry. The read-only `LayoutFit` property exposes `Minimum`,
+`Available`, and the positive `Overflow` on each axis; `Fits()` reports whether both axes fit. A
+later interactive renderer clips overflow to the container. Applications will use `TuiScrollView`
+when clipped content must remain reachable.
 
 When the terminal is smaller than the desktop minimum, Std.Tui2 replaces normal desktop paint and input with a built-in too-small overlay showing current and required sizes. Only resize and quit actions remain active. Normal layout resumes automatically when the terminal is large enough.
 

@@ -63,11 +63,7 @@ fn build_library_check_with_optional_standard_library(
 
     apply_program_source_id(&mut main_program, 0);
     let mut source_paths = vec![PathBuf::from(LIBRARY_CHECK_STUB_PATH)];
-    let standard_source_files = standard_library.map_or(&[][..], StandardLibrary::source_files);
-    let mut all_source_files = source_files.to_vec();
-    all_source_files.extend_from_slice(standard_source_files);
-    let standard_source_paths = standard_source_files.iter().collect();
-    let units = parse_unit_files(&all_source_files, &mut source_paths, &standard_source_paths)?;
+    let units = parse_unit_files(source_files, &mut source_paths, standard_library)?;
     let effective_link_meta = merge_standard_library_link_meta(link_meta, standard_library);
     let import_policy = super::import_policy::ImportPolicy::new(&effective_link_meta, &units);
 

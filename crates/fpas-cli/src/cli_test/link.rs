@@ -46,9 +46,15 @@ impl LinkContextCache {
         }
 
         let loaded = project::load_project(&project_file)?;
-        let hooks = hooks::discover_test_hooks(&loaded.source_files)?;
+        // Test entry programs are run individually and are never linkable unit sources.
+        let source_files = loaded
+            .source_files
+            .into_iter()
+            .filter(|path| !project::is_test_source_file(path))
+            .collect::<Vec<_>>();
+        let hooks = hooks::discover_test_hooks(&source_files)?;
         let context = LinkContext {
-            source_files: loaded.source_files,
+            source_files,
             link_meta: loaded.link_meta,
             test_manifest: loaded.test_manifest,
             hooks,
@@ -98,5 +104,36 @@ fn find_enclosing_project(start: &Path) -> Result<Option<PathBuf>, String> {
         if !dir.pop() {
             return Ok(None);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_support::{create_temp_dir, write_text};
+
+    #[test]
+    fn context_excludes_test_entry_programs_from_linkable_sources() {
+        let dir = create_temp_dir("fpas-link-context-sources");
+        let project_file = dir.join("suite.fpasprj");
+        let first_test = dir.join("first_test.fpas");
+        let second_test = dir.join("second_test.fpas");
+        let helper = dir.join("fixture.fpas");
+
+        write_text(
+            &project_file,
+            "[project]\nname = \"suite\"\nkind = \"test\"\n\n[sources]\ninclude = [\"*.fpas\"]\n",
+        );
+        write_text(&first_test, "program First;\nbegin end.");
+        write_text(&second_test, "program Second;\nbegin end.");
+        write_text(&helper, "unit Tests.Fixture;\n");
+
+        let context = LinkContextCache::new(None)
+            .context_for_test(&first_test)
+            .expect("test project must load")
+            .expect("test project must provide a link context");
+
+        assert_eq!(context.source_files, vec![helper]);
+        std::fs::remove_dir_all(dir).ok();
     }
 }

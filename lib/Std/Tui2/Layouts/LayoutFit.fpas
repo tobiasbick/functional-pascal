@@ -1,0 +1,33 @@
+unit Std.Tui2.Layouts.LayoutFit;
+
+uses Std.Tui2.Geometry.Size;
+
+private function TuiLayoutFitOverflow(Minimum: integer; Available: integer): integer;
+begin
+  if Minimum > Available then
+  begin
+    return Minimum - Available
+  end;
+  return 0
+end;
+
+type
+  TuiLayoutFit = record
+    Minimum: TuiSize;
+    Available: TuiSize;
+    Overflow: TuiSize;
+
+    static function Create(Minimum: TuiSize; Available: TuiSize): TuiLayoutFit;
+    begin
+      return record
+        Minimum := Minimum;
+        Available := Available;
+        Overflow := TuiSize.Create(TuiLayoutFitOverflow(Minimum.Width, Available.Width), TuiLayoutFitOverflow(Minimum.Height, Available.Height));
+      end
+    end;
+
+    function Fits(Self: TuiLayoutFit): boolean;
+    begin
+      return (Self.Overflow.Width = 0) and (Self.Overflow.Height = 0)
+    end;
+  end;

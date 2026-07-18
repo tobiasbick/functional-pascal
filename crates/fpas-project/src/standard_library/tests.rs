@@ -46,6 +46,39 @@ include = ["Std/**/*.fpas"]
 }
 
 #[test]
+fn loaded_library_links_from_cached_units_without_rereading_sources() {
+    let dir = temp_dir("cached-unit");
+    write_text(
+        &dir.join("stdlib.fpasprj"),
+        r#"[project]
+name = "test-stdlib"
+kind = "library"
+
+[sources]
+include = ["Std/**/*.fpas"]
+"#,
+    );
+    let unit_path = dir.join("Std/Sample.fpas");
+    write_text(
+        &unit_path,
+        "unit Std.Sample;\nconst\n  Value: integer := 42;\n",
+    );
+    let program = dir.join("main.fpas");
+    write_text(
+        &program,
+        "program Main;\nuses Std.Sample;\nbegin\n  var Answer: integer := Value\nend.\n",
+    );
+
+    let library = load_standard_library(&dir).expect("standard library must load");
+    fs::remove_file(unit_path).expect("cached source file must be removable");
+    let linked =
+        build_program_with_standard_library(&program, &[], &ProjectLinkMeta::default(), &library);
+    remove_dir(&dir);
+
+    assert!(linked.is_ok(), "cached standard-library unit must link");
+}
+
+#[test]
 fn private_standard_library_unit_is_not_importable_by_programs() {
     let dir = temp_dir("private-unit");
     write_text(

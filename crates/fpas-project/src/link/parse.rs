@@ -4,9 +4,9 @@ use super::{
     support::canonical_unit_key,
 };
 use crate::common::{parse_compilation_unit_file, qualified_id_to_string, validate_user_unit_name};
-use crate::is_test_source_file;
+use crate::{StandardLibrary, is_test_source_file};
 
-use fpas_parser::{CompilationUnit, Program};
+use fpas_parser::{CompilationUnit, Program, Unit};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -27,13 +27,13 @@ pub(super) fn parse_program_file(path: &Path) -> Result<Program, String> {
 pub(super) fn parse_unit_files(
     source_files: &[PathBuf],
     source_paths: &mut Vec<PathBuf>,
-    standard_source_paths: &std::collections::HashSet<&PathBuf>,
+    standard_library: Option<&StandardLibrary>,
 ) -> Result<HashMap<String, UnitFile>, String> {
     let mut by_unit = HashMap::<String, UnitFile>::new();
 
     for source_path in source_files {
         let parsed = parse_compilation_unit_file(source_path, 0)?.0;
-        let CompilationUnit::Unit(mut unit) = parsed else {
+        let CompilationUnit::Unit(unit) = parsed else {
             if is_test_source_file(source_path) {
                 continue;
             }
@@ -47,33 +47,50 @@ pub(super) fn parse_unit_files(
             ));
         };
 
-        let source_id = next_source_id(source_paths.len())?;
-        source_paths.push(source_path.clone());
-        apply_unit_source_id(&mut unit, source_id);
-        if !standard_source_paths.contains(source_path) {
-            validate_user_unit_name(source_path, &unit.name)?;
-        }
+        insert_unit(&mut by_unit, source_paths, source_path, unit, true)?;
+    }
 
-        let key = canonical_unit_key(&unit.name);
-        if let Some(existing) = by_unit.get(&key) {
-            return Err(format!(
-                "Duplicate unit name `{}` found in `{}` and `{}`.\n  help: Use unique unit names across source files.",
-                qualified_id_to_string(&unit.name),
-                existing.path.to_string_lossy(),
-                source_path.to_string_lossy()
-            ));
+    if let Some(standard_library) = standard_library {
+        for (source_path, unit) in standard_library.parsed_units() {
+            insert_unit(&mut by_unit, source_paths, source_path, unit.clone(), false)?;
         }
-
-        by_unit.insert(
-            key,
-            UnitFile {
-                path: source_path.clone(),
-                unit,
-            },
-        );
     }
 
     Ok(by_unit)
+}
+
+fn insert_unit(
+    by_unit: &mut HashMap<String, UnitFile>,
+    source_paths: &mut Vec<PathBuf>,
+    source_path: &Path,
+    mut unit: Unit,
+    validate_name: bool,
+) -> Result<(), String> {
+    let source_id = next_source_id(source_paths.len())?;
+    source_paths.push(source_path.to_path_buf());
+    apply_unit_source_id(&mut unit, source_id);
+    if validate_name {
+        validate_user_unit_name(source_path, &unit.name)?;
+    }
+
+    let key = canonical_unit_key(&unit.name);
+    if let Some(existing) = by_unit.get(&key) {
+        return Err(format!(
+            "Duplicate unit name `{}` found in `{}` and `{}`.\n  help: Use unique unit names across source files.",
+            qualified_id_to_string(&unit.name),
+            existing.path.to_string_lossy(),
+            source_path.to_string_lossy()
+        ));
+    }
+
+    by_unit.insert(
+        key,
+        UnitFile {
+            path: source_path.to_path_buf(),
+            unit,
+        },
+    );
+    Ok(())
 }
 
 fn next_source_id(source_path_count: usize) -> Result<u32, String> {

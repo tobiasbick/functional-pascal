@@ -89,11 +89,7 @@ fn build_program_with_optional_standard_library(
     let mut main_program = parse_program_file(main_path)?;
 
     let mut source_paths = vec![main_path.to_path_buf()];
-    let standard_source_files = standard_library.map_or(&[][..], StandardLibrary::source_files);
-    let mut all_source_files = source_files.to_vec();
-    all_source_files.extend_from_slice(standard_source_files);
-    let standard_source_paths = standard_source_files.iter().collect();
-    let units = parse_unit_files(&all_source_files, &mut source_paths, &standard_source_paths)?;
+    let units = parse_unit_files(source_files, &mut source_paths, standard_library)?;
     let effective_link_meta = merge_standard_library_link_meta(link_meta, standard_library);
     let import_policy = ImportPolicy::new(&effective_link_meta, &units);
     import_policy.validate_root_uses(&main_program.uses)?;

@@ -18,7 +18,7 @@ Useful contributions include:
 
 When validating examples, use the curated allowlists in [`crates/fpas-cli/src/main_tests/examples.rs`](crates/fpas-cli/src/main_tests/examples.rs) (see also [`examples/README.md`](examples/README.md)):
 
-- `cargo test -p fpas-cli non_interactive_examples_run_successfully` — console programs that exit on their own
+- `cargo test -p fpas-cli example_` — console programs that exit on their own
 - `cargo test -p fpas-cli non_interactive_check_examples_succeed` — `fpas check` only (for example `apps/ide/ide.fpasprj`)
 
 Or run `scripts/run-non-interactive-examples.*` for the run allowlist. Never batch-run every file under `examples/` — interactive TUI and graph demos block until the user quits.
@@ -26,7 +26,7 @@ Or run `scripts/run-non-interactive-examples.*` for the run allowlist. Never bat
 **FPAS tests** (`*_test.fpas`, `uses Std.Test`) belong under [`tests/`](tests/), not `examples/`. Layout: `tests/stdlib/`, `tests/concurrency/`, `tests/runner/`, `tests/console/`, `tests/tui/` (subdirs `views/`, `events/`, `smoke/`, `modals/`), `tests/graph/` (see [`examples/README.md`](examples/README.md) § Stdlib regression suite). Run and verify with:
 
 - `fpas test tests/` or `fpas test tests/suite.fpasprj`
-- `cargo test -p fpas-cli fpas_regression_suite_passes`
+- `cargo test -p fpas-cli fpas_suite_`
 
 Spec: [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md).
 

@@ -2,4 +2,4 @@
 # Safe for CI and agents — does not start interactive TUI/graph demos.
 $ErrorActionPreference = "Stop"
 Set-Location (Join-Path $PSScriptRoot "..")
-cargo test -p fpas-cli non_interactive_examples_run_successfully --
+cargo test -p fpas-cli example_ --

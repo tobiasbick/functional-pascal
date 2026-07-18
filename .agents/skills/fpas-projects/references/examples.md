@@ -60,7 +60,7 @@ Expected behavior:
 ```text
 fpas test tests/
 fpas test tests/suite.fpasprj
-cargo test -p fpas-cli fpas_regression_suite_passes
+cargo test -p fpas-cli fpas_suite_
 ```
 
 Pick one full-suite command; use targeted `fpas test tests/<theme>/` when iterating.

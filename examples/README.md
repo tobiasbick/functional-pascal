@@ -9,7 +9,7 @@ Many examples under `examples/` are **interactive** (TUI alternate screen, nativ
 Use the curated allowlist in [`crates/fpas-cli/src/main_tests/examples.rs`](../crates/fpas-cli/src/main_tests/examples.rs):
 
 ```sh
-cargo test -p fpas-cli non_interactive_examples_run_successfully
+cargo test -p fpas-cli example_
 ```
 
 Or:
@@ -41,7 +41,7 @@ Run via:
 fpas test tests/
 fpas test tests/suite.fpasprj
 fpas test tests/runner/assert_basics_test.fpas
-cargo test -p fpas-cli fpas_regression_suite_passes
+cargo test -p fpas-cli fpas_suite_
 ```
 
 Test files are named `*_test.fpas`. `Skip` tests are reported as skipped (use `--strict` to fail the run). See [`docs/pascal/std/testing/test.md`](../docs/pascal/std/testing/test.md).

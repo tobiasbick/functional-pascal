@@ -56,7 +56,7 @@ Rules:
 - FPAS regression tests live in [`tests/`](../../../tests/), not `examples/`
 - Bundle the suite via [`tests/suite.fpasprj`](../../../tests/suite.fpasprj)
 - Name: `*_test.fpas`, use `Std.Test` where asserting output — spec: [`docs/pascal/std/testing/test.md`](../../../docs/pascal/std/testing/test.md)
-- After FPAS test edits: `fpas test tests/`, `fpas test tests/suite.fpasprj`, or `cargo test -p fpas-cli fpas_regression_suite_passes`
+- After FPAS test edits: `fpas test tests/`, `fpas test tests/suite.fpasprj`, or `cargo test -p fpas-cli fpas_suite_`
 - Add tests only for meaningful behavior — skip trivial or duplicate coverage
 
 If no new test is warranted, state **why** (e.g. refactor-only, covered by existing test X).

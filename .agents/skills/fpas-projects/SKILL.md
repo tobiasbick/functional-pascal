@@ -140,7 +140,7 @@ Discovery with no path:
 
 1. Write `*_test.fpas` under `tests/<theme>/` (`fpas-authoring` skill).
 2. Ensure `tests/suite.fpasprj` `[sources].include` covers the path (extend glob if needed).
-3. Run `fpas test <new-file>` then `fpas test tests/` or `cargo test -p fpas-cli fpas_regression_suite_passes`.
+3. Run `fpas test <new-file>` then `fpas test tests/` or `cargo test -p fpas-cli fpas_suite_`.
 
 ## Common mistakes
 

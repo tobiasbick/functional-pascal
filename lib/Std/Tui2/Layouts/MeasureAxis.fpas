@@ -1,0 +1,56 @@
+unit Std.Tui2.Layouts.MeasureAxis;
+
+uses Std.Tui2.Layouts.MeasureConstraint;
+
+const
+  TuiMeasureAxisIntegerMax: integer := 9223372036854775807;
+
+type
+  TuiMeasureAxisResult = record
+    Preferred: integer;
+    Maximum: integer;
+  end;
+  TuiMeasureAxis = record
+    static function Min(Left: integer; Right: integer): integer;
+    begin
+      if Left < Right then
+      begin
+        return Left
+      end;
+      return Right
+    end;
+
+    static function Max(Left: integer; Right: integer): integer;
+    begin
+      if Left > Right then
+      begin
+        return Left
+      end;
+      return Right
+    end;
+
+    static function Add(Left: integer; Right: integer): integer;
+    begin
+      if Left > TuiMeasureAxisIntegerMax - Right then
+      begin
+        panic('Tui2 layout measurement overflows integer extents')
+      end;
+      return Left + Right
+    end;
+
+    static function Apply(
+  Minimum: integer;
+  Preferred: integer;
+  Maximum: integer;
+  Constraint: TuiMeasureConstraint
+): TuiMeasureAxisResult;
+    begin
+      if not Constraint.IsBounded() then
+      begin
+        return record Preferred := Preferred; Maximum := Maximum; end
+      end;
+      var ConstrainedPreferred: integer := TuiMeasureAxis.Max(Minimum, TuiMeasureAxis.Min(Preferred, Constraint.Limit));
+      var ConstrainedMaximum: integer := TuiMeasureAxis.Max(ConstrainedPreferred, TuiMeasureAxis.Min(Maximum, Constraint.Limit));
+      return record Preferred := ConstrainedPreferred; Maximum := ConstrainedMaximum; end
+    end;
+  end;

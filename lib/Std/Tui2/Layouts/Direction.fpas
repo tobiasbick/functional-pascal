@@ -1,0 +1,7 @@
+unit Std.Tui2.Layouts.Direction;
+
+type
+  TuiLayoutDirection = enum
+    Horizontal;
+    Vertical;
+  end;

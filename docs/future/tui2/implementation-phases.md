@@ -30,16 +30,19 @@ Completion contracts: [handles-and-ownership.md](handles-and-ownership.md), [run
 
 ## Phase 3 — Layout engine
 
-- **Partial foundation.** `TuiMeasureConstraint`, `TuiMeasureSpec`, and `TuiMeasureResult` provide
-  validated pure values. Views retain a size hint and independent size policy in their registry
-  state. Width-dependent view measurement remains.
-- Implement minimum, preferred, and maximum size calculation.
-- **Partial foundation.** `TuiSizePolicy`, `TuiMargins`, `TuiAlignment`, `TuiSpacer`, and
+- **Implemented foundation.** `TuiMeasureConstraint`, `TuiMeasureSpec`, and `TuiMeasureResult`
+  provide validated pure values. Views retain a size hint and independent size policy in registry
+  state. Recursive layout measurement calculates minimum, preferred, and maximum sizes from visible
+  views, nested layouts, spacers, spacing, and margins. Width-dependent control measurement remains.
+- **Implemented foundation.** `TuiSizePolicy`, `TuiMargins`, `TuiAlignment`, `TuiSpacer`, and
   `TuiLayoutItem` are implemented as validated values. `TuiLayoutItems` provides ordered lists,
   exclusive root-or-nested ownership, cycle rejection, stable removal, and nested destruction.
-  Spacing, measurement evaluation, and allocation-time geometry remain.
-- Implement horizontal and vertical layouts, followed by grid, form, and stacked layouts.
-- Support nesting, deterministic cell remainders, clipping below nested minimums, and the terminal-too-small overlay.
+  Immutable layout kinds select the algorithm; live `TuiLayoutSettings` applies margins and spacing.
+- **Implemented:** typed horizontal, vertical, and grid layouts; recursive headless allocation;
+  alignment; stretch/expanding slot growth; finite item maximum enforcement; grid spans; overlap
+  rejection; and deterministic item or track remainders.
+- Implement form and stacked layouts.
+- Integrate arrangement with containers and invalidation, then add terminal-too-small handling.
 - Add `TuiScrollView` for explicitly reachable overflow.
 
 Completion contract: [layout.md](layout.md) and the layout section of [testing.md](testing.md).

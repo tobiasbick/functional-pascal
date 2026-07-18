@@ -1,0 +1,315 @@
+unit Std.Tui2.Layouts.LayoutArrange;
+
+uses
+  Std.Array, Std.Tui2.Geometry.Rect, Std.Tui2.Geometry.Size, Std.Tui2.Layouts.Alignment,
+  Std.Tui2.Layouts.Direction, Std.Tui2.Layouts.GridArrange, Std.Tui2.Layouts.GridLayout,
+  Std.Tui2.Layouts.Layout, Std.Tui2.Layouts.LayoutItem, Std.Tui2.Layouts.LayoutKind,
+  Std.Tui2.Layouts.LayoutContent, Std.Tui2.Layouts.LayoutItems, Std.Tui2.Layouts.LayoutMeasure,
+  Std.Tui2.Layouts.LayoutSettings, Std.Tui2.Layouts.Margins, Std.Tui2.Layouts.MeasureResult,
+  Std.Tui2.Layouts.MeasureSpec, Std.Tui2.Layouts.SizePolicy, Std.Tui2.Layouts.Spacer;
+
+private type TuiLayoutSlot = record
+  Item: TuiLayoutItem;
+  Measured: TuiMeasureResult;
+  MinimumMain: integer;
+  PreferredMain: integer;
+  MaximumMain: integer;
+  MainExtent: integer;
+end;
+
+private function TuiLayoutArrangeMin(Left: integer; Right: integer): integer;
+begin
+  if Left < Right then
+  begin
+    return Left
+  end;
+  return Right
+end;
+
+private function TuiLayoutArrangeMax(Left: integer; Right: integer): integer;
+begin
+  if Left > Right then
+  begin
+    return Left
+  end;
+  return Right
+end;
+
+private function TuiLayoutArrangeVisible(Item: TuiLayoutItem): boolean;
+begin
+  if Item.Kind = TuiLayoutItemKind.View then
+  begin
+    return Item.View.Visible
+  end;
+  return true
+end;
+
+private function TuiLayoutArrangeAlignment(Item: TuiLayoutItem; Horizontal: boolean): TuiAlignmentKind;
+begin
+  if Horizontal then
+  begin
+    return Item.Alignment.Horizontal
+  end;
+  return Item.Alignment.Vertical
+end;
+
+private function TuiLayoutArrangeOffset(Available: integer; Extent: integer; Alignment: TuiAlignmentKind): integer;
+begin
+  case Alignment of
+    TuiAlignmentKind.Leading:
+    begin
+      return 0
+    end;
+    TuiAlignmentKind.Center:
+    begin
+      return (Available - Extent) div 2
+    end;
+    TuiAlignmentKind.Trailing:
+    begin
+      return Available - Extent
+    end;
+    TuiAlignmentKind.Fill:
+    begin
+      return 0
+    end
+  end;
+  return 0
+end;
+
+private function TuiLayoutArrangeGrowthWeight(Item: TuiLayoutItem; Direction: TuiLayoutDirection): integer;
+begin
+  if Item.Stretch > 0 then
+  begin
+    return Item.Stretch
+  end;
+  if (Item.Kind = TuiLayoutItemKind.Spacer) and (Item.Spacer.Kind = TuiSpacerKind.Expanding) then
+  begin
+    return 1
+  end;
+  if Item.Kind = TuiLayoutItemKind.View then
+  begin
+    if (Direction = TuiLayoutDirection.Horizontal) and
+       (Item.View.SizePolicy.Horizontal = TuiSizePolicyKind.Expanding) then
+    begin
+      return 1
+    end;
+    if (Direction = TuiLayoutDirection.Vertical) and
+       (Item.View.SizePolicy.Vertical = TuiSizePolicyKind.Expanding) then
+    begin
+      return 1
+    end
+  end;
+  return 0
+end;
+
+private function TuiLayoutArrangeCrossExtent(
+  Slot: TuiLayoutSlot;
+  Direction: TuiLayoutDirection;
+  Available: integer
+): integer;
+begin
+  mutable var Minimum: integer := Slot.Measured.Minimum.Height;
+  mutable var Preferred: integer := Slot.Measured.Preferred.Height;
+  mutable var Maximum: integer := Slot.Measured.Maximum.Height;
+  mutable var Alignment: TuiAlignmentKind := Slot.Item.Alignment.Vertical;
+  if Direction = TuiLayoutDirection.Vertical then
+  begin
+    Minimum := Slot.Measured.Minimum.Width;
+    Preferred := Slot.Measured.Preferred.Width;
+    Maximum := Slot.Measured.Maximum.Width;
+    Alignment := Slot.Item.Alignment.Horizontal
+  end;
+  mutable var Extent: integer := Preferred;
+  if Alignment = TuiAlignmentKind.Fill then
+  begin
+    Extent := TuiLayoutArrangeMin(Available, Maximum)
+  end;
+  Extent := TuiLayoutArrangeMax(Minimum, Extent);
+  if Available >= Minimum then
+  begin
+    Extent := TuiLayoutArrangeMin(Extent, Available)
+  end;
+  return Extent
+end;
+
+type
+  TuiLayoutArrange = record
+    static function Arrange(Layout: TuiLayout; Bounds: TuiRect): boolean;
+    begin
+      if not Layout.IsAlive() then
+      begin
+        panic('Tui2 cannot arrange a stale layout')
+      end;
+      if Layout.Kind = TuiLayoutKind.Grid then
+      begin
+        var Grid: TuiGridLayout := record Layout := Layout; end;
+        var ArrangeNested: TuiGridArrangeCallback := function(Nested: TuiLayout; NestedBounds: TuiRect): boolean begin
+          return TuiLayoutArrange.Arrange(Nested, NestedBounds)
+        end;
+        return TuiGridArrange.Arrange(Grid, Bounds, ArrangeNested)
+      end;
+      mutable var Direction: TuiLayoutDirection := TuiLayoutDirection.Horizontal;
+      if Layout.Kind = TuiLayoutKind.Vertical then
+      begin
+        Direction := TuiLayoutDirection.Vertical
+      end;
+      var Margins: TuiMargins := TuiLayoutSettings.Margins(Layout);
+      var Content: TuiRect := TuiLayoutContent.Inset(Bounds, Margins);
+      var ContentX: integer := Content.X;
+      var ContentY: integer := Content.Y;
+      var ContentWidth: integer := Content.Width;
+      var ContentHeight: integer := Content.Height;
+      mutable var ContentMain: integer := ContentWidth;
+      mutable var ContentCross: integer := ContentHeight;
+      if Direction = TuiLayoutDirection.Vertical then
+      begin
+        ContentMain := ContentHeight;
+        ContentCross := ContentWidth
+      end;
+      var Spec: TuiMeasureSpec := TuiMeasureSpec.AtMost(TuiSize.Create(ContentWidth, ContentHeight));
+      mutable var Slots: array of TuiLayoutSlot := [];
+      mutable var MinimumTotal: integer := 0;
+      for I: integer := 0 to TuiLayoutItems.Count(Layout) - 1 do
+      begin
+        var Item: TuiLayoutItem := TuiLayoutItems.Get(Layout, I);
+        if TuiLayoutArrangeVisible(Item) then
+        begin
+          var Measured: TuiMeasureResult := TuiLayoutMeasure.MeasureItem(Item, Direction, Spec);
+          mutable var MinimumMain: integer := Measured.Minimum.Width;
+          mutable var PreferredMain: integer := Measured.Preferred.Width;
+          mutable var MaximumMain: integer := Measured.Maximum.Width;
+          if Direction = TuiLayoutDirection.Vertical then
+          begin
+            MinimumMain := Measured.Minimum.Height;
+            PreferredMain := Measured.Preferred.Height;
+            MaximumMain := Measured.Maximum.Height
+          end;
+          if (Item.Kind = TuiLayoutItemKind.Spacer) and (Item.Spacer.Kind = TuiSpacerKind.Expanding) then
+          begin
+            MaximumMain := TuiLayoutArrangeMax(MaximumMain, ContentMain)
+          end;
+          Slots := Std.Array.Concat(Slots, [
+                                             record
+
+                                               Item := Item;
+
+                                               Measured := Measured;
+
+                                               MinimumMain := MinimumMain;
+
+                                               PreferredMain := PreferredMain;
+
+                                               MaximumMain := MaximumMain;
+
+                                               MainExtent := MinimumMain;
+
+                                             end
+
+                                           ]);
+          MinimumTotal := MinimumTotal + MinimumMain
+        end
+      end;
+      var Spacing: integer := TuiLayoutSettings.Spacing(Layout);
+      mutable var SpacingTotal: integer := 0;
+      if Std.Array.Length(Slots) > 1 then
+      begin
+        for I: integer := 1 to Std.Array.Length(Slots) - 1 do
+        begin
+          SpacingTotal := SpacingTotal + Spacing
+        end
+      end;
+      mutable var AvailableForItems: integer := ContentMain - SpacingTotal;
+      if AvailableForItems < 0 then
+      begin
+        AvailableForItems := 0
+      end;
+      if AvailableForItems >= MinimumTotal then
+      begin
+        mutable var Remaining: integer := AvailableForItems - MinimumTotal;
+        mutable var Progress: boolean := true;
+        while (Remaining > 0) and Progress do
+        begin
+          Progress := false;
+          for I: integer := 0 to Std.Array.Length(Slots) - 1 do
+          begin
+            if (Remaining > 0) and (Slots[I].MainExtent < Slots[I].PreferredMain) then
+            begin
+              mutable var Slot: TuiLayoutSlot := Slots[I];
+              Slot.MainExtent := Slot.MainExtent + 1;
+              Slots[I] := Slot;
+              Remaining := Remaining - 1;
+              Progress := true
+            end
+          end
+        end;
+        Progress := true;
+        while (Remaining > 0) and Progress do
+        begin
+          Progress := false;
+          for I: integer := 0 to Std.Array.Length(Slots) - 1 do
+          begin
+            var Weight: integer := TuiLayoutArrangeGrowthWeight(Slots[I].Item, Direction);
+            if Weight > 0 then
+            begin
+              for Share: integer := 1 to Weight do
+              begin
+                if (Remaining > 0) and (Slots[I].MainExtent < ContentMain) then
+                begin
+                  mutable var Slot: TuiLayoutSlot := Slots[I];
+                  Slot.MainExtent := Slot.MainExtent + 1;
+                  Slots[I] := Slot;
+                  Remaining := Remaining - 1;
+                  Progress := true
+                end
+              end
+            end
+          end
+        end
+      end;
+      mutable var Cursor: integer := 0;
+      for I: integer := 0 to Std.Array.Length(Slots) - 1 do
+      begin
+        var Slot: TuiLayoutSlot := Slots[I];
+        var MainHorizontal: boolean := Direction = TuiLayoutDirection.Horizontal;
+        var MainAlignment: TuiAlignmentKind := TuiLayoutArrangeAlignment(Slot.Item, MainHorizontal);
+        mutable var ItemMain: integer := Slot.PreferredMain;
+        if MainAlignment = TuiAlignmentKind.Fill then
+        begin
+          ItemMain := TuiLayoutArrangeMin(Slot.MainExtent, Slot.MaximumMain)
+        end;
+        ItemMain := TuiLayoutArrangeMin(ItemMain, Slot.MainExtent);
+        ItemMain := TuiLayoutArrangeMax(ItemMain, Slot.MinimumMain);
+        var CrossAlignment: TuiAlignmentKind := TuiLayoutArrangeAlignment(Slot.Item, not MainHorizontal);
+        var ItemCross: integer := TuiLayoutArrangeCrossExtent(Slot, Direction, ContentCross);
+        var MainOffset: integer := TuiLayoutArrangeOffset(Slot.MainExtent, ItemMain, MainAlignment);
+        var CrossOffset: integer := TuiLayoutArrangeOffset(ContentCross, ItemCross, CrossAlignment);
+        mutable var ItemX: integer := ContentX + CrossOffset;
+        mutable var ItemY: integer := (ContentY + Cursor) + MainOffset;
+        mutable var ItemWidth: integer := ItemCross;
+        mutable var ItemHeight: integer := ItemMain;
+        if Direction = TuiLayoutDirection.Horizontal then
+        begin
+          ItemX := (ContentX + Cursor) + MainOffset;
+          ItemY := ContentY + CrossOffset;
+          ItemWidth := ItemMain;
+          ItemHeight := ItemCross
+        end;
+        var ItemBounds: TuiRect := TuiRect.Create(ItemX, ItemY, ItemWidth, ItemHeight);
+        case Slot.Item.Kind of
+          TuiLayoutItemKind.View:
+          begin
+            Slot.Item.View.Bounds := ItemBounds
+          end;
+          TuiLayoutItemKind.Layout:
+          begin
+            TuiLayoutArrange.Arrange(Slot.Item.Layout, ItemBounds)
+          end;
+          TuiLayoutItemKind.Spacer:
+          begin
+          end
+        end;
+        Cursor := (Cursor + Slot.MainExtent) + Spacing
+      end;
+      return true
+    end;
+  end;

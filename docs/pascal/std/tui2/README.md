@@ -1,8 +1,9 @@
 # Std.Tui2
 
-`Std.Tui2` provides terminal UI value types plus the first headless live-object surface for
-applications, actions, buttons, and layouts. Rendering, layout allocation, terminal acquisition, and
-interactive input are not exposed yet.
+`Std.Tui2` provides terminal UI value types plus a headless live-object surface for applications,
+actions, buttons, views, and layouts. Horizontal, vertical, and grid layouts can be measured and
+arranged without a terminal. Interactive rendering, terminal acquisition, and input are not exposed
+yet.
 
 ```pascal
 program Geometry;
@@ -46,6 +47,16 @@ Coordinates are zero-based: `(0, 0)` is the upper-left cell, X grows to the righ
 | `TuiSpacer` | A fixed or expanding empty layout extent. |
 | `TuiLayoutItem` | A validated view, nested-layout, or spacer description. |
 | `TuiLayoutItems` | Ordered live item-list operations for a layout. |
+| `TuiLayoutDirection` | Horizontal or vertical main-axis direction. |
+| `TuiLayoutKind` | Horizontal, vertical, or grid layout dispatch kind. |
+| `TuiLayoutSettings` | Live margins and spacing operations. |
+| `TuiHorizontalLayout` | Typed horizontal layout handle. |
+| `TuiVerticalLayout` | Typed vertical layout handle. |
+| `TuiGridPlacement` | A zero-based grid cell with row and column spans. |
+| `TuiGridLayout` | Typed row-and-column layout handle. |
+| `TuiGridItems` | Grid item placement and removal operations. |
+| `TuiLayoutMeasure` | Recursive headless layout measurement. |
+| `TuiLayoutArrange` | Recursive headless rectangle allocation. |
 | `TuiAction` | A reusable operation with live properties and one `OnExecute` event. |
 | `TuiButton` | A headless semantic button with an optional action and one `OnClick` event. |
 | `TuiPoint.Create(X, Y)` | Creates a point. |
@@ -189,7 +200,20 @@ closes. The eventual `App.Desktop` property is not exposed yet.
 `TuiLayout.Create(App)` creates a live application-scoped layout handle. Like views, its `Tag`
 property is live registry state, `Destroy` invalidates it, and a reused slot always has a new
 generation. Closing the application invalidates all remaining layouts. `TuiLayoutItems` manages an
-ordered item list for each live layout. Measurement and allocation are not exposed yet.
+ordered item list for each live layout.
+
+`TuiLayout.CreateKind(App, Kind)` creates a common handle with an explicit immutable kind;
+`Create(App)` is its horizontal shorthand. Applications normally use the typed constructors below.
+
+`TuiHorizontalLayout.Create(App)`, `TuiVerticalLayout.Create(App)`, and
+`TuiGridLayout.Create(App)` create typed handles. `AsLayout()` returns the common identity accepted
+by settings, measurement, arrangement, nesting, and container operations. `IsAlive()` and
+`Destroy()` retain the normal generational-handle behavior.
+
+The common layout's read-only `Kind` property identifies its horizontal, vertical, or grid family.
+`TuiLayoutSettings` retains non-negative margins and non-negative spacing. A generic `TuiLayout`
+defaults to horizontal kind with zero margins and spacing. The settings belong to the live registry
+generation and are discarded when the layout is destroyed.
 
 ## Measurement values
 
@@ -199,16 +223,20 @@ axis; `Unbounded()` and `AtMost(TuiSize)` construct common specifications.
 
 `TuiMeasureResult.Create(Minimum, Preferred, Maximum)` requires the three sizes to be ordered on both
 axes: minimum no greater than preferred, and preferred no greater than maximum. `Fixed(Size)` creates
-a result with the same value for every size. These are pure values; views and layouts do not yet expose
-measurement or allocation operations.
+a result with the same value for every size.
+
+`TuiLayoutMeasure.Measure(Layout, Spec)` recursively combines visible view size hints, nested layout
+results, spacers, spacing, and margins. `AtMost` constrains preferred and maximum extents without
+reducing a declared minimum. Hidden views do not participate. `MeasureItem` exposes the same policy
+evaluation for one layout item and is primarily used by the allocator.
 
 ## Size policies
 
 `TuiSizePolicyKind` has `Fixed`, `Minimum`, `Maximum`, `Preferred`, and `Expanding` values. A
 `TuiSizePolicy` contains independent `Horizontal` and `Vertical` fields. Use `Create` for mixed axes
 or one of the uniform constructors: `Fixed()`, `Minimum()`, `Maximum()`, `Preferred()`, and
-`Expanding()`. A view's `SizePolicy` property retains the selected value. Layout allocation does not
-use policies yet.
+`Expanding()`. A view's `SizePolicy` property retains the selected value. Measurement applies the
+policy on each axis, and arrangement uses `Expanding` to request remaining main-axis cells.
 
 ## Margins and alignment
 
@@ -218,8 +246,8 @@ uses one value on all sides, while `Symmetric(Horizontal, Vertical)` uses one va
 
 `TuiAlignmentKind` has `Leading`, `Center`, `Trailing`, and `Fill` values. Leading means left on the
 horizontal axis and top on the vertical axis; trailing means right and bottom. `TuiAlignment.Create`
-combines independent axes, and matching uniform constructors create the common cases. Layout
-allocation does not apply margins or alignment yet.
+combines independent axes, and matching uniform constructors create the common cases. Arrangement
+reserves margins and spacing, then applies alignment inside each allocated slot.
 
 ## Layout items
 
@@ -242,7 +270,41 @@ view because the view tree owns views. A nested layout has exactly one owner: ei
 another layout. Removing or clearing a nested item destroys that nested layout and its nested
 descendants. Destroying a parent layout does the same. Directly destroying an attached view removes
 its item; directly destroying a nested layout removes its item. Cycles and cross-application items are
-rejected. Layout allocation does not consume the ordered lists yet.
+rejected.
+
+Grid layouts use `TuiGridItems` instead of adding directly through `TuiLayoutItems`.
+`TuiGridPlacement.Cell(Row, Column)` creates a single cell; `Create(Row, Column, RowSpan,
+ColumnSpan)` creates a spanning placement. Indexes are zero-based, spans must be positive, and
+placements may not overlap. `TuiGridItems.Add`, `Count`, `Get`, `PlacementAt`, `RemoveAt`, and
+`Clear` retain the same view and nested-layout ownership rules as the common list. A one-dimensional
+`TuiSpacer` is not a valid grid item.
+
+## Headless layout allocation
+
+`TuiLayoutArrange.Arrange(Layout, Bounds)` performs a complete recursive layout pass for box and grid
+layouts. It reserves margins and inter-item spacing, assigns minimum sizes, moves items toward
+preferred sizes, and then distributes remaining cells by stretch weight or expanding policy.
+Indivisible cells go to earlier items or tracks in stable order. Stretch enlarges an allocated slot;
+the item inside that slot still respects its finite maximum size and alignment.
+
+`Leading`, `Center`, `Trailing`, and `Fill` align the final item rectangle on each axis. Fixed and
+expanding spacers consume main-axis space but do not receive view bounds. Hidden views keep their
+previous bounds and are excluded from the pass. When the supplied bounds are below the combined
+minimum, items keep their minimum geometry and can extend beyond the supplied rectangle; a parent
+container is responsible for clipping that overflow.
+
+```pascal
+var Row: TuiHorizontalLayout := TuiHorizontalLayout.Create(App);
+TuiLayoutSettings.SetMargins(Row.AsLayout(), TuiMargins.Uniform(1));
+TuiLayoutSettings.SetSpacing(Row.AsLayout(), 1);
+TuiLayoutItems.Add(Row.AsLayout(), TuiLayoutItem.ForView(Left, TuiAlignment.Fill(), 1));
+TuiLayoutItems.Add(Row.AsLayout(), TuiLayoutItem.ForView(Right, TuiAlignment.Fill(), 1));
+TuiLayoutArrange.Arrange(Row.AsLayout(), TuiRect.Create(0, 0, 40, 10));
+```
+
+A grid infers its rows and columns from its visible placements. Spanning items contribute their size
+requirements across every covered track, while fixed spacing is counted once between adjacent
+tracks. Item stretch provides the relative growth weight for every covered row and column.
 
 ## Commands and actions
 

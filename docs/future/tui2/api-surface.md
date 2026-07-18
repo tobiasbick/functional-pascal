@@ -26,6 +26,7 @@ Std.Tui2 distinguishes immutable or copyable values from identities for live app
 | `TuiMargins` | Outer layout margins in cells. |
 | `TuiLayoutItem` | A view, nested layout, or spacer entry. |
 | `TuiSpacer` | Fixed or expanding empty layout space. |
+| `TuiLayoutDirection` | Horizontal or vertical layout main axis. |
 
 These records describe values only. They do not own live views or contain copies of mutable widget state.
 
@@ -125,6 +126,27 @@ Container.Layout: TuiLayout                      { read-write property }
 Typed view handles use explicit `AsView` operations so containers can accept different controls without discarding type-specific operations. Layout handles use matching `AsLayout` operations. Downcasts are not public.
 
 Views expose minimum, preferred, and maximum sizes plus independent horizontal and vertical size policies. Containers may attach nested layouts that assign the resolved bounds. See [layout.md](layout.md).
+
+### Layouts
+
+```pascal
+TuiHorizontalLayout.Create(App: TuiApplication): TuiHorizontalLayout
+TuiVerticalLayout.Create(App: TuiApplication): TuiVerticalLayout
+TuiGridLayout.Create(App: TuiApplication): TuiGridLayout
+Horizontal.AsLayout(): TuiLayout
+Vertical.AsLayout(): TuiLayout
+Grid.AsLayout(): TuiLayout
+TuiGridPlacement.Create(Row: integer; Column: integer; RowSpan: integer; ColumnSpan: integer): TuiGridPlacement
+TuiGridItems.Add(Grid: TuiGridLayout; Item: TuiLayoutItem; Placement: TuiGridPlacement): boolean
+TuiLayoutSettings.SetMargins(Layout: TuiLayout; Margins: TuiMargins): boolean
+TuiLayoutSettings.SetSpacing(Layout: TuiLayout; Spacing: integer): boolean
+TuiLayoutMeasure.Measure(Layout: TuiLayout; Spec: TuiMeasureSpec): TuiMeasureResult
+TuiLayoutArrange.Arrange(Layout: TuiLayout; Bounds: TuiRect): boolean
+```
+
+Grid construction, validated cell or span placement, and recursive grid measurement/allocation are
+also implemented. Form and stacked layouts, automatic container invalidation, and control-specific
+measurement remain planned.
 
 ### Containers and top-level views
 

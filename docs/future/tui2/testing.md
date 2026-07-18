@@ -52,7 +52,12 @@ nested destruction while preserving view-tree ownership.
 Container coverage also verifies recursive destruction of nested child subtrees. Desktop coverage
 verifies its single root identity, direct child ownership, and invalidation on application close.
 `TuiLayout` coverage verifies the same slot reuse, stale-generation, tag, and application-close
-contracts before layout items and allocation are introduced. Container-layout coverage verifies
-attachment, direct layout destruction, replacement, and destruction with the container.
+contracts. Container-layout coverage verifies attachment, direct layout destruction, replacement,
+and destruction with the container. Layout-engine coverage verifies typed directions, live margins
+and spacing, hidden-view exclusion, constrained recursive measurement, policy evaluation, stable
+remainder allocation, finite maximum sizes, alignment, and nested rectangle assignment.
+Grid coverage additionally verifies placement overlap rejection, positive spans, inferred tracks,
+span measurement, stable two-axis growth, per-axis alignment, direct child cleanup, and nesting
+through the common layout dispatcher.
 
 Interactive smoke tests remain useful for terminal compatibility, but they are not the primary regression mechanism.

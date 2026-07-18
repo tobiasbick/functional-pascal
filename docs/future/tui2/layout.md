@@ -41,9 +41,9 @@ TuiLayoutItem
 policy on both axes and a fixed zero size hint; both values are retained registry properties that an
 application may replace.
 
-Implemented foundation: `TuiSizePolicy.Create(Horizontal, Vertical)` represents independent axes,
-while `Fixed`, `Minimum`, `Maximum`, `Preferred`, and `Expanding` construct uniform policies.
-Policies are not evaluated until allocation is implemented.
+Implemented: `TuiSizePolicy.Create(Horizontal, Vertical)` represents independent axes, while
+`Fixed`, `Minimum`, `Maximum`, `Preferred`, and `Expanding` construct uniform policies. Recursive
+measurement and horizontal or vertical allocation evaluate these policies.
 
 ## Layout items
 
@@ -61,8 +61,7 @@ Implemented foundation: `TuiSpacer.Fixed` and `Expanding` validate their main-ax
 `TuiLayoutItem.ForView`, `ForLayout`, and `ForSpacer` validate the selected live handle, alignment,
 and non-negative stretch. `TuiLayoutItems` retains the ordered lists. A view can occur in one list;
 removal does not destroy it because the view tree owns it. Nested layouts have exclusive ownership,
-cannot also be a container root, reject cycles, and are destroyed with their parent item. Geometry
-measurement and allocation remain part of the layout engine work.
+cannot also be a container root, reject cycles, and are destroyed with their parent item.
 
 ## Initial layouts
 
@@ -78,9 +77,16 @@ Layouts may contain other layouts. This is the primary mechanism for composing c
 
 Each layout supports outer margins and spacing between neighboring items. Alignment controls whether an item fills its allocated area or uses a smaller aligned rectangle.
 
-Implemented foundation: `TuiMargins` validates outer cell counts and provides uniform and symmetric
+Implemented: `TuiMargins` validates outer cell counts and provides uniform and symmetric
 constructors. `TuiAlignment` combines independent `Leading`, `Center`, `Trailing`, or `Fill` choices
-for both axes. Layouts do not apply either value yet.
+for both axes. A common layout has an immutable horizontal, vertical, or grid kind;
+`TuiLayoutSettings` retains margins and spacing for each live layout. Typed handles provide
+controlled `AsLayout()` conversion.
+
+Implemented grid foundation: `TuiGridLayout` uses the same common handle identity.
+`TuiGridPlacement` validates zero-based cells and positive row or column spans. `TuiGridItems`
+rejects overlap and one-dimensional spacers while preserving common view and nested-layout
+ownership. Rows and columns are inferred from visible placements.
 
 ## Measurement and allocation
 
@@ -101,6 +107,12 @@ Allocation follows these rules:
 
 Hidden views are excluded from measurement and allocation by default. Showing or hiding a view invalidates its parent layout.
 
+Implemented: `TuiLayoutMeasure.Measure` combines visible view hints, policies, nested layouts,
+spacers, spacing, margins, and grid spans. `TuiLayoutArrange.Arrange` performs a recursive headless
+pass and assigns view bounds. Box slots and grid tracks distribute stretch and expanding space in
+stable order while aligned items retain finite maximum sizes. Automatic invalidation and
+container-loop integration remain part of the runtime phase.
+
 ## Invalidation
 
 A layout is invalidated when an input to measurement changes, including:
@@ -115,33 +127,41 @@ A layout is invalidated when an input to measurement changes, including:
 
 Repeated invalidations before the next application iteration are coalesced. Layout completes before repaint so drawing and hit-testing observe the same resolved rectangles.
 
-## Rough API
+## Layout API
 
-The names below show the intended surface, not final signatures:
+The implemented horizontal, vertical, and grid surface is:
 
 ```pascal
-TuiHorizontalLayout.New(App: TuiApplication): TuiHorizontalLayout
-TuiVerticalLayout.New(App: TuiApplication): TuiVerticalLayout
-TuiGridLayout.New(App: TuiApplication): TuiGridLayout
-TuiFormLayout.New(App: TuiApplication): TuiFormLayout
-TuiStackedLayout.New(App: TuiApplication): TuiStackedLayout
+TuiHorizontalLayout.Create(App: TuiApplication): TuiHorizontalLayout
+TuiVerticalLayout.Create(App: TuiApplication): TuiVerticalLayout
+Horizontal.AsLayout(): TuiLayout
+Vertical.AsLayout(): TuiLayout
+TuiLayoutSettings.SetMargins(Layout: TuiLayout; Margins: TuiMargins): boolean
+TuiLayoutSettings.SetSpacing(Layout: TuiLayout; Spacing: integer): boolean
+TuiLayoutMeasure.Measure(Layout: TuiLayout; Spec: TuiMeasureSpec): TuiMeasureResult
+TuiLayoutArrange.Arrange(Layout: TuiLayout; Bounds: TuiRect): boolean
+TuiGridLayout.Create(App: TuiApplication): TuiGridLayout
+TuiGridPlacement.Cell(Row: integer; Column: integer): TuiGridPlacement
+TuiGridPlacement.Create(Row: integer; Column: integer; RowSpan: integer; ColumnSpan: integer): TuiGridPlacement
+TuiGridItems.Add(Grid: TuiGridLayout; Item: TuiLayoutItem; Placement: TuiGridPlacement): boolean
+
+{ Planned layout families }
+TuiFormLayout.Create(App: TuiApplication): TuiFormLayout
+TuiStackedLayout.Create(App: TuiApplication): TuiStackedLayout
 
 TuiLayoutItems.Add(Layout: TuiLayout; Item: TuiLayoutItem)
 TuiLayoutItems.Count(Layout: TuiLayout)
 TuiLayoutItems.Get(Layout: TuiLayout; Index: integer)
 TuiLayoutItems.RemoveAt(Layout: TuiLayout; Index: integer)
 TuiLayoutItems.Clear(Layout: TuiLayout)
-TuiLayout.SetMargins(Layout: TuiLayout; Margins: TuiMargins)
-TuiLayout.SetSpacing(Layout: TuiLayout; Spacing: integer)
 TuiLayout.SetStretch(Layout: TuiLayout; Index: integer; Stretch: integer)
 
 TuiView.SetSizePolicy(View: TuiView; Policy: TuiSizePolicy)
 TuiView.Measure(View: TuiView; Spec: TuiMeasureSpec): TuiMeasureResult
 ```
 
-The `TuiLayoutItems` functions above are implemented. The remaining names illustrate the intended
-allocation surface. Typed layout handles require the same controlled conversion to `TuiLayout` that
-typed view handles use for `TuiView`.
+The item-list functions above are implemented. Per-item stretch replacement, form, stacked, and
+control-specific measurement remain planned.
 
 ## Terminal overflow
 
@@ -155,8 +175,8 @@ When the terminal is smaller than the desktop minimum, Std.Tui2 replaces normal 
 
 Implemented foundation: `TuiMeasureConstraint.Unbounded()` and `AtMost(Limit)` represent one axis;
 `TuiMeasureSpec` combines width and height constraints. `TuiMeasureResult` stores validated minimum,
-preferred, and maximum sizes. A view retains an application-provided `SizeHint`, but does not yet
-calculate a result from a measure specification.
+preferred, and maximum sizes. Current views contribute their retained `SizeHint`; control-owned and
+width-dependent measurement callbacks remain.
 
 Dependent measurement is part of the initial layout engine rather than a later API extension.
 

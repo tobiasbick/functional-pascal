@@ -1,0 +1,29 @@
+unit Std.Tui2.Layouts.VerticalLayout;
+
+uses Std.Tui2.Layouts.Layout, Std.Tui2.Layouts.LayoutKind, Std.Tui2.Runtime.Application;
+
+type
+  TuiVerticalLayout = record
+    Layout: TuiLayout;
+
+    static function Create(App: TuiApplication): TuiVerticalLayout;
+    begin
+      var Layout: TuiLayout := TuiLayout.CreateKind(App, TuiLayoutKind.Vertical);
+      return record Layout := Layout; end
+    end;
+
+    function AsLayout(Self: TuiVerticalLayout): TuiLayout;
+    begin
+      return Self.Layout
+    end;
+
+    function IsAlive(Self: TuiVerticalLayout): boolean;
+    begin
+      return Self.Layout.IsAlive()
+    end;
+
+    procedure Destroy(Self: TuiVerticalLayout);
+    begin
+      Self.Layout.Destroy()
+    end;
+  end;

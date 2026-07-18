@@ -1,0 +1,66 @@
+program Tui2LayoutArrangeTest;
+
+uses Std.Test, Std.Tui2;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
+  var Row: TuiHorizontalLayout := TuiHorizontalLayout.Create(App);
+  var First: TuiView := TuiView.Create(App);
+  var Second: TuiView := TuiView.Create(App);
+  var Third: TuiView := TuiView.Create(App);
+  var ExpandHint: TuiMeasureResult := TuiMeasureResult.Create(TuiSize.Create(1, 1), TuiSize.Create(1, 1), TuiSize.Create(10, 2));
+  First.SizeHint := ExpandHint;
+  Second.SizeHint := ExpandHint;
+  Third.SizeHint := ExpandHint;
+  First.SizePolicy := TuiSizePolicy.Expanding();
+  Second.SizePolicy := TuiSizePolicy.Expanding();
+  Third.SizePolicy := TuiSizePolicy.Expanding();
+  AssertTrue(TuiLayoutItems.Add(Row.AsLayout(), TuiLayoutItem.ForView(First, TuiAlignment.Fill(), 0)));
+  AssertTrue(TuiLayoutItems.Add(Row.AsLayout(), TuiLayoutItem.ForView(Second, TuiAlignment.Fill(), 0)));
+  AssertTrue(TuiLayoutItems.Add(Row.AsLayout(), TuiLayoutItem.ForView(Third, TuiAlignment.Fill(), 0)));
+  AssertTrue(TuiLayoutArrange.Arrange(Row.AsLayout(), TuiRect.Create(10, 4, 8, 2)));
+  AssertEquals(10, First.Bounds.X);
+  AssertEquals(3, First.Bounds.Width);
+  AssertEquals(13, Second.Bounds.X);
+  AssertEquals(3, Second.Bounds.Width);
+  AssertEquals(16, Third.Bounds.X);
+  AssertEquals(2, Third.Bounds.Width);
+  AssertEquals(2, First.Bounds.Height);
+  var AlignedRow: TuiHorizontalLayout := TuiHorizontalLayout.Create(App);
+  var Aligned: TuiView := TuiView.Create(App);
+  Aligned.SizeHint := TuiMeasureResult.Fixed(TuiSize.Create(2, 1));
+  AssertTrue(TuiLayoutItems.Add(AlignedRow.AsLayout(), TuiLayoutItem.ForView(Aligned, TuiAlignment.Center(), 1)));
+  AssertTrue(TuiLayoutArrange.Arrange(AlignedRow.AsLayout(), TuiRect.Create(0, 0, 6, 1)));
+  AssertEquals(2, Aligned.Bounds.X);
+  AssertEquals(2, Aligned.Bounds.Width);
+  var Outer: TuiHorizontalLayout := TuiHorizontalLayout.Create(App);
+  var Column: TuiVerticalLayout := TuiVerticalLayout.Create(App);
+  var Top: TuiView := TuiView.Create(App);
+  var Bottom: TuiView := TuiView.Create(App);
+  Top.SizeHint := TuiMeasureResult.Fixed(TuiSize.Create(3, 2));
+  Bottom.SizeHint := TuiMeasureResult.Fixed(TuiSize.Create(4, 1));
+  AssertTrue(TuiLayoutSettings.SetMargins(Outer.AsLayout(), TuiMargins.Uniform(1)));
+  AssertTrue(TuiLayoutSettings.SetSpacing(Column.AsLayout(), 1));
+  AssertTrue(TuiLayoutItems.Add(Column.AsLayout(), TuiLayoutItem.ForView(Top, TuiAlignment.Fill(), 0)));
+  AssertTrue(TuiLayoutItems.Add(Column.AsLayout(), TuiLayoutItem.ForView(Bottom, TuiAlignment.Fill(), 0)));
+  AssertTrue(TuiLayoutItems.Add(Outer.AsLayout(), TuiLayoutItem.ForLayout(Column.AsLayout(), TuiAlignment.Fill(), 1)));
+  AssertTrue(TuiLayoutArrange.Arrange(Outer.AsLayout(), TuiRect.Create(20, 5, 8, 6)));
+  AssertEquals(21, Top.Bounds.X);
+  AssertEquals(3, Top.Bounds.Width);
+  AssertEquals(6, Top.Bounds.Y);
+  AssertEquals(2, Top.Bounds.Height);
+  AssertEquals(21, Bottom.Bounds.X);
+  AssertEquals(4, Bottom.Bounds.Width);
+  AssertEquals(9, Bottom.Bounds.Y);
+  AssertEquals(1, Bottom.Bounds.Height);
+  First.Destroy();
+  Second.Destroy();
+  Third.Destroy();
+  Aligned.Destroy();
+  Top.Destroy();
+  Bottom.Destroy();
+  Row.Destroy();
+  AlignedRow.Destroy();
+  Outer.Destroy();
+  App.Close()
+end.

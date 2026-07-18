@@ -1,0 +1,27 @@
+unit Std.Tui2.Layouts.LayoutContent;
+
+uses Std.Tui2.Geometry.Rect, Std.Tui2.Layouts.Margins;
+
+private function TuiLayoutContentMin(Left: integer; Right: integer): integer;
+begin
+  if Left < Right then
+  begin
+    return Left
+  end;
+  return Right
+end;
+
+type
+  TuiLayoutContent = record
+    static function Inset(Bounds: TuiRect; Margins: TuiMargins): TuiRect;
+    begin
+      var LeftInset: integer := TuiLayoutContentMin(Margins.Left, Bounds.Width);
+      var WidthAfterLeft: integer := Bounds.Width - LeftInset;
+      var RightInset: integer := TuiLayoutContentMin(Margins.Right, WidthAfterLeft);
+      var TopInset: integer := TuiLayoutContentMin(Margins.Top, Bounds.Height);
+      var HeightAfterTop: integer := Bounds.Height - TopInset;
+      var BottomInset: integer := TuiLayoutContentMin(Margins.Bottom, HeightAfterTop);
+      return TuiRect.Create(Bounds.X + LeftInset, Bounds.Y + TopInset, WidthAfterLeft - RightInset, HeightAfterTop -
+                                                                                                    BottomInset)
+    end;
+  end;

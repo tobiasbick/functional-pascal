@@ -1,0 +1,55 @@
+program Tui2GridLayoutEngineTest;
+
+uses Std.Test, Std.Tui2;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
+  var Grid: TuiGridLayout := TuiGridLayout.Create(App);
+  var First: TuiView := TuiView.Create(App);
+  var Second: TuiView := TuiView.Create(App);
+  var Spanning: TuiView := TuiView.Create(App);
+  First.SizeHint := TuiMeasureResult.Fixed(TuiSize.Create(2, 1));
+  Second.SizeHint := TuiMeasureResult.Fixed(TuiSize.Create(3, 2));
+  Spanning.SizeHint := TuiMeasureResult.Fixed(TuiSize.Create(6, 1));
+  AssertTrue(TuiLayoutSettings.SetMargins(Grid.AsLayout(), TuiMargins.Uniform(1)));
+  AssertTrue(TuiLayoutSettings.SetSpacing(Grid.AsLayout(), 1));
+  AssertTrue(TuiGridItems.Add(Grid, TuiLayoutItem.ForView(First, TuiAlignment.Center(), 1), TuiGridPlacement.Cell(0, 0)));
+  AssertTrue(TuiGridItems.Add(Grid, TuiLayoutItem.ForView(Second, TuiAlignment.Fill(), 1), TuiGridPlacement.Cell(0, 1)));
+  AssertTrue(TuiGridItems.Add(Grid, TuiLayoutItem.ForView(Spanning, TuiAlignment.Trailing(), 1), TuiGridPlacement.Create(1, 0, 1, 2)));
+  var Measured: TuiMeasureResult := TuiLayoutMeasure.Measure(Grid.AsLayout(), TuiMeasureSpec.Unbounded());
+  AssertEquals(8, Measured.Minimum.Width);
+  AssertEquals(6, Measured.Minimum.Height);
+  AssertEquals(8, Measured.Preferred.Width);
+  AssertEquals(6, Measured.Preferred.Height);
+  var Constrained: TuiMeasureResult := TuiLayoutMeasure.Measure(Grid.AsLayout(), TuiMeasureSpec.AtMost(TuiSize.Create(10, 8)));
+  AssertEquals(10, Constrained.Maximum.Width);
+  AssertEquals(8, Constrained.Maximum.Height);
+  AssertTrue(TuiLayoutArrange.Arrange(Grid.AsLayout(), TuiRect.Create(10, 5, 10, 8)));
+  AssertEquals(11, First.Bounds.X);
+  AssertEquals(7, First.Bounds.Y);
+  AssertEquals(2, First.Bounds.Width);
+  AssertEquals(1, First.Bounds.Height);
+  AssertEquals(15, Second.Bounds.X);
+  AssertEquals(6, Second.Bounds.Y);
+  AssertEquals(3, Second.Bounds.Width);
+  AssertEquals(2, Second.Bounds.Height);
+  AssertEquals(13, Spanning.Bounds.X);
+  AssertEquals(11, Spanning.Bounds.Y);
+  AssertEquals(6, Spanning.Bounds.Width);
+  AssertEquals(1, Spanning.Bounds.Height);
+  var Outer: TuiVerticalLayout := TuiVerticalLayout.Create(App);
+  AssertTrue(TuiLayoutItems.Add(Outer.AsLayout(), TuiLayoutItem.ForLayout(Grid.AsLayout(), TuiAlignment.Fill(), 1)));
+  AssertTrue(TuiLayoutArrange.Arrange(Outer.AsLayout(), TuiRect.Create(30, 2, 12, 10)));
+  AssertEquals(32, First.Bounds.X);
+  AssertEquals(4, First.Bounds.Y);
+  AssertEquals(36, Second.Bounds.X);
+  AssertEquals(3, Second.Bounds.Y);
+  AssertEquals(35, Spanning.Bounds.X);
+  AssertEquals(10, Spanning.Bounds.Y);
+  First.Destroy();
+  Second.Destroy();
+  Spanning.Destroy();
+  Outer.Destroy();
+  AssertFalse(Grid.IsAlive());
+  App.Close()
+end.

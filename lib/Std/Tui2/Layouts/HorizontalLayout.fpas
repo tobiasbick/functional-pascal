@@ -1,0 +1,29 @@
+unit Std.Tui2.Layouts.HorizontalLayout;
+
+uses Std.Tui2.Layouts.Layout, Std.Tui2.Layouts.LayoutKind, Std.Tui2.Runtime.Application;
+
+type
+  TuiHorizontalLayout = record
+    Layout: TuiLayout;
+
+    static function Create(App: TuiApplication): TuiHorizontalLayout;
+    begin
+      var Layout: TuiLayout := TuiLayout.CreateKind(App, TuiLayoutKind.Horizontal);
+      return record Layout := Layout; end
+    end;
+
+    function AsLayout(Self: TuiHorizontalLayout): TuiLayout;
+    begin
+      return Self.Layout
+    end;
+
+    function IsAlive(Self: TuiHorizontalLayout): boolean;
+    begin
+      return Self.Layout.IsAlive()
+    end;
+
+    procedure Destroy(Self: TuiHorizontalLayout);
+    begin
+      Self.Layout.Destroy()
+    end;
+  end;

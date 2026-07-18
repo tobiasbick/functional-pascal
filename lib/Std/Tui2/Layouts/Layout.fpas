@@ -1,11 +1,12 @@
 unit Std.Tui2.Layouts.Layout;
 
-uses Std.Array, Std.Tui2.Runtime.Application;
+uses Std.Array, Std.Tui2.Layouts.LayoutKind, Std.Tui2.Runtime.Application;
 
 private mutable var TuiLayoutApplicationIds: array of integer := [];
 private mutable var TuiLayoutGenerations: array of integer := [];
 private mutable var TuiLayoutAlive: array of boolean := [];
 private mutable var TuiLayoutTags: array of integer := [];
+private mutable var TuiLayoutKinds: array of TuiLayoutKind := [];
 
 private procedure TuiLayoutRequire(ApplicationId: integer; Slot: integer; Generation: integer);
 begin
@@ -73,7 +74,7 @@ type
     Slot: integer;
     Generation: integer;
 
-    static function Create(App: TuiApplication): TuiLayout;
+    static function CreateKind(App: TuiApplication; Kind: TuiLayoutKind): TuiLayout;
     begin
       if not App.IsOpen() then
       begin
@@ -88,6 +89,7 @@ type
           TuiLayoutApplicationIds[I] := App.Id;
           TuiLayoutAlive[I] := true;
           TuiLayoutTags[I] := 0;
+          TuiLayoutKinds[I] := Kind;
           break
         end
       end;
@@ -97,6 +99,7 @@ type
         TuiLayoutGenerations := Std.Array.Concat(TuiLayoutGenerations, [1]);
         TuiLayoutAlive := Std.Array.Concat(TuiLayoutAlive, [true]);
         TuiLayoutTags := Std.Array.Concat(TuiLayoutTags, [0]);
+        TuiLayoutKinds := Std.Array.Concat(TuiLayoutKinds, [Kind]);
         Slot := Std.Array.Length(TuiLayoutGenerations)
       end;
       var Layout: TuiLayout := record
@@ -109,6 +112,11 @@ type
       end;
       RegisterApplicationCleanup(App.Id, App.Generation, Cleanup);
       return Layout
+    end;
+
+    static function Create(App: TuiApplication): TuiLayout;
+    begin
+      return TuiLayout.CreateKind(App, TuiLayoutKind.Horizontal)
     end;
 
     function IsAlive(Self: TuiLayout): boolean;
@@ -134,6 +142,12 @@ type
       TuiLayoutTags[Self.Slot - 1] := Value
     end;
 
+    function ReadKind(Self: TuiLayout): TuiLayoutKind;
+    begin
+      TuiLayoutRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      return TuiLayoutKinds[Self.Slot - 1]
+    end;
+
     procedure Destroy(Self: TuiLayout);
     begin
       TuiLayoutRequire(Self.ApplicationId, Self.Slot, Self.Generation);
@@ -142,6 +156,7 @@ type
     end;
 
     property Tag: integer read ReadTag write WriteTag;
+    property Kind: TuiLayoutKind read ReadKind;
   end;
 
 procedure RegisterLayoutCleanup(Layout: TuiLayout; Callback: TuiLayoutCleanupCallback);

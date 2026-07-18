@@ -1,0 +1,26 @@
+program Tui2LayoutSettingsTest;
+
+uses Std.Test, Std.Tui2;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
+  var Horizontal: TuiHorizontalLayout := TuiHorizontalLayout.Create(App);
+  var Vertical: TuiVerticalLayout := TuiVerticalLayout.Create(App);
+  var Generic: TuiLayout := TuiLayout.Create(App);
+  AssertTrue(Horizontal.IsAlive());
+  AssertTrue(Vertical.IsAlive());
+  AssertTrue(Horizontal.AsLayout().Kind = TuiLayoutKind.Horizontal);
+  AssertTrue(Vertical.AsLayout().Kind = TuiLayoutKind.Vertical);
+  AssertTrue(Generic.Kind = TuiLayoutKind.Horizontal);
+  AssertEquals(0, TuiLayoutSettings.Spacing(Horizontal.AsLayout()));
+  AssertEquals(0, TuiLayoutSettings.Margins(Horizontal.AsLayout()).Horizontal());
+  AssertTrue(TuiLayoutSettings.SetSpacing(Horizontal.AsLayout(), 2));
+  AssertTrue(TuiLayoutSettings.SetMargins(Horizontal.AsLayout(), TuiMargins.Create(1, 2, 3, 4)));
+  AssertEquals(2, TuiLayoutSettings.Spacing(Horizontal.AsLayout()));
+  AssertEquals(4, TuiLayoutSettings.Margins(Horizontal.AsLayout()).Horizontal());
+  AssertEquals(6, TuiLayoutSettings.Margins(Horizontal.AsLayout()).Vertical());
+  Horizontal.Destroy();
+  Vertical.Destroy();
+  Generic.Destroy();
+  App.Close()
+end.

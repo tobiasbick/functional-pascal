@@ -1,0 +1,8 @@
+unit Std.Tui2.Layouts.LayoutKind;
+
+type
+  TuiLayoutKind = enum
+    Horizontal;
+    Vertical;
+    Grid;
+  end;

@@ -8,7 +8,11 @@ uses
   Std.Tui2.Layouts.MeasureConstraint, Std.Tui2.Layouts.MeasureSpec, Std.Tui2.Layouts.MeasureResult,
   Std.Tui2.Layouts.SizePolicy, Std.Tui2.Layouts.Margins, Std.Tui2.Layouts.Alignment,
   Std.Tui2.Layouts.Spacer, Std.Tui2.Layouts.LayoutItem, Std.Tui2.Layouts.LayoutItems,
-  Std.Tui2.Actions.Command, Std.Tui2.Actions.Action, Std.Tui2.Controls.Button;
+  Std.Tui2.Layouts.Direction, Std.Tui2.Layouts.LayoutSettings, Std.Tui2.Layouts.HorizontalLayout,
+  Std.Tui2.Layouts.VerticalLayout, Std.Tui2.Layouts.LayoutKind, Std.Tui2.Layouts.GridPlacement,
+  Std.Tui2.Layouts.GridLayout, Std.Tui2.Layouts.GridItems, Std.Tui2.Layouts.LayoutMeasure,
+  Std.Tui2.Layouts.LayoutArrange, Std.Tui2.Actions.Command, Std.Tui2.Actions.Action,
+  Std.Tui2.Controls.Button;
 
 type
   TuiPoint = Std.Tui2.Geometry.Point.TuiPoint;
@@ -42,6 +46,16 @@ type
   TuiLayoutItemKind = Std.Tui2.Layouts.LayoutItem.TuiLayoutItemKind;
   TuiLayoutItem = Std.Tui2.Layouts.LayoutItem.TuiLayoutItem;
   TuiLayoutItems = Std.Tui2.Layouts.LayoutItems.TuiLayoutItems;
+  TuiLayoutDirection = Std.Tui2.Layouts.Direction.TuiLayoutDirection;
+  TuiLayoutKind = Std.Tui2.Layouts.LayoutKind.TuiLayoutKind;
+  TuiLayoutSettings = Std.Tui2.Layouts.LayoutSettings.TuiLayoutSettings;
+  TuiHorizontalLayout = Std.Tui2.Layouts.HorizontalLayout.TuiHorizontalLayout;
+  TuiVerticalLayout = Std.Tui2.Layouts.VerticalLayout.TuiVerticalLayout;
+  TuiGridPlacement = Std.Tui2.Layouts.GridPlacement.TuiGridPlacement;
+  TuiGridLayout = Std.Tui2.Layouts.GridLayout.TuiGridLayout;
+  TuiGridItems = Std.Tui2.Layouts.GridItems.TuiGridItems;
+  TuiLayoutMeasure = Std.Tui2.Layouts.LayoutMeasure.TuiLayoutMeasure;
+  TuiLayoutArrange = Std.Tui2.Layouts.LayoutArrange.TuiLayoutArrange;
   TuiCommand = Std.Tui2.Actions.Command.TuiCommand;
   TuiAction = Std.Tui2.Actions.Action.TuiAction;
   TuiButton = Std.Tui2.Controls.Button.TuiButton;

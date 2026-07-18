@@ -1,0 +1,71 @@
+unit Std.Tui2.Layouts.GridPlacement;
+
+const
+  TuiGridPlacementIntegerMax: integer := 9223372036854775807;
+
+private function TuiGridPlacementRequireNonNegative(Value: integer; Name: string): integer;
+begin
+  if Value < 0 then
+  begin
+    panic(('Tui2 grid ' + Name) + ' must not be negative')
+  end;
+  return Value
+end;
+
+private function TuiGridPlacementRequirePositive(Value: integer; Name: string): integer;
+begin
+  if Value <= 0 then
+  begin
+    panic(('Tui2 grid ' + Name) + ' must be positive')
+  end;
+  return Value
+end;
+
+private function TuiGridPlacementCheckedEdge(Start: integer; Span: integer; Name: string): integer;
+begin
+  if Start > TuiGridPlacementIntegerMax - Span then
+  begin
+    panic(('Tui2 grid ' + Name) + ' overflows integer indexes')
+  end;
+  return Start + Span
+end;
+
+type
+  TuiGridPlacement = record
+    Row: integer;
+    Column: integer;
+    RowSpan: integer;
+    ColumnSpan: integer;
+
+    static function Create(Row: integer; Column: integer; RowSpan: integer; ColumnSpan: integer): TuiGridPlacement;
+    begin
+      TuiGridPlacementRequireNonNegative(Row, 'row');
+      TuiGridPlacementRequireNonNegative(Column, 'column');
+      TuiGridPlacementRequirePositive(RowSpan, 'row span');
+      TuiGridPlacementRequirePositive(ColumnSpan, 'column span');
+      TuiGridPlacementCheckedEdge(Row, RowSpan, 'row span');
+      TuiGridPlacementCheckedEdge(Column, ColumnSpan, 'column span');
+      return record Row := Row; Column := Column; RowSpan := RowSpan; ColumnSpan := ColumnSpan; end
+    end;
+
+    static function Cell(Row: integer; Column: integer): TuiGridPlacement;
+    begin
+      return TuiGridPlacement.Create(Row, Column, 1, 1)
+    end;
+
+    function RowEnd(Self: TuiGridPlacement): integer;
+    begin
+      return TuiGridPlacementCheckedEdge(Self.Row, Self.RowSpan, 'row span')
+    end;
+
+    function ColumnEnd(Self: TuiGridPlacement): integer;
+    begin
+      return TuiGridPlacementCheckedEdge(Self.Column, Self.ColumnSpan, 'column span')
+    end;
+
+    function Overlaps(Self: TuiGridPlacement; Other: TuiGridPlacement): boolean;
+    begin
+      return (((Self.Row < Other.RowEnd()) and (Other.Row < Self.RowEnd())) and (Self.Column < Other.ColumnEnd())) and
+             (Other.Column < Self.ColumnEnd())
+    end;
+  end;

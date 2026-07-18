@@ -44,5 +44,6 @@ This directory records the remaining plan for the FPAS-native terminal UI librar
 ## Current implementation status
 
 Implemented behavior is documented in the current
-[`Std.Tui2` reference](../../pascal/std/tui2/README.md). The next ordered work is the Phase 1 cell
-surface and canvas boundary in [implementation-phases.md](implementation-phases.md).
+[`Std.Tui2` reference](../../pascal/std/tui2/README.md). Phase 3 now has recursive horizontal,
+vertical, and grid measurement/allocation. The next ordered layout work is form and stacked layouts,
+followed by container invalidation integration in [implementation-phases.md](implementation-phases.md).

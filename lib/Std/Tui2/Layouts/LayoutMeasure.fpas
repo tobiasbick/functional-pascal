@@ -1,0 +1,227 @@
+unit Std.Tui2.Layouts.LayoutMeasure;
+
+uses
+  Std.Tui2.Geometry.Size, Std.Tui2.Layouts.Direction, Std.Tui2.Layouts.GridLayout,
+  Std.Tui2.Layouts.GridMeasure, Std.Tui2.Layouts.GridTracks, Std.Tui2.Layouts.Layout,
+  Std.Tui2.Layouts.LayoutItem, Std.Tui2.Layouts.LayoutItems, Std.Tui2.Layouts.LayoutKind,
+  Std.Tui2.Layouts.LayoutSettings, Std.Tui2.Layouts.Margins, Std.Tui2.Layouts.MeasureAxis,
+  Std.Tui2.Layouts.MeasureConstraint, Std.Tui2.Layouts.MeasureResult, Std.Tui2.Layouts.MeasureSpec,
+  Std.Tui2.Layouts.SizePolicy, Std.Tui2.Layouts.Spacer, Std.Tui2.Views.View;
+
+private function TuiLayoutMeasurePolicy(
+  Minimum: integer;
+  Preferred: integer;
+  Maximum: integer;
+  Policy: TuiSizePolicyKind
+): TuiSize;
+begin
+  case Policy of
+    TuiSizePolicyKind.Fixed:
+    begin
+      return TuiSize.Create(Preferred, Preferred)
+    end;
+    TuiSizePolicyKind.Minimum:
+    begin
+      return TuiSize.Create(Preferred, Maximum)
+    end;
+    TuiSizePolicyKind.Maximum:
+    begin
+      return TuiSize.Create(Preferred, Preferred)
+    end;
+    TuiSizePolicyKind.Preferred:
+    begin
+      return TuiSize.Create(Preferred, Maximum)
+    end;
+    TuiSizePolicyKind.Expanding:
+    begin
+      return TuiSize.Create(Preferred, Maximum)
+    end
+  end;
+  return TuiSize.Create(Preferred, Maximum)
+end;
+
+private function TuiLayoutMeasureView(View: TuiView; Spec: TuiMeasureSpec): TuiMeasureResult;
+begin
+  var Hint: TuiMeasureResult := View.SizeHint;
+  var Policy: TuiSizePolicy := View.SizePolicy;
+  var WidthPolicy: TuiSize := TuiLayoutMeasurePolicy(Hint.Minimum.Width, Hint.Preferred.Width, Hint.Maximum.Width, Policy.Horizontal);
+  var HeightPolicy: TuiSize := TuiLayoutMeasurePolicy(Hint.Minimum.Height, Hint.Preferred.Height, Hint.Maximum.Height, Policy.Vertical);
+  mutable var MinimumWidth: integer := Hint.Minimum.Width;
+  mutable var MinimumHeight: integer := Hint.Minimum.Height;
+  if Policy.Horizontal = TuiSizePolicyKind.Fixed then
+  begin
+    MinimumWidth := Hint.Preferred.Width
+  end;
+  if Policy.Horizontal = TuiSizePolicyKind.Minimum then
+  begin
+    MinimumWidth := Hint.Preferred.Width
+  end;
+  if Policy.Vertical = TuiSizePolicyKind.Fixed then
+  begin
+    MinimumHeight := Hint.Preferred.Height
+  end;
+  if Policy.Vertical = TuiSizePolicyKind.Minimum then
+  begin
+    MinimumHeight := Hint.Preferred.Height
+  end;
+  var Width: TuiMeasureAxisResult := TuiMeasureAxis.Apply(MinimumWidth, WidthPolicy.Width, WidthPolicy.Height, Spec.Width);
+  var Height: TuiMeasureAxisResult := TuiMeasureAxis.Apply(MinimumHeight, HeightPolicy.Width, HeightPolicy.Height, Spec.Height);
+  return TuiMeasureResult.Create(TuiSize.Create(MinimumWidth, MinimumHeight), TuiSize.Create(Width.Preferred, Height.Preferred), TuiSize.Create(Width.Maximum, Height.Maximum))
+end;
+
+private function TuiLayoutMeasureSpacer(Item: TuiLayoutItem; Direction: TuiLayoutDirection): TuiMeasureResult;
+begin
+  if Direction = TuiLayoutDirection.Horizontal then
+  begin
+    return TuiMeasureResult.Fixed(TuiSize.Create(Item.Spacer.MinimumExtent, 0))
+  end;
+  return TuiMeasureResult.Fixed(TuiSize.Create(0, Item.Spacer.MinimumExtent))
+end;
+
+private function TuiLayoutMeasureItemVisible(Item: TuiLayoutItem): boolean;
+begin
+  if Item.Kind = TuiLayoutItemKind.View then
+  begin
+    return Item.View.Visible
+  end;
+  return true
+end;
+
+type
+  TuiLayoutMeasure = record
+    static function MeasureItem(Item: TuiLayoutItem; Direction: TuiLayoutDirection; Spec: TuiMeasureSpec): TuiMeasureResult;
+    begin
+      case Item.Kind of
+        TuiLayoutItemKind.View:
+        begin
+          return TuiLayoutMeasureView(Item.View, Spec)
+        end;
+        TuiLayoutItemKind.Layout:
+        begin
+          return TuiLayoutMeasure.Measure(Item.Layout, Spec)
+        end;
+        TuiLayoutItemKind.Spacer:
+        begin
+          return TuiLayoutMeasureSpacer(Item, Direction)
+        end
+      end;
+      return TuiMeasureResult.Fixed(TuiSize.Create(0, 0))
+    end;
+
+    static function Measure(Layout: TuiLayout; Spec: TuiMeasureSpec): TuiMeasureResult;
+    begin
+      if not Layout.IsAlive() then
+      begin
+        panic('Tui2 cannot measure a stale layout')
+      end;
+      if Layout.Kind = TuiLayoutKind.Grid then
+      begin
+        var Grid: TuiGridLayout := record Layout := Layout; end;
+        var MeasureItem: TuiGridMeasureCallback := function(Item: TuiLayoutItem; ChildSpec: TuiMeasureSpec): TuiMeasureResult begin
+          return TuiLayoutMeasure.MeasureItem(Item, TuiLayoutDirection.Horizontal, ChildSpec)
+        end;
+        return TuiGridMeasure.Measure(Grid, Spec, MeasureItem)
+      end;
+      mutable var Direction: TuiLayoutDirection := TuiLayoutDirection.Horizontal;
+      if Layout.Kind = TuiLayoutKind.Vertical then
+      begin
+        Direction := TuiLayoutDirection.Vertical
+      end;
+      mutable var MinimumMain: integer := 0;
+      mutable var PreferredMain: integer := 0;
+      mutable var MaximumMain: integer := 0;
+      mutable var MinimumCross: integer := 0;
+      mutable var PreferredCross: integer := 0;
+      mutable var MaximumCross: integer := 0;
+      mutable var VisibleCount: integer := 0;
+      mutable var CanGrowMain: boolean := false;
+      for I: integer := 0 to TuiLayoutItems.Count(Layout) - 1 do
+      begin
+        var Item: TuiLayoutItem := TuiLayoutItems.Get(Layout, I);
+        if TuiLayoutMeasureItemVisible(Item) then
+        begin
+          var Measured: TuiMeasureResult := TuiLayoutMeasure.MeasureItem(Item, Direction, Spec);
+          mutable var ItemMinimumMain: integer := Measured.Minimum.Width;
+          mutable var ItemPreferredMain: integer := Measured.Preferred.Width;
+          mutable var ItemMaximumMain: integer := Measured.Maximum.Width;
+          mutable var ItemMinimumCross: integer := Measured.Minimum.Height;
+          mutable var ItemPreferredCross: integer := Measured.Preferred.Height;
+          mutable var ItemMaximumCross: integer := Measured.Maximum.Height;
+          if Direction = TuiLayoutDirection.Vertical then
+          begin
+            ItemMinimumMain := Measured.Minimum.Height;
+            ItemPreferredMain := Measured.Preferred.Height;
+            ItemMaximumMain := Measured.Maximum.Height;
+            ItemMinimumCross := Measured.Minimum.Width;
+            ItemPreferredCross := Measured.Preferred.Width;
+            ItemMaximumCross := Measured.Maximum.Width
+          end;
+          MinimumMain := TuiMeasureAxis.Add(MinimumMain, ItemMinimumMain);
+          PreferredMain := TuiMeasureAxis.Add(PreferredMain, ItemPreferredMain);
+          MaximumMain := TuiMeasureAxis.Add(MaximumMain, ItemMaximumMain);
+          MinimumCross := TuiMeasureAxis.Max(MinimumCross, ItemMinimumCross);
+          PreferredCross := TuiMeasureAxis.Max(PreferredCross, ItemPreferredCross);
+          MaximumCross := TuiMeasureAxis.Max(MaximumCross, ItemMaximumCross);
+          VisibleCount := VisibleCount + 1;
+          if Item.Stretch > 0 then
+          begin
+            CanGrowMain := true
+          end;
+          if (Item.Kind = TuiLayoutItemKind.Spacer) and (Item.Spacer.Kind = TuiSpacerKind.Expanding) then
+          begin
+            CanGrowMain := true
+          end;
+          if Item.Kind = TuiLayoutItemKind.View then
+          begin
+            if ((Direction = TuiLayoutDirection.Horizontal) and (Item.View.SizePolicy.Horizontal = TuiSizePolicyKind.Expanding)) or
+               ((Direction = TuiLayoutDirection.Vertical) and (Item.View.SizePolicy.Vertical = TuiSizePolicyKind.Expanding)) then
+            begin
+              CanGrowMain := true
+            end
+          end
+        end
+      end;
+      var Spacing: integer := TuiLayoutSettings.Spacing(Layout);
+      if VisibleCount > 1 then
+      begin
+        mutable var SpacingTotal: integer := 0;
+        for I: integer := 1 to VisibleCount - 1 do
+        begin
+          SpacingTotal := TuiMeasureAxis.Add(SpacingTotal, Spacing)
+        end;
+        MinimumMain := TuiMeasureAxis.Add(MinimumMain, SpacingTotal);
+        PreferredMain := TuiMeasureAxis.Add(PreferredMain, SpacingTotal);
+        MaximumMain := TuiMeasureAxis.Add(MaximumMain, SpacingTotal)
+      end;
+      var Margins: TuiMargins := TuiLayoutSettings.Margins(Layout);
+      mutable var MinimumWidth: integer := TuiMeasureAxis.Add(MinimumCross, Margins.Horizontal());
+      mutable var PreferredWidth: integer := TuiMeasureAxis.Add(PreferredCross, Margins.Horizontal());
+      mutable var MaximumWidth: integer := TuiMeasureAxis.Add(MaximumCross, Margins.Horizontal());
+      mutable var MinimumHeight: integer := TuiMeasureAxis.Add(MinimumMain, Margins.Vertical());
+      mutable var PreferredHeight: integer := TuiMeasureAxis.Add(PreferredMain, Margins.Vertical());
+      mutable var MaximumHeight: integer := TuiMeasureAxis.Add(MaximumMain, Margins.Vertical());
+      if Direction = TuiLayoutDirection.Horizontal then
+      begin
+        MinimumWidth := TuiMeasureAxis.Add(MinimumMain, Margins.Horizontal());
+        PreferredWidth := TuiMeasureAxis.Add(PreferredMain, Margins.Horizontal());
+        MaximumWidth := TuiMeasureAxis.Add(MaximumMain, Margins.Horizontal());
+        MinimumHeight := TuiMeasureAxis.Add(MinimumCross, Margins.Vertical());
+        PreferredHeight := TuiMeasureAxis.Add(PreferredCross, Margins.Vertical());
+        MaximumHeight := TuiMeasureAxis.Add(MaximumCross, Margins.Vertical())
+      end;
+      if CanGrowMain then
+      begin
+        if (Direction = TuiLayoutDirection.Horizontal) and Spec.Width.IsBounded() then
+        begin
+          MaximumWidth := TuiMeasureAxis.Max(MaximumWidth, Spec.Width.Limit)
+        end;
+        if (Direction = TuiLayoutDirection.Vertical) and Spec.Height.IsBounded() then
+        begin
+          MaximumHeight := TuiMeasureAxis.Max(MaximumHeight, Spec.Height.Limit)
+        end
+      end;
+      var Width: TuiMeasureAxisResult := TuiMeasureAxis.Apply(MinimumWidth, PreferredWidth, MaximumWidth, Spec.Width);
+      var Height: TuiMeasureAxisResult := TuiMeasureAxis.Apply(MinimumHeight, PreferredHeight, MaximumHeight, Spec.Height);
+      return TuiMeasureResult.Create(TuiSize.Create(MinimumWidth, MinimumHeight), TuiSize.Create(Width.Preferred, Height.Preferred), TuiSize.Create(Width.Maximum, Height.Maximum))
+    end;
+  end;

@@ -1,0 +1,30 @@
+program Tui2GridItemsTest;
+
+uses Std.Test, Std.Tui2;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
+  var Grid: TuiGridLayout := TuiGridLayout.Create(App);
+  AssertTrue(Grid.AsLayout().Kind = TuiLayoutKind.Grid);
+  var First: TuiView := TuiView.Create(App);
+  var Second: TuiView := TuiView.Create(App);
+  var Nested: TuiVerticalLayout := TuiVerticalLayout.Create(App);
+  var FirstItem: TuiLayoutItem := TuiLayoutItem.ForView(First, TuiAlignment.Fill(), 0);
+  var SecondItem: TuiLayoutItem := TuiLayoutItem.ForView(Second, TuiAlignment.Fill(), 0);
+  AssertTrue(TuiGridItems.Add(Grid, FirstItem, TuiGridPlacement.Cell(0, 0)));
+  AssertFalse(TuiGridItems.CanAdd(Grid, SecondItem, TuiGridPlacement.Cell(0, 0)));
+  AssertTrue(TuiGridItems.Add(Grid, SecondItem, TuiGridPlacement.Cell(0, 1)));
+  AssertTrue(TuiGridItems.Add(Grid, TuiLayoutItem.ForLayout(Nested.AsLayout(), TuiAlignment.Fill(), 1), TuiGridPlacement.Create(1, 0, 1, 2)));
+  AssertFalse(TuiGridItems.CanAdd(Grid, TuiLayoutItem.ForSpacer(TuiSpacer.Fixed(1), TuiAlignment.Fill(), 0), TuiGridPlacement.Cell(2, 0)));
+  AssertEquals(3, TuiGridItems.Count(Grid));
+  AssertEquals(2, TuiGridItems.PlacementAt(Grid, 2).ColumnSpan);
+  First.Destroy();
+  AssertEquals(2, TuiGridItems.Count(Grid));
+  AssertTrue(TuiGridItems.RemoveAt(Grid, 0));
+  AssertEquals(1, TuiGridItems.Count(Grid));
+  AssertTrue(TuiGridItems.Clear(Grid));
+  AssertEquals(0, TuiGridItems.Count(Grid));
+  AssertFalse(Nested.IsAlive());
+  Grid.Destroy();
+  App.Close()
+end.

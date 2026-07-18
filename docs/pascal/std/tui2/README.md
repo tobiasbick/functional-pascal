@@ -195,9 +195,20 @@ by the container. Assigning `None`, assigning a different layout, or destroying 
 the former layout. Destroying an attached layout directly clears the property. A layout cannot belong
 to more than one container.
 
+`NeedsLayout()` reports whether the attached layout requires a headless pass. A newly attached
+layout is dirty. Child insertion or removal, view visibility, size hints, size policies, layout
+settings, stacked-page selection, and invalidation from a nested layout make its root dirty.
+Repeated changes before the next pass are coalesced.
+
+`PerformLayout()` arranges a dirty root into `(0, 0, ContainerWidth, ContainerHeight)`, marks the
+complete nested layout tree clean, and returns `true`. It also runs when the container width or
+height changes. It returns `false` when no layout is attached or the existing geometry remains
+current. Moving a container without resizing it does not require a new pass because child bounds
+are local to the container.
+
 `TuiDesktop.Create(App)` creates the one explicit headless root container for an open application.
-It exposes the same `Add`, `Contains`, and `Remove` operations, and becomes stale when its application
-closes. The eventual `App.Desktop` property is not exposed yet.
+It exposes the same `Add`, `Contains`, `Remove`, `NeedsLayout`, and `PerformLayout` operations, and
+becomes stale when its application closes. The eventual `App.Desktop` property is not exposed yet.
 
 ## Headless layouts
 

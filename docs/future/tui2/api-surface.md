@@ -149,10 +149,12 @@ TuiLayoutSettings.SetMargins(Layout: TuiLayout; Margins: TuiMargins): boolean
 TuiLayoutSettings.SetSpacing(Layout: TuiLayout; Spacing: integer): boolean
 TuiLayoutMeasure.Measure(Layout: TuiLayout; Spec: TuiMeasureSpec): TuiMeasureResult
 TuiLayoutArrange.Arrange(Layout: TuiLayout; Bounds: TuiRect): boolean
+Container.NeedsLayout(): boolean
+Container.PerformLayout(): boolean
 ```
 
-Grid construction, form rows, stacked pages, and recursive measurement/allocation are implemented.
-Automatic container invalidation and control-specific measurement remain planned.
+Grid construction, form rows, stacked pages, recursive measurement/allocation, and explicit
+container invalidation passes are implemented. Control-specific measurement remains planned.
 
 ### Containers and top-level views
 

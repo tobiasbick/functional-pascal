@@ -116,7 +116,9 @@ spacers, spacing, margins, grid spans, form rows, and stacked pages.
 `TuiLayoutArrange.Arrange` performs a recursive headless pass and assigns view bounds. Box slots and
 grid tracks distribute stretch and expanding space in stable order while aligned items retain finite
 maximum sizes. Form rows reuse the grid allocator; stacks allocate only their selected visible page.
-Automatic invalidation and container-loop integration remain part of the runtime phase.
+Layouts track dirty state and propagate nested invalidation to their root. Containers expose an
+explicit coalesced layout pass that also detects size changes. Scheduling that pass automatically in
+the application loop remains part of the runtime phase.
 
 ## Invalidation
 
@@ -130,7 +132,9 @@ A layout is invalidated when an input to measurement changes, including:
 - margins or spacing changes;
 - container or terminal resize.
 
-Repeated invalidations before the next application iteration are coalesced. Layout completes before repaint so drawing and hit-testing observe the same resolved rectangles.
+Repeated invalidations before the next container pass are coalesced. `NeedsLayout()` reports the
+pending work and `PerformLayout()` resolves the complete tree before returning. The application loop
+will run this pass before repaint so drawing and hit-testing observe the same resolved rectangles.
 
 ## Layout API
 

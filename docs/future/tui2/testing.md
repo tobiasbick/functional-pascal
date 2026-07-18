@@ -53,9 +53,11 @@ Container coverage also verifies recursive destruction of nested child subtrees.
 verifies its single root identity, direct child ownership, and invalidation on application close.
 `TuiLayout` coverage verifies the same slot reuse, stale-generation, tag, and application-close
 contracts. Container-layout coverage verifies attachment, direct layout destruction, replacement,
-and destruction with the container. Layout-engine coverage verifies typed directions, live margins
-and spacing, hidden-view exclusion, constrained recursive measurement, policy evaluation, stable
-remainder allocation, finite maximum sizes, alignment, and nested rectangle assignment.
+and destruction with the container. Container-pass coverage verifies initial arrangement, idle-pass
+suppression, resize detection, local coordinates, view-input invalidation, nested propagation, and
+coalescing. Layout-engine coverage verifies typed directions, live margins and spacing, hidden-view
+exclusion, constrained recursive measurement, policy evaluation, stable remainder allocation,
+finite maximum sizes, alignment, and nested rectangle assignment.
 Grid coverage additionally verifies placement overlap rejection, positive spans, inferred tracks,
 span measurement, stable two-axis growth, per-axis alignment, direct child cleanup, and nesting
 through the common layout dispatcher. Form coverage verifies paired insertion, two-column

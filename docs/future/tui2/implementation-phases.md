@@ -42,7 +42,9 @@ Completion contracts: [handles-and-ownership.md](handles-and-ownership.md), [run
   allocation; alignment; stretch/expanding slot growth; finite item maximum enforcement; grid spans;
   form rows; stable stacked measurement; current-page selection; overlap rejection; and deterministic
   item or track remainders.
-- Integrate arrangement with containers and invalidation, then add terminal-too-small handling.
+- **Implemented:** coalesced invalidation from layout items, view measurement inputs, settings, and
+  nested layouts; explicit container and desktop layout passes; and container resize detection.
+- Add terminal-too-small handling.
 - Add `TuiScrollView` for explicitly reachable overflow.
 
 Completion contract: [layout.md](layout.md) and the layout section of [testing.md](testing.md).

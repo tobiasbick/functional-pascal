@@ -1,0 +1,64 @@
+program Tui2ContainerLayoutPassTest;
+
+uses Std.Test, Std.Tui2;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
+  var Container: TuiContainer := TuiContainer.Create(App);
+  var ContainerView: TuiView := TuiContainer.AsView(Container);
+  ContainerView.Bounds := TuiRect.Create(10, 6, 8, 3);
+  var Root: TuiHorizontalLayout := TuiHorizontalLayout.Create(App);
+  var Child: TuiView := TuiView.Create(App);
+  Child.SizeHint := TuiMeasureResult.Fixed(TuiSize.Create(2, 1));
+  AssertTrue(TuiLayoutItems.Add(Root.AsLayout(), TuiLayoutItem.ForView(Child, TuiAlignment.Fill(), 0)));
+  Container.Layout := Some(Root.AsLayout());
+  AssertTrue(Container.NeedsLayout());
+  AssertTrue(Container.PerformLayout());
+  AssertFalse(Container.NeedsLayout());
+  AssertFalse(Container.PerformLayout());
+  AssertEquals(0, Child.Bounds.X);
+  AssertEquals(0, Child.Bounds.Y);
+  AssertEquals(2, Child.Bounds.Width);
+  AssertEquals(1, Child.Bounds.Height);
+  ContainerView.Bounds := TuiRect.Create(30, 12, 8, 3);
+  AssertFalse(Container.NeedsLayout());
+  ContainerView.Bounds := TuiRect.Create(30, 12, 10, 4);
+  AssertTrue(Container.NeedsLayout());
+  AssertTrue(Container.PerformLayout());
+  AssertFalse(Container.NeedsLayout());
+  Child.SizeHint := TuiMeasureResult.Fixed(TuiSize.Create(4, 2));
+  AssertTrue(Container.NeedsLayout());
+  Child.SizeHint := TuiMeasureResult.Fixed(TuiSize.Create(4, 2));
+  AssertTrue(Container.PerformLayout());
+  AssertFalse(Container.NeedsLayout());
+  AssertEquals(4, Child.Bounds.Width);
+  AssertEquals(2, Child.Bounds.Height);
+  Child.Visible := false;
+  AssertTrue(Container.NeedsLayout());
+  AssertTrue(Container.PerformLayout());
+  AssertFalse(Container.NeedsLayout());
+  Child.Visible := true;
+  AssertTrue(Container.NeedsLayout());
+  AssertTrue(Container.PerformLayout());
+  var Nested: TuiVerticalLayout := TuiVerticalLayout.Create(App);
+  var NestedChild: TuiView := TuiView.Create(App);
+  NestedChild.SizeHint := TuiMeasureResult.Fixed(TuiSize.Create(1, 1));
+  AssertTrue(TuiLayoutItems.Add(Nested.AsLayout(), TuiLayoutItem.ForView(NestedChild, TuiAlignment.Fill(), 0)));
+  AssertTrue(TuiLayoutItems.Add(Root.AsLayout(), TuiLayoutItem.ForLayout(Nested.AsLayout(), TuiAlignment.Fill(), 0)));
+  AssertTrue(Container.PerformLayout());
+  AssertFalse(Container.NeedsLayout());
+  AssertTrue(TuiLayoutSettings.SetSpacing(Nested.AsLayout(), 1));
+  AssertTrue(TuiLayoutSettings.SetSpacing(Nested.AsLayout(), 2));
+  AssertTrue(Container.NeedsLayout());
+  AssertTrue(Container.PerformLayout());
+  AssertFalse(Container.NeedsLayout());
+  AssertFalse(Container.PerformLayout());
+  ContainerView.Destroy();
+  AssertFalse(Root.IsAlive());
+  AssertFalse(Nested.IsAlive());
+  AssertTrue(Child.IsAlive());
+  AssertTrue(NestedChild.IsAlive());
+  Child.Destroy();
+  NestedChild.Destroy();
+  App.Close()
+end.

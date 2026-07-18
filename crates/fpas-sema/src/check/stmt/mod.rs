@@ -82,6 +82,8 @@ impl Checker {
                 span,
             } => self.check_call_stmt(designator, args, *span),
 
+            Stmt::Expression { expr, span } => self.check_postfix_statement(expr, *span),
+
             Stmt::Go { expr, span } => {
                 // `go` accepts both procedure and function calls.
                 if let Expr::Call {

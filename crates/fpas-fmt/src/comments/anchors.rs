@@ -36,6 +36,7 @@ pub(crate) fn stmt_start(stmt: &Stmt) -> usize {
         | Stmt::Break(span)
         | Stmt::Continue(span)
         | Stmt::Call { span, .. }
+        | Stmt::Expression { span, .. }
         | Stmt::Go { span, .. } => span.offset,
     }
 }
@@ -58,6 +59,7 @@ pub(crate) fn stmt_end(stmt: &Stmt) -> usize {
         | Stmt::Break(span)
         | Stmt::Continue(span)
         | Stmt::Call { span, .. }
+        | Stmt::Expression { span, .. }
         | Stmt::Go { span, .. } => span_end(*span),
     }
 }

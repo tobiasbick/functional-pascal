@@ -1,6 +1,6 @@
 //! Postfix expression chaining: `.Field`, `[Index]`, and `.Method(args)`.
 //!
-//! **Documentation:** `docs/pascal/language/functions/README.md`
+//! **Documentation:** `docs/pascal/language/functions/postfix-chaining.md`
 
 use super::super::Checker;
 use crate::check::MethodCallTarget;
@@ -12,20 +12,67 @@ use fpas_parser::{Expr, PostfixOperation};
 impl Checker {
     /// Type-check a primary expression followed by one or more postfix suffixes.
     ///
-    /// **Documentation:** `docs/pascal/language/functions/README.md`
+    /// **Documentation:** `docs/pascal/language/functions/postfix-chaining.md`
     pub(crate) fn check_postfix_expr(
         &mut self,
         base: &Expr,
         operations: &[PostfixOperation],
     ) -> Ty {
+        self.check_postfix_chain(base, operations, false)
+    }
+
+    /// Type-check a postfix chain used as a statement.
+    ///
+    /// The final method may be a procedure because its `Unit` result is discarded.
+    /// **Documentation:** `docs/pascal/language/functions/postfix-chaining.md`
+    pub(crate) fn check_postfix_statement(&mut self, expr: &Expr, span: Span) {
+        let Expr::Postfix {
+            base, operations, ..
+        } = expr
+        else {
+            self.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                "Expression statement must be a postfix method call",
+                "End the statement with `.Method(...)`.",
+                span,
+            );
+            self.check_expr(expr);
+            return;
+        };
+        if !matches!(operations.last(), Some(PostfixOperation::MethodCall { .. })) {
+            self.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                "Postfix expression statement must end with a method call",
+                "End the statement with `.Method(...)`; fields and indexes are values, not statements.",
+                span,
+            );
+            self.check_postfix_chain(base, operations, false);
+            return;
+        }
+        self.check_postfix_chain(base, operations, true);
+    }
+
+    fn check_postfix_chain(
+        &mut self,
+        base: &Expr,
+        operations: &[PostfixOperation],
+        allow_final_procedure: bool,
+    ) -> Ty {
         let mut ty = self.check_expr(base);
-        for operation in operations {
-            ty = self.check_postfix_operation(&ty, operation);
+        for (index, operation) in operations.iter().enumerate() {
+            let procedure_result_is_discarded =
+                allow_final_procedure && index + 1 == operations.len();
+            ty = self.check_postfix_operation(&ty, operation, procedure_result_is_discarded);
         }
         ty
     }
 
-    fn check_postfix_operation(&mut self, ty: &Ty, operation: &PostfixOperation) -> Ty {
+    fn check_postfix_operation(
+        &mut self,
+        ty: &Ty,
+        operation: &PostfixOperation,
+        procedure_result_is_discarded: bool,
+    ) -> Ty {
         if ty.is_error() {
             match operation {
                 PostfixOperation::Field { .. } => {}
@@ -52,9 +99,14 @@ impl Checker {
             PostfixOperation::Index { index, span } => {
                 self.check_index_access(&resolved, index, *span)
             }
-            PostfixOperation::MethodCall { name, args, span } => {
-                self.check_postfix_method_call(&resolved, name, args, *span, operation)
-            }
+            PostfixOperation::MethodCall { name, args, span } => self.check_postfix_method_call(
+                &resolved,
+                name,
+                args,
+                *span,
+                operation,
+                procedure_result_is_discarded,
+            ),
         }
     }
 
@@ -65,6 +117,7 @@ impl Checker {
         args: &[Expr],
         span: Span,
         operation: &PostfixOperation,
+        procedure_result_is_discarded: bool,
     ) -> Ty {
         let Ty::Record(record_ty) = receiver_ty else {
             if !receiver_ty.is_error() {
@@ -159,13 +212,17 @@ impl Checker {
                     args,
                     span,
                 );
-                self.error_with_code(
-                    SEMA_TYPE_MISMATCH,
-                    format!("Method procedure `{qualified}` does not return a value"),
-                    "Use a method function instead if you need a return value.",
-                    span,
-                );
-                Ty::Error
+                if procedure_result_is_discarded {
+                    Ty::Unit
+                } else {
+                    self.error_with_code(
+                        SEMA_TYPE_MISMATCH,
+                        format!("Method procedure `{qualified}` does not return a value"),
+                        "Use a method function instead if you need a return value, or make the procedure the final call of a statement.",
+                        span,
+                    );
+                    Ty::Error
+                }
             }
         }
     }

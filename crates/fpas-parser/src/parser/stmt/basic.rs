@@ -65,25 +65,52 @@ impl Parser {
                 value,
                 span: self.span_from(start),
             }
-        } else if self.check(&Token::LParen) {
-            self.advance();
-            let args = if self.check(&Token::RParen) {
-                Vec::new()
-            } else {
-                self.parse_arg_list()
-            };
-            self.expect(&Token::RParen);
-            Stmt::Call {
-                designator,
-                args,
-                span: self.span_from(start),
-            }
         } else {
-            Stmt::Call {
-                designator,
-                args: Vec::new(),
-                span: self.span_from(start),
+            let base = if self.eat(&Token::LParen) {
+                let args = if self.check(&Token::RParen) {
+                    Vec::new()
+                } else {
+                    self.parse_arg_list()
+                };
+                self.expect(&Token::RParen);
+                Expr::Call {
+                    designator,
+                    args,
+                    span: self.span_from(start),
+                }
+            } else {
+                Expr::Designator(designator)
+            };
+            let expr = self.apply_postfix_suffixes(base, start);
+            match expr {
+                Expr::Call {
+                    designator,
+                    args,
+                    span,
+                } => Stmt::Call {
+                    designator,
+                    args,
+                    span,
+                },
+                Expr::Designator(designator) => Stmt::Call {
+                    span: designator.span,
+                    designator,
+                    args: Vec::new(),
+                },
+                expr => Stmt::Expression {
+                    span: self.span_from(start),
+                    expr,
+                },
             }
+        }
+    }
+
+    pub(super) fn parse_expression_stmt(&mut self) -> Stmt {
+        let start = self.current_span();
+        let expr = self.parse_expression();
+        Stmt::Expression {
+            expr,
+            span: self.span_from(start),
         }
     }
 }

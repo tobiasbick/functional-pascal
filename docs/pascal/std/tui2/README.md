@@ -45,6 +45,7 @@ Coordinates are zero-based: `(0, 0)` is the upper-left cell, X grows to the righ
 | `TuiAlignment` | Independent horizontal and vertical item alignment. |
 | `TuiSpacer` | A fixed or expanding empty layout extent. |
 | `TuiLayoutItem` | A validated view, nested-layout, or spacer description. |
+| `TuiLayoutItems` | Ordered live item-list operations for a layout. |
 | `TuiAction` | A reusable operation with live properties and one `OnExecute` event. |
 | `TuiButton` | A headless semantic button with an optional action and one `OnClick` event. |
 | `TuiPoint.Create(X, Y)` | Creates a point. |
@@ -187,8 +188,8 @@ closes. The eventual `App.Desktop` property is not exposed yet.
 
 `TuiLayout.Create(App)` creates a live application-scoped layout handle. Like views, its `Tag`
 property is live registry state, `Destroy` invalidates it, and a reused slot always has a new
-generation. Closing the application invalidates all remaining layouts. Layout item descriptions are
-available, but live item lists, allocation, and nested-layout ownership are not exposed yet.
+generation. Closing the application invalidates all remaining layouts. `TuiLayoutItems` manages an
+ordered item list for each live layout. Measurement and allocation are not exposed yet.
 
 ## Measurement values
 
@@ -229,8 +230,19 @@ constructors reject negative extents.
 A `TuiLayoutItem` describes exactly one live view, one live nested layout, or one spacer. Use
 `ForView`, `ForLayout`, or `ForSpacer`; each constructor also receives an alignment and a
 non-negative stretch factor. View and layout constructors reject stale handles, and an empty action
-source is not a view item. These are validated values only: `TuiLayout` does not yet own an item list
-or perform allocation.
+source is not a view item.
+
+`TuiLayoutItems.Add(Layout, Item)` appends an item and returns `true`. `Count` and `Get` expose the
+current stable order. `RemoveAt` removes one item, while `Clear` removes all items; both return `true`
+after a successful mutation. Indexes are zero-based. `CanAdd` reports whether an already constructed
+item currently satisfies the live ownership contract without mutating either layout.
+
+A live view may occur in only one layout item list. Removing or clearing its item does not destroy the
+view because the view tree owns views. A nested layout has exactly one owner: either a container or
+another layout. Removing or clearing a nested item destroys that nested layout and its nested
+descendants. Destroying a parent layout does the same. Directly destroying an attached view removes
+its item; directly destroying a nested layout removes its item. Cycles and cross-application items are
+rejected. Layout allocation does not consume the ordered lists yet.
 
 ## Commands and actions
 

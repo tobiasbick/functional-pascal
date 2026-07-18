@@ -300,7 +300,8 @@ statement           = block
                     | break_stmt
                     | continue_stmt
                     | go_stmt
-                    | call_stmt ;
+                    | call_stmt
+                    | postfix_expr_stmt ;
 
 block               = 'begin' statement_list 'end' ;
 
@@ -413,6 +414,11 @@ go_stmt             = 'go' go_call ;
 
 (* -- Procedure / Function Call (statement position) -- *)
 call_stmt           = designator '(' [ arg_list ] ')' ;
+
+(* A postfix expression may be used as a statement when semantic analysis *)
+(* confirms that its final suffix is a method call. Final procedure calls  *)
+(* are valid because their Unit result is discarded.                      *)
+postfix_expr_stmt   = primary_atom postfix_suffix { postfix_suffix } ;
 
 (* ---- 2.7 Expressions ------------------------------------------ *)
 

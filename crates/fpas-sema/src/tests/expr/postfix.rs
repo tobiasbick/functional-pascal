@@ -211,6 +211,56 @@ fn procedure_method_in_expression() {
 }
 
 #[test]
+fn procedure_method_may_finish_postfix_statement() {
+    check_ok(
+        "program T; \
+         type Point = record \
+           X: integer; \
+           procedure Touch(Self: Point); begin end; \
+           static function Create(): Point; begin return record X := 1; end end; \
+         end; \
+         begin Point.Create().Touch() end.",
+    );
+}
+
+#[test]
+fn procedure_method_may_not_continue_postfix_statement() {
+    let errors = check_errors(
+        "program T; \
+         type Point = record \
+           X: integer; \
+           procedure Touch(Self: Point); begin end; \
+           function Next(Self: Point): Point; begin return Self end; \
+           static function Create(): Point; begin return record X := 1; end end; \
+         end; \
+         begin Point.Create().Touch().Next() end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.message.contains("does not return a value")),
+        "{errors:#?}"
+    );
+}
+
+#[test]
+fn postfix_value_may_not_be_used_as_statement() {
+    let errors = check_errors(
+        "program T; \
+         type Point = record X: integer; \
+           static function Create(): Point; begin return record X := 1; end end; \
+         end; \
+         begin Point.Create().X end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.message.contains("must end with a method call")),
+        "{errors:#?}"
+    );
+}
+
+#[test]
 fn generic_instance_function_in_chain() {
     check_ok(
         "program T; \

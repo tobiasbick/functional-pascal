@@ -7,8 +7,8 @@ uses
   Std.Tui2.Views.View, Std.Tui2.Views.Container, Std.Tui2.Views.Desktop, Std.Tui2.Layouts.Layout,
   Std.Tui2.Layouts.MeasureConstraint, Std.Tui2.Layouts.MeasureSpec, Std.Tui2.Layouts.MeasureResult,
   Std.Tui2.Layouts.SizePolicy, Std.Tui2.Layouts.Margins, Std.Tui2.Layouts.Alignment,
-  Std.Tui2.Layouts.Spacer, Std.Tui2.Layouts.LayoutItem, Std.Tui2.Actions.Command,
-  Std.Tui2.Actions.Action, Std.Tui2.Controls.Button;
+  Std.Tui2.Layouts.Spacer, Std.Tui2.Layouts.LayoutItem, Std.Tui2.Layouts.LayoutItems,
+  Std.Tui2.Actions.Command, Std.Tui2.Actions.Action, Std.Tui2.Controls.Button;
 
 type
   TuiPoint = Std.Tui2.Geometry.Point.TuiPoint;
@@ -41,6 +41,7 @@ type
   TuiSpacer = Std.Tui2.Layouts.Spacer.TuiSpacer;
   TuiLayoutItemKind = Std.Tui2.Layouts.LayoutItem.TuiLayoutItemKind;
   TuiLayoutItem = Std.Tui2.Layouts.LayoutItem.TuiLayoutItem;
+  TuiLayoutItems = Std.Tui2.Layouts.LayoutItems.TuiLayoutItems;
   TuiCommand = Std.Tui2.Actions.Command.TuiCommand;
   TuiAction = Std.Tui2.Actions.Action.TuiAction;
   TuiButton = Std.Tui2.Controls.Button.TuiButton;

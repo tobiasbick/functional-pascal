@@ -58,6 +58,7 @@ impl Parser {
             }
             Token::Go => self.parse_go_stmt(),
             Token::Ident(_) | Token::Event | Token::Property => self.parse_call_or_assign(),
+            _ if self.can_start_expression() => self.parse_expression_stmt(),
             _ => self.parse_invalid_statement_start(),
         }
     }

@@ -233,3 +233,27 @@ end.",
     );
     assert_eq!(out.lines, vec!["5", "5", "7"]);
 }
+
+#[test]
+fn final_procedure_method_runs_as_statement() {
+    let out = compile_and_run(
+        "\
+program PostfixProcedureStatement;
+mutable var Hits: integer := 0;
+type Handle = record
+  procedure Destroy(Self: Handle);
+  begin
+    Hits := Hits + 1
+  end;
+  static function Create(): Handle;
+  begin
+    return record end
+  end;
+end;
+begin
+  Handle.Create().Destroy();
+  Std.Console.WriteLn(Hits)
+end.",
+    );
+    assert_eq!(out.lines, vec!["1"]);
+}

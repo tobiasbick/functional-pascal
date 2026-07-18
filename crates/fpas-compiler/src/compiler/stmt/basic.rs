@@ -106,4 +106,17 @@ impl Compiler {
         }
         Ok(())
     }
+
+    /// Compile a postfix method chain whose final result is intentionally discarded.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/postfix-chaining.md`
+    pub(super) fn compile_expression_stmt(
+        &mut self,
+        expr: &Expr,
+        location: SourceLocation,
+    ) -> Result<(), CompileError> {
+        self.compile_expr(expr)?;
+        self.emit(Op::Pop, location);
+        Ok(())
+    }
 }

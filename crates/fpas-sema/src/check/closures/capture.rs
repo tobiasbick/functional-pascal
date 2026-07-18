@@ -172,7 +172,10 @@ impl CaptureCollector<'_> {
                 self.collect_from_designator(target);
                 self.collect_from_expr(value);
             }
-            Stmt::Return(Some(expr), _) | Stmt::Panic(expr, _) | Stmt::Go { expr, .. } => {
+            Stmt::Return(Some(expr), _)
+            | Stmt::Panic(expr, _)
+            | Stmt::Expression { expr, .. }
+            | Stmt::Go { expr, .. } => {
                 self.collect_from_expr(expr);
             }
             Stmt::Return(None, _) | Stmt::Break(_) | Stmt::Continue(_) => {}

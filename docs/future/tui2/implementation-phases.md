@@ -35,8 +35,9 @@ Completion contracts: [handles-and-ownership.md](handles-and-ownership.md), [run
   state. Width-dependent view measurement remains.
 - Implement minimum, preferred, and maximum size calculation.
 - **Partial foundation.** `TuiSizePolicy`, `TuiMargins`, `TuiAlignment`, `TuiSpacer`, and
-  `TuiLayoutItem` are implemented as validated values. Items carry alignment and stretch, but live
-  ordered item lists, spacing, nested ownership, and allocation-time evaluation remain.
+  `TuiLayoutItem` are implemented as validated values. `TuiLayoutItems` provides ordered lists,
+  exclusive root-or-nested ownership, cycle rejection, stable removal, and nested destruction.
+  Spacing, measurement evaluation, and allocation-time geometry remain.
 - Implement horizontal and vertical layouts, followed by grid, form, and stacked layouts.
 - Support nesting, deterministic cell remainders, clipping below nested minimums, and the terminal-too-small overlay.
 - Add `TuiScrollView` for explicitly reachable overflow.

@@ -43,9 +43,18 @@ Factory.Create()[0]
 stay callable only through a type designator (`Point.Create(...)`), not through
 a returned value.
 
-Procedure methods cannot appear in an expression chain because they do not
-return a value. Statement chaining (discarding a final result) is not part of
-this feature.
+Procedure methods may appear only as the final call of a postfix chain used as
+a statement. The procedure runs and its `Unit` result is discarded:
+
+```pascal
+TuiContainer.AsView(Container).Destroy()
+Factory.Create().Configure().Start()
+```
+
+Every earlier step must still produce a value. A procedure cannot appear in the
+middle of a chain, and a postfix statement cannot end in a field or index. A
+final method function is also valid; its result is discarded just like an
+ordinary function call used as a statement.
 
 ## Indexing
 

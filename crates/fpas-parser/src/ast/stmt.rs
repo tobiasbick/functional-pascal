@@ -58,6 +58,13 @@ pub enum Stmt {
         args: Vec<Expr>,
         span: Span,
     },
+    /// A postfix chain used as a statement, ending in an instance method call.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/postfix-chaining.md`
+    Expression {
+        expr: Expr,
+        span: Span,
+    },
     /// `go` statement: spawn a concurrent task.
     ///
     /// **Documentation:** `docs/pascal/language/concurrency/README.md`

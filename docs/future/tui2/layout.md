@@ -59,8 +59,10 @@ The view tree owns live views. Layouts arrange views but do not create a second 
 
 Implemented foundation: `TuiSpacer.Fixed` and `Expanding` validate their main-axis extents.
 `TuiLayoutItem.ForView`, `ForLayout`, and `ForSpacer` validate the selected live handle, alignment,
-and non-negative stretch. These item descriptions are not attached to live layouts yet, so ordered
-item storage, nested-layout ownership, and cycle detection remain part of the layout engine work.
+and non-negative stretch. `TuiLayoutItems` retains the ordered lists. A view can occur in one list;
+removal does not destroy it because the view tree owns it. Nested layouts have exclusive ownership,
+cannot also be a container root, reject cycles, and are destroyed with their parent item. Geometry
+measurement and allocation remain part of the layout engine work.
 
 ## Initial layouts
 
@@ -124,9 +126,11 @@ TuiGridLayout.New(App: TuiApplication): TuiGridLayout
 TuiFormLayout.New(App: TuiApplication): TuiFormLayout
 TuiStackedLayout.New(App: TuiApplication): TuiStackedLayout
 
-TuiLayout.AddView(Layout: TuiLayout; View: TuiView)
-TuiLayout.AddLayout(Layout: TuiLayout; Child: TuiLayout)
-TuiLayout.AddSpacer(Layout: TuiLayout; Spacer: TuiSpacer)
+TuiLayoutItems.Add(Layout: TuiLayout; Item: TuiLayoutItem)
+TuiLayoutItems.Count(Layout: TuiLayout)
+TuiLayoutItems.Get(Layout: TuiLayout; Index: integer)
+TuiLayoutItems.RemoveAt(Layout: TuiLayout; Index: integer)
+TuiLayoutItems.Clear(Layout: TuiLayout)
 TuiLayout.SetMargins(Layout: TuiLayout; Margins: TuiMargins)
 TuiLayout.SetSpacing(Layout: TuiLayout; Spacing: integer)
 TuiLayout.SetStretch(Layout: TuiLayout; Index: integer; Stretch: integer)
@@ -135,7 +139,9 @@ TuiView.SetSizePolicy(View: TuiView; Policy: TuiSizePolicy)
 TuiView.Measure(View: TuiView; Spec: TuiMeasureSpec): TuiMeasureResult
 ```
 
-Typed layout handles require the same controlled conversion to `TuiLayout` that typed view handles use for `TuiView`.
+The `TuiLayoutItems` functions above are implemented. The remaining names illustrate the intended
+allocation surface. Typed layout handles require the same controlled conversion to `TuiLayout` that
+typed view handles use for `TuiView`.
 
 ## Terminal overflow
 

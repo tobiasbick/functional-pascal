@@ -33,3 +33,33 @@ fn qualified_call() {
         _ => panic!("expected Call"),
     }
 }
+
+#[test]
+fn postfix_method_chain_is_expression_statement() {
+    let stmts = body_stmts("program T; begin Factory.Create().Destroy() end.");
+    match &stmts[0] {
+        Stmt::Expression {
+            expr: Expr::Postfix { operations, .. },
+            ..
+        } => {
+            assert_eq!(operations.len(), 1);
+            assert!(matches!(
+                &operations[0],
+                PostfixOperation::MethodCall { name, .. } if name == "Destroy"
+            ));
+        }
+        other => panic!("expected postfix expression statement, got {other:?}"),
+    }
+}
+
+#[test]
+fn parenthesized_postfix_method_chain_is_expression_statement() {
+    let stmts = body_stmts("program T; begin (Factory.Create()).Destroy() end.");
+    assert!(matches!(
+        &stmts[0],
+        Stmt::Expression {
+            expr: Expr::Postfix { .. },
+            ..
+        }
+    ));
+}

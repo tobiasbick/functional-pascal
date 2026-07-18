@@ -1,0 +1,295 @@
+unit Std.Tui2.Layouts.LayoutItems;
+
+uses
+  Std.Array, Std.Tui2.Layouts.Layout, Std.Tui2.Layouts.LayoutItem, Std.Tui2.Layouts.LayoutOwnership,
+  Std.Tui2.Views.View;
+
+private mutable var TuiLayoutItemOwnerApplicationIds: array of integer := [];
+private mutable var TuiLayoutItemOwnerSlots: array of integer := [];
+private mutable var TuiLayoutItemOwnerGenerations: array of integer := [];
+private mutable var TuiLayoutItemValues: array of TuiLayoutItem := [];
+private mutable var TuiLayoutItemsActive: array of boolean := [];
+private mutable var TuiLayoutItemCleanupApplicationIds: array of integer := [];
+private mutable var TuiLayoutItemCleanupSlots: array of integer := [];
+private mutable var TuiLayoutItemCleanupGenerations: array of integer := [];
+
+private function TuiLayoutItemsSame(Left: TuiLayout; Right: TuiLayout): boolean;
+begin
+  return ((Left.ApplicationId = Right.ApplicationId) and (Left.Slot = Right.Slot)) and
+         (Left.Generation = Right.Generation)
+end;
+
+private function TuiLayoutItemsOwnerMatches(Index: integer; Layout: TuiLayout): boolean;
+begin
+  return ((TuiLayoutItemsActive[Index] and (TuiLayoutItemOwnerApplicationIds[Index] = Layout.ApplicationId)) and (TuiLayoutItemOwnerSlots[Index] = Layout.Slot)) and
+         (TuiLayoutItemOwnerGenerations[Index] = Layout.Generation)
+end;
+
+private function TuiLayoutItemsContainsView(View: TuiView): boolean;
+begin
+  for I: integer := 0 to Std.Array.Length(TuiLayoutItemsActive) - 1 do
+  begin
+    var Item: TuiLayoutItem := TuiLayoutItemValues[I];
+    if (((TuiLayoutItemsActive[I] and (Item.Kind = TuiLayoutItemKind.View)) and (Item.View.ApplicationId = View.ApplicationId)) and (Item.View.Slot = View.Slot)) and
+       (Item.View.Generation = View.Generation) then
+    begin
+      return true
+    end
+  end;
+  return false
+end;
+
+private function TuiLayoutItemsCanReach(Start: TuiLayout; Target: TuiLayout): boolean;
+begin
+  if TuiLayoutItemsSame(Start, Target) then
+  begin
+    return true
+  end;
+  for I: integer := 0 to Std.Array.Length(TuiLayoutItemsActive) - 1 do
+  begin
+    var Item: TuiLayoutItem := TuiLayoutItemValues[I];
+    if TuiLayoutItemsOwnerMatches(I, Start) and (Item.Kind = TuiLayoutItemKind.Layout) then
+    begin
+      if TuiLayoutItemsCanReach(Item.Layout, Target) then
+      begin
+        return true
+      end
+    end
+  end;
+  return false
+end;
+
+private procedure TuiLayoutItemsDetachView(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  for I: integer := 0 to Std.Array.Length(TuiLayoutItemsActive) - 1 do
+  begin
+    var Item: TuiLayoutItem := TuiLayoutItemValues[I];
+    if (TuiLayoutItemsActive[I] and (Item.Kind = TuiLayoutItemKind.View)) and
+       (((Item.View.ApplicationId = ApplicationId) and (Item.View.Slot = Slot)) and (Item.View.Generation = Generation)) then
+    begin
+      TuiLayoutItemsActive[I] := false
+    end
+  end
+end;
+
+private procedure TuiLayoutItemsDetachLayout(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  for I: integer := 0 to Std.Array.Length(TuiLayoutItemsActive) - 1 do
+  begin
+    var Item: TuiLayoutItem := TuiLayoutItemValues[I];
+    if (TuiLayoutItemsActive[I] and (Item.Kind = TuiLayoutItemKind.Layout)) and
+       (((Item.Layout.ApplicationId = ApplicationId) and (Item.Layout.Slot = Slot)) and (Item.Layout.Generation = Generation)) then
+    begin
+      TuiLayoutItemsActive[I] := false
+    end
+  end;
+  TuiLayoutOwnershipDetach(ApplicationId, Slot, Generation)
+end;
+
+private procedure TuiLayoutItemsClearOwned(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  var Owner: TuiLayout := record
+    ApplicationId := ApplicationId;
+    Slot := Slot;
+    Generation := Generation;
+  end;
+  for I: integer := 0 to Std.Array.Length(TuiLayoutItemsActive) - 1 do
+  begin
+    if TuiLayoutItemsOwnerMatches(I, Owner) then
+    begin
+      TuiLayoutItemsActive[I] := false;
+      var Item: TuiLayoutItem := TuiLayoutItemValues[I];
+      if Item.Kind = TuiLayoutItemKind.Layout then
+      begin
+        TuiLayoutOwnershipDetach(Item.Layout.ApplicationId, Item.Layout.Slot, Item.Layout.Generation);
+        if Item.Layout.IsAlive() then
+        begin
+          Item.Layout.Destroy()
+        end
+      end
+    end
+  end
+end;
+
+private procedure TuiLayoutItemsEnsureCleanup(Layout: TuiLayout);
+begin
+  for I: integer := 0 to Std.Array.Length(TuiLayoutItemCleanupApplicationIds) - 1 do
+  begin
+    if ((TuiLayoutItemCleanupApplicationIds[I] = Layout.ApplicationId) and (TuiLayoutItemCleanupSlots[I] = Layout.Slot)) and
+       (TuiLayoutItemCleanupGenerations[I] = Layout.Generation) then
+    begin
+      return
+    end
+  end;
+  TuiLayoutItemCleanupApplicationIds := Std.Array.Concat(TuiLayoutItemCleanupApplicationIds, [
+                                                                                               Layout.ApplicationId
+
+                                                                                             ]);
+  TuiLayoutItemCleanupSlots := Std.Array.Concat(TuiLayoutItemCleanupSlots, [Layout.Slot]);
+  TuiLayoutItemCleanupGenerations := Std.Array.Concat(TuiLayoutItemCleanupGenerations, [
+                                                                                         Layout.Generation
+
+                                                                                       ]);
+  var Cleanup: TuiLayoutCleanupCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+    TuiLayoutItemsClearOwned(ApplicationId, Slot, Generation)
+  end;
+  RegisterLayoutCleanup(Layout, Cleanup)
+end;
+
+private function TuiLayoutItemsFind(Layout: TuiLayout; ItemIndex: integer): integer;
+begin
+  if ItemIndex < 0 then
+  begin
+    return -1
+  end;
+  mutable var Current: integer := 0;
+  for I: integer := 0 to Std.Array.Length(TuiLayoutItemsActive) - 1 do
+  begin
+    if TuiLayoutItemsOwnerMatches(I, Layout) then
+    begin
+      if Current = ItemIndex then
+      begin
+        return I
+      end;
+      Current := Current + 1
+    end
+  end;
+  return -1
+end;
+
+type
+  TuiLayoutItems = record
+    static function CanAdd(Layout: TuiLayout; Item: TuiLayoutItem): boolean;
+    begin
+      if not Layout.IsAlive() or (Item.Stretch < 0) then
+      begin
+        return false
+      end;
+      case Item.Kind of
+        TuiLayoutItemKind.View:
+        begin
+          return (((Item.View.Kind <> TuiViewKind.Empty) and Item.View.IsAlive()) and (Item.View.ApplicationId = Layout.ApplicationId)) and
+                 not TuiLayoutItemsContainsView(Item.View)
+        end;
+        TuiLayoutItemKind.Layout:
+        begin
+          return ((Item.Layout.IsAlive() and (Item.Layout.ApplicationId = Layout.ApplicationId)) and not TuiLayoutOwnershipIsOwned(Item.Layout)) and
+                 not TuiLayoutItemsCanReach(Item.Layout, Layout)
+        end;
+        TuiLayoutItemKind.Spacer:
+        begin
+          return Item.Spacer.MinimumExtent >= 0
+        end
+      end;
+      return false
+    end;
+
+    static function Add(Layout: TuiLayout; Item: TuiLayoutItem): boolean;
+    begin
+      if not TuiLayoutItems.CanAdd(Layout, Item) then
+      begin
+        panic('Tui2 layout cannot attach the item; check ownership, application, and cycles')
+      end;
+      if Item.Kind = TuiLayoutItemKind.Layout then
+      begin
+        TuiLayoutOwnershipAttach(Item.Layout)
+      end;
+      TuiLayoutItemOwnerApplicationIds := Std.Array.Concat(TuiLayoutItemOwnerApplicationIds, [
+                                                                                               Layout.ApplicationId
+
+                                                                                             ]);
+      TuiLayoutItemOwnerSlots := Std.Array.Concat(TuiLayoutItemOwnerSlots, [Layout.Slot]);
+      TuiLayoutItemOwnerGenerations := Std.Array.Concat(TuiLayoutItemOwnerGenerations, [
+                                                                                         Layout.Generation
+
+                                                                                       ]);
+      TuiLayoutItemValues := Std.Array.Concat(TuiLayoutItemValues, [Item]);
+      TuiLayoutItemsActive := Std.Array.Concat(TuiLayoutItemsActive, [true]);
+      TuiLayoutItemsEnsureCleanup(Layout);
+      case Item.Kind of
+        TuiLayoutItemKind.View:
+        begin
+          var ViewCleanup: TuiViewCleanupCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+            TuiLayoutItemsDetachView(ApplicationId, Slot, Generation)
+          end;
+          RegisterViewCleanup(Item.View, ViewCleanup)
+        end;
+        TuiLayoutItemKind.Layout:
+        begin
+          var LayoutCleanup: TuiLayoutCleanupCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+            TuiLayoutItemsDetachLayout(ApplicationId, Slot, Generation)
+          end;
+          RegisterLayoutCleanup(Item.Layout, LayoutCleanup)
+        end;
+        TuiLayoutItemKind.Spacer:
+        begin
+        end
+      end;
+      return true
+    end;
+
+    static function Count(Layout: TuiLayout): integer;
+    begin
+      if not Layout.IsAlive() then
+      begin
+        panic('Tui2 cannot read items from a stale layout')
+      end;
+      mutable var ItemCount: integer := 0;
+      for I: integer := 0 to Std.Array.Length(TuiLayoutItemsActive) - 1 do
+      begin
+        if TuiLayoutItemsOwnerMatches(I, Layout) then
+        begin
+          ItemCount := ItemCount + 1
+        end
+      end;
+      return ItemCount
+    end;
+
+    static function Get(Layout: TuiLayout; Index: integer): TuiLayoutItem;
+    begin
+      if not Layout.IsAlive() then
+      begin
+        panic('Tui2 cannot read items from a stale layout')
+      end;
+      var StorageIndex: integer := TuiLayoutItemsFind(Layout, Index);
+      if StorageIndex < 0 then
+      begin
+        panic('Tui2 layout item index is out of bounds')
+      end;
+      return TuiLayoutItemValues[StorageIndex]
+    end;
+
+    static function RemoveAt(Layout: TuiLayout; Index: integer): boolean;
+    begin
+      if not Layout.IsAlive() then
+      begin
+        panic('Tui2 cannot remove items from a stale layout')
+      end;
+      var StorageIndex: integer := TuiLayoutItemsFind(Layout, Index);
+      if StorageIndex < 0 then
+      begin
+        panic('Tui2 layout item index is out of bounds')
+      end;
+      TuiLayoutItemsActive[StorageIndex] := false;
+      var Item: TuiLayoutItem := TuiLayoutItemValues[StorageIndex];
+      if Item.Kind = TuiLayoutItemKind.Layout then
+      begin
+        TuiLayoutOwnershipDetach(Item.Layout.ApplicationId, Item.Layout.Slot, Item.Layout.Generation);
+        if Item.Layout.IsAlive() then
+        begin
+          Item.Layout.Destroy()
+        end
+      end;
+      return true
+    end;
+
+    static function Clear(Layout: TuiLayout): boolean;
+    begin
+      if not Layout.IsAlive() then
+      begin
+        panic('Tui2 cannot clear a stale layout')
+      end;
+      TuiLayoutItemsClearOwned(Layout.ApplicationId, Layout.Slot, Layout.Generation);
+      return true
+    end;
+  end;

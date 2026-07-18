@@ -4,7 +4,7 @@
 //! `Call`. Method targets come from [`fpas_sema::MethodCallMap`] keyed by
 //! [`fpas_sema::postfix_operation_lookup_key`].
 //!
-//! **Documentation:** `docs/pascal/language/functions/README.md`
+//! **Documentation:** `docs/pascal/language/functions/postfix-chaining.md`
 
 use crate::error::{CompileError, internal_compiler_error};
 use fpas_bytecode::{Op, Value};

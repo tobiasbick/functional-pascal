@@ -102,6 +102,11 @@ fn emit_stmt_in_block(emitter: &mut Emitter, stmt: &Stmt, is_last: bool, comment
             emitter.write(")");
             finish_stmt_line(emitter, comments, stmt, is_last);
         }
+        Stmt::Expression { expr, .. } => {
+            write_indented(emitter);
+            emit_expr(emitter, expr, 0);
+            finish_stmt_line(emitter, comments, stmt, is_last);
+        }
         Stmt::Go { expr, .. } => {
             write_indented(emitter);
             emitter.write("go ");
@@ -218,5 +223,16 @@ end.",
              WriteLn('hi');\n\
              return X\n"
         );
+    }
+
+    #[test]
+    fn postfix_procedure_statement_round_trips() {
+        let source = "program T; begin Factory.Create().Transform().Destroy() end.";
+        let formatted = format_body(source);
+        assert_eq!(formatted, "Factory.Create().Transform().Destroy()\n");
+
+        let reparsed = format!("program T; begin {formatted} end.");
+        let (_, errors) = fpas_parser::parse(&reparsed);
+        assert!(errors.is_empty(), "{errors:?}");
     }
 }

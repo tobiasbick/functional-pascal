@@ -29,8 +29,12 @@ impl Parser {
     ///
     /// Returns `base` unchanged when no suffix is present. Never emits an empty operation list.
     ///
-    /// **Documentation:** `docs/pascal/language/functions/README.md`
-    pub(super) fn apply_postfix_suffixes(&mut self, base: Expr, start: fpas_lexer::Span) -> Expr {
+    /// **Documentation:** `docs/pascal/language/functions/postfix-chaining.md`
+    pub(in crate::parser) fn apply_postfix_suffixes(
+        &mut self,
+        base: Expr,
+        start: fpas_lexer::Span,
+    ) -> Expr {
         let mut operations = Vec::new();
 
         loop {

@@ -81,6 +81,9 @@ impl Compiler {
                 args,
                 span,
             } => self.compile_call_stmt(designator, args, Self::location_of(span)),
+            Stmt::Expression { expr, span } => {
+                self.compile_expression_stmt(expr, Self::location_of(span))
+            }
             Stmt::Go { expr, span } => self.compile_go_stmt(expr, *span),
         }
     }

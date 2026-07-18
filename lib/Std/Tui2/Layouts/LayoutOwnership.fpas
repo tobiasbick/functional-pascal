@@ -1,0 +1,59 @@
+unit Std.Tui2.Layouts.LayoutOwnership;
+
+uses Std.Array, Std.Tui2.Layouts.Layout;
+
+private mutable var TuiOwnedLayoutApplicationIds: array of integer := [];
+private mutable var TuiOwnedLayoutSlots: array of integer := [];
+private mutable var TuiOwnedLayoutGenerations: array of integer := [];
+private mutable var TuiOwnedLayoutsActive: array of boolean := [];
+
+private function TuiLayoutOwnershipFind(Layout: TuiLayout): integer;
+begin
+  for I: integer := 0 to Std.Array.Length(TuiOwnedLayoutsActive) - 1 do
+  begin
+    if ((TuiOwnedLayoutsActive[I] and (TuiOwnedLayoutApplicationIds[I] = Layout.ApplicationId)) and (TuiOwnedLayoutSlots[I] = Layout.Slot)) and
+       (TuiOwnedLayoutGenerations[I] = Layout.Generation) then
+    begin
+      return I
+    end
+  end;
+  return -1
+end;
+
+function TuiLayoutOwnershipIsOwned(Layout: TuiLayout): boolean;
+begin
+  return TuiLayoutOwnershipFind(Layout) >= 0
+end;
+
+procedure TuiLayoutOwnershipAttach(Layout: TuiLayout);
+begin
+  if not Layout.IsAlive() then
+  begin
+    panic('Tui2 cannot attach a stale layout')
+  end;
+  if TuiLayoutOwnershipIsOwned(Layout) then
+  begin
+    panic('Tui2 layout already has an owner')
+  end;
+  TuiOwnedLayoutApplicationIds := Std.Array.Concat(TuiOwnedLayoutApplicationIds, [
+                                                                                   Layout.ApplicationId
+
+                                                                                 ]);
+  TuiOwnedLayoutSlots := Std.Array.Concat(TuiOwnedLayoutSlots, [Layout.Slot]);
+  TuiOwnedLayoutGenerations := Std.Array.Concat(TuiOwnedLayoutGenerations, [Layout.Generation]);
+  TuiOwnedLayoutsActive := Std.Array.Concat(TuiOwnedLayoutsActive, [true])
+end;
+
+procedure TuiLayoutOwnershipDetach(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  var Layout: TuiLayout := record
+    ApplicationId := ApplicationId;
+    Slot := Slot;
+    Generation := Generation;
+  end;
+  var Index: integer := TuiLayoutOwnershipFind(Layout);
+  if Index >= 0 then
+  begin
+    TuiOwnedLayoutsActive[Index] := false
+  end
+end;

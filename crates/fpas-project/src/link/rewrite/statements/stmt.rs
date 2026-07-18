@@ -105,6 +105,7 @@ impl NameRewriter<'_> {
                     self.rewrite_expr(arg);
                 }
             }
+            Stmt::Expression { expr, .. } => self.rewrite_expr(expr),
             Stmt::Go { expr, .. } => self.rewrite_expr(expr),
         }
     }

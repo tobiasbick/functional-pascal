@@ -1,6 +1,6 @@
 unit Std.Tui2.Views.ContainerLayout;
 
-uses Std.Array, Std.Tui2.Layouts.Layout, Std.Tui2.Views.View;
+uses Std.Array, Std.Tui2.Layouts.Layout, Std.Tui2.Layouts.LayoutOwnership, Std.Tui2.Views.View;
 
 private mutable var TuiContainerLayoutParentApplicationIds: array of integer := [];
 private mutable var TuiContainerLayoutParentSlots: array of integer := [];
@@ -23,19 +23,6 @@ begin
   return -1
 end;
 
-private function TuiContainerLayoutIsAttached(Layout: TuiLayout): boolean;
-begin
-  for I: integer := 0 to Std.Array.Length(TuiContainerLayoutAttached) - 1 do
-  begin
-    if ((TuiContainerLayoutAttached[I] and (TuiContainerLayoutApplicationIds[I] = Layout.ApplicationId)) and (TuiContainerLayoutSlots[I] = Layout.Slot)) and
-       (TuiContainerLayoutGenerations[I] = Layout.Generation) then
-    begin
-      return true
-    end
-  end;
-  return false
-end;
-
 private procedure TuiContainerLayoutDetach(ApplicationId: integer; Slot: integer; Generation: integer);
 begin
   for I: integer := 0 to Std.Array.Length(TuiContainerLayoutAttached) - 1 do
@@ -43,7 +30,8 @@ begin
     if ((TuiContainerLayoutAttached[I] and (TuiContainerLayoutApplicationIds[I] = ApplicationId)) and (TuiContainerLayoutSlots[I] = Slot)) and
        (TuiContainerLayoutGenerations[I] = Generation) then
     begin
-      TuiContainerLayoutAttached[I] := false
+      TuiContainerLayoutAttached[I] := false;
+      TuiLayoutOwnershipDetach(ApplicationId, Slot, Generation)
     end
   end
 end;
@@ -56,6 +44,7 @@ begin
        (TuiContainerLayoutParentGenerations[I] = Generation) then
     begin
       TuiContainerLayoutAttached[I] := false;
+      TuiLayoutOwnershipDetach(TuiContainerLayoutApplicationIds[I], TuiContainerLayoutSlots[I], TuiContainerLayoutGenerations[I]);
       var Layout: TuiLayout := record
         ApplicationId := TuiContainerLayoutApplicationIds[I];
         Slot := TuiContainerLayoutSlots[I];
@@ -103,6 +92,7 @@ begin
           Slot := TuiContainerLayoutSlots[ExistingIndex];
           Generation := TuiContainerLayoutGenerations[ExistingIndex];
         end;
+        TuiLayoutOwnershipDetach(Existing.ApplicationId, Existing.Slot, Existing.Generation);
         if Existing.IsAlive() then
         begin
           Existing.Destroy()
@@ -131,16 +121,22 @@ begin
         begin
           return
         end;
+        if TuiLayoutOwnershipIsOwned(Layout) then
+        begin
+          panic('Tui2 layout already has an owner')
+        end;
         TuiContainerLayoutAttached[ExistingIndex] := false;
+        TuiLayoutOwnershipDetach(Existing.ApplicationId, Existing.Slot, Existing.Generation);
         if Existing.IsAlive() then
         begin
           Existing.Destroy()
         end
       end;
-      if TuiContainerLayoutIsAttached(Layout) then
+      if TuiLayoutOwnershipIsOwned(Layout) then
       begin
-        panic('Tui2 layout is already attached to a container')
+        panic('Tui2 layout already has an owner')
       end;
+      TuiLayoutOwnershipAttach(Layout);
       TuiContainerLayoutParentApplicationIds := Std.Array.Concat(TuiContainerLayoutParentApplicationIds, [
                                                                                                            Container.ApplicationId
 

@@ -46,7 +46,9 @@ Measurement-value coverage verifies bounded and unbounded constraints plus order
 Size-policy coverage verifies independent axes and every uniform policy constructor.
 Layout-value coverage verifies margin construction, axis totals, and mixed or uniform alignment.
 Layout-item coverage verifies fixed and expanding spacers plus view, nested-layout, and spacer item
-descriptions with alignment and stretch.
+descriptions with alignment and stretch. Live-list coverage verifies stable order, removal, clearing,
+duplicate rejection, cycle rejection, exclusive container-or-layout ownership, child detachment, and
+nested destruction while preserving view-tree ownership.
 Container coverage also verifies recursive destruction of nested child subtrees. Desktop coverage
 verifies its single root identity, direct child ownership, and invalidation on application close.
 `TuiLayout` coverage verifies the same slot reuse, stale-generation, tag, and application-close

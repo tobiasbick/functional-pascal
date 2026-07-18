@@ -43,6 +43,12 @@ Budget exhaustion leaves the application started and open for another bounded ru
 | `OnCloseRequest` | Before a closeable view is removed. | `boolean` |
 | `OnClosed` | After closing completed and the view no longer participates in dispatch. | none |
 
+Implemented headless transitions: `TuiCustomView.OnAttach` runs after its parent relation is visible.
+`OnDetach` runs after parent and layout cleanup while the sender remains live. `OnResize` receives old
+and new bounds after layout and before `OnTick`; multiple pending changes coalesce, and changes from
+inside the handler wait for a later iteration. Dispatch revalidates handles after each callback.
+Measure, paint, focus, blur, close-request, and closed delivery remain in the ordered work below.
+
 For `OnCloseRequest`, `true` allows closing and `false` cancels it. This meaning differs intentionally from raw input handlers, where `true` means consumed.
 
 ## Typical sequence

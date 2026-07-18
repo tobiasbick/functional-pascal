@@ -1,0 +1,178 @@
+unit Std.Tui2.Views.CustomView;
+
+uses
+  Std.Tui2.Geometry.Rect, Std.Tui2.Runtime.Application, Std.Tui2.Views.CustomViewLifecycle,
+  Std.Tui2.Views.View;
+
+type
+  TuiCustomView = record
+    View: TuiView;
+
+    static function Create(App: TuiApplication): TuiCustomView;
+    begin
+      var View: TuiView := TuiView.Create(App);
+      TuiCustomViewLifecycleEnsure(View);
+      return record View := View; end
+    end;
+
+    static function AsView(CustomView: TuiCustomView): TuiView;
+    begin
+      if not CustomView.IsAlive() then
+      begin
+        panic('Tui2 custom view handle is stale')
+      end;
+      return CustomView.View
+    end;
+
+    function IsAlive(Self: TuiCustomView): boolean;
+    begin
+      return Self.View.IsAlive()
+    end;
+
+    function ReadOnAttach(Self: TuiCustomView): option of procedure(Sender: TuiCustomView);
+    begin
+      case TuiCustomViewLifecycleReadAttach(TuiCustomView.AsView(Self)) of
+        None:
+        begin
+          return None
+        end;
+        Some(Callback):
+        begin
+          return Some(procedure(Sender: TuiCustomView) begin
+            Callback(Sender.View.ApplicationId, Sender.View.Slot, Sender.View.Generation)
+          end)
+        end
+      end
+    end;
+
+    procedure WriteOnAttach(Self: TuiCustomView; Handler: option of procedure(Sender: TuiCustomView));
+    begin
+      var View: TuiView := TuiCustomView.AsView(Self);
+      case Handler of
+        None:
+        begin
+          TuiCustomViewLifecycleWriteAttach(View, None)
+        end;
+        Some(Value):
+        begin
+          var Callback: TuiCustomViewLifecycleHandler := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+            var Sender: TuiCustomView := record
+              View := record
+              ApplicationId := ApplicationId;
+              Slot := Slot;
+              Generation := Generation;
+              Kind := TuiViewKind.Custom;
+            end;
+            end;
+            Value(Sender)
+          end;
+          TuiCustomViewLifecycleWriteAttach(View, Some(Callback))
+        end
+      end
+    end;
+
+    function ReadOnDetach(Self: TuiCustomView): option of procedure(Sender: TuiCustomView);
+    begin
+      case TuiCustomViewLifecycleReadDetach(TuiCustomView.AsView(Self)) of
+        None:
+        begin
+          return None
+        end;
+        Some(Callback):
+        begin
+          return Some(procedure(Sender: TuiCustomView) begin
+            Callback(Sender.View.ApplicationId, Sender.View.Slot, Sender.View.Generation)
+          end)
+        end
+      end
+    end;
+
+    procedure WriteOnDetach(Self: TuiCustomView; Handler: option of procedure(Sender: TuiCustomView));
+    begin
+      var View: TuiView := TuiCustomView.AsView(Self);
+      case Handler of
+        None:
+        begin
+          TuiCustomViewLifecycleWriteDetach(View, None)
+        end;
+        Some(Value):
+        begin
+          var Callback: TuiCustomViewLifecycleHandler := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+            var Sender: TuiCustomView := record
+              View := record
+              ApplicationId := ApplicationId;
+              Slot := Slot;
+              Generation := Generation;
+              Kind := TuiViewKind.Custom;
+            end;
+            end;
+            Value(Sender)
+          end;
+          TuiCustomViewLifecycleWriteDetach(View, Some(Callback))
+        end
+      end
+    end;
+
+    function ReadOnResize(Self: TuiCustomView): option of procedure(Sender: TuiCustomView; OldBounds: TuiRect; NewBounds: TuiRect);
+    begin
+      case TuiCustomViewLifecycleReadResize(TuiCustomView.AsView(Self)) of
+        None:
+        begin
+          return None
+        end;
+        Some(Callback):
+        begin
+          return Some(procedure(Sender: TuiCustomView; OldBounds: TuiRect; NewBounds: TuiRect) begin
+            Callback(Sender.View.ApplicationId, Sender.View.Slot, Sender.View.Generation, OldBounds, NewBounds)
+          end)
+        end
+      end
+    end;
+
+    procedure WriteOnResize(
+  Self: TuiCustomView;
+  Handler: option of procedure(Sender: TuiCustomView; OldBounds: TuiRect; NewBounds: TuiRect)
+);
+    begin
+      var View: TuiView := TuiCustomView.AsView(Self);
+      case Handler of
+        None:
+        begin
+          TuiCustomViewLifecycleWriteResize(View, None)
+        end;
+        Some(Value):
+        begin
+          var Callback: TuiCustomViewResizeLifecycleHandler := procedure(
+  ApplicationId: integer;
+  Slot: integer;
+  Generation: integer;
+  OldBounds: TuiRect;
+  NewBounds: TuiRect
+) begin
+            var Sender: TuiCustomView := record
+              View := record
+              ApplicationId := ApplicationId;
+              Slot := Slot;
+              Generation := Generation;
+              Kind := TuiViewKind.Custom;
+            end;
+            end;
+            Value(Sender, OldBounds, NewBounds)
+          end;
+          TuiCustomViewLifecycleWriteResize(View, Some(Callback))
+        end
+      end
+    end;
+
+    procedure Destroy(Self: TuiCustomView);
+    begin
+      TuiCustomView.AsView(Self).Destroy()
+    end;
+
+    event OnAttach: procedure(Sender: TuiCustomView) read ReadOnAttach write WriteOnAttach;
+    event OnDetach: procedure(Sender: TuiCustomView) read ReadOnDetach write WriteOnDetach;
+    event OnResize: procedure(Sender: TuiCustomView; OldBounds: TuiRect; NewBounds: TuiRect) read ReadOnResize write WriteOnResize;
+  end;
+  TuiAttachHandler = procedure(Sender: TuiCustomView);
+  TuiDetachHandler = procedure(Sender: TuiCustomView);
+  TuiResizeHandler = procedure(Sender: TuiCustomView; OldBounds: TuiRect; NewBounds: TuiRect);

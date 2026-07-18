@@ -44,6 +44,10 @@ cleanup, plus direct container attachment and destructive removal.
 Application coverage verifies FIFO callback posting, including callbacks posted during a drain;
 bounded iteration budgets; automatic single start; orderly quit and stop; pre-tick posted quit;
 retained application size; desktop resize propagation; and automatic dirty desktop layout passes.
+Custom-view lifecycle coverage verifies visible parent state during attach, structural cleanup before
+detach, live senders during detach, post-layout resize ordering, resize coalescing, deferred changes
+from inside a resize callback, self-destruction, continued sibling delivery, and application-close
+detachment.
 Measurement-value coverage verifies bounded and unbounded constraints plus ordered measurement results.
 Size-policy coverage verifies independent axes and every uniform policy constructor.
 Layout-value coverage verifies margin construction, axis totals, and mixed or uniform alignment.

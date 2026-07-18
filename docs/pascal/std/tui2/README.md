@@ -35,6 +35,10 @@ Coordinates are zero-based: `(0, 0)` is the upper-left cell, X grows to the righ
 | `TuiApplication` | An application-scoped headless registry and lifecycle boundary. |
 | `TuiCommand` | A validated positive command identity. |
 | `TuiView` | A headless application-scoped view handle and action source identity. |
+| `TuiCustomView` | A typed headless view with attach, detach, and resize lifecycle events. |
+| `TuiAttachHandler` | Handler invoked after a custom view is attached. |
+| `TuiDetachHandler` | Handler invoked before an attached custom view is released. |
+| `TuiResizeHandler` | Handler receiving the previous and resolved custom-view bounds. |
 | `TuiContainer` | A headless owner of directly attached views. |
 | `TuiDesktop` | The explicit headless root container for one application. |
 | `TuiLayout` | A headless application-scoped layout identity. |
@@ -169,8 +173,8 @@ App.Close()
 `RunIterations(IterationCount, DeltaMilliseconds)` is the bounded headless loop. It starts the
 application once when needed, runs at most the requested non-negative number of iterations, and
 leaves the application open when that budget is exhausted. Each iteration drains posted callbacks,
-performs invalid desktop layout, invokes `OnTick`, and drains callbacks again. A negative iteration
-count or tick delta is rejected.
+performs invalid desktop layout, delivers pending view lifecycle notifications, invokes `OnTick`,
+and drains callbacks again. A negative iteration count or tick delta is rejected.
 
 `Quit()` requests orderly shutdown while `RunIterations` is active. The current callback returns,
 the remaining iteration phases are skipped, `OnStop` runs once, and the application closes. Calling
@@ -196,6 +200,33 @@ preferred policy on both axes. `Destroy` invalidates the handle. Destroyed slots
 always with a new generation, so an old copied handle remains stale and the new view starts with the
 default state. Closing the application invalidates every remaining view. `TuiView.Empty(App)` remains
 an action-source sentinel and is not a destroyable registry view.
+
+## Headless custom-view lifecycle
+
+`TuiCustomView.Create(App)` creates a typed view backed by the normal view registry. `AsView()`
+returns the identity accepted by containers and layouts. `IsAlive()` and `Destroy()` retain the
+normal generational-handle behavior.
+
+The implemented lifecycle surface consists of three single-handler record events:
+
+```pascal
+Custom.OnAttach := procedure(Sender: TuiCustomView) begin ... end;
+Custom.OnDetach := procedure(Sender: TuiCustomView) begin ... end;
+Custom.OnResize := procedure(Sender: TuiCustomView; OldBounds: TuiRect; NewBounds: TuiRect) begin ... end;
+```
+
+`OnAttach` runs synchronously after the parent relation becomes visible and before the first layout.
+`OnDetach` runs only for a view that was attached. Parent and layout relations have already been
+removed, but the sender remains live for the callback; destruction completes afterward.
+
+`OnResize` runs after the application layout phase and before `OnTick`. It is raised only for an
+attached custom view whose bounds actually changed. Multiple changes before delivery are coalesced:
+`OldBounds` is the first previous rectangle and `NewBounds` is the final rectangle. A bounds change
+made inside `OnResize` is delivered during a later iteration rather than recursively.
+
+Lifecycle dispatch revalidates handles after callbacks. Destroying the sender from `OnAttach`,
+`OnDetach`, or `OnResize` is safe, and a destroyed view receives no later pending resize event.
+Replacing an event handler replaces the previous handler; assigning `nil` clears it.
 
 ## Headless containers
 

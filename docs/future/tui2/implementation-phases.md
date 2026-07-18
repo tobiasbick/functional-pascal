@@ -59,8 +59,10 @@ Completion contract: [layout.md](layout.md) and the layout section of [testing.m
 - **Partial foundation.** Headless application lifecycle events, live action state,
   `TuiAction.OnExecute`, button action binding, and action-before-`OnClick` dispatch are implemented.
 - Integrate the existing lifecycle events with the bounded loop and terminal lifecycle.
-- **Next:** implement attach, detach, and resize lifecycle transitions, then add measure, paint,
-  focus, blur, close-request, and closed transitions.
+- **Implemented headless core:** typed custom views with synchronous attach, structural detach before
+  release, coalesced post-layout resize delivery, and callback revalidation.
+- **Next:** implement custom-view measure and clipped paint transitions, then add focus, blur,
+  close-request, and closed transitions.
 - Implement z-order, hit-testing, focus traversal, pointer capture, modal roots, and raw fallback handlers.
 - Extend the existing action registry with shortcuts and propagation to every bound-control type.
 - Implement typed single-handler event properties with `TuiChangeOrigin`.

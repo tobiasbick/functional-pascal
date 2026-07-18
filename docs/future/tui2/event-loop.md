@@ -11,8 +11,9 @@ The Rust runtime maps terminal input to `Std.Console.Event`; it does not select 
 Implemented headless core: `RunIterations(IterationCount, DeltaMilliseconds)` starts the application
 once, executes a deterministic maximum number of iterations, and remains open when the budget is
 exhausted. Each iteration drains posts, completes dirty desktop layout, runs `OnTick`, and drains
-posts again. `Quit` stops at a callback boundary and performs orderly close. `ResizeForTest` updates
-the application and desktop extents, so the next iteration performs the invalidated layout.
+posts again. Pending custom-view resize notifications run after layout and before `OnTick`. `Quit`
+stops at a callback boundary and performs orderly close. `ResizeForTest` updates the application and
+desktop extents, so the next iteration performs the invalidated layout.
 
 The initial application loop has this shape:
 

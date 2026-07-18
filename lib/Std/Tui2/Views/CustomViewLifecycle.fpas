@@ -1,0 +1,260 @@
+unit Std.Tui2.Views.CustomViewLifecycle;
+
+uses
+  Std.Array, Std.Tui2.Geometry.Rect, Std.Tui2.Runtime.Application,
+  Std.Tui2.Runtime.ApplicationLifecycle, Std.Tui2.Views.View, Std.Tui2.Views.ViewLifecycleHooks;
+
+type
+  TuiCustomViewLifecycleHandler = procedure(ApplicationId: integer; Slot: integer; Generation: integer);
+  TuiCustomViewResizeLifecycleHandler = procedure(
+  ApplicationId: integer;
+  Slot: integer;
+  Generation: integer;
+  OldBounds: TuiRect;
+  NewBounds: TuiRect
+);
+
+private mutable var TuiCustomViewLifecycleApplicationIds: array of integer := [];
+private mutable var TuiCustomViewLifecycleSlots: array of integer := [];
+private mutable var TuiCustomViewLifecycleGenerations: array of integer := [];
+private mutable var TuiCustomViewLifecycleAttached: array of boolean := [];
+private mutable var TuiCustomViewLifecycleResizePending: array of boolean := [];
+private mutable var TuiCustomViewLifecycleOldBounds: array of TuiRect := [];
+private mutable var TuiCustomViewLifecycleNewBounds: array of TuiRect := [];
+private mutable var TuiCustomViewLifecycleOnAttach: array of option of TuiCustomViewLifecycleHandler := [];
+private mutable var TuiCustomViewLifecycleOnDetach: array of option of TuiCustomViewLifecycleHandler := [];
+private mutable var TuiCustomViewLifecycleOnResize: array of option of TuiCustomViewResizeLifecycleHandler := [];
+private mutable var TuiCustomViewLifecycleActive: array of boolean := [];
+
+private function TuiCustomViewLifecycleFind(ApplicationId: integer; Slot: integer; Generation: integer): integer;
+begin
+  for I: integer := 0 to Std.Array.Length(TuiCustomViewLifecycleActive) - 1 do
+  begin
+    if ((((TuiCustomViewLifecycleActive[I] and (TuiCustomViewLifecycleApplicationIds[I] = ApplicationId)) and (TuiCustomViewLifecycleSlots[I] = Slot)) and (TuiCustomViewLifecycleGenerations[I] = Generation))) then
+    begin
+      return I
+    end
+  end;
+  return -1
+end;
+
+private procedure TuiCustomViewLifecycleAttach(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  var Index: integer := TuiCustomViewLifecycleFind(ApplicationId, Slot, Generation);
+  if Index < 0 then
+  begin
+    return
+  end;
+  TuiCustomViewLifecycleAttached[Index] := true;
+  case TuiCustomViewLifecycleOnAttach[Index] of
+    None:
+    begin
+    end;
+    Some(Callback):
+    begin
+      Callback(ApplicationId, Slot, Generation)
+    end
+  end
+end;
+
+private procedure TuiCustomViewLifecycleBeforeRelease(
+  ApplicationId: integer;
+  Slot: integer;
+  Generation: integer
+);
+begin
+  var Index: integer := TuiCustomViewLifecycleFind(ApplicationId, Slot, Generation);
+  if Index < 0 then
+  begin
+    return
+  end;
+  if not TuiCustomViewLifecycleAttached[Index] then
+  begin
+    return
+  end;
+  TuiCustomViewLifecycleAttached[Index] := false;
+  TuiCustomViewLifecycleResizePending[Index] := false;
+  case TuiCustomViewLifecycleOnDetach[Index] of
+    None:
+    begin
+    end;
+    Some(Callback):
+    begin
+      Callback(ApplicationId, Slot, Generation)
+    end
+  end
+end;
+
+private procedure TuiCustomViewLifecycleBoundsChanged(
+  ApplicationId: integer;
+  Slot: integer;
+  Generation: integer;
+  OldBounds: TuiRect;
+  NewBounds: TuiRect
+);
+begin
+  var Index: integer := TuiCustomViewLifecycleFind(ApplicationId, Slot, Generation);
+  if Index < 0 then
+  begin
+    return
+  end;
+  if not TuiCustomViewLifecycleAttached[Index] then
+  begin
+    return
+  end;
+  if not TuiCustomViewLifecycleResizePending[Index] then
+  begin
+    TuiCustomViewLifecycleOldBounds[Index] := OldBounds;
+    TuiCustomViewLifecycleResizePending[Index] := true
+  end;
+  TuiCustomViewLifecycleNewBounds[Index] := NewBounds
+end;
+
+private procedure TuiCustomViewLifecycleReleased(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  var Index: integer := TuiCustomViewLifecycleFind(ApplicationId, Slot, Generation);
+  if Index >= 0 then
+  begin
+    TuiCustomViewLifecycleAttached[Index] := false;
+    TuiCustomViewLifecycleResizePending[Index] := false;
+    TuiCustomViewLifecycleOnAttach[Index] := None;
+    TuiCustomViewLifecycleOnDetach[Index] := None;
+    TuiCustomViewLifecycleOnResize[Index] := None;
+    TuiCustomViewLifecycleActive[Index] := false
+  end
+end;
+
+private procedure TuiCustomViewLifecycleDrain(View: TuiView);
+begin
+  var Index: integer := TuiCustomViewLifecycleFind(View.ApplicationId, View.Slot, View.Generation);
+  if Index < 0 then
+  begin
+    return
+  end;
+  if not TuiCustomViewLifecycleResizePending[Index] then
+  begin
+    return
+  end;
+  if not View.IsAlive() then
+  begin
+    return
+  end;
+  var OldBounds: TuiRect := TuiCustomViewLifecycleOldBounds[Index];
+  var NewBounds: TuiRect := TuiCustomViewLifecycleNewBounds[Index];
+  TuiCustomViewLifecycleResizePending[Index] := false;
+  case TuiCustomViewLifecycleOnResize[Index] of
+    None:
+    begin
+    end;
+    Some(Callback):
+    begin
+      Callback(View.ApplicationId, View.Slot, View.Generation, OldBounds, NewBounds)
+    end
+  end
+end;
+
+function TuiCustomViewLifecycleEnsure(View: TuiView): integer;
+begin
+  if not View.IsAlive() then
+  begin
+    panic('Tui2 custom view handle is stale')
+  end;
+  var Existing: integer := TuiCustomViewLifecycleFind(View.ApplicationId, View.Slot, View.Generation);
+  if Existing >= 0 then
+  begin
+    return Existing
+  end;
+  TuiCustomViewLifecycleApplicationIds := Std.Array.Concat(TuiCustomViewLifecycleApplicationIds, [
+                                                                                                   View.ApplicationId
+
+                                                                                                 ]);
+  TuiCustomViewLifecycleSlots := Std.Array.Concat(TuiCustomViewLifecycleSlots, [View.Slot]);
+  TuiCustomViewLifecycleGenerations := Std.Array.Concat(TuiCustomViewLifecycleGenerations, [
+                                                                                             View.Generation
+
+                                                                                           ]);
+  TuiCustomViewLifecycleAttached := Std.Array.Concat(TuiCustomViewLifecycleAttached, [false]);
+  TuiCustomViewLifecycleResizePending := Std.Array.Concat(TuiCustomViewLifecycleResizePending, [
+                                                                                                 false
+
+                                                                                               ]);
+  TuiCustomViewLifecycleOldBounds := Std.Array.Concat(TuiCustomViewLifecycleOldBounds, [View.Bounds]);
+  TuiCustomViewLifecycleNewBounds := Std.Array.Concat(TuiCustomViewLifecycleNewBounds, [View.Bounds]);
+  TuiCustomViewLifecycleOnAttach := Std.Array.Concat(TuiCustomViewLifecycleOnAttach, [None]);
+  TuiCustomViewLifecycleOnDetach := Std.Array.Concat(TuiCustomViewLifecycleOnDetach, [None]);
+  TuiCustomViewLifecycleOnResize := Std.Array.Concat(TuiCustomViewLifecycleOnResize, [None]);
+  TuiCustomViewLifecycleActive := Std.Array.Concat(TuiCustomViewLifecycleActive, [true]);
+  var AttachHook: TuiViewAttachHook := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+    TuiCustomViewLifecycleAttach(ApplicationId, Slot, Generation)
+  end;
+  var BeforeReleaseHook: TuiViewBeforeReleaseHook := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+    TuiCustomViewLifecycleBeforeRelease(ApplicationId, Slot, Generation)
+  end;
+  var BoundsChangedHook: TuiViewBoundsChangedHook := procedure(
+  ApplicationId: integer;
+  Slot: integer;
+  Generation: integer;
+  OldBounds: TuiRect;
+  NewBounds: TuiRect
+) begin
+    TuiCustomViewLifecycleBoundsChanged(ApplicationId, Slot, Generation, OldBounds, NewBounds)
+  end;
+  var ReleasedHook: TuiViewReleasedHook := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+    TuiCustomViewLifecycleReleased(ApplicationId, Slot, Generation)
+  end;
+  RegisterViewLifecycleHooks(View.ApplicationId, View.Slot, View.Generation, AttachHook, BeforeReleaseHook, BoundsChangedHook, ReleasedHook);
+  var App: TuiApplication := record Id := View.ApplicationId; Generation := 1; end;
+  var LifecycleCallback: TuiApplicationLifecycleCallback := procedure(ApplicationId: integer) begin
+    if ApplicationId = View.ApplicationId then
+    begin
+      TuiCustomViewLifecycleDrain(View)
+    end
+  end;
+  RegisterApplicationLifecycle(App.Id, App.Generation, LifecycleCallback);
+  return Std.Array.Length(TuiCustomViewLifecycleActive) - 1
+end;
+
+function TuiCustomViewLifecycleReadAttach(View: TuiView): option of TuiCustomViewLifecycleHandler;
+begin
+  var Index: integer := TuiCustomViewLifecycleEnsure(View);
+  return TuiCustomViewLifecycleOnAttach[Index]
+end;
+
+procedure TuiCustomViewLifecycleWriteAttach(
+  View: TuiView;
+  Handler: option of TuiCustomViewLifecycleHandler
+);
+begin
+  var Index: integer := TuiCustomViewLifecycleEnsure(View);
+  TuiCustomViewLifecycleOnAttach[Index] := Handler
+end;
+
+function TuiCustomViewLifecycleReadDetach(View: TuiView): option of TuiCustomViewLifecycleHandler;
+begin
+  var Index: integer := TuiCustomViewLifecycleEnsure(View);
+  return TuiCustomViewLifecycleOnDetach[Index]
+end;
+
+procedure TuiCustomViewLifecycleWriteDetach(
+  View: TuiView;
+  Handler: option of TuiCustomViewLifecycleHandler
+);
+begin
+  var Index: integer := TuiCustomViewLifecycleEnsure(View);
+  TuiCustomViewLifecycleOnDetach[Index] := Handler
+end;
+
+function TuiCustomViewLifecycleReadResize(View: TuiView): option of TuiCustomViewResizeLifecycleHandler;
+begin
+  var Index: integer := TuiCustomViewLifecycleEnsure(View);
+  return TuiCustomViewLifecycleOnResize[Index]
+end;
+
+procedure TuiCustomViewLifecycleWriteResize(
+  View: TuiView;
+  Handler: option of TuiCustomViewResizeLifecycleHandler
+);
+begin
+  var Index: integer := TuiCustomViewLifecycleEnsure(View);
+  TuiCustomViewLifecycleOnResize[Index] := Handler
+end;

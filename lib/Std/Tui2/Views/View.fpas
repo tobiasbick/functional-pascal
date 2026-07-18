@@ -2,7 +2,7 @@ unit Std.Tui2.Views.View;
 
 uses
   Std.Array, Std.Tui2.Geometry.Rect, Std.Tui2.Geometry.Size, Std.Tui2.Layouts.MeasureResult,
-  Std.Tui2.Layouts.SizePolicy, Std.Tui2.Runtime.Application;
+  Std.Tui2.Layouts.SizePolicy, Std.Tui2.Runtime.Application, Std.Tui2.Views.ViewLifecycleHooks;
 
 type
   TuiViewKind = enum
@@ -88,6 +88,16 @@ begin
   end
 end;
 
+private function TuiViewIsCurrent(ApplicationId: integer; Slot: integer; Generation: integer): boolean;
+begin
+  if (Slot <= 0) or (Slot > Std.Array.Length(TuiViewGenerations)) then
+  begin
+    return false
+  end;
+  return ((TuiViewApplicationIds[Slot - 1] = ApplicationId) and (TuiViewGenerations[Slot - 1] = Generation)) and
+         TuiViewAlive[Slot - 1]
+end;
+
 private procedure TuiViewRelease(ApplicationId: integer; Slot: integer; Generation: integer);
 begin
   if (Slot <= 0) or (Slot > Std.Array.Length(TuiViewGenerations)) then
@@ -100,6 +110,24 @@ begin
     TuiViewAlive[Slot - 1] := false;
     TuiViewGenerations[Slot - 1] := Generation + 1
   end
+end;
+
+private procedure TuiViewDestroyLive(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  if not TuiViewIsCurrent(ApplicationId, Slot, Generation) then
+  begin
+    return
+  end;
+  TuiViewRunCleanups(ApplicationId, Slot, Generation);
+  if TuiViewIsCurrent(ApplicationId, Slot, Generation) then
+  begin
+    TuiViewLifecycleNotifyBeforeRelease(ApplicationId, Slot, Generation)
+  end;
+  if TuiViewIsCurrent(ApplicationId, Slot, Generation) then
+  begin
+    TuiViewRelease(ApplicationId, Slot, Generation)
+  end;
+  TuiViewLifecycleNotifyReleased(ApplicationId, Slot, Generation)
 end;
 
 type
@@ -169,7 +197,7 @@ type
         Kind := TuiViewKind.Custom;
       end;
       var Cleanup: TuiApplicationCleanupCallback := procedure(ApplicationId: integer) begin
-        TuiViewRelease(ApplicationId, View.Slot, View.Generation)
+        TuiViewDestroyLive(ApplicationId, View.Slot, View.Generation)
       end;
       RegisterApplicationCleanup(App.Id, App.Generation, Cleanup);
       return View
@@ -182,13 +210,7 @@ type
         var App: TuiApplication := record Id := Self.ApplicationId; Generation := 1; end;
         return App.IsOpen()
       end;
-      if (Self.Slot <= 0) or (Self.Slot > Std.Array.Length(TuiViewGenerations)) then
-      begin
-        return false
-      end;
-      return ((TuiViewApplicationIds[Self.Slot - 1] = Self.ApplicationId) and (TuiViewGenerations[Self.Slot -
-                                                                                                  1] = Self.Generation)) and
-             TuiViewAlive[Self.Slot - 1]
+      return TuiViewIsCurrent(Self.ApplicationId, Self.Slot, Self.Generation)
     end;
 
     function ReadTag(Self: TuiView): integer;
@@ -212,7 +234,13 @@ type
     procedure WriteBounds(Self: TuiView; Value: TuiRect);
     begin
       TuiViewRequire(Self.ApplicationId, Self.Slot, Self.Generation);
-      TuiViewBounds[Self.Slot - 1] := Value
+      var Existing: TuiRect := TuiViewBounds[Self.Slot - 1];
+      if (((Existing.X <> Value.X) or (Existing.Y <> Value.Y)) or (Existing.Width <> Value.Width)) or
+         (Existing.Height <> Value.Height) then
+      begin
+        TuiViewBounds[Self.Slot - 1] := Value;
+        TuiViewLifecycleNotifyBoundsChanged(Self.ApplicationId, Self.Slot, Self.Generation, Existing, Value)
+      end
     end;
 
     function ReadVisible(Self: TuiView): boolean;
@@ -279,8 +307,7 @@ type
     procedure Destroy(Self: TuiView);
     begin
       TuiViewRequire(Self.ApplicationId, Self.Slot, Self.Generation);
-      TuiViewRunCleanups(Self.ApplicationId, Self.Slot, Self.Generation);
-      TuiViewRelease(Self.ApplicationId, Self.Slot, Self.Generation)
+      TuiViewDestroyLive(Self.ApplicationId, Self.Slot, Self.Generation)
     end;
 
     property Tag: integer read ReadTag write WriteTag;

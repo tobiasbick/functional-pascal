@@ -3,7 +3,7 @@ unit Std.Tui2.Views.Container;
 uses
   Std.Array, Std.Tui2.Layouts.Layout, Std.Tui2.Layouts.LayoutFit, Std.Tui2.Runtime.Application,
   Std.Tui2.Views.ContainerLayout, Std.Tui2.Views.ContainerLayoutFit,
-  Std.Tui2.Views.ContainerLayoutPass, Std.Tui2.Views.View;
+  Std.Tui2.Views.ContainerLayoutPass, Std.Tui2.Views.View, Std.Tui2.Views.ViewLifecycleHooks;
 
 private mutable var TuiContainerParentApplicationIds: array of integer := [];
 private mutable var TuiContainerParentSlots: array of integer := [];
@@ -165,7 +165,8 @@ type
       var Cleanup: TuiViewCleanupCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
         TuiContainerDetachChild(ApplicationId, Slot, Generation)
       end;
-      RegisterViewCleanup(Child, Cleanup)
+      RegisterViewCleanup(Child, Cleanup);
+      TuiViewLifecycleNotifyAttach(Child.ApplicationId, Child.Slot, Child.Generation)
     end;
 
     function Contains(Self: TuiContainer; Child: TuiView): boolean;
@@ -183,7 +184,10 @@ type
         panic('Tui2 container does not own the view')
       end;
       TuiContainerAttached[Index] := false;
-      Child.Destroy()
+      if Child.IsAlive() then
+      begin
+        Child.Destroy()
+      end
     end;
 
     function NeedsLayout(Self: TuiContainer): boolean;

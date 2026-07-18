@@ -2,8 +2,9 @@ unit Std.Tui2.Runtime.Application;
 
 uses
   Std.Array, Std.Tui2.Geometry.Size, Std.Tui2.Runtime.ApplicationLayout,
-  Std.Tui2.Runtime.ApplicationLoop, Std.Tui2.Runtime.ApplicationPosts,
-  Std.Tui2.Runtime.ApplicationRegistry, Std.Tui2.Runtime.ApplicationResize;
+  Std.Tui2.Runtime.ApplicationLifecycle, Std.Tui2.Runtime.ApplicationLoop,
+  Std.Tui2.Runtime.ApplicationPosts, Std.Tui2.Runtime.ApplicationRegistry,
+  Std.Tui2.Runtime.ApplicationResize;
 
 type
   TuiApplicationCallback = procedure(ApplicationId: integer);
@@ -240,6 +241,11 @@ type
       begin
         return
       end;
+      TuiApplicationLifecyclePerform(Self.Id, Self.Generation);
+      if (not Self.IsOpen()) or TuiApplicationLoopShouldQuit(Self.Id) then
+      begin
+        return
+      end;
       if Assigned(Self.OnTick) then
       begin
         Self.OnTick(Self, DeltaMilliseconds)
@@ -323,6 +329,7 @@ type
         end
       end;
       TuiApplicationLayoutRelease(Self.Id, Self.Generation);
+      TuiApplicationLifecycleRelease(Self.Id, Self.Generation);
       TuiApplicationResizeRelease(Self.Id, Self.Generation);
       TuiApplicationLoopRelease(Self.Id);
       TuiApplicationOnStart[Self.Id - 1] := None;

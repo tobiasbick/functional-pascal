@@ -1,0 +1,60 @@
+unit Std.Tui2.Runtime.ApplicationLifecycle;
+
+uses Std.Array, Std.Tui2.Runtime.ApplicationLoop, Std.Tui2.Runtime.ApplicationRegistry;
+
+type
+  TuiApplicationLifecycleCallback = procedure(ApplicationId: integer);
+
+private mutable var TuiApplicationLifecycleApplicationIds: array of integer := [];
+private mutable var TuiApplicationLifecycleGenerations: array of integer := [];
+private mutable var TuiApplicationLifecycleCallbacks: array of TuiApplicationLifecycleCallback := [];
+private mutable var TuiApplicationLifecycleActive: array of boolean := [];
+
+procedure RegisterApplicationLifecycle(
+  ApplicationId: integer;
+  Generation: integer;
+  Callback: TuiApplicationLifecycleCallback
+);
+begin
+  TuiApplicationRegistryRequire(ApplicationId, Generation);
+  TuiApplicationLifecycleApplicationIds := Std.Array.Concat(TuiApplicationLifecycleApplicationIds, [
+                                                                                                     ApplicationId
+
+                                                                                                   ]);
+  TuiApplicationLifecycleGenerations := Std.Array.Concat(TuiApplicationLifecycleGenerations, [
+                                                                                               Generation
+
+                                                                                             ]);
+  TuiApplicationLifecycleCallbacks := Std.Array.Concat(TuiApplicationLifecycleCallbacks, [Callback]);
+  TuiApplicationLifecycleActive := Std.Array.Concat(TuiApplicationLifecycleActive, [true])
+end;
+
+procedure TuiApplicationLifecyclePerform(ApplicationId: integer; Generation: integer);
+begin
+  var Last: integer := Std.Array.Length(TuiApplicationLifecycleActive);
+  for I: integer := 0 to Last - 1 do
+  begin
+    if ((TuiApplicationLifecycleActive[I] and (TuiApplicationLifecycleApplicationIds[I] = ApplicationId)) and (TuiApplicationLifecycleGenerations[I] = Generation)) then
+    begin
+      var Callback: TuiApplicationLifecycleCallback := TuiApplicationLifecycleCallbacks[I];
+      Callback(ApplicationId);
+      if (not TuiApplicationRegistryIsOpen(ApplicationId, Generation)) or
+         TuiApplicationLoopShouldQuit(ApplicationId) then
+      begin
+        return
+      end
+    end
+  end
+end;
+
+procedure TuiApplicationLifecycleRelease(ApplicationId: integer; Generation: integer);
+begin
+  for I: integer := 0 to Std.Array.Length(TuiApplicationLifecycleActive) - 1 do
+  begin
+    if (TuiApplicationLifecycleApplicationIds[I] = ApplicationId) and
+       (TuiApplicationLifecycleGenerations[I] = Generation) then
+    begin
+      TuiApplicationLifecycleActive[I] := false
+    end
+  end
+end;

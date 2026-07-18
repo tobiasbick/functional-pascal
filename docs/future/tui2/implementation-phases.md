@@ -18,19 +18,25 @@ Completion contracts: [geometry.md](geometry.md), [text-and-cells.md](text-and-c
   registry slots, generation checks, cross-application validation, deterministic destruction, and
   application-close cleanup. Custom views and generic layouts use the same model, including reusable
   slots. Views also retain bounds, visibility, and enabled state. Headless containers own child
-  subtrees and one root layout, and each headless application may create one desktop root.
+  subtrees and one root layout, and each headless application may create one desktop root. Headless
+  `Post` callbacks drain FIFO before and after `OnTick`.
 - Implement the desktop root, parent-child ownership, destruction, stale-handle diagnostics, and tags.
 - Extend `OpenForTest` to the generic view registry and add transactional interactive terminal acquisition.
 - Add the VM terminal-mode restoration safety net.
-- Add the generic typed FIFO main-task post queue and enforce main-task-only UI mutation.
+- Extend `Post` from headless scheduling to the generic typed main-task queue and enforce
+  main-task-only UI mutation.
 
 Completion contracts: [handles-and-ownership.md](handles-and-ownership.md), [runtime-boundary.md](runtime-boundary.md), and the registry/failure sections of [testing.md](testing.md).
 
 ## Phase 3 — Layout engine
 
-- Implement `TuiMeasureSpec` and `TuiMeasureResult`, including width-dependent measurement.
+- **Partial foundation.** `TuiMeasureConstraint`, `TuiMeasureSpec`, and `TuiMeasureResult` provide
+  validated pure values. Views retain a size hint and independent size policy in their registry
+  state. Width-dependent view measurement remains.
 - Implement minimum, preferred, and maximum size calculation.
-- Implement per-axis policies, stretch factors, spacers, margins, spacing, and alignment.
+- **Partial foundation.** `TuiSizePolicy`, `TuiMargins`, `TuiAlignment`, `TuiSpacer`, and
+  `TuiLayoutItem` are implemented as validated values. Items carry alignment and stretch, but live
+  ordered item lists, spacing, nested ownership, and allocation-time evaluation remain.
 - Implement horizontal and vertical layouts, followed by grid, form, and stacked layouts.
 - Support nesting, deterministic cell remainders, clipping below nested minimums, and the terminal-too-small overlay.
 - Add `TuiScrollView` for explicitly reachable overflow.

@@ -1,0 +1,33 @@
+unit Std.Tui2.Layouts.MeasureResult;
+
+uses Std.Tui2.Geometry.Size;
+
+private procedure TuiMeasureResultRequireOrdered(Minimum: TuiSize; Preferred: TuiSize; Maximum: TuiSize);
+begin
+  if (Minimum.Width > Preferred.Width) or (Minimum.Height > Preferred.Height) then
+  begin
+    panic('Tui2 measure result minimum size must not exceed preferred size')
+  end;
+  if (Preferred.Width > Maximum.Width) or (Preferred.Height > Maximum.Height) then
+  begin
+    panic('Tui2 measure result preferred size must not exceed maximum size')
+  end
+end;
+
+type
+  TuiMeasureResult = record
+    Minimum: TuiSize;
+    Preferred: TuiSize;
+    Maximum: TuiSize;
+
+    static function Create(Minimum: TuiSize; Preferred: TuiSize; Maximum: TuiSize): TuiMeasureResult;
+    begin
+      TuiMeasureResultRequireOrdered(Minimum, Preferred, Maximum);
+      return record Minimum := Minimum; Preferred := Preferred; Maximum := Maximum; end
+    end;
+
+    static function Fixed(Size: TuiSize): TuiMeasureResult;
+    begin
+      return TuiMeasureResult.Create(Size, Size, Size)
+    end;
+  end;

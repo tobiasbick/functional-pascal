@@ -39,8 +39,14 @@ Remaining failure canaries cover worker-task UI calls, forbidden paint mutation,
 cleanup, and terminal-open rollback.
 
 Implemented registry coverage includes `TuiView` slot reuse, stale generations, tags, bounds,
-visibility, enabled state, and application-close cleanup, plus direct container attachment and
-destructive removal.
+visibility, enabled state, size hints, size policies, default restoration, and application-close
+cleanup, plus direct container attachment and destructive removal.
+Application coverage verifies FIFO callback posting, including callbacks posted during a drain.
+Measurement-value coverage verifies bounded and unbounded constraints plus ordered measurement results.
+Size-policy coverage verifies independent axes and every uniform policy constructor.
+Layout-value coverage verifies margin construction, axis totals, and mixed or uniform alignment.
+Layout-item coverage verifies fixed and expanding spacers plus view, nested-layout, and spacer item
+descriptions with alignment and stretch.
 Container coverage also verifies recursive destruction of nested child subtrees. Desktop coverage
 verifies its single root identity, direct child ownership, and invalidation on application close.
 `TuiLayout` coverage verifies the same slot reuse, stale-generation, tag, and application-close

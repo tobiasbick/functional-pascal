@@ -33,9 +33,17 @@ TuiAlignment
 TuiMargins
 TuiMeasureSpec
 TuiMeasureResult
+TuiSpacer
+TuiLayoutItem
 ```
 
-`TuiSizePolicy` contains separate horizontal and vertical policies. A view supplies sensible defaults, and an application may override them for an individual view.
+`TuiSizePolicy` contains separate horizontal and vertical policies. A view starts with a preferred
+policy on both axes and a fixed zero size hint; both values are retained registry properties that an
+application may replace.
+
+Implemented foundation: `TuiSizePolicy.Create(Horizontal, Vertical)` represents independent axes,
+while `Fixed`, `Minimum`, `Maximum`, `Preferred`, and `Expanding` construct uniform policies.
+Policies are not evaluated until allocation is implemented.
 
 ## Layout items
 
@@ -48,6 +56,11 @@ A layout manages an ordered list of `TuiLayoutItem` values. An item contains exa
 An item also carries its alignment and stretch factor. Stretch factors are relative weights used to distribute additional space along the layout's main direction.
 
 The view tree owns live views. Layouts arrange views but do not create a second ownership hierarchy.
+
+Implemented foundation: `TuiSpacer.Fixed` and `Expanding` validate their main-axis extents.
+`TuiLayoutItem.ForView`, `ForLayout`, and `ForSpacer` validate the selected live handle, alignment,
+and non-negative stretch. These item descriptions are not attached to live layouts yet, so ordered
+item storage, nested-layout ownership, and cycle detection remain part of the layout engine work.
 
 ## Initial layouts
 
@@ -62,6 +75,10 @@ The view tree owns live views. Layouts arrange views but do not create a second 
 Layouts may contain other layouts. This is the primary mechanism for composing complex dialogs and application chrome.
 
 Each layout supports outer margins and spacing between neighboring items. Alignment controls whether an item fills its allocated area or uses a smaller aligned rectangle.
+
+Implemented foundation: `TuiMargins` validates outer cell counts and provides uniform and symmetric
+constructors. `TuiAlignment` combines independent `Leading`, `Center`, `Trailing`, or `Fill` choices
+for both axes. Layouts do not apply either value yet.
 
 ## Measurement and allocation
 
@@ -129,6 +146,11 @@ When the terminal is smaller than the desktop minimum, Std.Tui2 replaces normal 
 ## Dependent measurement
 
 `TuiMeasureSpec` describes each axis as unbounded or at-most a cell count. Wrapped labels and text views calculate height from the supplied width constraint. Measurement caches include the full specification, so the same view may have different preferred heights for different widths.
+
+Implemented foundation: `TuiMeasureConstraint.Unbounded()` and `AtMost(Limit)` represent one axis;
+`TuiMeasureSpec` combines width and height constraints. `TuiMeasureResult` stores validated minimum,
+preferred, and maximum sizes. A view retains an application-provided `SizeHint`, but does not yet
+calculate a result from a measure specification.
 
 Dependent measurement is part of the initial layout engine rather than a later API extension.
 

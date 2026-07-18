@@ -6,6 +6,7 @@ type
   TuiApplicationCallback = procedure(ApplicationId: integer);
   TuiApplicationTickCallback = procedure(ApplicationId: integer; DeltaMilliseconds: integer);
   TuiApplicationCleanupCallback = procedure(ApplicationId: integer);
+  TuiApplicationPostCallback = procedure();
 
 private mutable var TuiApplicationGenerations: array of integer := [];
 private mutable var TuiApplicationAlive: array of boolean := [];
@@ -18,6 +19,9 @@ private mutable var TuiApplicationOnStop: array of option of TuiApplicationCallb
 private mutable var TuiApplicationOnTick: array of option of TuiApplicationTickCallback := [];
 private mutable var TuiCleanupApplicationIds: array of integer := [];
 private mutable var TuiCleanupCallbacks: array of TuiApplicationCleanupCallback := [];
+private mutable var TuiPostApplicationIds: array of integer := [];
+private mutable var TuiPostCallbacks: array of TuiApplicationPostCallback := [];
+private mutable var TuiPostQueued: array of boolean := [];
 
 private procedure TuiApplicationRequire(ApplicationId: integer; Generation: integer);
 begin
@@ -45,6 +49,36 @@ begin
   TuiApplicationRequire(ApplicationId, Generation);
   TuiCleanupApplicationIds := Std.Array.Concat(TuiCleanupApplicationIds, [ApplicationId]);
   TuiCleanupCallbacks := Std.Array.Concat(TuiCleanupCallbacks, [Callback])
+end;
+
+private procedure TuiApplicationDrainPosts(ApplicationId: integer; Generation: integer);
+begin
+  var Last: integer := Std.Array.Length(TuiPostQueued);
+  for I: integer := 0 to Last - 1 do
+  begin
+    if TuiPostQueued[I] and (TuiPostApplicationIds[I] = ApplicationId) then
+    begin
+      TuiPostQueued[I] := false;
+      var Callback: TuiApplicationPostCallback := TuiPostCallbacks[I];
+      Callback();
+      if not TuiApplicationAlive[ApplicationId - 1] or
+         (TuiApplicationGenerations[ApplicationId - 1] <> Generation) then
+      begin
+        return
+      end
+    end
+  end
+end;
+
+private procedure TuiApplicationDiscardPosts(ApplicationId: integer);
+begin
+  for I: integer := 0 to Std.Array.Length(TuiPostQueued) - 1 do
+  begin
+    if TuiPostApplicationIds[I] = ApplicationId then
+    begin
+      TuiPostQueued[I] := false
+    end
+  end
 end;
 
 type
@@ -222,6 +256,19 @@ type
       end
     end;
 
+    function Post(Self: TuiApplication; Handler: procedure()): boolean;
+    begin
+      TuiApplicationRequire(Self.Id, Self.Generation);
+      if TuiApplicationClosing[Self.Id - 1] then
+      begin
+        return false
+      end;
+      TuiPostApplicationIds := Std.Array.Concat(TuiPostApplicationIds, [Self.Id]);
+      TuiPostCallbacks := Std.Array.Concat(TuiPostCallbacks, [Handler]);
+      TuiPostQueued := Std.Array.Concat(TuiPostQueued, [true]);
+      return true
+    end;
+
     procedure Tick(Self: TuiApplication; DeltaMilliseconds: integer);
     begin
       TuiApplicationRequire(Self.Id, Self.Generation);
@@ -234,9 +281,18 @@ type
       begin
         panic('Tui2 tick delta must not be negative')
       end;
+      TuiApplicationDrainPosts(Self.Id, Self.Generation);
+      if not Self.IsOpen() then
+      begin
+        return
+      end;
       if Assigned(Self.OnTick) then
       begin
         Self.OnTick(Self, DeltaMilliseconds)
+      end;
+      if Self.IsOpen() then
+      begin
+        TuiApplicationDrainPosts(Self.Id, Self.Generation)
       end
     end;
 
@@ -255,6 +311,7 @@ type
       begin
         Self.OnStop(Self)
       end;
+      TuiApplicationDiscardPosts(Self.Id);
       for I: integer := 0 to Std.Array.Length(TuiCleanupApplicationIds) - 1 do
       begin
         if TuiCleanupApplicationIds[I] = Self.Id then

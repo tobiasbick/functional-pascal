@@ -16,12 +16,24 @@ begin
   App.OnStop := procedure(Sender: TuiApplication) begin
     AssertEquals(App.Id, Sender.Id);
     Sequence := Sequence * 10 + 3;
+    AssertFalse(Sender.Post(procedure() begin
+      panic('a closing application must not accept posts')
+    end));
     Sender.Close()
   end;
+  AssertTrue(App.Post(procedure() begin
+    Sequence := Sequence * 10 + 4;
+    AssertTrue(App.Post(procedure() begin
+      Sequence := Sequence * 10 + 6
+    end))
+  end));
+  AssertTrue(App.Post(procedure() begin
+    Sequence := Sequence * 10 + 5
+  end));
   App.Start();
   App.Tick(2);
   App.Close();
-  AssertEquals(123, Sequence);
+  AssertEquals(145263, Sequence);
   AssertFalse(App.IsOpen());
   App.Close()
 end.

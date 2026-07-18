@@ -5,7 +5,10 @@ uses
   Std.Tui2.Cells.StyleRole, Std.Tui2.Cells.Style, Std.Tui2.Cells.Cell, Std.Tui2.Cells.Palette,
   Std.Tui2.Surface.Surface, Std.Tui2.Drawing.Canvas, Std.Tui2.Runtime.Application,
   Std.Tui2.Views.View, Std.Tui2.Views.Container, Std.Tui2.Views.Desktop, Std.Tui2.Layouts.Layout,
-  Std.Tui2.Actions.Command, Std.Tui2.Actions.Action, Std.Tui2.Controls.Button;
+  Std.Tui2.Layouts.MeasureConstraint, Std.Tui2.Layouts.MeasureSpec, Std.Tui2.Layouts.MeasureResult,
+  Std.Tui2.Layouts.SizePolicy, Std.Tui2.Layouts.Margins, Std.Tui2.Layouts.Alignment,
+  Std.Tui2.Layouts.Spacer, Std.Tui2.Layouts.LayoutItem, Std.Tui2.Actions.Command,
+  Std.Tui2.Actions.Action, Std.Tui2.Controls.Button;
 
 type
   TuiPoint = Std.Tui2.Geometry.Point.TuiPoint;
@@ -25,6 +28,19 @@ type
   TuiContainer = Std.Tui2.Views.Container.TuiContainer;
   TuiDesktop = Std.Tui2.Views.Desktop.TuiDesktop;
   TuiLayout = Std.Tui2.Layouts.Layout.TuiLayout;
+  TuiMeasureConstraintKind = Std.Tui2.Layouts.MeasureConstraint.TuiMeasureConstraintKind;
+  TuiMeasureConstraint = Std.Tui2.Layouts.MeasureConstraint.TuiMeasureConstraint;
+  TuiMeasureSpec = Std.Tui2.Layouts.MeasureSpec.TuiMeasureSpec;
+  TuiMeasureResult = Std.Tui2.Layouts.MeasureResult.TuiMeasureResult;
+  TuiSizePolicyKind = Std.Tui2.Layouts.SizePolicy.TuiSizePolicyKind;
+  TuiSizePolicy = Std.Tui2.Layouts.SizePolicy.TuiSizePolicy;
+  TuiMargins = Std.Tui2.Layouts.Margins.TuiMargins;
+  TuiAlignmentKind = Std.Tui2.Layouts.Alignment.TuiAlignmentKind;
+  TuiAlignment = Std.Tui2.Layouts.Alignment.TuiAlignment;
+  TuiSpacerKind = Std.Tui2.Layouts.Spacer.TuiSpacerKind;
+  TuiSpacer = Std.Tui2.Layouts.Spacer.TuiSpacer;
+  TuiLayoutItemKind = Std.Tui2.Layouts.LayoutItem.TuiLayoutItemKind;
+  TuiLayoutItem = Std.Tui2.Layouts.LayoutItem.TuiLayoutItem;
   TuiCommand = Std.Tui2.Actions.Command.TuiCommand;
   TuiAction = Std.Tui2.Actions.Action.TuiAction;
   TuiButton = Std.Tui2.Controls.Button.TuiButton;

@@ -8,7 +8,12 @@ Calling them from a spawned task is a programming error with a diagnostic that i
 
 ## Posting from workers
 
-The runtime adds a generic typed main-task queue. Tui2 exposes it through this conceptual API:
+Implemented headless foundation: `TuiApplication.Post` stores parameterless callbacks in an
+application-scoped FIFO queue and `Tick` drains it before and after `OnTick`. Posts added during a
+drain run in the following drain; closing the application discards callbacks that have not started.
+
+The runtime later extends this to a generic typed main-task queue. Tui2 exposes it through this
+conceptual API:
 
 ```pascal
 function TuiApplication.Post(

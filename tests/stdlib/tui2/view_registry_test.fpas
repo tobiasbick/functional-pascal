@@ -9,6 +9,8 @@ begin
   First.Bounds := TuiRect.Create(2, 3, 8, 5);
   First.Visible := false;
   First.Enabled := false;
+  First.SizeHint := TuiMeasureResult.Create(TuiSize.Create(2, 1), TuiSize.Create(8, 3), TuiSize.Create(20, 5));
+  First.SizePolicy := TuiSizePolicy.Create(TuiSizePolicyKind.Expanding, TuiSizePolicyKind.Minimum);
   AssertTrue(First.IsAlive());
   AssertEquals(42, First.Tag);
   AssertEquals(2, First.Bounds.X);
@@ -17,6 +19,11 @@ begin
   AssertEquals(5, First.Bounds.Height);
   AssertFalse(First.Visible);
   AssertFalse(First.Enabled);
+  AssertEquals(2, First.SizeHint.Minimum.Width);
+  AssertEquals(3, First.SizeHint.Preferred.Height);
+  AssertEquals(20, First.SizeHint.Maximum.Width);
+  AssertTrue(First.SizePolicy.Horizontal = TuiSizePolicyKind.Expanding);
+  AssertTrue(First.SizePolicy.Vertical = TuiSizePolicyKind.Minimum);
   First.Destroy();
   AssertFalse(First.IsAlive());
   var Second: TuiView := TuiView.Create(App);
@@ -27,6 +34,11 @@ begin
   AssertEquals(0, Second.Bounds.Height);
   AssertTrue(Second.Visible);
   AssertTrue(Second.Enabled);
+  AssertEquals(0, Second.SizeHint.Minimum.Width);
+  AssertEquals(0, Second.SizeHint.Preferred.Height);
+  AssertEquals(0, Second.SizeHint.Maximum.Width);
+  AssertTrue(Second.SizePolicy.Horizontal = TuiSizePolicyKind.Preferred);
+  AssertTrue(Second.SizePolicy.Vertical = TuiSizePolicyKind.Preferred);
   App.Close();
   AssertFalse(Second.IsAlive())
 end.

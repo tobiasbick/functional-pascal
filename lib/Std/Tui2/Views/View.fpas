@@ -1,6 +1,8 @@
 unit Std.Tui2.Views.View;
 
-uses Std.Array, Std.Tui2.Geometry.Rect, Std.Tui2.Runtime.Application;
+uses
+  Std.Array, Std.Tui2.Geometry.Rect, Std.Tui2.Geometry.Size, Std.Tui2.Layouts.MeasureResult,
+  Std.Tui2.Layouts.SizePolicy, Std.Tui2.Runtime.Application;
 
 type
   TuiViewKind = enum
@@ -17,6 +19,8 @@ private mutable var TuiViewTags: array of integer := [];
 private mutable var TuiViewBounds: array of TuiRect := [];
 private mutable var TuiViewVisible: array of boolean := [];
 private mutable var TuiViewEnabled: array of boolean := [];
+private mutable var TuiViewSizeHints: array of TuiMeasureResult := [];
+private mutable var TuiViewSizePolicies: array of TuiSizePolicy := [];
 private mutable var TuiViewCleanupApplicationIds: array of integer := [];
 private mutable var TuiViewCleanupSlots: array of integer := [];
 private mutable var TuiViewCleanupGenerations: array of integer := [];
@@ -113,6 +117,8 @@ type
           TuiViewBounds[I] := TuiRect.Create(0, 0, 0, 0);
           TuiViewVisible[I] := true;
           TuiViewEnabled[I] := true;
+          TuiViewSizeHints[I] := TuiMeasureResult.Fixed(TuiSize.Create(0, 0));
+          TuiViewSizePolicies[I] := TuiSizePolicy.Preferred();
           break
         end
       end;
@@ -125,6 +131,11 @@ type
         TuiViewBounds := Std.Array.Concat(TuiViewBounds, [TuiRect.Create(0, 0, 0, 0)]);
         TuiViewVisible := Std.Array.Concat(TuiViewVisible, [true]);
         TuiViewEnabled := Std.Array.Concat(TuiViewEnabled, [true]);
+        TuiViewSizeHints := Std.Array.Concat(TuiViewSizeHints, [
+                                                                 TuiMeasureResult.Fixed(TuiSize.Create(0, 0))
+
+                                                               ]);
+        TuiViewSizePolicies := Std.Array.Concat(TuiViewSizePolicies, [TuiSizePolicy.Preferred()]);
         Slot := Std.Array.Length(TuiViewGenerations)
       end;
       var View: TuiView := record
@@ -204,6 +215,30 @@ type
       TuiViewEnabled[Self.Slot - 1] := Value
     end;
 
+    function ReadSizeHint(Self: TuiView): TuiMeasureResult;
+    begin
+      TuiViewRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      return TuiViewSizeHints[Self.Slot - 1]
+    end;
+
+    procedure WriteSizeHint(Self: TuiView; Value: TuiMeasureResult);
+    begin
+      TuiViewRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      TuiViewSizeHints[Self.Slot - 1] := Value
+    end;
+
+    function ReadSizePolicy(Self: TuiView): TuiSizePolicy;
+    begin
+      TuiViewRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      return TuiViewSizePolicies[Self.Slot - 1]
+    end;
+
+    procedure WriteSizePolicy(Self: TuiView; Value: TuiSizePolicy);
+    begin
+      TuiViewRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      TuiViewSizePolicies[Self.Slot - 1] := Value
+    end;
+
     procedure Destroy(Self: TuiView);
     begin
       TuiViewRequire(Self.ApplicationId, Self.Slot, Self.Generation);
@@ -215,6 +250,8 @@ type
     property Bounds: TuiRect read ReadBounds write WriteBounds;
     property Visible: boolean read ReadVisible write WriteVisible;
     property Enabled: boolean read ReadEnabled write WriteEnabled;
+    property SizeHint: TuiMeasureResult read ReadSizeHint write WriteSizeHint;
+    property SizePolicy: TuiSizePolicy read ReadSizePolicy write WriteSizePolicy;
   end;
 
 procedure RegisterViewCleanup(View: TuiView; Callback: TuiViewCleanupCallback);

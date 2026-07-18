@@ -1,0 +1,31 @@
+program Tui2LayoutItemValuesTest;
+
+uses Std.Test, Std.Tui2;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
+  var View: TuiView := TuiView.Create(App);
+  var Layout: TuiLayout := TuiLayout.Create(App);
+  var FixedSpacer: TuiSpacer := TuiSpacer.Fixed(3);
+  var ExpandingSpacer: TuiSpacer := TuiSpacer.Expanding(1);
+  AssertTrue(FixedSpacer.Kind = TuiSpacerKind.Fixed);
+  AssertEquals(3, FixedSpacer.MinimumExtent);
+  AssertTrue(ExpandingSpacer.Kind = TuiSpacerKind.Expanding);
+  AssertEquals(1, ExpandingSpacer.MinimumExtent);
+  var ViewItem: TuiLayoutItem := TuiLayoutItem.ForView(View, TuiAlignment.Fill(), 2);
+  AssertTrue(ViewItem.Kind = TuiLayoutItemKind.View);
+  AssertEquals(View.Slot, ViewItem.View.Slot);
+  AssertTrue(ViewItem.Alignment.Horizontal = TuiAlignmentKind.Fill);
+  AssertEquals(2, ViewItem.Stretch);
+  var LayoutItem: TuiLayoutItem := TuiLayoutItem.ForLayout(Layout, TuiAlignment.Center(), 1);
+  AssertTrue(LayoutItem.Kind = TuiLayoutItemKind.Layout);
+  AssertEquals(Layout.Slot, LayoutItem.Layout.Slot);
+  AssertTrue(LayoutItem.Alignment.Vertical = TuiAlignmentKind.Center);
+  AssertEquals(1, LayoutItem.Stretch);
+  var SpacerItem: TuiLayoutItem := TuiLayoutItem.ForSpacer(ExpandingSpacer, TuiAlignment.Leading(), 4);
+  AssertTrue(SpacerItem.Kind = TuiLayoutItemKind.Spacer);
+  AssertTrue(SpacerItem.Spacer.Kind = TuiSpacerKind.Expanding);
+  AssertEquals(1, SpacerItem.Spacer.MinimumExtent);
+  AssertEquals(4, SpacerItem.Stretch);
+  App.Close()
+end.

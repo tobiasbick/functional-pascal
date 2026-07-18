@@ -37,6 +37,14 @@ Coordinates are zero-based: `(0, 0)` is the upper-left cell, X grows to the righ
 | `TuiContainer` | A headless owner of directly attached views. |
 | `TuiDesktop` | The explicit headless root container for one application. |
 | `TuiLayout` | A headless application-scoped layout identity. |
+| `TuiMeasureConstraint` | An unbounded or at-most constraint for one measurement axis. |
+| `TuiMeasureSpec` | Width and height constraints passed into measurement. |
+| `TuiMeasureResult` | Minimum, preferred, and maximum measured sizes. |
+| `TuiSizePolicy` | Independent horizontal and vertical layout policy. |
+| `TuiMargins` | Non-negative outer layout margins. |
+| `TuiAlignment` | Independent horizontal and vertical item alignment. |
+| `TuiSpacer` | A fixed or expanding empty layout extent. |
+| `TuiLayoutItem` | A validated view, nested-layout, or spacer description. |
 | `TuiAction` | A reusable operation with live properties and one `OnExecute` event. |
 | `TuiButton` | A headless semantic button with an optional action and one `OnClick` event. |
 | `TuiPoint.Create(X, Y)` | Creates a point. |
@@ -138,6 +146,12 @@ App.Tick(16);
 App.Close()
 ```
 
+`Post(Handler)` appends a parameterless callback and returns `true` while the application is open.
+`Tick` drains pending callbacks in FIFO order before and after `OnTick`; callbacks posted while a drain
+is in progress run in the next drain. Closing an application discards callbacks that have not started,
+and `Post` then returns `false`. This is currently deterministic headless scheduling; worker-task
+transfer and terminal-loop integration are not exposed yet.
+
 The lifecycle members are single-handler [record events](../../language/types/record-events.md).
 Assigning another compatible handler replaces the previous handler; assigning `nil` clears it.
 Copied application handles resolve the same registry state. `Tag` is a read-write live property.
@@ -145,11 +159,12 @@ Copied application handles resolve the same registry state. `Tag` is a read-writ
 ## Headless views
 
 `TuiView.Create(App)` creates an unattached custom view in the application's generational registry.
-Its `Tag`, `Bounds`, `Visible`, and `Enabled` properties are live registry state. New views are
-visible and enabled and have empty bounds at `(0, 0)`. `Destroy` invalidates the handle. Destroyed
-slots may be reused, always with a new generation, so an old copied handle remains stale and the new
-view starts with the default state. Closing the application invalidates every remaining view.
-`TuiView.Empty(App)` remains an action-source sentinel and is not a destroyable registry view.
+Its `Tag`, `Bounds`, `Visible`, `Enabled`, `SizeHint`, and `SizePolicy` properties are live registry
+state. New views are visible and enabled, have empty bounds at `(0, 0)`, a fixed zero size hint, and a
+preferred policy on both axes. `Destroy` invalidates the handle. Destroyed slots may be reused,
+always with a new generation, so an old copied handle remains stale and the new view starts with the
+default state. Closing the application invalidates every remaining view. `TuiView.Empty(App)` remains
+an action-source sentinel and is not a destroyable registry view.
 
 ## Headless containers
 
@@ -172,8 +187,50 @@ closes. The eventual `App.Desktop` property is not exposed yet.
 
 `TuiLayout.Create(App)` creates a live application-scoped layout handle. Like views, its `Tag`
 property is live registry state, `Destroy` invalidates it, and a reused slot always has a new
-generation. Closing the application invalidates all remaining layouts. Layout items, measurement,
-allocation, and nested layouts are not exposed yet.
+generation. Closing the application invalidates all remaining layouts. Layout item descriptions are
+available, but live item lists, allocation, and nested-layout ownership are not exposed yet.
+
+## Measurement values
+
+`TuiMeasureConstraint.Unbounded()` has no upper limit. `TuiMeasureConstraint.AtMost(Limit)` accepts a
+non-negative upper limit. `TuiMeasureSpec.Create(Width, Height)` combines one constraint for each
+axis; `Unbounded()` and `AtMost(TuiSize)` construct common specifications.
+
+`TuiMeasureResult.Create(Minimum, Preferred, Maximum)` requires the three sizes to be ordered on both
+axes: minimum no greater than preferred, and preferred no greater than maximum. `Fixed(Size)` creates
+a result with the same value for every size. These are pure values; views and layouts do not yet expose
+measurement or allocation operations.
+
+## Size policies
+
+`TuiSizePolicyKind` has `Fixed`, `Minimum`, `Maximum`, `Preferred`, and `Expanding` values. A
+`TuiSizePolicy` contains independent `Horizontal` and `Vertical` fields. Use `Create` for mixed axes
+or one of the uniform constructors: `Fixed()`, `Minimum()`, `Maximum()`, `Preferred()`, and
+`Expanding()`. A view's `SizePolicy` property retains the selected value. Layout allocation does not
+use policies yet.
+
+## Margins and alignment
+
+`TuiMargins.Create(Left, Top, Right, Bottom)` requires non-negative cell counts. `Uniform(Value)`
+uses one value on all sides, while `Symmetric(Horizontal, Vertical)` uses one value per axis.
+`Horizontal()` and `Vertical()` return the combined margins on each axis.
+
+`TuiAlignmentKind` has `Leading`, `Center`, `Trailing`, and `Fill` values. Leading means left on the
+horizontal axis and top on the vertical axis; trailing means right and bottom. `TuiAlignment.Create`
+combines independent axes, and matching uniform constructors create the common cases. Layout
+allocation does not apply margins or alignment yet.
+
+## Layout items
+
+`TuiSpacer.Fixed(Extent)` describes an exact empty extent on a layout's main axis.
+`TuiSpacer.Expanding(MinimumExtent)` describes empty space that may receive additional cells. Both
+constructors reject negative extents.
+
+A `TuiLayoutItem` describes exactly one live view, one live nested layout, or one spacer. Use
+`ForView`, `ForLayout`, or `ForSpacer`; each constructor also receives an alignment and a
+non-negative stretch factor. View and layout constructors reject stale handles, and an empty action
+source is not a view item. These are validated values only: `TuiLayout` does not yet own an item list
+or perform allocation.
 
 ## Commands and actions
 

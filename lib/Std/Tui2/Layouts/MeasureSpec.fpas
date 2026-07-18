@@ -1,0 +1,24 @@
+unit Std.Tui2.Layouts.MeasureSpec;
+
+uses Std.Tui2.Geometry.Size, Std.Tui2.Layouts.MeasureConstraint;
+
+type
+  TuiMeasureSpec = record
+    Width: TuiMeasureConstraint;
+    Height: TuiMeasureConstraint;
+
+    static function Create(Width: TuiMeasureConstraint; Height: TuiMeasureConstraint): TuiMeasureSpec;
+    begin
+      return record Width := Width; Height := Height; end
+    end;
+
+    static function Unbounded(): TuiMeasureSpec;
+    begin
+      return TuiMeasureSpec.Create(TuiMeasureConstraint.Unbounded(), TuiMeasureConstraint.Unbounded())
+    end;
+
+    static function AtMost(Size: TuiSize): TuiMeasureSpec;
+    begin
+      return TuiMeasureSpec.Create(TuiMeasureConstraint.AtMost(Size.Width), TuiMeasureConstraint.AtMost(Size.Height))
+    end;
+  end;

@@ -1,0 +1,22 @@
+program Tui2LayoutValuesTest;
+
+uses Std.Test, Std.Tui2;
+
+begin
+  var Margins: TuiMargins := TuiMargins.Create(1, 2, 3, 4);
+  AssertEquals(1, Margins.Left);
+  AssertEquals(4, Margins.Horizontal());
+  AssertEquals(6, Margins.Vertical());
+  var Uniform: TuiMargins := TuiMargins.Uniform(2);
+  AssertEquals(2, Uniform.Bottom);
+  var Symmetric: TuiMargins := TuiMargins.Symmetric(3, 5);
+  AssertEquals(3, Symmetric.Right);
+  AssertEquals(5, Symmetric.Top);
+  var Mixed: TuiAlignment := TuiAlignment.Create(TuiAlignmentKind.Fill, TuiAlignmentKind.Center);
+  AssertTrue(Mixed.Horizontal = TuiAlignmentKind.Fill);
+  AssertTrue(Mixed.Vertical = TuiAlignmentKind.Center);
+  AssertTrue(TuiAlignment.Leading().Horizontal = TuiAlignmentKind.Leading);
+  AssertTrue(TuiAlignment.Center().Vertical = TuiAlignmentKind.Center);
+  AssertTrue(TuiAlignment.Trailing().Horizontal = TuiAlignmentKind.Trailing);
+  AssertTrue(TuiAlignment.Fill().Vertical = TuiAlignmentKind.Fill)
+end.

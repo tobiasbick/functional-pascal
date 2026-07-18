@@ -1,0 +1,29 @@
+unit Std.Tui2.Layouts.Spacer;
+
+type
+  TuiSpacerKind = enum
+    Fixed;
+    Expanding;
+  end;
+  TuiSpacer = record
+    Kind: TuiSpacerKind;
+    MinimumExtent: integer;
+
+    static function Fixed(Extent: integer): TuiSpacer;
+    begin
+      if Extent < 0 then
+      begin
+        panic('Tui2 fixed spacer extent must not be negative')
+      end;
+      return record Kind := TuiSpacerKind.Fixed; MinimumExtent := Extent; end
+    end;
+
+    static function Expanding(MinimumExtent: integer): TuiSpacer;
+    begin
+      if MinimumExtent < 0 then
+      begin
+        panic('Tui2 expanding spacer minimum extent must not be negative')
+      end;
+      return record Kind := TuiSpacerKind.Expanding; MinimumExtent := MinimumExtent; end
+    end;
+  end;

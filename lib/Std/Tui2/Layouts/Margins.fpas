@@ -1,0 +1,48 @@
+unit Std.Tui2.Layouts.Margins;
+
+private function TuiMarginsRequireNonNegative(Value: integer; Name: string): integer;
+begin
+  if Value < 0 then
+  begin
+    panic(('Tui2 layout margin ' + Name) + ' must not be negative')
+  end;
+  return Value
+end;
+
+type
+  TuiMargins = record
+    Left: integer;
+    Top: integer;
+    Right: integer;
+    Bottom: integer;
+
+    static function Create(Left: integer; Top: integer; Right: integer; Bottom: integer): TuiMargins;
+    begin
+      return record
+        Left := TuiMarginsRequireNonNegative(Left, 'left');
+        Top := TuiMarginsRequireNonNegative(Top, 'top');
+        Right := TuiMarginsRequireNonNegative(Right, 'right');
+        Bottom := TuiMarginsRequireNonNegative(Bottom, 'bottom');
+      end
+    end;
+
+    static function Uniform(Value: integer): TuiMargins;
+    begin
+      return TuiMargins.Create(Value, Value, Value, Value)
+    end;
+
+    static function Symmetric(Horizontal: integer; Vertical: integer): TuiMargins;
+    begin
+      return TuiMargins.Create(Horizontal, Vertical, Horizontal, Vertical)
+    end;
+
+    function Horizontal(Self: TuiMargins): integer;
+    begin
+      return Self.Left + Self.Right
+    end;
+
+    function Vertical(Self: TuiMargins): integer;
+    begin
+      return Self.Top + Self.Bottom
+    end;
+  end;
